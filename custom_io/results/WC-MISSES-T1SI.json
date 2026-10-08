@@ -1,0 +1,1488 @@
+{
+ "length": 8,
+ "n_rows": 2793,
+ "device": "cpu fp32",
+ "results": {
+  "T1SI_s200": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/53-t1si-s200/T1SI_s200/checkpoint.pt",
+   "breakdown": {
+    "operand": {
+     "1": {
+      "n": 394,
+      "exact": 100.0
+     },
+     "2": {
+      "n": 412,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 429,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 445,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 399,
+      "exact": 100.0
+     },
+     "6": {
+      "n": 433,
+      "exact": 99.77
+     },
+     "7": {
+      "n": 417,
+      "exact": 97.6
+     },
+     "8": {
+      "n": 482,
+      "exact": 98.34
+     },
+     "9": {
+      "n": 428,
+      "exact": 96.96
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 454,
+      "exact": 99.78
+     },
+     "2": {
+      "n": 432,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 453,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 472,
+      "exact": 99.79
+     },
+     "5": {
+      "n": 432,
+      "exact": 99.31
+     },
+     "6": {
+      "n": 472,
+      "exact": 99.36
+     },
+     "7": {
+      "n": 467,
+      "exact": 98.93
+     },
+     "8": {
+      "n": 443,
+      "exact": 99.32
+     },
+     "9": {
+      "n": 458,
+      "exact": 98.03
+     }
+    },
+    "miss_kinds": {
+     "6": {
+      "other_number": 1
+     },
+     "7": {
+      "mid_number": 10
+     },
+     "8": {
+      "mid_number": 6,
+      "other_result": 1,
+      "other_number": 1
+     },
+     "9": {
+      "mid_number": 9,
+      "other_number": 3,
+      "other_result": 1
+     }
+    },
+    "path_changed": 13,
+    "misses": [
+     {
+      "id": "state_update-DI1-139",
+      "tag": "",
+      "call": 4,
+      "side": 0,
+      "want": "13567541",
+      "got": "1",
+      "kind": "mid_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "sub 8930614 4 = 13567541",
+      "earlier": [
+       "436",
+       "546939",
+       "8930614",
+       "13567541"
+      ]
+     },
+     {
+      "id": "state_update-DI1-372",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "15376400",
+      "got": "15",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 12 6 = 15376400",
+      "earlier": [
+       "15376400"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-31",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "87407109",
+      "got": "8",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 62 26 = 87407109",
+      "earlier": [
+       "87407109"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-39",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "78321011",
+      "got": "78",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 75 160 = 78321011",
+      "earlier": [
+       "78321011"
+      ]
+     },
+     {
+      "id": "state_update-DI1-43",
+      "tag": "|1",
+      "call": 3,
+      "side": 0,
+      "want": "55261026",
+      "got": "55",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 6172 4 = 55261026",
+      "earlier": [
+       "976687",
+       "6172",
+       "55261026"
+      ]
+     },
+     {
+      "id": "state_update-DI1-100",
+      "tag": "|1",
+      "call": 3,
+      "side": 0,
+      "want": "20725142",
+      "got": "34922399",
+      "kind": "other_result",
+      "picked_slot": 1,
+      "want_slot": 2,
+      "segment": "add 3 5 = 34922399",
+      "earlier": [
+       "3",
+       "34922399",
+       "20725142"
+      ]
+     },
+     {
+      "id": "state_update-DI1-198",
+      "tag": "|1",
+      "call": 3,
+      "side": 0,
+      "want": "90292899",
+      "got": "90",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "sub 538211491 9 = 90292899",
+      "earlier": [
+       "73",
+       "538211491",
+       "90292899"
+      ]
+     },
+     {
+      "id": "state_update-DI1-364",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "85141484",
+      "got": "52918597",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "add 52918597 5 = 85141484",
+      "earlier": [
+       "52918597",
+       "85141484"
+      ]
+     }
+    ]
+   },
+   "fresh": {
+    "operand": {
+     "1": {
+      "n": 1070,
+      "exact": 100.0
+     },
+     "2": {
+      "n": 1045,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1078,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 1033,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 1026,
+      "exact": 99.9
+     },
+     "6": {
+      "n": 1111,
+      "exact": 100.0
+     },
+     "7": {
+      "n": 1084,
+      "exact": 98.43
+     },
+     "8": {
+      "n": 1084,
+      "exact": 98.52
+     },
+     "9": {
+      "n": 1070,
+      "exact": 98.04
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 1103,
+      "exact": 99.64
+     },
+     "2": {
+      "n": 1122,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1205,
+      "exact": 99.83
+     },
+     "4": {
+      "n": 1122,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 1078,
+      "exact": 99.63
+     },
+     "6": {
+      "n": 1136,
+      "exact": 99.74
+     },
+     "7": {
+      "n": 1166,
+      "exact": 99.66
+     },
+     "8": {
+      "n": 1178,
+      "exact": 99.49
+     },
+     "9": {
+      "n": 1102,
+      "exact": 98.73
+     }
+    },
+    "miss_kinds": {
+     "5": {
+      "other_result": 1
+     },
+     "7": {
+      "mid_number": 17
+     },
+     "8": {
+      "mid_number": 6,
+      "other_number": 9,
+      "other_result": 1
+     },
+     "9": {
+      "mid_number": 17,
+      "other_number": 3,
+      "other_result": 1
+     }
+    },
+    "path_changed": 30,
+    "passes": 5
+   },
+   "secs": 332
+  },
+  "T1SI_s201": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/53-t1si-s201/T1SI_s201/checkpoint.pt",
+   "breakdown": {
+    "operand": {
+     "1": {
+      "n": 395,
+      "exact": 98.73
+     },
+     "2": {
+      "n": 414,
+      "exact": 97.34
+     },
+     "3": {
+      "n": 429,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 447,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 401,
+      "exact": 99.75
+     },
+     "6": {
+      "n": 432,
+      "exact": 99.31
+     },
+     "7": {
+      "n": 418,
+      "exact": 95.93
+     },
+     "8": {
+      "n": 483,
+      "exact": 87.99
+     },
+     "9": {
+      "n": 429,
+      "exact": 93.71
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 456,
+      "exact": 98.46
+     },
+     "2": {
+      "n": 435,
+      "exact": 99.08
+     },
+     "3": {
+      "n": 454,
+      "exact": 99.78
+     },
+     "4": {
+      "n": 478,
+      "exact": 98.95
+     },
+     "5": {
+      "n": 437,
+      "exact": 99.77
+     },
+     "6": {
+      "n": 478,
+      "exact": 99.37
+     },
+     "7": {
+      "n": 469,
+      "exact": 98.93
+     },
+     "8": {
+      "n": 441,
+      "exact": 96.83
+     },
+     "9": {
+      "n": 460,
+      "exact": 96.09
+     }
+    },
+    "miss_kinds": {
+     "1": {
+      "other_number": 5
+     },
+     "2": {
+      "other_number": 11
+     },
+     "5": {
+      "other_result": 1
+     },
+     "6": {
+      "other_number": 2,
+      "other_result": 1
+     },
+     "7": {
+      "mid_number": 14,
+      "other_number": 3
+     },
+     "8": {
+      "mid_number": 46,
+      "other_result": 2,
+      "other_number": 10
+     },
+     "9": {
+      "mid_number": 20,
+      "other_number": 6,
+      "other_result": 1
+     }
+    },
+    "path_changed": 8,
+    "misses": [
+     {
+      "id": "backward_solve-DI1-13",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "25201020",
+      "got": "2",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 63 5 = 25201020",
+      "earlier": [
+       "25201020"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-45",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "27385950",
+      "got": "27",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 47 7 = 27385950",
+      "earlier": [
+       "27385950"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-145",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "76367172",
+      "got": "76",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 65 15 = 76367172",
+      "earlier": [
+       "76367172"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-332",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "33717223",
+      "got": "33",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 58 14 = 33717223",
+      "earlier": [
+       "33717223"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-410",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "65796227",
+      "got": "65",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 51 13 = 65796227",
+      "earlier": [
+       "65796227"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-573",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "14369924",
+      "got": "14",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 13 13 = 14369924",
+      "earlier": [
+       "14369924"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-576",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "65634146",
+      "got": "65",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 84 20 = 65634146",
+      "earlier": [
+       "65634146"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-623",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "35338385",
+      "got": "35",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 57 15 = 35338385",
+      "earlier": [
+       "35338385"
+      ]
+     },
+     {
+      "id": "state_update-DI1-43",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "73676048",
+      "got": "73",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 82 4 = 73676048",
+      "earlier": [
+       "86354",
+       "82",
+       "73676048"
+      ]
+     },
+     {
+      "id": "state_update-DI1-62",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "40631367",
+      "got": "815314",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 40 9 = 815314",
+      "earlier": [
+       "815314",
+       "40631367"
+      ]
+     },
+     {
+      "id": "state_update-DI1-73",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "13280710",
+      "got": "13",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 101371 7 = 13280710",
+      "earlier": [
+       "55",
+       "101371",
+       "13280710"
+      ]
+     },
+     {
+      "id": "state_update-DI1-74",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "12025991",
+      "got": "12",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 17 2 = 12025991",
+      "earlier": [
+       "12025991"
+      ]
+     },
+     {
+      "id": "state_update-DI1-80",
+      "tag": "",
+      "call": 4,
+      "side": 0,
+      "want": "94632384",
+      "got": "1",
+      "kind": "other_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "sub 43083288 1 = 94632384",
+      "earlier": [
+       "102759267",
+       "3883808",
+       "43083288",
+       "94632384"
+      ]
+     },
+     {
+      "id": "state_update-DI1-97",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "75183890",
+      "got": "524646709",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "add 524646709 3 = 75183890",
+      "earlier": [
+       "524646709",
+       "75183890"
+      ]
+     },
+     {
+      "id": "state_update-DI1-116",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "62489691",
+      "got": "81470373",
+      "kind": "other_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "sub 81470373 6 = 62489691",
+      "earlier": [
+       "8762427",
+       "81470373",
+       "62489691"
+      ]
+     },
+     {
+      "id": "state_update-DI1-139",
+      "tag": "",
+      "call": 4,
+      "side": 0,
+      "want": "13567541",
+      "got": "1",
+      "kind": "mid_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "sub 8930614 4 = 13567541",
+      "earlier": [
+       "436",
+       "546939",
+       "8930614",
+       "13567541"
+      ]
+     },
+     {
+      "id": "state_update-DI1-194",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "53031749",
+      "got": "53",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "sub 30 4 = 53031749",
+      "earlier": [
+       "483483",
+       "30",
+       "53031749"
+      ]
+     },
+     {
+      "id": "state_update-DI1-299",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "93818964",
+      "got": "93",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 19 9 = 93818964",
+      "earlier": [
+       "93818964"
+      ]
+     },
+     {
+      "id": "state_update-DI1-341",
+      "tag": "",
+      "call": 4,
+      "side": 0,
+      "want": "22641826",
+      "got": "2",
+      "kind": "mid_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "add 900801 5 = 22641826",
+      "earlier": [
+       "3222",
+       "9263625",
+       "900801",
+       "22641826"
+      ]
+     },
+     {
+      "id": "state_update-DI1-370",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "73819508",
+      "got": "73",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 31 3 = 73819508",
+      "earlier": [
+       "73819508"
+      ]
+     },
+     {
+      "id": "state_update-DI1-372",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "15376400",
+      "got": "15",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 12 6 = 15376400",
+      "earlier": [
+       "15376400"
+      ]
+     },
+     {
+      "id": "state_update-DI1-378",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "23754651",
+      "got": "2",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 41 5 = 23754651",
+      "earlier": [
+       "7642",
+       "41",
+       "23754651"
+      ]
+     },
+     {
+      "id": "state_update-DI1-388",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "28270842",
+      "got": "560238",
+      "kind": "other_result",
+      "picked_slot": 1,
+      "want_slot": 2,
+      "segment": "sub 328 5 = 560238",
+      "earlier": [
+       "328",
+       "560238",
+       "28270842"
+      ]
+     },
+     {
+      "id": "state_update-DI1-431",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "45449663",
+      "got": "9551229",
+      "kind": "other_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "sub 9551229 4 = 45449663",
+      "earlier": [
+       "392629498",
+       "9551229",
+       "45449663"
+      ]
+     },
+     {
+      "id": "state_update-DI1-436",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "14775131",
+      "got": "14",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 11 9 = 14775131",
+      "earlier": [
+       "14775131"
+      ]
+     },
+     {
+      "id": "state_update-DI1-450",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "13178345",
+      "got": "13",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 395054 7 = 13178345",
+      "earlier": [
+       "817978504",
+       "395054",
+       "13178345"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-133",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "95828126",
+      "got": "95",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 51 11 = 95828126",
+      "earlier": [
+       "51",
+       "95828126"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-179",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "70918352",
+      "got": "70",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 720 6 = 70918352",
+      "earlier": [
+       "720",
+       "70918352"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-185",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "38147988",
+      "got": "468775483",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 468775483 12 = 38147988",
+      "earlier": [
+       "468775483",
+       "38147988"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-204",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "29099600",
+      "got": "29",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 71 11 = 29099600",
+      "earlier": [
+       "71",
+       "29099600"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-278",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "99632145",
+      "got": "99",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 66679 13 = 99632145",
+      "earlier": [
+       "66679",
+       "99632145"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-346",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "51192529",
+      "got": "12620731",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 12620731 13 = 51192529",
+      "earlier": [
+       "12620731",
+       "51192529"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-352",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "46961184",
+      "got": "4531053",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 4531053 13 = 46961184",
+      "earlier": [
+       "4531053",
+       "46961184"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-369",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "19912388",
+      "got": "19",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 135 13 = 19912388",
+      "earlier": [
+       "135",
+       "19912388"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-223",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "44658795",
+      "got": "44",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 25 4 = 44658795",
+      "earlier": [
+       "44658795"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-442",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "96341944",
+      "got": "96",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 30 2 = 96341944",
+      "earlier": [
+       "96341944"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-436",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "22344032",
+      "got": "22",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 55 25 = 22344032",
+      "earlier": [
+       "22344032"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-514",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "75565371",
+      "got": "75",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 19 25 = 75565371",
+      "earlier": [
+       "75565371"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-616",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "78017572",
+      "got": "78",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 44 16 = 78017572",
+      "earlier": [
+       "78017572"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-169",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "96925801",
+      "got": "78511443",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 78511443 33 = 96925801",
+      "earlier": [
+       "78511443",
+       "96925801"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-251",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "37334838",
+      "got": "37",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 42 19 = 37334838",
+      "earlier": [
+       "37334838"
+      ]
+     },
+     {
+      "id": "state_update-DI1-43",
+      "tag": "|1",
+      "call": 3,
+      "side": 0,
+      "want": "55261026",
+      "got": "55",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 6172 4 = 55261026",
+      "earlier": [
+       "976687",
+       "6172",
+       "55261026"
+      ]
+     },
+     {
+      "id": "state_update-DI1-53",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "12133956",
+      "got": "12",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 16 7 = 12133956",
+      "earlier": [
+       "12133956"
+      ]
+     },
+     {
+      "id": "state_update-DI1-71",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "77820120",
+      "got": "77",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 23 1 = 77820120",
+      "earlier": [
+       "77820120"
+      ]
+     },
+     {
+      "id": "state_update-DI1-80",
+      "tag": "|1",
+      "call": 4,
+      "side": 0,
+      "want": "15325216",
+      "got": "15",
+      "kind": "mid_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "sub 27 1 = 15325216",
+      "earlier": [
+       "8527",
+       "652812",
+       "27",
+       "15325216"
+      ]
+     },
+     {
+      "id": "state_update-DI1-109",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "97494277",
+      "got": "287500911",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 287500911 3 = 97494277",
+      "earlier": [
+       "287500911",
+       "97494277"
+      ]
+     },
+     {
+      "id": "state_update-DI1-196",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "68304476",
+      "got": "68",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 11 5 = 68304476",
+      "earlier": [
+       "68304476"
+      ]
+     },
+     {
+      "id": "state_update-DI1-295",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "20372858",
+      "got": "20",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 36 7 = 20372858",
+      "earlier": [
+       "20372858"
+      ]
+     },
+     {
+      "id": "state_update-DI1-364",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "52918597",
+      "got": "52",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 21 2 = 52918597",
+      "earlier": [
+       "52918597"
+      ]
+     },
+     {
+      "id": "state_update-DI1-364",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "85141484",
+      "got": "85",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "add 52 5 = 85141484",
+      "earlier": [
+       "52918597",
+       "85141484"
+      ]
+     },
+     {
+      "id": "state_update-DI1-386",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "76000022",
+      "got": "76",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 33 5 = 76000022",
+      "earlier": [
+       "76000022"
+      ]
+     },
+     {
+      "id": "state_update-DI1-408",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "74580743",
+      "got": "74",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 7 1 = 74580743",
+      "earlier": [
+       "74580743"
+      ]
+     },
+     {
+      "id": "state_update-DI1-418",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "57942184",
+      "got": "57",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 38 5 = 57942184",
+      "earlier": [
+       "57942184"
+      ]
+     },
+     {
+      "id": "state_update-DI1-429",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "62289385",
+      "got": "62",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 21 2 = 62289385",
+      "earlier": [
+       "62289385"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-244",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "98288698",
+      "got": "28768053",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 28768053 13 = 98288698",
+      "earlier": [
+       "28768053",
+       "98288698"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-103",
+      "tag": "|1",
+      "call": 3,
+      "side": 0,
+      "want": "75772757",
+      "got": "75",
+      "kind": "mid_number",
+      "picked_slot": 2,
+      "want_slot": 2,
+      "segment": "add 12 4 = 75772757",
+      "earlier": [
+       "52",
+       "12",
+       "75772757"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-123",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "92323100",
+      "got": "92",
+      "kind": "mid_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "mul 553 4 = 92323100",
+      "earlier": [
+       "553",
+       "92323100"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-442",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "24674460",
+      "got": "24",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "sub 30 2 = 24674460",
+      "earlier": [
+       "24674460"
+      ]
+     }
+    ]
+   },
+   "fresh": {
+    "operand": {
+     "1": {
+      "n": 1072,
+      "exact": 99.63
+     },
+     "2": {
+      "n": 1047,
+      "exact": 97.99
+     },
+     "3": {
+      "n": 1083,
+      "exact": 99.72
+     },
+     "4": {
+      "n": 1038,
+      "exact": 99.71
+     },
+     "5": {
+      "n": 1026,
+      "exact": 99.12
+     },
+     "6": {
+      "n": 1114,
+      "exact": 99.19
+     },
+     "7": {
+      "n": 1086,
+      "exact": 97.7
+     },
+     "8": {
+      "n": 1085,
+      "exact": 91.61
+     },
+     "9": {
+      "n": 1075,
+      "exact": 93.21
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 1113,
+      "exact": 98.65
+     },
+     "2": {
+      "n": 1128,
+      "exact": 98.94
+     },
+     "3": {
+      "n": 1208,
+      "exact": 99.5
+     },
+     "4": {
+      "n": 1130,
+      "exact": 99.56
+     },
+     "5": {
+      "n": 1087,
+      "exact": 98.99
+     },
+     "6": {
+      "n": 1140,
+      "exact": 99.3
+     },
+     "7": {
+      "n": 1180,
+      "exact": 98.81
+     },
+     "8": {
+      "n": 1180,
+      "exact": 96.86
+     },
+     "9": {
+      "n": 1113,
+      "exact": 96.86
+     }
+    },
+    "miss_kinds": {
+     "1": {
+      "other_number": 4
+     },
+     "2": {
+      "other_number": 21
+     },
+     "3": {
+      "other_result": 2,
+      "other_number": 1
+     },
+     "4": {
+      "other_result": 2,
+      "other_number": 1
+     },
+     "5": {
+      "other_result": 4,
+      "other_number": 5
+     },
+     "6": {
+      "other_number": 6,
+      "other_result": 3
+     },
+     "7": {
+      "mid_number": 19,
+      "other_result": 1,
+      "other_number": 5
+     },
+     "8": {
+      "mid_number": 76,
+      "other_number": 14,
+      "other_result": 1
+     },
+     "9": {
+      "mid_number": 56,
+      "other_number": 15,
+      "other_result": 2
+     }
+    },
+    "path_changed": 11,
+    "passes": 5
+   },
+   "secs": 338
+  }
+ }
+}
