@@ -1,0 +1,246 @@
+{
+ "name": "s101",
+ "model": "/root/c7d/s3/s101/W1.pt",
+ "spec": "Roadmap 8e924aaa2f: a 2x2 drift check on W1. CPU. Reads the skills TRAIN file (held slice, replay rows), C2 DEV and skills DEV (MEASURE only); C2 test / labelled / holdout never opened.",
+ "rules": {
+  "drift_confirmed": "BOTH lr 1e-4 cells drop <= 1.0 AND lr1e-3_fresh drops >= 3.0 (held in_dist drop vs M0, points)",
+  "overfit_confirmed": "lr1e-3_fresh drops <= 1.0 AND lr1e-3_reused drops >= 3.0 (held in_dist drop vs M0, points)",
+  "proved_wrong": "all four cells' held in_dist drops within 1.0 point of each other (max - min <= 1.0)"
+ },
+ "secs": {
+  "lr1e-3_reused": 560.2502689361572,
+  "lr1e-3_fresh": 514.4498159885406,
+  "lr1e-4_reused": 534.9463565349579,
+  "lr1e-4_fresh": 536.6608152389526,
+  "measure_M0": 96.6346025466919,
+  "measure_lr1e-3_reused": 94.83837628364563,
+  "measure_lr1e-3_fresh": 94.052321434021,
+  "measure_lr1e-4_reused": 95.73619794845581,
+  "measure_lr1e-4_fresh": 101.65027093887329,
+  "total": 2742.2632858753204
+ },
+ "args": {
+  "seed": 0,
+  "updates": 256,
+  "n_reused": 1024,
+  "lrs": [
+   0.001,
+   0.0001
+  ],
+  "held_per_family": 100,
+  "dev_limit": null,
+  "skills_limit": null,
+  "skills_train": "/root/work/data/train.jsonl",
+  "skills_data": "/root/work/data_big"
+ },
+ "note": "skills TRAIN (held slice, replay rows); C2 DEV and skills DEV MEASURE only; test / labelled / holdout never opened",
+ "held": {
+  "rows": 3400,
+  "per_family": 100,
+  "families": 34,
+  "repair_rows": 196600,
+  "ids_sha256": "afb4a2b20e7a93b59d84444da21674e43d6e6a2fcd112b35453ad4c8a6807bf8",
+  "matches_r": true
+ },
+ "cells": {
+  "lr1e-3_reused": {
+   "updates": 256,
+   "rows": 1024,
+   "max_visits": 16,
+   "lr": 0.001,
+   "kind": "reused",
+   "train_seconds": 560.2097671031952,
+   "requested_rows": 1024
+  },
+  "lr1e-3_fresh": {
+   "updates": 256,
+   "rows": 16384,
+   "max_visits": 1,
+   "lr": 0.001,
+   "kind": "fresh",
+   "train_seconds": 514.3826606273651,
+   "requested_rows": 16384
+  },
+  "lr1e-4_reused": {
+   "updates": 256,
+   "rows": 1024,
+   "max_visits": 16,
+   "lr": 0.0001,
+   "kind": "reused",
+   "train_seconds": 534.9009747505188,
+   "requested_rows": 1024
+  },
+  "lr1e-4_fresh": {
+   "updates": 256,
+   "rows": 16384,
+   "max_visits": 1,
+   "lr": 0.0001,
+   "kind": "fresh",
+   "train_seconds": 536.56467628479,
+   "requested_rows": 16384
+  }
+ },
+ "table": {
+  "M0": {
+   "held_in_dist": 87.3529411764706,
+   "dev_in_dist": 84.19117647058823,
+   "dev_pooled5": 98.0,
+   "c2_first_try": 34.375,
+   "stuck_rate": 0.65625
+  },
+  "lr1e-3_reused": {
+   "held_in_dist": 81.88235294117646,
+   "dev_in_dist": 80.13235294117646,
+   "dev_pooled5": 93.7,
+   "c2_first_try": 2.734375,
+   "stuck_rate": 0.97265625,
+   "held_drop": 5.47058823529413,
+   "held_fired": 9,
+   "held_fired_families": [
+    "cipher_map",
+    "fewshot_number_rule",
+    "order_chain",
+    "passage_qa",
+    "prop_eval",
+    "rule_apply",
+    "state_update",
+    "story_chain3",
+    "table_lookup"
+   ],
+   "dev_drop": 4.058823529411768,
+   "dev_fired": 8,
+   "dev_fired_families": [
+    "cipher_map",
+    "fewshot_number_rule",
+    "object_track",
+    "passage_qa",
+    "prop_eval",
+    "seq_next",
+    "state_update",
+    "story_chain3"
+   ],
+   "dev_passes": false,
+   "c2_first_try_boot_vs_M0": {
+    "points": -31.640625,
+    "lo": -37.5,
+    "hi": -26.171875
+   },
+   "updates": 256,
+   "rows": 1024,
+   "max_visits": 16,
+   "seconds": 560.2097671031952
+  },
+  "lr1e-3_fresh": {
+   "held_in_dist": 88.97058823529412,
+   "dev_in_dist": 86.52941176470588,
+   "dev_pooled5": 98.9,
+   "c2_first_try": 2.34375,
+   "stuck_rate": 0.9765625,
+   "held_drop": -1.6176470588235219,
+   "held_fired": 1,
+   "held_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_drop": -2.338235294117652,
+   "dev_fired": 1,
+   "dev_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_passes": false,
+   "c2_first_try_boot_vs_M0": {
+    "points": -32.03125,
+    "lo": -37.890625,
+    "hi": -26.171875
+   },
+   "updates": 256,
+   "rows": 16384,
+   "max_visits": 1,
+   "seconds": 514.3826606273651
+  },
+  "lr1e-4_reused": {
+   "held_in_dist": 87.23529411764706,
+   "dev_in_dist": 84.52941176470588,
+   "dev_pooled5": 98.6,
+   "c2_first_try": 30.859375,
+   "stuck_rate": 0.69140625,
+   "held_drop": 0.1176470588235361,
+   "held_fired": 1,
+   "held_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_drop": -0.3382352941176521,
+   "dev_fired": 1,
+   "dev_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_passes": false,
+   "c2_first_try_boot_vs_M0": {
+    "points": -3.515625,
+    "lo": -7.03125,
+    "hi": 0.0
+   },
+   "updates": 256,
+   "rows": 1024,
+   "max_visits": 16,
+   "seconds": 534.9009747505188
+  },
+  "lr1e-4_fresh": {
+   "held_in_dist": 89.70588235294117,
+   "dev_in_dist": 86.17647058823529,
+   "dev_pooled5": 98.9,
+   "c2_first_try": 30.078125,
+   "stuck_rate": 0.69921875,
+   "held_drop": -2.35294117647058,
+   "held_fired": 1,
+   "held_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_drop": -1.985294117647058,
+   "dev_fired": 1,
+   "dev_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_passes": false,
+   "c2_first_try_boot_vs_M0": {
+    "points": -4.296875,
+    "lo": -7.8125,
+    "hi": -0.78125
+   },
+   "updates": 256,
+   "rows": 16384,
+   "max_visits": 1,
+   "seconds": 536.56467628479
+  }
+ },
+ "reproduces_W1e": {
+  "equal": true,
+  "held_in_dist_W1e": 81.88235294117646,
+  "held_in_dist_cell": 81.88235294117646,
+  "dev_in_dist_W1e": 80.13235294117646,
+  "dev_in_dist_cell": 80.13235294117646
+ },
+ "fresh_check": {
+  "lr1e-3_fresh": {
+   "rows": 16384,
+   "requested": 16384,
+   "max_visits": 1,
+   "all_distinct_once": true
+  },
+  "lr1e-4_fresh": {
+   "rows": 16384,
+   "requested": 16384,
+   "max_visits": 1,
+   "all_distinct_once": true
+  }
+ },
+ "marks": {
+  "drift_confirmed": false,
+  "overfit_confirmed": true,
+  "proved_wrong": false,
+  "rules": {
+   "drift_confirmed": "BOTH lr 1e-4 cells drop <= 1.0 AND lr1e-3_fresh drops >= 3.0 (held in_dist drop vs M0, points)",
+   "overfit_confirmed": "lr1e-3_fresh drops <= 1.0 AND lr1e-3_reused drops >= 3.0 (held in_dist drop vs M0, points)",
+   "proved_wrong": "all four cells' held in_dist drops within 1.0 point of each other (max - min <= 1.0)"
+  }
+ }
+}

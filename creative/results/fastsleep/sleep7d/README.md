@@ -190,3 +190,25 @@ How to read it:
 - *Shown:* on W1 the adapter narrows the search. Distinct fitting programs per question fall from 1.4-1.5 to 0.7-1.1, below S1's variety bar (0.8 x U) on both parents. The KL to W1 ends 2-3x higher than S1's KL to N'.
 - *Suggested:* day 1's kept tries are off-policy for W1 (drawn by N', a broader worker). Loop 1 has no correction for that, so it sharpens W1 further onto programs it already favours, and loses the rare ones. This is the roadmap's stated next step: a few fresh adapter tries at night on the slept worker (on-policy for W1).
 - J2 (the swapped night order) does not run, because its gate was S1w passing.
+
+## 2 x 2 drift check (finished 14:27 UTC 10-08 = 10:27 AM ET; roadmap 8e924aaa2f, `creative/drift7d.py`, `drift/`)
+
+Why R failed. Each cell starts from W1 and runs 256 replay-only updates on its own skills training rows (fresh AdamW, batch 64, warmup 10, cosine). The cells are lr 1e-3 or 1e-4, crossed with `reused` (1,024 rows spread over all 34 families, each seen 16 times; the same draw as R's arm E) or `fresh` (16,384 distinct rows, each seen once). Measures: the held check (R's 3,400 held training rows), skills DEV in_dist with the harm measure, and C2 DEV first try, all against W1. The (1e-3, reused) cell reproduces R's W1e exactly on both parents (same held and DEV hits).
+
+| s100 / s101 | held in_dist (drop vs W1) | DEV in_dist (change vs W1) | DEV families firing | C2 first try (vs W1) |
+|---|---|---|---|---|
+| W1 | 87.6 / 87.4 | 82.9 / 84.2 | - | 31.2 / 34.4 |
+| lr 1e-3, reused | 82.0 / 81.9 (**5.6 / 5.5**) | 79.1 / 80.1 (-3.7 / -4.1) | 6 / 8 | 2.0 / 2.7 (**-29 / -32**) |
+| lr 1e-3, fresh | 87.4 / 89.0 (0.2 / -1.6) | 84.7 / 86.5 (**+1.8 / +2.3**) | 1 / 1 | 0.0 / 2.3 (**-31 / -32**) |
+| lr 1e-4, reused | 87.3 / 87.2 (0.4 / 0.1) | 82.9 / 84.5 (0.0 / +0.3) | 1 / 1 | 24.6 / 30.9 (-6.6 [-10.5, -2.3] / -3.5 [-7.0, 0.0]) |
+| lr 1e-4, fresh | 89.5 / 89.7 (-1.9 / -2.4) | 84.5 / 86.2 (**+1.6 / +2.0**) | 1 / 1 | 24.2 / 30.1 (-7.0 [-11.3, -3.1] / -4.3 [-7.8, -0.8]) |
+
+The one family firing in the good cells is fewshot_number_rule, the C2-like family that the night had pushed up. For comparison, N' DEV in_dist is 86.7 / 87.8.
+
+Marks (fixed in advance): **overfit confirmed on both parents** (1e-3 fresh drops 0.2 / -1.6, so at most 1.0; 1e-3 reused drops 5.6 / 5.5, so at least 3). Drift is not confirmed: 1e-3 with fresh rows does not hurt skills. Not proved wrong.
+
+How to read it:
+- *Shown:* the skills damage in R and E came from reusing a small row set (16 visits per row at lr 1e-3), not from the optimiser's step size. The same number of updates on fresh rows, at either lr, makes skills **better** than W1 (DEV +1.6 to +2.3, about two-thirds of the way back to N').
+- *Shown:* a separate effect. Any 256 replay-only updates at lr 1e-3 erase night 1's C2 gain (first try down to 0-3%), whether the rows are reused or fresh. At lr 1e-4 most of the C2 gain survives (-3.5 to -7.0).
+- *Suggested:* the night's own records are a small set seen 32 times at lr 1e-3, the same pattern as the damaging cell. Against that, night 2 uses the same recipe and adds no skills harm, while night 1 does. So the cost may belong to the first big move onto C2, not to reuse as such.
+- *Suggested:* a fresh-row replay pass at lr 1e-4 after a night trades about 2 DEV skills points back for about 4-7 points of C2 first try. As it stands, that misses a "C2 within 2 points" mark.
