@@ -433,6 +433,19 @@ def test_day_f_feeds_kept_tries():
     assert o['kept_tries'] == len(kept['items']) and 0 <= o['share_tries_from_pass2'] <= 1
 
 
+def test_s1wreport_joins_parents():
+    import json, pathlib, tempfile
+    tmp_path = pathlib.Path(tempfile.mkdtemp())
+    ok = dict(passes=True, proved_wrong_here=dict(flag=False))
+    bad = dict(passes=False, proved_wrong_here=dict(flag=True))
+    for n, mk in (('a', ok), ('b', bad)):
+        (tmp_path / n).mkdir()
+        json.dump(dict(marks=mk), open(tmp_path / n / 's1w.json', 'w'))
+    r = S.s1wreport(str(tmp_path), ('a', 'b'))
+    assert r['passes'] is False and r['proved_wrong'] is False and set(r['per_parent']) == {'a', 'b'}
+    assert S.s1wreport(str(tmp_path), ('a',))['passes'] is True and json.load(open(tmp_path / 's1w-report.json'))['parents'] == ['a']
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):

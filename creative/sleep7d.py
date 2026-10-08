@@ -1367,6 +1367,141 @@ def jreport(out, parents):
     return rep
 
 
+# ---- 9. Test S1w (roadmap 7d, 10-08): loop 1 trains the adapter on the slept worker W1 from day 1's kept tries
+def s1w_parent(nprime, out, s1dir, s3dir, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lr1=1e-3, passes1=1, kl=0.1, n_eval=512, k=32,
+               knew_dir=KNEW, transfer_kinds=TRANSFER_KINDS, device='cpu', name=None, resume=True, log=_log):
+    """One parent's Test S1w (S1 with W1 as the model the adapter trains on: loop 1 on W1 from day 1's kept tries, S1's setting, no grid; arms U, C and report-only C1 = S1's N'-trained adapter, all measured on W1).
+    DIR/<name>/s1w.json is written after every stage (no combined file: parents run as separate processes; `s1wreport` joins them). Adapter in adapters_w.pt, measures in measure_{arm}.pkl."""
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s1d, s3d = os.path.join(out, name), os.path.join(s1dir, name), os.path.join(s3dir, name)
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs, mseed = time.time(), {}, seed + 777
+    args = dict(pool_limit=pool_limit, dev_limit=dev_limit, n1=n1, n2=n2)
+    res = dict(nprime=nprime, name=name, seed=seed, T=T, measure_seed=mseed, spec=__doc__.split('\n')[0], args=dict(args, lr1=lr1, passes1=passes1, kl=kl, n_eval=n_eval, k=k, s1=s1dir, s3=s3dir),
+               note='C2 DEV, C2 pool and K_new DEV only; test / labelled / K_new test never opened; keys score, never pick (records and kept tries use the example check only)')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 's1w.json'), 'w'), indent=1)
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    cpath = os.path.join(knew_dir, 'candidates_dev.jsonl')
+    raw = open(cpath, 'rb').read()
+    kdev = c2_stones._with_nums(_limit([r for r in map(json.loads, raw.decode().splitlines()) if r['kind'] in transfer_kinds], dev_limit))
+    ksha = hashlib.sha256(raw).hexdigest()
+    res['transfer_source'] = dict(path=cpath, sha256=ksha, kinds=list(transfer_kinds))
+    res['sizes'] = dict(pool=len(pool), c2_dev=len(dev), knew_dev=len(kdev))
+    # 1. W1 (S3's night 1) and day 1 (S1's day, drawn by N')
+    wpath = os.path.join(s3d, 'W1.pt')
+    assert os.path.exists(wpath), f'no {wpath}'
+    W1, vocab, _ = sleep.load_parent(wpath, device)
+    W1.eval()
+    w1sha = _sha_file(wpath)
+    s3p = os.path.join(s3d, 's3.json')
+    res['W1'] = dict(path=wpath, sha256=w1sha, W1_night=json.load(open(s3p)).get('W1_night') if os.path.exists(s3p) else None)
+    dpath = os.path.join(s1d, 'day.pkl')
+    assert os.path.exists(dpath), f'no S1 day {dpath}'
+    c = pickle.load(open(dpath, 'rb'))
+    skey = (os.path.abspath(nprime), pool_limit, n1, n2, seed, T)
+    assert c['key'] == skey, f'S1 day key {c["key"]} != {skey}'
+    kept1 = kept_tries(pool, c['day'], seed)
+    res['kept'] = dict({x: v for x, v in kept1.items() if x != 'items'}, n_tries=len(kept1['items']))
+    log('kept', res['kept'])
+    # 2. loop 1 on W1 + zero adapter
+    m = copy.deepcopy(W1)
+    add_adapter(m, seed=seed)
+    init = adapter_state(m)
+    ut = worker_untouched(m, W1, dev[:64], vocab, device, perturb=True)
+    assert ut['passes'], f'worker-untouched test failed: {ut}'
+    res['unit_test_before'] = ut
+    save()
+    t0 = time.time()
+    akey = _h(skey, w1sha, lr1, passes1, kl, _hstate(init))
+    apath = os.path.join(pdir, 'adapters_w.pt')
+    ac = torch.load(apath, weights_only=False) if resume and os.path.exists(apath) else None
+    if ac is not None and ac['key'] == akey:
+        C, info = ac['C'], ac['info']
+        log('C: loaded', apath)
+    else:
+        li = loop1(m, kept1, lr1, passes1, T, seed, kl=kl)
+        info = dict(updates=li['updates'], last_loss=li['loss'][-1] if li['loss'] else None, kl_end=li['kl'][-1] if li['kl'] else None)
+        C = adapter_state(m)
+        torch.save(dict(key=akey, C=C, init=init, info=info), apath)
+    secs['loop1'] = time.time() - t0
+    res['loop1'] = info
+    log('loop 1 on W1', info)
+    load_adapter_state(m, C)
+    res['unit_test_after'] = worker_untouched(m, W1, dev[:64], vocab, device, perturb=False)
+    log('worker-untouched after', res['unit_test_after'])
+    save()
+    # 3. arms on W1: U untrained, C trained on W1, C1 (report only) S1's adapter trained on N'
+    states = dict(U=init, C=C)
+    s1apath = os.path.join(s1d, 'adapters.pt')
+    if os.path.exists(s1apath):
+        sc = torch.load(s1apath, weights_only=False)
+        st = sc['setting']
+        res['S1_setting'] = dict(lr=st['lr'], passes=st['passes'])
+        if st['lr'] == lr1 and st['passes'] == passes1:
+            states['C1'] = sc['C']
+        else:
+            res['C1_skipped'] = f'S1 picked lr {st["lr"]}, passes {st["passes"]}, not lr1 {lr1}, passes1 {passes1}'
+    else:
+        res['C1_skipped'] = f'no {s1apath}'
+    per, res['arms'] = {}, {}
+    for a, st in states.items():
+        t0 = time.time()
+        mkey = (akey, a, n_eval, k, mseed, ksha, dev_limit, _hstate(st))
+        mm = _cached(os.path.join(pdir, f'measure_{a}.pkl'), mkey, lambda st=st: j_measure(_arm_model(W1, st, seed), dev, kdev, vocab, device, T, n_eval, k, mseed), resume, log, f'measures {a}')
+        per[a] = mm
+        g = s3_measures(mm['greedy'], [])
+        res['arms'][a] = dict(stuck_rate=g['stuck_rate'], first_try_right=g['first_try_right'], creative=summarize_by_kind(mm['c32']), knew=summarize_by_kind(mm['knew']))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('arm', a, dict(reach32=res['arms'][a]['creative']['pooled'][f'reach{k}'], knew=res['arms'][a]['knew']['pooled'][f'reach{n_eval}']))
+        save()
+    res['greedy_equal_across_arms'] = all(per[a]['greedy'] == per['U']['greedy'] for a in per)
+    json.dump(dict(dev_ids=[r['id'] for r in dev], knew_ids=[r['id'] for r in kdev], creative32={a: per[a]['c32'] for a in per}, knew={a: per[a]['knew'] for a in per}), open(os.path.join(pdir, 'per_row.json'), 'w'))
+    # 4. paired bootstraps, same row order
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    reach = lambda a, ds, kk, kinds=None: [float(d[f'right{kk}']) for d in per[a][ds] if kinds is None or d['kind'] in kinds]
+    res['boot'] = dict(c2_C_minus_U=bd(reach('C', 'c32', k), reach('U', 'c32', k)),
+                       groups={g: bd(reach('C', 'c32', k, ks), reach('U', 'c32', k, ks)) for g, ks in GROUPS.items()},
+                       knew_F_minus_U=bd(reach('C', 'knew', n_eval), reach('U', 'knew', n_eval)), knew32_C_minus_U=bd(reach('C', 'knew', k), reach('U', 'knew', k)))
+    if 'C1' in per:
+        res['boot']['c2_C_minus_C1'] = bd(reach('C', 'c32', k), reach('C1', 'c32', k))
+    log('boot', res['boot'])
+    # 5. S1's own numbers on N', for context
+    s1p = os.path.join(s1d, 's1.json')
+    if os.path.exists(s1p):
+        s1r = json.load(open(s1p))
+        res['s1_on_nprime'] = dict(c2_C_minus_U=(s1r.get('boot') or {}).get('c2_C_minus_U'),
+                                   reach32={a: ((s1r.get('arms') or {}).get(a, {}).get('c2_dev') or {}).get('pooled', {}).get('reach32') for a in ('U', 'C')})
+    # 6. marks (roadmap 7d, 10-08)
+    b = res['boot']
+    res['marks'] = dict(
+        primary=dict(C_minus_U_points=b['c2_C_minus_U']['points'], passes=b['c2_C_minus_U']['points'] >= 5.0, rule=f'C2 DEV creative reach@{k} on W1: C - U >= +5 points'),
+        new_kind_guard=dict(C_F_minus_U_points=b['knew_F_minus_U']['points'], passes=b['knew_F_minus_U']['points'] >= -1.0, rule=f'K_new DEV reach@{n_eval} (F mode) on W1: C - U >= -1 point (point estimate)'),
+        unit_test=dict(passes=bool(res['unit_test_before']['passes'] and res['unit_test_after']['passes'])),
+        proved_wrong_here=dict(flag=b['c2_C_minus_U']['hi'] < 1.0, rule=f'C2 DEV creative reach@{k}: C - U upper end of the paired 95% interval < +1 point (both parents needed)'))
+    res['marks']['passes'] = all(res['marks'][x]['passes'] is True for x in ('primary', 'new_kind_guard', 'unit_test'))
+    secs['total'] = time.time() - t00
+    res['seconds'] = secs
+    save()
+    log('MARKS', {x: v.get('passes', v.get('flag')) for x, v in res['marks'].items() if isinstance(v, dict)}, res['marks']['passes'])
+    return res
+
+
+def s1w(nprimes, out, s1dir, s3dir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: s1w_parent(p, out, s1dir, s3dir, **kw) for p in nprimes}
+
+
+def s1wreport(out, parents):
+    """Test S1w verdict over the parents' DIR/<name>/s1w.json -> DIR/s1w-report.json: passes = every parent passes (primary, new-kind guard, unit test); proved_wrong = every parent's proved_wrong_here."""
+    res = {p: json.load(open(os.path.join(out, p, 's1w.json'))) for p in parents}
+    mk = {p: r.get('marks') or {} for p, r in res.items()}
+    rep = dict(parents=list(parents), passes=all(m.get('passes') is True for m in mk.values()), proved_wrong=all(m.get('proved_wrong_here', {}).get('flag') is True for m in mk.values()), per_parent=mk,
+               rule='passes: primary (C2 DEV reach@32 C - U >= +5), new-kind guard (K_new reach@512 F mode >= -1) and unit test on every parent; proved wrong: C - U upper end < +1 on every parent')
+    json.dump(rep, open(os.path.join(out, 's1w-report.json'), 'w'), indent=1)
+    return rep
+
+
 def _floats(s):
     return tuple(float(x) for x in s.split(','))
 
@@ -1386,6 +1521,10 @@ if __name__ == '__main__':
     q.add_argument('--n2', type=int, default=480); q.add_argument('--seed', type=int, default=0); q.add_argument('--n-eval', type=int, default=512); q.add_argument('--replay-n', type=int); q.add_argument('--b2', help='the parent\'s B2 checkpoint (report-only harm comparison)')
     q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('jreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', required=True)
+    q = sub.add_parser('s1w'); q.add_argument('--nprime', nargs='+', required=True); q.add_argument('--out', required=True); q.add_argument('--s1', required=True); q.add_argument('--s3', required=True)
+    q.add_argument('--pool-limit', type=int); q.add_argument('--dev-limit', type=int); q.add_argument('--n1', type=int, default=32); q.add_argument('--n2', type=int, default=480); q.add_argument('--seed', type=int, default=0)
+    q.add_argument('--n-eval', type=int, default=512); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('s1wreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', required=True)
     for c in ('s1', 's3'):
         s = sub.add_parser(c)
         s.add_argument('--nprime', nargs='+', required=True); s.add_argument('--out', required=True)
@@ -1407,6 +1546,11 @@ if __name__ == '__main__':
         print(json.dumps(s1report(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 'jreport':
         print(json.dumps(jreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1wreport':
+        print(json.dumps(s1wreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1w':
+        ex = os.path.expanduser
+        s1w(a.nprime, a.out, ex(a.s1), ex(a.s3), pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, n_eval=a.n_eval, device=a.device, resume=not a.no_resume)
     elif a.cmd == 'j':
         ex = os.path.expanduser
         j(a.nprime, a.out, ex(a.s1), ex(a.s3), skills_train=ex(a.skills_train) if a.skills_train else None, skills_data=ex(a.skills_data) if a.skills_data else None, pool_limit=a.pool_limit,
