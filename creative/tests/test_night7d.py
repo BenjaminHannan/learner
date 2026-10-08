@@ -1,4 +1,5 @@
 """python3 -m pytest creative/tests/test_night7d.py   (CPU, instant): marks, proved-wrong and pick logic of Test VL on fake numbers."""
+import copy
 from creative import night7d as N
 
 
@@ -54,3 +55,41 @@ def test_l64_no_climb_rule():
     v = N.l2_verdict({'s100': N.l2_marks(True, -6.0, -0.1, 3.0), 's101': N.l2_marks(True, -6.0, -0.1, 3.0)})   # rule 1 alone
     assert v['proved_wrong_vs_W2'] and v['proved_wrong'] and v['proved_wrong_no_climb'] is False
     assert N.l2_verdict({'s100': N.l2_marks(True, 0, 2), 's101': N.l2_marks(True, 0, 2)})['proved_wrong_no_climb'] is None
+
+
+def test_sc_marks_and_verdict():
+    m = N.sc_marks(True, -2.0, -3.0, 1.0, 3.0)
+    assert m['passes'] and not m['proved_wrong']                            # boundaries inclusive; drop exactly 1.0 smaller is not wrong
+    assert not N.sc_marks(True, -2.1, 0, 1.0, 3.0)['passes'] and not N.sc_marks(True, 0, -3.1, 1.0, 3.0)['passes'] and not N.sc_marks(False, 0, 0, 1.0, 3.0)['passes']
+    assert N.sc_marks(True, 0, 0, 2.01, 3.0)['proved_wrong']
+    w, g = N.sc_marks(True, 0, 0, 3.0, 3.0), N.sc_marks(True, 0, 0, 0.5, 3.0)
+    assert N.sc_verdict({'a': w, 'b': w})['proved_wrong'] and not N.sc_verdict({'a': w, 'b': g})['proved_wrong'] and 'proved_wrong' in N.sc_verdict({'a': w, 'b': g})['disagree']
+    assert N.sc_verdict({'a': g, 'b': g})['passes']
+
+
+def test_sleep_sc_hook_off_is_sleep_and_row_losses():
+    import os, pytest, torch
+    from creative import sleep
+    from custom_io.data import Dataset, collate, load_rows
+    ck, tr = os.path.expanduser('~/c7d/s100/Nprime.pt'), os.path.expanduser('~/work/data/train.jsonl')
+    if not (os.path.exists(ck) and os.path.exists(tr)):
+        pytest.skip('no N-prime / train file')
+    torch.set_num_threads(1)
+    rows = load_rows(tr)[::4000][:48]
+    recs, rep, ext = rows[:8], rows[8:40], rows[40:48]
+    base, vocab, _ = sleep.load_parent(ck, 'cpu')
+    cfg = sleep.SleepCfg(updates=3, batch=8, lr=1e-3, warmup=2, seed=3, max_visits=8)
+    a, b = copy.deepcopy(base), copy.deepcopy(base)
+    ra = sleep.sleep(a, recs, rep, vocab, cfg, 'cpu', replay_extra=ext)
+    rb = N.sleep_sc(b, recs, rep, vocab, cfg, 'cpu', replay_extra=ext, select=False)
+    assert ra['loss'] == rb['loss'] and ra['visits'] == rb['visits']
+    assert all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), b.state_dict().values())), 'hook off must reproduce sleep.sleep bit for bit'
+    # the hook on changes only the skills slots: same records, and selection rounds fire
+    c = copy.deepcopy(base)
+    rc = N.sleep_sc(c, recs, rep, vocab, sleep.SleepCfg(updates=4, batch=8, lr=1e-3, warmup=2, seed=3, max_visits=8), 'cpu', replay_extra=ext, every=2, n_draw=16, n_pick=4)
+    assert [r['step'] for r in rc['selection']] == [2] and len(rc['selection'][0]['families']) >= 1
+    # per-row losses average to model.loss on the same batch
+    base.eval()
+    batch = collate([Dataset(rows[:8], vocab, strict=False)[i] for i in range(8)])
+    o = base.loss(batch)
+    assert abs(sum(N.row_losses(base, rows[:8], vocab)) / 8 - float((o[0] if isinstance(o, tuple) else o))) < 1e-4

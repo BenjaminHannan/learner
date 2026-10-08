@@ -4,7 +4,8 @@ C2 DEV and skills DEV (MEASURE only); C2 test / labelled never opened.
   python3 -m creative.night7d report --out DIR --parents s100 s101
 Each arm is ONE change to the standard night 1 from N' (S3's W1 = sleep_on(N', W1's records, lr 1e-3, 32 visits, seed)): V = 8 visits per record (lr 1e-3); L = lr 1e-4 (32 visits).
 W1's records are rebuilt from S1's day with S3's seeds and checked against W1_night in s3.json."""
-import argparse, copy, json, os, pickle, time
+import argparse, collections, copy, json, os, pickle, random, time
+import math
 import torch
 from creative import c2_pilot, c2_stones, rules_real as R, sleep
 from creative.sleep7d import (DATA, T_POOL, _arm_model, _by_kind, _cached, _h, _hstate, _limit, _log, _sha_file, add_adapter, adapter_state, creative, day_f, greedy_rows, score_rows, search,
@@ -416,6 +417,295 @@ def l2report(out, parents, file='l2.json', label='L2'):
     return rep
 
 
+
+# ---------------------------------------------------------------- Test SC (roadmap a92e5945fe): the model picks its own skills replay
+SC_MARKS = dict(harm="(1) harm_measure(N' DEV hits, SC DEV hits) passes: in_dist drop <= 1.5 and no family fires",
+                first_try='(2) C2 DEV first try: c2_pilot.boot(SC right, W1 right) point >= -2.0',
+                reach32='(3) multi-step reach@32 (HARD_KINDS, 154 questions): SC - W1 point >= -3.0',
+                passes='passes = (1) and (2) and (3) on a parent; the verdict needs both parents',
+                proved_wrong="SC's in_dist drop vs N' is NOT at least 1.0 smaller than W1's drop vs N' (SC_drop > W1_drop - 1.0) on BOTH parents (decided in the report)")
+SC_RECIPE = ("night 1 = W1's exact recipe (835 / 808 records, lr 1e-3, 32 visits, W1's seed, warm replay, schedule) with ONE change: after the first 32 updates, every 32 updates 1,024 fresh skills TRAIN rows are scored "
+             "(loss now - loss of the frozen pre-night N'), the 256 with the largest rise are the skills replay of the next 32 updates (512 slots, ~2 visits each, seeded shuffled)")
+SC_EVERY, SC_DRAW, SC_PICK = 32, 1024, 256
+
+
+def sc_marks(harm_passes, c2_point, reach_point, sc_drop, w1_drop):
+    """Pure. -> the SC marks on one parent (points; drops vs N')."""
+    f, r = bool(c2_point >= -2.0), bool(reach_point >= -3.0)
+    return dict(harm=bool(harm_passes), first_try=f, reach32=r, passes=bool(harm_passes and f and r), proved_wrong=bool(sc_drop > w1_drop - 1.0))
+
+
+def sc_verdict(per_parent):
+    """Pure. {parent: sc_marks} -> passes on every parent, proved_wrong on every parent, where the parents disagree."""
+    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
+                disagree=[k for k in ('harm', 'first_try', 'reach32', 'passes', 'proved_wrong') if len({m[k] for m in per_parent.values()}) > 1])
+
+
+def row_losses(model, rows, vocab, device='cpu', bs=128):
+    """Per-row model.loss (Ledger): the same terms as ledger.Ledger.loss with the batch mean left out, so mean(row_losses) == model.loss on the same batch (checked in the tests). Eval mode, no grad;
+    the model is returned to its previous mode. -> list of floats."""
+    import torch.nn.functional as F
+    from custom_io.data import Dataset, collate, to_device
+    from custom_io.models import ledger as LG
+    was = model.training
+    model.eval()
+    out = []
+    with torch.no_grad():
+        for s0 in range(0, len(rows), bs):
+            rs = rows[s0:s0 + bs]
+            ds = Dataset(rs, vocab, strict=False)
+            batch = to_device(collate([ds[i] for i in range(len(rs))]), device)
+            dev = batch['prompt_ids'].device
+            g = model.gold(batch['rows'], dev)
+            o = model.run(batch, gold=g)
+            w_row = torch.where(g['has'], 1.0, model.w_noop)
+            comm = torch.isin(g['op'], torch.tensor(LG.COMM, device=dev))
+            tot = 0.0
+            for st, (lg, la, lb) in enumerate(o['steps']):
+                lg = lg.float()
+                tot = tot + F.cross_entropy(lg, g['op'][:, st], reduction='none') * w_row
+                pa, pb = la.log_softmax(-1), lb.log_softmax(-1)
+                ga, gb = g['a'][:, st], g['b'][:, st]
+                lab = torch.logsumexp(pa.masked_fill(~ga, -1e9), -1) + torch.logsumexp(pb.masked_fill(~gb, -1e9), -1)
+                lba = torch.logsumexp(pa.masked_fill(~gb, -1e9), -1) + torch.logsumexp(pb.masked_fill(~ga, -1e9), -1)
+                nll = -torch.where(comm[:, st], torch.logaddexp(lab, lba), lab)
+                tot = tot + nll * (g['op'][:, st] > 0)
+            marg = lambda lg, m, sel: torch.where(sel, -(torch.logsumexp(lg.masked_fill(~m, -1e9), -1) - torch.logsumexp(lg, -1)), torch.zeros_like(lg[:, 0]))
+            tot = tot + F.cross_entropy(o['lmode'].float(), g['mode'], reduction='none') + marg(o['lans'], g['ans'], g['mode'] == 0) + marg(o['lword'], g['word'], g['mode'] == 1)
+            n_t = (g['gen'] >= 0).sum(1).clamp(min=1)
+            if model.copy:
+                p, gate = model.gen_copy(o['R'], o['X'], o['xm'], batch['prompt_ids'])
+                tg = g['gen']
+                ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
+            else:
+                ce = F.cross_entropy(model.readout(o['R']).float().flatten(0, 1), g['gen'].flatten(), ignore_index=-100, reduction='none').view(len(rs), -1)
+            tot = tot + (ce.sum(1) / n_t) * (g['mode'] == 2)
+            out += [float(x) for x in tot]
+    model.train(was)
+    return out
+
+
+def sleep_sc(model, records, replay_rows, vocab, cfg, device='cpu', replay_extra=None, frozen=None, select=True, every=SC_EVERY, n_draw=SC_DRAW, n_pick=SC_PICK, log=None):
+    """A faithful copy of sleep.sleep's loop (same rng consumption, same order lists, same optimiser groups, schedule, clip) with a hook on the skills-replay slots: with select=False it is sleep.sleep bit
+    for bit. With select=True, at every `every`-th update from update `every` on, `n_draw` fresh rows of `replay_rows` (random.Random(seed + 5000 + step)) are scored under the current model and under
+    `frozen` (default: a copy of the model before the night), the `n_pick` with the largest loss rise are the skills replay of the next `every` updates (balanced seeded order). -> sleep.sleep's dict + selection
+    (per round: step, family counts of the picked rows, mean rise picked / all, score_seconds) and score_seconds."""
+    from custom_io.data import Dataset, collate, to_device
+    from custom_io.train import lr_at
+    if not records:
+        return dict(loss=[], visits={}, updates=0, selection=[], score_seconds=0.0)
+    if len({r['id'] for r in records}) != len(records):
+        raise ValueError('puzzle record ids must be unique (the target cache is keyed by id)')
+    sleep.check_visits(len(records), cfg, bool(replay_rows))
+    half = cfg.batch // 2 if replay_rows else cfg.batch
+    draws = cfg.updates * half
+    rng = random.Random(cfg.seed)
+    torch.manual_seed(cfg.seed)
+    rec_order = sleep._order(len(records), draws, rng)
+    nrep = cfg.batch - half
+    n_extra = nrep // 2 if (replay_rows and replay_extra) else 0
+    rep_order = sleep._order(len(replay_rows), cfg.updates * (nrep - n_extra), rng) if replay_rows else []
+    ext_order = sleep._order(len(replay_extra), cfg.updates * n_extra, rng) if n_extra else []
+    if select and frozen is None:
+        frozen = copy.deepcopy(model)
+        frozen.eval()
+        for p in frozen.parameters():
+            p.requires_grad_(False)
+    emb = {id(m.weight) for m in model.modules() if isinstance(m, torch.nn.Embedding)}
+    decay = [p for p in model.parameters() if p.requires_grad and p.ndim >= 2 and id(p) not in emb]
+    no_decay = [p for p in model.parameters() if p.requires_grad and (p.ndim < 2 or id(p) in emb)]
+    opt = torch.optim.AdamW([{'params': decay, 'weight_decay': cfg.weight_decay}, {'params': no_decay, 'weight_decay': 0.0}],
+                            lr=cfg.lr, betas=(0.9, 0.95), fused=torch.device(device).type == 'cuda')
+    visits, losses, sel, slots, score_s = {}, [], [], None, 0.0
+    k = nrep - n_extra
+    model.train()
+    for step in range(cfg.updates):
+        if select and replay_rows and step >= every and step % every == 0:
+            t0 = time.time()
+            drawn = random.Random(cfg.seed + 5000 + step).sample(replay_rows, min(n_draw, len(replay_rows)))
+            now, then = row_losses(model, drawn, vocab, device), row_losses(frozen, drawn, vocab, device)
+            rise = [a - b for a, b in zip(now, then)]
+            top = sorted(range(len(drawn)), key=lambda i: -rise[i])[:n_pick]
+            picked = [drawn[i] for i in top]
+            order = sleep._order(len(picked), every * k, random.Random(cfg.seed + 6000 + step))
+            slots = [picked[i] for i in order]
+            dt = time.time() - t0
+            score_s += dt
+            sel.append(dict(step=step, families=dict(collections.Counter(r['family'] for r in picked)), mean_rise_picked=sum(rise[i] for i in top) / len(top), mean_rise_all=sum(rise) / len(rise),
+                            drawn=len(drawn), score_seconds=dt))
+            model.train()
+            if log:
+                log('SC select', step, dict(rise_picked=round(sel[-1]['mean_rise_picked'], 4), rise_all=round(sel[-1]['mean_rise_all'], 4), seconds=round(dt, 1)))
+        rows = [records[i] for i in rec_order[step * half:(step + 1) * half]]
+        if slots is not None:
+            j = (step % every) * k
+            rows += slots[j:j + k]
+        else:
+            rows += [replay_rows[i] for i in rep_order[step * k:(step + 1) * k]]
+        rows += [replay_extra[i] for i in ext_order[step * n_extra:(step + 1) * n_extra]]
+        for r in rows[:half]:
+            visits[r['id']] = visits.get(r['id'], 0) + 1
+        ds = Dataset(rows, vocab, strict=False)
+        batch = to_device(collate([ds[i] for i in range(len(rows))]), device)
+        for g in opt.param_groups:
+            g['lr'] = lr_at(step, cfg.updates, cfg.warmup, cfg.lr)
+        out = model.loss(batch)
+        loss, aux = out if isinstance(out, tuple) else (out, {})
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
+        opt.step()
+        opt.zero_grad(set_to_none=True)
+        losses.append(float(loss.detach()))
+    assert max(visits.values()) <= cfg.max_visits, 'a record was seen too often'
+    return dict(loss=losses, visits=visits, updates=cfg.updates, selection=sel, score_seconds=score_s)
+
+
+def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log):
+    """sleep7d.sleep_on's recipe through sleep_sc. -> (model, info)."""
+    m = copy.deepcopy(N)
+    u = visits * len(recs) // 32
+    per = 32 if replay else 64
+    mv = max(visits, math.ceil(u * per / max(len(recs), 1)))
+    t0 = time.time()
+    so = sleep_sc(m, recs, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv), device, replay_extra=warm_rows, frozen=None, log=log)
+    m.eval()
+    sel = so['selection']
+    fam_all = collections.Counter()
+    for r in sel:
+        fam_all.update(r['families'])
+    pool_mix = collections.Counter(r['family'] for r in replay)
+    n_pick = sum(fam_all.values())
+    return m, dict(updates=u, records=len(recs), visits_per_record=u * 32 / max(len(recs), 1), last_loss=sum(so['loss'][-10:]) / max(len(so['loss'][-10:]), 1) if so['loss'] else None,
+                   rounds=sel, picked_family_share={f: fam_all[f] / max(n_pick, 1) for f in sorted(pool_mix)}, pool_family_share={f: pool_mix[f] / len(replay) for f in sorted(pool_mix)},
+                   seconds=time.time() - t0, score_seconds=so['score_seconds'], train_seconds=time.time() - t0 - so['score_seconds'])
+
+
+def sc_parent(nprime, out, s1dir, s3dir, rdir, s1wdir, skills_train, skills_data, seed=0, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True, log=_log, max_records=None, b2=None):
+    """One parent's Test SC. DIR/<name>/sc.json is written after every stage; SC.pt is a cached stage. Reuses (key-checked, read only) R's skills / c2 caches for N' and W1 and S1w's measure_U (W1 reach@32).
+    max_records = smoke only (recorded)."""
+    nprime = os.path.expanduser(nprime)
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s3d, rd, s1wd = (os.path.join(d, name) for d in (out, s3dir, rdir, s1wdir))
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs = time.time(), {}
+    s3 = json.load(open(os.path.join(s3d, 's3.json')))
+    a3 = s3['args']
+    seed, T = s3['seed'], s3['T']
+    mseed = seed + 777
+    assert a3['lr'] == 1e-3 and a3['visits'] == 32, 'W1 is not the standard night'
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], recipe=SC_RECIPE, marks_rules=SC_MARKS, secs=secs,
+               args=dict(seed=seed, night_seed=seed, T=T, measure_seed=mseed, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records, every=SC_EVERY, draw=SC_DRAW, pick=SC_PICK, s1=s1dir, s3=s3dir,
+                         r=rdir, s1w=s1wdir, skills_train=skills_train, skills_data=skills_data, b2=b2),
+               note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened; the pick uses only skills TRAIN rows and the model\'s own losses')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'sc.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, a3['replay_n'], seed)
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), a3['pool_limit']))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    w1p = os.path.join(s3d, 'W1.pt')
+    sha = dict(N=_sha_file(nprime), W1=_sha_file(w1p))
+    t0 = time.time()
+    recs, res['records'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    secs['records'] = time.time() - t0
+    if max_records:
+        recs = recs[:max_records]
+        res['records']['smoke_truncated_to'] = len(recs)
+    save()
+    t0 = time.time()
+    SC, info, sha['SC'] = _stage(pdir, 'SC', _h('sc', sha['N'], 1e-3, 32, seed, len(recs), res['records']['W1_night'], a3['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK),
+                                 lambda: _sc_night(N, recs, replay, warm_rows, vocab, 1e-3, 32, seed, device, log), meta, vocab, device, resume, log)
+    secs['SC'] = time.time() - t0
+    res['night'] = {k: v for k, v in info.items() if k not in ('rounds', 'picked_family_share', 'pool_family_share')}
+    res['selection'] = dict(rounds=info['rounds'], picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+                            rise_picked_vs_all=[(r['step'], r['mean_rise_picked'], r['mean_rise_all']) for r in info['rounds']])
+    log('SC night', res['night'])
+    save()
+    # measures: N', W1 (R / S1w caches), SC
+    W1, _, _ = sleep.load_parent(w1p, device)
+    W1.eval()
+    allm = dict(N=N, W1=W1, SC=SC)
+    hits, c2, c32, res['skills'], res['c2_dev'], res['reach32'], rows = {}, {}, {}, {}, {}, {}, None
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    for a, m in allm.items():
+        t0 = time.time()
+        sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
+        v = (_peek(os.path.join(rd, f'skills_{a}.pkl'), sk) if a != 'SC' else None) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda m=m: skills_dev(m, skills_data, device, skills_limit), resume, log, f'skills {a}')
+        c = (_peek(os.path.join(rd, f'c2_{a}.pkl'), ck) if a != 'SC' else None) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda m=m: greedy_rows(m, dev, vocab, device), resume, log, f'c2 dev {a}')
+        rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
+        c2[a] = c
+        res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
+        res['c2_dev'][a] = dict(first_try_right=sum(d['right'] for d in c) / len(dev), stuck_rate=1 - sum(d['fit'] for d in c) / len(dev), n=len(dev))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('measure', a, res['skills'][a], res['c2_dev'][a])
+        save()
+    if b2 and os.path.exists(os.path.expanduser(b2)):
+        b2p = os.path.expanduser(b2)
+        bv = _cached(os.path.join(pdir, 'skills_B2.pkl'), ('skills', _sha_file(b2p), skills_data, skills_limit), lambda: skills_dev(sleep.load_parent(b2p, device)[0].eval(), skills_data, device, skills_limit), resume, log, 'skills B2')
+        hits['B2'] = bv[1]
+        res['skills']['B2'] = dict(pooled5=bv[2], in_dist=bv[3], n=len(bv[1]))
+    for a in ('W1', 'SC'):
+        t0 = time.time()
+        v, how = None, 'computed'
+        mu = os.path.join(s1wd, 'measure_U.pkl')
+        if a == 'W1' and os.path.exists(mu):
+            c = pickle.load(open(mu, 'rb'))
+            kk = c['key']
+            ok = kk[1] == 'U' and kk[3] == 32 and kk[4] == mseed and kk[6] == dev_limit and len(c['v']['c32']) == len(dev) and all(x['kind'] == r['kind'] for x, r in zip(c['v']['c32'], dev))
+            if ok:
+                v, how = c['v']['c32'], f'reused {mu}'
+        if v is None:
+            def fn(a=a):
+                mm = _arm_model(allm[a], init, seed)
+                with creative(mm, True):
+                    smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
+                return score_rows(dev, smp, ks=(32,))
+            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), ('c32', sha[a], dev_limit, mseed, T, 32), fn, resume, log, f'reach32 {a}')
+        c32[a] = v
+        hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
+        res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
+        secs[f'reach32_{a}'] = time.time() - t0
+        log('reach32', a, res['reach32'][a])
+        save()
+    # marks
+    hard_ix = [i for i, r in enumerate(dev) if r['kind'] in c2_pilot.HARD_KINDS]
+    if not dev_limit:
+        assert len(hard_ix) == 154, f'{len(hard_ix)} multi-step DEV questions, expected 154'
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    right = lambda a: [float(d['right']) for d in c2[a]]
+    reach = lambda a: [float(c32[a][i]['right32']) for i in hard_ix]
+    hN, hW = harm_measure(hits['N'], hits['SC'], rows), harm_measure(hits['W1'], hits['SC'], rows)
+    w1_drop = res['skills']['N']['in_dist'] - res['skills']['W1']['in_dist']
+    ft, rc = bd(right('SC'), right('W1')), bd(reach('SC'), reach('W1'))
+    res['marks'] = dict(sc_marks(hN['passes'], ft['points'], rc['points'], hN['in_dist_drop'], w1_drop), in_dist_drop_vs_N=hN['in_dist_drop'], W1_in_dist_drop_vs_N=w1_drop, fired_vs_N=hN['fired'],
+                        first_try_SC_minus_W1=ft, multi_step_reach32_SC_minus_W1=rc, multi_step_n=len(hard_ix), W1_multi_step_reach32=res['reach32']['W1']['multi_step'], rules=SC_MARKS)
+    res['report_only'] = dict(harm_vs_W1={k: v for k, v in hW.items() if k != 'families'}, pooled5=dict(N=res['skills']['N']['pooled5'], W1=res['skills']['W1']['pooled5'], SC=res['skills']['SC']['pooled5']),
+                              harm_vs_B2={a: {k: v for k, v in harm_measure(hits['B2'], hits[a], rows).items() if k != 'families'} for a in ('N', 'W1', 'SC')} if 'B2' in hits else None,
+                              reach32=res['reach32'], pooled_first_try_SC_minus_W1=bd(right('SC'), right('W1')), cpu_seconds=dict(night=secs['SC'], scoring=info['score_seconds'], measures=sum(v for k, v in secs.items() if k.startswith(('measure_', 'reach32_')))))
+    secs['total'] = time.time() - t00
+    save()
+    log('MARKS', {k: res['marks'][k] for k in ('harm', 'first_try', 'reach32', 'passes', 'proved_wrong')})
+    return res
+
+
+def sc(nprimes, out, s1dir, s3dir, rdir, s1wdir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: sc_parent(p, out, s1dir, s3dir, rdir, s1wdir, **kw) for p in nprimes}
+
+
+def screport(out, parents):
+    """-> DIR/sc-report.json: per-parent marks, the verdict (passes on both parents; proved_wrong on both), tables."""
+    res = {p: json.load(open(os.path.join(out, p, 'sc.json'))) for p in parents}
+    pm = {p: {k: x['marks'][k] for k in ('harm', 'first_try', 'reach32', 'passes', 'proved_wrong')} for p, x in res.items()}
+    rep = dict(parents=list(parents), per_parent=pm, verdict=sc_verdict(pm), rules=SC_MARKS, recipe=SC_RECIPE,
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], night=x['night'], selection=x['selection']) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'sc-report.json'), 'w'), indent=1)
+    return rep
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
     sub = a.add_subparsers(dest='cmd', required=True)
@@ -423,6 +713,12 @@ if __name__ == '__main__':
     q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--dev-limit', type=int)
     q.add_argument('--skills-limit', type=int); q.add_argument('--pool-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only: truncate the night-1 records'); q.add_argument('--device', default='cpu')
     q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('sc'); q.add_argument('--nprime', nargs='+', required=True)
+    for f in ('s1', 's3', 'r', 's1w'):
+        q.add_argument('--' + f, required=True)
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
+    q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('screport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('l2'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s3', 'j', 'r', 'vl', 's1w'):
         q.add_argument('--' + f, required=True)
@@ -435,7 +731,13 @@ if __name__ == '__main__':
     a = a.parse_args()
     if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
-    if a.cmd == 'l2report':
+    if a.cmd == 'screport':
+        print(json.dumps(screport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'sc':
+        ex = os.path.expanduser
+        sc(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.r), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit, device=a.device,
+           resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+    elif a.cmd == 'l2report':
         print(json.dumps(l2report(a.out, tuple(a.parents), *(('l2.json', 'L2') if a.visits == 32 else (f'l{a.visits}.json', f'L{a.visits}'))), indent=1))
     elif a.cmd == 'l2':
         ex = os.path.expanduser
