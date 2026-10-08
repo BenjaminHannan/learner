@@ -33,6 +33,10 @@ grown to 23 conv layers with blocks 2; W = width 384, blocks 3, lr x 256/384.
 2. Check the 10M B2 runs for signs of a training problem: learning-rate fit for 8 blocks x 12 loops, gradient norms if
    logged, loss curves in `stdout.events.txt` (3M vs 10M), and the copy gate share.
 3. Rank the explanations (size in the wrong place; a ceiling in the test; the GEN head; optimisation; plain models only
-   gain because they start lower; anything else you find), and predict R and W before their results land.
+   gain because they start lower; B2 saturated on its calculator families and unable to express the pattern / rule
+   families, see the per-family table in the GPT prompt; anything else you find), and predict W before its results land.
+   R's first seed (401) scored 71.75 (-1.46 vs its 3M B2), with the lowest training loss of the three.
+   For the rule families (fewshot_number_rule, seq_next, rule_apply, order_chain), trace in `ledger.py` exactly how B2
+   would have to produce a correct answer (which mode, which ops), and say whether its op set and talker can express it.
 4. Propose the one next change to test, with pass marks fixed in advance and the result that would prove it wrong.
 5. End with a plain-language summary for Ben (a high-school senior): a few short paragraphs, no jargon.

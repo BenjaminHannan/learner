@@ -79,6 +79,35 @@ Mean over the 5 finished seeds: B2 +0.44, PT +3.77, LLM +15.77. B2's lead over P
 | PT (3M level: 82.1 / 61.1 / 78.9 / 82.7 / 31.3) | +4.01 | +5.47 | +5.66 | +2.38 | +0.89 |
 | LLM (3M level: 58.6 / 35.3 / 54.5 / 65.0 / 25.2) | +17.01 | +18.65 | +20.22 | +16.30 | +6.95 |
 
+**Per skill family** (exact %, all five dev files pooled, mean over the 5 seeds; about 120-200 rows per family per seed;
+selected families, the full list is 34):
+
+| family | B2 3M | B2 10M | PT 3M | PT 10M | what it asks |
+|---|---|---|---|---|---|
+| chain_ops | 100.0 | 99.9 | 94.2 | 97.9 | 2-3 step arithmetic story |
+| story_chain3 | 99.9 | 99.9 | 90.8 | 95.6 | 3-step story arithmetic |
+| state_update | 98.9 | 99.0 | 98.5 | 99.9 | track a value through updates |
+| percent_rate | 96.5 | 97.6 | 82.9 | 84.3 | "Rosa has 4 times as many pebbles as Kai (5)." -> 20 |
+| cipher_map | 97.5 | 99.2 | 51.3 | 41.3 | "Code: e=4, h=2, a=5, b=1. Write beb as numbers." -> 1 4 1 |
+| arith_bare | 85.2 | 89.4 | 66.4 | 74.8 | "Subtract 20 from 22." (some held-out formats) |
+| backward_solve | 81.2 | 81.4 | 37.2 | 63.6 | "Two numbers add up to 89 and differ by 5. The smaller?" -> 42 |
+| fewshot_number_rule | 19.1 | 18.9 | 31.8 | 44.2 | "(47, 16) -> 63; (26, 12) -> 38. Now (47, 16) -> ?" (infer the rule) |
+| seq_next | 36.2 | 37.8 | 41.5 | 51.1 | "Continue the pattern: 5, 6, 9, 14, ?" -> 21 |
+| order_chain | 43.7 | 42.6 | 51.1 | 57.3 | "Cy is older than Wren... Who is the oldest?" -> a name |
+| rule_apply | 60.9 | 62.8 | 71.2 | 74.8 | "if a number is at least 12, add 4; otherwise subtract 4. Apply it to 73." |
+| passage_qa | 78.1 | 77.5 | 84.8 | 85.8 | short facts, then a question (often a sum) |
+| table_lookup | 27.3 | 27.4 | 22.2 | 26.3 | "harbor: 58; engine: 4; ... Which word has the largest number?" |
+| list_index | 42.0 | 43.7 | 38.9 | 41.3 | "Items: bridge, falcon, kettle... Which word comes right before kettle?" |
+| digits_parity | 50.0 | 50.1 | 50.0 | 51.4 | "What is the tens digit of 764?" and similar (flat for all four) |
+
+So B2 is at or near 100% on the families its calculator program covers, and flat on the pattern / rule families, where
+the plain model does gain with size (shown). B2's calculator ops are add, subtract, multiply, divide, mod, min, max and compare over number slots, and its programs are learned only from rows whose worked steps parse into those ops;
+anything else has to be produced by WORD copy or the parallel GEN head.
+
+**First shape-probe result (seed 401 only):** R (reader grown to 23 conv layers, blocks 2) scored 71.75, i.e. -1.46 vs the
+same seed's 3M B2 and -1.74 vs its 10M depth-grown B2, although its training loss was the lowest of the three (1.156;
+GEN 0.776), so a wider reading window helps fit the web text but not the skill questions (one seed; suggested).
+
 **Final training loss (mean of the last logged step, 5 seeds):**
 - B2 total 1.232 -> 1.208. Parts: GEN characters 0.844 -> 0.828, mode 0.206 -> 0.207, word pointer 0.159 -> 0.154,
   program 0.009 -> 0.009, answer pointer 0.006 -> 0.006. (Most of B2's loss is GEN on the web fill-in rows.)
@@ -101,7 +130,11 @@ There the bigger B2 fitted its training data about 3x tighter (loss 0.0128 -> 0.
    (add your own, and tell me if any of these is wrong): the extra size went into a part that isn't B2's bottleneck (the
    2-layer, 9-character reader); B2 is near a ceiling for this test that size can't fix; the non-autoregressive GEN head
    can't use more capacity on web text; the 12-loop recurrence with 8 blocks needs a lower learning rate or more updates;
-   the plain models only gain because they start lower.
+   the plain models only gain because they start lower; B2 is already saturated on the families its calculator covers,
+   and its remaining errors are in pattern / rule families that its fixed program ops and parallel GEN head can't express,
+   so no amount of controller size helps there (the per-family table points this way). Also tell me what it means that
+   B2 is near 100% on a third of the families: can pooled-5 still show scaling for it? (I don't want to switch to a
+   test just because B2 looks better on it.)
 2. Predict the outcome of the R and W probes under your top explanations, before I see them.
 3. Propose the **one** next change you'd test (one change at a time), with pass marks fixed in advance and the result
    that would prove your explanation wrong. Keep it cheap: a 10M run costs me about $2-3 a seed.
