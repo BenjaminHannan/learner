@@ -4,7 +4,9 @@ python3 -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 cus
     [--out custom_io/results/H1-ANALYSIS.json]
 --base T1SDR: H1R, the same H1 on T1SDR (models/tool_h1.py cfg {"label": "settled", "span_copy": true, "span_idx": true, "span_end": true,
 "ans_drill": 0.25}, runs H1R_s<seed>, 3,314,389 params) against T1SDR (model 'tool', the same span cfg without the label, runs T1SDR_s<seed>,
-3,314,132); the marks and verdicts are the ones below, unchanged; output H1R-ANALYSIS.json / RESULTS-H1R.md. Without --base nothing changes.
+3,314,132); the marks and verdicts are the ones below, except H-e, resealed by MARKS Amendment 11 before any H1R run: loops:0 and donor in_dist
+each <= T1SDR + 1.0 on the same seed (the flat <= 5 and B2's values printed read-only); output H1R-ANALYSIS.json / RESULTS-H1R.md. Without --base
+nothing changes.
 Screen, seeds 200 and 201, each H1 seed against T1 on the same seed:
   H-a stability: pooled-5 at loops:32 (forced, stop ignored) - pooled-5 at the model's own stop >= -0.3 on both seeds.
   H-b parity: pooled-5 H1 - T1 >= -1.0 on both seeds; chain-5 >= 99.0 on both; no dev split's 2-seed mean of H1 - T1 below -2.0.
@@ -98,6 +100,7 @@ def screen(runs, base=None):
         return out
     n = len(F)
     mean = lambda xs: sum(xs) / len(xs)
+    leq5 = lambda lk: all(lk[k] is not None and lk[k] <= 5 for k in ('loops0', 'donor'))
     dspl = {sp: mean([f['d_split'][sp] for f in F.values()]) for sp in DEV_SPLITS}
     pr = {s: f['rounds']['pooled5'] or {} for s, f in F.items()}
     m = {'H-a stability: pooled-5 at loops:32 - own stop >= -0.3 on both seeds': dict(
@@ -111,9 +114,14 @@ def screen(runs, base=None):
          'H-d cap: pooled-5 turns at 32 <= 1% and median < 16 on both seeds': dict(
              value={s: dict(at_cap=p.get('at_cap'), median=p.get('median'), mean=p.get('mean')) for s, p in pr.items()},
              ok=all(p.get('at_cap') is not None and p['at_cap'] <= 1.0 and p['median'] < 16 for p in pr.values())),
-         'H-e leaks: loops:0 and donor in_dist <= 5 on both seeds': dict(
+         **({'H-e leaks: loops:0 and donor in_dist <= 5 on both seeds': dict(
              value={s: dict(H1=f['leak'], T1=f['t1_leak'], B2=f['b2_leak']) for s, f in F.items()},
-             ok=all(f['leak']['loops0'] is not None and f['leak']['loops0'] <= 5 and f['leak']['donor'] is not None and f['leak']['donor'] <= 5 for f in F.values())),
+             ok=all(f['leak']['loops0'] is not None and f['leak']['loops0'] <= 5 and f['leak']['donor'] is not None and f['leak']['donor'] <= 5 for f in F.values()))}
+            if base is None else
+            {'H-e leaks (MARKS Amendment 11 reseal, before any H1R run): loops:0 and donor in_dist each <= T1SDR + 1.0 on the same seed, both seeds': dict(
+             value={s: dict(H1R=f['leak'], T1SDR=f['t1_leak'], B2=f['b2_leak'], flat_le_5_read_only=leq5(f['leak'])) for s, f in F.items()},
+             ok=all(all(f['leak'][k] is not None and f['t1_leak'][k] is not None and f['leak'][k] <= f['t1_leak'][k] + 1.0 for k in ('loops0', 'donor'))
+                    for f in F.values()))}),
          'H-f audit: learned stop at p >= 0.5, cap 32, no other threshold': dict(
              value={s: f['audit'] for s, f in F.items()},
              ok=all(f['audit']['p_stop'] == 0.5 and f['audit']['cap'] == 32 and f['audit']['label'] == 'settled' for f in F.values()))}

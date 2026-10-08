@@ -722,3 +722,27 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   (a slow image download), and the project asked not to rent more, so T1SDR_s202/s203 run on BensPC's RTX 5070 Ti with the same lines
   (custom_io/queue_local/80b-pc-t1sdr-s202-203.txt; code at branch head, the model, training, data and eval files unchanged since the pin).
   Their B2 pair (q33) also ran on BensPC. Seeds 204/205 stay on Vast (t1c2). The judge prints the machine per seed.
+
+## Addendum 21, amendment 2 (written 2026-10-08 about 17:40 UTC, 1:40 PM ET, before any H1R run): H1R, H1 on T1SDR
+- **Why now:** MARKS-D0-T1 Amendment 10 item 2b (T1SDR passed its screen): H1 runs on T1SDR as built. Amendment 11 confirms the reading: the
+  queue-49 recipe trained from scratch on T1SDR's model (not a fine-tune of the T1SDR checkpoints), seeds 200/201, 24,000 steps, baseline
+  T1SDR_s200/s201 (queue 70).
+- **Model (26875d754):** 'tool_h1' with cfg {"label": "settled", "span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25},
+  3,314,389 params (T1SDR's 3,314,132 + the 257-param stop head, still created last, so every T1SDR weight starts identical at the same seed).
+  Everything not H1 is T1SDR: the call-writing losses (op, call strings, span calls, the span stop head) are T1SDR's, once; drills as T1SDR. The
+  per-round answer readout now includes the span answer pointer (its loss on mode-0 rows, every round t >= L, averaged like the other answer
+  terms) and GEN covers every non-WORD row as in T1SDR. The stop label reads each round's greedy answer including the span, against the row's
+  own target (a drill row's drawn answer). Inference keeps each row's state, tape and answer query at its own stop round. H1's stop loss is
+  logged as 'halt' ('stop' is T1S's span stop head). Tests: custom_io/tests/test_tool_h1.py (5 new; loops:8 with the stop ignored reproduces
+  T1SDR exactly; the plain-T1 H1 path is bit-identical to before).
+- **Review before the run (two independent reviewers, read-only, checked by running):** T1SDR's own loss and gradients bit-identical after the
+  span_terms refactor; plain H1 bit-identical; with K forced to 8 on 7-call rows H1R minus its halt term equals T1SDR's loss and every gradient;
+  per-row stop-round state equals Tool at loops:u. One disclosed, pre-existing, not changed (it is the sealed H1 design): a batch runs
+  n = max(K, longest gold program + 1) rounds, so when K = 4 and the batch's longest program has 6 or fewer calls (about 7.5% of batches at
+  batch 256), the op head's NOOP terms for the last call rounds are absent in that batch. "K = 4 then mostly runs 8" holds for about 69% of
+  K = 4 batches.
+- **Marks:** H-a to H-f as sealed (spec 8b/8c), except H-e, resealed by MARKS Amendment 11 before any H1R run: loops:0 and donor in_dist each
+  <= T1SDR + 1.0 on the same seed (the flat <= 5 and B2's values printed read-only), because T1SDR's own donor reads 5.0-5.6.
+- **Run:** BensPC RTX 5070 Ti (custom_io/queue_local/85-pc-h1r-screen.txt), per the project's spend note; the T1SDR baseline ran on Vast RTX
+  5090s, so the machine differs (printed beside, not a mark). Judge: `python -m custom_io.analyze_h1 --base T1SDR --results
+  custom_io/results/33-pc-confirm-b2 custom_io/results/70-vast-t1sdr <the H1R results dir>`.
