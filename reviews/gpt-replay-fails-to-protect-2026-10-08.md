@@ -40,19 +40,37 @@ Other facts (shown):
 - seq_next = "continue this sequence"; rule_apply = "apply this stated or shown rule to a new input"; cipher_map = "map letters/digits through a shown substitution". These are the families whose prompts look most like C2's: shown examples, then a query.
 - On C2 itself, night 1 lowers the stuck rate (first try fails the check) from about 99% to 65-68%. Night 2 lowers it about 2.5 more points.
 
+## 3b. New result (shown, 8:42 AM ET 10-08): a repair pass made it worse
+
+We tested option (a) from question 2 below: after each night, the model checks itself on a held slice of its own skills **training** rows (100 per family) against the same check before the night. Families that drop more than 5 points (paired 95% interval below 0) get 64 **replay-only** updates (whole batch = 1,024 of that family's other training rows, each seen about 4 times; fresh AdamW, lr 1e-3, warmup 10, cosine to 1e-4). Then it re-checks, for up to 4 rounds. A report-only arm spreads the same 256 updates evenly over all 34 families (1,024 rows, each seen about 16 times).
+
+| exact % | parent A | parent B |
+|---|---|---|
+| skills DEV, all 34 families: N' / night 1 / night 1 + repair / night 1 + even spread | 86.7 / 82.9 / **77.3** / 79.1 | 87.8 / 84.2 / **79.9** / 80.1 |
+| held training-row check during the 4 repair rounds (before the night: 92.2 / 92.5) | 87.7, 84.2, 81.7, 83.5, 80.8 | 87.4, 79.8, 83.9, 79.9, 82.2 |
+| C2 first try right: night 1 / + repair / + even spread | 31.2 / **0.0** / 2.0 | 34.4 / **14.8** / 2.7 |
+| skills DEV after night 2 (from the repaired model / from the unrepaired one) | 82.9 / 82.9 | 84.8 / 84.7 |
+| C2 first try after night 2 (repaired / unrepaired) | 38.7 / 34.0 | 40.2 / 39.5 |
+
+Also shown: night 2 by itself adds no skills harm (night 2 vs night 1: 0.0 and -0.5 points, no family drops significantly). The loss comes from night 1 and from the N' stepping stone.
+
+Facts about the optimiser that may matter: B2 was pre-trained with AdamW (betas 0.9/0.95, weight decay 0.1 on matrices), lr 1e-3, linear warmup then cosine to 1e-4, batch 64. Every night and every repair round starts a **fresh** AdamW at peak lr 1e-3 (the same peak as pre-training), with warmup 20 (night) or 10 (repair), then cosine to 1e-4. The night's replay rows are drawn fresh from all 200k training rows (each seen about once). The repair's rows are a small set reused several times.
+
 ## 4. My candidate explanations (all untested)
 
 1. **Format interference:** C2 records teach "few examples → write a rule program" on prompts that look like seq_next/rule_apply/cipher_map. The update moves exactly the representations those families use. Uniform replay gives each family about 1/34 of half a batch (about 1 row per update), against 32 C2 rows. (Against this: fewshot_number_rule, the most C2-like family, improves.)
 2. **Thin replay per family:** the problem is the replay share per family, not the format.
 3. **Too many visits per record (32) or too high a learning rate:** the model overfits the records and drifts.
 4. **Shared output head:** C2 records use a few operations and pointer patterns heavily, which shifts the prior over ops for every task.
-5. Something else.
+5. **Optimiser drift (added after 3b):** on rows the model already fits, gradients are mostly noise; a fresh Adam at the pre-training peak lr turns noise into full-size steps, so replay-only updates move the weights away. In the night, the C2 records give a real gradient and the replay half pulls back. (For: replay-only on its own training rows hurts, with every family as well as only the dropped ones. Against: the night uses the same lr for ~1,200 updates and, from a damaged model, it restores skills.)
+6. **Overfitting a small replay set (added after 3b):** the repair reuses 1,024 rows 4-16 times; the night sees fresh rows.
+7. Something else.
 
 ## 5. Questions
 
 1. Rank these explanations (or better ones). For each, give the cheapest diagnostic using only what I have: the checkpoints B2, N', night 1 and night 2; the records; the replay rows; CPU only; no new data.
 2. What is the single best next change? It must keep every step autonomous (the deployed model must be able to do it alone, with no hand-picked families or hand-tuned values). Options I'm considering:
-   - (a) a repair pass after each night: the model checks itself on a held slice of its own training rows and does replay-only updates on families that dropped;
+   - (a) a repair pass after each night: the model checks itself on a held slice of its own training rows and does replay-only updates on families that dropped (**tested, section 3b: made it worse**; say whether a different version of it could work, and why);
    - (b) more replay overall;
    - (c) replay weighted toward rows whose loss rose most during the night;
    - (d) fewer visits per record or a lower learning rate;
