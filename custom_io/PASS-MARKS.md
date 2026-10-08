@@ -658,7 +658,10 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   d = the char's distance from the end of its own string (0 = its last char, 0..39).
 - **Disclosure:** like the entry index, d comes from the text layout (which chars exist in the char's string, i.e. its length). A result's
   units digit is its entry's last char (d = 0) at every length. No rule picks the start, no length is given, nothing else changes.
-  The small CPU proxy (one seed, trained on 1-3 digits) is suggestive only and decides nothing (Amendment 7).
+  The small CPU proxy (one seed, trained on 1-3 digits) is suggestive only and decides nothing (Amendment 7). Its numbers, with a
+  correction: re-run with 3 CPU threads instead of 4, T1SI's proxy answer copy at 7-9 digits was 82.5/71.4/64.6, not the 100/100/100 quoted
+  in amendment 3, so that proxy figure was run-to-run noise and showed nothing. Matched runs (3 threads, same seed), copy at 7/8/9 digits:
+  T1SI operands 100/100/100, answers 82.5/71.4/64.6; T1SD operands 90.3/91.3/81.8, answers 85.7/71.4/72.9 (n 23-63 per cell).
 - **Marks (MARKS Amendment 7 + Clarification 7a), seeds 200/201, T1SI's recipe, rented RTX 5090s:** R1 per side (operand, answer) and seed:
   the unweighted mean of the nine length cells >= 99 and every cell >= 97, n >= 1000 per cell, unambiguous set (reading (a), all nine >= 99,
   printed beside, not a mark). R2 pooled-5 - B2 >= -2.0. R3 1-3 digit cells >= 99 and no more than 1.0 below T1's Amendment 4 re-score.
