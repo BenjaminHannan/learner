@@ -1,0 +1,193 @@
+{
+ "parents": [
+  "s100",
+  "s101"
+ ],
+ "passes": false,
+ "proved_wrong": true,
+ "per_parent": {
+  "s100": {
+   "harm": {
+    "point1": false,
+    "point2": false,
+    "rule": "(a) DEV harm measure of the repaired model against its pre-night model passes: W1r vs N' and W2r vs W1r (in_dist drop <= 1.5, no family fires: drop > 5 points and paired 95% interval of b - a below 0)"
+   },
+   "first_try": {
+    "point1_points": -31.25,
+    "point2_points": 4.6875,
+    "point1": false,
+    "point2": true,
+    "rule": "(b) C2 DEV first try right within 2 points of the unrepaired night: W1r - W1 and W2r - W2 >= -2 (paired bootstrap point estimate, c2_pilot.boot)"
+   },
+   "proved_wrong": {
+    "flag": true,
+    "point1_in_dist_drop": 9.441176470588232,
+    "point2_in_dist_drop": -5.647058823529406,
+    "point2_flag": false,
+    "rule": "PROVED WRONG: after repair, DEV in_dist is still more than 1.5 below the pre-night model at point 1 (W1r vs N') on both parents (point 2 reported too); rreport decides \"both parents\""
+   },
+   "report_only": {
+    "E_vs_R": {
+     "point1": {
+      "in_dist_R": 77.25,
+      "in_dist_E": 79.1470588235294,
+      "fired_R": [
+       "arith_bare",
+       "backward_solve",
+       "cipher_map",
+       "compare_numbers",
+       "distance_units",
+       "div_exact",
+       "fewshot_number_rule",
+       "kin_chain",
+       "list_index",
+       "list_stats",
+       "object_track",
+       "order_chain",
+       "passage_qa",
+       "prop_eval",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "state_update",
+       "story_addsub",
+       "table_calc",
+       "var_chain",
+       "verify_claim",
+       "word_filter"
+      ],
+      "fired_E": [
+       "cipher_map",
+       "digits_parity",
+       "fewshot_number_rule",
+       "kin_chain",
+       "list_index",
+       "list_stats",
+       "object_track",
+       "order_chain",
+       "passage_qa",
+       "prop_eval",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "state_update",
+       "word_filter"
+      ]
+     },
+     "point2": {
+      "in_dist_R": 82.8970588235294,
+      "in_dist_E": 82.5,
+      "fired_R": [
+       "rule_apply"
+      ],
+      "fired_E": []
+     }
+    },
+    "updates": {
+     "point1": 256,
+     "point2": 0
+    },
+    "rule": "E against R (in_dist, fired families), the update counts, everything against N'"
+   },
+   "passes": false,
+   "passes_rule": "PASS = (a) and (b) at both points on both parents"
+  },
+  "s101": {
+   "harm": {
+    "point1": false,
+    "point2": true,
+    "rule": "(a) DEV harm measure of the repaired model against its pre-night model passes: W1r vs N' and W2r vs W1r (in_dist drop <= 1.5, no family fires: drop > 5 points and paired 95% interval of b - a below 0)"
+   },
+   "first_try": {
+    "point1_points": -19.53125,
+    "point2_points": 0.78125,
+    "point1": false,
+    "point2": true,
+    "rule": "(b) C2 DEV first try right within 2 points of the unrepaired night: W1r - W1 and W2r - W2 >= -2 (paired bootstrap point estimate, c2_pilot.boot)"
+   },
+   "proved_wrong": {
+    "flag": true,
+    "point1_in_dist_drop": 7.852941176470594,
+    "point2_in_dist_drop": -4.882352941176478,
+    "point2_flag": false,
+    "rule": "PROVED WRONG: after repair, DEV in_dist is still more than 1.5 below the pre-night model at point 1 (W1r vs N') on both parents (point 2 reported too); rreport decides \"both parents\""
+   },
+   "report_only": {
+    "E_vs_R": {
+     "point1": {
+      "in_dist_R": 79.92647058823529,
+      "in_dist_E": 80.13235294117646,
+      "fired_R": [
+       "arith_bare",
+       "cipher_map",
+       "compare_numbers",
+       "digits_parity",
+       "distance_units",
+       "fewshot_number_rule",
+       "list_stats",
+       "object_track",
+       "odd_one_out",
+       "passage_qa",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "state_update",
+       "story_addsub",
+       "word_filter"
+      ],
+      "fired_E": [
+       "cipher_map",
+       "digits_parity",
+       "fewshot_number_rule",
+       "list_index",
+       "list_stats",
+       "object_track",
+       "order_chain",
+       "passage_qa",
+       "prop_eval",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "state_update",
+       "story_chain3",
+       "table_calc",
+       "word_filter"
+      ]
+     },
+     "point2": {
+      "in_dist_R": 84.80882352941177,
+      "in_dist_E": 84.19117647058823,
+      "fired_R": [],
+      "fired_E": [
+       "kin_chain"
+      ]
+     }
+    },
+    "updates": {
+     "point1": 256,
+     "point2": 0
+    },
+    "rule": "E against R (in_dist, fired families), the update counts, everything against N'"
+   },
+   "passes": false,
+   "passes_rule": "PASS = (a) and (b) at both points on both parents"
+  }
+ },
+ "updates": {
+  "s100": {
+   "point1": 256,
+   "point2": 0
+  },
+  "s101": {
+   "point1": 256,
+   "point2": 0
+  }
+ },
+ "rules": {
+  "harm": "(a) DEV harm measure of the repaired model against its pre-night model passes: W1r vs N' and W2r vs W1r (in_dist drop <= 1.5, no family fires: drop > 5 points and paired 95% interval of b - a below 0)",
+  "first_try": "(b) C2 DEV first try right within 2 points of the unrepaired night: W1r - W1 and W2r - W2 >= -2 (paired bootstrap point estimate, c2_pilot.boot)",
+  "proved_wrong": "PROVED WRONG: after repair, DEV in_dist is still more than 1.5 below the pre-night model at point 1 (W1r vs N') on both parents (point 2 reported too); rreport decides \"both parents\"",
+  "passes": "PASS = (a) and (b) at both points on both parents",
+  "report_only": "E against R (in_dist, fired families), the update counts, everything against N'"
+ }
+}

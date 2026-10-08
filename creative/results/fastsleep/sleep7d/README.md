@@ -139,3 +139,29 @@ How to read it:
 - *Suggested:* the adapter is trained on one worker and then used on the next one, after that worker has slept. Night 2's loop 1 is also half off-policy (53-54% of kept rows had fits only from adapter-off tries).
 - *Shown, s100 only:* J's worker gets better on near-copy first try (+26.5). J's day-2 records hold far fewer last_digit programs (218 vs 382). *Suggested:* fewer, more consistent programs per question teach x mod 10 better. s101 shows the same sign but much smaller (+4.9, interval crosses 0).
 - *Shown:* both arms carry the per-night skills harm (vs N': in_dist -3.1 to -3.8, 7-9 families firing). J adds none on s100 and a little on s101 (word_filter; pooled-5 97.4 vs 98.9).
+
+## Test R (finished 12:42 UTC 10-08 = 8:42 AM ET; roadmap e9e0bd2aeb, `creative/repair7d.py`, `r/`)
+
+The repair pass runs after each night. The model checks itself on a held slice of its own skills training rows (100 per family, 3,400 rows, never DEV), compared with the same check before that night. Families that fire under the new harm rule get 64 replay-only updates on 1,024 of their other training rows (lr 1e-3), and the check runs again, for up to 4 rounds. Arm E (report only) gets the same number of updates spread evenly over all 34 families. Point 1 is night 1 (W1, from N'). Point 2 is night 2 (each arm sleeps on J's W day-2 records, from its own repaired model). The DEV harm measure and C2 DEV first try are taken on every model.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: N' / W1 / W1r / W1e | 86.7 / 82.9 / **77.3** / 79.1 | 87.8 / 84.2 / **79.9** / 80.1 |
+| held-slice check during point-1 repair (pre-night 92.2 / 92.5) | 87.7, 84.2, 81.7, 83.5, 80.8 (families firing: 12, 20, 21, 16, 23) | 87.4, 79.8, 83.9, 79.9, 82.2 (8, 21, 17, 18, 19) |
+| repair updates point 1 / point 2 | 256 / 0 | 256 / 0 |
+| (a) harm vs the pre-night model, point 1 (W1r vs N') | drop 9.4, 23 families fire, **fail** | drop 7.9, 16 fire, **fail** |
+| (a) harm, point 2 (W2r vs W1r) | in_dist +5.6 better, rule_apply fires, fail | +4.9 better, nothing fires, pass |
+| (b) C2 first try, W1r - W1 (mark >= -2) | 31.2 -> 0.0, **-31.2** [-37.1, -25.8] fail | 34.4 -> 14.8, **-19.5** [-24.6, -14.8] fail |
+| (b) C2 first try, W2r - W2 | 34.0 -> 38.7, +4.7 [0.8, 8.6] pass | 39.5 -> 40.2, +0.8 [-2.3, 3.9] pass |
+| E (even spread): W1e in_dist / C2 first try | 79.1 / 2.0 | 80.1 / 2.7 |
+| after night 2, vs N' (report): W2 / W2r / W2e in_dist drop | 3.8 / 3.8 / 4.2 | 3.1 / 3.0 / 3.6 |
+| night 2 alone (W2 vs W1, J's arm, no repair) | drop -0.0, nothing fires | drop -0.5, nothing fires |
+
+Verdict: **R fails on both parents and is proved wrong** (the rule fixed in advance: after repair, point-1 in_dist is still more than 1.5 below N' on both parents; it is 9.4 and 7.9 below).
+
+How to read it:
+- *Shown:* replay-only updates on the model's own training rows make the skills harm worse, not better. The held check falls round after round (s100 87.7 to 80.8), and more families fire after the first round than before it. DEV agrees: W1r is 5.6 / 4.3 below W1. The even spread does the same (79.1 / 80.1), so it isn't about which families are picked.
+- *Shown:* the same updates wipe out the C2 gain from night 1 (first try 31 -> 0, 34 -> 15; E 2-3%).
+- *Shown:* night 2 (half C2 records, half replay drawn fresh from all 200k training rows) brings W1r back up to the unrepaired level (in_dist 82.9 / 84.8, C2 first try 38.7 / 40.2). So in the end, after two nights, the repair changed nothing (vs N' 3.8 / 3.0 against 3.8 / 3.1).
+- *Shown (J's W arm):* night 2 by itself adds no skills harm (W2 vs W1: 0.0 / -0.5, nothing fires). The cost comes from night 1 and from the N' stepping stone.
+- *Suggested, untested:* the cause is the optimiser, not the data. Each repair round starts a fresh AdamW at lr 1e-3, which is B2's own peak pretraining lr. On rows the model already fits, the gradients are mostly noise, and Adam scales noise up to full-size steps, so the weights drift. A second suspect is overfitting to small row sets: R visits each of its 1,024 rows 4 times per round, and E visits its 1,024 rows 16 times. In the night, by contrast, replay rows are fresh and seen about once each. A 2 x 2 check on N' (lr 1e-3 or 1e-4, by 1,024 rows reused or fresh rows each step, 256 replay-only updates, held check) would tell the two apart.
