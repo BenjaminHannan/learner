@@ -87,7 +87,9 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   (10-08, Test VL):** a 10x lower learning rate costs no skills (old skills even rise slightly) and keeps nearly all
   of the night's gain on the new rules. Two nights at the lower rate (Test L2) also cost no skills, but the new
   rules climbed only about half as much and the search did not widen. More practice per night at the lower rate is
-  being tested (L64).
+  being tested (L64). Ben asked (2:50 PM ET 10-08) what happens if the model chooses its own training set. First
+  step, Test SC: at the fast rate, the model picks which old skills to re-practise during the night, by checking
+  which ones it is starting to forget.
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1405,6 +1407,32 @@ families x 200, two parents).**
     same marks. If that misses too, the trade-off goes to an outside opinion (a prompt under reviews/) before more
     screens.
   - Job 9 is not changed.
+- **Ruled (10-08, Ben's question at 2:50 PM ET: "What if we had the model choose its training set"): Test SC, the
+  model picks which old skills rows to re-practise during the night.** Today the night's skills replay half is
+  random rows from the 200k skills TRAIN file; every setting of the mix is ours. The first thing to hand over is the
+  part tied to the harm: which old rows to rehearse. It is tested on the fast-rate night, which has the climb and the
+  harm (L64 and the lr line try the other route: the low rate, adding climb).
+  - Arm SC: night 1 from N' with W1's exact recipe (lr 1e-3, 32 visits, the same 835 / 808 records, seed, warm
+    add/mult replay and update count). One change: the 16 skills replay rows in each batch. The model keeps a frozen
+    copy of itself from before the night. Every 32 updates it draws 1,024 fresh skills TRAIN rows, scores each with
+    its own loss now and with the frozen copy's loss, and uses the 256 whose loss rose most as the skills replay for
+    the next 32 updates (each seen about twice). The first 32 updates use random rows, since nothing has risen yet.
+  - Deployable: it uses only the model's own losses on its own old training rows and a copy of itself. There is no
+    answer key beyond those rows' own targets and no outside judge. Autonomy label: no outside help, but not own
+    choices (the picking rule and its sizes are ours; 7c table). A later step can make the rule learned.
+  - Marks, on both parents (DEV, s100 and s101; control W1):
+    1. Harm against N' passes the 10-08 measure (in_dist drop at most 1.5, no family fires).
+    2. C2 first try within 2 points of W1 (SC - W1 at least -2, paired point estimate).
+    3. Multi-step reach@32 within 3 points of W1 (SC - W1 at least -3; W1 13.0 / 14.3). This is the night-1 sign of
+       the climb that L lost (L 6.5 / 7.1).
+  - Proved wrong: SC's in_dist drop against N' is not at least 1.0 smaller than W1's (3.8 / 3.6) on both parents.
+    Picking rows by forgetting then does not protect skills at the fast rate.
+  - Report only: the family mix of the picked rows, loss rise on picked against random rows, and CPU time.
+  - If SC passes, night 2 with SC at 1e-3 is next, judged by L2's marks against W2. If it fails but is not proved
+    wrong, the next single change is letting the model also set the replay share (more replay when its forgetting
+    signal is high). Choosing which new records to sleep on comes after that.
+  - Runs after L64 on the fast-sleep CPU, or on a free PC or Mac slot or Vast per the compute rule; CPU, DEV only.
+    Job 9 is not changed.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1517,7 +1545,7 @@ CPU):
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL, L2 and L64 in new files, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL, L2, L64 and SC in new files, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1699,3 +1727,7 @@ CPU):
 - **10-08, 1:15 PM ET:** L2 ruled (fast-sleep 5b74064b4b): skills kept over two nights at lr 1e-4, multi-step climb
   missed on both parents (about half of W2's), not proved wrong. L64 runs as fixed before; added a second
   proved-wrong line (L64 - L2 below +1.0 on both) before its results, and lr 3e-4 as the next change if it misses.
+- **10-08, 3:00 PM ET:** Ben asked what happens if the model chooses its own training set (relayed by the
+  coordinator). Accepted Test SC: on the fast-rate night, the model picks its skills replay rows by its own loss
+  rise against a frozen pre-night copy. Marks: harm passes, C2 first try within 2 of W1, multi-step reach@32 within
+  3 of W1; proved wrong if the drop is not 1.0 below W1's on both parents. Section 0 updated.
