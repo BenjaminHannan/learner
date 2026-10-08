@@ -180,7 +180,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
-    assert not b2_extra.get('eg_embed'), 'the plain arms have no EmbeddingGemma front yet (spec section 3 needs one if stage 2b picks EGE): not built'
+    if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM} and a.public == 'none', 'with eg_embed only the B2 and PT arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)

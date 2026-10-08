@@ -63,6 +63,58 @@ def test_queue_kinds():
         assert got == [('DATA', 'g8a-data'), ('SPEED', 'g8a-speed'), ('8a-3M-s400', 'g8a'), ('T', 'train'), ('H', 'hf')], got
 
 
+class FakeEG:
+    """Stands in for the frozen EmbeddingGemma 2 (271M params, needs transformers >= 5.19): fixed random per-char states."""
+    def encode(self, prompts, T, device, chars=True):
+        import torch
+        g = torch.Generator().manual_seed(7)
+        return torch.randn(len(prompts), T, 768, generator=g).to(device), torch.zeros(len(prompts), 768)
+
+
+def _batch(vocab):
+    from custom_io.data import Dataset, collate
+    rows = [dict(id=f'r{i}', prompt=p, answer=a, accepted=[a], family=f, level=1, stage=1, variant='v', steps=st)
+            for i, (p, a, f, st) in enumerate([('What is 12 + 30 ?', '42', 'arith_bare', ['12 + 30 = 42']), ('Echo: sune', 'sune', 'copy_word', []),
+                                                ('Tom has 5 apples and gets 7 more . How many ?', '12', 'story_addsub', ['5 + 7 = 12'])])]
+    ds = Dataset(rows, vocab)
+    return collate([ds[j] for j in range(len(rows))])
+
+
+def test_gemma_front_is_plain_at_step_0():
+    import torch
+    from custom_io.models import build
+    v = C.vocab()
+    cfg = dict(d_model=64, n_layers=2, n_heads=4)
+    torch.manual_seed(3); a = build('plain_tf_steps_g', v, **cfg)
+    torch.manual_seed(3); b = build('plain_tf_steps_g', v, eg_embed=True, **cfg)
+    b._eg = [FakeEG()]
+    assert b.n_params() - a.n_params() == 2 * 768 + 768 * 64 + 64, (b.n_params(), a.n_params())
+    for k, t in a.state_dict().items():
+        assert torch.equal(t, b.state_dict()[k]), k           # every plain weight starts identical (the adapter is built last)
+    batch = _batch(v)
+    assert torch.equal(a.loss(batch), b.loss(batch)), 'zero-initialised front must not change the loss at step 0'
+    assert a.generate(batch) == b.generate(batch)
+    b.loss(batch).backward()
+    assert b.eg_proj.weight.grad.abs().sum() > 0, 'the adapter gets gradients'
+    with torch.no_grad():
+        b.eg_proj.weight.normal_(0, 0.5)
+    assert not torch.equal(a.loss(batch), b.loss(batch)), 'a non-zero adapter changes the input'
+    # nothing is added past the prompt: the front is zero at BOS, SEP and every position after the prompt
+    b._set_front(batch, 50)
+    lens = batch['prompt_mask'].sum(1)
+    assert b._front[:, 0].abs().sum() == 0 and all(b._front[i, 1 + int(lens[i]):].abs().sum() == 0 for i in range(len(lens)))
+    assert b.size()['frozen_borrowed'] == 271_002_624 and a.size()['frozen_borrowed'] == 0
+
+
+def test_plain_lm_refuses_the_front():
+    from custom_io.models import build
+    try:
+        build('plain_lm', C.vocab(), d_model=64, n_layers=1, n_heads=4, eg_embed=True)
+    except AssertionError:
+        return
+    raise AssertionError('plain_lm must refuse eg_embed')
+
+
 # ---- analyze_8a on fake numbers ---------------------------------------------------------------------------------------------
 def fake(p5, c5=100.0, leak=0.5, calc=None):
     """A RESULT.json with five splits of 100 rows each whose pooled-5 is p5 (%)."""

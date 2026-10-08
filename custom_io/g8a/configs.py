@@ -70,7 +70,7 @@ def b2_cfg(rung, extra=None):
     if rung == '3M':
         cfg = dict(B2_S)
     else:
-        base = dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=8, mlp=r['mlp'], copy=True)
+        base = dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=8, mlp=r['mlp'], copy=True, **(extra or {}))      # extras (eg_embed: the adapter) are counted in the block choice
         c1, per = n('ledger', dict(base, blocks=1)), _per_unit('ledger', base, 'blocks', 1)
         best = min(range(1, 41), key=lambda b: abs(c1 + (b - 1) * per - r['target']))
         cfg = dict(base, blocks=best)
@@ -85,9 +85,10 @@ def plain_cfg(rung, b2=None, extra=None):
     """Plain arm config matched to B2's trained size (+-2%): width as B2, nearest layer count with today's 4x feed-forward; only if that is
     outside the band is the feed-forward width trimmed (3M therefore stays plain_tf_steps' own 4 layers x 1024)."""
     r = RUNGS[rung]
-    target = n('ledger', b2 or b2_cfg(rung))
+    b2 = b2 or b2_cfg(rung)
+    target = n('ledger', b2)
     d, h = r['width'], r['heads']
-    base = dict(d_model=d, n_heads=h)
+    base = dict(d_model=d, n_heads=h, **({'eg_embed': True} if b2.get('eg_embed') else {}))      # test 8a-G: the plain step arm gets the same frozen-Gemma front (its adapter counts)
     c1, per = n('plain_tf_steps_g', dict(base, n_layers=1)), _per_unit('plain_tf_steps_g', base, 'n_layers', 1)
     best = min(range(1, 61), key=lambda L: abs(c1 + (L - 1) * per - target))
     cfg = dict(base, n_layers=best)
@@ -96,11 +97,18 @@ def plain_cfg(rung, b2=None, extra=None):
     return dict(cfg, **(extra or {}))
 
 
+def eg_adapter_params(d):
+    """Trained parameters of the frozen-Gemma front's adapter: LayerNorm(768) + Linear(768, d)."""
+    return 2 * 768 + 768 * d + d
+
+
 def sizes(rung, b2_extra=None):
     """{'B2': cfg, 'PT': cfg, 'LLM': cfg} and the counts."""
     b2 = b2_cfg(rung, b2_extra)
     pc = plain_cfg(rung, b2)           # matched to B2's actual count (n_loops raised by the caps included), within 2%
-    cfgs = {B2_ARM: b2, PT_ARM: pc, LLM_ARM: dict(pc)}
+    cfgs = {B2_ARM: b2, PT_ARM: pc}
+    if not b2.get('eg_embed'):          # plain_lm has no Gemma front: with eg_embed (test 8a-G) the arms are B2 and PT only
+        cfgs[LLM_ARM] = dict(pc)
     return cfgs, {a: n(MODEL_OF[a], c) for a, c in cfgs.items()}
 
 
@@ -108,14 +116,18 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
     """Assert section 2's bands. Returns the counts. A run outside its band does not count (the launcher refuses it)."""
     cfgs, counts = (cfgs, counts) if cfgs else sizes(rung)
     r, b2 = RUNGS[rung], counts[B2_ARM]
+    eg = bool(cfgs[B2_ARM].get('eg_embed'))
+    ref = B2_S_PARAMS + (eg_adapter_params(r['width']) if eg else 0)      # test 8a-G: B2_S + the adapter (EGE-3M, 3,500,881 at the old caps)
     if rung == '3M':
         if exact_3m:
-            assert b2 == B2_S_PARAMS, f'3M B2 must be today\'s {B2_S_PARAMS:,}, got {b2:,}'
+            assert b2 == ref, f'3M B2 must be today\'s {ref:,}, got {b2:,}'
         else:           # caps sized from the data (addendum E) grow the position / place tables: allowed, within 3% of today's, disclosed in box.json
-            assert abs(b2 / B2_S_PARAMS - 1) <= 0.03, f'3M B2 {b2:,} is more than 3% from today\'s {B2_S_PARAMS:,}'
+            assert abs(b2 / ref - 1) <= 0.03, f'3M B2 {b2:,} is more than 3% from today\'s {ref:,}'
     else:
         assert abs(b2 / r['target'] - 1) <= r['band'], f'{rung} B2 {b2:,} outside {r["target"]:,.0f} +-{100 * r["band"]:.0f}%'
     for a in (PT_ARM, LLM_ARM):
+        if a not in counts:
+            continue
         assert abs(counts[a] / b2 - 1) <= PLAIN_BAND, f'{rung} {a} {counts[a]:,} is not within {100 * PLAIN_BAND:.0f}% of B2 {b2:,}'
     return counts
 

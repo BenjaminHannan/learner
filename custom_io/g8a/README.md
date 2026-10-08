@@ -33,6 +33,6 @@ skills builds `local_runner setup` already makes.
 Queue line kinds added to `local_runner`: `g8a:` (job), `g8a-speed:` (probe), `g8a-data:` (data rebuild). Jobs wait for `WORK/data8a/READY.json`. The speed probe's
 accumulation counts are read from `results/45-pc-8a-speed/8a-speed/speed.json` by every job.
 
-Not built: an EmbeddingGemma front for the plain arms (needed only if the reader pick is EGE; the job refuses `eg_embed`).
+8a-G (Gemma-embedder growth test): `--b2-extra '{"eg_embed": true}'` gives B2 the frozen EmbeddingGemma 2 front (EGE) and the plain step arm (`plain_tf_steps_g`, `models/plain_lm.py`) the same front: each prompt char's embedding gets `eg_proj(ln(H))`, zero-initialised, so at step 0 it equals PT (unit-tested). Arms are B2 and PT only (no LLM, no public model). The adapter (LayerNorm + Linear, 198,400 at d=256) counts as trained parameters; `check_bands` matches PT to EGE within 2%, and the frozen Gemma text part (N_TEXT) is counted in `size()['whole']`. The box needs transformers >= 5.19 (`TFVER=5.19.0 EG=1 box.sh`, which runs `python -m custom_io.models.eg check cuda`).
 
 Web slices: 3M and 10M read `slice_rung30.jsonl`, whose first documents are exactly `slice_rung10.jsonl` (byte-checked); the pool builder stops at its piece budget. The slices yield 95.5% of their token budget as cloze pieces, so a pool up to 6% short of its web budget is accepted and disclosed in its manifest (30M: web about 61% instead of 62%); more than that refuses to build.

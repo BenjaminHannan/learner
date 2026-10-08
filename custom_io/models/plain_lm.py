@@ -40,7 +40,11 @@ class FlexBlock(nn.Module):
 
 
 class PlainStepsG(PlainTFSteps):
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None):
+    """eg_embed=True (8A-G, test 8a-G): the same frozen EmbeddingGemma 2 front as ledger.py's eg_embed. Every prompt char's input embedding also gets
+    eg_proj(ln_eg(H)), H = EmbeddingGemma's state of the token holding that char (models/eg.py, aligned per char), at the real prompt positions only (BOS, SEP, the
+    steps / answer positions and padding get nothing). eg_proj is zero-initialised and built last, so at step 0 the model computes exactly what the same-seed model
+    without the front computes. The frozen part is held in a list (never trained, counted or saved); ln_eg + eg_proj count as trained parameters."""
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None, eg_embed=False, eg_path=None):
         super().__init__(vocab, d_model, n_layers, n_heads, n_loops, place)
         h = int(hidden) if hidden is not None else int(mlp * d_model)
         if h != 4 * d_model:      # only then are the blocks rebuilt, so the default really is plain_tf_steps
@@ -49,9 +53,51 @@ class PlainStepsG(PlainTFSteps):
             for b in self.blocks:
                 for lin in (b.proj, b.out):
                     nn.init.normal_(lin.weight, std=0.02 / math.sqrt(2 * n_layers * n_loops))
+        self.eg_embed, self._front = bool(eg_embed), None
+        if self.eg_embed:       # created after every other module and zero-initialised (building the Linear draws RNG after every plain weight)
+            from custom_io.models.eg import EG_DIM, FrozenEG
+            self._eg = [FrozenEG(eg_path)]
+            self.ln_eg, self.eg_proj = nn.LayerNorm(EG_DIM), nn.Linear(EG_DIM, d_model)
+            nn.init.zeros_(self.eg_proj.weight)
+            nn.init.zeros_(self.eg_proj.bias)
+
+    def eg(self):
+        return self._eg[0]
+
+    def _set_front(self, batch, width):
+        """[B, width, d] term for the sequence BOS prompt ...: eg_proj(ln_eg(H)) at positions 1..T where the prompt is real, zero elsewhere."""
+        if not self.eg_embed:
+            return
+        ids = batch['prompt_ids']
+        T = ids.shape[1]
+        H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], T, ids.device)
+        f = self.eg_proj(self.ln_eg(H.float())) * batch['prompt_mask'][..., None]
+        self._front = F.pad(f, (0, 0, 1, width - 1 - T))
+
+    def hidden(self, ids, loops=None, place=None):
+        x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device))
+        if place is not None:
+            x = x + self.place(place.clamp(min=0)) * (place >= 0)[..., None]
+        if self._front is not None:
+            x = x + self._front[:, :ids.shape[1]].to(x.dtype)
+        for _ in range(self.n_loops if loops is None else loops):
+            for blk in self.blocks:
+                x = blk(x)
+        return self.ln_f(x)
+
+    def size(self):
+        """Same keys as ledger.size(): the frozen EmbeddingGemma 2 text part counts toward the whole size (Ben's rule)."""
+        from custom_io.models.eg import N_TEXT
+        tr = self.n_params()
+        fz = N_TEXT if self.eg_embed else 0
+        return dict(trainable=tr, discarded=0, frozen_borrowed=fz, shipped_trainable=tr, whole=tr + fz)
 
 
 class PlainLM(PlainStepsG):
+    def __init__(self, *a, eg_embed=False, **kw):
+        assert not eg_embed, 'plain_lm has no EmbeddingGemma front (8a-G fronts the step arm, plain_tf_steps_g, only)'
+        super().__init__(*a, **kw)
+
     def _sequences(self, batch):
         """-> seq [B, W] ids (PAD after the end), tgt [B, W] (-100 where not supervised), W. tgt[i, j] is the id the model must emit at position j."""
         seqs, starts = [], []
