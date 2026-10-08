@@ -71,6 +71,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   times sooner on the kinds it was stuck on (42-43% of fresh questions within 32 tries, from 24-27%). It finds
   nothing it could not find before, and on brand-new kinds it lost the few answers it used to find. Next: use the
   trained add-on for the first 32 tries only, then search with the untrained one (Test S1b, no training needed).
+  Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
+  nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -1160,8 +1162,46 @@ it should also get faster at its own tasks. Written here before any training; th
   4. Steps per right answer are reported. They are gated only once learned halting exists: then thinking rounds per
      right answer must be at least 20% fewer, with accuracy within 1 point.
 - Proved wrong: Z - P on stuck rate has its interval's upper end below +1 on both parents.
+- **S3 result (fast-sleep a95a222e6, finished 12:42 AM ET 10-08; DEV, two parents): FAIL as written, not proved
+  wrong.** W1 is one W night from N'. P slept on 255 and 228 shaky passes; Z got the same dose as a seeded draw of half
+  skills rows, half warm rows. All three arms share the same sleep replay.
+  - Stuck rate, W1 / P / Z: s100 68.4 / 66.0 / 98.0; s101 65.6 / 62.9 / 89.5. Z - P +32.0 [26.2, 37.9] and
+    +26.6 [21.1, 32.4] (mark 1 met).
+  - First try P - Z, near-copy / multi-step / practised: +71.6 / +5.2 / -10.2 and +59.8 / +4.5 / -7.0 (mark 2 fails
+    on practised).
+  - Harm vs W1, P (Z): 0.2 (0.8) and 3.1 (3.1) (mark 3 fails on s101).
+  - Written steps per right answer, W1 / P / Z: 1.51 / 1.76 / 1.60 and 1.16 / 1.22 / 1.52.
+- **Ruled:**
+  - The fail stands as written.
+  - Mark 1's pass does not count. The control was wrong, and the fault is this spec's: "replay rows only" did not say
+    the control must keep C2. Z's dose made the worker forget C2 (near-copy first try 74-81% in W1, 4-25% in Z), so
+    Z - P mostly measures forgetting that P avoids (shown). Z won the practised group only because its dose was
+    add/mult rows (shown).
+  - Suggested, points only (per-row scores and the P and Z models were not kept): P - W1 is about -2.5 on stuck rate
+    and +2.6 on multi-step first try on both parents. Nothing about practice is shown yet.
+  - s101's harm is the same in P and Z (3.1), so it comes from a second night on top of W1, not from practice (shown on
+    one parent). J has two nights, so this goes to the fast-sleep thread's nightly harm check before J.
+  - "Faster" is not shown: steps per right answer rose a little, because P gets more multi-step rows right.
 
-**Test J, all three loops together** (only after S1b and S3 pass their screens): two days and nights from N', against
+**Test S3', the same test with a fair control** (one change: the control; screen: s100 and s101, DEV):
+- P is unchanged (same seed). Z' gets the same dose as a seeded draw of W1's own previous-night records, that is, more
+  loop-2 sleep. Everything else is the same (shared replay, number of updates, learning rate). Both arms keep C2, and
+  the only difference is what fills the dose: the worker's own shaky passes, or the creative part's finds again.
+- Keep the per-row next-day scores and both models, for paired intervals and for J.
+- Marks, on both parents (S3's marks, now against Z'):
+  1. Stuck rate: P at most Z' - 3.
+  2. No kind group's first try (near-copy, multi-step, practised) more than 2 points below Z''s.
+  3. Skills harm vs W1: P at most 2. Fixed now: if P's harm is above 2 but within 0.5 of Z''s, the ruling is
+     "practice passes; the second night's harm is a separate blocker", owned by the fast-sleep thread and fixed
+     before J.
+  4. Reported: steps per right answer, P - W1 with paired intervals.
+- Proved wrong: Z' - P on stuck rate has its paired interval's upper end below +1 on both parents. Loop 3 then adds
+  nothing over more loop-2 sleep, and J runs loops 1 and 2 only.
+- Disclosed: the control changed after S3's numbers. The marks did not change.
+- Runs on CPU after S1b.
+
+
+**Test J, all three loops together** (only after S1b and S3' pass their screens): two days and nights from N', against
 loop 2 alone (W). J's creative mode is S1b's F. Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh
 sealed C2 split (job 9 uses up C2's test) and a sealed split of the three new kinds (`knew.py`'s writer, 128 per kind,
 hash only, written before J runs and opened once).
@@ -1182,7 +1222,7 @@ hash only, written before J runs and opened once).
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3 and J in a new file, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3' and J in a new file, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1323,3 +1363,7 @@ hash only, written before J runs and opened once).
   at 512 tries did not move and the new kinds fell from 2-3% to 0, so it sharpened habits rather than widened search.
   Added Test S1b (trained add-on for the first 32 tries only, no training) and rewrote Test J's marks: K_new TEST was
   never written, so J gets an in-kind creative mark and a new-kind guard at 512 tries.
+- **S3 fails, and its control was wrong (10-08):** loop 3 failed as written (practised group and s101 harm). Its stuck
+  pass (+32.0 / +26.6) does not count, because the matched-updates control (half skills, half warm rows) forgot C2;
+  the spec had not said the control must keep it. Added Test S3': same P and marks, against a control that re-sleeps on
+  W1's own records. s101's harm comes from any second night and goes to the nightly harm check before J.
