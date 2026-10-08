@@ -92,9 +92,29 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   real prompt positions, in both training and answer writing. The 3M sizes under the addendum G caps are G-B2 3,544,913 and G-PT 3,495,936 (1.4%
   apart). Letter-reader counts are unchanged from 8a.
 - **Bug found, fix requested:** at 10M the job crashes before training, because `configs.b2_cfg` gets `n_loops` twice. The one-line fix gives
-  G-B2 10M = blocks 8, 10,496,537 (+4.97%, in band) and G-PT 13 layers, 10,603,776. The 10M boxes wait for that fix commit. The 3M boxes run on
+  G-B2 10M = blocks 8, 10,496,537 (+4.97%, in band) and G-PT 13 layers, 10,603,776. The fix landed as 612f5c5b01 (10:34 AM ET), and the 10M boxes run on it. The 3M boxes run on
   2a46cb17d0, because the 3M path does not touch that code (disclosed).
 - **Speed check folded into the screen:** the speed probe has no Gemma option. Each screen box's own timing therefore sets the caps for seeds 402-405,
   and the screen boxes self-stop at 8 hours (MAXH 8, about $4.50 a box at most). Marks, arms and readout are unchanged.
 - **Pool check:** every 8a-G box must build the same pool as 8a for its seed. Its pool MANIFEST sha must equal the 8a box's for that seed and rung,
   or the box's results do not count.
+
+## 7. Addendum B (2026-10-08, 2:50 PM ET, after the first Vast run): the screen moves to BensPC
+
+- **Why:** Ben, 2:39 PM ET 10-08 (relayed by the coordinator): "just use benspc for now". Vast credit is at $0, so there are no new rentals.
+- **What the Vast boxes left:** the four screen boxes (2 seeds x 2 rungs, both arms on each) stopped when the credit ran out. One arm-run finished:
+  G-B2 3M seed 400 = **72.42** pooled-5 (4,374 of 6,040). Thinker-off (`loops:0`) 10.48; chain-5 100; 3.16 updates/s on a 5090, 2.11 h, peak 8.9 GB.
+  Its pool MANIFEST (1d32e12a) equals 8a's seed-400 pool, so it passes the pool check. Letter-reader B2 on the same seed and pool scored 71.59, so
+  the Gemma front is worth +0.83 here (one seed, reported). The other seven arm-runs were cut partway and nothing from them is kept. Box 54861956
+  holds the finished G-B2 checkpoint and stays (stopped) until credit returns. The three boxes with nothing finished were destroyed.
+- **New plan:** the whole screen runs on BensPC's RTX 5070 Ti (16 GB) from queue `8aG-pc-screen.txt` at code 612f5c5b01 (the 10M fix; the 3M path is
+  unchanged). One job at a time, sharing the GPU with the reader/talker thread through `GPU-BUSY.txt`: data build (pool-set MANIFEST e8f32daf...),
+  then 3M s400, 10M s400, 3M s401, 10M s401, each with both arms. Inputs: data pool at da1a59cf (`claude/data-pool-8b`), own text from
+  `claude/8a-own-data`. Addendum A's pool check still applies to every PC job.
+- **Same machine:** G-B2 3M s400 runs again on the PC, so both arms of every seed and rung come from one machine. The PC run counts; the Vast 72.42 is
+  reported as a cross-machine check (suggested: they agree within about 1 point).
+- **10M memory:** both 10M arms use gradient accumulation 2 (two halves of 128 rows, still 256 rows per update, same rows and order), because the
+  letter-reader 10M B2 peaked at 21.5 GB on the 5090 and the PC has 16 GB. Disclosed: bf16 sums can differ slightly from one 256-row pass.
+- **Hours:** set from the first PC run's speed. Our guess before timing (suggested): about two days of PC time for the screen, more while the
+  reader/talker jobs hold the GPU. Seeds 402-405, if the screen says go on or unclear, also run on the PC unless credit returns.
+- Marks, arms and the screen readout are unchanged.
