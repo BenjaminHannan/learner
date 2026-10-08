@@ -631,3 +631,19 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **The single next change, named now, if answer selection is the case:** a learned entry-index signal on the span pointer's keys (which
   string, prompt or entry k, a char belongs to; from the text layout, as entry spans are; no rule picks the last result). Same recipe,
   re-screen seeds 200/201, R1-R4 unchanged. `analyze_t1s.py` prints these verdicts.
+
+## Addendum 22, amendment 3 (written 2026-10-08 about 00:20 UTC, 8:20 PM ET 10-07, after the T1S re-screen read, before any T1SI run)
+- **T1S re-screen read (custom_io/results/RESULTS-T1S.md):** NOT SHOWN: answer selection. Operand copy (unambiguous, n 395-483 per cell)
+  100/100/100/100/98.8/97.2/94.2/94.4/93.7 (s200) and 99.5/100/100/99.6/99.5/99.1/93.3/94.6/93.7 (s201) at 1-9 digits, no cell below 90, so
+  span copy is not proved wrong. Answer cells below 90: s200 at 7 digits (82.7), s201 at 8 (88.6) and 9 (86.7). R2 pass (+1.52, -0.26), R4 pass
+  (tool off 0.0, free-run call 98.1 / 98.5); R1 and R3 fail (R3: s201's 1-digit answer 96.7 is below T1's re-scored 97.9).
+- **The next change, as sealed by Amendment 5:** T1SI = model 'tool' cfg {"span_copy": true, "span_idx": true}, 3,311,572 params (+512, within
+  3% of 3.24M; code e5389aa5e). One table e_s[string] (dk wide, zero at init, so the model starts as T1S) is added to every span key:
+  string 0 = the prompt, 1 + k = entry k.
+- **Disclosure:** the index comes from the text layout (which string a char sits in, the same fact the copy already uses to stay inside one
+  string). The keys already saw tape_emb[k] through k_s, but that table is shared with the thinker; e_s is the pointer's own. No rule picks
+  the last or newest result, nothing else changes (no stacking). On the small CPU proxy (one seed, trained on 1-3 digits, 1500 steps) it
+  lifted answer copy at 7-9 digits from 88.9/76.2/72.9 to 100/100/100; suggestive only.
+- **Run and judge:** same recipe, seeds 200/201, on the same two boxes (custom_io/queue/t1a|t1b/53-t1si-*.sh, re-scored by 54-wc-t1si-*.sh
+  with the Amendment 4 scorer). R1-R4 and the path-read proved-wrong line unchanged; R3 compares against the same T1 re-scored values:
+  `python -m custom_io.analyze_t1s --arm T1SI --results ...33-pc-confirm-b2 ...40-vast-t1 ...53-vast-t1si --wc ...51-vast-wc-t1 ...54-vast-wc-t1si`.
