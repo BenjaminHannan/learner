@@ -3,6 +3,7 @@
 #  2. EG=1 (default): transformers $TFVER (default 5.19.0), EmbeddingGemma 2 at its pinned revision into $J/eg2, `python -m custom_io.models.eg check cuda` must be ok.
 #  3. B2X values true/false become JSON booleans (B2X=eg_embed:true).
 #  4. CK=0 by default (no checkpoint printing: it keeps the box up for hours); END_SLEEP 1800.
+#  5. ACCUM=K: B2 trains each 256-row update as K micro-batches (36 register slots at 10M do not fit 32 GB in one).
 # Runs on a Vast GPU box as `bash -c "$(this file)" cio`.
 # MODE=job: one rung x seed (custom_io.g8a.job in Vast mode: pool, global caps, arms B2 PT LLM one after another; every folder is printed into the log
 #           as RBEGIN/R|/REND base64 lines with a sha256). Needs RUNG, SEED. The own text and web slices are rebuilt and hash-checked by custom_io.g8a.get_data.
@@ -17,7 +18,7 @@ PIN=50ee17163276061255e76b1a0039951b5de223b5
 OWNSHA=e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
 DPREF=${DPREF:-da1a59cf917f8a5fece264516ce069d4ca45a652}   # data-pool commit the 3M boxes fetched (before the 30M slice grew)
 R=https://github.com/BenjaminHannan/learner
-ARMS=${ARMS:-}; B2X=${B2X:-}; LRS=${LRS:-1.0}; CK=${CK:-0}; OVL=${OVL:?OVL commit required}; EG=${EG:-1}; PACE=${PACE:-100}; CKWAIT=${CKWAIT:-300}; MODE=${MODE:-job}; RUNG=${RUNG:-3M}; SEED=${SEED:-0}; TFVER=${TFVER:-5.19.0}; MAXH=${MAXH:-6}; JOBH=${JOBH:-5}; DPH=${DPH:-0}
+ARMS=${ARMS:-}; B2X=${B2X:-}; LRS=${LRS:-1.0}; CK=${CK:-0}; OVL=${OVL:?OVL commit required}; EG=${EG:-1}; ACCUM=${ACCUM:-1}; PACE=${PACE:-100}; CKWAIT=${CKWAIT:-300}; MODE=${MODE:-job}; RUNG=${RUNG:-3M}; SEED=${SEED:-0}; TFVER=${TFVER:-5.19.0}; MAXH=${MAXH:-6}; JOBH=${JOBH:-5}; DPH=${DPH:-0}
 END_SLEEP=${END_SLEEP:-1800}; FAIL_SLEEP=${FAIL_SLEEP:-1200}
 T0=$(date +%s)
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
@@ -116,7 +117,7 @@ python -c "import json; a=json.load(open('$J/cur/skills_curriculum/FULL-BUILD-MA
 echo "big build train.jsonl hash matches"
 PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==$TFVER" "safetensors==0.8.0" accelerate numpy pyarrow huggingface_hub > out/pip.log 2>&1 || { tail -3 out/pip.log; die pip; }
 python -c "import torch, transformers, pyarrow; print(torch.__version__, transformers.__version__, pyarrow.__version__, torch.cuda.get_device_name(0))"
-export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=4 PYTHONUNBUFFERED=1
+export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=4 PYTHONUNBUFFERED=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 if [ "$EG" = 1 ]; then
   (cd mine && python -c "from huggingface_hub import snapshot_download as s; from custom_io.models.eg import EG_ID, EG_REV; s(EG_ID, revision=EG_REV, local_dir='$J/eg2')") > out/eg_dl.log 2>&1 || { tail -5 out/eg_dl.log; die eg-download; }
   export CUSTOM_IO_EG2=$J/eg2
@@ -136,7 +137,7 @@ else
   say "G8 DATA READY"
   B2JSON=$(python -c "import json,sys; V=lambda v: {'true': True, 'false': False}.get(v, float(v) if '.' in v else int(v) if v.lstrip('-').isdigit() else v); print(json.dumps({k: V(v) for k, v in (x.split(':') for x in sys.argv[1].split(',') if x)}))" "$B2X")
   say "G8 B2 extra $B2JSON arms ${ARMS:-all} lr-scale $LRS"
-  (cd mine && python -m custom_io.g8a.job --rung $RUNG --seed $SEED ${ARMS:+--arms $ARMS} --b2-extra "$B2JSON" --lr-scale $LRS --work $J/g8a --skills $J/data --big-data $J/data_big --data8a $J/data8a --web $J/data8a/web/slice_rung30.jsonl --maxh $JOBH --dph $DPH)
+  (cd mine && python -m custom_io.g8a.job --rung $RUNG --seed $SEED ${ARMS:+--arms $ARMS} --b2-extra "$B2JSON" --lr-scale $LRS --accum B2=$ACCUM --work $J/g8a --skills $J/data --big-data $J/data_big --data8a $J/data8a --web $J/data8a/web/slice_rung30.jsonl --maxh $JOBH --dph $DPH)
   say "G8 DONE job rc=$?"
   if [ "$CK" = 1 ]; then
     # Checkpoints off the box through the log (same format as the reader branch's box/ck_export.sh, read by vast.py collectck):
