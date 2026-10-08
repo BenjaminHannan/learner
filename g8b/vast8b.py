@@ -3,7 +3,8 @@
 with the box script and the results folder changed; create exports --env before the script (OVL, RUNG, SEED, ARMS, B2X, MAXH, JOBH, DPH).
 Adapted from scripts/cap256_launch/ultracode_vast.py on claude/ultracode-learning-blocker-gh011t.
 
-The proxy adds the Vast key to console.vast.ai requests; this script never reads or prints a key.
+In the cloud session the proxy adds the Vast key to console.vast.ai requests. Elsewhere (e.g. your Mac) set VAST_API_KEY in the environment;
+the script sends it as a Bearer header and never prints it.
   search [--gpu "RTX 5090"] [--n 8]       cheapest verified offers (reliability >= 0.98, CUDA >= 12.8)
   create --offer ID [--label L] [--maxpar 5] [--qsub /egwA] [--env "TFVER=5.19.0 EG=1 MAXH=7.5"]   (env: box.sh header)
   status --id ID
@@ -18,6 +19,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 import tarfile
 import time
 import urllib.error
@@ -32,8 +34,10 @@ OUT = REPO / 'results/8b'
 
 
 def call(method, path, body=None, timeout=60):
-    req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(),
-                                 headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+    hdr = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+    if os.environ.get('VAST_API_KEY'):      # off the cloud session (no proxy adding the key): send it from the environment, never print it
+        hdr['Authorization'] = 'Bearer ' + os.environ['VAST_API_KEY']
+    req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(), headers=hdr)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode() or '{}')
