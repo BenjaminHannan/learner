@@ -746,3 +746,21 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Run:** BensPC RTX 5070 Ti (custom_io/queue_local/85-pc-h1r-screen.txt), per the project's spend note; the T1SDR baseline ran on Vast RTX
   5090s, so the machine differs (printed beside, not a mark). Judge: `python -m custom_io.analyze_h1 --base T1SDR --results
   custom_io/results/33-pc-confirm-b2 custom_io/results/70-vast-t1sdr <the H1R results dir>`.
+
+## Addendum 22, amendment 7 (written 2026-10-08 about 18:45 UTC, 2:45 PM ET, before seeds 202/203 are read and before any 6-seed verdict)
+- **Disclosed: ruled with numbers in view.** MARKS-D0-T1 Amendments 11 and 12 (architecture thread, about 1:15 and 1:30 PM ET) were written
+  after four of six confirm seeds (200, 201, 204, 205) and the opswap miss breakdown (custom_io/results/SWAP-MISSES-T1SDR.md) were read.
+  Amendment 12 is a post-result scorer definition, so it binds in the stricter direction.
+- **Mark 4 (Amendment 11 item 1), unchanged:** loops:0 and donor in_dist <= 5 on every seed, B2's printed beside. The other reading (a value
+  over 5 counts as a miss only if it is more than 1.0 above B2 on that seed) is printed beside, not a mark. Donor fails under both readings
+  on the seeds read so far, so the confirm is NOT SHOWN on mark 4 unless Ben explicitly clears it (Amendment 12 item 6).
+- **Mark 5 (Amendment 12):** per seed, the LOWER of (i) opswap on UNAMBIGUOUS rows only (no operand of the intact calls whose text equals
+  both a question number and an earlier result) and (ii) the own-pointer reading (each span-copied operand's source is where the model's own
+  pointer copied it from, B2's definition), >= 99 with n >= 500 counted rows, every seed. The run's own text-match figure is printed beside,
+  superseded. B2's six seeds are re-scored with the same rule. Re-score: custom_io/rescore_opswap.py on CPU, once per checkpoint, no
+  training; the judge reads its outputs (`analyze_t1s --arm T1SDR ... --opswap <files>`, code in amend12) and checks each checkpoint's
+  sha256 against its write_copy re-score where one exists. A seed whose checkpoint is not re-scored leaves mark 5 open, not passed.
+- **Seed 205's checkpoint:** two of five parts were not copied off its Vast box before the account's credit ran out (the box is stopped,
+  not deleted). If it cannot be recovered, T1SDR_s205 is retrained on BensPC with the same line and that run is re-scored for mark 5; the
+  retrained run's marks 1-4 and 6 are printed beside the Vast run's, and the swap is disclosed.
+- **Marks 1-3 and 6 and the proved-wrong lines:** unchanged.

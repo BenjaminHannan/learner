@@ -304,6 +304,64 @@ def confirm(runs):
         A.ARMS['T1'] = keep
 
 
+def load_opswap(files):
+    """{(arm, seed): run} from custom_io/rescore_opswap outputs (runs named <arm>_s<seed>), plus the dev set hashes they read."""
+    out, shas = {}, set()
+    for f in files or []:
+        d = json.load(open(f))
+        shas.add(d.get('in_dist_sha256'))
+        for name, r in d.get('runs', {}).items():
+            m = re.match(r'^(.+)_s(\d+)$', name)
+            if m:
+                out[(m.group(1), int(m.group(2)))] = r
+    return out, sorted(x for x in shas if x)
+
+
+def amend12(conf, ops, shas, wcs):
+    """Marks 4 and 5 of the T1SDR confirm as ruled in Amendments 11-12 (MARKS-D0-T1, 10-08), on top of analyze_t1.confirm's marks 1-3, 6.
+    Mark 4 unchanged (flat <= 5 every seed, B2 beside); Amendment 11's other reading (a miss counts only if > 1.0 above B2 on that seed) is
+    printed beside, not a mark. Mark 5: per seed the LOWER of the unambiguous-only and the own-pointer opswap figure (rescore_opswap, CPU),
+    >= 99 with the unambiguous n >= 500, every seed; the text-match figure (the run's own, superseded) and B2's re-score printed beside. A seed
+    without a re-scored checkpoint leaves mark 5 open. Ben's screen "good enough" (hair tolerance) does not apply here (Amendment 10 item 1)."""
+    if not conf.get('judged'):
+        return conf
+    F, m = conf['facts'], conf['marks']
+    k4 = next(k for k in m if k.startswith('4 '))
+    alt = {s: {x: (f['leak'][x] or 0) > 5 and (f['leak'][x] or 0) - (f['b2_leak'][x] or 0) > 1.0 for x in ('loops0', 'donor')} for s, f in F.items()}
+    m[k4]['beside'] = dict(reading='Amendment 11 item 1 other reading (not a mark): a value over 5 counts as a miss only if it is > 1.0 above B2 on that seed',
+                           misses={s: [x for x, v in a.items() if v] for s, a in alt.items()}, ok=not any(any(a.values()) for a in alt.values()))
+    k5 = next(k for k in m if k.startswith('5 '))
+    old = m.pop(k5)
+    v, pend = {}, []
+    for s, f in F.items():
+        t, b = ops.get(('T1S', s)), ops.get(('B2', s))
+        if t is None:
+            pend.append(s)
+            v[s] = dict(pending='checkpoint not re-scored', text_match_run=f['swap_match'])
+            continue
+        wck = (wcs.get(('T1S', s)) or {}).get('ck_sha256')
+        v[s] = dict(value=t['mark5']['value'], unambiguous=t['unambiguous']['match'], unambiguous_n=t['unambiguous']['n_affected'],
+                    own_pointer=t['own_pointer']['match'], text_match=t['text_match']['match'], text_match_run=f['swap_match'],
+                    ambiguous_rate=t['ambiguous']['rate'], B2=None if b is None else b['mark5']['value'],
+                    ck_matches_wc=None if not wck else wck == t['ck_sha256'])
+    m['5 opswap (Amendment 12): lower of unambiguous-only and own-pointer >= 99, unambiguous n >= 500, every seed'] = dict(
+        value=v, pending=pend, dev_sha256=shas,
+        ok=not pend and len(shas) == 1 and all(x['value'] is not None and x['value'] >= 99 and x['unambiguous_n'] >= 500 for x in v.values()))
+    conf['mark5_old_text_match'] = old
+    fails = [k.split()[0] for k, x in m.items() if not x['ok']]
+    conf['marks'] = dict(sorted(m.items()))
+    conf['open'] = pend
+    if conf['proved_wrong']:
+        conf['verdict'] = 'PROVED WRONG'
+    elif not fails:
+        conf['verdict'] = 'PASS: the model works as well with the calculator outside'
+    else:
+        conf['verdict'] = (f"NOT SHOWN (failing: {', '.join(fails)}{'; mark 5 open on seed(s) ' + ', '.join(map(str, pend)) if pend else ''})"
+                           + ('. Mark 4 donor fails as Amendment 12 item 6 says: the confirm stays NOT SHOWN on mark 4 unless Ben explicitly clears it'
+                              if '4' in fails else ''))
+    return conf
+
+
 def fmt(v):
     return '-' if v is None else f'{v:.1f}' if isinstance(v, float) else str(v)
 
@@ -315,6 +373,7 @@ def main(argv=None):
     ap.add_argument('--arm', default='T1S', choices=['T1S'] + sorted(NEXT))
     ap.add_argument('--out', default=None, help='default custom_io/results/<arm>-ANALYSIS.json')
     ap.add_argument('--dev', default=None, help='T1SDR (R5): the dev set the runs were evaluated on (its dev/in_dist.jsonl)')
+    ap.add_argument('--opswap', nargs='*', default=[], help='T1SDR confirm mark 5 (Amendment 12): custom_io/rescore_opswap outputs')
     a = ap.parse_args(argv)
     a.out = a.out or f'custom_io/results/{a.arm}-ANALYSIS.json'
     if a.arm != 'T1S':
@@ -329,7 +388,11 @@ def main(argv=None):
         sc = screen8(runs, wcs, as_t1s(load_preds(a.results), a.arm), rows)
     else:
         sc = (screen7 if a.arm == 'T1SD' else screen)(runs, wcs)
-    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=sc, confirm=confirm(runs), skipped=skipped)
+    conf = confirm(runs)
+    if a.arm == 'T1SDR':
+        ops, shas = load_opswap(a.opswap)
+        conf = amend12(conf, as_t1s(ops, a.arm), shas, wcs)
+    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=sc, confirm=conf, skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     sc = res['screen']
@@ -371,7 +434,29 @@ def main(argv=None):
                       f'| {side} T1 old scorer | ' + ' | '.join(fmt(f['t1_old_copy'][side][x][0]) for x in LENS) + ' |']
                 L = L if not new7 else [x.replace(f'| {side} T1S ', f'| {side} {a.arm} ') for x in L]
             L += [f"Scorer passes: {f['passes']}", '']
-    L += [f"## 6-seed confirm (marks 1-6 as amended): {res['confirm']['verdict']}", '']
+    c = res['confirm']
+    L += [f"## 6-seed confirm (marks 1-6 as amended): {c['verdict']}", '']
+    if not c['judged']:
+        L += [f"- missing or invalid: {({s: p for s, p in c['problems'].items() if p})}", '']
+    else:
+        L += [f"- {k}: {'pass' if x['ok'] else 'FAIL'}" for k, x in c['marks'].items()]
+        v1 = next(x for k, x in c['marks'].items() if k.startswith('1 '))['value']
+        L += [f"- parity: mean {v1['mean']:+.2f}, sd {v1['sd']:.2f}, 95% CI [{v1['ci'][0]:+.2f}, {v1['ci'][1]:+.2f}], seeds within 1.0: {v1['seeds_within_1']} of 6",
+              f"- proved wrong (pooled-5 mean < -2.0 or chain-5 mean < 95): {c['proved_wrong']}"]
+        b4 = next((x.get('beside') for k, x in c['marks'].items() if k.startswith('4 ')), None)
+        if b4:
+            L += [f"- {b4['reading']}: misses {({s: v for s, v in b4['misses'].items() if v}) or 'none'} -> {'pass' if b4['ok'] else 'FAIL'}"]
+        L += ['', f"| seed | pooled-5 {a.arm} - B2 | chain-5 {a.arm} / B2 | tool off | loops:0 {a.arm} / B2 | donor {a.arm} / B2 | "
+                  'swap mark 5 (unamb / own / text; n; amb rate) | B2 swap | swap run (text) | machine differs |', '|---|---|---|---|---|---|---|---|---|---|']
+        m5 = next((x['value'] for k, x in c['marks'].items() if k.startswith('5 opswap (Amendment 12)')), {})
+        for s, f in c['facts'].items():
+            o = m5.get(s) or {}
+            sw = ('open' if 'pending' in o else f"{fmt(o['value'])} ({fmt(o['unambiguous'])} / {fmt(o['own_pointer'])} / {fmt(o['text_match'])}; "
+                  f"n {o['unambiguous_n']}; {fmt(o['ambiguous_rate'])}%)") if o else '-'
+            L += [f"| {s} | {f['d_pooled5']:+.2f} | {fmt(f['t1_chain5'])} / {fmt(f['b2_chain5'])} | {fmt(f['tool_off'])} | "
+                  f"{fmt(f['leak']['loops0'])} / {fmt(f['b2_leak']['loops0'])} | {fmt(f['leak']['donor'])} / {fmt(f['b2_leak']['donor'])} | {sw} | "
+                  f"{fmt(o.get('B2'))} | {fmt(f['swap_match'])} | {f['machine_differs'] or '-'} |"]
+        L += ['']
     md = os.path.join(os.path.dirname(a.out) or '.', f'RESULTS-{a.arm}.md')
     open(md, 'w').write('\n'.join(L) + '\n')
     print('\n'.join(L))
