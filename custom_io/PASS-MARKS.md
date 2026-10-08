@@ -718,3 +718,7 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Run:** two rented RTX 5090s, two seeds each in parallel (custom_io/queue/t1c1: 202, 203; t1c2: 204, 205; 80 train, 81 re-score,
   82 checkpoint export). Queue_local record: custom_io/queue_local/80-pc-t1sdr-confirm.txt. H1 on the T1SDR checkpoints runs alongside
   (Amendment 10 item 2b; its code change and pin are disclosed under addendum 21 before it runs).
+- **Change of machine for seeds 202/203 (about 15:20 UTC, before either ran):** their Vast box was destroyed before its first job started
+  (a slow image download), and the project asked not to rent more, so T1SDR_s202/s203 run on BensPC's RTX 5070 Ti with the same lines
+  (custom_io/queue_local/80b-pc-t1sdr-s202-203.txt; code at branch head, the model, training, data and eval files unchanged since the pin).
+  Their B2 pair (q33) also ran on BensPC. Seeds 204/205 stay on Vast (t1c2). The judge prints the machine per seed.
