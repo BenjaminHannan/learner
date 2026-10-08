@@ -786,6 +786,8 @@ def ap_parent(nprime, out, s1dir, s3dir, jdir, rdir, s1wdir, skills_train, skill
     # night-1 records (W1's, rebuilt) and night-2 records (J's W arm day 2)
     t0 = time.time()
     recs1, res['records1'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    from custom_io.models import progparse as pp
+    tg1 = {r['id']: pp._CACHE[r['id']] for r in recs1}        # night 1's targets, snapshot NOW: night 2's records re-register the same 'W:<question>:<k>' ids below
     m1 = copy.deepcopy(N)
     add_adapter(m1, seed=seed)
     init = adapter_state(m1)
@@ -794,6 +796,7 @@ def ap_parent(nprime, out, s1dir, s3dir, jdir, rdir, s1wdir, skills_train, skill
     c = pickle.load(open(dp, 'rb'))
     assert c['key'] == (skey, s2, sha['W1'], _hstate(init), 'W'), "J's day2_W.pkl key differs from the one j_parent builds"
     recs2, cnt = w_records(pool, c['v']['tries'], s2 + 1)
+    tg2 = {r['id']: pp._CACHE[r['id']] for r in recs2}
     want2 = jj['night2']['W']['records']
     assert len(recs2) == want2, f'rebuilt {len(recs2)} night-2 records, J has {want2}'
     res['records2'] = dict(rebuilt=len(recs2), J_night2=want2, equal=True, source=dp, records_by_kind=_by_kind(pool, cnt))
@@ -804,20 +807,28 @@ def ap_parent(nprime, out, s1dir, s3dir, jdir, rdir, s1wdir, skills_train, skill
         res['records1']['smoke_truncated_to'] = len(recs1)
     u = len(recs2)                                  # W2's update count: 32 * len(recs2) // 32
     mv = max(math.ceil(u * 32 / (len(recs1) + len(recs2))), 1)
-    res['ids'] = dict(n1=check_prefixed(recs1, 'n1|'), n2=check_prefixed(recs2, 'n2|'),
-                      original_id_overlap=len({r['id'] for r in recs1} & {r['id'] for r in recs2}), note='ids prefixed n1| / n2| on copies; no stale target-cache entry; targets of a prefixed copy equal the original\'s')
+    # prefixed copies registered from each night's own snapshot (registering from the live cache would give night-1 copies night 2's targets wherever the original ids collide)
+    stale = [x + r['id'] for x, rs in (('n1|', recs1), ('n2|', recs2)) for r in rs if x + r['id'] in pp._CACHE]
+    assert not stale, f'stale target cache entries for {stale[:3]}'
+    for x, rs, tg in (('n1|', recs1, tg1), ('n2|', recs2, tg2)):
+        for r in rs:
+            pp._CACHE[x + r['id']] = tg[r['id']]
+    overlap = {r['id'] for r in recs1} & {r['id'] for r in recs2}
+    assert all(pp._CACHE['n2|' + r['id']] == pp._CACHE[r['id']] for r in recs2), 'night-2 copies differ from the live (night-2) targets'
+    res['ids'] = dict(n1=len(recs1), n2=len(recs2), original_id_overlap=len(overlap), overlap_with_different_targets=sum(tg1[i] != tg2[i] for i in overlap), stale_entries=0,
+                      note='ids prefixed n1| / n2| on copies; each copy registered with its own night\'s targets, snapshotted right after that night\'s records were built')
     res['plan'] = dict(records1=len(recs1), records2=len(recs2), union=len(recs1) + len(recs2), updates=u, visits_per_record=u * 32 / (len(recs1) + len(recs2)), W2_visits_per_record=32.0, max_visits=mv)
     log('AP plan', res['plan'], res['ids'])
     save()
 
     def night2():
         t1 = time.time()
-        union = prefixed_copies(recs1, 'n1|') + prefixed_copies(recs2, 'n2|')       # targets registered by check_prefixed; registering again is idempotent
+        union = prefixed_copies(recs1, 'n1|', register=False) + prefixed_copies(recs2, 'n2|', register=False)       # targets registered above from each night's snapshot
         m = copy.deepcopy(W1)
         so = sleep.sleep(m, union, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=1e-3, warmup=20, seed=s2, max_visits=mv), device, replay_extra=warm_rows)
         m.eval()
         return m, dict(updates=u, records=len(union), visits_per_record=u * 32 / len(union), last_loss=sum(so['loss'][-10:]) / max(len(so['loss'][-10:]), 1) if so['loss'] else None, seconds=time.time() - t1)
-    AP, info, sha['AP'] = _stage(pdir, 'AP', _h('ap', sha['W1'], 1e-3, 32, s2, len(recs1), len(recs2), res['records1']['W1_night'], ja['replay_n'], bool(skills_train)), night2, meta, vocab, device, resume, log)
+    AP, info, sha['AP'] = _stage(pdir, 'AP', _h('ap-snap', sha['W1'], 1e-3, 32, s2, len(recs1), len(recs2), res['records1']['W1_night'], ja['replay_n'], bool(skills_train)), night2, meta, vocab, device, resume, log)
     secs['AP'] = time.time() - t0
     res['night2'] = info
     log('AP night 2', info)
