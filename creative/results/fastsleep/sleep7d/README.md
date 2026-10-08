@@ -235,3 +235,25 @@ How to read it:
 - *Shown:* the training signal is small. Only 13-23% of the questions W1 still fails get a fit in 32 tries, giving 128 / 75 kept rows and 24 / 14 updates (S1 on N' had 550 rows and 97 updates). The adapter hardly moves (KL 0.47 / 0.10). s100 shows a real but small gain, mostly multi-step; s101 shows none.
 - *Suggested:* the limit is how many fits the night finds, not the method. The single change that builds on this is more night tries per still-stuck question.
 - J2 does not run, because its gate was S1f passing.
+
+## Test VL (finished 15:31 UTC 10-08 = 11:31 AM ET; roadmap 7526d614e5, `creative/night7d.py`, `vl/`)
+
+Each arm makes one change to night 1 from N', against the standard night 1 (W1: lr 1e-3, each record seen 32 times). Both arms use the same 835 / 808 records (W1's own, rebuilt and count-checked) and the same seed and replay. V sees each record 8 times (208 / 202 updates). L uses lr 1e-4 with 32 visits (835 / 808 updates). Measures are on DEV.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: N' / W1 / V / L | 86.7 / 82.9 / 83.0 / **87.5** | 87.8 / 84.2 / 84.9 / **88.3** |
+| (1) harm vs N' (drop; families firing) | W1 3.8 (9); V 3.7 (9) fail; **L -0.8 (0) pass** | W1 3.6 (9); V 2.9 (8) fail; **L -0.6 (0) pass** |
+| pooled-5: W1 / V / L | 97.4 / 97.3 / 98.2 | 98.0 / 94.5 / 99.0 |
+| C2 first try: W1 / V / L | 31.2 / 29.7 / 28.9 | 34.4 / 33.6 / 33.6 |
+| (2) first try vs W1 (mark >= -2) | V -1.6 [-5.9, 3.1] pass; **L -2.3 [-7.0, 2.3] fail** | V -0.8 [-4.3, 2.7] pass; L -0.8 [-4.3, 2.3] pass |
+| arm passes (1) and (2) | V no, L no (by 0.3 on first try) | V no, **L yes** |
+| proved wrong (drop not at least 1.0 below W1's on both parents) | V yes; L no | |
+| reference (report only): W1 + 256 fresh-row replay-only updates at 1e-4 | in_dist 84.5, first try 24.2 | 86.2, 30.1 |
+
+Verdict: **neither arm passes on both parents.** V is proved wrong. L is not proved wrong; it passes on s101 and misses on s100 only by first try (-2.3 against the -2 mark, interval [-7.0, 2.3]). By the rule fixed in advance, L is the one to build on.
+
+How to read it:
+- *Shown:* night 1 at lr 1e-4 costs no skills at all. in_dist ends up 0.6-0.8 above N', no family fires, and pooled-5 rises. It keeps nearly all of night 1's C2 gain (28.9 / 33.6 against W1's 31.2 / 34.4, from N' at 0.4).
+- *Shown:* fewer visits at lr 1e-3 (V) keeps the C2 gain but not the skills. Its harm matches W1's.
+- *Suggested:* together with the 2 x 2, the night's lr is what sets the skills cost. At lr 1e-3, reusing a small set (the records, 32 visits) overfits. At 1e-4, the same reuse is harmless. N' itself came from an lr 1e-3 stepping-stone night (N' vs B2 in_dist -2.2 to -2.7), and so did the research loop's sleep. Both are worth re-checking under a lower lr.

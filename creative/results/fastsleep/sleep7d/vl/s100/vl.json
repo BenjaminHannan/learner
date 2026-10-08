@@ -1,0 +1,214 @@
+{
+ "nprime": "/root/c7d/s100/Nprime.pt",
+ "name": "s100",
+ "spec": "Roadmap 7526d614e5, Test VL: does night 1 hurt skills less with each record seen fewer times (arm V) or at a lower lr (arm L)? CPU. Reads the skills TRAIN file (replay), C2 pool / warm rows (night records),",
+ "marks_rules": {
+  "harm": "(1) harm_measure(N' DEV hits, arm DEV hits) passes: in_dist drop <= 1.5 and no family fires (drop > 5 points and paired 95% interval below 0)",
+  "first_try": "(2) C2 DEV first try within 2 points of W1: c2_pilot.boot(arm right, W1 right) point >= -2.0",
+  "passes": "arm passes = (1) and (2)",
+  "proved_wrong": "arm's in_dist drop vs N' is NOT at least 1.0 point smaller than W1's drop vs N' (arm_drop > W1_drop - 1.0) on BOTH parents (decided in the report)"
+ },
+ "decision_rule": "if both pass, the arm with the smaller harm (mean in_dist drop vs N' over parents) goes forward; if neither passes, the one not proved wrong is built on (both not proved wrong: the smaller mean drop; both proved wrong: none); if exactly one passes, that one",
+ "secs": {
+  "records": 23.435168981552124,
+  "V": 541.7167067527771,
+  "L": 1560.2043719291687,
+  "measure_N": 0.01847553253173828,
+  "measure_W1": 0.016726016998291016,
+  "measure_V": 60.87341856956482,
+  "measure_L": 58.38687705993652,
+  "total": 2281.7366111278534
+ },
+ "arms_spec": {
+  "V": {
+   "lr": 0.001,
+   "visits": 8
+  },
+  "L": {
+   "lr": 0.0001,
+   "visits": 32
+  }
+ },
+ "args": {
+  "seed": 0,
+  "night_seed": 0,
+  "T": 3.0,
+  "n1": 32,
+  "n2": 480,
+  "s3_args": {
+   "pool_limit": null,
+   "dev_limit": null,
+   "n1": 32,
+   "n2": 480,
+   "lr": 0.001,
+   "visits": 32,
+   "replay_n": null,
+   "day_from": "/root/c7d/s1"
+  },
+  "pool_limit": null,
+  "dev_limit": null,
+  "skills_limit": null,
+  "max_records": null,
+  "s1": "/root/c7d/s1",
+  "s3": "/root/c7d/s3",
+  "r": "/root/c7d/r",
+  "skills_train": "/root/work/data/train.jsonl",
+  "skills_data": "/root/work/data_big"
+ },
+ "note": "C2 pool / warm rows / DEV and skills train / DEV only; test / labelled never opened",
+ "records": {
+  "rebuilt": 835,
+  "W1_night": 835,
+  "equal": true,
+  "night_seed": 0,
+  "source": "from S1 day /root/c7d/s1/s100/day.pkl (1023 rows); 1 greedy-passing rows searched here (seed 2000)"
+ },
+ "arms": {
+  "V": {
+   "updates": 208,
+   "records": 835,
+   "visits_per_record": 7.97125748502994,
+   "last_loss": 1.9269343972206117,
+   "seconds": 541.6869568824768,
+   "lr": 0.001,
+   "visits": 8
+  },
+  "L": {
+   "updates": 835,
+   "records": 835,
+   "visits_per_record": 32.0,
+   "last_loss": 1.4987345576286315,
+   "seconds": 1560.172200679779,
+   "lr": 0.0001,
+   "visits": 32
+  }
+ },
+ "skills": {
+  "N": {
+   "pooled5": 98.1,
+   "in_dist": 86.69117647058823,
+   "n": 6800
+  },
+  "W1": {
+   "pooled5": 97.4,
+   "in_dist": 82.88235294117646,
+   "n": 6800
+  },
+  "V": {
+   "pooled5": 97.3,
+   "in_dist": 83.02941176470588,
+   "n": 6800
+  },
+  "L": {
+   "pooled5": 98.2,
+   "in_dist": 87.48529411764706,
+   "n": 6800
+  }
+ },
+ "c2_dev": {
+  "N": {
+   "first_try_right": 0.00390625,
+   "stuck_rate": 0.99609375,
+   "n": 256
+  },
+  "W1": {
+   "first_try_right": 0.3125,
+   "stuck_rate": 0.68359375,
+   "n": 256
+  },
+  "V": {
+   "first_try_right": 0.296875,
+   "stuck_rate": 0.703125,
+   "n": 256
+  },
+  "L": {
+   "first_try_right": 0.2890625,
+   "stuck_rate": 0.7109375,
+   "n": 256
+  }
+ },
+ "W1_drop_vs_N": 3.808823529411768,
+ "marks": {
+  "V": {
+   "harm": false,
+   "first_try": true,
+   "passes": false,
+   "proved_wrong": true,
+   "in_dist_drop_vs_N": 3.661764705882348,
+   "W1_in_dist_drop_vs_N": 3.808823529411768,
+   "fired_vs_N": [
+    "cipher_map",
+    "kin_chain",
+    "list_stats",
+    "order_chain",
+    "passage_qa",
+    "rule_apply",
+    "seq_cycle",
+    "seq_next",
+    "verify_claim"
+   ],
+   "pooled5": 97.3,
+   "first_try_boot_vs_W1": {
+    "points": -1.5625,
+    "lo": -5.859375,
+    "hi": 3.125
+   },
+   "report_only_vs_W1": {
+    "in_dist_drop": -0.14705882352942012,
+    "fired": [],
+    "passes": true
+   }
+  },
+  "L": {
+   "harm": true,
+   "first_try": false,
+   "passes": false,
+   "proved_wrong": false,
+   "in_dist_drop_vs_N": -0.794117647058826,
+   "W1_in_dist_drop_vs_N": 3.808823529411768,
+   "fired_vs_N": [],
+   "pooled5": 98.2,
+   "first_try_boot_vs_W1": {
+    "points": -2.34375,
+    "lo": -7.03125,
+    "hi": 2.34375
+   },
+   "report_only_vs_W1": {
+    "in_dist_drop": -4.602941176470594,
+    "fired": [],
+    "passes": true
+   }
+  }
+ },
+ "fresh_pass_reference": {
+  "source": "/root/c7d/drift/s100/drift.json",
+  "row": {
+   "held_in_dist": 89.52941176470588,
+   "dev_in_dist": 84.48529411764706,
+   "dev_pooled5": 98.0,
+   "c2_first_try": 24.21875,
+   "stuck_rate": 0.7578125,
+   "held_drop": -1.8823529411764781,
+   "held_fired": 1,
+   "held_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_drop": -1.602941176470594,
+   "dev_fired": 1,
+   "dev_fired_families": [
+    "fewshot_number_rule"
+   ],
+   "dev_passes": false,
+   "c2_first_try_boot_vs_M0": {
+    "points": -7.03125,
+    "lo": -11.328125,
+    "hi": -3.125
+   },
+   "updates": 256,
+   "rows": 16384,
+   "max_visits": 1,
+   "seconds": 539.5553817749023
+  },
+  "note": "W1 + 256 fresh-row replay-only updates at 1e-4; report only"
+ }
+}

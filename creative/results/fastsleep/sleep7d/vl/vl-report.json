@@ -1,0 +1,354 @@
+{
+ "parents": [
+  "s100",
+  "s101"
+ ],
+ "arms": {
+  "L": {
+   "passes": false,
+   "proved_wrong": false,
+   "mean_drop": -0.676470588235297
+  },
+  "V": {
+   "passes": false,
+   "proved_wrong": true,
+   "mean_drop": 3.257352941176471
+  }
+ },
+ "per_parent": {
+  "s100": {
+   "V": {
+    "passes": false,
+    "proved_wrong": true,
+    "drop": 3.661764705882348
+   },
+   "L": {
+    "passes": false,
+    "proved_wrong": false,
+    "drop": -0.794117647058826
+   }
+  },
+  "s101": {
+   "V": {
+    "passes": false,
+    "proved_wrong": true,
+    "drop": 2.852941176470594
+   },
+   "L": {
+    "passes": true,
+    "proved_wrong": false,
+    "drop": -0.558823529411768
+   }
+  }
+ },
+ "picked": "L",
+ "decision_rule": "if both pass, the arm with the smaller harm (mean in_dist drop vs N' over parents) goes forward; if neither passes, the one not proved wrong is built on (both not proved wrong: the smaller mean drop; both proved wrong: none); if exactly one passes, that one",
+ "rules": {
+  "harm": "(1) harm_measure(N' DEV hits, arm DEV hits) passes: in_dist drop <= 1.5 and no family fires (drop > 5 points and paired 95% interval below 0)",
+  "first_try": "(2) C2 DEV first try within 2 points of W1: c2_pilot.boot(arm right, W1 right) point >= -2.0",
+  "passes": "arm passes = (1) and (2)",
+  "proved_wrong": "arm's in_dist drop vs N' is NOT at least 1.0 point smaller than W1's drop vs N' (arm_drop > W1_drop - 1.0) on BOTH parents (decided in the report)"
+ },
+ "tables": {
+  "s100": {
+   "skills": {
+    "N": {
+     "pooled5": 98.1,
+     "in_dist": 86.69117647058823,
+     "n": 6800
+    },
+    "W1": {
+     "pooled5": 97.4,
+     "in_dist": 82.88235294117646,
+     "n": 6800
+    },
+    "V": {
+     "pooled5": 97.3,
+     "in_dist": 83.02941176470588,
+     "n": 6800
+    },
+    "L": {
+     "pooled5": 98.2,
+     "in_dist": 87.48529411764706,
+     "n": 6800
+    }
+   },
+   "c2_dev": {
+    "N": {
+     "first_try_right": 0.00390625,
+     "stuck_rate": 0.99609375,
+     "n": 256
+    },
+    "W1": {
+     "first_try_right": 0.3125,
+     "stuck_rate": 0.68359375,
+     "n": 256
+    },
+    "V": {
+     "first_try_right": 0.296875,
+     "stuck_rate": 0.703125,
+     "n": 256
+    },
+    "L": {
+     "first_try_right": 0.2890625,
+     "stuck_rate": 0.7109375,
+     "n": 256
+    }
+   },
+   "marks": {
+    "V": {
+     "harm": false,
+     "first_try": true,
+     "passes": false,
+     "proved_wrong": true,
+     "in_dist_drop_vs_N": 3.661764705882348,
+     "W1_in_dist_drop_vs_N": 3.808823529411768,
+     "fired_vs_N": [
+      "cipher_map",
+      "kin_chain",
+      "list_stats",
+      "order_chain",
+      "passage_qa",
+      "rule_apply",
+      "seq_cycle",
+      "seq_next",
+      "verify_claim"
+     ],
+     "pooled5": 97.3,
+     "first_try_boot_vs_W1": {
+      "points": -1.5625,
+      "lo": -5.859375,
+      "hi": 3.125
+     },
+     "report_only_vs_W1": {
+      "in_dist_drop": -0.14705882352942012,
+      "fired": [],
+      "passes": true
+     }
+    },
+    "L": {
+     "harm": true,
+     "first_try": false,
+     "passes": false,
+     "proved_wrong": false,
+     "in_dist_drop_vs_N": -0.794117647058826,
+     "W1_in_dist_drop_vs_N": 3.808823529411768,
+     "fired_vs_N": [],
+     "pooled5": 98.2,
+     "first_try_boot_vs_W1": {
+      "points": -2.34375,
+      "lo": -7.03125,
+      "hi": 2.34375
+     },
+     "report_only_vs_W1": {
+      "in_dist_drop": -4.602941176470594,
+      "fired": [],
+      "passes": true
+     }
+    }
+   },
+   "arms": {
+    "V": {
+     "updates": 208,
+     "records": 835,
+     "visits_per_record": 7.97125748502994,
+     "last_loss": 1.9269343972206117,
+     "seconds": 541.6869568824768,
+     "lr": 0.001,
+     "visits": 8
+    },
+    "L": {
+     "updates": 835,
+     "records": 835,
+     "visits_per_record": 32.0,
+     "last_loss": 1.4987345576286315,
+     "seconds": 1560.172200679779,
+     "lr": 0.0001,
+     "visits": 32
+    }
+   },
+   "fresh_pass_reference": {
+    "source": "/root/c7d/drift/s100/drift.json",
+    "row": {
+     "held_in_dist": 89.52941176470588,
+     "dev_in_dist": 84.48529411764706,
+     "dev_pooled5": 98.0,
+     "c2_first_try": 24.21875,
+     "stuck_rate": 0.7578125,
+     "held_drop": -1.8823529411764781,
+     "held_fired": 1,
+     "held_fired_families": [
+      "fewshot_number_rule"
+     ],
+     "dev_drop": -1.602941176470594,
+     "dev_fired": 1,
+     "dev_fired_families": [
+      "fewshot_number_rule"
+     ],
+     "dev_passes": false,
+     "c2_first_try_boot_vs_M0": {
+      "points": -7.03125,
+      "lo": -11.328125,
+      "hi": -3.125
+     },
+     "updates": 256,
+     "rows": 16384,
+     "max_visits": 1,
+     "seconds": 539.5553817749023
+    },
+    "note": "W1 + 256 fresh-row replay-only updates at 1e-4; report only"
+   }
+  },
+  "s101": {
+   "skills": {
+    "N": {
+     "pooled5": 98.9,
+     "in_dist": 87.77941176470588,
+     "n": 6800
+    },
+    "W1": {
+     "pooled5": 98.0,
+     "in_dist": 84.19117647058823,
+     "n": 6800
+    },
+    "V": {
+     "pooled5": 94.5,
+     "in_dist": 84.92647058823529,
+     "n": 6800
+    },
+    "L": {
+     "pooled5": 99.0,
+     "in_dist": 88.33823529411765,
+     "n": 6800
+    }
+   },
+   "c2_dev": {
+    "N": {
+     "first_try_right": 0.00390625,
+     "stuck_rate": 0.9921875,
+     "n": 256
+    },
+    "W1": {
+     "first_try_right": 0.34375,
+     "stuck_rate": 0.65625,
+     "n": 256
+    },
+    "V": {
+     "first_try_right": 0.3359375,
+     "stuck_rate": 0.6640625,
+     "n": 256
+    },
+    "L": {
+     "first_try_right": 0.3359375,
+     "stuck_rate": 0.6640625,
+     "n": 256
+    }
+   },
+   "marks": {
+    "V": {
+     "harm": false,
+     "first_try": true,
+     "passes": false,
+     "proved_wrong": true,
+     "in_dist_drop_vs_N": 2.852941176470594,
+     "W1_in_dist_drop_vs_N": 3.588235294117652,
+     "fired_vs_N": [
+      "cipher_map",
+      "list_stats",
+      "passage_qa",
+      "rule_apply",
+      "seq_cycle",
+      "seq_next",
+      "story_chain3",
+      "word_filter"
+     ],
+     "pooled5": 94.5,
+     "first_try_boot_vs_W1": {
+      "points": -0.78125,
+      "lo": -4.296875,
+      "hi": 2.734375
+     },
+     "report_only_vs_W1": {
+      "in_dist_drop": -0.735294117647058,
+      "fired": [
+       "fewshot_number_rule",
+       "story_chain3"
+      ],
+      "passes": false
+     }
+    },
+    "L": {
+     "harm": true,
+     "first_try": true,
+     "passes": true,
+     "proved_wrong": false,
+     "in_dist_drop_vs_N": -0.558823529411768,
+     "W1_in_dist_drop_vs_N": 3.588235294117652,
+     "fired_vs_N": [],
+     "pooled5": 99.0,
+     "first_try_boot_vs_W1": {
+      "points": -0.78125,
+      "lo": -4.296875,
+      "hi": 2.34375
+     },
+     "report_only_vs_W1": {
+      "in_dist_drop": -4.14705882352942,
+      "fired": [],
+      "passes": true
+     }
+    }
+   },
+   "arms": {
+    "V": {
+     "updates": 202,
+     "records": 808,
+     "visits_per_record": 8.0,
+     "last_loss": 1.7183387875556946,
+     "seconds": 523.2996897697449,
+     "lr": 0.001,
+     "visits": 8
+    },
+    "L": {
+     "updates": 808,
+     "records": 808,
+     "visits_per_record": 32.0,
+     "last_loss": 1.0034748792648316,
+     "seconds": 1498.057169675827,
+     "lr": 0.0001,
+     "visits": 32
+    }
+   },
+   "fresh_pass_reference": {
+    "source": "/root/c7d/drift/s101/drift.json",
+    "row": {
+     "held_in_dist": 89.70588235294117,
+     "dev_in_dist": 86.17647058823529,
+     "dev_pooled5": 98.9,
+     "c2_first_try": 30.078125,
+     "stuck_rate": 0.69921875,
+     "held_drop": -2.35294117647058,
+     "held_fired": 1,
+     "held_fired_families": [
+      "fewshot_number_rule"
+     ],
+     "dev_drop": -1.985294117647058,
+     "dev_fired": 1,
+     "dev_fired_families": [
+      "fewshot_number_rule"
+     ],
+     "dev_passes": false,
+     "c2_first_try_boot_vs_M0": {
+      "points": -4.296875,
+      "lo": -7.8125,
+      "hi": -0.78125
+     },
+     "updates": 256,
+     "rows": 16384,
+     "max_visits": 1,
+     "seconds": 536.56467628479
+    },
+    "note": "W1 + 256 fresh-row replay-only updates at 1e-4; report only"
+   }
+  }
+ }
+}
