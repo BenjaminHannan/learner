@@ -100,3 +100,13 @@ recipe used on that parent.
 - `ro` replaced by `rp` (above); the fall-back rule for a harmless `rlc` (above); harm vs B2 and the research-loop re-score are report-only.
 - Memory, not a mark: dream targets are dropped from the target cache after each update, and runs are capped at three at once (cgroup limit
   13.4 GiB). Neither changes any computed value.
+
+## Amendment after Screen A was scored (10-08 about 5:30 PM ET; before any 256-update run was read)
+
+Screen A result: A1 not testable (rlc's drop at 128 updates is 0.00 and -0.16), A2 pass, not proved wrong, fall-back rule -> `fd`, no step up to 128
+reaches 71.2 (two-parent mean `fd` C2: 35.7, 48.2, 61.1 at 32, 64, 128). Per the rule above, `fd` is rerun with a 256-update schedule on s201 and s202
+(saves at 128, 192, 256).
+- The snapshots at 128 and 192 of a 256-update schedule are mid-schedule (lr not annealed), so they are reported but cannot set U*. **U\* may be 256
+  only**, from the end of the full schedule: the smallest of {256} at which the two-parent mean `fd` C2 DEV is at least 71.2 and harm_measure passes
+  on both parents. If 256 misses 71.2, the confirm's C2 mark is expected to fail and is run anyway as the honest test of the 256-update recipe.
+- "Within 2 points" in the fall-back rule is one-sided (the same wording as A2): `fd` may be better than `rlc` by any amount.

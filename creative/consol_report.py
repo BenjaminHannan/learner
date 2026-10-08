@@ -63,7 +63,7 @@ def screen_a(root, parents, steps=(32, 64, 128), last=128, a1_steps=(64, 128), d
             sd, slo, shi = c2_pilot.boot(b['hits'], a['hits'])
             pr['steps'][k] = dict(rlc={x: a[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')}, fd={x: b[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')},
                                   fd_minus_rlc_c2=[d, lo, hi], fd_minus_rlc_in_dist=[sd, slo, shi])
-        if os.path.exists(os.path.join(out, 'rp', 'result.json')):
+        if os.path.exists(os.path.join(out, 'rp', 'hits.json')):
             rp, fd = point(out, 'rp', last, last), point(out, 'fd', last, last)
             pr['rp'] = dict(c2=rp['c2'], in_dist=rp['in_dist'], drop=rp['drop'], fired=rp['fired'], fd_minus_rp_in_dist=list(c2_pilot.boot(fd['hits'], rp['hits'])),
                             rp_minus_N_in_dist=list(c2_pilot.boot(rp['hits'], nm['skills']['hits'])), fd_minus_N_in_dist=list(c2_pilot.boot(fd['hits'], nm['skills']['hits'])))
@@ -80,7 +80,11 @@ def screen_a(root, parents, steps=(32, 64, 128), last=128, a1_steps=(64, 128), d
         if sum(P[p]['steps'][k]['fd']['c2'] for p in parents) / len(parents) >= dev_bar and all(P[p]['steps'][k]['fd']['passes'] for p in parents):
             ustar = k
             break
-    res['marks'] = dict(A1=a1, A2=a2, passes=a1 and a2, proved_wrong=wrong, U_star=ustar,
+    harmless = any(P[p]['steps'][last]['rlc']['drop'] < 2.0 for p in parents)      # MARKS.md fall-back rule: rlc shows little harm, so A1 cannot be tested
+    fd_ok = all(P[p]['steps'][last]['fd']['passes'] and P[p]['steps'][last]['fd']['c2'] >= P[p]['steps'][last]['rlc']['c2'] - 2.0 for p in parents)
+    res['fall_back'] = dict(rlc_harmless=harmless, fd_ok=fd_ok, confirm_uses=('fd' if fd_ok else 'rlc') if harmless else None,
+                            rule='rlc drop < 2.0 at the last step on either parent -> A1 not testable; confirm uses fd if fd passes harm_measure on both and its C2 is >= rlc C2 - 2 (one-sided), else rlc')
+    res['marks'] = dict(A1='not testable' if harmless else a1, A2=a2, passes=('not testable' if harmless else (a1 and a2)), proved_wrong=wrong, U_star=ustar,
                         rule='A1: fd in_dist drop <= rlc drop - 1.0 at 64 and 128 on both parents; A2: fd C2 >= rlc C2 - 2 there; wrong: fd drop >= rlc drop at every step on both; '
                              'U*: smallest step with two-parent mean fd C2 DEV >= 71.2 and harm passes on both (None -> rerun fd at 256)')
     return res
