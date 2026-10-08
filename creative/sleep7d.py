@@ -878,9 +878,13 @@ def w1_tries_from_day(day_path, key, N, pool, vocab, device, seed, T, n1, n2):
 
 
 def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lr=1e-3, visits=32, replay_n=None, device='cpu',
-              name=None, resume=True, log=_log, allres=None, day_from=None):
+              name=None, resume=True, log=_log, allres=None, day_from=None, control='replay', w1_from=None):
     """One parent's S3. After every stage DIR/s3.json (all parents so far, `allres`) and DIR/<name>/s3.json are written; W1 is cached (DIR/<name>/W1.pt) when the same arguments come back.
-    day_from = an S1 output dir: W1's records come from S1's day on this parent when its key matches (else W1 runs its own search; s3.json says which)."""
+    day_from = an S1 output dir: W1's records come from S1's day on this parent when its key matches (else W1 runs its own search; s3.json says which).
+    control = 'replay' (S3's Z: half skills, half warm rows) or 'w1' (S3', roadmap 36d3fc2d14: Z' = a seeded draw of W1's own previous-night records, the same dose).
+    w1_from = an earlier S3 output dir whose W1 (same arguments) is reused; W1's records are then rebuilt from the same day and seeds and checked against its counts."""
+    assert control in ('replay', 'w1')
+    zl = "Z'" if control == 'w1' else 'Z'
     name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
     pdir = os.path.join(out, name)
     os.makedirs(pdir, exist_ok=True)
@@ -899,16 +903,10 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
     N, vocab, meta = sleep.load_parent(nprime, device)
     N.eval()
     res['sizes'] = dict(pool=len(pool), c2_dev=len(dev), fresh_practised=len(fresh), replay=len(replay), warm_rows=len(warm_rows))
-    # 1. W1 = one C2b W night from N' (job 8's two-pass search at T, <= 2 distinct fitting tries per row, the frozen dose)
-    wpath = os.path.join(pdir, 'W1.pt')
-    prev = json.load(open(os.path.join(pdir, 's3.json'))) if resume and os.path.exists(os.path.join(pdir, 's3.json')) else {}
-    if resume and os.path.exists(wpath) and prev.get('args') == args and 'W1_night' in prev:
-        W1, _, _ = sleep.load_parent(wpath, device)
-        W1.eval()
-        res['W1_night'] = prev['W1_night']
-        log('W1: loaded', wpath)
-    else:
-        t0 = time.time()
+    res['control'] = dict(arm=zl, kind=control, w1_from=w1_from,
+                          rule='Z = seeded half skills / half warm-row draw' if control == 'replay' else "Z' = seeded draw of W1's own previous-night records (roadmap 36d3fc2d14)")
+
+    def w1_search():
         got, source = None, 'own search (seed %d)' % (seed + 10)
         dp = os.path.join(day_from, name, 'day.pkl') if day_from else None
         if dp and os.path.exists(dp):
@@ -921,8 +919,23 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
             tries, fit1, fit, drawn = search(N, pool, vocab, device, seed + 10, T, n1, n2)
         recs, counts = w_records(pool, tries, seed + 1)
         kind_of = {r['id']: r['kind'] for r in pool}
-        info = dict(source=source, samples=drawn, records=len(recs), records_by_kind={k: sum(c for i, c in counts.items() if kind_of[i] == k) for k in sorted(set(kind_of.values()))},
-                    pool_with_fit_pass1=sum(fit1), pool_with_fit_final=sum(fit))
+        return recs, dict(source=source, samples=drawn, records=len(recs), records_by_kind={k: sum(c for i, c in counts.items() if kind_of[i] == k) for k in sorted(set(kind_of.values()))},
+                          pool_with_fit_pass1=sum(fit1), pool_with_fit_final=sum(fit))
+    # 1. W1 = one C2b W night from N' (job 8's two-pass search at T, <= 2 distinct fitting tries per row, the frozen dose)
+    wsrc = os.path.join(w1_from, name) if w1_from else pdir
+    wpath = os.path.join(wsrc, 'W1.pt')
+    prev = json.load(open(os.path.join(wsrc, 's3.json'))) if (resume or w1_from) and os.path.exists(os.path.join(wsrc, 's3.json')) else {}
+    w1_recs = None
+    if (resume or w1_from) and os.path.exists(wpath) and prev.get('args') == args and 'W1_night' in prev:
+        W1, _, _ = sleep.load_parent(wpath, device)
+        W1.eval()
+        res['W1_night'], res['W1_from'] = prev['W1_night'], wpath
+        log('W1: loaded', wpath)
+    else:
+        assert not w1_from, f'w1_from: no W1 with the same arguments in {wsrc}'
+        t0 = time.time()
+        recs, info = w1_search()
+        w1_recs = recs
         log('W1 search', info)
         secs['W1_search'] = time.time() - t0
         if len(recs) < 1:
@@ -952,8 +965,20 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
     # 3. P and Z at the same dose, the same replay
     t0 = time.time()
     P, pi = sleep_on(W1, precs, vocab, replay, warm_rows, lr, visits, seed, device)
-    zrecs = replay_only_records(replay, warm_rows, len(precs), seed + 4)
+    if control == 'w1':
+        if w1_recs is None:                                     # W1 reused: rebuild its records from the same day and seeds, and check them against W1's own counts
+            w1_recs, rinfo = w1_search()
+            same = all(rinfo[k] == res['W1_night'][k] for k in ('records', 'records_by_kind', 'pool_with_fit_pass1', 'pool_with_fit_final'))
+            res['W1_records_rebuilt'] = dict(records=rinfo['records'], same_counts_as_W1_night=same)
+            log("Z': W1's records rebuilt", res['W1_records_rebuilt'])
+            assert same, "rebuilt W1 records differ from W1's night"
+        assert len(w1_recs) >= len(precs), "Z' needs as many W1 records as P has"
+        zrecs = random.Random(seed + 4).sample(list(w1_recs), len(precs))
+    else:
+        zrecs = replay_only_records(replay, warm_rows, len(precs), seed + 4)
     Z, zi = sleep_on(W1, zrecs, vocab, replay, warm_rows, lr, visits, seed, device)
+    for arm, m in (('P', P), ('Z', Z)):
+        sleep.save_parent(m, meta['name'], meta['cfg'], vocab, os.path.join(pdir, f'{arm}.pt'), step=(meta['step'] or 0), warmup=True)
     assert pi['updates'] == zi['updates'], 'P and Z must get the same number of updates'
     res['P_sleep'], res['Z_sleep'] = pi, zi
     secs['sleep_PZ'] = time.time() - t0
@@ -963,10 +988,10 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
     t0 = time.time()
     sk = {}
     models = dict(W1=W1, P=P, Z=Z)
-    per, res['arms'] = {}, {}
+    per, perf, res['arms'] = {}, {}, {}
     for arm, m in models.items():
         dp, fp = greedy_rows(m, dev, vocab, device), greedy_rows(m, fresh, vocab, device)
-        per[arm] = dp
+        per[arm], perf[arm] = dp, fp
         sk[arm] = skills_eval(m, skills_data, device)
         res['arms'][arm] = dict(s3_measures(dp, fp), skills=sk[arm])
         if sk['W1'] and sk[arm]:
@@ -974,18 +999,38 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
         log('arm', arm, {k: res['arms'][arm][k] for k in ('stuck_rate', 'first_try_right')})
         save()
     secs['measure'] = time.time() - t0
+    json.dump(dict(dev_ids=[r['id'] for r in dev], fresh_ids=[r['id'] for r in fresh], dev={k: per[k] for k in models}, fresh={k: perf[k] for k in models}),
+              open(os.path.join(pdir, 'per_row.json'), 'w'))
     stuck = lambda arm: [0.0 if d['fit'] else 1.0 for d in per[arm]]
     zp = c2_pilot.boot(stuck('Z'), stuck('P'))
-    res['boot'] = dict(stuck_Z_minus_P=dict(zip(('points', 'lo', 'hi'), zp)))
+    bd = lambda a_, b_: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(a_, b_)))
+    rv = lambda ds, kinds=None: [float(d['right']) for d in ds if kinds is None or d['kind'] in kinds]
+    both = [(x['written'], y['written']) for x, y in zip(per['P'], per['W1']) if x['right'] and y['right']]
+    res['boot'] = dict(stuck_Z_minus_P=dict(zip(('points', 'lo', 'hi'), zp)),
+                       stuck_W1_minus_P=bd(stuck('W1'), stuck('P')),
+                       first_try_P_minus_W1=dict({g: bd(rv(per['P'], ks), rv(per['W1'], ks)) for g, ks in GROUPS.items()},
+                                                 practised=bd(rv(perf['P']), rv(perf['W1'])), pooled_dev=bd(rv(per['P']), rv(per['W1']))),
+                       first_try_P_minus_Z=dict({g: bd(rv(per['P'], ks), rv(per['Z'], ks)) for g, ks in GROUPS.items()}, practised=bd(rv(perf['P']), rv(perf['Z']))),
+                       written_steps_P_minus_W1_on_rows_both_right=dict(rows=len(both), **(dict(zip(('mean_x100', 'lo_x100', 'hi_x100'), c2_pilot.boot([x for x, _ in both], [y for _, y in both])))
+                                                                                         if both else {})))
     # 5. marks
     a = res['arms']
     gap = {g: 100 * (a['P']['first_try_right'][g] - a['Z']['first_try_right'][g]) for g in list(GROUPS) + ['practised']}
-    harm = a['P'].get('skills_harm_vs_W1_points')
+    harm, zharm = a['P'].get('skills_harm_vs_W1_points'), a['Z'].get('skills_harm_vs_W1_points')
+    hm = dict(P_points=harm, Z_points=zharm, passes=None if harm is None else harm <= 2.0, rule='P skills harm vs W1 <= 2 points (100 x pooled-5 drop)')
+    if control == 'w1':
+        hm['second_night_harm'] = bool(harm is not None and zharm is not None and harm > 2.0 and abs(harm - zharm) <= 0.5)
+        hm['rule'] += f"; if P > 2 but within 0.5 of {zl}'s: 'practice passes; second-night harm is a separate blocker' (roadmap 36d3fc2d14)"
     res['marks'] = dict(
-        stuck=dict(Z_minus_P_points=zp[0], passes=zp[0] >= 3.0, rule='P stuck rate <= Z stuck rate - 3 points (C2 DEV greedy try fails the example check)'),
-        groups=dict(P_minus_Z_first_try_points=gap, passes=all(v >= -2.0 for v in gap.values()), rule='no group more than 2 points below Z on first try right'),
-        harm=dict(P_points=harm, Z_points=a['Z'].get('skills_harm_vs_W1_points'), passes=None if harm is None else harm <= 2.0, rule='P skills harm vs W1 <= 2 points (100 x pooled-5 drop)'),
-        proved_wrong=dict(flag=zp[2] < 1.0, rule='Z - P stuck-rate upper end of the paired 95% interval < +1 point'))
+        stuck=dict(Z_minus_P_points=zp[0], passes=zp[0] >= 3.0, rule=f'P stuck rate <= {zl} stuck rate - 3 points (C2 DEV greedy try fails the example check)'),
+        groups=dict(P_minus_Z_first_try_points=gap, passes=all(v >= -2.0 for v in gap.values()), rule=f'no group more than 2 points below {zl} on first try right'),
+        harm=hm,
+        proved_wrong=dict(flag=zp[2] < 1.0, rule=f'{zl} - P stuck-rate upper end of the paired 95% interval < +1 point'))
+    ok = res['marks']['stuck']['passes'] and res['marks']['groups']['passes']
+    res['marks']['passes'] = bool(ok and hm['passes'])
+    if control == 'w1':
+        res['marks']['ruling'] = ('practice passes' if ok and hm['passes'] else
+                                  'practice passes; second-night harm is a separate blocker' if ok and hm.get('second_night_harm') else 'fails')
     secs['total'] = time.time() - t00
     res['seconds'] = secs
     save()
@@ -1027,6 +1072,8 @@ if __name__ == '__main__':
         else:
             s.add_argument('--skills-train'); s.add_argument('--skills-data'); s.add_argument('--replay-n', type=int)
             s.add_argument('--day-from', help="an S1 output dir: W1's search tries come from S1's day on the same parent when its key matches")
+            s.add_argument('--control', choices=('replay', 'w1'), default='replay', help="replay = S3's Z; w1 = S3''s Z' (W1's own previous-night records)")
+            s.add_argument('--w1-from', help='an earlier S3 output dir whose W1 is reused (same arguments)')
     a = a.parse_args()
     if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
@@ -1039,4 +1086,5 @@ if __name__ == '__main__':
            knew_dir=a.knew, resume=not a.no_resume)
     else:
         s3(a.nprime, a.out, skills_train=a.skills_train, skills_data=a.skills_data, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed,
-           replay_n=a.replay_n, device=a.device, resume=not a.no_resume, day_from=os.path.expanduser(a.day_from) if a.day_from else None)
+           replay_n=a.replay_n, device=a.device, resume=not a.no_resume, day_from=os.path.expanduser(a.day_from) if a.day_from else None,
+           control=a.control, w1_from=os.path.expanduser(a.w1_from) if a.w1_from else None)
