@@ -77,9 +77,10 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   did not make answers shorter. It is parked.
 - **Sleep has been quietly costing other skills (found 10-08).** Each weight-changing night costs about 1-4 points
   over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
-  nights), and our nightly check only watched five other families. The check now covers all 34. Next the model gets
-  a repair step: it tests itself on its own old practice rows after each night and re-practises what dropped. Parts
-  1 and 2 are tested together after that.
+  nights), and our nightly check only watched five other families. The check now covers all 34. A repair step
+  (re-practising old skills after each night) made things worse and is dropped. The suspect now is that each night
+  learns too fast, and a short check of that is next. Most of the loss comes from building the practice parent and
+  the first night; a second night adds little.
   Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
   nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1289,6 +1290,35 @@ families x 200, two parents).**
    families (format clash with C2, too little replay per family, or too many passes per record), saved under
    `reviews/`, for Ben.
 
+**Test R result (fast-sleep d06d69f58, finished 8:42 AM ET 10-08; DEV, two parents): FAIL, proved wrong.**
+- After night 1 the repair made things worse: in_dist N' / W1 / repaired 86.7 / 82.9 / 77.3 and 87.8 / 84.2 / 79.9
+  (9.4 and 7.9 below N', 23 and 16 families firing). Its own held check fell round by round, and all 4 rounds (256
+  updates) were used.
+- C2 first try after repair: 31.2 to 0.0 and 34.4 to 14.8.
+- The even-spread arm did the same (in_dist 79.1 / 80.1, C2 first try 2.0 / 2.7), so the choice of families is not
+  the cause.
+- Night 2 on the repaired model brought in_dist back to the unrepaired level; after two nights the repair bought
+  nothing (3.8 / 3.0 below N', against 3.8 / 3.1 without it).
+- Also shown (J's W arm): night 2 alone adds no skills harm (0.0 and -0.5, nothing fires). The cost comes from the
+  stepping-stone build and night 1, which corrects "every night costs" above.
+
+**Ruled:**
+- R is dropped. Replay-only updates on its own skills rows, at the sleep's settings, damage skills rather than repair
+  them.
+- Suggested (fast-sleep), untested: the optimiser, not the data. Every night and every repair round starts a fresh
+  AdamW at learning rate 1e-3, which is B2's own pretraining peak. The rival explanation is overfitting a small reused
+  row set.
+- Accepted as the next check, owned by the fast-sleep thread with its marks fixed before the run: a 2 x 2 on N',
+  learning rate {1e-3, 1e-4} x {1,024 rows reused, fresh rows each step}, 256 replay-only updates.
+  - Drift is confirmed if both 1e-4 cells drop at most 1.0 on the held check while 1e-3 with fresh rows drops at
+    least 3.
+  - Overfitting is confirmed if 1e-3 with fresh rows drops at most 1.0 while 1e-3 with reused rows drops at least 3.
+  - Proved wrong if all four cells land within 1 point of each other.
+  - Added: DEV in_dist and C2 first try are reported for every cell.
+- If drift is confirmed, the fix to test next is a lower sleep learning rate. That must still show C2 learning, so it
+  is judged on C2 first try and the harm measure together, one change.
+- J2 runs without any repair.
+
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
 first two points together: does a creative part that learns from its successes hand the worker better finds?
@@ -1514,3 +1544,7 @@ night, CPU):
 - **J fails (10-08):** with loops 1 and 2 together, the creative add-on trained on the parent stopped helping once the
   worker slept (creative reach@32 J - W -6.3 / +0.4). Added Test S1w (loop 1 trained on the slept worker) before a
   second J with the night order swapped.
+
+- **Test R proved wrong (10-08):** the self-repair pass (replay-only updates on its own skills rows) deepened the harm
+  (in_dist 9.4 / 7.9 below N') and wiped C2 first try. Dropped. Night 2 alone adds no harm; the cost is the
+  stepping-stone build plus night 1. Next: the fast-sleep thread's 2 x 2 on learning rate and row reuse.
