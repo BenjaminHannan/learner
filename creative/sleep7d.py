@@ -536,34 +536,50 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
         save()
         log('STOP', res['stop'])
         return res
-    # 4. C: the grid, picked on C2 DEV rows the worker fails
-    t0 = time.time()
-    with creative(model, False):
-        dgt = sampler.greedy_tries(model, dev, vocab, device)
-    dev_stuck = [r for r, t in zip(dev, dgt) if not fits(fewshot.parse(r['prompt']), t.t)]
-    res['pick_rows'] = len(dev_stuck)
-    best, c_state, grid = pick_setting(model, init, kept, dev_stuck, vocab, device, T, seed, lrs, passes, kl, n, log)
-    res['grid'], res['pick'] = grid, best
-    secs['grid'] = time.time() - t0
-    log('pick', best)
-    save()
-    # S at C's setting (same updates), U = untrained
-    t0 = time.time()
-    load_adapter_state(model, init)
-    sinfo = loop1(model, kept, best['lr'], best['passes'], T, seed, kl=kl, shuffle=True)
-    s_state = adapter_state(model)
-    res['S_train'] = dict(updates=sinfo['updates'], last_loss=sinfo['loss'][-1], kl_end=sinfo['kl'][-1])
-    secs['train_S'] = time.time() - t0
-    torch.save(dict(C=c_state, S=s_state, setting=best, init=init), os.path.join(pdir, 'adapters.pt'))
+    # 4. C: the grid, picked on C2 DEV rows the worker fails (cached in DIR/<name>/adapters.pt with S, so a restart resumes after training)
+    apath = os.path.join(pdir, 'adapters.pt')
+    akey = key + (dev_limit, tuple(lrs), tuple(passes), kl, n)
+    ac = torch.load(apath, weights_only=False) if resume and os.path.exists(apath) else None
+    if ac is not None and ac.get('key') == akey:
+        c_state, s_state, best = ac['C'], ac['S'], ac['setting']
+        res['pick_rows'], res['grid'], res['pick'], res['S_train'] = ac['pick_rows'], ac['grid'], best, ac['S_train']
+        log('grid + S: loaded', apath, best)
+        save()
+    else:
+        t0 = time.time()
+        with creative(model, False):
+            dgt = sampler.greedy_tries(model, dev, vocab, device)
+        dev_stuck = [r for r, t in zip(dev, dgt) if not fits(fewshot.parse(r['prompt']), t.t)]
+        res['pick_rows'] = len(dev_stuck)
+        best, c_state, grid = pick_setting(model, init, kept, dev_stuck, vocab, device, T, seed, lrs, passes, kl, n, log)
+        res['grid'], res['pick'] = grid, best
+        secs['grid'] = time.time() - t0
+        log('pick', best)
+        save()
+        # S at C's setting (same updates), U = untrained
+        t0 = time.time()
+        load_adapter_state(model, init)
+        sinfo = loop1(model, kept, best['lr'], best['passes'], T, seed, kl=kl, shuffle=True)
+        s_state = adapter_state(model)
+        res['S_train'] = dict(updates=sinfo['updates'], last_loss=sinfo['loss'][-1], kl_end=sinfo['kl'][-1])
+        secs['train_S'] = time.time() - t0
+        torch.save(dict(C=c_state, S=s_state, setting=best, init=init, key=akey, pick_rows=res['pick_rows'], grid=grid, S_train=res['S_train']), apath)
     # 5. measures per arm, one sampling seed for every arm
     mseed = seed + 777
     states = dict(U=init, C=c_state, S=s_state)
     res['arms'], per = {}, {}
     t0 = time.time()
     for arm, st in states.items():
-        load_adapter_state(model, st)
-        kn, kp = measure(model, kdev, vocab, device, T, n_eval, mseed)
-        c2, cp = measure(model, dev, vocab, device, T, n_eval, mseed)
+        mpath, mkey = os.path.join(pdir, f'measure_{arm}.pkl'), akey + (arm, n_eval, mseed, res['transfer_source']['sha256'])
+        mc = pickle.load(open(mpath, 'rb')) if resume and os.path.exists(mpath) else None
+        if mc is not None and mc['key'] == mkey:
+            kn, kp, c2, cp = mc['m']
+            log('arm', arm, 'measures: loaded', mpath)
+        else:
+            load_adapter_state(model, st)
+            kn, kp = measure(model, kdev, vocab, device, T, n_eval, mseed)
+            c2, cp = measure(model, dev, vocab, device, T, n_eval, mseed)
+            pickle.dump(dict(key=mkey, m=(kn, kp, c2, cp)), open(mpath, 'wb'))
         res['arms'][arm] = dict(knew=kn, c2_dev=c2)
         per[arm] = dict(knew=kp, c2_dev=cp)
         show = ('reach32', f'reach{n_eval}', f'fit{n_eval}', 'tries_to_first_fit', 'distinct_fitting')
