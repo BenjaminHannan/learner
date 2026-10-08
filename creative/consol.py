@@ -123,10 +123,11 @@ class _Replay:
     """Skills rows drawn WITHOUT repetition: one seeded shuffle consumed in order, or (with weights) one seeded shuffled queue per family, each consumed in order.
     Raises when a queue runs out."""
 
-    def __init__(self, rows, seed):
+    def __init__(self, rows, seed, ordered=False):
         self.rows, self.seed = rows, seed
         self.order = list(range(len(rows)))
-        random.Random(f'replay|{seed}').shuffle(self.order)
+        if not ordered:
+            random.Random(f'replay|{seed}').shuffle(self.order)
         self.pos, self.queues, self.fpos = 0, None, {}
 
     def draw(self, n, weights=None):
@@ -162,12 +163,13 @@ def quota(weights, n):
 
 
 def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1e-3, warmup=None, seed=0, device='cpu', check_every=0, check_fn=None,
-                replay_weight_fn=None, log=None, save_at=(), save_fn=None, micro=None):
+                replay_weight_fn=None, log=None, save_at=(), save_fn=None, micro=None, replay_ordered=False):
     """sleep.sleep's fresh AdamW, lr schedule and clip, with each update half record rows, half skills replay rows (batch // 2 each).
     rec_source: a list (rows drawn with sleep._order: balanced reuse) or an iterator (dream_stream: the next batch // 2 rows). replay_rows: drawn without
     repetition (raises when used up). replay_weight_fn(model, step) -> {family: weight}, called at step 0 and every check_every steps (model in eval mode): the replay
     half is then split over families by those weights. check_fn(model, step) after updates check_every, 2 * check_every, ... and the last (eval mode);
     returning 'stop' ends the sleep. save_fn(model, step) after the updates in save_at.
+    replay_ordered: replay_rows are already in draw order (see trim_replay).
     micro: rows per backward pass (gradient accumulation, row-weighted; CPU memory: a 1,024-row pass needs ~9 GB). None = the whole batch at once. -> dict(updates_done, rows_seen, record_visits, loss, checks, weights)."""
     half = batch // 2
     warmup = min(20, max(1, updates // 5)) if warmup is None else warmup
@@ -186,7 +188,7 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
             return rs
     if replay_weight_fn is None and updates * half > len(replay_rows):
         raise ValueError(f'{updates} updates draw {updates * half} replay rows without repetition from {len(replay_rows)}')
-    rep = _Replay(replay_rows, seed)
+    rep = _Replay(replay_rows, seed, replay_ordered)
     emb = {id(m.weight) for m in model.modules() if isinstance(m, torch.nn.Embedding)}
     decay = [p for p in model.parameters() if p.requires_grad and p.ndim >= 2 and id(p) not in emb]
     no_decay = [p for p in model.parameters() if p.requires_grad and (p.ndim < 2 or id(p) in emb)]
@@ -235,6 +237,13 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
     v = list(visits.values())
     return dict(updates_done=done, rows_seen=done * batch, loss=losses, checks=checks, weights=wlog,
                 record_visits=dict(max=max(v) if v else 0, mean=float(np.mean(v)) if v else 0.0, n=len(v)))
+
+
+def trim_replay(rows, seed, n):
+    """The first n rows an unweighted _Replay(rows, seed) would draw, in draw order (pass replay_ordered=True): the same draws with ~1.5 GB less held in memory."""
+    order = list(range(len(rows)))
+    random.Random(f'replay|{seed}').shuffle(order)
+    return [rows[i] for i in order[:n]]
 
 
 # ---------------------------------------------------------------- self-signals (no answers, no DEV)
@@ -411,13 +420,17 @@ def cmd_run(a):
     res['seconds']['N_ref'] = round(time.time() - t0, 1)
     save()
     rng = random.Random(f'consol|{a.seed}')
-    rec_source, wfn = None, None
+    rec_source, wfn, ordered = None, None, False
     if a.arm == 'ro':
         mix = list(rest)
         rng.shuffle(mix)
         replay_rows, rec_source = mix[:a.updates * half], mix[a.updates * half:]
     else:
-        replay_rows = rest
+        replay_rows, ordered = rest, False
+        if a.arm != 'fdw':      # unweighted: keep only the rows the night will draw, in draw order (same draws, less memory)
+            replay_rows, ordered = trim_replay(rest, a.seed, a.updates * half), True
+            del rest
+            import gc; gc.collect()
         t1 = time.time()
         recs, res['finds'] = _cached_finds(N, ctx, out, a.parent_dir, a.n_held)
         res['seconds']['finds'] = round(time.time() - t1, 1)
@@ -452,7 +465,7 @@ def cmd_run(a):
     L = copy.deepcopy(N)
     t1 = time.time()
     info = sleep_mixed(L, rec_source, replay_rows, vocab, a.updates, a.batch, a.lr, None, a.seed, a.device, a.check_every,
-                       check_fn if a.check_every > 0 else None, wfn, log, saves, lambda m, s: _save(m, meta, vocab, os.path.join(adir, f'learner_s{s}.pt')), a.micro)
+                       check_fn if a.check_every > 0 else None, wfn, log, saves, lambda m, s: _save(m, meta, vocab, os.path.join(adir, f'learner_s{s}.pt')), a.micro, ordered)
     if a.self_stop and state['sd'] is not None:
         L.load_state_dict(state['sd'])
         info['kept_best_held_fits'] = state['best']

@@ -262,6 +262,13 @@ def test_finds_smoke():
     assert len({r['id'] for r in recs}) == len(recs) and all(r['source'].startswith('c2:pool') for r in recs)
 
 
+def test_trim_replay():
+    rows = [{'id': f'r{i}', 'family': f'f{i % 5}'} for i in range(5000)]
+    a, b = C._Replay(rows, 3), C._Replay(C.trim_replay(rows, 3, 900), 3, True)
+    for _ in range(9):
+        assert [r['id'] for r in a.draw(100)] == [r['id'] for r in b.draw(100)]
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):
