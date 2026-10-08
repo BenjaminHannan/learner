@@ -385,6 +385,19 @@ def test_s3_measures():
     assert m['written_steps_per_right']['dev'] == 3.0 and m['written_steps_per_right']['practised'] == 1.0 and m['n_right'] == dict(dev=2, practised=1)
 
 
+def test_s1b_try_marks_match_score_rows():
+    m, _, vocab = _fresh()
+    rows = _rows(6)
+    with S.creative(m, True):
+        smp = S.legal.raw_samples(m, rows, vocab, 'cpu', n=40, temperature=3.0, level=0, seed=5)
+    pm = S.try_marks(rows, smp)
+    assert S.score_marks(pm, (32, 40)) == S.score_rows(rows, smp, ks=(32, 40))
+    off = [dict(r, tries=[(0, 0, None)] * 40) for r in pm]
+    f = S.score_marks(S.switch_marks(pm, off, 32), (32, 40))
+    a = S.score_marks(pm, (32, 40))
+    assert [x['right32'] for x in f] == [x['right32'] for x in a] and all(x['n_fit'] <= y['n_fit'] for x, y in zip(f, a))
+    assert all(len(r['tries']) == 40 for r in S.switch_marks(pm, off, 32))
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):

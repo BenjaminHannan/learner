@@ -648,6 +648,144 @@ def s1report(out, parents=('s100', 's101')):
     return rep
 
 
+# ---------------------------------------------------------------- 6b. S1b (roadmap 7d, 083303c493): no training; F = trained adapter for tries 1-32, untrained (U) for tries 33-512
+def try_marks(rows, samples):
+    """Per row, per try in sampling order: (fit, right, result key or None), by score_rows' rules. -> [dict(id, kind, tries)]."""
+    out = []
+    for row, tr in zip(rows, samples):
+        p = fewshot.parse(row['prompt'])
+        recs = []
+        for rec in tr:
+            v = fewshot.verdict(p, rec.t) if pyfit(p, rec.t) else None
+            if v is None or v[0] != 'accept':
+                recs.append((0, 0, None))
+            else:
+                recs.append((1, int(str(v[2]) in row['accepted']), result_key(rec.t, run(p['nums'], rec.t)[1])))
+        out.append(dict(id=row['id'], kind=row['kind'], tries=recs))
+    return out
+
+
+def score_marks(pm, ks=(32,)):
+    """score_rows on try_marks output (same fields, same rules)."""
+    out = []
+    for r in pm:
+        fit, right, keys, first, first_right, keys_at = 0, False, set(), None, None, {}
+        for j, (f, rt, key) in enumerate(r['tries']):
+            for k in ks:
+                if j == k:
+                    keys_at[k] = set(keys)
+            if not f:
+                continue
+            fit += 1
+            first = j + 1 if first is None else first
+            if rt:
+                right = True
+                first_right = j + 1 if first_right is None else first_right
+            keys.add(key)
+        n = len(r['tries'])
+        d = dict(id=r['id'], kind=r['kind'], n=n, n_fit=fit, fit=fit > 0, right=right, first=first, first_right=first_right, distinct=len(keys))
+        for k in ks:
+            d[f'right{k}'] = first_right is not None and first_right <= k
+            d[f'fit{k}'] = first is not None and first <= k
+            d[f'distinct{k}'] = len(keys_at[k]) if k < n else len(keys)
+        out.append(d)
+    return out
+
+
+def switch_marks(on, off, k=32):
+    """F: `on`'s tries 1..k, then `off`'s tries k+1.. (each row's tries are independent draws, so this is a fair draw paired with `off`)."""
+    assert [r['id'] for r in on] == [r['id'] for r in off]
+    return [dict(id=a['id'], kind=a['kind'], tries=a['tries'][:k] + b['tries'][k:]) for a, b in zip(on, off)]
+
+
+def s1b_parent(nprime, s1dir, out, n_eval=512, k=32, device='cpu', knew_dir=KNEW, transfer_kinds=TRANSFER_KINDS, dev_limit=None, name=None, resume=True, log=_log):
+    """One parent: re-draw U's and C's S1 measures with S1's adapters and sampling seed (no training), keep per-try records, check they equal S1's per-row scores, then score F."""
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, sdir = os.path.join(out, name), os.path.join(s1dir, name)
+    os.makedirs(pdir, exist_ok=True)
+    s1r = json.load(open(os.path.join(sdir, 's1.json')))
+    s1per = json.load(open(os.path.join(sdir, 'per_row.json')))
+    ad = torch.load(os.path.join(sdir, 'adapters.pt'), weights_only=False)
+    seed, T, mseed = s1r['seed'], s1r['T'], s1r['seed'] + 777
+    assert s1r['n_eval'] == n_eval
+    res = dict(nprime=nprime, name=name, s1=sdir, seed=seed, T=T, sampling_seed=mseed, n_eval=n_eval, switch_after=k, spec='S1b (roadmap 7d 083303c493): F = C for tries 1-32, U for tries 33-512; no training; C2 DEV and K_new DEV only')
+    model, vocab, meta = sleep.load_parent(nprime, device)
+    model.eval()
+    add_adapter(model, seed=seed)
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    cpath = os.path.join(knew_dir, 'candidates_dev.jsonl')
+    raw = open(cpath, 'rb').read()
+    assert hashlib.sha256(raw).hexdigest() == s1r['transfer_source']['sha256'], 'K_new DEV file changed since S1'
+    kdev = c2_stones._with_nums(_limit([r for r in map(json.loads, raw.decode().splitlines()) if r['kind'] in transfer_kinds], dev_limit))
+    ks = sorted({k, n_eval})
+    marks, check = {}, {}
+    for arm, st in (('U', ad['init']), ('C', ad['C'])):
+        mpath = os.path.join(pdir, f'tries_{arm}.pkl')
+        mc = pickle.load(open(mpath, 'rb')) if resume and os.path.exists(mpath) else None
+        if mc is not None and mc['key'] == (mseed, n_eval, len(dev), len(kdev)):
+            marks[arm] = mc['m']
+            log(arm, 'per-try records: loaded', mpath)
+        else:
+            t0 = time.time()
+            load_adapter_state(model, st)
+            m = {}
+            with creative(model, True):
+                for ds, rows in (('knew', kdev), ('c2_dev', dev)):        # the order and seed S1's measure used
+                    smp = legal.raw_samples(model, rows, vocab, device, n=n_eval, temperature=T, level=0, seed=mseed)
+                    m[ds] = try_marks(rows, smp)
+            marks[arm] = m
+            pickle.dump(dict(key=(mseed, n_eval, len(dev), len(kdev)), m=m), open(mpath, 'wb'))
+            log(arm, 'redrawn', round(time.time() - t0), 's')
+        # S1's per-row scores must come back exactly from the redrawn tries (then F is computed from S1's own draws)
+        check[arm] = {}
+        for ds in ('knew', 'c2_dev'):
+            a, b = score_marks(marks[arm][ds], ks), s1per[arm][ds]
+            diff = [i for i, (x, y) in enumerate(zip(a, b)) if any(x[f] != y[f] for f in x)]
+            check[arm][ds] = dict(rows=len(a), rows_differing=len(diff), equal=len(a) == len(b) and not diff)
+    res['reproduces_s1'] = check
+    exact = all(v['equal'] for c in check.values() for v in c.values())
+    res['draws'] = 'S1\'s own draws (redrawn with S1\'s seed; every per-row score equals S1\'s)' if exact else 'fresh draws with S1\'s seed (NOT identical to S1\'s per-row scores; see reproduces_s1)'
+    log('reproduces S1', exact, check)
+    per = {arm: {ds: score_marks(marks[arm][ds], ks) for ds in ('knew', 'c2_dev')} for arm in ('U', 'C')}
+    per['F'] = {ds: score_marks(switch_marks(marks['C'][ds], marks['U'][ds], k), ks) for ds in ('knew', 'c2_dev')}
+    json.dump(per['F'], open(os.path.join(pdir, 'per_row_F.json'), 'w'))
+    res['arms'] = {arm: {ds: summarize_by_kind(per[arm][ds]) for ds in ('knew', 'c2_dev')} for arm in per}
+    vec = lambda arm, ds, kk, kinds=None: [float(x[f'right{kk}']) for x in per[arm][ds] if kinds is None or x['kind'] in kinds]
+    bt = lambda a, b, ds, kk, kinds=None: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(vec(a, ds, kk, kinds), vec(b, ds, kk, kinds))))
+    E = n_eval
+    res['boot'] = dict(knew_F_minus_U=bt('F', 'U', 'knew', E), c2_F_minus_U=bt('F', 'U', 'c2_dev', E), c2_32_F_minus_C=bt('F', 'C', 'c2_dev', k),
+                       c2_32_F_minus_U=bt('F', 'U', 'c2_dev', k), c2_F_minus_C=bt('F', 'C', 'c2_dev', E),
+                       groups={g: dict(F_minus_U=bt('F', 'U', 'c2_dev', E, kk)) for g, kk in GROUPS.items()})
+    P = lambda arm, ds: res['arms'][arm][ds]['pooled']
+    b = res['boot']
+    res['marks'] = dict(
+        reach32_equals_C=dict(F=P('F', 'c2_dev')[f'reach{k}'], C=P('C', 'c2_dev')[f'reach{k}'], S1_C=s1r['arms']['C']['c2_dev']['pooled'][f'reach{k}'],
+                              passes=P('F', 'c2_dev')[f'reach{k}'] == s1r['arms']['C']['c2_dev']['pooled'][f'reach{k}'], rule=f'C2 DEV reach@{k}: F equals S1\'s C'),
+        new_kind_guard=dict(F=P('F', 'knew')[f'reach{E}'], U=P('U', 'knew')[f'reach{E}'], F_minus_U=b['knew_F_minus_U'],
+                            passes=b['knew_F_minus_U']['points'] >= -1.0, rule=f'K_new DEV ({"/".join(transfer_kinds)}) reach@{E}: F >= U - 1 point'),
+        in_kind_guard=dict(F=P('F', 'c2_dev')[f'reach{E}'], U=P('U', 'c2_dev')[f'reach{E}'], F_minus_U=b['c2_F_minus_U'],
+                           passes=b['c2_F_minus_U']['points'] >= -2.0, rule=f'C2 DEV reach@{E}: F >= U - 2 points'),
+        report={arm: {ds: {x: P(arm, ds)[x] for x in ('tries_to_first_fit', 'distinct_fitting', f'distinct{k}', 'rows_with_fit')} for ds in ('knew', 'c2_dev')} for arm in ('U', 'C', 'F')},
+        proved_wrong_here=dict(flag=P('F', 'knew')[f'reach{E}'] == 0 and P('U', 'knew')[f'reach{E}'] > 0.01, rule=f'F\'s K_new reach@{E} is 0 while U\'s > 1% (both parents needed)'))
+    res['marks']['passes'] = all(res['marks'][x]['passes'] for x in ('reach32_equals_C', 'new_kind_guard', 'in_kind_guard'))
+    json.dump(res, open(os.path.join(pdir, 's1b.json'), 'w'), indent=1)
+    log('MARKS', {x: (v.get('passes'), v.get('F'), v.get('U')) for x, v in res['marks'].items() if isinstance(v, dict) and 'rule' in v})
+    return res
+
+
+def s1b(nprimes, s1dir, out, **kw):
+    os.makedirs(out, exist_ok=True)
+    allres = {}
+    for p in nprimes:
+        r = s1b_parent(p, s1dir, out, **kw)
+        allres[r['name']] = r
+    m = {n: r['marks'] for n, r in allres.items()}
+    allres['verdict'] = dict(passes=all(x['passes'] for x in m.values()), proved_wrong=bool(m) and all(x['proved_wrong_here']['flag'] for x in m.values()),
+                             rule='marks 1-3 on both parents; proved wrong when F\'s new-kind reach@512 is 0 on both while U\'s > 1%')
+    json.dump(allres, open(os.path.join(out, 's1b.json'), 'w'), indent=1)
+    return allres
+
+
 # ---------------------------------------------------------------- 7. S3
 
 
@@ -875,6 +1013,8 @@ if __name__ == '__main__':
     a = argparse.ArgumentParser()
     sub = a.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('s1report'); r.add_argument('--out', required=True); r.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    b = sub.add_parser('s1b'); b.add_argument('--nprime', nargs='+', required=True); b.add_argument('--s1', required=True); b.add_argument('--out', required=True)
+    b.add_argument('--knew', default=KNEW); b.add_argument('--dev-limit', type=int); b.add_argument('--device', default='cpu'); b.add_argument('--threads', type=int); b.add_argument('--no-resume', action='store_true')
     for c in ('s1', 's3'):
         s = sub.add_parser(c)
         s.add_argument('--nprime', nargs='+', required=True); s.add_argument('--out', required=True)
@@ -892,6 +1032,8 @@ if __name__ == '__main__':
         torch.set_num_threads(a.threads)
     if a.cmd == 's1report':
         print(json.dumps(s1report(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1b':
+        print(json.dumps(s1b(a.nprime, os.path.expanduser(a.s1), a.out, device=a.device, knew_dir=a.knew, dev_limit=a.dev_limit, resume=not a.no_resume)['verdict'], indent=1))
     elif a.cmd == 's1':
         s1(a.nprime, a.out, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, lrs=a.lrs, passes=a.passes, kl=a.kl, n_eval=a.n_eval, device=a.device,
            knew_dir=a.knew, resume=not a.no_resume)
