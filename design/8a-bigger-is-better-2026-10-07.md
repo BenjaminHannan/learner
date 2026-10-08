@@ -426,3 +426,29 @@ Nothing here changes a mark, an arm, a seed or the data mix. It records two fact
   On a 5090's 32 GB, 10M runs every arm in one part: about 2.8 hours a seed, about $1.40 a box. 30M runs B2 in two
   parts: about 13 hours a seed plus about 0.75 hour for pythia-31m, so about 14 hours and about $7 a box, about $42 for
   six seeds in parallel. 30M still goes to Ben with these numbers before it starts.
+
+## 20. Addendum J: where should B2's extra size go? A two-seed shape probe at 10M (2026-10-08, 12:55 AM ET, before any probe run)
+
+Why: at 10M, B2 has not grown. Over five seeds so far, 10M minus 3M is +0.44 pooled-5 (range -1.11 to +2.48), while the
+plain step model gained +3.77 and the plain LLM +15.77 (shown, 5 of 6 seeds). Mark 1 (+3.0 per step) therefore fails
+at the 3M-to-10M step whatever 30M does. B2's training loss barely moved either (1.232 to 1.208, mostly the GEN part,
+0.844 to 0.828), so the extra size is not being used even to fit the training rows (shown). The 10M rung grew B2 only
+in its controller (2 to 8 blocks), with the 2-layer letter-window reader (convolutions, about 9 letters wide) unchanged;
+the plain models grew every layer that reads the text (suggested explanation, untested).
+
+This addendum adds an exploratory probe. It does not change any mark, rung, arm or seed of the ladder, and it decides
+nothing by itself: any new ladder shape would get its own dated addendum and fresh marks before it runs.
+
+- **Arms** (B2 only, 10M band, same pool, caps, recipe and 24,000 updates as the 10M rung; seeds 400 and 401; one
+  rented RTX 5090 per arm and seed; code 50ee171632):
+  - **R (reader-grown):** blocks 2 (as at 3M), reader layers 2 -> 23 (receptive field about 9 -> 93 letters):
+    10,243,921 trained params. One change against the 10M rung: where the size goes.
+  - **W (wider):** width 256 -> 384 (6 heads), blocks 3, reader layers 2, feed-forward ratio 4.8: 9,892,562 params.
+    Learning rate scaled by 256/384 as the spec already does for width at 30M (part of the width change, disclosed).
+- **Readout per arm, fixed now** (pooled-5; "gain" = arm minus the same seed's 8a 3M B2; "depth" = the same seed's 10M B2):
+  - **Grows:** gain >= +3.0 on both seeds AND arm minus depth >= +2.0 on both seeds.
+  - **Flat:** gain < +1.0 on both seeds.
+  - Otherwise **unclear**. Two seeds is not a verdict. Guard: chain-5 >= 99 on both seeds.
+  - What would prove the "size sits in the wrong place" explanation wrong: both arms flat.
+- **Reported:** training-loss parts (GEN, WORD, mode), loops:0 leak, per-split gains, hours and cost.
+- **Cost cap:** about $2-3 a box, about $10 for the four; kill at 7 hours. Checkpoints exported as in the 10M rung.
