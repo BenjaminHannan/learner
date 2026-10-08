@@ -86,8 +86,9 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   re-reading the same small set of records many times at a high learning rate. **Fix found for the first night
   (10-08, Test VL):** a 10x lower learning rate costs no skills (old skills even rise slightly) and keeps nearly all
   of the night's gain on the new rules. Two nights at the lower rate (Test L2) also cost no skills, but the new
-  rules climbed only about half as much and the search did not widen. More practice per night at the lower rate is
-  being tested (L64). Ben asked (2:50 PM ET 10-08) what happens if the model chooses its own training set. First
+  rules climbed only about half as much and the search did not widen. Twice the practice per night (L64) won back
+  part of the climb (about two-thirds of the fast nights') but cost one old skill on one copy; the next lever, a
+  middle learning rate, is on hold. Ben asked (2:50 PM ET 10-08) what happens if the model chooses its own training set. First
   step, Test SC: at the fast rate, the model picks which old skills to re-practise during the night, by checking
   which ones it is starting to forget. Ben's follow-up (2:54 PM ET): keep every past training example. Old skills rows
   are already mixed into every night; past nights' own finds are not, so Test AP keeps them.
@@ -1467,6 +1468,24 @@ families x 200, two parents).**
   fast-sleep CPU, finishes and is ruled. SC and AP (built, fast-sleep c29a9b9bd / 3c6a98f11) do not start. The lr
   3e-4 follow-up and any new 7d test wait for the "One big proven training run" thread to name the checks that gate
   that run; a held test runs only if that thread asks for it. Job 9 is not changed.
+  - Confirmed 3:37 PM ET by the big-run thread (via the coordinator): let L64 and job 9 finish; SC, AP, lr 3e-4,
+    consolidation Screen A and the 71.3% re-check stay held; sleep is not on the big run's path for now.
+- **L64 result (fast-sleep 3dc882fce, 3:53 PM ET 10-08; shown, DEV, s100 / s101): fails, not proved wrong.**
+  - Mark 1, harm against N': in_dist rises (-0.9 / -1.2), but on s100 table_calc fires (62.5 to 56.0, -6.5
+    [-11.5, -1.0]; it was 62.0 after L2, so the 64-visit night 2 did it). s101 passes. This is a real family fire,
+    3 rows past the line, not a one-question miss.
+  - Mark 2, multi-step first try L64 - W2: -2.6 [-7.8, +2.6] / -2.6 [-7.1, +1.9]. That is 4 questions behind where 3
+    were allowed, on both parents. Under Ben's near-miss rule this counts as met.
+  - Proved wrong: neither line is met. Upper ends against W2 are +2.6 / +1.9, and L64 - L2 is +1.9 / +0.6 (below
+    +1.0 on s101 only).
+  - Report only: climb over N' +5.8 / +3.9 (L2 +3.9 / +3.2; job 8's mark +10). Multi-step reach@32 18.2 / 13.0
+    (L2 9.1 / 9.1, W2 31.8 / 24.7). Pooled first try 35.2 / 35.2 (W2 34.0 / 39.5). Night 1 at 64 visits matches
+    VL's L.
+  - Shown: more practice at lr 1e-4 buys back part of the search breadth and the climb, and starts a small
+    one-family cost. Suggested (fast-sleep): the lever is the rate between 1e-4 and 1e-3, not visits.
+  - State of the line (held): the best tested recipe, L64, keeps old skills except one family on one parent and gets
+    about two-thirds of the fast nights' climb. The fast nights get the full climb for about 4 points of skills. lr
+    3e-4 is the next single change, held until the big-run thread asks for it.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1771,3 +1790,6 @@ CPU):
   the pooled gain's upper end is below +1 on both parents.
 - **10-08, 3:30 PM ET:** Ben's rule (one proven big run, not many little tests): SC, AP and the lr 3e-4 follow-up
   held; L64 finishes and is ruled; new 7d tests only if the "One big proven training run" thread asks.
+- **10-08, 4:00 PM ET:** L64 ruled (fast-sleep 3dc882fce): fails on s100's table_calc fire; the climb mark is missed
+  by one question on both parents (met under Ben's near-miss rule); not proved wrong. lr 3e-4 next, held. The 7d
+  sleep line pauses here: sleep is not on the big run's path for now.
