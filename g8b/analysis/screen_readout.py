@@ -6,7 +6,7 @@ LADDER_DIR results/8a-ladder of claude/project-thread-yha868 (B2, PT, LLM on the
 G_DIR      optional: 8a-G results with G-B2 / G-PT folders named 8a-{rung}-s{seed}-{B2,PT} (used for the G-PT part of the go rule)."""
 import json, os, statistics as st, sys
 
-SEEDS = [400, 401]
+SEEDS = [int(x) for x in os.environ.get('SEEDS', '400,401').split(',')]     # SEEDS=400 for addendum E's one-seed screen
 SPL = ['in_dist', 'answer', 'frame', 'vocab', 'variant']
 FAMS = ['seq_next', 'fewshot_number_rule', 'rule_apply', 'digits_parity', 'order_chain', 'table_lookup', 'list_index', 'cipher_map']
 

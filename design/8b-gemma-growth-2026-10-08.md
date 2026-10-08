@@ -239,3 +239,24 @@ at 21.5 GB plus EmbeddingGemma). Screen: about 2.6 h + 5 h of box time, about $3
   under about a dozen lesions, plus the donor eval, each batch also running EmbeddingGemma. Neither EGE nor EGA has been timed at 10M with
   `--accum 2`. At the first `PROG` lines, project training time plus the eval against MAXH 9.5 (a MAXH kill during the final
   eval loses the whole run). If it doesn't fit, raise MAXH for that box and tell Ben the new worst-case cost.
+
+## 9. Addendum E (2026-10-08, 3:30 PM ET, no 8b result exists): a one-seed first step, about $7 instead of $26; marks fixed before it runs
+
+Ben, 3:15 PM ET: $26 is a lot; can it run on his M1 Pro? (No: an M1 Pro is probably 10-20x slower than a 5090, and the 10M arms needed gradient
+accumulation to fit 32 GB; speeds are estimates.) He then said "yes" to the cheaper plan below. Addendum D's full two-arm, two-seed screen
+is not dropped, only put behind this step. It needs Vast credit first (credit 0, balance -$0.88 at 3:25 PM ET).
+
+- **Step 1 (about $7, worst case about $9.3 at the caps):** **EGA36 only, seed 400, 3M and 10M**, 2 boxes, from one commit, with
+  `ACCUM=2` at 10M, MAXH 6 / 9.5, the `PROG` lines on. `d = pooled-5(10M) - pooled-5(3M)`. 8a references on seed 400 (shown):
+  B2 +0.03, PT +3.08, LLM +15.03.
+- **Readout (computed by `SEEDS=400 python g8b/analysis/screen_readout.py results/8b/EGA36 <8a-ladder>`):**
+  - **Grows (go on):** `d - d_B2 >= +3.0` and `d - d_PT >= +1.0` (d at least +3.03 and +4.08... i.e. d >= +4.08).
+  - **Flat (stop):** `d - d_B2 < +1.0`, i.e. d < +1.03. No more money goes to this fix, and I report that the Gemma input plus the letter writer
+    does not make B2 grow, as a one-seed screen.
+  - **Unclear:** anything between: one more seed (401) of EGA36 (about $7) before any other spend.
+  - **Guards, both rungs:** chain-5 >= 99; cipher_map >= 90; thinker off (`loops:0`) pooled-5 <= half the full score. A failed guard voids the run.
+- **If it grows:** the EGE36 control on seed 400 (about $7), to say how much of the gain is the letter writer and how much the bug
+  fix, then seeds 401-405 as addendum D / section 3 describe. Any spend past the $40 line is Ben's call.
+- **What this step cannot say:** with one seed it cannot support a claim (Ben's M1 needs 6 paired seeds), and a flat result does not separate the bug
+  fix from the letter writer. B2's seed-to-seed gain varies by about 1.2, so a single seed near a line is not a result.
+- **Prediction (written now, suggested):** d between +1 and +4, so likely "unclear" or "flat".
