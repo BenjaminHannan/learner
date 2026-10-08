@@ -14,7 +14,7 @@ checkpoints. Proved wrong for this fix (Amendment 5, 6:50 PM ET, read by path): 
 cells all >= 90 but an answer cell at 4-9 below 90: "NOT SHOWN: answer selection" (the next single change, sealed: a learned entry-index signal
 on the span pointer's keys). Otherwise (some cell 90-99, or R2-R4): not shown.
 A run counts only if status ok, the q33 recipe and the right size; a missing or invalid run: NOT JUDGED."""
-import argparse, json, os, re
+import argparse, hashlib, json, os, re
 from custom_io import analyze_t1 as A
 from custom_io.analyze import P5, C5, g, load, sub
 
@@ -317,12 +317,14 @@ def load_opswap(files):
     return out, sorted(x for x in shas if x)
 
 
-def amend12(conf, ops, shas, wcs):
+def amend12(conf, ops, shas, wcs, dev_shas=None):
     """Marks 4 and 5 of the T1SDR confirm as ruled in Amendments 11-12 (MARKS-D0-T1, 10-08), on top of analyze_t1.confirm's marks 1-3, 6.
     Mark 4 unchanged (flat <= 5 every seed, B2 beside); Amendment 11's other reading (a miss counts only if > 1.0 above B2 on that seed) is
     printed beside, not a mark. Mark 5: per seed the LOWER of the unambiguous-only and the own-pointer opswap figure (rescore_opswap, CPU),
     >= 99 with the unambiguous n >= 500, every seed; the text-match figure (the run's own, superseded) and B2's re-score printed beside. A seed
-    without a re-scored checkpoint leaves mark 5 open. Ben's screen "good enough" (hair tolerance) does not apply here (Amendment 10 item 1)."""
+    without a re-scored checkpoint leaves mark 5 open. Ben's screen "good enough" (hair tolerance) does not apply here (Amendment 10 item 1).
+    Every re-score must have read the judge's --opswap-dev in_dist.jsonl: its sha256 as stored, or with CRLF line ends (a Windows checkout of the
+    same file); without --opswap-dev, all re-scores must share one hash."""
     if not conf.get('judged'):
         return conf
     F, m = conf['facts'], conf['marks']
@@ -344,9 +346,10 @@ def amend12(conf, ops, shas, wcs):
                     own_pointer=t['own_pointer']['match'], text_match=t['text_match']['match'], text_match_run=f['swap_match'],
                     ambiguous_rate=t['ambiguous']['rate'], B2=None if b is None else b['mark5']['value'],
                     ck_matches_wc=None if not wck else wck == t['ck_sha256'])
+    dev_ok = all(x in dev_shas for x in shas) if dev_shas else len(shas) == 1
     m['5 opswap (Amendment 12): lower of unambiguous-only and own-pointer >= 99, unambiguous n >= 500, every seed'] = dict(
-        value=v, pending=pend, dev_sha256=shas,
-        ok=not pend and len(shas) == 1 and all(x['value'] is not None and x['value'] >= 99 and x['unambiguous_n'] >= 500 for x in v.values()))
+        value=v, pending=pend, dev_sha256=shas, dev_ok=dev_ok,
+        ok=not pend and dev_ok and all(x['value'] is not None and x['value'] >= 99 and x['unambiguous_n'] >= 500 for x in v.values()))
     conf['mark5_old_text_match'] = old
     fails = [k.split()[0] for k, x in m.items() if not x['ok']]
     conf['marks'] = dict(sorted(m.items()))
@@ -374,6 +377,7 @@ def main(argv=None):
     ap.add_argument('--out', default=None, help='default custom_io/results/<arm>-ANALYSIS.json')
     ap.add_argument('--dev', default=None, help='T1SDR (R5): the dev set the runs were evaluated on (its dev/in_dist.jsonl)')
     ap.add_argument('--opswap', nargs='*', default=[], help='T1SDR confirm mark 5 (Amendment 12): custom_io/rescore_opswap outputs')
+    ap.add_argument('--opswap-dev', default=None, help='the --big-data dir the opswap re-scores read (its dev/in_dist.jsonl hash is checked)')
     a = ap.parse_args(argv)
     a.out = a.out or f'custom_io/results/{a.arm}-ANALYSIS.json'
     if a.arm != 'T1S':
@@ -391,7 +395,8 @@ def main(argv=None):
     conf = confirm(runs)
     if a.arm == 'T1SDR':
         ops, shas = load_opswap(a.opswap)
-        conf = amend12(conf, as_t1s(ops, a.arm), shas, wcs)
+        dv = open(os.path.join(a.opswap_dev, 'dev', 'in_dist.jsonl'), 'rb').read() if a.opswap_dev else None
+        conf = amend12(conf, as_t1s(ops, a.arm), shas, wcs, dv and {hashlib.sha256(dv).hexdigest(), hashlib.sha256(dv.replace(b'\r\n', b'\n').replace(b'\n', b'\r\n')).hexdigest()})
     res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=sc, confirm=conf, skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
@@ -443,6 +448,9 @@ def main(argv=None):
         v1 = next(x for k, x in c['marks'].items() if k.startswith('1 '))['value']
         L += [f"- parity: mean {v1['mean']:+.2f}, sd {v1['sd']:.2f}, 95% CI [{v1['ci'][0]:+.2f}, {v1['ci'][1]:+.2f}], seeds within 1.0: {v1['seeds_within_1']} of 6",
               f"- proved wrong (pooled-5 mean < -2.0 or chain-5 mean < 95): {c['proved_wrong']}"]
+        m5k = next((x for k, x in c['marks'].items() if k.startswith('5 opswap (Amendment 12)')), None)
+        if m5k:
+            L += [f"- mark 5 re-scores read the --opswap-dev set (LF or CRLF copy of the same file): {m5k['dev_ok']}; open seeds: {m5k['pending'] or 'none'}"]
         b4 = next((x.get('beside') for k, x in c['marks'].items() if k.startswith('4 ')), None)
         if b4:
             L += [f"- {b4['reading']}: misses {({s: v for s, v in b4['misses'].items() if v}) or 'none'} -> {'pass' if b4['ok'] else 'FAIL'}"]

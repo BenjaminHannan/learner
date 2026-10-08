@@ -47,5 +47,25 @@ Scorer passes: {'T1S': 5, 'T1': 8}
 | answer T1 old scorer | 97.1 | 98.1 | 97.3 | 59.5 | 0.7 | 0.0 | 0.0 | 0.0 | - |
 Scorer passes: {'T1S': 5, 'T1': 8}
 
-## 6-seed confirm (marks 1-6 as amended): NOT JUDGED
+## 6-seed confirm (marks 1-6 as amended): NOT SHOWN (failing: 4, 5; mark 5 open on seed(s) 205). Mark 4 donor fails as Amendment 12 item 6 says: the confirm stays NOT SHOWN on mark 4 unless Ben explicitly clears it
+
+- 1 parity (Amendment 2): mean T1 - B2 >= -1.0, 95% CI lower >= -2.0, T1 >= B2 - 1.0 on >= 5 of 6 seeds: pass
+- 2 chain-5 mean within 1.0 of B2 and >= 99 on 5 of 6 seeds: pass
+- 3 tool off: noexec program set < 5 on every seed: pass
+- 4 loops:0 and donor in_dist <= 5 on every seed: FAIL
+- 5 opswap (Amendment 12): lower of unambiguous-only and own-pointer >= 99, unambiguous n >= 500, every seed: FAIL
+- 6 no dev split 6-seed mean drop > 2.0: pass
+- parity: mean +0.62, sd 0.81, 95% CI [-0.23, +1.46], seeds within 1.0: 6 of 6
+- proved wrong (pooled-5 mean < -2.0 or chain-5 mean < 95): False
+- mark 5 re-scores read the --opswap-dev set (LF or CRLF copy of the same file): True; open seeds: [205]
+- Amendment 11 item 1 other reading (not a mark): a value over 5 counts as a miss only if it is > 1.0 above B2 on that seed: misses {200: ['donor'], 201: ['loops0', 'donor'], 202: ['donor'], 203: ['donor'], 205: ['donor']} -> FAIL
+
+| seed | pooled-5 T1SDR - B2 | chain-5 T1SDR / B2 | tool off | loops:0 T1SDR / B2 | donor T1SDR / B2 | swap mark 5 (unamb / own / text; n; amb rate) | B2 swap | swap run (text) | machine differs |
+|---|---|---|---|---|---|---|---|---|---|
+| 200 | +1.94 | 99.7 / 99.4 | 0.0 | 1.6 / 0.0 | 5.6 / 3.2 | 99.9 (99.9 / 99.9 / 97.5; n 772; 7.3%) | 99.9 | 97.5 | ['data'] |
+| 201 | -0.15 | 99.7 / 99.6 | 0.0 | 12.9 / 10.8 | 5.1 / 3.3 | 99.3 (99.5 / 99.3 / 97.2; n 773; 7.2%) | 99.9 | 97.2 | ['data'] |
+| 202 | +0.18 | 99.8 / 99.6 | 0.0 | 2.5 / 0.0 | 5.6 / 3.3 | 99.4 (99.5 / 99.4 / 97.1; n 773; 7.3%) | 99.9 | 97.1 | - |
+| 203 | +0.89 | 99.6 / 99.5 | 0.0 | 3.4 / 5.7 | 5.1 / 3.1 | 99.7 (99.7 / 99.8 / 97.3; n 771; 7.3%) | 99.9 | 97.3 | - |
+| 204 | +0.96 | 99.7 / 99.6 | 0.0 | 2.1 / 3.5 | 5.0 / 3.8 | 99.6 (99.6 / 99.6 / 97.2; n 772; 7.3%) | 99.9 | 97.2 | ['data'] |
+| 205 | -0.12 | 99.8 / 99.7 | 0.0 | 4.6 / 0.0 | 5.6 / 3.5 | open | - | 97.6 | ['data'] |
 

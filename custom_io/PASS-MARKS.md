@@ -764,3 +764,11 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   not deleted). If it cannot be recovered, T1SDR_s205 is retrained on BensPC with the same line and that run is re-scored for mark 5; the
   retrained run's marks 1-4 and 6 are printed beside the Vast run's, and the swap is disclosed.
 - **Marks 1-3 and 6 and the proved-wrong lines:** unchanged.
+- **Read (about 20:00 UTC, 4:00 PM ET 10-08), all six seeds (custom_io/results/RESULTS-T1SDR.md):** NOT SHOWN on marks 4 and 5.
+  Marks 1-3 and 6 pass: pooled-5 T1SDR - B2 mean +0.62 (95% CI -0.23 to +1.46), every seed within 1.0; chain-5 99.6-99.8; tool off 0.0.
+  Mark 4 fails: donor 5.59/5.15/5.59/5.07/5.00/5.59 on seeds 200-205 (B2 3.09-3.75), five of six over 5; loops:0 fails on seed 201
+  (12.94, B2 10.81). Mark 5 per Amendment 12: 99.87/99.28/99.40/99.74/99.61 on seeds 200-204 (B2 99.88 on all six, the run's own text
+  match 97.1-97.6), seed 205 open: its checkpoint is not off the stopped box, and Ben's 3:27 PM ET rule (big money only on one run that
+  demonstrably works, no more small tests) means no retrain. Seeds 202/203's re-score read BensPC's copy of the same dev file with
+  CRLF line ends (sha256 7d72337c97..., equal to the LF file 3e3a5edb05... with CRLF line ends); the judge checks this (--opswap-dev).
+  Not proved wrong. Per Amendment 12 item 6 the confirm stays NOT SHOWN on mark 4 unless Ben explicitly clears it.
