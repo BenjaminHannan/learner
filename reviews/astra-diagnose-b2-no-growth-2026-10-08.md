@@ -41,5 +41,10 @@ rose to 10.9 / 12.4 (3M: 5.3 / 9.8).
    each. Check whether W's small gain could come from the talker answering without the loop (its leak rose).
    For the rule families (fewshot_number_rule, seq_next, rule_apply, order_chain), trace in `ledger.py` exactly how B2
    would have to produce a correct answer (which mode, which ops), and say whether its op set and talker can express it.
-4. Propose the one next change to test, with pass marks fixed in advance and the result that would prove it wrong.
+4. Ben's updated bar (10:16 AM ET 10-08): the model must gain **more** from each size step than the plain model does;
+   EmbeddingGemma 2 is the finished model's main input encoder; reader help is allowed but the thinker must drive.
+   The planned next test is `/mnt/project-files/whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md` (8a-G: EGE vs
+   the plain step model with the same Gemma front, 3M -> 10M). From the code, is it the right next test, and is its
+   plain-arm front fair? If not, propose the one next change to test instead, with pass marks fixed in advance and the
+   result that would prove it wrong. Say which part of B2 would have to change for it to out-scale a plain transformer.
 5. End with a plain-language summary for Ben (a high-school senior): a few short paragraphs, no jargon.

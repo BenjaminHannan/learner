@@ -16,6 +16,19 @@ That my own architecture ("B2") gets clearly better as it gets bigger (3M -> 10M
 ahead of plain transformers of the same size trained on the same data. The marks were fixed before any run: B2 must gain
 at least +3.0 points per size step, and its lead over the plain step model must not shrink by more than 1.0.
 
+**Updated goal (after these results):** my model must gain **more** from each size step than a plain transformer of the same
+size gains on the same data. The finished model will read its input through a frozen pretrained text embedder
+(EmbeddingGemma 2, 271M parameters, about 768 numbers per word piece); help from that reader is fine, but the part I train
+(the looped "thinker" below) should learn more and drive the answers. The 30M step of today's B2 is on hold.
+
+**My next planned test (fixed before it is built):** the same 3M -> 10M step, with both my model and the plain step model
+reading through the same frozen EmbeddingGemma 2 front (each prompt character's input gets a learned projection of the
+Gemma state of its word piece, zero-initialised). Pass: mean over 6 seeds of (my 10M-minus-3M gain) minus (the plain
+model's gain) above 0 with its 95% CI above 0, and at least half of my model's gain must remain when measured as
+(full model) minus (thinker switched off). Two seeds first: go on if the gain difference is at least +1.0 on both, stop
+if it is 0 or less on both. A version of B2 with this front ("EGE") scored +2.67 over B2 at 3M on an older data set
+(6 seeds), so it is our best model today.
+
 ## 2. The data and the test
 
 - **Training pool** (same rows, same order, for every model and both sizes): about 60M "word pieces", 38% my own question
@@ -138,8 +151,11 @@ on the rule families (fewshot_number_rule 16.2 -> 20.6, seq_next 36.2 -> 40.0, o
    test just because B2 looks better on it.)
 2. Say what the R and W probe results above do to each explanation (R flat, W slightly better than deep, neither close
    to +3), and whether a wider-and-deeper B2 at 30M is worth trying.
-3. Propose the **one** next change you'd test (one change at a time), with pass marks fixed in advance and the result
-   that would prove your explanation wrong. Keep it cheap: a 10M run costs me about $2-3 a seed.
+3. Is the planned Gemma-front test above the right next test for the updated goal? If not, propose the **one** next
+   change you'd test instead (one change at a time), with pass marks fixed in advance and the result that would prove
+   your explanation wrong. What would make a design gain **more** from size than a plain transformer, and which part of
+   B2 would have to change for that? Keep it cheap: a 10M run costs me about $2-3 a seed (about double with the Gemma
+   front, our estimate).
 4. Tell me whether running the 30M size of the current B2 shape (about $42 for six seeds) could still tell me anything
    useful, given the +3.0-per-step mark already fails at the first step.
 5. Plain-language summary for me (a high-school senior): what's going on, what to try next, and why, in a few short
