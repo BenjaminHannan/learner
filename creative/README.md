@@ -1,0 +1,82 @@
+# creative/: code for C1 and C2 (creative roadmap, 2026-10-06)
+
+Spec: `creative-roadmap-2026-10-06.md` sections 6 (C1) and 7 (C2). Imports `custom_io` (B2) and edits nothing there.
+**Nothing here trains B2.** CPU smoke tests only. Both tests wait for B2's 6-seed confirm (seeds 200-205 = the 6 parents).
+
+Run the tests (no data needed, tiny random B2): `python3 -m creative.tests.test_c1` and `python3 -m creative.tests.test_c2`.
+Branch note: this branch is cut from `claude/custom-reader-talker-4x309r` so `custom_io` exists; the diff of this PR is `creative/` only.
+
+| File | What it is |
+|---|---|
+| `programs.py` | B2's slots as python ints: `Try`, exact run, answer cone, canonical program key, forced-replay training form (`train_form`, `register_targets` seeds `progparse._CACHE` so `Ledger.gold()` forces the logged slot ids) |
+| `puzzles.py` | C1 puzzle generator, exact solver (all solutions), twin targets, hash-sealed splits (`data/c1/`), S0 floors |
+| `checkers.py` | the two independent checkers + B2-executor replay -> `accept / reject / unresolved` |
+| `sampler.py` | the shared sampler: heads sampled at a temperature, top-8 first-step branching, duplicates dropped; also `loops:K` |
+| `scoreboard.py` | luck, reach@4/@32, first try, variety, STOP-rule luck, own-vs-twin aim, DEV gates, temperature choice, lesions |
+| `arms.py` | C1 arms W, R, H, H', PC (N = no records) |
+| `sleep.py` | resume from checkpoint, fresh-AdamW sleep with forced targets + skills replay, <= 4 visits per record |
+| `fewshot.py` | C2a checker over input roles, C2b arms W/R/H, comparison-net data sets, synthetic rule kinds (smoke only) |
+| `cli.py` | `build-splits`, `floors`, `dev-gate`, `lesions` |
+
+## What is built, against the spec
+- **Puzzles (C1).** 3 numbers from 3..40 minus 10, T >= 1, T not a constant or a given number, exact division, solvable, no 2-number shortcut. Splits by number set: practice 1,024 / DEV 128 / T1 256 / T1b 256 / X 128 four-number. Twin target on every DEV/T1/T1b puzzle. One fixed instruction line, no digits in it. Sealed: `data/c1/MANIFEST.json` holds each file's sha256 and `load_split` refuses a file that does not match.
+- **Checkers.** `rules_a` (recursion, leaf multiset) and `rules_b` (reverse reachability + consumption pool, Fractions) written differently; 23 planted bad programs of every kind are rejected by both, with and without the value check; 10,000 random and structured tries never split them; B2's own torch executor replays every accepted try. Unresolved (disagree, replay mismatch, crash) = no hit.
+- **Shared sampler (D4).** Same code for C1 and C2. Tested: its greedy mode equals `Ledger.run` (program, answer pointer, values), seeds repeat exactly, branches really force their first step, the answer key can be blanked without changing a single try.
+- **DEV gates.** Cold start (accepted try within 32 on >= 10% of puzzles), sameness (>= 4 distinct result-changing programs per puzzle). `cli dev-gate` picks the temperature on DEV first.
+- **Sleep plumbing.** Resume from a checkpoint (weights only: checkpoints hold no optimizer, so every sleep is a fresh AdamW, as the spec says), half puzzle rows / half replay, visit cap enforced, record ids must be unique. A tiny model overfits the forced targets (loss 20.1 -> 1.8 in 120 updates).
+- **C2a without changing B2.** A try is a program over the query's input slot, the constants and its own results. To re-run it on example i the query slot is re-bound to x_i. Pointers at other prompt numbers are rejected, and the program must read x. Two executions (python ints, B2's torch executor over the examples as one batch). `mechanism_report` gives the "agrees with the key on >= 99% of accepted tries" mark. So the input-role pointers the roadmap listed as a need from B2's owner are not needed for the check; the model still has to learn to point at the query slot.
+- **C2b arms.** W (tries fitting every example, <= 2 distinct per question), R (run on every example, fit none-or-not-all, matched count, separate pool), H (R's tries with the example outputs rewritten to what the try computes; every relabel fits). Records are answered by the try's own output; the key is never read (tested by corrupting every key).
+
+## Not built yet (waits)
+- The warm-up on 2-number puzzles and the DEV choice of lr / update count with the PC arm (needs a B2 parent and a GPU or a slow CPU).
+- The power simulation and the spread between parents (needs real DEV numbers).
+- The orchestration that runs 36 sleeps and scores T1 / T1b (a small script once B2's confirm is in; it is just these functions in a loop).
+- Real C2 rows: the skills data's fewshot_number_rule / rule_apply are parsed by `fewshot.parse`, but that data is not in this repo's checkout, so only synthetic kinds were smoke-tested. Sealing the held-out rule kinds by hash is C2's own step.
+- The plain-net and fresh-net training for "examples to learn" (`labelled_sets` builds the k = 0, 8, 32, 128 data only).
+
+## Spec revision of 10-06 (relay from the roadmap thread), applied
+1. **Signal gate replaces cold start** (`scoreboard.dev_gate`; REWRITTEN later on 10-06, see the section at the end): an accepted try on >= 100 distinct practice puzzles. Reach@32 is report-only; reach@4 is the reach mark (and what `tune_temperature` picks on).
+2. **Sameness gate** = distinct rule-following programs (canonical key) >= 4 per puzzle. `distinct` (result-changing) is still reported; variety is reported with and without branching (`nobranch_*`).
+3. Puzzle generator unchanged. Correct-solution variety is report-only: `cli score --split x`.
+4. **Aim check** (`scoreboard.aim_check`, `cli aim`): own tries, twin-prompt tries scored on the real target, and the value-blind rule follower (`sampler.rule_follower_tries`, matches the exact floor: 2.25% vs 2.39% on 64 DEV puzzles), luck and reach@4. A report, not a gate; repeat on W.
+5. **F1** and the verdict names live in `marks.py` (`c1_marks`, `c1_verdict`: void -> gate stop -> placebo too close -> PASS with first answers / PASS, search only -> rules only -> gain with harm -> proved wrong -> not shown; `c2b_verdict`). Tested on synthetic parents.
+6. **Lesion: donor only** (`scoreboard.lesions`: donor_ok = donor luck <= rules-only floor). loops:0 is reported.
+7. **DEV-only pilot** (`creative/pilot.py`, `cli pilot`): raw parent gates + aim, shared warm-up on 2-number solver puzzles, warmed-parent gates + aim, PC-arm lr/update grid on DEV. Reads no T1/T1b/X. Without `--skills-train` there is no replay and warm-up harm on skills is not measured (flagged `no_replay`).
+8. **C2:** `fewshot.find_reference` / `representability` (a kind is sealed only if every sampled question has a reference program in B2's executor within 7 steps), `value_blind_floor`, `fewshot.dev_gate` (reach@32 >= 10% AND >= 3x the floor's reach@32, sameness >= 4), `marks.c2b_verdict` (first try W-N >= +15, W-R >= +10, reach@4 and skills within 2 of N).
+
+## Numbers from this code (CPU, no model unless stated)
+- Value-blind rule follower on DEV: 2.4% per try, 9.2% pass@4, 48.8% pass@32. Only about 58% of its tries count as rule-following (inexact division and the like), so the 50% signal threshold is not far above a random rule follower; the practice-puzzle count is the real signal test.
+- Mean solutions per target: practice 1.9, DEV 2.0, T1 1.9, T1b 1.7, X 4.4.
+- The uniform floor is near 0 and a few thousand samples cannot resolve it.
+- Forcing the top 8 first steps keeps about 7 distinct programs per puzzle even at near-zero temperature, which is why the gate now counts rule-following programs.
+- `loops:0` writes no steps, so its luck is 0 by construction.
+
+## Pilot prep (10-06, behind flags; nothing launched on Ben's machines)
+- `pilot --warm3 N` adds N 3-number solver puzzles to the warm-up. Their number sets appear in no sealed split (`puzzles.warmup3_rows`, ids `mk:warm3:*`; tested disjoint from practice/DEV/T1/T1b). Default 0 = the spec's 2-number-only warm-up.
+- The lr grid now defaults to 3e-4, 1e-3, 3e-3, 1e-2 (the first CPU pilot's best was 1e-3, the old grid's edge). The 4-visit cap still limits updates: `sleep.max_updates`.
+- First CPU pilot on s100 (2-number warm-up, no replay): raw 0.2% rule-following; warmed 0.4%, 3/256 practice puzzles solved; PC arm at lr 1e-3 (86 updates): DEV luck 2.0%, first try 7.8%, reach@32 45%. Files: /mnt/project-files/creative-pilot/.
+
+## Pilot as decided 10-06 (`creative/pilot.py`, tested by `tests/test_pilot.py`)
+Warm-up ladder (1,500 two-number puzzles + 1,500 / 3,000 / 6,000 three-number solver puzzles on number sets in no sealed split; <= 4 visits per record; smallest rung that passes the DEV signal gate wins), temperature re-chosen after each rung (reach@4 among sameness-passing temperatures, widen on an edge), warm-up harm vs raw (pooled-5 chain families), headroom (DEV luck, first try), PC arm with skills replay (lr edge rule, widen x3 up to twice, updates at the 4-visit cap), PC gate (PC - N >= +10 luck, first-try gain beside it). Fallbacks if the ladder fails: (a) warmed parent does not fit its own warm-up puzzles (greedy < 90%) -> 16 visits per warm-up record; (b) it fits but fails DEV -> `dream_rows` (random rule-following 3-number programs labelled with what they make, number sets in no sealed split); (c) stop and report. Hindsight is not a warm-up. Job file for the Mac: `creative/MAC-JOB.md`.
+
+## Gates and marks rewritten 10-06 (roadmap thread, after the second pilot)
+The old signal gate asked for >= 50% rule-following tries; the value-blind follower's own share is 58%, so the bar asked for near-perfect legality (both Mac pilots sat at 25-31% at every temperature and rung). Now (`scoreboard.dev_gate`):
+- **Signal:** an accepted try on >= 100 distinct practice puzzles.
+- **Aim:** luck / rules_share >= 0.082 (twice the follower's 0.041 = 2.4% / 58%). A feasibility check, not a claim.
+- **Sameness:** >= 4 distinct rule-following programs per puzzle (unchanged). `rules_share` is reported, never gated. The gate verdict names every failed part.
+- **Warm-up:** `--ladder 1500` (default), max 4 visits. 6,000 and 6,000 @ 16 visits are comparison runs only (`--ladder 6000`, `--fallbacks`); fallbacks are off by default. The fallback fork (a)/(b) uses `FIT_MIN = 0.9` in `pilot.py`: a threshold the build thread chose, not in the spec; the failure message now lists the fallbacks that actually ran.
+- **Marks (`marks.py`):** L1 W/N >= 1.6 and W-N >= +3, W above N on every parent; L2 W/R >= 1.4 and W-R >= +2.5 (interval above 0); G0 W/R >= 1.5 and W-R >= +3 (interval above 0) and W above N (interval above 0); PC gate PC/N >= 1.6 and PC-N >= +3 (`marks.pc_gate`, also used by the pilot); proved wrong: PC gate passes and W-R upper end below +1.5 points (luck) and below +1 (aim). G1, G2, G3, F1, lesion and H unchanged. Ratios are ratios of parent means.
+- **Disclosure:** these changes were made after seeing DEV numbers (a feasibility check, not a claim), and PC's +2 points on the first warm-up was known when the marks were re-scaled. T1 and T1b stay sealed. The same note is written into every `pilot.json` (`notes`).
+- `creative/diagnose.py` (read-only): why tries break the rules, per temperature, branching on/off; can re-make the warmed parent.
+
+## C1's sampler is the level-4 mask (decided 10-06, roadmap thread; PR #45's `creative/legal.py` merged here)
+- `sampler.sample_tries(..., level=4)` / `greedy_tries(..., level=4)` run `legal.sample_run_masked` (unused operands only, + - x /, exact division, k-1 steps, answer on the last result; the mask never reads the target). `sampler.C1_LEVEL = 4` is the default of every C1 entry point (`scoreboard.choose_temperature`, `aim_check`, `lesions`, `pilot.pilot`, `cli --level`). `level=0` is the plain sampler and is only a labelled comparison (pilot 2 = plain; never pooled with masked arms). C2 does not inherit the mask.
+- **Disclosure:** the mask is disclosed test scaffolding chosen after the DEV numbers; the same sampler runs for every arm (N, W, R, H, H', PC), so it favours none; T1 and T1b were never read. Written into `pilot.json` `notes`.
+- **Floors under the mask** (`puzzles.rules_only_floor(exact=True)`, `sampler.rule_follower_tries(exact=True)`): the value-blind follower is uniform over exact legal steps. DEV: 4.02% per try, pass@4 14.8%, pass@32 64.5% (the old follower: 2.4 / 9.2 / 48.8). `scoreboard.AIM_MIN = 2 x 0.0402 = 0.0804` (luck / rules_share; under the mask rules_share is ~1).
+- **F1** scores B2's PLAIN greedy try (`first_try`); the masked first try is `first_try_masked`; the plain sampler's own rules share on 8 undeduplicated tries per puzzle is `plain_rules_share`, reported for the warmed parent and every PC lr, never gated.
+- Temperature: re-chosen under the mask by reach@4 among sameness-passing temperatures; the pilot widens the grid down up to 5 times (to about 0.09).
+- Lesion: donor luck is compared with the exact-legal floor under the mask; loops:0 stays reported-only (plain call, 0 by construction).
+- Job file for the masked pilot: `creative/MAC-JOB-3.md`.
+
+## PC dose grid (decided 10-06, after the pilot 2 PC miss)
+`pilot.py`: lr {3e-4, 1e-3} x visits {4, 8, 16} per record (`LRS`, `VISITS`; updates = visits x records / 32 = 172 / 344 / 688); pick by masked DEV luck among settings whose pooled-5 skills harm vs the warmed parent is <= `SKILLS_HARM_MAX` = 2 points; if the pick is the top dose (16) try 32 once, then freeze lr and visits (`pc_choice`). Per setting and for N (`pc_n`): masked luck, twin luck, reach@4, plain and masked first try, skills harm, the plain sampler's luck / legal share / hit rate among legal tries, and the loss split into puzzle rows vs replay rows after the sleep (`sleep.split_loss`). If no setting is within the skills limit or the gate misses at every eligible setting: C1 stops with T1 and T1b sealed (`pc_gate.stop_rule`). Disclosure: the grid was added after the PC miss on DEV, applies to every arm alike, and T1 and T1b were never read (`notes` in `pilot.json`).

@@ -1,0 +1,96 @@
+{
+ "ckpt": "warm_s100_6000_rep.pt",
+ "n": 128,
+ "greedy_L0": {
+  "n": 128,
+  "rules_share": 0.3672,
+  "first_error": {
+   "step2 b=spent/unwritten": 0.4219,
+   "step2 a=spent/unwritten": 0.1094,
+   "step2 a==b": 0.0547,
+   "step1 a==b": 0.0469
+  },
+  "hit": 0.1328125
+ },
+ "greedy_L3": {
+  "n": 128,
+  "rules_share": 0.9688,
+  "first_error": {
+   "step2 inexact division": 0.0234,
+   "step1 inexact division": 0.0078
+  },
+  "hit": 0.25
+ },
+ "greedy_L4": {
+  "n": 128,
+  "rules_share": 1.0,
+  "first_error": {},
+  "hit": 0.265625
+ },
+ "follower": {
+  "rules_share": 0.583,
+  "distinct_rules": 18.6562,
+  "luck": 0.0237,
+  "reach4": 0.0908,
+  "reach32": 0.5078,
+  "kept_per_puzzle": 32.0
+ },
+ "T0.21_L0": {
+  "rules_share": 0.2725,
+  "distinct_rules": 4.1406,
+  "luck": 0.0591,
+  "reach4": 0.222,
+  "reach32": 0.6953,
+  "kept_per_puzzle": 25.1172,
+  "first_error": {
+   "step2 b=spent/unwritten": 0.3449,
+   "step1 a==b": 0.176,
+   "step2 a=spent/unwritten": 0.1201,
+   "step1 inexact division": 0.051,
+   "step2 a==b": 0.0317,
+   "step2 inexact division": 0.0037
+  },
+  "twin_luck": 0.0129,
+  "twin_reach4": 0.0512
+ },
+ "T0.21_L3": {
+  "rules_share": 0.737,
+  "distinct_rules": 9.4141,
+  "luck": 0.1046,
+  "reach4": 0.4093,
+  "reach32": 0.8672,
+  "kept_per_puzzle": 12.7734,
+  "twin_luck": 0.0368,
+  "twin_reach4": 0.1697
+ },
+ "T0.21_L4": {
+  "rules_share": 1.0,
+  "distinct_rules": 10.1875,
+  "luck": 0.1442,
+  "reach4": 0.4742,
+  "reach32": 0.875,
+  "kept_per_puzzle": 10.1875,
+  "twin_luck": 0.0529,
+  "twin_reach4": 0.1949
+ },
+ "T1.0_L0": {
+  "rules_share": 0.2542,
+  "distinct_rules": 5.5312,
+  "luck": 0.0457,
+  "reach4": 0.1664,
+  "reach32": 0.6797,
+  "kept_per_puzzle": 31.9609,
+  "first_error": {
+   "step2 b=spent/unwritten": 0.3791,
+   "step1 a==b": 0.2092,
+   "step2 a=spent/unwritten": 0.0904,
+   "step1 inexact division": 0.0472,
+   "step2 a==b": 0.0127,
+   "step2 inexact division": 0.0054,
+   "step2 op NOOP": 0.0007,
+   "step2 b=target": 0.0005,
+   "step2 a=constant": 0.0002,
+   "step2 op MOD/MIN/MAX/CMP": 0.0002
+  }
+ }
+}
