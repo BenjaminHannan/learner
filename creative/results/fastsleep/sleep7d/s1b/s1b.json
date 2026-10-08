@@ -1,0 +1,1293 @@
+{
+ "s100": {
+  "nprime": "/root/c7d/s100/Nprime.pt",
+  "name": "s100",
+  "s1": "/root/c7d/s1/s100",
+  "seed": 0,
+  "T": 3.0,
+  "sampling_seed": 777,
+  "n_eval": 512,
+  "switch_after": 32,
+  "spec": "S1b (roadmap 7d 083303c493): F = C for tries 1-32, U for tries 33-512; no training; C2 DEV and K_new DEV only",
+  "reproduces_s1": {
+   "U": {
+    "knew": {
+     "rows": 192,
+     "rows_differing": 0,
+     "equal": true
+    },
+    "c2_dev": {
+     "rows": 256,
+     "rows_differing": 0,
+     "equal": true
+    }
+   },
+   "C": {
+    "knew": {
+     "rows": 192,
+     "rows_differing": 0,
+     "equal": true
+    },
+    "c2_dev": {
+     "rows": 256,
+     "rows_differing": 0,
+     "equal": true
+    }
+   }
+  },
+  "draws": "S1's own draws (redrawn with S1's seed; every per-row score equals S1's)",
+  "arms": {
+   "U": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.020833333333333332,
+      "fit_all": 0.020833333333333332,
+      "rows_with_fit": 4,
+      "tries_to_first_fit": 272.75,
+      "distinct_fitting": 0.020833333333333332,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.020833333333333332,
+      "fit512": 0.020833333333333332,
+      "distinct512": 0.020833333333333332
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 272.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 173.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.03125,
+       "fit_all": 0.03125,
+       "rows_with_fit": 2,
+       "tries_to_first_fit": 323.0,
+       "distinct_fitting": 0.03125,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.03125,
+       "fit512": 0.03125,
+       "distinct512": 0.03125
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.5234375,
+      "fit_all": 0.5234375,
+      "rows_with_fit": 134,
+      "tries_to_first_fit": 89.74626865671642,
+      "distinct_fitting": 1.87109375,
+      "reach32": 0.2421875,
+      "fit32": 0.24609375,
+      "distinct32": 0.33203125,
+      "reach512": 0.5234375,
+      "fit512": 0.5234375,
+      "distinct512": 1.87109375
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.07692307692307693,
+       "fit_all": 0.07692307692307693,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 137.5,
+       "distinct_fitting": 0.11538461538461539,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.07692307692307693,
+       "fit512": 0.07692307692307693,
+       "distinct512": 0.11538461538461539
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.37254901960784315,
+       "fit_all": 0.37254901960784315,
+       "rows_with_fit": 19,
+       "tries_to_first_fit": 246.1578947368421,
+       "distinct_fitting": 0.5490196078431373,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.37254901960784315,
+       "fit512": 0.37254901960784315,
+       "distinct512": 0.5490196078431373
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 61.27450980392157,
+       "distinct_fitting": 2.7058823529411766,
+       "reach32": 0.45098039215686275,
+       "fit32": 0.47058823529411764,
+       "distinct32": 0.5490196078431373,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.7058823529411766
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.19607843137254902,
+       "fit_all": 0.19607843137254902,
+       "rows_with_fit": 10,
+       "tries_to_first_fit": 236.2,
+       "distinct_fitting": 0.2549019607843137,
+       "reach32": 0.0392156862745098,
+       "fit32": 0.0392156862745098,
+       "distinct32": 0.0392156862745098,
+       "reach512": 0.19607843137254902,
+       "fit512": 0.19607843137254902,
+       "distinct512": 0.2549019607843137
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.9803921568627451,
+       "fit_all": 0.9803921568627451,
+       "rows_with_fit": 50,
+       "tries_to_first_fit": 26.24,
+       "distinct_fitting": 5.764705882352941,
+       "reach32": 0.7254901960784313,
+       "fit32": 0.7254901960784313,
+       "distinct32": 1.0784313725490196,
+       "reach512": 0.9803921568627451,
+       "fit512": 0.9803921568627451,
+       "distinct512": 5.764705882352941
+      }
+     }
+    }
+   },
+   "C": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.0,
+      "fit_all": 0.0,
+      "rows_with_fit": 0,
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.0,
+      "fit512": 0.0,
+      "distinct512": 0.0
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.515625,
+      "fit_all": 0.515625,
+      "rows_with_fit": 132,
+      "tries_to_first_fit": 30.84090909090909,
+      "distinct_fitting": 1.8515625,
+      "reach32": 0.421875,
+      "fit32": 0.421875,
+      "distinct32": 0.78515625,
+      "reach512": 0.515625,
+      "fit512": 0.515625,
+      "distinct512": 1.8515625
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.019230769230769232,
+       "fit_all": 0.019230769230769232,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 52.0,
+       "distinct_fitting": 0.019230769230769232,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.019230769230769232,
+       "fit512": 0.019230769230769232,
+       "distinct512": 0.019230769230769232
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.5686274509803921,
+       "fit_all": 0.5686274509803921,
+       "rows_with_fit": 29,
+       "tries_to_first_fit": 128.9655172413793,
+       "distinct_fitting": 0.9803921568627451,
+       "reach32": 0.13725490196078433,
+       "fit32": 0.13725490196078433,
+       "distinct32": 0.13725490196078433,
+       "reach512": 0.5686274509803921,
+       "fit512": 0.5686274509803921,
+       "distinct512": 0.9803921568627451
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 2.235294117647059,
+       "distinct_fitting": 1.4509803921568627,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.0196078431372548,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 1.4509803921568627
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 3.235294117647059,
+       "distinct_fitting": 6.8431372549019605,
+       "reach32": 0.9803921568627451,
+       "fit32": 0.9803921568627451,
+       "distinct32": 2.784313725490196,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 6.8431372549019605
+      }
+     }
+    }
+   },
+   "F": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.020833333333333332,
+      "fit_all": 0.020833333333333332,
+      "rows_with_fit": 4,
+      "tries_to_first_fit": 272.75,
+      "distinct_fitting": 0.020833333333333332,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.020833333333333332,
+      "fit512": 0.020833333333333332,
+      "distinct512": 0.020833333333333332
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 272.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 173.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.03125,
+       "fit_all": 0.03125,
+       "rows_with_fit": 2,
+       "tries_to_first_fit": 323.0,
+       "distinct_fitting": 0.03125,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.03125,
+       "fit512": 0.03125,
+       "distinct512": 0.03125
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.53125,
+      "fit_all": 0.53125,
+      "rows_with_fit": 136,
+      "tries_to_first_fit": 51.11029411764706,
+      "distinct_fitting": 1.9609375,
+      "reach32": 0.421875,
+      "fit32": 0.421875,
+      "distinct32": 0.78515625,
+      "reach512": 0.53125,
+      "fit512": 0.53125,
+      "distinct512": 1.9609375
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.07692307692307693,
+       "fit_all": 0.07692307692307693,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 137.5,
+       "distinct_fitting": 0.11538461538461539,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.07692307692307693,
+       "fit512": 0.07692307692307693,
+       "distinct512": 0.11538461538461539
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.4117647058823529,
+       "fit_all": 0.4117647058823529,
+       "rows_with_fit": 21,
+       "tries_to_first_fit": 174.52380952380952,
+       "distinct_fitting": 0.6078431372549019,
+       "reach32": 0.13725490196078433,
+       "fit32": 0.13725490196078433,
+       "distinct32": 0.13725490196078433,
+       "reach512": 0.4117647058823529,
+       "fit512": 0.4117647058823529,
+       "distinct512": 0.6078431372549019
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 2.235294117647059,
+       "distinct_fitting": 2.627450980392157,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.0196078431372548,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.627450980392157
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.19607843137254902,
+       "fit_all": 0.19607843137254902,
+       "rows_with_fit": 10,
+       "tries_to_first_fit": 254.1,
+       "distinct_fitting": 0.21568627450980393,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.19607843137254902,
+       "fit512": 0.19607843137254902,
+       "distinct512": 0.21568627450980393
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.9803921568627451,
+       "fit_all": 0.9803921568627451,
+       "rows_with_fit": 50,
+       "tries_to_first_fit": 1.62,
+       "distinct_fitting": 6.2745098039215685,
+       "reach32": 0.9803921568627451,
+       "fit32": 0.9803921568627451,
+       "distinct32": 2.784313725490196,
+       "reach512": 0.9803921568627451,
+       "fit512": 0.9803921568627451,
+       "distinct512": 6.2745098039215685
+      }
+     }
+    }
+   }
+  },
+  "boot": {
+   "knew_F_minus_U": {
+    "points": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "c2_F_minus_U": {
+    "points": 0.78125,
+    "lo": 0.0,
+    "hi": 1.953125
+   },
+   "c2_32_F_minus_C": {
+    "points": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "c2_32_F_minus_U": {
+    "points": 17.96875,
+    "lo": 13.28125,
+    "hi": 22.65625
+   },
+   "c2_F_minus_C": {
+    "points": 1.5625,
+    "lo": -2.734375,
+    "hi": 5.859375
+   },
+   "groups": {
+    "near_copy": {
+     "F_minus_U": {
+      "points": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+     }
+    },
+    "multi_step": {
+     "F_minus_U": {
+      "points": 1.2987012987012987,
+      "lo": 0.0,
+      "hi": 3.2467532467532463
+     }
+    }
+   }
+  },
+  "marks": {
+   "reach32_equals_C": {
+    "F": 0.421875,
+    "C": 0.421875,
+    "S1_C": 0.421875,
+    "passes": true,
+    "rule": "C2 DEV reach@32: F equals S1's C"
+   },
+   "new_kind_guard": {
+    "F": 0.020833333333333332,
+    "U": 0.020833333333333332,
+    "F_minus_U": {
+     "points": 0.0,
+     "lo": 0.0,
+     "hi": 0.0
+    },
+    "passes": true,
+    "rule": "K_new DEV (sq_minus/triple_add/mult_sub) reach@512: F >= U - 1 point"
+   },
+   "in_kind_guard": {
+    "F": 0.53125,
+    "U": 0.5234375,
+    "F_minus_U": {
+     "points": 0.78125,
+     "lo": 0.0,
+     "hi": 1.953125
+    },
+    "passes": true,
+    "rule": "C2 DEV reach@512: F >= U - 2 points"
+   },
+   "report": {
+    "U": {
+     "knew": {
+      "tries_to_first_fit": 272.75,
+      "distinct_fitting": 0.020833333333333332,
+      "distinct32": 0.0,
+      "rows_with_fit": 4
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 89.74626865671642,
+      "distinct_fitting": 1.87109375,
+      "distinct32": 0.33203125,
+      "rows_with_fit": 134
+     }
+    },
+    "C": {
+     "knew": {
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "distinct32": 0.0,
+      "rows_with_fit": 0
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 30.84090909090909,
+      "distinct_fitting": 1.8515625,
+      "distinct32": 0.78515625,
+      "rows_with_fit": 132
+     }
+    },
+    "F": {
+     "knew": {
+      "tries_to_first_fit": 272.75,
+      "distinct_fitting": 0.020833333333333332,
+      "distinct32": 0.0,
+      "rows_with_fit": 4
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 51.11029411764706,
+      "distinct_fitting": 1.9609375,
+      "distinct32": 0.78515625,
+      "rows_with_fit": 136
+     }
+    }
+   },
+   "proved_wrong_here": {
+    "flag": false,
+    "rule": "F's K_new reach@512 is 0 while U's > 1% (both parents needed)"
+   },
+   "passes": true
+  }
+ },
+ "s101": {
+  "nprime": "/root/c7d/s101/Nprime.pt",
+  "name": "s101",
+  "s1": "/root/c7d/s1/s101",
+  "seed": 0,
+  "T": 3.0,
+  "sampling_seed": 777,
+  "n_eval": 512,
+  "switch_after": 32,
+  "spec": "S1b (roadmap 7d 083303c493): F = C for tries 1-32, U for tries 33-512; no training; C2 DEV and K_new DEV only",
+  "reproduces_s1": {
+   "U": {
+    "knew": {
+     "rows": 192,
+     "rows_differing": 0,
+     "equal": true
+    },
+    "c2_dev": {
+     "rows": 256,
+     "rows_differing": 0,
+     "equal": true
+    }
+   },
+   "C": {
+    "knew": {
+     "rows": 192,
+     "rows_differing": 0,
+     "equal": true
+    },
+    "c2_dev": {
+     "rows": 256,
+     "rows_differing": 0,
+     "equal": true
+    }
+   }
+  },
+  "draws": "S1's own draws (redrawn with S1's seed; every per-row score equals S1's)",
+  "arms": {
+   "U": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.026041666666666668,
+      "fit_all": 0.026041666666666668,
+      "rows_with_fit": 5,
+      "tries_to_first_fit": 182.8,
+      "distinct_fitting": 0.03125,
+      "reach32": 0.005208333333333333,
+      "fit32": 0.005208333333333333,
+      "distinct32": 0.005208333333333333,
+      "reach512": 0.026041666666666668,
+      "fit512": 0.026041666666666668,
+      "distinct512": 0.03125
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.03125,
+       "fit_all": 0.03125,
+       "rows_with_fit": 2,
+       "tries_to_first_fit": 72.0,
+       "distinct_fitting": 0.03125,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.03125,
+       "fit512": 0.03125,
+       "distinct512": 0.03125
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.03125,
+       "fit_all": 0.03125,
+       "rows_with_fit": 2,
+       "tries_to_first_fit": 220.0,
+       "distinct_fitting": 0.046875,
+       "reach32": 0.015625,
+       "fit32": 0.015625,
+       "distinct32": 0.015625,
+       "reach512": 0.03125,
+       "fit512": 0.03125,
+       "distinct512": 0.046875
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 330.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.54296875,
+      "fit_all": 0.54296875,
+      "rows_with_fit": 139,
+      "tries_to_first_fit": 78.53956834532374,
+      "distinct_fitting": 1.4921875,
+      "reach32": 0.2734375,
+      "fit32": 0.27734375,
+      "distinct32": 0.35546875,
+      "reach512": 0.54296875,
+      "fit512": 0.54296875,
+      "distinct512": 1.4921875
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.07692307692307693,
+       "fit_all": 0.07692307692307693,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 150.75,
+       "distinct_fitting": 0.11538461538461539,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.07692307692307693,
+       "fit512": 0.07692307692307693,
+       "distinct512": 0.11538461538461539
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.5686274509803921,
+       "fit_all": 0.5686274509803921,
+       "rows_with_fit": 29,
+       "tries_to_first_fit": 173.79310344827587,
+       "distinct_fitting": 1.0588235294117647,
+       "reach32": 0.0784313725490196,
+       "fit32": 0.0784313725490196,
+       "distinct32": 0.0784313725490196,
+       "reach512": 0.5686274509803921,
+       "fit512": 0.5686274509803921,
+       "distinct512": 1.0588235294117647
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 52.666666666666664,
+       "distinct_fitting": 2.5294117647058822,
+       "reach32": 0.5098039215686274,
+       "fit32": 0.5294117647058824,
+       "distinct32": 0.6274509803921569,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.5294117647058822
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.0784313725490196,
+       "fit_all": 0.0784313725490196,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 363.0,
+       "distinct_fitting": 0.0784313725490196,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0784313725490196,
+       "fit512": 0.0784313725490196,
+       "distinct512": 0.0784313725490196
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 22.274509803921568,
+       "distinct_fitting": 3.7058823529411766,
+       "reach32": 0.7843137254901961,
+       "fit32": 0.7843137254901961,
+       "distinct32": 1.0784313725490196,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 3.7058823529411766
+      }
+     }
+    }
+   },
+   "C": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.0,
+      "fit_all": 0.0,
+      "rows_with_fit": 0,
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.0,
+      "fit512": 0.0,
+      "distinct512": 0.0
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.53515625,
+      "fit_all": 0.53515625,
+      "rows_with_fit": 137,
+      "tries_to_first_fit": 33.62043795620438,
+      "distinct_fitting": 1.25,
+      "reach32": 0.43359375,
+      "fit32": 0.43359375,
+      "distinct32": 0.515625,
+      "reach512": 0.53515625,
+      "fit512": 0.53515625,
+      "distinct512": 1.25
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.019230769230769232,
+       "fit_all": 0.019230769230769232,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 228.0,
+       "distinct_fitting": 0.019230769230769232,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.019230769230769232,
+       "fit512": 0.019230769230769232,
+       "distinct512": 0.019230769230769232
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.6666666666666666,
+       "fit_all": 0.6666666666666666,
+       "rows_with_fit": 34,
+       "tries_to_first_fit": 124.52941176470588,
+       "distinct_fitting": 1.8235294117647058,
+       "reach32": 0.17647058823529413,
+       "fit32": 0.17647058823529413,
+       "distinct32": 0.19607843137254902,
+       "reach512": 0.6666666666666666,
+       "fit512": 0.6666666666666666,
+       "distinct512": 1.8235294117647058
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 1.607843137254902,
+       "distinct_fitting": 2.0980392156862746,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.1372549019607843,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.0980392156862746
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.0,
+       "fit_all": 0.0,
+       "rows_with_fit": 0,
+       "tries_to_first_fit": null,
+       "distinct_fitting": 0.0,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0,
+       "fit512": 0.0,
+       "distinct512": 0.0
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 1.2156862745098038,
+       "distinct_fitting": 2.3333333333333335,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.2549019607843137,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.3333333333333335
+      }
+     }
+    }
+   },
+   "F": {
+    "knew": {
+     "pooled": {
+      "n": 192,
+      "n_samples": 512,
+      "reach_all": 0.020833333333333332,
+      "fit_all": 0.020833333333333332,
+      "rows_with_fit": 4,
+      "tries_to_first_fit": 222.75,
+      "distinct_fitting": 0.026041666666666668,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.020833333333333332,
+      "fit512": 0.020833333333333332,
+      "distinct512": 0.026041666666666668
+     },
+     "by_kind": {
+      "mult_sub": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.03125,
+       "fit_all": 0.03125,
+       "rows_with_fit": 2,
+       "tries_to_first_fit": 72.0,
+       "distinct_fitting": 0.03125,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.03125,
+       "fit512": 0.03125,
+       "distinct512": 0.03125
+      },
+      "sq_minus": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 417.0,
+       "distinct_fitting": 0.03125,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.03125
+      },
+      "triple_add": {
+       "n": 64,
+       "n_samples": 512,
+       "reach_all": 0.015625,
+       "fit_all": 0.015625,
+       "rows_with_fit": 1,
+       "tries_to_first_fit": 330.0,
+       "distinct_fitting": 0.015625,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.015625,
+       "fit512": 0.015625,
+       "distinct512": 0.015625
+      }
+     }
+    },
+    "c2_dev": {
+     "pooled": {
+      "n": 256,
+      "n_samples": 512,
+      "reach_all": 0.55078125,
+      "fit_all": 0.55078125,
+      "rows_with_fit": 141,
+      "tries_to_first_fit": 48.51063829787234,
+      "distinct_fitting": 1.5,
+      "reach32": 0.43359375,
+      "fit32": 0.43359375,
+      "distinct32": 0.515625,
+      "reach512": 0.55078125,
+      "fit512": 0.55078125,
+      "distinct512": 1.5
+     },
+     "by_kind": {
+      "affine": {
+       "n": 52,
+       "n_samples": 512,
+       "reach_all": 0.07692307692307693,
+       "fit_all": 0.07692307692307693,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 150.75,
+       "distinct_fitting": 0.11538461538461539,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.07692307692307693,
+       "fit512": 0.07692307692307693,
+       "distinct512": 0.11538461538461539
+      },
+      "double_add": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.6078431372549019,
+       "fit_all": 0.6078431372549019,
+       "rows_with_fit": 31,
+       "tries_to_first_fit": 149.70967741935485,
+       "distinct_fitting": 1.1176470588235294,
+       "reach32": 0.17647058823529413,
+       "fit32": 0.17647058823529413,
+       "distinct32": 0.19607843137254902,
+       "reach512": 0.6078431372549019,
+       "fit512": 0.6078431372549019,
+       "distinct512": 1.1176470588235294
+      },
+      "last_digit": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 1.607843137254902,
+       "distinct_fitting": 2.588235294117647,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.1372549019607843,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 2.588235294117647
+      },
+      "sq_plus": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 0.0784313725490196,
+       "fit_all": 0.0784313725490196,
+       "rows_with_fit": 4,
+       "tries_to_first_fit": 363.0,
+       "distinct_fitting": 0.0784313725490196,
+       "reach32": 0.0,
+       "fit32": 0.0,
+       "distinct32": 0.0,
+       "reach512": 0.0784313725490196,
+       "fit512": 0.0784313725490196,
+       "distinct512": 0.0784313725490196
+      },
+      "square": {
+       "n": 51,
+       "n_samples": 512,
+       "reach_all": 1.0,
+       "fit_all": 1.0,
+       "rows_with_fit": 51,
+       "tries_to_first_fit": 1.2156862745098038,
+       "distinct_fitting": 3.627450980392157,
+       "reach32": 1.0,
+       "fit32": 1.0,
+       "distinct32": 1.2549019607843137,
+       "reach512": 1.0,
+       "fit512": 1.0,
+       "distinct512": 3.627450980392157
+      }
+     }
+    }
+   }
+  },
+  "boot": {
+   "knew_F_minus_U": {
+    "points": -0.5208333333333334,
+    "lo": -1.5625,
+    "hi": 0.0
+   },
+   "c2_F_minus_U": {
+    "points": 0.78125,
+    "lo": 0.0,
+    "hi": 1.953125
+   },
+   "c2_32_F_minus_C": {
+    "points": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "c2_32_F_minus_U": {
+    "points": 16.015625,
+    "lo": 11.328125,
+    "hi": 21.09375
+   },
+   "c2_F_minus_C": {
+    "points": 1.5625,
+    "lo": -1.171875,
+    "hi": 4.6875
+   },
+   "groups": {
+    "near_copy": {
+     "F_minus_U": {
+      "points": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+     }
+    },
+    "multi_step": {
+     "F_minus_U": {
+      "points": 1.2987012987012987,
+      "lo": 0.0,
+      "hi": 3.2467532467532463
+     }
+    }
+   }
+  },
+  "marks": {
+   "reach32_equals_C": {
+    "F": 0.43359375,
+    "C": 0.43359375,
+    "S1_C": 0.43359375,
+    "passes": true,
+    "rule": "C2 DEV reach@32: F equals S1's C"
+   },
+   "new_kind_guard": {
+    "F": 0.020833333333333332,
+    "U": 0.026041666666666668,
+    "F_minus_U": {
+     "points": -0.5208333333333334,
+     "lo": -1.5625,
+     "hi": 0.0
+    },
+    "passes": true,
+    "rule": "K_new DEV (sq_minus/triple_add/mult_sub) reach@512: F >= U - 1 point"
+   },
+   "in_kind_guard": {
+    "F": 0.55078125,
+    "U": 0.54296875,
+    "F_minus_U": {
+     "points": 0.78125,
+     "lo": 0.0,
+     "hi": 1.953125
+    },
+    "passes": true,
+    "rule": "C2 DEV reach@512: F >= U - 2 points"
+   },
+   "report": {
+    "U": {
+     "knew": {
+      "tries_to_first_fit": 182.8,
+      "distinct_fitting": 0.03125,
+      "distinct32": 0.005208333333333333,
+      "rows_with_fit": 5
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 78.53956834532374,
+      "distinct_fitting": 1.4921875,
+      "distinct32": 0.35546875,
+      "rows_with_fit": 139
+     }
+    },
+    "C": {
+     "knew": {
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "distinct32": 0.0,
+      "rows_with_fit": 0
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 33.62043795620438,
+      "distinct_fitting": 1.25,
+      "distinct32": 0.515625,
+      "rows_with_fit": 137
+     }
+    },
+    "F": {
+     "knew": {
+      "tries_to_first_fit": 222.75,
+      "distinct_fitting": 0.026041666666666668,
+      "distinct32": 0.0,
+      "rows_with_fit": 4
+     },
+     "c2_dev": {
+      "tries_to_first_fit": 48.51063829787234,
+      "distinct_fitting": 1.5,
+      "distinct32": 0.515625,
+      "rows_with_fit": 141
+     }
+    }
+   },
+   "proved_wrong_here": {
+    "flag": false,
+    "rule": "F's K_new reach@512 is 0 while U's > 1% (both parents needed)"
+   },
+   "passes": true
+  }
+ },
+ "verdict": {
+  "passes": true,
+  "proved_wrong": false,
+  "rule": "marks 1-3 on both parents; proved wrong when F's new-kind reach@512 is 0 on both while U's > 1%"
+ }
+}

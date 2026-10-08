@@ -52,3 +52,20 @@ How to read it:
 - *Shown:* Z beats P on the practised add/mult rows (85% vs 75% and 86% vs 79%) because Z trains on warm rows. That is why the groups mark fails.
 - *Shown:* the s101 harm (3.1) is the same for P and Z, so it comes from a second night on top of W1, not from practising.
 - *Not shown:* "faster". Written steps per right answer go up a little with P, because P gets more multi-step rows right.
+
+## S1b (finished 06:30 UTC 10-08 = 2:30 AM ET; roadmap 083303c493)
+
+No training. F = the trained adapter (C) for tries 1-32, then the untrained one (U) for tries 33-512. S1 did not keep its tries, so S1b redraws U and C with S1's adapters and sampling seed and keeps them. Every per-row score equals S1's on both parents and both sets (0 rows differ), so F is computed from S1's own draws. Per-try records: `~/c7d/s1b/<parent>/tries_{U,C}.pkl` and `/mnt/project-files/fast-sleep/sleep7d/s1b/`.
+
+| | s100 | s101 |
+|---|---|---|
+| (1) C2 DEV reach@32: F vs S1's C | 42.2 = 42.2 pass | 43.4 = 43.4 pass |
+| (2) new kinds (sq_minus / triple_add / mult_sub, 192 q) reach@512: F - U (mark >= -1) | 0.0 [0.0, 0.0] (2.1 vs 2.1) pass | -0.5 [-1.6, 0.0] (2.1 vs 2.6) pass |
+| (3) C2 DEV reach@512: F - U (mark >= -2) | +0.8 [0.0, 2.0] (53.1 vs 52.3) pass | +0.8 [0.0, 2.0] (55.1 vs 54.3) pass |
+| tries to first fit, C2 DEV (rows with a fit): U / C / F | 90 / 31 / 51 | 79 / 34 / 49 |
+| distinct fitting programs per question within 512, C2 DEV: U / C / F | 1.87 / 1.85 / 1.96 | 1.49 / 1.25 / 1.50 |
+| C2 DEV reach@32: F - U | +18.0 [13.3, 22.7] | +16.0 [11.3, 21.1] |
+
+Verdict: **PASS on both parents**, not proved wrong: F still reaches the new kinds (2.1% on both), where C reached 0.
+
+*Shown:* switching the trained creative part off after 32 tries keeps its 32-try gain (+16 to +18) and gives back what C lost. New-kind reach returns to U's level, within one question on s101, and in-kind reach@512 is no lower than U's.
