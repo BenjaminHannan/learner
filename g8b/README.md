@@ -10,6 +10,8 @@ Spec, diagnosis and marks (written before any 8b run): `design/8b-gemma-growth-2
 - `tests/test_gen_ar.py`: 8 CPU checks of `gen_ar` (parameter parity, loss and gradient, causality, teacher forcing = greedy decoding,
   every lesion, and identity with the pinned Ledger when off). Run from a checkout of the pinned code with the overlay copied in.
 - `analysis/screen_readout.py`: the screen's go / stop readout, mechanically from the pre-registered rules.
+- `overlay/custom_io/g8a/configs.py`: `train_args` checks the size band on the thinker's shape too (the first 3M launch, on dba17e6, refused
+  to start: the adapter put EGE-3M 7.3% over the 3M band). The EmbeddingGemma adapter is counted and reported, not banded.
 - `overlay/custom_io/g8a/job.py`: the 8a job (build branch `claude/project-thread-f1to6a` at 50ee171632) with one change: `eg_embed` is
   allowed for B2-only jobs, the size band is checked on the thinker's shape, and the trained count includes the 198,400-param adapter.
 - `box-g8b.sh`: the 8a probe box script plus the overlay, EmbeddingGemma 2 (transformers 5.19.0, pinned revision, probe check),
