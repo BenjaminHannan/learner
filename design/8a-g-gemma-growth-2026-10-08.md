@@ -125,3 +125,32 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   doing a bunch of little tests?" The coordinator's reading: only runs already in progress on free machines finish; no new tests start.
 - The PC screen had not started (the PC was offline), so it is held, not run. The queue and code stay staged on the PC. The thread "One big proven
   training run" decides whether this check gates its run. Box 54861956 stays stopped (no credit is spent on it). Marks unchanged.
+
+## 9. Addendum D (2026-10-08, 3:40 PM ET, before any valid run): the 9-slot bug, and the fixed re-run (gate G1)
+
+- **Bug (shown).** Found by Ben's 8b session (`design/8b-gemma-growth-2026-10-08.md` addendum B on `claude/nice-lamport-al1gwo`), confirmed in the code by
+  the "One big proven training run" thread, and reproduced here on CPU at 612f5c5b01. `caps.apply()` (`custom_io/g8a/caps.py:139-147`) patches the
+  Ledger's `N_REG` / `GEN_MAX` only if `custom_io.models.ledger` is already imported. `train.py` applies the caps at line 147 and builds the model at
+  line 155, and `models.build` imports the Ledger lazily (`models/__init__.py:22`). So the Ledger kept its defaults `N_REG = 9`, `GEN_MAX = 8`
+  (`ledger.py:62-63`): 9 register tokens instead of 36, and GEN training targets cut to 8 letters (`ledger.py:441`). That breaks addendum G's caps
+  and the no-cut rule. CPU check: after `apply(caps_g.json)` the caps say n_reg 36, but the imported Ledger has N_REG 9, GEN_MAX 8.
+- **Affected:** every 8a B2 run (ladder and shape probes), and this test's one finished arm (Vast G-B2 3M s400, 72.42). The plain arms are
+  unaffected. The 8b session reports (not rechecked here): none of the 6,040 scored dev rows has a GEN answer over 8 letters; 191,172 of
+  1,655,902 pool rows have answers over 8 letters; trained parameter counts do not change.
+- **Fix:** only `caps.py` from `g8b/overlay/custom_io/g8a/caps.py` (branch `claude/nice-lamport-al1gwo` at e9125e9013; sha256 3da2dfbb...). It
+  differs from 612f5c5b01's `caps.py` only in importing those modules before patching (checked with diff). The overlay's `configs.py`, `job.py`
+  and `ledger.py` are **not** used: they sit on an older base without the plain arm's Gemma front and the pinned caps, and `gen_ar` is 8b's own
+  change. CPU check with the fix: Ledger N_REG 36, GEN_MAX 35; trained counts from `sizes()` unchanged by the fix (3M G-B2 3,543,889 /
+  G-PT 3,495,936; 10M 10,495,513 / 10,603,776; counted with sizes()' default vocab, 1,024 below the runs' 108-letter vocab).
+- **G1 = this test, re-run with the fix.** Marks (section 3), arms (G-B2 vs G-PT, same Gemma front), seeds 400 and 401, rungs 3M and 10M, the
+  pool, 24,000 updates of 256 rows and the screen readout (section 4) are all unchanged. BensPC only (addendum B), run as gate G1 of the big-run
+  plan (`/mnt/project-files/big-run/PLAN.md` section 5). New queue name, so no code frozen from the old staging is reused.
+- **Memory:** the thinker now holds 8 + 36 = 44 tokens instead of 17, so addendum B's memory figures no longer hold. Start at gradient
+  accumulation 2 at 3M and 4 at 10M for both arms (still 256 rows per update, same rows and order). If a job stops on CUDA out-of-memory,
+  rerun it with accumulation doubled for both arms (at most 8). Accumulation changes only bf16 summing order (disclosed).
+- **Voided or relabelled:** the Vast G-B2 3M s400 72.42 is the bugged model and counts toward nothing. In section 3's reports, "G-B2 minus
+  8a's letter B2" now mixes two changes (the Gemma front and the fix); it stays reported with that label.
+- **Prediction (suggested, written now):** the same as section 4: likely stop or unclear (the 8b session and the big-run plan expect G-B2 to gain
+  +0 to +2 against G-PT's +3 to +4). What would prove it wrong: go on both seeds, with gains on the rule families.
+- **Hours:** set by the first PC job's speed. The big-run plan's estimate (suggested) is about 2 days of PC per seed, so about 4 days for the
+  screen. The 36 slots make G-B2 slower than that estimate assumed (untested).

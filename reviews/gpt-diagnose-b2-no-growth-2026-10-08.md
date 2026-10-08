@@ -19,9 +19,11 @@ at least +3.0 points per size step, and its lead over the plain step model must 
 **Updated goal (after these results):** my model must gain **more** from each size step than a plain transformer of the same
 size gains on the same data. The finished model will read its input through a frozen pretrained text embedder
 (EmbeddingGemma 2, 271M parameters, about 768 numbers per word piece); help from that reader is fine, but the part I train
-(the looped "thinker" below) should learn more and drive the answers. The 30M step of today's B2 is on hold.
+(the looped "thinker" below) should learn more and drive the answers. The 30M step of today's B2 is dropped. New rule
+from me: no more paid small tests. The next real money goes only into one big training run that demonstrably works, so any
+test before it has to run free on my home GPU (an RTX 5070 Ti, 16 GB).
 
-**My next planned test (fixed before it is built):** the same 3M -> 10M step, with both my model and the plain step model
+**My next planned test (fixed before it was built; now re-run with the bug in section 2b fixed, on my home GPU):** the same 3M -> 10M step, with both my model and the plain step model
 reading through the same frozen EmbeddingGemma 2 front (each prompt character's input gets a learned projection of the
 Gemma state of its word piece, zero-initialised). Pass: mean over 6 seeds of (my 10M-minus-3M gain) minus (the plain
 model's gain) above 0 with its 95% CI above 0, and at least half of my model's gain must remain when measured as
@@ -42,6 +44,19 @@ if it is 0 or less on both. A version of B2 with this front ("EGE") scored +2.67
   pieces, openers and closers), `vocab` (unseen names, nouns, places, made-up words), `variant` (unseen structural variants
   of each skill and one unseen layout). The web text is not scored.
 
+## 2b. Read this first: every B2 run below had a setting bug
+
+After these results we found that every B2 run in sections 4 and 5 ran with **9 register tokens instead of the 36
+described in section 3**, and its GEN (generated-answer) training targets were **cut to the first 8 characters**. Cause:
+the code that applies the size settings patched the B2 module only if it was already loaded, and the training script
+loads B2 just after applying them, so B2 kept its old defaults (9 registers, 8 characters). Shown from the code and
+reproduced; the plain models (PT, LLM) were not affected. What another check reports (not re-checked by me): none of the
+6,040 scored dev rows has a generated answer longer than 8 characters, so scoring was not cut; about 191,000 of 1.66 million
+training rows have answers longer than 8 characters, and those answered by GEN (mostly web fill-in words) were trained on
+cut targets; the parameter counts do not change (the register slots have no weights of their own). So the B2 that ran had
+a controller of 8 + 9 = 17 tokens instead of 44. The results below are real for that B2, and **untested for the B2 as
+designed**. The fixed version is what my next test runs.
+
 ## 3. The models (all read the prompt one character at a time; no borrowed tokenizer or pretrained weights)
 
 **B2** (my architecture):
@@ -49,13 +64,13 @@ if it is 0 or less on both. A version of B2 with this front ("EGE") scored +2.67
   convolution layers, kernel 5** (pre-LayerNorm, GELU). So each character's reader output sees only about 9 characters
   around it.
 - **Workspace:** the numbers found in the prompt are copied into exact integer slots (up to 91), plus constants and result slots.
-- **Controller:** a set of tokens (8 control tokens + 36 register tokens) updated by `blocks` transformer blocks (each:
+- **Controller:** a set of tokens (8 control tokens + 36 register tokens as designed; **9 in every run below**, section 2b) updated by `blocks` transformer blocks (each:
   cross-attention to [workspace; reader output], self-attention among the controller tokens, MLP). The same blocks are
   **looped 12 times**. On most loops a control token picks an operation and two operand slots, and an **exact,
   parameter-free integer calculator** writes the result into the next result slot (a program, trained by teacher forcing
   from the worked steps).
 - **Talker:** after the last loop, a head picks the answer **mode**: NUM (print the value of the slot an answer pointer
-  picks), WORD (copy word k of the prompt), or GEN (generate characters: each of the 36 register tokens emits one character
+  picks), WORD (copy word k of the prompt), or GEN (generate characters: each register token (36 as designed, 9 in the runs) emits one character
   in parallel through a linear readout tied to the character table, mixed with a pointer-copy distribution over prompt
   characters; **not autoregressive**). Web fill-in rows are answered by WORD or GEN.
 - Training loss = program steps + mode + answer pointer + word pointer + GEN characters.
@@ -67,7 +82,7 @@ worked steps, then ` # `, then the answer, autoregressively. No calculator. Fill
 on every character (the blank filled back in); question rows as PT. No calculator.
 
 **How each grew from 3M to 10M** (width fixed at 256 for all):
-- B2: controller blocks 2 -> 8 (reader stays 2 conv layers, 12 loops, 36 registers). 3,346,513 -> 10,298,137 params.
+- B2: controller blocks 2 -> 8 (reader stays 2 conv layers, 12 loops, 36 registers as designed, 9 as run). 3,346,513 -> 10,298,137 params.
 - PT and LLM: 4 -> 13 transformer layers. About 3.30M -> 10.41M params.
 - Same learning rate (1e-3, AdamW, bf16, batch 256), same data, same 24,000 updates.
 
@@ -148,15 +163,17 @@ on the rule families (fewshot_number_rule 16.2 -> 20.6, seq_next 36.2 -> 40.0, o
    and its remaining errors are in pattern / rule families that its fixed program ops and parallel GEN head can't express,
    so no amount of controller size helps there (the per-family table points this way). Also tell me what it means that
    B2 is near 100% on a third of the families: can pooled-5 still show scaling for it? (I don't want to switch to a
-   test just because B2 looks better on it.)
+   test just because B2 looks better on it.) Then say how much of the flat result the setting bug in section 2b could
+   explain (17 controller tokens instead of 44; GEN targets cut to 8 characters on about 191,000 training rows), and
+   whether it is likely the main cause or a side issue.
 2. Say what the R and W probe results above do to each explanation (R flat, W slightly better than deep, neither close
    to +3), and whether a wider-and-deeper B2 at 30M is worth trying.
-3. Is the planned Gemma-front test above the right next test for the updated goal? If not, propose the **one** next
+3. Is the planned Gemma-front test above (with the bug fixed) the right single check before a big spend, for the updated goal? If not, propose the **one** next
    change you'd test instead (one change at a time), with pass marks fixed in advance and the result that would prove
    your explanation wrong. What would make a design gain **more** from size than a plain transformer, and which part of
-   B2 would have to change for that? Keep it cheap: a 10M run costs me about $2-3 a seed (about double with the Gemma
-   front, our estimate).
-4. Tell me whether running the 30M size of the current B2 shape (about $42 for six seeds) could still tell me anything
-   useful, given the +3.0-per-step mark already fails at the first step.
+   B2 would have to change for that? It must run free on my 16 GB home GPU; our guess is about 2 days per seed for both
+   models at both sizes.
+4. Given the bug in section 2b, which conclusions from sections 4 and 5 still stand, and which need the fixed B2 before I
+   trust them?
 5. Plain-language summary for me (a high-school senior): what's going on, what to try next, and why, in a few short
    paragraphs with no jargon.

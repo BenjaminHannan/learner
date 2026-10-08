@@ -17,6 +17,23 @@ This is about the B2 skills model and the 8a size ladder only; keep the small ca
   conv reader, kernel 5), `custom_io/models/plain_lm.py` (the PT and LLM arms), `custom_io/g8a/configs.py` (how each rung
   is sized: B2 grows `blocks` only), `custom_io/g8a/cloze.py` (web fill-in rows), `custom_io/train.py`.
 
+## Read first: the B2 runs had a setting bug
+
+Every 8a B2 run (ladder and shape probes) and 8a-G's one finished Gemma arm ran with `N_REG = 9` register tokens and
+`GEN_MAX = 8`, not the specified 36 / 35 (shown, from the code at 612f5c5b01; found by Ben's 8b session,
+`design/8b-gemma-growth-2026-10-08.md` addendum B on `claude/nice-lamport-al1gwo`). `custom_io/g8a/caps.py:139-147` patches
+those only for modules already in `sys.modules`; `custom_io/train.py` applies the caps at line 147 and builds the model at
+line 155; `custom_io/models/__init__.py:22` imports the ledger lazily; so `ledger.py:62-63` keep 9 / 8 and line 441 cuts GEN
+targets to 8 letters. The plain arms are unaffected. Reported by the 8b session (check it): 0 of the 6,040 dev rows have a
+GEN answer over 8 letters; 191,172 of 1,655,902 pool rows have answers over 8 letters; parameter counts do not change.
+The fix (`g8b/overlay/custom_io/g8a/caps.py`, import before patching) is in the next test, gate G1 (8a-G re-run with the
+fix: `/mnt/project-files/whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md` addendum D; big-run plan
+`/mnt/project-files/big-run/PLAN.md` section 5). So the finding below is real for the B2 that ran (17 controller tokens)
+and untested for the B2 as designed (44).
+
+Ben's money rule (3:27 PM ET 10-08): no more paid small tests; the next real spend is one big training run that demonstrably
+works. Anything you propose before it must run free on his 16 GB RTX 5070 Ti.
+
 ## The finding
 
 At 10M, B2 gains +0.49 pooled-5 over 3M (6 seeds: +0.03, +0.28, -1.11, +0.51, +0.73, +2.48; CI -0.74 to +1.72). The
@@ -32,10 +49,13 @@ rose to 10.9 / 12.4 (3M: 5.3 / 9.8).
 1. From the code, where does B2's 10M size actually go, and which parts of B2 limit (a) the five dev files and (b) the
    GEN loss on web fill-in rows? Check in particular: does any path let the controller's extra blocks change what GEN
    or WORD can output (GEN is a parallel per-register readout, not autoregressive)? Is anything in the loss or the data
-   (e.g. mode targets for fill-in rows, `max_ans`, the register count) capping what a bigger B2 can learn?
+   (e.g. mode targets for fill-in rows, `max_ans`, the register count) capping what a bigger B2 can learn? Estimate how much
+   of the flat result the 9-register bug can explain: which training families and modes had GEN targets over 8 letters, and
+   what 17 instead of 44 controller tokens takes away. Also check whether any other value `caps.apply` sets is missed the
+   same way (lazily imported modules `tool`, `plain_lm`, `english`; constants copied at import time; default arguments).
 2. Check the 10M B2 runs for signs of a training problem: learning-rate fit for 8 blocks x 12 loops, gradient norms if
    logged, loss curves in `stdout.events.txt` (3M vs 10M), and the copy gate share.
-3. Rank the explanations (size in the wrong place; a ceiling in the test; the GEN head; optimisation; plain models only
+3. Rank the explanations (the 9-register bug; size in the wrong place; a ceiling in the test; the GEN head; optimisation; plain models only
    gain because they start lower; B2 saturated on its calculator families and unable to express the pattern / rule
    families, see the per-family table in the GPT prompt; anything else you find), and say what the R and W results do to
    each. Check whether W's small gain could come from the talker answering without the loop (its leak rose).
@@ -43,8 +63,8 @@ rose to 10.9 / 12.4 (3M: 5.3 / 9.8).
    would have to produce a correct answer (which mode, which ops), and say whether its op set and talker can express it.
 4. Ben's updated bar (10:16 AM ET 10-08): the model must gain **more** from each size step than the plain model does;
    EmbeddingGemma 2 is the finished model's main input encoder; reader help is allowed but the thinker must drive.
-   The planned next test is `/mnt/project-files/whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md` (8a-G: EGE vs
-   the plain step model with the same Gemma front, 3M -> 10M). From the code, is it the right next test, and is its
-   plain-arm front fair? If not, propose the one next change to test instead, with pass marks fixed in advance and the
+   The planned next test is gate G1: `/mnt/project-files/whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md` (8a-G: EGE vs
+   the plain step model with the same Gemma front, 3M -> 10M) re-run with the fix (addendum D), on the PC. From the code, is
+   it the right single gate before the big run, does the fix fully restore 36 / 35, and is its plain-arm front fair? If not, propose the one next change to test instead, with pass marks fixed in advance and the
    result that would prove it wrong. Say which part of B2 would have to change for it to out-scale a plain transformer.
 5. End with a plain-language summary for Ben (a high-school senior): a few short paragraphs, no jargon.
