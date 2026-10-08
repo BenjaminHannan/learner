@@ -1,0 +1,143 @@
+{
+ "parents": [
+  "s100",
+  "s101"
+ ],
+ "per_parent": {
+  "s100": {
+   "marks": {
+    "primary": {
+     "C_minus_U_points": 17.96875,
+     "C_minus_S_points": 17.1875,
+     "passes": true,
+     "rule": "C2 DEV reach@32 in creative mode, pooled: C - U >= +5 and C - S >= +3 points"
+    },
+    "variety": {
+     "C": 0.78515625,
+     "U": 0.33203125,
+     "passes": true,
+     "rule": "C2 DEV distinct fitting programs per question within 32 tries: C >= 0.8 x U"
+    },
+    "unit_test": {
+     "passes": true
+    },
+    "proved_wrong": {
+     "flag": false,
+     "rule": "C2 DEV reach@32: C - S upper end of the paired 95% interval < +1 point (both parents needed)"
+    },
+    "transfer_report_only": {
+     "C_minus_U": {
+      "points": -2.0833333333333335,
+      "lo": -4.166666666666666,
+      "hi": -0.5208333333333333
+     },
+     "C_minus_S": {
+      "points": -1.0416666666666667,
+      "lo": -2.604166666666667,
+      "hi": 0.0
+     },
+     "rule": "K_new subset reach@512 (report only)"
+    },
+    "passes": true
+   },
+   "groups": {
+    "near_copy": {
+     "C_minus_U": {
+      "points": 40.19607843137255,
+      "lo": 30.392156862745097,
+      "hi": 50.0
+     },
+     "C_minus_S": {
+      "points": 40.19607843137255,
+      "lo": 30.392156862745097,
+      "hi": 49.01960784313725
+     }
+    },
+    "multi_step": {
+     "C_minus_U": {
+      "points": 3.2467532467532467,
+      "lo": -0.6493506493506493,
+      "hi": 7.142857142857142
+     },
+     "C_minus_S": {
+      "points": 1.948051948051948,
+      "lo": -1.948051948051948,
+      "hi": 5.844155844155844
+     }
+    }
+   }
+  },
+  "s101": {
+   "marks": {
+    "primary": {
+     "C_minus_U_points": 16.015625,
+     "C_minus_S_points": 18.359375,
+     "passes": true,
+     "rule": "C2 DEV reach@32 in creative mode, pooled: C - U >= +5 and C - S >= +3 points"
+    },
+    "variety": {
+     "C": 0.515625,
+     "U": 0.35546875,
+     "passes": true,
+     "rule": "C2 DEV distinct fitting programs per question within 32 tries: C >= 0.8 x U"
+    },
+    "unit_test": {
+     "passes": true
+    },
+    "proved_wrong": {
+     "flag": false,
+     "rule": "C2 DEV reach@32: C - S upper end of the paired 95% interval < +1 point (both parents needed)"
+    },
+    "transfer_report_only": {
+     "C_minus_U": {
+      "points": -2.6041666666666665,
+      "lo": -4.6875,
+      "hi": -0.5208333333333333
+     },
+     "C_minus_S": {
+      "points": -1.5625,
+      "lo": -3.125,
+      "hi": 0.0
+     },
+     "rule": "K_new subset reach@512 (report only)"
+    },
+    "passes": true
+   },
+   "groups": {
+    "near_copy": {
+     "C_minus_U": {
+      "points": 35.294117647058826,
+      "lo": 26.47058823529412,
+      "hi": 45.09803921568628
+     },
+     "C_minus_S": {
+      "points": 39.21568627450981,
+      "lo": 30.392156862745097,
+      "hi": 49.01960784313725
+     }
+    },
+    "multi_step": {
+     "C_minus_U": {
+      "points": 3.2467532467532467,
+      "lo": -0.6493506493506493,
+      "hi": 7.792207792207792
+     },
+     "C_minus_S": {
+      "points": 4.545454545454546,
+      "lo": 1.2987012987012987,
+      "hi": 8.441558441558442
+     }
+    }
+   }
+  }
+ },
+ "passes": true,
+ "multi_step_pooled_C_minus_U": {
+  "points": 3.2467532467532467,
+  "lo": 0.6493506493506493,
+  "hi": 6.1688311688311686
+ },
+ "label": "beyond near-copy",
+ "proved_wrong": false,
+ "wording": "a pass reads \"finds answers faster on the kinds it was stuck on\", never \"more creative in general\" (roadmap 13f4b987eb)"
+}
