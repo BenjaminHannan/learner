@@ -83,7 +83,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
   nights), and our nightly check only watched five other families. The check now covers all 34. A repair step
   (re-practising old skills after each night) made things worse and is dropped. The suspect now is that each night
-  learns too fast, and a short check of that is next. Most of the loss comes from building the practice parent and
+  learns too fast. A check (10-08) pointed instead at re-reading the same small set of records too many times; two
+  fixes to the first night are being screened. Most of the loss comes from building the practice parent and
   the first night; a second night adds little.
   Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
   nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
@@ -1323,6 +1324,31 @@ families x 200, two parents).**
 - If drift is confirmed, the fix to test next is a lower sleep learning rate. That must still show C2 learning, so it
   is judged on C2 first try and the harm measure together, one change.
 - J2 runs without any repair.
+- **2 x 2 result (fast-sleep 5329b2c6c, 10:25 AM ET 10-08; DEV, two parents, from W1, 256 replay-only updates per
+  cell): overfitting confirmed, drift not confirmed, not proved wrong.**
+  - Held-check drop / DEV in_dist change / C2 first try, s100 and s101:
+    - 1e-3 reused: 5.6 and 5.5 / -3.7 and -4.1 / 2.0 and 2.7 (W1 31.2 and 34.4);
+    - 1e-3 fresh: 0.2 and -1.6 / +1.8 and +2.3 / 0.0 and 2.3;
+    - 1e-4 reused: 0.4 and 0.1 / 0.0 and +0.3 / 24.6 and 30.9;
+    - 1e-4 fresh: -1.9 and -2.4 / +1.6 and +2.0 / 24.2 and 30.1.
+  - Shown: the skills damage comes from reusing a small row set many times. Fresh rows improve skills at either
+    learning rate, recovering about two-thirds of the loss to N'.
+  - Shown, a separate effect: any replay-only pass at 1e-3 erases night 1's C2 gain; at 1e-4 most of it stays.
+  - Suggested: night 1's records are a small set seen 32 times at 1e-3, the same shape as the damaging cell (night 2
+    uses the same recipe and adds no harm, so the cost may belong to the first big move onto C2).
+- **Ruled: two one-change screens on night 1 from N', each against the standard night 1 (W1)** (fast-sleep's
+  proposal, accepted as written; DEV, s100 and s101, CPU):
+  - Arm V: each record seen 8 times instead of 32 (4x fewer updates), nothing else changed.
+  - Arm L: learning rate 1e-4 instead of 1e-3, 32 visits.
+  - Marks, per arm, on both parents: (1) harm against N' passes the 10-08 measure (in_dist drop at most 1.5, no
+    family fires); (2) C2 DEV first try within 2 points of W1 (at least 29.2 and 32.4).
+  - Proved wrong for an arm: its in_dist drop against N' is not at least 1.0 smaller than W1's (3.8 and 3.6) on both
+    parents.
+  - Report only: the fresh-row 1e-4 pass after the night (above), which keeps skills but misses mark 2 by 4-7 points.
+  - If both pass, the one with the smaller harm goes forward; its confirm on six parents waits for job 9's scoring.
+    If neither passes but one is not proved wrong, the next single change builds on it.
+  - Autonomy label: not own choices (visits and learning rate are ours; 7c table).
+  - Job 9 is not changed: it uses the old recipe, and report item 10 shows its skills cost.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1588,3 +1614,7 @@ CPU):
   (C - U -2.7 / -3.5), and the slept worker alone already beat S1's add-on on N'. Loop 2 gives the worker what loop 1
   gave the add-on. J2 cancelled; one last pre-set screen, S1f (fresh on-policy tries at night); if it fails, loop 1 is
   parked and creative learning moves to variety and own stepping stones.
+- **Sleep harm traced to reuse (10-08):** the 2 x 2 on learning rate and row reuse confirmed overfitting a small reused
+  row set (fresh rows improve skills at either rate) and showed that any 1e-3 replay-only pass erases C2's gain.
+  Two night-1 screens follow: V (8 visits per record instead of 32) and L (learning rate 1e-4), each judged on the
+  harm measure and C2 first try within 2 of W1.
