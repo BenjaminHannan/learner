@@ -162,12 +162,13 @@ def quota(weights, n):
 
 
 def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1e-3, warmup=None, seed=0, device='cpu', check_every=0, check_fn=None,
-                replay_weight_fn=None, log=None, save_at=(), save_fn=None):
+                replay_weight_fn=None, log=None, save_at=(), save_fn=None, micro=None):
     """sleep.sleep's fresh AdamW, lr schedule and clip, with each update half record rows, half skills replay rows (batch // 2 each).
     rec_source: a list (rows drawn with sleep._order: balanced reuse) or an iterator (dream_stream: the next batch // 2 rows). replay_rows: drawn without
     repetition (raises when used up). replay_weight_fn(model, step) -> {family: weight}, called at step 0 and every check_every steps (model in eval mode): the replay
     half is then split over families by those weights. check_fn(model, step) after updates check_every, 2 * check_every, ... and the last (eval mode);
-    returning 'stop' ends the sleep. save_fn(model, step) after the updates in save_at. -> dict(updates_done, rows_seen, record_visits, loss, checks, weights)."""
+    returning 'stop' ends the sleep. save_fn(model, step) after the updates in save_at.
+    micro: rows per backward pass (gradient accumulation, row-weighted; CPU memory: a 1,024-row pass needs ~9 GB). None = the whole batch at once. -> dict(updates_done, rows_seen, record_visits, loss, checks, weights)."""
     half = batch // 2
     warmup = min(20, max(1, updates // 5)) if warmup is None else warmup
     rng = random.Random(seed)
@@ -205,12 +206,16 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
             visits[r['id']] = visits.get(r['id'], 0) + 1
         fast.prefill(model, rows)
         ds = Dataset(rows, vocab, strict=False)
-        b = to_device(collate([ds[i] for i in range(len(rows))]), device)
         for g in opt.param_groups:
             g['lr'] = lr_at(step, updates, warmup, lr)
-        out = model.loss(b)
-        loss = out[0] if isinstance(out, tuple) else out
-        loss.backward()
+        mb = micro or len(rows)
+        loss = 0.0
+        for s0 in range(0, len(rows), mb):
+            ix = range(s0, min(s0 + mb, len(rows)))
+            out = model.loss(to_device(collate([ds[i] for i in ix]), device))
+            part = (out[0] if isinstance(out, tuple) else out) * (len(ix) / len(rows))
+            part.backward()
+            loss = loss + part.detach()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         opt.zero_grad(set_to_none=True)
@@ -447,7 +452,7 @@ def cmd_run(a):
     L = copy.deepcopy(N)
     t1 = time.time()
     info = sleep_mixed(L, rec_source, replay_rows, vocab, a.updates, a.batch, a.lr, None, a.seed, a.device, a.check_every,
-                       check_fn if a.check_every > 0 else None, wfn, log, saves, lambda m, s: _save(m, meta, vocab, os.path.join(adir, f'learner_s{s}.pt')))
+                       check_fn if a.check_every > 0 else None, wfn, log, saves, lambda m, s: _save(m, meta, vocab, os.path.join(adir, f'learner_s{s}.pt')), a.micro)
     if a.self_stop and state['sd'] is not None:
         L.load_state_dict(state['sd'])
         info['kept_best_held_fits'] = state['best']
@@ -505,6 +510,7 @@ def main(argv=None):
         if name == 'run':
             s.add_argument('--updates', type=int, required=True); s.add_argument('--batch', type=int, default=1024); s.add_argument('--lr', type=float, default=1e-3)
             s.add_argument('--check-every', type=int, default=16); s.add_argument('--save-at', default=''); s.add_argument('--self-stop', action='store_true')
+            s.add_argument('--micro', type=int, default=256)
         else:
             s.add_argument('--grid', default='0.25,0.5,0.75,1.0'); s.add_argument('--max-drop', type=float, default=1.0)
     a = p.parse_args(argv)

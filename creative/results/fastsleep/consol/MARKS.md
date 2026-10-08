@@ -13,7 +13,9 @@ through transfer. Code: `creative/consol.py`. Literature and the three candidate
   (seeded) are held back as the model's own practice check (fit-only, no answers). Every arm on a parent sleeps on the same finds.
 - Skills replay: half of every batch, fresh rows from skills TRAIN, never repeated within a night. 100 training rows per family (3,400) are held
   back as the model's own self-check and never replayed.
-- Optimiser: fresh AdamW, lr 1e-3 peak, warm-up then cosine, batch 1,024 (512 day rows + 512 replay rows), as the research-loop sleep.
+- Optimiser: fresh AdamW, lr 1e-3 peak, warm-up then cosine, batch 1,024 (512 day rows + 512 replay rows), as the research-loop sleep. On this CPU
+  each 1,024-row update is computed as 4 to 16 backward passes of 64 to 256 rows, row-weighted and summed into one optimiser step
+  (a 1,024-row pass needs about 9 GB). The research loop did one 1,024-row pass on a GPU. The two give the same mean when the loss is a per-row mean.
 - Measures (never seen by the sleep): C2 DEV greedy first try (256); skills DEV in_dist (34 families x 200) for harm and transfer; the C2 research-loop
   holdout (512) only in the confirm, once per parent, for the winning arm. C2 test and labelled are never opened.
 - Harm: `creative/harm_look.py` harm_measure(N, learner): fails if in_dist drops more than 1.5 points, or any family drops more than 5 points with
@@ -34,14 +36,18 @@ through transfer. Code: `creative/consol.py`. Literature and the three candidate
 
 ## Screen A: fresh dreams vs re-read rows (s200, s201; DEV only)
 
-`rlc` and `fd` at 256 updates, saved and measured at 32, 64, 128 and 256 updates; `ro` at 256.
+Amended 10-08 11:40 AM ET, before any sleep run: one update takes about 80 CPU-seconds, so Screen A stops at 128 updates.
+`rlc` and `fd` with a 128-update schedule, saved and measured at 32, 64 and 128 updates (the 32 and 64 snapshots are mid-schedule, at a higher
+lr than a 32- or 64-update sleep would end on); `ro` at 128.
 
-- A1 (re-reading is the cause): at 128 and 256 updates, `fd`'s in_dist drop vs N is at least 1.0 point smaller than `rlc`'s, on both parents.
+- A1 (re-reading is the cause): at 64 and 128 updates, `fd`'s in_dist drop vs N is at least 1.0 point smaller than `rlc`'s, on both parents.
 - A2 (no loss of learning): at the same updates, `fd`'s C2 DEV first try is no more than 2 points below `rlc`'s (point estimate), on both parents.
 - **Screen A passes = A1 and A2.**
 - Proved wrong (fresh rows don't help): at every saved step, on both parents, `fd`'s in_dist drop is not smaller than `rlc`'s.
 - Update cap for the confirm, fixed now: U* = the smallest saved step at which `fd`'s two-parent mean C2 DEV first try is at least 71.2 (the research
-  loop's DEV mean) and harm_measure passes on both parents. If no step qualifies, U* = 256 and the confirm says the speed mark is not met.
+  loop's DEV mean) and harm_measure passes on both parents. If no step up to 128 qualifies, `fd` is rerun with a 256-update schedule (saves at 192,
+  256) on both parents, and the same rule picks U* from those. If still none qualifies, U* = 256 and the confirm says the C2 or harm mark is not
+  expected to be met.
 
 ## Screen B: self-chosen scale (no training; only if `fd` at U* fails harm on a parent)
 
