@@ -10,6 +10,36 @@ from custom_io.data import load_rows
 from custom_io.evalx import CHAIN5, evaluate, is_hit
 
 
+def skills_hits(model, skills_data, device='cpu'):
+    """One greedy pass on skills DEV in_dist. -> (rows, per-row 0/1 hits, pooled-5 %, in_dist %)."""
+    rows = load_rows(os.path.join(skills_data, 'dev', 'in_dist.jsonl'))
+    e = evaluate(model, rows, 128, device, return_preds=True)
+    h = [int(is_hit(e['preds'][r['id']], r)) for r in rows]
+    c5 = [x for x, r in zip(h, rows) if r['family'] in CHAIN5]
+    return rows, h, 100 * sum(c5) / max(len(c5), 1), 100 * sum(h) / max(len(h), 1)
+
+
+def harm_measure(hits_a, hits_b, rows, family_drop=5.0, in_dist_drop=1.5):
+    """The sleep harm measure (roadmap e9e0bd2aeb): model b against reference a on the same in_dist rows. A family fires when it drops more than `family_drop` points
+    AND the paired 95% interval of b - a over its rows is below 0; passes = in_dist drop <= `in_dist_drop` and no family fires."""
+    from creative import c2_pilot
+    fams = {}
+    for i, r in enumerate(rows):
+        fams.setdefault(r['family'], []).append(i)
+    pct = lambda h, ix: 100 * sum(h[i] for i in ix) / len(ix)
+    out, fired = {}, []
+    for f, ix in sorted(fams.items()):
+        d, lo, hi = c2_pilot.boot([hits_b[i] for i in ix], [hits_a[i] for i in ix])
+        fires = -d > family_drop and hi < 0
+        out[f] = dict(a=pct(hits_a, ix), b=pct(hits_b, ix), drop=-d, lo=lo, hi=hi, fires=fires)
+        if fires:
+            fired.append(f)
+    allix = range(len(rows))
+    ia, ib = pct(hits_a, allix), pct(hits_b, allix)
+    return dict(in_dist_a=ia, in_dist_b=ib, in_dist_drop=ia - ib, families=out, fired=fired, passes=ia - ib <= in_dist_drop and not fired,
+                rule=f'in_dist drop <= {in_dist_drop} and no family with drop > {family_drop} and paired 95% interval below 0')
+
+
 def look(models, skills_data, out, device='cpu', log=print):
     rows = load_rows(os.path.join(skills_data, 'dev', 'in_dist.jsonl'))
     fam = sorted({r['family'] for r in rows})
