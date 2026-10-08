@@ -77,8 +77,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   did not make answers shorter. It is parked.
   Parts 1 and 2 together (10-08) did not add up: one night of the worker learning the day's finds already gives it
   what the trained creative add-on gave, and an add-on trained after that night only narrowed the search. One last
-  pre-set check (fresh tries at night) runs; if it fails, the creative add-on's sleep is parked and "learning to be
-  more creative" moves to variety and the model making its own easier versions of hard problems.
+  pre-set check (fresh tries at night) gave only a small gain on one copy, so the creative add-on's sleep is parked.
+  "Learning to be more creative" moves to variety and the model making its own easier versions of hard problems.
 - **Sleep has been quietly costing other skills (found 10-08).** Each weight-changing night costs about 1-4 points
   over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
   nights), and our nightly check only watched five other families. The check now covers all 34. A repair step
@@ -1440,6 +1440,21 @@ CPU):
 - Disclosed: the night tries are extra samples, drawn by the model itself. The cost is reported (samples, CPU time).
 - If S1f passes: J2 with fresh night tries, the same J marks, no repair.
 
+- **S1f result (fast-sleep feb323a27, 10:50 AM ET 10-08; DEV, two parents): FAIL, not proved wrong.**
+  - Mark 1, creative reach@32 C - U: +2.7 [0.8, 5.1] (multi-step +4.5 [1.3, 8.4]) and -0.4 [-1.2, 0.0].
+  - Marks 2-4 pass: variety 1.57 vs 1.47 and 1.41 vs 1.39; new-kind reach@512 +0.5 and 0.0; worker untouched.
+  - Against S1w's C: +5.5 [2.0, 9.0] and +3.1 [0.0, 7.0]. On-policy tries undo S1w's narrowing.
+  - Night cost: 19,168 and 16,800 samples, about 8-9 CPU minutes. Only 128 and 75 still-stuck questions got a fit,
+    giving 24 and 14 loop-1 updates (S1: 97).
+- **Ruled: loop 1 is parked**, as fixed before S1f ran. Its sleep makes the creative part faster on the parent it
+  was trained on (S1). Once the worker sleeps on the same finds, that gain is the worker's (S1w). Fresh night tries
+  give at most a small extra gain on one parent (S1f). J2 does not run.
+  - Recorded for later, not run: 128 night tries per still-stuck question (fast-sleep's proposal). It needs a matched
+    control that gives the same night fits to the worker instead, because S1w showed the worker takes up whatever
+    the add-on learns from the same finds.
+  - "The creative part learns to be more creative" moves to what the worker's sleep cannot give: variety (C3) and
+    stepping stones the model makes itself (C6, required by 7c). Their specs are written after job 9 is scored.
+
 **Later, one change each:**
 - the worker is also pushed down on its own failed first tries;
 - the model picks what to replay (C9);
@@ -1618,3 +1633,6 @@ CPU):
   row set (fresh rows improve skills at either rate) and showed that any 1e-3 replay-only pass erases C2's gain.
   Two night-1 screens follow: V (8 visits per record instead of 32) and L (learning rate 1e-4), each judged on the
   harm measure and C2 first try within 2 of W1.
+- **Loop 1 parked (10-08):** S1f (fresh on-policy night tries) failed, not proved wrong: +2.7 on s100, -0.4 on s101,
+  with variety and new kinds kept. As fixed before it ran, loop 1 is parked; 128 night tries is recorded for later
+  with a matched worker control. Creative learning moves to C3 and C6 after job 9.
