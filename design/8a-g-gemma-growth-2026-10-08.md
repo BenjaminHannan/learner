@@ -154,3 +154,15 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   +0 to +2 against G-PT's +3 to +4). What would prove it wrong: go on both seeds, with gains on the rule families.
 - **Hours:** set by the first PC job's speed. The big-run plan's estimate (suggested) is about 2 days of PC per seed, so about 4 days for the
   screen. The 36 slots make G-B2 slower than that estimate assumed (untested).
+
+## 10. Addendum E (2026-10-08, 5:50 PM ET, before any G1 training): Windows line endings and the PC pool check
+
+- G1's first PC launch (about 3:50 PM ET) stopped at the data step, before any training: `own72_MANIFEST.json` hashed to 5d9e79d7 instead of
+  e8f32daf. Shown: the file at da1a59cf hashes to e8f32daf as committed and to exactly 5d9e79d7 with every `\n` turned into `\r\n`, so Windows
+  git converted line endings on checkout. Fix: the data-pool and own-data checkouts are renormalized with `core.autocrlf false` (expected hash
+  unchanged). The 36-slot check and the Gemma check passed on the PC.
+- **Pool check on the PC (replaces addendum A's byte check for PC jobs):** Python on Windows writes the pool's `train.jsonl` with `\r\n`, so its
+  byte sha (and the MANIFEST sha) differ from the Vast boxes even when every row is the same. The check is on content: sha256 of `train.jsonl`
+  with `\r\n` read as `\n` must equal 8a's pool `train_sha256` for that seed (s400 b90ff7d7..., s401 910485f1...) with 1,418,702 rows. A
+  mismatch stops the queue.
+- Marks, arms and readout unchanged.
