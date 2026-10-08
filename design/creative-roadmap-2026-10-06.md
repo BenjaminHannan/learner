@@ -74,8 +74,12 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   That fix worked (2:30 AM ET 10-08): the trained add-on for 32 tries, then the untrained search, keeps the faster
   answers and gets the new-kind answers back.
   Part 3 failed its fair re-run too: practising its own shaky wins did no better than one more ordinary night, and it
-  did not make answers shorter. It is parked. Parts 1 and 2 are tested together next, once a skills drop that every
-  second night causes on one trial copy is understood.
+  did not make answers shorter. It is parked.
+- **Sleep has been quietly costing other skills (found 10-08).** Each weight-changing night costs about 1-4 points
+  over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
+  nights), and our nightly check only watched five other families. The check now covers all 34. Next the model gets
+  a repair step: it tests itself on its own old practice rows after each night and re-practises what dropped. Parts
+  1 and 2 are tested together after that.
   Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
   nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -688,6 +692,10 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     9. Autonomy labels, added 10-07 before the test is opened (Ben's autonomy rule, section 7c): every arm's result
        carries the label in 7c's table. A pass reads "sleeping on its own checked tries works without outside help;
        the parent was given stepping stones we wrote for these kinds, and the loop is a fixed script".
+    10. Report only, added 10-08 before the test is opened (fast-sleep cb7ba33ed): skills harm on all of skills dev
+       in_dist (34 families x 200 rows) and per family, for every arm against N' and against B2, with the 10-08
+       measure (in_dist drop above 1.5, or a family above 5 with its interval below 0). The chain-5 mark above
+       misses most of this harm. A W pass is reported with its in_dist cost beside it.
   - **Fast-sleep research, ruled 10-07 (RESEARCH-2026-10-07.md in the project folder; shown on DEV):**
     - Answer note behind an agreement gate: no harm on 8 parents, gain +0.98 against +1.0 needed. M keeps it off.
     - Chaining stored programs into the notebook at night: proved wrong (+0.7 against +5; no better than blind
@@ -1238,10 +1246,50 @@ it should also get faster at its own tasks. Written here before any training; th
     with nights. It reports before changing the sleep.
   - J becomes loops 1 and 2 (below).
 
+**Skills harm per night (fast-sleep cb7ba33ed, first look 3:15 AM ET 10-08; shown, skills DEV in_dist, 34
+families x 200, two parents).**
+- Every step costs skills. in_dist B2 / N' / W1 / night 2: s100 89.4 / 86.7 / 82.9 / 81.7; s101 90.5 / 87.8 / 84.2 /
+  81.7. From B2 to night 2 that is -7.7 and -8.9.
+- The same families take most of it on both parents: seq_next 81 to 31 and 89 to 30; rule_apply 90 to 48 and 93 to
+  55; cipher_map 97 to 62 and 100 to 59 (P and Z' alike); digits_parity, passage_qa and order_chain lose 5-15. They
+  are mostly "find the rule from examples" families, the nearest in format to C2.
+- The nightly guard (pooled-5, the chain families) barely sees it: 99.7 to 97.2 on s100 while seq_next lost 50.
+  Half of every sleep batch is skills replay over all 34 families, and it does not protect these.
+- Not affected: loop 1 (the worker is bit-identical with the add-on off) and the notebook (no weight change; its
+  harm check on 29 non-chain families was -0.3).
+- Untested: the research loop's "no harm" (C2 holdout 71.3%) used the same pooled-5 guard.
+
+**Ruled (10-08):**
+1. **New harm measure for every sleep test from now on** (the fast-sleep thread's proposal 1, one tweak): a night
+   fails if in_dist (6,800 rows) drops more than 1.5 against the pre-night model, or any family drops more than 5
+   points with its paired interval below 0. The interval condition is added because 34 families of 200 rows each
+   would otherwise fire on noise. DEV stays our ruler; the deployed model needs the same check on its own held rows,
+   which is proposal 2's self-check.
+2. **The research loop's compliant night is re-scored with it.** It is the fast-sleep thread's result and its call:
+   CPU, or about 15 minutes on Vast (~$0.3) if both of Ben's machines are busy.
+3. **Test R, a repair pass the model runs itself** (proposal 2; one change; screen s100 and s101, DEV, both nights):
+   - After each night the model checks itself on a held slice of its own skills training rows (never DEV). For each
+     family that dropped more than 5 against its pre-night self, it runs replay-only updates on that family's
+     training rows, then checks again.
+   - Pass, both parents: measure 1 passes on DEV after each night, and C2 DEV first try stays within 2 points of the
+     unrepaired night.
+   - Proved wrong: in_dist after repair is still more than 1.5 below the pre-night model on both parents.
+   - Report only: the same number of extra updates spread evenly over all families, to tell targeting from more
+     replay.
+   - Autonomy label: no outside help (its own rows and its own check), not own choices (the thresholds are ours).
+4. **J waits for Test R.** J's mark 5 becomes: measure 1 passes for J on each night, and J's in_dist is at most 1.5
+   below W's with no family firing against W. If R passes, both arms use the repair.
+5. **Job 9: marks unchanged** (sealed; its harm mark is the chain-5 rows). Report item 10 is added before the test
+   is opened (below). A W pass is reported with its in_dist cost beside it, and nothing from job 9 is used in a later
+   model unless measure 1 passes, with or without the repair.
+6. Outside opinion: the fast-sleep thread writes the GPT prompt on why half-batch replay does not protect these
+   families (format clash with C2, too little replay per family, or too many passes per record), saved under
+   `reviews/`, for Ben.
+
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
 first two points together: does a creative part that learns from its successes hand the worker better finds?
-- J waits for the fast-sleep thread's harm look. If that changes the sleep recipe, both arms use the changed recipe.
+- J waits for Test R (the repair pass, above). If R passes, both arms use it.
 - Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh sealed C2 split (job 9 uses up C2's test) and a
   sealed split of the three new kinds (`knew.py`'s writer, 128 per kind, hash only, written before J runs and opened
   once).
@@ -1251,8 +1299,8 @@ first two points together: does a creative part that learns from its successes h
      at least W + 5.
   3. New-kind guard: reach@512 on sq_minus, triple_add and mult_sub, J at least W - 1 point.
   4. C2 first try: J at least W - 2.
-  5. Skills harm from loop 1: J at most W + 2. Harm against N' is reported for both arms; it belongs to the nightly
-     harm check, which must pass before anything ships.
+  5. Skills harm: the 10-08 measure (in_dist and per family) passes for J on each night, and J's in_dist is at most
+     1.5 below W's with no family firing against W.
 - Proved wrong: J no better than W on both stuck rate and creative reach@32 (upper ends below +1).
 - Changed 10-08 after S1, before J was built: K_new TEST was never written (fewer than four kinds qualified), so the
   old mark "K_new creative reach@32 at least W + 5" became mark 2 (in-kind) plus the new-kind guard (mark 3).
@@ -1417,3 +1465,7 @@ first two points together: does a creative part that learns from its successes h
   creative part's finds (Z' - P -0.8 / 0.0), with no shorter answers. Not proved wrong (upper ends +3.5), but parked.
   J becomes loops 1 and 2 against loop 2 alone, waits for the nightly harm look (any second night costs s101 3.1-3.8
   pooled-5 points), and its harm mark is measured against W.
+- **Skills harm per night (10-08):** the fast-sleep thread found that every weight-changing night costs in_dist skills
+  (B2 to night 2 -7.7 / -8.9), mostly on rule-from-examples families, while the pooled-5 guard barely moved. New
+  measure for all sleep tests (in_dist above 1.5 or a family above 5 with its interval below 0); Test R (the model's
+  own repair pass) before J; job 9 report item 10 added before opening; marks unchanged.
