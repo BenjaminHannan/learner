@@ -295,3 +295,18 @@ measures the memory that matters. It stays in the post-G1 chain behind GX. G1 it
   logs NEEDS ATTENTION and goes on to c30. The installer unpacks `b3.zip`, checks the three hashes, runs `test_g8a` on CPU (passes, 12 s here)
   and writes the marker. Both scripts parse clean; the mock-PC run starts 8aGX from src-8gx, 8aFC from src-b3, 8aC30 from src-8ag (shown,
   mock only). c30 keeps G1's code because it is G1's control.
+
+## 18. Addendum M (2026-10-09, 12:05 PM ET): c30 moves to the B3 caps and pool
+
+Asked by the big-run thread (coordinator relay, 11:52 AM ET; PLAN.md substitution 4): a rung is a matched pair, so the plain partner of
+B3 30M runs at caps_b3 on the B3 long-chunk pool. c30 therefore runs from `src-b3` (c24bce9489) with `--cloze-long` and
+`--caps-file caps_b3.json`, PT only, seed 400, accum PT=32, and builds `p30-rung30-s400-a64-L` first. It is still last in the post-G1
+chain and still skipped if `WORK\B3-READY.txt` exists. G1 is unchanged.
+
+- **Size check (shown on CPU at c24bce9489, caps_b3, Gemma front):** 10M B2 9,816,397 / PT 9,814,442 and 30M B2 29,718,329 / PT 29,556,480
+  pass the job's bands. Only 3M refuses (addendum L) until the matched-pair band code lands.
+- **Its 10M partner** is G2's own G-PT 10M at caps_b3, not G1's (different pool and caps). G2's G-PT 3M and 10M are not staged here.
+- **Time (suggested, not measured):** about 52,000 steps if rows average 44.7 pieces as in the B3 3M pool (60.0M pieces / 1,343,273 rows),
+  slower per step than at G1's caps because of the long rows: about 2-3 PC days.
+- Installer and waiter: both queue files go to `src-b3`, the waiter starts c30 from `src-b3` with its caps hash and needs
+  `B3-SETUP-OK.txt`. Parse clean; the mock-PC run starts 8aGX (src-8gx), 8aFC and 8aC30 (src-b3) in order (shown, mock only).

@@ -1,15 +1,14 @@
-# Post-G1 chain on BensPC (9 Oct 2026, spec addenda K and L). After gate G1's last PC queue ends: test GX stage 1 (queue 8aGX,
+# Post-G1 chain on BensPC (9 Oct 2026, spec addenda K, L and M). After gate G1's last PC queue ends: test GX stage 1 (queue 8aGX,
 # code src-8gx, Ben's "experts first"), then the 100M fit check part A on B3 inputs (8aFC, code src-b3), then the G-PT 30M
-# control (8aC30, G1's code src-8ag) unless B3 group 1 is ready (WORK\B3-READY.txt). One queue at a time. WORK\STOP holds the chain (it never removes STOP). Started detached by
+# control at the B3 caps (8aC30, code src-b3) unless B3 group 1 is ready (WORK\B3-READY.txt). One queue at a time. WORK\STOP holds the chain (it never removes STOP). Started detached by
 # install_post_g1.ps1, so it outlives the ssh session. It stops nothing and deletes nothing.
 $CIO   = 'C:\Users\benja\custom-io'
 $WORK  = "$CIO\work"
-$SRC   = "$CIO\src-8ag"
 $SRCGX = "$CIO\src-8gx"
 $SRCB3 = "$CIO\src-b3"
 $JOBS  = 'C:\Users\benja\pc-jobs'
 $PY    = 'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
-$CAPS  = '3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78'      # caps.py of G1 (src-8ag) and of the experts code (src-8gx)
+$CAPS  = '3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78'      # caps.py of the experts code (src-8gx; same as G1's)
 $CAPSB3 = 'D276FAC05E1127D9979E9B8EA3A4F4E6CC4D7BAC33C218FA164117B60F1B4AA8'     # caps.py at c24bce9489 (src-b3)
 $LOG   = "$WORK\q8aPost-waiter.log"
 function Now { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') }
@@ -139,7 +138,9 @@ if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) {
 if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
 WaitFree 'before c30'
 if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
-if (Launch '8aC30' $SRC $CAPS) {
+if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) {
+  Say 'src-b3\B3-SETUP-OK.txt missing: c30 NOT started, NEEDS ATTENTION. Chain finished.'
+} elseif (Launch '8aC30' $SRCB3 $CAPSB3) {
   MoveDone 'gx.md'
   MoveDone 'fc100.md'
   FromTemplate 'c30.template.md' 'c30.md'

@@ -1,4 +1,4 @@
-# Installs the post-G1 chain on BensPC (spec addenda K and L). Run ONCE, after Ben's go, while G1 still runs; it starts no GPU work itself.
+# Installs the post-G1 chain on BensPC (spec addenda K, L and M). Run ONCE, after Ben's go, while G1 still runs; it starts no GPU work itself.
 # Expects in C:\Users\benja\custom-io\post-g1-in (from the Mac): gx.zip (custom_io of the experts branch at c1464d19b7), b3.zip (custom_io
 # at c24bce9489), cloze_long.py (data_pool/cloze_long.py at 3d0afbeadd), q8aPost_wait.ps1, 8aFC-pc.txt, 8aC30-pc.txt, fc100.md, c30.md.
 # Prints what it did and stops at the first problem.
@@ -62,17 +62,16 @@ if (Unpack "$IN\b3.zip" $SRCB3 'B3-SETUP-OK.txt') {
   $out = CpuTest $SRCB3 'custom_io.tests.test_g8a'
   $out | Select-Object -Last 3
   if ($rc -ne 0 -or ($out -match '^FAIL')) { Fail "test_g8a failed (rc $rc): fc100 NOT set up" }
-  Copy-Item -Force "$IN\8aFC-pc.txt" "$SRCB3\custom_io\queue_local\"
   Set-Content -Encoding ascii "$SRCB3\B3-SETUP-OK.txt" -Value @("caps.py $CAPSB3", "caps_b3.json $JSONB3", "cloze_long.py $LONG", 'test_g8a ok (CPU)', (Stamp))
-  'src-b3: set up, hashes ok, test_g8a ok; cloze_long.py and caps_b3.json in work\b3-inputs; 8aFC-pc.txt in src-b3 queue_local'
+  'src-b3: set up, hashes ok, test_g8a ok; cloze_long.py and caps_b3.json in work\b3-inputs'
 } else { 'src-b3: already set up (B3-SETUP-OK.txt present)' }
 
-# 3. c30's queue file (new file; the running G1 queues read theirs at start), card templates and the waiter.
-Copy-Item -Force "$IN\8aC30-pc.txt" "$SRC\custom_io\queue_local\"
+# 3. fc100's and c30's queue files into src-b3 (both run on c24bce9489 at the B3 caps), card templates and the waiter.
+Copy-Item -Force "$IN\8aFC-pc.txt", "$IN\8aC30-pc.txt" "$SRCB3\custom_io\queue_local\"
 Copy-Item -Force "$IN\fc100.md" "$CIO\fc100.template.md"
 Copy-Item -Force "$IN\c30.md" "$CIO\c30.template.md"
 Copy-Item -Force "$IN\q8aPost_wait.ps1" "$CIO\q8aPost_wait.ps1"
-'copied 8aC30-pc.txt to src-8ag queue_local; card templates and waiter to custom-io'
+'copied 8aFC-pc.txt and 8aC30-pc.txt to src-b3 queue_local; card templates and waiter to custom-io'
 
 # 4. Start the chain waiter detached.
 $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\custom-io\q8aPost_wait.ps1'}
