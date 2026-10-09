@@ -10,6 +10,8 @@ A nonzero count means a row was cut, skipped or reduced to an answer-only row, a
   number_clipped       a prompt number above 10**18 (ledger.spans clips it)
   words_over           prompt words past W_MAX (ledger / tool / progparse word slots)
   steps_over           a program with more than N_RES steps (progparse._targets drops it: the row then trains answer-only, no program)
+  steps_unparsed       a row with worked steps that progparse cannot read (e.g. list_stats 'count_even of [..]', verify_claim 'scan'): it trains
+                       answer-only, no program (reader/talker thread, PASS-MARKS addendum 23: 6,433 such rows in T1SDR training incl. steps_over)
   gen_answer_over      a GEN answer longer than GEN_MAX letters (the register targets are cut)
   operand_cells_over   a calculator operand (tool.py, the outside calculator) with more than CELLS - 1 = 10 characters: cell_ids cuts it
   tape_entry_over      a calculator tape entry (tool.py) longer than LE characters
@@ -19,7 +21,7 @@ Counts are per distinct prompt / row id where the code caches (ledger.spans, pro
 from collections import Counter
 
 HITS = Counter()
-NAMES = ('prompt_over_max', 'answer_over_max', 'numbers_over', 'number_clipped', 'words_over', 'steps_over', 'gen_answer_over', 'plain_target_over', 'operand_cells_over', 'tape_entry_over')
+NAMES = ('prompt_over_max', 'answer_over_max', 'numbers_over', 'number_clipped', 'words_over', 'steps_over', 'steps_unparsed', 'gen_answer_over', 'plain_target_over', 'operand_cells_over', 'tape_entry_over')
 
 
 def hit(name, n=1):
