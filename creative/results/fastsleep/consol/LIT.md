@@ -7,9 +7,9 @@ background for choosing candidates, not evidence about B2.
 ## What the literature says, grouped by the question it answers
 
 **Why re-reading a small set hurts (our 7d diagnosis)**
-- Muennighoff et al. 2023, NeurIPS, arXiv 2305.16264 (verified): up to about 4 epochs of repeated data is worth almost as much as unique data; beyond that, extra passes add little. Our night re-reads each record 32 times (7d) or 80 times (research-loop sleep).
-- Verwimp, De Lange, Tuytelaars 2021, ICCV, arXiv 2104.07446 (verified): rehearsal models memorise and overfit the buffer.
-- Chaudhry et al. 2019, arXiv 1902.10486, "Tiny episodic memories" (verified): repeating a tiny memory helped (+7-17%) only because fresh new-task data flowed alongside it.
+- Muennighoff et al. 2023, NeurIPS, arXiv 2305.16264 (verified, abstract): training with up to 4 epochs of repeated data changes the loss negligibly compared with unique data; with more repetition, the value of adding compute eventually decays to zero (the abstract does not say 'extra repeats add little' in those words). Our night re-reads each record 32 times (7d) or 80 times (research-loop sleep).
+- Verwimp, De Lange, Tuytelaars 2021, ICCV, arXiv 2104.07446 (verified, abstract): models trained with rehearsal risk overfitting their sample memory, which harms generalisation. (A claim that they 'still generalise in some settings' was NOT seen in the abstract.)
+- Chaudhry et al. 2019, arXiv 1902.10486, "On Tiny Episodic Memories in Continual Learning" (v1 title "Continual Learning with Tiny Episodic Memories") (verified): repeating a tiny memory alongside new-task data helped; the +7-17% figure and the 'only because fresh new-task data flowed alongside' reading are the scout's, not checked.
 - Ibrahim et al. 2024, TMLR, arXiv 2403.08763 (verified, fetched): re-warm + re-decay lr with about 5% replay matched from-scratch training (405M model). Their replay is a fraction of a fresh stream, not re-reading a fixed small set.
 
 **Self-made replay (no stored data, no teacher)**
@@ -18,7 +18,7 @@ background for choosing candidates, not evidence about B2.
 - Sun, Ho, Lee 2020, ICLR, arXiv 1909.03329, LAMOL (verified): the same LM generates old-task samples; 2-3% below multitask.
 - Ellis et al. 2021, PLDI, DreamCoder (verified, summary): wake (search) / abstraction / dreaming. Dreams = programs sampled from the library, run to make their own tasks, used to train the recognition model. Targets are programs, not answers.
 - Zelikman et al. 2022, NeurIPS, arXiv 2203.14465, STaR (verified): train on own kept rationales; uses gold answers for "rationalization" (we would use the fit check instead).
-- Marek et al. 2026, arXiv 2605.26097 (verified, summary only): self-generated replay with a KL penalty; reports a capacity limit for near-saturated models.
+- Marek, Cho, Qiu, Chunara, Izmailov, Wilson 2026, "Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay", arXiv 2605.26097, submitted 25 May 2026 (verified in the second check; the first draft of this file gave a made-up descriptive title): samples from the model's own training distribution used as replay nearly eliminate forgetting; forgetting persists when capacity is near saturation. The KL-penalty detail was not seen in the abstract.
 
 **Choosing what old material to replay**
 - Saxena, Shobe, McNaughton 2022, PNAS 119(27) (verified): similarity-weighted interleaved learning. Replaying only the old items similar to the new ones gives similar accuracy with far fewer old items.
@@ -61,3 +61,6 @@ Picked (all three use only the model's own finds, its own training rows and outs
    model from its own signals (fit rate on its held practice questions and its held self-check on its own skills training rows). Costs only checks.
 3. **Interference-weighted fresh replay (similarity-weighted interleaving, Saxena 2022):** the skills half is drawn more from the families whose
    loss on the model's own held training slice rises during the night, measured by the model as it sleeps. Fresh rows only (Test R failed by reusing rows).
+
+## Addendum 10-08 evening: Haiku verification and gap sweep (`LIT-ADDENDUM.md`)
+Corrections above come from it. The new papers and the Haiku verdicts are in `LIT-ADDENDUM.md`.
