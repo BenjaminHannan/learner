@@ -15,11 +15,13 @@ skills rows. The model checks its own fit rate on 128 held practice questions ev
 | "through transfer" label (sleep - replay-only control above 0) | **-1.58 [-1.79, -1.37]** | **not shown**: "improved, not shown to come from the new skill" |
 | proved wrong (harm on 3 or more parents) | harm on 0 parents | not proved wrong |
 
-Claims (a) and (b) are met as the marks define them; claim (c) is met only as "old skills improved", not as transfer.
+Claims (a) and (b) are met as the marks define them. Claim (c) is met only as "old skills improved"; transfer from the new skill is not shown.
 
-Marks: `MARKS.md` (committed before the runs they judge; amendments dated at its end). Literature and candidates: `LIT.md`. Code: `creative/consol.py`,
-`creative/consol_report.py`. Handoff and how to resume: `HANDOFF.md`. All numbers below are C2 DEV and skills DEV only; no sealed split was opened.
-Parents: s201 and s202, rebuilt on the cloud CPU (close to the research loop's N, not identical: see MARKS.md). Times in ET.
+Marks: `MARKS.md` (committed before the runs they judge; amendments dated at its end). Literature and candidates: `LIT.md`, `LIT-ADDENDUM.md`. Code:
+`creative/consol.py`, `creative/consol_report.py`. Handoff and how to resume: `HANDOFF.md`. Screen A and the 256-update rerun used DEV only (s201, s202);
+the confirm adds the research loop's holdout, read once per learner. C2 test and labelled were never opened. Parents were rebuilt on the cloud CPU and
+are close to, not equal to, the research loop's (see MARKS.md). Times in ET. The confirm verdict was checked by an independent Opus judge, and every
+number in this file was re-derived from the raw files by a Haiku workflow.
 
 ## Screen A: fresh dreams vs re-read rows (finished 5:30 PM ET)
 
@@ -89,21 +91,23 @@ harm_measure vs B2: N fails on all six parents (2 to 6 families fire); `fd` fail
 
 ### How to read it
 
-- *Shown (six parents, holdout):* after the sleep, C2 first try on the holdout is 76.1% after 256 updates. Before the sleep, N scored 0.4 to 3.1% on the DEV questions; N's holdout was not read. That is above the research-loop sleep's 71.3%, which used about 560 to 610 updates on the same kind of night.
-- *Shown:* against the model it starts from, the sleep loses nothing on old skills. No family fires on any parent, and in_dist rises by +0.52 [0.31, 0.74] pooled.
-- *Shown:* the old-skill rise is not from the new skill. The replay-only control, with the same updates and the same skills rows and no C2 rows, rises much more: +2.11 [1.88, 2.32] over N, and 1.58 points above the sleep. The control trains on exactly the same skills rows. In the sleep those rows share every update with 512 C2 rows, so each one carries half the weight per step.
-- *Shown:* the rule-from-examples damage the task describes comes from the parent build (B2 to N: warm-up and stepping stones, researcher-designed, before any sleep), not from this sleep. The sleep claws back about 0.5 of the build's 2.3 points; the replay-only control claws back almost all of it (89.98 vs B2's 90.16, with fewshot_number_rule fully back).
-- *Suggested:* fresh skills replay repairs old skills, and sharing each update with the C2 rows (half the weight per skills row, and maybe some interference) is what limits the repair. A sleep with a larger skills share, or more updates, may get both the C2 gain and the full repair. This is the mix-ratio question Ben asked about. *Untested.*
-- *Suggested:* fresh dreams are what make 256 updates enough. At the same 128 updates they beat re-read rows by +7.4 and +5.5 on two parents (Screen A), but the research-loop sleep itself was not re-run on these parents, so 76.1 vs 71.3 is not a paired comparison.
+- *Shown (six parents, holdout):* after the sleep, C2 first try on the holdout is 76.1%, after 256 updates. That clears the pre-set 71.3% bar. Before the sleep N scored 0.4 to 3.1% on the DEV questions; N's holdout was not read. Per kind, affine is still weak: 12.6 to 22.3% on the holdout; square and last_digit are about 100%.
+- *Suggested, not shown:* that this sleep beats the research-loop sleep. 71.3% is that sleep's stored score on its own parents (near-copies of these), not a paired run. "About 560 to 610 updates" is its formula (80 x rows / 512) applied to these nights, not a logged run.
+- *Shown:* no harm against the model the sleep starts from, by the pre-set measure. No family fires on any parent, and in_dist rises by +0.52 [0.31, 0.74] pooled. Single families still drop by up to 3.5 points on single parents (s203 list_index, s204 odd_one_out), under the 5-point line. Per parent, the in_dist rise has an interval above 0 on four parents and includes 0 on s200 and s204.
+- *Shown:* the old-skill rise is not shown to come from the new skill. The replay-only control rises more: +2.11 [1.88, 2.32] over N, 1.58 points above the sleep, with every per-parent interval below 0. It trains on the same skills rows. In the sleep those rows share every update with 512 C2 rows, so each one carries half the weight per step, which could hide a small transfer. On s201, s202 and s205 the kept sleep checkpoint is from update 224, so it saw 32 fewer updates of those rows than the control. The control learns no C2 at all.
+- *Shown (report only):* against the raw B2, the rule-from-examples families are already down after the parent build (warm-up and stepping stones, before any sleep). The sleep takes back about 0.5 of the build's 2.3 in_dist points. The control takes back most of it (89.98 vs B2's 90.16; fewshot_number_rule back to 36.2 vs 35.5; seq_next only to 80.8 vs 83.6, and it still fires on 2 parents). The research-loop sleep's own harm against B2 or N was not measured here.
+- *Suggested:* fresh skills replay repairs old skills, and sharing each update with the C2 rows (half the weight per skills row, and maybe some interference) limits the repair. A larger skills share or more updates may keep the C2 gain and repair more. This is the mix-ratio question Ben asked about. *Untested.*
+- *Suggested:* fresh dreams are what make 256 updates enough. At the same 128 updates they beat re-read rows by +7.4 and +5.5 on two parents (Screen A).
+- *Not tested:* "the model decides when to stop." The stop rule never ended a night early; only its "keep the best checkpoint" part acted (on 3 parents).
 - Caveats:
-  - The 71.3% is the research loop's stored number from its own copies of these parents (rebuilt here as near-copies), not a paired baseline. PC job 1 would re-run it on the same N.
-  - The research-loop sleep's real harm is still unmeasured.
-  - Update counts compare training steps of equal size (1,024 rows); night sampling is about the same for both and is not counted; FLOPs were not counted on this CPU.
+  - One training run per parent; the pooled interval covers row noise only, not run-to-run noise. The 1-thread and 2-thread runs of the same recipe on s202 gave 75.4 and 71.9 on DEV (the second kept its update-224 state).
   - The holdout had been read 14 times by the research loop before this; here each learner read it once.
+  - Update counts compare steps of equal size (1,024 rows); night sampling is about the same for both and is not counted; FLOPs were not counted on this CPU.
 
 ### Plain summary for Ben
 
-The model now learns the new puzzle kinds in one night of 256 practice steps, and gets 76% of fresh puzzles right on the first try, better than the old
-sleep's 71% with fewer than half its steps. It does not forget anything it knew the evening before. Its old skills even go up a little, but that
-comes from the practice rows mixed into the night, not from the new puzzles: practising old skills alone helps them four times as much. The
-old-skill damage you saw before comes from the warm-up steps that build each starting model, and plain practice repairs it almost completely.
+In one night of 256 practice steps the model got 76% of fresh puzzles of the new kinds right on the first try. Your target was the old sleep's 71%, so this
+clears it, though that 71% was measured on slightly different copies of the models, so the comparison is not exact. One kind (a·x+b) is still mostly
+wrong. By the harm test fixed in advance, the night cost no old skill. Old skills even rose a little. But practising old skills alone raised them about
+four times as much, so there is no evidence yet that the new puzzles help the old skills. Most of the old-skill damage you saw before was already there
+before the sleep, from the warm-up steps that build each starting model, and plain practice repairs most of it.
