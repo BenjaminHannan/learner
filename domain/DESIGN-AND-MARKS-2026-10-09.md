@@ -147,7 +147,7 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 
 **Marks after these addenda.** DM4 passes only after the candidate RPN panel is installed and a real run passes `domain.audit`. DM1 and DM6 need the A2 and A6 decisions. Regression tests: `domain/tests/test_review_fixes.py` (6 tests) and the original `domain/tests/test_tools.py` (10 tests) both pass.
 
-**Opus rulings on A1-A7 (12:45 PM ET 10-09, before any run).**
+**Opus rulings on A1-A7 (12:37 PM ET 10-09, before any run).**
 - A1 accepted. The candidate RPN panel replaces the first one (written by this thread at 11:51 AM ET, never used by any run); the first one is kept as `panel/rpn.v1-overlap.jsonl` for the record. DM4 is read on the candidate.
 - A2 decided: no change to `custom_io/` for this test (one change at a time). **DM1, DM2 and DM6 are scored on the kinds the model can be trained on**: sheet SUM, MAX, MIN, PRODUCT, cell arithmetic, division, ABS (7 of 10); RPN all kinds except `a b %` (7 of 8). Bars unchanged (+30 near, +10 far), computed over those kinds' rows. MOD, COUNTIF, IF and `a b %` stay in the practice mix (the model is not told they cannot be learned) and are reported. They double as a picking check: a good picker moves its practice away from kinds that never improve (reported share on the last day).
 - A3 accepted (COUNTIF is unscored under A2 anyway).
