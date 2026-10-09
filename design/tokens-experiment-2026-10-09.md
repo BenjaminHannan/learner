@@ -159,3 +159,11 @@ Marks M1-M5 and the window lines are unchanged; only the order, the stop rule be
   index_add (the runner sets PYTORCH_ENABLE_MPS_FALLBACK=1, so an unsupported op falls back to the CPU and is only slower).
 - **Time (suggested, untested):** G1's 3M run took 6.5 h on the PC; a Mac is several times slower, so roughly 1 to 1.5 days per run on
   the M3 Pro and more on the M1 Pro. Kill-first saves up to 3 runs.
+
+## Addendum B (11:50 AM ET Fri Oct 9, before any run): back on the PC
+
+From the big-run thread via the coordinator, 11:45 AM ET: the M1 Pro measured the experts test's 3M run at 25 s per update (about 6.9 days a
+run), so the Macs cannot train 3M Gemma-input runs in useful time. The token test goes back to **BensPC, in its first free gap, TK seed 400
+first, never delaying the B3 ladder**. Addendum A's kill-first order and stop lines stay; its Mac and fp32 parts no longer apply (on the PC the
+runs use bf16 like G1's controls). Queues `8aTK-pc-1/2/3.txt` (one step each), card `8aTK-card.md`. The Mac queues are kept but not used
+unless a 100-update speed check of a dense 3M run on a Mac says a run ends within a week. Marks unchanged.
