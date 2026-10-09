@@ -132,6 +132,21 @@ def test_cap_hit_counters():
     assert h['words_over'] == 1 and h['numbers_over'] == 1 and h['gen_answer_over'] == 1 and h['total'] >= 3, h
 
 
+def test_3m_band_follows_the_caps():
+    # B3 caps (prompt 2000, numbers 240, words 727): B2 3M grows well above today's 3.30M; the pair must still pass, each within PLAIN_BAND of the other.
+    # Fresh process: caps patch module globals.
+    import subprocess
+    code = ("import json, os; from custom_io.g8a import caps as CP, configs as C\n"
+            "CP.apply(json.load(open(os.path.join(os.path.dirname(C.__file__), 'caps_b3.json'))))\n"
+            "cfgs, counts = C.sizes('3M', {'n_loops': 12})\n"
+            "assert counts['B2'] > 1.1 * C.B2_S_PARAMS, counts\n"
+            "C.check_bands('3M', cfgs, counts, exact_3m=False)\n"
+            "assert abs(counts['PT'] / counts['B2'] - 1) <= C.PLAIN_BAND\n"
+            "try:\n    C.check_bands('3M', cfgs, dict(counts, B2=int(2 * C.B2_S_PARAMS)), exact_3m=False)\nexcept AssertionError:\n    print('OK')\n")
+    p = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    assert p.stdout.strip().endswith('OK'), p.stdout + p.stderr
+
+
 def test_plain_lm_refuses_the_front():
     from custom_io.models import build
     try:
