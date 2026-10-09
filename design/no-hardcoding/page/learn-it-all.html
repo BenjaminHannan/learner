@@ -7,17 +7,17 @@
 :root{
   --bg:#eef1f4; --card:#ffffff; --ink:#18212b; --muted:#5b6673; --line:#cfd6de;
   --learn:#2457c5; --learn-soft:#dce6fb; --hand:#d4570f; --hand-soft:#fbe3d3; --tool:#1d7a55; --tool-soft:#d6f0e4;
-  --guess:#7a5bb5;
+  --guess:#7a5bb5; --on-strong:#ffffff;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#11161c; --card:#19212a; --ink:#e8edf2; --muted:#9aa6b2; --line:#2e3946;
-  --learn:#7ea3ff; --learn-soft:#1f2d4d; --hand:#ff9450; --hand-soft:#4a2a16; --tool:#5fd3a0; --tool-soft:#163a2c; --guess:#b79cf0; color-scheme:dark }}
+  --learn:#7ea3ff; --learn-soft:#1f2d4d; --hand:#ff9450; --hand-soft:#4a2a16; --tool:#5fd3a0; --tool-soft:#163a2c; --guess:#b79cf0; --on-strong:#0b1220; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#11161c; --card:#19212a; --ink:#e8edf2; --muted:#9aa6b2; --line:#2e3946;
-  --learn:#7ea3ff; --learn-soft:#1f2d4d; --hand:#ff9450; --hand-soft:#4a2a16; --tool:#5fd3a0; --tool-soft:#163a2c; --guess:#b79cf0; color-scheme:dark }
+  --learn:#7ea3ff; --learn-soft:#1f2d4d; --hand:#ff9450; --hand-soft:#4a2a16; --tool:#5fd3a0; --tool-soft:#163a2c; --guess:#b79cf0; --on-strong:#0b1220; color-scheme:dark }
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
 main{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:flex;flex-direction:column;gap:22px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 18px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -43,7 +43,7 @@ footer code{font-family:var(--mono);font-size:12px}
 <main>
 
 <section class="card hero">
-  <div class="kicker">B2 · Oct 7, 2026</div>
+  <div class="kicker">B2 · Oct 7, 2026 · updated Oct 9</div>
   <h1>Learn it all</h1>
   <p class="lede">Today, hand-written Python does B2's number work. The plan swaps each piece for something the model learns, and keeps hand code only inside tools the model chooses to call.</p>
   <svg viewBox="0 0 640 230" role="img" aria-label="A question goes into the model; inside, orange Python gears sit next to the blue learned brain; an answer comes out">
@@ -54,14 +54,14 @@ footer code{font-family:var(--mono);font-size:12px}
     <rect x="196" y="20" width="250" height="190" rx="18" fill="none" stroke="var(--ink)" stroke-width="2"/>
     <text x="321" y="44" text-anchor="middle" font-size="15" font-weight="700">B2 today</text>
     <circle cx="270" cy="120" r="46" fill="var(--learn)"/>
-    <text x="270" y="116" text-anchor="middle" font-size="14" fill="#fff" style="fill:#fff">learned</text>
-    <text x="270" y="134" text-anchor="middle" font-size="14" style="fill:#fff">thinker</text>
+    <text x="270" y="116" text-anchor="middle" font-size="14" style="fill:var(--on-strong)">learned</text>
+    <text x="270" y="134" text-anchor="middle" font-size="14" style="fill:var(--on-strong)">thinker</text>
     <g fill="var(--hand)">
       <circle cx="372" cy="85" r="26"/><circle cx="398" cy="140" r="22"/><circle cx="352" cy="175" r="18"/>
     </g>
-    <text x="372" y="90" text-anchor="middle" font-size="12" class="mono" style="fill:#fff">int()</text>
-    <text x="398" y="145" text-anchor="middle" font-size="12" class="mono" style="fill:#fff">a+b</text>
-    <text x="352" y="180" text-anchor="middle" font-size="11" class="mono" style="fill:#fff">str()</text>
+    <text x="372" y="90" text-anchor="middle" font-size="12" class="mono" style="fill:var(--on-strong)">int()</text>
+    <text x="398" y="145" text-anchor="middle" font-size="12" class="mono" style="fill:var(--on-strong)">a+b</text>
+    <text x="352" y="180" text-anchor="middle" font-size="11" class="mono" style="fill:var(--on-strong)">str()</text>
     <path d="M452 115 H496" stroke="var(--muted)" stroke-width="3" marker-end="url(#ah)"/>
     <rect x="502" y="80" width="128" height="70" rx="10" fill="var(--learn-soft)" stroke="var(--line)"/>
     <text x="566" y="121" text-anchor="middle" font-size="17" font-weight="700">answer</text>
@@ -90,13 +90,13 @@ footer code{font-family:var(--mono);font-size:12px}
       <text x="560" y="88" text-anchor="middle" font-size="14" font-weight="700">Python adds</text>
       <text x="560" y="108" text-anchor="middle" font-size="14">inside</text>
     </g>
-    <path d="M500 140 C 500 180, 420 180, 420 200" stroke="var(--muted)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
-    <text x="440" y="176" font-size="12" class="muted">8 fixed rounds, at most 7 steps</text>
-    <rect x="300" y="200" width="200" height="60" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
-    <text x="400" y="226" text-anchor="middle" font-size="14" font-weight="700">Python prints it</text>
-    <text x="400" y="246" text-anchor="middle" font-size="14" class="mono">str(10) → "10"</text>
+    <path d="M500 140 C 500 180, 440 180, 440 200" stroke="var(--muted)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
+    <text x="474" y="168" text-anchor="end" font-size="12" class="muted">8 fixed rounds, at most 7 steps</text>
+    <rect x="340" y="200" width="200" height="60" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
+    <text x="440" y="226" text-anchor="middle" font-size="14" font-weight="700">Python prints it</text>
+    <text x="440" y="246" text-anchor="middle" font-size="14" class="mono">str(10) → "10"</text>
     <g font-size="13">
-      <rect x="20" y="200" width="250" height="84" rx="10" fill="none" stroke="var(--line)"/>
+      <rect x="20" y="200" width="310" height="84" rx="10" fill="none" stroke="var(--line)"/>
       <text x="36" y="226">Hand-written parts</text>
       <rect x="36" y="238" width="170" height="14" rx="3" fill="var(--hand)"/><text x="214" y="250">17 when it answers</text>
       <rect x="36" y="260" width="60" height="14" rx="3" fill="var(--hand)" opacity=".55"/><text x="104" y="272">6 only in teaching</text>
@@ -107,64 +107,96 @@ footer code{font-family:var(--mono);font-size:12px}
 <section class="card">
   <div class="kicker">2 · Where it's going</div>
   <h2>The model writes, a tool calculates</h2>
-  <p>Numbers stay as letters. The model copies them into a call, the calculator sends back text, and the model stops when it writes an answer.</p>
-  <svg viewBox="0 0 640 300" role="img" aria-label="Three turns: the model writes CALL 12-5, the tool returns 7; the model writes CALL 7+3, the tool returns 10; the model writes ANSWER 10">
+  <p>Numbers stay as letters: the model copies them into a call, and it reads the calculator's reply in its next round.</p>
+  <svg viewBox="0 0 640 330" role="img" aria-label="One thinking pass. After round 1 the model writes sub 12 5 and the calculator replies 7. After round 2 it writes add 7 3 and gets 10. After round 3 it writes no call and its done check says yes. Then the talker writes 10.">
+    <text x="575" y="14" text-anchor="middle" font-size="13" class="muted">done?</text>
     <g font-size="15">
-      <text x="20" y="40" font-weight="700">turn 1</text>
-      <rect x="100" y="18" width="200" height="36" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="200" y="42" text-anchor="middle" class="mono">CALL 12-5</text>
-      <path d="M306 36 H366" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
-      <rect x="372" y="18" width="120" height="36" rx="8" fill="var(--tool-soft)" stroke="var(--tool)" stroke-width="2"/>
-      <text x="432" y="42" text-anchor="middle">calculator</text>
-      <path d="M498 36 H548" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
-      <text x="580" y="42" text-anchor="middle" class="mono" font-weight="700">"7"</text>
+      <text x="14" y="45" font-weight="700">round 1</text>
+      <circle cx="112" cy="40" r="20" fill="var(--learn)"/>
+      <text x="112" y="44" text-anchor="middle" font-size="11" style="fill:var(--on-strong)">think</text>
+      <path d="M134 40 H154" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <rect x="160" y="22" width="140" height="36" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
+      <text x="230" y="46" text-anchor="middle" class="mono">sub 12 5</text>
+      <path d="M304 40 H324" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <rect x="330" y="22" width="110" height="36" rx="8" fill="var(--tool-soft)" stroke="var(--tool)" stroke-width="2"/>
+      <text x="385" y="46" text-anchor="middle">calculator</text>
+      <path d="M444 40 H466" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <text x="492" y="46" text-anchor="middle" class="mono" font-weight="700">"7"</text>
+      <text x="575" y="46" text-anchor="middle" class="muted">no</text>
 
-      <text x="20" y="130" font-weight="700">turn 2</text>
-      <rect x="100" y="108" width="200" height="36" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="200" y="132" text-anchor="middle" class="mono">CALL 7+3</text>
-      <path d="M306 126 H366" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
-      <rect x="372" y="108" width="120" height="36" rx="8" fill="var(--tool-soft)" stroke="var(--tool)" stroke-width="2"/>
-      <text x="432" y="132" text-anchor="middle">calculator</text>
-      <path d="M498 126 H548" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
-      <text x="580" y="132" text-anchor="middle" class="mono" font-weight="700">"10"</text>
+      <text x="14" y="120" font-weight="700">round 2</text>
+      <circle cx="112" cy="115" r="20" fill="var(--learn)"/>
+      <text x="112" y="119" text-anchor="middle" font-size="11" style="fill:var(--on-strong)">think</text>
+      <path d="M134 115 H154" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <rect x="160" y="97" width="140" height="36" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
+      <text x="230" y="121" text-anchor="middle" class="mono">add 7 3</text>
+      <path d="M304 115 H324" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <rect x="330" y="97" width="110" height="36" rx="8" fill="var(--tool-soft)" stroke="var(--tool)" stroke-width="2"/>
+      <text x="385" y="121" text-anchor="middle">calculator</text>
+      <path d="M444 115 H466" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <text x="492" y="121" text-anchor="middle" class="mono" font-weight="700">"10"</text>
+      <text x="575" y="121" text-anchor="middle" class="muted">no</text>
 
-      <text x="20" y="220" font-weight="700">turn 3</text>
-      <rect x="100" y="198" width="200" height="36" rx="8" fill="var(--learn)" />
-      <text x="200" y="222" text-anchor="middle" class="mono" style="fill:#fff">ANSWER 10</text>
-      <text x="320" y="222" class="muted" font-size="14">writing an answer = stop</text>
+      <text x="14" y="195" font-weight="700">round 3</text>
+      <circle cx="112" cy="190" r="20" fill="var(--learn)"/>
+      <text x="112" y="194" text-anchor="middle" font-size="11" style="fill:var(--on-strong)">think</text>
+      <path d="M134 190 H154" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#ah2)"/>
+      <rect x="160" y="172" width="140" height="36" rx="8" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="230" y="196" text-anchor="middle" class="muted">no call</text>
+      <text x="575" y="196" text-anchor="middle" font-weight="700" style="fill:var(--learn)">yes</text>
+
+      <text x="14" y="267" font-weight="700">talk</text>
+      <rect x="160" y="244" width="280" height="36" rx="8" fill="var(--learn)"/>
+      <text x="300" y="268" text-anchor="middle" style="fill:var(--on-strong)">talker writes <tspan class="mono" font-weight="700" style="fill:var(--on-strong)">10</tspan></text>
     </g>
-    <path d="M580 52 C 580 80, 200 70, 200 104" stroke="var(--tool)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
-    <path d="M580 142 C 580 170, 200 160, 200 194" stroke="var(--tool)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
-    <text x="330" y="86" font-size="12" class="muted">read back as text</text>
-    <text x="20" y="280" font-size="14" class="muted">Any number of calls. Every letter written by the model.</text>
+    <path d="M492 56 C 492 80, 112 72, 112 92" stroke="var(--tool)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
+    <path d="M492 131 C 492 155, 112 147, 112 167" stroke="var(--tool)" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
+    <text x="500" y="86" font-size="12" class="muted">read next round</text>
+    <path d="M112 212 V262 H154" stroke="var(--muted)" stroke-width="2.5" fill="none" marker-end="url(#ah2)"/>
+    <text x="14" y="318" font-size="14" class="muted">Up to 16 calls in one pass. A learned "done?" check ends it.</text>
     <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>
   </svg>
-  <span class="tag">our best guess · not built yet</span>
+  <span class="tag">built · never run yet</span>
 </section>
 
 <section class="card">
   <div class="kicker">3 · How we get there</div>
-  <h2>Remove one piece at a time</h2>
-  <p>Each step may cost at most 2 points; the finished model must land within 1 point of today's B2, and no piece ever goes back in.</p>
-  <svg viewBox="0 0 640 360" role="img" aria-label="A staircase of six steps from today's B2 to the all-learned model">
+  <h2>Remove the hand parts in two groups</h2>
+  <p>Two steps are done and group 1 is built; group 2 removes the last hand parts, and none ever goes back in.</p>
+  <svg viewBox="0 0 400 600" style="max-width:460px;margin-inline:auto" role="img" aria-label="Staircase from the bottom. D0, check reading: done. T1, calculator outside: done. Group 1 (learned stop, calls any time, Gemma reads, 2,000 letters): built, not run. Group 2 (N1 no number cutter, O1 one writer for every answer, the model writes the op name as letters, P1 no place labels, V1 raw bytes, L1 steps as written, ST1 keeps its own good tries): being built. Top: B3, all learned, then the size test. Hand parts used to answer, counted by the Oct 9 rules: B2 today 14, group 1 11, B3 0.">
+    <text x="14" y="22" font-size="15" font-weight="700">Hand parts used to answer (Oct 9 count)</text>
     <g font-size="14">
-      <rect x="20"  y="290" width="96" height="50" rx="8" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
-      <text x="68" y="312" text-anchor="middle" font-weight="700">D0</text><text x="68" y="330" text-anchor="middle" font-size="12">check reading</text>
-      <rect x="122" y="240" width="96" height="100" rx="8" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
-      <text x="170" y="262" text-anchor="middle" font-weight="700">T1</text><text x="170" y="280" text-anchor="middle" font-size="12">calculator</text><text x="170" y="296" text-anchor="middle" font-size="12">outside</text>
-      <rect x="224" y="190" width="96" height="150" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="272" y="212" text-anchor="middle" font-weight="700">O1</text><text x="272" y="230" text-anchor="middle" font-size="12">model writes</text><text x="272" y="246" text-anchor="middle" font-size="12">every answer</text>
-      <rect x="326" y="140" width="96" height="200" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="374" y="162" text-anchor="middle" font-weight="700">N1</text><text x="374" y="180" text-anchor="middle" font-size="12">no number</text><text x="374" y="196" text-anchor="middle" font-size="12">cutter</text>
-      <rect x="428" y="90" width="96" height="250" rx="8" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="476" y="112" text-anchor="middle" font-weight="700">P1</text><text x="476" y="130" text-anchor="middle" font-size="12">no place</text><text x="476" y="146" text-anchor="middle" font-size="12">labels</text>
-      <rect x="530" y="40" width="96" height="300" rx="8" fill="var(--learn)"/>
-      <text x="578" y="64" text-anchor="middle" font-weight="700" style="fill:#fff">B3</text><text x="578" y="82" text-anchor="middle" font-size="12" style="fill:#fff">all learned,</text><text x="578" y="98" text-anchor="middle" font-size="12" style="fill:#fff">6-run check</text>
+      <text x="14" y="52">B2 today</text><rect x="120" y="40" width="168" height="16" rx="3" fill="var(--hand)"/><text x="296" y="53" font-weight="700">14</text>
+      <text x="14" y="80">group 1</text><rect x="120" y="68" width="132" height="16" rx="3" fill="var(--hand)"/><text x="260" y="81" font-weight="700">11</text>
+      <text x="14" y="108">B3</text><text x="120" y="108" font-weight="700">0</text>
+      <text x="14" y="127" font-size="12" class="muted">Card 1 says 17: 3 now count as allowed (caps, call format).</text>
     </g>
-    <text x="20" y="40" font-size="13" class="muted">orange = still has</text>
-    <text x="20" y="58" font-size="13" class="muted">hand-written parts</text>
+    <rect x="10" y="136" width="380" height="68" rx="10" fill="var(--learn)"/>
+    <text x="24" y="166" font-size="17" font-weight="700" style="fill:var(--on-strong)">B3 · all learned</text>
+    <text x="24" y="190" font-size="14" style="fill:var(--on-strong)">then the size test</text>
+    <rect x="40" y="212" width="350" height="160" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
+    <text x="50" y="236" font-size="15" font-weight="700">Group 2</text><text x="382" y="236" font-size="13" text-anchor="end" class="muted">being built</text>
+    <rect x="50" y="250" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="58" y="267" font-size="13"><tspan font-weight="700">N1</tspan> · no number cutter</text>
+    <rect x="50" y="280" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="58" y="297" font-size="13"><tspan font-weight="700">O1</tspan> · one writer</text>
+    <rect x="50" y="310" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="58" y="327" font-size="13"><tspan font-weight="700">op</tspan> · name as letters</text>
+    <rect x="50" y="340" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="58" y="357" font-size="13"><tspan font-weight="700">P1</tspan> · no place labels</text>
+    <rect x="220" y="250" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="228" y="267" font-size="13"><tspan font-weight="700">V1</tspan> · raw bytes</text>
+    <rect x="220" y="280" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="228" y="297" font-size="13"><tspan font-weight="700">L1</tspan> · steps as written</text>
+    <rect x="220" y="310" width="160" height="24" rx="6" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="1.5"/><text x="228" y="327" font-size="13"><tspan font-weight="700">ST1</tspan> · keeps good tries</text>
+    <rect x="90" y="380" width="300" height="96" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
+    <text x="100" y="404" font-size="15" font-weight="700">Group 1</text><text x="382" y="404" font-size="13" text-anchor="end" class="muted">built, not run</text>
+    <g font-size="14">
+      <text x="100" y="432">learned stop</text><text x="240" y="432">calls any time</text>
+      <text x="100" y="458">Gemma reads</text><text x="240" y="458">2,000 letters</text>
+    </g>
+    <rect x="130" y="484" width="260" height="50" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
+    <text x="140" y="514" font-size="14"><tspan font-weight="700">T1</tspan> · calculator outside</text><text x="382" y="514" font-size="14" text-anchor="end" font-weight="700" style="fill:var(--tool)">✓ done</text>
+    <rect x="170" y="542" width="220" height="50" rx="10" fill="var(--hand-soft)" stroke="var(--hand)" stroke-width="2"/>
+    <text x="180" y="572" font-size="14"><tspan font-weight="700">D0</tspan> · check reading</text><text x="382" y="572" font-size="14" text-anchor="end" font-weight="700" style="fill:var(--tool)">✓ done</text>
+    <text x="14" y="562" font-size="13" class="muted">orange = still</text>
+    <text x="14" y="580" font-size="13" class="muted">has hand parts</text>
   </svg>
-  <span class="tag">marks fixed before any run</span>
+  <span class="tag">group 1 marks sealed · group 2 marks proposed</span>
 </section>
 
 <section class="card">
@@ -176,7 +208,7 @@ footer code{font-family:var(--mono);font-size:12px}
     <g class="mono" font-size="17">
       <g id="lt"></g>
     </g>
-    <text x="20" y="140" font-size="14" font-weight="700">word pieces (GPT-2 style)</text>
+    <text x="20" y="146" font-size="14" font-weight="700">word pieces (GPT-2 style)</text>
     <g font-size="17" class="mono">
       <rect x="20" y="156" width="80" height="40" rx="6" fill="var(--learn-soft)" stroke="var(--line)"/><text x="60" y="182" text-anchor="middle">48</text>
       <rect x="104" y="156" width="80" height="40" rx="6" fill="var(--learn-soft)" stroke="var(--line)"/><text x="144" y="182" text-anchor="middle">21</text>
@@ -184,15 +216,15 @@ footer code{font-family:var(--mono);font-size:12px}
       <rect x="262" y="156" width="70" height="40" rx="6" fill="var(--learn-soft)" stroke="var(--line)"/><text x="297" y="182" text-anchor="middle">␣9</text>
       <rect x="336" y="156" width="80" height="40" rx="6" fill="var(--learn-soft)" stroke="var(--line)"/><text x="376" y="182" text-anchor="middle">37</text>
     </g>
-    <path d="M100 150 V202" stroke="var(--hand)" stroke-width="3"/>
+    <path d="M100 153 V202" stroke="var(--hand)" stroke-width="3"/>
     <text x="20" y="232" font-size="13" class="muted">"4821" is split 48|21; the units digit's place is no longer obvious.</text>
   </svg>
 </section>
 
 <section class="card">
   <div class="kicker">5 · What our tests showed</div>
-  <h2>Add meaning on top; keep the 9-letter window</h2>
-  <p>Gemma's meanings on top added about 2 points (a bigger check runs tonight); every reader without the 9-letter window broke the cipher puzzles, even with the letters still in.</p>
+  <h2>Gemma's meaning helps; keep the 9-letter window</h2>
+  <p>Gemma's meanings added about 2 points here and 2.7 on average over 6 more runs; every reader without the 9-letter window broke the cipher puzzles.</p>
   <svg viewBox="0 0 640 330" role="img" aria-label="Bar chart of pooled score: B2 73.9, letters plus Gemma 75.8, no window 67.4; cipher puzzle score: letters with window 97, letters without window 4, Gemma without window 0 to 10">
     <text x="20" y="26" font-size="14" font-weight="700">Score on 5 question sets (out of 100)</text>
     <g font-size="14">
@@ -206,13 +238,14 @@ footer code{font-family:var(--mono);font-size:12px}
     <text x="20" y="196" font-size="14" font-weight="700">Cipher puzzles (out of 100)</text>
     <g font-size="14">
       <text x="20" y="232">letters + window</text>
-      <rect x="190" y="216" width="419" height="24" rx="4" fill="var(--learn)"/><text x="560" y="234" text-anchor="end" font-weight="700" style="fill:#fff">97</text>
+      <rect x="190" y="216" width="419" height="24" rx="4" fill="var(--learn)"/><text x="560" y="234" text-anchor="end" font-weight="700" style="fill:var(--on-strong)">97</text>
       <text x="20" y="270">letters, no window</text>
       <rect x="190" y="254" width="18" height="24" rx="4" fill="var(--hand)"/><text x="216" y="272" font-weight="700">4</text>
       <text x="20" y="308">Gemma, no window</text>
       <rect x="190" y="292" width="22" height="24" rx="4" fill="var(--hand)"/><text x="220" y="310" font-weight="700">0–10</text>
     </g>
   </svg>
+  <span class="tag">caveat · it answered a few questions with no thinking (6.6 vs a 4.6 limit)</span>
 </section>
 
 <section class="card">
@@ -234,25 +267,35 @@ footer code{font-family:var(--mono);font-size:12px}
 
 <section class="card">
   <div class="kicker">7 · What happens next</div>
-  <h2>Richer letters, not fewer</h2>
-  <p>Keep the letters for exactness and stack three learned add-ons on top, each tested alone first.</p>
-  <svg viewBox="0 0 640 300" role="img" aria-label="Letters at the bottom; above them, whole-question attention, learned letter groups, and Gemma meaning">
+  <h2>Gemma reads first; the letters stay on top</h2>
+  <p>Ben made Gemma the main reader; the small letter window stays on top, and the thinker looks at every letter each round.</p>
+  <svg viewBox="0 0 640 330" role="img" aria-label="Layers from the bottom: the question, up to 2,000 letters; Gemma reads it once (borrowed); the learned 9-letter window on the letters; the learned thinker on top. Size bar drawn to scale: Gemma 271 million, thinker 100 million, talker 25 million planned, about 397 million in all.">
     <g font-size="15">
-      <rect x="40" y="226" width="560" height="50" rx="10" fill="var(--learn-soft)" stroke="var(--learn)" stroke-width="2"/>
-      <text x="320" y="257" text-anchor="middle" font-weight="700">letters + 9-letter window (kept)</text>
-      <rect x="70" y="160" width="500" height="50" rx="10" fill="var(--learn)" opacity=".9"/>
-      <text x="320" y="191" text-anchor="middle" style="fill:#fff">W1 · look across the whole question</text>
-      <rect x="100" y="94" width="440" height="50" rx="10" fill="var(--learn)" opacity=".75"/>
-      <text x="320" y="125" text-anchor="middle" style="fill:#fff">U2 · learned letter groups (no word splitter)</text>
-      <rect x="130" y="28" width="380" height="50" rx="10" fill="var(--learn)" opacity=".6"/>
-      <text x="320" y="59" text-anchor="middle" style="fill:#fff">Gemma meaning · 6-run check tonight</text>
+      <rect x="40" y="10" width="560" height="44" rx="10" fill="var(--learn)"/>
+      <text x="320" y="38" text-anchor="middle" style="fill:var(--on-strong)">thinker · looks at every letter, every round</text>
+      <rect x="40" y="62" width="560" height="44" rx="10" fill="var(--learn)" opacity=".75"/>
+      <text x="320" y="90" text-anchor="middle" style="fill:var(--on-strong)">9-letter window on the letters (kept)</text>
+      <rect x="40" y="114" width="560" height="44" rx="10" fill="var(--card)" stroke="var(--muted)" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="320" y="142" text-anchor="middle" font-weight="700">Gemma reads the question once · borrowed</text>
+      <text x="320" y="184" text-anchor="middle" class="mono" font-size="14">"Tom has 12 apples …" · up to 2,000 letters</text>
     </g>
+    <text x="20" y="222" font-size="13" font-weight="700">Size, borrowed parts counted: about 397M (planned)</text>
+    <rect x="20" y="232" width="411" height="26" rx="4" fill="var(--line)" stroke="var(--muted)"/>
+    <rect x="431" y="232" width="152" height="26" fill="var(--learn)"/>
+    <rect x="583" y="232" width="37" height="26" fill="var(--learn)" opacity=".5"/>
+    <g font-size="13">
+      <text x="20" y="276">Gemma 271M</text>
+      <text x="507" y="276" text-anchor="middle">thinker 100M</text>
+      <text x="620" y="294" text-anchor="end">talker 25M</text>
+    </g>
+    <text x="20" y="320" font-size="13" class="muted">Tokens instead of letters for the thinker: being tested.</text>
   </svg>
-  <span class="tag">not tested yet · pass marks written first</span>
+  <span class="tag">planned · 100M not run yet</span>
 </section>
 
 <footer>
   <div>Sources: B2 code at commit <code>e10ea0232d</code> (branch claude/custom-reader-talker-4x309r: <code>models/ledger.py</code>, <code>reader.py</code>, <code>progparse.py</code>); results <code>RESULTS-EG2.md</code>, <code>REPORT.md</code>, q33 confirm. Scores are 2-run averages on the same machines. Word-piece split measured with GPT-2's tokenizer.</div>
+  <div>Updated Oct 9 after the architecture audit, from <code>architecture/FINISHED-MODEL-2026-10-09.md</code> (cards 2, 3 and 7), <code>no-hardcoding/INVENTORY-B3-2026-10-09.md</code> (hand-part counts) and the q39 6-run Gemma check (card 5). Cards 1, 4 and 6 describe B2 as of Oct 7.</div>
   <div>Full write-up: <code>/mnt/project-files/no-hardcoding/</code> (parts list, plan and sealed marks, letters vs word pieces).</div>
 </footer>
 </main>
