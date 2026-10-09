@@ -69,12 +69,16 @@ def test_sc_marks_and_verdict():
 
 def test_sc_scorecard():
     m = N.sc_scorecard(28.2, 31.2, 0.4, True)          # gain 27.8 / 30.8 = 0.903
-    assert m['passes'] and not m['proved_wrong'] and abs(m['ratio'] - 27.8 / 30.8) < 1e-9
+    assert m['passes'] and not m['low'] and abs(m['ratio'] - 27.8 / 30.8) < 1e-9
     assert not N.sc_scorecard(28.0, 31.2, 0.4, True)['passes']
-    assert not N.sc_scorecard(31.2, 31.2, 0.4, False)['passes'] and N.sc_scorecard(31.2, 31.2, 0.4, False)['proved_wrong']
-    assert N.sc_scorecard(15.0, 31.2, 0.4, True)['proved_wrong'] and not N.sc_scorecard(16.0, 31.2, 0.4, True)['proved_wrong']
-    assert N.sc_scorecard(5.0, 0.4, 0.4, True)['proved_wrong']   # no W1 gain to compare with: never a pass
-
+    assert not N.sc_scorecard(31.2, 31.2, 0.4, False)['passes']
+    assert N.sc_scorecard(15.0, 31.2, 0.4, True)['low'] and not N.sc_scorecard(16.0, 31.2, 0.4, True)['low']
+    assert N.sc_scorecard(5.0, 0.4, 0.4, True)['low'] and not N.sc_scorecard(5.0, 0.4, 0.4, True)['passes']   # no W1 gain to compare with
+    ok, low, harm = N.sc_scorecard(31.2, 31.2, 0.4, True), N.sc_scorecard(10.0, 31.2, 0.4, True), N.sc_scorecard(31.2, 31.2, 0.4, False)
+    v = N.sc_scorecard_verdict
+    assert v({'a': ok, 'b': ok})['passes'] and not v({'a': ok, 'b': ok})['proved_wrong']
+    assert v({'a': ok, 'b': harm})['proved_wrong'] and not v({'a': ok, 'b': harm})['passes']      # harm on either parent
+    assert not v({'a': ok, 'b': low})['proved_wrong'] and v({'a': low, 'b': low})['proved_wrong']  # low gain only on both
 
 def test_sleep_sc_hook_off_is_sleep_and_row_losses():
     import os, pytest, torch
