@@ -97,6 +97,20 @@ def plain_cfg(rung, b2=None, extra=None):
     return dict(cfg, **(extra or {}))
 
 
+def tkn_mlp(rung, tk_extra, tol=0.005):
+    """Test TKN (TOKENS-EXPERIMENT-2026-10-09.md sec. 3b): TK with reader_layers 0; raise `mlp` until the trained count is within `tol` of TK's. Same trimming
+    arithmetic as b2_cfg: hidden = int(mlp * d), 2d + 1 params per hidden unit per block, mlp = (hidden + 0.5) / d. Counts depend on the caps in force: call
+    after caps.apply (job.py does) -> (mlp, TKN --b2-extra dict, TK count, TKN count)."""
+    tk = b2_cfg(rung, tk_extra)
+    target, d = n('ledger', tk), tk['d']
+    ex = {k: v for k, v in dict(tk_extra, reader_layers=0).items() if k != 'mlp'}
+    c0 = b2_cfg(rung, ex)
+    hid = int(c0['mlp'] * d) + round((target - n('ledger', c0)) / (c0['blocks'] * (2 * d + 1)))
+    best = min((dict(c0, mlp=round((h + 0.5) / d, 5)) for h in (hid - 1, hid, hid + 1)), key=lambda c: abs(n('ledger', c) - target))
+    assert abs(n('ledger', best) / target - 1) <= tol, (n('ledger', best), target)
+    return best['mlp'], dict(ex, mlp=best['mlp']), target, n('ledger', best)
+
+
 def eg_adapter_params(d):
     """Trained parameters of the frozen-Gemma front's adapter: LayerNorm(768) + Linear(768, d)."""
     return 2 * 768 + 768 * d + d
@@ -176,7 +190,23 @@ def main(argv=None):
     ap.add_argument('--lr-scale', type=float, default=1.0, help='1 = the rung\'s lr; 0.5 = the sealed non-finite re-run')
     ap.add_argument('--max-ans', type=int, default=8)
     ap.add_argument('--json', action='store_true')
+    ap.add_argument('--tkn', metavar='CAPS_JSON', help='print the 3M rung\'s TK and TKN configs, counts and --b2-extra strings under these caps (e.g. g8a/caps_g.json)')
     a = ap.parse_args(argv)
+    if a.tkn:
+        from custom_io.g8a import caps as CP
+        caps = CP.apply(json.load(open(a.tkn)))
+        loops = dict(n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else {}      # what job.py adds to --b2-extra
+        tk_user = {'eg_embed': True, 'tok_think': True}
+        mlp, tkn_user, c_tk, c_tkn = tkn_mlp('3M', dict(tk_user, **loops))
+        tkn_user = {k: v for k, v in tkn_user.items() if k not in loops}
+        base = n('ledger', b2_cfg('3M', dict({'eg_embed': True}, **loops)))
+        print(f'caps {a.tkn}: n_loops {loops.get("n_loops", 8)}; EGE (G-B2) {base:,}')
+        for nm, u, c in (('TK', tk_user, c_tk), ('TKN', tkn_user, c_tkn)):
+            cfgs, cnt = sizes('3M', dict(u, **loops))
+            check_bands('3M', cfgs, cnt, exact_3m=False)      # job.py's 3% band (and PT within 2%)
+            print(f'{nm}: trained {c:,} ({100 * (c / c_tk - 1):+.3f}% vs TK)  mlp {cfgs[B2_ARM]["mlp"]}  hidden {int(cfgs[B2_ARM]["mlp"] * 256)}  bands ok (PT {cnt[PT_ARM]:,})')
+            print(f"  --b2-extra '{json.dumps(u)}'")
+        return
     if a.rung and a.arm:
         print('python -m custom_io.train ' + ' '.join(shlex.quote(x) for x in train_args(
             a.rung, a.arm, a.seed, a.steps or 1, a.data, out=a.out, minutes=a.minutes, lr=RUNGS[a.rung]['lr'] * a.lr_scale, max_ans=a.max_ans, big_data=a.big_data)))
