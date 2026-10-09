@@ -1,0 +1,52 @@
+# ch06 notes (auto-generated from ch06.json by the lead, 10-09; picture review is separate)
+
+Title: Deciding when it is done  |  scenes: 13
+
+## SOURCES (distinct src paths)
+- animations/source-g1-3m-s400.json G-B2 (full pooled5 73.01, right 4410 of 6040; by_thinking_rounds loops:0 0.66, loops:1 20.0, loops:2 29.3; trained_rounds 12)
+- animations/source-g1-3m-s400.json G-B2 chain5 (loops:0 0.0, loops:1 0.0, loops:2 1.1, intact 99.9); by_thinking_rounds loops:1 20.0 (pooled-5)
+- architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 3 (lines 53-54: gap_p 0.25, gaps g in {0,1,2})
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (one paragraph) and sec. 2 (Learned stop row, line 36: built, never run)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row: width + 1, 257 at 256, 513 at 512, never run)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 60-66: calls inside the thinking; one stop for the whole answer)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 66-69: risk, suggested; B3 3M readout reports it)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 5 (lines 54-56)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (line 94: fixed rounds, 8 in T1SDR, 12 in G1) and sec. 2 (first run after G1)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (table row: fixed number of rounds, 8 in T1SDR, 12 in G1, line 94)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 13 (line 149)
+- architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 (73.01 with thinker on, 0.66 with it off, 3M seed 400)
+- architecture/fast-slow-2026-10-08.md sec. 1 (short answer, suggested) and sec. 5 (no new test proposed)
+- big-run/PLAN.md Amendment 1:25 PM ET (audit B13-2; applied before any B3 run; line 236)
+- big-run/PLAN.md B3-4 (line 226: average rounds within 10% of the cap of 32 on every family; longer chains more than 5 below the lesion)
+- big-run/PLAN.md addendum 12:25 PM ET (line 230: early-stop share reported, not gated)
+- big-run/PLAN.md sec. 5 note (b) (line 234: n_res is 11 under caps_b3, so read '12-step' as 11-step)
+- big-run/PLAN.md sec. 5 row 5 (line 74: practised within 1, longer chains within 2 of always-32, rounds on 1-step <= half those on 12-step, fails if it never stops early)
+- custom_io/models/b3.py docstring lines 1-17 (switches: eg_embed, any_round; the stop is part of H1R)
+- custom_io/models/tool_h1.py lines 10 (stop = Linear(d,1), 257 params at d=256), 42-44 (CAP = 32, P_STOP = 0.5)
+- custom_io/models/tool_h1.py lines 13-16 (a batch of n < 32 rounds cannot see later rounds; stop loss counted only when n >= 32, about 1 batch in 4, about half of all trained rounds)
+- custom_io/models/tool_h1.py lines 19-20 (run rule: first round with sigmoid >= 0.5, at least 1 round, cap 32)
+- custom_io/models/tool_h1.py lines 42-44 (cap 32, stop line 0.5)
+- custom_io/models/tool_h1.py lines 5-17 (one stop, not one per call)
+- custom_io/models/tool_h1.py lines 52-57 (def settled: label = right now, or no later round is right)
+- no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 (16 rounds cost 1.2-1.9 points; in_dist saturates at 8 rounds; one seed); line 12 (same claim)
+
+## NUMBERS ON SCREEN (numbers found in each scene text; src list for that scene)
+- s01: (none)  <- architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (one paragraph) and sec. 2 (Learned stop row, line 36: built, never run)
+- s02: 12  <- architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (table row: fixed number of rounds, 8 in T1SDR, 12 in G1, line 94)
+- s03: 0, 0.66, 1, 100, 100,, 12, 2, 20.00, 29.30, 3, 6,040, 73.01  <- animations/source-g1-3m-s400.json G-B2 (full pooled5 73.01, right 4410 of 6040; by_thinking_rounds loops:0 0.66, loops:1 20.0, loops:2 29.3; trained_rounds 12); architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 (73.01 with thinker on, 0.66 with it off, 3M seed 400)
+- s04: 0.0, 1, 1.1, 100,, 2, 20.00, 3, 5, 5,, 99.9  <- animations/source-g1-3m-s400.json G-B2 chain5 (loops:0 0.0, loops:1 0.0, loops:2 1.1, intact 99.9); by_thinking_rounds loops:1 20.0 (pooled-5)
+- s05: 08, 1.2, 1.6, 1.9, 10, 16, 2, 2026, 39, 8  <- no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 (16 rounds cost 1.2-1.9 points; in_dist saturates at 8 rounds; one seed); line 12 (same claim); architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 13 (line 149)
+- s06: 0, 0.5, 1, 256,, 257, 32, 512, 513  <- custom_io/models/tool_h1.py lines 10 (stop = Linear(d,1), 257 params at d=256), 42-44 (CAP = 32, P_STOP = 0.5); custom_io/models/tool_h1.py lines 19-20 (run rule: first round with sigmoid >= 0.5, at least 1 round, cap 32); architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row: width + 1, 257 at 256, 513 at 512, never run)
+- s07: 0, 2, 32  <- architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 60-66: calls inside the thinking; one stop for the whole answer); architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 3 (lines 53-54: gap_p 0.25, gaps g in {0,1,2}); custom_io/models/tool_h1.py lines 5-17 (one stop, not one per call)
+- s08: 4  <- custom_io/models/tool_h1.py lines 52-57 (def settled: label = right now, or no later round is right); architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 5 (lines 54-56)
+- s09: 1, 1,, 10, 12, 32, 4, 8  <- custom_io/models/tool_h1.py lines 13-16 (a batch of n < 32 rounds cannot see later rounds; stop loss counted only when n >= 32, about 1 batch in 4, about half of all trained rounds); big-run/PLAN.md Amendment 1:25 PM ET (audit B13-2; applied before any B3 run; line 236)
+- s10: (none)  <- architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 66-69: risk, suggested; B3 3M readout reports it); big-run/PLAN.md addendum 12:25 PM ET (line 230: early-stop share reported, not gated)
+- s11: 1, 11, 12, 2, 32, 5  <- big-run/PLAN.md sec. 5 row 5 (line 74: practised within 1, longer chains within 2 of always-32, rounds on 1-step <= half those on 12-step, fails if it never stops early); big-run/PLAN.md B3-4 (line 226: average rounds within 10% of the cap of 32 on every family; longer chains more than 5 below the lesion); big-run/PLAN.md sec. 5 note (b) (line 234: n_res is 11 under caps_b3, so read '12-step' as 11-step)
+- s12: 1, 3, 8  <- custom_io/models/b3.py docstring lines 1-17 (switches: eg_embed, any_round; the stop is part of H1R); architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (line 94: fixed rounds, 8 in T1SDR, 12 in G1) and sec. 2 (first run after G1)
+- s13: 32,  <- architecture/fast-slow-2026-10-08.md sec. 1 (short answer, suggested) and sec. 5 (no new test proposed); custom_io/models/tool_h1.py lines 42-44 (cap 32, stop line 0.5)
+
+## ILLUSTRATIONS (scenes that say picture-only / made-up in their text)
+s02, s06, s07, s08, s09, s10
+
+## OPEN QUESTIONS
+- Picture review of the contact sheets: see the lead report. No checker (VERIFIER-GUIDE) run yet.

@@ -38,13 +38,14 @@ def _rows(paths):
                         yield json.loads(line)
 
 
-def measure(r, progs=True, by_bytes=False):
-    """One row's sizes. by_bytes (V1): prompt / answer / target lengths and the word count in UTF-8 bytes (max_prompt, max_ans, n_reg, plain_target); the same for ASCII."""
+def measure(r, progs=True, by_bytes=False, all_steps=False):
+    """One row's sizes. by_bytes (V1): prompt / answer / target lengths and the word count in UTF-8 bytes (max_prompt, max_ans, n_reg, plain_target); the same for ASCII.
+    all_steps (B3 steps-for-all, default off): the plain target is '; '.join(steps) + ' # ' + answer for EVERY row that has steps (no STEP_FAMILIES gate)."""
     from custom_io.data import word_spans
     from custom_io.models import progparse as pp
     from custom_io.models.plain_tf_steps import STEP_FAMILIES
     tgt = r['answer']
-    if r.get('family') in STEP_FAMILIES and r.get('steps'):
+    if r.get('steps') and (all_steps or r.get('family') in STEP_FAMILIES):
         tgt = '; '.join(r['steps']) + ' # ' + r['answer']
     n_prog = 0
     if progs and r.get('family') != 'cloze':
@@ -55,12 +56,12 @@ def measure(r, progs=True, by_bytes=False):
                 w_max=len(word_spans(r['prompt'])), n_res=n_prog, n_reg=ln(r['answer']) + 1, plain_target=ln(tgt))
 
 
-def compute(paths, progs=True, by_bytes=False):
+def compute(paths, progs=True, by_bytes=False, all_steps=False):
     """-> caps dict: max over every row of every size, never below today's. `rows` = how many rows were read."""
     mx, n = dict(TODAY), 0
     for r in _rows(paths):
         n += 1
-        for k, v in measure(r, progs, by_bytes).items():
+        for k, v in measure(r, progs, by_bytes, all_steps).items():
             if v > mx[k]:
                 mx[k] = v
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
@@ -68,24 +69,25 @@ def compute(paths, progs=True, by_bytes=False):
     return mx
 
 
-def compute_rows(rows, progs=True, by_bytes=False):
+def compute_rows(rows, progs=True, by_bytes=False, all_steps=False):
     """compute() on rows already in memory."""
     mx = dict(TODAY)
     for r in rows:
-        for k, v in measure(r, progs, by_bytes).items():
+        for k, v in measure(r, progs, by_bytes, all_steps).items():
             mx[k] = max(mx[k], v)
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
     mx['rows'] = len(rows)
     return mx
 
 
-def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print, cloze_long=None):
+def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print, cloze_long=None, all_steps=False):
     """Caps for the whole ladder (addendum F d): the longest case in the LARGEST pool = all of own72 (the 30M rung's own rows contain the smaller rungs')
-    plus every cloze row of the 30M web slice plus the dev splits. Every rung then uses these same caps, so N_RES, n_loops and the tables are identical."""
+    plus every cloze row of the 30M web slice plus the dev splits. Every rung then uses these same caps, so N_RES, n_loops and the tables are identical.
+    web_slice=None skips the web rows (a partial measurement: the source field says so). all_steps: see measure()."""
     from custom_io.g8a import cloze as Z, pool as P
     mx, n = dict(TODAY), 0
     def take(r, progs):
-        for k, v in measure(r, progs).items():
+        for k, v in measure(r, progs, all_steps=all_steps).items():
             if v > mx[k]:
                 mx[k] = v
     st = {s_: P._newstat() for s_ in ('skills', 'english', 'teach')}
@@ -95,23 +97,29 @@ def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print, cl
         if n % 200000 == 0:
             say('own rows measured', n, {k: mx[k] for k in TODAY})
     own_n = n
-    for r in P.web_rows(web_slice, seed, None, Z.Stats(), cloze_long):
+    for r in (P.web_rows(web_slice, seed, None, Z.Stats(), cloze_long) if web_slice else []):
         take(r, False)
         n += 1
     for r in _rows(dev_paths):
         take(r, True)
         n += 1
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
-    mx.update(rows=n, own_rows=own_n, source='largest pool: own72 (rung <= 30) + rung30 web slice (%s, seed %d) + dev' % ('long-chunk cloze rows, data_pool/cloze_long.py' if cloze_long else 'cloze rows', seed))
+    if web_slice:
+        src = 'largest pool: own72 (rung <= 30) + rung30 web slice (%s, seed %d) + dev' % ('long-chunk cloze rows, data_pool/cloze_long.py' if cloze_long else 'cloze rows', seed)
+    else:
+        src = 'own72 (rung <= 30) only: no web slice, no dev rows measured'
+    if all_steps:
+        src += '; all_steps: plain target = steps + answer for every row that has steps'
+    mx.update(rows=n, own_rows=own_n, source=src)
     return mx
 
 
-def report(caps, paths, progs=True, by_bytes=False):
+def report(caps, paths, progs=True, by_bytes=False, all_steps=False):
     """Rows over each cap (today's and the given one) and the longest value seen. Target 0 under the given caps."""
     over_today, over, seen, n = {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, 0
     for r in _rows(paths):
         n += 1
-        for k, v in measure(r, progs, by_bytes).items():
+        for k, v in measure(r, progs, by_bytes, all_steps).items():
             seen[k] = max(seen[k], v)
             over_today[k] += v > TODAY[k]
             over[k] += v > caps[k]
@@ -168,15 +176,16 @@ def main(argv=None):
     ap.add_argument('paths', nargs='+')
     ap.add_argument('--out')
     ap.add_argument('--bytes', action='store_true', help='measure prompt / answer / target lengths in UTF-8 bytes (V1: a bytes model counts bytes)')
+    ap.add_argument('--all-steps', action='store_true', help='plain target = steps + answer for every row that has steps (B3 steps-for-all; no STEP_FAMILIES gate)')
     a = ap.parse_args(argv)
     if a.cmd == 'compute':
-        caps = compute(a.paths, by_bytes=a.bytes)
+        caps = compute(a.paths, by_bytes=a.bytes, all_steps=a.all_steps)
         print(json.dumps(caps))
         if a.out:
             json.dump(caps, open(a.out, 'w'))
     else:
         caps = json.load(open(a.paths[0]))
-        print(json.dumps(report(caps, a.paths[1:], by_bytes=a.bytes), indent=1))
+        print(json.dumps(report(caps, a.paths[1:], by_bytes=a.bytes, all_steps=a.all_steps), indent=1))
 
 
 if __name__ == '__main__':

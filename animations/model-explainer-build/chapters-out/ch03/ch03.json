@@ -1,0 +1,362 @@
+{
+  "kicker": "Part 3 of 14",
+  "title": "The reader: giving every letter a meaning",
+  "blurb": "The reader is a borrowed part. It reads the question once and gives every letter a meaning in context.",
+  "accent": "reader",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 24,
+      "heading": "Where we are: the reader comes first",
+      "caption": [
+        "The question enters the reader first. It reads the whole question one time.",
+        "Picture only: a translator who already knows English well. We borrowed him, and we cannot change him."
+      ],
+      "illustration": "picture only",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 and sec. 2 (Reader row)",
+        "kit GLOSSARY.md (shared translator picture)"
+      ],
+      "notes": "Map is S.modelMap with highlight reader. Order of the five parts follows GLOSSARY.md."
+    },
+    {
+      "id": "s02",
+      "duration": 26,
+      "heading": "Letters versus word pieces",
+      "caption": [
+        "Gemma cuts text into word pieces, called tokens.",
+        "Our thinker works on letters, one spot for each letter."
+      ],
+      "example": "Tom has 12 apples.",
+      "illustration": "made-up example: where the cuts fall is a picture only, not Gemma's real cut",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 1 (why, in plain words)"
+      ],
+      "notes": "Only the sentence is real. The token boxes are drawn by hand and are labelled as a made-up example."
+    },
+    {
+      "id": "s03",
+      "duration": 24,
+      "heading": "Measured: about 3 letters per token",
+      "caption": [
+        "On our skill questions, one token covers 3.08 letters.",
+        "On web text in 279-letter chunks, one token covers 4.27 letters."
+      ],
+      "labels": {
+        "skills": "skill questions",
+        "web": "web text, 279-letter chunks"
+      },
+      "numbers": {
+        "skills": 3.08,
+        "web": 4.27
+      },
+      "chip": "tested",
+      "chip_label": "measured by count",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 2 table, rows 1 and 2 (my count 10-09, Gemma tokenizer.json at 914f7f89)"
+      ],
+      "notes": "A ratio (letters per token), not a score out of 100. The sec. 1 text rounds these to 3.1 and 4.3; the table values 3.08 and 4.27 are shown (table used)."
+    },
+    {
+      "id": "s04",
+      "duration": 26,
+      "heading": "The reader reads once, then copies meaning",
+      "caption": [
+        {
+          "at": 0.05,
+          "text": "Gemma reads the whole question one time."
+        },
+        {
+          "at": 0.4,
+          "text": "Each token gets a row of 768 numbers that holds its meaning in context."
+        },
+        {
+          "at": 0.7,
+          "text": "Each letter takes the row of the token it sits in."
+        }
+      ],
+      "labels": {
+        "token": "one token",
+        "row": "768 numbers",
+        "letter": "one letter"
+      },
+      "illustration": "shaded cells are decoration; only the 768 count is a fact",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Reader row, line 31)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 1"
+      ],
+      "notes": "768 is Gemma's width. Older page architecture/model-deep-dive.html line 69 says 256 numbers per letter; that is the earlier design and is not shown."
+    },
+    {
+      "id": "s05",
+      "duration": 27,
+      "heading": "The borrowed reader: 271,002,624 numbers",
+      "caption": [
+        "The reader holds 271,002,624 numbers, all set before our work began.",
+        "134,217,728 of them are a word table; 136,784,896 are a transformer with its projection.",
+        "It is frozen: our practice never changes it. Its own reading limit is 8,192 tokens, which is not our limit."
+      ],
+      "labels": {
+        "table": "word table 134,217,728",
+        "tf": "transformer 136,784,896",
+        "frozen": "borrowed, frozen"
+      },
+      "src": [
+        "custom-io/models/eg.py line 6 (text backbone 271,002,624 = 134,217,728 word table + 136,784,896 transformer and its 512 to 768 projection)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Reader row)",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 2 (8,192-token model card)"
+      ],
+      "notes": "Sum checked by hand: 134,217,728 + 136,784,896 = 271,002,624. Borrowed and frozen is shown as a teal text label, not a status chip."
+    },
+    {
+      "id": "s06",
+      "duration": 21,
+      "heading": "The converter plug: 768 numbers in",
+      "caption": [
+        "One linear layer changes Gemma's 768 numbers into the thinker's width.",
+        "At width 256 it has 196,864 learned numbers; at width 512 it has 393,728."
+      ],
+      "labels": {
+        "in": "768 in",
+        "out": "thinker width"
+      },
+      "chip": "learned",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Gemma adapter row, line 32)",
+        "custom-io/models/ledger.py lines 284-294 (eg_proj applied to Gemma's state)"
+      ],
+      "notes": "Our check: 768 times 256 plus 256 bias = 196,864; 768 times 512 plus 512 = 393,728. Matches the source."
+    },
+    {
+      "id": "s07",
+      "duration": 40,
+      "heading": "Four parts added into one letter row",
+      "caption": [
+        "Part one: which letter it is. A learned row of numbers.",
+        "Part two: where it sits in the question. A learned table, with 2,000 rows in B3 and 280 in G1.",
+        "Part three: how far its letter sits from the end of its word. The count is hand-written; the row it picks is learned.",
+        "Part four: Gemma's meaning, through the converter plug, is added on top. Then the window reads the sum."
+      ],
+      "labels": {
+        "char": "which letter",
+        "pos": "where in question",
+        "place": "place in word",
+        "gemma": "Gemma meaning",
+        "sum": "added together"
+      },
+      "chip": "hand-written",
+      "chip_label": "place count only",
+      "chip_target": "place",
+      "src": [
+        "custom-io/models/reader.py lines 1-3 (docstring: E_char + E_pos + E_place) and lines 72-80 (order: char + pos, then place, then extra added)",
+        "custom-io/models/ledger.py lines 280-294 (read(): eg_proj(ln_eg(H)) passed as extra)",
+        "custom-io/g8a/caps_b3.json (max_prompt 2000)",
+        "custom-io/g8a/caps_g.json (max_prompt 280)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (place code row; group 2 replaces the count)"
+      ],
+      "notes": "Order checked in code this round: Gemma's projection is added after the three parts and before the conv window (reader.py 72-80; ledger.py 280-294). Only the place COUNT is hand-written; the place ROW is learned. Disagreement (5) is closed."
+    },
+    {
+      "id": "s08",
+      "duration": 30,
+      "heading": "The letter window: each letter sees 4 each side",
+      "caption": [
+        "Two small learned layers read the summed row. They are ours, not borrowed.",
+        "Each layer looks 2 letters left and 2 right, so together a letter sees 4 letters each side.",
+        "The window adds about 0.7M numbers at width 256 and about 2.6M at width 512."
+      ],
+      "labels": {
+        "l1": "layer 1: 2 each side",
+        "l2": "layer 2: 2 more each side"
+      },
+      "chip": "learned",
+      "chip_label": "learned, ours",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (letter window row, line 33)",
+        "custom-io/models/reader.py line 5 and lines 46-63 (two blocks, kernel 5, receptive field plus or minus 4)"
+      ],
+      "notes": "The window is learned, not borrowed. Exact counts from code (my count, not shown): about 656,896 at width 256 and 2,624,512 at width 512; the on-screen 0.7M and 2.6M are the source's rounded values."
+    },
+    {
+      "id": "s09",
+      "duration": 28,
+      "heading": "Without the window, cipher puzzles fall",
+      "caption": [
+        "Cipher puzzles are one kind of question in our test set.",
+        "With the window, Gemma plus letters scores 97.5 and 95.0 out of 100 on two copies.",
+        "Without the window, Gemma plus letters scores 5.0 and 2.5. Letters alone score 12.5 and 2.5."
+      ],
+      "labels": {
+        "with": "with window",
+        "without": "without window"
+      },
+      "numbers": {
+        "ewith1": 97.5,
+        "ewith2": 95,
+        "wo1": 5,
+        "wo2": 2.5,
+        "r0a": 12.5,
+        "r0b": 2.5
+      },
+      "chip": "tested",
+      "chip_label": "2 copies, one kind",
+      "src": [
+        "custom_io/results/RESULTS-EG2.md lines 120-121 (in-distribution cipher_map; copies 200 and 201)",
+        "custom_io/results/44-egr-s200/EGR_s200/RESULT.json (eg_embed true, reader_layers 0: Gemma plus letters, no window)",
+        "custom_io/results/46-r0ege-s200/R0_s200/RESULT.json (reader_layers 0, no eg_embed: letters alone, no window)"
+      ],
+      "notes": "Arms checked in the result files: EGR = Gemma plus letters with zero window layers; R0 = letters alone with zero window layers. Disagreement (1): the brief and FINISHED sec. 2 say 100% down to 2.5-10%; the results file says 97.5/95.0 with the window, 5.0/2.5 (EGR) and 12.5/2.5 (R0). Source used."
+    },
+    {
+      "id": "s10",
+      "duration": 24,
+      "heading": "The position table: how far the text can be",
+      "caption": [
+        "Sampled bAbI test questions: 32% are longer than 280 letters.",
+        "Only 1% are longer than 2,000 letters, the limit for B3."
+      ],
+      "numbers": {
+        "sample": 4000,
+        "over280": 32,
+        "over2000": 1
+      },
+      "labels": {
+        "sample": "4,000 test questions",
+        "a": "over 280 letters",
+        "b": "over 2,000 letters"
+      },
+      "chip": "tested",
+      "chip_label": "counted in FINISHED sec. 7",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 7 Q2 (lines 173-176; 200 per task, bAbI test split)"
+      ],
+      "notes": "Counts from FINISHED sec. 7 (its own sample; my recount not done). Not a score."
+    },
+    {
+      "id": "s11",
+      "duration": 24,
+      "heading": "A hand-written pattern marks the numbers",
+      "illustration": "picture only: the marked cells are not a real question",
+      "caption": [
+        "A plain pattern, written by hand, finds the numbers in the question.",
+        "It records where each number is, not its value.",
+        "It has 16 slots in T1SDR, 91 in G1, and 240 in the B3 build."
+      ],
+      "labels": {
+        "regex": "hand-written pattern",
+        "slots": "16 / 91 / 240 slots"
+      },
+      "chip": "hand-written",
+      "chip_label": "hand-written",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (number finder row, line 89; ledger.py:206)",
+        "custom-io/g8a/caps_g.json (n_num 91)",
+        "custom-io/g8a/caps_b3.json (n_num 240)"
+      ],
+      "notes": "Planned replacement N1 (learned) is in B3 group 2, not built as a result. 16 (T1SDR) is from FINISHED sec. 4 only, not re-checked in code."
+    },
+    {
+      "id": "s12",
+      "duration": 22,
+      "heading": "Calculator replies: read by the window only",
+      "caption": [
+        "The reply, like sub 12 5 = 7, is read by the letter window.",
+        "Gemma does not read replies. It read the question once.",
+        "Suggested reasoning: a reply carries nothing Gemma would add."
+      ],
+      "example": "sub 12 5 = 7",
+      "chip": "untested",
+      "chip_label": "built, never run",
+      "illustration": "suggested reasoning",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 5 (lines 120-122; labelled suggested)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 3"
+      ],
+      "notes": "B3 group 1 builds this way; it has never been run. The reply path is suggested, not measured."
+    },
+    {
+      "id": "s13",
+      "duration": 32,
+      "heading": "The gain: +2.67 points out of 100",
+      "caption": [
+        "On pooled-5, the reader version beats the same model without it by 2.67 points out of 100.",
+        "Pooled-5 is 6,040 test questions kept aside, five kinds together.",
+        "It was ahead in all 6 copies (seeds) tested at the 3M size."
+      ],
+      "numbers": {
+        "gain": 2.67,
+        "held": 6040,
+        "copies": 6
+      },
+      "labels": {
+        "ege": "with Gemma: 75.9 to 77.2",
+        "b2": "without: 73.0 to 74.7"
+      },
+      "warning": "6-copy result files are not in this repo; not re-checked",
+      "chip": "tested",
+      "chip_label": "3M size, 6 copies",
+      "src": [
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md line 18 (6-seed confirm on q33 data, +2.67, ahead on 6 of 6)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 line 31 (EGE +2.67, 6 of 6 seeds)",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md line 26 and line 44 (EGE 6 seeds 75.88-77.19; plain B2 73.00-74.74)"
+      ],
+      "notes": "Disagreement (2): custom_io/results/RESULTS-EG2.md lines 116-118 says the 6-seed EGE confirm is NOT JUDGED (seeds 202-207 missing); only EGE_s200 and EGE_s201 result files exist in this repo. The 6-of-6 figure is from FINISHED and the growth spec, shown with the warning line. Not re-checked by a result file."
+    },
+    {
+      "id": "s14",
+      "duration": 28,
+      "heading": "Caveats: the leak warning light",
+      "caption": [
+        "A leak means some answers are right with zero rounds of thinking.",
+        "The zero-round leak mean is 6.59, above the limit of 4.62. That mark was missed.",
+        "On seed 200, the reader version scored 18.09 with zero rounds. Another version scored 1.40. The cause is not settled."
+      ],
+      "numbers": {
+        "leak": 6.59,
+        "limit": 4.62,
+        "ege": 18.09,
+        "other": 1.4
+      },
+      "chip": "untested",
+      "chip_label": "caveat, not settled",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 line 31 (leak mean 6.59 against a limit of 4.62)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 (lines 110-112, 18.09 vs 1.40)"
+      ],
+      "notes": "The 2-copy screen also failed its variant and leak marks (TOKENS sec. 2). The 1.40 comparison is labelled 'another version' because the code name B2V is not defined in the glossary."
+    },
+    {
+      "id": "s15",
+      "duration": 20,
+      "heading": "Open question: tokens instead of letters",
+      "illustration": "picture only: the boxes show the idea, not a measured run",
+      "caption": [
+        "Test TK would let the thinker read one spot per token, not per letter.",
+        "The code and a PC job file exist, but no result is recorded here. Chapter 12 covers it."
+      ],
+      "chip": "untested",
+      "chip_label": "built, never tested",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 8 (no build at 10:15 AM ET; conflict)",
+        "custom-io/train.py lines 229-230 (tok_think code present)",
+        "custom-io/queue_local/8aTK-pc-3.txt (job file exists; no result file found)"
+      ],
+      "notes": "Disagreement (3): the brief says TK is built and never run; TOKENS sec. 8 says no build had started. Code and a job file exist in the repo, no result was found. Amber chip used. The 3.1 and 5.4 earlier word-piece losses were dropped (ch12 owns them, unverified here)."
+    },
+    {
+      "id": "s16",
+      "duration": 24,
+      "heading": "Recap: what to remember",
+      "caption": [
+        "The reader is borrowed and frozen. It reads the question once.",
+        "Each letter gets a meaning in context, plus a window of 4 letters each side.",
+        "Without the window, the Gemma version falls to 5.0 and 2.5 out of 100 on cipher puzzles."
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 and sec. 5",
+        "custom_io/results/RESULTS-EG2.md lines 120-121"
+      ],
+      "notes": "Recap only; every number repeats an earlier scene."
+    }
+  ]
+}
