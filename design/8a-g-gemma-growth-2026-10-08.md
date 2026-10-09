@@ -325,10 +325,11 @@ Asked by the big-run thread (coordinator relays, 11:55-11:56 AM ET). New post-G1
 - **g2c3** = G-PT 3M at caps_b3 on `p10-rung30-s400-a64-L` (the pool fc100 builds), seed 400, accum PT=16. **g2c10** = G-PT 10M on the same
   pool (3M and 10M share it, as in G1), seed 400, accum PT=32. Both from src-b3 with `--cloze-long` and `--caps-file caps_b3.json`. Seed 401
   only if B3's seed 400 is not at its proved-wrong line (big-run thread's call; not staged). Spill rule doubles twice.
-- **c30** accum PT=64 now (was 32): micro-batches pad to the longest row, and about 1 row in 100 is a 2,000-letter chunk (suggested from
-  the 80/7/7/6% piece mix), so most 8-row passes would still be short but a 64-row pass would almost always hold one. Spill rule 64->128->256.
+- **c30** accum PT=64 now (was 32), so 4 rows per pass: micro-batches pad to the longest row, and about 1 row in 100 is a 2,000-letter
+  chunk (suggested from the 80/7/7/6% piece mix), so about 4% of 4-row passes hold one, against about 47% of 64-row passes. A wider model
+  needs more room per row than 10M. Spill rule 64->128->256.
 - **Accumulation reasoning (suggested, not measured):** G1's G-PT 3M peaked at 2,681 MiB allocated (10,334 reserved) at accum 4 with rows
-  of at most 280 letters; padding to 2,000 letters is up to about 7x the activations, hence 4x fewer rows per pass at 3M and 8x at 10M.
+  of at most 280 letters; padding to 2,000 letters is up to about 7x the activations, hence 4x fewer rows per pass than G1's 3M (accum 4) and 10M (accum 8) plain runs.
 - **Rough PC time after G1 (suggested):** GX about 20-24 h, fc100 about 1-2 h, g2c3 + g2c10 about 0.5-1 day (big-run thread's estimate),
   c30 about 2-3 days. The chain still skips only c30 if `WORK\B3-READY.txt` exists.
 - Waiter and installer updated (four src-b3 queues and cards); both parse clean; mock-PC runs give the order above for normal, B3-ready
