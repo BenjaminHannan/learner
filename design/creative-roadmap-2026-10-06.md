@@ -1535,6 +1535,9 @@ families x 200, two parents).**
   - Proved wrong: harm fails on either parent, or the gain is under 0.5x L's on both.
   - Report only: the same against W1, multi-step reach@32, and the picked-row family mix.
   - Cost: about 1 hour of free cloud CPU on the fast-sleep machine.
+  - **Go (10-09, 12:15 PM ET):** the coordinator relayed Ben's standing instruction (10:57 AM ET 10-09: "Keep
+    demonstrating those principles in the model and iterating until they're found as the goal") and asked for the
+    next single change on free compute. SCL runs on the fast-sleep CPU with the marks above, unchanged.
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
@@ -1858,3 +1861,5 @@ CPU):
 - **10-09, 12:20 PM ET:** SC ruled PROVED WRONG under the scorecard marks (fast-sleep 864b0af6f). Few-example families
   still fire on both parents, though SC beats hand-picked W1 on every measure and keeps the full C2 gain. Proposed
   Test SCL (model-picked replay at lr 1e-4, control L) with marks fixed now; it waits for the big-run thread's word.
+- **10-09, 12:25 PM ET:** SCL started on Ben's standing instruction (via the coordinator), with marks unchanged from
+  e5ab95d650.
