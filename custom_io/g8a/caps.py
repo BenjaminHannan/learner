@@ -136,10 +136,11 @@ def apply(caps):
     pp.N_NUM, pp.N_RES, pp.W_MAX = caps['n_num'], caps['n_res'], caps['w_max']
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
+    import importlib
     for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.english', 'custom_io.models.plain_lm'):
-        m = _s.modules.get(name)
-        if m is None:
-            continue
+        # 8b fix (g8b/README.md): import before patching. These modules are imported lazily (models.build), after train.py's apply(), so
+        # `_s.modules.get(name)` used to skip them and the Ledger kept N_REG 9 / GEN_MAX 8: 9 register tokens, GEN targets cut to 8 letters.
+        m = importlib.import_module(name)
         for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt'], CAP=caps['plain_target']).items():
             if hasattr(m, k):
                 setattr(m, k, v)
