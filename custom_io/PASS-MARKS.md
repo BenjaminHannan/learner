@@ -772,3 +772,8 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   demonstrably works, no more small tests) means no retrain. Seeds 202/203's re-score read BensPC's copy of the same dev file with
   CRLF line ends (sha256 7d72337c97..., equal to the LF file 3e3a5edb05... with CRLF line ends); the judge checks this (--opswap-dev).
   Not proved wrong. Per Amendment 12 item 6 the confirm stays NOT SHOWN on mark 4 unless Ben explicitly clears it.
+- **Ben's ruling (2026-10-09 12:21 UTC, 8:21 AM ET, decision card in the reader/talker thread, "Clear it"):** mark 4 is cleared, as
+  Amendment 12 item 6 left to him. The T1SDR 6-seed confirm counts as PASS on that ruling: marks 1-3 and 6 pass, mark 4 (donor 5.0-5.6
+  vs the flat 5, B2 3.1-3.8; loops:0 seed 201 12.94) is cleared by Ben and stays disclosed, and mark 5 passes on seeds 200-204 with
+  seed 205 unscored (its checkpoint is not off the stopped box). The judge's own printout stays NOT SHOWN as sealed; this line is the
+  record of the clearance. H1R stays held until the big-run plan's gate G1 reads GO on its first seed.
