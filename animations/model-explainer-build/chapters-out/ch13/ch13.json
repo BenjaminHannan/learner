@@ -1,0 +1,431 @@
+{
+  "kicker": "Part 13 of 14",
+  "title": "Size, and whether it pays off",
+  "blurb": "The project does not ask whether bigger models are good. It asks whether our design gains more from extra size than a plain model does. Here is the ladder of sizes, what the first tests showed, and what is still unknown.",
+  "accent": "thinker",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 30,
+      "heading": "Does a bigger model pay off?",
+      "caption": [
+        "A model is a list of learned numbers. More numbers means a bigger model.",
+        "The project asks: does our design gain more from extra size than a plain model does?",
+        "That is the bar. When both grow, our line must climb steeper than the plain line."
+      ],
+      "tag": "picture only: not a measurement",
+      "labels": {
+        "ours": "ours: the bar",
+        "plain": "plain model",
+        "more": "more gain",
+        "xs": "smaller",
+        "xe": "bigger",
+        "y": "score"
+      },
+      "src": [
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 0 lines 8-13 (the project owner's bar: the benefit from more parameters should be more than the plain model's)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 7 line 125 ('must pass Ben's size bar itself')",
+        "glossary: plain model = standard transformer of the same size on the same practice"
+      ],
+      "notes": "The two lines are an illustration only; no number is drawn from data."
+    },
+    {
+      "id": "s02",
+      "duration": 38,
+      "heading": "The size ladder: 3M, 10M, 30M, 100M",
+      "caption": [
+        "The thinker comes in four sizes, named for their rough count of learned numbers. M means million.",
+        "These counts come from the build. No run of the new build at these sizes has happened yet.",
+        "At 100M the thinker is 21 blocks at width 512. The blocks alone are 97.1 million; with the adapter, window and heads, 102.1 million."
+      ],
+      "chip": "counted, never run",
+      "rungs": [
+        {
+          "label": "3M",
+          "value": 4039957
+        },
+        {
+          "label": "10M",
+          "value": 9832977
+        },
+        {
+          "label": "30M",
+          "value": 29789693
+        },
+        {
+          "label": "100M",
+          "value": 102116618
+        }
+      ],
+      "src": [
+        "animations/model-explainer-build/sources/pr-56-b3-group1-and-token-test.md line 15 (sizes at caps_b3: 4,039,957; 9,832,977; 29,789,693; 102,116,618) and line 17 ('Runs: none yet')",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 lines 21-25 (21 blocks at width 512 = 97.1M; 102.1M trained incl. Gemma adapter and letter window; ladder 3M, 10M, 30M, then 100M) and sec. 5 item 9 lines 132-135",
+        "big-run/PLAN.md line 270 (102.1M trained thinker and heads, 21 blocks x 512)"
+      ],
+      "notes": "Counts are the B3 group-1 thinker at caps_b3. G1's older 3M thinker was 3,544,913 (ch09); the number name '3M' differs by build.",
+      "labels": {
+        "unit": "learned numbers in the thinker alone",
+        "big": "100M: 21 blocks at width 512"
+      }
+    },
+    {
+      "id": "s03",
+      "duration": 33,
+      "heading": "Whole size counts the borrowed reader",
+      "caption": [
+        "The rule: size counts every number that runs, including the borrowed reader.",
+        "As built at the 100M step: reader 271.0 million, frozen, plus the trained part 102.1 million makes 373.1 million.",
+        "The plan adds an English talker of about 25 million. It is not built, so about 398 million is a plan."
+      ],
+      "labels": {
+        "reader": "reader: borrowed, frozen",
+        "ours": "ours: trained",
+        "talker": "talker: planned",
+        "built": "million, as built",
+        "plan": "about 398 million: plan only"
+      },
+      "values": {
+        "reader": 271.0,
+        "ours": 102.1,
+        "talker": 25,
+        "total": 373.1
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 lines 21-23 (373.1M as built = 102.1M trained + 271.0M frozen Gemma; the 25M talker is not built) and sec. 5 item 8 lines 130-131 (size counts every weight that runs, borrowed ones included); the same lines give about 397M planned, counting the thinker as about 100M, which is why the sum on screen (373.1 + 25 = 398.1) is shown as about 398M",
+        "big-run/PLAN.md line 270 and line 47 (about 373M whole as built; about 398M once a 25M talker is added)"
+      ],
+      "notes": "Bar segment widths are drawn to scale from the three source numbers. FINISHED line 21 says about 397M (thinker counted as about 100M); PLAN.md lines 47 and 270 say about 398M (373.1 + 25 = 398.1). The video shows about 398M so the sum on screen matches its own parts."
+    },
+    {
+      "id": "s04",
+      "duration": 44,
+      "heading": "First size test: 3M to 10M (8a)",
+      "caption": [
+        "In the first size test, tag 8a, our model was grown from 3M to 10M. Its score moved from 72.34 to 72.83 points out of 100.",
+        "That is a gain of 0.49. We needed about 3.0 per step. This is the older design, as it actually ran.",
+        "On the same practice, the plain step-writing model gained 3.77 and the plain language model 15.77."
+      ],
+      "chip": "tested: 6 copies ours, 5 plain",
+      "rows": [
+        {
+          "label": "ours",
+          "value": 0.49,
+          "from": 72.34,
+          "to": 72.83
+        },
+        {
+          "label": "plain step model",
+          "value": 3.77
+        },
+        {
+          "label": "plain language model",
+          "value": 15.77
+        }
+      ],
+      "needed": 3.0,
+      "labels": {
+        "head": "gain, 3M to 10M",
+        "need": "needed: 3.0",
+        "range": "5 of 6 copies gained; likely range -0.74 to +1.72"
+      },
+      "src": [
+        "whole-model-roadmap/8A-10M-RESULT-2026-10-08.md line 49 (mark 1: +0.49, CI -0.74 to +1.72, 5 of 6 seeds positive, needed +3.0) and line 68 (means: B2 72.34 to 72.83 = +0.49; PT +3.77 (5 seeds); LLM +15.77 (5 seeds))",
+        "same file lines 27-31 (plain summary says about 3.7 and about 15.6; the table values are used here)"
+      ],
+      "notes": "The summary text rounds to 3.7 and 15.6; the table says 3.77 and 15.77 (5 seeds each). The video uses the table. 'Ours' is B2 as it ran, with the settings bug of the next scene."
+    },
+    {
+      "id": "s05",
+      "duration": 37,
+      "heading": "Where our model stayed flat",
+      "caption": [
+        "Split by question type, our model was already near the top on arithmetic stories.",
+        "But on rule questions, like finding a rule from examples, ours stayed flat while the plain model kept growing.",
+        "Continuing a pattern showed the same. Numbers are averages over 5 copies, about 120 to 200 questions per type."
+      ],
+      "heads": {
+        "ours": "ours",
+        "plain": "plain step model",
+        "from": "3M",
+        "to": "10M"
+      },
+      "rows": [
+        {
+          "label": "arithmetic stories",
+          "o3": 100.0,
+          "o10": 99.9,
+          "p3": 94.2,
+          "p10": 97.9
+        },
+        {
+          "label": "find the rule",
+          "o3": 19.1,
+          "o10": 18.9,
+          "p3": 31.8,
+          "p10": 44.2
+        },
+        {
+          "label": "continue the pattern",
+          "o3": 36.2,
+          "o10": 37.8,
+          "p3": 41.5,
+          "p10": 51.1
+        }
+      ],
+      "chip": "tested, older design",
+      "src": [
+        "whole-model-roadmap/8A-10M-RESULT-2026-10-08.md lines 78-97 (per question type, mean of the 5 seeds with all arms; about 120-200 rows per type per seed): chain_ops line 84 (B2 100.0 to 99.9; PT 94.2 to 97.9), fewshot_number_rule line 94 (19.1 to 18.9; 31.8 to 44.2), seq_next line 95 (36.2 to 37.8; 41.5 to 51.1)"
+      ],
+      "notes": "Scores are points out of 100 per question type. 'Arithmetic stories' = chain_ops; 'find the rule' = fewshot_number_rule; 'continue the pattern' = seq_next."
+    },
+    {
+      "id": "s06",
+      "duration": 39,
+      "heading": "The correction: a settings bug",
+      "caption": [
+        "Later, a settings bug was found. Our model had run with 9 note vectors, not the 36 the settings said.",
+        "Its answer targets were also cut to 8 letters. The plain models were not affected.",
+        "So the result is real for the model that ran, but untested for the model as designed."
+      ],
+      "tag": "picture only: cell shading means nothing",
+      "labels": {
+        "said": "settings said: 36 note vectors",
+        "ran": "it ran with: 9 note vectors",
+        "cut": "answer targets cut to 8 letters",
+        "real": "real for the model that ran",
+        "untested": "untested as designed"
+      },
+      "counts": {
+        "said": 36,
+        "ran": 9
+      },
+      "src": [
+        "whole-model-roadmap/8A-10M-RESULT-2026-10-08.md lines 7-11 (Correction, 3:40 PM ET 10-08: 9 register tokens instead of 36, GEN targets cut to 8 letters, plain arms not affected; real for the B2 that ran, untested for B2 as designed)",
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 9 (addendum D) lines 129-136 (N_REG 9 and GEN_MAX 8 versus 36 and 35)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 line 34 (8 control + 36 memory vectors under the caps)"
+      ],
+      "notes": "'Register tokens' in the sources are the memory ('note') vectors of ch04. The fix is the re-run called G1."
+    },
+    {
+      "id": "s07",
+      "duration": 42,
+      "heading": "The fixed re-run (G1): first result",
+      "caption": [
+        "The fixed re-run is called G1. So far only one rung is finished: 3M, copy 400, on the project's own PC.",
+        "Ours scored 73.01 points out of 100, which is 4,410 right of 6,040. The plain model scored 67.12, which is 4,054 of 6,040.",
+        "The difference is 5.89 points (our subtraction: 73.01 minus 67.12). One copy at one size is a first result, not proof."
+      ],
+      "chip": "tested once: 3M, one copy",
+      "rows": [
+        {
+          "label": "ours",
+          "value": 73.01
+        },
+        {
+          "label": "plain model",
+          "value": 67.12
+        }
+      ],
+      "src": [
+        "animations/source-g1-3m-s400.json (G-B2 pooled5 73.01 = 4410 of 6040; G-PT 67.12 = 4054 of 6040)",
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 12 (addendum G) lines 187-189 (3M s400 done; one rung of one seed: no readout yet)",
+        "big-run/PLAN.md line 51 ('one clean 3M rung, 73.01 vs 67.12')"
+      ],
+      "notes": "5.89 = 73.01 - 67.12 (our subtraction; ch09 rounds it to 5.9). Design: calculator inside, 12 fixed rounds.",
+      "labels": {
+        "rung": "G1 re-run: 3M, copy 400",
+        "of": "of 6,040 right",
+        "diff": "points more (our subtraction: 73.01 minus 67.12)"
+      },
+      "counts": {
+        "ours": 4410,
+        "plain": 4054
+      },
+      "diff": 5.89
+    },
+    {
+      "id": "s08",
+      "duration": 44,
+      "heading": "As of Oct 9: what G1 still has to show",
+      "caption": [
+        "G1 has more to run: copy 401 at 3M, and both copies at 10M. Results are not in yet.",
+        "A copy's gain is its 10M score minus its 3M score. To go on, ours must gain at least 1.0 more than plain, on both copies.",
+        "Stop if ours gains no more than plain on both. Between is unclear. The team's guess, written first: stop or unclear."
+      ],
+      "labels": {
+        "axis": "ours gain minus plain gain",
+        "stop": "Stop",
+        "unclear": "Unclear",
+        "go": "Go",
+        "q": "?",
+        "t0": "0",
+        "t1": "1.0"
+      },
+      "status": {
+        "a": "3M copy 400: done",
+        "b": "3M copy 401: running",
+        "c": "10M: queued"
+      },
+      "src": [
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 4 lines 63-72 (screen readout: go on if d(G-B2)-d(G-PT) >= +1.0 on both seeds and d(G-B2) > 0 on both; stop if <= 0 on both; otherwise unclear; prediction: the screen stops) and sec. 13 (addendum H) lines 203-214 (3M s401 keeps running; 10M jobs queued)",
+        "big-run/PLAN.md line 204 (readout: GO at >= +1.0, STOP at <= 0) and line 206 (prediction: G-B2 gains +0 to +2, G-PT +3 to +4, likely UNCLEAR or STOP)"
+      ],
+      "notes": "No time is given for seed 401 or the 10M readout: both are estimates in the sources. The zone picture is an illustration of the written rule; no marker is a result.",
+      "tag": "picture only: shows the written rule, not a result"
+    },
+    {
+      "id": "s09",
+      "duration": 41,
+      "heading": "The finished design climbs its own ladder",
+      "caption": [
+        "G1 tests the older design. The finished design, called B3, must pass the same size test itself.",
+        "It climbs 3M, then 10M, then 30M, each paired with a plain model trained at the same settings.",
+        "The 100M run is the last rung. It starts only after the planned Oct 31 readout and the team's 90 percent bar."
+      ],
+      "rungs": [
+        {
+          "label": "3M",
+          "chip": "built, never run"
+        },
+        {
+          "label": "10M",
+          "chip": "plan only"
+        },
+        {
+          "label": "30M",
+          "chip": "plan only"
+        },
+        {
+          "label": "100M",
+          "chip": "plan only"
+        }
+      ],
+      "labels": {
+        "pair": "plain model at the same settings",
+        "ours": "finished design (B3)"
+      },
+      "tag": "picture only: steps drawn in order, not to size",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 7 lines 125-129 (B3 climbs its own ladder on the PC: 3M, then 10M with both groups as the G2 screen, then 30M, each paired with a plain model at the same caps; B3 group 1 built, never run)",
+        "big-run/PLAN.md lines 38-44 (path: 10-31 ladder readout; 100M launches after it) and line 51 (the 90% bar)"
+      ],
+      "notes": "The 30M step of the OLDER design (B2) is on hold by the team's rule 'one big proven run, no more little tests' (8A-10M-RESULT line 15-16 and the audit note lines 13-17); B3's 30M rung is a plan. Dates are planned, never certain. The staircase is an illustration of order only: rung boxes are placed by position, not by size or date."
+    },
+    {
+      "id": "s10",
+      "duration": 42,
+      "heading": "How sure is the team?",
+      "caption": [
+        "The team's rule, as the plan reads it: no weeks-long or money-costing step starts until it can truthfully say 90 percent sure.",
+        "Its own honest odds today: about 1 in 3 that our design out-scales a plain model.",
+        "For the long-term Minecraft goal, well under 1 in 10, because eyes, hands and a game loop are not built."
+      ],
+      "chip": "judgment, not measured",
+      "tag": "picture only: boxes not to scale; under 1 in 10 is not zero",
+      "labels": {
+        "a": "our design out-scales a plain model",
+        "b": "the Minecraft goal",
+        "aOdds": "about 1 in 3",
+        "bOdds": "well under 1 in 10"
+      },
+      "src": [
+        "big-run/PLAN.md line 51 (the 90% bar; 'judgment, not measured': about 1 in 3 that our design out-scales a plain model, well under 1 in 10 for the Minecraft goal itself; eyes, hands and a game loop not built)"
+      ],
+      "notes": "Boxes are an illustration of the odds only (tagged on screen): 1 of 3 filled; none of 10 filled to show 'under 1' (not 'zero'; the source says well under 1 in 10). Not to scale."
+    },
+    {
+      "id": "s11",
+      "duration": 45,
+      "heading": "Where it will run, and how long",
+      "caption": [
+        "Everything that trains runs on the project's own PC, with a 16 GB graphics card. Whether the 100M thinker fits is untested.",
+        "The Mac laptops are too slow: a 3M test run measured 25.0 seconds per update, about 6.9 days for 24,000 updates.",
+        "On the PC alone the 100M run is estimated at 3 to 5 weeks. Renting, about $80 with a $120 cap, is not used now."
+      ],
+      "cards": {
+        "pc": {
+          "name": "Project PC",
+          "chip": "100M fit: untested",
+          "big": "3 to 5",
+          "unit": "weeks, estimate"
+        },
+        "mac": {
+          "name": "Mac laptop",
+          "chip": "measured",
+          "big": 25.0,
+          "unit": "seconds per update",
+          "days": "6.9 days for 24,000 updates"
+        },
+        "rent": {
+          "name": "Rented machine",
+          "chip": "plan only",
+          "big": "$80",
+          "unit": "expected, cap $120"
+        }
+      },
+      "src": [
+        "big-run/PLAN.md line 17 (5070 Ti PC 16 GB: fits everything up to 30M; 100M fit untested, free fit check first) and line 18 (M1 Pro: GX-3M on MPS fp32 = 25.0 s per update, 100-update check; one 24,000-update run = about 6.9 days)",
+        "big-run/PLAN.md lines 273-275 (hardware: PC alone; time on the PC about 23 to 32 days, so 3 to 5 weeks, suggested; if rented about 150 h, about $80 expected, range $55-$150, hard cap $120, one seed)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 lines 24-25 (plan on the PC and Macs only)"
+      ],
+      "notes": "6.9 days is as written in PLAN.md line 18 (25.0 s x 24,000 = 600,000 s, which is 6.9 days). The Mac test model was the experts test at 3M, not the finished design."
+    },
+    {
+      "id": "s12",
+      "duration": 35,
+      "heading": "The race: the real proof (a plan)",
+      "caption": [
+        "After the model exists, the plan races it against the closest-size public model, SmolLM2-360M, on the team's own sealed question sets.",
+        "The pass mark, written first: ahead by at least 3 points on those sets, and ahead on bAbI, with whole size counted.",
+        "The race needs an English talker, a placeholder today. So no race has been run."
+      ],
+      "tag": "picture only: no race has been run",
+      "labels": {
+        "ours": "our model",
+        "rival": "SmolLM2-360M",
+        "start": "start",
+        "finish": "?",
+        "talker": "English talker: not built"
+      },
+      "src": [
+        "big-run/PLAN.md line 77 (scorecard row 8: race ahead of SmolLM2-360M by >= +3 on our sealed sets and ahead on bAbI, whole size counted; untested; the race needs the open-English talker) and line 284 (R4: cannot pass until the English talker works)",
+        "big-run/PLAN.md line 33 (race one rival first, SmolLM2-360M, on the 30M model; the 100M model raced again when it exists)"
+      ],
+      "notes": "PLAN.md line 33 races the 30M model first; the brief and R4 race the finished model. Both are plans; the caption keeps to 'after the model exists'."
+    },
+    {
+      "id": "s13",
+      "duration": 33,
+      "heading": "Recap: what is shown, what is not",
+      "caption": [
+        "Shown: one clean rung. At 3M, one copy, ours scored 73.01 and the plain model 67.12.",
+        "Not shown: the 10M answer, the 30M rung, the 100M run, or the finished design at any size.",
+        "So there is no size claim yet. The test is whether our line climbs steeper than the plain line."
+      ],
+      "rungs": [
+        {
+          "label": "3M",
+          "chip": "tested once",
+          "sub": "73.01 vs 67.12"
+        },
+        {
+          "label": "10M",
+          "chip": "result not in"
+        },
+        {
+          "label": "30M",
+          "chip": "plan only"
+        },
+        {
+          "label": "100M",
+          "chip": "plan only"
+        }
+      ],
+      "src": [
+        "big-run/PLAN.md line 51 (one clean 3M rung, 73.01 vs 67.12, a 10M answer still to come)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 items 2, 6, 7 lines 109-129 (shown on one seed; the finished design must pass the size bar itself)"
+      ],
+      "notes": "Recap of the chapter. Nothing new is introduced."
+    }
+  ]
+}
