@@ -296,7 +296,7 @@ measures the memory that matters. It stays in the post-G1 chain behind GX. G1 it
   and writes the marker. Both scripts parse clean; the mock-PC run starts 8aGX from src-8gx, 8aFC from src-b3, 8aC30 from src-8ag (shown,
   mock only). c30 keeps G1's code because it is G1's control.
 
-## 18. Addendum M (2026-10-09, 12:05 PM ET): c30 moves to the B3 caps and pool
+## 18. Addendum M (2026-10-09, 11:55 AM ET): c30 moves to the B3 caps and pool
 
 Asked by the big-run thread (coordinator relay, 11:52 AM ET; PLAN.md substitution 4): a rung is a matched pair, so the plain partner of
 B3 30M runs at caps_b3 on the B3 long-chunk pool. c30 therefore runs from `src-b3` (c24bce9489) with `--cloze-long` and
