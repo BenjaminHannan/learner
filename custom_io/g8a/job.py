@@ -220,7 +220,7 @@ def main(argv=None):
     if emit_on:
         emit(base, tag + '-pool')
     accum = parse_accum(a.accum, a.speed_json, a.rung)
-    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
+    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, active_params={k: C.n_active(C.MODEL_OF[k], cfgs[k]) for k in cfgs}, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
                maxh=a.maxh, dph=a.dph, accum=accum, arms={}, started_unix=t0, pool_build_s=round(time.time() - t0, 1), pool_train_sha256=man['train_sha256'],
                pool_schedule=man['schedule'], b2_extra=b2_extra)
     qdir = None

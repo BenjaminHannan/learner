@@ -59,6 +59,21 @@ def n(model, cfg):
     return count(model, json.dumps(cfg, sort_keys=True))
 
 
+MOE_KEYS = ('experts', 'top_k', 'moe_aux', 'moe_gamma', 'moe_ckpt')
+
+
+@functools.lru_cache(maxsize=None)
+def active(model, cfg_json):
+    torch.manual_seed(0)
+    m = build(model, vocab(), **json.loads(cfg_json))
+    return m.active_params() if hasattr(m, 'active_params') else m.n_params()
+
+
+def n_active(model, cfg):
+    """Parameters a token uses per round (experts: the top_k picked + router); = n(model, cfg) when the cfg has no experts."""
+    return active(model, json.dumps(cfg, sort_keys=True)) if cfg.get('experts', 0) > 0 else n(model, cfg)
+
+
 def _per_unit(model, cfg, key, base_v):
     """Parameters added by one more unit of `key` (blocks / n_layers): count(base_v + 1) - count(base_v). Exactly linear for these models."""
     return n(model, dict(cfg, **{key: base_v + 1})) - n(model, dict(cfg, **{key: base_v}))
@@ -67,6 +82,8 @@ def _per_unit(model, cfg, key, base_v):
 def b2_cfg(rung, extra=None):
     """B2 config for a rung (copy talker on, 8 rounds). `extra` = reader switches, e.g. {"eg_embed": true} once stage 2b picks EGE."""
     r = RUNGS[rung]
+    moe = {k: v for k, v in (extra or {}).items() if k in MOE_KEYS}      # experts: the shape (blocks, mlp) is chosen as without them, then they are added
+    extra = {k: v for k, v in (extra or {}).items() if k not in MOE_KEYS}
     if rung == '3M':
         cfg = dict(B2_S)
     else:
@@ -78,7 +95,7 @@ def b2_cfg(rung, extra=None):
             d = r['width']                           # trim the feed-forward ratio: hidden = int(mlp * d), 2d + 1 params per hidden unit per block
             hid = int(r['mlp'] * d) + round((r['target'] - n('ledger', cfg)) / (best * (2 * d + 1)))
             cfg['mlp'] = round((hid + 0.5) / d, 5)
-    return dict(cfg, **(extra or {}))
+    return dict(cfg, **extra, **moe)
 
 
 def plain_cfg(rung, b2=None, extra=None):
@@ -86,7 +103,7 @@ def plain_cfg(rung, b2=None, extra=None):
     outside the band is the feed-forward width trimmed (3M therefore stays plain_tf_steps' own 4 layers x 1024)."""
     r = RUNGS[rung]
     b2 = b2 or b2_cfg(rung)
-    target = n('ledger', b2)
+    target = n_active('ledger', b2)
     d, h = r['width'], r['heads']
     base = dict(d_model=d, n_heads=h, **({'eg_embed': True} if b2.get('eg_embed') else {}))      # test 8a-G: the plain step arm gets the same frozen-Gemma front (its adapter counts)
     c1, per = n('plain_tf_steps_g', dict(base, n_layers=1)), _per_unit('plain_tf_steps_g', base, 'n_layers', 1)
@@ -116,6 +133,9 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
     """Assert section 2's bands. Returns the counts. A run outside its band does not count (the launcher refuses it)."""
     cfgs, counts = (cfgs, counts) if cfgs else sizes(rung)
     r, b2 = RUNGS[rung], counts[B2_ARM]
+    act = None
+    if cfgs[B2_ARM].get('experts', 0) > 0:      # experts: today's rung check on the dense twin (same cfg without the MOE keys); the active count must be within 3% of it
+        act, b2 = n_active('ledger', cfgs[B2_ARM]), n('ledger', {k: v for k, v in cfgs[B2_ARM].items() if k not in MOE_KEYS})
     eg = bool(cfgs[B2_ARM].get('eg_embed'))
     ref = B2_S_PARAMS + (eg_adapter_params(r['width']) if eg else 0)      # test 8a-G: B2_S + the adapter (EGE-3M, 3,500,881 at the old caps)
     if rung == '3M':
@@ -125,6 +145,9 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
             assert abs(b2 / ref - 1) <= 0.03, f'3M B2 {b2:,} is more than 3% from today\'s {ref:,}'
     else:
         assert abs(b2 / r['target'] - 1) <= r['band'], f'{rung} B2 {b2:,} outside {r["target"]:,.0f} +-{100 * r["band"]:.0f}%'
+    if act is not None:
+        assert abs(act / b2 - 1) <= 0.03, f'{rung} active {act:,} is more than 3% from its dense twin {b2:,}'
+        b2 = act
     for a in (PT_ARM, LLM_ARM):
         if a not in counts:
             continue
