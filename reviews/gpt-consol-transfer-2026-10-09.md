@@ -21,7 +21,7 @@ I am training a tiny program-writing model and need a second opinion on one resu
 |---|---|---|---|---|
 | C2 first try, holdout (512 questions) | - | - | 76.1% (71.3 to 78.3) | - |
 | skills in_dist, mean of six | 90.16 | 87.87 | 88.39 | 89.98 |
-| fewshot_number_rule | 35.5 | 15.2 | 17.8 | 36.2 |
+| fewshot_number_rule | 35.5 | 15.2 | 17.8 | 36.3 |
 | seq_next | 83.6 | 69.9 | 71.0 | 80.8 |
 | rule_apply | 90.6 | 80.2 | 82.8 | 89.7 |
 
