@@ -67,3 +67,13 @@ These come from the project files. Verify any you use against the sources in you
 
 Refer to "the project owner" or "the team", not to individuals' names. Machines: the project's own PC (a graphics card with 16 GB) and Mac laptops. No rented cloud machines are
 being used now. Dates in New York time, written like "Oct 9". Never state a future date as certain: say "planned".
+
+## Added after the ch09 pilot
+- **round**: one lap of the thinker (look at the question, pass notes, look again).
+- **dial**: the number of rounds the thinker is allowed; at test time it can be turned down.
+- **lesion test**: break one part on purpose and see whether the answer breaks too. If it does, that part was doing the work.
+- **pass mark**: the bar written down before a run; it is never moved after the result is seen.
+- **wiring check**: a test that must pass by construction; it shows the plumbing works, not that the model reasons.
+- **copy** (of a run): one training run with its own random start, called a seed in the code; show it as "copy A / copy B".
+- **pooled-5**: the 6,040 questions kept aside for testing, five kinds pooled into one score out of 100.
+- **chain-5**: 1,000 multi-step questions used as a harder check.

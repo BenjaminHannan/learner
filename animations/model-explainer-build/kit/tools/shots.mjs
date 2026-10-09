@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
+import sharp from 'sharp';
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const args = process.argv.slice(2);
 const demo = args.includes('--demo');
@@ -42,10 +43,15 @@ for (let i = 0; i < pngs.length; i += perSheet) {
   const chunk = pngs.slice(i, i + perSheet).map((f) => path.join(out, f));
   const lab = labels.slice(i, i + perSheet);
   const sheet = path.join(out, `sheet-${String(i / perSheet + 1).padStart(2, '0')}.jpg`);
-  const m = ['-background', '#222', '-fill', 'white', '-pointsize', '28'];
-  const items = chunk.flatMap((f, k) => ['-label', lab[k] || '', f]);
-  const r = spawnSync('montage', [...m, ...items, '-tile', '2x3', '-geometry', '960x540+8+8', sheet], { cwd: root });
-  if (r.status !== 0) console.error('montage failed', String(r.stderr));
-  else console.log('sheet:', sheet);
+  const W = 960, H = 540, G = 8, L = 34;
+  const tiles = await Promise.all(chunk.map(async (f, k) => {
+    const lab = String(labels[i + k] || '').replace(/[<>&]/g, '');
+    const png = await sharp(f).resize(W, H).toBuffer();
+    const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${L}"><text x="6" y="26" font-size="24" font-family="Helvetica" fill="white">${lab}</text></svg>`);
+    return { png, svg, k };
+  }));
+  const comps = tiles.flatMap((t) => { const x = G + (t.k % 2) * (W + G), y = G + Math.floor(t.k / 2) * (H + L + G); return [{ input: t.png, left: x, top: y + L }, { input: t.svg, left: x, top: y }]; });
+  await sharp({ create: { width: 2 * W + 3 * G, height: 3 * (H + L) + 4 * G, channels: 3, background: '#222' } }).composite(comps).jpeg({ quality: 82 }).toFile(sheet);
+  console.log('sheet:', sheet);
 }
 console.log(`${pngs.length} frames; single frames are in ${out}`);

@@ -204,3 +204,16 @@ Copy to `/mnt/project-files/animations/model-explainer-build/chapters-out/chNN/`
 
 A source is missing or contradicts the brief: keep going with what you can verify, drop the claim from the video if you cannot, and say so in notes.md. Do not guess.
 A kit helper misbehaves: work around it locally and report it. Keep your working copy; do not edit the master kit.
+
+## 11. Pilot corrections (from the ch09 author; these override anything above)
+- LENGTH: reading budget is 3 s + words/2.6 per scene, so 45-85 words is 20-37 s. Aim for 11-14 scenes and 330-420 s total. If your brief lists more scenes than fit, merge or cut the weakest and say which in notes.md. Longer is welcome; this video is meant to be many minutes long.
+- NUMBERS: the raw RESULT.json / source files beat any brief or deep-dive page. Say in notes.md which design (older 8-round vs G1 12-round) each number belongs to. Never invent a number; if a brief gives none, show a labelled picture ("picture only") instead.
+- SETUP: the kit already has content/global.json (merge.mjs needs it); `mkdir -p chapters content` is safe. `mkindex` prints "0 chapter file(s)" until chapters/chNN.js exists: that is not an error.
+- AUDIT counts every JSON string and every number as a word (even tick values and 0.0), ignoring only keys id, src, notes, duration, illustration, at. It does not see text the kit draws itself (map labels).
+- CAPTIONS may be objects `{at, text}`: `at` is a fraction 0..1 of the scene; each caption's slot is the gap to the next one and the audit checks every slot.
+- FRAMES: `shots` samples a scene at about 0.18, 0.39, 0.59, 0.8. The 0.8 frame must look finished (nothing still counting up); the last 20% of a scene stays still.
+- SVG: z-order is creation order. A drawing made with S.svg() BEFORE a card sits behind it; make the drawing after the card.
+- TOOLS: `hyperframes check` fetches Google Fonts and `shots` writes extra contact-sheet-*.jpg and frame-*.png; both are allowed. Only sheet-*.jpg are deliverables. check's layout test samples only 9 frames: look at late captions yourself. Use ONE mono font: JetBrains Mono. If check or shots cannot run (no Node 22), say so in notes.md and run only `node tools/audit.mjs chNN`.
+- RATES: a share (830 of 831 = 99.9) is not a score; label it "out of 100" only if it is a score, otherwise write the count.
+- HELPERS you may copy from chapters-out/ch09/ch09.js: makeDial (0-24 dial and needle), resultCard (title + counting big number + sub line), revealRow (one hbar row per caption). S.modelMap always draws the finished design; if your chapter is about an older tested design, say so in a scene.
+- KIT FILES kit.js, main.js, style.css, tools/ are FINAL for this wave; do not edit them (write helpers inside your chNN.js).
