@@ -3,11 +3,13 @@
 Ben's ask: a sleep that (a) absorbs the day's finds in very few updates, (b) loses no old skills, (c) ideally improves old skills through transfer.
 Branch `claude/friendly-bohr-z4dpfo`, PR #53 (base: PR #48's branch `claude/project-thread-2kevpk`).
 
-## State in one paragraph
+## State (10-09, 9:40 AM ET): finished
 
-Literature done, three candidates picked, marks written and committed before any run, code written and tested. **No result exists yet.** Screen A
-(fresh dreams vs re-read rows) is running on this cloud CPU: s202's `rlc` run was at update 20 of 128 at 16:43 UTC. Everything below "Where things
-live" marked *container* is lost if this container is reclaimed. A new session must rebuild it with the commands in "How to resume".
+Done end to end: literature (`LIT.md`, `LIT-ADDENDUM.md`, checked by a Haiku workflow), marks (`MARKS.md`, every amendment dated and committed before the
+run it affects), Screen A (2 parents), the 256-update rerun, and the six-parent confirm. **Verdict (README.md, top): marks 1-4 pass.** Holdout 76.1% in
+256 updates; no harm vs N; old skills +0.52 [0.31, 0.74]. The "through transfer" label is not shown: the replay-only control does better on old skills
+(+2.11). Report only: the old-skill gap against the raw B2 comes from the parent build, not from the sleep, and plain practice repairs it.
+No job is running. Container state below is not in git, and a container restart already happened once (10-09 8:08 AM ET).
 
 ## Files in the repo
 
@@ -22,8 +24,8 @@ live" marked *container* is lost if this container is reclaimed. A new session m
 
 - Parents (raw B2): `~/work/ckpt/B2_s{100,101,200..205}.pt`, from branches `claude/creative-parents` and `claude/b2-confirm-checkpoints` (sha256 checked for s100/s101).
 - Skills data: `~/work/data`, `~/work/data_big` (`python3 -m custom_io.local_runner setup --work ~/work --curriculum ~/work/cur`, curriculum from branch `claude/project-thread-y0sxwe`; hashes matched).
-- Rebuilt N: `~/rl/parents/s{200,201,202}` (`fastsleep setup --T 3.0 --floors ~/work/dev_floors.json`). **s203-s205 not built yet.**
-- Runs: `~/consol/A/<parent>/<arm>/` (result.json, hits.json, learner*.pt), logs `~/consol/A-<parent>-<arm>.log`, finish lines `~/consol/chainA.txt`.
+- Rebuilt N: `~/rl/parents/s200` to `s205` (`fastsleep setup --T 3.0 --floors ~/work/dev_floors.json`; the floors file is also in the repo as `dev_floors.json`).
+- Runs: Screen A `~/consol/A/`, 256-update reruns `~/consol/A256/`, confirm `~/consol/C/<parent>/{fd,rp}/` (learner.pt kept; result, hits and holdout files are copied into `confirm/` in the repo).
 
 ## Facts learned (shown)
 
@@ -34,18 +36,12 @@ live" marked *container* is lost if this container is reclaimed. A new session m
 - Memory: the cgroup limit is 14.3 GB (not the 16 GB `free` shows). A night's sampling peaks at about 6.4 GB, a sleep run at 3-4 GB. The s201 night was OOM-killed twice before re-sequencing. Replay rows are now trimmed to the rows each night draws (identical draws, tested).
 - The model's loss is a per-row mean, so the micro-batch gradient accumulation used on CPU gives the same update as one 1,024-row pass.
 
-## Running now (chainA3.sh)
+## Next steps (in order of value)
 
-s202 `rlc` (sleep phase) -> s201 `rlc` (night, then sleep) -> both `fd` runs start 2 min after s201's finds.pkl appears -> `ro` s202 after s202 `rlc`, then `ro` s201.
-Expected Screen A end: about 4-5 PM ET. Note: s202 `rlc` was started by an earlier chain that was stopped; a watcher writes its finish line to chainA.txt.
-
-## Next steps
-
-1. When Screen A finishes: `python3 -m creative.consol_report snaps --out ~/consol/A/s201` (and s202), then `python3 -m creative.consol_report screenA --root ~/consol/A --parents s201 s202`. Judge against MARKS.md as written; write the README with paired numbers, labelled shown / suggested / untested.
-2. Screen B (`consol scale`) only if fd at U* fails harm; Screen C (`--arm fdw`) only if harm remains. If no step up to 128 reaches 71.2 DEV, rerun fd at 256 (rule in MARKS.md).
-3. Build s203-s205 (`fastsleep setup`, one at a time beside the runs, about 45 min each; memory!).
-4. Confirm on s200-s205 with `--self-stop`, cap U*, plus `ro`; holdout once per parent for the winning arm only. Never open C2 test or labelled.
-5. Report only, if compute allows: the full research-loop sleep's real harm (`creative/rl/rescore_harm.py`), about 7 h per parent on this CPU.
+1. Mix ratio, the open question (Ben asked about it; untested): the sleep's skills rows carry half the weight per step. One change: the same sleep with a larger skills share (for example 256 dream rows + 768 skills rows per update), or the control's batch-1,024 version (two halves of skills rows) as the dilution test. GPT prompt ready: `reviews/gpt-consol-transfer-2026-10-09.md`.
+2. PC job 1 (`PC-JOB-1.md`): the research-loop sleep on the same rebuilt N, with the harm measure, for a paired baseline against 76.1% and its real harm.
+3. A stop rule that also watches the model's own held skills rows (Vins et al. 2025 in `LIT-ADDENDUM.md`). Cheap, since both checks already run.
+4. Screens B and C were never needed (fd passed harm); their code (`consol scale`, `--arm fdw`) is tested but unrun.
 
 ## Open issues for Ben
 
