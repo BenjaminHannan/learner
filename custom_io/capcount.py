@@ -17,7 +17,7 @@ A nonzero count means a row was cut, skipped or reduced to an answer-only row, a
   gen_answer_over      a GEN answer longer than GEN_MAX letters (the register targets are cut)
   operand_cells_over   a calculator operand (tool.py, the outside calculator) with more than CELLS - 1 = 10 characters: cell_ids cuts it
   tape_entry_over      a calculator tape entry (tool.py) longer than LE characters
-  plain_target_over    a plain_tf_steps / plain_lm target longer than CAP + 12 characters
+  plain_target_over    a plain_tf_steps / plain_lm target longer than CAP + 12 characters (the PTS arm, all_steps: any all-steps target longer than CAP = caps plain_target; it is never cut)
 Counts are per distinct prompt / row id where the code caches (ledger.spans, progparse.row_targets), per call elsewhere.
 """
 from collections import Counter
