@@ -1486,6 +1486,28 @@ families x 200, two parents).**
   - State of the line (held): the best tested recipe, L64, keeps old skills except one family on one parent and gets
     about two-thirds of the fast nights' climb. The fast nights get the full climb for about 4 points of skills. lr
     3e-4 is the next single change, held until the big-run thread asks for it.
+- **SC un-held (10-09, 11:00 AM ET; big-run PLAN.md SCORECARD 10-09 row 5, Ben's principle "it runs itself",
+  relayed by the coordinator), free cloud CPU, fast-sleep thread.** AP, lr 3e-4, Screen A and the 71.3% re-check stay
+  held. Job 9 keeps running.
+  - The arm is as specced above: model-picked skills replay rows by loss rise against a frozen pre-night copy. One
+    change. The scorecard row also names nights and temperature; those are later single changes, not part of SC.
+  - **Governing marks, replaced before any SC result with the scorecard's, so one standard is used.** On both parents
+    (DEV, s100 / s101, control W1):
+    1. Harm against N' passes the 10-08 measure (in_dist drop at most 1.5, no family over 5 with its paired
+       interval below 0).
+    2. C2 first-try gain over N' is at least 0.9x W1's gain (SC - N' at least 0.9 x (W1 - N'); W1 31.2 / 34.4 and
+       N' 0.4 / 0.4, so SC at least 28.1 / 31.0).
+  - **Proved wrong:** harm fails on both parents, or SC's gain is under 0.5x W1's on both parents. "Both parents" is
+    read in, matching every other 7d proved-wrong line; disclosed here.
+  - Report only (the earlier SC lines): SC - W1 first try against -2, multi-step reach@32 against W1 - 3 (13.0 /
+    14.3), and whether SC's in_dist drop is at least 1.0 below W1's (3.8 / 3.6). These show partial progress if the
+    harm mark is missed.
+- **Queued by the scorecard (rows 1b and 7):**
+  - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
+    It is built while job 9 runs.
+  - Once B3 3M exists: first try after sleep on B3 3M, on cloud CPU, with job 9's marks (W - N' at least +15, W - R
+    at least +10, practised within 2) on a fresh C2 split, since the sealed test is spent on job 9. The spec, with
+    B3's input format, is written when the B3 3M checkpoint and its interface exist.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1793,3 +1815,7 @@ CPU):
 - **10-08, 4:00 PM ET:** L64 ruled (fast-sleep 3dc882fce): fails on s100's table_calc fire; the climb mark is missed
   by one question on both parents (met under Ben's near-miss rule); not proved wrong. lr 3e-4 next, held. The 7d
   sleep line pauses here: sleep is not on the big run's path for now.
+- **10-09, 11:05 AM ET:** SC un-held per the big-run scorecard (row 5). Its marks were replaced before any result with
+  the scorecard's: harm clean, and first-try gain at least 0.9x W1's; proved wrong on harm or under 0.5x. The old SC
+  lines are kept as report only. The D6 learned-gate screen is queued after job 9, and first try after sleep on B3
+  3M once it exists.
