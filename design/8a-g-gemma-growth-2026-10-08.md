@@ -170,3 +170,14 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   exactly (12,345 and 36,132 lines). The slices are converted to `\n`, checked against the manifest, and placed where the data step looks first.
   Nothing in the content changes.
 - Marks, arms and readout unchanged.
+
+## 11. Addendum F (2026-10-08, 8:20 PM ET, G1 running): GPU memory on the 16 GB PC
+
+- G1's first training run (6:32 PM ET, 3M s400, accumulation 2 = 128 rows per pass) spilled into Windows shared memory (4.2 GB shared on top of
+  15.5 GB dedicated, 98% use at 106 W, speed falling from 0.97 to 0.57 updates/s by step 1,000). Per addendum D's rule it was stopped and
+  restarted at 7:08 PM ET with accumulation 4 for both 3M arms. The 1,000 updates already done were discarded, so nothing mixed.
+- **10M settings (suggested estimate, set before those jobs start):** the 36-slot 3M B2 needs about 150 MB per row, and in 8a the 2 -> 8 block step
+  raised per-row memory about 2.4x. So the 10M B2 runs at accumulation 8 and the 10M plain arm at 4. The arms may differ, since accumulation changes
+  only the bf16 summing order (256 rows per update either way).
+- **Spill rule (replaces "at most 8"):** a job whose shared GPU memory passes 1 GB is stopped and rerun with that arm's accumulation doubled, up to 16.
+- Marks, arms and readout unchanged.
