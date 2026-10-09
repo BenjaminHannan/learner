@@ -1497,8 +1497,9 @@ families x 200, two parents).**
        interval below 0).
     2. C2 first-try gain over N' is at least 0.9x W1's gain (SC - N' at least 0.9 x (W1 - N'); W1 31.2 / 34.4 and
        N' 0.4 / 0.4, so SC at least 28.1 / 31.0).
-  - **Proved wrong:** harm fails on both parents, or SC's gain is under 0.5x W1's on both parents. "Both parents" is
-    read in, matching every other 7d proved-wrong line; disclosed here.
+  - **Proved wrong:** harm fails on either parent, or SC's gain is under 0.5x W1's on both parents. This wording was
+    clarified by the big-run thread at 11:04 AM ET 10-09, before any SC result. It replaces my earlier reading of
+    "both parents" for harm.
   - Report only (the earlier SC lines): SC - W1 first try against -2, multi-step reach@32 against W1 - 3 (13.0 /
     14.3), and whether SC's in_dist drop is at least 1.0 below W1's (3.8 / 3.6). These show partial progress if the
     harm mark is missed.
@@ -1816,6 +1817,7 @@ CPU):
   by one question on both parents (met under Ben's near-miss rule); not proved wrong. lr 3e-4 next, held. The 7d
   sleep line pauses here: sleep is not on the big run's path for now.
 - **10-09, 11:05 AM ET:** SC un-held per the big-run scorecard (row 5). Its marks were replaced before any result with
-  the scorecard's: harm clean, and first-try gain at least 0.9x W1's; proved wrong on harm or under 0.5x. The old SC
+  the scorecard's: harm clean, and first-try gain at least 0.9x W1's; proved wrong on harm on either parent, or under
+  0.5x on both (wording clarified by the big-run thread, 11:04 AM ET). The old SC
   lines are kept as report only. The D6 learned-gate screen is queued after job 9, and first try after sleep on B3
   3M once it exists.
