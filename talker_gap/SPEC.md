@@ -109,3 +109,13 @@ Timing probe (T1, seed 0, Mac MPS, machine under load average ~10): 0.31 s per u
 - Waves: T1 and T1-nothinker first; T2 after. Jobs run at most two at a time because the Mac is memory-tight. A run whose wall-clock exceeds 30 min because of machine load is reported as such; nothing is changed to make it faster.
 - FRESH-R7 is scored exactly once, after every arm and seed has finished, by an eval script that refuses to run without `--final`. DEV is scored per run as in the harness.
 - Nothing above changes any mark in Amendment 2.
+
+## Amendment 2c (2026-10-09 09:13 ET, during the T1-nothinker runs, before FRESH-R7 is read)
+
+Problem found while fact-checking the explainer page: Amendment 2b runs T1-long only if C1 passes, but FRESH-R7 is scored exactly once, after every arm. C1 is only known after R7 is scored, so T1-long could only be scored by reading R7 a second time. Fixed now, before any R7 read:
+- **T1-long is trained for seeds 0-2 whatever happens** (6000 TEACH updates, one warm-up/cosine, as in 2b), after T2, one job at a time. FRESH-R7 is then scored once over five arms: B0, T1, T1-nothinker, T2, T1-long.
+- **C1b (fixed now):** mean over 3 seeds, S_R7(T2) - S_R7(T1-long) >= 3 points, paired bootstrap over rows 95% interval excluding 0, and the difference positive in every seed.
+- **Reading:** C1 and C1b both pass -> the gain comes from the FineWeb text, not just more updates (shown). C1 passes and C1b fails -> the gain may be extra updates (suggested). C1 fails -> C1b and T1-long - T1 are reported only.
+- **Decision interval for every R7 mark:** the paired bootstrap over rows (`pass_by_rows` in `seal_eval_t.py`). The question-clustered interval (source and paraphrase resampled together) is a sensitivity report and decides nothing.
+- T1-long's DEV numbers are reported; no DEV mark.
+- Nothing above changes any mark in Amendment 2.
