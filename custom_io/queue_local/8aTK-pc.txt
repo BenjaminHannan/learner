@@ -1,0 +1,13 @@
+# BensPC RTX 5070 Ti: test TK / TKN (design/tokens-experiment-2026-10-09.md), ONLY after gate G1's last job (8aG1f) has finished. Code = branch claude/project-thread-qtxfp4 (G1's exact code 612f5c5b01 + caps.py overlay sha 3da2dfbb, plus the tok_think switch). B2 arm only; the controls are G1's own G-B2 3M runs (8aG1d-3M-s400, 8aG1e-3M-s401). accum B2=4 as in both G1 3M runs.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aTK-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}' --accum B2=4
+# MEM 12000
+g8a: 8aTK-3M-s401 --rung 3M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}' --accum B2=4
+# MEM 12000
+g8a: 8aTKN-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true, "reader_layers": 0, "mlp": 7.29883}' --accum B2=4
+# MEM 12000
+g8a: 8aTKN-3M-s401 --rung 3M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true, "reader_layers": 0, "mlp": 7.29883}' --accum B2=4
