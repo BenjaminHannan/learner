@@ -1,7 +1,7 @@
-# BensPC RTX 5070 Ti: G-PT 30M control (big-run scorecard row 3): the plain arm of G1 at the 30M rung, seed 400 only (kill-first), same code (src-8ag + caps fix) and pinned caps as G1. Builds the 30M pool (own rung 30 + web rung30 slice) first. Accum PT=16 is a staged guess: set it from G1 10M-s400 PT peak memory before launch (spec addendum J).
+# BensPC RTX 5070 Ti: G-PT 30M control (big-run scorecard row 3): the plain arm of G1 at the 30M rung, seed 400 only (kill-first), same code (src-8ag + caps fix) and pinned caps as G1. Builds the 30M pool (own rung 30 + web rung30 slice) first. Accum PT=32 is cautious (spec addendum K): the 3M s401 run spilled at accum 4, and a spill costs far more than a smaller pass.
 # ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
 # ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
 # MEM 3000
 g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
 # MEM 9000
-g8a: 8aC30-30M-s400 --rung 30M --seed 400 --arms PT --b2-extra '{"eg_embed": true}' --accum PT=16
+g8a: 8aC30-30M-s400 --rung 30M --seed 400 --arms PT --b2-extra '{"eg_embed": true}' --accum PT=32

@@ -251,3 +251,25 @@ Mac chat and no queue runs. Cards and queue files are in `results/8a-g/pc-job-ca
   worth the hour and a no-fit kills the PC plan early. A part A pass does not clear the 100M launch: part B (H1 round checkpointing,
   2,000-letter rows, new caps) runs on B3 group 1 before launch. c30 runs right after fc100 unless B3 group 1 is ready first. Row 6: G1 passes
   the truncation audit on both seeds (the non-ASCII drops are disclosed, not truncation). Starting still needs Ben's go in the Mac chat.
+
+## 16. Addendum K (2026-10-09, 11:20 AM ET): one post-G1 chain on the PC, experts test first
+
+Asked by the coordinator (relay, 11:10 AM ET) after Ben asked for the experts test first after G1 (10:18 AM ET). Two separate waiters
+("start GX when no queue runs" and fc100/c30) could race for the same gap, so one waiter runs them in order, one queue at a time:
+
+1. **Gate G1 ends:** an ok `RESULT.json` for `8aG1s401*-10M-s401` (any spill letter), or the futility waiter logged the s401 skip, or
+   `WORK\G1-DONE.txt` (manual release); and no G1 waiter, no queue runner and no `WORK\STOP` for 5 minutes in a row.
+2. **Test GX stage 1** (thread "Many experts, many layers test", queue `8aGX` from `src-8gx`, its card's step 3 exactly), unless
+   `WORK\GX-ON-MAC.txt` exists (stage 1 moved to the Mac). It needs `src-8gx\GX-SETUP-OK.txt`, written by the installer after that card's
+   setup steps 1-2 (experts branch `custom_io` at c1464d19b7, caps hash, `test_moe` ALL OK on CPU). If any job in its queue file ends without
+   an ok `RESULT.json` (a spill relaunch as `8aGXb` still counts), the chain **holds** until `WORK\GX-DONE.txt` exists, so a fixed GX goes
+   straight back on instead of waiting behind c30.
+3. **fc100** (addendum J). An out-of-memory run is a result, so the chain goes on either way.
+4. **c30** (addendum J), skipped if `WORK\B3-READY.txt` exists. Its accumulation is now **PT=32**, not 16: G1's 3M s401 spilled at
+   accum 4 and lost about half its speed, which costs far more than smaller passes do. The spill rule doubles 32 -> 64 -> 128.
+
+`WORK\STOP` holds the chain at every step; the waiter never removes it. Files: `after-g1/q8aPost_wait.ps1` (the waiter) and
+`after-g1/install_post_g1.ps1` (sets up `src-8gx`, copies the queue files and card templates, starts the waiter detached; it starts no GPU
+work). Both parse clean, and the waiter ran end to end in a mock PC (fake processes and clock) for five cases: normal, s401 skipped, GX on
+the Mac, GX failed then released, B3 ready (shown, mock only). Rough PC time after G1 (suggested, not measured): GX about 20-24 h (its card),
+fc100 about 1 h, c30 about 1-2 days. Starting needs Ben's go.
