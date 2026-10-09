@@ -171,7 +171,7 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   Nothing in the content changes.
 - Marks, arms and readout unchanged.
 
-## 11. Addendum F (2026-10-08, 8:20 PM ET, G1 running): GPU memory on the 16 GB PC
+## 11. Addendum F (2026-10-08, 8:18 PM ET, G1 running): GPU memory on the 16 GB PC
 
 - G1's first training run (6:32 PM ET, 3M s400, accumulation 2 = 128 rows per pass) spilled into Windows shared memory (4.2 GB shared on top of
   15.5 GB dedicated, 98% use at 106 W, speed falling from 0.97 to 0.57 updates/s by step 1,000). Per addendum D's rule it was stopped and
