@@ -228,7 +228,7 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   GPU back. Files are in `results/8a-g/pc-job-cards/`. Settings are unchanged from addendum H.
 - Marks, arms and readout otherwise unchanged.
 
-## 15. Addendum J (2026-10-09, 11:30 AM ET): jobs staged for the first PC gap after G1 (not part of G1's readout)
+## 15. Addendum J (2026-10-09, 11:05 AM ET): jobs staged for the first PC gap after G1 (not part of G1's readout)
 
 Asked by the big-run scorecard (coordinator relay, 11 AM ET). Both are **staged, not running**. Each starts only when Ben types go in the
 Mac chat and no queue runs. Cards and queue files are in `results/8a-g/pc-job-cards/after-g1/`.
