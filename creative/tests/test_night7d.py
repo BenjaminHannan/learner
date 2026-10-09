@@ -68,10 +68,14 @@ def test_sc_marks_and_verdict():
 
 
 def test_sc_scorecard():
-    m = N.sc_scorecard(28.2, 31.2, 0.4, True)          # gain 27.8 / 30.8 = 0.903
-    assert m['passes'] and not m['low'] and abs(m['ratio'] - 27.8 / 30.8) < 1e-9
-    assert not N.sc_scorecard(28.0, 31.2, 0.4, True)['passes']
-    assert not N.sc_scorecard(31.2, 31.2, 0.4, False)['passes']
+    n0, w1 = 100 / 256, 100 * 80 / 256                  # N' 1 of 256, W1 80 of 256 (s100): 0.9x needs 72.1 of 256
+    m = N.sc_scorecard(100 * 73 / 256, w1, n0, True)
+    assert m['passes'] and m['questions_short'] == 0 and not m['near_miss'] and not m['low']
+    m = N.sc_scorecard(100 * 72 / 256, w1, n0, True)    # ratio 0.899: one question short = near miss, met
+    assert m['questions_short'] == 1 and m['near_miss'] and m['mark2'] and m['passes'] and m['ratio'] < 0.9
+    m = N.sc_scorecard(100 * 71 / 256, w1, n0, True)    # two short: fails
+    assert m['questions_short'] == 2 and not m['mark2'] and not m['passes']
+    assert not N.sc_scorecard(w1, w1, n0, False)['passes']
     assert N.sc_scorecard(15.0, 31.2, 0.4, True)['low'] and not N.sc_scorecard(16.0, 31.2, 0.4, True)['low']
     assert N.sc_scorecard(5.0, 0.4, 0.4, True)['low'] and not N.sc_scorecard(5.0, 0.4, 0.4, True)['passes']   # no W1 gain to compare with
     ok, low, harm = N.sc_scorecard(31.2, 31.2, 0.4, True), N.sc_scorecard(10.0, 31.2, 0.4, True), N.sc_scorecard(31.2, 31.2, 0.4, False)

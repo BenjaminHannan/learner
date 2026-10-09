@@ -435,19 +435,26 @@ def sc_marks(harm_passes, c2_point, reach_point, sc_drop, w1_drop):
     return dict(harm=bool(harm_passes), first_try=f, reach32=r, passes=bool(harm_passes and f and r), proved_wrong=bool(sc_drop > w1_drop - 1.0))
 
 
-SC_SCORECARD = dict(source="big-run PLAN.md SCORECARD 10-09 row 5 (11:00 AM ET); set as SC's marks by the roadmap (097902443a, proved-wrong wording 5a1efd4d20) before any result. These govern the verdict; SC_MARKS are report only",
+SC_SCORECARD = dict(source="big-run PLAN.md SCORECARD 10-09 row 5 (11:00 AM ET); set as SC's marks by the roadmap (097902443a, proved-wrong wording 5a1efd4d20, near-miss rule 10-09 11:21 AM ET) before any result. These govern the verdict; SC_MARKS are report only",
                     gain="gain = C2 DEV first try minus N' first try (points); ratio = SC gain / W1 gain (W1 = the same night with hand-picked uniform skills replay)",
-                    passes="on BOTH parents: harm_measure(N' DEV hits, SC DEV hits) passes (in_dist drop <= 1.5, no family fires) and ratio >= 0.9 (stated by the roadmap as SC >= 28.1 on s100, >= 31.0 on s101)",
+                    passes="on BOTH parents: harm_measure(N' DEV hits, SC DEV hits) passes (in_dist drop <= 1.5, no family fires) and mark 2 is met",
+                    mark2="the 0.9x ratio governs (the roadmap's 28.1 / 31.0 floors were rounding). A shortfall of ONE question (one more right DEV answer would reach 0.9x, e.g. 72 of 256 on s100, ratio 0.899) counts as met under Ben's near-miss rule; short by two or more questions fails",
                     proved_wrong="harm fails on EITHER parent, or ratio < 0.5 on BOTH parents",
                     scope="this SC picks only its replay rows; the scorecard row also names nights and temperature, which this run does not let the model pick")
-SC_STATED_MIN = dict(s100=28.1, s101=31.0)   # the roadmap's written first-try floors (0.9x W1's gain over N'), cross-checked against the ratio in the report
 
 
-def sc_scorecard(sc_ft, w1_ft, n_ft, harm_passes):
-    """Pure. First-try percents for SC, W1 and N' -> the scorecard marks on one parent (low = ratio under 0.5, or no W1 gain to compare with)."""
+def sc_scorecard(sc_ft, w1_ft, n_ft, harm_passes, n=256):
+    """Pure. First-try percents for SC, W1 and N' on n DEV questions -> the scorecard marks on one parent. questions_short = how many more right answers SC
+    needs for ratio >= 0.9 (0 = met outright, 1 = near miss, counted as met); low = ratio under 0.5, or no W1 gain to compare with."""
     g_sc, g_w1 = sc_ft - n_ft, w1_ft - n_ft
     ratio = g_sc / g_w1 if g_w1 > 0 else float('nan')
-    return dict(gain_SC=g_sc, gain_W1=g_w1, ratio=ratio, harm=bool(harm_passes), ratio_ok=bool(ratio >= 0.9), low=bool(not ratio >= 0.5), passes=bool(ratio >= 0.9 and harm_passes))
+    if g_w1 > 0:
+        short = max(0, math.ceil(round((0.9 * g_w1 - g_sc) * n / 100, 9)))
+    else:
+        short = None
+    m2 = short is not None and short <= 1
+    return dict(gain_SC=g_sc, gain_W1=g_w1, ratio=ratio, harm=bool(harm_passes), questions_short=short, near_miss=short == 1, mark2=bool(m2), low=bool(not ratio >= 0.5),
+                passes=bool(m2 and harm_passes))
 
 
 def sc_scorecard_verdict(per_parent):
@@ -723,11 +730,10 @@ def screport(out, parents):
     res = {p: json.load(open(os.path.join(out, p, 'sc.json'))) for p in parents}
     pm = {p: {k: x['marks'][k] for k in ('harm', 'first_try', 'reach32', 'passes', 'proved_wrong')} for p, x in res.items()}
     ft = lambda x, a: 100 * x['c2_dev'][a]['first_try_right']
-    sp = {p: dict(sc_scorecard(ft(x, 'SC'), ft(x, 'W1'), ft(x, 'N'), x['marks']['harm']), SC_first_try=ft(x, 'SC'), W1_first_try=ft(x, 'W1'), N_first_try=ft(x, 'N'),
-                  in_dist_drop_vs_N=x['marks']['in_dist_drop_vs_N'], fired_vs_N=x['marks']['fired_vs_N'],
-                  stated_min=SC_STATED_MIN.get(p), at_least_stated=(ft(x, 'SC') >= SC_STATED_MIN[p]) if p in SC_STATED_MIN else None) for p, x in res.items()}
+    sp = {p: dict(sc_scorecard(ft(x, 'SC'), ft(x, 'W1'), ft(x, 'N'), x['marks']['harm'], x['c2_dev']['SC']['n']), SC_first_try=ft(x, 'SC'), W1_first_try=ft(x, 'W1'), N_first_try=ft(x, 'N'),
+                  in_dist_drop_vs_N=x['marks']['in_dist_drop_vs_N'], fired_vs_N=x['marks']['fired_vs_N']) for p, x in res.items()}
     rep = dict(parents=list(parents), per_parent=sp, verdict=sc_scorecard_verdict(sp), rules=SC_SCORECARD, recipe=SC_RECIPE,
-               stated_vs_ratio_disagree=[p for p, m in sp.items() if m['at_least_stated'] is not None and m['at_least_stated'] != m['ratio_ok']],
+               near_miss_on=[p for p, m in sp.items() if m['near_miss']],
                report_only_roadmap_marks=dict(label='report only (roadmap 097902443a): the original SC marks', rules=SC_MARKS, per_parent=pm, verdict=sc_verdict(pm)),
                tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], night=x['night'], selection=x['selection']) for p, x in res.items()})
     json.dump(rep, open(os.path.join(out, 'sc-report.json'), 'w'), indent=1)
