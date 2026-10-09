@@ -220,6 +220,8 @@ def main(argv=None):
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if hasattr(model, '_tk_spots'):         # tok_think: valid letters vs token spots the thinker saw in training (ratio = letters per spot)
+        result['tok_think'] = dict(letters=model._tk_letters, spots=model._tk_spots, ratio=round(model._tk_letters / max(model._tk_spots, 1), 4))
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib
