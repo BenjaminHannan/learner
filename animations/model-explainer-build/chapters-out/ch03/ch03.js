@@ -49,7 +49,7 @@ Kit.chapter('ch03', function (Ch) {
     const svg = S.svg();
     tok.forEach((b, k) => { const xc = L.cx(words[k].s); const a = S.arrow(svg, xc, 330, xc, 512, { color: C.soft, width: 4, head: 16 }); S.draw(a, S.capAt(0) + 0.5 + k * 0.2, 0.4); });
     const tag = S.text(c.illustration, { x: 160, y: 700, w: 1600, size: 34, color: C.soft });
-    S.show(tag, S.capAt(1));
+    S.show(tag, S.capAt(0) + 0.3);
     S.pulse(tok[0], S.capAt(1) + 0.2);
   });
 
@@ -308,8 +308,8 @@ Kit.chapter('ch03', function (Ch) {
   // ---------- s16: recap ----------
   Ch.scene('s16', function (S) {
     const c = S.c;
-    const cards = [C.reader, C.thinker, C.call].map((col, i) =>
-      S.box({ x: 160 + i * 540, y: 260, w: 500, h: 120, color: col, fill: '#FFFFFF', r: 14, border: 6 }));
+    const cards = c.cards.map((cd, i) =>
+      S.box({ x: 160 + i * 540, y: 260, w: 500, h: 120, color: C.reader, fill: '#FFFFFF', r: 14, border: 6, label: cd.label, sub: cd.sub, size: 36, subSize: 26 }));
     S.show(cards[0], S.capAt(0)); S.show(cards[1], S.capAt(1)); S.show(cards[2], S.capAt(2));
     const m = S.modelMap({ x: 100, y: 500, w: 1720, h: 190, highlight: 'reader' });
     const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
