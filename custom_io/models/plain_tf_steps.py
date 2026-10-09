@@ -103,6 +103,10 @@ class PlainTFSteps(PlainTF):
         dev = batch['prompt_ids'].device
         return dict(batch, prompt_ids=ids.to(dev), prompt_mask=(ids != PAD).to(dev))
 
+    def _set_front(self, batch, width):
+        """Hook for a front end that adds a per-char term to the prompt input embeddings (g8a plain_tf_steps_g with eg_embed). Called with the batch and the
+        sequence width at the start of loss() and generate(); a no-op here."""
+
     def _targets(self, batch):
         """-> ids [B, A] (target chars + EOS, PAD after), mask [B, A]."""
         enc = [self.vocab.encode(target_text(r, self.cap))[:self.cap + 12] + [EOS] for r in batch['rows']]
@@ -117,6 +121,7 @@ class PlainTFSteps(PlainTF):
         p, lens = batch['prompt_ids'], batch['prompt_mask'].sum(1)
         a, am = self._targets(batch)
         B, T, A = p.shape[0], p.shape[1], a.shape[1]
+        self._set_front(batch, T + 2 + A)
         seq = p.new_full((B, T + 2 + A), PAD)
         seq[:, 0], seq[:, 1:1 + T] = BOS, p
         r = torch.arange(B, device=p.device)
@@ -140,6 +145,7 @@ class PlainTFSteps(PlainTF):
         seq[:, 0], seq[:, 1:1 + T] = BOS, p
         r = torch.arange(B, device=p.device)
         seq[r, 1 + lens] = SEP
+        self._set_front(batch, seq.shape[1])
         pl = self.place_seq(batch, seq.shape[1])
         txt, queue, done = [''] * B, [[] for _ in range(B)], [False] * B
         for t in range(self.max_new):

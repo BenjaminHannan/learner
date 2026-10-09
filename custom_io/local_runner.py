@@ -12,7 +12,7 @@ hf: lines).
 
 Queue file lines: `NAME args...` = one `python -m custom_io.train --data WORK/data --big-data WORK/data_big
 --out WORK/results/QUEUE/NAME args...` run; `hf: NAME args...` = one `python -m custom_io.hf_baseline --data WORK/data
---out ... args...` run. `#` starts a comment; `# MEM 5000` sets the MiB a run needs free before it starts (default 5000;
+--out ... args...` run; `g8a: NAME args...` / `g8a-speed: NAME args...` / `g8a-data: NAME args...` = the 8a ladder's job, speed probe and data rebuild (custom_io/g8a/README.md). `#` starts a comment; `# MEM 5000` sets the MiB a run needs free before it starts (default 5000;
 a later `# MEM` line changes it for the lines after it); `# ENV KEY=VALUE` sets an environment variable for every run of the queue. Args are split like a shell does (shlex), so keep the
 single-quoted JSON of the Vast queue files. On MPS, --bf16 is dropped (bf16 autocast is cuda only) and --device mps is
 added; a pairing is only fair between runs on the same device, so a queue file should not be split across machines.
@@ -121,6 +121,9 @@ def queue_env(path):
     return env
 
 
+KIND_PREFIXES = ('hf', 'g8a-speed', 'g8a-data', 'g8a')        # longer names first: 'g8a:' must not swallow 'g8a-speed:'
+
+
 def parse_queue(path, work=None):
     """-> [(name, kind 'train'|'hf', args list, mem MiB)]. `{WORK}` inside a token (after shlex.split, so Windows backslashes survive) is the work dir."""
     runs, mem, seen = [], 5000, set()
@@ -134,8 +137,10 @@ def parse_queue(path, work=None):
                 mem = int(parts[1])
             continue
         kind = 'train'
-        if line.startswith('hf:'):
-            kind, line = 'hf', line[3:].strip()
+        for pre in KIND_PREFIXES:
+            if line.startswith(pre + ':'):
+                kind, line = pre, line[len(pre) + 1:].strip()
+                break
         toks = [t.replace('{WORK}', str(work)) for t in shlex.split(line)] if work is not None else shlex.split(line)
         name, args = toks[0], toks[1:]
         if name in seen:
@@ -151,6 +156,13 @@ def command(kind, args, work, out, device):
         args = [x for x in args if x != '--bf16']
     if device in ('mps', 'cpu') and '--device' not in args:
         args += ['--device', device]
+    if kind == 'g8a':           # one 8a rung x seed job (custom_io.g8a.job): its arms run one after another, results under OUT/<arm>/
+        return [sys.executable, '-m', 'custom_io.g8a.job', '--work', str(work / 'g8a'), '--local', '--out', str(out), '--skills', str(work / 'data'),
+                '--big-data', str(work / 'data_big'), '--data8a', str(work / 'data8a')] + args
+    if kind == 'g8a-speed':     # the 8a speed probe (custom_io.g8a.speed)
+        return [sys.executable, '-m', 'custom_io.g8a.speed', '--data', str(work / 'data'), '--out', str(out)] + args
+    if kind == 'g8a-data':      # rebuild the 8a own-text and web slices and check their hashes (custom_io.g8a.get_data); ARGS: --data-pool DIR [--own-xz DIR]
+        return [sys.executable, '-m', 'custom_io.g8a.get_data', '--work', str(work), '--out', str(out)] + args
     if kind == 'hf':
         return [sys.executable, '-m', 'custom_io.hf_baseline', '--data', str(work / 'data'), '--out', str(out)] + args
     return [sys.executable, '-m', 'custom_io.train', '--data', str(work / 'data'), '--big-data', str(work / 'data_big'),
