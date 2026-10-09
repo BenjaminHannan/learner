@@ -61,16 +61,16 @@ def get_caps(a, pdir):
     dev = [os.path.join(pdir, 'dev')] + ([a.big_data] if a.big_data and os.path.isdir(a.big_data) else [])
     own72 = a.own72 or (os.path.join(a.data8a, 'own72') if a.data8a else None)
     web30 = a.web30 or (os.path.join(a.data8a, 'web', 'slice_rung30.jsonl') if a.data8a else None)
-    pinned = a.caps_file or (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json') if not a.recompute_caps else None)
+    pinned = a.caps_file or (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json') if not (a.recompute_caps or a.cloze_long) else None)      # long-chunk rows (B3) outgrow G1's caps: recompute
     if pinned and a.scale == 1.0:       # addendum G: one set of caps for every rung and every box; a pool row that does not fit stops the job (checked below), nothing is cut
         caps = json.load(open(pinned))
     elif own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
-        gf = os.path.join(a.work, 'caps-global.json')
+        gf = os.path.join(a.work, 'caps-global-long.json' if a.cloze_long else 'caps-global.json')
         _locked(gf + '.lock')
         try:
             if not os.path.exists(gf):
                 t = time.time()
-                caps = CP.compute_global(own72, web30, dev, a.max_ans)
+                caps = CP.compute_global(own72, web30, dev, a.max_ans, cloze_long=a.cloze_long)
                 caps['compute_s'] = round(time.time() - t)
                 json.dump(caps, open(gf, 'w'), indent=1)
                 print('global caps', json.dumps(caps), flush=True)
@@ -108,7 +108,7 @@ def parse_accum(s, speed_json, rung):
 def get_pool(a, man_out_dir):
     """Build (or reuse) the pool dir of this rung and seed. Returns (dir, manifest)."""
     R = C.RUNGS[a.rung]
-    key = 'p%d-%s-s%d-a%d' % (R['own_rung'], R['web'], a.seed, a.max_ans)
+    key = 'p%d-%s-s%d-a%d%s' % (R['own_rung'], R['web'], a.seed, a.max_ans, '-L' if a.cloze_long else '')
     pdir = os.path.join(a.work, 'pools', key)
     os.makedirs(os.path.dirname(pdir), exist_ok=True)
     lock = pdir + '.lock'
@@ -136,7 +136,7 @@ def get_pool(a, man_out_dir):
         web = a.web or os.path.join(a.data8a, 'web', 'slice_%s.jsonl' % R['web'])
         ns = argparse.Namespace(rung=a.rung, seed=a.seed, out=pdir, own72=own72, own=None if own72 else [os.path.join(a.skills, 'train.jsonl')] + list(a.own_extra), web=web,
                                 dev=os.path.join(a.skills, 'dev'), max_ans=a.max_ans, allow_short=a.allow_short, keep_mix=not a.no_keep_mix, scale=a.scale,
-                                overlap_index=a.overlap_index, data_pool=a.data_pool)
+                                overlap_index=a.overlap_index, data_pool=a.data_pool, cloze_long=a.cloze_long)
         return pdir, P.build(ns)
     finally:
         os.remove(lock)
@@ -155,6 +155,7 @@ def main(argv=None):
     ap.add_argument('--own-extra', nargs='*', default=[], help='without own72: more own-row files PATH:WEIGHT')
     ap.add_argument('--caps-file', help='pinned caps json (default: g8a/caps_g.json, the addendum G caps)')
     ap.add_argument('--recompute-caps', action='store_true', help='size the caps from own72 + the rung30 slice instead of using the pinned file (needs a dated addendum first)')
+    ap.add_argument('--cloze-long', help='data_pool/cloze_long.py (or its folder): web rows with chunks up to 2,000 letters (B3); needs --recompute-caps or --caps-file (G1\'s pinned caps are too small)')
     ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')

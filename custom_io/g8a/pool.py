@@ -157,7 +157,28 @@ def schedule(rung, mean_row_pieces, n_rows, scale=1.0):
                 seen_pieces_actual=round(steps * BATCH * mean_row_pieces))
 
 
+def load_long(path):
+    """data_pool/cloze_long.py (the data thread's long-chunk builder, big-run REPLAN 10-09) by path: `path` is that file or the directory holding it."""
+    import importlib.util
+    f = os.path.join(path, 'cloze_long.py') if os.path.isdir(path) else path
+    spec = importlib.util.spec_from_file_location('cloze_long', f)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    m.PATH, m.SHA256 = f, sha256_file(f)
+    return m
+
+
+def web_rows(slice_path, seed, budget, stats, cloze_long=None):
+    """The web fill-in rows of a slice, in document order, until `budget` word pieces. cloze_long = path of cloze_long.py (or its folder): chunks get their own
+    ceilings (280 / 700 / 1300 / 2000 letters, 80 / 7 / 7 / 6% of pieces); otherwise the 8a rows (<= 280 letters). Rows carry '_np'."""
+    if cloze_long:
+        return load_long(cloze_long).cloze_rows_mixed(Z, Z.read_slice(slice_path), seed, budget, stats)
+    return Z.cloze_rows(Z.read_slice(slice_path), seed, budget, stats)
+
+
 def build(a):
+    global HYGIENE_PROMPT
+    HYGIENE_PROMPT = 2000 if getattr(a, 'cloze_long', None) else 400       # B3 trains on inputs up to 2,000 letters: an own row of 401-2,000 letters is not a broken row
     R = RUNGS[a.rung]
     pool = R['pool'] * a.scale
     own_total, web_total = pool * OWN_SHARE, pool * WEB_SHARE
@@ -178,12 +199,18 @@ def build(a):
         own_rows = n_rows
         web_budget = min(web_total, own_p * WEB_SHARE / OWN_SHARE) if a.keep_mix else web_total
         zs = Z.Stats()
-        for r in Z.cloze_rows(Z.read_slice(a.web), a.seed, web_budget, zs):
+        for r in web_rows(a.web, a.seed, web_budget, zs, getattr(a, 'cloze_long', None)):
             assert r['id'] not in ids, r['id']
             ids.add(r['id'])
             r.pop('_np')
             f.write(json.dumps(r) + '\n')
     web = zs.report()
+    long_ = getattr(a, 'cloze_long', None)
+    if long_:
+        CL = load_long(long_)
+        web['cloze_long'] = dict(file=os.path.basename(CL.PATH), sha256=CL.SHA256, mix=CL.MIX, buckets=getattr(zs, 'extra', {}))
+        DEVIATIONS[0] = 'cloze prompts up to %d chars incl. the blank (long-chunk mix %s, data_pool/cloze_long.py), blanked word %d..%d letters; model caps sized from the data (caps.json)' % (
+            max(c for c, _ in CL.MIX), json.dumps(CL.MIX), Z.WORD_MIN, Z.WORD_MAX)
     n_rows += web['rows']
     pieces = own_p + web['pieces']
     web_short = max(0.0, web_budget - web['pieces'])
@@ -286,6 +313,7 @@ def main(argv=None):
     b.add_argument('--allow-short', action='store_true')
     b.add_argument('--scale', type=float, default=1.0, help='DRY RUNS ONLY: multiply the pool and seen budgets (recorded in the manifest)')
     b.add_argument('--overlap-index')
+    b.add_argument('--cloze-long', help='data_pool/cloze_long.py (or its folder): web rows with chunks up to 2,000 letters (B3); default the 8a rows (<= 280)')
     b.add_argument('--data-pool', default='data_pool')
     n = sub.add_parser('nested')
     n.add_argument('small')
