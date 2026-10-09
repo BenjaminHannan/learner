@@ -334,3 +334,45 @@ Asked by the big-run thread (coordinator relays, 11:55-11:56 AM ET). New post-G1
   c30 about 2-3 days. The chain still skips only c30 if `WORK\B3-READY.txt` exists.
 - Waiter and installer updated (four src-b3 queues and cards); both parse clean; mock-PC runs give the order above for normal, B3-ready
   and GX-failed-then-released cases, and the installer mock sets up both folders and copies the four queues (shown, mock only).
+
+## 20. Addendum O (2026-10-09, 12:45 PM ET): chain version 2, B3 group 1 at 3M joins, GX split by seed
+
+Asked by the big-run thread (coordinator relay, 12:11 PM ET). Ben's go at 12:27 PM ET covered version 1 (addenda K-N), which is what the
+PC gets now. Version 2 installs only on his go on a new card, and only while version 1's waiter is still waiting for G1.
+
+- **Order (v2):** G1, then GX seed 400, fc100, g2c3, **B3 3M seed 400** (then its readout), GX seed 401 if GX seed 400 is alive, g2c3 seed
+  401 and **B3 3M seed 401** if B3 seed 400 is alive, g2c10, then c30. c30 runs earlier, in the gap, if B3's fixed code is not installed
+  when B3 is due; the chain then holds for it, or for `WORK\B3-SKIP.txt`.
+- **Alive rules (adopted by the big-run thread, 12:40 PM ET):** GX seed 400 is alive when GX minus G-B2 on pooled-5 is at least +0.5
+  (X1's +1.0 less the 0.5 hair) and X4 is not "fail" (`analyze_gx --seeds 400`). B3 seed 400 is alive when B3-1 is at least +1.0
+  (PLAN.md sec. 5: below +1.0, no seed 401). `WORK\GX-S401-GO.txt` / `GX-S401-SKIP.txt` and `B3-S401-GO.txt` / `B3-S401-SKIP.txt`
+  override the rules. A score that cannot be read starts no seed-401 run and says NEEDS ATTENTION.
+- **g2c3 seed 401 is added (default picked here):** B3 seed 401 needs its own plain partner on the same pool and caps (PLAN.md
+  substitution 4). It builds the seed-401 long-chunk pool, which B3 seed 401 then reuses.
+- **GX queues `8aGXs400` / `8aGXs401`:** the experts thread's two g8a lines, one per queue, unchanged. The jobs keep the names
+  `8aGX-3M-s400` / `-s401` that `analyze_gx` reads; a spill relaunch renames only the queue.
+- **B3 queue `8aB3G1s400` / `s401`:** arm B3, `--b2-extra '{"eg_embed": true}'` (B3_G1 already holds every switch), `--cloze-long`, `--caps-file
+  caps_b3.json`, accum B3=32 (a guess, unmeasured; spill rule 32, 64, 128). Code `src-b3r` is PR #56 with the round-cap fix below. Its
+  pair g2c3 runs from src-b3 (71299b1a47). Shown: the diff from 71299b1a47 to e070556ce5 only adds B3 (the arm, its job branch, the
+  LOOP_SWEEP hook, and tool_h1/b3 in the caps patch list), so the plain arm and the pool builder are the same code.
+- **Bug found before any B3 run (shown):** at e070556ce5, `caps.apply` sets every listed module's `CAP` to `plain_target`. Commit
+  ca4460b13d added tool_h1 and b3 to that list, so H1's round cap of 32 becomes 109 under caps_b3.json (and under caps_g.json).
+  `b3_capcheck.py` builds a tiny B3 after `caps.apply`, in train.py's order, and prints 109. It went to the PR #56 owner. The upgrade
+  refuses any B3 code whose cap is not 32, then runs test_g8a and test_b3_run on CPU.
+- **Readout `b3_readout.py`** (run by the waiter after each B3 run; its lines go into that queue's log). B3-1: pooled-5 minus g2c3's
+  (checks same pool hash, caps and seed). B3-2: loops:0 over full, chain-5, donor. B3-3: noexec program rows against intact. B3-4: H-a with
+  the loops:32 lesion, H-c, H-d, H-e flat 5, H-f, mean rounds by program length (1 against 11 steps: n_res is 11 under caps_b3, so there
+  are no 12-step rows; big-run thread, 12:40 PM ET), and 8-11 step chains at the own stop against loops:32 (from the checkpoint; no
+  training). B3-5: the held-out long rows (`long_dev.jsonl`, 1,360 rows, SHA-256 7ab9b5b9..., 340 per bucket). The dev splits stop at
+  280 letters (shown: caps_g.json, sized on own72 + slice + dev, has max_prompt 280), so they cannot fill the long buckets. B3-6: every
+  cap counter at the end of training and after the evals, plus the pool's rows_over_caps. Exit 0 alive, 3 dead, 2 cannot tell.
+  Shown: it runs end to end on a tiny real B3 (no Gemma) trained at e070556ce5, including the checkpoint part and the real long-dev file.
+- **PC fix to version 1 (shown):** on BensPC, test_moe's first test (`test_off_is_base`, weight bytes against gold made on another
+  machine's torch build) fails at the first weight. The installer now runs the other 8 tests after `caps.apply(caps_g)`; they pass here in
+  9 s. A setup folder left by a failed run is renamed aside, never deleted.
+- **Tests (mock PC only):** the waiter gives the expected order in 9 cases (normal, both seeds dead, X4 failed, late B3 code with c30 in
+  the gap, B3 skipped, GX on the Mac, unreadable scores, override flags, GX failed then released). The upgrade gives the expected result
+  in 5 cases (replaces a waiting v1, refuses a started v1, refreshes a running v2, sets up the fixed code, refuses a 109 cap).
+- **Rough PC time after G1 (suggested, unmeasured for B3):** GX seed 400 about 11 h, fc100 1-2 h, g2c3 about 2.4 h, B3 3M seed 400
+  12-26 h. If both are alive: GX seed 401 about 11 h, g2c3 seed 401 about 3 h, B3 seed 401 12-26 h. Then g2c10 about half a day and c30
+  2-3 days.
