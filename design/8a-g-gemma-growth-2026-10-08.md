@@ -363,7 +363,7 @@ PC gets now. Version 2 installs only on his go on a new card, and only while ver
   (checks same pool hash, caps and seed). B3-2: loops:0 over full, chain-5, donor. B3-3: noexec program rows against intact. B3-4: H-a with
   the loops:32 lesion, H-c, H-d, H-e flat 5, H-f, mean rounds by program length (1 against 11 steps: n_res is 11 under caps_b3, so there
   are no 12-step rows; big-run thread, 12:40 PM ET), and 8-11 step chains at the own stop against loops:32 (from the checkpoint; no
-  training). B3-5: the held-out long rows (`long_dev.jsonl`, 1,360 rows, SHA-256 7ab9b5b9..., 340 per bucket). The dev splits stop at
+  training). B3-5: the held-out long rows (`long_dev.jsonl`, 1,360 rows, 340 per bucket; SHA-256 8cf15f7b... at f1to6a 649c1e3fcb, rebuilt 1:03 PM ET because the first build, 7ab9b5b9..., had 9 of its 340 base prompts in the skills training set; swapped on the PC before any B3 run). The dev splits stop at
   280 letters (shown: caps_g.json, sized on own72 + slice + dev, has max_prompt 280), so they cannot fill the long buckets. B3-6: every
   cap counter at the end of training and after the evals, plus the pool's rows_over_caps. Exit 0 alive, 3 dead, 2 cannot tell.
   Shown: it runs end to end on a tiny real B3 (no Gemma) trained at e070556ce5, including the checkpoint part and the real long-dev file.
