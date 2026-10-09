@@ -21,7 +21,9 @@ Marks: `MARKS.md` (committed before the runs they judge; amendments dated at its
 `creative/consol.py`, `creative/consol_report.py`. Handoff and how to resume: `HANDOFF.md`. Screen A and the 256-update rerun used DEV only (s201, s202);
 the confirm adds the research loop's holdout, read once per learner. C2 test and labelled were never opened. Parents were rebuilt on the cloud CPU and
 are close to, not equal to, the research loop's (see MARKS.md). Times in ET. The confirm verdict was checked by an independent Opus judge, and every
-number in this file was re-derived from the raw files by a Haiku workflow.
+number in this file was re-derived from the raw files by a Haiku workflow. **Rule broken:** 4 of that workflow's 15 Haiku agents went over Ben's
+100k-token context limit (peak 133k; the literature workflow's 36 agents peaked at 78k). Every mismatch they reported was re-derived by a second
+agent and checked by me before any change. The 12 trained learners are kept outside git (`~/consol/C/`); their sha256 are in `confirm/LEARNERS.sha256`.
 
 ## Screen A: fresh dreams vs re-read rows (finished 5:30 PM ET)
 

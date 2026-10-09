@@ -5,7 +5,7 @@ Paste everything below the line. It stands alone; GPT cannot see the repo.
 ---
 
 I am training a tiny program-writing model and need a second opinion on one result. Please label every claim **shown** (follows from the numbers below),
-**suggested** (plausible, not shown) or **untested**. Keep to this small-model setting; do not generalise to large language models or to any other project.
+**suggested** (plausible, not shown) or **untested**. Keep to this small-model setting; do not generalise to large language models or to any other project. This is one of the small card/puzzle experiments; keep it separate from the larger "village" model, which is a different project and is not described here.
 
 ## The setup, in words
 
