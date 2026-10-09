@@ -78,3 +78,25 @@ Secondary numbers (reported, not pass/fail):
 ## Amendment 1 (2026-10-08 ET, after wave 1, before any candidate was built)
 
 Wave 1 (seed 0) left the ceiling rule at S_H(B0) = 84.52, just under 85, with the headline S_H and mark 1 needing S_H(T) >= 94.5. Ben chose to stop building and run the sealed check on B0, B0-nothinker and P0 only (R, T1, T2 not built). Marks 1-5 were never applied to a candidate. Mark 6 was evaluated only as a descriptive B0 vs B0-nothinker vs P0 comparison on pooled R5+R6 (RESULTS.md); there is no winner.
+
+## Amendment 2 (2026-10-08 ET, after the sealed check on B0/B0-nothinker/P0 and before any T1 or T2 step)
+
+Ben chose option C ("let it read lots of ordinary text first"). That is T2 = T1 + FineWeb-Edu pretraining, so T1 must be built first (as T2's base and as its control). Two one-change comparisons are reported separately: **T1 vs B0** (does the architecture help) and **T2 vs T1** (does the pretraining help). B0 is not used as T2's base because B0 trains answer-only.
+
+**Fresh scoring set FRESH-R7 (evaluation only).** R3-R6 are spent, and DEV/TEST (held-out TEACH kinds) cannot show the outside-set drop (B0 85.3 DEV vs 85.9 practised). No unused outside set exists in the repo (searched 2026-10-08). So agents write a new one before any T1/T2 training: 160 questions (who 20, what 24, which 20, where 24, why 20, when 24, how 28), made-up names, 1-2 sentence passages of 8-30 reader tokens like R5/R6, short answers only, the answer a contiguous verbatim word span of the passage (checked by code), each scored on source text and paraphrase = 320 rows. Deduplicated against TEACH train passages, R3-R6 and the FineWeb sample (no 8-word-gram overlap). sha256 of every file goes into `fresh_r7/MANIFEST.json` before training starts. It is evaluation data only: never trained on, never used to select anything. It is not GOLD-PRIVATE, reserved or blind. **It is run once, at the very end, on B0, T1, T1-nothinker and T2 (seeds 0, 1, 2 each).** A bug found after seeing R7 numbers voids and documents that run; nothing is re-tuned on R7.
+
+**Pretraining data and task (T2).** FineWeb-Edu pulled fresh through the HF dataset server (not the desmos-llm holdout files, which belong to another project). Chunks of 2-4 consecutive sentences; a word span of 1-3 words that occurs in two different sentences of the chunk is the recurring span; the passage is the chunk minus the sentence holding the second occurrence; the question is that sentence with the span blanked out; the target is `<that cloze sentence> ? <span>` (say-back plus answer, never cut: sentences over 120 characters are dropped, not truncated). Same reader -> thinker -> talker path as T1. No teacher model, no TEACH text. Then the same TEACH fine-tune as T1 (same 3000 updates, same 24,000-row subsample, same optimiser). N pretraining rows are chosen after a timing probe so the pretraining step fits a 30 minute wave and the state cache stays under 5 GB; check `df` shows >= 10 GB free before each launch.
+
+**Arms:** T1, T1-nothinker, T2 (seeds 0, 1, 2 each; seeds are not gated on DEV marks because the R7 comparison is the decision). T2 also gets a **T1-long** control (T1 trained for the same total number of updates as T2 on TEACH only), run only if T2 clears mark C1, to separate "FineWeb text" from "more updates".
+
+**Marks (fixed now):**
+- **C1 (decides whether pretraining helped):** mean over 3 seeds, S_R7(T2) - S_R7(T1) >= 3 points, paired bootstrap over rows 95% interval excluding 0, and the difference positive in every seed.
+- **C2 (decides whether the end result beats today's talker on the outside set):** S_R7(T2) - S_R7(B0) >= 5, same interval rule.
+- **C3 (architecture):** S_R7(T1) - S_R7(B0) reported with its interval; no pass mark.
+- **DEV marks from the original spec stay as written and are reported pass/fail:** T1 - B0 >= 5 on S, T1 - T1-nothinker >= 10, T2 - T1 >= 3. Expected: the +10 thinker mark may fail (B0's thinker adds only 2.2); that is reported, not tuned.
+- **Guards, all arms:** S_DEV(T2) >= S_DEV(T1) - 2; shuffled-thinker-state drop >= 20 points; thinker-off gap as above; <= 25M talker parameters; decode <= 50 ms per answer at batch 1 on the Mac CPU.
+- **Secondary, descriptive:** the T2 - T1 gain on R7 split into practised openers (who, what, which) and never-practised openers (where, why, when, how). This only bears on the two guesses (question types vs style shift) and any reading stays **suggested**.
+
+**What would prove C wrong:** C1 fails (T2 - T1 < 3 or the interval includes 0). That says FineWeb-Edu recurring-span pretraining does not close the outside gap on this set; it does not say which of the two guesses is true.
+
+**Compute and data rules unchanged:** Mac only, no GPU job, no Vast, no paid compute; TEACH + FineWeb-Edu only for training; no new teacher model; everything the model does is learned, hand-written code only prepares data and scores; no training target is truncated or answer-only for T1/T2.
