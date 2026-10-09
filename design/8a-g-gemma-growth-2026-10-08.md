@@ -190,7 +190,7 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
 - **Is the fix inside the run?** Shown before launch: the PC's code printed `36 35` and its `caps.py` hash matched. Not logged inside the run (the
   `caps` event prints 36 with or without the bug). Suggested: G1's B2 needs about 1.6x the memory per row and about 1.7x the compute per row of
   the bugged Vast run, which fits the larger thinker.
-- **Seed 401 spilled.** 3M s401 B2 (accumulation 4) reached 1.15 GB of shared GPU memory, and 500 updates took 1,169 s against 490 s for s400.
+- **Seed 401 spilled** (the restart below was replaced by addendum H). 3M s401 B2 (accumulation 4) reached 1.15 GB of shared GPU memory, and 500 updates took 1,169 s against 490 s for s400.
   The GPU showed 15.9 of 16.3 GB in use with Ben's desktop apps also on the card (inferred cause). Per addendum F it is stopped at update 9,000 and
   rerun from the start as queue 8aG1f. The partial run's files stay on the PC and count for nothing.
 - **Settings for the rest of G1 (set before these runs start):** 3M s401 at accumulation 8 for both arms; 10M at B2 16 and plain 8. This goes one
@@ -198,4 +198,18 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   only the bf16 summing order (256 rows per update either way). If a 10M B2 at 16 still spills, it stops and waits for a decision.
 - **Job cards:** the PC babysitter's cards are in `results/8a-g/pc-job-cards/`. The stall check reads the step count, because Windows does not refresh
   LastWriteTime on a file that is still open.
+- Marks, arms and readout unchanged.
+
+## 13. Addendum H (2026-10-09, 9:05 AM ET): 3M s401 is not restarted after all
+
+- **Change to addendum G:** 3M s401 is **not** stopped. It keeps running at accumulation 4, as 3M s400 did. Reasons: at 8:46 AM ET it was at
+  update 9,500 of 24,000 (shown, 1,170 s per 500 updates). Finishing it slowly needs about 9.4 h more for B2. A restart needs 24,000 updates
+  at accumulation 8, and the half-size micro-batches of this small model are likely slower per update too (suggested; not measured). So a
+  restart saves little or nothing, and it would need Ben's own go on the Mac. Keeping accumulation 4 also makes the two 3M seeds identical in
+  settings.
+- **10M jobs run in a new queue, 8aG1f** (`results/8a-g/pc-job-cards/8aG1f-pc.txt`). They use B2 at accumulation 16 and plain at 8, as set in
+  addendum G, with the start-memory gate lowered from 13,000 to 9,000 MiB so a busy desktop doesn't hold them back. WORK\STOP keeps them out of
+  the old queue. `q8aG1f_wait.ps1` runs detached on the PC: it waits for the 8aG1e runner to exit, moves STOP, starts 8aG1f, and swaps the job
+  cards (g1e to done, g1f installed). Nothing is stopped.
+- Estimates (suggested): 3M s401 done about 8:30 PM ET 10-09; the two 10M jobs follow at an untested speed, so the gate lands late Saturday ET.
 - Marks, arms and readout unchanged.

@@ -1,7 +1,7 @@
-job: g1e (Gate G1: 3M-s401, then 10M-s400, then 10M-s401, one at a time)
+job: g1f (Gate G1: 10M-s400, then 10M-s401, one at a time; started by q8aG1f_wait.ps1 when the 8aG1e runner exited)
 queue: 8aG1f
 next_queue: 8aG1g
-owner: Whole-model roadmap thread (Gate G1, spec design/8a-g-gemma-growth-2026-10-08.md addenda D-F)
+owner: Whole-model roadmap thread (Gate G1, spec design/8a-g-gemma-growth-2026-10-08.md addenda D-H)
 gpu: yes
 started: @STARTED@
 log: C:\Users\benja\custom-io\work\q8aG1f.log
@@ -14,7 +14,7 @@ alive: a python process whose command line contains Q-pc.txt (the queue runner)
 done_when: the log prints "queue Q-pc done"; then every WORK\results\Q-pc\<job>\RESULT.json says "status": "ok" (else report)
 on_spill: a custom_io.train process with shared GPU memory over 1024 MiB, or "CUDA out of memory" in an arm's stdout.txt:
   0. Guard: if SRC\custom_io\queue_local\<next_queue>-pc.txt (or a later letter) exists, someone already relaunched: report only.
-  1. Note the failing job (Q-3M-s401, Q-10M-s400 or Q-10M-s401) and arm (its B2 or PT folder).
+  1. Note the failing job (Q-10M-s400 or Q-10M-s401) and arm (its B2 or PT folder).
   2. New-Item WORK\STOP (the runner then starts nothing new).
   3. Stop by exact PID, after checking each command line: the custom_io.train process, its custom_io.g8a.job
      parent, and the custom_io.local_runner process whose command line has Q-pc.txt.
@@ -43,7 +43,7 @@ on_crlf: a hash, "expected" or MANIFEST error naming a data file, before any tra
   slice_rung30.jsonl fe28aa2e3d0f32aa8b5b5057d83d1d1e769efa70fc4ba70fb6d5739fc5bc997f
   own72_MANIFEST.json e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
 on_crash: report only (any other Traceback, an arm rc not 0, or the runner gone before done)
-max_restarts: 2 per job (count the 9 Oct 8:30 AM ET spill restart of 3M-s401 as its first)
+max_restarts: 2 per job
 next: nothing; the roadmap thread scores G1 when it ends
 never: change seeds, data, marks, steps, learning rate, the custom_io code or any setting not named above;
   never touch finished result folders or checkpoints; never run two G1 queues at once
