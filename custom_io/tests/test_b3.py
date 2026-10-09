@@ -105,6 +105,13 @@ import sys, torch
 from custom_io.data import CharVocab, Dataset, collate
 from custom_io.models import build
 sys.path.insert(0, sys.argv[3])
+if sys.argv[4:] == ['legacy']:      # this tree with 17a356e62's operand cells and tape width: the no-truncation audit raised them to 21 / 68 (1d69257a99)
+    import importlib
+    for name in ('custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3'):
+        mod = importlib.import_module(name)
+        for k, v in dict(CELLS=11, LE=40, SPAN_MAX=40).items():
+            if hasattr(mod, k):
+                setattr(mod, k, v)
 V = CharVocab.build([])
 rs = []
 for i in range(24):
@@ -126,14 +133,15 @@ torch.save(dict(losses=torch.stack(L), sd=m.state_dict()), sys.argv[1])
 '''
 
 
-def run_p(tree, model, out):
+def run_p(tree, model, out, *extra):
     env = dict(os.environ, PYTHONPATH=tree)
-    subprocess.check_call([sys.executable, '-c', P_SCRIPT, out, model, tree], cwd=tree, env=env)
+    subprocess.check_call([sys.executable, '-c', P_SCRIPT, out, model, tree, *extra], cwd=tree, env=env)
     return torch.load(out)
 
 
 def test_p_bit_identity():
-    """H1R's config: tool_h1 and b3 (no switches) here vs the code at 17a356e62, 50 steps, tiny CPU, caps not applied."""
+    """H1R's config: tool_h1 and b3 (no switches) here vs the code at 17a356e62, 50 steps, tiny CPU, caps not applied. The only intended differences,
+    CELLS 21 and LE 68 (no-truncation audit, 1d69257a99), are set back to 17a356e62's 11 and 40 on this side; everything else must match bit for bit."""
     with tempfile.TemporaryDirectory() as d:
         ref = os.path.join(d, 'ref')
         os.makedirs(ref)
@@ -142,7 +150,7 @@ def test_p_bit_identity():
         assert arc.wait() == 0
         a = run_p(ref, 'tool_h1', os.path.join(d, 'a.pt'))
         for model in ('tool_h1', 'b3'):
-            b = run_p(ROOT, model, os.path.join(d, 'b.pt'))
+            b = run_p(ROOT, model, os.path.join(d, 'b.pt'), 'legacy')
             assert all(torch.equal(x, y) for x, y in zip(a['losses'], b['losses'])), model
             assert a['sd'].keys() == b['sd'].keys() and all(torch.equal(a['sd'][k], b['sd'][k]) for k in a['sd']), model
             print(f'  {model}: 50 losses and {len(a["sd"])} tensors equal 17a356e62')
@@ -476,7 +484,12 @@ def child_caps():
     m.eval()
     with torch.no_grad():
         m.generate(b)
-    print(json.dumps(dict(ok=True, modules=len(checked), registers=zs[0] - 8, gen_width=g['gen'].shape[1], tape=m.tape)))
+    from custom_io.models import tool as TL
+    assert TL.CELLS == 21 and TL.LE == 68 and m.reader.place.num_embeddings >= TL.CELLS, (TL.CELLS, TL.LE, m.reader.place.num_embeddings)
+    assert m.cells(torch.zeros(2, m.d)).shape[1] == 2 * 21                                       # 20-character operands + EOS, both operands
+    big = '-9223372036854775808'
+    assert TL.entry('mul', big, big, big) == f'mul {big} {big} = {big}' and len(TL.entry('mul', big, big, big)) <= TL.LE        # no tape entry cut
+    print(json.dumps(dict(ok=True, modules=len(checked), registers=zs[0] - 8, gen_width=g['gen'].shape[1], tape=m.tape, cells=TL.CELLS, le=TL.LE)))
 
 
 def test_c_caps_reach_every_module():
@@ -484,25 +497,6 @@ def test_c_caps_reach_every_module():
     assert out.returncode == 0, out.stdout[-2000:] + out.stderr[-3000:]
     res = json.loads(out.stdout.strip().splitlines()[-1])
     print('ok caps: every defining module holds the caps value (%d names checked); B3 has %d registers, GEN width %d, tape %d' % (res['modules'], res['registers'], res['gen_width'], res['tape']))
-
-
-def test_c_cloze_defaults_unchanged():
-    """cloze_rows with the new long_share at its default gives the rows of the committed-before cloze.py byte for byte; long_share cuts long chunks."""
-    import types
-    from custom_io.g8a import cloze as Z
-    old = types.ModuleType('cloze_old')
-    old.__package__ = 'custom_io.g8a'
-    exec(compile(subprocess.check_output(['git', 'show', f'{BASE_SHA}:custom_io/g8a/cloze.py'], cwd=ROOT, text=True), 'cloze_old', 'exec'), old.__dict__)
-    rng = random.Random(1)
-    words = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'theta', 'iota', 'kappa', 'lambda']
-    docs = [dict(id=f'd{i}', text=' '.join(rng.choice(words) for _ in range(rng.randrange(80, 900))), token_count=500) for i in range(40)]
-    a, b = list(old.cloze_rows(docs, 7)), list(Z.cloze_rows(docs, 7))
-    assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True) and len(a) > 40 and max(len(r['prompt']) for r in a) <= 280
-    c = list(Z.cloze_rows(docs, 7, long_share=1.0))
-    assert max(len(r['prompt']) for r in c) > 1000 and max(len(r['prompt']) for r in c) <= 2000
-    half = list(Z.cloze_rows(docs, 7, long_share=0.5))
-    assert 280 < max(len(r['prompt']) for r in half) and any(len(r['prompt']) <= 280 for r in half)
-    print('ok cloze: default rows unchanged (%d rows), long_share 1.0 -> prompts up to %d letters' % (len(a), max(len(r['prompt']) for r in c)))
 
 
 def test_configs_and_job():
@@ -534,6 +528,8 @@ def test_configs_and_job():
 
 def main():
     global NAMES
+    from custom_io.tests import legacy_widths
+    legacy_widths.apply()
     from custom_io.models.tool import NAMES as N
     NAMES = N
     for name, fn in list(globals().items()):

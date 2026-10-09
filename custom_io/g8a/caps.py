@@ -76,7 +76,7 @@ def compute_rows(rows, progs=True):
     return mx
 
 
-def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print):
+def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print, cloze_long=None):
     """Caps for the whole ladder (addendum F d): the longest case in the LARGEST pool = all of own72 (the 30M rung's own rows contain the smaller rungs')
     plus every cloze row of the 30M web slice plus the dev splits. Every rung then uses these same caps, so N_RES, n_loops and the tables are identical."""
     from custom_io.g8a import cloze as Z, pool as P
@@ -92,14 +92,14 @@ def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print):
         if n % 200000 == 0:
             say('own rows measured', n, {k: mx[k] for k in TODAY})
     own_n = n
-    for r in Z.cloze_rows(Z.read_slice(web_slice), seed):
+    for r in P.web_rows(web_slice, seed, None, Z.Stats(), cloze_long):
         take(r, False)
         n += 1
     for r in _rows(dev_paths):
         take(r, True)
         n += 1
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
-    mx.update(rows=n, own_rows=own_n, source='largest pool: own72 (rung <= 30) + rung30 web slice (cloze seed %d) + dev' % seed)
+    mx.update(rows=n, own_rows=own_n, source='largest pool: own72 (rung <= 30) + rung30 web slice (%s, seed %d) + dev' % ('long-chunk cloze rows, data_pool/cloze_long.py' if cloze_long else 'cloze rows', seed))
     return mx
 
 
@@ -117,7 +117,7 @@ def report(caps, paths, progs=True):
 
 def apply(caps):
     """Patch the module globals. Call before building any Dataset / model, and before anything imports these names by value."""
-    import sys as _s
+    import importlib
     from custom_io import data
     from custom_io.models import progparse as pp, reader, plain_tf, plain_tf_steps
     caps = {k: max(int(caps.get(k, v)), v) for k, v in TODAY.items()}
@@ -136,10 +136,9 @@ def apply(caps):
     pp.N_NUM, pp.N_RES, pp.W_MAX = caps['n_num'], caps['n_res'], caps['w_max']
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
-    import importlib
     for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3', 'custom_io.english', 'custom_io.models.plain_lm'):
-        # 8b fix (g8b/README.md): import before patching. These modules are imported lazily (models.build), after train.py's apply(), so
-        # `_s.modules.get(name)` used to skip them and the Ledger kept N_REG 9 / GEN_MAX 8: 9 register tokens, GEN targets cut to 8 letters.
+        # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
+        # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
         m = importlib.import_module(name)
         for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt'], CAP=caps['plain_target']).items():
             if hasattr(m, k):

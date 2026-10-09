@@ -2,7 +2,7 @@
 import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
-from custom_io import data as D
+from custom_io import capcount, data as D
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
 from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
@@ -167,6 +167,7 @@ def main(argv=None):
                             lr=args.lr, betas=(0.9, 0.95), fused=device.type == 'cuda')
     jprint(event='start', model=args.model, cfg=cfg, n_params=model.n_params(), device=str(device), vocab=len(vocab), rows=len(rows))
     n, (lo, hi) = model.n_params(), SIZE_BAND
+    jprint(event='cap_hits', step=0, **capcount.snapshot())
     jprint(event='size', n_params=n, band=[lo, hi], inside=lo <= n <= hi, headroom_to_top=hi - n, vs_plain_tf_pct=round(100 * (n / PLAIN_TF_S - 1), 2))
 
     cap = args.minutes * 60 if args.minutes else None
@@ -203,7 +204,7 @@ def main(argv=None):
         run_loss += loss.detach(); run_n += 1
         if step % args.log_every == 0 or step == args.steps:
             last_loss = float(run_loss) / run_n
-            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0, 1),
+            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0, 1), cap_hits=capcount.snapshot()['total'],
                    **{k: round(float(v), 5) for k, v in aux.items()})
             run_loss, run_n = 0.0, 0
             if not math.isfinite(last_loss):
@@ -219,7 +220,8 @@ def main(argv=None):
         torch.cuda.synchronize()
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
-                  train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+                  train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={}, cap_hits=capcount.snapshot())
+    jprint(event='cap_hits', step=step, **result['cap_hits'])       # scorecard row 6: every count must be 0 (see custom_io/capcount.py)
     if hasattr(model, '_tk_spots'):         # tok_think: valid letters vs token spots the thinker saw in training (ratio = letters per spot)
         result['tok_think'] = dict(letters=model._tk_letters, spots=model._tk_spots, ratio=round(model._tk_letters / max(model._tk_spots, 1), 4))
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
@@ -247,6 +249,8 @@ def main(argv=None):
             write()
         if hasattr(model, 'extra_evals'):
             run_extra(model, args, device, amp, result)
+    result['cap_hits'] = capcount.snapshot()      # again after the final evaluations
+    jprint(event='cap_hits', step=step, final=True, **result['cap_hits'])
     write()
     jprint(event='done', steps=step, status=status, steps_per_s=round(result['steps_per_s'], 3), wall_s=round(result['wall_s'], 1),
            **{k: result[k] for k in ('peak_mem_mib', 'peak_reserved_mib') if k in result},

@@ -59,6 +59,7 @@ passes only) are the valid letters and token spots seen by run(); train.py write
 import math
 import numpy as np
 import torch
+from custom_io import capcount
 import torch.nn as nn
 import torch.nn.functional as F
 from custom_io.data import EOS, word_spans
@@ -212,10 +213,19 @@ class Ledger(Model):
             if len(self._spans) > 20000:
                 self._spans.clear()
             ns, ne, nv, ws, we = (np.zeros(n, np.int64) for n in (N_NUM, N_NUM, N_NUM, W_MAX, W_MAX))
+            n_found = 0
             for k, m in enumerate(pp.NUM_RE.finditer(prompt)):
+                n_found += 1
                 if k < N_NUM:
                     ns[k], ne[k], nv[k] = m.start(), m.end(), min(int(m.group()), 10 ** 18)
-            for k, (s, e) in enumerate(word_spans(prompt)[:W_MAX]):
+                    if int(m.group()) > 10 ** 18:
+                        capcount.hit('number_clipped')
+            if n_found > N_NUM:
+                capcount.hit('numbers_over')
+            sp = word_spans(prompt)
+            if len(sp) > W_MAX:
+                capcount.hit('words_over')
+            for k, (s, e) in enumerate(sp[:W_MAX]):
                 ws[k], we[k] = s, e
             hit = self._spans[prompt] = (ns, ne, nv, ws, we)
         return hit
@@ -479,6 +489,8 @@ class Ledger(Model):
                 op[i, s], A[i, s, list(ca)], Bm[i, s, list(cb)] = o, True, True
             mode[i], ans[i, list(t['ans'])], word[i, list(t['word'])] = t['mode'], True, True
             if t['mode'] == 2:
+                if len(r['answer']) > GEN_MAX:
+                    capcount.hit('gen_answer_over')
                 ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
         A[:, :, 0] |= ~A.any(-1)

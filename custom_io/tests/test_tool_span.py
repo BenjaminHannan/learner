@@ -4,6 +4,8 @@ stepping and bounds, the training labels, no look-ahead, every lesion and eval r
 copies 1-9 digit calculator results into the next call (and into the answer up to 6 digits; plain T1 copies nothing at 5+)."""
 import json, os, random, time
 import torch
+from custom_io.tests import legacy_widths
+legacy_widths.apply()      # T1SDR's 11 operand cells / 40-char entries, before CELLS / LE are imported by value
 from custom_io.data import Dataset, collate
 from custom_io.evalx import donor_eval, evaluate
 from custom_io.models.tool import LE, N_RES, Tool, rand_digits

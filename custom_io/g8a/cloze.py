@@ -102,11 +102,9 @@ class Stats:
         return d
 
 
-def cloze_rows(docs, seed, max_pieces=None, stats=None, chunk_max=CHUNK_MAX, wmin=WORD_MIN, wmax=WORD_MAX, long_share=0.0, long_max=1999):
+def cloze_rows(docs, seed, max_pieces=None, stats=None, chunk_max=CHUNK_MAX, wmin=WORD_MIN, wmax=WORD_MAX):
     """Yield cloze rows from an iterable of {'id', 'text', 'token_count'} in file order, stopping before max_pieces (GPT-2 word pieces, the
-    document's own token_count spread over its chunks by characters). Every row carries '_np' = its share of the pieces (stripped when written).
-    B3 part C: long_share = the share of documents (a pure draw per seed and document id, no RNG state) cut into chunks of up to long_max letters (prompt <= 2,000
-    with the blank) instead of chunk_max; 0.0 (default) = exactly the rows above, byte for byte."""
+    document's own token_count spread over its chunks by characters). Every row carries '_np' = its share of the pieces (stripped when written)."""
     st = stats or Stats()
     for doc in docs:
         st.d['docs'] += 1
@@ -115,8 +113,7 @@ def cloze_rows(docs, seed, max_pieces=None, stats=None, chunk_max=CHUNK_MAX, wmi
             continue
         per_char = doc['token_count'] / max(len(text), 1)
         got = False
-        long_doc = long_share > 0 and pick(seed, doc['id'], 'long', 10 ** 6) < long_share * 10 ** 6
-        for i, ch in enumerate(chunks(text, long_max if long_doc else chunk_max)):
+        for i, ch in enumerate(chunks(text, chunk_max)):
             st.d['chunks'] += 1
             if not ch.isascii():
                 st.d['skipped_non_ascii'] += 1

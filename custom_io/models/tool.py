@@ -18,7 +18,7 @@ B2's own pointer-generator (vocabulary readout or copy attention over the contex
 argmax per cell up to the first EOS, reversed. So every digit of a call is written by a learned writer, never by str() of a value.
 Answer: B2's NUM mode (str(value of a slot)) is gone; those rows are GEN rows and the 9 registers write the answer with the same
 pointer-generator, copying from the prompt and the entries. WORD is unchanged.
-Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 40 chars), + tape_emb[k]; the thinker cross-attends to
+Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
 [prompt-number slots; entries written so far; prompt]. Teacher forcing (training): the entries are the gold calls with their results (the same
 text calc() returns for them, tested), revealed one round at a time, and the call writer is trained by -log p of the gold operand strings
 (either order for ADD MUL MIN MAX, as B2's pointer loss).
@@ -76,13 +76,14 @@ Size: 3,314,132 (unchanged)."""
 import math, random, re
 import numpy as np
 import torch
+from custom_io import capcount
 import torch.nn as nn
 from custom_io.data import EOS, PAD, UNK, word_spans
 from custom_io.models import progparse as pp
 from custom_io.models.ledger import Ledger, COMM, GEN_MAX, N_CTRL, N_NUM, N_REG, N_RES, OPS, R0, W_MAX, BIG
 
-CELLS = 11          # operand cells: up to 9 digits and a sign, then EOS
-LE = 40             # chars per tape entry
+CELLS = 21          # operand cells: the longest int64 string is 20 characters (-9223372036854775808), then EOS; was 11, which cut operands to 10 characters
+LE = 68             # chars per tape entry: 'MUL ' + two 20-char int64 operands + ' = ' + a 20-char result (was 40, which cut the result of long operands)
 NAMES = [o.lower() for o in OPS]
 INT_RE = re.compile(r'-?\d+')
 ENT_NUM = re.compile(r'-?\d+')       # number tokens of an entry (the calculator's own text): span-copy training labels only
@@ -104,7 +105,10 @@ def calc(op, a, b, swap=False):
 
 
 def entry(op, a, b, r):
-    return f'{op} {a} {b} = {r}'[:LE]
+    s = f'{op} {a} {b} = {r}'
+    if len(s) > LE:
+        capcount.hit('tape_entry_over')
+    return s[:LE]
 
 
 def rand_digits(rng, lo=1, hi=9):
@@ -122,6 +126,7 @@ class Tool(Ledger):
         self.tape = int(tape or N_RES)      # tape entries: T1's N_RES, or (B3 any_round) max(16, N_RES)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
                          w_noop=w_noop, wpos=wpos, copy=True, **kw)
+        assert self.reader.place.num_embeddings >= CELLS, f'operand cells need {CELLS} place rows (caps n_reg + 1 >= CELLS), the reader has {self.reader.place.num_embeddings}'
         self.LESIONS = list(Tool.LESIONS)
         for name in ('vcode', 'res_from_z', 'op_emb', 'q_a', 'q_b', 'q_ans', 'k_slot', 'ln_k'):
             delattr(self, name)
@@ -450,6 +455,8 @@ class Tool(Ledger):
         return hit
 
     def cell_ids(self, s):
+        if len(s) > CELLS - 1:
+            capcount.hit('operand_cells_over')
         e = self.vocab.encode(s[::-1][:CELLS - 1]) + [EOS]
         return e + [-100] * (CELLS - len(e))
 
@@ -509,6 +516,8 @@ class Tool(Ledger):
                 op[i, s], ca[i, s], cb[i, s] = o, self.cell_ids(sa), self.cell_ids(sb)
             mode[i], word[i, list(wd)] = md, True
             if md != 1 and not (dr and len(ans) > GEN_MAX):     # a drill answer longer than GEN's registers: no GEN target, never a cut one
+                if len(ans) > GEN_MAX:
+                    capcount.hit('gen_answer_over')
                 ids = self.vocab.encode(ans[:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
             tape.append(list(tp))

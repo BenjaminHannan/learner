@@ -13,6 +13,7 @@ The loss is the mean over all supervised characters of the batch, as in any lang
 """
 import math
 import torch
+from custom_io import capcount
 import torch.nn as nn
 import torch.nn.functional as F
 from custom_io.data import BOS, EOS, PAD, SEP
@@ -108,6 +109,7 @@ class PlainLM(PlainStepsG):
             else:
                 p = self.vocab.encode(r['prompt'])
                 ids = [BOS] + p + [SEP] + self.vocab.encode(target_text(r))[:pts.CAP + 12] + [EOS]
+                capcount.hit('plain_target_over', len(target_text(r)) > pts.CAP + 12)
                 starts.append(2 + len(p))   # first target char
             seqs.append((ids, starts[-1]))
         W = max(len(s) for s, _ in seqs)

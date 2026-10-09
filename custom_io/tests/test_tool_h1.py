@@ -7,6 +7,8 @@ its stop labels, the checkpoint round trip, the extra evals)."""
 import json, os, tempfile
 import torch
 import torch.nn as nn
+from custom_io.tests import legacy_widths
+legacy_widths.apply()      # T1SDR's 11 operand cells / 40-char entries, before CELLS / LE are imported by value
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, collate, load_rows
 from custom_io.models import build, load_model
 from custom_io.models import tool_h1 as H
