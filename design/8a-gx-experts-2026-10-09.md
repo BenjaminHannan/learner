@@ -170,3 +170,20 @@ the follow-up test, not a change to this one.
 - **Suggested, untested:** the M3 Pro is unlikely to be 4x faster than the M1 Pro, so it does not fit a GX run either.
 - The PC timing is still the section 10 estimate (untested); the card's 15-minute memory look will report the PC's real step speed.
 - Marks X1-X5 and D1-D5 unchanged.
+
+## 12. Addendum E (Fri Oct 9, 12:45 PM ET, before any run): run seed 401 only if seed 400 can still reach GO (roadmap thread's split; Ben's card)
+
+- **The rule (proposed by the roadmap thread, which runs the PC chain; it goes to Ben on a card):** stage 1 is split into queues 8aGXs400
+  and 8aGXs401 (same g8a lines, same job names). Seed 401 runs only if seed 400 has GX-3M minus G-B2 3M of at least +0.5 and X4 did not
+  fail; `WORK\GX-S401-GO.txt` forces it.
+- **Why it fits the marks (shown from sections 4 and 10):** GO needs X1 >= +1.0 on each seed with at most one hair use of 0.5, and an X4
+  fail rules GO out. So below +0.5 on seed 400, or with X4 failed, GO is already impossible, and seed 401 could only tell UNCLEAR from STOP.
+  Skipping it saves one PC run (about 10-12 h, suggested).
+- **Reading when seed 401 is skipped:** "not GO after one run". Stage 2 does not run. The report gives seed 400's difference and X2-X5. It
+  does not claim STOP or proved wrong, which need both seeds. `analyze_gx` (default seeds 400,401) already reads a missing seed as n/a and
+  never as GO; with seed 400 below +0.5 it prints UNCLEAR, which this addendum reads as "not GO after one run".
+- **Unchanged:** GO still needs both runs; marks X1-X5 and D1-D5; stage 2 rules.
+- **PC install check (shown by the roadmap thread on BensPC, CPU):** `test_off_is_base` fails there because the PC's torch build draws
+  different starting weights for the same seed (the first weight created already differs; the code is the same commit that passes on the
+  cloud CPU). The installer runs the other 8 tests. Same-machine identity of GX's shared weights with G-B2's is still checked on the PC by
+  `test_shared_weights_identical`, so the comparison with G1's PC runs stays like for like.
