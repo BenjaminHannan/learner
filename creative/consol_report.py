@@ -90,15 +90,32 @@ def screen_a(root, parents, steps=(32, 64, 128), last=128, a1_steps=(64, 128), d
     return res
 
 
+def holdout(out, arms, device='cpu'):
+    """The research loop's C2 holdout (512, creative/data/c2rl), ONE greedy pass per saved learner, per-question list kept: DIR/<arm>/holdout.json. Refuses to run twice."""
+    from creative import c2_stones, fastsleep as fs, rules_real as R
+    rows = c2_stones._with_nums(R.load_split('creative/data/c2rl', 'holdout'))
+    for arm in arms:
+        hp = os.path.join(out, arm, 'holdout.json')
+        if os.path.exists(hp):
+            raise RuntimeError(f'{hp} exists: the holdout is read once per learner')
+        m, vocab, _ = sleep.load_parent(os.path.join(out, arm, 'learner.pt'), device)
+        m.eval()
+        d, per = fs.dev_eval(m, rows, vocab, device)
+        _dump(dict(right=100 * d['right'], by_kind={k: 100 * v for k, v in d['by_kind'].items()}, per_q_right=[int(x) for x in per], n=len(rows)), hp)
+        print(out, arm, 'holdout', round(100 * d['right'], 2), flush=True)
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
-    a.add_argument('cmd', choices=('snaps', 'screenA'))
+    a.add_argument('cmd', choices=('snaps', 'screenA', 'holdout'))
     a.add_argument('--out'); a.add_argument('--arms', nargs='+', default=['rlc', 'fd']); a.add_argument('--steps', nargs='+', type=int, default=[32, 64])
     a.add_argument('--root'); a.add_argument('--parents', nargs='+', default=['s200', 's201']); a.add_argument('--threads', type=int, default=1)
     a = a.parse_args()
     torch.set_num_threads(a.threads)
     if a.cmd == 'snaps':
         snaps(os.path.expanduser(a.out), a.arms, a.steps)
+    elif a.cmd == 'holdout':
+        holdout(os.path.expanduser(a.out), a.arms)
     else:
         r = screen_a(os.path.expanduser(a.root), a.parents)
         _dump(r, os.path.join(os.path.expanduser(a.root), 'screenA.json'))

@@ -447,6 +447,8 @@ def cmd_run(a):
         recs, res['finds'] = _cached_finds(N, ctx, out, a.parent_dir, a.n_held)
         res['seconds']['finds'] = round(time.time() - t1, 1)
         save()
+        if a.prepare:       # nights cached in OUT/finds.pkl (and N's measures); no sleep
+            return res
         inputs, lo, hi = replay.experience(ctx.pool)
         if a.arm == 'rlc':
             rec_source = fixed_replay(recs, a.seed, inputs, lo, hi)
@@ -535,7 +537,7 @@ def main(argv=None):
         if name == 'run':
             s.add_argument('--updates', type=int, required=True); s.add_argument('--batch', type=int, default=1024); s.add_argument('--lr', type=float, default=1e-3)
             s.add_argument('--check-every', type=int, default=16); s.add_argument('--save-at', default=''); s.add_argument('--self-stop', action='store_true')
-            s.add_argument('--micro', type=int, default=256)
+            s.add_argument('--micro', type=int, default=256); s.add_argument('--prepare', action='store_true')
         else:
             s.add_argument('--grid', default='0.25,0.5,0.75,1.0'); s.add_argument('--max-drop', type=float, default=1.0)
     a = p.parse_args(argv)

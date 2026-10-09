@@ -110,3 +110,22 @@ reaches 71.2 (two-parent mean `fd` C2: 35.7, 48.2, 61.1 at 32, 64, 128). Per the
   only**, from the end of the full schedule: the smallest of {256} at which the two-parent mean `fd` C2 DEV is at least 71.2 and harm_measure passes
   on both parents. If 256 misses 71.2, the confirm's C2 mark is expected to fail and is run anyway as the honest test of the 256-update recipe.
 - "Within 2 points" in the fall-back rule is one-sided (the same wording as A2): `fd` may be better than `rlc` by any amount.
+
+## Result of the 256-update rerun and the confirm's exact procedure (10-08 about 9:40 PM ET; written before any confirm run, and before the holdout was read for any learner)
+
+256-update `fd`, DEV: s201 C2 81.25, s202 75.39 (two-parent mean 78.3 >= 71.2); harm_measure passes on both (in_dist +0.99, +0.92 over N, no family fires).
+So **U\* = 256**, and 256 is under half the research-loop sleep's updates on both (576 and 558 by 80 x rows / 512 on our own nights: 288 and 279).
+
+Confirm, as run (this supersedes any looser wording above):
+- Parents s200-s205, each N rebuilt on this CPU. Arms per parent: `fd` (256-update schedule, batch 1,024, `--self-stop`: a check every 32 updates on the 128
+  held practice questions' fit rate; stop when two checks in a row fail to beat the best, a tie does not beat it; the best state is kept) and `rp`
+  (the control: batch 512, the same skills rows as `fd`, as many updates as `fd` actually ran, not as many as it kept).
+- All six `fd` runs are fresh, including s201 and s202 (their Screen A reruns used no stop rule and, on s201, a tie at update 256 means the stop rule would keep the
+  update-224 state). Runs use 2 threads each, two runs at a time, not the Screen A runs' 1 thread; results can differ from Screen A's by float order only.
+- Holdout (`creative/data/c2rl/holdout.jsonl`, 512): one greedy pass per learner, after all runs of that parent are finished, written once (`holdout.json`; the script refuses to run twice).
+  Mark 1 is the mean of the six `fd` holdout first-try scores, point estimate, >= 71.3. The research-loop sleep is NOT re-run in this confirm, so 71.3 is the stored
+  number from its own (near-copy) parents, not a paired baseline; the paired baseline is PC job 1 if Ben runs it.
+- Mark 2 per parent: updates_done <= 256 and <= 0.5 x (80 x (finds + chain records) x 4 / 512) of that parent's own night.
+- Mark 3 per parent: harm_measure(N, `fd`) passes on the skills DEV in_dist (34 x 200 rows). Mark 4: pooled over the six parents, `fd` - N in_dist point > 0 and its paired 95% bootstrap interval
+  (over rows, parent-stacked) lower end > 0; transfer label only if `fd` - `rp` is also above 0 with its interval above 0, as written above.
+- Report only: harm vs the raw B2 parents, C2 DEV, per-kind scores, CPU seconds, the `rp` numbers.
