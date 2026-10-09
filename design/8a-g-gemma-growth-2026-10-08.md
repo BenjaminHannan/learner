@@ -227,3 +227,23 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   waits for 10M s400 to finish, then runs `g1_futility.py` (exit 3 = skip). Any error in the check starts seed 401, so a fault never holds the
   GPU back. Files are in `results/8a-g/pc-job-cards/`. Settings are unchanged from addendum H.
 - Marks, arms and readout otherwise unchanged.
+
+## 15. Addendum J (2026-10-09, 11:30 AM ET): jobs staged for the first PC gap after G1 (not part of G1's readout)
+
+Asked by the big-run scorecard (coordinator relay, 11 AM ET). Both are **staged, not running**. Each starts only when Ben types go in the
+Mac chat and no queue runs. Cards and queue files are in `results/8a-g/pc-job-cards/after-g1/`.
+
+- **fc100, the 100M fit check, part A (about 1 h).** G1's code and pool. The dense ledger thinker at the planned 100M shape: 21 blocks x 512,
+  12 rounds, Gemma input. Three runs of 60 updates at gradient accumulation 64, 128 and 256 (4, 2 and 1 rows per pass). It reports
+  updates per second, peak and reserved memory, and any shared-memory spill. **It does not cover** H1's learned stop with round
+  checkpointing, 2,000-letter rows, or the larger caps, because B3's code and the long-chunk pool don't exist yet. Those parts still need
+  their own check on B3. The big-run thread decides whether part A is worth its hour or should wait for B3.
+- **c30, the G-PT 30M control (about 1-2 PC days, not measured).** G1's plain arm at the 30M rung, seed 400 only (kill-first), with the same
+  code and pinned caps. The job builds the 30M pool (own rung 30 + web rung30 slice) first, because 3M and 10M share a smaller pool.
+  Steps follow the pool schedule: max(24,000, 600M seen pieces / (256 x mean row pieces)), about 55,000 if rows average 42 pieces as at
+  3M (suggested). Gradient accumulation for the plain arm is staged at 16. It is set from G1's 10M-s400 plain-arm peak memory before launch,
+  and the spill rule doubles it up to 32. Mark (big-run scorecard row 3, theirs): B3's 10M-to-30M gain minus this control's gain over
+  G-PT 10M s400 must be >= +1.0 on one seed, kill-first; <= 0 proves it wrong. B3 group 1 goes first if it is ready.
+- **Cap-hit counters for G1 (scorecard row 6).** Shown for the 3M/10M s400 pool: its `caps_report.json` gives `rows_over_caps` 0 for every cap,
+  on the 1,655,902 train rows and on the dev splits with programs. `g8a.job` exits instead of cutting a row that touches a cap. The s401 pool
+  writes the same report; it gets read when its results are collected.
