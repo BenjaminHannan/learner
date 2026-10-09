@@ -108,3 +108,25 @@ seeds. Else UNCLEAR. **Proved wrong:** 2-seed mean of D1's difference <= -1.0.
 - Stage 1 STOP / proved wrong: the big run stays dense; experts drop off the list for this thinker (the deep version is not run).
 - Stage 1 GO, stage 2 GO: the big-run thread weighs an expert thinker (needs 6 seeds and Ben's yes; the big run is dense today).
 - Stage 1 GO, stage 2 not GO: experts help only the shallow thinker; dense stays for the deep big-run thinker.
+
+## 8. Addendum A (Fri Oct 9, 10:40 AM ET, before any build finished or any run): Ben's "used about evenly"
+
+Ben, 10:18 AM ET (project chat, right after his ask): "and ensure they get used about evenly". Changes, made before any run:
+
+- **Design: a balancing nudge on top of the balance loss** (the method DeepSeek-V3 uses to keep experts evenly used). Each expert layer
+  keeps 52 balancing numbers (one per expert, start 0). The router picks its 8 experts by score + balancing number; the weights given to
+  the picked experts still come from the plain router scores, so the nudge changes who is picked, not how much they count. After every
+  training pass, each block's numbers move by 0.001: down for experts picked more than average in that pass (all rounds), up for those
+  picked less. The numbers change only while learning, never while answering, and are saved with the model (104 numbers at 3M, 416 at
+  10M; not trained by gradient, so not in the trained counts; disclosed). The balance loss (weight 0.01) stays. Both are part of how the
+  model learns; nothing is picked by hand at run time.
+- **Mark X4 is replaced by (applies to D3-D5 too):**
+  **X4 (used about evenly, and every expert trains):** in every block, over all rounds on the dev in_dist rows, every one of the 52
+  experts gets between half and double an even share of the picks (an even share is 1/52 of picks, about 1.9%). Hair rule: on a screen,
+  up to 2 experts per block may fall in [0.4, 0.5) or (2.0, 2.5] x even share if everything else passes; disclosed. An expert that is
+  picked is an expert that gets gradient, so this also shows every expert trains. A model that fails X4 is reported as "experts not
+  evenly used" and cannot be GO, whatever its score.
+- **Measured and reported:** each expert's share per block and per round (dev rows); the training log every 500 updates (`moe_top` =
+  the busiest expert's share x 52, `moe_low` = the least used x 52, `moe_lb`); the balancing numbers at the end.
+- The old "one expert taking a big share is allowed" note is withdrawn: Ben asked for even use.
+- Header time corrected: the spec above was written about 10:30 AM ET, not 10:45.
