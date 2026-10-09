@@ -505,6 +505,33 @@ def test_c_cloze_defaults_unchanged():
     print('ok cloze: default rows unchanged (%d rows), long_share 1.0 -> prompts up to %d letters' % (len(a), max(len(r['prompt']) for r in c)))
 
 
+def test_configs_and_job():
+    """configs.b3_cfg: 3M = B2's S shape, 10M / 30M block counts to the target, 100M = width 512 / 8 heads / mlp 4.8 / 21 blocks; train_args and job.py take arm B3."""
+    from custom_io.g8a import configs as C
+    c3, c100 = C.b3_cfg('3M'), C.b3_cfg('100M')
+    assert {k: c3[k] for k in ('d', 'n_heads', 'blocks', 'reader_layers', 'mlp')} == dict(d=256, n_heads=4, blocks=2, reader_layers=2, mlp=4.8)
+    assert all(c3[k] == v for k, v in C.B3_G1.items()) and c3['n_loops'] == 8
+    assert {k: c100[k] for k in ('d', 'n_heads', 'blocks', 'mlp')} == dict(d=512, n_heads=8, blocks=21, mlp=4.8) and C.RUNGS['100M']['pool'] == 'not built'
+    for r in ('10M', '30M'):
+        c = C.b3_cfg(r)
+        assert abs(C.check_b3(r, c) / C.RUNGS[r]['target'] - 1) <= C.RUNGS[r]['band']
+    sz = C.b3_sizes(c3)
+    assert sz['frozen_gemma'] == 271_002_624 and sz['whole'] == sz['trained'] + sz['frozen_gemma']
+    a = C.train_args('3M', 'B3', 400, 10, '/d', b2_extra={'tok_think': True})
+    assert a[a.index('--model') + 1] == 'b3' and json.loads(a[a.index('--cfg') + 1])['tok_think'] is True
+    assert 'B3' in C.ALL_ARMS and 'B3' not in C.ARMS and set(C.LADDER) == {'3M', '10M', '30M'}
+    for row in C.table():            # the 8a table is unchanged: no B3, no 100M
+        assert row['rung'] in C.LADDER and row['arm'] in C.ARMS
+    import argparse
+    from custom_io.g8a import job
+    try:
+        job.get_pool(argparse.Namespace(rung='100M', seed=1, work='/nonexistent', max_ans=8), '/x')
+        raise AssertionError('100M pool must be refused')
+    except AssertionError as e:
+        assert 'not built' in str(e)
+    print('ok configs: 3M %s trained, 100M %s trained, arm B3 in train_args, 100M pool refused' % (f"{C.n('b3', c3):,}", f"{C.n('b3', c100):,}"))
+
+
 def main():
     global NAMES
     from custom_io.models.tool import NAMES as N
