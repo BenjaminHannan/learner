@@ -29,7 +29,7 @@ K, TAU, OLD, N_STEPS = 16, 0.05, 512, pp.N_RES              # arm M's notebook: 
 N_FEAT = K + 3 + N_STEPS                                      # 16 sims + 3 vote shares + step one-hot = 26
 N_CONT = K + 3                                                # the continuous features (standardised)
 HIDDEN = 16
-TRAIN = dict(steps=600, lr=0.03, seed=0, hidden=HIDDEN)       # full-batch Adam on the cached rows
+TRAIN = dict(steps=600, lr=0.03, seed=0, hidden=HIDDEN)       # full-batch Adam on the cached rows; fixed by the roadmap's D6 ruling 10-09 (no tuning on DEV or after a result)
 HAND = dict(fs.MEMORY_C2B[1])                                 # H = today's gate (c 50, theta 0.9, cal 0.99, old 512, ans 0)
 
 MARKS = {
@@ -355,7 +355,7 @@ def skills_sets(rows):
 
 # ---------------------------------------------------------------- one parent
 def gate_parent(nprime, out, s1dir, s3dir, skills_train, skills_data, seed=0, dev_limit=None, skills_limit=None, max_records=None, practised_limit=None, device='cpu', name=None,
-                resume=True, log=_log, loo='self', train_cfg=TRAIN, old=OLD):
+                resume=True, log=_log, loo='question', train_cfg=TRAIN, old=OLD):
     """One parent's screen. DIR/<name>/gate.json is written after every stage; the gate, each model's scores and the practised reach are cached (pickles keyed on N's hash, the limits and the
     gate's weights), so a rerun resumes. Smoke-only limits (dev_limit, skills_limit, max_records, practised_limit) are recorded in the JSON."""
     nprime = os.path.expanduser(nprime)
@@ -521,7 +521,7 @@ if __name__ == '__main__':
     q = sub.add_parser('run'); q.add_argument('--nprime', nargs='+', required=True); q.add_argument('--s1', required=True); q.add_argument('--s3', required=True)
     q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True)
     q.add_argument('--dev-limit', type=int, help='smoke only'); q.add_argument('--skills-limit', type=int, help='smoke only'); q.add_argument('--max-records', type=int, help='smoke only')
-    q.add_argument('--practised-limit', type=int, help='smoke only'); q.add_argument('--loo', default='self', choices=['self', 'question'])
+    q.add_argument('--practised-limit', type=int, help='smoke only'); q.add_argument('--loo', default='question', choices=['question', 'self'], help='question (roadmap D6 ruling 10-09): drop every note of the record\'s source question; self: only its own entries')
     q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true'); q.add_argument('--seed', type=int, default=0)
     q = sub.add_parser('report'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     a = a.parse_args()
