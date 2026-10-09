@@ -100,3 +100,12 @@ Ben chose option C ("let it read lots of ordinary text first"). That is T2 = T1 
 **What would prove C wrong:** C1 fails (T2 - T1 < 3 or the interval includes 0). That says FineWeb-Edu recurring-span pretraining does not close the outside gap on this set; it does not say which of the two guesses is true.
 
 **Compute and data rules unchanged:** Mac only, no GPU job, no Vast, no paid compute; TEACH + FineWeb-Edu only for training; no new teacher model; everything the model does is learned, hand-written code only prepares data and scores; no training target is truncated or answer-only for T1/T2.
+
+## Amendment 2b (2026-10-08 ET, after the timing probe and before the first real T1 step)
+
+Timing probe (T1, seed 0, Mac MPS, machine under load average ~10): 0.31 s per update, so ~15.5 min per 3000-update TEACH run. Fixed now, before any real training:
+- **T2 pretraining = 3000 updates** (batch 64, same optimiser and warm-up/cosine as the TEACH stage, ~5.3 passes over the 36,363 filtered FineWeb-Edu rows), then the unchanged 3000-update TEACH stage. Seeds 0-2 each use their own seed for both stages.
+- **T1-long = 6000 TEACH updates** (same optimiser, one warm-up/cosine over 6000), seeds 0-2, run only if C1 passes.
+- Waves: T1 and T1-nothinker first; T2 after. Jobs run at most two at a time because the Mac is memory-tight. A run whose wall-clock exceeds 30 min because of machine load is reported as such; nothing is changed to make it faster.
+- FRESH-R7 is scored exactly once, after every arm and seed has finished, by an eval script that refuses to run without `--final`. DEV is scored per run as in the harness.
+- Nothing above changes any mark in Amendment 2.
