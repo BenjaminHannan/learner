@@ -4,10 +4,10 @@ owner: Architecture ambiguities thread (spec and marks); scheduling by the big-r
 gpu: yes (mps)
 machine: the M3 Pro Mac when it arrives, or the M1 Pro once the experts test's (GX) stage 1 has finished there. ONE Mac for all four runs (a pairing is fair only on one device).
 start_when: Ben says go in that Mac's session. Never while another training job runs on that Mac. Re-ask Ben before each next step (2 and 3).
-paths: SRC = a NEW folder, e.g. ~/custom-io/src-8ag-tk: branch claude/project-thread-qtxfp4 at commit <PIN> exactly (git archive <PIN> | tar -x -C SRC; never "the pushed head", never edit another src folder)
+paths: SRC = a NEW folder, e.g. ~/custom-io/src-8ag-tk: branch claude/project-thread-qtxfp4 at commit 4171d83730db exactly (git archive 4171d83730db | tar -x -C SRC; never "the pushed head", never edit another src folder)
   WORK = ~/custom-io/work (new for this Mac unless the GX test already made one)
 setup:
-  1. Copy the branch at <PIN> into SRC. shasum -a 256 SRC/custom_io/g8a/caps.py must be 3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78 (compare ignoring case). Else stop, NEEDS ATTENTION.
+  1. Copy the branch at 4171d83730db into SRC. shasum -a 256 SRC/custom_io/g8a/caps.py must be 3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78 (compare ignoring case). Else stop, NEEDS ATTENTION.
   2. Env (cd SRC first; in every shell): export PYTHONPATH=SRC:<site-packages of a Python env with torch (mps) and transformers >= 5.19>
      export CUSTOM_IO_EG2=<local copy of EmbeddingGemma 2 at revision 914f7f89142e33e77833254d9c9b90c3cef7303b (custom_io/models/eg.py EG_REV)>. If the Mac has none: scp -r benspc:C:/Users/benja/eg2 ~/eg2 (ssh benspc), and check its config is that revision.
   3. Data, copied from the PC WORK (C:\Users\benja\custom-io\work), same bytes as G1's controls, so nothing is rebuilt (job.py get_pool reuses a pool whose MANIFEST.json and train.jsonl hash match):
