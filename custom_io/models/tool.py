@@ -79,7 +79,7 @@ import torch
 import torch.nn as nn
 from custom_io.data import EOS, PAD, UNK, word_spans
 from custom_io.models import progparse as pp
-from custom_io.models.ledger import Ledger, COMM, GEN_MAX, N_CTRL, N_NUM, N_RES, OPS, R0, W_MAX, BIG
+from custom_io.models.ledger import Ledger, COMM, GEN_MAX, N_CTRL, N_NUM, N_REG, N_RES, OPS, R0, W_MAX, BIG
 
 CELLS = 11          # operand cells: up to 9 digits and a sign, then EOS
 LE = 40             # chars per tape entry
@@ -116,15 +116,16 @@ class Tool(Ledger):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False,
-                 span_idx=False, span_end=False, ans_drill=0.0, **kw):
-        assert not kw.get('eg_embed') and not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
+                 span_idx=False, span_end=False, ans_drill=0.0, tape=None, **kw):
+        assert not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
         kw.pop('copy', None)
+        self.tape = int(tape or N_RES)      # tape entries: T1's N_RES, or (B3 any_round) max(16, N_RES)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
                          w_noop=w_noop, wpos=wpos, copy=True, **kw)
         self.LESIONS = list(Tool.LESIONS)
         for name in ('vcode', 'res_from_z', 'op_emb', 'q_a', 'q_b', 'q_ans', 'k_slot', 'ln_k'):
             delattr(self, name)
-        self.W_a, self.W_b, self.tape_emb = nn.Linear(d, d), nn.Linear(d, d), nn.Embedding(N_RES, d)      # created last
+        self.W_a, self.W_b, self.tape_emb = nn.Linear(d, d), nn.Linear(d, d), nn.Embedding(self.tape, d)      # created last
         for m in (self.W_a, self.W_b, self.tape_emb):
             nn.init.normal_(m.weight, std=0.02)
             if getattr(m, 'bias', None) is not None:
@@ -139,7 +140,7 @@ class Tool(Ledger):
         self.span_idx = bool(span_idx)
         assert self.span_copy or not self.span_idx, 'span_idx is a term of the span pointer keys'
         if self.span_idx:       # Amendment 5's single next change: created after every T1S module, zero (T1S at step 0)
-            self.e_s = nn.Embedding(1 + N_RES, dk)
+            self.e_s = nn.Embedding(1 + self.tape, dk)
             nn.init.zeros_(self.e_s.weight)
         self.span_end = bool(span_end)
         assert self.span_idx or not self.span_end, 'span_end is T1SI (span_copy + span_idx) + one table'
@@ -310,28 +311,29 @@ class Tool(Ledger):
         Kw, wvalid = self.word_keys(ws, we), we > ws
         if lesion != 'nowordc':
             Kw = Kw + self.word_content(X, ws, we)
-        kvx = [b.kv_of(X + self.src.weight[1]) for b in self.core]
+        Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)       # tok_think: token spots for the thinker's cross-attention only
+        kvx = [b.kv_of(Xk + self.src.weight[1]) for b in self.core]
         kvs0 = [b.kv_of(S0 + self.src.weight[0]) for b in self.core]
         if gold is not None and not self._full_tape:    # teacher forcing: only the entries the longest gold program writes, each as long as the longest
             K = max(1, int((gold['op'] > 0).sum(1).max()))
             texts, le = [row[:K] for row in gold['tape']], None
         elif gold is not None:                          # the same in the free-run layout (tests only)
-            K, texts, le = N_RES, [list(row) for row in gold['tape']], LE
+            K, texts, le = self.tape, [list(row) for row in gold['tape']], LE
         else:
-            K, texts, le = N_RES, [[''] * N_RES for _ in range(B)], LE
+            K, texts, le = self.tape, [[''] * self.tape for _ in range(B)], LE
         Xt, idt, mt, le = self.tape_of(texts, dev, le)
         ent = torch.arange(K * le, device=dev) // le                     # entry index of every tape position
         kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-        Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:9]]).expand(B, -1, -1)
+        Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:N_REG]]).expand(B, -1, -1)
         steps, calls, n = [], [[] for _ in range(B)], self.n_loops if loops is None else loops
-        shown = torch.zeros(B, N_RES, dtype=torch.bool, device=dev)     # entries the thinker may see now
+        shown = torch.zeros(B, self.tape, dtype=torch.bool, device=dev)     # entries the thinker may see now
         kvs_of = None
         for t in range(n):
             ts = min(t, self.n_loops - 1)
             vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
             if kvs_of is not kvt:                                       # rebuilt only when the tape changed (same values either way)
                 kvs, kvs_of = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)], kvt
-            mask = torch.cat([valid, vis, xm], 1)
+            mask = torch.cat([valid, vis, km], 1)
             Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
                 Z = torch.cat([Z[:, :2], torch.zeros_like(Z[:, 2:N_CTRL]), Z[:, N_CTRL:]], 1)
@@ -397,8 +399,8 @@ class Tool(Ledger):
         p, _ = self.gen_copy(R, Xc, mc, idc, lesion == 'nocopy')
         span = None
         if self.span_copy:
-            assert Xt.shape[1] % N_RES == 0
-            T, le = X.shape[1], Xt.shape[1] // N_RES
+            assert Xt.shape[1] % self.tape == 0
+            T, le = X.shape[1], Xt.shape[1] // self.tape
             span = self.span_read(self.ptr(state[6], self.span_keys(Xc, T, le, mc), mc), idc, mc, T, le)
         out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'], span=span)
         return (out, modes) if return_modes else out
@@ -498,7 +500,7 @@ class Tool(Ledger):
         B, L = len(rows), N_RES
         op = np.zeros((B, L), np.int64)
         ca, cb = np.full((B, L, CELLS), -100, np.int64), np.full((B, L, CELLS), -100, np.int64)
-        mode, word, gen = np.zeros(B, np.int64), np.zeros((B, W_MAX), bool), np.full((B, 9), -100, np.int64)
+        mode, word, gen = np.zeros(B, np.int64), np.zeros((B, W_MAX), bool), np.full((B, N_REG), -100, np.int64)
         tape = []
         golds = golds or [self.row_gold(r) + (r['answer'], False) for r in rows]
         for i, r in enumerate(rows):
@@ -577,8 +579,8 @@ class Tool(Ledger):
         lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
         return dict(span_call=ls['span_call'], span_ans=lsn, stop=ls['stop'], span_share=ls['span_share'])
 
-    def call_loss(self, steps, g, B):
-        """The call writer's losses over the call rounds: op CE (NOOP rows weighted w_noop) and -log p of the gold operand strings."""
+    def call_loss(self, steps, g, B, ops=True):
+        """The call writer's losses over the call rounds: op CE (NOOP rows weighted w_noop; ops=False: B3 any_round computes it itself) and -log p of the gold operand strings."""
         import torch.nn.functional as F
         dev = g['op'].device
         w_row = torch.where(g['has'], 1.0, self.w_noop)
@@ -588,7 +590,8 @@ class Tool(Ledger):
         sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
         for s, st in enumerate(steps):
             lg, p = st[0].float(), st[1]
-            lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row).mean()
+            if ops:
+                lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row).mean()
             lp = torch.log(p + 1e-6)
             la, lb = lp[:, :CELLS], lp[:, CELLS:]
             ta, tb = g['ca'][:, s], g['cb'][:, s]

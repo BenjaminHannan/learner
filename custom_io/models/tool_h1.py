@@ -85,10 +85,10 @@ class ToolH1(Tool):
         lop[:, 0] = 1e4
         st = (lop, torch.zeros(B, 2 * CELLS, self.reader.tok.weight.shape[0], device=dev))
         if self.span_copy and ref is not None:
-            T, le = ref['ids'].shape[1] - N_RES * ref['le'], ref['le']
-            st += (dict(la=torch.zeros(B, T + N_RES * le, device=dev), lb=torch.zeros(B, T + N_RES * le, device=dev), ga=torch.full((B,), -1e4, device=dev),
-                        gb=torch.full((B,), -1e4, device=dev), ids=torch.zeros(B, T + N_RES * le, dtype=torch.long, device=dev),
-                        m=torch.zeros(B, T + N_RES * le, dtype=torch.bool, device=dev), T=T, le=le),)
+            T, le = ref['ids'].shape[1] - self.tape * ref['le'], ref['le']
+            st += (dict(la=torch.zeros(B, T + self.tape * le, device=dev), lb=torch.zeros(B, T + self.tape * le, device=dev), ga=torch.full((B,), -1e4, device=dev),
+                        gb=torch.full((B,), -1e4, device=dev), ids=torch.zeros(B, T + self.tape * le, dtype=torch.long, device=dev),
+                        m=torch.zeros(B, T + self.tape * le, dtype=torch.bool, device=dev), T=T, le=le),)
         return st
 
     def p_stop(self, zf):
@@ -135,14 +135,24 @@ class ToolH1(Tool):
                     calls=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['calls'])], rounds=u)
 
     # ---- loss ----
+    def plan(self, g, B, dev):
+        """-> (call rounds [B, N_RES] or None, each row's last call round): T1's schedule, call k at round k + 1."""
+        return None, (g['op'] > 0).sum(1)
+
+    def run_tf(self, batch, n, g, sched, each):
+        return Tool.run(self, batch, n, gold=g, each=each)
+
+    def op_losses(self, o, g, B):
+        return self.call_loss(o['steps'], g, B)
+
     def loss(self, batch):
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         rows = batch['rows']
         sc = self.span_copy
         g = self.gold(rows, dev, self.train_golds(rows) if self.ans_drill else None)
-        L = (g['op'] > 0).sum(1)
+        sched, last = self.plan(g, B, dev)                                     # B3 any_round: the calls' rounds; here call k at round k + 1, last = L
         K = KS[int(torch.randint(len(KS), (1,)))]
-        n = max(K, int(L.max()) + 1)
+        n = max(K, int(last.max()) + 1)
         per = []
 
         def keep_round(t, st):            # `shown` changes in place each round, so this round's visible tape is taken now
@@ -150,8 +160,8 @@ class ToolH1(Tool):
             per.append((t, st['Z'], vis, st['Kw'], st['wvalid']))
             return False
 
-        o = super().run(batch, n, gold=g, each=keep_round)
-        lop, lcall, hits, tot = self.call_loss(o['steps'], g, B)
+        o = self.run_tf(batch, n, g, sched, keep_round)
+        lop, lcall, hits, tot = self.op_losses(o, g, B)
         T = batch['prompt_ids'].shape[1]
         Xc, idc = o['X'], o['ids']                                             # prompt + the (teacher-forced) tape, fixed over the rounds
         xmp = o['xm'][:, :T]
@@ -184,7 +194,7 @@ class ToolH1(Tool):
             lw = torch.where(g['mode'] == 1, -(torch.logsumexp(lword.masked_fill(~g['word'], -1e9), -1) - torch.logsumexp(lword, -1)), torch.zeros_like(lm))
             ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
             lg = (ce.sum(1) / n_t) * gmode
-            ok = (t >= L).float()
+            ok = (t >= last).float()
             row = lm + lw + lg
             if sc:
                 ln = r[4]
