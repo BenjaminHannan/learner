@@ -18,7 +18,7 @@ B2's own pointer-generator (vocabulary readout or copy attention over the contex
 argmax per cell up to the first EOS, reversed. So every digit of a call is written by a learned writer, never by str() of a value.
 Answer: B2's NUM mode (str(value of a slot)) is gone; those rows are GEN rows and the 9 registers write the answer with the same
 pointer-generator, copying from the prompt and the entries. WORD is unchanged.
-Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 40 chars), + tape_emb[k]; the thinker cross-attends to
+Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
 [prompt-number slots; entries written so far; prompt]. Teacher forcing (training): the entries are the gold calls with their results (the same
 text calc() returns for them, tested), revealed one round at a time, and the call writer is trained by -log p of the gold operand strings
 (either order for ADD MUL MIN MAX, as B2's pointer loss).
@@ -35,8 +35,8 @@ from custom_io.data import EOS, PAD, word_spans
 from custom_io.models import progparse as pp
 from custom_io.models.ledger import Ledger, COMM, GEN_MAX, N_CTRL, N_NUM, N_RES, OPS, R0, W_MAX, BIG
 
-CELLS = 11          # operand cells: up to 9 digits and a sign, then EOS
-LE = 40             # chars per tape entry
+CELLS = 21          # operand cells: the longest int64 string is 20 characters (-9223372036854775808), then EOS; was 11, which cut operands to 10 characters
+LE = 68             # chars per tape entry: 'MUL ' + two 20-char int64 operands + ' = ' + a 20-char result (was 40, which cut the result of long operands)
 NAMES = [o.lower() for o in OPS]
 INT_RE = re.compile(r'-?\d+')
 
@@ -55,7 +55,10 @@ def calc(op, a, b, swap=False):
 
 
 def entry(op, a, b, r):
-    return f'{op} {a} {b} = {r}'[:LE]
+    s = f'{op} {a} {b} = {r}'
+    if len(s) > LE:
+        capcount.hit('tape_entry_over')
+    return s[:LE]
 
 
 def rand_digits(rng, lo=1, hi=9):

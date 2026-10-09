@@ -52,6 +52,9 @@ def model_side(caps, model_name='ledger'):
     chk('reader.place table rows', m.reader.place.num_embeddings, max(16, c['n_reg'] + 1))
     chk('n_loops >= n_res + 1', m.n_loops >= c['n_res'] + 1, True)
     if model_name == 'tool':
+        from custom_io.models import tool as T
+        chk('tool.CELLS >= 21 (longest int64 string 20 chars + EOS)', T.CELLS >= 21, True)
+        chk('place table covers the calculator cells', m.reader.place.num_embeddings >= T.CELLS, True)
         # tool.py keeps register-count constants (9) inside its code; the cap-hit audit must read them, not the cap file
         import inspect
         src = inspect.getsource(importlib.import_module('custom_io.models.tool'))
