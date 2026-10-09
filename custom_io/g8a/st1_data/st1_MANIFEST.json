@@ -1,0 +1,116 @@
+{
+ "rule": "Rule (fixed, no hand picking): the kinds of the variant split (a kind = family id + held-out variant), in alphabetical order of family id, keeping the first\nthree that (a) have a generator that makes fresh question-and-answer rows, (b) appear in no training pool (own72 skills, the 200k skills train file, the\nbigger 1M build): a held-out variant is never trained on, with or without steps, and (c) the calculator tool can check (progparse builds a calculator program\nwhose result is the gold answer, on every dev row of the kind).\nFor each kind: 2,000 fresh question-and-answer pairs (no steps, no meta, no slots) and a separate 500-row evaluation file (dev-row format). Namespaces ST1T /\nST1E and seeds disjoint from the curriculum (1), the long file (424242) and the 8a seeds (400-405); prompts disjoint from every dev split, every training pool,\nthe long file and each other.",
+ "kinds": [
+  {
+   "family": "arith_bare",
+   "variant": "symbol",
+   "id": "arith_bare__symbol",
+   "train": {
+    "file": "st1_train_arith_bare__symbol.jsonl",
+    "rows": 2000,
+    "sha256": "d8b450721e4dfbad4375b71199631f60bfdba05fdbb2fb7d46d83422f6b08302",
+    "draws": 2956
+   },
+   "eval": {
+    "file": "st1_eval_arith_bare__symbol.jsonl",
+    "rows": 500,
+    "sha256": "00caef7be9f8fd517572c87dfbeefd174c2228147d9828f061d86796c324203a",
+    "draws": 755
+   }
+  },
+  {
+   "family": "backward_solve",
+   "variant": "think_of_number",
+   "id": "backward_solve__think_of_number",
+   "train": {
+    "file": "st1_train_backward_solve__think_of_number.jsonl",
+    "rows": 2000,
+    "sha256": "96b08447910f70f3927ddc6145b5ea3b860e17481ae92abce879440712d6ba7e",
+    "draws": 3764
+   },
+   "eval": {
+    "file": "st1_eval_backward_solve__think_of_number.jsonl",
+    "rows": 500,
+    "sha256": "88bd52b81d5e4d3cc2a507d120ff2089bb31e3f401906ac17f51829e16f906c9",
+    "draws": 1009
+   }
+  },
+  {
+   "family": "chain_ops",
+   "variant": "sub_second",
+   "id": "chain_ops__sub_second",
+   "train": {
+    "file": "st1_train_chain_ops__sub_second.jsonl",
+    "rows": 2000,
+    "sha256": "f32027c3b118878c694b615132fa41d075a4d957e98eb078d837f95def9be9c1",
+    "draws": 5595
+   },
+   "eval": {
+    "file": "st1_eval_chain_ops__sub_second.jsonl",
+    "rows": 500,
+    "sha256": "3737bc76fa0073f3baf5f9d21fb6ee6529137909382f7b67dc00a4dd967c65c4",
+    "draws": 1428
+   }
+  }
+ ],
+ "seeds": {
+  "train": 5311,
+  "eval": 5312
+ },
+ "namespaces": {
+  "train": "ST1T",
+  "eval": "ST1E"
+ },
+ "kinds_considered_before_the_third": [
+  {
+   "family": "arith_bare",
+   "variant": "symbol",
+   "dev_rows": 40,
+   "rejected": []
+  },
+  {
+   "family": "backward_solve",
+   "variant": "sum_diff_larger",
+   "dev_rows": 2,
+   "rejected": [
+    "in a training pool"
+   ]
+  },
+  {
+   "family": "backward_solve",
+   "variant": "sum_diff_smaller",
+   "dev_rows": 7,
+   "rejected": [
+    "in a training pool"
+   ]
+  },
+  {
+   "family": "backward_solve",
+   "variant": "think_of_number",
+   "dev_rows": 31,
+   "rejected": []
+  },
+  {
+   "family": "chain_ops",
+   "variant": "sub_first",
+   "dev_rows": 8,
+   "rejected": [
+    "in a training pool"
+   ]
+  },
+  {
+   "family": "chain_ops",
+   "variant": "sub_second",
+   "dev_rows": 22,
+   "rejected": []
+  }
+ ],
+ "generator_files_sha256": {
+  "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "build.py": "876c1ba638635dc472643539791b24a9a1724042c8b9195d56efe756385dae18",
+  "core.py": "e4f1f7a2b8410f1c5f7483d129c403ee32970c8ff26138a7232280abb744ac20",
+  "skills.py": "20d163fc7e4ea42fc18bf8421a373a77e12f3773162cecad92fb0560d5a0765d",
+  "token_report.py": "07c4de493ff2f936b8770683b3d144457d7b9f602dc0bd985fc659932615ffd8",
+  "verify.py": "b9138e8d9672a66f098171ca367b781e2ce7397589d2759e5aeb14597534230f"
+ }
+}
