@@ -105,17 +105,73 @@ def holdout(out, arms, device='cpu'):
         print(out, arm, 'holdout', round(100 * d['right'], 2), flush=True)
 
 
+def confirm(root, parents, b2_dir=None, skills_data=SKILLS_DATA, device='cpu', bar=71.3):
+    """The confirm's marks, exactly as the last section of MARKS.md states them. root/<parent>/{fd,rp}/ from `consol run`; fd/holdout.json from `holdout`.
+    Mark 1: mean fd holdout >= 71.3. Mark 2: updates_done <= 256 and <= 0.5 x (80 x (W + C) x 4 / 512) per parent. Mark 3: harm_measure passes per parent.
+    Mark 4: pooled (parent-stacked) in_dist fd - N point > 0 and 95% interval lower end > 0; transfer label only if fd - rp (pooled) is above 0 with its interval above 0.
+    Report only: harm vs the raw B2 (if b2_dir), C2 DEV, per kind, rp numbers."""
+    import numpy as np
+    res, ho, ah_fd, ah_n, ah_rp = dict(parents={}), [], [], [], []
+    for p in parents:
+        out = os.path.join(root, p)
+        r = json.load(open(os.path.join(out, 'fd', 'result.json')))
+        hj = json.load(open(os.path.join(out, 'fd', 'hits.json')))
+        h = r['harm_vs_N']
+        f = r['finds']
+        half = 0.5 * (80 * (f['n_W'] + f['n_C']) * 4 / 512)
+        pr = dict(c2_dev=r['learner']['c2_right'], by_kind=r['learner']['by_kind'], in_dist_N=h['in_dist_a'], in_dist_fd=h['in_dist_b'], harm_passes=h['passes'], fired=h['fired'],
+                  updates_done=r['sleep']['updates_done'], half_research_loop_updates=half,
+                  mark2=bool(r['sleep']['updates_done'] <= 256 and r['sleep']['updates_done'] <= half), seconds=r['seconds'])
+        hp = os.path.join(out, 'fd', 'holdout.json')
+        if os.path.exists(hp):
+            pr['holdout'] = json.load(open(hp))['right']
+            ho.append(pr['holdout'])
+        ah_fd += hj['learner']; ah_n += hj['N']
+        rpj = os.path.join(out, 'rp', 'hits.json')
+        if os.path.exists(rpj):
+            rh = json.load(open(rpj))
+            assert rh['ids'] == hj['ids']
+            ah_rp += rh['learner']
+            pr['rp_in_dist'] = 100 * sum(rh['learner']) / len(rh['learner'])
+        if b2_dir:
+            from creative.harm_look import skills_hits
+            m, _, _ = sleep.load_parent(os.path.join(os.path.expanduser(b2_dir), f'B2_{p}.pt'), device)
+            m.eval()
+            rows, hb, _, idb = skills_hits(m, skills_data, device)
+            hv = harm_measure(hb, hj['learner'], rows)
+            pr['vs_B2'] = dict(in_dist_B2=idb, in_dist_fd=hv['in_dist_b'], drop=hv['in_dist_drop'], fired=hv['fired'], passes=hv['passes'])
+        res['parents'][p] = pr
+    P = res['parents']
+    d4 = c2_pilot.boot(ah_fd, ah_n)
+    res['marks'] = dict(
+        mark1_holdout_mean=(float(np.mean(ho)) if len(ho) == len(parents) else None), mark1_bar=bar, mark1=(bool(np.mean(ho) >= bar) if len(ho) == len(parents) else 'holdout not scored'),
+        mark2=all(P[p]['mark2'] for p in parents), mark3=all(P[p]['harm_passes'] for p in parents),
+        mark4_fd_minus_N=list(d4), mark4=bool(d4[0] > 0 and d4[1] > 0),
+        c2_dev_mean=float(np.mean([P[p]['c2_dev'] for p in parents])))
+    if ah_rp:
+        t = c2_pilot.boot(ah_fd, ah_rp)
+        r_n = c2_pilot.boot(ah_rp, ah_n)
+        res['marks'].update(fd_minus_rp=list(t), rp_minus_N=list(r_n), transfer_label=('through transfer' if t[0] > 0 and t[1] > 0 else 'improved, not shown to come from the new skill'))
+    fails = sum(not P[p]['harm_passes'] for p in parents)
+    res['marks']['proved_wrong'] = bool(fails >= 3)
+    return res
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
-    a.add_argument('cmd', choices=('snaps', 'screenA', 'holdout'))
+    a.add_argument('cmd', choices=('snaps', 'screenA', 'holdout', 'confirm'))
     a.add_argument('--out'); a.add_argument('--arms', nargs='+', default=['rlc', 'fd']); a.add_argument('--steps', nargs='+', type=int, default=[32, 64])
-    a.add_argument('--root'); a.add_argument('--parents', nargs='+', default=['s200', 's201']); a.add_argument('--threads', type=int, default=1)
+    a.add_argument('--root'); a.add_argument('--b2-dir'); a.add_argument('--parents', nargs='+', default=['s200', 's201', 's202', 's203', 's204', 's205']); a.add_argument('--threads', type=int, default=1)
     a = a.parse_args()
     torch.set_num_threads(a.threads)
     if a.cmd == 'snaps':
         snaps(os.path.expanduser(a.out), a.arms, a.steps)
     elif a.cmd == 'holdout':
         holdout(os.path.expanduser(a.out), a.arms)
+    elif a.cmd == 'confirm':
+        r = confirm(os.path.expanduser(a.root), a.parents, a.b2_dir)
+        _dump(r, os.path.join(os.path.expanduser(a.root), 'confirm.json'))
+        print(json.dumps(r['marks'], indent=1))
     else:
         r = screen_a(os.path.expanduser(a.root), a.parents)
         _dump(r, os.path.join(os.path.expanduser(a.root), 'screenA.json'))
