@@ -1,7 +1,8 @@
-# Post-G1 chain on BensPC (9 Oct 2026, spec addenda K, L and M). After gate G1's last PC queue ends: test GX stage 1 (queue 8aGX,
-# code src-8gx, Ben's "experts first"), then the 100M fit check part A on B3 inputs (8aFC, code src-b3), then the G-PT 30M
-# control at the B3 caps (8aC30, code src-b3) unless B3 group 1 is ready (WORK\B3-READY.txt). One queue at a time. WORK\STOP holds the chain (it never removes STOP). Started detached by
-# install_post_g1.ps1, so it outlives the ssh session. It stops nothing and deletes nothing.
+# Post-G1 chain on BensPC (9 Oct 2026, spec addenda K-N). After gate G1's last PC queue ends, one queue at a time:
+# test GX stage 1 (8aGX, code src-8gx, Ben's "experts first"); the 100M fit check part A on B3 inputs (8aFC); G2's plain
+# controls at the B3 caps, 3M then 10M (8aG2C3, 8aG2C10); the G-PT 30M control at the B3 caps (8aC30) unless the B3 ladder is
+# ready (WORK\B3-READY.txt). 8aFC, 8aG2C* and 8aC30 run from src-b3. WORK\STOP holds the chain (it never removes STOP).
+# Started detached by install_post_g1.ps1, so it outlives the ssh session. It stops nothing and deletes nothing.
 $CIO   = 'C:\Users\benja\custom-io'
 $WORK  = "$CIO\work"
 $SRCGX = "$CIO\src-8gx"
@@ -92,7 +93,7 @@ function GXOk {
   return $true
 }
 
-Say "post-G1 chain waiter started (pid $PID): GX stage 1, then fc100, then c30 unless WORK\B3-READY.txt exists"
+Say "post-G1 chain waiter started (pid $PID): GX stage 1, fc100, g2c3, g2c10, then c30 unless WORK\B3-READY.txt exists"
 
 # 1. Gate G1 ends.
 $k = 0
@@ -120,29 +121,32 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
       WaitEnd '8aGX'
     }
     if (GXOk) { Say 'GX stage 1: every job ok' }
-    else { Hold 'GX-DONE.txt' 'GX stage 1 did not finish ok, so fc100 and c30 wait (Ben asked for experts first); fix and rerun GX, then create WORK\GX-DONE.txt' }
+    else { Hold 'GX-DONE.txt' 'GX stage 1 did not finish ok, so the rest of the chain waits (Ben asked for experts first); fix and rerun GX, then create WORK\GX-DONE.txt' }
   }
 }
 
-# 3. 100M fit check part A on B3 inputs (an out-of-memory run is a result, so the chain goes on either way).
-WaitFree 'before fc100'
-if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) {
-  Say 'src-b3\B3-SETUP-OK.txt missing: fc100 NOT started, NEEDS ATTENTION (going on to c30)'
-} elseif (Launch '8aFC' $SRCB3 $CAPSB3) {
-  MoveDone 'gx.md'
-  FromTemplate 'fc100.template.md' 'fc100.md'
-  WaitEnd '8aFC'
+# 3-5. src-b3 queues. A failed or out-of-memory run is reported by its card; the chain goes on either way.
+function B3Step($q, $tpl, $card, $old) {
+  WaitFree "before $q"
+  if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) { Say "src-b3\B3-SETUP-OK.txt missing: $q NOT started, NEEDS ATTENTION"; return }
+  if (Launch $q $SRCB3 $CAPSB3) {
+    foreach ($c in $old) { MoveDone $c }
+    FromTemplate $tpl $card
+    WaitEnd $q
+  } else { Say "$q did NOT start: NEEDS ATTENTION" }
 }
+B3Step '8aFC' 'fc100.template.md' 'fc100.md' @('gx.md')
+B3Step '8aG2C3' 'g2c3.template.md' 'g2c3.md' @('gx.md', 'fc100.md')
+B3Step '8aG2C10' 'g2c10.template.md' 'g2c10.md' @('gx.md', 'fc100.md', 'g2c3.md')
 
-# 4. G-PT 30M control, unless B3 group 1 is ready to run first.
-if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
+# 6. G-PT 30M control, unless the B3 ladder is ready to run first.
+if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: the B3 ladder goes first, c30 NOT started. Chain finished.'; exit }
 WaitFree 'before c30'
-if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
+if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: the B3 ladder goes first, c30 NOT started. Chain finished.'; exit }
 if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) {
   Say 'src-b3\B3-SETUP-OK.txt missing: c30 NOT started, NEEDS ATTENTION. Chain finished.'
 } elseif (Launch '8aC30' $SRCB3 $CAPSB3) {
-  MoveDone 'gx.md'
-  MoveDone 'fc100.md'
+  foreach ($c in @('gx.md', 'fc100.md', 'g2c3.md', 'g2c10.md')) { MoveDone $c }
   FromTemplate 'c30.template.md' 'c30.md'
   Say 'chain finished: c30 runs on (its card handles a spill)'
 } else {

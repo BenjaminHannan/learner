@@ -1,6 +1,7 @@
-# Installs the post-G1 chain on BensPC (spec addenda K, L and M). Run ONCE, after Ben's go, while G1 still runs; it starts no GPU work itself.
+# Installs the post-G1 chain on BensPC (spec addenda K-N). Run ONCE, after Ben's go, while G1 still runs; it starts no GPU work itself.
 # Expects in C:\Users\benja\custom-io\post-g1-in (from the Mac): gx.zip (custom_io of the experts branch at c1464d19b7), b3.zip (custom_io
-# at c24bce9489), cloze_long.py (data_pool/cloze_long.py at 3d0afbeadd), q8aPost_wait.ps1, 8aFC-pc.txt, 8aC30-pc.txt, fc100.md, c30.md.
+# at 71299b1a47), cloze_long.py (data_pool/cloze_long.py at 3d0afbeadd), q8aPost_wait.ps1, and the queue files and cards of fc100,
+# g2c3, g2c10 and c30.
 # Prints what it did and stops at the first problem.
 $CIO    = 'C:\Users\benja\custom-io'
 $WORK   = "$CIO\work"
@@ -11,9 +12,11 @@ $SRCB3  = "$CIO\src-b3"
 $B3IN   = "$WORK\b3-inputs"
 $PY     = 'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
 $CAPS   = '3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78'    # caps.py of G1 and of the experts code
-$CAPSB3 = 'D276FAC05E1127D9979E9B8EA3A4F4E6CC4D7BAC33C218FA164117B60F1B4AA8'    # caps.py at c24bce9489
-$JSONB3 = 'BD81C67F0B6F33686718587A3FBDCD73E939C1FF9CB832DC6D68F34DEE4F7550'    # g8a/caps_b3.json at c24bce9489
+$CAPSB3 = 'D276FAC05E1127D9979E9B8EA3A4F4E6CC4D7BAC33C218FA164117B60F1B4AA8'    # caps.py at 71299b1a47 (unchanged since c24bce9489)
+$JSONB3 = 'BD81C67F0B6F33686718587A3FBDCD73E939C1FF9CB832DC6D68F34DEE4F7550'    # g8a/caps_b3.json at 71299b1a47
 $LONG   = 'FF6A2E12CF9E4B6A3880C503274898F64B3CB14CBAA853CEEAEB51819EDB8CC9'    # data_pool/cloze_long.py at 3d0afbeadd
+$QUEUES = @('8aFC-pc.txt', '8aG2C3-pc.txt', '8aG2C10-pc.txt', '8aC30-pc.txt')
+$CARDS  = @('fc100', 'g2c3', 'g2c10', 'c30')
 function Fail($m) { "NEEDS ATTENTION: $m"; exit 1 }
 function Hash($f) { (Get-FileHash $f).Hash }
 # Unpack a git-archive zip into an empty folder (or keep a folder whose marker says it is already set up).
@@ -37,7 +40,7 @@ function CpuTest($dir, $module) {
 function Stamp { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') + ' ET' }
 
 if (@(Get-CimInstance Win32_Process -Filter "Name like 'powershell%'" | Where-Object { $_.CommandLine -like '*q8aPost_wait.ps1*' }).Count -gt 0) { Fail 'a post-G1 chain waiter already runs' }
-foreach ($f in 'gx.zip', 'b3.zip', 'cloze_long.py', 'q8aPost_wait.ps1', '8aFC-pc.txt', '8aC30-pc.txt', 'fc100.md', 'c30.md') { if (-not (Test-Path "$IN\$f")) { Fail "missing $IN\$f" } }
+foreach ($f in @('gx.zip', 'b3.zip', 'cloze_long.py', 'q8aPost_wait.ps1') + $QUEUES + ($CARDS | ForEach-Object { "$_.md" })) { if (-not (Test-Path "$IN\$f")) { Fail "missing $IN\$f" } }
 if ((Hash "$SRC\custom_io\g8a\caps.py") -ne $CAPS) { Fail 'src-8ag caps.py hash wrong' }
 if ((Hash "$IN\cloze_long.py") -ne $LONG) { Fail 'cloze_long.py hash wrong' }
 
@@ -52,7 +55,7 @@ if (Unpack "$IN\gx.zip" $SRCGX 'GX-SETUP-OK.txt') {
   'src-8gx: set up, caps hash ok, test_moe ALL OK'
 } else { 'src-8gx: already set up (GX-SETUP-OK.txt present)' }
 
-# 2. B3 code (c24bce9489) into src-b3, its inputs into WORK\b3-inputs, and its CPU check.
+# 2. B3 code (71299b1a47) into src-b3, its inputs into WORK\b3-inputs, and its CPU check.
 if (Unpack "$IN\b3.zip" $SRCB3 'B3-SETUP-OK.txt') {
   if ((Hash "$SRCB3\custom_io\g8a\caps.py") -ne $CAPSB3) { Fail 'src-b3 caps.py hash wrong' }
   if ((Hash "$SRCB3\custom_io\g8a\caps_b3.json") -ne $JSONB3) { Fail 'src-b3 caps_b3.json hash wrong' }
@@ -66,12 +69,11 @@ if (Unpack "$IN\b3.zip" $SRCB3 'B3-SETUP-OK.txt') {
   'src-b3: set up, hashes ok, test_g8a ok; cloze_long.py and caps_b3.json in work\b3-inputs'
 } else { 'src-b3: already set up (B3-SETUP-OK.txt present)' }
 
-# 3. fc100's and c30's queue files into src-b3 (both run on c24bce9489 at the B3 caps), card templates and the waiter.
-Copy-Item -Force "$IN\8aFC-pc.txt", "$IN\8aC30-pc.txt" "$SRCB3\custom_io\queue_local\"
-Copy-Item -Force "$IN\fc100.md" "$CIO\fc100.template.md"
-Copy-Item -Force "$IN\c30.md" "$CIO\c30.template.md"
+# 3. The src-b3 queue files (all at the B3 caps), card templates and the waiter.
+foreach ($f in $QUEUES) { Copy-Item -Force "$IN\$f" "$SRCB3\custom_io\queue_local\" }
+foreach ($c in $CARDS) { Copy-Item -Force "$IN\$c.md" "$CIO\$c.template.md" }
 Copy-Item -Force "$IN\q8aPost_wait.ps1" "$CIO\q8aPost_wait.ps1"
-'copied 8aFC-pc.txt and 8aC30-pc.txt to src-b3 queue_local; card templates and waiter to custom-io'
+"copied $($QUEUES -join ', ') to src-b3 queue_local; card templates and waiter to custom-io"
 
 # 4. Start the chain waiter detached.
 $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\custom-io\q8aPost_wait.ps1'}
