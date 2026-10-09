@@ -52,10 +52,23 @@ def _locked(path, wait=30, stale=6 * 3600):
             time.sleep(wait)
 
 
+def caps_dir(a, pdir):
+    """Where caps.json and caps_report.json live. The pool dir is shared by g2c3, fc100 and B3 (same key), and get_caps returns a cached caps.json without looking at
+    --caps-file; so PTS (caps_b3s.json) and B3G2 (caps_b3g2.json: le 95) keep theirs in a sibling dir of the pool, and neither reads nor overwrites the pool's. The
+    pool itself (train.jsonl, dev/) is still shared. Any other arm: the pool dir, as before."""
+    arm = C.B3G2_ARM if C.B3G2_ARM in a.arms else C.PTS_ARM if C.PTS_ARM in a.arms else None
+    if arm is None:
+        return pdir
+    d = pdir.rstrip('/\\') + '.caps-' + arm
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def get_caps(a, pdir):
     """The caps of the whole ladder (addendum F d: set once from the largest pool, the same at every rung), written to the pool dir beside a report of the rows
     of THIS pool and the dev splits that any cap touches (target 0; a run with a touched row stops instead of cutting it)."""
-    f = os.path.join(pdir, 'caps.json')
+    cdir = caps_dir(a, pdir)
+    f = os.path.join(cdir, 'caps.json')
     pts = C.PTS_ARM in a.arms           # B3 steps-for-all: its caps are g8a/caps_b3s.json, measured with all_steps (the lead writes that file)
     pts_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3s.json')
     train_f = os.path.join(pdir, 'train.jsonl')
@@ -63,13 +76,19 @@ def get_caps(a, pdir):
         assert os.path.exists(pts_caps) and a.scale == 1.0, 'PTS needs g8a/caps_b3s.json and --scale 1.0'
         assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.PTS_ARM}, 'PTS pins caps_b3s.json for the whole job: it cannot run beside the B3 / B3G2 arms (their caps are their own)'
         assert not a.caps_file or json.load(open(a.caps_file)) == json.load(open(pts_caps)), '--caps-file is not caps_b3s.json: PTS pins caps_b3s.json for the whole job'
+    g2 = C.B3G2_ARM in a.arms           # B3G2 pins caps_b3g2.json (caps_b3 + le 95): a different tape width than the pool's cached caps.json (caps_b3, le 68)
+    g2_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3g2.json')
+    if g2:
+        assert set(a.arms) == {C.B3G2_ARM}, 'B3G2 pins caps_b3g2.json for the whole job: it runs alone'
+        assert a.scale == 1.0 and a.caps_file and json.load(open(a.caps_file)) == json.load(open(g2_caps)), 'B3G2 needs --caps-file g8a/caps_b3g2.json (le 95) and --scale 1.0'
     if os.path.exists(f):
         if not pts:
-            return json.load(open(f))
+            if not g2 or json.load(open(f)) == json.load(open(g2_caps)):
+                return json.load(open(f))
         # PTS: a cached pool caps.json is used only if it is the pin AND the all_steps report of this very train.jsonl passed (no row over caps, dev included);
         # otherwise it is measured again below (the report refuses any row longer than the caps' plain_target)
         try:
-            rep0 = json.load(open(os.path.join(pdir, 'caps_report.json')))
+            rep0 = json.load(open(os.path.join(cdir, 'caps_report.json')))
             if (json.load(open(f)) == json.load(open(pts_caps)) and rep0.get('all_steps') is True and rep0.get('train_bytes') == os.path.getsize(train_f)
                     and not any(rep0['rows_over_caps'].values()) and not any(rep0['rows_over_caps_dev_with_programs'].values())):
                 return json.load(open(f))
@@ -105,7 +124,7 @@ def get_caps(a, pdir):
     if pts:
         rep.update(all_steps=True, train_bytes=os.path.getsize(train_f))
     json.dump(caps, open(f, 'w'))
-    json.dump(rep, open(os.path.join(pdir, 'caps_report.json'), 'w'), indent=1)
+    json.dump(rep, open(os.path.join(cdir, 'caps_report.json'), 'w'), indent=1)
     bad = {k: max(rep['rows_over_caps'][k], rep_dev['rows_over_caps'][k]) for k in rep['rows_over_caps'] if rep['rows_over_caps'][k] or rep_dev['rows_over_caps'][k]}
     if bad:
         os.remove(f)
@@ -250,7 +269,7 @@ def main(argv=None):
     os.makedirs(pm_dir, exist_ok=True)
     json.dump(man, open(os.path.join(pm_dir, 'pool_MANIFEST.json' if a.local else 'MANIFEST.json'), 'w'), indent=1)
     for f in ('caps.json', 'caps_report.json'):         # E3: the caps used and the rows any cap touches (target 0), beside the results
-        shutil.copy2(os.path.join(pdir, f), os.path.join(pm_dir, f))
+        shutil.copy2(os.path.join(caps_dir(a, pdir), f), os.path.join(pm_dir, f))
     if emit_on:
         emit(base, tag + '-pool')
     accum = parse_accum(a.accum, a.speed_json, a.rung)
@@ -278,7 +297,7 @@ def main(argv=None):
             box['public']['steps'] = psteps
         else:
             args = C.train_args(a.rung, arm, a.seed, steps, pdir, out=out, minutes=mins, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale,
-                                b2_extra=b2_extra, big_data=a.big_data, caps=os.path.join(pdir, 'caps.json'))
+                                b2_extra=b2_extra, big_data=a.big_data, caps=os.path.join(caps_dir(a, pdir), 'caps.json'))
             if accum.get(arm, 1) > 1:
                 args += ['--accum', str(accum[arm])]
             cmd = [sys.executable, '-m', 'custom_io.train'] + args + dev_flag

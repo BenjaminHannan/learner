@@ -1,0 +1,8 @@
+# BensPC RTX 5070 Ti: g2c3s ("PTS") = the plain 3M control WITH worked steps on every row, seed 400 (big-run PLAN.md B3G2-1 control; Ben chose "All steps", 2:28 PM ET 10-09). Same as g2c3 (G-PT 3M, eg_embed, n_loops 12, the B3 3M long-chunk pool p10-rung30-s400-a64-L, accum 16) except one switch: the training target is every worked step joined by "; ", then " # ", then the answer, for EVERY row that has steps (no family list, no answer-only fallback, no cut). Scoring reads the answer after the last "#". Arm PTS pins g8a/caps_b3s.json (plain_target 115, measured on own72 only): the job stops at start if any train or dev row is longer than 115 (report only, then ask). Its caps live in <pool>.caps-PTS, so the pool's own caps.json (g2c3 / B3) is never read or changed. Trained count 4,023,976 (1,536 above g2c3's 4,022,440: the longer target adds 6 position slots; both inside the +-2% band).
+# Code: a source checkout of branch claude/learner-new-g2 at the commit named in pc-jobs\g2c3s.md (new dir src-b3g2; do not reuse src-b3 / src-b3r).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG2C3S-3M-s400 --rung 3M --seed 400 --arms PTS --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3s.json --accum PTS=16

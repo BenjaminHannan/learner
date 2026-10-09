@@ -270,7 +270,9 @@ def test_caps_report_refuses():
     with tempfile.TemporaryDirectory(prefix='ptspool-', dir=os.environ.get('PTS_TEST_TMP')) as t:
         d = pool(os.path.join(t, 'ok'), train=[rowline()], dev=[rowline(prompt='Dev.')])
         assert job.get_caps(ns(['PTS']), d) == pin
-        rep = json.load(open(os.path.join(d, 'caps_report.json')))
+        cd = job.caps_dir(ns(['PTS']), d)         # PTS keeps its caps beside the shared pool, not in it
+        assert cd != d and not os.path.exists(os.path.join(d, 'caps.json')) and not os.path.exists(os.path.join(d, 'caps_report.json'))
+        rep = json.load(open(os.path.join(cd, 'caps_report.json')))
         assert rep['all_steps'] is True and rep['train_bytes'] == os.path.getsize(os.path.join(d, 'train.jsonl')) and not any(rep['rows_over_caps'].values()), rep
         # cached: used as is, without a new measurement ...
         real = CP.report
@@ -286,7 +288,7 @@ def test_caps_report_refuses():
             raise SystemExit('a cached pool with a too-long row was accepted')
         except SystemExit as e:
             assert 'plain_target' in str(e), e
-        assert not os.path.exists(os.path.join(d, 'caps.json'))
+        assert not os.path.exists(os.path.join(cd, 'caps.json'))
         # a too-long dev row is refused too; a row in a family the group-1 rule skips is measured whole
         d2 = pool(os.path.join(t, 'dev'), train=[rowline()], dev=[rowline(steps=too_long, answer='23')])
         try:
@@ -296,6 +298,23 @@ def test_caps_report_refuses():
             assert 'plain_target' in str(e), e
         d3 = pool(os.path.join(t, 'old'), train=[rowline(steps=too_long, answer='23')], dev=[rowline()])
         assert job.get_caps(ns(['PT'], caps_file=os.path.join(G8A, 'caps_b3s.json')), d3) == pin        # the old arms measure with the family gate: unchanged
+        # the pool dir is shared with g2c3 / B3: a cached caps.json (caps_b3, le 68) is neither read nor overwritten by PTS or B3G2, and B3G2 gets le 95
+        b3 = json.load(open(os.path.join(G8A, 'caps_b3.json')))
+        g2c = json.load(open(os.path.join(G8A, 'caps_b3g2.json')))
+        assert g2c['le'] == 95 and 'le' not in b3 and {k: v for k, v in g2c.items() if k not in ('le', 'source')} == {k: v for k, v in b3.items() if k != 'source'}
+        d4 = pool(os.path.join(t, 'shared'), train=[rowline()], dev=[rowline(prompt='Dev.')])
+        json.dump(b3, open(os.path.join(d4, 'caps.json'), 'w'))
+        before = open(os.path.join(d4, 'caps.json')).read()
+        assert job.get_caps(ns(['PT'], caps_file=os.path.join(G8A, 'caps_b3.json')), d4) == b3                    # the old arms: the cached caps, as before
+        assert job.get_caps(ns(['PTS']), d4) == pin and job.get_caps(ns(['B3G2'], caps_file=os.path.join(G8A, 'caps_b3g2.json')), d4) == g2c
+        assert open(os.path.join(d4, 'caps.json')).read() == before and not os.path.exists(os.path.join(d4, 'caps_report.json'))
+        assert len({job.caps_dir(ns(['PTS']), d4), job.caps_dir(ns(['B3G2']), d4), d4}) == 3
+        for bad in (ns(['B3G2']), ns(['B3G2'], caps_file=os.path.join(G8A, 'caps_b3.json')), ns(['B3G2', 'B3'], caps_file=os.path.join(G8A, 'caps_b3g2.json'))):
+            try:
+                job.get_caps(bad, d4)
+                raise SystemExit('B3G2 accepted a different caps pin')
+            except AssertionError:
+                pass
         # PTS pins its caps for the whole job: not beside the B3 arms, not with another caps file
         for bad in (ns(['PTS', 'B3G2']), ns(['PTS'], caps_file=os.path.join(G8A, 'caps_b3.json'))):
             try:

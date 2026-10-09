@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti: B3 group 2 at 3M, seed 400 (big-run PLAN.md "G2 step 2b", marks B3G2-1 to B3G2-7 sealed 12:55 PM ET 10-09; spec design/architecture-2026-10-09/B3-GROUP2-BUILD-2026-10-09.md). Arm B3G2 = class B3G2(B3) with N1 no_slots, O1 learned ByteWriter, P1 no_place, V1 bytes, L1 as_written traces and ST1; 4,081,871 trained parameters at 3M (+1.48% from g2c3's 4,022,440) plus the frozen Gemma. Same pool p10-rung30-s400-a64-L as g2c3 / B3 group 1. The arm pins g8a/caps_b3g2.json (caps_b3 + le 95: tape entries up to 95 letters); its caps live in <pool>.caps-B3G2, so the pool's own caps.json (le 68, g2c3 / B3) is neither read nor changed. Group 2 must reach steps_unparsed = 0 (B3G2-6).
+# Accum B3G2=32 is the same cautious guess as group 1 (rows up to 2,000 letters; Mac cost 0.212 s/step at 2,000 letters).
+# Code: a source checkout of branch claude/learner-new-g2 at the commit named in pc-jobs\b3g2.md (new dir src-b3g2).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aB3G2s400-3M-s400 --rung 3M --seed 400 --arms B3G2 --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=32
