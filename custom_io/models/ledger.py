@@ -135,10 +135,14 @@ class CBlock(nn.Module):
 
 class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
+    no_slots = False        # N1 (B3 sets it): no number slots; spans() then skips the regex number spans
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, tok_think=False):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, tok_think=False, no_place=False, bytes=False):
         super().__init__(vocab)
+        self.is_bytes = bool(bytes)
+        assert self.is_bytes == bool(getattr(vocab, 'is_bytes', False)), f"cfg bytes={bool(bytes)} but the vocab is {type(vocab).__name__}: V1 needs ByteVocab, and ByteVocab needs bytes"
+        self.no_place = bool(no_place)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
@@ -150,7 +154,7 @@ class Ledger(Model):
         assert not self.tok_think or (self.eg_embed and not self.eg_thinker), 'tok_think needs eg_embed and is not combined with eg_thinker'
         self.round_readout = float(round_readout)
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
-        self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
+        self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in), no_place=self.no_place, by_bytes=self.is_bytes)
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
             nn.Embedding(n, d) for n in (3, N_NUM, len(OPS), n_loops, 2, N_CTRL))
@@ -184,7 +188,7 @@ class Ledger(Model):
             nn.init.zeros_(self.q_wend.bias)
         if self.eg_embed or self.eg_teach:      # created after every other module, so every B / B2 / span weight starts identical at the same seed
             from custom_io.models.eg import EG_DIM, MT_DIM, FrozenEG
-            self._eg = [FrozenEG(eg_path)]      # a list, not a submodule: never trained, counted or saved
+            self._eg = [FrozenEG(eg_path, by_bytes=self.is_bytes)]      # a list, not a submodule: never trained, counted or saved
         if self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
             if self.eg_adapter == 'none':       # addendum 9: the thinker is EmbeddingGemma's width, so its states go in through a LayerNorm only
                 assert d == EG_DIM, f"eg_adapter='none' needs d = {EG_DIM}, got {d}"
@@ -214,7 +218,7 @@ class Ledger(Model):
                 self._spans.clear()
             ns, ne, nv, ws, we = (np.zeros(n, np.int64) for n in (N_NUM, N_NUM, N_NUM, W_MAX, W_MAX))
             n_found = 0
-            for k, m in enumerate(pp.NUM_RE.finditer(prompt)):
+            for k, m in enumerate(() if self.no_slots else pp.NUM_RE.finditer(prompt)):
                 n_found += 1
                 if k < N_NUM:
                     ns[k], ne[k], nv[k] = m.start(), m.end(), min(int(m.group()), 10 ** 18)
@@ -227,6 +231,9 @@ class Ledger(Model):
                 capcount.hit('words_over')
             for k, (s, e) in enumerate(sp[:W_MAX]):
                 ws[k], we[k] = s, e
+            off = self.vocab.offsets(prompt)        # ByteVocab on non-ASCII text: char offsets -> byte offsets (every position of X is a byte)
+            if off is not None:
+                ns, ne, ws, we = off[ns], off[ne], off[ws], off[we]
             hit = self._spans[prompt] = (ns, ne, nv, ws, we)
         return hit
 
@@ -489,9 +496,9 @@ class Ledger(Model):
                 op[i, s], A[i, s, list(ca)], Bm[i, s, list(cb)] = o, True, True
             mode[i], ans[i, list(t['ans'])], word[i, list(t['word'])] = t['mode'], True, True
             if t['mode'] == 2:
-                if len(r['answer']) > GEN_MAX:
+                if self.vocab.length(r['answer']) > GEN_MAX:
                     capcount.hit('gen_answer_over')
-                ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
+                ids = self.vocab.encode(self.vocab.clip(r['answer'], GEN_MAX)[::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
         A[:, :, 0] |= ~A.any(-1)
         Bm[:, :, 0] |= ~Bm.any(-1)

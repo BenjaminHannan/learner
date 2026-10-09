@@ -10,6 +10,9 @@ switches is H1R exactly (tested bit for bit against 17a356e62). Nothing in the s
   rounds, g uniform on {0, 1, 2}. Op loss: the gold op at each call round, NOOP at every round after the row's last call, NOTHING at gap rounds (no label ever
   says 'wait'); cell, span and gate losses at call rounds; the answer loss from the last call round on; stop labels unchanged. steps / calls are call-ordered,
   so the T1SDR evals (call accuracy, tool off, opswap replay, write_copy) work unchanged. The learned stop is H1's.
+- no_slots (N1, group 2): the thinker's memory is [tape; letters] with no number slots: no regex number spans are used (Ledger.spans skips them), S0 is not built, the
+  ordinal and type tables are deleted (19 rows x d fewer weights), masks and K/V lists lose the slot part (Tool.num_memory / join_kv). The word keys (for the WORD
+  answer head) are still built. Combines with tok_think (the letters are token spots then). Default off = group 1 exactly.
 - tok_think (a Ledger switch, three lines in Tool.run and in loop()): the thinker reads one spot per Gemma token. Off by default.
 Learned: everything H1R learns, plus tape_emb / e_s rows past N_RES (any_round). Hand-written: the calculator, the gap schedule (training only), the tape size."""
 import random
@@ -31,12 +34,15 @@ def bucket(n):
 
 
 class B3(ToolH1):
-    def __init__(self, vocab, any_round=False, gap_p=0.0, **kw):
+    def __init__(self, vocab, any_round=False, gap_p=0.0, no_slots=False, **kw):
         assert 0.0 <= gap_p <= 1.0 and (any_round or not gap_p), 'gap_p schedules calls at gap rounds: it needs any_round'
         if any_round:
             kw['tape'] = max(TAPE_MIN, N_RES)
         super().__init__(vocab, **kw)
         self.any_round, self.gap_p = bool(any_round), float(gap_p)
+        self.no_slots = bool(no_slots)
+        if self.no_slots:       # N1: deleted after every module is built, so no RNG draw changes and every other weight starts as without the switch
+            del self.ordinal, self.stype
         self._gap_rng = random.Random(f'gap|{torch.initial_seed()}')            # its own stream (train.py seeds torch first), as ans_drill
         self.plan_stats = dict(rows=0, gapped=0, fallback=0)
         self.last_tape_full = None
@@ -102,18 +108,13 @@ class B3(ToolH1):
         X, xm = self.read(batch, talker=True)
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
-        t_ix = torch.arange(T, device=dev)
-        inn = (t_ix >= ns[..., None]) & (t_ix < ne[..., None])
-        cnt = inn.sum(-1)
-        valid = cnt > 0
-        pool = torch.bmm(inn.to(X.dtype), X) / cnt.clamp(min=1)[..., None]
-        S0 = (pool + self.ordinal.weight + self.stype.weight[0]) * valid[..., None]
+        valid, S0 = self.num_memory(X, ns, ne)
         Kw, wvalid = self.word_keys(ws, we), we > ws
         if lesion != 'nowordc':
             Kw = Kw + self.word_content(X, ws, we)
         Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)
         kvx = [b.kv_of(Xk + self.src.weight[1]) for b in self.core]
-        kvs0 = [b.kv_of(S0 + self.src.weight[0]) for b in self.core]
+        kvs0 = self.slot_kv(S0)
         tf = gold is not None
         if force is not None:
             gold_f, sched = force
@@ -138,7 +139,7 @@ class B3(ToolH1):
             ts = min(t, self.n_loops - 1)
             vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
             if kvs_of is not kvt:
-                kvs, kvs_of = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)], kvt
+                kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
             mask = torch.cat([valid, vis, km], 1)
             Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
@@ -183,7 +184,7 @@ class B3(ToolH1):
                             else:
                                 r = '?' if lesion == 'noexec' else calc(NAMES[op[i]], sa, sb, swap=lesion == 'opswap')
                             calls[i].append((t, NAMES[op[i]], sa, sb, r))
-                            new_k.setdefault(int(kk[i]), [''] * B)[i] = entry(NAMES[op[i]], sa, sb, r)
+                            new_k.setdefault(int(kk[i]), [''] * B)[i] = entry(NAMES[op[i]], sa, sb, r, self.vocab)
                         Xt, idt, mt = Xt.clone(), idt.clone(), mt.clone()
                         for k, new in new_k.items():
                             sel = torch.tensor([bool(x) for x in new], device=dev)
@@ -299,7 +300,7 @@ class B3(ToolH1):
                     ans = self.talk(self.state_of(o), b)
                 nfull += sum(self.last_tape_full or [])
                 for r, a, cs in zip(ch, ans, o['calls']):
-                    e = ok.setdefault(bucket(len(r['prompt'])), [0, 0])
+                    e = ok.setdefault(bucket(self.vocab.length(r['prompt'])), [0, 0])
                     e[0] += 1
                     e[1] += is_hit(a, r)
                     per[str(len(cs))] = per.get(str(len(cs)), 0) + 1
