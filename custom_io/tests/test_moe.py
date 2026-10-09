@@ -103,6 +103,25 @@ def test_gradients():
     print('ok unpicked experts have exactly zero grad, the router has grad')
 
 
+def test_checkpoint_same():
+    """moe_ckpt True vs False (fp32): same loss, same gradient on every parameter (<= 1e-6), and one log entry per block and round either way."""
+    b = FP.batch()
+    out = []
+    for ck in (True, False):
+        m = tiny(8, 2, moe_ckpt=ck)
+        loss, aux = m.loss(b)
+        assert all(len(blk.moe.log) == m.n_loops for blk in m.core) and m.core[0].moe.ckpt == ck
+        loss.backward()
+        out.append((loss.item(), {k: p.grad.clone() for k, p in m.named_parameters() if p.grad is not None}, float(aux['moe_top'])))
+    assert out[0][2] == out[1][2] and abs(out[0][0] - out[1][0]) <= 1e-6 and set(out[0][1]) == set(out[1][1])
+    worst = max(float((out[0][1][k] - out[1][1][k]).abs().max()) for k in out[0][1])
+    assert worst <= 1e-6, worst
+    m = tiny(8, 2, moe_ckpt=True).eval()
+    with torch.no_grad():
+        m.loss(b)
+    print('ok checkpoint: loss and all grads equal, max grad diff %.2e, %d log entries per block' % (worst, m.n_loops))
+
+
 def test_sizes():
     ex = dict(eg_embed=True, n_loops=12)
     got = {}
@@ -116,12 +135,11 @@ def test_sizes():
         except AssertionError as err:
             band = 'FAILS: %s' % err
         print('  ', name, got[name], 'check_bands', band, 'PT', cnt['PT'])
-        if name != 'GX-10M':
-            assert band == 'passes', band
+        assert band == 'passes', band
     assert got['B2-3M'][:2] == (3_544_913,) * 2 and got['B2-10M'][:2] == (10_496_537,) * 2
     assert got['GX-3M'][:2] == (10_553_929, 3_579_225) and got['GX-10M'] == (38_532_601, 10_633_785, 8), got
     assert C.b2_cfg('3M', ex)['blocks'] == 2 and C.b2_cfg('10M', dict(ex, experts=52))['blocks'] == 8
-    print('ok sizes (GX-10M active is %+.2f%% from the 10.0M target: outside the rung band of 5%%, see report)' % (100 * (got['GX-10M'][1] / 10e6 - 1)))
+    print('ok sizes; active vs dense twin: GX-3M %+.2f%%, GX-10M %+.2f%%' % (100 * (got['GX-3M'][1] / got['B2-3M'][0] - 1), 100 * (got['GX-10M'][1] / got['B2-10M'][0] - 1)))
 
 
 def test_bias_moves_only_in_training():
@@ -195,6 +213,6 @@ def test_report():
 if __name__ == '__main__':
     torch.set_num_threads(max(1, min(8, os.cpu_count() or 1)))
     test_off_is_base()           # first: it applies the 8a-G caps for everything after
-    for t in (test_shared_weights_identical, test_layer_matches_loop, test_gradients, test_sizes, test_bias_moves_only_in_training, test_training, test_report):
+    for t in (test_shared_weights_identical, test_layer_matches_loop, test_gradients, test_checkpoint_same, test_sizes, test_bias_moves_only_in_training, test_training, test_report):
         t()
     print('ALL OK')

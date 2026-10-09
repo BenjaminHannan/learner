@@ -1,5 +1,5 @@
 """Report-only cost check of the expert layer (design/8a-gx-experts section 6): one forward + backward of G-B2 3M vs GX-3M on CPU, micro-batch of 32 rows
-(prompts ~200 letters, caps_g applied, EmbeddingGemma replaced by the test stub): bytes of tensors saved for backward (every pack call counted, weights included)
+(prompts ~200 letters, caps_g applied, EmbeddingGemma replaced by the test stub): bytes of tensors saved for backward (every pack call counted, weights included; also reported without the tensors that are model parameters)
 and wall time (best of 2 after a warm-up). Prints one JSON.   python3 -m custom_io.g8a.moe_cost"""
 import json, os, time
 import torch
@@ -18,21 +18,24 @@ def rows(n=32):
 
 
 def measure(m, b):
-    saved = [0]
+    saved, nonparam = [0], [0]
+    ptrs = {p.data_ptr() for p in m.parameters()}
 
     def pack(t):
         saved[0] += t.numel() * t.element_size()
+        if t.data_ptr() not in ptrs:
+            nonparam[0] += t.numel() * t.element_size()
         return t
     times = []
     for rep in range(3):
-        saved[0] = 0
+        saved[0] = nonparam[0] = 0
         t0 = time.time()
         with torch.autograd.graph.saved_tensors_hooks(pack, lambda t: t):
             loss, _ = m.loss(b)
         loss.backward()
         times.append(time.time() - t0)
         m.zero_grad()
-    return dict(saved_bytes=saved[0], seconds=min(times[1:]))
+    return dict(saved_bytes=saved[0], saved_bytes_excl_params=nonparam[0], seconds=min(times[1:]))
 
 
 def main():
@@ -42,11 +45,13 @@ def main():
     b = collate([Dataset(rs, FP.vocab())[i] for i in range(len(rs))])
     ex = dict(eg_embed=True, n_loops=12)
     res = {}
-    for name, e in (('G-B2 3M', ex), ('GX-3M', dict(ex, experts=52, top_k=8))):
+    for name, e in (('G-B2 3M', ex), ('GX-3M', dict(ex, experts=52, top_k=8, moe_ckpt=True)), ('GX-3M no ckpt', dict(ex, experts=52, top_k=8, moe_ckpt=False))):
         cfg = C.b2_cfg('3M', e)
         res[name] = dict(measure(FP.make(cfg), b), params=C.n('ledger', cfg), active=C.n_active('ledger', cfg))
-    g, d = res['GX-3M'], res['G-B2 3M']
-    res['ratio_GX_over_B2'] = dict(saved_bytes=g['saved_bytes'] / d['saved_bytes'], seconds=g['seconds'] / d['seconds'])
+    d = res['G-B2 3M']
+    for k in ('GX-3M', 'GX-3M no ckpt'):
+        g = res[k]
+        res['ratio_%s_over_B2' % k.replace(' ', '_')] = {f: g[f] / d[f] for f in ('saved_bytes', 'saved_bytes_excl_params', 'seconds')}
     res['note'] = dict(embeddinggemma='stub (moe_fp.StubEG), not the real model: its 271M frozen params are in neither arm here', dtype='fp32 on CPU, no autocast',
                        micro_batch=len(rs), threads=torch.get_num_threads(), prompt_chars=[min(len(r['prompt']) for r in rs), max(len(r['prompt']) for r in rs)])
     print(json.dumps(res, indent=1))

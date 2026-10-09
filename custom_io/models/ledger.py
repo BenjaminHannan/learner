@@ -53,6 +53,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 from custom_io.data import EOS, word_spans
 from custom_io.models.base import Model
 from custom_io.models.reader import CharReader
@@ -104,9 +105,9 @@ class MoEMLP(nn.Module):
     bias = DeepSeek-V3 balancing buffer), gates = top_k * p / sum(p picked) from the plain softmax. Every expert is computed densely; unpicked gates are exactly 0.
     Each call appends (load-balancing loss, picks per expert [E]) to self.log (run() resets it); self.trace (a list or None) also gets (picks, entropy sum, tokens)."""
 
-    def __init__(self, d, E, top_k, h, out_std):
+    def __init__(self, d, E, top_k, h, out_std, ckpt=True):
         super().__init__()
-        self.E, self.k, self.h = E, top_k, h
+        self.E, self.k, self.h, self.ckpt = E, top_k, h, ckpt
         self.router = nn.Linear(d, E, bias=False)
         nn.init.normal_(self.router.weight, std=0.02)
         self.w1 = nn.Parameter(torch.randn(E, d, h) * 0.02)
@@ -117,7 +118,7 @@ class MoEMLP(nn.Module):
         self.log, self.trace = [], None
 
     def forward(self, x):
-        E, k, h = self.E, self.k, self.h
+        E, k = self.E, self.k
         with torch.autocast(x.device.type, enabled=False):
             logits = F.linear(x.float(), self.router.weight.float())
             p = logits.softmax(-1)
@@ -129,10 +130,18 @@ class MoEMLP(nn.Module):
         self.log.append((lb, cnt.detach()))
         if self.trace is not None:
             self.trace.append((cnt.detach(), float(-(p * (p + 1e-20).log()).sum()), p.shape[0] * p.shape[1]))
-        hid = torch.einsum('bnd,edh->bneh', x, self.w1)
-        hid = F.gelu(hid + self.b1.view(E, h).to(hid.dtype))
-        y = torch.einsum('bneh,ehd->bnd', hid * g[..., None].to(hid.dtype), self.w2)
-        return y + (g.to(x.dtype) @ self.b2.view(E, -1).to(x.dtype)).to(y.dtype)
+        args = (x, g, self.w1, self.b1, self.w2, self.b2)
+        if self.ckpt and self.training and torch.is_grad_enabled():     # the dense [B,N,E,h] activations are recomputed in backward, not stored
+            return checkpoint(self.dense, *args, use_reentrant=False)
+        return self.dense(*args)
+
+    def dense(self, x, g, w1, b1, w2, b2):
+        """Every expert on every token, gated: sum_e g_e (gelu(x w1_e + b1_e) w2_e + b2_e) -> [B,N,d]."""
+        E, h = self.E, self.h
+        hid = torch.einsum('bnd,edh->bneh', x, w1)
+        hid = F.gelu(hid + b1.view(E, h).to(hid.dtype))
+        y = torch.einsum('bneh,ehd->bnd', hid * g[..., None].to(hid.dtype), w2)
+        return y + (g.to(x.dtype) @ b2.view(E, -1).to(x.dtype)).to(y.dtype)
 
 
 class CBlock(nn.Module):
@@ -167,7 +176,7 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, experts=0, top_k=8, moe_aux=0.01, moe_gamma=1e-3):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, experts=0, top_k=8, moe_aux=0.01, moe_gamma=1e-3, moe_ckpt=True):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
@@ -177,7 +186,7 @@ class Ledger(Model):
         self.eg_thinker = bool(eg_thinker)
         assert not self.eg_thinker or (self.eg_embed and eg_adapter == 'linear' and letters_in), 'eg_thinker needs eg_embed, the linear adapter and letters'
         self.round_readout = float(round_readout)
-        self.experts, self.top_k, self.moe_aux, self.moe_gamma = int(experts), int(top_k), float(moe_aux), float(moe_gamma)
+        self.experts, self.top_k, self.moe_aux, self.moe_gamma, self.moe_ckpt = int(experts), int(top_k), float(moe_aux), float(moe_gamma), bool(moe_ckpt)
         assert not self.experts or 1 <= self.top_k <= self.experts, 'experts needs 1 <= top_k <= experts'
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
         self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
@@ -233,7 +242,7 @@ class Ledger(Model):
         if self.experts:        # created after every other module (block 0 first); the dense fc / out were drawn above and are discarded, so no other weight changes
             h = -(-int(mlp * d) // self.top_k)
             for b in self.core:
-                b.moe = MoEMLP(d, self.experts, self.top_k, h, 0.02 / math.sqrt(3 * blocks * n_loops))
+                b.moe = MoEMLP(d, self.experts, self.top_k, h, 0.02 / math.sqrt(3 * blocks * n_loops), self.moe_ckpt)
                 del b.fc, b.out
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
