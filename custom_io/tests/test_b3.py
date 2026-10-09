@@ -139,6 +139,40 @@ def run_p(tree, model, out, *extra):
     return torch.load(out)
 
 
+def fix_settled(path):
+    """The H1 'settled' fix (B13-2; marks amended 1:25 PM ET 10-09, big-run PLAN.md sec. 5) applied to the reference copy of 17a356e62, so check P
+    compares against the fixed H1R: the settled stop loss counts only in batches that ran the whole turn (n >= cap)."""
+    s = open(path).read()
+    a = "        total = lop + lcall + lans + lstop\n"
+    b = ("        w_stop = 1.0 if self.label == 'right' or n >= self.cap else 0.0\n"
+         "        total = lop + lcall + lans + w_stop * lstop\n")
+    assert s.count(a) == 1, 'reference tool_h1.py changed'
+    open(path, 'w').write(s.replace(a, b))
+
+
+def test_settled_needs_the_whole_turn():
+    """B13-2 on b3 (data-free; test_tool_h1 has the same check on the skills rows): with label 'settled' the stop loss counts only when the batch
+    ran the whole turn (K = 32), 'right' counts always, and switching the weight off leaves a zero gradient on the stop head only."""
+    from custom_io.models import tool_h1 as H
+    rs = rows(8)
+    b = batch_of(rs)
+    m = make(any_round=True)
+    m.train()
+    ks = H.KS
+    try:
+        for lab, K, w in (('right', 8, 1.0), ('settled', 8, 0.0), ('settled', 32, 1.0)):
+            m.label, H.KS = lab, (K,)
+            torch.manual_seed(0)
+            m.zero_grad()
+            loss, aux = m.loss(b)
+            loss.backward()
+            assert int(aux['rounds']) >= K and float(aux['stop_w']) == w, (lab, K, aux['stop_w'])
+            assert (float(m.stop.weight.grad.abs().sum()) == 0.0) == (w == 0.0), (lab, K)
+    finally:
+        H.KS = ks
+    print('ok settled stop loss only over the whole turn (stop_w 0 at K=8, 1 at K=32)')
+
+
 def test_p_bit_identity():
     """H1R's config: tool_h1 and b3 (no switches) here vs the code at 17a356e62, 50 steps, tiny CPU, caps not applied. The only intended differences,
     CELLS 21 and LE 68 (no-truncation audit, 1d69257a99), are set back to 17a356e62's 11 and 40 on this side; everything else must match bit for bit."""
@@ -148,6 +182,7 @@ def test_p_bit_identity():
         arc = subprocess.Popen(['git', 'archive', REF, 'custom_io/__init__.py', 'custom_io/data.py', 'custom_io/models'], cwd=ROOT, stdout=subprocess.PIPE)
         subprocess.check_call(['tar', '-x', '-C', ref], stdin=arc.stdout)
         assert arc.wait() == 0
+        fix_settled(os.path.join(ref, 'custom_io', 'models', 'tool_h1.py'))
         a = run_p(ref, 'tool_h1', os.path.join(d, 'a.pt'))
         for model in ('tool_h1', 'b3'):
             b = run_p(ROOT, model, os.path.join(d, 'b.pt'), 'legacy')

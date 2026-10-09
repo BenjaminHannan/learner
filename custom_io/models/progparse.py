@@ -200,6 +200,8 @@ def _targets(r):
     p, _ = program_for(r)
     if p is not None and len(p['prog']) > N_RES:
         capcount.hit('steps_over')
+    if p is None and any(str(s).strip() for s in r.get('steps') or ()):
+        capcount.hit('steps_unparsed')     # the row HAS worked steps the parser cannot turn into calls: it trains answer-only (PASS-MARKS addendum 23)
     if p is not None and len(p['prog']) <= N_RES:
         n = len(p['nums'])
         remap = lambda i: i if i < n else (N_NUM + i - n if i < n + len(CONSTS) else R0 + i - n - len(CONSTS))

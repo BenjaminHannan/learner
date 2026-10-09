@@ -117,6 +117,39 @@ def test_labels():
     print('ok settled labels')
 
 
+def test_settled_needs_the_whole_turn():
+    """B13-2: 'settled' over a batch shorter than the cap says stop on a row that is right later, so that loss counts only when the batch ran
+    the whole turn (n >= cap); 'right' counts in every batch; nothing else in the loss changes."""
+    full = torch.zeros(H.CAP, 3, dtype=torch.bool)
+    full[12:, 0] = True                                 # row 0: first right at round 13, right from then on
+    full[2, 1] = True                                   # row 1: right at round 3 only; row 2: never right
+    whole, short = H.settled(full), H.settled(full[:8])
+    assert not whole[:12, 0].any() and whole[12:, 0].all()          # the whole turn: go on until round 13, then stop
+    assert short[:, 0].all()                                         # 8 rounds: every round says stop, round 1 included (the bias)
+    assert (short | ~whole[:8]).all() and torch.equal(short[:, 1:], whole[:8, 1:])   # cutting the turn only adds stops
+    v, rows, b, t1, h = setup(k=16, steps=0)
+    h.train()
+    ks = H.KS
+    try:
+        got = {}
+        for lab, K, w in (('right', 8, 1.0), ('settled', 8, 0.0), ('right', 32, 1.0), ('settled', 32, 1.0)):
+            h.label, H.KS = lab, (K,)
+            torch.manual_seed(0)
+            h.zero_grad()
+            l, aux = h.loss(b)
+            l.backward()
+            assert int(aux['rounds']) == K and float(aux['stop_w']) == w, (lab, K, aux['stop_w'])
+            assert (float(h.stop.weight.grad.abs().sum()) == 0.0) == (w == 0.0), (lab, K)   # off = a zero gradient on the stop head only
+            got[lab, K] = float(l.detach()), float(aux['stop'])
+        for K in (8, 32):                               # every other term is the same under both labels
+            (lr_, sr), (ls_, ss) = got['right', K], got['settled', K]
+            w = 0.0 if K < H.CAP else 1.0
+            assert abs((lr_ - sr) - (ls_ - w * ss)) < 1e-4, (K, got)
+    finally:
+        H.KS, h.label = ks, 'right'
+    print('ok settled stop loss counts only over the whole turn')
+
+
 def test_loss_and_roundtrip():
     v, rows, b, t1, h = setup(k=24, steps=1)
     for lab in H.LABELS:

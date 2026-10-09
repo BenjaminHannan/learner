@@ -10,7 +10,11 @@ A turn = answering one question. Rounds = T1's controller iterations: round t (t
 - Stop head (spec (b)): stop = Linear(d, 1) (257 params) on ln_z(control 1) after each round (the state the mode and word heads read), trained by
   BCE on a label from the model's OWN readout: label 'right' (the first sealed spec, the default) = this round's greedy answer equals the target
   answer; label 'settled' (cfg {"label": "settled"}, SEALED for the H1 screen by amendment 1, section 8c) = right now, or no later round of this
-  turn is right, so the model also learns to stop when more rounds will not help. The stop head's input is
+  turn (up to the cap, 32) is right, so the model also learns to stop when more rounds will not help. A batch of n < 32 rounds cannot
+  see the later rounds: there, 'no later round is right' and 'the right round comes after n' look the same, and the label would say stop.
+  So the 'settled' stop loss counts only in batches that ran the whole turn (n >= 32, the K = 32 draws: about 1 batch in 4, about half
+  of all trained rounds); in shorter batches its weight is 0 (logged as stop_w). K is drawn before any row is read, so which batches
+  count never depends on how a row did. 'right' reads one round at a time and counts in every batch. The stop head's input is
   detached, so the stop loss never moves the loop (the spec's note on jointly trained halt gates).
 - Run rule (inference, `generate()` with no loops lesion): the turn ends after the first round with sigmoid(stop) >= 0.5 (P_STOP, fixed), at
   least 1 round, hard cap 32 (CAP). No other threshold exists. The batch keeps running until every row has stopped (rows are independent, so
@@ -229,9 +233,11 @@ class ToolH1(Tool):
         y = (settled(right) if self.label == 'settled' else right).to(dev).float()
         logit = self.stop(torch.stack(zs)).float()[..., 0]                    # [n, B]
         lstop = F.binary_cross_entropy_with_logits(logit, y)
-        total = lop + lcall + lans + lstop
+        # 'settled' asks about every later round of the turn; a batch shorter than the cap cannot see them (B13-2), so its settled loss is off
+        w_stop = 1.0 if self.label == 'right' or n >= self.cap else 0.0
+        total = lop + lcall + lans + w_stop * lstop
         aux = dict(prog=lop + lcall, op_acc=hits / tot.clamp(min=1), call=lcall, ans=lans, stop=lstop, stop_y=y.mean(), stop_acc=((logit >= 0).float() == y).float().mean(),
-                   right_last=right[-1].float().mean(), rounds=float(n), copy_share=share)
+                   right_last=right[-1].float().mean(), rounds=float(n), copy_share=share, stop_w=w_stop)
         if sc:                      # 'stop' is T1S's span stop head there: H1's own loss is logged as 'halt'
             total = total + ls['span_call'] + ls['stop']
             aux.update(halt=lstop, span_call=ls['span_call'], span_ans=(asp / cnt.clamp(min=1)).sum() / B, stop=ls['stop'], span_share=ls['span_share'])
