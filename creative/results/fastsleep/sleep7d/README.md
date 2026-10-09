@@ -337,3 +337,29 @@ How to read it:
 - *Shown:* the pick finds the right rows. The picked rows' loss rose about 5x as much as random rows', and the families that drop most (seq_next, rule_apply, list_stats, order_chain) are over-picked against their pool share.
 - *Shown:* it doesn't fully protect them. seq_next and rule_apply still lose 8-11 points against N' on s100, and seq_next and order_chain on s101.
 - *Suggested:* at lr 1e-3 the replay half can't fully counter the records' pull on the few-example families even when aimed at them. lr 1e-4 alone (VL's L) already had no family fire but a smaller first-try gain. Model-picked replay at lr 1e-4 or 3e-4 is the natural next single change; that is the roadmap's call, and lr 3e-4 is held.
+
+## Test SCL (finished 17:15 UTC 10-09 = 1:15 PM ET; roadmap e5ab95d650, Ben's "Run it" 12:27 PM ET; `night7d.py scl`, `scl/`)
+
+SC's model-picked replay (same pick rule and sizes) on VL's arm L night: from N', lr 1e-4, 32 visits, L's records, seed and warm rows. ONE change from L, the control. With picking off, the night reproduces L bit for bit (smoke test), and L's settings are asserted against `vl/<p>/vl.json`. Marks were fixed before the run (roadmap e5ab95d650).
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: B2 / N' / W1 / L / **SCL** | 89.4 / 86.7 / 82.9 / 87.5 / **87.6** | 90.5 / 87.8 / 84.2 / 88.3 / **88.9** |
+| (1) harm SCL vs N' | -0.9 (better), nothing fires, **pass** | -1.1 (better), nothing fires, **pass** |
+| (2) C2 DEV first try: N' / L / **SCL**; gain ratio SCL / L (mark >= 0.9x) | 0.4 / 28.9 / **27.0**; **0.93** met (0 questions short) | 0.4 / 33.6 / **32.8**; **0.98** met (0 short) |
+| report only: SCL - L first try | -2.0 [-4.7, +0.4] | -0.8 [-2.0, 0.0] |
+| report only: SCL vs L skills | +0.1, nothing fires | +0.5, nothing fires |
+| report only: SCL vs W1: first try / in_dist | -4.3 [-9.0, +0.4] / +4.7 | -1.6 [-5.1, +1.6] / +4.7 |
+| report only: multi-step reach@32: W1 / L / SCL | 13.0 / 6.5 / 5.8 (SCL - L -0.6, SCL - W1 -7.1) | 14.3 / 7.1 / 7.8 (+0.6, -6.5) |
+| report only: loss rise picked / random rows (mean over 26 / 25 rounds) | 0.09 / -0.02 | 0.08 / -0.03 |
+| report only: picked family mix (top) | letter_ops 7.0%, list_index 6.3, compare_numbers 5.7, seq_next 5.5, backward_solve 5.4 | letter_ops 6.6%, list_index 5.7, list_stats 5.3, seq_next 5.2, backward_solve 5.2 |
+| CPU seconds: night (of it, picking) / measures | 2,491 (616) / 203 | 2,451 (596) / 224 |
+
+Verdict: **SCL PASSES on both parents.** Harm is clean against N', and the first-try gain is 0.93x / 0.98x L's.
+
+How to read it:
+- *Shown:* with the model choosing its own replay rows on the lr 1e-4 night, no skill is lost (skills are 0.9 / 1.1 above N'), and it keeps 93-98% of the hand-picked night's C2 gain. That is the scorecard's sleep test for "it runs itself", on 2 parents.
+- *Shown:* picking adds nothing measurable over uniform replay at this rate. Skills are within 0.5 of L, and first try is 2.0 / 0.8 lower (intervals touch 0).
+- *Shown:* at lr 1e-4 the night barely raises any skills row's loss (random rows' mean rise is below 0), so the pick has little to aim at. At lr 1e-3 (SC) the picked rows rose 5x more than random rows.
+- *Shown:* both lr 1e-4 nights trail W1 on multi-step search breadth (reach@32 6-8 vs 13-14), as in L2 and L64.
+- *Suggested:* the low rate removes the forgetting, and the model's own picking keeps the same result without a hand-chosen replay mix. Winning back the multi-step climb is still the open problem (lr 3e-4 is the pre-set next step, held).
