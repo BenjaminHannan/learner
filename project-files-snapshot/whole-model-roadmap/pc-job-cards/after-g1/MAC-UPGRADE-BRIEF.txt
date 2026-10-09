@@ -1,0 +1,6 @@
+From the Whole-model roadmap thread. Ben chose "Add B3" on the project card at @TIME@ ET: upgrade the post-G1 chain on BensPC to version 2 (B3 3M added; second seeds only if the first are alive). This touches no running job and starts no GPU work now: it replaces the chain waiter only while it is still waiting for G1 (it refuses otherwise). In your repo clone:
+1. git fetch origin claude/project-thread-yha868 claude/project-thread-f1to6a
+2. rm -rf /tmp/pg2 && mkdir -p /tmp/pg2 && git show 649c1e3fcb:custom_io/g8a/long_dev/long_dev.jsonl > /tmp/pg2/long-dev.jsonl && for f in q8aPost2_wait.ps1 upgrade_post_g1.ps1 b3_readout.py b3_capcheck.py gx-head.md 8aGXs400-pc.txt 8aGXs401-pc.txt 8aG2C3s401-pc.txt 8aB3G1s400-pc.txt 8aB3G1s401-pc.txt fc100.md g2c3.md g2c3s401.md g2c10.md c30.md b3g1.md; do git show @COMMIT@:results/8a-g/pc-job-cards/after-g1/$f > /tmp/pg2/$f; done@B3R@
+3. scp /tmp/pg2/* benspc:C:/Users/benja/custom-io/post-g1-in/
+4. ssh benspc "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\custom-io\post-g1-in\upgrade_post_g1.ps1"
+5. Reply with step 4's full output. If it prints NEEDS ATTENTION, stop there and do nothing else.

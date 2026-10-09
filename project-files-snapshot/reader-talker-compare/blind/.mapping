@@ -1,0 +1,21 @@
+X = armA-report.md
+Y = armB-report.md
+
+(Random draw: secrets.randbelow(2) returned 0, so armA became X.)
+
+Edits to X.md (from armA-report.md):
+- Title line "# Arm A report (one Opus agent, no subagents)" replaced with "# Report X".
+- Removed the meta sentence "Copied as delivered, not edited afterward." and the wall-clock sentence (start/finish timestamps and "5 min 14 s"); kept the "Sources: ... PR #36 (commit 51fcdcfb5)" part of that line.
+- No "update"/"later result" section was present, so none removed. Dates "(2026-10-04)" in the body headings left untouched. References to "speed file", "PASS-MARKS-SMALL-LM.md" and /mnt/project-files/notes/hearer-talker/ left as is (not origin-revealing).
+
+Edits to Y.md (from armB-report.md):
+- Title line "# Cheaper reader and talker: Arm B report (Opus lead + Sonnet helpers)" replaced with "# Report Y: Cheaper reader and talker".
+- Removed "Written 2026-10-04, 3:08 PM ET." and replaced the folder/file list (`reader-talker-compare/armB/`: code-map, lit-reader, lit-talker, lit-efficiency, lit-small-reasoners, citation-check, speed-probe) with "[supporting notes]".
+- "(shown, code-map.md)" -> "(shown, [supporting notes])"; "(shown, speed-probe.md, one 5090" -> "(shown, [supporting notes], one 5090"; "on a 3090 (code-map)" -> "on a 3090 ([supporting notes])".
+- Caveats bullet: "Two of the four literature helpers wrote from memory... A third helper then checked all 82 arXiv ids" -> "Two of the four literature surveys were written from memory... All 82 arXiv ids were then checked against arXiv."; "The helper files still contain those original errors. Check citation-check.md before quoting them." -> "The supporting notes still contain those original errors. Check [supporting notes] before quoting them."
+- Added a neutral Caveats bullet from the removed process section: "The key code lines (the allptr prefix in run_english.py lines 123-150) were cross-checked directly against the code." (reword of "Opus ... cross-checked the key code lines").
+- Removed the entire final section "## How Arm B ran" (wall clock 2:42 PM to 3:10 PM / ~28 min, 7 Sonnet helpers and their tasks, 6 in parallel, which helpers did not use the web, $0.15 Vast spend, what Opus did).
+- Kept "~$0.15" in the speed-facts header (part of the speed measurement). Date "(2026-10-04)" etc. not otherwise present.
+- No "update"/"later result" section was present, so "[later test results removed]" was not needed in either file.
+
+Grep check (case-insensitive: arm, helper, subagent, sub-agent, sonnet, opus, solo, minute, worker, delegat, parallel agent): remaining hits are technical only ("--arm allptr" CLI flag in X; experiment "arm"/"arms" such as copytalk arm in Y; "40 min" is an experiment run time, not work time).

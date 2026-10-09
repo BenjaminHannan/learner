@@ -1,0 +1,140 @@
+{
+ "prefix": {
+  "bootstrap": {
+   "scale_norm": 15.462,
+   "bias_in_norm": 0.375,
+   "W1_fro": 3.66,
+   "b1_norm": 0.25,
+   "W2_fro": 27.33,
+   "W2_top_sv": [
+    9.46,
+    5.35,
+    5.09,
+    5.06
+   ],
+   "b2_norm": 4.97,
+   "W2_rank_le": 32
+  },
+  "parent0": {
+   "scale_norm": 15.272,
+   "bias_in_norm": 1.162,
+   "W1_fro": 11.65,
+   "b1_norm": 0.83,
+   "W2_fro": 41.95,
+   "W2_top_sv": [
+    14.87,
+    13.55,
+    10.6,
+    10.38
+   ],
+   "b2_norm": 6.85,
+   "W2_rank_le": 32
+  },
+  "main2": {
+   "scale_norm": 13.514,
+   "bias_in_norm": 2.074,
+   "W1_fro": 15.79,
+   "b1_norm": 1.38,
+   "W2_fro": 53.35,
+   "W2_top_sv": [
+    24.81,
+    15.37,
+    13.98,
+    11.99
+   ],
+   "b2_norm": 12.07,
+   "W2_rank_le": 32
+  }
+ },
+ "update": {
+  "parent0": 5120,
+  "main2": 55120
+ },
+ "moe_parent0": [
+  {
+   "block": 0,
+   "router_nonzero": 0,
+   "expert0_eq_expert1": true,
+   "max_abs_diff_e0_e1": 0.0,
+   "experts2to7_all_equal": true,
+   "max_abs_diff_e0_e2": 0.31731635332107544,
+   "params_per_expert": 525568
+  },
+  {
+   "block": 1,
+   "router_nonzero": 0,
+   "expert0_eq_expert1": true,
+   "max_abs_diff_e0_e1": 0.0,
+   "experts2to7_all_equal": true,
+   "max_abs_diff_e0_e2": 0.23907199501991272,
+   "params_per_expert": 525568
+  }
+ ],
+ "core_stored_params_parent0": 9008430,
+ "moe_main2": [
+  {
+   "block": 0,
+   "router_nonzero": 0,
+   "expert0_eq_expert1": true,
+   "max_abs_diff_e0_e1": 0.0,
+   "experts2to7_all_equal": true,
+   "max_abs_diff_e0_e2": 0.8928939700126648,
+   "params_per_expert": 525568
+  },
+  {
+   "block": 1,
+   "router_nonzero": 0,
+   "expert0_eq_expert1": true,
+   "max_abs_diff_e0_e1": 0.0,
+   "experts2to7_all_equal": true,
+   "max_abs_diff_e0_e2": 0.7635007500648499,
+   "params_per_expert": 525568
+  }
+ ],
+ "core_stored_params_main2": 9008430,
+ "core_live_estimate": {
+  "one_distinct_expert_per_block": 1051136,
+  "non_expert_params": 595230,
+  "of_which_unused_puzzle_heads": 65406,
+  "live_distinct_trainable": 1580960,
+  "stored": 9008430
+ },
+ "reader_parent0": {
+  "W1_shape": [
+   32,
+   2048
+  ],
+  "sv_top": [
+   5.387,
+   4.795,
+   4.704,
+   4.473
+  ],
+  "sv_last": [
+   0.94,
+   0.871,
+   0.763,
+   0.71
+  ],
+  "effective_rank_99": 31
+ },
+ "reader_main2": {
+  "W1_shape": [
+   32,
+   2048
+  ],
+  "sv_top": [
+   20.627,
+   14.548,
+   12.855,
+   11.944
+  ],
+  "sv_last": [
+   5.348,
+   5.053,
+   4.869,
+   4.171
+  ],
+  "effective_rank_99": 32
+ }
+}

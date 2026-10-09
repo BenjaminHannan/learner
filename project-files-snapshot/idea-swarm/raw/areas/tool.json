@@ -1,0 +1,1838 @@
+{
+ "area": "tool",
+ "title": "Calculator as an outside tool and the no-hard-coding ladder (T1 -> K1 -> O1 -> N1 -> P1 -> V1 -> B3)",
+ "brief": {
+  "state": "T1, the calculator outside the model, is built and queued but has not run. models/tool.py is B2 with the value codes, the executor, and the constant and result slots removed. The model writes a call as text (the op word from B2's op head, and two operands written cell by cell through B2's pointer-generator). A plain Python calc() returns the result string, and the entry 'op a b = r' is read back by the reader as its own string. Size is 3,277,393 trainable (B2 3,302,481; band 3,147,208 to 3,341,880). Queue 40 runs T1_s200 and T1_s201 at the default 8 loops. No T1 result folder exists in the snapshot.\n\nSealed screen (seeds 200, 201): T1 minus B2 pooled-5 >= -2.0, chain-5 >= 95, and write-copy >= 99.0 on both. Confirm (200-205): mean(T1 - B2) pooled-5 >= -1.0, its CI lower bound >= -2.0, T1 >= B2 - 1.0 on 5 of 6 seeds, chain-5 mean within 1.0 of B2 and >= 99 on 5 of 6 seeds, plus tool-off, leak, swap and split lines.\n\nB2 reference (confirm seeds 200-205): pooled-5 73.0 to 74.7 (mean 74.02, SD 0.63); chain-5 99.4 to 99.7 (mean 99.57). The step-writing transformer gets pooled-5 mean 67.1 and chain-5 94.0; with its regex calculator, chain-5 is 96.35. B2 minus step-writing is +6.89 (paired SD 1.33), positive on all six seeds.\n\nReading (D0) passes: B2's reader output carries every digit place at 99.997 to 100% on all six seeds, but the pooled slot path loses digits (place 9 at 65.2 to 83.2%). The writing check has not run; it is scored on the T1 screen. D0b: 58 of 72 wrong text-baseline chain rows come from its own 64-char training cap; copy errors are 0 of 2,000.\n\nCode findings. (1) The call cap is min(N_RES, n_loops - 1) = 7, because calls happen only in rounds 1 to 7 of an 8-round loop. The planned K1 (16 calls) needs n_loops of at least 17, or a second turn. That means about 2x thinker compute, not just a bigger tape. (2) Hand code still on T1's path: regex spans for the 16 prompt numbers, the place index from a word regex, word-regex copying for WORD answers, units-first string reversal, and calc() running inside the model class (the B3 audit as written would fail). (3) The 528 list_stats rows (9 to 11 steps) are trained answer-only with no calls, in T1 and in B2; this conflicts with the no-truncation rule. (4) B2 itself fails the zero-round leak line (<= 5) on seeds 201 (10.8) and 203 (5.7).\n\nLadder: D0 and D0b are done; T1 is queued; K1, O1, N1, P1, V1, H1, L1, ST1 and B3 are specified but not started. W1, U0 and C0 are queued as q41 to q44, not run. The EGE 6-seed confirm (q39) is not in the snapshot. EGE's whole model is 274.5M, so its result counts only as B2-internal under rule 3.",
+  "facts": [
+   {
+    "claim": "T1 (models/tool.py) is B2 with vcode, res_from_z, op_emb, the four slot pointers, ln_k, and the 4 constant and 7 result slots removed; it adds W_a, W_b (d to d) and tape_emb (N_RES x d). Trainable size 3,277,393 (-0.76% vs B2's 3,302,481). The band top is 3,341,880, so T1 sits 64,487 below it and 25,088 below B2.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/tool.py lines 1-28, 65-81 (docstring count not re-run); PASS-MARKS.md addendum 17; analyze_t1.py ARMS"
+   },
+   {
+    "claim": "T1 has not run: the queue (queue_local/40-pc-t1-screen.txt) runs T1_s200 and T1_s201 with --cfg '{}' (default n_loops 8), 24k steps, bf16, --save-preds, judged by analyze_t1.py against q33's B2. No results/40-* folder exists in the code snapshot.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/40-pc-t1-screen.txt; .../custom_io/results/ listing"
+   },
+   {
+    "claim": "Call cap mechanics: the loop runs range(n_loops) rounds (n_loops default 8); a call is written only for t in [1, min(N_RES, n_loops-1)]; so the cap is 7 calls with N_RES=7 and n_loops=8. step_emb has n_loops rows.",
+    "label": "shown",
+    "source": "tool.py lines 150-165 (loop and 'if not 1 <= t <= N_RES'); ledger.py line 130 (n_loops=8 default), lines 144-145 (step_emb = Embedding(n_loops, d))"
+   },
+   {
+    "claim": "Cost of K1 as planned (16 calls): tape_emb grows 7 to 16 rows (+2,304 params at d=256). Raising n_loops 8 to 17 for 16 calls adds step_emb rows (+2,304), so about +4,608 total, and about 2x thinker forward work per question. The PLAN's '+2,300' counts only tape_emb.",
+    "label": "shown",
+    "source": "tool.py line 76 (tape_emb = Embedding(N_RES, d)); ledger.py line 145 (step_emb); arithmetic by this read"
+   },
+   {
+    "claim": "Tape entries are read by the reader one string at a time (positions from 0, max LE=40 chars), with a learned entry-order vector tape_emb[k] added. The thinker cross-attends to prompt slots, written entries, and prompt. The entry text is never read in the same pass as the question.",
+    "label": "shown",
+    "source": "tool.py lines 56-57, 84-108, 187-193; PASS-MARKS.md addendum 17 (disclosed choice 'read by the reader as its own string')"
+   },
+   {
+    "claim": "Call writer: op word from B2's op head (9 classes incl. NOOP; NOOP = no call). Each operand is written as 11 cells, units first, cell j = W_k(z) + reader.place row j, through B2's pointer-generator (vocab or copy of prompt/entry chars); decode = argmax to first EOS, then reversed.",
+    "label": "shown",
+    "source": "tool.py lines 110-117 (cells, decode_cells), 149-167 (step loop), 252 (cell_ids reversal)"
+   },
+   {
+    "claim": "calc() is plain Python over call text. It returns '?' for an unknown op, a non-integer operand, |x| or |y| or result >= 1e9, an inexact DIV, or MOD by 0. It uses progparse.ex, B2's executor. opswap swaps add and sub inside calc.",
+    "label": "shown",
+    "source": "tool.py lines 43-53; progparse.py lines 21-30 (ex)"
+   },
+   {
+    "claim": "Answer path: B2's NUM mode is removed (row_gold yields only mode 1 WORD or 2 GEN; lmode class 0 is never a target). Answers are written by the 9-register GEN writer (8 chars + EOS; GEN_MAX = 8) and reversed by [::-1]. WORD answers still come from regex word_spans copying.",
+    "label": "shown",
+    "source": "tool.py lines 233-249 (row_gold), 213 (gen reversal), 216-221 (WORD copy via word_spans); ledger.py line 63 (GEN_MAX = N_REG - 1 = 8)"
+   },
+   {
+    "claim": "Teacher traces: operand strings are str(vals[ca[0]]) of slot programs from pp.row_targets (B2's parser, including the inverse-op rewrite for missing operands). Tape entries are the gold calls with their results; the build reports 0 mismatches on 2,053 training calls.",
+    "label": "shown",
+    "source": "tool.py lines 233-249; progparse.py lines 42-51, 111-114 (inverse rewrite); PASS-MARKS.md addendum 17 (tested claim)"
+   },
+   {
+    "claim": "Rule-7 issue: progparse keeps a program only if it has <= N_RES=7 steps (else prog is empty). The 528 train rows (list_stats, 9 to 11 steps) therefore train as GEN answers with NOOP ops and w_noop 0.1, i.e. answer-only with no calls. Dev rows affected: in_dist 3, answer 1, frame 2 (big dev: 16, 11, 17). B2 has the same behaviour.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/LIMIT-COUNTS-2026-10-07.json (train program_over_7 = 528); progparse.py line 199; tool.py lines 275-307 (loss)"
+   },
+   {
+    "claim": "Conflict inside the PLAN: its limit table says K1 'lifts it to 16 for T1', but the 2:00 PM note says lifting the limit is 'its own one-change step after T1's confirm', and PLAN section 5 orders K1 after the T1 confirm.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 2 limit table row 2 vs section 5 item 4; /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md Note (2:00 PM ET)"
+   },
+   {
+    "claim": "Negative numbers in prompts: the regex \\d+ drops the minus sign. In the first 200,000 rows of skills.jsonl (inside own72.tgz), 1,431 prompts (0.72%) contain a minus-digit: fewshot_number_rule 724, seq_next 707. All 1,431 have only rule-text steps (for example 'rule arith', 'rule x*1+-27'), none parseable, so none is program-bearing today.",
+    "label": "shown",
+    "source": "own72.tgz member skills.jsonl, read in memory by this read (not extracted); progparse.py lines 14, 18; ledger.py spans() (around lines 204-207)"
+   },
+   {
+    "claim": "Answer cap: MAX_ANS = 8 (data.py line 11). Train max answer length is 8, so no train answer is cut. Dev family-split rows with answers over 8 chars: 5 of 160 (clock_date 3, string_transform 2); big dev family 25 of 800. Family rows are not in pooled-5.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/LIMIT-COUNTS-2026-10-07.json (dev_family, big_dev_family); data.py line 11"
+   },
+   {
+    "claim": "Silent generation filter: any drawn question over 62 estimated word pieces is discarded and redrawn; the reject count was not saved. No answer-length filter exists there.",
+    "label": "shown",
+    "source": "PLAN-AND-MARKS section 2 limit table (cites skills_curriculum/core.py and build.py on branch claude/project-thread-y0sxwe; not re-read here)"
+   },
+   {
+    "claim": "Hand code still on T1's path: (a) regex spans for the first 16 prompt numbers, pooled by the reader into slots (ledger spans() and tokenize; tool.run uses them); (b) the place index from word_spans (reader.py place_ids); (c) word regex for WORD answers (tool.py 217); (d) units-first string reversal (tool.py 117, 213, 252); (e) calc() called inside the model class's run() (tool.py 181).",
+    "label": "shown",
+    "source": "ledger.py ~204-207 and tokenize; reader.py lines 17-23; tool.py 117, 181, 213, 217, 252"
+   },
+   {
+    "claim": "P1 is not a clean deletion: the reader's place table (rows 0-10) indexes the 11 call cells (tool.py line 112), and rows 0-8 initialise the 9 GEN registers (tool.py line 149; ledger.py line 149 pattern). A P1 must give the writer its own position table.",
+    "label": "shown",
+    "source": "tool.py lines 112, 149; reader.py place Embedding(N_PLACE=16)"
+   },
+   {
+    "claim": "A17 (prompt position table) does not apply to T1: entries are read separately with positions from 0, so the reader's position table stays at MAX_PROMPT=208. It would matter for a B3 design that reads question plus transcript in one pass.",
+    "label": "shown",
+    "source": "tool.py lines 84-99 (read_texts); reader.py CharReader (pos = Embedding(MAX_PROMPT, d))"
+   },
+   {
+    "claim": "Operation set: calc supports add, sub, mul, div, mod, min, max, cmp (the B2 9-op list minus NOOP). The text baseline's calculator supports only + - * /.",
+    "label": "shown",
+    "source": "tool.py line 39 (NAMES); progparse.py line 11 (OPS); INVENTORY E3 (text baseline calculator, plain_tf_steps.py lines 43-53)"
+   },
+   {
+    "claim": "Size band arithmetic: 3,244,544 x 0.97 = 3,147,208 and x 1.03 = 3,341,880. B2 headroom to the top is 39,399. W1 (3,336,113) leaves 5,767. U0 (3,339,776) leaves 2,104. C0 (3,271,424) is inside.",
+    "label": "shown",
+    "source": "PASS-MARKS.md addenda 18-20; MARKS-D0-T1 Amendment 2; arithmetic by this read"
+   },
+   {
+    "claim": "B2 on confirm seeds 200 to 205 (RESULT.json): pooled-5 = 73.00, 74.27, 74.74, 74.02, 73.63, 74.47 (mean 74.02; SD 0.63). Chain-5 intact = 99.4, 99.6, 99.6, 99.5, 99.6, 99.7 (mean 99.57). The 99.8 in the orchestrator summary does not appear in these files.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s200..B2_s205/RESULT.json (final_eval, chain5.intact)"
+   },
+   {
+    "claim": "B2 per-split exact ranges over 6 seeds: in_dist 89.6 to 91.5; answer 73.1 to 74.9; frame 87.3 to 89.0; vocab 86.3 to 88.8; variant 31.9 to 37.1 (B2 misses about 63 to 68% of variant). Family split 0.6 to 2.5.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json final_eval (computed from correct/n)"
+   },
+   {
+    "claim": "B2 lesions over 6 seeds: zero-round (loops:0) in_dist = 0.0, 10.81, 0.0, 5.66, 3.53, 0.0; donor in_dist 3.09 to 3.75; tool-off program families 0.24 to 0.82%; opswap swap_match 99.88% (826 to 830 affected rows); loops:16 in_dist is 0.8 to 1.9 points below loops:8.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json lesions and extra (noexec, opswap, chain5_lesions)"
+   },
+   {
+    "claim": "Plain transformers, 6 seeds: direct answer pooled-5 52.7 to 55.6 (mean 53.7), chain-5 29.9 to 38.0; step-writing pooled-5 66.2 to 69.0 (mean 67.1), chain-5 93.7 to 94.4 (mean 94.0); step-writing with C1' calculator chain-5 96.2 to 96.6 (mean 96.35).",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/tf_s20x, tfsteps_s20x RESULT.json (final_eval, chain5.intact and chain5.calc)"
+   },
+   {
+    "claim": "Paired gaps: B2 minus step-writing = +6.89 (SD 1.33; per seed +4.6 to +8.4, all positive). B2 minus direct = +20.34 (SD 0.94). B2 alone SD 0.63. These match CONFIRM-ANALYSIS.json.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/*/RESULT.json (computed); results/CONFIRM-ANALYSIS.json"
+   },
+   {
+    "claim": "Family gaps, B2 minus step-writing (6-seed mean of per-seed % over the 5 pooled splits): fewshot_number_rule -14.9 (22.7 vs 37.6); verify_claim -5.6; rule_apply -4.8; order_chain -3.9. B2 ahead on cipher_map +34.0, seq_cycle +28.8, object_track +26.8, backward_solve +22.5. REPORT.md quotes fewshot -9 and rule_apply -6 on a basis not stated; not reproduced here.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/*/RESULT.json (computed); REPORT.md line 103 (quoted figures)"
+   },
+   {
+    "claim": "D0 reading: B2's reader output digit probe is 99.997 to 100% at every place on all six seeds (pass at 99.0). The pooled span mean (what B2's number slots add) loses digits: place 9 at 65.2 to 83.2% (D0-RESULT says 65 to 84). The digits-only control reader: lowest place 100%, pooled lowest place 74.2%.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md table; results/d0/control_digits_reader.json"
+   },
+   {
+    "claim": "D0 writing (exact copy of 1-9 digit results) has not been run. PASS-MARKS addendum 16 defers it to the T1 screen (write_copy operand and answer copy >= 99.0 on both seeds, addendum 17).",
+    "label": "shown",
+    "source": "PASS-MARKS.md addendum 16 and 17; tool.py lines 449-482 (write_copy eval implemented)"
+   },
+   {
+    "claim": "D0b: the text baseline's calculator (C1') with 72 wrong chain rows over seeds 100 and 101. 58 (81%) are rows trained answer-only by the 64-char cap; 5 wrong name, 1 own arithmetic, 5 format, 2 wrong operation, 1 wrong number; copy errors 0 of 72 (0 of 2,000). Verdict: mixed.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md table"
+   },
+   {
+    "claim": "Parity arithmetic: the 6-seed 95% CI half-width is t(5) x SD / sqrt(6) = 1.05 x SD. Mark 1b (CI lower bound >= -2.0) is equivalent to mean(T1 - B2) >= -2.0 + 1.05 x SD, which is stricter than 1a (mean >= -1.0) when the paired SD exceeds about 0.95.",
+    "label": "shown",
+    "source": "MARKS-D0-T1-2026-10-07.md Amendment 2 (formula); arithmetic by this read"
+   },
+   {
+    "claim": "The T1 and B3 zero-round leak line (in_dist <= 5 on every seed) is failed by B2 itself on seeds 201 (10.81) and 203 (5.66). A B2-level leak fails the line as written.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2 RESULT.json lesions.loops:0.in_dist; MARKS-D0-T1 mark 4; PLAN section 3c mark 6"
+   },
+   {
+    "claim": "T1's chain-5 margin: B2 is 99.4 to 99.7 per seed, so T1 has 0.4 to 0.7 points per seed above the chain-5 >= 99 line (required on 5 of 6 seeds).",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2 RESULT.json chain5.intact; MARKS-D0-T1 confirm mark 2"
+   },
+   {
+    "claim": "Control ctl27 (zero controls 2-7 at test): B2 s200 pooled -1.6, chain -7.8; across seeds pooled -0.6 to -13.6, chain -0.6 to -36.9. So the thinker's 6 extra controls are used, unevenly by seed.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md table"
+   },
+   {
+    "claim": "Loop count at test: B2 in_dist at 16 loops is 0.8 to 1.9 points below 8 loops across six seeds; Test LR (round readout every round) gave +1.14/+1.27 pooled, failed stability (-0.51 vs -0.3), and leaked 15.88 at loops:0 on s200.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2 RESULT.json loops:16; /mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 3 (cites RESULTS-EG2.md)"
+   },
+   {
+    "claim": "Reader window removal (R0): pooled-5 -6.3 and -6.8; cipher family falls from about 97 to about 4 (letters kept).",
+    "label": "shown",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 1 (cites R0); gpt-no-hardcoding-ladder-2026-10-07.md section 2"
+   },
+   {
+    "claim": "EGE (frozen EmbeddingGemma before the window): +1.6 and +2.1 pooled on 2 seeds, but it failed its pre-registered screen (variant +1.7 vs +3.0 needed; zero-round leak 18% on one seed). Its whole model is 274,503,505 params (trainable 3,500,881). PASS-MARKS addendum 4 says a pass is a B2-internal result.",
+    "label": "shown",
+    "source": "PASS-MARKS.md lines 162-184 (addendum 4), addendum 15 (line 387 size rule); gpt-no-hardcoding-ladder-2026-10-07.md section 2 (screen numbers)"
+   },
+   {
+    "claim": "Four Gemma-based readers without the window (EGR, EGO, EGM, EGW) all lost; ciphers 0 to 10.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/gpt-no-hardcoding-ladder-2026-10-07.md section 2 (summary of PASS-MARKS addenda 6-9)"
+   },
+   {
+    "claim": "Every model tested (including B2) scores 0 to 4% on held-out families (brand-new task kinds).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/REPORT.md line 109"
+   },
+   {
+    "claim": "Literature (abstract-level): Toolformer filters self-made calls by whether the result lowers later-token loss (6.7B+; small scale untested). TALM bootstraps tool use by self-play from demos. PAL and Program-of-Thoughts move arithmetic out of the text for big LLMs. Lee 2023 (arXiv 2307.03381): small transformers learn arithmetic, and intermediate results help.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/no-hardcoding-papers.md sections 'Reading and writing exact numbers' and 'Learning to call outside tools' (abstracts only)"
+   },
+   {
+    "claim": "Number-position papers (Abacus, Position Coupling, Shen 2023) show that digit alignment needs a position feature built from number boundaries. That feature is a hand-written structure in disguise. A tool-side calculator avoids needing alignment in the model, so the model needs copy, not computation.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/no-hardcoding-papers.md section 'Reading and writing exact numbers' items 3-5"
+   },
+   {
+    "claim": "Popescu 2026 (arXiv 2607.20519, not opened here, cited second-hand): a jointly trained halt gate distorts the loop; per-round supervision plus a confidence stop often matched or beat it.",
+    "label": "suggested",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8 and 8b"
+   }
+  ],
+  "tried_and_failed": [
+   {
+    "what": "Reader without the +-4 window (R0)",
+    "result": "pooled-5 -6.3 and -6.8; cipher family 97 to about 4",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 1; gpt-no-hardcoding-ladder-2026-10-07.md"
+   },
+   {
+    "what": "Four Gemma-based readers with no window (EGR, EGO, EGM, EGW)",
+    "result": "all lost; ciphers 0 to 10",
+    "source": "/mnt/project-files/no-hardcoding/gpt-no-hardcoding-ladder-2026-10-07.md section 2 (summary of PASS-MARKS addenda 6-9)"
+   },
+   {
+    "what": "EGE: frozen EmbeddingGemma before the window (screen, 2 seeds)",
+    "result": "+1.6 / +2.1 pooled; failed the pre-registered screen (variant +1.7 vs +3.0 needed; zero-round leak 18% on one seed); whole model 274.5M, so B2-internal only",
+    "source": "gpt-no-hardcoding-ladder-2026-10-07.md section 2; PASS-MARKS.md addendum 4 and 15"
+   },
+   {
+    "what": "Test LR: readout at every thinker round",
+    "result": "+1.14 / +1.27 pooled, but failed stability (-0.51 vs -0.3) and leaked 15.88 at loops:0 on s200",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 3"
+   },
+   {
+    "what": "B2 run at 16 loops instead of 8 (test time)",
+    "result": "in_dist 0.8 to 1.9 points lower across six seeds (-1.91 and -1.61 on s200 and s201)",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json lesions loops:16 (computed)"
+   },
+   {
+    "what": "Place code alone on plain transformers",
+    "result": "+0.8 and -0.8 (noise)",
+    "source": "gpt-no-hardcoding-ladder-2026-10-07.md section 2 (summary of PASS-MARKS addendum 1)"
+   },
+   {
+    "what": "Zeroing thinker controls 2-7 (ctl27)",
+    "result": "pooled -0.6 to -13.6; chain -0.6 to -36.9 across seeds; the extra controls are used",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "what": "Text baseline with a regex-triggered calculator (C1')",
+    "result": "chain-5 96.2 to 96.6 (mean 96.35) vs B2 99.4 to 99.7; the 58 of 72 failed rows come from the 64-char training cap, so the gap is partly self-inflicted",
+    "source": "results/33-pc-confirm-b2/tfsteps_s20x RESULT.json lesions calc (computed); D0b-RESULT-2026-10-07.md"
+   },
+   {
+    "what": "Step-writing transformer trained with the 64-char steps cap",
+    "result": "840 var_chain rows trained answer-only; cap fix (C0, cap 107) queued, not run",
+    "source": "PLAN-AND-MARKS section 3.1; PASS-MARKS addendum 20"
+   },
+   {
+    "what": "Digit reading check on the digits-only control reader",
+    "result": "100% at every place on synthetic data; span path lossy (74.2% lowest pooled place); not needed as a verdict because B2's reader passed",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/d0/control_digits_reader.json"
+   },
+   {
+    "what": "B1 students (models trained on their own task mix)",
+    "result": "91 to 96% on their own mix, about 11% on new kinds",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 3"
+   },
+   {
+    "what": "Notebook recall that replays slot ids (creative D6)",
+    "result": "affine questions 0% (3x+7 cannot become 5x+2); to be replaced by a recall tool",
+    "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 4 (cites RESEARCH-2026-10-07.md, not read here)"
+   },
+   {
+    "what": "Parity mark 'CI of T1 minus B2 inside +-1.0'",
+    "result": "unpassable at paired SD 0.94 (half-width 1.05 x SD); re-sealed by Amendment 2 (1a mean >= -1.0, 1b CI lower >= -2.0, 1c 5 of 6 seeds)",
+    "source": "/mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md Amendment 2"
+   },
+   {
+    "what": "W1 family mark 'no other family down more than 2.0'",
+    "result": "fails 100% of the time with no change (null check on q33); replaced by F1 (four lookup families pooled, 2-seed mean)",
+    "source": "PASS-MARKS.md addendum 19 amendment 1; redesign-ideas section 8a"
+   }
+  ],
+  "planned_or_running": [
+   {
+    "what": "T1 screen on seeds 200 and 201 (model tool, 3,277,393 params), judged by analyze_t1 against q33 B2",
+    "status": "queued on BensPC as q40; not run in the snapshot (PLAN section 5 expects about 9 PM to midnight ET on 10-07)",
+    "source": "queue_local/40-pc-t1-screen.txt; PASS-MARKS addendum 17; PLAN section 5"
+   },
+   {
+    "what": "T1 6-seed confirm (adds 202 to 205); O1 starts only after T1 passes",
+    "status": "waits on the screen; if the screen shows 'not shown', the named link is fixed first",
+    "source": "MARKS-D0-T1 confirm and Amendment 2; PLAN section 5 item 3"
+   },
+   {
+    "what": "EGE 6-seed confirm (new seeds 202 to 207; EGE_s202 to s207 plus B2_s206, s207)",
+    "status": "queue 39 'running' per PLAN and INPUT-UNITS; no results/39-* folder in the snapshot",
+    "source": "queue_local/39-pc-ege-confirm.txt; PLAN-AND-MARKS section 2 (gain tests); INPUT-UNITS-2026-10-07.md"
+   },
+   {
+    "what": "U0: plain_tf_steps with 308 BPE merges on the prompt (3,339,776 params); pass 'Ben right' if pooled-5 minus letters >= +2.0 on both seeds, 'letters fine' if <= +1.0",
+    "status": "queued (queue 41, seeds 200 and 201), not run",
+    "source": "queue_local/41-pc-gain-u0.txt; PASS-MARKS addendum 18"
+   },
+   {
+    "what": "W1: B2 plus one low-rank global attention block (gattn 32; 3,336,113 params); marks F1 family line, pooled-5 >= +1.0 both seeds, chain-5 >= 99",
+    "status": "queued after U0 (queue 42), not run",
+    "source": "queue_local/42-pc-gain-w1.txt; PASS-MARKS addendum 19 and amendment 1"
+   },
+   {
+    "what": "C0: plain_tf_steps with cap 107 (3,271,424 params); predicted chain-5 with calc >= 98.5 on both seeds, proved wrong below 97.5 on both",
+    "status": "queued (queue 43); PT13C0 (13-layer, 10,379,264 params) queued (queue 44); neither run",
+    "source": "queue_local/43-pc-c0.txt; queue_local/44-pc-8a-pt13-c0.txt; PASS-MARKS addendum 20"
+   },
+   {
+    "what": "K1: raise the call cap from 7 to 16 (tape 16; needs n_loops of at least 17 or a second turn; about +4.6k params if loops also rise)",
+    "status": "planned after the T1 confirm; not built (no n_loops change exists in tool.py)",
+    "source": "PLAN-AND-MARKS section 2 and 3a (link checks); MARKS note 2:00 PM"
+   },
+   {
+    "what": "O1 (final answers through the call writer; delete WORD and mode head), N1 (delete regex spans and slots), P1 (delete the place input term), V1 (raw bytes; no screen)",
+    "status": "planned; O1's case must be recorded from T1's build before coding (PLAN 3a); P1 needs its own position table for cells and registers",
+    "source": "PLAN-AND-MARKS sections 2, 3a, 3b; tool.py lines 112, 149"
+   },
+   {
+    "what": "H1: learned rounds per turn (per-round supervision, stop head of 257 params, cap 32, K drawn from {4, 8, 16, 32})",
+    "status": "spec only; section 8b says required for B3; not built; needs the T1 screen first",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8b (section 8 line 116 says 'not required' and is superseded)"
+   },
+   {
+    "what": "L1: teach from the worked steps exactly as written (remove the inverse-op rewrite in progparse 42-51); ST1: self-taught traces on 3 held-out kinds (2,000 Q/A pairs each; pass +20 on both seeds, proved wrong below +5)",
+    "status": "spec only with marks; untested; L1 and ST1 come after T1",
+    "source": "PLAN-AND-MARKS section 2 (L1, ST1 marks)"
+   },
+   {
+    "what": "B3 confirm: 6 seeds, nine marks (parity re-sealed; still beats step-writing by >= +3.0; chain-5; tool-off; swap >= 99%; leaks; no split down > 2.0; audit that no regex, int or str runs outside tools/; call and write caps)",
+    "status": "spec only; the loop must move to tools/ for the audit to pass",
+    "source": "PLAN-AND-MARKS section 3c; tool.py (loop currently in models/)"
+   },
+   {
+    "what": "W2: 16 learned scratch tokens added to the thinker state (about 4k params)",
+    "status": "untested idea; spec in redesign-ideas section 5b",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b"
+   },
+   {
+    "what": "U2: learned letter groups (boundary scorer, about 4 letters per group) after W1",
+    "status": "untested idea; spec in INPUT-UNITS",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md section 'Tests'"
+   },
+   {
+    "what": "D3 'try it on the examples' checker tool (creative track); waits for T1's 6-seed confirm",
+    "status": "planned, not built",
+    "source": "PLAN-AND-MARKS section 4 (superseded note)"
+   }
+  ],
+  "open_questions": [
+   "K1 mechanics: raise n_loops to 17 (changes depth and training regime, about 2x compute) or add a second turn (a new design)? Does K1 wait for H1's round cap, since both need more than 8 rounds?",
+   "The 528 list_stats rows (9 to 11 steps) train answer-only in T1 and B2. Fix before T1's confirm (K1 for T1) or keep and disclose? The PLAN contradicts itself on timing, and Ben's rule 7 reads as requiring a fix.",
+   "The zero-round leak line (in_dist <= 5 every seed) is failed by B2 itself on 2 of 6 seeds (10.81, 5.66). Should the leak line be re-sealed before T1 runs, or kept as written?",
+   "Where does the tool loop live? It is in models/tool.py (inside run and generate). B3 mark 8 requires the loop in tools/ and no re/int/str outside it. Move it, or re-seal the audit?",
+   "T1 has two writers (an 11-cell call writer and a 9-register answer writer) plus WORD copying and a mode head. Which one becomes the final writer under O1? PLAN 3a says the build thread must record the case before O1 is coded.",
+   "P1: the reader's place table indexes both the call cells (tool.py line 112) and the GEN registers (tool.py line 149). Give the writer its own position table before the hand place index is removed?",
+   "Units-first reversal is hand code on the answer path (ledger.py line 390; tool.py lines 117, 213, 252). Should O1 or V1 learn normal order, as PLAN A15 says?",
+   "Entries are read separately (positions from 0), not appended to the question as Ben described. Does the thinker recover the right digits without the question in the same pass? B3 (question plus transcript) would bring back the prompt-cap change A17.",
+   "Negative numbers: the regex drops the minus sign. 1,431 of 200,000 skills prompts (fewshot_number_rule, seq_next) contain one, but none is program-bearing today. N1 must keep signs before any signed prompt number can enter a call.",
+   "Numbers of 10 or more digits: the cells hold 9 digits plus sign, and calc returns '?' at 1e9 or more. Are such numbers present in any split? Not checked here.",
+   "Answer cap: GEN_MAX is 8 characters (ledger.py line 63). Family-split rows with 9 to 12-character answers (5 of 160; 25 of 800 in big dev) are unanswerable in T1. B3 uses a 48-byte cap. Is the family split a judged set?",
+   "Silent filter: questions over 62 estimated word pieces were discarded at generation, with no reject count saved. Could that bias long-question families? The next skills build should record its rejects.",
+   "Size: T1 leaves 64,487 under the top; K1 needs about 2.3k to 4.6k; W1 needs 33.6k (5.8k left after). Which rungs can stack inside the band, and which must name what they shrink?",
+   "Stopping: T1 always reads the answer after round 8 and stops calling only through NOOP (tool.py lines 194-196). Is per-round NOOP enough for B3 mark 9 (cap hit on at most 1% of dev rows)?",
+   "Teacher forcing: the call writer is trained only on gold entries, never on its own wrong ones. No test yet. TALM-style self-training or ST1 is the fallback; which is cheaper to test first?",
+   "write_copy screen mark (>= 99.0 on operand and answer copy, both seeds): the number of copy events is unknown until the run. How many events make a 99.0 mark meaningful?",
+   "EGE: its whole model is 274.5M, so under Ben's rule 3 a pass is B2-internal. Is there any same-size comparison, or only distillation (untested)?",
+   "The REPORT.md figures (fewshot_number_rule -9, rule_apply -6) do not reproduce on the 6-seed files (-14.9, -4.8). Which basis do they use?"
+  ],
+  "corrections": [
+   "K1 is not a constant change. The call cap is min(N_RES, n_loops - 1) (tool.py lines 152-162), so 16 calls needs n_loops of at least 17 or a second turn. The '+2,300 params' in PLAN section 2 counts only tape_emb; if loops rise too, about +4,608, and thinker compute roughly doubles. PLAN calls K1 one change.",
+   "The T1 parity mark 'chain-5 >= 99 and pooled-5 within 1.0 of plain B2' is from redesign-ideas section 4b (suggested, 10:48 AM) and is superseded. The sealed marks are: screen pooled-5 >= -2.0 and chain-5 >= 95 on seeds 200 and 201, plus write-copy >= 99.0 on both; confirm 1a mean >= -1.0, 1b CI lower bound >= -2.0, 1c T1 >= B2 - 1.0 on 5 of 6 seeds, plus chain-5 mean within 1.0 and >= 99 on 5 of 6 seeds (MARKS-D0-T1 Amendment 2; PASS-MARKS addendum 17 amendment).",
+   "B2 chain-5 on confirm seeds 200 to 205 is 99.4 to 99.7 (mean 99.57), not 99.4 to 99.8. 99.8 is not in these six files.",
+   "The ladder as summarised omits H1 (required per redesign section 8b and PLAN rule 0), L1 and ST1, C0 (a yardstick change), the gain tests W1, U0, U2 and EGE, and the no-truncation fix that lives in C0 and K1.",
+   "D0's writing check has not run. It is deferred to the T1 screen (PASS-MARKS addenda 16 and 17). D0 reading passes on all six seeds.",
+   "D0-RESULT gives place-9 pooled span loss as 65 to 84%; the table values are 65.2 to 83.2%.",
+   "REPORT.md line 103 quotes fewshot_number_rule -9 and rule_apply -6 against plain_tf_steps. On the six confirm files (pooled over the 5 splits, mean of per-seed family %) the gaps are -14.9 and -4.8. The basis of REPORT's numbers is not stated.",
+   "redesign-ideas section 8 line 116 says H1 is 'not required for B3'; section 8b (2:55 PM, later) says it is required. Use 8b.",
+   "The PLAN limit table says K1 'lifts it to 16 for T1'; the 2:00 PM MARKS note and PLAN section 5 put K1 after T1's confirm. The T1 build as sealed keeps 7 calls and the 528 answer-only rows.",
+   "A17 (prompt position table to about 400 bytes) does not apply to T1, because entries are read as separate strings with positions from 0 (tool.py lines 84-99). It matters only for a B3 design that reads question plus transcript together. The PLAN table's A17 row for T1 needs this note.",
+   "P1 is not a clean deletion: reader.place rows 0-10 index T1's call cells (tool.py line 112) and rows 0-8 initialise the GEN registers, so the PLAN's 'the 9 place rows stay as the register tokens' init' is incomplete.",
+   "The GPT summary says the call cap is 12 and writes 48 bytes; the PLAN says 16 calls after K1 and 48-byte writes; T1 has 7 calls, an 8-character answer register (GEN_MAX 8) and 11-cell operands. The 48-byte writer does not exist in T1.",
+   "EGE is described as a 270M encoder in several places. The whole model is 274,503,505 params (trainable 3,500,881). PASS-MARKS addendum 4 says a pass is B2-internal only, so it is not a same-size win under rule 3.",
+   "ledger.py line 11's docstring says S = 3,252,368 params; that is the Ledger before copy modules (B). B2 with copy=True is 3,302,481. Both are right for their models; do not mix them in the band check.",
+   "The ladder order in redesign section 5 (W1, H1, T1) is superseded by the PLAN order (T1 first). The 'T1 proved wrong' thresholds in redesign section 4b are also superseded by MARKS-D0-T1."
+  ]
+ },
+ "raw_count": 90,
+ "distinct": [
+  {
+   "title": "T1 tool-loop behaviour battery on q40 checkpoints",
+   "summary": "As soon as queue 40 writes T1_s200 and T1_s201, run one eval-only script on the calls list that run() already returns. It measures five things nobody has measured: what T1 does after a refused call, whether its stop holds in free run, whether any call writes after a no-call round, whether call operands come from the transcript, and how NUM-heavy answer rows fare now that T1 has no NUM mode. No training, no parameters.",
+   "change": "Eval hooks in models/tool.py only. (1) Add a 'dropop' lesion (LESIONS line 66, generate state-path tuple line 226, calc call site line 181) that makes the tool answer '?' for one op chosen from dev counts before the run; log the next-round op. (2) Count free-run calls written after a NOOP round and calls at round 7, and compare free-run vs teacher-forced no-call accuracy (extra_evals 356-389). (3) Stricter source test than sources() (311-321): an operand counts as sourced only if it equals a prompt number, an earlier result, or 1, 2, 10, 100. (4) Calls per family from the calls list, with the 19 zero-parse families listed. (5) Per-mode, per-split exact for the 13 families that B2 answers through NUM (520 answer-split rows per seed), against B2 on the same seed.",
+   "why": "T1 is trained only on gold tapes, so every free-run behaviour below is off-distribution and unmeasured. Gold never contains '?' (str(v) at tool.py 245-247); a NOOP round only skips a write (173-177) and gold programs are contiguous from slot 0 (263-264); calc does no source check (43-53); B2 with every call refused falls to 0.24-0.82 on program families. T1 also loses B2's NUM answer path, and the premise check found 13 answer-split families (520 of 1,200 rows) that B2 answers through NUM at 96.7 percent; the T1 screen has no per-mode breakdown, so a loss there would hide inside pooled-5. All five checks reuse the same checkpoints, so the marginal cost is minutes.",
+   "evidence": [
+    {
+     "claim": "Gold tape entries are str(v) of exact integers, so no training tape contains '?'; calc returns '?' for bad op, non-integer operands, |value| >= 1e9, inexact DIV and MOD by 0.",
+     "label": "shown",
+     "source": "models/tool.py:43-53, 245-247 (code base /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io)"
+    },
+    {
+     "claim": "A NOOP at inference only skips that row's write; the loop never breaks, and a later round can write into slot t-1 leaving an empty slot that no training row ever shows.",
+     "label": "shown",
+     "source": "models/tool.py:152, 169, 173-177, 186-193; fact check verify-stop-and-round-mechanics"
+    },
+    {
+     "claim": "B2 with every call refused (noexec) scores 0.82, 0.77, 0.58, 0.29, 0.24, 0.29 on program families over six seeds.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200..s205 RESULT.json extra.noexec.program_families"
+    },
+    {
+     "claim": "13 answer-split families are at least 90 percent NUM mode in B2 (520 of 1,200 rows per seed, B2 96.70 percent, plain_tf_steps 77.69); T1 writes all answers by GEN; the T1 screen has no per-mode breakdown.",
+     "label": "shown",
+     "source": "RESULT.json extra.coverage.by_family and final_eval.answer.by_family (premise-check-degenerate-and-hard-rows); tool.py:248"
+    },
+    {
+     "claim": "On a '?' reply the model stops or switches op instead of repeating the call.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC (or CPU), T1_s200 and T1_s201 checkpoint.pt from queue 40, dev splits only; the dropped op and its event count are written in the queue file before the run",
+    "hours": 1,
+    "arms": "T1 intact vs T1 with dropop lesion; free-run vs teacher-forced stop; per-mode breakdown T1 vs B2 s200/s201 (existing RESULT.json)",
+    "pass_mark": "Fixed now, both seeds. (a) After a refused call (at least 100 events per seed, else seed not scored) the next op is NOOP or a different op on >=90 percent of events and the same call is repeated on <=5 percent. (b) Calls after a no-call round on <=0.5 percent of dev rows; calls at round 7 on <=1 percent; free-run no-call accuracy within 1.0 point of teacher-forced. (c) Operands not sourced from prompt, transcript or 1/2/10/100 on <=1 percent of calls. (d) The 13 NUM-heavy answer families within 3.0 points of B2 on the same seed (2-seed mean). (e) Calls per family reported, no mark.",
+    "proved_wrong": "Repeat after refusal >=25 percent, or post-no-call calls >5 percent or stop gap >3.0 points, or unsourced operands >5 percent, or NUM-heavy families >8 points below B2: that behaviour is a real defect and the matching rung (failure-reply training, stop head, source check, answer-writer change) is built before the T1 confirm."
+   },
+   "rules_check": "Rule 1: nothing added to the answer path; the lesion is test code. Rule 3: 0 params. Rule 4: 2-seed probe, a screen, no claim. Rule 5: dev only. Rule 6: minutes on the PC. Rule 9: T1 card line only. Rule 10: it measures the deployed model's own reaction, stop and operand choice; no deploy step added.",
+   "closest_prior": "extra_evals (tool.py 356-389) measures call accuracy teacher-forced vs free-run in_dist only; the noexec lesion refuses every call but never reads the next op. Nothing measures reaction to a single refused call, calls after a no-call round, or per-mode answer rows.",
+   "autonomy": "Diagnostic only. It tests whether the deployed model, on its own, reads a refusal, stops, and picks sourced operands; the lesion is a test-time switch and never ships.",
+   "merged_from": [
+    "w3a-3",
+    "w3a-5",
+    "w2d-3",
+    "w2d-4"
+   ],
+   "director_score": 8,
+   "director_note": "Highest value per GPU hour: zero training and it gates five other ideas (failure-reply training, stop head, ANSWER class, source check, answer writer). Critics should check: (1) the dropped op is chosen by dev count before the run, not after seeing results; (2) '?' from BIG overflow (|v|>=1e9) must be separated from the lesion's '?' (the proxy data had 0 such values in 1.58M rows, but B2's real train file is not mounted); (3) the post-no-call count is only meaningful if T1 ever writes a call after NOOP; (4) the 8-point NUM-heavy kill line is a judgement, not a measured null.",
+   "id": "tool-D1",
+   "area": "tool"
+  },
+  {
+   "title": "Diagnose B2 and T1 variant failures before building any check",
+   "summary": "B2 misses 63-68 percent of the variant split, and four ideas in this area (check-and-retry, pick audit, scheduled sampling, list ops) assume where it fails. One diagnostic run decides: first wrong link per failed row, teacher-forced vs free-run program match on all five splits, rank of the gold op, a family-level test of new-computation vs new-wording, and (after q40) the gold-call lift on T1. No training.",
+   "change": "(a) Reanalysis of RESULT.json only: for the 33 variant families, correlate B2 miss with the designers' new-computation flag (data.md line 53) and with unseen-word count; no GPU. (b) On B2_s100 and B2_s101: extend the op_acc block (models/ledger.py 548-590; T1 copy tool.py 356-381, in_dist only) to in_dist, variant, frame, vocab, answer; report teacher-forced and free-run program match, a first-wrong-link label per failed program row (op wrong / operand pick wrong / program right answer wrong / no program, D0b classes), and the rank of the gold op among the 9 classes (top-1, top-2, top-4); label the 10 recurring chain-5 rows and the var_chain, chain_story2 and backward_solve variant rows. (c) After q40: on T1_s200/s201 run each dev row twice, free-run and with gold ops and tape forced via run(batch, gold=...), then talk().",
+   "why": "In-distribution, B2's teacher-forced and free-run program match are equal on all eight seeds (97.0-98.75), so compounding is unproven where measured. Variant per-family B2 (6-seed pooled): arith_bare 57.5, verify_claim 23.8, compare_numbers 6.7, div_exact 6.2, rule_apply 1.2, list_stats 0.0, chain_ops 100. The designers' flagged new-computation families average 17.1 vs 40.3 for the rest, but compare_numbers fails unflagged. Which link breaks (op, pick, reading, answer) decides which fix is worth a GPU run; D0b did this only for the text baseline on chain rows.",
+   "evidence": [
+    {
+     "claim": "B2 teacher-forced program match equals free-run on in_dist (400 sampled rows): 97.5, 98.75, 98.0, 97.5, 97.0, 98.0, 97.0, 98.25 on eight seeds; free-run op accuracy 99.93-100.",
+     "label": "shown",
+     "source": "results/29-b2-screen and results/33-pc-confirm-b2 RESULT.json extra.op_acc"
+    },
+    {
+     "claim": "B2 variant exact 31.9-37.1; per-family pooled over six seeds: arith_bare 138/240, verify_claim 57/240, compare_numbers 16/240, div_exact 15/240, rule_apply 3/240, list_stats 0/240, chain_ops 240/240.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json final_eval.variant.by_family"
+    },
+    {
+     "claim": "Flagged new-computation variant families average 17.1 percent vs 40.3 for the other 25; layout-only state_update 90.8 and story_chain3 100.",
+     "label": "shown",
+     "source": "RESULT.json variant.by_family; research/data.md line 53 (flags)"
+    },
+    {
+     "claim": "D0b classified 72 wrong text-baseline chain rows; 58 were the 64-char cap, copy errors 0 of 2,000; a comparable label set for B2 variant rows does not exist.",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "Whether variant errors compound through the model's own earlier calls.",
+     "label": "untested",
+     "source": "no per-split exposure measurement exists"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU or PC; B2_s100 and B2_s101 checkpoints (mounted) with the big-build dev files from Ben's PC (not in snapshot); step (c) on T1_s200/s201 after q40",
+    "hours": 2,
+    "arms": "B2 s100 and s101 on five dev splits (in_dist as control); T1 free-run vs gold-forced on seeds 200 and 201",
+    "pass_mark": "Decision table fixed now, applied per branch (2 seeds, at least 100 variant program rows per seed or report counts only): exposure is live if variant teacher-forced minus free-run program match >=5.0 points on both seeds (dead if <=2.0); a two-candidate check is enough if the gold op is in top-2 for >=70 percent of failed program rows (op choice is not the failure if top-4 <50 percent); a pick check is worth building if operand picks are >=50 percent of labelled wrong rows; call choice is the variant bottleneck if gold-forced exact on T1 variant is >=20 points above free-run and >=60 percent on both seeds, reading or answer writing if the gap is <5; misses are operation-driven if the flag separates groups by >=15 points and |Spearman| of unseen-word count with miss is <=0.3 inside unflagged families.",
+    "proved_wrong": "Exposure gap <=2.0 on both seeds and gold-call lift <5 on both seeds: the 'call choice / compounding' story is dead for variant and check-and-retry, scheduled sampling and pick audit lose their reason. Operand picks <25 percent of labelled rows: no pick check can move these families."
+   },
+   "rules_check": "Rule 1: measurement only. Rule 3: 0 params. Rule 4: 2-seed probe; any claim needs six seeds (checkpoints 200-205 not mounted). Rule 5: dev splits only. Rule 6: CPU. Rule 9: B2 and T1 card numbers only. Rule 10: no deploy step.",
+   "closest_prior": "B2 op_acc and T1 extra_evals (in_dist only); D0b (text baseline, chain rows, 72 rows). No tried or planned item labels B2 variant failures.",
+   "autonomy": "Measurement only; the deployed model never sees gold calls. It decides which learned fix (not a hand rule) is worth building.",
+   "merged_from": [
+    "w1c-1",
+    "w1c-5",
+    "w2e-1",
+    "w1f-1",
+    "w1g-4"
+   ],
+   "director_score": 7.5,
+   "director_note": "Cheap and it prevents building the wrong fix. Check hardest: (1) mark thresholds mix B2 (s100/s101) and T1 (s200/s201) seeds, so the table is a decision aid, not a result; (2) the dev files and the skills generator branch (claude/project-thread-y0sxwe) are not in the snapshot, so step (b) cannot run until Ben copies them; (3) gold-forced exact on chain rows is partly an upper bound because the gold tape already holds the answer, so use the gap, not the level.",
+   "id": "tool-D2",
+   "area": "tool"
+  },
+  {
+   "title": "Probe whether tape entries are read back digit-exact",
+   "summary": "T1 reads each calculator entry alone from position 0, and the whole claim 'the model reads the tool's reply back' rests on that. Two cheap checks: now on the mounted B2 reader (digit probe on 'add 12 5 = 17'-style strings, read alone vs after a question, plus a receptive-field check), and after q40 on T1 (thinker-state digit probe per round, joint-transcript swap eval). Together they say whether any read-back repair is needed.",
+   "change": "Stage A, CPU, B2_s100/s101, no change to the model: copy diag_d0.py features. About 6,000 calc-true strings in tool.entry() format (ops add, sub, mul, div, mod, min, max, cmp; non-negative 1-9 digit operands), conditions A = reader(entry) alone, B = reader(question + ' ' + entry) at true positions, C = entry alone with position ids shifted. Linear probes per place 1-9, split by entry. Plus a perturbation check: states change only within 4 characters of a changed input, and an incremental append (re-read 8 characters before the junction, the entry, 4 after) matches a full re-read. Stage B, after q40, on T1_s200/s201: a copied loop that saves ln_z(Z[:,0]) after each round, probe the newest visible entry's digits (entry k at round k+2); and an eval flag that re-reads [question + visible entries] jointly, then scores pooled-5 and chain-5 with the same weights.",
+   "why": "D0 passed on question numbers (99.997-100 percent at every place, six seeds) but never read tool-format entries, never read them alone vs jointly, and did not look at the thinker state. T1's entries are normal digit order (calc returns str of an int), so the place labels count correctly from the right. The only open risks are the apart read (T1 differs from Ben's 'append to the transcript' picture by a position offset and a 4-character junction) and whether the controller state keeps the digits. The probe tells which, before six confirm runs are spent.",
+   "evidence": [
+    {
+     "claim": "D0 reading passes: B2 reader window probe 99.997-100 percent at every place on six seeds; the pooled span path loses digits (place 9 at 65.2-83.2).",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md table"
+    },
+    {
+     "claim": "Each entry is read alone from position 0 by the reader, tape_emb[k] added afterwards; the reader's cross-position path is two k=5 convolutions (+-4) and an absolute position table of 208 rows.",
+     "label": "shown",
+     "source": "models/tool.py:84-108; models/reader.py:43-51, 68-96"
+    },
+    {
+     "claim": "run() asserts rounds=False, so per-round states need a copied loop; B2's own loop saves them at ledger.py 340-341 and 355-356.",
+     "label": "shown",
+     "source": "models/tool.py:124; models/ledger.py:340-356"
+    },
+    {
+     "claim": "A joint question + 7 entries needs 481 position rows (+69,888 params) and the 40-character cap needs 495 (+73,472, 8,985 over the band top), so a joint read cannot reuse the table unchanged.",
+     "label": "shown",
+     "source": "arithmetic in w3d-2; train.py:10-11; tests/test_tool.py:15"
+    },
+    {
+     "claim": "T1's thinker holds the digits of the newest entry at 99 percent or better.",
+     "label": "untested",
+     "source": "T1 has not run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Stage A: M1 Pro CPU, B2_s100 and B2_s101 (mounted), about 10 minutes per seed. Stage B: PC after q40, T1_s200 and T1_s201, in_dist dev",
+    "hours": 1,
+    "arms": "A entry alone; B joint; C offset only; thinker-state probe per round; joint-swap eval vs intact",
+    "pass_mark": "Fixed now. Stage A, both seeds: A-own >=99.0 at every place 1-9 and B-own minus A-own <=1.0; perturbation: no state changes beyond 4 positions of a changed input (tolerance 1e-5); incremental vs full re-read <=1e-4 max abs. Stage B, both seeds: thinker probe >=99.0 at places 1-9 and the digit count; joint-swap chain-5 >= intact minus 0.5 and pooled-5 >= intact minus 1.0.",
+    "proved_wrong": "Stage A: A-own below 97.0 at any place (the apart read loses digits), or B-own minus A-own >=2.0 (T1 is not equivalent to a joint transcript and the restart-position rung is needed), or any state changing more than 4 positions away. Stage B: thinker probe <99.0 while the reader probe passes (the loss is in attention or state, so read-back repairs are funded); joint-swap chain-5 down >=2.0."
+   },
+   "rules_check": "Rule 1: probe only. Rule 3: 0 params (same B2 weights). Rule 4: 2-seed screen. Rule 5: dev prompts only. Rule 6: CPU first, PC minutes. Rule 7: nothing trained; probe questions capped at 169 characters so the joint string fits 208 rows (disclose). Rule 10: developer-side measurement.",
+   "closest_prior": "D0 digit probe (question numbers only, six seeds, pass). No tried item probes tool-format entries, the apart-vs-joint read, or the thinker state. The arm 'units-first results' from w1b-1 is dropped because tape entries are normal order.",
+   "autonomy": "Offline diagnostic. The deployed reader and controller read the transcript on their own; nothing is added.",
+   "merged_from": [
+    "w1b-1",
+    "w3d-1",
+    "w3d-2",
+    "w1b-3",
+    "w3d-3"
+   ],
+   "director_score": 7,
+   "director_note": "Stage A is probably a pass (D0 predicts it), so its value is mostly insurance plus the junction rule for B3; Stage B is the informative half. Critics should check: the Stage A zero-fill must clamp the feature window at the entry start or question characters leak into it; the 'config not read yet' warning on loading B2_s100/s101 with copy=True; and that T1 shares B2's reader so B2 is a fair proxy until T1 exists.",
+   "id": "tool-D3",
+   "area": "tool"
+  },
+  {
+   "title": "Settled-stop probe, then a frozen 257-parameter stop head",
+   "summary": "T1 always answers after round 8, which breaks Ben's rule that the model decides when to stop. First, a CPU probe on the two mounted B2 checkpoints: does the frozen thinker state already say 'the answer is settled'? If yes, fit one linear head on a fresh calibration set and test the stop on dev, with no change to the thinker's weights.",
+   "change": "Probe script outside models/ (based on probe_loops.py). For k=1..8 record ln_z state and exact-match from loops:k runs on a fresh 6,800-row calibration set from a new generator seed (not train, dev or protected). Fit one shared logistic head (256+1 params) on label A = H1's 'settled' (right now, or no later round is right) and label B = strict stable. Policy: stop at the first round whose head says p>=0.5 (equivalently argmax of a 2-class head), cap 8. Stage 2, after K1-min or on T1 directly: the same head on T1's talker state, forward passes only (about 0.5 h on the PC).",
+   "why": "Fixed budgets lose accuracy fast: all-row in_dist K4 is 6.9-11.7 below K8 and K6 is 0.6-0.7 below; but an oracle that stops when the answer is settled averages about 3.1-3.2 rounds, so there is room for per-row stopping. H1 trains the same head jointly at about 1.9x cost and has not run; freezing the thinker means answers cannot move (Test LR's joint per-round training leaked 15.88 at zero rounds on s200). Fitting on train rows would see optimistic labels (B2 final train loss 0.021), so a fresh set is needed.",
+   "evidence": [
+    {
+     "claim": "All-row in_dist exact by fixed rounds, seed 100: K4 82.44, K5 87.32, K6 88.76, K8 89.35, K12 89.09, K16 88.21; seed 101: K4 78.81, K5 86.78, K6 89.87, K8 90.53, K12 90.38, K16 89.68.",
+     "label": "shown",
+     "source": "results/40-loops-probe/PROBE.json results[].M1.all"
+    },
+    {
+     "claim": "Rounds to settle: 60, 24, 9, 6 percent of right-at-8 rows settle at calls+1, +2, +3, +4 or later (seed 100); mean settle 2.54 and 2.70; oracle stop about 3.1-3.2 rounds.",
+     "label": "shown",
+     "source": "PROBE.json M2; arithmetic in w3b-1"
+    },
+    {
+     "claim": "H1 (257-param stop head, settled label, about 1.9x cost) is specified in redesign-ideas 8b and not built; Test LR's per-round readout shifted in_dist -0.2 to -0.5 at 16 rounds and leaked 15.88 at loops:0.",
+     "label": "shown",
+     "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md 8b-8c; results/37-pc-loop-readout/LR_s200, LR_s201 RESULT.json"
+    },
+    {
+     "claim": "A jointly trained halt gate distorts the loop and per-round supervision plus a confidence stop often matched or beat it (second-hand, not opened).",
+     "label": "suggested",
+     "source": "redesign-ideas section 8 (Popescu 2026, arXiv 2607.20519)"
+    },
+    {
+     "claim": "The frozen state carries a settle signal at AUROC >=0.80.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU (M1 Pro or PC CPU), /mnt/project-files/custom-io/checkpoints/29-b2-screen/B2_s100 and B2_s101; dev in_dist from the big build",
+    "hours": 1.5,
+    "arms": "fixed K4, K5, K6, K8; learned stop label A; learned stop label B; NOOP-plus-2 freeze for program rows (hand comparison only)",
+    "pass_mark": "Fixed now, both checkpoints: (a) AUROC of the head on held-out calibration rows at k=3 to 5 >=0.80; (b) the best learned stop has dev in_dist exact >= K8 minus 0.5 (>=88.85 on s100, >=90.03 on s101) at mean rounds <=5.0. Fixed K6 (88.76, 89.87) sits just under (b), so the stop must be nearly lossless.",
+    "proved_wrong": "AUROC <0.70 at every k from 2 to 6 on both checkpoints (the frozen state has no settle signal), or the learned stop is more than 1.0 below K8 at mean rounds <=5.0 on either checkpoint; then joint training (H1) is the only stop route and the ANSWER-class idea moves up."
+   },
+   "rules_check": "Rule 1: the head is learned, calc stays a tool. Rule 2: labels from the model's own answers vs gold at build time only. Rule 3: +257 params on 3.30M. Rule 4: 2-seed probe; no claim. Rule 5: calibration rows from a new generator seed, dev only for scoring. Rule 6: CPU first. Rule 10: the stop is the model's own head output at a fixed argmax; gold is used only to build labels.",
+   "closest_prior": "H1 (same label and 257-param head, trained jointly with per-round supervision, about 1.9x cost, not run); Test LR (per-round readout trained jointly, leaked at zero rounds); the loops probe measured settle rounds but fitted no stop.",
+   "autonomy": "At deploy the model's own head chooses the round and reads no gold. Build time only: the head fit with gold labels. Residual: the 0.5 cut is a global classifier decision, not a per-task threshold; critics should confirm that counts as the model's own choice.",
+   "merged_from": [
+    "w3b-1",
+    "w3b-4"
+   ],
+   "director_score": 7,
+   "director_note": "Stop is an explicit rule-10 deploy step that T1 does not satisfy, and this is the cheapest way to learn whether a learned stop is feasible at all. Check hardest: (1) the pass bar (K8 minus 0.5 at mean rounds <=5) is razor-thin against K6; (2) the label uses future-round correctness, so test rows must be disjoint from calibration rows; (3) B2 is only a proxy for T1, whose last call is never read by the thinker; (4) a per-row stop saves compute only if the batch loop is restructured.",
+   "id": "tool-D4",
+   "area": "tool"
+  },
+  {
+   "title": "Pair the zero-round leak line to B2 on each seed",
+   "summary": "The sealed T1 and B3 leak line (zero-round in_dist <=5 on every seed) is failed by B2 itself on seeds 201 (10.81) and 203 (5.66), so a perfect T1 could fail the confirm. Re-seal it before q40 runs as a paired line (T1 minus B2 on the same seed) and report the hits by answer type instead of counting them all as computation. This keeps the line honest without choosing families after the fact.",
+   "change": "Edit the T1 leak bullet in PASS-MARKS.md (line 458) and MARKS-D0-T1 mark 4 before queue 40 runs: leak passes if T1 loops:0 in_dist <= max(5.0, B2 same-seed value + 2.0) on every seed. Add per-row loops:0 predictions to the saved outputs (PREDS.json holds intact predictions only), and print hits split into copy-type, binary-label, computed, and count families. 0 params; evaluation only.",
+   "why": "The orchestrator brief and the original proposal said computed families stay at 0-1.7 percent on every seed, but the fact check refutes that: on the 16 computed-answer families seed 203 has 43 of 640 hits (word_filter 22/40 = 55 percent, letter_ops 12/40 = 30 percent) and seed 204 has 13. The 13-family subset (9 of 520 on s203) excludes word_filter and letter_ops after seeing the results, which is moving the goalposts. Seed 201's 147 hits are 145 outside computed families (copy_word 35/40, prop_eval 30/40). The line should compare T1 with B2, which has the same leak mechanism, not with a fixed number B2 cannot meet.",
+   "evidence": [
+    {
+     "claim": "B2 zero-round in_dist: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00 on seeds 200-205 (hits 0, 147, 0, 77, 48, 0 of 1,360).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json lesions.loops:0.in_dist"
+    },
+    {
+     "claim": "On the 16 computed-answer families, zero-round hits are 0, 2, 0, 43, 13, 0 of 640; seed 203 is word_filter 22/40 and letter_ops 12/40; seed 201 has 145 of 147 hits outside computed families.",
+     "label": "shown",
+     "source": "RESULT.json lesions.loops:0.in_dist.by_family; fact check verify-leak-wordfilter-chain5-premises"
+    },
+    {
+     "claim": "zero_state lesion in_dist is 0.0 on all six seeds, so the zero-round hits pass through the initial registers attending to the prompt (a copy path).",
+     "label": "shown",
+     "source": "RESULT.json lesions.zero_state.in_dist"
+    },
+    {
+     "claim": "Seed 101's zero-round hits were all word-pointer families (copy_word, object_track, prop_eval, order_chain).",
+     "label": "shown",
+     "source": "REPORT.md leak finding; reviews/gpt-b2-leak-and-credit-2026-10-05.md"
+    },
+    {
+     "claim": "T1 shares B2's copy machinery, so its zero-round hits will be of the same kind.",
+     "label": "suggested",
+     "source": "tool.py is a Ledger subclass with the same registers and gen_copy"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "PASS-MARKS.md text edit before q40 (no GPU); per-row loops:0 predictions on the PC for B2_s200-s205 (inference only) and T1_s200/s201 after q40",
+    "hours": 0.3,
+    "arms": "B2 six seeds (existing counts); B2 per-row loops:0 on the PC; T1 loops:0 on seeds 200 and 201",
+    "pass_mark": "Amendment written and dated before queue 40 starts. Paired line: T1 zero-round in_dist <= max(5.0, B2 same-seed + 2.0) on both screen seeds. The absolute <=5 value and the per-type split are printed next to it, not judged.",
+    "proved_wrong": "T1 exceeds B2 same-seed by >2.0 on either seed: the leak is real for T1 and the paired line fails honestly."
+   },
+   "rules_check": "Rule 4: the amendment is dated before any T1 run and fixed. Rule 5: dev only. Rule 1/2/3: no model change. Rule 10: offline measurement; nothing here runs at deploy.",
+   "closest_prior": "PASS-MARKS line 458 and PLAN 3c mark 6 (absolute <=5, failed by B2 on 2 of 6 seeds). The original proposal (hand-picked 13 computed families at 2 percent) is replaced by a paired line because the fact check refutes its premise.",
+   "autonomy": "No deploy step; it defines how the zero-round check is scored.",
+   "merged_from": [
+    "w1g-1"
+   ],
+   "director_score": 6.5,
+   "director_note": "Premise corrected: the claim 'computed families stay at 0.00-1.7 percent on every seed' is false once word_filter and letter_ops are included. Cheap and it removes a guaranteed false failure at the T1 and B3 confirms. Check hardest: that the amendment is a real pre-registration (before q40 results), and that +2.0 over B2 is not so lax that a real T1 leak passes.",
+   "id": "tool-D5",
+   "area": "tool"
+  },
+  {
+   "title": "Two-layer B3 audit: bytecode scan and answer provenance",
+   "summary": "B3 mark 8 as written (patch re, int and str, loop in tools/) is fooled both ways on this code. Replace it with a bytecode scan plus call allow-list that is proved on 12 planted cheats, and a behavioural check that correct answers only contain digits from the question or the tool's replies. Both run on CPU.",
+   "change": "New test file (for example custom_io/tests/test_b3_audit.py), hand-written test code. Layer A: dis scan of every code object on the generate path (flag LOAD_GLOBAL of int, float, str, ord, chr, eval, type, getattr, re; LOAD_ATTR of split, strip, join, encode, decode, format, finditer, fullmatch, match, search, sub; FORMAT_VALUE and BUILD_STRING). Layer B: sys.setprofile with a runtime allow-list by file path (tools/ allowed; models/ functions allowed only if on the learned list). Layer C (untested on the real import): per-module builtins shadow. Red team: 12 planted cheats in a copy of tool.py (aliased int, f-string entry, compiled-pattern call, getattr(str,'split'), type(0)('3'), a hidden float on the answer path, others); each must be flagged. Behavioural check: for each correct dev answer with a digit run of >=3, the run must appear in the question or a transcript entry; compare T1 intact, T1 tool-off and B2 as control.",
+   "why": "Shown in memory on Python 3.13: sys.setprofile c_call events fired for str.split, Pattern.finditer, Pattern.fullmatch, Match.group, str.encode but not for int('3') or str(4); patching the module-level re.finditer caught 0 calls to the compiled NUM_RE.finditer; a bytecode scan did show LOAD_GLOBAL int for an aliased i = int. T1's generate path does call NUM_RE.finditer and int (ledger.py 206-207), INT_RE.fullmatch and int in calc (tool.py 45, 49), an f-string entry (57), vocab.encode (89), decode and reversal (117, 213), and word_spans (217). So mark 8 would pass the compiled-pattern calls and never see int. The provenance check is the behavioural second opinion, and B2 (whose answers are slot values printed with str, never in text) is the positive control that shows the check can see hidden arithmetic.",
+   "evidence": [
+    {
+     "claim": "Profiler test on Python 3.13.16: c_call events for str.split, Pattern.finditer, Pattern.fullmatch, Match.group, str.encode; none for int('3') or str(4); a module-level re.finditer patch was called 0 times by compiled NUM_RE.finditer.",
+     "label": "shown",
+     "source": "inline test in w3c-1 read (in memory, nothing written)"
+    },
+    {
+     "claim": "Expected flags on clean T1: ledger.py:206-207, tool.py:45, 49, 57, 89, 117, 181, 213, 217, reader.py:17-23 via data.py:149-154, and training-only tool.py:140.",
+     "label": "suggested",
+     "source": "derived from code reads; to be confirmed by the audit"
+    },
+    {
+     "claim": "Model receives strings: batch rows and prompts go into reader place code and talker word slicing, so mark 8's 'tensors only' clause already fails.",
+     "label": "shown",
+     "source": "models/tool.py:97, 216-217; models/reader.py batch_places"
+    },
+    {
+     "claim": "B2 prints a slot value with str(), so its computed answers never appear in text; extra_evals already returns per-row calls and Tool.replay replays them.",
+     "label": "shown",
+     "source": "INVENTORY A13; models/ledger.py:389-390; models/tool.py:310-334, 414-423"
+    },
+    {
+     "claim": "torch is not installed in this container, so the audit has not been run; it needs CPU torch on Ben's Mac or the PC.",
+     "label": "shown",
+     "source": "import check in w3c-1 and w3c-5"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU torch or PC CPU; random-init Tool (S config) for the static layers; T1_s200/s201 and B2_s100 for provenance (about 1,000 dev rows each)",
+    "hours": 0.8,
+    "arms": "clean T1; 12 planted cheats; clean B2; provenance on T1 intact, T1 noexec, B2",
+    "pass_mark": "Fixed now. All 12 planted cheats flagged by at least one layer; clean T1 flagged at exactly the expected sites; after the planned ladder the clean model is flagged at 0 sites. Provenance: T1 intact novel-digit share among correct answers <=0.1 percent; B2 control at least 5 points above T1 intact.",
+    "proved_wrong": "Any planted cheat passes all layers (audit unfit for mark 8), or clean T1 is flagged at fewer sites than expected, or T1 intact novel share >1 percent (hidden path or guess), or B2 within 5 points of T1 (the probe is blind to hidden arithmetic)."
+   },
+   "rules_check": "Rule 1: a test, allowed to be hand-written; adds nothing to the model. Rule 3: 0 params. Rule 4: a check, not a claim. Rule 5: dev only. Rule 6: CPU, minutes. Rule 10: development test, not a deploy step; it verifies that the deployed path holds no text or number code outside the tool.",
+   "closest_prior": "PLAN-AND-MARKS 3c mark 8 (patch re, int, str, loop in tools/). No audit exists in tests/ (grep finds only a sys.modules stub). write_copy tests copying of random digits, not where digits come from.",
+   "autonomy": "Not a deploy step. It certifies that nothing hand-written sits between question and answer outside a tool; holes it cannot close (torch internals, float arithmetic unless float is banned) are listed in the test file.",
+   "merged_from": [
+    "w3c-1",
+    "w3c-5"
+   ],
+   "director_score": 6.5,
+   "director_note": "Ben's rules 1 and 10 are only as good as the audit, and the demonstrated blind spots (no c_call for int, compiled patterns bypass re patches) mean mark 8 as written would give false assurance. Check hardest: that the planted cheats are not written to match the scan (have a second person write 4 of them), and that the builtins-shadow layer works on the real import, which was only tested on an exec'd module.",
+   "id": "tool-D6",
+   "area": "tool"
+  },
+  {
+   "title": "Teach fewshot_number_rule rules with calculator traces",
+   "summary": "fewshot_number_rule is B2's biggest loss (22.7 vs 37.6 for the step-writing transformer and 62.9 vs 34.6 in-dist for the direct transformer) and it is the closest card task to Ben's 'learn from a few examples'. All of its 1,798 sample rows train answer-only today. In the 60k sample, 1,591 fit a trace built from the first two examples (7-op affine solve or 3-4 op pair rules) that replays to the stated answer. Teach those traces and see if the thinker learns to infer the rule.",
+   "change": "Teaching-only branch in progparse.program_for (progparse.py 168-182). Affine rows: SUB, SUB, DIV, MUL, SUB, MUL, ADD (7 ops, exactly at the cap) using the first two examples; pair rows: one 'p op q = r' check per example from ADD, SUB, MUL, MAX, MIN that fits every example, then the query op. Rows with a minus sign (207 of 1,798) stay answer-only in this screen because B2's slots drop the sign (ledger spans use unsigned digits); the signed-number parse is a T1 step (T1 copies the sign as a character). 0 params. Optional step 0 (inference on s200-s205 B2 checkpoints): split fewshot misses by answer digit count and by minus sign in the prompt to see if the writer, not rule induction, is the limit.",
+   "why": "The step-writer was not given steps on this family: fewshot_number_rule, rule_apply, order_chain and seq_next are not in STEP_FAMILIES (plain_tf_steps.py 19-20), so its +14.9 lead comes from native text attention, not from writing a rule. B2's hits come through the thinker state (zero_state and shuffle_state give 0.0; no-copy 25.8) and the copy gate is only 4-8 percent, so the answer is generated digit by digit with no calculator. Giving the family calculator traces moves the arithmetic (division, multiplication) to the tool and leaves the thinker to choose the steps. The risk is shortcuts: in the sample, all 49 pair rows are addition.",
+   "evidence": [
+    {
+     "claim": "fewshot_number_rule pooled-5: B2 22.7, step-writer 37.6, gap +14.9 (per-seed +10.0 to +19.4); in-dist B2 34.6 vs direct transformer 62.9; variant B2 2.9.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/{B2,tfsteps,tf}_s200..s205 RESULT.json final_eval (computed in w3f-1, w2f-3, w1g-6)"
+    },
+    {
+     "claim": "First 60,000 rows: 1,798 fewshot rows, 0 parsed; 1,591 fit a <=7-op trace that replays to the answer (3 ops 239, 4 ops 349, 7 ops 1,003); 207 fail on negative values.",
+     "label": "shown",
+     "source": "own72.tgz skills.jsonl first 60k, progparse.Builder replay (w3f-1)"
+    },
+    {
+     "claim": "STEP_FAMILIES has 11 families and excludes fewshot_number_rule, rule_apply, order_chain and seq_next, so the step-writer is answer-only there.",
+     "label": "shown",
+     "source": "models/plain_tf_steps.py:19-20 (read for this merge)"
+    },
+    {
+     "claim": "B2 fewshot lesions over six seeds: shuffle_state 0 of 240, zero_state 0, loops:0 0, loops:8 83, loops:16 63, no-copy 62; copy-gate share 3.7-8.2 percent.",
+     "label": "shown",
+     "source": "RESULT.json lesions and extra.copy_gate (w1g-6)"
+    },
+    {
+     "claim": "Teaching a rule-solving trace makes the thinker infer rules from examples rather than memorise answers; the variant guard is meant to catch always-add.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, B2 recipe (24k steps, batch 256, lr 1e-3, bf16), seeds 200 and 201; baselines already on disk in results/33-pc-confirm-b2; confirm seeds 200-205 only if the screen passes",
+    "hours": 3.5,
+    "arms": "B2 (existing RESULT.json) vs B2 with fewshot traces only; same seeds, recipe, dev; signed rows left answer-only (disclosed)",
+    "pass_mark": "Fixed now. Screen: fewshot pooled-5 gain >= +8.0 on both seeds (more than half the 14.9 gap); fewshot variant >= 10.0 on both seeds; pooled-5 >= B2 minus 1.0; chain-5 >= 99.0; no other family down more than 3.0 on either seed. Confirm (6 seeds): mean gain >= +8.0, at least 5 of 6 seeds >= 0, chain-5 >= 99.0 on at least 5 of 6, zero-round in_dist no more than 1.0 above B2 on any seed.",
+    "proved_wrong": "Screen gain < +3.0 on either seed, or variant < 5 on both seeds (always-add or memorised answers). 6-seed mean gain < +3.0 or fewer than 4 of 6 seeds positive."
+   },
+   "rules_check": "Rule 1: hand-written teaching traces are allowed; the rule search runs only in the teacher at build time. Rule 2: deterministic code, no teacher model. Rule 3: 0 params. Rule 4: 2-seed screen with marks fixed here, then 6 seeds. Rule 5: dev only. Rule 6: PC. Rule 7: all fitting rows get full traces (7 ops is at the cap, no 8-step row seen in the sample); the 207 signed rows stay answer-only until T1 and are disclosed. Rule 9: B2 card line only. Rule 10: see autonomy.",
+   "closest_prior": "W1 (attention block) in PASS-MARKS targets the same family with architecture, not traces; REPORT.md lines 103-105 name the gap without a fix; no trace version of fewshot_number_rule exists in PLAN, INVENTORY or PASS-MARKS.",
+   "autonomy": "At deploy the model reads the examples, infers the rule, writes the subtract, divide, multiply and add calls and the answer by itself. The traces are training data only. Untested: which two examples to combine is fixed to the first two in training, so the model has not learned to choose.",
+   "merged_from": [
+    "w2f-3",
+    "w3f-1",
+    "w1g-6"
+   ],
+   "director_score": 6.5,
+   "director_note": "Best-specified training-data idea with the largest known gap, and it targets 'learn from examples'. Check hardest: (1) the step-writer's lead here is native attention, not steps, so a trace may not close the gap vs the direct transformer (62.9 in-dist); consider adding that comparison; (2) all 49 pair rows are addition in the sample, so a pass on pair rows proves nothing without the variant guard; (3) the counts come from the own72 proxy, not B2's training file (which is not mounted; the proxy gives 429 vs 528 long list rows elsewhere); (4) the signed parse must not be turned on for B2 (slots drop the sign), only for T1.",
+   "id": "tool-D7",
+   "area": "tool"
+  },
+  {
+   "title": "Write the op as letters; empty first cell means no call",
+   "summary": "T1 picks one of 9 op classes with a learned head and Python turns the class index into the op word (tool.py 181-183), so the model never writes its own call. Replace the 9-class head with four letter cells (three letters plus EOS) written by the same pointer-generator as the operands; EOS in the first cell means no call. The model then writes the op, the operands and the stop as text, and an unknown name simply gets '?' from calc. Net parameters drop by 1,289.",
+   "change": "models/tool.py: delete the op_head use (lines 165, 173; the layer is created at ledger.py 149 so the RNG draw is kept and every shared weight starts as in T1). Add op_pos = nn.Embedding(4, d) (+1,024, N(0,0.02), created last) and write 4 op cells from z = ln_z(Z[:,0]) + op_pos through gen_copy together with the operand cells. Decode without the [::-1] that decode_cells applies; target = vocab.encode(name) + EOS padded with -100. Call iff the decoded op text is non-empty; calc(op_text, a, b) and entry(op_text, ...) replace NAMES[op[i]] (181-183). Loss: cell-0 CE (EOS vs letter) with w_row as the old op CE (line 287); letters 1-3 NLL on call rows. Params 3,277,393 - 2,313 + 1,024 = 3,276,104. Arm B only if the stop mark fails: stop word 'answer' with 7 op cells (+768).",
+   "why": "Rule 10 needs the call decision and the call word to be the model's own text. The 9-way head is already near ceiling (B2 teacher-forced op 100.0 and 99.96 on s200, s201), so a text writer must match near-perfect accuracy, which makes this a real test. EOS cannot come from copy (prompt and tape ids are encoded without EOS, data.py 116, tool.py 89), so EOS mass in cell 0 comes only from the tied vocabulary readout. A new full-size query layer would put T1 at 3,343,185, over the band, so the query reuses z plus a position table. m-words (mul, mod, min, max) share a first letter, so cell 1 is the riskiest and the four cells are not autoregressive.",
+   "evidence": [
+    {
+     "claim": "op_head is Linear(d,9) = 2,313 params, read at tool.py:165, and Python writes the name from NAMES[op[i]] at tool.py:181-183; NAMES is OPS lowercased (9 entries incl. NOOP).",
+     "label": "shown",
+     "source": "models/ledger.py:149; models/tool.py:39, 165, 173, 181-183; models/progparse.py:11"
+    },
+    {
+     "claim": "B2 teacher-forced op accuracy 100.0 (s200) and 99.96 (s201) on 400 rows; program 98.0 and 97.5.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json extra.op_acc"
+    },
+    {
+     "claim": "Gold op names are at most 3 letters, so 4 cells cut no target; operand cells use reader place rows 0-10 so op cells need their own table.",
+     "label": "shown",
+     "source": "progparse.py:11; tool.py:110-113"
+    },
+    {
+     "claim": "EOS has its own id and prompt and tape ids carry no EOS, so only the vocabulary route can emit it.",
+     "label": "shown",
+     "source": "data.py:21, 116; tool.py:89"
+    },
+    {
+     "claim": "Four independent letter cells can spell the op word and the stop as accurately as the class head.",
+     "label": "untested",
+     "source": "no run; this screen is the test"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC beside or after q40; models/tool.py sites above; tests/test_tool.py:15 size constant becomes 3276104",
+    "hours": 3,
+    "arms": "T1 (queue 40, seeds 200 and 201) vs text-op T1 on the same seeds; arm B only if the stop mark fails",
+    "pass_mark": "Fixed now, both seeds: teacher-forced op-text exact on call rounds incl. cell 3 EOS >=99.0 percent; premature stops (EOS where gold has a call, free run) <=1.0 percent of gold-call rounds; written non-op names <=1.0 percent of calls; pooled-5 minus T1 >=-1.0 on each seed; chain-5 >=99.0; size 3,276,104 inside the band.",
+    "proved_wrong": "Op-text exact <95.0 percent on both seeds, or chain-5 <97.5 on both seeds, or premature stops >=3.0 percent on both seeds: letters cannot be spelled at this size and the class head stays, with the call word listed as a disclosed rule-10 exception."
+   },
+   "rules_check": "Rule 1: the model writes the call word; calc only parses text. Rule 2: no LLM. Rule 3: -1,289 params, inside the band. Rule 4: one change, 2-seed screen; claims wait for 6 seeds. Rule 5: dev only. Rule 7: no op word is longer than 3 letters. Rule 9: T1 line only. Rule 10: the decision to call, the op and the stop are all the model's own text. Residual: ' = r' formatting still sits in the tool.",
+   "closest_prior": "T1 (tool.py 165, 181-183) keeps the class head. PASS-MARKS addendum 17 describes the talker as writing an op word, but the code does not. No ladder rung changes how the op is chosen; w1a-6 (OTHER class) and the ANSWER class are replaced by this.",
+   "autonomy": "Fully the model's: it writes the op word, the operands and the stop. The tool parses and computes. The 8-round clock and 7-call window stay as planned rungs (H1, K1).",
+   "merged_from": [
+    "w1e-7",
+    "w1f-3",
+    "w2h-1",
+    "w3a-1",
+    "w3a-2",
+    "w3c-3"
+   ],
+   "director_score": 6,
+   "director_note": "Six near-identical proposals agree on the mechanism, which is a good sign. Differences resolved: new 4-row op table (w3a-1) over reusing place rows 11-14 (w3c-3), because reader place rows carry digit-place meaning. Check hardest: (1) the PLAN, MARKS and addendum 17 all describe an op word that the built T1 does not write, so confirm Ben wants this as its own rung rather than an addendum; (2) held-out op names (pow) belong to the manual idea, not here; (3) an EOS-first stop inherits the problem that no training row shows a call after a gap.",
+   "id": "tool-D8",
+   "area": "tool"
+  },
+  {
+   "title": "Test internal signals that say 'this try is right'",
+   "summary": "Deployed, the model must decide when it is stuck and which of its own tries to keep without gold (rule 10). Before building a learned verdict head or relying on self-made traces (ST1), run one CPU probe on B2's own samples: sample 16 traces per question and check five gold-free signals against correctness, each with a floor control: slot pick margin, minimum op margin, plurality-vote agreement, disagreement as a practice filter, and floor-matched pass@16.",
+   "change": "New script reader/custom_io/probe_yield.py (not written): load B2_s100 and B2_s101; copy creative/creative/sampler.py sample_run and extend it to sample mode, WORD pointer and the 9 GEN registers (the mounted sampler covers op, operands and the NUM slot only); 16 draws per row at T 1.0 (T 3.0 reported). Rows: all 160 family rows, 320 stratified variant rows, all in_dist greedy-miss rows. Scores per trace: pick margin (top-1 minus top-2 slot probability), minimum op top-1-minus-top-2 log-probability over the written steps, plurality of the 16 answers. Report within-question AUROC for 'answer right', plurality-keep precision vs all samples, precision of the 'at least two distinct answers' queue, and pass@16 minus a uniform random-word floor on greedy-miss rows. If margins fail, fit a 257-param linear keep head on final state zf (train traces, L2 1e-3 fixed) as a second arm. After q40 the final-state probe and a round-1 answer-size probe can be run on T1.",
+   "why": "P0 already found creative-family yield tiny: pass@32 of 1.9 and 5.6 percent of 160 rows vs greedy 0.6 and 1.2, with a random-word floor of 15-25 percent post hoc. ST1 needs a keep that acts without gold; PLAN line 84 relies on world feedback, which a QA model does not have. Variant rows (B2 greedy 31.9-37.1) have a large greedy-miss pool, so that is where a signal could exist. The floor and an in_dist control validate the sampler. If nothing works, the keep must come from an outside check tool the model calls, which is allowed.",
+   "evidence": [
+    {
+     "claim": "P0 family pass@32 1.9 percent (seed 100) and 5.6 percent (seed 101) vs greedy 0.6 and 1.2; one op_define hit, the rest unit_convert.",
+     "label": "shown",
+     "source": "/mnt/project-files/creative-roadmap/creative-roadmap-2026-10-06.md lines 115-131"
+    },
+    {
+     "claim": "sampler.py samples op, operands and the NUM slot pointer only; mode is argmax and no register state is returned.",
+     "label": "shown",
+     "source": "creative/creative/sampler.py lines 99-103"
+    },
+    {
+     "claim": "B2 computes an executor ok flag per step and masks invalid steps; T1's calc returns '?' for invalid steps.",
+     "label": "shown",
+     "source": "models/ledger.py:333-337; models/tool.py:43-53"
+    },
+    {
+     "claim": "Tool need is linearly decodable from hidden states of pretrained LLMs (AUROC 0.89-0.96), a hint that a small head might read correctness.",
+     "label": "suggested",
+     "source": "arXiv 2605.09252 abstract (scouts' list)"
+    },
+    {
+     "claim": "Pick margin, op margin or agreement tracks correctness on B2 traces.",
+     "label": "untested",
+     "source": "no result file in the snapshot"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU or PC, B2_s100 and B2_s101 (mounted; torch must be installed), dev family/variant/in_dist files from Ben's PC",
+    "hours": 1.5,
+    "arms": "16 draws per row at T 1.0 on family, variant and in_dist greedy-miss rows; signals compared with chance and with a uniform random-word floor",
+    "pass_mark": "Fixed now, both seeds. Sampler valid: in_dist greedy-miss pass@16 minus floor >=+20. Signals on variant questions with both right and wrong samples: pick-margin AUROC >=0.70 and min-op-margin AUROC >=0.65; plurality-keep precision minus all-sample precision >=+15 points; disagreement-queue precision >=25 percent; variant pass@16 minus floor >=+10 (ST1 may start on B2).",
+    "proved_wrong": "Variant pass@16 minus floor <=+3 on both seeds (B2's own traces carry no more than guessing, ST1 cannot start); all signal AUROCs <=0.60 (no internal signal, the keep must come from an outside check tool); sampler check <+5 on either seed voids the probe."
+   },
+   "rules_check": "Rule 1: scorer, floor and reductions are test code; any deployed reduction must sit in a tool the model calls or be a learned head. Rule 3: 0 params (+257 only in the fallback arm). Rule 4: 2-seed screen. Rule 5: dev only; training traces for the head from the train split. Rule 9: B2 numbers only, no C1/C2 creative numbers mixed in. Rule 10: every signal is the model's own output; no gold at deploy.",
+   "closest_prior": "P0 (family pass@32, no floor on the same rows, no in_dist control); C2 keep (creative/creative/c2_keep.py) uses worked examples as the checker; C4 (checker-trained head) in the creative roadmap line 223. None tests gold-free signals on B2 variant rows.",
+   "autonomy": "At deploy the model would score its own tries from its own state or sample agreement and keep or retry them, with no gold or orchestrator. The vote or ranking reduction must be an outside tool the model calls by writing text, or a learned head.",
+   "merged_from": [
+    "w1a-4",
+    "w1a-5",
+    "w2e-3",
+    "w2g-1",
+    "w2g-2",
+    "w2g-3",
+    "w2g-4",
+    "w2g-5"
+   ],
+   "director_score": 6,
+   "director_note": "Eight overlapping proposals share one set of samples, so one script answers all. Check hardest: (1) the sampler for GEN and WORD answers does not exist and is where the effort sits; (2) torch is absent in this container; (3) within-question AUROC needs questions with both right and wrong samples, which may be rare on family rows; (4) B2 is a proxy for T1, which has no sampler (decode_cells is argmax); (5) the round-1 'answer size' probe (w1a-5) needs T1 states and should be dropped if the others fail.",
+   "id": "tool-D9",
+   "area": "tool"
+  },
+  {
+   "title": "Audit dev labels: word_filter answers and recurring chain rows",
+   "summary": "Three architectures score exactly 0 of 240 on the word_filter answer split, and one state_update chain row fails on all six B2 seeds. Both look like label or generator artefacts, not model failures. A 45-minute check on the PC dev files settles whether the labels are right, and whether the nine degenerate answer cells should be reported separately.",
+   "change": "On the PC (dev files not in snapshot): (1) for each of the 40 answer-split word_filter prompts, compute the stated rule (words with more than 5 letters) and compare with the gold '2'; (2) for the 10 distinct failing chain-5 ids (24 state_update and 2 story_chain3 misses over six seeds; state_update-DI1-137 fails on all six, -99 on four), re-derive the gold answer from each prompt's event list and compare the gold program (progparse row_targets) with the prompt; (3) report pooled-5 both ways (all rows, as sealed, and without the nine degenerate answer cells of data.md line 50, 360 of 6,040 rows). No model change; no new run unless labels are wrong.",
+   "why": "Fact check: all three models (B2, step-writing, direct) are 0 of 240 on word_filter in the answer split while in-dist word_filter is 95-100 (the brief's 98-100 low end is wrong; step-writing is 95.0 on seed 201). A constant '2' gold would be easy to score, so a zero from every model suggests a wrong key. The chain-5 misses cluster far beyond chance: two rows fail on four or more seeds where independent noise predicts none. The data.md note says exclude these cells from means but pooled-5 keeps them. Dropping the nine cells moves the B2 minus step-writing gap from 6.89 to 6.60, so no verdict flips, but the T1 parity reading should not rest on unchecked cells.",
+   "evidence": [
+    {
+     "claim": "answer.by_family.word_filter is 0/40 on every seed for B2, tf and tfsteps (0/240 each); in-dist word_filter B2 per seed 97.5, 100, 95.0, 100, 100, 100.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/{B2,tf,tfsteps}_s200..s205 RESULT.json (recomputed in the premise check)"
+    },
+    {
+     "claim": "Gold answers for word_filter in the answer split are not stored in RESULT.json; the claim that all 40 are '2' rests on data.md line 50, written 2026-10-05.",
+     "label": "untested",
+     "source": "research/data.md line 50; dev files absent from the snapshot"
+    },
+    {
+     "claim": "B2 chain-5 misses per seed 6, 4, 4, 5, 4, 3 (26 total: state_update 24, story_chain3 2); 10 distinct ids; state_update-DI1-137 on all six seeds, -99 on four, -111 and -303 on three.",
+     "label": "shown",
+     "source": "chain5.intact.hits in the six B2 RESULT.json files"
+    },
+    {
+     "claim": "pooled-5 keeps the nine degenerate cells; dropping them gives B2 75.23 and a paired gap of 6.60 (SD 1.42) over step-writing, still positive on all six seeds.",
+     "label": "shown",
+     "source": "analyze.py lines 11, 76-82; computed in the premise check"
+    },
+    {
+     "claim": "RESULT.json stores only 0/1 flags for chain-5 rows, no prompt, gold or prediction.",
+     "label": "shown",
+     "source": "train.py lines 38-44; RESULT.json key walk"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "PC: big-build dev answer split (word_filter) and dev in_dist from C:\\Users\\benja\\custom-io\\work\\data_big; progparse and evalx.chain_panel; CPU only",
+    "hours": 0.75,
+    "arms": "none (label checks); re-score the three existing checkpoints only if word_filter labels are wrong",
+    "pass_mark": "Fixed now. Word_filter labels wrong if >=36 of 40 rule counts differ from '2'; chain rows have a data cause if at least one of state_update-DI1-137 or -99 has a gold its own event list does not produce or a gold program that differs from its prompt.",
+    "proved_wrong": ">=36 of 40 counts equal '2' (the 0/240 is a real failure and needs its own probe); both recurring rows re-derive exactly and their programs match (the misses are model-side on specific inputs). 5-35 matches on word_filter means the generator is ambiguous: exclude the cell."
+   },
+   "rules_check": "Rule 1: the checker is test code. Rule 3: 0 params. Rule 4: any pooled-5 definition change is a dated re-seal before use; the sealed all-row definition stays for T1 and both numbers are reported. Rule 5: dev only. Rule 10: no deploy step.",
+   "closest_prior": "research/data.md line 50 marks nine answer families degenerate but pooled-5 in REPORT and PASS-MARKS still includes them; no row-level chain-5 failure analysis exists.",
+   "autonomy": "Checks dev labels; the deployed model does not change.",
+   "merged_from": [
+    "w1g-2",
+    "w1g-3"
+   ],
+   "director_score": 5.5,
+   "director_note": "Cheap hygiene, but premise (a) is only supported by a note (gold '2' not checked) and the in-dist range is 95-100, not 98-100. Check hardest: pooled-5 stays all-row for T1; if Ben wants the exclusion it must be a dated re-seal before any T1 run. Per-row prediction files should be saved in future runs; train.py currently pops predictions.",
+   "id": "tool-D10",
+   "area": "tool"
+  },
+  {
+   "title": "K1-min: size the call window to the data, 11 calls",
+   "summary": "T1's 7-call window leaves 528 training list rows (9-11 steps) answer-only, which breaks rule 7. The PLAN's K1 (16 calls) is not one change and costs 2.25x rounds. The longest program in the data is 11, so set the window to 11 calls and 13 rounds as a Tool-only argument: +2,304 params, about 1.6x thinker rounds, and the 11th result is read by the thinker.",
+   "change": "models/tool.py: pass N_RES=11 and n_loops=13 to Tool (progparse.N_RES at line 8 also sets B2's workspace size and the program cap at line 199, so a T1-local cap of 11 is needed in the gold path). Adds tape_emb 11 rows (+1,024) and step_emb 13 rows (+1,280): T1 becomes 3,279,697, inside the band. tests/test_tool.py: new size, and compare only the first 8 rows of step_emb in the same-seed check at line 35. Build first a long-chain dev split (200 rows each of 9-11, 12-13, 14-15 steps from the list_stats generator, replayed through the exact calculator, no overlap with train or dev).",
+   "why": "A call is written only for 1 <= t <= min(N_RES, n_loops-1) and an entry is visible from the next round, so 11 calls need 12 rounds and the 11th result reaches the thinker only at 13. LIMIT-COUNTS shows max_program 11 in train and every dev split, so 16 calls is far above the data. Big-dev rows over 7 steps are only 44 (16, 11, 17), so K1's ceiling on current splits is about 0.2 points; the new split is the only way to see a cap gain. The n_loops=9 variant (let the 7th result be read) is covered because 13 rounds also fixes it. B2 at 12 rounds loses little (89.09 vs 89.35; 90.38 vs 90.53 in_dist), but 16 rounds lost 0.8-1.9 at test time, so the extra rounds must be trained.",
+   "evidence": [
+    {
+     "claim": "Train: 528 list_stats rows (9-11 steps) have no program; max_program 11 in train and in every dev split; big-dev rows over 7 steps: in_dist 16, answer 11, frame 17.",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/LIMIT-COUNTS-2026-10-07.json"
+    },
+    {
+     "claim": "On the own72 proxy the count is 429 (327 with 9 ops, 102 with 11), not 528; B2's real train file is not mounted.",
+     "label": "shown",
+     "source": "fact check verify-data-limits"
+    },
+    {
+     "claim": "K1 as planned costs +4,864 params and 2.25x rounds (not '+2,300'); N_RES also changes which rows get programs (progparse.py:199) and the same-seed check at tests/test_tool.py:35.",
+     "label": "shown",
+     "source": "fact check verify-code-mechanics; models/tool.py:76, 152-162; ledger.py:145"
+    },
+    {
+     "claim": "B2 loops:16 in_dist is 0.8-1.9 points below loops:8 over six seeds; at 12 rounds the loops probe gives 89.09 and 90.38 vs 89.35 and 90.53 at 8.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json lesions loops:16; results/40-loops-probe/PROBE.json"
+    },
+    {
+     "claim": "The 7th call's result is never read by the thinker at n_loops 8; only 7-step rows (about 0.4 percent) are affected; effect untested.",
+     "label": "shown",
+     "source": "tool.py:154, 171, 184-198; fact check verify-stop-and-round-mechanics"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201, T1 recipe; long-chain split built on CPU first (0.5 h); compare with the queue-40 T1 on the same seeds; after the T1 confirm per PLAN section 5",
+    "hours": 5,
+    "arms": "T1 (N_RES 7, n_loops 8) vs K1-min (N_RES 11, n_loops 13); long-chain buckets scored on both",
+    "pass_mark": "Fixed now. (a) Every training row with 9-11 steps gets a program; teacher-forced call accuracy on those rows >=95 percent. (b) Pooled-5 (K1-min minus T1) mean >=-0.5 and each seed >=-1.0. (c) Chain-5 >=99.0 on both seeds. (d) 9-11-step bucket exact >=80 percent on both seeds. (e) Zero-round in_dist no worse than T1 same seed +1. The split's replay agrees with gold on >=99 percent of rows and has zero overlap with train or dev.",
+    "proved_wrong": "(d) <50 percent on both seeds while (a) holds (calls learned but free-run answers fail: the cap is not the blocker, do not fund 16 calls), or (b) < -1.0 on both seeds (extra rounds hurt, as the 16-round test did)."
+   },
+   "rules_check": "Rule 7: removes the answer-only fallback for the long rows (required, not optional). Rule 3: +2,304 params, inside the band. Rule 4: 2-seed screen; the 6-seed confirm needs a new seal because the rounds change. Rule 5: new split from a fresh seed. Rule 6: PC. Rule 10: the 11-call and 13-round budgets are fixed world limits; without a stop head the number of rounds is still ours. Pair with the stop-head idea.",
+   "closest_prior": "PLAN K1 (16 calls, n_loops at least 17 or a second turn; its '+2,300' counts only tape_emb). The continue-bit proposal (second turn) is superseded by this plus a stop head.",
+   "autonomy": "Partial: calls, operands and read-back are the model's; the 11-call window and 13-round clock are fixed limits until a learned stop exists.",
+   "merged_from": [
+    "w2d-5",
+    "w3b-3",
+    "w1b-6",
+    "w1d-6",
+    "w3b-2"
+   ],
+   "director_score": 5.5,
+   "director_note": "Required for rule 7, but the gain is small and compute rises 1.6x. Check hardest: (1) the list generator is not in the snapshot (branch claude/project-thread-y0sxwe absent from this clone), so the long-chain split cannot be built until Ben supplies it; (2) 13 rounds vs 12 rounds is a judgement (13 lets the thinker read the 11th result); (3) the PLAN says K1 comes after the T1 confirm, so do not run it before that; (4) the 528 vs 429 mismatch must be reconciled on Ben's data.",
+   "id": "tool-D11",
+   "area": "tool"
+  },
+  {
+   "title": "Teach recovery after a refused call, then abstain",
+   "summary": "No training row contains a '?' reply or any abstain wording, so T1's reaction to a refused call is untrained. If the behaviour battery shows the model repeats a refused call or guesses, add teaching copies in which one call is refused (a stray '.' in an operand, an inexact DIV, MOD by zero), the next call is the correct one, and a smaller share where the same call is refused twice and the answer is 'cannot'. Hold division by zero out of training as the transfer test.",
+   "change": "Teaching data only, in tool.py row_gold and run(gold=...). For about 10 percent of rows with at most 6 gold steps, add a copy with a distractor entry before a gold step whose result calc really returns '?' (checked at build time); mask the op and cell loss on that step (target -100) but show the entry to the thinker (shown[:,k] set at tool.py 171); the next step is the correct call re-written from the question. For about 5 percent, make the re-issued call refuse too and set the GEN answer target to 'cannot'. Original rows keep their targets; rows with 7 steps get no copy. Hold out zero-divisor rows for the test.",
+   "why": "Gold never shows '?' and no train answer contains cannot, unknown, not possible or impossible (first 200,000 rows). A small model repeats a bad call unless recovery is taught (second-hand). B2 with every call refused falls to 0.24-0.82 on program families, so it has no recovery. Masking the refused step means the model is not taught to write bad calls. The expected pooled-5 effect is near zero; the value is that ST1 and the creative loop will not meet an unseen reply.",
+   "evidence": [
+    {
+     "claim": "No training prompt or answer in the first 200,000 rows contains cannot, unknown, not possible, impossible or not enough.",
+     "label": "shown",
+     "source": "own72.tgz skills.jsonl streamed in memory (w1f-2)"
+    },
+    {
+     "claim": "calc returns '?' for zero divisor, inexact DIV, |value| >= 1e9, non-integer operands; progparse turns inexact division into no program, so such rows train answer-only and never show a '?'.",
+     "label": "shown",
+     "source": "models/tool.py:43-53; progparse.py:54-56"
+    },
+    {
+     "claim": "B2 with every call refused: program families 0.82, 0.77, 0.58, 0.29, 0.24, 0.29 percent over six seeds.",
+     "label": "shown",
+     "source": "RESULT.json extra.noexec.program_families"
+    },
+    {
+     "claim": "Small models repeat a bad call after an error unless recovery rows (bad move, error text, corrected move) are taught (Fission-GRPO 2026; Su 2025, abstract level).",
+     "label": "suggested",
+     "source": "PLAN-AND-MARKS section 4 line 185"
+    },
+    {
+     "claim": "Appending the tool's reply and issuing the next command works in small models for code repair (arXiv 2507.05065).",
+     "label": "suggested",
+     "source": "scouts' list, abstract page verified"
+    },
+    {
+     "claim": "The model reads a '?' reply for a new cause (zero divisor) and recovers.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201 vs the queue-40 T1; build only if the T1 behaviour battery shows repeats >5 percent or stop-or-switch <90 percent",
+    "hours": 3,
+    "arms": "T1 vs T1 plus refusal-recovery copies, same seeds; test-only lesion that makes the first call of each program row refuse",
+    "pass_mark": "Fixed now, both seeds. Forced-refusal retry exact (op and both operands, either order for ADD MUL MIN MAX) >=90 percent; on refuse-first rows whose intact answer is right, the answer after the refusal is right on >=60 percent and the next call differs from the refused one in >=95 percent; 'cannot' on >=80 percent of 300 held-out zero-division rows; false '?' or 'cannot' on normal dev rows <=1.0 percent; pooled-5 minus T1 >=-1.0 and chain-5 >=99.0.",
+    "proved_wrong": "Retry exact <50 percent on either seed, or the refused call written again on >20 percent of rows, or false abstain >3 percent, or pooled-5 down >2.0 on both seeds."
+   },
+   "rules_check": "Rule 1: copies are hand-made teaching data, calc stays the tool. Rule 2: no teacher. Rule 3: 0 params. Rule 4: 2-seed screen, marks fixed. Rule 5: dev only. Rule 7: originals kept; 7-step rows get no copy (disclosed). Rule 10: the model reads '?' and writes the next call or 'cannot' itself. Named residual: giving up after two refusals is set by the teaching data and guarded by the false-abstain mark.",
+   "closest_prior": "T1 noexec lesion (tests tool-off, no training on failure); planned D1/D3 tool-side rejection rows in the creative track (not run); PLAN caps (16 calls, 48 bytes) are world limits, not reactions. ST1 filters by correct answers and has no refusal training.",
+   "autonomy": "At deploy the model's own call yields '?' and the model writes the retry or 'cannot' by itself. The insertion is training only; the repeat-count of two is the one teaching-time constant.",
+   "merged_from": [
+    "w1a-1",
+    "w1a-2",
+    "w1c-4",
+    "w1f-2",
+    "w3a-4"
+   ],
+   "director_score": 5.5,
+   "director_note": "Gated by the T1 behaviour battery (do not build if the model already stops or switches). Check hardest: (1) the held-out zero-divisor test is the only evidence the model reads '?' rather than a pattern; (2) the stray-'.' injection differs from a real inexact-division '?' so use the real calc refusals as the mark; (3) 'cannot' abstain conflicts with the 8-char answer cap only if longer words are used; (4) the BIG-overflow confound from w3a-4 is likely small (0 values >=1e9 in 1.58M proxy rows) but needs checking on Ben's file.",
+   "id": "tool-D12",
+   "area": "tool"
+  },
+  {
+   "title": "Move the tool loop to tools/ with a registry and census",
+   "summary": "B3 mark 8 needs the call loop, calc and entry formatting outside the model file. Refactor models/tool.py so the model maps id tensors to per-round tensors and a harness in tools/ holds a registry of (function, arity) pairs, builds entries and parses call text. The same registry builds the teacher's gold entries, so a full-data census checks that no gold entry disagrees with what the tool would return.",
+   "change": "New tools/harness.py (about 40 lines): REGISTRY = {name: (fn, arity)}; field 0 of a round is the op word, the next arity fields are EOS-terminated operands; entry = f'{name} {args} = {result}' cut to LE; unregistered name or wrong arity gives a visible '?' entry; rounds 1 to 7 as now; an entry is shown iff non-empty. Remove from models/tool.py: calc (43-53), entry (56-57), vocab.encode in read_texts (89), decode_cells (115-117) and the entry writing (182). Until the op-as-letters rung, field 0 is the op-head index mapped to its registry name so behaviour is unchanged. Keep module creation order so the seed gives identical weights. Do this after the T1 screen so the sealed q40 code is not altered.",
+   "why": "calc() and the loop sit in models/tool.py (calc at line 43, called inside run at line 181) and the model also receives strings (reader place code, talker word slicing). The audit cannot pass until the boundary moves. The gold tape uses str(v) with no BIG or exactness check (245-247) and the equality test samples only 4,000 of 200,000 train rows (tests/test_tool.py), so a full-data census is cheap insurance. A registry turns a new tool into a one-line change, which the tool-manual idea needs.",
+   "evidence": [
+    {
+     "claim": "calc is defined in models/tool.py and called inside Tool.run; the model class also holds entry formatting, vocab.encode of entries and the cell decoder.",
+     "label": "shown",
+     "source": "models/tool.py:43-57, 89, 115-117, 181"
+    },
+    {
+     "claim": "The gold tape is written with str(v) and is not checked against calc's '?' rules; the equality test samples 4,000 train rows.",
+     "label": "shown",
+     "source": "models/tool.py:245-247; tests/test_tool.py test_gold_tape_matches_calc"
+    },
+    {
+     "claim": "On the own72 proxy, 0 of 50,605 taught steps have an operand over 10 characters, an entry over 40 characters, or a result at or above 1e9; B2's real train file is not mounted.",
+     "label": "shown",
+     "source": "fact check verify-data-limits; w2d-5 cut counters"
+    },
+    {
+     "claim": "The text baseline already runs a regex-triggered calculator (C1') with no registry.",
+     "label": "shown",
+     "source": "INVENTORY-2026-10-07.md section C"
+    },
+    {
+     "claim": "The refactor reproduces T1's free-run calls and answers exactly.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU equivalence (random-init T1, same seed, 200 prompts); PC census over all 200,000 train rows; a dummy one-argument tool as a registry unit test",
+    "hours": 0.5,
+    "arms": "before vs after the refactor; census of every gold entry and operand against the harness; second tool by one registry line",
+    "pass_mark": "Fixed now. Identical calls and answers on all 200 rows with op logits within 1e-6; zero gold-entry mismatches and zero operand overflows (length >= CELLS) over all rows with a program; the dummy tool works with no harness edit.",
+    "proved_wrong": "Any call or answer difference (the visibility rule or entry format changed); any census mismatch names the families whose teacher text the deployed tool cannot produce; a harness edit needed for a new tool means the registry is not generic."
+   },
+   "rules_check": "Rule 1: loop and calculator move into tools/, which is allowed; the model still writes its own calls. Rule 3: 0 params. Rule 4: a test. Rule 7: the census checks that no operand is cut. Rule 10: the harness is the outside tool loop and only parses text and appends the reply. Until the op-letters rung, the call trigger is still a head index.",
+   "closest_prior": "PLAN-AND-MARKS 3c mark 8 requires the loop in tools/ but gives no interface; C1' is a regex calculator with no registry.",
+   "autonomy": "The harness is the outside tool; the 8-round clock and 7-call window are unchanged here (H1 and K1).",
+   "merged_from": [
+    "w3c-2"
+   ],
+   "director_score": 5.5,
+   "director_note": "Mechanical but necessary for B3, and the equivalence test is a strong guard. Check hardest: it must not touch tool.py before q40 finishes; the census needs B2's real train file; the same-seed weight equality depends on module creation order.",
+   "id": "tool-D13",
+   "area": "tool"
+  },
+  {
+   "title": "P1: replace the hand place index with learned alignment",
+   "summary": "The hand place index (word-regex digit-from-right label) is the one hand-made count in the reader, and the call writer depends on it. Two learned replacements are tested with the same reader-only probe protocol as D0: (A) a small bidirectional GRU counter that adds a digit-run count, keeping the place table for cells and registers; (B) no place input at all and an anchored shift writer that copies the character j steps right of a learned start anchor, in normal digit order.",
+   "change": "Arm A: models/reader.py CharReader.forward (lines 82-96): remove the place term at line 86; after the two conv blocks add BiGRU(256, hidden 8) and Linear(16,256) added before the final LayerNorm: +17,120 params (T1 3,294,513); keep the 16-row place table for cells (tool.py 112) and registers (149). Arm B: keep W_a, W_b as anchor queries; anchor softmax over prompt and tape characters plus a start-tag logit; cell j copy mass = anchor convolved with a learned 21-offset kernel per cell (11 cells x 21 x 2 operands + 2 scalars = +464); drop the [::-1] reversals (tool.py 117, 252); T1 becomes 3,277,857. Before either, count the longest train operand against CELLS = 11 (10 characters kept silently, tool.py 252) and extend cells rather than truncate.",
+   "why": "D0's reader probe passed because the place index is an input to the reader (reader.py line 86); the digits-only control reader also had the place input, so neither shows counting is learnable. Number-position papers (Abacus, Position Coupling) inject alignment with hand-set IDs, the same kind of hand structure. P1 is not a clean deletion: the writer's 11 cell positions use place rows 0-10 and the 9 registers use rows 0-8, so removing the input term frees only rows 11-15 (1,280 params) and needs its own position table. A relative kernel finds 'j to the right of the anchor' from sequence index alone and removes the Python reversal as well.",
+   "evidence": [
+    {
+     "claim": "CharReader adds an embedding of a word-regex place index to every character: x = tok + pos + place; place table Embedding(16, d).",
+     "label": "shown",
+     "source": "models/reader.py:13-23, 72, 86"
+    },
+    {
+     "claim": "T1 operand cells add place rows 0-10 and the 9 registers initialise from place rows 0-8; P1 would free only rows 11-15 = 1,280 params.",
+     "label": "shown",
+     "source": "models/tool.py:110-113, 149; fact check verify-param-budget-of-rungs"
+    },
+    {
+     "claim": "D0 reader probe 99.997-100 percent at every place on six seeds, with the place index as input; the digits-only control reader reached 100 percent at each place.",
+     "label": "shown",
+     "source": "D0-RESULT-2026-10-07.md; results/d0/control_digits_reader.json"
+    },
+    {
+     "claim": "Causal LMs with no positional encoding learn to count predecessors; a 2-layer transformer can copy long strings; Position Coupling needs hand-set position IDs.",
+     "label": "suggested",
+     "source": "papers/no-hardcoding-papers.md items 3-4, 11-12 (abstracts)"
+    },
+    {
+     "claim": "An 8-unit GRU counts digit runs up to 9, and a learned 21-offset kernel copies 1-9 digit numbers at 99 percent from an anchor.",
+     "label": "untested",
+     "source": "no run; the probes are the test"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC probes first: reader-only diag_d0 protocol (800 steps, batch 64, 25,992 train prompts, held-out numbers), seeds 200 and 201 (about 0.5 h per arm); then, only for an arm that passes, a 2-seed screen vs T1",
+    "hours": 4,
+    "arms": "A: BiGRU counter (hidden 8; hidden 16 as named fix); B: anchored shift writer with no place input; control: existing place index on the same protocol",
+    "pass_mark": "Fixed now. Probe A: digit-place accuracy >=99.0 at every place 1-9 on both seeds (one pre-registered re-run at 4,000 steps if it misses). Probe B: writer-only exact copy >=99.0 at every length 1-9 on 1,000 held-out numbers per length, both seeds. Screen (passing arm only): sealed S1-S2 vs T1 (pooled-5 2-seed mean >=-2.0, chain-5 >=99.0) and write_copy operand copy >=99.0.",
+    "proved_wrong": "Probe A: place 7, 8 or 9 below 95.0 on both seeds at both step counts. Probe B: copy <97.0 at length 7-9 on both seeds, or screen operand write_copy <97.0 on both seeds."
+   },
+   "rules_check": "Rule 1: place labels and gold anchors are teaching signals only; at run time everything is learned. Rule 2: no teacher. Rule 3: +17,120 or +464 params, inside the band. Rule 4: 2-seed screen; claims need 6 seeds at B3. Rule 6: PC. Rule 7: CELLS must cover the longest gold operand plus EOS; measure first. Rule 10: no hand step remains on the operand path.",
+   "closest_prior": "PLAN P1 (delete the place input; PLAN itself says it is not clean) and P1 option 2 (a cumsum over learned boundaries, disclosed as last resort). Arm A uses a learned scan with no cumsum, arm B a parallel anchored copy.",
+   "autonomy": "Everything inside the model at run time: counts or anchors are learned. Gold anchors and place labels exist only in training.",
+   "merged_from": [
+    "w1e-1",
+    "w1e-2"
+   ],
+   "director_score": 5.5,
+   "director_note": "Directly serves Ben's no-hard-coding ladder. Check hardest: the control reader in D0 had the place input so a pass of the no-place probe is the first real counting evidence; arm B needs a start-tag (a boundary signal), which is a hand structure in disguise unless it is learned from gold anchors; the P1 wording 'the 9 place rows stay' is wrong (see why).",
+   "id": "tool-D14",
+   "area": "tool"
+  },
+  {
+   "title": "Worked-trace bundle: lookup, threshold, sorted-list, order rows",
+   "summary": "Four more families have no calculator program today, each with a small exact rewrite using only existing ops: table_lookup (158 rows: sum, difference or argmax), rule_apply threshold rows (1,075: CMP then ADD or SUB), verify_claim sorted-list rows (638: adjacent CMP chain), order_chain yes/no rows (570: positions built by ADD, then CMP). All replay to the stated answer in the 60k sample. One run with per-family marks.",
+   "change": "Teaching-only branches in progparse.program_for (168-182) plus one teacher file: table_lookup: 'a + b = c', 'hi - lo = d' or the existing 'largest of [...]' fold; rule_apply: CMP(X,T) then ADD(X,A) or SUB(X,B); verify_claim 'increasing order': CMP(s_i, s_i+1) for 4 pairs; order_chain: positions 3-5 built from existing slots by ADD, then CMP on the two positions. No parser change beyond the branches, no new op, 0 params. Unrecognised question forms keep old steps.",
+   "why": "Fact check: gaps vs the step-writer (6-seed pooled) are rule_apply +4.8, verify_claim +5.6 (per-seed SD 6.8) and order_chain +3.9; B2's table_lookup is its lowest in the sample (25.0, variant 11.2). Note that rule_apply and order_chain are not in STEP_FAMILIES, so those leads come from native text attention, and verify_claim is. table_calc has parsed programs yet scores 56.1 with variant 0.4, so a parsed program alone does not fix a family when the real limit is binding words to values in the reader; the kill mark is set for that.",
+   "evidence": [
+    {
+     "claim": "All 158 table_lookup rows have an exact rewrite within the cap (47 sums, 54 differences, 57 argmax); B2 table_lookup pooled-5 25.0 (SD 1.67), variant 11.2.",
+     "label": "shown",
+     "source": "w2f-2 (own72 sample replay); RESULT.json by_family"
+    },
+    {
+     "claim": "1,075 rule_apply threshold rows replay with 2 ops; rule_apply gap +4.8 (per-seed -0.5 to +9.0); 638 sorted verify_claim rows replay with 4 CMP ops; 570 order_chain yes/no rows replay with 2-5 ops, direction consistent across four adjectives.",
+     "label": "shown",
+     "source": "w3f-2, w3f-3, w3f-4 replays with progparse.Builder (first 60k rows)"
+    },
+    {
+     "claim": "STEP_FAMILIES excludes rule_apply, order_chain, seq_next and fewshot but includes verify_claim, so the step-writer's leads differ in cause.",
+     "label": "shown",
+     "source": "models/plain_tf_steps.py:19-20"
+    },
+    {
+     "claim": "table_calc has 100 percent parsed programs but scores 56.1 pooled and 0.4 on variant.",
+     "label": "shown",
+     "source": "progparse.coverage; RESULT.json by_family"
+    },
+    {
+     "claim": "Mapping names to positions from the statements is learned rather than handed over in the trace.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, B2 recipe, seeds 200 and 201 vs the existing B2_s200 and B2_s201; confirm seeds 200-205 on any family that passes",
+    "hours": 3.5,
+    "arms": "B2 vs B2 with the four trace branches (disjoint families, per-family marks); if pooled-5 falls >1.0 or another family drops >3.0, re-run one family at a time",
+    "pass_mark": "Fixed now, both seeds: table_lookup pooled-5 >= B2 + 20; rule_apply >= B2 + 2.0; verify_claim >= B2 + 3.0; order_chain >= B2 + 2.0; pooled-5 >= B2 - 1.0; chain-5 >= 99.0. Confirm per passing family: mean gain >= +3.0 (verify_claim +4.0), at least 5 of 6 seeds >= 0.",
+    "proved_wrong": "Per-family gain <5 for table_lookup (the reader's word-to-value binding is the limit, not the calculator), or <1 for the others on both seeds."
+   },
+   "rules_check": "Rule 1: teaching traces only. Rule 2: deterministic code. Rule 3: 0 params. Rule 4: disjoint families in one screen is an exception to one change at a time; disclose and fall back to single-family runs on a failure. Rule 5: dev only. Rule 7: all listed rows get full traces; name-answer order_chain rows and lookup rows need no calc. Rule 10: see autonomy.",
+   "closest_prior": "INVENTORY B4 covers verify_claim for sub/add rows only; table_calc is the nearest parsed analogue; no trace version of these families exists in PLAN, INVENTORY, PASS-MARKS or REPORT.",
+   "autonomy": "At deploy the model decides the operation from the question, builds positions with ADD, and compares them itself. The name-to-position map is taught in traces and is untested as a learned skill.",
+   "merged_from": [
+    "w2f-2",
+    "w3f-2",
+    "w3f-3",
+    "w3f-4"
+   ],
+   "director_score": 5,
+   "director_note": "Moderate gains over several families but each is small (about 1-3 pooled rows). Check hardest: bundling four families breaks 'one change at a time' unless the fallback is honoured; counts are from the own72 proxy; the 5,000-row sample sizes (130-170 rows per family) are small so per-family numbers may differ on Ben's data.",
+   "id": "tool-D15",
+   "area": "tool"
+  },
+  {
+   "title": "Tool manual: model asks for help and reads the name",
+   "summary": "Test whether a 3M model can learn a tool the way a person does: when its call is refused or it meets an unfamiliar concept, it writes 'help <concept>', reads a one-line manual from the tool, and copies the op name. Random per-episode aliases mean recall cannot work, and a held-out concept (power, 'pow') is the transfer test. Controls separate reading from recall.",
+   "change": "Depends on the op-as-letters rung. (1) 'help' becomes a written op word (0 params). (2) Add a manual lane of 2 tape entries with their own tape_emb rows (+512 params); calc returns 'no op' for an unknown name, distinct from '?'. (3) New tool-world teaching set (about 40k rows): 30% canonical names, 40% random 3-letter aliases from a 40-word pool of non-words, 30% house-map names (fixed alias map, a memorisable shortcut the controls need). Manual line 'concept=alias' of 7-9 characters (inside the reader's +-4 window) plus 0, 1 or 3 role-labelled example lines. In alias episodes the teacher writes the canonical name first (a wrong try), reads 'no op', writes help, reads the manual, then writes the alias call. Ops gcd (train) and pow (held out) live in the tool table, not progparse.OPS. Rows with at most 3 calls so every row fits 7 writes; any row that does not is redesigned, not cut.",
+   "why": "A class head cannot name an op it never trained, and the manual tests whether copy attention can carry a name from a line to a call (induction-style copying, suggested). This is the closest card experiment to 'learn new things from few examples' that stays inside rules 1 and 10: the tool's text is hand-written, the decision to ask is the model's. B2's weakest in-prompt family is fewshot_number_rule (22.7 vs 37.6), a warning that reading examples is hard at this size; B2 follows the tool at 99.88 percent when add and sub are swapped, so it does obey tool text.",
+   "evidence": [
+    {
+     "claim": "No pow, power, mod, modulo, remainder or leftover in the first 200,000 training prompts; gcd occurs 4 times (cipher_map); no raised/power wording either.",
+     "label": "shown",
+     "source": "own72.tgz skills.jsonl streamed in memory (w1f-3, w1f-4)"
+    },
+    {
+     "claim": "B2 swapped-op test: 99.88 percent of affected chain rows follow the swap (s200: 826 rows).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200 RESULT.json extra.opswap; tool.py:413-447"
+    },
+    {
+     "claim": "One write per round, calls at rounds 1-7, entry visible from the next round; help costs one of seven writes.",
+     "label": "shown",
+     "source": "models/tool.py:162-163, 176-194"
+    },
+    {
+     "claim": "Small models repeat a bad call after an error unless recovery is taught; copy heads match a key and copy the token after it.",
+     "label": "suggested",
+     "source": "PLAN-AND-MARKS line 185; arXiv 2209.11895 (abstract)"
+    },
+    {
+     "claim": "A 3M model copies never-seen alias words and transfers to a new concept from a one-line manual.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201, one training run per seed on the tool-world set after the op-letters rung passes; controls and the no-manual demo probe are eval-only on the same checkpoints",
+    "hours": 3,
+    "arms": "(1) trained concepts with pool aliases; (2) held-out alias words; (3) held-out concept pow with held-out alias; controls: no manual, name-shuffled manual, example-shuffled manual; demo probe with k=0..3 worked examples and no manual; manual size mixed over {0,1,3} lines",
+    "pass_mark": "Fixed now, both seeds. (A) After a 'no op' reply the next write is help on >=95 percent of events; (B) after a valid reply help <=2 percent; (C) first write is help on >=90 percent of held-out-concept rows. Aliased rows: (1) exact >=85 percent, (2) >=70 percent, (3) >=50 percent. Controls: no manual <=5 percent on random-alias rows; shuffled manual uses the manual's alias on >=85 percent of swapped calls and the house alias on <=10 percent; example-shuffled answer equals the tool result on >=95 percent. Demo probe: described wording at k=3 >=30 percent, at k=0 <=10 percent, named control >=90 percent. Order convention: k=1 minus k=0 >=+20 on random-order power rows.",
+    "proved_wrong": "(A) <50 percent on both seeds, (B) >10 percent on either seed (always-help policy), (C) help <30 percent on the held-out concept, aliased (1) <50 percent or (3) <10 percent on both seeds, no manual >=20 percent, house alias on >=30 percent of swapped calls (recall beats the manual), named control <60 percent."
+   },
+   "rules_check": "Rule 1: the help reply, 'no op' text and manual lines are hand-written inside the tool, which is allowed. Rule 2: no teacher; alias draws are teaching data. Rule 3: +512 params on top of the op-letters model. Rule 4: one model change (the help word and lane), 2-seed screen. Rule 5: all dev rows are new generated rows. Rule 7: rows that do not fit are regenerated. Rule 9: card model only. Rule 10: the model decides to ask and which name to copy. Gap: the number of example lines is the tool's manual size, not the model's choice.",
+   "closest_prior": "Planned D3 checker tool with recovery rows (PLAN section 4, line 185); fewshot_number_rule (B2 22.7). No manual-reading idea in the plan files.",
+   "autonomy": "At deploy the model calls help itself after its own refused try or on an unfamiliar word, reads the line, and copies the name. Nothing in the loop picks a name for it; the manual text is the tool's.",
+   "merged_from": [
+    "w2h-2",
+    "w2h-3",
+    "w2h-4",
+    "w2h-5",
+    "w1f-4"
+   ],
+   "director_score": 5,
+   "director_note": "Most north-star-aligned idea in the area but the largest build (tool-world set, two new rungs before it). Check hardest: the 30 percent house-map arm must be present or the shuffled-manual control cannot fail; the 40k-row count and 7-write fit are untested; do not start before the op-letters rung passes; B2's failure on fewshot suggests the manual may also fail and the fallback is nothing.",
+   "id": "tool-D16",
+   "area": "tool"
+  },
+  {
+   "title": "N1: lesion the number slots, then delete or learn them",
+   "summary": "The 16 prompt-number slots are built from a regex, int() and a count-based valid mask, all hand steps on the deploy path. First check on T1 checkpoints (test-time) whether the thinker uses them at all, and on dev what the pooled-digit loss costs in rows. If not used, run the PLAN's N1 deletion directly. If used, replace the regex pooling with attention pooling queried by the ordinal table T1 already has (0 params), adding learned boundary tags only if that fails.",
+   "change": "Stage 0 (inference): zero S0 at test time on T1_s200/s201 (a 3-line option in run()) and, on the PC, count dev in_dist/variant rows with a 3-digit and a 4+-digit prompt number to bound the pooled-digit loss (D0 pooled third digit 93.6-94.5 synthetic, 97.5-99.1 real). Stage 1: if the lesion costs <=1.0, run N1 as deletion. Else in tool.py run() (126-133): slot_k = softmax over valid prompt characters of (ordinal_k . X_t / sqrt(d)) times X_t, S0_k = pool_k + ordinal_k + stype_0 for all 16 slots, no valid mask; spans() stops calling NUM_RE and int on the deploy path. Stage 2 only if slot mass fails: three tag heads on the reader output (number start 257, word start 257, same-class 771) plus 3 beta scalars, minus the dead stype rows 1-2 (-512): net +776 params, T1 3,278,169.",
+   "why": "Operands are copied from prompt characters by the cell writer, not from slots, so the slots feed only the thinker's cross-attention (tool.py 126-133, 155-156). A test-time lesion shows reliance, not need, but it decides which screen to run. The regex also drops minus signs: 1,431 of 200,000 prompts (0.72 percent, seq_next and fewshot_number_rule) contain a signed number, none program-bearing today, so any learned finder must keep signs before a signed number can enter a call. A fixed query may not tell the k-th number from the first without position information, so a slot-mass check is needed.",
+   "evidence": [
+    {
+     "claim": "Prompt-number spans: NUM_RE.finditer and int() on the first 16 numbers, pooled into slots with a valid mask count > 0; the thinker reads them through kvs0 and its mask.",
+     "label": "shown",
+     "source": "models/ledger.py:205-207; models/tool.py:126-133, 137-138, 155-156"
+    },
+    {
+     "claim": "D0: pooled span mean loses digits (place 9 at 65.2-83.2 percent); third digit 93.9, 93.6, 94.5 percent synthetic and 98.4, 97.5, 99.1 percent on real prompts (seeds 200-202); in-dist arithmetic families score 100 percent.",
+     "label": "shown",
+     "source": "D0-RESULT-2026-10-07.md; results/d0/B2_s200..s202.json reading.pool; RESULT.json final_eval.in_dist"
+    },
+    {
+     "claim": "1,431 of 200,000 prompts (0.716 percent) contain a minus-digit (fewshot_number_rule 724, seq_next 707); none has a program; progparse NUM_RE and ledger spans drop the sign.",
+     "label": "shown",
+     "source": "fact check verify-data-limits; progparse.py:14, 18"
+    },
+    {
+     "claim": "Only stype row 0 is used in T1; rows 1-2 are 512 dead params.",
+     "label": "shown",
+     "source": "models/tool.py:133"
+    },
+    {
+     "claim": "A fixed ordinal query can pick out the k-th number by attention.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "Stage 0: PC inference on T1_s200/s201 (minutes) plus dev-row counts on the PC; Stage 1/2: PC 2-seed screen (about 1 h per run) plus a slot-mass probe on in_dist dev",
+    "hours": 3,
+    "arms": "Stage 0: noslots lesion vs intact; Stage 1: T1 vs deletion (or learned pooling); Stage 2: tag heads",
+    "pass_mark": "Fixed now. Stage 0: if chain-5 and pooled-5 each drop <=1.0 on both seeds, run deletion; if either drops >1.0, run learned pooling. Digit budget: if predicted loss on real dev rows is <=1.0 point of in_dist, the digit argument for N1 is dropped. Stage 1/2 pass: chain-5 and pooled-5 within 1.0 of T1 on both seeds; slot mass on the k-th number's characters >=0.8 for k=1..min(16, count) on in_dist dev; tag F1 >=0.99 for number start and word start.",
+    "proved_wrong": "Slot mass <0.5 for any k>=2 (the query cannot count numbers; regex still needed for slot identity); tag F1 <0.95; pooled-5 2-seed mean <= -4.0."
+   },
+   "rules_check": "Rule 1: regex labels are teaching only; at run time attention and heads are learned. Rule 3: 0 or +776 params, inside the band. Rule 4: 2-seed screens. Rule 5: dev only. Rule 9: T1 line only. Rule 10: no regex runs on the deploy path after this rung.",
+   "closest_prior": "PLAN N1 (delete regex spans and slots). This keeps the choice open: deletion if the lesion shows no reliance, learned pooling otherwise.",
+   "autonomy": "The model finds its own numbers by attention. The 16-slot table size is a fixed switch named as such.",
+   "merged_from": [
+    "w1e-4",
+    "w3c-4",
+    "w1g-5"
+   ],
+   "director_score": 5,
+   "director_note": "Stage 0 is nearly free and may make the whole rung a deletion. Check hardest: a test-time lesion on a model trained with the slots can overstate reliance; the clean test is training without slots (the deletion screen). Signs must be kept before a signed number enters a call; the pooled-digit budget needs dev files from the PC.",
+   "id": "tool-D17",
+   "area": "tool"
+  },
+  {
+   "title": "Teach seq_next with difference steps and signed numbers",
+   "summary": "The 164 seq_next rows in the sample train answer-only because their gold steps are rule text. Every one fits a rule (constant first difference 94, constant second difference 54, sum of previous two 16) and rewrites to at most 6 calculator steps. B2 scores 51.6 pooled (variant 4.6, answer 30.4). The signed-number parse must come first, but only T1 can use it, because B2's slots drop the sign.",
+   "change": "(a) progparse.py line 14: signed NUM_RE (optional minus directly before digits, not preceded by a letter, digit or minus); this also changes prompt_numbers (line 18) and the invert path (line 112). (b) New build-time teacher (custom_io/models/teach_seq.py) called from row_targets: first difference: 'x1 - x0 = d', 'x_last + d = next'; second difference: 6 steps; sum of previous two: 1 step; rows fitting no rule keep old steps. Run on T1 once T1 is confirmed (T1 copies signs as characters). For the screen on B2, exclude the 23 signed rows (14 percent) from traces and disclose. 0 params.",
+   "why": "All 164 sample rows have an exact rewrite; the longest rewrite is 6 steps, the largest intermediate 103, answers at most 3 digits, 26 negative. The plain digit regex reads all 23 negative prompts with wrong values, and ledger.py spans use the same unsigned digits, so a signed teacher value (-27) would not match a B2 slot value (27) and the label would be wrong. In T1 the operand is text copied from the reader's characters, so the sign survives. B2 seq_next in-dist 86.7 vs direct transformer 95.4.",
+   "evidence": [
+    {
+     "claim": "164 seq_next rows: 94 constant first difference, 54 constant second difference, 16 sum of previous two, all exact; 148 of 148 arithmetic and growing rewrites pass program_for under the signed regex.",
+     "label": "shown",
+     "source": "w2f-1 code run on own72 first 5,000 rows (not saved)"
+    },
+    {
+     "claim": "B2 seq_next pooled-5 51.25 (s200), 54.38 (s201), 6-seed mean 51.56 (SD 2.56); by split in_dist 86.7, answer 30.4, frame 84.6, variant 4.6; direct transformer in-dist 95.4.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json final_eval by_family"
+    },
+    {
+     "claim": "NUM_RE = re.compile(r'\\d+') drops the minus sign at progparse.py:14, 18; all 23 negative seq_next prompts misread.",
+     "label": "shown",
+     "source": "progparse.py:14, 18; sample check in w2f-1"
+    },
+    {
+     "claim": "In T1 an operand is text written from char-level reader output, so a sign character can be copied while the slot value is unsigned.",
+     "label": "shown",
+     "source": "tool.py:110-117, 166-167; fact check verify-code-mechanics claim 4"
+    },
+    {
+     "claim": "Teaching the difference steps lifts seq_next by >=15 points.",
+     "label": "untested",
+     "source": "this screen"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, B2 recipe, seeds 200 and 201 with signed rows excluded, vs existing B2_s200/s201; then the signed version on T1 after its confirm",
+    "hours": 3.5,
+    "arms": "B2 vs B2 plus seq_next teacher; later T1 vs T1 plus teacher with signed parse",
+    "pass_mark": "Fixed now, both seeds: seq_next pooled-5 >= B2 + 15 (>=66.25 on s200, >=69.38 on s201); pooled-5 >= B2 - 1.0.",
+    "proved_wrong": "seq_next gain <+5 on either seed, or pooled-5 falls >1.0: answer-only training of these rows is not the bottleneck."
+   },
+   "rules_check": "Rule 1: teaching data at build time only. Rule 2: deterministic code. Rule 3: 0 params. Rule 4: 2-seed screen, then 6. Rule 5: own72 train rows only, dev scored as B2 does. Rule 7: every rewrite is <=6 steps; signed rows stay answer-only on B2 and are disclosed. Rule 10: at deploy the model chooses the rule and writes subtract and add calls itself.",
+   "closest_prior": "L1 (PLAN) changes the inverse-op rewrite, not step text; state_update is the nearest parsed running-total case (97.6). No rung rewrites seq_next.",
+   "autonomy": "The thinker reads the sequence, decides the rule, writes the calls, reads each result and stops. The teacher and the signed parse run only when training rows are built.",
+   "merged_from": [
+    "w2f-1"
+   ],
+   "director_score": 5,
+   "director_note": "Not the biggest gap but cleanest rewrite. Check hardest: the signed-parse prerequisite is a B2-vs-T1 mismatch the proposals missed (B2 slots drop the sign), so the screen must either exclude signed rows or wait for T1; counts come from a 5,000-row proxy sample.",
+   "id": "tool-D18",
+   "area": "tool"
+  },
+  {
+   "title": "list_stats traces within 7 calls; escalate only if needed",
+   "summary": "Of 1,298 unparsed list_stats rows in the 60k sample, 747 fit a hand-written network that stays within 7 calls: second-largest for 3 items (4 ops) and 4 items (7 ops), and count-even for 3 items. 551 rows (5-6 items) need more calls. First decide with a free reanalysis whether missing steps are the bottleneck; then run the zero-parameter traces; escalate to running-state ops, whole-list ops or two call tracks only if the remainder matters.",
+   "change": "Step 0 (after q40, free): within T1_s200/s201 PREDS.json compare programmed 'range of' rows (3-4 numbers) with unprogrammed second_largest/count_even rows at the same length. Step 1: teaching-only branch in progparse.program_for for 'second_largest of' (3 items: MAX(MIN(a,b), MIN(MAX(a,b),c)); 4 items: MAX(MIN(MAX(a,b),MAX(c,d)), MAX(MIN(a,b),MIN(c,d)))) and 'count_even of' (3 items: 3 - sum(x MOD 2), 3 built as ADD(1,2)); 0 params. Escalation arms, only if step 1 helps: running-state ops (op list +5 classes, +1,285 params, tool-local), whole-list ops with 24-cell copy (+3.1k, copy-only probe first), or two call tracks per round (+4.1k); K1-min covers the 5-6 number range rows.",
+   "why": "3,784 of 5,807 list_stats rows in the first 200k give 'unparsed step' (second_largest 2,110, count_even 1,674); 429 more are over the cap (range of 5 or 6 numbers). B2 is 52.1 on list_stats vs the step-writer's 48.9, so B2 is already ahead, but variant is 0.0, so there is headroom. The networks are exact (brute force over all 3- and 4-tuples with values 0-5, including ties). All the escalation arms need new ops or cells, which is why they follow the free step.",
+   "evidence": [
+    {
+     "claim": "Of 1,298 no-program list_stats rows in 60k: 255 (second-largest, 3 items, 4 ops), 269 (4 items, 7 ops), 223 (count-even, 3 items) fit within 7 ops and replay to the answer; 551 rows do not fit.",
+     "label": "shown",
+     "source": "w3f-5 replay with progparse.Builder"
+    },
+    {
+     "claim": "List shape scan: 3,784 of 5,807 list_stats rows unparsed; 1,594 programmed (range of 3-4 numbers); 429 over the cap; the LIMIT-COUNTS figure is 528.",
+     "label": "shown",
+     "source": "w1d-1 computed here; LIMIT-COUNTS-2026-10-07.json"
+    },
+    {
+     "claim": "list_stats pooled-5: B2 52.1, step-writer 48.9; list_stats is not in STEP_FAMILIES.",
+     "label": "shown",
+     "source": "RESULT.json final_eval; plain_tf_steps.py:19-20"
+    },
+    {
+     "claim": "B2 list_stats coverage in dev is 29.0 percent of 200 rows with a program.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200 RESULT.json extra.coverage"
+    },
+    {
+     "claim": "Models learn to stop at the end of a list under running-state ops.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step 0: PC CPU after q40 (0.2 h). Step 1: PC, B2 recipe, seeds 200 and 201 vs existing B2 baselines",
+    "hours": 3.5,
+    "arms": "B2 vs B2 plus the 747 list_stats traces; step 0 within T1 programmed vs unprogrammed rows at equal list length",
+    "pass_mark": "Fixed now. Step 0: programmed exact >=90 and unprogrammed <=60 on both seeds (missing steps are the bottleneck). Step 1, both seeds: list_stats pooled-5 gain >=+4.0; pooled-5 >= B2 - 1.0; chain-5 >= 99.0.",
+    "proved_wrong": "Step 0: the two groups within 5.0 points on both seeds (labels are not the bottleneck: build no list op). Step 1: gain <+1.0 on both seeds."
+   },
+   "rules_check": "Rule 1: networks are teaching data. Rule 3: 0 params for step 1. Rule 4: 2-seed screens. Rule 7: the 551 over-cap rows stay answer-only until K1-min, disclosed. Rule 10: the model picks the network from the list length and writes each call itself; running-state arms must also show a learned list end.",
+   "closest_prior": "K1 raises the cap (planned); progparse has a binary 'range of' fold. No second-largest or count-even network is planned.",
+   "autonomy": "The model picks the network and the calls from what it reads. The teacher runs at build time only.",
+   "merged_from": [
+    "w3f-5",
+    "w1d-1",
+    "w1d-2",
+    "w1d-3",
+    "w1d-4"
+   ],
+   "director_score": 4.5,
+   "director_note": "Five proposals, one cheap order: reanalysis, then zero-param traces, then ops. Check hardest: the 528 vs 429 count mismatch; the running-state arm changes calc from binary to stateful and the 'learned stop at list end' is its main risk; B2 is already ahead of the step-writer here so the prize is B2-relative.",
+   "id": "tool-D19",
+   "area": "tool"
+  },
+  {
+   "title": "ANSWER as a tenth op class: stop inside the op head",
+   "summary": "An alternative to the frozen stop head: add ANSWER as a tenth op-head class. The turn ends at the first round whose op argmax is ANSWER, the registers are read at that round, and the label is the trace's own end (round K+1), which T1 already teaches as trailing NOOP. A random per-row round budget in training is the fallback if intermediate answers are unstable.",
+   "change": "ledger.py 149 op_head Linear(d, 9) to Linear(d, 10) (+257) and n_loops 8 to 9 (+256 step_emb row): 3,277,906. Read the op head through round N_RES+1. Per-round register snapshot (T1 has none, tool.py 124). Per-round CE on ANSWER and GEN loss on rounds K+1 to the last, averaged; rows with no program mask the op loss (not NOOP at 0.1) and keep GEN at the last round. Fallback (from the random-budget proposal): draw each row's answer round uniformly from [L+2, 13]; read the answer loss there from the same forward pass.",
+   "why": "Always reading the answer after round 8 fixes compute and never reads the 7th result; H1's stop head has a hand 0.5 cut and about 1.9x cost. Here the model's own argmax decides. Programless rows (59 percent of the sample) cannot be labelled from a trace, which H1's readout label can; that is the trade.",
+   "evidence": [
+    {
+     "claim": "op_head is Linear(d, len(OPS)) with 9 classes; step_emb has n_loops rows; the 7th call result is never read by the thinker at n_loops 8.",
+     "label": "shown",
+     "source": "models/ledger.py:144-145, 149; models/tool.py:152-162, 184-194"
+    },
+    {
+     "claim": "NOOP after the last call is trained at weight 1 for program rows; w_noop 0.1 applies to rows without one; a NOOP does not stop the loop.",
+     "label": "shown",
+     "source": "models/tool.py:176-177, 280, 285-287; fact check verify-stop-and-round-mechanics"
+    },
+    {
+     "claim": "59.1 percent of the 200k train slice has no program (117,780 unparsed, 429 over cap, 35 final mismatches).",
+     "label": "shown",
+     "source": "fact check verify-data-limits"
+    },
+    {
+     "claim": "B2 at 16 rounds loses 0.8-1.9 in_dist points; Test LR per-round training moved drift to -0.2/-0.5 but leaked 15.88 at zero rounds.",
+     "label": "shown",
+     "source": "RESULT.json lesions loops:16; results/37-pc-loop-readout"
+    },
+    {
+     "claim": "A learned ANSWER argmax stops earlier on short questions and later on long ones.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201 vs queue-40 T1; build only if the frozen stop head probe fails",
+    "hours": 3,
+    "arms": "T1 vs ANSWER-class T1 (n_loops 9, per-round GEN loss); fallback arm: random per-row budget",
+    "pass_mark": "Fixed now, both seeds: chain-5 >=99.0; pooled-5 minus T1 mean >=-1.0 and each seed >=-2.0; premature ANSWER (before the last gold call) <=1 percent of chain-5 dev rows and stop after round K+1 <=5 percent; mean rounds on chain-5 minus one-step families >=2.0; zero-round in_dist <= max(5, T1 + 1); turns reaching round 9 without ANSWER <=1 percent of program rows.",
+    "proved_wrong": "Premature ANSWER >5 percent of chain-5 rows, or mean-rounds gap <0.5, or pooled-5 mean < -2.0."
+   },
+   "rules_check": "Rule 3: +513 params, inside the band. Rule 4: 2-seed screen with marks fixed. Rule 7: programless rows keep their answer loss; their stop label is masked, not cut. Rule 10: the stop is the model's own argmax; the round-9 end is a world limit. Residual: programless rows have an untrained stop.",
+   "closest_prior": "H1 (separate stop head, 0.5 cut, K drawn from {4,8,16,32}, 1.9x compute). Differs: no extra head, no cut, trace-based label.",
+   "autonomy": "The end of the turn is the model's own class at each round; n_loops 9 is a disclosed depth setting.",
+   "merged_from": [
+    "w1a-3",
+    "w3b-5"
+   ],
+   "director_score": 4.5,
+   "director_note": "A fallback, not a first move. Check hardest: whether programless rows (most of the data) ever get a stop label, because that is where the 8-round clock is least justified; an inference-time ANSWER stop saves compute only if the batch loop is restructured.",
+   "id": "tool-D20",
+   "area": "tool"
+  },
+  {
+   "title": "O1: answers through one learned writer, WORD path removed",
+   "summary": "Write final answers with the anchored shift writer (one answer anchor, nine register cells with learned kernels, the existing vocabulary readout for generated words) and delete the hand WORD slicing, word keys, word content and mode head. Frees 38,339 parameters and removes the Python reversal. The risk is NUM and WORD answer rows that T1 already writes by GEN.",
+   "change": "tool.py talk() (206-222): remove the WORD branch (217-221) and the reversal (213). run() (134-136, 196): remove word keys, word content, lword, lmode. ledger.py: remove mode_head (149), q_word (150), k_word and len_emb (151), ln_wc and k_wc (164-165). The answer anchor query is q_cp(ln_t(zf)) with zf = ln_z(control token 1); kernels 9 x 21 + 1 beta = +190. Net -38,149: 3,239,244. Depends on the anchored shift writer from the P1 probe; if only the call writer passes, O1 uses that writer with an answer-position table instead.",
+   "why": "The WORD path is the one answer renderer that cuts the prompt with a regex (data.py 149-154, tool.py 217-221). Train answers are at most 8 characters, so 8 cells plus EOS cut no training target; dev family answers reach 12 (5 of 160, big dev 25 of 800). In T1 mode class 0 (NUM) is already dead and decodes as GEN, so NUM-heavy rows have already moved to a writer; the premise check recommends a per-mode breakdown before reading parity.",
+   "evidence": [
+    {
+     "claim": "WORD answers are sliced from the prompt by regex word spans; WORD-path params: mode head 771, q_word 16,448, k_word 2,624, len_emb 1,536, ln_wc 512, k_wc 16,448 = 38,339.",
+     "label": "shown",
+     "source": "tool.py:217-221; data.py:149-154; ledger.py:149-151, 164-165 (arithmetic)"
+    },
+    {
+     "claim": "Train max answer is 8; dev family answers over 8: 5 of 160 (clock_date 3, string_transform 2); big dev family 25 of 800.",
+     "label": "shown",
+     "source": "LIMIT-COUNTS-2026-10-07.json"
+    },
+    {
+     "claim": "T1's mode class 0 is never a target and decodes as GEN; 13 NUM-heavy answer-split families (520 rows) score 96.7 in B2.",
+     "label": "shown",
+     "source": "tool.py:206-208, 248; RESULT.json extra.coverage"
+    },
+    {
+     "claim": "Deleting WORD removes WORD answers (copy_word, object_track, order_chain and similar) unless the writer copies them; the cost is untested.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "CPU reanalysis (0.1 h): progparse.coverage over dev for WORD-mode families joined to B2 results; PC probe (answer anchor given, 1-8 characters, 800 steps); PC 2-seed screen vs T1",
+    "hours": 3.6,
+    "arms": "anchored answer writer (main) vs T1 register writer (control)",
+    "pass_mark": "Fixed now. Probe: exact copy >=99.0 at every length 1-8 on both seeds. Screen: pooled-5 2-seed mean >=-2.0 vs T1; chain-5 >=99.0 on both seeds; every WORD-mode family within -3.0 of T1 (2-seed mean); NUM-heavy answer families within -3.0 of B2.",
+    "proved_wrong": "Pooled-5 2-seed mean <= -4.0, or any WORD-mode family <= -5.0 on both seeds."
+   },
+   "rules_check": "Rule 1: removes hand word slicing and the Python reversal. Rule 3: -38,149, inside the band. Rule 4: 2-seed screen. Rule 7: 8 cells equal the train maximum; dev answers over 8 are a reported limit, not a training row. Rule 10: answer start and end are learned.",
+   "closest_prior": "PLAN O1 (route answers through the writer, delete mode head and renderers). Names a specific writer and deletes WORD in the same rung, which PLAN O1 does not.",
+   "autonomy": "No hand step remains on the answer path at run time.",
+   "merged_from": [
+    "w1e-3"
+   ],
+   "director_score": 4.5,
+   "director_note": "Large rung, large risk. Check hardest: it depends on the P1 anchored writer; the premise check shows T1's loss of the NUM path already needs a per-mode breakdown (in the behaviour battery) before O1 is judged; PLAN says the build thread must record O1's case from T1's build before coding.",
+   "id": "tool-D21",
+   "area": "tool"
+  },
+  {
+   "title": "Check a result against the stated number, as a pilot",
+   "summary": "Two variant families give the question's own reference number: arith_bare (a one-step equation) and backward_solve (solve for an operand, end value stated). After the candidate call, the model writes a forward call with its candidate and a CMP against the stated number; a non-zero CMP sends it back to re-solve. This is a small pilot of the check-and-retry loop that a larger example checker would need, on families where the check is exact.",
+   "change": "progparse.py (Builder.op invert branch 42-51; to_program missing-operand block 111-127) and tool.py row_gold (233-249): for arith_bare-style and backward_solve rows emit, after each candidate, a check call (operator = the question's own, operands = the candidate and the known operand) and a CMP against the stated number (the last prompt number). For about 30 percent of such rows prepend a failing sibling candidate (add<->sub, mul<->div, or another prompt number for backward_solve) with its real calc result and failing check, then the gold candidate and its passing check; then NOOP. 0 params; three to five entries, inside the 7 slots.",
+   "why": "B2's arith_bare is 240/240 in_dist and 138/240 on variant; backward_solve is 40/40 in_dist and 9-12/40 on variant, so the failure is in reading the question, not arithmetic, and the stated number is the one exact reference available. The honest prize is tiny: if both reached 100 percent, pooled variant gains about 31 rows per seed (about +0.5 pooled-5). The value is whether a learned check triggers a retry at all.",
+   "evidence": [
+    {
+     "claim": "B2 arith_bare: in_dist 240/240, frame 240/240, answer 240/240, variant 138/240; backward_solve in_dist 40/40, variant 12, 9, 10, 9, 11, 9 of 40 on seeds 200-205.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json final_eval by_family"
+    },
+    {
+     "claim": "The inverse rewrite reads the answer to decide which operand is missing and takes the last prompt number as the equation's result; verify_claim's gold program already uses CMP.",
+     "label": "shown",
+     "source": "progparse.py:42-51, 111-127, 175-177"
+    },
+    {
+     "claim": "backward_solve has 100 percent program coverage in-dist.",
+     "label": "shown",
+     "source": "RESULT.json extra.coverage.by_family"
+    },
+    {
+     "claim": "The learned check flips the operator or re-solves when CMP is non-zero.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201 vs T1; test-only lesion forcing a failing candidate at round 1 on dev arith_bare and backward_solve rows",
+    "hours": 3,
+    "arms": "T1 vs T1 plus check-then-flip",
+    "pass_mark": "Fixed now, both seeds: on the forced-failure lesion the model writes the flipped operator or re-solves in >=90 percent of rows; backward_solve variant >=60 percent; arith_bare variant up >=20 points over the two seeds; arith_bare in_dist not down; pooled-5 not down >1.0; chain-5 >=99.0.",
+    "proved_wrong": "Retry after forced failure <50 percent on either seed, or the failed candidate repeated in >20 percent of forced rows, or arith_bare variant gain <5 and backward_solve <35 on both seeds."
+   },
+   "rules_check": "Rule 1: the check is a call to the outside calculator; the sibling table is training corruption only. Rule 3: 0 params. Rule 4: 2-seed screen. Rule 5: dev only. Rule 7: rows have 1-2 steps; no target cut. Rule 10: candidate, check, comparison, retry and stop are all learned.",
+   "closest_prior": "L1 (remove the inverse rewrite, no check); D3 example checker (planned); verify_claim CMP (gold label only).",
+   "autonomy": "The model writes the forward call and the CMP, reads the exact reply, and re-solves or answers. Only the calculator is outside.",
+   "merged_from": [
+    "w1c-3",
+    "w2e-5"
+   ],
+   "director_score": 4,
+   "director_note": "A mechanism pilot with a tiny score ceiling (about +0.5 pooled-5 combined). Check hardest: sibling-candidate corruption on backward_solve uses the answer to pick the corruption; the forced-failure lesion is the real evidence; do not build before the variant diagnosis shows operand picks dominate.",
+   "id": "tool-D22",
+   "area": "tool"
+  },
+  {
+   "title": "Teach MOD steps; test digits_parity tens and parity rows",
+   "summary": "The calculator and B2's op head have a MOD class, but no gold program ever writes MOD (0 of 24,460 parsed rows in 60k). A grammar gap in progparse blocks it. After adding a 'mod' token, a free CPU parse shows how many mod-step rows actually parse; then test digits_parity (tens-digit and odd/even rows, 100 of 147 sample rows) with 4- and 1-step MOD traces. The seq_cycle chain-count version is deferred until K1-min.",
+   "change": "(a) progparse.py: add 'mod' as a multiplicative infix operator (SYM, tok_expr line 64, expression regex line 156, eval_expr * / level line 94). CPU gate: rerun the 60k-row parse and report the share of the 940 seq_cycle mod-step rows that parse and pass the value assert. (b) New teacher called from row_targets for digits_parity: tens digit: 'N mod 100 = m', 'N mod 10 = u', 'm - u = t', 't / 10 = d' (4 steps); parity: 'N mod 2 = r' (1 step; the label odd/even is written by the talker); digit-sum rows untouched (a digit-sum op would cost about 513 params). 0 params.",
+   "why": "The brief's gap: w2d-1 says 95 percent of mod-step rows would parse, but w2f-5 found that for 59 of 76 'item number N' rows the modulus (the pattern length) is neither a prompt number nor a constant, so only 17 of 76 fit; the earlier claim that no row fails on 'operand not found' is unreliable because parsing stops at the grammar first. So the gate may kill the seq_cycle part. digits_parity (B2 pooled-5 50.1: in_dist 93.3, answer 21.2, variant 0.8) has exact short rewrites for 100 of 147 sample rows.",
+   "evidence": [
+    {
+     "claim": "Gold op counts over 24,460 parsed rows: ADD 13,749, SUB 12,470, MUL 7,598, DIV 6,294, MIN 4,009, MAX 3,366, CMP 1,899, MOD 0; 940 of 60,000 rows contain a mod step (all seq_cycle), all rejected by the expression regex.",
+     "label": "shown",
+     "source": "w2d-1 count over own72.tgz first 60k with progparse.program_for"
+    },
+    {
+     "claim": "For seq_cycle, 59 of 76 'item number N' rows have a modulus that is neither a prompt number nor a constant; only 17 fit the current parser.",
+     "label": "shown",
+     "source": "w2f-5 code run on the 5,000-row sample"
+    },
+    {
+     "claim": "All 49 tens-digit and 51 parity digits_parity rows rewrite to the gold answer (tens 4 steps, parity 1); sum-of-digits rows would need about 10 steps.",
+     "label": "shown",
+     "source": "w2f-4 code run (rewrites not run through the parser, 'mod' not a token yet)"
+    },
+    {
+     "claim": "MOD is in the calculator (tool.py NAMES) and in B2's OPS list, but progparse SYM has no mod, so no step can reach MOD today.",
+     "label": "shown",
+     "source": "tool.py:39; progparse.py:11, 13"
+    },
+    {
+     "claim": "seq_cycle chain-count programs: 96 of 147 rows fit; 51 need 8-21 steps (a rule-7 problem).",
+     "label": "shown",
+     "source": "w2f-5 (cost T + L - 3)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "CPU gate on the PC or Mac (0.2 h); then PC 2-seed screen, B2 recipe, seeds 200 and 201, only digits_parity rows changed, vs existing B2 baselines",
+    "hours": 3.2,
+    "arms": "B2 vs B2 plus mod token and digits_parity teacher; tens and parity rows scored separately via saved predictions",
+    "pass_mark": "Fixed now. Gate: report the share of mod-step rows that parse and pass the value assert (>=95 percent keeps the seq_cycle part, else it is deferred). Screen, both seeds: digits_parity pooled-5 >= B2 + 10 (>=56.25 on s200, >=61.25 on s201); tens and parity rows each >=60 percent; pooled-5 >= B2 - 1.0.",
+    "proved_wrong": "digits_parity gain <+3 on either seed, or tens and parity rows <50 percent on both seeds."
+   },
+   "rules_check": "Rule 1: teaching data; MOD is a calculator op the model calls. Rule 3: 0 params (about 513 for a digit-sum op, not in this idea). Rule 4: 2-seed screen. Rule 7: seq_cycle chain-count rows over the cap are excluded and flagged, not truncated; the confirm must wait for K1-min. Rule 10: at deploy the model picks the step and writes mod and divide calls.",
+   "closest_prior": "No tried rung adds a mod step; MOD is in the op list but unreachable from progparse.",
+   "autonomy": "The model chooses the operation from the question, writes the calls, and maps a 0 or 1 to odd/even itself. The teacher and mod token exist only at build time.",
+   "merged_from": [
+    "w2d-1",
+    "w2f-4",
+    "w2f-5"
+   ],
+   "director_score": 4,
+   "director_note": "The two source ideas contradict each other on the key fact (whether the modulus is a slot), so the free CPU gate comes first. Check hardest: the 'item number N' modulus is the pattern length, not in the prompt; seq_cycle by +1 add chain is clumsy and would be better served by a count op, which is a calculator change; digits_parity is only 3 percent of the data.",
+   "id": "tool-D23",
+   "area": "tool"
+  },
+  {
+   "title": "V1: raw bytes, after an ASCII check",
+   "summary": "Replace the 108-id hand-listed character table (13 specials plus ASCII 32-126) with 13 specials plus 256 raw byte ids. Check on CPU that every train and dev string is printable ASCII, then run a 2-seed screen against the previous rung. It fits the band on T1 without deleting any table.",
+   "change": "data.py SPECIALS and ASCII (lines 20-24) and CharVocab (40-55): ids = 13 specials + 256 bytes. reader.tok (108 to 269 rows), the tied readout and its bias grow by 161 x 256 + 161 = +41,377: T1 3,318,770 (23,110 below the band top). Dropping the eight unused query specials would make it +39,321. Run after P1 per the ladder.",
+   "why": "The 108-entry table is hand-listed; bytes are the identity map. The PLAN expects no change on ASCII data, but that is a prediction. V1 does not fit B2 (3,343,858, 1,978 over the top) but fits T1, so the proposal to delete the 208-row learned position table to pay for it is not needed. Byte models start weaker than token models and pass them only with more compute at 1B scale, so direction only.",
+   "evidence": [
+    {
+     "claim": "Vocabulary is 13 specials + 95 printable ASCII = 108 ids; V1 adds 161 x 256 + 161 = 41,377 params (tied table counted once).",
+     "label": "shown",
+     "source": "data.py:20-24, 40-55; models/ledger.py:152, 245; fact check verify-param-budget-of-rungs"
+    },
+    {
+     "claim": "V1 on B2 is 3,343,858 (over the top by 1,978); V1 on T1 is 3,318,770 (23,110 left).",
+     "label": "shown",
+     "source": "arithmetic in fact check verify-param-budget-of-rungs"
+    },
+    {
+     "claim": "The eight query specials <q0>..<q7> are referenced by no model file (2,056 params).",
+     "label": "shown",
+     "source": "data.py:12, 20, 22; test_harness.py:74"
+    },
+    {
+     "claim": "Every train and dev string is printable ASCII.",
+     "label": "untested",
+     "source": "PLAN 3b claim; the CPU check is the test"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "CPU ASCII check first (0.05 h); then PC 2-seed screen vs the previous rung, seeds 200 and 201",
+    "hours": 3.05,
+    "arms": "raw bytes vs the previous rung",
+    "pass_mark": "Fixed now. CPU: 100 percent of train, dev, answer and tape strings are printable ASCII (else the rung becomes a normal screen). Screen: 2-seed mean pooled-5 (V1 minus previous rung) >=-1.0; chain-5 >=99.0 on both seeds; no split down >2.0 on the 2-seed mean.",
+    "proved_wrong": "2-seed mean below -2.0; between -2.0 and -1.0 is 'not shown'. Claims wait for B3's six seeds."
+   },
+   "rules_check": "Rule 1: the byte map is a fixed identity, no hand logic at answer time. Rule 3: +41,377, inside the band on T1. Rule 4: 2-seed screen only. Rule 10: all steps learned.",
+   "closest_prior": "PLAN V1 (raw bytes after P1, no screen). This adds the ASCII check, the budget on T1 and the deferral of the position-table deletion.",
+   "autonomy": "Inside the model; nothing hand-written runs at answer time.",
+   "merged_from": [
+    "w1e-6"
+   ],
+   "director_score": 4,
+   "director_note": "Late-ladder rung with little risk. Check hardest: that dev strings truly contain no non-ASCII; the byte table is still a fixed structure but the identity map is the least hand-made option; do not run before P1.",
+   "id": "tool-D24",
+   "area": "tool"
+  },
+  {
+   "title": "Long numbers: stress panel first, then priming chains",
+   "summary": "Chain-5 is at ceiling for B2 (99.4-99.7), so it cannot show a read-back change. Build a panel whose intermediates have 7-9 digits and score B2 and T1 on it; if the outside calculator is to carry numbers beyond training, then widen the tool to 15 digits and test whether 30 hand-written long-number chains teach the writer to copy them, against a same-size plain transformer with the same chains. Training results never exceed 47,334 and prompt numbers 9,994, so this is length generalisation, not read-back.",
+   "change": "Stage 1, CPU: 200 rows per chain-5 family with intermediates in [1e6, 1e9), prompt numbers at most 4 digits, final answers 7-8 characters, fixed fresh seed, no overlap with train, dev or reserved panels. Stage 2 (PC, 6 runs): arm A calc range 1e9 to 1e15 with operand cells 11 to 16 (the 16 place rows already exist) and entry width 40 to 56; arm B arm A plus 30 hand-written chains with 5-14 digit intermediates; arm C plain_tf_steps (3.26M) with the same chains and no tool. Final answers stay at 8 characters or fewer.",
+   "why": "B2 cannot put a result of 1e9 or more into a slot (values clamp at 999,999,999), so only an outside tool can even try. No train prompt has a number above 4 digits and no parsed step result above 47,334, so any 6-9 digit claim is outside the training range. Priming with 10-50 long examples lets small arithmetic transformers generalise in length (second-hand). A 20-step chain is not proposed because calls stop after round 7.",
+   "evidence": [
+    {
+     "claim": "Largest prompt number 9,994; largest parsed step result 47,334; 0 prompts with a 10-digit run in 1.58M rows; no value at or above 1e9.",
+     "label": "shown",
+     "source": "fact check verify-data-limits (own72 proxy)"
+    },
+    {
+     "claim": "calc returns '?' at |x|, |y| or |result| >= 1e9; B2 clamps slot values at 999,999,999; entry cut at LE = 40; operands cut at 10 characters.",
+     "label": "shown",
+     "source": "models/tool.py:37-38, 43-57; models/ledger.py:62, 70, 83"
+    },
+    {
+     "claim": "The T1 write_copy screen replaces results with random 1-9 digit strings, so copy of up to 9 digits is already scored at the screen.",
+     "label": "shown",
+     "source": "models/tool.py:60-62, 449-482; analyze_t1.py:69-72"
+    },
+    {
+     "claim": "Train-set priming with 10-50 long examples generalises 5x3-digit products to 35x3 (arXiv 2306.15400, abstract).",
+     "label": "suggested",
+     "source": "scouts' list, abstract page verified"
+    },
+    {
+     "claim": "Whether the 9-12 digit band reaches a usable accuracy at this size.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Stage 1 CPU (0.5 h); Stage 2 PC six runs (arms A, B, C on seeds 200 and 201)",
+    "hours": 9.5,
+    "arms": "A range only; B range plus 30 priming chains; C plain_tf_steps plus the same chains",
+    "pass_mark": "Fixed now. Stage 1: B2 exact between 50 and 97 on the panel on both mounted seeds, else the panel tests something other than read-back. Stage 2, both seeds: B exact >=60 percent on 300 held-out chains with 9-12 digit intermediates, B at least 20 points above C, chain-5 >=99.",
+    "proved_wrong": "Stage 1: B2 >=99 (too easy) or <50 (out of range, as expected from the training maxima). Stage 2: B <30 percent on both seeds (priming does not teach length; next link is P1 and V1)."
+   },
+   "rules_check": "Rule 1: the bigint calc is tool code; priming chains are hand-written teaching data. Rule 2: no teacher. Rule 3: arm C is the same-size comparator. Rule 4: 2-seed screen; six seeds before any claim. Rule 5: fresh seed, overlap check first. Rule 7: every operand fits 15 characters; the build asserts it. Rule 10: the tool range is its display limit; the model writes and reads long numbers itself.",
+   "closest_prior": "D0 digit probes (1-9 digits); the write_copy screen. PLAN rungs P1 and V1 are not range tests.",
+   "autonomy": "At deploy the model writes and reads long numbers through the tool; priming chains are training only.",
+   "merged_from": [
+    "w1b-2",
+    "w1f-5"
+   ],
+   "director_score": 3.5,
+   "director_note": "Expensive (9 h) and outside the main skills goal. Stage 1 will most likely land in the 'B2 below 50' branch because training never exceeded 47k, which is itself informative but not a read-back result. Check hardest: whether the chain generators can produce 7-9 digit intermediates without changing their programs; run Stage 1 only.",
+   "id": "tool-D25",
+   "area": "tool"
+  },
+  {
+   "title": "Read-back repairs, only if the probes find digit loss",
+   "summary": "Conditional menu in cost order, built only if the reading-path probes show T1 loses digits from tape entries: (1) result-only entries ('17' instead of 'add 12 5 = 17'), (2) a training-only read-back auxiliary head on the controller state, (3) joint question-plus-transcript reading with each entry's positions restarted at 0 (no new position rows).",
+   "change": "Arm 1: one line in tool.entry() (models/tool.py 56-57); gold tape and free run both use it. Arm 2: Linear(256, 99) (25,443 params, training only) on ln_z(Z[:,0]) at rounds 2-7 predicting the digits of the newest visible entry (places 1-9 x 11 classes). Arm 3: each round reads [question + ' ' + visible entries] with entry positions restarted at 0 and only visible entries in the string (hidden entries must not leak through the +-4 window); unit test that visible states do not change when hidden entries change.",
+   "why": "Arm 1 removes two of three competing numbers per entry in the copy query, but the entry also tells the thinker which call produced it, so chain-5 may drop. Arm 2 targets the controller state directly but may teach in-model arithmetic, which the tool-off line would catch. Arm 3 avoids growing the position table (a joint read of a 208-character question plus 7 entries needs 481-495 rows, +69,888 to +73,472 params, 8,985 over the band at 495).",
+   "evidence": [
+    {
+     "claim": "Each entry holds op, two operands and a result; place labels count from the right in each word, so units digits of a, b and r share a label; cell j's query carries place row j plus the controller state.",
+     "label": "shown",
+     "source": "models/tool.py:56-57, 110-113; models/reader.py place_ids"
+    },
+    {
+     "claim": "Joint position rows needed: 481 (+69,888 params) for 7 gold-form entries, 495 (+73,472, 8,985 over the band top) at the 40-character cap.",
+     "label": "shown",
+     "source": "w3d-2 arithmetic; train.py:10-11"
+    },
+    {
+     "claim": "Test LR (per-round readout) gave +1.14/+1.27 pooled but failed stability and leaked 15.88 at loops:0.",
+     "label": "shown",
+     "source": "results/37-pc-loop-readout; redesign-ideas section 3"
+    },
+    {
+     "claim": "Training a probe to predict a running sum lets a model learn multi-digit multiplication (arXiv 2510.00184, abstract only).",
+     "label": "suggested",
+     "source": "papers/no-hardcoding-papers.md"
+    },
+    {
+     "claim": "Any of the three arms improves stress exact by >=1.0.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201 vs queue-40 T1; only after the reading-path probes fail; arm 1 first",
+    "hours": 2.5,
+    "arms": "T1 vs result-only entries; next arms in order only if the previous fails",
+    "pass_mark": "Fixed now, both seeds: stress panel exact >= T1 + 1.0; chain-5 >= T1 - 0.3; teacher-forced operand accuracy >= T1; zero-round leak <= T1 + 2.0; for arm 2 also noexec pooled-5 not more than 2.0 above T1; for arm 3 the visible-state unit test passes exactly and pooled-5 >= T1 - 1.0 (each seed >= -2.0).",
+    "proved_wrong": "Stress gain <0.5 on either seed (distractors are not the limit); chain-5 drop >=0.5 (the op text does work the thinker needs); arm 2 tool-off gain >2.0 (teaching internal arithmetic)."
+   },
+   "rules_check": "Rule 1: the tool still writes the result. Rule 3: 0 params for arms 1 and 3; arm 2 counts its 25,443 params in the band (3,302,836). Rule 4: one change per screen. Rule 7: entries get shorter, nothing cut. Rule 10: the deployed controller still reads the tape on its own.",
+   "closest_prior": "T1's 'op a b = r' format and PLAN A17 / B3 joint spec; Test LR for the per-round readout. No tried item changes entry content.",
+   "autonomy": "Arm 2 is training-only; arms 1 and 3 change the text the tool returns or how the model reads it; nothing is a deploy-time hand step.",
+   "merged_from": [
+    "w1b-4",
+    "w1b-5",
+    "w3d-4"
+   ],
+   "director_score": 3,
+   "director_note": "Likely dropped: D0 predicts read-back is fine, and the stress panel that would score it is out of the training range. Check hardest: the mechanism for arm 1 is argued from place labels but the thinker may need the operands; arm 3's hidden-entry leak through the window is the main correctness risk.",
+   "id": "tool-D26",
+   "area": "tool"
+  },
+  {
+   "title": "Self-correction training menu, gated by the probes",
+   "summary": "If the variant diagnosis and the self-check signal probes show that wrong operand picks dominate and some internal signal flags them, three training options are available: an 'audit' tool op that lists unused and twice-used prompt numbers; a learned ok/redo verdict head with slot rewrite; or pointer-labelled scheduled sampling that trains on the model's own wrong calls. Build one only if the gates pass.",
+   "change": "Default arm = pick audit: append 'audit' as op index 9 (op_head Linear(256,10), +257); the tool returns the unused and twice-used prompt numbers (computed inside the tool) as text; the gold builder seeds a wrong last-step pick in about 15 percent of rows with at most 5 steps, then audit line, reply, and the corrected call. Alternates: verdict Linear(256,1) (+257) with a per-row write counter and BCE on seeded wrong picks vs swapped-operand controls; scheduled sampling: replace the visible gold entry k with the model's own no-grad free-run call with probability ramping 0 to 0.25, cell targets pointing to the tape's own result, GEN loss masked where the tape-derived answer differs (count and report).",
+   "why": "In-distribution, program failures are operand picks (op accuracy 99.93-100, program 97.0-98.25). A wrong pick usually leaves one number unused and reuses another. But the in-distribution compounding gap is zero (teacher-forced equals free-run), so these fixes may have nothing to fix; they are gated on the variant diagnosis. The verdict head reads the same state that wrote the pick, so it may inherit the error; the audit tool is independent.",
+   "evidence": [
+    {
+     "claim": "Free-run op accuracy 99.93-100 and program accuracy 97.0-98.25 on 400 in-dist program rows per seed; teacher-forced equals free-run.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json extra.op_acc; ledger.py 566-588"
+    },
+    {
+     "claim": "Calls are written in rounds 1-7; a call at round 6 or earlier is read by the thinker the next round, so the audit fits 5-step programs plus audit and fix (n+2 entries).",
+     "label": "shown",
+     "source": "models/tool.py:162, 184-194"
+    },
+    {
+     "claim": "Whether every prompt number is used exactly once in gold chain programs (the audit's false-alarm rate depends on it).",
+     "label": "untested",
+     "source": "dev rows not mounted"
+    },
+    {
+     "claim": "DAgger-style training on the learner's own states with expert labels is the standard fix for compounding errors in imitation.",
+     "label": "suggested",
+     "source": "papers/research-loop-c2/angle-1-self-training.md (Ross et al. 2011)"
+    },
+    {
+     "claim": "Small models repeat bad calls unless recovery is taught.",
+     "label": "suggested",
+     "source": "PLAN-AND-MARKS line 185"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200 and 201 vs queue-40 T1; only after the variant diagnosis shows operand picks >=50 percent of labelled wrong rows",
+    "hours": 3,
+    "arms": "T1 vs T1 plus audit (default); alternates only as a second screen",
+    "pass_mark": "Fixed now, both seeds: forced-last-pick recovery >=60 percent on 200 dev program rows with <=5 steps; answer changes after a fix call on <=2 percent of clean rows; chain-5 >=99.0; pooled-5 2-seed mean not down >1.0 vs T1.",
+    "proved_wrong": "Recovery <30 percent on either seed, or answer changes after a fix call on >5 percent of clean rows, or chain-5 <98.5."
+   },
+   "rules_check": "Rule 1: the audit list is computed inside a tool the model calls. Rule 3: +257 params. Rule 4: 2-seed screen. Rule 7: seeding limited to programs of at most 5 steps (disclosed). Rule 10: the model chooses to audit, writes the fix and stops; no threshold.",
+   "closest_prior": "Planned D3 checker tool (creative track); B3 puzzle tool reply 'left: 3 7 10'; H1 stop head.",
+   "autonomy": "The model writes 'audit', reads the reply and writes its own fix. The only hand part is the tool's list.",
+   "merged_from": [
+    "w2e-2",
+    "w2e-4",
+    "w1c-2"
+   ],
+   "director_score": 3,
+   "director_note": "Three heavy changes for a failure type that may not exist in-distribution. Check hardest: that the gate (operand picks dominate on variant) is applied; the audit's false alarms if prompt numbers are legitimately unused.",
+   "id": "tool-D27",
+   "area": "tool"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "w1a-6",
+   "reason": "OTHER as a tenth op class is superseded by the op-as-letters rung: once the model writes the op name itself, an op the tool lacks simply returns '?' and the reaction is covered by the behaviour battery and the failure-reply idea. A new class also trains on a hand-built power family and would need the head widened for each missing op."
+  },
+  {
+   "id": "w1d-5",
+   "reason": "Learned continue bit with a second turn is superseded by K1-min plus a learned stop head: it needs a new generator for 8-12-step chains (not in the snapshot), a hand-set turn cap of 3 (a rule-10 residual), and a teacher that splits programs across turns, for a case that is 0.22 percent of rows."
+  },
+  {
+   "id": "w1e-5",
+   "reason": "Deleting the 208-row absolute position table removes a learned table, not a hand-written part, so it serves no no-hard-coding goal. Its stated reason (paying for raw bytes) is void because V1 fits on T1 without it (3,318,770), and without any absolute position the conv-only reader loses word and number order (R0 already shows removing the window costs 6-7 pooled points)."
+  },
+  {
+   "id": "w2d-2",
+   "reason": "w_noop = 0 probe: the 19 zero-parse families have no positive call labels, so removing their NOOP weight cannot create a call that was never taught; the result is nearly certain to be flat and costs 2 GPU hours. The measurable part (call rate per family on T1 free run) is moved to the T1 behaviour battery at no cost."
+  }
+ ],
+ "area_summary": "Ninety raw ideas reduce to 27 distinct ideas, 4 dropped. Corrections the critics should know: T1 has not run, so every T1 idea is gated on queue 40. K1 as planned is three changes (n_loops, N_RES, tape_emb) costing +4,864 params and 2.25x rounds, and the longest program in the data is 11, so K1-min (11 calls, 13 rounds, +2,304) is the sized-to-data alternative. B2 itself fails the zero-round leak line (seeds 201, 203), and the claim that computed families stay at 0 to 1.7 percent is false once word_filter and letter_ops are included, so the leak line should be paired to B2 per seed. P1 frees only 1,280 params (place rows 11-15), V1 fits on T1 without deleting any table, and mark 8's audit is blind to int() and to compiled-pattern calls. I checked plain_tf_steps.py: fewshot_number_rule, rule_apply, order_chain and seq_next are not in STEP_FAMILIES, so the step-writer's leads there come from native text attention, not from writing steps; teaching traces gives B2 or T1 a different route. B2 slots drop minus signs, so signed-number parsing only works for T1, whose writer copies characters. Count conflicts remain: 528 vs 429 long list rows, and two ideas disagree on whether the seq_cycle modulus is a slot. Most promising per GPU hour: eval-only batteries on the q40 checkpoints (loop behaviour, reading path), the variant-failure diagnosis, the frozen stop head (rule 10 stop), the paired leak line, the two-layer audit, and fewshot_number_rule traces. Missing: nothing covers how T1 would append the result and re-read question plus transcript under Ben's picture beyond the restart-position fallback, there is no test of learned task choice for practice (rule 10 'choosing what to practise'), and dev files, the skills generator branch and the 200-205 B2 checkpoints are not in the snapshot, so several probes cannot run until Ben copies them from the PC."
+}

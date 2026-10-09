@@ -1,0 +1,69 @@
+{
+ "file": "long_dev.jsonl",
+ "sha256": "8cf15f7b9a88d93af91f6b6c17900d38674ad974d22bd5d34db7803e9b536909",
+ "rows": 1360,
+ "families": 34,
+ "k_per_family": 10,
+ "buckets": {
+  "le280": {
+   "rows": 340,
+   "pos": {
+    "none": 340
+   },
+   "min_len": 11,
+   "max_len": 195,
+   "families": 34
+  },
+  "b280_700": {
+   "rows": 340,
+   "pos": {
+    "middle": 114,
+    "last": 113,
+    "first": 113
+   },
+   "min_len": 324,
+   "max_len": 700,
+   "families": 34
+  },
+  "b700_1300": {
+   "rows": 340,
+   "pos": {
+    "last": 114,
+    "first": 113,
+    "middle": 113
+   },
+   "min_len": 728,
+   "max_len": 1300,
+   "families": 34
+  },
+  "b1300_2000": {
+   "rows": 340,
+   "pos": {
+    "first": 114,
+    "middle": 113,
+    "last": 113
+   },
+   "min_len": 1347,
+   "max_len": 2000,
+   "families": 34
+  }
+ },
+ "seed": 424242,
+ "namespace": "LD",
+ "generator": {
+  "package": "skills_curriculum",
+  "files_sha256": {
+   "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "build.py": "876c1ba638635dc472643539791b24a9a1724042c8b9195d56efe756385dae18",
+   "core.py": "e4f1f7a2b8410f1c5f7483d129c403ee32970c8ff26138a7232280abb744ac20",
+   "skills.py": "20d163fc7e4ea42fc18bf8421a373a77e12f3773162cecad92fb0560d5a0765d",
+   "token_report.py": "07c4de493ff2f936b8770683b3d144457d7b9f602dc0bd985fc659932615ffd8",
+   "verify.py": "b9138e8d9672a66f098171ca367b781e2ce7397589d2759e5aeb14597534230f"
+  }
+ },
+ "shard": "013_00000.parquet",
+ "shard_sha256": "b393f51fefab26cd6f4c8f65707c1924f6666c4961a0ebebe04bb57f7ec832de",
+ "distractor_sentences": 42418,
+ "avoided_prompts": 1762971,
+ "rules": "in_dist-clean generator items; pad sentences: ASCII, 40-180 chars, no digits, no row slot/answer string; positions cycled first/middle/last; no TEACH, no protected panels"
+}

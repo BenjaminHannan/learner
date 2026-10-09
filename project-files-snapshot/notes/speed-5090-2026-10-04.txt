@@ -1,0 +1,20 @@
+SYS {"set": "short", "prompt_tokens_each": 39, "batch": 1, "sec_per_batch": 0.052419072948396206, "questions_per_s": 19.077025665532982, "prompt_tok_per_s": 744.0040009557863, "answer_tok_per_s": 19.077025665532982}
+SYS {"set": "short", "prompt_tokens_each": 39, "batch": 16, "sec_per_batch": 0.0803079130128026, "questions_per_s": 199.23316893379234, "prompt_tok_per_s": 7770.093588417901, "answer_tok_per_s": 199.23316893379234}
+SYS {"set": "short", "prompt_tokens_each": 39, "batch": 64, "sec_per_batch": 0.196667586453259, "questions_per_s": 325.4222068526303, "prompt_tok_per_s": 12691.466067252582, "answer_tok_per_s": 325.4222068526303}
+SYS {"set": "short", "prompt_tokens_each": 39, "batch": 256, "sec_per_batch": 0.7141545247286558, "questions_per_s": 358.46583776426763, "prompt_tok_per_s": 13980.167672806438, "answer_tok_per_s": 358.46583776426763}
+SYS {"set": "long", "prompt_tokens_each": 67, "batch": 1, "sec_per_batch": 0.05113987252116203, "questions_per_s": 19.554213780767505, "prompt_tok_per_s": 1310.1323233114226, "answer_tok_per_s": 19.554213780767505}
+SYS {"set": "long", "prompt_tokens_each": 67, "batch": 16, "sec_per_batch": 0.0891252988949418, "questions_per_s": 179.5225395974303, "prompt_tok_per_s": 12028.01015302783, "answer_tok_per_s": 179.5225395974303}
+SYS {"set": "long", "prompt_tokens_each": 67, "batch": 64, "sec_per_batch": 0.24063702765852213, "questions_per_s": 265.96073190706005, "prompt_tok_per_s": 17819.369037773024, "answer_tok_per_s": 265.96073190706005}
+SYS {"set": "long", "prompt_tokens_each": 67, "batch": 256, "sec_per_batch": 0.8926032045856118, "questions_per_s": 286.8015694822059, "prompt_tok_per_s": 19215.705155307794, "answer_tok_per_s": 286.8015694822059}
+BARE {"dtype": "fp32+tf32", "set": "short", "prompt_tokens_each": 39, "batch": 1, "prefill_tok_per_s": 2676.4316360926437, "decode_tok_per_s": 70.67949533411087, "gen_total_s": 0.9200676362961531, "decode_new_tokens": 64}
+BARE {"dtype": "fp32+tf32", "set": "short", "prompt_tokens_each": 39, "batch": 64, "prefill_tok_per_s": 36727.31581207072, "decode_tok_per_s": 4325.301735290737, "gen_total_s": 1.0149462725967169, "decode_new_tokens": 64}
+BARE {"dtype": "fp32+tf32", "set": "long", "prompt_tokens_each": 67, "batch": 1, "prefill_tok_per_s": 4566.662155994489, "decode_tok_per_s": 70.60026569613713, "gen_total_s": 0.9211837165057659, "decode_new_tokens": 64}
+BARE {"dtype": "fp32+tf32", "set": "long", "prompt_tokens_each": 67, "batch": 64, "prefill_tok_per_s": 35103.779745694344, "decode_tok_per_s": 4352.16651140937, "gen_total_s": 1.0632925499230623, "decode_new_tokens": 64}
+BARE {"dtype": "bf16", "set": "short", "prompt_tokens_each": 39, "batch": 1, "prefill_tok_per_s": 2731.962152776147, "decode_tok_per_s": 68.2797537562149, "gen_total_s": 0.9515957646071911, "decode_new_tokens": 64}
+BARE {"dtype": "bf16", "set": "short", "prompt_tokens_each": 39, "batch": 64, "prefill_tok_per_s": 71452.52100761385, "decode_tok_per_s": 4271.476801550831, "gen_total_s": 0.993851225823164, "decode_new_tokens": 64}
+BARE {"dtype": "bf16", "set": "long", "prompt_tokens_each": 67, "batch": 1, "prefill_tok_per_s": 4623.371293450365, "decode_tok_per_s": 68.17328343320507, "gen_total_s": 0.9532757699489594, "decode_new_tokens": 64}
+BARE {"dtype": "bf16", "set": "long", "prompt_tokens_each": 67, "batch": 64, "prefill_tok_per_s": 67589.3842489511, "decode_tok_per_s": 4304.839849234005, "gen_total_s": 1.014929112046957, "decode_new_tokens": 64}
+
+# Ben's machines (relayed by coordinator from the Mac session; raw JSON is on its branch in artifacts/bench-tps/: mac-m1pro-mps.json, pc-5070ti-cuda.json)
+RTX 5070 Ti (CUDA), our model, questions/s: short prompts 18.5 (batch 1), 146.6 (16), 211.5 (64), 228.2 (128); long prompts 18.1, 127.3, 159.7, 162.4. Bare LFM2.5-1.2B decode: ~73 tok/s batch 1, 4256-4669 tok/s batch 64.
+M1 Pro (MPS), our model: 5.6 questions/s batch 1, ~21 at batch 32-64. Bare LFM decode batch 1: 25 tok/s fp32, 37 tok/s bf16. Needed an MPS fix for adaptive_avg_pool1d (pushed by the Mac session).

@@ -1,0 +1,2001 @@
+{
+ "area": "reader",
+ "title": "Richer input: the reader, more than 9 letters at once, and making EmbeddingGemma beat the letter reader",
+ "brief": {
+  "state": "Snapshot checked 2026-10-07 against the files (no live PC runs). B2 = 3,302,481 params: reader = 108 hand-listed chars + hand place code + 2 conv blocks (kernel 5, so a +-4 letter window, no attention); thinker = 2 blocks, 8 fixed rounds, 17 state vectors (8 control, 9 register), attending to every reader position each round; exact int64 executor; pointer-generator talker. Six paired seeds (200-205, PC, q33): pooled-5 mean 74.02 (73.00-74.74) over 6,040 rows; chain-5 99.4-99.7; B2 minus plain_tf +20.34 (6/6 seeds); B2 minus plain_tf_steps +6.89 (6/6). B2 gets about 35% of the variant split and 1.6% of the four unseen-kind family split.\n\nGemma arms (2-seed screens, same-box B2V baselines 73.48 and 74.39): EGE (Gemma before the window; whole model 274.5M, trainable 3.50M) gives +1.59/+2.12. It passes pooled, chain and every split on average, but fails the variant mark (+1.70 vs +3.0) and the loops:0 leak (18.09 on seed 200). EGK: seed 200 finished (+0.97); seed 201 was non-finite in both runs. EGR, EGO, EGM and EGW (Gemma without the window) lost 0.3 to 5.3 points. EGT and Test LR were small and failed. The 6-seed EGE confirm (q39, seeds 202-207) is staged; no result files exist, and addendum 15 makes running it Ben's call.\n\nDiagnosis (shown): Gemma's final state reads 23.0% of letters linearly; 99.6% of letters sit inside multi-letter pieces. With the in-piece offset and a 2-layer MLP it reads 97.4%, which needs tokenizer alignment. B2's reader reads 99.85% linearly. D0 shows the reader window reads every digit place at 99.997% or better, but the executor never reads the reader: its operands are regex int() values.\n\nBuilt but not run: W1 (one low-rank attention block, 3,336,113 params, queue 42 after U0), U0 (BPE prompt on plain_tf_steps, 3,339,776, queue 41; its base truncates steps at 64 chars, which conflicts with rule 7), C0 (cap 107, queue 43), T1 (calculator outside, 3,277,393, queue 40). Not built: U2 (no code, no queue) and V1 raw bytes (+41,377 params, beyond the 39,399 headroom). Main gaps for richer input: W1 is untested, the number and word tokenizers on the input path are hand-written, and the Gemma arms are judged only against B2 (3.3M), not a same-size model.",
+  "facts": [
+   {
+    "claim": "B2 = 3,302,481 params (copy=True, S config, vocab 108, d=256); plain_tf = 3,244,544; sealed size band 3,147,208-3,341,880 (+-3%); B2 is 39,399 below the band top.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py:11-12,19-23; /mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md:48"
+   },
+   {
+    "claim": "Reader: 2 ConvBlocks (kernel 5, residual, masked), receptive field +-4 letters; place code = index from the right end of each regex word (word_spans); nothing pretrained; no attention.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/reader.py:1-6,17-23,43-51,58-96"
+   },
+   {
+    "claim": "Thinker cross-attends to all reader positions every round (mask covers the whole prompt); heads read control 0 (op, operands) and control 1 (mode, pointers); controls 2-7 are not read by any head but are used (ctl27 lesion costs -0.6 to -13.6 pooled-5 across seeds).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py:117-124,295,304,312,321-336; /mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "Pooled-5 = 6,040 rows (in_dist 1,360; answer 1,200; frame 1,360; vocab 800; variant 1,320); chain-5 = 1,000 rows; cipher_map pooled over its 3 splits = 120 rows.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s200/RESULT.json (final_eval)"
+   },
+   {
+    "claim": "q33 six-seed means on PC: B2 pooled-5 74.02 (per seed 73.00, 74.27, 74.74, 74.02, 73.63, 74.47); plain_tf 53.69; plain_tf_steps 67.13. B2 minus plain_tf +20.34 (sd 0.94, 6/6 seeds); B2 minus plain_tf_steps +6.89 (sd 1.33, 6/6 seeds).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/CONFIRM-ANALYSIS.json (arms.B2.diffs)"
+   },
+   {
+    "claim": "B2 chain-5 on q33 seeds 200-205: 99.4, 99.6, 99.6, 99.5, 99.6, 99.7 (mean 99.57); 99.8 is seed 101 of the screen.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json; results/29-b2-screen/B2_s101/RESULT.json"
+   },
+   {
+    "claim": "B2 variant split (6 seeds) 31.9-37.1, mean 34.7 (about 65% missed). Family split (4 unseen kinds: clock_date, op_define, string_transform, unit_convert; 160 rows): B2 0.6-2.5% per seed (mean 1.56); plain_tf_steps mean 1.25.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (final_eval.variant, final_eval.family)"
+   },
+   {
+    "claim": "B2 minus plain_tf_steps by family, 6 seeds, pooled over 5 splits: fewshot_number_rule -14.9 (per seed -10.0 to -19.4); rule_apply -4.8; order_chain -3.9; digits_parity -2.9; prop_eval -2.2; verify_claim (a step family) -5.6. B2 is ahead on cipher_map +34.0, seq_cycle +28.8, object_track +26.7, backward_solve +22.5, table_lookup +4.8.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json; models/plain_tf_steps.py:18-19 (STEP_FAMILIES, 11 families)"
+   },
+   {
+    "claim": "On the 2-seed screen (seeds 100/101) B2 minus plain_tf_steps: fewshot_number_rule -9.4 and rule_apply -6.3.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/29-b2-screen/B2_s100,B2_s101; results/20-screen-s100-w1/tfsteps_s100; results/22-screen-s101-w1/tfsteps_s101"
+   },
+   {
+    "claim": "B2 loops:0 in_dist (zero thinker rounds) on PC seeds 200-205: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00 (6-seed mean 3.33). Donor in_dist 3.1-3.8. The limit is 5.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (lesions.loops:0)"
+   },
+   {
+    "claim": "Removing the window (R0, reader_layers=0): pooled-5 66.64 (s200) and 68.13 (s201) against same-box B2V 73.48 and 74.39 = -6.84 and -6.26. cipher_map pooled 6.7 / 1.7 (in_dist 12.5 / 2.5; B2V 100 in_dist). R0 trainable 2,645,585: 656,896 (19.9%) fewer params than B2, so the lesion removes capacity as well as the window.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/46-r0ege-s200/R0_s200/RESULT.json; results/48-r0-s201/R0_s201/RESULT.json; results/RESULTS-EG2.md"
+   },
+   {
+    "claim": "EGE = frozen google/embeddinggemma-2 text part (271,002,624 params, never trained or saved), per-char state of the token holding each char, added to B2's input before the window (zero-initialised adapter, so step 0 equals B2). Trainable 3,500,881 (+198,400); whole model 274,503,505. Pooled-5 75.07 / 76.51 vs same-box B2V: +1.59 / +2.12.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/eg.py:1-25,85-95; models/ledger.py:29-36,174-187,252-267; results/RESULTS-EG2.md"
+   },
+   {
+    "claim": "EGE 2-seed means vs B2: in_dist +1.18, answer +0.25, frame +3.60, vocab +2.69, variant +1.70; chain-5 99.90 / 100.00; loops:0 18.09 (s200) and 4.49 (s201); donor 3.53 / 3.46. Fails the variant mark (needs +3.0) and the leak mark.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; PASS-MARKS.md addenda 4 and 15"
+   },
+   {
+    "claim": "EGE family changes vs B2V (2-seed mean, pooled 5 splits): gains order_chain +22.2, table_calc +15.0, list_index +15.0, kin_chain +13.0, object_track +7.2, table_lookup +7.0, prop_eval +3.8, arith_bare +6.2; losses seq_cycle -12.2, seq_next -6.2, list_stats -5.3, passage_qa -4.8, chain_story2 -4.5, fewshot_number_rule -3.1, group_induct -2.9. Answer split: rule_apply -26.2, seq_cycle -22.5, fewshot_number_rule -15.0.",
+    "label": "shown",
+    "source": "computed from results/40-egw-s200/B2V_s200, 41-egw-s201/B2V_s201, 46-r0ege-s200/EGE_s200, 49-ege-s201/EGE_s201 RESULT.json (family and answer-split cells)"
+   },
+   {
+    "claim": "Gemma-only arms (no window, reader_layers 0): EGR -0.27 / -2.68; EGO -0.73 / -1.84; EGM -1.18 / -1.36 (2-layer MLP adapter); EGW -3.40 / -5.30 (no adapter, 768-wide thinker, 22,164,357 trainable, whole 293,166,981). cipher_map pooled 2.5 to 5.8 for all four. loops:0 leaks 5.3 to 14.6.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/40-egw-s200 to 45-egr-s201 RESULT.json"
+   },
+   {
+    "claim": "EGK (Gemma feeds the controller's cross-attention only; talker, number slots, word keys and copy keys use B2's own reader): seed 200 status ok, pooled 74.45 (+0.97 vs B2V); seed 201 status nonfinite_loss in both runs (stopped at 3,000 and 4,500 steps).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/50-egk-s200/EGK_s200/RESULT.json; results/51-egk-s201; results/52-egk-s201-retry"
+   },
+   {
+    "claim": "Gemma letter readability (2,040 train rows, held-out 25%): EG final state, linear read: letters 22.99% (all chars 33.56%); letters in 1-char pieces 79.81%; letters in multi-char pieces 22.78%; 99.64% of letters are in multi-char pieces. EG state + offset-in-piece + piece length through a 2-layer MLP: letters 97.39%. B2 reader, linear: letters 99.85%.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/eg-diag/DIAG.json (P1_spelling); diag_eg.py"
+   },
+   {
+    "claim": "No Gemma layer (0 to 24) gives a linear letter read above 26.3% (layer 0 input table 26.25; layer 9 22.57). With the in-piece offset, 47 to 57%. No arm has used a middle layer: eg.py feeds last_hidden_state (final layer).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/eg-diag/LAYERS.json; models/eg.py:85"
+   },
+   {
+    "claim": "Same-word sameness probe: Gemma AUC 0.95 vs B2 reader 0.82 (all word pairs); matching families 0.938 vs 0.892; match@1 on matching families Gemma 73.7 vs B2 83.0.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/eg-diag/DIAG.json (P2_sameness)"
+   },
+   {
+    "claim": "Digit reading (D0): linear probe on reader output at the 9 chars ending at each number, held-out prompts: lowest place 99.997 to 100.000 on all six seeds (PASS). The pooled span mean used by B2's number slots loses digits: place 9 at 65.2 to 83.2%. Digits-only control: 74.2% lowest place. Writing not tested here (scored on T1).",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md; /mnt/project-files/no-hardcoding/PASS-MARKS addendum 16 (in custom_io/PASS-MARKS.md)"
+   },
+   {
+    "claim": "Executor operands come from regex parsing: \\d+ finds the first 16 numbers and int() gives their values, which go straight into the workspace the executor reads (vals). The reader only adds a pooled vector to each number slot. D0's probe does not test this path.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py:8,14,17-18; models/ledger.py:199-208,281-296; /mnt/project-files/no-hardcoding/INVENTORY-2026-10-07.md A1-A3"
+   },
+   {
+    "claim": "Hand-written parts on the question-to-answer path (INVENTORY): number regex and int() (A1); exact 93-number value code (A2); number-span pooling (A3); constants 1,2,10,100 (A4); caps N_NUM 16, W_MAX 64, MAX_PROMPT 208 (A5, A17); word regex word_spans (A10, also used by the place code); content-free word keys (A11); mode head and three renderers (A12-A14); NUM printed with str() (A13); 8-char GEN cap (A15); hand char vocab of 108 ids (A16).",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/INVENTORY-2026-10-07.md; custom_io/data.py:11,20-24,149-154; models/reader.py:21; models/ledger.py:200-225,383-394"
+   },
+   {
+    "claim": "Place codes on plain transformers (2-seed screen): plain_tf minus plain_tf (no place) +1.79 / -0.17 (mean +0.81); plain_tf_steps -0.94 / -0.68 (mean -0.81). These are two arms, not one.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md (place-code arms, addendum 1); results/24-ingredient-place/*"
+   },
+   {
+    "claim": "Bigger plain transformer, one run each at 24k steps: 10.8M 54.93 vs 3.2M 52.73 pooled-5 (+2.2).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/02-calib-long/tf10m_24k and tf3m_24k/RESULT.json"
+   },
+   {
+    "claim": "B2 at 16 rounds minus 8 rounds: in_dist -1.91 (s200) and -1.62 (s201). Test LR (readout at every round): pooled +1.14 / +1.27; stability -0.51 / -0.22 against a -0.3 mark; loops:0 15.88 on s200. Fails.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (Test LR); results/37-pc-loop-readout/LR_s200, LR_s201"
+   },
+   {
+    "claim": "W1 is coded: reader.py GlobalAttn (one head, inner width r=32, pre-LN residual, padding masked) after the conv blocks; ledger gattn argument; size 3,336,113 (+33,632; 5,767 below the band top).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/reader.py:54-65,94-95; models/ledger.py:130-131,192-197; PASS-MARKS.md addendum 19"
+   },
+   {
+    "claim": "U0 is coded: bpe.py learns 308 merges on the 200k train prompts only over 95 printable-ASCII base symbols (GPT-2 style pre-tokenizer); models/bpe_prompt.json; plain_tf_steps cfg bpe=308 gives 416 prompt ids and 3,339,776 params (+2.94% vs plain_tf_steps). Average 2.31 letters per token; digits about one per token.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/bpe.py:1-12; models/plain_tf_steps.py:72-82; PASS-MARKS.md addendum 18"
+   },
+   {
+    "claim": "The U0 base (plain_tf_steps, default CAP=64) trains any step row whose steps+answer exceed 64 chars on the answer alone: 840 var_chain rows at cap 64, none at cap 107 (C0). D0b: 58 of 72 wrong chain-5 rows of the calculator baseline are this case. Ben's rule 7 forbids answer-only fallbacks for long rows.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/plain_tf_steps.py:21,27-31; PASS-MARKS.md addendum 20; /mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "V1 (raw bytes, 256 ids) adds 161 table rows x 256 = +41,377 params (+1.25%), which is more than the 39,399 headroom under B2; it must wait until T1, O1, N1 or P1 free parameters.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 3b"
+   },
+   {
+    "claim": "U2 (learned letter groups, H-Net-style boundary scorer) exists only as a spec: no boundary or chunk code in models/ or bpe.py, and no queue file.",
+    "label": "shown",
+    "source": "grep of custom_io/models and bpe.py; custom_io/queue_local (no U2 file); /mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (U2)"
+   },
+   {
+    "claim": "Data: train prompts p5/p50/p95/max 28/78/142/204 characters. Of 18,496 distinct train word types, 13,084 are made-up syllable words. Unseen alphabetic word types by dev split: in_dist 0.2%, answer 0.1%, frame 7.4%, vocab 10.1%, variant 4.2%, family 29.2%.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/research/data.md:46-47"
+   },
+   {
+    "claim": "Gemma EG2 text part is 134,217,728 word-table params + 136,784,896 transformer and 512 to 768 projection, asserted at load to total 271,002,624.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/eg.py:5-6,23,46"
+   },
+   {
+    "claim": "Rule 0 (Ben, 2:45 PM ET 10-07): what the deployed model does must be its own, including reading and choosing. Rule 4: when a hand part costs points, fix the learned link that broke and never put the part back. Rule 1: nothing hand-written runs between question and answer except inside a tool.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 0 (items 0, 1, 4)"
+   },
+   {
+    "claim": "EGE 6-seed confirm marks (addendum 15, sealed before any run): 6-seed mean pooled-5 gain >= +1.0 and EGE ahead on >= 5 of 6 seeds; no split down more than 2.0 (6-seed mean); chain-5 >= 99.0 every seed; 6-seed loops:0 mean <= plain B2's 6-seed mean + 1.0 (B2 = 3.33); donor <= 5 every seed. Proved wrong: gain < +0.5, or EGE behind plain B2 on 3 or more seeds.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addendum 15"
+   },
+   {
+    "claim": "W1 marks (addendum 19 with amendment 1, sealed before any run): pooled-5 W1 minus B2 >= +1.0 on both seeds; cipher_map in_dist >= 95 (2-seed mean); F1 (cipher_map, fewshot_number_rule, group_induct and seq_cycle pooled on in_dist) not down more than 2.0 (2-seed mean); no dev split down more than 2.0; chain-5 >= 99.0 both seeds; loops:0 <= B2 + 1.0 and donor <= 5. Proved wrong: pooled-5 mean below 0, or cipher_map down more than 2.0. F1 fails 22.2% of no-change draws, so it is judged.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addenda 19 and 19 amendment 1"
+   },
+   {
+    "claim": "U0 marks (addendum 18): BPE minus letters pooled-5 >= +2.0 on both seeds = Ben right (add a from-scratch word-piece side channel next); <= +1.0 on both = letters fine; otherwise tie. Pre-registered prediction: letters fine; cipher_map falls 10 or more with word pieces; arithmetic families fall; frame and vocab move less than 2.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addendum 18; /mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (U0)"
+   },
+   {
+    "claim": "U2 marks (INPUT-UNITS sec. U2): pooled-5 >= +1.0 on both seeds; frame and vocab both up; cipher_map in_dist >= 95; no split down more than 2 (2-seed mean); loops:0 no more than 1 above base. Proved wrong: pooled-5 mean below 0, or cipher_map below 90. Also reported: how often learned boundaries match word ends.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (U2)"
+   },
+   {
+    "claim": "T1 (calculator outside the model, text calls and results read by the reader, call writer by pointer-generator): built as models/tool.py, 3,277,393 params (-0.76% vs B2); screen marks: pooled-5 T1 minus B2 >= -2.0 on both seeds; chain-5 >= 95; write_copy >= 99.0 on both seeds. Not run; T1 still uses regex spans to find the question's numbers.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/tool.py:1-28; PASS-MARKS.md addendum 17 and amendment"
+   },
+   {
+    "claim": "Gemma diagnostic facts from the papers file: fix 1 (linear probe of Gemma states) was run as DIAG; fix 2 (EGE) was run; fix 3 (LayerNorm plus gate, middle layer, adapter learning rate, LP-FT) was only partly tried (EGM is a 2-layer adapter; no gate, no LP-FT, no separate adapter learning rate, no partial unfreezing).",
+    "label": "shown",
+    "source": "/mnt/project-files/papers/gemma-reader-papers.md (For Ben; Top 3 fixes); results/RESULTS-EG2.md"
+   },
+   {
+    "claim": "Paper claims in the input-units table (Edman 2026 2609.00463; Hiraoka 2025 2506.10641; CUTE 2409.15452; Gigant 2026 2604.27263; Singh 2024 2402.14903; H-Net 2507.07955; AU-Net 2506.14761; MrT5 2410.20771; BLT 2412.09871; Bolmo 2512.15586; Zoology 2312.04927; Jelassi 2402.01032) are read from abstracts only, as that file states.",
+    "label": "suggested",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (options table)"
+   },
+   {
+    "claim": "EGK's seed 201 non-finite loss: cause not diagnosed. Candidates: bf16 Gemma states on CUDA (eg.py:42, 85), learning rate with a shared reader, or the second reader pass. No fp32-Gemma or lower-learning-rate run exists.",
+    "label": "untested",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/eg.py:42; results/51-egk-s201; results/52-egk-s201-retry"
+   },
+   {
+    "claim": "The 6-seed EGE confirm (q39) is described as running on the PC with results around 9 PM ET. The repo has no result files for seeds 202-207 (RESULTS-EG2 says NOT JUDGED); the queue is staged behind queue 38; addendum 15 says it runs only if Ben says so.",
+    "label": "untested",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/39-pc-ege-confirm.txt; PASS-MARKS.md addendum 15; results/RESULTS-EG2.md"
+   },
+   {
+    "claim": "GPT-2 tokenizer splits 1000-9999 with a leading space as 2+2 52%, 1+3 38%, 3+1 6%; example 4821 + 937 becomes 48|21| +| 9|37. Helper measurement with the tokenizers; not in the repo.",
+    "label": "untested",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md:33"
+   },
+   {
+    "claim": "The approximately 5.4M word pieces of practice (200k rows, each seen about 30 times) is not found in research/data.md, which gives word-regex token counts and prompt lengths only. Seen-count of about 30 matches 24,000 updates x 256 / 200k.",
+    "label": "untested",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md:8; custom_io/research/data.md:46-47"
+   }
+  ],
+  "tried_and_failed": [
+   {
+    "what": "R0: remove the +-4 letter window (reader_layers 0), no Gemma",
+    "result": "pooled-5 -6.84 / -6.26 vs same-box B2V; cipher_map pooled 4.2 mean; 19.9% fewer params than B2 (confound)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/46-r0ege-s200, 48-r0-s201"
+   },
+   {
+    "what": "EGR: Gemma per token plus each letter's own code, no window",
+    "result": "pooled-5 -0.27 / -2.68; answer split -4.6; chain-5 98.8 / 99.0; fails; cipher_map 2.5 to 3.3",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/44-egr-s200, 45-egr-s201"
+   },
+   {
+    "what": "EGO: Gemma as the whole reader (1-layer adapter), letters_in=False, no window",
+    "result": "pooled-5 -0.73 / -1.84; answer -4.2; leaks 11.3 / 10.6; fails",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/42-eg-s200, 43-eg-s201"
+   },
+   {
+    "what": "EGM: Gemma as the whole reader with a 2-layer MLP adapter, no window",
+    "result": "pooled-5 -1.18 / -1.36; answer -4.8; leaks 11.2 / 14.6; fails",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/42-eg-s200, 43-eg-s201"
+   },
+   {
+    "what": "EGW: Gemma as the whole reader, no adapter, thinker at width 768 (22.2M trainable)",
+    "result": "pooled-5 -3.40 / -5.30; chain-5 98.3 / 97.6; in_dist -6.0; fails",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/40-egw-s200, 41-egw-s201"
+   },
+   {
+    "what": "EGE: Gemma per char added to B2's input before the window (zero-initialised linear adapter)",
+    "result": "pooled-5 +1.59 / +2.12 vs same-box B2V; fails variant (+1.70 vs +3.0 mark) and loops:0 leak (18.09 on s200); chain-5 99.9 / 100.0; 2-seed screen failed; 6-seed confirm staged",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/46-r0ege-s200/EGE_s200, 49-ege-s201/EGE_s201; PASS-MARKS addendum 4"
+   },
+   {
+    "what": "EGK: Gemma feeds only the controller's cross-attention (second reader pass); talker and number slots use B2's own reader",
+    "result": "seed 200 ok, pooled +0.97 (74.45); seed 201 nonfinite_loss in both runs (3,000 and 4,500 steps); unstable, fails",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/50-egk-s200, 51-egk-s201, 52-egk-s201-retry"
+   },
+   {
+    "what": "EGT: Gemma only as a training-time meaning teacher (cosine loss on a discarded head; test model is plain B2 size)",
+    "result": "pooled-5 +0.18 / +0.61; variant +2.54 (mark +3.0); fails the pooled mark",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md; results/38-pc-eg-teacher"
+   },
+   {
+    "what": "Test LR: readout loss at every round in training (round_readout)",
+    "result": "pooled +1.14 / +1.27; stability -0.51 / -0.22 vs mark -0.3; loops:0 15.88 on s200; fails",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/37-pc-loop-readout"
+   },
+   {
+    "what": "Place codes removed from plain transformers (2-seed screen)",
+    "result": "plain_tf +1.79 / -0.17; plain_tf_steps -0.94 / -0.68; no clear effect; untested for B2's window",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md; results/24-ingredient-place"
+   },
+   {
+    "what": "Gemma layer choice: linear and offset probes over layers 0 to 24 (diagnosis only, no arm)",
+    "result": "linear letter read 22.6 to 26.3% for every layer; no middle layer better; no arm trained on a middle layer",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/eg-diag/LAYERS.json"
+   },
+   {
+    "what": "Zero thinker controls 2-7 at test (ctl27 lesion)",
+    "result": "pooled-5 -0.6 to -13.6 and chain-5 -0.6 to -36.9 across seeds 200-205; controls are used, unevenly",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "what": "More thinker rounds (16 vs 8) on plain B2",
+    "result": "in_dist -1.91 / -1.62; not helpful",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (Test LR section, plain B2 rows)"
+   },
+   {
+    "what": "Bigger plain transformer (10.8M vs 3.2M), one run each",
+    "result": "pooled-5 +2.2 (54.93 vs 52.73); cited as the scale effect at this data size",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/02-calib-long"
+   },
+   {
+    "what": "D0: digit reading of B2's reader (probe, no training)",
+    "result": "PASS: lowest place 99.997 to 100.000 on all six seeds; pooled span mean loses digits (place 9 at 65 to 83%)",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   }
+  ],
+  "planned_or_running": [
+   {
+    "what": "EGE 6-seed confirm (seeds 202-207; plain B2 on same PC; EGE_s202 to 207 and B2_s206, 207 new)",
+    "status": "staged in queue_local/39-pc-ege-confirm.txt behind queue 38; no result files; addendum 15 says it runs only if Ben says yes; status not verifiable from the repo",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/39-pc-ege-confirm.txt; PASS-MARKS.md addendum 15"
+   },
+   {
+    "what": "U0: plain_tf_steps with bpe 308 (prompt BPE, steps and answer as letters), seeds 200 and 201",
+    "status": "staged in queue_local/41-pc-gain-u0.txt; not run; cap is the default 64, so the base has answer-only rows (rule 7 conflict); judge with analyze_gain against q33",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/41-pc-gain-u0.txt; PASS-MARKS.md addenda 18 and 20"
+   },
+   {
+    "what": "W1: B2 with gattn 32 (one low-rank global attention block after the window), seeds 200 and 201",
+    "status": "staged in queue_local/42-pc-gain-w1.txt after U0; not run; 6-seed confirm only if the screen passes; family mark F1 re-sealed",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/42-pc-gain-w1.txt; PASS-MARKS.md addendum 19"
+   },
+   {
+    "what": "C0: plain_tf_steps with cap 107 (no answer-only rows), seeds 200 and 201; becomes the yardstick if its pooled-5 is at or above plain_tf_steps",
+    "status": "staged in queue_local/43-pc-c0.txt; not run",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/43-pc-c0.txt; PASS-MARKS.md addendum 20"
+   },
+   {
+    "what": "T1: calculator outside the model (tool.py), screen seeds 200 and 201",
+    "status": "built (3,277,393 params) and staged in queue_local/40-pc-t1-screen.txt; not run; 6-seed confirm waits on the screen",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/tool.py; PASS-MARKS.md addendum 17"
+   },
+   {
+    "what": "U2: learned letter groups (H-Net-style boundary scorer, target about 4 letters per group), after W1",
+    "status": "spec only in INPUT-UNITS; no code, no queue file",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (U2)"
+   },
+   {
+    "what": "V1: raw bytes (256 ids) instead of the 108-id hand vocab",
+    "status": "spec only (PLAN 3b); about +41,377 params, beyond the size headroom; waits for T1, O1, N1 or P1 to free parameters; no code",
+    "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 3b"
+   },
+   {
+    "what": "W2: 16 learned scratch tokens added to the thinker state (no head reads them)",
+    "status": "spec only (redesign-ideas section 5b); about 4k params; not built, not queued",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b"
+   }
+  ],
+  "open_questions": [
+   "Which size baseline applies to Gemma arms? Ben's rule 3 says size comparisons count borrowed parts and compare with plain transformers of the same size (+-3%). PASS-MARKS addendum 4 instead calls EGE (274.5M) a B2-internal result. A claim that the Gemma reader beats the scratch reader needs a same-size plain model (about 274M), which has not been run. Which rule governs?",
+   "Is hand code on the input path allowed? Examples: the number regex and int() (ledger.py:199-208), word_spans used by the place code and WORD copy (reader.py:21, ledger.py:209, 383-394), and EGE's character-to-token alignment via tokenizer offsets (eg.py:51-67). Rule 1 allows only tools and teaching data; PLAN rungs N1 and P1 treat the regex and place code as parts to remove.",
+   "Is the fixed +-4 letter window (kernel 5, two blocks) a hand-chosen part under rules 0 and 4? Ben calls it test-fitting. R0's loss is confounded with 19.9% fewer parameters, and no size-matched control has been run.",
+   "Should EGE's 6-seed confirm (q39) run? Addendum 15 says it is Ben's call and is removed if he says stop.",
+   "Rule 7 conflict in U0: its base plain_tf_steps (cap 64) trains 840 var_chain rows answer-only. Should U0 be re-staged on C0 (cap 107) before its verdict is used, or is the 64-cap base accepted as an exception?",
+   "The loops:0 leak mark is unstable even for plain B2: seed 201 reads 10.81 on the PC (q33) but 4.34 on the rented 5090 (B2V); seed 200 reads 0.00 vs 1.40. Which B2 reference should the EGE leak mark use (the 6-seed mean on the same machine is 3.33)?",
+   "Cause of EGK's seed-201 non-finite loss is untested (candidates: bf16 Gemma states, eg.py:42 and 85; learning rate; the second reader pass). No fp32 or lower-rate run exists.",
+   "Untried Gemma fixes from gemma-reader-papers.md: middle-layer states (no arm used one), LayerNorm plus gate, a separate adapter learning rate (LoRA+ style), LP-FT, unfreezing the last 1-2 Gemma layers. Which goes first?",
+   "Digits: the reader can read digits (D0 PASS), but the executor reads regex int() values, so reader digits never reach the calculator. Is T1's text call route meant to be the digit route, given it still uses regex spans to find numbers?",
+   "The paper claims in the input-units table are from abstracts only (the file says so). None has been read in full for numbers here.",
+   "V1 (raw bytes) does not fit the size band before the ladder frees parameters. Which rung frees them first, and is V1 needed before W1 or U2?",
+   "Facts not verifiable in the repo: the GPT-2 digit-split percentages (helper measurement) and the 5.4M word-piece count. Should they be measured before any idea relies on them?",
+   "W1's 2-seed screen has F1 (four families pooled on in_dist) judged because its no-change failure rate is 22.2%, under the 25% limit. Confirm that the 25% limit applies to the 2-seed screen, since F2 was computed on q33 seeds only."
+  ],
+  "corrections": [
+   "INPUT-UNITS-2026-10-07.md says B2's hand rules on the letter path are 'only the hand vocab and the place code'. That is incomplete. The path also has the number regex and int() (progparse.py:14,17-18; ledger.py:199-208), exact value codes (ledger.py:68-73), number-span pooling (ledger.py:281-296), word_spans in the place code and WORD copy (reader.py:21; ledger.py:209, 383-394), NUM printed with str() (ledger.py:389-390), and caps of 16 numbers, 64 words and 208 characters. See INVENTORY A1-A17.",
+   "INPUT-UNITS-2026-10-07.md lists W1's architecture as open ('2-3 global blocks', size band, family mark). That is resolved: one low-rank block at 3,336,113 params (redesign-ideas section 8, 12:55 PM; PASS-MARKS addendum 19), and the family mark was re-sealed as F1 (addendum 19 amendment 1). The old 'family drops more than 2' line is superseded.",
+   "Orchestrator: 'EGK went NaN'. Only partly true. Seed 200 finished with status ok and pooled 74.45 (+0.97). Seed 201 went non-finite in both runs (51 and 52).",
+   "Orchestrator: 'the 6-seed EGE confirm (q39) is running on the PC, result about 9 PM ET tonight'. It is staged in queue_local/39 behind queue 38. The repo has no result files for seeds 202-207, and addendum 15 makes running it Ben's call. Running status cannot be verified from the files.",
+   "Orchestrator: 'fewshot_number_rule -9, rule_apply -6' are 2-seed screen numbers (seeds 100/101: -9.4 and -6.3). On the 6-seed confirm (seeds 200-205, pooled 5 splits) they are -14.9 and -4.8. Both sets are real; say which seeds are meant.",
+   "Orchestrator: 'B2 loses to plain_tf_steps on families with no worked steps'. Overstated. B2 loses on fewshot_number_rule (-14.9), rule_apply (-4.8), order_chain (-3.9), digits_parity (-2.9), prop_eval (-2.2), and verify_claim (-5.6, a step family). It wins on cipher_map (+34.0), seq_cycle (+28.8), object_track (+26.7), backward_solve (+22.5) and table_lookup (+4.8).",
+   "INPUT-UNITS-2026-10-07.md says hand place codes give '+0.8 / -0.8' on plain transformers. Those are two arms' means: plain_tf +0.81 (per seed +1.79 / -0.17) and plain_tf_steps -0.81 (per seed -0.94 / -0.68). Two seeds each.",
+   "INPUT-UNITS-2026-10-07.md says 'keep letters (as raw bytes) as the base'. Raw bytes (V1) are not built and do not fit the band yet (+41,377 params, beyond the 39,399 headroom). B2's base is the 108 hand-listed ids (data.py:20-24).",
+   "INPUT-UNITS-2026-10-07.md quotes the window's worth as -6.3 / -6.8 with no caveat. R0 also removes 656,896 parameters (-19.9%), so it is a window-plus-capacity lesion, not a clean receptive-field test.",
+   "gemma-reader-papers.md gives EmbeddingGemma as about 200M table and 100M transformer (Google write-up). That describes a different EmbeddingGemma. The EG2 text part measured in code is 134,217,728 table and 136,784,896 transformer (eg.py:5-6, 46). PASS-MARKS gives roughly 140M and 130M. Use the code's count.",
+   "Naming clash: results folders named *-w1 and *-w2 (for example 10-probe-w1, 20-screen-s100-w1, 21-screen-s100-w2) are screen waves (arm A = register loop, arm B = ledger). They are not the W1 global-attention test.",
+   "Orchestrator: 'B2 chain-5 99.4-99.8'. On the 6-seed confirm the range is 99.4-99.7. The 99.8 is screen seed 101.",
+   "U0 and W1 are built and queued (queue_local 41 and 42), not just planned. U2 has no code and no queue entry.",
+   "Plain B2's seed-201 loops:0 reading differs by machine: 4.34 on the rented 5090 (RESULTS-EG2 baseline) and 10.81 on the PC (q33). INPUT-UNITS-2026-10-07.md does not mention this.",
+   "U0's base (plain_tf_steps at the default cap 64) trains 840 var_chain rows answer-only (PASS-MARKS addendum 20). That conflicts with rule 7. INPUT-UNITS and addendum 18 describe the 64-char cap as the normal base without flagging this.",
+   "D0-RESULT-2026-10-07.md says place 9 is at '65-84%'. Its own table gives 65.2 to 83.2%."
+  ]
+ },
+ "raw_count": 93,
+ "distinct": [
+  {
+   "title": "Random-token control for EGE: content or wrapper",
+   "summary": "Run EGE with fixed random vectors per Gemma token id instead of Gemma's states (same tokenizer alignment, LayerNorm and zero-init 198,400-param adapter), plus a boundary-only arm (code from in-piece offset and piece length, no identity) and an optional wrapper-only arm (random table over the 108 letter ids). No 271M forward runs, so each run costs about a B2 run. It splits EGE's +1.59/+2.12 into wrapper, piece identity, segmentation and Gemma content, and decides whether further Gemma spending (q39-style runs, adapter repairs) is worth it. Path keys: CIO = /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io ; PF = /mnt/project-files.",
+   "change": "CIO/models/eg.py: split the tokenizer load from the AutoModel load (load(), lines 34-49) so the arm holds no 271M weights; new FrozenEG.static_states(prompts, T, mode) reusing align() (lines 51-67) and the char-to-token gather of encode() (lines 90-95), zero past each prompt. RAND table = mu + sigma*z, z ~ N(0,1), shape (len(tokenizer), 768), seed-0 generator; mu/sigma are Gemma per-dimension stats from one forward over 20k train prompts (fall back to N(0,1) only if that pass is unavailable, and report which). BND: code = 8*min(offset,7) + min(piece_len,8) - 1 into a random 64x768 table. WRAP: frozen random 108x64 table by letter id, LayerNorm(64) + zero-init Linear(64,256) = 16,768 trainable. CIO/models/ledger.py read() lines 255-267: new eg_control in {rand, bound, wrap}; ln_eg and eg_proj (lines 184-187) unchanged, so RAND/BND train 3,500,881 params like EGE. 24k steps, batch 256, lr 1e-3, bf16, add --save-preds. Follow-up arms only if RAND lands in the 'identity' band: static per-token mean of Gemma states vs the same vectors permuted across ids (4 more runs).",
+   "why": "EGE keeps B2's own letter table, so Gemma's term only adds piece-level information, and Gemma's linear letter read is 22.99%, so the gain is not spelling. Its family pattern (order_chain +22.2, table_calc +15.0, list_index +15.0, kin_chain +13.0; seq_cycle -12.2, seq_next -6.2, list_stats -5.3) fits meaning, piece identity or plain extra capacity equally, and per-family seed signs agree on only 18 of 34 families. A random per-id vector keeps boundaries and identity and removes meaning and context, so it is the cheapest cut through those explanations.",
+   "evidence": [
+    {
+     "claim": "EGE pooled-5 gain +1.59 (seed 200) and +2.12 (seed 201) over same-box B2V (73.48, 74.39); trainable 3,500,881; whole 274,503,505.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md; CIO/results/46-r0ege-s200/EGE_s200, 49-ege-s201/EGE_s201, 40-egw-s200/B2V_s200, 41-egw-s201/B2V_s201 RESULT.json"
+    },
+    {
+     "claim": "EGE keeps B2's letter table (letters_in True) so Gemma only adds piece-level information; Gemma's linear letter read is 22.99% vs 99.85% for B2's reader.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:131; CIO/models/reader.py:82-90; CIO/results/eg-diag/DIAG.json (P1_spelling)"
+    },
+    {
+     "claim": "Per-family EGE gains are not a letters-vs-words story: seed signs agree on 18 of 34 families, about 15 of 34 are within one B2 SD of zero, and two real-word cells lose (passage_qa in_dist 39->35 and 38->34 of 40; rule_apply answer split -25.0/-27.5).",
+     "label": "shown",
+     "source": "computed from the four RESULT.json files above and CIO/results/33-pc-confirm-b2 (fact check ege-family-attribution)"
+    },
+    {
+     "claim": "EGE seeds ran on two different rented boxes; rented-minus-PC for plain B2 is +0.48/+0.12 pooled, so a cross-box reference inflates EGE's gain by about 0.3 (to +2.15).",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md device check; CIO/results/33-pc-confirm-b2/B2_s200,B2_s201 RESULT.json"
+    },
+    {
+     "claim": "On 2 seeds a no-change arm passes 'both seeds >= +1.0' about 2-5% of the time and a true +1.5 passes only about 42-51% of the time, so 2-seed bands are screens.",
+     "label": "suggested",
+     "source": "fact check mark-noise-floors (normal model on CONFIRM-ANALYSIS.json spreads)"
+    },
+    {
+     "claim": "No random-input or same-wrapper control exists in the repo notes, marks or results.",
+     "label": "shown",
+     "source": "grep of CIO/PASS-MARKS.md, CIO/results/RESULTS-EG2.md, PF/custom-io, PF/embeddinggemma"
+    },
+    {
+     "claim": "B2V on the rented box took 2,512 s; EGE 6,692-8,045 s; a solo B2 run on the PC is about 1 hour.",
+     "label": "shown",
+     "source": "RESULT.json train_s; PF/progress-board/data.json (8a speed probe)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Preferred: Ben's PC, seeds 202 and 203, because q33 gives PC B2_s202/203 and q39 (if finished) gives PC EGE_s202/203, so all arms share one box. Otherwise seeds 200/201 on a rented 5090 beside B2V_s200/201 and declare the +0.30 cross-box margin. No Gemma forward.",
+    "hours": 4,
+    "arms": "RAND_s{a,b} and BND_s{a,b} (4 runs); optional WRAP (2 runs, about +2 h). References already existing: EGE and B2/B2V on the same seeds and box. Report cipher_map, loops:0, and the five lookup families (order_chain, kin_chain, list_index, table_lookup, table_calc).",
+    "pass_mark": "g = pooled-5 of the arm minus same-box B2 on the same seed; EGE reference mean +1.86. Gemma content or context needed: RAND mean g <= +0.5 and EGE minus RAND >= +1.0 on both seeds. Identity or wrapper carries it: RAND g >= +1.0 on both seeds, or RAND keeps >= 2/3 of EGE's mean gain (>= +1.24); then read BND: segmentation carries it if BND g >= 2/3 of RAND g. Anything between: not shown, add seeds 204-205. Validity: chain-5 >= 99.0 on both seeds. loops:0 and variant are report-only (loops:0 SD 4.35 across seeds; variant 2-seed power about 30% at a true +2). Seal as a PASS-MARKS addendum before any run.",
+    "proved_wrong": "'EGE's gain is Gemma content or context' is proved wrong if RAND g >= +1.0 on both seeds. 'It is piece identity or the wrapper' is proved wrong if RAND g <= +0.5 on both seeds and EGE minus RAND >= +1.0 on both."
+   },
+   "rules_check": "R1: Gemma tokenizer alignment (eg.py:51-67) is hand code on the input path, as in EGE; control only, Ben to rule for any shipped design. R2: no teacher, no Gemma weights run. R3: not a shipped model; EGE is 159,001 trainable params over the band top 3,341,880 and 274.5M whole, a B2-internal result until a ~274M plain model is run. R4: 2-seed screen, marks fixed first, 6 seeds before any claim. R5: train/dev only. R6: B2-class cost. R7: inherits B2's 528-row 7-step exception.",
+   "closest_prior": "EGE (PASS-MARKS addendum 4; RESULTS-EG2). The shuffled-teacher rule of addendum 4 was written and never run. Scout 2606.14153 (random frozen table in a robot wrapper) is the published precedent. No random-input arm exists in the repo.",
+   "autonomy": "Not a deployed design: a training-time control. Nothing it adds ships, so no deploy-time step is involved.",
+   "merged_from": [
+    "w1a-1",
+    "w1b-5",
+    "w1g-2",
+    "w1i-5",
+    "w2a-1",
+    "w2a-2",
+    "w2a-3",
+    "w3e-1"
+   ],
+   "director_score": 9,
+   "director_note": "Check hardest: (1) same-box pairing (EGE_s200 and s201 ran on different rented boxes); (2) that RAND really skips the Gemma forward but keeps identical padding, T and alignment; (3) per-dimension stats, so LayerNorm does not make RAND trivially different; (4) power: a 'between' result must trigger more seeds, not a verdict; (5) RAND is context-free, so RAND < EGE alone cannot separate content from context (T0 and the static/permuted follow-up do). q39 may already have finished (board ETA 6-7 PM ET), in which case pair with its EGE_s202-207.",
+   "id": "reader-D1",
+   "area": "reader"
+  },
+  {
+   "title": "Capacity-matched no-window control: R0 plus pointwise MLP",
+   "summary": "R0 (window removed) lost 6.84/6.26 pooled-5 but also lost exactly 656,896 params (two conv blocks), so neither 'the window is needed' nor Ben's 'the window is test-fitting' has a clean test, and the window size was only ever varied 2 vs 0. Add the same params back as a per-position MLP that mixes no neighbours (C0') and a one-block +-2 version (C1'). If C0' recovers, R0's loss was capacity; if it stays broken, the window supplies local binding that cipher_map needs.",
+   "change": "CIO/models/reader.py: new PointBlock(d=256, h) = Linear(256,h), GELU, Linear(h,256), residual, masked, no LayerNorm (513h + 256 params). New cfg key pw_hidden wired at ledger.py:130-131 and 142 (CharReader built at reader.py:69-73). C0': reader_layers=0 + PointBlock(h=1280) = 656,896 params, total 3,302,481 = B2. C1': reader_layers=1 + PointBlock(h=640), total 3,302,609 (+128), reach +-2. q33 recipe; add --save-preds (R0 runs saved no per-row predictions).",
+   "why": "R0's final train loss was 0.0906/0.1018 against 0.0210/0.0139 for B2, so underfitting is a live reading. Of R0's lost pooled rows (-413 s200, -378 s201), cipher_map is 107/115 (26%/30%) and non-cipher frame families 167/124 (40%/33%). EGW (7x wider thinker, no window) also lost cipher_map, which points to reach rather than capacity, but it changed the input too.",
+   "evidence": [
+    {
+     "claim": "R0 has 2,645,585 params vs B2 3,302,481; the 656,896 difference equals two k=5 conv blocks with LayerNorm (2 x 328,448).",
+     "label": "shown",
+     "source": "CIO/results/46-r0ege-s200/R0_s200/RESULT.json n_params; CIO/models/reader.py:43-51"
+    },
+    {
+     "claim": "R0 pooled-5 -6.84/-6.26 vs same-box B2V; cipher_map in_dist 5/40 and 1/40 vs 40/40.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md; 46-r0ege-s200, 48-r0-s201, 40-egw-s200, 41-egw-s201 RESULT.json"
+    },
+    {
+     "claim": "Final train loss R0 0.0906/0.1018 vs B2 0.0210/0.0139.",
+     "label": "shown",
+     "source": "final_train_loss in the same RESULT.json files"
+    },
+    {
+     "claim": "Lost-row split: cipher_map -107/-115, frame non-cipher -167/-124, vocab -47/-47, variant -52/-39.",
+     "label": "shown",
+     "source": "computed from final_eval.by_family of the same files"
+    },
+    {
+     "claim": "The window has only been tested as 2 blocks vs 0; reader_layers=1 appears only in unit tests and the kernel is not a Ledger knob.",
+     "label": "shown",
+     "source": "grep over CIO/results configs, queue, queue_local; CIO/models/ledger.py:142 (fact check)"
+    },
+    {
+     "claim": "PointBlock h=1280 without LayerNorm gives exactly 656,896 params; h=640 gives 328,576 (C1' total +128).",
+     "label": "shown",
+     "source": "arithmetic from the Linear shapes"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Rented 5090 on the same box class as R0 (R0 ran 3,313 s; B2V_s200/201 exist there), or the PC with R0 and B2 re-run beside it; B2-size runs are about 1 h solo on the PC.",
+    "hours": 4,
+    "arms": "C0'_s200/201 and C1'_s200/201 (4 runs) against existing B2V and R0.",
+    "pass_mark": "f = (C0' - R0) / (B2V - R0) on 2-seed means. Reach reading: f <= 1/3 AND C0' cipher_map in_dist <= 50. Capacity reading: f >= 2/3 AND cipher_map in_dist >= 90. C1': B2V minus C1' >= +1.0 on both seeds means +-4 beats +-2 at equal params; within 1.0 on both means +-2 is enough. Between: not shown, add a third seed. Seal before running.",
+    "proved_wrong": "The reach reading is proved wrong by cipher_map >= 90 with f >= 2/3; the capacity reading is proved wrong by cipher_map <= 50 with f <= 1/3."
+   },
+   "rules_check": "R1: no hand code added. R3: 3,302,481 and 3,302,609, inside the band 3,147,208-3,341,880. R4: 2-seed screen; a claim needs 6 seeds. R5: dev only. R6: rented only if the PC is full (Vast credit about $8.84). R7: inherits B2's 7-step exception. R10: training-time control.",
+   "closest_prior": "R0 (RESULTS-EG2, PASS-MARKS addendum 6) has no capacity control; the Gemma window-less arms changed input and capacity together.",
+   "autonomy": "Control only: it settles whether any fixed window is needed at all, which is the first step to a reader that decides its own reach.",
+   "merged_from": [
+    "w1c-1",
+    "w2e-2"
+   ],
+   "director_score": 8,
+   "director_note": "Check hardest: the f ratio denominator is about 6.5 points against a single-run SD of 0.6-1.0, so the 1/3 vs 2/3 bands are about 2 SD apart; confirm the box pairing (R0 was rented, B2V rented); confirm PointBlock parameter arithmetic and that C1' really has reach +-2 only. This is the most direct answer to Ben's 'the +-4 window is test-fitting' objection.",
+   "id": "reader-D2",
+   "area": "reader"
+  },
+  {
+   "title": "Table-only EGE, then shrink ladder with same-size comparators",
+   "summary": "Feed each char the frozen 512-wide Gemma input-table row of its word piece instead of the final 768-wide body state, so the 24-layer body never runs (whole model 137.65M). If the gain survives, prune the table to train-prompt pieces plus UNK (about 6M whole), store rows at 64-d (about 4M), or keep only the first 2 layers (17.4M). Each rung has a cheap same-size plain comparator, the first affordable route to Ben's rule 3 for a Gemma-derived reader.",
+   "change": "Rung 1 (T0): CIO/models/eg.py FrozenEG.encode takes H from the input embedding rows (hidden_states[0]) gathered with align() ids and skips the body; CIO/models/ledger.py adapter LN(512)+Linear(512,256) zero-init (+132,352; trainable 3,434,833; whole 137,652,561 = 134,217,728 table + trainable). Rows are dumped once from the Gemma weights. Later rungs, each one change and each gated: R1 keep only rows of distinct pieces in the 200k train prompts plus a learned UNK row (borrowed 512R; R unmeasured, needs a tokenizer pass; R=5k gives whole 5,994,833); variant R1b adds the top-N FineWeb-Edu pieces. R2 fixed PCA-64 of the kept rows, adapter LN(64)+Linear(64,256)=16,768 (R=10k whole 3,959,249). R3 first 2 Gemma layers over the pruned table (11,365,930 for the body; whole 17,360,763 at R=5k).",
+   "why": "The table already carries piece identity: layer-0 linear letter read 26.25% and same-word AUC 0.9998 against 22.99% and 0.9502 at the final state, and spelling is flat over all 25 layers (22.6-26.3%). EGE's largest gains were frame (+3.60) and vocab (+2.69), the splits with unseen words (7.4% and 10.1% of word types). Whether the body's context adds to the table is untested. T0 needs no Gemma forward, so it costs about a B2 run, and a pruned table makes the whole model small enough for a same-size plain model.",
+   "evidence": [
+    {
+     "claim": "Word table 134,217,728 params (262,144 x 512); transformer plus 512->768 projection 136,784,896; text part 271,002,624, asserted at load; the output is 768-d after projection.",
+     "label": "shown",
+     "source": "CIO/models/eg.py:5-6,23,46"
+    },
+    {
+     "claim": "Layer 0: linear letter read 26.25%, same-word AUC 0.9998; final state 22.99% and 0.9502; letter read 22.6-26.3% at all layers.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/LAYERS.json (P3_layers.0); DIAG.json"
+    },
+    {
+     "claim": "Plain-transformer count 12*d*d*L + 13*d*L + 334*d reproduces tf3m (3,244,544) and tf10m (10,775,040) exactly; d=976,L=12 gives 137,649,184 (-0.00% vs T0); d=284,L=6 gives 5,924,240; d=256,L=5 gives 4,034,304; d=486,L=6 gives 17,206,344.",
+     "label": "shown",
+     "source": "CIO/results/02-calib-long/tf3m_24k and tf10m_24k RESULT.json (config.cfg, n_params); arithmetic"
+    },
+    {
+     "claim": "EGE 2-seed split gains: frame +3.60, vocab +2.69, variant +1.70; unseen alphabetic word types frame 7.4%, vocab 10.1%.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md; CIO/research/data.md:46-47"
+    },
+    {
+     "claim": "U0 (own BPE pieces replacing letters) lost -3.1/-5.4 pooled (frame -10.8, vocab -6.6), so pieces may help only added to letters, as EGE does.",
+     "label": "suggested",
+     "source": "PF/progress-board/data.json (U0 done, 4:00 PM ET); inference is suggested"
+    },
+    {
+     "claim": "Plain 137.7M comparator would take about 2.7-4.7 h per 24k-step seed on the calibration box; R and per-split UNK rates are unmeasured because no tokenizer runs in this container.",
+     "label": "untested",
+     "source": "computed from tf10m 1,331 s; python import check"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 202/203 (PC B2 from q33, PC EGE from q39 if finished). Rung 1 has no Gemma forward and stores only the used rows. Comparator and later rungs only after rung 1 passes.",
+    "hours": 3,
+    "arms": "T0_s202/203 against PC B2 and EGE; read together with RAND (T0 minus RAND shows what pretrained rows add beyond identity). Later: R1 (a) train pieces, (b) plus FineWeb pieces; R2; R3; each against its plain comparator.",
+    "pass_mark": "T0 pooled-5 gain >= +1.0 over same-box B2 on both seeds; cipher_map in_dist >= 95 (2-seed mean); chain-5 >= 99.0 on both seeds; no split down more than 3.0 (2-seed mean; the -2.0 rule fails about 20% of no-change draws on 2 seeds); variant and loops:0 report-only. Move to R1 only if T0 keeps >= 2/3 of EGE's gain. Any rung's rule-3 claim needs the matching plain comparator trained on the same recipe, 6 seeds. Seal first.",
+    "proved_wrong": "T0 mean gain < +0.5 means the body's context carries EGE and the table route is closed; T0 minus RAND < +0.5 means pretrained row values add nothing beyond piece identity."
+   },
+   "rules_check": "R1/R10: the Gemma tokenizer and char-to-piece alignment (eg.py:51-67) are hand code on the input path (Ben to rule); UNK is a learned row, no hand rule at run time. R2: frozen pretrained rows, counted (512 per row). R3: whole sizes above with comparators. R4: 2-seed screen. R5: pieces from train prompts or FineWeb-Edu only, never dev. R7: no truncation, inherits B2's 7-step exception. R9: B2 card only.",
+   "closest_prior": "EGE (frozen full body). EGR, EGO, EGM and EGW used final states; none used layer 0, though LAYERS.json probed it. The scouts' static-table arm (w2a-3) is a related control.",
+   "autonomy": "At run time the model reads letters, looks up a frozen row per piece, applies its own adapter and thinker; no developer step beyond the tokenizer (flagged).",
+   "merged_from": [
+    "w3a-1",
+    "w3a-2",
+    "w3a-3",
+    "w3a-4"
+   ],
+   "director_score": 8,
+   "director_note": "Check hardest: that hidden_states[0] is the raw (possibly sqrt-scaled) embedding row and the adapter LayerNorm handles scale; the piece count R; that the 137.7M comparator is really needed before rung 1 (it is not); whether pruning to train pieces only destroys the unseen-word prior that gave frame/vocab gains. Dropped the learned 24-layer mix (w2d-5) as dominated by this ladder.",
+   "id": "reader-D3",
+   "area": "reader"
+  },
+  {
+   "title": "Where do variant and cipher misses come from?",
+   "summary": "One free-run pass over the dev misses of B2_s100/s101 splits variant (34.7% right) and cipher_map misses into four bins: gold NUM value absent from the workspace, value present but not pointed at, wrong mode, and low copy mass on the gold character. Because the executor gets exact regex int() values, a NUM miss is never a reading error. If most variant misses are program errors, no input-side change can fix variant, which decides how much richer-input work is worth doing.",
+   "change": "Probe only, 0 params. For each miss on the variant split (about 860 of 1,320 rows) and cipher_map rows: (a) is the gold NUM in ledger run() vals/valid; (b) does argmax lans pick a slot holding it; (c) is argmax lmode right; (d) for GEN rows, copy mass from gen_copy (ledger.py:239-249) on the gold character at the first wrong register. Free run, no teacher forcing; loops:0 as the chance floor.",
+   "why": "Executor operands are exact and come from regex parsing, so NUM errors are program, pointer or mode errors; the reader enters only through pointers, WORD/GEN copying and the controller's attention. B2 gets 34.7% on variant (31.9-37.1) and 1.6% on unseen kinds, and letter_ops and list_stats variant are 0 of 240 over six seeds. Knowing the split tells the lead whether richer input (this whole area) can touch variant at all.",
+   "evidence": [
+    {
+     "claim": "The executor is exact and takes regex int() values; the reader only adds a pooled vector to each number slot.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:199-208,281-296; CIO/models/progparse.py:14,17-18; PF/no-hardcoding/INVENTORY-2026-10-07.md A1-A3"
+    },
+    {
+     "claim": "B2 variant per seed 31.9, 33.9, 37.1, 34.4, 35.4, 35.5 (mean 34.7); letter_ops variant 0/240 and list_stats variant 0/240 over six seeds.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/B2_s200..s205 RESULT.json final_eval (computed)"
+    },
+    {
+     "claim": "At zero rounds the mode and pointer query are shared across rows, so loops:0 hits come from one fixed mode with content ranked by the pointer and copy keys.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:303-304,342-345 (code reading)"
+    },
+    {
+     "claim": "q33 saved no per-row predictions; B2_s100 and B2_s101 checkpoints (13.2 MB each) exist.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/B2_s200 listing; PF/custom-io/checkpoints/29-b2-screen/"
+    },
+    {
+     "claim": "The share of variant misses in each bin.",
+     "label": "untested",
+     "source": "probe not run"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC or M1 eval of B2_s100 and B2_s101 on dev variant (1,320 rows) and cipher_map rows; dev data is on the PC, not in this container; torch needed.",
+    "hours": 0.3,
+    "arms": "Free run only; four bins per miss; loops:0 as floor.",
+    "pass_mark": "Program bottleneck: >= 50% of NUM-mode variant misses have no valid slot holding the gold value. Pointer or mode bottleneck: >= 50% have the value present but unpointed or a wrong mode. Copy-binding (reader-dependent) for cipher_map: >= 50% of misses have copy mass below 0.5 on the gold character at the first wrong register. Fixed now.",
+    "proved_wrong": "If the value is missing in >= 50% of variant misses, the claim that pointers or the talker limit variant is wrong. If copy-binding covers <= 20% of cipher_map misses, the claim that the reader binds ciphers wrongly is wrong."
+   },
+   "rules_check": "R1: diagnosis code, allowed. R5: dev only. R9: B2 only. R4: two checkpoints, a diagnosis, no claim. R10: offline.",
+   "closest_prior": "noexec and opswap lesions (ledger.py:332-335, 617-649) and loops probes attribute errors coarsely; none separates pointer, mode and copy bins on variant misses.",
+   "autonomy": "Offline diagnosis; no deploy-time step.",
+   "merged_from": [
+    "w1h-4"
+   ],
+   "director_score": 7,
+   "director_note": "Check hardest: how 'gold value present in valid slots' is read from run() (vals, valid) and whether multi-step rows have several gold intermediates; the 50% thresholds are judgement; whether WORD/GEN rows are separated from NUM rows before binning.",
+   "id": "reader-D4",
+   "area": "reader"
+  },
+  {
+   "title": "Reach-demand probes on trained B2 and W1 checkpoints",
+   "summary": "Four zero-training readouts decide whether a trained B2 uses anything beyond about +-2..4 letters: a gradient profile over offsets -6..+6, a one-letter occlusion map by distance from digits against a noise floor, exact match on copied words binned by length, and controller attention mass by region. A new fifth readout reads W1's learned attention by offset on the archived W1 checkpoints. Results gate every reach idea (dilation, depthwise, relative bias, kernel-3).",
+   "change": "Probe only. (a) Gradient norm of X[t0] w.r.t. input at t0+k, k=-6..6, on the 3 prompts in eg.py:25, normalised to k=0 (reader.py:82-96). (b) About 850 dev rows (25 per family), swap each letter, count answer changes (talk(state(...))); far = letters > 4 chars from any digit span; floor = swaps inside held-out frame openers. (c) Exact match for copy_word/WORD rows by copied-word length (<=5, 6-9, >=10), >= 60 rows per bin; plus gradient mass at >= 5 chars on GEN rows against a wrong-gold null. (d) Controller cross-attention recomputed for 8 rounds (reader columns start at 27), mass on digit / near-digit / word / far. (e) W1 GlobalAttn weights by |i-j| on cipher rows (reader.py:54-65).",
+   "why": "The window is +-4 by construction (two k=5 blocks), but use is unmeasured. R0's loss mixes reach with 19.9% fewer params; the kernel-3 option would free 262,144 params (B2 would drop to 3,040,337, below the 3,147,208 floor and need reinvestment). W1 gained only +0.9/+0.1 with lookup families -4.1; attention maps show whether its head learned local binding at all.",
+   "evidence": [
+    {
+     "claim": "Receptive field is two kernel-5 blocks (+-4); kernel size is not a Ledger knob; each block is 328,448 params.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:1-6,43-51; CIO/models/ledger.py:142"
+    },
+    {
+     "claim": "Cipher letter and digit sit two characters apart ('h=2'); R0 cipher_map 2-12% vs B2 96-100%.",
+     "label": "shown",
+     "source": "CIO/research/data.md:35; CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "W1: pooled +0.9 and +0.1 over B2 (mark +1.0), lookup-family pool F1 -4.1 (limit -2.0), chain-5 99.6/99.9.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (W1 done, 4:14 PM ET)"
+    },
+    {
+     "claim": "W1_s200/s201, U0, C0 and T1 checkpoint.pt archives (seeds 200/201) exist as split tar parts; results files are not in the project folder.",
+     "label": "shown",
+     "source": "PF/checkpoints/cio-1007/parts (listing; tar t of 42-w1-s200 shows only checkpoint.pt)"
+    },
+    {
+     "claim": "Attention is not returned by any function; it is computed inline and must be recomputed from the block weights.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:117-124; CIO/models/reader.py:62-65"
+    },
+    {
+     "claim": "Outer letters are or are not decisive for NUM answers.",
+     "label": "untested",
+     "source": "probes not run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or M1 (torch needed, not in this container). Checkpoints: B2_s100/s101 (PF/custom-io/checkpoints/29-b2-screen) and W1_s200/s201 (extract checkpoint.pt from PF/checkpoints/cio-1007/parts into a scratch folder). Occlusion needs a GPU (about 75k forwards per checkpoint).",
+    "hours": 1.5,
+    "arms": "Probes (a)-(e) on B2_s100, B2_s101, W1_s200, W1_s201.",
+    "pass_mark": "(a) normalised gradient at |k|=3 and 4 both >= 0.10 on both B2 checkpoints: full window used; both <= 0.05: effective +-2, so screen a kernel-3 reader with the 262,144 freed params reinvested to >= 3,147,208. (b) far-decisive rate minus floor >= 5 points on both: reach beyond the window is used; <= 1 point on both: the window is enough for NUM answers. (c) within-family exact gap (<=5 minus >=10 letters) >= 10 points on both seeds and in-word gradient mass at >= 5 chars >= 0.15 and >= 2x null: window limits spelling. (d) far attention mass <= 10% in every round vs >= 25% in some round. (e) reported only. Fixed now.",
+    "proved_wrong": "(a) both <= 0.05 proves the full +-4 window is not used. (c) gap < 3 points on both seeds and real/null ratio < 1.2 proves the window is not limiting spelling. (b) far rate >= floor + 5 on both proves the window is too narrow for NUM answers."
+   },
+   "rules_check": "R1/R10: offline measurements of learned weights; no hand code on the model path. R3: no size change unless a kernel-3 follow-up (must reinvest). R4: two checkpoints, a screen. R5: dev only. R9: B2 only.",
+   "closest_prior": "R0 removed the window with 19.9% fewer params; no probe of within-word demand exists. Test LR and loops probes do not measure reach.",
+   "autonomy": "Offline; no deploy-time step. Any reach it supports must be learned in training.",
+   "merged_from": [
+    "w1h-3",
+    "w1h-5",
+    "w1h-6",
+    "w2e-1"
+   ],
+   "director_score": 7,
+   "director_note": "Check hardest: gradient normalisation and padding handling; whether input-embedding gradients (not post-embedding) are used; occlusion swap rule (letter swaps can create new tokens); row counts per length bin; W1 checkpoint extraction needs the Ledger gattn cfg.",
+   "id": "reader-D5",
+   "area": "reader"
+  },
+  {
+   "title": "Cache frozen Gemma states so Gemma arms run near B2 speed",
+   "summary": "Every Gemma arm so far runs the 271M forward on every batch (EGE 3.0-3.65 steps/s vs 9.56 for B2V on rented boxes; the wide arm took about 9 h per run on the PC). The Gemma input is the prompt alone, so its per-token final states can be computed once and read from disk for any arm that trains nothing below the cache point. That makes the adapter, gate, offset, port, late-attach and top-layer LoRA arms about as cheap as B2 runs.",
+   "change": "Engineering, no model change. One forward pass of FrozenEG over the 200k train prompts and all dev, chain-5, family and donor prompts, writing last_hidden_state per prompt token (768, bf16; keep PREFIX/bos/eos handling) to a memmapped file keyed by prompt string; align() ids cached too. encode() (eg.py:69-98) reads the cache and does the char gather as now. Valid for: adapter variants, gates, rank, offsets, lr, dropout, token-memory port, late attach; for top-layer LoRA cache hidden_states[23] (512-d). Not valid when anything trainable sits below the cache point or the Gemma input changes (spelled-body input, layer mix). Estimated 9-14 GB at 768-d bf16 (6-9M tokens, untested); if the PC disk is too small use int8 per token or a second disk.",
+   "why": "One uncached 24k-step run is 6.1M row-forwards; the cache is 200k, about 1/31 of that, so building it costs minutes to about 20 min. With the cache, one rented-box EGE run (1.9-2.2 h) falls to about a B2 run (0.7 h) and the PC cost per Gemma arm falls from many hours to about 1 h. It multiplies the value of all later Gemma screens, though not of the first three ideas (which need no Gemma forward).",
+   "evidence": [
+    {
+     "claim": "EGE ran at 3.65/3.04 steps/s (6,692/8,045 s) against 9.56/5.73 for B2V on rented boxes; encode() memoises only the last call.",
+     "label": "shown",
+     "source": "CIO/results/46-r0ege-s200/EGE_s200, 49-ege-s201/EGE_s201, 40-egw-s200/B2V_s200 RESULT.json; CIO/models/eg.py:72-74,85"
+    },
+    {
+     "claim": "The wide EmbeddingGemma arm was too slow on the PC (about 9 hours per run) and was moved to rented 5090s.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (blockers: Vast credit is low)"
+    },
+    {
+     "claim": "The PC had about 3.5 GB free disk at the last board update (undated), which would not hold a 9-14 GB cache.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (blockers: Resources); current value unverified"
+    },
+    {
+     "claim": "Cache size 9-14 GB at 768-d bf16 and 6-9M tokens; tokens per prompt were never measured (no Gemma tokenizer in this container).",
+     "label": "untested",
+     "source": "estimate from CIO/research/data.md:46 (p50 78 chars) and 200k rows"
+    },
+    {
+     "claim": "Cached states match a live forward only up to bf16 batch-composition noise.",
+     "label": "untested",
+     "source": "not measured"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC (or the rented box) once; check free disk first.",
+    "hours": 2,
+    "arms": "Build the cache; compare cached vs live H on 200 prompts; re-run EGE_s202 from the cache and compare pooled-5 with the live q39 EGE_s202 and with a B2 run's steps/s.",
+    "pass_mark": "Max abs diff / state RMS < 1% on 200 prompts (bf16); a cached EGE run within +-1.0 pooled-5 of the live run on the same seed; steps/s >= 2.5x the live EGE run. Fixed now.",
+    "proved_wrong": "Cached-vs-live diff >= 3% or cached run differs by > 2.0 pooled-5 (padding or batch effects matter), or the cache does not fit on any local disk."
+   },
+   "rules_check": "R1-R3, R10: training-time engineering only, nothing ships. R5: cache includes dev prompts but no labels. R6: reduces PC and rented time.",
+   "closest_prior": "EGE/EGK memoise only the last call. No cache across steps exists. The estimate was raised in w2d-1 to w2d-4 and w2a-4.",
+   "autonomy": "No deploy-time effect. At deploy the Gemma forward runs live, once per question.",
+   "merged_from": [],
+   "director_score": 6,
+   "director_note": "Derived from the caching notes in w2d-1, w2d-3, w2d-4 and w2a-4, not a raw idea. Check hardest: disk space on the PC; whether cached states depend on batch padding; that no arm using it trains below the cache point. Low value if RAND/T0 say Gemma content is not needed.",
+   "id": "reader-D6",
+   "area": "reader"
+  },
+  {
+   "title": "Gemma state audit: held-out spelling, scale, bf16, alignment",
+   "summary": "A CPU/PC probe set on frozen Gemma that stops several repair ideas before they cost GPU time. It re-runs the spelling probe with held-out words and held-out pieces, an MLP at every layer, a token-identity baseline and a one-character control; audits per-dimension scale and bf16 finiteness; and tests whether a letter can find its covering token by attention without tokenizer offsets.",
+   "change": "New P4 mode in CIO/diag_eg.py on the 2,040-row train sample (sample(60), seed 0, train rows only). (1) Layers 0,3,...,24; heads linear and 2-layer MLP (512) trained 2,000 steps (P1 used 400); features with and without in-piece offset; splits: prompt split (P1 control), word-held-out (25% of word types withheld), piece-held-out (25% of token ids); add a token-identity lookup baseline for the 97.39% read; control: one-character-piece MLP read at layer 24. (2) Scale: per-dimension median |x|, mu/sigma, common share, max-abs over median; bf16 vs fp32 non-finite count and max error as a share of RMS (DIAG and LAYERS disagree: 88.5 vs 69.8). (3) One-head attention from letter queries to token keys trained 400 steps to predict the covering token, against a position-only prior. No model change.",
+   "why": "P1's 97.39% letter read splits by prompt row, so a piece seen in training also appears in test, and its MLP reads only 87.5% on one-character pieces, so it is capped or undertrained. The middle-layer claim rests on linear reads only. If the held-out read is low, the spelling-repair ideas (offset tables, spelling-bag loss, char-level Gemma) have nothing to work on. The scale and bf16 checks cover the EGK non-finite event and the massive-activation worry.",
+   "evidence": [
+    {
+     "claim": "P1 splits by prompt row (first 75% of rows train); EG+offset+length MLP reads 97.39% of letters, 87.5% on one-character pieces; linear read 22.99%.",
+     "label": "shown",
+     "source": "CIO/diag_eg.py:150,221; CIO/results/eg-diag/DIAG.json (P1_spelling)"
+    },
+    {
+     "claim": "P3 layer probes are linear only; linear 22.6-26.3%, with offset 47.4-56.8% across layers 0-24.",
+     "label": "shown",
+     "source": "CIO/diag_eg.py:108; CIO/results/eg-diag/LAYERS.json"
+    },
+    {
+     "claim": "EGK seed 201 went non-finite at 3,000 and 4,500 steps; Gemma runs in bf16 on CUDA; cause untested.",
+     "label": "shown",
+     "source": "CIO/results/51-egk-s201, 52-egk-s201-retry; CIO/models/eg.py:42"
+    },
+    {
+     "claim": "Massive activations (a few huge near-constant dimensions) occur in LLMs; EGE already applies LayerNorm before its adapter, which limits the effect.",
+     "label": "suggested",
+     "source": "arXiv 2402.17762 abstract (scouts); CIO/models/ledger.py:184"
+    },
+    {
+     "claim": "Gemma's mean cross-word cosine is 0.18 vs 0.45 for B2's reader, so a large common component looks unlikely.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/DIAG.json (P2_sameness)"
+    },
+    {
+     "claim": "Gemma and transformers >= 5.19 are not installed in this container, so the probe must run on the PC or Mac.",
+     "label": "shown",
+     "source": "fact check (python find_spec; no torch/transformers)"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU fp32 on the M1 Pro or the PC GPU; one Gemma forward over 2,040 rows plus small heads; about 0.5 h.",
+    "hours": 0.5,
+    "arms": "Layers x splits x (linear, MLP); scale and dtype audit; learned-alignment probe.",
+    "pass_mark": "Control: one-char-piece MLP read at layer 24 >= 98% (else retrain longer and read nothing). M1: word-held-out MLP+offset >= 90% at some layer. M2: best layer 3-21 minus layer 24 >= +5 points on word-held-out (opens a layer idea). M3: piece-held-out <= 50% while word-held-out >= 90% means per-piece lookup only. Scale flag: s >= 0.5, or |mu|/sigma >= 3, or max-abs/median >= 100; any bf16 non-finite value or error >= 1% of RMS. Alignment: top-1 covering token >= 80% and >= 30 points above position-only prior. Fixed now.",
+    "proved_wrong": "Word-held-out MLP+offset read < 60% at every layer (after the control passes) proves the 97.4% was split leakage and that Gemma states carry no decodable spelling for unseen words: drop offset, spelling-bag and char-level ideas. Alignment <= prior or < 50% proves attention cannot replace tokenizer offsets."
+   },
+   "rules_check": "R5: train rows only. R2: no new model. R4: a measurement, not a claim. R1/R10: the alignment sub-probe asks whether the hand tokenizer-offset step could become learned. R3: none.",
+   "closest_prior": "P1 and P3 in diag_eg.py (DIAG.json, LAYERS.json): prompt-level splits, linear heads for layers, no identity baseline.",
+   "autonomy": "Offline diagnostic; if the alignment probe passes, a deployed design could replace tokenizer offsets with the model's own attention.",
+   "merged_from": [
+    "w2d-1",
+    "w1b-6",
+    "w1b-4",
+    "w2a-4",
+    "w1g-1"
+   ],
+   "director_score": 6,
+   "director_note": "Check hardest: the word-held-out split must remove all occurrences of the word types, including in different prompts; piece-held-out vs word-held-out leakage; the EGK fp32 rerun from w1g-1 was dropped (EGK leaks 13.68 and is superseded by the port idea). Needs the Gemma weights and tokenizer on the PC or Mac.",
+   "id": "reader-D7",
+   "area": "reader"
+  },
+  {
+   "title": "Eval-only lesions on EGE checkpoints: gain and leak location",
+   "summary": "Keep checkpoints and per-row predictions from the q39 EGE confirm and run eval-only lesions: Gemma replaced by its training mean at test, word-content keys off, copy off (each at zero and eight thinker rounds), and EGE's gain split by rows containing an unseen word type. No new training. It says whether EGE uses Gemma at test, where the zero-round leak (18.09 on seed 200) lives, and whether the gain is about new words.",
+   "change": "Add --save-preds and keep checkpoint.pt (train.py:201) in the q39 EGE lines and B2 seeds without checkpoints. Test hooks (about 15 lines): a Gemma-off option passing the training-set mean of the Gemma state as the extra reader term (reader.py:82-90; term built in ledger.read, lines 255-267); existing lesions nowordc and nocopy (Ledger.LESIONS) at loops 0 and 8; a per-row table EGE minus B2 binned by whether the prompt has a word type absent from the 200k train prompts.",
+   "why": "EGE leaked 18.09 (s200) and 4.49 (s201) at loops:0; R0 with no Gemma leaks 6.32/6.69; EGK (Gemma to the controller only) leaks 13.68, so shared reader weights trained through the Gemma term may carry the leak. B2's own leak moves with machine and seed (SD 4.35). No Gemma arm saved per-row predictions.",
+   "evidence": [
+    {
+     "claim": "EGE loops:0 in_dist 18.09 and 4.49 vs same-box B2V 1.40 and 4.34; PC B2 0.00 and 10.81; B2 six-seed mean 3.33, SD 4.35.",
+     "label": "shown",
+     "source": "CIO/results/46-r0ege-s200, 49-ege-s201, 40-egw-s200, 41-egw-s201, 33-pc-confirm-b2 RESULT.json (lesions loops:0)"
+    },
+    {
+     "claim": "R0 leaks 6.32/6.69; EGK s200 13.68; EGR 11.5/12.6.",
+     "label": "shown",
+     "source": "CIO/results/46-r0ege-s200/R0_s200, 48-r0-s201, 50-egk-s200, 44-egr-s200, 45-egr-s201 RESULT.json"
+    },
+    {
+     "claim": "Only B2_s100/s101 checkpoints are in the project folder; q33 seeds 200-205 have none, so B2 per-row predictions need re-runs.",
+     "label": "shown",
+     "source": "PF/custom-io/checkpoints/29-b2-screen; CIO/results/33-pc-confirm-b2 listing"
+    },
+    {
+     "claim": "A 3% leak rate on 1,360 rows has a binomial error of about 0.5 points against a seed SD of 4.35, so the leak is seed-level, not row sampling.",
+     "label": "suggested",
+     "source": "computed in fact check mark-noise-floors"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "Ben's PC after q39 (needs its EGE checkpoints; add the flags before q39 finishes if possible). B2 per-row predictions for seeds 202-205 need four extra B2 runs (about 4 h) unless the PC kept checkpoints.",
+    "hours": 1,
+    "arms": "EGE_s202-207 checkpoints under: Gemma-off, nowordc, nocopy at loops 0 and 8; per-row EGE minus B2 split by unseen-word rows.",
+    "pass_mark": "(a) 6-seed mean pooled-5 of EGE minus EGE-with-Gemma-off >= +3.0 (Gemma used at test). (b) nowordc leaves loops:0 <= 5 on >= 5 of 6 seeds (leak lives in word keys). (c) EGE's gain on rows with an unseen word type exceeds its gain on other rows by >= +1.0 (6 seeds pooled). Fixed now.",
+    "proved_wrong": "(a) drop < +1.0 proves EGE uses Gemma only as a training signal. (b) nowordc leaves loops:0 > 10 on >= 4 of 6 seeds proves the leak is not in the word-key path. (c) gain on rows without unseen words >= gain with them proves the gain is not about new words."
+   },
+   "rules_check": "Eval only: R1/R2/R3/R7 untouched; hooks are test code. R4: report per-seed signs and 6-seed means. R10: no deploy step added; a zero-round answer is a deployed behaviour, so any fix must be a learned gate, never a hand threshold.",
+   "closest_prior": "diag_eg P1/P2 (no lesions); Ledger lesions nowordc/nocopy applied only to B2. donor_eval swaps the whole state.",
+   "autonomy": "Test only; no deploy step.",
+   "merged_from": [
+    "w3e-2"
+   ],
+   "director_score": 6,
+   "director_note": "Depends on q39 (status unverified; board ETA 6-7 PM ET, brief says about 9 PM). Check hardest: whether q39 kept checkpoints; Gemma-off mean must be the training-set mean per dimension; B2 seeds 202-205 re-runs for per-row predictions.",
+   "id": "reader-D8",
+   "area": "reader"
+  },
+  {
+   "title": "Dilated second conv block: +-10 letters, zero extra params",
+   "summary": "Give the second reader block dilation 4 (taps at -8,-4,0,4,8 on top of the first block's +-2) so every letter's view grows from +-4 to a contiguous +-10 with exactly B2's 3,302,481 params. It separates reach from capacity at zero cost, unlike R0, and avoids the attention that hurt W1's lookup families.",
+   "change": "CIO/models/reader.py ConvBlock(d,k,dil=1): Conv1d(d,d,k,padding=dil*(k//2),dilation=dil), mask unchanged; CharReader takes dilations=(1,1) by default so B2 is unchanged; ledger.py:142 passes cfg dil2=4. (A dilation pair (1,3) gives contiguous +-8; (2,2) leaves holes and is rejected.) Params 0 change.",
+   "why": "R0 mixes reach with capacity; W1 (global attention, +33,632 params) gained only +0.5 on average with lookup families down 4.1, which may be global attention interfering with local binding. A dilated conv keeps local taps and adds far taps with no attention. Prediction (suggested): 0 to +2 pooled-5, cipher flat.",
+   "evidence": [
+    {
+     "claim": "Two k=5 blocks give +-4; dilation changes taps not parameters, so a dil2=4 arm has the same 3,302,481 params.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:1-6,43-51 (arithmetic)"
+    },
+    {
+     "claim": "W1 minus B2 pooled +0.9/+0.1 and F1 -4.1 against a -2.0 limit.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (W1 done)"
+    },
+    {
+     "claim": "R0 -6.84/-6.26 but with 656,896 fewer params.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md; 46-r0ege-s200/R0_s200 RESULT.json"
+    },
+    {
+     "claim": "The thinker already cross-attends every reader position each round, so far text can reach it without reader reach.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:117-124,302-314"
+    },
+    {
+     "claim": "Gain 0 to +2 pooled-5, cipher flat.",
+     "label": "suggested",
+     "source": "reasoned from R0 and the cross-attention; untested"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 200/201 against q33 B2 on the same flags (about 1 h solo each; 3.7 h when three share the card).",
+    "hours": 3,
+    "arms": "B2 (q33, existing) vs B2 with dil2=4 (new).",
+    "pass_mark": "pooled-5 >= B2 +1.0 on both seeds; cipher_map in_dist >= 95 (2-seed mean); no split down more than 3.0 (2-seed mean); chain-5 >= 99.0 on both seeds; loops:0 <= B2 + 1.0 and donor <= 5 are report-first given the noise. Seal first.",
+    "proved_wrong": "Pooled-5 2-seed mean below 0, or cipher_map in_dist below 90."
+   },
+   "rules_check": "R1: no hand code added; the +-10 reach is a hand constant like the kernel (disclosed), so a pass justifies learned reach rather than keeping the constant. R3: 0 param change. R4: 2-seed screen. R7: inherits the 7-step exception. R10: nothing chosen at run time.",
+   "closest_prior": "B2's +-4 window; R0; W1 (global attention, not shown). Not tried: any dilated block.",
+   "autonomy": "The reader uses its wider view itself; the dilation is an architecture constant fixed before training.",
+   "merged_from": [
+    "w1d-1",
+    "w2e-3"
+   ],
+   "director_score": 6,
+   "director_note": "Check hardest: padding and masking with dilation; that the arm is compared with a PC B2 on the same box; Ben may reject a hand-picked dilation as the same test-fitting as +-4, so frame it as a diagnostic that precedes learned reach. Run after the reach probe if it says outer letters are unused.",
+   "id": "reader-D9",
+   "area": "reader"
+  },
+  {
+   "title": "Do B2's own states mark word, number and place without regex?",
+   "summary": "Frozen-reader probes ask whether B2's reader states already tell where words and numbers end and what place a digit has, with and without the hand place code, so the hand word_spans and number regex could become learned. Conditional follow-ups: place as a training-only target with the place input removed, a learned start/end head replacing word_spans in WORD copy, and learned word-edge gates.",
+   "change": "Probe only (CPU, frozen B2_s100/s101, diag_d0 features and 75/25 prompt split): (i) test-time lesion setting input place ids to 15 while keeping rows 0-8 as register seeds (zeroing reader.place.weight would also change the registers, ledger.py:303-304); (ii) place of each digit read from window states with place zeroed, against majority class and a model-free window ceiling; (iii) 2-logit start/end head (514 params) and a per-character number-end classifier on frozen X, place intact vs zeroed, labels from word_spans and the number regex as teaching data. Follow-ups, each gated: place as a training-only Linear(256,16) target (4,112 params, discarded) with the 16x256 place table removed; head spans replace word_spans for WORD copy only; a bidirectional low-rank gated recurrence (22,312) that learns word edges.",
+   "why": "The place code and WORD keys are hand regex on the input path (INVENTORY A9-A11), the hand step Ben objects to most. Structurally a digit more than 4 places from the number end cannot see the end through a +-4 window, so places 5-9 may need a global read. D0 reads 100% only because it aligns digits by the regex end, so it does not test the reader's own place. W1, the only global-read attempt, did not pass, so the follow-ups are rebased on plain B2.",
+   "evidence": [
+    {
+     "claim": "Place is the index from the right end of each regex word, added to the input; rows 0-8 of the same table seed the nine registers.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:17-23,72,86; CIO/models/ledger.py:303-304"
+    },
+    {
+     "claim": "D0 window and own-char probes read 99.997-100% at every place but align digits by the regex end; the pooled span mean loses digits (place 9 at 65-83%).",
+     "label": "shown",
+     "source": "PF/no-hardcoding/D0-RESULT-2026-10-07.md; CIO/diag_d0.py:62-76; CIO/results/d0/B2_s200.json"
+    },
+    {
+     "claim": "Place codes on plain transformers: +1.79/-0.17 (plain_tf) and -0.94/-0.68 (plain_tf_steps); no test on B2's window.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-SCREEN.md addendum 1"
+    },
+    {
+     "claim": "WORD keys and copy use the same word_spans regex, so place removal alone does not clear the hand regex.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:209,383-394; CIO/data.py:149-154"
+    },
+    {
+     "claim": "T1 still finds question numbers with regex spans.",
+     "label": "shown",
+     "source": "CIO/models/tool.py:126-133"
+    },
+    {
+     "claim": "The reader can compute place from its own window states when place is zeroed.",
+     "label": "untested",
+     "source": "probe not run; arm (ii) is a lower bound because the reader trained with place input"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or M1 CPU, frozen B2_s100/s101 (optionally C0/W1/T1 s200/201 from PF/checkpoints/cio-1007/parts), diag_d0 prompt split; about 0.7 h.",
+    "hours": 0.7,
+    "arms": "Lesion (i); place probe (ii) with arm A place intact, arm B place zeroed, arm C model-free ceiling; boundary heads (iii) intact vs zeroed.",
+    "pass_mark": "(i) pooled-5 drop <= 1.0 on both seeds: place unused at test; drop >= 3.0 on both: load-bearing. (ii) arm B at places 5-9 within 5 points of the majority rate and at most arm C + 2. (iii) exact start/end match >= 99.5% of dev words and >= 98% of prompts with every span exact; number-end F1 >= 0.99 intact and >= 0.95 zeroed; digit read at predicted ends >= 99.0 on places 1-4. Follow-up arm passes if pooled-5 within 1.0 of its base and post-hoc place probe >= 99.0 on places 1-9. Fixed now.",
+    "proved_wrong": "(iii) exact span match below 99.5% of words, or zeroed-place F1 below 0.90, proves learned spans cannot replace the regex at this size; (i) drop >= 3.0 on both proves the reader depends on the hand code."
+   },
+   "rules_check": "R1: regex used as teaching labels only in the follow-ups; at run time spans would come from the model's own states (the sign of a logit, no tuned threshold). R3: +514, +4,112 (discarded) or 22,312, all inside the band. R4: probes are screens. R5: dev for scoring only, never fitting. R10: this is the rule-10 question for the input path; WORD copy and the number regex stay until their own rungs.",
+   "closest_prior": "PLAN rungs N1, O1, P1 (place removal after T1); U2 (task-loss boundary scorer, no exact spans); P1's named fix 2 (learned boundary plus a hand cumulative sum).",
+   "autonomy": "If a probe passes, the deployed model finds word and number edges from its own states; labels exist only in training.",
+   "merged_from": [
+    "w1h-2",
+    "w1e-2",
+    "w1e-1",
+    "w2c-3",
+    "w1e-4",
+    "w1c-5"
+   ],
+   "director_score": 6,
+   "director_note": "Check hardest: the lesion must not zero the register seeds; arm B is a lower bound; exact-span threshold is strict (one wrong character breaks a copy); T1's copy failure (29-42% for 4+ digits) means number-pointer follow-ups wait for the T1 re-screen. Dropped w1e-5 (attention digit read) as unneeded.",
+   "id": "reader-D10",
+   "area": "reader"
+  },
+  {
+   "title": "Gated Gemma token-memory port beside untouched letters",
+   "summary": "Keep B2 unchanged and add Gemma's per-token states as a separate memory read by the controller's cross-attention, through a 34,592-param low-rank adapter and a hard-forward learned gate per state vector so a closed gate adds exactly zero and the network equals B2. No per-character alignment, no change to the reader or talker. A random-id memory with the same adapter is the control, and a memory-roll test checks that content is used.",
+   "change": "New CIO/models/port.py (MemPort) and a port cfg key. Memory: per-token last_hidden_state with PREFIX tokens dropped via the offsets align() already computes (no char gather). Adapter LayerNorm(768)->Linear(768,32)->GELU->Linear(32,256), last layer and a type row zero-init; keys/values via the block's own kv_of, a second softmax over memory only in CBlock.forward (ledger.py:117-125) using the block's q and o. Gate per block s = w.LN(Z)+b (w zero, b=-0.5), hard in the forward pass, soft in backward. Port built last so B2 weights start identical. Adapter, gates and memory in fp32 outside autocast with a finiteness assert. Params 34,592 + 256 + 1,538 = 36,386 (B2 + port 3,338,867, 3,013 under the band top). Control P1: same port, memory = fixed random Fourier features of token ids. Arm M: MiniLM-L6 memory (adapter width 384, 23,330 params, whole about 26M). Probe: normal vs noport vs memory rolled one row in the batch.",
+   "why": "EGE adds Gemma per character before the window and leaks at loops:0 (18.09 on s200); EGK feeds the controller through a second reader pass and went non-finite on seed 201. The port leaves reader, copy keys and talker untouched, so the leak can move only through shared-weight training, and the gate can close per state vector. A MiniLM encoder makes a same-size (about 26M, plain d=512,L=8 at about 25.4M by the fitted count) comparison affordable, which the 274M Gemma case is not.",
+   "evidence": [
+    {
+     "claim": "36,386 = 34,592 adapter + 256 type + 1,538 gates (2 blocks x (LN 512 + w 256 + b 1)); B2 + 36,386 = 3,338,867.",
+     "label": "shown",
+     "source": "arithmetic from CIO/models/ledger.py:102-125 shapes; fact check audit-second-half-counts (gate form is this design's assumption)"
+    },
+    {
+     "claim": "A zero memory is not neutral because zero keys still take softmax mass (kv biases zeroed at init), so a gate or a -20 logit bias is needed for step-0 equality with B2.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:117-121,156-157 (code reading)"
+    },
+    {
+     "claim": "EGK seed 200 pooled +0.97 with loops:0 13.68; seed 201 non-finite in both runs.",
+     "label": "shown",
+     "source": "CIO/results/50-egk-s200, 51-egk-s201, 52-egk-s201-retry"
+    },
+    {
+     "claim": "Closing a gate returns the frozen base output bit for bit in modality-gated adapters; their external encoder inside a frozen model lost 16 R@10 points.",
+     "label": "shown",
+     "source": "arXiv 2609.26182 abstract (scouts)"
+    },
+    {
+     "claim": "Whether the port beats a random-id memory through the same port.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC (use the Gemma cache if built); pre-run exactness check on CPU. About 2 h per run uncached on a rented box, about 1 h cached.",
+    "hours": 8,
+    "arms": "G (Gemma memory), P1 (random Fourier ids), same seeds as the B2 reference; optional MiniLM arm M with its own placebo and a plain d=512,L=8 comparator; memory-roll probe on G checkpoints.",
+    "pass_mark": "Pre-run: with the port closed, outputs equal the no-port network on 200 prompts (max logit diff < 1e-3) and the first three batches match. Screen: G minus B2 pooled-5 >= +1.0 on both seeds; G minus P1 >= +1.0 on the 2-seed mean and G ahead on both; chain-5 >= 99.0; no split down more than 3.0 (2-seed mean); mean gate-open rate >= 5%; probe: normal minus noport >= +1.0 and normal minus memroll >= 2/3 of that. Leak: loops:0 <= same-seed B2 + 1.0 reported. Seal first.",
+    "proved_wrong": "G minus B2 < 0 on the 2-seed mean, or G minus P1 < +0.5 (a random token-identity read does as well), or normal minus memroll < 1/3 of normal minus noport."
+   },
+   "rules_check": "R1: Gemma tokenizer and PREFIX are borrowed input format (Ben to rule); no char alignment. R2: frozen pretrained encoder, allowed. R3: whole about 274.5M, a B2-internal result; MiniLM arm allows a ~26M plain comparison. R4: 2-seed screen. R7: all prompt tokens kept; inherits B2's 7-step exception. R10: the gate is learned and computed by the model; sign of a learned score, no tuned threshold.",
+   "closest_prior": "EGE (ungated, per char), EGK (second reader pass, NaN on s201), EGM/EGW; planned RMT memory tokens (no encoder). The H1 halt gate gates halting, not reading.",
+   "autonomy": "At deploy the model runs its encoder, attends to memory and decides per state vector and round whether to read it, all in the forward pass. Tokenizer flagged.",
+   "merged_from": [
+    "w1b-3",
+    "w2f-1",
+    "w2f-3",
+    "w2f-4"
+   ],
+   "director_score": 5,
+   "director_note": "Check hardest: exactness when closed (RNG, init order, hard gate cast to Z dtype); fp32 and finite assert (EGK NaN); the P1 control must use identical adapter, type row and gates; the 36,386 breakdown assumes two gated blocks. W1 is not shown, so stacking with W1 is moot, but B2 + port + W1 would overshoot the band.",
+   "id": "reader-D11",
+   "area": "reader"
+  },
+  {
+   "title": "Attach Gemma to an already-trained B2 in stages",
+   "summary": "Load a trained B2 checkpoint (adapter zero-init, so the model equals B2 at step 0) and compare four ways to add the Gemma term: keep training B2 unchanged (control), train everything jointly, train only the adapter for 1,500 updates then everything (LP-FT), and train only a token-memory port on a frozen thinker. It tests whether a new frozen encoder can be added after training without relearning the thinker, the shape of the later audio and vision plug-ins.",
+   "change": "Load B2_s100/B2_s101 with load_model (models/__init__.py:28-33), strict=False so Gemma keys are missing. Arm A: continue 6,000 updates, no adapter. Arm B: add the EGE adapter (198,400), train all 6,000 jointly. Arm C: adapter only for 1,500 updates (lr 1e-3), then all weights for 4,500 (cosine 1e-3 to 1e-4 per stage). Arm D: freeze every B2 tensor, train only the port of idea PORT (36,386) for 4,000 updates, hashing B2 tensors before and after. Fresh data order, seeds 300/301.",
+   "why": "Every Gemma arm so far trained adapter and thinker jointly from scratch, and EGE's variant gain is the weak point (+1.70 vs +3.0). With a zero-init adapter any gain or loss comes from how the adapter is trained. LP-FT is reported to reduce feature distortion out of distribution; the port variant asks whether a thinker that never saw a memory can use one.",
+   "evidence": [
+    {
+     "claim": "B2_s100/B2_s101 checkpoint.pt exist (13.2 MB, cfg copy true); q33 seeds 200-205 have no checkpoint in the project folder.",
+     "label": "shown",
+     "source": "PF/custom-io/checkpoints/29-b2-screen; CIO/results/33-pc-confirm-b2/B2_s200 listing"
+    },
+    {
+     "claim": "The Gemma modules are created after every B2 module, so a B2 state dict loads with strict=False.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:174-177 (comment); load itself not run"
+    },
+    {
+     "claim": "LP-FT (fit the head first, then fine-tune all) beats full fine-tuning out of distribution; staged adapters on a frozen 4B model succeeded where end-to-end training collapsed (single-author preprint).",
+     "label": "suggested",
+     "source": "PF/papers/gemma-reader-papers.md item 8; arXiv 2601.15324 abstract (scouts)"
+    },
+    {
+     "claim": "EGE's joint, from-scratch variant gain is +1.70 against a +3.0 mark.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "A frozen thinker can use a memory it never trained with.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC or rented 5090; Gemma forward per step unless cached; 6,000 updates is about 55 min of B2 pace.",
+    "hours": 3.5,
+    "arms": "A, B, C (and D) on seeds 300/301 from B2_s100/s101; six or eight runs.",
+    "pass_mark": "C minus A pooled-5 >= +1.0 on both seeds; C minus A variant >= +2.0 (2-seed mean); staging gate C minus B >= +0.5 (2-seed mean); chain-5 >= 99.0; no split down more than 3.0 (2-seed mean). D: D minus A >= +1.0 on both seeds, all B2 tensors bit-identical before and after, closed port reproduces the checkpoint's outputs on 200 prompts. Fixed now.",
+    "proved_wrong": "C minus A < +0.5 (a late adapter adds nothing); C minus B <= 0 (staging does not help); D minus A < +0.5 (a frozen thinker cannot use an added encoder)."
+   },
+   "rules_check": "R3: whole about 274.5M, B2-internal only. R4: 2-seed screen; only two usable checkpoints so a 6-seed claim needs six new B2 checkpoints. R5: training rows and dev apart. R7: no truncation. R10: staging is a training schedule; a deploy-time version (the model attaches a new encoder from few examples by itself) is untested and not claimed.",
+   "closest_prior": "Planned fix 3 in gemma-reader-papers.md (LP-FT, separate adapter lr) is untried; EGT used a train-only head.",
+   "autonomy": "Build-stage only. At deploy the model would have to generate its own rows and train its own adapter to attach a new encoder; not met here.",
+   "merged_from": [
+    "w1g-3",
+    "w2f-2"
+   ],
+   "director_score": 5,
+   "director_note": "Check hardest: the seed-300/301 data order is paired across arms; only the s100/s101 checkpoints exist; arm A must also continue 6,000 updates so the comparison is not just extra training. Only worth running if RAND says Gemma content matters.",
+   "id": "reader-D12",
+   "area": "reader"
+  },
+  {
+   "title": "Warm-start a learned piece table; Gemma only at build",
+   "summary": "Initialise a learned 256-wide piece table (owned and trained by the model) from a fixed PCA-256 of Gemma's input rows for pieces in the train prompts, then drop Gemma from the shipped model. Shipped size is B2 plus about 2.56M with no frozen borrowed weights, so a plain comparator of about 5.9M is affordable. The control is the same table with random init.",
+   "change": "Build: PCA-256 of the R kept rows (R=10k gives 2,560,000 params; whole and trainable 5,862,481) initialises nn.Embedding(R+1,256) (row R = UNK, random); added to each char's input at its piece index as EGE adds H, no adapter (step 0 is not B2). Control: N(0,0.02) init. Comparator: plain d=284,L=6 (5,924,240, +1.05%). Piece ids come from the Gemma tokenizer.",
+   "why": "EGE's gain path may be piece identity (layer-0 AUC 0.9998). A warm start keeps the pretrained lexical prior while removing the borrowed 271M, so rules 2, 3 and 10 are easier to meet. If warm start gives nothing over random init, the prior was not what EGE needed. Rows may drift during training.",
+   "evidence": [
+    {
+     "claim": "Own table 256R: R=10k is 2,560,000; total 5,862,481; plain d=284,L=6 is 5,924,240.",
+     "label": "shown",
+     "source": "arithmetic on B2 3,302,481 and the fitted plain-count formula (CIO/results/02-calib-long)"
+    },
+    {
+     "claim": "Layer-0 piece identity: linear letter read 26.25%, same-word AUC 0.9998.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/LAYERS.json (P3_layers.0)"
+    },
+    {
+     "claim": "EGE's zero-init adapter makes step 0 equal B2; a warm-started table does not.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:177-187"
+    },
+    {
+     "claim": "Copied pretrained values may or may not count as borrowed under rule 3; warm rows drift under training.",
+     "label": "untested",
+     "source": "Ben's ruling needed; not measured"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, 2 arms x 2 seeds, B2-class cost; R computed first on the PC.",
+    "hours": 4,
+    "arms": "Warm init vs random init, same architecture, R=10k, both against same-box B2.",
+    "pass_mark": "Warm minus random pooled-5 >= +1.0 on both seeds; cipher_map in_dist not down more than 2.0 vs random (2-seed mean); chain-5 >= 99.0; no split down more than 3.0 vs B2. Fixed first.",
+    "proved_wrong": "Warm minus random 2-seed mean < +0.5: Gemma's rows give no lasting prior once trained."
+   },
+   "rules_check": "R1/R10: the Gemma tokenizer that gives piece ids is hand code (ruling needed); nothing else from Gemma at run time; UNK is a learned row. R2: pretrained values copied at build, no data generated; Ben to rule. R3: shipped model has no frozen weights; strict reading counts the 512R source rows. R5: train-prompt pieces only. R4: screen.",
+   "closest_prior": "EGE (frozen input, never trained). Warm-starting embeddings from a pretrained model is standard; not tried here.",
+   "autonomy": "At deploy the model reads letters and its own piece table; no Gemma and no hand rule except the tokenizer.",
+   "merged_from": [
+    "w3a-5"
+   ],
+   "director_score": 5,
+   "director_note": "Moot if RAND shows a random per-id vector gives the same gain; then a learned table from scratch (BPE-free) is all that is needed. Check hardest: whether init from PCA-256 survives training (probe row drift), and that the random-init control has the same R.",
+   "id": "reader-D13",
+   "area": "reader"
+  },
+  {
+   "title": "Put letters inside the Gemma body for a window-free reader",
+   "summary": "The window-free Gemma readers (EGR, EGO, EGM, EGW) lost, mostly on cipher_map, because letter-to-digit binding is lost. This idea gives the frozen body the letters: (a) feed Gemma one token per character, (b) add the sum of Gemma's own one-character rows and an in-piece position code to each piece's input embedding. A cheap probe decides whether either keeps word-level states.",
+   "change": "(a) Probe first: run diag_eg.py P1/P2 with a char-per-piece input (a table from the 108 hand characters to single-character Gemma pieces; no align()); adapter later LN(768)+Linear(768,32)->GELU->Linear(32,256), 34,592 params. (b) eg.py:85 replaces m(input_ids) with m(inputs_embeds = E(ids)*s + S) where S[t] = sum over chars in token t of R[c] + P[k_c] (R = Gemma's no-space single-character row, P = fixed sinusoidal in-piece position, s fixed to match RMS); S is a fixed function of the prompt, so the output can be cached. Reader as EGR (letters per char, reader_layers 0).",
+   "why": "EGR had per-letter codes and no window and still scored cipher_map 2.5-3.3%; EGE with the window scores 95-97.5%. The window-free arms match B2V off cipher (EGR +1.63/-0.83, EGO +1.08/+0.08, EGM +0.70/+0.49 non-cipher pooled), so a fix for binding without the window would approach EGE's size of gain. Gemma's own attention is the only cross-token mixer available if the letters are visible to it.",
+   "evidence": [
+    {
+     "claim": "EGR cipher_map 2.5% (s200) and 3% (s201) vs B2 95.8-98; EGE with window 97.5/95.",
+     "label": "shown",
+     "source": "PF/custom-io/WHY-GEMMA-LOST-2026-10-06.md (correction); CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "Non-cipher pooled-5 vs same-box B2V: EGR +1.63/-0.83, EGO +1.08/+0.08, EGM +0.70/+0.49, EGE +1.64/+2.16.",
+     "label": "shown",
+     "source": "computed from by_family counts in CIO/results/42-eg..45-egr RESULT.json (fact-check output of idea w3e-4)"
+    },
+    {
+     "claim": "The Gemma body receives input_ids only; no arm changed its input; Gemma tokens carry leading spaces so each char sits in one token.",
+     "label": "shown",
+     "source": "CIO/models/eg.py:85 and docstring"
+    },
+    {
+     "claim": "Even a full cipher fix on a Gemma-only reader gives about +0.6 over B2 (EGO non-cipher part), below the +1.0 bar.",
+     "label": "suggested",
+     "source": "computed ceiling in w3b-2; non-cipher means above"
+    },
+    {
+     "claim": "Whether the single-character rows exist for all 108 characters and inputs_embeds skips the model's embedding scale.",
+     "label": "untested",
+     "source": "needs the Gemma tokenizer and modelling file on the PC"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Probe: PC or M1, 2,040 rows, forward only. Arm after a pass: PC, EGR control vs letters-in-body, seeds 200/201, cache for (b).",
+    "hours": 3,
+    "arms": "Probe P1/P2 on char-level input; then EGR vs spelled-body EGR.",
+    "pass_mark": "Probe: linear letter read >= 95% (held-out 25%), same-word AUC >= 0.90, >= 95% of the 108 characters have a single-character piece. Arm: cipher_map in_dist 2-seed mean >= 50 and each seed >= 25; pooled-5 >= EGR + 1.0 on both seeds; chain-5 >= 99.0; no split down more than 3.0 (2-seed mean). Fixed first.",
+    "proved_wrong": "Probe: linear read < 80% or AUC < 0.85. Arm: cipher_map 2-seed mean < 20, so letters at the body input do not replace the window."
+   },
+   "rules_check": "R1/R10: the char-to-row lookup and tokenizer are hand code on the input path (flagged for Ben). R2: only Gemma's own rows. R3: EGR 2,843,985 trainable, 303,223 under the band floor, whole about 273.8M; out of band either way. R4: 2-seed screen. R7: P[k] length is the longest piece, no cap.",
+   "closest_prior": "EGR/EGO/EGM/EGW (body input unchanged). Spelling Bee embeddings (2601.18030) add a spelling vector to the embedding layer; this is the fixed, cacheable form with Gemma's own rows.",
+   "autonomy": "At deploy the same fixed input map runs on each prompt; no human step. The learned follow-up (trainable letter table) makes it fully the model's own.",
+   "merged_from": [
+    "w1b-1",
+    "w2d-2"
+   ],
+   "director_score": 5,
+   "director_note": "This is the only no-window Gemma route that could answer Ben's 'make Gemma win without the window'. Check hardest: single-character rows exist; inputs_embeds scale; whether Gemma's attention is bidirectional; and honestly the ceiling (+0.6 to +2 over B2) versus EGE's existing +1.9.",
+   "id": "reader-D14",
+   "area": "reader"
+  },
+  {
+   "title": "Does absolute position explain the frame gap? Shift probe",
+   "summary": "Left-pad dev prompts with spaces and re-score B2, which changes only absolute positions (word identity, place codes and number spans are unchanged). B2 loses 1.5-4.6 points from in_dist to frame, and the frame openers are the only difference, so a shift separates position from wording. If position matters, a random left-pad training augmentation with zero parameters is the next single change.",
+   "change": "Probe only: for B2_s100/s101, prepend 4, 5 and 10 spaces to in_dist (NUM-mode rows) and to variant prompts; exclude and count rows that exceed 208 characters; WORD-mode rows excluded because word keys carry the start index (wpos). If triggered: training-time left-pad of 0-5 spaces on half the rows (hand-written teaching augmentation, 0 params). The 33,568-param position-free max-pool detector of w1i-6 is not recommended (same budget class as W1, which did not pass).",
+   "why": "Frame minus in_dist for B2 per seed is -4.63, -2.57, -1.47, -3.09, -2.35, -2.87 (mean -2.8) while EGE is +0.22 and -1.18. The reader adds one absolute position embedding per character and word-relative place codes only. A position shortcut would give a gap with no new words.",
+   "evidence": [
+    {
+     "claim": "Reader adds a 208-row absolute position embedding; place codes are word-relative.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:17-23,72,86"
+    },
+    {
+     "claim": "Frame minus in_dist for B2 seeds 200-205: -4.63, -2.57, -1.47, -3.09, -2.35, -2.87; EGE s200 +0.22, s201 -1.18.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/*/stdout.events.txt; 46-r0ege-s200, 49-ege-s201"
+    },
+    {
+     "claim": "1,349 of 1,360 frame rows differ from in_dist only by a held-out opener or closer; max prompt in_dist 198, frame 203; cap 208.",
+     "label": "shown",
+     "source": "CIO/research/data.md sections 1 and 3; CIO/data.py:107"
+    },
+    {
+     "claim": "A leading-space shift leaves NUM values, word identity and place codes unchanged.",
+     "label": "suggested",
+     "source": "CIO/models/reader.py:17-23; CIO/models/ledger.py:205-208"
+    },
+    {
+     "claim": "Position explains part of the frame gap.",
+     "label": "untested",
+     "source": "probe not run"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC or M1 eval of B2_s100/s101 on dev in_dist (1,360 rows) and variant; no training.",
+    "hours": 0.5,
+    "arms": "Unshifted, shift 5, shift 10 (rows that fit), and 4-space variant shift.",
+    "pass_mark": "Paired McNemar on NUM-mode in_dist: drop <= 1.0 point at shift 5 on both seeds means position is not the frame cause (no change). Drop >= 3.0 on either seed means position is used: then 2-seed augmentation screen passes if the frame minus in_dist gap closes by >= 1.5 points with in_dist down <= 1.0 and pooled-5 not down more than 1.0. Fixed now.",
+    "proved_wrong": "Drop <= 1.0 on both seeds proves the frame gap is wording, not position."
+   },
+   "rules_check": "R1: a test harness; the augmentation would be hand-written teaching data, allowed. R5: dev only. R7: over-cap rows excluded and counted, none truncated. R4: two checkpoints, a screen. R9: B2 only.",
+   "closest_prior": "No positional-shift test exists in tried or planned lists; frame is reported only as a gap.",
+   "autonomy": "Offline probe; any augmentation is training-time.",
+   "merged_from": [
+    "w1h-1",
+    "w1i-6"
+   ],
+   "director_score": 4,
+   "director_note": "Check hardest: shifted rows still within the 208 cap; the opener wording confound is removed only if the shift probe changes nothing else; frame-in_dist gap is -2.8 with SD about 1, so the 3.0-point trigger is about one SD.",
+   "id": "reader-D15",
+   "area": "reader"
+  },
+  {
+   "title": "Is B2's reader weak on unseen words? Familiarity probe",
+   "summary": "Two CPU probes on B2's frozen reader: same-word AUC split by whether the word type appears in training, and a logistic probe that predicts word unfamiliarity from pooled reader states. They gate the reading-practice ideas (masked-letter and contrastive pretraining) and a Gemma text-call lookup tool, and say whether a learned call trigger could exist at all.",
+   "change": "In the diag_eg.py p2 style (lines 180-197): AUC over word pairs restricted to types absent from the 200k train prompts vs seen, on dev splits, with a prompt bootstrap. Familiarity probe: positives = generated pseudo-words never in train (teaching generator), negatives = train types of matched length, scored on real dev unseen types (frame 12, variant 35, family 30, overlap unknown) with a type-level bootstrap CI; control: random-init reader. Follow-up only if the probe passes: Gemma NEAR(word) text call on T1's tape returning the nearest designed word (frozen Gemma inside a tool), which also needs the T1 re-screen.",
+   "why": "B2's reader sameness AUC is 0.82 against Gemma's 0.95; unseen alphabetic types are 7.4% (frame), 10.1% (vocab), 4.2% (variant), 29.2% (family). EGE's largest gains were frame (+3.60) and vocab (+2.69). Most unseen types are made-up, so the real-word sample is small and surface form (made-up syllables vs English) could masquerade as novelty.",
+   "evidence": [
+    {
+     "claim": "Same-word AUC: Gemma 0.9502 vs B2 reader 0.8205; matching families 0.9382 vs 0.8922; match@1 73.7 vs 83.0.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/DIAG.json (P2_sameness)"
+    },
+    {
+     "claim": "Unseen alphabetic word types by split: in_dist 0.2%, answer 0.1%, frame 7.4%, vocab 10.1%, variant 4.2%, family 29.2%; 13,084 of 18,496 train types are made-up syllables.",
+     "label": "shown",
+     "source": "CIO/research/data.md:46-47"
+    },
+    {
+     "claim": "T1 outside-calculator screen: S1 +1.72/-0.31, S2 chain-5 99.7/99.9, S3 exact copy failed at 29-42% (4+ digits almost untrained); a re-screen with a span copy fix is planned.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (T1 screen, 5:10 PM ET; running: T1 re-screen R1-R4)"
+    },
+    {
+     "claim": "Real unseen types: 12 in frame, 35 in variant, 30 in family.",
+     "label": "shown",
+     "source": "CIO/research/data.md STATS"
+    },
+    {
+     "claim": "A probe will reach AUC 0.85 on real unseen types.",
+     "label": "untested",
+     "source": "not run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU; reader-only forward on dev prompts of B2_s100/B2_s101 (torch needed).",
+    "hours": 0.3,
+    "arms": "Two checkpoints; gap = AUC(seen pairs) minus AUC(unseen pairs); familiarity AUC vs random-init control.",
+    "pass_mark": "Gap >= 0.05 on both checkpoints: one reading-practice GPU screen earns a run. Gap < 0.02 on both: park reading practice and grouping ideas. Familiarity AUC >= 0.85 with 95% CI lower bound >= 0.75 and random-init within 0.05 of 0.5: a learned call trigger has a basis for the NEAR tool. Fixed now.",
+    "proved_wrong": "Familiarity AUC < 0.70 on both seeds drops the NEAR tool (no learned trigger basis, and rule 10 forbids a hand threshold); gap < 0.02 proves the reader handles new words."
+   },
+   "rules_check": "R5: dev words only for scoring, never for fitting. R1: nothing between question and answer. R10: a pass implies a learned CALL token in the talker softmax, not a threshold. R3: the NEAR follow-up counts Gemma's 271M at answer time. R4: screen only.",
+   "closest_prior": "diag_eg P2 (all-pairs AUC); the planned stop head reads rounds, not word novelty.",
+   "autonomy": "Diagnostic only. If the NEAR tool is ever built, the model decides to call it from its own states.",
+   "merged_from": [
+    "w3e-3",
+    "w1f-4",
+    "w1f-3"
+   ],
+   "director_score": 4,
+   "director_note": "Check hardest: the probe must not learn made-up-vs-English shortcuts (13,084 of 18,496 train types are made-up); real unseen types are few (about 77) so CI width matters; NEAR waits on the T1 re-screen.",
+   "id": "reader-D16",
+   "area": "reader"
+  },
+  {
+   "title": "EGE with one conv block, then window-free with learned reach",
+   "summary": "Config-only change: reader_layers 2 -> 1 narrows EGE's window from +-4 to +-2, removes 328,448 params, and brings trainable params to 3,172,433, inside the band. It asks how much local reach cipher binding needs when Gemma is present. If it passes, window-free EGR plus a learned-reach fix becomes the next test.",
+   "change": "Config {copy: true, eg_embed: true, reader_layers: 1} (ledger.py:131,142; reader.py:69). No code. Seeds 200/201 on the same box as EGE_s200/201 (or PC seeds 202/203 with q39 EGE and q33 B2). Follow-up only if it fails: EGR plus a relative-offset-bias global block (idea RELBIAS), not plain W1.",
+   "why": "Without any window, Gemma-only readers match B2V on non-cipher rows but lose cipher_map (1-7 of 120 vs 115-117). The cipher example binds a letter to a digit two characters away, so reach 2 is the minimum for that pattern; one block gives exactly that. W1's failure (+0.9/+0.1, F1 -4.1) weakens the plain-W1 branch.",
+   "evidence": [
+    {
+     "claim": "Non-cipher pooled-5 vs B2V: EGR +1.63/-0.83, EGO +1.08/+0.08, EGM +0.70/+0.49, EGE +1.64/+2.16; cipher_map correct of 120: EGR 3/4, EGO 7/1, EGM 3/6, B2V 115/117.",
+     "label": "shown",
+     "source": "computed from RESULT.json by_family (CIO/results/40..49)"
+    },
+    {
+     "claim": "EGE trainable 3,500,881 is 159,001 over the band top; one conv block is 328,448, so one block gives 3,172,433.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:269-275; CIO/models/reader.py:43-51 (arithmetic)"
+    },
+    {
+     "claim": "Cipher example 'Code: h=2, e=5, c=3, g=6. Decode 5 6 5' binds letter and digit at distance 2.",
+     "label": "shown",
+     "source": "CIO/research/data.md:35"
+    },
+    {
+     "claim": "W1 did not pass its marks (+0.9/+0.1; F1 -4.1).",
+     "label": "shown",
+     "source": "PF/progress-board/data.json"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Same box as the EGE references; Gemma forward per step (about 2 h each rented) or the cache.",
+    "hours": 4,
+    "arms": "EGE-1block_s200/201 vs EGE_s200 (75.07) and EGE_s201 (76.51) on the same box.",
+    "pass_mark": "cipher_map in_dist 2-seed mean >= 95; pooled-5 2-seed mean >= EGE minus 1.0; chain-5 >= 99.0 on both seeds; no split more than 3.0 below EGE (2-seed mean). Variant and leak report-only. Fixed first.",
+    "proved_wrong": "cipher_map 2-seed mean < 50 proves binding needs reach beyond +-2; pooled-5 2-seed mean <= EGE minus 3.0."
+   },
+   "rules_check": "R1: no hand code added; +-2 is still a fixed hand reach. R3: trainable 3,172,433 in band; whole 274.5M, B2-internal. R4: screen. R10: tokenizer alignment remains a flagged hand step.",
+   "closest_prior": "R0 and the window-free Gemma arms; this keeps one block with Gemma.",
+   "autonomy": "Learned reach inside a fixed small window; Gemma alignment flagged as in EGE.",
+   "merged_from": [
+    "w3e-4"
+   ],
+   "director_score": 4,
+   "director_note": "Check hardest: whether the dropped second block costs more than it frees; compare with C1' in the capacity-control idea (B2 with one block plus pointwise MLP) to see if the +-2 limit is Gemma-specific.",
+   "id": "reader-D17",
+   "area": "reader"
+  },
+  {
+   "title": "EGE with learned in-piece offset and length, or a spelling-bag loss",
+   "summary": "Gemma gives every character of a piece the same vector, so the reader cannot tell letters inside a piece apart except through its own letter table. Add learned offset-in-piece and piece-length tables (16 rows each, +8,192 params) to EGE's Gemma term, or a training-only head that predicts the set of letters and length of each piece. It targets copy_word on variant (-13.8 for EGE) but cannot clear the variant +3.0 mark alone.",
+   "change": "CIO/models/eg.py returns each char's offset in its token (clamped 15) and the token's character length from align() (lines 51-67). CIO/models/ledger.py read() (255-267) adds E_off[offset] + E_len[len] to the Gemma term after eg_proj (+8,192; EGE trainable 3,509,073). Alternative arm: training-only head Linear(256,108+L) with BCE over letters in the piece and CE over exact length, weight 0.1, discarded at test. Run after AUDIT says the held-out read is >= 90% and after q39 confirms EGE.",
+   "why": "Letters of a piece share one Gemma vector; DIAG shows a linear letter read of 23%, 47-57% with the offset, and 97.4% with offset and length through an MLP, but that probe splits by prompt. EGE keeps the letter table, so the missing piece is in-piece position. copy_word loses only on variant (-15.0/-12.5 by seed); arithmetic: copy_word alone is 0.42 variant points, chain_story2 and percent_rate would also need to recover.",
+   "evidence": [
+    {
+     "claim": "Gemma gives one vector per word piece (eg.py:57-62,95); 99.64% of letters sit in multi-character pieces.",
+     "label": "shown",
+     "source": "CIO/models/eg.py:57-62,95; CIO/results/eg-diag/DIAG.json"
+    },
+    {
+     "claim": "copy_word variant -13.8 (per seed -15.0/-12.5, 40 rows each); in_dist, answer, vocab 0.0.",
+     "label": "shown",
+     "source": "variant by_family in 46-r0ege-s200, 49-ege-s201, 40-egw-s200, 41-egw-s201 RESULT.json"
+    },
+    {
+     "claim": "EGE variant gain +1.70 vs +3.0 mark; the 2-seed variant mark has about 30% power at a true +2 (SE about 1.9).",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md; fact check mark-noise-floors"
+    },
+    {
+     "claim": "Reader nonlinear blocks can use the offset, so a linear 47% read does not cap it.",
+     "label": "suggested",
+     "source": "reading of DIAG P1 and LAYERS P3"
+    },
+    {
+     "claim": "The 97.4% read may be split leakage; held-out words untested.",
+     "label": "untested",
+     "source": "see idea AUDIT"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Same box as EGE (PC seeds 202/203 after q39, or rented 200/201); cache if built.",
+    "hours": 4,
+    "arms": "EGE+offset_s{a,b} vs EGE on the same seeds and box; optional spelling-bag arm.",
+    "pass_mark": "copy_word variant cell (2-seed mean, 80 rows) >= -5.0 (EGE -13.8); pooled-5 minus EGE >= +1.0 on both seeds; cipher_map in_dist >= 95; chain-5 >= 99.0; no split more than 3.0 below EGE. Fixed first.",
+    "proved_wrong": "Pooled gain over EGE < +0.5 on both seeds, or copy_word variant stays <= -10 on the 2-seed mean."
+   },
+   "rules_check": "R1/R10: offsets come from Gemma's tokenizer, hand code on the input path (Ben to rule; a learned alignment is the clean version, see AUDIT). R3: +8,192 trainable on an arm already 159,001 over band. R4: screen after the confirm. R7: no cap.",
+   "closest_prior": "DIAG P1 uses offsets only on Gemma's own states in a probe; EGM/EGW changed adapter depth/width, not inputs. TIPA (2411.17679) is the loss idea.",
+   "autonomy": "Offsets are deterministic from the tokenizer; the rule-clean version is a learned alignment, untested.",
+   "merged_from": [
+    "w1a-5",
+    "w1h-7",
+    "w3e-5",
+    "w2d-3"
+   ],
+   "director_score": 4,
+   "director_note": "Dropped w1d-5 (same offset on window-free EGM) because EGR already had letter identity and still failed cipher. Check hardest: whether variant movement is reachable at all; this is a letters-inside-pieces fix with weak per-family evidence.",
+   "id": "reader-D18",
+   "area": "reader"
+  },
+  {
+   "title": "Masked-letter cloze for the reader, skills first then FineWeb",
+   "summary": "Train the reader to name masked letters in its own prompts: 15% of letter inputs swapped for a learned MASK vector, read out through the tied letter table, as a training-only auxiliary loss on the skills rows (0 shipped params). If it helps, pretrain the reader on FineWeb-Edu windows before B2 trains, with the same objective on skills prompts as the control. It targets frame and vocab, where unseen words sit.",
+   "change": "Stage 1: CIO/models/ledger.py loss adds 0.1 x CE on reader output at masked positions; masked input via the existing extra argument (reader.py:82-90): extra = m*(mask_vec - tok(ids)); logits = X @ tok.weight.T + aux_bias (108); training-only params 364 discarded. Stage 2 (blocked by rule 5): reader-only span-cloze pretraining on the FineWeb-Edu rung30 slice (117.8M GPT-2 tokens, about 9,000 updates of 256 windows <= 208 letters, cut at word boundaries, SEP id 3 as mask), then B2 on skills; controls: random reader and the same objective on skills prompts for the same steps.",
+   "why": "B2's reader already reads letters 99.85% linearly, so identity is not the gap; what may be missing is spelling regularity for made-up and unseen words (13,084 of 18,496 train types are made-up; vocab 10.1%, frame 7.4% unseen). EGE gained frame +3.60 and vocab +2.69. U0 (word pieces replacing letters) lost, so letters are kept here.",
+   "evidence": [
+    {
+     "claim": "B2 reader linear letter read 99.85% (99.04% for one-character pieces).",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/DIAG.json (P1_spelling)"
+    },
+    {
+     "claim": "Unseen types: frame 7.4%, vocab 10.1%; 13,084 of 18,496 train word types are made-up syllables.",
+     "label": "shown",
+     "source": "CIO/research/data.md:46-47"
+    },
+    {
+     "claim": "U0 word pieces lost -3.1/-5.4 pooled (frame -10.8, vocab -6.6) while letters were fine.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (U0 done)"
+    },
+    {
+     "claim": "FineWeb-Edu rung3/10/30 slices are built; protected-panel hashes are not merged, so the slice may not be used for training yet.",
+     "label": "shown",
+     "source": "PF/data-pool/DATA-POOL-PLAN-2026-10-06.md sections 6 and 10; PF/data-pool/PROTECTED-HASH-JOB.md"
+    },
+    {
+     "claim": "8A already mixes word-level cloze rows into the whole model.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8A-SPEC-2026-10-07.md section 4 (cited in the raw idea)"
+    },
+    {
+     "claim": "Reader-only pretraining adds >= 1 point on 2 seeds.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Stage 1: PC, seeds 200/201 against q33 B2 (about 1.2 h each, extra reader pass). Stage 2 waits on the protected-hash merge and a 13-gram scan of the slice.",
+    "hours": 2.5,
+    "arms": "Stage 1: B2 + cloze aux. Stage 2: R-rand, R-web, R-skill.",
+    "pass_mark": "Stage 1: pooled-5 >= B2 +1.0 on both seeds; held-out masked-letter accuracy >= unigram baseline + 5 points; cipher_map in_dist >= 95; chain-5 >= 99.0; no split down more than 3.0. Stage 2: R-web minus R-rand >= +1.0 on both seeds, frame >= +1.5 (2-seed mean), R-web minus R-skill >= +1.0 (2-seed mean). Fixed first.",
+    "proved_wrong": "Stage 1: pooled-5 2-seed mean below 0 or masked-letter accuracy within 5 points of unigram. Stage 2: frame gain under +0.5 or R-web minus R-skill under +0.5."
+   },
+   "rules_check": "R1: mask and windows are training setup; answer path unchanged. R2: free human text allowed, no teacher. R3: 0 shipped params (364 discarded). R5: FineWeb must pass overlap against all panels including the unmerged protected hashes before training. R7: windows cut at word boundaries, nothing dropped. R9: B2 only.",
+   "closest_prior": "8A cloze rows (word-level, whole model); EGT (Gemma teacher). No masked-letter objective exists in custom_io.",
+   "autonomy": "Training-only; the deployed reader is B2's reader with different weights.",
+   "merged_from": [
+    "w1i-1",
+    "w2c-1"
+   ],
+   "director_score": 4,
+   "director_note": "Dropped w2c-5 (W1 pretraining) because W1 did not pass. Check hardest: stage 2 is rule-5 blocked; stage 1 may only learn bigram statistics; compare to the 8A cloze rows to avoid duplicate work.",
+   "id": "reader-D19",
+   "area": "reader"
+  },
+  {
+   "title": "Retarget the Gemma train-only teacher to words, after a target audit",
+   "summary": "EGT regressed the controller onto a prompt-level pooled Gemma vector and gained only +0.18/+0.61 (matched PC mean +0.40). First audit that target (does it separate the 38 families at all; how much of it is the fixed prefix?). Then try a word-level relational loss: B2's word-to-word similarities match Gemma's for designed train words, no head and no Gemma at answer time, so the shipped model stays B2.",
+   "change": "Audit (CPU): on 2,000 train prompts over 38 families, family AUC of cosine for (i) EGT's target (pooled mean including PREFIX and bos/eos, eg.py:12,85-87,101-103) and (ii) the prompt-only pool. Arm: CIO/models/ledger.py loss gets 0.1 x mean over word pairs in a batch of (cos_student - cos_teacher)^2; student = reader states pooled per word with data.word_ids (data.py:157-170); teacher = Gemma pooled over the word's own tokens (prefix and specials dropped), MRL-256, computed once per word type. Words: designed train words encoded as <= 2 pieces; one third held out for an agreement probe. Controls: shuffled teacher; optional identity-only loss.",
+   "why": "EGT's target mixes in a constant prefix and is topical; the word-level target is aimed at vocab and frame, where EGE gained. The loss is precomputed per word type, so it costs about a B2 run. Variant is not the expected mechanism: B2's variant losses are mostly zero-shot computations.",
+   "evidence": [
+    {
+     "claim": "EGT matched on the PC: pooled +0.18/+0.61 (mean +0.40) over PC B2 73.00/74.27; variant +2.54 (mark +3.0); loops:0 2.50/3.82.",
+     "label": "shown",
+     "source": "CIO/results/38-pc-eg-teacher RESULT.json; 33-pc-confirm-b2; fact check ege-teacher"
+    },
+    {
+     "claim": "The EGT teacher runs inside every training loss, not offline, and pools over the constant prefix 'task: sentence similarity | query: ' and bos/eos.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:536-541; CIO/models/eg.py:12-13,85-87"
+    },
+    {
+     "claim": "Same-word AUC Gemma 0.9502 vs B2 reader 0.8205.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/DIAG.json (P2)"
+    },
+    {
+     "claim": "EGE vocab +2.7 and frame +3.6 over same-box B2V.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "Neighbours of operator words can be antonyms (add/subtract), pulling the loss the wrong way.",
+     "label": "untested",
+     "source": "precheck on hand-written pairs designed to catch it"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Audit on CPU; arm on the PC, seeds 200/201 with shuffled control (4 runs); targets precomputed once.",
+    "hours": 4.4,
+    "arms": "Audit (i) vs (ii); then A_s200/201 and shuffled-teacher control.",
+    "pass_mark": "Audit: prompt-only family AUC >= 0.70 and >= 0.05 above EGT's target. Arm: pooled-5 >= +1.0 on both seeds; vocab >= +2.0 (2-seed mean); held-out designed-word top-1 agreement >= plain B2 + 15 points; shuffled control keeps < 2/3 of the vocab gain; chain-5 >= 99.0; no split down more than 3.0; precheck: synonym partner in top-3 for >= 3 of 5 hand-written pairs. Fixed first.",
+    "proved_wrong": "Audit: prompt-only AUC <= 0.60 or within 0.02 of EGT's target (stop all prompt-level Gemma teachers); arm: vocab gain < +1.0 on both seeds or shuffled control keeps >= 2/3."
+   },
+   "rules_check": "R2: a pretrained Gemma used only as a training-time target is neither clearly inside the model nor a data-generating teacher; Ben must rule (EGT ran under the same reading). R3: shipped model stays 3,302,481; size() reports no borrowed part for teacher-only arms (ledger.py:274), fix before any claim. R5: designed train words only. R10: training-time only.",
+   "closest_prior": "EGT (pooled prompt target, 66,304-param head); REPA (2410.06940) is the nearest published design.",
+   "autonomy": "Training-only; at deploy B2 runs alone, no call and no lookup.",
+   "merged_from": [
+    "w1b-2",
+    "w1f-1",
+    "w1f-5"
+   ],
+   "director_score": 4,
+   "director_note": "Check hardest: the rule-2 ruling; EGT's 'matched' gain (+0.40) is far below the +1.0 mark; 490 designed words may be too few; Qwen teacher pilot mentioned elsewhere is not used here.",
+   "id": "reader-D20",
+   "area": "reader"
+  },
+  {
+   "title": "Band-sized EGE: rank-32 adapter, then a learned per-character gate",
+   "summary": "Replace EGE's dense Linear(768,256) (198,400 params) by a rank-32 bottleneck (34,592) so trainable params fall inside the band, then add a learned sigmoid gate per character (257 params, hard forward, zero-start). The control is the same adapter with the gate fixed open. It asks whether EGE's gain needs the full map and whether a learned gate cures the leak and variant shortfall.",
+   "change": "CIO/models/ledger.py eg_embed (lines 177-187): option eg_rank=32 builds LN(768) + Linear(768,32) + Linear(32,256) with the last layer zero-init. Gate: g_t = sigmoid(w . x_pre + b) with w zero, b=-0.5, hard in the forward pass (hard = g > 0), contribution cast to the input dtype; x = x_pre + g*extra (CIO/models/reader.py:82-96); +257 params with a Linear(256,1) (or 769 from LN(H)). Totals: rank-32 only 3,337,073 (4,807 under the top); with gate 3,337,330. Control U: rank-32 ungated. A cheaper variant gates by character id (108 scalars).",
+   "why": "EGE failed variant (+1.70 vs +3.0) and the leak (18.09 on s200). A per-character gate lets training choose where Gemma helps; the gate reads only the letter, its position and its place, so it cannot see the answer. Band compliance of trainable params is cosmetic for rule 3 (whole model 274.5M) but makes the screen comparable.",
+   "evidence": [
+    {
+     "claim": "EGE adapter LN(768) 1,536 + Linear 196,864 = 198,400; rank-32 is 34,592; band top 3,341,880.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:184; arithmetic; PF/no-hardcoding/INPUT-UNITS-2026-10-07.md"
+    },
+    {
+     "claim": "EGE variant +1.70 and loops:0 18.09 (s200), 4.49 (s201); EGM's 2-layer MLP adapter and the no-window arms failed.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "Closing a gate gives bit-exact base outputs in modality-gated adapters; row-type switches would be hand-set, per-character learned gates are not.",
+     "label": "suggested",
+     "source": "arXiv 2609.26182 abstract; reasoning from rule 10"
+    },
+    {
+     "claim": "The gate will close on cipher letters and one-character pieces and open on multi-character pieces.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Same box as the EGE references; cached Gemma states make it about 1 h per run, uncached about 2 h on a rented box.",
+    "hours": 4,
+    "arms": "U (rank-32, gate open) and L (gated), seeds 200/201 or PC 202/203, against EGE and B2.",
+    "pass_mark": "U keeps >= 2/3 of EGE's pooled gain (>= +1.0 on both seeds) or the rank claim fails; L minus U pooled-5 >= +1.0 on both seeds; cipher_map in_dist >= 95; chain-5 >= 99.0; no split more than 3.0 below B2; gate open on > 1% and < 99% of characters; report loops:0 and variant. Fixed first.",
+    "proved_wrong": "U gain < +1.0 on either seed (the gain needs the full map); L minus U < +0.5 (the gate adds nothing); gate mean > 0.9 on cipher letters (it did not learn to close)."
+   },
+   "rules_check": "R1: gate is learned; tokenizer alignment flagged. R3: trainable inside the band but whole 274.5M, so still B2-internal until a 274M comparator exists. R4: 2-seed screen. R10: the model decides per character with its own gate; no row-type switch.",
+   "closest_prior": "EGE (dense, ungated), EGM (MLP), 2609.26182 (row-type gate); fix 3 in gemma-reader-papers.md lists LayerNorm plus gate as untried.",
+   "autonomy": "Per-character gate computed by the model from its own state at run time; init values are a training choice.",
+   "merged_from": [
+    "w1a-6",
+    "w1a-3",
+    "w1g-5",
+    "w2f-5"
+   ],
+   "director_score": 4,
+   "director_note": "Check hardest: the control must use the same rank-32 adapter; the gate arithmetic (257 vs 769 params); that a pass is not read as size-compliance. The rank-32 half is a cheap single config; the gate half is where the leak hypothesis lives.",
+   "id": "reader-D21",
+   "area": "reader"
+  },
+  {
+   "title": "EGE recipe fixes: adapter learning rate, Gemma-row dropout, top-layer LoRA",
+   "summary": "Three one-change arms on EGE with different failure targets: a slower (1e-4) or faster (3e-3) adapter learning rate; zeroing the Gemma term on a random half of training rows (test-time always on); and rank-8 LoRA on Gemma's last layer trained from cached layer-23 states. Each is cheap once Gemma states are cached and should be run only if the control says Gemma content matters.",
+   "change": "train.py optimiser: put ln_eg and eg_proj in a separate AdamW group at lr 1e-4 or 3e-3, rest 1e-3. Ledger.read (255-267): training-only Bernoulli keep mask (p=0.5) on the Gemma term per row. LoRA: wrap Gemma layer 24 with r=8 on q,k,v,o and MLP projections (about 90-115k trainable; EGE 3.59-3.62M), cached hidden_states[23] (512-d, bf16) as input; with r=0 as the exact-EGE control from the same cache. Log norm of the Gemma term over the letter input every 500 steps.",
+   "why": "Under Adam a zero-init adapter can grow to letter scale in a few hundred steps; EGE's early loss advantage is gone by step 8,000 on seed 200. EGK's seed-200 zero-round leak (13.68) is in a path where the talker never sees Gemma, which suggests shared reader weights trained through Gemma carry it; dropout forces them to work without Gemma. No layer is known to hold letters in a more usable form (letter read flat across layers), so unfreezing is a long shot.",
+   "evidence": [
+    {
+     "claim": "EGE uses one lr (1e-3) for every trainable weight; no arm uses a separate adapter lr; LoRA+ and partial unfreezing are listed as untried.",
+     "label": "shown",
+     "source": "PF/papers/gemma-reader-papers.md (fix 3, item 9); CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "500-step mean loss 1.76 vs 2.48 (s200) and 1.74 vs 2.50 (s201) for EGE vs B2V; level by step 8,000 on s200 (0.2283 vs 0.2284).",
+     "label": "shown",
+     "source": "train events in 46-r0ege-s200, 40-egw-s200 stdout.events.txt"
+    },
+    {
+     "claim": "EGK s200 zero-round 13.68 with the talker on B2's own reader; EGE 18.09 vs B2V 1.40.",
+     "label": "shown",
+     "source": "CIO/results/50-egk-s200, 46-r0ege-s200 RESULT.json; CIO/models/ledger.py:258-259,284-285"
+    },
+    {
+     "claim": "Per-layer linear letter read is flat (22.6-26.3%); a 24th-layer LoRA reshapes the state the thinker reads.",
+     "label": "shown",
+     "source": "CIO/results/eg-diag/LAYERS.json"
+    },
+    {
+     "claim": "Adam moves each weight by about its learning rate per step.",
+     "label": "suggested",
+     "source": "standard property, not measured here"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Same box as EGE references; cached states strongly recommended.",
+    "hours": 8,
+    "arms": "lr 1e-4, lr 3e-3, dropout p=0.5, LoRA r=8 vs r=0; seeds 200/201 each, against EGE and B2 on the same box.",
+    "pass_mark": "Arm minus EGE pooled-5 >= +1.0 on both seeds; for dropout also loops:0 <= 5 on both seeds and pooled gain over B2 >= +1.0; LoRA: variant 2-seed mean >= +3.0 and chain-5 >= 99.0; no split more than 3.0 below EGE. Any seed non-finite fails an arm. Fixed first.",
+    "proved_wrong": "Arm minus EGE < +0.5 on either seed; dropout seed-200 loops:0 >= 10 (training reliance on Gemma does not drive the leak)."
+   },
+   "rules_check": "R3: lr and dropout add 0 params; LoRA out of band. R4: 2-seed screens. R10: all training-time; dropout leaves the term always on at test.",
+   "closest_prior": "EGE; fix 3 of gemma-reader-papers.md; partial unfreezing never run.",
+   "autonomy": "Training-only; nothing at deploy.",
+   "merged_from": [
+    "w1a-4",
+    "w1g-4",
+    "w1a-2",
+    "w2d-4"
+   ],
+   "director_score": 3,
+   "director_note": "Low expected value: the lr arms point in opposite directions; run only after the control and with the cache. Check hardest: that the cache is exact for the LoRA arm (nothing trainable below layer 24).",
+   "id": "reader-D22",
+   "area": "reader"
+  },
+  {
+   "title": "Attention-free learned reach: 33-tap depthwise filter and variants",
+   "summary": "Add one residual depthwise conv of 33 taps per channel after the two window blocks so each of the 256 channels learns its own reach out to +-16 for about 9.2-9.5k params, with tap energy by offset read back after training. Variants: a gated periphery over 4-character bins (5,633 params) and a tied conv block whose passes are mixed by a learned per-character weight. These are the cheap alternatives to W1 now that W1 did not pass.",
+   "change": "CIO/models/reader.py after the conv loop (lines 92-93): y = x + gamma*DWConv1d(k=33, groups=256, padding=16)(GELU(LN(x))), masked; gamma zero-init (LayerScale). Params: taps 8,448 + bias 256 + LN 512 = 9,216 (+256 gamma = 9,472); total 3,311,697 or 3,311,953. Periphery: 4-char bin means, DWConv over bins (K=17), per-character sigmoid gate, gamma zero-init, 5,633 params. Tied pass variant: one ConvBlock reused 4x with a Linear(256,4) pass mixer vs a fixed 2-pass tie, MLP widened to mlp 5.9375 to stay in band (two disclosed changes; TS vs T2).",
+   "why": "W1 (global attention, 33,632 params) gave +0.5 on average and hurt lookup families by 4.1, perhaps by blurring local binding. A depthwise filter is linear and keeps locality. The reach actually used is visible as tap energy. It fits alone but not beside W1: B2+W1+filter is over the band top by 3,449.",
+   "evidence": [
+    {
+     "claim": "Depthwise 256x33 = 8,448 weights; with bias and LayerNorm 9,216; with LayerScale gamma 9,472; B2 + 9,216 = 3,311,697.",
+     "label": "shown",
+     "source": "arithmetic; fact check param-and-rules-audit (the '9.5k' figure includes gamma)"
+    },
+    {
+     "claim": "W1 +0.9/+0.1 pooled, F1 -4.1.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json"
+    },
+    {
+     "claim": "Hyena-style long convolution was not recommended at 64 characters; CANINE and Charformer GBST are listed, not built.",
+     "label": "shown",
+     "source": "PF/architecture/redesign-ideas-2026-10-07.md section 2"
+    },
+    {
+     "claim": "Tied conv block removes 328,448 params; B2 minus it is 2,974,033, below the band floor, so the freed budget must be spent.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:43-51 (arithmetic)"
+    },
+    {
+     "claim": "The model will use the far taps on at least 25% of channels.",
+     "label": "untested",
+     "source": "not run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200/201 against q33 B2.",
+    "hours": 3,
+    "arms": "B2 + depthwise (primary); periphery and tied-pass only if the reach probe says outer letters are used.",
+    "pass_mark": "W1's sealed set: pooled-5 >= +1.0 on both seeds; cipher_map in_dist >= 95; F1 pool not down more than 2.0 (judged, 18-22% false-fail rate); no split more than 3.0 down; chain-5 >= 99.0. Reach check: >= 25% of channels with energy-weighted reach above 4 characters on each seed. Fixed first.",
+    "proved_wrong": "Pooled-5 2-seed mean below 0, or < 10% of channels reach beyond 4 characters (the model ignored the reach offered)."
+   },
+   "rules_check": "R1: no hand code; K=33 is an architecture cap like the 208 position limit. R3: inside the band alone. R4: screen. R10: taps learned; the reach readout is a training-time report.",
+   "closest_prior": "W1 (not shown); Hyena/CANINE/GBST listed; R0 and the dilated block.",
+   "autonomy": "Taps are learned in training and read at answer time; nothing set by a person at deploy.",
+   "merged_from": [
+    "w1c-2",
+    "w2e-4",
+    "w1c-4",
+    "w1c-3"
+   ],
+   "director_score": 3,
+   "director_note": "Check hardest: do not queue before the reach probe; F1 judged with a ~20% false-fail rate; a tied-pass arm is two changes (tie + spend). Another hand reach constant (33) may draw Ben's test-fitting objection.",
+   "id": "reader-D23",
+   "area": "reader"
+  },
+  {
+   "title": "Relative-offset bias for a global reader block",
+   "summary": "W1's one-head global attention sees only absolute positions, and it hurt lookup families by 4.1. Add a learned scalar per relative offset (-207..+207, 415 values) to its logits so the head can put weight on 'two characters left' without a fixed window. Variant: rank-16 block with the bias (17,615 params) as a replacement.",
+   "change": "CIO/models/reader.py GlobalAttn (54-65): add rel = nn.Parameter(zeros(415)); build index (t - s) + 207 for the current T and pass pad mask plus rel[index] as a float attn_mask to scaled_dot_product_attention. W1 + bias = 3,336,528 (5,352 under top). Rank-16 + bias: 17,615 added, total 3,320,096. Test against B2 and against W1 (archived W1_s200/s201 checkpoints show W1's score).",
+   "why": "W1's global attention without a relative signal may interfere with the local letter-digit binding that cipher and lookup rows need; a relative bias lets the head recover it. The bias table is also a readable measure of the reach the model chose.",
+   "evidence": [
+    {
+     "claim": "W1: GlobalAttn has only absolute position embeddings; 33,632 params; pooled +0.9/+0.1, F1 -4.1.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:54-65,72,86; PF/progress-board/data.json"
+    },
+    {
+     "claim": "Rank-16 block = 512 + 12,336 + 4,352 = 17,200; +415 gives 17,615; the general form is 1,027r + 768.",
+     "label": "shown",
+     "source": "arithmetic from reader.py:54-61"
+    },
+    {
+     "claim": "MAX_PROMPT is 208, so offsets -207..+207.",
+     "label": "shown",
+     "source": "CIO/data.py:11"
+    },
+    {
+     "claim": "T5-style relative bias helps local binding in small models.",
+     "label": "suggested",
+     "source": "from memory, not opened"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200/201; baseline B2 (q33) and W1 (same seeds).",
+    "hours": 3,
+    "arms": "W1 + rel bias vs B2 and vs W1.",
+    "pass_mark": "Pooled-5 minus B2 >= +1.0 on both seeds (the sealed W1 mark); F1 not down more than 2.0 vs B2; cipher_map in_dist >= 95; no split more than 3.0 down; chain-5 >= 99.0; bias range (max-min over |offset| <= 8) >= 1.0 nat. Fixed first.",
+    "proved_wrong": "Pooled-5 2-seed mean below B2; bias range < 0.5 logits on both seeds (flat); F1 still below -4."
+   },
+   "rules_check": "R1: learned bias, no hand code. R3: inside band. R4: screen. R10: table learned; 208 is the maximum prompt length.",
+   "closest_prior": "W1 (not shown), T5/ALiBi relative position (not opened), W2 scratch tokens.",
+   "autonomy": "Learned at training time and applied at answer time; nothing set by a person.",
+   "merged_from": [
+    "w1c-6",
+    "w2e-5"
+   ],
+   "director_score": 3,
+   "director_note": "Only worth running if the reach probe shows W1's head learned something local; W1's two-seed result is below its mark, so this stacks a second change on an unconfirmed base.",
+   "id": "reader-D24",
+   "area": "reader"
+  },
+  {
+   "title": "Context-contrast word vectors from FineWeb sentences, teacher-free",
+   "summary": "Pretrain the reader so each word's pooled state is close to other words in its sentence and far from in-batch words (InfoNCE), with a static PPMI-SVD word table as a teacher-free alternative. No Gemma is used, so rule 2 is clean. It tests whether letter-only input can acquire some word meaning, the part EGE supplied with 271M borrowed weights. Blocked until the protected-hash merge.",
+   "change": "Reader pretraining objective on rung30 FineWeb-Edu windows: word vectors from segment mean over word ids (data.word_ids); positives are words within 5 positions in the same sentence, temperature 0.1, anchors with document frequency under 1%, 9,000 updates. Pre-check: held-out top-1 same-sentence retrieval of context vs shuffled-context (M-shuf). Teacher-free arm: 64-d PPMI-SVD vectors for designed train words as a relational target (no dev words embedded).",
+   "why": "EGE's word meaning gains were frame +3.6, vocab +2.7; EGT gave variant +2.54. Vocab has unseen category words, places and colours (97% of rows contain an unseen word). Static vectors cannot see context, so symbol-in-context meaning is missed.",
+   "evidence": [
+    {
+     "claim": "Vocab: 97% of rows contain an unseen word; unseen real words variant 35, family 30, frame 12.",
+     "label": "shown",
+     "source": "CIO/research/data.md:47,52"
+    },
+    {
+     "claim": "EGE frame +3.6, vocab +2.7; EGT variant +2.54, pooled +0.18/+0.61.",
+     "label": "shown",
+     "source": "CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "FineWeb-Edu slices are built and panel-checked (0 hits) against the current hashes, but protected-panel hashes are not merged.",
+     "label": "shown",
+     "source": "PF/data-pool/DATA-POOL-PLAN-2026-10-06.md section 10; PF/data-pool/PROTECTED-HASH-JOB.md"
+    },
+    {
+     "claim": "Contrastive co-occurrence vectors capture meaning (word2vec family); fit to the vocab split is untested.",
+     "label": "suggested",
+     "source": "general literature, not opened"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Pre-check on the PC (20-30 min); screen after the merge, B2 shape, seeds 200/201.",
+    "hours": 7,
+    "arms": "Pre-check M-web vs M-shuf; screen M-rand, M-web, M-shuf, M-skill.",
+    "pass_mark": "Pre-check: M-web beats M-shuf by >= 5 points top-1. Screen: M-web minus M-shuf pooled-5 >= +1.0 on both seeds; vocab >= +2.0 vs M-rand (2-seed mean); cipher_map >= 95; chain-5 >= 99.0; no split more than 3.0 down. Fixed first.",
+    "proved_wrong": "M-web minus M-shuf < +0.5 on the 2-seed mean, or vocab gain < +0.5."
+   },
+   "rules_check": "R2: free human text, no teacher; static vectors generate no data (Ben to confirm). R5: blocked until protected hashes merge; designed train words only for the static arm. R3: 0 new params. R7: sentences split at word boundaries.",
+   "closest_prior": "EGT/EGE (Gemma); 8A cloze rows. No word-vector objective is planned.",
+   "autonomy": "Build-time only; deployed reader unchanged.",
+   "merged_from": [
+    "w2c-2",
+    "w1f-2"
+   ],
+   "director_score": 3,
+   "director_note": "Rule 5 blocker; overlaps 8a web-text rung. Check hardest: whether the retrieval pre-check separates context from letter statistics.",
+   "id": "reader-D25",
+   "area": "reader"
+  },
+  {
+   "title": "Learned summary memory beside letters: chunks, gist slots, lexicon, bigrams",
+   "summary": "Four low-cost ways to give the thinker more than single letters without replacing them: a task-loss-only boundary scorer with chunk memory slots (16,929 params), 16 learned gist slots (12,832), a 64-prototype lexicon layer (26,656), and a top-120 letter-bigram table (30,976). All fit the band alone and none stacks with the others. Authors' own expected gain is at most about +1.",
+   "change": "Chunk: boundary Linear(256,1) (257), mean-pool chunks, Linear(256,32)+Linear(32,256) (16,672), memory slots appended to the controller's cross-attention keys (ledger.py:302,311), straight-through boundary gradient, 208 slots so nothing is dropped; optional BPE-label BCE arm (labels only). Gist: 16 learned queries pool the reader output by content into 16 extra keys. Lexicon: LexiconLayer after the conv blocks, 64 key-value prototypes, values zero-init. Bigram: 121-row table (120 top bigrams plus OTHER) summed into each letter before the conv blocks (30,976; B2 + table 3,333,457).",
+   "why": "Unseen word types are 7.4% (frame) and 10.1% (vocab). But U0 (BPE word pieces replacing letters) lost -3.1/-5.4 and W1 gained only +0.5, so extra grouping beside letters has not helped so far. The BPE-label arm (w1d-3) is deprioritised because piece groupings lost on frame and vocab.",
+   "evidence": [
+    {
+     "claim": "U0: word-piece input scored worse than letters (-3.1/-5.4 pooled; cipher_map -3.5, frame -10.8, vocab -6.6).",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (U0 done)"
+    },
+    {
+     "claim": "B2 + 16,929 = 3,319,410; W1 + chunk exceeds the band top by 11,162; W1 + bigram table exceeds by 25,209.",
+     "label": "shown",
+     "source": "arithmetic (fact check param-and-rules-audit)"
+    },
+    {
+     "claim": "Over-Tokenized n-gram input tables help at large size as language-model loss; 128x vocabulary and 400M-vs-1B figures are from a snippet, not the abstract.",
+     "label": "suggested",
+     "source": "arXiv 2501.16975 (scouts)"
+    },
+    {
+     "claim": "121 = 120 bigrams plus one catch-all row (not 120 x 256).",
+     "label": "shown",
+     "source": "fact check param-and-rules-audit"
+    },
+    {
+     "claim": "Chunk memory slots add something the +-4 window does not already show.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC, seeds 200/201 vs q33 B2, one variant at a time starting with chunk memory; CPU coverage check first for the bigram table (top-120 must cover >= 80% of dev bigram occurrences).",
+    "hours": 4,
+    "arms": "B2 + chunk memory (a); lesion that zeros chunk slots at test; others only if (a) passes.",
+    "pass_mark": "Pooled-5 minus B2 >= +1.0 on both seeds; chunk-lesion cost >= 1.0 pooled-5; mean chunk length 1.5-8 letters; frame and vocab both up; cipher_map in_dist >= 95; chain-5 >= 99.0; no split more than 3.0 down. Fixed first.",
+    "proved_wrong": "Pooled-5 2-seed mean below 0; chunk-lesion cost < 0.5 (memory unused); mean chunk length < 1.2."
+   },
+   "rules_check": "R1: no word list or splitter in the chunk arm; BPE labels are training-time teaching data; bigram table is a fixed build-time list like the char vocab. R3: each fits alone. R4: screen. R10: boundaries and lookups are learned at run time; WORD copy still uses word_spans until a later rung.",
+   "closest_prior": "U2 spec (ratio loss, upsampling), W1, W2 scratch tokens, H-Net/FLEXITOKENS (boundary objective without a ratio target).",
+   "autonomy": "The model decides chunk starts and memory use itself; hand parts are the memory size (208) and straight-through training estimator.",
+   "merged_from": [
+    "w1d-2",
+    "w1d-3",
+    "w1d-4",
+    "w1i-3",
+    "w1i-4"
+   ],
+   "director_score": 2.5,
+   "director_note": "Lowest evidence: letters were fine for U0 and W1 barely moved. Run only if the reach and unseen-word probes show a gap. Check hardest: mask order for the memory keys; bigram coverage check.",
+   "id": "reader-D26",
+   "area": "reader"
+  },
+  {
+   "title": "Letter-digit pair-binding probe before any tape tool",
+   "summary": "A no-training probe on frozen Gemma decides whether any text tool (LOOK: re-read a 40-character prompt span as a tape entry; BIND: write 'key = value' as text) could rescue the window-free Gemma readers on cipher_map. It compares the state of each code digit in the full prompt, in a packed entry of the same pairs, and in B2's reader (ceiling). By arithmetic even a full cipher fix leaves a Gemma-only reader near +0.6 over B2.",
+   "change": "Extend diag_eg.py with P4: at least 600 train-split cipher_map prompts; targets: letter paired with a code digit (decode) and digit paired with a code letter (write); inputs (A) Gemma last state at the digit in the full prompt, (B) at the digit in the packed entry 'h=2 e=5 c=3 g=6' alone (<= 40 chars), (C) B2_s100 reader output; linear and 2-layer MLP probes, 75/25 split by row. If (B) passes: oracle LOOK screen on T1 with a Gemma-only reader (+257 params for one op, shared q_word pointer, 0 new), then BIND (+16,705).",
+   "why": "No probe measures pair binding; EGR had per-letter codes and still got cipher_map 2.5-3%. Cipher_map is 120 of 6,040 pooled rows, so a 60% fix is worth about +1.1 pooled; the non-cipher part of EGO is +0.57 mean, so a Gemma-only reader cannot clear +1.0. BIND targets object_track and chain_story2, where window-free arms lose 10-20 points, worth at most about +0.7 pooled.",
+   "evidence": [
+    {
+     "claim": "EGO loses 1.79/1.92 pooled points to cipher_map; non-cipher EGO part is +1.06/+0.08.",
+     "label": "shown",
+     "source": "computed from 42-eg-s200, 43-eg-s201, 40-egw-s200, 41-egw-s201 RESULT.json"
+    },
+    {
+     "claim": "EGR (per-letter code, no window) cipher_map 2.5%/3% vs B2 95.8-98; EGE with window 97.5/95.",
+     "label": "shown",
+     "source": "PF/custom-io/WHY-GEMMA-LOST-2026-10-06.md correction; CIO/results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "T1 copy step failed (29-42% for 4+ digits); LOOK and BIND build on T1, so they wait for the re-screen R1-R4.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json"
+    },
+    {
+     "claim": "No pair-binding probe exists; diag_eg P1/P2 measure letter identity and word sameness only.",
+     "label": "shown",
+     "source": "CIO/diag_eg.py:1-12; DIAG.json"
+    },
+    {
+     "claim": "Binding survives in a packed Gemma entry.",
+     "label": "untested",
+     "source": "probe not run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC GPU or CPU fp32 (Gemma needed, not in this container); minutes.",
+    "hours": 0.3,
+    "arms": "A, B, C; two directions; linear and MLP.",
+    "pass_mark": "Proceed to an oracle LOOK screen only if B >= 90% (MLP, held-out) in both directions and C >= 95%. A >= 90% with B < 60% closes LOOK/BIND for Gemma-only readers. Fixed now.",
+    "proved_wrong": "B < 60% in either direction closes LOOK and BIND; C < 95% means the probe is broken."
+   },
+   "rules_check": "R5: train-split rows. R1: any later tool slice is formatting inside a tool; the model picks pointers. R3: Gemma counted. R10: learned op and pointer; no hand gate.",
+   "closest_prior": "WORD copy (tool.py:216-221) copies one word; DIAG P1/P2.",
+   "autonomy": "Offline; any later tool call is chosen by the model.",
+   "merged_from": [
+    "w3b-1",
+    "w3b-2",
+    "w3b-3"
+   ],
+   "director_score": 2.5,
+   "director_note": "Low priority because the ceiling is below +1.0 and T1 has not passed; the probe is cheap. Dropped DIGITS and SPELL separately.",
+   "id": "reader-D27",
+   "area": "reader"
+  },
+  {
+   "title": "Model writes the whole calculator call as text; audit the model path",
+   "summary": "In T1 the model writes only operand digits; the operator is an index from a head, Python prints its name (NAMES), and Python reverses units-first digits. Let the writer produce operator letters as cells too (0 new params, remove the 2,313-param op head), and run a CPU audit that counts hand-code calls on the model path before and after. The planned audit patches only re, int and str, so these slips pass it.",
+   "change": "CIO/models/tool.py: four operator cells from ln_z(control 0) plus reader place rows 0-3 through the same gen_copy pointer-generator; drop op_head Linear(256,9); the tool parses the model's text (units-first reversal moves into the tool grammar). T1 goes 3,277,393 -> 3,275,080. Audit: random-init T1, generate on 200 dev rows with NAMES lookup, entry() and the decode reversal instrumented.",
+   "why": "Rules 1 and 10: the call should be the model's own text. NAMES[op], the f-string in entry() and the [::-1] slice are hand code between model output and the tool. T1's copy step also failed (29-42% at 4+ digits); a re-screen with a span copy fix (Amendment 3) is planned, so this runs after it.",
+   "evidence": [
+    {
+     "claim": "Operator is an index from op_head printed via NAMES[op]; units-first digits reversed in Python in decode_cells; CELLS=11.",
+     "label": "shown",
+     "source": "CIO/models/tool.py:56-57,110-117,173,182"
+    },
+    {
+     "claim": "The planned B3 audit patches only re, int and str, so these paths pass it.",
+     "label": "suggested",
+     "source": "PF/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md line 167; code reading"
+    },
+    {
+     "claim": "T1 S3 exact copy failed at 29-42% for 4+ digits (almost untrained in that run).",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (T1 screen)"
+    },
+    {
+     "claim": "Op head is Linear(256,9) = 2,313 params.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py:149; CIO/models/progparse.py:11"
+    },
+    {
+     "claim": "Operator letters from the vocabulary readout match the op head's accuracy.",
+     "label": "untested",
+     "source": "screen"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "CPU audit (no training) now; PC 2-seed screen after the T1 re-screen.",
+    "hours": 0.2,
+    "arms": "Audit before/after; screen T1 vs T1 with op cells.",
+    "pass_mark": "Audit: 0 calls to NAMES lookup, entry() or the decode reversal from the model path after the change (more than 0 before). Screen: call exact-match >= T1 minus 0.5; pooled-5 >= T1 minus 1.0; operator-letter errors <= 1% of calls.",
+    "proved_wrong": "Operator-letter errors > 1% of calls or pooled-5 below T1 minus 2.0; the fix is then repairing the operator-letter link, not restoring the op head (rule 4)."
+   },
+   "rules_check": "R1: the call becomes the model's own text. R7: no cap added (operands 11 cells, operator 4 cells plus end). R3: -2,313 params. R10: the tool parses text and returns text.",
+   "closest_prior": "T1's call writer (operand cells only); the C1' regex-triggered calculator in plain_tf_steps.",
+   "autonomy": "The model writes the whole call as its own text; no Python formats or chooses the operator.",
+   "merged_from": [
+    "w1e-3"
+   ],
+   "director_score": 3,
+   "director_note": "Overlaps the calculator-outside area; keep only the audit if the lead assigns T1 elsewhere. Check hardest: the audit's scope claim about B3.",
+   "id": "reader-D28",
+   "area": "reader"
+  },
+  {
+   "title": "Same-size 274M plain baseline: 200-step timing probe first",
+   "summary": "Rule 3 asks for a plain transformer of the same size as EGE's whole 274.5M. None exists (largest plain run 10.8M). A 200-step timing and memory probe on the PC sizes one run before any commitment; the full run would be plain_tf_steps at d=1280, L=14, cap 107 (about 276M) with gradient accumulation.",
+   "change": "New baseline plain_tf_steps d_model 1280, 14 layers, 20 heads, cap 107 (no answer-only rows); trainer changes: micro-batch 32 x 8 accumulation (train.py:171-173 steps once per batch), length bucketing; lr 3e-4 sealed in an addendum; new size band in the addendum (train.py's 3.14-3.34M check would print inside=False). Timing probe: 200 steps, projected hours and peak memory.",
+   "why": "Only a same-size plain model can show whether Gemma beats scratch at equal total size. FLOP estimates differ: 17-33 h per 24k-step seed on the 5070 Ti without bucketing (this idea) vs about 9.4 h on the calibration box (FLOP scaling from the 10.8M run) \u2014 both untested. The cheaper rungs of the shrink ladder have affordable comparators, so run those first. The 8a first look shows B2's lead over plain shrinking from 3M to 10M (4.2/4.5 from 5.5/7.0), another reason to compare at the real size.",
+   "evidence": [
+    {
+     "claim": "10.8M plain run: 24,000 steps in 1,345 s at 18.0 steps/s; 3.2M plain 842 s.",
+     "label": "shown",
+     "source": "CIO/results/02-calib-long/tf10m_24k and tf3m_24k RESULT.json"
+    },
+    {
+     "claim": "EGE whole 274,503,505; band +-3% is 266.3-282.7M; plain d=1280,L=14 is about 276.0M by the fitted count.",
+     "label": "shown",
+     "source": "CIO/models/eg.py; arithmetic from 12d^2L+13dL+334d"
+    },
+    {
+     "claim": "B2's lead over plain shrank from 5.5/7.0 to 4.2/4.5 going from 3M to 10M (old skills-only data).",
+     "label": "shown",
+     "source": "PF/progress-board/data.json (8a first look)"
+    },
+    {
+     "claim": "Memory about 9-10 GB at micro-batch 32; 24k steps take 17-33 h on the 5070 Ti; a 276M model will memorise 200k rows.",
+     "label": "untested",
+     "source": "estimates, not measured"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC: 200-step probe; full run on seed 200 only if the probe projects <= 35 h (rent after).",
+    "hours": 20,
+    "arms": "P276 (plain, d=1280, L=14, cap 107) on seed 200 vs EGE_s200 (same data order).",
+    "pass_mark": "Void unless the run finishes ok and in_dist >= 50. EGE minus P276 >= +1.0 pooled-5 means the Gemma body is worth >= 1 point at equal size on this seed (a screen).",
+    "proved_wrong": "P276 >= EGE + 1.0 stops the Gemma-wins claim at this size on this screen."
+   },
+   "rules_check": "R3: satisfied by construction. R6: PC first, rent only after the screen. R7: cap 107. R4: one seed is a screen. R10: a plain model adds no deploy step.",
+   "closest_prior": "C0 (cap 107, 3.27M); EGW (22.2M trainable) is not a same-size plain model.",
+   "autonomy": "No deploy-time step.",
+   "merged_from": [
+    "w1g-6"
+   ],
+   "director_score": 3,
+   "director_note": "Expensive; park until the shrink ladder or RAND says there is a Gemma-derived gain worth testing at size. Run only the timing probe now.",
+   "id": "reader-D29",
+   "area": "reader"
+  },
+  {
+   "title": "Self-gated reading after deployment, reader only",
+   "summary": "After shipping, the thinker stays frozen and the reader (letter table excluded) keeps learning from free text the model fetches through an outside tool. The model picks the window it finds hardest, keeps an update only if its own held-out masked-letter loss does not rise and its own skills self-test does not fall, and stops when a round accepts nothing. It is the only deploy-time learning idea in this area.",
+   "change": "A deploy loop around the B2 checkpoint, no architecture change. Each round: fetch 64 FineWeb windows through a tool (protected-hash filter inside the tool); score each by the reader's masked-span loss; take one gradient step on the highest-loss window; accept only if (a) masked loss on a replay set the model built from its own earlier reads does not rise and (b) accuracy on a fresh skills batch from an outside generator tool does not fall; stop when no window is accepted. Freeze reader.tok so the talker's output does not move.",
+   "why": "The reader is 22% of B2 (742,400 params) and every thinker round reads it, so drift can move skills accuracy; the self-test gate is the guard. If reading helps, expected movers are frame and vocab as in the cloze idea.",
+   "evidence": [
+    {
+     "claim": "Reader is 742,400 params (22% of B2); the thinker cross-attends every reader position each round; the tied letter table feeds the talker.",
+     "label": "shown",
+     "source": "CIO/models/reader.py:68-96; CIO/models/ledger.py:117-124,245,365-366"
+    },
+    {
+     "claim": "Reading fetched text without the protected hashes merged could expose a test panel.",
+     "label": "shown",
+     "source": "PF/data-pool/DATA-POOL-PLAN-2026-10-06.md section 6; PROTECTED-HASH-JOB.md"
+    },
+    {
+     "claim": "A deploy-time reader can learn from text with only its held-out loss as signal.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC, starting from same-box B2 checkpoints seeds 200/201 (note: only s100/s101 B2 checkpoints are in the project folder); 2M characters from FineWeb shard 1 through the protected filter.",
+    "hours": 2,
+    "arms": "Gated (both checks), ungated (accept every step), frozen.",
+    "pass_mark": "Gated pooled-5 change after reading >= -0.5 on both seeds (scored by us, never inside the loop); gated held-out masked loss down >= 5% relative; frame or vocab up >= +0.5 (2-seed mean); ungated minus gated <= -1.0 (else the gate is not needed). Fixed first.",
+    "proved_wrong": "Gated pooled-5 down more than 2.0 on either seed, or held-out masked loss does not fall."
+   },
+   "rules_check": "R10 is the point: window choice, update, accept/reject and stopping are the model's own; the fetch and generator are outside tools it must call. R1: the generator's answers are hand-written inside that tool only. R5: protected hashes must be merged and inside the fetch tool first. R4: 2-seed screen.",
+   "closest_prior": "None in the plan: all current learning is build-time; fast-sleep and creative loops are separate threads.",
+   "autonomy": "The only deploy-time learning idea here: the model chooses, updates, accepts and stops itself; fails rule 10 if the model cannot call the tools by text.",
+   "merged_from": [
+    "w2c-4"
+   ],
+   "director_score": 2.5,
+   "director_note": "Depends on the cloze idea working first and on rule-5 hashes; may duplicate the fast-sleep thread. Check hardest: whether the loop's gate is itself autonomous at deploy.",
+   "id": "reader-D30",
+   "area": "reader"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "w1d-5",
+   "reason": "Contradicted by shown data: EGR had a per-letter code and no window and still scored cipher_map 2.5-3.3%, so the missing ingredient is local binding, not letter identity; the offset adds only letter identity, and the predicted cipher_map >= 60 is not supported. The offset idea survives only on EGE (merged into the EGE offset idea)."
+  },
+  {
+   "id": "w1d-6",
+   "reason": "Fact-check mismatch and dependency: +41,216 is the tied growth (161 x 256); an untied 269-row input with a 108-row output costs +68,864 and puts T1 over the band top by 4,377. The premise that T1 has passed is false (T1 S3 copy failed at 29-42%), raw bytes are already planned as V1 in PLAN 3b, and all current panels are printable ASCII so no gain is expected."
+  },
+  {
+   "id": "w3e-6",
+   "reason": "Superseded by results: U0 has run (word pieces lost -3.1/-5.4 pooled; cipher_map -3.5, frame -10.8, vocab -6.6) and C0 showed the cap-64 base was not the cause (fair plain model 67.1 vs 67.0). A cap-107 U0 rerun would not change the verdict, and a hand BPE on the question path breaks rules 1 and 10 unless it is a tool."
+  },
+  {
+   "id": "w1i-2",
+   "reason": "Weakest evidence in the set: its motivating cell (letter_ops variant 0/240) is a new-operation failure that a local re-read of reader features is not shown to touch; seven extra reader passes per forward; no mechanism evidence beyond an analogy."
+  },
+  {
+   "id": "w2d-5",
+   "reason": "Dominated by the depth ladder (table-only, 2 layers, 24 layers): a learned mix of all 24 layers cannot be cached (150-220 GB), costs about 10 h for 4 runs, and the linear letter read is flat across layers (22.6-26.3%), so the middle-layer premise is unsupported."
+  },
+  {
+   "id": "w3b-4",
+   "reason": "Gate nominally met (T1 S3 copy failed at 29-42%) but the cause is untrained 4+ digit operands, not the reader (D0 reads digits at 99.997% or better); the planned repair is the Amendment 3 span copy fix and the T1 re-screen, not a digit tool."
+  },
+  {
+   "id": "w3b-5",
+   "reason": "Self-closed by its own evidence: letter-only families show no Gemma loss (letter_ops, copy_word at or above B2 for EGO and EGR), so a SPELL tool has nothing to recover."
+  },
+  {
+   "id": "w1e-5",
+   "reason": "The executor takes regex int() values, not slot vectors; the pooled slot mean only chooses a number and T1's call writer copies digits from characters, so an attention digit read has no shown consumer; revisit after the T1 re-screen."
+  },
+  {
+   "id": "w2c-5",
+   "reason": "Builds on W1, which did not pass its marks (+0.9/+0.1 pooled, F1 -4.1), and needs FineWeb pretraining that is blocked by the unmerged protected-panel hashes; two unconfirmed changes stacked."
+  }
+ ],
+ "area_summary": "Path keys: CIO = /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io; PF = /mnt/project-files. 93 raw ideas merged into 30, 9 dropped. Newest facts (PF/progress-board/data.json, shown), which correct the brief: W1, U0, C0 and T1 have already run. W1 gained only +0.9/+0.1 pooled with lookup families -4.1; U0 word pieces lost -3.1/-5.4 (cipher -3.5, frame -10.8, vocab -6.6), so letters are fine; C0 67.1 vs 67.0 keeps B2's +6.6 lead; T1 exact copy failed at 29-42% for 4+ digits (training coverage). Checkpoints (seeds 200/201) of all four sit in PF/checkpoints/cio-1007/parts (checkpoint.pt only), usable for CPU probes. This weakens every 'richer unit' or 'more global reach' idea and leaves EGE (+1.6/+2.1) as the only positive input result, with its cause unknown. Most promising and cheapest: (1) a random-token control, a table-only EGE with a shrink ladder (whole model 4-17M, so cheap same-size plain comparators exist), and a capacity-matched no-window control; all are B2-class cost and need no Gemma forward. They decide whether Gemma content, piece identity or the window's lost capacity explains the results, and give Ben's rule 3 an affordable route. (2) CPU probes on existing checkpoints: miss attribution, reach, regex-free boundaries, shift. Missing: no rule-10-clean replacement for the Gemma tokenizer alignment (only an attention-alignment probe), the window was never varied beyond 2 vs 0, and q39 (EGE 6-seed) results are not in the files. Caveats for critics: 2-seed marks are screens (noise audit: variant, leak and split-drop clauses are unreliable on 2 seeds; I used -3.0 for split-drop); pair every comparison on one box; all B2-derived arms inherit the 528-row 7-step exception; the PC had about 3.5 GB free disk (undated), which limits a Gemma cache; 8a shows B2's lead over plain shrinking from 3M to 10M, so input-side gains need retesting at larger size."
+}

@@ -1,0 +1,2148 @@
+{
+ "area": "scale",
+ "title": "Make bigger = better: the 8a growth ladder (3M -> 10M -> 30M -> hundreds of millions)",
+ "brief": {
+  "state": "Stage 8a (is bigger better for B2?) is sealed (8A-SPEC-2026-10-07.md, PR #50, addenda A to G) and has not run. Nothing has been measured above B2's 3.3M on the skills data. Every size point in the history is a different design, a different dataset, or one seed: PR #18's +1.9 is an older frozen-1.2B core (9.0 to 35.8M, English new kinds, CI -0.95 to +4.77); B1's 10.9M students ran on TEACH/GEN and were flat on new kinds; the plain 3.2M vs 10.8M calibration is one seed.\n\nB2 baseline (q33, seeds 200-205, 24k updates, 3,302,481 params; recomputed from RESULT.json): pooled-5 74.0 (seed sd 0.6), plain_tf 53.7 (B2 +20.3), plain_tf_steps 67.1 (B2 +6.9, ahead 6 of 6). Chain-5 99.4-99.7. Weak points: variant 34.7 (only +4.8 over plain_tf_steps), held-out kinds 1.6%, fewshot_number_rule (-14.9 vs plain_tf_steps). Leak (loops:0, in_dist) 0-10.8, over the limit of 5 on seeds 201 and 203. Sixteen rounds cost -0.85 pooled.\n\nShape arithmetic (checked against two documented counts): at width 256 a block adds 1,158,604 params, so the 10M band admits only 8 blocks (10,254,105). The spec's 10-12 blocks would be 12.6-14.9M. At width 384 (mlp 6.0) a block adds 2,957,952, so the 30M band admits 9 blocks (28.6M); the spec's 14-16 blocks would be 43-49M.\n\nPlan: rungs 3M, 10M, 30M; a fixed 38% own text and 62% FineWeb-Edu cloze rows; pools 60M (3M and 10M share it) and 190M; seeds 400-405 at each rung; arms B2, plain_tf_steps (C0 if it passes) and an LLM-recipe arm not yet built. Marks: +3.0 per rung with CI above 0; lead over plain not down more than 1.0; at 30M, +3.0 on 5 of 6 seeds; good enough means 3M at least 72.0 and 30M at least pythia-31m +2.0. No 30M rung if 10M minus 3M is below 0. Runs on BensPC. Estimates (suggested): 3M about 9 h, 10M about a day, 30M 4-5 days; 30M waits for Ben.\n\nRisks: the 10M-to-30M step changes width, learning rate, updates and pool at once. Cloze answers are mostly absent from the prompt, so B2 must spell them with its char generator, which was trained only on short answers. B2 still has hand parts (regex spans, in-forward executor, str() renderer, a 7-step cap that gives 528 train rows no program), so 8a measures today's design. The 30M shape probably needs micro-batches to fit 16 GB (suggested).",
+  "facts": [
+   {
+    "claim": "B2 has 3,302,481 trainable params: copy=True, S shape (width 256, 2 controller blocks, 8 rounds, 2-conv reader with +-4 window, vocab 108).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py lines 1-12; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s200/RESULT.json (n_params)"
+   },
+   {
+    "claim": "q33 six-seed pooled-5 (in_dist+answer+frame+vocab+variant, 6,040 rows): B2 74.02 (sd 0.63, range 73.0-74.7); plain_tf 53.68; plain_tf_steps 67.13. B2 minus plain_tf +20.34 (ahead 6/6); B2 minus plain_tf_steps +6.89 (range +4.6 to +8.4, ahead 6/6).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/{B2,tf,tfsteps}_s200..s205/RESULT.json final_eval; recomputed by me"
+   },
+   {
+    "claim": "Per split, B2 vs plain_tf_steps (6-seed mean exact): in_dist 90.5 vs 87.3; answer 74.2 vs 61.2; frame 87.7 vs 81.9; vocab 87.4 vs 78.0; variant 34.7 vs 29.9; held-out families 1.6 vs 1.2 (family split is 160 rows, not in pooled-5). Split sizes 1360/1200/1360/800/1320.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json final_eval"
+   },
+   {
+    "claim": "Per family, pooled-5 B2 minus plain_tf_steps (6-seed): fewshot_number_rule -14.9, verify_claim -5.6, rule_apply -4.8, order_chain -3.9, digits_parity -2.9, prop_eval -2.2. B2 ahead by 22 to 34 on backward_solve, object_track, seq_cycle, cipher_map. B2 behind on 9 of 34 families.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json final_eval by_family"
+   },
+   {
+    "claim": "Chain-5 (1,000 rows): B2 99.4, 99.6, 99.6, 99.5, 99.6, 99.7 on seeds 200-205. plain_tf_steps about 94 (seeds 200-202: 94.4, 93.9, 93.7). Plain_tf_steps with the C1' calculator 96.2-96.6.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json chain5; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 1"
+   },
+   {
+    "claim": "Leak check (loops:0, in_dist, limit 5) for B2 seeds 200-205: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00. Seeds 201 and 203 are over the limit.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json lesions.loops:0; PASS-MARKS.md lines 56 and 176"
+   },
+   {
+    "claim": "Rounds (q33 6 seeds, minus intact): loops:16 pooled-5 -0.85 mean (range -0.51 to -1.18), in_dist -0.8 to -1.9; loops:2 pooled -40.5; loops:1 pooled -52.9. Trained count is 8 rounds.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json lesions"
+   },
+   {
+    "claim": "Lesions, in_dist, seeds 200-205: noexec 51.4-53.0 (intact 89.6-91.5); shuffle_state 7.8-8.2; zero_state 0.0; opswap 67.0-68.9; nocopy 78.2-80.4.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json lesions"
+   },
+   {
+    "claim": "Training recipe: AdamW betas (0.9, 0.95); weight decay 0.1 on matrices only; grad clip 1.0; linear warmup 300 steps then cosine to 10% of base lr. q33 used batch 256, lr 1e-3, bf16, 24,000 steps. The --minutes flag makes the cosine depend on wall-clock time.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (lr_at, optimizer block, lines 127 and 156)"
+   },
+   {
+    "claim": "Init: B2 output projections use std 0.02/sqrt(3 x blocks x rounds); PlainTF residual projections use std 0.02/sqrt(2 x layers x loops).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py __init__; models/plain_tf.py __init__"
+   },
+   {
+    "claim": "Speed on BensPC: B2 at 3.3M ran 1.6-6.7 steps/s in the 3-job q33 queue (train_s 13,160 and 15,164 s for seeds 200 and 201); 8.2 steps/s (29-b2-screen) and 9.6 (40-egw, same size) in other queues. plain_tf_steps seed 200 ran 14.3 steps/s but seed 201 ran 1.9 in the same queue, so the 7.8x ratio in addendum B is a GPU-sharing artefact.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*, 29-b2-screen/B2_s100, 40-egw-s200/B2V_s200 RESULT.json (steps_per_s, train_s)"
+   },
+   {
+    "claim": "B2-M (10.9M, width 384, 3 blocks, copy+span) on TEACH/GEN, 16k updates, 2 jobs sharing: 5.9-6.9 steps/s; peak GPU memory 5.7-6.0 GB at batch 256. Plain 10.8M (d384, 6 layers) ran 18.0 steps/s solo in 02-calib-long.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/35-pc-b1-students/*/RESULT.json; results/02-calib-long/tf10m_24k/RESULT.json"
+   },
+   {
+    "claim": "Block parameter arithmetic from the code (reproduces the documented counts 10,254,105 for 8 blocks at width 256 and 10,890,041 for B2-M with copy): width 256 mlp 4.8 block = 1,158,604, non-block part 985,273; width 384 mlp 6.0 block = 2,957,952, non-block part 2,016,185 (copy on); width 384 mlp 4.8 block = 2,603,443; width 512 mlp 4.8 block = 4,624,281.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py CBlock and Ledger.__init__ (arithmetic by me); checked against the span docstring (10,890,041) and /mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md line 10 (10,254,105)"
+   },
+   {
+    "claim": "10M band (9.5-10.5M): width 256 admits only 8 blocks (10,254,105, +2.5%). 10 blocks = 12,571,313 (+25%); 12 blocks = 14,888,521. The spec's 10-12 blocks is outside the band.",
+    "label": "shown",
+    "source": "derived from ledger.py block arithmetic (see previous fact); /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 2"
+   },
+   {
+    "claim": "30M band (28.5-31.5M): width 384 with mlp 6.0 admits 9 blocks (28,637,753, -4.5%); 10 blocks = 31,595,705 (+5.3%, out). With mlp 4.8, 11 blocks = 30,654,058 (+2.2%, in) and 10 = 28,050,615 (out). The spec's 14-16 blocks = 43.4M to 49.3M (mlp 6.0). The spec does not fix mlp for 30M.",
+    "label": "shown",
+    "source": "derived from ledger.py block arithmetic; /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 2"
+   },
+   {
+    "claim": "The roadmap's ~100M thinker shape (about 30 blocks at width 512) is about 140M at mlp 4.8; about 21 blocks give about 100M.",
+    "label": "shown",
+    "source": "derived from ledger.py block arithmetic; /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 1.1 table"
+   },
+   {
+    "claim": "Size band in code: SIZE_BAND = plain_tf S +-3% (3,147,208 to 3,341,880). train.py only prints an 'inside' flag; it does not stop a run. Addendum G's 3M B2 is 3,346,513 (+3.1% over 3,244,544, 4,633 above the band top); plain_tf arm 3,297,536 (within 1.5% of it).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (PLAIN_TF_S, SIZE_BAND, size event); /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 17 (addendum G)"
+   },
+   {
+    "claim": "Length caps in the code today: MAX_PROMPT 208 letters (asserted in training); MAX_ANS 8; GEN_MAX 8 (gold() cuts answers to 8 letters); N_NUM 16; N_RES 7 program steps; W_MAX 64 words; plain_tf_steps CAP 64 with answer-only fallback in target_text, and targets cut at cap+12.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/data.py line 11; models/ledger.py lines 62-63 and gold(); models/progparse.py line 8; models/plain_tf_steps.py lines 21, 108 and target_text"
+   },
+   {
+    "claim": "A training row with more than 7 program steps gets an empty program, so it trains with no program (answer-only). 528 train rows (list_stats, 9-11 steps) are affected. Train max prompt 204 letters, 11 numbers, 50 words, 11 steps.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py line 199 (_targets); /mnt/project-files/no-hardcoding/LIMIT-COUNTS-2026-10-07.json (train program_over_7 528)"
+   },
+   {
+    "claim": "Hand parts still inside B2 (ship rule, Ben 2:45 PM ET): regex number spans (NUM_RE, spans()), word splitter (data.word_spans), hand place code, in-forward int64 executor (execute()), str() NUM printer and word-slice renderer. The roadmap says 8a's B2 cannot ship.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py spans(), execute(), talk(); /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 4.1"
+   },
+   {
+    "claim": "Cloze answers are usually not in the prompt: the blank replaces the blanked word, so only copies from a repeat in the chunk can be pointed at. The rest must be spelled by B2's GEN char generator (pointer-generator over prompt chars, GEN_MAX registers), which the skills data trained only on short answers. The spec keeps repeat rows and reports their share but does not analyse the GEN path.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py talk() and gen_copy(); /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 4"
+   },
+   {
+    "claim": "Built 8a web slices (FineWeb-Edu shard 0, grade 12 and below, 0 panel hits): rung3 12.4M, rung10 37.2M, rung30 117.8M GPT-2 tokens, nested and prefix-checked. Own text prefixes 7.6M / 22.8M / 72.0M LFM tokens. Pools 20M / 60M / 190M.",
+    "label": "shown",
+    "source": "/mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 10 (manifest and tgz not in this checkout)"
+   },
+   {
+    "claim": "Own-text near-repeats (same problem, new numbers): 20.5% / 23.1% / 25.5% at the 7.6M / 22.8M / 72.0M prefixes; target was 10% or less. Accepted and reported, not gated.",
+    "label": "shown",
+    "source": "/mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 10; /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 14 (D2)"
+   },
+   {
+    "claim": "Measured data stock: skills 5.4M + English generator 5.7M + TEACH 3.25M = 14.3M word pieces (LFM tokenizer). Roughly 50M usable tokens at 20 per parameter gives the roadmap's about 2M trained parameters. The 12M figure is stale.",
+    "label": "shown",
+    "source": "/mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 2; /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 1.3"
+   },
+   {
+    "claim": "Calibration, plain char transformers from scratch, skills data, one seed each: 8k updates pooled-5 3.2M 46.97 vs 10.8M 45.51. 24k updates seed 0: 3.2M 52.73 vs 10.8M 54.93. Four seeds of 3.2M at 24k: 52.7, 54.7, 54.7, 54.6 (mean 54.2, sd 1.0). In_dist: 10.8M 76.0 vs 3.2M 4-seed mean 75.7.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/CALIBRATION.md; results/01-calib/tf3m, tf10m; results/02-calib-long/tf3m_24k, tf10m_24k; results/03-noise"
+   },
+   {
+    "claim": "Looped plain transformer tf2x4 (1,665,024 params, 2 layers x 4 loops) at 8k updates, one seed: pooled-5 40.15, vs 46.97 for the 3.2M plain model.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/01-calib/tf2x4/RESULT.json"
+   },
+   {
+    "claim": "PR #18 fair scaling is not a B2 result: a frozen-1.2B-era core scaled 9.0 to 17.9 to 35.8M on NEW-KINDS-S, 6 seeds: 64.4 / 65.3 / 66.3; S3 minus S1 +1.9, CI -0.95 to +4.77; training fit did not rise. Source branch origin/claude/project-thread-6qsyg1 is not in this checkout.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/research/results-digest.md row 11; research/baselines.md (fair scaling paragraph)"
+   },
+   {
+    "claim": "Test B1 (10.9M B2-M and 10.8M plain on TEACH/GEN, 2 seeds): new-kinds pooled b2t 11.20, b2g 10.42, plain 13.93; FRESH b2t 22.92, b2g 48.96, plain 17.71. Held-out in-own-mix 91-97%. B1-a (TEACH minus GEN) +0.78 vs +15 needed: proved wrong. B1-c failed (-2.73).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-B1.md"
+   },
+   {
+    "claim": "D0 digits: the reader carries digits (lowest place 99.997-100% on six seeds). Zeroing controls 2-7 (ctl27) costs -0.6 to -13.6 pooled-5, so the thinker's controls are used unevenly across seeds.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "D0b: of 72 failing chain-5 rows for plain_tf_steps (with calculator), 58 are answer-only training rows (steps+answer over 64 chars). Copy errors 0 of 2,000 rows.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "Reader results (2-seed screens): window removed (R0) costs 6.3-6.8 pooled-5 and cipher falls to 4; EGE (EmbeddingGemma 2 in front of the window) +1.59 / +2.12, missed 2 of 5 marks (variant +1.70 vs +3.0; leak 18.1 on seed 200). Window-free Gemma readers failed; EGT failed; EGK unstable (NaN).",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 2 and 5 (row 2b); /mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md table"
+   },
+   {
+    "claim": "EGE sizes: trainable 3,500,881; whole 274,503,505 (EmbeddingGemma text part 271,002,624 frozen, not trained).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/39-pc-ege-confirm.txt header; models/ledger.py docstring"
+   },
+   {
+    "claim": "Public-model mark: pythia-31m (30.5M) fine-tuned on the same question rows at default lr 1e-4 (8A spec). PASS-2 instead swept lr over 1e-4, 3e-4, 1e-3 with 6k-update runs, which the marks say can only flatter pythia. PASS-2's pretrained baselines (queue 30) have not run.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md lines 46-49; /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum A2 item 5"
+   },
+   {
+    "claim": "Looping as a size substitute (literature, from the scan): Closing the Loop (arXiv 2610.00673) reports a 1.4B looped LM beating a parameter-matched dense model on 12 of 12 benchmarks with 310B tokens (abstract opened). Looped Diffusion Transformer (2609.40305): a 260M model beats 6.5x larger (blurb only). Muennighoff 2023 (data reuse up to about 4 epochs) is cited by the roadmap, not checked here.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/arxiv-bangers-scan.md items 2 and 5; /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 1.3"
+   },
+   {
+    "claim": "Protected panels (GOLD-PRIVATE, reserved, blind) are not yet hashed or merged into the overlap index. 8a may train before the check, but it must pass before 8c, and any flagged web document leaves the pool.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum A1 and section 9 item 2; /mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 6; /mnt/project-files/data-pool/PROTECTED-HASH-JOB.md"
+   },
+   {
+    "claim": "8a stop rule: no 30M rung if B2's 10M-minus-3M pooled-5 mean is below 0. Good-enough marks: 3M mean at least 72.0 (q33 74.0 minus 2.0); 30M B2 at least pythia-31m plus 2.0 with CI above 0. Growth marks: +3.0 per rung with CI above 0; lead not down more than 1.0; +3.0 on 5 of 6 seeds at 30M; chain-5 at least 99.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md sections 6, 7 and addendum A2"
+   },
+   {
+    "claim": "8a rung design as sealed: 3M = B2 width 256, 2 blocks; 10M = width 256, 8 blocks in the first look (spec says 10-12); 30M = width 384. Seen = 20 word pieces per parameter or a 24k-update floor, whichever is larger. 3M and 10M share the 60M pool and rows (about 3.9 passes at an assumed 38 pieces per row). 30M: about 600M seen, about 62k updates, pool 190M (about 3.2 passes). LR 1e-3 at 3M and 10M, 6.7e-4 at 30M.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md sections 2, 4, 5 and addenda B1, C"
+   },
+   {
+    "claim": "Mean row length of 38 word pieces (used for the 3.9-pass and 62k-update estimates) is an estimate. Skills rows measured 26.9 tokens; TEACH rows 18.9; web chunks up to 280 letters not measured with the tokenizer.",
+    "label": "untested",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum B1; /mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 2 and section 5"
+   },
+   {
+    "claim": "Addendum G shape for every 8a B2 arm: 12 rounds, 36 answer registers, 106 workspace slots (91 numbers, 4 constants, 11 results), 44 controller tokens (8 control + 36 registers), reads up to 280 letters. q33 had 8 rounds, 9 registers, 27 slots.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum G (section 17) and F4 (section 16)"
+   },
+   {
+    "claim": "Time estimates for 8a on BensPC: 3M (6 seeds, all arms) about 9 h; 10M about a day; 30M 4-5 days, about 2 more days if SmolLM2-360M is the public model. Addendum G3 says the 3M figure is probably low. Block-applications per forward (blocks x rounds): B2-S 16, B2-M 24, deep 10M 64, the 30M shape with G's caps 108.",
+    "label": "suggested",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum C (section 13) and G3 (section 17); block counts derived from the spec and ledger.py"
+   },
+   {
+    "claim": "Compute estimates from the code (my arithmetic, not timed): the 30M shape with G's caps (9 blocks, 12 rounds, 44 tokens, width 384) has about 11x the block-token work of B2-M, so batch 256 probably needs micro-batching under 16 GB (addendum C rule). The deep 10M (8 blocks x 8 rounds x 17 tokens, width 256) costs about the same per update as B2-M, so its time depends on call overhead, not FLOPs. Untested.",
+    "label": "suggested",
+    "source": "derived from ledger.py block arithmetic and results/35-pc-b1-students RESULT.json (peak 5.7-6.0 GB)"
+   },
+   {
+    "claim": "The 8a build (cloze.py, analyze_8a.py, depth configs, param counter) is not in this checkout (commit 2b1cbd4d7). Addendum F cites PR #51 (claude/project-thread-f1to6a) as the build; not checked here.",
+    "label": "shown",
+    "source": "find of /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code (no cloze or analyze_8a files); /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum F"
+   }
+  ],
+  "tried_and_failed": [
+   {
+    "what": "B2 vs same-size plain transformers, six-seed confirm (q33, 24k updates, 3.3M)",
+    "result": "Passed PASS-1: B2 74.0 vs plain_tf 53.7 (+20.3) and plain_tf_steps 67.1 (+6.9), ahead 6 of 6. B2 leak over 5 on seeds 201 and 203. PASS-2 pretrained baselines not run.",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 2; results/33-pc-confirm-b2 RESULT.json"
+   },
+   {
+    "what": "Plain 3.2M vs 10.8M, same data, one seed, 8k and 24k updates (calibration)",
+    "result": "8k: 10.8M lower (45.5 vs 47.0). 24k seed 0: +2.2 pooled, but +0.7 vs the four-seed 3.2M mean and +0.3 in_dist. Inconclusive; not a seed-matched 6-seed test.",
+    "source": "/mnt/project-files/../scratchpad/code/reader/custom_io/CALIBRATION.md; results/01-calib, 02-calib-long, 03-noise"
+   },
+   {
+    "what": "Looped plain model 1.7M, 2 layers x 4 loops, vs 3.2M (8k, one seed)",
+    "result": "Worse: pooled-5 40.2 vs 47.0.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/01-calib/tf2x4/RESULT.json"
+   },
+   {
+    "what": "PR #18 fair scaling: frozen-1.2B-era core 9.0 to 35.8M on English new kinds (6 seeds)",
+    "result": "Flat: +1.9, CI -0.95 to +4.77; not B2; training fit does not rise.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/research/results-digest.md row 11"
+   },
+   {
+    "what": "Test B1: 10.9M B2-M students on TEACH (171,940 teacher rows) vs GEN vs plain 10.8M, 2 seeds",
+    "result": "Proved wrong: TEACH minus GEN on new kinds +0.78 vs +15 needed. B2 minus plain on TEACH -2.73 (failed). Students memorised their own mix (91-97%) and reached about 11% on new kinds.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-B1.md"
+   },
+   {
+    "what": "More rounds than trained (loops:16 on the q33 B2 at 8 trained rounds)",
+    "result": "No gain: pooled-5 -0.85 mean (range -0.5 to -1.2); in_dist -0.8 to -1.9. In-distribution saturates at 8 rounds.",
+    "source": "results/33-pc-confirm-b2/*/RESULT.json lesions.loops:16"
+   },
+   {
+    "what": "Test LR: training the answer at every round (round readout, q33 seeds)",
+    "result": "Pooled +1.14 and +1.27 but failed marks: 16-round check -0.51 on seed 200 (limit 0.3); leak 15.9 on seed 200.",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 2; PASS-MARKS.md addendum 5"
+   },
+   {
+    "what": "Reader without the +-4 letter window (R0)",
+    "result": "Lost 6.3-6.8 pooled-5; cipher_map falls to 4.2%.",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md table"
+   },
+   {
+    "what": "Gemma readers without the window (EGW, EGM, EGO, EGR), EGT (teacher only), EGK (Gemma into thinker)",
+    "result": "All failed marks; EGK unstable (NaN on seed 201, crash on another run).",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 2 and row 2b"
+   },
+   {
+    "what": "EGE (EmbeddingGemma 2 in front of window), 2-seed screen",
+    "result": "+1.59 / +2.12 pooled-5, every split up; missed 2 of 5 marks (variant +1.70 vs +3.0; leak 18.1 on seed 200). 6-seed confirm running (see planned).",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 2"
+   },
+   {
+    "what": "Digit reading check D0 (linear probe on the reader)",
+    "result": "Passed on six seeds, lowest place 99.997-100%. Zeroing controls 2-7 costs -0.6 to -13.6 pooled-5.",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "what": "D0b: where plain_tf_steps' calculator text baseline loses chain-5",
+    "result": "58 of 72 failing rows are answer-only training (64-char cap); copy errors 0 of 2,000. Motivated C0 (cap 107).",
+    "source": "/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md"
+   },
+   {
+    "what": "Hand place code for plain transformers (screen)",
+    "result": "No effect: +0.8 / -0.8.",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md (cites RESULTS-SCREEN.md:57)"
+   },
+   {
+    "what": "Own generated text variety (skills and English generators)",
+    "result": "Limit found, not a test: 1.7M shape-unique skills rows (about 46M tokens); English passages collapse to about 19k skeletons per 60k draws; 20-26% near-repeat rows in own text.",
+    "source": "/mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md sections 2 and 10"
+   },
+   {
+    "what": "Distractor numbers in long questions (notes RESULTS-8; frozen-core line, not B2)",
+    "result": "Not a B2 result: +33.9 on DISTR chain but guard Blind-2 -3.6.",
+    "source": "/mnt/project-files/notes/RESULTS-8.md"
+   }
+  ],
+  "planned_or_running": [
+   {
+    "what": "q39: EmbeddingGemma 2 (EGE) 6-seed confirm, seeds 202-207, on BensPC",
+    "status": "Running since 2:56 AM ET 10-07; expected 9 PM to midnight ET. Under addendum F it only adds a 2-seed extra arm at 10M (B2 with EGE); the letter reader is used at every 8a rung.",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 6; 8A-SPEC addendum F1"
+   },
+   {
+    "what": "q43: C0 = plain_tf_steps with cap 107 (3,271,424 params), seeds 200 and 201",
+    "status": "Queued after q39. If its 2-seed pooled-5 mean reaches plain_tf_steps', C0 replaces plain_tf_steps as the yardstick in 8a. If B2 minus C0 falls more than 3.0 below +6.9, the +6.9 claim is withdrawn until a 6-seed C0 confirm.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/43-pc-c0.txt; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 3.1; 8A-SPEC addendum D1"
+   },
+   {
+    "what": "First look: B2 8-block (10,254,105) vs q33 B2-S on seeds 200 and 201; readout of pooled-5, chain-5, leak, seconds per update, peak memory",
+    "status": "Planned to run tonight after q39 and C0. Readout about 7 AM ET 10-08. Encouraging if 10M minus 3M is at least +3.0 on both seeds; flat if under +1.0. The run's queue file is not in this checkout (queue_local ends at 44), so its status is unverified.",
+    "source": "/mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md"
+   },
+   {
+    "what": "q44: PT13-C0 plain model, 13 layers, width 256 (10,379,264 params), seeds 200 and 201",
+    "status": "Queued after the first look; the 10M plain arm of the first look.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/44-pc-8a-pt13-c0.txt"
+   },
+   {
+    "what": "q40 T1 (calculator outside, tool model, 3,277,393 params); q41 U0 (BPE prompt, 3,339,776 params); q42 W1 (global attention in reader, 3,336,113 params)",
+    "status": "Queued on the PC after C0; not run in this snapshot. T1 is the 2c2 test and gates the ship design (B3).",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/40, 41, 42"
+   },
+   {
+    "what": "8a speed probe: 200 updates of each arm at 3M, 10M and 30M shapes; seconds per update and peak memory",
+    "status": "Planned first on the PC when free (about 20 minutes). Its result sets the 10M and 30M caps and whether micro-batching applies.",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum C (section 13)"
+   },
+   {
+    "what": "8a rungs: 3M (6 seeds 400-405, arms B2, plain_tf_steps (C0 if it passes), LLM recipe), then 10M (same arms plus B2-M depth check, 2 seeds), then 30M (waits for Ben's PC-or-rent decision after measured time)",
+    "status": "Spec sealed; not run. The build (cloze.py, pool assembler, depth configs and counter, LLM arm, box launcher, analyze_8a.py) is not in this checkout.",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md sections 3-10, addenda A-G"
+   },
+   {
+    "what": "LLM-recipe arm: plain causal transformer on raw web text with next-word loss plus question rows as text",
+    "status": "Specified (8A-SPEC section 3), not built. Reported, not gated.",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 3"
+   },
+   {
+    "what": "U0 LLM-BPE arm (BPE prompt), added to each rung not yet started",
+    "status": "Queue 41 (U0 result) pending; arm not in 8a yet.",
+    "source": "/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md; 8A-SPEC section 3"
+   },
+   {
+    "what": "Quarter-pool diagnostic at 30M (2 seeds): B2 on a quarter of the unique pool with the same seen budget",
+    "status": "Planned in the spec; if within 1 point of full pool, data variety is the limit.",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 7"
+   },
+   {
+    "what": "Protected-panel hash merge into the overlap index (PROTECTED-HASH-JOB) and re-scan of web slices",
+    "status": "Must pass before 8c; 8a may train before it (addendum A1).",
+    "source": "/mnt/project-files/data-pool/PROTECTED-HASH-JOB.md; /mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 9"
+   },
+   {
+    "what": "Design tests at 3.3M, outside 8a: 2c1 (learned number reading), 2c2 = T1 (calculator as tool), 2d (learned stop); then B3 (T1, K1, O1, N1, P1, V1, H1, L1, ST1)",
+    "status": "Specs in progress; none run. B3 joins 8a as a catch-up arm after its 3M confirm.",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 5; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md section 2"
+   },
+   {
+    "what": "8c: about 400M whole (thinker about 100M, talker about 25M, EGE or letter reader), only after 8a passes",
+    "status": "Not started; money asked first (about 6 PC days or about $30 per run).",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 8; whole-model-roadmap-2026-10-06.md section 1.1"
+   }
+  ],
+  "open_questions": [
+   "Which pool does the 3M rung train on? Addendum B1 says 3M shares the 60M pool with 10M (rung10 web slice, 37.2M). Section 4 and the built rung3 slice (12.4M, the 20M pool) say otherwise.",
+   "Which block counts go in the spec? The band forces 8 blocks at width 256 for 10M; for 30M, 9 blocks at mlp 6.0 or 11 at mlp 4.8. The mlp for the 30M shape is not fixed.",
+   "Does the 3M B2 stay at 3,346,513 (addendum F3, which allows +3%) or come back inside the sealed +-3% band that PLAN-AND-MARKS section 2 uses?",
+   "Which depth-check arm: B2-M with copy (10,890,041, the arm all B2 rungs use) or the spec's 10,814,968 (no copy)?",
+   "Does the 30M shape fit 16 GB at batch 256? If not, how many micro-batches, and what does that cost in wall time? Untested.",
+   "How many cloze answers are copyable from the chunk (the spec reports the share, but does not gate it), and does B2's GEN path spell words it never saw in short-answer training? No mark covers this.",
+   "The 10M-to-30M step changes width, LR, updates and pool together. Can the quarter-pool diagnostic (2 seeds at 30M) separate data from size? Which marks are attributed to which change?",
+   "Will the C0 result (queue 43) replace plain_tf_steps as the yardstick? If so, mark 2 tightens and the +6.9 claim may need a 6-seed C0 confirm.",
+   "pythia-31m lr for mark 5: default 1e-4 (8A spec) or PASS-2's sweep over 1e-4, 3e-4, 1e-3? PASS-2's pretrained baselines (queue 30) have not run.",
+   "Is --minutes (wall-clock cap, changes the cosine schedule) forbidden for every 8a arm? The spec does not say.",
+   "Rule 7 in the code: GEN_MAX and N_REG (8 today), plain_tf_steps' answer-only fallback and cap+12 cut, and progparse's empty program over 7 steps must all be lifted before 8a. The build that does this is not in this checkout.",
+   "The leak check: the spec flags loops:0 above 5 at 30M only if it is more than 5 above 3M. Should a 30M leak above 5 count as a failure, given the gain may then come from the reader?",
+   "The LLM arm reads letters or word pieces? U0 (BPE) is pending, so the LLM arm's tokenizer is not fixed.",
+   "8a keeps 12 rounds from 3M (addendum G), so its B2 differs from q33 in rounds, registers, caps and data. Should a 3M B2 at 8 rounds run to isolate the caps effect?",
+   "Tokenizer units: own text is measured in LFM tokens, web in GPT-2 counts, and both are summed into 20M/60M/190M pools. Is the mix exactly 38/62 in the units that are trained on?"
+  ],
+  "corrections": [
+   "PR #18 is not a B2 result. Its +1.9 (CI -0.95 to +4.77) came from an older frozen-1.2B core (9.0 to 35.8M) on English new kinds. B2 has never been scaled past 3.3M on the skills data. The roadmap's 'the 4x bigger core gave only +1.9' describes a different design.",
+   "The calibration's '10.8M plain gained +2.4 in_dist over 3.2M' compares seed 0 with seed 0; seed 0 is the lowest 3.2M seed. Against the four-seed 3.2M mean (75.7 in_dist, 54.2 pooled), the 10.8M gain is +0.3 in_dist and +0.7 pooled. At 8k updates the 10.8M was lower (45.5 vs 47.0).",
+   "Per-family numbers: fewshot_number_rule is -14.9 pooled-5 (in_dist -26.2), not -9. rule_apply is -4.8 pooled-5 (in_dist -3.3), not -6. Also verify_claim, a step family, is -5.6.",
+   "Rounds: loops:16 costs -0.85 pooled-5 (range -0.5 to -1.2) and -0.8 to -1.9 in_dist. The summary's '-1.2 to -1.9' does not match the six-seed RESULT files.",
+   "B2 chain-5 is 99.4-99.7 on the six q33 seeds (RESULT chain5), not 99.4-99.8.",
+   "The data-stock figure of about 12M word pieces is stale. Measured stock is 14.3M (skills 5.4 + English 5.7 + TEACH 3.25). The roadmap's 'about 2M trained parameters' comes from about 50M usable tokens at 20 per parameter.",
+   "8A-SPEC section 2 block counts conflict with its own parameter bands. At width 256, 10-12 blocks give 12.6-14.9M, outside the 10M +-5% band; only 8 blocks fit. At width 384, 14-16 blocks give 43-49M (mlp 6.0), outside the 30M band; 9 blocks fit. The roadmap's ~100M thinker at 'about 30 blocks at width 512' is about 140M; about 21 blocks give about 100M.",
+   "The depth-check arm is listed as B2-M with 10,814,968 params. That is the no-copy count. B2 arms use copy, so the matching count is 10,890,041.",
+   "The 3M rung's B2 at 3,346,513 (addendum G) is 3.1% above the 3,244,544 base and above the sealed band top (3,341,880). The spec's section 2 table still says 3,302,481. train.py prints an 'inside' flag and does not enforce the band.",
+   "The 3M pool conflicts: section 4 says 20M; addendum B1 says 3M shares the 60M pool with 10M; the built rung3 slice matches the 20M pool. Which slice trains is unresolved.",
+   "'One change' does not hold at 30M. The 10M-to-30M step changes width (256 to 384), LR (1e-3 to 6.7e-4), updates (24k to about 62k) and pool (60M to 190M). The 3M-to-10M step is depth only, on identical rows.",
+   "The 'B2 is 7.8x slower per update than plain_tf_steps' ratio compares B2 seed 200 (1.82 steps/s) with plain seed 200 (14.3 steps/s). Plain seed 201 ran at 1.9 steps/s in the same queue, so the ratio mostly reflects GPU sharing. The first look's '6.7 updates/s' for B2-S is a shared-GPU figure, not a solo measurement here.",
+   "Seeds: the 8a spec uses seeds 400-405 at every rung and marks are read on those seeds. The first look and C0/PT13 use seeds 200-201. Only 400-405 runs count for 8a marks.",
+   "The 8a build (cloze.py, analyze_8a.py, depth configs, parameter counter) is not in this checkout (commit 2b1cbd4d7), and the first look's B2-8 queue file is missing. The summary's 'runs tonight' is unverified.",
+   "Ben's no-hard-coding rule: B2 as coded violates rule 1 (regex number spans, in-forward executor, str() printer, word splitter). The summary does not say so. 8a measures today's design, and the roadmap states B2 cannot ship (section 4.1).",
+   "Cloze answers are mostly not in the prompt, because the blank replaces the word. B2 must spell them with its char generator, which was trained on short skills answers. The summary's risk list omits this."
+  ]
+ },
+ "raw_count": 100,
+ "distinct": [
+  {
+   "title": "Re-power and pre-register the 10M first-look gate",
+   "summary": "The sealed first-look rule calls 10M encouraging only at +3.0 on both seeds, which fires 25% of the time at a true +3 and 2% at a true +2, so it will mostly read unclear. Replace or add a dated GO/STOP rule (2-seed mean at least +1.0 with both seeds above 0 opens the six-seed 10M rung; mean under +0.5 stops it; otherwise add seed 202), write a point forecast now, and fix the missing plain-10M arm. Zero compute.",
+   "change": "Dated amendment to FIRST-LOOK-10M-2026-10-07.md before the run (it edits a sealed readout, so it needs Ben or coordinator sign-off); keep the sealed bins as a reported column. Add PT13-C0 (10,379,264 params, about 25-45 min a seed, suggested) to each rented box, or amend the clause that compares B2-10M with a plain 10M. Check that B2D (8 blocks, four runs sharing one card) finishes inside the 4 h per-box kill. Write the forecast: 10M minus 3M about +1.1 to +1.5, 80% interval -0.5 to +3.5. 0 params.",
+   "why": "Seed sd of B2 pooled-5 is 0.63 and paired B2 minus plain_tf_steps sd is 1.33 (shown). At paired sd 0.9 the sealed rule gives P(encouraging) 0.02 at +2.0 and 0.25 at +3.0, while the proposed gate gives P(go) 0.05 at 0, 0.48 at +1.0, 0.76 at +1.5 (simulation). Size-to-size paired sd is untested, so the gate is checked across 0.6 to 1.33.",
+   "evidence": [
+    {
+     "claim": "Six q33 seeds: B2 pooled-5 mean 74.02, seed sd 0.63; B2 minus plain_tf_steps paired mean +6.89, sd 1.33 (per seed +4.60 to +8.36).",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/{B2,tfsteps}_s200..s205/RESULT.json final_eval (recomputed by two checkers)"
+    },
+    {
+     "claim": "Monte Carlo (normal paired differences): sealed rule P(encouraging) 0.02 at true +2.0 and 0.25 at +3.0 (sd 0.9); proposed gate P(go) 0.05/0.48/0.76 at true 0/+1.0/+1.5 (sd 0.9) and 0.12/0.65 at 0/+1.5 (sd 1.33). Both-rung pass of the 6-seed +3.0 mark is about 25% at a true +3.",
+     "label": "suggested",
+     "source": "simulations in verify-time-and-power and w2g-1; assumed normality; size-to-size sd untested"
+    },
+    {
+     "claim": "Amendment 2: two rented 5090s, each runs the 3M pair (B2, C0) and B2D; the PC no longer runs B2D or queue 44 (PT13-C0). So no plain 10M exists for the lead clause. Each run is killed at 4 h of box uptime.",
+     "label": "shown",
+     "source": "/mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md Amendment 2"
+    },
+    {
+     "claim": "Analogue prior for 3.3M to 10M is about +1.1 (plain 3.2M vs 10.8M +0.76 pooled on one 10.8M seed at a changed lr; old frozen core +1.9, CI -0.95 to +4.77).",
+     "label": "suggested",
+     "source": "custom_io/CALIBRATION.md; research/results-digest.md row 11; verify-scaling-evidence"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "Python over the q33 RESULT.json files plus a simulation; no GPU; must be done before the first look is read (readout about 7 AM ET 10-08)",
+    "hours": 0.5,
+    "arms": "Sealed two-seed readout vs proposed two-seed gate with a third-seed fallback, at paired sd 0.6, 0.9 and 1.33",
+    "pass_mark": "New gate has P(go) at most 0.12 at true 0 and at least 0.60 at true +1.5, for sd 0.9 and 1.33; forecast is scored on the first-look 2-seed mean (holds if inside -0.5 to +3.5)",
+    "proved_wrong": "The 3-seed version still has power under 0.60 at +1.5 when sd is 1.33 (then 10M cannot be decided inside the budget and waits for the data/size and width-ladder screens); forecast is wrong if the 2-seed mean falls outside -0.5 to +3.5."
+   },
+   "rules_check": "Rule 4: gate fixed and dated before the run; two- and three-seed readouts stay screens, claims need six seeds. Rule 3: adding PT13-C0 keeps a same-size plain. Rule 6: no PC time. Rule 1: nothing added to the model. Changing a sealed readout needs a dated addendum.",
+   "closest_prior": "FIRST-LOOK readout (1:53 PM) and 8A-SPEC section 7 marks; this changes only the 2-seed screen rule and adds a forecast and the missing plain arm.",
+   "autonomy": "Build-time decision rule for running a rung; no deploy-time step. The deployed model is unchanged.",
+   "merged_from": [
+    "w2g-1",
+    "w1b-6"
+   ],
+   "director_score": 9,
+   "director_note": "Time-critical and free. Critics should check: (1) whether the first look has already started, since the amendment must precede any run; (2) that the simulated sd is a guess for size-to-size pairs; (3) whether adding PT13-C0 or B2D blows the 4 h kill; (4) that moving the gate lower is not post-hoc fitting to a likely result.",
+   "id": "scale-D1",
+   "area": "scale"
+  },
+  {
+   "title": "Block-use census: skip-one-block and per-round share on saved checkpoints",
+   "summary": "Before buying more depth, measure on trained checkpoints whether each controller block and each round actually changes the answer. Skip one block (all rounds, early rounds, late rounds), halve it, and log each application's update size relative to the state; later repeat on the 8-block first-look checkpoints, and log the same matrix every 1,000 updates in 8a runs. No training.",
+   "change": "Off-by-default hooks in Ledger.run() (skip_cells, half_cells, rec list) plus a probe script using load_model and evalx. Cells: intact; skip block j all rounds; skip j in rounds 0-3 or 4-7; skip every block in a half; half-strength j. 11 cells at 2 blocks, 35 at 8 blocks. Log teacher-forced loss, in_dist exact, McNemar counts, chain-5, and per-(round, block) update norm over state norm. Run on b2ckpt B2_s200..s205 now; ask for checkpoint.pt in the first-look collection list before the rented boxes are destroyed. Optional --usage-every N logger for the 8a runs. 0 params.",
+   "why": "Residual writers moved 10-18x from init during training (0.0505 vs 0.00289), and the control state RMS grows 3.4-3.9x over 8 rounds (shown), so Pre-LN dilution is possible but unmeasured per block. The 30M block count is otherwise set only by band arithmetic (9 blocks at mlp 6.0 or 11 at mlp 4.8; the spec's 14-16 do not fit). Skipping biases toward showing use, so a small cost is strong evidence of idleness and a large cost is only an upper bound.",
+   "evidence": [
+    {
+     "claim": "Six q33 checkpoints exist: b2ckpt/B2_s200..B2_s205/checkpoint.pt, 13,243,510 bytes each, step 24000, cfg copy=True, 101 tensors summing to 3,302,481. Seed identity is shown only for 200-202 (d0 result paths); match each file's dev in_dist to its RESULT.json first.",
+     "label": "shown",
+     "source": "code/b2ckpt/*; custom_io/results/d0/B2_s200.json; verify-growth-ops-and-ckpts"
+    },
+    {
+     "claim": "Trained residual-writer std 0.0505 (block 0) and 0.0520 (block 1) vs init 0.00289 on B2_s100; control-state RMS after round 8 is 3.92x and 3.38x round 1 on B2_s100/s101.",
+     "label": "shown",
+     "source": "/mnt/project-files/custom-io/checkpoints/29-b2-screen/B2_s100,s101; custom_io/results/40-loops-probe/PROBE.json M5"
+    },
+    {
+     "claim": "Each CBlock has three residual writers (o, p, out); the same blocks run every round; no existing lesion removes a single block (loops:K truncates rounds, ctl27 zeroes controls).",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 102-124, 306-318; train.py lesion_names"
+    },
+    {
+     "claim": "In LLMs late Pre-LN layers add little (2502.05795) and second-half layers contribute less (2505.13898); not shown for B2 or at 3M-30M.",
+     "label": "suggested",
+     "source": "scout abstracts (verified abstract only)"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or Mac CPU with torch (torch is not importable in the reading session); needs the dev in_dist rows from the PC data folder (not in the snapshot); first-look 8-block checkpoints after collection",
+    "hours": 1.5,
+    "arms": "2-block q33 checkpoints B2_s200..s205 (11 cells each); the two 8-block first-look checkpoints (35 cells each); intact reproduction check first",
+    "pass_mark": "Reproduction: intact in_dist within 0.05 of RESULT.json, else stop. Labels: USED = teacher-forced loss rises at least 10% on both seeds, IDLE = under 2% on both. Decision rows: 3 or more of 8 blocks IDLE on both seeds at 8 blocks means do not order 30M at 9-11 blocks, re-solve the shape by width; all USED and 10M minus 3M at least +3.0 on both seeds means order 30M per the ladder; all USED with gain under +3.0 means run the data/size screen first; late rounds IDLE and early USED means test the stop head.",
+    "proved_wrong": "Reading 'cheap to skip so block unneeded' is wrong if retraining without that block (one fewer block, same width) loses 3 or more points on both seeds; probe is invalid if reproduction fails."
+   },
+   "rules_check": "Rules 1, 3, 4: measurement only, no claim; marks fixed here. Rule 5: dev in_dist and chain-5 only. Rule 6: CPU or PC minutes. Rule 9: B2 only. Rule 10: developer diagnostic, nothing in the answer path.",
+   "closest_prior": "LOOPS-probe M1-M5 and gate G3 (state RMS only), the loops:K lesions, and the ctl27 lesion; no per-block or per-application lesion exists.",
+   "autonomy": "No deploy-time step; analysis of saved weights. The 30M shape it informs is a build-time choice.",
+   "merged_from": [
+    "w1c-1",
+    "w1c-2",
+    "w1c-6",
+    "w1d-6",
+    "w2c-6",
+    "w2d-1",
+    "w2d-2",
+    "w2g-5",
+    "w1f-2"
+   ],
+   "director_score": 8.8,
+   "director_note": "Cheapest decisive test for the 'does depth help' risk and it gates the 30M money. Critics should check: skip bias, whether 2-block results say anything about 8 blocks, that first-look checkpoints will actually be collected, and that the 10%/2% thresholds on loss are sensible. The Csordas and MIDAS papers disagree, so do not trust either as a prior.",
+   "id": "scale-D2",
+   "area": "scale"
+  },
+  {
+   "title": "Spelling gate: can B2 write 9-12 letter cloze answers?",
+   "summary": "The 62% web share asks B2 to spell blanked words of 3-12 letters, mostly absent from the prompt, with a parallel one-character-per-register generator that today caps answers at 8 letters and cuts longer ones silently. Run a no-training audit of GEN spelling on existing checkpoints, then a 2,000-update pilot on a closed set of 200 frequent 9-12 letter words before any 8a rung is started.",
+   "change": "Step 0 (CPU): run B2_s100/s101 (or b2ckpt) on answer-split rows of word_filter, seq_next, digits_parity, fewshot_number_rule, table_lookup, list_stats, order_chain; per wrong row record edit distance to gold, whether gold occurs in the prompt, answer length. Step 1: pilot 2 seeds x 2,000 updates with N_REG=13 and GEN_MAX=12 (13 registers fit the existing 16-row place table; only the constant in ledger.py line 62 changes) and an assert in gold() that fails instead of cutting; train on web cloze rows whose blank is one of 200 frequent 9-12 letter words, test on held-out docs with the same words; control set of 200 frequent 3-8 letter words in the same job. Closed vocabulary tests spelling, not prediction. 0 params beyond the 8a shape.",
+   "why": "GEN decodes each register in parallel with no conditioning on earlier output characters, answers are cut at GEN_MAX=8, and about 10.4% of 3-12 letter blank positions are 9-12 letters (about 40% if length is drawn uniformly; the spec is ambiguous). If long words break, the 62% web share cannot train and the 9-hour 3M rung fails for a reason unrelated to size.",
+   "evidence": [
+    {
+     "claim": "GEN_MAX = N_REG - 1 = 8; gold() cuts answers to GEN_MAX silently; train.py skips the max_ans check for B2.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 62-63, 390, 447; train.py lines 142-143"
+    },
+    {
+     "claim": "N_REG=13 (12 letters plus EOS) fits the 16-row place table with no new parameters; the 36 registers of addendum G need N_PLACE of at least 36 (+5,120 params) or the gather fails.",
+     "label": "shown",
+     "source": "ledger.py line 303; reader.py line 13; verify-growth-ops-and-ckpts"
+    },
+    {
+     "claim": "Blank-length share on slice_rung3: 3-8 letters 89.6%, 9-12 letters 10.4%; 28.4% of 3-12 letter blanks repeat elsewhere in the chunk (30.2% for 3-8, 12.5% for 9-12).",
+     "label": "shown",
+     "source": "streaming measurement of web_slices_8a.tgz by w2f ideas (my packing rule, not cloze.py)"
+    },
+    {
+     "claim": "Answer-split means (six seeds): word_filter 0.0 with copy gate 0.00006; seq_next 30.4 (GEN 100%); fewshot_number_rule 28.3; table_lookup 20.4. cipher_map (GEN-only, 8 letters) scores 39-40 of 40 in_dist, so short spelling works.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2 RESULT.json final_eval and extra.copy_gate, extra.coverage"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Step 0 on Mac or PC CPU (torch needed); step 1 on BensPC after the speed probe and before any 8a rung",
+    "hours": 1.1,
+    "arms": "Step 0: B2_s100, B2_s101. Step 1: B2 with N_REG 13 on the 200-word 9-12 letter closed set plus 3-8 letter control, seeds 410 and 411",
+    "pass_mark": "Step 1 passes if held-out 9-12 letter exact is at least 25% and length-right share at least 80% (2-seed mean) and 3-8 letter exact at least 40%. Step 0 reads: spelling limit if 60% or more of wrong answer-split GEN answers are within edit distance 1; value limit if under 30%.",
+    "proved_wrong": "9-12 letter exact under 10% and length-right under 50%, or under half the 3-8 letter exact: the parallel generator cannot carry long words, so do not start the 3M rung; test the GRU decoder. Step 0: under 30% within edit distance 1 means misses are wrong values and a spelling fix would not move the answer split."
+   },
+   "rules_check": "Rule 7: the assert makes any cut an error, the opposite of the silent cut. Rule 2: human web text. Rule 5: test docs from a slice with overlap13 checked; no protected panel. Rule 4: pilot, not a claim. Rule 10: n/a; the generator is the model's own.",
+   "closest_prior": "8A-SPEC section 4 names the problem and its risk list mentions it, but no test is planned; the G build raises registers to 36 without a spelling check.",
+   "autonomy": "Probe before shipping. At deploy the talker spells with its own registers; no outside step.",
+   "merged_from": [
+    "w1a-3",
+    "w2f-4"
+   ],
+   "director_score": 8.6,
+   "director_note": "This is the largest unmeasured risk to the 8a web share and costs under 2 hours. Critics should check: the closed 200-word set might be solved by memorising words (so it overstates open spelling), the threshold values are suggested, and whether the 8a build (not in checkout) changes the register path. A pass does not show web cloze teaches skills.",
+   "id": "scale-D3",
+   "area": "scale"
+  },
+  {
+   "title": "Remove host stalls from the B2 step, phase timer first",
+   "summary": "B2 at q33 caps runs about 105-121 ms per update against about 28 ms of matmul time, and B2 is 4x slower than plain at the 8a caps on a 5090 (0.092 s vs 0.023 s at 3M). Measure where a step goes with a per-phase timer, then remove syncs (cached constant tensors, one pinned non_blocking copy, equality-based one-hot) and move collate, span parsing and gold-target building into DataLoader workers. Outputs stay bit-identical.",
+   "change": "Step 1, measurement only: synchronize around collate, tokenize, gold, forward, backward, step for 200 updates. Step 2 if prep is at least 15% of the step: (a) ledger.py value_code uses (digs[...,None]==arange(10)).float() instead of F.one_hot; (b) cache OMEGA, CONSTS, COMM per device; (c) pack tokenize and gold numpy arrays into one pinned int64 array with one non_blocking copy; (d) DataLoader with 2-3 workers, pin_memory, prefetch 4, precomputed int32 spans per worker replacing the 20,000-entry spans cache that thrashes at 200,000 rows. 0 params.",
+   "why": "Achieved matmul rate is about 7-8 TFLOP/s for B2 vs about 30 for plain (my arithmetic from steps/s), so most of the gap looks like dispatch, host syncs and CPU prep. Any speed-up multiplies across all 8a rungs (30M B2 is 0.679 s an update, about 13-14 h a seed on a 5090). The 7.8x B2/plain timing ratio in addendum B is a GPU-sharing artefact, so no solo timing exists yet.",
+   "evidence": [
+    {
+     "claim": "About 16 host-to-device copies per update (gold 8, tokenize 5, CONSTS, OMEGA, COMM), F.one_hot called 8 times per update, collate and spans in the main process, spans cache cleared above 20,000 entries with 200,000 training rows.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 72, 199-217, 222, 292, 295, 338, 454, 502; data.py lines 119-143"
+    },
+    {
+     "claim": "At addendum G caps on one 5090: B2 0.092 / 0.327 / 0.679 s and plain 0.023 / 0.070 / 0.148 s per update at 3M / 10M / 30M.",
+     "label": "shown",
+     "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum I2"
+    },
+    {
+     "claim": "B2 q33 steps/s 8.24 (29-b2-screen), 9.56 (40-egw); plain 3.2M 24.5-28.5 steps/s. No run is verified solo; q33 ran three jobs at a time.",
+     "label": "shown",
+     "source": "custom_io/results/29-b2-screen/B2_s100, 40-egw-s200/B2V_s200, 33-pc-confirm-b2 RESULT.json; queue_local/33-pc-confirm-b2.txt"
+    },
+    {
+     "claim": "A pageable-memory copy without non_blocking and F.one_hot's range check force a CUDA sync.",
+     "label": "suggested",
+     "source": "PyTorch behaviour from memory; torch not available to check"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "BensPC RTX 5070 Ti at q33 caps, 200 updates, 3 repeats, median; CPU fp32 for the equality check (Mac can run that part)",
+    "hours": 0.6,
+    "arms": "current code vs changed code, same seed and batches; separate phase-timer run",
+    "pass_mark": "Step-0 loss and first 200 update losses equal to 6 digits; median steps/s at least 1.10x current; worker loader only if collate+spans+gold is at least 15% of the step, then at least 1.20x and identical tensors for the first 200 batches.",
+    "proved_wrong": "Median steps/s under 1.03x (syncs are not the cost; kernel launches are, see CUDA graph), or prep under 10% of the step (skip workers)."
+   },
+   "rules_check": "Rule 3: same function and size. Rule 1: the regex spans are still hand-written tokenisation, moving them does not change their rule-1 status. Rule 7: no truncation. Rule 6: 0.6 PC hours. Rule 10: training-side only.",
+   "closest_prior": "None tried; torch.compile and CUDA graphs were only suggested, and this is their prerequisite.",
+   "autonomy": "Training speed only; the deployed forward is the same function.",
+   "merged_from": [
+    "w3b-1",
+    "w3b-3"
+   ],
+   "director_score": 8.2,
+   "director_note": "Highest compute leverage per hour spent: every 8a rung and every later screen gets cheaper. Critics should check: the sync claims are recalled from PyTorch behaviour, the 15-30% prep share is a guess, and whether bit-identity holds when the order of float ops in one-hot or packing changes.",
+   "id": "scale-D4",
+   "area": "scale"
+  },
+  {
+   "title": "Build workspace keys and values once per forward",
+   "summary": "Every round recomputes the key and value projections of all workspace slots, including the number and constant slots (20 at q33, 95 at addendum-G caps) that never change within a forward. Compute those once and recompute only the result slots each round. Same numbers, fewer FLOPs, less saved activation memory, which matters for fitting 30M in 16 GB.",
+   "change": "ledger.py run(), lines 307-310: before the loop compute kvs0 = [b.kv_of(S0 + src.weight[0]) for b in core]; each round compute kvsR from Rs only and concatenate in the order [S0, Rs] as today. Same for the per-step pointer keys k_slot(ln_k(cat(S0, Rs))) at lines 326 and 345 (split S0 and Rs parts). 0 params.",
+   "why": "I read the code: S0 is built once before the loop and S = cat(S0, Rs) with a constant src offset, so S0 keys and values are identical every round. S0 keys and values are 7.5% of fwd+bwd FLOPs at q33 (20 of 27 slots) and 15.7% at G caps (95 of 106), and about 16% of saved activations at G 3M (suggested model that overshoots measured peaks by about 1.4x). B2 runs at about half of plain's achieved rate on the 5090 at G caps.",
+   "evidence": [
+    {
+     "claim": "S0 is computed once before the loop; kvs = kv_of(S + src.weight[0]) with S = cat(S0, Rs) is rebuilt every round for every block; k_slot(ln_k(cat(S0, Rs))) is rebuilt at each program step.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 295-297, 307-310, 326, 345 (read in this review)"
+    },
+    {
+     "claim": "S0 share of fwd+bwd FLOPs: 7.5% at q33 caps, 15.7% at addendum-G caps (arithmetic from slot counts; not timed).",
+     "label": "shown",
+     "source": "arithmetic by w3b-2 from ledger.py shapes and 8A-SPEC addendum G"
+    },
+    {
+     "claim": "Measured peaks: 2,872.9 MiB at q33 caps (activation model 2.64 GiB), 6.3 GB at G 3M (model 8.0 GiB).",
+     "label": "shown",
+     "source": "results/40-egw-s200/B2V_s200/RESULT.json; 8A-SPEC addendum I2"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "CPU fp32 equality at the G 3M shape (1,000 dev rows); PC bf16 speed and memory at G caps, 200 updates, 3 repeats",
+    "hours": 0.4,
+    "arms": "current vs changed, same seed and batches",
+    "pass_mark": "fp32 max abs logit difference at most 1e-5 with identical argmax on 1,000 rows; PC peak allocated at most 0.90x current and median steps/s at least 1.08x.",
+    "proved_wrong": "Peak allocated falls under 5% (S0 keys are not a saved-activation term), or steps/s under 1.0x."
+   },
+   "rules_check": "Rule 3: same function and size. Rule 4: equality and speed check, not a model claim. Rule 7: no truncation. Rule 10: same forward at answer time.",
+   "closest_prior": "Addendum G2 (optional per-batch slot trimming) shrinks slot counts; this keeps every slot and removes repeated work, and the two stack.",
+   "autonomy": "No deploy-time change; same function.",
+   "merged_from": [
+    "w3b-2"
+   ],
+   "director_score": 7.6,
+   "director_note": "Premise checked against ledger.py. Critics should check that the workspace key/value path has no per-round dependence I missed (for example masking or the lesion paths), and that the memory saving is real since the activation model overshoots.",
+   "id": "scale-D5",
+   "area": "scale"
+  },
+  {
+   "title": "Report pool4, no-executor subset, family classes and smooth scores",
+   "summary": "Add reported columns, all computed from the same checkpoints and rows, so a failed size mark can be interpreted: a four-split pool (in_dist, answer, frame, vocab; 4,720 rows) beside pooled-5, a no-executor family subset, family-class predictions fixed now for the first look, and two smooth scores (edit similarity and answer log-likelihood). Marks are not changed.",
+   "change": "Reporting in analyze_8a.py (not in this checkout) and a small eval function beside evalx.evaluate. Columns: pool4; the 20 families with program coverage under 50% (3,480 rows a seed) and the 14 above the cut, flagged as a rule-1 risk; per-family deltas for pre-registered classes (U: fewshot_number_rule, list_index, order_chain, table_calc, table_lookup should each rise 3.0 or more; S: 12 families with in_dist at least 85 and variant under 30 stay within 2.0); edit similarity and answer NLL (B2 NLL marginalises over modes and pointers that spell the gold; comparable within an arm only). Regression: new code must reproduce RESULT.json exact match (B2_s200 in_dist 90.51; tfsteps_s200 88.53). 0 params.",
+   "why": "Variant holds 54.9% of B2's lost pooled-5 points (14.27 of 25.98) and in_dist alone can add at most about 2.1, so the +3.0 per rung mark mostly tests variant, a data-limited split. Pool4 is 85.0, so +3.0 pooled needs +3.84 on pool4. The 20 no-executor families hold 20.13 of 25.98 lost points and are where size must show without a hand calculator. Exact match is 0/1 and could hide growth (2304.15004 argues metric choice drives apparent plateaus).",
+   "evidence": [
+    {
+     "claim": "B2 six-seed means: in_dist 90.5, answer 74.2, frame 87.7, vocab 87.4, variant 34.7; points lost per split 2.13 / 5.14 / 2.77 / 1.67 / 14.27 (total 25.98); pool4 85.0.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/B2_s200..s205 RESULT.json final_eval (recomputed by several checkers)"
+    },
+    {
+     "claim": "Correction: the 14 'executor-bound' families are a 50% program-coverage cut (ledger.py line 559); the code's own noexec set is 12 families (B2 87.63, loses 4.67). The 20 no-executor families score B2 65.07 vs plain_tf_steps 59.25 (not 59.3).",
+     "label": "shown",
+     "source": "ledger.py lines 13-14, 559, 589-591; verify-split-family-claims"
+    },
+    {
+     "claim": "Correction: the variant split has 33 families, not 34 (cipher_map is absent); odd_one_out has no vocab rows, so 'odd_one_out vocab is 0' is false; list_index figures 75 and 52 are percentages (75.4, 52.1).",
+     "label": "shown",
+     "source": "verify-split-family-claims (final_eval by_family keys)"
+    },
+    {
+     "claim": "Plain size gain is +0.76 pooled and +0.28 in_dist at 24k vs the 4-seed 3.2M mean (+2.2 only seed-matched with the lowest 3.2M seed).",
+     "label": "shown",
+     "source": "custom_io/CALIBRATION.md; results/02-calib-long, 03-noise"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "q33 six-seed RESULT.json now (zero compute for pool4, subset, class table); smooth columns on CPU or PC for the q33 and first-look checkpoints",
+    "hours": 0.8,
+    "arms": "B2 vs plain_tf_steps (and C0 if it passes), six paired seeds at 3M; 3M and 10M first-look seeds when they exist",
+    "pass_mark": "Size claim on pool4: at least +3.8 per rung (equals +3.0 pooled), CI above 0, on six paired seeds; on the no-executor subset at least +5.2 per rung with B2's lead not down more than 1.0. Class prediction holds if 4 of 5 U families rise 3.0 or more, 9 of 12 S families stay within 2.0, on both first-look seeds. Smooth-score hidden gain: smooth slope per doubling at least 1.5x the exact slope, smooth CI above 0, exact CI includes 0, and the 3.3M ordering B2 over plain_tf_steps holds on 6 of 6 seeds.",
+    "proved_wrong": "Pool4 rises under +1.9 per rung on six seeds (same-structure rows do not respond to size, so any pooled gain is variant-only data); at most 2 of 5 U families rise 3.0, or 5 or more of 12 S families rise 3.0; a smooth-score ratio under 1.5 means exact match is not hiding growth."
+   },
+   "rules_check": "Rule 3: same-size plain arms. Rule 4: six seeds, marks fixed first; mark changes would need a dated addendum and none is proposed. Rule 5: dev only. Rule 10: reporting only.",
+   "closest_prior": "8A-SPEC section 7 and the first-look readout report every split but put the marks on pooled-5.",
+   "autonomy": "Reporting only; a deployed model does not compute these.",
+   "merged_from": [
+    "w1a-1",
+    "w1a-2",
+    "w1a-4",
+    "w1b-4",
+    "w2g-4"
+   ],
+   "director_score": 7.5,
+   "director_note": "Free and makes a flat result readable. Critics should check: family classes were fixed from the 3M table so the 2-seed read is a screen, the pool4 vs pooled-5 reframing could be seen as moving goalposts, and the 14/12/20 family sets must be stated with their cut.",
+   "id": "scale-D6",
+   "area": "scale"
+  },
+  {
+   "title": "Separate data from size at 3M: train-dev gap, 1.7M unique rows",
+   "summary": "q33 spends about 31 passes over 200k rows while 8a spends about 4 passes over bigger pools, so today's size results may partly measure repetition. Step 0 scores the six saved q33 B2 checkpoints on training rows vs dev in_dist. Step 1 trains the same 3.3M B2 on the 1.7M shape-unique skills rows (about 3.6 passes) on seeds 200-201, with q33 as control; a row-count curve (50k, 100k) and a gated 10M 2x2 follow only if needed.",
+   "change": "Step 0: eval-only on b2ckpt B2_s200..s205: exact match on a seeded 1,000-row train sample (same rows for all) vs dev in_dist 1,360; scoring may need answer equality because train rows may lack the accepted list. Step 1: q33 recipe and caps (3,302,481 params, 24,000 updates, batch 256, lr 1e-3, bf16) on 1.7M unique rows with pooled-5 shapes, held-out flags and protected shapes removed. Optional: 50k and 100k random subsets (not prefixes, file is stage-ordered). Gated 2x2: 10.25M on 100k rows only if the first look shows 10M minus 3M of at least +1.0 on one seed. 0 params.",
+   "why": "Final training loss is 0.009-0.021 while in_dist is 90.5, consistent with memorised rows but not proof. The only plain size pair has +0.76 pooled, one 10.8M seed at a changed lr. 8a changes size and data together, so a pass there cannot say which helped; this isolates repetition cheaply. The 1.70M shape-unique count and ~46M tokens come from the data-pool plan and predate the no-length-filter rebuild.",
+   "evidence": [
+    {
+     "claim": "24,000 x 256 / 200,000 = 30.7 passes at q33; final_train_loss 0.009-0.021 on six seeds.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/*/RESULT.json; no-hardcoding/LIMIT-COUNTS-2026-10-07.json (train rows 200000)"
+    },
+    {
+     "claim": "Skills generator has about 1.70M shape-unique rows (about 46M tokens); the builder (skills_curriculum) is not in this checkout, so data must be built on the PC; exclusion of held-out flags for this set is untested.",
+     "label": "shown",
+     "source": "/mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md section 2; verify-probe-inputs"
+    },
+    {
+     "claim": "No train exact-match is stored anywhere; checkpoints for plain q33 arms are absent (B2 only).",
+     "label": "shown",
+     "source": "train.py lines 175-193; code/b2ckpt listing; verify-probe-inputs"
+    },
+    {
+     "claim": "Up to about 4 epochs of repeats add negligible loss change at LLM scale.",
+     "label": "suggested",
+     "source": "arXiv 2305.16264 abstract; cited by the roadmap; not checked at 3M-30M"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step 0 on the PC CPU or GPU (minutes); step 1 on BensPC with the data built from the existing generator",
+    "hours": 3,
+    "arms": "A: q33 200k (seeds 200, 201 reused). B: 1.7M unique rows (seeds 200, 201). Optional C: 100k and 50k subsets.",
+    "pass_mark": "Step 0: memorisation if train minus dev in_dist is at least +6.0 on 5 of 6 seeds; underfit if at most +2.0 on 5 of 6 with train exact under 97%. Step 1: repetition binds if mean(B minus A) pooled-5 is at least +1.0 with both seeds above 0, then run seeds 202-205 (claim: six-seed mean at least +1.0, CI lower bound above 0).",
+    "proved_wrong": "Six-seed mean under +0.5 or CI upper bound under +1.0 means repetition does not bind at 3.3M, so the first look is not repetition-confounded and the 30M quarter-pool run can be dropped; step 0 contradicts memorisation if the gap is at most +2.0 on 5 of 6 seeds."
+   },
+   "rules_check": "Rule 5: remove pooled-5 dev shapes, held-out flags, protected panels from the 1.7M set (untested). Rule 4: 2-seed screen, six-seed claim. Rule 7: q33 caps carry over (528 rows without a program), disclosed. Rule 6: PC. Rule 10: build-time data choice.",
+   "closest_prior": "The planned 8a quarter-pool diagnostic is at 30M on the web pool and tests variety; this is the 3.3M version on skills rows with no size change. B1 showed own-mix memorisation (91-97% in-mix, about 11% on new kinds).",
+   "autonomy": "Build-time data choice; no deploy-time step.",
+   "merged_from": [
+    "w1b-5",
+    "w1b-2",
+    "w1b-3",
+    "w2g-2"
+   ],
+   "director_score": 7.4,
+   "director_note": "Step 0 is nearly free and informative. Critics should check: row-count ladder confounds count with passes at fixed updates, the 1.7M number is stale, and whether a gain from unique rows says anything about web text (different task). Do not run the 2x2 unless the first look passes its gate.",
+   "id": "scale-D7",
+   "area": "scale"
+  },
+  {
+   "title": "Downward width ladder (0.8M, 1.7M) with a dated 10M and 30M forecast",
+   "summary": "B2 has never been run below 3.3M. Train the same 2-block design at width 120 (796,985 params) and width 180 (1,692,041) with matched plain_tf_steps controls, giving three width points below the 10M first look and a measured slope per doubling. Write the 10M and 30M forecast before any result.",
+   "change": "No model code change. cfg: copy=True with d=120 and d=180, blocks=2, mlp 4.8, n_loops 8, n_heads 4, q33 recipe, seeds 200-201 (screen) then 202-205. Controls: plain_tf_steps d_model=124 L=4 (793,848) and d_model=184 L=4 (1,707,888); reuse q33 3.3M runs. Run a 200-update timing probe first (small shapes are probably launch-bound). Forecast (suggested, dated 2026-10-07): 10M 75.1 (90% 73.8-76.4) and 30M (width 384, 11 blocks mlp 4.8, 30.65M) 76.1 (90% 73.6-78.7).",
+   "why": "The 8a mark of +3.0 per rung over 1.63 doublings is about +1.8 per doubling; from 0.8M to 3.3M (2.05 doublings) that slope would be about +3.7. The plain calibration is nearly flat above 3.2M (+0.76), and a looped plain 1.7M scored 40.2 vs 47.0 at 8k, so a small-size deficit is plausible. If the slope is already flat below 3.3M, the 8a premise fails cheaply.",
+   "evidence": [
+    {
+     "claim": "Param counts: width 120 = 796,985; width 180 = 1,692,041; width 256 = 3,302,481; 8 blocks = 10,254,105 (formula reproduces 3,302,481, 10,254,105, 10,890,041, 10,814,968).",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py CBlock and Ledger.__init__; results/33-pc-confirm-b2/B2_s200/RESULT.json n_params; FIRST-LOOK-10M line 10"
+    },
+    {
+     "claim": "Plain 3.2M vs 10.8M at 24k: +0.76 pooled (one 10.8M seed at lr 7e-4 vs four 3.2M seeds at 1e-3); at 8k the 10.8M was 1.46 lower.",
+     "label": "shown",
+     "source": "custom_io/CALIBRATION.md; verify-scaling-evidence"
+    },
+    {
+     "claim": "PR #18 scaling (frozen 1.2B-era core, 9.0 to 35.8M) was +1.9, CI -0.95 to +4.77; it is not a B2 result.",
+     "label": "shown",
+     "source": "custom_io/research/results-digest.md row 11"
+    },
+    {
+     "claim": "Prior of about 0.66 points per doubling (sd 0.48) from the two analogues; six-seed minimum detectable difference about 1.3 at sd 0.9.",
+     "label": "suggested",
+     "source": "computed in w2g-3"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC queue in the style of queue_local/33-pc-confirm-b2.txt, par 3",
+    "hours": 6,
+    "arms": "B2 d=120, B2 d=180, plain_tf_steps d_model 124 and 184 (seeds 200-201); reuse q33 3.3M B2 and plain; the six-seed claim adds seeds 202-205 for both B2 sizes (about 10 GPU-hours)",
+    "pass_mark": "Screen: mean(3.3M minus 0.8M) pooled-5 at least +3.0 with both seeds above 0, and 1.7M between the endpoints on both seeds. Claim: six-seed mean at least +3.0 with CI lower bound above 0 and 1.7M above 0.8M on at least 5 of 6 seeds.",
+    "proved_wrong": "Mean(3.3M minus 0.8M) under +1.0, or 1.7M within 1.0 of 3.3M while 0.8M is 3.0 or more below, or 0.8M beats 1.7M by over 1.0 on any seed: B2 is flat in width and a width-based 30M rung should not be ordered."
+   },
+   "rules_check": "Rule 3: plain controls within 1% of each B2 size. Rule 4: two seeds is a screen; claim needs six. Rule 7: q33 caps carry over, disclosed. Rule 6: PC only. Rule 10: build-time sizes.",
+   "closest_prior": "No B2 point below 3.3M exists. Calibration and PR #18 scaled plain or frozen cores.",
+   "autonomy": "Build-time only.",
+   "merged_from": [
+    "w1b-1",
+    "w2g-3"
+   ],
+   "director_score": 7,
+   "director_note": "Cheap and the only way to see a B2 slope before spending on 10M-30M. Critics should check: width and depth may scale differently so a width slope does not predict the depth-first ladder; the dated forecast is analog-based; head size becomes 30 and 45 at these widths; 6h estimate assumes small shapes are fast.",
+   "id": "scale-D8",
+   "area": "scale"
+  },
+  {
+   "title": "Round-unique blocks (U8) against the shared deep 10M",
+   "summary": "Give each of the 8 rounds its own block (8 blocks, 10,254,105 params, the same trained size as the deep 10M) so it runs 8 block applications per forward instead of 64. Shared recurrences are worth less than unique parameters in published looped-LM fits, and this shape is about 0.8-1.0x B2-S compute. Later arms: shared attention with a unique MLP per round, 16 unique blocks at B2-S compute with a shared reader projection, and a run-once pre-block.",
+   "change": "ledger.py Ledger.run(): block t is used only in round t (self.core[t]); compute workspace keys and values only for that block; reader keys per block as now. Config blocks=8, n_loops=8, d=256, copy=True. Keep the out-projection init at 0.02/sqrt(48)=0.00289 (the code formula would give 0.00144 at 8 blocks) so sharing is the only change. Later arms: A1 = one shared attention plus 8 unique MLPs of hidden 2,048 (9,924,281 params, 0.70x multiplies); K16 = 16 unique blocks with a shared reader kv (17,541,497 params, 0.97x multiplies, no sealed band); pre-block = one unique mlp-2.0 block run once (+791,296 params).",
+   "why": "Rounds carry real work (loops:2 drops in_dist 90.5 to 45.0) and the deep 10M reuses each of 8 blocks 8 times (64 applications, 4x B2-S per update in time). The iso-depth fit phi=0.46 says a reused parameter is worth about 2.6 units when reused 8 times, so unique blocks should carry more per trained parameter (LLM-scale, abstract only). If U8 matches the deep 10M, the 10M and 30M rungs get several times cheaper. Risk: one block per round halves per-round depth.",
+   "evidence": [
+    {
+     "claim": "CBlock = 1,158,604 params at d=256 (attention 526,336, MLP 630,220, norms 2,048); non-block 985,273; U8 total 10,254,105 equals the deep 10M.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py CBlock/Ledger.__init__; FIRST-LOOK-10M line 10; recounted by several checkers"
+    },
+    {
+     "claim": "Seed 200 in_dist: intact 90.5, loops:2 45.0, loops:16 88.6; block applications per forward: B2-S 16, B2-M 24, deep 10M 64.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/B2_s200/RESULT.json lesions; 8A-SPEC addendum C"
+    },
+    {
+     "claim": "Iso-depth fit phi = 0.46 (a loop is worth less than a unique block); at r=4 a 410M looped model matches a 580M dense one; nothing under 100M stated.",
+     "label": "suggested",
+     "source": "arXiv 2604.21106 abstract"
+    },
+    {
+     "claim": "Per-round routers in the planner did not pass (131.2 vs 132.5) and a shared router plateaued worse in chain-of-experts; these are not unique blocks but warn against assuming specialisation helps.",
+     "label": "shown",
+     "source": "/mnt/project-files/model-audit/AUDIT-ranked-2026-10-05.md section 9; /mnt/project-files/papers/chain-of-experts-2506.18945.md"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC RTX 5070 Ti (or a rented 5090), q33 rows and recipe",
+    "hours": 3,
+    "arms": "U8 on seeds 200-201; comparators B2-S q33 (73.00, 74.27), C0 / PT13-C0 (10,379,264), and the deep 10M of the first look if it has run",
+    "pass_mark": "On both seeds: U8 minus B2-S pooled-5 at least +3.0; U8 minus same-size plain at least (B2-S minus C0 on that seed) minus 1.0; chain-5 at least 99.0; loops:0 leak no more than 2 above the same-seed B2-S. Reported, not gated: U8 minus deep 10M and a block-skip test.",
+    "proved_wrong": "U8 minus B2-S under +1.0 on both seeds (unique blocks add nothing at 10M on these rows), or U8 below B2-S on both seeds, or leak more than 2 above B2-S on both."
+   },
+   "rules_check": "Rule 3: all trained params counted; same-size plain needed (PT13-C0 is +1.2%). Rule 4: 2-seed screen. Rule 7: unchanged 7-step cap; unique rounds tie block count to program steps (11 steps means 12 blocks, 14.9M). The sealed 8a shape would need an addendum. Rule 10: fixed schedule at build time.",
+   "closest_prior": "The first-look deep 10M (same params, shared). B2-M depth check (3 blocks at width 384). No unique-per-round arm exists.",
+   "autonomy": "Architecture fixed at build time; at use the model chooses ops, pointers and mode itself. Hand executor and regex spans are existing hand code (rule 1), not added here.",
+   "merged_from": [
+    "w3e-1",
+    "w3e-3",
+    "w3e-5",
+    "w1d-3"
+   ],
+   "director_score": 6.8,
+   "director_note": "Would change the 8a shape, so the strongest upside is cost: several-fold fewer block applications at the same trained size. Critics should check: whether fewer rounds of depth per step breaks the program loop, that the iso-depth law is from 410M+ and abstract-only, and that passing against B2-S (not the deep 10M) is a weak bar if the deep 10M turns out flat.",
+   "id": "scale-D9",
+   "area": "scale"
+  },
+  {
+   "title": "Zero-residual block insertion, 2 to 8 blocks, with an equal-parameter arm",
+   "summary": "Copy a trained 2-block B2 into an 8-block shape and set the six new blocks' residual writers (o, p, out weights and biases) to exactly zero so each new block is the identity at step 0 and the child equals its parent. Continue the child and the parent for the same updates; any gain over the parent-continued control is the value of added depth. A second pair of arms compares adding one more block against widening both MLPs by the same trained parameters.",
+   "change": "Build items (not in checkout): grow.py (copy by tensor name, zero core.2-7 o/p/out), train.py --init option (none exists; checkpoints hold weights only, so AdamW restarts), step-0 audit script. Arms from parents b2ckpt B2_s200/s201 (or 29-b2-screen s100/s101): (a) +6 zero blocks (10,254,105, 6,000-8,000 updates, peak lr 5e-4, 300 warmup, cosine to 10%); (b) parent continued the same updates. Equal-parameter pair: +1 zero block (4,461,085) vs MLP hidden 1,228 to 2,357 in both blocks with zero output columns (4,460,835), plus the parent-continued control. 0 new hand code.",
+   "why": "The grown model equals its parent at step 0 and the control isolates depth from restart effects. Default init zeroes biases only (lines 153-157) and gives writers std 0.02/sqrt(3 x blocks x loops), so a stock constructor is not an identity and the builder must zero them explicitly. The sealed ladder grows depth from scratch, so this asks whether depth added to a trained model pays, which would cut the 10M cost. Zero-output blocks get nonzero gradient only on the writers at the first step, so they wake up slowly (suggested).",
+   "evidence": [
+    {
+     "claim": "Zeroing o, p and out (weights and biases) makes a CBlock return Z unchanged for any input; cross-attention mask keeps 4 constant slots valid so no NaN; verified in real arithmetic.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 102-124, 294, 311; verify-growth-ops-and-ckpts"
+    },
+    {
+     "claim": "Widening the MLP with zero out columns is exact in real arithmetic; needs per-block hidden size (code change at line 147); 513 params per added hidden unit at d=256.",
+     "label": "shown",
+     "source": "ledger.py lines 105-111, 147"
+    },
+    {
+     "claim": "train.py has no init/resume flag; parents: 29-b2-screen B2_s100 pooled-5 72.83, B2_s101 74.49 (24k steps, 8.24 steps/s).",
+     "label": "shown",
+     "source": "custom_io/train.py; results/29-b2-screen RESULT.json"
+    },
+    {
+     "claim": "Gradual stacking (MIDAS 2409.19044) and G_stack (2405.15319) report gains at 1B and above; not tested at 3M.",
+     "label": "suggested",
+     "source": "scout abstracts"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step-0 identity on CPU; continuation on BensPC RTX 5070 Ti",
+    "hours": 3.4,
+    "arms": "parent-continued; +6 zero blocks; +1 zero block; widened MLP (equal params); seeds 200-201",
+    "pass_mark": "Step 0: max abs logit difference at most 1e-5 (fp32) on 1,000 rows. Growth: +6 blocks minus parent-continued at least +3.0 on both seeds and within 1.0 of the first-look scratch 8-block run (unpaired). Depth vs width: winner leads the other by at least +1.0 on both seeds, otherwise a tie. Guard: chain-5 at least 99.",
+    "proved_wrong": "+6 blocks minus parent-continued under +1.0 on either seed (six blocks add nothing usable), step-0 error over 1e-4 (identity claim false), or both equal-param arms under +1.0 over control (inconclusive, not a verdict on size)."
+   },
+   "rules_check": "Rule 2: parent is our own model. Rule 3: 10.25M child counted in full, plain 13-layer is +1.1-1.2%. Rule 4: screen; claim on six paired seeds (400-405). Rule 10: growth is a build step. Reported beside 8a, never as a sealed mark.",
+   "closest_prior": "The sealed 8a and first look train deep from scratch; stacking papers are LLM-scale and untested here.",
+   "autonomy": "Build-time weight edit and training; no growth at deploy.",
+   "merged_from": [
+    "w1f-1",
+    "w2c-1",
+    "w1f-3",
+    "w2c-2"
+   ],
+   "director_score": 6.5,
+   "director_note": "If warm growth works it can replace most of the 10M and 30M scratch cost. Critics should check: that the child gets 6-8k extra updates the scratch run lacks (hence the control), that 2-seed on seeds 100/101 or 200/201 parents already trained 24k, and that the +3.0 bar suits a 6k-update continuation.",
+   "id": "scale-D10",
+   "area": "scale"
+  },
+  {
+   "title": "Real worked programs for label-only numeric sub-types",
+   "summary": "B2 loses to plain_tf_steps by 14.9 pooled-5 points on fewshot_number_rule and trails on 8 more families, mostly ones with no executable program and answers spelled by GEN. Hand-write executable programs for 10 of the 12 label-only sub-types of table_lookup, fewshot_number_rule, digits_parity and seq_next, keep the rows and order, and leave out the held-out variant computations.",
+   "change": "Build-time program writer adding a prog field that progparse.row_targets reads. table_lookup: sum_two (ADD), difference (SUB). fewshot: add (SUB then ADD), mult (DIV then MUL, exact DIV only), pair_sum (ADD). digits_parity: tens_digit (MOD, SUB, DIV, MOD), parity (MOD 2). seq_next: arith (SUB then ADD), growing_step, fib_like (ADD). digit_sum and table_lookup 'most' keep the current treatment; held-out affine, geometric, alternating, num_digits excluded. Same rows and order as q33. 0 params.",
+   "why": "These four families have 0% program coverage and GEN decodes 96% (fewshot), 100% (seq_next), 61.5% (digits_parity), 67.5% (table_lookup) of their rows; their non-variant lost rows total about 279 a seed, an upper bound of +4.6 pooled-5. Plain_tf_steps writes label steps as text and wins here, which suggests step supervision, not capacity, is the gap.",
+   "evidence": [
+    {
+     "claim": "fewshot_number_rule pooled-5 B2 22.7 vs plain_tf_steps 37.6 (-14.9; in_dist 34.6 vs 60.8); 7 of the 9 families where B2 trails have no executable program.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2 and tfsteps RESULT.json final_eval by_family (recomputed)"
+    },
+    {
+     "claim": "Coverage: program 0% for fewshot, seq_next, digits_parity, table_lookup; GEN 96.0 / 100 / 61.5 / 67.5%.",
+     "label": "shown",
+     "source": "B2_s200/RESULT.json extra.coverage.by_family"
+    },
+    {
+     "claim": "Non-variant lost rows per seed: table_lookup 114.5, fewshot 84.9, digits_parity 40.1, seq_next 39.3.",
+     "label": "shown",
+     "source": "q33 six-seed RESULT by_family"
+    },
+    {
+     "claim": "Held-out sub-types (fewshot affine, seq_next geometric/alternating, digits num_digits) must stay out; the table_lookup held-out type is not itemised, so exclusion there is untested.",
+     "label": "untested",
+     "source": "research/data.md line 53"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC at the q33 recipe; controls are the existing q33 B2 runs on seeds 200-201",
+    "hours": 2,
+    "arms": "control q33; treatment with programs for the 10 in-scope sub-types, seeds 200-201 (seeds 202-205 for a claim)",
+    "pass_mark": "Pooled-5 mean gain at least +2.0 with each seed at least +1.0; the four families' non-variant accuracy up at least 15 points on average; no split down more than 2.0 on the 2-seed mean.",
+    "proved_wrong": "Pooled-5 gain under +1.0 on both seeds, or the four families' non-variant accuracy up under 5 points: step supervision is not what limits these families."
+   },
+   "rules_check": "Rule 1: hand-written worked programs are allowed teaching data; the in-forward executor stays a flagged hand part. Rule 3: same size. Rule 5: held-out computations excluded. Rule 7: digit_sum rows keep the no-program treatment, cap issue stays open. Rule 10: the model writes its own steps at use.",
+   "closest_prior": "plain_tf_steps label steps; the 11-14 arithmetic families that already have executable steps; round-readout test (changed the readout, not supervision).",
+   "autonomy": "Build-time supervision only; at use the model picks ops and pointers itself.",
+   "merged_from": [
+    "w3d-4"
+   ],
+   "director_score": 6.3,
+   "director_note": "Targets a measured B2 deficit and also bears on the 'loses to plain on no-step families' weak point. Critics should check: sub-type membership of held-out variants, that the 4.6 upper bound is generous, and that this adds hand-written teaching programs whose executor is still inside the forward pass (T1 would move it out).",
+   "id": "scale-D11",
+   "area": "scale"
+  },
+  {
+   "title": "Web share at a fixed unique budget: own-only vs 62% web",
+   "summary": "Train the 3M-shape B2 on the same unique word-piece budget either as own text only or with the sealed 62% web cloze share, 2 seeds, 24k updates, to see whether the web share helps or hurts against mark 4's level of 72.0. Follow-up arms if web does not hurt: own text first then mixed order, and a predict-only variant that redraws the 28.4% copy-solvable blanks.",
+   "change": "Data only. Arm A: first 65M pieces of own text, 0% web. Arm B: 24.7M own + 40.3M web (38/62). Optional C: first 30% of updates own-only then the same mix (train.py order option 'phased'). Optional D: same 62% share with blanks redrawn so the blank word never repeats in its chunk. Held-out web-cloze dev reported per arm, split into copy and predict rows. Suggested cheaper design: run at the q33 shape with N_REG=13 and MAX_PROMPT raised to 280 (+18,432 params) instead of the 3.9x costlier addendum-G shape. 0 params beyond the shape.",
+   "why": "q33 B2 scores 74.0 and mark 4 needs 72.0, so a web share that costs more than 2 points would fail the 3M rung before size is tested. Addendum I1 settles that 3M and 10M share the 60M pool (shown), but web chunks average about 61 GPT-2 tokens vs about 28 per own row, so that pool gives about 4.3 passes, over the 4-pass cap. pooled-5 has no web split, so web value has to be read on held-out web cloze.",
+   "evidence": [
+    {
+     "claim": "Addendum I1: every 3M and 10M box takes slice_rung30 and the 60M pool (22.8M own + 37.2M web), 60,008,319 pieces, own share 0.38.",
+     "label": "shown",
+     "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum I1"
+    },
+    {
+     "claim": "Passes over 6.14M row presentations: 20M pool about 13; 60M about 4.3 at measured lengths (3.9 at the assumed 38); 65M own-only about 2.7. Own rows 28.1 pieces, web chunks about 61 GPT-2 tokens.",
+     "label": "suggested",
+     "source": "measured by w2f ideas from web_slices_8a.tgz and own72 MANIFEST; depends on unbuilt cloze.py"
+    },
+    {
+     "claim": "28.4% of 3-12 letter blanks also occur elsewhere in the chunk; the spec reports the copyable share but does not analyse it.",
+     "label": "shown",
+     "source": "streaming measurement of slice_rung3; 8A-SPEC section 4"
+    },
+    {
+     "claim": "Marks: 3M B2 at least 72.0 pooled-5 (q33 74.0 minus 2.0); G shape 3,346,513 params (12 rounds, 36 registers) is 4,633 above the band top.",
+     "label": "shown",
+     "source": "8A-SPEC sections 6, 17; train.py SIZE_BAND"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC after the spelling gate and speed work; seeds 410-411 (not the 8a seeds 400-405)",
+    "hours": 5,
+    "arms": "A own-only 65M; B 62% web 65M; then C phased and D predict-only if B does not hurt",
+    "pass_mark": "Keep the web share if mean(B minus A) pooled-5 is at least -1.0, both B seeds at least 72.0, chain-5 at least 99 in both arms; report held-out web-cloze exact (B all-rows at least 5%, suggested). Phased: C minus B at least +1.0. Predict-only: held-out exact at least 10% on both seeds.",
+    "proved_wrong": "Web hurts if mean(B minus A) is -2.0 or lower (share must fall before any rung); web teaches nothing if held-out cloze exact is under 5% on both seeds; between -2.0 and -1.0 run six seeds before 8a."
+   },
+   "rules_check": "Rule 2: FineWeb-Edu human text approved by Ben; filter label question is a separate idea. Rule 3: same shape in all arms. Rule 4: screen. Rule 5: web chunks overlap13-checked, no protected panel. Rule 7: needs more than 8 answer registers or it silently cuts. Rule 10: pre-ship recipe.",
+   "closest_prior": "Sealed 8a uses one shuffled stream at a fixed 38/62 mix. Own-only arm, phased order and predict-only are new; own-text-first echoes 2502.19249 (1B, untested here).",
+   "autonomy": "Pre-ship data recipe; no deploy-time gate.",
+   "merged_from": [
+    "w2f-1",
+    "w2f-2",
+    "w2f-3"
+   ],
+   "director_score": 6.2,
+   "director_note": "Needs the spelling gate first or results are uninterpretable. Critics should check that the 65M budget quietly changes the sealed pool (needs addendum), that the G shape cost (about 3.9x) is why the cheaper q33+13-register variant is suggested, and that held-out web exact below 5% could be spelling, not data.",
+   "id": "scale-D12",
+   "area": "scale"
+  },
+  {
+   "title": "Capture the fixed-shape step in a CUDA graph",
+   "summary": "After host stalls are removed and per-update numpy work moves to workers, capture the forward and backward once per padded shape so the CPU stops dispatching thousands of small kernels per update. Padding to the cap changes no math because the reader, attention and copy paths are masked.",
+   "change": "Pad training batches to fixed width (208 at q33, 280 at G) and fixed slot counts (27 or 106 slots, 8 or 12 rounds); static buffers for prompt, gold and spans; capture loss(batch) plus backward() with torch.cuda.graph (or torch.compile(mode='reduce-overhead')) under autocast(cache_enabled=False), gradients in place (zero_grad(set_to_none=False)); AdamW, the per-step lr float and clip_grad_norm_ stay outside the graph. 0 params.",
+   "why": "At G caps B2 3M is 0.092 s vs plain 0.023 s; fwd+bwd TFLOP per update: 3M 2.92, 10M deep 10.84, 30M 28.75. At width 256 the card looks overhead-bound, at width 384 closer to busy, so the gain should be largest at 3M and 10M. The fp32 pointer einsums are under 2% of FLOPs and not a target.",
+   "evidence": [
+    {
+     "claim": "Per-update seconds on one 5090 at G caps: 3M B2 0.092 / plain 0.023; 10M 0.327 / 0.070; 30M 0.679 / 0.148.",
+     "label": "shown",
+     "source": "8A-SPEC addendum I2"
+    },
+    {
+     "claim": "Padded positions are inert: conv blocks zero masked positions, attention and copy use the same masks, positions are left-aligned.",
+     "label": "shown",
+     "source": "models/reader.py ConvBlock/CharReader.forward; ledger.py lines 247, 311"
+    },
+    {
+     "claim": "Capture needs static shapes, no CPU sync inside the region, autocast cache disabled; lr is a Python float set every step.",
+     "label": "suggested",
+     "source": "PyTorch practice from memory; train.py lines 164-166"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "BensPC at q33 caps then G 3M caps, 200 updates, 3 repeats, median",
+    "hours": 0.5,
+    "arms": "eager vs graph after the host-stall idea",
+    "pass_mark": "q33 caps: median steps/s at least 1.5x eager, step-0 loss equal to 3 digits, first 200 losses within 0.5%, grad norm within 1%; G 3M caps at least 1.2x.",
+    "proved_wrong": "GPU busy under 60% of the eager step in a profile, or q33 speed under 1.2x (GPU work, not dispatch, is the limit)."
+   },
+   "rules_check": "Rule 7: padding only, never a cut. Rule 1: executor and spans stay outside the graph. Rule 6: PC only. Rule 10: training speed only. M1 Pro not applicable.",
+   "closest_prior": "None tried; torch.compile without graphs is the fallback.",
+   "autonomy": "Training-time only; answers unchanged.",
+   "merged_from": [
+    "w3b-4"
+   ],
+   "director_score": 6,
+   "director_note": "Depends on the host-stall work; the largest possible win (toward plain's 0.023 s) but may not materialise. Critics should check that the in-forward int64 executor and dynamic indexing capture cleanly, and that padding to the cap does not raise FLOPs more than dispatch saves.",
+   "id": "scale-D13",
+   "area": "scale"
+  },
+  {
+   "title": "Hidden-limit probes on saved checkpoints: 3-digit numbers, number links",
+   "summary": "Two no-training probes on the q33 B2 checkpoints. LEN3: score a sealed panel of three-digit values in six templates that never contain them in training (group_induct, list_stats, seq_next at 0.0%; odd_one_out 3.6%, verify_claim 2.0%, fewshot 4.4%). Number-link: rows where the answer is the integer after a named word at near (0-2 letters) and far (6-40 letters) gaps, with a skills-name control, to see whether the +-4 reader window blocks number links.",
+   "change": "Probe scripts on b2ckpt B2_s200/s201 (existing, eval only). LEN3: 300 rows from the six templates with three-digit values absent from every training arm. Number-link: 400 rows per cell (near-web, far-web, far-skills-name), plain integers only (NUM_RE splits commas and decimals). Only if a probe fails does a 2-seed screen follow (q33 control already run; about 25% three-digit numbers at fixed row count, or W1 / number-slot content key). The cap-counting part of the original w1a-5 is not run (see dropped). 0 params.",
+   "why": "Own-text skills rows have no three-digit numbers in three families, so a length gap would be a size-linked limit that dev in_dist cannot show. table_lookup scores 29 in_dist and 11 variant and plain_tf_steps also scores 22 in_dist, so part of the failure may be data. cipher_map (key two letters before the digit) is 97.8 pooled, supporting a geometry reading but not proving it.",
+   "evidence": [
+    {
+     "claim": "Three-digit share of numbers in own-text skills rows (first 120,000 lines of own72 skills.jsonl): group_induct 0.0%, list_stats 0.0%, seq_next 0.0%, odd_one_out 3.6%, verify_claim 2.0%, fewshot 4.4%, arith_bare 21.9%.",
+     "label": "shown",
+     "source": "/mnt/project-files/data-pool/built/own72.tgz skills.jsonl (not the q33 file)"
+    },
+    {
+     "claim": "The reader sees +-4 characters only; number slot keys have no word content while WORD keys get a content term.",
+     "label": "shown",
+     "source": "models/reader.py lines 1-5; ledger.py lines 231-237, 286-301"
+    },
+    {
+     "claim": "table_lookup in_dist 29 / variant 11 (B2) vs 22 / 11 (plain_tf_steps); cipher_map 97.8 vs 63.8 pooled.",
+     "label": "shown",
+     "source": "q33 six-seed RESULT.json by_family"
+    },
+    {
+     "claim": "Caps cannot bind in q33 data: max numbers 11 (cap 16), max words 50 (cap 64), max prompt 204 (cap 208) in train and all dev splits except the 7-step program cap (528 train rows, 6 of 6,040 pooled-5 dev rows).",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/LIMIT-COUNTS-2026-10-07.json; FIRST-LOOK-10M amendment"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC (dev rows and builders are there; torch needed); Mac CPU if torch is installed",
+    "hours": 0.8,
+    "arms": "B2_s200 and B2_s201 on LEN3 and on the three number-link cells",
+    "pass_mark": "LEN3: proceed to a screen only if q33 scores at most 60% on both seeds; stop if 80% or more. Number-link: geometry block confirmed if far skills-name accuracy is under 20 and near is at least 80 on both seeds; vocabulary effect if far skills-name is at least 60 and far-web under 20; no block if far skills-name is at least 60 on both.",
+    "proved_wrong": "Far skills-name accuracy at least 60 on either seed (window does not limit number links; table_lookup failure is data or size); LEN3 at 80% or more (length is not the limit)."
+   },
+   "rules_check": "Rule 1: test code only. Rule 5: LEN3 values sealed and new, never trained. Rule 7: values under 1,000 and plain integers, disclosed. Rule 4: probe, not a claim. Rule 10: developer measurement.",
+   "closest_prior": "W1 (queue 42, global attention in the reader) pursues the same goal by a fix; R0 (window removed) cost 6.3-6.8. No length or link probe exists.",
+   "autonomy": "No deploy-time step; if a link exists the deployed model uses its own pointer.",
+   "merged_from": [
+    "w1a-5",
+    "w3d-5",
+    "w1e-1"
+   ],
+   "director_score": 5.9,
+   "director_note": "Cheap and likely to kill two hypotheses quickly (the cap hypothesis is already refuted by LIMIT-COUNTS). Critics should check that the LEN3 panel is truly out of every training arm and that dev builders are available on the PC.",
+   "id": "scale-D14",
+   "area": "scale"
+  },
+  {
+   "title": "Round recompute instead of micro-batching at 30M",
+   "summary": "At 30M the speed table splits a 256-row update into four micro-batches to fit 15 GB, and each extra part repeats a fixed cost. Recomputing each thinker round in the backward pass (torch.utils.checkpoint) keeps only round inputs, so all 256 rows can run in one part with identical math, at the cost of one extra thinker forward. Suggested saving is about 23% per update at 30M and none at 10M.",
+   "change": "ledger.py run(): move the round body into a function of tensors and wrap each round in torch.utils.checkpoint.checkpoint(fn, ..., use_reentrant=False). The thinker has no dropout or random draws so recompute is exact. Micro-batching stays as the fallback; using recompute needs an addendum because addendum C names the micro-batch rule. 0 params.",
+   "why": "Addendum I2: 30M B2 is 0.679 s in 4 parts and 0.503 s in 2 parts at 18.5 GB; 10M is 0.327 s in 2 parts and 0.272 s in 1 part at 21 GB. Fit: about 0.088 s per extra part at 30M and 0.055 s at 10M, so one 30M part with recompute is about 0.52 s (-23%). The 16 GB fit is unproven because the activation model overshoots measured peaks by 1.4-1.6x.",
+   "evidence": [
+    {
+     "claim": "Speed table: 30M B2 0.679 s (4 parts), 0.503 s (2 parts, 18.5 GB); 10M 0.327 s (2 parts), 0.272 s (1 part, 21 GB); measured on a 5090 with a 15 GB limit.",
+     "label": "shown",
+     "source": "8A-SPEC addendum I2"
+    },
+    {
+     "claim": "Fitted per-part cost and the 0.52 s estimate; 30M block count assumed 9 x 384 mlp 6.0 (I2 does not state it).",
+     "label": "suggested",
+     "source": "my fit by w3b-5 to the I2 table; not timed on the PC"
+    },
+    {
+     "claim": "The thinker has no dropout or random draws; recompute is deterministic.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py (no dropout module)"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "BensPC RTX 5070 Ti at the G 30M shape (9 blocks, width 384, mlp 6.0), 200 updates, 3 repeats; CPU fp32 gradient check at G 3M",
+    "hours": 0.5,
+    "arms": "4-part micro-batch vs 1-part checkpointed, same box and seed",
+    "pass_mark": "1-part peak allocated at most 14 GB at 256 rows and median steps/s at least 1.15x the 4-part baseline; 3M gradients equal to relative difference 1e-5 and step-0 loss equal to 3 digits.",
+    "proved_wrong": "1-part run exceeds 15 GB, or steps/s under 1.0x the 4-part baseline."
+   },
+   "rules_check": "Rule 3: same size and math. Rule 4: exactness and speed check; marks untouched. Rule 6: PC. Rule 10: training-side only.",
+   "closest_prior": "Addendum C's micro-batch rule (planned); this replaces the split and is math-identical.",
+   "autonomy": "Training-time only.",
+   "merged_from": [
+    "w3b-5"
+   ],
+   "director_score": 5.8,
+   "director_note": "Only matters if 30M is ordered. Critics should check that the executor's int64 ops and in-place writes survive checkpointing, and that a 30M batch of 256 rows really fits in 16 GB with only round inputs saved.",
+   "id": "scale-D15",
+   "area": "scale"
+  },
+  {
+   "title": "Matched-parameter shape screen near 4.1M: wide, deep, wide MLP",
+   "summary": "Compare three B2 shapes of about the same trained size by one change each: wide-shallow (d=288, 2 blocks, 4,140,933), deep-thin (d=256, 3 blocks, mlp 4.0, 4,147,129), and wide MLP (d=256, 2 blocks, mlp 8.0, 4,143,801). The 8a plan chooses depth first and widens to 384 at 30M with no width-versus-depth test at any rung.",
+   "change": "Config only: Arm W cfg d=288 blocks=2 mlp=4.8 heads=4; Arm D d=256 blocks=3 mlp=4.0; Arm M d=256 blocks=2 mlp=8.0. q33 recipe, seeds 200-201, same box. Comparator for a claim: plain_tf_steps at 4.14M (n_layers 5 at d=256 is 4,034,304, -2.6%). 0 new code.",
+   "why": "The deep route multiplies block applications (3x8=24 vs 16) while wide routes add per-token MLP work only; for LLMs pre-LN depth is used unevenly and the shared-loop law favours width at equal trained params (abstract-level, suggested). Plain capacity at fixed data was flat in calibration, so the MLP-width arm is the cleanest one-knob test of whether controller capacity limits B2 on this data.",
+   "evidence": [
+    {
+     "claim": "Block size = 8d^2 + 17d + 2dh + h with h = int(mlp x d); non-block part at d=288 is 1,209,209; block at d=288 is 1,465,862; block at mlp 8.0 d=256 is 1,579,264 (+420,660).",
+     "label": "shown",
+     "source": "arithmetic checked against 1,158,604, 3,302,481, 10,254,105"
+    },
+    {
+     "claim": "The 8a ladder: 10M depth only at width 256, 30M width 384; roadmap line says grow deep, not wide.",
+     "label": "shown",
+     "source": "8A-SPEC section 2; whole-model-roadmap-2026-10-06.md line 99"
+    },
+    {
+     "claim": "Plain 3.2M vs 10.8M flat at 24k (+0.76); looped plain 1.7M worse (40.2 vs 47.0 at 8k).",
+     "label": "shown",
+     "source": "CALIBRATION.md; results/01-calib/tf2x4"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC RTX 5070 Ti, same box and seeds as the q33 recipe",
+    "hours": 7,
+    "arms": "W, D, M at seeds 200-201 (about 1.2 h a run, suggested)",
+    "pass_mark": "A shape leads the others by at least +1.5 pooled-5 on the 2-seed mean and +1.0 on each seed; otherwise no shape claim and the depth-first plan stands. A claim adds plain_tf_steps at the matched size on six seeds.",
+    "proved_wrong": "Depth-first is wrong at this size if W or M leads D by 1.5 or more and by 1.0 or more on each seed; width-first is wrong if D leads by the same margin."
+   },
+   "rules_check": "Rule 3: sizes within 0.15% of each other, outside the 3M band (+27% over plain S), so a claim needs a re-sized plain. Rule 4: screen. Rule 6: PC, about 7 h. Rule 10: design-time shape.",
+   "closest_prior": "8A-SPEC section 2 (sealed, no test); B2-M (3 blocks, d=384) never compared at matched shape. PR #18 scaled a different core.",
+   "autonomy": "Design-time choice; nothing at deploy.",
+   "merged_from": [
+    "w1d-5",
+    "w2e-2"
+   ],
+   "director_score": 5.7,
+   "director_note": "Informs the 30M shape (9 blocks vs 11 vs wider) but 4M is far from 30M. Critics should check: three arms differ in more than one knob (mlp ratio changes with shape), and the 4.1M shape sits outside every sealed band.",
+   "id": "scale-D16",
+   "area": "scale"
+  },
+  {
+   "title": "Loss-ranked replay with a placebo (hard-half, two-box, nearly-solved)",
+   "summary": "Instead of shuffled order, draw each batch with probability proportional to each row's rank by the loss B2 already computes on it (never-shown rows rank highest), so updates move from fitted rows to unfitted ones. A two-box variant retires rows the model got exactly right and re-shows them only on relapse; a third score uses free-run samples to find nearly-solved rows. A placebo gives the same weights to random rows.",
+   "change": "Per-row loss vector from ledger.loss() (mean equals the current total, stored as self.row_loss); custom_io/data.py train_batches replaced by a rank-weighted sampler refreshed after every tenth of the pool is visited (relative, no clock); train.py observes losses after the optimiser step. Placebo P: same weight vector on a random permutation. Two-box: exact-at-last-visit flag from op/mode/pointer/GEN argmax. Nearly-solved: 4 no-grad free-run samples per visit. 0 params; +60-100% time per update for the free-run score (suggested).",
+   "why": "At q33 each row is visited about 30.7 times while the last training loss is 0.019-0.021, so most visits go to rows already fitted; a bigger model fits sooner, so the waste should grow with size (suggested). Risks: family starvation and over-practising unlearnable rows, hence the family-share guard and placebo. In_dist is 89-91 while loss is near zero, so at 3M the remaining error is on unseen forms and the gain may be small, hence the step-0 kill.",
+   "evidence": [
+    {
+     "claim": "q33: 24,000 updates x 256 rows over 200,000 rows is 30.7 visits per row; last logged loss 0.0187 (s100) and 0.0210 (s200); in_dist 89.0 and 90.5.",
+     "label": "shown",
+     "source": "queue_local/33-pc-confirm-b2.txt; results/29-b2-screen and 33-pc-confirm-b2 RESULT.json"
+    },
+    {
+     "claim": "Per-row loss terms exist before the batch mean in ledger.loss; train.py formats aux values with float() so a vector cannot go in aux.",
+     "label": "shown",
+     "source": "models/ledger.py lines 497-531; train.py lines 167-179"
+    },
+    {
+     "claim": "528 train rows have no program (over 7 steps); they must be judged on answer decisions, not dropped.",
+     "label": "shown",
+     "source": "no-hardcoding/LIMIT-COUNTS-2026-10-07.json"
+    },
+    {
+     "claim": "The 8a pool repeats about 4 times, so a pass at the q33 recipe (31 repeats) does not transfer to 8a without its own test.",
+     "label": "suggested",
+     "source": "8A-SPEC section 4"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step 0 on M1 Pro or CPU with B2_s100 / b2ckpt over all 200k train rows (30-60 min); arms on BensPC",
+    "hours": 5,
+    "arms": "A0 q33 seeds 200-201 (existing); A1 rank-proportional replay; P placebo; optional two-box and nearly-solved arms",
+    "pass_mark": "Step-0 kill: fewer than 3% of train rows with row loss above 0.1 (or U box under 1%, or nearly box under 2%) means nothing to replay. Screen: A1 minus A0 at least +1.5 on both seeds and A1 minus P at least +1.0 on both. Claim (six seeds 200-205): mean A1 minus A0 at least +2.0 with CI above 0, mean A1 minus P at least +1.0 with CI above 0, chain-5 at least 99.0, loops:0 in_dist no more than 2 above the same-seed q33.",
+    "proved_wrong": "Mean A1 minus P under +0.5 over six seeds (choosing rows adds nothing beyond visit counts), or A1 minus A0 under +1.0 with its CI including 0."
+   },
+   "rules_check": "Rule 1: sampler runs between updates, not at answer time. Rule 3: 0 params. Rule 4: screen, then six-seed claim. Rule 7: no targets changed. Rule 10: rank weights have no threshold; the model scores its own stored episodes in sleep. The nearly-solved score needs the executor in the forward pass (rule 1 until T1).",
+   "closest_prior": "B2 has only run the uniform shuffle. Fast-sleep replay belongs to the village model (rule 9). Rank-based online batch selection (2015, recalled) lacks a placebo.",
+   "autonomy": "Deploy analogue: the model rescored its own stored episodes against checked answers and replays by rank; the refresh is a count of visited rows, not a clock. A fixed sleep routine counting as the model's own step is Ben's call.",
+   "merged_from": [
+    "w1g-1",
+    "w1g-5",
+    "w2h-1",
+    "w2h-2",
+    "w2h-3"
+   ],
+   "director_score": 5.5,
+   "director_note": "The step-0 probe is cheap and decides. Critics should check: hand constants in w1g-1 (50% cut, 2,000-update refresh) were dropped in favour of the parameter-free rank version, the +1.5 screen bar vs sd 0.9, and the free-run variant's dependency on the in-forward executor.",
+   "id": "scale-D17",
+   "area": "scale"
+  },
+  {
+   "title": "Zero-sleep few-shot readout across rungs",
+   "summary": "Measure how many examples a rung needs with no sleep at all: first-sample accuracy on fresh add/mult questions at k = 3, 4 and 7 on the six q33 warm parents now, and at k = 3, 7 and 16 on each 8a rung later. Practised kinds sit at 20-27% first try so they can show a size gap; held-out kinds sit near floor and are reported, not gated.",
+   "change": "Build DEV-k question sets with rules_real.make_questions(PRACTISED, usable, 256, seed, tag, avoid=<every key in the test, labelled, pool, warm and DEV splits>, k_ex=k); score warm.pt on first sample at T=1.0, one try per question; report N_ss.pt's held-out first sample beside it. Assert zero overlap first. 8a: rungs warmed on the same 2,048 add/mult rows (4 visits, lr 3e-4, skills replay). No new model code, 0 params.",
+   "why": "The north star includes learning from few examples, and held-out kinds are at floor before sleep (0.4-1.6% greedy first try), so the C2 readout cannot show size at 3.3M. Warm parents reach 61% and 57% reach@32 on fresh add/mult and 27% / 20% first try. The C2 DOMAIN has 26 values so k is at most 25; at k=7 a prompt is 92 characters but k=18 is already 205 (over the 208 cap), so q33 supports k of 3-7 only.",
+   "evidence": [
+    {
+     "claim": "Warm parent: fresh add/mult reach@32 61% and 57%, first try 27% and 20%; stepping-stone sleep takes the same check to 11% and 11%; held-out greedy first try 1.2% and 0.4%.",
+     "label": "shown",
+     "source": "/mnt/project-files/creative-roadmap/creative-roadmap-2026-10-06.md section 7"
+    },
+    {
+     "claim": "warm.pt and N_ss.pt exist for seeds 200-205.",
+     "label": "shown",
+     "source": "/mnt/project-files/fast-sleep/confirm/s200..s205"
+    },
+    {
+     "claim": "k=3 prompt 51 chars, k=7 92, k=16 184, k=18 205, k=25 277; k=64 cannot be built from the current generator.",
+     "label": "shown",
+     "source": "replica of rules_real.prompt_of; creative/creative/rules_real.py lines 26, 128-160"
+    },
+    {
+     "claim": "Dated prediction: the 10M minus 3M practised first-sample gain at k=3 lands between -1 and +3 on the six-seed mean (about 60% confidence).",
+     "label": "suggested",
+     "source": "w3c-1"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU, forward passes only; q33 on the six warm.pt files now; 8a arm after the 8a build (not in checkout)",
+    "hours": 0.7,
+    "arms": "q33 warm.pt at k=3, 4, 7 on six seeds; 8a 3M and 10M rungs at G caps at k=3, 7, 16",
+    "pass_mark": "At 8a caps, 10M minus 3M practised first sample at least +3.0 at k=3 and at k=16 on the six-seed mean, paired CI above 0 at both k.",
+    "proved_wrong": "10M minus 3M gain under +1.0 at both k=3 and k=16 on the six-seed mean."
+   },
+   "rules_check": "Rule 9: C2 card only, kept apart from the village model. Rule 3: B2 only; a B2-vs-plain claim needs a same-size plain with the same warm-up. Rule 4: six paired seeds. Rule 5: DEV-k built with avoid-sets; overlap asserted zero. Rule 1: scoring code only.",
+   "closest_prior": "Roadmap C2 report-only item 7 (k in 0, 8, 32, 128 on a labelled split); this is B2 warm parents, DEV-k, k up to 16.",
+   "autonomy": "Scoring only. The warm-up rows are chosen by us; the model would choose its own practice by retrying questions it failed and calling a generator tool (not built).",
+   "merged_from": [
+    "w3c-1"
+   ],
+   "director_score": 5.5,
+   "director_note": "Ties the ladder to the learn-from-few north star at near-zero cost. Critics should check the DEV-k overlap guarantees, that k is capped at 7 at q33, and that first-sample accuracy is not dominated by the practised-kind prior.",
+   "id": "scale-D18",
+   "area": "scale"
+  },
+  {
+   "title": "Talker for 9-12 letter words: GRU decoder or GEN adapter",
+   "summary": "If the spelling gate fails, test two fixes against the same parallel-GEN baseline: a small GRU character decoder that starts from the answer control token and stops at its own EOS (+178,816 params), or a residual adapter on each GEN register (+33,088 params). Either removes or eases the fixed 8-letter cap that 9-12 letter cloze answers would hit.",
+   "change": "Arm AR: keep zf = ln_z(Z[:,1]) as start state; h0 = Linear(256,128); Embedding(108,128) for the previous character, one GRU layer 128, Linear(128,256) into the existing tied readout and copy gate; talk() writes until EOS with a 24-character safety cap; gold() stops cutting at GEN_MAX. Arm ADP: R' = R + W2 GELU(W1 R), W1 256-64, W2 64-256 zero-started, applied before ln_t in both copy and vocabulary paths. Baseline: B2 with N_REG=13 (parallel GEN, 12 letters plus EOS). Both on the spelling-gate pilot rows plus q33 rows.",
+   "why": "Parallel GEN gives each register its own character from its own state, so no character sees earlier ones; B2 still spells 8-letter cipher answers (39-40 of 40). GEN is 29.97% of in_dist rows. The AR decoder makes length the model's own decision (rule 7) but costs 5.4% params; the adapter is almost free but keeps the parallel structure.",
+   "evidence": [
+    {
+     "claim": "GEN is 29.97% of the 6,800-row in_dist dev file; answer split 74.9 / 74.4 (seeds 200, 201) vs in_dist 90.5 / 91.5.",
+     "label": "shown",
+     "source": "B2_s200/RESULT.json extra.coverage; final_eval"
+    },
+    {
+     "claim": "AR decoder total 3,481,297 params, +7.3% over plain S 3,244,544, outside the +-3% band; adapter total 3,335,569 (+2.8%), inside.",
+     "label": "shown",
+     "source": "arithmetic by w1d-1 and w2e-5 from ledger.py; train.py SIZE_BAND"
+    },
+    {
+     "claim": "Parallel decoding is a handicap for 9-12 letter answers against causal arms.",
+     "label": "suggested",
+     "source": "reading of ledger.py talk and gen_copy; untested"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201; run only if the spelling gate fails",
+    "hours": 6,
+    "arms": "AR decoder, GEN adapter, parallel N_REG=13 baseline",
+    "pass_mark": "AR minus baseline at least +10.0 on spell12 on each seed; pooled-5 change at least -1.0; cipher_map in_dist at least 95; chain-5 at least 99.0; zero training answers cut. Adapter: GEN-row exact gain at least +3.0 and pooled-5 gain at least +1.0 on both seeds (skip if GEN rows already at 97% exact).",
+    "proved_wrong": "spell12 gain under +3.0 on both seeds (parallel decoding is not the limit), or pooled-5 down by more than 2.0 on the 2-seed mean."
+   },
+   "rules_check": "Rule 1: learned decoder, no hand spelling code. Rule 3: AR arm needs plain_tf_steps re-sized to 3.48M. Rule 4: screen. Rule 7: removes the GEN_MAX cut. Rule 10: model's own EOS sets length; the 24-char cap is a safety bound no training row reaches.",
+   "closest_prior": "B2's parallel GEN; roadmap stage 9 open-English talker (larger, not started).",
+   "autonomy": "The model chooses answer length through EOS; decoder learned before shipping.",
+   "merged_from": [
+    "w1d-1",
+    "w2e-5"
+   ],
+   "director_score": 5.4,
+   "director_note": "Conditional on the spelling gate. Critics should check that the AR arm is outside the size band and that gains on a closed 200-word set will not transfer to open web words.",
+   "id": "scale-D19",
+   "area": "scale"
+  },
+  {
+   "title": "Stage blocks and per-round low-rank deltas at 3M",
+   "summary": "Two cheap 3M screens of whether B2's shared loop needs its repeats. Stage blocks (P2): two unique blocks, each run four consecutive rounds, same 3,302,481 params at 0.6x block work. Per-round LoRA: rank-4 query deltas per (round, block) for +32,768 params (or rank-8 MLP deltas for +379,904, outside the band).",
+   "change": "P2: ledger.py run() uses block 0 for rounds 0-3 and block 1 for rounds 4-7 (schedule list), init 0.02/sqrt(48). LoRA-q: CBlock cross-attention query gets A_t (256x4) and B_t (4x256) indexed by the loop counter, B_t zero at init, +32,768 params. Optional LoRA-MLP rank 8 on fc and out. q33 recipe, seeds 200-201.",
+   "why": "Under the iso-depth fit a reuse of 8 is worth about 2.6 units and a reuse of 4 about 1.9, so P2 is predicted to carry less reuse capacity at the same params for 0.6x compute; if it holds, the 3M rung is about 40% cheaper to train and repeats are not what B2 needs. The only round-specific input today is the additive step_emb, so per-round deltas directly test whether shared weights limit step-specific decisions.",
+   "evidence": [
+    {
+     "claim": "Same two CBlocks run in all 8 rounds; the only round identity is step_emb added to Z; the index saturates at n_loops-1.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 307-318, 308, 312"
+    },
+    {
+     "claim": "Each round does work: loops:2 costs 38.7-42.2 pooled-5; shuffle_state 66-68; loops:16 costs 0.5-1.2 (mean 0.86).",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2 RESULT.json lesions"
+    },
+    {
+     "claim": "Looped plain tf2x4 (1.67M) scored 40.2 vs 47.0 for 3.2M at 8k (one seed).",
+     "label": "shown",
+     "source": "results/01-calib/tf2x4/RESULT.json"
+    },
+    {
+     "claim": "Per-round LoRA on shared blocks recovers much of an untied gain.",
+     "label": "untested",
+     "source": "recalled from Relaxed Recursive Transformers; not opened"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC RTX 5070 Ti, seeds 200-201 against same-seed q33 B2",
+    "hours": 4,
+    "arms": "P2; LoRA-q; (LoRA-MLP only if LoRA-q shows a signal)",
+    "pass_mark": "P2 non-inferior: P2 minus B2-S at least -1.0 on both seeds, chain-5 at least 99.0, leak no more than 2 above same-seed B2-S. LoRA-q: pooled-5 gain at least +1.0 on each seed, variant gain at least +2.0 on the 2-seed mean, chain-5 at least 99.0, learned deltas at least 5% of the query size.",
+    "proved_wrong": "P2 minus B2-S below -1.0 on either seed (repeats carry capacity at 3M); LoRA gain under 0 on the mean or both seeds within +-0.5 (round-specific queries add nothing)."
+   },
+   "rules_check": "Rule 3: P2 same size, LoRA-q +0.99% inside the band (3,335,249); LoRA-MLP outside. Rule 4: screen. Rule 6: PC. Rule 10: fixed schedule, rounds stay 8.",
+   "closest_prior": "B2-S itself; MIDAS stacks stages but grows depth; looped plain tf2x4 lost.",
+   "autonomy": "Fixed architecture; no deploy-time choice.",
+   "merged_from": [
+    "w3e-2",
+    "w1d-2",
+    "w2e-1"
+   ],
+   "director_score": 5.2,
+   "director_note": "P2 is a cost-saving non-inferiority test more than a size test. Critics should check that non-inferiority at 3M does not predict anything at 10M and that LoRA gains are measured against the shared-loop baseline, not a wider model.",
+   "id": "scale-D20",
+   "area": "scale"
+  },
+  {
+   "title": "Learned stop head so the model picks its own depth",
+   "summary": "Add a two-way stop head on the answer token trained to say stop from the round after the gold program is complete. At deploy the model stops its own loop and reads the answer at that round. It is the only idea here that can save compute, and it answers rule 10's 'deciding when to stop'. Run only if the census shows late rounds idle.",
+   "change": "ledger.py: flag stop_head, nn.Linear(d,2) on ln_z(Z[:,1]) (514 params). Train: cross-entropy at each round t>=1 with label 1 iff t >= L+1 (L = gold program steps); answer, mode, pointer and GEN losses at round L+1 only via the rounds=True snapshots. Deploy: run rounds in order, stop at the first argmax-stop round (or n_loops), read that round's state. Trained on hand-written worked traces (allowed).",
+   "why": "B2 always runs n_loops rounds (G caps: 12, so more block applications at 8-30M). More rounds than trained hurt (loops:16 -0.85 pooled), so the stop must be learned, not a count. The round_readout test (train-only) failed leak and 16-round marks, so this one is judged on compute saved and chain-5.",
+   "evidence": [
+    {
+     "claim": "Loop always runs n_loops rounds; op 0 NOOP is the only existing stop-like signal.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py lines 83, 306-308"
+    },
+    {
+     "claim": "loops:16 on q33: pooled -0.85 mean (range -0.51 to -1.18); round_readout failed marks (leak 15.9 seed 200, 16-round check -0.51).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 lesions; whole-model-roadmap-2026-10-06.md section 2"
+    },
+    {
+     "claim": "Learned halting with trained readouts at the halt round works (ACT-style).",
+     "label": "suggested",
+     "source": "reasoning; not checked against a source"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201 against same-seed q33",
+    "hours": 4,
+    "arms": "stop_head on, seeds 200-201 (about 2 h a run, suggested)",
+    "pass_mark": "Chain-5 at least 99.0 on both seeds; stop accuracy (first argmax-stop equals gold L+1) at least 90% on in_dist dev; mean rounds run at most mean gold L + 2; pooled-5 change at least -1.0 on the mean.",
+    "proved_wrong": "Chain-5 under 99.0 on either seed, stop accuracy under 90%, or pooled-5 down by more than 1.0 on both seeds."
+   },
+   "rules_check": "Rule 10: the model decides when to stop with its own head; argmax of its own two logits is the only rule (Ben to confirm). Rule 7: labels use the full program. Rule 3: +514 params.",
+   "closest_prior": "round_readout (train-only, failed marks); roadmap stage 2d / H1 (planned learned stop, not built).",
+   "autonomy": "Meets rule 10 for the stop decision; round cap n_loops remains a build-time safety bound.",
+   "merged_from": [
+    "w2d-7"
+   ],
+   "director_score": 5.2,
+   "director_note": "Conditional on the census. Critics should check that the stop label equals program length and whether 12-round G shape changes the rounds-per-step relation.",
+   "id": "scale-D21",
+   "area": "scale"
+  },
+  {
+   "title": "Count the C2 night and audit its caps at each rung shape",
+   "summary": "Count with FlopCounterMode, on random-init models at five shapes, what one C2 sleep night costs (tries, notebook, fine-tune), and audit that the C2 target path drops or truncates nothing at each shape. Tries are about 95% of a notebook night and scale with the same forward cost, so the whole-night fine-tune/notebook ratio should stay near 2 at every size. CPU only.",
+   "change": "Probe: build shapes with custom_io.models.build('ledger', vocab, **cfg) at random init and count with fastsleep.count_flops: S0 q33, S1 8a 3M caps, S3 first-look 10M, S2 8a 10M caps, S4 8a 30M caps (9 blocks, width 384, mlp 6.0). Audit: run fewshot.parse, progparse.prompt_numbers, _targets and head_inputs on 256 DEV-k rows per k; count dropped, truncated, answer-only targets and memory entries vs forced steps. Predictions fixed now: whole-night ratio 1.7-2.5 at all shapes; single-forward cost of the 30M caps is 40-50x q33.",
+   "why": "At q33 tries cost about 25.5 TFLOP, notebook 0.8-1.2, fine-tune 19.3-39.4, so sleep-only ratio is 25-34 but whole-night ratio only 1.7-2.5. At 30M caps a night of tries alone is about 1,100 TFLOP and a full C2 parent about 10,000 TFLOP (about 40 CPU-hours at 74 GFLOP/s), so the 30M C2 readout needs the GPU. The path is not shape-generic: fewshot.parse returns None above 16 numbers and build_arms has no None check, prompt_numbers truncates to 16, programs over 7 steps get answer-only targets.",
+   "evidence": [
+    {
+     "claim": "One q33 forward is 0.97 GFLOP; tries about 25.5 TFLOP per night; notebook 0.78-1.16 TFLOP; fine-tune 19.3-39.4 TFLOP; measured 74 GFLOP/s on CPU.",
+     "label": "shown",
+     "source": "/mnt/project-files/fast-sleep/RESULTS-2026-10-06.md; RESEARCH-2026-10-07.md section 6; confirm/s200/confirm.json"
+    },
+    {
+     "claim": "fewshot.parse returns None above N_NUM=16 numbers; prompt_numbers keeps the first 16; _targets keeps a program only up to N_RES=7 steps; m_knn slot count from pp.M=27.",
+     "label": "shown",
+     "source": "creative/creative/fewshot.py lines 24-34, 186-200; progparse.py lines 8, 17-18, 196-203; fastsleep.py lines 128-131"
+    },
+    {
+     "claim": "Cost multipliers 3.9x / 15x / 4x / 45x for the 8a 3M / 8a 10M / first-look 10M / 30M caps.",
+     "label": "suggested",
+     "source": "arithmetic by w3c-2"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU, random-init models, no training; the 8a configs need the build (not in checkout) or hand-set cfgs",
+    "hours": 0.5,
+    "arms": "five shapes; k=3,4,7 expected clean and 8, 16 expected to break at q33; 8a caps up to k=24",
+    "pass_mark": "Whole-night fine-tune/notebook ratio between 1.5 and 3.0 at all five shapes; sleep-only ratio at least 20; tries at least 90% of the notebook night; zero dropped or truncated rows for every k a shape claims; memory entries equal forced steps.",
+    "proved_wrong": "Whole-night ratio above 3.0 or below 1.5 at any shape, notebook sleep above one tenth of fine-tune at any shape, or any silent drop at a claimed k."
+   },
+   "rules_check": "Rule 6: counting only. Rule 3/4: no claim. Rule 7: this is the check that no training target is cut. Rule 9: C2/B2 only. Rule 5: DEV-k only.",
+   "closest_prior": "RESEARCH-2026-10-07 section 6 costs q33 nights only; 8A-SPEC addendum G checks cloze caps, not the C2 path.",
+   "autonomy": "Measurement. Hand-set parts in the night (32-try budget, temperature per parent, harm panel) would need the model's own versions; not built.",
+   "merged_from": [
+    "w3c-2",
+    "w3c-3"
+   ],
+   "director_score": 5,
+   "director_note": "Cheap planning data for any 30M C2 claim. Critics should check that the C2 pipeline (creative code) runs on the 8a configs without the build and that FLOP counting on random init equals trained cost.",
+   "id": "scale-D22",
+   "area": "scale"
+  },
+  {
+   "title": "Learning rate and residual init at 8 blocks (conditional)",
+   "summary": "If the first look is flat, check whether depth-only growth is limited by the learning rate or the residual init. First a no-training check of how far each residual writer grew from its depth-scaled init on the 8-block checkpoints; then lr 5e-4 and 2e-3 against 1e-3 at 8 blocks; and, only if some blocks stayed near init, a per-block init without the rounds factor.",
+   "change": "Check: trained/init Frobenius norm of core.k.o, core.k.p, core.k.out (init std 0.02/sqrt(3 x 8 x 8) = 0.00144). Screen 1: first-look 8-block arm at --lr 5e-4 and 2e-3, seeds 200-201, 24,000 updates. Screen 2 (only if lazy): out-projection init std 0.02/sqrt(3 x blocks) (2.83x larger at 8 rounds). 0 params.",
+   "why": "Effective depth is blocks x rounds (16 at 2 blocks, 64 at 8) and the init shrinks 2x (0.00289 to 0.00144), while lr stays 1e-3; CompleteP argues the best lr moves with depth. Trained writers moved 10-18x from init at 2 blocks, so training washes out the init there, but not necessarily at 8x8. A flat first look could be a mismatch rather than a size limit.",
+   "evidence": [
+    {
+     "claim": "Writer init std 0.02/sqrt(3 x blocks x n_loops): 0.00289 at 2x8, 0.00144 at 8x8; train.py does not scale lr with width or depth; non-finite check only every log_every (100) steps.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py line 160; train.py lines 119, 176-183"
+    },
+    {
+     "claim": "Standard depth scaling does not transfer the optimal lr across depth (CompleteP, LLM scale, no loss numbers in abstract).",
+     "label": "suggested",
+     "source": "arXiv 2505.01618 abstract"
+    },
+    {
+     "claim": "First look: lr 5e-4 retry is allowed only on non-finite loss; the 8a lr is 1e-3 at 3M and 10M and 6.7e-4 at 30M.",
+     "label": "shown",
+     "source": "FIRST-LOOK-10M; 8A-SPEC section 5"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Check on CPU with collected 8-block checkpoints; screens on BensPC or rented 5090 only if the first look is flat (10M minus 3M under +1.0 on both seeds)",
+    "hours": 5,
+    "arms": "lr 5e-4, 1e-3 (existing), 2e-3 at seeds 200-201; conditional init arm",
+    "pass_mark": "Lazy: any block's writers grow under 2x from init on either checkpoint. LR screen pass: one alternative beats 1e-3 by at least +1.5 pooled-5 on both seeds with leak at most 5 and finite loss. Init screen: train loss at 6,000 updates at least 5% lower on both seeds.",
+    "proved_wrong": "Every block at least 5x init on both checkpoints closes the init idea; 1e-3 best on both seeds, or both alternatives within +-1.0, means lr is not the lever."
+   },
+   "rules_check": "Rule 4: 2-seed screens, sealed 8a lr stays 1e-3 unless a six-seed test passes. Rule 3: same shape and params. Rule 10: build-time setting.",
+   "closest_prior": "First look's lr retry only on non-finite; ledger.py 158-160 depth init; no lr sweep for B2 exists.",
+   "autonomy": "Build-time only.",
+   "merged_from": [
+    "w1c-4",
+    "w1c-5",
+    "w2d-6"
+   ],
+   "director_score": 5,
+   "director_note": "Only worth running if the first look is flat. Critics should check the trigger is not just noise (2-seed), and that lr sweeps at 8 blocks are separated from the 10M-to-30M step, which changes width, lr, updates and pool together.",
+   "id": "scale-D23",
+   "area": "scale"
+  },
+  {
+   "title": "Where B2 lacks capacity: reader window and controller state screens",
+   "summary": "One-knob 3M screens of which part of B2 limits it. Dilated second reader conv (window +-8 at zero params), 8 extra control tokens (+2,048 params), wider slot-pointer keys (96 vs 64, +32,896, probe-first), and an exact character-pair table (+763,136, outside the band). Each is paired against same-seed q33.",
+   "change": "Dilation: reader.py second ConvBlock with dilation 3 and padding 6 (layers 1+2 cover -8..8). Control tokens: N_CTRL 8 to 16, new rows as a separate embedding created last (ctl27 lesion stays at controls 2-7). Slot keys: dk_slot=96 on q_a, q_b, q_ans, k_slot only; first a no-training probe of variant vs in_dist pointer accuracy on B2_s100/s101 (skip if variant program accuracy is 97% or more). Pair table: Embedding(108x108, 64) plus zero-started Linear(64,256) added to each character's reader input. Depthwise warm growth of the window (+4,096) is a later variant.",
+   "why": "The window matters (R0 loses 6.3-6.8, cipher_map 4.2%), and characters in a 12-letter word's middle are 6 from either end, outside +-4. Controls 2-7 carry state (zeroing costs 0.6 to 13.6 pooled-5). Variant failures sit in families with in_dist 92-100 (object_track, list_stats, table_calc variant 0/40), so something local or state-related may be short. Free-run program accuracy is 98.0 / 97.5 in_dist, so pointers are not the in_dist limit.",
+   "evidence": [
+    {
+     "claim": "Removing the window costs 6.8 / 6.3 pooled-5 and drops cipher_map to 4.2%; EmbeddingGemma in front of the window gave +1.59 / +2.12 on 2 seeds (missed 2 of 5 marks).",
+     "label": "shown",
+     "source": "no-hardcoding/INPUT-UNITS-2026-10-07.md; whole-model-roadmap-2026-10-06.md section 2"
+    },
+    {
+     "claim": "Zeroing controls 2-7 costs -0.6 to -13.6 pooled-5 and -0.6 to -36.9 chain-5; object_track, list_stats, table_calc variant 0/40 at both seeds.",
+     "label": "shown",
+     "source": "no-hardcoding/D0-RESULT-2026-10-07.md line 20; B2_s200/s201 RESULT.json by_family"
+    },
+    {
+     "claim": "Free-run program accuracy 98.0 (s200) and 97.5 (s201) on 400 in_dist rows.",
+     "label": "shown",
+     "source": "B2_s200/s201 RESULT.json extra.op_acc"
+    },
+    {
+     "claim": "Hash-based n-gram tables are excluded because the hash is a hand step between question and answer; the exact 108x108 table needs none.",
+     "label": "shown",
+     "source": "models/reader.py lines 17-23; ledger.py lines 200-217; roadmap section 4.1"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201 against same-seed q33; probe for slot keys on CPU",
+    "hours": 8,
+    "arms": "dilated window, +8 control tokens, wider slot keys (gated by probe), pair table; one change each",
+    "pass_mark": "Each arm: pooled-5 gain at least +1.0 on both seeds, variant gain 2-seed mean at least +2.0, chain-5 at least 99.0, no split down more than 1.0, loops:0 in_dist no more than same-seed B2 + 1.0; dilation also cipher_map in_dist at least 95; control tokens also state-family variant (object_track, list_stats, table_calc) up at least 5 points.",
+    "proved_wrong": "Any arm with 2-seed pooled gain under +0.5 or variant gain under +0.5; dilation proved wrong if cipher_map falls 5 or more."
+   },
+   "rules_check": "Rule 1: no hand code added (pair table is a fixed encoding of the input characters, not parsing). Rule 3: sizes +0 to +23% (pair table outside the band, needs a re-sized plain). Rule 4: screens. Rule 10: fixed architecture.",
+   "closest_prior": "R0 (no window), EGE, W1 (global reader attention, queue 42) and the Gemma window arms; no dilation or pair-table arm exists.",
+   "autonomy": "Architecture fixed at build time; a learned range mix would be the autonomous version.",
+   "merged_from": [
+    "w1d-4",
+    "w1f-4",
+    "w2e-3",
+    "w2e-4",
+    "w2e-6"
+   ],
+   "director_score": 4.8,
+   "director_note": "A menu of cheap shots at where capacity lives. Critics should check overlap with the architecture area (W1, EGE), and that 2-seed +1.0 bars are above noise (seed sd 0.63).",
+   "id": "scale-D24",
+   "area": "scale"
+  },
+  {
+   "title": "EmbeddingGemma anatomy: table-only and random-weight twins",
+   "summary": "EGE's frozen 271M is a 134.2M word table plus a 136.8M transformer. Two controls with the same trainable adapter (3,500,881) separate where the +1.85 screen gain comes from: feed the adapter the table lookup alone (no Gemma layers), and a random-weight twin of the same shape. If either gains as much, most of the 274.5M whole is lookup or extra input, not learned meaning. Gated by the q39 six-seed confirm.",
+   "change": "models/eg.py: FrozenEG.encode takes eg_layer (default last, so EGE is unchanged); eg_layer=0 uses the input table lookup (hidden_states[0]) through the same frozen projection and skips the blocks (frozen about 134.6M, whole about 138.1M). FrozenEG.load gets eg_random=seed: same LM class with seeded random init (std 0.02), frozen, same alignment path (whole 274,503,505). Seeds 200-201 on the same machine as EGE and B2V.",
+   "why": "Letters are lost at Gemma's input (26.3% linear letter read at layer 0, 22.6% at the last layer), so the contextual transformer's role is unclear. A pretrained part counts toward size (rule 3), so knowing that a table alone gives the gain changes how many parameters the design is credited with. EmbeddingGemma was trained by distillation, which Ben should check against rule 2 (suggested).",
+   "evidence": [
+    {
+     "claim": "EGE screen vs same-box B2V: pooled-5 +1.59 / +2.12; variant +1.70 (needs +3.0); loops:0 leak 18.09 on seed 200; EGE whole 274,503,505, trainable 3,500,881, frozen 271,002,624 = 134,217,728 table + 136,784,896.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-EG2.md; models/eg.py lines 6, 23, 43-46; queue_local/39-pc-ege-confirm.txt"
+    },
+    {
+     "claim": "Linear letter read from Gemma: 26.3% at layer 0, 22.6% at layer 24.",
+     "label": "shown",
+     "source": "/mnt/attach/project-files/custom-io/WHY-GEMMA-LOST-2026-10-06.md"
+    },
+    {
+     "claim": "EGE runs at 3.65 steps/s vs R0 at 7.24 in the same queue; each new arm costs about 1.8-2.2 h on rented boxes.",
+     "label": "shown",
+     "source": "results/46-r0ege-s200, 49-ege-s201 RESULT.json"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Same machine per seed as EGE and B2V (PC once free, or the rented pairs); gate: q39 must pass addendum 15 (six-seed mean gain at least +1.0, EGE ahead on 5 of 6, leak marks)",
+    "hours": 6,
+    "arms": "table-only, random-weight twin, plus existing EGE and B2V, seeds 200-201",
+    "pass_mark": "EGE minus table-only at least +1.0 on the 2-seed mean and at least 0 on each seed, table-only loops:0 in_dist at most 5; random twin: RAND minus B2V at most +0.5 on both seeds and EGE minus RAND at least +1.0 on both.",
+    "proved_wrong": "EGE minus table-only under +0.5 or below 0 on either seed (frozen transformer adds nothing); RAND minus B2V at least +1.0 on either seed (pretraining not needed)."
+   },
+   "rules_check": "Rule 2: random weights are not a teacher; EmbeddingGemma pretraining history flagged for Ben. Rule 3: whole size counted either way. Rule 4: screen. Rule 1: same hand tokenizer alignment as EGE. Rule 10: neural parts only at answer time.",
+   "closest_prior": "EGE, EGW, EGT, EGK, EGR/EGO/EGM; none feeds the table alone or uses random frozen weights.",
+   "autonomy": "Same as EGE: a frozen network runs per prompt; the random seed is build-time.",
+   "merged_from": [
+    "w3f-1",
+    "w3f-2"
+   ],
+   "director_score": 4.8,
+   "director_note": "Only after q39 passes. Critics should check which tensor is hidden_states[0], whether Gemma's embedding scale applies, and the papers note's 200M/100M split vs the code's 134.2M/136.8M (code is authoritative).",
+   "id": "scale-D25",
+   "area": "scale"
+  },
+  {
+   "title": "Cache frozen Gemma token states",
+   "summary": "EGE re-runs the 271M frozen encoder on every batch (only the last call is memoised), yet each training prompt is seen about 31 times. Store each prompt's token-level 768-d states once, keyed by the exact string Gemma sees, and gather per batch. The trained model and its math do not change; the saving could be about half the update time.",
+   "change": "models/eg.py FrozenEG.encode checks an on-disk fp16 memory-mapped cache keyed by (EG_REV, tokenizer hash, PREFIX + prompt); a miss runs Gemma and writes it. Trained layers and the per-character gather are untouched. Disk about 6-8 GB for 200,000 skills prompts (estimate). Cache only train and dev prompts after a hash check against protected panels.",
+   "why": "EGE is 3.65 steps/s vs R0's 7.24 in the same queue, so the frozen forward is roughly half the update (suggested). Gemma's states do not depend on the reader's window or the batch (padding changes at most 0.0005), so a key on the exact string is legal. Build cost about 2e15 FLOP for ~7M tokens (suggested), minutes on the 5070 Ti.",
+   "evidence": [
+    {
+     "claim": "encode() memoises only the last call; no cross-batch cache exists.",
+     "label": "shown",
+     "source": "custom_io/models/eg.py lines 69-98; ledger.py read() lines 255-267"
+    },
+    {
+     "claim": "EGE 3.65 steps/s (6,581 s) vs R0 7.24 steps/s (3,313 s) in one queue.",
+     "label": "shown",
+     "source": "results/46-r0ege-s200/EGE_s200 and R0_s200 RESULT.json"
+    },
+    {
+     "claim": "The protected-panel hash merge is not done, so the cache may hold only hash-checked prompts.",
+     "label": "shown",
+     "source": "8A-SPEC addendum A1; DATA-POOL-PLAN section 6"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Identity probe on CPU or M1 Pro (1,000 dev and 200 train prompts); build on 5070 Ti; one cached and one live EGE rerun after q39",
+    "hours": 3.5,
+    "arms": "live EGE (existing), cached EGE, live rerun of seed 200 for the noise floor",
+    "pass_mark": "Cosine of cached vs live token states at least 0.999 on 1,000 prompts; cached pooled-5 within the live rerun's noise floor and at most 0.5 from live; predictions agree on at least 99% of rows; seconds per update at most 0.6x live.",
+    "proved_wrong": "Any cosine below 0.999, cached pooled-5 more than 0.5 from live, or agreement under 99% (use fp32 or drop it); seconds per update above 0.8x live (no real saving)."
+   },
+   "rules_check": "Rule 1 and 10: train-time only; the deployed model encodes live prompts. Rule 5: no protected panel in the cache. Rule 7: full prompts up to 280 letters. Rule 6: CPU and Mac first.",
+   "closest_prior": "EGE's single-call memo only; no persistent cache.",
+   "autonomy": "Training-time only.",
+   "merged_from": [
+    "w3f-4"
+   ],
+   "director_score": 4.6,
+   "director_note": "Worth it only if EGE survives q39 and appears in 8a at 10M. Critics should check fp16 storage fidelity and that prompts are cut to the same string Gemma sees in every path.",
+   "id": "scale-D26",
+   "area": "scale"
+  },
+  {
+   "title": "Width-growth operators and shape-check audit (CPU exactness)",
+   "summary": "256 to 384 cannot be reached by exact duplication, so test the operators that could grow width without changing the function: 2x duplication to 512 with a small antisymmetric symmetry break, and a two-group LayerNorm (256 original channels plus 128 zero channels normalised separately, zero writers) landing a 3-block width-384 model at 9.83M. Also audit the 3M warm start to the 8a G shape (12 loops, 36 registers, 91 numbers, 280 letters, 3,346,513 params). CPU exactness only; training screens only if they pass.",
+   "change": "Weight transforms or code changes in ledger.py/reader.py and a probe: step-0 max logit difference on 1,000 dev rows (fp32) per operator; copy check that no-split duplicates stay equal after training; G-shape warm start with a self-attention mask so old tokens (0-16) attend only to old tokens, letter place clamp kept at 14, vocabulary appended after the 95 ASCII ids. Conditional training: 4,000-6,000 updates against parent-continued on seeds 100-101.",
+   "why": "The 30M rung is width 384 from scratch with no growth path; zero-padding under LayerNorm changes mean and variance (mean x d/d'), so only integer multiples duplicate exactly. G-shape growth needs three things to hold: new registers masked from old controller tokens, the letter place clamp (reader.py line 22) unchanged when PLACE_NONE moves, and vocabulary order preserved. The 3,346,513 vs q33 delta of 44,032 decomposes as 171 rows of 256 (72 position, 75 ordinal, 4 step, 20 place), one row unexplained.",
+   "evidence": [
+    {
+     "claim": "LN of duplicated input is exact; ln_t feeds the tied readout so its gain/bias must be halved; head dim is D//h so q must be scaled by 1/sqrt(2); params 12,654,057 (512x2, q33 caps), 31,235,145 (512x6, G caps).",
+     "label": "shown",
+     "source": "arithmetic by w2c-3 against ledger.py lines 115-122, 244, 365-366"
+    },
+    {
+     "claim": "Register tokens are reader.place.weight[:N_REG] and N_PLACE=16, so 36 registers need at least 36 place rows (+5,120 params); controller self-attention has no mask so unmasked new registers change old tokens.",
+     "label": "shown",
+     "source": "ledger.py lines 123, 303; reader.py lines 13-14, 22"
+    },
+    {
+     "claim": "Two-group LN 3-block width-384 at mlp 4.8 = 9,826,514 (q33 caps) or 9,892,562 (G caps), inside the 10M band.",
+     "label": "shown",
+     "source": "arithmetic checked against anchors by w2c-4"
+    },
+    {
+     "claim": "The 8a build (commit b3d48f22e2) is not in this checkout, so the extra 256-wide row is unidentified.",
+     "label": "shown",
+     "source": "verify-growth-ops-and-ckpts"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Mac or PC CPU; checkpoints b2ckpt B2_s200 / 29-b2-screen B2_s100",
+    "hours": 0.5,
+    "arms": "duplicated (no split), duplicated (split), two-group LN, masked and unmasked G-shape child, parent B2_s100",
+    "pass_mark": "No-split duplication max logit change at most 1e-4 and split at most 1e-3; two-group LN at most 1e-4; masked G child gives 1,000 of 1,000 identical answers and max logit change at most 1e-4 on rows that fit the parent caps. Growth mark later: width gain over parent-continued at least +2.0 pooled-5 on both seeds.",
+    "proved_wrong": "Any masked row differs (a clamp, ordinal, EOS or vocabulary item is not preserved); a failed step-0 check is a bug, not a result; width gain under +1.0 on either seed means width gives no usable capacity in 4,000 updates."
+   },
+   "rules_check": "Rule 3: 12.7M (512x2) and 9.83M (384x3) counted in full. Rule 4: screen. Rule 7: eval subset the parent can read (6 of 6,040 pooled-5 rows exceed its caps). Rule 1: no hand code between question and answer. Rule 10: build-time.",
+   "closest_prior": "8A-SPEC section 2 (width 384 from scratch); no exact width step planned; no warm start from q33 to G.",
+   "autonomy": "Build-time transform; no deploy-time switch.",
+   "merged_from": [
+    "w2c-3",
+    "w2c-4",
+    "w2c-5",
+    "w1f-2"
+   ],
+   "director_score": 4.6,
+   "director_note": "Prerequisite if 30M is to be grown instead of trained from scratch. Critics should check the exactness algebra for two-group LN with biases and the head re-indexing, and that this is not over-engineering before the 10M result.",
+   "id": "scale-D27",
+   "area": "scale"
+  },
+  {
+   "title": "Model-chosen blanks on web text",
+   "summary": "Instead of blanking one uniformly drawn word per chunk, the model scores four candidate words by its own loss on each blanked version and samples one in proportion to that loss, so one chunk yields many different questions and the data keeps pace with the model. The true word in the text is the check. Each chunk is visited at most four times and no word is asked twice, keeping the repeat rule.",
+   "change": "Replace the uniform blank draw in the 8a cloze builder (cloze.py, not in checkout): per visit draw k=4 eligible words not yet asked for that chunk; score each by B2's own loss with that word blanked (no backward); sample one proportional to loss; visit cap 4. Eligible words 3-8 letters while GEN_MAX=8, excluded share reported (or the median-surprise variant of 8 candidates at update 2,000). Targets stay the blanked word. 0 params; +50-100% per update (suggested).",
+   "why": "A 280-letter chunk has roughly 25-30 eligible words (untested), so one text supports many questions; uniform blanks include trivial function words and unguessable names. Bigger models predict more of each chunk, so a loss-weighted choice keeps finding blanks worth asking without new text. Risks: picks names or rare words (spelling, not skills), prefers copyable repeats, biases blank length; guards test each.",
+   "evidence": [
+    {
+     "claim": "8a draws the blank uniformly among 3-12 letter words in a chunk of up to 280 letters; answers mostly absent from the prompt; each row at most 4 times.",
+     "label": "shown",
+     "source": "8A-SPEC section 4"
+    },
+    {
+     "claim": "GEN answers are capped at 8 characters; 36 registers are part of the G shape.",
+     "label": "shown",
+     "source": "ledger.py lines 62-63; 8A-SPEC addendum G"
+    },
+    {
+     "claim": "Fill-in-the-middle (2207.14255) and span corruption (T5) are the closest published objectives; no learned blank choice has been tested here.",
+     "label": "suggested",
+     "source": "scout abstracts"
+    },
+    {
+     "claim": "About 25-30 eligible words per 280-letter chunk.",
+     "label": "untested",
+     "source": "word-length arithmetic"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC after the 8a build (cloze builder not in checkout); seeds 400-401",
+    "hours": 9,
+    "arms": "U (uniform blank, the 8a arm), M (model-chosen, 4 candidates), R (placebo: one of the same 4 candidates uniformly)",
+    "pass_mark": "On a held-out cloze dev (2,000 rows from chunks in no pool and no protected panel, uniform blanks): M minus U at least +3.0 exact on both seeds, M minus R at least +1.5 on both, pooled-5 of M no more than 1.0 below U. Claim (seeds 400-405): M minus U at least +3.0 with CI above 0 and M minus R at least +2.0.",
+    "proved_wrong": "M minus R under +1.0 over six seeds, or more than 40% of chosen blanks are capitalised or non-alphabetic (a shallow choice)."
+   },
+   "rules_check": "Rule 2: FineWeb-Edu human text. Rule 5: cloze dev from chunks outside the pool and overlap-checked. Rule 7: nothing cut; words over 8 letters excluded until the 36-register build with the share reported. Rule 10: the model scores, samples and checks its own blank against the text.",
+   "closest_prior": "8a uniform blank (planned, not built).",
+   "autonomy": "Deploy: the model reads a passage via a text tool, scores its candidate blanks by its own loss, samples one, answers, and checks against the text. The 4 candidates and 3-8 letter limit are fixed for now.",
+   "merged_from": [
+    "w1g-2",
+    "w2h-4"
+   ],
+   "director_score": 4.5,
+   "director_note": "Rule-10 positive and plausibly valuable at 30M, but depends on unbuilt code and the spelling gate. Critics should check the loss-proportional pick does not collapse onto unspellable words and that M-vs-U is judged on uniform-blank dev.",
+   "id": "scale-D28",
+   "area": "scale"
+  },
+  {
+   "title": "Web-text rows for unpractised skills (sum, word-before, odd-one-out)",
+   "summary": "Build rows from FineWeb-Edu text that carry skills the q33 data does not teach in prose: sum or range of numbers in a passage (list_stats sum is 0 of 240 on variant), word-before-a-chosen-word lists with web vocabulary (list_index answer 52 vs in_dist 75), odd-one-out from natural comma lists with no list cue. Start with a no-training probe of derivable-number blanks (blank equals a sum, difference, product or exact quotient of two other chunk numbers).",
+   "change": "Step 0 probe: 1,000 derivable-number rows from held-out rung-3 docs on B2_s100 (exact and NUM/WORD/GEN shares). Then training rows only, 20% of rows replaced one for one: sum/range rows (up to 7 steps; ranges limited to 4 numbers), list_index-template rows from six-to-eight consecutive web words (arm A) vs generator words (arm C), odd-one-out rows (outsider also appears in a list elsewhere in the chunk). q33 mix and caps, 0 params.",
+   "why": "Only about 2.4-2.75% of web chunks have a derivable number, so the probe decides whether a training arm is worth it. The sum and word-before families fail on new wording or new words, not on mechanism: chain-5 is 99.4-99.7 so the ADD chain exists.",
+   "evidence": [
+    {
+     "claim": "list_stats B2 in_dist 89, answer 31, frame 88, variant 0 (240 rows each); plain_tf_steps 88/32/75/0. list_index B2 75.4 / 52.1 (answer) vs plain 54.6 / 21.7.",
+     "label": "shown",
+     "source": "q33 six-seed RESULT.json by_family (summed)"
+    },
+    {
+     "claim": "Correction to the odd_one_out premise: odd_one_out has no vocab rows in any of the 12 RESULT files, so 'vocab is 0' is false; its variant is 22.9 (B2) vs 8.8 (plain_tf_steps).",
+     "label": "shown",
+     "source": "verify-split-family-claims"
+    },
+    {
+     "claim": "A derivable number occurs in 2.75% of chunks (2.4% after dropping year-like 1900-2030); 36.8% of chunks have any number.",
+     "label": "shown",
+     "source": "streaming measurement of slice_rung3 with the writer's derivation rule"
+    },
+    {
+     "claim": "NUM_RE is digits only so commas and decimals split into several numbers; progparse caps 16 numbers and 7 steps.",
+     "label": "shown",
+     "source": "models/progparse.py lines 8, 14, 18"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step 0 on BensPC CPU or GPU, inference only; arms on BensPC, seeds 200-201 against same-seed q33",
+    "hours": 4.5,
+    "arms": "probe, then A web-word list_index, C generator-word list_index, sum/range web rows, odd-one-out web rows (one change each)",
+    "pass_mark": "Probe: go on if exact at least 30% and NUM mode on at least 50% of rows; drop if exact under 5% or NUM under 50%. Screens: list_index answer+vocab mean (A minus C) at least +10.0 on both seeds; list_stats variant at least 20.0 on both seeds; odd_one_out variant (not vocab) at least +10 over q33 on both seeds; pooled-5 no more than 1.0 below q33; chain-5 at least 99.0.",
+    "proved_wrong": "A minus C under +3.0 on both seeds (vocabulary is not the limit); list_stats variant under 10.0; odd_one_out held-out accuracy at most 30% on both seeds."
+   },
+   "rules_check": "Rule 1: builders are hand-written data, allowed; sums run through the in-forward executor (flagged). Rule 2: human text. Rule 5: shard-0 documents, overlap-checked. Rule 7: at most 7 steps per row. Rule 10: model picks numbers and pointers itself.",
+   "closest_prior": "Skills families list_stats, list_index, odd_one_out (q33); ClozeMath (2506.03763, not opened) blanks a derivable operand.",
+   "autonomy": "Pointer and op choice by the model at answer time; no outside step.",
+   "merged_from": [
+    "w1e-3",
+    "w1e-4",
+    "w1e-5",
+    "w2f-5"
+   ],
+   "director_score": 4.4,
+   "director_note": "Tests whether web text can carry skills at all. Critics should check the corrected odd_one_out target, that fixed-share replacement does not just add near-repeats, and that the sum rows rely on the hand executor.",
+   "id": "scale-D29",
+   "area": "scale"
+  },
+  {
+   "title": "Skills questions wrapped in human web text",
+   "summary": "Wrap a quarter of the skills questions inside FineWeb-Edu sentences, leaving the question and its answer whole, to test whether B2 can find a question inside long human text, which the 8a web rows never train. This is the bridge between the skills rows and the cloze rows.",
+   "change": "Build-time script: for 25% of training questions add a human-written chunk before and after, from a FineWeb-Edu shard held out of the pools (no digits or family-pool words, hand filter). Raise MAX_PROMPT from 208 to the longest wrapped row (about 280, as in addendum G) with no cut; +18,432 params (3,320,913). Control A-prime: same 280 cap and unchanged rows (re-run, since the position table changes init).",
+   "why": "Frame split only swaps openers and closers (10 openers, 6 closers in training; 1,349 of 1,360 rows differ only that way), and B2 frame is 85.9 on seed 200. Long human context is exactly what 8a's web rows create. Failure mode: the model learns the wrapper style as a cue, or wraps add answer-like numbers.",
+   "evidence": [
+    {
+     "claim": "MAX_PROMPT 208 is asserted at build and sizes the reader position table; 280 adds 72 rows (18,432 params at d=256).",
+     "label": "shown",
+     "source": "data.py lines 11, 107; models/reader.py line 72"
+    },
+    {
+     "claim": "Frame: 1,349 of 1,360 rows differ only by an opener or closer; training has 10 openers and 6 closers.",
+     "label": "shown",
+     "source": "custom_io/research/data.md section 3"
+    },
+    {
+     "claim": "Wrapping helps B2 find questions in long context.",
+     "label": "untested",
+     "source": "suggested by cross-attention design only"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201",
+    "hours": 6,
+    "arms": "A-prime (280 cap, unwrapped) vs B (25% wrapped, same count and updates)",
+    "pass_mark": "Bridged dev (1,000 held-out questions inside held-out FineWeb chunks, scored only after the protected-panel merge): B minus A-prime at least +5.0 on the mean and +2.0 on each seed; pooled-5 B minus A-prime at least -1.0; in_dist at least -2.0.",
+    "proved_wrong": "B minus A-prime under +2.0 on the mean, or A-prime already at 80% or more on bridged dev (no room)."
+   },
+   "rules_check": "Rule 2: FineWeb-Edu allowed; wrap choice is hand-written, build time. Rule 3: +18,432 params counted, still in band. Rule 5: bridged dev must pass overlap13 vs all panels first. Rule 7: no cut. Rule 10: no new deploy step.",
+   "closest_prior": "Frame split and the 8a cloze rows; no row mixes a skills question with human context.",
+   "autonomy": "No new deploy step; the model finds the question in the text itself.",
+   "merged_from": [
+    "w1g-4"
+   ],
+   "director_score": 4.4,
+   "director_note": "Nearest direct test of whether skills and web text combine. Critics should check the protected-panel merge ordering (scored only after) and that the wrapper chunks do not leak answers.",
+   "id": "scale-D30",
+   "area": "scale"
+  },
+  {
+   "title": "Make idle late blocks matter: round gate, LN scale, block drop (conditional)",
+   "summary": "Run only if the block-use census shows idle late blocks or rounds. Three one-change 3M or 8-block screens: a learned per-round write gate on each block's update (+16 or +257 params, rule-10 clean), the LayerNorm-output scale 1/sqrt(application index) from the curse-of-depth paper (0 params), and training-only random block dropping (0 params).",
+   "change": "Gate: ledger.py after the last module, rgate length blocks x n_loops (or Linear(d,1) with bias +2 reading ln_z(Z[:,0])), init 1.0, Z = Z + g*(b(Z) - Z). LN scale: CBlock takes scalar s=1/sqrt(t*len(core)+j+1) on the LN outputs feeding q, self-attention and MLP, flag ln_scale. Block drop: train-only per-row keep masks per block with the same draw in every round (block_drop 0.25), eval runs full depth. Seeds 200-201 against same-seed q33.",
+   "why": "Pre-LN with an unnormalised residual lets variance grow with depth so deep applications act near identity (2502.05795). At 2 blocks x 8 rounds the trained writers are 10-18x init so training probably washes out an init-level change; the learned gate is the only freedom that can differ by round (a constant LN scale cannot unless scheduled). Test LR (round readout) gained +1.15 and +1.28 but failed the leak mark, so this is judged on pooled-5 and leak.",
+   "evidence": [
+    {
+     "claim": "Test LR pooled-5 74.14 vs B2_s200 72.99 and 75.55 vs B2_s201 74.27; loops:0 15.88 (s200) and 0.0 (s201) vs B2's 0.0 and 10.81.",
+     "label": "shown",
+     "source": "results/37-pc-loop-readout/LR_s200, LR_s201; results/33-pc-confirm-b2 RESULT.json"
+    },
+    {
+     "claim": "3M has 16 block applications (2 blocks x 8 rounds); the model has no dropout so the only randomness is data order.",
+     "label": "shown",
+     "source": "ledger.py lines 130, 306-308; grep for dropout"
+    },
+    {
+     "claim": "LayerNorm Scaling beats earlier normalisation in pre-training at 130M-7B (LLM scale).",
+     "label": "suggested",
+     "source": "arXiv 2502.05795 abstract"
+    },
+    {
+     "claim": "Leak at loops:0 moves about 11 points between same-seed runs, so a 2-seed leak mark is noisy.",
+     "label": "shown",
+     "source": "RESULT.json loops:0 values LR vs B2"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201, paired by seed with the q33 runs; run only the arm that matches the census row",
+    "hours": 6,
+    "arms": "round gate, LN scale, block drop (2 h each)",
+    "pass_mark": "Gate: pooled-5 at least +1.0 on both seeds, chain-5 at least 99.0, loops:0 in_dist at most 5 on both (or no more than same-seed B2 + 1.0), finite loss, spread of per-round mean gate at least 0.2. LN scale: gain at least +1.0 on both seeds and last-block skip cost at least 1.5x baseline. Block drop: intact pooled-5 at least q33 minus 1.0 and the formerly idle block USED after training.",
+    "proved_wrong": "Gate within 0.05 of 1.0 on both seeds, or gain under +0.5 on both seeds (per-round scale is not the limit at 2 blocks); LN scale late-block skip cost not above baseline; block drop pooled-5 down more than 1.0 on both seeds."
+   },
+   "rules_check": "Rule 1: no hand code in the answer path. Rule 3: +16 / +257 params or 0. Rule 4: screen. Rule 10: gate is learned and applied in the forward pass; LN scale is a fixed function of loop position; drop is training-only.",
+   "closest_prior": "Test LR round readout (tried, failed marks), LOOPS-probe G3 (gate closed), the existing 1/sqrt(3 x blocks x rounds) init.",
+   "autonomy": "Gate is learned and applied by the deployed model with no external setting; others are build-time.",
+   "merged_from": [
+    "w1c-3",
+    "w2d-3",
+    "w2d-4",
+    "w2d-5"
+   ],
+   "director_score": 4.2,
+   "director_note": "Likely moot at 2 blocks if the census shows both used. Critics should check that the arm is chosen by the census row and not run by default, and that the 8-block version is tested where idleness actually matters.",
+   "id": "scale-D31",
+   "area": "scale"
+  },
+  {
+   "title": "Program-row variety at fixed rows: wiring, cross-family, length, twins",
+   "summary": "Four one-change teaching-data screens at 3M with the row count held fixed, aimed at the variant split (54.9% of B2's lost points, new computations not wordings): (a) random op-wiring programs, wide (about 10,000 shapes) vs narrow (60), scored on unseen wirings, optionally filtered by B2's own solve band; (b) cross-family chains with 30 of 156 ordered pairs held out; (c) chain length 2-5 vs 2-8 steps at 12 rounds and N_RES 11; (d) minimal-pair twins that flip one key fact for syllogism, object_track and move_place.",
+   "change": "Build-time generators (not in checkout): (a) rows {prompt, answer, steps, prog} over the nine ops and constants 1, 2, 10, 100 in three fixed frames, dropping any program equal after commutation to a held-out variant computation, answers under 8 characters; (b) composed rows from existing family steps with B's first operand linked to A's result slot, 40,000 composed rows replacing 40,000; (c) N_RES 7 to 11 and n_loops 8 to 12 (+1,024 params) with 6-8-step rows replacing 20% of rows, which also gives the 528 over-cap list_stats rows programs; (d) twins for 25% of the three families' rows with the answer from the family gold function, vs an exact-duplicate control.",
+   "why": "Variant failures are new computations (list_stats 0.0, digits_parity 0.8, fewshot 2.9, seq_next 4.6) while layout-only families do well (state_update 90.8, story_chain3 100), so choosing a new program is the bottleneck. B2 sees each of its 200,000 rows about 31 times and in-dist rows are 82% template-matched vs 16% for variant. A 60-shape set is easy to memorise; B1 students did exactly that (91-97% own mix, about 11% on new kinds). Chain families are near 100% already, so ceilings are a real risk.",
+   "evidence": [
+    {
+     "claim": "Variant split holds 862 of 1,569 lost pooled rows per seed (54.9%); B2 variant 34.7; chain-5 99.4-99.7.",
+     "label": "shown",
+     "source": "q33 RESULT.json final_eval, chain5"
+    },
+    {
+     "claim": "In-distribution rows 82% template-matched, variant 16% (after masking numbers and names; seed-1 build, not re-measured).",
+     "label": "shown",
+     "source": "custom_io/research/data.md section 1"
+    },
+    {
+     "claim": "Syllogism 'prompt starts with No' cue gets 100% on train and in_dist but 47.5% on dev and variant; object_track and move_place solved 100% by the last named recipient or place.",
+     "label": "shown",
+     "source": "research/data.md line 44"
+    },
+    {
+     "claim": "A step is written only for 1 <= t <= N_RES (needs N_RES+1 rounds); the 16-round lesion adds rounds at test only (-0.85 pooled); about 2.7e8 three-step programs exist over 4 prompt numbers and 4 constants before commutation.",
+     "label": "shown",
+     "source": "ledger.py line 319; lesions; progparse.py lines 8-9 (arithmetic suggested)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 500-501 (fresh; 400-405 are 8a's); step 0 on b2ckpt op accuracy on variant rows (stop if op choice is at least 80% correct)",
+    "hours": 4,
+    "arms": "(a) lo vs hi wiring on sealed WIRE-HELD (1,000 rows); (b) wide 126 vs narrow 12 pairs on PAIR-HELD (300 rows); (c) 2-5 vs 2-8 steps on LEN-HELD (300 rows of 9-11 steps); (d) twins vs q33 vs duplicates",
+    "pass_mark": "(a) hi minus lo at least +5.0 on both seeds, pooled-5 not below lo by more than 1.0, variant gain at least +2.0; (b) wide minus narrow at least +8.0; (c) b minus a at least +10.0, chain-5 at least 99; (d) twins minus q33 at least +10 on both families and twins minus duplicates at least +5; all with pooled-5 not down more than 1.0.",
+    "proved_wrong": "(a) gain under +2.0 or lo at 95%+; (b) under +3.0 or narrow at 85%+; (c) under +3.0 or arm a at 80%+; (d) twins minus q33 under +3 points or twins minus duplicates at most 0."
+   },
+   "rules_check": "Rule 1: hand-written teaching rows allowed; the executor stays a flagged hand part. Rule 3: +0 params (+1,024 for 12 rounds). Rule 5: held-out panels sealed and new; variant computations dropped at build. Rule 7: N_RES 11 removes the answer-only fallback for 528 rows. Rule 8: used only to fix the stuck variant split. Rule 10: build-time data; fixed round budget (a hand-set switch; a deploy claim needs the learned stop).",
+   "closest_prior": "chain_ops, chain_story2, state_update (within-family chains); model-made stepping stones in the creative roadmap; 'Training Transformers as a Universal Computer' (2604.25166, abstract only).",
+   "autonomy": "Build-time data. The proposer in (a) is a hand sampler; a learned propose head (about 70k params, not built) would be required before ship.",
+   "merged_from": [
+    "w3d-1",
+    "w3d-2",
+    "w3d-3",
+    "w1g-3",
+    "w1g-6"
+   ],
+   "director_score": 4,
+   "director_note": "Likely duplicates the data-variety area; the lead should dedupe there. Critics should check that sealed panels are truly absent from every arm, that fixed-row replacement is respected, and the model-band filter variant breaks rule 10 unless the model proposes.",
+   "id": "scale-D32",
+   "area": "scale"
+  },
+  {
+   "title": "FineWeb vs FineWeb-Edu rule-2 cost check",
+   "summary": "The 62% web share is FineWeb-Edu, whose quality filter was trained on a 70B model's labels (stated in the data-pool plan, not checked against the dataset card). Rebuild the same share from plain FineWeb with only the hand Flesch-Kincaid grade of 12 or less and the 13-gram gate, and measure the pooled-5 cost on 2 seeds. It tells Ben what the label question costs.",
+   "change": "Data source switch in web_slice.py (FineWeb sample-10BT instead of Edu) with the same FK <= 12 filter and overlap13 gate, same 65M budget and 62% share; first a one-shard CPU check of the share passing FK <= 12. 0 params.",
+   "why": "If the classifier's labels add nothing the grade filter does not give, the LLM-labelled step can be dropped for free; if they add points, Ben weighs that against rule 2. The manifest lists a 48,920 'quality' drop whose rule is not written down.",
+   "evidence": [
+    {
+     "claim": "Manifest: fk_max 12.0, plain_fk 10.0; drops too_hard 224,832, quality 48,920, duplicate 95.",
+     "label": "shown",
+     "source": "web_slices_8a.tgz MANIFEST.json"
+    },
+    {
+     "claim": "FineWeb-Edu's filter is a classifier trained on Llama-3-70B labels; Ben approved FineWeb-Edu on 10-06.",
+     "label": "untested",
+     "source": "DATA-POOL-PLAN-2026-10-06.md section 3 line 50"
+    },
+    {
+     "claim": "Plain FineWeb passes a grade filter at a usable rate.",
+     "label": "untested",
+     "source": "not checked"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "CPU one-shard check, then BensPC after the web-share screen",
+    "hours": 5,
+    "arms": "FineWeb-Edu (web-share arm B, shared) vs plain FineWeb FK <= 12, seeds 410-411",
+    "pass_mark": "Raw minus Edu pooled-5 at least -1.0 on the 2-seed mean, and at least 10% of raw docs pass FK <= 12 on one shard.",
+    "proved_wrong": "Raw minus Edu at -2.0 or lower (classifier labels carry measurable value; Ben decides) or under 5% of raw docs pass the grade filter."
+   },
+   "rules_check": "Rule 2: this is the test the rule needs. Rule 5: raw docs pass overlap13. Rule 3: 0 params. Rule 4: screen. Rule 10: pre-ship data choice.",
+   "closest_prior": "8a FineWeb-Edu slices; only the source changes.",
+   "autonomy": "Pre-ship data choice.",
+   "merged_from": [
+    "w2f-6"
+   ],
+   "director_score": 4,
+   "director_note": "Mostly a Ben-decision input. Critics should check that the Edu filter's LLM labelling claim is correct (recalled, not verified) and that raw FineWeb's quality gap is not confounded by topic mix.",
+   "id": "scale-D33",
+   "area": "scale"
+  },
+  {
+   "title": "Novelty-first batches from the model's own reader states",
+   "summary": "Each batch is chosen from 4,096 random candidate rows by farthest-first picking on B2's own pooled reader states, so a batch avoids rows that look like the rows just shown (the same problem with new numbers). A placebo draws a random batch from the same candidates. It targets the 20.5 / 23.1 / 25.5% own-text near-repeats at 7.6M / 22.8M / 72M prefixes.",
+   "change": "ledger.py run(): keep pooled reader state per row (mean of X over prompt characters, line 284; 64-d random projection for 8a pools). data.py: batch = 256 rows farthest-first from 4,096 unseen-this-epoch candidates, maximising min cosine distance to the previous batch and to already picked rows. Placebo P5 = random 256 of the same 4,096. 0 params; about 0.27 GFLOP per batch (suggested).",
+   "why": "Two near-copies in one batch give nearly the same gradient, so the update is spent twice. The 8a rungs see about 3.3-4 passes, so each pass should carry more distinct forms, helping larger models most (suggested). Risk: farthest-first picks outliers and starves common kinds, hence the family-share guard.",
+   "evidence": [
+    {
+     "claim": "Own-text near-repeat rates about 20.5%, 23.1%, 25.5% at the 7.6M, 22.8M, 72.0M prefixes (target 10% or less; accepted and reported, not gated).",
+     "label": "shown",
+     "source": "DATA-POOL-PLAN-2026-10-06.md section 10; 8A-SPEC addendum D2"
+    },
+    {
+     "claim": "The reader output X is computed in every forward pass, so a pooled state costs no extra compute.",
+     "label": "shown",
+     "source": "ledger.py lines 284, 352"
+    },
+    {
+     "claim": "Farthest-first batches reduce within-batch near-copies by a margin that matters.",
+     "label": "untested",
+     "source": "needs the 3M-slice probe"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Step 0 on the M1 Pro after the 8a build (within-batch cosine, 30 min); arms on BensPC seeds 400-401",
+    "hours": 6.5,
+    "arms": "U5 uniform (8a design), N5 novelty-first, P5 placebo",
+    "pass_mark": "Step-0 kill: farthest-first batches not at least 0.05 less similar within the batch than uniform. Screen: N5 minus U5 pooled-5 at least +1.5 on both seeds and N5 minus P5 at least +1.0 on both; no family below half its uniform visit share. Claim (400-405): mean N5 minus U5 at least +2.0, CI above 0.",
+    "proved_wrong": "Mean N5 minus P5 under +0.5 over six seeds, or any family with 50 or more train rows visited under half its uniform share."
+   },
+   "rules_check": "Rule 1: sampler between updates. Rule 2: none. Rule 3: 0 params. Rule 5: train rows only. Rule 10: no threshold; candidate size and state dimension fixed (disclosed).",
+   "closest_prior": "Offline duplicate limits in the data-pool plan; this moves the choice into the model's own sampler.",
+   "autonomy": "Deploy: the model keeps its own pooled states for stored episodes and builds sleep batches by farthest-first among a fixed-size candidate set.",
+   "merged_from": [
+    "w2h-5"
+   ],
+   "director_score": 3.8,
+   "director_note": "Needs the 8a build for its 3M arm. Critics should check that pooled reader-state cosine actually separates near-repeats (same problem, new numbers).",
+   "id": "scale-D34",
+   "area": "scale"
+  },
+  {
+   "title": "Copy-path rows: options cloze and span talker",
+   "summary": "Two ways to test whether pointers can replace character spelling for cloze-type answers. Options cloze: list the answer among four chunk words in the prompt so the answer becomes a word copy, with frequency and length baselines and a GEN-only arm on the same chunks. Span talker: compare span=True (up to 12 words, +16,448 params at d=256) with WORD-only on copy-span rows at 3M.",
+   "change": "Options: an options line after the blank with the answer and three distractors of similar length (never the answer), at G caps (N_REG 36, W_MAX 208). Span: span=True adds q_wend Linear(256,64); 20% copy-span rows ('copy the 2 words right after K'), K occurring once. Both at q33 mix, seeds 200-201.",
+   "why": "The blank removes the word, so cloze answers are copyable only via repeats (28.4%); the rest go to the parallel GEN registers. A copy target removes the spelling step; the shortcut baselines show whether the model reads text or a prior. The span talker has only been measured at 10.9M on teacher rows (B1), against GEN, not WORD.",
+   "evidence": [
+    {
+     "claim": "B2 coverage on 6,800 in_dist rows: NUM 42.2, WORD 27.9, GEN 30.0 percent; the WORD talker copies exactly one word.",
+     "label": "shown",
+     "source": "B2_s200/RESULT.json extra.coverage; ledger.py talk() lines 380-405"
+    },
+    {
+     "claim": "Span talker copies up to span_max=12 words with start and end pointers; B2 span at M size is 10,914,681.",
+     "label": "shown",
+     "source": "ledger.py lines 24-28, 350; RESULTS-B1.md lines 97-100"
+    },
+    {
+     "claim": "Options turn the answer into a pointer target but at deploy the model cannot yet build its own candidate list.",
+     "label": "suggested",
+     "source": "w1e-2 autonomy note"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201 at 3M shape with G caps",
+    "hours": 8,
+    "arms": "options A vs GEN-only B (plus frequency/length baselines); span S vs WORD W",
+    "pass_mark": "Options: A at least the better baseline + 15 points on held-out chunks on both seeds and B at most 10; chain-5 at least 99. Span: S minus W at least +20 exact on held-out copy-span rows on both seeds, pooled-5 not below -1.0.",
+    "proved_wrong": "A within 5 points of the better baseline (rows teach a prior) or B above 25 on both seeds (GEN path is not the bottleneck); S within +5 of W on both seeds."
+   },
+   "rules_check": "Rule 1: builders hand-written data; word_spans is an existing hand splitter. Rule 3: +16,448 params for span. Rule 7: W_MAX and N_REG raised, not cut. Rule 10: pointer choice is the model's, but free fill-in needs a candidate step the model does itself (gap).",
+   "closest_prior": "8A-SPEC section 4 cloze and addendum G; B1's span talker.",
+   "autonomy": "Partial: in use the user supplies options; free fill-in would need the model's own candidate step, not built.",
+   "merged_from": [
+    "w1e-2",
+    "w1e-6"
+   ],
+   "director_score": 3.6,
+   "director_note": "Mostly redundant with the spelling gate and its fixes. Critics should check the rule-10 gap for the options arm and whether options ruin the cloze's skill content.",
+   "id": "scale-D35",
+   "area": "scale"
+  },
+  {
+   "title": "Byte-level frozen encoder instead of Gemma tokens",
+   "summary": "EGE's per-character states come from a hand-written Gemma tokenizer and offset map inside the answer path, which breaks rules 1 and 10 as written. A pretrained byte-level encoder (ByT5- or CANINE-class; not chosen, sizes not checked) gives one state per byte, one per letter for ASCII prompts, so the alignment becomes the identity and letters stay visible. Needs Ben's approval of a new borrowed part.",
+   "change": "models/eg.py second backend; align() identity for ASCII prompts (check the vocabulary); adapter input width d_enc (ln_eg over d_enc, eg_proj Linear(d_enc,256), trainable 2 d_enc + 256 d_enc + 256, same as EGE at 768). Frozen count unknown until chosen and must be counted.",
+   "why": "Letters are lost at Gemma's input and the +-4 window carries cipher tasks (R0 -6.3 / -6.8; EGE keeps cipher 97.5 / 95.0). A byte encoder may keep spelling while adding meaning. Byte sequences are 3-4x longer than Gemma tokens, so cost per seed is higher (suggested).",
+   "evidence": [
+    {
+     "claim": "Gemma alignment (align, encode) runs per batch in the forward path.",
+     "label": "shown",
+     "source": "models/eg.py lines 51-98"
+    },
+    {
+     "claim": "EGE cipher_map in_dist 97.5 (s200) and 95.0 (s201); R0 (no window) 12.5 and 2.5.",
+     "label": "shown",
+     "source": "results/RESULTS-EG2.md"
+    },
+    {
+     "claim": "Byte-level pretrained encoders ByT5 (2105.13626) and Bolmo (2512.15586) are listed; abstracts not re-read; sizes and licences unchecked.",
+     "label": "untested",
+     "source": "/mnt/project-files/papers/gemma-reader-papers.md"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC after q39, or rented pairs; needs Ben's OK to add a borrowed encoder (his 10-06 approval named EmbeddingGemma 2 only) and a rule-2 check of the encoder's pretraining data",
+    "hours": 5,
+    "arms": "BYTE vs B2V and EGE, seeds 200-201 on the same machine",
+    "pass_mark": "All five addendum-4 marks (pooled-5 at least +1.0 on both seeds; variant at least +3.0 on the 2-seed mean; no split down more than 2.0; chain-5 at least 99.0; loops:0 and donor in_dist at most 5), plus 2-seed mean gain at least +1.85 and cipher_map in_dist at least 90 on both seeds.",
+    "proved_wrong": "2-seed mean gain below +1.35 or cipher_map below 90 on either seed; between +1.35 and +1.85 is a tie."
+   },
+   "rules_check": "Rule 1: removes one hand algorithm from the answer path. Rule 2: borrowed encoder pretraining data must be checked. Rule 3: whole size counted. Rule 4: screen. Rule 10: no added human step.",
+   "closest_prior": "EGO, EGR, EGM, EGW (Gemma tokens), U0 (BPE prompt). None uses a pretrained byte encoder.",
+   "autonomy": "Deploy-time the encoder runs on the live prompt with identity alignment, removing one hand step.",
+   "merged_from": [
+    "w3f-5"
+   ],
+   "director_score": 3.2,
+   "director_note": "Valuable for rule 1 only if EGE-style readers survive. Critics should check encoder choice, size and licence before anything is run.",
+   "id": "scale-D36",
+   "area": "scale"
+  },
+  {
+   "title": "Fast-sleep fixed dose and record curve",
+   "summary": "On the six confirm parents, one fixed dose (lr 3e-4, 16 visits) gives 98% of the per-parent pick's reference-arm gain with skills harm at most 0.2, so test dropping the hand pick on the W arm; and re-run the notebook arm with 100%, 50% and 25% of its W records with the calibration count held fixed to see whether gain tracks record count.",
+   "change": "Dose: replace the per-parent dose pick (B_GRID lr in 3e-4, 1e-3 at 16 visits) with lr 3e-4, 16 visits; run the W arm on s200, s201, s203 (the three parents that picked 1e-3). Records: subsample W records (two seeds at 50% and 25%) and pass the full-W count to calibration (one-line change in m_knn, which sets n_cal = len(recs)). CPU, about 9 min a dose run and 15-40 s a notebook run.",
+   "why": "Reference-arm gains at 3e-4 are 39.8, 40.6, 39.5, 39.5, 42.6, 40.2 (mean 40.4) vs per-parent pick mean 41.0; W-arm gains at chosen doses 35.9, 39.1, 34.4, 36.3, 40.6, 35.9 (pooled 37.0). W counts are 420, 344, 207, 358, 324, 322 and notebook gains 32.0, 37.5, 21.5, 28.9, 40.6, 32.0 (correlation 0.53, n=6).",
+   "evidence": [
+    {
+     "claim": "3e-4 mean 40.4 vs 1e-3 mean 40.9 vs pick 41.0; largest harm 0.2 at 3e-4 and 2.3 at 1e-3 (s202).",
+     "label": "shown",
+     "source": "/mnt/project-files/fast-sleep/confirm/s200..s205/confirm.json (arithmetic)"
+    },
+    {
+     "claim": "W records and notebook gains per parent as listed; correlation 0.53 not significant.",
+     "label": "shown",
+     "source": "confirm/s20X/setup.json arm_build.n_W; REPORT.json"
+    },
+    {
+     "claim": "nightly_recall switches recall off when chain-5 harm exceeds 2 on a fixed panel.",
+     "label": "shown",
+     "source": "creative/creative/fastsleep.py skills5, nightly_recall"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "CPU (cloud or PC), fastsleep.py confirm stage W with a fixed dose; m_knn with the calibration count passed in",
+    "hours": 0.8,
+    "arms": "W at lr 3e-4 on s200, s201, s203; notebook at 100/50/25% records on six parents",
+    "pass_mark": "Pooled W gain of the fixed dose at least 0.95 x 37.0 = 35.2 and harm at most 2 on every parent; mean gain at 50% at least 0.9x the 100% gain and at 25% at least 0.6x across six paired parents.",
+    "proved_wrong": "Pooled W gain below 31.5 or harm above 2 on two or more parents; gain at 50% below 0.75x the 100% gain."
+   },
+   "rules_check": "Rule 4: six paired parents with the dose fixed before the run. Rule 5: pool and DEV only. Rule 9: C2/fast-sleep card only. Rule 10: removes one hand pick; the fixed dose is a build-time constant (Ben to rule).",
+   "closest_prior": "Job 6's per-parent rule (best DEV first try within 2 points of harm); the 8a quarter-pool varies the training pool, not sleep records.",
+   "autonomy": "Removes one hand-set step; the harm guard, the W filter and the 16 visits remain hand-set. The model would calibrate on its own past skills rows (untested).",
+   "merged_from": [
+    "w3c-4",
+    "w3c-5"
+   ],
+   "director_score": 3,
+   "director_note": "Off the main size question; belongs to the fast-sleep area. Critics should check the area overlap and that the 98% figure comes from six parents with a tuned grid.",
+   "id": "scale-D37",
+   "area": "scale"
+  },
+  {
+   "title": "Top-1 MoE MLP with a router on controller state",
+   "summary": "Replace each block's MLP with 6 expert MLPs and a learned router on the controller state: 9,607,765 trained params (10M band) at B2-S per-token compute. The idea itself expects it to be the weakest of the equal-compute designs.",
+   "change": "ledger.py CBlock: 6 experts (Linear 256-1228, GELU, Linear 1228-256) and a router Linear(256,6) on ln_f(Z); out = softmax(router)[e] x expert_e(...) with e the argmax; gather dispatch (dense masked would be 6x); training-only Switch-style balance loss; independent random init of router and experts.",
+   "why": "Compute stays at B2-S while parameters grow 2.9x. The prior is weak: per-round routers in the planner did not pass (131.2 vs 132.5), shared gating across iterations plateaued worse in the chain-of-experts paper, and an earlier thinker with zero routers and identical experts never trained (lock-in).",
+   "evidence": [
+    {
+     "claim": "Per-round routers in the planner 131.2 vs 132.5, did not pass; zero routers and identical experts never trained.",
+     "label": "shown",
+     "source": "/mnt/project-files/model-audit/AUDIT-ranked-2026-10-05.md section 9"
+    },
+    {
+     "claim": "Shared gating across iterations plateaued at about 1.5, worse than standard CoE and the MoE baseline.",
+     "label": "shown",
+     "source": "/mnt/project-files/papers/chain-of-experts-2506.18945.md lines 13-15"
+    },
+    {
+     "claim": "9,607,765 params counted from the block arithmetic (6 x 630,220 + 1,542 router per block).",
+     "label": "shown",
+     "source": "recount by w3e-4 from ledger.py"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "BensPC seeds 200-201",
+    "hours": 5,
+    "arms": "X6 vs B2-S; a same-size plain at 9.32-9.90M (not built)",
+    "pass_mark": "X6 minus B2-S pooled-5 at least +3.0 on both seeds; at least 4 of 6 experts take at least 5% of tokens in each block; chain-5 at least 99.0; leak no more than 2 above same-seed B2-S.",
+    "proved_wrong": "X6 minus B2-S under +1.0 on both seeds, or routing collapse (3 or fewer experts at 5%) in either block on either seed."
+   },
+   "rules_check": "Rule 3: all experts and routers counted; same-size plain needed. Rule 10: router is learned; the balance loss is training-only. Bench lists per-round routers as do-not-port (BENCH-RECIPE line 108); this router is shared across rounds.",
+   "closest_prior": "PLR, CoE (2506.18945), Mixture-of-Recursions (2507.10524, abstract).",
+   "autonomy": "Router picks the expert from controller state at deploy; no hand gate.",
+   "merged_from": [
+    "w3e-4"
+   ],
+   "director_score": 2.5,
+   "director_note": "Low prior; included for the question of parameters at fixed compute. Critics should check that it is not just the shared-gating arm the paper already found worse.",
+   "id": "scale-D38",
+   "area": "scale"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "w1f-5",
+   "reason": "Spare block gated by its own failures breaks rule 10 as written: practice selection, the stop rule and an outside-tool failure label (T1) do not exist yet, and the idea itself says it has no prototype and no runnable test (hours 0). The fast-sleep night-chain test it leans on failed its mark (+0.7 vs +5). Re-open after 2d, T1 and a practice loop exist."
+  },
+  {
+   "id": "w3f-3",
+   "reason": "Same-whole-size plain 270M (d=896, 28 layers, 270,371,584 params) costs about 28 GPU-hours for a 2-seed screen (14-22 h a seed on the PC) and needs Ben's money approval, far above the cheap-test bar. It is the required rule-3 control for any EGE-based 274.5M claim, so keep it as a gated later step after q39 passes; not an idea for this wave."
+  },
+  {
+   "id": "w1a-5 (cap-counting part)",
+   "reason": "Refuted by shown counts: train and every dev split have max 11 numbers (cap 16), max 51 words (cap 64) and max prompt 204 (cap 208), so the silent N_NUM/W_MAX/MAX_PROMPT caps cannot explain table_calc, list_index or seq_cycle misses; only the 7-step program cap binds (528 train rows, 6 of 6,040 pooled-5 dev rows). The LEN3 and number-link probes are kept in the probe-battery idea."
+  },
+  {
+   "id": "w1e-5 (vocab-split mark)",
+   "reason": "Its premise 'odd_one_out vocab is 0 for both models' is false: odd_one_out has no rows in the vocab split in any of the 12 RESULT files (its variant is 22.9 for B2 vs 8.8 for plain_tf_steps). The idea survives in the web-skill-rows merge with the mark moved to the variant split and held-out web rows."
+  },
+  {
+   "id": "w1g-1/w1g-5 (hand-constant versions)",
+   "reason": "The 50%-cut with 2,000-update refresh and the fixed 4,000/500-update return gaps are hand-set switches with no way for the deployed model to set them (rule 10). Their goal is kept in the loss-ranked replay idea in its parameter-free rank-weight form."
+  }
+ ],
+ "area_summary": "The swarm produced 100 raw ideas; I merged them into 38 distinct ones. Nearly all are zero-compute reanalyses, CPU probes on the six saved q33 B2 checkpoints (code/b2ckpt, verified present, 13.2 MB each, seed identity shown only for 200-202), or 2-seed screens of 2-8 PC hours. The central finding is that no B2 result yet shows bigger is better on the skills data, and the 8a mark of +3.0 per rung is statistically demanding (about 25% pass at a true +3 for two rungs). The most valuable moves are the cheap decision aids. First, re-power the first-look gate and add the missing plain-10M arm (the rented boxes run only the 3M pair and B2D). Second, run a block-use census to learn whether added depth is used, which decides the 30M shape (the spec's 10-12 and 14-16 blocks do not fit the parameter bands; 8 blocks at width 256 and 9 at mlp 6.0 or 11 at mlp 4.8 at width 384 do). Third, run a spelling gate, because 62% of the 8a web rows ask a parallel 8-letter generator to write 3-12 letter words (13 registers fit the existing place table, so the pilot needs only one constant). Fourth, cut B2's step time, since B2 is about 4x plain per update at 8a caps and the 30M rung is about 13-14 h a seed. I verified the workspace key/value premise in ledger.py, the existence of the checkpoints, the pool resolution (addendum I1: 3M and 10M share the 60M pool) and the speed table (addendum I2). Corrections applied: the cap-truncation hypothesis is refuted by LIMIT-COUNTS, odd_one_out has no vocab rows, the variant split has 33 families, the executor-bound set is a 50% coverage cut, and the first look runs on rented 5090s. Two ideas were dropped (rule 10 and cost). The variant-data ideas probably overlap another area. Missing: any test of the size claim at 30M that is cheap, and a plan for collecting the first-look checkpoints before the boxes are destroyed."
+}

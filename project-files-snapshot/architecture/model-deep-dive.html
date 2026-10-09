@@ -1,0 +1,210 @@
+<title>Premonition Deep Dive</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one column of picture cards; each card = headline, one picture, one short line, a small facts list. */
+:root{
+  --bg:#f3f5f7; --card:#ffffff; --fg:#14232e; --muted:#5b6b78; --line:#d6dde3;
+  --read:#2f7fb8; --think:#1f9d8a; --talk:#d9822b; --frozen:#8a6fd1; --hand:#8d99a3; --warn:#b8860b;
+  --warnbg:#fff3cf; --soft:#e9eff3; --onfill:#ffffff;
+  --display:"Bricolage Grotesque","Trebuchet MS",sans-serif; --body:"DM Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1a22; --card:#17252f; --fg:#e8eef2; --muted:#9db0bd; --line:#2a3b47;
+  --read:#5aaee6; --think:#46c9b3; --talk:#f0a050; --frozen:#b5a0f0; --hand:#7d8b96; --warn:#f0c85a;
+  --warnbg:#3a3015; --soft:#223440; --onfill:#0f1a22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1a22; --card:#17252f; --fg:#e8eef2; --muted:#9db0bd; --line:#2a3b47;
+  --read:#5aaee6; --think:#46c9b3; --talk:#f0a050; --frozen:#b5a0f0; --hand:#7d8b96; --warn:#f0c85a;
+  --warnbg:#3a3015; --soft:#223440; --onfill:#0f1a22; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;padding-inline:16px;padding-block:20px 40px}
+main{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+h1{font-size:2.1rem;font-weight:800}
+h2{font-size:1.4rem;font-weight:800}
+p{margin:0}
+.sub{color:var(--muted)}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);fill:var(--fg)}
+.m{fill:var(--muted)!important}
+.big{font-family:var(--display);font-weight:800}
+.w{fill:var(--onfill)!important}
+.tag{align-self:flex-start;font-size:.78rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--warnbg);color:var(--warn)}
+.facts{margin:0;padding-left:1.1em;color:var(--muted);font-size:.85rem;line-height:1.5;display:flex;flex-direction:column;gap:2px}
+.facts b{color:var(--fg);font-weight:600}
+footer{max-width:640px;margin:20px auto 0;color:var(--muted);font-size:.8rem;line-height:1.5}
+</style>
+<main>
+<section class="card"><h1>How Premonition's model works</h1><p class="sub">It reads a question, thinks in rounds on a numbered notepad, and answers. We follow one question all the way through.</p><svg viewBox="0 0 360 134" role="img" aria-label="Read, workspace, think, say">
+<rect x="6" y="28" width="82" height="64" rx="10" fill="var(--read)"/><text x="47" y="66" text-anchor="middle" class="big w" font-size="15">READ</text>
+<rect x="104" y="28" width="82" height="64" rx="10" fill="var(--hand)"/><text x="145" y="58" text-anchor="middle" class="big w" font-size="12">WORKSPACE</text><text x="145" y="76" text-anchor="middle" class="w" font-size="11">27 slots</text>
+<rect x="202" y="28" width="82" height="64" rx="10" fill="var(--think)"/><text x="243" y="66" text-anchor="middle" class="big w" font-size="15">THINK</text>
+<rect x="300" y="28" width="54" height="64" rx="10" fill="var(--talk)"/><text x="327" y="66" text-anchor="middle" class="big w" font-size="13">SAY</text>
+<g stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M90 60h12"/><path d="M188 60h12"/><path d="M286 60h12"/></g>
+<rect x="6" y="112" width="12" height="12" rx="3" fill="var(--think)"/><text x="24" y="122" font-size="12" class="m">learned</text>
+<rect x="84" y="112" width="12" height="12" rx="3" fill="var(--hand)"/><text x="102" y="122" font-size="12" class="m">hand-written code</text>
+<text x="180" y="12" text-anchor="middle" font-size="13" class="m">3.3M learned numbers, trained from scratch</text>
+</svg>
+<ul class="facts"><li><b>Model:</b> B2, the best whole model so far. Nothing pretrained.</li><li><b>Size:</b> 3,302,481 learned numbers (small version); 10,890,041 (medium version).</li><li><b>Symbols it knows:</b> 108 characters and special marks, as counted in the size.</li><li>Teal and orange parts are learned. Grey parts are ordinary code written by us.</li></ul></section>
+<section class="card"><span class="tag">Illustrative</span><h2>Our example question</h2><svg viewBox="0 0 360 156" role="img" aria-label="A word problem and its answer">
+<rect x="6" y="14" width="348" height="62" rx="10" fill="var(--soft)"/>
+<text x="16" y="38" font-size="13">Tom has <tspan class="big" style="fill:var(--read)" font-size="15">12</tspan> apples. He gives away <tspan class="big" style="fill:var(--read)" font-size="15">5</tspan>,</text>
+<text x="16" y="60" font-size="13">then buys <tspan class="big" style="fill:var(--read)" font-size="15">3</tspan>. How many does he have?</text>
+<path d="M180 80v22" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M172 96l8 8 8-8" stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="130" y="110" width="100" height="36" rx="10" fill="var(--talk)"/><text x="180" y="135" text-anchor="middle" class="big w" font-size="18">10</text>
+</svg><p>We follow this one through each part. 12 minus 5 is 7, then plus 3 is 10.</p><ul class="facts"><li><b>Made up for this page</b>, in the style of the 200,000 practice questions. It is not a real row.</li><li>Real questions: 81 characters on average, longest 204. A batch is padded to about 161.</li></ul></section>
+<section class="card"><h2>Read: every letter becomes a vector</h2><svg viewBox="0 0 360 136" role="img" aria-label="Letters become vectors with place codes">
+<g font-size="20" class="big" text-anchor="middle">
+<rect x="10" y="30" width="40" height="44" rx="8" fill="var(--soft)"/><text x="30" y="60">1</text>
+<rect x="56" y="30" width="40" height="44" rx="8" fill="var(--soft)"/><text x="76" y="60">2</text>
+<rect x="102" y="30" width="40" height="44" rx="8" fill="var(--soft)"/><text x="122" y="60" class="m">_</text>
+<rect x="148" y="30" width="40" height="44" rx="8" fill="var(--soft)"/><text x="168" y="60">a</text>
+</g>
+<g font-size="11" class="m" text-anchor="middle"><text x="30" y="22">tens</text><text x="76" y="22">units</text><text x="122" y="22">space</text><text x="168" y="22">0 (units)</text></g>
+<path d="M200 52h28" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+<g><rect x="238.0" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="244.6" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="251.2" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="257.8" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="264.4" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="271.0" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="277.6" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="284.2" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="290.8" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="297.4" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="304.0" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="310.6" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="317.2" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="323.8" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="330.4" y="36" width="5" height="32" rx="2" fill="var(--read)"/><rect x="337.0" y="36" width="5" height="32" rx="2" fill="var(--read)"/></g>
+<text x="290" y="28" text-anchor="middle" font-size="11" class="m">256 numbers per letter</text>
+<text x="180" y="104" text-anchor="middle" font-size="13">each letter = its identity + its place in the word + its neighbours</text>
+<text x="180" y="124" text-anchor="middle" font-size="12" class="m">two small blocks mix in the letters up to 4 away each side</text>
+</svg><p>The reader gives each character a list of 256 numbers that carries what it is, where it sits in its word, and what is next to it.</p><ul class="facts"><li><b>Input per letter:</b> letter + position in the question + place code. The place code counts from the right end of the word: units 0, tens 1, up to 14. Spaces get code 15.</li><li><b>Two blocks</b> of a 5-wide convolution, so each letter sees 4 letters left and 4 right.</li><li><b>Output:</b> one 256-number vector per character, up to 208 characters. The thinker later looks at all of them.</li></ul></section>
+<section class="card"><span class="tag">Plain code</span><h2>Hand-written helper: finds the numbers</h2><svg viewBox="0 0 360 148" role="img" aria-label="Code finds numbers in the question">
+<rect x="6" y="14" width="348" height="44" rx="10" fill="var(--soft)"/>
+<g font-size="13">
+<text x="16" y="42" textLength="44" lengthAdjust="spacing">Tom has</text>
+<text x="66" y="42" class="big" style="fill:var(--read)" textLength="16" lengthAdjust="spacing">12</text>
+<text x="90" y="42" textLength="130" lengthAdjust="spacing">apples. He gives away</text>
+<text x="226" y="42" class="big" style="fill:var(--read)">5</text>
+<text x="236" y="42" textLength="62" lengthAdjust="spacing">, then buys</text>
+<text x="304" y="42" class="big" style="fill:var(--read)">3</text>
+</g>
+<rect x="62" y="24" width="24" height="26" rx="4" fill="none" stroke="var(--hand)" stroke-width="2.5"/>
+<rect x="221" y="24" width="14" height="26" rx="4" fill="none" stroke="var(--hand)" stroke-width="2.5"/>
+<rect x="300" y="24" width="14" height="26" rx="4" fill="none" stroke="var(--hand)" stroke-width="2.5"/>
+<g stroke="var(--hand)" stroke-width="2" fill="none"><path d="M74 52v28M228 52L198 80M307 52L290 80"/></g>
+<g class="big" font-size="16" text-anchor="middle"><rect x="44" y="80" width="60" height="34" rx="8" fill="var(--hand)"/><text x="74" y="103" class="w">12</text><rect x="168" y="80" width="60" height="34" rx="8" fill="var(--hand)"/><text x="198" y="103" class="w">5</text><rect x="260" y="80" width="60" height="34" rx="8" fill="var(--hand)"/><text x="290" y="103" class="w">3</text></g>
+<text x="180" y="138" text-anchor="middle" font-size="12" class="m">plain code: find digits, turn them into exact whole numbers</text>
+</svg><p>Before the thinker starts, ordinary code (not learned) pulls each number out as an exact whole number. The model never has to read '12' digit by digit to use it.</p><ul class="facts"><li><b>Number finder:</b> a plain pattern for runs of digits. It keeps the first 16 numbers, as whole numbers (capped at 10^18).</li><li><b>Word finder:</b> a second helper marks where each word starts and ends, first 64 words.</li><li><b>Why this matters:</b> it is part of the input path that does not have to work through the learned reader. An outside-calculator test has to remove it.</li></ul></section>
+<section class="card"><h2>Workspace: 27 numbered slots</h2><svg viewBox="0 0 360 150" role="img" aria-label="27 slots: numbers, constants, results"><rect x="6.0" y="22" width="22" height="30" rx="4" fill="var(--read)"/><rect x="31.2" y="22" width="22" height="30" rx="4" fill="var(--read)"/><rect x="56.4" y="22" width="22" height="30" rx="4" fill="var(--read)"/><rect x="81.6" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="106.8" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="132.0" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="157.2" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="182.4" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="207.6" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="232.8" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="258.0" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="283.2" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="308.4" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="333.6" y="22" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="6.0" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="31.2" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="56.4" y="62" width="22" height="30" rx="4" fill="var(--hand)"/><rect x="81.6" y="62" width="22" height="30" rx="4" fill="var(--hand)"/><rect x="106.8" y="62" width="22" height="30" rx="4" fill="var(--hand)"/><rect x="132.0" y="62" width="22" height="30" rx="4" fill="var(--hand)"/><rect x="157.2" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="182.4" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="207.6" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="232.8" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="258.0" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="283.2" y="62" width="22" height="30" rx="4" fill="var(--soft)"/><rect x="308.4" y="62" width="22" height="30" rx="4" fill="var(--soft)"/>
+<g font-size="10" class="big" text-anchor="middle">
+<text x="17" y="42" class="w">12</text><text x="42.2" y="42" class="w">5</text><text x="67.4" y="42" class="w">3</text>
+<text x="6" y="14" class="m" text-anchor="start" font-size="11">slots 0-15: numbers from the question</text>
+</g>
+<text x="6" y="106" font-size="11" class="m">slots 16-19: constants 1, 2, 10, 100 (grey)</text>
+<text x="6" y="122" font-size="11" class="m">slots 20-26: results, empty until a step runs</text>
+<text x="6" y="142" font-size="11" class="m">27 slots in all</text>
+</svg><p>The thinker's notepad. Numbers from the question go in the first slots. Results of each step go in the last 7.</p><ul class="facts"><li><b>16</b> number slots + <b>4</b> constants (1, 2, 10, 100) + <b>7</b> result slots = <b>27</b>.</li><li><b>Each filled slot</b> is stored as a 93-number code: 9 digit one-hots (units first), a sign, a valid flag and the size of the number. Plus the reader's average over that number's digits, plus its slot number.</li><li>The thinker can only read the workspace. It cannot write into it directly.</li></ul></section>
+<section class="card"><h2>Thinker: 17 state vectors</h2><svg viewBox="0 0 360 154" role="img" aria-label="8 control vectors and 9 register vectors">
+<text x="6" y="16" font-size="12" class="big">17 state vectors in the thinker</text>
+<g><rect x="6.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="30.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="54.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="78.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="102.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="126.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="150.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/><rect x="174.0" y="26" width="20" height="40" rx="3" fill="var(--think)"/></g>
+<g><rect x="196.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="215.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="234.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="253.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="272.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="291.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="310.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="329.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/><rect x="348.0" y="26" width="16" height="40" rx="3" fill="var(--talk)"/></g>
+<rect x="6" y="26" width="20" height="40" rx="3" fill="none" stroke="var(--fg)" stroke-width="2.5"/>
+<rect x="30" y="26" width="20" height="40" rx="3" fill="none" stroke="var(--fg)" stroke-width="2.5"/>
+<text x="16" y="82" text-anchor="middle" font-size="10" class="m">step</text><text x="40" y="82" text-anchor="middle" font-size="10" class="m">final</text>
+<text x="110" y="82" text-anchor="middle" font-size="11" class="m">6 scratch, used</text>
+<text x="262" y="82" text-anchor="middle" font-size="11" class="m">9 spell the answer</text>
+<text x="6" y="108" font-size="12">control 0 picks the next calculator step</text>
+<text x="6" y="126" font-size="12">control 1 makes the final choice</text>
+<text x="6" y="144" font-size="12">registers hold letters for the talker</text>
+</svg><p>The thinker's own memory is 17 vectors. Two of the 8 control vectors steer the work. The other 6 are scratch space that the thinker really uses.</p><ul class="facts"><li><b>8 control + 9 register</b> vectors, each 256 numbers wide (384 in the medium version).</li><li><b>Output heads read only control 0 and control 1</b> (from the code). Controls 2 to 7 only pass information through attention. <b>Zeroing them at test time</b> cost 1.6 points on pooled-5 and 7.8 on chains (99.4 to 91.6) on one seed (s200), so they are used.</li><li><b>Registers</b> are tied to the 9 answer letters: 8 letters plus an end mark.</li></ul></section>
+<section class="card"><h2>One round: look, talk, think</h2><svg viewBox="0 0 360 166" role="img" aria-label="A round of thinking">
+<g class="big" font-size="12" text-anchor="middle">
+<rect x="6" y="14" width="106" height="30" rx="8" fill="var(--read)"/><text x="59" y="34" class="w">all the letters</text>
+<rect x="6" y="52" width="106" height="30" rx="8" fill="var(--hand)"/><text x="59" y="72" class="w">27 slots</text>
+<rect x="150" y="30" width="86" height="44" rx="10" fill="var(--think)"/><text x="193" y="56" class="w">17 vectors</text>
+</g>
+<g stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M114 29L146 44"/><path d="M114 67L146 60"/><path d="M193 78v14"/></g>
+<text x="130" y="22" font-size="11" class="m">look</text>
+<rect x="150" y="96" width="86" height="26" rx="8" fill="var(--soft)"/><text x="193" y="113" text-anchor="middle" font-size="11">compare notes</text>
+<path d="M193 124v10" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"/>
+<rect x="150" y="136" width="86" height="22" rx="8" fill="var(--soft)"/><text x="193" y="151" text-anchor="middle" font-size="11">small network</text>
+<path d="M244 140h30v-90h-30" stroke="var(--think)" stroke-width="3" fill="none" stroke-linecap="round"/>
+<text x="282" y="94" font-size="12" class="big" style="fill:var(--think)">x 8 rounds</text>
+<text x="282" y="112" font-size="11" class="m">same weights</text>
+</svg><p>Every round the 17 vectors look at all the letters and all the slots, compare notes with each other, then pass through a small network. Eight rounds, same weights each time.</p><ul class="facts"><li><b>Small version:</b> width 256, 4 attention heads, 2 blocks, hidden layer 1,228. <b>Medium:</b> width 384, 6 heads, 3 blocks.</li><li><b>Each round</b> gets a stamp saying which round it is, so the same weights can behave differently each time.</li><li><b>Looping is fixed at 8.</b> Running 16 loops scores 1.6 to 1.9 points worse.</li></ul></section>
+<section class="card"><h2>Rounds 1 to 7: one calculator step each</h2><svg viewBox="0 0 360 182" role="img" aria-label="The example traced round by round">
+<g font-size="12">
+<rect x="6" y="8" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="28" class="big">round 0</text><text x="90" y="28" class="m">just look, no step</text>
+<rect x="6" y="42" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="62" class="big">round 1</text><text x="90" y="62">SUB slot 0, slot 1  = 12 - 5 = 7</text><text x="342" y="62" text-anchor="end" class="m">slot 20</text>
+<rect x="6" y="76" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="96" class="big">round 2</text><text x="90" y="96">ADD slot 20, slot 2 = 7 + 3 = 10</text><text x="342" y="96" text-anchor="end" class="m">slot 21</text>
+<rect x="6" y="110" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="130" class="big">rounds 3-7</text><text x="110" y="130" class="m">NOOP: nothing left to do</text>
+<rect x="6" y="144" width="348" height="30" rx="8" fill="var(--talk)"/><text x="16" y="164" class="big w">end</text><text x="90" y="164" class="w">answer: print slot 21</text>
+</g>
+</svg><p>Our example needs two steps. The thinker writes them one per round. A step is: which operation, and which two slots to use.</p><ul class="facts"><li><b>Control 0</b> picks one of 9 operations, then two pointers choose the operand slots (each a match between a 64-number query and the slot keys).</li><li><b>At most 7 steps</b>, because there are only 7 result slots and one step per round.</li><li><b>Unused rounds</b> are trained to say NOOP.</li></ul></section>
+<section class="card"><span class="tag">Plain code</span><h2>Calculator: nine exact operations</h2><svg viewBox="0 0 360 162" role="img" aria-label="Nine operations"><rect x="6" y="10" width="110" height="36" rx="8" fill="var(--hand)"/><text x="61" y="34" text-anchor="middle" class="big w" font-size="14">NOOP</text><rect x="124" y="10" width="110" height="36" rx="8" fill="var(--hand)"/><text x="179" y="34" text-anchor="middle" class="big w" font-size="14">ADD</text><rect x="242" y="10" width="110" height="36" rx="8" fill="var(--hand)"/><text x="297" y="34" text-anchor="middle" class="big w" font-size="14">SUB</text><rect x="6" y="54" width="110" height="36" rx="8" fill="var(--hand)"/><text x="61" y="78" text-anchor="middle" class="big w" font-size="14">MUL</text><rect x="124" y="54" width="110" height="36" rx="8" fill="var(--hand)"/><text x="179" y="78" text-anchor="middle" class="big w" font-size="14">DIV</text><rect x="242" y="54" width="110" height="36" rx="8" fill="var(--hand)"/><text x="297" y="78" text-anchor="middle" class="big w" font-size="14">MOD</text><rect x="6" y="98" width="110" height="36" rx="8" fill="var(--hand)"/><text x="61" y="122" text-anchor="middle" class="big w" font-size="14">MIN</text><rect x="124" y="98" width="110" height="36" rx="8" fill="var(--hand)"/><text x="179" y="122" text-anchor="middle" class="big w" font-size="14">MAX</text><rect x="242" y="98" width="110" height="36" rx="8" fill="var(--hand)"/><text x="297" y="122" text-anchor="middle" class="big w" font-size="14">CMP</text><text x="180" y="158" text-anchor="middle" font-size="11" class="m">hand-written, no learned parts</text></svg><p>It does the arithmetic exactly. The thinker only chooses what to ask it.</p><ul class="facts"><li><b>Exact whole-number maths.</b> DIV only when it divides evenly. Anything that is invalid or 10^9 or larger is marked invalid.</li><li><b>The result</b> goes back into the workspace as a new slot, so the next round can use it.</li><li><b>Proof it matters:</b> with the calculator off, program questions score 0.6%. Swap ADD and SUB inside it and 99.9% of answers follow the swap.</li></ul></section>
+<section class="card"><h2>After round 8: how to answer</h2><svg viewBox="0 0 360 150" role="img" aria-label="Control 1 makes the final decisions">
+<rect x="6" y="40" width="90" height="46" rx="10" fill="var(--think)"/><text x="51" y="68" text-anchor="middle" class="big w" font-size="13">control 1</text>
+<g stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M98 63h24M122 63v-34h20M122 63h20M122 63v34h20"/></g>
+<g class="big" font-size="13"><rect x="146" y="12" width="208" height="34" rx="8" fill="var(--soft)"/><text x="156" y="34">mode: number, word or letters?</text>
+<rect x="146" y="50" width="208" height="30" rx="8" fill="var(--soft)"/><text x="156" y="70">which slot holds the answer?</text>
+<rect x="146" y="84" width="208" height="30" rx="8" fill="var(--soft)"/><text x="156" y="104">which word to copy?</text></g>
+<text x="180" y="140" text-anchor="middle" font-size="12" class="m">in our example: mode number, slot 21</text>
+</svg><p>One last vector decides what kind of answer to give and where to find it.</p><ul class="facts"><li><b>Mode head:</b> 3-way choice (number, word, letters).</li><li><b>Answer pointer</b> over the 27 slots. <b>Word pointer</b> over up to 64 words.</li></ul></section>
+<section class="card"><h2>Talker: three ways to speak</h2><svg viewBox="0 0 360 166" role="img" aria-label="Number, word, letters">
+<g class="big" font-size="13">
+<rect x="6" y="8" width="348" height="46" rx="10" fill="var(--soft)"/><text x="16" y="28" style="fill:var(--talk)">NUMBER</text><text x="16" y="45" font-size="11" class="m">prints the slot's value: "10"</text>
+<rect x="6" y="60" width="348" height="46" rx="10" fill="var(--soft)"/><text x="16" y="80" style="fill:var(--talk)">WORD</text><text x="16" y="97" font-size="11" class="m">copies one word from the question</text>
+<rect x="6" y="112" width="348" height="46" rx="10" fill="var(--soft)"/><text x="16" y="132" style="fill:var(--talk)">LETTERS</text><text x="16" y="149" font-size="11" class="m">spells up to 8 letters, or copies a letter</text>
+</g>
+<g font-size="10" class="m" text-anchor="end"><text x="344" y="30">pointer learned, print by code</text><text x="344" y="82">pointer learned, copy by code</text><text x="344" y="134">fully learned</text></g>
+</svg><p>The talker adds no thinking. It turns the thinker's final choice into text.</p><ul class="facts"><li><b>NUMBER:</b> the learned part is the pointer. The digits are printed by a line of code.</li><li><b>WORD:</b> the pointer is learned. Word boundaries come from the hand-written word finder.</li><li><b>LETTERS:</b> the 9 registers each give one letter, units first. A learned gate chooses between a letter from the alphabet and a letter copied from the question.</li><li><b>Limit:</b> 8 letters. Answers longer than that cannot be written.</li></ul></section>
+<section class="card"><h2>Learned versus hand-written</h2><svg viewBox="0 0 360 166" role="img" aria-label="What is learned and what is code">
+<rect x="6" y="6" width="170" height="154" rx="10" fill="var(--soft)"/><rect x="184" y="6" width="170" height="154" rx="10" fill="var(--soft)"/>
+<text x="91" y="26" text-anchor="middle" class="big" font-size="14" style="fill:var(--think)">learned</text><text x="269" y="26" text-anchor="middle" class="big" font-size="14" style="fill:var(--hand)">hand-written</text>
+<g font-size="11"><text x="16" y="50">reader (letters to vectors)</text><text x="16" y="70">thinker (rounds, steps)</text><text x="16" y="90">which op, which slots</text><text x="16" y="110">mode and answer pointer</text><text x="16" y="130">letter spelling and copy gate</text>
+<text x="194" y="50">number finder</text><text x="194" y="70">word finder</text><text x="194" y="90">calculator</text><text x="194" y="110">number printing</text><text x="194" y="130">word copying</text></g>
+</svg><p>The learned part decides. The code handles exact numbers and exact text, in and out.</p><ul class="facts"><li><b>Why it matters:</b> if the calculator must be outside the model, the input and output paths have to be learned too. That is the test now proposed (T1), with a digit reading and writing check first (D0).</li><li>Both are untested. Today's 3.3M figure counts only the learned side.</li></ul></section>
+<section class="card"><h2>How it learns</h2><svg viewBox="0 0 360 146" role="img" aria-label="Practice loop">
+<g class="big" font-size="13" text-anchor="middle">
+<rect x="6" y="20" width="96" height="52" rx="10" fill="var(--soft)"/><text x="54" y="42">question</text><text x="54" y="60" font-size="11" class="m">200,000 of them</text>
+<rect x="132" y="20" width="96" height="52" rx="10" fill="var(--think)"/><text x="180" y="52" class="w">model tries</text>
+<rect x="258" y="20" width="96" height="52" rx="10" fill="var(--talk)"/><text x="306" y="42" class="w">compare to</text><text x="306" y="60" class="w">the key</text>
+</g>
+<g stroke="var(--muted)" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M104 46h26"/><path d="M230 46h26"/><path d="M306 76v22h-250v-22"/></g>
+<text x="180" y="116" text-anchor="middle" font-size="12">nudge the weights, repeat 24,000 times</text>
+<text x="180" y="138" text-anchor="middle" font-size="11" class="m">256 questions per nudge</text>
+</svg><p>It practises 24,000 times on 200,000 questions, checks each try against the answer key, and nudges its weights.</p><ul class="facts"><li><b>Recipe:</b> AdamW, learning rate 1e-3 with warm-up then a cosine fall to 10%, batch 256, bf16, shuffled order, from random start.</li><li><b>Teacher-forced steps:</b> where a question has worked steps in the data, the thinker is told the right operation and slots each round. Only 11 arithmetic families have them.</li><li><b>Losses:</b> operation, both operand pointers, mode, answer pointer, word pointer, and letter spelling with the copy path.</li></ul></section>
+<section class="card"><h2>How we score it</h2><svg viewBox="0 0 360 142" role="img" aria-label="B2 73.7 vs 67.7 vs 54.4">
+<g font-size="12"><text x="6" y="30">B2</text><text x="6" y="64">writes steps</text><text x="6" y="98">answers directly</text></g>
+<rect x="106" y="14" width="227" height="24" rx="5" fill="var(--think)"/><rect x="106" y="48" width="209" height="24" rx="5" fill="var(--hand)"/><rect x="106" y="82" width="168" height="24" rx="5" fill="var(--hand)" opacity=".6"/>
+<g font-size="14" class="big" text-anchor="end"><text x="327" y="32" class="w">73.7</text><text x="309" y="66" class="w">67.7</text><text x="268" y="100" class="w">54.4</text></g>
+<text x="6" y="132" font-size="11" class="m">pooled-5, 2-seed screen, all about 3.3M, same practice</text>
+</svg><p>Same-size models learn from the same questions. We compare on questions they have not seen.</p><ul class="facts"><li><b>pooled-5:</b> 6,040 held-out questions across 5 splits (old, new answers, new sentence frames, new words, new wording).</li><li><b>chain-5:</b> 1,000 multi-step questions. B2 gets 99.7 to 99.8. The step-writing text model gets 94.</li><li><b>Fair play:</b> pass marks are written before any run, seeds are paired, and 6 fresh seeds confirm a win. In that confirm B2 led the plain model on all 6 seeds.</li></ul></section>
+<section class="card"><h2>Proof the thinker decides</h2><svg viewBox="0 0 360 148" role="img" aria-label="Lesion results">
+<g font-size="11"><text x="6" y="26">swap ADD/SUB: answers follow</text><text x="6" y="62">give it another question's notes</text><text x="6" y="98">shuffle the state</text><text x="6" y="134">no calculator, program questions</text></g>
+<rect x="196" y="12" width="158" height="22" rx="4" fill="var(--think)"/><rect x="196" y="48" width="6" height="22" rx="2" fill="var(--talk)"/><rect x="196" y="84" width="13" height="22" rx="2" fill="var(--talk)"/><rect x="196" y="120" width="2" height="22" rx="1" fill="var(--talk)"/>
+<g font-size="11" class="big"><text x="350" y="28" text-anchor="end" class="w">99.9%</text><text x="208" y="64">3.8%</text><text x="215" y="100">7.9%</text><text x="206" y="136">0.6%</text></g>
+</svg><p>Break one piece and the answer breaks with it. That shows the thinker, not the talker, is doing the work.</p><ul class="facts"><li><b>Bars:</b> swapping ADD and SUB makes answers follow the swap on 99.9% of rows. Another question's notes: 3.8% right. Shuffled state: 7.9%. No calculator: 0.6%.</li><li><b>One small leak:</b> with zero thinking rounds it still got 6.8% on one seed (mark 5%). Plain B2 reads 0 to 10.8 on other seeds.</li></ul></section>
+<section class="card"><h2>Where it still fails</h2><svg viewBox="0 0 360 164" role="img" aria-label="Known weak spots">
+<g class="big" font-size="13">
+<rect x="6" y="8" width="348" height="38" rx="8" fill="var(--soft)"/><text x="16" y="32">brand-new kinds of question: about 1%</text>
+<rect x="6" y="52" width="348" height="38" rx="8" fill="var(--soft)"/><text x="16" y="76">rule questions: 6 to 9 points behind</text>
+<rect x="6" y="96" width="348" height="38" rx="8" fill="var(--soft)"/><text x="16" y="120">answers over 8 letters: unreachable</text>
+</g>
+<text x="180" y="156" text-anchor="middle" font-size="11" class="m">no program in the data means no calculator help</text>
+</svg><p>It cannot yet learn a new kind of task from a few examples, and rule questions with no worked steps are weak.</p><ul class="facts"><li><b>Rule questions:</b> fewshot_number_rule 9 points and rule_apply 6 points behind the step-writing model.</li><li><b>These are the families with no program in the data.</b> The thinker has to solve them in its 17 vectors.</li></ul></section>
+<section class="card"><h2>Size, counted honestly</h2><svg viewBox="0 0 360 164" role="img" aria-label="Sizes to scale">
+<g font-size="12"><text x="6" y="26">B2 small</text><text x="6" y="66">B2 medium</text><text x="6" y="106">B2 + Gemma</text><text x="6" y="146">shipped plan</text></g>
+<rect x="96" y="12" width="2.1" height="22" fill="var(--think)"/><rect x="96" y="52" width="7.1" height="22" fill="var(--think)"/>
+<rect x="96" y="92" width="179" height="22" rx="3" fill="var(--frozen)"/><rect x="96" y="92" width="2.3" height="22" fill="var(--think)"/>
+<rect x="96" y="132" width="258" height="22" rx="3" fill="var(--frozen)" opacity=".6"/>
+<g font-size="12" class="big"><text x="106" y="30">3.30M</text><text x="110" y="70">10.89M</text><text x="185" y="108" text-anchor="middle" class="w">274.5M counted</text><text x="225" y="148" text-anchor="middle" class="w">about 396M</text></g>
+</svg><p>Borrowed parts count. The Gemma version is 274.5M, almost all of it frozen and not ours.</p><ul class="facts"><li><b>B2:</b> 3,302,481 (small), 10,890,041 (medium).</li><li><b>With EmbeddingGemma 2:</b> 271,002,624 frozen + 3,500,881 trained = 274,503,505.</li><li><b>Shipped plan (not built):</b> about 271M reader + 100M thinker + 25M talker.</li></ul></section>
+<section class="card"><span class="tag">Untested</span><h2>What is being tested next</h2><svg viewBox="0 0 360 178" role="img" aria-label="Next tests">
+<g font-size="12" class="big">
+<rect x="6" y="6" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="26">EGE: Gemma on top of the window (6-seed check)</text>
+<rect x="6" y="40" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="60">D0: can it read and write digits? (no training)</text>
+<rect x="6" y="74" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="94">T1: calculator outside, talker calls it</text>
+<rect x="6" y="108" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="128">W1 wider reading, W2 scratch, H1 stopping</text>
+<rect x="6" y="142" width="348" height="30" rx="8" fill="var(--soft)"/><text x="16" y="162">then deeper loops and an English talker</text>
+</g>
+</svg><p>One change at a time, each against plain B2 on the same seeds, with pass marks written first.</p><ul class="facts"><li><b>EGE</b> gained +1.6 and +2.1 on 2 seeds. Its 6-seed check should land between about 9 PM and midnight ET tonight.</li><li><b>D0 and T1</b> marks are sealed (architecture/MARKS-D0-T1). <b>W1, W2, H1</b> are ideas with proposed marks. All untested.</li></ul></section>
+<section class="card"><h2>Explain it in 30 seconds</h2><svg viewBox="0 0 360 188" role="img" aria-label="Five-step summary">
+<rect x="6" y="6" width="348" height="176" rx="12" fill="var(--soft)"/>
+<g font-size="13"><text x="18" y="32" class="big" style="fill:var(--read)">1. Read.</text><text x="80" y="32">Turn every letter into numbers.</text>
+<text x="18" y="62" class="big" style="fill:var(--think)">2. Note.</text><text x="80" y="62">Put the question's numbers on a pad.</text>
+<text x="18" y="92" class="big" style="fill:var(--think)">3. Think.</text><text x="80" y="92">8 rounds: pick a step, run it.</text>
+<text x="18" y="122" class="big" style="fill:var(--hand)">4. Calculate.</text><text x="108" y="122">Exact code does the maths.</text>
+<text x="18" y="152" class="big" style="fill:var(--talk)">5. Say.</text><text x="80" y="152">Print the slot the thinker points at.</text></g>
+</svg><p>It is a very small model that learns to plan steps for an exact calculator, then reports the result.</p><ul class="facts"><li><b>The claim:</b> at 3.3M learned numbers it beats a plain transformer of the same size by 19 points on new questions (73.7 vs 54.4, 2 seeds).</li><li><b>The honest caveat:</b> the number handling in and out is hand-written code, and it cannot learn brand-new kinds of task yet.</li></ul></section>
+</main>
+<footer>Sources: custom_io/models/ledger.py, reader.py, progparse.py, data.py, README.md, PASS-MARKS.md, REPORT.md and results/RESULTS-EG2.md on branch claude/custom-reader-talker-4x309r. Example question is made up for illustration. The confirm lead (all 6 seeds) is from the thread notes and was not rechecked against the result files here. Status Oct 7, 2026, ET.</footer>

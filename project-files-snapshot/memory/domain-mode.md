@@ -1,0 +1,20 @@
+---
+name: domain-mode
+description: Domain mode (Ben 10:57 AM ET 10-09, "learn how to do spreadsheets"): model teaches itself a domain from a tool + help page; DM-S test on T1SDR 3M, cloud CPU, PR #58
+metadata:
+  type: project
+  modified: 2026-10-09T16:41:11.239Z
+---
+
+Thread "Domain-learning mode" (root cmsg_01GSLCHTCnZxn7DhV19qcDvMK1gzL9x7vxaYkaemt3Fir4), run as ULTRACODE per Ben (Opus plans/judges, all helpers Haiku 5.5 xhigh <100k).
+Ben 10:57 AM ET 10-09: "add a mode where I can have it learn a bunch of skills in a domain"; 10:58 "Like if I said learn how to do spreadsheets"; 12:32 PM "when it's smarter (bigger) it will be better at picking its own skills" (-> addendum A8, reported only: R1 pick gain vs even mix, R2 own-quiz vs sealed rank corr, R3 wasted practice; 3M now, B3 3M/10M and 30M later).
+- Design + sealed marks: /mnt/project-files/domain-mode/DESIGN-AND-MARKS-2026-10-09.md (= domain/ in repo). Loop: make practice by swapping digits in help examples, tool checks, keep own try only if it equals the tool's working (A6) else train the tool's working, choose by |quiz change| over 2 nights, night lr 1e-4 half self-replay, undo night if 512-check agreement drops >3 (A4), stop when quiz rises <1 over 2 nights / all >=0.95 / 12 nights.
+- Marks: DM1 near +30, DM2 far +10, DM3 harm_measure, DM4 audit, DM5 stop within 3 of best night, DM6 RPN with same constants. Scored on trainable kinds only (A2: progparse has no row form for mod/cmp, so MOD/COUNTIF/IF/"a b %" can't train; they stay in practice as a picking check).
+- Code: branch claude/project-thread-p2qwcq (base claude/custom-reader-talker-4x309r), PR #58. Panels /mnt/project-files/domain-mode/panel/ (sheet b9574ab1, rpn 309890ce; rpn.v1-overlap kept). Data: rebuilt sk200k via skills_curriculum.build (branch y0sxwe) --train 200000 --dev-per-cell 40 --seed 1, hashes match manifest; lives in this container's scratchpad only.
+- A9 (1:10 PM ET): diary self-replay keeps parent's call-free answers (A5 had dropped 64% of old questions). First 12:40 start stopped, kept as runs/sheet-s200-stopped-diary-a5.
+- v1 RESULT (run 1:02-1:52 PM ET, only ~50 min on 4 CPUs; A10): own quiz 11.7 -> ~74 (7 trainable kinds 96-100%), stopped night 7 by itself; sealed near 3.33 -> 2.86 = DM1 PROVED WRONG; DM3 fail (in_dist 90.22 -> 88.16, passage_qa + seq_next fired; agreement drift 100 -> 93.2). CAUSE (probe): maker only swapped same-length digits, so practice kept the example's column/grid size/1-digit numbers; model learned shortcuts (col B 5%, 2-digit 3%), quiz from same maker couldn't see it.
+- v2 (A10, one change): domain-free wider maker (digit lengths 1..Lmax+1, list insert/delete, letter-digit token rename, symbol swap; vary_p 0.5), fresh panel draw seeds 91011/91012 (sheet.v2/rpn.v2), decontaminated scoring (DM4 fails if >2% panel rows collide). If DM3 still fails, next single change = cap total drift. Analyzer: python3 -m domain.analyze --run R --parent P --panel PANEL --dev DEV --out R/analysis.
+- ELI5 page (Haiku): https://claude.ai/artifact/7j9bBVuszNNiu5PaE8McuE. Scorecard row 9 + B3 note (write whole tool call incl. op name as letters) sent to big-run thread via coordinator.
+- PAUSED 2:30 PM ET 10-09 (Ben: 5% weekly usage left, must last to 7 AM ET 10-10; coordinator: no posts until after 7 AM). v2 build workflow stopped mid-way; WIP committed 5c1a5eb72 (v2 maker, panels sheet.v2/rpn.v2 written, NOT reviewed, NOT run). A11 (practice maker = fixed domain-free outside tool, Level 1 only) recorded. Resume after 7 AM ET: review + smoke v2, then run sheet s200 v2. Data sk200k lives in container scratchpad; rebuild (1 min) if the container was reclaimed.
+**Why:** Ben funds a bigger run once all principles are demonstrated; this demonstrates "runs itself" + "few examples".
+**How to apply:** start from the design file and PR #58; never let mode.py read panels; constants file must stay identical across domains. Related: [[fast-sleep]], [[sleep7d-screens]], [[deployed-autonomy-rule]], [[one-proven-run-rule]].

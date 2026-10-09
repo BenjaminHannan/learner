@@ -1,0 +1,783 @@
+{
+ "updated": "2026-10-09 12:31 PM ET",
+ "running": [
+  {
+   "what": "Creative job 9 (the real C2b): training on the Mac",
+   "detail": "4 arms x 6 fresh parents (s200 to s205), started on the Mac at 4:36 AM ET. The sealed-test score runs once after training, and the Mac will ask Ben first.",
+   "where": "Mac",
+   "eta": "Training ends about 4:00 PM ET; then sealed-test score once (Mac asks Ben first)"
+  },
+  {
+   "what": "Ultracode: why only about a quarter of tries are legal",
+   "detail": "Non-blocking side question from the creative test. The C1 blocker was withdrawn: its 50% rules gate was miscalibrated (a random rule-follower reaches 58%). Read correctly, the warmed model aims 3.9x to 7.9x better than chance among legal tries. Answered: B2 reuses a number its first step already used (see wins).",
+   "where": "Ultracode: creative rules blocker",
+   "eta": "No ETA (side question)"
+  },
+  {
+   "what": "Done: answer at every loop round (Test LR), not adopted",
+   "detail": "Test LR (Amazon ALoDLM idea: train the answer at every loop round) FAILED narrowly and is not adopted. Main score +1.1 and +1.3, but on s200 it dropped 0.5 at 16 rounds (limit 0.3) and got 15.9% with zero rounds, which is a leak.",
+   "where": "PC GPU (finished)",
+   "eta": "Finished. PC is on q35, then q38"
+  },
+  {
+   "what": "Custom reader and talker (ultracode)",
+   "detail": "B2 confirm is complete on all 6 seeds (PR #39). B2 beats the plain transformer by +20.3 points pooled and the step-writing transformer by +6.9, ahead on 6 of 6 seeds. PASS-1 and the step-writer part of PASS-2 pass. Ben's full criterion still needs the pythia-31m and few-shot baselines.",
+   "where": "Ultracode thread",
+   "eta": "q36 (EmbeddingGemma reader arms EGM, EGO, EGR) running since 4:06 PM ET; B1 students follow at about 9 PM ET"
+  },
+  {
+   "what": "Stopped Vast boxes cleanup (4070 and 5090)",
+   "detail": "Waiting on the Mac to confirm checksums before anything is deleted.",
+   "where": "Clean up stopped Vast boxes",
+   "eta": "No fixed ETA"
+  },
+  {
+   "what": "Audit model for wasteful parts",
+   "detail": "Audit done (page: https://claude.ai/artifact/8Ugiyc1sqL57wNZihHosBo). Tests T1/T2/T3/T5 go to the blocker thread. T4 speed is a new Sonnet thread on the PC after the swarm runs.",
+   "where": "Audit model for wasteful parts",
+   "eta": "T4 speed from about 9:30 PM ET"
+  },
+  {
+   "what": "Make the thinker the big part",
+   "detail": "Design done (PR #41) but its recommendation is superseded: we keep our own thinker (Plan B) and nothing borrowed thinks. A borrowed model may only write practice data, never ship. The layer-map test (no training) is no longer a path to the shipped model.",
+   "where": "Make the thinker the big part",
+   "eta": "Superseded by Plan B; no ETA"
+  },
+  {
+   "what": "Plan B: Test B1 decided, continues via 8a web-text rung",
+   "detail": "Plan B Test B1 is DECIDED: proved wrong (+0.78 vs +15 needed). Ben chose 'Wait for web text' at 9:32 AM ET, so there is no 100M student. Plan B continues via the roadmap's 8a 10M web-text rung. Nothing here waits on Ben.",
+   "where": "Roadmap stage 8a",
+   "eta": "Next: the 10M web-text rung (no ETA yet)"
+  },
+  {
+   "what": "Creative model roadmap",
+   "detail": "Opus thread planning the roadmap toward a creative model. Test code built in PR #44 (C1 machinery check, C2 rules-from-examples): CPU tests pass, nothing has trained. The GPT-6 Pro reply for the creative roadmap has arrived and is being checked. The CPU trial on B2 failed the signal gate; a new warm-up is being chosen.",
+   "where": "Creative model roadmap",
+   "eta": "Built, waiting: needs the B2 6-seed confirm (now queued on the PC) and a GPU run"
+  },
+  {
+   "what": "Papers on the warm-up blocker",
+   "detail": "Sonnet thread searching for papers on the creative test warm-up problem (only 3 of 256 practice puzzles got a usable try).",
+   "where": "Papers on the warm-up blocker",
+   "eta": "No ETA yet"
+  },
+  {
+   "what": "No hard-coding ladder (Ben, 12:01 PM ET)",
+   "detail": "Marks sealed (PR #49); T1 parity mark re-sealed (Amendment 2). Explainer: https://claude.ai/artifact/Y7C596ZUvFJq8TVPbTx9Fn",
+   "where": "Architecture thread; T1 waits for the PC",
+   "eta": "T1 (q40) runs after q39, to about 11 PM-midnight ET"
+  },
+  {
+   "what": "Growth ladder (30M rung on hold)",
+   "detail": "Ben approved the ladder 1:08 PM ET Oct 8. 30M is on hold: B2 failed Ben's scaling bar (it must gain more from size than the plain model). The step bar will be measured against the plain model, not an absolute +3.",
+   "where": "Whole-model roadmap",
+   "eta": "30M on hold; no renting"
+  },
+  {
+   "what": "8a addendum J shape probe (10M mark 1 failed)",
+   "detail": "10M rung done; mark 1 fails (B2 +0.5, PT +3.8, plain LLM +15.8 over 3M). No 30M under the stop rule. Addendum J (reader-grown and wider B2, 2 seeds) is running; its first cell, reader-grown B2 seed 401, was -1.5.",
+   "where": "Vast (PC only has q39 left)",
+   "eta": "Full readout to Ben the morning of 10-08"
+  },
+  {
+   "what": "New rule: no training answer is ever cut off",
+   "detail": "Ben's rule 2:04 PM ET. Remaining limits are tracked: 7-step programs on 528 rows, being lifted to 16 next. C0 fair plain model (no cut-off answers) runs about 10 PM ET.",
+   "where": "Rule for all training",
+   "eta": "C0 about 10 PM ET tonight"
+  },
+  {
+   "what": "KEY RULE (Ben, 2:45 PM ET): deployed model does everything autonomously",
+   "detail": "Everything must be doable by the deployed model on its own. Hand-written code is allowed only as outside tools the model chooses to call.",
+   "where": "Rule for all work",
+   "eta": "Standing rule"
+  },
+  {
+   "what": "Creative + sleep: three loops (roadmap section 7d), planned",
+   "detail": "Loop 1: creative-only adapter rewarded by outcome (pass: reach@32 +5 vs untrained and +3 vs a shuffled placebo, on 4 unslept kinds). Loop 2: job 9 W arm. Loop 3: a worker practises its unsure successes (pass: next-day stuck rate -3 vs control, harm 2 or less). Joint night only after loops 1 and 3 each pass alone.",
+   "where": "Fast sleep thread builds it",
+   "eta": "No ETA yet"
+  },
+  {
+   "what": "Creative-sleep: loop 3 parked, sleep-harm fix pending",
+   "detail": "S1b passed; S3' failed so loop 3 is parked. Proposed fix for the sleep harm: an all-family guard plus a repair pass, pending the creative roadmap ruling.",
+   "where": "Fast sleep thread",
+   "eta": "Waiting on the roadmap ruling; no ETA"
+  },
+  {
+   "what": "T1SDR 6-seed confirm (seeds 202-205); H1 not yet run",
+   "detail": "T1SD and T1SDR passed screens (Amendment 10, Note 10a). The architecture source of truth says H1 was never run and the outside calculator is shown on 6 seeds; treat any 'H1 running' line as unconfirmed. Gemma reader shortcut marks re-scoped to 'thinker adds the most' (G1-G3).",
+   "where": "Architecture thread",
+   "eta": "No ETA from thread yet"
+  },
+  {
+   "what": "PC GPU is free (q39 done)",
+   "detail": "The Gemma reader (EGE) 6-seed confirm finished. The next PC job is not set yet.",
+   "where": "BensPC",
+   "eta": "Next job to be chosen"
+  },
+  {
+   "what": "Sleep skills-loss fixes: screens V (8 visits per record) and L (lr 1e-4)",
+   "detail": "Screen L passed (see wins). Screen V still to read. The 71% research-loop sleep harm re-check is running on CPU.",
+   "where": "Fast sleep thread (CPU)",
+   "eta": "S1f next; the LR x row-reuse check is running"
+  },
+  {
+   "what": "Test AP (append-only training, queued after SC)",
+   "detail": "Night 2 trains on night 1's own finds plus night 2's, same total training. Passes if new-rule first tries rise 2+ points on both copies, harder rules slip no more than 2, and old skills don't drop. Came from Ben's question about only appending training examples.",
+   "where": "Creative roadmap thread",
+   "eta": "After SC; no ETA yet"
+  },
+  {
+   "what": "Gate G1: 8a-G re-run with the caps bug fixed (seeds 400/401, 3M + 10M)",
+   "detail": "Seed 400 at 3M: ours 73.0 vs plain 67.1 (chain 99.9 vs 91.0); half of the pair, undecided. Seed 401 is not being restarted. G1 is NOT the go signal for the big run: the gate is now the principles scorecard (big-run PLAN.md SCORECARD, Oct 31 readout), and the finished design must also pass the size bar itself. G1 tests today's model (calculator inside, 12 fixed rounds). Size corrections: the '100M' model is 373M as built and the 30M rung is about 301M whole.",
+   "where": "PC",
+   "eta": "3M s401 about 8:30 PM ET today; whole gate late Saturday ET"
+  },
+  {
+   "what": "Queued PC work after G1: token experiment and G2 size test",
+   "detail": "Token experiment about 15 h; G2 size test about 1 week. Big-run ETA on the PC alone is now 3-5 weeks. Token test spec with marks is written (3M, 2 seeds, PC after G1) and is under review.",
+   "where": "PC (queued)",
+   "eta": "Token experiment about 15 h and G2 about 1 week, both after G1 (late Saturday ET)"
+  },
+  {
+   "what": "Finished-model schedule on the PC (100M thinker)",
+   "detail": "Finished-model ETA about Nov 21 to Dec 12 on the PC; ladder readout around Oct 31. Cap audit is clean.",
+   "where": "PC",
+   "eta": "Ladder readout about Oct 31; finished model Nov 21 to Dec 12"
+  }
+ ],
+ "blockers": [
+  {
+   "title": "Sleep harms the rule-from-examples skills",
+   "detail": "After two nights: seq_next 85 -> 30, rule_apply 90 -> 50, cipher_map 98 -> 60. The pooled-5 guard was blind to it, so the earlier 'no harm' claim on the 71.3% fast-sleep win is withdrawn (harm unmeasured). Suspected cause: the night learning rate (1e-3) with a fresh optimiser. Test R (self-repair practice) made it worse and is dropped. UPDATE 10:30 AM ET: cause found. It is overfitting from re-reading a small reused row set (32 visits per record), not the learning rate. Fresh rows improve skills (+1.6 to +2.3). UPDATE 11:33 AM ET: screen L (lr 1e-4) removes the loss on both parents and keeps nearly all of the C2 gain (one parent 0.3 under its bar).",
+   "next": "Creative roadmap picks the next step; the 71% research-loop sleep harm re-check is running on CPU."
+  },
+  {
+   "title": "100M run cannot launch until group 2 is built",
+   "detail": "Group 2 (learned reading and writing) must be built and pass at 3M with the hand-code count at 0. All 12 audit fixes from the big-run thread are in PLAN.md.",
+   "next": "Build group 2, then run it at 3M. Also waiting on Ben: which size class to race (default is own size first, 1-2B as the stretch goal), asked on a card."
+  },
+  {
+   "title": "B2 does not get better with size (8a 10M mark 1 fails)",
+   "detail": "Gains from 3M to 10M: B2 +0.5, PT +3.8, plain LLM +15.8. Under the stop rule there is no 30M run. The addendum J shape probe (reader-grown and wider B2) is running; its first cell (reader-grown B2, seed 401) was -1.5.",
+   "next": "30M on hold: B2 fails Ben's new scaling bar (must gain more from size than the plain model)."
+  },
+  {
+   "title": "Creative-sleep loop 3 failed as written; re-test pending",
+   "detail": "S3 cut the stuck rate by about 2.5 against a bar of 3, measured against the pre-night model. The official control forgot most of the previous night, so it was unfair. Separately, new 4-5 step rule kinds still score 0-2 of 64 even with 512 tries, so creativity on never-seen kinds can't be measured yet.",
+   "next": "Creative roadmap thread rules on a re-test; S1b (eval-only, CPU) runs, ETA about 2:30 AM ET."
+  },
+  {
+   "title": "Skills pretraining stalls near 72/100 (pass mark 80)",
+   "detail": "PC runs: skmain2 72, skmain3 65, main4 71, all below 80 (checkpoints kept). Diagnosis at 4:20 PM ET: the model cannot memorize 2,000 practised questions (48% against an 85% mark), and more practice adds only +10. Multi-step skills are at 15%. Combined with fair scaling, the block is outside the core. Suspected cause was the 32-wide pipes and the 8-slot averaged output, but screen v1 found wider pipes, 8 loops, lower learning rate and the pointer exit each had no effect on fit (all about 48-50%). Stiffness, core size and cut-off inputs are ruled out. Screen v2 (exit width 32 to 256) added only +0.7 fit over 3 seeds. Five changes have failed; suspect the frozen 1.2B is the cap. Blocker-paper ideas (Opus, from 20 papers): the likely cause is that the core's 8 hint vectors sit before the question, and prefix hints cannot redirect attention (Petrov et al. 2023), so they only elicit skills the 1.2B already has. Eval bug found at 10:15 PM ET: question words were fed twice at answer time vs once in training, so all skills scores ran about 6 points low. Corrected, main2 scores 74.6% on practised skills, not 68.5%, so the real plateau is higher than 72. Screen v3: a rank-8 LoRA hurt fit (50% to 12%) at the learning rate used. Update 10:33 PM ET: eval bug fixed in PR #38; corrected fit on practised skills is 67% (was reading 49%), mark 85, gap 18 points. Earlier fit numbers (48-50%) were read with the bug, so the 'cannot memorize' diagnosis is weaker than first thought. Update 10:58 PM ET: a talker that writes worked steps before the answer lifted practised skills 67 to 78% and new kinds 48 to 70% (3 runs); chain puzzles 86-99%. Still under the 85 mark. Update 12:26 AM ET: a 3.2M char-level transformer from scratch scores 75.7% in-distribution (4 seeds) vs 74.6% for the 1.2B sandwich, so the 1.2B adds little on practised skills; both are ~0% on 4 unpractised skills. Update 3:32 AM ET: SR2 worked steps reach the 85% mark on 3 seeds, but swap tests show the talker does that thinking and the core can't learn to add. Partial fix: the core plans the sums (which numbers, which operations) and an exact calculator runs the plan; this scores 87% on new chain questions without the talker, matching the talker's own steps. Pending 5 confirmation seeds. Update 5:02 AM ET: plan-plus-calculator scores 97.6% on new chain questions across 6 seeds (minimum 95.6%), beating the talker's own steps at 87%. The fix was decaying the learning rate to zero. Caveat: the thinker had more practice questions, so a matched test is needed. Update 5:50 AM ET: the 97.6% plan-plus-calculator result depended on extra practice (17k questions). Matched practice: thinker's plan 82.8% vs talker's steps 85.8% over 6 paired seeds, about level, still under the 85 mark for the plan. Update 7:24 AM ET: with matched practice (17k questions + lr decay) the LM writing its own steps scores 98.8% on new chain questions (2 runs), level with the plan route's 97.6%, so the thinker does not beat the talker. What holds: in the real model with the plan route, swapping plans drops chain answers from about 157/160 to 2 (the thinker decides them), and the model gets 89.6% of all new questions (3 runs). Update 6:33 PM ET: two-hop pointer (76/160) and 2048 thinker reader (77/160) are both flat against 77, so pointer and door designs are ruled out as the limit on the 4 lookup kinds.",
+   "next": "Ultracode thread: keep checking the plan route on more skill families and the 89.6% overall figure against the 85 mark; custom reader/talker designs are also being judged."
+  },
+  {
+   "title": "A bigger core does not help; reader/pipes or recipe likely limit",
+   "detail": "All 6 seeds: 9.0M 64.4%, 17.9M 65.3%, 35.8M 66.3% on fresh kinds. Scaling gain +1.9 points (CI -1.0 to +4.8) against a +5 mark, so in between. Core size is not the limit. Earlier design noted the reader-to-core pipes are only 32 numbers wide.",
+   "next": "Look at the reader/pipes and recipe; the 4-arm fit screen (wider pipes) is running."
+  },
+  {
+   "title": "Data: a 100M thinker needs about 50x more new text",
+   "detail": "The roadmap's 400M target grows the thinker to about 100M, and that needs about 50 times more new training text than we have now. The growth ladder (3M, 10M, 30M on 6 seeds, at least +3 per step) will show whether growth pays before that data is made.",
+   "next": "Ben decides in the roadmap thread; the ladder then runs on the PC"
+  },
+  {
+   "title": "Long questions with irrelevant numbers: only 50%",
+   "detail": "Irrelevant numbers in long questions drop the round-7 recipe from 62% to 16% on the two-step chain. Training with distractors recovers 50.2% (+33.9, all 6 seeds), which just meets the 50% mark. Weakest: receipts 26%, reports 34%. The pointer picks the right first operand only 66% of the time. Longer than 150 tokens is still untested.",
+   "next": "Improve operand picking and receipt/report layouts; see RESULTS-8.md, PR #33."
+  },
+  {
+   "title": "The reader/talker LM sets a ceiling",
+   "detail": "Swapping the 1.2B LM for a 350M one dropped English from 92.6% to 65.7% (5 of 6 seeds, each down 21-34 points), under the bare 1.2B's 75%. The model reads only as well as its LM allows, so replacing the LM to shrink the whole model costs accuracy. The copy-talker (cheaper talker) test also failed; see the next blocker. Info-flow round 7 is still running.",
+   "next": "Untested idea: a reader that stops at the 1.2B's middle layer."
+  },
+  {
+   "title": "The core does not generalize past practised kinds",
+   "detail": "Copy-talker test (PR #37): 13.6% on new question kinds vs 78.2% for the current talker (6 seeds), but 97% on practised kinds. With and without the core, new kinds differ by only +0.7. Swapping in another question's core state left the score unchanged at 73.2% (1 seed), so on new kinds the 1.2B answers by itself.",
+   "next": "Cheaper-talker line is parked. The core needs a fix before it earns its place on new kinds."
+  },
+  {
+   "title": "New question layouts: 62-76%, not 81%",
+   "detail": "Two-step chain scores 81% on our own wording, 76% on the first independent layout set and 62% on the second. Weakest: ledger, receipt, report, warehouse slip (~48%), recipe steps (~42%). Extra practice gave +3.8 to +4.4, under the +5 mark.",
+   "next": "More seeds on the same comparison, or a set written by GPT or a person."
+  },
+  {
+   "title": "English on never-practised kinds only ties the bare model",
+   "detail": "Six more unseen kinds: 78% vs 78% for the bare 1.2B model with 8 examples. Quoting what someone said is about 45% for both. Practising 12 kinds instead of 6 added about 2 points, too small to call.",
+   "next": "Needs a bigger lever than more kinds of practice."
+  },
+  {
+   "title": "Idle experts and fixed 4-round depth",
+   "detail": "6 of 8 experts unused; the core always runs 4 rounds. From the weaknesses brainstorm.",
+   "next": "No test yet."
+  },
+  {
+   "title": "Notebook, sleep replay and the sealed head-to-head are not built",
+   "detail": "Designs exist (notebook PR #20, sleep replay PR #19). The earlier matching-sleep test missed its bar (see Sep 28).",
+   "next": "Not started."
+  },
+  {
+   "title": "Test authors are all Claude",
+   "detail": "Every blind layout set was written by a Claude worker, grammar unchecked. No person-written or other-vendor set yet. Two-digit add/subtract and an exact calculator only.",
+   "next": "A GPT- or person-written set."
+  },
+  {
+   "title": "Resources",
+   "detail": "PC has about 3.5 GB disk free. PC checkpoints were trained with the 49-token cap and need retraining for long questions. Vast credit was $9.64 at 4:51 PM ET, shared by several threads.",
+   "next": "Keep balance above $1."
+  },
+  {
+   "title": "Compute is PC-only: Vast is off and the Macs are too slow",
+   "detail": "Vast is off entirely and both stopped boxes are deleted. The Macs are too slow for the 3M experts test (M1 Pro 25 s per update, about 6.9 days per run; the M3 Pro would need to be about 4x faster).",
+   "next": "The experts test stays on the PC right after G1. Big-run ETA on the PC alone is long (see roadmap)."
+  },
+  {
+   "title": "Managed Agents setup waits on Ben's three keys (PR #55)",
+   "detail": "The setup cannot proceed until Ben supplies three keys.",
+   "next": "Ben provides the keys."
+  },
+  {
+   "title": "Reader cannot yet read 2,000-letter inputs",
+   "detail": "The letter-position table is learned and sized to 280 (reader.py:58); the word slot cap (208) and number slot cap (91) are also sized for 280.",
+   "next": "Options: train on long inputs, or switch to relative positions. The big-run thread chooses in PLAN.md. Whether the word (208) and number (91) slot caps also grow is part of the same choice."
+  }
+ ],
+ "days": [
+  {
+   "date": "Oct 9",
+   "wins": [
+    {
+     "t": "Outside calculator counts as working",
+     "d": "Ben cleared the calculator leak, so the T1SD/T1SDR outside-calculator line stands.",
+     "w": "T1 line unblocked for H1.",
+     "tag": "PASS"
+    },
+    {
+     "t": "Architecture questions settled by Ben",
+     "d": "Calculator can be called in any round, inputs up to 2,000 letters, letter window kept.",
+     "w": "Design choices fixed for the T1/H1 line.",
+     "tag": "NOTE"
+    }
+   ],
+   "misses": []
+  },
+  {
+   "date": "Oct 8",
+   "wins": [
+    {
+     "t": "Creative-sleep S1b passed",
+     "d": "The creative part works for the first 32 tries (eval-only check, CPU).",
+     "w": "3:00 AM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "T1SD and T1SDR pass their screens",
+     "d": "Amendment 10 + Note 10a (Ben: \"good enough\"): hair tolerance, screens only. Earlier 'not shown' calls (98.96 vs 99; 97.9% vs 98%) are now passes at screen level; the 6-seed confirm still has to hold.",
+     "w": "Outside calculator line unblocked; H1 can start.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Sleep screen L (lr 1e-4) removes the skills loss",
+     "d": "On both parents the skills loss is gone and old skills are slightly up, while nearly all of the C2 gain is kept (one parent 0.3 under its bar). Earlier cause finding: overfitting from re-reading a small reused row set.",
+     "w": "First fix for the sleep-harm blocker; the creative roadmap picks the next step.",
+     "tag": "PASS"
+    }
+   ],
+   "misses": [
+    "Creative-sleep S3 (loop 3, worker practises shaky successes) failed as written: the stuck rate dropped about 2.5 against a bar of 3 (versus the pre-night model). The official control was unfair because it forgot most of the previous night, so the creative roadmap thread rules on a re-test.",
+    "8a 10M rung (5 of 6 seeds so far): B2 gains only +0.4 over 3M (PT +3.8, plain LLM +15.8).",
+    "T1SD re-screen (outside calculator, distance-from-end fix): not shown, not proved wrong. Seed 200 answer mean 98.96 vs the 99 bar.",
+    "8a 10M rung finished and mark 1 FAILS: gains over 3M were B2 +0.5, PT +3.8, plain LLM +15.8, so B2 does not scale with size. The first addendum J cell (reader-grown B2, seed 401) was -1.5. No 30M under the stop rule.",
+    "Creative-sleep S3' failed, so loop 3 (worker practises shaky successes) is parked.",
+    "Test R (self-repair practice after sleep) FAILED and is proved wrong: it made the skills loss worse (in_dist -9.4 / -7.9 vs -3.8 / -3.6 without it) and wiped C2 first try (31 -> 0, 34 -> 15). Dropped.",
+    "S1w proved wrong on both parents: the creative add-on lowered results by 2.7 and 3.5. Plain worker sleep reaches 47-48% within 32 tries against 42-43% for the S1 add-on. J2 cancelled.",
+    "T1SDR re-screen not shown by one call: long-answer copy 100% at 1-9 digits on both seeds, natural answers not worse; seed 200 call accuracy 97.9% vs 98% mark (17/806 wrong, 16 allowed), mostly a wrong table row. Vast boxes deleted.",
+    "S1f failed (+2.7 / -0.4): creative add-on sleep (loop 1) parked; worker sleep already gives its gain."
+   ]
+  },
+  {
+   "date": "Oct 7",
+   "wins": [
+    {
+     "t": "Creative-sleep screen S1 (loop 1) passed on both parents",
+     "d": "On stuck kinds, creative-only training raised reach@32 from about 25% to 43%. The shuffled-reward placebo stayed at about 25%. Same answers come about 3x faster, but no new answers were found. Source: fast-sleep/sleep7d/README.md in the project files.",
+     "w": "11:57 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "Gemma reader (EGE) beat B2 on all 6 seeds, but fails the shortcut mark",
+     "d": "EGE beat B2 on 6 of 6 seeds (+2.67 mean). It fails the shortcut mark: 6.6% with thinking off against B2's 3.6%, where the limit was +1.0. Not proved wrong. The PC GPU is now free.",
+     "w": "9:25 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Span copy fixed long-number input copying",
+     "d": "Copying 4-9 digit numbers is now 93-100% (it was 18-27% at 4 digits and about 0 beyond).",
+     "w": "8:18 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "8a 3M rung passed its mark, narrowly",
+     "d": "Six-seed mean 72.3 against a bar of 72.0, so B2 stays good at 3M on the new web-text data. The plain model scored 66.3.",
+     "w": "7:00 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "T1 copying of 1-3 digit numbers is fine (old score was an artifact)",
+     "d": "Re-scoring T1 on clear-cut copies shows 1-3 digit copying at about 97-100%. The earlier 85-93 came from the scoring, not the model. Copying 4 or more digits is still broken (4 digits 18-27%, 5 or more about 0).",
+     "w": "6:35 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "8a first look at 10M: unclear",
+     "d": "B2 gain from 3M to 10M is +1.42 / -0.28 (encouraging needs +3.0). The plain model gains +2.73 / +2.19. B2's lead over plain shrank to 4.2 / 4.5 (was 5.5 / 7.0). This used the old skills-only data, so it does not decide 8a. PR #50.",
+     "w": "5:24 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "T1 outside-calculator screen: not shown (copy step fails)",
+     "d": "S1 passed (+1.72 / -0.31). S2 passed: chain-5 scored 99.7 / 99.9. S3 exact copy FAILED at 29-42%: copying breaks at 4 or more digits, which were almost untrained in this run.",
+     "w": "5:10 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "8a speed probe done: sizes are affordable",
+     "d": "Per seed: 3M about 1 hour, 10M about 3.2 hours, 30M about 16 hours. For 6 seeds: 3M about $2.75, 10M about $9, 30M about $45 (Ben is asked before 30M, after 10M passes).",
+     "w": "4:26 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "W1 (wider attention) done: not shown, not proved wrong",
+     "d": "W1 minus B2, pooled over 5 splits: +0.9 and +0.1 (mark was +1.0 or better on both). Lookup families (F1) fell -4.1 against a -2.0 limit. Chain-5 scored 99.6 / 99.9.",
+     "w": "4:14 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "U0 done: letters are fine",
+     "d": "Word-piece input scored worse than letters: -3.1 and -5.4 (pooled over 5 splits); the Ben-right mark needed +2.0 or better. The prediction that detail kinds would gain was wrong: cipher_map -3.5 (predicted 10+), frame -10.8, vocab -6.6.",
+     "w": "4:00 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "C0 fair yardstick done: B2's lead stands",
+     "d": "The fair plain model (no cut-off answers) scores 67.1 vs the old plain_tf_steps 67.0, so B2's +6.9 lead holds (B2 minus C0 is +6.6, 2 seeds). Chain-5 with the outside calculator scores 99.2 / 99.1 (mark 98.5).",
+     "w": "3:55 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "D0 digit reading passed all 6 seeds",
+     "d": "99.997% or better per place. The remaining loss is in the hand-written pooling step, which the T1 outside-calculator screen removes.",
+     "w": "2:47 PM ET",
+     "tag": "PASS"
+    },
+    {
+     "t": "Fast sleep: 71.3% on the 6-seed holdout (goal 70%); 'no harm' claim WITHDRAWN",
+     "d": "Compliant 6-seed holdout mean 71.3%, up from 41.6%; 4 of 6 seeds are at 70% or better. The earlier non-compliant run (72.7%) is reported separately. Rules of the form a*x+b reach 15%. Each sleep costs about 2,400 TF. The rented box is shut down (about $2.9). Correction (3:00 AM ET 10-08): the earlier no-harm claim is withdrawn because harm was unmeasured; see the blocker on sleep harming rule-from-examples skills.",
+     "w": "5:07 PM ET",
+     "tag": "NOTE"
+    },
+    {
+     "t": "4:05 AM ET",
+     "d": "The roadmap ruled job 8 'climbed, but missed the mark as written by less than one question on s101'. The real C2b is GO: 6 fresh parents (s200 to s205), scored once on the sealed test. The build thread is building it now; then it runs on the Mac for about 10 hours.",
+     "w": "Job 8 missed its +10 mark by less than one question on s101 (+9.7), so the roadmap called it a climb and approved the full test.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "3:56 AM ET",
+     "d": "Creative job 8 ('more tries where stuck') is the first real climb. Multi-step solving went from under 1% to about 10-11% over two nights: +10.4 on s100 (pass) and +9.7 on s101 (0.3 short of the +10 mark). Old skills were kept.",
+     "w": "Starting point under 1% multi-step; mark was +10 per parent. Old skills kept.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "3:20 AM ET",
+     "d": "Fast sleep's fixed memory sleep (answer note off) PASSES a fresh harm check on all 8 parents. Harm was -0.3 to -0.4, which means slightly better than before on unseen skills. It now qualifies as the creative loop's nightly recall step, with about 30 times less compute than a fine-tune.",
+     "w": "Earlier version harmed skills by -3.9 on one seed (s205); fixed version: -0.3 to -0.4 on all 8 parents (negative = no harm).",
+     "tag": "PASS"
+    },
+    {
+     "t": "3:03 AM ET",
+     "d": "Memory sleep 6-seed confirm FAILS on one mark. It uses 25 to 34 times less compute and gets 0.87 times the fine-tune's gain, and its recall of stored programs is 3 to 5 times higher. But it harmed skills on one seed (s205, -3.9), caused by the 'answer note'. With that note off, harm is 0 on all 6. C2b will test the fixed version fresh.",
+     "w": "Fine-tune sleep: full gain but more compute and earlier skill harm. Memory sleep: 0.87x the gain at 25-34x less compute.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "1:37 AM ET",
+     "d": "EGE (Gemma on top of B2's window) beats plain B2 by +1.6 and +2.1 on 2 seeds, every split up, cipher 95% or better. It misses 2 of 5 pre-set marks, so it is not confirmed yet. EGK (the fix for one mark) crashed with NaN on seed 201.",
+     "w": "Plain B2 baseline; 2 of 5 marks missed so far; 6-seed confirm pending.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "12:45 AM ET",
+     "d": "Creative job 7 'keep the parts' (12:45 AM ET): the feasibility gate PASSES on both parents (+26.6 and +34.4 vs +10 needed), and the parts were kept (practised add/multiply 61.7% and 61.3%). Night 1 of the real run shows almost no multi-step yet (0.6% and 1.9%).",
+     "w": "Gate needed +10; got +26.6 and +34.4. Practised add/multiply stayed at 61.7% and 61.3% (it dropped to 0.11 in the earlier version).",
+     "tag": "NOTE"
+    }
+   ],
+   "misses": [
+    "Creative job 7 'keep the parts' DONE (12:55 AM ET): between the marks on both parents. Multi-step gain +0.6 and +3.2 (need +10), no climb. Skills kept (add/multiply up to 95-96%). Cause: the search finds too few multi-step answers to learn from.",
+    "EGK (the fix for one EGE mark) crashed with NaN on seed 201.",
+    "Memory sleep 6-seed confirm failed one mark: skill harm of -3.9 on s205, caused by the 'answer note' (harm 0 on all 6 with it off).",
+    "Plan B Test B1 proved wrong (+0.78 vs +15 needed; students about 11% on new kinds, memorised practice 91-96%). Ben chose 'Wait for web text' (9:32 AM ET): no 100M student; Plan B continues via roadmap 8a 10M web-text rung.",
+    "EGT (Gemma as a training-only teacher, shipping at 3.3M) FAILS: pooled-5 +0.18 and +0.61 (needs +1) and variant +2.54 (needs +3).",
+    "Fast sleep (DEV, 10:29 AM ET): answer note off gives +0.98 vs +1.0 needed; chaining nights into the notebook proved wrong (+0.7 vs +5). Fine-tuning on search records beat plain sleep by 4-8 points on 2 parents but falls between marks, not adopted."
+   ]
+  },
+  {
+   "date": "Oct 6",
+   "wins": [
+    {
+     "t": "11:10 PM ET",
+     "d": "Memory sleep (screen, 2 seeds, not yet confirmed): learns from the night's finds by writing them into a notebook the model reads, with no weight changes. It matched the fine-tune sleep's gain (+34 and +29 vs +36 and +27) using 25 to 32 times less compute, with zero skill harm, and it kept add/multiply (32% vs 8-10%). Tuning was done on one seed, so a 6-seed confirm is next.",
+     "w": "Fine-tune sleep: +36 and +27, but skill harm earlier. Memory sleep: +34 and +29 at 25-32x less compute.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "10:01 PM ET",
+     "d": "C2b sleep pilot: sleeping on its own correct finds raised right first answers on new rules by +35 and +27 points on the two copies. The ideal version gained +40 and +42, so the feasibility check passed. Sleeping on wrong or relabelled tries did nothing. Caveat: almost all of the gain is the x-times-x rule; the harder rules barely moved. Scoring against the marks is pending in the build thread. Update 10:03 PM ET: the marks pass pooled, but the gain is all near-copy (square +96 and +94, last_digit +78 and +39, the hard kinds about 0). Night 2 shows no climbing. New concern: practised-kind skill dropped (0.61 to 0.11 on the stepping-stone parent; cause untested). The roadmap thread is ruling on the verdict.",
+     "w": "The ideal (everything-correct) version gained +40 and +42; wrong or relabelled tries gave no gain.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "8:01 PM ET",
+     "d": "C2 cleared its first gate after practice on easier versions (25% and 20% vs 14.5% needed), but mostly on one rule (x times x) and only with very random tries. Next: does sleeping on its own finds turn them into first answers, and does a second night reach the harder rules? Raw numbers: 25.4% and 19.5% vs a 10% gate, a 14.5% bar and a 4.8% chance floor; placebo 4.3% and 5.1%, plain warm-up 5.1% and 9.8%.",
+     "w": "Placebo and plain warm-up arms, and chance floor 4.8%. C2 stays alive.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "4:12 PM ET",
+     "d": "B2 confirm complete on all 6 seeds: B2 beats the plain transformer by +20.3 points pooled and the step-writing transformer by +6.9, ahead on 6 of 6 seeds. PASS-1 and the step-writer part of PASS-2 pass.",
+     "w": "Plain transformer and step-writing transformer at the same size, nothing pretrained. Still needed: pythia-31m and few-shot baselines for Ben's full criterion.",
+     "tag": "PASS"
+    },
+    {
+     "t": "2:42 PM ET",
+     "d": "Local teacher works: Qwen 27B on the PC runs 32 tokens/s on one stream and 112 tokens/s across 8 streams in 15 GB of video memory, with no think text in the output. Pilot N=10 finished cleanly in about 10 minutes. No spend.",
+     "w": "Muse Spark plan was about $8 and needed a paid key; this costs nothing.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "7:35 AM ET",
+     "d": "TEACH teacher data finished",
+     "w": "171,940 examples kept for Plan B.",
+     "tag": "PASS"
+    },
+    {
+     "t": "7:32 AM ET",
+     "d": "Creative rule breaks explained and fixed (DEV only)",
+     "w": "B2 reuses a number its first step already used. Greying out used numbers while it samples makes every try legal and nearly triples luck: 4.7% to 13.1% on s100 and 4.6% to 13.4% on s101. DEV only, PR #45; the roadmap thread is deciding whether to adopt it.",
+     "tag": "PASS"
+    },
+    {
+     "t": "5:23 AM ET",
+     "d": "Creative test C1 un-blocked (gate was miscalibrated)",
+     "w": "The roadmap thread found the 50% rules gate was miscalibrated: a random rule-follower reaches 58%. Read correctly, the warmed model aims 3.9x to 7.9x better than chance among legal tries. This is a re-reading of the gate, not a new training result.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "12:53 AM ET",
+     "d": "Wide doors still help on the other four question kinds",
+     "w": "CRDW (2048 doors on the plan route) scored 291.5 vs 287.0 held-out but was ahead on only 3/6 seeds, so it does not stack by its marks. The test also widened the planner's reader by accident, making chain answers slightly worse; on the other four question kinds the doors gave +8 and were never behind.",
+     "tag": "NOTE"
+    }
+   ],
+   "misses": [
+    "1.2B bench final (parked): T1 lr decay to 0 HURTS (276.2 vs 287.0 held, behind on 6 of 6 seeds).",
+    "1.2B bench final: T2 quiet notes HURTS (226.5 vs 287.0 held, behind on 6 of 6 seeds).",
+    "1.2B bench final: CRDW (doors on the plan route) does not stack (291.5 vs 287.0, ahead on only 3 of 6, confounded).",
+    "Creative pilot 2 (plain sampler) fails the PC gate on both seeds: PC/N 1.15 and 1.20 against 1.6. Signal, aim and sameness pass. The used-number mask has been adopted; masked pilot 3 is next.",
+    "Creative C1 retired (1:25 PM ET), even counted per try: s101 passed at 1.66x vs the 1.6 mark, but s100 missed at 1.29x (+2.8 points; needed 1.6x and +3), and the rule needed both. T1 sealed. C2 is next.",
+    "Qwen 27B teacher dropped by Ben (3:11 PM ET) after a clean N=10 pilot: no strong-teacher run; students use the existing teach data.",
+    "C2 stopped at cold start (B2's tries on new rule kinds are at chance: 3.9% and 6.3% vs a 4.8% floor). Next: stepping stones, easier versions of the new kinds, made by code. C2 retires only if that also misses.",
+    "EGW (EmbeddingGemma into a 768-wide thinker, 22.2M trained / 293.2M whole) failed vs plain B2 on the same 5090: pooled-5 -3.39 and -5.30 on 2 seeds. It also changed the thinker width, so Gemma itself is not yet shown to hurt.",
+    "Test LR (train the answer at every loop round) failed narrowly, not adopted: +1.1 and +1.3 on the main score, but s200 dropped 0.5 at 16 rounds (limit 0.3) and scored 15.9% with zero rounds (a leak).",
+    "C2b sleep: gain is all near-copy (hard kinds about 0), night 2 shows no climbing, and practised-kind skill dropped from 0.61 to 0.11 on the stepping-stone parent (cause untested).",
+    "EmbeddingGemma arms: EGR, EGM and EGO all failed. EGE (Gemma on top of the window) beat B2 by +1.6 on s200 but fails the zero-rounds leak mark (18% vs 5% limit)."
+   ]
+  },
+  {
+   "date": "Oct 5",
+   "wins": [
+    {
+     "t": "9:16 PM ET",
+     "d": "2048-wide doors confirmed on 6 seeds",
+     "w": "Held-out 274.8/320 vs 260.0 without, ahead on 5 of 6 seeds. The gain is +15, down from +26 on the first 3 seeds, so the first read was optimistic.",
+     "tag": "PASS"
+    },
+    {
+     "t": "8:15 PM ET",
+     "d": "Talker calls the calculator (CRT, Ben's design)",
+     "w": "471/480 held chain questions over 3 seeds (direct hand-over 470) and 298/320 fit. A swapped note gives 2-14/160 and no note 31-44, so the note is used. One mark missed: on 2/3 seeds the talker copied a swapped note only 79-84% of the time (bar 90%).",
+     "tag": "NOTE"
+    },
+    {
+     "t": "6:39 PM ET",
+     "d": "2048-wide doors lift held-out score (3 seeds)",
+     "w": "Held-out 258.0 to 284.3 of 320 and practised 275.7 to 300.7, ahead on 3/3 seeds. The 6-seed confirmation is due about 8:45 PM ET.",
+     "tag": "PASS"
+    },
+    {
+     "t": "10:42 AM ET",
+     "d": "Custom design B2 leads the screen (but missed its mark)",
+     "w": "2 seeds, nothing pretrained at 3.3M: B2 pooled 73.7% vs plain transformer with steps 67.7%, plain 54.4%, B 68.6%. Swapping another question's plan drops it to 4%, so the plan is used. Missed the pre-set mark: with the thinker off it still scores 6.76% on seed 101 against a 5% limit (word-pointer leak).",
+     "tag": "NOTE"
+    },
+    {
+     "t": "7:26 AM ET",
+     "d": "Custom design B ties the step-writing transformer",
+     "w": "Screen seed 100: design B (program plus exact calculator, nothing pretrained) ties the step-writing transformer overall and gets 99.7% vs 93.5% on 5-step chains. One seed so far; seed 101 about 8:00 AM ET.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "7:24 AM ET",
+     "d": "Real model reaches 89.6% on new questions (plan route)",
+     "w": "With matched practice (17k questions + lr decay), the LM writing its own steps scores 98.8% on new chain questions (2 runs), level with the thinker's plan at 97.6%. In the real model, swapping plans drops chain answers from about 157/160 to 2, so the thinker decides them; overall 89.6% on new questions (3 runs) vs the 85 mark.",
+     "tag": "PASS"
+    },
+    {
+     "t": "5:02 AM ET",
+     "d": "Plan-plus-calculator: level with talker when practice is matched",
+     "w": "Earlier read of 97.6% (6 seeds, min 95.6%) used 17k extra practice questions. Matched-practice test, 6 paired seeds: thinker's plan 82.8% vs talker's steps 85.8%, about level. Downgraded from a win.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "3:32 AM ET",
+     "d": "Core plans, calculator executes (partial win, pending confirmation)",
+     "w": "Worked steps (SR2) reach the 85% mark on 3 seeds, but swap tests show the talker does that thinking and the core can't learn to add. Instead the core plans the sums and an exact calculator runs them: 87% on new chain questions without the talker, matching the talker's own steps. 5 more confirmation seeds running.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "12:26 AM ET",
+     "d": "Small from-scratch model matches the 1.2B sandwich",
+     "w": "A 3.2M char-level transformer, no pretraining, 20 min, same 200k skills rows: 75.7% in-distribution (4 seeds) vs 74.6% for the 1.2B sandwich. Sets the bar for custom reader/talker designs.",
+     "tag": "NOTE"
+    }
+   ],
+   "misses": [
+    "Both models weak on chain families (small 2-20%, sandwich 10-32%) and about 0% on 4 unpractised skills.",
+    "Custom design A out: beats a same-size plain transformer by 10 but loses by 3 to the step-writing transformer (seed 100).",
+    "B2 failed its pre-set leak check: thinker off scores 6.76% on seed 101 vs a 5% limit.",
+    "Per-round routers (Chain-of-Experts, PLR) dropped: 131.2 vs 132.5 of 160 held, ahead on 2 of 6 seeds.",
+    "Two-hop pointer (76/160) and 2048 thinker reader (77/160) flat against 77: pointer and door designs ruled out as the limit on the 4 lookup kinds.",
+    "Swarm parked (7:09 PM ET, PR #40): training together was void because the coach stopped steering; the answer-aware picker was +2.5 on familiar questions but -0.6 on twisted ones, failing its mark.",
+    "CRT copy-fidelity mark missed: talker copied a swapped note 79-84% on 2/3 seeds vs a 90% bar.",
+    "Merged Hearer+Reader (Ben's ask) is wrong: 278.8 vs 287.0 of 320 held, ahead on 2 of 6 seeds. Chain was level; the loss was all on cipher, letter-cycle, few-shot and grouping. The Reader stays: its width was the limit, not its being separate (2048 doors gave +26)."
+   ]
+  },
+  {
+   "date": "Oct 4",
+   "wins": [
+    {
+     "t": "10:58 PM ET",
+     "d": "Worked-steps talker (Ultracode)",
+     "w": "Writing worked steps before the answer: practised 67 to 78%, new kinds 48 to 70% (3 runs), chain puzzles 86-99%. Still under the 85 mark.",
+     "tag": "PASS"
+    },
+    {
+     "t": "10:33 PM ET",
+     "d": "Eval bug fixed (PR #38)",
+     "w": "Question words were fed twice at answer time; fixed. Fit on practised skills reads 67% instead of 49%, so the true gap to the 85 mark is 18 points.",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Eval bug found: skills scores ran about 6 points low",
+     "d": "At answer time the question words were fed twice, but once in training. Corrected, main2 scores 74.6% on practised skills, not 68.5%. All skills scores so far, including the 72 plateau, were low by about 6 points. Result in RESULT-v3.md on claude/project-thread-aya9pk.",
+     "w": "10:15 PM",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Info-flow round 7: current talker confirmed as the best of three",
+     "d": "English, 6 seeds, 576 questions: current talker (16 core vectors + question words) 83%. Latency is about 3x bare to the first word and 1.3x for an 8-word answer, the same for all three variants, so the cost is the core plus the extra pass, not the re-read. Round cost about $2.30.",
+     "w": "5:27 PM",
+     "tag": "NOTE"
+    },
+    {
+     "t": "35.8M system beats the bare 1.2B (8-shot) on new kinds: 66.3% vs 62.5%",
+     "d": "Gain +3.8 (CI +2.9 to +4.7), mark passed, all 6 seeds. Sums are about 22% for both, and there is no calculator in this recipe.",
+     "w": "4:51 PM"
+    },
+    {
+     "t": "English reproduced on the PC: 91.9% scratch, 91.2% from main2",
+     "d": "Mark 80%, bare LM 75.0%, 6 seeds each. Scratch CI 90.0-93.8, main2 CI 90.0-92.5. Main2 minus scratch is -0.7, no effect. Matches the cloud result of 92.6%.",
+     "w": "3:46 PM"
+    },
+    {
+     "t": "Speed measured on three machines",
+     "d": "Questions per second, batch 1 / batched: 5090 19 / 358 (batch 256); 5070 Ti 18.5 / 228 (batch 128); M1 Pro 5.6 / about 21.",
+     "w": "4:10 PM",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Research judge: helpers 39/50 vs solo 36/50",
+     "d": "Opus with Sonnet helpers beat solo Opus in the judged comparison on replacing the 1.2B hearer/talker. The solo thread's top pick, the 350M LFM, is being tested and is failing early.",
+     "w": "3:38 PM",
+     "tag": "NOTE"
+    },
+    {
+     "t": "Distractor fix works: 16% to 50.2% on long questions with extra numbers",
+     "d": "Round-7 recipe fell to 62% to 16% on the two-step chain once irrelevant numbers were added. Training with distractors: 50.2% (+33.9, up on all 6 seeds), just meeting the 50% mark. Partial: one guard missed, independent set 2 lost 3.6 vs a 3-point limit (not significant).",
+     "w": "1:33 PM"
+    },
+    {
+     "t": "English with many generated practice questions: 35% to 93%",
+     "d": "Same fresh questions. Bare 1.2B model with 8 examples: 75%. Gain +18 over it, all 6 seeds. Both marks set before training.",
+     "w": "1:32 AM"
+    },
+    {
+     "t": "English on 6 never-practised kinds: 80% vs 68%",
+     "d": "Bare 1.2B with 8 examples got 68%. +12 points, every seed above.",
+     "w": "3:12 AM"
+    },
+    {
+     "t": "Two-step chain: 54.9% to 81.4%",
+     "d": "Gain +26.6 (interval +14.8 to +38.3), all 6 seeds up. Table layout 30% to 62%, question-first 51% to 79%. The answer still comes only from the calculator.",
+     "w": "9:20 AM"
+    },
+    {
+     "t": "Stiffness ruled out",
+     "d": "Skills-trained core reached 20.9% on 2 new skills after 4,000 rows; its parent reached 10.4%. Core ahead on all 6 seeds. Weight resets are not needed.",
+     "w": "12:04 PM"
+    },
+    {
+     "t": "Round 4 holds on layouts someone else wrote: 73.4%",
+     "d": "Mark was 70. Chat 96%, first-person 85-95%, riddle/diary 87%.",
+     "w": "11:15 AM"
+    },
+    {
+     "t": "English goal of 80% reached",
+     "d": "12 practised kinds scored 83% on unseen kinds; the 6-kind rerun scored 81%.",
+     "w": "12:15 PM"
+    },
+    {
+     "t": "Long questions work: 66.6% on 55-150 token questions",
+     "d": "Mark was 50%. Input cap lifted from 49 to 160 tokens. Short sets did not drop (-0.3, +1.4, +3.4 vs a 3-point limit).",
+     "w": "12:36 PM"
+    }
+   ],
+   "misses": [
+    "Skills fix-screen v3 (PC): the rank-8 LoRA on the 1.2B hurt fit, 50% to 12%, at the learning rate used. A gentler learning rate is untested (10:15 PM).",
+    "Skills fix-screen v2 (PC): widening the exit 32 to 256 gave +0.7 fit over 3 seeds, no effect. Five changes have now failed to move fit. Suspect: the frozen 1.2B is the cap (8:07 PM).",
+    "Skills plateau screen v1 (PR #34): wider pipes, 8 loops, lr 3e-4 and the pointer exit each had no effect on fit (all about 48-50%). About $2.80 spent, Vast boxes destroyed (6:27 PM).",
+    "Info-flow round 7 alternatives: core vectors only scored 19% even with 8000 practice questions; question-first with the second read reused scored 75% (-8 vs 83%) (5:27 PM).",
+    "Copy-talker test failed (PR #37): 13.6% on new question kinds vs 78.2% for the current talker (6 seeds), 97% on practised kinds. Swapping in another question's core state left the score at 73.2% (1 seed), so on new kinds the 1.2B answers by itself. Cheaper-talker line parked, about $0.75 (5:09 PM).",
+    "350M LM swap failed: 65.7% vs 92.6% for the 1.2B (5 of 6 seeds, each down 21-34 points), below the bare 1.2B's 75%. The model reads to a ceiling set by the LM (4:12 PM).",
+    "Fair scaling finished (6 seeds): 9.0M 64.4%, 17.9M 65.3%, 35.8M 66.3%. Scaling gain +1.9 (CI -1.0 to +4.8) vs a +5 mark, in between. Core size is not the limit (4:51 PM).",
+    "Distractor round: guard mark missed. Independent set 2 lost 3.6 points against a 3-point limit, not significant. Receipts 26%, reports 34%, first operand right only 66% (1:33 PM).",
+    "English with two kinds left out of practice: 80% vs bare 77%, too close to call. Skipping practice on a kind cost about 16 points (3:12 AM).",
+    "Extra table practice: +4.4, needed +5. No claim. That test set was partly read before the practice was written (11:15 AM).",
+    "Report/ledger practice: +3.8, needed +5. No claim. Out-of-style level is 62-76% (11:41 AM).",
+    "12 kinds vs 6 kinds of English practice: about +2, not shown. Six more new kinds tie the bare model, 78 vs 78 (12:15 PM).",
+    "Stiffness results file was lost when its box was destroyed. Scores survived in the log (12:04 PM)."
+   ]
+  },
+  {
+   "date": "Oct 3",
+   "wins": [
+    {
+     "t": "Copy path fixes unseen answers: 0-4% to 84-90%",
+     "d": "The model now copies the calculator result instead of looking answers up. No wrong unseen answer is a training answer.",
+     "w": "PR #29"
+    },
+    {
+     "t": "Varied training wording: right-call rate 81.6% to 98.1%",
+     "d": "Paired gain +16.5 (interval +5.6 to +27.4), all 6 seeds up. Seed spread 11.9 to 2.8 points.",
+     "w": "2:35 PM"
+    },
+    {
+     "t": "Two-step with varied wording and ordered read: 28% to 70.8%",
+     "d": "Gain +42.8 (interval +37 to +49). Varied wording alone 56.5% (+28.5). A second step that is a subtraction went from 0% to 66%.",
+     "w": "4:33 PM"
+    }
+   ],
+   "misses": [
+    "English first rerun passed a low bar: 4% to 35%. It memorised all 48 practice questions, and the bare 1.2B model alone gets 30% (11:47 PM).",
+    "'Think before calling': first looked like +14, six seeds said +1.9 (interval -20 to +24). Falsified; the early gain was seed luck (1:58 PM).",
+    "Sealed confirmation on new story structures: +8.5, combined 79.4% vs mark 80%. In between, not confirmed (3:47 PM).",
+    "First two-step run: only 39.9% of chains right; every second subtraction wrong (3:47 PM).",
+    "Ordered read alone: -2.4, fails (4:33 PM).",
+    "Fair scaling could not start: no working recipe yet, so it waited (9:33 AM).",
+    "Standing noise number: baseline seed spread is about 12 points, so one-seed differences under about 25 mean nothing. Marks now need 6 paired seeds."
+   ]
+  },
+  {
+   "date": "Sep 28",
+   "wins": [],
+   "misses": [
+    "Matching-sleep (distill) test missed: +4.5 of 200 on sums and +9.75 of 200 on grids vs a +20 bar. Doubling the true-answer loss did as well or better (4:51 PM)."
+   ]
+  }
+ ],
+ "coverage": "Oct 3 and Oct 4 are covered from the Real model fixes, More information, Reasoner fresh-data, Fair scaling and Fernando threads plus the round write-ups. Sep 28 has one entry from the project chat; Sep 29 to Oct 2 are not summarised yet.",
+ "roadmap": [
+  {
+   "s": "done",
+   "t": "Reader and copy path",
+   "n": "Copy path fixed unseen answers (0-4% to 84-90%); contextual reader 72.5% to 95.5%. PR #33."
+  },
+  {
+   "s": "done",
+   "t": "Two-step reasoning",
+   "n": "Chain 54.9% to 81.4% on our wording; 62-76% on layouts someone else wrote, so layout robustness is still a blocker."
+  },
+  {
+   "s": "done",
+   "t": "Long inputs",
+   "n": "Input cap 49 to 160 tokens, 66.6% on 55-150 token questions. With irrelevant numbers added only 50%, tracked as a blocker."
+  },
+  {
+   "s": "done",
+   "t": "English skills",
+   "n": "80% goal reached: 83% and 81% on never-practised kinds vs 68% for the bare 1.2B model with 8 examples. Newer kinds only tie it (78 vs 78). Reproduced on the PC: 91.9% and 91.2% vs 75.0% bare LM."
+  },
+  {
+   "s": "progress",
+   "t": "Skills pretraining reaches its 80 mark",
+   "n": "Likely near the mark: real model with plan route gets 89.6% of all new questions (3 runs) vs the 85 mark; matched-practice talker steps hit 98.8% on new chain questions. Needs more skill families and a sealed check.",
+   "eta": "No ETA yet"
+  },
+  {
+   "s": "done",
+   "t": "Fair scaling: does a bigger core help?",
+   "n": "Done, result in between: 64.4%, 65.3%, 66.3% for 9.0M, 17.9M, 35.8M, gain +1.9 vs +5 mark (CI -1.0 to +4.8). The core is not the limit. The 35.8M system beats the bare 1.2B 8-shot, 66.3 vs 62.5."
+  },
+  {
+   "s": "todo",
+   "t": "Sleep replay (PR #19)",
+   "n": "Designed and approved by Ben; not built. Earlier matching-sleep test missed its bar."
+  },
+  {
+   "s": "todo",
+   "t": "Notebook memory (PR #20)",
+   "n": "Designed; needs a code change before it can run."
+  },
+  {
+   "s": "todo",
+   "t": "Sealed head-to-head: beat 1-2B models at whole size",
+   "n": "Whole size counts the borrowed 1.2B LM. Only a bare-1.2B comparison on English exists. The 350M LM swap failed (65.7% vs 92.6%); a middle-layer reader is untested."
+  },
+  {
+   "s": "progress",
+   "t": "End-to-end proof of concept",
+   "n": "Core pipeline end to end on the real model.",
+   "eta": "Oct 14 to 18 (given earlier)"
+  },
+  {
+   "s": "paused",
+   "t": "Vision and audio encoders",
+   "n": "Paused by Ben on Oct 3 (about 11:07 AM ET). PRs #22, #24, #25, #26, #28.",
+   "eta": "About 2 to 3 weeks after restart"
+  },
+  {
+   "s": "todo",
+   "t": "Size target: ship a model of about 400M",
+   "n": "Plan: EmbeddingGemma 2 reader (271M, borrowed, frozen) + our own thinker grown to about 100M + talker of about 25M. Nothing borrowed thinks. Growth ladder of 3M, 10M and 30M: each step must gain more from size than the plain model does (30M on hold). The big run is gated by the principles scorecard (Oct 31 readout), not by G1. Size note: the 100M model is 373M as built; the 30M rung is about 301M. Launch waits on group 2 passing at 3M with hand-code count 0.",
+   "eta": "Ladder about 1 week of PC time after it starts; not started"
+  },
+  {
+   "s": "todo",
+   "t": "North star: beat Minecraft like a person",
+   "n": "Long-term goal; nothing built toward it yet."
+  }
+ ],
+ "footer_note": "Explainer page: https://claude.ai/artifact/LxsmdiQnHCayDWFNvhFVfa"
+}

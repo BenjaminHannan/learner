@@ -1,0 +1,41 @@
+/* Shared look for the long explainer. 1920x1080. Do not edit per chapter; use inline styles in your chapter file for one-offs. */
+:root{
+  --bg:#FBF7F0; --ink:#1F2430; --soft:#5B6475; --card:#FFFFFF; --line:#E4DAC8;
+  --reader:#0F8B8D; --thinker:#4F46E5; --call:#E4572E; --calc:#64748B; --stop:#9333EA; --talker:#DB2777;
+  --tested:#16875A; --untested:#C77D00; --placeholder:#7B8494; --hand:#8A5A2B; --learned:#2F6FEB; --warn:#C2410C;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:var(--ink)}
+#root{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+.scene{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;visibility:hidden}
+.g{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.abs{position:absolute}
+.t{position:absolute;white-space:normal;line-height:1.25;font-weight:500}
+.mono{font-family:"DejaVu Sans Mono","Liberation Mono",ui-monospace,monospace;font-weight:600;letter-spacing:-0.01em}
+.heading{position:absolute;left:80px;top:118px;width:1760px;font-size:58px;font-weight:700;letter-spacing:-0.02em;line-height:1.1}
+.caption{position:absolute;left:80px;bottom:50px;width:1760px;min-height:112px;padding:20px 32px;border-radius:22px;background:#fff;border:3px solid var(--line);font-size:38px;line-height:1.28;font-weight:500;display:grid;grid-template-columns:10px 1fr;column-gap:26px}
+.caption .cbar{grid-column:1;grid-row:1;border-radius:6px;background:var(--cap-accent,var(--thinker))}
+.caption .ctext{grid-column:2;grid-row:1;align-self:center}
+.lcell{position:absolute;border:2px solid var(--line);border-radius:8px;text-align:center;font-weight:600}
+.vec{position:absolute}
+.vec i{position:absolute;display:block;border-radius:5px}
+.note{position:absolute;background:#fff;border:3px solid var(--line);border-left:12px solid var(--thinker);border-radius:16px;padding:16px 24px;line-height:1.3;font-weight:500}
+.box{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:4px solid var(--line);background:#fff;border-radius:18px;padding:8px 14px;line-height:1.15}
+.box .lab{font-weight:700}
+.box .sub{font-weight:500;color:var(--soft);margin-top:6px}
+.chip{position:absolute;display:inline-flex;align-items:center;gap:10px;padding:6px 18px;border-radius:999px;font-weight:700;font-size:28px;border:3px solid;background:#fff;white-space:nowrap}
+.chip::before{content:"";width:16px;height:16px;border-radius:50%;background:currentColor;flex:none}
+.track{position:absolute;border-radius:12px;background:#EFE8DA;overflow:hidden}
+.fill{position:absolute;left:0;top:0;height:100%;transform-origin:left center;border-radius:12px}
+.card{position:absolute;background:#fff;border:3px solid var(--line);border-radius:22px}
+#chrome{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none}
+.chip-ch{position:absolute;left:80px;top:34px;height:56px;display:flex;align-items:center;gap:16px;font-size:26px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--soft);opacity:0;visibility:hidden}
+.chip-ch b{color:var(--ink)}
+.chip-ch i{display:block;width:18px;height:18px;border-radius:50%;background:var(--thinker)}
+#pbar{position:absolute;left:0;bottom:0;width:1920px;height:10px;background:#EFE8DA}
+#pfill{position:absolute;left:0;top:0;width:1920px;height:10px;background:var(--thinker);transform-origin:left center;transform:scaleX(0)}
+.ptick{position:absolute;bottom:0;width:3px;height:10px;background:#fff}
+.title-card .kicker{position:absolute;left:160px;top:330px;width:1600px;font-size:34px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.title-card .big{position:absolute;left:160px;top:400px;width:1600px;font-size:104px;font-weight:800;letter-spacing:-0.03em;line-height:1.02}
+.title-card .blurb{position:absolute;left:160px;top:690px;width:1500px;font-size:42px;font-weight:500;line-height:1.3;color:var(--soft)}
+.title-card .rule{position:absolute;left:160px;top:660px;width:220px;height:10px;border-radius:6px}

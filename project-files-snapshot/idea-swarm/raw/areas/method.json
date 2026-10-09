@@ -1,0 +1,1756 @@
+{
+ "area": "method",
+ "title": "More decisive experiments per day: speed, cheaper tests, and better measurement",
+ "brief": {
+  "state": "Status as of Oct 7, 2:48 PM ET (latest status file in the project; the code copies show no PC run beyond q39). B2 is 3,302,481 params, trained from scratch: 24,000 updates, batch 256. Its 6-seed confirm passed PASS-1 (+20.3 pooled-5 over plain_tf, +6.9 over plain_tf_steps).\n\nSpeed is the bottleneck, and the orchestrator's \"1 hour\" figure is only the fastest run. On the shared 5070 Ti, B2 ran 1.6 to 6.7 updates/s; PC runs took 1.0 to 4.2 h (median about 1.55 h). The 18-run confirm used about 21 run-hours, roughly 7 h at three at a time (computed, ideal packing). Rented 5090s took 0.7 to 1.2 h. No B2 training step has been profiled. custom_io has no torch.compile, CUDA graphs, sequence packing, length bucketing, loader workers or warm starts. Batches pad to their longest prompt (mean prompt 81 characters). Eval is cheap (36 to 158 s per run). A B2 run uses about 3 GB allocated and 4.8 GB reserved; some model shapes reserve 12 to 15 GB.\n\nMeasurement. Six-seed pooled-5 SDs: B2 0.63, plain_tf 1.19, plain_tf_steps 1.01; paired SDs 0.94 (B2 minus plain_tf) and 1.33 (B2 minus plain_tf_steps). Two-seed screens matched six-seed means within about 1 point for three arms. Two cheap proxies reversed an arm ordering on one seed each (400-step probe; 8k-step run). A CPU probe on saved checkpoints, with no training, gave clear loop gates. Chain-5 is at ceiling (99.4 to 99.7 for B2), so it cannot show gains. The loops:0 leak is above 5% on 3 of 8 B2 seeds. Null checks reuse six seeds, so their failure rates are rough.\n\nTwo findings change the picture. The +6.9 margin is against a step-writing baseline with a 64-character target cap, which left 58 of 72 wrong calculator-on chain rows answer-only; the uncapped control (C0, queue 43) has not run. B2 itself trains 528 rows (9 to 11 program steps) answer-only, because its 7-step program cap drops their program target; that breaks rule 7 and T1 keeps it. Test B1 proved wrong (+0.8 against a +15 mark).",
+  "facts": [
+   {
+    "claim": "B2 = 3,302,481 params; d=256; two reader conv blocks (kernel 5, about +-4 letters); thinker of 2 transformer blocks run for 8 fixed rounds; 17 thinker vectors (8 control + 9 register); 27 workspace slots (16 number, 4 constant, 7 result); exact int64 executor; copy/pointer talker.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py (Ledger defaults lines 130-146); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py lines 8-10; /mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 1"
+   },
+   {
+    "claim": "B2 confirm recipe: 24,000 updates, batch 256 (about 30.7 passes over the 200k train rows), lr 1e-3, 300-step warmup then cosine to 10%, AdamW (0.9, 0.95), weight decay 0.1 on matrices only, bf16 autocast, fused AdamW on CUDA, grad clip 1, no time cap in the confirm.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (lr_at, optimizer, argparse defaults); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/33-pc-confirm-b2.txt"
+   },
+   {
+    "claim": "Dev split sizes: in_dist 1360, answer 1200, frame 1360, vocab 800, variant 1320 (pooled-5 = 6,040 rows); family 160 (not pooled). Chain-5 = 1,000 rows from the 200-per-cell build.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s200/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/evalx.py"
+   },
+   {
+    "claim": "6-seed B2 confirm pooled-5 = 73.00, 74.27, 74.74, 74.02, 73.63, 74.47 (mean 74.02, SD 0.63). plain_tf mean 53.69 (SD 1.19); plain_tf_steps mean 67.13 (SD 1.01). Paired differences: B2 minus plain_tf +20.34 (SD 0.94, CI 19.35 to 21.32); B2 minus plain_tf_steps +6.89 (SD 1.33, CI 5.49 to 8.29). Verdict PASS-1, PASS-2 pending.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/CONFIRM-ANALYSIS.json; per-run RESULT.json files in results/33-pc-confirm-b2/ (pooled recomputed by summing the five pooled splits)"
+   },
+   {
+    "claim": "Chain-5 for B2 on the six confirm seeds: 99.4, 99.6, 99.6, 99.5, 99.6, 99.7 (screen seeds 100/101: 99.7, 99.8). plain_tf_steps chain-5 93.7 to 94.4. B2 chain-5 is at ceiling, so it cannot show gains.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s20x/RESULT.json (chain5 intact); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md"
+   },
+   {
+    "claim": "Zero-round leak (lesion loops:0, in_dist) for B2: confirm seeds 200-205 = 0.00, 10.81, 0.00, 5.66, 3.53, 0.00; screen seeds 100/101 = 0.00, 6.76. Above the 5% mark on 3 of 8 seeds. Donor in_dist 3.1 to 3.8 on the confirm.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s20x/RESULT.json (lesions); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md"
+   },
+   {
+    "claim": "B2 variant split is the noisiest dev split (values 31.9 to 37.1, SD about 1.8, computed); answer split SD about 0.7 (computed).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s20x/RESULT.json (final_eval)"
+   },
+   {
+    "claim": "PC training speed (steps_per_s) in the 18-run confirm, three jobs at a time on a card shared with another thread: B2 1.82, 1.58, 4.41, 4.39, 4.30, 6.74 updates/s for seeds 200-205; B2 train time 0.99 h (s205) to 4.21 h (s201), median about 1.55 h. plain_tf 12.97 to 26.25/s; plain_tf_steps 1.90 to 20.06/s in the same queue.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (steps_per_s, train_s, wall_s)"
+   },
+   {
+    "claim": "Per-update cost ratio B2 vs plain_tf_steps in the same queue ranged from 1.2x (seed 201) to 7.9x (seed 200); the roadmap's 7.8x (3.66 h vs 0.47 h) is one seed pair. Contention dominates these ratios.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (computed); /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md section 8"
+   },
+   {
+    "claim": "The full 18-run confirm used about 76,400 run-seconds (about 21 h) of per-run wall time; at three at a time that is about 7 h if perfectly packed (computed; per-run times already include contention).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (wall_s, computed)"
+   },
+   {
+    "claim": "Rented RTX 5090 B2 runs: 9.56 and 5.73 updates/s (wall 0.71 h and 1.18 h). B2 screen runs on a 5090: 8.24 and 8.17 updates/s. Same-seed B2 device check, 5090 minus PC pooled-5: +0.48 (seed 200), +0.12 (seed 201).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/40-egw-s200/B2V_s200/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/41-egw-s201/B2V_s201/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/29-b2-screen/B2_s100/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (device check)"
+   },
+   {
+    "claim": "GPU memory: B2 peak allocated 2.87 to 3.08 GB, reserved 4.70 to 4.89 GB. EGT (3.37M) allocated 5.4 GB but reserved 12.0 to 15.4 GB. EGW (22.2M) allocated 8.5 GB, reserved 14.6 to 17.6 GB (rented 5090).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/37-pc-loop-readout/LR_s200/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/38-pc-eg-teacher/EGT_s200/RESULT.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/40-egw-s200/EGW_s200/RESULT.json"
+   },
+   {
+    "claim": "Test B1 students show reserved memory of 16,824 MiB (tft_s301) on a card the notes call the 16 GB PC; device or metric is unclear.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/35-pc-b1-students/tft_s301/RESULT.json"
+   },
+   {
+    "claim": "local_runner starts a run only when nvidia-smi reports free memory at least the queue's # MEM value (default 5000 MiB; B2 queues 6000). Each child sets OMP_NUM_THREADS=2. Defaults: --par 3, --gap 60 s, --poll 20 s. No retry on failure; a run with an existing RESULT.json is skipped; each queue gets a frozen code copy.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/local_runner.py (child_env, free_mib, argparse, docstring)"
+   },
+   {
+    "claim": "Eval is cheap: wall time minus train time is 36 to 158 s per B2 run (final eval, lesions, chain-5). Eval is about 1 to 2 percent of a run.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (wall_s minus train_s, computed)"
+   },
+   {
+    "claim": "No torch.compile, CUDA graphs, JIT, DataLoader workers, pin_memory, nested tensors or pack_padded_sequence anywhere in custom_io. Attention uses F.scaled_dot_product_attention; AdamW is fused on CUDA.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io (grep over *.py and models/*.py; train.py line with fused=)"
+   },
+   {
+    "claim": "Batches are padded to the longest prompt in each batch; no packing or length bucketing. Prompt length mean 81 chars, p99 163, max 204; a 64-row batch pads to about 161 chars.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/data.py (collate); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/README.md (Numbers)"
+   },
+   {
+    "claim": "Per-step CPU work in B2 training: collate() loops over rows in Python; ledger.gold() loops over rows (targets cached by row id in progparse.row_targets); tokenize()/spans() run regex and numpy per row, and the spans cache clears at 20,000 entries while train has 200,000 prompts. No profile exists; whether CPU or GPU sets step time is untested.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/data.py; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py (gold, tokenize, spans); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py (row_targets)"
+   },
+   {
+    "claim": "No warm start in custom_io: train.py has no init or resume argument; checkpoints load only through load_model (evalx, probes).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (argparse); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/__init__.py (load_model)"
+   },
+   {
+    "claim": "--minutes sets a wall-clock cap, and the lr schedule then follows elapsed time (progress = max(step/steps, elapsed/cap)), so time-capped runs are not step-matched. The confirm runs used no cap.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (lr_at, main)"
+   },
+   {
+    "claim": "--eval-every quick eval uses 200 in_dist rows; at about 75 percent accuracy the standard error is about 3 points (computed). B2 runs in the confirm and screen had no quick_eval events.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py; grep of results/29-b2-screen and results/33-pc-confirm-b2 stdout.events.txt (none)"
+   },
+   {
+    "claim": "Quick-eval trajectory, plain 3M, seed 0, 200 rows: dev 74.5 at 16k steps, 71.0 at 20k, 71.5 at 24k, while train loss fell from 0.125 to 0.026. The dev curve is noisy and not monotone.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/02-calib-long/tf3m_24k/stdout.events.txt"
+   },
+   {
+    "claim": "400-step probes (150 rows, seed 100): plain_tf 14.67, plain_tf_steps 8.67, register-loop A 18.0, ledger B 50.0. At 24k (seed 100): plain_tf 53.81, plain_tf_steps 68.39. The 400-step probe reverses the plain_tf vs plain_tf_steps order.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/10-probe-w1/*/RESULT.json; results/11-probe-w2/*/RESULT.json; results/20-screen-s100-w1/*/RESULT.json (pooled-5 computed)"
+   },
+   {
+    "claim": "8k vs 24k calibration, one seed each, plain 3M vs 10M: pooled-5 at 8k 46.97 vs 45.51 (3M ahead); at 24k 52.73 vs 54.93 (10M ahead). The 8k proxy reverses the size order.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/01-calib/tf3m, tf10m; results/02-calib-long/tf3m_24k, tf10m_24k; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/CALIBRATION.md"
+   },
+   {
+    "claim": "Two-seed screen (100, 101) means vs six-seed confirm means: B2 73.66 vs 74.02; plain_tf_steps 67.74 vs 67.13; plain_tf 54.36 vs 53.69 (within about 1 point for three arms). B2 minus plain_tf_steps was +5.9 on the screen and +6.9 on six seeds.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md; results/CONFIRM-ANALYSIS.json; per-run RESULT.json (computed)"
+   },
+   {
+    "claim": "Seed noise from calibration: four seeds of plain 3M at 24k updates give pooled-5 SD about 1.0 (sd of 52.7, 54.7, 54.7, 54.6 on the 03-noise table).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/CALIBRATION.md (03-noise table)"
+   },
+   {
+    "claim": "Null check (analyze_gain.null_check): 360 ordered draws, each a mean of two paired differences over four of six seeds. Only 45 distinct two-pair splits exist, so the draws overlap and the failure rates are rough. Family mark failed 100 percent of no-change draws (median worst family -6.6); dev-split mark 22 percent; W1's F1 family mark 22.2 percent; cipher_map proved-wrong line 6.7 percent.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/analyze_gain.py lines 176-198; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addenda 19 and 19 amendment 1; /mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8a"
+   },
+   {
+    "claim": "CPU loop probe on saved B2 checkpoints s100/s101 (no training; 200 rows per cell): in_dist at K=1,2,4,6,8,12,16 = 30.6, 46.9, 82.4, 88.8, 89.4, 89.1, 88.2 (s100); 30.2, 46.2, 78.8, 89.9, 90.5, 90.4, 89.7 (s101). K=6 is 0.6 below K=8 on both seeds. Gates: more-loops open (7.3 and 8.4 percent of wrong rows right later, gate 5); halting closed (overthinking 1.9 and 1.7 percent, gate 2); state growth closed (controller RMS x3.9 and x3.4, gate 10).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/40-loops-probe/PROBE.json; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/design/LOOPS-probe.md; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/probe_loops.py"
+   },
+   {
+    "claim": "Digit reading probe (CPU, no training): reader output carries every digit place at 99.997 percent or better on all six seeds (lowest place). The pooled span mean loses digits (place 9 at 65 to 84 percent). Digit writing is untested until T1.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "Lesion ctl27 (controls 2 to 7 zeroed at test time): pooled-5 change -0.6 to -13.6 and chain-5 change -0.6 to -36.9 across six seeds; the controls are used, unevenly.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0-RESULT-2026-10-07.md"
+   },
+   {
+    "claim": "plain_tf_steps (the step-writing baseline) has a 64-character cap on steps plus answer: 840 var_chain rows were trained answer-only. In the calculator-on diagnosis, 58 of the 72 wrong chain-5 rows (81 percent, two seeds) come from that cap; copying never failed (0 of 2,000 rows). C0 (cap 107, no answer-only rows) has not run.",
+    "label": "shown",
+    "source": "/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addendum 20; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/plain_tf_steps.py lines 15, 21-27"
+   },
+   {
+    "claim": "B2 has a 7-step program cap: progparse._targets sets the program target to empty when a row has more than N_RES=7 steps, so those rows train with no program (answer only). The redesign's FIRST-LOOK file counts 528 train rows (9 to 11 steps); no other cap binds on train. This is a truncation under rule 7; T1 keeps the same cap.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py lines 8, 196-205; /mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md (caps paragraph); /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md (note of 2:00 PM ET)"
+   },
+   {
+    "claim": "Family-level 6-seed means, B2 vs plain_tf_steps (rows pooled over the five pooled splits, computed): cipher_map 97.8 vs 63.8; seq_cycle 69.8 vs 41.0; copy_word 86.1 vs 68.4; fewshot_number_rule 22.7 vs 37.6; rule_apply 66.3 vs 71.1; digits_parity 50.1 vs 53.0; order_chain 43.6 vs 47.5.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json (by_family, computed)"
+   },
+   {
+    "claim": "REPORT.md item 6 quotes B2 losses of fewshot_number_rule -9 and rule_apply -6 vs plain_tf_steps; the recomputed 6-seed confirm gives -14.9 and -4.8. The run behind REPORT's figures is not named.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/REPORT.md item 6; results/33-pc-confirm-b2/*/RESULT.json (computed)"
+   },
+   {
+    "claim": "Test B1 (10.9M B2-M students, seeds 300/301): B1-a (TEACH minus GEN, new kinds) +0.78 (per seed -0.52, +2.08), needed at least +15, proved wrong below +5. B1-c -2.73. Students score 91 to 96 percent on their own practice and about 11 percent on new kinds.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-B1.md; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addendum 3"
+   },
+   {
+    "claim": "Test LR (readout loss at every loop round): pooled-5 +1.14 and +1.27, but in_dist at 16 rounds minus 8 is -0.51 and -0.22 (mark -0.3), and zero-round leak 15.88 on seed 200. Plain B2 at 16 minus 8 rounds is -1.91 and -1.62. Verdict FAIL.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (LR section)"
+   },
+   {
+    "claim": "EmbeddingGemma arms, pooled-5 gain over same-machine B2 (seeds 200, 201): EGE +1.59 and +2.12 (passes gain, fails variant gain and leak; loops:0 18.09 on s200 vs B2 1.40); EGT +0.18 and +0.61; EGR -0.26 and -2.68; EGM -1.18 and -1.36; EGO -0.73 and -1.84; EGW -3.39 and -5.30. Removing the letter window (R0) costs B2 6.84 and 6.26. EGE 6-seed confirm (queue 39) has not finished.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md"
+   },
+   {
+    "claim": "EGK (EmbeddingGemma feeding the thinker) hit non-finite loss on seed 201 at step 3,000 (wall 1012 s) and again at step 4,500 on retry (wall 1361 s). The runner does not retry automatically.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/51-egk-s201/EGK_s201/RESULT.json; results/52-egk-s201-retry/EGK_s201/RESULT.json"
+   },
+   {
+    "claim": "Retired 1.2B sandwich speed numbers (questions per second, short prompts): RTX 5090 19.1 at batch 1, 358 at batch 256; RTX 5070 Ti 18.5 at batch 1, 228 at batch 128; M1 Pro MPS 5.6 at batch 1, about 21 at batch 32 to 64. bench_tps.py times the LFM2.5-1.2B sandwich, not B2. The bare LFM decode is about 4,300 tokens/s at batch 64 on the 5070 Ti.",
+    "label": "shown",
+    "source": "/mnt/project-files/notes/speed-5090-2026-10-04.txt; /mnt/project-files/notes/bench_tps.py (loads run_arm.py with lm = LFM2.5-1.2B); /mnt/project-files/bench/BENCH-RECIPE.md (parked 10-06)"
+   },
+   {
+    "claim": "No B2 inference speed and no M1 MPS training speed for any custom_io model is measured in these files. The creative pilot notes say MPS is untested for its jobs. The Mac was busy with creative job 9 training until about 4 PM ET.",
+    "label": "shown",
+    "source": "/mnt/project-files/creative-pilot/MAC-JOB.md section 4; /mnt/project-files/progress-board/data.json (running list)"
+   },
+   {
+    "claim": "Rented RTX 5090 cost about 0.45 to 0.58 dollars per hour (Vast). Ben approved Vast for important runs while the PC and Mac are busy (3:00 PM ET, relayed).",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md (cost line); /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 18"
+   },
+   {
+    "claim": "The 5070 Ti is shared with the ultracode blocker thread. Coordination is by GPU-BUSY.txt and by free memory only; no compute share is enforced or measured.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PC-JOB.md section 3; /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/local_runner.py docstring"
+   },
+   {
+    "claim": "Per-row predictions (PREDS.json) were not saved for the confirm runs; train.py has --save-preds and the T1 queue uses it. The B2 confirm checkpoints are on the PC; /mnt/project-files/custom-io/checkpoints holds only the screen B2 checkpoints (seeds 100, 101) and some screen baselines (212 MB).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (--save-preds); /mnt/project-files/custom-io/checkpoints/29-b2-screen/"
+   },
+   {
+    "claim": "Pairing: same-seed runs share model init (torch.manual_seed) and data order (RandomState(seed) permutation). GPU nondeterminism (bf16, SDPA) is not measured: no same-seed replicate exists in results.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py (main, seeding); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/data.py (train_batches)"
+   },
+   {
+    "claim": "At inference the number values come from a hand-written regex (progparse.NUM_RE, first 16 numbers) and word spans from hand-written word_spans. This is the rule-1 issue the architecture thread plans to remove later (rung N1).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py (spans); /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md (Amendment 1 and 2)"
+   },
+   {
+    "claim": "Mark arithmetic: a 6-seed 95 percent CI half-width is 2.571 x SD / sqrt(6), about 1.05 x SD. A +-1.0 band needs SD below about 0.95; at paired SD 0.94 the mean must lie within about 0.01 of zero.",
+    "label": "shown",
+    "source": "/mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md (Amendment 2); /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addendum 17"
+   }
+  ],
+  "tried_and_failed": [
+   {
+    "what": "Running 3 B2 jobs at a time on the PC (queue 33, par 3)",
+    "result": "B2 ran 1.6 to 6.7 updates/s; no aggregate throughput measured; per-run speed varied about 4x with the shared card",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/*/RESULT.json"
+   },
+   {
+    "what": "B2 on rented 5090s (B2V, screen)",
+    "result": "5.7 to 9.6 updates/s; pooled-5 within +0.5 and +0.1 of the PC run on the same seeds",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (device check)"
+   },
+   {
+    "what": "400-step probe as a predictor of 24k ranking (150 rows, seed 100)",
+    "result": "Failed: reversed plain_tf vs plain_tf_steps (14.7 vs 8.7 at 400 steps; 53.8 vs 68.4 at 24k)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/10-probe-w1; results/11-probe-w2; results/20-screen-s100-w1"
+   },
+   {
+    "what": "8k-step calibration as a predictor of 24k (one seed each)",
+    "result": "Failed: 3M 46.97 vs 10M 45.51 at 8k; 52.73 vs 54.93 at 24k (order flips)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/CALIBRATION.md"
+   },
+   {
+    "what": "Quick eval every N steps on 200 rows (--eval-every)",
+    "result": "Noisy (about 3 points SE) and not monotone (plain 3M dev 74.5 at 16k, 71.5 at 24k); not used for B2",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/02-calib-long/tf3m_24k/stdout.events.txt"
+   },
+   {
+    "what": "Test-time loop sweep on saved B2 checkpoints (CPU, no training)",
+    "result": "Done: accuracy flat from K=6 to 16; halting and state-growth gates closed; more-loops gate open; no training was run",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/40-loops-probe/PROBE.json"
+   },
+   {
+    "what": "Null check of W1 marks (no-change draws from plain B2 seeds)",
+    "result": "Family mark failed 100 percent of null draws (replaced); dev-split mark 22 percent; F1 family mark 22.2 percent (judged)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/PASS-MARKS.md addenda 19 and 19 amendment 1"
+   },
+   {
+    "what": "Seed-noise calibration of plain 3M at 24k (4 seeds)",
+    "result": "Pooled-5 SD about 1.0; 3M mean about 54.2",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/CALIBRATION.md"
+   },
+   {
+    "what": "Test LR: loss at every loop round (queue 37, 2 seeds)",
+    "result": "FAIL: stability -0.51 and -0.22 vs -0.3 mark; zero-round leak 15.9 on s200; pooled-5 gain +1.1 and +1.3",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md"
+   },
+   {
+    "what": "EmbeddingGemma-based readers and adapters (EGE, EGT, EGR, EGM, EGO, EGW, R0; queues 36, 38, 40-44 rented)",
+    "result": "All FAIL or not confirmed. EGE passed gain on 2 seeds but failed variant gain and leak marks; EGW -3.4 and -5.3; window removal (R0) costs B2 about 6.5",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md"
+   },
+   {
+    "what": "EGK (EmbeddingGemma feeding the thinker), seed 201",
+    "result": "Non-finite loss at step 3,000 and again at 4,500 on retry; no fix run queued",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/51-egk-s201; results/52-egk-s201-retry"
+   },
+   {
+    "what": "Test B1: teacher-data students (10.9M B2-M on TEACH and GEN, plus plain 10.8M)",
+    "result": "PROVED WRONG: B1-a +0.78 vs needed +15; B1-c -2.73; new kinds about 11 percent for all students",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-B1.md"
+   },
+   {
+    "what": "Place codes alone for plain transformers (addendum 1)",
+    "result": "No gain: pooled-5 +0.81 mean, below the +1.0 do-nothing bar; tfsteps -0.81",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md"
+   },
+   {
+    "what": "Screen designs A (register loop), A0, plain L2x2 (screen, seeds 100/101)",
+    "result": "NO-GO: A -3.3 vs plain_tf_steps; A0 -7.2; L2x2 -5.4 vs plain_tf",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md"
+   },
+   {
+    "what": "B (ledger without copy talker) and B2 screen",
+    "result": "B2 NO-GO by the letter on loops:0 (6.76 on seed 101); B2 then passed the 6-seed confirm (PASS-1)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md; results/CONFIRM-ANALYSIS.json"
+   },
+   {
+    "what": "1.2B sandwich bench, lr decay to 0 (T1 in the bench)",
+    "result": "Hurt: held 276.2 vs 287.0, behind on 6 of 6 seeds (bench parked 10-06)",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md"
+   },
+   {
+    "what": "1.2B bench: quiet notes, merged Hearer/Reader, pointer planners PX/PXW/PXH/T3, per-round routers, wider planner reader, CRDW doors",
+    "result": "Each failed or stayed flat (quiet notes 226.5 vs 287.0; merge 278.8; pointer planners flat at 75 to 78 of 160; CRDW did not stack)",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md (ladder and tried tables)"
+   },
+   {
+    "what": "Plateau-thread ideas on the 1.2B model: stiffness, core size, truncation, too little practice, wider input pipe, 8 loops, lr 3e-4, pointer, wider exit",
+    "result": "Each ruled out (no effect on fit)",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md (earlier plateau thread, PR 34)"
+   },
+   {
+    "what": "Warm start of B2 from a checkpoint",
+    "result": "Not implemented: train.py has no init or resume",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py"
+   },
+   {
+    "what": "Wall-clock capped runs (--minutes)",
+    "result": "Available but unused for B2 confirm; a time cap changes the lr schedule by elapsed time, so runs are not step-matched",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/train.py"
+   }
+  ],
+  "planned_or_running": [
+   {
+    "what": "queue 39: EGE 6-seed confirm (8 runs; seeds 202-207; B2_s206 and B2_s207 new, 202-205 reuse queue 33)",
+    "status": "running on the PC; ETA about 9 PM ET per the 2:48 PM ET status file",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/39-pc-ege-confirm.txt; /mnt/project-files/progress-board/data.json"
+   },
+   {
+    "what": "queue 40: T1 screen (model tool, 3,277,393 params; seeds 200 and 201; sealed marks; 6-seed confirm waits on the screen)",
+    "status": "queued after queue 39; expected about 9 PM to midnight ET per the plan; no results yet",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/40-pc-t1-screen.txt; /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md"
+   },
+   {
+    "what": "queue 41: U0, letters vs BPE prompt on plain_tf_steps (3,339,776 params; seeds 200 and 201; report first)",
+    "status": "queued after the T1 screen; no results yet",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/41-pc-gain-u0.txt"
+   },
+   {
+    "what": "queue 42: W1, one low-rank global attention block in the reader (3,336,113 params; seeds 200 and 201)",
+    "status": "queued after U0; F1 family mark judged because its no-change failure rate is 22.2 percent (under 25)",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/42-pc-gain-w1.txt; PASS-MARKS addendum 19 amendment 1"
+   },
+   {
+    "what": "queue 43: C0, plain_tf_steps with cap 107 (3,271,424 params; seeds 200 and 201). Decides whether the +6.9 margin over the step writer holds.",
+    "status": "queued; no results yet",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/43-pc-c0.txt; PASS-MARKS addendum 20"
+   },
+   {
+    "what": "queue 44: PT13-C0, 13-layer plain model with C0 settings (10,379,264 params), the 8a first look",
+    "status": "queued after queue 43",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/44-pc-8a-pt13-c0.txt"
+   },
+   {
+    "what": "First look at B2 at 10M (B2D, 10.25M, 8 blocks) and its plain baseline, seeds 200 and 201, on two rented 5090s with a 4-hour cap per box",
+    "status": "approved 3:05 PM ET; planned, not started in the copies",
+    "source": "/mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md (Amendment 2)"
+   },
+   {
+    "what": "8a 3M rung on rented 5090s (seeds 400 to 405, one box per seed plus a speed-check box; caps 3.30 dollars per box; expected 3 to 4 h per box, about 11 dollars total)",
+    "status": "spec sealed 3:10 PM ET; not started",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 18"
+   },
+   {
+    "what": "queue 30 (pythia-31m lr pick, PASS-2 baseline) and queue 31 (Mac speed probes and 8-shot baselines)",
+    "status": "not run (no result folders); PASS-2 stays pending",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/30-pc-baselines.txt; queue_local/31-mac-probe-fewshot.txt"
+   },
+   {
+    "what": "H1 learned stop with per-round supervision (sealed spec, required for B3; needs the T1 screen first)",
+    "status": "not run",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8b"
+   },
+   {
+    "what": "W2, 16 extra scratch tokens in the thinker state (about 4k params)",
+    "status": "idea only; untested, no spec sealed",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b"
+   },
+   {
+    "what": "Speed-up G2: size number and word slots per batch (no math change claimed; needs a fp32 equivalence test at 1e-5 first)",
+    "status": "allowed, not built, not tested",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 12 (G2)"
+   },
+   {
+    "what": "Fast-sleep 6-seed confirm of its 72.7 percent result (other thread)",
+    "status": "not scheduled; audit first",
+    "source": "/mnt/project-files/progress-board/data.json"
+   }
+  ],
+  "open_questions": [
+   "Does the step-writing margin (+6.9) survive the uncapped control C0 (queue 43), and does C0 with the calculator reach chain-5 near 98.5?",
+   "Would removing B2's 7-step program cap (528 train rows, answer-only today) change B2's chain or family scores? T1 keeps the cap; the fix is untested.",
+   "Is B2's step time set by GPU kernels, by per-row Python work (collate, gold, tokenize), or by padded width? No profile exists; a one-step profile on the PC is the cheapest test.",
+   "Can batches be length-sorted or packed without changing results? Batch composition changes the data order, so any such change needs paired checks (suggested).",
+   "Does training at 6 rounds instead of 8 keep accuracy? The test-time probe says K=6 is 0.6 below K=8, but no model has been trained at 6 (saves about a quarter of loop compute, untested).",
+   "What is the aggregate updates/s of 2 vs 3 B2 jobs per card? Per-run speed fell up to about 4x under sharing; aggregate is unmeasured.",
+   "How large is GPU nondeterminism (bf16, SDPA)? Needs a same-seed replicate pair per arm; none exists.",
+   "Which cheap proxy ranks arms like 24k? The 400-step and 8k-step proxies each reversed an ordering on one seed; any proxy needs a multi-seed check against the q33 results.",
+   "Are the null failure rates stable with independent seeds? The current null reuses six seeds (45 distinct splits).",
+   "Should chain-5 be replaced by a harder panel, since B2 sits at 99.4 to 99.7?",
+   "Can the loops:0 leak be held at 5 percent or below on all seeds? It is above on 3 of 8 seeds; the word-pointer hits are the known source (screen report).",
+   "Would 1,000-row quick evals (about 10 to 20 s each, computed from the 36 to 158 s final eval) replace the 200-row checks for early decisions? Untested.",
+   "What is M1 MPS training speed for B2? Not measured; MPS is untested in the creative pilot.",
+   "Why does tft_s301 report 16.8 GB reserved on a 16 GB card? The device or the metric is unclear (untested).",
+   "Can EGK's NaN be stopped by a loss guard or a lower lr? The runner does not retry failed runs."
+  ],
+  "corrections": [
+   "'A 3M B2 run takes about 1 hour (6.7 updates/s)': only the fastest of six PC confirm runs (B2_s205, 0.99 h). The PC runs took 1.0 to 4.2 h (median about 1.55 h) at 1.6 to 6.7 updates/s while sharing the card; rented 5090s took 0.7 to 1.2 h.",
+   "The speed table (19/358, 18.5/228, 5.6/about 21 questions/s) times the retired 1.2B sandwich (bench_tps.py loads LFM2.5-1.2B), not B2. B2 inference speed and M1 training speed are not measured in these files.",
+   "'+6.9 over plain_tf_steps (6 of 6 seeds)' is measured correctly, but that baseline has a 64-character target cap that left 58 of the 72 wrong calculator-on chain rows answer-only. The claim stays provisional until C0 (queue 43) runs.",
+   "Missing from the summary: Test B1 PROVED WRONG (B1-a +0.78 against a +15 mark; students about 11 percent on new kinds). Test LR FAILED. The EGE 6-seed confirm has not run, and EGK is unstable (NaN twice on seed 201).",
+   "'loops:0 0 to 10.8' is the right range, but the leak is above the 5 percent mark on 3 of 8 B2 seeds (confirm seed 201 at 10.81, seed 203 at 5.66, screen seed 101 at 6.76), not a single case.",
+   "B2 itself has a 7-step program cap that trains 528 train rows answer-only (progparse._targets). That breaks rule 7 (no truncation of training targets), and it is not in the summary; T1 keeps it.",
+   "REPORT.md item 6 says B2 loses fewshot_number_rule by 9 and rule_apply by 6. The recomputed 6-seed confirm gives -14.9 and -4.8, and the run behind REPORT's figures is not named.",
+   "'The PC queue is full through tomorrow morning' is not checkable from these files. The 2:48 PM ET status file shows queue 39 (about 9 PM ET) with queues 40 to 44 queued after it, and the 8a and B2D first looks on rented boxes.",
+   "The 22 percent null failure rate rests on 360 overlapping draws from six seeds (45 distinct splits), so it is rough; the 100 percent family-mark failure is not in doubt.",
+   "'Shared warm starts' are not available: train.py has no init or resume option, so any warm-start idea needs new code."
+  ]
+ },
+ "raw_count": 82,
+ "distinct": [
+  {
+   "title": "Profile one B2 step, then pick the fix by a fixed table",
+   "summary": "No B2 training step has ever been timed. One 30-minute probe times prep, forward, backward and optimizer with synced timers, counts host syncs and kernel launches, and sweeps batch size, padded width, cold vs warm caches and job count. A fixed outcome table then names the single speed fix worth building. It changes no tensor and gates ideas 10, 13, 17, 21 and 22.",
+   "change": "New probe script outside the repo (e.g. CIO/probe_step.py; CIO = /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io). Freeze 200 batches of the q33 stream (seed 200) and, for the 8a caps shape (12 loops, 36 registers, 91 numbers, 208 words, 280 chars), 200 batches from the 8a pool. CUDA-event timers with synchronize around (a) next(batch)+to_device+tokenize+gold, (b) forward, (c) backward, (d) clip+opt.step; 3 repeats of 200 steps. torch.cuda.set_sync_debug_mode('warn') for 5 steps (lists every sync). torch.profiler over 20 steps: kernel launches per step, median kernel time, GPU-busy share, cudaMemcpy/StreamSynchronize counts. Saved-tensor bytes by group (reader, controller state, K/V concatenation) via saved_tensors_hooks. Sweeps: batch 128/256/512; padded width 96/190/260; spans+gold caches cleared (cold, as in real training) vs warm; 1 vs 3 jobs. Also time collate+gold on the M1 CPU as a prior (screen only). Param cost 0. Outcome table, checked in order, first row that fires names the fix: (1) syncs>=8 and GPU busy<=60% -> idea 10 (buffers, pinned copy); (2) prep>=20% of step cold and busy<=70% -> idea 10 parts (b)(d) only; (3) launches>=3000, median kernel<15us, busy<=80% -> idea 13 (CUDA graph) or compile; (4) K/V+controller state>=60% of saved bytes -> idea 21; (5) attention kernels>=30% of GPU time -> revisit dropped summary-slot idea; (6) busy>=85% -> GPU-bound, stop speed edits; (7) 190 vs 260 padding within 5% -> drop bucketing; (8) cold vs warm prep differ>20% -> the I2 probe under-counted prep, use cold numbers; (9) 3-job aggregate>=1.8x one job -> keep par 3, <1.4x -> par 2; (10) CV>10% or phases outside 90-110% of wall -> repeat on a quiet box.",
+   "why": "Shown: each step does 16 blocking host-to-device copies in 5 drain groups plus 5 non-blocking pageable copies, so the brief's 'no host sync' claim (w1c-1) is false and a copy-then-wait story is live. Shown: B2 runs a quiet step of 115-172 ms against about 55-75 ms for its 16 controller-block applications (computed from plain-model per-application cost), so 40-60% of the step is not block compute. Shown: in the 8a box run B2 took 0.141 s per update against 0.092 s in the I2 probe, while the plain arms matched their probes within 3%, so the gap lives in B2's own code. Shown: time per update tracks block applications and width, not stored parameters, and the fixed share for plain models is at most about 0.3 of a 4-application step. About 1 TFLOP per step is 25-50 ms of GPU work against a 148 ms fastest step (suggested), so an isolated fast run is probably dispatch or host bound; this is what the probe tests.",
+   "evidence": [
+    {
+     "claim": "16 blocking CPU-to-GPU copy calls per step (ledger.py 217 x5, 222, 292, 454 x8, 502) forming 5 drain points, plus 5 non-blocking pageable copies (data.py 131-132, reader.py 40). No per-step .item() or tensor-valued branch; logging syncs every 500 steps. The brief's 'no host sync' claim is refuted.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py, CIO/data.py, CIO/models/reader.py, CIO/train.py (fact check verify-sync-and-graph-blockers)"
+    },
+    {
+     "claim": "Quiet-window B2 step 115-172 ms (5.8-8.7 steps/s) vs 16 controller-block applications at 3.3-4.4 ms each (about 55-75 ms); roughly 40-60% of the step is not block compute. Best sustained PC rate 8.5 steps/s (B2_s205, steps 12k-24k); the 6.74 figure is a run mean. B2 costs about 3x plain_tf at best rates, not 7.8x.",
+     "label": "suggested",
+     "source": "CIO/results/33-pc-confirm-b2/*/stdout.events.txt and RESULT.json (fact checks verify-steps-per-s-table, verify-speed-contention)"
+    },
+    {
+     "claim": "8a B2 3M: 0.141 s/update (3,384 s, 68% of box wall) vs 0.092 s in the I2 probe; PT and LLM arms matched probes within 3%. Whether the I2 probe reused rows (warm caches) is untested.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s401-box/box.json; PF/whole-model-roadmap/8A-SPEC-2026-10-07.md section 19 (I2)"
+    },
+    {
+     "claim": "No profile, no per-phase timer, no torch/CUDA version in any RESULT.json; eval is 0.3-1.2% of wall (36-158 s).",
+     "label": "shown",
+     "source": "CIO/train.py lines 159-209; results/33-pc-confirm-b2/*/RESULT.json"
+    },
+    {
+     "claim": "Sandbox micro-benchmark (not the PC): spans 21 us/row, gold-like loop 2.6 ms and collate-like loop 2.0 ms per 256 rows, so prep is about 9-10 ms per batch (about 7% of a 148 ms step). The PC CPU is unmeasured.",
+     "label": "suggested",
+     "source": "idea w1c-1 sandbox run; README mean prompt 81 chars"
+    },
+    {
+     "claim": "Host share of B2's step, CUDA-graph feasibility and GPU-busy fraction on the 5070 Ti.",
+     "label": "untested",
+     "source": "no profile exists (brief)"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC RTX 5070 Ti alone on the card (coordinate GPU-BUSY with the blocker thread) for about 30 min; if the card cannot be cleared, one rented 5090 (about $0.25, needs Ben's OK per rule 6). The M1 CPU prep timing is a free screen.",
+    "hours": 0.5,
+    "arms": "B2 q33 3M; B2 8a caps 3M; plain_tf_steps S as timing control; cold vs warm caches; 1 vs 3 jobs; 3 repeats of 200 steps",
+    "pass_mark": "Decisive when exactly one table row fires on both B2 shapes, repeat CV <=10%, and phase shares sum to 90-110% of wall time. Fix thresholds exactly as in the table (all fixed now).",
+    "proved_wrong": "GPU busy >=70% on both shapes AND prep <10% of step: B2 is GPU-bound and the CPU-side ideas (10, 13) gain under 10%; also wrong if the sync-debug run lists fewer than 4 syncs (copy-and-wait story fails)."
+   },
+   "rules_check": "Measurement only: no model, data, target or score change. Rule 6: PC first, rented box only with Ben's OK. Rule 4: no claim. Rule 5: train rows only. Rule 9: B2 only.",
+   "closest_prior": "Brief open question 'a one-step profile on the PC is the cheapest test' and code-note suggestion of timers around train.py 167-173. This adds GPU-busy from the trace, sync census, cold/warm cache, width and batch sweeps and a decision table. SR2's T4 audit profiled a different model.",
+   "autonomy": "Training-time measurement; no deploy-time step added or removed.",
+   "merged_from": [
+    "w1c-1",
+    "w1d-1",
+    "w1e-2",
+    "w1f-5",
+    "w1j-1",
+    "w2g-2",
+    "w3d-1",
+    "w3e-1"
+   ],
+   "director_score": 9,
+   "director_note": "Critics should check (a) that the table rows cannot contradict each other (rows 1-3 can all fire; order resolves it but confirm that is intended), (b) that 'alone on the card' is real: the PC is shared with the blocker thread and the fact check could not show the 1.6-6.7 spread was co-tenancy, (c) that the sandbox 9-10 ms prep number is not carried as a PC fact, (d) that cold-cache timing really clears the 20k spans cache.",
+   "id": "method-D1",
+   "area": "method"
+  },
+  {
+   "title": "Re-score saved checkpoints per row: row noise, precision, soft score",
+   "summary": "One eval-only pass over the saved B2 checkpoints writes per-row correctness, answer probability, margin and zero-round answer. From it, CPU analyses split row-sampling noise from seed noise, test fp32 vs stored bf16 eval precision, and test whether a soft answer score has a smaller seed SD than exact match. Zero GPU hours.",
+   "change": "New eval-only script (e.g. CIO/rescore.py). Load each checkpoint (B2_s200-205 are in scratchpad code/b2ckpt/B2_s20x/checkpoint.pt; B2_s100/101 in PF/custom-io/checkpoints/29-b2-screen; T1_s200/201 in PF/checkpoints/cio-1007). Run evalx.evaluate with return_preds on the five pooled dev splits in fp32 CPU, and (optional) bf16 CPU. Save per row: correct, P(gold) = P(mode) x P(pointer/chars) from lmode/lans/lword/gen_copy and Ledger.gold targets, min margin, loops:0 prediction. Analyses: (a) row disagreement q between seeds and row SE = sqrt(q/N) for pooled-5; combined SE of a six-seed gap = sqrt((sd/sqrt6)^2 + rowSE^2); replace pooled McNemar by per-seed McNemar. (b) fp32 CPU vs stored bf16 CUDA numbers for seeds 100/101 (pooled-5, loops:0 in_dist). (c) soft pooled-5 = 100 x mean P(gold), partial-credit (1 - normalised edit distance) and teacher-forced answer NLL (plain arms: text after last '#'); within-arm SD over six B2 seeds and, if plain checkpoints exist, paired SD. Dev jsonl must be copied from the PC (not in this snapshot). Param cost 0.",
+   "why": "Seed SD alone understates the error of small margins. Shown: chain-5 row disagreement between B2 seeds is 4.5 rows of 1000 (row SE 0.21) but 62-65 rows vs plain_tf_steps (row SE 0.80), and row correctness is correlated across seeds (ICC 0.48 B2, 0.72 plain_tf_steps), so pooling seeds does not shrink the row term. Suggested bound: row noise for B2 minus plain_tf is 0.52-1.06 points and for B2 minus plain_tf_steps 0.33-0.98, about the size of the 6-seed training SE (0.38 and 0.55), and the sealed CIs use training noise only. Pooled-5 binomial SE is 0.56 against a seed SD of 0.63, so seed noise on a fixed row set is mostly training noise (the two cannot be separated without per-row data). Continuous companions can quiet threshold metrics (arXiv 2304.15004, suggested).",
+   "evidence": [
+    {
+     "claim": "Chain-5 per-row hits: B2 vs other B2 seeds disagree on 1-8 rows (mean 4.5); B2 vs plain_tf_steps 62-65 rows; ICC 0.475 (B2), 0.720 (plain_tf_steps).",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/B2_s20x and tfsteps_s20x RESULT.json chain5.intact.hits (idea w1h-5)"
+    },
+    {
+     "claim": "Binomial SE of one model on 6,040 fresh rows: 0.564 (B2), 0.642 (plain_tf), 0.604 (plain_tf_steps); seed SDs 0.629, 1.191, 1.006. Row-sampling bound on a fixed-model gap 0.52-1.06 (B2-tf) and 0.33-0.98 (B2-tfsteps). Per-row preds do not exist for the confirm runs (no --save-preds).",
+     "label": "shown",
+     "source": "fact check verify-pairing-and-noise; CIO/queue_local/33-pc-confirm-b2.txt; CIO/train.py lines 72-73, 125"
+    },
+    {
+     "claim": "Same-seed other-box differences by split run from -1.03 to +1.88 points, loops:0 10.81 (PC) vs 4.34 (5090), so eval vs training-run noise is unseparated; CPU fp32 reproduced plain_tf_steps scores exactly but B2 is untested.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/B2_s201 vs results/41-egw-s201/B2V_s201; PF/no-hardcoding/D0b-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "B2 final train loss 0.021 so outputs are confident; whether soft score has smaller seed SD is not measured. B2 checkpoints s200-205 exist locally with sha256; dev rows and plain_tf/tfsteps 200-205 checkpoints may not (PLAN-AND-MARKS line 107 says no tfsteps 200-205 checkpoints).",
+     "label": "shown",
+     "source": "scratchpad code/b2ckpt/B2_s20x; PF/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md line 107; PC-JOB.md line 6"
+    },
+    {
+     "claim": "Soft and partial-credit scores have smaller paired seed SD than exact match.",
+     "label": "untested",
+     "source": "design of this idea"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU or PC CPU, eval only, after copying dev jsonl from the PC. Start on B2_s100/s101 (mount) then B2 s200-205.",
+    "hours": 1.5,
+    "arms": "B2 seeds 100,101,200-205 (+ plain_tf_steps and plain_tf where checkpoints exist); fp32 CPU intact and loops:0; optional bf16 CPU",
+    "pass_mark": "(a) no-change row SE on pooled-5 (B2 vs its own other seeds) <=0.3 points; (b) fp32 minus stored bf16 within 0.5 on pooled-5 and 1.0 on loops:0 in_dist on both screen seeds; (c) soft pooled-5 within-arm SD across six B2 seeds <=0.40 (hard 0.63), same sign as hard on every seed, mean within 3 points. Fixed now.",
+    "proved_wrong": "Row SE >0.5 on pooled-5: no six-seed +-1.0 parity claim is possible whatever the seed count, so a larger dev panel is the fix; soft within-arm SD >=0.60: drop the soft score; fp32 minus stored >2.0 on loops:0: every leak verdict must be re-scored on one device."
+   },
+   "rules_check": "Rule 5: dev splits only. Rule 6: CPU. Rule 4: measurement; any mark change is sealed before the next claim. Rule 1/10: scoring tools use gold, so no deploy role. Rule 9: B2 only.",
+   "closest_prior": "analyze.py paired McNemar pools discordant counts over seeds; --save-preds exists but the confirm queue skipped it. Quick-eval and 400-step probes are exact match only. No dev-row probability or row-noise analysis exists.",
+   "autonomy": "Developer scoring; the deployed model never needs gold-based scores.",
+   "merged_from": [
+    "w1h-5",
+    "w2g-4",
+    "w1g-3",
+    "w1f-4",
+    "w1j-4"
+   ],
+   "director_score": 8.5,
+   "director_note": "Critics: confirm the dev jsonl and plain-arm checkpoints can actually be obtained (this snapshot has neither), that P(gold) for the GEN/copy path is computed from the same distribution used at decode (argmax over 9 registers + EOS), and that 'row SE' is computed on fixed models, not confused with the binomial SE of a fresh draw. Do not let the soft score replace exact match in any mark without a sealed addendum.",
+   "id": "method-D2",
+   "area": "method"
+  },
+  {
+   "title": "Measure aggregate B2 updates/s at 1, 2, 3 jobs per card",
+   "summary": "Per-run speed on the PC moves 4x with outside load, and nobody has measured the sum over jobs that run together. Run 1, 2 and 3 B2 jobs in back-to-back 1,000-update windows with a repeat check, log card-level utilization and memory, and run a two-job test on one rented 5090. The result sets the par value, which decides how many seeds fit per day.",
+   "change": "No model change. (a) Three one-line queue files for local_runner: B2 seeds 998 and 999 (unused), --steps 1000 --log-every 100, no --final-eval, par 1, 2, 3, then par 1 again as drift check. Steady window = updates 200-1000 from train events. (b) A background nvidia-smi sampler every 5 s (utilization, memory.used, memory.total, compute-apps) and UTC START/END lines written into the run folders. (c) On one rented 5090 (8a command): B2 alone, B2+B2, B2+PT+LLM, 600 steps each. Check nvidia-smi memory.total first (tft_s301 reported 16,824 MiB reserved on a '16 GB' card). Param cost 0.",
+   "why": "Shown: queue 33 ran 18 jobs at par 3 and its aggregate was never measured; B2 rates were step-like (e.g. B2_s201 about 2.2 steps/s, then 1.1 from update 3,000, then 5.6-7.1) and B2_s205 jumped from about 5 to 8.5 when others finished. The cleanest data: three identical plain runs held 20.8 steps/s each (62.4 aggregate) and two B2 jobs on a cloud box held 8.2-8.7 each, so our own jobs share a card well when nothing else is on it; the swings probably come from outside load (untested). Windows has no CUDA MPS (suggested), so extra jobs add throughput only where one job leaves the GPU idle, which idea 1 measures. A 3M B2 reserves 4.7-4.9 GB, so 3 jobs need about 14.4 GB of a 16 GB card.",
+   "evidence": [
+    {
+     "claim": "B2 confirm runs 1.58-6.74 steps/s on the PC; best sustained 8.5; step-like changes; one run (B2_s200) never changes in 13,160 s; cause (outside load vs co-tenancy) not provable from the files; no absolute timestamps in any result file.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/*/stdout.events.txt (fact check verify-speed-contention)"
+    },
+    {
+     "claim": "Window 03: three identical 3.24M plain runs ran at 20.8 steps/s each, all ended within 1 s (aggregate 62.4, no solo rate measured). Screen B2 pair on a cloud box 8.2-8.7 steps/s each.",
+     "label": "shown",
+     "source": "CIO/results/03-noise, results/29-b2-screen stdout.events.txt (fact check verify-steps-per-s-table)"
+    },
+    {
+     "claim": "B2 peak reserved 4,696-4,890 MiB (PC and 5090); MEM gate in queue 33 is 6000 MiB; EG arms did not slow with partners.",
+     "label": "shown",
+     "source": "CIO/results/37-pc-loop-readout, 40-egw-s200, 41-egw-s201 RESULT.json; local_runner.py lines 256-260"
+    },
+    {
+     "claim": "8a B2 3M peak allocated 6,462.6 MiB; box wall equals pool build + three sequential arms, so rented-card spare capacity is unmeasured.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s401-box/box.json"
+    },
+    {
+     "claim": "Two B2 jobs on one 5090 reach >=1.6x one job; 3 jobs on the PC give >=1.2x two.",
+     "label": "untested",
+     "source": "no aggregate measurement exists"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "BensPC RTX 5070 Ti (about 1-2 h wall depending on the other tenant); one rented 5090 for 0.5 h (about $0.25) only while the PC queue is full",
+    "hours": 1.5,
+    "arms": "W1: 1 B2 job; W2: 2 jobs; W3: 3 jobs; W1-repeat; seeds 998/999, 1000 updates. 5090: B2 alone, B2+B2, B2+PT+LLM.",
+    "pass_mark": "Par 2 supported if W2 summed rate >=1.3x W1; par 3 supported if W3 >=1.2x W2; windows valid only if W1-repeat is within 15% of W1 and the third job starts within 2 min of the second. 5090: two B2 jobs >=1.6x one job (>=11.4 steps/s vs 7.1) and trio finishes in <=0.8x the sequential arm time.",
+    "proved_wrong": "With the drift check passing, W2 <1.15x W1: extra jobs add nothing on this card; par stays 1-2 and gains must come from per-update cost (ideas 10, 13). On the 5090, two-job total <1.2x single job: one job fills the box."
+   },
+   "rules_check": "Rule 6: PC first. Rule 4: speed measurement with a repeat window, no score claim. Rule 5: seeds 998/999 have no results. Rule 10: training throughput only.",
+   "closest_prior": "Queue 33 (par 3) and screen queue 32 (par 2) were run with no aggregate measured; PASS-MARKS notes rented speed is 5.7-9.6 steps/s. Nothing logs card-level utilization.",
+   "autonomy": "No deploy-time step; sets how many training jobs run.",
+   "merged_from": [
+    "w1e-1",
+    "w2f-4",
+    "w3e-2"
+   ],
+   "director_score": 8,
+   "director_note": "Critics: the other tenant can move rates between windows, so check that the drift-repeat rule really catches it; that memory for 3 jobs (14.4 GB) leaves headroom beside the blocker thread's footprint; and that 'aggregate' is judged on summed updates/s of identical-shape jobs, not mixed arms.",
+   "id": "method-D3",
+   "area": "method"
+  },
+  {
+   "title": "Leak mark probe: what loops:0 hits really are",
+   "summary": "The zero-round leak mark (<=5% on every seed) fails on 3 of 8 B2 seeds and on T1 seed 200 (9.41). With zero rounds the controller state does not depend on the row, so hits are probably a fixed string or a positional pick matching a few families. A CPU probe splits hits by what the zero-round path can reach and compares them to train-only constants, so the mark can be restated as an excess over a chance floor.",
+   "change": "Eval-only script (CIO/leak_classes.py, new). On saved checkpoints run talk(state(batch, loops=0), batch) row by row on dev in_dist (1,360) and the big in_dist (6,800 if available, rule 5 check first), intact and loops:0. Classes from progparse.row_targets: C (computed: mode 0 with every gold answer slot >= R0), A (prompt number or constant), B (prompt word, mode 1), D (GEN, mode 2). Per family report: share of the most frequent zero-round string, the best constant answer from train (scored on dev), and excess = zero-round hits - constant. Chance floors for A/B/D from train statistics and reachable-candidate counts. Param cost 0.",
+   "why": "Shown: at loops=0 result slots are invalid and the pointers mask them with -1e9, so NUM answers can only be prompt numbers or the four constants; the noexec lesion shows the computed-class floor is 0.24-0.82% over 8 seeds (2,085 computed rows). Shown: B2 seed 201 hits are copy_word 35/40, prop_eval 30/40, i.e. copy and label families, not reasoning. Seed 201 moved from 10.81 (PC) to 4.34 (5090) on the same code and seed, so a single-seed line at 5 sits inside seed/box noise. Suggested: the 'word-pointer' explanation in the brief is only partly right (prop_eval is a true/false label family reached through the copy path).",
+   "evidence": [
+    {
+     "claim": "B2 loops:0 in_dist: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00 (s200-205), 0.00 and 6.76 (s100/101); T1 9.41 and 5.00; donor 3.09-3.82. Five of eight B2 seeds pass the 5% line.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/*/RESULT.json, results/29-b2-screen; PF/architecture/T1-SCREEN-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "Seed 201 loops:0 hits: copy_word 35/40, prop_eval 30/40, digits_parity 9/40; seed 101: copy_word 18/40, object_track 18/40, prop_eval 16/40; EGE zero-round copy_word 85, prop_eval 70.",
+     "label": "shown",
+     "source": "RESULT.json lesions.loops:0.in_dist.by_family; PASS-MARKS.md addendum 14"
+    },
+    {
+     "claim": "Zero-round state is row-independent (controls and registers from parameters only); only copy attention over the prompt and the word-key pointer see the question.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py run/ptr/talk/gen_copy (lines 227-249, 278-358)"
+    },
+    {
+     "claim": "Most zero-round hits equal a per-family train-constant answer and the computed-class rate stays under 2%.",
+     "label": "suggested",
+     "source": "reasoned from the row-independence above; not measured"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro or PC CPU, eval only; B2_s100/s101 (mount) and T1_s200/s201 first, then B2 s200-205",
+    "hours": 1.5,
+    "arms": "B2 and T1 checkpoints, intact and loops:0, per row; floors from train.jsonl only",
+    "pass_mark": "Class C hit rate <=2.0% on every seed (noexec floor 0.24-0.82); pooled excess over the reachable-class floor <=+5.0 points per seed; if pooled excess <=2.0 and the top string covers >=80% of rows in half the families, the leak is chance-level and mark 4 is restated as an excess mark (restating is Ben's decision, sealed before any confirm).",
+    "proved_wrong": "Class C >2.0% on either screen seed: computed answers are reachable at zero rounds, so the thinker/executor account is wrong. Or pooled excess >5.0 with >=3 families each >=10 points over 50+ rows: the zero-round path answers real questions."
+   },
+   "rules_check": "Rule 1/10: measurement only; any later fix must not add a hand gate. Rule 4: diagnostic of a mark, not a claim. Rule 5: dev in_dist and train rows only; big build needs a protected-panel check. Rule 6: CPU. Rule 9: B2 and T1 card line only.",
+   "closest_prior": "40-loops-probe sweeps accuracy against K but not zero-round answers by class; noexec splits computed rows for the executor lesion only. Nothing compares zero-round output with a train constant.",
+   "autonomy": "Probe only; measures a behaviour the deployed model also shows with no thinking.",
+   "merged_from": [
+    "w1g-2",
+    "w3a-6"
+   ],
+   "director_score": 7.5,
+   "director_note": "Critics: check that the class-C rule matches extra_evals' ex_rows definition, that train-constant floors use train rows only (no dev leakage), and that the 5-point excess cutoff is not chosen after seeing the numbers. Restating the mark is a loosening; keep that out of this probe's pass mark.",
+   "id": "method-D4",
+   "area": "method"
+  },
+  {
+   "title": "Null-power audit and re-seal of marks that cannot pass",
+   "summary": "Several sealed marks fail a design identical to the reference: T1 confirm mark 4 (every-seed loops:0 <=5) rejects it 88-94% of the time and B2 itself misses it on two sealed seeds; mark 1c plus the parity set reject 21-42%; the family mark failed 100% (a 30-family multiplicity effect); the R1 copy mark almost never passes even for a 99.5% copier at the screen's cell sizes. Run one CPU null-and-power audit over every sealed mark and re-seal the failing ones before the T1 6-seed confirm. All loosening needs Ben's explicit approval.",
+   "change": "One script (CIO/audit_marks_null.py) that reads RESULT.json only. For each sealed mark compute no-change pass rate three ways: the 360-draw permutation null (note: only 90 distinct combinations), exact sign-flip, and parametric at the measured SD with the chi-square band (paired SD 0.94 -> 0.59-2.31). Marks covered: T1 1a/1b/1c and 4, F1 family and split minimum, per-family, R1 per-length cells (binomial, n per cell from RESULT.json extra.write_copy; 0.98/0.99/0.995/0.999). Proposed edits (each sealed as an addendum before the run): 1c -> at least 4 of 6 seeds >= -1.0; mark 4 leak -> six-seed mean <=5.0 plus donor <=5 on every seed, with B2's same-seed value printed for information and stated as not entering the verdict (removes the ambiguous 'read against B2' sentence); F1 -> six-seed one-sided TOST with margin -3.5 (or 2-seed lines stop-only); families -> at most three disjoint pre-registered groups (lookup, copy, arithmetic) tested by exact 2^6 sign-flip at alpha/3 = 0.0167; R1 -> cell sizes raised until a true 99.5% copier passes with p>=0.8 (the 99% bar stays). Param cost 0.",
+   "why": "Reproduced by fact checks: mark 4 rejects an identical design at 1-(5/8)^6 = 94% (8 PC values), 91% (6 confirm values) or 88% (10 values); joint parity 1a+1b+1c rejects 21% at SD 0.94 and 42% at 1.33 (mark 1c drives it); at SD 0.63 only 4%. The family mark fails because 30 families have seed SDs 2-6 (P that the worst of 30 falls below -2 is 99.6% if independent). Six-seed TOST at -2.0 passes no-change 99.7% (SD 0.94) and 93% (1.33); F1 at SD 2.18 passes 61% at -2.0 but 96% at -3.5. Smallest exact six-seed sign-flip p is 2/64. T1's sealed absolute leak line comes from a mark B2 already fails (PASS-MARKS line 375).",
+   "evidence": [
+    {
+     "claim": "B2 loops:0 values (8 seeds) give mark-4 rejection of 88-94% for fresh seeds; B2 fails it on seeds 201 (10.81) and 203 (5.66). Mark 4 and 1c are confirm-only; the T1 screen has run (NOT SHOWN, S3 copy fail) and never evaluated them.",
+     "label": "shown",
+     "source": "fact check verify-t1-marks-4-and-1c; PF/architecture/MARKS-D0-T1-2026-10-07.md lines 17-26; PF/architecture/T1-SCREEN-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "Null check: 360 draws equal 90 distinct combinations (not 45 or 180); F1 fails 22.2% (band about 7-35%), split minimum 22.2%, cipher_map 6.7%, family old line 100% (multiple comparison of 30 families, not W1 evidence).",
+     "label": "shown",
+     "source": "CIO/analyze_gain.py lines 176-198; fact check verify-pairing-and-noise"
+    },
+    {
+     "claim": "Six-seed TOST pass rates under no change: 99.7% (-2.0, SD 0.94), 93% (-2.0, SD 1.33); F1 61% at -2.0 and 96% at -3.5; two-seed TOST at -2.0 passes only 36% (SD 0.94) and 17% (SD 2.18). All three groups G1 +11.25, G2 +5.12, G3 +7.77 vs plain_tf_steps are 6/6 positive (p=1/64).",
+     "label": "suggested",
+     "source": "normal Monte Carlo in ideas w1h-4, w1h-6; group values from CIO/results/33-pc-confirm-b2 RESULT.json by_family"
+    },
+    {
+     "claim": "A true 99.5% copier passes R1 0.3% of the time at about 120 operand and 45 answer cases per length per seed; 99.9% passes 43%; at 500 cases per cell 24% and 100%. The n values are estimates; the answer length 9 cell cannot be scored (GEN_MAX 8).",
+     "label": "suggested",
+     "source": "idea w3a-4 binomial calculation; CIO/models/tool.py extra_evals; models/ledger.py GEN_MAX"
+    },
+    {
+     "claim": "The 22% null rests on six seeds; independent draws are not available, so every null rate is itself a band.",
+     "label": "shown",
+     "source": "fact check verify-pairing-and-noise item (c)"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "CPU, stored RESULT.json only; no training",
+    "hours": 0.5,
+    "arms": "B2 seeds 100,101,200-205 as the no-change reference; proposed and sealed mark variants",
+    "pass_mark": "Each re-sealed set passes >=90% of no-change draws at paired SD 0.94 and >=75% at SD 1.33; leak line passes >=80% of six-seed resamples of the B2 values; R1 cell size gives >=0.8 pass probability for a true 99.5% copier. Fixed now.",
+    "proved_wrong": "A re-sealed set that passes <75% of no-change draws at SD 1.33 (re-derive before any run, never after a result). The audit itself is wrong if sign-flip and parametric nulls disagree with the permutation null by >10 points."
+   },
+   "rules_check": "Rule 4: marks change before any 6-seed T1 result but after the 2-seed screen; disclose that, and the loosening needs Ben's explicit approval (MARKS file forbids loosening after a result, silent before). 99% copy bar is never loosened. Rule 5: dev only. Rule 3/7 untouched.",
+   "closest_prior": "MARKS Amendment 2 re-sealed parity mark 1 for the same reason (unpassable). PASS-MARKS addendum 19 amendment 1 replaced the per-family mark after a 100% null failure. This extends the same audit to 1c, 4, F1, groups and R1 before a run, using a null that reports its band.",
+   "autonomy": "Developer marks on a design; no deploy-time step.",
+   "merged_from": [
+    "w1h-1",
+    "w1h-4",
+    "w1h-6",
+    "w3a-4"
+   ],
+   "director_score": 7.5,
+   "director_note": "Critics: the premise 'before queue 40' in w1h-1 is stale (screen ran at 5:10 PM ET); check that re-sealing after seeing screen numbers (T1 loops:0 9.41/5.00) is disclosed and not tuned to them. Check the null rates use band-aware SDs. The F1 margin -3.5 loosens a sealed -2.0 and needs Ben's explicit yes; W1 already ran, so it applies only to later arms.",
+   "id": "method-D5",
+   "area": "method"
+  },
+  {
+   "title": "Claim and screen rules sealed from measured SD",
+   "summary": "PASS-1's point bar (mean >= +2.0) passes a true +2.0 arm only half the time, the two-seed screen line at +1.0 stops 6.5-14.5% of true +2.0 arms and passes 7-14% of no-change arms, and a seed-extension rule can raise power but loosens the sealed 2.5% error rate to 4.4%. Put the options in one table with Monte Carlo numbers at the measured SDs (as ranges) and seal one rule per arm before it runs.",
+   "change": "Reanalysis plus a sealed addendum (no code in the model). (a) Claim rule for new arms: pass iff the one-sided 97.5% lower bound of the six-seed mean paired pooled-5 difference >= X, X chosen by Ben (0 or +1.0). (b) Seed extension for six-seed-ambiguous arms: alpha-spent two-stage, per-look level about 0.014, extension seeds 208-213 only (queue 39 uses 202-207), stop for futility if six-seed upper bound <0. This holds total false-pass at 2.3-2.7%; the unadjusted w2d-4 form raises it to 4.4% and needs explicit approval. (c) Screen line: either c2 = 2.0 - 1.645 sd/sqrt2 (+0.91 at sd 0.94, +0.45 at 1.33) or G1 raised to +1.3 (false-go 2.5% / 8.3%); the two options pull opposite ways and Ben chooses. Report every figure as a range over the chi-square band of the SD (0.59-2.31). Param cost 0.",
+   "why": "Reproduced by Monte Carlo: two-seed G1 at +1.0 false-go 6.8% (SD 0.94) and 14.3% (1.33); PASS-1 point bar power at true +2.0 is 50.7%, CI-only rule 98.3% (SD 0.94); LB>=0 power at +2.0 is 98% / 83%. w2d-4's two-stage rule lifts power at +1.0 from 56% to 92% at SD 0.94 but only 32% to 69% at SD 1.33; the alpha-spent version gives about 86% and 58% with false-pass 2.5%. The SD itself is uncertain: power at +1.0 ranges 14-100% across the SD band, and PASS-MARKS still uses sigma_P = 1.4.",
+   "evidence": [
+    {
+     "claim": "PASS-1 requires pooled-5 d >= +2.0 with CI above 0 and >=5/6 positive; screen G1 is d >= +1.0 on 2 seeds; paired SDs 0.937 and 1.334; sigma_P 1.4 assumed.",
+     "label": "shown",
+     "source": "CIO/PASS-MARKS.md (Confirm, Screen, Metrics); CIO/results/CONFIRM-ANALYSIS.json"
+    },
+    {
+     "claim": "Monte Carlo (20,000 draws): G1 false-go 6.8/14.3%; point bar power at +2.0 50.7%; two-stage false-pass 4.4-4.5% and power at +1.0 92/69%; alpha-spent 2.3-2.7% false-pass, 86/58% power; fixed six-seed CI-only power at +1.0 56/32%.",
+     "label": "shown",
+     "source": "fact check simulate-mark-and-stop-rules (reproduced by Monte Carlo)"
+    },
+    {
+     "claim": "Two-seed screens stopped 86-93% of no-change arms at 2.3-2.6 expected seeds, so group-sequential futility at 3-4 seeds saves under 0.2 seeds; only the stop line placement matters.",
+     "label": "suggested",
+     "source": "idea w1h-3 Monte Carlo (300,000 draws)"
+    },
+    {
+     "claim": "A 6-seed paired SD has about 30% uncertainty; two-seed screens matched six-seed arm means within 1 point but the B2 minus plain_tf_steps margin moved by up to 1.5.",
+     "label": "shown",
+     "source": "fact check verify-pairing-and-noise item (d)"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "CPU, stdlib Python; replay on the existing six confirm seeds then a sealed addendum in PASS-MARKS.md",
+    "hours": 0.1,
+    "arms": "B2 vs plain_tf and vs plain_tf_steps on existing seeds; simulated no-change and true +1.0/+2.0/+2.5 arms at SD 0.94, 1.33 and the band ends",
+    "pass_mark": "Adopt a stop line only if expected seeds <=3.5 under no change and a true +2.0 arm reaches six seeds >=90% of the time at the measured SD; adopt an extension only if total false-pass <=2.7% and the replay leaves PASS-1 and PASS-2 unchanged (they are: lower bounds 19.35 and 5.49).",
+    "proved_wrong": "A stop line that stops >10% of true +2.0 re-draws; an extension whose power at +1.0 stays <0.5 at the upper SD band end (then it cannot rescue noisy arms); any rule whose false-pass exceeds the sealed 2.5% without Ben's written approval."
+   },
+   "rules_check": "Rule 4: six seeds stay the minimum; extra seeds come from a rule fixed before any run, no peeking. The 4.4% unadjusted form and any LB>=0 replacement of the +2.0 bar are loosenings needing Ben's explicit approval. Rule 5: no panels. Rule 6: no compute.",
+   "closest_prior": "PASS-MARKS Screen G1 and analyze_gain null check; the 8k/400-step proxies cut cost per run, this changes seeds per arm. Group-sequential futility is not tried in the files.",
+   "autonomy": "Developer decision rules; the deployed model never runs seeds or screens.",
+   "merged_from": [
+    "w1h-2",
+    "w2d-4",
+    "w1h-3",
+    "w2g-5"
+   ],
+   "director_score": 6.5,
+   "director_note": "Critics: the extension seeds must start at 208 (queue 39 owns 202-207); 'ambiguous' must be defined as the six-seed t-interval straddling 0 before any run; the idea text for w2d-4 was not found in a file so the simulated reading is an assumption. The +1.3 and +0.45 options conflict; do not seal both.",
+   "id": "method-D6",
+   "area": "method"
+  },
+  {
+   "title": "Twin-run noise floor and a three-tier equivalence gate",
+   "summary": "Every speed rewrite needs a way to show it did not change the math, and nobody knows how much a plain GPU rerun differs from itself. Run same-seed twins on one machine, log software versions and code hashes into RESULT.json, and adopt a three-tier gate: bitwise for host-side edits, a 1e-5 fp32 CPU check for rounding-level edits, a loss-curve-inside-the-floor check on GPU. Only batch-composition or schedule changes then need 6 paired seeds.",
+   "change": "No model change. (a) CPU: rerun the existing 60-step determinism check (test_harness.py:113) for the B2 config (copy=True, scatter_add_ path) with one thread. (b) PC: B2 seed 200 twice and plain_tf seed 200 twice, --steps 1000 --log-every 50 --final-eval off; compare all 20 logged losses and a state_dict hash; log torch, CUDA, cuDNN, GPU name, ledger.py hash and data manifest hash. (c) If twins differ: repeat with torch.use_deterministic_algorithms(True), CUBLAS_WORKSPACE_CONFIG=:4096:8, cudnn.deterministic; record whether ledger.py:248 raises. (d) Optional, only if (b) shows box-level drift: six rented 5090 replicates of the 8a 3M B2 (seeds 400-405, one fresh box each, about $2.9) paired by seed with the original boxes. Gate tiers: Tier 0 hash of the first 500 batches (host-side edits); Tier 1 CPU fp32 5 steps, loss and parameters within 1e-5 relative (G2 standard); Tier 2 GPU 200-step curve inside the twin floor every 20 steps plus a 1,000-row dev check within 0.5; Tier 3 (needs 6 seeds): length-bucketed batches, packing, any schedule or --minutes change. Param cost 0.",
+   "why": "Shown: no same-seed replicate of any B2 run exists. The only same-seed comparison crosses machines: pooled-5 +0.48 and +0.12 for seeds 200/201, per-split offsets -1.03 to +1.88, loops:0 10.81 vs 4.34, final loss 20% and 71% apart (confounded by box, data path, max_ans recorded None vs 8, and no code hash). The one-degree-of-freedom SD 0.26 has a 95% range of about 0.12 to 8.2, so it bounds nothing. Suggested: ledger.py:248 scatter_add_ is nondeterministic on CUDA, so bitwise GPU twins may fail. Without a floor, a speed edit cannot be certified equal in minutes.",
+   "evidence": [
+    {
+     "claim": "Same seed, PC vs rented 5090: pooled-5 73.00 vs 73.48 and 74.27 vs 74.39; loops:0 0.00 vs 1.40 and 10.81 vs 4.34; per-split offsets vocab +1.63/+1.88, in_dist -0.52/-1.03; the 5090 beat the PC in 4 of 4 same-seed comparisons including first-look runs.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2, 40-egw-s200, 41-egw-s201; fact checks early-signal-from-stored-logs, verify-pairing-and-noise"
+    },
+    {
+     "claim": "No torch/CUDA version, GPU model or code hash is recorded in any RESULT.json; rented B2V runs had an EGW co-tenant, so 'rented 5090' timings are contended.",
+     "label": "shown",
+     "source": "fact check verify-speed-contention; CIO/results/40-egw-s200/B2V_s200/RESULT.json"
+    },
+    {
+     "claim": "CPU same-seed determinism is asserted for a 60-step run; GPU identity is untested anywhere. CPU fp32 reproduces plain_tf_steps scores exactly.",
+     "label": "shown",
+     "source": "CIO/test_harness.py:97,113; PF/no-hardcoding/D0b-RESULT-2026-10-07.md line 4"
+    },
+    {
+     "claim": "scatter_add_ in the copy talker (ledger.py:248) is atomic and nondeterministic on CUDA; plain_tf has no scatter_add.",
+     "label": "suggested",
+     "source": "CIO/models/ledger.py line 248; CIO/models/plain_tf.py lines 116, 125"
+    },
+    {
+     "claim": "Padded positions are zeroed or excluded in ConvBlock, cross-attention and pools, so fixed-width padding changes only float order.",
+     "label": "suggested",
+     "source": "CIO/models/reader.py ConvBlock.forward; ledger.py lines 236, 291, 311"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "CPU first (free), then PC RTX 5070 Ti for the twin pairs (about 0.5 h for the two B2 jobs together, under 5 min for plain_tf)",
+    "hours": 0.6,
+    "arms": "B2 seed 200 x2; plain_tf seed 200 x2; 1,000 updates; log every 50; same card state per pair; deterministic-flag repeat only if they differ",
+    "pass_mark": "Twins bit-equal at all 20 logged points -> rewrites can be checked for bit equality; or all points within relative 1e-3 -> that band is the gate for GPU edits. Fixed now.",
+    "proved_wrong": "Any twin pair differs by >1% by update 200: GPU noise is as large as the paired SD, so every paired mark needs same-box replicate pairs in its null and speed edits can be judged only by 2-seed screens against the 0.63 B2 seed SD."
+   },
+   "rules_check": "Rule 4: noise probe plus a verification protocol; no score claim. Rule 5: seed 200 is an existing train seed. Rule 6: PC (rented only for optional stage d with Ben's OK). Rule 7/3: no change. Rule 10: no deploy step.",
+   "closest_prior": "RESULTS-EG2 device check (n=2, 24k, crosses machines) and test_harness CPU check. 8A-SPEC G2 already requires a 1e-5 fp32 test for per-batch slot sizing; this generalises it and measures the GPU floor.",
+   "autonomy": "Training-side verification; no deploy-time step.",
+   "merged_from": [
+    "w3d-2",
+    "w1e-5",
+    "w2d-3",
+    "w1f-6",
+    "w3e-3"
+   ],
+   "director_score": 7,
+   "director_note": "Critics: if the deterministic flag raises at ledger.py:248, record it and do not patch the model in this test. Check that 'same card state' for twins is real (the PC is shared) and that a 1e-3 band is not chosen after seeing the twins. Optional stage (d) costs money and needs Ben's OK.",
+   "id": "method-D7",
+   "area": "method"
+  },
+  {
+   "title": "Exact resume (weights, Adam, step) proven on CPU, then fork",
+   "summary": "train.py saves only model weights at the end, so nothing can be resumed, forked or rescued from a capped box. Save AdamW state and step every N steps and accept --resume, prove on CPU that a resumed run equals an uninterrupted one bit for bit, with two negative controls. Forking six seeds at 12k for late-phase tests, and cap-safe 30M runs, follow only if it passes.",
+   "change": "train.py: --save-every N (default 0, existing runs unchanged) writes OUT/resume.pt (model state_dict, optimizer state_dict, step, seed, n_rows, batch, order); --resume loads it. data.train_batches gets a start argument: redraw the per-epoch permutations from RandomState(seed) without collating, then skip to step (data pointer = (step // 781, step % 781) for 200k rows at batch 256). Build the AdamW groups exactly as train.py 146-151 before load_state_dict. About 40 MB per B2 state (13.2 MB weights + 26.4 MB moments), about 360 MB at 30M. local_runner relaunches a folder holding resume.pt and no RESULT.json with --resume. Stage 2 (after the CPU pass): six prefixes to step 12,000 (seeds 200-205), arm N continues unchanged, arm V continues with one late loss-weight change (e.g. lgen x2 from 12k), plus a same-box replicate of N on two seeds (10 run-equivalents). Legal forks: loss weights, data mix or curriculum switched at k, zero-initialised module. Illegal: anything before k, a change of rows, targets from step 0 (so the 7-step cap cannot be fixed by a fork). Param cost 0.",
+   "why": "Shown: no optimizer state, no mid-run save, no init/resume; the fast-sleep copy restores weights only with a fresh AdamW, so a continuation from today's checkpoint is a different optimizer trajectory. B2's forward has no dropout or torch RNG, so the permutation is the only randomness to reproduce. For rented capped boxes, a cap kill loses the whole arm: the 30M B2 is about 13 h per seed (suggested) against written caps of 9 h and 12 h. A fork removes early-phase differences only if outcomes depend on them: seed correlations are +0.63 (B2 vs plain_tf) and -0.29 (vs plain_tf_steps), so a noise reduction is not promised and must be tested.",
+   "evidence": [
+    {
+     "claim": "train.py saves model, name, cfg, chars, step once at the end (line 201); no optimizer state; no init or resume argument. EGK_s201 failed at 3,000 and again at 4,500 steps with the same config and seed.",
+     "label": "shown",
+     "source": "CIO/train.py lines 105-128, 181-183, 199-201; results/51-egk-s201, 52-egk-s201-retry RESULT.json"
+    },
+    {
+     "claim": "Training randomness is only the init (torch, at construction) and np.random.RandomState(seed).permutation per epoch; no dropout in B2. lr_at depends only on step/steps/warmup/base.",
+     "label": "shown",
+     "source": "CIO/data.py lines 135-143; CIO/train.py lines 14-21, 133"
+    },
+    {
+     "claim": "Written caps: 30M MAXH 9 h and 12 h (with EGE), 10M 3 h; 30M B2 about 13 h per seed plus data time (addendum I3).",
+     "label": "suggested",
+     "source": "PF/whole-model-roadmap/8A-SPEC-2026-10-07.md lines 94, 201, section 19"
+    },
+    {
+     "claim": "Per-seed correlation of pooled-5: B2 vs plain_tf +0.63 (one-sided re-pairing p 0.074), B2 vs plain_tf_steps -0.29. GPU resume cannot be bit-equal because of scatter_add_.",
+     "label": "shown",
+     "source": "fact check verify-pairing-and-noise; CIO/models/ledger.py line 248"
+    },
+    {
+     "claim": "With one CPU thread and deterministic algorithms the resumed B2 run is bit-equal to the straight run.",
+     "label": "untested",
+     "source": "torch not importable in the review sandbox"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or M1 CPU, fp32, torch.set_num_threads(1), tiny config (d 64, 1 block, batch 16, 200 rows); stage 2 on the PC queue or a rented box only if stage 1 passes",
+    "hours": 0.2,
+    "arms": "(1) straight run to 100 steps; (2) run to 50, save, resume, run to 100; (3) negative control: resume without optimizer state; (4) negative control: resume one batch late",
+    "pass_mark": "Arm 2 equals arm 1 exactly: all 50 post-resume losses identical, every parameter and Adam moment max abs diff 0.0; control 3 differs in >=1 of the first 5 steps; control 4 differs at step 1.",
+    "proved_wrong": "Any nonzero difference in arm 2 (hidden state exists; no fork claim is valid). A negative control that does not differ voids the test. Stage 2: replicate N differs by >1.0 pooled-5 on either seed, or SD(V-N) >0.9 (the fork saves cost but not noise)."
+   },
+   "rules_check": "Rules 1-3, 5-7, 9 hold; CPU only for stage 1 (rule 6). Rule 4: stage 2 is six paired forks and its claim is limited to continuation, never a from-scratch PASS. Rule 10: dev-time infrastructure; the deployed model's own sleep would call the same save/load on its own weights with no outside script.",
+   "closest_prior": "fastsleep/creative/sleep.py loads weights only with fresh AdamW; warm start and resume are listed as not implemented. --minutes changes the lr schedule and is no substitute.",
+   "autonomy": "Not a deploy step; a deployed model's own save/restore would use the same code with no script in the loop.",
+   "merged_from": [
+    "w1i-1",
+    "w1i-2",
+    "w2d-5",
+    "w2f-5"
+   ],
+   "director_score": 7,
+   "director_note": "Critics: the CPU test must include the Adam state and use the real data.train_batches skip, not a toy sampler; fork claims must be worded as continuation claims; B2 confirm checkpoints have no optimizer state so prefixes must be retrained (3 run-equivalents). Check that stage 2's pass marks are not read as a PASS for scratch training.",
+   "id": "method-D8",
+   "area": "method"
+  },
+  {
+   "title": "Diagnose T1's 4+ digit copy break on saved checkpoints",
+   "summary": "T1's screen failed only the copy mark: operand copy is 86/93/85% at 1-3 digits and 14/1/0% at 4/5/6-9 digits. Before the sealed span-copy fix is built and re-screened (about 3 GPU-hours), one CPU harness on the T1 checkpoints classifies each wrong cell, forces one link right at a time, checks that the reader carries the digits, and checks whether place rows 4-10 are still at init.",
+   "change": "One instrumented harness (new, CIO/diag_t1_copy.py) on T1_s200 and T1_s201 (PF/checkpoints/cio-1007/40b-t1-s20x/T1_s20x/checkpoint.pt). (1) Reader read-back: 2,000 synthetic entries 'op a b = r' with r of 1-9 digits, features from diag_d0._features, linear probe (diag_eg.probe, 400 steps), accuracy per place and digit count, both reader view and thinker view (X + tape_emb). (2) Cause split: wrap Ledger.gen_copy during the extra_evals write_copy harness; per wrong cell record attention over context, gate, p_vocab, p_copy and classify SELECT (wrong entry), PLACE (right entry, wrong place), STOP (EOS early/late), DIGIT; also score operand copy side-agnostically for commutative ops. (3) Intervention ladder S0 observed; S1 stop oracle; S2 alignment oracle; S3 gate=0 copy-only; S1+S2. Oracles use gold length and are scoring devices only. (4) Norm of reader.place.weight rows 0-10 versus init norm 0.32. Param cost 0.",
+   "why": "Shown: call results in training are 1-3 digits (99.6% of operands), cell_ids pads cells after EOS with -100 (no gradient), and copy attention reads the whole visible context with queries from W_k(z)+place row j. Which link breaks decides which sealed candidate fix helps: span copy changes start pointer and end, not the gate or vocabulary mixing; relative-place copy only helps if place rows are untrained. D0 showed the B2 reader carries every digit on prompt numbers (99.997%) but tape entries take a different path (separate strings, tape_emb added after the reader). Predicted (suggested): STOP dominates at 4-5 digits and rows 4-8 have moved from init because registers read rows 0-8 every forward.",
+   "evidence": [
+    {
+     "claim": "T1 write_copy exact copy by result digits 1,2,3,4,5,6-9: operand 86,93,85,14,1,0; answer 96,98,98,59,1,0 (seed 200; seed 201 within a few points). Call-result lengths in training: 1 digit 16.6%, 2 61.8%, 3 20.6%, 4 0.8%, 5 0.2%, never 6+. Screen verdict NOT SHOWN, S3 29.3/42.1 and 30.9/42.4.",
+     "label": "shown",
+     "source": "PF/architecture/T1-SCREEN-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "B2 reader carries every digit place at >=99.997% on all six seeds (prompt numbers only).",
+     "label": "shown",
+     "source": "PF/no-hardcoding/D0-RESULT-2026-10-07.md"
+    },
+    {
+     "claim": "cell_ids writes units first then EOS and pads with -100; gen_copy returns gate*p_vocab + (1-gate)*p_copy; the side-specific operand check conflicts with a loss that accepts either order for ADD, MUL, MIN, MAX.",
+     "label": "shown",
+     "source": "CIO/models/tool.py (cell_ids, loss, extra_evals); CIO/models/ledger.py gen_copy lines 239-258"
+    },
+    {
+     "claim": "Embedding rows get no weight decay and init at std 0.02 (norm about 0.32), so an untouched row stays at init; registers read place rows 0-8 every forward.",
+     "label": "shown",
+     "source": "CIO/train.py lines 146-149; models/ledger.py init loop; models/tool.py run"
+    },
+    {
+     "claim": "STOP dominates errors at lengths 4-5; every place passes in both views; place rows 4-8 are trained.",
+     "label": "suggested",
+     "source": "reasoned from the training masks; not measured"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU, a few minutes per seed; T1_s200 and T1_s201 checkpoints on the mount",
+    "hours": 0.5,
+    "arms": "Reader view and thinker view; observed run, S1, S2, S3, S1+S2; place-row norms; seeds 200 and 201; operand and answer cells; lengths 1-9",
+    "pass_mark": "Reader/thinker view accuracy >=99.0 at every place 1-9 and the digit count on both seeds. Span copy is the right next change only if, at lengths 4 and 5 on both seeds, SELECT <30% of operand errors and PLACE+STOP >=60%, and S1+S2 >=99.0 at lengths 4-9; S0 must reproduce the T1 table within 3 points. Relative-place is worth building only if rows 9-10 are within 5% of init.",
+    "proved_wrong": "Any place 4-9 <95.0 in the reader view (reading link breaks, a writer-only fix cannot reach R1); SELECT >=50% of errors at lengths 4-5; S1+S2 <90.0 at any length 4-9 (sealed span copy is wrong as the next change)."
+   },
+   "rules_check": "Rule 1: probe only. Rule 3: T1 unchanged at 3,277,393 params. Rule 4: diagnostic of links, no claim. Rule 5: synthetic and in_dist dev rows. Rule 7: nothing truncated; the harness reports too_long cases rather than hiding them. Rule 10: gold-length oracles are scoring devices; any fix they point to must learn its own stop and pointer.",
+   "closest_prior": "The write_copy table is aggregate by length only. diag_d0.py runs the reader probe on B2 prompt numbers; T1 tape entries, the thinker view and 4+ digit results are new. MARKS Amendment 3 seals span copy without this diagnosis.",
+   "autonomy": "Probe only; the stop and pointer inspected are the model's own decisions.",
+   "merged_from": [
+    "w3a-1",
+    "w3a-2",
+    "w3a-3",
+    "w3a-5"
+   ],
+   "director_score": 7,
+   "director_note": "This sits at the edge of the speed area (it protects a GPU re-screen). Critics: confirm S1 oracle uses gold length only for scoring, that side-agnostic copy is within 1.0 of side-specific (else the S3 table has a scoring bias), and that the 99% bar is not loosened. Note the T1 checkpoints were 'being copied' at the time of the result file; verify they are complete before running.",
+   "id": "method-D9",
+   "area": "method"
+  },
+  {
+   "title": "Exact host-side rewrite: row pack, persistent constants, pinned copy",
+   "summary": "Each step rebuilds 256 prompts in Python, misses the 20k-entry spans cache about 95% of the time, and makes about 21 host-to-device copies. Build all per-row tensors once, keep constants on the device, move each batch with one pinned copy, and prefetch on a worker. Same batches, same math, so equivalence is a hash and a 1e-5 check, not a 6-seed claim. Build only if idea 1 shows host or sync cost.",
+   "change": "Default-off flags, no model-math change. (a) Persistent device buffers (persistent=False) for OMEGA, CONSTS, COMM, POW10 and cached aranges (ledger.py 222, 223, 288, 292, 502; reader.py 86, 88). (b) CIO/data.py build_pack(rows, vocab, MAX_ANS): call the existing collate, Ledger.gold, Ledger.tokenize and CharReader.places on all 200k train rows in 4,096-row chunks, store fixed-width arrays (prompt ids uint8 [N,208], places, spans, nv int64, gold fields bit-packed; about 190 MB), key = sha256(train.jsonl + vocab + MAX_ANS + version), temp-write-then-rename, np.load(mmap_mode='r'); train_batches yields pack.take(idx) with the same RandomState permutation; assert no dev id in the pack. (c) One pinned int64 buffer and one uint8 buffer per step (two alternating sets, CUDA event guard) replacing data.py:131-132, tokenize 5, gold 8, places 1. (d) Optional prefetch worker using the same index stream. (e) Exact forward trims: value_code digits as (a[...,None]//POW10)%10 and (digs[...,None]==arange(10)) instead of the 9-op list comprehension and F.one_hot (8 calls per forward, about 150 fewer ops), and hoisting the constant S0 number-slot keys/values out of the loop. Tier gate from idea 7. Param cost 0.",
+   "why": "Shown: 16 blocking copies in 5 drain groups plus 5 pageable copies per step; the spans cache clears at 20,000 entries against 200,000 prompts (about 95% miss, suggested); gold() and row_targets work per row; the sandbox prep estimate is about 9-10 ms per batch (7% of a 148 ms step), so this is worth building only if the PC profile shows a larger host share (the 8a B2 gap of 0.141 vs 0.092 s suggests it may). Vectorising value_code is exact for integers; hoisting S0 saves about 8% of forward FLOPs at B2's shape and helps only if GPU-bound. A prefetch thread contends with Python dispatch for the GIL (suggested), so the pack is the part with least risk.",
+   "evidence": [
+    {
+     "claim": "Spans cache cleared at 20,000 entries (ledger.py 203-204); row_targets cache uncapped by row id (progparse.py 185-193); gold() calls row_targets twice per row; per-row Python in collate (data.py 119-128), tokenize (ledger.py 200-217), batch_places (reader.py 26-40).",
+     "label": "shown",
+     "source": "CIO/models/ledger.py, CIO/models/progparse.py, CIO/data.py, CIO/models/reader.py"
+    },
+    {
+     "claim": "Precomputing gold and spans per row is exact because they depend only on the row; padding to 208 changes shapes but not results since masks zero padded positions. Equivalence is untested and must hold at 1e-5 fp32.",
+     "label": "shown",
+     "source": "fact check verify-sync-and-graph-blockers (E1-E6 edit set)"
+    },
+    {
+     "claim": "value_code is called 8 times per forward (ledger.py 295 and 338); digs are 0-9 because values are clamped below 1e9; replacing the loop and F.one_hot is bit-exact.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py lines 62, 68-73, 295, 338"
+    },
+    {
+     "claim": "S0 slots are constant once multiplied by the valid mask; kv_of over 27 slots runs in each of 8 loops and 2 blocks; the S0 key/value share is about 21 GFLOP per forward (about 8%).",
+     "label": "suggested",
+     "source": "CIO/models/ledger.py 295-314, 322 (idea w1d-4 arithmetic)"
+    },
+    {
+     "claim": "Gain of 15-30% of step time.",
+     "label": "untested",
+     "source": "no profile exists"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU first (any machine, minutes) for equivalence; then the PC or one rented 5090 for steps/s in alternating A/B blocks",
+    "hours": 1,
+    "arms": "Old vs new path, seed 200 / first 500 batches; q33 and 8a caps shapes; three alternating A/B pairs of 400 updates in one card state",
+    "pass_mark": "(i) Tier 0: batch-stream hash identical for 500 batches and all batch keys torch.equal for 50; (ii) Tier 1: CPU fp32 5-step loss and gradients within 1e-5; (iii) value_code bit-equal on 10,000 random int64 in [-1e12,1e12] and aten op count down >=5%; (iv) median steps/s >=15% higher on both shapes; (v) syncs per step <=3. Build only if idea 1 rows 1 or 2 fire.",
+    "proved_wrong": "Any batch hash or key differs (the pack changes what the model sees); step time moves <5% on both shapes (host work was not the cost); idea 1 shows GPU busy >=85%."
+   },
+   "rules_check": "Rule 7: the pack copies current targets exactly, so the 528 over-cap rows keep their answer-only treatment (neither fixed nor worsened). Rule 5: train rows only. Rule 3: 0 params. Rule 4: exact by construction, no score claim; any non-bit-identical edit falls to Tier 2. Rule 1/10: training pipeline only; the edited value_code also runs at inference but the rewrite is exact.",
+   "closest_prior": "Per-row caches exist (spans, places, row_targets) but nothing packs a whole train set; 8A-SPEC G2 resizes slots per batch (different change, stacks). The brief lists prefetch and per-row caching only as untested suggestions.",
+   "autonomy": "Training pipeline only; the deployed model reads one prompt through its own reader.",
+   "merged_from": [
+    "w1c-2",
+    "w1c-3",
+    "w1c-4",
+    "w1d-2",
+    "w1d-3",
+    "w1d-4",
+    "w1e-3",
+    "w3d-3"
+   ],
+   "director_score": 6.5,
+   "director_note": "Critics: this is gated on idea 1; if the host share is under 10% it is wasted. Check that pinned alternating buffers cannot be overwritten in flight, that the pack key includes MAX_ANS and the vocab, and that the 8a caps shape (MAX_ANS 35) does not silently re-key the pack. Row-id uniqueness across splits is unchecked (a collision would hand a train target to a dev row).",
+   "id": "method-D10",
+   "area": "method"
+  },
+  {
+   "title": "Snapshot ladder with a pre-registered early-stop rule",
+   "summary": "No B2 run has a score before step 24,000, so no early signal can be validated. Add full 6,040-row pooled-5 plus loops:0 snapshots every 4,000 steps with a saved checkpoint, window-mean loss components and a passive EMA copy scored beside the raw weights, on runs already planned. Then test, with the rule fixed now, whether any early step ranks seeds and arms like the final.",
+   "change": "train.py: --snap-steps (comma list, e.g. 4000,8000,12000,16000,20000). At each, run evalx.evaluate on all five pooled dev splits (not the 200-row subsample) plus loops:0 in_dist, append step and scores to RESULT.json 'snapshots', and save checkpoint_<step>.pt (13 MB). lr_at and the data RNG untouched. Accumulate each loss component on the device every step and log the 500-step window mean so components sum to the logged total (fixes last-batch aux in train.py 167-180). Passive EMA: float32 copy, b=0.999, updated after opt.step, scored beside raw at each snapshot (training unchanged; not saved as model). Triage gate: stop a ledger-family screen run when its 4k loss exceeds the same-seed B2 loss on the same box by >0.04. Param cost 0.",
+   "why": "Shown: eval_every is 0 in every ledger config, so no B2 score-vs-step curve exists; a 200-row quick eval has SE 3.1 points vs 1.4 at 1,000 rows and the plain 3M reading went 74.5, 71.0, 71.5 at 16k, 20k, 24k. Shown: the arm-level 4k train loss orders the six EG arms exactly like their 24k gains (Spearman -1.00 at 4k; the 0.94 quoted earlier is the 24k value), but within B2 it has no seed power (rho +0.09 on PC seeds at 4k, -0.49 at 12k, -0.83 at 24k), and loss levels are not comparable across arms (plain_tf, plain_tf_steps and B2 use different objectives). Single-batch logged components have relative seed SD 123% (prog) to 13% (copy_share) at 8k vs 2.7% for the window-mean total; op_acc is exactly 1.0 by 12k. So a gross-loser gate may work, a margin gate cannot, and validity needs the snapshots.",
+   "evidence": [
+    {
+     "claim": "All ledger configs have eval_every 0; checkpoint saved once at the end; five calibration files (01-calib, 02-calib-long plain runs) used 200-row quick evals, none of the B2 runs did.",
+     "label": "shown",
+     "source": "CIO/results/*/RESULT.json config.eval_every; CIO/train.py line 201; fact check verify-steps-per-s-table"
+    },
+    {
+     "claim": "Within-B2 Spearman of loss with 24k pooled-5 (8 seeds): 2k +0.76, 4k +0.29, 8k -0.50, 12k -0.76, 24k -0.76; PC seeds only 4k +0.09, 12k -0.49, 24k -0.83. Six EG arms: -1.00 at 2k-16k, -0.94 at 24k. 4k loss gap vs same-seed B2V correlates -0.80 with 24k gain over 12 arm-seed points.",
+     "label": "shown",
+     "source": "fact check early-signal-from-stored-logs; CIO/results/*/stdout.events.txt"
+    },
+    {
+     "claim": "Components logged are the last batch's values (aux overwritten each step) while loss is the 500-step mean; relative seed SD at 8k: prog 123%, ans 73%, mode 48%, word 39%, gen 15%, copy_share 13%, total 2.7%. No component at 8k/12k reaches |rho| 0.83 against 24k pooled-5.",
+     "label": "shown",
+     "source": "CIO/train.py lines 157-180; ledger.py 497-531; ideas w1f-1, early-signal fact check"
+    },
+    {
+     "claim": "B2 total loss at 8k has rho +0.03 against final pooled-5 (wrong sign), plain_tf -0.49, plain_tf_steps -0.66; the 400-step and 8k proxies each reversed an arm order on one seed.",
+     "label": "shown",
+     "source": "idea w1f-2; CIO/CALIBRATION.md; results/10-probe-w1, 20-screen-s100-w1"
+    },
+    {
+     "claim": "EMA gain is small because cosine already anneals to 10%; expected EMA-minus-raw gain under +0.3.",
+     "label": "suggested",
+     "source": "reasoned from lr_at (train.py 14-21)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC (or rented, rule 6): rides on planned runs; stage 1 = B2, plain_tf, plain_tf_steps seeds 200/201 at 24k with snapshots (about 3.3 run-hours of which only the evals are new)",
+    "hours": 3.3,
+    "arms": "B2 (copy=True), plain_tf, plain_tf_steps; seeds 200 and 201; snapshots at 4k, 8k, 12k, 16k, 20k; EMA scored beside raw",
+    "pass_mark": "Stage 1: within-run ratio of 12k to 24k margin R12 in [0.6,1.4] for both (B2 minus plain_tf_steps) and (B2 minus plain_tf), and the 12k B2-minus-tfsteps margin positive on both seeds. Stage 2 (6-seed claim, rule fixed now): an early step is an accepted screen only if rho between pooled-5 at s and at 24k >=0.886 over 6 new seeds AND the arm order matches on every seed; leak screen needs rho >=0.886 and is void if >=4 of 6 seeds read 0.0. EMA kept only if EMA-minus-raw >=+1.0 with paired CI >0 and EMA seed SD <=0.8x raw.",
+    "proved_wrong": "12k margin negative on either seed or R12 <0.3 (12k cannot screen); every step <=12k gives rho <0.5 for B2; a same-seed replicate gap of >=0.04 in 4k loss (the triage gate sits inside device noise); EMA gain <+0.3 or below raw on 2+ seeds."
+   },
+   "rules_check": "Rule 4: stage 1 is two seeds and only a screen; thresholds fixed here; stage 2 uses 6 seeds. Rule 5: the five pooled dev splits are the tuning panels, nothing protected. Rule 3: 0 params (EMA is training-only). Rule 7: no target touched. Rule 10: build-time instrumentation, not a deploy step.",
+   "closest_prior": "--eval-every (200 rows, tried, noisy, unused for B2) and the 400-step/8k single-seed probes (order reversed). Scaling-with-collapse (arXiv 2509.25087, suggested) argues loss deviation is an early diagnostic; here the between-arm form holds and the within-arm form does not.",
+   "autonomy": "Build-time instrumentation; a deploy-time read-out would need its own design and is not proposed.",
+   "merged_from": [
+    "w1f-1",
+    "w1f-2",
+    "w1f-3",
+    "w1i-3",
+    "w2e-3",
+    "w2e-4"
+   ],
+   "director_score": 6.5,
+   "director_note": "Critics: snapshots add eval passes and 80 MB checkpoints per run; check evalx.evaluate restores model.train() and does not touch the data RNG (it appears to). The 4k gate threshold 0.04 was chosen in-sample on the EG ladder (LR and EGT excluded because their objectives differ); validate on W1/EGE seeds. Do not let a 12k snapshot inside a 24k run (lr 5.6e-4, unannealed) be read as a full-cosine 12k run.",
+   "id": "method-D11",
+   "area": "method"
+  },
+  {
+   "title": "Calibrate shorter training budgets on the real arms",
+   "summary": "Check whether 8,000 or 12,000 full-cosine updates keep the arm margins that 24,000 gave, using the real arms on six paired seeds, instead of single-seed proxies that already reversed orders. If B2-minus-tfsteps at 8k is 0.6-1.4x its 24k value, margin checks drop to a third of the stream time and 2-seed B2-family screens from 1.6 to 0.5 hours.",
+   "change": "No code change: train.py --steps 8000 (and 12000) with the confirm command otherwise unchanged (300-step warmup, cosine to 10%, batch 256, lr 1e-3, bf16, same box for all arms of a seed). Stage 1: plain_tf and plain_tf_steps at 12k, seeds 200-205 (12 cheap runs, about 3 h), paired with their existing 24k runs. Stage 2: B2, plain_tf, plain_tf_steps at 8k on seeds 200-205 (about 3 stream-hours at 8.2 steps/s for B2) or, if cost matters, B2 at 12k on seeds 200 and 201 first. Before spending anything, score the existing C0 checkpoints (cap 107; PF/checkpoints/cio-1007/43-c0-s20x) to see whether the +6.9 margin survives (the board reports C0 done: fair plain 67.1 vs 67.0, B2 minus C0 +6.6 on 2 seeds). Param cost 0.",
+   "why": "Shown: the 8k calibration is a complete 8k cosine and the plain 3.2M model gains +5.8 from 8k to 24k, the 10.8M model +9.4 (one seed each; lr 1e-3 vs 7e-4, so size and lr are confounded), which is about the size of the +6.9 margin; the 3M-vs-10M gap flips from +1.46 to -2.20, but with plain seed SD about 1.0 that swing is about 1.8 SD, so the old calibration could not call a reversal. The 400-step probe gave Spearman 0.14 against 24k. Suggested: B2 train loss falls 0.091 to 0.014 between 16k and 24k, i.e. late steps mostly re-fit rows, so a shorter budget may be enough for margins (not for absolute scores). An 8k or 12k run cannot be told from a time-capped one: keep --minutes off.",
+   "evidence": [
+    {
+     "claim": "Plain 3M seed 0: 8k pooled-5 46.97 vs 24k 52.73 (+5.8); plain 10M 45.51 vs 54.93 (+9.4). 400-step Spearman 0.14 over six arms on seed 100; plain_tf vs plain_tf_steps 14.67 vs 8.67 at 400 steps and 53.81 vs 68.39 at 24k.",
+     "label": "shown",
+     "source": "CIO/results/01-calib, 02-calib-long; results/10-probe-w1, 11-probe-w2, 20-screen-s100-w1; CALIBRATION.md"
+    },
+    {
+     "claim": "24k six-seed margins: B2 minus plain_tf_steps +6.89 (SD 1.33), B2 minus plain_tf +20.34 (SD 0.94); a 6-seed B2 claim costs 13.4 train-hours (sum train_s) and would cost about 6.7 at 12k.",
+     "label": "shown",
+     "source": "CIO/results/CONFIRM-ANALYSIS.json; results/33-pc-confirm-b2/*/RESULT.json"
+    },
+    {
+     "claim": "24k lr is 7.9e-4 at 8k, 5.6e-4 at 12k, 3.3e-4 at 16k, 1.6e-4 at 20k; B2 train loss 0.091 at 16k, 0.014 at 24k (mean of 6 seeds).",
+     "label": "shown",
+     "source": "CIO/train.py lr_at; results/33-pc-confirm-b2 stdout.events.txt"
+    },
+    {
+     "claim": "A time cap changes the lr by elapsed time (progress = max(step/steps, elapsed/cap)); two B2 screen runs carry minutes=150 but the cap never bound.",
+     "label": "shown",
+     "source": "CIO/train.py lines 14-21, 156-163; results/29-b2-screen RESULT.json"
+    },
+    {
+     "claim": "Whether 12k or 8k keeps the B2-minus-tfsteps margin.",
+     "label": "untested",
+     "source": "no B2 run exists at another budget"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC queue (rented 5090 only with Ben's OK while PC and Mac are full)",
+    "hours": 6,
+    "arms": "plain_tf_steps and plain_tf at 12k (6 seeds) vs their 24k runs; B2, plain_tf, plain_tf_steps at 8k (6 seeds, or B2 12k on 2 seeds as a first screen)",
+    "pass_mark": "Plain arms: one-sided 95% lower bound (t, df 5) of mean (12k minus 24k) pooled-5 >=-2.0 for each. Margin: M8 = six-seed mean of (B2 minus plain_tf_steps) at 8k satisfies 0.6<=M8/6.89<=1.4, paired CI excludes 0 and >=5 of 6 seeds positive; same for B2 minus plain_tf (0.6<=M8'/20.34<=1.4). B2 12k screen: 2-seed gap within 2.0 points of its 24k gap (+6.18, +7.19). Fixed now.",
+    "proved_wrong": "M8 below 2.1 or above 13.8, fewer than 4 of 6 seeds positive, a plain lower bound below -2.0, or a B2 gap moving by >2.0: the budget cannot rank this pair and 24k stays."
+   },
+   "rules_check": "Rule 4: six paired seeds for the plain stage and the 8k margin; the 2-seed B2 12k step is a screen only. Rule 3: all three arms inside the +-3% band. Rule 5: dev splits only. Rule 7: B2 inherits its 528 answer-only rows; this does not fix them. Rule 9: card experiments only. Rule 10: pre-training recipe only.",
+   "closest_prior": "01-calib and 02-calib-long: one seed, plain sizes only, lr confounded, no B2 arms; PASS-MARKS fixes 24k for every arm. Snapshot ladder (idea 11) answers the unannealed-12k variant for free on runs already planned.",
+   "autonomy": "Pre-training recipe only; no deploy-time role.",
+   "merged_from": [
+    "w2e-1",
+    "w1j-2"
+   ],
+   "director_score": 6.5,
+   "director_note": "Critics: a full-cosine 12k run is annealed, unlike a 12k snapshot of a 24k run, so the two tests answer different questions; the scratch-vs-pretrained-feature caveat does not apply (no EG arms here). Check that the same box is used for both arms of each seed and that stage 2 is not run until stage 1 passes. The dropped EG-ladder slope idea (w2e-2) is not a substitute.",
+   "id": "method-D12",
+   "area": "method"
+  },
+  {
+   "title": "CUDA-graph the B2 forward and backward per width bucket",
+   "summary": "If idea 1 shows the step is limited by kernel launches and host waits (about 5,000-7,000 launches per step against 25-50 ms of GPU work), capture forward, loss and backward once per padded-width bucket and replay them each step, keeping AdamW eager. Same kernels, so no score claim; the expected speed-up is 2-3x on an isolated run with wide uncertainty. Waits for the idea 10 edits.",
+   "change": "train.py loop (167-173): pad prompt width to multiples of 32 (7 buckets to 208; 9 to 280 for the 8a reading cap), one static input set per bucket filled from pinned memory; torch.cuda.CUDAGraph per bucket with static grads (zero_grad(set_to_none=False) inside); torch.autocast(cache_enabled=False) during capture; warm up on a side stream using a throwaway copy of model and optimizer state; one graph memory pool shared across buckets. Required edits first (idea 10): constants as device buffers, no .to/torch.tensor inside the step, tokenize/gold outside as static tensors, the lr as a device tensor updated with fill_ (fused AdamW with a tensor lr on torch 2.11 is untested). Ledger.loss becomes a tensor-only function of prepared inputs. Param cost 0; extra graph-pool memory must fit the 6000 MiB gate.",
+   "why": "Shown: no Dropout or host RNG in the step, B=256, L=7, M=27, W_MAX=64 and 8 loops are fixed; blockers are the 16 blocking copies, variable width T, per-row Python, the Python-float lr and the autocast cache. Suggested: 5,000-7,000 kernel launches per step at 10-20 us is 50-100 ms, close to the measured 105-175 ms, while about 1 TFLOP/step is only 25-50 ms of GPU work. scatter_add_ makes replays nondeterministic but capture is allowed. torch.compile needs Triton, which has no official Windows path (suggested); manual graphs need only the CUDA runtime. CUDA graphs do not exist on MPS, so this is PC or rented GPU only.",
+   "evidence": [
+    {
+     "claim": "Capture blockers: 16 blocking copies (ledger.py 217, 222, 292, 454, 502), pageable copies (data.py 131-132, reader.py 40), variable T (data.py 121; reader.py 84-86), per-row Python, Python-float lr (train.py 165-166), autocast weight cache. Not blockers: fixed B, L, M, W_MAX, loop count, no Dropout.",
+     "label": "shown",
+     "source": "fact check verify-sync-and-graph-blockers"
+    },
+    {
+     "claim": "Step kernel count about 5,000-7,000 and FLOPs about 1 TFLOP by reading ops and shapes; not profiled. Fastest observed step 148 ms.",
+     "label": "suggested",
+     "source": "CIO/models/ledger.py 117-124, 300-357, 497-531; results/33-pc-confirm-b2/B2_s205"
+    },
+    {
+     "claim": "Windows WDDM graph support, fused AdamW tensor-lr support on torch 2.11 and capture of the backward through the 27-slot workspace indexing.",
+     "label": "untested",
+     "source": "no capture attempted; PC-JOB.md says torch 2.11 cu128"
+    },
+    {
+     "claim": "B2 peak reserved 4.7-4.9 GB, leaving room under the 6000 MiB gate.",
+     "label": "shown",
+     "source": "CIO/results/40-egw-s200/B2V_s200/RESULT.json; local_runner.py MEM gate"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "One rented 5090 alone on the card (the PC is shared and would contaminate timing); a 5070 Ti repeat only if the blocker thread is idle",
+    "hours": 2,
+    "arms": "Eager vs per-width graph, one bucket (T 128-160), seed 200, 200 steps, par 1, 3 repeats; two eager runs first to measure the loss band",
+    "pass_mark": "Steps/s >=1.6x eager (median of 3); loss at every logged step inside the band set by the two eager runs; no capture error; peak reserved within the 6000 MiB gate.",
+    "proved_wrong": "Idea 1 shows GPU busy >=70%; speed-up <1.2x; or loss outside the eager-vs-eager band (the graph changes the math and then needs 6 seeds before any use)."
+   },
+   "rules_check": "Rule 4: speed claim from repeats; any score effect needs 6 paired seeds. Rule 6: rented GPU only with Ben's OK; Mac excluded. Rule 3: 0 params. Rule 7: padding to a bucket is not truncation. Rule 9: B2 only. Rule 10: training only.",
+   "closest_prior": "CUDA graphs and torch.compile are listed as absent. This keeps the same kernels (rounding unchanged) rather than fusing.",
+   "autonomy": "Training-side engineering; the deployed forward is unchanged.",
+   "merged_from": [
+    "w1c-6",
+    "w1d-5"
+   ],
+   "director_score": 6,
+   "director_note": "Highest ceiling in the speed set (2-3x) and the most complex; critics should check that the throwaway warm-up really leaves the weights untouched, that bucket count x graph pool fits memory, and that the gain is not already captured by idea 10. Do not start before idea 1 row 3 fires.",
+   "id": "method-D13",
+   "area": "method"
+  },
+  {
+   "title": "Launch pre-flight checker; build caps and pools once",
+   "summary": "The nine 8a launch records say --max-ans 8 while the caps, caps.json and every B2 RESULT config say 35, and the 8a B2 reads inside:false for the size band (3,346,513 vs top 3,341,880). A pre-flight that compares flags, caps, the parameter band and the pool hash before any rental would have caught both, and building caps and pools once on the M1 removes 255-292 s of billed box time per box.",
+   "change": "A pre-flight script (CIO/preflight.py, run on the M1 CPU against the box's build commit 50ee171632 before rental): compare every command-line flag with caps.json and the RESULT config; count training targets that MAX_ANS would cut (rule 7); check each arm's parameter count against the +-3% band before launch; verify the pool sha256 against box.json pool_train_sha256. Compute caps once and ship caps.json (identical on every box except compute_s) and build each seed's pool on the M1 and transfer it, reusing a seed's 60M pool for the 10M rung (spec section 12). Param cost 0.",
+   "why": "Shown: caps compute_s is 187-217 s and pool_build_s 255-292 s on each box, billed at $0.48/h (about $0.034-0.039 per box); more important is the check: a launch that says 8 when the run used 35, or the reverse, can waste a 3M rung (about $4.2) or silently cut targets (rule 7). In the scratchpad copy a strict Dataset (train.py 139) asserts every answer fits MAX_ANS and the caps report counts 191,239 pool rows with answers over 8 letters, so a real run at 8 would have stopped; the cmd field is most likely the misrecorded one (suggested, not confirmed from box argv or stdout). Spec section 2 says a run outside its band does not count, yet the B2 size event reads inside:false and spec F3 accepted B2 up to 3%.",
+   "evidence": [
+    {
+     "claim": "All nine 8a arm commands pass --max-ans 8; caps events, caps.json and the three B2 RESULT configs say 35.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s40{1,2,5}-box/box.json (cmd); 8a-3M-s401-B2 stdout.events.txt; RESULT.json config"
+    },
+    {
+     "claim": "8a B2 size event: 3,346,513 params vs band top 3,341,880 (+3.14% over plain 3,244,544), inside:false; PT and LLM inside.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s401-B2/stdout.events.txt; 8A-SPEC-2026-10-07.md sections 2 and 16"
+    },
+    {
+     "claim": "caps compute_s 187/188/217 s and pool_build_s 254.9/256.1/291.9 s on seeds 401/402/405; the three caps.json files match on every field except compute_s; caps source includes dev lengths ('+ dev'), read but never trained on.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s40{1,2,5}-pool/caps.json, box.json"
+    },
+    {
+     "claim": "Transferred pool hashes equal box-built hashes.",
+     "label": "untested",
+     "source": "to be checked on two seeds"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro CPU, about 0.5 h, no rental",
+    "hours": 0.5,
+    "arms": "No arm trained; pre-flight on the existing 8a launch records (seeds 401, 402, 405) and one planted clean launch",
+    "pass_mark": "(i) flags the --max-ans mismatch and the inside:false B2 on the existing records and passes the clean launch; (ii) transferred pool sha256 equals the box-built one on two seeds; (iii) box idle time before training falls from 255-292 s to <=60 s.",
+    "proved_wrong": "The pre-flight passes the existing 8a records without a flag, or a transferred pool hash differs (build on the box and drop the reuse)."
+   },
+   "rules_check": "Rule 7: enforces that MAX_ANS cuts no training target. Rule 3: checks the band before rental. Rule 5: caps read dev lengths but never train or score on dev; flag to Ben because spec section 4 says dev is never trained on. Rule 6: M1 CPU. Rule 2: FineWeb-Edu text only.",
+   "closest_prior": "local_runner checks only memory gates; no launch-consistency check exists. Spec section 12 B1 pool sharing is planned, not built.",
+   "autonomy": "Build-time tooling; no deploy-time step.",
+   "merged_from": [
+    "w3e-4"
+   ],
+   "director_score": 6,
+   "director_note": "This is an 8a-spec issue rather than a speed idea, but it affects Ben's money and rule 3/7 compliance. Critics: confirm from a box argv or stdout whether the run really used 35 (the claim that cmd is the misrecorded field is an inference) and whether F3's 3% allowance is in the sealed spec text before calling the B2 band a violation.",
+   "id": "method-D14",
+   "area": "method"
+  },
+  {
+   "title": "Retime B2 on the M1 GPU with fallback off and loss parity",
+   "summary": "The M1 Pro has no measured B2 speed or numerics, and the queued Mac probe times the wrong design (B, copy off) with CPU fallback on. A 100-step B2 run on MPS with fallback off, checked against a CPU run at the same seed, says whether the Mac can be a night-time training node (>=0.83 updates/s) or only a probe and eval box.",
+   "change": "Probe only, 0 params. (a) Do not run queue 31's probe_B_mps line as written (cfg '{}' is design B). Run python -m custom_io.train --model ledger --cfg '{\"copy\":true}' --steps 100 --batch 256 --lr 1e-3 --seed 1 --log-every 5 --device mps with PYTORCH_ENABLE_MPS_FALLBACK=0 (queue ENV line overrides the runner's default of 1). (b) Same arguments on CPU (OMP_NUM_THREADS=8) as the reference. (c) Optional third run with fallback on to compare speed. Read steady-state speed from train-event elapsed between steps 20 and 100, not steps_per_s (includes warm-up). Run one after another so timings do not compete; check ps first (creative job 9 and fast-sleep DEV runs use the Mac).",
+   "why": "Shown: the speed table (5.6 questions/s at batch 1, about 21 at batch 32-64) times the retired 1.2B sandwich, not B2; no M1 or MPS training speed exists for any custom_io model. MPS runs fp32 with no fused AdamW. Suggested: M1 Pro about 5.2 TFLOP/s fp32 vs about 44 for the 5070 Ti; at 10-30% effective B2 (about 0.8 TFLOP per update) would run at 0.6-2 updates/s. Computed break-even: a 6-seed B2 claim needs 5.0 updates/s to finish in one 8-hour day, a night seed needs 0.83. Pairs must share a device, so an MPS arm can never join a PC claim.",
+   "evidence": [
+    {
+     "claim": "Queue 31 probe_B_mps uses --cfg '{}' (design B, copy off) and the runner sets PYTORCH_ENABLE_MPS_FALLBACK=1 on mps; B2 is copy true.",
+     "label": "shown",
+     "source": "CIO/queue_local/31-mac-probe-fewshot.txt; CIO/local_runner.py lines 52-59; models/ledger.py line 130"
+    },
+    {
+     "claim": "MPS uses fp32 (amp only on CUDA, train.py 132) and no fused AdamW (line 151); steps_per_s includes first-call warm-up.",
+     "label": "shown",
+     "source": "CIO/train.py lines 132, 151, 178, 194"
+    },
+    {
+     "claim": "Speed table figures are for the 1.2B sandwich; no B2 inference or M1 training speed is measured.",
+     "label": "shown",
+     "source": "PF/notes/speed-5090-2026-10-04.txt; PF/notes/bench_tps.py"
+    },
+    {
+     "claim": "M1 Pro 5.2 vs 5070 Ti 44 TFLOP/s fp32 peak; plausible B2 M1 range 0.6-2 updates/s; Kernel-launch and page-fault gaps explain Apple-vs-NVIDIA training gaps (arXiv 2501.14925, abstract).",
+     "label": "suggested",
+     "source": "public specs; arXiv 2501.14925"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "M1 Pro, Mac idle, runs sequential; 10-15 min per run (estimate)",
+    "hours": 0.3,
+    "arms": "B2 (copy=true) seed 1, batch 256, 100 steps, fp32: MPS fallback off vs CPU; optional MPS fallback on",
+    "pass_mark": "(1) MPS run finishes with fallback off (an unsupported op named in the error is a FAIL for MPS training); (2) MPS loss within 1% of CPU loss at logged steps 5, 50, 100; (3) steady-state speed >=0.83 updates/s (a night node). The Mac carries a claim only if it reaches 5 updates/s.",
+    "proved_wrong": "Steady speed <0.83 updates/s (Mac is probes and evals only); loss gap >1% at step 5 (MPS computes a different function); fallback-on and fallback-off speeds differ by >20% (every earlier MPS speed figure is void)."
+   },
+   "rules_check": "Rule 6: M1 first, no rental. Rule 4: single-seed probe, not a claim; device-class rule keeps MPS out of PC claims. Rule 3: same size as B2. Rule 10: device choice is a development decision.",
+   "closest_prior": "Queue 31 (planned, not run) has the same MPS timing but for design B, with fallback on and warm-up included. Nothing else times B2 on any device.",
+   "autonomy": "No deploy-time step.",
+   "merged_from": [
+    "w2g-3"
+   ],
+   "director_score": 5.5,
+   "director_note": "Directly serves 'using the M1 well'. Critics: the Mac was busy with creative job 9 until about 4 PM ET; verify it is free. Note the int64 executor and scatter_add_ may be unsupported or slow on MPS, which is a result, not a failure of the probe.",
+   "id": "method-D15",
+   "area": "method"
+  },
+  {
+   "title": "Runner v2: screen-gated confirms, first-fit launches, UTC logs",
+   "summary": "Link each sealed screen verdict to the launch of its six-seed confirm, start the first queued run that fits in free memory instead of waiting on the head run, lock the GPU check so two runners cannot double-launch, and write UTC times into every run folder. Plan the PC/rent split by decision value per run-hour with measured rates. Saves about 9 PC-hours per skipped B2-size confirm and about 16 per EGE-size confirm.",
+   "change": "local_runner.py (about 60 lines). (a) Header '# GATE screen=<queue>/<name> judge=<module>:<function>' above '# CONFIRM' lines; before the first CONFIRM launches call the sealed judge from the frozen code copy (analyze_t1.py line 60, analyze_eg.py lines 60/178, analyze_gain.py line 139); PASS launches, FAIL writes SKIPPED-GATE and launches nothing, NOT JUDGED stops and asks; a person-written '# OVERRIDE name UTC reason' line is the only way past a FAIL (addendum 15 already requires Ben's call for EGE). Gate only on pooled-5 and chain-5; keep leak, split and family marks advisory until their null rates are measured. (b) Replace the head-of-line break (lines 257-260) by a scan for the first entry whose MEM fits and whose '# AFTER name' entries have status ok. (c) WORK/gpu-<device>.lock via os.open(O_CREAT|O_EXCL) around free_mib() and the 60 s gap; other runners (the blocker thread's) must adopt the same file. (d) times.txt per run (start_utc, end_utc, free MiB, par); per-queue WORK/STOP-<queue>. NaN runs keep their RESULT.json; any retry is a new named arm. (e) Planner: replay the queue with measured run times (FIFO vs value-tiered: pythia lr pick, Mac speed probes, T1 confirm, then EGE) and a rent rule for Ben to set (rent when PC projected wall exceeds box wall by >2 h and credit fits). Param cost 0.",
+   "why": "Shown: the sealed judges are code and read only status-ok runs, but nothing ties a verdict to a launch, and the runner breaks on the head run whenever free memory is below its MEM (queue 39 mixes 7000 and 5000). GPU-BUSY lines are never read to decide a launch; STOP stops every queue; UTC START/END lines go only to the console, so no run folder has a timestamp. At least 8 screened arms missed their marks (A -3.3, A0 -7.2, L2x2 -5.4, EGE/EGR/EGM/EGO/EGW). Caveat: a gate on the leak line would have blocked B2 (6.76 on seed 101) and the F1 and split marks fail 22.2% of no-change draws, so they stay advisory. Premises are partly stale: C0, U0, W1 are done, T1 screen is NOT SHOWN, and T1's machine is stated inconsistently (queue 40 header says PC, board says Vast).",
+   "evidence": [
+    {
+     "claim": "Head-of-line break at local_runner.py 257-260; queue 39 MEM 7000 (EGE) then 5000 (B2) at par 2; STOP is per WORK directory; no timestamps in run folders; judges exist at analyze_t1.py 60/78, analyze_eg.py 60/178, analyze_gain.py 139 and read RESULT.json only.",
+     "label": "shown",
+     "source": "CIO/local_runner.py; CIO/queue_local/39-pc-ege-confirm.txt; analyze_*.py (ideas w2f-2, w2f-3)"
+    },
+    {
+     "claim": "EGE screen: variant +1.70 vs +3.0 and loops:0 18.09 vs 5 fail; confirm runs only on Ben's call; B2's own screen failed the leak line (6.76) and its confirm still passed PASS-1.",
+     "label": "shown",
+     "source": "CIO/PASS-MARKS.md addendum 15; results/RESULTS-SCREEN.md; results/CONFIRM-ANALYSIS.json"
+    },
+    {
+     "claim": "Board at 4:29 PM ET: C0 done, U0 done (-3.1/-5.4), W1 done (+0.9/+0.1, not shown), Test LR failed, B1 proved wrong; B2D and queue 44 moved to two rented 5090s with 4 h caps.",
+     "label": "shown",
+     "source": "PF/progress-board/data.json; PF/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md Amendment 2"
+    },
+    {
+     "claim": "Rented cost_usd = wall x $0.48 (3 boxes: $0.674, $0.672, $0.740); boot time probably falls outside it; Vast credit $8.84-9.64.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/*/box.json; progress-board data.json"
+    },
+    {
+     "claim": "Hours saved per skipped confirm (about 9 PC-h B2-size, about 16 EGE-size) and 1-2 PC-h per mixed-memory queue.",
+     "label": "suggested",
+     "source": "computed from measured steps/s; no GPU trace exists to measure head-of-line wait"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Mac or PC CPU, no GPU: stub nvidia-smi on PATH printing a scripted free-MiB sequence, command() replaced by sleep 1; judges run on stored RESULT.json; queue replay with measured times. About 0.4 h.",
+    "hours": 0.4,
+    "arms": "Queue 39 run names/MEM; one runner then two sharing the lock (100 races); relaunch over folders with RESULT.json (including a planted nonfinite one) and rc.txt only; EGE screen and B2 six seeds through their judges; FIFO vs tiered replay",
+    "pass_mark": "(a) zero launches while free<MEM over 200 polls; (b) a 5000-MiB run starts while a 7000-MiB run waits, makespan no longer than FIFO; (c) zero double launches; (d) relaunch skips RESULT.json folders and reruns rc.txt-only folders; (e) the judges reproduce addendum 15 (EGE marks 2 and 5 fail, mark 1 holds) and B2 PASS-1 with no hand input; (f) tiered order cuts time to the first Tier-A confirm by >=5 wall-hours on the current queue.",
+    "proved_wrong": "Any launch below MEM, any double launch, a PASS for EGE or FAIL for B2 PASS-1 from the judges, or tiered order delaying a Tier-A result by >1 h."
+   },
+   "rules_check": "Rule 4: no mark, seed or claim changes; an override is a named human decision. Rule 6: saves PC time and uses rent only per the stated rule. Rule 7: a NaN run is recorded, not trimmed. Rule 9: card and village queues stay separate. Rule 10: build-time scheduling only.",
+   "closest_prior": "Addendum 15 wrote the EGE stop by hand; the current runner is FIFO head-of-line with a 60 s gap and RESULT.json skip.",
+   "autonomy": "Developer-side scheduling; the deployed model does not run queues or judge its own training.",
+   "merged_from": [
+    "w2f-1",
+    "w2f-2",
+    "w2f-3",
+    "w3e-5"
+   ],
+   "director_score": 5.5,
+   "director_note": "Critics: the lock protects only runners that use it, and the blocker thread's runner must adopt it or it does nothing; confirm which machine T1 actually ran on before using any queue-order claim; the 6-7 h earlier T1 confirm gain assumes a premise (EGE still queued ahead) that the 4:29 PM board may have changed.",
+   "id": "method-D16",
+   "area": "method"
+  },
+  {
+   "title": "Measure padding share and width sensitivity before any bucketing",
+   "summary": "Every batch pads to its longest prompt (mean 81 characters, 256-row batch max likely 175-200), so about half the positions may be padding, but padding adds FLOPs, not launches. A seconds-long CPU count on the real train file plus a width timing on the M1 gives the real share. A length-grouped reader is exact; length-bucketed batches change batch composition and need 6 paired seeds for every arm.",
+   "change": "Stage 1 (CPU, seconds): replay train_batches' permutation for seeds 100-105 over 24,000 steps on the PC's train.jsonl; report per-batch max length T_b, padding share 1 - sum(len)/sum(256*T_b), the share after sorting inside windows of 32 batches, and the count of distinct T_b. Stage 2 (M1 CPU, 10 steps): time the same weights and 256 rows padded to width 81 vs 175 (evalx._pad_prompt), ratio R. Stage 3 (only if the profile says GPU-bound): exact length-grouped reader, 4 groups each padded to its own max, scatter back to [B,T,d], equivalence of X and kvx at 1e-5. Stage 4 (only if the padded share passes): length-bucketed batches (sort inside blocks of 16 batches, shuffle batch order) as one change applied to ALL arms, 6 paired seeds. Param cost 0.",
+   "why": "Shown: collate pads to the batch max; mean 81, p99 163, max 204; a 64-row batch pads to about 161. Computed: width-dependent cost is about 2.1 MFLOP per padded position per row vs about 0.67 GFLOP fixed thinker cost, so width 175 vs 81 predicts only R about 1.24 (about 20% of forward FLOPs), not 2x. Suggested: if the step is launch-bound (idea 1), bucketing gains about nothing. Packing needs per-example masks in the reader conv (kernel 5 crosses boundaries), cross-attention and the 27-slot workspace, i.e. a model contract change (arXiv 2407.09105 checklist). Bucketing for plain models only would break arm comparability.",
+   "evidence": [
+    {
+     "claim": "Prompt length mean 81, p99 163, max 204; a 64-row batch pads to about 161. Train rows and train.jsonl are not on this snapshot, so the 256-row padding share (estimated 55-60%) is unmeasured.",
+     "label": "shown",
+     "source": "CIO/README.md line 44; CIO/data.py 119-128; search of /mnt/project-files"
+    },
+    {
+     "claim": "ConvBlock and CharReader mask padding, so each row's reader output does not depend on the padded width; reader conv at 185 columns is about 62 GFLOP and kv of X about 25 GFLOP forward.",
+     "label": "shown",
+     "source": "CIO/models/reader.py 49-51, 91-96; ledger.py 302"
+    },
+    {
+     "claim": "Computed time ratio R=1.24 between width 175 and 81; four length groups cut reader and kvx cost about 45%, about 15% of forward FLOPs (quartile maxima assumed).",
+     "label": "suggested",
+     "source": "ideas w1d-6, w2g-1 arithmetic"
+    },
+    {
+     "claim": "Padding adds no host ops or launches, so on a CPU-bound step bucketing gains about nothing.",
+     "label": "suggested",
+     "source": "reasoning from the step structure; idea 1 decides"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "PC CPU with train.jsonl for stage 1 (seconds per seed); M1 CPU for stage 2 (about 6 min, Mac otherwise idle)",
+    "hours": 0.1,
+    "arms": "None for stage 1; same weights and rows at widths 81 and 175 for stage 2",
+    "pass_mark": "Go to stage 3/4 only if padded fraction >=0.40 on the real rows AND R >=1.15 AND idea 1 shows GPU busy >=70%. Fix 150 as the maximum distinct widths for graph buckets (idea 13).",
+    "proved_wrong": "Padded fraction <0.30 (the README-based estimate is wrong); R <1.05 on the M1 (width is not a compute cost there); or idea 1 shows host share >=0.60 (padding changes no launches)."
+   },
+   "rules_check": "Rule 7: bucketing keeps every row; _pad_prompt only adds PAD. Rule 4: stage 4 needs 6 paired seeds with marks fixed first and the same sampler for all arms. Rule 5: train rows only. Rule 6: CPU first. Rule 10: batch order during pre-training only.",
+   "closest_prior": "No padding or width test exists; data.py has only shuffled and curriculum orders. Packing papers (2404.10830, 2407.09105) are untested for B2. 8A-SPEC G2 resizes slots, not characters.",
+   "autonomy": "Pre-training batch order only; no deploy-time role.",
+   "merged_from": [
+    "w1c-5",
+    "w1d-6",
+    "w1j-5",
+    "w2g-1"
+   ],
+   "director_score": 5,
+   "director_note": "Critics: bucketing is a batch-composition change (data order), so it cannot be certified by the equivalence gate; the exact length-grouped reader adds about 4x the reader's ops. The M1 CPU ratio may not transfer to the 5070 Ti and must be repeated on the PC before any decision.",
+   "id": "method-D17",
+   "area": "method"
+  },
+  {
+   "title": "Test whether bigger or different dev panels reduce seed spread",
+   "summary": "B2's variant split has seed SD 1.77 against a binomial bound of 1.31, and its nine high-swing variant families have SDs 17-25 at 40 rows against row bounds 6-8, so most of that spread is shared across rows and bigger panels will not remove it. A CPU re-score at 40 vs 200 rows per family on the same checkpoints tests this, and also tests whether a 200-row state_update variant panel can replace the saturated chain-5 as a gain panel.",
+   "change": "Eval-only script (CIO/panel_size.py, new). Load saved checkpoints with models.load_model, read the big dev builds through evalx._dev_rows, score the first 40 rows per family (the existing dev rows) and all 200 per family. Report per family and split: 6-seed SD at each size, binomial bound sqrt(m(1-m)/n), and the paired B2 minus plain_tf_steps SD. Separately, the 200-row state_update variant and in_dist rows (if big_dev_variant has them; else the generator needs --dev-per-cell 200 for that family, untested). Chain-5 becomes a regression guard only (>=98.5 on every seed). Param cost 0.",
+   "why": "Shown: B2 variant seeds 31.89-37.12 (SD 1.77, 1,320 rows) vs independent-row bound 1.31, so at least 45% of variance is seed-level; a 5x panel (6,600 rows) could not push the SD below about 1.2. Shown: re-weighting (drop frame, macro over splits) leaves the paired SD at 1.30-1.33, so the metric is not the lever. Chain-5 is 99.4-99.8 with SD about 0.1, 28 of 31 misses are state_update, and held-out-layout state_update in the variant split is 90.8 (SD 3.8) for B2 vs 100.0 for plain_tf_steps. At a paired SD of 3.8, +1 needs about 55 seeds, so a 40-row panel is undecidable; at 2.5, +3 clears a 6-seed CI.",
+   "evidence": [
+    {
+     "claim": "B2 variant 6-seed accuracies 31.89, 33.94, 37.12, 34.39, 35.38, 35.53 (SD 1.77); family 40-row variant SDs arith_bare 25.5, percent_rate 25.4, verify_claim 19.7, seq_cycle 19.6, chain_story2 17.1 vs bounds 7.8, 6.4, 6.7, 7.9, 7.9.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/B2_s20x/RESULT.json (final_eval by_family; computed in ideas w1g-1, w1g-6)"
+    },
+    {
+     "claim": "Big builds hold 200 rows per family per split (variant 6,600 = 33 x 200); 40-row dev rows are a per-family prefix of the big build; chain-5 already uses the big build.",
+     "label": "shown",
+     "source": "PF/no-hardcoding/LIMIT-COUNTS-2026-10-07.json; CIO/research/data.md section 0; CIO/evalx.py chain_panel"
+    },
+    {
+     "claim": "Chain-5 intact 99.4-99.8 over eight seeds; 28 of 31 misses are state_update; variant state_update B2 90.8 (SD 3.8) vs plain_tf_steps 100.0; variant var_chain 30.0 (SD 0.0) vs 39.2.",
+     "label": "shown",
+     "source": "RESULT.json chain5.intact.hits and final_eval variant by_family"
+    },
+    {
+     "claim": "Whether the big variant build contains 200 state_update rows, and whether big_dev_* are unprotected panels (rule 5).",
+     "label": "untested",
+     "source": "per-family counts not listed in the counts file"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or M1 CPU, eval only; screen on the mounted B2 s100/s101 and tfsteps s100/s101, then PC checkpoints s200-205 if they exist",
+    "hours": 1,
+    "arms": "B2 and plain_tf_steps at 40 vs 200 rows per family on big variant and in_dist; state_update 200-row panel",
+    "pass_mark": "(a) Of the 9 variant families with 40-row SD >=8, at least 7 have 200-row SD >=0.8x the 40-row SD (shared-effect prediction); (b) chain-5 guard >=98.5 on every seed; (c) the 200-row state_update panel is kept as a gain panel only if B2 scores 60-90 and the 6-seed paired SD (B2 minus plain_tf_steps) is <=2.5.",
+    "proved_wrong": "6 or more of the 9 families show 200-row SD <=0.5x the 40-row SD (row sampling dominates, larger panels are the lever); 200-row variant seed SD <1.1 (row outcomes correlated, argument must be redone); paired state_update SD >=3.5 (no panel of this type can show a gain at 6 seeds)."
+   },
+   "rules_check": "Rule 5: dev big builds only; confirm they are not protected before the run (chain-5 uses data_big under the same rule). Rule 4: 6 paired seeds for any claim, 2-seed screens only screens. Rule 7: no target touched. Rule 6: CPU. Rule 10: measurement.",
+   "closest_prior": "Chain-5 panel (evalx.chain_panel, 200 per cell). PASS-MARKS assumes sigma_P 1.4. No panel-size test exists.",
+   "autonomy": "Measurement only; no deploy-time step.",
+   "merged_from": [
+    "w1g-1",
+    "w1g-6"
+   ],
+   "director_score": 5,
+   "director_note": "Critics: the claim that larger panels cannot cut the variant SD rests on an independent-row bound; the test is exactly what tests it. Check the family list for the nine high-swing families is fixed before running, and that the big build's families match the 40-row dev families.",
+   "id": "method-D18",
+   "area": "method"
+  },
+  {
+   "title": "Own-margin AUROC as a no-training stuck signal",
+   "summary": "Before any stuck detector is trained, check whether the model's own answer margins already separate right from wrong answers. The probe reads saved B2 checkpoints, needs no training, and is threshold-free, so no hand-set cutoff enters the test. B2's train loss of 0.021 may have saturated the margins, which would close this route.",
+   "change": "CPU probe (CIO/margin_probe.py, new). For each dev row read run() outputs: margin of lmode (top1 minus top2), margin of lans or lword on the chosen mode, and the minimum over written steps of the op-logit margin (steps tensors). Score each row by its smallest margin; report AUROC for exact hit within family and averaged over families with >=10 wrong rows. Use 200 rows per family where the big build is available. Param cost 0.",
+   "why": "Shown: run() already returns per-step op logits, lmode, lans, lword and valid masks, and probe_loops.py reports loop-round gates (overthinking 1.7-1.9%, controller RMS x3.4-3.9) but no per-row confidence; the planned H1 learned stop needs a T1 screen first. Families with headroom at 40 rows: fewshot 34.6, table_lookup 28.8, order_chain 64.2, table_calc 65.4, list_index 75.4, kin_chain 86.2. Suggested: confident outputs may make margins uninformative. Autonomy: the model's own margins need no gold at inference; the threshold must be the model's own, which this probe does not set.",
+   "evidence": [
+    {
+     "claim": "run() returns steps (op, a and b logits), lmode, lans, lword and valid masks; ptr masks invalid entries with -1e9.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py run() and ptr() (lines 227-229, 278-358)"
+    },
+    {
+     "claim": "probe_loops.py gates M1-M5 give no per-row confidence; loops gates: more-loops open (7.3, 8.4% of wrong rows right later), halting closed (1.9, 1.7%), state growth closed.",
+     "label": "shown",
+     "source": "CIO/probe_loops.py; CIO/results/40-loops-probe/PROBE.json"
+    },
+    {
+     "claim": "40-row in_dist B2 family means on headroom families: fewshot 34.6, table_lookup 28.8, order_chain 64.2 (SD 11.5), table_calc 65.4, list_index 75.4.",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2 RESULT.json by_family (computed)"
+    },
+    {
+     "claim": "Margins saturate under train loss 0.021 so AUROC may be low; several hundred wrong rows per seed are available at 200 rows per family (estimate).",
+     "label": "suggested",
+     "source": "final_train_loss in RESULT.json; family headroom"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC or M1 CPU, eval only; screen on B2_s100/s101 (mount), then B2 s200-205",
+    "hours": 1.5,
+    "arms": "B2 only (plain_tf_steps comparison if it has step outputs)",
+    "pass_mark": "Within-family AUROC >=0.75 on both screen seeds with >=100 wrong rows per seed; then mean >=0.75 over the six confirm seeds.",
+    "proved_wrong": "AUROC <=0.60 on either screen seed: own confidence is not a usable stuck signal and any gate must come from another signal (e.g. cross-round disagreement); or <100 wrong rows per seed (cannot be judged; enlarge the families)."
+   },
+   "rules_check": "Rule 10: the score uses only the model's own outputs; the deploy-time threshold must be set by the model itself from its own held-out rows or train-only statistics, which this probe does not supply (open). Rule 4: 2-seed screen only. Rule 5: dev only. Rule 6: CPU. Rule 8: stuck detection only, not open-ended creativity.",
+   "closest_prior": "probe_loops.py M3/M4 (round gates, no margin). H1 learned stop (redesign section 8b, planned) trains a head; this measures a signal that needs no training.",
+   "autonomy": "The margin is computed by the deployed model from its own distributions; the threshold-setting step is open and must become the model's own.",
+   "merged_from": [
+    "w1g-4"
+   ],
+   "director_score": 5,
+   "director_note": "Critics: AUROC within family hides base-rate effects across families; check that margins are taken on the chosen mode only; and that the follow-on gate would be set by the model itself (rule 10) rather than by a developer-picked threshold.",
+   "id": "method-D19",
+   "area": "method"
+  },
+  {
+   "title": "Measure the cost of B2's 7-step program cap on list_stats",
+   "summary": "B2 writes at most 7 program steps, so 528 of 200,000 train rows (all list_stats, 9-11 steps) train answer-only, which breaks rule 7. A cliff probe on list_stats rows with 3-4 vs 5-6 numbers measures what the cap costs before any architecture change. The 8a caps shape already uses 12 loops, so check caps.json first.",
+   "change": "Eval-only probe (CIO/cap_probe.py, new) on B2 checkpoints, binned by number count: list_stats dev rows with 3-4 numbers (<=7 steps) vs 5-6 numbers (9-11 steps), 200 rows per count. Needs a dev-only generator option that controls the number count (untested; the generator is not in this snapshot). Compare plain_tf_steps (no program cap, but a 64-char target cap) as a reference. If the cap binds, the later change is progparse.N_RES 7 -> 11 with Ledger n_loops 8 -> 12 (+50% thinker compute, step embedding +4 rows). Param cost about 0.",
+   "why": "Shown: progparse sets the program target empty when a row has more than N_RES = 7 steps, so those rows train answer-only with weight 0.1 on the op term; all 528 train rows over 7 steps are list_stats; big in_dist has 16 of 200 list_stats rows over 7 steps; list_stats in_dist is 89.2 (SD 2.6). From four examples 5 numbers give 9 steps and 6 give 11 (rule 2n-1 is an extrapolation). Suggested: most list_stats misses may be the 5+ number rows. The 8a caps shape uses 12 loops and 36 registers, so the cap may already be lifted there; the probe is about what the 8-loop card model loses.",
+   "evidence": [
+    {
+     "claim": "N_RES = 7; programs over 7 steps get prog=() and train answer-only; 528 of 200,000 train rows, all list_stats; 16 of 200 list_stats rows in the big in_dist; train maxima 11 steps.",
+     "label": "shown",
+     "source": "CIO/models/progparse.py lines 8, 196-205; PF/no-hardcoding/LIMIT-COUNTS-2026-10-07.json"
+    },
+    {
+     "claim": "list_stats in_dist B2 89.2 (SD 2.6, 40 rows, six seeds).",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2 RESULT.json by_family (computed)"
+    },
+    {
+     "claim": "plain_tf_steps has its own 64-character cap: 840 var_chain rows trained answer-only; 58 of 72 wrong calculator-on chain rows come from it; C0 (cap 107) is done (fair plain 67.1 vs 67.0).",
+     "label": "shown",
+     "source": "PF/no-hardcoding/D0b-RESULT-2026-10-07.md; PASS-MARKS.md addendum 20; progress-board data.json"
+    },
+    {
+     "claim": "A generator option controlling the number count exists, dev-only.",
+     "label": "untested",
+     "source": "data.md mentions only --dev-per-cell"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "PC CPU for the generator and eval; B2 screen checkpoints first (mount), then PC seeds 200-205; plain_tf_steps for comparison",
+    "hours": 2,
+    "arms": "B2 and plain_tf_steps, scored per row, binned by number count (3-4 vs 5-6)",
+    "pass_mark": "Accuracy at 3-4 numbers minus accuracy at 5-6 numbers >=20 points on both screen seeds (the cap binds); then a 6-seed screen of the N_RES change is allowed.",
+    "proved_wrong": "Gap <5 points on both seeds: the cap is not what limits list_stats, so drop the N_RES idea (the rule-7 cost on this family is small). 5-20 points is inconclusive."
+   },
+   "rules_check": "Rule 7: this measures the cost of the truncation; any fix must keep every target (raise N_RES), not drop rows. Rule 5: dev only. Rule 1/10: the model writes its own steps; no outside step added. Rule 4: 2-seed screen. Rule 6: CPU.",
+   "closest_prior": "C0 raises a different cap (plain_tf_steps text, 64 to 107). The B2 program cap is noted in the redesign doc and kept by T1; its cost has never been measured.",
+   "autonomy": "A raised cap lets the model write its own longer programs; no outside step added.",
+   "merged_from": [
+    "w1g-5"
+   ],
+   "director_score": 5,
+   "director_note": "Critics: check progparse.py to see whether the 8a spec already raises N_RES (caps shape uses 12 loops); verify the number-count generator exists before budgeting. The finding bears on rule 7 compliance, so Ben may want it regardless of speed.",
+   "id": "method-D20",
+   "area": "method"
+  },
+  {
+   "title": "Activation checkpointing around each controller loop",
+   "summary": "Each loop saves a fresh concatenation of reader and workspace keys/values plus controller activations, about 61% of B2's 2.9 GB peak. Wrap the two controller blocks in torch.utils.checkpoint (exact math) to cut the peak by about half, so 256 rows fit in one part at 10M and 30M on the 16 GB PC, where batch splitting now costs about 20% per update.",
+   "change": "Ledger.run() lines 313-314: wrap the loop body over the two CBlocks in torch.utils.checkpoint(use_reentrant=False) behind a new cfg flag ckpt (default False, so B2's numbers are unchanged). Keep kvx (line 302, computed once) and the heads, pointers and executor outside. Param cost 0.",
+   "why": "Shown: the K/V concatenation is rebuilt and saved every loop (ledger.py 120, 310-314). Peaks: q33 3M 2,873 MiB allocated; 8a caps 3M 6,463 MiB (44 controller tokens vs 17); B2D 10M 9,673 MiB allocated and 17,010 MiB reserved, above the 16 GB card. Computed: per block-loop about 52 MB controller state and 57 MB K/V at q33. I2: 10M one part 0.272 s at 21 GB vs two parts 0.327 s; 30M four parts 0.679 s. Suggested: one checkpointed part costs about +25% step time, saving about 0.16 s per update at 30M (about 2.6 h per seed), but no gain at 10M (0.34 s vs 0.327 s) beyond fit.",
+   "evidence": [
+    {
+     "claim": "CBlock concatenates reader and workspace K/V every loop (line 120); kvx computed once per block (302); kvs recomputed per loop (310).",
+     "label": "shown",
+     "source": "CIO/models/ledger.py lines 120, 302, 310-314"
+    },
+    {
+     "claim": "Peaks: 8a caps B2 3M 6,462.6 MiB allocated / 6,986 reserved; q33 B2 2,872.9 / 4,696; B2D 10M 9,672.7 / 17,010.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8a-results/8a-3M-s401-B2/RESULT.json; first-look-10m-results/B2_s200, B2D_s200"
+    },
+    {
+     "claim": "I2 on one 5090: 10M one part 0.272 s at 21 GB, two parts 0.327 s; 30M four parts 0.679 s, two parts 0.503 s at 18.5 GB.",
+     "label": "shown",
+     "source": "PF/whole-model-roadmap/8A-SPEC-2026-10-07.md section 19 (I2)"
+    },
+    {
+     "claim": "Recompute costs about one extra controller forward per loop (+20-30% step time).",
+     "label": "untested",
+     "source": "to be measured"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC RTX 5070 Ti (about 10 min) plus CPU fp32 gradient check",
+    "hours": 1,
+    "arms": "B2 q33 3M and 8a caps 3M (200 steps for step time); B2D 10M and 30M one part at 256 rows (10 steps for peak); checkpoint on vs off",
+    "pass_mark": "(i) fp32 CPU 5-step gradients within 1e-5 relative; (ii) caps 3M peak allocated <=3,230 MiB; (iii) B2D 10M one-part peak reserved <=15,000 MiB; (iv) step time <=30% higher; (v) 30M one part at 256 rows <=15,000 MiB reserved.",
+    "proved_wrong": "Idea 1 shows loop state <45% of the caps peak (a 50% cut is out of reach) or fp32 gradients differ by >1e-5."
+   },
+   "rules_check": "Rule 3: no parameter change. Rule 4: exact math, memory and speed measured directly. Rule 6: existing PC. Rules 1/10: training-time only.",
+   "closest_prior": "Batch splitting into parts (queue 33; I2) is the existing workaround. Nothing uses recompute.",
+   "autonomy": "Training-time only; deployed model unchanged.",
+   "merged_from": [
+    "w3d-4"
+   ],
+   "director_score": 5,
+   "director_note": "Relevant to Ben's hundreds-of-millions goal (fit on the PC). Critics: the 10M one-part claim must hold on the 16,384 MiB card (the tft_s301 16,824 MiB reserve figure is unexplained); a gradient-equality check is necessary because use_reentrant=False can interact with in-place workspace writes (ledger.py 336-337).",
+   "id": "method-D21",
+   "area": "method"
+  },
+  {
+   "title": "Batch 512 for 12,000 steps if B2's step time is flat",
+   "summary": "If a batch-512 B2 step costs about the same as a batch-256 step, doubling the batch and halving the steps keeps the rows per epoch and halves wall time. Time both first (part of idea 1), then run a 2-seed screen against the existing 24k results with one pre-registered learning rate.",
+   "change": "--batch 512 --steps 12000 with lr fixed before running (either 1.41e-3, the square-root rule, or the unscaled 1e-3; pick one and seal it), warmup 300 unchanged, MEM gate raised to about 9000 MiB (B2 reserved 4.7-4.9 GB at 256, expect 7-9 GB at 512). Arms: B2 and plain_tf_steps on seeds 200 and 201. Drop-last removes 320 rows per epoch at 512, reshuffled each epoch. Param cost 0.",
+   "why": "Shown: no run in custom_io uses another batch size; B2 runs 1.6-6.7 steps/s while plain_tf runs 13-26 in the same queue, so B2's step is probably overhead, not arithmetic. Suggested: if time is per-step overhead, a 512-row step costs about the same as a 256-row step. The scaling-law paper (arXiv 2503.04715) says the optimal batch depends mainly on data size, but it concerns LLMs; sqrt-lr is a common default (suggested).",
+   "evidence": [
+    {
+     "claim": "All arms use 24,000 updates at batch 256; no run uses another size; drop-last at 512 removes 320 of 200,000 rows per epoch.",
+     "label": "shown",
+     "source": "CIO/PASS-MARKS.md Arms; results/33-pc-confirm-b2/*/cmd.txt; data.py 135-143"
+    },
+    {
+     "claim": "B2 peak reserved 4.7-4.9 GB at batch 256.",
+     "label": "shown",
+     "source": "CIO/results/37-pc-loop-readout/LR_s200/RESULT.json"
+    },
+    {
+     "claim": "A batch-512 step costs <=1.3x a batch-256 step for B2.",
+     "label": "untested",
+     "source": "idea 1's batch sweep measures it"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "PC: 200-step timing at 256 and 512 in the same window (0.1 h), then 2 seeds of B2 at 512 x 12k and plain_tf_steps at 512 x 12k",
+    "hours": 4,
+    "arms": "B2 512x12k vs existing B2 256x24k (seeds 200, 201); plain_tf_steps likewise; one lr only",
+    "pass_mark": "(a) one B2 step at 512 <=1.3x one at 256; (b) mean (512x12k minus 256x24k) pooled-5 >=-1.0 and no seed below -3.0. A screen only; any claim needs 6 seeds with lower bound >=-2.0.",
+    "proved_wrong": "Step ratio >=1.5x (B2 is per-row or GPU bound); 2-seed mean <=-2.0 (batch 512 costs too much score)."
+   },
+   "rules_check": "Rule 4: 2-seed screen only. Rule 6: PC. Rule 7: all rows kept. Rule 9: card only. Rule 10: pre-training only. One change: batch and lr move together, so the lr rule must be sealed first.",
+   "closest_prior": "Idea 12 changes only the step count; this changes batch and lr together and depends on idea 1.",
+   "autonomy": "Pre-training batch and lr only.",
+   "merged_from": [
+    "w1j-3"
+   ],
+   "director_score": 4.5,
+   "director_note": "Critics: this is two changes (batch and lr) unless the lr is sealed beforehand; B2's 5.0 GB at 256 may exceed the 6000 MiB gate at 512; the PC memory cannot host three 512-batch jobs at once (check against idea 3).",
+   "id": "method-D22",
+   "area": "method"
+  },
+  {
+   "title": "Muon on hidden matrices: fewer steps to the same score?",
+   "summary": "Replace AdamW with Muon-style orthogonalised updates on the 2-D weight matrices (AdamW kept for embeddings, biases, norms) and test whether 12,000 steps reach the 24,000-step AdamW score. The 2x efficiency in the scouted paper is at 16B MoE scale; at 3M it is untested. The attribution arm (AdamW at 12k) is required so step count is not credited to Muon.",
+   "change": "train.py optimizer block (lines 147-151): split the existing decay group (ndim>=2, not an embedding) into a Muon group (Newton-Schulz, 5 steps, momentum 0.95, update scale matched to AdamW's update size so lr 1e-3 is reused; read the equation in arXiv 2502.16982 before coding; weight decay kept). 200-step divergence check first. Arms on plain_tf_steps (cheap stand-in, about 0.4 h per run), then B2 on 2 seeds if it passes. Param cost 0; about 2-3% extra FLOPs.",
+   "why": "Shown: the optimizer is AdamW (0.9, 0.95), decay 0.1 on matrices only, fused on CUDA; nothing in custom_io uses another optimizer. Suggested (scout list): Muon with weight decay and update-scale fix reports about 2x AdamW compute efficiency at large scale (2502.16982); NorMuon reports 21.7% over Adam at 1.1B (2510.05491). Both untested at 3M. Computed: a Muon 12k run costs about half an AdamW 24k run, so a pass halves every future run.",
+   "evidence": [
+    {
+     "claim": "AdamW betas (0.9, 0.95), weight decay 0.1 on matrices only, fused on CUDA, warmup 300 then cosine to 10%.",
+     "label": "shown",
+     "source": "CIO/train.py lines 14-21, 146-151"
+    },
+    {
+     "claim": "Muon reports about 2x compute efficiency vs AdamW at 16B MoE scale; NorMuon +21.74% over Adam at 1.1B.",
+     "label": "suggested",
+     "source": "arXiv 2502.16982, 2510.05491 (abstracts, scout-verified)"
+    },
+    {
+     "claim": "No Muon or other optimizer change appears in custom_io.",
+     "label": "shown",
+     "source": "grep over CIO *.py and *.md"
+    },
+    {
+     "claim": "Muon helps at 3.3M with a looped controller and an int64 executor in the loss path.",
+     "label": "untested",
+     "source": "no run exists"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "PC queue: 6 plain_tf_steps runs at 12k with Muon (seeds 200-205) after a 200-step divergence check; AdamW 12k runs (idea 12) for attribution",
+    "hours": 3,
+    "arms": "Muon 12k vs existing AdamW 24k plain_tf_steps (same seeds); if it passes, AdamW 12k",
+    "pass_mark": "Non-inferiority: one-sided 95% lower bound (t, n=6) of mean (Muon 12k minus AdamW 24k) pooled-5 >=-2.0 and no non-finite loss on any seed. Attribution: mean (Muon 12k minus AdamW 12k) >=+1.0 with lower bound >0.",
+    "proved_wrong": "Lower bound below -2.0; any non-finite loss; or Muon 12k less than 1.0 above AdamW 12k (step count alone explains the gap)."
+   },
+   "rules_check": "Rules 1-3: architecture and size unchanged. Rule 4: six seeds, marks fixed, attribution arm required. Rule 5: dev only. Rule 6: PC. Rule 10: pre-training optimizer only.",
+   "closest_prior": "Schedule-free AdamW (2405.15682) was considered and not proposed (does not cut steps). The bench's lr-decay-to-0 test hurt the 1.2B model, a different change.",
+   "autonomy": "Pre-training optimizer only.",
+   "merged_from": [
+    "w1j-6"
+   ],
+   "director_score": 4.5,
+   "director_note": "Critics: plain_tf_steps is a stand-in; B2 has pointer and executor losses that may behave differently under orthogonalised updates. NaN risk is real (EGK diverged twice); check the 200-step divergence guard is in place and that the NaN check runs per step, not only every 500 steps.",
+   "id": "method-D23",
+   "area": "method"
+  },
+  {
+   "title": "Practise on the model's own hardest rows, with its own canary",
+   "summary": "A deploy-style sleep step tested on finished B2 checkpoints: the model scores a candidate pool with its own per-row loss, keeps the hardest quarter, trains 1,000 updates on a mix, and a canary of fresh in-distribution rows it holds decides whether to revert. Compared against a random control and a repetition-matched control. A pretraining variant (half of each batch drawn by own loss) follows only if this works.",
+   "change": "Add Ledger.row_loss (the terms of Ledger.loss kept per row). For each of the six local checkpoints: score 20,000 random train rows, keep the top 25% (5,000), continue 1,000 updates at batch 256, fresh AdamW, peak lr 3e-4, warmup 50. Arm H: 128 selected + 128 random per update; arm R2 (repetition control): 256 rows from a random 5,000-row subset; arm R: 256 random train rows. Candidates with answers over 8 characters are dropped, not cut. Canary: 1,000 fresh in-distribution rows from the generator with a new seed, deduplicated against dev, test and every protected panel and never in a training pool; revert if the paired before/after drop exceeds 2 paired standard errors. Param cost 0.",
+   "why": "Shown: B2 train loss is 0.0137 at 24k, so remaining errors sit in the loss tail; H reuses each selected row about 26 times in 1,000 updates, so R2 is required to separate selection from repetition. The fast-sleep harm check reads the dev split with a fixed 2.0-point limit (fastsleep.py 566-580), which a deployed model cannot do; train-split rows are already fit, so a canary must be fresh rows. An unpaired 1,000-row SE at 90% accuracy is 0.95 points, hence the paired test. Loss-based example selection is a common supervised idea (suggested; no paper checked).",
+   "evidence": [
+    {
+     "claim": "B2 final train loss averages 0.0137 across six seeds; six confirm checkpoints at step 24000 are in the scratchpad (b2ckpt).",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2/*/RESULT.json; scratchpad code/b2ckpt/B2_s20x"
+    },
+    {
+     "claim": "Fast-sleep nightly recall scores dev in_dist through skills5 and reverts when chain-5 harm exceeds a fixed 2.0 points.",
+     "label": "shown",
+     "source": "scratchpad fastsleep/creative/fastsleep.py lines 88-96, 548-580"
+    },
+    {
+     "claim": "Ledger.loss averages each per-row term over the batch, so a per-row version changes only the reduction.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py lines 497-543"
+    },
+    {
+     "claim": "Loss-selected rows beat random and repetition-matched rows; the canary agrees with the dev rule (Spearman >=0.8 over 12 runs).",
+     "label": "untested",
+     "source": "none"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "One 5090 or the 5070 Ti: 18 continuations (3 arms x 6 checkpoints) of 1,000 updates plus evals; canary evals on CPU",
+    "hours": 1.5,
+    "arms": "H, R2, R on six checkpoints plus base evals; canary on 12 continuations (H and R2)",
+    "pass_mark": "H minus R2 >=+1.0 pooled-5 (paired over six checkpoints, CI low >0); chain-5 change >=-0.5 in every arm; selected rows' mean loss falls >=30%; void if |R minus base| <0.5. Canary: Spearman >=0.8 between canary change and pooled-5 change across 12 runs, revert rule agrees with the dev rule (pooled drop >1.0) on >=11 of 12 with <=1 false revert.",
+    "proved_wrong": "H minus R2 <=0 with CI above +0.5; selected rows' loss does not fall; canary Spearman <0.5 or >=3 disagreements with the dev rule."
+   },
+   "rules_check": "Rule 1: gold is the exact answer. Rule 5: train split only; the canary must be checked against every protected panel. Rule 7: long candidates dropped, not cut. Rule 4: six paired checkpoints. Rule 9: B2 card only, fast-sleep C2 numbers not mixed in. Rule 10 only partly met: see autonomy.",
+   "closest_prior": "fast-sleep nights use every pool question at a fixed visit count; no loss-based selection was tried for B2. The bench 'too little practice' idea was a 1.2B plateau test.",
+   "autonomy": "Deploy path: candidates must come from the model's own programs checked by an outside calculator tool the model calls by writing text (not built; this test uses train rows as stand-ins); the model's own per-row loss ranks them; fresh AdamW continuation; the canary is the model's own held-out verified answers. Gaps: the 25% fraction and the 2-SE constant are set by us and Ben must rule whether fixed global sleep constants count under rule 10; per-row loss needs gold, which at deploy would come from the calculator check.",
+   "merged_from": [
+    "w1i-4",
+    "w1i-5",
+    "w1j-7"
+   ],
+   "director_score": 4,
+   "director_note": "Out of the core speed area; kept as a cheap use of finished checkpoints. Critics: rule 10 is only partly met (hand-set 25% and 2-SE constants; gold-based loss); make sure the canary rows are truly outside every training pool; R2 is the control that matters, a result without it is not interpretable.",
+   "id": "method-D24",
+   "area": "method"
+  },
+  {
+   "title": "Gate K=3 seed-stacked training with a CPU vmap test",
+   "summary": "Run three seeds of one arm in one process by stacking their weights and vmapping the forward with torch.func, so one launch sequence serves three models (horizontal fusion, arXiv 2102.02344). Only a CPU gate is proposed now: stacked loss and gradients must match three separate models and vmap must trace the program loop. The speed probe and any build follow only if it passes.",
+   "change": "New stacked-trainer file, not an edit to train.py. Build each seed's model after torch.manual_seed(seed) in train.py's order (lines 133, 141), stack_module_state, run model.loss via functional_call under vmap on K batches padded to a common width; loss = sum of per-seed losses. Rewrite four things: the decay split (by ndim and id, train.py 148-149), the global clip (172) into a per-seed norm, per-seed CPU prep (needs idea 10's pack), and any op vmap cannot trace (suspects: F.one_hot ledger.py:72, scatter_add_ :248, in-place slice writes :336-337). Param cost 0.",
+   "why": "If the step is launch-bound (idea 1), K models share one launch sequence and each kernel is K times larger; seeds, init and data order stay separate so six-seed pairing survives. Bit equality with separate runs is not expected, so equivalence is the twin-run band from idea 7. torch.compile needs Triton (no official Windows path, suggested); CUDA-graph capture (idea 13) is the single-model route to the same saving and the fallback if vmap fails.",
+   "evidence": [
+    {
+     "claim": "The decay split uses p.ndim and an id-based embedding exclusion; clipping is one global clip_grad_norm_ at train.py 172.",
+     "label": "shown",
+     "source": "CIO/train.py lines 146-150, 172"
+    },
+    {
+     "claim": "Per-seed init follows torch.manual_seed before build, so each seed's init can be reproduced by building in turn; pairs must share a device.",
+     "label": "shown",
+     "source": "CIO/train.py lines 133, 141; local_runner.py docstring lines 16-18"
+    },
+    {
+     "claim": "Horizontal fusion of same-shape jobs gives up to 15.1x throughput on other models.",
+     "label": "suggested",
+     "source": "arXiv 2102.02344 abstract"
+    },
+    {
+     "claim": "vmap traces F.one_hot, scatter_add_ and the in-place slice writes in ledger.run.",
+     "label": "untested",
+     "source": "suspects listed from ledger.py 72, 248, 336-337"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU on the PC or M1 (fp32, no GPU), about 10 min; speed probe on the 5070 Ti only after the gate passes",
+    "hours": 1.2,
+    "arms": "Gate: three seeds, 8 rows of one batch, one forward and backward, stacked vs separate. Speed (after pass): K=3 stacked vs K=1 separate, 300 updates, three alternating blocks",
+    "pass_mark": "Gate: stacked loss and every gradient within relative 1e-5 of the separate models, vmap traces without error. Speed: 3 x K=3 updates/s >=2.0x K=1 updates/s and each seed's first 300 losses inside idea 7's band.",
+    "proved_wrong": "vmap cannot trace the forward (drop fusion, test CUDA graphs); speed ratio <1.3 (launch overhead is not the limit)."
+   },
+   "rules_check": "Rule 6: gate on CPU; speed on the PC. Rule 4: each seed keeps its own init and data order so a stacked arm still counts as six paired seeds once the band is met. Rule 5: probe seeds 997-999 only. Rule 10: training only.",
+   "closest_prior": "Nothing in the repo fuses seeds or uses vmap. Related: CUDA graphs (idea 13).",
+   "autonomy": "Training only; no deploy-time step.",
+   "merged_from": [
+    "w1e-4"
+   ],
+   "director_score": 4,
+   "director_note": "Critics: the potential is large (the 6-seed rule is the main cost) but the loop with data-dependent argmax and int64 executor may not trace; per-seed prep costs K times in one process. The CPU gate is the right size of bet.",
+   "id": "method-D25",
+   "area": "method"
+  },
+  {
+   "title": "Audit whether same-seed arms really share init, and how much of B2's noise is init",
+   "summary": "Pairing is justified by 'same seed, same init and data order', but the code comments say every B2 weight starts identical while R0, EGO, EGM and EGR build a reader with no conv blocks, which shifts the random stream. A seconds-long CPU check shows which arms share init; a seed-decomposition run then measures how much of the seed noise is init, which bounds what init-matching could ever gain.",
+   "change": "Stage 1 (CPU, seconds): build B2 and each reader-depth arm at seeds 200 and 201 in fp32 with train.py's seeding and compare every shared tensor (max abs diff 0 or not); if they differ, add phantom ConvBlock constructions in CharReader.__init__ (reader.py 68-74) when layers is 0 so the RNG position matches B2, and re-check; n_params must equal the old count. Stage 2: add --init-seed and --data-seed (default --seed; four lines in train.py at 133 and 139). Run X = existing (init s, data s), Y = (init s, data s+100), Z = (init s+100, data s) on seeds 200-202, first on plain_tf (about 6 runs, 2-3 h, cheap stand-in), then on B2 only if it matters (about 9 GPU-h). Param cost 0.",
+   "why": "Shown: init draws happen only at construction; the shared re-init loop (ledger.py 153) runs after the reader's conv constructions, which reader_layers=0 removes; arms built last (copy, span, eg, gattn, round_readout) keep B2's init, the reader-depth arms do not. Evidence of the split: 1-df paired SD about 1.05 RMS for arms with unshared init (R0 0.41, EGO 0.78, EGM 0.13, EGR 1.71, EGW 1.35) vs about 0.28 for shared-init arms (LR 0.09, EGT 0.30, EGE 0.37), confounded by box and effect size. Fact check: per-seed correlation of pooled-5 is only +0.63 (B2 vs plain_tf, one-sided p 0.074) and -0.29 (vs plain_tf_steps), and cross-architecture init is probably not shared; the data order is the one shared piece for every arm.",
+   "evidence": [
+    {
+     "claim": "CharReader creates embeddings and ConvBlocks (reader.py 72-73) before Ledger's shared re-init loop (ledger.py 153); copy (162), span (169), eg (174-190), gattn (192-199) are built after; reader_layers=0 and d=768 arms are not.",
+     "label": "shown",
+     "source": "CIO/models/ledger.py 142, 153, 162-199; CIO/models/reader.py 43-73"
+    },
+    {
+     "claim": "PASS-MARKS line 30 and ledger.py comments (19, 35) say the paired statistic uses the same init; true of the seed, false of the weights for reader_layers=0 arms. Init equality has never been checked numerically.",
+     "label": "shown",
+     "source": "CIO/PASS-MARKS.md:30; models/ledger.py:19,35; fact check verify-pairing-and-noise"
+    },
+    {
+     "claim": "B2 vs plain_tf seed correlation +0.63 (paired SD 0.94 vs unpaired 1.35); B2 vs plain_tf_steps -0.29 (1.33 vs 1.19).",
+     "label": "shown",
+     "source": "CIO/results/33-pc-confirm-b2 RESULT.json (computed)"
+    },
+    {
+     "claim": "Init-only SD of 0.6 would cut the B2-vs-tfsteps paired SD from 1.33 to 1.19 at most; SD 0.3 gives under 5%.",
+     "label": "suggested",
+     "source": "derivation in idea w2d-2"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "CPU for stage 1 (PC or M1, seconds); stage 2 on plain_tf on the PC queue (2-3 h), B2 only if gated",
+    "hours": 3,
+    "arms": "Stage 1: B2 vs R0/EGO/EGM/EGR at seeds 200, 201. Stage 2: X, Y, Z at seeds 200-202",
+    "pass_mark": "Stage 1: max abs diff 0 for every shared tensor after the fix, n_params unchanged. Stage 2: build init-matching code for other arms only if SD(Z-X) >=0.6; drop init pairing if SD(Z-X) <0.3; in between add seeds 203-205.",
+    "proved_wrong": "Init pairing is useless if SD(Z-X) <0.3; the additive model is wrong if SD(Z-X)^2+SD(Y-X)^2 falls below 0.2 or above 1.6."
+   },
+   "rules_check": "Rule 3: phantom blocks are deleted before the optimizer and n_params. Rule 4: stage 2 is three pairs, a screen that gates building code. Rule 6: CPU first; plain stand-in on the PC. Rule 9: EG2 arms are card experiments, kept apart from the village model. Rule 10: build-time initialisation.",
+   "closest_prior": "The 'created last' pattern at ledger.py 162-199 keeps B2's weights for add-on arms; nothing extends it to reader depth or measures the init share of seed noise. CALIBRATION 03-noise measured plain seed SD about 1.0 without separating init from data.",
+   "autonomy": "Build-time initialisation; no deploy-time step.",
+   "merged_from": [
+    "w2d-1",
+    "w2d-2"
+   ],
+   "director_score": 3.5,
+   "director_note": "Low value for Ben's current arms: most reader-depth EG arms have already failed or are not size-matched, and the data order (the main shared piece) is already shared. Do stage 1 (free) and stop unless a live arm needs the init match.",
+   "id": "method-D26",
+   "area": "method"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "w2e-2",
+   "reason": "Calibrates a proxy on the EmbeddingGemma ladder, whose arms carry 271M frozen borrowed parameters (274-293M whole, far outside the +-3% band) and are mostly failed; with only two scratch comparators (R0, LR) a slope is not informative for B2-family decisions, and it needs about 5.8 rented hours. The real question (does a shorter budget keep arm order on the actual arms) is answered by idea 12 and the snapshot ladder (idea 11)."
+  },
+  {
+   "id": "w3d-5",
+   "reason": "An architecture change (32 learned summary slots for the thinker's cross-attention, +9,248 params), not a speed or measurement idea. The cut it offers is about 15-23% of peak memory with an unmeasured time effect, and it risks the letter-level reads that explain B2's strong cipher_map and seq_cycle scores (the redesign notes reject a Perceiver-style reader bottleneck for the same reason). Revisit only if idea 1's outcome table shows cross-attention is at least 30% of GPU time (row 5)."
+  }
+ ],
+ "area_summary": "The 82 raw ideas reduce to 26 distinct ones (2 dropped). CIO in the files means the custom_io code folder under the scratchpad; PF means /mnt/project-files. Three themes.\n\nSpeed. Nothing about B2's step has been profiled, and fact checks refute two brief claims: the step is not sync-free (16 blocking host-to-device copies in 5 drain groups, plus 5 pageable copies), and time per update does not look like a fixed launch cost (it tracks block applications and width). The '1 hour' figure is only the fastest run (median 1.55 h; best sustained 8.5 updates/s); B2 costs about 3x plain at best rates, not 7.8x. A quiet B2 step of 115-172 ms against about 55-75 ms of block compute suggests 40-60% is something else. So profile first (idea 1), measure aggregate throughput at par 1/2/3 (idea 3), and only then build the exact host-side rewrite (10), CUDA graphs (13) or checkpointing (21). Every speed edit should pass a tiered equivalence gate with a measured same-seed twin floor (7), which does not exist yet.\n\nMeasurement. Seed pairing buys little (correlation +0.63 vs plain_tf, -0.29 vs plain_tf_steps), row noise is the same size as training noise for small margins, and several sealed marks cannot pass under no change (T1 mark 4 rejects an identical design 88-94% of the time; the family mark's 100% failure is multiplicity over 30 families; the null draws are only 90 distinct combinations). Ideas 2, 4, 5, 6 and 18 fix this with CPU work on saved checkpoints (B2 s200-205 and T1 s200/201 exist locally). Loosening any mark needs Ben's explicit approval and must be sealed before a confirm.\n\nProxies. No B2 score-vs-step curve exists; the 4k loss ranks arms but not seeds. Ideas 11 and 12 are the valid way to test early stops and shorter budgets.\n\nGaps: dev and train jsonl are not in this snapshot (every re-score needs a PC copy); plain 200-205 checkpoints are uncertain; no M1 B2 number exists (idea 16); stale premises (C0, U0, W1 are done; T1 screen is NOT SHOWN on the copy mark). Variance reduction beyond forking is thin."
+}

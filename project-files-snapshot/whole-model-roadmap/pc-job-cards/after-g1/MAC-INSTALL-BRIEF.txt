@@ -1,0 +1,7 @@
+From the Whole-model roadmap thread. Ben chose "Go" on the project card at @TIME@ ET for the after-G1 PC chain (experts test, 100M fit check, two small plain controls, 30M control). This touches no running job and starts no GPU work now; the waiter starts each queue only after G1 has ended. In your repo clone:
+1. git fetch origin claude/project-thread-yha868 claude/project-thread-x2cm2v claude/project-thread-f1to6a claude/data-pool-8b
+2. rm -rf /tmp/pg1 && mkdir -p /tmp/pg1 && git archive --format=zip -o /tmp/pg1/gx.zip c1464d19b7 custom_io && git archive --format=zip -o /tmp/pg1/b3.zip 71299b1a47 custom_io && git show 3d0afbeadd:data_pool/cloze_long.py > /tmp/pg1/cloze_long.py
+3. for f in q8aPost_wait.ps1 install_post_g1.ps1 8aFC-pc.txt 8aG2C3-pc.txt 8aG2C10-pc.txt 8aC30-pc.txt fc100.md g2c3.md g2c10.md c30.md; do git show @COMMIT@:results/8a-g/pc-job-cards/after-g1/$f > /tmp/pg1/$f; done
+4. ssh benspc "powershell -NoProfile -Command New-Item -ItemType Directory -Force C:\Users\benja\custom-io\post-g1-in | Out-Null" && scp /tmp/pg1/* benspc:C:/Users/benja/custom-io/post-g1-in/
+5. ssh benspc "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\custom-io\post-g1-in\install_post_g1.ps1"
+6. Reply with step 5's full output. If it prints NEEDS ATTENTION, stop there and do nothing else.

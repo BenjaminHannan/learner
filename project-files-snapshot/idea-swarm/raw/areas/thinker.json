@@ -1,0 +1,1828 @@
+{
+ "area": "thinker",
+ "title": "A deep, adaptive thinker: loop as long as needed, more layers, more thinking room",
+ "brief": {
+  "state": "B2 (3,302,481 params) runs two weight-shared controller blocks (width 256) for 8 fixed rounds. Each round passes 17 controller vectors (8 control, 9 register) over 27 workspace slots and every reader position. Round t = 1..7 writes program step t, so programs stop at 7 steps (progparse.py N_RES = 7). Rounds 8+ write nothing, and the step embedding stops changing after row 7.\n\nSix confirm seeds (200-205, results/33-pc-confirm-b2): pooled-5 74.02 (73.00-74.74), chain-5 99.4-99.7, +20.3 over plain_tf and +6.9 over plain_tf_steps (both 6 of 6 seeds). Extra rounds at test hurt: in_dist at 16 minus 8 is -0.81 to -1.91 (mean -1.46); screen seeds 100/101 give -1.1 and -0.8. Fewer rounds collapse chain-5 (loops:1 0.0-2.9, loops:2 1.1-6.5). Overthinking (right before round 8, wrong at 8) is 1.7-1.9% of in_dist, under the 2% halting gate. Controller-state size grows about linearly (x3.4-3.9 over 8 rounds), so the blow-up gate stayed shut. The more-loops gate (G1) opened only on its 5%-of-wrong clause: 7.3-8.4% of wrong rows are right at a later round, about 0.8% of in_dist, and no family gains 3 points. Test LR (answer loss at every round) gained +1.1/+1.3 pooled-5, failed stability on seed 200 (-0.51 vs -0.3) and leaked (loops:0 15.88); the arm was stopped, not proved wrong.\n\nLosses sit in families with no program (fewshot_number_rule -14.9 and rule_apply -4.8 against plain_tf_steps over six seeds and five splits), where answers flip across rounds. Controls 2-7 matter strongly on seed 200 only (zeroing costs -7.8 chain-5); seeds 201 and 202 lose 0.6 and 1.0.\n\nSealed but not run: W1 (global attention in the reader, +33,632 params, queue 42), T1 (calculator as a text tool, 3,277,393 params, queue 40; still at most 7 calls per turn), H1 (learned stop, cap 32; needs the T1 screen first; no stop head coded). W2 (16 scratch tokens) has proposed marks only. Ben's deploy rule requires the model to choose its own round count; B2 still uses fixed rounds (12 under the 8a spec).",
+  "facts": [
+   {
+    "claim": "B2 = 3,302,481 params: copy=True, S config d=256, 4 heads, 2 reader conv layers, blocks=2, n_loops=8, mlp 4.8x. Plain_tf S = 3,244,544 (B2 is +1.79%).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/ledger.py (docstring lines 10-24; __init__ line 130); results/33-pc-confirm-b2/B2_s200/RESULT.json (n_params)"
+   },
+   {
+    "claim": "One CBlock is 1,158,604 params at d=256 (computed from its layer shapes); the non-block part is 985,273. So 2 blocks = 3,302,481 and 8 blocks = 10,254,105, which matches the 10M deep shape in 8A-SPEC addendum C.",
+    "label": "shown",
+    "source": "ledger.py CBlock (lines 102-124) and __init__; /mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md section 13 (computed here)"
+   },
+   {
+    "claim": "Blocks are weight-shared across rounds, so effective depth = blocks x rounds: 16 CBlock passes at 3.3M (2 x 8), 96 for the 8-block 10M deep shape with 12 rounds under 8a.",
+    "label": "shown",
+    "source": "ledger.py run() lines 307-318; 8A-SPEC addendum G"
+   },
+   {
+    "claim": "Controller state Z = 8 control vectors plus 9 register vectors (256-wide). Only control 0 feeds the step heads and control 1 feeds the final readout (mode, answer pointer, word pointer). Registers feed the talker's GEN path.",
+    "label": "shown",
+    "source": "ledger.py lines 62, 144-146, 303-304, 321, 342"
+   },
+   {
+    "claim": "Each round cross-attends to 27 workspace slots (16 prompt numbers, 4 constants, 7 result slots) plus every reader position (mask covers the whole prompt); self-attention runs over the 17 controller vectors.",
+    "label": "shown",
+    "source": "ledger.py docstring lines 1-8; CBlock.forward lines 117-124; run() lines 293-302"
+   },
+   {
+    "claim": "Program cap: round t (1..7) writes result slot t-1 after that round's blocks; round 0 writes nothing. So at most 7 steps, with 7 writing rounds plus 1 initial round.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/progparse.py line 8 (N_RES = 7); ledger.py run() lines 319-337"
+   },
+   {
+    "claim": "At test with loops above 8, rounds 8+ write no steps and reuse step-embedding row 7 (ts = min(t, n_loops-1)); the step_emb table has only n_loops = 8 rows.",
+    "label": "shown",
+    "source": "ledger.py lines 145 (step_emb = Embedding(n_loops)), 308, 312, 319"
+   },
+   {
+    "claim": "Blind spot in code: the final readout state zf is taken after the last round's blocks, before that round's step result is written. Only the answer-pointer keys (built from S0 and Rs after the loop) include the last result. Only programs whose last write falls in the final round are affected (7 steps now; 11 steps under 8a addendum G, with 12 rounds). Effect untested.",
+    "label": "shown",
+    "source": "ledger.py run() lines 307-345 (zf line 342, ks_ line 343)"
+   },
+   {
+    "claim": "Confirm seeds 200-205 pooled-5 = 73.00, 74.27, 74.74, 74.02, 73.63, 74.47 (mean 74.02, SD 0.63). Chain-5 intact = 99.4, 99.6, 99.6, 99.5, 99.6, 99.7 (the brief's earlier 99.8 upper bound is not on these seeds).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/33-pc-confirm-b2/B2_s200..B2_s205/RESULT.json (final_eval, chain5)"
+   },
+   {
+    "claim": "B2 minus plain_tf pooled-5 = +20.34 (95% CI 19.35 to 21.32; 6 of 6 seeds). B2 minus plain_tf_steps = +6.89 (CI 5.49 to 8.29; 6 of 6). Chain-5 minus plain_tf_steps = +5.6.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/CONFIRM-ANALYSIS.json (arms B2 diffs)"
+   },
+   {
+    "claim": "16 rounds at test minus 8 rounds, in_dist, confirm seeds 200-205: -1.91, -1.62, -1.40, -1.76, -0.81, -1.25 (mean -1.46). Screen seeds 100/101 (no training): -1.14 and -0.85.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json (lesions loops:16 vs final_eval in_dist); results/40-loops-probe/PROBE.json (M1)"
+   },
+   {
+    "claim": "No-training probe, screen checkpoints, 6,800 in_dist rows, in_dist exact by K: K=1 30.6/30.2; K=4 82.4/78.8; K=7 88.9/90.2; K=8 89.4/90.5; K=9 89.4/90.5; K=16 88.2/89.7 (seeds 100/101).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/40-loops-probe/PROBE.json (M1); probe.log"
+   },
+   {
+    "claim": "Fewer rounds, confirm seeds: loops:1 in_dist 22.4-31.3 and loops:2 41.5-45.4; loops:1 chain-5 0.0-2.9, loops:2 chain-5 1.1-6.5; calculator off (noexec) chain-5 2.5-6.9.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json (lesions loops:1, loops:2; extra.chain5_lesions; extra.noexec)"
+   },
+   {
+    "claim": "Overthinking (right at some round before 8, wrong at 8): 130 rows = 1.91% (seed 100) and 113 = 1.66% (seed 101). The halting-gate mark is 2%, so G2 stayed shut.",
+    "label": "shown",
+    "source": "results/40-loops-probe/PROBE.json (M4); design/LOOPS-probe.md (gates)"
+   },
+   {
+    "claim": "Right-later (wrong at 8, right at some round 9-16): 53 of 724 (7.3%) and 54 of 644 (8.4%) of wrong rows, about 0.8% of in_dist. G1 opened only on its 5% clause (no family gained 3 points). Worst family at 16 rounds: cipher_map -13.0 (seed 100) and seq_next -14.5 (seed 101). Best gains +2.0.",
+    "label": "shown",
+    "source": "results/40-loops-probe/PROBE.json (M3, gates); design/LOOPS-probe.md result table"
+   },
+   {
+    "claim": "Settle round (smallest round from which an answer stays right through 8): number families 3.09 and 3.33 vs string families 1.69 and 1.74 (seeds 100/101). Number programs take about 1.6 rounds longer.",
+    "label": "shown",
+    "source": "results/40-loops-probe/PROBE.json (M2)"
+   },
+   {
+    "claim": "Controller-token RMS after round 8 over round 1 = 3.9 (seed 100) and 3.4 (seed 101). The growth is about linear (about +3.8 to +4.6 per round from 8 to 16), with no blow-up. G3 mark is 10x, so G3 stayed shut.",
+    "label": "shown",
+    "source": "results/40-loops-probe/PROBE.json (M5); design/LOOPS-probe.md"
+   },
+   {
+    "claim": "No-program rows (L = 0, 4,007 rows): in_dist at 8 rounds 84.0 and 85.0; at 16 rounds 82.1 and 83.6 (seeds 100/101).",
+    "label": "shown",
+    "source": "design/LOOPS-probe.md result table"
+   },
+   {
+    "claim": "Families where answers flip across rounds (overthinking rows): fewshot_number_rule (22 and 18 rows), list_index (20 and 18), table_lookup, rule_apply, seq_next, order_chain. Program families settle by round 8.",
+    "label": "shown",
+    "source": "results/40-loops-probe/PROBE.json (M4 by_family); design/LOOPS-probe.md"
+   },
+   {
+    "claim": "Test LR (round_readout 1.0; queue 37; screen seeds 200/201): pooled-5 +1.14/+1.27 (mark 1 pass); in_dist 16-minus-8 -0.51 (mark -0.3, fail) and -0.22; loops:0 in_dist 15.88 on seed 200 (fail) vs 0.00 on seed 201; chain-5 99.5/99.7; loops:1 chain-5 2.2/3.0. Verdict FAIL, arm stopped; not proved wrong.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-EG2.md (LR section); PASS-MARKS.md addendum 5"
+   },
+   {
+    "claim": "Controls 2-7 zeroed at test (lesion ctl27), seeds 200/201/202: pooled-5 change -1.62, -0.61, -0.78; chain-5 change -7.8 (99.4 to 91.6), -0.6 (99.6 to 99.0), -1.0 (99.6 to 98.6).",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/d0/B2_s200.json, B2_s201.json, B2_s202.json (key ctl27); PASS-MARKS.md addendum 16 (mark source)"
+   },
+   {
+    "claim": "The calculator is used: with the executor off (noexec), program families fall to 0.24-0.82% on confirm seeds 200-205 (intact 96-97%).",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json (extra.noexec.program_families, intact)"
+   },
+   {
+    "claim": "Zero-round leak (loops:0, in_dist) on confirm seeds: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00. Two of six seeds are above the limit of 5. Donor in_dist 3.09-3.75.",
+    "label": "shown",
+    "source": "results/33-pc-confirm-b2/B2_s20x/RESULT.json (lesions loops:0, donor)"
+   },
+   {
+    "claim": "The same seed gives different plain-B2 loops:0 values on different machines: seed 200 = 0.00 (BensPC) vs 1.40 (rented 5090); seed 201 = 10.81 vs 4.34. Same-seed leak comparisons across machines are noisy.",
+    "label": "shown",
+    "source": "results/RESULTS-EG2.md (EGE, EGR tables: 1.40 / 4.34) vs LR and EGT tables (0.00 / 10.81); PASS-MARKS.md addendum 10 (device check)"
+   },
+   {
+    "claim": "The window matters: B2 minus the no-window reader (R0) = +6.84 and +6.26 pooled-5 (seeds 200/201). cipher_map in_dist without the window = 12.5 and 2.5.",
+    "label": "shown",
+    "source": "results/RESULTS-EG2.md (R0 section; diagnosis checks)"
+   },
+   {
+    "claim": "Loss families, six seeds x five splits, B2 minus plain_tf_steps: fewshot_number_rule -14.9 (22.7 vs 37.6), verify_claim -5.6, rule_apply -4.8 (66.3 vs 71.1), order_chain -3.9. Gains: cipher_map +34.0, seq_cycle +28.8, object_track +26.7, backward_solve +22.5, arith_bare +22.3.",
+    "label": "shown",
+    "source": "Recomputed for this brief from results/33-pc-confirm-b2/*/RESULT.json (final_eval by_family, five dev splits pooled)"
+   },
+   {
+    "claim": "B1 new kinds (seeds 300/301, 10.9M B2 with span): TEACH mean 11.20, GEN 10.42, plain_tf 13.93. B1-a proved wrong (+0.78); B1-c FAIL (B2 minus plain_tf on TEACH = -2.73). Students score 91-96% on their own practice.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-B1.md"
+   },
+   {
+    "claim": "Data stock = 14.3M word pieces (skills 5.4M for 200k rows, TEACH 3.25M, GEN 5.69M); the earlier roadmap estimate of 12M is superseded.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md ('What we have'); /mnt/project-files/data-pool/DATA-POOL-PLAN-2026-10-06.md line 44"
+   },
+   {
+    "claim": "B2 made about 30 passes over its 200k skills rows (24,000 updates x 256 rows / 200,000), far above the about-4-reuse guideline.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum B1 ('q33 itself made about 30 passes')"
+   },
+   {
+    "claim": "Reuse above about 4 passes adds little (Muennighoff et al. 2023), so B2 is past the data-reuse guideline; a deeper stack on this data risks memorising.",
+    "label": "suggested",
+    "source": "whole-model-roadmap-2026-10-06.md ('How much data can be reused'); redesign-ideas-2026-10-07.md section 3"
+   },
+   {
+    "claim": "Speed: q33 B2 took 3.66 h for 24,000 updates vs 0.47 h for plain_tf_steps (7.8x per update). Each deeper block runs once per round, so deep B2 should be slower again (untested until timed).",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum B3 (section 12)"
+   },
+   {
+    "claim": "Calibration: at 8,000 updates a 10.8M plain transformer scored below the 3.2M one (45.5 vs 47.0 pooled-5); at 24,000 it scored above (54.9 vs 52.7). One seed, so bigger models need longer training.",
+    "label": "shown",
+    "source": "custom_io/CALIBRATION.md, as cited in 8A-SPEC addendum B1"
+   },
+   {
+    "claim": "W1 code exists: GlobalAttn (one low-rank head, inner width 32) after the conv blocks, enabled by gattn=32. It adds 33,632 params (total 3,336,113; band top 3,341,880). Sealed in PASS-MARKS addendum 19 and amendment 1. Not run: no results folder; queue 42 is staged after U0.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/reader.py lines 54-62, 94-95; models/ledger.py lines 192-197; PASS-MARKS.md addendum 19"
+   },
+   {
+    "claim": "T1 build exists (models/tool.py, 3,277,393 params, inside band 3,147,208-3,341,880). The thinker writes operand text at rounds 1-7; calc() returns text; the entry is read back. Sealed (addendum 17 and amendments; architecture MARKS-D0-T1). Queue 40, not run. Amendment 2: replace, not alongside.",
+    "label": "shown",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/models/tool.py; PASS-MARKS.md addendum 17 and amendment; /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md"
+   },
+   {
+    "claim": "T1 still allows at most 7 calls per turn: its call-writing gate is the same 'if not 1 <= t <= N_RES' with 8 fixed loops. So it does not remove the 7-step cap as redesign-ideas section 4 says.",
+    "label": "shown",
+    "source": "models/tool.py line 162 (gate) and line 152 (range(n)); PASS-MARKS.md addendum 17 (8 fixed loops, rounds 1-7)"
+   },
+   {
+    "claim": "D0 reading probe (seeds 200-202, held-out prompts): every place 1-9 and the digit count reads at 99.997-100% (mark 99). Writing is not tested; it needs the T1 build.",
+    "label": "shown",
+    "source": "results/d0/B2_s200.json, B2_s201.json, B2_s202.json (reading); PASS-MARKS.md addendum 16"
+   },
+   {
+    "claim": "Rule 1 status: B2 still runs hand-written regex number and word spans (ledger.py spans(); progparse NUM_RE) and an exact int64 executor inside the forward pass. Roadmap rows 2-4 list these for replacement (2c2 = T1 for the calculator; 2c1, N1, P1, V1 for input and output).",
+    "label": "shown",
+    "source": "ledger.py lines 76-86 (execute), 89-99 (replay), 199-217 (spans/tokenize); /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md deploy-rules table rows 2-4"
+   },
+   {
+    "claim": "Per-round routers (Chain-of-Experts) do not apply to B2 as such: B2's CBlock has one dense MLP (fc and out), no MoE and no router. The CoE note's 'our thinker loops 4 rounds' describes the ultracode planner branch.",
+    "label": "shown",
+    "source": "ledger.py CBlock lines 102-124; /mnt/project-files/papers/chain-of-experts-2506.18945.md lines 18-25"
+   },
+   {
+    "claim": "Round-readout training is already coded (round_readout arg; round_loss over rounds L+1..n-2; no new params; eval unchanged). H1's stop head (257 params) and early exit are not coded (grep finds no halt or stop head in ledger.py or tool.py).",
+    "label": "shown",
+    "source": "ledger.py lines 140, 340-341, 461-495, 532-535; redesign-ideas-2026-10-07.md section 8b"
+   },
+   {
+    "claim": "H1 per-batch cap K from {4,8,16,32}: with K=4 only steps 1..3 are ever written (writes need 1 <= t < K and t <= 7). Rows with 4-7 step programs would then be trained against unwritten result slots. Under Ben's rule 7 (no truncated targets), K should be set per row, at least L+1 (suggested fix).",
+    "label": "shown",
+    "source": "ledger.py run() lines 307-337; redesign-ideas-2026-10-07.md section 8b ('each batch draws its round cap K')"
+   },
+   {
+    "claim": "step_emb has n_loops = 8 rows, and rounds beyond 7 reuse row 7. Any cap above 8 (H1's 32, or 16 at test) needs saturation or new rows; the H1 spec does not address this.",
+    "label": "shown",
+    "source": "ledger.py lines 145, 308"
+   },
+   {
+    "claim": "Deploy rule: the shipped thinker must decide how long to think itself (learned stop, cap 32). Roadmap row 1 lists B2 at fixed 8 rounds (12 in 8a). Ben's rule 0 is quoted in redesign section 8b.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md deploy-rules table row 1; redesign-ideas-2026-10-07.md section 8b"
+   },
+   {
+    "claim": "8a spec (sealed, not started): 3M = B2 with 2 blocks, 12 rounds, 36 registers, 106 slots, 11 program steps (addendum G); 10M = 8 blocks at 256 (10,254,105); 30M = about 15 blocks at width 384. Stop rule: no 30M unless B2's 10M-minus-3M pooled-5 mean is at least 0.",
+    "label": "shown",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md sections 2, 7, 13, 17 (addenda C, F, G)"
+   },
+   {
+    "claim": "H1 pass marks (redesign section 8b, screen seeds 200/201 vs T1): H-a stability (forced 32 rounds minus own stop >= -0.3); H-b parity (pooled-5 >= -1.0, chain-5 >= 99); H-c adaptive (chain-5 mean rounds at least 2.0 above one-step families); H-d cap (<= 1% reach 32); H-e leak <= 5; H-f no per-dataset threshold. Proved wrong: pooled-5 mean below -2.0.",
+    "label": "shown",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8b"
+   },
+   {
+    "claim": "TRM-Text design: decisive-test marks fixed (chain panel A minus B >= +8; A minus no-recursion arm >= +10; loops:1 costs A >= 8). No result found in the code copy (no matching results folder).",
+    "label": "untested",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/design/design-recursive-refine.md (decisive_test section)"
+   },
+   {
+    "claim": "StreamPonder design (LSTM reader with halting head, up to 8 silent ticks, talker sees only the final state): designed, no result found in the code copy.",
+    "label": "untested",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/design/design-streaming-ponder.md"
+   },
+   {
+    "claim": "ALoDLM (arXiv 2610.04198): token-level learned halting gate, max depth K=4 (paper says K=4 matches K=8); per-depth supervision cuts gate-gradient variance 1.4-1.8x. Diffusion LM initialised from Qwen3 1.7B/8B, so transfer to B2 is unproven.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/amazon-looped-llm.md"
+   },
+   {
+    "claim": "Popescu 2026 (arXiv 2607.20519): joint halt-gate training distorts the trajectory; per-depth supervision plus a post-hoc confidence readout matches or beats learned gates (modular arithmetic, parity, Ouro). Abstract-level only; two notes word it differently.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/no-hardcoding-papers.md lines 281-289 ('Opened: abstract'); /mnt/project-files/papers/blocker-ideas.md line 115"
+   },
+   {
+    "claim": "Dense supervision (arXiv 2606.24898): the hidden-state norm keeps growing through loops behind normalisation; the fix is to make scale visible to the loss or remove it from the loop.",
+    "label": "suggested",
+    "source": "/mnt/project-files/papers/amazon-looped-llm.md (closest looped papers list)"
+   },
+   {
+    "claim": "Bench (1.2B sandwich planner, parked 10-06): one router per round (Chain-of-Experts) WRONG at 131.2 vs 132.5 per 160 (same plan baseline the CoE note proposes). Two-hop pointer 76 WRONG. All heads see question 78 WRONG. Wider planner reader 75-77, flat. Talker writes calc(note) LEVEL (471 vs 470 and 480, 3 seeds).",
+    "label": "shown",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md ('Tried and dropped' table)"
+   }
+  ],
+  "tried_and_failed": [
+   {
+    "what": "Fixed 8 rounds (B2 design; chosen at q33)",
+    "result": "Six-seed confirm: pooled-5 74.02 (73.00-74.74), chain-5 99.4-99.7. This is the reference all loop tests are judged against.",
+    "source": "results/33-pc-confirm-b2/B2_s200-205/RESULT.json; results/CONFIRM-ANALYSIS.json"
+   },
+   {
+    "what": "More rounds at test, no training (16 rounds)",
+    "result": "in_dist -0.81 to -1.91 (mean -1.46) over six seeds; -1.14 and -0.85 on screen seeds; answering at 16 is net worse. Rule and lookup families flip answers.",
+    "source": "results/33-pc-confirm-b2 RESULT.json; results/40-loops-probe/PROBE.json; design/LOOPS-probe.md"
+   },
+   {
+    "what": "9 rounds at test (one round after the last write)",
+    "result": "in_dist +0.02 and -0.04 on screen seeds (89.35 to 89.37; 90.53 to 90.49). No gain.",
+    "source": "results/40-loops-probe/PROBE.json (M1)"
+   },
+   {
+    "what": "Fewer rounds (loops:1, loops:2)",
+    "result": "Chain-5 collapses to 0.0-2.9 (loops:1) and 1.1-6.5 (loops:2). Programs need their rounds; in_dist 22-45.",
+    "source": "results/33-pc-confirm-b2 RESULT.json (chain5_lesions)"
+   },
+   {
+    "what": "Test LR: answer readout loss at every round (round_readout=1.0, queue 37)",
+    "result": "FAIL, arm stopped (not proved wrong). Pooled-5 +1.14/+1.27 passed mark 1; stability failed on seed 200 (-0.51 vs -0.3); leak failed on seed 200 (loops:0 15.88); seed 201 passed both.",
+    "source": "results/RESULTS-EG2.md (LR); PASS-MARKS.md addendum 5"
+   },
+   {
+    "what": "Halting gate test G2 (probe, no training)",
+    "result": "Not opened. Overthinking 1.91% and 1.66% of in_dist vs 2% mark. Only 1.7-1.9% of rows are right early and wrong at the end.",
+    "source": "design/LOOPS-probe.md; results/40-loops-probe/PROBE.json"
+   },
+   {
+    "what": "Hidden-state growth gate G3 (probe)",
+    "result": "Not opened. Controller RMS grows 3.4-3.9x over 8 rounds vs 10x mark; linear, not exponential.",
+    "source": "design/LOOPS-probe.md; results/40-loops-probe/PROBE.json (M5)"
+   },
+   {
+    "what": "Controls 2-7 zeroed at test (ctl27 lesion)",
+    "result": "Seed 200: pooled-5 -1.62, chain-5 -7.8. Seeds 201 and 202: pooled-5 -0.61 and -0.78, chain-5 -0.6 and -1.0. Used scratch on one seed only.",
+    "source": "results/d0/B2_s200/201/202.json (ctl27)"
+   },
+   {
+    "what": "Per-round routers (Chain-of-Experts) on the planner bench (PLR)",
+    "result": "WRONG: 131.2 vs 132.5 per 160 (ahead on 2 of 6 seeds). Do not re-propose for B2 (B2 has no MoE).",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md"
+   },
+   {
+    "what": "Two-hop content pointer (PXH); all planner heads see whole question (T3)",
+    "result": "PXH WRONG at 76; T3 WRONG at 78. Plain pointer programs flat at 77 (PX), wider reader 75-77 (PXW, PXW2048).",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md"
+   },
+   {
+    "what": "8 loops vs 4 loops, single change (old planner, PR #34 plateau thread)",
+    "result": "Ruled out as a single change on the planner. This is not B2; B2 runs 8 rounds.",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md ('Earlier, from the plateau thread (PR #34)')"
+   },
+   {
+    "what": "Learning-rate decay to 0 on the planner (bench T1, not the current T1)",
+    "result": "HURTS: held 276.2 vs 287.0, behind on 6 of 6 seeds. B2's lr floor left unchanged.",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md"
+   },
+   {
+    "what": "Talker writes calc(note) from the thinker's note (bench CRT)",
+    "result": "LEVEL with the inside calculator: chain 471 vs 470/480 (3 seeds). Copies a swapped note 79-96%. Precedent for T1's external-calculator idea.",
+    "source": "/mnt/project-files/bench/BENCH-RECIPE.md"
+   },
+   {
+    "what": "A0: register loop without step targets (screen)",
+    "result": "NO-GO: -7.2 vs plain_tf_steps; loops:1 keeps chain-5 near 40 (mark 15 or less).",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/results/RESULTS-SCREEN.md line 37"
+   },
+   {
+    "what": "Ledger-lite B (screen, pre-copy B2 design): loops:1 and noexec lesions",
+    "result": "loops:1 chain-5 0.0-0.1, noexec program families 0.6, swap follows swapped program 99.9%. Leak at loops:0 on seed 101 was 6.76 (fails 5 limit).",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/REPORT.md; RESULTS-SCREEN.md line 50-51"
+   },
+   {
+    "what": "No letter window (R0 reader)",
+    "result": "Worse: B2 minus R0 = +6.84 and +6.26 pooled-5; cipher_map in_dist 12.5 and 2.5 without the window.",
+    "source": "results/RESULTS-EG2.md (R0 section; diagnosis checks)"
+   },
+   {
+    "what": "EmbeddingGemma front arms EGE, EGT, EGR, EGO, EGM, EGW, EGK (screen)",
+    "result": "All FAIL. EGE: pooled-5 +1.59/+2.12, but variant +1.70 (needs +3.0) and loops:0 18.09 on seed 200; EGW -3.4/-5.3 pooled. EGE 6-seed confirm (202-207) not judged.",
+    "source": "results/RESULTS-EG2.md"
+   },
+   {
+    "what": "Student models trained on teacher text for new kinds (B1)",
+    "result": "B1-a PROVED WRONG (+0.78); B1-c FAIL (-2.73 vs plain_tf). New-kind scores 10-14% for all arms.",
+    "source": "results/RESULTS-B1.md"
+   },
+   {
+    "what": "Halting head with a cost on extra rounds (ACT / PonderNet-style), StreamPonder LSTM, TRM-Text recursion",
+    "result": "Designs only in this copy: marks fixed (TRM decisive test; StreamPonder mixed-result branch). No runs or results found.",
+    "source": "design/design-streaming-ponder.md; design/design-recursive-refine.md"
+   }
+  ],
+  "planned_or_running": [
+   {
+    "what": "T1 screen (calculator outside as a text tool; 8 fixed loops; calls at rounds 1-7)",
+    "status": "queued (queue 40), not run; no results folder. Screen marks: pooled-5 T1 minus B2 >= -2.0 on both seeds; chain-5 >= 95; D0 write copy >= 99.0 on both seeds.",
+    "source": "/tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/queue_local/40-pc-t1-screen.txt; PASS-MARKS.md addendum 17"
+   },
+   {
+    "what": "W1 global low-rank attention in the reader (gattn=32, +33,632 params)",
+    "status": "sealed and staged (queue 42, after U0 in queue 41); not run. Screen seeds 200/201 vs B2; marks in PASS-MARKS addendum 19 and amendment 1 (family line replaced by F1).",
+    "source": "queue_local/42-pc-gain-w1.txt; PASS-MARKS.md addendum 19 and amendment 1"
+   },
+   {
+    "what": "H1 learned stop with per-round supervision and confidence stop (cap 32, stop head 257 params)",
+    "status": "spec sealed (redesign section 8b, 2:55 PM 10-07); roadmap says being built by the reader/talker thread; no stop head in code; requires the T1 screen first; about 1.9x compute. Roadmap stage 2d has different marks (see corrections).",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8b; /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md stage 2d"
+   },
+   {
+    "what": "W2: 16 learned scratch tokens added to the controller (about 4k params)",
+    "status": "proposed only; marks in redesign section 5b; no PASS-MARKS entry; no code.",
+    "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b"
+   },
+   {
+    "what": "8a growth ladder for B2 (3M, 10M, 30M rungs; 12 rounds, 36 registers, 106 slots, 11 steps after addendum G)",
+    "status": "spec sealed, not started. Speed check q45 is named in addendum G but no queue file exists in queue_local. 30M waits for Ben.",
+    "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addenda A-G"
+   },
+   {
+    "what": "EGE 6-seed confirm (seeds 202-207; queue 39)",
+    "status": "screen FAILED; 202-207 missing, not judged. Roadmap and redesign still say 'running'. 8a F1 uses the letter reader at every rung anyway.",
+    "source": "results/RESULTS-EG2.md ('NOT JUDGED'); PASS-MARKS.md addendum 15; 8A-SPEC addendum F1"
+   },
+   {
+    "what": "Test LR 6-seed confirm",
+    "status": "not run; the screen failed marks 2 and 5 on seed 200.",
+    "source": "PASS-MARKS.md addendum 5; results/RESULTS-EG2.md"
+   },
+   {
+    "what": "ALoDLM-style per-token halting gate on B2",
+    "status": "not run; G2 shut by probe (overthinking 1.7-1.9% < 2%).",
+    "source": "design/LOOPS-probe.md"
+   },
+   {
+    "what": "TRM-Text decisive test; StreamPonder design",
+    "status": "designed with fixed marks; no run found in the code copy.",
+    "source": "design/design-recursive-refine.md; design/design-streaming-ponder.md"
+   }
+  ],
+  "open_questions": [
+   "Does the final-readout blind spot matter? Only programs whose last write falls in the final round are affected (7 steps now, 11 under 8a). A test would add one round after the last write, or write before the blocks, scored on 7-step rows only. Not run.",
+   "What fixes no-program families (fewshot_number_rule, list_index, rule_apply), whose answers flip across rounds? Test LR's stability fix failed on seed 200 only and was never run on six seeds.",
+   "Why do controls 2-7 matter on seed 200 (-7.8 chain-5) and barely on 201-202 (-0.6, -1.0)? ctl27 has only three seeds; six seeds are needed before any claim that the controls are used scratch.",
+   "Can a learned stop avoid truncating programs (rule 7)? Options: per-row K of at least L+1, or stop only after the NOOP that ends a program. Untested.",
+   "Is the NOOP (program finished) already the stop for program families, leaving a learned stop useful only for no-program families where no NOOP exists? Untested.",
+   "Size of the prize from perfect stopping: the overthinking rows (1.7-1.9%) plus right-later rows (about 0.8%) bound in_dist gains at roughly 2-3 points (suggested, not measured).",
+   "Does per-round supervision (Test LR) fix or worsen the zero-round leak? It gave 15.88 on seed 200 and 0.00 on seed 201. Needs six seeds with same-machine baselines.",
+   "The leak baseline is noisy across machines (same seed 0.00 vs 1.40, and 10.81 vs 4.34). A determinism check is needed before leak marks are compared across arms.",
+   "Does extra scratch (W2) help the no-program families? The controls already do scratch work on seed 200. Untested.",
+   "Does an 8-block x 12-round thinker beat a same-size plain transformer, and at what speed? The 8a 10M depth check is reported, not gated; speed is untested.",
+   "Calls per turn: T1 gives 7 call slots, but roadmap stage 2d asks for chains up to 16 steps. Either the round count or N_RES must grow, and H1's cap of 32 needs step-embedding rows beyond 8. Undecided.",
+   "Does the 16-round stability (Test LR mark 2) hold on the six-seed confirm? Only screen data exists (-0.51 and -0.22)."
+  ],
+  "corrections": [
+   "Orchestrator: '16 rounds: -1.2 to -1.9 in_dist'. Six confirm seeds give -0.81 to -1.91 (mean -1.46). The -1.9 and -1.6 are seeds 200 and 201. Screen seeds 100/101 give -1.14 and -0.85 (PROBE.json; PASS-MARKS addendum 5 writes -1.1 and -0.8).",
+   "Orchestrator: 'controls 2-7 act as used scratch (zeroing costs -7.8 chain-5)'. That is seed 200 only. Seeds 201 and 202 lose -0.6 and -1.0 chain-5 (results/d0). The redesign doc's own update says 's200 only' and the orchestrator dropped that.",
+   "Orchestrator: 'B2 chain-5 is 99.4-99.8'. Confirm seeds give 99.4-99.7.",
+   "Orchestrator: 'B2 scores 0-4% on brand-new task kinds'. The 0-4% is REPORT.md's screen-era held-out families. The B1 new-kind test (seeds 300/301) gives 10-14% for all arms (B2-TEACH 11.20, plain_tf 13.93), and B2 trails plain_tf there (B1-c FAIL).",
+   "Orchestrator: B2 loses to plain_tf_steps on 'fewshot_number_rule -9, rule_apply -6'. Those are REPORT.md screen figures. Recomputed over six confirm seeds and five splits they are -14.9 and -4.8 (also verify_claim -5.6, order_chain -3.9). Label which measure is used.",
+   "redesign-ideas section 2 and roadmap ('EGE 6-seed confirm running') and EG2-and-loops ('both tests queued'): stale. RESULTS-EG2.md shows EGE FAILED the screen (marks 2 and 5); seeds 202-207 are missing and not judged. EG2-and-loops also cites a 5-seed B2 confirm (+20.1, +6.8); the final six-seed values are +20.34 and +6.89.",
+   "redesign-ideas section 4: 'Removes the 7-step cap: any number of calls'. The sealed T1 (models/tool.py, PASS-MARKS addendum 17) keeps 8 fixed loops and writes calls only at rounds 1-7, so at most 7 calls per turn.",
+   "redesign-ideas section 7 asks whether T1 replaces or runs alongside the workspace. Answered in PASS-MARKS addendum 17 amendment 2: replace, not alongside. The regex-found number spans stay in T1 (disclosed) until the N1 rung.",
+   "redesign-ideas section 3 says the data limit is about 12M word pieces. Measured stock is 14.3M (skills 5.4M, TEACH 3.25M, GEN 5.69M); 12M was the earlier roadmap estimate.",
+   "amazon-looped-llm.md says 'Our thinker is already a 4-loop looped core' and '8 loops did not beat 4'. B2 runs 8 rounds (ledger.py). The 4-vs-8 comparison came from the old planner (BENCH-RECIPE, PR #34), and the paper's K=4 result is for a diffusion LM.",
+   "chain-of-experts-2506.18945.md says 'Our thinker loops 4 rounds' and treats the per-round router as untested. That describes the ultracode planner branch, not B2 (no MoE in ledger.py). The same per-round router test already ran on the bench as PLR and was WRONG (131.2 vs 132.5).",
+   "redesign-ideas section 8b (H1 marks H-a to H-f) and roadmap stage 2d (always-32 comparison; practised and held-out chain bands; longer chains up to 16 steps) give two different mark sets for the same learned-stop stage. The roadmap says 2d = H1. Pick one before queuing.",
+   "redesign-ideas section 8b's per-batch K from {4,8,16,32} can truncate programs: with K=4 only 3 steps are written (ledger.py run()). That conflicts with rule 7 unless K is set per row to at least L+1.",
+   "redesign-ideas section 8b and roadmap say Popescu 2607.20519 finds 'per-round supervision plus a confidence stop matches or beats gates'. blocker-ideas.md says 'post-hoc readouts match or beat learned gates'. The no-hardcoding note says 'Opened: abstract'. Treat as suggested and second-hand.",
+   "Orchestrator: 'Test LR ... failed the stability mark'. More precisely it failed marks 2 and 5, both on seed 200 only (mark 2 -0.51 vs -0.3; mark 5 leak 15.88). It was stopped, not proved wrong; seed 201 passed both.",
+   "redesign-ideas section 8a says W1 is about 3,335,500 params. The sealed count is 3,336,113 (+33,632; PASS-MARKS addendum 19).",
+   "8A-SPEC section 2 lists 'B2-M ... 10,814,968'. That is the no-copy B count. B2-M with copy is 10,890,041 (ledger.py docstring plus copy-module arithmetic).",
+   "Name clashes: 'T1' is also the bench's learning-rate decay test (hurt). The results folders 10-probe-w1, 11-probe-w2, 20-23-screen-*-w1/w2 are older register-loop arm screens (A, A0, B, tf, L2x2), not the redesign's W1 (global attention) or W2 (scratch tokens).",
+   "redesign-ideas section 5 recommends the order W1, then H1, then T1. The queue runs T1 (queue 40) before W1 (queue 42).",
+   "Roadmap sizes '10M about 10-12 blocks at 256' conflict with 8A-SPEC addendum C ('8 blocks, 10,254,105'). The later 8A addendum governs."
+  ]
+ },
+ "raw_count": 82,
+ "distinct": [
+  {
+   "title": "One traced pass: does B2's own NOOP or confidence give a free stop?",
+   "summary": "Run each screen checkpoint once for 16 rounds, keep every round's answer, op, NOOP probability and confidence, then replay stop rules offline. It measures NOOP onset against program length, the cost of freezing at the NOOP round, and the AUROC of the model's own confidence. It says whether a zero-parameter stop exists for program rows (the NOOP B2 already trains) and for the 59% of rows with no program, before any stop is built. Shown ceiling for any stop inside 8 rounds is about 2 in-dist points, so the value is compute saving and the rule-10 path, not accuracy.",
+   "change": "New script custom_io/probe_trace.py (copy of probe_loops.py; no edit to ledger.py). Per batch of 128 rows sorted by prompt length, call m.run(batch, loops=16, rounds=True) once under no_grad. Snapshot t is the state after K=t+1 loops, so one run holds all K. Re-apply mode_head, the answer pointer (q_ans, k_slot, valid) and word pointer to ln_z(Z[:,1]) of each snapshot; take op argmax from out['steps'] (rounds 2 to 8 only). Save per-row arrays (probe_loops.py computes them in memory but writes aggregates only): exact_r, answer string per round, mode_p_r, pointer top-1 and entropy, noop_p_r, op_r, and gold program length L (used for grouping only). Arms scored offline: (a) round 8; (b) NOOP stop, t* = first non-NOOP-after-write round, answer read at K=t*+1 and K=t*+2, rows with no t* read at 8; (c) answer-agreement stop for no-program rows (first K>=4 with identical answers at K-2, K-1, K); (d) rows whose step-1 op is NOOP read at pass 6, others at 8; (e) AUROC of conf_r (mode_p times pointer top-1; GEN rows use mean top-1 over the 9 registers), mode_p, ans_top and step-1 NOOP probability for 'already right at r' and 'settled by r' on the 4,007 no-program rows; (f) argmax-confidence over passes 2 to 8 as a selection arm. Extend scoring from in_dist to the five dev splits and chain-5, and add a robust overthinking count (wrong at 8, right at both K and K+1) to price the prize on variant, answer, frame and vocab. Self-check: per-K exact from the trace must equal untraced evaluate at K=8 and 16 on the same machine. Params 0.",
+   "why": "Halting alone is capped near 2 in-dist points and about 0.6 pooled-5 points, and 94 to 95% of the overthinking rows and the whole 16-minus-8 loss sit in no-program rows, which carry NOOP targets only at weight 0.1. For program rows the model already trains NOOP after the last write at weight 1.0 but nothing reads it. Freezing program rows at the NOOP round itself costs -3.4 and -5.7 points because the answer heads are only trained at round 8, while one settle round later is nearly free (-0.1 to -0.24 points, 15% of rounds saved). So the open question is whether the model's existing outputs mark the right stop round on each row type; this probe answers it in about an hour on CPU and decides whether ideas 5 and 7 are worth building.",
+   "evidence": [
+    {
+     "claim": "Overthinking (wrong at 8, right at some round 1-7) is 130 rows (1.91%) and 113 rows (1.66%) of 6,800 in_dist rows; right-later (wrong at 8, right at a round 9-16) is 53 of 724 and 54 of 644 wrong rows. The union is the gold-picked oracle of 2.69 and 2.46 points; it reads untrained heads and counts lucky hits.",
+     "label": "shown",
+     "source": "custom_io/results/40-loops-probe/PROBE.json (M3, M4); probe_loops.py:55-61; fact check verify-halting-prize-numbers"
+    },
+    {
+     "claim": "122 of 130 and 107 of 113 overthinking rows lie in the 19 zero-coverage families. The 16-minus-8 loss is -75 of -78 rows (seed 100) and -58 of -58 (seed 101) in no-program rows (L=0, 4,007 of 6,800 rows).",
+     "label": "shown",
+     "source": "PROBE.json M4 by_family and M1 by_len, n_by_len; extra.coverage in custom_io/results/33-pc-confirm-b2/B2_s200/RESULT.json"
+    },
+    {
+     "claim": "On program rows (2,793), reading at K=L+2 gives in_dist -3.38 and -5.69 points; reading at K=L+3 gives -0.24 and -0.10 and saves 15.4% of rounds per row. These are per-row counts; ledger.run has no per-row freeze, so there is no batch saving yet.",
+     "label": "shown",
+     "source": "Recomputed from PROBE.json M1 by_len (fact check verify-halting-prize-numbers)"
+    },
+    {
+     "claim": "NOOP after the last write is trained at weight 1.0 on program rows and 0.1 on no-program rows; run() has no break and the answer is read after the last round for every row.",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py:501-507, 306-307, 342-345"
+    },
+    {
+     "claim": "The mode, answer and word heads are trained at the final readout only (round_readout=0), so every K!=8 readout is untrained. No-program rows are right 51.8% (seed 100) and 50.9% (seed 101) at K=1, so right-at-an-early-round includes lucky hits.",
+     "label": "shown",
+     "source": "ledger.py:131, 140, 342-345; PROBE.json M1 by_len['0']"
+    },
+    {
+     "claim": "No-program accuracy by K=1..8, seed 100: 51.8, 68.8, 77.3, 81.8, 83.4, 83.7, 83.9, 84.0. Reading no-program rows at pass 6 and program rows at 8 loses 0.15 points at 6.82 mean passes (gold branch used in this reanalysis, predicted branch untested).",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len; reanalysis in raw idea w1b-1"
+    },
+    {
+     "claim": "PROBE.json keeps aggregates only and the dev rows are not in project files, so the probe must run where the rows are (Ben's PC). probe_loops.py asserts n_loops==8 at line 19 and scores in_dist only.",
+     "label": "shown",
+     "source": "probe_loops.py:19-24, 113-114; custom_io/data.py:7-9; fact check probe-feasibility-dev-rows"
+    },
+    {
+     "claim": "LOOPS-probe.md says every program question is right by round 8; single-step rows are 92.7% and 96.2% at K=8 and identical at K=16, so that line is overstated.",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len['1']; custom_io/design/LOOPS-probe.md"
+    },
+    {
+     "claim": "Post-hoc confidence readouts match or beat learned halting gates (Popescu 2607.20519). Abstract-level, second-hand; the composite 'per-round supervision plus confidence stop' is a hypothesis, not a finding.",
+     "label": "suggested",
+     "source": "/mnt/project-files/papers/no-hardcoding-papers.md:281-289; fact check verify-stop-and-cap-code-claims item 7"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Ben's PC CPU (dev rows live there). Checkpoints B2_s100 and B2_s101 from /mnt/project-files/custom-io/checkpoints/29-b2-screen/. Run every arm on one machine. Confirm on B2_s200-205 only if the PC still holds them.",
+    "hours": 1.5,
+    "arms": "(a) round 8 reference; (b) first post-write NOOP stop at K=t*+1 and t*+2; (c) three-round answer agreement on no-program rows; (d) step-1 NOOP branch read at pass 6; (e) AUROC of four confidence scores; (f) argmax-confidence over passes 2-8. Scored on in_dist (6,800 rows), chain-5 (1,000 rows) and the other four dev splits.",
+    "pass_mark": "Fixed now, both seeds. V: trace per-K exact within 0.05 points of untraced evaluate at K=8 and 16 (otherwise discard). P1: first post-write NOOP at round L+1 on at least 90% of L=1..6 rows, premature at most 2%, false-freeze (L=0 rows that write then say NOOP) at most 2%. P2: arm (b) at K=t*+2 keeps in_dist within 0.3 of round 8, chain-5 at least 99.0, and mean rounds on program rows at most 7. P3: some zero-parameter rule (c, d or f) on no-program rows stays within 0.5 of 84.0 (seed 100) and 85.0 (seed 101) at mean rounds at most 6.0 with harmful stops at most 1.5% of in_dist, or AUROC at least 0.75 of some score for settled-by-3 on both seeds. FREE STOP EXISTS = P1 and P2 on both seeds; NO-PROGRAM SIGNAL EXISTS = P3.",
+    "proved_wrong": "P1 exact onset below 50% or arm (b) loses 2.0 or more on both seeds: the NOOP is not a usable stop and idea 7 needs a new label. AUROC below 0.60 for every score at rounds 2-4 on both seeds: no zero-parameter signal for no-program rows, so idea 5 must fit one. All of (c), (d), (f) lose more than 1.0 at mean rounds at most 6: kill the zero-parameter route."
+   },
+   "rules_check": "Rule 1: analysis only, nothing added to the answer path; gold appears only in grouping and scoring. Rule 3: 0 params. Rule 4: two checkpoints is a screen and no claim is made. Rule 5: dev splits only. Rule 6: CPU. Rule 7: nothing trained, no target cut. Rule 9: B2 only. Rule 10: the rules with a hand window (c), a hand pass number (d) or a developer-chosen selection (f) are measurement only, and arm (b) uses the model's own op argmax with no threshold.",
+   "closest_prior": "probe_loops.py M1 to M5 and LOOPS-probe G1/G2 (round K-sweep, one-sided oracle, in_dist only). H1 (redesign-ideas section 8b) trains a stop head instead of reading what exists. This adds NOOP onset against L+1, per-row arrays, early-stop cost (not just overthinking gain), confidence AUROC and the other four splits.",
+   "autonomy": "Measurement only. Arm (b) is the model's own op argmax. The deployable stop for no-program rows needs idea 5 (a head the model fits and reads itself) or idea 7 (a trained stop); the cap of 8 stays a fixed architecture constant.",
+   "merged_from": [
+    "w1a-1",
+    "w1a-2",
+    "w1b-1",
+    "w1b-2",
+    "w1b-3",
+    "w1c-3",
+    "w1c-6",
+    "w2c-1",
+    "w2c-2",
+    "w2d-1",
+    "w2d-2",
+    "w1i-1"
+   ],
+   "director_score": 9,
+   "director_note": "Gates ideas 5 and 7 and costs about an hour. Critics: (1) every K!=8 readout is untrained and chance floor is about 51%, so insist on the harmful-stop count and the robust (K and K+1) overthinking count, not the one-sided oracle; (2) the 6,800-row probe set and the 1,360-row RESULT set give different 16-minus-8 numbers, name the set; (3) probe_loops.py must be changed to save per-row arrays and drop the n_loops==8 assert; (4) the dev rows are not in project files; (5) the brief's phrase 'right before round 8' is actually rounds 1 to 7; (6) the 15% round saving is per-row, not wall-clock.",
+   "id": "thinker-D1",
+   "area": "thinker"
+  },
+  {
+   "title": "Count rows past the 7-step cap and probe longer programs at test",
+   "summary": "progparse drops every program longer than 7 steps to an empty target, so those rows train answer-only, which rule 7 forbids; the documented count is 528 train rows (list_stats, 9 to 11 steps) but it was never recounted. This idea counts the shortfall by family with a reason histogram, then raises the cap at test on hand-built 6 to 9 step rows to see whether the cap or the training coverage binds. It decides whether the N_RES 7 to 11 and 12-round change in the 8a plan is needed.",
+   "change": "Part A (reanalysis, CPU): call progparse.program_for on every train row and histogram the failure reason strings by family (returned at progparse.py:168-182 and discarded by coverage() at :198, :212-223), and count rows with len(prog) > N_RES per family. Part B (probe, CPU): probe-only harness on B2_s100 and B2_s101 that sets N_RES and the slot count M at test (drop the n_loops==8 assert at probe_loops.py:19), runs loops 8, 10 and 12, and scores 100 hand-built test rows each of 6, 7, 8 and 9 steps (state_update template extended to more events; test data, allowed by rule 1). Second arm removes the repeated step addition at rounds 8+ (idea 6). Params 0. If Part A says to proceed, the build change is N_RES 7 to 11, n_loops 8 to 12, step_emb 8 to 12 rows (+1,024 params), keep the init std pinned to the n_loops=8 value, and add assert n_loops >= N_RES+1 (none exists today).",
+   "why": "Raising N_RES alone fails silently: the loop and write window stop at round 7, steps 8 to 11 are never written or trained, and nothing asserts. Raising n_loops changes the init std (0.02/sqrt(3 x blocks x n_loops)), so the pair is two changes unless the init is pinned. The no-program count (4,007 of 6,800 dev rows) is about 99.6% from other causes than the cap (program_for returning None or no steps by design), so the cap itself is a small share; the audit measures how small. Reported marks (chain-5, program_families, extra_evals) exclude list_stats, so no current number covers these rows.",
+   "evidence": [
+    {
+     "claim": "_targets keeps a gold program only when len(prog) <= N_RES (7); otherwise prog=() and the row trains as NUM/WORD/GEN answer-only with op loss weight 0.1.",
+     "label": "shown",
+     "source": "custom_io/models/progparse.py:196-209; ledger.py:446-448, 501"
+    },
+    {
+     "claim": "528 of 200,000 train rows (0.26%) have more than 7 steps, all list_stats with 5-6 numbers and 9-11 steps; the big in_dist dev has 16 such rows. Counts are from the build thread and were not recounted.",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:58, :70; /mnt/project-files/whole-model-roadmap/FIRST-LOOK-10M-2026-10-07.md:48"
+    },
+    {
+     "claim": "Program coverage on in_dist dev: list_stats 29.0, verify_claim 68.5, arith_bare 99.0, 19 label-only families 0. The cap explains at most 16 of the 142 no-program list_stats rows; the rest is parser grammar (second-largest, count, mean are not parsed).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200/RESULT.json extra.coverage.by_family; models/progparse.py:135-155; fact check verify-long-program-fallback"
+    },
+    {
+     "claim": "Range of k numbers is a MAX fold, a MIN fold and one SUB, so 2k-1 ops (k=4 gives 7, k=5 gives 9, k=6 gives 11), matching the documented 9-11 step rows.",
+     "label": "suggested",
+     "source": "models/progparse.py:101-105, 151-154"
+    },
+    {
+     "claim": "With N_RES=11 but n_loops=8 nothing asserts and steps 8-11 are never written; round_readout cannot supervise rows with L>=10 at 12 rounds (snapshots end at t<=n-2).",
+     "label": "shown",
+     "source": "ledger.py:306-307, 319, 340-341, 462-472; fact check verify-long-program-fallback"
+    },
+    {
+     "claim": "In_dist rows with 6 and 7 steps (7 and 28 rows) are 100% right at 8 rounds on both screen seeds, so the in-cap length works; whether B2 can write at rounds 8+ is untested.",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len, n_by_len"
+    },
+    {
+     "claim": "plain_tf_steps has the same kind of fallback: CAP=64 leaves 840 var_chain train rows answer-only, so any plain margin compares against a baseline with that fallback.",
+     "label": "shown",
+     "source": "custom_io/models/plain_tf_steps.py:21, 27-33; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:57"
+    },
+    {
+     "claim": "Other silent caps: GEN_MAX=8 characters (ledger.py:63, 447) and N_NUM=16 prompt numbers (progparse.py:8, 18); 8a's 35-letter answers and 91-number prompts would hit them.",
+     "label": "shown",
+     "source": "ledger.py:63, 207, 447; progparse.py:8, 18, 53"
+    }
+   ],
+   "test": {
+    "kind": "reanalysis",
+    "where": "Ben's PC CPU (train file and dev rows are there, not in this session). Checkpoints B2_s100 and B2_s101 from /mnt/project-files/custom-io/checkpoints/29-b2-screen/ for Part B.",
+    "hours": 0.8,
+    "arms": "Part A: reason histogram and over-cap count over the 200k train rows. Part B: loops 8 for 6- and 7-step rows (control); loops 10 and 12 with the cap raised for 8- and 9-step rows; each with and without the idle-round addition.",
+    "pass_mark": "Fixed now. Part A: go to the N_RES=11 / n_loops=12 build only if at least 0.5% of the rows of some family with at least 50 rows exceed 7 steps; report the share of no-program rows due to the cap versus parser failures. Part B: 6- and 7-step rows at least 95% at 8 rounds on both seeds (control); 8- and 9-step rows at least 80% at 10 or 12 rounds on both seeds means the cap, not training coverage, is the limit.",
+    "proved_wrong": "Part A: zero over-cap rows means the rule-7 breach is nothing and the idea ends with the count. Part B: 8- and 9-step rows below 50% at both 10 and 12 rounds on both seeds means writing past round 7 needs a trained longer rung (ideas 15 to 17), not a test-time cap raise."
+   },
+   "rules_check": "Rule 7 is the point of the audit. Rule 1: test rows are test data. Rule 5: hand-built rows are dev-style, hash-checked against protected panels. Rule 6: CPU, minutes. Rule 4: counts are exact, probe is a screen. Rule 10: diagnostic only; a pass still leaves the cap and round count set by a developer, so it does not meet rule 10 on its own.",
+   "closest_prior": "8A addenda E1, F4 and G plan N_RES 11 with 12 rounds but give no row count by family and no reason histogram. PROBE M1 (9 rounds at test) never raised the cap.",
+   "autonomy": "Diagnostic; no deploy-time step. The table sizes should be computed from the pool maximum, and rows beyond the table saturate, which a learned way to write further (ideas 15 and 17) would remove.",
+   "merged_from": [
+    "w2c-5",
+    "w1d-5",
+    "w1f-2"
+   ],
+   "director_score": 8.5,
+   "director_note": "Cheap, and it settles a rule-7 breach and the 8a cap change with a count. Critics: (1) the 528 figure is cited, not measured, so the first output is the recount; (2) list_stats is outside chain-5 and the program_families mark, so verify no existing score covers these rows; (3) the N_RES and n_loops change is two changes unless the init std is pinned; (4) plain_tf_steps has its own 64-character fallback, so C0 (cap 107) should report before any plain margin is trusted; (5) hand-built 8-9 step rows must come from a template the model was not trained on at that length, with a hash check.",
+   "id": "thinker-D2",
+   "area": "thinker"
+  },
+  {
+   "title": "Worked steps for fewshot, table_lookup, seq_next with a matched plain control",
+   "summary": "Hand-written 2 to 6 step traces for three families that have no program, so the thinker's loop and the exact calculator are used for them. The matched plain_tf_steps gets the same traces so the architecture credit survives. These families hold 5.8 of the 26.0 pooled-5 points B2 loses and are the biggest identified prize in this area; a cheap rank probe first says whether the problem is the state or the digit writer.",
+   "change": "Step 0 (CPU rank probe on B2_s100 and B2_s101): on each fewshot dev row, score the gold answer and 19 other fewshot answers from the same family by teacher-forced GEN log-probability, and record gold rank and greedy accuracy. Step 1 (data only): a trace writer that emits (op, operand slots, value) from the generator's rule parameters, so progparse row_targets gives these rows programs: fewshot proportional rule (DIV then MUL, e.g. 12->48; 18->72; 10->? gives DIV(48,12)=4 then MUL(4,10)=40), seq_next constant difference, table_lookup (MAX, MIN, SUB for larger minus smaller). Only rule types that exist in the train generator; the variant computations (fewshot affine, seq geometric and alternating, list_stats sum, letter length and nth, word contains; research/data.md:53) stay out. Rows needing more than 7 steps are counted, never cut. Train B2 (3,302,481 params) and plain_tf_steps (3,260,928) on the same traces. Step 2 only if the rank probe says writer-limited: a fourth talker mode NUMW (mode head 3 to 4 outputs, +257 params, 3,302,738 total) that reads digit places from control 1 through the transpose of the slot-code projection.",
+   "why": "fewshot_number_rule scores 22.7 for B2 against 37.6 for plain_tf_steps (-14.9, below on every seed), has 0% program coverage, answers go to GEN 96% of the time with copy gate 0.046, so B2 has to hold the multiplication in latent state. The three families together miss 2,107 of 9,415 all-split rows (5.8 pooled-5 points) and in-dist they score about 50%, while programmed families reach about 97% in-dist. A trace moves the arithmetic onto the supervised exact path the programmed families use. More thinking rounds cannot help these families without steps (their answers flip across rounds), so this is the way to make a deeper loop useful for them.",
+   "evidence": [
+    {
+     "claim": "fewshot_number_rule pooled-5 over six seeds: B2 22.7, plain_tf_steps 37.6 (-14.9); per seed 17.5-26.9 vs 34.4-40.6. B2 beats plain_tf_steps on table_lookup (+4.8) and seq_next (+0.8).",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/B2_s200..B2_s205/RESULT.json and tfsteps_s200..205 (final_eval by_family, recomputed)"
+    },
+    {
+     "claim": "All-split misses over six seeds: table_lookup 900, fewshot_number_rule 742, seq_next 465 = 2,107 of 9,415 (5.8 pooled-5 points). In-dist six-seed means: fewshot 34.6, table_lookup 28.8, seq_next 86.7.",
+     "label": "shown",
+     "source": "RESULT.json by_family over six seeds (raw ideas w1g-1 and w1i-3, recomputed there)"
+    },
+    {
+     "claim": "Program coverage 0% for the three families; talker mode GEN 96% (fewshot), 100% (seq_next), 67.5% (table_lookup, WORD 31%); copy_gate for fewshot is 0.046.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200/RESULT.json extra.coverage.by_family and extra.copy_gate"
+    },
+    {
+     "claim": "With the calculator off, program families fall to 0.24-0.82% while intact is 96-97%, so a programmed row's answer really comes through the executor.",
+     "label": "shown",
+     "source": "RESULT.json extra.noexec (confirm seeds 200-205)"
+    },
+    {
+     "claim": "Variant new computations (fewshot affine, seq geometric and alternating, list_stats sum, letter length and nth, word contains) are held out; traces must not contain them. A six-step affine fewshot trace (dx, dy, DIV, MUL, ADD) in raw idea w1i-3 would teach the variant rule if affine is not a train sub-type.",
+     "label": "shown",
+     "source": "custom_io/research/data.md:53"
+    },
+    {
+     "claim": "Worked equations exist only for 11 arithmetic families; the other families have labels only. The DSL has DIV, MUL, SUB, ADD, MAX, MIN with a 7-step cap.",
+     "label": "shown",
+     "source": "research/data.md:56; models/progparse.py:8, 11"
+    },
+    {
+     "claim": "B2 wall time per 24k-update run on the PC is 1.0 to 4.2 h (median 1.54 h); plain_tf_steps median 0.41 h. The brief's 1 hour per B2 run is wrong for seed 200.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json train_s; fact check speed-and-hours-reconcile"
+    },
+    {
+     "claim": "Rank of the gold answer among in-family candidates separates a state that lacks the rule from a writer that cannot emit it.",
+     "label": "suggested",
+     "source": "reasoning in raw idea w1f-4; no file runs this probe"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC (RTX 5070 Ti), same machine as the seed 200 and 201 baselines (same-seed values differ across machines). Rank probe on CPU first.",
+    "hours": 8,
+    "arms": "Probe: B2_s100 and B2_s101 rank test. Screen: (a) B2 + traces and (b) plain_tf_steps + the same traces, seeds 200 and 201, 24,000 updates; baselines are the existing B2_s200/201 and tfsteps_s200/201.",
+    "pass_mark": "Fixed now. Probe: writer-limited if gold ranked first among 20 on at least 60% of fewshot dev rows with greedy at most 30% on both seeds; state-limited if gold first on at most 30% on both. Screen: M1 in-dist exact on the three families up at least 20 points on both seeds (baseline about 50%) and fewshot pooled-5 at least baseline +15; M2 pooled-5 up at least 2.0 on both seeds; M3 no dev split down more than 2.0 on the two-seed mean; M4 chain-5 at least 99.0; M5 noexec lesion drops those families by at least 25 points; M6 loops:0 in_dist at most 5 and at most B2 +1.0. Architecture credit only if B2's gain exceeds the plain model's gain by at least 1.0.",
+    "proved_wrong": "In-dist gain below +5 on both seeds (the traces do not move the family); or the plain model gains as much as B2 (traces, not the loop, do the work); or the noexec drop is below 10 (the gain is not from the ops)."
+   },
+   "rules_check": "Rule 1: traces are hand-written teaching data; generate and the executor are unchanged (executor placement is an existing rule-1 debt T1 is meant to fix). Rule 2: no teacher. Rule 3: B2 unchanged in size (NUMW branch +257 params, inside the band); matched plain arm. Rule 4: two seeds is a screen; six-seed confirm before any claim. Rule 5: variant and held-out rule types never written into traces. Rule 6: PC. Rule 7: traces at most 7 steps, over-cap rows counted. Rule 9: B2 only.",
+   "closest_prior": "Roadmap stage 4 (new rule and lookup ops, not run) and W2 (scratch tokens for the same families, not run); design/design-B2.md left these families out because traces would give B2 supervision the plain model lacked. This idea adds no op or slot and gives the plain model the same traces.",
+   "autonomy": "At deploy B2 reads the examples and writes its own DIV and MUL steps and operand pointers; the executor computes the digits. The traces only supervise training; no hand step runs at answer time.",
+   "merged_from": [
+    "w1f-1",
+    "w1g-1",
+    "w1i-3",
+    "w1f-4",
+    "w1f-5"
+   ],
+   "director_score": 8,
+   "director_note": "Largest bounded prize in the area (5.8 pooled points versus 0.6 for halting). Critics: (1) contamination of the variant split, especially the affine fewshot trace and any seq_next rule that is not a train sub-type; check against the generator; (2) the traces must parse through progparse and eval_expr (read, not run); (3) the matched plain control is what makes it an architecture claim; (4) expected gain is a target, not a measurement; (5) B2 runs take 1.5 to 3.7 h each, not 1 h; (6) two seeds only, and bound 5.8 assumes every miss is fixable.",
+   "id": "thinker-D3",
+   "area": "thinker"
+  },
+  {
+   "title": "Which parts of B2's loop are used: blocks, reader, scratch",
+   "summary": "Zero-training hooks on the two screen checkpoints: skip or swap each controller block, blind the thinker to the reader from round 2, 5 or 9, zero controls 2 to 7 on seeds 100 and 101, and record per-round relative state change, per-slot norm profile and participation ratios. Each outcome gates a named later run: unique-block depth, scratch room, late reader attention, a narrower MLP.",
+   "change": "One probe script, no model edit. (a) Replace core[b].forward by identity at all rounds, or at rounds 2-8 only, or replace core[1] by a second copy of core[0]. (b) Pre-hook each CBlock with a per-block call counter and set mask[:, 27:] = False from round r on (r = 2, 5, 9), and recompute the softmax mass on the 27 workspace columns versus reader columns per round. (c) evaluate(m, rows, lesion='ctl27') on seeds 100 and 101 (already coded, ledger.py:315-316, 410). (d) Forward hook on core[-1] and pre-hook on core[0] on a 512-row sample for rounds 1-16: relative change ||Z_t[i]-Z_{t-1}[i]||/||Z_{t-1}[i]|| for control 0, control 1 and the mean of registers; RMS of each of the 17 slots with max/median ratio; participation ratio of the MLP GELU input, reader output and controller state. Outputs reported per stratum (L=0, L>=1, chain-5). Params 0.",
+   "why": "The 8a plan spends on depth-first growth (8 blocks), W2 asks for 16 scratch tokens, W1 changes reader features, and none of these has a usage measurement. The only evidence that scratch is used is seed 200 (zeroing controls 2-7 costs -7.8 chain-5 there, but -0.6 and -1.0 on seeds 201 and 202). The A register loop lost its chain-5 when the prompt was cut after round 1, but B2 was never tested that way. Only the small-cost outcome of a lesion is decisive because a removed part also shifts the residual scale.",
+   "evidence": [
+    {
+     "claim": "Controls 2-7 zeroed at test: pooled-5 -1.62, -0.61, -0.78 and chain-5 99.4 to 91.6, 99.6 to 99.0, 99.6 to 98.6 on seeds 200, 201, 202. W2's premise rests on seed 200.",
+     "label": "shown",
+     "source": "custom_io/results/d0/B2_s200.json, B2_s201.json, B2_s202.json (key ctl27); /mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b"
+    },
+    {
+     "claim": "Two weight-shared CBlocks run once each per round over 8 rounds (16 block passes); the thinker cross-attends to 27 workspace slots plus every reader position every round; no block-level skip or swap exists in results.",
+     "label": "shown",
+     "source": "ledger.py:117-124, 147, 302, 311, 313-314; fact check depth-evidence-already-in-hand"
+    },
+    {
+     "claim": "Prompt-blind lesion from round 2 put the A register loop's chain-5 at 0.5 to 1.1 (mark: at most 10). It was never run on B2; planned lesions exist in design notes.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-SCREEN.md:34; PASS-MARKS.md:61; design/design-wildcard.md:231; design/design-latent-reread.md:216"
+    },
+    {
+     "claim": "Controller RMS rises 8.3 (round 1), 32.4 (round 8), 68.9 (round 16) on seed 100 with increments of about 4.4 to 4.6 per round; per-round relative change is unmeasured.",
+     "label": "shown",
+     "source": "PROBE.json M5; probe_loops.py:62-79"
+    },
+    {
+     "claim": "Removing the letter window costs 6.84 and 6.26 pooled-5; reader depth is the largest depth effect measured in the project.",
+     "label": "shown",
+     "source": "results/RESULTS-EG2.md lines 48-50 (R0)"
+    },
+    {
+     "claim": "Second-half layers add little in large pretrained LLMs (2505.13898); extra spare tokens are reused as high-norm hidden scratch unless dedicated unread tokens are added (2309.16588). Neither tested on from-scratch 3M models.",
+     "label": "suggested",
+     "source": "scout notes in the area brief (abstract only)"
+    },
+    {
+     "claim": "Dev rows are not in project files; screen checkpoints are (13.2 MB each). Instance-level forward override works because nn.Module dispatches through self.forward (confirm once in a shell).",
+     "label": "suggested",
+     "source": "/mnt/project-files/custom-io/checkpoints/29-b2-screen/; data.py:7-9"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Ben's PC (dev rows needed); checkpoints B2_s100 and B2_s101; a 1,000-row subsample is enough for a first look, 6,800 rows for the record.",
+    "hours": 1,
+    "arms": "Intact; skip core[1]; skip core[0]; skip core[1] at rounds 2-8; core[1] replaced by a copy of core[0]; reader blind from round 2, 5, 9; ctl27 on seeds 100 and 101; per-round change, slot-norm and participation readouts.",
+    "pass_mark": "Fixed now, both seeds. Block 1 idle: skipping core[1] costs at most 1.0 pooled-5 with chain-5 at least 99.0 (then run the one-block control before any block-count arm); block 1 used (suggestive only): costs at least 5. Late reader not needed: blinding from round 5 costs at most 1.0 and reader share at rounds 5-8 below 0.2; needed: costs at least 2.0 and share at least 0.5. Loop needs text after round 2: blind from round 2 gives chain-5 at most 10. Scratch used: ctl27 in_dist change at most -1.0 on both new seeds; unused: -0.3 or better. State settled: relative change of controls 0 and 1 at round 8 at most 0.02; not settled: at least 0.10. Scratch outlier slot: max/median RMS at least 3 on seed 200 (needs that checkpoint on the PC).",
+    "proved_wrong": "'B2 uses its second block per round' is wrong if skipping core[1] costs at most 1.0 on both seeds. 'Late rounds read the prompt' is wrong if blinding from round 5 costs at most 1.0. 'Spare control slots carry scratch' is wrong if ctl27 changes in_dist by -0.3 or better on both new seeds and the max/median ratio is below 1.5."
+   },
+   "rules_check": "Rule 1: probe, answer path unchanged. Rule 3: 0 params. Rule 4: two checkpoints is a screen; the scratch claim needs six seeds. Rule 5: dev splits only. Rule 6: CPU, about 6% to 12% of the round-passes of the full M1 probe per arm. Rule 7: nothing trained. Rule 9: B2 only (the A arm numbers are cited as precedent, not mixed in). Rule 10: diagnostic only.",
+   "closest_prior": "ctl27 on seeds 200-202 (results/d0); PROBE M5 (norms only). No block-skip, reader-blind or per-slot test exists on B2. W1 and W2 are the planned builds this gates.",
+   "autonomy": "Not a deploy step. If late rounds need no text, a deployed loop could skip late reader attention and the model would decide that itself; nothing in the probe adds a hand step.",
+   "merged_from": [
+    "w1c-1",
+    "w1c-2",
+    "w1c-5",
+    "w1h-4",
+    "w2d-4",
+    "w3f-5"
+   ],
+   "director_score": 7.5,
+   "director_note": "One hour decides whether the 8a depth-first premise and W2 have any support. Critics: (1) a large cost is ambiguous because the residual scale shifts, so only small-cost outcomes are decisive (state this in the result); (2) the ctl27 evidence is three seeds, two of them barely affected, so two more seeds is still a screen; (3) the seed 200 checkpoint is not in project files; (4) check the instance forward override really applies to every round; (5) the 25% participation cutoff is a choice made here, not a measured threshold.",
+   "id": "thinker-D4",
+   "area": "thinker"
+  },
+  {
+   "title": "Frozen 257-parameter heads for 'settled' and 'right' on B2's state",
+   "summary": "Fit a logistic head on B2's frozen controller readout state to predict (a) the answer is already final through round 8 and (b) the answer is right, using fresh generated training-split rows. At deploy the stop is the sign of the head's own logit, no gradient enters the loop, and B2's numbers are unchanged when the stop is not taken. It is the only stop candidate for the 59% of rows that have no program and no useful NOOP.",
+   "change": "Add head(s) Linear(256,1) on ln_z(Z[:,1]) at each round (257 params each; 3,302,738 total with one head, 0.008% over B2), computed under no_grad from the rounds=True snapshots. Labels from the model's own answers against gold on about 20k fresh rows from the same generator (new seeds, none of the 200k train rows, no dev or protected rows): settled(K) = right at K and at every round from K to 8; rows get label 0 before round L+2 so the head never stops before the program's last write is read. Fit 16k, test 4k; score in_dist and variant dev. Deploy rule: stop at the first K in 2..8 where the settled logit is positive, otherwise 8. Second label: right at the final round. Compare against idea 1's best zero-parameter score on the same rows.",
+   "why": "Oracle stopping at each right-at-8 row's settle round averages 2.54 and 2.70 rounds against 8 (a compute bound of about 3x), but the accuracy ceiling is only 1.7 to 1.9 in-dist points. The settle round is 1.69 and 1.74 for string families and 3.09 and 3.33 for number families, so a stop has to depend on the row. Test LR trained answers at every round and leaked; a detached head reads the loop without changing it. Joint gate training is reported to distort the loop while post-hoc readouts match or beat gates (abstract-level, second-hand). The correctness label doubles as the 'am I stuck' signal that rule 8 allows creativity to use.",
+   "evidence": [
+    {
+     "claim": "Oracle settle round averages 2.54 (seed 100) and 2.70 (seed 101) over right-at-8 rows; settle round for number families 3.09 and 3.33, string families 1.69 and 1.74.",
+     "label": "shown",
+     "source": "custom_io/results/40-loops-probe/PROBE.json (M2)"
+    },
+    {
+     "claim": "Stop ceiling inside 8 rounds is the overthinking set, 1.91% and 1.66% of in_dist; any-round oracle 2.5 to 2.7 points, about 0.6 pooled-5.",
+     "label": "shown",
+     "source": "PROBE.json M3, M4; fact check verify-halting-prize-numbers"
+    },
+    {
+     "claim": "No halt or stop head exists in ledger.py or tool.py; H1's stop head is 257 params with a 0.5 threshold and no code.",
+     "label": "shown",
+     "source": "ledger.py (grep); /mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 8b"
+    },
+    {
+     "claim": "Test LR (answer loss at every round) failed stability on seed 200 (-0.51 vs -0.3) and leaked at loops:0 (15.88); this idea adds no per-round loss.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-EG2.md (LR block); PASS-MARKS.md addendum 5"
+    },
+    {
+     "claim": "B2 made about 30 passes over its 200k rows, so correctness on training rows would teach memorisation; labels must come from fresh generated rows.",
+     "label": "shown",
+     "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md addendum B1"
+    },
+    {
+     "claim": "Post-hoc confidence readouts match or beat learned halting gates (Popescu 2607.20519); LoopViT uses a parameter-free entropy exit on an 18M looped model (2602.02156).",
+     "label": "suggested",
+     "source": "/mnt/project-files/papers/no-hardcoding-papers.md:281-289; scout notes in the area brief"
+    },
+    {
+     "claim": "A linear probe on the final state recovers correctness the output heads do not show.",
+     "label": "untested",
+     "source": "raw idea w1i-5; not run"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Ben's PC (forward passes plus a logistic fit); B2_s100 and B2_s101; fresh rows from the skills generator (new seeds); in_dist and variant dev rows for scoring. Run after idea 1.",
+    "hours": 2,
+    "arms": "A: round 8 for all rows. B: settled-label head stop. C: idea 1's best zero-parameter rule. D: right/wrong head versus the best zero-training confidence AUROC from idea 1.",
+    "pass_mark": "Fixed now, both seeds. Held-out AUROC for settled(K), K in 3-8, at least 0.75; B vs A: in_dist change at least -0.3 with mean rounds at most 6.0 and loops:0 in_dist unchanged within 1.0 (a gain of +0.3 pooled-5 is a bonus, not required, given the 2-point ceiling); right/wrong head AUC at least 0.80 on in_dist and at least 0.70 on variant, and at least 0.05 above idea 1's best zero-parameter AUC on variant.",
+    "proved_wrong": "Settled AUROC below 0.65 on both seeds, or B loses 1.0 or more in_dist against A, means a linear readout cannot find a stable stop and idea 7's trained stop is needed. Right/wrong head gains 0.02 or less over the zero-parameter score on variant: the final state holds nothing the heads do not already show."
+   },
+   "rules_check": "Rule 1: the loop break is control flow like today's fixed count; the decision is the head's own sign. Flag for Ben's ruling: is a logit>0 cutoff inside the forward pass a hand-set switch (it is the natural logistic boundary, not tuned). Rule 2: labels come from the model's own answers against gold, no teacher. Rule 3: +257 params (+0.008%). Rule 4: two checkpoints is a screen. Rule 5: head fitted on generated training-split rows. Rule 7: no positive label before round L+2.",
+   "closest_prior": "H1 (redesign section 8b): joint per-round supervision plus a stop head with cap 32, needs T1 first, no code. Test LR (tried, failed). StreamPonder (design only). This freezes B2 and changes no loss.",
+   "autonomy": "At deploy the model stops on the sign of its own head; no threshold we pick. Fitting the head is a build step; a deployed model could refit it on its own self-generated practice rows (suggested), since gold labels there come from the generator that produces the practice questions. Cap stays 8.",
+   "merged_from": [
+    "w1b-4",
+    "w1g-4",
+    "w1i-5"
+   ],
+   "director_score": 7.5,
+   "director_note": "Cheapest route to a model-decided stop for no-program rows without retraining. Critics: (1) the head reads untrained mid-loop states, so check AUROC per round and per stratum, not pooled; (2) labels need fresh rows (30 passes over the 200k set); (3) whether the sign cutoff counts as a hand-set switch under rule 10; (4) accuracy gain should be near zero by the ceiling, so judge on rounds saved at flat accuracy; (5) the first positive label at round L+2 uses gold L in training, deploy uses the model's own view.",
+   "id": "thinker-D5",
+   "area": "thinker"
+  },
+  {
+   "title": "Remove the repeated step push at rounds 9 and later",
+   "summary": "At 16 rounds every round past the 8th re-adds step_emb row 7 to all 17 controller vectors while the norm grows about 4 per round, none of which training saw. Zero-training hooks test the step addition (removed, replaced by the mean row, or index reset for a second look), magnitude held at the round-8 size, and drift removal, split into no-program and program rows because the whole drop sits in no-program rows. The prior that the clamp is the main cause is low.",
+   "change": "Forward and pre-hooks on the unmodified model, round index = call count of core[0] within a run. Arms apply at rounds >= 9 only (loop index 8 is the ninth iteration): S-zero subtracts step_emb[7] from the block input; S-mean then adds the mean of rows 0-7; S-reset uses ts = t mod 8 for a second look of 8 more rounds with no program writes (Rs and vals unchanged) and compares the two answers; M-hold rescales each token's output to its round-8 per-row RMS; drift-off subtracts a per-round calibration mean of block edits taken from 512 disjoint rows; NOOP-freeze index uses ts_i = min(t, t*_i) per row. Report L=0 and L>=1 separately; loops:8 output must be bit-identical to unedited. Params 0. (A scratch-copy one-liner for S-zero is Z = Z + (step_emb[ts] if t < n_loops else 0) at ledger.py:312.)",
+   "why": "The 16-round drop is -1.46 in-dist on average over six confirm seeds and sits in no-program rows (L=0 -1.87 and -1.45; L>=1 -0.11 and 0.00). One step addition is small (init norm about 0.32 against a state norm of about 130 at round 1, trained norm not measured), and the norm increments pass the clamp boundary smoothly (4.39 then 4.47 on seed 100; 9 rounds gives +0.02 and -0.04 in-dist), so the repeated add is probably not the main cause. The probe separates it from magnitude and drift for the cost of six forward passes, and decides whether trained stability fixes (idea 18) are needed at all.",
+   "evidence": [
+    {
+     "claim": "16 minus 8 rounds, in_dist, confirm seeds 200-205: -1.91, -1.62, -1.40, -1.76, -0.81, -1.25 (mean -1.46). Screen seeds on the 6,800-row probe: -1.15 and -0.85; on the 1,360-row RESULT set -1.62 and -1.76.",
+     "label": "shown",
+     "source": "custom_io/results/33-pc-confirm-b2/B2_s200..B2_s205/RESULT.json (lesions loops:16); PROBE.json M1; fact check verify-halting-prize-numbers"
+    },
+    {
+     "claim": "By gold program length, 16-minus-8: L=0 (4,007 rows) -1.87 (seed 100) and -1.45 (seed 101); L>=1 -0.11 and 0.00.",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len and n_by_len (recomputed)"
+    },
+    {
+     "claim": "ts = min(t, n_loops-1) at ledger.py:308 and the row is added to all 17 vectors at line 312; step_emb has 8 rows and training never runs past 8 rounds. First clamped iteration is loop index 8.",
+     "label": "shown",
+     "source": "ledger.py:145, 308, 312, 500; fact check verify-stop-and-cap-code-claims item 3"
+    },
+    {
+     "claim": "In-dist exact at 8 vs 9 rounds: 89.35 vs 89.37 (seed 100) and 90.53 vs 90.49 (seed 101); controller RMS increments 4.39 then 4.47 (seed 100) and 3.72 then 3.74 (seed 101) across the clamp boundary.",
+     "label": "shown",
+     "source": "PROBE.json M1, M5"
+    },
+    {
+     "claim": "The same 16-minus-8 sign appears in every ledger or register arm checked (B -1.69/-1.54, R0 -1.99/-2.21, EGE -1.18/-0.81, A -1.76/-1.47); only per-round answer loss (LR -0.51/-0.22, A0 +0.07/+0.15) removes most of it.",
+     "label": "shown",
+     "source": "results/21-screen-s100-w2/B_s100, results/46-r0ege-s200, results/37-pc-loop-readout/LR_s200 RESULT.json; fact check depth-evidence-already-in-hand"
+    },
+    {
+     "claim": "Right-later and 16-minus-8 are both measured entirely in clamped iterations, so they cannot separate the clamp from more rounds; the executor design lists 'clamp the step embedding when loops > 8' as a to-do.",
+     "label": "shown",
+     "source": "fact check verify-stop-and-cap-code-claims item 3; custom_io/design/design-program-executor.md:373"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Ben's PC; B2_s100 and B2_s101; same 6,800 in_dist rows and machine as idea 1.",
+    "hours": 0.5,
+    "arms": "Baseline; S-zero; S-mean; S-reset (second look, agreement reported); M-hold; drift-off; NOOP-freeze index; each at loops 8 and 16, split into L=0 and L>=1 and chain-5.",
+    "pass_mark": "Fixed now. Identity gate: loops:8 output of every arm bit-identical to unedited, and rounds 1-8 flags identical. An arm closes the drop if (16 minus 8) in_dist is at least -0.3 on both seeds, with the closure coming from L=0 rows. Second look: P(first right | two looks agree) at least 0.95 on in_dist and second-look exact within 1.0 of the first look (reported, not gated). Not the cause: the arm's gap stays within 0.2 of the baseline gap (-1.15, -0.85) for S-zero and S-mean, or at -0.8 or worse for M-hold.",
+    "proved_wrong": "'The repeated step addition causes the 16-round drop' is wrong if S-zero and S-mean both stay within 0.2 of the baseline gap on both seeds. If all arms fail to close the drop, the drift lives in the trained block weights and the trained fixes of idea 18 are the next test."
+   },
+   "rules_check": "Rule 1: test-only edit; the 8-round path is unchanged. Rule 3: 0 params. Rule 4: two checkpoints is a screen. Rule 5: dev only. Rule 6: CPU, six forward passes. Rule 10: diagnostic; a fixed zero row or sinusoid, if later adopted, is an architecture rule the model runs itself. M-hold, drift-off and the calibration mean are probe-only, not deployable.",
+   "closest_prior": "PROBE M1 at 9 rounds (null) and 16 rounds changed only the round count. The code notes list the step-embedding clamp probe as suggested and untested; nothing in results or design runs it. LR/A0 shows per-round answer loss shrinks the drop, which this does not test.",
+   "autonomy": "Diagnosis only. The round count stays a fixed 8 at deploy, which is the rule-10 gap shared with H1.",
+   "merged_from": [
+    "w1c-4",
+    "w1d-1",
+    "w1e-1",
+    "w2d-3",
+    "w2e-4",
+    "w1i-2"
+   ],
+   "director_score": 7,
+   "director_note": "Very cheap, and a null result is useful: it points the budget at trained fixes or at the stop. Critics: (1) the prior is low, so do not overweight a pass on one seed; (2) the 6,800-row and 1,360-row sets give different drops; (3) drift-off uses a calibration mean and is not deployable; (4) label the round counting (loop index 8 is the ninth iteration); (5) with a learned stop (ideas 5, 7) post-stop rounds are frozen, so the drop matters only if rounds past 8 are ever used.",
+   "id": "thinker-D6",
+   "area": "thinker"
+  },
+  {
+   "title": "Train the model's own NOOP into a per-row stop with freeze",
+   "summary": "Make the op head's NOOP after the last write (or a tenth ANSWER class on T1) end each row's loop: the row's state freezes, its answer is read one settle round later, and the answer heads are trained at that round. A cheap screen first fine-tunes the existing B2 checkpoints for 2,000 updates with and without the freeze; a full retrain happens only if that passes. It covers program rows (41% of in_dist) and gives the model a stop it emits itself.",
+   "change": "ledger.py run(freeze=False default, which reproduces B2 exactly): per-row done and wrote masks; at the top of each round save Z0; after the blocks Z = where(done, Z0, Z); for 1<=t<=N_RES stop = alive & (op==0) & wrote, writes masked for done rows; readout uses the frozen Z, Rs, vals at round t*+1 (one settle round, an architecture constant). loss() calls run(gold=g, freeze=True) so the gold op drives the stop in training; round_readout stays 0. Eval uses the model's own argmax. Eval-only per-row compaction: gather alive rows, run the blocks on the subset, scatter back (outputs must match the masked full batch exactly; batch-level early exit is useless because 58.9% of rows never stop). Optional arm: w_noop 0.1 to 1.0 (ledger.py:130) if idea 1 finds a false-freeze rate above 2% on L=0 rows. T1 variant after T1's screen: op head 9 to 10 outputs (ANSWER class, +257 params, 3,277,650 total), ANSWER trained at gold L+1 on program rows. Param cost 0 on the B2 variant.",
+   "why": "NOOP after each program is already trained at weight 1.0 but never read; the idle rounds after it are where answers can flip, and the answer heads are trained only at round 8. Training the readout at the freeze round puts the answer where it is read, for program rows only, so it avoids Test LR's all-round loss that leaked. Program rows have only about 1.2 and 0.6 in-dist points of headroom and show no 16-round drop (-0.04 and 0.00), so the benefit is compute (about 0.795 of the block passes on the dev mix) and a model-emitted stop, not accuracy. No-program rows need idea 5's head or the w_noop arm. A cap of 8 only covers L<=6: 8a's 11-step programs need 13 rounds for a visible stop.",
+   "evidence": [
+    {
+     "claim": "The loop is a fixed Python for-loop with no halt; NOOP writes nothing and has an op CE target after each program end (weight 1.0 program rows, 0.1 no-program rows).",
+     "label": "shown",
+     "source": "ledger.py:306-307, 319-337, 342-345, 501-507"
+    },
+    {
+     "claim": "Program rows (2,793 of 6,800) miss 81 rows (seed 100) and 43 rows (seed 101) at round 8, so their headroom is about 1.2 and 0.6 in-dist points; reading at L+2 untrained costs -3.38 and -5.69, at L+3 -0.24 and -0.10.",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len (recomputed); fact check verify-halting-prize-numbers"
+    },
+    {
+     "claim": "Batch early exit saves nothing: P(a shuffled batch of 256 has no no-program row) = 0.411^256, about 1e-99; per-row compaction saves about 20% of block passes on the dev mix if onset is exact.",
+     "label": "shown",
+     "source": "n_by_len arithmetic (raw ideas w1a-4, w1a-3); onset exactness is idea 1's P1"
+    },
+    {
+     "claim": "Test LR (all-round readout loss) gained +1.14/+1.27 pooled-5 but leaked at loops:0 (15.88 seed 200) and failed stability; this trains only the freeze round of program rows.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-EG2.md (LR); PASS-MARKS.md addendum 5"
+    },
+    {
+     "claim": "2,000 updates is about 0.3 h per arm per seed at the logged 3.66 h per 24,000 (seed 200; median run 1.54 h); 2,000 more updates add about 2.6 passes over the 200k rows, so the no-freeze control arm is required. Optimizer state is not saved in checkpoints, so a fine-tune restarts AdamW.",
+     "label": "shown",
+     "source": "8A-SPEC section 12 B3 and B1; results/33-pc-confirm-b2 RESULT.json; train.py:201; fact check speed-and-hours-reconcile"
+    },
+    {
+     "claim": "Writes still run for every row, so no program target is truncated; the final-round blind spot (zf read before the last write) affects only L=7 rows, which score 28 of 28 at K=8.",
+     "label": "shown",
+     "source": "ledger.py:307-345; PROBE.json M1 by_len['7']; fact check verify-stop-and-cap-code-claims item 2"
+    },
+    {
+     "claim": "T1 has no answer stop today (NOOP only skips a call) and keeps 7 calls at rounds 1-7.",
+     "label": "shown",
+     "source": "models/tool.py:150-163, 173-177"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC. Stage A fine-tunes from B2_s100 and B2_s101 checkpoints (lr restarted, same rows). Stage B retrains seeds 200 and 201 from scratch on the same machine as their B2 baselines.",
+    "hours": 2,
+    "arms": "Stage A: F (2,000 updates with freeze and stop) vs C (2,000 updates, no freeze) vs reference round 8, scored at the model's own stop. Stage B (about 8 h more, only if A passes): freeze-trained 3.3M model vs B2, seeds 200 and 201; optional w_noop=1.0 arm.",
+    "pass_mark": "Fixed now. Stage A, both seeds: F at stop minus C at round 8 at least -0.3 pooled-5; first-NOOP onset equals L+1 on at least 95% of L=1..6 rows; chain-5 at least 99.0; loops:0 in_dist at most 5; mean rounds on program rows at most 7. Stage B, both seeds: P1 program-row in_dist change at least -1.0; P2 pooled-5 change at least -1.0; P3 chain-5 at least 99.0; P4 mean stop round on L=5 rows minus L=1 rows at least 3.0; P5 no-program in_dist change at least -1.0 with false-freeze rate at most 2%; P6 loops:0 in_dist at most 5 and at most B2 +1.0.",
+    "proved_wrong": "Stage A: F at stop at most C at stop on both seeds, or chain-5 below 98. Stage B: P1 at -2.0 or worse on both seeds (the answer cannot be read at the stop round even when trained there), or chain-5 below 95. If P1 fails but onset is exact, the next change is a learned wait op (about 513 params), not a fixed lag."
+   },
+   "rules_check": "Rule 1: the stop is the model's own op argmax; freeze is architecture. Rule 3: 0 params on the B2 variant, +257 on the T1 variant (3,277,650, +1.02% over plain S). Rule 4: 2-seed screen with marks fixed, six seeds before any claim. Rule 5: dev only. Rule 7: all writes run; the training cap must be at least L+2 for the longest row in the batch (so 8a needs 13 rounds). Rule 10: stop and answer are model-emitted; the settle round and the deploy cap are fixed constants (disclosed); no-program rows still run to the cap unless idea 5 or the w_noop arm works.",
+   "closest_prior": "H1 (redesign section 8b): separate 257-param stop head, per-round supervision on all rows, cap 32, no code, needs T1 first. Test LR (per-round answer loss, leaked). StreamPonder (LSTM halting head, design only). This reuses the NOOP B2 already trains.",
+   "autonomy": "At deploy the stop is the argmax of the model's op head and the answer is read by its own heads one fixed settle round later; no threshold, script or human. Gold NOOP positions are used only in training. Fixed by us: the 8-round cap and the one-round settle, both disclosed.",
+   "merged_from": [
+    "w1a-3",
+    "w1a-4",
+    "w1a-5",
+    "w1b-5",
+    "w2c-3"
+   ],
+   "director_score": 7,
+   "director_note": "The rule-10 centrepiece for program rows; the 2,000-update fine-tune keeps the first screen under 2 hours. Critics: (1) the whole gain is compute and autonomy, program headroom is 0.6 to 1.2 points; (2) false-freeze on no-program rows (idea 1) decides whether w_noop is needed; (3) 8a needs 13 rounds for an 11-step visible stop; (4) a fine-tune restarts AdamW and adds about 2.6 passes, so only F-versus-C counts; (5) same-machine baselines, the loops:0 leak differs across machines (0.00 vs 1.40 on seed 200).",
+   "id": "thinker-D7",
+   "area": "thinker"
+  },
+  {
+   "title": "Three confound controls for the plain step-writer yardstick",
+   "summary": "B2's +6.9 over plain_tf_steps bundles supervision, tied depth and update budget. Three cheap plain runs separate them: the same step sets with cap 107, a 4-layer plain model looped 4 times (16 block passes, 1.3% smaller than B2), and 96,000 updates. A free re-score without nine constant-answer cells shows how stable the gap is. It tells whether B2's controller design or just tied depth carries its lead, which is the premise for scaling it.",
+   "change": "No model code. (1) plain_tf_steps with STEP_FAMILIES extended by backward_solve, table_calc, compare_numbers and list_stats and cap 107 (the C0 setting in queue_local/43-pc-c0.txt), seeds 200 and 201. (2) plain_tf_steps cfg {n_layers: 4, n_loops: 4} (3,260,928 params; loops add none; plain_tf.py:93), seeds 100 and 101 with B2 re-run beside it on the same box. (3) plain_tf_steps default cfg with --steps 96000 --eval-every 12000, seeds 100 and 101. (4) Reanalysis of RESULT.json: pooled-5 with and without word_filter, letter_ops, seq_cycle, order_chain, div_exact, digits_parity, object_track, list_index, kin_chain (answer split), and the B2-minus-plain gap both ways.",
+   "why": "The four families plain_tf_steps had no steps for (backward_solve +22.5, table_lookup excluded, table_calc +15.0, compare_numbers +3.1, list_stats +3.2) carry +11.2 of the gap over 4,080 rows per arm while the other 30 give +6.34 against the headline +6.89. The only looped plain runs are half-size (L2x2 at 1.67M, -5.4), so tied depth at matched size is unmeasured. All arms are held to 24k updates, yet B2 costs 4 to 5 times more per update, and a bigger plain model moved from below to above a smaller one between 8k and 24k updates (one seed). Rows 1 to 3 each remove one alternative explanation of B2's lead.",
+   "evidence": [
+    {
+     "claim": "B2 minus plain_tf_steps pooled-5 is +6.89 (CI 5.49 to 8.29, six of six seeds); the four B2-only families give +11.20 and the other 30 families +6.34 (recomputed from RESULT.json).",
+     "label": "shown",
+     "source": "custom_io/results/CONFIRM-ANALYSIS.json; results/33-pc-confirm-b2 RESULT.json (raw idea w1f-3)"
+    },
+    {
+     "claim": "plain_tf_steps writes steps only for 11 listed families and only if steps plus answer fit in 64 characters, leaving 840 var_chain train rows answer-only; 58 of 72 wrong chain-5 rows pooled over two seeds come from this cap. C0 (cap 107) is queued and has no result.",
+     "label": "shown",
+     "source": "models/plain_tf_steps.py:21-33; /mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md:7-18; queue_local/43-pc-c0.txt"
+    },
+    {
+     "claim": "L2x2 (2 layers looped twice, 1,665,024 params) scores -5.03 and -5.79 pooled-5 against plain_tf at 3.24M; tf2x4 at 8k updates one seed -6.8. Both are half-size, so no matched-size looped plain test exists.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-SCREEN.md lines 12-13, 26-27, 38; results/01-calib/tf2x4/RESULT.json"
+    },
+    {
+     "claim": "Calibration, one seed: at 8k updates 3.2M plain 46.97 vs 10.8M 45.51 pooled-5; at 24k 52.73 vs 54.93. The 3M seed 0 is the lowest of four 3M seeds (52.73, 54.70, 54.70, 54.55), so the 10M lead over the 3M mean is +0.76, inside noise.",
+     "label": "shown",
+     "source": "results/01-calib, results/02-calib-long, results/03-noise RESULT.json"
+    },
+    {
+     "claim": "Per-update speed ratio B2 to plain_tf_steps is about 4 to 5 (solo 5090 probe 4.0 at 3M; PC clean trio 4.6); the 7.8x figure is seed 200 only. 96,000 updates is about 123 passes over the 200k rows against a guideline of about 4.",
+     "label": "shown",
+     "source": "8A-SPEC section 19 (I2); results/33-pc-confirm-b2 RESULT.json; fact check speed-and-hours-reconcile"
+    },
+    {
+     "claim": "Removing the nine constant or few-valued answer cells raises B2's pooled-5 by about 1.2 on all six seeds and moves the B2-minus-plain gap from 6.89 to 6.60 (six of six seeds).",
+     "label": "shown",
+     "source": "RESULT.json for B2_s200..205 and tfsteps_s200..205 (raw idea w1g-5, recomputed); research/data.md:50"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC first; B2 and plain baselines on the same machine (existing screen/confirm RESULT.json files if the box matches).",
+    "hours": 6,
+    "arms": "S = plain_tf_steps with the B2 step set and cap 107 (seeds 200/201, about 0.5 h each); LP = plain_tf_steps {n_layers 4, n_loops 4} (seeds 100/101, about 1 to 1.5 h each); P96 = plain_tf_steps at 96,000 updates (seeds 100/101, about 1.6 h each); re-score is arithmetic.",
+    "pass_mark": "Sealed before running, per arm. S: on the four families the matched baseline is within 3 points of B2 on both seeds means the gap there is supervision, and the headline is restated on the common families (about +6.3). LP: B2 minus LP at least +3.0 pooled-5 on both seeds means controller design matters; B2 minus LP below +1.0 on either seed means tied depth carries the gain. P96: B2 at 24k minus P96 at least +3.0 on both seeds means the lead is not a budget effect; if P96 is below P24 on either seed the result is inconclusive (overfitting). Re-score: gap moves by at most 0.5 and B2 still wins six of six seeds.",
+    "proved_wrong": "S: matched baseline at least 8 below B2 on the four families on both seeds (the +11 architecture credit stands). P96: B2 at 24k minus P96 below +1.0 on either seed (the lead was a budget effect). LP: B2 minus LP below +1.0 on either seed (tied depth, not the controller, is the gain)."
+   },
+   "rules_check": "Rule 3: this is the fair-supervision and matched-pass comparison the headline needs; LP is 1.3% below B2. Rule 4: two seeds is a screen; a restated headline needs the six-seed set. Rule 5: dev only. Rule 6: PC, plain runs are cheap. Rule 7: cap 107 removes the plain model's answer-only fallback. Rule 9: card experiment only. Rule 10: training-side controls, no deploy step.",
+   "closest_prior": "queue 43 (C0, cap 107 on the 11-family list, no result); L2x2 and tf2x4 (half-size); 8a addendum B1 (24k floor). None is a matched-supervision, matched-pass or budget control.",
+   "autonomy": "No deploy-time step; building and pre-training before shipping is outside rule 10.",
+   "merged_from": [
+    "w1f-3",
+    "w2f-1",
+    "w2f-5",
+    "w1g-5"
+   ],
+   "director_score": 7,
+   "director_note": "Protects the claim every later depth result is measured against, and plain runs are cheap. Critics: (1) the 24k floor is 8a policy, so P96 tests that policy, check 123 passes against the reuse guideline; (2) the per-update ratio (4 to 5x) is not the 7.8x of seed 200, and wall-clock runs were shared; (3) LP init scales with n_layers x n_loops (plain_tf.py:53), left as is; (4) two seeds only; (5) C0 may already report, check queue 43 first.",
+   "id": "thinker-D8",
+   "area": "thinker"
+  },
+  {
+   "title": "Deep-thin vs wide-shallow plain model at 10M",
+   "summary": "The 8a yardstick at 10M is a 13-layer width-256 plain step-writer, and nothing tests whether that shape is the strong one. A 2-layer width-648 plain model at the same 10.35M parameters is the matched alternative; plain 10M runs are cheap. If the wide shape wins by 1.5 or more on both seeds, the yardstick is under-tuned and B2's 10M lead would be overstated; if the deep shape wins, depth-first is supported at 10M.",
+   "change": "Shapes only, both plain_tf_steps at 24,000 updates, same rows and settings: deep-thin {n_layers 13, d_model 256, n_heads 4} = 10,368,768 params; wide-shallow {n_layers 2, d_model 648, n_heads 4} = 10,352,448 params (-0.16%, head dim 162). Four runs: two shapes times seeds 200 and 201. Optional third shape in the middle (for example 6 layers at 384) if both are close.",
+   "why": "The plain arm's shape has never been varied; the only plain 10M run is 6 layers at width 384 (one seed). Per token the block FLOPs are about the same (13 x 256^2 versus 2 x 648^2), so a gap is about shape, not compute. Depth versus width at 3M to 30M has no result here, so this is the cheapest check on Ben's 'as deep as possible' default for the plain yardstick that the 8a depth-first bet is judged against. A deep-thin plain model can be up to 2x slower on a GPU (suggested).",
+   "evidence": [
+    {
+     "claim": "8A sets the 10M plain arm at width 256 with 13 layers, 10,368,768 params; the only plain 10M run is 6 layers at width 384 (10,775,040 params), one seed: in_dist 65.6 at 8k and 76.0 at 24k updates.",
+     "label": "shown",
+     "source": "/mnt/project-files/whole-model-roadmap/8A-SPEC-2026-10-07.md sections 2 and 13; custom_io/CALIBRATION.md; results/02-calib-long/tf10m_24k/RESULT.json"
+    },
+    {
+     "claim": "The 10M plain run took 1,345 s at 24k updates on a 5090 (18.0 steps/s), the 3M plain run 861 s.",
+     "label": "shown",
+     "source": "results/02-calib-long/tf10m_24k and tf3m_24k stdout.events.txt"
+    },
+    {
+     "claim": "Wide-shallow 2 layers at width 648 has 10,352,448 params from the plain block layout with MAX_POS 288.",
+     "label": "shown",
+     "source": "computed in raw idea w2f-4 from models/plain_tf_steps.py; recount with the size counter before running"
+    },
+    {
+     "claim": "MobileLLM reports deep-thin beating wide models at 125M and above; the roadmap guesses deep-thin runs up to 2x slower.",
+     "label": "suggested",
+     "source": "arXiv 2402.14905 abstract; /mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md:270"
+    },
+    {
+     "claim": "At 8k updates the 10.8M plain model scored below the 3.2M one and at 24k above it (one seed), so rankings between sizes depend on training length.",
+     "label": "shown",
+     "source": "custom_io/CALIBRATION.md; 8A-SPEC addendum B1"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC first (plain 10M fits 16 GB), seeds 200 and 201, 24,000 updates.",
+    "hours": 3,
+    "arms": "DT = plain_tf_steps 13 layers x 256; WS = plain_tf_steps 2 layers x 648; same rows and settings. Optional middle shape.",
+    "pass_mark": "Sealed before running. Deep-first holds at 10M if DT minus WS is at least +1.5 pooled-5 on both seeds. The 8a yardstick is under-tuned if WS minus DT is at least +1.5 on both seeds. Otherwise no shape signal and shape is chosen by GPU time. Both shapes must pass the size counter within 3% of 10,368,768.",
+    "proved_wrong": "The deep yardstick, and the claim that depth helps plain models at 10M, is wrong if WS minus DT is at least +1.5 on both seeds."
+   },
+   "rules_check": "Rule 1: plain arms write taught steps, no hand code. Rule 3: both shapes within 3% (0% and -0.16%). Rule 4: 2-seed screen, six seeds before a claim. Rule 5: dev only. Rule 7: no truncation (plain cap 64 default, use cap 107 to match C0). Rule 9: plain arm only.",
+   "closest_prior": "8A addenda C and D check depth only for B2-M against a deep B2, not for plain models; the only plain 10M run is one shape. No depth-versus-width plain pair exists.",
+   "autonomy": "Build-time shape choice; no deploy-time step (rule 10).",
+   "merged_from": [
+    "w2f-4"
+   ],
+   "director_score": 6.5,
+   "director_note": "Cheap and directly informs the 8a spend. Critics: (1) head dimension 162 for the wide model is unusual, and a different head count may change the result; (2) lr, warmup and init were tuned at 3M, not for either 10M shape (one 10M run at lr 7e-4 exists); (3) wall time per shape differs, so equal-update is not equal-compute; (4) 2 seeds only; (5) set the plain cap to 107 so both shapes see the same targets.",
+   "id": "thinker-D9",
+   "area": "thinker"
+  },
+  {
+   "title": "Equal-size depth test: 3 unique blocks, 4x192, or repeat twice",
+   "summary": "At B2's size, trade parameters for depth per round: three blocks with a narrower MLP, four blocks at width 192, or the same two blocks run twice per round (0 params, 2x block passes). Rounds cannot drop below 8 because program step t is written at round t, so blocks and width are the only free depth axes at this size. It is the first same-data, same-size read on the 8a depth-first bet.",
+   "change": "Config only: D3 = {copy: true, blocks: 3, mlp: 1.857} with the block-output init std pinned to the 2-block value (ledger.py:160 uses blocks and n_loops, otherwise the arm changes its init too); params 3,302,218 (-0.008%). D4 = {blocks 4, d 192, mlp 4.8, heads 4} = 3,216,029 (-2.6% vs B2, -1.4% vs plain_tf_steps S); counts by formula 11d^2 + 1014d + 4793 + n(8d^2 + 17d + 2dh + h), h=int(4.8d), which reproduces 3,302,481 exactly, recheck with the size counter. REP = new cfg reps (default 1 = B2): wrap the loop over self.core at ledger.py:313-314 in 'for _ in range(self.reps)' reusing kvs and kvx; params 3,302,481, init pinned. Optional CODA = loop only core[0] for 8 rounds and run core[1] once after the loop on the post-write state (9 block passes instead of 16, same params; targets the final-readout blind spot). Run in the order D3, REP, D4, CODA, skipping any arm that idea 4 says is idle (block 1 skip cost at most 1.0).",
+   "why": "No run in the project changes block count, layers or width at matched size, so the 8a depth-first premise (8 blocks at 10M, about 15 at 30M) has no support. The strongest depth effect measured is the reader window (+6.3 to +6.8), not controller depth. A skip-one-block probe (idea 4) is cheap and predicts this result. A second pass per round costs one more query, attention over the same keys and an MLP, but the controller RMS already grows about 4 per round with no normalisation, so extra passes may worsen drift (suggested). The 16-round test-time result (-1.46) changed the schedule; these arms train more block passes with the schedule fixed.",
+   "evidence": [
+    {
+     "claim": "No run trains two models with the same data and matched size that differ only in blocks, layers or width; the 8a 10M depth check (8 blocks at 256 = 10,254,105) is about 6% below B2-M with copy and span (10,914,681), outside rule 3's band, reported not gated, and has not run.",
+     "label": "shown",
+     "source": "fact check depth-evidence-already-in-hand; 8A-SPEC lines 43-44, 281-283; results/35-pc-b1-students/b2g_s300/RESULT.json"
+    },
+    {
+     "claim": "One CBlock is 1,158,604 params at d=256 (hidden 1228); non-block part 985,273; the formula reproduces 3,302,481 and the M config total 10,890,041. Three blocks at hidden 475 give 3,302,218.",
+     "label": "shown",
+     "source": "ledger.py:102-124, 130-147 (recomputed in raw ideas w1h-1 and w3f-2)"
+    },
+    {
+     "claim": "Program step t is written at round t (1<=t<=7), so 8 rounds is the minimum for 7 steps; loops:1 chain-5 is 0.0-2.9 and loops:2 1.1-6.5, so rounds cannot be traded for depth.",
+     "label": "shown",
+     "source": "ledger.py:319; results/33-pc-confirm-b2 RESULT.json (lesions loops:1, loops:2)"
+    },
+    {
+     "claim": "Block-pass cost scales: 8 blocks x 12 rounds is 3.55 times the time of 2 blocks (0.327 vs 0.092 s per update on a 5090), about 15% fixed cost. A third block adds about +6.9% FLOPs; reps=2 about 1.3 to 1.6x (estimate).",
+     "label": "shown",
+     "source": "8A-SPEC section 19 (I2); raw idea w3f-2 arithmetic; the reps estimate is suggested"
+    },
+    {
+     "claim": "Block depth changes init: out-projection std 0.02/sqrt(3 x blocks x n_loops), so an unpinned block count is two changes.",
+     "label": "shown",
+     "source": "ledger.py:160"
+    },
+    {
+     "claim": "Deep-and-thin beats wide models at sub-billion sizes (MobileLLM); block-wise sharing adds no parameters; late layers add little in large LLMs (2505.13898). All abstract-level, none at 3M.",
+     "label": "suggested",
+     "source": "scout notes in the area brief (arXiv 2402.14905, 2505.13898)"
+    },
+    {
+     "claim": "Right-later gains are about 0.8% of in_dist and rounds past 8 do not help current data, so extra block passes per round must pay in accuracy at 8 rounds to be worth anything.",
+     "label": "shown",
+     "source": "PROBE.json M3; design/LOOPS-probe.md"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 200 and 201, B2 numbers reused from results/33-pc-confirm-b2 (re-run B2 on the same box if the unit test that the default config reproduces B2_s200/201 exactly fails).",
+    "hours": 10,
+    "arms": "D3 (3 blocks x 8 rounds, mlp 1.857, init pinned); REP (reps=2); then D4 and CODA only if D3 or REP pass; B2 reference; plain_tf_steps reference.",
+    "pass_mark": "Fixed now. Size counter asserts 3.16M to 3.36M. Screen continues only if, on both seeds, chain-5 at least 99.0, loops:0 in_dist at most B2's same-seed value +2.0, and pooled-5 (arm minus B2) at least -1.0. Depth gain: D3 minus B2 pooled-5 at least +1.0 on both seeds; REP at least +1.5 mean with each seed at least 0. Confirm on seeds 202-205: mean gain at least +1.0 with the 95% CI above 0. Reported, not gated: train-versus-dev exact (memorisation gap), the 16-round drop, seconds per update.",
+    "proved_wrong": "D3 below B2 by 2.0 or more on both seeds, or the six-seed CI entirely below 0: unique depth per round does not help at this size. REP gain below +0.5 mean or any seed at -1.0 or worse: per-step depth is not the bottleneck. If block 1 is idle in idea 4, the extra block cannot help and the 8a depth-first rung is unsupported."
+   },
+   "rules_check": "Rule 1: no hand code. Rule 3: D3 -0.008% vs B2, D4 within the band, REP identical. Rule 4: 2-seed screen with marks fixed; six paired seeds before any claim; the init pin is a control, not a second change. Rule 5: dev only. Rule 6: PC. Rule 7: same rows and targets. Rule 9: B2 only. Rule 10: pre-ship architecture choice, but rounds stay a fixed 8, the gap shared with H1.",
+   "closest_prior": "L2x2 (1.67M looped plain, -5.4, half-size, not the block-versus-round question); 8a addendum C 10M depth check (width and depth changed together, reported not gated). No same-size block split is on file.",
+   "autonomy": "Pre-ship architecture choice, outside rule 10. It adds no deploy-time decision; the fixed round count is the rule-10 gap, to be paired with a learned stop.",
+   "merged_from": [
+    "w3f-2",
+    "w1h-1",
+    "w2f-2",
+    "w1h-2"
+   ],
+   "director_score": 6.5,
+   "director_note": "Decides whether the 8a depth-first spend is justified at 3M, and costs a day on the PC. Critics: (1) gate on idea 4's skip-block result before spending; (2) B2 runs take 1.0 to 4.2 h, not 1 h, so 10 h is a floor; (3) check the unit test that defaults reproduce B2_s200/201, the same seed gives different results on different machines; (4) the init pin must be applied to every arm; (5) the coda arm's blind-spot motive is weak (7-step rows are 28 of 28 right), its case is speed.",
+   "id": "thinker-D10",
+   "area": "thinker"
+  },
+  {
+   "title": "Grow a trained B2 by zero-init identity blocks",
+   "summary": "Insert two extra controller blocks into the trained 2-block B2 with their output projections set to zero, so the grown model computes exactly B2's function at step 0. Train grown and unchanged B2 for 6,000 more updates on the same rows and compare. If growth beats the control by 1.0 or more on both seeds, depth can be added to a trained checkpoint instead of retraining every rung, which cuts the cost of the 8a ladder and of any hundreds-of-millions build.",
+   "change": "Build step, no new forward code. Load core.0 and core.1 from the 2-block checkpoint into Ledger(blocks=4) (ledger.py:147) and set core.2 and core.3 to identity: o, p and out weights and biases all zero (CBlock.forward, ledger.py:117-124; block output adds o, p, out to the residual). Continue 6,000 updates from step 24,000 on the same shuffled rows with restarted AdamW (no optimizer state is saved), peak lr 3e-4, 300 warmup, cosine to 10% (train.py lr_at, lines 14-20). Control = the 2-block B2 with identical settings. train.py has no warm-start flag, so the loader is a build step and untested. Step-0 check: the grown model's dev predictions are identical to B2's. Depthwise duplication (arXiv 2405.15319) changes the function at step 0, so it becomes a second arm only if this passes.",
+   "why": "A zero-init block is an exact identity and gradients still reach the new output projections, so the first check catches bugs before training. The control is the continued 2-block B2, which also absorbs the extra data passes (about 30.7 to 38.4 over the 200k rows), so the difference is growth alone. 8a trains every rung from scratch (30M is 4 to 5 days on the PC); growth that works would remove most of that. Caveat: late blocks add little in large pretrained LLMs (2505.13898, abstract-level), so identity blocks may stay idle.",
+   "evidence": [
+    {
+     "claim": "CBlock adds o, p and out to the residual; with those weights and biases zero a block returns its input unchanged (init sets biases to zero).",
+     "label": "shown",
+     "source": "custom_io/models/ledger.py:117-124, 158-160"
+    },
+    {
+     "claim": "The 4-block B2 has 5,619,689 params (+70.2%); a 7-layer plain_tf_steps at 5,630,208 (+0.19%) is the same-size yardstick.",
+     "label": "shown",
+     "source": "computed in raw idea w2f-3 from the CBlock layout (1,158,604 per block; 985,273 non-block)"
+    },
+    {
+     "claim": "Screen checkpoints B2_s100 and B2_s101 (13,243,510 bytes, fp32 weights only) are in project files; train.py has no warm-start or resume option and saves model.state_dict() only.",
+     "label": "shown",
+     "source": "/mnt/project-files/custom-io/checkpoints/29-b2-screen/; train.py:105-128, 201"
+    },
+    {
+     "claim": "The 8a ladder trains every rung from scratch with at least 24,000 updates; 24,000 x 256 / 200,000 = 30.7 passes, 6,000 more adds 7.7.",
+     "label": "shown",
+     "source": "8A-SPEC sections 2-3 and addendum B1"
+    },
+    {
+     "claim": "Depthwise stacking is the best of four growth operators up to 7B parameters (2405.15319); late layers add little to the residual stream in large LLMs (2505.13898). Both abstract-level, neither tested at 3M.",
+     "label": "suggested",
+     "source": "scout notes in the area brief"
+    },
+    {
+     "claim": "No B2 growth or warm-start test exists in results; no identity-block code exists.",
+     "label": "shown",
+     "source": "fact check depth-evidence-already-in-hand (results listing)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, starting from the existing B2_s100 and B2_s101 checkpoints, 6,000 updates per arm.",
+    "hours": 3,
+    "arms": "G = grown model (blocks=4, two zero-init blocks); C = continued 2-block B2 with identical schedule and rows.",
+    "pass_mark": "Sealed before running. Step-0 check: grown predictions identical to B2 (max difference 0). G minus C pooled-5 at least +1.0 on both seeds; G chain-5 at least 99.0; G loops:0 in_dist at most 5. A same-size claim would need the 7-layer plain model (5,630,208) on six seeds.",
+    "proved_wrong": "Growth does not help if G minus C is at most +0.3 on both seeds, or G minus C is -1.0 or worse on either seed."
+   },
+   "rules_check": "Rule 3: +70% params, so this is a growth test and makes no same-size claim. Rule 1: no hand step. Rule 4: 2-seed screen. Rule 5: dev only. Rule 7: caps unchanged. Rule 10: growth is a pre-ship build step. Init: the unpinned init std of the new blocks depends on blocks, but they are zeroed, so only the continued-training dynamics differ.",
+   "closest_prior": "The 8a plan retrains each rung from scratch. Depthwise stacking duplicates layers; this uses identity blocks and checks the step-0 function. Nothing like it in results.",
+   "autonomy": "Growth happens before shipping; the shipped model keeps fixed depth, and a learned stop is H1's separate job.",
+   "merged_from": [
+    "w2f-3"
+   ],
+   "director_score": 6.5,
+   "director_note": "Directly attacks the cost of reaching hundreds of millions. Critics: (1) the control must absorb the data passes, restarted AdamW and lr 3e-4 are untested choices; (2) the 4-block model is 70% bigger so no same-size claim; (3) a null (identity blocks stay idle) is likely if the 2-block model is already saturated on the 200k rows, check the block-skip probe first; (4) train.py needs a warm-start loader, which is code not yet written.",
+   "id": "thinker-D11",
+   "area": "thinker"
+  },
+  {
+   "title": "Where B2's variant failures sit: op, pointer, count, writer or choice",
+   "summary": "A probe on the screen checkpoints that labels each wrong variant row in a programmed family by its first wrong link, ranks the gold op at failing steps, counts oracle@k over rank-2 alternatives, tests whether control-token noise gives different still-accurate programs, and counts failed calculator steps a retry could fix. The programmed variant families miss 1,794 rows (4.95 pooled-5 points) and fail because of the program, not the loop. The label decides which build, if any, is worth money.",
+   "change": "One script custom_io/probe_tries.py (copied from probe_loops.py). A probe-only copy of Ledger.run takes force={step: (op,a,b)} and overrides those steps only (about 6 lines); margins come from out['steps'] (ledger.py:323-324); talker tries pass modified lmode, lans, lword to talk() (:380-406). (1) Label each wrong programmed variant row: P = operation or operand value differs and result changes; B = same operations but a pointer picks a slot with a different value; C = wrong step count; T = final slot right but printed output differs; O = other. (2) Gold-rank: teacher-forced rank of the gold op and pointers at each step. (3) Oracle@1, @3, @8 over greedy plus rank-2 choices at the lowest-margin decisions, against a null of the highest-margin decisions. (4) Init-noise tries: Z = cat(ctrl.weight + sigma x noise, P) with sigma 0.5 x RMS of ctrl.weight for three extra tries; report single-try accuracy, share of rows with different programs, and oracle@4. (5) Failed-write retry: count variant rows whose greedy program has a non-NOOP step with ok=False (execute, ledger.py:76-86) or a NUM answer on an invalid slot, re-run with the rank-2 op at the first failed step. Conditional build if pointer errors are at least 50%: cue attention on the 16 number slots (q_cue, k_cue Linear(256,64), +32,896 params, total 3,335,377, within the band) with a nocue lesion.",
+   "why": "Variant is 34.7 pooled (31.9 to 37.1 over six seeds). Programmed families that score 100 in-dist fall on variant: arith_bare 57.5, div_exact 6.2, compare_numbers 6.7, distance_units 25.4, var_chain 30.0. With the calculator off, variant program families fall to near zero (34.7 to 17.2 pooled), and 16 rounds leave them unchanged, so the program written is what is wrong and extra thinking does not help. The failures are unstable across seeds on some families (arith_bare 15 to 78) and fixed on others (var_chain 30.0 on every seed), which decides whether choosing among tries can help at all.",
+   "evidence": [
+    {
+     "claim": "Variant-split programmed families miss 1,794 of 5,171 variant misses (4.95 pooled-5 points); in-dist programmed families miss 97 of 3,360 rows (2.9%) versus 1,794 of 3,360 variant rows (53%).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json by_family, six seeds (raw idea w1g-2, recomputed)"
+    },
+    {
+     "claim": "noexec lesion on variant: pooled 34.7 to 17.2; div_exact 6.2 to 2.9; table_calc 0.4 to 0.0. loops:16 leaves variant programmed families almost unchanged (div_exact 6.2 to 5.4; var_chain 30.0 to 30.0).",
+     "label": "shown",
+     "source": "RESULT.json lesions noexec and loops:16, six seeds"
+    },
+    {
+     "claim": "Six-seed variant means: arith_bare 57.5 (per seed 15, 70, 78, 38, 78, 68), percent_rate 40 to 100, chain_story2 28 to 80; var_chain 30.0 and story_addsub 57.5 on every seed.",
+     "label": "shown",
+     "source": "RESULT.json by_family (raw idea w2g-4, recomputed)"
+    },
+    {
+     "claim": "execute(): NOOP, division by zero and inexact DIV are invalid (ledger.py:83-85); a NUM answer on an invalid slot falls back to GEN (:398-405). Variant includes div-group recombinations and new operator symbols.",
+     "label": "shown",
+     "source": "ledger.py:76-86, 398-405; research/data.md:53"
+    },
+    {
+     "claim": "Zeroing controls 2-7 left seed 200's variant at 31.89 both ways (seed 201 -0.4, seed 202 -1.8), so scratch state that steers chain programs may barely steer variant answers.",
+     "label": "shown",
+     "source": "custom_io/results/d0/B2_s200.json, B2_s201.json, B2_s202.json (ctl27)"
+    },
+    {
+     "claim": "Nobody has measured how often the gold op is in B2's top two on variant failures, the variant gold-program coverage, or the oracle@k headroom; no top-k or oracle code exists.",
+     "label": "untested",
+     "source": "grep of custom_io; fact check probe-feasibility-dev-rows"
+    },
+    {
+     "claim": "A number slot's key is the exact value code, a pooled reader term over its own digit span, an ordinal and a type embedding; its reader features cover about 4 letters either side, so a distant role cue cannot reach the pointer.",
+     "label": "shown",
+     "source": "ledger.py:150, 290-296, 322"
+    }
+   ],
+   "test": {
+    "kind": "cpu_probe",
+    "where": "Ben's PC CPU (dev rows needed) on B2_s100 and B2_s101; the six confirm checkpoints only if a result falls between the marks.",
+    "hours": 1,
+    "arms": "Error labels P/B/C/T/O; gold-rank; greedy vs oracle@3 and @8 on lowest-margin and highest-margin (null) decisions; init-noise tries at sigma 0.5 (1.0 reported only); rank-2 retry at the first failed step.",
+    "pass_mark": "Fixed now. Labels cover at least 80% of wrong programmed variant rows; a label earns its fix if it covers at least 50% on both checkpoints (P at least 30% opens a second-route build; B at least 50% opens the cue-attention build). Oracle: variant oracle@8 minus greedy at least +8.0 on both checkpoints, pooled-4 (answer, frame, vocab, variant) at least +5.0, lowest-margin gain at least 2x the null, gold op at rank 2 or 3 on at least 30% of failing steps in the number group. Noise: in_dist single-try at sigma 0.5 within 1.0 of greedy, at least 10% of variant rows with differing programs, oracle@4 minus greedy at least +5.0. Retry: at least 3.0% of variant rows have a failed non-NOOP step and the retry adds at least +1.0 variant points.",
+    "proved_wrong": "No single label reaches 50% or the labels cover under 80%: the errors are unknown computation. Variant oracle@8 gain below +5.0 on either checkpoint, or gold op at rank 4 or worse on at least 70% of failing steps: the gap is in what B2 writes, not in choosing, so tries and selectors stop. Noise breaks in_dist (N1 fails) or tries are identical (N2 fails). Retry gain below +0.5 on both checkpoints, or failed steps below 2.0% of variant rows."
+   },
+   "rules_check": "Rule 1: enumeration and oracle count are hand-written test code, allowed; no deployed path changes. The failure flag comes from the hand-written int64 executor inside the forward pass, so a deployable retry waits for T1. Rule 3: 0 params (+32,896 only for the conditional cue build). Rule 4: probe, not a claim; two checkpoints can be luck on families with a 15 to 78 spread. Rule 5: standard dev splits only. Rule 6: CPU. Rule 8: tries are for stuck rows only, and the selector would have to be learned. Rule 10: noise scale and try count are developer-set, so those arms are measurement only.",
+   "closest_prior": "LOOPS-probe M3/M4 has a round-wise oracle, not a decision-level one. results/d0/D0b.md labelled link errors for the plain model on chain-5 in-dist rows. W1 (global reader attention, +33,632 params, queue 42, not run) is the reader-level version of the cue hypothesis. No top-k code in the repo.",
+   "autonomy": "Measurement only. A deployable selector or retry would be a learned choice among the model's own tries (idea 23) or a model-written retry call on T1, with no cutoff we set.",
+   "merged_from": [
+    "w1g-2",
+    "w1i-4",
+    "w2g-1",
+    "w2g-2",
+    "w2g-3",
+    "w1g-3"
+   ],
+   "director_score": 6.5,
+   "director_note": "One hour tells which of three expensive builds (second route, tries and selector, cue attention) deserves a day. Critics: (1) the label taxonomy must cover 80% before it is read; (2) per-seed variance on arith_bare is large, so a two-checkpoint oracle can be luck; (3) pooled-4 excludes in_dist by design, state it; (4) the variant split mixes new wording and zero-shot computations, so a wrong-op result may reflect an unseen symbol rather than a thinking failure; (5) the dev rows are on the PC.",
+   "id": "thinker-D12",
+   "area": "thinker"
+  },
+  {
+   "title": "Repair Test LR: keep its gain, stop the loop gradient or early rounds",
+   "summary": "Test LR (answer loss at every round) is the only change in this area that raised pooled-5 (+1.14 and +1.27) and it halved the 16-round drop, but it failed stability and leaked at loops:0 on seed 200 only. Two single-change repairs test where the leak comes from: stop the round-loss gradient before it enters the loop, or start the round loss at round 3 so shallow states are not trained to answer. A same-machine determinism check comes first, because the leak differs across machines.",
+   "change": "Arm SG: ledger.py run() line 341 store Z[:,1].detach(), Z[:,N_CTRL:].detach() and Rs.detach() in each snapshot, and use detached copies of S0, Kw, X and the reader token weights inside round_loss (lines 462-495); final-readout losses unchanged; round_readout=1.0. Arm W3: ledger.py:472 'sel = (L+1 <= t) & (t >= 3)' so rounds 1-2 get no round loss. Params 0. Step 0: rerun plain B2 seed 200 and 201 on the PC twice to measure same-machine determinism of loops:0 before reading any leak mark.",
+   "why": "At zero rounds the readout reads the initial control token itself (ledger.py:304, 342), so round-1 losses can push that vector toward an answer, which is a route to a zero-round leak. On seed 201 zero-round answers already score copy_word 35 of 40 and prop_eval 30 of 40 (147 of 1,360 hits total), which looks like a fixed word-pointer prior trained from shallow states. LR gained mostly outside in_dist (in_dist changes +0.3 and -0.7), so the stability benefit and the pooled-5 gain are what to keep. The seed-200 leak (15.88) is one seed, and the same seed's plain-B2 leak is 0.00 on the PC and 1.40 on a rented 5090.",
+   "evidence": [
+    {
+     "claim": "Test LR (round_readout 1.0, screen seeds 200 and 201): pooled-5 +1.14 and +1.27; in_dist 16-minus-8 -0.51 and -0.22 (B2: -1.91, -1.62); stability mark -0.3 failed on seed 200; loops:0 in_dist 15.88 on seed 200 (fail) and 0.00 on seed 201; chain-5 99.5 and 99.7. Stopped, not proved wrong.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-EG2.md (LR block); PASS-MARKS.md addendum 5; results/37-pc-loop-readout/LR_s200, LR_s201 RESULT.json"
+    },
+    {
+     "claim": "Same-seed plain-B2 loops:0 differs across machines: seed 200 0.00 (PC) vs 1.40 (rented 5090); seed 201 10.81 vs 4.34. Zero-round leak on six confirm seeds: 0.00, 10.81, 0.00, 5.66, 3.53, 0.00.",
+     "label": "shown",
+     "source": "results/RESULTS-EG2.md; results/33-pc-confirm-b2 RESULT.json lesions loops:0"
+    },
+    {
+     "claim": "At loops:0 the readout uses Z[:,1], the initial control token; round losses run from round L+1 to round 6 with no detach, per row, normalised by B.",
+     "label": "shown",
+     "source": "ledger.py:304, 340-342, 462-495, 534; fact check verify-stop-and-cap-code-claims item 5"
+    },
+    {
+     "claim": "Seed 201 zero-round hits by family: copy_word 35 of 40, prop_eval 30 of 40, story_chain3 12 of 40; seed 203 word_filter 22 of 40; seed 204 odd_one_out 13 of 40 (one or two families per seed).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s201, B2_s203, B2_s204 RESULT.json (lesions loops:0 by_family)"
+    },
+    {
+     "claim": "The round-loss route into the initial state is the leak mechanism.",
+     "label": "untested",
+     "source": "inferred from the code path; no run isolates it"
+    },
+    {
+     "claim": "Dense per-depth supervision and post-hoc confidence readouts stabilise loops better than joint gate training (2606.24898, 2607.20519); abstract-level.",
+     "label": "suggested",
+     "source": "/mnt/project-files/papers/amazon-looped-llm.md; papers/no-hardcoding-papers.md"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, queue 37 recipe, seeds 200 and 201, B2 and LR controls on the same machine.",
+    "hours": 10,
+    "arms": "SG vs LR, W3 vs LR, plain B2, each on seeds 200 and 201 (LR numbers exist; rerun if the machine or commit differs).",
+    "pass_mark": "Fixed now, both seeds. Pooled-5 change versus same-seed B2 at least +0.5; in_dist 16-minus-8 at least -0.3; loops:0 in_dist and donor at most 5; chain-5 at least 99.0 and loops:1 chain-5 at most 5; no dev split down more than 2.0 on the 2-seed mean. Report the same-machine plain-B2 loops:0 beside every leak value.",
+    "proved_wrong": "SG: 2-seed mean 16-minus-8 at -1.0 or worse (loop gradients produced LR's stability) or loops:0 above 5 on both seeds (the leak is not on the loop path). W3: loops:0 above 5 on both seeds (shallow rounds are not the source) or 16-minus-8 at -1.0 or worse on both seeds (rounds 1-2 supervision gave the stability)."
+   },
+   "rules_check": "Rule 4: one change from LR per arm; confirm on seeds 202-205 only if the screen passes. Rule 5: dev only. Rule 7: no target changed. Rule 10: training-only; the deployed round count stays fixed (this is the stability prerequisite for H1's cap above 8). Rule 3: 0 params. Rule 6: PC, 4 to 8 h per pair.",
+   "closest_prior": "Test LR (PASS-MARKS addendum 5) with gradient through the loop and rounds 1-6. H1 inherits the same per-round supervision, so its leak mark H-e is directly affected.",
+   "autonomy": "Training only; answering at deploy is unchanged.",
+   "merged_from": [
+    "w1e-2",
+    "w1e-3"
+   ],
+   "director_score": 6.5,
+   "director_note": "The only positive pooled-5 result near this area, so a repair has real expected value. Critics: (1) leak values move across machines, so the determinism check and same-machine B2 are not optional; (2) LR's gain was mostly outside in_dist, check which splits move; (3) 4 runs at 1.5 to 3.7 h each is 6 to 15 h, not the 6 h quoted in the raw ideas; (4) the leak failure is one seed of two; (5) with a learned stop (ideas 5 and 7) the post-stop rounds are frozen, which weakens the 16-round stability need.",
+   "id": "thinker-D13",
+   "area": "thinker"
+  },
+  {
+   "title": "Compile the round loop: same math, measured speed",
+   "summary": "B2 runs 4.3 to 4.4 updates per second against about 20 for the plain step model on three clean seeds, and its 17-token matmuls are small, so launch overhead may be a large share. Wrap the round loop with torch.compile or CUDA graphs under fixed padded shapes, keep weights and math identical, and measure. A faster loop makes every depth and stability arm in this area cheaper.",
+   "change": "models/ledger.py run(): wrap the round loop (about lines 306-345) or CBlock.forward in torch.compile (reduce-overhead mode or CUDA graphs) with fixed shapes: pad prompts to 208 letters and fix the number and word slot counts per batch. No parameter, loss, data or target change. Check nvidia-smi before and after that nothing else is running.",
+   "why": "The speed gap is real but noisy: seeds 202-204 give B2 4.41/4.39/4.30 against plain 20.03/20.06/19.88 updates per second, seed 200 gives 1.82 vs 14.29, seed 201 1.58 vs 1.90, and the PC is shared with another owner's jobs. The solo 5090 probe gives 4.0 at 3M and 4.7 at 10M, and per-block cost is about 0.0033 s per block-pass per update plus about 0.014 s fixed (15%), which is what a compile can reduce. Whether the time is launches or arithmetic is untested; this decides how to cost every deep arm and the 8a 10M rung.",
+   "evidence": [
+    {
+     "claim": "Steps per second B2 vs plain steps: seeds 202-204 about 4.4 vs about 20; seed 200 1.82 vs 14.29; seed 201 1.58 vs 1.90; seed 205 6.74 vs 10.57. Runs shared the card.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json (steps_per_s); fact check speed-and-hours-reconcile"
+    },
+    {
+     "claim": "Solo 5090 per-update time at 8a shapes: B2 0.092 s (3M), 0.327 s (10M), 0.679 s (30M) against plain 0.023, 0.070, 0.148 (x4.0, x4.7, x4.6).",
+     "label": "shown",
+     "source": "8A-SPEC-2026-10-07.md section 19 (I2)"
+    },
+    {
+     "claim": "The round loop is a Python for loop of rounds x 2 blocks with masked attention, no compilation; a 10.9M B2-M ran faster per step than the 3.3M q33 B2 on the PC because of co-running jobs.",
+     "label": "shown",
+     "source": "ledger.py:306-313; results/35-pc-b1-students/b2g_s300/RESULT.json (6.01 steps/s)"
+    },
+    {
+     "claim": "Per-update time is overhead-bound rather than arithmetic-bound.",
+     "label": "untested",
+     "source": "reasoning from 17 tokens x batch 256 matrices; this idea measures it"
+    },
+    {
+     "claim": "I3's 30M B2 '13 hours a seed' does not follow from I2 (0.503 s x 58,594 = 8.2 h at two parts); FIRST-LOOK's 2-3 h deep B2 is optimistic (3.5 to 5.5 h).",
+     "label": "shown",
+     "source": "8A-SPEC section 19; fact check speed-and-hours-reconcile"
+    }
+   ],
+   "test": {
+    "kind": "other",
+    "where": "Ben's PC with nothing else running; equality check on 1,000 dev rows of B2_s100.",
+    "hours": 1,
+    "arms": "Eager vs compiled (or graph-captured) round loop, same weights, same batch, same steps, B2 default config.",
+    "pass_mark": "Equality: forward logits and one training step match eager within 1e-5 relative in fp32 and identical argmax on 1,000 dev rows in bf16. Speed: steps per second at least 1.5x eager on the same box and batch; strong pass 2.0x.",
+    "proved_wrong": "Speed-up below 1.2x: time is arithmetic, not launches; then depth must come from fewer FLOPs and the 8a time estimate must use measured per-block cost."
+   },
+   "rules_check": "Rules 1, 2, 3: no hand code, no teacher, no size change. Rule 6: cheap and speeds every later arm. Rule 7: padding changes no targets, padded positions are masked. Rule 9: B2 only. Rule 10: implementation detail, no deploy-time decision.",
+   "closest_prior": "8A addenda G and H: speed probe q45 on rented 5090s (timing only, no code change). No compile test on file.",
+   "autonomy": "Implementation speed-up only; the model gains or loses no run-time decision.",
+   "merged_from": [
+    "w1h-5"
+   ],
+   "director_score": 6,
+   "director_note": "An enabling idea; its payoff is the multiplier on every other run. Critics: (1) variable-length padding to 208 may waste more than the launches save (mean prompt is 81 characters); (2) bf16 argmax equality on 1,000 rows is a weak bit-exactness test; (3) dynamic shapes in the per-row number and word spans may force recompiles; (4) measure on a free card, shared-GPU timings are noisy.",
+   "id": "thinker-D14",
+   "area": "thinker"
+  },
+  {
+   "title": "CONTINUE turns on T1's text tape: calls past seven, model-decided",
+   "summary": "T1 can write at most 7 calls because each answer is read after one fixed 8-round pass over a 7-row tape. Let the model end a turn with CONTINUE instead of ANSWER: the tape stays and a new 8-round turn reads the longer tape, so the model chooses how many turns it takes. A memoryless variant carries one running value plus a marker word to the next turn and tests whether the tape adds anything. Both depend on T1's screen and on a held-out length panel.",
+   "change": "models/tool.py run() (round loop lines 152-193): wrap in a turn loop. Mode-head class 0 (Linear(d,3), unused by T1 which trains only classes 1 and 2) becomes CONTINUE at zero parameter cost; on CONTINUE keep texts and tape, reinitialise Z to ctrl plus place rows, start the next 8-round turn; ANSWER as now; safety cap 32 turns (disclosed). Replace tape_emb Embedding(7,d) by a fixed sinusoid of the global entry index so the tape can grow (params 3,277,393 - 1,792 = 3,275,601). Keep every gold step (progparse.py:199 drop removed for T1), split gold entries at teacher turn boundaries (training only: end of the turn that consumes the last number of a prompt sentence; after the 7th call otherwise) and set class 0 at each non-final turn end in loss(). Memoryless arm: at CONTINUE the value is written through the GEN registers/copy path and a marker word is the argmax of lword, the tape is cleared and a driver re-feeds ' | carry <value> after <marker>' appended to the prompt (reader position table and MAX_PROMPT 208 grow); the driver only re-feeds text the model wrote.",
+   "why": "Program rows L=2 to 7 are 98.6 to 100% at 8 rounds and unchanged at 16, so extra rounds are not the way to length; extra turns of the trained 8-round depth are. The 7-call tape is the cap that sends the 528 train rows with 9 to 11 steps to answer-only targets, and T1 as sealed keeps 7 calls (its write gate is the same 'if not 1 <= t <= N_RES'). Chain families reduce to a fold of the running result, so one carried value may suffice; families with two live values should fail the carry arm, which is informative either way. Scope: out-of-length generalisation, not in-dist gains (only 35 of 6,800 dev rows have 6 to 7 steps).",
+   "evidence": [
+    {
+     "claim": "T1 (3,277,393 params) writes calls at rounds 1-7, tape_emb is Embedding(7,d), NOOP only skips a call, and the answer is read after round 8; T1 still allows at most 7 calls per turn.",
+     "label": "shown",
+     "source": "custom_io/models/tool.py:76, 150-163, 173-177; PASS-MARKS.md addendum 17; fact check (brief corrections)"
+    },
+    {
+     "claim": "Mode head Linear(d,3) is on control 1; T1 trains only classes 1 (WORD) and 2 (GEN), and talk() maps every non-1 mode to GEN, so class 0 is unused.",
+     "label": "shown",
+     "source": "ledger.py:149; models/tool.py talk() and loss()"
+    },
+    {
+     "claim": "528 train rows have 9-11 steps (list_stats, 5-6 numbers) and train answer-only; 3 of 1,360 small-dev in_dist rows are over 7 steps. Counts come from the build thread.",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:58; FIRST-LOOK-10M-2026-10-07.md:48"
+    },
+    {
+     "claim": "Program rows L=2..7 score 98.6-100 at both 8 and 16 rounds; L=0 rows fall 84.0 to 82.1 and 85.0 to 83.6.",
+     "label": "shown",
+     "source": "PROBE.json M1 by_len (seeds 100, 101)"
+    },
+    {
+     "claim": "Chain families fold the previous result with the next value (fold(), progparse.py:101-105; running total for state_update at :128-131); K1 proposes 16 calls in one turn with a bigger fixed table.",
+     "label": "shown",
+     "source": "models/progparse.py:101-105, 128-131; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:70"
+    },
+    {
+     "claim": "Re-entering a fixed 8-round loop several times in one forward pass appears in no file.",
+     "label": "untested",
+     "source": "reading of project files and the code copy"
+    },
+    {
+     "claim": "The held-out length panel (rows with 4 to 10 steps, fresh, hash-checked) needs a step parameter that is not in the code copy of the generator.",
+     "label": "shown",
+     "source": "raw idea w3e-1 test section; custom_io/data.py (no generator)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, after T1's screen (queue 40, not yet run). Same-machine baselines only.",
+    "hours": 8,
+    "arms": "A: teacher turns at sentence boundaries (tape kept). B: teacher turns of 3 calls (count control). C: memoryless carry. Train on rows with at most 5 program steps. Held-out panel: 200 fresh rows each for 4, 5, 6, 7, 8, 9, 10 steps from chain_ops, state_update and var_chain-type generators, scored whole. Reference: plain_tf_steps on the same rows and seeds.",
+    "pass_mark": "Fixed now, both seeds. P1 arm A accuracy on 6-10 steps at least 0.8 x its accuracy on 4-5 steps. P2 arm A on 6-10 at least plain_tf_steps +5 points. P3 CONTINUE agrees with gold at turn ends at least 98%. P4 CONTINUE lands on the sentence boundary at least 90% and no single call count explains 60% or more of CONTINUE events. P5 arm A on 6-10 at least arm B. P6 full-data parity: pooled-5 and chain-5 at least T1 -1.0. Carry arm C: one-live-value families on 6-10 steps at least 0.8 x their 4-5 step accuracy and within 3 points of arm A.",
+    "proved_wrong": "P1 ratio below 0.5 on both seeds, or P3 below 90%, or the count shortcut fires on both seeds (the model counts calls instead of reading the question). Carry arm: ratio below 0.5 on one-live-value families (one number is not enough) or 10 points below arm A (the tape does the work)."
+   },
+   "rules_check": "Rule 1: calc() stays an outside tool called by writing text; the driver only re-feeds the model's own text. Rule 2: sentence boundaries from word_spans are teaching data. Rule 3: 3,275,601 params (-0.82% vs B2, +0.94% vs plain S). Rule 4: 2-seed screen, six before a claim. Rule 5: held-out panel fresh and hash-checked. Rule 7: every step kept, no answer-only fallback. Rule 9: card experiment. Rule 10: the model decides each call, each CONTINUE and the ANSWER; the 8-round turn and 32-turn cap are disclosed constants; teacher turn boundaries exist only in training.",
+   "closest_prior": "K1 (16 calls in one turn, bigger fixed table); H1 (learned stop head inside one loop, cap 32); redesign section 4 (calculator as text tool, stop by emitting the answer). This adds no stop head and no per-round readout loss.",
+   "autonomy": "The deployed model decides every call, every CONTINUE and the final ANSWER; fixed by us are the 8-round turn depth and the 32-turn cap. Teacher turn boundaries are training only.",
+   "merged_from": [
+    "w3e-1",
+    "w3e-2"
+   ],
+   "director_score": 6,
+   "director_note": "The clearest route to 'think as long as needed' beyond 7 steps with no stop head. Critics: (1) T1 has not run; (2) the held-out length generator does not exist in the code copy; (3) whether a count shortcut replaces reading (P4); (4) carry-turn prompts grow past MAX_PROMPT and the reader position table; (5) the teacher boundary rule for sentences holding several numbers; (6) a 32-turn cap is a developer constant, state how often it binds.",
+   "id": "thinker-D15",
+   "area": "thinker"
+  },
+  {
+   "title": "Index steps by writes, and let the model say 'prev'",
+   "summary": "The step embedding is indexed by round, so program length and round count are tied, and T1 finds the previous result through a 7-row position table that is trained only to the lengths seen. Index the step clock by writes made so far (0 params, same 8 rows), and on T1 let the model write the word prev as an operand so the outside calculator substitutes the last result. Both are tested by training on short programs and scoring held-out longer ones, whole rows only.",
+   "change": "B2 arm (trained): ledger.py:308 replace the scalar ts by a per-row count of writes before round t clamped to 7, so Z gets step_emb(ts)[:, None, :] (line 312) and each result key uses it (line 338); training excludes rows with 4 or more steps (excluded, not truncated); held-out 4-5 step rows scored whole (220 of 6,800 in_dist rows have 4-5 steps, plus a fresh panel). T1 arm: tool.py calc() (lines 43-53) accepts a or b equal to 'prev' and substitutes the result of the most recent non-empty entry; the entry keeps the word (e.g. 'add prev 5 = 17'); in loss() a gold operand equal to the previous step's value gets a logsumexp over {digits, 'prev'} like the existing order-free ADD/MUL/MIN/MAX loss. Params 0 for both. Zero-training companion lesion: freeze each row's step index at its first post-write NOOP (ts_i = min(t, t*_i)) on the screen checkpoints, as part of idea 6.",
+   "why": "Under a loop that can stop at different times, the round number no longer says where the program is, and a write-count clock is the model's own bookkeeping. Gold ops are padded with NOOP after the last step, so index 3 means stop in either form, and both arms may fail the same way; the test is informative either way. The D0b test found 0 copy errors in 2,000 rows inside the trained range, so any 'prev' benefit would appear only at tape positions 5 to 6, which training on at most 5 steps never writes.",
+   "evidence": [
+    {
+     "claim": "Step index equals round: ts = min(t, n_loops-1), added to Z (line 312) and to each result key (line 338); step_emb has 8 rows.",
+     "label": "shown",
+     "source": "ledger.py:145, 308, 312, 338"
+    },
+    {
+     "claim": "Gold ops are padded with NOOP after the last step on every round up to 7; result pointers are dot products with keys that carry no slot position.",
+     "label": "shown",
+     "source": "ledger.py gold() lines 443-449; ptr() lines 227-229"
+    },
+    {
+     "claim": "In_dist length counts (6,800 rows): L4 151, L5 69, L6 7, L7 28; L=7 rows are 100% right at 8 rounds.",
+     "label": "shown",
+     "source": "PROBE.json n_by_len, M1 by_len"
+    },
+    {
+     "claim": "T1 writes operands as cells (CELLS=11, units first); calc() accepts only integer strings; tape positions use Embedding(7,d); D0b: 0 copy errors in 2,000 rows.",
+     "label": "shown",
+     "source": "models/tool.py:37, 43-53, 76, 101-117; /mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:123"
+    },
+    {
+     "claim": "A position-indexed reference fails where that position was never trained; a 'prev' name closes the gap inside one turn.",
+     "label": "suggested",
+     "source": "reasoning in raw idea w3e-3"
+    },
+    {
+     "claim": "Whether T1's answer is stable after its last call is untested (B2 program rows are stable, shown).",
+     "label": "untested",
+     "source": "T1 has not run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC; B2 arm first (no T1 needed), T1 arm after T1's screen; seeds 200 and 201.",
+    "hours": 5,
+    "arms": "B2: absolute round index vs write-count index, both trained on rows with 3 or fewer steps, scored on held-out 4-5 step rows (panel at least 200 rows, hash-checked). T1: prev operand vs digits only, trained on at most 5 steps, scored on 4-5 steps and 6-7 steps inside one turn.",
+    "pass_mark": "Fixed now, both seeds. B2 arm: best arm held-out accuracy at least 80%; write-count minus absolute at least +3 on held-out and at least -1.0 on in_dist rows with 3 or fewer steps and on L=0 rows. T1 arm: (prev on 4-5 minus prev on 6-7) at most 0.5 x (digits on 4-5 minus digits on 6-7); prev on 6-7 at least digits +5 points; prev written at gold-previous positions and nowhere else at least 98%; pooled-5 at least T1 -1.0.",
+    "proved_wrong": "B2 arm: both arms at 30% or below on held-out (training coverage binds, the fix is the longer 8a rung, not an index change) or write-count minus absolute below +3 on both seeds. T1 arm: prev gain below +2 on both seeds (position code is not the bottleneck) or tool resolution errors above 0.5% of calls."
+   },
+   "rules_check": "Rule 1: the write count is bookkeeping inside the forward pass, flagged for Ben's ruling; 'prev' is resolved in calc(), an outside tool, and the model decides when to write it. Rule 3: 0 params. Rule 4: 2-seed screen. Rule 5: panel from the dev generator, hash-checked against protected panels. Rule 7: excluded rows are not cut or given answer-only targets and held-out rows are scored whole. Rule 10: the model's own write count; the round count is still fixed.",
+   "closest_prior": "A0 (register loop without step targets, NO-GO) changes targets, not the index. K1 raises the number of entries but not how they are referred to. 8a addenda train all lengths, so none tests extrapolation.",
+   "autonomy": "The write count is the model's own output and the write decision is its op head; no hand threshold. The saturation of the 8-row table at 7 writes is a disclosed developer bound.",
+   "merged_from": [
+    "w1d-4",
+    "w2c-4",
+    "w3e-3"
+   ],
+   "director_score": 5.5,
+   "director_note": "Cheap enough, and the answer feeds the idea of unbounded programs. Critics: (1) the B2 arm may fail identically because index 3 already means stop; (2) held-out 4-5 step rows are only 220 in the dev set, a fresh generator panel is needed; (3) the write-count bookkeeping is grey under rule 1; (4) the T1 arm waits for queue 40; (5) which rows are excluded from training must be counted and reported.",
+   "id": "thinker-D16",
+   "area": "thinker"
+  },
+  {
+   "title": "A cursor over the prompt's numbers with a learned END",
+   "summary": "Many programs are folds: each step combines the running result with the next number in the question. Replace B2's 16-row number-order table with fixed sinusoid codes, add a cursor that moves to the next number, and add a learned END candidate to the operand pointer; pointing at END writes NOOP. The stop then has a content reason (nothing left to read) instead of a round count, and a fold can read lists longer than any it trained on.",
+   "change": "ledger.py:144-145: the ordinal table Embedding(16,d) becomes a fixed sinusoid of number index (the OMEGA codes used by word_keys, lines 222-224) through Linear(20,d) (+1,280 net). Cursor: a 20-d state kept in a control token by Linear(20,d) (5,376), read back by Linear(d,20) (5,140), next cursor by Linear(20,20) (420); the b-operand query is the read-out matched against number codes (ledger.py:322-331). A learned END key (64 params) is one more b-pointer candidate; choosing END writes NOOP (ledger.py:325-331). N_RES 7 to 11 and n_loops 8 to 12 (+1,024 step rows) as in idea 2. About +13,304 params, total 3,315,785 (+0.41% vs B2). The cursor uses the 16 prompt-number slots that T1 keeps (tool.py docstring lines 11-12), so it can move to T1 later.",
+   "why": "List folds (sum, smallest, largest, range) parse as chains of previous result op next number, and the 528 train rows with 9 to 11 steps are list_stats folds over 5 to 6 numbers. B2's step embedding is indexed by round, so nothing in the signal tells it to stop because the list is finished. A cursor with an END candidate gives the stop a content reason and lets a fold read any length. Untested: whether list numbers appear in prompt order (the cursor assumes it). Scope: list folds only.",
+   "evidence": [
+    {
+     "claim": "sum, smallest, largest and range parse to folds over the list; range of k numbers takes 2k-1 ops.",
+     "label": "shown",
+     "source": "models/progparse.py:101-105, 135-154"
+    },
+    {
+     "claim": "list_stats has 5-6 numbers and 9-11 steps in 528 train rows and these rows get no program; B2 has N_NUM=16 number slots and an ordinal table of 16 rows.",
+     "label": "shown",
+     "source": "/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md:58; models/progparse.py:8; ledger.py:144-145"
+    },
+    {
+     "claim": "B2's step embedding is indexed by round and clamped at n_loops-1; T1 keeps 16 prompt-number slots.",
+     "label": "shown",
+     "source": "ledger.py:145, 308, 312; models/tool.py docstring lines 11-12"
+    },
+    {
+     "claim": "A learned END candidate lets the model stop from content rather than round count.",
+     "label": "suggested",
+     "source": "reasoning in raw idea w3e-5; no run"
+    },
+    {
+     "claim": "Cursor-driven folds generalise to 7-11 numbers.",
+     "label": "untested",
+     "source": "no run in any file"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC; B2 same-machine control; loops 12.",
+    "hours": 6,
+    "arms": "A: cursor and END. B: B2 with 11 result slots and 12 rounds on the same data (control). Train on folds of 2-6 numbers (1-5 steps); test on 7-11 numbers (6-10 steps), 200 fresh hash-checked rows per count, scored whole; full-data parity run for pooled-5 and the loops:0 leak.",
+    "pass_mark": "Fixed now, both seeds. P1 arm A on 7-11 numbers at least 0.8 x its accuracy on 3-6 numbers. P2 arm A on 7-11 at least arm B +5 points. P3 END chosen at the step after the last number at least 98% and never earlier. P4 pooled-5 at least B2 -1.0 and loops:0 leak at most 5.",
+    "proved_wrong": "P1 ratio below 0.5 on both seeds, or P3 below 90% (the stop is not reading the cursor)."
+   },
+   "rules_check": "Rule 1: nothing hand-written at test; the fold order is teaching data. Rule 3: +13,304 params, inside the band. Rule 4: 2-seed screen. Rule 5: fresh hash-checked panel. Rule 7: N_RES 11 keeps every train fold, longer rows still counted. Rule 9: card experiment. Rule 10: the model decides the cursor move, the operand, END (the stop) and the answer; the 12-round cap is a disclosed budget.",
+   "closest_prior": "B2's ordinal table and slot pointers (ledger.py:145, 322-331); H1 stops with a learned head, this stops with a pointer candidate and no head. Shares the N_RES 11 change with idea 2.",
+   "autonomy": "The deployed model decides cursor step, operand, END and answer; fixed by us is the 12-round safety budget.",
+   "merged_from": [
+    "w3e-5"
+   ],
+   "director_score": 5,
+   "director_note": "Odd but a clean rule-10 story for folds. Critics: (1) fold-only scope, are folds a large share of what Ben cares about; (2) list order assumption; (3) the sinusoid number code replaces a learned table, which is a second change, run it as a pre-arm; (4) needs the N_RES 11 / n_loops 12 build with the init pinned; (5) the fresh panel generator needs a numbers-count parameter.",
+   "id": "thinker-D17",
+   "area": "thinker"
+  },
+  {
+   "title": "Train for stability past round 8: round norm, 8-12 rounds, stillness",
+   "summary": "Three single-change trained fixes for the 16-round drop, ordered by what idea 6 finds: a LayerNorm on the controller state after each round (the scale grows about 4 per round and is never normalised), a random round count of 8 to 12 per batch (so rounds 8 to 11 are trained), and a penalty on state movement after the program is written. Each keeps the cap at 8 or more so no program is cut. They matter only if rounds past 8 are ever used; a learned stop would freeze the post-stop rounds.",
+   "change": "Arm N: ledger.py __init__ adds self.round_ln = nn.LayerNorm(d) (weight init 8.0 to match the round-1 RMS 8.26 or no-affine for 0 params), built last so other weights match at the same seed; run() adds Z = self.round_ln(Z) after the block loop (after line 314); +512 params if affine. Arm R: loss() draws n from {8,9,10,11,12} per batch and calls run(batch, loops=n, gold=g); n_loops stays 8 so the init and step_emb rows are unchanged and rounds 8-11 reuse row 7; compute about 1.2x. Arm S: penalty lam=1.0 (fixed, no sweep) times the mean over rows and pairs (t-1,t) with max(2,L+2) <= t <= 6 of ||Z1_t - Z1_(t-1)||^2 + ||R_t - R_(t-1)||^2 divided by ||Z1_(t-1)||^2 + ||R_(t-1)||^2 using the rounds=True snapshots (ledger.py:340-341).",
+   "why": "Controller RMS goes 8.3 to 32.4 to 68.9 (rounds 1, 8, 16) with no normalisation across rounds, only linear growth and a 3.4 to 3.9x ratio over 8 rounds, so the G3 blow-up gate (10x) stayed shut while the scale drift was never tested. Rounds past 8 are never trained, and the drop sits in no-program rows whose answers flip across rounds. Test LR's per-round answer loss shrinks the drop but leaks; N and R use no answer labels, S asks the loop to settle once the program is written. The pooled-5 and chain-5 marks guard against losing the 8-round dynamics (N changes the relative size of the step addition about 8x).",
+   "evidence": [
+    {
+     "claim": "Controller RMS: 8.26, 32.4, 68.9 at rounds 1, 8, 16 (seed 100); 8.08, 27.3, 57.3 (seed 101); growth about linear, G3 gate (10x) shut; no LayerNorm on Z between rounds.",
+     "label": "shown",
+     "source": "custom_io/results/40-loops-probe/PROBE.json (M5, gates); ledger.py:307-315"
+    },
+    {
+     "claim": "16-minus-8 in_dist -1.91 and -1.62 on seeds 200 and 201 (B2); chain-5 99.4 and 99.6; loops:0 in_dist 0.00 and 10.81 (PC).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200, B2_s201 RESULT.json"
+    },
+    {
+     "claim": "H1 draws its cap from {4, 8, 16, 32}; cap 4 writes only steps 1-3, which truncates 4-7 step programs, and the batch rule max(K, L_max+1) in redesign line 167 fixes it for the longest row only. Arm R keeps caps at 8 or more.",
+     "label": "shown",
+     "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md:138, :167; fact check verify-stop-and-cap-code-claims item 4"
+    },
+    {
+     "claim": "Worst 16-round family changes: cipher_map -13.0 (seed 100), seq_next -14.5 (seed 101), rule_apply -7.0 and -2.5; best +2.0. Fewer rounds collapse chain-5 (loops:1 0.0-2.9).",
+     "label": "shown",
+     "source": "PROBE.json M3 gain16_by_family; results/33-pc-confirm-b2 RESULT.json (lesions loops:1)"
+    },
+    {
+     "claim": "Randomising the loop count in training reduces out-of-distribution variance across inference loop counts (2606.29983); length-sampled trajectories keep both short and long loops useful (LoopFormer 2602.11451); normalising or removing scale from the loop is the proposed fix for norm growth (2606.24898). All abstract-level.",
+     "label": "suggested",
+     "source": "scout notes in the area brief; /mnt/project-files/papers/amazon-looped-llm.md"
+    },
+    {
+     "claim": "Settling the readout state after the program is written carries past the trained rounds (DEQ-style regulariser).",
+     "label": "suggested",
+     "source": "reasoning in raw idea w1e-6; no result here"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, queue 37 recipe, seeds 200 and 201, B2 control on the same machine. Run only the arm idea 6 points at; each arm about 3 to 8 h for two seeds.",
+    "hours": 6,
+    "arms": "N (round LayerNorm), then R (8-12 rounds), then S (stillness), each versus B2 on seeds 200 and 201.",
+    "pass_mark": "Fixed now, both seeds, same marks for every arm. (16 minus 8) in_dist at least -0.3; pooled-5 at least B2 -1.0; chain-5 at least 99.0 and loops:1 chain-5 at most 5; loops:0 in_dist and donor at most 5 and at most B2 +1.0. Arm R also needs 12-minus-8 at least -0.3. Log the mean stillness ratio for arm S.",
+    "proved_wrong": "(16 minus 8) at -1.0 or worse on both seeds with the fix in place (the drop is not what the arm targets); pooled-5 down more than 2.0 on both seeds (the fix breaks 8-round dynamics). For arm S, a near-zero logged penalty with the drop unchanged means settling inside rounds 2-6 does not carry to 8-16."
+   },
+   "rules_check": "Rule 3: arm N +512 params (+0.016%), others 0. Rule 4: one change per arm; 2 seeds then 6. Rule 7: no target cut, n >= 8. Rule 10: pre-training/architecture only; the deployed model normalises or settles itself, and the round count is still fixed at 8 (H1's job). Rule 9: B2 only.",
+   "closest_prior": "Test LR (per-round answer loss, gold labels, leaked). G3 (blow-up gate, not scale drift). H1 draws caps from {4,8,16,32}. Nothing normalises or penalises the state across rounds in the project.",
+   "autonomy": "Architecture and training only; the deployed model needs no extra step.",
+   "merged_from": [
+    "w1d-2",
+    "w1e-5",
+    "w1e-4",
+    "w1e-6"
+   ],
+   "director_score": 5,
+   "director_note": "Run only if idea 6 says the step push is not the cause and the stop of ideas 5 and 7 cannot freeze the rounds. Critics: (1) with a learned stop, the post-stop rounds are frozen, so the 16-round drop is moot; (2) arm S penalises no-program rows from round 2 where thinking may still be needed; (3) arm N changes the step addition's relative size about 8x; (4) each arm is 3 to 8 h on the PC and the raw ideas understate it; (5) the 8-to-16 drop is on a regime that does not help current tasks.",
+   "id": "thinker-D18",
+   "area": "thinker"
+  },
+  {
+   "title": "Reader depth at equal size: four conv layers, narrower MLP",
+   "summary": "Move the 656,896 parameters of two extra reader conv blocks out of the controller MLP (hidden 1228 to 588), keeping the total at 3,302,737, to test whether the same parameters buy more letter reach (window +-4 to +-8 characters) than controller width. Removing the window costs 6.3 to 6.8 pooled-5 today, so reach matters; its value beyond +-4 is unmeasured, and this is the 'more layers' idea at the part of B2 where layers are known to help.",
+   "change": "Config only: {copy: true, reader_layers: 4, mlp: 2.3}. A conv block is 328,448 params at d=256 (LN 512, Conv1d 327,680, bias 256); +656,896 in the reader and -656,640 in the controller MLP (1,026 per hidden unit across 2 blocks), net +256. Compute about 8% fewer FLOPs per answer (extra conv +106M, narrower MLP -178M at mean prompt length 81). Optional R4-only arm (+20% params, MLP kept at 4.8) separates the reader from the thin MLP.",
+   "why": "The window is what the answer needs: B2 minus the no-window reader is +6.84 and +6.26 pooled-5 and cipher_map in-dist falls to 12.5 and 2.5 without it. Two more conv layers double reach to +-8 characters, enough for most neighbouring words, and the extra reach is cheap. W1 (global low-rank attention, +33,632 params, queue 42) tests long range; this tests local reach at equal size and should be read against it.",
+   "evidence": [
+    {
+     "claim": "B2 minus R0 (no window) is +6.84 and +6.26 pooled-5 on seeds 200 and 201; R0 has 656,896 fewer params; cipher_map in-dist without the window 12.5 and 2.5.",
+     "label": "shown",
+     "source": "custom_io/results/RESULTS-EG2.md lines 48-50, 121 (R0)"
+    },
+    {
+     "claim": "Reader conv block 328,448 params; two blocks 656,896; reader total 742,400; the formula reproduces the saved B2 total 3,302,481.",
+     "label": "shown",
+     "source": "models/reader.py:43-51; models/ledger.py:130-147 (raw idea w3f-1)"
+    },
+    {
+     "claim": "No run in results has reader_layers above 2 at d=256.",
+     "label": "shown",
+     "source": "grep of results/*/stdout.events.txt cfg fields (raw idea w3f-1)"
+    },
+    {
+     "claim": "Leak guard: B2 loops:0 in_dist on seeds 200-205 is 0.00, 10.81, 0.00, 5.66, 3.53, 0.00, so the guard must be paired with B2's own value on the same seed.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json (lesions loops:0)"
+    },
+    {
+     "claim": "Frame and vocab shifts cost about 0.95 pooled points beyond the in-dist rate, so reading is not the main bottleneck for pooled-5.",
+     "label": "shown",
+     "source": "RESULT.json by_family excess method (raw idea w1g-3)"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, config-only queue file, seeds 200 and 201 side by side, B2 reused from results/33-pc-confirm-b2.",
+    "hours": 4,
+    "arms": "R4M (reader_layers 4, mlp 2.3, 3,302,737 params); B2; plain_tf_steps reference.",
+    "pass_mark": "Screen: R4M minus B2 pooled-5 at least +1.0 on both seeds; chain-5 at least 99.0; loops:0 in_dist at most B2's same-seed value +2.0. Confirm seeds 200-205: mean gain at least +1.0 with 95% CI above 0.",
+    "proved_wrong": "Six-seed mean gain at most 0 with the CI upper bound below +0.5: local reach does not pay at equal size and the parameters belong in the controller. A loss of 1.0 or more may come from the thin 588-unit MLP, so run the R4-only arm."
+   },
+   "rules_check": "Rule 1, 2: no hand code, no teacher. Rule 3: 1.8% above plain_tf_steps, inside 3%. Rule 4: 2 seeds then 6, one trade. Rule 5: dev only. Rule 6: PC. Rule 7: no target change. Rule 9: B2 only. Rule 10: fixed feed-forward stack, nothing gated at deploy.",
+   "closest_prior": "R0 removes the window (tried, -6.3 to -6.8); W1 adds global reach (+33,632 params, queue 42, not run).",
+   "autonomy": "A fixed learned conv stack; no deploy-time gate.",
+   "merged_from": [
+    "w3f-1"
+   ],
+   "director_score": 5,
+   "director_note": "Belongs partly to the reader area; keep because it is the one depth axis with evidence behind it. Critics: (1) thin MLP confound, hence the R4-only arm; (2) the extra conv depth overlaps with W1, check queue order; (3) the leak guard must be relative to same-seed B2; (4) the 656,896 trade is asymmetric in compute.",
+   "id": "thinker-D19",
+   "area": "thinker"
+  },
+  {
+   "title": "Memory of its own earlier rounds: notebook, edit-log, ring, history readout",
+   "summary": "Give later rounds a frozen or bounded record of what earlier rounds did, instead of only the summed residual: a notebook with one learned 16-wide summary per round (+9,232 params), per-round block edits as extra cross-attention keys (+256), an 8-slot ring with learned addressing (+11,288, bounded past round 8), or one attention over round states at the readout (+25,408). Each comes with a dummy-token control and a probe gate, and a downward arm cuts the control tokens from 8 to 4 to price the scratch.",
+   "change": "Gate first (CPU, idea 4's hooks): row-specific share of each round's edit, share = mean over controls 0-7 of ||e_t(row) - batch mean|| / ||e_t(row)|| for rounds 2-8, and per-control edit norms. If the gate passes, build in this order: (1) notebook: after each round's blocks write m_t = Lin(16->256)(GELU(Lin(256->16)(LN(mean of controls 0-7)))) into N and read it through kv_of with a third source row (src Embedding(2) to 3 rows, ledger.py:144); (2) ring: address a_t = softmax(Lin(256->8)(LN(...))) and erase-add update of 8 slots, constant 8 keys per block; (3) edit-log: edit_t = blocks(Z) - Z over the 8 controls kept as keys; (4) history readout: store Z[:,1] after each round and attend (q,k Linear(256,32), o Linear(32,256)) from zf, adding the result to zf and the 9 registers. Build every new module last so B2 weights match at the same seed. Downward arm C4: N_CTRL 8 to 4 (ledger.py:62; -1,024 params, about -16% FLOPs per answer).",
+   "why": "The only evidence that extra state is used is seed 200 (zeroing controls 2-7 costs -7.8 chain-5; seeds 201 and 202 lose -0.6 and -1.0). Controller RMS grows about 4 per round, so a fixed-size edit sits in a growing sum and is hard to read back; kv_of applies LayerNorm so an edit enters a key at unit scale. A bounded ring should lose less than a growing notebook past round 8. Perfect selection among a row's own earlier states has a ceiling of about 2 in-dist points (overthinking plus right-later), which bounds the history readout. W2 (16 unread scratch tokens, about 4k params) is the planned fixed-count version with no content from the model's own rounds.",
+   "evidence": [
+    {
+     "claim": "Controls 2-7 zeroed: chain-5 99.4 to 91.6 (seed 200), 99.6 to 99.0 (201), 99.6 to 98.6 (202); pooled-5 -1.62, -0.61, -0.78.",
+     "label": "shown",
+     "source": "custom_io/results/d0/B2_s200.json, B2_s201.json, B2_s202.json (ctl27)"
+    },
+    {
+     "claim": "Controller RMS 8.3 to 68.9 over 16 rounds with increments levelling near 4.6 (seed 100) and 3.75 (seed 101); kv_of applies LayerNorm to every memory row; the residual is updated in place once per round.",
+     "label": "shown",
+     "source": "PROBE.json M5; ledger.py:113-124, 313-314"
+    },
+    {
+     "claim": "out['R'] is Z[:, N_CTRL:] and the talker reads all tokens after the controls, so appended tokens must be sliced off at ledger.py:344 or GEN would read them; the op and answer heads read only controls 0 and 1.",
+     "label": "shown",
+     "source": "ledger.py:321, 342, 344"
+    },
+    {
+     "claim": "Parameter arithmetic: notebook 512+4,112+4,352+256 = 9,232 (B2 3,311,713, +2.07% vs plain S); edit-log +256 (+1.79%); ring 11,288 (3,313,769, +2.13%); history readout 25,408 (3,327,889, +2.57%), all inside the band; W1 plus the history readout would exceed it.",
+     "label": "shown",
+     "source": "computed in raw ideas w2e-1, w2e-2, w2e-5, w1d-3 from layer shapes"
+    },
+    {
+     "claim": "Overthinking 1.91% and 1.66% of in_dist and right-later 7.3% and 8.4% of wrong rows bound any selection among a row's own states at about 2 points; the final-readout blind spot looks weak (28 of 28 L=7 rows right).",
+     "label": "shown",
+     "source": "PROBE.json M1, M3, M4"
+    },
+    {
+     "claim": "W2 is proposed with no code and no marks entry; RMT memory tokens and dedicated unread tokens (ViT registers) are the external precedents.",
+     "label": "suggested",
+     "source": "/mnt/project-files/architecture/redesign-ideas-2026-10-07.md section 5b; arXiv 2207.06881, 2309.16588 (abstract only)"
+    },
+    {
+     "claim": "Whether a stream of model-computed notes beats fixed unread tokens, and whether the model needs more or fewer than 8 controls.",
+     "label": "untested",
+     "source": "no run in any file"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Gate on Ben's PC CPU with B2_s100 and B2_s101; screens on the PC, seeds 200 and 201, same box as B2 baselines.",
+    "hours": 6,
+    "arms": "Gate: no training. Screen: (a) notebook; (b) write-only arm (entries computed but masked from every read); (c) zero-write arm (same key count, zeros). Then ring vs notebook for the bounded-versus-growing comparison; C4 as the downward arm. 3 arms x 2 seeds = 6 runs for the notebook alone.",
+    "pass_mark": "Gate: median row-specific edit share at least 0.5 on both checkpoints (run the screen) or at most 0.25 on both (predicted fail, do not run); controls 2-7 mean edit norm at least 0.5 x controls 0-1 on both. Screen, both seeds: S1 pooled-5 arm minus B2 at least -0.5; S2 in_dist(16) minus in_dist(8) at least -0.3; S3 arm minus write-only at least +1.0 and minus zero-write at least +1.0; S4 chain-5 at least 99.0; S6 (if both exist) ring's 16-minus-8 at least notebook's +0.3. C4: 6-seed mean pooled-5 of C4 minus B2 at least -0.5 and chain-5 at least 99.0 means the scratch is over-provisioned.",
+    "proved_wrong": "Write-only or zero-write arm within 0.5 of the notebook arm on both seeds (any gain is dilution or compute, not use of the model's own notes); S2 at -1.0 or worse on both seeds; gate share at most 0.25. C4: scratch is needed if the 6-seed mean change is -1.5 or worse or chain-5 falls below 98.0 on two or more seeds."
+   },
+   "rules_check": "Rule 3: all variants +256 to +25,408 params, inside the 3% band. Rule 4: 2-seed screens; a W2-type claim needs six seeds. Rule 1: no hand-written step. Rule 7: no target touched. Rule 10: writes, addresses and reads are learned; the round count is still fixed at 8. Rule 9: B2 only.",
+   "closest_prior": "W2 (16 learned scratch tokens, planned, no code); 8a addendum G (36 fixed registers at 12 rounds); Test LR and H1 (per-round supervision rather than memory). None has per-round model-computed content.",
+   "autonomy": "The model writes each entry and decides by attention what to read; the count equals the rounds run (ring: fixed 8); no schedule or threshold is added.",
+   "merged_from": [
+    "w1d-3",
+    "w2e-1",
+    "w2e-2",
+    "w2e-3",
+    "w2e-5",
+    "w3f-4"
+   ],
+   "director_score": 4.5,
+   "director_note": "Speculative, ranked low because the usage evidence is one seed. Critics: (1) the appended-token variant (live registers) risks the talker reading extra tokens; (2) the dummy-token controls are what make any gain attributable; (3) history readout and W1 cannot both be in the size band; (4) six runs for one variant is a day on the PC; (5) the last round's entry is read by no head, so spec how it is written; (6) overlaps W2, check which is sealed first.",
+   "id": "thinker-D20",
+   "area": "thinker"
+  },
+  {
+   "title": "Dropout in the controller blocks against 30 data passes",
+   "summary": "B2 sees its 200k skills rows about 30 times, and deeper loops may fit them tighter. Add dropout 0.1 on the attention and MLP residual branches of the two controller blocks during training only, with no new parameters, and test on 2 seeds whether pooled-5 and the variant split move. It is the cheapest memorisation control and no tried or planned arm uses any.",
+   "change": "CBlock (ledger.py:102-124): apply dropout p=0.1 in training only to the attention branch and the MLP branch before each residual add. Nothing else changes; params 3,302,481. Eval unchanged.",
+   "why": "24,000 updates x 256 rows over 200,000 rows is about 30.7 passes, far past the reuse guideline of about 4 (suggested). Final training loss is 0.014 to 0.021 on seeds 200 and 201 while variant sits at 32 to 35, consistent with a generalisation gap. Deeper stacks risk memorising on about 5.4M word pieces, so the same test at 8 blocks follows the 8a rung where the pool is 60M word pieces.",
+   "evidence": [
+    {
+     "claim": "24,000 x 256 / 200,000 = 30.7 passes over the skills rows.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200/RESULT.json; 8A-SPEC addendum B1"
+    },
+    {
+     "claim": "final_train_loss 0.0210 (seed 200) and 0.0139 (seed 201).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2/B2_s200, B2_s201 RESULT.json"
+    },
+    {
+     "claim": "Dropout or any memorisation control has no arm in design, PASS-MARKS, REPORT or the roadmap (grep).",
+     "label": "shown",
+     "source": "grep over those folders (raw idea w1h-6)"
+    },
+    {
+     "claim": "Reuse above about 4 passes adds little without extra regularisation (Muennighoff et al. 2023).",
+     "label": "suggested",
+     "source": "/mnt/project-files/whole-model-roadmap/whole-model-roadmap-2026-10-06.md:174"
+    },
+    {
+     "claim": "Dropout helps B2's variant split.",
+     "label": "untested",
+     "source": "no run"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 200 and 201, B2 RESULT.json as baseline.",
+    "hours": 5,
+    "arms": "B2 with dropout 0.1 in the two CBlocks vs B2.",
+    "pass_mark": "Chain-5 at least 99.0; loops:0 in_dist at most 5; pooled-5 at least B2 -0.5 and variant-split gain at least +2.0 on both seeds. Confirm six seeds: pooled-5 mean at least +1.0 with CI above 0.",
+    "proved_wrong": "Variant-split gain at most +0.5 on both seeds, or chain-5 below 99 on either seed (dropout breaks exact program steps)."
+   },
+   "rules_check": "Rule 1, 2, 3: no hand code, no teacher, no size change. Rule 4: marks fixed, six seeds before a claim. Rule 5: dev only. Rule 7: rows unchanged. Rule 9: B2 only. Rule 10: training-only regulariser.",
+   "closest_prior": "None in the tried or planned lists; the roadmap's data-reuse note is the only related text.",
+   "autonomy": "Nothing runs at deploy; the deployed architecture is unchanged.",
+   "merged_from": [
+    "w1h-6"
+   ],
+   "director_score": 4.5,
+   "director_note": "Cheap but it only addresses memorisation, which is not shown to limit B2. Critics: (1) dropout on exact program steps may hurt chain-5; (2) pooled-5 seed SD is 0.63 and paired SD about 1.4, so a 2-seed +2.0 variant mark is near noise; (3) the generalisation gap inference rests on a single training-loss number.",
+   "id": "thinker-D21",
+   "area": "thinker"
+  },
+  {
+   "title": "Per-round rank-1 adapters on the shared blocks",
+   "summary": "Give each (block, round) pair its own rank-1 adapter on the MLP input, zero-initialised so step 0 equals B2 (23,744 params, +0.72%). Today only step_emb differs between rounds, a vector added to all 17 tokens, so every round runs the same transform. The test asks whether a few thousand per-round parameters beat more shared blocks at almost no compute.",
+   "change": "models/ledger.py: CBlock.forward (lines 117-124) takes the round index t and adds (ln_f(Z) @ V[b,t]) @ U[b,t]^T to the fc pre-activation; new ParameterLists U (2 x 8 x 1228 x 1, zero init) and V (2 x 8 x 256 x 1); the loop in run() (306-314) passes t, clamped at 7 like step_emb. Params 2 x 8 x (256+1228) = 23,744, total 3,326,225 (+0.72% vs B2, 2.5% above plain_tf_steps). Compute about +0.1%. A wider variant (adapters on fc and out, 47,488 params) is the alternative.",
+   "why": "Shared weights force each round to apply the same transform, and the rounds differ only through step_emb. Relaxed Recursive Transformers report that shared layers with per-depth low-rank adapters recover much of unshared depth, on pretrained LLMs. Answers that flip across rounds (fewshot, rule_apply, order_chain) are where per-round transforms could help. Rounds past 7 reuse the last adapter, so the 16-round drop is expected to persist.",
+   "evidence": [
+    {
+     "claim": "The only per-round parameter in B2 is step_emb (n_loops x d); CBlock weights are shared across all rounds.",
+     "label": "shown",
+     "source": "ledger.py:145, 147, 312, 338"
+    },
+    {
+     "claim": "16-minus-8 in_dist: -1.91, -1.62, -1.40, -1.76, -0.81, -1.25 (mean -1.46).",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json"
+    },
+    {
+     "claim": "Per-depth LoRA on tied layers recovers much of unshared depth in pretrained LLMs from 1B up; no per-depth ablation in the abstract.",
+     "label": "suggested",
+     "source": "arXiv 2410.20672 (scout note, abstract only)"
+    },
+    {
+     "claim": "Per-round routers (Chain-of-Experts) were WRONG on the planner bench (131.2 vs 132.5 per 160); that changed which experts run, not the weights.",
+     "label": "shown",
+     "source": "/mnt/project-files/bench/BENCH-RECIPE.md line 77"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 200 and 201, B2 reused.",
+    "hours": 4,
+    "arms": "A1: copy + per-round rank-1 MLP adapters (3,326,225 params, U zero-init); B2; plain_tf_steps reference.",
+    "pass_mark": "Screen: pooled-5 A1 minus B2 at least +0.8 on both seeds; chain-5 at least 99.0; loops:0 at most B2's same-seed value +2.0; mechanism gate ||A_t B_t||_F / ||W_fc||_F at least 5% for at least 4 of 8 rounds on both seeds. Confirm six seeds: mean gain at least +0.8 with CI above 0.",
+    "proved_wrong": "Six-seed mean gain at most 0 with CI upper bound below +0.4, or the mechanism gate fails on both seeds (relative change below 1% in every round): rounds do not need separate weights at this size."
+   },
+   "rules_check": "Rule 3: 2.5% above plain_tf_steps, inside 3%. Rule 4: one change, marks fixed. Rule 10: the round index is the loop's own counter, adapters are learned, no gate or threshold; round count still fixed. Rule 9: B2 only.",
+   "closest_prior": "step_emb (additive round identity, ledger.py:312). Relaxed Recursive Transformers (pretrained LLM, not from scratch). Not in B2's tried or planned lists.",
+   "autonomy": "Adapters are part of the forward pass indexed by the model's own round counter; nothing at deploy is hand-set.",
+   "merged_from": [
+    "w1h-3",
+    "w3f-3"
+   ],
+   "director_score": 4,
+   "director_note": "Weak motive and a likely null. Critics: (1) rounds 8+ clamp to adapter 7; (2) it competes with idea 10 for the same budget and should run after it; (3) the mechanism gate threshold of 5% is a choice made here.",
+   "id": "thinker-D22",
+   "area": "thinker"
+  },
+  {
+   "title": "Four learned control sets with an in-model try selector",
+   "summary": "Give the thinker four learned sets of control tokens so each row runs four tries in one forward pass with shared reader and blocks, each writing its own program and answer. A learned scorer on each try's readout state picks one, with no threshold or hand-picked try. It runs only if the anatomy probe (idea 12) shows headroom among rank-2 choices and diversity, and the comparison with the same weights forced to try 1 isolates selection.",
+   "change": "models/ledger.py: ctrl = Embedding(8,d) (line 145) becomes four sets of eight (32 x 256). Per-row reader tensors (X, mask, S0, Kw) are repeat-interleaved by 4 before the loop (run(), lines 284-314), so the thinker runs on B x 4. Scorer s_k = Linear(256,1)(LN(Z_k[:,1])); output = talk() on the argmax try's state. Loss: each try keeps the normal B2 loss (averaged) plus a listwise cross-entropy of softmax(s) toward tries whose greedy answer is accepted (gold at training time only; rows with no correct try add no selector loss). No cross-try attention (a low-rank version costs 33,120 params and breaches the band by 122). Params +6,401 (3,308,882, +1.98% vs plain S). If tries collapse the next change is a winner-take-all loss.",
+   "why": "Variant failures are unstable across training seeds on several families (arith_bare 15 to 78, percent_rate 40 to 100, chain_story2 28 to 80), where disagreement among tries may carry signal; fixed failures (var_chain 30.0, story_addsub 57.5 on every seed) are out of reach of choosing. When all four tries agree the listwise label is uniform and the selector learns nothing, which marks D2 and D6 catch. K=4 is a developer constant, a rule-10 gap, and until T1 each try uses the hand-written executor inside the forward pass.",
+   "evidence": [
+    {
+     "claim": "Three extra control sets (6,144) plus the scorer (257) add 6,401 params: 3,308,882, +1.98% over plain_tf S (3,244,544), inside the band top 3,341,880. A low-rank cross-try attention (33,120) would reach 3,342,002.",
+     "label": "shown",
+     "source": "computed in raw idea w2g-4 from ledger.py:144-145"
+    },
+    {
+     "claim": "Seed spread on variant: arith_bare 15 to 78, percent_rate 40 to 100, chain_story2 28 to 80; var_chain 30.0 and story_addsub 58 on every seed.",
+     "label": "shown",
+     "source": "results/33-pc-confirm-b2 RESULT.json (computed)"
+    },
+    {
+     "claim": "The variant mark in PASS-MARKS is a gain of +3.0 on the 2-seed mean; B2 runs took 3.70 and 4.23 h on the PC for seeds 200 and 201, so a four-try batch could cost 6 to 12 h.",
+     "label": "shown",
+     "source": "PASS-MARKS.md line 173; results/33-pc-confirm-b2 RESULT.json wall_s"
+    },
+    {
+     "claim": "Per-round routers were WRONG on the planner bench; parallel tries with a learned choice among complete answers are not in the tried or planned lists.",
+     "label": "shown",
+     "source": "/mnt/project-files/bench/BENCH-RECIPE.md; raw idea w2g-4"
+    },
+    {
+     "claim": "Four-try cost on the 5070 Ti is 1.5 to 3 h per run.",
+     "label": "untested",
+     "source": "estimate only"
+    }
+   ],
+   "test": {
+    "kind": "screen_2seed",
+    "where": "Ben's PC, seeds 200 and 201, 24,000 updates, only if idea 12 passes its oracle and diversity marks.",
+    "hours": 8,
+    "arms": "(A) K=4 with learned selector; (B) the same A weights forced to try 1 at eval; (C) B2 on the same machine.",
+    "pass_mark": "All six, fixed now: D1 variant (A minus C) at least +3.0 on the 2-seed mean; D2 variant (A minus B) at least +2.0 (selection, not ensemble); D3 pooled-5 at least +1.0 on each seed and chain-5 at least 99.0; D4 loops:0 and donor at most 5; D5 no split down more than 2.0 vs C; D6 at least 10% of variant rows where the four tries write different programs.",
+    "proved_wrong": "D2 mean below 0.0 (the selector picks worse than try 1). If D1 passes but D2 fails, the gain is from parameters or averaging, not selection. D6 failing means tries collapsed."
+   },
+   "rules_check": "Rule 1: until T1 each try runs the in-forward-pass executor, a research arm only. Rule 3: +1.98% vs plain S. Rule 4: 2-seed screen. Rule 5: dev only; selector labels use gold at training time only. Rule 7: no target truncated. Rule 8: tries are for hard rows, but the selector here runs on all rows. Rule 10: fixed K=4 is a developer constant; the try count is not model-chosen.",
+   "closest_prior": "H1 is a learned stop across rounds; W2 adds scratch tokens with no selection. Bench PLR (per-round router) was wrong and does not apply to B2's dense block.",
+   "autonomy": "In-model: the tries, the scorer and the argmax are model outputs. Gaps: K=4 is fixed by the developer, and until T1 each try uses the hand-written executor inside the forward pass.",
+   "merged_from": [
+    "w2g-4"
+   ],
+   "director_score": 3,
+   "director_note": "Conditional and expensive with two rule-10 and rule-1 gaps; keep only as a possible follow-up. Critics: (1) rule 8 says creativity is for when the model is stuck, not for every row; (2) the selection effect (D2) is the whole claim; (3) the four-try batch may cost far more than 1.5 to 3 h.",
+   "id": "thinker-D23",
+   "area": "thinker"
+  }
+ ],
+ "dropped": [
+  {
+   "id": "w3e-4",
+   "reason": "Working ring of 3 cells with a learned write pointer for B2's result slots: the sealed T1 design (PASS-MARKS addendum 17 amendment 2: replace, not alongside) removes the result-slot workspace, so the idea lapses if T1 passes. It also needs a hand-written liveness allocation teacher, +17,472 params and a 12-round build, for a B2-only result."
+  },
+  {
+   "id": "w1g-6",
+   "reason": "LEN, NTH and CONTAINS as extra T1 text tools targets variant word computations (about 1.1 pooled-5 points), belongs to the tools/T1 area rather than the deep adaptive thinker, and cannot start until T1's own screen (queue 40) passes. Not a rule breach; dropped as out of area and low prize per GPU hour."
+  }
+ ],
+ "area_summary": "The swarm's main finding is that the accuracy prize from adaptive halting on B2 is small, so its value is the rule-10 path and compute saved, and the decisive tests are cheap CPU probes on the two screen checkpoints. Shown: the gold-picked any-round oracle is about 2.5 to 2.7 in-dist points (about 0.6 pooled-5); 94 to 95% of overthinking rows and the whole 16-minus-8 loss sit in no-program rows (59% of in_dist). For program rows the NOOP after the last write is already trained but unread; freezing at the NOOP round costs -3.4 and -5.7 points (answer heads are only trained at round 8) while one settle round later is near free (-0.1 to -0.24, 15% of rounds saved). No-program rows have no usable NOOP, so a frozen 257-parameter head (idea 5) is the only cheap candidate. Rule 7 is broken today: 528 train rows exceed 7 steps (cited, not recounted), and raising N_RES without n_loops fails silently; H1's cap draw also truncates unless set per row. No matched-size test of depth, width or blocks exists anywhere, so the 8a depth-first bet is unsupported; ideas 4, 8, 9, 10 and 11 are the cheap ways to test it. The largest identified accuracy prize is worked steps for fewshot, table_lookup and seq_next (5.8 pooled points bound, idea 3). Gaps: the dev rows are not in project files, so every probe must run on Ben's PC; probe_loops.py saves only aggregates; same-seed leak values differ across machines; raw-idea hour estimates (1 h per B2 run) conflict with logged 1.0 to 4.2 h; extra rounds do not help current tasks, so adaptive depth must be shown on longer chains (ideas 2, 15, 16, 17), which needs a held-out length generator not in the code copy. Source paths starting custom_io/ mean /tmp/claude-0/-home-user-learner/25dd80f7-54e0-50c0-b0e0-f697e28becce/scratchpad/code/reader/custom_io/."
+}
