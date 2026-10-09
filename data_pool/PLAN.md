@@ -167,3 +167,6 @@ Files: `data_pool/` on branch `claude/data-pool-8b`: `PLAN.md`, `overlap13.py`, 
 
 ### 10.x rung30 enlarged (2026-10-07, 8a request)
 Rung30 rebuilt with budget 123.35M tokens (= 117.8M / 0.955) so cloze chunking still reaches 117.8M. Same shard 0, same filters. Rung3 and rung10 are byte-identical to the earlier cut (sha 59c70dc5e2c3..., 5a5f23e70f8f...) and exact prefixes/subsets of the new rung30 (sha 442a93647acf...; 120,994 docs). Archive web_slices_8a.tgz sha256 90b3559e96b65886a23c07802d4d817b7b22b8894f69e2f0c71a1093f21d0949.
+
+### 10.y Exclusion for the 600M pool (2026-10-09, big-run coordinator)
+FineWeb-Edu sample-10BT **shard 013 is excluded from the 600M-token pool** (and from any rung pool). It supplies the distractor padding for the held-out B3-5 long-row test file (`/mnt/project-files/big-run/long-dev/long_dev.jsonl`, built by the 8a build thread). The 8a rung pools read shard 0 only. When building the 600M pool use `web_slice.py --shards` with shards 0-12 only (never 013), and keep the 13-gram gate against long_dev.jsonl as well.
