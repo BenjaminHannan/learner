@@ -219,11 +219,12 @@ def verify(m, row, calls):
     return None
 
 
-def make_row(m, fam, prompt, answer, calls, cons, source):
-    """A training row whose targets are exactly `calls` then `answer`. -> (row, None) or (None, reason)."""
+def make_row(m, fam, prompt, answer, calls, cons, source, allow_zero=False):
+    """A training row whose targets are exactly `calls` then `answer`. -> (row, None) or (None, reason).
+    allow_zero: diary rows only (addendum A9): the parent's whole own output, which for many old questions has no calls."""
     if not answer or len(answer) > MAX_ANS:
         return None, 'answer_len'
-    if not calls:  # answer-only rows (no tool check, no worked steps) never train (addendum A5)
+    if not calls and not allow_zero:  # practice rows with no worked steps never train (addendum A5)
         return None, 'zero_steps'
     if len(calls) > cons['max_calls']:
         return None, 'caps_calls'
@@ -289,7 +290,7 @@ def build_diary(m, pool, cons, ctx, log, write_row):
             if not ans or not set(ans) <= ctx['vchars']:
                 disc['answer_empty_or_vocab'] += 1
                 continue
-            row, why = make_row(m, 'diary', p, ans, calls, cons, 'diary')
+            row, why = make_row(m, 'diary', p, ans, calls, cons, 'diary', allow_zero=True)
             if row is None:
                 disc[why] += 1
                 continue

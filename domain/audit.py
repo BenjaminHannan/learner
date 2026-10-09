@@ -37,7 +37,7 @@ def read_panel(panel_dir):
 def audit_rows(rows, panel):
     """rows: the training rows (dicts with id, source, kind, prompt, steps). panel: {prompt: where}. -> report dict."""
     overlap = [dict(id=r['id'], prompt=r['prompt'], panel=panel[r['prompt']]) for r in rows if r['prompt'] in panel]
-    zero = [r['id'] for r in rows if not r['steps']]
+    zero = [r['id'] for r in rows if not r['steps'] and r['source'] != 'diary']  # A9: diary = the parent's whole own output
     bad = [r['id'] for r in rows if r['source'] not in SOURCES]
     return dict(rows=len(rows), by_source=dict(Counter(r['source'] for r in rows)),
                 by_source_kind={f"{s}/{k}": n for (s, k), n in sorted(Counter((r['source'], r['kind']) for r in rows).items())},

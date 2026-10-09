@@ -33,7 +33,7 @@ def test_rpn_near_rows_differ_from_help_digit_runs():
 
 def test_zero_step_rows_refused_and_mod_cmp_have_no_row_form():
     # A5: answer-only rows never train; A2: mod and cmp have no text form
-    assert mode.make_row(None, 'diary', 'A: 1 2 | B: 3 4 ; =SUM(A1:A2)', '3', [], CONST, 'diary') == (None, 'zero_steps')
+    assert mode.make_row(None, 'domain_sheet', 'A: 1 2 | B: 3 4 ; =SUM(A1:A2)', '3', [], CONST, 'tool') == (None, 'zero_steps')
     assert mode.step_text('mod', '7', '5', '2') is None
     assert mode.step_text('cmp', '7', '5', '1') is None
     assert mode.step_text('add', '7', '5', '12') == '7 + 5 = 12'
@@ -56,7 +56,7 @@ def test_audit_rules():
     # A1/A5/A7: overlap with a sealed prompt, zero steps and unknown sources are each caught
     panel_map = {'rpn: 9 4 -': 'rpn.jsonl:rpn-near-x'}
     rows = [dict(id='1', source='tool', kind='a b -', prompt='rpn: 9 4 -', steps=['9 - 4 = 5']),
-            dict(id='2', source='diary', kind='diary', prompt='A: 1 | B: 2 ; =A1', steps=[]),
+            dict(id='2', source='tool', kind='SUM', prompt='A: 1 | B: 2 ; =A1', steps=[]),
             dict(id='3', source='mystery', kind='x', prompt='rpn: 1 2 +', steps=['1 + 2 = 3'])]
     rep = audit.audit_rows(rows, panel_map)
     assert not rep['ok']
@@ -95,7 +95,7 @@ def test_check_set_not_starved_by_diary_refusals():
     pool = [f'A: {i} 2 | B: 3 4 ; =SUM(A1:A2)' for i in range(40)]
     saved = mode.greedy
     try:
-        mode.greedy = lambda m_, ps, bs=64: [([], '7')] * len(ps)
+        mode.greedy = lambda m_, ps, bs=64: [([], '')] * len(ps)
         diary, check = mode.build_diary(m, pool, dict(CONST, diary=10, check=5), ctx(), lambda *a, **k: None, lambda **kw: None)
     finally:
         mode.greedy = saved
