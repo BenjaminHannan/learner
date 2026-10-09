@@ -38,6 +38,10 @@ No job is running. Container state below is not in git, and a container restart 
 
 ## Next steps (in order of value)
 
+Ben's decision (10-09 about 10 AM ET): all three are parked for now. He wants one big proven run, not more small tests. The PC is busy with the size test
+until late Saturday ET; PC job 1 is queued after that only if the big-run plan needs it. The GPT prompt is optional. The 12 learners are saved on the branch
+`claude/consol-learners` (sha256 in `confirm/LEARNERS.sha256`).
+
 1. Mix ratio, the open question (Ben asked about it; untested): the sleep's skills rows carry half the weight per step. One change: the same sleep with a larger skills share (for example 256 dream rows + 768 skills rows per update), or the control's batch-1,024 version (two halves of skills rows) as the dilution test. GPT prompt ready: `reviews/gpt-consol-transfer-2026-10-09.md`.
 2. PC job 1 (`PC-JOB-1.md`): the research-loop sleep on the same rebuilt N, with the harm measure, for a paired baseline against 76.1% and its real harm.
 3. A stop rule that also watches the model's own held skills rows (Vins et al. 2025 in `LIT-ADDENDUM.md`). Cheap, since both checks already run.
