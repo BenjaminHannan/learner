@@ -10,13 +10,17 @@ Plain arms (plain_tf_steps_g, plain_lm): layers and feed-forward width chosen so
 """
 import argparse, functools, json, shlex, sys
 import torch
-from custom_io.data import CharVocab
+from custom_io.data import ByteVocab, CharVocab
 from custom_io.models import build
 
 VOCAB = None
 B2_ARM, PT_ARM, LLM_ARM = 'B2', 'PT', 'LLM'
-ARMS = (B2_ARM, PT_ARM, LLM_ARM)
-MODEL_OF = {B2_ARM: 'ledger', PT_ARM: 'plain_tf_steps_g', LLM_ARM: 'plain_lm'}
+B3_ARM = 'B3'
+B3G2_ARM = 'B3G2'
+ARMS = (B2_ARM, PT_ARM, LLM_ARM)                      # the 8a arms (job.py's default); B3 is asked for by name
+ALL_ARMS = ARMS + (B3_ARM, B3G2_ARM)
+MODEL_OF = {B2_ARM: 'ledger', PT_ARM: 'plain_tf_steps_g', LLM_ARM: 'plain_lm', B3_ARM: 'b3', B3G2_ARM: 'b3g2'}
+LADDER = ('3M', '10M', '30M')                          # the rungs of the 8a table (B2 / PT / LLM); B3 also has '100M'
 B2_S = dict(d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, copy=True)       # today's S, 3,302,481 trained params (q33)
 B2_S_PARAMS = 3_302_481
 # rung -> width, heads, today's mlp ratio at that width, target trained params, band as a fraction, pool word pieces, seen word pieces (20 per trained
@@ -28,6 +32,9 @@ RUNGS = {
     '3M': dict(width=256, heads=4, mlp=4.8, target=B2_S_PARAMS, band=0.0, pool=60e6, seen=66e6, lr=1e-3, own_rung=10, web='rung30'),
     '10M': dict(width=256, heads=4, mlp=4.8, target=10.0e6, band=0.05, pool=60e6, seen=200e6, lr=1e-3, own_rung=10, web='rung30'),
     '30M': dict(width=384, heads=6, mlp=6.0, target=30.0e6, band=0.05, pool=190e6, seen=600e6, lr=1e-3 * 256 / 384, own_rung=30, web='rung30'),
+    # B3's top rung (B3-GROUP1-BUILD sec. 6): the PLAN's 97.1M thinker shape, width 512, 8 heads, mlp 4.8, 21 blocks, no band. Its pool (the 600M pool) is not built
+    # (the data thread's, waits for a GO), so the pool fields say so; lr = the 30M rule (1e-3 * 256 / width).
+    '100M': dict(width=512, heads=8, mlp=4.8, blocks=21, target=None, band=None, pool='not built', seen='not built', lr=1e-3 * 256 / 512, own_rung=None, web=None),
 }
 UPDATE_FLOOR = 24000        # addendum B1: every arm at every rung trains at least q33's 24,000 updates of 256 rows
 OWN_SHARE, WEB_SHARE = 0.38, 0.62
@@ -41,8 +48,11 @@ PUBLIC = {
 BATCH, PLAIN_BAND, PLAIN_TRIM = 256, 0.02, 0.003
 
 
-def vocab():
+def vocab(bytes=False):
+    """The vocab every count / size is built with: the 108-id CharVocab, or (V1 cfg {"bytes": true}) the 269-id ByteVocab."""
     global VOCAB
+    if bytes:
+        return ByteVocab()
     if VOCAB is None:
         VOCAB = CharVocab.build([])     # all printable ASCII + specials = 108 ids, the vocabulary every q33 run used
     return VOCAB
@@ -52,7 +62,8 @@ def vocab():
 def count(model, cfg_json):
     """Trained parameter count of `model` built with cfg (a JSON string, for caching). Frozen borrowed parts are not in it."""
     torch.manual_seed(0)
-    return build(model, vocab(), **json.loads(cfg_json)).n_params()
+    cfg = json.loads(cfg_json)
+    return build(model, vocab(cfg.get('bytes', False)), **cfg).n_params()
 
 
 def n(model, cfg):
@@ -81,6 +92,75 @@ def b2_cfg(rung, extra=None):
     return dict(cfg, **(extra or {}))
 
 
+B3_G1 = dict(label='settled', span_copy=True, span_idx=True, span_end=True, ans_drill=0.25, eg_embed=True, any_round=True, gap_p=0.25)      # B3 group 1 (sec. 6)
+
+
+B3_G2 = dict(B3_G1, no_slots=True, no_place=True, bytes=True, as_written=True)      # B3 group 2 (sec. 1): all switches on; the writer is always on in 'b3g2'
+G2C3 = 4_022_440            # the plain 3M control at caps_b3 (g2c3): group 2's trained count must sit within PLAIN_BAND of it
+
+
+def b3g2_cfg(rung, extra=None):
+    """B3 group 2 config for a rung: b3_cfg's path with B3_G2 and model 'b3g2'. 3M: the thinker is B2's S shape; if the trained count is outside PLAIN_BAND of g2c3 the writer's
+    MLP ratio is trimmed first (writer_mlp, in steps of 1/16 down from 2.0), then the thinker's feed-forward ratio mlp (hidden units). 10M / 30M: block count to the rung's band (as
+    b3_cfg); 100M: 21 x 512, no band. Call after caps.apply (the counts depend on the caps in force)."""
+    return b3_cfg(rung, extra, group=2)
+
+
+def b3_cfg(rung, extra=None, group=1):
+    """B3 config for a rung, from the same code path as b2_cfg: 3M = B2's S shape; 10M / 30M = B2's rung widths with the block count chosen to the target (the
+    feed-forward ratio trimmed only if the nearest count is outside the band); 100M = width 512, 8 heads, mlp 4.8, 21 blocks, no band. n_loops = max(8, n_res + 1)
+    under the caps in force (call after caps.apply). `extra` = more switches (e.g. {"tok_think": true}, or n_loops from job.py), counted in the block choice."""
+    from custom_io.models import ledger as L
+    r = RUNGS[rung]
+    loops = max(8, L.N_RES + 1)
+    mod = 'b3g2' if group == 2 else 'b3'
+    base = dict(dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=loops, mlp=r['mlp']), **(B3_G2 if group == 2 else B3_G1))
+    base.update(extra or {})
+    n = lambda model, cfg: globals()['n']('b3g2' if group == 2 else model, cfg)
+    if rung == '3M':
+        cfg = dict(base, blocks=B2_S['blocks'])
+        if group == 2 and abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:
+            # the writer's MLP first: the largest 1/16 step that lands within PLAIN_BAND - 0.5% of g2c3 (a margin, so the count is not on the edge of the band)
+            best = next((w for w in range(31, 0, -1) if abs(n('b3', dict(cfg, writer_mlp=w / 16)) / G2C3 - 1) <= PLAIN_BAND - 0.005), 1)
+            cfg['writer_mlp'] = best / 16
+            if abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
+                d = r['width']
+                hid = int(cfg['mlp'] * d) + round((G2C3 - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
+                cfg['mlp'] = round((hid + 0.5) / d, 5)
+    elif rung == '100M':
+        cfg = dict(base, blocks=r['blocks'])
+    else:
+        c1, per = n('b3', dict(base, blocks=1)), _per_unit(mod, base, 'blocks', 1)
+        best = min(range(1, 41), key=lambda b: abs(c1 + (b - 1) * per - r['target']))
+        cfg = dict(base, blocks=best)
+        if abs(n('b3', cfg) / r['target'] - 1) > r['band']:
+            d = r['width']
+            hid = int(r['mlp'] * d) + round((r['target'] - n('b3', cfg)) / (best * (2 * d + 1)))
+            cfg['mlp'] = round((hid + 0.5) / d, 5)
+    return cfg
+
+
+def b3_sizes(cfg, model='b3'):
+    """{'trained', 'frozen_gemma', 'whole'} of a B3 config (the frozen EmbeddingGemma 2 text part counts in the whole)."""
+    torch.manual_seed(0)
+    s = build(model, vocab(cfg.get('bytes', False)), **cfg).size()
+    return dict(trained=s['trainable'], frozen_gemma=s['frozen_borrowed'], whole=s['whole'])
+
+
+def check_b3(rung, cfg, group=1):
+    """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3 (4,022,440), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
+    100M: no band."""
+    c = n('b3g2' if group == 2 else 'b3', cfg)
+    if group == 2 and rung == '3M':
+        assert abs(c / G2C3 - 1) <= PLAIN_BAND, f'3M B3G2 {c:,} is more than {100 * PLAIN_BAND:.0f}% from g2c3 {G2C3:,}'
+    elif rung in ('10M', '30M'):
+        assert abs(c / RUNGS[rung]['target'] - 1) <= RUNGS[rung]['band'], f'{rung} B3 {c:,} outside {RUNGS[rung]["target"]:,.0f} +-{100 * RUNGS[rung]["band"]:.0f}%'
+    elif rung == '3M' and group == 1:
+        ref = n('ledger', b2_cfg('3M', dict(eg_embed=True, n_loops=cfg['n_loops'])))      # G-B2 (EGE) under the same caps
+        assert abs(c / ref - 1) <= 0.12, f'3M B3 {c:,} is more than 12% from G-B2 {ref:,}'
+    return c
+
+
 def plain_cfg(rung, b2=None, extra=None):
     """Plain arm config matched to B2's trained size (+-2%): width as B2, nearest layer count with today's 4x feed-forward; only if that is
     outside the band is the feed-forward width trimmed (3M therefore stays plain_tf_steps' own 4 layers x 1024)."""
@@ -95,6 +175,20 @@ def plain_cfg(rung, b2=None, extra=None):
     if abs(n('plain_tf_steps_g', cfg) / target - 1) > PLAIN_BAND - 0.005:
         cfg['hidden'] = 4 * d + round((target - n('plain_tf_steps_g', cfg)) / (best * (2 * d + 1)))
     return dict(cfg, **(extra or {}))
+
+
+def tkn_mlp(rung, tk_extra, tol=0.005):
+    """Test TKN (TOKENS-EXPERIMENT-2026-10-09.md sec. 3b): TK with reader_layers 0; raise `mlp` until the trained count is within `tol` of TK's. Same trimming
+    arithmetic as b2_cfg: hidden = int(mlp * d), 2d + 1 params per hidden unit per block, mlp = (hidden + 0.5) / d. Counts depend on the caps in force: call
+    after caps.apply (job.py does) -> (mlp, TKN --b2-extra dict, TK count, TKN count)."""
+    tk = b2_cfg(rung, tk_extra)
+    target, d = n('ledger', tk), tk['d']
+    ex = {k: v for k, v in dict(tk_extra, reader_layers=0).items() if k != 'mlp'}
+    c0 = b2_cfg(rung, ex)
+    hid = int(c0['mlp'] * d) + round((target - n('ledger', c0)) / (c0['blocks'] * (2 * d + 1)))
+    best = min((dict(c0, mlp=round((h + 0.5) / d, 5)) for h in (hid - 1, hid, hid + 1)), key=lambda c: abs(n('ledger', c) - target))
+    assert abs(n('ledger', best) / target - 1) <= tol, (n('ledger', best), target)
+    return best['mlp'], dict(ex, mlp=best['mlp']), target, n('ledger', best)
 
 
 def eg_adapter_params(d):
@@ -136,8 +230,13 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
 
 def train_args(rung, arm, seed, steps, data, out=None, minutes=None, lr=None, b2_extra=None, bf16=True, big_data=None, caps=None, max_ans=8):
     """The train.py argument list of one arm (q33 flags: AdamW, bf16, batch 256, final eval with chain-5 and every lesion)."""
-    cfgs, counts = sizes(rung, b2_extra)
-    check_bands(rung, cfgs, counts, exact_3m=not caps)
+    if arm in (B3_ARM, B3G2_ARM):           # B3: its own config; b2_extra carries its extra switches / n_loops, the PT and LLM arms are not built
+        g = 2 if arm == B3G2_ARM else 1
+        cfgs = {arm: b3_cfg(rung, b2_extra, g)}
+        check_b3(rung, cfgs[arm], g)
+    else:
+        cfgs, counts = sizes(rung, b2_extra)
+        check_bands(rung, cfgs, counts, exact_3m=not caps)
     a = ['--model', MODEL_OF[arm], '--cfg', json.dumps(cfgs[arm], sort_keys=True), '--data', data, '--steps', str(int(steps)), '--batch', str(BATCH),
          '--lr', repr(lr if lr is not None else RUNGS[rung]['lr']), '--seed', str(seed), '--log-every', '500', '--final-eval', '--max-ans', str(max_ans)]
     if caps:
@@ -153,9 +252,29 @@ def train_args(rung, arm, seed, steps, data, out=None, minutes=None, lr=None, b2
     return a
 
 
-def table():
+def b3_table():
+    """One row per rung: trained / frozen Gemma / whole of B3 under the caps in force."""
     rows = []
     for rung in RUNGS:
+        cfg = b3_cfg(rung)
+        check_b3(rung, cfg)
+        rows.append(dict(rung=rung, cfg=cfg, **b3_sizes(cfg)))
+    return rows
+
+
+def b3g2_table():
+    """One row per rung: trained / frozen Gemma / whole of B3 group 2 under the caps in force (use caps_b3g2.json: LE 95)."""
+    rows = []
+    for rung in RUNGS:
+        cfg = b3g2_cfg(rung)
+        check_b3(rung, cfg, 2)
+        rows.append(dict(rung=rung, cfg=cfg, **b3_sizes(cfg, 'b3g2')))
+    return rows
+
+
+def table():
+    rows = []
+    for rung in LADDER:
         cfgs, counts = sizes(rung)
         check_bands(rung, cfgs, counts)
         for arm in ARMS:
@@ -168,7 +287,7 @@ def table():
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--rung', choices=list(RUNGS))
-    ap.add_argument('--arm', choices=ARMS)
+    ap.add_argument('--arm', choices=ALL_ARMS)
     ap.add_argument('--seed', type=int, default=400)
     ap.add_argument('--steps', type=int)
     ap.add_argument('--data', default='/job/pool')
@@ -178,8 +297,38 @@ def main(argv=None):
     ap.add_argument('--lr-scale', type=float, default=1.0, help='1 = the rung\'s lr; 0.5 = the sealed non-finite re-run')
     ap.add_argument('--max-ans', type=int, default=8)
     ap.add_argument('--json', action='store_true')
+    ap.add_argument('--tkn', metavar='CAPS_JSON', help='print the 3M rung\'s TK and TKN configs, counts and --b2-extra strings under these caps (e.g. g8a/caps_g.json)')
+    ap.add_argument('--group', type=int, choices=(1, 2), default=1, help='with --b3: the table of B3 group 1 (b3) or group 2 (b3g2; use g8a/caps_b3g2.json)')
+    ap.add_argument('--b3', metavar='CAPS_JSON', help='print the B3 rung table (trained / frozen Gemma / whole at 3M, 10M, 30M, 100M) under these caps (g8a/caps_g.json = G1\'s, g8a/caps_b3.json = 2,000 letters)')
     a = ap.parse_args(argv)
+    if a.b3:
+        from custom_io.g8a import caps as CP
+        caps = CP.apply(json.load(open(a.b3)))
+        g2 = a.group == 2
+        print(f'caps {a.b3}: le {caps["le"]}; max_prompt {caps["max_prompt"]}, n_num {caps["n_num"]}, w_max {caps["w_max"]}, n_res {caps["n_res"]}, n_reg {caps["n_reg"]}; n_loops {max(8, caps["n_res"] + 1)}; tape {max(16, caps["n_res"])}')
+        print(f'{"rung":>5} {"trained":>13} {"frozen Gemma":>13} {"whole":>13}  shape')
+        for r in (b3g2_table() if g2 else b3_table()):
+            c = r['cfg']
+            print(f'{r["rung"]:>5} {r["trained"]:>13,} {r["frozen_gemma"]:>13,} {r["whole"]:>13,}  d {c["d"]} heads {c["n_heads"]} blocks {c["blocks"]} mlp {c["mlp"]} n_loops {c["n_loops"]}'
+                  + (f' writer_mlp {c["writer_mlp"]}' if 'writer_mlp' in c else '') + ('   (pool: ' + RUNGS[r['rung']]['pool'] + ')' if isinstance(RUNGS[r['rung']]['pool'], str) else ''))
+        return
+    if a.tkn:
+        from custom_io.g8a import caps as CP
+        caps = CP.apply(json.load(open(a.tkn)))
+        loops = dict(n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else {}      # what job.py adds to --b2-extra
+        tk_user = {'eg_embed': True, 'tok_think': True}
+        mlp, tkn_user, c_tk, c_tkn = tkn_mlp('3M', dict(tk_user, **loops))
+        tkn_user = {k: v for k, v in tkn_user.items() if k not in loops}
+        base = n('ledger', b2_cfg('3M', dict({'eg_embed': True}, **loops)))
+        print(f'caps {a.tkn}: n_loops {loops.get("n_loops", 8)}; EGE (G-B2) {base:,}')
+        for nm, u, c in (('TK', tk_user, c_tk), ('TKN', tkn_user, c_tkn)):
+            cfgs, cnt = sizes('3M', dict(u, **loops))
+            check_bands('3M', cfgs, cnt, exact_3m=False)      # job.py's 3% band (and PT within 2%)
+            print(f'{nm}: trained {c:,} ({100 * (c / c_tk - 1):+.3f}% vs TK)  mlp {cfgs[B2_ARM]["mlp"]}  hidden {int(cfgs[B2_ARM]["mlp"] * 256)}  bands ok (PT {cnt[PT_ARM]:,})')
+            print(f"  --b2-extra '{json.dumps(u)}'")
+        return
     if a.rung and a.arm:
+        assert a.arm != B3_ARM or a.rung in RUNGS
         print('python -m custom_io.train ' + ' '.join(shlex.quote(x) for x in train_args(
             a.rung, a.arm, a.seed, a.steps or 1, a.data, out=a.out, minutes=a.minutes, lr=RUNGS[a.rung]['lr'] * a.lr_scale, max_ans=a.max_ans, big_data=a.big_data)))
         return

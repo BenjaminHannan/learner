@@ -47,7 +47,15 @@ eg_adapter='none' (addendum 9, EGW; needs d = 768): no adapter. The thinker is b
 LayerNorm(EmbeddingGemma state) + position + place code, then the reader's final LayerNorm; the thinker's own first layers do the adapting.
 eg_thinker=True (PASS-MARKS.md addendum 14, EGK; needs eg_embed with the linear adapter; default False = EGE): the reader runs twice with the same weights.
 The run with the EmbeddingGemma term feeds only the controller's cross-attention to the reader output; the number slots, the WORD content keys and the
-GEN copy keys (everything the talker reads, and the workspace) take B2's own reader output, without EmbeddingGemma. No new parameters (EGE's 3,500,881)."""
+GEN copy keys (everything the talker reads, and the workspace) take B2's own reader output, without EmbeddingGemma. No new parameters (EGE's 3,500,881).
+tok_think=True (TOKENS-EXPERIMENT-2026-10-09.md arms TK / TKN; needs eg_embed, not eg_thinker; default False = exactly EGE): the thinker's cross-attention reads one
+spot per EmbeddingGemma token instead of one per letter. The reader is unchanged (letter level); in run() the letters of each token (FrozenEG.align char -> token,
+compacted per row to 0..n_tok-1 in order of first appearance, so a first token that merges with the prompt prefix is token 0) are pooled by a learned attention
+pool: score = tok_pool(x) per letter (nn.Linear(d, 1), weight and bias ZERO, so it starts as a plain mean), softmax over the letters of the same token, weighted
+sum; index ops only (scatter max / index_add over B * n_tok_max segments), no dense [B, tokens, T] matrix. These spots (Xk) and their mask (km) feed ONLY the
+controller's cross-attention K/V and its mask; the number pool, word_content, gen_copy, out['X'] / out['xm'], talk and the round readout stay letter-level.
+tok_pool is created after every other module (same seed -> every other weight identical); +d + 1 params. Counters _tk_letters / _tk_spots (python ints, training
+passes only) are the valid letters and token spots seen by run(); train.py writes them to RESULT.json as tok_think."""
 import math
 import numpy as np
 import torch
@@ -127,10 +135,14 @@ class CBlock(nn.Module):
 
 class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
+    no_slots = False        # N1 (B3 sets it): no number slots; spans() then skips the regex number spans
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, tok_think=False, no_place=False, bytes=False):
         super().__init__(vocab)
+        self.is_bytes = bool(bytes)
+        assert self.is_bytes == bool(getattr(vocab, 'is_bytes', False)), f"cfg bytes={bool(bytes)} but the vocab is {type(vocab).__name__}: V1 needs ByteVocab, and ByteVocab needs bytes"
+        self.no_place = bool(no_place)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
@@ -138,9 +150,11 @@ class Ledger(Model):
         self.eg_adapter = eg_adapter
         self.eg_thinker = bool(eg_thinker)
         assert not self.eg_thinker or (self.eg_embed and eg_adapter == 'linear' and letters_in), 'eg_thinker needs eg_embed, the linear adapter and letters'
+        self.tok_think = bool(tok_think)
+        assert not self.tok_think or (self.eg_embed and not self.eg_thinker), 'tok_think needs eg_embed and is not combined with eg_thinker'
         self.round_readout = float(round_readout)
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
-        self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
+        self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in), no_place=self.no_place, by_bytes=self.is_bytes)
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
             nn.Embedding(n, d) for n in (3, N_NUM, len(OPS), n_loops, 2, N_CTRL))
@@ -174,7 +188,7 @@ class Ledger(Model):
             nn.init.zeros_(self.q_wend.bias)
         if self.eg_embed or self.eg_teach:      # created after every other module, so every B / B2 / span weight starts identical at the same seed
             from custom_io.models.eg import EG_DIM, MT_DIM, FrozenEG
-            self._eg = [FrozenEG(eg_path)]      # a list, not a submodule: never trained, counted or saved
+            self._eg = [FrozenEG(eg_path, by_bytes=self.is_bytes)]      # a list, not a submodule: never trained, counted or saved
         if self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
             if self.eg_adapter == 'none':       # addendum 9: the thinker is EmbeddingGemma's width, so its states go in through a LayerNorm only
                 assert d == EG_DIM, f"eg_adapter='none' needs d = {EG_DIM}, got {d}"
@@ -190,6 +204,11 @@ class Ledger(Model):
             self.ln_mt, self.mt_head = nn.LayerNorm(d), nn.Linear(d, MT_DIM)
             nn.init.normal_(self.mt_head.weight, std=0.02)
             nn.init.zeros_(self.mt_head.bias)
+        if self.tok_think:      # created after every other module: no RNG draw (zeros), and every other weight starts identical at the same seed
+            self.tok_pool = nn.Linear(d, 1)
+            nn.init.zeros_(self.tok_pool.weight)
+            nn.init.zeros_(self.tok_pool.bias)
+            self._tk_letters = self._tk_spots = 0
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
     def spans(self, prompt):
@@ -199,7 +218,7 @@ class Ledger(Model):
                 self._spans.clear()
             ns, ne, nv, ws, we = (np.zeros(n, np.int64) for n in (N_NUM, N_NUM, N_NUM, W_MAX, W_MAX))
             n_found = 0
-            for k, m in enumerate(pp.NUM_RE.finditer(prompt)):
+            for k, m in enumerate(() if self.no_slots else pp.NUM_RE.finditer(prompt)):
                 n_found += 1
                 if k < N_NUM:
                     ns[k], ne[k], nv[k] = m.start(), m.end(), min(int(m.group()), 10 ** 18)
@@ -212,6 +231,9 @@ class Ledger(Model):
                 capcount.hit('words_over')
             for k, (s, e) in enumerate(sp[:W_MAX]):
                 ws[k], we[k] = s, e
+            off = self.vocab.offsets(prompt)        # ByteVocab on non-ASCII text: char offsets -> byte offsets (every position of X is a byte)
+            if off is not None:
+                ns, ne, ws, we = off[ns], off[ne], off[ws], off[we]
             hit = self._spans[prompt] = (ns, ne, nv, ws, we)
         return hit
 
@@ -270,6 +292,31 @@ class Ledger(Model):
             h = F.gelu(self.eg_hid(h))
         return self.reader(batch, extra=self.eg_proj(h))
 
+    def tok_spots(self, X, xm, batch):
+        """tok_think: pool the letters of each EmbeddingGemma token into one spot. X [B,T,d], xm [B,T] -> (Xk [B,K,d], km [B,K] bool), K = the batch's
+        most tokens. Token ids come from align() (call after read(): the tokenizer is loaded), compacted per row in order of first appearance. Softmax
+        over the valid letters of a token (fp32, max detached), weighted sum by index_add; a plain mean while tok_pool is zero."""
+        B, T, d = X.shape
+        tk, nt, nl = np.zeros((B, T), np.int64), np.zeros(B, np.int64), 0
+        for b, r in enumerate(batch['rows']):
+            c = np.asarray(self.eg().align(r['prompt'])[1][:T], np.int64)
+            u, first, inv = np.unique(c, return_index=True, return_inverse=True)
+            tk[b, :len(c)] = np.argsort(np.argsort(first))[inv.reshape(-1)]
+            nt[b], nl = len(u), nl + len(c)
+        K = int(nt.max())
+        if self.training:
+            self._tk_letters += nl
+            self._tk_spots += int(nt.sum())
+        gid = (torch.from_numpy(tk).to(X.device) + K * torch.arange(B, device=X.device)[:, None])[xm]       # [N] segment of each valid letter
+        xv = X[xm]
+        sc = self.tok_pool(xv).float()[:, 0]
+        with torch.no_grad():
+            mx = torch.full((B * K,), -float('inf'), device=X.device).scatter_reduce(0, gid, sc, 'amax', include_self=False)
+        e = torch.exp(sc - mx[gid])
+        w = e / torch.zeros(B * K, device=X.device).index_add_(0, gid, e)[gid]
+        Xk = torch.zeros(B * K, d, device=X.device).index_add_(0, gid, w[:, None] * xv.float())
+        return Xk.to(X.dtype).view(B, K, d), torch.arange(K, device=X.device)[None, :] < torch.from_numpy(nt).to(X.device)[:, None]
+
     def size(self):
         """{trainable, discarded (training-only heads, not shipped), frozen_borrowed (EmbeddingGemma 2 text part, eg_embed only), shipped_trainable, whole}."""
         from custom_io.models.eg import N_TEXT
@@ -303,7 +350,8 @@ class Ledger(Model):
         Kw, wvalid = self.word_keys(ws, we), we > ws
         if self.copy and lesion != 'nowordc':
             Kw = Kw + self.word_content(X, ws, we)
-        kvx = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
+        Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (Xt, xm)       # tok_think: token spots for the thinker's cross-attention only
+        kvx = [b.kv_of(Xk + self.src.weight[1]) for b in self.core]
         P = self.reader.place.weight[:N_REG]
         Z = torch.cat([self.ctrl.weight, P]).expand(B, -1, -1)
         steps, prog, snaps = [], [], []
@@ -312,7 +360,7 @@ class Ledger(Model):
             ts = min(t, self.n_loops - 1)
             S = torch.cat([S0, Rs], 1)
             kvs = [b.kv_of(S + self.src.weight[0]) for b in self.core]
-            mask = torch.cat([valid, xm], 1)
+            mask = torch.cat([valid, km], 1)
             Z = Z + self.step_emb.weight[ts]
             for b, kx, ks in zip(self.core, kvx, kvs):
                 Z = b(Z, ks, kx, mask)
@@ -448,9 +496,9 @@ class Ledger(Model):
                 op[i, s], A[i, s, list(ca)], Bm[i, s, list(cb)] = o, True, True
             mode[i], ans[i, list(t['ans'])], word[i, list(t['word'])] = t['mode'], True, True
             if t['mode'] == 2:
-                if len(r['answer']) > GEN_MAX:
+                if self.vocab.length(r['answer']) > GEN_MAX:
                     capcount.hit('gen_answer_over')
-                ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
+                ids = self.vocab.encode(self.vocab.clip(r['answer'], GEN_MAX)[::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
         A[:, :, 0] |= ~A.any(-1)
         Bm[:, :, 0] |= ~Bm.any(-1)

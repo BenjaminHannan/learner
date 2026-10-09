@@ -1,4 +1,4 @@
-"""Char vocab, dataset, collator, training-order iterator and a word-level view of prompts."""
+"""Char vocab (CharVocab) or raw-byte vocab (ByteVocab, V1 `bytes`), dataset, collator, training-order iterator and a word-level view of prompts."""
 import json, os, re, sys
 import numpy as np
 import torch
@@ -41,6 +41,8 @@ def load_rows(path, limit=None, keep=KEEP):
 class CharVocab:
     """ids: PAD=0 BOS=1 EOS=2 SEP=3 UNK=4, Q0..Q7 = 5..12, then the sorted alphabet. Unknown chars -> UNK."""
 
+    is_bytes = False        # units (ids, positions, widths) are characters
+
     def __init__(self, chars):
         self.chars = ''.join(sorted(set(chars)))
         self.itos = SPECIALS + list(self.chars)
@@ -57,6 +59,20 @@ class CharVocab:
 
     def encode(self, s):
         return [self.stoi.get(c, UNK) for c in s]
+
+    # unit measures (one unit = one id): a char here, a byte in ByteVocab. Models and Dataset size everything through these.
+    @staticmethod
+    def length(s):
+        return len(s)
+
+    @staticmethod
+    def clip(s, n):
+        return s[:n]
+
+    @staticmethod
+    def offsets(s):
+        """None: char offsets are unit offsets. (ByteVocab: int array [len(s) + 1], the unit offset of each char and of the end.)"""
+        return None
 
     def decode(self, ids):
         """Ids -> string; stops at the first EOS and skips every other special."""
@@ -99,24 +115,84 @@ class CharVocab:
         return v
 
 
+class ByteVocab:
+    """V1 `bytes`: the same 13 specials at 0..12, then the 256 byte values at 13..268 (269 ids). encode = UTF-8 bytes (a non-ASCII char is 2-4 ids; no UNK);
+    decode = the bytes up to the first EOS, specials skipped, read as UTF-8 with errors='replace'. For ASCII text it is CharVocab's text with different ids.
+    Every length in the models is in these units (see length / clip / offsets); `chars` is empty (a checkpoint records vocab='bytes')."""
+    is_bytes = True
+
+    def __init__(self):
+        self.chars = ''
+        self.itos = SPECIALS + [bytes([b]).decode('latin-1') for b in range(256)]
+        self.stoi = {chr(b): b + N_SPECIAL for b in range(128)}        # ASCII only (a char above is several ids: use encode)
+
+    def __len__(self):
+        return N_SPECIAL + 256
+
+    @classmethod
+    def build(cls, rows=None):
+        return cls()
+
+    def encode(self, s):
+        return [b + N_SPECIAL for b in s.encode('utf-8', errors='replace')]
+
+    def decode(self, ids):
+        out = bytearray()
+        for i in ids:
+            i = int(i)
+            if i == EOS:
+                break
+            if N_SPECIAL <= i < N_SPECIAL + 256:
+                out.append(i - N_SPECIAL)
+        return out.decode('utf-8', errors='replace')
+
+    @staticmethod
+    def length(s):
+        return len(s) if s.isascii() else len(s.encode('utf-8', errors='replace'))
+
+    @staticmethod
+    def clip(s, n):
+        """The longest prefix of s that fits n bytes (never half a character)."""
+        return s[:n] if s.isascii() else s.encode('utf-8', errors='replace')[:n].decode('utf-8', errors='ignore')
+
+    @staticmethod
+    def offsets(s):
+        """None for ASCII (char offset = byte offset); else int64 [len(s) + 1]: the byte offset where each char starts, and the total at the end."""
+        if s.isascii():
+            return None
+        return np.concatenate([[0], np.cumsum([len(c.encode('utf-8', errors='replace')) for c in s])]).astype(np.int64)
+
+    def save(self, path, **meta):
+        with open(path, 'w') as f:
+            json.dump({'specials': SPECIALS, 'bytes': True, **meta}, f)
+
+
+def unit_spans(vocab, text, spans):
+    """[(start, end)] char offsets of `text` -> unit offsets of `vocab` (identity for CharVocab and for ASCII text)."""
+    off = vocab.offsets(text)
+    return spans if off is None else [(int(off[a]), int(off[e])) for a, e in spans]
+
+
 class Dataset(torch.utils.data.Dataset):
     """Item = (prompt ids, answer ids + EOS, raw row). strict=False (dev data) truncates over-long answers
     instead of asserting; the dev 'family' split has answers up to 12 chars that no 8-slot model can emit."""
 
     def __init__(self, rows, vocab, strict=True):
         self.rows, self.vocab, self.strict = rows, vocab, strict
-        assert max(len(r['prompt']) for r in rows) <= MAX_PROMPT, 'prompt too long'
+        ln = vocab.length       # units: chars, or bytes for ByteVocab
+        assert max(ln(r['prompt']) for r in rows) <= MAX_PROMPT, 'prompt too long'
         if strict:
-            assert max(len(r['answer']) for r in rows) <= MAX_ANS, 'answer too long'
+            assert max(ln(r['answer']) for r in rows) <= MAX_ANS, 'answer too long'
 
     def __len__(self):
         return len(self.rows)
 
     def __getitem__(self, i):
         r = self.rows[i]
-        if len(r['answer']) > MAX_ANS:
+        a = self.vocab.encode(r['answer'])
+        if len(a) > MAX_ANS:
             capcount.hit('answer_over_max')
-        return self.vocab.encode(r['prompt']), self.vocab.encode(r['answer'])[:MAX_ANS] + [EOS], r
+        return self.vocab.encode(r['prompt']), a[:MAX_ANS] + [EOS], r
 
 
 def collate(items):

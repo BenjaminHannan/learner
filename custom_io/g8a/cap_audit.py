@@ -41,6 +41,9 @@ def model_side(caps, model_name='ledger'):
                             CAP=c['plain_target']).items():
             if hasattr(m, k):
                 chk(f'{name.split(".")[-1]}.{k}', getattr(m, k), want)
+    from custom_io.models import tool_h1, b3
+    chk('tool_h1.CAP (H1 round cap, fixed)', tool_h1.CAP, 32)
+    chk('b3.CAP (H1 round cap, fixed)', b3.CAP, 32)
     from custom_io.models import ledger as L
     chk('ledger.M (workspace slots)', L.M, c['n_num'] + len(pp.CONSTS) + c['n_res'])
     from custom_io.data import CharVocab
