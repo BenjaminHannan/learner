@@ -1,14 +1,16 @@
-# Post-G1 chain on BensPC (9 Oct 2026, spec addendum K). After gate G1's last PC queue ends: test GX stage 1 (queue 8aGX, code
-# src-8gx, Ben's "experts first"), then the 100M fit check part A (8aFC), then the G-PT 30M control (8aC30) unless B3 group 1
-# is ready (WORK\B3-READY.txt). One queue at a time. WORK\STOP holds the chain (it never removes STOP). Started detached by
+# Post-G1 chain on BensPC (9 Oct 2026, spec addenda K and L). After gate G1's last PC queue ends: test GX stage 1 (queue 8aGX,
+# code src-8gx, Ben's "experts first"), then the 100M fit check part A on B3 inputs (8aFC, code src-b3), then the G-PT 30M
+# control (8aC30, G1's code src-8ag) unless B3 group 1 is ready (WORK\B3-READY.txt). One queue at a time. WORK\STOP holds the chain (it never removes STOP). Started detached by
 # install_post_g1.ps1, so it outlives the ssh session. It stops nothing and deletes nothing.
 $CIO   = 'C:\Users\benja\custom-io'
 $WORK  = "$CIO\work"
 $SRC   = "$CIO\src-8ag"
 $SRCGX = "$CIO\src-8gx"
+$SRCB3 = "$CIO\src-b3"
 $JOBS  = 'C:\Users\benja\pc-jobs'
 $PY    = 'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
-$CAPS  = '3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78'
+$CAPS  = '3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78'      # caps.py of G1 (src-8ag) and of the experts code (src-8gx)
+$CAPSB3 = 'D276FAC05E1127D9979E9B8EA3A4F4E6CC4D7BAC33C218FA164117B60F1B4AA8'     # caps.py at c24bce9489 (src-b3)
 $LOG   = "$WORK\q8aPost-waiter.log"
 function Now { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') }
 function Say($m) { "$(Now) ET $m" | Add-Content -Encoding ascii $LOG }
@@ -44,10 +46,10 @@ function MoveDone($pattern) {
   New-Item -ItemType Directory -Force "$JOBS\done" | Out-Null
   foreach ($c in @(Get-ChildItem "$JOBS\$pattern" -ErrorAction SilentlyContinue)) { Move-Item -Force $c.FullName "$JOBS\done\"; Say "moved pc-jobs\$($c.Name) to done" }
 }
-function Launch($q, $src) {
+function Launch($q, $src, $hash) {
   $qf = "$src\custom_io\queue_local\$q-pc.txt"
   if (-not (Test-Path $qf)) { Say "queue file $qf missing: $q NOT started"; return $false }
-  if ((Get-FileHash "$src\custom_io\g8a\caps.py").Hash -ne $CAPS) { Say "caps.py hash wrong in ${src}: $q NOT started"; return $false }
+  if ((Get-FileHash "$src\custom_io\g8a\caps.py").Hash -ne $hash) { Say "caps.py hash wrong in ${src}: $q NOT started"; return $false }
   if ((Runner) -or (Test-Path "$WORK\STOP")) { Say "a runner or STOP appeared: $q NOT started"; return $false }
   $cmd = "$CIO\q${q}_run.cmd"
   Set-Content -Encoding ascii $cmd -Value @(
@@ -112,7 +114,7 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
     Say 'WORK\GX-ON-MAC.txt present: GX stage 1 runs on the Mac, skipped here'
   } else {
     WaitFree 'before GX'
-    if (Launch '8aGX' $SRCGX) {
+    if (Launch '8aGX' $SRCGX $CAPS) {
       Card 'gx.md' (@("started: $(Now) ET by the post-G1 chain waiter C:\Users\benja\custom-io\q8aPost_wait.ps1 on Ben's go (setup steps 1-2 done",
                      "  by install_post_g1.ps1, step 3 by the waiter). When this queue ends the waiter starts the next job itself; never start one by hand.") +
                     @(Get-Content "$SRCGX\custom_io\queue_local\8aGX-card.md"))
@@ -123,9 +125,11 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
   }
 }
 
-# 3. 100M fit check part A (an out-of-memory run is a result, so the chain goes on either way).
+# 3. 100M fit check part A on B3 inputs (an out-of-memory run is a result, so the chain goes on either way).
 WaitFree 'before fc100'
-if (Launch '8aFC' $SRC) {
+if (-not (Test-Path "$SRCB3\B3-SETUP-OK.txt")) {
+  Say 'src-b3\B3-SETUP-OK.txt missing: fc100 NOT started, NEEDS ATTENTION (going on to c30)'
+} elseif (Launch '8aFC' $SRCB3 $CAPSB3) {
   MoveDone 'gx.md'
   FromTemplate 'fc100.template.md' 'fc100.md'
   WaitEnd '8aFC'
@@ -135,7 +139,8 @@ if (Launch '8aFC' $SRC) {
 if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
 WaitFree 'before c30'
 if (Test-Path "$WORK\B3-READY.txt") { Say 'WORK\B3-READY.txt present: B3 group 1 goes first, c30 NOT started. Chain finished.'; exit }
-if (Launch '8aC30' $SRC) {
+if (Launch '8aC30' $SRC $CAPS) {
+  MoveDone 'gx.md'
   MoveDone 'fc100.md'
   FromTemplate 'c30.template.md' 'c30.md'
   Say 'chain finished: c30 runs on (its card handles a spill)'

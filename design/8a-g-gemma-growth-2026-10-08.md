@@ -273,3 +273,25 @@ Asked by the coordinator (relay, 11:10 AM ET) after Ben asked for the experts te
 work). Both parse clean, and the waiter ran end to end in a mock PC (fake processes and clock) for five cases: normal, s401 skipped, GX on
 the Mac, GX failed then released, B3 ready (shown, mock only). Rough PC time after G1 (suggested, not measured): GX about 20-24 h (its card),
 fc100 about 1 h, c30 about 1-2 days. Starting needs Ben's go.
+
+## 17. Addendum L (2026-10-09, 11:50 AM ET): fc100 part A moves to B3 inputs
+
+Asked by the big-run thread (coordinator relay, 11:41 AM ET): run part A with the B3 caps on the B3 3M long-chunk pool, so the same hour
+measures the memory that matters. It stays in the post-G1 chain behind GX. G1 itself is unchanged (still `src-8ag`, 612f5c5b01 + caps fix).
+
+- **Code:** new folder `src-b3` = `custom_io` at **c24bce9489**, not 61fb6fdac2: `--cloze-long` and `caps_b3.json` exist only in c24bce9489,
+  the child of 61fb6fdac2. Its diff against 61fb6fdac2 touches only `g8a/caps.py` (`compute_global`), `g8a/job.py`, `g8a/pool.py` and adds
+  `caps_b3.json`; `train.py` and the models are byte-identical (shown: same file hashes). Hashes: caps.py D276FAC0..., caps_b3.json
+  BD81C67F..., `data_pool/cloze_long.py` FF6A2E12... (branch claude/data-pool-8b at 3d0afbeadd, copied to `WORK\b3-inputs`).
+- **Pool:** the PC builds it itself (the audited B3 3M pool was built on cloud CPU). Queue line `8aFC-pool-3M-s400-L` runs `g8a.job --rung 3M
+  --seed 400 --cloze-long ... --caps-file caps_b3.json`: it builds `p10-rung30-s400-a64-L` and its `caps.json` and `caps_report.json`, then
+  **stops at the 3M size check**, because under the B3 caps the 3M B2 arm is 4,023,377 parameters, more than 3% from 3,500,881 (shown on
+  CPU at c24bce9489). That stop is expected here, and it means **B3 group 1 at 3M will hit the same check** until its owner widens the 3M
+  band for B3 caps or sizes the 3M arms down.
+- **Runs:** unchanged shape (ledger, 21 blocks x 512, 12 rounds, Gemma input, 60 updates at accumulation 64, 128, 256), now `--data` and
+  `--caps` from the `-L` pool. Rough PC time about 1-2 h with the pool build (suggested). Part B (H1 round checkpointing) still waits for B3
+  group 1.
+- **Chain and installer:** the waiter launches `8aFC` from `src-b3` (its own caps hash) and needs `src-b3\B3-SETUP-OK.txt`; without it, it
+  logs NEEDS ATTENTION and goes on to c30. The installer unpacks `b3.zip`, checks the three hashes, runs `test_g8a` on CPU (passes, 12 s here)
+  and writes the marker. Both scripts parse clean; the mock-PC run starts 8aGX from src-8gx, 8aFC from src-b3, 8aC30 from src-8ag (shown,
+  mock only). c30 keeps G1's code because it is G1's control.
