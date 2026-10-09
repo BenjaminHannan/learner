@@ -3,6 +3,17 @@
 Sealed before any 8a run (written 2026-10-07, about 1:15 PM ET). Changing a mark after the first run needs a dated
 addendum that says why, and it cannot use any 8a result.
 
+> **Audit notes (1:15 PM ET 10-09, architecture audit B04-1, B04-6, B04-7). No mark changes.**
+> - Addendum A3's "8c builds the design that passed 8a, and B3 if both pass" is replaced: 8c builds only B3
+>   (`8A-10M-RESULT-2026-10-08.md` sec. 7; FINISHED sec. 4), and only after B3 itself gains more from size than the plain
+>   model (gate G1, then B3's own ladder). Today's B2 never ships (Ben's deploy rule, 2:45 PM ET 10-07). (B04-1)
+> - "Depth first, Ben 10:48 AM ET": Ben's words were "as deep as possible", said about how long it thinks (rounds, cap
+>   32). Growing by blocks rather than width is our build choice, not his ruling. The only depth-against-width result (the
+>   10M shape probe: wider about +1) ran on the B2 with the register bug, so it counts neither way. (B04-6)
+> - Sec. 1's "2c1, 2c2 and 2d are tested separately at 3.3M": only 2c2 ran (T1SDR, 6 seeds). Learned number finding (N1)
+>   is in B3 group 2 and not built; the learned stop (H1) has never run, and its first run is B3 group 1 at 3M after G1.
+>   (B04-7)
+
 Labels: **shown** = measured in this repo; **suggested** = reasoned; **untested** = a plan or guess.
 
 Asks this answers:

@@ -376,3 +376,22 @@ PC gets now. Version 2 installs only on his go on a new card, and only while ver
 - **Rough PC time after G1 (suggested, unmeasured for B3):** GX seed 400 about 11 h, fc100 1-2 h, g2c3 about 2.4 h, B3 3M seed 400
   12-26 h. If both are alive: GX seed 401 about 11 h, g2c3 seed 401 about 3 h, B3 seed 401 12-26 h. Then g2c10 about half a day and c30
   2-3 days.
+
+## 21. Addendum P (2026-10-09, 1:15 PM ET): answers to the architecture audit (B01-11, B01-12, B01-13, B01-15)
+
+From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a mark or a run.
+
+- **B01-12, answers over 35 letters (shown):** G1's own cap report on the PC (`8aG1d-3M-s400/caps_report.json`, pushed to
+  `claude/8a-g-pc-results`) counts 1,655,902 rows; the longest answer is 35 letters, and rows over the caps are 0 for every cap, in
+  training and in the dev files. So no G1 training answer is cut at 35. B3 counts `gen_answer_over` and `answer_over_max` at run time as
+  well (readout B3-6).
+- **B01-13, what "thinker off" means once the stop is learned (shown):** `loops:K` forces exactly K rounds with the stop head ignored
+  (`tool_h1.py` docstring line 21 and `run()` lines 97-101 at e070556ce5). So `loops:0` is zero rounds for B3 too, the same test as G1's;
+  the stop's "at least 1 round" applies only to the model's own runs. B3-2 reads it this way.
+- **B01-15, the Gemma adapter's size (shown, my count):** the adapter is a layer norm and a 768-to-d linear map (`ledger.py` lines 30-45 at
+  e070556ce5): 1,536 + 768 x d + d = 198,400 at width 256, 395,264 at 512 (under 0.1% of the whole). It is counted in every trained size this spec reports (sec. 2), and the source of truth now
+  counts it too (FINISHED sec. 1: "102.1M trained, which includes the Gemma adapter and the letter window").
+- **B01-11, which plain model is the yardstick (open, for Ben):** Ben's bar (10:16 AM ET 10-08) says "more than the plain model" and
+  does not name one. This spec picked the plain step model (same rows, same answers) by default; the plain LLM recipe gained more in 8a
+  (+15.8 against +3.8 from 3M to 10M on the letter reader) but starts 26 points lower. The marks stay sealed as written. The 8a LLM
+  numbers stay reported beside them, and the roadmap lists the choice for Ben (whole-model roadmap, "Latest, Fri Oct 9").
