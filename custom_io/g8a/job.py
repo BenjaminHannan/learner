@@ -108,6 +108,7 @@ def parse_accum(s, speed_json, rung):
 def get_pool(a, man_out_dir):
     """Build (or reuse) the pool dir of this rung and seed. Returns (dir, manifest)."""
     R = C.RUNGS[a.rung]
+    assert R['own_rung'] is not None, f'the {a.rung} pool is not built (the 600M pool is the data thread\'s and waits for a GO)'
     key = 'p%d-%s-s%d-a%d' % (R['own_rung'], R['web'], a.seed, a.max_ans)
     pdir = os.path.join(a.work, 'pools', key)
     os.makedirs(os.path.dirname(pdir), exist_ok=True)
@@ -158,7 +159,7 @@ def main(argv=None):
     ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')
-    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ARMS))
+    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ALL_ARMS), help='B3 (B3-GROUP1-BUILD): the b3 model at the rung, config from configs.b3_cfg; --b2-extra adds switches to it')
     ap.add_argument('--max-ans', type=int, default=P.HYGIENE_ANS, help='data hygiene limit on answer chars for the pool builder (NOT a model cap: model caps come from caps.json)')
     ap.add_argument('--b2-extra', default='{}', help='JSON reader switches for B2 (stage 2b pick), e.g. {"eg_embed": true}')
     ap.add_argument('--lr-scale', type=float, default=1.0)
@@ -181,7 +182,7 @@ def main(argv=None):
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
     if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM} and a.public == 'none', 'with eg_embed only the B2 and PT arms run (plain_lm and the public model have no Gemma front)'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM} and a.public == 'none', 'with eg_embed only the B2, PT and B3 arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)
@@ -209,8 +210,15 @@ def main(argv=None):
     caps = get_caps(a, pdir)
     CP.apply(caps)                                  # in this process too, so the parameter counts below include the sized position / place tables
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
-    cfgs, counts = C.sizes(a.rung, b2_extra)
-    C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
+    old = [x for x in a.arms if x != C.B3_ARM]
+    cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
+    if old:
+        C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
+    if C.B3_ARM in a.arms:          # B3: n_loops (and any extra switch) come in through --b2-extra; its trained count is checked against its rung band
+        cfgs[C.B3_ARM] = C.b3_cfg(a.rung, b2_extra)
+        counts[C.B3_ARM] = C.check_b3(a.rung, cfgs[C.B3_ARM])
+        sz = C.b3_sizes(cfgs[C.B3_ARM])
+        print('B3 size', json.dumps(sz), flush=True)
     steps = a.steps or man['schedule']['steps']
     pm_dir = base if a.local else os.path.join(base, tag + '-pool')
     os.makedirs(pm_dir, exist_ok=True)
