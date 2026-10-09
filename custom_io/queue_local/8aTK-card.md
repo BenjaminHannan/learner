@@ -3,10 +3,10 @@ queue: 8aTK (files 8aTK-pc-1.txt, 8aTK-pc-2.txt, 8aTK-pc-3.txt; 8aTK-pc.txt is t
 owner: Architecture ambiguities thread (spec and marks); scheduling by the big-run thread
 gpu: yes (BensPC RTX 5070 Ti)
 start_when: the big-run thread names a free PC gap (first gap after G1; it must never delay the B3 ladder) AND Ben has said go in the Mac session. Never while any other GPU job runs (GPU-BUSY.txt).
-paths: SRC = C:\Users\benja\custom-io\src-8ag-tk (a NEW folder: branch claude/project-thread-qtxfp4 at commit <PIN> exactly; never "the pushed head", never edit src-8ag or src-8gx)
+paths: SRC = C:\Users\benja\custom-io\src-8ag-tk (a NEW folder: branch claude/project-thread-qtxfp4 at commit 1ed55c8d5d96 exactly; never "the pushed head", never edit src-8ag or src-8gx)
   WORK = C:\Users\benja\custom-io\work (shared with G1: the 3M pools p10-rung30-s400-a64 and p10-rung30-s401-a64, data8a, data and data_big are reused, not rebuilt)
 setup:
-  1. Copy the branch at <PIN> into SRC (git archive or gh_fetch.py, as for src-8ag). Get-FileHash SRC\custom_io\g8a\caps.py must be
+  1. Copy the branch at 1ed55c8d5d96 into SRC (git archive or gh_fetch.py, as for src-8ag). Get-FileHash SRC\custom_io\g8a\caps.py must be
      3DA2DFBB0DDDE64F0B4A263CCC025A01E70CA35C7C69FD9E9FDBB9C2D2325F78. Else stop, NEEDS ATTENTION.
   2. CPU check in SRC: python -m custom_io.tests.test_tok_think must end "ALL OK".
   3. Cost check (report-only, minutes, GPU): python -m custom_io.g8a.tok_cost --cloze <a training jsonl of WORK\g8a\pools\p10-rung30-s400-a64> --out WORK\results\8aTK-cost.json
