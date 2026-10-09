@@ -29,6 +29,7 @@ Each job running on the PC should have a card at `C:\Users\benja\pc-jobs\<job>.m
 1. Read `status/last-check.txt`. If it holds a check finished less than 5 minutes ago, reply `SKIP: checked at <time>` and stop. (Checks pile up while the Mac sleeps; this keeps the backlog cheap.)
 2. Run `~/learner-ops/bin/pc-check`.
 3. Decide each job's state: running, finished, stalled (log older than its `stall_minutes`), or failed (an error in the log tail or the process gone before "done").
+   - `pc-check` reads only the card's `log:` file. If the card says the live progress is in another file (for example a `stall_check:` line naming the newest `stdout.txt` in a folder), read that file's age and last 15 lines with one `pc-ps` call and judge stalls and errors from it as the card says.
    - The spill rule from the 8a-G spec: a training process whose shared GPU memory passes 1 GB (1024 MiB) counts as failed by spill, even while it runs.
    - Windows line endings: files written on Windows end lines with `\r\n`. A hash or manifest mismatch on a data file is often only that; follow the card's line-ending step if it has one.
 4. If a job failed or stalled and its card covers that failure, check `log/actions.md` for restarts of that job in the last 24 hours. Under the card's `max_restarts`, do exactly the card's steps, then confirm with `pc-check` that it is running again. At or over the limit, do nothing to the job and mark it NEEDS ATTENTION.
