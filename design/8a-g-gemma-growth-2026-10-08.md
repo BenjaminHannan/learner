@@ -213,3 +213,17 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   cards (g1e to done, g1f installed). Nothing is stopped.
 - Estimates (suggested): 3M s401 done about 8:30 PM ET 10-09; the two 10M jobs follow at an untested speed, so the gate lands late Saturday ET.
 - Marks, arms and readout unchanged.
+
+## 14. Addendum I (2026-10-09, 10:50 AM ET, before any 10M result): stop early if seed 400 already rules out a pass
+
+- **Rule (fixed now, before any 10M run has started):** after 10M s400, compute seed 400's gain difference, d(G-B2) - d(G-PT), with
+  pooled-5. If it is at or below -1.0, 10M s401 is not run. The gate then reads **Stop (one seed)**. In every other case 10M s401 runs as planned
+  and the readout is unchanged.
+- **Why:** Go needs +1.0 or more on both seeds, so a seed 400 result at or below -1.0 rules Go out. Skipping seed 401 then saves about half a
+  day of the PC. The big-run replan (Ben 10:43 AM ET 10-09: no Vast, soonest finish) waits on this gate. A result between -1.0 and +1.0 also rules
+  Go out, but seed 401 still runs then, because it tells Stop from Unclear and that changes what the replan does next. The -1.0 line came from
+  the coordinator's replan note.
+- **How (on the PC, no one needs to be awake):** queue 8aG1f now holds 10M s400 only, and queue 8aG1s401 holds 10M s401. `q8aG1s401_wait.ps1`
+  waits for 10M s400 to finish, then runs `g1_futility.py` (exit 3 = skip). Any error in the check starts seed 401, so a fault never holds the
+  GPU back. Files are in `results/8a-g/pc-job-cards/`. Settings are unchanged from addendum H.
+- Marks, arms and readout otherwise unchanged.
