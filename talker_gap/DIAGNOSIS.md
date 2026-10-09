@@ -1,3 +1,5 @@
+> **Update 2026-10-08 (read RESULTS.md first):** the wave-1 and sealed runs changed the headline. A new-style pointer head over Gemma states is good on held-out TEACH kinds (82-85%) but 11-20% on the outside sets, and TEACH's training questions contain no where/why/when/how-many. So the leading explanation is question-type coverage in the training data, not the talker design. This file's older claims stand as written; claim 2 (question-blindness) is absent in the new head on 28 DEV pairs.
+
 # Why our own talker trails the borrowed one - diagnosis (2026-10-08, ET)
 
 Evidence is in `diag/D1`..`D8` (read-only Haiku reports plus orchestrator checks). **shown** = read or measured, source cited in the D-report; **suggested** = reasoning/literature; **untested** = no run yet. Everything here is the English-QA line; nothing is claimed for the card toys or the village model.

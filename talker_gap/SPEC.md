@@ -74,3 +74,7 @@ Secondary numbers (reported, not pass/fail):
 - Results go in `RESULTS.md` with shown/suggested/untested labels; DEV-set tuning is limited to the single config in the harness; no per-arm hyperparameter search.
 - No training target is truncated or answer-only except B0, whose head cannot say back (stated, scored on the answer part).
 - Everything the model does is learned; hand-written code is only data preparation and evaluation.
+
+## Amendment 1 (2026-10-08 ET, after wave 1, before any candidate was built)
+
+Wave 1 (seed 0) left the ceiling rule at S_H(B0) = 84.52, just under 85, with the headline S_H and mark 1 needing S_H(T) >= 94.5. Ben chose to stop building and run the sealed check on B0, B0-nothinker and P0 only (R, T1, T2 not built). Marks 1-5 were never applied to a candidate. Mark 6 was evaluated only as a descriptive B0 vs B0-nothinker vs P0 comparison on pooled R5+R6 (RESULTS.md); there is no winner.

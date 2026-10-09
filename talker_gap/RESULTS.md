@@ -26,7 +26,7 @@ Means: B0 S 85.53, S_H 84.34; B0-nothinker S 83.34, S_H 80.63. B0 is above B0-no
 ## What this shows
 
 1. **Ceiling rule (pre-registered): S(B0) = 85.28 >= 80, so the headline switches to S_H. S_H(B0) = 84.52, which is below 85 by 0.48 points, so the "build nothing" branch does not fire by the letter of the rule.** This ceiling decision is the seed-0 reading, recorded before seeds 1 and 2 finished; seeds 1 and 2 are for mark 1's seed-matched comparison and are not used to re-decide the ceiling. The pass mark with S_H would need S_H(T) >= 94.5 (mark 1 asks +10 over B0). That leaves almost no headroom. (shown)
-2. **The copytalk-style failure does not appear in this harness.** A non-autoregressive pointer head that reads contextual reader states of "passage + question" scores 85% on kinds it never saw, against 13.6% for PR #37's copytalk head on unseen kinds. This run changes several things at once (reader, head, data size, question in the reader input), so it does not say which one fixed it. (shown for the numbers; the cause is suggested: PR #37's head had no question input and 59% of different questions got identical spans, see DIAGNOSIS.md)
+2. **On held-out TEACH kinds (DEV, TEST) the copytalk-style failure does not appear; on the sealed outside sets it does.** B0 scores 85% (DEV) and 82% (TEST) on kinds it never trained on, but 11% on pooled R5+R6 and 20% on FRESH-EN-R3 (see "Sealed check"). Held-out TEACH kinds are an easy test of transfer; the outside sets are the real one. (shown)
 3. **The thinker helps a little, not a lot.** +2.2 points on S (+4.2 on S_H) over the same head with the layers removed, one seed. The bootstrap is over rows; it does not measure seed-to-seed variation. (shown in seed 0; it holds in seeds 1 and 2 too, see the seed table)
 4. **P0 shows the answer location is not readable by a linear map alone** (67.7). The pointer head's query from the pooled state is worth +17.6 over it. (shown) P0 starts with a very large loss because its inputs are unnormalised (no LayerNorm, unlike the other arms); I did not change it. (suggested: P0 may be understated)
 5. **Remaining weakness is boundaries on longer answers**: 120 of 212 errors have the right location and wrong edges; answers over 8 characters are 63.8%. (shown)
@@ -34,8 +34,31 @@ Means: B0 S 85.53, S_H 84.34; B0-nothinker S 83.34, S_H 80.63. B0 is above B0-no
 7. **Question-sensitivity (DIAGNOSIS.md claim 2) is absent in B0.** DEV passages with two questions of different gold spans are rare (28 of 12,194 passages; TEACH is mostly one question per passage), so this is a small sample: B0 gave the identical span for 1 of 28 pairs (3.6%) and B0-nothinker 0 of 28, against 335/564 (59%) for copytalk on unseen kinds. B0 got the exact gold span on 51/56 of these rows. (shown, n=28 pairs; `probe_pairs_build.py`, `probe_pairs_eval.py`, `results/pairs_qsens.json`)
 8. **The shuffled-state check drops every arm to about 20%** (nearly automatic here, since the notes are the talker's only view of the passage). It is not evidence against bypass. (shown, as SPEC.md predicted)
 
+## Sealed check (run once, 2026-10-08 ET; B0, B0-nothinker, P0 only; no tuning on these sets)
+
+Rows: each of the 96 questions per set scored on both its source text and its paraphrase = 192 rows per set (`seal_build.py`, `seal_eval.py`, `results/sealed_results.json`). Short-answer EM, mean over seeds 0-2 (P0: seed 0):
+
+| set | B0 | B0-nothinker | P0 |
+|---|---|---|---|
+| TEST (held-out TEACH kinds, 3,000 rows) | 81.6 | 79.8 | 63.1 |
+| FRESH-EN-R3 | 20.0 | 17.3 | 8.8 |
+| GEN-HELDOUT-R4 | 17.0 | 16.3 | 13.6 |
+| NEW-KINDS-R5 | 12.7 | 11.7 | 8.3 |
+| NEW-KINDS2-R6 | 10.3 | 8.7 | 2.9 |
+| **R5+R6 pooled (mark 6 set)** | **11.5** (11.2 / 11.2 / 12.1) | 10.2 (10.0 / 10.9 / 9.7) | 5.6 |
+
+Paired bootstrap on pooled R5+R6 short answers: B0 - B0-nothinker = +1.18 (-2.35, 4.71), +0.29 (-2.94, 3.82), +2.35 (-0.88, 5.59) for seeds 0, 1, 2 (all intervals include 0). B0 - P0 = +5.59 (2.35, 9.12). On TEST: B0 - B0-nothinker = +0.9 (-0.76, 2.48), +0.3 (-1.45, 2.00), +4.1 (2.34, 5.72). Speed 2.6 ms/answer.
+
+What this shows:
+- **The talker gap is real on outside sets: 11-20% against 80-85% on held-out TEACH kinds.** It is the same size as PR #37's copytalk number (13.6%). (shown)
+- **The likely cause is question-type coverage, not talker architecture.** TEACH's training side has short-answer questions that are 57.6% "who", 22.7% "what did", and zero "where", "why", "when" or "how many/much"; the R5 and R6 sets are mostly where/why/when/how-many/how-long/which. On R5+R6 the wrong answers are mostly wrong words (it picks a neighbouring noun, a name, or even "yes"): of B0's seed-0 short answers, 105 of 168 (R5) and 96 of 172 (R6) point at the wrong place and 43 and 58 have the right place with wrong edges. (shown for the counts; the cause is suggested: no run here adds those question types to training and measures the change)
+- **The thinker's +2 points on held-out TEACH kinds shrinks to +1 on R5+R6 and is not distinguishable from 0 there.** (shown)
+- **The reader-side check is untested:** whether a pretrained LM talker (R) transfers better was not built, because of the decision to stop (SPEC.md ceiling branch, Ben's choice on 2026-10-08).
+
+Because this one-shot check is now spent, any later candidate needs a new unseen test set; reusing R3-R6 would no longer be a clean test.
+
 ## Not done
 
-- Seeds 1 and 2 for P0 (untested). R, T1, T1-nothinker, T2 are not built (SPEC.md: built only after wave 1 reports). Sealed R5+R6 check not run.
+- P0 seeds 1 and 2 (untested). R, T1, T1-nothinker, T2 are not built (stopped after wave 1 by Ben's choice; the sealed check was run on B0, B0-nothinker, P0 only). Adding where/why/how-many question types to training is untested: it is the natural next experiment, not run here.
 - Not compared against the real B2 talker (8-character GEN register, NUM path): B0 here is the SPEC.md stand-in (untested against B2).
 - Agent context peaks for the three build agents: 77k, 68k and 49k tokens (all under 100k).
