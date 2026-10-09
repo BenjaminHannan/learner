@@ -99,6 +99,42 @@ def replay(vals, valid, ops, a, b, swap=False):
     return vals, valid
 
 
+class MoEMLP(nn.Module):
+    """Sparse expert feed-forward (design/8a-gx-experts): E experts d -> h -> d, router Linear(d, E) in fp32, top_k picked per token (selection on logits + bias,
+    bias = DeepSeek-V3 balancing buffer), gates = top_k * p / sum(p picked) from the plain softmax. Every expert is computed densely; unpicked gates are exactly 0.
+    Each call appends (load-balancing loss, picks per expert [E]) to self.log (run() resets it); self.trace (a list or None) also gets (picks, entropy sum, tokens)."""
+
+    def __init__(self, d, E, top_k, h, out_std):
+        super().__init__()
+        self.E, self.k, self.h = E, top_k, h
+        self.router = nn.Linear(d, E, bias=False)
+        nn.init.normal_(self.router.weight, std=0.02)
+        self.w1 = nn.Parameter(torch.randn(E, d, h) * 0.02)
+        self.b1 = nn.Parameter(torch.zeros(E * h))
+        self.w2 = nn.Parameter(torch.randn(E, h, d) * out_std)
+        self.b2 = nn.Parameter(torch.zeros(E * d))
+        self.register_buffer('bias', torch.zeros(E))
+        self.log, self.trace = [], None
+
+    def forward(self, x):
+        E, k, h = self.E, self.k, self.h
+        with torch.autocast(x.device.type, enabled=False):
+            logits = F.linear(x.float(), self.router.weight.float())
+            p = logits.softmax(-1)
+            sel = (logits + self.bias).topk(k, -1).indices
+            pv = p.gather(-1, sel)
+            g = torch.zeros_like(p).scatter(-1, sel, k * pv / pv.sum(-1, keepdim=True))
+            cnt = torch.zeros(E, device=x.device).scatter_add(0, sel.flatten(), torch.ones(sel.numel(), device=x.device))
+            lb = E * ((cnt / sel.numel()) * p.mean((0, 1))).sum()
+        self.log.append((lb, cnt.detach()))
+        if self.trace is not None:
+            self.trace.append((cnt.detach(), float(-(p * (p + 1e-20).log()).sum()), p.shape[0] * p.shape[1]))
+        hid = torch.einsum('bnd,edh->bneh', x, self.w1)
+        hid = F.gelu(hid + self.b1.view(E, h).to(hid.dtype))
+        y = torch.einsum('bneh,ehd->bnd', hid * g[..., None].to(hid.dtype), self.w2)
+        return y + (g.to(x.dtype) @ self.b2.view(E, -1).to(x.dtype)).to(y.dtype)
+
+
 class CBlock(nn.Module):
     """Controller block: cross-attention to [workspace; reader output] (the reader half's K/V computed once), self-attention, MLP."""
 
@@ -109,6 +145,7 @@ class CBlock(nn.Module):
         self.q, self.kv, self.o = nn.Linear(d, d), nn.Linear(d, 2 * d), nn.Linear(d, d)
         self.qkv, self.p = nn.Linear(d, 3 * d), nn.Linear(d, d)
         self.fc, self.out = nn.Linear(d, hidden), nn.Linear(hidden, d)
+        self.moe = None         # experts > 0: a MoEMLP replaces fc / out (set by Ledger, after every other module)
 
     def kv_of(self, mem):
         B, T, D = mem.shape
@@ -121,6 +158,8 @@ class CBlock(nn.Module):
         Z = Z + self.o(F.scaled_dot_product_attention(q, k, v, attn_mask=mask[:, None, None, :]).transpose(1, 2).reshape(B, N, D))
         q, k, v = self.qkv(self.ln_s(Z)).view(B, N, 3, self.h, D // self.h).permute(2, 0, 3, 1, 4)
         Z = Z + self.p(F.scaled_dot_product_attention(q, k, v).transpose(1, 2).reshape(B, N, D))
+        if self.moe is not None:
+            return Z + self.moe(self.ln_f(Z))
         return Z + self.out(F.gelu(self.fc(self.ln_f(Z))))
 
 
@@ -128,7 +167,7 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, experts=0, top_k=8, moe_aux=0.01, moe_gamma=1e-3):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
@@ -138,6 +177,8 @@ class Ledger(Model):
         self.eg_thinker = bool(eg_thinker)
         assert not self.eg_thinker or (self.eg_embed and eg_adapter == 'linear' and letters_in), 'eg_thinker needs eg_embed, the linear adapter and letters'
         self.round_readout = float(round_readout)
+        self.experts, self.top_k, self.moe_aux, self.moe_gamma = int(experts), int(top_k), float(moe_aux), float(moe_gamma)
+        assert not self.experts or 1 <= self.top_k <= self.experts, 'experts needs 1 <= top_k <= experts'
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
         self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
         self.vcode = nn.Linear(93, d)
@@ -189,6 +230,11 @@ class Ledger(Model):
             self.ln_mt, self.mt_head = nn.LayerNorm(d), nn.Linear(d, MT_DIM)
             nn.init.normal_(self.mt_head.weight, std=0.02)
             nn.init.zeros_(self.mt_head.bias)
+        if self.experts:        # created after every other module (block 0 first); the dense fc / out were drawn above and are discarded, so no other weight changes
+            h = -(-int(mlp * d) // self.top_k)
+            for b in self.core:
+                b.moe = MoEMLP(d, self.experts, self.top_k, h, 0.02 / math.sqrt(3 * blocks * n_loops))
+                del b.fc, b.out
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
     def spans(self, prompt):
@@ -260,13 +306,20 @@ class Ledger(Model):
             h = F.gelu(self.eg_hid(h))
         return self.reader(batch, extra=self.eg_proj(h))
 
+    def active_params(self):
+        """n_params() minus the experts a token does not use: blocks * (E - top_k) * (2 d h + h + d) (the router counts as active)."""
+        if not self.experts:
+            return self.n_params()
+        h = self.core[0].moe.h
+        return self.n_params() - len(self.core) * (self.experts - self.top_k) * (2 * self.d * h + h + self.d)
+
     def size(self):
         """{trainable, discarded (training-only heads, not shipped), frozen_borrowed (EmbeddingGemma 2 text part, eg_embed only), shipped_trainable, whole}."""
         from custom_io.models.eg import N_TEXT
         tr = self.n_params()
         disc = sum(p.numel() for m in (getattr(self, 'ln_mt', None), getattr(self, 'mt_head', None)) if m is not None for p in m.parameters())
         fz = N_TEXT if self.eg_embed else 0
-        return dict(trainable=tr, discarded=disc, frozen_borrowed=fz, shipped_trainable=tr - disc, whole=tr - disc + fz)
+        return dict(trainable=tr, active=self.active_params(), discarded=disc, frozen_borrowed=fz, shipped_trainable=tr - disc, whole=tr - disc + fz)
 
     # ---- reasoner ----
     def run(self, batch, loops=None, gold=None, lesion=None, rounds=False):
@@ -275,6 +328,9 @@ class Ledger(Model):
         -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
         copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice).
         rounds=True (round_readout training) adds 'rounds' [(t, Z[:,1], registers, Rs, valid) after iterations 1..n-2], S0 and Kw."""
+        for b in self.core:
+            if b.moe is not None:
+                b.moe.log = []
         X, xm = self.read(batch, talker=True)
         Xt = self.read(batch)[0] if self.eg_thinker else X       # eg_thinker: only the controller's cross-attention sees EmbeddingGemma
         ns, ne, nv, ws, we = self.tokenize(batch)
@@ -348,6 +404,11 @@ class Ledger(Model):
             out['z1'] = z1
         if rounds:
             out['rounds'], out['S0'], out['Kw'] = snaps, S0, Kw
+        if self.experts and gold is not None and self.training and self.moe_gamma > 0:      # balancing bias: after the whole forward, overloaded experts go down
+            with torch.no_grad():
+                for b in self.core:
+                    c = sum(c for _, c in b.moe.log)
+                    b.moe.bias += self.moe_gamma * torch.sign(c.mean() - c)
         return out
 
     def state(self, batch, loops=None, lesion=None):
@@ -523,6 +584,12 @@ class Ledger(Model):
             tm = (g['gen'] >= 0) & (g['gen'] != EOS) & (g['mode'] == 2)[:, None]
             aux['copy_share'] = ((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1)
         total = lop + lptr + lmode + lans + lword + lgen
+        if self.experts:    # Switch load-balancing loss (mean over blocks and rounds); moe_top / moe_low = busiest / idlest expert's share x E (mean over blocks)
+            lb = torch.stack([l for b in self.core for l, _ in b.moe.log]).mean()
+            sh = [sum(c for _, c in b.moe.log) for b in self.core]
+            sh = torch.stack([c / c.sum() * self.experts for c in sh])
+            total = total + self.moe_aux * lb
+            aux['moe_lb'], aux['moe_top'], aux['moe_low'] = lb, sh.max(-1).values.mean(), sh.min(-1).values.mean()
         if self.round_readout:
             lrr = self.round_loss(o, g, batch)
             total = total + self.round_readout * lrr
@@ -645,8 +712,42 @@ class Ledger(Model):
             out['copy_gate'] = self.copy_gate_eval(rows, ctx)
         if self.eg_embed or self.eg_teach:
             out['size'] = self.size()
+        if self.experts:
+            out['moe'] = self.moe_report(rows[:1000], ctx)
         self.train(was)
         return out
+
+    @torch.no_grad()
+    def moe_report(self, rows, ctx):
+        """Routing on `rows` (dev in_dist, first 1000): per block {rounds: share per expert per round, share: over all rounds, dead (< 0.1/E of an even share), top_share_x_even,
+        share_min_x_even, share_max_x_even, n_in_half_to_double, entropy (mean over rounds and tokens), round_overlap (mean Jaccard of the top-8 sets of consecutive rounds),
+        bias: min / max / mean}."""
+        from custom_io.data import collate, Dataset, to_device
+        E, bs, amp = self.experts, ctx['batch_size'], ctx['amp']
+        cnt = [torch.zeros(self.n_loops, E) for _ in self.core]
+        ent, tok = [torch.zeros(self.n_loops) for _ in self.core], [torch.zeros(self.n_loops) for _ in self.core]
+        for b in self.core:
+            b.moe.trace = []
+        for s in range(0, len(rows), bs):
+            rs = rows[s:s + bs]
+            with amp():
+                self.run(to_device(collate([Dataset(rs, self.vocab, strict=False)[i] for i in range(len(rs))]), ctx['device']))
+            for i, b in enumerate(self.core):
+                for t, (c, e, n) in enumerate(b.moe.trace):
+                    cnt[i][t] += c.cpu(); ent[i][t] += e; tok[i][t] += n
+                b.moe.trace = []
+        out = []
+        for i, b in enumerate(self.core):
+            rd = cnt[i] / cnt[i].sum(-1, keepdim=True)
+            sh = cnt[i].sum(0) / cnt[i].sum()
+            tops = [set(r.topk(min(8, E)).indices.tolist()) for r in rd]
+            jac = [len(a & c) / len(a | c) for a, c in zip(tops, tops[1:])]
+            x = sh * E
+            out.append(dict(rounds=rd.tolist(), share=sh.tolist(), dead=int((sh < 0.1 / E).sum()), top_share_x_even=float(x.max()), share_min_x_even=float(x.min()),
+                            share_max_x_even=float(x.max()), n_in_half_to_double=int(((x >= 0.5) & (x <= 2.0)).sum()), entropy=float(ent[i].sum() / tok[i].sum()),
+                            round_overlap=sum(jac) / max(len(jac), 1), bias=dict(min=float(b.moe.bias.min()), max=float(b.moe.bias.max()), mean=float(b.moe.bias.mean()))))
+            b.moe.trace = None
+        return dict(blocks=out, n_rows=len(rows))
 
     @torch.no_grad()
     def copy_gate_eval(self, rows, ctx):
