@@ -13,6 +13,7 @@ LAZY = {
     'plain_lm': 'custom_io.models.plain_lm:PlainLM',                    # 8a: the plain LLM recipe arm (next-char loss on web text + question rows)
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
     'tool_h1': 'custom_io.models.tool_h1:ToolH1',                       # H1: T1 where a learned stop head picks the rounds per turn (cap 32)
+    'b3': 'custom_io.models.b3:B3',                                     # B3 group 1: H1R + eg_embed (Gemma), any_round (calls at any round), gap_p
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
 
