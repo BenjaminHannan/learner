@@ -1,6 +1,7 @@
 """Analysis of one domain-mode run: marks DM1-DM5 and the A8 self-knowledge numbers (design sec. 5; addenda A2, A6-A8).
 
   python -m domain.analyze --run RUN_DIR --parent PARENT_CKPT --panel PANEL.jsonl --dev DEV_IN_DIST.jsonl --out OUT_DIR [--threads N]
+  --panel sheet.jsonl | rpn.jsonl (v1, zero overlap) or sheet.v2.jsonl | rpn.v2.jsonl (v2, addendum A10: decontaminated)
 
 Reads RUN_DIR/log.jsonl, RUN_DIR/summary.json and RUN_DIR/night_K/checkpoint.pt. Never writes to RUN_DIR.
 - Scores the parent (night 0) and every night on the sealed panel (domain/score.py; scoring only).
@@ -74,9 +75,10 @@ def cached(path, fp, compute):
     return result, False
 
 
-def pooled(rows, kinds, split):
-    """Pooled accuracy (percent) over the rows of `kinds` in `split`. None when there are no such rows."""
-    hs = [r['hit'] for r in rows if r['kind'] in kinds and r['split'] == split]
+def pooled(rows, kinds, split, exclude=frozenset()):
+    """Pooled accuracy (percent) over the rows of `kinds` in `split`, not counting ids in `exclude` (addendum A10: rows
+    whose prompt is also a training prompt). None when there are no such rows."""
+    hs = [r['hit'] for r in rows if r['kind'] in kinds and r['split'] == split and r['id'] not in exclude]
     return round(100.0 * sum(hs) / len(hs), 6) if hs else None
 
 
@@ -274,6 +276,12 @@ def main(argv=None):
     t = time.time()
     panel_rows = score.load_panel(a.panel)
     panel_sha = sha256_file(a.panel)
+    suffix = audit.panel_suffix(a.panel)
+    assert {r['domain'] for r in panel_rows} == {summary['tool']}, 'the panel file is not the panel of this run tool'
+    # addendum A10, DM4 decontamination: panel rows whose exact prompt is among the run's training rows (any 'row' event)
+    # are not scored for DM1, DM2 or DM5. The scores are still computed for all rows (the cache key stays the full panel).
+    dec = audit.decontam(panel_rows, {e['prompt'] for e in events if e['event'] == 'row'})
+    dropped = set(dec['ids'])
     scores = {}
     for k in range(0, N + 1):
         label = 'parent' if k == 0 else f'night_{k}'
@@ -284,10 +292,12 @@ def main(argv=None):
               f'({"cache" if hit else "scored"}, {time.time() - t1:.1f} s)', flush=True)
     T['score_panel'] = round(time.time() - t, 1)
 
-    near_curve = [pooled(scores[k]['rows'], scored, 'near') for k in range(N + 1)]
-    far0, farN = pooled(scores[0]['rows'], scored, 'far'), pooled(scores[N]['rows'], scored, 'far')
-    n_near = sum(1 for r in panel_rows if r['split'] == 'near' and r['kind'] in scored)
-    n_far = sum(1 for r in panel_rows if r['split'] == 'far' and r['kind'] in scored)
+    near_curve = [pooled(scores[k]['rows'], scored, 'near', dropped) for k in range(N + 1)]
+    far0, farN = pooled(scores[0]['rows'], scored, 'far', dropped), pooled(scores[N]['rows'], scored, 'far', dropped)
+    n_near = sum(1 for r in panel_rows if r['split'] == 'near' and r['kind'] in scored and r['id'] not in dropped)
+    n_far = sum(1 for r in panel_rows if r['split'] == 'far' and r['kind'] in scored and r['id'] not in dropped)
+    print(f'DM4 decontamination: {dec["dropped"]} of {dec["n"]} panel rows are also training prompts (by kind {dec["by_kind"]}); '
+          f'dropped from DM1/DM2/DM5 scoring (panel suffix {suffix or "v1"})', flush=True)
     print('scored near curve (night 0..N):', near_curve, flush=True)
 
     # DM1, DM2 (scored kinds, final minus parent)
@@ -318,17 +328,20 @@ def main(argv=None):
     buf, rc, audit_rep = io.StringIO(), None, None
     try:
         with contextlib.redirect_stdout(buf):
-            rc = audit.main([run, '--panel', panel_dir])
+            rc = audit.main([run, '--panel', panel_dir, '--panel-suffix', suffix])
         audit_rep = json.loads(buf.getvalue())
     except (OSError, ValueError, KeyError) as e:
         notes.append(f'DM4 audit could not run: {type(e).__name__}: {e}')
+    if audit_rep is not None and audit_rep.get('decontam') and audit_rep['decontam']['dropped'] != dec['dropped']:
+        notes.append('DM4 audit and DM1/DM2/DM5 scoring count different dropped rows: %d and %d'
+                     % (audit_rep['decontam']['dropped'], dec['dropped']))
     const_sha = sha256_file(CONST_PATH)
     start = [e for e in events if e['event'] == 'start']
     log_sha = start[0].get('constants_sha256') if start else None
     const_ok = log_sha == const_sha
     unknown = sorted({e['event'] for e in events} - KNOWN_EVENTS)
-    if audit_rep is not None and audit_rep['panel_overlap']:
-        dm4_verdict = 'PROVED WRONG'                       # any row from our panel
+    if audit_rep is not None and suffix == '' and audit_rep['panel_overlap']:
+        dm4_verdict = 'PROVED WRONG'                       # v1 panel: any row from our panel
     elif log_sha is not None and not const_ok:
         dm4_verdict = 'PROVED WRONG'                       # the run used constants other than the shared file (per-domain setting)
     elif rc == 0 and const_ok:
@@ -339,8 +352,13 @@ def main(argv=None):
                constants_file_sha256=const_sha, constants_match=const_ok,
                summary_constants_match=summary.get('constants_sha256') == const_sha,
                unknown_events=unknown,
-               bar='pass: audit exits clean and log constants hash = domain/constants.json; proved wrong: any panel row '
-                   'or a constants hash that differs from the file (per-domain setting)')
+               bar=('pass: audit exits clean and log constants hash = domain/constants.json; FAIL: more than %g%% of the run '
+                    'tool\'s panel rows also in training (dropped), or any zero-step or bad-source row; proved wrong: any row '
+                    'from a v1 panel, or a constants hash that differs from the file (per-domain setting)'
+                    % (100 * audit.DECONTAM_MAX_FRAC)) if suffix == audit.DECONTAM_SUFFIX else
+                   ('pass: audit exits clean and log constants hash = domain/constants.json; proved wrong: any panel row '
+                    'or a constants hash that differs from the file (per-domain setting)'),
+               decontam=dec if suffix == audit.DECONTAM_SUFFIX else None)
     T['audit'] = round(time.time() - t, 1)
 
     # DM5: scored near curve, stop night N = nights_run
@@ -388,7 +406,9 @@ def main(argv=None):
     T['total'] = round(time.time() - t_all, 1)
     res = dict(run=run, tool=summary['tool'], seed=summary['seed'], smoke=summary['smoke'], parent=a.parent,
                final_checkpoint=fin, nights_run=N, stop_reason=summary['stop_reason'],
-               panel=dict(path=a.panel, sha256=panel_sha, n=len(panel_rows), n_near_scored=n_near, n_far_scored=n_far),
+               panel=dict(path=a.panel, sha256=panel_sha, n=len(panel_rows), n_near_scored=n_near, n_far_scored=n_far,
+                          suffix=suffix or 'v1', decontam_dropped=dec['dropped'], decontam_by_kind=dec['by_kind'],
+                          decontam_by_split=dec['by_split']),
                dev=dict(path=a.dev, sha256=dev_sha, n=len(dev_rows)),
                kinds=dict(all=kinds, scored=scored, unscored=unscored, no_row_form_ops=ops, source=dev_source),
                marks=dict(DM1=dm1, DM2=dm2, DM3=dm3, DM4=dm4, DM5=dm5),
@@ -427,7 +447,9 @@ def render_md(res):
              f'| DM3 harm: in_dist drop | {sg(m["DM3"]["value"])} pts (fired: {", ".join(m["DM3"]["fired"]) or "none"}) | '
              f'{m["DM3"]["bar"]} | {m["DM3"]["verdict"]} |',
              f'| DM4 audit and constants | rows {d4["audit"]["rows"] if d4["audit"] else "?"}, panel overlap '
-             f'{len(d4["audit"]["panel_overlap"]) if d4["audit"] else "?"}, zero-step {len(d4["audit"]["zero_steps"]) if d4["audit"] else "?"}, '
+             f'{len(d4["audit"]["panel_overlap"]) if d4["audit"] else "?"}, decontam dropped '
+             f'{d4["audit"]["decontam"]["dropped"] if d4["audit"] and d4["audit"].get("decontam") else "n/a (v1)"} by kind '
+             f'{d4["audit"]["decontam"]["by_kind"] if d4["audit"] and d4["audit"].get("decontam") else "n/a"}, zero-step {len(d4["audit"]["zero_steps"]) if d4["audit"] else "?"}, '
              f'bad source {len(d4["audit"]["bad_source"]) if d4["audit"] else "?"}; audit exit {d4["audit_exit"]}; '
              f'constants hash match {d4["constants_match"]} | {d4["bar"]} | {d4["verdict"]} |',
              f'| DM5 stop night N={d5["stop_night"]} | score(N) {pc(d5["score_stop"])}, best {pc(d5["best"])} (night {d5["best_night"]}), '

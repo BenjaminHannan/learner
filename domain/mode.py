@@ -111,10 +111,105 @@ def digit_run(rng, n):
     return str(rng.randrange(1, 10)) + ''.join(str(rng.randrange(10)) for _ in range(n - 1))
 
 
-def draft(tool, example, kind, rng, ctx):
-    """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set). -> (item, None) or (None, reason)."""
+DIGITS = re.compile(r'[0-9]+')
+LETTER_CELL = re.compile(r'(?<![A-Za-z])([A-Z])(?=\d)')  # a one-letter letter-digit token, e.g. the A in A1 (not a label "A:")
+EDITS = ('run_insert', 'run_delete', 'letter_rename', 'symbol_swap')  # the edits that can change a draft (addendum A10)
+# Over-draw caps (tries per problem asked). Raised for addendum A10: measured on the real vocabulary, the wider maker keeps
+# 0.6% of practice draws on the sheet tool (a day needs about 180 tries per problem) and 0.025% of one kind's draws
+# (quiz needs about 4,000 per problem). The old caps (300 and 300 per problem) would leave the quiz short.
+PRACTICE_OVERDRAW, QUIZ_OVERDRAW = 1000, 20000
+
+
+def lmax_of(helps, extra):
+    """Longest digit run over ALL of the domain's help prompts, plus digit_len_extra (addendum A10, edit a)."""
+    return max(len(d) for h in helps for d in DIGITS.findall(h['prompt'])) + extra
+
+
+def is_symbol(ch):
+    """A character that is not a letter, digit or space (addendum A10, edit d)."""
+    return ch != ' ' and not ch.isalnum()
+
+
+def relength(text, rng, lmax):
+    """Edit (a): every digit run gets a new random length L in [1, lmax], no leading zero unless L is 1. -> (text, runs)."""
+    runs = len(DIGITS.findall(text))
+    return DIGITS.sub(lambda g: digit_run(rng, rng.randint(1, lmax)), text), runs
+
+
+def run_edit(text, rng, lmax, p):
+    """Edit (b): each maximal run of two or more space-separated numbers, with chance p, gets one number inserted at a
+    random position or one deleted (1 in 2 each). A run never goes below one number. -> (text, counts)."""
+    toks = text.split(' ')
+    runs, i = [], 0
+    while i < len(toks):
+        if DIGITS.fullmatch(toks[i]):
+            j = i
+            while j + 1 < len(toks) and DIGITS.fullmatch(toks[j + 1]):
+                j += 1
+            if j > i:
+                runs.append((i, j))
+            i = j + 1
+        else:
+            i += 1
+    c = Counter(runs_seen=len(runs))
+    for i, j in reversed(runs):  # right to left, so the token indices of the runs to the left stay valid
+        if rng.random() >= p:
+            continue
+        if rng.random() < 0.5:
+            toks.insert(rng.randint(i, j + 1), digit_run(rng, rng.randint(1, lmax)))
+            c['run_insert'] += 1
+        else:
+            del toks[rng.randint(i, j)]  # j > i, so one number is always left
+            c['run_delete'] += 1
+    return ' '.join(toks), c
+
+
+def letter_edit(text, rng, p):
+    """Edit (c): with chance p, one letter X used in one-letter letter-digit tokens is renamed to another such letter Y
+    from the same text, in every such token. Labels such as 'A:' are not tokens and stay. -> (text, counts)."""
+    if rng.random() >= p:
+        return text, Counter()
+    letters = sorted(set(LETTER_CELL.findall(text)))
+    if len(letters) < 2:
+        return text, Counter(letter_no_pair=1)
+    x = rng.choice(letters)
+    y = rng.choice([v for v in letters if v != x])
+    return re.sub(r'(?<![A-Za-z])' + re.escape(x) + r'(?=\d)', y, text), Counter(letter_rename=1)
+
+
+def symbol_edit(text, rng, p):
+    """Edit (d): with chance p, one occurrence of a symbol is swapped for a different symbol that occurs in the same
+    text. -> (text, counts)."""
+    if rng.random() >= p:
+        return text, Counter()
+    syms = sorted(set(ch for ch in text if is_symbol(ch)))
+    if len(syms) < 2:
+        return text, Counter(symbol_no_pair=1)
+    k = rng.choice([n for n, ch in enumerate(text) if is_symbol(ch)])
+    new = rng.choice([s for s in syms if s != text[k]])
+    return text[:k] + new + text[k + 1:], Counter(symbol_swap=1)
+
+
+def vary(example, rng, lmax, p):
+    """Edits (a) to (d), in that order, on one help example (addendum A10). -> (prompt, counts)."""
+    text, runs = relength(example, rng, lmax)
+    c = Counter(digit_runs=runs)
+    text, cb = run_edit(text, rng, lmax, p)      # each edit works on the text the edit before it left
+    text, cc = letter_edit(text, rng, p)
+    text, cd = symbol_edit(text, rng, p)
+    c.update(cb)
+    c.update(cc)
+    c.update(cd)
+    return text, c
+
+
+def draft(tool, example, kind, rng, ctx, edits=None):
+    """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set, lmax).
+    edits: optional Counter that gets this draw's edit counts, kept or not. -> (item, None) or (None, reason)."""
     cons = ctx['cons']
-    prompt = re.sub(r'\d+', lambda g: digit_run(rng, len(g.group())), example)
+    prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'])
+    if edits is not None:
+        edits.update(counts)
     if prompt in ctx['quiz_set']:
         return None, 'quiz_dup'
     if prompt in ctx['seen']:
@@ -150,7 +245,7 @@ def draft(tool, example, kind, rng, ctx):
         return None, 'caps_entry'
     if any(s[0] not in NAMES[1:] for s in steps):
         return None, 'bad_op'
-    return dict(kind=kind, prompt=prompt, value=value, steps=steps), None
+    return dict(kind=kind, prompt=prompt, value=value, steps=steps, edits=[e for e in EDITS if counts[e]]), None
 
 
 def make_quiz(tool, kinds, ex, n, rng, ctx, log):
@@ -159,7 +254,7 @@ def make_quiz(tool, kinds, ex, n, rng, ctx, log):
     items, disc = [], Counter()
     for k in kinds:
         got, tries = 0, 0
-        while got < quota[k] and tries < 300 * quota[k] + 300:
+        while got < quota[k] and tries < QUIZ_OVERDRAW * quota[k] + 300:
             tries += 1
             item, why = draft(tool, ex[k], k, rng, ctx)
             if item is None:
@@ -176,19 +271,20 @@ def make_quiz(tool, kinds, ex, n, rng, ctx, log):
 
 
 def make_practice(tool, kinds, ex, share, n, rng, ctx):
-    """One day's practice: a kind by the day's mix for each draft, kept if draft() accepts it. Over-draws, capped."""
-    items, disc, tries, cap = [], Counter(), 0, 300 * n
+    """One day's practice: a kind by the day's mix for each draft, kept if draft() accepts it. Over-draws, capped.
+    -> (items, discards, tries, edits drawn). Short days are logged by the caller (practice_short)."""
+    items, disc, tries, cap, edits = [], Counter(), 0, PRACTICE_OVERDRAW * n, Counter()
     weights = [share[k] for k in kinds]
     while len(items) < n and tries < cap:
         tries += 1
         kind = rng.choices(kinds, weights=weights)[0]
-        item, why = draft(tool, ex[kind], kind, rng, ctx)
+        item, why = draft(tool, ex[kind], kind, rng, ctx, edits=edits)
         if item is None:
             disc[why] += 1
             continue
         ctx['seen'].add(item['prompt'])
         items.append(item)
-    return items, disc, tries
+    return items, disc, tries, edits
 
 
 # ---------- training rows: the row format of custom_io (progparse) ----------
@@ -433,7 +529,8 @@ def main(argv=None):
     kinds = [h['kind'] for h in helps]
     assert len(set(kinds)) == len(kinds), 'one help example per kind'
     ex = {h['kind']: h['prompt'] for h in helps}
-    log('help', kinds=kinds, examples=ex)
+    lmax = lmax_of(helps, cons['digit_len_extra'])  # addendum A10, edit (a): from the help prompts of this domain
+    log('help', kinds=kinds, examples=ex, lmax=lmax)
     # choice (dated deviation A2): these calls have no row form, so their rows never train
     log('deviation', id='A2', no_row_form_ops=sorted(NO_ROW_FORM))
 
@@ -441,7 +538,7 @@ def main(argv=None):
     ck = torch.load(parent, map_location='cpu', weights_only=True)
     torch.manual_seed(a.seed)  # the model's ans_drill RNG is seeded at construction (tool.py:151)
     m = load_model(parent).eval()
-    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set())
+    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=lmax)
     write_row = lambda **kw: log.write('row', **kw)
 
     # step 1: diary (self-replay) and check set, from TRAIN prompts only
@@ -477,10 +574,12 @@ def main(argv=None):
     for night in range(1, cons['max_nights'] + 1):
         # step 2: practice for this day, by the day's mix
         t = time.time()
-        items, disc, tries = make_practice(tool, kinds, ex, share, cons['day_problems'], random.Random(f'{a.seed}-day-{night}'), ctx)
+        items, disc, tries, edits = make_practice(tool, kinds, ex, share, cons['day_problems'], random.Random(f'{a.seed}-day-{night}'), ctx)
         T['practice'] += time.time() - t
-        log('practice', day=night, n=len(items), tries=tries, share={k: round(v, 4) for k, v in share.items()},
-            progress={k: round(v, 4) for k, v in prog.items()}, kept=dict(Counter(i['kind'] for i in items)), discards=dict(disc))
+        log('practice', day=night, n=len(items), tries=tries, kept_rate=round(len(items) / tries, 4) if tries else None,
+            share={k: round(v, 4) for k, v in share.items()}, progress={k: round(v, 4) for k, v in prog.items()},
+            kept=dict(Counter(i['kind'] for i in items)), discards=dict(disc),
+            edits_drawn=dict(edits), edits_kept=dict(Counter(e for i in items for e in i['edits'])))  # addendum A10 counts
         if len(items) < cons['day_problems']:
             log('practice_short', day=night, n=len(items), wanted=cons['day_problems'])
 

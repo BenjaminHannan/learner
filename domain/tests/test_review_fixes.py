@@ -19,7 +19,7 @@ PARENT = '/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/check
 
 def ctx(chars=None):
     return dict(vchars=chars or set('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz :|;=()+-*/,<>"[]._'),
-                cons=CONST, seen=set(), quiz_set=set())
+                cons=CONST, seen=set(), quiz_set=set(), lmax=mode.lmax_of(sheet_tool.help(), CONST['digit_len_extra']))  # A10
 
 
 def test_rpn_near_rows_differ_from_help_digit_runs():

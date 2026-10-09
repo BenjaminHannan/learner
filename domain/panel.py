@@ -22,7 +22,8 @@ RPN panel (800 rows = 8 kinds x (60 near + 40 far)):
   far:  4 or 5 operators in a random postfix order, values 1-99, operators + - * / %. The help shapes have at most 3
         operators, so no far shape can equal one.
 
-Run from the repo root:  python3 -m domain.panel
+Run from the repo root:  python3 -m domain.panel            (v1: sheet.jsonl, rpn.jsonl; refuses to overwrite)
+                           python3 -m domain.panel --v2       (v2, addendum A10: sheet.v2.jsonl, rpn.v2.jsonl, new seeds)
 It writes sheet.jsonl and rpn.jsonl and a .sha256 for each into OUT_DIR, and refuses to replace existing files unless
 main(overwrite=True) is called.
 """
@@ -40,6 +41,10 @@ from domain.tools import sheet as sheet_tool
 
 SHEET_SEED = 91001
 RPN_SEED = 91002
+# v2 (addendum A10): a fresh draw with the same generator, counts and checks, written to new files (sheet.v2.jsonl,
+# rpn.v2.jsonl). The v1 files are never rewritten by the v2 option.
+V2_SHEET_SEED = 91011
+V2_RPN_SEED = 91012
 OUT_DIR = '/mnt/project-files/domain-mode/panel'
 NEAR_PER_KIND, FAR_PER_KIND = 60, 40
 MAX_TRIES = 200000  # a cell not full after this many draws is a bug in the generator, not a slow fill
@@ -286,8 +291,8 @@ def fill_panel(domain, kinds, rng, draw, evaluate, help_prompts, shape_ok):
     return rows, stats
 
 
-def build_sheet():
-    rng = random.Random(SHEET_SEED)
+def build_sheet(seed=SHEET_SEED):
+    rng = random.Random(seed)
     help_list = sheet_tool.help()
     assert [h['kind'] for h in help_list] == SHEET_KINDS
     help_skel = {h['kind']: skeleton(h['prompt'].split('; =')[1]) for h in help_list}
@@ -296,8 +301,8 @@ def build_sheet():
                       lambda kind, split, formula: split == 'far' or skeleton(formula) == help_skel[kind])
 
 
-def build_rpn():
-    rng = random.Random(RPN_SEED)
+def build_rpn(seed=RPN_SEED):
+    rng = random.Random(seed)
     help_list = rpn_tool.help()
     assert {h['kind']: shape_of(h['prompt']) for h in help_list} == RPN_SHAPE
     help_prompts = {h['prompt'] for h in help_list}
@@ -355,16 +360,18 @@ def report(name, rows, stats):
             print(f"  sample {split} {kind}: {r['prompt']}  ->  {r['answer']}  [{r['n_steps']} steps]")
 
 
-def main(overwrite=False):
-    """Build, check and write both panels. Without overwrite=True it refuses to replace existing files."""
+def main(overwrite=False, v2=False):
+    """Build, check and write both panels. Without overwrite=True it refuses to replace existing files.
+    v2=True writes sheet.v2.jsonl and rpn.v2.jsonl from the v2 seeds (addendum A10); the v1 files are not named here."""
     assert (N_NUM, N_RES, MAX_PROMPT, MAX_ANS) == (16, 7, 208, 8)
-    names = ('sheet.jsonl', 'rpn.jsonl')
+    sfx = '.v2' if v2 else ''
+    names = (f'sheet{sfx}.jsonl', f'rpn{sfx}.jsonl')
     for n in names:
         for p in (os.path.join(OUT_DIR, n), os.path.join(OUT_DIR, n + '.sha256')):
             if os.path.exists(p) and not overwrite:
                 raise SystemExit(f'refusing to overwrite {p}')
-    sheet_rows, sheet_stats = build_sheet()
-    rpn_rows, rpn_stats = build_rpn()
+    sheet_rows, sheet_stats = build_sheet(V2_SHEET_SEED if v2 else SHEET_SEED)
+    rpn_rows, rpn_stats = build_rpn(V2_RPN_SEED if v2 else RPN_SEED)
     clash = [r['prompt'] for r in rpn_rows
              if r['split'] == 'near' and digit_runs(r['prompt'].split()[1:]) == RPN_HELP_RUNS[r['kind']]]
     assert not clash, ('near RPN rows with the help digit-run lengths (practice can make these)', clash[:5])
@@ -376,9 +383,10 @@ def main(overwrite=False):
     report('sheet', sheet_rows, sheet_stats)
     report('rpn', rpn_rows, rpn_stats)
     os.makedirs(OUT_DIR, exist_ok=True)
-    print('sha256 sheet.jsonl', write_panel('sheet.jsonl', sheet_rows))
-    print('sha256 rpn.jsonl', write_panel('rpn.jsonl', rpn_rows))
+    print(f'sha256 {names[0]}', write_panel(names[0], sheet_rows))
+    print(f'sha256 {names[1]}', write_panel(names[1], rpn_rows))
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    main(v2='--v2' in sys.argv[1:])
