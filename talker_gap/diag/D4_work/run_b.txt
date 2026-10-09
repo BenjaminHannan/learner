@@ -1,0 +1,12 @@
+TEACH distinct kinds 60 | SPARES in TEACH 0 of 8
+SPARES missing from TEACH rows ['gift_for', 'borrowed_item', 'pet_kind', 'ordinal_position', 'carried_item', 'instrument_played', 'gave_name_to', 'sat_next_to']
+teach_stats overall keys with sub/novel: {'short_answer_substring_exact_case_sensitive': {'source_text': 0.9607, 'paraphrase': 0.8898, 'question': 0.0175, 'source_plus_question': 0.9652}, 'short_answer_substring_case_insensitive': {'source_text': 0.9701, 'paraphrase': 0.9442, 'question': 0.0177, 'source_plus_question': 0.9742}, 'short_answer_novel_vs_prompt': {'union_source_paraphrase_question': {'row_share': 0.0045, 'token_frac_mean': 0.0022}, 'source_question': {'row_share': 0.0094, 'token_frac_mean': 0.0046}, 'paraphrase_question': {'row_share': 0.0529, 'token_frac_mean': 0.0371}}}
+dev rows with passage in test 130 distinct passages 105 dev kinds [('permission', 28), ('forgot', 19), ('choice_pick', 18), ('object_eaten', 16), ('occupation', 16), ('found_item', 14), ('opponent', 12), ('role_in_play', 7)]
+test rows with passage in dev 130 distinct passages 105 test kinds [('family_relation', 56), ('object_read', 37), ('goal_want', 17), ('rule_must', 10), ('object_made', 7), ('team_member', 3)]
+V2 per split {'train': 125544, 'dev': 24997, 'test': 18300, 'dropped_passage_overlap_with_dev_test': 968, 'practised_slice': 2001, 'dropped_dev_test_passage_overlap': 130}
+V2 dev {'rows': 24997, 'yes_no_share': 0.5099, 'distinct_kinds': 8, 'distinct_passages': 20661, 'answer_words_mean': 1.263} | test {'rows': 18300, 'yes_no_share': 0.5115, 'distinct_kinds': 6, 'distinct_passages': 15378, 'answer_words_mean': 1.28}
+V2 checks: dev-test shared passages 0 | dev/test passages in train side 0 | slice ids unchanged True | dev/test kinds all present True
+option B (also drop test-side overlap) would remove additional test rows: 130 test rows left 18170
+dev+test rows 43427 yes/no 22171 short 21256 yn share 0.5105 | proposal says yes/no before 22171
+alt thinning keep 2542 -> resulting yes/no share 0.1068
+WROTE split_proposal_v2.json and /Users/ben-hannan/Desktop/projects/talker-gap-wt/talker_gap/diag/D4_work/v2_dev_rows_moved_to_dropped_ids.txt dropped_dev 130

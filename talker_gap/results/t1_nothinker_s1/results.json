@@ -1,0 +1,91 @@
+{
+  "arm": "t1_nothinker",
+  "seed": 1,
+  "steps": 3000,
+  "device": "mps",
+  "n_params": 4656996,
+  "decode_ms_per_answer": 24.23606166500008,
+  "config": {
+    "batch": 64,
+    "lr": 0.001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "weight_decay": 0.01,
+    "warmup": 200,
+    "clip": 1.0,
+    "max_target_len": 160,
+    "vocab_size": 99,
+    "memory": "notes[0] (projection only)",
+    "n_train_rows": 24000,
+    "n_train_filtered": 0,
+    "unk_train_target_char_frac": 0.0,
+    "pretrain": null
+  },
+  "loss_check": {
+    "fixed_batch_loss_start": 3.1927878856658936,
+    "fixed_batch_loss_end": 0.00456191785633564
+  },
+  "splits": {
+    "dev": {
+      "n": 3000,
+      "n_short": 1440,
+      "n_yesno": 1560,
+      "exact": 0.8746666666666667,
+      "short_em": 0.8777777777777778,
+      "yesno_em": 0.8717948717948718,
+      "hard_em": 0.8597449908925319,
+      "n_hard": 549,
+      "short_em_le8": 0.9091646390916464,
+      "n_short_le8": 1233,
+      "short_em_gt8": 0.6908212560386473,
+      "n_short_gt8": 207,
+      "errors_short": {
+        "total": 176,
+        "unreachable": 0,
+        "mode_error": 0,
+        "wrong_location": 176,
+        "wrong_edges": 0,
+        "same_span_string_miss": 0
+      },
+      "yesno_pred_span": 0,
+      "oracle_short_em": null,
+      "lesion_short_em": 0.07430555555555556,
+      "lesion_yesno_em": 0.04871794871794872,
+      "lesion_no_donor": 0,
+      "echo_exact": 0.856,
+      "unk_prompt_char_frac": 0.0
+    },
+    "practised": {
+      "n": 2001,
+      "n_short": 964,
+      "n_yesno": 1037,
+      "exact": 0.889055472263868,
+      "short_em": 0.9066390041493776,
+      "yesno_em": 0.8727097396335584,
+      "hard_em": 0.870026525198939,
+      "n_hard": 377,
+      "short_em_le8": 0.932285368802902,
+      "n_short_le8": 827,
+      "short_em_gt8": 0.7518248175182481,
+      "n_short_gt8": 137,
+      "errors_short": {
+        "total": 90,
+        "unreachable": 0,
+        "mode_error": 0,
+        "wrong_location": 90,
+        "wrong_edges": 0,
+        "same_span_string_miss": 0
+      },
+      "yesno_pred_span": 2,
+      "oracle_short_em": null,
+      "lesion_short_em": 0.05912863070539419,
+      "lesion_yesno_em": 0.06075216972034716,
+      "lesion_no_donor": 0,
+      "echo_exact": 0.8390804597701149,
+      "unk_prompt_char_frac": 1.5058199942778841e-05
+    }
+  },
+  "seconds": 606.5
+}

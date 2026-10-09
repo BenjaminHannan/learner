@@ -1,0 +1,121 @@
+files read: 65  rows: 11232  problems: none
+
+## Reproduction (mean over seeds of per-seed %; allptr = seed 0 only)
+arm | group | expected | got | seeds
+copytalk | unseen | 13.6 | 13.6 | 6
+copytalk | extra | 13.8 | 13.8 | 6
+copytalk | extra2 | 13.5 | 13.5 | 6
+copytalk | heldout | 97.4 | 97.4 | 6
+copytalk | none | 58.7 | 58.7 | 6
+copytalk_nocore | unseen | 12.9 | 12.9 | 6
+copytalk_nocore | extra | 14.3 | 14.3 | 6
+copytalk_nocore | extra2 | 11.5 | 11.5 | 6
+copytalk_nocore | heldout | 41.6 | 41.6 | 6
+copytalk_nocore | none | 24.5 | 24.5 | 6
+allptr | unseen | 73.2 | 73.2 | 1
+
+## Pooled over seeds: n, correct%, then wrong-row causes as % of all rows (wrong causes sum to 100-correct%)
+extra   copytalk         n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=13.8 | c_yesno_flip=3.2 c_yesno_other=2.9 c_gate_or_decode=2.9 e_empty=0.2 b_boundary=29.1 a_wrong_location=48.0
+extra   copytalk_nocore  n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=14.3 | c_yesno_flip=3.9 c_yesno_other=0.3 c_gate_or_decode=0.5 b_boundary=32.7 a_wrong_location=48.3
+extra   allptr           n=  192 seeds=[0] correct=76.0 | c_yesno_flip=3.1 c_gate_or_decode=4.2 b_boundary=13.0 a_wrong_location=3.6
+extra2  copytalk         n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=13.5 | c_yesno_flip=3.4 c_yesno_other=2.8 c_gate_or_decode=1.0 b_boundary=33.4 a_wrong_location=45.9
+extra2  copytalk_nocore  n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=11.5 | c_yesno_flip=3.1 c_yesno_other=0.4 c_gate_or_decode=0.2 b_boundary=33.9 a_wrong_location=51.0
+extra2  allptr           n=  192 seeds=[0] correct=70.3 | c_yesno_flip=1.6 c_gate_or_decode=13.0 e_empty=1.0 b_boundary=12.0 a_wrong_location=2.1
+unseen  copytalk         n= 2304 seeds=[0, 1, 2, 3, 4, 5] correct=13.6 | c_yesno_flip=3.3 c_yesno_other=2.8 c_gate_or_decode=2.0 e_empty=0.1 b_boundary=31.2 a_wrong_location=47.0
+unseen  copytalk_nocore  n= 2304 seeds=[0, 1, 2, 3, 4, 5] correct=12.9 | c_yesno_flip=3.5 c_yesno_other=0.3 c_gate_or_decode=0.3 b_boundary=33.3 a_wrong_location=49.6
+unseen  allptr           n=  384 seeds=[0] correct=73.2 | c_yesno_flip=2.3 c_gate_or_decode=8.6 e_empty=0.5 b_boundary=12.5 a_wrong_location=2.9
+none    copytalk         n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=58.7 | c_yesno_flip=3.1 c_yesno_other=0.1 b_boundary=15.8 a_wrong_location=21.3 d_nonspan_pred_in_prompt=0.6 d_nonspan_pred_not_in_prompt=0.4
+none    copytalk_nocore  n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=24.5 | c_yesno_flip=2.5 c_yesno_other=0.4 b_boundary=32.1 a_wrong_location=39.4 d_nonspan_pred_in_prompt=1.0
+none    allptr           n=  192 seeds=[0] correct=93.8 | c_yesno_flip=1.0 c_gate_or_decode=1.6 b_boundary=1.0 a_wrong_location=2.6
+heldout copytalk         n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=97.4 | c_yesno_flip=0.7 b_boundary=0.7 a_wrong_location=0.2 d_nonspan_pred_in_prompt=0.3 d_nonspan_pred_not_in_prompt=0.8
+heldout copytalk_nocore  n= 1152 seeds=[0, 1, 2, 3, 4, 5] correct=41.6 | c_yesno_flip=0.5 b_boundary=14.3 a_wrong_location=42.5 d_nonspan_pred_yesno=0.5 d_nonspan_pred_in_prompt=0.5
+heldout allptr           n=  192 seeds=[0] correct=100.0 | 
+train   copytalk         n=  576 seeds=[0, 1, 2, 3, 4, 5] correct=67.9 | c_yesno_flip=1.9 b_boundary=11.3 a_wrong_location=18.9
+train   copytalk_nocore  n=  576 seeds=[0, 1, 2, 3, 4, 5] correct=34.5 | c_yesno_flip=0.9 b_boundary=21.2 a_wrong_location=43.4
+train   allptr           n=   96 seeds=[0] correct=92.7 | c_yesno_flip=1.0 c_gate_or_decode=3.1 a_wrong_location=3.1
+
+## Wrong rows by cause letter, share of wrong rows (%)
+unseen  copytalk         wrong= 1990 a=54.4 b=36.2 c=9.3 e=0.1
+unseen  copytalk_nocore  wrong= 2007 a=57.0 b=38.2 c=4.8
+unseen  allptr           wrong=  103 a=10.7 b=46.6 c=40.8 e=1.9
+none    copytalk         wrong=  476 a=51.5 b=38.2 c=7.8 d=2.5
+none    copytalk_nocore  wrong=  870 a=52.2 b=42.5 c=3.9 d=1.4
+none    allptr           wrong=   12 a=41.7 b=16.7 c=41.7
+heldout copytalk         wrong=   30 a=6.7 b=26.7 c=26.7 d=40.0
+heldout copytalk_nocore  wrong=  673 a=72.8 b=24.5 c=0.9 d=1.8
+train   copytalk         wrong=  185 a=58.9 b=35.1 c=5.9
+train   copytalk_nocore  wrong=  377 a=66.3 b=32.4 c=1.3
+train   allptr           wrong=    7 a=42.9 c=57.1
+
+## Accuracy by stored atype (correct% / n)
+unseen  copytalk         yes_no=46.6/264  span1=5.6/696  spanN=11.3/1344
+unseen  copytalk_nocore  yes_no=66.3/264  span1=4.2/696  spanN=6.9/1344
+unseen  allptr           yes_no=79.5/44  span1=67.2/116  spanN=75.0/224
+none    copytalk         yes_no=72.0/132  span1=66.4/324  spanN=53.5/684  nonspan=0.0/12
+none    copytalk_nocore  yes_no=74.2/132  span1=17.9/324  spanN=18.4/684  nonspan=0.0/12
+none    allptr           yes_no=90.9/22  span1=98.1/54  spanN=92.1/114  nonspan=100.0/2
+heldout copytalk         yes_no=91.7/96  span1=97.1/204  spanN=99.5/840  nonspan=0.0/12
+heldout copytalk_nocore  yes_no=93.8/96  span1=35.8/204  spanN=37.6/840  nonspan=0.0/12
+heldout allptr           yes_no=100.0/16  span1=100.0/34  spanN=100.0/140  nonspan=100.0/2
+
+## yes/no gold: predicted yes / no / other (copytalk and nocore)
+unseen  copytalk         n=264 gold yes=132 no=132 | pred yes=48 no=151 other=65 | correct=46.6
+unseen  copytalk_nocore  n=264 gold yes=132 no=132 | pred yes=57 no=199 other=8 | correct=66.3
+unseen  allptr           n=44 gold yes=22 no=22 | pred yes=17 no=27 other=0 | correct=79.5
+none    copytalk         n=132 gold yes=60 no=72 | pred yes=23 no=108 other=1 | correct=72.0
+none    copytalk_nocore  n=132 gold yes=60 no=72 | pred yes=28 no=99 other=5 | correct=74.2
+none    allptr           n=22 gold yes=10 no=12 | pred yes=8 no=14 other=0 | correct=90.9
+heldout copytalk         n=96 gold yes=24 no=72 | pred yes=16 no=80 other=0 | correct=91.7
+heldout copytalk_nocore  n=96 gold yes=24 no=72 | pred yes=18 no=78 other=0 | correct=93.8
+heldout allptr           n=16 gold yes=4 no=12 | pred yes=4 no=12 other=0 | correct=100.0
+
+## Wrong span rows (span1/spanN) by word-level category, % of those rows (char-level substring checks)
+unseen  copytalk         n= 1849 empty=0.1 pred_strict_sub_of_gold=4.9 gold_strict_sub_of_pred=28.7 partial_word_overlap=13.5 no_overlap_pred_words_in_prompt=47.1 no_overlap_pred_has_words_not_in_prompt=5.7
+unseen  copytalk_nocore  n= 1918 pred_strict_sub_of_gold=1.5 gold_strict_sub_of_pred=34.5 partial_word_overlap=10.9 no_overlap_pred_words_in_prompt=50.3 no_overlap_pred_has_words_not_in_prompt=2.9
+unseen  allptr           n=   94 empty=2.1 pred_strict_sub_of_gold=12.8 gold_strict_sub_of_pred=52.1 partial_word_overlap=17.0 no_overlap_pred_words_in_prompt=6.4 no_overlap_pred_has_words_not_in_prompt=9.6
+none    copytalk         n=  427 pred_strict_sub_of_gold=9.6 gold_strict_sub_of_pred=28.3 partial_word_overlap=25.1 no_overlap_pred_words_in_prompt=34.2 no_overlap_pred_has_words_not_in_prompt=2.8
+none    copytalk_nocore  n=  824 pred_strict_sub_of_gold=3.0 gold_strict_sub_of_pred=39.0 partial_word_overlap=23.1 no_overlap_pred_words_in_prompt=31.3 no_overlap_pred_has_words_not_in_prompt=3.6
+none    allptr           n=   10 pred_strict_sub_of_gold=10.0 gold_strict_sub_of_pred=30.0 partial_word_overlap=40.0 no_overlap_pred_words_in_prompt=20.0
+heldout copytalk         n=   10 pred_strict_sub_of_gold=30.0 gold_strict_sub_of_pred=50.0 no_overlap_pred_words_in_prompt=20.0
+heldout copytalk_nocore  n=  655 pred_strict_sub_of_gold=0.5 gold_strict_sub_of_pred=24.7 partial_word_overlap=27.6 no_overlap_pred_words_in_prompt=47.2
+
+## Per-seed correct% on unseen kinds (extra + extra2 pooled)
+copytalk         s0=14.8 s1=12.0 s2=13.3 s3=11.2 s4=16.7 s5=13.8
+copytalk_nocore  s0=12.0 s1=13.8 s2=12.5 s3=12.2 s4=12.0 s5=14.8
+allptr           s0=73.2
+
+## Off-prompt, non-yes/no predictions (closed-list picks; proxy) per arm, unseen | none
+copytalk         unseen=10/2304  none=5/1152
+copytalk_nocore  unseen=0/2304  none=0/1152
+allptr           unseen=52/384  none=7/192
+
+## Mechanism cuts: copytalk unseen kinds (wrong rows)
+b_boundary rows by edge type: partial=69 pred_longer=569 pred_shorter=82
+c_gate_or_decode rows by gate class: off_prompt_class=10 yes_no_class=35
+a_wrong_location: n=1082 pred_in_question=2.9% gold_occurs_once_in_prompt=99.3% would_be_b_if_any_occurrence=0.9%
+gold yes: n=132 pred yes=40 pred no=68 other=24
+gold no: n=132 pred yes=8 pred no=83 other=41
+
+## copytalk vs copytalk_nocore row-level agreement (same seed and row id)
+unseen  paired rows=2304: both correct=5.9 copytalk-only=7.7 nocore-only=7.0 both wrong=79.4 | same normalised pred=19.3 same earliest prompt position=24.1
+heldout paired rows=1152: both correct=41.0 copytalk-only=56.4 nocore-only=0.6 both wrong=2.0 | same normalised pred=40.9 same earliest prompt position=42.4
+none    paired rows=1152: both correct=20.4 copytalk-only=38.3 nocore-only=4.1 both wrong=37.2 | same normalised pred=28.6 same earliest prompt position=36.0
+
+## Example copytalk unseen errors (first 3 per cause)
+a_wrong_location           seed0 gold='two' pred='three pears' atype=span1 id=new_counting_quantity_01-source_text-q0
+a_wrong_location           seed0 gold='at eight' pred="'s class starts at nine, and the bus" atype=spanN id=new_time_when_03-source_text-q0
+a_wrong_location           seed0 gold='six' pred='one bowl' atype=span1 id=new_counting_quantity_03-source_text-q0
+b_boundary                 seed0 gold='three' pred='eight shells on the beach and three stones' atype=span1 id=new_counting_quantity_05-source_text-q0
+b_boundary                 seed0 gold='eight' pred='eight shells on the beach and three stones' atype=span1 id=new_counting_quantity_05-source_text-q1
+b_boundary                 seed0 gold='four' pred='nine bean seeds and four corn seeds' atype=span1 id=new_counting_quantity_06-source_text-q0
+c_gate_or_decode           seed0 gold='on Thursday' pred='no' atype=spanN id=new_time_when_07-paraphrase-q0
+c_gate_or_decode           seed0 gold='on Tuesday' pred='no' atype=spanN id=new_time_when_07-paraphrase-q1
+c_gate_or_decode           seed1 gold='on Thursday' pred='painted the fence' atype=spanN id=new_time_when_07-source_text-q0
+c_yesno_flip               seed0 gold='Yes' pred='no' atype=yes_no id=new_time_when_01-source_text-q1
+c_yesno_flip               seed0 gold='Yes' pred='no' atype=yes_no id=new_time_when_01-paraphrase-q1
+c_yesno_flip               seed0 gold='Yes' pred='no' atype=yes_no id=new_location_tracking_08-paraphrase-q1
+c_yesno_other              seed0 gold='Yes' pred='Ruf' atype=yes_no id=new_attribute_lookup_04-source_text-q1
+c_yesno_other              seed0 gold='Yes' pred='Qua' atype=yes_no id=new_attribute_lookup_04-paraphrase-q1
+c_yesno_other              seed0 gold='No' pred='two cats' atype=yes_no id=new_counting_quantity_07-paraphrase-q1
+e_empty                    seed0 gold='silk' pred='?' atype=span1 id=new_attribute_lookup_07-paraphrase-q0
+e_empty                    seed1 gold='at eight' pred='?' atype=spanN id=new_time_when_03-paraphrase-q0
