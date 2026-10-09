@@ -1,0 +1,96 @@
+"""Shared shallow reader for the custom designs (A register loop, B ledger). Nothing pretrained, no attention.
+
+x = E_char[id] + E_pos[t] + E_place[place]; place = a char's index from the right end of its word_spans token
+(units digit 0, tens 1, ...; letters likewise), 15 for spaces/padding, clamped at 14. Then `layers` masked residual
+blocks x + Conv1d_k5(GELU(LN x)) and a final LayerNorm. Receptive field: +-2 chars per block (+-4 with 2 blocks), so
+every relation between words further apart has to be computed by the reasoner, not here."""
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from custom_io.data import MAX_PROMPT, word_spans
+
+N_PLACE = 16
+PLACE_NONE = 15
+
+
+def place_ids(prompts, T, device=None):
+    """[B,T] long: index from the right end of each char's word token; PLACE_NONE for spaces and padding."""
+    out = torch.full((len(prompts), T), PLACE_NONE, dtype=torch.long)
+    for b, p in enumerate(prompts):
+        for a, e in word_spans(p):
+            out[b, a:e] = torch.arange(e - a - 1, -1, -1).clamp(max=PLACE_NONE - 1)
+    return out.to(device) if device is not None else out
+
+
+def batch_places(batch, cache):
+    """[B, T] long on batch['prompt_ids'].device: place ids for batch['rows'] prompts, PLACE_NONE for spaces and for
+    padding out to prompt_ids' width (donor_eval may widen it). `cache` is a plain dict the caller owns: it holds one
+    int8 numpy row per distinct prompt, so a shuffled batch costs one small copy per row instead of a regex pass."""
+    ids = batch['prompt_ids']
+    out = np.full((ids.shape[0], ids.shape[1]), PLACE_NONE, dtype=np.int64)
+    for b, r in enumerate(batch['rows']):
+        p = r['prompt']
+        v = cache.get(p)
+        if v is None:
+            if len(cache) > 400_000:
+                cache.clear()
+            v = cache[p] = place_ids([p], len(p))[0].numpy().astype(np.int8)
+        out[b, :len(v)] = v
+    return torch.from_numpy(out).to(ids.device, non_blocking=True)
+
+
+class ConvBlock(nn.Module):
+    def __init__(self, d, k=5):
+        super().__init__()
+        self.ln = nn.LayerNorm(d)
+        self.conv = nn.Conv1d(d, d, k, padding=k // 2)
+
+    def forward(self, x, mask):
+        h = F.gelu(self.ln(x)) * mask[..., None]
+        return (x + self.conv(h.transpose(1, 2)).transpose(1, 2)) * mask[..., None]
+
+
+class GlobalAttn(nn.Module):
+    """W1 (redesign-ideas sec. 8): one low-rank global self-attention block over the whole prompt, inner width r, one head, with the conv
+    blocks' pre-LayerNorm residual pattern: x + O(attn(Q h, K h, V h)), h = LN x; padding is masked as keys and zeroed in the output."""
+    def __init__(self, d, r=32):
+        super().__init__()
+        self.ln = nn.LayerNorm(d)
+        self.q, self.k, self.v, self.o = nn.Linear(d, r), nn.Linear(d, r), nn.Linear(d, r), nn.Linear(r, d)
+
+    def forward(self, x, mask):
+        h = self.ln(x)
+        a = F.scaled_dot_product_attention(self.q(h)[:, None], self.k(h)[:, None], self.v(h)[:, None], attn_mask=mask[:, None, None, :])
+        return (x + self.o(a[:, 0])) * mask[..., None]
+
+
+class CharReader(nn.Module):
+    def __init__(self, n_vocab, d, layers=2, k=5, letters=True):
+        super().__init__()
+        self.letters = letters      # False (Ledger letters_in=False): the letter table is not added to the input (the talker still uses it as its alphabet)
+        self.tok, self.pos, self.place = nn.Embedding(n_vocab, d), nn.Embedding(MAX_PROMPT, d), nn.Embedding(N_PLACE, d)
+        self.blocks = nn.ModuleList(ConvBlock(d, k) for _ in range(layers))
+        self.ln = nn.LayerNorm(d)
+        self.glob = None            # W1: a GlobalAttn after the conv blocks, set by the owner after its own init (no RNG draw here)
+        self._cache = {}
+
+    def places(self, batch):
+        """place ids for batch['rows'] prompts, padded to prompt_ids' width (see batch_places); cached per prompt."""
+        return batch_places(batch, self._cache)
+
+    def forward(self, batch, extra=None):
+        """-> X [B,T,d] (zeros at padding), mask [B,T] bool. extra [B,T,d] (Ledger eg_embed) is added to the input embedding, before the conv blocks."""
+        ids, mask = batch['prompt_ids'], batch['prompt_mask']
+        if self.letters:
+            x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
+        else:
+            x = self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
+        if extra is not None:
+            x = x + extra
+        x = x * mask[..., None]
+        for blk in self.blocks:
+            x = blk(x, mask)
+        if self.glob is not None:
+            x = self.glob(x, mask)
+        return self.ln(x) * mask[..., None], mask

@@ -1,0 +1,8 @@
+# BensPC RTX 5070 Ti (cuda): U0, letters vs word pieces in the all-learned text baseline (PASS-MARKS.md addendum 18, written before any U0 run).
+# U0 = plain_tf_steps with the PROMPT as byte-level BPE (308 merges learned on train prompts only, custom_io/models/bpe_prompt.json; 416 ids;
+# 3,339,776 params). Letters = queue 33's plain_tf_steps (same PC, same flags), not retrained. Report-first, seeds 200 and 201.
+# Judge: python -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/41-pc-gain-u0
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\41-pc-gain-u0.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 6000
+U0_s200 --model plain_tf_steps --cfg '{"bpe":308}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+U0_s201 --model plain_tf_steps --cfg '{"bpe":308}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds
