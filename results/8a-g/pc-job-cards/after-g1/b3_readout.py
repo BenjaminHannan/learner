@@ -220,15 +220,17 @@ def main(argv=None):
     rocd = rep_caps.get('rows_over_caps_dev_with_programs') or {}
     tr = train_cap_hits(os.path.join(os.path.dirname(os.path.abspath(a.b3)), 'stdout.txt'))
     fin = b3.get('cap_hits') or {}
-    names = [k for k in fin if k not in ('total', 'number_clipped')]
+    # steps_unparsed (rows with worked steps progparse cannot read train answer-only) is reported, not gated: Ben chose "Run, disclosed", 1:32 PM ET 10-09
+    names = [k for k in fin if k not in ('total', 'number_clipped', 'steps_unparsed')]
+    unp = dict(training=tr.get('steps_unparsed') if tr else None, after_evals=fin.get('steps_unparsed'))
     over = {k: v for k, v in list(roc.items()) + [('dev ' + k, v) for k, v in rocd.items()] if v}
     over.update({f'training {k}': tr.get(k) for k in names if tr and tr.get(k)})
     over.update({f'after evals {k}': fin.get(k) for k in names if fin.get(k)})
-    m6 = dict(rows_over_caps=roc, rows_over_caps_dev=rocd, training=tr, after_evals=fin, number_clipped=fin.get('number_clipped'), over=over,
+    m6 = dict(rows_over_caps=roc, rows_over_caps_dev=rocd, training=tr, after_evals=fin, number_clipped=fin.get('number_clipped'), steps_unparsed=unp, over=over,
               ok=None if not roc and not fin else not over, wrong=bool(roc and any(roc.values())) or bool(tr and any(tr.get(k) for k in names)))
     rep['marks']['B3-6'] = m6
     say(f"B3-6 cap counters: rows_over_caps {roc or 'n/a'}; training {({k: tr.get(k) for k in names} if tr else 'n/a')}; after evals {({k: fin.get(k) for k in names} or 'n/a')}; "
-        f"number_clipped {fin.get('number_clipped')} (reported)  -> {verdict(m6['ok'], m6['wrong'])}{'  nonzero: ' + json.dumps(over) if over else ''}")
+        f"number_clipped {fin.get('number_clipped')}, steps_unparsed training {unp['training']} / after evals {unp['after_evals']} (both reported)  -> {verdict(m6['ok'], m6['wrong'])}{'  nonzero: ' + json.dumps(over) if over else ''}")
 
     # the part that needs the checkpoint
     ck = None

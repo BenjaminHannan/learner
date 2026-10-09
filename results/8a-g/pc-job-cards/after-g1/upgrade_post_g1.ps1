@@ -64,8 +64,9 @@ if (Test-Path "$IN\b3r.zip") {
     $out | Select-Object -Last 2
     if (-not ($out -and ($out[-1] -match 'ALL OK'))) { FailB3R 'test_b3_run did not end "ALL OK": src-b3r NOT set up' }
     $capsr = Hash "$SRCB3R\custom_io\g8a\caps.py"
-    Set-Content -Encoding ascii "$SRCB3R\B3R-SETUP-OK.txt" -Value @("caps.py $capsr", "caps_b3.json $JSONB3", 'b3_capcheck 32, test_g8a ok, test_b3_run ALL OK (CPU)', (Stamp))
-    "src-b3r: set up (caps.py $capsr), round cap 32, test_g8a ok, test_b3_run ALL OK"
+    $h1r = Hash "$SRCB3R\custom_io\models\tool_h1.py"
+    Set-Content -Encoding ascii "$SRCB3R\B3R-SETUP-OK.txt" -Value @("caps.py $capsr", "tool_h1.py $h1r", "caps_b3.json $JSONB3", 'b3_capcheck 32, test_g8a ok, test_b3_run ALL OK (CPU)', (Stamp))
+    "src-b3r: set up (caps.py $capsr, tool_h1.py $h1r), round cap 32, test_g8a ok, test_b3_run ALL OK"
   } else { 'src-b3r: already set up (B3R-SETUP-OK.txt present)' }
 } else { 'b3r.zip not here: src-b3r not set up yet (the waiter holds before B3 until it is; rerun this script with b3r.zip)' }
 if ((Hash "$IN\long-dev.jsonl") -ne $LDEV) { Fail 'long-dev.jsonl hash wrong' }
