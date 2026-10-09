@@ -14,3 +14,7 @@ In every such prompt:
 - ask for a plain-language summary for Ben (a high-school senior).
 
 Check factual claims in the reply against the code before acting on them.
+
+## Subagent context cap
+
+SUBAGENT CONTEXT CAP: every subagent must finish under 100k tokens of context. Never read a whole file over 300 lines; use grep, head/tail or line ranges (max 300 lines per read). Never print full logs or jsonl; use tail -n 50, wc, or python one-liners that print summaries. If you think you are past ~60k tokens, stop immediately and return a short HANDOFF (what's done, what's left, file:line pointers) instead of continuing.
