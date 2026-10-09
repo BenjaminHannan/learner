@@ -1496,7 +1496,9 @@ families x 200, two parents).**
     1. Harm against N' passes the 10-08 measure (in_dist drop at most 1.5, no family over 5 with its paired
        interval below 0).
     2. C2 first-try gain over N' is at least 0.9x W1's gain (SC - N' at least 0.9 x (W1 - N'); W1 31.2 / 34.4 and
-       N' 0.4 / 0.4, so SC at least 28.1 / 31.0).
+       N' 0.4 / 0.4, so SC at least 28.1 / 31.0). The 0.9x ratio governs; 28.1 / 31.0 are rounded. Fixed before any
+       result (fast-sleep flagged that 72 of 256 on s100 gives 28.125 but a ratio of 0.899): a shortfall of one
+       question counts as met under Ben's near-miss rule.
   - **Proved wrong:** harm fails on either parent, or SC's gain is under 0.5x W1's on both parents. This wording was
     clarified by the big-run thread at 11:04 AM ET 10-09, before any SC result. It replaces my earlier reading of
     "both parents" for harm.
