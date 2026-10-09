@@ -117,7 +117,7 @@ def report(caps, paths, progs=True):
 
 def apply(caps):
     """Patch the module globals. Call before building any Dataset / model, and before anything imports these names by value."""
-    import sys as _s
+    import importlib
     from custom_io import data
     from custom_io.models import progparse as pp, reader, plain_tf, plain_tf_steps
     caps = {k: max(int(caps.get(k, v)), v) for k, v in TODAY.items()}
@@ -137,9 +137,9 @@ def apply(caps):
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
     for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.english', 'custom_io.models.plain_lm'):
-        m = _s.modules.get(name)
-        if m is None:
-            continue
+        # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
+        # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
+        m = importlib.import_module(name)
         for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt'], CAP=caps['plain_target']).items():
             if hasattr(m, k):
                 setattr(m, k, v)

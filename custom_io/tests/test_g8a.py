@@ -112,6 +112,26 @@ def test_sizes_with_loops_in_extra():
         assert z, ex
 
 
+def test_cap_audit_model_side():
+    # the lazily imported ledger / tool / english must take the caps (the 10-08 bug: ledger kept N_REG 9, GEN_MAX 8); fresh process, caps patch module globals
+    import subprocess
+    for model in ('ledger', 'tool'):
+        p = subprocess.run([sys.executable, '-m', 'custom_io.g8a.cap_audit', os.path.join(os.path.dirname(C.__file__), 'caps_g.json'), '--model', model],
+                           capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        assert p.returncode == 0, p.stdout + p.stderr
+
+
+def test_cap_hit_counters():
+    import subprocess
+    code = ('import json; from custom_io import capcount; from custom_io.data import CharVocab; from custom_io.models import build; '
+            'm = build("ledger", CharVocab(list(" abcdefghijklmnopqrstuvwxyz0123456789"))); '
+            'r = dict(id="t", family="f", prompt="what is " + " ".join(["w"] * 70) + " " + " ".join(str(i) for i in range(20)), answer="x" * 12, accepted=["x"], steps=[]); '
+            'import torch; m.spans(r["prompt"]); m.gold([r], torch.device("cpu")); print(json.dumps(capcount.snapshot()))')
+    p = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    h = json.loads(p.stdout.strip().splitlines()[-1])
+    assert h['words_over'] == 1 and h['numbers_over'] == 1 and h['gen_answer_over'] == 1 and h['total'] >= 3, h
+
+
 def test_plain_lm_refuses_the_front():
     from custom_io.models import build
     try:

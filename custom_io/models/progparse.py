@@ -3,6 +3,7 @@ Workspace slots (27): 0..15 prompt numbers (regex \\d+, first 16), 16..19 consta
 A step is (op, cands_a, cands_b, value): the operand slots that hold the operand values (any of them is a correct pointer).
 row_targets(row) -> dict(prog, mode (0 NUM / 1 WORD / 2 GEN), ans (slots), word (word indices)), cached by row id."""
 import re
+from custom_io import capcount
 from custom_io.data import word_spans
 
 N_NUM, CONSTS, N_RES, W_MAX = 16, [1, 2, 10, 100], 7, 64
@@ -15,7 +16,8 @@ NUM_RE = re.compile(r'\d+')
 
 
 def prompt_numbers(prompt):
-    return [int(m.group()) for m in NUM_RE.finditer(prompt)][:N_NUM]
+    nums = [int(m.group()) for m in NUM_RE.finditer(prompt)]
+    return nums[:N_NUM]      # the cut itself is counted once per distinct prompt in ledger.spans (capcount numbers_over)
 
 
 def ex(op, a, b):
@@ -196,12 +198,14 @@ def row_targets(r):
 def _targets(r):
     nums, a, prog = prompt_numbers(r['prompt']), r['answer'], ()
     p, _ = program_for(r)
+    if p is not None and len(p['prog']) > N_RES:
+        capcount.hit('steps_over')
     if p is not None and len(p['prog']) <= N_RES:
         n = len(p['nums'])
         remap = lambda i: i if i < n else (N_NUM + i - n if i < n + len(CONSTS) else R0 + i - n - len(CONSTS))
         prog = tuple((OPS.index(op), tuple(remap(i) for i in ca), tuple(remap(i) for i in cb), v) for op, ca, cb, v in p['prog'])
     vals = nums + [None] * (N_NUM - len(nums)) + CONSTS + [s[3] for s in prog]
-    words = [r['prompt'][s:e].lower() for s, e in word_spans(r['prompt'])][:W_MAX]
+    words = [r['prompt'][s:e].lower() for s, e in word_spans(r['prompt'])][:W_MAX]      # words past W_MAX are counted in ledger.spans
     isint = re.fullmatch(r'-?\d+', a) is not None and str(int(a)) == a
     ans = tuple(i for i, u in enumerate(vals) if u is not None and isint and u == int(a)) if isint and (prog or int(a) in nums) else ()
     word = tuple(i for i, w in enumerate(words) if w == a.lower())

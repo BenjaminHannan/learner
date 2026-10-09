@@ -29,6 +29,7 @@ Size (vocab 108, S cfg): 3,277,393 (B2 3,302,481; -0.76%)."""
 import math, re
 import numpy as np
 import torch
+from custom_io import capcount
 import torch.nn as nn
 from custom_io.data import EOS, PAD, word_spans
 from custom_io.models import progparse as pp
@@ -146,7 +147,7 @@ class Tool(Ledger):
         Xt, idt, mt, le = self.tape_of(texts, dev, le)
         ent = torch.arange(K * le, device=dev) // le                     # entry index of every tape position
         kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-        Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:9]]).expand(B, -1, -1)
+        Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:GEN_MAX + 1]]).expand(B, -1, -1)      # GEN_MAX + 1 register tokens (was a hard-coded 9)
         steps, calls, n = [], [[] for _ in range(B)], self.n_loops if loops is None else loops
         shown = torch.zeros(B, N_RES, dtype=torch.bool, device=dev)     # entries the thinker may see now
         for t in range(n):
@@ -249,6 +250,8 @@ class Tool(Ledger):
         return hit
 
     def cell_ids(self, s):
+        if len(s) > CELLS - 1:
+            capcount.hit('operand_cells_over')
         e = self.vocab.encode(s[::-1][:CELLS - 1]) + [EOS]
         return e + [-100] * (CELLS - len(e))
 
@@ -256,7 +259,7 @@ class Tool(Ledger):
         B, L = len(rows), N_RES
         op = np.zeros((B, L), np.int64)
         ca, cb = np.full((B, L, CELLS), -100, np.int64), np.full((B, L, CELLS), -100, np.int64)
-        mode, word, gen = np.zeros(B, np.int64), np.zeros((B, W_MAX), bool), np.full((B, 9), -100, np.int64)
+        mode, word, gen = np.zeros(B, np.int64), np.zeros((B, W_MAX), bool), np.full((B, GEN_MAX + 1), -100, np.int64)
         tape = []
         for i, r in enumerate(rows):
             ops, opd, tp, md, wd = self.row_gold(r)
@@ -264,6 +267,8 @@ class Tool(Ledger):
                 op[i, s], ca[i, s], cb[i, s] = o, self.cell_ids(sa), self.cell_ids(sb)
             mode[i], word[i, list(wd)] = md, True
             if md == 2:
+                if len(r['answer']) > GEN_MAX:
+                    capcount.hit('gen_answer_over')
                 ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
             tape.append(list(tp))

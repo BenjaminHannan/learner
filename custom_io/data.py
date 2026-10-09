@@ -2,6 +2,7 @@
 import json, os, re, sys
 import numpy as np
 import torch
+from custom_io import capcount
 
 # The ONLY place the default data location is written down. Override with --data or $CUSTOM_IO_DATA.
 DEFAULT_DATA = os.environ.get(
@@ -113,6 +114,8 @@ class Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, i):
         r = self.rows[i]
+        if len(r['answer']) > MAX_ANS:
+            capcount.hit('answer_over_max')
         return self.vocab.encode(r['prompt']), self.vocab.encode(r['answer'])[:MAX_ANS] + [EOS], r
 
 

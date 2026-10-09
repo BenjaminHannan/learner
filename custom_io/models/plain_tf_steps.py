@@ -3,6 +3,7 @@ Scored on the text after the last '#'. Lesion 'calc' (C1'): same weights, but wh
 'a op b =' the exact result is forced in as tokens (integer division only when exact)."""
 import re
 import torch
+from custom_io import capcount
 import torch.nn as nn
 import torch.nn.functional as F
 from custom_io.data import BOS, EOS, PAD, SEP, N_SPECIAL
@@ -77,6 +78,7 @@ class PlainTFSteps(PlainTF):
     def _targets(self, batch):
         """-> ids [B, A] (target chars + EOS, PAD after), mask [B, A]."""
         enc = [self.vocab.encode(target_text(r))[:CAP + 12] + [EOS] for r in batch['rows']]
+        capcount.hit('plain_target_over', sum(len(target_text(r)) > CAP + 12 for r in batch['rows']))
         dev = batch['prompt_ids'].device
         ids = torch.full((len(enc), max(map(len, enc))), PAD, dtype=torch.long)
         for i, e in enumerate(enc):
