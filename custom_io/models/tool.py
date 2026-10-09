@@ -56,7 +56,8 @@ Size: 3,311,060 + 8 x 64 = 3,311,572.
 
 span_end=True (needs span_idx; T1SD, Amendment 7's one start-pointer change after T1SI's miss breakdown: 56 of s201's 58 missed 8-digit
 operands started on the wrong char inside the right entry, 0 were stop-head misses): a learned distance-from-the-end-of-its-string term on
-the span pointer's keys, e_e[d] (d = 0 for a string's last char, 0..39; zero at init, so the model starts as T1SI). Disclosure: like the entry
+the span pointer's keys, e_e[d] (d = 0 for a string's last char, 0..39, clipped: every char 39 or more from its string's end uses row
+39, so d is exact on replies (at most 40 chars) but not on a longer question; zero at init, so the model starts as T1SI). Disclosure: like the entry
 index, d comes from the text layout (which chars exist in the char's string, i.e. the string's length); a result's units digit is its entry's
 last char (d = 0) at every length, so that entry of the table is trained in every row. No rule picks the start, no length is given.
 Size: 3,311,572 + 40 x 64 = 3,314,132.

@@ -49,6 +49,8 @@ Scorer passes: {'T1S': 5, 'T1': 8}
 
 ## 6-seed confirm (marks 1-6 as amended): NOT SHOWN (failing: 4, 5; mark 5 open on seed(s) 205). Mark 4 donor fails as Amendment 12 item 6 says: the confirm stays NOT SHOWN on mark 4 unless Ben explicitly clears it
 
+> Added by hand 2026-10-09 (not judge output): Ben cleared mark 4 at 8:21 AM ET 10-09, so the confirm is recorded as PASS on his ruling, with mark 5 open on seed 205, whose checkpoint was lost on 10-09. See PASS-MARKS.md addendum 22 amendment 7 and addendum 23.
+
 - 1 parity (Amendment 2): mean T1 - B2 >= -1.0, 95% CI lower >= -2.0, T1 >= B2 - 1.0 on >= 5 of 6 seeds: pass
 - 2 chain-5 mean within 1.0 of B2 and >= 99 on 5 of 6 seeds: pass
 - 3 tool off: noexec program set < 5 on every seed: pass

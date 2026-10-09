@@ -50,6 +50,7 @@ GO for a design needs ALL of:
 - **Secondary:** variant d vs plain_tf >= +2.0 with CI above 0.
 - **FAIL:** pooled-5 d < +1.0, or in_dist d < -2.0. Between FAIL and PASS: inconclusive, no claim, no more spend.
 - L2x2 joins confirm only if it came within 2 pooled-5 points of the winner in the screen.
+- Note (2026-10-09): PASS-2 is a rung gate, not the ship bar, and was never judged; see addendum 23.
 
 ## Lesion marks (every seed)
 Wiring checks (hold by construction; they show the plumbing, not reasoning):
@@ -153,6 +154,7 @@ If B1-a is proved wrong, way B at this size is dead (source section 6): next sin
   (driven by yes/no), not PASS. It only tightens B1-a. Per-kind and per-type scores of every arm are reported (read only). The data above is
   unchanged: TEACH = teach_clean, GEN = gen_matched_94831 (the thinker-first thread withdrew its 5:15 PM ET switch to the 171,940-row pair at
   5:20 PM ET; `teach.jsonl` is 51% yes/no).
+**Disclosure (added 2026-10-09):** letter-written answers over 8 letters (roughly 1% of rows) were cut to 8 in training despite --max-ans 32; see addendum 23.
 
 ## Addendum 4: EmbeddingGemma 2 arms for B2 (written 2026-10-06 about 17:40 UTC, 1:40 PM ET, before any EG run; design/EG2-embedding.md)
 Source: the marks at `/mnt/project-files/embeddinggemma/PASS-MARKS-meaning-teacher.md` (written 10-06 before any run), applied unchanged to both arms.
@@ -183,6 +185,7 @@ reject. EGE passing -> no shuffle control (the embedding ships inside the model,
 confirm at the same marks. Nothing is adopted on 2 seeds (noise rule).
 **Size rule:** EGE is a 274.5M model (borrowed parts count), so a pass is a B2-internal result; whether it beats similar-size models is a separate
 comparison against ~135M-360M models, not judged here. EGT ships at 3,302,481.
+**Result (added 2026-10-09):** EGT failed its screen and stopped, so it never became the finished reader; see addendum 23.
 **Read only:** the family split, per-family changes, the other lesions, steps per second and peak memory.
 
 ## Addendum 5: Test LR, a readout loss at every round for B2 (written 2026-10-06 about 18:40 UTC, 2:40 PM ET, before any LR code or run)
@@ -387,6 +390,7 @@ EGE and plain B2 (B2V) of its seed.
 **Size rule** as in addendum 4: EGE is a 274.5M model with EmbeddingGemma counted, so a pass is a B2-internal result ("the Gemma version of B2
 beats B2"), not a claim against other models of its size. **Read only:** the variant gain, per-family changes, loops:0 per seed, and every
 seed's sign.
+**Result (added 2026-10-09):** FAIL on the leak mark only (loops:0 6.59 vs 4.62), not proved wrong, pooled-5 +2.67 on 6 of 6; see addendum 23.
 
 ## Addendum 16: D0, the digit check before T1 (written 2026-10-07 about 15:55 UTC, 11:55 AM ET, before any D0 run)
 Marks are the architecture thread's, sealed in `/mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md` (D0 section and Amendment 1).
@@ -567,6 +571,7 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   architecture thread chooses before the run; the queue uses the sealed label.
 - **Judge:** `python -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen custom_io/results/49-pc-h1-screen`.
   Queue `49-pc-h1-screen.txt` (45-48 are the 8a queues).
+**Disclosure (added 2026-10-09):** the 'settled' label is judged over too few rounds in batches shorter than 32; a fix is proposed, not applied; see addendum 23.
 
 ## Addendum 21, amendment 1 (written 2026-10-07 about 19:35 UTC, 3:35 PM ET, before any H1 run)
 - **Source, mirrored as sealed:** spec section 8c ("H1 amendment 1", 3:30 PM ET), the architecture thread's ruling on the label question above.
@@ -670,6 +675,7 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   change named from a miss breakdown of the failing cell. Pass: the 6-seed confirm (marks 1-6, Amendment 2) on T1SD, H1 queued behind it.
 - **Run and judge:** box jobs custom_io/queue/t1d1|t1d2 (60 train, 61 re-score with `--min-n 1000`, 62 checkpoint export);
   `python -m custom_io.analyze_t1s --arm T1SD --results ...33-pc-confirm-b2 ...40-vast-t1 ...60-vast-t1sd --wc ...51-vast-wc-t1 ...61-vast-wc-t1sd`.
+**Clarification (added 2026-10-09):** d is clipped at 39 (tool.py:218); exact on replies, not on the question; see addendum 23.
 
 ## Addendum 22, amendment 5 (written 2026-10-08 about 06:40 UTC, 2:40 AM ET, before any T1SDR run)
 - **T1SD read (custom_io/results/RESULTS-T1SD.md):** NOT SHOWN. R1 failed only on seed 200's answers (mean of nine 98.96 vs 99; 7-9 digit
@@ -762,7 +768,8 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   sha256 against its write_copy re-score where one exists. A seed whose checkpoint is not re-scored leaves mark 5 open, not passed.
 - **Seed 205's checkpoint:** two of five parts were not copied off its Vast box before the account's credit ran out (the box is stopped,
   not deleted). If it cannot be recovered, T1SDR_s205 is retrained on BensPC with the same line and that run is re-scored for mark 5; the
-  retrained run's marks 1-4 and 6 are printed beside the Vast run's, and the swap is disclosed.
+  retrained run's marks 1-4 and 6 are printed beside the Vast run's, and the swap is disclosed. (Update 2026-10-09: the box was deleted at
+  10:38 AM ET, the checkpoint is lost, and seed 205 is not retrained; see addendum 23.)
 - **Marks 1-3 and 6 and the proved-wrong lines:** unchanged.
 - **Read (about 20:00 UTC, 4:00 PM ET 10-08), all six seeds (custom_io/results/RESULTS-T1SDR.md):** NOT SHOWN on marks 4 and 5.
   Marks 1-3 and 6 pass: pooled-5 T1SDR - B2 mean +0.62 (95% CI -0.23 to +1.46), every seed within 1.0; chain-5 99.6-99.8; tool off 0.0.
@@ -775,5 +782,73 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Ben's ruling (2026-10-09 12:21 UTC, 8:21 AM ET, decision card in the reader/talker thread, "Clear it"):** mark 4 is cleared, as
   Amendment 12 item 6 left to him. The T1SDR 6-seed confirm counts as PASS on that ruling: marks 1-3 and 6 pass, mark 4 (donor 5.0-5.6
   vs the flat 5, B2 3.1-3.8; loops:0 seed 201 12.94) is cleared by Ben and stays disclosed, and mark 5 passes on seeds 200-204 with
-  seed 205 unscored (its checkpoint is not off the stopped box). The judge's own printout stays NOT SHOWN as sealed; this line is the
+  seed 205 unscored (its checkpoint is not off the stopped box; lost 10-09, so mark 5 is open on that seed, see addendum 23). The judge's own printout stays NOT SHOWN as sealed; this line is the
   record of the clearance. H1R stays held until the big-run plan's gate G1 reads GO on its first seed.
+
+## Addendum 23: architecture audit disclosures (written 2026-10-09 about 17:15 UTC, 1:15 PM ET, after every result below was read; no mark, verdict or run changes)
+Source: /mnt/project-files/architecture/AUDIT-2026-10-09.md, the 36 findings owned by this thread. Every count was measured on CPU at
+17a356e62, whose forward path equals the T1SDR pin f6d724cffc, on the T1SDR training file (sk200k train.jsonl, 200,000 rows, sha256
+010af671...) unless another file is named.
+- **Answers cut to 8 letters (B00-1, B13-1, B14-1; Ben's rule that no training answer is cut).** The answer-letter slots on the T1SDR and H1
+  code hold 8 letters (GEN_MAX = N_REG - 1 = 8, ledger.py:62-63). tool.py:509-510 writes a longer non-drill answer as its first 8 letters
+  plus the stop sign, so a longer training answer would be cut. It never fired in the T1SDR runs or in the B2 runs paired with them: all
+  twelve ran with the default --max-ans 8 (no flag on their queue lines), data.py:109 refuses any training answer over 8 letters, and all twelve finished with status ok. Training
+  file: 0 of 200,000 answers are over 8 letters. Dev: 5 of 160 'family' rows in sk200k and 25 of 800 in sk200k_big have answers of 9-12
+  letters; none is in the five pooled-5 splits. An 8-letter writer can never answer those rows in full: T1SDR got 0 of the 5 on every
+  seed, and B2 has the same limit. Still open: train.py:142 stops only a model that declares a smaller max_ans, and 'tool' and 'ledger'
+  declare none, so a run on this code with --max-ans above 8 would cut silently. B3 under caps_b3 writes up to 35 letters and counts a
+  longer answer instead of cutting it (cap audit; not rechecked here). A refusal in training mode in tool.py gold() is proposed to the B3
+  owner and not applied here, because B3 builds on this code.
+- **The same cut in the B1 students (addendum 3).** Ledger.gold (ledger.py:447) cuts letter-written answers to 8 letters whatever
+  --max-ans says. The students b2t/b2g ran with --max-ans 32 (queue_local/35-pc-b1-students.txt); the 8 was kept on purpose for B2 parity
+  (design/B1-students.md; tests/test_ledger_span.py check 5), but addendum 3 and RESULTS-B1.md did not say so. Rough count (a case-folded
+  substring test, not the ledger's own matcher): about 2,000 teach rows and 1,800 gen rows (about 1% each) have answers over 8 letters
+  that are not in the prompt; those are the rows likely to have been letter-written and cut. Effect on B1-a (proved wrong) and B1-c (fail): untested.
+- **Rows that train on the answer alone (B13-3; Ben's rule I12).** A row gets call targets only if the hand parser reads its worked steps
+  and the program has at most 7 steps (progparse.py:162-180 and 199; N_RES 7 at line 8). Every other row trains on its answer alone, with
+  the 'no call' label at weight 0.1 (tool.py:584) and no operand targets. The code cannot tell a parser failure from a row with no
+  calculator step. Training file: 68,576 rows (34.3%) keep a program and 131,424 (65.7%) have none. Of those, 124,991 (62.5%) are rows of
+  the 19 families whose steps are not arithmetic (copying, lookups, rules, ciphers and the like). The other 6,433 (3.2%) are calculator-
+  family rows that lost their program: list_stats 4,692 (4,164 unparsed step, 528 over 7 steps), verify_claim 1,687 (unparsed step),
+  arith_bare 54 (final mismatch). B2 uses the same parser, limit and file, so the T1SDR-minus-B2 gaps are paired. For the 6,433 rows that
+  have steps and lose them, this breaks the no-answer-only rule; their effect is untested. B3 lifts the 7-step limit and group 2 replaces
+  the hand parser (L1, ST1). Whether the rule also covers rows that never had steps (62.5% here, fill-in web rows in B3) is Ben's call; it
+  has been sent to the source-of-truth owner.
+- **Distance from the end is clipped at 39 (B12-9; addendum 22, amendment 4).** Every character 39 or more from the end of its string
+  uses row 39 of e_e (tool.py:218). Replies hold at most 40 characters, so for them d is exact; in the question it is not. On the training
+  file 57% of the question places the span labels point at sit in row 39 (61% on dev in_dist). Effect untested. With 2,000-letter
+  questions (B3) almost all of the question would share row 39.
+- **H1's 'settled' stop label sees too few rounds (B13-2; addendum 21).** 'Settled' at a round means right now, or no later round of the
+  turn (up to the cap of 32) is right. A training batch runs only n = max(K, longest program + 1) rounds with K drawn from {4, 8, 16, 32}
+  (tool_h1.py:144-145, 208-219), so in a batch shorter than 32 a row first right after round n is labelled stop at every round. That
+  pushes the stop early. H1 and H1R have never run, so no result is affected. A fix is drafted with a CPU test (the settled stop loss
+  counts only in batches that run all 32 rounds; K is drawn before any row is read, so the choice never depends on how a row did) and
+  sent to the B3 owner, since B3's loss calls ToolH1.loss. Not applied here: it changes the sealed H1R build and needs its own amendment
+  before any H1R or B3 run.
+- **T1SDR confirm, restated (B12-6; amendment 7).** Ben's "Clear it" cleared mark 4 only. Marks 1-3 and 6 pass on all six seeds. Mark 4
+  is cleared and stays disclosed. Mark 5 passes on seeds 200-204 (99.87, 99.28, 99.40, 99.74, 99.61; B2 99.88 on all six). Seed 205 can
+  never be scored: its checkpoint was lost when both stopped Vast boxes were deleted at 10:38 AM ET 10-09 on Ben's yes (big-run PLAN
+  line 12; the Vast instance list was empty at 10:50 AM ET), and Ben's 10-08 rule (money only on one big proven run, no more small tests) rules out a retrain.
+  Amendment 7 says a seed that is not re-scored leaves mark 5 open, so mark 5 is open on seed 205. The confirm is recorded as PASS on
+  Ben's ruling about mark 4, with mark 5 open on one seed; it is not a pass by the sealed marks alone. Amendment 7's retrain plan for seed
+  205 is void. The judge's printout stays NOT SHOWN as sealed.
+- **EGT result (B12-7; addendum 4).** EGT failed its screen and stopped (results/RESULTS-EG2.md, "EGT: FAIL"): pooled-5 +0.18 and +0.61
+  against B2V (needed +1.0 on both seeds), variant +2.54 (needed +3.0); the leak marks held. It was never a candidate for the finished
+  reader: it used EmbeddingGemma only as a training-time teacher and would have shipped with none, while Ben's rule is that Gemma is the
+  model's main encoder (1:10 PM ET 10-06, 10:16 AM ET 10-08). The finished reader is the EGE kind (FINISHED-MODEL sec. 2).
+- **EGE 6-seed result (B12-4; addendum 15).** Judged 2026-10-08 01:25 UTC (9d964e291; results/39-pc-ege-confirm/RESULTS-EG2.md and
+  EGE-CONFIRM-ANALYSIS.json): FAIL on the leak mark only, not proved wrong. Mark 1 passes: pooled-5 +2.67 over plain B2 on the 6-seed
+  mean, ahead on 6 of 6 (+1.14, +2.70, +3.44, +2.63, +3.54, +2.57 on seeds 202-207). Mark 2 passes (in_dist +2.84, answer +2.76, frame
+  +3.80, vocab +3.42, variant +0.80). Mark 3 passes (chain-5 99.9-100.0). Mark 4 fails: mean loops:0 in_dist 6.59 against plain B2's
+  3.62 + 1.0 = 4.62 (EGE 0.0, 4.56, 16.10, 0.0, 18.90, 0.0 by seed; plain B2 0.0, 5.66, 3.53, 0.0, 0.59, 11.91); donor 3.0-3.3 on every
+  seed. Plain B2 also reads high at loops:0 on some seeds, so the cause is not settled (addendum 14). Any "shown at 3M" claim for the
+  Gemma reader should carry the leak-mark failure beside the +2.67.
+- **PASS-2 is not the ship bar (B12-8; Confirm block).** PASS-2 was Ben's 10-05 criterion for a 3M model against models of 30M-135M: a
+  rung gate. The current bar is big-run PLAN R4 (ahead of SmolLM2-360M, LFM2-350M and Qwen3-0.6B at whole size, borrowed weights counted;
+  a 1-2B race is a stretch rung after R4, and Ben was asked on a card whether his bar means 1-2B). PASS-2's outside comparisons (fine-tuned pythia-31m, 8-shot SmolLM2-135M and pythia-31m) were never run, so
+  PASS-2 has no verdict (results/CONFIRM-ANALYSIS.json: n/a).
+- **Checked and not binding on this data:** the 64-word pointer cap (longest training question 50 words, 0 rows affected), the 11
+  operand cells and their 10-letter target cut (never fired), the constants list 1, 2, 10, 100 (no row lost its program to it) and the
+  40-letter span ceiling. Chain-5 on the six T1SDR seeds is 99.6-99.8 (amendment 7 is right). Fixes for the source of truth
+  (rows for hand-coded rules it leaves out, and a few wrong numbers) went to its owner as
+  /mnt/project-files/custom-io/audit-2026-10-09/FINISHED-fixes.md (with the H1 fix diff beside it).
