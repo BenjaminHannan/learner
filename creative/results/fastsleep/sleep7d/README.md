@@ -309,3 +309,31 @@ How to read it:
 - *Shown:* the skills cost stays near zero overall (in_dist is above N' on both parents), but 64 visits on night 2 starts to cost one family on s100. table_calc was 62.0 after L2 and is 56.0 after L64 (-6.0 [-10.5, -1.5]); night 1 at 64 visits left it within its interval.
 - *Shown:* multi-step first try still trails W2 by 4 questions on both parents, and the climb over N' (+5.8 / +3.9) is still below the +10 mark.
 - *Suggested:* more visits at lr 1e-4 buy back sampling breadth faster than first-try accuracy, and the first family cost appears at 64 visits. That puts the lever between lr 1e-4 and 1e-3 rather than in more visits. The pre-set next step (lr 3e-4) is held under the one-big-run rule (3:27 PM ET 10-08), so nothing more runs here unless the big-run thread asks for it.
+
+## Test SC (finished 16:13 UTC 10-09 = 12:13 PM ET; roadmap a92e5945fe, un-held by the big-run scorecard row 5 and Ben's "Run it" 11:16 AM ET; `night7d.py sc`, `sc/`)
+
+Night 1 = W1's exact recipe (835 / 808 records, lr 1e-3, 32 visits, same seed and schedule) with ONE change. After the first 32 updates, every 32 updates the model scores 1,024 fresh skills TRAIN rows by how much their loss rose against its frozen pre-night self (N'). The 256 with the largest rise become the skills replay for the next 32 updates. The control is W1, the same night with uniform (hand-picked) replay. Marks are the scorecard's (roadmap 097902443a, 5a1efd4d20 and the near-miss rule, all before any result); the roadmap's original SC marks are report only.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: B2 / N' / W1 / **SC** | 89.4 / 86.7 / 82.9 / **85.2** | 90.5 / 87.8 / 84.2 / **87.7** |
+| (1) harm SC vs N' (in_dist drop <= 1.5, no family fires) | drop 1.47, but **3 families fire**: rule_apply 77.5 -> 66.5, seq_next 62.0 -> 51.5, list_stats 86.5 -> 80.0; **fail** | drop 0.12, but **2 fire**: order_chain 59.5 -> 52.0, seq_next 66.5 -> 58.5; **fail** |
+| same families after W1 (uniform replay) | rule_apply 50.0, seq_next 43.0, list_stats 75.5 | order_chain 53.5, seq_next 42.5 |
+| (2) C2 DEV first try: N' / W1 / **SC**; gain ratio SC / W1 (mark >= 0.9x) | 0.4 / 31.2 / **33.6**; **1.08** met | 0.4 / 34.4 / **37.1**; **1.08** met |
+| Verdict (scorecard) | harm fails | harm fails |
+| report only: SC - W1 first try (old mark >= -2) | +2.3 [-1.2, +6.3] | +2.7 [-0.8, +5.9] |
+| report only: multi-step reach@32 SC - W1 (old mark >= -3) | +1.9 [-3.2, +7.1] (14.9 vs 13.0) | +0.6 [-5.2, +6.5] (14.9 vs 14.3) |
+| report only: in_dist drop vs N', SC vs W1 (old proved-wrong needs SC not 1.0 below W1) | 1.5 vs 3.8 (2.3 smaller) | 0.1 vs 3.6 (3.5 smaller) |
+| report only: SC vs W1 harm | in_dist +2.3, nothing fires | +3.5, nothing fires |
+| picked rows: loss rise picked / random (mean over 26 / 25 rounds) | 1.13 / 0.22 | 1.22 / 0.24 |
+| picked family mix (top; pool share in brackets) | list_index 9.2% (6.7), seq_next 8.6, list_stats 6.9, rule_apply 6.1, order_chain 5.9 | seq_next 9.4%, list_index 7.8, letter_ops 6.2, list_stats 6.0, order_chain 5.9 |
+| CPU seconds: night (of it, picking) / measures | 3,014 (714) / 213 | 2,924 (695) / 231 |
+
+Verdict: **SC is PROVED WRONG under the scorecard's marks**: harm fails on both parents, and the rule is "harm fails on either parent". The first-try mark is met on both (1.08x W1's gain). Under the roadmap's original marks (report only) it fails on harm and is not proved wrong.
+
+How to read it:
+- *Shown:* letting the model pick its own replay rows by loss rise cuts the night's skills cost a lot at lr 1e-3. in_dist falls 1.5 / 0.1 points from N', against W1's 3.8 / 3.6, and SC beats W1 by 2.3 / 3.5 points with no family worse than W1's.
+- *Shown:* it keeps the whole C2 gain (first try 33.6 / 37.1 vs W1 31.2 / 34.4).
+- *Shown:* the pick finds the right rows. The picked rows' loss rose about 5x as much as random rows', and the families that drop most (seq_next, rule_apply, list_stats, order_chain) are over-picked against their pool share.
+- *Shown:* it doesn't fully protect them. seq_next and rule_apply still lose 8-11 points against N' on s100, and seq_next and order_chain on s101.
+- *Suggested:* at lr 1e-3 the replay half can't fully counter the records' pull on the few-example families even when aimed at them. lr 1e-4 alone (VL's L) already had no family fire but a smaller first-try gain. Model-picked replay at lr 1e-4 or 3e-4 is the natural next single change; that is the roadmap's call, and lr 3e-4 is held.
