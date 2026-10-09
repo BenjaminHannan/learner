@@ -91,7 +91,7 @@ DEV marks (Amendment 2, reported pass/fail; they decide nothing, R7 does):
 - T1-long - T1 (reported only): **+0.90** (+0.55 / +1.11 / +1.04). T2 - T1-long on DEV: **+0.09** (+0.35 / -0.14 / +0.07). On DEV, the T2 gain over T1 is about the size of what 3000 extra TEACH updates give. DEV only; R7 decides. (shown, DEV)
 - Guards: S(T2) >= S(T1) - 2 passes in all seeds; wrong-notes drop >= 20 passes for every T arm (T1 drops 77-80 points); <= 25M params and <= 50 ms pass. (shown)
 
-## FRESH-R7 (read once, 2026-10-09 ~12:35 ET; 320 rows = 160 questions x source/paraphrase; S = short-answer EM)
+## FRESH-R7 (read once, 2026-10-09, finished 12:28:54 ET; 320 rows = 160 questions x source/paraphrase; S = short-answer EM)
 
 `seal_eval_t.py --final` ran once and finished without error. Output: `results/fresh_r7_results.json`, `results/fresh_r7_hits.json`, `results/fresh_r7_run.log`. Before the read, all 15 checkpoints were loaded and scored on TEST through the same script (pipeline check; TEST is not a mark).
 
@@ -147,6 +147,6 @@ Plan and decision table written before running: `diag/DIAG_PLAN.md`. FRESH-R7 wa
 (DEV echo exact for the same runs: T1 90 %, T2 94 %.)
 
 - **Echo collapses outside TEACH.** The say-back starts with the exact question in 4-35 % of outside rows vs ~90 % on DEV, so the decision table's first branch fires: the talker cannot repeat longer or unfamiliar questions. But hits barely depend on the echo (e.g. R3 T1: 5.9 % with an exact echo, 5.1 % without), so the echo is not the only failure. (shown on spent sets, seed 0; cause suggested)
-- **Answers are often written, not copied.** 54-70 % of T1's short answers contain words that are not in the prompt. (shown, seed 0)
-- **Some answers are misspelled copies** ("Haleel" for Hale, "Danio" for Dani). Wrong answers within 2 character edits of, or containing, an accepted answer: T1 9.5 % of wrong answers, T2 9.0 %. Counting them as right would lift pooled T1 from 6.0 to 14.9 (B0: 14.9) and T2 from 11.2 to 19.2. This counting is diagnostic only; the registered scorer stands. (shown, seed 0; whether a word-piece talker removes this is untested)
+- **Answers are often not exact copies.** 54-70 % of T1's short answers are not an exact substring of the prompt (this count includes misspelled copies). (shown, seed 0)
+- **Some answers are misspelled copies** ("Haleel" for Hale, "Danio" for Dani). Wrong answers within 2 character edits of, or containing, an accepted answer: T1 9.5 % of wrong answers, T2 9.0 %. This is a loose count: short gold answers ("up", "no", "two") match many short wrong strings (e.g. "the ppupup" counts), and B0 was not given the same credit, so no T1-vs-B0 comparison is drawn from it. Diagnostic only; the registered scorer stands. (suggested, seed 0; whether a word-piece talker removes this is untested)
 - On these older outside sets T2 - T1 is +5.2 pooled (seed 0 only), unlike R7 where both arms sit at the floor. R7's longer answers (20.3 characters on average) are likely part of why R7 is harder for these talkers. (suggested)
