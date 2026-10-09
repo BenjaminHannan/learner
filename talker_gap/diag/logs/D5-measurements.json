@@ -1,0 +1,142 @@
+{
+ "task": "D5 env check (Mac): transformers/torch versions, small-transformer step benchmark, FineWeb-Edu local text, EmbeddingGemma 2 load",
+ "machine": {
+  "hw.ncpu": 10,
+  "hw.memsize_bytes": 34359738368,
+  "memsize_GiB": 32,
+  "root_disk": "460Gi size, 13Gi used, 24Gi avail (36% used)"
+ },
+ "env_venv": "/Users/ben-hannan/ucv4/venv/bin/python",
+ "versions": {
+  "python": "3.12.14",
+  "torch": "2.11.0",
+  "transformers": "5.17.0",
+  "tokenizers": "0.23.2",
+  "numpy": "2.5.3",
+  "safetensors": "0.8.0",
+  "sentencepiece": "NOT INSTALLED"
+ },
+ "mps": {
+  "is_available": true,
+  "is_built": true
+ },
+ "bench_small_tf": {
+  "config": "4 layers, d=256, 4 heads, seq 64, batch 64, vocab 32768 tied head, fp32, AdamW lr 3e-4, fwd+bwd+step, 5 warmup, 30 timed, torch.set_num_threads(4)",
+  "params": 11564544,
+  "embedding_tied_params": 8388608,
+  "cpu": {
+   "steps_per_s_mean": 2.16,
+   "ms_per_step_mean": 463.7,
+   "ms_per_step_median": 428.3,
+   "ms_min": 382.9,
+   "ms_max": 995.0,
+   "tokens_per_s": 8832
+  },
+  "mps": {
+   "steps_per_s_mean": 4.97,
+   "ms_per_step_mean": 201.1,
+   "ms_per_step_median": 201.9,
+   "ms_min": 182.8,
+   "ms_max": 220.3,
+   "tokens_per_s": 20372,
+   "driver_allocated_MB_after_run_NOT_peak": 3197.2
+  },
+  "script": "scripts/bench_small_tf.py"
+ },
+ "fineweb_edu_local": {
+  "shard": "/Users/ben-hannan/desmos-data/tok32k/fineweb_edu/tokens_0000.bin (+ .idx.npy)",
+  "tokens": 19999782,
+  "docs": 37087,
+  "doc_len_tokens_min_median_max_mean": [
+   124,
+   489,
+   1959,
+   539.3
+  ],
+  "doc_layout": "doc i = tokens[idx[i]:idx[i+1]]; starts with <|bos|>(id 0) then <web>(id 11)",
+  "tokenizer": "/Users/ben-hannan/Desktop/projects/desmos-llm/tokenizer/tok32k/tokenizer.json (sha256[:16]=a8fc4ae441399e37, matches index.json tokenizer_sha16; index.json's own path /mnt/c/... is the PC path)",
+  "decode_3_docs": "docs 0-2 decode to clean English web text (see transcript)",
+  "roundtrip_decode_then_encode_exact": "200/200 docs (docs 0-199)",
+  "stream_50M_chars": {
+   "docs_read": 21465,
+   "chars": 50002226,
+   "tokens_used": 11554254,
+   "seconds": 2.3,
+   "chars_per_token": 4.328
+  },
+  "raw_hf_cache": "no .arrow files for fineweb in ~/.cache/huggingface/datasets; only .lock files for fineweb-edu sample-10BT and smollm-corpus",
+  "index_note": "index.json note: 'sliced subset of the full tok32k corpus for local smoke tests'; index total_docs 618514 across all sources",
+  "whole_shard_ceiling": {
+   "docs": 37087,
+   "chars": 86616716,
+   "tokens": 19999782,
+   "chars_per_token": 4.331
+  },
+  "clean_text_tip": "use tok.decode(ids, skip_special_tokens=True) or slice ids[2:] to drop <|bos|><web> prefix"
+ },
+ "eg2_weights": {
+  "file": "/Users/ben-hannan/eg2/model.safetensors",
+  "bytes": 1488915288,
+  "size_stable_over_30s": true,
+  "dtype": "BF16",
+  "header_tensors": 1376,
+  "language_model_tensors": 413,
+  "language_model_params_header": 271002648,
+  "layer_scalar_tensors_shape_1": 24,
+  "loader_expected_text_params_eg_py_line46": 271002624,
+  "embed_tokens": [
+   262144,
+   512
+  ],
+  "config_model_type": "embedding_gemma2",
+  "config_transformers_version": "5.18.0.dev0",
+  "text_config": {
+   "model_type": "embedding_gemma2_text",
+   "hidden_size": 512,
+   "num_hidden_layers": 24,
+   "num_attention_heads": 4,
+   "num_key_value_heads": 2,
+   "head_dim": 256,
+   "per_layer_head_dim_512_layers": [
+    5,
+    11,
+    17,
+    23
+   ],
+   "sliding_window": 512,
+   "full_attention_layers": [
+    5,
+    11,
+    17,
+    23
+   ],
+   "vocab_size": 262144,
+   "embedding_dim": 768,
+   "hidden_size_per_layer_input": 512
+  },
+  "tokenizer_load_on_5_17": "OK (GemmaTokenizer, pad_token_id 0)",
+  "layer_scalar_note": "24 tensors named *.layer_scalar, shape [1] (one per layer). Loader count excludes them, so likely buffers in the real model (SUGGESTED, untested)."
+ },
+ "eg2_load_attempts": {
+  "transformers_installed": [
+   "5.5.0 (beautiful-model/.runtime/teacher)",
+   "5.16.1 (ralph/mlx-venv2)",
+   "5.17.0 (ucv4 venv)",
+   "5.18.0 (tf-j68k6q/thinker_first/.venv)"
+  ],
+  "embedding_gemma2_in_any_installed_version": false,
+  "attempt1_eg_py_strict_load_mps": "AssertionError: EmbeddingGemma 2 needs transformers >= 5.19, found 5.17.0 (eg_ref.py:39)",
+  "attempt2_automodel_no_assert": "ValueError: checkpoint model type `embedding_gemma2` not recognized by Transformers (KeyError 'embedding_gemma2' in CONFIG_MAPPING)",
+  "embed_256_prompts_timing_and_peak_memory": "NOT MEASURED (load blocked)",
+  "script": "scripts/eg_load_attempt.py",
+  "log": "logs/eg_load_attempt.txt",
+  "minimum_transformers_version": {
+   "shown": [
+    "eg_ref.py:5,39 asserts >=5.19",
+    "released 5.5.0, 5.16.1, 5.17.0, 5.18.0 on this Mac do not register embedding_gemma2",
+    "config transformers_version 5.18.0.dev0"
+   ],
+   "untested": "5.19 is the first version that works (not installed, no pip)"
+  }
+ }
+}
