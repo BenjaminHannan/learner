@@ -67,6 +67,15 @@ def test_sc_marks_and_verdict():
     assert N.sc_verdict({'a': g, 'b': g})['passes']
 
 
+def test_sc_scorecard():
+    m = N.sc_scorecard(28.2, 31.2, 0.4, True)          # gain 27.8 / 30.8 = 0.903
+    assert m['passes'] and not m['proved_wrong'] and abs(m['ratio'] - 27.8 / 30.8) < 1e-9
+    assert not N.sc_scorecard(28.0, 31.2, 0.4, True)['passes']
+    assert not N.sc_scorecard(31.2, 31.2, 0.4, False)['passes'] and N.sc_scorecard(31.2, 31.2, 0.4, False)['proved_wrong']
+    assert N.sc_scorecard(15.0, 31.2, 0.4, True)['proved_wrong'] and not N.sc_scorecard(16.0, 31.2, 0.4, True)['proved_wrong']
+    assert N.sc_scorecard(5.0, 0.4, 0.4, True)['proved_wrong']   # no W1 gain to compare with: never a pass
+
+
 def test_sleep_sc_hook_off_is_sleep_and_row_losses():
     import os, pytest, torch
     from creative import sleep

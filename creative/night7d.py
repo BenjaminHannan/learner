@@ -435,6 +435,20 @@ def sc_marks(harm_passes, c2_point, reach_point, sc_drop, w1_drop):
     return dict(harm=bool(harm_passes), first_try=f, reach32=r, passes=bool(harm_passes and f and r), proved_wrong=bool(sc_drop > w1_drop - 1.0))
 
 
+SC_SCORECARD = dict(source="big-run PLAN.md SCORECARD 10-09 row 5 (11:00 AM ET); added to the report before the run, alongside the roadmap's SC_MARKS",
+                    gain="gain = C2 DEV first try minus N' first try (points); ratio = SC gain / W1 gain (W1 = the same night with hand-picked uniform skills replay)",
+                    passes="ratio >= 0.9 and harm_measure(N' DEV hits, SC DEV hits) passes (in_dist drop <= 1.5, no family fires); the verdict needs both parents",
+                    proved_wrong="harm_measure(N', SC) fires or ratio < 0.5; the verdict needs both parents (either parent is reported too)",
+                    scope="this SC picks only its replay rows; the scorecard row also names nights and temperature, which this run does not let the model pick")
+
+
+def sc_scorecard(sc_ft, w1_ft, n_ft, harm_passes):
+    """Pure. First-try percents for SC, W1 and N' -> the scorecard marks on one parent."""
+    g_sc, g_w1 = sc_ft - n_ft, w1_ft - n_ft
+    ratio = g_sc / g_w1 if g_w1 > 0 else float('nan')
+    return dict(gain_SC=g_sc, gain_W1=g_w1, ratio=ratio, harm=bool(harm_passes), passes=bool(ratio >= 0.9 and harm_passes), proved_wrong=bool(not harm_passes or not ratio >= 0.5))
+
+
 def sc_verdict(per_parent):
     """Pure. {parent: sc_marks} -> passes on every parent, proved_wrong on every parent, where the parents disagree."""
     return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
@@ -702,6 +716,10 @@ def screport(out, parents):
     pm = {p: {k: x['marks'][k] for k in ('harm', 'first_try', 'reach32', 'passes', 'proved_wrong')} for p, x in res.items()}
     rep = dict(parents=list(parents), per_parent=pm, verdict=sc_verdict(pm), rules=SC_MARKS, recipe=SC_RECIPE,
                tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], night=x['night'], selection=x['selection']) for p, x in res.items()})
+    ft = lambda x, a: 100 * x['c2_dev'][a]['first_try_right']
+    sp = {p: sc_scorecard(ft(x, 'SC'), ft(x, 'W1'), ft(x, 'N'), x['marks']['harm']) for p, x in res.items()}
+    rep['scorecard'] = dict(rules=SC_SCORECARD, per_parent=sp, verdict=dict(passes=all(m['passes'] for m in sp.values()), proved_wrong=all(m['proved_wrong'] for m in sp.values()),
+                                                                           proved_wrong_either=any(m['proved_wrong'] for m in sp.values())))
     json.dump(rep, open(os.path.join(out, 'sc-report.json'), 'w'), indent=1)
     return rep
 
