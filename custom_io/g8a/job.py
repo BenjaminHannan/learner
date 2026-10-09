@@ -56,12 +56,31 @@ def get_caps(a, pdir):
     """The caps of the whole ladder (addendum F d: set once from the largest pool, the same at every rung), written to the pool dir beside a report of the rows
     of THIS pool and the dev splits that any cap touches (target 0; a run with a touched row stops instead of cutting it)."""
     f = os.path.join(pdir, 'caps.json')
+    pts = C.PTS_ARM in a.arms           # B3 steps-for-all: its caps are g8a/caps_b3s.json, measured with all_steps (the lead writes that file)
+    pts_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3s.json')
+    train_f = os.path.join(pdir, 'train.jsonl')
+    if pts:
+        assert os.path.exists(pts_caps) and a.scale == 1.0, 'PTS needs g8a/caps_b3s.json and --scale 1.0'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.PTS_ARM}, 'PTS pins caps_b3s.json for the whole job: it cannot run beside the B3 / B3G2 arms (their caps are their own)'
+        assert not a.caps_file or json.load(open(a.caps_file)) == json.load(open(pts_caps)), '--caps-file is not caps_b3s.json: PTS pins caps_b3s.json for the whole job'
     if os.path.exists(f):
-        return json.load(open(f))
+        if not pts:
+            return json.load(open(f))
+        # PTS: a cached pool caps.json is used only if it is the pin AND the all_steps report of this very train.jsonl passed (no row over caps, dev included);
+        # otherwise it is measured again below (the report refuses any row longer than the caps' plain_target)
+        try:
+            rep0 = json.load(open(os.path.join(pdir, 'caps_report.json')))
+            if (json.load(open(f)) == json.load(open(pts_caps)) and rep0.get('all_steps') is True and rep0.get('train_bytes') == os.path.getsize(train_f)
+                    and not any(rep0['rows_over_caps'].values()) and not any(rep0['rows_over_caps_dev_with_programs'].values())):
+                return json.load(open(f))
+        except (OSError, ValueError, KeyError):
+            pass
     dev = [os.path.join(pdir, 'dev')] + ([a.big_data] if a.big_data and os.path.isdir(a.big_data) else [])
     own72 = a.own72 or (os.path.join(a.data8a, 'own72') if a.data8a else None)
     web30 = a.web30 or (os.path.join(a.data8a, 'web', 'slice_rung30.jsonl') if a.data8a else None)
     pinned = a.caps_file or (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json') if not (a.recompute_caps or a.cloze_long) else None)      # long-chunk rows (B3) outgrow G1's caps: recompute
+    if pts:
+        pinned = pts_caps               # PTS pins caps_b3s.json (a --caps-file is not taken for it)
     if pinned and a.scale == 1.0:       # addendum G: one set of caps for every rung and every box; a pool row that does not fit stops the job (checked below), nothing is cut
         caps = json.load(open(pinned))
     elif own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
@@ -80,9 +99,11 @@ def get_caps(a, pdir):
     else:       # dry run: the pool's own longest cases
         caps = CP.compute([os.path.join(pdir, 'train.jsonl')] + dev)
     paths = [os.path.join(pdir, 'train.jsonl')] + dev
-    rep = CP.report(caps, paths, progs=True)        # program steps too: a few minutes per pool, against hours of training
-    rep_dev = CP.report(caps, dev, progs=True)
+    rep = CP.report(caps, paths, progs=True, all_steps=pts)        # program steps too: a few minutes per pool, against hours of training
+    rep_dev = CP.report(caps, dev, progs=True, all_steps=pts)
     rep['rows_over_caps_dev_with_programs'] = rep_dev['rows_over_caps']
+    if pts:
+        rep.update(all_steps=True, train_bytes=os.path.getsize(train_f))
     json.dump(caps, open(f, 'w'))
     json.dump(rep, open(os.path.join(pdir, 'caps_report.json'), 'w'), indent=1)
     bad = {k: max(rep['rows_over_caps'][k], rep_dev['rows_over_caps'][k]) for k in rep['rows_over_caps'] if rep['rows_over_caps'][k] or rep_dev['rows_over_caps'][k]}
@@ -183,7 +204,7 @@ def main(argv=None):
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
     if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM} and a.public == 'none', 'with eg_embed only the B2, PT and B3 arms run (plain_lm and the public model have no Gemma front)'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM, C.PTS_ARM} and a.public == 'none', 'with eg_embed only the B2, PT, PTS and B3 arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)
@@ -213,6 +234,9 @@ def main(argv=None):
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
     old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM)]
     cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
+    if C.PTS_ARM in a.arms:
+        assert b2_extra.get('eg_embed'), 'PTS: --b2-extra must carry eg_embed (the G2C3 front, as its PT control)'
+        C.add_pts(a.rung, cfgs, counts, b2_extra)
     if old:
         C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
     for arm_, g_ in ((C.B3_ARM, 1), (C.B3G2_ARM, 2)):

@@ -17,9 +17,10 @@ VOCAB = None
 B2_ARM, PT_ARM, LLM_ARM = 'B2', 'PT', 'LLM'
 B3_ARM = 'B3'
 B3G2_ARM = 'B3G2'
+PTS_ARM = 'PTS'         # B3 steps-for-all: the PT arm with all_steps on, eg_embed on, caps_b3s.json (asked for by name; not in ARMS)
 ARMS = (B2_ARM, PT_ARM, LLM_ARM)                      # the 8a arms (job.py's default); B3 is asked for by name
-ALL_ARMS = ARMS + (B3_ARM, B3G2_ARM)
-MODEL_OF = {B2_ARM: 'ledger', PT_ARM: 'plain_tf_steps_g', LLM_ARM: 'plain_lm', B3_ARM: 'b3', B3G2_ARM: 'b3g2'}
+ALL_ARMS = ARMS + (B3_ARM, B3G2_ARM, PTS_ARM)
+MODEL_OF = {B2_ARM: 'ledger', PT_ARM: 'plain_tf_steps_g', LLM_ARM: 'plain_lm', B3_ARM: 'b3', B3G2_ARM: 'b3g2', PTS_ARM: 'plain_tf_steps_g'}
 LADDER = ('3M', '10M', '30M')                          # the rungs of the 8a table (B2 / PT / LLM); B3 also has '100M'
 B2_S = dict(d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, copy=True)       # today's S, 3,302,481 trained params (q33)
 B2_S_PARAMS = 3_302_481
@@ -196,6 +197,22 @@ def eg_adapter_params(d):
     return 2 * 768 + 768 * d + d
 
 
+def pts_cfg(rung, b2_extra=None):
+    """PTS config (B3 steps-for-all): the PT arm's config with all_steps on. eg_embed is forced on (the G2C3 control's front), so PTS and its PT control
+    differ only by the target; the switch adds no weights, so PTS's count equals PT's under the same caps: 4,022,440 at 3M under caps_b3 (= G2C3). The arm itself
+    pins caps_b3s.json (plain_target 115, not 109): MAX_NEW and MAX_POS grow by 6 and the position table by 6 x d_model parameters, so under its own caps PTS and
+    a PT in the same job count the same, 6 x d_model above G2C3 (tests/test_pts.py measures both)."""
+    cfgs, _ = sizes(rung, dict(b2_extra or {}, eg_embed=True))
+    return dict(cfgs[PT_ARM], all_steps=True)
+
+
+def add_pts(rung, cfgs, counts, b2_extra=None):
+    """Adds the PTS entry to cfgs and counts (in place) and returns them."""
+    cfgs[PTS_ARM] = pts_cfg(rung, b2_extra)
+    counts[PTS_ARM] = n(MODEL_OF[PTS_ARM], cfgs[PTS_ARM])
+    return cfgs, counts
+
+
 def sizes(rung, b2_extra=None):
     """{'B2': cfg, 'PT': cfg, 'LLM': cfg} and the counts."""
     b2 = b2_cfg(rung, b2_extra)
@@ -221,7 +238,7 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
             assert b2 / ref - 1 <= 0.5, f'3M B2 {b2:,} is more than 50% above today\'s {ref:,}: the caps are out of range'
     else:
         assert abs(b2 / r['target'] - 1) <= r['band'], f'{rung} B2 {b2:,} outside {r["target"]:,.0f} +-{100 * r["band"]:.0f}%'
-    for a in (PT_ARM, LLM_ARM):
+    for a in (PT_ARM, LLM_ARM, PTS_ARM):
         if a not in counts:
             continue
         assert abs(counts[a] / b2 - 1) <= PLAIN_BAND, f'{rung} {a} {counts[a]:,} is not within {100 * PLAIN_BAND:.0f}% of B2 {b2:,}'
@@ -236,6 +253,9 @@ def train_args(rung, arm, seed, steps, data, out=None, minutes=None, lr=None, b2
         check_b3(rung, cfgs[arm], g)
     else:
         cfgs, counts = sizes(rung, b2_extra)
+        if arm == PTS_ARM:              # PTS: its own entry (PT's config + all_steps), checked against B2 like PT
+            assert caps, 'PTS needs --caps (caps_b3s.json applied by train.py): without them MAX_NEW / MAX_POS are the default 76 / 288 and a long target is cut at decoding'
+            add_pts(rung, cfgs, counts, b2_extra)
         check_bands(rung, cfgs, counts, exact_3m=not caps)
     a = ['--model', MODEL_OF[arm], '--cfg', json.dumps(cfgs[arm], sort_keys=True), '--data', data, '--steps', str(int(steps)), '--batch', str(BATCH),
          '--lr', repr(lr if lr is not None else RUNGS[rung]['lr']), '--seed', str(seed), '--log-every', '500', '--final-eval', '--max-ans', str(max_ans)]

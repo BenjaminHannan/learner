@@ -45,8 +45,8 @@ class PlainStepsG(PlainTFSteps):
     eg_proj(ln_eg(H)), H = EmbeddingGemma's state of the token holding that char (models/eg.py, aligned per char), at the real prompt positions only (BOS, SEP, the
     steps / answer positions and padding get nothing). eg_proj is zero-initialised and built last, so at step 0 the model computes exactly what the same-seed model
     without the front computes. The frozen part is held in a list (never trained, counted or saved); ln_eg + eg_proj count as trained parameters."""
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None, eg_embed=False, eg_path=None):
-        super().__init__(vocab, d_model, n_layers, n_heads, n_loops, place)
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None, eg_embed=False, eg_path=None, all_steps=False):
+        super().__init__(vocab, d_model, n_layers, n_heads, n_loops, place, all_steps)
         h = int(hidden) if hidden is not None else int(mlp * d_model)
         if h != 4 * d_model:      # only then are the blocks rebuilt, so the default really is plain_tf_steps
             self.blocks = nn.ModuleList(FlexBlock(d_model, n_heads, h) for _ in range(n_layers))
@@ -98,6 +98,7 @@ class PlainLM(PlainStepsG):
     def __init__(self, *a, eg_embed=False, **kw):
         assert not eg_embed, 'plain_lm has no EmbeddingGemma front (8a-G fronts the step arm, plain_tf_steps_g, only)'
         super().__init__(*a, **kw)
+        assert not self.all_steps, 'plain_lm reads target_text (no all_steps); the steps-for-all arm is PTS (plain_tf_steps_g)'      # after init: also catches a positional all_steps
 
     def _sequences(self, batch):
         """-> seq [B, W] ids (PAD after the end), tgt [B, W] (-100 where not supervised), W. tgt[i, j] is the id the model must emit at position j."""
