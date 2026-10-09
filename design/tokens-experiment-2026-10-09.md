@@ -72,9 +72,13 @@ position + place + Gemma). The ~0.66M freed weights go to the thinker's feed-for
 - TK and TKN, seeds 400 and 401, BensPC, B2 arm only (`--arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}'`, TKN adds
   `"reader_layers": 0` and its `mlp`), same accum as G1's B2 run of that seed. Control = G1's own G-B2 3M run of the same seed (s400 done:
   73.01 pooled-5; s401 running).
-- When: after G1's last job. Order relative to G2 (finished-design size test) and H1R is the big-run thread's call; my default is TK
-  before G2, so that if tokens pass, G2 tests the token version once instead of twice.
-- PC time (not free; the PC is the project's bottleneck): about 6.5 h per run at G1's 3M pace (s400: 23,422 s), so about 26 h for 4 runs.
+- Where and when (big-run REPLAN, 10:55 AM ET 10-09): on the M3 Pro Mac when it arrives, or on the M1 Pro after the experts test (GX)
+  stage 1; no longer on the PC between GX and G2. **Kill-first order:** TK seed 400 first; if it hits the proved-wrong line, stop (TKN
+  is then read as in sec. 5 only if it already ran); otherwise TK seed 401, then TKN 400 and 401. Results land before the 30M freeze
+  (REPLAN: 10-19 to 10-23). On a Mac, run the test file on its device first (the pool uses scatter_reduce 'amax' and index_add) and
+  disclose fp32 if bf16 is not used; the G1 controls ran bf16 on the PC.
+- Time: about 6.5 h per run on the PC at G1's 3M pace (s400: 23,422 s); on a Mac several times longer (REPLAN: an M3 Pro about 1-1.5 days
+  per 3M seed, untested), so several days for 4 runs.
 - Judge: pooled-5 over 6,040 rows, chain-5 and loops:0 as for G1 (`custom_io/analyze_8a.py` numbers).
 - **Cost check at 2,000 letters (report-only, standalone script, CPU-built, run on the PC in minutes):** both arms rebuilt with max_prompt
   2,000 (position table and word/number caps re-sized the same way in both; these memory-only builds are not the trained models and skip
@@ -136,3 +140,22 @@ Branch claude/project-thread-qtxfp4 from 612f5c5b0 + the overlay. Requirements:
 - Tests: pooling against a hand-worked prompt; masks; padding rows; prompts whose first token merges with the prefix; TKN size within 0.5%.
 - The sec. 4 cost script.
 - PC staging (job card, code tree) goes through Ben's Mac session after G1, with his go there.
+
+## Addendum A (10:58 AM ET Fri Oct 9, before any run): kill-first order and the Macs
+
+From the big-run REPLAN (10:55 AM ET 10-09, substitution 1, after Ben's 10:43 AM ET "as cheap as possible ... as soon as possible").
+Marks M1-M5 and the window lines are unchanged; only the order, the stop rule between runs and the machine change.
+- **Order:** TK seed 400 alone first; then TK seed 401; then TKN seed 400; then TKN seed 401. Each next run starts only after the
+  previous one is scored (`custom_io/g8a/analyze_tk.py --stop-check`).
+- **Stop after TK seed 400** if, on that seed alone, pooled-5 TK minus G-B2 <= -2.0, or (only when M3 is judged: G-B2 seeds 400 and 401
+  within 10 points on cipher_map) cipher_map TK more than 20 points below G-B2 (120 rows). Then TK reads "proved wrong (seed 400,
+  kill-first)" and TKN does not run. This turns the 2-seed proved-wrong line into a 1-seed stop line. At a paired single-seed sd of
+  about 0.78 (0.55 x sqrt 2), a true zero difference hits -2.0 about 0.5% of the time (suggested).
+- **Stop after TKN seed 400** if, on that seed alone, pooled-5 TKN minus TK seed 400 <= -2.0, or cipher_map TKN more than 20 below TK.
+  Then the window question reads "window needed (seed 400, kill-first)" and TKN seed 401 does not run.
+- **Machine:** the M3 Pro when it arrives, or the M1 Pro after the experts test's stage 1 (REPLAN). On a Mac the runner drops bf16
+  (`local_runner.py:156`), so TK runs fp32 against G1's bf16 controls from the PC; disclosed in the readout, marks unchanged. A short
+  device check on the Mac (the tests and a few training steps on mps) comes first, since the pooling uses scatter_reduce 'amax' and
+  index_add (the runner sets PYTORCH_ENABLE_MPS_FALLBACK=1, so an unsupported op falls back to the CPU and is only slower).
+- **Time (suggested, untested):** G1's 3M run took 6.5 h on the PC; a Mac is several times slower, so roughly 1 to 1.5 days per run on
+  the M3 Pro and more on the M1 Pro. Kill-first saves up to 3 runs.

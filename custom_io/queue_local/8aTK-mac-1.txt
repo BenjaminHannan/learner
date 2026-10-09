@@ -1,0 +1,6 @@
+# Mac queue for test TK / TKN (design/tokens-experiment-2026-10-09.md, Addendum A: kill-first order). Card: custom_io/queue_local/8aTK-card.md. Run on ONE Mac device only (a pairing is fair only on one device). No ENV lines: the Mac card sets PYTHONPATH and CUSTOM_IO_EG2. Same args as 8aTK-pc.txt.
+# step 1 of 3: TK seed 400 alone. Then the stop check (analyze_tk --stop-check TK); only on CONTINUE and Ben's go, 8aTK-mac-2.txt.
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aTK-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}' --accum B2=4
