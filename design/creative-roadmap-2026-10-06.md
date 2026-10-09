@@ -921,6 +921,13 @@ Ruled:
   - s200-s205, with job 9's N' and W night-1 records, on DEV and the same skills sets;
   - the same marks on at least 5 of 6 parents, with the pooled L - none gain interval above 0.
   - The nightly recall step then uses L.
+- **Build rulings (10-09, before any full run; fast-sleep 9b2c17752, `creative/gate7b.py`):**
+  - Leave-one-out is at question level. The 835 records come from 551 questions. With only the record itself left
+    out, a sibling record from the same question stays in the notebook at similarity about 1.0. A DEV question never
+    has that, so the gate could learn to over-trust near-copies. Every note from the same source question is
+    dropped. This clarifies the sealed "itself left out" to match what DEV sees; the sibling count is reported.
+  - The gate's training settings are the builder's defaults, fixed now: 16 hidden units, 600 full-batch Adam steps,
+    lr 0.03, recorded in the report. They are not tuned on DEV or after any result.
 - **Later (B3):** the notebook becomes a recall tool that replies with stored programs as text the model can adapt.
   Today's notebook replays slot ids, so 3x+7 cannot become 5x+2 (affine 0%, shown). Its marks come with its build.
 
@@ -1823,3 +1830,5 @@ CPU):
   0.5x on both (wording clarified by the big-run thread, 11:04 AM ET). The old SC
   lines are kept as report only. The D6 learned-gate screen is queued after job 9, and first try after sleep on B3
   3M once it exists.
+- **10-09, 11:45 AM ET:** D6 gate screen build rulings before the full run: leave-one-out at question level, and the
+  builder's gate training settings fixed (16 hidden, 600 Adam steps, lr 0.03). The run waits for job 9's scoring.
