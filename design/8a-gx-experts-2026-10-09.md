@@ -157,5 +157,5 @@ the follow-up test, not a change to this one.
   single-seed miss is one use; one seed's X4 inside its hair band is one use. So a hair miss on X1 plus an X4 hair seed, or X4 hair on both
   seeds, is not a pass. X5's spill part is checked from the PC log by hand (it is not in RESULT.json).
 - **Queue (staged, not started):** `custom_io/queue_local/8aGX-pc.txt` (stage 1, the two 3M runs), `8aGXD-pc.txt` (stage 2, held),
-  card `8aGX-card.md`. Not before G1's last job is done and Ben's go in the Mac session.
+  card `8aGX-card.md`. Not before G1's last queue is done (no local_runner running; 8aG1s401, or 8aG1f) and Ben's go in the Mac session.
 - Marks X1-X5 and D1-D5 unchanged.

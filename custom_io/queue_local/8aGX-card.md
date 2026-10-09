@@ -2,7 +2,7 @@ job: gx (test GX stage 1: 2 runs of GX-3M, one at a time, about 20-24 h; design/
 queue: 8aGX   (stage 2 = queue 8aGXD, HELD until stage 1 reads GO and Ben says go)
 owner: thread "many experts with many layers" (spec and marks); scheduling by the big-run thread
 gpu: yes
-start_when: gate G1's queue 8aG1f has printed "queue 8aG1f-pc done" AND Ben has said go in the Mac session. Never while any G1 job runs.
+start_when: no local_runner process is running on the PC (G1's last queue, 8aG1s401, or 8aG1f if the seed-400 futility check skips s401, has printed "queue <Q>-pc done") AND Ben has said go in the Mac session. Never while any G1 job runs.
 paths: SRC = C:\Users\benja\custom-io\src-8gx (a NEW folder: branch claude/project-thread-x2cm2v at its pushed head; never edit src-8ag or src-8ag-tk)
   WORK = C:\Users\benja\custom-io\work (shared with G1: the 3M pool p10-rung30-s400-a64 and its s401 twin are reused, not rebuilt)
 setup:
