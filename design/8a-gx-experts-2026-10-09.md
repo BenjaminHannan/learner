@@ -142,7 +142,7 @@ weights per block (+293k at 3M, +8% of the active count); (3) the paper's eviden
 the expert sets of different rounds overlap (section 4). If GX is GO but the rounds pick nearly the same experts, per-round routers are
 the follow-up test, not a change to this one.
 
-## 10. Addendum C (Fri Oct 9, 11:00 AM ET, after the build, before any run): memory, size check, hair reading, queue
+## 10. Addendum C (Fri Oct 9, 10:50 AM ET, after the build, before any run): memory, size check, hair reading, queue
 
 - **Memory (shown on CPU, fp32, 32 rows, Gemma stubbed; `custom_io/g8a/moe_cost.py`):** computing every expert stores 2.72x G-B2's tensors for
   learning. The build now recomputes the expert step during learning instead of storing it (`moe_ckpt`, on by default; tested: same loss and
