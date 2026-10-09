@@ -1,0 +1,14 @@
+# BensPC RTX 5070 Ti: gate G1d (G1c relaunch, 3M accum 4 after shared-memory spill) = test 8a-G two-seed screen with the 9-register fix (caps.py overlay e9125e9013, sha 3da2dfbb); spec 8AG-GEMMA-GROWTH-SPEC addendum D. Code 612f5c5b01 + caps.py.
+# Both arms read through the same frozen EmbeddingGemma 2 front. Replaces 8aG-pc-screen.txt (held for good).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aG1d-3M-s400 --rung 3M --seed 400 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=4,PT=4
+# MEM 13000
+g8a: 8aG1d-10M-s400 --rung 10M --seed 400 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=4,PT=4
+# MEM 12000
+g8a: 8aG1d-3M-s401 --rung 3M --seed 401 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=4,PT=4
+# MEM 13000
+g8a: 8aG1d-10M-s401 --rung 10M --seed 401 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=4,PT=4

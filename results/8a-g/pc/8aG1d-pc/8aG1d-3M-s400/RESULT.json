@@ -1,0 +1,93 @@
+{
+ "status": "ok",
+ "job": {
+  "rung": "3M",
+  "seed": 400,
+  "steps": 24000,
+  "cfgs": {
+   "B2": {
+    "d": 256,
+    "n_heads": 4,
+    "reader_layers": 2,
+    "blocks": 2,
+    "n_loops": 12,
+    "mlp": 4.8,
+    "copy": true,
+    "eg_embed": true
+   },
+   "PT": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4
+   }
+  },
+  "trained_params": {
+   "B2": 3544913,
+   "PT": 3495936
+  },
+  "lr": 0.001,
+  "lr_scale": 1.0,
+  "caps": {
+   "max_prompt": 280,
+   "max_ans": 35,
+   "n_num": 91,
+   "w_max": 208,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "source": "addendum G caps (roadmap spec section 17): computed once on own72 + the da1a59cf91 rung30 slice + dev; pinned so every rung and every box uses the same shapes"
+  },
+  "maxh": 0,
+  "dph": 0,
+  "accum": {
+   "B2": 4,
+   "PT": 4
+  },
+  "arms": {
+   "B2": {
+    "rc": 0,
+    "status": "ok",
+    "wall_s": 23548.4,
+    "steps": 24000,
+    "steps_per_s": 1.0246510680771155,
+    "n_params": 3544913,
+    "cmd": "C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe -m custom_io.train --model ledger --cfg {\"blocks\": 2, \"copy\": true, \"d\": 256, \"eg_embed\": true, \"mlp\": 4.8, \"n_heads\": 4, \"n_loops\": 12, \"reader_layers\": 2} --data C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64\\caps.json --bf16 --big-data C:\\Users\\benja\\custom-io\\work\\data_big --out C:\\Users\\benja\\custom-io\\work\\results\\8aG1d-pc\\8aG1d-3M-s400\\B2 --accum 4",
+    "accum": 4,
+    "peak_mem_mib": 2850.8
+   },
+   "PT": {
+    "rc": 0,
+    "status": "ok",
+    "wall_s": 8620.4,
+    "steps": 24000,
+    "steps_per_s": 2.8012560658461836,
+    "n_params": 3495936,
+    "cmd": "C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe -m custom_io.train --model plain_tf_steps_g --cfg {\"d_model\": 256, \"eg_embed\": true, \"n_heads\": 4, \"n_layers\": 4} --data C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64\\caps.json --bf16 --big-data C:\\Users\\benja\\custom-io\\work\\data_big --out C:\\Users\\benja\\custom-io\\work\\results\\8aG1d-pc\\8aG1d-3M-s400\\PT --accum 4",
+    "accum": 4,
+    "peak_mem_mib": 2681.3
+   }
+  },
+  "started_unix": 1791501015.5318115,
+  "pool_build_s": 0.5,
+  "pool_train_sha256": "2164859d4f511c56714838a9eced029b359d3028c88c79cbc2eeabe8c58008e8",
+  "pool_schedule": {
+   "seen_pieces_target": 66000000.0,
+   "steps_by_seen": 6096,
+   "update_floor": 24000,
+   "steps": 24000,
+   "floor_rules": true,
+   "row_draws": 6144000,
+   "passes": 4.331,
+   "max_row_draws": 5,
+   "ok_reuse": true,
+   "seen_pieces_actual": 259879179
+  },
+  "b2_extra": {
+   "eg_embed": true,
+   "n_loops": 12
+  },
+  "wall_s": 32169.3,
+  "cost_usd": 0.0
+ }
+}
