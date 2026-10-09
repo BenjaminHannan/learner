@@ -1,0 +1,49 @@
+{
+ "title": "FRESH-R7 repairs (evaluation only, written 2026-10-08 before any R7 scoring)",
+ "note": "Replacement and repair records. raw_A.json and raw_B.json are NOT edited. build_fresh_r7.py swaps the ids listed in 'replaces' into FRESH-R7.json; 'spare' holds r7A_081 (who), which is NOT in the 160-example set because who is already 20 once r7A_077 is restored.",
+ "replaces": {
+  "r7A_077": "r7A_077",
+  "r7A_016": "r7A_016b",
+  "r7A_035": "r7A_035b",
+  "r7B_040": "r7B_040b"
+ },
+ "examples": [
+  {
+   "id": "r7A_077",
+   "family": "who",
+   "source_text": "Vastrin repairs the printing presses at the Dunmar factory on weekdays.",
+   "paraphrase": "Repairing the printing presses at the Dunmar factory on weekdays belongs to Vastrin.",
+   "questions": [{"type": "short_answer", "question": "Who repairs the printing presses?", "canonical_answer": "Vastrin", "accepted_answers": ["Vastrin"]}]
+  },
+  {
+   "id": "r7A_016b",
+   "family": "what",
+   "source_text": "The potters at Oldwick dip every bowl in Velk glaze before they fire it.",
+   "paraphrase": "Before firing, every bowl at Oldwick is dipped by the potters in Velk glaze.",
+   "questions": [{"type": "short_answer", "question": "What do the potters at Oldwick dip every bowl in before firing?", "canonical_answer": "Velk glaze", "accepted_answers": ["Velk glaze"]}]
+  },
+  {
+   "id": "r7A_035b",
+   "family": "where",
+   "source_text": "Ferry crews keep spare rope in the blue locker beside Harrow Pier.",
+   "paraphrase": "Spare rope is kept by the ferry crews in the blue locker beside Harrow Pier.",
+   "questions": [{"type": "short_answer", "question": "Where do the ferry crews keep spare rope?", "canonical_answer": "in the blue locker beside Harrow Pier", "accepted_answers": ["in the blue locker beside Harrow Pier"]}]
+  },
+  {
+   "id": "r7B_040b",
+   "family": "when",
+   "source_text": "Masons from Brenn Yard poured the harbor wall during the second week of June.",
+   "paraphrase": "During the second week of June, the harbor wall was poured by masons from Brenn Yard.",
+   "questions": [{"type": "short_answer", "question": "When did the masons pour the harbor wall?", "canonical_answer": "during the second week of June", "accepted_answers": ["during the second week of June"]}]
+  }
+ ],
+ "spare": [
+  {
+   "id": "r7A_081",
+   "family": "who",
+   "source_text": "Dorrin checks the tickets at the gate before every show begins.",
+   "paraphrase": "Before every show begins, the tickets at the gate are checked by Dorrin.",
+   "questions": [{"type": "short_answer", "question": "Who checks the tickets at the gate?", "canonical_answer": "Dorrin", "accepted_answers": ["Dorrin"]}]
+  }
+ ]
+}
