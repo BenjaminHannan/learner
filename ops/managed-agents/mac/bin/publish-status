@@ -1,0 +1,29 @@
+#!/bin/bash
+# Publish the worker's status and action log to the pc-status branch.
+# The branch keeps a single amended commit, so it never grows a long history.
+set -u
+OPS="${LEARNER_OPS:-$HOME/learner-ops}"
+REPO="$OPS/status-repo"
+WORK="$OPS/worker"
+if [ ! -d "$REPO/.git" ]; then
+    echo "PUBLISH=skipped (no status repo; rerun setup.sh)"
+    exit 0
+fi
+cp "$WORK/status/pc-status.md" "$REPO/pc-status.md" 2>/dev/null || { echo "PUBLISH=skipped (no status file)"; exit 0; }
+cp "$WORK/log/actions.md" "$REPO/actions.md" 2>/dev/null || true
+cd "$REPO" || exit 0
+git add -A
+if git diff --cached --quiet; then
+    echo "PUBLISH=unchanged"
+    exit 0
+fi
+stamp="$(TZ=America/New_York date '+%Y-%m-%d %H:%M ET')"
+git -c user.name="pc-operator" -c user.email="pc-operator@users.noreply.github.com" \
+    commit -q --amend -m "BensPC status $stamp" 2>/dev/null \
+  || git -c user.name="pc-operator" -c user.email="pc-operator@users.noreply.github.com" \
+    commit -q -m "BensPC status $stamp"
+if git push -q --force origin HEAD:pc-status 2>/dev/null; then
+    echo "PUBLISH=pushed $stamp"
+else
+    echo "PUBLISH=push-failed"
+fi

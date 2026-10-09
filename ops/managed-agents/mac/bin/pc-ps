@@ -1,0 +1,31 @@
+#!/bin/bash
+# Run one PowerShell script (argument or stdin) on BensPC.
+# Short scripts go as -EncodedCommand (UTF-16LE base64), so no quoting layer applies. Long ones are
+# copied over with scp and run with -File, because cmd.exe caps a command line at 8191 characters.
+set -u
+HOST="${BENSPC_HOST:-benspc}"
+OPTS=(-o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2)
+PS="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass"
+REMOTE_DIR="C:/Users/benja/learner-ops"
+
+if [ $# -gt 0 ]; then
+    script="$*"
+else
+    script="$(cat)"
+fi
+encoded="$(printf '%s' "$script" | iconv -f UTF-8 -t UTF-16LE | base64 | tr -d '\n')"
+if [ "${#encoded}" -le 7000 ]; then
+    exec ssh "${OPTS[@]}" "$HOST" "$PS -EncodedCommand $encoded" </dev/null
+fi
+
+local_file="$(mktemp "${TMPDIR:-/tmp}/pc-ps.XXXXXX")" || exit 1
+trap 'rm -f "$local_file"' EXIT
+# UTF-8 with a byte-order mark, so Windows PowerShell 5 reads non-ASCII text correctly.
+{ printf '\xef\xbb\xbf'; printf '%s\n' "$script"; } > "$local_file"
+remote_file="$REMOTE_DIR/pc-ps-$$.ps1"
+ssh "${OPTS[@]}" "$HOST" "$PS -Command \"New-Item -ItemType Directory -Force -Path '$REMOTE_DIR' | Out-Null\"" </dev/null || exit 1
+scp -q "${OPTS[@]}" -- "$local_file" "$HOST:$remote_file" || exit 1
+ssh "${OPTS[@]}" "$HOST" "$PS -File $remote_file" </dev/null
+status=$?
+ssh "${OPTS[@]}" "$HOST" "$PS -Command \"Remove-Item -LiteralPath '$remote_file' -ErrorAction SilentlyContinue\"" </dev/null
+exit $status
