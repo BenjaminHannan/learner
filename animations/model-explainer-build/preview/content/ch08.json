@@ -1,0 +1,369 @@
+{
+ "kicker": "Part 8 of 14",
+ "title": "Practice, one small nudge at a time",
+ "blurb": "How the model learns: it tries a question, is shown the right answer, and every setting moves a tiny bit. This part covers the practice loop, the data, the fairness rules and the cost.",
+ "accent": "learned",
+ "scenes": [
+  {
+   "id": "s01",
+   "duration": 22,
+   "heading": "Where we are: practice sets the numbers",
+   "caption": [
+    "Practice sets the numbers inside the thinker, the call writer, the stop switch and the talker.",
+    "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
+   ],
+   "labels": {
+    "reader": "frozen",
+    "thinker": "learned",
+    "calc": "hand-written",
+    "stop": "learned",
+    "talker": "learned"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 table (lines 29-38: reader borrowed and frozen; thinker, stop, talker learned; calculator hand code, allowed as a tool)",
+    "kit/GLOSSARY.md (frozen, hand-written, learned)"
+   ],
+   "notes": "The stop switch (H1) is built but never run; the chip says what the part is meant to be (learned). Statuses per part are shown in earlier chapters."
+  },
+  {
+   "id": "s02",
+   "duration": 26,
+   "heading": "The loop: try, check, nudge",
+   "caption": [
+    "The model tries a question.",
+    "It is shown the right answer.",
+    "Then every setting moves a tiny bit. One nudge is one update."
+   ],
+   "labels": {
+    "q": "12 minus 5 = ?",
+    "try": "its try: 6",
+    "key": "right answer: 7",
+    "settings": "settings",
+    "nudge": "nudge",
+    "pic": "picture only: made-up question",
+    "model": "the model"
+   },
+   "src": [
+    "kit/GLOSSARY.md (practice = try, told the right answer, every setting nudged; one nudge = one update)",
+    "architecture/model-deep-dive.html line 156-165 (How it learns: question, model tries, compare to the key, nudge the weights, repeat)"
+   ],
+   "notes": "The question, the wrong try and the needle angles are all made up to show the idea."
+  },
+  {
+   "id": "s03",
+   "duration": 30,
+   "heading": "24,000 updates of 256 rows each",
+   "caption": [
+    "Each update looks at 256 practice rows, then nudges every setting once. The 3M test copy did 24,000 updates.",
+    "Our multiplication: 24,000 × 256 = 6,144,000 row draws. The pool has 1,418,702 rows, so rows come round again."
+   ],
+   "labels": {
+    "updates": "updates",
+    "rows": "rows per update",
+    "draws": "row draws",
+    "mult": "our multiplication",
+    "div": "÷ 1,418,702 pool rows = about 4.3 draws each",
+    "chip": "3M, seed 400"
+   },
+   "src": [
+    "animations/source-g1-3m-s400.json G-B2 updates 24000",
+    "architecture/EXPERTS-TEST-2026-10-09.md lines 36-38 (24,000 updates of 256 rows)",
+    "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md line 166 (pool train file 1,418,702 rows)",
+    "whole-model-roadmap/8A-SPEC-2026-10-07.md line 253 (B1: about 3.9 passes, an estimate before the run)"
+   ],
+   "notes": "Computed by us: 24,000 x 256 = 6,144,000; 6,144,000 / 1,418,702 = 4.33. The spec's earlier estimate was about 3.9 passes; we show our own division, labelled. Not 6.1 million different questions.",
+   "nums": {
+    "updates": 24000,
+    "rows": 256,
+    "draws": 6144000
+   }
+  },
+  {
+   "id": "s04",
+   "duration": 30,
+   "heading": "The recipe: how each nudge is made",
+   "caption": [
+    "AdamW is the nudging rule. The learning rate is how big a nudge may be.",
+    "It peaks at 1e-3 after a warm-up, then falls to 10% of the peak.",
+    "Numbers are stored short (bf16), rows come shuffled, and the start is random."
+   ],
+   "labels": {
+    "adamw": "AdamW",
+    "bf16": "bf16",
+    "shuf": "shuffled",
+    "rand": "random start",
+    "clip": "nudge cap 1.0",
+    "y": "size of nudge",
+    "x1": "24,000 updates",
+    "warm": "warm-up",
+    "peak": "1e-3",
+    "tenth": "10% of peak",
+    "pic": "picture only"
+   },
+   "src": [
+    "architecture/EXPERTS-TEST-2026-10-09.md lines 36-38 (AdamW, lr 1e-3, grad clip 1.0, bf16, 24,000 updates of 256 rows)",
+    "architecture/model-deep-dive.html line 165 (older recipe: AdamW, lr 1e-3 with warm-up then cosine fall to 10%, batch 256, bf16, shuffled order, from random start)",
+    "whole-model-roadmap/8A-SPEC-2026-10-07.md line 93 (as q33: AdamW, bf16, batch 256)"
+   ],
+   "notes": "Warm-up and the fall to 10% come from the older recipe page, which G1 inherits 'as q33'; the warm-up length is not in the sources so the curve is a picture only."
+  },
+  {
+   "id": "s05",
+   "duration": 31,
+   "heading": "What it practises on",
+   "caption": [
+    "The 3M test copy practised on a pool of 60 million pieces of text (GPT-2 word pieces).",
+    "38% is our own text: practice questions and teaching rows. 62% is web text.",
+    "The TEACH rows were written earlier by a 1.2-billion-number teacher model."
+   ],
+   "labels": {
+    "own": "our own text",
+    "web": "web fill-in rows",
+    "skills": "skills set: made by our code",
+    "skillsN": "200,000 questions",
+    "teach": "TEACH set",
+    "teachN": "171,940 rows",
+    "pool": "60 million pieces",
+    "chip": "tested: 3M copy"
+   },
+   "src": [
+    "whole-model-roadmap/8A-10M-RESULT-2026-10-08.md line 5 (60M-piece pool: 38% our questions, 62% web fill-in rows)",
+    "whole-model-roadmap/8A-SPEC-2026-10-07.md lines 71-74 (20M/60M/190M word pieces, GPT-2 count; 38% own text = generator rows plus TEACH; 62% web)",
+    "no-hardcoding/LIMIT-COUNTS-2026-10-07.json train rows 200000",
+    "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 250, 265, 393 (TEACH 171,940 kept rows, PR #46; written by the 1.2B teacher; no new teacher rows)"
+   ],
+   "notes": "Shares are of pieces, not of rows. 200,000 is the skills practice set only. TEACHING_TO_TEST_CONTRACT.md is an older design memo, unrelated to these TEACH rows, and was not used.",
+   "nums": {
+    "own": 38,
+    "web": 62
+   }
+  },
+  {
+   "id": "s06",
+   "duration": 38.5,
+   "heading": "Web text: fill in the missing word",
+   "caption": [
+    "FineWeb-Edu web text: a script blanks one word of 3 to 12 letters, and the model must name it.",
+    "Each prompt holds at most 280 letters, blank included, in the 3M runs; the finished design's long pool goes up to 2,000.",
+    "It learns to read English, not write it. Rows without steps add a faint no-call label, weight 0.1."
+   ],
+   "labels": {
+    "pre": "Plants make food from",
+    "post": ", water and air.",
+    "word": "sunlight",
+    "ex": "made-up example",
+    "b1": "280 letters",
+    "b2": "2,000 letters",
+    "b1chip": "tested",
+    "b2chip": "never run",
+    "w": "no-call weight"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 11 (lines 140-146)",
+    "custom_io/g8a/cloze.py lines 12, 21-22 (prompt <= 280 chars with blank; chunk text itself capped at 279; blanked word 3..12 letters; rows made by a script)",
+    "custom_io/models/ledger.py line 140 and tool.py line 125 (w_noop=0.1)"
+   ],
+   "notes": "FineWeb-Edu = free human-written web text. The example sentence is made up; real rows come from FineWeb-Edu. The 2,000-letter pool (cloze_long, --cloze-long) is built but never run.",
+   "nums": {
+    "b1": 280,
+    "b2": 2000,
+    "w": 0.1,
+    "lo": 3,
+    "hi": 12
+   }
+  },
+  {
+   "id": "s07",
+   "duration": 35,
+   "heading": "Worked steps: practising each call",
+   "caption": [
+    "Where a row has worked steps, the answer key gives the right call each round.",
+    "Call loss: was the call slip right? After the last call, the right slip is no call.",
+    "Answer loss: is the final answer right? Counted from the last call round on."
+   ],
+   "labels": {
+    "round": "round",
+    "r1": "1",
+    "r2": "2",
+    "r3": "3",
+    "key": "answer key",
+    "cw": "call writer",
+    "c1": "sub 12 5 = 7",
+    "c2": "add 7 3 = 10",
+    "c3": "no call",
+    "ans": "answer 10",
+    "callLoss": "call loss",
+    "ansLoss": "answer loss",
+    "ex": "made-up example",
+    "chip": "built, never run"
+   },
+   "src": [
+    "architecture/B3-GROUP1-BUILD-2026-10-09.md lines 53-60 (teacher forcing: op loss on the gold call each call round and no-call after the last; answer loss from the last call round on)",
+    "architecture/model-deep-dive.html line 165 (older write-up: losses for operation, pointers, answer, spelling)"
+   ],
+   "notes": "This is the finished design's loss schedule (B3 group 1): built, never run. The 3M test copy was an older design with its own losses."
+  },
+  {
+   "id": "s08",
+   "duration": 31.5,
+   "heading": "Teacher forcing: practice follows the key",
+   "caption": [
+    "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess.",
+    "At test time there is no key. The model writes its own calls.",
+    "Not every row has steps: 62.5% of the skills rows have none (an older page said only 11 families had them)."
+   ],
+   "labels": {
+    "lane1": "practice",
+    "lane2": "test",
+    "k": "key's call",
+    "r": "reply",
+    "n": "next round",
+    "g": "own guess: graded",
+    "o": "own call",
+    "none": "no steps"
+   },
+   "src": [
+    "architecture/B3-GROUP1-BUILD-2026-10-09.md lines 49-53, 67-71 (running with no teacher vs teacher forcing; gold calls fed in a free run give the same thinker states)",
+    "architecture/FINISHED-MODEL-2026-10-09.md line 143 (62.5% of the skills rows the 3M models trained on have no worked steps)",
+    "architecture/model-deep-dive.html line 165 (only 11 arithmetic families have teacher steps; older B2)"
+   ],
+   "notes": "Finished-design behaviour (built, never run). The 62.5% is a share of skills rows and comes from FINISHED; the older page speaks of 11 families.",
+   "nums": {
+    "share": 62.5
+   }
+  },
+  {
+   "id": "s09",
+   "duration": 34.5,
+   "heading": "Fair practice: three rules",
+   "caption": [
+    "Rule 1: no answer is cut short. A longer answer is counted, and any count above 0 fails.",
+    "Rule 2: exam questions are kept apart: 6,040 questions are never used in practice.",
+    "Rule 3: web text is scanned against exam sets. The 3M runs started before the last check, still pending."
+   ],
+   "labels": {
+    "c1": "No answer cut short",
+    "c1a": "T1SDR runs: 0 of 200,000 over 8 letters",
+    "c1b": "B3 cap: 35 letters",
+    "c1chip": "built, never run",
+    "c2": "Kept aside",
+    "c3": "Web gate",
+    "c3chip": "check pending"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 lines 79-82 (0 of 200,000 over 8 letters in T1SDR runs; B3 caps_b3 writes up to 35 letters, counts longer ones; any count above 0 fails its sealed mark)",
+    "no-hardcoding/PLAN-AND-MARKS-2026-10-07.md sec. 2 (nothing is cut off; every limit listed with rows touched) and no-hardcoding/LIMIT-COUNTS-2026-10-07.json",
+    "whole-model-roadmap/8A-SPEC-2026-10-07.md line 115 (pooled-5 = 6,040 dev rows), lines 84-90 and A1 lines 179-184 (overlap scan; never trained on the dev splits; 3M runs may start before the protected-panel check)",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 12 (web pool gate; hash file waits on a Mac job). DATA-POOL-PLAN sec. 6 and 10 is not in the project snapshot and was not read."
+   ],
+   "notes": "Present as a rule plus a check, not a guarantee. 8a's B2 had answers cut to 8 letters by a settings bug (8A-10M-RESULT correction); G1 is the fixed re-run. 6,040 = 1360+1200+1360+800+1320 (LIMIT-COUNTS dev splits).",
+   "nums": {
+    "kept": 6040
+   }
+  },
+  {
+   "id": "s10",
+   "duration": 37.5,
+   "heading": "Time: our model versus the plain model",
+   "caption": [
+    "Ours did 24,000 updates on the project's PC: 1.02 updates a second, 6.51 hours.",
+    "Plain: 2.8 a second, 2.38 hours (its update count was not logged; the plan's floor is 24,000). Our division: 6.51 ÷ 2.38, about 2.7 times longer.",
+    "A plan, not a result: the 100M run is estimated at 3 to 5 weeks on this PC."
+   ],
+   "labels": {
+    "ours": "our model",
+    "plain": "plain model",
+    "hrs": "hours",
+    "chip": "tested: 3M, one copy",
+    "plan": "plan only",
+    "weeks": "100M: 3 to 5 weeks",
+    "ratio": "times longer (our division)"
+   },
+   "src": [
+    "animations/source-g1-3m-s400.json G-B2 updates_per_s 1.02, train_hours 6.51; G-PT updates_per_s 2.8, train_hours 2.38",
+    "whole-model-roadmap/8A-SPEC-2026-10-07.md lines 250-251 (every arm trains at least 24,000 updates of 256 rows)",
+    "big-run/PLAN.md sec. 6 (lines 274-275: about 23 to 32 days, so 3 to 5 weeks on the PC, suggested; not run)"
+   ],
+   "notes": "Only ours has updates=24000 in the run JSON; the plain model's update count is NOT logged. The spec sets 24,000 as the least for every arm, and 2.8 x 3600 x 2.38 = 23,990 is consistent with it (our inference, not a logged count), so the caption says floor, not \"both did\". Our division 6.51 / 2.38 = 2.74. Older design (calculator inside, 12 rounds).",
+   "nums": {
+    "oursH": 6.51,
+    "plainH": 2.38,
+    "ratio": 2.7
+   }
+  },
+  {
+   "id": "s11",
+   "duration": 36,
+   "heading": "Why the thinker is harder to train",
+   "caption": [
+    "The same blocks run every round, so the lesson from a wrong answer must travel back through all of them.",
+    "To save memory, training redoes some work instead of storing it: about a third more compute (plan estimate).",
+    "Depth has a known cost: on one old probe, 16 rounds cost 1.2 to 1.9 points. At 100M it is an open risk."
+   ],
+   "labels": {
+    "rounds": "rounds",
+    "fwd": "answer goes forward",
+    "back": "the lesson goes back",
+    "chip": "never run",
+    "pic": "picture only",
+    "r1": "1",
+    "r2": "2",
+    "r3": "3",
+    "dots": "...",
+    "r32": "32"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 13 (line 149: 16 rounds cost 1.2-1.9 points on one B2 probe; open risk for 100M) and line 186 (H1 back-propagates through every round with checkpointing)",
+    "custom_io/models/tool_h1.py lines 22-24 (rounds 9..32 gradient-checkpointed: same values, less memory)",
+    "big-run/PLAN.md sec. 6 line 274 (checkpointing recomputes about a third more)",
+    "no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 (16 rounds cost 1.2-1.9 points, one seed; FINISHED cites line 31)"
+   ],
+   "notes": "The 'third more' is a suggested plan estimate. The 100M fit in 16 GB with 32 rounds is untested."
+  },
+  {
+   "id": "s12",
+   "duration": 20,
+   "heading": "What changes after practice",
+   "caption": [
+    "The model's size stays the same. Only the values of its settings change, by many tiny nudges.",
+    "Real before-and-after values are not shown here. This is an idea, drawn as a picture."
+   ],
+   "labels": {
+    "before": "before: random start",
+    "after": "after: 24,000 updates",
+    "pic": "picture only"
+   },
+   "src": [
+    "architecture/model-deep-dive.html line 165 (from random start; nudge the weights, repeat 24,000 times)",
+    "No source lists real before and after setting values, so none are shown."
+   ],
+   "notes": "All needle positions are decoration."
+  },
+  {
+   "id": "s13",
+   "duration": 26.5,
+   "heading": "Recap: what to remember",
+   "caption": [
+    "Practice is try, check against the key, nudge: 24,000 updates of 256 rows.",
+    "Rows are our questions, teaching rows and web blanks, with exam questions kept apart.",
+    "At 3M ours took about 2.7 times longer than the plain model; the finished design is not trained yet."
+   ],
+   "labels": {
+    "t1": "the loop",
+    "t2": "the rows",
+    "t3": "the cost"
+   },
+   "src": [
+    "see scenes s02, s03, s05, s06, s09, s10 of this chapter",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 6 (B3 group 1's first run comes after G1)"
+   ],
+   "notes": "Recap only; every number is shown earlier.",
+   "nums": {
+    "updates": 24000,
+    "rows": 256,
+    "kept": 6040,
+    "ratio": 2.7
+   }
+  }
+ ]
+}

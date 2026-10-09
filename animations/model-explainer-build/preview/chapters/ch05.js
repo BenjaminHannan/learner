@@ -15,7 +15,7 @@ Kit.chapter('ch05', function (Ch) {
   // s02: why a calculator. Slip out, calculator, slip back.
   Ch.scene('s02', function (S) {
     const c = S.c;
-    const svg = S.svg({ x: 0, y: 190, w: 1920, h: 650 });
+    const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     const slip = S.box({ x: 160, y: 420, w: 430, h: 150, label: c.labels.slip, color: C.call, size: 40 });
     const calc = S.box({ x: 745, y: 380, w: 430, h: 230, label: c.labels.calc, color: C.calc, size: 46 });
     const back = S.box({ x: 1330, y: 420, w: 430, h: 150, label: c.labels.back, color: C.tested, size: 40 });
@@ -33,26 +33,29 @@ Kit.chapter('ch05', function (Ch) {
   // s03: the call writer reads control vector 0 and picks one of nine choices.
   Ch.scene('s03', function (S) {
     const c = S.c;
-    const svg = S.svg({ x: 0, y: 190, w: 1920, h: 650 });
+    const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     const v0 = S.text(c.labels.v0, { x: 160, y: 370, w: 560, size: 36, weight: 700, color: C.thinker });
     const v = S.vec({ x: 160, y: 430, n: 8, cell: 70, gap: 8, dir: 'h', color: C.thinker, seed: 4 });
     const pic = S.chip('placeholder', { x: 160, y: 600, label: c.labels.pic });
-    const cw = S.box({ x: 860, y: 380, w: 380, h: 170, label: c.labels.cw, color: C.call, size: 42 });
-    const a1 = S.arrow(svg, 800, 515, 860, 465, { color: C.soft, width: 6 });
-    const none = S.box({ x: 1400, y: 300, w: 420, h: 110, label: c.labels.none, color: C.soft, size: 36 });
-    const ops = S.box({ x: 1400, y: 470, w: 420, h: 110, label: c.labels.ops, color: C.calc, size: 36 });
-    const a2 = S.arrow(svg, 1240, 465, 1400, 355, { color: C.soft, width: 6 });
-    const a3 = S.arrow(svg, 1240, 465, 1400, 525, { color: C.soft, width: 6 });
+    const cw = S.box({ x: 920, y: 380, w: 380, h: 170, label: c.labels.cw, color: C.call, size: 42 });
+    const a1 = S.arrow(svg, 792, 465, 918, 465, { color: C.soft, width: 6 });
+    const none = S.box({ x: 1440, y: 300, w: 400, h: 110, label: c.labels.none, color: C.soft, size: 36 });
+    const ops = S.box({ x: 1440, y: 470, w: 400, h: 110, label: c.labels.ops, color: C.calc, size: 36 });
+    const a2 = S.arrow(svg, 1302, 465, 1438, 355, { color: C.soft, width: 6 });
+    const a3 = S.arrow(svg, 1302, 465, 1438, 525, { color: C.soft, width: 6 });
     S.show(v0, S.capAt(0));
     S.show(v, S.capAt(0) + 0.2);
     S.show(pic, S.capAt(0) + 0.4);
-    let t = S.draw(a1, S.capAt(1), 0.5);
-    S.show(cw, t);
-    S.draw(a2, t + 0.3, 0.5);
-    S.draw(a3, t + 0.3, 0.5);
-    S.show(none, t + 0.4);
-    S.show(ops, t + 0.6);
-    S.pulse(cw, t + 1.0);
+    // the call writer appears while the first caption says it reads the vector
+    S.show(cw, S.capAt(0) + 1.0);
+    let t = S.draw(a1, S.capAt(0) + 1.6, 0.7);
+    S.pulse(v, t + 0.1);
+    S.pulse(cw, t + 0.1);
+    // the nine choices appear with the second caption
+    S.draw(a2, S.capAt(1), 0.5);
+    S.draw(a3, S.capAt(1), 0.5);
+    S.show(none, S.capAt(1) + 0.4);
+    S.show(ops, S.capAt(1) + 0.6);
   });
 
   // s04: the eight operations, one card each, with made-up example numbers.
@@ -78,7 +81,7 @@ Kit.chapter('ch05', function (Ch) {
   // s05: the copy trick. Pointer lands on the last digit, copy steps left, a stop head says stop.
   Ch.scene('s05', function (S) {
     const c = S.c;
-    const q = S.text(c.question, { x: 160, y: 205, w: 1600, size: 36, color: C.soft });
+    const q = S.text(c.question, { x: 80, y: 205, w: 1600, size: 36, color: C.soft });
     S.show(q, S.at(0.02));
     const L = S.letters('12', { x: 340, y: 300, size: 90 });
     S.stagger(L.cells, S.at(0.03), 0.1);
@@ -88,8 +91,11 @@ Kit.chapter('ch05', function (Ch) {
     const outR = S.box({ x: 1000, y: 600, w: 110, h: 110, label: c.labels.d2, color: C.call, size: 60 });
     const outL = S.box({ x: 1130, y: 600, w: 110, h: 110, label: c.labels.d1, color: C.call, size: 60 });
     S.pop(outR, S.capAt(0) + 0.5);
-    S.tint(L.cells[0], S.capAt(1), { fill: C.call, dur: 0.4 });
-    S.pop(outL, S.capAt(1) + 0.5);
+    // the pointer slides one letter left; only the letter being copied stays lit
+    S.move(ptr, S.capAt(1), 0.8, { x: L.cx(0) - L.cx(1) });
+    S.tint(L.cells[1], S.capAt(1), { fill: '#ffffff', dur: 0.4 });
+    S.tint(L.cells[0], S.capAt(1) + 0.4, { fill: C.call, dur: 0.4 });
+    S.pop(outL, S.capAt(1) + 0.9);
     const stop = S.box({ x: 1300, y: 600, w: 340, h: 110, label: c.labels.stop, color: C.stop, size: 30 });
     S.show(stop, S.capAt(2));
     S.pulse(stop, S.capAt(2) + 0.5);
@@ -103,31 +109,34 @@ Kit.chapter('ch05', function (Ch) {
       const bar = S.card({ x: 1100, y: y + 50, w: b.value / 100 * 560, h: 50, fill: C.tested, r: 6 });
       S.show(bar, t);
       const num = S.text('', { x: 1100 + b.value / 100 * 560 + 16, y: y + 56, w: 220, size: 36, weight: 700, color: C.ink });
-      S.count(num, { from: 0, to: b.value, dec: 1, suf: '%' }, t, 0.8);
+      S.show(num, t);
+      S.count(num, { from: 0, to: b.value, dec: Number.isInteger(b.value) ? 0 : 1, suf: '%' }, t, 0.8);
     });
-    S.show(S.chip('tested', { x: 1100, y: 600, label: c.labels.chip }), S.capAt(3));
+    S.show(S.chip('tested', { x: 1100, y: 222, label: c.labels.chip }), S.capAt(3));
   });
 
-  // s06: a number not in the text is built into 21 cells, last digit first.
+  // s06: a number not in the text is built into 21 cells, units digit first (cell 0), then the next digit, then the end mark.
   Ch.scene('s06', function (S) {
     const c = S.c;
-    const top = S.text(c.labels.cells, { x: 120, y: 290, w: 1600, size: 36, color: C.calc, weight: 700 });
+    const top = S.text(c.labels.cells, { x: 120, y: 330, w: 1600, size: 36, color: C.calc, weight: 700 });
     S.show(top, S.at(0.02));
     const cells = [];
-    for (let i = 0; i < 21; i++) cells.push(S.box({ x: 120 + i * 80, y: 420, w: 74, h: 110, label: '', color: C.calc, fill: C.card, size: 50 }));
+    for (let i = 0; i < 21; i++) cells.push(S.box({ x: 120 + i * 80, y: 460, w: 74, h: 110, label: '', color: C.calc, fill: C.card, size: 50 }));
     S.sweep(cells, S.at(0.05), 0.9);
-    const z = S.text(c.labels.z, { x: 120 + 20 * 80, y: 448, w: 74, align: 'center', size: 60, weight: 700, mono: true, color: C.ink });
-    const o = S.text(c.labels.o, { x: 120 + 19 * 80, y: 448, w: 74, align: 'center', size: 60, weight: 700, mono: true, color: C.ink });
+    const z = S.text(c.labels.z, { x: 120, y: 488, w: 74, align: 'center', size: 60, weight: 700, mono: true, color: C.ink });
+    const o = S.text(c.labels.o, { x: 120 + 80, y: 488, w: 74, align: 'center', size: 60, weight: 700, mono: true, color: C.ink });
+    const e = S.text(c.labels.end, { x: 120 + 2 * 80, y: 506, w: 74, align: 'center', size: 30, weight: 700, mono: true, color: C.calc });
     S.show(z, S.capAt(1));
     S.show(o, S.capAt(1) + 0.9);
-    const first = S.note(c.labels.first, { x: 800, y: 600, w: 900, color: C.calc });
-    S.show(first, S.capAt(1) + 1.5);
+    S.show(e, S.capAt(1) + 1.6);
+    const first = S.note(c.labels.first, { x: 120, y: 610, w: 760, color: C.calc });
+    S.show(first, S.capAt(1) + 2.0);
   });
 
   // s07: the calculator takes call text and replies with text. Div of 12 by 5 gives a question mark.
   Ch.scene('s07', function (S) {
     const c = S.c;
-    const svg = S.svg({ x: 0, y: 190, w: 1920, h: 650 });
+    const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     const inn = S.box({ x: 160, y: 380, w: 460, h: 150, label: c.labels.in, color: C.call, size: 42 });
     const calc = S.box({ x: 730, y: 340, w: 460, h: 230, label: c.labels.calc, color: C.calc, size: 46 });
     const out = S.box({ x: 1290, y: 380, w: 460, h: 150, label: c.labels.out, color: C.tested, size: 42 });
@@ -148,11 +157,11 @@ Kit.chapter('ch05', function (Ch) {
   // s08: the reply goes into the thinker's notes; the question is not read again.
   Ch.scene('s08', function (S) {
     const c = S.c;
-    const svg = S.svg({ x: 0, y: 190, w: 1920, h: 650 });
+    const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     const q = S.box({ x: 160, y: 230, w: 540, h: 150, label: c.labels.q, color: C.soft, size: 36 });
     const cw = S.box({ x: 160, y: 470, w: 540, h: 130, label: c.labels.cw, sub: c.labels.rd2, color: C.call, size: 40, subSize: 32 });
     const calc = S.box({ x: 160, y: 640, w: 540, h: 130, label: c.labels.calc, color: C.calc, size: 40 });
-    const notes = S.card({ x: 800, y: 230, w: 1040, h: 580, fill: C.card, color: C.thinker, r: 18 });
+    const notes = S.card({ x: 800, y: 230, w: 1040, h: 430, fill: C.card, color: C.thinker, r: 18 });
     const nlab = S.text(c.labels.notes, { x: 840, y: 250, w: 800, size: 36, weight: 700, color: C.thinker });
     const r1 = S.box({ x: 840, y: 330, w: 960, h: 120, label: c.labels.r1, sub: c.labels.rd2, color: C.calc, size: 40, subSize: 30 });
     const r2 = S.box({ x: 840, y: 500, w: 960, h: 120, label: c.labels.r2, sub: c.labels.rd3, color: C.calc, size: 40, subSize: 30 });
@@ -174,7 +183,7 @@ Kit.chapter('ch05', function (Ch) {
   // s09: timing today. Round k+1 feeds call k; rounds 9-32 cannot call.
   Ch.scene('s09', function (S) {
     const c = S.c;
-    const svg = S.svg({ x: 0, y: 190, w: 1920, h: 650 });
+    const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     const rounds = c.labels.rounds.map((r, i) => S.box({ x: 160 + i * 160, y: 300, w: 130, h: 100, label: r, color: C.thinker, size: 48 }));
     S.stagger(rounds, S.at(0.03), 0.06);
     const calls = c.labels.calls.map((r, i) => S.box({ x: 160 + (i + 1) * 160, y: 520, w: 130, h: 100, label: r, color: C.call, size: 28 }));

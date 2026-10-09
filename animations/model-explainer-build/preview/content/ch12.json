@@ -1,0 +1,503 @@
+{
+  "kicker": "Part 12 of 14",
+  "title": "Built or planned, not yet proven",
+  "blurb": "Ideas the team has built or planned but not proven. For each one: the question it answers, what exists today, and what result would count as a pass.",
+  "accent": "untested",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 26,
+      "heading": "Where each idea touches the model",
+      "caption": [
+        "These are the ideas on the way to the finished model.",
+        "Almost none has been run. Amber means built, never tested. Grey means a plan only."
+      ],
+      "labels": {
+        "reader": "2,000 letters, tokens",
+        "thinker": "experts",
+        "calc": "calls in any round",
+        "stop": "learned stop",
+        "talker": "one learned writer",
+        "domain": "domain mode",
+        "later": "later plans"
+      },
+      "chips": {
+        "built": "built, never tested",
+        "plan": "plan only",
+        "ran": "run once, not passed"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (B3 groups), sec. 6 (Being tested, Not in run-1)",
+        "sources/pr-56-b3-group1-and-token-test.md (Runs: none yet)",
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md addendum A10 (one run, did not pass)"
+      ],
+      "notes": "BUILD: S.modelMap, no highlight, all five parts + arrows. Under each part a small tag text from labels and an amber S.chip('untested',{label:chips.built}). Below the map two wide cards: 'domain mode' with S.chip('tested',{label:chips.ran}) (the only result in the chapter; a failed run is still a result) and 'later plans' with S.chip('placeholder',{label:chips.plan}). Long-text reading and the other later ideas are grey. Group 1 touches reader (2,000 letters), calc (calls in any round), stop; group 2 touches the writer; tokens touch the reader; experts touch the thinker. Mapping is ours, for orientation."
+    },
+    {
+      "id": "s02",
+      "duration": 31,
+      "heading": "Group 1: four changes in one model",
+      "caption": [
+        "Group 1 puts four changes in one model. A switch is an on/off setting in the code.",
+        "Only two are real switches, both off at the start.",
+        "If the first test fails, turning each switch off, one at a time, shows the cause."
+      ],
+      "labels": {
+        "a": "Gemma, outside calculator",
+        "a_tag": "switch",
+        "b": "calls in any round",
+        "b_tag": "switch",
+        "c": "2,000-letter inputs",
+        "c_tag": "settings file",
+        "d": "learned stop",
+        "d_tag": "always on",
+        "off": "off"
+      },
+      "chip": "built, never tested",
+      "src": [
+        "sources/pr-56-b3-group1-and-token-test.md (After: two real switches eg_embed and any_round, both off by default; caps_b3.json; stop always on; bisect)",
+        "architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 0, sec. 9"
+      ],
+      "notes": "TRAP: PR #56's first paragraph and the spec sec. 0 say 'each of the four is a switch'; the code has TWO (eg_embed, any_round). Show two real switch toggles (shown OFF, small code names as tags eg_embed / any_round next to the plain words) and two boxes with a 'not a switch' tag. Newer wording (PR After paragraph) wins. BUILD: four boxes in a row; a small toggle graphic (card + knob) on the two switch boxes, knob slides to off then both pulse; at the third caption a coral arrow turns one toggle at a time (illustration of the bisect plan). Colours: reader/calc/stop part colours for the three part-related boxes."
+    },
+    {
+      "id": "s03",
+      "duration": 38,
+      "heading": "Calls in any round, on a tape of 16",
+      "caption": [
+        "Tested so far: calls only after rounds 2 to 8. The new build allows any round.",
+        "Each call goes in the next free place on a tape of 16: calls after rounds 2 and 5 fill places 1 and 2.",
+        "In practice, 1 row in 4 gets 0 to 2 extra thinking rounds before each call."
+      ],
+      "labels": {
+        "rounds": "rounds",
+        "tape": "tape of 16",
+        "c1": "call",
+        "c2": "call",
+        "full": "17th: not run, counted",
+        "pic": "picture only",
+        "rnums": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "pl": [
+          "1",
+          "2"
+        ]
+      },
+      "illustration": "picture only: a made-up row of rounds, taken from the build's own test plan",
+      "chip": "built, never tested",
+      "src": [
+        "architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 3 (Tape, Running, Training with gap_p 0.25 and g from 0,1,2; test (b) rounds 2 and 5 give entries 0 and 1 visible from rounds 3 and 6; test (c) the 17th call)",
+        "chapters-out/ch01 s12 (tested model: calls after rounds 2 to 8 only)",
+        "chapters-out/ch05 s10 (tape holds 16 calls, 1 row in 4 gets 0 to 2 extra rounds)"
+      ],
+      "notes": "Max 32 rounds, so the picture shows only some rounds; draw 12 round boxes and an ellipsis, not 32. The 17th-call text: spec says a call when the tape is full is not run and is counted. BUILD: row of round boxes (thinker colour) left to right; a call box (coral) drops from round 2 into tape place 1, later from round 5 into place 2; the reply appears one round later with a thin arrow; then tape of 16 small cells fills; last a grey box for the 17th. Everything finished by 80%."
+    },
+    {
+      "id": "s04",
+      "duration": 38,
+      "heading": "Group 1: the pass marks",
+      "caption": [
+        "Pass marks are fixed before any run, never moved.",
+        "Mark 1: beat the plain model by 3.0 or more points out of 100, on 6,040 kept-aside questions.",
+        "Proved wrong if the lead is under 1.0. Mark 5: no length group may fall over 10 points below the short one."
+      ],
+      "labels": {
+        "axis": "lead over plain model",
+        "wrong": "proved wrong: under 1.0",
+        "mid": "undecided",
+        "pass": "pass: 3.0 or more",
+        "guess": "guess: +3 to +6",
+        "pic": "picture only",
+        "groups": [
+          "280-700",
+          "700-1,300",
+          "1,300-2,000"
+        ],
+        "gt": "length groups, in letters"
+      },
+      "illustration": "picture only: the bar shows the marks, not a result",
+      "chip": "marks B3-1, B3-5: first run after the size test (G1)",
+      "src": [
+        "big-run/PLAN.md sec. 5, 'G2 step 2 marks: B3 group 1 at 3M' table, rows B3-1 and B3-5 (lines 219-229)",
+        "big-run/PLAN.md line 229 (prediction between +3 and +6, suggested)",
+        "big-run/PLAN.md line 39 (first run after the G1 verdict)"
+      ],
+      "notes": "B3-1 compares B3 group 1 (3M, seed 400) with g2c3, the plain 3M control at the same caps and pool, on pooled-5 (6,040 dev rows). Pass +3.0, proved wrong below +1.0; anything between is not decided in the sources. B3-5 length groups 280-700, 700-1,300, 1,300-2,000 letters: pass no group more than 10 under the short one; proved wrong more than 20. The guess (+3 to +6) is labelled as a guess written before the run. Other marks B3-2..B3-4, B3-6 exist; not shown here. BUILD: a horizontal number line 0..6 drawn with three coloured zones (warn orange for below 1.0, grey for between, plain ink for 3.0 or more; no green), a marker labelled 'guess' spans 3 to 6; below, three small length boxes with a '10' bracket. G1 = growth size test (glossary)."
+    },
+    {
+      "id": "s05",
+      "duration": 33,
+      "heading": "Group 2: counting hand-written pieces",
+      "caption": [
+        "Hand-written code is ordinary code a person wrote. The team counted what is left on group 1's answer path.",
+        "Every count must reach 0. Reading and new kinds have the most left."
+      ],
+      "labels": {
+        "stop": "stopping",
+        "arith": "arithmetic",
+        "read": "reading",
+        "write": "writing",
+        "kinds": "new kinds",
+        "mark": "pass mark: 0",
+        "r_stop": "learned stop",
+        "r_arith": "one learned writer",
+        "r_read": "number finder, no place code, raw bytes",
+        "r_write": "one learned writer",
+        "r_kinds": "steps as written, checked tries"
+      },
+      "values": {
+        "stop": 0,
+        "arith": 2,
+        "read": 6,
+        "write": 4,
+        "kinds": 6
+      },
+      "chip": "counted in code, not a run",
+      "src": [
+        "no-hardcoding/INVENTORY-B3-2026-10-09.md 'Summary (scorecard counts)' lines 11-19",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (counts stop 0, arithmetic 2, reading 6, writing 4, new kinds 6; table of N1, O1, P1, V1, L1, ST1)",
+        "architecture/B3-GROUP2-BUILD-2026-10-09.md sec. 1 (parts table)"
+      ],
+      "notes": "Counts are an inventory read in code, group 1 build; not a model result. 'Reading' lists A1,A3,A9,A10,A11,A16 = number finder N1, no place code P1, raw bytes V1; 'writing' lists A12,A14,A15,X1 and arithmetic X1,X2 = one learned writer O1; 'new kinds' B1..B6 = L1 and ST1. Group 2 is code only: its 3M run waits for the G1 test. BUILD: S.hbars with five rows, values count up, a thin dashed line at 0 labelled mark; right of each row an arrow to the replacement text (labels r_*). Amber chip."
+    },
+    {
+      "id": "s06",
+      "duration": 43,
+      "heading": "Group 2: one writer spells the whole call",
+      "caption": [
+        "Today a small head picks one of 8 operations, and code types its name.",
+        "Group 2 replaces both with one learned writer. It spells the call letter by letter, copying numbers from the question.",
+        "A tool added later could then be called too."
+      ],
+      "labels": {
+        "today": "today: 8 fixed names",
+        "ops": [
+          "add",
+          "sub",
+          "mul",
+          "div",
+          "mod",
+          "min",
+          "max",
+          "cmp"
+        ],
+        "thinker": "thinker's notes",
+        "writer": "writer",
+        "q": "Tom has 12 apples and gives away 5.",
+        "call": "sub 12 5",
+        "toy": "Toy check, 500 questions, out of 100: copy a number 100.0; operation and numbers 99.0; thinker-only number 99.8",
+        "pic": "made-up example"
+      },
+      "illustration": "made-up example: Tom's apples are not from a test",
+      "chip": "code only, never run",
+      "src": [
+        "architecture/B3-GROUP2-BUILD-2026-10-09.md sec. 0 and sec. 2 (the writer)",
+        "architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 8 (the call writer must write the WHOLE call as letters so a tool added later can be called)",
+        "big-run/PLAN.md addendum 2:10 PM ET item 5 (toy checks: copy a number 100.0%, op plus two copied numbers 99.0%, a number given only through the thinker 99.8%, 500 held-out rows; their numbers, not rerun)"
+      ],
+      "notes": "The toy numbers are the build thread's own small code check on made-up toy rows, quoted in PLAN.md; nothing here was rerun by us and it is not a result of the model on real questions. The example question is the video's made-up Tom's apples (ch01, ch04); the call sub 12 5 is the same as ch01. BUILD: left a faded card with the 8 op boxes (brown 'hand-written' tint, strike line), right the thinker vectors (S.vec indigo) -> writer box (call colour) -> S.type typing 'sub 12 5' letter by letter, with curves from the 12 and 5 in the question text to the typed digits. Toy line is a small note at the bottom (S.note). Amber chip."
+    },
+    {
+      "id": "s07",
+      "duration": 40,
+      "heading": "Group 2: learning steps as written",
+      "caption": [
+        "A step like 7 + 5 = 12 was rewritten by a hand rule as sub 12 5.",
+        "Now it is taught as written: add 7 5. The model finds the 7 itself; the calculator checks.",
+        "Then it practises alone: 4 tries per question, checked by the calculator; only right tries are kept.",
+        "Pass mark: up by at least 20 points on both copies. Never run."
+      ],
+      "labels": {
+        "old": "hand rule",
+        "old_to": "sub 12 5",
+        "new": "as written",
+        "new_call": "add 7 5",
+        "reply": "calculator: 12",
+        "tries": "4 tries",
+        "kept": "kept for study",
+        "pic": "picture only",
+        "q": "question"
+      },
+      "illustration": "picture only: which tries are kept is made up",
+      "chip": "built, never run",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table (Worked steps rewritten by hand rules, e.g. '? + 5 = 12' becomes a subtraction; L1, ST1)",
+        "architecture/B3-GROUP2-BUILD-2026-10-09.md sec. 4 (L1: '7 + 5 = 12' taught as add 7 5) and sec. 5 (ST1: sample 4 traces, keep matching answers, up to 3 rounds)",
+        "big-run/PLAN.md line 262 (ST1 marks: up at least +20 on both seeds, pooled-5 not down more than 1.0; proved wrong below +5 on both)"
+      ],
+      "notes": "L1 and ST1 are two parts of group 2; ST1 is a separate stage run on a trained group 2 checkpoint. 'Both copies' = seeds 400 and 401 (glossary: copy). ST1 detail not shown: temperature 1.0, 500 updates per round at 1e-4; also pooled-5 must not drop more than 1.0 (not on screen). Proved wrong: below +5 on both. BUILD: top half L1: old box -> sub 12 5 (struck), new box -> add 7 5 where '?' turns into 7 and the calculator slip returns 12 with a tick; bottom half ST1: one question box -> 4 try boxes -> calculator -> two ticked tries slide into a 'kept for study' box. Which tries pass is made up (illustration)."
+    },
+    {
+      "id": "s08",
+      "duration": 44,
+      "heading": "Experts: many small layers, a few used",
+      "caption": [
+        "Each thinker block's feed-forward layer is a small network of 1,228 units, at the 3 million size.",
+        "The test cuts it into 52 experts of 154 units. A router picks 8 per input, as big public models do.",
+        "The 8 picked hold 8 × 154 = 1,232 units: about the same work.",
+        "On the Mac one update takes 25.0 s (about 6.9 days in all), so it runs on the PC."
+      ],
+      "labels": {
+        "old": "today's layer",
+        "new": "52 experts",
+        "router": "router",
+        "picked": "picked",
+        "stored": "stored",
+        "used": "used",
+        "plain": "plain 3M thinker",
+        "pic": "picture only",
+        "sum": "8 × 154 =",
+        "unit": "154 units each"
+      },
+      "values": {
+        "stored": 10553929,
+        "used": 3579225,
+        "plain": 3544913,
+        "units": 1232
+      },
+      "illustration": "picture only: which 8 experts are picked is made up",
+      "chip": "built, never tested",
+      "src": [
+        "architecture/EXPERTS-TEST-2026-10-09.md sec. 2 (52 experts, 8 used, each Linear d to 154 to d, 1,232 vs 1,228 at d = 256)",
+        "architecture/EXPERTS-TEST-2026-10-09.md sec. 3 (sizes table: G-B2 3M 3,544,913; GX-3M 10,553,929 total, 3,579,225 active)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 6 item 10 (finished model dense by default)"
+      ],
+      "notes": "OUR MULTIPLICATION: 8 x 154 = 1,232 (source says 1,232). 1,228 is 4.8 x width 256 (the 3M thinker); the 100M thinker is width 512 (ch04). Sizes are counted by formula in the spec, checked by the build's tests; not a run. Source says 8 active is what DeepSeek-V3, Qwen3 and Kimi K2 use; may be said in half a sentence if room. BUILD: left a wide box (old layer); right a grid of 52 small squares (4 rows x 13), router box with curves to 8 lit squares (expert colour: use thinker indigo tint); count '8 × 154' to 1,232 beside; beneath, three S.hbars rows (stored, used, plain) counting up. Source: experts built, nothing has run (Addendum C: after the build, before any run)."
+    },
+    {
+      "id": "s09",
+      "duration": 41,
+      "heading": "Experts: keeping every expert in use",
+      "caption": [
+        "In an older design the experts were dead: its routers started at exactly 0.",
+        "So experts 0 and 1 were exact copies and never split apart.",
+        "Now the router starts random, and a small balance loss keeps picks about even.",
+        "Pass mark: beat the plain 3M thinker by at least 1.0 point on each copy. The team's guess: no clear gain."
+      ],
+      "labels": {
+        "old": "older design",
+        "same": "exact copies",
+        "new": "now",
+        "band": "half to double an even share",
+        "even": "even share: about 1.9 percent",
+        "why": "why: 3 times more stored numbers gained only 0.49 before",
+        "pic": "picture only"
+      },
+      "illustration": "picture only: the bars are not measured picks",
+      "chip": "built, never tested",
+      "src": [
+        "architecture/EXPERTS-TEST-2026-10-09.md sec. 1 (dead experts: routers at exactly 0, experts 0 and 1 exact copies)",
+        "architecture/EXPERTS-TEST-2026-10-09.md sec. 2 (router random, balance loss weight 0.01) and sec. 8 addendum A (mark X4: between half and double an even share, 1/52, about 1.9 percent)",
+        "architecture/EXPERTS-TEST-2026-10-09.md sec. 4 (mark X1: plus 1.0 on each seed; prediction UNCLEAR or STOP; +0.49 over 6 seeds, with the 8-letter bug)"
+      ],
+      "notes": "The older experts audit is 10-05 (model audit). X1 compares GX-3M with G1's plain-thinker 3M (G-B2) per seed, pooled-5. Prediction in source: UNCLEAR or STOP, reason: in the 8a size test the thinker gained +0.49 over 6 seeds from 3x more dense weights (with the 8-letter bug), so stored weights do not look like the limit. The balancing-nudge detail (0.001 per pass) and the balance loss weight 0.01 are not on screen. Stage 2 (more layers) runs only if stage 1 passes; finished model stays dense unless both stages pass (said in s16). BUILD: left two identical S.vec strips 'expert 0' 'expert 1' with an equals sign and a cross; right 52 thin bars (heights random from K.rng, picture only) with a shaded band for half to double the even share; at the last caption the guess note."
+    },
+    {
+      "id": "s10",
+      "duration": 35,
+      "heading": "Tokens: one spot per word piece",
+      "caption": [
+        "Today the thinker has one spot for every letter of the question.",
+        "Gemma already cuts text into tokens, or word pieces. One token covers 3.08 letters on skill questions and 4.27 on web text.",
+        "With one spot per token, the thinker's reading gets about 3 to 4 times cheaper. The rest still reads letters."
+      ],
+      "labels": {
+        "letters": "Tom has 12 apples.",
+        "today": "per letter",
+        "tok": "per token",
+        "skills": "skill questions",
+        "web": "web text",
+        "pic": "picture only",
+        "unit": "letters per token"
+      },
+      "values": {
+        "skills": 3.08,
+        "web": 4.27
+      },
+      "illustration": "picture only: the real word pieces differ",
+      "chip": "built, never tested",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 1 (3-4 times cheaper for the thinker's reading) and sec. 2 table (3.08 skill questions; 4.27 web text in 279-letter chunks; 4.36 at 2,000 letters)",
+        "chapters-out/ch03 s03 (3.08 and 4.27) and s15 (promise: Chapter 12 covers tokens)"
+      ],
+      "notes": "The 3.08 and 4.27 are measured letters per token (counts of Gemma's tokenizer, spec sec. 2). '3 to 4 times cheaper' is the spec's own wording for the thinker's part, from letters per token; the whole model gets cheaper by less. Test name TK (and TKN, next scene). The grouping of letters in the picture is invented. BUILD: top the 18-letter row (S.letters), below a shorter row of grouped boxes with brackets joining about 3 letters each (picture only), two counting number cards 3.08 and 4.27 with their meanings."
+    },
+    {
+      "id": "s11",
+      "duration": 42,
+      "heading": "Tokens: the risk is spelling",
+      "caption": [
+        "The risk is spelling: each token's spot is built from its letters, so single letters stay visible.",
+        "An older test used word pieces instead of letters and lost 3.1 and 5.4 points out of 100. Here the letters stay.",
+        "Pass mark: lose no more than 1.0 point. A second version drops the letter window, to test whether it can go."
+      ],
+      "labels": {
+        "tk": "tokens, window kept (TK)",
+        "tkn": "tokens, no window (TKN)",
+        "old": "older test: pieces instead of letters",
+        "runs": "4 runs, about 26 hours on the PC",
+        "l": "letters",
+        "w": "window",
+        "t": "token spot"
+      },
+      "values": {
+        "lost1": 3.1,
+        "lost2": 5.4
+      },
+      "chip": "no run yet; decided before 30M",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 1 (risk: spelling) and sec. 2 first bullet (U0: lost 3.1 and 5.4 points pooled-5) and sec. 3, 3b",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 5 (M1: pooled-5 TK minus plain thinker, 2-seed mean, at least minus 1.0)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 6 (decided before the 30M freeze; seed 400 first)",
+        "big-run/PLAN.md line 39 / REPLAN (token test 4 runs, about 26 PC-hours)"
+      ],
+      "notes": "Mark M1 is a two-copy mean (copies 400 and 401), no tolerance; other marks (M2 frame/vocab, M3 spelling puzzles, M4 chains, M5 thinker drives) not shown. 'Window' = the letter window (ch03). '30M' = the 30 million size rung of the ladder. The 3.1 and 5.4 are from the earlier U0 test, which removed letters; do not call them two copies (source does not say). 4 runs = TK and TKN x seeds 400, 401. BUILD: two rows of boxes (letters -> window -> token spot) for TK and TKN with the window box struck out in TKN; at the second caption two red-orange loss cards -3.1 and -5.4 counting down from 0 labelled 'older test'. Amber chip."
+    },
+    {
+      "id": "s12",
+      "duration": 32,
+      "heading": "Long text: carry the notes forward",
+      "caption": [
+        "Plan only, no test proposed. The thinker now sees the question at once and forgets it afterwards.",
+        "Idea: read long text in pieces and carry the thinker's notes from one piece to the next.",
+        "It could also learn which older pieces to look back at, a pattern from DeepSeek's Native Sparse Attention."
+      ],
+      "labels": {
+        "limit": "today's limit: 2,000 letters",
+        "p1": "piece 1",
+        "p2": "piece 2",
+        "p3": "piece 3",
+        "notes": "notes carried",
+        "look": "learned look-back",
+        "pic": "picture only"
+      },
+      "illustration": "picture only: pieces and notes are drawn, not measured",
+      "chip": "plan only",
+      "src": [
+        "architecture/running-summary-2026-10-08.md sec. 1 and sec. 6 (carry vectors piece to piece, keep a glance back)",
+        "architecture/important-links-2026-10-09.md sec. 3 (Native Sparse Attention, 2502.11089) and sec. 5 (add learned picking at the long-input stage; no test proposed)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 6 (Not in run-1: reading text longer than 2,000 letters)"
+      ],
+      "notes": "Both source notes are labelled suggested/untested; nothing was run for them. The look-back must be learned, never a hand list (important-links sec. 4). BUILD: three piece boxes in a row (reader teal), a strip of S.vec (thinker indigo) carried by arrows from piece 1 to 2 to 3, a curved arrow from piece 3 back to piece 1 appearing at the third caption, grey 'plan only' chip (S.chip('placeholder',{label:chips})). All motion by 80%."
+    },
+    {
+      "id": "s13",
+      "duration": 35,
+      "heading": "Domain mode: the model teaches itself",
+      "caption": [
+        "The idea: type one line, like learn how to do spreadsheets, and the model studies the subject by itself.",
+        "It makes practice by changing worked examples, checks each with a tool, and keeps what matched.",
+        "Then it sleeps on it, checks it has not forgotten old skills, and stops when its own quiz stalls."
+      ],
+      "labels": {
+        "s1": "open the tool",
+        "s2": "make practice",
+        "s3": "try it",
+        "s4": "choose what to practise",
+        "s5": "sleep",
+        "s6": "check old skills",
+        "s7": "stop",
+        "pic": "picture only"
+      },
+      "illustration": "picture only: the loop is a plan; most steps are not built",
+      "chip": "partly built, one run",
+      "src": [
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md sec. 1 and sec. 2 (the seven steps table: what exists today)",
+        "sources/pr-58-domain-mode.md (After: python -m domain.mode, nightly lr 1e-4, half self-replay, undo a night)"
+      ],
+      "notes": "Per sec. 2 'Exists today': open = not built (tool and help page are handed over in the small test); make practice = not built in the full sense; choose, check, stop = built into the small test loop but never run before this one run; sleep = partly. In the test, the loop calls the tool at fixed points on the model's behalf (disclosed, 'Level 1'); the full version needs group 2's whole-call writer. Fixed numbers (not on screen unless wanted): 1,024 made problems a day, quiz of 256 day-1 problems, 512 old questions for the forgetting check, undo if drift more than 3 points, at most 12 nights. BUILD: seven boxes on a ring or two rows with arrows between, a small marker token moves along them in step with the captions; spreadsheet example text in a note: 'A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)' -> 13 (this is the design's own help example, label it example)."
+    },
+    {
+      "id": "s14",
+      "duration": 41,
+      "heading": "Domain mode: the first run did not pass",
+      "caption": [
+        "First real run: spreadsheets, one copy, 7 nights. Its own quiz rose from 11.7 to about 74.",
+        "But on kept-aside sheet questions it went from 3.33 to 2.86. The pass mark was a gain of 30 points.",
+        "Cause: its practice used one narrow grid shape, so it learned shortcuts, not what a cell reference means.",
+        "Next: a wider practice maker, still hand-written code run at fixed points."
+      ],
+      "labels": {
+        "quiz": "its own quiz",
+        "near": "kept-aside, near",
+        "far": "kept-aside, far",
+        "before": "before",
+        "after": "after",
+        "need": "needed: +30"
+      },
+      "values": {
+        "quiz0": 11.7,
+        "quiz1": 74,
+        "near0": 3.33,
+        "near1": 2.86,
+        "far0": 1.07,
+        "far1": 0.36
+      },
+      "chip": "run once, not passed",
+      "src": [
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md addendum A10 (run 1:02-1:52 PM ET 10-09, sheet, seed 200: 7 nights; quiz 11.7 to about 74; near 3.33 to 2.86; far 1.07 to 0.36; old skills in_dist 90.22 to 88.16; cause; ruling v2 wider practice maker)",
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md addendum A11 (practice maker is hand-written code called at fixed points; Level 1)",
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md marks DM1 (near plus 30; proved wrong below plus 10) and DM2"
+      ],
+      "notes": "NEWER THAN PR #58 and the brief: the PR body (and brief) say the first run is 'running'; addendum A10 (2:05 PM ET) records that it ran and DM1 was proved wrong on seed 200, so seed 201 did not run. Scores are on the 7 trainable kinds (ruling A2), not the 4.67 / 2.50 of the PR body (all 10 kinds, before practice). The 'quiz rose to about 74' is the source's pooled own-quiz value (74.22, 75.78, 73.83 in the last nights). Far score 1.07 to 0.36 (DM2 needed plus 10). Also reported: old-skills score dropped from 90.22 to 88.16 and two families fired (not on screen). Use S.chip('tested',{label:chips}) only because a result file exists; say in notes it is a failed result. BUILD: S.hbars before/after pairs (quiz, near, far) counting; a dashed marker at 'needed' on the near row; scene stays still last 20%."
+    },
+    {
+      "id": "s15",
+      "duration": 33,
+      "heading": "Plans with no design or test yet",
+      "caption": [
+        "The model would call creative mode only when stuck. It would use a use-once puzzle tool and an example checker.",
+        "The notebook would be a tool it can call. Saying I don't know has no design yet. Eyes, ears and hands for games are paused."
+      ],
+      "labels": {
+        "c1": "creative mode, only when stuck",
+        "c2": "use-once puzzle tool",
+        "c3": "example checker",
+        "c4": "notebook as a tool",
+        "c5": "saying I don't know",
+        "c6": "eyes, ears, hands: paused"
+      },
+      "chip": "plan only",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 6 'Not in run-1' (puzzle tool, example checker `check <program>`, notebook as a recall tool, I don't know has no design, eyes ears hands paused)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md lines 26, 43, 266 (creative mode used when the worker is stuck)"
+      ],
+      "notes": "All six are grey plans, none built into the finished model's run-1. The first caption's items are 'planned for the tool loop' (creative roadmap 7b); the creative mode when stuck has its own earlier small tests in the creative roadmap which are NOT claimed here. BUILD: six grey cards in a 3 x 2 grid appearing one per beat, each with S.chip('placeholder',{label:'plan only'}) only once for the group, not six times (word budget)."
+    },
+    {
+      "id": "s16",
+      "duration": 39,
+      "heading": "What each idea would change, and the order",
+      "caption": [
+        "If it works, group 1 gives the 3M model calls anywhere, 2,000 letters and its own stop; group 2 removes hand-written pieces.",
+        "Experts and tokens are side tests: they change the finished model only if their marks pass.",
+        "The plan runs left to right, with no dates promised.",
+        "Remember: almost none of this has been run."
+      ],
+      "labels": {
+        "g1": "size test (G1)",
+        "ex": "experts",
+        "b1": "group 1, 3M",
+        "b2": "group 2, 3M",
+        "m10": "10M",
+        "m30": "30M",
+        "m100": "100M",
+        "side": "tokens: fills a free PC slot",
+        "dom": "domain mode: free cloud CPU"
+      },
+      "chip": "plan, no dates",
+      "src": [
+        "big-run/PLAN.md lines 39 and 41-46 (REPLAN path: after G1, GX stage 1 seed 400, fc100 fit check, plain control g2c3, B3 group 1 at 3M seed 400, then group 2 at 3M, then B3 10M, 30M, 100M)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 6 (tokens decided before the 30M freeze; experts join only if both stages pass)",
+        "domain-mode/DESIGN-AND-MARKS-2026-10-09.md sec. 5 (cloud CPU)"
+      ],
+      "notes": "ORDER (plan, from PLAN.md REPLAN 'Path and dates', dates removed): G1 verdict -> experts stage 1 (seed 400 first) -> a free fit check of the 100M thinker in 16 GB -> plain 3M control -> B3 group 1 at 3M -> B3 group 2 at 3M (then ST1) -> 10M -> 30M -> 100M. Skipped for space: GX stage 2, seed 401 runs, c30 and g2c10 controls, six-seed confirm. The plan gives dates; none are shown (never state a future date as certain). Tokens: PLAN says it fills a gap on the PC and must never delay the B3 ladder. BUILD: a lane of 8 boxes with a marker that moves along to the 100M box by 70% of the scene; two side boxes (tokens, domain mode) below on dashed arrows; recap as last caption, three short lines would also be fine."
+    }
+  ]
+}

@@ -196,14 +196,17 @@ Kit.chapter('ch06', function (Ch) {
     const svg = S.svg();
     const la = S.text(c.barA, { x: 160, y: 290, w: 1400, size: 40, color: C.ink });
     const lb = S.text(c.barB, { x: 160, y: 470, w: 1400, size: 40, color: C.ink });
-    const ra = S.svgEl(svg, 'rect', { x: 160, y: 340, width: 450, height: 80, fill: 'none', stroke: C.soft, 'stroke-width': 4, 'stroke-dasharray': '14 10' });
-    const rb = S.svgEl(svg, 'rect', { x: 160, y: 520, width: 900, height: 80, fill: 'none', stroke: C.soft, 'stroke-width': 4, 'stroke-dasharray': '14 10' });
+    const ra = S.svgEl(svg, 'rect', { x: 160, y: 358, width: 450, height: 80, fill: 'none', stroke: C.soft, 'stroke-width': 4, 'stroke-dasharray': '14 10' });
+    const rb = S.svgEl(svg, 'rect', { x: 160, y: 538, width: 900, height: 80, fill: 'none', stroke: C.soft, 'stroke-width': 4, 'stroke-dasharray': '14 10' });
     S.show(la, S.capAt(0));
     S.show(ra, S.capAt(1));
     S.show(lb, S.capAt(1));
     S.show(rb, S.capAt(2));
-    const tgt = S.text(c.target, { x: 160, y: 660, w: 1400, size: 40, color: C.soft });
-    S.show(tgt, S.capAt(2));
+    // the rule goes inside the dashed targets: A is at most half of B (the widths show it too); B is marked as a target
+    const ta = S.text(c.ruleA, { x: 160, y: 379, w: 450, size: 30, color: C.ink, align: 'center', nowrap: true });
+    S.show(ta, S.capAt(1) + 0.3);
+    const tgt = S.text(c.target, { x: 160, y: 557, w: 900, size: 34, color: C.soft, align: 'center', nowrap: true });
+    S.show(tgt, S.capAt(2) + 0.3);
     const chip = S.chip('placeholder', { x: 160, y: 740, label: c.chip, size: 34 });
     S.pop(chip, S.capAt(3));
   });
