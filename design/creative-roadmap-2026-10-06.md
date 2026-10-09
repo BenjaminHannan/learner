@@ -1538,6 +1538,32 @@ families x 200, two parents).**
   - **Go (10-09, 12:15 PM ET):** the coordinator relayed Ben's standing instruction (10:57 AM ET 10-09: "Keep
     demonstrating those principles in the model and iterating until they're found as the goal") and asked for the
     next single change on free compute. SCL runs on the fast-sleep CPU with the marks above, unchanged.
+- **SCL result (fast-sleep 29e768b53, 1:15 PM ET 10-09; shown, DEV, s100 / s101): PASSES on both parents.** This is
+  scorecard row 5's sleep test (the model picks its own replay).
+  - Harm against N': in_dist -0.9 / -1.1 (it gets better), and no family fires on either parent.
+  - First-try gain against L: ratio 0.93 / 0.98, with 0 questions short (SCL 27.0 / 32.8, L 28.9 / 33.6, N' 0.4).
+  - Report only: SCL - L first try -2.0 [-4.7, +0.4] / -0.8 [-2.0, 0.0], and skills against L +0.1 / +0.5. Against
+    W1: first try -4.3 / -1.6, in_dist +4.7 / +4.7. Multi-step reach@32 5.8 / 7.8, against L 6.5 / 7.1 and W1 13.0 /
+    14.3 (both intervals against W1 below 0).
+  - Shown, on 2 parents: with the model choosing its own replay at lr 1e-4, the night forgets nothing and keeps 93-98%
+    of the hand-picked night's gain. Also shown: picking adds nothing over uniform replay at this rate. Few rows'
+    loss rises (picked 0.09 / 0.08, random -0.02 / -0.03), so the pick has little to aim at.
+  - Not shown: the fast night's climb. Against W1 the gain ratio would be 0.86 / 0.95, and multi-step search is
+    narrower. The confirm on six parents (s200-s205) follows job 9 under the 6-seed rule.
+- **Next single change (10-09, Ben's standing instruction to keep iterating on free compute): Test SCM, SCL at a
+  middle rate.** Night 1 from N' with SCL's recipe (model-picked replay, 32 visits, L's records, seed and warm
+  replay), with one change: lr 3e-4. The aim is the fast night's climb without its harm.
+  - Marks, fixed now. On both parents (DEV, s100 / s101):
+    1. Harm against N' passes the 10-08 measure.
+    2. The first-try gain over N' is at least 0.9x W1's (W1 31.2 / 34.4; one-question shortfall met).
+    3. Multi-step reach@32 is at least W1's minus 3 (W1 13.0 / 14.3). This is the night-1 sign that predicted L2's
+       weak climb.
+  - Proved wrong: harm fails on either parent (the middle rate is too fast even with picking), or multi-step
+    reach@32 SCM - SCL is under +3 on both parents (the middle rate buys no search breadth).
+  - Report only: SCM against SCL and W1 on everything, the picked-row family mix, and loss rise on picked against
+    random rows.
+  - If SCM passes, both nights at its recipe are checked against W2 with L2's marks. Free cloud CPU, about 45 minutes
+    per parent.
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
@@ -1863,3 +1889,6 @@ CPU):
   Test SCL (model-picked replay at lr 1e-4, control L) with marks fixed now; it waits for the big-run thread's word.
 - **10-09, 12:25 PM ET:** SCL started on Ben's standing instruction (via the coordinator), with marks unchanged from
   e5ab95d650.
+- **10-09, 1:25 PM ET:** SCL PASSES (fast-sleep 29e768b53): the model-picked lr 1e-4 night forgets nothing and keeps
+  93-98% of L's gain on 2 parents (scorecard row 5's sleep test). The climb is still short of W1's. Next single change
+  is Test SCM (SCL at lr 3e-4), with marks fixed.
