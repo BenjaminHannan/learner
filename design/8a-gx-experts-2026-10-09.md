@@ -141,3 +141,21 @@ different experts per round (shown in code); (2) one change at a time: per-round
 weights per block (+293k at 3M, +8% of the active count); (3) the paper's evidence is weak. The routing report already measures how much
 the expert sets of different rounds overlap (section 4). If GX is GO but the rounds pick nearly the same experts, per-round routers are
 the follow-up test, not a change to this one.
+
+## 10. Addendum C (Fri Oct 9, 11:00 AM ET, after the build, before any run): memory, size check, hair reading, queue
+
+- **Memory (shown on CPU, fp32, 32 rows, Gemma stubbed; `custom_io/g8a/moe_cost.py`):** computing every expert stores 2.72x G-B2's tensors for
+  learning. The build now recomputes the expert step during learning instead of storing it (`moe_ckpt`, on by default; tested: same loss and
+  exactly the same gradients). With it GX stores 1.035x G-B2's (0.85x without the weights). So **GX-3M runs at accumulation 4, the same as
+  both G1 3M controls** (section 6's "8" is replaced), and GX-10M at 16, the same as G1's 10M B2. Spill rule unchanged (double, up to 16 / 32).
+  CPU wall time GX / G-B2 = 3.7x with the Gemma reader stubbed; on the PC the real Gemma reader is a large share of each step, so the ratio
+  there is smaller (untested). Revised estimate (suggested): 10-12 h per 3M seed on the PC, about a day for stage 1.
+- **Size check (launcher refusal, not a mark):** a GX config passes if its dense twin (the same config with experts off) passes today's rung
+  check and GX's active count is within 3% of that twin: GX-3M +0.97%, GX-10M +1.31%. (Comparing GX-10M with the 10.0M target directly, as
+  the first build did, put it at +6.3%, outside the 5% band, because G-B2 10M itself sits at +5.0%.)
+- **Hair reading, fixed before any score (`custom_io/g8a/analyze_gx.py`):** at most one hair use per stage across all marks. A 0.5-point
+  single-seed miss is one use; one seed's X4 inside its hair band is one use. So a hair miss on X1 plus an X4 hair seed, or X4 hair on both
+  seeds, is not a pass. X5's spill part is checked from the PC log by hand (it is not in RESULT.json).
+- **Queue (staged, not started):** `custom_io/queue_local/8aGX-pc.txt` (stage 1, the two 3M runs), `8aGXD-pc.txt` (stage 2, held),
+  card `8aGX-card.md`. Not before G1's last job is done and Ben's go in the Mac session.
+- Marks X1-X5 and D1-D5 unchanged.

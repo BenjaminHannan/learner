@@ -1,0 +1,9 @@
+# HELD. BensPC RTX 5070 Ti: test GX stage 2 = experts + many layers (GX-10M: G-B2 10M's 8 blocks with the same expert layers; design/8a-gx-experts-2026-10-09.md section 5). Runs ONLY if stage 1 (queue 8aGX) reads GO (or Ben says go on UNCLEAR), after G1 is done, with Ben's go in the Mac session. Same code tree as 8aGX. accum B2=16 and MEM 9000 as G1's 10M B2 (8aG1f-pc.txt); re-set from 8aG1f's measured memory before release.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aGXD-10M-s400 --rung 10M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "experts": 52, "top_k": 8}' --accum B2=16
+# MEM 9000
+g8a: 8aGXD-10M-s401 --rung 10M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "experts": 52, "top_k": 8}' --accum B2=16
