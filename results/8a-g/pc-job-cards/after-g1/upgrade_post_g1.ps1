@@ -23,6 +23,8 @@ function Hash($f) { (Get-FileHash $f).Hash }
 # A failed src-b3r setup renames the new folder aside (nothing is deleted), so a rerun with a better b3r.zip can unpack afresh.
 function FailB3R($m) { $n = 'src-b3r.failed-' + (Get-Date).ToString('yyyyMMdd-HHmm'); Rename-Item -Path $SRCB3R -NewName $n; Fail "$m (src-b3r renamed to $n)" }
 function Stamp { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') + ' ET' }
+# Callers wrap it in @(): a function's one-item array unrolls to a bare CimInstance, whose .Count is empty in Windows PowerShell 5.1 (seen 10-09: v1 was
+# not stopped).
 function Waiters($name) { @(Get-CimInstance Win32_Process -Filter "Name like 'powershell%'" | Where-Object { $_.CommandLine -like "*$name*" }) }
 function Unpack($zip, $dir, $marker) {
   if (Test-Path "$dir\$marker") { return $false }
@@ -81,9 +83,9 @@ Copy-Item -Force "$IN\b3_capcheck.py" "$CIO\b3_capcheck.py"
 'copied the queue files, card templates, b3_readout.py and b3_capcheck.py'
 
 # 3. Waiter v2 replaces v1 while v1 still waits for G1.
-$v2 = Waiters 'q8aPost2_wait.ps1'
+$v2 = @(Waiters 'q8aPost2_wait.ps1')
 if ($v2.Count -gt 0) { "chain waiter v2 already runs (pid $($v2[0].ProcessId)): files refreshed, nothing restarted"; exit 0 }
-$v1 = Waiters 'q8aPost_wait.ps1'
+$v1 = @(Waiters 'q8aPost_wait.ps1')
 if ($v1.Count -gt 0) {
   if (@(Get-Content "$WORK\q8aPost-waiter.log" -ErrorAction SilentlyContinue) -match 'gate G1 has ended') { Fail 'waiter v1 has already started the chain: not replacing it' }
   foreach ($p in $v1) { Stop-Process -Id $p.ProcessId -Force; "stopped chain waiter v1 (pid $($p.ProcessId)); it was still waiting for G1 and had started nothing" }
