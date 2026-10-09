@@ -1512,6 +1512,29 @@ families x 200, two parents).**
   - Report only (the earlier SC lines): SC - W1 first try against -2, multi-step reach@32 against W1 - 3 (13.0 /
     14.3), and whether SC's in_dist drop is at least 1.0 below W1's (3.8 / 3.6). These show partial progress if the
     harm mark is missed.
+- **SC result (fast-sleep 864b0af6f, 12:13 PM ET 10-09; shown, DEV, s100 / s101): PROVED WRONG under the governing
+  scorecard marks.** Harm fails on both parents, and the rule is harm on either.
+  - Harm against N': in_dist drop 1.5 / 0.1, but few-example families fire. On s100: rule_apply -11.0 [-17.5, -4.5],
+    seq_next -10.5 [-19.0, -2.0], list_stats -6.5 [-11.5, -2.0]. On s101: order_chain -7.5 [-14.0, -1.5], seq_next
+    -8.0 [-15.5, -0.5].
+  - First-try gain ratio against W1: 1.08 / 1.08 (SC 33.6 / 37.1, W1 31.2 / 34.4). Met.
+  - Report only, against the hand-picked night W1 at the same rate: SC is better on everything measured. in_dist
+    +2.3 / +3.5 with no family firing against W1, first try +2.3 / +2.7, multi-step reach@32 +1.9 / +0.6. Its drop
+    against N' is 2.3 / 3.5 smaller than W1's.
+  - The pick works: picked rows' loss rise is 1.13 / 1.22 against 0.22 / 0.24 for random rows. The families that
+    still drop are the ones it over-picks (seq_next about 9% of picks).
+  - Shown: at lr 1e-3, the model's own pick removes most of the night's skills cost and keeps the whole C2 gain. It
+    does not make the night harmless; the few-example families still drop more than 5 points. Principle 5's sleep
+    part stays red.
+- **Proposed next, not run (SC and L combined; needs the big-run thread's word, since only SC was un-held):** Test
+  SCL, SC's model-picked replay on the lr 1e-4 night (VL's arm L), from N', DEV, s100 / s101. One change from L,
+  which had no family fire: the replay rows are model-picked.
+  - Marks, fixed now. On both parents: harm against N' passes the 10-08 measure, and the first-try gain over N' is
+    at least 0.9x L's gain (L 28.9 / 33.6). The hand-picked control at the same rate is L; a one-question shortfall
+    counts as met.
+  - Proved wrong: harm fails on either parent, or the gain is under 0.5x L's on both.
+  - Report only: the same against W1, multi-step reach@32, and the picked-row family mix.
+  - Cost: about 1 hour of free cloud CPU on the fast-sleep machine.
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
@@ -1832,3 +1855,6 @@ CPU):
   3M once it exists.
 - **10-09, 11:45 AM ET:** D6 gate screen build rulings before the full run: leave-one-out at question level, and the
   builder's gate training settings fixed (16 hidden, 600 Adam steps, lr 0.03). The run waits for job 9's scoring.
+- **10-09, 12:20 PM ET:** SC ruled PROVED WRONG under the scorecard marks (fast-sleep 864b0af6f). Few-example families
+  still fire on both parents, though SC beats hand-picked W1 on every measure and keeps the full C2 gain. Proposed
+  Test SCL (model-picked replay at lr 1e-4, control L) with marks fixed now; it waits for the big-run thread's word.
