@@ -247,3 +247,7 @@ Mac chat and no queue runs. Cards and queue files are in `results/8a-g/pc-job-ca
 - **Cap-hit counters for G1 (scorecard row 6).** Shown for the 3M/10M s400 pool: its `caps_report.json` gives `rows_over_caps` 0 for every cap,
   on the 1,655,902 train rows and on the dev splits with programs. `g8a.job` exits instead of cutting a row that touches a cap. The s401 pool
   writes the same report; it gets read when its results are collected.
+- **Decision (big-run thread, relayed 11:08 AM ET):** fc100 part A runs in the first PC gap after G1, because a measured 21x512 speed is
+  worth the hour and a no-fit kills the PC plan early. A part A pass does not clear the 100M launch: part B (H1 round checkpointing,
+  2,000-letter rows, new caps) runs on B3 group 1 before launch. c30 runs right after fc100 unless B3 group 1 is ready first. Row 6: G1 passes
+  the truncation audit on both seeds (the non-ASCII drops are disclosed, not truncation). Starting still needs Ben's go in the Mac chat.
