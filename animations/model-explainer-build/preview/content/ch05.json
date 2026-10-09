@@ -1,0 +1,468 @@
+{
+  "kicker": "Part 5 of 14",
+  "title": "Asking the calculator for help",
+  "blurb": "The model can ask an ordinary calculator for exact sums. It writes the question as plain text, and the calculator writes back the answer as plain text.",
+  "accent": "call",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 22,
+      "heading": "Where we are: the calculator sits outside",
+      "caption": [
+        "This part is about the call writer and the calculator.",
+        "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
+      ],
+      "labels": {
+        "call": "call writer",
+        "calc": "calculator"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (parts table) and sec. 4 (rules dated 10-07)"
+      ]
+    },
+    {
+      "id": "s02",
+      "duration": 24,
+      "heading": "Why a calculator? Code adds exactly",
+      "caption": [
+        "Code adds two numbers exactly, every time.",
+        "A learned network has to learn each sum from practice.",
+        "So the model writes its sum as a slip of text and hands it to a calculator."
+      ],
+      "labels": {
+        "slip": "call: sub 12 5",
+        "back": "reply: 7",
+        "calc": "calculator",
+        "why": "our reasoning, not a measured result"
+      },
+      "src": [
+        "GLOSSARY.md (call writer and calculator pictures)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (hand code only as a tool)"
+      ],
+      "notes": "The 'why' sentences are our reasoning and are labelled on screen."
+    },
+    {
+      "id": "s03",
+      "duration": 26,
+      "heading": "Each round, the call writer reads one vector",
+      "caption": [
+        "After every round, the call writer reads the thinker's first control vector.",
+        "It writes one of nine choices: no call, or one of the eight operations."
+      ],
+      "labels": {
+        "v0": "control vector 0",
+        "none": "no call",
+        "ops": "8 operations",
+        "cw": "call writer",
+        "pic": "picture only: the shading is decoration"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (call writer row)",
+        "custom_io/models/tool.py:15 (op head on control token 0; NOOP = no call)",
+        "custom_io/models/progparse.py:12 (NOOP plus 8 operations)"
+      ],
+      "notes": "The code header calls control vector 0 'control token 0'. Same first vector."
+    },
+    {
+      "id": "s04",
+      "duration": 42,
+      "heading": "The eight operations, one line each",
+      "caption": [
+        "Eight operations. Each example uses made-up numbers 12 and 5."
+      ],
+      "ops": [
+        {
+          "name": "add",
+          "meaning": "add the two",
+          "ex": "add 12 5 = 17"
+        },
+        {
+          "name": "sub",
+          "meaning": "first minus second",
+          "ex": "sub 12 5 = 7"
+        },
+        {
+          "name": "mul",
+          "meaning": "multiply",
+          "ex": "mul 12 5 = 60"
+        },
+        {
+          "name": "div",
+          "meaning": "divide, only if exact",
+          "ex": "div 12 5 = ?"
+        },
+        {
+          "name": "mod",
+          "meaning": "left over after dividing",
+          "ex": "mod 12 5 = 2"
+        },
+        {
+          "name": "min",
+          "meaning": "the smaller one",
+          "ex": "min 12 5 = 5"
+        },
+        {
+          "name": "max",
+          "meaning": "the bigger one",
+          "ex": "max 12 5 = 12"
+        },
+        {
+          "name": "cmp",
+          "meaning": "1 if first bigger, 0 if same, -1 if less",
+          "ex": "cmp 12 5 = 1"
+        }
+      ],
+      "src": [
+        "custom_io/models/progparse.py:12 and :23-33 (ex: exact semantics; DIV only when exact)",
+        "custom_io/models/tool.py:95-103 (calc: '?' when it cannot run)",
+        "example results computed by hand from those lines, with made-up numbers 12 and 5"
+      ],
+      "notes": "12 divided by 5 is not whole, so div gives '?'. mod 12 5 = 2 because 12 = 2 x 5 + 2. cmp returns 1, 0 or -1 as in progparse ex."
+    },
+    {
+      "id": "s05",
+      "duration": 45,
+      "heading": "Copying digits: a pointer, a step left, a stop",
+      "question": "Tom has 12 apples.",
+      "caption": [
+        "To write the 12 in a call, a learned pointer lands on its last digit, the 2.",
+        "The copy then steps one letter left and copies the 1.",
+        "A learned stop head says when to stop, or at the start of the text.",
+        "The copy trick was used for 98% of written operands and 91.5% of answers, on every T1SDR seed.",
+        "That is how often the copy was used, not how often it was right."
+      ],
+      "labels": {
+        "ptr": "pointer",
+        "stop": "stop head",
+        "out": "written last digit first",
+        "chip": "tested at 3M",
+        "d2": "2",
+        "d1": "1"
+      },
+      "bars": [
+        {
+          "label": "operands copied",
+          "value": 98
+        },
+        {
+          "label": "answers copied",
+          "value": 91.5
+        }
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 2 (lines 46-50): worked Tom example and copy rule",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (span copy row): 98% of written operands and 91.5% of answers on every T1SDR seed",
+        "custom_io/models/tool.py:222-247 (span copy: one letter left until the learned stop head says stop)"
+      ],
+      "notes": "The 98% and 91.5% are shares of uses, not accuracy. FINISHED sec. 4 is the only source found; the raw per-seed file was not located in custom_io/results."
+    },
+    {
+      "id": "s06",
+      "duration": 30,
+      "heading": "A number not in the text: 21 cells",
+      "caption": [
+        "Some numbers are not in the question. The 10 from add 7 3 is one of them.",
+        "It is built one letter at a time, into 21 cells, last digit first. The code flips the text afterwards."
+      ],
+      "labels": {
+        "cells": "21 cells: 20 for the longest 64-bit whole number, 1 for the end mark",
+        "first": "0 goes in first, then 1",
+        "z": "0",
+        "o": "1"
+      },
+      "src": [
+        "custom_io/models/tool.py:84 (CELLS = 21, with its comment: longest int64 string 20 characters, then end mark)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 2 (21 slots, last digit first) and step 4 (add 7 3 = 10)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (last letter first row)"
+      ],
+      "notes": "tool.py header line 15 says 11 cells: a stale comment; CELLS = 21 is the code. The 10 is from the project's worked Tom example."
+    },
+    {
+      "id": "s07",
+      "duration": 27,
+      "heading": "The calculator: plain Python, no learned numbers",
+      "caption": [
+        "The calculator is ordinary Python code. It has 0 learned numbers.",
+        "It reads the call as text and writes the reply as text. A call it cannot run gets a question mark."
+      ],
+      "labels": {
+        "in": "call in: sub 12 5",
+        "out": "reply out: 7",
+        "bad": "div 12 5 gives ?",
+        "calc": "calculator",
+        "tag": "hand code, allowed as a tool"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row: size 0)",
+        "custom_io/models/tool.py:95-103 (calc)",
+        "custom_io/models/progparse.py:23-33 (ex)"
+      ]
+    },
+    {
+      "id": "s08",
+      "duration": 37,
+      "heading": "The reply goes into the notes, not the question",
+      "caption": [
+        "After round 2 the call writer writes sub 12 5, and the calculator replies.",
+        "The reply line, sub 12 5 = 7, is read by the letter window and added to the notes.",
+        "The question is not read again. In round 3 the call writer writes add 7 3, and the reply is 10."
+      ],
+      "labels": {
+        "q": "question: not read again",
+        "notes": "thinker's notes",
+        "r": "reply",
+        "cw": "call writer",
+        "calc": "calculator",
+        "rd2": "round 2",
+        "rd3": "round 3",
+        "r1": "sub 12 5 = 7",
+        "r2": "add 7 3 = 10"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 steps 2-4 (lines 46-53): worked Tom example",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (letter window row) and sec. 5 item 5 (replies read by the letter window only)",
+        "custom_io/models/tool.py:155-170, 368-374 (reply read as a short string; thinker keeps its vectors)"
+      ]
+    },
+    {
+      "id": "s09",
+      "duration": 34,
+      "heading": "Timing today: calls follow rounds 2 to 8",
+      "caption": [
+        "In the tested design, the first call follows round 2.",
+        "Call k follows round k plus 1, up to call 7 after round 8.",
+        "Rounds 9 to 32 cannot call."
+      ],
+      "labels": {
+        "r2": "round 2, then call 1",
+        "r8": "round 8, then call 7",
+        "none": "rounds 9-32: no call",
+        "chip": "tested in T1SDR (3M)",
+        "rounds": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "calls": [
+          "call 1",
+          "call 2",
+          "call 3",
+          "call 4",
+          "call 5",
+          "call 6",
+          "call 7"
+        ]
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 60-62)",
+        "custom_io/models/tool.py:338, 350 (call timing; no call after round 8 in the tested code)"
+      ]
+    },
+    {
+      "id": "s10",
+      "duration": 35,
+      "heading": "Built, not run: any round, and a tape of 16",
+      "caption": [
+        "The project owner chose any time for when a call may follow.",
+        "The group 1 build lets a call follow any round from 2 to 32.",
+        "The tape holds 16 calls.",
+        "In training, 1 row in 4 gets 0, 1 or 2 extra thinking rounds before each call."
+      ],
+      "labels": {
+        "any": "rounds 2 to 32",
+        "tape": "tape: 16 slots",
+        "gap": "1 in 4 rows",
+        "chip": "built, never run",
+        "pic": "picture only: 4 filled slots are an example"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 60-65) and sec. 7 Q1 (answered 9:30 AM ET 10-09)",
+        "custom_io/models/b3.py:6-10 (any_round, gap_p, think-only rounds 0-2)",
+        "custom_io/models/b3.py:26 (TAPE_MIN = 16)",
+        "custom_io/g8a/configs.py:95 (B3_G1 gap_p=0.25)"
+      ]
+    },
+    {
+      "id": "s11",
+      "duration": 39,
+      "heading": "Still hand-written, and what group 2 changes",
+      "caption": [
+        "Some parts are still ordinary code a person wrote. Four of them are shown here as brown chips.",
+        "The operation name comes from a fixed list of 8, so a new tool could not be called yet.",
+        "Group 2 writes the whole call as letters, operation name included.",
+        "It is built as code and has never run."
+      ],
+      "labels": {
+        "ops": "operation from a fixed list of 8",
+        "num": "number finder (regex)",
+        "copy": "copy rules: start, step left, stop",
+        "flip": "last letter first, text flipped",
+        "chip": "built, never tested",
+        "g2call": "sub 12 5"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (hand code table: op word, number finder, span copy rules, last letter first; group 2 row)",
+        "custom_io/models/ledger.py:206 (number finder regex)",
+        "custom_io/models/tool.py:188, 191-197, 222-247 (last letter first; span copy rules)"
+      ],
+      "notes": "FINISHED sec. 4 lists more hand parts than the four shown (word splitter, 108-character list, worked steps, layout codes, operand slots)."
+    },
+    {
+      "id": "s12",
+      "duration": 45,
+      "heading": "The evidence: 6 copies, calculator outside",
+      "caption": [
+        "Each copy starts from its own random start.",
+        "The calculator-outside model (T1SDR) was compared with the same model with the calculator inside (B2).",
+        "Pooled-5, 6,040 questions kept aside: plus 0.62 points, likely range minus 0.23 to plus 1.46.",
+        "All six copies were within 1.0 of B2 on pooled-5.",
+        "Chain-5, 1,000 multi-step questions: 99.6 to 99.8 with the calculator outside, mean 99.72. Inside: 99.4 to 99.7.",
+        "With the calculator switched off, program questions score 0.0."
+      ],
+      "labels": {
+        "ob": "B2: calc inside",
+        "out": "T1SDR: calc outside",
+        "chip": "tested at 3M, 6 copies",
+        "ticks": [
+          "-1",
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      "numline": {
+        "min": -1,
+        "max": 2,
+        "mean": 0.62,
+        "lo": -0.23,
+        "hi": 1.46
+      },
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (lines 198-205): pooled-5 +0.62, CI -0.23 to +1.46; 6 of 6 copies within 1.0; tool off 0.0",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 1: chain-5 99.6-99.8, mean 99.72; B2 99.4-99.7",
+        "GLOSSARY.md (pooled-5: 6,040 kept-aside questions; chain-5: 1,000 multi-step questions)"
+      ],
+      "notes": "Record 13 is relayed, not rechecked. The chain-5 per-copy values appear only in FINISHED sec. 5 item 1. The 6,040 and 1,000 counts are from GLOSSARY.md."
+    },
+    {
+      "id": "s13",
+      "duration": 35,
+      "heading": "Check 1: the swap test",
+      "caption": [
+        "In the swap test, add and sub are swapped inside the calculator.",
+        "The pass line: 99% or more of the rows must follow the swap.",
+        "Five copies: 99.28 to 99.87, all at 99 or more.",
+        "The sixth copy's saved model was lost, so it is not scored."
+      ],
+      "labels": {
+        "swap": "add and sub swapped",
+        "pass": "pass line: 99",
+        "lost": "copy F: not scored",
+        "chip": "tested on 5 of 6 copies"
+      },
+      "vals": [
+        {
+          "label": "A",
+          "value": 99.87
+        },
+        {
+          "label": "B",
+          "value": 99.28
+        },
+        {
+          "label": "C",
+          "value": 99.4
+        },
+        {
+          "label": "D",
+          "value": 99.74
+        },
+        {
+          "label": "E",
+          "value": 99.61
+        }
+      ],
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (line 201): mark 5 values for seeds 200-204; seed 205 unscored",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 1 (swap holds on 5 of 6 copies; checkpoint lost)"
+      ],
+      "notes": "Copies A-F are seeds 200-205 in order (our labels). Seed 205 is F and is unscored. The 99% pass line is the Amendment 12 definition in the marks file."
+    },
+    {
+      "id": "s14",
+      "duration": 43,
+      "heading": "Check 2: the leak test, missed then cleared",
+      "caption": [
+        "The leak score: right answers with zero rounds, in points out of 100.",
+        "The sealed limit was 5. Five of six copies read above it, from 5.07 to 5.59.",
+        "The plain model without the calculator read 3.09 to 3.75 on the same check.",
+        "The leak mark was missed as sealed. The project owner cleared it on Oct 9.",
+        "One other zero-round read, loops 0, was 12.94 on one copy, against 10.81 for B2."
+      ],
+      "labels": {
+        "lim": "sealed limit: 5",
+        "chip": "missed, then cleared by owner"
+      },
+      "vals": [
+        {
+          "label": "A",
+          "value": 5.59
+        },
+        {
+          "label": "B",
+          "value": 5.15
+        },
+        {
+          "label": "C",
+          "value": 5.59
+        },
+        {
+          "label": "D",
+          "value": 5.07
+        },
+        {
+          "label": "E",
+          "value": 5.0
+        },
+        {
+          "label": "F",
+          "value": 5.59
+        }
+      ],
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (line 202): donor 5.59/5.15/5.59/5.07/5.00/5.59; B2 3.09-3.75; loops:0 on s201 12.94 vs B2 10.81",
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (line 203): owner cleared mark 4, 8:21 AM ET 10-09",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row: leak mark cleared 8:21 AM ET 10-09)"
+      ],
+      "notes": "Copies A-F are seeds 200-205 in order (our labels). The leak limit is 5 (mark 4). The loops:0 read is on copy B (seed 201). Five values are above 5; E is exactly 5.00, which is at the limit."
+    },
+    {
+      "id": "s15",
+      "duration": 40,
+      "heading": "What is tested, and what is not",
+      "caption": [
+        "Tested: the calculator outside the model, at 3M, over six copies (swap check on five).",
+        "Never run together: the Gemma reader with the outside calculator.",
+        "Built, never run: calls at any round.",
+        "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most digits."
+      ],
+      "labels": {
+        "t": "tested: calc outside, 3M",
+        "n": "never run: Gemma with calc",
+        "b": "built, never run: any round",
+        "rem1": "Calls are text.",
+        "rem2": "The calculator replies in text.",
+        "rem3": "A copy trick, with a learned stop, writes most digits."
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row), sec. 5 item 6 (Gemma and calculator never run together), sec. 3 (any-round built, untested)",
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (6 copies; mark 5 on 5)"
+      ]
+    }
+  ]
+}

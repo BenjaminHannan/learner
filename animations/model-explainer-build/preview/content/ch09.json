@@ -1,0 +1,433 @@
+{
+ "kicker": "Part 9 of 14",
+ "title": "Does the thinking really do the work?",
+ "blurb": "We turn the thinking down, round by round, and break other parts on purpose, to see whether the answers fall with it.",
+ "accent": "thinker",
+ "scenes": [
+  {
+   "id": "s01",
+   "duration": 20,
+   "heading": "Where we are: the thinker",
+   "caption": [
+    "This part is the thinker, a team of note-takers that works in rounds.",
+    "We claim the thinking does the work. This chapter tests that claim."
+   ],
+   "note": "One round = one lap: look at the whole question, pass notes, think.",
+   "src": [
+    "animations/model-explainer-build/kit/GLOSSARY.md (thinker, round)",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 and 2 (Thinker row: 'same weights every round')"
+   ]
+  },
+  {
+   "id": "s02",
+   "duration": 21,
+   "heading": "A score with nothing to compare",
+   "caption": [
+    "Our model scored 73.01 points out of 100 on 6,040 questions kept aside.",
+    "That is 4,410 right. But is it the thinking that earns them?"
+   ],
+   "score": 73.01,
+   "unit": "points out of 100",
+   "right": 4410,
+   "rightLabel": "right, out of 6,040",
+   "chip": "tested: one copy, smallest size",
+   "src": [
+    "animations/source-g1-3m-s400.json (G-B2 full: right 4410, of 6040, pooled5 73.01)",
+    "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 12 (addendum G): 73.01 (4,410/6,040), 3M s400",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2: 'Shown on one seed'"
+   ],
+   "notes": "Tested once: 3M size (3,544,913 numbers it learned), seed 400, run on the project's own PC. Re-added from the raw RESULT.json (branch claude/8a-g-pc-results) by me: 1170+863+1178+715+484 = 4410 right of 1360+1200+1360+800+1320 = 6040; 100 x 4410/6040 = 73.01."
+  },
+  {
+   "id": "s03",
+   "duration": 22,
+   "heading": "What the 6,040 questions are",
+   "caption": [
+    "To score it, we use 6,040 questions kept aside.",
+    "They come in five kinds, from familiar to new.",
+    "They add up to 6,040. The test is called pooled-5."
+   ],
+   "total": 6040,
+   "kinds": [
+    {
+     "label": "Familiar",
+     "n": 1360
+    },
+    {
+     "label": "New answers",
+     "n": 1200
+    },
+    {
+     "label": "New sentence frames",
+     "n": 1360
+    },
+    {
+     "label": "New words",
+     "n": 800
+    },
+    {
+     "label": "New wording",
+     "n": 1320
+    }
+   ],
+   "src": [
+    "custom-io/gpt-b2-leak-and-credit-2026-10-05.md 'Data and metrics' (dev splits: in_dist same templates; answer unseen answer values; frame new sentence frames; vocab new words; variant new wordings; pooled-5 = 6,040 rows)",
+    "repo branch origin/claude/project-thread-qtxfp4: custom_io/PASS-MARKS.md line 26 (pooled-5 = in_dist + answer + frame + vocab + variant, 6,040 rows)",
+    "branch claude/8a-g-pc-results results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json final_eval.{in_dist,answer,frame,vocab,variant}.n = 1360, 1200, 1360, 800, 1320"
+   ],
+   "notes": "The per-kind question counts are the n fields of the raw file; they sum to 6040. 'Familiar templates' is in_dist (same templates as practice, new questions)."
+  },
+  {
+   "id": "s04",
+   "duration": 28,
+   "heading": "Turning the thinking down",
+   "caption": [
+    {
+     "at": 0.02,
+     "text": "Trained with 12 rounds, it scores 73.01 at 12."
+    },
+    {
+     "at": 0.2,
+     "text": "Turn the dial down, with no new practice: 2 rounds scores 29.30."
+    },
+    {
+     "at": 0.4,
+     "text": "1 round: 20.00."
+    },
+    {
+     "at": 0.58,
+     "text": "0 rounds, no thinking at all: 0.66. Just 40 right out of 6,040."
+    }
+   ],
+   "ticks": [
+    0,
+    12,
+    24
+   ],
+   "scoreHead": "points out of 100",
+   "rows": [
+    {
+     "label": "12 rounds",
+     "rounds": 12,
+     "value": 73.01
+    },
+    {
+     "label": "2 rounds",
+     "rounds": 2,
+     "value": 29.3
+    },
+    {
+     "label": "1 round",
+     "rounds": 1,
+     "value": 20.0
+    },
+    {
+     "label": "0 rounds",
+     "rounds": 0,
+     "value": 0.66
+    }
+   ],
+   "src": [
+    "animations/source-g1-3m-s400.json (G-B2 trained_rounds 12; by_thinking_rounds loops:0 40 right 0.66; loops:1 1208 right 20.0; loops:2 1770 right 29.3)",
+    "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 12 (addendum G): thinker-off (loops:0) 0.66; spec sec. 3 mark 3 defines loops:0 as zero rounds",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table ('Fixed number of rounds ... 12 in G1')",
+    "branch claude/8a-g-pc-results B2/RESULT.json config.cfg.n_loops = 12; lesions loops:0/1/2"
+   ],
+   "notes": "0.66, 73.01 are in the spec; 29.30, 20.00 and the right-counts 1,770 / 1,208 / 40 are re-added from the raw RESULT.json files (sum of correct over in_dist, answer, frame, vocab, variant, divided by 6,040). The 12-round row is the model as trained ('full'); the raw file has no separate loops:12 entry."
+  },
+  {
+   "id": "s05",
+   "duration": 27,
+   "heading": "More rounds: no gain",
+   "caption": [
+    "Now turn the dial past its practice, to 24 rounds.",
+    "The score does not rise: 72.57, which is 27 fewer right (4,410 minus 4,383).",
+    "The finished design adds a learned stop switch to choose the rounds."
+   ],
+   "ticks": [
+    0,
+    12,
+    24
+   ],
+   "scoreHead": "points out of 100",
+   "rows": [
+    {
+     "label": "12 rounds",
+     "rounds": 12,
+     "value": 73.01
+    },
+    {
+     "label": "24 rounds",
+     "rounds": 24,
+     "value": 72.57
+    }
+   ],
+   "chip": "stop switch: built, never tested",
+   "src": [
+    "animations/source-g1-3m-s400.json (loops:24: 4383 right, 72.57)",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row: 'built, never run'; at least 1, at most 32 rounds) and sec. 5 item 13 (depth has a known cost)"
+   ],
+   "notes": "27 = 4,410 minus 4,383, my subtraction (right answers at 12 rounds minus at 24 rounds). 24 = twice the 12 trained rounds (the raw file's 2 x n_loops lesion)."
+  },
+  {
+   "id": "s06",
+   "duration": 31,
+   "heading": "Multi-step questions need rounds most",
+   "caption": [
+    "A second test, called chain-5: 1,000 multi-step questions kept aside.",
+    "Each step needs its own round, so cutting rounds hurts most.",
+    "1 round: 0.0. 2 rounds: 1.1. 12 and 24 rounds: 99.9."
+   ],
+   "example": "Tom has 12 apples. He gives away 5, then buys 3.",
+   "illustration": "made-up example",
+   "scoreHead": "points out of 100",
+   "rows": [
+    {
+     "label": "0 rounds",
+     "value": 0.0
+    },
+    {
+     "label": "1 round",
+     "value": 0.0
+    },
+    {
+     "label": "2 rounds",
+     "value": 1.1
+    },
+    {
+     "label": "12 rounds",
+     "value": 99.9
+    },
+    {
+     "label": "24 rounds",
+     "value": 99.9
+    }
+   ],
+   "src": [
+    "animations/source-g1-3m-s400.json (chain5: intact 99.9, loops:0 0.0, loops:1 0.0, loops:2 1.1, loops:24 99.9)",
+    "architecture/model-deep-dive.html 'How we score it' (chain-5: 1,000 multi-step questions) and 'Rounds 1 to 7: one calculator step each' (example needs two steps, one per round)",
+    "custom-io/gpt-b2-leak-and-credit-2026-10-05.md (chain-5 = 5 multi-step arithmetic families, 1,000 rows)"
+   ],
+   "notes": "Not the separate 'multistep' subset (480 rows per split). The Tom example is made up (deep-dive: 'Made up for this page'); its two steps are an illustration of one step per round, in the older design page's words. 12 rounds = the model as trained (chain5 'intact').",
+   "stepsLabel": "two steps, two rounds"
+  },
+  {
+   "id": "s07",
+   "duration": 32,
+   "heading": "Break the notes, the answer breaks",
+   "caption": [
+    "A lesion test: break one part, and see if the answer breaks.",
+    "Give the talker another question's notes: the score falls to 4.19.",
+    "Shuffle the notes between questions: 6.80."
+   ],
+   "labels": {
+    "thinker": "Thinker",
+    "notes": "notes",
+    "talker": "Talker",
+    "a": "A",
+    "b": "B"
+   },
+   "illustration": "picture only",
+   "cards": [
+    {
+     "title": "Another question's notes",
+     "was": 86.03,
+     "to": 4.19,
+     "sub": "was 86.03, on 1,360 questions",
+     "extra": "55.15 gave the other's answer"
+    },
+    {
+     "title": "Notes shuffled",
+     "was": 73.01,
+     "to": 6.8,
+     "sub": "was 73.01, on 6,040 questions"
+    }
+   ],
+   "wiring": "Wiring check: shows plumbing, not good reasoning.",
+   "src": [
+    "branch claude/8a-g-pc-results B2/RESULT.json lesions.donor.in_dist (exact 4.19, donor_match 55.15, n 1360) and lesions.shuffle_state (pooled-5 411/6040)",
+    "branch origin/claude/project-thread-qtxfp4 custom_io/README.md ('donor-swap lesion': same-family donor whose answer differs) and custom_io/models/base.py lines 20-21, 38, 55-56 (shuffle_state = notes rolled by one row across the batch)",
+    "custom_io/PASS-MARKS.md lines 53-57 ('Wiring checks (hold by construction; they show the plumbing, not reasoning)')",
+    "animations/model-explainer-build/chapters-out/ch09/g1-3m-s400-extract.json"
+   ],
+   "notes": "Same model and seed as the rest of the chapter (G-B2, 3M, seed 400), not the older design numbers in model-deep-dive.html (3.8% / 7.9%). 86.03 and 4.19 are on the 1,360 familiar-template questions only (the donor test's in_dist split; 1,170 right intact, 57 right with a donor's notes, 750 of 1,360 gave the donor's answer). 6.80 = 411/6040, intact 73.01. Shuffle is the notes rolled by one row (each question gets the next question's notes).",
+   "scoreHead": "points out of 100"
+  },
+  {
+   "id": "s08",
+   "duration": 28,
+   "heading": "Break the calculator, the answer breaks",
+   "caption": [
+    "Swap add and subtract inside the calculator, and the answers follow.",
+    "Of 831 answers the swap changes, 830 followed it.",
+    "Switch it off: the score is 0.0 on 2,085 questions that need it."
+   ],
+   "labels": {
+    "thinker": "Thinker",
+    "calc": "Calculator",
+    "talker": "Talker",
+    "add": "add",
+    "sub": "subtract"
+   },
+   "illustration": "picture only",
+   "cards": [
+    {
+     "title": "Add and subtract swapped",
+     "value": 99.9,
+     "sub": "830 of 831 followed the swap"
+    },
+    {
+     "title": "Calculator off",
+     "was": 100.0,
+     "to": 0.0,
+     "sub": "was 100.0"
+    }
+   ],
+   "src": [
+    "branch claude/8a-g-pc-results B2/RESULT.json extra.opswap (n_affected 831, swap_match 99.88, stays_intact 0.0) and extra.noexec (n 2085, intact 100.0, program_families 0.0)",
+    "branch origin/claude/project-thread-qtxfp4 custom_io/models/ledger.py lines 640-695 (how noexec program rows and opswap affected rows are chosen) and custom_io/PASS-MARKS.md lines 66-67, 434-445",
+    "animations/model-explainer-build/chapters-out/ch09/g1-3m-s400-extract.json"
+   ],
+   "notes": "830 of 831 = 99.88, shown as 99.9. 'Answers the swap changes' = chain-5 rows the intact model got right, answered by a calculator result, where swapping add and subtract changes that result (ledger.py swap_stats: aff). 'Questions that need it' = rows whose right answer is a calculator result (noexec program rows, n 2085): 100.0 with the calculator on, 0.0 off.",
+   "scoreHead": "points out of 100"
+  },
+  {
+   "id": "s09",
+   "duration": 30,
+   "heading": "A small leak with no thinking",
+   "caption": [
+    "At zero rounds a model should score near zero. Some runs did not.",
+    "An earlier version, copy 200: with the borrowed Gemma reader 18.09, without it 1.40.",
+    "Our copy 400: 0.96 here, 0.66 on all 6,040. Cause not settled."
+   ],
+   "subtitle": "points out of 100, zero rounds, familiar questions",
+   "markLabel": "pass mark",
+   "mark": 5,
+   "rows": [
+    {
+     "label": "No Gemma, copy 200",
+     "value": 1.4
+    },
+    {
+     "label": "Gemma, copy 200",
+     "value": 18.09
+    },
+    {
+     "label": "This model, copy 400",
+     "value": 0.96
+    }
+   ],
+   "src": [
+    "repo branch origin/claude/project-thread-qtxfp4 custom_io/PASS-MARKS.md addendum 14 (lines 339-367: 'read 18.09 at loops:0 in_dist (mark 5 limit 5; B2V 1.40)'; 'cause ... wrong'; loops:0 score varies widely across runs)",
+    "custom_io/results/RESULTS-EG2.md (EGE seed 200 loops0 18.09; plain B2 1.40)",
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 items 2 and 4 ('cause not settled')",
+    "branch claude/8a-g-pc-results B2/RESULT.json lesions.loops:0.in_dist: 13 right of 1360 = 0.96"
+   ],
+   "notes": "All three bars are the zero-round score on the familiar-template questions (in_dist, 1,360 questions per copy), not the 6,040-question pooled-5 (0.66). The seed-200 numbers come from the earlier version of the model (8 rounds, older settings), before the G1 fix; the seed-400 copy is G1 (12 rounds). 'Gemma' = EGE, B2 with the borrowed reader in front; 'No Gemma' = B2V on the same seed. 0.96 = 13/1360 (my division). Mark 5 = 'loops:0 in_dist <= 5' in PASS-MARKS addendum 4/14; big-run PLAN scorecard row 2 uses the same idea ('thinker-off <= half the full score')."
+  },
+  {
+   "id": "s10",
+   "duration": 37,
+   "heading": "Side by side with a plain model",
+   "caption": [
+    "Ours scores 5.9 points more than the plain model (our subtraction: 73.01 minus 67.12).",
+    "But it takes 2.7 times longer to train (our division: 6.51 by 2.38 hours).",
+    "Add a calculator to the plain model, no retraining: 69.62 and 99.0. Gap: 3.39 points (our subtraction)."
+   ],
+   "heads": {
+    "ours": "Ours, with thinker",
+    "plain": "Plain model",
+    "calc": "Plain + calculator"
+   },
+   "headSubs": {
+    "ours": "3,544,913 numbers",
+    "plain": "3,495,936 numbers",
+    "calc": "added afterwards"
+   },
+   "table": [
+    {
+     "label": "Main test, of 100",
+     "dec": 2,
+     "ours": 73.01,
+     "plain": 67.12,
+     "calc": 69.62
+    },
+    {
+     "label": "Multi-step, of 100",
+     "dec": 1,
+     "ours": 99.9,
+     "plain": 91.0,
+     "calc": 99.0
+    },
+    {
+     "label": "Training hours",
+     "dec": 2,
+     "ours": 6.51,
+     "plain": 2.38,
+     "calc": null
+    }
+   ],
+   "src": [
+    "animations/source-g1-3m-s400.json (G-B2 3,544,913; 6.51 h; 73.01; chain5 99.9. G-PT 3,495,936; 2.38 h; 67.12; chain5 91.0)",
+    "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 2 (G-PT: plain step model with the same Gemma front) and sec. 6 addendum A (sizes)",
+    "branch claude/8a-g-pc-results PT/RESULT.json lesions.calc (pooled-5 4205/6040 = 69.62) and chain5.calc (99.0)",
+    "custom_io/README.md and custom_io/models/plain_tf_steps.py line 2 ('calc' lesion: a calculator fills each a op b = while decoding, same weights, no retraining)"
+   ],
+   "notes": "5.9 = 73.01 - 67.12 = 5.89 (my subtraction). 2.7 = 6.51 / 2.38 = 2.735 (my division; the speed ratio 2.80 / 1.02 = 2.745 also gives 2.7). 3.39 = 73.01 - 69.62 (my subtraction). 69.62 = 4205/6040 summed from PT/RESULT.json lesions.calc over the five splits. The plain model writes its worked steps out as text and then the answer (plain_tf_steps_g, 4 layers, width 256). One copy, seed 400, 3M."
+  },
+  {
+   "id": "s11",
+   "duration": 28,
+   "heading": "What this does not show",
+   "caption": [
+    "One copy at the smallest size is a first result, not proof.",
+    "This is the older design, with 12 fixed rounds. It says nothing yet about bigger sizes."
+   ],
+   "rows": [
+    {
+     "kind": "tested",
+     "label": "tested once",
+     "text": "Smallest size, one copy"
+    },
+    {
+     "kind": "placeholder",
+     "label": "to come",
+     "text": "Second copy and the 10M size"
+    },
+    {
+     "kind": "untested",
+     "label": "never tested",
+     "text": "The finished design (learned stop)"
+    },
+    {
+     "kind": "untested",
+     "label": "unsettled",
+     "text": "Why zero-round answers happen",
+     "color": "warn"
+    }
+   ],
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 items 2, 4, 7 (G1 tests today's model: calculator inside, 12 fixed rounds; 'shown on one seed') and sec. 2 (Learned stop: built, never run)",
+    "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 12-13 (addenda G, H: seed 401 and the 10M arms not yet in) and sec. 3 (mark 1 needs both sizes)",
+    "big-run/PLAN.md scorecard row 2 ('shown at 3M, one seed ... Not yet at 10M, nor with Gemma and the outside calculator joined')"
+   ],
+   "notes": "Seed 401 (3M) and the 10M arms were still running or queued in the project notes of Oct 9; no result file for them existed on branch claude/8a-g-pc-results. 'Open question' chip is warn-orange on purpose."
+  },
+  {
+   "id": "s12",
+   "duration": 17,
+   "heading": "What to remember",
+   "caption": "Three things to remember.",
+   "lines": [
+    "Less thinking, lower score: 73.01 to 0.66.",
+    "Multi-step answers fall first: 99.9 to 0.0 at one round.",
+    "One copy, smallest size: first result, not proof."
+   ],
+   "src": [
+    "animations/source-g1-3m-s400.json",
+    "scenes s02 to s11 of this chapter"
+   ],
+   "scoreHead": "points out of 100"
+  }
+ ]
+}
