@@ -20,6 +20,7 @@ The only behaviour change a bigger N_PLACE brings: place ids of letters 15+ from
 """
 import argparse, glob, json, os, sys
 
+LE_TODAY = 68        # tool.LE: chars per tape entry (an optional caps key 'le' raises it)
 TODAY = dict(max_prompt=208, max_ans=8, n_num=16, w_max=64, n_res=7, n_reg=9, plain_target=64)
 
 
@@ -122,8 +123,10 @@ def apply(caps):
     import importlib
     from custom_io import data
     from custom_io.models import progparse as pp, reader, plain_tf, plain_tf_steps
+    le = max(int(caps.get('le', LE_TODAY)), LE_TODAY)
     caps = {k: max(int(caps.get(k, v)), v) for k, v in TODAY.items()}
     caps['n_reg'] = max(caps['n_reg'], caps['max_ans'] + 1)
+    caps['le'] = le       # tape entry width (units): B3 group 2's notes can be longer than 68 (caps_b3g2.json: 95)
     data.MAX_PROMPT = caps['max_prompt']
     data.set_max_ans(caps['max_ans'])
     reader.MAX_PROMPT = caps['max_prompt']
@@ -138,12 +141,15 @@ def apply(caps):
     pp.N_NUM, pp.N_RES, pp.W_MAX = caps['n_num'], caps['n_res'], caps['w_max']
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
-    for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3', 'custom_io.english', 'custom_io.models.plain_lm'):
+    for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3', 'custom_io.models.b3g2', 'custom_io.english', 'custom_io.models.plain_lm'):
         # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
         # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
         m = importlib.import_module(name)
         # no CAP here: plain_tf_steps.CAP is set above and no module in this list reads a CAP of its own except tool_h1 / b3, whose CAP is H1's fixed
         # 32-round cap, not a data cap (patching it made B3 run up to plain_target = 109 rounds; found by the roadmap thread 10-09)
+        for k, v in dict(LE=caps['le'], SPAN_MAX=caps['le']).items():
+            if hasattr(m, k):
+                setattr(m, k, v)
         for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt']).items():
             if hasattr(m, k):
                 setattr(m, k, v)

@@ -119,6 +119,7 @@ def rand_digits(rng, lo=1, hi=9):
 
 
 class Tool(Ledger):
+    OPERAND_CELLS = True        # B3 group 2 (b3g2) writes operands with its byte writer: no cells, so the place table need not hold CELLS rows
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False,
@@ -128,7 +129,7 @@ class Tool(Ledger):
         self.tape = int(tape or N_RES)      # tape entries: T1's N_RES, or (B3 any_round) max(16, N_RES)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
                          w_noop=w_noop, wpos=wpos, copy=True, **kw)
-        assert self.reader.place.num_embeddings >= CELLS, f'operand cells need {CELLS} place rows (caps n_reg + 1 >= CELLS), the reader has {self.reader.place.num_embeddings}'
+        assert not self.OPERAND_CELLS or self.reader.place.num_embeddings >= CELLS, f'operand cells need {CELLS} place rows (caps n_reg + 1 >= CELLS), the reader has {self.reader.place.num_embeddings}'
         self.LESIONS = list(Tool.LESIONS)
         for name in ('vcode', 'res_from_z', 'op_emb', 'q_a', 'q_b', 'q_ans', 'k_slot', 'ln_k'):
             delattr(self, name)
@@ -239,17 +240,25 @@ class Tool(Ledger):
         e_s[which string the char is in] (0 = the prompt, 1 + k = entry k), a fact of the text layout, the same one seg_of uses; span_end adds
         e_e[the char's distance from the end of its string] (0 = its last char; mask [B, N] = the chars that exist), another layout fact."""
         ks = self.k_s(Xc)
-        if self.span_idx:
-            pos = torch.arange(Xc.shape[1], device=Xc.device)
-            sid = torch.where(pos < T, torch.zeros_like(pos), 1 + (pos - T).div(le, rounding_mode='floor'))
-            ks = ks + self.e_s(sid)
-            if self.span_end:
-                m = mask.long()
-                n = torch.zeros(m.shape[0], int(sid.max()) + 1, dtype=torch.long, device=m.device).scatter_add_(1, sid.expand_as(m), m)
-                lo = torch.where(pos < T, torch.zeros_like(pos), T + (sid - 1) * le)
-                dist = (n.gather(1, sid.expand_as(m)) - 1 - (pos - lo)).clamp(0, LE - 1)
-                ks = ks + self.e_e(dist)
+        for term in self.layout_terms(Xc.shape[1], T, le, mask, Xc.device):
+            ks = ks + term
         return ks
+
+    def layout_terms(self, N, T, le, mask, dev):
+        """The learned layout terms of the span keys, without k_s (B3 group 2's writer uses them as its copy-key terms): [] (no span_idx), [e_s[string]] or
+        [e_s[string], e_e[distance from the string's end]] over a context of N positions (prompt [0, T), then entries of le chars; mask [B, N] = chars that exist)."""
+        if not self.span_idx:
+            return []
+        pos = torch.arange(N, device=dev)
+        sid = torch.where(pos < T, torch.zeros_like(pos), 1 + (pos - T).div(le, rounding_mode='floor'))
+        terms = [self.e_s(sid)]
+        if self.span_end:
+            m = mask.long()
+            n = torch.zeros(m.shape[0], int(sid.max()) + 1, dtype=torch.long, device=m.device).scatter_add_(1, sid.expand_as(m), m)
+            lo = torch.where(pos < T, torch.zeros_like(pos), T + (sid - 1) * le)
+            dist = (n.gather(1, sid.expand_as(m)) - 1 - (pos - lo)).clamp(0, LE - 1)
+            terms.append(self.e_e(dist))
+        return terms
 
     def span_read(self, logits, ids, mask, T, le):
         """Greedy span copy -> texts in reading order. logits [B, N]: the pointer over the context (prompt [0, T), then entries of le chars);
@@ -666,25 +675,10 @@ class Tool(Ledger):
         return vals
 
     # ---- extra evals (train.py --final-eval) ----
-    @torch.no_grad()
-    def extra_evals(self, ctx):
-        import os, random
-        from custom_io.data import collate, Dataset, load_rows, to_device
-        from custom_io.evalx import CHAIN5, evaluate, is_hit, subsample
-        was = self.training
-        self.eval()
-        root = ctx.get('big') or ctx['data']
-        rows = load_rows(os.path.join(root, 'dev', 'in_dist.jsonl'))
-        dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
-        cov = pp.coverage(rows)
-        fams = sorted(f for f, c in cov['by_family'].items() if c['prog'] >= 50)
-        prows = [r for r in rows if pp.row_targets(r)['prog']]
-        out = dict(coverage=cov, program_families=fams, n_dev=len(rows), n_prog=len(prows), size=self.size())
-
-        def batches(rs, size=bs):
-            for s in range(0, len(rs), size):
-                yield to_device(collate([Dataset(rs[s:s + size], self.vocab, strict=False)[i] for i in range(len(rs[s:s + size]))]), dev)
-
+    def call_evals(self, out, prows, batches, ctx):
+        """Call accuracy into out['op_acc'] (and 'span_use'); B3 group 2 replaces it (calls are text there)."""
+        from custom_io.evalx import is_hit, subsample
+        dev, amp = ctx['device'], ctx['amp']
         # call accuracy: teacher-forced (gold tape) vs free run; a call is right when the op and both operand strings are the gold ones
         sl = subsample(prows, 400)
         acc = {m: dict(ops=0, steps=0, calls=0, n_calls=0, prog=0) for m in ('teacher_forced', 'free_run')}
@@ -726,6 +720,28 @@ class Tool(Ledger):
         out['op_acc']['free_run']['answer'] = pc(fr_ans, n)
         if self.span_copy:      # free run on the call-accuracy rows: share of written operands that took the span path, of answers in mode 0
             out['span_use'] = dict(operand=pc(su['span'], su['sides']), answer=pc(su['ans_span'], su['rows']), n_sides=su['sides'], n_rows=su['rows'])
+
+    @torch.no_grad()
+    def extra_evals(self, ctx):
+        import os, random
+        from custom_io.data import collate, Dataset, load_rows, to_device
+        from custom_io.evalx import CHAIN5, evaluate, is_hit, subsample
+        was = self.training
+        self.eval()
+        root = ctx.get('big') or ctx['data']
+        rows = load_rows(os.path.join(root, 'dev', 'in_dist.jsonl'))
+        dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
+        cov = pp.coverage(rows)
+        fams = sorted(f for f, c in cov['by_family'].items() if c['prog'] >= 50)
+        prows = [r for r in rows if pp.row_targets(r)['prog']]
+        out = dict(coverage=cov, program_families=fams, n_dev=len(rows), n_prog=len(prows), size=self.size())
+
+        def batches(rs, size=bs):
+            for s in range(0, len(rs), size):
+                yield to_device(collate([Dataset(rs[s:s + size], self.vocab, strict=False)[i] for i in range(len(rs[s:s + size]))]), dev)
+
+        pc = lambda x, d: 100 * x / max(d, 1)
+        self.call_evals(out, prows, batches, ctx)
         # tool off (mark 3): the B2 noexec set (NUM rows whose gold answer slots are all result slots), calculator returns '?'
         tg = {r['id']: pp.row_targets(r) for r in rows}
         fr_rows = subsample([r for r in rows if r['family'] in fams], 3000)

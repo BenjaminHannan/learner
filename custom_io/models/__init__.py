@@ -14,6 +14,7 @@ LAZY = {
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
     'tool_h1': 'custom_io.models.tool_h1:ToolH1',                       # H1: T1 where a learned stop head picks the rounds per turn (cap 32)
     'b3': 'custom_io.models.b3:B3',                                     # B3 group 1: H1R + eg_embed (Gemma), any_round (calls at any round), gap_p
+    'b3g2': 'custom_io.models.b3g2:B3G2',                               # B3 group 2: b3 + one learned byte writer (calls and answers as text), no_slots / no_place / bytes / as_written
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
 

@@ -183,7 +183,7 @@ def main(argv=None):
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
     if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM} and a.public == 'none', 'with eg_embed only the B2, PT and B3 arms run (plain_lm and the public model have no Gemma front)'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM} and a.public == 'none', 'with eg_embed only the B2, PT and B3 arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)
@@ -211,15 +211,16 @@ def main(argv=None):
     caps = get_caps(a, pdir)
     CP.apply(caps)                                  # in this process too, so the parameter counts below include the sized position / place tables
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
-    old = [x for x in a.arms if x != C.B3_ARM]
+    old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM)]
     cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
     if old:
         C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
-    if C.B3_ARM in a.arms:          # B3: n_loops (and any extra switch) come in through --b2-extra; its trained count is checked against its rung band
-        cfgs[C.B3_ARM] = C.b3_cfg(a.rung, b2_extra)
-        counts[C.B3_ARM] = C.check_b3(a.rung, cfgs[C.B3_ARM])
-        sz = C.b3_sizes(cfgs[C.B3_ARM])
-        print('B3 size', json.dumps(sz), flush=True)
+    for arm_, g_ in ((C.B3_ARM, 1), (C.B3G2_ARM, 2)):
+        if arm_ in a.arms:          # B3 / B3G2 (arm 'B3G2' = model b3g2, caps g8a/caps_b3g2.json): n_loops (and any extra switch) come in through --b2-extra; the count is checked against its band
+            cfgs[arm_] = C.b3_cfg(a.rung, b2_extra, g_)
+            counts[arm_] = C.check_b3(a.rung, cfgs[arm_], g_)
+            sz = C.b3_sizes(cfgs[arm_], C.MODEL_OF[arm_])
+            print(arm_, 'size', json.dumps(sz), flush=True)
     steps = a.steps or man['schedule']['steps']
     pm_dir = base if a.local else os.path.join(base, tag + '-pool')
     os.makedirs(pm_dir, exist_ok=True)
