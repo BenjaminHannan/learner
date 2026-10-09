@@ -140,3 +140,42 @@ def test_ap_check_prefixed_targets():
     import pytest
     with pytest.raises(AssertionError):                                      # a second call finds the entries now there
         N.check_prefixed(rows, 'n2|')
+
+
+def test_scl_scorecard_edges():
+    n0, L = 100 / 256, 100 * 80 / 256                   # L gain ~ 78.9 questions-worth; 0.9x of it needs ~72.1 of 256 (as SC's W1)
+    v, sc = N.sc_scorecard_verdict, N.sc_scorecard
+    ok = sc(100 * 73 / 256, L, n0, True)
+    near = sc(100 * 72 / 256, L, n0, True)              # one question short: met
+    short2 = sc(100 * 71 / 256, L, n0, True)            # two short: fails
+    harm = sc(L, L, n0, False)
+    low = sc(10.0, L, n0, True)
+    assert near['questions_short'] == 1 and near['mark2'] and near['passes'] and short2['questions_short'] == 2 and not short2['passes']
+    assert v({'a': ok, 'b': near})['passes'] and not v({'a': ok, 'b': near})['proved_wrong']
+    assert not v({'a': ok, 'b': short2})['passes'] and not v({'a': ok, 'b': short2})['proved_wrong']      # short, not low: neither
+    assert v({'a': harm, 'b': ok})['proved_wrong'] and v({'a': ok, 'b': harm})['proved_wrong']            # harm on either parent
+    assert v({'a': low, 'b': low})['proved_wrong'] and not v({'a': low, 'b': ok})['proved_wrong']         # low on both only
+    assert N.SCL_LR == 1e-4 and N.SCL_VISITS == 32 and (N.SC_EVERY, N.SC_DRAW, N.SC_PICK) == (32, 1024, 256)
+
+
+def test_scl_night_picking_off_is_vl_L_smoke():
+    """_sc_night(select=False) at lr 1e-4 == sleep7d.sleep_on (VL's arm L call) bit for bit, on 8 real N-prime records (8 updates)."""
+    import os, pytest, torch
+    from creative import sleep, c2_stones, rules_real as R
+    from creative.sleep7d import DATA, sleep_on, _limit
+    ck, tr = os.path.expanduser('~/c7d/s100/Nprime.pt'), os.path.expanduser('~/work/data/train.jsonl')
+    if not (os.path.exists(ck) and os.path.exists(tr) and os.path.isdir(os.path.expanduser('~/c7d/s1/s100'))):
+        pytest.skip('no N-prime / train / S1 day')
+    torch.set_num_threads(1)
+    s3 = __import__('json').load(open(os.path.expanduser('~/c7d/s3/s100/s3.json')))
+    base, vocab, _ = sleep.load_parent(ck, 'cpu')
+    base.eval()
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), s3['args']['pool_limit']))
+    recs, _ = N._w1_records(ck, 's100', os.path.expanduser('~/c7d/s1'), s3, pool, base, vocab, 'cpu')
+    recs = recs[:8]
+    replay = sleep.load_replay(tr, s3['args']['replay_n'], s3['seed'])[:64]
+    warm = R.warm_records(R.load_split(DATA, 'warm'))
+    a, ia = sleep_on(base, recs, vocab, replay, warm, 1e-4, 32, s3['seed'], 'cpu')
+    b, ib = N._sc_night(base, recs, replay, warm, vocab, 1e-4, 32, s3['seed'], 'cpu', None, select=False)
+    assert ia['updates'] == ib['updates'] == 8 and ia['last_loss'] == ib['last_loss']
+    assert all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), b.state_dict().values()))

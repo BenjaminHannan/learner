@@ -589,14 +589,14 @@ def sleep_sc(model, records, replay_rows, vocab, cfg, device='cpu', replay_extra
     return dict(loss=losses, visits=visits, updates=cfg.updates, selection=sel, score_seconds=score_s)
 
 
-def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log):
+def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log, select=True):
     """sleep7d.sleep_on's recipe through sleep_sc. -> (model, info)."""
     m = copy.deepcopy(N)
     u = visits * len(recs) // 32
     per = 32 if replay else 64
     mv = max(visits, math.ceil(u * per / max(len(recs), 1)))
     t0 = time.time()
-    so = sleep_sc(m, recs, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv), device, replay_extra=warm_rows, frozen=None, log=log)
+    so = sleep_sc(m, recs, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv), device, replay_extra=warm_rows, frozen=None, select=select, log=log)
     m.eval()
     sel = so['selection']
     fam_all = collections.Counter()
@@ -737,6 +737,179 @@ def screport(out, parents):
                report_only_roadmap_marks=dict(label='report only (roadmap 097902443a): the original SC marks', rules=SC_MARKS, per_parent=pm, verdict=sc_verdict(pm)),
                tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], night=x['night'], selection=x['selection']) for p, x in res.items()})
     json.dump(rep, open(os.path.join(out, 'sc-report.json'), 'w'), indent=1)
+    return rep
+
+
+
+# ---------------------------------------------------------------- Test SCL (roadmap e5ab95d650): SC's self-picked skills replay on VL's arm L (lr 1e-4, 32 visits)
+SCL_RECIPE = ("night 1 from N' = VL's arm L exactly (W1's records, lr 1e-4, 32 visits, W1's seed, warm replay, schedule) with ONE change, SC's: after the first 32 updates, every 32 updates 1,024 fresh skills TRAIN rows "
+              "are scored (loss now - loss of the frozen pre-night N'), the 256 with the largest rise are the skills replay of the next 32 updates. Control = VL's L (uniform replay), already trained")
+SCL_LR, SCL_VISITS = 1e-4, 32
+SCL_SCORECARD = dict(source="roadmap e5ab95d650 (Test SCL), set before any result; same form as SC's scorecard with L (VL's lr 1e-4 night) in W1's place",
+                     gain="gain = C2 DEV first try minus N' first try (points); ratio = SCL gain / L gain",
+                     passes="on BOTH parents: harm_measure(N' DEV hits, SCL DEV hits) passes (in_dist drop <= 1.5, no family fires) and first-try gain over N' >= 0.9x L's gain",
+                     near_miss="as in SC: a shortfall of exactly ONE DEV question counts as met; two or more fails (questions_short is reported)",
+                     proved_wrong="harm fails on EITHER parent, or gain < 0.5x L's on BOTH parents",
+                     report_only="SCL - L and SCL - W1 first try (paired boot), multi-step reach@32 SCL - L and SCL - W1, in_dist drop SCL vs L, harm SCL vs L and vs W1, harm vs B2, picked family mix, loss rise picked vs random, CPU seconds")
+
+
+def scl_parent(nprime, out, s1dir, s3dir, rdir, vldir, l2dir, s1wdir, skills_train, skills_data, seed=0, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True, log=_log, max_records=None, b2=None):
+    """One parent's Test SCL. DIR/<name>/scl.json is written after every stage; SCL.pt is a cached stage. Reuses (key-checked, read only): R's skills / c2 caches for N', VL's for L (and L.pt), L2's c32_L.pkl for
+    L's reach@32. Asserts VL's L was trained with this night's records count, lr 1e-4, 32 visits and seed. max_records = smoke only (recorded; L's key check is then skipped)."""
+    nprime = os.path.expanduser(nprime)
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s3d, rd, vd, l2d, s1wd = (os.path.join(d, name) for d in (out, s3dir, rdir, vldir, l2dir, s1wdir))
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs = time.time(), {}
+    s3 = json.load(open(os.path.join(s3d, 's3.json')))
+    a3 = s3['args']
+    seed, T = s3['seed'], s3['T']
+    mseed = seed + 777
+    assert a3['lr'] == 1e-3 and a3['visits'] == 32, 'W1 is not the standard night'
+    vj = json.load(open(os.path.join(vd, 'vl.json')))
+    vL = vj['arms']['L']
+    assert vL['lr'] == SCL_LR and vL['visits'] == SCL_VISITS and vj['args']['seed'] == seed and vj['args']['night_seed'] == seed, "VL's L is not lr 1e-4 / 32 visits / this seed"
+    assert vj['records']['rebuilt'] == vj['records']['W1_night'] and not vj['args'].get('max_records') and vj['args']['s3_args'] == a3, "VL's L was not trained on the full W1 records of this S3 run"
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], recipe=SCL_RECIPE, marks_rules=SCL_SCORECARD, secs=secs,
+               args=dict(seed=seed, night_seed=seed, T=T, measure_seed=mseed, lr=SCL_LR, visits=SCL_VISITS, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records, every=SC_EVERY, draw=SC_DRAW, pick=SC_PICK,
+                         s1=s1dir, s3=s3dir, r=rdir, vl=vldir, l2=l2dir, s1w=s1wdir, skills_train=skills_train, skills_data=skills_data, b2=b2),
+               night_L=vL, note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened; the pick uses only skills TRAIN rows and the model\'s own losses')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'scl.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, a3['replay_n'], seed)
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), a3['pool_limit']))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    lp = os.path.join(vd, 'L.pt')
+    w1p = os.path.join(s3d, 'W1.pt')
+    sha = dict(N=_sha_file(nprime), L=_sha_file(lp), W1=_sha_file(w1p))
+    t0 = time.time()
+    recs, res['records'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    secs['records'] = time.time() - t0
+    want = res['records']['W1_night']
+    # VL's stage key for L, recomputed: the same N', lr, visits, seed, records count, replay setting
+    lkey = _h('vl', sha['N'], SCL_LR, SCL_VISITS, seed, len(recs), want, a3['replay_n'], bool(skills_train))
+    lpk = pickle.load(open(os.path.join(vd, 'L.pkl'), 'rb'))['key']
+    if max_records:
+        recs = recs[:max_records]
+        res['records']['smoke_truncated_to'] = len(recs)
+        res['L_key_check'] = 'skipped (smoke truncation)'
+    else:
+        assert lpk == lkey, "VL's L stage key differs from the key of lr 1e-4 / 32 visits / this seed / these records"
+        res['L_key_check'] = 'equal'
+    save()
+    t0 = time.time()
+    SCL, info, sha['SCL'] = _stage(pdir, 'SCL', _h('scl', sha['N'], SCL_LR, SCL_VISITS, seed, len(recs), want, a3['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK),
+                                   lambda: _sc_night(N, recs, replay, warm_rows, vocab, SCL_LR, SCL_VISITS, seed, device, log), meta, vocab, device, resume, log)
+    secs['SCL'] = time.time() - t0
+    res['night'] = {k: v for k, v in info.items() if k not in ('rounds', 'picked_family_share', 'pool_family_share')}
+    res['selection'] = dict(rounds=info['rounds'], picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+                            rise_picked_vs_all=[(r['step'], r['mean_rise_picked'], r['mean_rise_all']) for r in info['rounds']])
+    log('SCL night', res['night'])
+    save()
+    # measures: N' (R's caches), L (VL's caches, L.pt), SCL
+    L, _, _ = sleep.load_parent(lp, device)
+    L.eval()
+    W1, _, _ = sleep.load_parent(w1p, device)
+    W1.eval()
+    allm = dict(N=N, L=L, W1=W1, SCL=SCL)      # W1 = report only
+    src = dict(N=rd, L=vd, W1=rd)
+    hits, c2, c32, res['skills'], res['c2_dev'], res['reach32'], rows = {}, {}, {}, {}, {}, {}, None
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    for a, m in allm.items():
+        t0 = time.time()
+        sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
+        v = (a in src and _peek(os.path.join(src[a], f'skills_{a}.pkl'), sk)) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda m=m: skills_dev(m, skills_data, device, skills_limit), resume, log, f'skills {a}')
+        c = (a in src and _peek(os.path.join(src[a], f'c2_{a}.pkl'), ck)) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda m=m: greedy_rows(m, dev, vocab, device), resume, log, f'c2 dev {a}')
+        rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
+        c2[a] = c
+        res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
+        res['c2_dev'][a] = dict(first_try_right=sum(d['right'] for d in c) / len(dev), stuck_rate=1 - sum(d['fit'] for d in c) / len(dev), n=len(dev))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('measure', a, res['skills'][a], res['c2_dev'][a])
+        save()
+    if b2 and os.path.exists(os.path.expanduser(b2)):
+        b2p = os.path.expanduser(b2)
+        bv = _cached(os.path.join(pdir, 'skills_B2.pkl'), ('skills', _sha_file(b2p), skills_data, skills_limit), lambda: skills_dev(sleep.load_parent(b2p, device)[0].eval(), skills_data, device, skills_limit), resume, log, 'skills B2')
+        hits['B2'] = bv[1]
+        res['skills']['B2'] = dict(pooled5=bv[2], in_dist=bv[3], n=len(bv[1]))
+    for a in ('L', 'W1', 'SCL'):
+        t0 = time.time()
+        v, how = None, 'computed'
+        key = ('c32', sha[a], dev_limit, mseed, T, 32)
+        if a == 'W1':
+            mu = os.path.join(s1wd, 'measure_U.pkl')
+            if os.path.exists(mu):
+                c = pickle.load(open(mu, 'rb'))
+                kk = c['key']
+                ok = kk[1] == 'U' and kk[3] == 32 and kk[4] == mseed and kk[6] == dev_limit and len(c['v']['c32']) == len(dev) and all(x['kind'] == r['kind'] for x, r in zip(c['v']['c32'], dev))
+                if ok:
+                    v, how = c['v']['c32'], f'reused {mu}'
+        if a == 'L':
+            v = _peek(os.path.join(l2d, 'c32_L.pkl'), key)
+            if v is not None and len(v) == len(dev) and all(x['kind'] == r['kind'] for x, r in zip(v, dev)):
+                how = f"reused {os.path.join(l2d, 'c32_L.pkl')}"
+            else:
+                v = None
+        if v is None:
+            def fn(a=a):
+                mm = _arm_model(allm[a], init, seed)
+                with creative(mm, True):
+                    smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
+                return score_rows(dev, smp, ks=(32,))
+            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), key, fn, resume, log, f'reach32 {a}')
+        c32[a] = v
+        hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
+        res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
+        secs[f'reach32_{a}'] = time.time() - t0
+        log('reach32', a, res['reach32'][a])
+        save()
+    # marks
+    hard_ix = [i for i, r in enumerate(dev) if r['kind'] in c2_pilot.HARD_KINDS]
+    if not dev_limit:
+        assert len(hard_ix) == 154, f'{len(hard_ix)} multi-step DEV questions, expected 154'
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    right = lambda a: [float(d['right']) for d in c2[a]]
+    reach = lambda a: [float(c32[a][i]['right32']) for i in hard_ix]
+    slim = lambda h: {k: v for k, v in h.items() if k != 'families'}
+    hN, hNL, hL = harm_measure(hits['N'], hits['SCL'], rows), harm_measure(hits['N'], hits['L'], rows), harm_measure(hits['L'], hits['SCL'], rows)
+    hW = harm_measure(hits['W1'], hits['SCL'], rows)
+    ft, rc = bd(right('SCL'), right('L')), bd(reach('SCL'), reach('L'))
+    pct = lambda a: 100 * res['c2_dev'][a]['first_try_right']
+    res['marks'] = dict(sc_scorecard(pct('SCL'), pct('L'), pct('N'), hN['passes'], res['c2_dev']['SCL']['n']), SCL_first_try=pct('SCL'), L_first_try=pct('L'), N_first_try=pct('N'),
+                        in_dist_drop_vs_N=hN['in_dist_drop'], fired_vs_N=hN['fired'], rules=SCL_SCORECARD)
+    rs = info['rounds']
+    res['report_only'] = dict(first_try_SCL_minus_L=ft, multi_step_reach32_SCL_minus_L=rc, multi_step_n=len(hard_ix), first_try_SCL_minus_W1=bd(right('SCL'), right('W1')),
+                              multi_step_reach32_SCL_minus_W1=bd(reach('SCL'), reach('W1')), harm_SCL_vs_W1=slim(hW), W1_in_dist_drop_vs_N=res['skills']['N']['in_dist'] - res['skills']['W1']['in_dist'],
+                              in_dist_drop_vs_N=dict(SCL=hN['in_dist_drop'], L=hNL['in_dist_drop'], SCL_minus_L=hN['in_dist_drop'] - hNL['in_dist_drop']),
+                              harm_vs_N=dict(SCL=slim(hN), L=slim(hNL)), harm_SCL_vs_L=slim(hL),
+                              harm_vs_B2={a: slim(harm_measure(hits['B2'], hits[a], rows)) for a in ('N', 'L', 'W1', 'SCL')} if 'B2' in hits else None,
+                              picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+                              loss_rise_picked_vs_random=dict(picked=sum(r['mean_rise_picked'] for r in rs) / len(rs) if rs else None, random=sum(r['mean_rise_all'] for r in rs) / len(rs) if rs else None, rounds=len(rs)),
+                              pooled5=dict(N=res['skills']['N']['pooled5'], L=res['skills']['L']['pooled5'], W1=res['skills']['W1']['pooled5'], SCL=res['skills']['SCL']['pooled5']), reach32=res['reach32'],
+                              cpu_seconds=dict(night=secs['SCL'], scoring=info['score_seconds'], measures=sum(v for k, v in secs.items() if k.startswith(('measure_', 'reach32_')))))
+    secs['total'] = time.time() - t00
+    save()
+    log('MARKS', {k: res['marks'][k] for k in ('harm', 'ratio', 'questions_short', 'mark2', 'low', 'passes')})
+    return res
+
+
+def scl(nprimes, out, s1dir, s3dir, rdir, vldir, l2dir, s1wdir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: scl_parent(p, out, s1dir, s3dir, rdir, vldir, l2dir, s1wdir, **kw) for p in nprimes}
+
+
+def sclreport(out, parents):
+    """-> DIR/scl-report.json: the scorecard verdict (SCL_SCORECARD governs; gain_SC / gain_W1 in the rows mean SCL / L), the report-only block, tables."""
+    res = {p: json.load(open(os.path.join(out, p, 'scl.json'))) for p in parents}
+    pp = {p: {k: v for k, v in x['marks'].items() if k != 'rules'} for p, x in res.items()}
+    rep = dict(parents=list(parents), per_parent=pp, verdict=sc_scorecard_verdict(pp), rules=SCL_SCORECARD, recipe=SCL_RECIPE, near_miss_on=[p for p, m in pp.items() if m['near_miss']],
+               questions_short={p: m['questions_short'] for p, m in pp.items()}, report_only={p: x['report_only'] for p, x in res.items()},
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], night=x['night'], selection=x['selection'], night_L=x['night_L']) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'scl-report.json'), 'w'), indent=1)
     return rep
 
 
@@ -969,6 +1142,13 @@ if __name__ == '__main__':
     q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
     q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('screport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    q = sub.add_parser('scl'); q.add_argument('--nprime', nargs='+', required=True)
+    for f in ('s1', 's3', 'r', 'vl', 'l2'):
+        q.add_argument('--' + f, required=True)
+    q.add_argument('--s1w', default='~/c7d/s1w', help='W1 reach@32 (report only)')
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
+    q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('sclreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('ap'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s1', 's3', 'j', 'r', 's1w'):
         q.add_argument('--' + f, required=True)
@@ -994,6 +1174,12 @@ if __name__ == '__main__':
         ex = os.path.expanduser
         ap(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.j), ex(a.r), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit,
            device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+    elif a.cmd == 'sclreport':
+        print(json.dumps(sclreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'scl':
+        ex = os.path.expanduser
+        scl(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.r), ex(a.vl), ex(a.l2), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit, device=a.device,
+            resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
     elif a.cmd == 'screport':
         print(json.dumps(screport(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 'sc':
