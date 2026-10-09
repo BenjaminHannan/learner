@@ -131,3 +131,22 @@ Reading:
 - **Amendment 2c** (T1-long always run, C1b, row interval decides) was added during the T1-nothinker runs, before any FRESH-R7 read, after a fact-check found that "T1-long only if C1 passes" would need a second R7 read.
 - **One-read rule, written before FRESH-R7 was read.** `seal_eval_t.py --final` runs once. If it crashes partway, that read is void and documented here (SPEC: a bug found after seeing R7 voids the run), not quietly rerun. Before the read, all 15 checkpoints were loaded and scored on TEST through the same script (pipeline check, not a mark).
 - Run times: T1-type ~10 min, T2 34-38 min, T1-long 34 min (seed 0, during heavy macOS background load), ~21 min (seeds 1, 2). All on the Mac, $0.
+
+## Post-hoc diagnosis of the R7 drop (after the R7 read; suggested-level; changes no mark)
+
+Plan and decision table written before running: `diag/DIAG_PLAN.md`. FRESH-R7 was not read again. Runs: the spent outside sets R3-R6 (686 short-answer rows), seed 0 only, models b0_s0, t1_s0, t2_s0. Scripts and outputs: `diag/diag_outside.py`, `diag/diag_nearmiss.py`, `diag/*.json`, `diag/*.log`.
+
+| set | B0 S | T1 S | T2 S | T1 echo exact | T2 echo exact | T1 answer not in prompt |
+|---|---|---|---|---|---|---|
+| R3 | 20.6 | 5.3 | 18.8 | 17.7 | 21.4 | 69.4 |
+| R4 | 16.5 | 2.8 | 3.4 | 20.3 | 35.4 | 69.9 |
+| R5 | 11.9 | 7.1 | 13.1 | 12.5 | 24.0 | 53.6 |
+| R6 | 10.5 | 8.7 | 9.9 | 4.2 | 9.4 | 54.7 |
+| pooled (686 rows) | 14.9 | 6.0 | 11.2 | | | |
+
+(DEV echo exact for the same runs: T1 90 %, T2 94 %.)
+
+- **Echo collapses outside TEACH.** The say-back starts with the exact question in 4-35 % of outside rows vs ~90 % on DEV, so the decision table's first branch fires: the talker cannot repeat longer or unfamiliar questions. But hits barely depend on the echo (e.g. R3 T1: 5.9 % with an exact echo, 5.1 % without), so the echo is not the only failure. (shown on spent sets, seed 0; cause suggested)
+- **Answers are often written, not copied.** 54-70 % of T1's short answers contain words that are not in the prompt. (shown, seed 0)
+- **Some answers are misspelled copies** ("Haleel" for Hale, "Danio" for Dani). Wrong answers within 2 character edits of, or containing, an accepted answer: T1 9.5 % of wrong answers, T2 9.0 %. Counting them as right would lift pooled T1 from 6.0 to 14.9 (B0: 14.9) and T2 from 11.2 to 19.2. This counting is diagnostic only; the registered scorer stands. (shown, seed 0; whether a word-piece talker removes this is untested)
+- On these older outside sets T2 - T1 is +5.2 pooled (seed 0 only), unlike R7 where both arms sit at the floor. R7's longer answers (20.3 characters on average) are likely part of why R7 is harder for these talkers. (suggested)
