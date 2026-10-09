@@ -140,7 +140,9 @@ def apply(caps):
         # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
         # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
         m = importlib.import_module(name)
-        for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt'], CAP=caps['plain_target']).items():
+        # no CAP here: plain_tf_steps.CAP is set above and no module in this list reads a CAP of its own except tool_h1 / b3, whose CAP is H1's fixed
+        # 32-round cap, not a data cap (patching it made B3 run up to plain_target = 109 rounds; found by the roadmap thread 10-09)
+        for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt']).items():
             if hasattr(m, k):
                 setattr(m, k, v)
         if hasattr(m, 'N_REG'):
