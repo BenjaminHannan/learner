@@ -12,6 +12,7 @@ LAZY = {
     'plain_tf_steps_g': 'custom_io.models.plain_lm:PlainStepsG',        # 8a: plain_tf_steps with a free feed-forward width
     'plain_lm': 'custom_io.models.plain_lm:PlainLM',                    # 8a: the plain LLM recipe arm (next-char loss on web text + question rows)
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
+    'tool_h1': 'custom_io.models.tool_h1:ToolH1',                       # H1: T1 where a learned stop head picks the rounds per turn (cap 32)
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
 
