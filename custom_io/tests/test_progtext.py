@@ -42,9 +42,18 @@ ROWS = dict(
     vc_no=row('Tom has 12 and buys 5. Claim: Tom has 18.', 'no', ['12 + 5 = 17'], 'verify_claim'),
     neg=row('3 - 8 + 2', '-3', ['3 - 8 + 2 = -3'], 'chain_ops'),
     bad=row('Tom has 12 apples and buys 5.', '99', ['12 + 5 = 17']),
+    ls_even=row('Count the even numbers in [4, 7, 10].', '2', ['count_even of [4, 7, 10]'], 'list_stats'),
+    ls_second=row('What is the second largest of [12, 45, 7]?', '12', ['second_largest of [12, 45, 7]'], 'list_stats'),
+    ls_sum=row('What is the sum of [12, 45, 7]?', '64', ['sum of [12, 45, 7]'], 'list_stats'),
+    ls_range=row('What is the range of [12, 45, 7]?', '38', ['range of [12, 45, 7]'], 'list_stats'),
+    vc_scan=row('Is [3, 1, 2] sorted ascending? Claim: yes', 'no', ['scan'], 'verify_claim'),
+    vc_mul=row('Tom has 6 boxes of 7. Claim: 42', 'yes', ['6 * 7 = 42'], 'verify_claim'),
+    mixed=row('Count evens in [4, 7, 10], then times 10.', '20', ['count_even of [4, 7, 10]', '2 * 10 = 20'], 'list_stats'),
+    bare_copy=row('Tom has 7 and 5 and 12.', '7', ['7 + 5 = 12'], 'arith_bare'),
     nosteps=row('Echo: sune', 'sune', [], 'copy_word'),
 )
 TEXT = lambda cs: [f"{c['op']} {c['a']} {c['b']} = {c['result']}" for c in cs]
+NOTE_ROWS = {'ls_even', 'ls_second', 'ls_sum', 'vc_scan', 'mixed'}
 SAME = {'story', 'prec', 'paren', 'var', 'state', 'sum', 'small', 'large', 'rng', 'cmp_after', 'neg'}      # calls equal in both settings
 
 
@@ -117,7 +126,7 @@ def test_calc():
     for k, r in ROWS.items():
         for w in (False, True):
             s = pt.steps_of(r, w)[0]
-            for c in s or []:
+            for c in [c for c in s or [] if c['op'] != 'note']:
                 assert tool.calc(c['op'], c['a'], c['b']) == c['result'], (k, w, c)
     print('ok calc')
 
@@ -156,24 +165,59 @@ def test_drill():
     print('ok drill')
 
 
+def test_notes():
+    n = lambda k: pt.steps_of(ROWS[k], True)
+    for k in ('ls_even', 'ls_second', 'ls_sum', 'vc_scan'):
+        assert pt.steps_of(ROWS[k], False)[0] is None, k                     # False: unreadable, as today
+    assert n('ls_even')[0] == [dict(op='note', text='count_even of [4, 7, 10]', result='')]
+    assert n('ls_second')[0][0]['text'] == 'second_largest of [12, 45, 7]' and n('ls_sum')[0][0]['op'] == 'note'
+    assert n('vc_scan')[0] == [dict(op='note', text='scan', result='')]
+    assert TEXT(n('ls_range')[0]) == ['max 12 45 = 45', 'max 45 7 = 45', 'min 12 45 = 12', 'min 12 7 = 7', 'sub 45 7 = 38']
+    assert pt.steps_of(row('x', 'y', ['  scan  '], 'verify_claim'), True)[0] == [dict(op='note', text='scan', result='')]
+    m = n('mixed')[0]                                                         # notes and calls in step order; the call still resolves its operands
+    assert [c['op'] for c in m] == ['note', 'mul'] and (m[1]['a'], m[1]['a_src'], m[1]['b_src']) == ('2', 'const', 'prompt')
+    # a later call may use an earlier result across a note
+    r = row('Add 3 and 4, scan, then add 5.', '12', ['3 + 4 = 7', 'scan', '7 + 5 = 12'])
+    m = pt.steps_of(r, True)[0]
+    assert [c['op'] for c in m] == ['add', 'note', 'add'] and m[2]['a_src'] == ('res', 0), m
+    # no final check on the answer of a row with a note; a vc_yes/no row with a call keeps no CMP
+    assert pt.steps_of(ROWS['vc_mul'], True)[0] == pt.steps_of(ROWS['vc_mul'], False)[0][:1]
+    # arith_bare 'final mismatch': the answer (7) is a question number written in the call
+    assert pt.steps_of(ROWS['bare_copy'], False) == (None, 'final mismatch')
+    assert TEXT(n('bare_copy')[0]) == ['add 7 5 = 12']
+    # rendering
+    assert pt.text(m[0]) == 'add 3 4' and pt.text(m[1]) == 'note scan' and pt.entry(m[0]) == 'add 3 4 = 7' and pt.entry(m[1]) == 'note scan'
+    assert pt.entry(n('ls_even')[0][0]) == 'note count_even of [4, 7, 10]' and ' = ' not in pt.entry(m[1])
+    # drill skips notes: no draw for them, the note stays as written, a call's operand still follows its source
+    d = pt.drill(m, '12', random.Random(3))
+    assert d[0][1] == m[1] and d[0][2]['a'] == d[0][0]['result'] and d[1] == d[0][2]['result']
+    a, b = random.Random(3), random.Random(3)
+    pt.drill(m, '12', a)
+    [tool.rand_digits(b, *tool.DRILL_LEN) for _ in range(2)]
+    assert a.getstate() == b.getstate()                                       # two draws for two calls
+    assert pt.drill(n('ls_even')[0], '2', random.Random(0)) is None
+    print('ok notes')
+
+
 def test_report():
-    rows = list(ROWS.values())
+    rows = [r for k, r in ROWS.items() if k != 'bad']
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         r0, r1 = pt.report(rows, False), pt.report(rows, True)
+        rb = pt.report([ROWS['bad']], True)
     out = buf.getvalue()
-    assert out.count('NO TRACE') == 5 and 'copy_word' in out and 'backward_solve' in out        # loud: False: 3 families, True: 2
-    for r, bad, why in ((r0, 3, {'final mismatch': 1, 'no ops': 1, 'expr mismatch 7 + 5 = 12': 1}), (r1, 2, {'final mismatch': 1, 'no ops': 1})):
-        a = r['all']
-        assert a['rows'] == len(rows) and a['read'] + a['unreadable'] == len(rows) and a['no_trace'] == a['unreadable'] == bad and a['reasons'] == why, a
-        assert r['copy_word']['no_trace'] == 1
-    assert r1['all']['hidden'] == r0['all']['hidden'] == 8                   # bare x6, invert, invert_eq (hidden is counted under True either way)
-    assert r1['all']['differ'] == r0['all']['differ'] == 12, r0['all']       # bare x6, invert, invert_eq, cmp x2, verify_claim x2
-    assert r1['verify_claim']['differ'] == 2 and r1['compare_numbers']['differ'] == 2
+    assert 'copy_word' in out and 'backward_solve' in out and out.count('STEPS BUT NO TRACE') == 4 + 1        # False: backward_solve, list_stats, verify_claim, arith_bare; True: the wrong row
+    a1 = r1['all']
+    assert a1['steps_no_trace'] == 0 and a1['unreadable'] == a1['no_trace'] == 1 == r1['copy_word']['no_trace'], a1       # only the row with no steps
+    assert a1['reasons'] == {'no ops': 1} and a1['notes'] == 5 and a1['note_rows'] == 5, a1
+    assert r1['list_stats']['notes'] == 4 and r1['verify_claim']['notes'] == 1
+    a0 = r0['all']
+    assert a0['notes'] == 0 and a0['steps_no_trace'] == a0['unreadable'] - 1 and a0['hidden'] == a1['hidden'] == 8, a0   # False cannot read the note rows
+    assert rb['all']['steps_no_trace'] == 1 and rb['all']['reasons'] == {'final mismatch': 1}                 # a genuinely wrong row is still reported
     print('ok report')
 
 
 if __name__ == '__main__':
-    for f in (test_parity, test_forms, test_as_written, test_calc, test_drill, test_report):
+    for f in (test_parity, test_forms, test_as_written, test_calc, test_drill, test_notes, test_report):
         f()
     print('ALL OK')
