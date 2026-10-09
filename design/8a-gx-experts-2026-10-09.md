@@ -159,3 +159,14 @@ the follow-up test, not a change to this one.
 - **Queue (staged, not started):** `custom_io/queue_local/8aGX-pc.txt` (stage 1, the two 3M runs), `8aGXD-pc.txt` (stage 2, held),
   card `8aGX-card.md`. Not before G1's last queue is done (no local_runner running; 8aG1s401, or 8aG1f) and Ben's go in the Mac session.
 - Marks X1-X5 and D1-D5 unchanged.
+
+## 11. Addendum D (Fri Oct 9, 11:45 AM ET, before any run): the Mac speed check; both runs stay on the PC
+
+- **Shown (M1 Pro, 32 GB, MPS, fp32, torch 2.14.1; 100 updates of GX-3M seed 400 at accumulation 4, run by the Mac session):** step 50 at
+  1,096.7 s, step 100 at 2,344.8 s, so **25.0 s per update** (the step-25 line was not logged). Peak memory footprint 9.4 GB, no errors.
+  A full 24,000-update run would take about **6.9 days** on this Mac, against the 36 h limit set before the check.
+- **Decision:** both stage 1 runs stay on the PC, in the shared post-G1 chain (`results/8a-g/pc-job-cards/after-g1/q8aPost_wait.ps1` on
+  claude/project-thread-yha868: G1, then 8aGX, then 8aFC, then 8aC30). Nothing moves to a Mac, so no cross-machine disclosure is needed.
+- **Suggested, untested:** the M3 Pro is unlikely to be 4x faster than the M1 Pro, so it does not fit a GX run either.
+- The PC timing is still the section 10 estimate (untested); the card's 15-minute memory look will report the PC's real step speed.
+- Marks X1-X5 and D1-D5 unchanged.
