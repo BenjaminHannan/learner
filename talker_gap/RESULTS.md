@@ -64,3 +64,70 @@ Because this one-shot check is now spent, any later candidate needs a new unseen
 - P0 seeds 1 and 2 (untested). R, T1, T1-nothinker, T2 are not built (stopped after wave 1 by Ben's choice; the sealed check was run on B0, B0-nothinker, P0 only). Adding where/why/how-many question types to training is untested: it is the natural next experiment, not run here.
 - Not compared against the real B2 talker (8-character GEN register, NUM path): B0 here is the SPEC.md stand-in (untested against B2).
 - Agent context peaks for the three build agents: 77k, 68k and 49k tokens (all under 100k).
+
+# Option C: T1, T1-nothinker, T2, T1-long (2026-10-08/09 ET, seeds 0-2, Mac/MPS, one job at a time)
+
+Marks: SPEC.md Amendments 2, 2b, 2c (fixed before FRESH-R7 was read). Harness: `models_t1.py` (T1 character decoder with a pointer over the prompt, fed the thinker notes), `run_t.py` (same optimiser and 24,000 TEACH rows as `run_arm.py`, 3000 TEACH updates, batch 64, AdamW 1e-3, 200-update warm-up then cosine), `seal_eval_t.py` (FRESH-R7, refuses to run without `--final`, never overwrites). Queues: `run_queue.sh` (t1, t1_nothinker, t2), `run_queue_t1long.sh` (t1_long). Every number is from `results/<arm>_s<seed>/results.json`. B0 rows are the wave-1 runs above.
+
+- **T1** = thinker notes (loop of 3) -> 4-layer, d=256 character decoder, 99-character vocabulary, trained on the say-back target `question + " " + answer`. The score reads only the answer part.
+- **T1-nothinker** = T1 fed only the projection notes (no thinker layers).
+- **T2** = T1 after 3000 updates of FineWeb-Edu recurring-span cloze (target `<cloze sentence> ? <span>`, 36,363 rows from 30,000 pages, 8-word-gram overlap with TEACH and every test set: 0), then the same 3000 TEACH updates.
+- **T1-long** = T1 trained for 6000 TEACH updates (one warm-up/cosine), the same total updates as T2 without the FineWeb text.
+
+## DEV (held-out TEACH kinds; S = short-answer EM on 1,440, S_H = 549 hard answers)
+
+| arm | params | S, seeds 0 / 1 / 2 | mean S | S_H, seeds 0 / 1 / 2 | yes/no | wrong-notes S | ms/answer |
+|---|---|---|---|---|---|---|---|
+| B0 | 2.06M | 85.28 / 84.93 / 86.39 | 85.53 | 84.52 / 82.88 / 85.61 | 87.1 / 86.8 / 86.5 | 21.3 / 21.9 / 20.5 | 2.6 |
+| T1 | 6.24M | 89.03 / 88.47 / 88.40 | 88.63 | 87.25 / 87.25 / 88.71 | 88.8 / 89.2 / 89.5 | 11.9 / 8.8 / 11.7 | 24-28 |
+| T1-nothinker | 4.66M | 88.47 / 87.78 / 87.78 | 88.01 | 87.25 / 85.97 / 86.16 | 89.3 / 87.2 / 88.6 | 7.5 / 7.4 / 7.3 | 24 |
+| T2 | 6.24M | 89.93 / 89.44 / 89.51 | 89.63 | 89.44 / 89.98 / 89.80 | 90.1 / 89.2 / 90.3 | 5.6 / 4.4 / 4.0 | 26-27 |
+| T1-long | 6.24M | 89.58 / 89.58 / 89.44 | 89.54 | 89.25 / 88.89 / 88.71 | 90.5 / 89.5 / 89.9 | 11.9 / 10.4 / 11.4 | 24-25 |
+
+DEV marks (Amendment 2, reported pass/fail; they decide nothing, R7 does):
+- T1 - B0 >= 5 on S: **+3.10, fails** (+3.75 / +3.54 / +2.01 by seed). On S_H T1 - B0 = +3.40 (reported only; Amendment 2 puts the mark on S). (shown)
+- T1 - T1-nothinker >= 10: **+0.62, fails** (+0.56 / +0.69 / +0.62). Expected in SPEC (B0's thinker added 2.2). (shown)
+- T2 - T1 >= 3: **+1.00, fails** (+0.90 / +0.97 / +1.11). Positive in every seed. On S_H T2 - T1 = +2.0 (+2.19 / +2.73 / +1.09), reported only. (shown)
+- T1-long - T1 (reported only): **+0.90** (+0.55 / +1.11 / +1.04). T2 - T1-long on DEV: **+0.09** (+0.35 / -0.14 / +0.07). On DEV, the T2 gain over T1 is about the size of what 3000 extra TEACH updates give. DEV only; R7 decides. (shown, DEV)
+- Guards: S(T2) >= S(T1) - 2 passes in all seeds; wrong-notes drop >= 20 passes for every T arm (T1 drops 77-80 points); <= 25M params and <= 50 ms pass. (shown)
+
+## FRESH-R7 (read once, 2026-10-09 ~12:35 ET; 320 rows = 160 questions x source/paraphrase; S = short-answer EM)
+
+`seal_eval_t.py --final` ran once and finished without error. Output: `results/fresh_r7_results.json`, `results/fresh_r7_hits.json`, `results/fresh_r7_run.log`. Before the read, all 15 checkpoints were loaded and scored on TEST through the same script (pipeline check; TEST is not a mark).
+
+| arm | S, seeds 0 / 1 / 2 | mean S |
+|---|---|---|
+| B0 | 14.37 / 15.62 / 15.62 | 15.21 |
+| T1 | 0.94 / 1.56 / 2.19 | 1.56 |
+| T1-nothinker | 0.94 / 1.88 / 0.62 | 1.15 |
+| T2 | 3.44 / 2.81 / 2.19 | 2.81 |
+| T1-long | 1.88 / 2.50 / 1.56 | 1.98 |
+
+Marks (Amendments 2 and 2c; `pass_by_rows` decides, question-cluster interval is sensitivity only):
+
+| mark | mean diff | row 95% CI | question-cluster 95% CI | per seed 0 / 1 / 2 | result |
+|---|---|---|---|---|---|
+| C1 T2 - T1 >= 3 | +1.25 | [+0.10, +2.29] | [-0.21, +2.60] | +2.50 / +1.25 / 0.00 | **fail** (under 3; seed 2 not > 0) |
+| C1b T2 - T1-long >= 3 | +0.83 | [-0.21, +1.87] | [-0.42, +2.19] | +1.56 / +0.31 / +0.62 | **fail** (report-only under 2c, since C1 fails) |
+| C2 T2 - B0 >= 5 | -12.40 | [-15.73, -8.96] | [-16.98, -8.12] | -10.94 / -12.81 / -13.44 | **fail** |
+| C3 T1 - B0 (no mark) | -13.65 | [-17.19, -9.90] | [-18.54, -8.96] | -13.44 / -14.06 / -13.44 | reported |
+| T1 - T1-nothinker | +0.42 | [0.00, +0.94] | [-0.10, +1.04] | 0.00 / -0.31 / +1.56 | reported |
+| T1-long - T1 | +0.42 | [-0.31, +1.15] | [-0.42, +1.35] | +0.94 / +0.94 / -0.62 | report-only (2c) |
+
+Secondary (descriptive, Amendment 2): T2 - T1 on practised openers (who/what/which, 128 rows) +3.39; never-practised openers (where/why/when/how, 192 rows) -0.17. Every T arm is near 0 on the never-practised openers, so this split cannot separate the two guesses. (suggested at most)
+
+Reading:
+- **The FineWeb practice did not pass.** C1 fails, so under Amendment 2c this run does not show that the FineWeb text helped. All four T arms sit at 1-3 % (about 3-11 of 320 rows), so the T2 - T1 comparison is at the floor: it shows neither help nor harm. Say "not shown to help", not "does not help". (shown: C1 fails; untested: whether FineWeb helps a talker that is off the floor)
+- **The character say-back talker is far worse than B0 on the outside set.** T1 - B0 = -13.65, interval well below 0, about -13.5 in every seed. On DEV the same difference was +3.10. The talker beats B0 on held-out TEACH kinds and loses badly on fresh outside questions. (shown)
+- **B0's scoring path behaves as before.** B0 scores 15.2 on R7, inside its wave-1 range of 11-20 % on R3-R6. (shown)
+- **Test-set caveat.** R7 answers average 20.3 characters (TEACH train 4.6, R3-R6 7.8-11.0). 86 of 320 R7 say-back targets are longer than the longest TEACH train say-back (69 characters). R7 was written and hashed before any T training, so this does not void the read, but it tilts R7 against talkers that write their answers character by character. (shown: the lengths; untested: how much it matters)
+- From the saved hits only (no second R7 read): every T arm scores 0 on the 86 rows longer than 69 characters, including T2, whose FineWeb targets reached 126 characters. On 1-word answers (54 rows) B0 scores 38.9 and T1 1.9. So length alone does not explain the gap. (shown, small n; cause untested)
+
+## Run notes
+
+- **Mac restarts (2).** The first came after two T1 runs finished training but before they saved; both were retrained from scratch with the same seed. The second came with three jobs running and memory full (macOS watchdog restart). After that: one job at a time, weights saved before scoring, `--eval-only` resume, and a queue that skips finished runs. No result was picked from a restart; each reported run is the one complete run for that arm and seed.
+- **T2 target fix, before any T2 run.** The FineWeb practice target first lacked the ` ? ` separator SPEC asks for (`<cloze sentence> ? <span>`); `pretrain_target` in `run_t.py` was corrected before T2 seed 0 started.
+- **Timing probe.** Amendment 2b's numbers were fixed after a 20-update timing probe that ran real T1 updates (seed 0, 0.31 s/update), so "before the first real T1 step" means before the first real training run; the probe model was not kept or used.
+- **Amendment 2c** (T1-long always run, C1b, row interval decides) was added during the T1-nothinker runs, before any FRESH-R7 read, after a fact-check found that "T1-long only if C1 passes" would need a second R7 read.
+- **One-read rule, written before FRESH-R7 was read.** `seal_eval_t.py --final` runs once. If it crashes partway, that read is void and documented here (SPEC: a bug found after seeing R7 voids the run), not quietly rerun. Before the read, all 15 checkpoints were loaded and scored on TEST through the same script (pipeline check, not a mark).
+- Run times: T1-type ~10 min, T2 34-38 min, T1-long 34 min (seed 0, during heavy macOS background load), ~21 min (seeds 1, 2). All on the Mac, $0.
