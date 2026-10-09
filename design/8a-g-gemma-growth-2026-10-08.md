@@ -181,3 +181,21 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   only the bf16 summing order (256 rows per update either way).
 - **Spill rule (replaces "at most 8"):** a job whose shared GPU memory passes 1 GB is stopped and rerun with that arm's accumulation doubled, up to 16.
 - Marks, arms and readout unchanged.
+
+## 12. Addendum G (2026-10-09, 8:40 AM ET, G1 running): first G1 result in, and a spill on seed 401
+
+- **3M s400 is done** (shown, `claude/8a-g-pc-results` commit 532ebdc, `results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/`). G-B2: pooled-5
+  73.01 (4,410/6,040), chain-5 99.9, thinker-off (loops:0) 0.66, 1.02 updates/s, 6.5 h. G-PT: 67.12 (4,054/6,040), chain-5 91.0, 2.80 updates/s,
+  2.4 h. One rung of one seed: no readout yet. The Vast 72.42 and letter-B2 71.59 remain context only.
+- **Is the fix inside the run?** Shown before launch: the PC's code printed `36 35` and its `caps.py` hash matched. Not logged inside the run (the
+  `caps` event prints 36 with or without the bug). Suggested: G1's B2 needs about 1.6x the memory per row and about 1.7x the compute per row of
+  the bugged Vast run, which fits the larger thinker.
+- **Seed 401 spilled.** 3M s401 B2 (accumulation 4) reached 1.15 GB of shared GPU memory, and 500 updates took 1,169 s against 490 s for s400.
+  The GPU showed 15.9 of 16.3 GB in use with Ben's desktop apps also on the card (inferred cause). Per addendum F it is stopped at update 9,000 and
+  rerun from the start as queue 8aG1f. The partial run's files stay on the PC and count for nothing.
+- **Settings for the rest of G1 (set before these runs start):** 3M s401 at accumulation 8 for both arms; 10M at B2 16 and plain 8. This goes one
+  step past addendum F's "double the spilling arm" so that the 10M runs, which need more memory, don't lose hours to the same spill. It changes
+  only the bf16 summing order (256 rows per update either way). If a 10M B2 at 16 still spills, it stops and waits for a decision.
+- **Job cards:** the PC babysitter's cards are in `results/8a-g/pc-job-cards/`. The stall check reads the step count, because Windows does not refresh
+  LastWriteTime on a file that is still open.
+- Marks, arms and readout unchanged.
