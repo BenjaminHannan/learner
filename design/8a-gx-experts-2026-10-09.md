@@ -130,3 +130,14 @@ Ben, 10:18 AM ET (project chat, right after his ask): "and ensure they get used 
   the busiest expert's share x 52, `moe_low` = the least used x 52, `moe_lb`); the balancing numbers at the end.
 - The old "one expert taking a big share is allowed" note is withdrawn: Ben asked for even use.
 - Header time corrected: the spec above was written about 10:30 AM ET, not 10:45.
+
+## 9. Addendum B (Fri Oct 9, 10:45 AM ET, before any run): one router per block, shared by the 12 rounds (design note; marks unchanged)
+
+Question (coordinator, from Ben's 10-05 paper drop, Chain-of-Experts arXiv 2506.18945): its ablation found one router reused on every
+loop pass plateaus worse than plain experts (loss only, one 544M model, 2 passes; weak evidence). GX does reuse each block's router on
+all 12 rounds. **Choice: keep it shared.** Reasons: (1) the router is not blind to the round: B2 adds a learned round embedding into the
+thinker state every round (`ledger.py:362`, `Z = Z + self.step_emb.weight[ts]`), and the router reads that state, so it can pick
+different experts per round (shown in code); (2) one change at a time: per-round routers would be a second change and add 11 x 13,312
+weights per block (+293k at 3M, +8% of the active count); (3) the paper's evidence is weak. The routing report already measures how much
+the expert sets of different rounds overlap (section 4). If GX is GO but the rounds pick nearly the same experts, per-round routers are
+the follow-up test, not a change to this one.
