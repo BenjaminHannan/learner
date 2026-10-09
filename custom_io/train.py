@@ -3,7 +3,7 @@ import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
 from custom_io import capcount, data as D
-from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
+from custom_io.data import DEFAULT_DATA, ByteVocab, CharVocab, Dataset, load_rows, to_device, train_batches
 from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
 
@@ -149,7 +149,11 @@ def main(argv=None):
         jprint(event='caps', **_c)
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
-    vocab = CharVocab.get(args.data, args.vocab, rows)
+    if cfg.get('bytes'):                # V1: raw UTF-8 bytes (269 ids), no vocab file; the model's cfg {"bytes": true} says so
+        assert not args.vocab, '--vocab and cfg bytes are exclusive'
+        vocab = ByteVocab()
+    else:
+        vocab = CharVocab.get(args.data, args.vocab, rows)
     batches = train_batches(Dataset(rows, vocab), args.batch, args.order, args.seed)
     dev = subsample(load_rows(os.path.join(args.data, 'dev', 'in_dist.jsonl')), 200)
     model = build(args.model, vocab, **cfg).to(device)
@@ -230,7 +234,7 @@ def main(argv=None):
         result['data_manifest_sha256'] = hashlib.sha256(open(mf, 'rb').read()).hexdigest()
     if args.out:
         os.makedirs(args.out, exist_ok=True)
-        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step), os.path.join(args.out, 'checkpoint.pt'))
+        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, vocab='bytes' if vocab.is_bytes else 'chars', step=step), os.path.join(args.out, 'checkpoint.pt'))
     def write():
         result['wall_s'] = time.time() - t_start
         if device.type == 'cuda':       # peaks so far (training, then evals): later queues size --par and # MEM from these

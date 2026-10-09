@@ -12,6 +12,8 @@ encode(prompts, T, device) -> (H, pooled):
   pooled [B, 768] float: mean of last_hidden_state over every token, prefix and <bos>/<eos> included (sentence-transformers mean
       pooling with include_prompt), not normalised: the meaning teacher cuts it to MT_DIM and re-normalises (MRL).
 The weights come from the Hugging Face cache at revision EG_REV, or from the folder in $CUSTOM_IO_EG2 / the Ledger's eg_path.
+by_bytes (V1, ByteVocab): H and every alignment have one row per UTF-8 byte of the prompt (T counts bytes); a byte takes the Gemma token of the character it belongs to,
+so a multi-byte character's bytes all share one token and an ASCII prompt gives exactly the character path's states.
   python -m custom_io.models.eg check     loads it, checks the size and compares 3 probe vectors with the ones taken on the build box."""
 import os
 import sys
@@ -26,8 +28,9 @@ PROBES = ['Echo: sune Give only the answer.', 'What is the first letter of peray
 
 
 class FrozenEG:
-    def __init__(self, path=None):
+    def __init__(self, path=None, by_bytes=False):
         self.path = path or os.environ.get('CUSTOM_IO_EG2') or EG_ID
+        self.by_bytes = bool(by_bytes)
         self.m = self.tok = None
         self._align, self._last = {}, None
 
@@ -49,7 +52,8 @@ class FrozenEG:
         return self
 
     def align(self, prompt):
-        """-> (token ids int32 [L], char -> token index int16 [len(prompt)]), cached per prompt."""
+        """-> (token ids int32 [L], char -> token index int16 [len(prompt)]), cached per prompt. by_bytes: byte -> token index, [len(prompt.encode())]
+        (each character's bytes take that character's token)."""
         hit = self._align.get(prompt)
         if hit is None:
             if len(self._align) > 400_000:
@@ -63,6 +67,8 @@ class FrozenEG:
             for i in range(len(prompt)):            # a char no token covers (never seen on the skills prompts): the token before it
                 if c2t[i] < 0:
                     c2t[i] = c2t[i - 1] if i else next((j for j, (s, e) in enumerate(enc['offset_mapping']) if e > n0), 0)
+            if self.by_bytes and not prompt.isascii():
+                c2t = np.repeat(c2t, [len(c.encode('utf-8', errors='replace')) for c in prompt])
             hit = self._align[prompt] = (np.asarray(enc['input_ids'], np.int32), c2t.astype(np.int16))
         return hit
 

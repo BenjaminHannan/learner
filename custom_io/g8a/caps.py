@@ -12,6 +12,7 @@ A cap is never set below today's value, so on data that fits today's caps nothin
     n_res        progparse/ledger N_RES (program steps; B2 needs n_loops >= n_res + 1)               today 7
     n_reg        ledger N_REG/GEN_MAX = max_ans + 1 register slots; reader N_PLACE = n_reg + 1       today 9 / 16
     plain_target plain_tf_steps.CAP (longest steps+answer target), MAX_NEW, MAX_POS                   today 64
+V1 `bytes`: max_prompt / max_ans / n_reg / plain_target count bytes (`--bytes`; identical for ASCII).
 The only behaviour change a bigger N_PLACE brings: place ids of letters 15+ from a word's right end clamp at N_PLACE-2 instead of 14.
 
   python3 -m custom_io.g8a.caps compute POOL_DIR [DEV_DIR ...] --out caps.json     # reads POOL/train.jsonl and every dev/*.jsonl
@@ -36,8 +37,8 @@ def _rows(paths):
                         yield json.loads(line)
 
 
-def measure(r, progs=True):
-    """One row's sizes."""
+def measure(r, progs=True, by_bytes=False):
+    """One row's sizes. by_bytes (V1): prompt / answer / target lengths and the word count in UTF-8 bytes (max_prompt, max_ans, n_reg, plain_target); the same for ASCII."""
     from custom_io.data import word_spans
     from custom_io.models import progparse as pp
     from custom_io.models.plain_tf_steps import STEP_FAMILIES
@@ -48,16 +49,17 @@ def measure(r, progs=True):
     if progs and r.get('family') != 'cloze':
         p, _ = pp.program_for(r)
         n_prog = len(p['prog']) if p is not None else 0
-    return dict(max_prompt=len(r['prompt']), max_ans=len(r['answer']), n_num=len(pp.NUM_RE.findall(r['prompt'])),
-                w_max=len(word_spans(r['prompt'])), n_res=n_prog, n_reg=len(r['answer']) + 1, plain_target=len(tgt))
+    ln = (lambda x: len(x.encode('utf-8', errors='replace'))) if by_bytes else len
+    return dict(max_prompt=ln(r['prompt']), max_ans=ln(r['answer']), n_num=len(pp.NUM_RE.findall(r['prompt'])),
+                w_max=len(word_spans(r['prompt'])), n_res=n_prog, n_reg=ln(r['answer']) + 1, plain_target=ln(tgt))
 
 
-def compute(paths, progs=True):
+def compute(paths, progs=True, by_bytes=False):
     """-> caps dict: max over every row of every size, never below today's. `rows` = how many rows were read."""
     mx, n = dict(TODAY), 0
     for r in _rows(paths):
         n += 1
-        for k, v in measure(r, progs).items():
+        for k, v in measure(r, progs, by_bytes).items():
             if v > mx[k]:
                 mx[k] = v
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
@@ -65,11 +67,11 @@ def compute(paths, progs=True):
     return mx
 
 
-def compute_rows(rows, progs=True):
+def compute_rows(rows, progs=True, by_bytes=False):
     """compute() on rows already in memory."""
     mx = dict(TODAY)
     for r in rows:
-        for k, v in measure(r, progs).items():
+        for k, v in measure(r, progs, by_bytes).items():
             mx[k] = max(mx[k], v)
     mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
     mx['rows'] = len(rows)
@@ -103,12 +105,12 @@ def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print, cl
     return mx
 
 
-def report(caps, paths, progs=True):
+def report(caps, paths, progs=True, by_bytes=False):
     """Rows over each cap (today's and the given one) and the longest value seen. Target 0 under the given caps."""
     over_today, over, seen, n = {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, 0
     for r in _rows(paths):
         n += 1
-        for k, v in measure(r, progs).items():
+        for k, v in measure(r, progs, by_bytes).items():
             seen[k] = max(seen[k], v)
             over_today[k] += v > TODAY[k]
             over[k] += v > caps[k]
@@ -159,15 +161,16 @@ def main(argv=None):
     ap.add_argument('cmd', choices=['compute', 'report'])
     ap.add_argument('paths', nargs='+')
     ap.add_argument('--out')
+    ap.add_argument('--bytes', action='store_true', help='measure prompt / answer / target lengths in UTF-8 bytes (V1: a bytes model counts bytes)')
     a = ap.parse_args(argv)
     if a.cmd == 'compute':
-        caps = compute(a.paths)
+        caps = compute(a.paths, by_bytes=a.bytes)
         print(json.dumps(caps))
         if a.out:
             json.dump(caps, open(a.out, 'w'))
     else:
         caps = json.load(open(a.paths[0]))
-        print(json.dumps(report(caps, a.paths[1:]), indent=1))
+        print(json.dumps(report(caps, a.paths[1:], by_bytes=a.bytes), indent=1))
 
 
 if __name__ == '__main__':

@@ -104,11 +104,13 @@ def calc(op, a, b, swap=False):
     return '?' if v is None or abs(v) >= BIG else str(v)
 
 
-def entry(op, a, b, r):
+def entry(op, a, b, r, vocab=None):
+    """The tape text of a call. LE is in vocab units (chars; bytes for ByteVocab)."""
     s = f'{op} {a} {b} = {r}'
-    if len(s) > LE:
+    ln, cl = (vocab.length, vocab.clip) if vocab is not None else (len, lambda x, n: x[:n])
+    if ln(s) > LE:
         capcount.hit('tape_entry_over')
-    return s[:LE]
+    return cl(s, LE)
 
 
 def rand_digits(rng, lo=1, hi=9):
@@ -163,7 +165,7 @@ class Tool(Ledger):
         non-empty strings go through the reader (the reader's output is zero wherever the mask is, so this is the same result, faster)."""
         ids = np.full((len(texts), le), PAD, np.int64)
         for i, s in enumerate(texts):
-            e = self.vocab.encode(s[:le])
+            e = self.vocab.encode(self.vocab.clip(s, le))
             ids[i, :len(e)] = e
         ids = torch.from_numpy(ids).to(dev)
         mask = ids != PAD
@@ -171,15 +173,39 @@ class Tool(Ledger):
         X = torch.zeros(len(texts), le, self.d, device=dev)
         if full:
             ix = torch.tensor(full, device=dev)
-            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': texts[i][:le]} for i in full]})
+            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': self.vocab.clip(texts[i], le)} for i in full]})
             X = X.to(Xf.dtype).index_copy(0, ix, Xf)
         return X, ids, mask
+
+    def num_memory(self, X, ns, ne):
+        """The thinker's number slots: (valid [B, N_NUM] bool, S0 [B, N_NUM, d] = pool over each number's letters + ordinal + type). no_slots (N1, B3): (an empty
+        [B, 0] mask, None) - nothing is pooled, no regex span is used, and the ordinal / type tables do not exist. (Split from slot_kv so the autograd graph is built
+        in the order it always was: the gradient sums are bit-identical.)"""
+        B, T, dev = X.shape[0], X.shape[1], X.device
+        if self.no_slots:
+            return torch.zeros(B, 0, dtype=torch.bool, device=dev), None
+        t_ix = torch.arange(T, device=dev)
+        inn = (t_ix >= ns[..., None]) & (t_ix < ne[..., None])
+        cnt = inn.sum(-1)
+        valid = cnt > 0
+        pool = torch.bmm(inn.to(X.dtype), X) / cnt.clamp(min=1)[..., None]
+        S0 = (pool + self.ordinal.weight + self.stype.weight[0]) * valid[..., None]
+        return valid, S0
+
+    def slot_kv(self, S0):
+        """Per-block K/V of the slots (None without slots)."""
+        return None if S0 is None else [b.kv_of(S0 + self.src.weight[0]) for b in self.core]
+
+    @staticmethod
+    def join_kv(kvs0, kvt):
+        """Memory K/V per block = [slots; tape] along the key axis (no_slots: the tape alone)."""
+        return list(kvt) if kvs0 is None else [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)]
 
     def tape_of(self, texts, dev, le=None):
         """texts [B][K] -> (X [B, K*le, d] with tape_emb added, ids, mask); le = the longest entry (teacher forcing) or LE (free run). The layout
         only decides where padding sits: the thinker and the copy attention see an entry's chars through the reader's positions and tape_emb[k]."""
         B, K = len(texts), len(texts[0])
-        le = le or max(1, max(len(x) for row in texts for x in row))
+        le = le or max(1, max(self.vocab.length(x) for row in texts for x in row))
         X, ids, mask = self.read_texts([x for row in texts for x in row], dev, le)
         X = (X.view(B, K, le, -1) + self.tape_emb.weight[None, :K, None].to(X.dtype)) * mask.view(B, K, le, 1)
         return X.flatten(1, 2), ids.view(B, -1), mask.view(B, -1), le
@@ -256,7 +282,9 @@ class Tool(Ledger):
         """Span-copy labels -> ([(string index, start, end, text)] number tokens, [(text, regex, is entry)] strings): string 0 = the prompt
         (`\\d+`, a token kept only if it ends within T), string k + 1 = entry k (`-?\\d+`)."""
         strs = [(prompt, pp.NUM_RE, False)] + [(x, ENT_NUM, True) for x in tape]
-        toks = [(j, m.start(), m.end(), m.group()) for j, (x, rx, _) in enumerate(strs) for m in rx.finditer(x) if j or T is None or m.end() <= T]
+        offs = [self.vocab.offsets(x) for x, _, _ in strs]            # None: chars are units (CharVocab, ASCII); else char -> byte offsets, so a token's start / end are units
+        u = lambda j, c: c if offs[j] is None else int(offs[j][c])
+        toks = [(j, u(j, m.start()), u(j, m.end()), m.group()) for j, (x, rx, _) in enumerate(strs) for m in rx.finditer(x) if j or T is None or u(0, m.end()) <= T]
         return toks, strs
 
     def span_gold(self, rows, T, le, K, golds=None):
@@ -265,17 +293,21 @@ class Tool(Ledger):
         golds: train_golds' per-row targets (ans_drill), else row_gold's."""
         B, N = len(rows), T + K * le
         Ma, Mb, Mn = np.zeros((B, N_RES, N), bool), np.zeros((B, N_RES, N), bool), np.zeros((B, N), bool)
-        cs, ts, ys, enc = [], [], [], self.vocab.stoi
+        cs, ts, ys = [], [], []
         for i, r in enumerate(rows):
             ops, opd, tape, md, _, ans, _ = golds[i] if golds else self.row_gold(r) + (r['answer'], False)
             toks, strs = self.num_tokens(r['prompt'], tape[:min(len(ops), K)], T)
             pos = lambda j, e: e - 1 if j == 0 else T + (j - 1) * le + e - 1
+            ids = {}
             for j, a, e, _ in toks:
                 x, _, ent = strs[j]
+                xi = ids.get(j)
+                if xi is None:
+                    xi = ids[j] = self.vocab.encode(x)          # one id per unit; a, e are unit offsets
                 for q in range(a, e - 1):
-                    cs.append(enc.get(x[q], UNK)); ts.append(ent); ys.append(0.0)
+                    cs.append(xi[q]); ts.append(ent); ys.append(0.0)
                 if a > 0:
-                    cs.append(enc.get(x[a - 1], UNK)); ts.append(ent); ys.append(1.0)
+                    cs.append(xi[a - 1]); ts.append(ent); ys.append(1.0)
 
             def mark(M, want, upto):
                 for j, a, e, x in toks:
@@ -307,18 +339,13 @@ class Tool(Ledger):
         X, xm = self.read(batch, talker=True)
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
-        t_ix = torch.arange(T, device=dev)
-        inn = (t_ix >= ns[..., None]) & (t_ix < ne[..., None])
-        cnt = inn.sum(-1)
-        valid = cnt > 0
-        pool = torch.bmm(inn.to(X.dtype), X) / cnt.clamp(min=1)[..., None]
-        S0 = (pool + self.ordinal.weight + self.stype.weight[0]) * valid[..., None]
+        valid, S0 = self.num_memory(X, ns, ne)
         Kw, wvalid = self.word_keys(ws, we), we > ws
         if lesion != 'nowordc':
             Kw = Kw + self.word_content(X, ws, we)
         Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)       # tok_think: token spots for the thinker's cross-attention only
         kvx = [b.kv_of(Xk + self.src.weight[1]) for b in self.core]
-        kvs0 = [b.kv_of(S0 + self.src.weight[0]) for b in self.core]
+        kvs0 = self.slot_kv(S0)
         if gold is not None and not self._full_tape:    # teacher forcing: only the entries the longest gold program writes, each as long as the longest
             K = max(1, int((gold['op'] > 0).sum(1).max()))
             texts, le = [row[:K] for row in gold['tape']], None
@@ -337,7 +364,7 @@ class Tool(Ledger):
             ts = min(t, self.n_loops - 1)
             vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
             if kvs_of is not kvt:                                       # rebuilt only when the tape changed (same values either way)
-                kvs, kvs_of = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)], kvt
+                kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
             mask = torch.cat([valid, vis, km], 1)
             Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
@@ -367,7 +394,7 @@ class Tool(Ledger):
                             r = oracle(i, t, (NAMES[op[i]], sa, sb))
                         else:
                             r = '?' if lesion == 'noexec' else calc(NAMES[op[i]], sa, sb, swap=lesion == 'opswap')
-                        new[i] = entry(NAMES[op[i]], sa, sb, r)
+                        new[i] = entry(NAMES[op[i]], sa, sb, r, self.vocab)
                         calls[i].append((t, NAMES[op[i]], sa, sb, r))
                     if any(new):
                         for i in range(B):
@@ -447,7 +474,7 @@ class Tool(Ledger):
             for s, (o, ca, cb, v) in enumerate(t['prog']):
                 sa, sb = str(vals[ca[0]]), str(vals[cb[0]])
                 ops.append(o); opd.append((sa, sb))
-                tape[s] = entry(NAMES[o], sa, sb, str(v))
+                tape[s] = entry(NAMES[o], sa, sb, str(v), self.vocab)
             md = 1 if t['mode'] == 1 else 2
             if self.span_copy and t['mode'] == 0 and r['answer'] in {x for *_, x in self.num_tokens(r['prompt'], tape[:len(ops)])[0]}:
                 md = 0          # T1S: a NUM row whose answer is a number token of the context answers by span copy (it keeps T1's GEN targets)
@@ -455,9 +482,9 @@ class Tool(Ledger):
         return hit
 
     def cell_ids(self, s):
-        if len(s) > CELLS - 1:
+        if self.vocab.length(s) > CELLS - 1:
             capcount.hit('operand_cells_over')
-        e = self.vocab.encode(s[::-1][:CELLS - 1]) + [EOS]
+        e = self.vocab.encode(self.vocab.clip(s[::-1], CELLS - 1)) + [EOS]
         return e + [-100] * (CELLS - len(e))
 
     def drill_gold(self, r, rng):
@@ -473,9 +500,9 @@ class Tool(Ledger):
         ops, opd, tape = [], [], [''] * N_RES
         for s, (o, ca, cb, _) in enumerate(t['prog']):
             sa, sb = val(ca[0]), val(cb[0])
-            if len(f'{NAMES[o]} {sa} {sb} = {d[s]}') > LE:
+            if self.vocab.length(f'{NAMES[o]} {sa} {sb} = {d[s]}') > LE:
                 return 'too_long'
-            ops.append(o); opd.append((sa, sb)); tape[s] = entry(NAMES[o], sa, sb, d[s])
+            ops.append(o); opd.append((sa, sb)); tape[s] = entry(NAMES[o], sa, sb, d[s], self.vocab)
         return ops, opd, tape, 0, (), d[max(res)], True
 
     @staticmethod
@@ -515,10 +542,10 @@ class Tool(Ledger):
             for s, (o, (sa, sb)) in enumerate(zip(ops, opd)):
                 op[i, s], ca[i, s], cb[i, s] = o, self.cell_ids(sa), self.cell_ids(sb)
             mode[i], word[i, list(wd)] = md, True
-            if md != 1 and not (dr and len(ans) > GEN_MAX):     # a drill answer longer than GEN's registers: no GEN target, never a cut one
-                if len(ans) > GEN_MAX:
+            if md != 1 and not (dr and self.vocab.length(ans) > GEN_MAX):     # a drill answer longer than GEN's registers: no GEN target, never a cut one
+                if self.vocab.length(ans) > GEN_MAX:
                     capcount.hit('gen_answer_over')
-                ids = self.vocab.encode(ans[:GEN_MAX][::-1]) + [EOS]
+                ids = self.vocab.encode(self.vocab.clip(ans, GEN_MAX)[::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
             tape.append(list(tp))
         g = {k: torch.from_numpy(v).to(dev) for k, v in dict(op=op, ca=ca, cb=cb, mode=mode, word=word, gen=gen).items()}

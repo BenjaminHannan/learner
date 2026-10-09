@@ -10,7 +10,7 @@ Plain arms (plain_tf_steps_g, plain_lm): layers and feed-forward width chosen so
 """
 import argparse, functools, json, shlex, sys
 import torch
-from custom_io.data import CharVocab
+from custom_io.data import ByteVocab, CharVocab
 from custom_io.models import build
 
 VOCAB = None
@@ -47,8 +47,11 @@ PUBLIC = {
 BATCH, PLAIN_BAND, PLAIN_TRIM = 256, 0.02, 0.003
 
 
-def vocab():
+def vocab(bytes=False):
+    """The vocab every count / size is built with: the 108-id CharVocab, or (V1 cfg {"bytes": true}) the 269-id ByteVocab."""
     global VOCAB
+    if bytes:
+        return ByteVocab()
     if VOCAB is None:
         VOCAB = CharVocab.build([])     # all printable ASCII + specials = 108 ids, the vocabulary every q33 run used
     return VOCAB
@@ -58,7 +61,8 @@ def vocab():
 def count(model, cfg_json):
     """Trained parameter count of `model` built with cfg (a JSON string, for caching). Frozen borrowed parts are not in it."""
     torch.manual_seed(0)
-    return build(model, vocab(), **json.loads(cfg_json)).n_params()
+    cfg = json.loads(cfg_json)
+    return build(model, vocab(cfg.get('bytes', False)), **cfg).n_params()
 
 
 def n(model, cfg):
@@ -117,7 +121,7 @@ def b3_cfg(rung, extra=None):
 def b3_sizes(cfg):
     """{'trained', 'frozen_gemma', 'whole'} of a B3 config (the frozen EmbeddingGemma 2 text part counts in the whole)."""
     torch.manual_seed(0)
-    s = build('b3', vocab(), **cfg).size()
+    s = build('b3', vocab(cfg.get('bytes', False)), **cfg).size()
     return dict(trained=s['trainable'], frozen_gemma=s['frozen_borrowed'], whole=s['whole'])
 
 
