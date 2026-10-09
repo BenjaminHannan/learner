@@ -1,0 +1,228 @@
+{
+ "status": "ok",
+ "speed": {
+  "caps": {
+   "max_prompt": 280,
+   "max_ans": 35,
+   "n_num": 91,
+   "w_max": 208,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109
+  },
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "updates": 200,
+  "batch": 256,
+  "mem_gb": 15.0,
+  "rungs": {
+   "3M": {
+    "B2": {
+     "accum": 1,
+     "micro_batch": 256,
+     "s_per_update": 0.09149812459945679,
+     "peak_gb": 6.311113357543945,
+     "n_params": 3346513,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.09149812459945679,
+       "peak_gb": 6.311113357543945
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 0.6099874973297119,
+     "usd_per_run": 0.28669412374496456
+    },
+    "PT": {
+     "accum": 1,
+     "micro_batch": 256,
+     "s_per_update": 0.02338352918624878,
+     "peak_gb": 2.968461036682129,
+     "n_params": 3297536,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.02338352918624878,
+       "peak_gb": 2.968461036682129
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 0.15589019457499187,
+     "usd_per_run": 0.07326839145024618
+    },
+    "LLM": {
+     "accum": 1,
+     "micro_batch": 256,
+     "s_per_update": 0.03155611991882324,
+     "peak_gb": 2.9088258743286133,
+     "n_params": 3297536,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.03155611991882324,
+       "peak_gb": 2.9088258743286133
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 0.21037413279215494,
+     "usd_per_run": 0.09887584241231281
+    },
+    "_schedule": {
+     "steps": 24000,
+     "assumed_mean_row_pieces": 40.0
+    },
+    "_per_seed_hours_all_arms": 0.9762518246968588,
+    "_six_seed_hours": 5.857510948181153
+   },
+   "10M": {
+    "B2": {
+     "accum": 2,
+     "micro_batch": 128,
+     "s_per_update": 0.3264936316013336,
+     "peak_gb": 10.882387161254883,
+     "n_params": 10298137,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.2720531630516052,
+       "peak_gb": 20.96078062057495
+      },
+      {
+       "accum": 2,
+       "s_per_update": 0.3264936316013336,
+       "peak_gb": 10.882387161254883
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 2.1766242106755573,
+     "usd_per_run": 1.023013379017512
+    },
+    "PT": {
+     "accum": 1,
+     "micro_batch": 256,
+     "s_per_update": 0.07021784901618958,
+     "peak_gb": 8.779921531677246,
+     "n_params": 10405376,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.07021784901618958,
+       "peak_gb": 8.779921531677246
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 0.46811899344126384,
+     "usd_per_run": 0.220015926917394
+    },
+    "LLM": {
+     "accum": 1,
+     "micro_batch": 256,
+     "s_per_update": 0.07737653493881226,
+     "peak_gb": 8.607588768005371,
+     "n_params": 10405376,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.07737653493881226,
+       "peak_gb": 8.607588768005371
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 0.5158435662587484,
+     "usd_per_run": 0.24244647614161172
+    },
+    "_schedule": {
+     "steps": 24000,
+     "assumed_mean_row_pieces": 40.0
+    },
+    "_per_seed_hours_all_arms": 3.1605867703755695,
+    "_six_seed_hours": 18.963520622253416
+   },
+   "30M": {
+    "B2": {
+     "accum": 4,
+     "micro_batch": 64,
+     "s_per_update": 0.6792630219459533,
+     "peak_gb": 9.465436458587646,
+     "n_params": 28703801,
+     "tries": [
+      {
+       "accum": 1,
+       "oom": true
+      },
+      {
+       "accum": 2,
+       "s_per_update": 0.5026729583740235,
+       "peak_gb": 18.452112197875977
+      },
+      {
+       "accum": 4,
+       "s_per_update": 0.6792630219459533,
+       "peak_gb": 9.465436458587646
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 11.055760418861443,
+     "usd_per_run": 5.196207396864878
+    },
+    "PT": {
+     "accum": 2,
+     "micro_batch": 128,
+     "s_per_update": 0.14795109629631042,
+     "peak_gb": 8.406907558441162,
+     "n_params": 28599168,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.15239169359207153,
+       "peak_gb": 16.058765411376953
+      },
+      {
+       "accum": 2,
+       "s_per_update": 0.14795109629631042,
+       "peak_gb": 8.406907558441162
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 2.408068482329448,
+     "usd_per_run": 1.1317921866948406
+    },
+    "LLM": {
+     "accum": 2,
+     "micro_batch": 128,
+     "s_per_update": 0.15388134598731995,
+     "peak_gb": 8.258445262908936,
+     "n_params": 28599168,
+     "tries": [
+      {
+       "accum": 1,
+       "s_per_update": 0.1588309359550476,
+       "peak_gb": 15.7506103515625
+      },
+      {
+       "accum": 2,
+       "s_per_update": 0.15388134598731995,
+       "peak_gb": 8.258445262908936
+      }
+     ],
+     "fits": true,
+     "hours_per_run": 2.5045898852169515,
+     "usd_per_run": 1.177157246051967
+    },
+    "_schedule": {
+     "steps": 58594,
+     "assumed_mean_row_pieces": 40.0
+    },
+    "_per_seed_hours_all_arms": 15.968418786407842,
+    "_six_seed_hours": 95.81051271844706
+   }
+  },
+  "public": {
+   "pythia31m": {
+    "s_per_update": 0.046020468473434446,
+    "peak_gb": 12.275128364562988,
+    "n_params": 30494720
+   }
+  }
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "rung": "10M",
+ "seed": 400,
+ "steps": 24000,
+ "cfgs": {
+  "B2": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "copy": true,
+   "blocks": 8
+  },
+  "PT": {
+   "d_model": 256,
+   "n_heads": 4,
+   "n_layers": 13
+  },
+  "LLM": {
+   "d_model": 256,
+   "n_heads": 4,
+   "n_layers": 13
+  }
+ },
+ "trained_params": {
+  "B2": 10298137,
+  "PT": 10405376,
+  "LLM": 10405376
+ },
+ "lr": 0.001,
+ "lr_scale": 1.0,
+ "caps": {
+  "max_prompt": 280,
+  "max_ans": 35,
+  "n_num": 91,
+  "w_max": 208,
+  "n_res": 11,
+  "n_reg": 36,
+  "plain_target": 109,
+  "rows": 4634263,
+  "own_rows": 2561232,
+  "source": "largest pool: own72 (rung <= 30) + rung30 web slice (cloze seed 400) + dev",
+  "compute_s": 184
+ },
+ "maxh": 5.0,
+ "dph": 0.47,
+ "accum": {},
+ "arms": {
+  "B2": {
+   "rc": 0,
+   "status": "ok",
+   "wall_s": 7741.2,
+   "steps": 24000,
+   "steps_per_s": 3.1225454097476923,
+   "n_params": 10298137,
+   "cmd": "/usr/bin/python -m custom_io.train --model ledger --cfg {\"blocks\": 8, \"copy\": true, \"d\": 256, \"mlp\": 4.8, \"n_heads\": 4, \"n_loops\": 12, \"reader_layers\": 2} --data /job/g8a/pools/p10-rung10-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps /job/g8a/pools/p10-rung10-s400-a64/caps.json --bf16 --big-data /job/data_big --out /job/g8a/w/8a-10M-s400-B2",
+   "accum": 1,
+   "peak_mem_mib": 21466.4
+  },
+  "PT": {
+   "rc": 0,
+   "status": "ok",
+   "wall_s": 1748.6,
+   "steps": 24000,
+   "steps_per_s": 14.087791437427924,
+   "n_params": 10405376,
+   "cmd": "/usr/bin/python -m custom_io.train --model plain_tf_steps_g --cfg {\"d_model\": 256, \"n_heads\": 4, \"n_layers\": 13} --data /job/g8a/pools/p10-rung10-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps /job/g8a/pools/p10-rung10-s400-a64/caps.json --bf16 --big-data /job/data_big --out /job/g8a/w/8a-10M-s400-PT",
+   "accum": 1,
+   "peak_mem_mib": 9579.2
+  },
+  "LLM": {
+   "rc": 0,
+   "status": "ok",
+   "wall_s": 1897.2,
+   "steps": 24000,
+   "steps_per_s": 12.956114952858892,
+   "n_params": 10405376,
+   "cmd": "/usr/bin/python -m custom_io.train --model plain_lm --cfg {\"d_model\": 256, \"n_heads\": 4, \"n_layers\": 13} --data /job/g8a/pools/p10-rung10-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps /job/g8a/pools/p10-rung10-s400-a64/caps.json --bf16 --big-data /job/data_big --out /job/g8a/w/8a-10M-s400-LLM",
+   "accum": 1,
+   "peak_mem_mib": 9579.4
+  }
+ },
+ "started_unix": 1791414724.0820818,
+ "pool_build_s": 251.2,
+ "pool_train_sha256": "b90ff7d79e5ca0fc2a03c51bbc956e642479336868a5c0de4c844aa8294c1b91",
+ "pool_schedule": {
+  "seen_pieces_target": 200000000.0,
+  "steps_by_seen": 18471,
+  "update_floor": 24000,
+  "steps": 24000,
+  "floor_rules": true,
+  "row_draws": 6144000,
+  "passes": 4.331,
+  "max_row_draws": 5,
+  "ok_reuse": true,
+  "seen_pieces_actual": 259879179
+ },
+ "b2_extra": {
+  "n_loops": 12
+ },
+ "wall_s": 11638.1,
+ "cost_usd": 1.519
+}

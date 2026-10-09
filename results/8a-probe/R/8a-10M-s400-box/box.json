@@ -1,0 +1,86 @@
+{
+ "rung": "10M",
+ "seed": 400,
+ "steps": 24000,
+ "cfgs": {
+  "B2": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 23,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "copy": true,
+   "blocks": 2
+  },
+  "PT": {
+   "d_model": 256,
+   "n_heads": 4,
+   "n_layers": 13,
+   "hidden": 1000
+  },
+  "LLM": {
+   "d_model": 256,
+   "n_heads": 4,
+   "n_layers": 13,
+   "hidden": 1000
+  }
+ },
+ "trained_params": {
+  "B2": 10243921,
+  "PT": 10245320,
+  "LLM": 10245320
+ },
+ "lr": 0.001,
+ "lr_scale": 1.0,
+ "caps": {
+  "max_prompt": 280,
+  "max_ans": 35,
+  "n_num": 91,
+  "w_max": 208,
+  "n_res": 11,
+  "n_reg": 36,
+  "plain_target": 109,
+  "rows": 4634263,
+  "own_rows": 2561232,
+  "source": "largest pool: own72 (rung <= 30) + rung30 web slice (cloze seed 400) + dev",
+  "compute_s": 406
+ },
+ "maxh": 5.0,
+ "dph": 0.5,
+ "accum": {},
+ "arms": {
+  "B2": {
+   "rc": 0,
+   "status": "ok",
+   "wall_s": 8642.6,
+   "steps": 24000,
+   "steps_per_s": 2.806564593971157,
+   "n_params": 10243921,
+   "cmd": "/usr/bin/python -m custom_io.train --model ledger --cfg {\"blocks\": 2, \"copy\": true, \"d\": 256, \"mlp\": 4.8, \"n_heads\": 4, \"n_loops\": 12, \"reader_layers\": 23} --data /job/g8a/pools/p10-rung10-s400-a64 --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps /job/g8a/pools/p10-rung10-s400-a64/caps.json --bf16 --big-data /job/data_big --out /job/g8a/w/8a-10M-s400-B2",
+   "accum": 1,
+   "peak_mem_mib": 10253.1
+  }
+ },
+ "started_unix": 1791436016.2108104,
+ "pool_build_s": 553.6,
+ "pool_train_sha256": "b90ff7d79e5ca0fc2a03c51bbc956e642479336868a5c0de4c844aa8294c1b91",
+ "pool_schedule": {
+  "seen_pieces_target": 200000000.0,
+  "steps_by_seen": 18471,
+  "update_floor": 24000,
+  "steps": 24000,
+  "floor_rules": true,
+  "row_draws": 6144000,
+  "passes": 4.331,
+  "max_row_draws": 5,
+  "ok_reuse": true,
+  "seen_pieces_actual": 259879179
+ },
+ "b2_extra": {
+  "reader_layers": 23,
+  "blocks": 2,
+  "n_loops": 12
+ },
+ "wall_s": 9196.2,
+ "cost_usd": 1.277
+}
