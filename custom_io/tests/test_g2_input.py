@@ -15,7 +15,7 @@ from custom_io.models.reader import place_ids
 from custom_io.tests import legacy_widths
 from custom_io.tests.test_b3 import CFG, StubEG, rows
 
-BASE = 'e070556ce5'
+BASE = '8fce7247a8'
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 V, BV = CharVocab.build([]), ByteVocab()
 UNI = ['Écho: café Give only the answer.', 'Tom has 12 apples and 5€ — buys 345 more. 日本語 ok?', 'naïve 7 + 5']

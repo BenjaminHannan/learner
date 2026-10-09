@@ -335,7 +335,7 @@ def child():
     opt = torch.optim.AdamW(m.parameters(), lr=3e-3, betas=(0.9, 0.95), weight_decay=0.0)
     m.train()
     ls, call_acc = [], []
-    N = int(os.environ.get('B3G2_STEPS', 120))
+    N = int(os.environ.get('B3G2_STEPS', 400))
     for s in range(N):
         loss, aux = m.loss(batches[s % 4])
         loss.backward()
