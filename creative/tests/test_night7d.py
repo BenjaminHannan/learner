@@ -179,3 +179,41 @@ def test_scl_night_picking_off_is_vl_L_smoke():
     b, ib = N._sc_night(base, recs, replay, warm, vocab, 1e-4, 32, s3['seed'], 'cpu', None, select=False)
     assert ia['updates'] == ib['updates'] == 8 and ia['last_loss'] == ib['last_loss']
     assert all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), b.state_dict().values()))
+
+
+def test_scl_renamed_gain_keys_and_sc_unchanged():
+    n0, L = 100 / 256, 100 * 80 / 256
+    m = N.sc_scorecard(100 * 73 / 256, L, n0, True, keys=N.GAIN_KEYS)
+    assert 'gain_test' in m and 'gain_control' in m and 'gain_SC' not in m and 'gain_W1' not in m
+    d = N.sc_scorecard(100 * 73 / 256, L, n0, True)                       # SC's own outputs keep their names
+    assert 'gain_SC' in d and 'gain_W1' in d and 'gain_test' not in d
+    assert m['gain_test'] == d['gain_SC'] and m['gain_control'] == d['gain_W1'] and m['ratio'] == d['ratio']
+
+
+def test_scm_marks_edges():
+    n0, w1 = 100 / 256, 100 * 80 / 256
+    card = lambda k, harm=True: N.sc_scorecard(100 * k / 256, w1, n0, harm, keys=N.GAIN_KEYS)
+    assert (N.SCM_LR, N.SCM_VISITS) == (3e-4, 32)
+    ok = N.scm_marks(True, card(73), 10.0, 13.0)                          # reach exactly W1 - 3: met (inclusive)
+    assert ok['passes'] and ok['reach_ok'] and ok['questions_short'] == 0
+    assert not N.scm_marks(True, card(73), 9.9, 13.0)['reach_ok'] and not N.scm_marks(True, card(73), 9.9, 13.0)['passes']
+    assert N.scm_marks(True, card(72), 13.0, 13.0)['passes'] and N.scm_marks(True, card(72), 13.0, 13.0)['questions_short'] == 1   # one question short = met
+    two = N.scm_marks(True, card(71), 13.0, 13.0)
+    assert two['questions_short'] == 2 and not two['mark2'] and not two['passes']
+    assert not N.scm_marks(False, card(73), 13.0, 13.0)['passes'] and not N.scm_marks(False, card(73), 13.0, 13.0)['harm']
+    assert N.scm_marks(True, card(73), 14.3 - 3.0, 14.3)['reach_ok']
+
+
+def test_scm_vs_scl_and_verdict():
+    n0, w1 = 100 / 256, 100 * 80 / 256
+    card = lambda k, harm=True: N.sc_scorecard(100 * k / 256, w1, n0, harm, keys=N.GAIN_KEYS)
+    assert not N.scm_vs_scl(16.0, 13.0)['under_3'] and N.scm_vs_scl(15.9, 13.0)['under_3'] and N.scm_vs_scl(16.0, 13.0)['scm_minus_scl'] == 3.0
+    mk = lambda harm, d, k=73: dict(N.scm_marks(harm, card(k, harm), 13.0, 13.0), **N.scm_vs_scl(13.0 + d, 13.0))
+    good, flat, bad = mk(True, 3.0), mk(True, 0.0), mk(False, 5.0)
+    v = N.scm_verdict
+    assert v({'a': good, 'b': good})['passes'] and not v({'a': good, 'b': good})['proved_wrong']
+    assert not v({'a': good, 'b': mk(True, 3.0, 71)})['passes']                        # mark 2 fails on one parent: not a pass ...
+    assert not v({'a': good, 'b': mk(True, 3.0, 71)})['proved_wrong']                  # ... and not proved wrong
+    assert v({'a': good, 'b': bad})['proved_wrong'] and v({'a': bad, 'b': good})['proved_wrong'] and v({'a': good, 'b': bad})['harm_failed_on'] == ['b']   # harm on either parent
+    assert v({'a': flat, 'b': flat})['proved_wrong'] and v({'a': flat, 'b': flat})['under_3_on'] == ['a', 'b']  # under +3 on both
+    assert not v({'a': flat, 'b': good})['proved_wrong'] and not v({'a': good, 'b': flat})['proved_wrong']   # under +3 on one only
