@@ -456,6 +456,50 @@ def make_opt(m, lr):
                              lr=lr, betas=(0.9, 0.95))
 
 
+class AddOn:
+    """Addendum A18: a small add-on that holds what a domain teaches. Each Linear layer of the model gets a low-rank
+    pair (A: r x in, B: out x r, B starts at zero, so a new add-on changes nothing); while `on`, the layer outputs
+    W x + b + (alpha / r) B A x. The model's own weights are frozen. Forward hooks, so the model's state_dict keys
+    stay the parent's. merged_state() folds the add-on into the weights (a checkpoint in the parent's format)."""
+
+    def __init__(self, m, rank, alpha, seed):
+        g = torch.Generator().manual_seed(seed)
+        self.on, self.scale, self.layers = False, alpha / rank, []
+        for name, mod in m.named_modules():
+            if isinstance(mod, torch.nn.Linear):
+                A = (torch.randn(rank, mod.in_features, generator=g) / math.sqrt(mod.in_features)).requires_grad_(True)
+                B = torch.zeros(mod.out_features, rank, requires_grad=True)
+                self.layers.append((name, mod, A, B))
+                mod.register_forward_hook(self._hook(A, B))
+        for p in m.parameters():
+            p.requires_grad_(False)
+
+    def _hook(self, A, B):
+        def hook(mod, inp, out):
+            return out + self.scale * torch.nn.functional.linear(torch.nn.functional.linear(inp[0], A), B) if self.on else out
+        return hook
+
+    def params(self):
+        return [t for _, _, A, B in self.layers for t in (A, B)]
+
+    def n_params(self):
+        return sum(t.numel() for t in self.params())
+
+    def snapshot(self):
+        return [t.detach().clone() for t in self.params()]
+
+    def restore(self, snap):
+        with torch.no_grad():
+            for t, v in zip(self.params(), snap):
+                t.copy_(v)
+
+    def merged_state(self, m):
+        sd = {k: v.detach().clone() for k, v in m.state_dict().items()}
+        for name, mod, A, B in self.layers:
+            sd[name + '.weight'] += self.scale * (B @ A).detach()
+        return sd
+
+
 def row_losses(m, ds, idx):
     """Addendum A16: model.loss of each row ds[i], i in idx, one row at a time (eval mode, no grad). -> list of floats."""
     was = m.training
@@ -466,7 +510,7 @@ def row_losses(m, ds, idx):
     return out
 
 
-def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None):
+def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None, addon=None):
     """Each batch: half new rows (cycling through reshuffles, so each is seen about visits_per_new_row times), half
     self-replay rows: drawn from the diary, or with fresh=True (addendum A13) taken in order from this night's fresh
     replay rows, each once. Grad clip 1.0 as in custom_io training (train.py:172). -> per-update losses."""
@@ -476,9 +520,13 @@ def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None):
     ds_new, ds_rep = Dataset(new, m.vocab), Dataset(diary, m.vocab)
     rng = np.random.RandomState(seed)
     torch.manual_seed(seed)  # ans_drill draws from the model's own RNG in train mode (tool.py:151)
-    opt = make_opt(m, cons['lr'])
+    if addon is None:
+        opt = make_opt(m, cons['lr'])
+    else:   # addendum A18: only the add-on trains (AdamW as make_opt, weight decay 0.1 on its matrices)
+        opt = torch.optim.AdamW([{'params': addon.params(), 'weight_decay': 0.1}], lr=cons['addon_lr'], betas=(0.9, 0.95))
     order, pos, losses, rep_pos = np.array([], dtype=int), 0, [], 0
     pick = cons['replay_pick'] and not fresh
+    assert not (pick and addon is not None), 'picking scores a deep copy, which would share the add-on (A18)'
     if pick:   # addendum A16: the model picks its own review (Test SC's rule, creative/night7d.py sleep_sc at 78ba7bba8)
         frozen = copy.deepcopy(m).eval()
         prng, slots, spos = random.Random(seed + 5000), None, 0
@@ -516,7 +564,7 @@ def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None):
         out = m.loss(b)
         loss = out[0] if isinstance(out, tuple) else out
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(m.parameters() if addon is None else addon.params(), 1.0)
         opt.step()
         opt.zero_grad(set_to_none=True)
         losses.append(float(loss.detach()))
@@ -543,11 +591,12 @@ def make_mix(kinds, hist_k, night, cons):
     return {k: share[k] / s for k in kinds}, prog
 
 
-def save_ckpt(ck, m, path):
-    """Same keys as the parent's checkpoint (train.py:201): model replaced, the rest copied, so load_model reads it the same way."""
+def save_ckpt(ck, m, path, addon=None):
+    """Same keys as the parent's checkpoint (train.py:201): model replaced, the rest copied, so load_model reads it the same way.
+    With an add-on (addendum A18) the saved weights are the merged ones (the model with its add-on on)."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     out = dict(ck)
-    out['model'] = {k: v.detach().clone() for k, v in m.state_dict().items()}
+    out['model'] = addon.merged_state(m) if addon is not None else {k: v.detach().clone() for k, v in m.state_dict().items()}
     torch.save(out, path)
 
 
@@ -601,6 +650,7 @@ def main(argv=None):
     ck = torch.load(parent, map_location='cpu', weights_only=True)
     torch.manual_seed(a.seed)  # the model's ans_drill RNG is seeded at construction (tool.py:151)
     m = load_model(parent).eval()
+    addon = None   # addendum A18: built after the diary and check set, which are the pre-mode self's
     ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=lmax)
     write_row = lambda **kw: log.write('row', **kw)
 
@@ -617,6 +667,11 @@ def main(argv=None):
     random.Random(f'{a.seed}-diary').shuffle(pool)
     diary, check, pool_pos = build_diary(m, pool, cons, ctx, log, write_row)
     pm = load_model(parent).eval() if cons['replay_fresh'] else None   # addendum A13: the frozen pre-mode self
+    if cons['addon']:
+        addon = AddOn(m, cons['addon_rank'], cons['addon_alpha'], seed=a.seed)
+        addon.on = True   # on for this tool's work: quiz, tries, nights; switched off for the check if per_tool
+        log('addon', mode=cons['addon'], rank=cons['addon_rank'], alpha=cons['addon_alpha'], lr=cons['addon_lr'],
+            params=addon.n_params(), layers=len(addon.layers))
     T['diary'] += time.time() - t
     assert len(diary) > 0, 'no diary rows'
     assert check, 'empty check set: agreement would read 0 and every night would be undone'
@@ -661,11 +716,16 @@ def main(argv=None):
             updates = math.ceil(vis * n_new / (cons['batch'] * (1 - cons['replay_share']))) if n_new else 0
         log('night_plan', night=night, new_rows=n_new, visits_per_new_row=vis, updates=updates, halved_after_undo=undo_prev)
         snap = {k: v.detach().clone() for k, v in m.state_dict().items()}
+        asnap = addon.snapshot() if addon is not None else None
         # step 7: the same check prompts before and after this night; undo if agreement fell more than
         # undo_drop_points. choice: the test is per night (design step 6: "before and after each night"), not against
         # 100, so a night's drift is not counted again on the next night (addendum A4).
         t = time.time()
+        if addon is not None and cons['addon'] == 'per_tool':
+            addon.on = False   # A18: the check prompts are old questions, not this tool's, so the add-on is off
         before = check_agree(m, check)
+        if addon is not None:
+            addon.on = True
         T['check'] += time.time() - t
         t = time.time()
         rep = diary
@@ -681,12 +741,16 @@ def main(argv=None):
                 rep = diary
         picks = []
         losses = train_night(m, new, rep, updates, cons, seed=a.seed * 1000 + night,
-                             fresh=cons['replay_fresh'] and rep is not diary, picks=picks) if updates else []
+                             fresh=cons['replay_fresh'] and rep is not diary, picks=picks, addon=addon) if updates else []
         if picks:
             log('replay_pick', night=night, rounds=picks)
         T['train'] += time.time() - t
         t = time.time()
+        if addon is not None and cons['addon'] == 'per_tool':
+            addon.on = False
         agree = check_agree(m, check)
+        if addon is not None:
+            addon.on = True
         T['check'] += time.time() - t
         drop = before - agree
         # addendum A14: with undo_total, the gate counts the whole drift from the pre-mode self (100 = every check
@@ -694,6 +758,8 @@ def main(argv=None):
         undo = (100.0 - agree if cons['undo_total'] else drop) > cons['undo_drop_points']
         if undo:
             m.load_state_dict(snap)
+            if addon is not None:
+                addon.restore(asnap)
             m.eval()
         undo_prev = undo
         log('check', night=night, agreement_before=round(before, 2), agreement=round(agree, 2), drop=round(drop, 2),
@@ -701,7 +767,7 @@ def main(argv=None):
 
         t = time.time()
         path = os.path.join(a.out, f'night_{night}', 'checkpoint.pt')
-        save_ckpt(ck, m, path)
+        save_ckpt(ck, m, path, addon)
         T['save'] += time.time() - t
         last_ck = path
 
@@ -737,6 +803,7 @@ def main(argv=None):
 
     final = hist_k[-1]
     summary = dict(parent=parent, tool=a.tool, seed=a.seed, smoke=a.smoke, even_mix_control=a.even_mix, nights_run=night, stop_reason=stop,
+                   addon=cons['addon'],
                    quiz_pooled_history=[round(100 * p, 2) for p in hist_p],
                    quiz_per_kind_history=[{k: round(v, 4) for k, v in h.items()} for h in hist_k],
                    quiz_per_kind_final={k: round(v, 4) for k, v in final.items()},

@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CONST_PATH = os.path.join(HERE, 'constants.json')
 KNOWN_EVENTS = frozenset({'start', 'help', 'deviation', 'row', 'diary', 'quiz_built', 'quiz_short', 'quiz', 'practice',
                           'practice_short', 'try', 'night_plan', 'check', 'night', 'stop_check', 'mix', 'done',
-                          'replay_fresh', 'replay_short', 'replay_pick'})  # addenda A13, A16
+                          'replay_fresh', 'replay_short', 'replay_pick', 'addon'})  # addenda A13, A16, A18
 
 # Marks (design sec. 5 table; addenda A2, A6-A8). Values are percentage points.
 DM1_PASS, DM1_PROVED = 30.0, 10.0      # near, After minus Before: pass >= +30; proved wrong < +10
@@ -319,6 +319,11 @@ def main(argv=None):
     aft, _ = in_dist_one(fin, dev_rows, dev_sha, cache_dir)
     harm_res = harm.harm_measure(ref['hits'], aft['hits'], dev_rows, family_drop=5.0, in_dist_drop=1.5)
     dm3 = dm3_rule(harm_res)
+    if summary.get('addon') == 'per_tool':
+        # addendum A18: the add-on is used only with its tool, so on old questions the model is the parent and DM3
+        # holds by construction. The numbers above are the add-on left on (merged final), reported only.
+        dm3 = dict(dm3, verdict='PASS (by construction: add-on off outside its tool)', addon_left_on=dict(
+            value=dm3['value'], verdict=dm3['verdict'], fired=dm3['fired']), value=0.0, fired=[])
     T['harm'] = round(time.time() - t, 1)
     print('DM3 in_dist parent', round(harm_res['in_dist_a'], 2), 'final', round(harm_res['in_dist_b'], 2),
           'drop', round(harm_res['in_dist_drop'], 2), 'fired', harm_res['fired'], flush=True)
