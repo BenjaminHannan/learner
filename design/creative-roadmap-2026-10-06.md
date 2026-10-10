@@ -1626,6 +1626,10 @@ families x 200, two parents).**
   on the same parents, DEV. Both SCM2 marks hold on at least 5 of 6 parents, and the pooled multi-step first try
   SCM2 - W2 (924 paired questions) is at least -2 points. Proved wrong: the pooled interval's upper end is below 0.
   Free cloud CPU, about 2 hours per parent.
+  - Report only (forgetting thread, /mnt/project-files/forgetting/REPORT-2026-10-10.md): seq_next and rule_apply per
+    parent, the two canary families. That report finds no new forgetting test is needed for this recipe. When search
+    breadth is widened later, more tries per question come first; a higher rate or handed-down answers are predicted to
+    bring the forgetting back.
 - **Next single change (10-10, free CPU; Ben's 2:54 PM ET 10-08 question, "what if the training examples are only
   appended?"): Test APM, Test AP's append-only pool on SCM2's recipe.** AP was written for the fast nights and held;
   this is the same one change on the recipe that now carries forward.
