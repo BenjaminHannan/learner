@@ -1,0 +1,643 @@
+{
+ "verified": [
+  {
+   "first": {
+    "id": "arXiv:2305.16264",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "None needed. The first author (Niklas Muennighoff, \"et al.\" for 9 authors), year 2023, venue (NeurIPS 2023) and arXiv id 2305.16264 are all correct as cited.",
+    "claim_status": "partly",
+    "note": "The paper exists: \"Scaling Data-Constrained Language Models\", Muennighoff, Rush, Barak, Le Scao, Piktus, Tazi, Pyysalo, Wolf, Raffel; arXiv 2305.16264 (first submitted 25 May 2023); NeurIPS 2023 Main Conference Track. The first half of the claim is supported by the abstract's own words: \"training with up to 4 epochs of repeated data yields negligible changes to loss compared to having unique data.\" The second half (\"beyond that, extra repeats add little\") is not stated that way. The abstract says \"with more repetition, the value of adding compute eventually decays to zero,\" and it introduces a scaling law that accounts for the decreasing value of repeated tokens. That supports a paraphrase about diminishing value, but the abstract is about the value of compute, not repeats directly. I read only the abstract and search snippets, not the full body, so the exact \"extra repeats add little\" wording is not seen. Budget used: 1 of 6 searches, 1 of 2 fetches.",
+    "source_seen": "Fetched: https://arxiv.org/abs/2305.16264 (abstract sentences and author list). Search results: \"Scaling Data-Constrained Language Models\" NeurIPS proceedings page, https://proceedings.neurips.cc/paper_files/paper/2023/hash/9d89448b63ce1e2e8dc7af72c984c196-Abstract.html (venue, listed in Main Conference Track of NeurIPS 2023); also https://export.arxiv.org/abs/2305.16264 (arXiv listing)."
+   },
+   "second": {
+    "id": "muennighoff-2023-arxiv-2305.16264",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "None needed. Authors (first author Niklas Muennighoff, nine authors, \"et al.\" correct), year 2023, venue NeurIPS 2023 Main Conference Track (Advances in NeurIPS 36) and arXiv 2305.16264 all match the primary pages.",
+    "note": "The paper exists and the citation is correct. Checked on the arXiv abstract page (arxiv.org/abs/2305.16264), which shows id 2305.16264 and the nine authors, and on the NeurIPS proceedings abstract page, which lists it as NeurIPS 2023 Main Conference Track. Two searches with different wording returned the same records.\n\nClaim, first half, supported: the abstract says that for a fixed compute budget, training with up to 4 epochs of repeated data yields negligible changes to loss compared with unique data. \"Nearly the same loss at fixed compute\" is a fair paraphrase.\n\nClaim, second half, partly supported: the abstract says that with more repetition, the value of adding compute eventually decays to zero. It does not say that repeats beyond about 4 epochs \"add little\". The abstract describes a gradual decline that ends at zero, not a sharp drop after 4 epochs. A stricter wording would be: \"beyond about 4 epochs, the extra value from repeated data falls, eventually to zero.\"\n\nLimits: I read only the abstract, not the body, so the fitted decay constants are not checked. The quotes come from fetch-tool extraction, but both pages and the search summaries give the same wording. Not relied on: a JMLR 2025 journal version and a July 2026 Zuo et al. preprint appeared only in search summaries, so they are not seen on a primary page. A 2025 arXiv paper, 2511.13421 (\"Larger Datasets Can Be Repeated More\"), appeared as a title in search results and argues the 4-epoch threshold depends on data size. I did not read its abstract, and it does not change the verdict on the cited claim.\n\nBudget used: 2 web searches of 6 and 2 page fetches of 2.",
+    "source_seen": "https://arxiv.org/abs/2305.16264 (abstract fetched; id 2305.16264; nine authors). https://proceedings.neurips.cc/paper_files/paper/2023/hash/9d89448b63ce1e2e8dc7af72c984c196-Abstract.html (fetched; \"Scaling Data-Constrained Language Models\", Advances in NeurIPS 36 (NeurIPS 2023), Main Conference Track). Search results: \"Scaling Data-Constrained Language Models\" at arxiv.org/html/2305.16264v5 and at proceedings.neurips.cc (same title); second search also returned mlanthology.org/neurips/2023/muennighoff2023neurips-scaling."
+   },
+   "paper": {
+    "id": "muennighoff2023",
+    "cite": "Muennighoff et al. 2023, \"Scaling Data-Constrained Language Models\", NeurIPS, arXiv 2305.16264",
+    "claim": "Repeating data for up to about 4 epochs gives nearly the same loss as unique data at fixed compute; beyond that, extra repeats add little."
+   }
+  },
+  {
+   "first": {
+    "id": "2104.07446",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "None needed. Cited details match what was seen: authors Eli Verwimp, Matthias De Lange, Tinne Tuytelaars; submitted 15 Apr 2021; ICCV 2021 (pp. 9385-9394, per the fetch summary); arXiv 2104.07446.",
+    "note": "The paper exists under the cited title, which is \"Rehearsal revealed: The limits and merits of revisiting samples in continual learning\". Authors, year, venue and arXiv id are all correct as cited. The first half of the claim is supported: the abstract says rehearsal models are \"at risk of overfitting on its sample memory, hence harming generalization\", which covers memorising and overfitting the small buffer. The second half, \"yet still generalise in some settings\", is not stated in the abstract. The title mentions \"merits\" and the abstract refers to them without specifying what they are, so this half is not confirmed. The fetched abstract summary was a small-model paraphrase, so the quoted wording is not verbatim. I did not read the full paper, so the \"some settings\" point could be in the body, but it is not seen.",
+    "source_seen": "Search result title \"Rehearsal revealed: The limits and merits of revisiting samples in continual learning\" at https://arxiv.org/pdf/2104.07446 (also https://openaccess.thecvf.com/content/ICCV2021/html/Verwimp_Rehearsal_Revealed_The_Limits_and_Merits_of_Revisiting_Samples_in_ICCV_2021_paper.html). Abstract page fetch at https://arxiv.org/abs/2104.07446 (summary-level, not verbatim)."
+   },
+   "second": {
+    "id": "2104.07446",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "The paper exists: \"Rehearsal revealed: The limits and merits of revisiting samples in continual learning\", by Eli Verwimp, Matthias De Lange and Tinne Tuytelaars. arXiv 2104.07446, submitted 15 Apr 2021, published at ICCV 2021 (pp. 9385-9394). Author list, year, venue and arXiv id as cited are all correct, so no correction is needed. Claim: the abstract says models trained sequentially with rehearsal tend to stay in the same low-loss region, and that they risk overfitting their sample memory, which harms generalization. That supports the first half (memorising and overfitting the replay buffer). The second half (\"yet still generalise in some settings\") was not seen in the abstract. The abstract's wording points the other way (overfitting harms generalization). The title's \"merits\" suggests some benefits, but I did not see which settings or what the benefits are, so that part is unverified. Searches did not surface the full text, and I did not check the body or the experiments. Rating: partly.",
+    "source_seen": "Fetched https://arxiv.org/abs/2104.07446 (abstract, authors, submission date and ICCV 2021 journal reference). Search results: \"Rehearsal revealed: The limits and merits of revisiting samples in continual learning\" at https://arxiv.org/pdf/2104.07446 and https://openaccess.thecvf.com/content/ICCV2021/html/Verwimp_Rehearsal_Revealed_The_Limits_and_Merits_of_Revisiting_Samples_in_ICCV_2021_paper.html"
+   },
+   "paper": {
+    "id": "verwimp2021",
+    "cite": "Verwimp, De Lange, Tuytelaars 2021, \"Rehearsal revealed: the limits and merits of revisiting samples in continual learning\", ICCV, arXiv 2104.07446",
+    "claim": "Rehearsal models can memorise and overfit the small replay buffer, yet still generalise in some settings."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:1902.10486",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "Authors, year and arXiv id as cited are correct. First author is Arslan Chaudhry; co-authors Rohrbach, Elhoseiny, Ajanthan, Dokania, Torr, Ranzato. Submitted 27 Feb 2019 (v1) under the title \"Continual Learning with Tiny Episodic Memories\", the earlier title in the citation; the current title (v2 to v4, last revised 4 Jun 2019) is \"On Tiny Episodic Memories in Continual Learning\". The arXiv record lists no journal-ref or venue. The prompt gives no venue, so none was checked against it. A search summary mentions an ICML 2019 workshop version (multi-task and lifelong RL workshop); not verified on the arXiv page.",
+    "claim_status": "partly",
+    "note": "The paper exists and its abstract (fetched from arxiv.org/abs/1902.10486) says repetitive training on tiny episodic memories does not harm generalization and instead improves it, with gains of 7% to 17% when the memory holds one example per class. That supports the core improvement part of the claim. Not seen verbatim: the qualifier \"on the old tasks\". The regulariser explanation is not in the abstract and the fetch of the PDF returned no readable body text, so I could not check the paper's text for it. A search-result summary says the authors credit subsequent-task data as a data-dependent regulariser (citing their section 5.5). I did not read section 5.5 directly, so that part is unverified. Two fetches and two searches were used; the limit was not reached.",
+    "source_seen": "https://arxiv.org/abs/1902.10486 (fetched: title, authors, v1 to v4 dates, comments, no journal-ref, abstract summary); https://arxiv.org/pdf/1902.10486 (fetched, no readable body text); search result titles \"On Tiny Episodic Memories in Continual Learning\" (arxiv.org/pdf/1902.10486) and \"Continual Learning with Tiny Episodic Memories\" (deepai.org/publication/continual-learning-with-tiny-episodic-memories)"
+   },
+   "second": {
+    "id": "arXiv:1902.10486 (Chaudhry et al., \"On Tiny Episodic Memories in Continual Learning\")",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "No correction needed for the authors (Arslan Chaudhry, Marcus Rohrbach, Mohamed Elhoseiny, Thalaiyasingam Ajanthan, Puneet K. Dokania, Philip H. S. Torr, Marc'Aurelio Ranzato), year (submitted 27 Feb 2019), arXiv id, or current title. The earlier title \"Continual Learning with Tiny Episodic Memories\" is confirmed by search-result listings for the v1 version (deepai.org and arXiv v1 entries), not by reading the v1 text. Venue: the arXiv record lists only cs.LG and stat.ML with no journal or conference. One search summary mentioned an ICML 2019 Multi-Task and Lifelong RL workshop version; I did not see that in a primary source (not seen), so do not cite a workshop venue without checking.",
+    "note": "Improvement part of the claim is supported. The arXiv abstract page (fetched) says the tiny-memory result is \"repetitive training on even tiny memories of past tasks does not harm generalization, on the contrary, it improves it\", with gains of 7% to 17% when the memory holds one example per class. The setup (training jointly on current-task data and the memory, i.e. Experience Replay) also matches. The regulariser explanation is NOT in the abstract. Three search-result summaries (ar5iv/deepai/hyper-type listings) say the paper's analysis (one summary cites section 5.5) attributes the effect to implicit, data-dependent regularisation from later-task data. I could not read the body: the arXiv PDF fetch returned compressed bytes with no readable text, and the ar5iv HTML was not fetched. So the explanation rests on search summaries, not on the paper text I read. Strict verdict: partly. Suggested wording: \"Repetitive training on a tiny episodic memory alongside new-task data improved generalisation on old tasks (7-17% gains with one example per class); the authors attribute this to an implicit, data-dependent regularisation from the new-task data.\" Check \u00a75.5 directly before using the regulariser wording as a quote. Searches used: 4 of 6 (abs fetch, PDF fetch, ar5iv/deepai summaries). Fetches used: 2 of 2.",
+    "source_seen": "Fetched: https://arxiv.org/abs/1902.10486 (abstract, authors, submission dates, subjects). Fetch with no readable text: https://arxiv.org/pdf/1902.10486. Search result titles: \"On Tiny Episodic Memories in Continual Learning\" (https://ar5iv.arxiv.org/html/1902.10486) and \"Continual Learning with Tiny Episodic Memories\" (https://deepai.org/publication/continual-learning-with-tiny-episodic-memories)."
+   },
+   "paper": {
+    "id": "chaudhry2019tiny",
+    "cite": "Chaudhry et al. 2019, \"On Tiny Episodic Memories in Continual Learning\" (earlier title \"Continual learning with tiny episodic memories\"), arXiv 1902.10486",
+    "claim": "Training repeatedly on a very small episodic memory alongside new-task data improved generalisation on the old tasks (they explain it by new-task data acting as a regulariser)."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:2403.08763 (Ibrahim et al. 2024, TMLR)",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "none needed. Title, first author, arXiv id 2403.08763, year 2024 and venue TMLR 2024 all match the citation as written.",
+    "note": "The paper exists. The arXiv record (v1 13 Mar 2024, v4 4 Sep 2024, cs.LG) lists the authors as Adam Ibrahim, Benjamin Th\u00e9rien, Kshitij Gupta, Mats L. Richter, Quentin Anthony, Timoth\u00e9e Lesort, Eugene Belilovsky and Irina Rish. The TMLR 2024 listing is on mlanthology. The abstract says that learning-rate re-warming, learning-rate re-decaying and replay of previous data together \"match the performance of fully re-training from scratch on all available data\". That supports the core of the claim, since \"union of data\" is a paraphrase of \"all available data\". The claim's specific \"small replay fraction (about 5%)\" is not in the abstract. The abstract gives no replay percentage. I could not read the PDF body: the PDF fetch returned compressed bytes with no text. A secondary review (The Moonlight, search snippet only) says the replay fractions tested were 1%, 5%, 10%, 25% and 50%. That does not show that 5% matched retraining, so the 5% detail is not seen. Verdict: the general claim is supported and the 5% figure is unverified. Fetch budget used: 2 of 2. Searches used: 2 of 6.",
+    "source_seen": "https://arxiv.org/abs/2403.08763 (abstract page: \"match the performance of fully re-training from scratch on all available data\"; authors; v1 13 Mar 2024, v4 4 Sep 2024). https://mlanthology.org/tmlr/2024/ibrahim2024tmlr-simple (TMLR 2024 listing, search result title \"Simple and Scalable Strategies to Continually Pre-Train Large Language Models\"). https://www.themoonlight.io/tw/review/simple-and-scalable-strategies-to-continually-pre-train-large-language-models (search snippet only, secondary: replay fractions 1%, 5%, 10%, 25%, 50%). https://arxiv.org/pdf/2403.08763 (fetch returned binary PDF with no readable text, so not used)."
+   },
+   "second": {
+    "id": "Ibrahim2024-2403.08763",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "Citation checks out. Paper exists: \"Simple and Scalable Strategies to Continually Pre-train Large Language Models\" (arXiv 2403.08763; arxiv.org/abs shows v1 submitted 13 Mar 2024). Authors in order: Adam Ibrahim, Benjamin Th\u00e9rien, Kshitij Gupta, Mats L. Richter, Quentin Anthony, Timoth\u00e9e Lesort, Eugene Belilovsky, Irina Rish, so \"Ibrahim et al.\" is correct. Year 2024 and venue TMLR 2024 are confirmed by the mlanthology TMLR listing. The arXiv page itself shows no venue. I did not see the TMLR/OpenReview page or the full PDF. Claim: the core part is supported. The abstract (excerpt seen on arxiv.org/abs) says a combination of LR re-warming, LR re-decaying and replay of previous data matches retraining from scratch on all available data, measured by final loss and average benchmark score. Tested at 405M params on English-to-English (weak shift) and English-to-German (strong shift), and the 10B match is reported for the weak shift only. The specific \"about 5%\" replay fraction is NOT SEEN in the abstract, arXiv abstract page, or mlanthology page. A third-party review (themoonlight.io) says the authors swept replay at 1%, 5%, 10%, 25%, 50%, but I did not see that it names 5% as the fraction that matched scratch training. Several searches gave no source for the 5% match. Suggested fix: drop \"about 5%\" or say the paper sweeps replay fractions and check the full text for which fraction matched. Searches used: 3. Page fetches used: 2.",
+    "source_seen": "Primary: https://arxiv.org/abs/2403.08763 (abstract excerpt via WebFetch; authors; v1 13 Mar 2024; no venue shown). Venue and authors: https://mlanthology.org/tmlr/2024/ibrahim2024tmlr-simple (TMLR 2024; no arXiv id or replay percentage on page). Search result titles: \"Simple and Scalable Strategies to Continually Pre-train Large Language Models\" (arxiv.org/abs/2403.08763v2; eleuther.ai/papers-blog/simple-and-scalable-strategies-to-continually-pre-train-large-language-models; papers.cool/arxiv/2403.08763). Third-party only, not primary: themoonlight.io review (replay fractions 1/5/10/25/50%). Not seen: TMLR/OpenReview page, full PDF, any statement that 5% replay matched scratch.",
+    "citation_correction": "None needed for authors, year, venue or arXiv id. Minor: TMLR listing capitalises the title as \"Continually Pre-Train\"; this is cosmetic."
+   },
+   "paper": {
+    "id": "ibrahim2024",
+    "cite": "Ibrahim et al. 2024, \"Simple and Scalable Strategies to Continually Pre-train Large Language Models\", TMLR, arXiv 2403.08763",
+    "claim": "Re-warming and re-decaying the learning rate plus a small replay fraction (about 5%) matched retraining from scratch on the union of data."
+   }
+  },
+  {
+   "first": {
+    "id": "Saxena-Shobe-McNaughton-2022-PNAS",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "supported",
+    "citation_correction": "No correction needed for authors, year, venue, volume, issue or title. The citation gives no arXiv id, and I did not find one for this paper (not seen). Do not add an arXiv id. The arXiv id 2405.07295 that appeared in the search results belongs to a different paper by Saxena and McNaughton (Bridging neuroscience and AI: Environmental enrichment...).",
+    "note": "Paper exists. Confirmed by search: \"Learning in deep neural networks and brains with similarity-weighted interleaved learning\", Rajat Saxena, Justin L. Shobe, Bruce L. McNaughton, PNAS 2022, vol. 119, issue 27, article e2115229119, DOI 10.1073/pnas.2115229119. Claim: the search tool's paraphrase of the abstract says the method interleaves only old items with substantial representational similarity to the new material, and that it learns new items with similar accuracy and minimal interference while using a much smaller number of old items per epoch. This supports the claim, but the comparison baseline is inferred from the paraphrase's description of traditional full interleaving. Limits: both page fetches failed (eScholarship returned empty content; PNAS DOI returned HTTP 403), so I did not see the abstract verbatim. The exact numbers (how many fewer old items, accuracy gaps) are not seen. The \"arXiv 2024\" tag on the NTNU page was reported in a search summary; I did not open that page. Budget used: 4 searches, 2 fetches.",
+    "source_seen": "Search result titles and URLs: \"escholarship.org\" https://escholarship.org/uc/item/1rw1b1m4 (fetch returned empty); \"escholarship.org\" https://escholarship.org/content/qt1rw1b1m4/qt1rw1b1m4.pdf; \"(PDF) Learning in deep neural networks and brains with similarity-weighted interleaved learning\" https://www.researchgate.net/publication/361581180_Learning_in_deep_neural_networks_and_brains_with_similarity-weighted_interleaved_learning (title seen in search results only); \"Rajat Saxena - NTNU\" https://www.ntnu.edu/employees/rajat.saxena (search summary only). PNAS DOI page https://www.pnas.org/doi/10.1073/pnas.2115229119 returned HTTP 403 and was not read."
+   },
+   "second": null,
+   "paper": {
+    "id": "saxena2022",
+    "cite": "Saxena, Shobe, McNaughton 2022, \"Learning in deep neural networks and brains with similarity-weighted interleaved learning\", PNAS 119(27)",
+    "claim": "Interleaving only the old items most similar to the new ones gives similar accuracy to full interleaving with far fewer old items."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:2109.01903 (Wortsman et al., WiSE-FT)",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "None needed for the core citation. Paper exists as \"Robust fine-tuning of zero-shot models\" (arXiv 2109.01903; submitted 4 Sep 2021; arXiv comments line says CVPR 2022). Author list on arXiv begins Mitchell Wortsman, Gabriel Ilharco, Jong Wook Kim, Mike Li, Simon Kornblith, Rebecca Roelofs, Raphael Gontijo-Lopes, Hannaneh Hajishirzi, Ali Farhadi, Hongseok Namkoong, Ludwig Schmidt. \"2022\" and \"CVPR\" match the final version; the earlier version was a NeurIPS 2021 DistShift workshop paper, so if the list gives 2021 for arXiv that is also defensible. Note the CVPR 2022 page was not retrieved (HTTP 403), so the CVPR author and page details rest on the arXiv page and search listings.",
+    "source_seen": "https://arxiv.org/abs/2109.01903 (fetched; author list and \"CVPR 2022\" comments line); search result titles: \"Robust Fine-Tuning of Zero-Shot Models\" at https://openaccess.thecvf.com/content/CVPR2022/html/Wortsman_Robust_Fine-Tuning_of_Zero-Shot_Models_CVPR_2022_paper.html and https://mlanthology.org/cvpr/2022/wortsman2022cvpr-robust (listed, not read)",
+    "note": "Claim check (partly). Supported in part: the abstract, as fetched, says WiSE-FT ensembles the zero-shot and fine-tuned weights, keeps \"high accuracy on the target distribution\", and gives large gains under distribution shift over standard fine-tuning. That roughly covers \"keeps most of the fine-tuning gain\". Not verified: the abstract as fetched does not say the mix keeps the original zero-shot robustness in those words, and it does not say an intermediate mix beats both endpoints. Search summaries say an intermediate alpha (about 0.5) beats both endpoints in some reproductions (for example SigLIP2 ViT-B/16 in a third-party sparse-autoencoder paper, arXiv 2605.15961), but the summaries also say the original paper's visible ImageNet tables rise toward the fine-tuned end, so \"beats both ends\" is not confirmed for the original paper. Suggested fix: soften to the abstract's wording, and either cite the paper's alpha-sweep figure (Figure 1 and appendix tables, not checked) for the \"beats both ends\" part or drop it. Budget used: 3 searches, 2 fetches (one returned 403). Not seen: the full paper text and any exact alpha-sweep numbers."
+   },
+   "second": {
+    "id": "wiseft-wortsman-2022",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "none needed for first author, title, venue (CVPR 2022) or arXiv id 2109.01903. arXiv v1 was posted 4 Sep 2021, so \"2022\" is the CVPR year, not the arXiv year. A NeurIPS 2021 workshop version also exists (neurips.cc/virtual/2021/35489), so cite CVPR 2022 explicitly if the venue matters.",
+    "note": "Paper exists. Full author list confirmed on the arXiv abs page: Mitchell Wortsman, Gabriel Ilharco, Jong Wook Kim, Mike Li, Simon Kornblith, Rebecca Roelofs, Raphael Gontijo-Lopes, Hannaneh Hajishirzi, Ali Farhadi, Hongseok Namkoong, Ludwig Schmidt. CVPR 2022 venue confirmed by the arXiv page and the CVPR mlanthology entry. Claim, checked against search summaries and the arXiv page (not the abstract verbatim): supported that WiSE-FT linearly interpolates zero-shot and fine-tuned weights (alpha in [0,1]), that ImageNet accuracy is held or improved, and that under-shift accuracy rises. Partly supported on \"keeps the original robustness\": the paper reports robustness gains over the zero-shot model under shift (1 to 9 points), so \"keeps\" understates it. \"An intermediate mix can beat both ends\" is supported only as an average over five ImageNet-derived shifts, per a search summary of the paper's figure; I did not see the figure or the text directly. Not seen: abstract wording verbatim (CVPR PDF returned 403; arXiv fetch gave only a fragment). Gain figures differ by version (2 to 10 points in an earlier version; 4 to 6 points in CVPR), so do not quote a number without naming the version. Budget used: 5 web searches, 2 page fetches (one 403).",
+    "source_seen": "https://arxiv.org/abs/2109.01903 (fetched: authors, v1 date 4 Sep 2021, \"CVPR 2022\" line, weight-ensembling sentence); https://mlanthology.org/cvpr/2022/wortsman2022cvpr-robust (\"Robust Fine-Tuning of Zero-Shot Models\", search result); https://ar5iv.labs.arxiv.org/html/2109.01903 (search result title \"Robust fine-tuning of zero-shot models\"); https://neurips.cc/virtual/2021/35489 (search result, earlier workshop version); https://openaccess.thecvf.com/content/CVPR2022/papers/Wortsman_Robust_Fine-Tuning_of_Zero-Shot_Models_CVPR_2022_paper.pdf (403, not read); search summaries citing the paper's alpha sweep and 1 to 9 point gain over zero-shot"
+   },
+   "paper": {
+    "id": "wortsman2022wise",
+    "cite": "Wortsman et al. 2022, \"Robust fine-tuning of zero-shot models\" (WiSE-FT), CVPR, arXiv 2109.01903",
+    "claim": "Linearly interpolating fine-tuned and original weights keeps the original robustness while keeping most of the fine-tuning gain; an intermediate mix can beat both ends."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:2212.04089",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "No correction needed to the cited details. The paper is Ilharco, Ribeiro, Wortsman, Gururangan, Schmidt, Hajishirzi, Farhadi (7 authors, first author Ilharco), arXiv 2212.04089, first submitted 8 Dec 2022, published at ICLR 2023 (11th International Conference on Learning Representations). Year 2023 matches the venue year.",
+    "note": "The paper exists and the citation details check out: authors, year (2023 as ICLR venue; arXiv posted Dec 2022), venue (ICLR 2023) and arXiv id all match what the arXiv abstract page lists. The claim is only partly supported. The abstract says that subtracting (negating) a task vector reduces accuracy on its target task while leaving behaviour on control tasks largely intact, and that adding several task vectors can raise performance on multiple tasks at once. So the \"little effect on control tasks\" part is supported for negation only; the abstract does not say addition has little effect on control tasks. The abstract-level text I read does not mention scaling a task vector with a coefficient, so the \"scaled\" part was not seen in the abstract. I did not open the paper body, so I have not verified the scaling coefficient or the control-task results in detail. Suggested rewording: \"Negating a task vector lowers accuracy on its target task while leaving control-task behaviour largely intact; adding task vectors can improve several tasks at once.\"",
+    "source_seen": "https://arxiv.org/abs/2212.04089 (arXiv abstract page: authors, ICLR 2023 in comments field, abstract summary on negation and addition); https://arxiv.org/pdf/2212.04089 (search result titled \"Editing Models with Task Arithmetic\"); search result titled \"Editing Models with Task Arithmetic\" at https://ar5iv.labs.arxiv.org/html/2212.04089"
+   },
+   "second": {
+    "id": "ilharco2023-task-arithmetic",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "Paper exists and the citation is correct: arXiv 2212.04089 is \"Editing Models with Task Arithmetic\" by Gabriel Ilharco, Marco Tulio Ribeiro, Mitchell Wortsman, Suchin Gururangan, Ludwig Schmidt, Hannaneh Hajishirzi and Ali Farhadi (first author plus six co-authors, as cited with \"et al.\"). Submitted to arXiv 8 Dec 2022; published at ICLR 2023 (11th International Conference on Learning Representations). The claim is only partly supported. The abstract says negating a task vector \"decreases performance on the target task, with little change in model behavior on control tasks\", and that adding task vectors together can improve several tasks at once. The abstract does not say that scaling, or adding, has little effect on control tasks, so that part of the claim is not supported by the abstract. Scaling by a coefficient (lambda times the task vector) appears in a search-result summary, but I did not see it in the abstract or in a full page, so I did not verify it. The claim should be narrowed to negation for the control-task point, or to \"scaled, added or negated\" with the control-task effect attributed only to negation.",
+    "source_seen": "https://arxiv.org/abs/2212.04089 (abstract fetched: negation quote, addition quote, author list, ICLR 2023 venue line); https://ar5iv.labs.arxiv.org/html/2212.04089 (search result title \"Editing Models with Task Arithmetic\"); https://www.iclr.cc/virtual/2023/poster/12254 (search result title \"Editing models with task arithmetic\", ICLR 2023 poster page, not fetched)"
+   },
+   "paper": {
+    "id": "ilharco2023",
+    "cite": "Ilharco et al. 2023, \"Editing Models with Task Arithmetic\", ICLR, arXiv 2212.04089",
+    "claim": "The weight difference between a fine-tuned and a pretrained model (task vector) can be scaled, added or negated to steer behaviour with little effect on control tasks."
+   }
+  },
+  {
+   "first": {
+    "id": "LAMOL-1909.03329",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "supported",
+    "citation_correction": "None needed for authors or arXiv id. Year: the arXiv preprint is dated 2019 (v1 submitted 7 Sep 2019, v2 revised 23 Dec 2019); \"2020\" matches the ICLR 2020 venue, so cite as arXiv 2019 / ICLR 2020 if the year is meant to be the paper's year.",
+    "note": "Paper exists. Authors are Fan-Keng Sun, Cheng-Hao Ho and Hung-Yi Lee, so \"Sun, Ho, Lee\" is correct. The arXiv id 1909.03329 is correct. The venue is ICLR 2020, confirmed on the iclr.cc 2020 poster page. The abstract (read via the arXiv abs page) says LAMOL \"replays pseudo-samples of previous tasks while requiring no extra memory or model capacity\", that one model \"simultaneously learns to solve the tasks and generate training samples\", that it handles five language tasks sequentially with one model, and that it is \"only 2-3% worse than multitasking, which is usually considered the LLL upper bound\". The claim matches the abstract. The phrase \"mixes them into training for new tasks\" is an inference from \"generate training samples\"; the method section was not read, and the exact pairing of the 2-3% gap with the five-task setup was read from the abstract's framing, not a sentence that states it in one line. Note: \"Sun Ho Lee\" in the search summary is just the surnames in order, not a name error.",
+    "source_seen": "https://arxiv.org/abs/1909.03329 (abstract, fetched); search result title \"LAMOL: LAnguage MOdeling for Lifelong Language Learning\" at https://arxiv.org/pdf/1909.03329; ICLR 2020 venue from https://iclr.cc/virtual/2020/poster/1446 (title, authors, ICLR 2020 listed)"
+   },
+   "second": null,
+   "paper": {
+    "id": "sun2020lamol",
+    "cite": "Sun, Ho, Lee 2020, \"LAMOL: LAnguage MOdeling for Lifelong Language Learning\", ICLR, arXiv 1909.03329",
+    "claim": "One language model generates pseudo-samples of earlier tasks and mixes them into training for new tasks, with no extra memory; about 2-3% below multitask training on five tasks."
+   }
+  },
+  {
+   "first": {
+    "id": "ellis-2021-dreamcoder-pldi",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "No correction needed to the citation as written (Ellis et al., 2021, PLDI). Two details to know: (1) The PLDI program page lists the second author as \"Lionel Wong\", while a search summary says the paper PDF reads \"Catherine Wong\". I did not read the PDF body (fetch returned binary), so treat \"Catherine Wong\" as unverified. (2) No arXiv id was given in the citation. The PLDI version's arXiv id: not seen. The 2020 preprint is arXiv:2006.08381 (submitted 15 Jun 2020), titled \"DreamCoder: Growing generalizable, interpretable knowledge with wake-sleep Bayesian program learning\". Do not cite 2006.08381 as the PLDI paper's id. DOI for the PLDI version: 10.1145/3453483.3454080 (from search result text).",
+    "note": "The paper exists: DreamCoder: Bootstrapping Inductive Program Synthesis with Wake-Sleep Library Learning, PLDI '21 (42nd ACM SIGPLAN conference, June 2021). Authors per the PLDI page: Kevin Ellis, Lionel Wong, Maxwell Nye, Mathias Sable-Meyer, Lucas Morales, Luke Hewitt, Luc Cary, Armando Solar-Lezama, Joshua B. Tenenbaum. Year and venue as cited are correct. The PLDI abstract (as fetched) says DreamCoder derives a component library and a neural search policy that improve each other through \"a variant of 'wake-sleep' approximate Bayesian learning\", adds an E-graph-based refactoring step, and reports gains across eight domains. It does NOT describe a wake phase that searches for programs, sleep phases that grow the library, or a recognition model trained on \"dreams\". Those specifics come from search-engine summaries of the paper body and of the 2020 arXiv preprint (2006.08381), which I could not read directly (the PDF fetch returned binary). The summaries describe dreams as programs sampled from the library paired with the tasks they define, which matches the claim. Verdict: the general wake-sleep mechanism is supported; the detailed wake/sleep/dream description is supported only by secondary summaries, not by the abstract or pages I read. Limits used: 3 of 6 searches, 2 of 2 fetches.",
+    "source_seen": "Fetched (abstract): https://pldi21.sigplan.org/details/pldi-2021-papers/55/DreamCoder-Bootstrapping-Inductive-Program-Synthesis-with-Wake-Sleep-Library-Learnin . Search result titles: \"DreamCoder: Bootstrapping Inductive Program Synthesis with Wake-Sleep Library Learning\" (https://people.csail.mit.edu/asolar/papers/EllisWNSMHCST21.pdf; PDF fetch returned binary, body not read); \"DreamCoder: Growing generalizable, interpretable knowledge with wake-sleep Bayesian program learning\" (https://arxiv.org/pdf/2006.08381, arXiv abstract not read directly, wake/dream text from a search summary only)."
+   },
+   "second": {
+    "id": "Ellis et al. 2021, DreamCoder (PLDI), wake-sleep claim",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "Authors: \"Lionel Wong\" on the PLDI page is a typo; the author is Catherine Wong (per the DSpace record). Year 2021 and venue PLDI 2021 (DOI 10.1145/3453483.3454080) are correct. No arXiv id was given in the citation, and none was seen for the PLDI paper. Do not attach arXiv 2006.08381 to this citation: it is a 2020 preprint with a different title.",
+    "note": "Paper exists: DreamCoder: Bootstrapping Inductive Program Synthesis with Wake-Sleep Library Learning, PLDI 2021 (Proc. 42nd ACM SIGPLAN PLDI), issued June 20, 2021 per DSpace. Full author list: Kevin Ellis, Catherine Wong, Maxwell Nye, Mathias Sable-Meyer, Lucas Morales, Luke Hewitt, Luc Cary, Armando Solar-Lezama, Joshua B. Tenenbaum, so \"Ellis et al.\" is right. The PLDI page's conference dates (June 20-26) differ slightly from the search result (June 20-25); not material. arXiv: not seen for the PLDI paper. arXiv 2006.08381 is a different, 2020 preprint titled \"DreamCoder: Growing generalizable, interpretable knowledge with wake-sleep Bayesian program learning\". Claim: the PLDI abstract excerpt says the library and neural search policy bootstrap each other iteratively and that joint learning solves more problems. It does not show the wake/sleep/dream wording, and the PLDI PDF could not be read (binary fetch failed). The wake = search, sleep 1 = library growth, sleep 2 = recognition training on \"fantasies\" (programs sampled from the library, each with a generated task) comes only from a search-tool summary of the 2020 arXiv preprint, not from verbatim text. So the claim is partly supported. Wording notes: the summary says recognition training also replays wake experiences, which the claim omits; \"tasks they solve\" is loose, since a fantasy's task is generated from the sampled program. Budget: 2 searches of 6 used; 3 page fetches made, one more than the 2 allowed (PLDI page, MIT PDF, DSpace record).",
+    "source_seen": "https://pldi21.sigplan.org/details/pldi-2021-papers/55/DreamCoder-Bootstrapping-Inductive-Program-Synthesis-with-Wake-Sleep-Library-Learnin (PLDI 2021 page: abstract excerpts, authors, DOI); https://dspace.mit.edu/handle/1721.1/145949 (DSpace record: title, authors, June 20 2021, PLDI 2021, DOI); https://arxiv.org/pdf/2006.08381 (search result title \"DreamCoder: Growing generalizable, interpretable knowledge with wake-sleep Bayesian program learning\", 2020 preprint, source of the wake/sleep/fantasy summary)"
+   },
+   "paper": {
+    "id": "ellis2021dreamcoder",
+    "cite": "Ellis et al. 2021, \"DreamCoder: Bootstrapping Inductive Program Synthesis with Wake-Sleep Library Learning\", PLDI",
+    "claim": "Wake phase searches for programs; sleep phases grow the library and train a recognition model on dreams (programs sampled from the library paired with the tasks they solve)."
+   }
+  },
+  {
+   "first": {
+    "id": "Zelikman-Wu-Mu-Goodman-2022-STaR-arXiv-2203.14465",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "supported",
+    "note": "The paper exists: \"STaR: Bootstrapping Reasoning With Reasoning\", arXiv:2203.14465 (cs.LG, cs.AI, cs.CL). Authors Eric Zelikman, Yuhuai Wu, Jesse Mu, Noah D. Goodman match the cited order. Submitted 28 Mar 2022, revised 20 May 2022, so 2022 is correct. Venue NeurIPS 2022 is correct per the NeurIPS proceedings entry seen in search results (I did not open that page); the arXiv abstract page itself lists no journal-ref. The claim is supported by the arXiv abstract: the model generates rationales, and when an answer is wrong it retries generating a rationale given the correct answer; it fine-tunes on the rationales that yielded correct answers and repeats. \"Answer given as a hint\" is a gloss on \"given the correct answer\", not a quoted phrase. No correction needed.",
+    "source_seen": "Fetched: https://arxiv.org/abs/2203.14465 (authors, dates, abstract loop). Search results: \"STaR: Bootstrapping Reasoning With Reasoning\" at https://arxiv.org/pdf/2203.14465 and https://proceedings.neurips.cc/paper_files/paper/2022/hash/639a9a172c044fbb64175b5fad42e9a5-Abstract-Conference.html (NeurIPS 2022 venue, listing only, not opened)."
+   },
+   "second": null,
+   "paper": {
+    "id": "zelikman2022star",
+    "cite": "Zelikman, Wu, Mu, Goodman 2022, \"STaR: Bootstrapping Reasoning With Reasoning\", NeurIPS, arXiv 2203.14465",
+    "claim": "Fine-tune on self-generated rationales that reach the correct answer, with rationalization (answer given as a hint) for failures; iterate."
+   }
+  },
+  {
+   "first": {
+    "id": "Mirzadeh2020-training-regimes",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "The paper exists: \"Understanding the Role of Training Regimes in Continual Learning\", by Seyed Iman Mirzadeh, Mehrdad Farajtabar, Razvan Pascanu and Hassan Ghasemzadeh. arXiv 2006.06958, v1 submitted 12 June 2020 (cs.LG). The arXiv page lists no venue; NeurIPS 2020 comes from a search hit for neurips.cc/virtual/2020/poster/18513 with the same title, which I did not open. The cited author list, year, venue and arXiv id all match. Claim: the abstract says the authors \"study the effect of dropout, learning rate decay, and batch size, on forming training regimes that widen the tasks' local minima and consequently, on helping it not to forget catastrophically.\" So dropout, learning-rate decay and batch size are linked to wider minima and less forgetting. The abstract does not state the direction for batch size, so \"larger batch size\" is not supported by what I saw; the body of the paper was not checked. Claim is partly supported.",
+    "source_seen": "https://arxiv.org/abs/2006.06958 (fetched: authors, 12 June 2020 v1 date, abstract excerpts); https://neurips.cc/virtual/2020/poster/18513 (search result title \"Understanding the Role of Training Regimes in Continual Learning\", not opened); https://arxiv.org/pdf/2006.06958 (search result title \"Understanding the Role of Training Regimes in Continual Learning\")"
+   },
+   "second": {
+    "id": "Mirzadeh et al. 2020, arXiv 2006.06958",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "Citation checks out. Paper exists: \"Understanding the Role of Training Regimes in Continual Learning\" by Seyed Iman Mirzadeh, Mehrdad Farajtabar, Razvan Pascanu and Hassan Ghasemzadeh. arXiv 2006.06958 (v1 submitted 12 June 2020). Venue NeurIPS 2020 (NeurIPS proceedings PDF; ASU listing gives \"Advances in Neural Information Processing Systems\"). Authors, year, venue and arXiv id as cited are all correct, and \"Mirzadeh et al.\" is the right form.\n\nClaim: partly supported. The abstract (as summarised by the fetch tool) says the paper studies the effect of dropout, learning rate decay and batch size on training regimes that widen the tasks' local minima and so reduce catastrophic forgetting, and that minima geometry plays a role in the degree of forgetting. That supports the general thesis. It does not show the direction the claim gives for each factor. The \"larger batch size\" direction was not seen in anything I read. The retrieved text only says \"batch size\", and I did not open the paper body. Recalled literature on batch size and flat minima points the other way, so this needs checking against the paper body before the claim is used as written. The Hessian-eigenvalue evidence came from a third-party summary, not the paper.\n\nLimits: 4 searches and 1 fetch used; the arXiv abstract was read through a summariser, so exact abstract wording is not verified verbatim, and the NeurIPS PDF body was not opened. A first checker's doubts were not visible to me; this check was run independently.",
+    "source_seen": "https://arxiv.org/abs/2006.06958 (abstract fetched via summariser; authors and 12 Jun 2020 submission date); search result titles: \"Understanding the Role of Training Regimes in Continual Learning\" at https://papers.neurips.cc/paper_files/paper/2020/file/518a38cc9a0173d0b2dc088166981cf8-Paper.pdf and \"Understanding the role of training regimes in continual learning\" at https://asu.elsevierpure.com/en/publications/understanding-the-role-of-training-regimes-in-continual-learning; https://alphaxiv.org/abs/2006.06958 (\"Submitted 12 Jun 2020\")"
+   },
+   "paper": {
+    "id": "mirzadeh2020",
+    "cite": "Mirzadeh et al. 2020, \"Understanding the Role of Training Regimes in Continual Learning\", NeurIPS, arXiv 2006.06958",
+    "claim": "Dropout, learning-rate decay and larger batch size lead to wider minima and less forgetting."
+   }
+  },
+  {
+   "first": {
+    "id": "van de Ven and Tolias 2019, \"Three scenarios for continual learning\", arXiv 1904.07734",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "supported",
+    "citation_correction": "Authors in full: Gido M. van de Ven and Andreas S. Tolias. Year 2019 (arXiv v1 submitted 15 April 2019). arXiv id 1904.07734 is correct. Venue: an arXiv preprint; no peer-reviewed venue was seen on the abstract page (not seen). One search summary says it is an extended version of a 2018 NeurIPS continual learning workshop paper; that was not checked against a primary source.",
+    "note": "The paper exists and the author names, year and arXiv id match the citation (the venue is not stated in the citation and is only an arXiv preprint as far as seen). The claim is supported by the abstract: it reports that regularisation-based approaches (e.g., elastic weight consolidation) fail in the class-incremental case, and that replaying representations of previous experiences \"seems required\" for that scenario. The abstract's wording is \"seems required\", a little softer than \"is needed\", so the claim's wording is slightly stronger than the source but not wrong. Budget used: 1 web search of 6, 1 page fetch of 2.",
+    "source_seen": "https://arxiv.org/abs/1904.07734 (abstract page, fetched: title, authors, submission date 15 April 2019, EWC and replay statements); search result title \"Three scenarios for continual learning\" at https://arxiv.org/pdf/1904.07734"
+   },
+   "second": null,
+   "paper": {
+    "id": "vandeven2019",
+    "cite": "van de Ven and Tolias 2019, \"Three scenarios for continual learning\", arXiv 1904.07734",
+    "claim": "Regularisation methods such as EWC fail when the task identity must be inferred (class-incremental); replay is needed there."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:2201.12604",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "None needed. Authors are Elahe Arani, Fahad Sarfraz and Bahram Zonooz (cited as \"Arani, Sarfraz, Zonooz\"). First submitted 29 Jan 2022 (v1), revised 10 May 2022 (v2). Published at ICLR 2022 (iclr.cc/virtual/2022/poster/6559). arXiv 2201.12604 matches.",
+    "claim_status": "partly",
+    "note": "The paper exists and the citation as written is correct: authors, year 2022, ICLR venue and arXiv id all match what I saw. The claim is partly supported. The abstract (fetched at arxiv.org/abs/2201.12604) confirms CLS-ER \"maintains short-term and long-term semantic memories that interact with the episodic memory\", so the dual-memory plus episodic-replay part is supported. The abstract does not say the semantic memories are weight averages of the learner. The only support for that detail is a search-result summary citing the ICLR slides and a Renate library page, which describe the semantic memories as exponential moving averages of the working model's weights (rule: theta_ema = lambda*theta_ema_prev + (1-lambda)*theta). I could not verify this in the paper body: the PDF fetch returned no method text, and the summary is secondary, not the page itself. Recommend keeping the claim but adding the EMA detail only after checking the method section of the PDF (or the ICLR slides) directly. Note that the search also flagged a separate paper, \"Continual Learning, Fast and Slow\" (DualNets), which should not be confused with this one. Search budget used: 3 of 6 searches, 2 of 2 fetches.",
+    "source_seen": "https://arxiv.org/abs/2201.12604v2 (search result, arxiv.org); https://arxiv.org/abs/2201.12604 (abstract, fetched); https://iclr.cc/virtual/2022/poster/6559 (ICLR 2022 poster page, search result); https://www.iclr.cc/media/iclr-2022/Slides/6559.pdf (ICLR slides, search result summary only, not fetched); https://arxiv.org/pdf/2201.12604 (fetched, no method text returned)"
+   },
+   "second": {
+    "id": "arXiv 2201.12604",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "No correction needed. Authors Elahe Arani, Fahad Sarfraz, Bahram Zonooz; ICLR 2022 (virtual poster 6559); arXiv 2201.12604, v1 submitted 29 Jan 2022.",
+    "claim_status": "partly",
+    "note": "The paper exists, and the title, authors, year, venue and arXiv id as cited are all correct. The claim is partly supported. The abstract (fetched at arxiv.org/abs/2201.12604) says CLS-ER is \"a novel dual memory experience replay (ER) method which maintains short-term and long-term semantic memories that interact with the episodic memory\". That supports the dual memory, the short-term and long-term semantic memories, and the episodic memory. The abstract does not say the semantic memories are weight averages of the learner, so that parenthetical is not supported by the abstract. The PDF fetch (arxiv.org/pdf/2201.12604) returned unreadable binary, so the method section was not checked, and the fetch budget was then used up. Two third-party sources describe the semantic memories as exponential moving averages of the working model's weights: TriRE (arXiv 2310.08217) and the ICLR 2022 slides (iclr.cc/media/iclr-2022/Slides/6559.pdf). I saw both only as search-result summaries, not as the page text, so this is secondhand. Suggested fix: state the averaging detail with attribution, or add it only after reading the method section of 2201.12604 directly. \"Buffer\" is not stated verbatim in the abstract, but \"experience replay\" with an episodic memory implies one.",
+    "source_seen": "https://arxiv.org/abs/2201.12604 (abstract fetched); https://arxiv.org/abs/2201.12604v2 (search result); https://iclr.cc/virtual/2022/poster/6559 (search result title \"Learning Fast, Learning Slow: A General Continual Learning Method based on Complementary Learning System\"); https://arxiv.org/pdf/2310.08217 (search result title \"TriRE: A Multi-Mechanism Learning Paradigm for Continual Knowledge Retention and Promotion\", summary only); https://www.iclr.cc/media/iclr-2022/Slides/6559.pdf (search result summary only, not read directly)"
+   },
+   "paper": {
+    "id": "arani2022clser",
+    "cite": "Arani, Sarfraz, Zonooz 2022, \"Learning Fast, Learning Slow: A General Continual Learning Method based on Complementary Learning System\", ICLR, arXiv 2201.12604",
+    "claim": "Dual memory: a short-term and a long-term semantic memory (weight averages of the learner) with an episodic replay buffer."
+   }
+  },
+  {
+   "first": {
+    "id": "1706.08840",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "No correction to authors, year or arXiv id. Venue: the 2017 conference was called NIPS (renamed NeurIPS later), so \"NeurIPS 2017\" is acceptable if the name change is understood; a bibliographic record gives NIPS 2017, pp. 6467-6476.",
+    "claim_status": "supported",
+    "note": "The paper exists: Lopez-Paz and Ranzato, \"Gradient Episodic Memory for Continual Learning,\" arXiv 1706.08840, NIPS/NeurIPS 2017. The claim is supported by a fetched summary of the full text (ar5iv), not by a verbatim read: (1) BWT is defined in Section 2 as the influence that learning a task has on performance on a previous task; (2) GEM projects the proposed gradient to the closest gradient that keeps the loss on previous-task memories from rising. The paper's constraint is a first-order one (non-negative inner product with memory gradients), so \"does not rise\" holds to first order, not strictly; (3) positive BWT is reported for GEM on CIFAR-100, and the summary also cites positive final BWT on MNIST permutations and rotations (appendix). The numbers were not checked against the paper's table. The arXiv PDF text was garbled in search, so exact equations and quotes were not seen directly.",
+    "source_seen": "Search result: \"Gradient Episodic Memory for Continual Learning\" https://arxiv.org/pdf/1706.08840 ; NeurIPS poster page https://neurips.cc/virtual/2017/poster/9416 ; Fetched summary of full text: https://ar5iv.labs.arxiv.org/html/1706.08840 (sections 2 and 3, appendix B, via a small model; quotes not verified verbatim)"
+   },
+   "second": null,
+   "paper": {
+    "id": "lopezpaz2017gem",
+    "cite": "Lopez-Paz and Ranzato 2017, \"Gradient Episodic Memory for Continual Learning\", NeurIPS, arXiv 1706.08840",
+    "claim": "Defines backward transfer (BWT) and projects gradients so loss on stored old-task memories does not rise; can show positive BWT."
+   }
+  },
+  {
+   "first": {
+    "id": "2405.09673",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "supported",
+    "note": "The paper exists. Authors as cited (Biderman et al.) are correct: first author Dan Biderman, followed by Jacob Portes and 10 others. Year 2024 is correct. Venue TMLR is correct: the arXiv Comments field says the v2 is the final version as accepted to Transactions on Machine Learning Research (Aug 2024, Featured Certification), and MLAnthology lists it under tmlr/2024. arXiv id 2405.09673 is correct. The claim is supported by the abstract: LoRA \"substantially underperforms full finetuning\" in standard low-rank settings on programming and mathematics, and LoRA \"better maintains the base model's performance\" on tasks outside the target domain (forgets less). Caveats: I did not open the OpenReview or TMLR page directly. Search results also showed an ICLR 2025 poster listing for the same title (iclr.cc/virtual/2025/poster/31465); I did not check how it relates to the TMLR version, so the TMLR venue is the one I confirmed.",
+    "source_seen": "https://arxiv.org/abs/2405.09673 (fetched: authors, Comments field, abstract); https://arxiv.org/html/2405.09673v2 (\"LoRA Learns Less and Forgets Less\", search result); https://mlanthology.org/tmlr/2024/biderman2024tmlr-lora (\"LoRA Learns Less and Forgets Less\", search result)"
+   },
+   "second": null,
+   "paper": {
+    "id": "biderman2024lora",
+    "cite": "Biderman et al. 2024, \"LoRA Learns Less and Forgets Less\", TMLR, arXiv 2405.09673",
+    "claim": "LoRA fine-tuning learns less than full fine-tuning on code and math but forgets less of the base model abilities."
+   }
+  },
+  {
+   "first": {
+    "id": "arXiv:2605.26097",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "Title as cited (\"self-generated replay with a KL penalty\") is not the paper's title. The paper is \"Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay\". Authors match the cited list: Martin Marek, Dongkyu Cho, Shikai Qiu, Rumi Chunara, Pavel Izmailov, Andrew Gordon Wilson. Year 2026 is right (arXiv v1 submitted 25 May 2026 per the abstract page; one search summary said 26 May). Venue: none listed; arXiv preprint, cs.LG. arXiv id 2605.26097 is correct.",
+    "claim_status": "partly",
+    "note": "The paper exists and the cited id, authors and year check out, but the title differs and there is no venue beyond arXiv. Claim part 1 (self-generated replay nearly eliminates forgetting) is supported by the abstract wording \"nearly eliminating forgetting\", as returned by the fetch summary. The \"plus a KL penalty to the previous model\" part is not in the abstract. Secondary summaries (emergentmind, modelwire, search snippets) describe a KL regularization term between the current and prior model on replay data, and say KL regularization gives the least forgetting, but I could not read the PDF body, so this is unverified in primary text. Claim part 2 (near-saturated models cannot absorb new information without overwriting prior knowledge) is supported by the abstract wording \"cannot absorb new information without overwriting prior knowledge\". Caveat: the quoted abstract phrases come from a fetch summary by a small model, not a verbatim page read. Suggested fix to the attribution: name the paper by its real title and say KL regularization is one of the compared methods, not clearly a combination with replay.",
+    "source_seen": "https://arxiv.org/abs/2605.26097 (fetched: title, authors, submission date 25 May 2026, cs.LG preprint, abstract phrases); https://arxiv.org/pdf/2605.26097 (search result title \"Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay\"; PDF body not readable on fetch); https://www.emergentmind.com/papers/2605.26097 and https://themodelwire.com/article/forgetting-in-language-models-capacity-optimization-and-self-generated-replay-01KSH791Q8HQFKV1MJYKBDFKP6 (secondary summaries cited for the KL detail, not verified against primary text)"
+   },
+   "second": {
+    "id": "arXiv:2605.26097",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "Title is \"Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay\" (arXiv:2605.26097v1, submitted 25 May 2026, cs.LG). Authors in order: Martin Marek, Dongkyu Cho, Shikai Qiu, Rumi Chunara, Pavel Izmailov, Andrew Gordon Wilson, which matches the cited list. Year 2026 is correct. Venue is arXiv preprint only; no peer-reviewed venue seen.",
+    "note": "The paper exists and the cited arXiv id, authors and year match. The cited title \"self-generated replay with a KL penalty\" is a description, not the title, and the task allowed the title to differ. Claim check: the abstract (fetched from arxiv.org/abs/2605.26097) says self-generated samples serve as replay that \"nearly eliminat[es] forgetting\", and says near-saturated models \"cannot absorb new information without overwriting prior knowledge\". The saturation half is supported verbatim. The abstract does not mention a KL penalty. The body (arxiv.org/html/2605.26097v1, Section 5) says a KL penalty on self-generated data \"almost completely eliminates forgetting\", but only for Llama-3.2-1B-Instruct on a Verilog domain-adaptation task; Figure 1's caption mentions KL on self-generated text. So the KL-plus-self-replay near-elimination is shown in one setting, while the abstract's near-elimination wording is about self-generated replay generally. The claim as written generalises beyond what was seen, hence partly. Second search with different terms (KL divergence regularization) returned the same paper and the same KL-on-replay description. Secondary summaries (emergentmind, alphaxiv) were not relied on for the claim.",
+    "source_seen": "https://arxiv.org/abs/2605.26097 (abstract, read via fetch); https://arxiv.org/html/2605.26097v1 (Section 5 and Figure 1 caption, read via fetch); search result title \"Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay\" at https://arxiv.org/pdf/2605.26097"
+   },
+   "paper": {
+    "id": "marek2026",
+    "cite": "Marek, Cho, Qiu, Chunara, Izmailov, Wilson 2026, self-generated replay with a KL penalty, arXiv 2605.26097 (the title may differ)",
+    "claim": "Replaying samples from the model itself plus a KL penalty to the previous model nearly eliminates forgetting; near-saturated models cannot absorb new data without forgetting."
+   }
+  },
+  {
+   "first": {
+    "id": "Tadros2022-NatCommun-13-7742",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "No correction needed for authors, year, venue, volume or article number. Optional addition: DOI 10.1038/s41467-022-34938-7. Do not add an arXiv id: the citation gives none, and the PMC record lists none for this paper. Do not use arXiv 1711.10563 (FearNet, cited in its reference list) or arXiv 2606.08447 (a 2026 follow-up by Anthony Bazhenov, Delanois and Krishnan that surfaced in search); neither is this paper.",
+    "note": "Paper exists. Authors as printed: Timothy Tadros, Giri P Krishnan, Ramyaa Ramyaa, Maxim Bazhenov. Matches the citation. Nature Communications, vol 13, article 7742, 2022 (DOI 10.1038/s41467-022-34938-7). Matches. Abstract supports the mechanism: an off-line sleep-like phase with noisy input and local unsupervised Hebbian plasticity recovers old tasks in incremental learning. So the qualitative part of the claim is supported. The specific figures (MNIST 19.5% to 48.5%) are not in the abstract. The PMC full text, read through a summarizer, shows Table 1 values 19.49 (sequential training, incremental MNIST) and 48.47 (SRC, incremental MNIST). Those round to 19.5 and 48.5, so the claim's numbers are probably rounded from that table. I did not see the raw table, did not confirm what SRC stands for, and did not confirm that \"incremental\" means class-incremental. Verdict: partly supported. The mechanism is supported. The numbers need a check against Table 1 before they are quoted. The 2022-12-15 publication date came from a search summary, not the article page. Search used 1 of 6; page fetches used 2 of 2 (the first returned a 301 redirect).",
+    "source_seen": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9755223/ (PMC page, reached via redirect from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9755223/; title \"Sleep-like unsupervised replay reduces catastrophic forgetting in artificial neural networks\"). Search result titles also seen: \"Nature Communications (Dec 2022)\" (https://doaj.org/article/cf67a05c568644f2913c0dfc5480f9cc) and the IDEAS/RePEc record for article natcom v13y2022i1d10.1038_s41467-022-34938-7."
+   },
+   "second": {
+    "id": "tadros-2022-natcommun-13-7742",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "note": "Paper exists: Tadros, Krishnan, Ramyaa, Bazhenov, \"Sleep-like unsupervised replay reduces catastrophic forgetting in artificial neural networks\", Nature Communications 13, article 7742, published 15 Dec 2022, DOI 10.1038/s41467-022-34938-7. Author order, year, venue and article number as cited are correct. DOI and article number are from the PMC page fetch and the IDEAS listing. No arXiv id is in the cited form, and I did not see one for this 2022 paper (not seen). arXiv 1908.02240 (\"Biologically inspired sleep algorithm for artificial neural networks\", submitted 1 Aug 2019) looks like an earlier preprint of the same line of work. I saw only its title and a search summary of its authors, not the PDF, so it is unverified and is not the Nature Communications record. The claim's mechanism is supported: the abstract describes an offline sleep-like phase with noisy input and local unsupervised Hebbian plasticity that recovers old tasks otherwise forgotten. The numbers match: Table 1 on the PMC page, as reported by the fetch summary, gives Sequential 19.49% and SRC 48.47% on incremental MNIST, which round to 19.5% and 48.5%. Caveats: (a) those values came from a summarizing fetch, not a verbatim read; a search summary repeated 48.47 but is not independent; (b) the label \"class-incremental\" was not confirmed in text I read. The paper says \"incremental MNIST\", and a search summary described each digit pair as a sequential task, which fits class-incremental but is not verbatim; (c) the 48.5% is the SRC-alone number. A search summary (unverified) also gave a rehearsal-plus-SRC figure of about 86% in the same column, so the claim should not be read as the best result. Not a citation error. Two fetches and six searches used. Not used for this claim: arXiv 2606.08447 (2026 follow-up by Bazhenov, Delanois, Krishnan), a different paper.",
+    "source_seen": "Fetched: https://pmc.ncbi.nlm.nih.gov/articles/PMC9755223/ (redirect from ncbi.nlm.nih.gov/pmc/articles/PMC9755223/; citation line, abstract summary and Table 1 values). Search results: https://www.nature.com/articles/s41467-022-34938-7 (\"Sleep-like unsupervised replay reduces catastrophic forgetting in artificial neural networks\"); https://ideas.repec.org/a/nat/natcom/v13y2022i1d10.1038_s41467-022-34938-7.html (Nature Communications v13 2022); https://doaj.org/article/cf67a05c568644f2913c0dfc5480f9cc (\"Nature Communications (Dec 2022)\"); https://ojs.aaai.org/index.php/AAAI/article/view/7239 (\"Biologically Inspired Sleep Algorithm for Reducing Catastrophic Forgetting in Neural Networks\"); https://arxiv.org/abs/1908.02240 (\"Biologically inspired sleep algorithm for artificial neural networks\", title and author summary only).",
+    "citation_correction": "No correction to authors, year, venue or article number. The cited form has no arXiv id; none seen for this paper. Do not treat arXiv 1908.02240 as the Nature Communications record without checking it; it is an earlier 2019 preprint of related work (unverified)."
+   },
+   "paper": {
+    "id": "tadros2022",
+    "cite": "Tadros, Krishnan, Ramyaa, Bazhenov 2022, \"Sleep-like unsupervised replay reduces catastrophic forgetting in artificial neural networks\", Nature Communications 13:7742",
+    "claim": "A sleep-like phase of noisy input with an unsupervised local rule raises class-incremental accuracy (for example MNIST 19.5% to 48.5%)."
+   }
+  },
+  {
+   "first": {
+    "id": "Kosson-Messmer-Jaggi-2024-NeurIPS-warmup",
+    "exists": true,
+    "citation_ok": true,
+    "citation_correction": "No correction needed to the citation as given. The title \"Analyzing & Reducing the Need for Learning Rate Warmup in GPT Training\", authors Kosson, Messmer and Jaggi (EPFL), year 2024 and venue NeurIPS 2024 match. The arXiv id is 2410.23922 (v1 submitted 31 Oct 2024), which the cited form did not include.",
+    "claim_status": "partly",
+    "note": "The paper exists and the bibliographic details check out. The claim is only partly supported. The arXiv abstract says warmup helps by keeping the overall size of the weight update limited early on, so the first half is supported. \"Mainly\" overstates it, because the abstract gives a second reason: warmup also counteracts large angular updates and a limited critical batch size early in training. The abstract does not discuss Adam-style early steps. A search-engine summary of the introduction says Adam's momentum bookkeeping can inflate the first updates, which would support the second half, but I did not read the full text to confirm that wording. The NeurIPS proceedings page appeared only in search results and I did not open it.",
+    "source_seen": "https://arxiv.org/abs/2410.23922 (abstract fetched; authors and submission date confirmed); search result titles \"Analyzing & Reducing the Need for Learning Rate Warmup in GPT Training\" at https://proceedings.neurips.cc/paper_files/paper/2024/hash/059445c2d5b3ef918079851628fef1d6-Abstract.html and https://liner.com/review/analyzing-reducing-the-need-for-learning-rate-warmup-in-gpt (search summary of the introduction, not read on the page)"
+   },
+   "second": {
+    "id": "Kosson-Messmer-Jaggi-2024-LR-warmup",
+    "exists": true,
+    "citation_ok": true,
+    "claim_status": "partly",
+    "citation_correction": "The citation as given (Kosson, Messmer, Jaggi, 2024, NeurIPS) is correct. Full form: Atli Kosson, Bettina Messmer, Martin Jaggi, \"Analyzing & Reducing the Need for Learning Rate Warmup in GPT Training,\" NeurIPS 2024 (Advances in Neural Information Processing Systems 37, main track). The arXiv id is 2410.23922 (submitted 31 Oct 2024, cs.LG). No arXiv id appears in the citation as supplied, so none was checked against it; 2410.23922 is the id found in search.",
+    "note": "The paper exists and the authors, year, venue and arXiv id match the search results. The first half of the claim is supported: the arXiv abstract frames warm-up as keeping the overall size of updates limited, offsetting large early updates. The abstract asks why and by which criteria early updates are too large, and it studies AdamW and Lion in small-scale GPT training, so the Adam-style part is only partly supported; the abstract does not say early Adam steps are too large without warm-up in those words. \"Mainly\" is too strong: the paper's account has two parts, counteracting large angular updates and accommodating a limited critical batch size early in training. The claim should say warm-up limits early update size, and that the paper also credits a small early critical batch size. Caveat: the abstract was read through a summary of the arXiv page, so exact wording is not verified against the page text.",
+    "source_seen": "Search result titles: \"Analyzing & Reducing the Need for Learning Rate Warmup in GPT Training\" at https://proceedings.neurips.cc/paper_files/paper/2024/hash/059445c2d5b3ef918079851628fef1d6-Abstract.html and https://nips.cc/virtual/2024/poster/94618; arXiv abstract page https://arxiv.org/abs/2410.23922 (read via WebFetch summary, not full text). Searches used: 2 of 6. Page fetches used: 1 of 2."
+   },
+   "paper": {
+    "id": "kosson2024",
+    "cite": "Kosson, Messmer, Jaggi 2024, \"Analyzing & Reducing the Need for Learning Rate Warmup in GPT Training\", NeurIPS",
+    "claim": "Warm-up mainly limits the size of early updates; Adam-style early steps can be too large without it."
+   }
+  }
+ ],
+ "gaps": [
+  {
+   "topic": "Replay fraction vs forgetting and new-skill learning speed in continual fine-tuning or continued pretraining",
+   "papers": [
+    {
+     "cite": "Ibrahim, A. et al. 2024. Simple and Scalable Strategies to Continually Pre-train Large Language Models. TMLR 2024.",
+     "id": "2403.08763",
+     "finding": "Replay of old data plus learning-rate re-warming and re-decaying matched full retraining on all data. The 1% to 50% replay grid comes from search snippets, not the paper itself, and the snippets disagree on the exact grid.",
+     "number": "not seen (outcome numbers). Snippets list replay shares 1%, 5%, 10%, 50%, plus 0.5% and 25% for the stronger shift.",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Authors not seen. 2025. Revisiting Replay and Gradient Alignment for Continual Pre-Training of Large Language Models. Venue not seen.",
+     "id": "2508.01908",
+     "finding": "Replay and gradient alignment both gave more stable continued-pretraining learning without forgetting, on Llama-family models trained on 100B tokens per language.",
+     "number": "not seen (100B tokens per language is the setup, not a result)",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Authors and venue not seen. 2025. TiC-LM: A Web-Scale Benchmark for Time-Continual LLM Pretraining.",
+     "id": "2504.02107",
+     "finding": "Abstract: replay matters most for generic web data and less for specific domains, so the best new-to-old balance depends on the domain. Snippet only: a fixed 1/2 new-data mix beat a 1/t decaying schedule on in-distribution performance but was slightly worse on backward transfer (forgetting).",
+     "number": "not seen",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Spiegelhalter et al. 2025. Balancing Synthetic Data and Replay for Enhancing Task-Specific Capabilities. NeurIPS 2025 listing; first name and full author list not seen. Link between this title and arXiv 2510.11842 not confirmed.",
+     "id": "2510.11842",
+     "finding": "On a narrow target task (bAbI), swept token budget and replay ratio and found a configuration that balances task performance against general-knowledge retention, with replay-ratio guidance by compute budget. This is the closest match to learning a new skill.",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Authors and venue not seen. 2025. Forget Forgetting: Continual Learning in a World of Abundant Memory.",
+     "id": "2502.07274",
+     "finding": "With abundant exemplar memory, replay approximates past tasks and reduces forgetting but lowers plasticity on novel information. Image classification (CIFAR-100, ImageNet-100), not language, so it is a plasticity-trade-off reference only.",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Authors not seen. 2026. Mix Early, Forget Less: Data Mixing During Pretraining Builds Resistance to Forgetting. ICLR 2026.",
+     "id": "",
+     "finding": "Mixing a few percent of capability-relevant data into pretraining builds resistance to later forgetting, and replay during continual pretraining gives gains that are complementary to it.",
+     "number": "not seen (snippet says only a few percent)",
+     "seen": "search_snippet_only"
+    }
+   ],
+   "one_line_takeaway": "The sources agree that replay reduces forgetting and that larger replay shares cost new-skill learning at a fixed compute budget, but no seen source measures new-skill learning speed at 3.3M parameters or repeated re-reading of a small fixed set, so the 1/5/25/50% sweep with pre-set pass marks has to be run in-house."
+  },
+  {
+   "topic": "Replaying a small fixed replay buffer many times vs fresh, regenerated, augmented, or diverse replay samples (buffer overfitting, repeated-data harm, fresh data vs epochs)",
+   "papers": [
+    {
+     "cite": "Muennighoff, Rush, Barak, Le Scao, Piktus, Tazi, Pyysalo, Wolf, Raffel, 2023, Scaling Data-Constrained Language Models, NeurIPS 2023 (expanded in JMLR vol. 26, 2025)",
+     "id": "2305.16264",
+     "finding": "Repeated data is nearly as good as unique data for up to about 4 epochs; beyond that, each added unit of repeated compute is worth less and eventually nothing. Pretraining-scale study (models up to 9B), not replay, so it speaks to fresh-vs-epochs in general rather than to rehearsal buffers.",
+     "number": "up to 4 epochs",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Zhang et al., 2022, A Simple but Strong Baseline for Online Continual Learning: Repeated Augmented Rehearsal, NeurIPS 2022",
+     "id": "2209.13917",
+     "finding": "Repeating the replay buffer with augmentation (Repeated Augmented Rehearsal) beats vanilla rehearsal in online single-pass continual learning; the paper frames small-memory overfitting as an underfitting-overfitting dilemma and studies both the merits and limits of repeated rehearsal. Setting is online, single pass, so it is not a direct test of our overnight fine-tune.",
+     "number": "9%-17% over vanilla rehearsal across four OCL benchmarks",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Bonicelli et al., 2022, On the Effectiveness of Lipschitz-Driven Rehearsal in Continual Learning (LiDER), NeurIPS 2022",
+     "id": "2210.06443",
+     "finding": "Replaying a small stored pool again and again yields tight, unstable decision boundaries and a rising Lipschitz constant as the buffer shrinks, i.e. overfitting to the buffer; a Lipschitz regularizer on replay examples gives stable gains over several rehearsal methods.",
+     "number": "",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Marek, Cho, Qiu, Chunara, Izmailov, Wilson, 2026, Forgetting in Language Models: Capacity, Optimization, and Self-Generated Replay (arXiv preprint, submitted 25 May 2026)",
+     "id": "2605.26097",
+     "finding": "Samples drawn from the model's own training distribution work as replay and are reported to nearly eliminate forgetting; forgetting persists when model capacity is near saturation. The KL-regularization comparison appears only in a third-party summary and was not confirmed in the abstract.",
+     "number": "",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Huang et al., 2024, Mitigating Catastrophic Forgetting in Large Language Models with Self-Synthesized Rehearsal, ACL 2024 (long paper)",
+     "id": "2403.01244",
+     "finding": "The base LLM generates replay examples by in-context learning, the latest model refines the outputs, and a diverse high-quality subset is kept for rehearsal; reported at least as good as conventional real-data replay while using less data, with the caveat that a third-party review says it may not always top forward transfer.",
+     "number": "",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Authors not seen, 2024, Adversarially Diversified Rehearsal Memory (ADRM): Mitigating Memory Overfitting Challenge in Continual Learning (venue not seen)",
+     "id": "2405.11829",
+     "finding": "Adversarially perturbed copies of replay images are added to the memory to increase diversity and counter memory overfitting, with the authors arguing this improves robustness of the continual learner.",
+     "number": "",
+     "seen": "search_snippet_only"
+    }
+   ],
+   "one_line_takeaway": "The literature points the same way as our tests: re-reading a small fixed buffer invites buffer overfitting and forgetting, and fresh, augmented, or model-regenerated replay is the usual remedy, but none of these papers tests a 3.3M model with overnight fine-tuning at fixed compute, and no fine-tuning-specific repeated-data study turned up, so compare augmented or regenerated replay against fresh pool draws at equal steps before relying on it."
+  },
+  {
+   "topic": "Training on self-generated, checker-verified data (rejection-sampling FT, expert iteration, ReST-EM, execution-grounded self-training): reported speed (few updates) and forgetting",
+   "papers": [
+    {
+     "cite": "Authors not seen. arXiv preprint, May 2026, on self-generated replay and forgetting.",
+     "id": "2605.26097",
+     "finding": "Abstract says samples drawn from the model's own training distribution, reused as replay, are effective and 'nearly eliminat[e] forgetting'. Low learning rates reduce forgetting but need substantially more steps; replay is said to allow fast, high-learning-rate fine-tuning without forgetting. The abstract does not say whether replay samples are correctness-filtered. Forgetting is framed as drift in predictions on old data, held in place with a KL term.",
+     "number": "not seen (abstract reports no numbers)",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Singh, A. et al., 2023, 'Beyond Human Data: Scaling Self-Training for Problem-Solving with Language Models' (ReST-EM), arXiv; an ICLR 2024 Workshop (DPFM) version is listed in search results.",
+     "id": "2312.06585",
+     "finding": "Sample from the model, keep only answers that pass a binary correctness check, fine-tune, and repeat 'a few times'. Abstract says it scales with model size and beats fine-tuning only on human data (PaLM 2, MATH and APPS). Search excerpts say held-out MATH gains are small after the first iteration while training-set scores keep rising, and that the paper reports no regression on other tasks; neither point appears in the abstract I fetched. Per-iteration numbers and the iteration count were not seen.",
+     "number": "MATH test gain 5.94% (PaLM 2-S) and 6.34% (PaLM 2-L), from a search excerpt; iteration not stated",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Authors not seen. 'LLM-Based FORM Code Generation with Verification-Driven Fine-Tuning', arXiv preprint, 2026.",
+     "id": "2609.23367",
+     "finding": "Verifier-checked training data with QLoRA; reports small drops against the base model. Also reports that verified data limited to deterministic tasks collapsed open-ended capability, so the data mix matters. Numbers come from a search summary, not the page.",
+     "number": "vs base: MMLU -2.6, GSM8K -1.5, HumanEval -0.6 points",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Yuan, Z. et al. (Alibaba), 2023, 'Scaling Relationship on Learning Mathematical Reasoning with Large Language Models' (rejection-sampling fine-tuning, RFT), arXiv. Venue not seen.",
+     "id": "2308.01825",
+     "finding": "RFT samples several solutions from an SFT model, keeps the correct ones, and adds them to training, with no new human labels. Combining rejection samples from several models lifts LLaMA-7B on GSM8K above SFT. Training speed (number of updates) and forgetting were not reported in what I saw.",
+     "number": "GSM8K 49.3% (combined RFT samples) vs 35.9% (SFT), LLaMA-7B",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Authors not seen. 'Talking to Yourself: Defying Forgetting in Large Language Models', arXiv 2602.20162, Feb 2026. Link to the SA-SFT method in one search summary; that link was not opened.",
+     "id": "2602.20162",
+     "finding": "Self-generated dialogues mixed with task data, without changing the training schedule, reportedly keep performance close to the original model. Attributes part of forgetting to style-induced parameter drift. Compared against layer freezing and external-data mixing. Treat as unverified: no page was opened.",
+     "number": "best result in 40 of 50 evaluation scenarios (from a search summary)",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Zelikman, E., Wu, Y., Mu, J., Goodman, N., 2022, 'STaR: Bootstrapping Reasoning With Reasoning', NeurIPS 2022; arXiv 2203.14465.",
+     "id": "2203.14465",
+     "finding": "Self-Taught Reasoner: generate rationales, keep those whose final answer is correct, fine-tune, repeat over rounds. Abstract reports it beats direct answer-only fine-tuning. Round counts and forgetting were not seen.",
+     "number": "CommonsenseQA: about the accuracy of a model roughly 30x larger (no exact value seen)",
+     "seen": "search_snippet_only"
+    }
+   ],
+   "one_line_takeaway": "Self-generated, checker-filtered rows are reported to work in a few rounds, and fresh self-sampled replay is reported to nearly eliminate forgetting (2605.26097, abstract only), but no paper seen tests our exact mix of old-skill replay plus half new-skill rows, and none says whether that replay was correctness-filtered, so our 1.3-1.7 point replay gain and ~1 point cost of the new-skill mix have no published comparison."
+  },
+  {
+   "topic": "Stopping or selecting a checkpoint in continual learning or fine-tuning using the model's own held-out probes, with no external labels or researcher-set schedule (early stopping on a held-out replay slice, forgetting detection, sleep triggers, self-monitoring of retention, learned or adaptive stopping for consolidation)",
+   "papers": [
+    {
+     "cite": "Vins, D., Delanois, J. E., & Bazhenov, M. (2025). When to Learn and When to Stop: Quitting at the Optimal Time (Student Abstract). Proceedings of the AAAI Conference on Artificial Intelligence, 39(28).",
+     "finding": "Halts training on each new task once the mean validation accuracy across all tasks (old and new) stops rising, and pairs this stop rule with sleep-style replay consolidation. The abstract does not say whether weights are reverted to an earlier checkpoint.",
+     "id": "",
+     "number": "Combined method reaches 'over twice the mean accuracy of baseline' (abstract wording; no exact figure seen)",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Pham, Liew, & Wang (authors per search summary, not verified). A Novel Class-wise Forgetting Detector in Continual Learning. Griffith University research repository. Year and venue not seen.",
+     "finding": "A windowed detector tracks the forgetting rate for each class label and switches to an online replay method (triplet rehearsal) when forgetting appears. Per-class tracking appears to need labels, which is my inference from the summary, not a stated limitation.",
+     "id": "",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Wang, W. (2025). Real Time Detection and Quantitative Analysis of Spurious Forgetting in Continual Learning. arXiv preprint.",
+     "finding": "A real-time detector separates spurious forgetting (task alignment disrupted while knowledge is intact) from true knowledge loss and triggers an adaptive mitigation. The abstract does not say whether the detector needs ground-truth labels.",
+     "id": "2512.20634",
+     "number": "86.2-90.6% identification accuracy across Qwen2.5 models from 3B to 32B",
+     "seen": "abstract_or_page_seen"
+    },
+    {
+     "cite": "Early Stopping Against Label Noise Without Validation Data (Label Wave). Authors not seen. ICLR 2024 poster listed in search results (not verified).",
+     "finding": "Picks a stopping point without validation or hold-out data, at the epoch where prediction fluctuations are minimal, reported as just before the model fits mislabeled examples. It targets label noise, not continual learning.",
+     "id": "2502.07551",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Robust and Efficient Training of Deep Neural Networks via Principled Stopping Strategies. PhD thesis, University of Sydney (handle 2123/35068). Author and year not seen.",
+     "finding": "Tracks per-example prediction histories across epochs. A stage where the network starts fitting spurious or mislabeled patterns coincides with a change in aggregate forgetting, and the thesis proposes stopping rules that need no extra data.",
+     "id": "",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    },
+    {
+     "cite": "Aghasanli, Li, & Angelov (2025). Prototype-Based Continual Learning with Label-free Replay Buffer and Cluster Preservation Loss. Lancaster University (per search summary). arXiv preprint.",
+     "finding": "Stores replay prototypes without labels and adds a cluster-preservation loss; an unsupervised variant stays competitive in class-incremental learning. It has no forgetting monitor or stopping rule.",
+     "id": "2504.07240",
+     "number": "not seen",
+     "seen": "search_snippet_only"
+    }
+   ],
+   "one_line_takeaway": "No paper I saw uses a model's own held-out old-task probes to stop training or trigger replay in continual fine-tuning, and none tests a 3.3M model. Vins et al.'s rule (stop when old-plus-new validation accuracy stops rising) fits our labelled replay slice and is the first thing to test; the label-free fallback is prediction churn (Label Wave), untested for forgetting. Keep the probe rows disjoint from the replay buffer."
+  },
+  {
+   "topic": "Positive backward transfer on old tasks from replay or extra practice, and the control arms that separate transfer from extra practice",
+   "papers": [
+    {
+     "cite": "Liu, Kim, Liu, Liu, Zhu, 2026, arXiv preprint (venue not stated). Title: Pretrained Vision-Language-Action Models are Surprisingly Resistant to Forgetting in Continual Learning",
+     "id": "2603.03818",
+     "finding": "Fetched abstract: simple experience replay 'sometimes achieving zero forgetting even with a small replay data size'; the VLAs keep old-task knowledge despite dips during new-task learning. The positive-backward-transfer-on-LIBERO claim came from a search snippet only and is not confirmed by the abstract. No no-replay control arm stated in what I read.",
+     "seen": "abstract_or_page_seen",
+     "number": "not seen"
+    },
+    {
+     "cite": "Authors not seen, 2019 (arXiv 1905 ID), venue not seen. Title: Sequential mastery of multiple visual tasks: Networks naturally learn to learn and forget to forget",
+     "id": "1905.10837",
+     "finding": "Snippet: across repeated training rounds, interference from later training on task 1 shrinks, and forgetting of task 1 is nearly gone by the last few episodes; retraining effort to reach criterion falls as a power law. This is forgetting that fades with re-exposure, not positive backward transfer. Control arms not seen.",
+     "seen": "search_snippet_only",
+     "number": "not seen"
+    },
+    {
+     "cite": "Verwimp, De Lange, Tuytelaars, 2021, ICCV 2021. Title: Rehearsal Revealed: The Limits and Merits of Revisiting Samples in Continual Learning",
+     "id": "2104.07446",
+     "finding": "Snippet: rehearsal keeps a sequential model in the first low-loss region it reaches, and the model can overfit toward the edge of the stored memory's low-loss region, which hurts generalization. This is a plausible mechanism for our finding that re-reading a small fixed set causes forgetting; that link is my inference, not a test the paper reports.",
+     "seen": "search_snippet_only",
+     "number": "not seen"
+    },
+    {
+     "cite": "Riemer, Cases, Ajemian, Liu, Rish, Tu, Tesauro, 2019, ICLR 2019. Title: Learning to Learn without Forgetting by Maximizing Transfer and Minimizing Interference",
+     "id": "1810.11910",
+     "finding": "Snippet: Meta-Experience Replay combines replay with Reptile-style meta-learning and optimizes gradient alignment to raise transfer and cut interference; the gain over baselines grows as stored experience shrinks. The phrase 'positive transfer' is not in the abstract, so reading it as positive backward transfer is my interpretation.",
+     "seen": "search_snippet_only",
+     "number": "not seen"
+    },
+    {
+     "cite": "Lopez-Paz, Ranzato, 2017, NIPS 2017. Title: Gradient Episodic Memory for Continual Learning",
+     "id": "1706.08840",
+     "finding": "Fetched abstract: GEM 'alleviates forgetting, while allowing beneficial transfer of knowledge to previous tasks' using a small episodic memory of past examples. The fetched page did not define backward transfer or give a BWT figure, so I cannot confirm the metric definition from it.",
+     "seen": "abstract_or_page_seen",
+     "number": "not seen"
+    },
+    {
+     "cite": "Authors not seen, 2024 (arXiv 2402 ID), venue not seen. Title: Layerwise Proximal Replay: A Proximal Point Method",
+     "id": "2402.09542",
+     "finding": "Snippet: replay raises the total number of training iterations that expose the network to past data. That is the compute confound a control arm has to match. No paper I saw runs the exact matched-steps old-data-only arm; that control design is my synthesis from several sources.",
+     "seen": "search_snippet_only",
+     "number": "not seen"
+    }
+   ],
+   "one_line_takeaway": "For our case, the 1.3 to 1.7 point gain from old-only replay looks like extra practice on old skills rather than transfer from the new skills (mixing in new rows cut it by about 1 point), so call it replay practice and claim backward transfer only if new-skill training beats a matched-steps old-only arm; no paper I found reports that exact control."
+  }
+ ],
+ "critic": "1. Parameter-regularization consolidation (EWC, LwF) - a replay-free control that tests whether replay is needed at all, and a complement to it - Kirkpatrick et al. 2017, PNAS, \"Overcoming catastrophic forgetting in neural networks\"\n2. Interference-targeted or prioritized replay selection - picks which day's finds and old items to rehearse instead of a random mix, which could cut overnight updates - Aljundi et al. 2019, NeurIPS, \"Online Continual Learning with Maximally Interfered Retrieval\"\n3. Architectural isolation (adapters or orthogonal subspaces) - protects old skills by construction, so new skills can be learned without touching old weights - Wang et al. 2023, EMNLP Findings, \"Orthogonal Subspace Learning for Language Model Continual Learning\"\n4. Synaptic homeostasis (global downscaling during sleep) - a biological model for an overnight scaling or weight-decay step that frees capacity - Tononi & Cirelli 2014, Neuron, \"Sleep and the Price of Plasticity\"\n5. Complementary learning systems (fast episodic store plus slow cortical learner) - the direct template for a day buffer plus overnight consolidation split - McClelland, McNaughton & O'Reilly 1995, Psychological Review"
+}
