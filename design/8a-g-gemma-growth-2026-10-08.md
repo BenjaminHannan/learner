@@ -417,4 +417,8 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   time, and s400 ends up to 1.6x later. Running side by side changes no numbers in either run; only updates/s and wall time differ, and those
   are not marks. The waiter will still run the futility check and relaunch the s401 queue after both end; with s401's RESULT.json present the
   runner skips it, so a "skipped" or "started" line there after this point means nothing.
+- **Measured (shown, PC read 10:34 AM ET 10-10):** s401 started 8:29 AM ET. s400 B2 took 3,049 s for updates 5,000-5,500 alone and 3,210 s
+  for 6,000-6,500 shared (+3%); s401 B2 took 3,230 and 3,220 s for its first two stretches. So the two runs together do about 1.9x the work
+  of one. GPU 81% busy, 11.9 GB used, shared memory 164 MiB; no stop rule tripped. New gate ETA about Mon 10-12 midday ET (suggested; the
+  10M plain arm's speed is not measured yet).
 - Marks, arms and readout unchanged.
