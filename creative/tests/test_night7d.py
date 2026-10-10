@@ -260,6 +260,17 @@ def test_apm_verdict_both_parents():
     assert not v({'a': dead, 'b': miss})['proved_wrong'] and not v({'a': miss, 'b': dead})['proved_wrong'] and not v({'a': dead, 'b': good})['proved_wrong']   # needs BOTH parents
 
 
+def test_canaries_report_only():
+    rows = [{'family': f} for f in ['seq_next'] * 10 + ['rule_apply'] * 10 + ['other'] * 10]
+    hits = {'N': [1] * 30, 'SCM': [1] * 30, 'APM': [0] * 8 + [1] * 2 + [1] * 20}
+    c = N.canaries(hits, rows, ('SCM', 'APM'))
+    assert set(c) == {'seq_next', 'rule_apply'} and c['seq_next']['n'] == 10
+    assert c['seq_next']['exact'] == {'N': 100.0, 'SCM': 100.0, 'APM': 20.0}
+    assert abs(c['seq_next']['drop_vs_N']['APM']['drop'] - 80.0) < 1e-9 and c['seq_next']['drop_vs_N']['APM']['fires']
+    assert c['rule_apply']['drop_vs_N']['APM']['drop'] == 0 and not c['rule_apply']['drop_vs_N']['SCM']['fires']
+    assert 'N' not in c['seq_next']['drop_vs_N']
+
+
 def _fake(prefix_ids, tag):
     return [{'id': i, 'prompt': 'p', 'answer': tag} for i in prefix_ids]
 

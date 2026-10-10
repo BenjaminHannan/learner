@@ -1567,6 +1567,22 @@ def apm_marks(first_pt, ms_pt, harm_passes, first_hi):
     return dict(mark1_first_try=a, mark2_multi_step=b, mark3_night2_cost=bool(harm_passes), passes=bool(a and b and harm_passes), proved_wrong=bool(round(first_hi - APM_HI_MAX, 9) < 0))
 
 
+CANARY_FAMILIES = ('seq_next', 'rule_apply')                # report only (roadmap 68385622e1): the two canary families from /mnt/project-files/forgetting/REPORT-2026-10-10.md
+
+
+def canaries(hits, rows, arms, ref='N', fams=CANARY_FAMILIES):
+    """Report only: per canary family, each arm's exact % on the skills DEV rows and its paired drop vs `ref` (drop, 95% interval, fires as in harm_measure)."""
+    out = {}
+    for f in fams:
+        ix = [i for i, r in enumerate(rows) if r['family'] == f]
+        if not ix:
+            continue
+        e = {a: 100 * sum(hits[a][i] for i in ix) / len(ix) for a in [ref] + [a for a in arms if a != ref] if a in hits}
+        dv = {a: harm_measure(hits[ref], hits[a], rows)['families'][f] for a in arms if a in hits and a != ref}
+        out[f] = dict(n=len(ix), exact=e, **{f'drop_vs_{ref}': {a: {k: d[k] for k in ('drop', 'lo', 'hi', 'fires')} for a, d in dv.items()}})
+    return out
+
+
 def apm_verdict(per_parent):
     """Pure. {parent: apm_marks} -> passes on every parent, proved_wrong on every parent (needs both), where the parents disagree."""
     return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
@@ -1751,6 +1767,7 @@ def apm_parent(nprime, out, s1dir, s3dir, rdir, jdir, scmdir, scm2dir, skills_tr
         per_kind_APM_minus_SCM2={k: bd(right('APM', ix), right('SCM2', ix)) for k, ix in kix.items()},
         pooled_first_try={a: 100 * sum(right(a)) / len(dev) for a in ('N', 'SCM', 'SCM2', 'APM')},
         reach32=res['reach32'], reach32_multi_step_APM_minus_SCM2=bd(reach('APM', hard_ix), reach('SCM2', hard_ix)), reach32_pooled_APM_minus_SCM2=bd(reach('APM'), reach('SCM2')),
+        canaries=canaries(hits, rows, ('SCM', 'SCM2', 'APM')),
         harm_vs_N={a: slim(harm_measure(hits['N'], hits[a], rows)) for a in ('SCM', 'SCM2', 'APM')},
         harm_vs_B2={a: slim(harm_measure(hits['B2'], hits[a], rows)) for a in ('SCM', 'SCM2', 'APM')} if 'B2' in hits else None,
         night2_own_cost_SCM2_vs_SCM=slim(harm_measure(hits['SCM'], hits['SCM2'], rows)), night2_own_cost_APM_vs_SCM=slim(hS), harm_APM_vs_SCM2=slim(harm_measure(hits['SCM2'], hits['APM'], rows)),
@@ -1774,7 +1791,8 @@ def apmreport(out, parents):
     res = {p: json.load(open(os.path.join(out, p, 'apm.json'))) for p in parents}
     keep = ('mark1_first_try', 'mark2_multi_step', 'mark3_night2_cost', 'passes', 'proved_wrong', 'first_try_APM_minus_SCM2', 'multi_step_first_try_APM_minus_SCM2', 'night2_in_dist_drop_APM_vs_SCM', 'night2_fired_APM_vs_SCM')
     pm = {p: {k: x['marks'][k] for k in keep} for p, x in res.items()}
-    rep = dict(parents=list(parents), per_parent=pm, verdict=apm_verdict(pm), rules=APM_MARKS, recipe=APM_RECIPE, report_only={p: x['report_only'] for p, x in res.items()},
+    rep = dict(parents=list(parents), per_parent=pm, verdict=apm_verdict(pm), rules=APM_MARKS, recipe=APM_RECIPE, canaries_report_only={p: x['report_only'].get('canaries') for p, x in res.items()},
+               report_only={p: x['report_only'] for p, x in res.items()},
                tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], night2=x['night2'], night1=x['night1'], ids=x['ids'], plan=x['plan'], selection=x['selection']) for p, x in res.items()})
     json.dump(rep, open(os.path.join(out, 'apm-report.json'), 'w'), indent=1)
     return rep
