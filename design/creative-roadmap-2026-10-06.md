@@ -92,9 +92,13 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   step, Test SC: at the fast rate, the model picks which old skills to re-practise during the night, by checking
   which ones it is starting to forget. Ben's follow-up (2:54 PM ET): keep every past training example. Old skills rows
   are already mixed into every night; past nights' own finds are not, so Test AP keeps them.
-  **On hold (Ben, 3:27 PM ET 10-08):** big money goes only on one training run that demonstrably works, not a pile
-  of little tests. L64 finishes; SC, AP and the lr 3e-4 follow-up wait until the "One big proven training run"
-  thread says which checks gate that run.
+  **Since then (free CPU only, on Ben's 10:57 AM ET 10-09 instruction to keep iterating):** with the model picking
+  which old skills to re-practise, the fast night still cost a few find-the-rule skills (SC). At the slow rate it
+  cost nothing and kept 93-98% of the gain (SCL, which passes scorecard row 5's sleep test on 2 copies). At the
+  middle rate (SCM, 10-10) it cost nothing and learned the new rules as well as the fast night, but its search on
+  multi-step rules stayed narrow (about 8-9 per 100 found in 32 tries, against 13-14), so its pre-set mark calls it
+  proved wrong. Next, Test SCM2: two nights at the middle rate, to see whether the narrow search really slows the
+  climb.
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1564,6 +1568,42 @@ families x 200, two parents).**
     random rows.
   - If SCM passes, both nights at its recipe are checked against W2 with L2's marks. Free cloud CPU, about 45 minutes
     per parent.
+- **SCM result (fast-sleep 47d31baa5, 9:06 AM ET 10-10; shown, DEV, s100 / s101): marks 1 and 2 met, mark 3 fails,
+  and the breadth line rules it PROVED WRONG.**
+  - Harm against N': in_dist -1.1 / -1.1 (it rises), nothing fires. Skills against SCL +0.2 / 0.0, against W1 +4.9 /
+    +4.7.
+  - First-try gain against W1: ratio 0.97 / 1.06, 0 questions short (SCM 30.5 / 36.3, W1 31.2 / 34.4). SCM - SCL +3.5
+    [-1.2, 8.2] / +3.5 [0.4, 7.0]; SCM - W1 -0.8 [-4.7, 3.1] / +2.0 [-1.2, 5.1].
+  - Multi-step reach@32 8.4 / 9.1 against W1 - 3 = 10.0 / 11.3: fails. SCM - SCL +2.6 [-1.9, 7.1] / +1.3 [-1.3, 3.9],
+    under +3 on both parents, so the proved-wrong line is met. Pooled reach@32 SCM - W1 -3.5 / -3.9, both intervals
+    below 0.
+  - Picked rows' loss rise 0.19 / 0.19 against random -0.02 / -0.01: more for the pick to aim at than at 1e-4. CPU
+    per parent: night about 2,000 s (picking about 490 s), measures about 190 s.
+  - Shown, 2 parents: the middle rate with model-picked replay is the first night in these screens with no forgetting
+    and W1's first try together. Shown: it does not buy back the fast night's multi-step search breadth (reach@32
+    rises with the rate: about 6-8 at 1e-4, 8-9 at 3e-4, 13-15 at 1e-3). Untested: whether the narrower search slows
+    the climb over two nights. That link rests on one comparison (L against W1, then L2), where narrow night-1 search
+    went with half the climb.
+- **Next single change (10-10, coordinator relay: the next sleep step on free compute, kept frugal): Test SCM2, both
+  nights at SCM's recipe, against the standard two nights (W1 then W2).** Night-1 reach@32 is only a proxy; this
+  measures the climb itself, which is what L2 was judged on. One change from SCM: a second night, as L2 added one to
+  L.
+  - Night 2 continues from SCM and resamples the pool with SCM, as job 8's night 2 did from W1. The model picks its
+    replay against a frozen pre-night copy of SCM. lr 3e-4, 32 visits, everything else as job 8's night 2. DEV, s100
+    and s101, from N'.
+  - Marks, fixed now (L2's). On both parents: (1) after night 2, harm against N' passes the 10-08 measure; (2)
+    multi-step first try (154 DEV questions) SCM2 - W2 at least -2 points (paired point estimate, 3 questions).
+  - Proved wrong: SCM2 - W2 multi-step first try with its paired interval's upper end below 0 on both parents (the
+    middle rate loses the climb).
+  - Prediction from SCM's narrow search: mark 2 fails. If it passes, night-1 reach@32 stops being used as a gate for
+    nights.
+  - Report only: SCM2 - L2 and SCM2 - N' multi-step first try (against job 8's +10 climb), pooled first try, reach@32
+    per night, harm against B2 for the whole chain, harm of SCM2 against SCM, and the picked-row family mix.
+  - If SCM2 passes, the middle-rate model-picked night becomes the night recipe for new runs and scorecard row 5's
+    candidate; its six-parent confirm (s200-s205) follows job 9. If it misses mark 2, the next lever is the night's
+    search breadth itself rather than its rate.
+  - Cost: free cloud CPU on the fast-sleep machine, about 40 minutes per parent for night 2 plus measures. Autonomy
+    label: not own choices (the rate is ours; the replay pick is the model's).
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
@@ -1892,3 +1932,6 @@ CPU):
 - **10-09, 1:25 PM ET:** SCL PASSES (fast-sleep 29e768b53): the model-picked lr 1e-4 night forgets nothing and keeps
   93-98% of L's gain on 2 parents (scorecard row 5's sleep test). The climb is still short of W1's. Next single change
   is Test SCM (SCL at lr 3e-4), with marks fixed.
+- **10-10, 9:15 AM ET:** SCM ruled PROVED WRONG on the breadth line (fast-sleep 47d31baa5): no forgetting and W1's
+  first try on 2 parents, but multi-step reach@32 only 8.4 / 9.1 (W1 13.0 / 14.3). Next single change is Test SCM2
+  (two nights at SCM's recipe against W2, with L2's marks).
