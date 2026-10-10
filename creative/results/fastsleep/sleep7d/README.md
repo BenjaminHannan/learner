@@ -387,3 +387,31 @@ How to read it:
 - *Shown:* at lr 3e-4 with model-picked replay, the night loses no skills (1.1 above N' on both parents, nothing fires) and keeps the fast night's whole first-try gain (0.97x / 1.06x W1's). That is the first night in these screens with both no forgetting and W1's first try.
 - *Shown:* it doesn't bring back the fast night's search breadth on multi-step rules. Reach@32 is 8.4 / 9.1 against W1's 13.0 / 14.3, a little above SCL's 5.8 / 7.8.
 - *Suggested:* the lr 1e-3 night's wider multi-step sampling comes with the same large updates that cost skills; lowering the rate keeps first try but narrows search. Whether search breadth on multi-step rules matters for the next nights (W2's climb came with it) is the open question.
+
+## Test SCM2 (finished 14:58 UTC 10-10 = 10:58 AM ET; roadmap after a6fa5a931b, Ben's "Run it" 9:17 AM ET 10-10; `night7d.py scm2`, `scm2/`)
+
+Both nights at SCM's recipe (model-picked replay, lr 3e-4, 32 visits) against the standard two nights (W1 then W2, job 8's recipe), from N'. Night 1 = SCM. Day 2 from SCM uses the same search and seeds as L2's and W's day 2. Night 2 trains on SCM's own day-2 records with model-picked replay against a frozen copy of SCM. Marks are L2's, fixed before the run.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: B2 / N' / W2 / SCM / **SCM2** | 89.4 / 86.7 / 82.9 / 87.8 / **87.8** | 90.5 / 87.8 / 84.7 / 88.9 / **89.3** |
+| (1) harm SCM2 vs N' | -1.1 (better), nothing fires, **pass** | -1.5 (better), nothing fires, **pass** |
+| (2) multi-step first try SCM2 - W2 (mark >= -2, i.e. 3 questions) | **-1.9** [-7.1, +3.2] (3 questions) **pass** | **+1.9** [-3.2, +7.1] **pass** |
+| proved wrong? (upper end < 0 on both) | no | no |
+| report only: multi-step first try SCM2 - L2 / SCM2 - N' (job 8's climb mark +10) | +2.6 [-0.6, +6.5] / +6.5 [+2.6, +10.4] | +5.2 [+0.6, +9.7] / +8.4 [+3.9, +13.0] |
+| report only: pooled first try N' / W1 / W2 / L2 / SCM / SCM2 | 0.4 / 31.2 / 34.0 / 33.6 / 30.5 / 32.8 (SCM2 - W2 -1.2 [-6.3, +4.3]) | 0.4 / 34.4 / 39.5 / 30.1 / 36.3 / 37.9 (-1.6 [-5.9, +2.7]) |
+| report only: multi-step reach@32 W1 / W2 / SCM / SCM2 | 13.0 / 31.8 / 8.4 / 20.8 (SCM2 - W2 -11.0 [-18.2, -3.9]) | 14.3 / 24.7 / 9.1 / 18.2 (-6.5 [-13.6, +0.6]) |
+| report only: night 2's own cost (SCM2 vs SCM) | 0.0, nothing fires | -0.4, nothing fires |
+| report only: skills drop vs B2: N' / W1 / W2 / SCM / SCM2 | 2.7 / 6.5 / 6.5 / 1.5 / 1.6 | 2.8 / 6.3 / 5.8 / 1.6 / 1.3 |
+| report only: night-2 records W2 / SCM2 (sq_plus) | 1,187 / 1,154 (136 / 126) | 1,118 / 1,084 (68 / 61) |
+| report only: night-2 loss rise picked / random | 0.17 / 0.00 (36 rounds) | 0.15 / 0.00 (33 rounds) |
+| CPU seconds: day 2 / night 2 (of it, picking) / measures | 2,868 / 2,827 (694) / 165 | 2,650 / 2,684 (639) / 210 |
+
+Verdict: **SCM2 PASSES on both parents.** No skills harm against N' after two nights, and multi-step first try is within the mark of the standard two nights (exactly at the 3-question limit on s100).
+
+How to read it:
+- *Shown:* two nights at lr 3e-4 with model-picked replay cost no skills. Skills end 1.1 / 1.5 above N', nothing fires, and night 2 adds no cost. The standard two nights cost 3.8 / 3.1 and fire 11-12 families against B2.
+- *Shown:* the C2 climb matches the standard two nights within the marks: multi-step first try -1.9 / +1.9 against W2, pooled first try -1.2 / -1.6. It beats L2 (both nights at 1e-4) on multi-step first try by +2.6 / +5.2.
+- *Shown:* search breadth recovers a lot over the second night (multi-step reach@32 8-9 -> 18-21) but still trails W2 (32 / 25).
+- *Shown:* the climb over N' (+6.5 / +8.4) is still below job 8's +10 mark (report only), as W2's own is on some parents.
+- *Suggested:* lr 3e-4 with model-picked replay is the first recipe in these screens that keeps old skills across two nights while matching the standard nights' first-try climb. It is a 2-parent screen; a confirm on more parents is the roadmap's call.
