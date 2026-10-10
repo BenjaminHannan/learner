@@ -209,3 +209,17 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 **A19. Result of v7 (per-tool add-on), sheet seed 200 (run 2:40-4:20 PM ET 10-10; scored 4:30 PM ET).** Shown, from `runs/sheet-s200-v7/analysis/RESULT.md`. The loop ran alone for 7 nights, none undone (the check reads 100 with the add-on off, as designed), and stopped on its own quiz (pooled 6.3 -> 45.3 at night 6, 42.2 at night 7). **DM1 +38.1, PASS** (near 2.14 -> 40.24; MAX 73, MIN 72, cell arithmetic 43, ABS 37, division 28, PRODUCT 17, SUM 12). **DM3 PASS by construction**: with the add-on off the model is the parent. DM4 pass (10,091 rows, no panel row in training). DM5 pass (stop 40.24, best 42.14 on night 6). R2 0.87. DM2 fail (far +0.7). Reported: with the add-on left on, old skills drop 6.18 and seven families fire. The add-on really is separate, and switching it by tool is what keeps old skills. The add-on learns less than v2's whole-model nights (+38 against +67), SUM and PRODUCT most of all; a bigger rank is the lever if needed (forgetting report, coordinator relay 3:27 PM ET). Next, per kill-first: seed 201 of v7, then DM6 (RPN, same constants).
 
 **A20. Result of v7, sheet seed 201 (run 4:25-6:20 PM ET 10-10; scored 6:25 PM ET), and DM6 start.** Shown, from `runs/sheet-s201-v7/analysis/RESULT.md`. 8 nights, stopped on its own quiz. **DM1 +53.8, PASS** (near 0.95 -> 54.76). DM3 pass by construction; with the add-on left on, old skills drop 9.78 and eleven families fire. DM4 pass (10,830 rows, no panel row in training). DM5 pass (stop 54.76 = best). R2 0.91. Far +1.07. **Read across both seeds: DM1 PASS (+38.1, +53.8); DM2 PROVED WRONG (+0.71, +1.07, both <= +2): it does not go past its practice to longer ranges or mixed formulas; DM3, DM4 and DM5 pass.** DM6 now runs: RPN with its own tool and sealed panel (`rpn.v2`), seed 200, the constants file unchanged (the same hash as the two v7 sheet runs). DM6 bars: DM1 and DM3 as for sheets.
+
+**A21. Result of DM6 (RPN, v7 constants unchanged), seed 200 (run 6:25-7:23 PM ET 10-10; scored 7:28 PM ET), and the read of DM-S.** Shown, from `runs/rpn-s200-v7/analysis/RESULT.md`. 4 nights, stopped on its own quiz. Near on scored kinds 6.54 -> 90.07 (**+83.5, DM1 bar PASS**). Every scored kind reached 83-100, except `a b /` at 55 (the calculator's exact division leaves few kept problems). DM3 pass by construction; with the add-on left on, old skills drop 4.12 and five families fire. DM4 pass: 7 of 800 panel rows (0.9%) were also training prompts and were dropped from scoring, under the 2% bar. DM5 pass (90.07, best 92.01). R2 0.73. Far -0.4. **DM6 PASS**: the same constants file learned a second subject.
+- **DM-S read (v7, per-tool add-on, Level 1):**
+  - DM1 PASS: sheet +38.1 and +53.8; RPN +83.5.
+  - DM2 PROVED WRONG: it does not go past its practice.
+  - DM3 PASS by construction.
+  - DM4 PASS at Level 1.
+  - DM5 PASS.
+  - DM6 PASS.
+- **Open:**
+  - Going past practice (DM2). Far problems need shapes the maker never makes, such as longer ranges and two kinds in one formula, so the model would have to compose or extrapolate.
+  - The add-on switch is ours in this test, standing in for the model's tool choice (Level 2).
+  - Whole-model learning without forgetting: the forgetting report's "own checked tries" path.
+  - A8 R1 (choosing vs even mix) and the bigger-model re-runs.
