@@ -226,3 +226,15 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 
 **A22. v8: the model switches its own add-on (Level 2 routing), measured on the three finished v7 runs (Opus, 7:45 PM ET 10-10; marks fixed before any routed result).** Change: v7's switch was ours (the question's subject). In v8 a small gate on the model's own reader decides. The gate takes the mean of the parent's reader features over the prompt (the add-on off, so the switch never depends on the add-on) and feeds a logistic unit (`domain/route.py`, fixed settings `GATE`, the same for every domain). The model trains it from its own records: positives are the prompts it practised with the tool, negatives are its diary of old questions. No panel or DEV row trains it. Then each sealed-panel question and each old-skills question is answered by the parent or by the add-on model, as the gate decides. Disclosed: the gate is trained after the run from the run's own log. That equals a last step of the mode that uses only what the mode itself recorded; it goes into `mode.py` if this passes.
 - **v8 marks, fixed now, on each of sheet s200, sheet s201 and RPN s200:** pass = routed DM1 >= +30 and routed DM3 passes (harm measure on the old-skills answers the gate chose). Proved wrong = routed DM3 fails on any run (the gate turns the add-on on for old questions), or routed DM1 < +10 on any run (the gate misses the subject's own questions). Reported: the share of panel near, panel far and old-skills questions the gate switched on, and the gate's training accuracy.
+
+**A23. Result of v8 (the model's own switch), 7:55 PM ET 10-10.** Shown, from `analysis/ROUTE.json` in each run.
+
+| run | gate training (practice / diary prompts, accuracy) | switched on: panel near / far / old skills | routed DM1 | routed DM3 |
+|---|---|---|---|---|
+| sheet s200 | 5,995 / 4,096, 100% | 100% / 100% / 1 of 1,360 | +38.1 PASS | drop 0.00, none fired, PASS |
+| sheet s201 | 6,734 / 4,096, 100% | 100% / 100% / 1 of 1,360 | +53.8 PASS | drop 0.00, none fired, PASS |
+| RPN s200 | 3,534 / 4,096, 100% | 100% / 100% / 0 of 1,360 | +83.5 PASS | drop 0.00, none fired, PASS |
+
+- **v8 PASSES on all three.** Its own switch keeps old skills, measured rather than by construction: the one old question switched on did not change its answer. The switch now lives in `mode.py`: at the end of a per-tool run the model trains it from its own records and saves `gate.pt` beside the final checkpoint (smoke shown). 
+- Caveat (suggested): telling these subjects apart is easy, because spreadsheet and RPN prompts look nothing like the old-skills prompts. A harder check is two subjects with similar prompts, which needs a second add-on and a switch that chooses between add-ons.
+- DM4 is now Level 1 for making and checking practice (fixed outside tools on a fixed schedule) and Level 2 for using what it learned (its own switch).

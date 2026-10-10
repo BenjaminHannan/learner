@@ -59,6 +59,7 @@ def train_gate(pos, neg):
     with torch.no_grad():
         train_acc = (((Z @ w + b0) > 0).float() == y).float().mean().item()
     gate = lambda F: (torch.sigmoid(((F - mu) / sd) @ w.detach() + b0.detach()) > GATE['threshold'])
+    gate.state = dict(mu=mu, sd=sd, w=w.detach(), b=b0.detach(), threshold=GATE['threshold'])
     return gate, train_acc
 
 

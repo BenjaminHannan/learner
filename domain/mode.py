@@ -688,6 +688,7 @@ def main(argv=None):
     log('quiz', when='before_night_1', pooled=round(100 * pooled, 2), per_kind={k: round(v, 4) for k, v in per.items()})
 
     share = {k: 1 / len(kinds) for k in kinds}   # day 1: even (no history yet)
+    all_practice = []
     prog = {k: 0.0 for k in kinds}
     visits, undo_prev, stop, night, last_ck = cons['visits_per_new_row'], False, None, 0, None
     for night in range(1, cons['max_nights'] + 1):
@@ -705,6 +706,7 @@ def main(argv=None):
         # step 3: try
         t = time.time()
         new = try_day(m, tool, items, kinds, cons, log, night, write_row)
+        all_practice += new   # A23: the add-on's switch learns from the prompts it practised
         T['try'] += time.time() - t
 
         # step 6: night (undo of the previous night halves this one's visits)
@@ -802,6 +804,16 @@ def main(argv=None):
         log('mix', for_day=night + 1, share={k: round(v, 4) for k, v in share.items()}, progress={k: round(v, 4) for k, v in prog.items()})
 
     final = hist_k[-1]
+    if addon is not None and cons['addon'] == 'per_tool':
+        # addendum A22/A23: the model trains its own switch for this add-on from its own records (practice prompts vs
+        # diary prompts, on its reader with the add-on off) and keeps it next to the final checkpoint
+        from domain import route
+        addon.on = False
+        pos = sorted({it['prompt'] for it in all_practice})
+        gate, gacc = route.train_gate(route.features(m, pos), route.features(m, [r['prompt'] for r in diary]))
+        addon.on = True
+        torch.save(gate.state, os.path.join(a.out, 'gate.pt'))
+        log('gate', pos=len(pos), neg=len(diary), train_acc=round(gacc, 4), path=os.path.join(a.out, 'gate.pt'))
     summary = dict(parent=parent, tool=a.tool, seed=a.seed, smoke=a.smoke, even_mix_control=a.even_mix, nights_run=night, stop_reason=stop,
                    addon=cons['addon'],
                    quiz_pooled_history=[round(100 * p, 2) for p in hist_p],
