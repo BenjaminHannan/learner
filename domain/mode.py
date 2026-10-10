@@ -13,6 +13,7 @@ and DIR/summary.json. Never opens the sealed panel or a DEV file: guard() assert
 Deviations from the design text are listed in the report and marked "choice:" in the code.
 """
 import argparse
+import copy
 import hashlib
 import importlib
 import itertools
@@ -455,7 +456,17 @@ def make_opt(m, lr):
                              lr=lr, betas=(0.9, 0.95))
 
 
-def train_night(m, new, diary, updates, cons, seed, fresh=False):
+def row_losses(m, ds, idx):
+    """Addendum A16: model.loss of each row ds[i], i in idx, one row at a time (eval mode, no grad). -> list of floats."""
+    was = m.training
+    m.eval()
+    with torch.no_grad():
+        out = [float(m.loss(to_device(collate([ds[i]]), 'cpu'))[0]) for i in idx]
+    m.train(was)
+    return out
+
+
+def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None):
     """Each batch: half new rows (cycling through reshuffles, so each is seen about visits_per_new_row times), half
     self-replay rows: drawn from the diary, or with fresh=True (addendum A13) taken in order from this night's fresh
     replay rows, each once. Grad clip 1.0 as in custom_io training (train.py:172). -> per-update losses."""
@@ -467,8 +478,25 @@ def train_night(m, new, diary, updates, cons, seed, fresh=False):
     torch.manual_seed(seed)  # ans_drill draws from the model's own RNG in train mode (tool.py:151)
     opt = make_opt(m, cons['lr'])
     order, pos, losses, rep_pos = np.array([], dtype=int), 0, [], 0
+    pick = cons['replay_pick'] and not fresh
+    if pick:   # addendum A16: the model picks its own review (Test SC's rule, creative/night7d.py sleep_sc at 78ba7bba8)
+        frozen = copy.deepcopy(m).eval()
+        prng, slots, spos = random.Random(seed + 5000), None, 0
     m.train()
-    for _ in range(updates):
+    for step in range(updates):
+        if pick and step >= cons['pick_every'] and step % cons['pick_every'] == 0:
+            # every pick_every updates: draw pick_draw diary rows, score them under the current model and under the
+            # frozen pre-night copy; the pick_n with the largest loss rise are the review of the next pick_every updates
+            t0 = time.time()
+            drawn = prng.sample(range(len(diary)), min(cons['pick_draw'], len(diary)))
+            rise = [a - b for a, b in zip(row_losses(m, ds_rep, drawn), row_losses(frozen, ds_rep, drawn))]
+            top = sorted(range(len(drawn)), key=lambda i: -rise[i])[:cons['pick_n']]
+            slots, spos = [drawn[i] for i in top], 0
+            prng.shuffle(slots)
+            if picks is not None:
+                picks.append(dict(step=step, rise_picked=round(sum(rise[i] for i in top) / len(top), 4),
+                                  rise_all=round(sum(rise) / len(rise), 4), secs=round(time.time() - t0, 1)))
+            m.train()
         ni = []
         while len(ni) < nb_new:
             if pos >= len(order):
@@ -476,7 +504,10 @@ def train_night(m, new, diary, updates, cons, seed, fresh=False):
             take = min(nb_new - len(ni), len(order) - pos)
             ni += [int(i) for i in order[pos:pos + take]]
             pos += take
-        if fresh:   # addendum A13: each fresh replay row is used once, in order
+        if pick and slots:   # addendum A16: cycle through the picked rows
+            ri = [slots[(spos + j) % len(slots)] for j in range(nb_rep)]
+            spos += nb_rep
+        elif fresh:   # addendum A13: each fresh replay row is used once, in order
             ri = [(rep_pos + j) % len(diary) for j in range(nb_rep)]
             rep_pos += nb_rep
         else:
@@ -648,8 +679,11 @@ def main(argv=None):
                 log('replay_short', night=night, n=len(rep), need=need)
             if not rep:
                 rep = diary
+        picks = []
         losses = train_night(m, new, rep, updates, cons, seed=a.seed * 1000 + night,
-                             fresh=cons['replay_fresh'] and rep is not diary) if updates else []
+                             fresh=cons['replay_fresh'] and rep is not diary, picks=picks) if updates else []
+        if picks:
+            log('replay_pick', night=night, rounds=picks)
         T['train'] += time.time() - t
         t = time.time()
         agree = check_agree(m, check)
