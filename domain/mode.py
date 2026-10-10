@@ -655,7 +655,9 @@ def main(argv=None):
         agree = check_agree(m, check)
         T['check'] += time.time() - t
         drop = before - agree
-        undo = drop > cons['undo_drop_points']
+        # addendum A14: with undo_total, the gate counts the whole drift from the pre-mode self (100 = every check
+        # answer as before the mode), not only this night's (A4)
+        undo = (100.0 - agree if cons['undo_total'] else drop) > cons['undo_drop_points']
         if undo:
             m.load_state_dict(snap)
             m.eval()
