@@ -363,3 +363,27 @@ How to read it:
 - *Shown:* at lr 1e-4 the night barely raises any skills row's loss (random rows' mean rise is below 0), so the pick has little to aim at. At lr 1e-3 (SC) the picked rows rose 5x more than random rows.
 - *Shown:* both lr 1e-4 nights trail W1 on multi-step search breadth (reach@32 6-8 vs 13-14), as in L2 and L64.
 - *Suggested:* the low rate removes the forgetting, and the model's own picking keeps the same result without a hand-chosen replay mix. Winning back the multi-step climb is still the open problem (lr 3e-4 is the pre-set next step, held).
+
+## Test SCM (finished 13:06 UTC 10-10 = 9:06 AM ET; roadmap 10-09 after 4fcc23d121, Ben's "Run it" 8:26 AM ET 10-10; `night7d.py scm`, `scm/`)
+
+SCL's recipe (model-picked replay, from N', 32 visits, L's records, seed and warm rows) with ONE change: lr 3e-4. Marks were fixed before the run.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: B2 / N' / W1 / SCL / **SCM** | 89.4 / 86.7 / 82.9 / 87.6 / **87.8** | 90.5 / 87.8 / 84.2 / 88.9 / **88.9** |
+| (1) harm SCM vs N' | -1.1 (better), nothing fires, **pass** | -1.1 (better), nothing fires, **pass** |
+| (2) C2 DEV first try: N' / W1 / SCL / **SCM**; gain ratio SCM / W1 (mark >= 0.9x) | 0.4 / 31.2 / 27.0 / **30.5**; **0.97** met | 0.4 / 34.4 / 32.8 / **36.3**; **1.06** met |
+| (3) multi-step reach@32: W1 / SCL / **SCM** (mark >= W1 - 3) | 13.0 / 5.8 / **8.4** (needs 10.0) **fail** | 14.3 / 7.8 / **9.1** (needs 11.3) **fail** |
+| proved wrong: reach@32 SCM - SCL < +3 on both | +2.6 [-1.9, +7.1] yes | +1.3 [-1.3, +3.9] yes |
+| report only: first try SCM - SCL / SCM - W1 | +3.5 [-1.2, +8.2] / -0.8 [-4.7, +3.1] | +3.5 [+0.4, +7.0] / +2.0 [-1.2, +5.1] |
+| report only: skills SCM vs SCL / vs W1 | +0.2 / +4.9, nothing fires | +0.0 / +4.7, nothing fires |
+| report only: pooled reach@32 SCM - SCL / SCM - W1 | +2.0 / -3.5 [-6.6, -0.8] | +1.6 / -3.9 [-7.4, -0.8] |
+| report only: loss rise picked / random rows | 0.19 / -0.02 | 0.19 / -0.01 |
+| CPU seconds: night (of it, picking) / measures | 2,042 (501) / 181 | 1,972 (480) / 196 |
+
+Verdict: **SCM fails mark 3 and is PROVED WRONG** by the pre-set rule: multi-step reach@32 rose only +2.6 / +1.3 over SCL, below +3 on both parents.
+
+How to read it:
+- *Shown:* at lr 3e-4 with model-picked replay, the night loses no skills (1.1 above N' on both parents, nothing fires) and keeps the fast night's whole first-try gain (0.97x / 1.06x W1's). That is the first night in these screens with both no forgetting and W1's first try.
+- *Shown:* it doesn't bring back the fast night's search breadth on multi-step rules. Reach@32 is 8.4 / 9.1 against W1's 13.0 / 14.3, a little above SCL's 5.8 / 7.8.
+- *Suggested:* the lr 1e-3 night's wider multi-step sampling comes with the same large updates that cost skills; lowering the rate keeps first try but narrows search. Whether search breadth on multi-step rules matters for the next nights (W2's climb came with it) is the open question.
