@@ -10,7 +10,7 @@ This is a small card-style experiment: T1SDR 3M parent, CPU, spreadsheets. Keep 
 
 ## Files to read
 
-- Design, marks and addenda A1-A14: `domain/DESIGN-AND-MARKS-2026-10-09.md`. The latest results are in A13 and A14.
+- Design, marks and addenda A1-A17: `domain/DESIGN-AND-MARKS-2026-10-09.md`. The latest results are in A13-A17.
 - Code:
   - `domain/mode.py`: the night is `train_night`, the gate is in the main loop, and replay comes from `build_diary` and `fresh_replay`.
   - `domain/constants.json`
@@ -28,9 +28,11 @@ This is a small card-style experiment: T1SDR 3M parent, CPU, spreadsheets. Keep 
 | v2 | 8 | 2.1 -> 69.1 (+67) | 4.19 | cipher_map, fewshot_number_rule, list_stats, passage_qa, rule_apply, seq_next, verify_claim | 100 -> 90.8 |
 | v3 (fresh replay) | 0 | no change | 0 | none (nothing kept) | night 1 alone: 96.3 |
 | v4 (cap at 3 points total) | 1 | 2.1 -> 26.9 (+25) | 1.47 | rule_apply, seq_next | 97.3 |
+| v5 (v4 + replay 7 of 8 rows, 4x updates) | 0 | no change | 0 | none (nothing kept) | night 1 alone: 95.7 |
+| v6 (v4 + model-picked review, SC rule) | 0 | no change | 0 | none (nothing kept) | night 1 alone: 96.5 |
 
 - One night at lr 1e-4 already makes rule_apply and seq_next fire. That night had 721 new rows, each seen 16 times, in 361 updates of batch 64, half of each batch replay.
-- Fresh replay drifted more than replay from a fixed 4,096-question diary: 3.71 against 2.73 on the same night-1 rows.
+- Every replay change made night 1 drift more than v2's plain night 1, which had the same new rows: fresh replay 3.71, more replay 4.30, model-picked review 3.52, against 2.73. One check prompt is 0.2 points.
 - AdamW weight decay is ruled out: shrinking the weights as 2,900 updates would leaves agreement at 99.6.
 - The pass bar for keeping old skills is an in_dist drop of 1.5 or less, with no family dropping more than 5 with its 95% interval below 0. Learning needs +30 on sealed near questions.
 
