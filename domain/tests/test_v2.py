@@ -113,8 +113,19 @@ def test_c_rename_touches_only_letter_digit_tokens():
 def test_c_no_rename_without_a_second_letter():
     out, c = mode.letter_edit('rpn: 3 4 +', random.Random(3), 1.0)
     assert out == 'rpn: 3 4 +' and c == Counter(letter_no_pair=1)
-    out, c = mode.letter_edit('A: 4 | B: 2 ; =SUM(A1:A1)', random.Random(3), 1.0)
-    assert c.get('letter_rename', 0) == 0 and c.get('letter_no_pair', 0) == 1 and out == 'A: 4 | B: 2 ; =SUM(A1:A1)'
+    out, c = mode.letter_edit('A: 4 | x: 2 ; =SUM(A1:A1)', random.Random(3), 1.0)
+    assert c.get('letter_rename', 0) == 0 and c.get('letter_no_pair', 0) == 1 and out == 'A: 4 | x: 2 ; =SUM(A1:A1)'
+
+
+def test_c_a12_a_letter_standing_alone_can_be_the_new_name():
+    # addendum A12: the SUM help example has one token letter (A) and the label B; the rename may now use B
+    seen = Counter()
+    for seed in range(200):
+        out, c = mode.letter_edit(SHEET_EX, random.Random(seed), 1.0)
+        assert out.startswith('A: 4 7 2 | B: 3 5 1 ; ')         # labels and grid stay
+        seen[out.split(';')[1].strip()] += 1
+        assert c == Counter(letter_rename=1)
+    assert set(seen) == {'=SUM(B1:B3)'}
 
 
 def test_d_symbol_swap_uses_only_symbols_of_the_draft():

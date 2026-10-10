@@ -113,6 +113,7 @@ def digit_run(rng, n):
 
 DIGITS = re.compile(r'[0-9]+')
 LETTER_CELL = re.compile(r'(?<![A-Za-z])([A-Z])(?=\d)')  # a one-letter letter-digit token, e.g. the A in A1 (not a label "A:")
+LETTER_ALONE = re.compile(r'(?<![A-Za-z0-9])([A-Z])(?![A-Za-z0-9])')  # a capital letter standing alone, e.g. the A in a label "A:" (addendum A12)
 EDITS = ('run_insert', 'run_delete', 'letter_rename', 'symbol_swap')  # the edits that can change a draft (addendum A10)
 # Over-draw caps (tries per problem asked). Raised for addendum A10: measured on the real vocabulary, the wider maker keeps
 # 0.6% of practice draws on the sheet tool (a day needs about 180 tries per problem) and 0.025% of one kind's draws
@@ -165,15 +166,18 @@ def run_edit(text, rng, lmax, p):
 
 
 def letter_edit(text, rng, p):
-    """Edit (c): with chance p, one letter X used in one-letter letter-digit tokens is renamed to another such letter Y
-    from the same text, in every such token. Labels such as 'A:' are not tokens and stay. -> (text, counts)."""
+    """Edit (c): with chance p, one letter X used in one-letter letter-digit tokens is renamed, in every such token, to
+    another letter Y of the same text: one used in such tokens or one standing alone (addendum A12; under A10 only the
+    first, which can never fire on an example whose tokens share one letter). Labels such as 'A:' are not tokens and
+    stay. -> (text, counts)."""
     if rng.random() >= p:
         return text, Counter()
-    letters = sorted(set(LETTER_CELL.findall(text)))
-    if len(letters) < 2:
+    used = sorted(set(LETTER_CELL.findall(text)))
+    pool = sorted(set(used) | set(LETTER_ALONE.findall(text)))
+    if not used or len(pool) < 2:
         return text, Counter(letter_no_pair=1)
-    x = rng.choice(letters)
-    y = rng.choice([v for v in letters if v != x])
+    x = rng.choice(used)
+    y = rng.choice([v for v in pool if v != x])
     return re.sub(r'(?<![A-Za-z])' + re.escape(x) + r'(?=\d)', y, text), Counter(letter_rename=1)
 
 
