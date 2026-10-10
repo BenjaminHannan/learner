@@ -400,7 +400,30 @@ def build_diary(m, pool, cons, ctx, log, write_row):
                 break
     log('diary', n=len(diary), check=len(check), scanned=pos, discards=dict(disc),
         calls_hist={str(k): v for k, v in sorted(Counter(len(r['steps']) for r in diary).items())})
-    return diary, check
+    return diary, check, pos
+
+
+def fresh_replay(pm, pool, pos, need, cons, ctx, write_row, night):
+    """Addendum A13: this night's replay rows, each an old question never used before in this run (not a check
+    prompt, not an earlier replay row), answered by the frozen pre-mode self `pm` with the diary's rules (A9).
+    -> (rows, new pos, discards). Fewer than `need` rows only when the pool runs out (logged by the caller)."""
+    rows, disc = [], Counter()
+    while len(rows) < need and pos < len(pool):
+        chunk = pool[pos:pos + 256]
+        pos += len(chunk)
+        for p, (calls, ans) in zip(chunk, greedy(pm, chunk)):
+            if len(rows) == need:
+                break
+            if not ans or not set(ans) <= ctx['vchars']:
+                disc['answer_empty_or_vocab'] += 1
+                continue
+            row, why = make_row(pm, 'diary', p, ans, calls, cons, 'diary', allow_zero=True)
+            if row is None:
+                disc[why] += 1
+                continue
+            rows.append(row)
+            write_row(day=night, kind='diary', id=row['id'], source='diary', prompt=p, answer=ans, steps=row['steps'])
+    return rows, pos, disc
 
 
 # ---------- quiz, check, night ----------
@@ -432,9 +455,10 @@ def make_opt(m, lr):
                              lr=lr, betas=(0.9, 0.95))
 
 
-def train_night(m, new, diary, updates, cons, seed):
+def train_night(m, new, diary, updates, cons, seed, fresh=False):
     """Each batch: half new rows (cycling through reshuffles, so each is seen about visits_per_new_row times), half
-    self-replay rows drawn from the diary. Grad clip 1.0 as in custom_io training (train.py:172). -> per-update losses."""
+    self-replay rows: drawn from the diary, or with fresh=True (addendum A13) taken in order from this night's fresh
+    replay rows, each once. Grad clip 1.0 as in custom_io training (train.py:172). -> per-update losses."""
     assert diary, 'empty diary: no replay half'
     nb_new = int(round(cons['batch'] * (1 - cons['replay_share'])))
     nb_rep = cons['batch'] - nb_new
@@ -442,7 +466,7 @@ def train_night(m, new, diary, updates, cons, seed):
     rng = np.random.RandomState(seed)
     torch.manual_seed(seed)  # ans_drill draws from the model's own RNG in train mode (tool.py:151)
     opt = make_opt(m, cons['lr'])
-    order, pos, losses = np.array([], dtype=int), 0, []
+    order, pos, losses, rep_pos = np.array([], dtype=int), 0, [], 0
     m.train()
     for _ in range(updates):
         ni = []
@@ -452,7 +476,11 @@ def train_night(m, new, diary, updates, cons, seed):
             take = min(nb_new - len(ni), len(order) - pos)
             ni += [int(i) for i in order[pos:pos + take]]
             pos += take
-        ri = [int(j) for j in rng.randint(0, len(diary), size=nb_rep)]
+        if fresh:   # addendum A13: each fresh replay row is used once, in order
+            ri = [(rep_pos + j) % len(diary) for j in range(nb_rep)]
+            rep_pos += nb_rep
+        else:
+            ri = [int(j) for j in rng.randint(0, len(diary), size=nb_rep)]
         b = to_device(collate([ds_new[i] for i in ni] + [ds_rep[j] for j in ri]), 'cpu')
         out = m.loss(b)
         loss = out[0] if isinstance(out, tuple) else out
@@ -556,7 +584,8 @@ def main(argv=None):
                 pool.append(p)
     pool = list(dict.fromkeys(pool))
     random.Random(f'{a.seed}-diary').shuffle(pool)
-    diary, check = build_diary(m, pool, cons, ctx, log, write_row)
+    diary, check, pool_pos = build_diary(m, pool, cons, ctx, log, write_row)
+    pm = load_model(parent).eval() if cons['replay_fresh'] else None   # addendum A13: the frozen pre-mode self
     T['diary'] += time.time() - t
     assert len(diary) > 0, 'no diary rows'
     assert check, 'empty check set: agreement would read 0 and every night would be undone'
@@ -608,7 +637,19 @@ def main(argv=None):
         before = check_agree(m, check)
         T['check'] += time.time() - t
         t = time.time()
-        losses = train_night(m, new, diary, updates, cons, seed=a.seed * 1000 + night) if updates else []
+        rep = diary
+        if cons['replay_fresh'] and updates:   # addendum A13: fresh old questions for this night's replay half
+            need = updates * (cons['batch'] - int(round(cons['batch'] * (1 - cons['replay_share']))))
+            t2 = time.time()
+            rep, pool_pos, rdisc = fresh_replay(pm, pool, pool_pos, need, cons, ctx, write_row, night)
+            log('replay_fresh', night=night, need=need, n=len(rep), pool_pos=pool_pos, discards=dict(rdisc),
+                gen_secs=round(time.time() - t2, 1))
+            if len(rep) < need:
+                log('replay_short', night=night, n=len(rep), need=need)
+            if not rep:
+                rep = diary
+        losses = train_night(m, new, rep, updates, cons, seed=a.seed * 1000 + night,
+                             fresh=cons['replay_fresh'] and rep is not diary) if updates else []
         T['train'] += time.time() - t
         t = time.time()
         agree = check_agree(m, check)

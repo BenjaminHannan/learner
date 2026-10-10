@@ -96,7 +96,7 @@ def test_check_set_not_starved_by_diary_refusals():
     saved = mode.greedy
     try:
         mode.greedy = lambda m_, ps, bs=64: [([], '')] * len(ps)
-        diary, check = mode.build_diary(m, pool, dict(CONST, diary=10, check=5), ctx(), lambda *a, **k: None, lambda **kw: None)
+        diary, check, _ = mode.build_diary(m, pool, dict(CONST, diary=10, check=5), ctx(), lambda *a, **k: None, lambda **kw: None)
     finally:
         mode.greedy = saved
     assert diary == [] and [c['prompt'] for c in check] == pool[:5]
