@@ -515,23 +515,29 @@ def row_losses(model, rows, vocab, device='cpu', bs=128):
     return out
 
 
-def sleep_sc(model, records, replay_rows, vocab, cfg, device='cpu', replay_extra=None, frozen=None, select=True, every=SC_EVERY, n_draw=SC_DRAW, n_pick=SC_PICK, log=None):
+def sleep_sc(model, records, replay_rows, vocab, cfg, device='cpu', replay_extra=None, frozen=None, select=True, every=SC_EVERY, n_draw=SC_DRAW, n_pick=SC_PICK, log=None, records_extra=None):
     """A faithful copy of sleep.sleep's loop (same rng consumption, same order lists, same optimiser groups, schedule, clip) with a hook on the skills-replay slots: with select=False it is sleep.sleep bit
     for bit. With select=True, at every `every`-th update from update `every` on, `n_draw` fresh rows of `replay_rows` (random.Random(seed + 5000 + step)) are scored under the current model and under
     `frozen` (default: a copy of the model before the night), the `n_pick` with the largest loss rise are the skills replay of the next `every` updates (balanced seeded order). -> sleep.sleep's dict + selection
-    (per round: step, family counts of the picked rows, mean rise picked / all, score_seconds) and score_seconds."""
+    (per round: step, family counts of the picked rows, mean rise picked / all, score_seconds) and score_seconds.
+    records_extra (Test APM; default None = unchanged): more puzzle records. The record half is then drawn (balanced epoch-wise shuffles, as sleep._order) from records + records_extra by its OWN rng
+    (random.Random(seed + 7000)); the main rng still consumes exactly what the records-only night consumes, so the replay / warm-row draws, the pick draws and torch's seed are identical to the night without extras."""
     from custom_io.data import Dataset, collate, to_device
     from custom_io.train import lr_at
     if not records:
         return dict(loss=[], visits={}, updates=0, selection=[], score_seconds=0.0)
-    if len({r['id'] for r in records}) != len(records):
+    allrec = list(records) + list(records_extra or [])
+    if len({r['id'] for r in allrec}) != len(allrec):
         raise ValueError('puzzle record ids must be unique (the target cache is keyed by id)')
-    sleep.check_visits(len(records), cfg, bool(replay_rows))
+    sleep.check_visits(len(allrec), cfg, bool(replay_rows))
     half = cfg.batch // 2 if replay_rows else cfg.batch
     draws = cfg.updates * half
     rng = random.Random(cfg.seed)
     torch.manual_seed(cfg.seed)
     rec_order = sleep._order(len(records), draws, rng)
+    if records_extra:
+        rec_order = sleep._order(len(allrec), draws, random.Random(cfg.seed + 7000))
+        records = allrec
     nrep = cfg.batch - half
     n_extra = nrep // 2 if (replay_rows and replay_extra) else 0
     rep_order = sleep._order(len(replay_rows), cfg.updates * (nrep - n_extra), rng) if replay_rows else []
@@ -590,14 +596,17 @@ def sleep_sc(model, records, replay_rows, vocab, cfg, device='cpu', replay_extra
     return dict(loss=losses, visits=visits, updates=cfg.updates, selection=sel, score_seconds=score_s)
 
 
-def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log, select=True):
-    """sleep7d.sleep_on's recipe through sleep_sc. -> (model, info)."""
+def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log, select=True, updates=None, records_extra=None):
+    """sleep7d.sleep_on's recipe through sleep_sc. -> (model, info). updates (default None: visits * len(recs) // 32) fixes the update count; records_extra = more records for the record half (see sleep_sc);
+    with either given, info also has the record-half draw counts (by id prefix before '|', total, most draws of one record). Both default off: the night is unchanged."""
     m = copy.deepcopy(N)
-    u = visits * len(recs) // 32
+    extra = list(records_extra or [])
+    n_pool = len(recs) + len(extra)
+    u = visits * len(recs) // 32 if updates is None else updates
     per = 32 if replay else 64
-    mv = max(visits, math.ceil(u * per / max(len(recs), 1)))
+    mv = max(visits, math.ceil(u * per / max(n_pool, 1))) if updates is None and not extra else max(math.ceil(u * per / max(n_pool, 1)), 1)
     t0 = time.time()
-    so = sleep_sc(m, recs, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv), device, replay_extra=warm_rows, frozen=None, select=select, log=log)
+    so = sleep_sc(m, recs, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv), device, replay_extra=warm_rows, frozen=None, select=select, log=log, records_extra=extra or None)
     m.eval()
     sel = so['selection']
     fam_all = collections.Counter()
@@ -605,7 +614,13 @@ def _sc_night(N, recs, replay, warm_rows, vocab, lr, visits, seed, device, log, 
         fam_all.update(r['families'])
     pool_mix = collections.Counter(r['family'] for r in replay)
     n_pick = sum(fam_all.values())
-    return m, dict(updates=u, records=len(recs), visits_per_record=u * 32 / max(len(recs), 1), last_loss=sum(so['loss'][-10:]) / max(len(so['loss'][-10:]), 1) if so['loss'] else None,
+    more = {}
+    if updates is not None or extra:
+        by = collections.Counter()
+        for i, c in so['visits'].items():
+            by[i.split('|')[0] if '|' in i else ''] += c
+        more = dict(record_draws=dict(by), record_draws_total=sum(by.values()), most_draws_one_record=max(so['visits'].values(), default=0), records_extra=len(extra), pool_records=n_pool)
+    return m, dict(more, updates=u, records=len(recs), visits_per_record=u * 32 / max(n_pool, 1), last_loss=sum(so['loss'][-10:]) / max(len(so['loss'][-10:]), 1) if so['loss'] else None,
                    rounds=sel, picked_family_share={f: fam_all[f] / max(n_pick, 1) for f in sorted(pool_mix)}, pool_family_share={f: pool_mix[f] / len(replay) for f in sorted(pool_mix)},
                    seconds=time.time() - t0, score_seconds=so['score_seconds'], train_seconds=time.time() - t0 - so['score_seconds'])
 
@@ -1533,6 +1548,238 @@ def apreport(out, parents):
     return rep
 
 
+# ---------------------------------------------------------------- Test APM (roadmap 03be030d3b follow-up): SCM2's night 2 with night 1's records appended to the record half
+APM_FIRST_MIN, APM_MS_MIN, APM_HI_MAX = 2.0, -2.0, 1.0      # points
+APM_SNAP_VERSION = 'snap-v1'                                # the target-cache snapshot / prefixed-copy logic (3c6a98f11): part of the stage key
+APM_MARKS = dict(mark1_first_try='(1) pooled C2 DEV first try: c2_pilot.boot(APM right, SCM2 right) point >= +2.0',
+                 mark2_multi_step='(2) multi-step first try (HARD_KINDS, 154 questions): APM - SCM2 point >= -2.0',
+                 mark3_night2_cost="(3) night 2's own cost: harm_measure(SCM DEV hits, APM DEV hits) passes (in_dist drop <= 1.5, no family fires)",
+                 passes='passes = (1) and (2) and (3) on BOTH parents (s100, s101)',
+                 proved_wrong='the APM - SCM2 pooled first-try paired 95% interval has its upper end < +1.0 on BOTH parents (decided in the report)')
+APM_RECIPE = ("night 2 = SCM2's night 2 (from SCM, frozen copy = SCM, lr 3e-4, SCM2's update count = number of night-2 records, seed s2, same model-picked skills replay, warm rows and pick settings; "
+              "the replay / pick draws are the same as SCM2's) with ONE change: the record half of each batch is drawn (balanced epoch-wise shuffles) from night 1's records PLUS night 2's records "
+              "(ids prefixed n1| / n2| on copies, targets registered from each night's own snapshot)")
+
+
+def apm_marks(first_pt, ms_pt, harm_passes, first_hi):
+    """Pure. Points. first_pt / first_hi = pooled first try APM - SCM2 (point, 95% upper end), ms_pt = multi-step APM - SCM2 point. All thresholds inclusive (rounded to 9 places); proved_wrong = upper end < +1.0."""
+    a, b = bool(round(first_pt - APM_FIRST_MIN, 9) >= 0), bool(round(ms_pt - APM_MS_MIN, 9) >= 0)
+    return dict(mark1_first_try=a, mark2_multi_step=b, mark3_night2_cost=bool(harm_passes), passes=bool(a and b and harm_passes), proved_wrong=bool(round(first_hi - APM_HI_MAX, 9) < 0))
+
+
+def apm_verdict(per_parent):
+    """Pure. {parent: apm_marks} -> passes on every parent, proved_wrong on every parent (needs both), where the parents disagree."""
+    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
+                disagree=[k for k in ('mark1_first_try', 'mark2_multi_step', 'mark3_night2_cost', 'passes', 'proved_wrong') if len({m[k] for m in per_parent.values()}) > 1])
+
+
+def register_snapshots(sets):
+    """sets = [(prefix, recs, snapshot {original id: targets})], each snapshot taken right after that night's records were built (the ids 'W:<question>:<k>' are re-registered by the next set of records,
+    so the live cache only holds the LAST night's targets for colliding ids). Asserts no stale entry for any prefixed id, registers each prefixed copy from its own snapshot, asserts each copy equals its snapshot
+    (all rows; a spot of them through pp.row_targets). -> (list of prefixed copy lists, counts dict)."""
+    from custom_io.models import progparse as pp
+    stale = [x + r['id'] for x, rs, _ in sets for r in rs if x + r['id'] in pp._CACHE]
+    assert not stale, f'stale target cache entries for {stale[:3]}'
+    copies = [prefixed_copies(rs, x, register=False) for x, rs, _ in sets]
+    for (x, rs, tg), cs in zip(sets, copies):
+        assert all(r['id'] in tg for r in rs), 'a record has no snapshot'
+        for c, r in zip(cs, rs):
+            pp._CACHE[c['id']] = tg[r['id']]
+    spot = 0
+    for (x, rs, tg), cs in zip(sets, copies):
+        assert all(pp._CACHE[c['id']] == tg[r['id']] for c, r in zip(cs, rs)), 'prefixed copy differs from its own night snapshot'
+        idx = sorted({int(i * (len(rs) - 1) / 7) for i in range(8)}) if rs else []
+        assert all(pp.row_targets(cs[i]) == tg[rs[i]['id']] for i in idx)
+        spot += len(idx)
+    ids = [set(r['id'] for r in rs) for _, rs, _ in sets]
+    overlap = set.intersection(*ids) if ids else set()
+    first, last = sets[0][2], sets[-1][2]
+    return copies, dict(sizes={x: len(rs) for x, rs, _ in sets}, original_id_overlap=len(overlap), overlap_with_different_targets=sum(first[i] != last[i] for i in overlap), stale_entries=0, snapshot_equal=True,
+                        spot_checked=spot)
+
+
+def apm_parent(nprime, out, s1dir, s3dir, rdir, jdir, scmdir, scm2dir, skills_train, skills_data, seed=0, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True, log=_log, max_records=None, b2=None):
+    """One parent's Test APM. DIR/<name>/apm.json is written after every stage; APM.pt is a cached stage. Start = scmdir/<name>/SCM.pt (key-checked against SCM.pkl as scm2_parent does, never retrained). Night-2 records
+    = SCM2's, rebuilt from scm2dir/<name>/day2_SCM.pkl (key rebuilt as scm2_parent builds it; no day 2 is run) and counted against scm2.json. Reuses (key-checked, read only): R's skills / c2 for N', J's skills_B2, SCM's and
+    SCM2's skills / c2 / c32 caches. Anything whose key does not match is recomputed into DIR. max_records = smoke only: truncates BOTH record sets (recorded)."""
+    nprime = os.path.expanduser(nprime)
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s3d, jd, rd, scmd, scm2d = (os.path.join(d, name) for d in (out, s3dir, jdir, rdir, scmdir, scm2dir))
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs = time.time(), {}
+    jj = json.load(open(os.path.join(jd, 'j.json')))
+    ja = jj['args']
+    s3 = json.load(open(os.path.join(s3d, 's3.json')))
+    a3 = s3['args']
+    s2j = json.load(open(os.path.join(scm2d, 'scm2.json')))
+    seed, T, s2, mseed, n1, n2 = jj['seed'], jj['T'], jj['day2_seed'], jj['measure_seed'], ja['n1'], ja['n2']
+    assert s2 == seed + 1 and mseed == seed + 777 and ja['lr'] == 1e-3 and ja['visits'] == 32, 'J is not the standard two nights'
+    assert a3['lr'] == 1e-3 and a3['visits'] == 32 and s3['seed'] == seed and a3['replay_n'] == ja['replay_n'] and ja['pool_limit'] == a3['pool_limit'], 'S3 / J disagree on seed, lr, visits, replay size or pool'
+    pool_limit = ja['pool_limit']
+    b2 = os.path.expanduser(b2 or ja.get('b2') or '')
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], recipe=APM_RECIPE, marks_rules=APM_MARKS, secs=secs,
+               args=dict(seed=seed, day2_seed=s2, measure_seed=mseed, T=T, n1=n1, n2=n2, lr=SCM_LR, visits=SCM_VISITS, pool_limit=pool_limit, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records,
+                         every=SC_EVERY, draw=SC_DRAW, pick=SC_PICK, snapshot_version=APM_SNAP_VERSION, b2=b2, s1=s1dir, s3=s3dir, j=jdir, r=rdir, scm=scmdir, scm2=scm2dir, skills_train=skills_train, skills_data=skills_data),
+               note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened; the pick uses only skills TRAIN rows and the model\'s own losses')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'apm.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, ja['replay_n'], seed)
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    paths = dict(N=nprime, SCM=os.path.join(scmd, 'SCM.pt'), SCM2=os.path.join(scm2d, 'SCM2.pt'))
+    sha = {a: _sha_file(p) for a, p in paths.items()}
+    # 1. night-1 records (SCM / SC use W1's), snapshotted at once; SCM key-checked
+    t0 = time.time()
+    from custom_io.models import progparse as pp
+    recs1, res['records1'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    tg1 = {r['id']: pp._CACHE[r['id']] for r in recs1}
+    want = s3['W1_night']['records']
+    scmkey = _h('scm', sha['N'], SCM_LR, SCM_VISITS, seed, len(recs1), want, a3['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK)
+    assert pickle.load(open(os.path.join(scmd, 'SCM.pkl'), 'rb'))['key'] == scmkey, "SCM's stage key differs from the key of lr 3e-4 / this seed / these records"
+    SCM, _, _ = sleep.load_parent(paths['SCM'], device)
+    SCM.eval()
+    res['night1'] = dict(SCM_path=paths['SCM'], SCM_sha256=sha['SCM'], SCM_key_check='equal', SCM_key=scmkey)
+    # 2. night-2 records: SCM2's, rebuilt from its cached day 2 exactly as scm2_parent builds them
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    skey = (os.path.abspath(nprime), pool_limit, n1, n2, seed, T)
+    dkey = (skey, s2, sha['SCM'], _hstate(init), 'SCM')
+    dp = os.path.join(scm2d, 'day2_SCM.pkl')
+    c = pickle.load(open(dp, 'rb'))
+    assert c['key'] == dkey, "SCM2's day2_SCM.pkl key differs from the one scm2_parent builds"
+    recs2, cnt = w_records(pool, c['v']['tries'], s2 + 1)
+    tg2 = {r['id']: pp._CACHE[r['id']] for r in recs2}
+    want2 = s2j['night2_records']['records']
+    assert len(recs2) == want2 == s2j['night2']['updates'], f'rebuilt {len(recs2)} night-2 records, SCM2 has {want2} records / {s2j["night2"]["updates"]} updates'
+    res['records2'] = dict(rebuilt=len(recs2), SCM2_night2=want2, equal=True, source=dp, records_by_kind=_by_kind(pool, cnt))
+    secs['records'] = time.time() - t0
+    if max_records:
+        recs1, recs2 = recs1[:max_records], recs2[:max_records]
+        res['records1']['smoke_truncated_to'], res['records2']['smoke_truncated_to'] = len(recs1), len(recs2)
+    u = len(recs2)                                  # SCM2's update count: 32 * len(recs2) // 32 (SCM2's own: s2j['night2']['updates'], asserted equal above when not truncated)
+    (c1, c2p), res['ids'] = register_snapshots([('n1|', recs1, tg1), ('n2|', recs2, tg2)])
+    res['ids']['note'] = "ids prefixed n1| / n2| on copies; each copy registered from its own night's snapshot taken right after that night's records were built"
+    res['plan'] = dict(records1=len(recs1), records2=len(recs2), union=len(recs1) + len(recs2), updates=u, visits_per_record=u * 32 / (len(recs1) + len(recs2)), SCM2_visits_per_record=32.0)
+    log('APM plan', res['plan'], res['ids'])
+    save()
+    # 3. night 2 from SCM; frozen copy = SCM; same replay / warm rows / pick settings as SCM2
+    t0 = time.time()
+    key = _h('apm', sha['SCM'], dkey, APM_SNAP_VERSION, len(recs1), len(recs2), u, SCM_LR, SCM_VISITS, ja['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK, bool(skills_train))
+    APM, info, sha['APM'] = _stage(pdir, 'APM', key, lambda: _sc_night(SCM, c2p, replay, warm_rows, vocab, SCM_LR, SCM_VISITS, s2, device, log, updates=u, records_extra=c1), meta, vocab, device, resume, log)
+    secs['night2_APM'] = time.time() - t0
+    res['night2'] = {k: v for k, v in info.items() if k not in ('rounds', 'picked_family_share', 'pool_family_share')}
+    res['night2']['lr'], res['night2']['visits'], res['night2']['frozen_copy'] = SCM_LR, SCM_VISITS, 'SCM'
+    res['selection'] = dict(rounds=info['rounds'], picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+                            rise_picked_vs_all=[(r['step'], r['mean_rise_picked'], r['mean_rise_all']) for r in info['rounds']])
+    log('APM night 2', res['night2'])
+    save()
+    # 4. measures: N' (R), SCM (SCM's caches), SCM2 (SCM2's caches), APM
+    models = dict(N=N, SCM=SCM, APM=APM)
+
+    def get(a):
+        if a not in models:
+            m, _, _ = sleep.load_parent(paths[a], device)
+            m.eval()
+            models[a] = m
+        return models[a]
+    src = dict(N=rd, SCM=scmd, SCM2=scm2d)
+    hits, c2, c32, res['skills'], res['c2_dev'], res['reach32'], rows = {}, {}, {}, {}, {}, {}, None
+    for a in ('N', 'SCM', 'SCM2', 'APM'):
+        t0 = time.time()
+        sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
+        v = (a in src and _peek(os.path.join(src[a], f'skills_{a}.pkl'), sk)) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda a=a: skills_dev(get(a), skills_data, device, skills_limit), resume, log, f'skills {a}')
+        rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
+        res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
+        cc = (a in src and _peek(os.path.join(src[a], f'c2_{a}.pkl'), ck)) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda a=a: greedy_rows(get(a), dev, vocab, device), resume, log, f'c2 dev {a}')
+        c2[a] = cc
+        res['c2_dev'][a] = dict(first_try_right=sum(d['right'] for d in cc) / len(dev), stuck_rate=1 - sum(d['fit'] for d in cc) / len(dev), n=len(dev))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('measure', a, res['skills'][a], res['c2_dev'][a])
+        save()
+    if os.path.exists(b2):
+        bs = _sha_file(b2)
+        bj = _peek(os.path.join(jd, 'skills_B2.pkl'), ('B2', skills_data, bs)) if not skills_limit else None
+        bv = _skills_as_tuple(bj) if bj else _cached(os.path.join(pdir, 'skills_B2.pkl'), ('skills', bs, skills_data, skills_limit), lambda: skills_dev(sleep.load_parent(b2, device)[0].eval(), skills_data, device, skills_limit), resume, log, 'skills B2')
+        hits['B2'] = bv[1]
+        res['skills']['B2'] = dict(pooled5=bv[2], in_dist=bv[3], n=len(bv[1]))
+        save()
+    for a in ('SCM', 'SCM2', 'APM'):                            # reach@32: 32 plain samples per C2 DEV row, untrained adapter, mseed
+        t0 = time.time()
+        key = ('c32', sha[a], dev_limit, mseed, T, 32)
+        v, how = None, 'computed'
+        if a in src:
+            f = os.path.join(src[a], f'c32_{a}.pkl')
+            v = _peek(f, key)
+            if v is not None and len(v) == len(dev) and all(x['kind'] == r['kind'] for x, r in zip(v, dev)):
+                how = f'reused {f}'
+            else:
+                v = None
+        if v is None:
+            def fn(a=a):
+                mm = _arm_model(get(a), init, seed)
+                with creative(mm, True):
+                    smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
+                return score_rows(dev, smp, ks=(32,))
+            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), key, fn, resume, log, f'reach32 {a}')
+        c32[a] = v
+        hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
+        res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
+        secs[f'reach32_{a}'] = time.time() - t0
+        log('reach32', a, res['reach32'][a])
+        save()
+    # 5. marks and report-only
+    hard_ix = [i for i, r in enumerate(dev) if r['kind'] in c2_pilot.HARD_KINDS]
+    if not dev_limit:
+        assert len(hard_ix) == 154, f'{len(hard_ix)} multi-step DEV questions, expected 154'
+    res['multi_step_n'] = len(hard_ix)
+    right = lambda a, ix=None: [float(c2[a][i]['right']) for i in (range(len(dev)) if ix is None else ix)]
+    reach = lambda a, ix=None: [float(c32[a][i]['right32']) for i in (range(len(dev)) if ix is None else ix)]
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    slim = lambda h: {k: v for k, v in h.items() if k != 'families'}
+    ft, ms = bd(right('APM'), right('SCM2')), bd(right('APM', hard_ix), right('SCM2', hard_ix))
+    hS = harm_measure(hits['SCM'], hits['APM'], rows)
+    res['marks'] = dict(apm_marks(ft['points'], ms['points'], hS['passes'], ft['hi']), first_try_APM_minus_SCM2=ft, multi_step_first_try_APM_minus_SCM2=ms, multi_step_n=len(hard_ix),
+                        night2_in_dist_drop_APM_vs_SCM=hS['in_dist_drop'], night2_fired_APM_vs_SCM=hS['fired'], rules=APM_MARKS)
+    kinds = sorted({r['kind'] for r in dev})
+    kix = {k: [i for i, r in enumerate(dev) if r['kind'] == k] for k in kinds}
+    rs = info['rounds']
+    res['report_only'] = dict(
+        per_kind_first_try={k: {a: 100 * sum(right(a, ix)) / len(ix) for a in ('SCM', 'SCM2', 'APM')} for k, ix in kix.items()}, per_kind_n={k: len(ix) for k, ix in kix.items()},
+        per_kind_APM_minus_SCM2={k: bd(right('APM', ix), right('SCM2', ix)) for k, ix in kix.items()},
+        pooled_first_try={a: 100 * sum(right(a)) / len(dev) for a in ('N', 'SCM', 'SCM2', 'APM')},
+        reach32=res['reach32'], reach32_multi_step_APM_minus_SCM2=bd(reach('APM', hard_ix), reach('SCM2', hard_ix)), reach32_pooled_APM_minus_SCM2=bd(reach('APM'), reach('SCM2')),
+        harm_vs_N={a: slim(harm_measure(hits['N'], hits[a], rows)) for a in ('SCM', 'SCM2', 'APM')},
+        harm_vs_B2={a: slim(harm_measure(hits['B2'], hits[a], rows)) for a in ('SCM', 'SCM2', 'APM')} if 'B2' in hits else None,
+        night2_own_cost_SCM2_vs_SCM=slim(harm_measure(hits['SCM'], hits['SCM2'], rows)), night2_own_cost_APM_vs_SCM=slim(hS), harm_APM_vs_SCM2=slim(harm_measure(hits['SCM2'], hits['APM'], rows)),
+        picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+        loss_rise_picked_vs_random=dict(picked=sum(r['mean_rise_picked'] for r in rs) / len(rs) if rs else None, random=sum(r['mean_rise_all'] for r in rs) / len(rs) if rs else None, rounds=len(rs)),
+        record_half_draws=dict(night1=info['record_draws'].get('n1'), night2=info['record_draws'].get('n2'), total=info['record_draws_total'], most_draws_one_record=info['most_draws_one_record'], plan=res['plan']),
+        cpu_seconds=dict(secs, night2_scoring=info['score_seconds']))
+    secs['total'] = time.time() - t00
+    save()
+    log('MARKS', {k: res['marks'][k] for k in ('mark1_first_try', 'mark2_multi_step', 'mark3_night2_cost', 'passes', 'proved_wrong')})
+    return res
+
+
+def apm(nprimes, out, s1dir, s3dir, rdir, jdir, scmdir, scm2dir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: apm_parent(p, out, s1dir, s3dir, rdir, jdir, scmdir, scm2dir, **kw) for p in nprimes}
+
+
+def apmreport(out, parents):
+    """-> DIR/apm-report.json: per-parent marks, the verdict (passes on both parents; proved_wrong on both), report-only block, tables."""
+    res = {p: json.load(open(os.path.join(out, p, 'apm.json'))) for p in parents}
+    keep = ('mark1_first_try', 'mark2_multi_step', 'mark3_night2_cost', 'passes', 'proved_wrong', 'first_try_APM_minus_SCM2', 'multi_step_first_try_APM_minus_SCM2', 'night2_in_dist_drop_APM_vs_SCM', 'night2_fired_APM_vs_SCM')
+    pm = {p: {k: x['marks'][k] for k in keep} for p, x in res.items()}
+    rep = dict(parents=list(parents), per_parent=pm, verdict=apm_verdict(pm), rules=APM_MARKS, recipe=APM_RECIPE, report_only={p: x['report_only'] for p, x in res.items()},
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], night2=x['night2'], night1=x['night1'], ids=x['ids'], plan=x['plan'], selection=x['selection']) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'apm-report.json'), 'w'), indent=1)
+    return rep
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
     sub = a.add_subparsers(dest='cmd', required=True)
@@ -1573,6 +1820,13 @@ if __name__ == '__main__':
     q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only: truncates both record sets'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int)
     q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('apreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    q = sub.add_parser('apm'); q.add_argument('--nprime', nargs='+', required=True)
+    for f in ('s1', 's3', 'r', 'j', 'scm', 'scm2'):
+        q.add_argument('--' + f, required=True)
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
+    q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only: truncates both record sets'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int)
+    q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('apmreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('l2'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s3', 'j', 'r', 'vl', 's1w'):
         q.add_argument('--' + f, required=True)
@@ -1585,7 +1839,13 @@ if __name__ == '__main__':
     a = a.parse_args()
     if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
-    if a.cmd == 'apreport':
+    if a.cmd == 'apmreport':
+        print(json.dumps(apmreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'apm':
+        ex = os.path.expanduser
+        apm(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.r), ex(a.j), ex(a.scm), ex(a.scm2), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit,
+            device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+    elif a.cmd == 'apreport':
         print(json.dumps(apreport(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 'ap':
         ex = os.path.expanduser

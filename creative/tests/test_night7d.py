@@ -1,5 +1,5 @@
 """python3 -m pytest creative/tests/test_night7d.py   (CPU, instant): marks, proved-wrong and pick logic of Test VL on fake numbers."""
-import copy
+import copy, random
 from creative import night7d as N
 
 
@@ -238,3 +238,132 @@ def test_scm2_verdict_needs_both_parents():
     assert v({'a': dead, 'b': dead})['proved_wrong'] and not v({'a': dead, 'b': dead})['passes']
     assert not v({'a': dead, 'b': mid})['proved_wrong'] and not v({'a': mid, 'b': dead})['proved_wrong']          # needs BOTH parents
     assert not v({'a': dead, 'b': good})['proved_wrong']
+
+
+def test_apm_marks_edges():
+    assert (N.APM_FIRST_MIN, N.APM_MS_MIN, N.APM_HI_MAX) == (2.0, -2.0, 1.0)
+    ok = N.apm_marks(2.0, -2.0, True, 4.0)                                   # all three exactly at their marks: met (inclusive)
+    assert ok['passes'] and ok['mark1_first_try'] and ok['mark2_multi_step'] and ok['mark3_night2_cost'] and not ok['proved_wrong']
+    assert not N.apm_marks(1.99, 0, True, 4.0)['mark1_first_try'] and not N.apm_marks(1.99, 0, True, 4.0)['passes']
+    assert not N.apm_marks(5, -2.01, True, 4.0)['mark2_multi_step'] and not N.apm_marks(5, -2.01, True, 4.0)['passes']
+    assert not N.apm_marks(5, 0, False, 4.0)['mark3_night2_cost'] and not N.apm_marks(5, 0, False, 4.0)['passes']
+    assert N.apm_marks(0.0, 0, True, 0.99)['proved_wrong'] and not N.apm_marks(0.0, 0, True, 1.0)['proved_wrong']   # upper end < +1.0 strictly
+
+
+def test_apm_verdict_both_parents():
+    good, miss, dead = N.apm_marks(3, 0, True, 5.0), N.apm_marks(1, 0, True, 3.0), N.apm_marks(0, 0, True, 0.5)
+    v = N.apm_verdict
+    assert v({'a': good, 'b': good})['passes'] and not v({'a': good, 'b': good})['proved_wrong']
+    assert not v({'a': good, 'b': miss})['passes'] and 'mark1_first_try' in v({'a': good, 'b': miss})['disagree']        # one parent misses: no pass
+    assert not v({'a': good, 'b': N.apm_marks(3, 0, False, 5.0)})['passes']                                           # harm on one parent
+    assert v({'a': dead, 'b': dead})['proved_wrong'] and not v({'a': dead, 'b': dead})['passes']
+    assert not v({'a': dead, 'b': miss})['proved_wrong'] and not v({'a': miss, 'b': dead})['proved_wrong'] and not v({'a': dead, 'b': good})['proved_wrong']   # needs BOTH parents
+
+
+def _fake(prefix_ids, tag):
+    return [{'id': i, 'prompt': 'p', 'answer': tag} for i in prefix_ids]
+
+
+def test_apm_register_snapshots_collisions():
+    from custom_io.models import progparse as pp
+    ids1, ids2 = ['W:t:0', 'W:t:1', 'W:t:2'], ['W:t:1', 'W:t:2', 'W:t:3']        # 1 and 2 collide across nights
+    r1, r2 = _fake(ids1, 'one'), _fake(ids2, 'two')
+    saved = dict(pp._CACHE)
+    try:
+        for i in ids1 + ids2 + ['n1|' + i for i in ids1] + ['n2|' + i for i in ids2]:
+            pp._CACHE.pop(i, None)
+        tg1 = {r['id']: ('t1', r['id']) for r in r1}
+        for k, v in tg1.items():
+            pp._CACHE[k] = v
+        tg1 = {r['id']: pp._CACHE[r['id']] for r in r1}                           # snapshot right after night 1's records
+        for r in r2:                                                              # night 2's records re-register the colliding ids
+            pp._CACHE[r['id']] = ('t2', r['id'])
+        tg2 = {r['id']: pp._CACHE[r['id']] for r in r2}
+        (c1, c2), info = N.register_snapshots([('n1|', r1, tg1), ('n2|', r2, tg2)])
+        assert [c['id'] for c in c1] == ['n1|' + i for i in ids1] and [c['id'] for c in c2] == ['n2|' + i for i in ids2]
+        assert info['original_id_overlap'] == 2 and info['overlap_with_different_targets'] == 2 and info['stale_entries'] == 0
+        assert pp._CACHE['n1|W:t:1'] == ('t1', 'W:t:1') and pp._CACHE['n2|W:t:1'] == ('t2', 'W:t:1') and pp._CACHE['W:t:1'] == ('t2', 'W:t:1')   # live cache is night 2's; the copy is night 1's own
+        import pytest
+        with pytest.raises(AssertionError):                                       # a second registration finds the entries now there
+            N.register_snapshots([('n1|', r1, tg1), ('n2|', r2, tg2)])
+    finally:
+        pp._CACHE.clear()
+        pp._CACHE.update(saved)
+
+
+def test_sleep_sc_records_extra_and_update_count():
+    import os, pytest, torch
+    from creative import sleep
+    from custom_io.data import load_rows
+    ck, tr = os.path.expanduser('~/c7d/s100/Nprime.pt'), os.path.expanduser('~/work/data/train.jsonl')
+    if not (os.path.exists(ck) and os.path.exists(tr)):
+        pytest.skip('no N-prime / train file')
+    torch.set_num_threads(1)
+    rows = load_rows(tr)[::4000][:48]
+    recs, rep, ext = rows[:8], rows[8:40], rows[40:48]
+    more = [dict(r, id='n1|' + r['id']) for r in rows[::-1][:6]]
+    recs_p = [dict(r, id='n2|' + r['id']) for r in recs]
+    base, vocab, _ = sleep.load_parent(ck, 'cpu')
+    cfg = sleep.SleepCfg(updates=6, batch=8, lr=1e-3, warmup=2, seed=3, max_visits=8)
+    a, b, c = (copy.deepcopy(base) for _ in range(3))
+    ra = N.sleep_sc(a, recs, rep, vocab, cfg, 'cpu', replay_extra=ext, every=2, n_draw=16, n_pick=4)
+    rb = N.sleep_sc(b, recs_p, rep, vocab, cfg, 'cpu', replay_extra=ext, every=2, n_draw=16, n_pick=4, records_extra=None)          # default path, only ids differ
+    assert ra['loss'] == rb['loss'] and all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), b.state_dict().values()))
+    rc = N.sleep_sc(c, recs_p, rep, vocab, cfg, 'cpu', replay_extra=ext, every=2, n_draw=16, n_pick=4, records_extra=more)
+    assert rc['updates'] == 6 and sum(rc['visits'].values()) == 6 * 4                                   # 4 record slots per update (half of 8)
+    assert {i.split('|')[0] for i in rc['visits']} == {'n1', 'n2'}                                       # the union is drawn
+    assert max(rc['visits'].values()) <= 2                                                                # balanced draws over 14 records
+    # the replay / warm halves of every batch are the same as without extras (same rng consumption); only the record half differs
+    import custom_io.data as D
+    seen, orig = [], D.Dataset
+
+    class Rec(orig):
+        def __init__(self, rows, *a, **k):
+            if len(rows) == 8:
+                seen.append([r['id'] for r in rows])
+            super().__init__(rows, *a, **k)
+    D.Dataset = Rec
+    try:
+        seen.clear()
+        N.sleep_sc(copy.deepcopy(base), recs_p, rep, vocab, cfg, 'cpu', replay_extra=ext, select=False)
+        n0 = list(seen)
+        seen.clear()
+        N.sleep_sc(copy.deepcopy(base), recs_p, rep, vocab, cfg, 'cpu', replay_extra=ext, select=False, records_extra=more)
+        n1 = list(seen)
+    finally:
+        D.Dataset = orig
+    assert len(n0) == len(n1) == 6 and all(x[4:] == y[4:] for x, y in zip(n0, n1)) and any(x[:4] != y[:4] for x, y in zip(n0, n1))
+
+
+def test_sc_night_updates_param_default_unchanged_and_reproduces_scm2_night():
+    """_sc_night defaults are untouched; with updates = SCM2's count and the record pool = the night-2 records only (extra none) the new call is bit for bit SCM2's night, prefixed ids included; with the
+    union only the record half's draw changes (same updates, same replay / pick draws)."""
+    import os, pytest, torch
+    from creative import sleep, c2_stones, rules_real as R
+    from creative.sleep7d import DATA, _limit
+    ck, tr = os.path.expanduser('~/c7d/s100/Nprime.pt'), os.path.expanduser('~/work/data/train.jsonl')
+    if not (os.path.exists(ck) and os.path.exists(tr) and os.path.isdir(os.path.expanduser('~/c7d/s1/s100'))):
+        pytest.skip('no N-prime / train / S1 day')
+    torch.set_num_threads(1)
+    s3 = __import__('json').load(open(os.path.expanduser('~/c7d/s3/s100/s3.json')))
+    base, vocab, _ = sleep.load_parent(ck, 'cpu')
+    base.eval()
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), s3['args']['pool_limit']))
+    recs, _ = N._w1_records(ck, 's100', os.path.expanduser('~/c7d/s1'), s3, pool, base, vocab, 'cpu')
+    recs2, recs1 = recs[:8], recs[8:14]
+    replay = sleep.load_replay(tr, s3['args']['replay_n'], s3['seed'])[:64]
+    warm = R.warm_records(R.load_split(DATA, 'warm'))
+    from custom_io.models import progparse as pp
+    for r in recs[:14]:
+        assert r['id'] in pp._CACHE
+        pp._CACHE['n2|' + r['id']] = pp._CACHE['n1|' + r['id']] = pp._CACHE[r['id']]
+    p2 = [dict(r, id='n2|' + r['id']) for r in recs2]
+    p1 = [dict(r, id='n1|' + r['id']) for r in recs1]
+    a, ia = N._sc_night(base, recs2, replay, warm, vocab, 3e-4, 32, 9, 'cpu', None)                         # SCM2's call
+    b, ib = N._sc_night(base, p2, replay, warm, vocab, 3e-4, 32, 9, 'cpu', None, updates=len(recs2))        # APM's call with the pool = night 2 only
+    assert ia['updates'] == ib['updates'] == 8 and ia['last_loss'] == ib['last_loss']
+    assert all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), b.state_dict().values()))
+    assert 'record_draws' not in ia and ib['record_draws'] == {'n2': 8 * 32}
+    c, ic = N._sc_night(base, p2, replay, warm, vocab, 3e-4, 32, 9, 'cpu', None, updates=len(recs2), records_extra=p1)
+    assert ic['updates'] == 8 and ic['records'] == 8 and ic['pool_records'] == 14 and ic['record_draws_total'] == 8 * 32 and set(ic['record_draws']) == {'n1', 'n2'}
+    assert not all(torch.equal(x, y) for x, y in zip(a.state_dict().values(), c.state_dict().values()))
