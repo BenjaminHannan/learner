@@ -395,3 +395,26 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   does not name one. This spec picked the plain step model (same rows, same answers) by default; the plain LLM recipe gained more in 8a
   (+15.8 against +3.8 from 3M to 10M on the letter reader) but starts 26 points lower. The marks stay sealed as written. The 8a LLM
   numbers stay reported beside them, and the roadmap lists the choice for Ben (whole-model roadmap, "Latest, Fri Oct 9").
+
+## 22. Addendum Q (2026-10-10, 8:30 AM ET): 3M seed 401 result, 10M speed, and seed 401 starts beside seed 400
+
+- **3M s401 is done** (shown, `claude/8a-g-pc-results` commit d17716d8ea, `results/8a-g/pc/8aG1e-pc/8aG1e-3M-s401/`). G-B2: pooled-5 73.68
+  (4,450/6,040), chain-5 100.0, thinker-off (loops:0) in_dist 0.0, 0.41 updates/s, 16.3 h. G-PT: 68.01 (4,108/6,040), chain-5 97.2,
+  2.96 updates/s, 2.3 h. The 3M gap B2 - PT is +5.67 here and +5.89 on s400. Still no readout: G1 is about the 3M -> 10M gains.
+  The slow s401 B2 matches its peak reserved memory of 16,220 MiB (the whole card) against 11,750 on s400, with the same peak allocated
+  (2,847 vs 2,851 MiB): its memory cache grew into Windows shared memory (shown from RESULT.json; the cause of the growth is suggested).
+- **10M is slower than planned, and not from a spill** (shown, PC read 8:22 AM ET). 10M s400 started 10:55 PM ET 10-09. Its B2 arm
+  (accumulation 16, so 16 rows per pass) was at update 4,500 after 28,048 s: 6.24 s per update. It is the only compute process on the card:
+  5,398 MiB dedicated, 82 MiB shared; whole card 6,178 MiB dedicated and 179 MiB shared of 16,303. Over 15 one-second samples the GPU was
+  14-41% busy at 75-83 W of 250 W. Suggested cause: passes of 16 rows leave the GPU idle most of the time. Alone, s400 B2 ends about
+  4:30 PM ET Sun 10-11 and the gate about Wed 10-14 (suggested). The old "late Sat 10-10" ETA is withdrawn.
+- **Change (one; Ben chose "Share the GPU" on a card, 8:25 AM ET 10-10):** 10M s401 starts now on the same GPU, beside s400, with the same
+  queue file and settings (`8aG1s401-pc.txt`, B2=16, PT=8). Each seed still trains on one machine. `results/8a-g/pc-job-cards/g1_share_watch.ps1`
+  starts it and watches. It stops the s401 training processes (not s400, not the runner) if (1) the G1 training processes' shared GPU memory
+  passes 1 GB on 3 checks in a row, or (2) any 500-update stretch of s400 B2 that starts after s401 began takes more than 5,000 s (1.6x its
+  3,121 s alone; below that, the two runs together do at least 1.25x the work of one). Then `q8aG1s401_wait.ps1`, still waiting, reruns s401
+  after s400 as before. Expected gain if it holds: about a day off the gate (suggested). Costs: addendum I's futility skip no longer saves GPU
+  time, and s400 ends up to 1.6x later. Running side by side changes no numbers in either run; only updates/s and wall time differ, and those
+  are not marks. The waiter will still run the futility check and relaunch the s401 queue after both end; with s401's RESULT.json present the
+  runner skips it, so a "skipped" or "started" line there after this point means nothing.
+- Marks, arms and readout unchanged.
