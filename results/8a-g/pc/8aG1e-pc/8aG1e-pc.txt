@@ -1,0 +1,11 @@
+# BensPC RTX 5070 Ti: G1e = rest of gate G1 after 8aG1d-3M-s400 (kept running). 3M accum 4; 10M accum B2=8,PT=4 (memory estimate 360 MB/row). Spill rule up to accum 16 (spec addendum F).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aG1e-3M-s401 --rung 3M --seed 401 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=4,PT=4
+# MEM 13000
+g8a: 8aG1e-10M-s400 --rung 10M --seed 400 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=8,PT=4
+# MEM 13000
+g8a: 8aG1e-10M-s401 --rung 10M --seed 401 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=8,PT=4
