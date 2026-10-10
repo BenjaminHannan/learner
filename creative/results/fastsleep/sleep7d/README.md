@@ -413,5 +413,5 @@ How to read it:
 - *Shown:* two nights at lr 3e-4 with model-picked replay cost no skills. Skills end 1.1 / 1.5 above N', nothing fires, and night 2 adds no cost. The standard two nights cost 3.8 / 3.1 and fire 11-12 families against B2.
 - *Shown:* the C2 climb matches the standard two nights within the marks: multi-step first try -1.9 / +1.9 against W2, pooled first try -1.2 / -1.6. It beats L2 (both nights at 1e-4) on multi-step first try by +2.6 / +5.2.
 - *Shown:* search breadth recovers a lot over the second night (multi-step reach@32 8-9 -> 18-21) but still trails W2 (32 / 25).
-- *Shown:* the climb over N' (+6.5 / +8.4) is still below job 8's +10 mark (report only), as W2's own is on some parents.
+- *Shown:* the climb over N' (+6.5 / +8.4) is still below job 8's +10 mark (report only). So is W2's own (+8.4 / +6.5).
 - *Suggested:* lr 3e-4 with model-picked replay is the first recipe in these screens that keeps old skills across two nights while matching the standard nights' first-try climb. It is a 2-parent screen; a confirm on more parents is the roadmap's call.
