@@ -1107,6 +1107,216 @@ def scmreport(out, parents):
     return rep
 
 
+# ---------------------------------------------------------------- Test SCM2 (roadmap a6fa5a931b follow-up): both nights at SCM's recipe
+SCM2_MARKS = dict(harm="(1) harm_measure(N' DEV hits, SCM2 DEV hits) passes: in_dist drop <= 1.5 and no family fires",
+                  multi_step='(2) C2 DEV first try on the multi-step kinds (c2_pilot.HARD_KINDS, 154 questions): c2_pilot.boot(SCM2 right, W2 right) point >= -2.0',
+                  passes='passes = (1) and (2) on a parent; the verdict needs both parents',
+                  proved_wrong='the SCM2 - W2 multi-step first-try paired 95% interval has its upper end < 0 on BOTH parents (decided in the report)')
+SCM2_RECIPE = ("both nights at SCM's recipe from N' (model-picked skills replay, lr 3e-4, 32 visits) against the standard two nights (W1 then W2). Night 1 = SCM, already trained (never retrained). "
+               "Day 2 from SCM exactly as L2's day 2 from L (day_f, seed + 1 for day 2, records via w_records(..., s2 + 1)). Night 2 continues from SCM on SCM's own day-2 records, "
+               "the pick's frozen pre-night copy is SCM, lr 3e-4, 32 visits, updates = records x 32 / 32, J's night-2 seed and replay / warm rows")
+SCM2_MS_MIN = -2.0      # points
+
+
+def scm2_marks(harm_passes, ms_point, ms_hi):
+    """Pure. -> the SCM2 marks on one parent: multi-step first try SCM2 - W2 (point, 95% upper end, in points). multi_step = point >= -2.0 (inclusive); proved_wrong = upper end < 0."""
+    ok2 = bool(round(ms_point - SCM2_MS_MIN, 9) >= 0)
+    return dict(harm=bool(harm_passes), multi_step=ok2, passes=bool(harm_passes and ok2), proved_wrong=bool(round(ms_hi, 9) < 0))
+
+
+def scm2_verdict(per_parent):
+    """Pure. {parent: scm2_marks dict} -> passes on every parent (both marks, both parents); proved_wrong only if the interval is below 0 on EVERY parent."""
+    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
+                disagree=[k for k in ('harm', 'multi_step', 'passes', 'proved_wrong') if len({m.get(k) for m in per_parent.values()}) > 1])
+
+
+def scm2_parent(nprime, out, s1dir, s3dir, rdir, jdir, l2dir, scmdir, s1wdir, skills_train, skills_data, seed=0, pool_limit=None, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True,
+                log=_log, max_records=None, b2=None):
+    """One parent's Test SCM2. DIR/<name>/scm2.json is written after every stage; day2_SCM.pkl and SCM2.pt are cached stages. Night 1 = scmdir/<name>/SCM.pt (key-checked against SCM.pkl, never retrained).
+    Reuses (key-checked, read only): R's skills / c2 for N', W1, W2; J's skills_B2 and measure_W (W2 reach@32); S1w's measure_U (W1 reach@32); L2's and SCM's skills / c2 / c32 caches. Anything whose key
+    does not match is recomputed into DIR. max_records = smoke only (recorded; skips the SCM key check)."""
+    nprime = os.path.expanduser(nprime)
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s3d, jd, rd, l2d, scmd, s1wd = (os.path.join(d, name) for d in (out, s3dir, jdir, rdir, l2dir, scmdir, s1wdir))
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs = time.time(), {}
+    jj = json.load(open(os.path.join(jd, 'j.json')))
+    ja = jj['args']
+    s3 = json.load(open(os.path.join(s3d, 's3.json')))
+    a3 = s3['args']
+    seed, T, s2, mseed, n1, n2 = jj['seed'], jj['T'], jj['day2_seed'], jj['measure_seed'], ja['n1'], ja['n2']
+    assert s2 == seed + 1 and mseed == seed + 777 and ja['lr'] == 1e-3 and ja['visits'] == 32, 'J is not the standard two nights'
+    assert a3['lr'] == 1e-3 and a3['visits'] == 32 and s3['seed'] == seed and a3['replay_n'] == ja['replay_n'], 'S3 / J disagree on seed, lr, visits or replay size'
+    pool_limit = ja['pool_limit'] if pool_limit is None else pool_limit
+    b2 = os.path.expanduser(b2 or ja.get('b2') or '')
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], recipe=SCM2_RECIPE, marks_rules=SCM2_MARKS, secs=secs,
+               args=dict(seed=seed, day2_seed=s2, measure_seed=mseed, T=T, n1=n1, n2=n2, lr=SCM_LR, visits=SCM_VISITS, pool_limit=pool_limit, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records,
+                         every=SC_EVERY, draw=SC_DRAW, pick=SC_PICK, b2=b2, s1=s1dir, s3=s3dir, j=jdir, r=rdir, l2=l2dir, scm=scmdir, s1w=s1wdir, skills_train=skills_train, skills_data=skills_data),
+               note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened; the pick uses only skills TRAIN rows and the model\'s own losses')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'scm2.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, ja['replay_n'], seed)
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    paths = dict(N=nprime, W1=os.path.join(s3d, 'W1.pt'), W2=os.path.join(jd, 'W2.pt'), L2=os.path.join(l2d, 'L2.pt'), SCM=os.path.join(scmd, 'SCM.pt'))
+    sha = {a: _sha_file(p) for a, p in paths.items() if os.path.exists(p)}
+    # 1. night 1 = SCM, key-checked against its stored stage key (the key scm_parent wrote), never retrained
+    want = s3['W1_night']['records']
+    nrec1 = want
+    if not max_records:
+        full_pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), a3['pool_limit']))
+        recs1, rinfo = _w1_records(nprime, name, s1dir, s3, full_pool, N, vocab, device)
+        nrec1 = len(recs1)
+    scmkey = _h('scm', sha['N'], SCM_LR, SCM_VISITS, seed, nrec1, want, a3['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK)
+    if max_records:
+        key_check = 'skipped (smoke truncation)'
+    else:
+        assert pickle.load(open(os.path.join(scmd, 'SCM.pkl'), 'rb'))['key'] == scmkey, "SCM's stage key differs from the key of lr 3e-4 / this seed / these records"
+        key_check = 'equal'
+    SCM, _, _ = sleep.load_parent(paths['SCM'], device)
+    SCM.eval()
+    res['night1'] = dict(SCM_path=paths['SCM'], SCM_sha256=sha['SCM'], SCM_key_check=key_check, SCM_key=scmkey)
+    save()
+    # 2. day 2 from SCM: l2_parent's day 2 from L, line for line (untrained adapter = plain two-pass search)
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    skey = (os.path.abspath(nprime), pool_limit, n1, n2, seed, T)
+    t0 = time.time()
+    dkey = (skey, s2, sha['SCM'], _hstate(init), 'SCM')
+    day = _cached(os.path.join(pdir, 'day2_SCM.pkl'), dkey, lambda: day_f(_arm_model(SCM, init, seed), pool, vocab, device, T, n1, n2, s2), resume, log, 'day 2 SCM')
+    secs['day2_SCM'] = time.time() - t0
+    res['day2'] = dict(drawn=day['drawn'], greedy_pass=sum(day['greedy_fit']) / len(pool), pool_with_fit_pass1=sum(day['fit1']), pool_with_fit_final=sum(day['fit_final']), pool_rows=len(pool),
+                       seconds=secs['day2_SCM'], seconds_per_pool_row=secs['day2_SCM'] / len(pool))
+    log('day 2 SCM', res['day2'])
+    save()
+    # 3. night 2: from SCM, model-picked replay whose frozen pre-night copy is SCM (sleep_sc copies the model it is handed)
+    recs, cnt = w_records(pool, day['tries'], s2 + 1)
+    assert recs, 'SCM: no day-2 records'
+    res['night2_records'] = dict(records=len(recs), records_by_kind=_by_kind(pool, cnt), W2_records=jj['night2']['W']['records'], W2_records_by_kind=jj['night2']['W']['records_by_kind'])
+    if max_records:
+        recs = recs[:max_records]
+        res['night2_records']['smoke_truncated_to'] = len(recs)
+    t0 = time.time()
+    SCM2, info, sha['SCM2'] = _stage(pdir, 'SCM2', _h('scm2', sha['SCM'], dkey, SCM_LR, SCM_VISITS, len(recs), ja['replay_n'], len(replay), SC_EVERY, SC_DRAW, SC_PICK, bool(skills_train)),
+                                     lambda: _sc_night(SCM, recs, replay, warm_rows, vocab, SCM_LR, SCM_VISITS, s2, device, log), meta, vocab, device, resume, log)
+    secs['night2_SCM2'] = time.time() - t0
+    res['night2'] = {k: v for k, v in info.items() if k not in ('rounds', 'picked_family_share', 'pool_family_share')}
+    res['night2']['lr'], res['night2']['visits'], res['night2']['frozen_copy'] = SCM_LR, SCM_VISITS, 'SCM'
+    res['selection'] = dict(rounds=info['rounds'], picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+                            rise_picked_vs_all=[(r['step'], r['mean_rise_picked'], r['mean_rise_all']) for r in info['rounds']])
+    log('SCM2 night 2', res['night2'])
+    save()
+    # 4. measures
+    models = dict(N=N, SCM=SCM, SCM2=SCM2)
+
+    def get(a):
+        if a not in models:
+            m, _, _ = sleep.load_parent(paths[a], device)
+            m.eval()
+            models[a] = m
+        return models[a]
+    src = dict(N=rd, W1=rd, W2=rd, L2=l2d, SCM=scmd)
+    hits, c2, c32, res['skills'], res['c2_dev'], res['reach32'], rows = {}, {}, {}, {}, {}, {}, None
+    for a in ('N', 'W1', 'W2', 'L2', 'SCM', 'SCM2'):
+        t0 = time.time()
+        sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
+        if a != 'L2':                                           # L2: first try only (report only), no skills needed
+            v = (a in src and _peek(os.path.join(src[a], f'skills_{a}.pkl'), sk)) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda a=a: skills_dev(get(a), skills_data, device, skills_limit), resume, log, f'skills {a}')
+            rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
+            res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
+        c = (a in src and _peek(os.path.join(src[a], f'c2_{a}.pkl'), ck)) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda a=a: greedy_rows(get(a), dev, vocab, device), resume, log, f'c2 dev {a}')
+        c2[a] = c
+        res['c2_dev'][a] = dict(first_try_right=sum(d['right'] for d in c) / len(dev), stuck_rate=1 - sum(d['fit'] for d in c) / len(dev), n=len(dev))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('measure', a, res['skills'].get(a), res['c2_dev'][a])
+        save()
+    if os.path.exists(b2):                                      # B2, skills only (report-only harm of the whole chain)
+        bs = _sha_file(b2)
+        bj = _peek(os.path.join(jd, 'skills_B2.pkl'), ('B2', skills_data, bs)) if not skills_limit else None
+        bv = _skills_as_tuple(bj) if bj else _cached(os.path.join(pdir, 'skills_B2.pkl'), ('skills', bs, skills_data, skills_limit), lambda: skills_dev(sleep.load_parent(b2, device)[0].eval(), skills_data, device, skills_limit), resume, log, 'skills B2')
+        hits['B2'] = bv[1]
+        res['skills']['B2'] = dict(pooled5=bv[2], in_dist=bv[3], n=len(bv[1]))
+        save()
+    # reach@32 per night (W1, W2, SCM, SCM2): 32 plain samples per C2 DEV row, untrained adapter, mseed
+    reuse = dict(W1=(os.path.join(s1wd, 'measure_U.pkl'), 'U'), W2=(os.path.join(jd, 'measure_W.pkl'), 'W'))
+    for a in ('W1', 'W2', 'SCM', 'SCM2'):
+        t0 = time.time()
+        v, how = None, 'computed'
+        key = ('c32', sha[a], dev_limit, mseed, T, 32)
+        if a in reuse and os.path.exists(reuse[a][0]):
+            c = pickle.load(open(reuse[a][0], 'rb'))
+            kk = c['key']
+            ok = kk[1] == reuse[a][1] and kk[3] == 32 and kk[4] == mseed and kk[6] == dev_limit and (a != 'W2' or kk[7] == skills_data) and len(c['v']['c32']) == len(dev)
+            ok = ok and all(x['kind'] == r['kind'] for x, r in zip(c['v']['c32'], dev))
+            if ok:
+                v, how = c['v']['c32'], f'reused {reuse[a][0]}'
+        if v is None and a == 'SCM':
+            v = _peek(os.path.join(scmd, 'c32_SCM.pkl'), key)
+            if v is not None and len(v) == len(dev) and all(x['kind'] == r['kind'] for x, r in zip(v, dev)):
+                how = f"reused {os.path.join(scmd, 'c32_SCM.pkl')}"
+            else:
+                v = None
+        if v is None:
+            def fn(a=a):
+                mm = _arm_model(get(a), init, seed)
+                with creative(mm, True):
+                    smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
+                return score_rows(dev, smp, ks=(32,))
+            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), key, fn, resume, log, f'reach32 {a}')
+        c32[a] = v
+        hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
+        res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
+        secs[f'reach32_{a}'] = time.time() - t0
+        log('reach32', a, res['reach32'][a])
+        save()
+    # 5. marks and report-only
+    hard_ix = [i for i, r in enumerate(dev) if r['kind'] in c2_pilot.HARD_KINDS]
+    if not dev_limit:
+        assert len(hard_ix) == 154, f'{len(hard_ix)} multi-step DEV questions, expected 154'
+    res['multi_step_n'] = len(hard_ix)
+    right = lambda a, ix=None: [float(c2[a][i]['right']) for i in (range(len(dev)) if ix is None else ix)]
+    reach = lambda a, ix=None: [float(c32[a][i]['right32']) for i in (range(len(dev)) if ix is None else ix)]
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    slim = lambda h: {k: v for k, v in h.items() if k != 'families'}
+    hN = harm_measure(hits['N'], hits['SCM2'], rows)
+    ms = bd(right('SCM2', hard_ix), right('W2', hard_ix))
+    res['marks'] = dict(scm2_marks(hN['passes'], ms['points'], ms['hi']), in_dist_drop_vs_N=hN['in_dist_drop'], fired_vs_N=hN['fired'], pooled5=res['skills']['SCM2']['pooled5'],
+                        multi_step_first_try_SCM2_minus_W2=ms, multi_step_n=len(hard_ix), rules=SCM2_MARKS)
+    rs = info['rounds']
+    res['report_only'] = dict(
+        multi_step_first_try_SCM2_minus_L2=bd(right('SCM2', hard_ix), right('L2', hard_ix)), multi_step_first_try_SCM2_minus_N=bd(right('SCM2', hard_ix), right('N', hard_ix)),
+        pooled_first_try={a: 100 * sum(right(a)) / len(dev) for a in ('N', 'W1', 'W2', 'L2', 'SCM', 'SCM2')}, pooled_first_try_SCM2_minus_W2=bd(right('SCM2'), right('W2')),
+        reach32=res['reach32'], reach32_pooled_SCM2_minus_W2=bd(reach('SCM2'), reach('W2')), reach32_multi_step_SCM2_minus_W2=bd(reach('SCM2', hard_ix), reach('W2', hard_ix)),
+        harm_vs_B2={a: slim(harm_measure(hits['B2'], hits[a], rows)) for a in ('N', 'W1', 'W2', 'SCM', 'SCM2')} if 'B2' in hits else None,
+        night2_own_cost_SCM2_vs_SCM=slim(harm_measure(hits['SCM'], hits['SCM2'], rows)), night2_records=res['night2_records'],
+        picked_family_share=info['picked_family_share'], pool_family_share=info['pool_family_share'],
+        loss_rise_picked_vs_random=dict(picked=sum(r['mean_rise_picked'] for r in rs) / len(rs) if rs else None, random=sum(r['mean_rise_all'] for r in rs) / len(rs) if rs else None, rounds=len(rs)),
+        cpu_seconds=dict(secs, night2_scoring=info['score_seconds']))
+    secs['total'] = time.time() - t00
+    save()
+    log('MARKS', {k: res['marks'][k] for k in ('harm', 'multi_step', 'passes', 'proved_wrong')})
+    return res
+
+
+def scm2(nprimes, out, s1dir, s3dir, rdir, jdir, l2dir, scmdir, s1wdir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: scm2_parent(p, out, s1dir, s3dir, rdir, jdir, l2dir, scmdir, s1wdir, **kw) for p in nprimes}
+
+
+def scm2report(out, parents):
+    """-> DIR/scm2-report.json: the verdict (passes on both parents; proved_wrong on both), per-parent marks, the report-only block, tables."""
+    res = {p: json.load(open(os.path.join(out, p, 'scm2.json'))) for p in parents}
+    keep = ('harm', 'multi_step', 'passes', 'proved_wrong', 'multi_step_first_try_SCM2_minus_W2', 'in_dist_drop_vs_N', 'fired_vs_N')
+    pm = {p: {k: x['marks'][k] for k in keep} for p, x in res.items()}
+    rep = dict(parents=list(parents), per_parent=pm, verdict=scm2_verdict(pm), rules=SCM2_MARKS, recipe=SCM2_RECIPE, report_only={p: x['report_only'] for p, x in res.items()},
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], day2=x['day2'], night2=x['night2'], night1=x['night1'], selection=x['selection']) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'scm2-report.json'), 'w'), indent=1)
+    return rep
+
+
 
 # ---------------------------------------------------------------- Test AP (roadmap a81b3bebd8): night 2 appends night 1's records
 AP_MARKS = dict(first_try='(1) pooled C2 DEV first try: c2_pilot.boot(AP right, W2 right) point >= +2.0',
@@ -1349,6 +1559,13 @@ if __name__ == '__main__':
     q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
     q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('scmreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    q = sub.add_parser('scm2'); q.add_argument('--nprime', nargs='+', required=True)
+    for f in ('s1', 's3', 'r', 'j', 'l2', 'scm', 's1w'):
+        q.add_argument('--' + f, required=True)
+    q.add_argument('--vl', help='accepted and ignored'); q.add_argument('--pool-limit', type=int)
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
+    q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('scm2report'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('ap'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s1', 's3', 'j', 'r', 's1w'):
         q.add_argument('--' + f, required=True)
@@ -1374,6 +1591,12 @@ if __name__ == '__main__':
         ex = os.path.expanduser
         ap(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.j), ex(a.r), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit,
            device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+    elif a.cmd == 'scm2report':
+        print(json.dumps(scm2report(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'scm2':
+        ex = os.path.expanduser
+        scm2(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.r), ex(a.j), ex(a.l2), ex(a.scm), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), pool_limit=a.pool_limit, dev_limit=a.dev_limit,
+             skills_limit=a.skills_limit, device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
     elif a.cmd == 'scmreport':
         print(json.dumps(scmreport(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 'scm':

@@ -217,3 +217,24 @@ def test_scm_vs_scl_and_verdict():
     assert v({'a': good, 'b': bad})['proved_wrong'] and v({'a': bad, 'b': good})['proved_wrong'] and v({'a': good, 'b': bad})['harm_failed_on'] == ['b']   # harm on either parent
     assert v({'a': flat, 'b': flat})['proved_wrong'] and v({'a': flat, 'b': flat})['under_3_on'] == ['a', 'b']  # under +3 on both
     assert not v({'a': flat, 'b': good})['proved_wrong'] and not v({'a': good, 'b': flat})['proved_wrong']   # under +3 on one only
+
+
+def test_scm2_marks_edges():
+    assert N.SCM2_MS_MIN == -2.0
+    ok = N.scm2_marks(True, -2.0, 3.0)                                      # exactly -2.0: met
+    assert ok['passes'] and ok['multi_step'] and ok['harm'] and not ok['proved_wrong']
+    assert not N.scm2_marks(True, -2.01, 3.0)['multi_step'] and not N.scm2_marks(True, -2.01, 3.0)['passes']
+    assert not N.scm2_marks(False, 5.0, 8.0)['passes'] and not N.scm2_marks(False, 5.0, 8.0)['harm']   # harm fails
+    assert N.scm2_marks(True, -6.0, -0.1)['proved_wrong'] and not N.scm2_marks(True, -6.0, 0.0)['proved_wrong']   # upper end < 0 strictly
+    assert not N.scm2_marks(True, -6.0, 0.1)['proved_wrong']
+
+
+def test_scm2_verdict_needs_both_parents():
+    good, mid, dead = N.scm2_marks(True, 0.0, 2.0), N.scm2_marks(True, -8.0, 1.0), N.scm2_marks(True, -8.0, -1.0)
+    v = N.scm2_verdict
+    assert v({'a': good, 'b': good})['passes'] and not v({'a': good, 'b': good})['proved_wrong']
+    assert not v({'a': good, 'b': mid})['passes'] and 'multi_step' in v({'a': good, 'b': mid})['disagree']       # one parent misses: no pass
+    assert not v({'a': good, 'b': N.scm2_marks(False, 0.0, 2.0)})['passes']                                        # harm on one parent
+    assert v({'a': dead, 'b': dead})['proved_wrong'] and not v({'a': dead, 'b': dead})['passes']
+    assert not v({'a': dead, 'b': mid})['proved_wrong'] and not v({'a': mid, 'b': dead})['proved_wrong']          # needs BOTH parents
+    assert not v({'a': dead, 'b': good})['proved_wrong']
