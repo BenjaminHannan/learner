@@ -271,3 +271,19 @@ Found in review: the maker's renames, edit (c), touch only capital cell letters,
 - **For sum cannot be written as a training row.** The row format (custom_io progparse) points every operand at a number in the prompt, one of 4 constants (1, 2, 10, 100), or an earlier result. A loop counter's values (0, 1, 2, 3, ...) are not written in the prompt. So a loop-sum row exists only when the counter values happen to fall in that set: s starts at 0 and the range is 3 or less. Of the 58 re-drawn drafts the tool accepts, 56 are refused (`gold_ops`). Day 1 refused 38.
 - **Both limits sit in the outside parts** (the maker's yield and the row format), not in the model's learning. Every kind with enough kept rows rose.
 - **Next (default, nothing changed):** seed 201 with the same code and constants, per A24's marks. After that, a fix for the maker's yield, the same for every domain, written as A27 with its marks before any run. The row-format limit belongs to the shared format, which this mode does not own. It is recorded here and not changed.
+
+**A27. Practice yield: edit (a) at chance p, the same for every domain (Opus, 11:10 PM ET 10-10, written before any run).**
+- **Problem (shown in A26).** Edit (a) gives every number a new length. Numbers that must stay small (a list position, a loop count, a row inside the sheet's grid) almost always break, and the tool rejects the draft. Drafts kept out of 400 per help example (seed 7, real vocabulary, no model): py list index 3, for repeat 25, for sum 57; sheet kinds 0-7 each.
+- **Change (one).** Edit (a) gives each digit run a new length with chance vary_p, like edits (b)-(e). Otherwise the run is kept as it is. This is set by the constant `relength_each_p: true`; false keeps the old rule, so old runs still replay. Nothing else changes.
+- **Measured before any run (no model).**
+  - py: list index 3 -> 50, for repeat 25 -> 94, for sum 57 -> 93.
+  - sheet: the 0-7 kinds rise to 19-70.
+  - RPN: kinds fall to about 60% of before (more duplicate drafts), but every kind still keeps 8 or more.
+- **Risk.** Half the time, practice keeps the help page's numbers, so it is narrower. v1 showed that narrow practice teaches shortcuts. DM1 near rows use new numbers, so a shortcut would show as a lower DM1.
+- **Marks, py seed 200** (against A26's `py-s200-v8`, same seed):
+  - Pass: list index near >= +30, routed DM1 >= +43.3 (A26's +46.3 minus 3), and routed DM3 passes.
+  - Proved wrong: list index near < +10, or routed DM1 < +36.3.
+  - Expected and not counted: for sum stays near 0, because the row format refuses its rows (A26).
+- **Marks, sheet seed 200.** The same rule must not break spreadsheets. Compared with `sheet-s200-v7` routed +38.1: pass needs routed DM1 >= +35.1 and DM3 passing; proved wrong is routed DM1 < +28.1.
+- **Reported for both:** DM2 far, per-kind changes, and practice yields from the log.
+- **Order.** These runs come after py seed 201, which uses A24's marks and the old code. The look-alikes thread's DM5 "keep the best night, picked by the model's own quiz" is a separate later change (A28) and is not part of this test. Disclosed: the stats panel's seed 91021 (look-alikes, PR #59) equals the py panel's seed. The generators differ, and no prompt is shared.

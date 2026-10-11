@@ -133,10 +133,12 @@ def is_symbol(ch):
     return ch != ' ' and not ch.isalnum()
 
 
-def relength(text, rng, lmax):
-    """Edit (a): every digit run gets a new random length L in [1, lmax], no leading zero unless L is 1. -> (text, runs)."""
+def relength(text, rng, lmax, p=None):
+    """Edit (a): every digit run gets a new random length L in [1, lmax], no leading zero unless L is 1. With p
+    (addendum A27, relength_each_p) each run is redrawn only with chance p and otherwise kept. -> (text, runs)."""
     runs = len(DIGITS.findall(text))
-    return DIGITS.sub(lambda g: digit_run(rng, rng.randint(1, lmax)), text), runs
+    return DIGITS.sub(lambda g: digit_run(rng, rng.randint(1, lmax)) if p is None or rng.random() < p else g.group(0),
+                      text), runs
 
 
 def run_edit(text, rng, lmax, p):
@@ -214,9 +216,10 @@ def word_edit(text, rng, p):
     return re.sub(r'(?<![A-Za-z0-9_])' + re.escape(x) + r'(?![A-Za-z0-9_])', y, text), Counter(word_rename=1)
 
 
-def vary(example, rng, lmax, p):
-    """Edits (a) to (e), in that order, on one help example (addenda A10, A25). -> (prompt, counts)."""
-    text, runs = relength(example, rng, lmax)
+def vary(example, rng, lmax, p, each_p=False):
+    """Edits (a) to (e), in that order, on one help example (addenda A10, A25). each_p: edit (a) at chance p too
+    (addendum A27). -> (prompt, counts)."""
+    text, runs = relength(example, rng, lmax, p if each_p else None)
     c = Counter(digit_runs=runs)
     text, cb = run_edit(text, rng, lmax, p)      # each edit works on the text the edit before it left
     text, cc = letter_edit(text, rng, p)
@@ -233,7 +236,7 @@ def draft(tool, example, kind, rng, ctx, edits=None):
     """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set, lmax).
     edits: optional Counter that gets this draw's edit counts, kept or not. -> (item, None) or (None, reason)."""
     cons = ctx['cons']
-    prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'])
+    prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'], cons.get('relength_each_p', False))
     if edits is not None:
         edits.update(counts)
     if prompt in ctx['quiz_set']:

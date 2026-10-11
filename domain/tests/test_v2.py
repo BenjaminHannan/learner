@@ -233,9 +233,24 @@ def test_panel_suffix_names_the_version():
         raise AssertionError(bad)
 
 
+def test_relength_each_p_keeps_runs_by_chance():
+    # A27: with relength_each_p, edit (a) redraws each digit run only with chance p; p=None is the old rule (every run)
+    text = 'py: v = [5, 9, 2]; i = 1; print(v[i] + v[2])'
+    runs = mode.DIGITS.findall(text)
+    assert mode.relength(text, random.Random(0), 3, p=0.0) == (text, len(runs))
+    kept = sum(a == b for s in range(200)
+               for a, b in zip(runs, mode.DIGITS.findall(mode.relength(text, random.Random(s), 3, p=0.5)[0])))
+    assert 0.4 * 200 * len(runs) <= kept <= 0.65 * 200 * len(runs)   # kept by chance 1-p, plus redraws that match
+    redrawn = sum(a == b for s in range(200)
+                  for a, b in zip(runs, mode.DIGITS.findall(mode.relength(text, random.Random(s), 3)[0])))
+    assert redrawn < 0.15 * 200 * len(runs)
+    assert mode.vary(text, random.Random(1), 3, 0.0, each_p=True)[0] == text   # p 0: no edit fires
+
+
 if __name__ == '__main__':
     tests = [v for k, v in sorted(globals().items()) if k.startswith('test_') and callable(v)]
     for t in tests:
         t()
         print('ok', t.__name__, flush=True)
     print(f'{len(tests)} tests passed', flush=True)
+
