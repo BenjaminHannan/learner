@@ -101,7 +101,7 @@ def main(argv=None):
             for d in days:
                 X = g('A', d) if name == 'G_reader' else GA(d)
                 y = g('y', d)
-                perm = np.random.RandomState(d).permutation(len(y)) if False else np.random.RandomState(0).permutation(len(y))
+                perm = np.random.RandomState(0).permutation(len(y))
                 h = [perm[:len(y) // 2], perm[len(y) // 2:]]
                 v = np.zeros(len(y))
                 for i in (0, 1):
@@ -111,8 +111,8 @@ def main(argv=None):
             print('crossfit', name, C, cross[f'{name}_C{C}']['within_kind_auc'], flush=True)
 
     # 3. proxies
-    y_all, k_all, d_all, P_all = (np.concatenate([g(k, d) for d in days]) for k in ('y', 'kind')) + (
-        np.concatenate([day_arr(d) for d in days]), np.concatenate([g('P', d) for d in days]))
+    y_all, k_all = cat('y', days), cat('kind', days)
+    d_all, P_all = np.concatenate([day_arr(d) for d in days]), cat('P', days)
     direct = {}
     for j, nm in enumerate(PROXY):
         wk, gr, n = within_kind_auc(y_all, P_all[:, j], k_all, d_all)
