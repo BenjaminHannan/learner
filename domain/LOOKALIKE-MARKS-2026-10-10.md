@@ -142,6 +142,8 @@ quiz (2.0 -> 96.9 -> 96.9 -> 87.1; night 3 fell and the final checkpoint is nigh
   answers alone. Add-on left on for everything: look-alike panel drop 2.12 (none fired), DEV drop 3.31 (fewshot_number_rule,
   passage_qa, rule_apply, seq_next fired), where the switch stays off.
 - Held-out variants (reported only): switched on for 15 of 100 "total cost of all rows", no answer changed.
+- Aside for the domain-mode owner (not a mark here): DM5 fails on invoice. The near score was best after night 1 (83.1)
+  and the mode kept night 3 (62.2), because it stops after its quiz falls and keeps the last night, not its best.
 
 **Verdict over both subjects: the switch holds on look-alikes (LA1-LA3 pass on stats and invoice, seed 200).** Suggested
 reason, not tested: two layers cover each other. The switch reliably keeps the add-on off the old skills it would harm
