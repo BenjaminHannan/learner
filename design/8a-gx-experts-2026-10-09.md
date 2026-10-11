@@ -211,3 +211,7 @@ the follow-up test, not a change to this one.
   about 10-12 h. Sharing helps if GX runs faster than about 7 s per update while G1 runs, and it speeds up as G1's arms finish. GX's pace
   after its first 1,000 updates decides whether it keeps running.
 - Marks X1-X5 and D1-D5, the seed-401 rule (addendum E) and stage 2 unchanged.
+- **Launch record (shown, PC logs).** The 8:50 PM ET launch failed after 1.3 min (arm_failed): the memory-cap call got a bare
+  `cuda` device with no index. Fixed in 9e2dd5f9a1 (int index). Relaunched 9:01 PM ET from a re-unpacked src-8gxs (old one renamed
+  aside), code folder `8aGXs400-pc-27397d06ea`. The card went from 12,341 to 15,067 MiB used (GX about 2.7 GB; about 1.2 GB left
+  free), and shared GPU memory went from 164 to 246 MiB (rule 1 limit 564). G1 was at B2 update 12,500 (s400) and 7,000 (s401).
