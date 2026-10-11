@@ -1,0 +1,90 @@
+{
+ "status": "ok",
+ "job": {
+  "rung": "3M",
+  "seed": 401,
+  "steps": 24000,
+  "cfgs": {
+   "B2": {
+    "d": 256,
+    "n_heads": 4,
+    "reader_layers": 2,
+    "blocks": 2,
+    "n_loops": 12,
+    "mlp": 4.8,
+    "copy": true,
+    "eg_embed": true,
+    "experts": 52,
+    "top_k": 8
+   },
+   "PT": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4,
+    "hidden": 1065
+   }
+  },
+  "trained_params": {
+   "B2": 10553929,
+   "PT": 3580068
+  },
+  "active_params": {
+   "B2": 3579225,
+   "PT": 3580068
+  },
+  "lr": 0.001,
+  "lr_scale": 1.0,
+  "caps": {
+   "max_prompt": 280,
+   "max_ans": 35,
+   "n_num": 91,
+   "w_max": 208,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "source": "addendum G caps (roadmap spec section 17): computed once on own72 + the da1a59cf91 rung30 slice + dev; pinned so every rung and every box uses the same shapes"
+  },
+  "maxh": 0,
+  "dph": 0,
+  "accum": {
+   "B2": 4
+  },
+  "arms": {
+   "B2": {
+    "rc": 0,
+    "status": "ok",
+    "wall_s": 19174.9,
+    "steps": 24000,
+    "steps_per_s": 1.257024405105588,
+    "n_params": 10553929,
+    "cmd": "/usr/bin/python -m custom_io.train --model ledger --cfg {\"blocks\": 2, \"copy\": true, \"d\": 256, \"eg_embed\": true, \"experts\": 52, \"mlp\": 4.8, \"n_heads\": 4, \"n_loops\": 12, \"reader_layers\": 2, \"top_k\": 8} --data /job/g8a8/g8a/pools/p10-rung30-s401-a64 --steps 24000 --batch 256 --lr 0.001 --seed 401 --log-every 500 --final-eval --max-ans 8 --caps /job/g8a8/g8a/pools/p10-rung30-s401-a64/caps.json --bf16 --big-data /job/data_big --out /job/w/51-gx-s401/8aGX-3M-s401/B2 --accum 4",
+    "accum": 4,
+    "peak_mem_mib": 2819.2
+   }
+  },
+  "started_unix": 1791686361.550123,
+  "pool_build_s": 76.6,
+  "pool_train_sha256": "910485f16cc6aa5a546bacf8d53f735b4ce00a6a44ecd9be84cfac5505829a8b",
+  "pool_schedule": {
+   "seen_pieces_target": 66000000.0,
+   "steps_by_seen": 6096,
+   "update_floor": 24000,
+   "steps": 24000,
+   "floor_rules": true,
+   "row_draws": 6144000,
+   "passes": 4.331,
+   "max_row_draws": 5,
+   "ok_reuse": true,
+   "seen_pieces_actual": 259879179
+  },
+  "b2_extra": {
+   "eg_embed": true,
+   "experts": 52,
+   "top_k": 8,
+   "n_loops": 12
+  },
+  "wall_s": 19251.5,
+  "cost_usd": 0.0
+ }
+}

@@ -1,0 +1,533 @@
+{
+ "seeds": [
+  401
+ ],
+ "stage1": {
+  "marks": [
+   {
+    "id": "X1",
+    "desc": "GX-3M - G-B2 3M >= +1.0",
+    "per_seed": {
+     "401": {
+      "value": -1.1920529801324449,
+      "thr": 1.0,
+      "ok": false,
+      "shortfall": 2.192052980132445
+     }
+    }
+   },
+   {
+    "id": "X2",
+    "desc": "chain-5 >= 99",
+    "per_seed": {
+     "401": {
+      "value": 100.0,
+      "thr": 99.0,
+      "ok": true,
+      "shortfall": 0.0
+     }
+    }
+   },
+   {
+    "id": "X3",
+    "desc": "GX (in_dist - loops:0) minus 0.8 x G-B2 (in_dist - loops:0) >= 0",
+    "per_seed": {
+     "401": {
+      "value": 22.20588235294118,
+      "thr": 0.0,
+      "ok": true,
+      "shortfall": 0.0
+     }
+    }
+   }
+  ],
+  "X4": {
+   "401": "fail"
+  },
+  "X5": {
+   "401": true
+  },
+  "pass_all": false,
+  "notes": [
+   "X1 seed 401: short by 2.19",
+   "X4 seed 401: experts not evenly used"
+  ],
+  "hair": [],
+  "diff": {
+   "401": -1.1920529801324449
+  },
+  "x4_failed": [
+   401
+  ],
+  "readout": "UNCLEAR",
+  "stop": false,
+  "proved_wrong": false,
+  "collapsed_note": "experts not evenly used: cannot be GO"
+ },
+ "stage2": {
+  "marks": [
+   {
+    "id": "D1",
+    "desc": "GX-10M - G-B2 10M >= +1.0",
+    "per_seed": {
+     "401": null
+    }
+   },
+   {
+    "id": "D2",
+    "desc": "(GX-10M - GX-3M) - (PT 10M - PT 3M) >= +1.0",
+    "per_seed": {
+     "401": null
+    }
+   },
+   {
+    "id": "D3 (X2)",
+    "desc": "chain-5 >= 99",
+    "per_seed": {
+     "401": null
+    }
+   },
+   {
+    "id": "D4 (X3 vs G-B2 10M)",
+    "desc": "GX (in_dist - loops:0) minus 0.8 x G-B2 (in_dist - loops:0) >= 0",
+    "per_seed": {
+     "401": null
+    }
+   }
+  ],
+  "D5_X4": {
+   "401": "n/a"
+  },
+  "X5": {
+   "401": "n/a"
+  },
+  "pass_all": "n/a",
+  "notes": [
+   "some runs missing"
+  ],
+  "hair": [],
+  "diff": {
+   "401": null
+  },
+  "readout": "n/a",
+  "stop": "n/a",
+  "proved_wrong": "n/a"
+ },
+ "reported": {
+  "GX3M_minus_B2_3M": {
+   "n": 1,
+   "mean": -1.1920529801324449,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {
+    "401": -1.1920529801324449
+   }
+  },
+  "GX3M_minus_B2_10M": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "GX3M_minus_PT_3M": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "GX10M_minus_B2_10M": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "GX10M_minus_PT_10M": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "splits_3M": {
+   "GX": {
+    "in_dist": 84.55882352941177,
+    "answer": 70.33333333333333,
+    "frame": 85.0,
+    "vocab": 90.25,
+    "variant": 36.36363636363637,
+    "family": 1.875
+   },
+   "B2": {
+    "in_dist": 87.79411764705883,
+    "answer": 71.58333333333333,
+    "frame": 87.42647058823529,
+    "vocab": 91.0,
+    "variant": 34.39393939393939,
+    "family": 0.625
+   },
+   "PT": {
+    "in_dist": null,
+    "answer": null,
+    "frame": null,
+    "vocab": null,
+    "variant": null,
+    "family": null
+   }
+  },
+  "families_in_dist_3M": {
+   "arith_bare": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "backward_solve": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "chain_ops": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "chain_story2": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "cipher_map": {
+    "rule_family": true,
+    "GX": 55.0,
+    "B2": 90.0,
+    "PT": null
+   },
+   "compare_numbers": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "copy_word": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "digits_parity": {
+    "rule_family": false,
+    "GX": 70.0,
+    "B2": 62.5,
+    "PT": null
+   },
+   "distance_units": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "div_exact": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "fewshot_number_rule": {
+    "rule_family": true,
+    "GX": 20.0,
+    "B2": 22.5,
+    "PT": null
+   },
+   "group_induct": {
+    "rule_family": false,
+    "GX": 92.5,
+    "B2": 97.5,
+    "PT": null
+   },
+   "kin_chain": {
+    "rule_family": false,
+    "GX": 85.0,
+    "B2": 95.0,
+    "PT": null
+   },
+   "letter_ops": {
+    "rule_family": false,
+    "GX": 95.0,
+    "B2": 92.5,
+    "PT": null
+   },
+   "list_index": {
+    "rule_family": false,
+    "GX": 75.0,
+    "B2": 77.5,
+    "PT": null
+   },
+   "list_stats": {
+    "rule_family": false,
+    "GX": 97.5,
+    "B2": 100.0,
+    "PT": null
+   },
+   "object_track": {
+    "rule_family": false,
+    "GX": 70.0,
+    "B2": 82.5,
+    "PT": null
+   },
+   "odd_one_out": {
+    "rule_family": false,
+    "GX": 97.5,
+    "B2": 97.5,
+    "PT": null
+   },
+   "order_chain": {
+    "rule_family": true,
+    "GX": 75.0,
+    "B2": 85.0,
+    "PT": null
+   },
+   "passage_qa": {
+    "rule_family": false,
+    "GX": 67.5,
+    "B2": 60.0,
+    "PT": null
+   },
+   "percent_rate": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "prop_eval": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "rule_apply": {
+    "rule_family": true,
+    "GX": 47.5,
+    "B2": 65.0,
+    "PT": null
+   },
+   "seq_cycle": {
+    "rule_family": false,
+    "GX": 65.0,
+    "B2": 72.5,
+    "PT": null
+   },
+   "seq_next": {
+    "rule_family": true,
+    "GX": 32.5,
+    "B2": 50.0,
+    "PT": null
+   },
+   "state_update": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "story_addsub": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "story_chain3": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "syllogism": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "table_calc": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "table_lookup": {
+    "rule_family": false,
+    "GX": 35.0,
+    "B2": 40.0,
+    "PT": null
+   },
+   "var_chain": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 100.0,
+    "PT": null
+   },
+   "verify_claim": {
+    "rule_family": false,
+    "GX": 95.0,
+    "B2": 97.5,
+    "PT": null
+   },
+   "word_filter": {
+    "rule_family": false,
+    "GX": 100.0,
+    "B2": 97.5,
+    "PT": null
+   }
+  },
+  "rule_families_3M": {
+   "fewshot_number_rule": {
+    "rule_family": true,
+    "GX": 20.0,
+    "B2": 22.5,
+    "PT": null
+   },
+   "seq_next": {
+    "rule_family": true,
+    "GX": 32.5,
+    "B2": 50.0,
+    "PT": null
+   },
+   "order_chain": {
+    "rule_family": true,
+    "GX": 75.0,
+    "B2": 85.0,
+    "PT": null
+   },
+   "rule_apply": {
+    "rule_family": true,
+    "GX": 47.5,
+    "B2": 65.0,
+    "PT": null
+   },
+   "cipher_map": {
+    "rule_family": true,
+    "GX": 55.0,
+    "B2": 90.0,
+    "PT": null
+   }
+  },
+  "splits_10M": {
+   "GX": {
+    "in_dist": null,
+    "answer": null,
+    "frame": null,
+    "vocab": null,
+    "variant": null,
+    "family": null
+   },
+   "B2": {
+    "in_dist": null,
+    "answer": null,
+    "frame": null,
+    "vocab": null,
+    "variant": null,
+    "family": null
+   },
+   "PT": {
+    "in_dist": null,
+    "answer": null,
+    "frame": null,
+    "vocab": null,
+    "variant": null,
+    "family": null
+   }
+  },
+  "families_in_dist_10M": {},
+  "rule_families_10M": {
+   "fewshot_number_rule": null,
+   "seq_next": null,
+   "order_chain": null,
+   "rule_apply": null,
+   "cipher_map": null
+  },
+  "run 3M/B2/s401": {
+   "steps_per_s": 1.4615643936665086,
+   "wall_s": 16526.099881887436,
+   "peak_mem_mib": 2846.7,
+   "peak_reserved_mib": 15404.0,
+   "n_params": 3544913,
+   "size": {
+    "trainable": 3544913,
+    "active": 3544913,
+    "discarded": 0,
+    "frozen_borrowed": 271002624,
+    "shipped_trainable": 3544913,
+    "whole": 274547537
+   },
+   "final_train_loss": 1.132939208984375,
+   "train_log_last": "n/a",
+   "accum": 4
+  },
+  "run 3M/GX/s401": {
+   "steps_per_s": 1.257024405105588,
+   "wall_s": 19172.53778553009,
+   "peak_mem_mib": 2819.2,
+   "peak_reserved_mib": 16310.0,
+   "n_params": 10553929,
+   "size": {
+    "trainable": 10553929,
+    "active": 3579225,
+    "discarded": 0,
+    "frozen_borrowed": 271002624,
+    "shipped_trainable": 10553929,
+    "whole": 281556553
+   },
+   "final_train_loss": 1.1519515380859375,
+   "train_log_last": "n/a",
+   "accum": 4,
+   "routing": [
+    {
+     "dead": 2,
+     "top_share_x_even": 4.400401592254639,
+     "share_min_x_even": 0.03914772719144821,
+     "share_max_x_even": 4.400401592254639,
+     "n_in_half_to_double": 32,
+     "entropy": 2.102527379989624,
+     "round_overlap": 0.6036630036630037,
+     "bias": {
+      "min": -0.49999719858169556,
+      "max": 5.179807186126709,
+      "mean": 3.510920524597168
+     }
+    },
+    {
+     "dead": 2,
+     "top_share_x_even": 3.9547576904296875,
+     "share_min_x_even": 0.0791325718164444,
+     "share_max_x_even": 3.9547576904296875,
+     "n_in_half_to_double": 24,
+     "entropy": 0.3228347599506378,
+     "round_overlap": 0.6473829201101928,
+     "bias": {
+      "min": -4.871829509735107,
+      "max": 5.1678080558776855,
+      "mean": 3.6276028156280518
+     }
+    }
+   ],
+   "box_active_params": {
+    "B2": 3544913,
+    "PT": 3495936
+   }
+  }
+ },
+ "present": [
+  "3M/B2/s401",
+  "3M/GX/s401"
+ ],
+ "skipped": []
+}

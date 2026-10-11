@@ -1,0 +1,92 @@
+{
+ "rung": "3M",
+ "seed": 401,
+ "scale": 1.0,
+ "trained_params_target": 3302481,
+ "pool_pieces_spec": 60000000.0,
+ "seen_pieces_target": 66000000.0,
+ "own_share_spec": 0.38,
+ "web_share_spec": 0.62,
+ "keep_mix": true,
+ "rows": 1418702,
+ "pieces": 60008318.8643212,
+ "own": {
+  "rows": 811663,
+  "pieces": 22808334.112104084,
+  "share": 0.38008620377574187,
+  "spec_pieces": 22800000.0,
+  "sources": {
+   "skills": {
+    "read": 501456,
+    "taken": 501456,
+    "pieces": 14803419.551279927,
+    "dropped_non_ascii": 0,
+    "dropped_prompt": 0,
+    "dropped_empty": 0,
+    "dropped_answer": 0,
+    "dropped_dup": 0
+   },
+   "english": {
+    "read": 255495,
+    "taken": 255495,
+    "pieces": 6992501.794872351,
+    "dropped_non_ascii": 0,
+    "dropped_prompt": 0,
+    "dropped_empty": 0,
+    "dropped_answer": 0,
+    "dropped_dup": 0
+   },
+   "teach": {
+    "read": 54729,
+    "taken": 54712,
+    "pieces": 1012412.7659573857,
+    "dropped_non_ascii": 17,
+    "dropped_prompt": 0,
+    "dropped_empty": 0,
+    "dropped_answer": 0,
+    "dropped_dup": 0
+   }
+  },
+  "own72": true,
+  "own_rung": 10
+ },
+ "web": {
+  "docs": 38158,
+  "docs_with_rows": 38079,
+  "chunks": 632098,
+  "rows": 607039,
+  "skipped_non_ascii": 25042,
+  "skipped_no_word": 16,
+  "copyable": 169529,
+  "chars": 164408453,
+  "pieces": 37199984.752217114,
+  "copyable_share": 0.27927200723511997,
+  "pieces_per_row": 61.28104578489539,
+  "share": 0.619913796224258,
+  "budget_pieces": 37200000.0,
+  "spec_pieces": 37200000.0,
+  "slice": "slice_rung30.jsonl"
+ },
+ "shortfalls": {},
+ "max_ans": 64,
+ "schedule": {
+  "seen_pieces_target": 66000000.0,
+  "steps_by_seen": 6096,
+  "update_floor": 24000,
+  "steps": 24000,
+  "floor_rules": true,
+  "row_draws": 6144000,
+  "passes": 4.331,
+  "max_row_draws": 5,
+  "ok_reuse": true,
+  "seen_pieces_actual": 259879179
+ },
+ "train_sha256": "910485f16cc6aa5a546bacf8d53f735b4ce00a6a44ecd9be84cfac5505829a8b",
+ "train_bytes": 497791452,
+ "deviations": [
+  "cloze prompt <= 280 chars incl. the blank, blanked word 3..12 letters (the spec sizes, addendum E); model caps sized from the data (caps.json)",
+  "own-row word pieces estimated as chars / ratio per source (web rows use the exact GPT-2 token_count)",
+  "english / teach records become ONE row each (panel alternating source_text / paraphrase), not two"
+ ],
+ "piece_method": "web: GPT-2 token_count of the document; own: chars / per-source ratio ({\"skills\": 3.12, \"english\": 3.9, \"teach\": 3.76, \"rows\": 3.13})"
+}
