@@ -26,16 +26,20 @@ DECONTAM_SUFFIX = '.v2'   # addendum A10: v2 panels are decontaminated (rows tha
 DECONTAM_MAX_FRAC = 0.02  # DM4 fails when more than this share of the run tool's panel rows is dropped
 
 
+LOOKALIKE_TOOLS = ('stats', 'invoice')   # LOOKALIKE-MARKS-2026-10-10.md: v2 panels only
+
+
 def panel_files(suffix=''):
-    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl')
+    extra = tuple(f'{t}{suffix}.jsonl' for t in LOOKALIKE_TOOLS) if suffix == DECONTAM_SUFFIX else ()
+    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl') + extra
 
 
 def panel_suffix(path):
     """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet.v2.jsonl or rpn.v2.jsonl. Any other name is refused."""
-    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl', os.path.basename(path))
+    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl|(?:stats|invoice)(\.v2)\.jsonl', os.path.basename(path))
     if not m:
         raise ValueError(f'not a sealed panel file: {path}')
-    return m.group(1) or ''
+    return m.group(1) or m.group(2) or ''
 
 
 def load_panel_file(path):
