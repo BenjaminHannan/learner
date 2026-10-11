@@ -624,7 +624,7 @@ def save_ckpt(ck, m, path, addon=None):
 def parse_args(argv=None):
     a = argparse.ArgumentParser(description='Domain mode (DM-S): learn a help-page tool by itself.')
     a.add_argument('--parent', required=True, help='parent checkpoint.pt (T1SDR)')
-    a.add_argument('--tool', required=True, choices=['sheet', 'rpn', 'py'])
+    a.add_argument('--tool', required=True, choices=['sheet', 'rpn', 'py', 'stats', 'invoice'])  # stats, invoice: LOOKALIKE-MARKS
     a.add_argument('--out', required=True, help='new folder for log.jsonl, night_K/, summary.json')
     a.add_argument('--seed', type=int, required=True)
     a.add_argument('--smoke', action='store_true')
