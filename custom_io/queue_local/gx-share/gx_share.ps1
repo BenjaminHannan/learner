@@ -50,7 +50,7 @@ function LastTrain($dir) {
   $last = @(Get-Content $f -Tail 3 -ErrorAction SilentlyContinue | Where-Object { $_.Trim() }) | Select-Object -Last 1
   if (-not $last -or -not $last.StartsWith('{"event": "train"')) { return $null }
   try { $j = $last | ConvertFrom-Json } catch { return $null }
-  @{ step = [int]$j.step; at = (Get-Item $f).LastWriteTime }
+  @{ step = [int]$j.step; elapsed = [double]$j.elapsed; at = (Get-Item $f).LastWriteTime }
 }
 # Rule 2 for one G1 job: $null, or why it trips.
 function Slow($job) {
@@ -61,7 +61,9 @@ function Slow($job) {
   $lt = LastTrain $dir
   if (-not $lt) { return $null }
   if ($tr[0].CommandLine -match '--steps\s+(\d+)' -and $lt.step -ge [int]$Matches[1]) { return $null }   # training done, evals running
-  $s = ((Get-Date) - $lt.at).TotalSeconds
+  $at = $lt.at                                                                                    # file time; never older than start + elapsed (a stale file time cannot trip the rule)
+  if ($tr[0].CreationDate -is [datetime]) { $byClock = $tr[0].CreationDate.AddSeconds($lt.elapsed); if ($byClock -gt $at) { $at = $byClock } }   # Get-CimInstance gives a DateTime
+  $s = ((Get-Date) - $at).TotalSeconds
   if ($s -gt $LIMIT) { return "rule 2: $job B2 has gone $([math]::Round($s)) s since update $($lt.step) (limit $LIMIT s)" }
   return $null
 }
