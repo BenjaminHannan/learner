@@ -15,6 +15,10 @@ The weights come from the Hugging Face cache at revision EG_REV, or from the fol
 encode_texts(texts, T, device) -> H: the same H as encode(..., chars=True)[0] but outside the last-call memo (the tape strings, read like the question).
 by_bytes (V1, ByteVocab): H and every alignment have one row per UTF-8 byte of the prompt (T counts bytes); a byte takes the Gemma token of the character it belongs to,
 so a multi-byte character's bytes all share one token and an ASCII prompt gives exactly the character path's states.
+pre=True (the 30M / 100M no-plug front; Ben, 4:12 PM ET: "can you remove the converter plug and just have our model match gemma's"): H is Gemma's own
+512-number state AFTER its final norm and BEFORE embedding_projection (taken with a forward hook on self.m.norm for the one forward call, removed
+after it, also on error), [B, T, EG_PRE_DIM]; our model is 512 wide and reads those numbers with no learned 768 -> width plug. pooled is unchanged
+(mean of the 768 last_hidden_state), so the meaning teacher is the same. pre=False is bit-identical to before. The memo key includes pre.
   python -m custom_io.models.eg check     loads it, checks the size and compares 3 probe vectors with the ones taken on the build box."""
 import os
 import sys
@@ -24,14 +28,16 @@ import torch
 EG_ID, EG_REV = 'google/embeddinggemma-2', '914f7f89142e33e77833254d9c9b90c3cef7303b'
 PREFIX = 'task: sentence similarity | query: '
 EG_DIM, MT_DIM, N_TEXT = 768, 256, 271_002_624
+EG_PRE_DIM = 512        # Gemma's own width: the state after its final norm, before embedding_projection (512 -> 768)
 # probe prompts for `check` (their 256-d teacher vectors from the build box are in eg_probe_ref.json)
 PROBES = ['Echo: sune Give only the answer.', 'What is the first letter of perayu?', 'Tom has 12 apples and gives 345 away. How many are left?']
 
 
 class FrozenEG:
-    def __init__(self, path=None, by_bytes=False):
+    def __init__(self, path=None, by_bytes=False, pre=False):
         self.path = path or os.environ.get('CUSTOM_IO_EG2') or EG_ID
         self.by_bytes = bool(by_bytes)
+        self.pre = bool(pre)
         self.m = self.tok = None
         self._align, self._last = {}, None
 
@@ -77,7 +83,7 @@ class FrozenEG:
     def encode(self, prompts, T, device, chars=True):
         """(H [B,T,768] in the model's dtype, pooled [B,768] float32); chars=False skips H (None). The last call is memoised, so
         Ledger.run and Ledger.talk on the same batch embed it once."""
-        key = (tuple(prompts), T, str(device))
+        key = (tuple(prompts), T, str(device), self.pre)
         if self._last is not None and self._last[0] == key and (self._last[1][0] is not None or not chars):
             return self._last[1]
         out = self._compute(prompts, T, device, chars)
@@ -100,10 +106,19 @@ class FrozenEG:
         for b, (t, _) in enumerate(al):
             ids[b, :len(t)], am[b, :len(t)] = t, 1
         ids, am = torch.from_numpy(ids).to(device), torch.from_numpy(am).to(device)
-        with torch.autocast(device.type, enabled=False):
-            Ht = self.m(input_ids=ids, attention_mask=am).last_hidden_state                          # [B, L, 768]
+        grab = []
+        hook = self.m.norm.register_forward_hook(lambda mod, inp, out: grab.append(out)) if self.pre else None
+        try:
+            with torch.autocast(device.type, enabled=False):
+                Ht = self.m(input_ids=ids, attention_mask=am).last_hidden_state                      # [B, L, 768]
+        finally:
+            if hook is not None:
+                hook.remove()
         w = am[..., None].float()
         pooled = (Ht.float() * w).sum(1) / w.sum(1)
+        if self.pre:
+            assert len(grab) == 1, f'expected one call of the final norm, saw {len(grab)}'
+            Ht = grab[0]                                                                               # [B, L, 512]
         H = None
         if chars:
             c2t, cm = np.zeros((B, T), np.int64), np.zeros((B, T), bool)
@@ -128,10 +143,20 @@ def check(device=None):
     dev = torch.device(device or ('cuda' if torch.cuda.is_available() else 'cpu'))
     eg = FrozenEG().load(dev)
     v = teacher_vec(eg.encode(PROBES, 1, dev, chars=False)[1]).cpu()
+    # the pre state is what we say: 512 wide, and Gemma's own projection of it equals last_hidden_state
+    pe = FrozenEG(pre=True)
+    pe.m, pe.tok = eg.m, eg.tok
+    Hp = pe.encode(PROBES, 64, dev)[0]
+    with torch.no_grad():
+        Hf = eg.encode(PROBES, 64, dev)[0]
+        proj = eg.m.embedding_projection(Hp.to(next(eg.m.parameters()).dtype))
+    pre_diff = (proj.float() - Hf.float()).abs().max().item()
+    pre_ok = Hp.shape[-1] == EG_PRE_DIM and pre_diff <= (1e-4 if dev.type == 'cpu' else 5e-2)
     ref = json.load(open(REF_FILE))
     cos = (v * torch.tensor(ref['vectors'])).sum(-1).tolist()
     out = dict(device=str(dev), transformers=transformers.__version__, path=eg.path, n_text=N_TEXT,
-               probe_cos_vs_build_box=[round(c, 5) for c in cos], ok=ref['prompts'] == PROBES and all(c >= 0.999 for c in cos))
+               probe_cos_vs_build_box=[round(c, 5) for c in cos], pre_width=Hp.shape[-1], pre_projection_max_abs_diff=pre_diff,
+               ok=ref['prompts'] == PROBES and all(c >= 0.999 for c in cos) and pre_ok)
     print(json.dumps(out))
     return out
 
