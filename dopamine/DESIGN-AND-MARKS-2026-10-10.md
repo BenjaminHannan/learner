@@ -171,3 +171,32 @@ curiosity under reproduction:
 | Pleasant to talk to (clear, kind, to the point, fun to read) | a judge's score, only added on top of right and honest | later, when the model talks (Ben's separate talking-from-scratch session owns talking) |
 Rule (suggested, said to Ben 9:38 PM ET): reward checked helping, never bare approval; a model paid for approval learns to
 flatter. Every later reward gets its own sealed marks before it trains anything.
+
+**B4. The motivator race: a learned motivator inside the model vs the hand rule vs no drive (10:25 PM ET 10-10; marks
+fixed before either motivator run starts).** Ben 9:35 PM ET: an inherent motivator that replaces the mix rule if better.
+- *The motivator (code `dopamine/motivator.py`, a fork of `domain.mode.main` with every change marked `# MOTIVATOR:`):* a
+  small competence head of the model, a logistic on its own reader-mean features (add-on on), refit after every quiz on the
+  quiz's per-question hits. It never sees kind labels. Two drives, each a fixed rule: **edge** (curiosity about what it is
+  unsure of) picks practice by V(1-V); **progress** (curiosity about what it is getting better at; Oudeyer's learning
+  progress, MAGELLAN's competence change) picks by |V now - V of the head 2 nights ago, read through the model of 2 nights
+  ago|. Each day the maker drafts a 4x pool with an even mix of help examples; the drive keeps 1,024: 10% uniform at random,
+  90% by weighted sampling without replacement. Days without a signal (day 1; day 2 for progress) use v7's even practice.
+  Settings `dopamine/motivator.json`: head_C 0.01, pool_factor 4, explore 0.10, window 2, the same for every subject.
+- *head_C = 0.01, chosen by H0 before any motivator run (shown, `results/h0/`, no training):* on the finished v7 runs, a
+  head fit on quiz k predicting day k+1's practice: C 0.01 had the best AUC and Brier of {0.001, 0.01, 0.1, 1}. Even then
+  its within-kind AUC is 0.51/0.53 and its Brier 0.221/0.224 is worse than the per-kind quiz rate's 0.209/0.210 (s200/s201).
+  So at 3M the learned head is a slightly noisier per-kind rate that it learned without being told the kinds.
+- *Arms:* M-edge and M-progress, seed 200, sheets, constants file unchanged (4781b0be...), sk200k, exactly 7 nights (the
+  stop rule is logged, not applied), 4 threads, run one after another after E. References: v7 (rule, 40.24 at night 7) and E
+  (even mix, B2). Reproduction check: day 1 (and day 2 for progress) equals v7's: night-1 loss_first10 32.5206, quiz 19.14.
+- *Measure:* sealed near split (sheet.v2, 7 scored kinds, `domain.analyze`) at night 7, each arm L minus v7.
+  | Verdict | Rule |
+  |---|---|
+  | REPLACES THE RULE | L - v7 >= +5.0; then seed 201 (vs v7 s201 at 8 nights, 54.76) before domain mode adopts it |
+  | NO DIFFERENCE SHOWN | between; the rule stays (Ben: substitute if better); the motivator is re-raced at 10M/30M |
+  | PROVED WRONG | L - v7 <= -5.0 |
+  Also reported for each arm: L - E, per-night near curve and its mean over nights 1-7, per-kind near, the share of
+  practice spent on the three kinds whose rows cannot train (MOD, COUNTIF, IF; A2), mean V(1-V) chosen vs pool, R2.
+- *Predictions (suggested):* both NO DIFFERENCE SHOWN, given H0. Edge may waste more practice on the untrainable kinds
+  (uncertainty-seeking curiosity's "noisy TV" trap: what stays uncertain because it cannot be learned keeps attracting it);
+  progress should waste less, since what cannot be learned shows no progress.
