@@ -145,9 +145,10 @@ def main(argv=None):
             raise SystemExit(f'CUSTOM_IO_MEM_CAP_MIB must be a positive integer (MiB), got {mem_cap!r}')
         mem_cap = int(mem_cap)
         if device.type == 'cuda':       # shared card: the cap makes the caching allocator free its cache instead of spilling into Windows shared memory
-            total = torch.cuda.get_device_properties(device).total_memory
+            idx = device.index if device.index is not None else torch.cuda.current_device()     # the fraction call needs an index, not bare 'cuda'
+            total = torch.cuda.get_device_properties(idx).total_memory
             frac = min(1.0, mem_cap * 2 ** 20 / total)
-            torch.cuda.set_per_process_memory_fraction(frac, device)
+            torch.cuda.set_per_process_memory_fraction(frac, idx)
             jprint(event='mem_cap', mib=mem_cap, fraction=round(frac, 4), total_mib=round(total / 2 ** 20))
         else:
             jprint(event='mem_cap', mib=mem_cap, ignored='not cuda')

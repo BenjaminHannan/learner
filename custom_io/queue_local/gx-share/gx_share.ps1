@@ -87,7 +87,11 @@ function CpuPy($dir, $pyargs) {
 }
 
 Say "gx_share started (pid $PID)"
-# 1. Setup (CPU only).
+# 1. Setup (CPU only). The marker records gxs.zip's hash, so a newer gxs.zip sets up again (the old folder is renamed aside, never deleted).
+$ZIPH = if (Test-Path "$IN\gxs.zip") { (Get-FileHash "$IN\gxs.zip").Hash } else { 'none' }
+if ((Test-Path "$SRC\GXS-SETUP-OK.txt") -and -not (Select-String -Path "$SRC\GXS-SETUP-OK.txt" -Pattern "zip $ZIPH" -SimpleMatch -Quiet)) {
+  $n = 'src-8gxs.old-' + (Get-Date).ToString('yyyyMMdd-HHmm'); Rename-Item -Path $SRC -NewName $n; Say "src-8gxs was set up from another gxs.zip: renamed to $n"
+}
 if (-not (Test-Path "$SRC\GXS-SETUP-OK.txt")) {
   if (-not (Test-Path "$IN\gxs.zip")) { Say "NEEDS ATTENTION: $IN\gxs.zip missing: GX NOT started"; exit 1 }
   if ((Test-Path $SRC) -and (@(Get-ChildItem $SRC -Force).Count -gt 0)) {
@@ -99,7 +103,7 @@ if (-not (Test-Path "$SRC\GXS-SETUP-OK.txt")) {
   if (-not (Select-String -Path "$SRC\custom_io\train.py" -Pattern 'CUSTOM_IO_MEM_CAP_MIB' -SimpleMatch -Quiet)) { Say 'NEEDS ATTENTION: train.py has no memory cap: GX NOT started'; exit 1 }
   $out = CpuPy $SRC @('-c', $MOE8)
   if (-not ($out -and ($out[-1] -match 'ALL OK'))) { Say "NEEDS ATTENTION: test_moe (8 tests) did not end ALL OK: GX NOT started. Last lines: $(($out | Select-Object -Last 3) -join ' | ')"; exit 1 }
-  Set-Content -Encoding ascii "$SRC\GXS-SETUP-OK.txt" -Value @("caps.py $CAPS", 'test_moe 8 of 9 tests ALL OK (CPU)', (Stamp))
+  Set-Content -Encoding ascii "$SRC\GXS-SETUP-OK.txt" -Value @("caps.py $CAPS", "zip $ZIPH", 'test_moe 8 of 9 tests ALL OK (CPU)', (Stamp))
   Say 'src-8gxs set up: caps hash ok, memory cap present, test_moe 8 of 9 tests ALL OK'
 }
 
