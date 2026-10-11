@@ -213,3 +213,18 @@ Within-kind AUC, days 2..N pooled (sheet s200 / sheet s201 / RPN s200):
 - Read (suggested): within a kind, which tries succeed is only weakly predictable at 3M from anything we can see; the
   model's thinking state carries a little of it, and a head trained into the thinker (the Main brain thread's SB-2) is the
   fair next test of a per-problem guesser. The motivator race (B4) uses the per-kind level that does work.
+
+**B6. R1-D result: the hand drive did not help; even practice ended higher (12:10 AM ET 10-11).** Shown,
+`/mnt/project-files/dopamine/r1/sheet-s200-even/analysis/RESULT.md` (run 9:33 PM-11:55 PM ET, scored 12:02 AM ET).
+- Reproduction: E's night 1 equals v7's exactly (loss_first10 32.5206, quiz 19.14); nights 1-2 near equal v7's (17.86,
+  27.62), as both practise evenly on days 1-2.
+- Near at night 7: E 50.00, v7 40.24, so v7 - E = -9.76 -> **PROVED WRONG on its sealed mark (the drive does not help).**
+  Per night (E / v7): 17.86/17.86, 27.62/27.62, 30.95/35.24, 37.86/37.62, 37.62/39.05, 44.05/42.14, 50.00/40.24. Mean
+  over nights 1-7: 35.14 vs 34.25, so most of the night-7 gap is the last night (v7 dipped 1.90, E rose 5.95); one seed.
+- Where it came from (per kind, near at night 7, E vs v7): SUM 33.3 vs 11.7, PRODUCT 46.7 vs 16.7, division 36.7 vs 28.3;
+  MAX, MIN, cell arithmetic and ABS within 5. The rule's last-day shares were SUM 5.3% and PRODUCT 1.0% (E: 10% each). The
+  rule moves practice by |quiz change| over 2 nights on about 26 quiz questions per kind (one question = 3.8 points), so
+  kinds whose small quiz stalled lost practice and stayed low. E spent 20% of its last day on MOD and COUNTIF, which cannot
+  train (A2), and still ended higher. R2 0.915 (v7 0.872).
+- Read (suggested): at 3M, practising evenly beats chasing a noisy progress signal. A drive helps only if its signal is
+  less noisy than the gains it chases; the learned motivators (B4) face the same test. Sent to the domain-mode thread.
