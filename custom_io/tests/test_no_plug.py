@@ -261,6 +261,16 @@ def test_d_configs():
     cfgs, cnt = C.sizes('30M', {'noplug': True})
     C.check_bands('30M', cfgs, cnt)
     assert cfgs['PT']['eg_pre'] and 'LLM' not in cfgs
+    # plain_cfg without b2: the blocks override (and the other extras) reach b2_cfg, not only the noplug key
+    assert C.plain_cfg('100M', extra={'noplug': True, 'blocks': 30}) == C.plain_cfg('100M', C.b2_cfg('100M', {'noplug': True, 'blocks': 30}))
+    seen, b2_orig = [], C.b2_cfg
+    C.b2_cfg = lambda rung, extra=None: (seen.append(dict(extra or {})), b2_orig(rung, extra))[1]
+    try:
+        C.plain_cfg('100M', extra={'noplug': True, 'blocks': 30})
+        C.plain_cfg('30M', extra={'noplug': True, 'n_loops': 10})
+    finally:
+        C.b2_cfg = b2_orig
+    assert seen == [{'noplug': True, 'blocks': 30}, {'noplug': True, 'n_loops': 10}], seen
     print('ok (d): 30M', f'{n30:,}', 'mlp', c30['mlp'], '| 100M', ' '.join(f'{b}:{c:,}/plain {p:,}' for b, c, p in rows_), '| 3M / 10M raise')
 
 
@@ -289,6 +299,66 @@ def test_e_3m_10m_unchanged():
     # pinned at the group 2 head this front is merged onto (54d8e6c6d8, fix 2: answers from Z only; 19.3092 at fix 1, 24b0a92112): measured the same on both sides of the merge
     assert abs(loss.item() - 20.576404571533203) < 1e-3, loss.item()
     print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 20.5764 as before')
+
+
+# ---- (f) g8a/speed.py --noplug builds the cfgs and lr job.py --noplug gives train.py; configs --noplug defaults to group 2 (CPU, nothing is timed) ----
+def test_f_speed_and_configs_noplug():
+    import contextlib, io, tempfile
+    from custom_io.g8a import speed as S
+    caps_f = os.path.join(ROOT, 'g8a', 'caps_b3g2.json')
+    caps = CP.apply(json.load(open(caps_f)))        # what speed.main applies with --caps (the same caps: nothing changes for the counts cached above)
+    loops = dict(n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else {}
+
+    def job_side(rung, arm):
+        """job.py --noplug --rung RUNG: b2_extra as main() builds it, then the --cfg and --lr train_args hands to train.py for the arm."""
+        b2_extra = {C.NOPLUG: True}
+        b2_extra = dict(b2_extra, **loops) if loops else b2_extra
+        a = C.train_args(rung, arm, 400, 100, '/x', b2_extra=b2_extra, lr=C.rung_lr(rung, b2_extra) * 1.0, caps=caps_f)
+        return json.loads(a[a.index('--cfg') + 1]), float(a[a.index('--lr') + 1])
+
+    def run_speed(*flags):
+        """speed.main with probe_rows / compute_rows / time_arm stubbed: records (model, cfg, lr) per timed arm; no model is built, nothing is timed."""
+        timed, saved = [], (S.probe_rows, S.time_arm, S.CP.compute_rows)
+        S.probe_rows = lambda d, *a, **k: [dict(prompt='q', answer='a')]
+        S.CP.compute_rows = lambda rows: dict(max_prompt=0, max_ans=0, n_num=0, w_max=0, n_res=0, n_reg=0, plain_target=0)
+        S.time_arm = lambda model, cfg, rows, batch, accum, updates, warmup, device, bf16, lr: (timed.append((model, cfg, lr)), (0.1, None, 1))[1]
+        try:
+            with tempfile.TemporaryDirectory() as out, contextlib.redirect_stdout(io.StringIO()):
+                res = S.main(['--data', 'unused', '--out', out, '--caps', caps_f, '--device', 'cpu'] + list(flags))
+        finally:
+            S.probe_rows, S.time_arm, S.CP.compute_rows = saved
+        return timed, res
+
+    for rung in ('30M', '100M'):
+        timed, res = run_speed('--noplug', '--rungs', rung)
+        assert [m for m, _, _ in timed] == ['ledger', 'plain_tf_steps_g'] and list(res['rungs'][rung])[:2] == ['B2', 'PT'], (rung, timed)
+        for (model, cfg, lr), arm in zip(timed, ('B2', 'PT')):
+            jcfg, jlr = job_side(rung, arm)
+            assert model == C.MODEL_OF[arm] and cfg == jcfg and lr == jlr == 5e-4, (rung, arm, cfg, jcfg, lr, jlr)
+            assert cfg['d' if arm == 'B2' else 'd_model'] == 512 and cfg['eg_pre'] and 'noplug' not in cfg
+    assert res['rungs']['100M']['_schedule']['steps'] is None      # 100M: no pool yet, so no schedule / cost, and nothing crashed after the timing
+    # without --noplug: the rungs are 3M 10M 30M (not 100M, which has no plugged B2 shape), all three arms, the rung's own lr
+    timed, res = run_speed()
+    assert [r for r in res['rungs']] == ['3M', '10M', '30M'] and len(timed) == 9 and [t[2] for t in timed] == [1e-3] * 6 + [1e-3 * 256 / 384] * 3, [t[2] for t in timed]
+    assert all('eg_pre' not in t[1] and 'eg_embed' not in t[1] for t in timed)
+    for flags in (('--noplug', '--rungs', '10M'), ('--noplug', '--rungs', '3M', '30M'), ('--noplug', '--arms', 'LLM'), ('--noplug', '--public', 'pythia31m')):
+        err = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(err):
+                run_speed(*flags)
+            raise AssertionError(flags)
+        except SystemExit as e:
+            assert e.code == 2 and '--noplug' in err.getvalue(), (flags, err.getvalue())
+    # configs --noplug: group 2 unless --group is given
+    def table(*flags):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            C.main(['--noplug', caps_f] + list(flags))
+        return [ln.split(' noplug ')[1].split()[0] for ln in buf.getvalue().splitlines() if ' noplug ' in ln]      # the model named on each line: b3g2 or b3
+    g2, g1 = table(), table('--group', '1')
+    assert len(g2) == 6 and set(g2) == {'b3g2'} and table('--group', '2') == g2, g2
+    assert len(g1) == 6 and set(g1) == {'b3'}, g1
+    print('ok (f): speed.py --noplug times the cfgs and lr job.py --noplug gives train.py (30M, 100M; lr 5e-4), default rungs 3M 10M 30M, bad flag combos refuse; configs --noplug defaults to b3g2')
 
 
 def main():
