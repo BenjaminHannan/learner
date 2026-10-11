@@ -17,7 +17,7 @@ Teacher forcing (loss): B3's schedule (calls at rounds 1..L, or gap rounds with 
 the tape holds the TOOL'S real reply (never the label's: a difference is counted `reply_mismatch`; a drill row carries its drawn strings). Rounds with a call: target = the
 call text; rounds after the row's last call: EOS only; gap rounds: no target. Context [prompt X; tape Xt] masked by the entries visible BEFORE the round's call; Z = every thinker
 vector; the call loss is the sum over rounds of the mean over rows of nll * w_row (1.0 with calls, w_noop without) over the rows that have a target. The per-round answer
-(H1's rule): at every round t >= the row's last call round the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
+(H1's rule): at every round t > the row's last call round (every round for a row with no call; Z has then read the last reply) the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
 those rounds; rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); the answer has no feedback, so it is
 greedy decoding up to numerics (extra_evals reports how often the label agrees with real greedy decoding).
 Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every step,
@@ -60,6 +60,7 @@ class B3G2(B3):
     def __init__(self, vocab, as_written=True, writer_refine=1, writer_inner=None, writer_mlp=2.0, writer_heads=4, **kw):
         super().__init__(vocab, **kw)
         assert self.any_round, 'b3g2 calls at any round: it needs any_round'
+        assert not getattr(self, 'eg_thinker', False), 'b3g2: the thinker reads the question and every reply through the Gemma path (rules 1 and 2); eg_thinker would strip it'
         self.as_written, self.refine = bool(as_written), int(writer_refine)
         for name in DELETED:        # deleted after everything is built: no RNG draw changes, every other weight starts as in B3
             if hasattr(self, name):
@@ -258,10 +259,10 @@ class B3G2(B3):
         return self.ans_pass(Z, te['inp'], te['tgt'], te['fb'])
 
     # ---- the loop ----
-    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False):
+    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False, quiet_last=False, settle=False):
         """n rounds. g (teacher forcing) = dict(L [B] call counts, ids [B][L] call target ids, tape [B][L] entries, has [B] bool) on `sched` [B, tape] (call rounds, -1 = none); the
         call losses are returned (lcall; call_hit / call_n / eos_hit / eos_n; rec: per call round [(row, k, text right, name right)]). Else a free run: halt [B] (rounds used, 0 =
-        running) keeps stopped rows from calling; temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
+        running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: if a call was written at the last round, one more think pass reads it before Z is returned; temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
@@ -299,7 +300,7 @@ class B3G2(B3):
             Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
                 Z = torch.cat([Z[:, :2], torch.zeros_like(Z[:, 2:N_CTRL]), Z[:, N_CTRL:]], 1)
-            if t >= 1:
+            if t >= 1 and not (quiet_last and t == n - 1):
                 Xc, cmask, cids = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis], 1), torch.cat([pids, idt], 1)
                 if tf:
                     at = sched == t
@@ -376,8 +377,12 @@ class B3G2(B3):
                                 mt[:, sl] = torch.where(sl_[:, None], mn, mt[:, sl])
                                 shown[sl_, k] = True
                             kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K)):
+            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, cround=cround)):
                 break
+        if settle and n > 0 and bool((cround == n - 1).any()):
+            vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
+            kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
+            Z = self.think(Z + self.step_emb.weight[min(n, self.n_loops - 1)], kvs, kvx, torch.cat([valid, vis, km], 1), n)
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         out = dict(Z=Z, X=X, xm=xm, tape=(Xt, idt, vis), calls=calls, records=recs, le=le, K=K, tape_full=full_ev, cround=cround)
         if tf:
@@ -392,7 +397,7 @@ class B3G2(B3):
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         if loops is not None or each is not None:
             n = self.n_loops if loops is None else loops
-            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator)
+            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator, settle=each is None)
             if each is None:
                 self.last_rounds = [n] * B
                 self.last_tape_full = [any(i == j for j, _ in o['tape_full']) for i in range(B)]
@@ -404,7 +409,8 @@ class B3G2(B3):
             Z = st['Z']
             vis = st['mt'] & st['shown'][:, :st['K']].gather(1, st['ent'].expand(Z.shape[0], -1))
             s = (Z, st['Xt'], st['idt'], vis)
-            new = (used == 0) & ((self.p_stop(self.ln_z(Z[:, 1])) >= P_STOP) | (t + 1 >= self.cap))
+            wrote = (st['cround'] == t).any(1)                                  # a call written this round is not yet read by Z: its row cannot stop here
+            new = (used == 0) & ~wrote & ((self.p_stop(self.ln_z(Z[:, 1])) >= P_STOP) | (t + 1 >= self.cap))
             if new.any():
                 if not keep:
                     keep.extend(x.clone() for x in s)
@@ -414,7 +420,7 @@ class B3G2(B3):
                 used[new] = t + 1
             return bool((used > 0).all())
 
-        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator)
+        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator, quiet_last=True)
         Z, Xt, idt, vis = keep
         u = used.tolist()
         full = [False] * B
@@ -477,7 +483,7 @@ class B3G2(B3):
         Ls = [len(x['texts']) for x in golds]
         sched, last = self.plan(Ls, B, dev)                                     # B3's schedule: the calls' rounds
         K = KS[int(torch.randint(len(KS), (1,)))]
-        n = max(K, int(last.max()) + 1)
+        n = max(K, int(last.max()) + 2)               # +2: a call row's answer rounds start at last+1, after the thinker has read the last reply
         g = dict(L=Ls, ids=[x['ids'] for x in golds], tape=[x['tape'] for x in golds], has=torch.tensor([bool(L) for L in Ls], device=dev))
         per = []
 
@@ -492,7 +498,7 @@ class B3G2(B3):
         zs, share = [], None
         for t, Z in per:
             zs.append(self.ln_z(Z[:, 1].detach()))          # the stop head reads the state detached: its loss trains ln_z and the head, never the loop
-            ok = last <= t                                                     # the writer is asked "answer" at every round t >= the row's last call round
+            ok = (t > last) | ~g['has']                                        # a call row is asked "answer" only at rounds t > its last call round (Z has then read the last reply); no-call rows at every round
             if not ok.any():
                 continue
             si = ok.nonzero()[:, 0]
