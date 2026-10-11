@@ -18,7 +18,7 @@ B2's own pointer-generator (vocabulary readout or copy attention over the contex
 argmax per cell up to the first EOS, reversed. So every digit of a call is written by a learned writer, never by str() of a value.
 Answer: B2's NUM mode (str(value of a slot)) is gone; those rows are GEN rows and the 9 registers write the answer with the same
 pointer-generator, copying from the prompt and the entries. WORD is unchanged.
-Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
+Tape: entry k is read by the reader (with eg_embed: Gemma + the letter window, like the question, Ben's RULE 1) as its own string (positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
 [prompt-number slots; entries written so far; prompt]. Teacher forcing (training): the entries are the gold calls with their results (the same
 text calc() returns for them, tested), revealed one round at a time, and the call writer is trained by -log p of the gold operand strings
 (either order for ADD MUL MIN MAX, as B2's pointer loss).
@@ -159,7 +159,8 @@ class Tool(Ledger):
 
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
-        """Each string read by the reader on its own -> X [n, le, d], ids [n, le], mask [n, le] (an empty string: all masked, zeros). Only the
+        """RULE 1 (Ben): "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." So each string is read
+        exactly like the question: the letter window PLUS (eg_embed) the Gemma term (Ledger.eg_term), as its own prompt. Each string read on its own -> X [n, le, d], ids [n, le], mask [n, le] (an empty string: all masked, zeros). Only the
         non-empty strings go through the reader (the reader's output is zero wherever the mask is, so this is the same result, faster)."""
         ids = np.full((len(texts), le), PAD, np.int64)
         for i, s in enumerate(texts):
@@ -171,7 +172,12 @@ class Tool(Ledger):
         X = torch.zeros(len(texts), le, self.d, device=dev)
         if full:
             ix = torch.tensor(full, device=dev)
-            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': texts[i][:le]} for i in full]})
+            sub = {'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': texts[i][:le]} for i in full]}
+            if self.eg_embed and not self.eg_thinker:       # the same gate as read(batch, talker=True), the flag the loop reads the question with
+                H = self.eg().encode_texts([r['prompt'] for r in sub['rows']], le, ids.device)      # not encode(): the question's memo stays
+                Xf, _ = self.reader(sub, extra=self.eg_term(H))
+            else:
+                Xf, _ = self.reader(sub)
             X = X.to(Xf.dtype).index_copy(0, ix, Xf)
         return X, ids, mask
 

@@ -36,6 +36,9 @@ class StubEG:
     def align(self, prompt):
         return np.zeros(3, np.int32), np.asarray(self.c2t_fn(prompt), np.int16)
 
+    def encode_texts(self, texts, T, device):
+        return self.encode(texts, T, device, True)[0]
+
     def encode(self, prompts, T, device, chars=True):
         H = torch.zeros(len(prompts), T, 768)
         for b, p in enumerate(prompts):

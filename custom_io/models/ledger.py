@@ -278,12 +278,18 @@ class Ledger(Model):
             return self.reader(batch)
         ids = batch['prompt_ids']
         H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device)
+        return self.reader(batch, extra=self.eg_term(H))
+
+    def eg_term(self, H):
+        """The Gemma term added to the letter window's input embedding: H [B,T,768] (EmbeddingGemma's state of the token holding each char) ->
+        ln_eg -> adapter (eg_adapter 'none' / 'mlp' / linear eg_proj) -> [B,T,d]. One function for the question (read) and for B3's tape strings
+        (Tool.read_texts), so both are read by exactly the same ops."""
         h = self.ln_eg(H.float())       # H is bf16 on cuda; fp32 here works with or without autocast
         if self.eg_adapter == 'none':
-            return self.reader(batch, extra=h)
+            return h
         if self.eg_adapter == 'mlp':
             h = F.gelu(self.eg_hid(h))
-        return self.reader(batch, extra=self.eg_proj(h))
+        return self.eg_proj(h)
 
     def tok_spots(self, X, xm, batch):
         """tok_think: pool the letters of each EmbeddingGemma token into one spot. X [B,T,d], xm [B,T] -> (Xk [B,K,d], km [B,K] bool), K = the batch's

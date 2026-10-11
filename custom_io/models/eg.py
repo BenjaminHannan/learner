@@ -73,6 +73,17 @@ class FrozenEG:
         key = (tuple(prompts), T, str(device))
         if self._last is not None and self._last[0] == key and (self._last[1][0] is not None or not chars):
             return self._last[1]
+        out = self._compute(prompts, T, device, chars)
+        self._last = (key, out)
+        return out
+
+    @torch.no_grad()
+    def encode_texts(self, texts, T, device):
+        """Exactly encode(texts, T, device, chars=True)[0], but never reads or writes the last-call memo: B3's tape strings (Ben's rule: replies are read
+        by the reader like the question) must not evict the question's memo, so run and talk still embed the question once per batch."""
+        return self._compute(texts, T, device, True)[0]
+
+    def _compute(self, prompts, T, device, chars):
         self.load(device)
         al = [self.align(p) for p in prompts]
         B, L = len(al), max(len(a[0]) for a in al)
@@ -93,9 +104,7 @@ class FrozenEG:
                 c2t[b, :n], cm[b, :n] = c[:n], True
             c2t, cm = torch.from_numpy(c2t).to(device), torch.from_numpy(cm).to(device)
             H = Ht.gather(1, c2t[..., None].expand(-1, -1, Ht.shape[-1])) * cm[..., None].to(Ht.dtype)
-        out = (H, pooled)
-        self._last = (key, out)
-        return out
+        return (H, pooled)
 
 
 def teacher_vec(pooled):

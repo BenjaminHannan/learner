@@ -65,6 +65,9 @@ def test_queue_kinds():
 
 class FakeEG:
     """Stands in for the frozen EmbeddingGemma 2 (271M params, needs transformers >= 5.19): fixed random per-char states."""
+    def encode_texts(self, texts, T, device):
+        return self.encode(texts, T, device, True)[0]
+
     def encode(self, prompts, T, device, chars=True):
         import torch
         g = torch.Generator().manual_seed(7)

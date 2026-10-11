@@ -22,6 +22,9 @@ class StubEG:
     def __init__(self):
         self.seen = []
 
+    def encode_texts(self, texts, T, device):
+        return self.encode(texts, T, device, True)[0]
+
     def encode(self, prompts, T, device, chars=True):
         self.seen += list(prompts)
         H = torch.zeros(len(prompts), T, 768)
