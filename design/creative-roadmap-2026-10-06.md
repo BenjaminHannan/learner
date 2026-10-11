@@ -1665,9 +1665,62 @@ families x 200, two parents).**
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
-  - Once B3 3M exists: first try after sleep on B3 3M, on cloud CPU, with job 9's marks (W - N' at least +15, W - R
-    at least +10, practised within 2) on a fresh C2 split, since the sealed test is spent on job 9. The spec, with
-    B3's input format, is written when the B3 3M checkpoint and its interface exist.
+  - Once B3 3M exists: first try after sleep on B3 3M. Sealed 10-11 as CB-1, below.
+- **Run-1 creative and sleep phase: marks sealed 10-11, before any B3 number.** Ben, 10:25 AM ET 10-11: "I want the
+  creative model to be part of the big run that we do. It should be in the final model ... as core a part as the
+  sleep mode". The architecture thread took the default (note
+  /mnt/project-files/architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md): run-1 is the 100M pretraining plus a
+  day-and-night phase on its checkpoint, and the shipped model is the one after that phase.
+  - **Run-1 creative mode:** the stuck test, stuck-first search (32 tries, then 480 more where none fits), the example
+    checker, and SCM2 nights. The notebook joins only if D6 passes.
+  - **One change to the architecture list: the add-on F is not in run-1.** Shown on B2 (2 parents each): F trained
+    once on N' does not survive the worker's sleep (J: on day 2 its 32 tries found fewer fits than plain sampling, and
+    its reach gain fell to -6.3 / +0.4). Retrained on the slept worker it narrows search (S1w, proved wrong), and with
+    fresh night tries it adds nothing (S1f). One night of SCM-style sleep already gives the worker what F gave N'.
+    Untested: F on day 1 only. It is not added without its own screen on B2 first.
+  - **CB-0 checker gate (B3 group 2, before CB-1; DEV of the fresh split only).** B3 has no prompt slots, so the
+    default checker re-runs a try on each example by swapping the values the writer copied from the query, using its
+    own copy record. The C2 kinds (square, last_digit, affine, sq_plus, double_add) all have one input number, so
+    field alignment is simple. Swapping is safe against wrong records: put back on the query, the swapped program is
+    the original try, so a value that collides with a rule constant (query x equal to a or c) can only cause a false
+    reject. What the build must handle:
+    1. Merge consecutive copied bytes from consecutive source positions into spans. A span that is a whole query
+       number is the variable.
+    2. Copies from an earlier tool result (two-call tries on the multi-step kinds) are re-bound to the re-run's
+       result at the same spot, not kept as constants.
+    3. A partial copy of the query number (for example the last byte, a natural last_digit answer) aligns from the
+       number's end. If that alignment is ambiguous, the try counts as uncheckable.
+    4. Copies from the example lines stay constants (affine's a and b are read off the examples).
+    5. A final answer that is not the last tool result, or a copy of it, is uncheckable.
+    - Marks: (1) a unit test where reference call texts for every kind (with copy records) are accepted on all
+      examples, and versions with one constant changed are rejected; (2) uncheckable tries at most 10% of B3's 32
+      pass-1 tries per hard kind on DEV; (3) the corrupt-every-key test gives identical records. If (1) or (3)
+      fails, or (2) fails after one fix, the checker becomes RM 7b's `check` tool, with its own note.
+  - **CB-1, 3M (B3 group 2, seed 400; seed 401 too if its checkpoint exists when CB-1 starts).** Job 9's design
+    ported, with one change: the nights are SCM2's.
+    - Per parent: the B3 checkpoint goes through job 9's warm-up and stepping-stone sleep to make N'_B3. Pool
+      temperature comes from the job-6 rule on DEV.
+    - Arms, two nights each, at SCM2's recipe (lr 3e-4, 32 visits, replay picked by the model against a frozen
+      pre-night copy, add/mult and skills replay):
+      - W: stuck-first search, at most 2 distinct fitting tries per question.
+      - R: the same number of records per question on W's questions, from tries that fail the check.
+    - Fresh C2 split in B3's format, made by the generator before any B3 run. DEV is used for building and for the
+      temperature; TEST (512 questions) is opened once, after N'_B3, W and R are trained.
+    - Marks, on every parent run:
+      1. Pooled first try (fits and right): W - N' at least +15 and W - R at least +10, paired intervals above 0.
+      2. reach@4 and the practised-kind check (256 fresh add/mult) no more than 2 points below N'_B3.
+      3. Harm, SCM2's: W against N'_B3 passes the 10-08 measure on B3's skills families (harm_look).
+      4. Whole chain, since the shipped model is the one after the phase: W's in_dist drop against the B3
+         checkpoint at most 3 points. On B2 this was 1.6 / 1.3 for SCM2 and 6.5 / 5.8 for W2.
+      5. Search check: night-1 multi-step records at least 75 (job 8's floor).
+    - Label: "beyond near-copy kinds" only if pooled multi-step W - N' has its interval above 0.
+    - Proved wrong: W - R upper end below +3.
+    - Report only: per-kind first try, reach@32, seq_next and rule_apply, the picked-row family mix, checker
+      uncheckable share per kind, and CPU seconds per step. A one-parent run is labelled a one-parent screen.
+  - **CB-2, 10M:** the same marks on the 10M group 2 seed-400 checkpoint (S of the depth pair). It uses the same
+    TEST split only if nothing in the recipe changed after CB-1's TEST was opened; otherwise a new fresh split. Report
+    only: 10M against 3M on every measure. If 3M passes and 10M fails, the 100M phase waits for a fix.
+  - The six-parent SCM2 confirm on B2 (after job 9) stays as planned.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1999,3 +2052,6 @@ CPU):
 - **10-10, 9:10 PM ET:** APM ruled (fast-sleep ffa1fe72a): mark 1 fails on both parents, not
   proved wrong. The append-only pool neither helps nor harms on SCM2's recipe; the pool is not changed. Next: SCM2
   six-parent confirm and D6 after job 9.
+- **10-11, 10:45 AM ET:** run-1 creative and sleep phase marks sealed (CB-0 checker gate, CB-1 at 3M, CB-2 at 10M)
+  for the architecture thread's default that creative mode and sleep join run-1 (Ben, 10:25 AM ET 10-11). F is left
+  out of run-1 on J, S1w and S1f's results.
