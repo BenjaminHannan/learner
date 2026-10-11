@@ -288,3 +288,10 @@ G1 and G2 proved wrong, G3 passed. With D0 (0.54-0.60) this is the second way of
 that stays near chance within a kind. Suggested: at 3M, self-knowledge finer than "which kind is hard" is not there to read out,
 by a fitted probe or by training it in. That leaves the motivator's next rungs as written: SB-2b (their reader mean + round-1
 workspace head, own marks), the 10M/30M re-check, and GW-D led by exploration (B9).
+
+**B11. SB-2b read (Main brain thread, Result 14 in `main-brain/MARKS-2026-10-10.md`, 1:30 PM ET 10-11; relayed, checked there).**
+Shown there, one seed: the head reading reader mean + 8 control rows after round 1, trained into the body, ranked within-kind
+next-day tries at 0.523 (frozen probe 0.585), Brier 0.293 vs 0.219, and again cost seq_next (85 -> 75; no-head recipe 85 -> 80).
+Both trained-in heads lost an old skill and read worse than a probe refit on all past days. Design decision (from their
+suggestion, matching sec. 3 and H0): the guesser stays a read-only head on the shared state, no gradient into the body, refit on
+all past days, as `dopamine/motivator.py` already does. SB-2 variants are stopped. Open rungs: the 10M/30M re-check and GW-D (B9).
