@@ -96,6 +96,40 @@ def test_save_load_roundtrip():
     assert b.router['classes'] == list(S.CLASSES) and b.numbers() == sh.numbers()
 
 
+def test_router_feats_decide_what_answer_reads():
+    g = torch.Generator().manual_seed(2)
+    prompts = [f'{i}+{i}=' for i in range(12)]
+    X = torch.randn(12, 24, generator=g)
+    y = torch.arange(60) % 6
+    sh = make_shelf()
+    sh.router = S.fit_router(torch.randn(60, 24, generator=g), y, feats='reader+workspace')
+    assert sh.router['feats'] == 'reader+workspace'
+    glance = [([], 'x')] * 12
+    _, r = sh.answer(prompts, features=(X, glance))
+    assert r == S.route(sh.router, X).tolist() and len(set(r)) > 1
+    # no features given: the shelf computes the ones its router reads
+    called = []
+    saved = S.workspace_features, S.reader_features, S.both_features
+    try:
+        S.both_features = lambda m, ps, bs=64: (called.append('both') or (X, glance))
+        S.workspace_features = lambda m, ps, bs=64: (called.append('workspace') or (X, glance))
+        S.reader_features = lambda m, ps: (called.append('reader') or X)
+        _, r2 = sh.answer(prompts)
+        assert called == ['both'] and r2 == r
+        old = {k: v for k, v in sh.router.items() if k != 'feats'}
+        assert 'feats' not in old
+        sh.router = old
+        called.clear()
+        _, r3 = sh.answer(prompts)
+        assert called == ['workspace'] and r3 == S.route(old, X).tolist()
+        sh.router = dict(old, feats='reader')
+        called.clear()
+        sh.answer(prompts)
+        assert called == ['workspace', 'reader']
+    finally:
+        S.workspace_features, S.reader_features, S.both_features = saved
+
+
 if __name__ == '__main__':
     for n, f in list(globals().items()):
         if n.startswith('test_'):

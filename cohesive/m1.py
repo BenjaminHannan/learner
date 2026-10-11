@@ -1,6 +1,7 @@
 """M1 "one shelf": five rank-8 pieces + one readout in one model file. Marks: /mnt/project-files/cohesive-model/M1-MARKS-2026-10-10.md
 
   python -m cohesive.m1 --out /mnt/project-files/cohesive-model/m1 --dev DEV_IN_DIST.jsonl [--threads 4]
+  M1b (marks addendum): --out .../m1b --arms T,R,TR --save-arm TR   (TR = reader mean 256 + workspace 2,048 side by side)
 """
 import argparse
 import json
@@ -16,6 +17,7 @@ from cohesive import shelf as S
 from domain import analyze, audit, harm, lookalike, score
 from domain.mode import greedy, load_model
 
+M1_CACHE = '/mnt/project-files/cohesive-model/m1/cache'
 RUNS_DIR = '/mnt/project-files/domain-mode/runs'
 PANEL_DIR = '/mnt/project-files/domain-mode/panel'
 PARENT = '/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/checkpoint.pt'
@@ -60,7 +62,12 @@ def main(argv=None):
     ap.add_argument('--out', required=True)
     ap.add_argument('--dev', required=True)
     ap.add_argument('--threads', type=int, default=4)
+    ap.add_argument('--arms', default='T,R')
+    ap.add_argument('--save-arm', default='T')
     a = ap.parse_args(argv)
+    ARMS = [x for x in a.arms.split(',') if x]
+    assert ARMS and all(x in ('T', 'R', 'TR') for x in ARMS) and len(set(ARMS)) == len(ARMS), ARMS
+    assert a.save_arm in ARMS, 'save-arm must be one of the arms run'
     torch.set_num_threads(a.threads)
     random.seed(0)
     times = {}
@@ -79,6 +86,10 @@ def main(argv=None):
         for n in os.listdir(src):
             if n.endswith('.json') and not os.path.exists(os.path.join(cache, n)):
                 shutil.copy(os.path.join(src, n), os.path.join(cache, n))
+    if os.path.isdir(M1_CACHE):                    # copy, never move; the fingerprints make reuse safe
+        for n in os.listdir(M1_CACHE):
+            if n.endswith('.json') and not os.path.exists(os.path.join(cache, n)):
+                shutil.copy(os.path.join(M1_CACHE, n), os.path.join(cache, n))
     deviations = []
 
     # ---- a. pieces
@@ -155,16 +166,25 @@ def main(argv=None):
             log('features', k, len(ps))
     with timed(times, 'fit'):
         rT = S.fit_router(XT, train_y, kind='workspace (8 control rows x 256, after the last round)')
-        rR = S.fit_router(XR, train_y, kind='reader mean (256)')
-    log('router train acc  T', round(rT['train_acc'], 4), ' R', round(rR['train_acc'], 4))
-    routes = {'T': {k: S.route(rT, feats_T[k]).tolist() for k in sets}, 'R': {k: S.route(rR, feats_R[k]).tolist() for k in sets}}
+        rR = S.fit_router(XR, train_y, kind='reader mean (256)', feats='reader')
+        routers = {'T': rT, 'R': rR}
+        feats_arm = {'T': feats_T, 'R': feats_R}
+        if 'TR' in ARMS:                           # reader first, then workspace; no extra model pass
+            routers['TR'] = S.fit_router(torch.cat([XR, XT], 1), train_y, kind='reader mean (256) + workspace (2,048), standardised together',
+                                         feats='reader+workspace')
+            feats_arm['TR'] = {k: torch.cat([feats_R[k], feats_T[k]], 1) for k in sets}
+    routers = {x: routers[x] for x in ARMS}
+    log('router train acc', {x: round(routers[x]['train_acc'], 4) for x in ARMS})
+    routes = {x: {k: S.route(routers[x], feats_arm[x][k]).tolist() for k in sets} for x in ARMS}
 
-    # ---- d. save the arm-T shelf
-    shelf = S.Shelf(ck, pieces, rT)
+    # ---- d. save the shelf of --save-arm
+    sv = a.save_arm
+    shelf = S.Shelf(ck, pieces, routers[sv])
     shelf_path = os.path.join(a.out, 'shelf.pt')
     shelf.save(shelf_path)
     nums = shelf.numbers()
     nums['readout_R_for_comparison'] = sum(rR[k].numel() for k in ('mu', 'sd', 'W', 'b'))
+    nums['saved_arm'] = sv
     nums['parent_plus_five_full_copies'] = nums['parent'] * 6
     nums['file_bytes'] = os.path.getsize(shelf_path)
     log('shelf saved', shelf_path, nums)
@@ -182,7 +202,7 @@ def main(argv=None):
                 eq_prompts.append(sets[k][i])
                 eq_src.append((k, i))
         ans, rt = fresh.answer(eq_prompts)
-        same_route = sum(r == routes['T'][k][i] for r, (k, i) in zip(rt, eq_src))
+        same_route = sum(r == routes[sv][k][i] for r, (k, i) in zip(rt, eq_src))
         ref = [None] * len(eq_prompts)
         for k in range(6):
             ix = [j for j, r in enumerate(rt) if r == k]
@@ -219,7 +239,7 @@ def main(argv=None):
     # ---- g, h, i. per arm
     dropped = {s: set(audit.decontam(panels[s], results[s]['_train_prompts'])['ids']) for s in S.SUBJECTS}
     arms = {}
-    for arm in ('T', 'R'):
+    for arm in ARMS:
         R = routes[arm]
         out = dict(S1={}, far={}, route_table={}, route_table_near_far={})
         for j, s in enumerate(S.SUBJECTS, 1):
@@ -265,37 +285,56 @@ def main(argv=None):
             'PASS' if all(out['S1'][s]['verdict'] == 'PASS' for s in S.SUBJECTS) else 'FAIL')
         out['overall'] = 'PROVED WRONG' if 'PROVED WRONG' in (out['S1_verdict'], out['S2']['verdict'], out['S3']['verdict']) else (
             'PASS' if all(x == 'PASS' for x in (out['S1_verdict'], out['S2']['verdict'], out['S3']['verdict'])) else 'FAIL')
-        out['train_acc'] = round((rT if arm == 'T' else rR)['train_acc'], 4)
+        out['train_acc'] = round(routers[arm]['train_acc'], 4)
         arms[arm] = out
-    T, Rr = arms['T'], arms['R']
-    fewer = Rr['false_on_total'] - T['false_on_total']
-    not_worse = verdict_rank(T['S2']['verdict']) >= verdict_rank(Rr['S2']['verdict']) and verdict_rank(T['S3']['verdict']) >= verdict_rank(Rr['S3']['verdict'])
-    comparison = dict(false_on_T=T['false_on_total'], false_on_R=Rr['false_on_total'], T_fewer_by=fewer, threshold=20,
-                      T_not_worse_than_R_on_S2_S3=not_worse,
-                      S2_drop=dict(T=T['S2']['drop'], R=Rr['S2']['drop']), S3_drop=dict(T=T['S3']['drop'], R=Rr['S3']['drop']),
-                      statement='the brain\'s own thinking picks skills better than the reader\'s mean (suggested, one seed)'
-                      if fewer >= 20 and not_worse else 'no difference shown')
-    result = dict(marks='M1-MARKS-2026-10-10.md', dev_sha256=dsha, checkpoints=ckpts, checkpoint_sha256=csha, pieces=piece_rep,
-                  class_sizes=sizes, dropped_cross_class=len(both), router_train_acc=dict(T=arms['T']['train_acc'], R=arms['R']['train_acc']),
-                  numbers=nums, equivalence=eq, arms=arms, comparison=comparison, deviations=deviations, timings_s=times,
+    comparison = comparison_TR = None
+    if 'T' in arms and 'R' in arms:
+        T, Rr = arms['T'], arms['R']
+        fewer = Rr['false_on_total'] - T['false_on_total']
+        not_worse = verdict_rank(T['S2']['verdict']) >= verdict_rank(Rr['S2']['verdict']) and verdict_rank(T['S3']['verdict']) >= verdict_rank(Rr['S3']['verdict'])
+        comparison = dict(false_on_T=T['false_on_total'], false_on_R=Rr['false_on_total'], T_fewer_by=fewer, threshold=20,
+                          T_not_worse_than_R_on_S2_S3=not_worse,
+                          S2_drop=dict(T=T['S2']['drop'], R=Rr['S2']['drop']), S3_drop=dict(T=T['S3']['drop'], R=Rr['S3']['drop']),
+                          statement='the brain\'s own thinking picks skills better than the reader\'s mean (suggested, one seed)'
+                          if fewer >= 20 and not_worse else 'no difference shown')
+    if 'TR' in arms and 'R' in arms:
+        X, Rr = arms['TR'], arms['R']
+        fewer = Rr['false_on_total'] - X['false_on_total']
+        not_worse = (verdict_rank(X['S1_verdict']) >= verdict_rank(Rr['S1_verdict']) and verdict_rank(X['S2']['verdict']) >= verdict_rank(Rr['S2']['verdict'])
+                     and verdict_rank(X['S3']['verdict']) >= verdict_rank(Rr['S3']['verdict']))
+        comparison_TR = dict(false_on_TR=X['false_on_total'], false_on_R=Rr['false_on_total'], TR_fewer_by=fewer, threshold=20,
+                             TR_not_worse_than_R_on_S1_S2_S3=not_worse,
+                             verdicts=dict(TR=dict(S1=X['S1_verdict'], S2=X['S2']['verdict'], S3=X['S3']['verdict']),
+                                           R=dict(S1=Rr['S1_verdict'], S2=Rr['S2']['verdict'], S3=Rr['S3']['verdict'])),
+                             near_diff_TR_minus_R={s: round(X['S1'][s]['near'] - Rr['S1'][s]['near'], 4) for s in S.SUBJECTS},
+                             S2_drop=dict(TR=X['S2']['drop'], R=Rr['S2']['drop']), S3_drop=dict(TR=X['S3']['drop'], R=Rr['S3']['drop']),
+                             statement='reading its own thinking as well as its reader cuts wrong switch-ons (suggested, one seed)'
+                             if fewer >= 20 and not_worse else 'no difference shown')
+    result = dict(marks='M1-MARKS-2026-10-10.md', marks_addendum='M1b' if 'TR' in ARMS else None, arms_run=ARMS, saved_arm=sv,
+                  dev_sha256=dsha, checkpoints=ckpts, checkpoint_sha256=csha, pieces=piece_rep,
+                  class_sizes=sizes, dropped_cross_class=len(both), router_train_acc={x: arms[x]['train_acc'] for x in ARMS},
+                  numbers=nums, equivalence=eq, arms=arms, comparison=comparison, comparison_TR=comparison_TR, deviations=deviations, timings_s=times,
                   total_secs=round(time.time() - T0, 1), decontam_dropped={s: len(dropped[s]) for s in S.SUBJECTS})
     with open(os.path.join(a.out, 'RESULT.json'), 'w') as f:
         json.dump(result, f, indent=1, default=str)
     write_md(result, os.path.join(a.out, 'RESULT.md'))
-    log('T overall', T['overall'], '| S1', T['S1_verdict'], 'S2', T['S2']['verdict'], 'S3', T['S3']['verdict'])
-    log('R overall', Rr['overall'], '| S1', Rr['S1_verdict'], 'S2', Rr['S2']['verdict'], 'S3', Rr['S3']['verdict'])
+    for x in ARMS:
+        A = arms[x]
+        log(x, 'overall', A['overall'], '| S1', A['S1_verdict'], 'S2', A['S2']['verdict'], 'S3', A['S3']['verdict'], '| wrong switch-ons', A['false_on_total'])
     log('comparison', comparison)
+    log('comparison_TR', comparison_TR)
 
 
 def write_md(r, path):
-    L = ['# M1 "one shelf" result', '', f"DEV sha256 {r['dev_sha256'][:16]}...; total {r['total_secs']} s; timings {r['timings_s']}", '']
+    L = ['# M1 "one shelf" result' + (f" ({r['marks_addendum']})" if r.get('marks_addendum') else ''), '',
+         f"Arms run {r['arms_run']}; saved shelf = arm {r['saved_arm']}", f"DEV sha256 {r['dev_sha256'][:16]}...; total {r['total_secs']} s; timings {r['timings_s']}", '']
     L += ['## Pieces', '', '| subject | tensors changed | numbers | max recon err |', '|---|---|---|---|']
     for s, p in r['pieces'].items():
         L.append(f"| {s} | {p['tensors_changed']} | {p['numbers']} | {p['max_recon_err']:.2e} |")
     L += ['', f"Class sizes {r['class_sizes']}; prompts in two or more classes (dropped): {r['dropped_cross_class']}", f"Readout train accuracy {r['router_train_acc']}",
           f"Sizes {r['numbers']}", '', f"## Equivalence (shelf.pt vs picked checkpoint): {r['equivalence']['share']}% of {r['equivalence']['n']}", '',
           f"{ {k: v for k, v in r['equivalence'].items() if k != 'mismatches'} }", '']
-    for arm in ('T', 'R'):
+    for arm in r['arms_run']:
         A = r['arms'][arm]
         L += [f"## Arm {arm}: overall {A['overall']} (S1 {A['S1_verdict']}, S2 {A['S2']['verdict']}, S3 {A['S3']['verdict']})", '',
               '| subject | near | threshold | own routed near | parent near | final alone near | verdict | hair-miss used |', '|---|---|---|---|---|---|---|---|']
@@ -314,7 +353,10 @@ def write_md(r, path):
               f"old {A['false_on']['old']['total']}/{A['false_on']['old']['n']} {A['false_on']['old']['by_class']}; "
               f"held {A['false_on']['held']['total']}/{A['false_on']['held']['n']} {A['false_on']['held']['by_class']}; total {A['false_on_total']}",
               f"DEV by family: {A['false_on']['dev']['by_family']}", f"old by variant: {A['false_on']['old']['by_variant']}", f"held by variant: {A['false_on']['held']['by_variant']}", '']
-    L += ['## Comparison rule', '', json.dumps(r['comparison'], indent=1), '', '## Deviations', ''] + [f'- {d}' for d in r['deviations']]
+    L += ['## Comparison rule' + (' (T vs R)' if r.get('comparison') else ''), '', json.dumps(r['comparison'], indent=1), '']
+    if r.get('comparison_TR'):
+        L += ['## Comparison rule M1b (TR vs R)', '', json.dumps(r['comparison_TR'], indent=1), '']
+    L += ['## Deviations', ''] + [f'- {d}' for d in r['deviations']]
     with open(path, 'w') as f:
         f.write('\n'.join(L) + '\n')
 

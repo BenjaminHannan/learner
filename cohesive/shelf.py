@@ -2,6 +2,7 @@
 
 piece_from      the difference between a run's final checkpoint and the parent, as rank-8 factors per Linear weight
 workspace_features / reader_features   what the readout looks at (arm T / arm R)
+both_features   reader mean (256) then workspace (2,048) side by side, 2,304 columns (arm TR), plus the glance answers
 fit_router / route   the 6-way softmax readout (none, sheet, rpn, stats, invoice, py)
 Shelf           parent + pieces + readout; save / load one file; use(k) adds piece k in place; answer(prompts)
 """
@@ -82,8 +83,16 @@ def reader_features(m, prompts):
     return _route.features(m, prompts).float()
 
 
-def fit_router(X, y, n_classes=6, kind='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0):
-    """6-way softmax on standardised features; every class's rows share total weight 1/n_classes."""
+def both_features(m, prompts, bs=64):
+    """Arm TR: reader mean (256) then workspace (2,048) side by side. -> (float32 [N, 2304], [(calls, answer)] from the glance pass)."""
+    Xw, glance = workspace_features(m, prompts, bs)
+    return torch.cat([reader_features(m, prompts), Xw], 1), glance
+
+
+def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0):
+    """6-way softmax on standardised features; every class's rows share total weight 1/n_classes.
+    feats records which features the router reads: 'workspace', 'reader' or 'reader+workspace'."""
+    assert feats in ('workspace', 'reader', 'reader+workspace'), feats
     X = X.float()
     y = torch.as_tensor(y, dtype=torch.long)
     g = torch.Generator().manual_seed(seed)
@@ -102,7 +111,7 @@ def fit_router(X, y, n_classes=6, kind='workspace', epochs=400, lr=0.01, l2=1e-4
     with torch.no_grad():
         acc = ((Z @ W.T + b).argmax(1) == y).float().mean().item()
     return dict(mu=mu, sd=sd, W=W.detach(), b=b.detach(), classes=list(CLASSES[:n_classes]) if n_classes <= 6 else list(range(n_classes)),
-                kind=kind, train_acc=acc, n_train=int(len(y)), class_counts=[int(c) for c in cnt])
+                kind=kind, feats=feats, train_acc=acc, n_train=int(len(y)), class_counts=[int(c) for c in cnt])
 
 
 def route(router, X):
@@ -156,7 +165,16 @@ class Shelf:
 
     def answer(self, prompts, bs=64, features=None):
         """-> (answers in input order, route per prompt). Glance pass -> workspace -> route -> greedy with the piece on."""
-        X, glance = workspace_features(self.m, prompts, bs) if features is None else features
+        if features is not None:
+            X, glance = features
+        else:
+            feats = self.router.get('feats', 'workspace')
+            if feats == 'reader+workspace':
+                X, glance = both_features(self.m, prompts, bs)
+            else:
+                X, glance = workspace_features(self.m, prompts, bs)
+                if feats == 'reader':
+                    X = reader_features(self.m, prompts)
         r = route(self.router, X).tolist()
         ans = [g[1] for g in glance]
         from domain.mode import greedy
