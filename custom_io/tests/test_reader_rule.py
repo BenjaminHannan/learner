@@ -8,8 +8,9 @@ RULE 2 (4:08 PM ET): "the talker shouldn't get a pointer from the thinker, it ju
   The answer (writer mode 1) is written from Z alone: no prompt, no tape, no copy keys, no selective-read feedback."""
 import torch
 from custom_io.data import BOS, EOS
+from custom_io.models.b3 import B3
 from custom_io.models.writer import ByteWriter
-from custom_io.tests.test_b3 import batch_of, rows
+from custom_io.tests.test_b3 import StubEG, batch_of, rows
 from custom_io.tests.test_b3g2 import G2, V, Script, make
 
 S = 'add 12 5 = 17'
@@ -42,14 +43,25 @@ def test_r1_tape_string_is_read_like_the_question():
                 Xq, mq = m.read(b, talker=True)
                 Xr, ir, mr = m.read_texts([s], 'cpu', T)
             assert Xr.shape == Xq.shape and torch.equal(Xr, Xq) and torch.equal(mr, mq) and torch.equal(ir, b['prompt_ids']), (kw, s)
-    # eg_thinker mirrors the question's talker flag: no Gemma term on either
-    mt = loud(make(eg_thinker=True)).eval()
+    # eg_thinker mirrors the question's talker flag: no Gemma term on either. B3G2 refuses eg_thinker (under rule 1 its thinker must read the question and every reply through
+    # Gemma), so this half runs on group 1 (B3), the same class with the same switches, where Tool.read_texts still honours the flag.
+    try:
+        make(eg_thinker=True)
+        raise SystemExit('b3g2 must refuse eg_thinker')
+    except AssertionError:
+        pass
+    class B3Bytes(B3):                      # B3 with B3G2's input switches (no_slots, no_place, bytes): no operand cells, as in B3G2
+        OPERAND_CELLS = False
+    torch.manual_seed(0)
+    mt = B3Bytes(V, **G2, eg_thinker=True)
+    mt._eg = [StubEG()]
+    mt = loud(mt).eval()
     b = lone(S)
     with torch.no_grad():
         assert torch.equal(mt.read_texts([S], 'cpu', b['prompt_ids'].shape[1])[0], mt.read(b, talker=True)[0])
         assert not torch.equal(mt.read(b)[0], mt.read(b, talker=True)[0])
     assert not mt._eg[0].text_calls
-    print('ok R1 (a): read_texts([s]) == the question reader on a one-row batch, bit for bit (linear and mlp adapters; eg_thinker mirrors the talker flag)')
+    print('ok R1 (a): read_texts([s]) == the question reader on a one-row batch, bit for bit (linear and mlp adapters); B3G2 refuses eg_thinker, and on B3 eg_thinker mirrors the talker flag')
 
 
 def test_r1_gemma_really_reaches_the_reply():
@@ -317,6 +329,44 @@ def test_r2_free_runs_read_the_last_reply():
     m2.writer.greedy = m2.writer.greedy.real
     assert all(c[0] < o['rounds'][0] - 0 for c in o['calls'][0]) and (not o['calls'][0] or o['rounds'][0] >= o['calls'][0][-1][0] + 2), (o['rounds'], o['calls'])
     print('ok R2 (g): forced runs settle one more pass after a final call; the learned stop never stops in a round that wrote a call')
+
+
+def test_r2_settle_pass_is_per_row():
+    """A forced run's extra "settle" think pass (after a call written at the last round) is per row: loops=2 on a 2-row batch where only row 0 calls at round 1 -> row 1's Z and
+    its talk() output equal row 1 run alone (it has no reply to read, so it gets no extra pass whatever its batch mate does); row 0 still reads its last reply."""
+    m = noisy_writer(loud(make())).eval()
+    P0 = 'Echo: abc'
+    for P1 in ('Echo: xyz', 'Echo: a rather longer second prompt'):        # same length, and a different one (padding must not matter)
+        b2 = batch_of([dict(id='a', family='copy_word', prompt=P0, answer='x', steps=[]), dict(id='b', family='copy_word', prompt=P1, answer='x', steps=[])], V)
+        b1 = batch_of([dict(id='b', family='copy_word', prompt=P1, answer='x', steps=[])], V)
+        a0 = batch_of([dict(id='a', family='copy_word', prompt=P0, answer='x', steps=[])], V)
+        zs = {}
+        for rep in ('12', '99999'):
+            Script(m, [['add 7 5'], []])
+            with torch.no_grad():
+                o = m.run(b2, loops=2, oracle=lambda i, t, call, rep=rep: rep)
+                st = m.state_of(o)
+                ans = m.talk(st, b2)
+            m.writer.greedy = m.writer.greedy.real
+            assert o['calls'][0] and o['calls'][0][0][0] == 1 and o['calls'][0][0][4] == rep and not o['calls'][1], o['calls']
+            assert (o['cround'][0] == 1).any() and not (o['cround'][1] == 1).any()
+            Script(m, [[]])
+            with torch.no_grad():
+                o1 = m.run(b1, loops=2)
+                ans1 = m.talk(m.state_of(o1), b1)
+            m.writer.greedy = m.writer.greedy.real
+            assert not o1['calls'][0]
+            d1 = (o['Z'][1] - o1['Z'][0]).abs().max().item()
+            assert d1 <= 1e-6, ('row 1 changed by its batch mate', P1, rep, d1)
+            assert ans[1] == ans1[0], (ans[1], ans1[0])
+            Script(m, [['add 7 5']])
+            with torch.no_grad():
+                oa = m.run(a0, loops=2, oracle=lambda i, t, call, rep=rep: rep)
+            m.writer.greedy = m.writer.greedy.real
+            assert (o['Z'][0] - oa['Z'][0]).abs().max().item() <= 1e-5, 'row 0 alone and in the batch agree'
+            zs[rep] = o['Z'][0]
+        assert (zs['12'] - zs['99999']).abs().max() > 0, 'row 0 still reads its last reply (its Z follows the reply text)'
+    print('ok R2 (h): the settle pass after a forced run is per row: a row that wrote no call at the last round keeps its Z (and its talk()) as if run alone; the row that did still reads its reply')
 
 
 def test_r2_lessons_still_run():

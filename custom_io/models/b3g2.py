@@ -262,7 +262,7 @@ class B3G2(B3):
     def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False, quiet_last=False, settle=False, copies=False):
         """n rounds. g (teacher forcing) = dict(L [B] call counts, ids [B][L] call target ids, tape [B][L] entries, has [B] bool) on `sched` [B, tape] (call rounds, -1 = none); the
         call losses are returned (lcall; call_hit / call_n / eos_hit / eos_n; rec: per call round [(row, k, text right, name right)]). Else a free run: halt [B] (rounds used, 0 =
-        running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: if a call was written at the last round, one more think pass reads it before Z is returned; temperature > 0 samples the writer (ST1); copies (free run only) asks the writer for its copy record of every placed call -> out['copy_recs'], parallel to out['records']. -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
+        running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: a row that wrote a call at the last round gets one more think pass that reads it before Z is returned (per row: every other row keeps its Z exactly); temperature > 0 samples the writer (ST1); copies (free run only) asks the writer for its copy record of every placed call -> out['copy_recs'], parallel to out['records']. -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
@@ -383,10 +383,13 @@ class B3G2(B3):
                             kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
             if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, cround=cround)):
                 break
-        if settle and n > 0 and bool((cround == n - 1).any()):
-            vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
-            kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
-            Z = self.think(Z + self.step_emb.weight[min(n, self.n_loops - 1)], kvs, kvx, torch.cat([valid, vis, km], 1), n)
+        if settle and n > 0:
+            wrote = (cround == n - 1).any(1)                                    # per row: only a row that wrote a call at the last round has a reply its Z has not read
+            if bool(wrote.any()):
+                vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
+                kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
+                Zn = self.think(Z + self.step_emb.weight[min(n, self.n_loops - 1)], kvs, kvx, torch.cat([valid, vis, km], 1), n)
+                Z = torch.where(wrote[:, None, None], Zn, Z)                    # every other row keeps its Z exactly: a row's loops:K result never depends on its batch mates
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         out = dict(Z=Z, X=X, xm=xm, tape=(Xt, idt, vis), calls=calls, records=recs, le=le, K=K, tape_full=full_ev, cround=cround)
         if copies:
