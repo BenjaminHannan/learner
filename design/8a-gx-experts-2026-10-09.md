@@ -215,3 +215,10 @@ the follow-up test, not a change to this one.
   `cuda` device with no index. Fixed in 9e2dd5f9a1 (int index). Relaunched 9:01 PM ET from a re-unpacked src-8gxs (old one renamed
   aside), code folder `8aGXs400-pc-27397d06ea`. The card went from 12,341 to 15,067 MiB used (GX about 2.7 GB; about 1.2 GB left
   free), and shared GPU memory went from 164 to 246 MiB (rule 1 limit 564). G1 was at B2 update 12,500 (s400) and 7,000 (s401).
+- **Result of sharing (shown, PC logs): stopped by rule 2 at 10:06:50 PM ET.** GX ran 1,000 updates at 2.97 s per update (1,000 at
+  2,970 s), but G1 slowed too much. G1 seed 400's B2 stretch from update 12,500 to 13,000 took 4,432 s, against 3,201-3,224 s for its
+  three stretches before GX. That stretch includes about 400 s before GX started and about 110 s after it stopped, so with GX running
+  G1 seed 400 went at about 9.3 s per update instead of 6.45 (about 1.44x slower; inferred from those times). The watcher stopped only
+  the GX processes. It renamed the job folder to `8aGX-3M-s400.share-stopped-20261010-2207` (kept, not deleted), and the card went back
+  to 12,348 MiB used. Seed 400 now runs alone in the post-G1 chain, as first planned. Lesson: on this card, 82-86% busy with two 10M
+  runs, a third process takes GPU time from both runs. It does not just fill idle gaps, even though memory fit.
