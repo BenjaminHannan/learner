@@ -99,3 +99,28 @@ wrongly called `total`). So the parent never trained on "What is the sum of the 
 - `panel/stats.v2.jsonl` sha256 bab0000578bc5ef110a8bb2aa66eebab9116b764273cfb24d5682b8d94f5ecc2 (700 rows);
   `panel/invoice.v2.jsonl` sha256 9640d92aa45554dc59d67445fc1a5200c49322fd618e4666519be9e7be9f6b24 (600 rows).
 Bars unchanged.
+
+## Addendum L2: result on stats s200 (Opus, 9:45 PM ET 10-10)
+
+Shown, from `runs/stats-s200-v8/analysis/LOOKALIKE_v8.json` and `RESULT.md`. The run took 3 nights (53 minutes) and
+stopped on its quiz (2.7 -> 98.4 -> 91.4 -> 98.8). The switch was trained by `mode.py` itself (`gate.pt`, 3,072 practice
+prompts against 4,096 diary prompts, training accuracy 99.73%).
+
+| mark | result | verdict |
+|---|---|---|
+| LA1 learns | near 0.0 -> 99.3 routed (+99.3); every near question switched on, far 87.5% | PASS |
+| LA2 DEV old skills, routed | in_dist drop 0.07 (1 of 1,360); list_stats 92.5 -> 90.0 (not fired), nothing fired | PASS |
+| LA3 look-alike old skills, routed | pooled drop 0.00; range 81 -> 82, second_largest 80 -> 79, all else unchanged | PASS |
+
+- **The switch is fooled, but being fooled costs nothing here.** It switched the add-on on for 32 of 100 old
+  "largest minus the smallest" questions, 10 smallest_of, 7 largest_of, 4 second_largest, and 8 of 1,360 DEV questions
+  (all list_stats). Those answers did not change: the add-on trains with half of every batch on old questions, and it
+  learned to leave the closest look-alikes alone (range 81 -> 81 even with the add-on left on for everything).
+- The add-on left on everywhere still harms other old skills: look-alike panel drop 4.25 (count_even 98 -> 80 fired,
+  row_total 22 -> 14, smallest_of 100 -> 95); DEV drop 3.01 (passage_qa, rule_apply, seq_next fired). The switch never
+  turns it on there, so the switch is still needed.
+- Held-out variants (reported only): the switch turned on for 64 of 100 "What is the sum of the numbers?" questions, a
+  question the parent never trained on; routed accuracy rose 1 -> 17. Others unchanged.
+- DM5 reads "proved wrong" on its letter (rise over the last night +15.2) only because night 2 dipped and night 3
+  recovered; the near score at the stop (99.3) is within 0.3 of the best night.
+- Per sec. 5, no fix is due. Next: `invoice` s200, the same way (started 9:41 PM ET).
