@@ -577,3 +577,20 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   pinned file hash in g2.zip: refused after group 1's checks; both new folders renamed `.failed-<stamp>`, live folders untouched.
   List only (no zips): checked on the live code, 8aFC2 and infer_speed.py replaced with the old copies kept. Not simulated: the
   v3e step (it runs `swap_v3e.ps1`, tested on its own for addendum U).
+
+## 30. Addendum Y (2026-10-11, 6:05 PM ET): the talker's first run (G2f) moves before B3 group 1 (waiter v3e, staged)
+
+- **Why.** Ben, 5:51 PM ET 10-11 (project chat): "can you build the talker". The architecture thread (5:58 PM ET) said G2f (B3 group 2
+  with its fixes 1, 2 and 2b: the talker writes answers and calls from the thinker's state only) is the talker's first PC run, the
+  agent model's AT-1 gate waits on G2f and not on group 1, and group 1 keeps the old copying talker. It suggested g2c3s then G2f
+  before B3 group 1, leaving the order to this thread. Taken (default, no OK needed).
+- **Rule in v3e.** After fc100 parts 1-3: if src-b3g2's G2-SETUP-OK.txt says "reader rules" (only `install_rr.ps1` writes that), run
+  g2c3s, then B3 group 2 3M s400 (= G2f), the inserted-jobs check point, then g2c3 and B3 group 1 3M s400 with its readout; the
+  option A hold (group 2 waits when group 1 s400 is proved wrong on B3-1, B3-2 or B3-3) no longer applies, because group 2 has
+  already run. Without the reader-rule code, v3d's option A order and its hold stay exactly as they were. The rest (seed-401 runs,
+  g2c10s, c30s, inserts) is unchanged. `swap_v3e.ps1` now also checks for this rule before swapping.
+- **Tested (shown, cloud, simulated PC, pwsh 7.4.6, real caps hashes, mocked processes):** with the reader-rule marker: 8aFC, 8aFC2,
+  timer, 8aG2C3S, 8aB3G2s400, 8aG2C3, 8aB3G1s400 + readout, seed-401 pair, 8aG2C10S, 8aC30S. Without it: v3d's order. Without it and
+  group 1 proved wrong on B3-2: group 2 held to the end and run on WORK\G2-GO.txt.
+- **Timing (suggested, not measured):** G1 ends about Monday midday ET; fc100 parts 1-3 and g2c3s come first, so G2f starts Monday
+  evening at the earliest and its 3M result lands about Tuesday, as the architecture thread told Ben.

@@ -1,7 +1,7 @@
 # Replace the running post-G1 waiter v3d with v3e (11 Oct 2026, spec addendum U): same file name q8aPost3_wait.ps1.
-# v3e changes only inserted jobs (WORK\insert): a job may come from any src-<name> folder in custom-io (with "caps: <SHA-256 of its caps.py>")
+# v3e changes inserted jobs (WORK\insert): a job may come from any src-<name> folder in custom-io (with "caps: <SHA-256 of its caps.py>")
 # or be a plain .cmd script in custom-io ("cmd: <file>.cmd"), for the creative/sleep jobs on new code; WORK\insert\README.txt is no longer
-# taken for a job. Only while v3d still waits for G1. Everything is checked before anything changes. It stops nothing but the waiter and
+# taken for a job. And (addendum Y) with the reader-rule code in src-b3g2, group 2 (G2f) runs before group 1. Only while v3d still waits for G1. Everything is checked before anything changes. It stops nothing but the waiter and
 # deletes nothing.
 $IN    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $CIO   = 'C:\Users\benja\custom-io'
@@ -15,7 +15,7 @@ $new = "$IN\q8aPost3_wait.ps1"
 $e = $null
 [void][System.Management.Automation.Language.Parser]::ParseFile($new, [ref]$null, [ref]$e)
 if ($e.Count) { Fail "parse errors in the new waiter: $(($e | ForEach-Object { "line $($_.Extent.StartLineNumber): $($_.Message)" }) -join '; ')" }
-foreach ($k in @('function InferStep', 'function RunInserts', '$script:icards', "'cmd:' goes alone")) {
+foreach ($k in @('function InferStep', 'function RunInserts', '$script:icards', "'cmd:' goes alone", '$g2first')) {
   if (-not (Select-String -Path $new -Pattern $k -SimpleMatch -Quiet)) { Fail "the new file is not v3e (no '$k')" }
 }
 'new waiter parses (0 errors)'

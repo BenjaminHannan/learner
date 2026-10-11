@@ -6,7 +6,9 @@
 # v3d (11 Oct 2026, spec addendum T): fc100 part 3 right after part 2 = answer speed of the same four shapes (custom-io\infer_speed.py, read-only,
 # alone on the GPU, at most about an hour): questions per second at batch 1, 16 and 128 with 12 and 32 thinking rounds -> WORK\fc100-infer.json.
 # v3e (11 Oct 2026, spec addendum U): inserted jobs may come from any src-<name> folder (with its caps.py hash) or be a plain .cmd script
-# (for later creative/sleep jobs on new code), and WORK\insert\README.txt is no longer taken for a job.
+# (for later creative/sleep jobs on new code), and WORK\insert\README.txt is no longer taken for a job. Addendum Y (5:58 PM ET): when
+# src-b3g2 holds the reader-rule code (install_rr.ps1), group 2 (g2c3s, then B3 group 2 = G2f, the talker's first run) moves before
+# g2c3 and B3 group 1; without it the order below (option A) stays.
 # After gate G1's last PC queue ends, one queue at a time:
 #   1. test GX seed 400 (8aGXs400, src-8gx), skipped if it already has an ok RESULT.json (it may have run beside G1)
 #   2. fc100 part 1 (8aFC, src-b3), then part 2 (8aFC2, src-b3g2), then part 3 (answer speed)  3. g2c3 seed 400 (8aG2C3, src-b3)
@@ -344,7 +346,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (v3e; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (the 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
+Say "post-G1 chain waiter v3 started (v3e; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (the 100M shapes) + part 3 (their answer speed), then with the reader-rule code g2c3s, B3 group 2 3M s400 (G2f), g2c3, B3 3M s400 (else g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400), [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
 
 # 1. Gate G1 ends.
 $k = 0
@@ -374,27 +376,43 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
   }
 }
 
-# 3-4. fc100 and g2c3 (src-b3), then B3 3M seed 400 (src-b3r) and its readout.
+# 3. fc100 (part 1 src-b3, part 2 src-b3g2, part 3 the answer timer).
 B3Step '8aFC' 'fc100.template.md' 'fc100.md'
 $null = G2Step '8aFC2' 'fc100v2.template.md' 'fc100v2.md'
 InferStep
+
+# 3a. With the reader-rule code in src-b3g2 (its G2-SETUP-OK.txt says "reader rules", written by install_rr.ps1), group 2 runs first:
+# g2c3s, then B3 group 2 3M s400 (= G2f, the talker's first run: answers and calls written from the thinker's state only). Ben asked
+# "can you build the talker" (5:51 PM ET 10-11); the agent model's AT-1 gate waits on G2f, not on group 1, which keeps the old copying
+# talker (architecture thread, 5:58 PM ET 10-11). The option A hold (group 2 waits if group 1 s400 is proved wrong) then does not apply.
+$g2first = [bool](Select-String -Path "$SRCG2\G2-SETUP-OK.txt" -Pattern 'reader rules' -SimpleMatch -Quiet -ErrorAction SilentlyContinue)
+$g2held = $false
+if ($g2first) {
+  Say 'src-b3g2 has the reader-rule code: group 2 (g2c3s, then B3 group 2 = G2f) runs before group 1'
+  $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
+  $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+  RunInserts 'after group 2 at 3M'
+} else { Say 'src-b3g2 has no reader-rule code: group 1 first, then group 2 (option A order)' }
+
+# 4. g2c3 (src-b3), then B3 3M seed 400 (src-b3r) and its readout.
 B3Step '8aG2C3' 'g2c3.template.md' 'g2c3.md'
 $rc400 = B3Seed 400
 
-# 4a. Group 2 at 3M seed 400 and its all-steps partner (big-run PLAN.md option A: after B3 group 1 s400, before the 10M and 30M controls).
-# Sealed rule: if group 1 s400 is proved wrong on B3-1, B3-2 or B3-3, group 2 waits for that bisect. It then moves to the end of the chain
-# and runs there only on WORK\G2-GO.txt (WORK\G2-SKIP.txt drops it); the rest of the chain does not wait.
-$g2wrong = "$(& $PY -c "import json,sys; m=json.load(open(sys.argv[1]))['marks']; w=[k for k, f in (('B3-1','dead'),('B3-2','wrong'),('B3-3','wrong')) if (m.get(k) or {}).get(f) is True]; print(' '.join(w) or 'none')" "$WORK\b3g1-s400-readout.json" 2>&1)".Trim()
-$g2held = $false
-if ($g2wrong -match '^(B3-\d)( B3-\d)*$' -and -not (Test-Path "$WORK\G2-GO.txt")) {
-  $g2held = $true
-  Say "group 1 s400 proved wrong on ${g2wrong}: group 2 (g2c3s, B3 group 2) waits for the bisect; it moves to the end of the chain and runs there only on WORK\G2-GO.txt, NEEDS ATTENTION"
-} else {
-  Say "group 1 s400 proved-wrong marks: $g2wrong. Group 2 runs now."
-  $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
-  $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+# 4a. Without the reader-rule code: group 2 at 3M seed 400 and its all-steps partner here (big-run PLAN.md option A: after B3 group 1
+# s400, before the 10M and 30M controls). Sealed rule: if group 1 s400 is proved wrong on B3-1, B3-2 or B3-3, group 2 waits for that
+# bisect. It then moves to the end of the chain and runs there only on WORK\G2-GO.txt (WORK\G2-SKIP.txt drops it); the rest does not wait.
+if (-not $g2first) {
+  $g2wrong = "$(& $PY -c "import json,sys; m=json.load(open(sys.argv[1]))['marks']; w=[k for k, f in (('B3-1','dead'),('B3-2','wrong'),('B3-3','wrong')) if (m.get(k) or {}).get(f) is True]; print(' '.join(w) or 'none')" "$WORK\b3g1-s400-readout.json" 2>&1)".Trim()
+  if ($g2wrong -match '^(B3-\d)( B3-\d)*$' -and -not (Test-Path "$WORK\G2-GO.txt")) {
+    $g2held = $true
+    Say "group 1 s400 proved wrong on ${g2wrong}: group 2 (g2c3s, B3 group 2) waits for the bisect; it moves to the end of the chain and runs there only on WORK\G2-GO.txt, NEEDS ATTENTION"
+  } else {
+    Say "group 1 s400 proved-wrong marks: $g2wrong. Group 2 runs now."
+    $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
+    $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+  }
+  RunInserts 'after group 2 at 3M'
 }
-RunInserts 'after group 2 at 3M'
 
 # 5. GX seed 401, only if GX seed 400 is alive.
 if ($gxHere -and (GXAlive)) {
