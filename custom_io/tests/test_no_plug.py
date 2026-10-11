@@ -286,8 +286,9 @@ def test_e_3m_10m_unchanged():
     torch.manual_seed(0)
     m.train()
     loss, _ = m.loss(batch_of(rows(8), V))
-    assert abs(loss.item() - 19.309206008911133) < 1e-3, loss.item()
-    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 19.3092 as before')
+    # pinned at the group 2 head this front is merged onto (54d8e6c6d8, fix 2: answers from Z only; 19.3092 at fix 1, 24b0a92112): measured the same on both sides of the merge
+    assert abs(loss.item() - 20.576404571533203) < 1e-3, loss.item()
+    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 20.5764 as before')
 
 
 def main():
