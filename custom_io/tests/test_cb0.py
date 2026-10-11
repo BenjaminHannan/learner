@@ -295,3 +295,50 @@ if __name__ == '__main__':
     for f in (test_eg_cache, test_day, test_records, test_night_fake, test_night_warm, test_row_losses, test_cycle_smoke):
         f()
     print('ALL OK')
+
+
+class FakeC2(nn.Module):
+    """C2 rows with hand-made copy records (test_cb0_check.reference): each sampled try is the kind's reference program with prob 0.5, else a one-constant mutant."""
+
+    def __init__(self, table):
+        super().__init__()
+        self.w = nn.Parameter(torch.zeros(1))
+        self.table = table                                   # prompt -> (reference trace, mutant trace); keyed by the prompt only, never the answer
+
+    def sample_traces(self, batch, temperature, generator):
+        out = []
+        for r in batch['rows']:
+            good, bad = self.table[r['prompt']]
+            ok = temperature > 0 and float(torch.rand(1, generator=generator)) < 0.5
+            out.append(copy.deepcopy(good if ok else bad))
+        return out
+
+
+def test_corrupt_every_key_records():
+    """CB-0 mark (3) end to end: day + records with the real checker give IDENTICAL records when every answer key, accepted list and kind is corrupted or deleted."""
+    from custom_io import cb0_check as C
+    from custom_io.tests.test_cb0_check import reference, MUT, XS, QS
+    rows, table = [], {}
+    for kind in MUT:
+        for j, (xs, q) in enumerate(zip(XS, QS)):
+            row, good = reference(kind, xs, q)
+            _, bad = reference(kind, xs, q, **MUT[kind][0])
+            assert C.check(row, good) and not C.check(row, bad)
+            rows.append(dict(row, id=f'{kind}{j}', kind=kind, answer=good['answer'], accepted=[good['answer']]))
+            table[row['prompt']] = (good, bad)
+    mb = lambda rs: dict(rows=rs)
+    m = FakeC2(table)
+
+    def recs_of(rs):
+        d = cb0.day(m, rs, mb, C.check, seed=3, n1=4, n2=8, batch_size=5)
+        rec, cnt = cb0.records(rs, d, seed=4)
+        return d, [(r['id'], r['trace']['calls'], r['trace']['answer']) for r in rec]
+
+    d0, r0 = recs_of(rows)
+    assert r0 and not any(d0['greedy_fit'])                    # the greedy try is the mutant: every row stuck; records come from the search
+    bad_rows = [dict(r, answer='999999', accepted=['-1'], kind='square' if r['kind'] != 'square' else 'affine') for r in rows]
+    gone = [{k: v for k, v in r.items() if k not in ('answer', 'accepted', 'kind')} for r in rows]
+    for rs in (bad_rows, gone):
+        d1, r1 = recs_of(rs)
+        assert r1 == r0 and d1['fit'] == d0['fit']
+    print(f'ok corrupt-every-key: {len(r0)} records identical with keys corrupted / deleted')
