@@ -1,0 +1,86 @@
+# Does the model's own add-on switch keep old skills when a new subject looks like old questions?
+
+Opus, 8:30 PM ET 10-10. Marks fixed here before any training, gate or scoring result for these subjects.
+Thread "Add-on switch on look-alikes (ultracode)". Builds on domain mode v8 (DESIGN-AND-MARKS addenda A18-A23, PR #58).
+
+## 1. Why
+
+v8 passed on sheet s200, sheet s201 and RPN s200: the model's own switch turned its add-on on for every subject question
+and for 1 of 1,360 old questions, with no answer changed (A23). But spreadsheet and RPN prompts look nothing like the old
+questions, so telling them apart was easy. This test gives the mode a subject whose questions are worded like two old skill
+families, one word apart, with different answers.
+
+## 2. The look-alike subject: `stats` (new tool, same constants file, same mode, nothing else changed)
+
+Plain-code tool `domain/tools/stats.py`. Prompt frame `Numbers: a, b, c. <question>`, exactly the frame of two old families:
+`compare_numbers` ("Which is the largest?", "Which is the smallest?", "How many are greater than t?") and `list_stats`
+("What is the sum of the numbers?", "What is the largest minus the smallest?", "How many of the numbers are even?",
+"What is the second largest number?"). Every working step is a calculator call the model already has (add, sub, mul, div,
+max, min), at most 7.
+
+| kind | help example | answer | working | old question it is closest to |
+|---|---|---|---|---|
+| product | Numbers: 6, 3, 4. What is the product of the numbers? | 72 | mul, mul | sum of the numbers |
+| half the sum | Numbers: 12, 4, 8. What is half the sum of the numbers? | 12 | add, add, div 2 | sum of the numbers |
+| largest plus smallest | Numbers: 65, 84, 7. What is the largest plus the smallest? | 91 | max, max, min, min, add | largest minus the smallest |
+| largest times smallest | Numbers: 9, 4, 7. What is the largest times the smallest? | 36 | max, max, min, min, mul | largest minus the smallest |
+| twice the largest | Numbers: 65, 84, 7, 20. What is twice the largest? | 168 | max x3, mul 2 | which is the largest |
+| twice the smallest | Numbers: 31, 6, 58. What is twice the smallest? | 12 | min x2, mul 2 | which is the smallest |
+| sum minus largest | Numbers: 12, 30, 5. What is the sum minus the largest? | 17 | add, add, max, max, sub | sum of the numbers |
+
+Confirmation subject (only run as section 5 says): `invoice`, worded like old `table_calc` ("Row zipper: qty 6, price 12. ...
+What is the total cost of row hammer?"), with new questions (total price over all rows, cost of two rows, largest qty,
+smallest price, cost difference of two rows, twice the total qty).
+
+## 3. Panels (ours, sealed, written and hashed before the run; the mode refuses the panel folder)
+
+- `panel/stats.v2.jsonl`: 7 kinds x (60 near + 40 far), seed 91021. Near: the help example's list length, values 1-99,
+  the help question. Far: longer lists within 7 calls. Decontaminated like the v2 panels (rows equal to a practice prompt
+  are dropped from scoring, A10).
+- `panel/lookalike-old.v1.jsonl`: old-skill look-alikes, 100 fresh rows per variant from the curriculum's own generator
+  (namespace LA, seed 91031), none equal to any train or DEV prompt: compare_numbers (larger, smaller, count_above,
+  largest_of, smallest_of), list_stats (sum, range, count_even, second_largest), table_calc (row_total, column_sum, total).
+  Scored like DEV in_dist (custom_io evaluate, accepted answers).
+
+## 4. Marks (stats, seed 200, v8 exactly as in A23: per-tool add-on, own switch, constants file unchanged)
+
+| mark | pass | proved wrong |
+|---|---|---|
+| LA1 learns the look-alike subject | routed near gain >= +30 (DM1 bar) | < +10 |
+| LA2 keeps old skills (DEV in_dist, routed answers) | harm measure passes (in_dist drop <= 1.5, no family drop > 5 with paired 95% interval below 0) | compare_numbers or list_stats fires, or in_dist drop > 1.5 |
+| LA3 keeps look-alike old skills (lookalike-old panel, routed answers, harm measure per variant) | pooled drop <= 1.5 and no variant fires (drop > 5, interval below 0) | pooled drop > 3, or a variant drops > 10 with interval below 0 |
+
+Switch holds on look-alikes = LA1, LA2 and LA3 pass. Switch fails = LA2 or LA3 proved wrong. Otherwise fail, not proved wrong.
+Ben's hair-miss rule applies (a one-question miss counts as met).
+
+Reported, not gated: the switch's on-rate on each lookalike-old variant, each DEV family and the stats panel (near, far);
+the add-on left on for every question (the cost of a switch mistake) on lookalike-old and DEV; which old answers changed.
+
+**LA0, switch-only screen (no model training, reported only).** The switch is a logistic unit on the parent's reader with
+the add-on off, so its decisions do not depend on the night training. Before the run: train it exactly as `mode.py` does,
+positives = the stats practice prompts the mode's own maker makes over 7 days at even mix (seed 200), negatives = the
+seed-200 diary (identical to the v7 runs' diary: same parent, data and seed). Report its on-rates as above.
+Prediction, written now: near 100% on the stats panel; low on most old variants, highest on `range` and `sum` (one word
+from a stats question). Whether a switch mistake costs anything depends on the add-on, which sees half old questions in
+every training batch; only the run can say.
+
+## 5. What happens next (fixed now)
+
+- **Pass on stats:** run `invoice` s200 the same way (LA1-LA3 with table_calc as the look-alike family) to show it is not
+  one subject.
+- **Fail because the switch turns on for look-alike old questions and the add-on changes their answers:** one change,
+  **F1: the switch learns where the add-on is risky, from its own answers.** At the end of the mode the model answers its
+  own diary with the add-on on; diary questions where that answer differs from its pre-mode answer (the diary row) are
+  risky. The switch trains with the risky diary questions given half of the negative weight (the other negatives the other
+  half; positives unchanged). Its own records and own answers only; no panel or DEV row. Re-scored from the same run's log
+  and checkpoints (no new training). Marks: LA1-LA3 as above on stats s200, plus A23's bars still met on sheet s200,
+  sheet s201 and RPN s200 (re-scored, free), then confirmed on `invoice` s200 (full run).
+  Proved wrong for F1: LA3 still proved wrong, or LA1 falls below +30 (the switch gets too shy).
+- **If F1 is proved wrong:** F4, the add-on reviews what looks like its subject: the replay half of each night's batch is
+  drawn from the diary questions the switch scores highest, so the add-on itself learns to keep those answers. Full re-run,
+  same marks.
+- **Fail because the switch misses the subject's own questions (LA1 low with the switch off on the stats panel):** F2,
+  the switch reads mean and max of the reader's features instead of the mean alone. Re-scored, same marks.
+
+Rules kept: free compute only (cloud CPU); the mode never reads a panel or DEV file; nothing in training is cut short;
+every step is the deployed model's own (the tools are outside tools it calls).
