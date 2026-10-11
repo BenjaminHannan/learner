@@ -24,7 +24,9 @@ class KCovs:
     """Forward hooks: input covariance A (with a constant 1) per module, and a tensor hook on the module's output that adds
     the covariance G of the gradient arriving there. All-zero rows are skipped."""
 
-    def __init__(self, m):
+    def __init__(self, m, norm=None):
+        assert norm in (None, 'example'), norm
+        self.norm = norm
         self.mods = gp.projected_modules(m)
         self.A = {n: None for n, _ in self.mods}
         self.G = {n: None for n, _ in self.mods}
@@ -44,6 +46,11 @@ class KCovs:
                 conv = isinstance(mod, torch.nn.Conv1d)
 
                 def ghook(g):
+                    if self.norm == 'example':   # g has the batch as dim 0 ([B, T, out], Conv1d [B, out, T], or [B, out])
+                        f = g.detach().float().flatten(1)
+                        mx = f.abs().amax(1)                       # scale by the max first so tiny gradients do not underflow
+                        n = torch.where(mx > 0, mx * (f / mx.clamp(min=1e-38)[:, None]).norm(dim=1), torch.ones_like(mx))
+                        g = g / n.view(-1, *([1] * (g.dim() - 1))).to(g.dtype)
                     Y = (g.transpose(1, 2) if conv else g).reshape(-1, g.shape[1] if conv else g.shape[-1]).detach().float()
                     Y = Y[Y.abs().sum(1) > 0]
                     if len(Y):
@@ -56,13 +63,14 @@ class KCovs:
             h.remove()
 
 
-def kfac_stats(m, rows, bs=64):
+def kfac_stats(m, rows, bs=64, norm=None):
     """A and G per module over the model's own old answers (rows' targets), eval mode (no drills). Parameters' grads are
-    cleared afterwards. -> {name: (A, G)}."""
+    cleared afterwards. norm='example': each example's output-gradient block is scaled to unit Frobenius norm per layer
+    before it enters G (A unchanged). -> {name: (A, G)}."""
     was = {n: p.requires_grad for n, p in m.named_parameters()}
     for p in m.parameters():
         p.requires_grad_(True)
-    kc = KCovs(m)
+    kc = KCovs(m, norm)
     m.eval()
     try:
         ds = Dataset(rows, m.vocab)
