@@ -5,6 +5,7 @@
 # Run from this folder (animations/model-explainer-v2/project) inside a checkout of claude/voice-render-mac3.
 cd "$(dirname "$0")" || exit 1
 export PATH=/opt/homebrew/bin:$PATH
+export HF_CAPTURE_PARALLEL_STREAM=${HF_CAPTURE_PARALLEL_STREAM:-true}   # stream frames: no 11 GB of temp frames on a nearly full disk
 BR=claude/voice-render-mac3
 OUT=../renders; mkdir -p "$OUT" ../claims
 CH="${*:-ch05 ch04 ch03 ch07 ch08 ch01 ch06 ch00 ch09}"
