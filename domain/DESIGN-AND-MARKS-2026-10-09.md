@@ -238,3 +238,52 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 - **v8 PASSES on all three.** Its own switch keeps old skills, measured rather than by construction: the one old question switched on did not change its answer. The switch now lives in `mode.py`: at the end of a per-tool run the model trains it from its own records and saves `gate.pt` beside the final checkpoint (smoke shown). 
 - Caveat (suggested): telling these subjects apart is easy, because spreadsheet and RPN prompts look nothing like the old-skills prompts. A harder check is two subjects with similar prompts, which needs a second add-on and a switch that chooses between add-ons.
 - DM4 is now Level 1 for making and checking practice (fixed outside tools on a fixed schedule) and Level 2 for using what it learned (its own switch).
+
+**A24. Ben's clarification and the third subject: reading code (Opus, 9:20 PM ET 10-10; marks fixed before the tool, panel or run exist).** Ben, 9:09 PM ET: "I think you took my learning spreadsheets thing too literally ... it could learn how to code very well. Or ... how to use computers very well. Or ... how to research in one specific area. I just meant like general skills it could learn." So the goal is broad skills. The loop (make practice from the help page's examples, check with the tool, sleep into a per-tool add-on, its own switch, stop on its own quiz) has nothing subject-specific in it. The limit is today's 3M model: it writes only calculator calls (a fixed list of 8 operations) and answers of 8 letters or fewer, so it cannot write programs, drive a computer, or write a report (sec. 4 items 1 and 4). The first step toward coding that today's model can take is **reading code**: given a small program, say what it prints.
+- **Tool `py`:** a sandboxed runner for a small Python subset. It is parsed with `ast` against a whitelist, never `exec` or `eval`, and has a step cap. A prompt is one line, and `; ` ends a statement (it stands for a newline). Each `+ - * //` is one calculator call, `max`/`min` are calls, and `abs(a - b)` is a `sub` with the larger value first. Comparisons in `if` and `while` make no call: the model decides them itself, which avoids `cmp`, the operation with no row form (A2). Help page: 10 kinds, one example each: assignment with addition, an arithmetic chain, max/min, abs, list indexing, a for-loop sum, a for-loop repeat, if/else, a while loop, and a one-line function.
+- **Sealed panel `py.jsonl`** (seed 91021, its own generator, separate from the maker, written and hashed before the run): 10 kinds x (60 near + 40 far). Near is the help example's shape with new numbers and new variable names. Far is longer loops or two kinds in one program. Every row fits the caps (prompt <= 208 letters, <= 16 numbers, answer <= 8 letters, <= 7 calls); no row is cut.
+- **Constants unchanged** (the v7 file, the same hash as the sheet and RPN runs). Per-tool add-on with its own switch (A22/A23).
+- **Marks, seed 200 (seed 201 runs only if 200 is not proved wrong):** DM1 = near, routed by its own switch, >= +30. DM3 = routed old-skills harm measure passes. DM4 = audit passes (panel collisions <= 2%). DM5 as before. DM2 (far >= +10) is reported. Proved wrong = routed near < +10.
+- Next after this, when the model can write calls as letters and open text (B3 group 2, the talker): flip the direction to "task -> write the program", checked by running it in the same tool. That step is writing code.
+
+**A25. The py tool is built, plus one maker edit found in review (Opus, 9:50 PM ET 10-10, before the run).** Shown:
+- The tool (`domain/tools/py.py`) is an `ast` whitelist walker that never calls exec, eval or compile. It caps loops at 50 iterations, 400 AST nodes and call depth 6. `//` runs only when the division is exact (the calculator's own div).
+- The help page has 10 kinds, 1-4 steps each.
+- The sealed panel `py.jsonl` has 600 near and 400 far rows, sha256 `bdad2e23c07aa1f0...`. Its longest prompt is 98 letters, it uses at most 7 steps, no row is over a cap, and none equals a help prompt.
+- All 56 tests pass, including 8 new ones for the tool and panel.
+- Smoke: practice keeps about 40% of draws on py, against 0.6% on sheets.
+
+Found in review: the maker's renames, edit (c), touch only capital cell letters, so practice programs would keep the help page's variable names. Near panel rows use new names (A24), the same kind of gap as v1's column B. **Edit (e), the same for every domain:** with chance vary_p, one letters-only word that occurs at least twice in the draft (a name the text reuses) is renamed everywhere to a new random word of 1-3 lowercase letters that the text does not already use. Checked: no sheet or RPN help example has a repeated word, so (e) never changes their drafts; the sheet and RPN results stand (their random draws would differ on a re-run). Disclosed: chosen knowing the panel's near rule. Marks unchanged.
+
+**A26. py seed 200 result, and why three kinds learned little (Opus, 10:45 PM ET 10-10, after the run).** Shown:
+- Run `py-s200-v8`, constants sha256 `4781b0be...` (the v7 file, the same as the sheet and RPN runs). 5 nights, stopped by the quiz rule, no night undone.
+- **Marks.**
+  - DM1 near: +46.50 (14.67 -> 61.17), PASS.
+  - Routed by its own switch: +46.3, PASS. The switch is on for 99.8% of panel near rows and for 1 of 1,360 old questions.
+  - DM3 routed drop: 0.00, PASS.
+  - DM4: PASS (9,027 rows, 0 panel overlap, 0 dropped).
+  - DM5: PASS (the stop night is the best night).
+  - DM2 far: -0.5, fail. Proved wrong needs seed 201 at +2 or less as well.
+  - R2: 0.836.
+- **Per kind, near:** function 100, chain 98, assign add 97, max min 85, abs 80, if else 68, while 50, for repeat 33, list index 0, for sum 0.
+- **Audit naming.** The py panel was built once, under the v2 rules (A24). `audit.py` now reads it as `py.v2.jsonl`, a byte-identical copy of `py.jsonl` (same sha256, `.sha256` file beside it). The content is unchanged.
+- **List index got no practice.** Shown by re-drawing 600 drafts from its help example. Edit (a) gives every number a new random length of 1-3 digits, so positions such as `i = 1` and `v[2]` fall outside the 3-item list. The tool rightly answers "?" for 598 of 600 drafts. Day 1 kept 0 list-index rows. For repeat (528 of 600 drafts are "?": loop counts and products grow past the caps) and for sum (452 of 600) are thinned the same way.
+- **For sum cannot be written as a training row.** The row format (custom_io progparse) points every operand at a number in the prompt, one of 4 constants (1, 2, 10, 100), or an earlier result. A loop counter's values (0, 1, 2, 3, ...) are not written in the prompt. So a loop-sum row exists only when the counter values happen to fall in that set: s starts at 0 and the range is 3 or less. Of the 58 re-drawn drafts the tool accepts, 56 are refused (`gold_ops`). Day 1 refused 38.
+- **Both limits sit in the outside parts** (the maker's yield and the row format), not in the model's learning. Every kind with enough kept rows rose.
+- **Next (default, nothing changed):** seed 201 with the same code and constants, per A24's marks. After that, a fix for the maker's yield, the same for every domain, written as A27 with its marks before any run. The row-format limit belongs to the shared format, which this mode does not own. It is recorded here and not changed.
+
+**A27. Practice yield: edit (a) at chance p, the same for every domain (Opus, 11:10 PM ET 10-10, written before any run).**
+- **Problem (shown in A26).** Edit (a) gives every number a new length. Numbers that must stay small (a list position, a loop count, a row inside the sheet's grid) almost always break, and the tool rejects the draft. Drafts kept out of 400 per help example (seed 7, real vocabulary, no model): py list index 3, for repeat 25, for sum 57; sheet kinds 0-7 each.
+- **Change (one).** Edit (a) gives each digit run a new length with chance vary_p, like edits (b)-(e). Otherwise the run is kept as it is. This is set by the constant `relength_each_p: true`; false keeps the old rule, so old runs still replay. Nothing else changes.
+- **Measured before any run (no model).**
+  - py: list index 3 -> 50, for repeat 25 -> 94, for sum 57 -> 93.
+  - sheet: the 0-7 kinds rise to 19-70.
+  - RPN: kinds fall to about 60% of before (more duplicate drafts), but every kind still keeps 8 or more.
+- **Risk.** Half the time, practice keeps the help page's numbers, so it is narrower. v1 showed that narrow practice teaches shortcuts. DM1 near rows use new numbers, so a shortcut would show as a lower DM1.
+- **Marks, py seed 200** (against A26's `py-s200-v8`, same seed):
+  - Pass: list index near >= +30, routed DM1 >= +43.3 (A26's +46.3 minus 3), and routed DM3 passes.
+  - Proved wrong: list index near < +10, or routed DM1 < +36.3.
+  - Expected and not counted: for sum stays near 0, because the row format refuses its rows (A26).
+- **Marks, sheet seed 200.** The same rule must not break spreadsheets. Compared with `sheet-s200-v7` routed +38.1: pass needs routed DM1 >= +35.1 and DM3 passing; proved wrong is routed DM1 < +28.1.
+- **Reported for both:** DM2 far, per-kind changes, and practice yields from the log.
+- **Order.** These runs come after py seed 201, which uses A24's marks and the old code. The look-alikes thread's DM5 "keep the best night, picked by the model's own quiz" is a separate later change (A28) and is not part of this test. Disclosed: the stats panel's seed 91021 (look-alikes, PR #59) equals the py panel's seed. The generators differ, and no prompt is shared.

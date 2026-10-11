@@ -26,16 +26,21 @@ DECONTAM_SUFFIX = '.v2'   # addendum A10: v2 panels are decontaminated (rows tha
 DECONTAM_MAX_FRAC = 0.02  # DM4 fails when more than this share of the run tool's panel rows is dropped
 
 
+LOOKALIKE_TOOLS = ('stats', 'invoice')   # LOOKALIKE-MARKS-2026-10-10.md: v2 panels only
+
+
 def panel_files(suffix=''):
-    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl')
+    # addendum A26: the py panel (A24) is decontaminated, so it exists only under the v2 naming (py.v2.jsonl = py.jsonl)
+    extra = tuple(f'{t}{suffix}.jsonl' for t in LOOKALIKE_TOOLS + ('py',)) if suffix == DECONTAM_SUFFIX else ()
+    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl') + extra
 
 
 def panel_suffix(path):
-    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet.v2.jsonl or rpn.v2.jsonl. Any other name is refused."""
-    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl', os.path.basename(path))
+    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet, rpn, stats, invoice or py .v2.jsonl. Any other name is refused."""
+    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl|(?:stats|invoice|py)(\.v2)\.jsonl', os.path.basename(path))
     if not m:
         raise ValueError(f'not a sealed panel file: {path}')
-    return m.group(1) or ''
+    return m.group(1) or m.group(2) or ''
 
 
 def load_panel_file(path):
@@ -98,7 +103,7 @@ def main(argv=None):
     ap.add_argument('run_dir')
     ap.add_argument('--panel', default=OUT_DIR, help='folder with the sealed panel files')
     ap.add_argument('--panel-suffix', default='', choices=['', DECONTAM_SUFFIX],
-                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' for sheet.v2.jsonl and rpn.v2.jsonl")
+                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' for the sheet, rpn, stats, invoice and py .v2.jsonl panels")
     a = ap.parse_args(argv)
     rep = audit_run(a.run_dir, a.panel, a.panel_suffix)
     print(json.dumps(rep, indent=1, sort_keys=True))

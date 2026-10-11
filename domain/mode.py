@@ -115,7 +115,8 @@ def digit_run(rng, n):
 DIGITS = re.compile(r'[0-9]+')
 LETTER_CELL = re.compile(r'(?<![A-Za-z])([A-Z])(?=\d)')  # a one-letter letter-digit token, e.g. the A in A1 (not a label "A:")
 LETTER_ALONE = re.compile(r'(?<![A-Za-z0-9])([A-Z])(?![A-Za-z0-9])')  # a capital letter standing alone, e.g. the A in a label "A:" (addendum A12)
-EDITS = ('run_insert', 'run_delete', 'letter_rename', 'symbol_swap')  # the edits that can change a draft (addendum A10)
+EDITS = ('run_insert', 'run_delete', 'letter_rename', 'symbol_swap', 'word_rename')  # the edits that can change a draft (A10, A25)
+WORD = re.compile(r'(?<![A-Za-z0-9_])[A-Za-z]+(?![A-Za-z0-9_])')  # a letters-only word standing alone (addendum A25)
 # Over-draw caps (tries per problem asked). Raised for addendum A10: measured on the real vocabulary, the wider maker keeps
 # 0.6% of practice draws on the sheet tool (a day needs about 180 tries per problem) and 0.025% of one kind's draws
 # (quiz needs about 4,000 per problem). The old caps (300 and 300 per problem) would leave the quiz short.
@@ -132,10 +133,12 @@ def is_symbol(ch):
     return ch != ' ' and not ch.isalnum()
 
 
-def relength(text, rng, lmax):
-    """Edit (a): every digit run gets a new random length L in [1, lmax], no leading zero unless L is 1. -> (text, runs)."""
+def relength(text, rng, lmax, p=None):
+    """Edit (a): every digit run gets a new random length L in [1, lmax], no leading zero unless L is 1. With p
+    (addendum A27, relength_each_p) each run is redrawn only with chance p and otherwise kept. -> (text, runs)."""
     runs = len(DIGITS.findall(text))
-    return DIGITS.sub(lambda g: digit_run(rng, rng.randint(1, lmax)), text), runs
+    return DIGITS.sub(lambda g: digit_run(rng, rng.randint(1, lmax)) if p is None or rng.random() < p else g.group(0),
+                      text), runs
 
 
 def run_edit(text, rng, lmax, p):
@@ -195,13 +198,34 @@ def symbol_edit(text, rng, p):
     return text[:k] + new + text[k + 1:], Counter(symbol_swap=1)
 
 
-def vary(example, rng, lmax, p):
-    """Edits (a) to (d), in that order, on one help example (addendum A10). -> (prompt, counts)."""
-    text, runs = relength(example, rng, lmax)
+def word_edit(text, rng, p):
+    """Edit (e), addendum A25: with chance p, one letters-only word that occurs at least twice in the text (a name the
+    text uses again, such as a variable) is renamed everywhere to a new random word of 1 to 3 lowercase letters that
+    the text does not already use. -> (text, counts)."""
+    if rng.random() >= p:
+        return text, Counter()
+    c = Counter(WORD.findall(text))
+    names = sorted(w for w, n in c.items() if n >= 2)
+    if not names:
+        return text, Counter(word_no_repeat=1)
+    x = rng.choice(names)
+    while True:
+        y = ''.join(rng.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(rng.randint(1, 3)))
+        if y not in c:
+            break
+    return re.sub(r'(?<![A-Za-z0-9_])' + re.escape(x) + r'(?![A-Za-z0-9_])', y, text), Counter(word_rename=1)
+
+
+def vary(example, rng, lmax, p, each_p=False):
+    """Edits (a) to (e), in that order, on one help example (addenda A10, A25). each_p: edit (a) at chance p too
+    (addendum A27). -> (prompt, counts)."""
+    text, runs = relength(example, rng, lmax, p if each_p else None)
     c = Counter(digit_runs=runs)
     text, cb = run_edit(text, rng, lmax, p)      # each edit works on the text the edit before it left
     text, cc = letter_edit(text, rng, p)
     text, cd = symbol_edit(text, rng, p)
+    text, ce = word_edit(text, rng, p)
+    c.update(ce)
     c.update(cb)
     c.update(cc)
     c.update(cd)
@@ -212,7 +236,7 @@ def draft(tool, example, kind, rng, ctx, edits=None):
     """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set, lmax).
     edits: optional Counter that gets this draw's edit counts, kept or not. -> (item, None) or (None, reason)."""
     cons = ctx['cons']
-    prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'])
+    prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'], cons.get('relength_each_p', False))
     if edits is not None:
         edits.update(counts)
     if prompt in ctx['quiz_set']:
@@ -603,7 +627,7 @@ def save_ckpt(ck, m, path, addon=None):
 def parse_args(argv=None):
     a = argparse.ArgumentParser(description='Domain mode (DM-S): learn a help-page tool by itself.')
     a.add_argument('--parent', required=True, help='parent checkpoint.pt (T1SDR)')
-    a.add_argument('--tool', required=True, choices=['sheet', 'rpn'])
+    a.add_argument('--tool', required=True, choices=['sheet', 'rpn', 'py', 'stats', 'invoice'])  # stats, invoice: LOOKALIKE-MARKS
     a.add_argument('--out', required=True, help='new folder for log.jsonl, night_K/, summary.json')
     a.add_argument('--seed', type=int, required=True)
     a.add_argument('--smoke', action='store_true')
