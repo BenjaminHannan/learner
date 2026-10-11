@@ -107,3 +107,22 @@ learning and practice. That keeps it outside the answer path, so it adds no hand
 - **What follows (fixed now):** PASS -> seed 201 against v7 seed 201 (54.76), same marks; then RPN. NO DIFFERENCE ->
   D-night next (its own marks). PROVED WRONG -> practising at the edge does not help when a tool shows the working at 3M;
   report it and put the effort on GW-D.
+
+## Addenda (dated; the sealed text above changes only by these)
+
+**B1. What the helpers read (9:55 PM ET 10-10; marks unchanged).** Shown, from Haiku reads of the code (line numbers at
+commit 8fce7247a for the model, branch claude/project-thread-2kevpk for sleep, claude/project-thread-h2ya81 for the game).
+- *Where the guesser goes in the finished model:* the learned stop H1 already is a one-number head (`Linear(d,1)`) on the
+  thinker's control row 1 after each round, read detached so its loss never moves the thinker (tool_h1.py:67, 81, 212). Its
+  'right' label is "this round's answer is right", which is the guesser's question for one-step answers. So the guesser is a
+  sibling head on detached control 1 (257 numbers at width 256, 513 at 512; counted in the size), trained on the model's own
+  checked outcomes; in a game it predicts reward still to come. It adds no round and no call (caps unchanged).
+- *Sleep today:* every kept own answer (up to 2 per question from 32 tries) gets the same 32 visits; per-try pass flags
+  exist only in a cached file, so "weight a found answer by how rarely it is found" (DART-style) was never tried. A caution:
+  the creative S1 loop that used reward minus a group mean as its weight gained as much with shuffled rewards (+17.2/+18.4)
+  as with real ones (+18.0/+16.0). A dopamine weight helps only if it carries information, which D0 checks first. The SCM2
+  night needs the whole 7d chain to run, and that line waits for the big-run thread, so D-sleep stays a proposal.
+- *Game today:* GW-S has not started; play.py discards the step reward and keeps play logs in memory only; the 8-move keep
+  rule is in constants but not yet in code; no PPO. Asked the game thread (via the coordinator, 9:50 PM ET) to save per-move
+  records so GW-D can train its guesser offline on GW-S's own play. No change to GW-S's marks.
+- *Environment:* the system python here has no torch; D0 runs in a CPU venv (`/tmp/claude-0/v`, torch + numpy).
