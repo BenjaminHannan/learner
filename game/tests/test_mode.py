@@ -1,0 +1,46 @@
+import unittest
+
+from game import mode, play
+
+
+class KeepWindowsTest(unittest.TestCase):
+
+    def test_single_unlock_window(self):
+        self.assertEqual(mode.keep_windows([(20, 'a')], 8), [(s, 'a', 20) for s in range(13, 21)])
+
+    def test_unlock_at_step_zero(self):
+        self.assertEqual(mode.keep_windows([(0, 'a')], 8), [(0, 'a', 0)])
+
+    def test_early_unlock_starts_at_zero(self):
+        self.assertEqual(mode.keep_windows([(3, 'a')], 8), [(s, 'a', 3) for s in range(0, 4)])
+
+    def test_overlapping_windows_do_not_overlap(self):
+        out = mode.keep_windows([(10, 'a'), (14, 'b')], 8)
+        self.assertEqual([x[0] for x in out], list(range(3, 15)))
+        self.assertEqual([x for x in out if x[1] == 'b'], [(s, 'b', 14) for s in range(11, 15)])
+
+    def test_two_unlocks_on_one_step(self):
+        out = mode.keep_windows([(5, 'a'), (5, 'b')], 3)
+        self.assertEqual(out, [(3, 'a', 5), (4, 'a', 5), (5, 'a', 5)])
+
+    def test_no_unlocks(self):
+        self.assertEqual(mode.keep_windows([], 8), [])
+
+
+class SeedsTest(unittest.TestCase):
+
+    def test_disjoint_and_not_sealed(self):
+        seen = set()
+        for day in range(0, 13):
+            n = 32 if day == 0 else 64
+            seeds, acts = mode.world_seeds(200, day, n)
+            self.assertEqual(len(acts), n)
+            for s in seeds:
+                self.assertNotIn(s, seen)
+                self.assertFalse(play.is_sealed(s))
+                seen.add(s)
+        self.assertEqual(len(seen), 32 + 12 * 64)
+
+
+if __name__ == '__main__':
+    unittest.main()
