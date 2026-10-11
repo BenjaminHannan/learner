@@ -296,9 +296,10 @@ def test_e_3m_10m_unchanged():
     torch.manual_seed(0)
     m.train()
     loss, _ = m.loss(batch_of(rows(8), V))
-    # pinned at the group 2 head this front is merged onto (54d8e6c6d8, fix 2: answers from Z only; 19.3092 at fix 1, 24b0a92112): measured the same on both sides of the merge
-    assert abs(loss.item() - 20.576404571533203) < 1e-3, loss.item()
-    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 20.5764 as before')
+    # pinned at the group 2 head this front is merged onto (9a5203b21b: answers from Z only, asked after the last reply is read; 19.3092 at fix 1
+    # 24b0a92112, 20.5764 at 54d8e6c6d8): measured the same on both sides of the merge
+    assert abs(loss.item() - 25.28279685974121) < 1e-3, loss.item()
+    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 25.2828 as before')
 
 
 # ---- (f) g8a/speed.py --noplug builds the cfgs and lr job.py --noplug gives train.py; configs --noplug defaults to group 2 (CPU, nothing is timed) ----
