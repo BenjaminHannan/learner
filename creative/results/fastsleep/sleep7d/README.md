@@ -441,5 +441,5 @@ Verdict: **APM FAILS mark 1 on both parents, not proved wrong.** Drawing night 1
 How to read it:
 - *Shown:* re-using yesterday's records in night 2 changes first try by +0.8 / -1.6 points. Both intervals cross 0, so it is neither a gain nor a loss at this size.
 - *Shown:* no forgetting. APM ends 0.9 / 1.5 above N' on skills, nothing fires, and night 2 adds no cost against SCM.
-- *Shown:* the two canary families do not drop in any arm. seq_next and rule_apply sit at or above N' for SCM, SCM2 and APM on both parents (the lr 1e-3 nights took seq_next from 81 to 30).
+- *Shown:* the two canary families do not drop in any arm. seq_next and rule_apply sit at or above N' for SCM, SCM2 and APM on both parents (the standard lr 1e-3 night W1 left seq_next at 43.0 / 42.5 from N's 62.0 / 66.5, Test SC table).
 - *Suggested:* at a fixed update count, mixing in old records spreads the same training over ~1.7x more records, so night 2's own records get ~58% of SCM2's visits. That may cancel any gain from seeing night 1 again. A version with SCM2's 32 visits per record (more updates) is untested.
