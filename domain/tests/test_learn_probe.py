@@ -242,3 +242,45 @@ def test_eval_sets_l5(tmp_path):
     path.write_text(''.join(json.dumps(r) + '\n' for r in rows))
     sets = L.eval_sets(_fake_train('F4-two'), 'l5', L.L5_SEED, l5_path=str(path))
     assert list(sets) == ['S5', 'S', 'HP', 'HO', 'HPO', 'F0-near', 'F4-two', 'fit'] and len(sets['fit']) == 420
+
+
+def test_addon_size_defaults_and_override():
+    cons = {'addon_rank': 8, 'addon_alpha': 16}
+    assert L.addon_size('LA', cons) == (8, 16)
+    assert L.addon_size('LA', cons, 64, 128) == (64, 128)
+    assert L.addon_size('LA', cons, rank=4) == (4, 16)
+    assert L.addon_size('LB', cons) == (None, None)
+    with pytest.raises(SystemExit):
+        L.addon_size('LB', cons, 64, None)
+    with pytest.raises(SystemExit):
+        L.main(['train', '--arm', 'LB', '--out', 'x', '--addon-alpha', '128'])
+
+
+def test_addon_override_reaches_addon(tmp_path, monkeypatch):
+    pytest.importorskip('torch')
+    import domain.mode as M
+    seen = []
+
+    class Stop(Exception):
+        pass
+
+    def stub(m, rank, alpha, seed):
+        seen.append((rank, alpha))
+        raise Stop
+
+    monkeypatch.setattr(M, 'AddOn', stub)
+    monkeypatch.setattr(L, 'load_jsonl', lambda p: [])
+    monkeypatch.setattr(L, 'eval_sets', lambda *a, **k: {})
+    monkeypatch.setattr(L, 'make_rows', lambda m, r, c: ([], {}))
+    import custom_io.data as D
+    import custom_io.models as MD
+    monkeypatch.setattr(MD, 'load_model', lambda p: type('X', (), {'eval': lambda s: s, 'vocab': None})())
+    monkeypatch.setattr(D, 'Dataset', lambda rows, vocab: None)
+    import torch
+    monkeypatch.setattr(torch, 'load', lambda *a, **k: {})
+    for kw, want in (({}, None), ({'addon_rank': 64, 'addon_alpha': 128}, (64, 128))):
+        seen.clear()
+        with pytest.raises(Stop):
+            L.train('LA', 1, 1, str(tmp_path / str(len(kw))), [0], **kw)
+        cons = __import__('json').load(open(M.CONST_PATH))
+        assert seen == [want or (cons['addon_rank'], cons['addon_alpha'])]

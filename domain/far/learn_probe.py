@@ -567,7 +567,7 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     return sets
 
 
-def score_step(ck, m, addon, sets, out, arm, step, t_train, threads):
+def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None):
     from domain.mode import save_ckpt
     from domain.score import score
     t0 = time.time()
@@ -583,7 +583,9 @@ def score_step(ck, m, addon, sets, out, arm, step, t_train, threads):
         cells[name] = {'n': len(rs), 'hits': h, 'pct': round(100.0 * h / len(rs), 2)}
     secs = round(time.time() - t0, 1)
     with open(os.path.join(out, 'scores.jsonl'), 'a') as f:
-        f.write(json.dumps({'arm': arm, 'step': step, 'cells': cells, 'secs': secs, 'train_secs': round(t_train, 1)}) + '\n')
+        rec = {'arm': arm, 'step': step, 'cells': cells, 'secs': secs, 'train_secs': round(t_train, 1)}
+        rec.update(extra or {})
+        f.write(json.dumps(rec) + '\n')
     print(f'{arm} step {step}: ' + ' '.join(f'{k} {v["pct"]:.1f}' for k, v in cells.items()) + f' (score {secs}s)', flush=True)
     os.remove(path)   # the checkpoint is only a vehicle for the scorer
     os.rmdir(os.path.dirname(path))
@@ -619,7 +621,17 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
-def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1'):
+def addon_size(arm, cons, rank=None, alpha=None):
+    """(rank, alpha) for arm LA: the mode's constants unless overridden. LB has no add-on: overrides are refused."""
+    if arm != 'LA':
+        if rank is not None or alpha is not None:
+            raise SystemExit('--addon-rank/--addon-alpha apply to arm LA only')
+        return None, None
+    return (cons['addon_rank'] if rank is None else rank), (cons['addon_alpha'] if alpha is None else alpha)
+
+
+def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
+          addon_rank=None, addon_alpha=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -628,6 +640,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     assert arm in ('LA', 'LB')
     assert steps and max(steps) <= updates and min(steps) >= 0, (steps, updates)
     cons = json.load(open(CONST_PATH))
+    rank, alpha = addon_size(arm, cons, addon_rank, addon_alpha)
+    extra = {'addon_rank': rank, 'addon_alpha': alpha}
     os.makedirs(out, exist_ok=True)
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
@@ -642,7 +656,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     print(f'{arm}: {len(rows)} of {len(train_rows)} rows usable; dropped {dict(drops)}', flush=True)
     ds = Dataset(rows, m.vocab)
     if arm == 'LA':
-        addon = AddOn(m, cons['addon_rank'], cons['addon_alpha'], SEED)
+        addon = AddOn(m, rank, alpha, SEED)
         addon.on = True
         params = addon.params()
         opt = torch.optim.AdamW([{'params': params, 'weight_decay': 0.1}], lr=cons['addon_lr'], betas=(0.9, 0.95))
@@ -657,7 +671,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     t_train, t_seg, losses = 0.0, time.time(), []
     steps = set(steps)
     if 0 in steps:
-        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads)
+        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, extra)
     t_seg = time.time()
     for u, ni in enumerate(batch_order(len(rows), cons['batch'], updates, SEED), 1):
         t0 = time.time()
@@ -677,7 +691,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                   f'loss {np.mean(losses[-k:]):.4f}', flush=True)
             t_seg = time.time()
         if u in steps:
-            score_step(ck, m, addon, sets, out, arm, u, t_train, threads)
+            score_step(ck, m, addon, sets, out, arm, u, t_train, threads, extra)
             t_seg = time.time()
     m.eval()
     print(f'{arm} done: {updates} updates, train {t_train:.1f}s ({t_train / max(updates, 1):.3f} s/update)', flush=True)
@@ -694,6 +708,8 @@ def main(argv=None):
     a.add_argument('--rows', default=TRAIN_ROWS, help='training rows (default: the L1 file)')
     a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4', 'l5'], default='l1',
                help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO; l5 = S5, S, HP, HO, HPO, F0-near, F4-two, fit')
+    a.add_argument('--addon-rank', type=int, default=None, help="arm LA only: add-on rank (default: the mode's constant)")
+    a.add_argument('--addon-alpha', type=float, default=None, help="arm LA only: add-on alpha (default: the mode's constant)")
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
     a = a.parse_args(argv)
     if a.stage == 'build':
@@ -708,8 +724,9 @@ def main(argv=None):
         build_l4()
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
+        addon_size(a.arm, {}, a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
-              train_path=a.rows, cells=a.cells)
+              train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha)
 
 
 if __name__ == '__main__':
