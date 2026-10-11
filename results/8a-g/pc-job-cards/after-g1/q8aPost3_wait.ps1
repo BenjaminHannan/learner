@@ -3,7 +3,9 @@
 #   1. test GX seed 400 (8aGXs400, src-8gx), skipped if it already has an ok RESULT.json (it may have run beside G1)
 #   2. fc100 (8aFC, src-b3)                                     3. g2c3 seed 400 (8aG2C3, src-b3)
 #   4. B3 group 1 at 3M seed 400 (8aB3G1s400, src-b3r), then b3_readout.py (marks B3-1 to B3-6) into its log
-#   4a. g2c3s (8aG2C3S, src-b3g2), then B3 group 2 at 3M seed 400 (8aB3G2s400, src-b3g2): big-run PLAN.md option A
+#   4a. g2c3s (8aG2C3S, src-b3g2), then B3 group 2 at 3M seed 400 (8aB3G2s400, src-b3g2): big-run PLAN.md option A. If group 1 s400 is
+#       proved wrong on B3-1, B3-2 or B3-3, group 2 waits for the bisect: it moves to the end and runs only on WORK\G2-GO.txt.
+# Before any launch, a job folder whose job-level RESULT.json is not ok is renamed aside (local_runner would skip it otherwise).
 #   5. only if GX seed 400 is alive: GX seed 401 (8aGXs401)     6. only if B3 seed 400 is alive: g2c3 s401 (8aG2C3s401), then B3 seed 401 + readout
 #   7. g2c10s (8aG2C10S, src-b3g2)                              8. c30s (8aC30S, src-b3g2) unless WORK\B3-READY.txt exists or c30s already ran in a gap
 # g2c10s and c30s (arm PTS, worked steps on every row, caps_b3s.json) replace g2c10 and c30 (big-run PLAN.md addendum 10-10, 9:00 PM ET).
@@ -79,11 +81,27 @@ function MoveDone($pattern, $keep) {
     if ($c.Name -ne $keep) { Move-Item -Force $c.FullName "$JOBS\done\"; Say "moved pc-jobs\$($c.Name) to done" }
   }
 }
+# local_runner skips a job whose job-level RESULT.json exists, even when its status is not ok. Before a launch (no runner present), such a
+# folder is renamed aside (never deleted) so the job really runs.
+function ClearFailed($q, $qf) {
+  foreach ($j in @(Get-Content $qf -ErrorAction SilentlyContinue | Where-Object { $_ -match '^g8a:\s+\S+' } | ForEach-Object { ($_ -split '\s+')[1] })) {
+    $d = "$WORK\results\$q-pc\$j"
+    if (-not (Test-Path "$d\RESULT.json")) { continue }
+    $st = $null
+    try { $st = (Get-Content "$d\RESULT.json" -Raw | ConvertFrom-Json).status } catch { }
+    if ($st -ne 'ok') {
+      $to = "$j.failed-$((Get-Date).ToString('yyyyMMdd-HHmm'))"
+      Rename-Item $d $to
+      Say "results\$q-pc\$j had status '$st': renamed to $to, so the runner runs it again"
+    }
+  }
+}
 function Launch($q, $src, $hash) {
   $qf = "$src\custom_io\queue_local\$q-pc.txt"
   if (-not (Test-Path $qf)) { Say "queue file $qf missing: $q NOT started"; return $false }
   if ((Get-FileHash "$src\custom_io\g8a\caps.py").Hash -ne $hash) { Say "caps.py hash wrong in ${src}: $q NOT started"; return $false }
   if ((Runner) -or (Test-Path "$WORK\STOP")) { Say "a runner or STOP appeared: $q NOT started"; return $false }
+  ClearFailed $q $qf
   $cmd = "$CIO\q${q}_run.cmd"
   Set-Content -Encoding ascii $cmd -Value @(
     '@echo off',
@@ -227,7 +245,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (pid $PID): GX s400 (unless done), fc100, g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s"
+Say "post-G1 chain waiter v3 started (v3b; pid $PID): GX s400 (unless done), fc100, g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s"
 
 # 1. Gate G1 ends.
 $k = 0
@@ -263,8 +281,18 @@ B3Step '8aG2C3' 'g2c3.template.md' 'g2c3.md'
 $rc400 = B3Seed 400
 
 # 4a. Group 2 at 3M seed 400 and its all-steps partner (big-run PLAN.md option A: after B3 group 1 s400, before the 10M and 30M controls).
-$null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
-$null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+# Sealed rule: if group 1 s400 is proved wrong on B3-1, B3-2 or B3-3, group 2 waits for that bisect. It then moves to the end of the chain
+# and runs there only on WORK\G2-GO.txt (WORK\G2-SKIP.txt drops it); the rest of the chain does not wait.
+$g2wrong = "$(& $PY -c "import json,sys; m=json.load(open(sys.argv[1]))['marks']; w=[k for k, f in (('B3-1','dead'),('B3-2','wrong'),('B3-3','wrong')) if (m.get(k) or {}).get(f) is True]; print(' '.join(w) or 'none')" "$WORK\b3g1-s400-readout.json" 2>&1)".Trim()
+$g2held = $false
+if ($g2wrong -match '^(B3-\d)( B3-\d)*$' -and -not (Test-Path "$WORK\G2-GO.txt")) {
+  $g2held = $true
+  Say "group 1 s400 proved wrong on $g2wrong: group 2 (g2c3s, B3 group 2) waits for the bisect; it moves to the end of the chain and runs there only on WORK\G2-GO.txt, NEEDS ATTENTION"
+} else {
+  Say "group 1 s400 proved-wrong marks: $g2wrong. Group 2 runs now."
+  $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
+  $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+}
 
 # 5. GX seed 401, only if GX seed 400 is alive.
 if ($gxHere -and (GXAlive)) {
@@ -283,4 +311,11 @@ if (B3Alive $rc400) {
 $null = G2Step '8aG2C10S' 'g2c10s.template.md' 'g2c10s.md'
 WaitFree 'before c30s'
 C30 'end of the chain'
+if ($g2held) {
+  $w = HoldAny @("$WORK\G2-GO.txt", "$WORK\G2-SKIP.txt") 'group 2 was held (group 1 s400 proved wrong): WORK\G2-GO.txt runs it now, WORK\G2-SKIP.txt drops it'
+  if ($w -like '*G2-GO*') {
+    $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
+    $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
+  } else { Say 'group 2 dropped (WORK\G2-SKIP.txt)' }
+}
 Say 'chain finished'

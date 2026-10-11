@@ -444,4 +444,10 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   failure stops before the waiter is touched. A missing G2-SETUP-OK.txt later makes v3 skip each group 2 job with a NEEDS ATTENTION line.
 - **Untested:** the speed of every group 2 job on the PC; the 10M and 30M accumulations are the old cautious guesses, and G1 showed that
   16-row passes leave the GPU mostly idle at 10M (addendum Q), so fc100's memory readings should reset them before g2c10s runs (suggested).
+- **Installed 8:59 PM ET 10-10** (v2 pid 2760 stopped, v3 pid 8764; CPU check ok on the PC). **Revision v3b (9:10 PM ET), swapped in by
+  `swap_v3b.ps1` while v3 still waits:** (1) before any launch, a job folder whose job-level RESULT.json is not ok is renamed aside
+  (`<job>.failed-<stamp>`, never deleted), because local_runner skips any job with a RESULT.json; the experts thread's GX run beside G1
+  ended arm_failed at 8:53 PM ET. (2) The architecture thread's sealed rule: if group 1 s400 is proved wrong on B3-1 (below +1.0), B3-2 or
+  B3-3 (read from `WORK\b3g1-s400-readout.json`), group 2 and g2c3s wait for the bisect; they move to the end of the chain and run there only
+  on `WORK\G2-GO.txt` (`G2-SKIP.txt` drops them). The rest of the chain does not wait.
 - Marks unchanged (they are the big-run thread's, in PLAN.md).
