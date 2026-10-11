@@ -1,7 +1,7 @@
 {
   "kicker": "Part 6 of 10",
   "title": "Writing down the answer",
-  "blurb": "The talker writes only the final answer, copying where the thinker points. Today it is a small stand-in. The talker that writes English is a placeholder.",
+  "blurb": "The plan: the talker reads the thinker's final thoughts and writes each turn's line, calls and answer, in words, with no pointer. Today it is a small stand-in. The talker that writes English is a placeholder.",
   "accent": "talker",
   "scenes": [
     {
@@ -11,32 +11,33 @@
       "caption": [
         {
           "at": 0.02,
-          "text": "This is the last stop on the map: the talker."
+          "text": "This is the last part inside the model: the talker."
         },
         {
           "at": 0.2,
-          "text": "Its only job is to write the final answer. It adds no thinking."
+          "text": "Its only job is to write each turn's last line. It adds no thinking."
         },
         {
           "at": 0.38,
-          "text": "It reads the thinker's final state, and may copy from the question and the calculator's replies."
+          "text": "New design, untested: thoughts in, calls and answer out. No pointer."
         },
         {
           "at": 0.6,
-          "text": "But only where the thinker points. Today's talker is a small stand-in."
+          "text": "Today's talker is a small stand-in. It also copies from the question and the notes, where the thinker points."
         }
       ],
       "labels": {
         "question": "the question",
-        "replies": "the calculator's replies",
+        "replies": "the notes, with the calculator's replies",
         "state": "thinker's final state (picture only)",
-        "points": "points",
+        "points": "thoughts in",
         "talker": "Talker",
         "talkerSub": "adds no thinking",
         "answer": "answer",
         "ten": "10",
         "tag": "made-up example",
-        "chip": "small stand-in, tested inside the model"
+        "chip": "small stand-in, tested inside the model",
+        "today": "today's stand-in only"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 Talker row (line 38): writes only the final answer from the thinker's final state; today a small stand-in",
@@ -49,7 +50,7 @@
     {
       "id": "s02",
       "duration": 40,
-      "heading": "Three ways the talker writes, today",
+      "heading": "Today's stand-in: three ways to write",
       "caption": [
         {
           "at": 0.02,
@@ -57,7 +58,7 @@
         },
         {
           "at": 0.23,
-          "text": "Span copy takes a stretch of letters from the question or a reply."
+          "text": "Span copy takes a stretch of letters from the question or the notes."
         },
         {
           "at": 0.43,
@@ -65,7 +66,7 @@
         },
         {
           "at": 0.62,
-          "text": "Letter slots spell the answer when it is not in the text."
+          "text": "Letter slots spell the answer when it is not in the text. The planned talker has no pointer."
         }
       ],
       "labels": {
@@ -96,11 +97,11 @@
     {
       "id": "s03",
       "duration": 42,
-      "heading": "Span copy: a pointer, a step left, a stop",
+      "heading": "Today's stand-in, span copy: a pointer, a step left, a stop",
       "caption": [
         {
           "at": 0.02,
-          "text": "The thinker's final state sets a pointer on the last digit of the last reply: the 0."
+          "text": "In today's stand-in, a pointer lands on the last digit of the last reply: the 0."
         },
         {
           "at": 0.23,
@@ -112,7 +113,7 @@
         },
         {
           "at": 0.58,
-          "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10."
+          "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10. The plan has no pointer."
         }
       ],
       "labels": {
@@ -141,11 +142,11 @@
     {
       "id": "s04",
       "duration": 45,
-      "heading": "Span copy: how often, and what is hand-written",
+      "heading": "Stand-in span copy: how often, what is hand-written",
       "caption": [
         {
           "at": 0.02,
-          "text": "In all 6 copies of the 3-million-number model with an outside calculator (T1SDR), span copy wrote 91.5% of answers."
+          "text": "In the tested version, in all 6 copies of the 3-million-number model with an outside calculator (T1SDR), the stand-in's span copy wrote 91.5% of answers."
         },
         {
           "at": 0.24,
@@ -153,11 +154,11 @@
         },
         {
           "at": 0.44,
-          "text": "The pointer and the stop head are learned. Three small pieces are still hand-written code."
+          "text": "The stand-in's pointer and stop head are learned. Three small pieces are hand-written code."
         },
         {
           "at": 0.64,
-          "text": "The plan: one learned writer replaces them. That build has not been run."
+          "text": "The plan: one learned writer, for calls and answers, replaces them. Not run."
         }
       ],
       "labels": {
@@ -172,14 +173,14 @@
           }
         ],
         "chip": "tested at 3M, 6 copies",
-        "barNote": "share of uses, not accuracy",
+        "barNote": "share of uses, not accuracy; both from the tested version",
         "hand": [
           "step one letter left",
           "split text into words",
           "flip last-first text"
         ],
         "handChip": "hand-written",
-        "plan": "one learned writer",
+        "plan": "one learned writer: calls and answers",
         "planChip": "plan only, not run"
       },
       "src": [
@@ -196,11 +197,11 @@
     {
       "id": "s05",
       "duration": 34,
-      "heading": "Letter slots: spelling an answer",
+      "heading": "Today's letter slots: spelling an answer",
       "caption": [
         {
           "at": 0.02,
-          "text": "When the answer is not in the text, the talker spells it in letter slots."
+          "text": "When the answer is not in the text, today's stand-in spells it in letter slots."
         },
         {
           "at": 0.22,
@@ -294,7 +295,7 @@
       "caption": [
         {
           "at": 0.02,
-          "text": "The finished plan has a real talker of about 25 million numbers (25M) that writes English."
+          "text": "The plan's talker, about 25 million numbers (25M), reads the thinker's final thoughts and writes English, with no pointer."
         },
         {
           "at": 0.25,
@@ -528,11 +529,11 @@
       "caption": [
         {
           "at": 0.02,
-          "text": "It writes only the final answer, copying where the thinker points."
+          "text": "The plan: thoughts in, calls and answer out, no pointer."
         },
         {
           "at": 0.28,
-          "text": "Today it is a small stand-in, tested only inside the 3M runs."
+          "text": "Today's stand-in copies by pointer. Tested only at 3M."
         },
         {
           "at": 0.5,
@@ -541,14 +542,14 @@
       ],
       "labels": {
         "cards": [
-          "Writes only the answer",
+          "Writes calls and the answer",
           "Today: a small stand-in",
           "English talker: not built"
         ],
         "chips": [
           {
             "kind": "learned",
-            "label": "talker's pointer, stop head: learned"
+            "label": "stand-in pointer, stop head: learned"
           },
           {
             "kind": "tested",
@@ -569,7 +570,7 @@
         "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 91): today the talker writes short answers and does not produce sentences",
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (lines 79-83): the 35-letter path is built, not run"
       ],
-      "notes": "The brief's recap said 'copy talker tested at small size'. No talker-only test exists; the stand-in ran inside T1SDR 3M runs, so the chip says 'ran in 3M tests, never alone'. BUILDER PLAN: three cards (x 100/686/1272, y 260, w 546, h 170, label 44px) appear one per caption; the four chips sit below in two rows (y 520 and 600) and appear with their card's caption (learned with card 1, tested and untested with card 2, placeholder with card 3). CHECKER: caption 3: \"The model cannot chat\" -> \"Today's model gives short answers, not sentences\" (redesign-ideas-2026-10-07.md sec. 6: \"does not produce sentences\"). FIXER: chip \"talker's pointer, stop head: learned\" (the span copy's own pointer and stop head, FINISHED line 38, not the map's Thinker or Stop switch) sits under its card; unlit map boxes get darker text and 30 px sub-labels."
+      "notes": "The brief's recap said 'copy talker tested at small size'. No talker-only test exists; the stand-in ran inside T1SDR 3M runs, so the chip says 'ran in 3M tests, never alone'. BUILDER PLAN: three cards (x 100/686/1272, y 260, w 546, h 170, label 44px) appear one per caption; the four chips sit below in two rows (y 520 and 600) and appear with their card's caption (learned with card 1, tested and untested with card 2, placeholder with card 3). CHECKER: caption 3: \"The model cannot chat\" -> \"Today's model gives short answers, not sentences\" (redesign-ideas-2026-10-07.md sec. 6: \"does not produce sentences\"). FIXER: chip \"stand-in pointer, stop head: learned\" (the span copy's own pointer and stop head, FINISHED line 38, not the map's Thinker or Stop switch) sits under its card; unlit map boxes get darker text and 30 px sub-labels."
     }
   ]
 }

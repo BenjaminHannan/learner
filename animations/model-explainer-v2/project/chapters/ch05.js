@@ -1,47 +1,56 @@
 Kit.chapter('ch05', function (Ch) {
   const C = Kit.C;
 
-  // s01: where we are. The five-part map, calculator lit, call writer added below and wired to the thinker and the calculator.
+  // s01: where we are. The four-part model (reader, thinker, stop switch, talker) with the calculator OUTSIDE it, lit.
+  // New design: the talker's line calls the calculator at the end of a turn; the reply starts the next turn and the whole reader reads it.
   Ch.scene('s01', function (S) {
     const c = S.c;
-    const m = S.modelMap({ x: 100, y: 250, w: 1720, h: 200, highlight: 'calc' });
+    const m = S.modelMap({ x: 100, y: 440, w: 1720, h: 200, highlight: 'calc', tool: 'above' });
     // the kit greys the four dimmed boxes to the placeholder grey (too light on cream): one step darker, still quieter than the lit Calculator box
     ['reader', 'thinker', 'stop', 'talker'].forEach((k) => {
       m.parts[k].querySelectorAll('.lab').forEach((n) => { n.style.color = C.soft; });
       m.parts[k].querySelectorAll('.sub').forEach((n) => { n.style.color = C.soft; n.style.fontWeight = '600'; });
     });
-    S.stagger([m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker], S.at(0.05), 0.2);
+    S.stagger(m.order.map((k) => m.parts[k]), S.at(0.05), 0.2);
     m.arrows.forEach((a, i) => S.draw(a, S.at(0.2) + i * 0.15, 0.3));
     const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
-    const cw = S.box({ x: 640, y: 590, w: 640, h: 130, label: c.labels.call, color: C.call, size: 44 });
-    // thinker -> call writer (it reads the thinker's vector), call writer -> calculator (it hands over the slip)
-    const a1 = S.path(svg, [[602, 458], [602, 655], [636, 655]], { color: C.soft, width: 6, head: 20 });
-    const a2 = S.arrow(svg, 960, 586, 960, 458, { color: C.soft, width: 6, head: 20 });
-    S.show(cw, S.capAt(0));
-    S.draw(a1, S.capAt(0) + 0.6, 0.6);
-    S.draw(a2, S.capAt(0) + 1.3, 0.5);
+    // new design: the talker's line calls the calculator at the end of a turn (no call writer inside the thinker); status tag below the map
+    S.show(S.chip('untested', { x: 100, y: 760, label: c.labels.chip }), S.capAt(0));
+    S.draw(m.tool.call, S.capAt(0) + 1.8, 0.7);
+    S.show(m.tool.callLabel, S.capAt(0) + 2.2);
+    S.draw(m.tool.reply, S.capAt(0) + 4.0, 0.7);
+    S.show(m.tool.replyLabel, S.capAt(0) + 4.4);
     S.pulse(m.parts.calc, S.capAt(1));
   });
 
-  // s02: why a calculator. Slip out, calculator, slip back.
+  // s02: why a calculator. The thinker's call goes out as text, the outside calculator answers, and the reader reads the reply.
   Ch.scene('s02', function (S) {
     const c = S.c;
     const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
-    const slip = S.box({ x: 160, y: 420, w: 430, h: 150, label: c.labels.slip, color: C.call, size: 40 });
-    const calc = S.box({ x: 745, y: 380, w: 430, h: 230, label: c.labels.calc, color: C.calc, size: 46 });
-    const back = S.box({ x: 1330, y: 420, w: 430, h: 150, label: c.labels.back, color: C.calc, size: 40 });
-    const a1 = S.arrow(svg, 590, 495, 745, 495, { color: C.soft, width: 6 });
-    const a2 = S.arrow(svg, 1175, 495, 1330, 495, { color: C.soft, width: 6 });
+    const slip = S.box({ x: 80, y: 420, w: 380, h: 150, label: c.labels.slip, color: C.call, size: 38 });
+    const calc = S.box({ x: 560, y: 380, w: 400, h: 230, label: c.labels.calc, sub: c.labels.calcsub, color: C.calc, size: 46, subSize: 30 });
+    calc.style.borderStyle = 'dashed';
+    const back = S.box({ x: 1060, y: 420, w: 340, h: 150, label: c.labels.back, color: C.calc, size: 38 });
+    const rd = S.box({ x: 1500, y: 400, w: 340, h: 190, label: c.labels.reader, sub: c.labels.readersub, color: C.reader, size: 46, subSize: 30 });
+    const a1 = S.arrow(svg, 460, 495, 560, 495, { color: C.soft, width: 6 });
+    const a2 = S.arrow(svg, 960, 495, 1060, 495, { color: C.soft, width: 6 });
+    const a3 = S.arrow(svg, 1400, 495, 1500, 495, { color: C.soft, width: 6 });
+    const n1 = S.text(c.labels.slipnote, { x: 80, y: 585, w: 440, size: 28, color: C.soft });
+    const n2 = S.text(c.labels.backnote, { x: 1060, y: 585, w: 400, size: 28, color: C.soft });
     S.show(slip, S.capAt(0));
+    S.show(n1, S.capAt(0) + 0.3);
     let t = S.draw(a1, S.capAt(1), 0.6);
     S.show(calc, S.capAt(1));
-    const why = S.note(c.labels.why, { x: 160, y: 680, w: 1100, color: C.soft });
+    const why = S.note(c.labels.why, { x: 80, y: 700, w: 1100, color: C.soft });
     S.show(why, S.capAt(1) + 0.3);
     t = S.draw(a2, S.capAt(2), 0.6);
     S.show(back, t);
+    S.show(n2, t + 0.2);
+    t = S.draw(a3, t + 0.8, 0.6);
+    S.show(rd, t);
   });
 
-  // s03: the call writer reads control vector 0 and picks one of nine choices.
+  // s03 (tested version): the call writer reads control vector 0 and picks one of nine choices.
   Ch.scene('s03', function (S) {
     const c = S.c;
     const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
@@ -49,6 +58,7 @@ Kit.chapter('ch05', function (Ch) {
     const v = S.vec({ x: 160, y: 430, n: 8, cell: 70, gap: 8, dir: 'h', color: C.thinker, seed: 4 });
     const pic = S.chip('placeholder', { x: 160, y: 600, label: c.labels.pic });
     const cw = S.box({ x: 920, y: 380, w: 380, h: 170, label: c.labels.cw, color: C.call, size: 42 });
+    const cwn = S.text(c.labels.cwnote, { x: 920, y: 565, w: 380, align: 'center', size: 28, color: C.soft });
     const a1 = S.arrow(svg, 792, 465, 918, 465, { color: C.soft, width: 6 });
     const none = S.box({ x: 1440, y: 300, w: 400, h: 110, label: c.labels.none, color: C.soft, size: 36 });
     const ops = S.box({ x: 1440, y: 470, w: 400, h: 110, label: c.labels.ops, color: C.calc, size: 36 });
@@ -59,6 +69,7 @@ Kit.chapter('ch05', function (Ch) {
     S.show(pic, S.capAt(0) + 0.4);
     // the call writer appears while the first caption says it reads the vector
     S.show(cw, S.capAt(0) + 1.0);
+    S.show(cwn, S.capAt(0) + 1.2);
     let t = S.draw(a1, S.capAt(0) + 1.6, 0.7);
     S.pulse(v, t + 0.1);
     S.pulse(cw, t + 0.1);
@@ -67,6 +78,7 @@ Kit.chapter('ch05', function (Ch) {
     S.draw(a3, S.capAt(1), 0.5);
     S.show(none, S.capAt(1) + 0.4);
     S.show(ops, S.capAt(1) + 0.6);
+    S.show(S.chip('tested', { x: 160, y: 740, label: c.labels.chip }), S.capAt(0) + 0.6);
   });
 
   // s04: the eight operations, one card each, with made-up example numbers.
@@ -89,7 +101,7 @@ Kit.chapter('ch05', function (Ch) {
     });
   });
 
-  // s05: the copy trick. Pointer lands on the last digit, copy steps left, a stop head says stop.
+  // s05 (tested version): the copy trick. Pointer lands on the last digit, copy steps left, a stop head says stop.
   Ch.scene('s05', function (S) {
     const c = S.c;
     const q = S.text(c.question, { x: 80, y: 205, w: 1600, size: 36, color: C.soft });
@@ -155,13 +167,14 @@ Kit.chapter('ch05', function (Ch) {
     S.show(S.chip('placeholder', { x: 900, y: 660, label: c.labels.pic }), S.capAt(1) + 0.9);
   });
 
-  // s07: the calculator takes call text and replies with text. Div of 12 by 5 gives a question mark.
+  // s07: the OUTSIDE calculator takes call text and replies with text (read by the reader). Div of 12 by 5 gives a question mark.
   Ch.scene('s07', function (S) {
     const c = S.c;
     const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
     // two calls through the same calculator: row 1 runs (sub 12 5 -> 7), row 2 cannot run (div 12 5 -> ?)
     const inn = S.box({ x: 160, y: 330, w: 460, h: 150, label: c.labels.in, color: C.call, size: 42 });
-    const calc = S.box({ x: 730, y: 300, w: 460, h: 390, label: c.labels.calc, color: C.calc, size: 46 });
+    const calc = S.box({ x: 730, y: 300, w: 460, h: 390, label: c.labels.calc, sub: c.labels.calcsub, color: C.calc, size: 46, subSize: 32 });
+    calc.style.borderStyle = 'dashed';
     const out = S.box({ x: 1290, y: 330, w: 460, h: 150, label: c.labels.out, color: C.calc, size: 42 });
     const in2 = S.box({ x: 160, y: 510, w: 460, h: 150, label: c.labels.in2, color: C.call, size: 42 });
     const out2 = S.box({ x: 1290, y: 510, w: 460, h: 150, label: c.labels.out2, color: C.calc, size: 42 });
@@ -169,11 +182,15 @@ Kit.chapter('ch05', function (Ch) {
     const a2 = S.arrow(svg, 1190, 405, 1290, 405, { color: C.soft, width: 6 });
     const a3 = S.arrow(svg, 620, 585, 730, 585, { color: C.soft, width: 6 });
     const a4 = S.arrow(svg, 1190, 585, 1290, 585, { color: C.soft, width: 6 });
+    const nf = S.text(c.labels.frm, { x: 160, y: 262, w: 480, size: 28, weight: 700, color: C.call });
+    const nt = S.text(c.labels.to, { x: 1290, y: 262, w: 480, size: 28, weight: 700, color: C.reader });
+    S.show(nf, S.capAt(0));
     S.show(inn, S.capAt(0));
     let t = S.draw(a1, S.capAt(0) + 0.3, 0.5);
     S.show(calc, t);
     t = S.draw(a2, t + 0.2, 0.5);
     S.show(out, t);
+    S.show(nt, t);
     S.show(in2, S.capAt(1));
     t = S.draw(a3, S.capAt(1) + 0.4, 0.5);
     t = S.draw(a4, t + 0.2, 0.5);
@@ -181,32 +198,47 @@ Kit.chapter('ch05', function (Ch) {
     S.show(S.chip('hand', { x: 730, y: 715, label: c.labels.tag }), S.capAt(1) + 0.5);
   });
 
-  // s08: the reply goes into the thinker's notes; the question is not read again.
+  // s08 (tested version): the call goes out as text to the OUTSIDE calculator; the reply comes back as text, is read by the reader (letter window)
+  // and only then added to the thinker's notes. The question is not read again.
   Ch.scene('s08', function (S) {
     const c = S.c;
+    const q = S.box({ x: 80, y: 230, w: 460, h: 110, label: c.labels.q, color: C.soft, size: 34 });
+    const cw = S.box({ x: 80, y: 390, w: 460, h: 130, label: c.labels.cw, sub: c.labels.cwsub, color: C.call, size: 40, subSize: 28 });
+    const calc = S.box({ x: 80, y: 630, w: 460, h: 150, label: c.labels.calc, sub: c.labels.calcsub, color: C.calc, size: 40, subSize: 28 });
+    calc.style.borderStyle = 'dashed';
+    const r1 = S.box({ x: 640, y: 430, w: 360, h: 110, label: c.labels.r1, sub: c.labels.rd2, color: C.calc, size: 38, subSize: 28 });
+    const r2 = S.box({ x: 640, y: 640, w: 360, h: 110, label: c.labels.r2, sub: c.labels.rd3, color: C.calc, size: 38, subSize: 28 });
+    const rl = S.text(c.labels.replyTxt, { x: 640, y: 386, w: 360, size: 28, weight: 700, color: C.reader });
+    const cl = S.text(c.labels.callTxt, { x: 316, y: 556, w: 220, size: 28, weight: 700, color: C.call });
+    const rd = S.box({ x: 1090, y: 440, w: 260, h: 300, label: c.labels.reader, sub: c.labels.readersub, color: C.reader, size: 46, subSize: 30 });
+    const notes = S.card({ x: 1440, y: 330, w: 400, h: 420, fill: C.card, color: C.thinker, r: 18 });
+    const nlab = S.text(c.labels.notes, { x: 1470, y: 350, w: 360, size: 36, weight: 700, color: C.thinker });
+    const n1 = S.text(c.labels.r1, { x: 1470, y: 450, w: 360, size: 40, mono: true, color: C.ink });
+    const n2 = S.text(c.labels.r2, { x: 1470, y: 530, w: 360, size: 40, mono: true, color: C.ink });
+    // drawing layer made after the boxes so no arrowhead is hidden
     const svg = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
-    const q = S.box({ x: 160, y: 230, w: 540, h: 150, label: c.labels.q, color: C.soft, size: 36 });
-    const cw = S.box({ x: 160, y: 470, w: 540, h: 130, label: c.labels.cw, color: C.call, size: 40 });
-    const calc = S.box({ x: 160, y: 640, w: 540, h: 130, label: c.labels.calc, color: C.calc, size: 40 });
-    const notes = S.card({ x: 800, y: 230, w: 1040, h: 430, fill: C.card, color: C.thinker, r: 18 });
-    const nlab = S.text(c.labels.notes, { x: 840, y: 250, w: 800, size: 36, weight: 700, color: C.thinker });
-    // second drawing layer made AFTER the notes card: the first layer sits behind the card, which hid the curves' arrowheads
-    const svgTop = S.svg({ x: 0, y: 0, w: 1920, h: 1080 });
-    const r1 = S.box({ x: 840, y: 330, w: 960, h: 120, label: c.labels.r1, sub: c.labels.rd2, color: C.calc, size: 40, subSize: 30 });
-    const r2 = S.box({ x: 840, y: 500, w: 960, h: 120, label: c.labels.r2, sub: c.labels.rd3, color: C.calc, size: 40, subSize: 30 });
     S.show(q, S.capAt(0));
     S.show(cw, S.capAt(0) + 0.2);
-    S.draw(S.arrow(svg, 430, 600, 430, 640, { color: C.soft, width: 6 }), S.capAt(0) + 0.4, 0.3);
-    S.show(calc, S.capAt(0) + 0.5);
-    S.show(notes, S.capAt(1));
-    S.show(nlab, S.capAt(1) + 0.1);
-    const c1 = S.curve(svgTop, 700, 705, 838, 390, { bend: 60, color: C.soft, width: 6 });
-    S.draw(c1, S.capAt(1) + 0.2, 0.6);
-    S.show(r1, S.capAt(1) + 0.6);
+    S.draw(S.arrow(svg, 310, 524, 310, 626, { color: C.call, width: 6 }), S.capAt(0) + 0.4, 0.3);
+    S.show(cl, S.capAt(0) + 0.5);
+    S.show(calc, S.capAt(0) + 0.6);
+    // second caption: reply text -> reader -> notes
+    S.draw(S.curve(svg, 542, 690, 638, 495, { bend: 40, color: C.reader, width: 6 }), S.capAt(1) + 0.1, 0.6);
+    S.show(r1, S.capAt(1) + 0.5);
+    S.show(rl, S.capAt(1) + 0.5);
+    S.draw(S.arrow(svg, 1002, 485, 1088, 590, { color: C.reader, width: 6 }), S.capAt(1) + 1.2, 0.5);
+    S.show(rd, S.capAt(1) + 1.2);
+    S.show(S.text(c.labels.newrd, { x: 1060, y: 752, w: 340, size: 25, weight: 700, color: C.reader }), S.capAt(1) + 1.6);
+    S.show(notes, S.capAt(1) + 1.9);
+    S.show(nlab, S.capAt(1) + 2.0);
+    S.draw(S.arrow(svg, 1352, 590, 1438, 590, { color: C.reader, width: 6 }), S.capAt(1) + 2.2, 0.5);
+    S.show(n1, S.capAt(1) + 2.7);
+    // third caption: the question is not read again; the second reply takes the same road
     S.pulse(q, S.capAt(2));
-    const c2 = S.curve(svgTop, 700, 705, 838, 560, { bend: 40, color: C.soft, width: 6 });
-    S.draw(c2, S.capAt(2) + 0.2, 0.6);
+    S.draw(S.arrow(svg, 542, 705, 638, 695, { color: C.reader, width: 6 }), S.capAt(2) + 0.2, 0.5);
     S.show(r2, S.capAt(2) + 0.6);
+    S.draw(S.arrow(svg, 1002, 695, 1088, 590, { color: C.reader, width: 6 }), S.capAt(2) + 1.3, 0.5);
+    S.show(n2, S.capAt(2) + 1.9);
   });
 
   // s09: timing today. Round k+1 feeds call k; rounds 9-32 cannot call.

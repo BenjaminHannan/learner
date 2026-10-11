@@ -34,30 +34,32 @@ Kit.chapter('ch00', function (Ch) {
     S.show(bx[1], S.capAt(2)); S.draw(a, S.capAt(2) - 0.3, 0.4); S.pop(ch[1], S.capAt(2) + 0.8);
   });
 
-  // s06: the five-part map, built one part per caption
+  // s06: the four-part model, then the outside calculator it uses
   Ch.scene('s06', function (S) {
     const L = S.c.labels;
-    const m = S.modelMap({ x: 100, y: 290, w: 1720, h: 250 });
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const m = S.modelMap({ x: 100, y: 400, w: 1720, h: 250, tool: 'above' });
+    const order = m.order;   // reader, thinker, stop, talker, calc (calc is outside the frame)
     order.forEach((k, i) => {
       const t = S.capAt(i);
       S.show(m.parts[k], t);
-      if (i > 0) S.draw(m.arrows[i - 1], t - 0.3, 0.4);
-      S.show(S.text(L.jobs[i], { x: 100 + i * 358, y: 580, w: 288, size: 32, align: 'center', color: C.ink }), t + 0.2, { dur: 0.4 });
+      if (i > 0 && i < 4) S.draw(m.arrows[i - 1], t - 0.3, 0.4);
+      S.show(S.text(L.jobs[i], { x: m.colX[k], y: 690, w: 288, size: 32, align: 'center', color: C.ink }), t + 0.2, { dur: 0.4 });
       S.pulse(m.parts[k], t + 0.9);
     });
-    S.pop(S.chip('untested', { x: 1143, y: 680, label: L.chipStop, size: 32 }), S.capAt(3) + 0.9);
-    S.pop(S.chip('placeholder', { x: 1528, y: 680, label: L.chip, size: 32 }), S.capAt(4) + 0.9);
+    S.pop(S.chip('untested', { x: m.colX.stop, y: 790, label: L.chipStop, size: 32 }), S.capAt(2) + 0.9);
+    S.pop(S.chip('placeholder', { x: m.colX.talker, y: 790, label: L.chip, size: 32 }), S.capAt(3) + 0.9);
+    S.draw(m.tool.call, S.capAt(4) + 1.2, 0.6); S.show(m.tool.callLabel, S.capAt(4) + 1.4);
+    S.draw(m.tool.reply, S.capAt(4) + 2.4, 0.6); S.show(m.tool.replyLabel, S.capAt(4) + 2.6);
   });
 
   // s08: the student analogy, six cards in the part colours
   Ch.scene('s08', function (S) {
-    const L = S.c.labels, cols = [C.reader, C.thinker, C.call, C.calc, C.stop, C.talker];
+    const L = S.c.labels, cols = [C.reader, C.thinker, C.stop, C.talker, C.calc];
     const cards = L.cards.map((c, i) => S.box({ x: 100 + (i % 3) * 590, y: 230 + Math.floor(i / 3) * 290, w: 540, h: 250, label: c.t, sub: c.p, color: cols[i], size: 50, subSize: 34 }));
     S.stagger(cards, S.capAt(0), 0.45);
     S.pulse(cards[0], S.capAt(1)); S.pulse(cards[1], S.capAt(1) + 0.4);
-    S.pulse(cards[2], S.capAt(2)); S.pulse(cards[3], S.capAt(2) + 0.4);
-    S.pulse(cards[4], S.capAt(3)); S.pulse(cards[5], S.capAt(3) + 0.4);
+    S.pulse(cards[3], S.capAt(2)); S.pulse(cards[4], S.capAt(2) + 0.4);
+    S.pulse(cards[2], S.capAt(3)); S.pulse(cards[3], S.capAt(3) + 0.4);
   });
 
   // s09: the three status tags with one example each

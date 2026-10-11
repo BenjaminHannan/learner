@@ -5,15 +5,15 @@ Kit.chapter('ch14', function (Ch) {
   const mkChip = (S, spec, x, y, size) => S.chip(spec.kind, { x: x, y: y, label: spec.label, size: size || 28, color: spec.color ? col(spec.color) : undefined });
   const monoLab = (b) => { const l = b.querySelector('.lab'); if (l) l.classList.add('mono'); };
 
-  // s01: the five-part ledger. Map first, then a status chip per part, stepping with the captions.
+  // s01: the four-part ledger plus the outside calculator. Map first, then a status chip per part, stepping with the captions.
   Ch.scene('s01', function (S) {
     const c = S.c;
     const m = S.modelMap({ x: 100, y: 215, w: 1720, h: 150 });
-    const keys = ['reader', 'thinker', 'calc', 'stop', 'talker'];
-    keys.forEach((k, i) => S.show(m.parts[k], S.at(0.04) + i * 0.18));
-    m.arrows.forEach((a, i) => S.draw(a, S.at(0.08) + i * 0.18, 0.3));
+    const dkeys = ['reader', 'thinker', 'calc', 'stop', 'talker'];   // order of c.parts in the content file
+    m.order.forEach((k, i) => S.show(m.parts[k], S.at(0.04) + i * 0.18));
+    m.arrows.forEach((a, i) => S.draw(a, S.at(0.08) + (i + 1) * 0.18, 0.3));
     const groups = c.parts.map((p, i) => {
-      const x = 100 + i * 358, els = [];
+      const x = m.colX[dkeys[i]], els = [];
       p.chips.forEach((ch, j) => els.push(mkChip(S, ch, x, 400 + j * 62, 26)));
       if (p.text) els.push(S.text(p.text, { x: x, y: 400 + p.chips.length * 62 + 12, w: 300, size: 30 }));
       return els;
@@ -47,6 +47,7 @@ Kit.chapter('ch14', function (Ch) {
     const c = S.c, L = c.labels, V = c.values;
     const slip = S.box({ x: 120, y: 230, w: 360, h: 130, label: L.slip, color: C.call, size: 46 }); monoLab(slip);
     const calc = S.box({ x: 700, y: 215, w: 400, h: 160, label: L.calc, color: C.calc, size: 46 });
+    const rnote = S.text(L.replyNote, { x: 1240, y: 380, w: 460, size: 34, align: 'center', color: C.ink });
     const back = S.box({ x: 1320, y: 230, w: 300, h: 130, label: L.reply, color: C.calc, size: 64 }); monoLab(back);   // calculator slate: a made-up reply must not look 'tested'
     const tag = S.chip('placeholder', { x: 120, y: 392, label: L.tag, size: 26 });
     const ok = S.chip('tested', { x: 200, y: 545, label: L.chip, size: 26 });   // sits with the number line it describes
@@ -58,6 +59,7 @@ Kit.chapter('ch14', function (Ch) {
     S.show(calc, S.capAt(0) + 1.5);
     S.draw(a2, S.capAt(0) + 2.4, 0.6);
     S.show(back, S.capAt(0) + 3.0);
+    S.show(rnote, S.capAt(0) + 3.2);
     S.pop(tag, S.capAt(0) + 3.4);
     S.pulse(calc, S.capAt(0) + 2.0);
     // number line, drawn to scale for -1 .. +2 (400 px per point)
@@ -181,19 +183,21 @@ Kit.chapter('ch14', function (Ch) {
   Ch.scene('s12', function (S) {
     const c = S.c;
     const m = S.modelMap({ x: 100, y: 215, w: 1720, h: 140 });
-    const keys = ['reader', 'thinker', 'calc', 'stop', 'talker'];
-    keys.forEach((k, i) => S.show(m.parts[k], S.at(0.04) + i * 0.18));
-    m.arrows.forEach((a, i) => S.draw(a, S.at(0.08) + i * 0.18, 0.3));
-    const lines = c.parts.map((p, i) => S.text(p, { x: 100 + i * 358, y: 372, w: 288, size: 34 }));
+    const dkeys = ['reader', 'thinker', 'calc', 'stop', 'talker'];   // order of c.parts and of the status list
+    m.order.forEach((k, i) => S.show(m.parts[k], S.at(0.04) + i * 0.18));
+    m.arrows.forEach((a, i) => S.draw(a, S.at(0.08) + (i + 1) * 0.18, 0.3));
+    const lines = c.parts.map((p, i) => S.text(p, { x: m.colX[dkeys[i]], y: 372, w: 288, size: 34 }));
     S.stagger(lines, S.capAt(0) + 0.5, 0.45, { dur: 0.4 });
     // one status chip per part (kit default words, same statuses as s01), so "most of the rest is built or planned" is visible
-    const stat = ['tested', 'tested', 'tested', 'untested', 'placeholder'].map((k, i) => S.chip(k, { x: 100 + i * 358, y: 480, size: 26 }));
+    const stat = ['tested', 'tested', 'tested', 'untested', 'placeholder'].map((k, i) => S.chip(k, { x: m.colX[dkeys[i]], y: 500, size: 26 }));
     S.pop(stat[0], S.capAt(0) + 1.4); S.pop(stat[1], S.capAt(0) + 1.9);
     S.pop(stat[2], S.capAt(1) + 0.4);
     S.pop(stat[3], S.capAt(1) + 1.8); S.pop(stat[4], S.capAt(1) + 2.4);
     S.pulse(m.parts.thinker, S.capAt(0) + 3.0);
     S.pulse(m.parts.calc, S.capAt(1) + 0.8);
     const chip = S.chip('placeholder', { x: 100, y: 565, label: c.chip });
+    const dz = S.text(c.design, { x: 100, y: 826, w: 1720, size: 29, weight: 600, color: C.soft });
+    S.show(dz, S.capAt(1) + 3.2);
     const n0 = S.note(c.notes_on[0], { x: 100, y: 630, w: 1720, color: C.placeholder, size: 46 });
     const n1 = S.note(c.notes_on[1], { x: 100, y: 735, w: 1720, color: C.placeholder, size: 36 });
     S.pop(chip, S.capAt(2) + 0.2);

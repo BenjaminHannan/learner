@@ -199,22 +199,23 @@
     },
     {
       "id": "s06",
-      "duration": 23.5,
-      "heading": "The converter plug: 768 numbers in",
+      "duration": 22,
+      "heading": "The small models' converter plug",
       "caption": [
         {
-          "at": 0.0255,
-          "text": "One linear layer, a learned mix of numbers, turns Gemma's 768 numbers into the thinker's row length, its width."
+          "at": 0.0273,
+          "text": "In the small test models, a converter plug, one learned layer, turns Gemma's 768 numbers into the thinker's width."
         },
         {
-          "at": 0.4987,
-          "text": "At width 256 it has 196,864 learned numbers; at width 512 it has 393,728."
+          "at": 0.424,
+          "text": "At width 256 it has 196,864 learned numbers. At full size there is no plug: Gemma's 512 numbers go straight in."
         }
       ],
       "labels": {
         "in": "768 in",
         "out": "thinker width",
-        "plug": "converter plug"
+        "plug": "converter plug (small models)",
+        "full": "full size: no plug, Gemma's 512 go straight in"
       },
       "chip": "learned",
       "src": [
@@ -226,34 +227,34 @@
       "atMap": [
         [
           0.0273,
-          0.0255
+          0.0273
         ],
         [
           0.4977,
-          0.4987
+          0.424
         ]
       ]
     },
     {
       "id": "s07",
-      "duration": 35,
+      "duration": 36,
       "heading": "Four parts added into one letter row",
       "caption": [
         {
-          "at": 0.0171,
+          "at": 0.0167,
           "text": "First: which letter it is. A learned row of numbers."
         },
         {
-          "at": 0.2007,
+          "at": 0.1951,
           "text": "Second: where it sits in the question. A learned table: 2,000 rows in the planned finished design (B3), 280 in the growth test (G1)."
         },
         {
-          "at": 0.5227,
+          "at": 0.5081,
           "text": "Third: how far its letter sits from the end of its word. The count is hand-written; the row it picks is learned."
         },
         {
-          "at": 0.7843,
-          "text": "Fourth: Gemma's meaning, through the converter plug, is added on top. Then the letter window (next scene) reads the sum."
+          "at": 0.7625,
+          "text": "Fourth: Gemma's meaning is added on top, via a small plug (none at full size). The letter window reads the sum."
         }
       ],
       "labels": {
@@ -276,19 +277,19 @@
       "atMap": [
         [
           0.0136,
-          0.0171
+          0.0167
         ],
         [
           0.2563,
-          0.2007
+          0.1951
         ],
         [
           0.4989,
-          0.5227
+          0.5081
         ],
         [
           0.7415,
-          0.7843
+          0.7625
         ]
       ]
     },
@@ -450,20 +451,20 @@
     },
     {
       "id": "s11",
-      "duration": 23,
+      "duration": 23.5,
       "heading": "A hand-written pattern marks the numbers",
       "illustration": "picture only: the marked cells are not a real question",
       "caption": [
         {
-          "at": 0.0261,
-          "text": "A plain pattern, written by hand, finds the numbers in the question."
+          "at": 0.0255,
+          "text": "Tested version: a hand-written pattern finds numbers. The new design copies none."
         },
         {
-          "at": 0.2689,
+          "at": 0.2726,
           "text": "It records where each number is, not its value."
         },
         {
-          "at": 0.4652,
+          "at": 0.4647,
           "text": "Room to mark: 16 numbers in the calculator-outside model (T1SDR), 91 in the growth test (G1), 240 in planned B3."
         }
       ],
@@ -491,62 +492,64 @@
       "atMap": [
         [
           0.0207,
-          0.0261
+          0.0255
         ],
         [
           0.3391,
-          0.2689
+          0.2726
         ],
         [
           0.6575,
-          0.4652
+          0.4647
         ]
       ]
     },
     {
       "id": "s12",
-      "duration": 20,
-      "heading": "Calculator replies: read by the window only",
+      "duration": 21,
+      "heading": "Calculator replies: read by the whole reader",
       "caption": [
         {
-          "at": 0.03,
-          "text": "In B3, the plain-code calculator's reply, shown as sub 12 5 = 7, is read by the letter window."
+          "at": 0.0286,
+          "text": "New design: each calculator reply, shown as sub 12 5 = 7, is read by Gemma plus the letter window."
         },
         {
-          "at": 0.4343,
-          "text": "Gemma does not read replies. It read the question once."
+          "at": 0.4306,
+          "text": "Built B3 version: the window alone reads replies."
         },
         {
-          "at": 0.6779,
-          "text": "Suggested reasoning: a reply carries nothing Gemma would add."
+          "at": 0.6451,
+          "text": "Never tested. The old reason, that Gemma adds nothing to a reply, was only suggested."
         }
       ],
       "example": "sub 12 5 = 7",
       "labels": {
+        "from": "reply from the outside calculator",
         "win": "letter window",
-        "gem": "Gemma"
+        "gem": "Gemma",
+        "old": "built B3 version only: window alone"
       },
       "chip": "untested",
-      "chip_label": "built, never tested",
-      "illustration": "suggested reasoning",
+      "chip_label": "being built, never tested",
+      "illustration": "old B3 reasoning: suggested only",
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 5 (lines 120-122; labelled suggested)",
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 3",
         "custom_io/models/b3.py lines 3-4 (B3 group 1: the calculator's entries are read by the letter reader alone, Tool.read_texts; Gemma sees each question once)"
       ],
-      "notes": "B3 group 1 builds this way; it has never been run (FINISHED sec. 5 item 6: the outside calculator and Gemma have never run together). The reply path is built, the reason is suggested, not measured. Checker edit: the two boxes now carry labels (they were empty), and the caption says 'shown as' to match the glossary (the reply itself is 7). Fixer edit: the amber chip now appears from the first beat (it was only at the last caption) and uses the chapter-wide wording \"built, never tested\". The X on the Gemma path is the as-built design of B3 group 1 (b3.py lines 3-4; FINISHED sec. 5 item 5), never run (item 6); only the reason (a reply adds nothing for Gemma) is \"suggested\", and that tag stays on caption 3. Captions unchanged.",
+      "notes": "B3 group 1 builds this way; it has never been run (FINISHED sec. 5 item 6: the outside calculator and Gemma have never run together). The reply path is built, the reason is suggested, not measured. Checker edit: the two boxes now carry labels (they were empty), and the caption says 'shown as' to match the glossary (the reply itself is 7). Fixer edit: the amber chip now appears from the first beat (it was only at the last caption) and uses the chapter-wide wording \"built, never tested\". The X on the Gemma path is the as-built design of B3 group 1 (b3.py lines 3-4; FINISHED sec. 5 item 5), never run (item 6); only the reason (a reply adds nothing for Gemma) is \"suggested\", and that tag stays on caption 3. Captions unchanged. Round 2 (Oct 11): the new design (FINISHED sec. 5 items 16-18) has the whole reader, Gemma plus the letter window, read every tool reply like the question; the X on the Gemma path now marks only the built B3 version (b3.py lines 3-4).",
       "atMap": [
         [
           0.0222,
-          0.03
+          0.0286
         ],
         [
           0.3395,
-          0.4343
+          0.4306
         ],
         [
           0.6568,
-          0.6779
+          0.6451
         ]
       ]
     },

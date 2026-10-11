@@ -46,16 +46,16 @@ Kit.chapter('ch01', function (Ch) {
 
   Ch.scene('s01', function (S) {
     const c = S.c;
-    const keys = ['reader', 'thinker', 'calc', 'stop', 'talker'];
     const m = S.modelMap({ x: 100, y: 300, w: 1720, h: 200 });
-    S.stagger(keys.map((k) => m.parts[k]), S.capAt(0), 0.35);
-    // third caption: a status chip under each part (the map's boxes are 288 wide, 358 apart), then one for all five
-    const kinds = ['tested', 'tested', 'tested', 'untested', 'placeholder'];
+    S.stagger(m.order.map((k) => m.parts[k]), S.capAt(0), 0.35);
+    // third caption: a status chip under each part, placed by key (the calculator is the last column, outside the frame),
+    // then one for the whole machine. c.part_chips keeps its old order: reader, thinker, calculator, stop switch, talker.
+    const chipOf = { reader: ['tested', 0], thinker: ['tested', 1], stop: ['untested', 3], talker: ['placeholder', 4], calc: ['tested', 2] };
     const t = S.capAt(2);
-    kinds.forEach((k, i) => S.pop(cchip(S, k, { label: c.part_chips[i] }, 100 + i * 358 + 144, 520), t + i * 0.2));
+    m.order.forEach((k, i) => S.pop(cchip(S, chipOf[k][0], { label: c.part_chips[chipOf[k][1]] }, m.colC[k], 540), t + i * 0.2));
     const svg = S.svg();
-    S.draw(bracket(S, svg, 100, 1820, 640, 18, C.untested), t + 1.3, 0.8);
-    S.pop(cchip(S, 'untested', { label: c.chip }, 960, 660), t + 2.0);
+    S.draw(bracket(S, svg, 100, 1820, 660, 18, C.untested), t + 1.3, 0.8);
+    S.pop(cchip(S, 'untested', { label: c.chip }, 960, 680), t + 2.0);
   });
 
   Ch.scene('s02', function (S) {
@@ -146,6 +146,8 @@ Kit.chapter('ch01', function (Ch) {
     const svg = S.svg();
     S.draw(bracket(S, svg, 390, 1530, 690, 18, C.tested), S.capAt(2) + 0.3, 0.8);
     S.pop(cchip(S, 'tested', { label: c.chips[0] }, 960, 708), S.capAt(2) + 1.0);
+    // one line on the new design (talker writes the call); the picture above is the tested version
+    S.show(S.text(c.labels[2], { x: 260, y: 800, w: 1400, size: 34, align: 'center', color: C.soft }), S.capAt(2) + 1.6);
   });
 
   Ch.scene('s08', function (S) {
@@ -167,17 +169,23 @@ Kit.chapter('ch01', function (Ch) {
     // caption 3: hand-written flip, then the call (the request to the calculator)
     S.show(S.box({ x: 489, y: 623, w: 420, h: 90, label: c.labels[2], color: C.hand, size: 34 }), S.capAt(2));
     S.draw(S.arrow(svg, 912, 668, 996, 668, { color: C.hand }), S.capAt(2) + 0.4, 0.4);
-    S.show(S.text(c.labels[3], { x: 1000, y: 568, w: 700, size: 32, color: C.soft }), S.capAt(2) + 0.8);
+    S.show(S.text(c.labels[3], { x: 1000, y: 568, w: 800, size: 32, color: C.soft }), S.capAt(2) + 0.8);
     S.show(S.text(c.call, { x: 1000, y: 612, w: 600, size: 90, mono: true, color: C.call }), S.capAt(2) + 0.8);
+    // one line on the new design; the picture above is the tested version
+    S.show(S.text(c.labels[4], { x: 160, y: 820, w: 1600, size: 34, align: 'center', color: C.soft }), S.capAt(2) + 1.6);
   });
 
   Ch.scene('s09', function (S) {
     const c = S.c;
     const svg = S.svg();
-    S.show(S.box({ x: 700, y: 360, w: 520, h: 200, label: c.labels[0], color: C.calc, size: 46 }), S.capAt(0));
+    // the calculator is an outside tool: dashed border and its own "outside tool" sub-label, as in the shared map
+    const calcBox = S.box({ x: 700, y: 360, w: 520, h: 200, label: c.labels[0], sub: c.labels[2], color: C.calc, size: 46, subSize: 30 });
+    calcBox.style.borderStyle = 'dashed';
+    S.show(calcBox, S.capAt(0));
     S.pop(S.chip('hand', { x: 700, y: 600 }), S.capAt(0) + 0.4);
     S.show(S.text(c.request, { x: 160, y: 415, w: 480, size: 52, align: 'right', mono: true, color: C.call }), S.capAt(1));
     S.draw(S.arrow(svg, 656, 447, 700, 447, { color: C.call }), S.capAt(1) + 0.4, 0.4);
+    S.show(S.text(c.labels[3], { x: 160, y: 490, w: 480, size: 30, align: 'right', color: C.soft }), S.capAt(1) + 0.6);
     const num = S.text('0.0', { x: 1280, y: 380, w: 500, size: 150, weight: 800, align: 'center', color: C.calc });
     S.show(num, S.capAt(2));
     S.count(num, { from: 0, to: c.zero_score, dec: 1 }, S.capAt(2), 1.2);
@@ -190,14 +198,19 @@ Kit.chapter('ch01', function (Ch) {
     const c = S.c;
     const svg = S.svg();
     const wReq = monoW(c.request, 52), wRep = monoW(c.reply, 52);
-    S.show(S.box({ x: 1240, y: 330, w: 520, h: 200, label: c.labels[0], color: C.calc, size: 46 }), S.capAt(0));
+    const calcBox = S.box({ x: 1240, y: 330, w: 520, h: 200, label: c.labels[0], sub: c.labels[3], color: C.calc, size: 46, subSize: 30 });
+    calcBox.style.borderStyle = 'dashed';   // outside tool
+    S.show(calcBox, S.capAt(0));
     S.show(S.text(c.request, { x: 160, y: 358, w: 480, size: 52, mono: true, color: C.call }), S.capAt(0));
     // each arrow starts or ends at the edge of the text it carries
     S.draw(S.arrow(svg, 160 + wReq + 24, 390, 1240, 390, { color: C.call }), S.capAt(0) + 0.4, 0.6);
     S.draw(S.arrow(svg, 1240, 480, 160 + wRep + 24, 480, { color: C.calc }), S.capAt(1), 0.6);
     S.show(S.text(c.reply, { x: 160, y: 448, w: 700, size: 52, mono: true, color: C.calc }), S.capAt(1) + 0.4);
-    S.show(S.box({ x: 160, y: 680, w: 560, h: 120, label: c.labels[1], color: C.thinker, size: 40 }), S.capAt(2));
-    S.draw(S.arrow(svg, 160 + wRep / 2, 524, 160 + wRep / 2, 680, { color: C.soft }), S.capAt(2) + 0.3, 0.5);
+    // the reply is read by the reader (its letter window), and only then goes into the thinker's notes
+    S.show(S.box({ x: 160, y: 590, w: 420, h: 110, label: c.labels[2], color: C.reader, size: 40 }), S.capAt(1) + 0.8);
+    S.draw(S.arrow(svg, 160 + wRep / 2, 524, 160 + wRep / 2, 590, { color: C.reader }), S.capAt(1) + 0.9, 0.4);
+    S.show(S.box({ x: 760, y: 590, w: 420, h: 110, label: c.labels[1], color: C.thinker, size: 40 }), S.capAt(2));
+    S.draw(S.arrow(svg, 590, 645, 750, 645, { color: C.soft }), S.capAt(2) + 0.3, 0.5);
     S.pop(S.chip('hand', { x: 1240, y: 580 }), S.capAt(0) + 0.6);
   });
 
@@ -230,7 +243,8 @@ Kit.chapter('ch01', function (Ch) {
     const rb = S.letters(c.reply2, { x: notesX, y: 770, size: SZ, parent: wrap });
     S.sweep(rb.cells, t + 0.6, 0.8);
     S.move(wrap, t + 1.9, 1.2, { y: -260 });
-    S.show(S.text(c.labels[1], { x: notesX + rowW(c.reply2, SZ) + 40, y: 516, w: 300, size: 40, weight: 800, color: C.calc }), t + 3.1);
+    S.show(S.text(c.labels[1], { x: notesX + rowW(c.reply2, SZ) + 40, y: 516, w: 560, size: 34, weight: 800, color: C.calc }), t + 3.1);
+    S.show(S.text(c.labels[3], { x: Math.round(callX + monoW(c.call2, CALL) + 40), y: 650, w: 700, size: 32, color: C.soft }), S.capAt(1) + 0.8);
   });
 
   Ch.scene('s12', function (S) {
@@ -271,7 +285,8 @@ Kit.chapter('ch01', function (Ch) {
     S.sweep(L.cells, S.capAt(0), 0.9);
     S.tint(L.byIndex[10], S.capAt(1), { fill: C.talker });
     S.tint(L.byIndex[11], S.capAt(1), { fill: C.talker });
-    S.show(S.box({ x: 560, y: 470, w: 520, h: 150, label: c.labels[0], color: C.talker, size: 46 }), S.capAt(0));
+    S.show(S.box({ x: 560, y: 470, w: 520, h: 150, label: c.labels[0], sub: c.labels[2], color: C.talker, size: 46, subSize: 30 }), S.capAt(0));
+    S.show(S.text(c.labels[3], { x: 860, y: 400, w: 900, size: 30, color: C.placeholder }), S.capAt(0) + 0.6);
     S.draw(S.arrow(svg, 820, 350, 820, 470, { color: C.talker }), S.capAt(1), 0.6);
     // the answer comes out of the Talker; the grey chip sits under the Talker, not under the answer
     S.draw(S.arrow(svg, 1086, 545, 1330, 545, { color: C.talker }), S.capAt(1) + 0.8, 0.5);
@@ -294,15 +309,23 @@ Kit.chapter('ch01', function (Ch) {
 
   Ch.scene('s16', function (S) {
     const c = S.c;
-    const m = S.modelMap({ x: 100, y: 330, w: 1720, h: 200 });
-    const parts = [m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker];
-    // the recap builds with the sentences: three parts with the first, two with the second, then each box lights in turn
-    const when = [S.capAt(0), S.capAt(0) + 1.0, S.capAt(0) + 2.0, S.capAt(1), S.capAt(1) + 1.0];
-    parts.forEach((p, i) => {
-      S.show(p, when[i]);
-      S.show(S.text(c.labels[i], { x: 100 + i * 358 + 144 - 165, y: 560, w: 330, size: 34, weight: 600, align: 'center', color: C.ink }), when[i] + 0.3);
-      if (i > 0) S.draw(m.arrows[i - 1], when[i], 0.4);
+    // y = 410 leaves room above the boxes for the call and reply arcs between the model and the outside calculator
+    const m = S.modelMap({ x: 100, y: 410, w: 1720, h: 200, tool: 'above' });
+    // four model parts in the frame, the calculator outside it; c.labels keeps its old order: reader, thinker, calculator, stop switch, talker
+    const lab = { reader: c.labels[0], thinker: c.labels[1], calc: c.labels[2], stop: c.labels[3], talker: c.labels[4] };
+    // caption 1 covers the reader and the thinker; caption 2 the stop switch, the talker and its line that calls the outside calculator
+    const when = { reader: S.capAt(0), thinker: S.capAt(0) + 1.0, stop: S.capAt(1), talker: S.capAt(1) + 1.0, calc: S.capAt(1) + 2.0 };
+    const arrowOf = { thinker: m.arrows[0], stop: m.arrows[1], talker: m.arrows[2] };
+    m.order.forEach((k) => {
+      S.show(m.parts[k], when[k]);
+      S.show(S.text(lab[k], { x: m.colC[k] - 165, y: 635, w: 330, size: 34, weight: 600, align: 'center', color: C.ink }), when[k] + 0.3);
+      if (arrowOf[k]) S.draw(arrowOf[k], when[k], 0.4);
     });
-    parts.forEach((p, i) => S.pulse(p, S.capAt(2) + i * 0.4));
+    // the talker's line is the call; the reply comes back as text and the reader reads it
+    S.draw(m.tool.call, when.calc + 0.5, 0.6);
+    S.show(m.tool.callLabel, when.calc + 0.8);
+    S.draw(m.tool.reply, when.calc + 1.4, 0.6);
+    S.show(m.tool.replyLabel, when.calc + 1.7);
+    m.order.forEach((k, i) => S.pulse(m.parts[k], S.capAt(2) + i * 0.4));
   });
 });

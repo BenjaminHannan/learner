@@ -82,11 +82,12 @@ Kit.chapter('ch09', function (Ch) {
   Ch.scene('s01', function (S) {
     const c = S.c;
     const m = S.modelMap({ x: 100, y: 250, w: 1720, h: 190, highlight: 'thinker' });
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const order = ['reader', 'thinker', 'stop', 'talker', 'calc'];
     const t = S.at(0.04);
-    order.forEach((k, i) => { S.show(m.parts[k], t + i * 0.3); if (m.arrows[i]) S.draw(m.arrows[i], t + i * 0.3 + 0.25, 0.4); });
+    // the 3 arrows are inside the model: arrows[0] comes in with the thinker, arrows[1] with the stop switch, arrows[2] with the talker; the calculator (outside tool) has none
+    order.forEach((k, i) => { S.show(m.parts[k], t + i * 0.3); if (i >= 1 && m.arrows[i - 1]) S.draw(m.arrows[i - 1], t + i * 0.3 + 0.25, 0.4); });
     const svg = S.svg();
-    const loop = S.curve(svg, 690, 448, 514, 448, { color: C.thinker, bend: 170, width: 7, head: 20 });
+    const loop = S.curve(svg, m.colC.thinker + 88, 448, m.colC.thinker - 88, 448, { color: C.thinker, bend: 170, width: 7, head: 20 });
     const note = S.note(c.note, { x: 100, y: 570, w: 1560, color: C.thinker, size: 40 });
     const design = S.note(c.design, { x: 100, y: 690, w: 1720, color: C.warn, size: 40 });
     S.pulse(m.parts.thinker, S.capAt(0) + 1.4);
@@ -241,29 +242,41 @@ Kit.chapter('ch09', function (Ch) {
     const c = S.c, L = c.labels, OY = 50;
     const svg = S.svg();
     const tag = S.chip('placeholder', { x: 90, y: 205, label: c.illustration, size: 28 });
-    const th = S.box({ x: 90, y: 350 + OY, w: 210, h: 120, label: L.thinker, color: C.thinker, size: 36 });
-    const a1 = S.arrow(svg, 304, 410 + OY, 358, 410 + OY, { color: C.soft, width: 5, head: 18 });
-    const calc = S.card({ x: 364, y: 270 + OY, w: 460, h: 280, color: C.calc });
-    const calcT = S.text(L.calc, { x: 364, y: 288 + OY, w: 460, size: 40, weight: 700, align: 'center', color: C.calc });
-    const pAdd = S.box({ x: 384, y: 390 + OY, w: 200, h: 76, label: L.add, size: 34, color: C.calc });
-    const pSub = S.box({ x: 604, y: 390 + OY, w: 200, h: 76, label: L.sub, size: 32, color: C.calc });
-    const pAdd2 = S.box({ x: 384, y: 390 + OY, w: 200, h: 76, label: L.sub, size: 32, color: C.warn });
-    const pSub2 = S.box({ x: 604, y: 390 + OY, w: 200, h: 76, label: L.add, size: 34, color: C.warn });
-    const a2 = S.arrow(svg, 828, 410 + OY, 882, 410 + OY, { color: C.soft, width: 5, head: 18 });
-    const tk = S.box({ x: 888, y: 350 + OY, w: 190, h: 120, label: L.talker, color: C.talker, size: 38 });
+    // the OLDER design tested here (G-B2): the calculator is built in, inside the frame, between thinker and talker
+    const frame = S.card({ x: 70, y: 300, w: 1030, h: 340, r: 26, color: C.warn });
+    const frameL = S.text(`<span style="background:${C.bg};padding:0 12px">${L.model}</span>`, { html: true, x: 90, y: 282, w: 520, size: 24, weight: 800, color: C.warn, lh: '34px' });
+    const th = S.box({ x: 100, y: 400, w: 190, h: 120, label: L.thinker, color: C.thinker, size: 36 });
+    const calc = S.card({ x: 400, y: 330, w: 420, h: 280, color: C.calc });
+    const calcT = S.text(L.calc, { x: 400, y: 344, w: 420, size: 40, weight: 700, align: 'center', color: C.calc });
+    const calcS = S.text(L.outside, { x: 400, y: 394, w: 420, size: 28, align: 'center', color: C.soft });
+    const pAdd = S.box({ x: 416, y: 480, w: 190, h: 76, label: L.add, size: 34, color: C.calc });
+    const pSub = S.box({ x: 614, y: 480, w: 190, h: 76, label: L.sub, size: 32, color: C.calc });
+    const pAdd2 = S.box({ x: 416, y: 480, w: 190, h: 76, label: L.sub, size: 32, color: C.warn });
+    const pSub2 = S.box({ x: 614, y: 480, w: 190, h: 76, label: L.add, size: 34, color: C.warn });
+    const tk = S.box({ x: 910, y: 400, w: 170, h: 120, label: L.talker, color: C.talker, size: 34 });
+    const svgA = S.svg();   // after the frame and boxes, so its arrows lie on top
+    const call = S.arrow(svgA, 294, 440, 396, 440, { color: C.call, width: 5, head: 18 });
+    const callL = S.text(L.call, { x: 296, y: 400, w: 100, size: 26, weight: 700, color: C.call, align: 'center' });
+    const reply = S.arrow(svgA, 396, 490, 294, 490, { color: C.soft, width: 5, head: 18 });
+    const replyL = S.text(L.reply, { x: 296, y: 500, w: 100, size: 26, weight: 700, color: C.soft, align: 'center' });
+    const a2 = S.arrow(svgA, 824, 460, 904, 460, { color: C.soft, width: 5, head: 18 });
+    const contrast = S.text(L.contrast, { x: 70, y: 665, w: 1030, size: 30, color: C.soft });
     const svg2 = S.svg();   // drawn after the card so the cross lies on top of it
-    const cross1 = S.path(svg2, [[392, 300 + OY], [796, 540 + OY]], { color: C.warn, width: 10, head: 0 });
-    const cross2 = S.path(svg2, [[796, 300 + OY], [392, 540 + OY]], { color: C.warn, width: 10, head: 0 });
+    const cross1 = S.path(svg2, [[410, 340], [810, 600]], { color: C.warn, width: 10, head: 0 });
+    const cross2 = S.path(svg2, [[810, 340], [410, 600]], { color: C.warn, width: 10, head: 0 });
     const tchip = S.chip('tested', { x: 1130, y: 196, label: c.testedChip, size: 30 });
     const head = S.text(c.scoreHead, { x: 1130, y: 252, w: 710, size: 32, color: C.soft });
     const cA = resultCard(S, { x: 1130, y: 294, w: 710, h: 260, title: c.cards[0].title, from: 0, to: c.cards[0].value, dec: 1, sub: c.cards[0].sub, color: C.thinker });
     const cB = resultCard(S, { x: 1130, y: 568, w: 710, h: 260, title: c.cards[1].title, from: c.cards[1].was, to: c.cards[1].to, dec: 1, sub: c.cards[1].sub, color: C.warn, cdur: 1.2 });
     let t = S.capAt(0) + 0.3;
     S.show(tag, t);
-    t = S.show(th, t + 0.2);
-    t = S.draw(a1, t, 0.4);
-    S.show(calc, t); S.show(calcT, t + 0.2); S.show(pAdd, t + 0.5); S.show(pSub, t + 0.8);
-    S.draw(a2, t + 1.2, 0.4); S.show(tk, t + 1.6);
+    S.show(frame, t + 0.2); S.show(frameL, t + 0.3);
+    t = S.show(th, t + 0.5);
+    S.show(calc, t + 0.3); S.show(calcT, t + 0.5); S.show(calcS, t + 0.6); S.show(pAdd, t + 0.8); S.show(pSub, t + 1.1);
+    S.draw(call, t + 1.3, 0.4); S.show(callL, t + 1.5);
+    S.draw(reply, t + 1.7, 0.4); S.show(replyL, t + 1.9);
+    S.draw(a2, t + 2.1, 0.4); S.show(tk, t + 2.3);
+    S.show(contrast, t + 2.8);
     t = S.capAt(0) + 5.2;
     S.hide(pAdd, t, 0.4); S.hide(pSub, t, 0.4);
     S.show(pAdd2, t + 0.3, { y: 0 }); S.show(pSub2, t + 0.3, { y: 0 });

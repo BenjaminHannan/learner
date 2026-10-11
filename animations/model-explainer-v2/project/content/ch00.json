@@ -122,37 +122,37 @@
     },
     {
       "id": "s06",
-      "duration": 40,
+      "duration": 38.5,
       "heading": "The whole machine in one picture",
       "caption": [
         {
-          "at": 0.015,
+          "at": 0.0156,
           "text": "The reader gives each letter a meaning from the whole question. Its main part is borrowed from others and frozen: our practice never changes it."
         },
         {
-          "at": 0.3239,
+          "at": 0.3371,
           "text": "The thinker thinks in rounds, which are laps of looking and thinking. Our practice sets its settings from scratch."
         },
         {
-          "at": 0.5363,
-          "text": "The calculator is ordinary code, not AI. It takes a text request and replies with text."
-        },
-        {
-          "at": 0.7116,
+          "at": 0.5577,
           "text": "The stop switch says done. It is built, but never run."
         },
         {
-          "at": 0.8423,
-          "text": "The talker writes the final answer. Today it is a small stand-in."
+          "at": 0.6935,
+          "text": "The talker writes one line a turn. Today it is a small stand-in."
+        },
+        {
+          "at": 0.8479,
+          "text": "Outside: a calculator. The talker's line calls it; the reader reads the reply."
         }
       ],
       "labels": {
         "jobs": [
           "reads the question",
           "thinks in rounds",
-          "does exact sums",
           "says when done",
-          "writes the answer"
+          "writes the answer or a call",
+          "outside tool: does exact sums"
         ],
         "chip": "stand-in today",
         "chipStop": "built, never tested"
@@ -160,49 +160,49 @@
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md:15-20 and table lines 31-38 (sec. 1-2)"
       ],
-      "notes": "Part boxes come from S.modelMap (sub-labels fixed by the kit). Reader: the frozen Gemma part is borrowed (271,002,624 numbers); the small adapter and letter window on top are ours (table lines 32-33), hence 'main part'. 'Borrowed from others and frozen' is the glossary's definition (a part somebody else trained, not changed by our practice). Stop switch: built, never run (line 36). Talker: 'today a small stand-in; the English talker is unbuilt' (line 38). The amber chip under the stop switch was added in the checking pass. The chip reads 'built, never tested' (the legend wording); the source says never run (line 36), the same fact.",
+      "notes": "Part boxes come from S.modelMap (sub-labels fixed by the kit). Reader: the frozen Gemma part is borrowed (271,002,624 numbers); the small adapter and letter window on top are ours (table lines 32-33), hence 'main part'. 'Borrowed from others and frozen' is the glossary's definition (a part somebody else trained, not changed by our practice). Stop switch: built, never run (line 36). Talker: 'today a small stand-in; the English talker is unbuilt' (line 38). The amber chip under the stop switch was added in the checking pass. The chip reads 'built, never tested' (the legend wording); the source says never run (line 36), the same fact. Calculator is outside the model (Ben, Oct 2026): fifth caption and job text are for the outside tool; the model has four parts.",
       "atMap": [
         [
           0.0133,
-          0.015
+          0.0156
         ],
         [
           0.2422,
-          0.3239
+          0.3371
         ],
         [
           0.4222,
-          0.5363
+          0.5577
         ],
         [
           0.5778,
-          0.7116
+          0.6935
         ],
         [
           0.7089,
-          0.8423
+          0.8479
         ]
       ]
     },
     {
       "id": "s08",
-      "duration": 34.5,
+      "duration": 37,
       "heading": "One picture for the whole video",
       "caption": [
         {
-          "at": 0.0174,
+          "at": 0.0162,
           "text": "One picture runs through the whole video: a student doing a word problem."
         },
         {
-          "at": 0.1896,
+          "at": 0.1768,
           "text": "A translator reads the question. A team of note-takers thinks it over, round after round."
         },
         {
-          "at": 0.3883,
-          "text": "The call writer, our team leader, writes a request slip. A pocket calculator hands back a slip with the result."
+          "at": 0.362,
+          "text": "The one who writes the final answer may write a request slip. A pocket calculator, outside the team, hands back a slip, and the translator reads it."
         },
         {
-          "at": 0.633,
+          "at": 0.6578,
           "text": "A little bell rings when they are done. One person writes the final answer. Each colour always means the same part."
         }
       ],
@@ -217,20 +217,16 @@
             "p": "note-takers passing notes"
           },
           {
-            "t": "Call writer",
-            "p": "writes a request slip"
-          },
-          {
-            "t": "Calculator",
-            "p": "pocket calculator"
-          },
-          {
             "t": "Stop switch",
             "p": "a little bell"
           },
           {
             "t": "Talker",
-            "p": "writes the answer"
+            "p": "writes the answer or the slip"
+          },
+          {
+            "t": "Calculator",
+            "p": "outside: a pocket calculator"
           }
         ]
       },
@@ -243,19 +239,19 @@
       "atMap": [
         [
           0.0143,
-          0.0174
+          0.0162
         ],
         [
           0.2143,
-          0.1896
+          0.1768
         ],
         [
           0.4381,
-          0.3883
+          0.362
         ],
         [
           0.6857,
-          0.633
+          0.6578
         ]
       ]
     },
@@ -360,25 +356,25 @@
     },
     {
       "id": "s12",
-      "duration": 25,
+      "duration": 26.5,
       "heading": "Two more words: call and reply",
       "caption": [
         {
-          "at": 0.024,
-          "text": "A call is a text request to the calculator. Here, sub 12 5 means: take 5 away from 12."
+          "at": 0.0226,
+          "text": "A call is the talker's line: a text request to the outside calculator. Here, sub 12 5 means: take 5 away from 12."
         },
         {
-          "at": 0.3655,
-          "text": "The reply is the calculator's answer, also text: 7. Together they read sub 12 5 = 7."
+          "at": 0.3817,
+          "text": "The reply is the calculator's answer, also text: 7. The whole reader reads it. Together they read sub 12 5 = 7."
         },
         {
-          "at": 0.6993,
-          "text": "The model writes calls itself. It may also write nothing, when no exact arithmetic is needed."
+          "at": 0.7272,
+          "text": "The talker writes calls on its own. A line that is not a call is the final answer."
         }
       ],
       "labels": {
-        "callL": "call",
-        "calcL": "calculator",
+        "callL": "call: talker's line",
+        "calcL": "outside calculator",
         "replyL": "reply",
         "call": "sub 12 5",
         "reply": "7",
@@ -387,21 +383,21 @@
       },
       "src": [
         "kit/GLOSSARY.md:26 (call, reply)",
-        "architecture/FINISHED-MODEL-2026-10-09.md:35 and 37 (call writer picks 1 of 8 operations or no call; calculator replies as text)"
+        "architecture/FINISHED-MODEL-2026-10-09.md:35 and 37 (tested version: a call writer picks 1 of 8 operations or no call; calculator replies as text. New design, not tested: the talker writes the call at the end of a turn)"
       ],
       "notes": "The numbers 12, 5 and 7 are the glossary's example, not a result.",
       "atMap": [
         [
           0.0187,
-          0.024
+          0.0226
         ],
         [
           0.43,
-          0.3655
+          0.3817
         ],
         [
           0.6883,
-          0.6993
+          0.7272
         ]
       ]
     },

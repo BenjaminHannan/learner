@@ -2,9 +2,9 @@ window.CONTENT = {
   "global": {
     "cardSeconds": 5,
     "endCard": {
-      "duration": 12,
+      "duration": 13,
       "title": "That is the whole machine",
-      "blurb": "Reader, thinker, calculator, stop switch, talker: what each part does, how it learns, and what is still not proven."
+      "blurb": "Reader, thinker, stop switch, talker, plus an outside calculator the model uses: what each part does, how it learns, and what is still not proven."
     },
     "narrated": true
   },
@@ -147,37 +147,37 @@ window.CONTENT = {
         },
         {
           "id": "s06",
-          "duration": 40,
+          "duration": 38.5,
           "heading": "The whole machine in one picture",
           "caption": [
             {
-              "at": 0.015,
+              "at": 0.0156,
               "text": "The reader gives each letter a meaning from the whole question. Its main part is borrowed from others and frozen: our practice never changes it."
             },
             {
-              "at": 0.3239,
+              "at": 0.3371,
               "text": "The thinker thinks in rounds, which are laps of looking and thinking. Our practice sets its settings from scratch."
             },
             {
-              "at": 0.5363,
-              "text": "The calculator is ordinary code, not AI. It takes a text request and replies with text."
-            },
-            {
-              "at": 0.7116,
+              "at": 0.5577,
               "text": "The stop switch says done. It is built, but never run."
             },
             {
-              "at": 0.8423,
-              "text": "The talker writes the final answer. Today it is a small stand-in."
+              "at": 0.6935,
+              "text": "The talker writes one line a turn. Today it is a small stand-in."
+            },
+            {
+              "at": 0.8479,
+              "text": "Outside: a calculator. The talker's line calls it; the reader reads the reply."
             }
           ],
           "labels": {
             "jobs": [
               "reads the question",
               "thinks in rounds",
-              "does exact sums",
               "says when done",
-              "writes the answer"
+              "writes the answer or a call",
+              "outside tool: does exact sums"
             ],
             "chip": "stand-in today",
             "chipStop": "built, never tested"
@@ -185,49 +185,49 @@ window.CONTENT = {
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md:15-20 and table lines 31-38 (sec. 1-2)"
           ],
-          "notes": "Part boxes come from S.modelMap (sub-labels fixed by the kit). Reader: the frozen Gemma part is borrowed (271,002,624 numbers); the small adapter and letter window on top are ours (table lines 32-33), hence 'main part'. 'Borrowed from others and frozen' is the glossary's definition (a part somebody else trained, not changed by our practice). Stop switch: built, never run (line 36). Talker: 'today a small stand-in; the English talker is unbuilt' (line 38). The amber chip under the stop switch was added in the checking pass. The chip reads 'built, never tested' (the legend wording); the source says never run (line 36), the same fact.",
+          "notes": "Part boxes come from S.modelMap (sub-labels fixed by the kit). Reader: the frozen Gemma part is borrowed (271,002,624 numbers); the small adapter and letter window on top are ours (table lines 32-33), hence 'main part'. 'Borrowed from others and frozen' is the glossary's definition (a part somebody else trained, not changed by our practice). Stop switch: built, never run (line 36). Talker: 'today a small stand-in; the English talker is unbuilt' (line 38). The amber chip under the stop switch was added in the checking pass. The chip reads 'built, never tested' (the legend wording); the source says never run (line 36), the same fact. Calculator is outside the model (Ben, Oct 2026): fifth caption and job text are for the outside tool; the model has four parts.",
           "atMap": [
             [
               0.0133,
-              0.015
+              0.0156
             ],
             [
               0.2422,
-              0.3239
+              0.3371
             ],
             [
               0.4222,
-              0.5363
+              0.5577
             ],
             [
               0.5778,
-              0.7116
+              0.6935
             ],
             [
               0.7089,
-              0.8423
+              0.8479
             ]
           ]
         },
         {
           "id": "s08",
-          "duration": 34.5,
+          "duration": 37,
           "heading": "One picture for the whole video",
           "caption": [
             {
-              "at": 0.0174,
+              "at": 0.0162,
               "text": "One picture runs through the whole video: a student doing a word problem."
             },
             {
-              "at": 0.1896,
+              "at": 0.1768,
               "text": "A translator reads the question. A team of note-takers thinks it over, round after round."
             },
             {
-              "at": 0.3883,
-              "text": "The call writer, our team leader, writes a request slip. A pocket calculator hands back a slip with the result."
+              "at": 0.362,
+              "text": "The one who writes the final answer may write a request slip. A pocket calculator, outside the team, hands back a slip, and the translator reads it."
             },
             {
-              "at": 0.633,
+              "at": 0.6578,
               "text": "A little bell rings when they are done. One person writes the final answer. Each colour always means the same part."
             }
           ],
@@ -242,20 +242,16 @@ window.CONTENT = {
                 "p": "note-takers passing notes"
               },
               {
-                "t": "Call writer",
-                "p": "writes a request slip"
-              },
-              {
-                "t": "Calculator",
-                "p": "pocket calculator"
-              },
-              {
                 "t": "Stop switch",
                 "p": "a little bell"
               },
               {
                 "t": "Talker",
-                "p": "writes the answer"
+                "p": "writes the answer or the slip"
+              },
+              {
+                "t": "Calculator",
+                "p": "outside: a pocket calculator"
               }
             ]
           },
@@ -268,19 +264,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0174
+              0.0162
             ],
             [
               0.2143,
-              0.1896
+              0.1768
             ],
             [
               0.4381,
-              0.3883
+              0.362
             ],
             [
               0.6857,
-              0.633
+              0.6578
             ]
           ]
         },
@@ -385,25 +381,25 @@ window.CONTENT = {
         },
         {
           "id": "s12",
-          "duration": 25,
+          "duration": 26.5,
           "heading": "Two more words: call and reply",
           "caption": [
             {
-              "at": 0.024,
-              "text": "A call is a text request to the calculator. Here, sub 12 5 means: take 5 away from 12."
+              "at": 0.0226,
+              "text": "A call is the talker's line: a text request to the outside calculator. Here, sub 12 5 means: take 5 away from 12."
             },
             {
-              "at": 0.3655,
-              "text": "The reply is the calculator's answer, also text: 7. Together they read sub 12 5 = 7."
+              "at": 0.3817,
+              "text": "The reply is the calculator's answer, also text: 7. The whole reader reads it. Together they read sub 12 5 = 7."
             },
             {
-              "at": 0.6993,
-              "text": "The model writes calls itself. It may also write nothing, when no exact arithmetic is needed."
+              "at": 0.7272,
+              "text": "The talker writes calls on its own. A line that is not a call is the final answer."
             }
           ],
           "labels": {
-            "callL": "call",
-            "calcL": "calculator",
+            "callL": "call: talker's line",
+            "calcL": "outside calculator",
             "replyL": "reply",
             "call": "sub 12 5",
             "reply": "7",
@@ -412,21 +408,21 @@ window.CONTENT = {
           },
           "src": [
             "kit/GLOSSARY.md:26 (call, reply)",
-            "architecture/FINISHED-MODEL-2026-10-09.md:35 and 37 (call writer picks 1 of 8 operations or no call; calculator replies as text)"
+            "architecture/FINISHED-MODEL-2026-10-09.md:35 and 37 (tested version: a call writer picks 1 of 8 operations or no call; calculator replies as text. New design, not tested: the talker writes the call at the end of a turn)"
           ],
           "notes": "The numbers 12, 5 and 7 are the glossary's example, not a result.",
           "atMap": [
             [
               0.0187,
-              0.024
+              0.0226
             ],
             [
               0.43,
-              0.3655
+              0.3817
             ],
             [
               0.6883,
-              0.6993
+              0.7272
             ]
           ]
         },
@@ -648,20 +644,20 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 21.5,
-          "heading": "Where we are: five parts",
+          "duration": 21,
+          "heading": "Where we are: four parts and a tool",
           "caption": [
             {
-              "at": 0.0279,
+              "at": 0.0286,
               "text": "This chapter follows one question through the whole model."
             },
             {
-              "at": 0.3962,
-              "text": "The model has five parts: reader, thinker, calculator, stop switch and talker."
+              "at": 0.4057,
+              "text": "The model has four parts: reader, thinker, stop switch and talker. It uses an outside calculator."
             },
             {
-              "at": 0.7209,
-              "text": "Some parts have a test result, but all five together have never been tested."
+              "at": 0.7397,
+              "text": "Some parts have a test result. All together, never tested."
             }
           ],
           "chip": "never tested all together",
@@ -670,7 +666,7 @@ window.CONTENT = {
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 6 (lines 123-124)",
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 table (lines 31, 34, 36, 37, 38) for the per-part chips under the five boxes"
           ],
-          "notes": "Map drawn by S.modelMap with all five parts; the map labels are drawn by the kit, not in this file. Third caption reworded by the checker: the old wording ('None of these parts has been tested all together') read as if no part had a result. Source: FINISHED-MODEL sec. 5 item 6 (calculator and Gemma never run together) and sec. 2 (stop switch never run, English talker unbuilt). Fix pass: each box now carries a status chip (Reader, Thinker, Calculator: \"tested at 3M\"; Stop switch: built, never tested; Talker: \"stand-in today\", grey) so the third caption can be checked on the picture. Reader and calculator use the same statuses as scene s15 (FM lines 31 and 37). The Thinker chip is new: the loop with the same weights every round was trained and tested at 3M in all B2/T1SDR runs (FM line 34 says only its 100M shape is untested; FM line 109-110 scores it at 3M); the checker should confirm. Talker: FM line 38 \"today a small stand-in\".",
+          "notes": "Map drawn by S.modelMap with the four model parts and the outside calculator; the map labels are drawn by the kit, not in this file. Third caption reworded by the checker: the old wording ('None of these parts has been tested all together') read as if no part had a result. Source: FINISHED-MODEL sec. 5 item 6 (calculator and Gemma never run together) and sec. 2 (stop switch never run, English talker unbuilt). Fix pass: each box now carries a status chip (Reader, Thinker, Calculator: \"tested at 3M\"; Stop switch: built, never tested; Talker: \"stand-in today\", grey) so the third caption can be checked on the picture. Reader and calculator use the same statuses as scene s15 (FM lines 31 and 37). The Thinker chip is new: the loop with the same weights every round was trained and tested at 3M in all B2/T1SDR runs (FM line 34 says only its 100M shape is untested; FM line 109-110 scores it at 3M); the checker should confirm. Talker: FM line 38 \"today a small stand-in\".",
           "part_chips": [
             "tested at 3M",
             "tested at 3M",
@@ -681,15 +677,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0279
+              0.0286
             ],
             [
               0.3397,
-              0.3962
+              0.4057
             ],
             [
               0.6564,
-              0.7209
+              0.7397
             ]
           ]
         },
@@ -887,21 +883,21 @@ window.CONTENT = {
         },
         {
           "id": "s06",
-          "duration": 20.5,
+          "duration": 21,
           "heading": "Round 1: look, and no call yet",
           "question_a": "Tom has 12 apples. He gives away 5,",
           "question_b": "then buys 3. How many does he have?",
           "caption": [
             {
-              "at": 0.0293,
+              "at": 0.0286,
               "text": "In round 1 the thinker looks at every letter and passes notes."
             },
             {
-              "at": 0.3017,
-              "text": "No call (a request to the calculator) is written after round 1, so the call slot stays empty."
+              "at": 0.2946,
+              "text": "Tested version: no call (a request to the calculator) is written after round 1; the call slot stays empty."
             },
             {
-              "at": 0.6787,
+              "at": 0.6796,
               "text": "In the version we tested, the first call comes after round 2."
             }
           ],
@@ -918,29 +914,29 @@ window.CONTENT = {
           "atMap": [
             [
               0.0194,
-              0.0293
+              0.0286
             ],
             [
               0.3387,
-              0.3017
+              0.2946
             ],
             [
               0.6581,
-              0.6787
+              0.6796
             ]
           ]
         },
         {
           "id": "s07",
-          "duration": 20,
-          "heading": "Round 2: the call writer picks",
+          "duration": 20.5,
+          "heading": "Tested version, round 2: the call writer picks",
           "caption": [
             {
-              "at": 0.03,
-              "text": "After round 2 the call writer reads the thinker's first control vector (a list of numbers)."
+              "at": 0.0293,
+              "text": "Tested version: after round 2 the call writer reads its first control vector (a list of numbers)."
             },
             {
-              "at": 0.3807,
+              "at": 0.3889,
               "text": "It picks one of 8 operations, or writes no call. No call is a choice."
             },
             {
@@ -960,7 +956,8 @@ window.CONTENT = {
           ],
           "labels": [
             "no call",
-            "not an op"
+            "not an op",
+            "New design: the talker writes the call at the end of a turn."
           ],
           "chips": [
             "tested version: 3M size, 6 separately trained copies"
@@ -973,11 +970,11 @@ window.CONTENT = {
           "atMap": [
             [
               0.0194,
-              0.03
+              0.0293
             ],
             [
               0.3387,
-              0.3807
+              0.3889
             ],
             [
               0.6581,
@@ -987,21 +984,21 @@ window.CONTENT = {
         },
         {
           "id": "s08",
-          "duration": 21.5,
-          "heading": "Copying 12 and 5 from the question",
+          "duration": 25.5,
+          "heading": "Tested version: copying 12 and 5 from the question",
           "question_a": "Tom has 12 apples. He gives away 5,",
           "question_b": "then buys 3. How many does he have?",
           "caption": [
             {
-              "at": 0.0279,
-              "text": "The numbers are copied, not typed. A learned pointer finds the last digit of each number."
+              "at": 0.0235,
+              "text": "Tested version: the thinker writes a call as text. A learned pointer finds each number's last digit."
             },
             {
-              "at": 0.3542,
+              "at": 0.3126,
               "text": "The code copies one letter at a time to the left, until the learned stop head says stop."
             },
             {
-              "at": 0.7136,
+              "at": 0.6157,
               "text": "Some steps are still hand-written code, like flipping the digits into reading order."
             }
           ],
@@ -1010,7 +1007,8 @@ window.CONTENT = {
             "pointer: learned",
             "stop head: learned",
             "flip: hand-written",
-            "the call: a request to the calculator"
+            "tested version: the call, as text",
+            "New design: no pointer. The talker writes the call at the end of a turn."
           ],
           "chips": [
             "learned",
@@ -1024,33 +1022,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0279
+              0.0235
             ],
             [
               0.3377,
-              0.3542
+              0.3126
             ],
             [
               0.6596,
-              0.7136
+              0.6157
             ]
           ]
         },
         {
           "id": "s09",
-          "duration": 21.5,
+          "duration": 22,
           "heading": "Why use a calculator at all",
           "caption": [
             {
-              "at": 0.0279,
+              "at": 0.0273,
               "text": "The calculator is an ordinary program. It is outside the model."
             },
             {
-              "at": 0.2791,
-              "text": "The model writes its request as text, and gets the answer back as text."
+              "at": 0.2728,
+              "text": "A call is a line of text. The reader reads the answer, also as text."
             },
             {
-              "at": 0.5721,
+              "at": 0.5754,
               "text": "With the calculator switched off, questions that need a calculation scored 0.0 points out of 100 on all 6 copies."
             }
           ],
@@ -1058,7 +1056,9 @@ window.CONTENT = {
           "zero_score": 0,
           "labels": [
             "Calculator",
-            "points out of 100, calculator off (2,085 questions, 3M size)"
+            "points out of 100, calculator off (2,085 questions, 3M size)",
+            "outside tool",
+            "the call, as text"
           ],
           "chips": [
             "hand",
@@ -1074,41 +1074,43 @@ window.CONTENT = {
           "atMap": [
             [
               0.0194,
-              0.0279
+              0.0273
             ],
             [
               0.3387,
-              0.2791
+              0.2728
             ],
             [
               0.6581,
-              0.5721
+              0.5754
             ]
           ]
         },
         {
           "id": "s10",
-          "duration": 21.5,
+          "duration": 19,
           "heading": "The calculator replies: 12 minus 5 is 7",
           "caption": [
             {
-              "at": 0.0279,
-              "text": "The calculator gets sub 12 5 and sends back 7, as plain text."
+              "at": 0.0316,
+              "text": "The outside calculator gets sub 12 5 and sends back 7, as plain text."
             },
             {
-              "at": 0.3674,
-              "text": "As built, the letter window reads the reply, not the Gemma reader. The calculator and Gemma have never run together."
+              "at": 0.3642,
+              "text": "Built so far: the letter window alone reads the reply. New design: the whole reader, Gemma too."
             },
             {
-              "at": 0.7601,
-              "text": "The question is not read again. The reply goes into the notes."
+              "at": 0.7521,
+              "text": "Gemma and the calculator have never run together."
             }
           ],
           "request": "sub 12 5",
           "reply": "sub 12 5 = 7",
           "labels": [
             "Calculator",
-            "Thinker's notes"
+            "Thinker's notes",
+            "Reader",
+            "outside tool"
           ],
           "chips": [
             "hand"
@@ -1121,15 +1123,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0207,
-              0.0279
+              0.0316
             ],
             [
               0.3391,
-              0.3674
+              0.3642
             ],
             [
               0.6575,
-              0.7601
+              0.7521
             ]
           ]
         },
@@ -1145,11 +1147,11 @@ window.CONTENT = {
             },
             {
               "at": 0.3229,
-              "text": "The call writer writes add 7 3: the 7 from the reply, the 3 from the question."
+              "text": "Tested version: the call writer writes add 7 3, copying 7 from the reply and 3 from the question."
             },
             {
-              "at": 0.6825,
-              "text": "The calculator returns 10, and add 7 3 = 10 joins the notes."
+              "at": 0.7174,
+              "text": "The calculator returns 10. The reader reads it, and it joins the notes."
             }
           ],
           "call2": "add 7 3",
@@ -1157,8 +1159,9 @@ window.CONTENT = {
           "reply1": "sub 12 5 = 7",
           "labels": [
             "Round 3",
-            "reply: 10",
-            "notes"
+            "reply: 10, read by the reader",
+            "notes",
+            "tested version: the call goes out"
           ],
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 4 (line 53)",
@@ -1176,7 +1179,7 @@ window.CONTENT = {
             ],
             [
               0.6581,
-              0.6825
+              0.7174
             ]
           ]
         },
@@ -1232,20 +1235,20 @@ window.CONTENT = {
         },
         {
           "id": "s13",
-          "duration": 19.5,
+          "duration": 19,
           "heading": "The stop switch: done or not",
           "caption": [
             {
-              "at": 0.0308,
+              "at": 0.0316,
               "text": "After each round a small learned switch asks: is it done yet?"
             },
             {
-              "at": 0.3172,
+              "at": 0.3256,
               "text": "It must run at least 1 round, and at most 32. The 32 is a safety limit."
             },
             {
-              "at": 0.6952,
-              "text": "One stop covers the whole answer. It is built, but never tested yet."
+              "at": 0.7135,
+              "text": "A stop ends each turn. The switch is built, never tested."
             }
           ],
           "labels": [
@@ -1266,41 +1269,43 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0308
+              0.0316
             ],
             [
               0.3397,
-              0.3172
+              0.3256
             ],
             [
               0.6564,
-              0.6952
+              0.7135
             ]
           ]
         },
         {
           "id": "s14",
-          "duration": 20.5,
+          "duration": 20,
           "heading": "The talker writes the answer",
           "caption": [
             {
-              "at": 0.0293,
-              "text": "The talker copies 10 from the last reply, where the thinker points."
+              "at": 0.03,
+              "text": "The stand-in copies 10 from the last reply, where the thinker points."
             },
             {
-              "at": 0.3017,
+              "at": 0.3093,
               "text": "It adds no thinking of its own, so the answer is just the copied 10."
             },
             {
-              "at": 0.6265,
-              "text": "Today's talker is a stand-in. The English talker, about 25 million numbers, is planned."
+              "at": 0.6421,
+              "text": "The planned talker, about 25 million numbers, reads thoughts, no pointer, and writes calls."
             }
           ],
           "answer": "10",
           "last_reply": "add 7 3 = 10",
           "labels": [
             "Talker",
-            "English talker: planned"
+            "English talker: planned, no pointer",
+            "stand-in today",
+            "stand-in only: copies where the thinker points"
           ],
           "chips": [
             "placeholder"
@@ -1313,15 +1318,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.024,
-              0.0293
+              0.03
             ],
             [
               0.34,
-              0.3017
+              0.3093
             ],
             [
               0.656,
-              0.6265
+              0.6421
             ]
           ]
         },
@@ -1348,7 +1353,7 @@ window.CONTENT = {
             },
             {
               "at": 0.7841,
-              "text": "Open question: with the Gemma reader, some answers use zero thinking rounds. All five together: never tested."
+              "text": "Open question: with the Gemma reader, some answers use zero thinking rounds. Everything together: never tested."
             }
           ],
           "src": [
@@ -1368,7 +1373,7 @@ window.CONTENT = {
             "Calls in any round, stop switch",
             "English talker",
             "Zero-round answers",
-            "All five parts together"
+            "Everything together"
           ],
           "chip_open": "open question",
           "chip_all": "never tested",
@@ -1397,19 +1402,19 @@ window.CONTENT = {
         },
         {
           "id": "s16",
-          "duration": 18,
+          "duration": 18.5,
           "heading": "Recap: what to remember",
           "caption": [
             {
-              "at": 0.0333,
-              "text": "The reader reads once. The thinker thinks in rounds. The calculator does the sums."
+              "at": 0.0324,
+              "text": "The reader reads each turn's new text. The thinker thinks in rounds."
             },
             {
-              "at": 0.3833,
-              "text": "The stop switch says when done. The talker writes the answer."
+              "at": 0.3344,
+              "text": "The stop switch ends the turn. The talker writes the answer or a call."
             },
             {
-              "at": 0.6738,
+              "at": 0.6749,
               "text": "Now we open each box, one at a time."
             }
           ],
@@ -1417,26 +1422,26 @@ window.CONTENT = {
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (lines 15-20)",
             "animations/storyboards-2026-10-09.md idea 1 (line 64: legend)"
           ],
-          "notes": "Still final picture: the full five-part map with all parts lit. Fix pass: heading changed from \"Recap: three things to remember\" to \"Recap: what to remember\" (the picture and captions cover five parts; no source claim involved). One short line under each box repeats the caption wording.",
+          "notes": "Still final picture: the four-part model map with the outside calculator beside it, call and reply arcs drawn, all parts lit. Fix pass: heading changed from \"Recap: three things to remember\" to \"Recap: what to remember\" (the picture and captions cover five parts; no source claim involved). One short line under each box repeats the caption wording.",
           "labels": [
-            "reads once",
+            "reads the new text",
             "thinks in rounds",
             "does the sums",
-            "says when done",
-            "writes the answer"
+            "ends each turn",
+            "calls or answers"
           ],
           "atMap": [
             [
               0.025,
-              0.0333
+              0.0324
             ],
             [
               0.3403,
-              0.3833
+              0.3344
             ],
             [
               0.6556,
-              0.6738
+              0.6749
             ]
           ]
         }
@@ -1643,22 +1648,23 @@ window.CONTENT = {
         },
         {
           "id": "s06",
-          "duration": 23.5,
-          "heading": "The converter plug: 768 numbers in",
+          "duration": 22,
+          "heading": "The small models' converter plug",
           "caption": [
             {
-              "at": 0.0255,
-              "text": "One linear layer, a learned mix of numbers, turns Gemma's 768 numbers into the thinker's row length, its width."
+              "at": 0.0273,
+              "text": "In the small test models, a converter plug, one learned layer, turns Gemma's 768 numbers into the thinker's width."
             },
             {
-              "at": 0.4987,
-              "text": "At width 256 it has 196,864 learned numbers; at width 512 it has 393,728."
+              "at": 0.424,
+              "text": "At width 256 it has 196,864 learned numbers. At full size there is no plug: Gemma's 512 numbers go straight in."
             }
           ],
           "labels": {
             "in": "768 in",
             "out": "thinker width",
-            "plug": "converter plug"
+            "plug": "converter plug (small models)",
+            "full": "full size: no plug, Gemma's 512 go straight in"
           },
           "chip": "learned",
           "src": [
@@ -1670,34 +1676,34 @@ window.CONTENT = {
           "atMap": [
             [
               0.0273,
-              0.0255
+              0.0273
             ],
             [
               0.4977,
-              0.4987
+              0.424
             ]
           ]
         },
         {
           "id": "s07",
-          "duration": 35,
+          "duration": 36,
           "heading": "Four parts added into one letter row",
           "caption": [
             {
-              "at": 0.0171,
+              "at": 0.0167,
               "text": "First: which letter it is. A learned row of numbers."
             },
             {
-              "at": 0.2007,
+              "at": 0.1951,
               "text": "Second: where it sits in the question. A learned table: 2,000 rows in the planned finished design (B3), 280 in the growth test (G1)."
             },
             {
-              "at": 0.5227,
+              "at": 0.5081,
               "text": "Third: how far its letter sits from the end of its word. The count is hand-written; the row it picks is learned."
             },
             {
-              "at": 0.7843,
-              "text": "Fourth: Gemma's meaning, through the converter plug, is added on top. Then the letter window (next scene) reads the sum."
+              "at": 0.7625,
+              "text": "Fourth: Gemma's meaning is added on top, via a small plug (none at full size). The letter window reads the sum."
             }
           ],
           "labels": {
@@ -1720,19 +1726,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.0171
+              0.0167
             ],
             [
               0.2563,
-              0.2007
+              0.1951
             ],
             [
               0.4989,
-              0.5227
+              0.5081
             ],
             [
               0.7415,
-              0.7843
+              0.7625
             ]
           ]
         },
@@ -1894,20 +1900,20 @@ window.CONTENT = {
         },
         {
           "id": "s11",
-          "duration": 23,
+          "duration": 23.5,
           "heading": "A hand-written pattern marks the numbers",
           "illustration": "picture only: the marked cells are not a real question",
           "caption": [
             {
-              "at": 0.0261,
-              "text": "A plain pattern, written by hand, finds the numbers in the question."
+              "at": 0.0255,
+              "text": "Tested version: a hand-written pattern finds numbers. The new design copies none."
             },
             {
-              "at": 0.2689,
+              "at": 0.2726,
               "text": "It records where each number is, not its value."
             },
             {
-              "at": 0.4652,
+              "at": 0.4647,
               "text": "Room to mark: 16 numbers in the calculator-outside model (T1SDR), 91 in the growth test (G1), 240 in planned B3."
             }
           ],
@@ -1935,62 +1941,64 @@ window.CONTENT = {
           "atMap": [
             [
               0.0207,
-              0.0261
+              0.0255
             ],
             [
               0.3391,
-              0.2689
+              0.2726
             ],
             [
               0.6575,
-              0.4652
+              0.4647
             ]
           ]
         },
         {
           "id": "s12",
-          "duration": 20,
-          "heading": "Calculator replies: read by the window only",
+          "duration": 21,
+          "heading": "Calculator replies: read by the whole reader",
           "caption": [
             {
-              "at": 0.03,
-              "text": "In B3, the plain-code calculator's reply, shown as sub 12 5 = 7, is read by the letter window."
+              "at": 0.0286,
+              "text": "New design: each calculator reply, shown as sub 12 5 = 7, is read by Gemma plus the letter window."
             },
             {
-              "at": 0.4343,
-              "text": "Gemma does not read replies. It read the question once."
+              "at": 0.4306,
+              "text": "Built B3 version: the window alone reads replies."
             },
             {
-              "at": 0.6779,
-              "text": "Suggested reasoning: a reply carries nothing Gemma would add."
+              "at": 0.6451,
+              "text": "Never tested. The old reason, that Gemma adds nothing to a reply, was only suggested."
             }
           ],
           "example": "sub 12 5 = 7",
           "labels": {
+            "from": "reply from the outside calculator",
             "win": "letter window",
-            "gem": "Gemma"
+            "gem": "Gemma",
+            "old": "built B3 version only: window alone"
           },
           "chip": "untested",
-          "chip_label": "built, never tested",
-          "illustration": "suggested reasoning",
+          "chip_label": "being built, never tested",
+          "illustration": "old B3 reasoning: suggested only",
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 5 (lines 120-122; labelled suggested)",
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 3",
             "custom_io/models/b3.py lines 3-4 (B3 group 1: the calculator's entries are read by the letter reader alone, Tool.read_texts; Gemma sees each question once)"
           ],
-          "notes": "B3 group 1 builds this way; it has never been run (FINISHED sec. 5 item 6: the outside calculator and Gemma have never run together). The reply path is built, the reason is suggested, not measured. Checker edit: the two boxes now carry labels (they were empty), and the caption says 'shown as' to match the glossary (the reply itself is 7). Fixer edit: the amber chip now appears from the first beat (it was only at the last caption) and uses the chapter-wide wording \"built, never tested\". The X on the Gemma path is the as-built design of B3 group 1 (b3.py lines 3-4; FINISHED sec. 5 item 5), never run (item 6); only the reason (a reply adds nothing for Gemma) is \"suggested\", and that tag stays on caption 3. Captions unchanged.",
+          "notes": "B3 group 1 builds this way; it has never been run (FINISHED sec. 5 item 6: the outside calculator and Gemma have never run together). The reply path is built, the reason is suggested, not measured. Checker edit: the two boxes now carry labels (they were empty), and the caption says 'shown as' to match the glossary (the reply itself is 7). Fixer edit: the amber chip now appears from the first beat (it was only at the last caption) and uses the chapter-wide wording \"built, never tested\". The X on the Gemma path is the as-built design of B3 group 1 (b3.py lines 3-4; FINISHED sec. 5 item 5), never run (item 6); only the reason (a reply adds nothing for Gemma) is \"suggested\", and that tag stays on caption 3. Captions unchanged. Round 2 (Oct 11): the new design (FINISHED sec. 5 items 16-18) has the whole reader, Gemma plus the letter window, read every tool reply like the question; the X on the Gemma path now marks only the built B3 version (b3.py lines 3-4).",
           "atMap": [
             [
               0.0222,
-              0.03
+              0.0286
             ],
             [
               0.3395,
-              0.4343
+              0.4306
             ],
             [
               0.6568,
-              0.6779
+              0.6451
             ]
           ]
         },
@@ -2359,19 +2367,19 @@ window.CONTENT = {
         },
         {
           "id": "s04",
-          "duration": 25,
-          "heading": "Control vector 0 drives the call writer",
+          "duration": 23.5,
+          "heading": "Tested version: control vector 0 drives the call writer",
           "caption": [
             {
-              "at": 0.024,
-              "text": "After each round from round 2 on, the call writer reads control vector 0."
+              "at": 0.0255,
+              "text": "In the tested version, after each round from round 2 on, the call writer reads control vector 0."
             },
             {
-              "at": 0.3723,
-              "text": "It either writes a request for the calculator, like sub 12 5, or writes nothing."
+              "at": 0.3544,
+              "text": "It either writes a request for the outside calculator, like sub 12 5, or writes nothing."
             },
             {
-              "at": 0.7283,
+              "at": 0.7268,
               "text": "The numbers in the request are usually copied from the question or an earlier reply."
             }
           ],
@@ -2386,19 +2394,19 @@ window.CONTENT = {
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 1, and sec. 2 (Call writer row: shown in T1SDR; Calculator row: T1SDR at 3M, 6 seeds)",
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 2 (tool.py:329-374 copies the numbers; calls need t >= 1, so none after round 1) and sec. 4 (span copy used for 98% of written operands)"
           ],
-          "chip2": "current design: never run as a whole",
+          "chip2": "new design: talker writes the call; never run",
           "atMap": [
             [
               0.0187,
-              0.024
+              0.0255
             ],
             [
               0.3385,
-              0.3723
+              0.3544
             ],
             [
               0.6583,
-              0.7283
+              0.7268
             ]
           ]
         },
@@ -2463,26 +2471,27 @@ window.CONTENT = {
         },
         {
           "id": "s06",
-          "duration": 23,
+          "duration": 23.5,
           "heading": "Round step 1: look at everything",
           "caption": [
             {
-              "at": 0.0261,
+              "at": 0.0255,
               "text": "Each letter of the question is one box. A borrowed reader, Gemma, has already given each letter its meaning."
             },
             {
-              "at": 0.4158,
-              "text": "Each note vector looks at every letter. In later rounds it also looks at every calculator reply."
+              "at": 0.407,
+              "text": "Each note vector looks at every letter. Later it also looks at each reply the whole reader has read."
             },
             {
-              "at": 0.7363,
+              "at": 0.7511,
               "text": "The shading inside each note is a picture only, not real numbers."
             }
           ],
           "tag": "picture only",
           "labels": {
             "q": "Tom has 12 apples.",
-            "look": "Look"
+            "look": "Look",
+            "tv": "Tested version: replies were read by the letter window only. New design: the whole reader."
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Thinker row: every letter and every calculator reply) and sec. 3 item 1 (Gemma reads the question once)",
@@ -2491,15 +2500,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0214,
-              0.0261
+              0.0255
             ],
             [
               0.3393,
-              0.4158
+              0.407
             ],
             [
               0.6571,
-              0.7363
+              0.7511
             ]
           ]
         },
@@ -2620,24 +2629,24 @@ window.CONTENT = {
         },
         {
           "id": "s09",
-          "duration": 37.5,
+          "duration": 38.5,
           "heading": "Why some questions need several rounds",
           "caption": [
             {
-              "at": 0.016,
-              "text": "Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
+              "at": 0.0156,
+              "text": "Tested version. Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
             },
             {
-              "at": 0.3023,
-              "text": "It copies 12 and 5 from the question. The calculator replies 7, which is added to the notes."
+              "at": 0.2861,
+              "text": "It copies 12 and 5. The outside calculator replies 7. The reader reads it, and adds it to the notes."
             },
             {
-              "at": 0.5084,
+              "at": 0.5054,
               "text": "Round 3 sees that reply. After it, the call writer writes add 7 3, and the calculator replies 10."
             },
             {
-              "at": 0.724,
-              "text": "The talker, which writes the final answer, copies 10 from the last reply. A worked example, traced from the code."
+              "at": 0.7154,
+              "text": "Today's stand-in talker copies 10; the planned one has no pointer. New design: the talker writes calls, and replies start the next turn."
             }
           ],
           "chip": "traced from code, never run as a whole",
@@ -2646,7 +2655,13 @@ window.CONTENT = {
             "r2r": "Reply: 7",
             "r3": "After round 3: add 7 3",
             "r3r": "Reply: 10",
-            "ans": "Answer: 10"
+            "ans": "Answer: 10",
+            "reader": "Reader",
+            "notes": "Added to the notes",
+            "standin": "stand-in talker, today",
+            "out": "outside calculator",
+            "plan": "Today's talker is a stand-in. The planned talker reads the thinker's final thoughts and writes words, with no pointer.",
+            "tv": "Tested design (call writer)"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 items 2-6 (tool.py:329-374, tool.py:155-170, tool.py:368-374)",
@@ -2655,19 +2670,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.016
+              0.0156
             ],
             [
               0.2561,
-              0.3023
+              0.2861
             ],
             [
               0.4989,
-              0.5084
+              0.5054
             ],
             [
               0.7417,
-              0.724
+              0.7154
             ]
           ]
         },
@@ -2980,25 +2995,25 @@ window.CONTENT = {
     "ch05": {
       "kicker": "Part 4 of 10",
       "title": "Asking the calculator for help",
-      "blurb": "The model can ask an ordinary calculator for exact sums. It writes the question as plain text, and the calculator writes back the answer as plain text.",
+      "blurb": "The model can use an ordinary calculator, outside the model, for exact sums. In the new design (being built), the talker writes the call as plain text at the end of a turn, the calculator writes back plain text, and the whole reader reads the reply. The results here are from the tested version.",
       "accent": "call",
       "scenes": [
         {
           "id": "s01",
-          "duration": 21,
+          "duration": 23.5,
           "heading": "Where we are: the calculator sits outside",
           "caption": [
             {
-              "at": 0.0286,
-              "text": "This part is about the call writer, which writes a request slip, and the calculator, which answers it."
+              "at": 0.0255,
+              "text": "In the new design, the talker's line calls the calculator, an outside tool, at the end of a turn. The reply starts the next turn, and the whole reader reads it."
             },
             {
-              "at": 0.5093,
+              "at": 0.552,
               "text": "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
             }
           ],
           "labels": {
-            "call": "call writer"
+            "chip": "new design: being built, not tested yet"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (parts table) and sec. 4 (rules dated 10-07)"
@@ -3007,37 +3022,42 @@ window.CONTENT = {
           "atMap": [
             [
               0.0273,
-              0.0286
+              0.0255
             ],
             [
               0.4977,
-              0.5093
+              0.552
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 20,
+          "duration": 20.5,
           "heading": "Why a calculator? Code adds exactly",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0293,
               "text": "Code adds two numbers exactly, every time."
             },
             {
-              "at": 0.4068,
+              "at": 0.3968,
               "text": "A learned network has to learn each sum from practice."
             },
             {
-              "at": 0.6503,
-              "text": "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
+              "at": 0.6345,
+              "text": "In the new design, the talker writes its sum on a text slip (made-up numbers here) and sends it to a calculator outside the model. The whole reader reads the reply."
             }
           ],
           "labels": {
             "slip": "call: sub 12 5",
             "back": "reply: 7",
             "calc": "calculator",
-            "why": "our reasoning, not a measured result"
+            "why": "our reasoning, not a measured result",
+            "slipnote": "written by the talker, as text",
+            "calcsub": "outside the model",
+            "backnote": "comes back as text",
+            "reader": "reader",
+            "readersub": "whole reader reads it"
           },
           "src": [
             "GLOSSARY.md (call writer and calculator pictures)",
@@ -3047,30 +3067,30 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.03
+              0.0293
             ],
             [
               0.3397,
-              0.4068
+              0.3968
             ],
             [
               0.6564,
-              0.6503
+              0.6345
             ]
           ]
         },
         {
           "id": "s03",
-          "duration": 21,
-          "heading": "After a round, the call writer reads one vector",
+          "duration": 20.5,
+          "heading": "Tested version: after a round, the call writer reads one vector",
           "caption": [
             {
-              "at": 0.0286,
-              "text": "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
+              "at": 0.0293,
+              "text": "In the tested version, after a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
             },
             {
-              "at": 0.557,
-              "text": "It writes one of nine choices: no call, or one of the eight operations."
+              "at": 0.5282,
+              "text": "It writes one of nine choices: no call, or one of the eight operations. The new design drops this call writer: the talker writes the call."
             }
           ],
           "labels": {
@@ -3078,7 +3098,9 @@ window.CONTENT = {
             "none": "no call",
             "ops": "8 operations",
             "cw": "call writer",
-            "pic": "picture only: the shading is decoration"
+            "pic": "picture only: the shading is decoration",
+            "cwnote": "tested version only",
+            "chip": "tested version, not the new design"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (call writer row)",
@@ -3089,22 +3111,22 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0286
+              0.0293
             ],
             [
               0.4981,
-              0.557
+              0.5282
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 36,
-          "heading": "The eight operations, one line each",
+          "duration": 36.5,
+          "heading": "The calculator's eight operations, one line each",
           "caption": [
             {
-              "at": 0.0167,
-              "text": "Eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
+              "at": 0.0164,
+              "text": "The outside calculator has eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
             }
           ],
           "ops": [
@@ -3158,34 +3180,34 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.0167
+              0.0164
             ]
           ]
         },
         {
           "id": "s05",
-          "duration": 41.5,
-          "heading": "Copying digits: a pointer, a step left, a stop",
+          "duration": 45,
+          "heading": "Tested version: copying digits with a pointer, a step left, a stop",
           "question": "Tom has 12 apples. (made-up example)",
           "caption": [
             {
-              "at": 0.0145,
-              "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
+              "at": 0.0133,
+              "text": "In the tested version, to write the 12 in a call, the call writer's learned pointer lands on its last digit, the 2."
             },
             {
-              "at": 0.2305,
+              "at": 0.2248,
               "text": "The copy then steps one letter left and copies the 1."
             },
             {
-              "at": 0.3925,
+              "at": 0.3742,
               "text": "A learned stop head says when to stop."
             },
             {
-              "at": 0.5468,
-              "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
+              "at": 0.5165,
+              "text": "In the tested version, the copy trick was used for 98% of written operands and, by today's stand-in talker, for 91.5% of answers, on all six separate copies (T1SDR). The planned talker and the new design use no pointer or copying."
             },
             {
-              "at": 0.8548,
+              "at": 0.8708,
               "text": "Copied here means the copy trick was used, not that the copy was right."
             }
           ],
@@ -3193,7 +3215,7 @@ window.CONTENT = {
             "ptr": "pointer",
             "stop": "stop head",
             "out": "written last digit first",
-            "chip": "tested at 3 million learned numbers (3M)",
+            "chip": "tested version, 3 million learned numbers (3M)",
             "d2": "2",
             "d1": "1",
             "num": "12"
@@ -3204,7 +3226,7 @@ window.CONTENT = {
               "value": 98
             },
             {
-              "label": "answers copied",
+              "label": "answers copied (stand-in talker)",
               "value": 91.5
             }
           ],
@@ -3218,38 +3240,38 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.0145
+              0.0133
             ],
             [
               0.2076,
-              0.2305
+              0.2248
             ],
             [
               0.4018,
-              0.3925
+              0.3742
             ],
             [
               0.596,
-              0.5468
+              0.5165
             ],
             [
               0.7902,
-              0.8548
+              0.8708
             ]
           ]
         },
         {
           "id": "s06",
-          "duration": 24.5,
-          "heading": "A number not in the text: 21 cells",
+          "duration": 25.5,
+          "heading": "Call-writer builds: a number not in the text, 21 cells",
           "caption": [
             {
-              "at": 0.0245,
-              "text": "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time."
+              "at": 0.0235,
+              "text": "In the tested version, some call numbers are in neither the question nor a reply, and the call writer builds such a number one digit at a time."
             },
             {
-              "at": 0.474,
-              "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
+              "at": 0.4855,
+              "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text. The new design has no call writer."
             }
           ],
           "labels": {
@@ -3273,26 +3295,26 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0245
+              0.0235
             ],
             [
               0.4987,
-              0.474
+              0.4855
             ]
           ]
         },
         {
           "id": "s07",
-          "duration": 15.5,
-          "heading": "The calculator: plain Python, no learned numbers",
+          "duration": 20.5,
+          "heading": "The outside calculator: plain Python, no learned numbers",
           "caption": [
             {
-              "at": 0.0387,
-              "text": "The calculator is ordinary Python code. It has 0 learned numbers."
+              "at": 0.0293,
+              "text": "The calculator is ordinary Python code, outside the model. It has 0 learned numbers."
             },
             {
-              "at": 0.376,
-              "text": "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
+              "at": 0.3366,
+              "text": "In the new design, it reads a call (made-up numbers here) and writes the reply as text, which starts the next turn for the whole reader. A call it cannot run gets a question mark."
             }
           ],
           "labels": {
@@ -3301,7 +3323,10 @@ window.CONTENT = {
             "in2": "call in: div 12 5",
             "out2": "reply out: ?",
             "calc": "calculator",
-            "tag": "hand code, allowed as a tool"
+            "tag": "hand code, allowed as a tool",
+            "calcsub": "outside the model",
+            "frm": "from the talker, as text",
+            "to": "to the whole reader, as text"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row: size 0)",
@@ -3312,29 +3337,29 @@ window.CONTENT = {
           "atMap": [
             [
               0.0214,
-              0.0387
+              0.0293
             ],
             [
               0.4982,
-              0.376
+              0.3366
             ]
           ]
         },
         {
           "id": "s08",
-          "duration": 32,
-          "heading": "The reply goes into the notes, not the question",
+          "duration": 37,
+          "heading": "Tested version: the reply goes through the reader into the notes",
           "caption": [
             {
-              "at": 0.0187,
-              "text": "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies."
+              "at": 0.0162,
+              "text": "In the tested version, in our made-up Tom example, after round 2 the call writer writes sub 12 5 as text, and the outside calculator replies."
             },
             {
-              "at": 0.3369,
-              "text": "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes."
+              "at": 0.3023,
+              "text": "The reply, sub 12 5 = 7, comes back as text. In the tested version the reader's letter window reads it, and it is added to the notes. The new design uses the whole reader, Gemma plus the window."
             },
             {
-              "at": 0.6737,
+              "at": 0.7139,
               "text": "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
             }
           ],
@@ -3346,7 +3371,14 @@ window.CONTENT = {
             "rd2": "after round 2",
             "rd3": "after round 3",
             "r1": "sub 12 5 = 7",
-            "r2": "add 7 3 = 10"
+            "r2": "add 7 3 = 10",
+            "cwsub": "tested version only",
+            "calcsub": "outside the model",
+            "reader": "reader",
+            "readersub": "letter window (tested)",
+            "newrd": "new design: whole reader, Gemma plus the window",
+            "callTxt": "call, as text",
+            "replyTxt": "reply, as text"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 steps 2-4 (lines 46-53): worked Tom example",
@@ -3357,33 +3389,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0187
+              0.0162
             ],
             [
               0.3373,
-              0.3369
+              0.3023
             ],
             [
               0.6603,
-              0.6737
+              0.7139
             ]
           ]
         },
         {
           "id": "s09",
-          "duration": 24.5,
-          "heading": "Timing today: calls follow rounds 2 to 8",
+          "duration": 24,
+          "heading": "Timing in the tested version: calls follow rounds 2 to 8",
           "caption": [
             {
-              "at": 0.0245,
-              "text": "In the tested design, the first call follows round 2."
+              "at": 0.025,
+              "text": "In the tested version, the first call follows round 2."
             },
             {
-              "at": 0.2528,
+              "at": 0.228,
               "text": "Call k follows round k plus 1, up to call 7 after round 8."
             },
             {
-              "at": 0.5917,
+              "at": 0.5739,
               "text": "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
             }
           ],
@@ -3420,15 +3452,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0245
+              0.025
             ],
             [
               0.3377,
-              0.2528
+              0.228
             ],
             [
               0.6596,
-              0.5917
+              0.5739
             ]
           ]
         },
@@ -3489,23 +3521,23 @@ window.CONTENT = {
         },
         {
           "id": "s11",
-          "duration": 29,
+          "duration": 30,
           "heading": "Still hand-written, and what build 2 changes",
           "caption": [
             {
-              "at": 0.0207,
-              "text": "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
+              "at": 0.02,
+              "text": "In the call-writer builds, some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
             },
             {
-              "at": 0.3158,
+              "at": 0.3252,
               "text": "The operation name comes from a fixed list of 8, so a new tool could not be called yet."
             },
             {
-              "at": 0.5946,
+              "at": 0.5948,
               "text": "The finished design's second build writes the whole call as letters, operation name included."
             },
             {
-              "at": 0.8119,
+              "at": 0.8048,
               "text": "It is built as code and has never run."
             }
           ],
@@ -3528,41 +3560,41 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0207
+              0.02
             ],
             [
               0.2565,
-              0.3158
+              0.3252
             ],
             [
               0.4988,
-              0.5946
+              0.5948
             ],
             [
               0.7411,
-              0.8119
+              0.8048
             ]
           ]
         },
         {
           "id": "s12",
-          "duration": 40,
-          "heading": "The evidence: 6 copies, calculator outside",
+          "duration": 41.5,
+          "heading": "The evidence: tested version, 6 copies, calculator outside",
           "caption": [
             {
-              "at": 0.015,
+              "at": 0.0145,
               "text": "Each copy starts from its own random start."
             },
             {
-              "at": 0.1788,
-              "text": "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2)."
+              "at": 0.1724,
+              "text": "The tested version, T1SDR, where the calculator is an outside tool, was compared with a similar model, B2, where the calculator is inside."
             },
             {
-              "at": 0.3864,
+              "at": 0.4016,
               "text": "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46."
             },
             {
-              "at": 0.787,
+              "at": 0.7878,
               "text": "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
             }
           ],
@@ -3570,7 +3602,7 @@ window.CONTENT = {
             "ob": "B2: calc inside",
             "out": "T1SDR: plus 0.62",
             "rng": "likely range",
-            "chip": "tested at 3M, 6 copies",
+            "chip": "tested version: 3M, 6 copies",
             "ticks": [
               "-1",
               "0",
@@ -3597,19 +3629,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0171,
-              0.015
+              0.0145
             ],
             [
               0.2579,
-              0.1788
+              0.1724
             ],
             [
               0.4986,
-              0.3864
+              0.4016
             ],
             [
               0.7393,
-              0.787
+              0.7878
             ]
           ]
         },
@@ -3640,7 +3672,7 @@ window.CONTENT = {
             "off": "calculator off",
             "zero": "0.0",
             "offsub": "2,085 questions that need it",
-            "chip": "tested at 3M, 6 copies"
+            "chip": "tested version: 3M, 6 copies"
           },
           "chain": {
             "outLo": 99.6,
@@ -3670,7 +3702,7 @@ window.CONTENT = {
         {
           "id": "s13",
           "duration": 43,
-          "heading": "Check 1: the swap test",
+          "heading": "Check 1: the swap test (tested version)",
           "caption": [
             {
               "at": 0.014,
@@ -3696,7 +3728,7 @@ window.CONTENT = {
           "labels": {
             "pass": "pass line: 99",
             "lost": "copy F: not scored",
-            "chip": "tested on 5 of 6 copies"
+            "chip": "tested version: 5 of 6 copies"
           },
           "vals": [
             {
@@ -3752,7 +3784,7 @@ window.CONTENT = {
         {
           "id": "s14",
           "duration": 46,
-          "heading": "Check 2: the leak test, missed then cleared",
+          "heading": "Check 2: the leak test (tested version), missed then cleared",
           "caption": [
             {
               "at": 0.013,
@@ -3843,33 +3875,33 @@ window.CONTENT = {
         },
         {
           "id": "s15",
-          "duration": 32,
+          "duration": 31.5,
           "heading": "What is tested, and what is not",
           "caption": [
             {
-              "at": 0.0187,
-              "text": "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
+              "at": 0.019,
+              "text": "Tested version: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
             },
             {
-              "at": 0.3629,
+              "at": 0.351,
               "text": "Never run together: the borrowed Gemma reader with the outside calculator."
             },
             {
-              "at": 0.527,
+              "at": 0.5177,
               "text": "Built, never run: calls at any round."
             },
             {
-              "at": 0.6458,
-              "text": "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
+              "at": 0.6384,
+              "text": "Remember: in the new design (being built), the talker's line calls the calculator and the whole reader reads the reply. The tested version used a copy trick, with a learned stop."
             }
           ],
           "labels": {
-            "t": "tested: calc outside, 3M",
+            "t": "tested version: calculator outside, 3M",
             "n": "built, never run: Gemma with calc",
             "b": "built, never run: any round",
-            "rem1": "Calls are text.",
-            "rem2": "The calculator replies in text.",
-            "rem3": "A copy trick, with a learned stop, writes most numbers."
+            "rem1": "New design (being built): the talker's line calls the calculator.",
+            "rem2": "Its reply starts the next turn; the whole reader reads it.",
+            "rem3": "Tested version: a copy trick, with a learned stop, writes most numbers."
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row), sec. 5 item 6 (Gemma and calculator never run together), sec. 3 (any-round built, untested)",
@@ -3879,19 +3911,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0187
+              0.019
             ],
             [
               0.2565,
-              0.3629
+              0.351
             ],
             [
               0.4988,
-              0.527
+              0.5177
             ],
             [
               0.7411,
-              0.6458
+              0.6384
             ]
           ]
         }
@@ -3914,10 +3946,10 @@ window.CONTENT = {
             },
             {
               "at": 0.5259,
-              "text": "The stop switch decides when the thinking is finished."
+              "text": "The stop switch decides when thinking stops."
             },
             {
-              "at": 0.7508,
+              "at": 0.7425,
               "text": "It is built, but it has never been run."
             }
           ],
@@ -3936,7 +3968,7 @@ window.CONTENT = {
             ],
             [
               0.6571,
-              0.7508
+              0.7425
             ]
           ]
         },
@@ -4186,23 +4218,23 @@ window.CONTENT = {
         },
         {
           "id": "s07",
-          "duration": 22.5,
+          "duration": 22,
           "heading": "One stop for the whole answer",
           "caption": [
             {
-              "at": 0.0267,
-              "text": "There is one stop for the whole answer, not one stop per call."
+              "at": 0.0273,
+              "text": "Built version: one stop for the whole answer. New design: one stop per turn."
             },
             {
-              "at": 0.2908,
-              "text": "Built, not tested: a call to the calculator may follow any round from round 2 up to 32."
+              "at": 0.3136,
+              "text": "Built version, not tested: the thinker may call an outside calculator, from round 2 up to 32."
             },
             {
-              "at": 0.6343,
-              "text": "In the built training code, about a quarter of the questions add 0 to 2 extra thinking rounds before a call."
+              "at": 0.6487,
+              "text": "Built code: about a quarter of questions add 0 to 2 rounds before a call. New design: the talker writes calls."
             }
           ],
-          "round": "rounds (10 of 32 shown)",
+          "round": "built version: rounds (10 of 32 shown)",
           "call": "call",
           "bell": "stop",
           "picture": "made-up example: no real run",
@@ -4216,15 +4248,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0187,
-              0.0267
+              0.0273
             ],
             [
               0.3385,
-              0.2908
+              0.3136
             ],
             [
               0.6583,
-              0.6343
+              0.6487
             ]
           ]
         },
@@ -4511,42 +4543,43 @@ window.CONTENT = {
     "ch07": {
       "kicker": "Part 6 of 10",
       "title": "Writing down the answer",
-      "blurb": "The talker writes only the final answer, copying where the thinker points. Today it is a small stand-in. The talker that writes English is a placeholder.",
+      "blurb": "The plan: the talker reads the thinker's final thoughts and writes each turn's line, calls and answer, in words, with no pointer. Today it is a small stand-in. The talker that writes English is a placeholder.",
       "accent": "talker",
       "scenes": [
         {
           "id": "s01",
-          "duration": 29,
+          "duration": 26,
           "heading": "Where we are: the talker writes the answer",
           "caption": [
             {
-              "at": 0.0207,
-              "text": "This is the last stop on the map: the talker."
+              "at": 0.0231,
+              "text": "This is the last part inside the model: the talker."
             },
             {
-              "at": 0.1887,
-              "text": "Its only job is to write the final answer. It adds no thinking."
+              "at": 0.2104,
+              "text": "Its only job is to write each turn's last line. It adds no thinking."
             },
             {
-              "at": 0.3936,
-              "text": "It reads the thinker's final state, and may copy from the question and the calculator's replies."
+              "at": 0.4527,
+              "text": "New design, untested: thoughts in, calls and answer out. No pointer."
             },
             {
-              "at": 0.6355,
-              "text": "But only where the thinker points. Today's talker is a small stand-in."
+              "at": 0.6712,
+              "text": "Today's talker is a small stand-in. It also copies from the question and the notes, where the thinker points."
             }
           ],
           "labels": {
             "question": "the question",
-            "replies": "the calculator's replies",
+            "replies": "the notes, with the calculator's replies",
             "state": "thinker's final state (picture only)",
-            "points": "points",
+            "points": "thoughts in",
             "talker": "Talker",
             "talkerSub": "adds no thinking",
             "answer": "answer",
             "ten": "10",
             "tag": "made-up example",
-            "chip": "small stand-in, tested inside the model"
+            "chip": "small stand-in, tested inside the model",
+            "today": "today's stand-in only"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 Talker row (line 38): writes only the final answer from the thinker's final state; today a small stand-in",
@@ -4558,42 +4591,42 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0207
+              0.0231
             ],
             [
               0.2,
-              0.1887
+              0.2104
             ],
             [
               0.38,
-              0.3936
+              0.4527
             ],
             [
               0.6,
-              0.6355
+              0.6712
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 30.5,
-          "heading": "Three ways the talker writes, today",
+          "duration": 29,
+          "heading": "Today's stand-in: three ways to write",
           "caption": [
             {
-              "at": 0.0197,
+              "at": 0.0207,
               "text": "Today's talker is a small stand-in with three ways to write an answer."
             },
             {
-              "at": 0.2145,
-              "text": "Span copy takes a stretch of letters from the question or a reply."
+              "at": 0.2256,
+              "text": "Span copy takes a stretch of letters from the question or the notes."
             },
             {
-              "at": 0.4203,
+              "at": 0.4383,
               "text": "A word pointer, a learned pick of a spot, takes one whole word from the question."
             },
             {
-              "at": 0.6503,
-              "text": "Letter slots spell the answer when it is not in the text."
+              "at": 0.6802,
+              "text": "Letter slots spell the answer when it is not in the text. The planned talker has no pointer."
             }
           ],
           "labels": {
@@ -4623,42 +4656,42 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0197
+              0.0207
             ],
             [
               0.23,
-              0.2145
+              0.2256
             ],
             [
               0.43,
-              0.4203
+              0.4383
             ],
             [
               0.62,
-              0.6503
+              0.6802
             ]
           ]
         },
         {
           "id": "s03",
-          "duration": 29.5,
-          "heading": "Span copy: a pointer, a step left, a stop",
+          "duration": 28.5,
+          "heading": "Today's stand-in, span copy: a pointer, a step left, a stop",
           "caption": [
             {
-              "at": 0.0203,
-              "text": "The thinker's final state sets a pointer on the last digit of the last reply: the 0."
+              "at": 0.0211,
+              "text": "In today's stand-in, a pointer lands on the last digit of the last reply: the 0."
             },
             {
-              "at": 0.2815,
+              "at": 0.2672,
               "text": "The copy steps one letter left and takes the 1."
             },
             {
-              "at": 0.4467,
+              "at": 0.4381,
               "text": "Next to the left is a space. A small learned part, the stop head, says stop."
             },
             {
-              "at": 0.6844,
-              "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10."
+              "at": 0.6842,
+              "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10. The plan has no pointer."
             }
           ],
           "labels": {
@@ -4686,42 +4719,42 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0203
+              0.0211
             ],
             [
               0.23,
-              0.2815
+              0.2672
             ],
             [
               0.4,
-              0.4467
+              0.4381
             ],
             [
               0.58,
-              0.6844
+              0.6842
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 37,
-          "heading": "Span copy: how often, and what is hand-written",
+          "duration": 35,
+          "heading": "Stand-in span copy: how often, what is hand-written",
           "caption": [
             {
-              "at": 0.0162,
-              "text": "In all 6 copies of the 3-million-number model with an outside calculator (T1SDR), span copy wrote 91.5% of answers."
+              "at": 0.0171,
+              "text": "In the tested version, in all 6 copies of the 3-million-number model with an outside calculator (T1SDR), the stand-in's span copy wrote 91.5% of answers."
             },
             {
-              "at": 0.3773,
+              "at": 0.4098,
               "text": "That counts how often it was used on 400 familiar calculator questions, not how often it was right."
             },
             {
-              "at": 0.5862,
-              "text": "The pointer and the stop head are learned. Three small pieces are still hand-written code."
+              "at": 0.6306,
+              "text": "The stand-in's pointer and stop head are learned. Three small pieces are hand-written code."
             },
             {
-              "at": 0.7898,
-              "text": "The plan: one learned writer replaces them. That build has not been run."
+              "at": 0.8106,
+              "text": "The plan: one learned writer, for calls and answers, replaces them. Not run."
             }
           ],
           "labels": {
@@ -4736,14 +4769,14 @@ window.CONTENT = {
               }
             ],
             "chip": "tested at 3M, 6 copies",
-            "barNote": "share of uses, not accuracy",
+            "barNote": "share of uses, not accuracy; both from the tested version",
             "hand": [
               "step one letter left",
               "split text into words",
               "flip last-first text"
             ],
             "handChip": "hand-written",
-            "plan": "one learned writer",
+            "plan": "one learned writer: calls and answers",
             "planChip": "plan only, not run"
           },
           "src": [
@@ -4759,30 +4792,30 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0162
+              0.0171
             ],
             [
               0.24,
-              0.3773
+              0.4098
             ],
             [
               0.44,
-              0.5862
+              0.6306
             ],
             [
               0.64,
-              0.7898
+              0.8106
             ]
           ]
         },
         {
           "id": "s05",
           "duration": 24.5,
-          "heading": "Letter slots: spelling an answer",
+          "heading": "Today's letter slots: spelling an answer",
           "caption": [
             {
               "at": 0.0245,
-              "text": "When the answer is not in the text, the talker spells it in letter slots."
+              "text": "When the answer is not in the text, today's stand-in spells it in letter slots."
             },
             {
               "at": 0.2962,
@@ -4912,14 +4945,14 @@ window.CONTENT = {
           "caption": [
             {
               "at": 0.0171,
-              "text": "The finished plan has a real talker of about 25 million numbers (25M) that writes English."
+              "text": "The plan's talker, about 25 million numbers (25M), reads the thinker's final thoughts and writes English, with no pointer."
             },
             {
-              "at": 0.2403,
+              "at": 0.2482,
               "text": "It is not built. As built, the 100M-thinker design is 373.1M in all: 271.0M borrowed, frozen reader (Gemma) plus 102.1M trained."
             },
             {
-              "at": 0.7135,
+              "at": 0.7213,
               "text": "How it would learn to write English is not in the plan. A separate team session owns that."
             }
           ],
@@ -4956,11 +4989,11 @@ window.CONTENT = {
             ],
             [
               0.25,
-              0.2403
+              0.2482
             ],
             [
               0.5,
-              0.7135
+              0.7213
             ]
           ]
         },
@@ -5219,32 +5252,32 @@ window.CONTENT = {
         },
         {
           "id": "s12",
-          "duration": 23,
+          "duration": 22,
           "heading": "What to remember about the talker",
           "caption": [
             {
-              "at": 0.0261,
-              "text": "It writes only the final answer, copying where the thinker points."
+              "at": 0.0273,
+              "text": "The plan: thoughts in, calls and answer out, no pointer."
             },
             {
-              "at": 0.2534,
-              "text": "Today it is a small stand-in, tested only inside the 3M runs."
+              "at": 0.2487,
+              "text": "Today's stand-in copies by pointer. Tested only at 3M."
             },
             {
-              "at": 0.4963,
+              "at": 0.4777,
               "text": "The English talker is a placeholder. Today's model gives short answers, not sentences."
             }
           ],
           "labels": {
             "cards": [
-              "Writes only the answer",
+              "Writes calls and the answer",
               "Today: a small stand-in",
               "English talker: not built"
             ],
             "chips": [
               {
                 "kind": "learned",
-                "label": "talker's pointer, stop head: learned"
+                "label": "stand-in pointer, stop head: learned"
               },
               {
                 "kind": "tested",
@@ -5265,19 +5298,19 @@ window.CONTENT = {
             "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 91): today the talker writes short answers and does not produce sentences",
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (lines 79-83): the 35-letter path is built, not run"
           ],
-          "notes": "The brief's recap said 'copy talker tested at small size'. No talker-only test exists; the stand-in ran inside T1SDR 3M runs, so the chip says 'ran in 3M tests, never alone'. BUILDER PLAN: three cards (x 100/686/1272, y 260, w 546, h 170, label 44px) appear one per caption; the four chips sit below in two rows (y 520 and 600) and appear with their card's caption (learned with card 1, tested and untested with card 2, placeholder with card 3). CHECKER: caption 3: \"The model cannot chat\" -> \"Today's model gives short answers, not sentences\" (redesign-ideas-2026-10-07.md sec. 6: \"does not produce sentences\"). FIXER: chip \"talker's pointer, stop head: learned\" (the span copy's own pointer and stop head, FINISHED line 38, not the map's Thinker or Stop switch) sits under its card; unlit map boxes get darker text and 30 px sub-labels.",
+          "notes": "The brief's recap said 'copy talker tested at small size'. No talker-only test exists; the stand-in ran inside T1SDR 3M runs, so the chip says 'ran in 3M tests, never alone'. BUILDER PLAN: three cards (x 100/686/1272, y 260, w 546, h 170, label 44px) appear one per caption; the four chips sit below in two rows (y 520 and 600) and appear with their card's caption (learned with card 1, tested and untested with card 2, placeholder with card 3). CHECKER: caption 3: \"The model cannot chat\" -> \"Today's model gives short answers, not sentences\" (redesign-ideas-2026-10-07.md sec. 6: \"does not produce sentences\"). FIXER: chip \"stand-in pointer, stop head: learned\" (the span copy's own pointer and stop head, FINISHED line 38, not the map's Thinker or Stop switch) sits under its card; unlit map boxes get darker text and 30 px sub-labels.",
           "atMap": [
             [
               0.02,
-              0.0261
+              0.0273
             ],
             [
               0.28,
-              0.2534
+              0.2487
             ],
             [
               0.5,
-              0.4963
+              0.4777
             ]
           ]
         }
@@ -5291,25 +5324,24 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 21,
+          "duration": 21.5,
           "heading": "Where we are: practice sets the numbers",
           "caption": [
             {
-              "at": 0.0286,
-              "text": "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far)."
+              "at": 0.0279,
+              "text": "Practice sets the numbers inside the thinker, the stop switch (built, not yet run) and the talker (a small stand-in so far; in the new design it writes the calls)."
             },
             {
-              "at": 0.6596,
-              "text": "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
+              "at": 0.6353,
+              "text": "The borrowed reader stays frozen. The outside calculator is plain code and needs no practice."
             }
           ],
           "labels": {
             "reader": "frozen",
             "thinker": "learned",
-            "calc": "hand-written",
+            "calc": "outside tool",
             "stop": "built, never run",
-            "talker": "learned stand-in",
-            "callwriter": "call writer"
+            "talker": "learned stand-in"
           },
           "src": [
             "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 table (lines 29-38: reader borrowed and frozen; thinker, call writer, stop, talker learned; calculator hand code, allowed as a tool; line 36 stop 'built, never run'; line 38 talker 'today a small stand-in')",
@@ -5319,11 +5351,11 @@ window.CONTENT = {
           "atMap": [
             [
               0.0235,
-              0.0286
+              0.0279
             ],
             [
               0.498,
-              0.6596
+              0.6353
             ]
           ]
         },
@@ -5602,20 +5634,20 @@ window.CONTENT = {
         },
         {
           "id": "s07",
-          "duration": 23,
+          "duration": 22.5,
           "heading": "Worked steps: practising each call",
           "caption": [
             {
-              "at": 0.0261,
-              "text": "Where a row has worked steps, the answer key gives the right call each round."
+              "at": 0.0267,
+              "text": "Built version: where a row has worked steps, the key gives the right call each round."
             },
             {
-              "at": 0.3155,
+              "at": 0.3384,
               "text": "Call loss: was the call slip right? After the last call, the right slip is no call."
             },
             {
-              "at": 0.636,
-              "text": "Answer loss: is the final answer right? Counted from the last call round on."
+              "at": 0.666,
+              "text": "Answer loss: is the final answer right? Counted from the last call round on (built version)."
             }
           ],
           "labels": {
@@ -5624,7 +5656,7 @@ window.CONTENT = {
             "r2": "3",
             "r3": "4",
             "key": "answer key",
-            "cw": "call writer",
+            "cw": "call writer (built)",
             "c1": "sub 12 5 = 7",
             "c2": "add 7 3 = 10",
             "c3": "no call",
@@ -5632,7 +5664,7 @@ window.CONTENT = {
             "callLoss": "call loss",
             "ansLoss": "answer loss",
             "ex": "made-up example",
-            "chip": "finished design: built, never run"
+            "chip": "built version: never run"
           },
           "src": [
             "architecture/B3-GROUP1-BUILD-2026-10-09.md lines 53-60 (teacher forcing: op loss on the gold call each call round and no-call after the last; answer loss from the last call round on)",
@@ -5642,33 +5674,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0167,
-              0.0261
+              0.0267
             ],
             [
               0.338,
-              0.3155
+              0.3384
             ],
             [
               0.6593,
-              0.636
+              0.666
             ]
           ]
         },
         {
           "id": "s08",
-          "duration": 29.5,
+          "duration": 29,
           "heading": "Teacher forcing: practice follows the key",
           "caption": [
             {
-              "at": 0.0203,
-              "text": "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess."
+              "at": 0.0207,
+              "text": "Teacher forcing, built version: the reader reads the key's call and reply, even after a wrong guess."
             },
             {
-              "at": 0.3134,
-              "text": "At test time there is no key. The model writes its own calls."
+              "at": 0.2749,
+              "text": "At test time there is no key. New design, untested: the talker writes the calls."
             },
             {
-              "at": 0.5148,
+              "at": 0.5044,
               "text": "Not every row has steps: 124,991 of the 200,000 skills rows (62.5%) the earlier 3M models used have none."
             }
           ],
@@ -5676,7 +5708,8 @@ window.CONTENT = {
             "lane1": "practice",
             "lane2": "test",
             "k": "key's call",
-            "r": "reply",
+            "r": "calculator's reply",
+            "rd": "reader",
             "n": "next round",
             "g": "own guess: graded",
             "o": "own call",
@@ -5696,15 +5729,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.019,
-              0.0203
+              0.0207
             ],
             [
               0.3386,
-              0.3134
+              0.2749
             ],
             [
               0.6582,
-              0.5148
+              0.5044
             ]
           ]
         },
@@ -6012,7 +6045,7 @@ window.CONTENT = {
             "branch origin/claude/project-thread-f1to6a custom_io/models/ledger.py docstring lines 1-8 (parameter-free exact executor inside the model; loop count n_loops)"
           ],
           "design": "Results as of Oct 9. The model tested is an older design: 12 fixed rounds, calculator built in, no learned stop switch.",
-          "notes": "The five-part map always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose.",
+          "notes": "The four-part map (calculator outside) always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose.",
           "atMap": [
             [
               0.0207,
@@ -6394,25 +6427,30 @@ window.CONTENT = {
         },
         {
           "id": "s08",
-          "duration": 22,
+          "duration": 26.5,
           "heading": "Break the calculator, the answer breaks",
           "caption": [
             {
-              "at": 0.0273,
-              "text": "Swap add and subtract inside the calculator (plain code that does the sums), and the answers follow."
+              "at": 0.0226,
+              "text": "Swap add and subtract in the calculator (plain code that does the sums), and the answers follow."
             },
             {
-              "at": 0.3623,
+              "at": 0.3008,
               "text": "Of 831 answers the swap changes, 830 followed it."
             },
             {
-              "at": 0.6942,
+              "at": 0.5763,
               "text": "Switch it off: the score is 0.0 on 2,085 questions that need it."
             }
           ],
           "labels": {
             "thinker": "Thinker",
             "calc": "Calculator",
+            "model": "OLDER DESIGN TESTED HERE",
+            "outside": "built in: does the sums",
+            "call": "call",
+            "reply": "reply",
+            "contrast": "The finished model keeps the calculator outside.",
             "talker": "Talker",
             "add": "add",
             "sub": "subtract"
@@ -6442,15 +6480,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0171,
-              0.0273
+              0.0226
             ],
             [
               0.3381,
-              0.3623
+              0.3008
             ],
             [
               0.659,
-              0.6942
+              0.5763
             ]
           ]
         },
@@ -7590,10 +7628,10 @@ window.CONTENT = {
             },
             {
               "at": 0.3971,
-              "text": "Reader, thinker and calculator have results at the smallest size, 3M: about three million learned numbers."
+              "text": "The reader and thinker have results at 3M, about three million learned numbers. So does the outside calculator."
             },
             {
-              "at": 0.725,
+              "at": 0.7231,
               "text": "The stop switch has never run. The English talker is not built."
             }
           ],
@@ -7645,7 +7683,7 @@ window.CONTENT = {
                   "label": "any round: never run"
                 }
               ],
-              "text": "Plain code, outside the model. Two checks not clean."
+              "text": "Outside tool, plain code. Two checks not clean."
             },
             {
               "chips": [
@@ -7684,7 +7722,7 @@ window.CONTENT = {
             ],
             [
               0.66,
-              0.725
+              0.7231
             ]
           ]
         },
@@ -7752,25 +7790,26 @@ window.CONTENT = {
         },
         {
           "id": "s04",
-          "duration": 30,
+          "duration": 31,
           "heading": "Result two: the calculator can sit outside",
           "caption": [
             {
-              "at": 0.02,
-              "text": "Result two. The calculator is plain code outside the model: it gets a slip, sends a reply."
+              "at": 0.0194,
+              "text": "Result two. The calculator is plain code outside the model. In the tested version the thinker writes a slip; the reader reads the reply."
             },
             {
-              "at": 0.3288,
+              "at": 0.3378,
               "text": "Over 6 copies it scored 0.62 points above a similar calculator-inside design. The likely range includes zero."
             },
             {
-              "at": 0.7221,
+              "at": 0.7185,
               "text": "With the calculator switched off, the questions that need it score 0.0, so the model really uses it."
             }
           ],
           "labels": {
             "slip": "sub 12 5",
-            "calc": "Calculator",
+            "calc": "Outside calculator",
+            "replyNote": "read by the reader",
             "reply": "7",
             "tag": "made-up example",
             "chip": "tested: 6 copies",
@@ -7799,15 +7838,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.02
+              0.0194
             ],
             [
               0.3,
-              0.3288
+              0.3378
             ],
             [
               0.62,
-              0.7221
+              0.7185
             ]
           ]
         },
@@ -8110,17 +8149,18 @@ window.CONTENT = {
           "parts": [
             "Reads the question.",
             "Thinks in rounds.",
-            "Does exact sums.",
+            "Outside tool: does exact sums.",
             "Rings when done.",
-            "Writes the answer."
+            "Stand-in today. Writes words."
           ],
           "chip": "the plan's own judgment",
+          "design": "New design, being built, not tested: works in turns; the talker's line calls the calculator; the whole reader reads the reply.",
           "notes_on": [
             "Nothing is ready to buy yet.",
             "Plan's count on Oct 9: 0 of 9 goals fully green. Its guess for Oct 31: 5 or 6."
           ],
           "src": [
-            "kit/GLOSSARY.md (the five parts and the one analogy)",
+            "kit/GLOSSARY.md (the four parts, the outside calculator and the one analogy)",
             "big-run/PLAN.md:115-116 (bottom line 1: nothing is ready to buy; it works at 3M, nobody has shown it gets better with size faster than a plain model), :82 ('Today: 0 of 9 fully green'), :89 (realistic read at Oct 31: 5 or 6)",
             "big-run/PLAN.md:74 and :133-134 (size claim untested for the model as specified); architecture/FINISHED-MODEL-2026-10-09.md:109-110 and :106-108"
           ],

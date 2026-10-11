@@ -3,7 +3,7 @@ Kit.chapter('ch04', function (Ch) {
   const C = Kit.C;
   // start a beat at time t, but no later than 0.78 of the scene minus its own length d (motion ends before 80%)
   const fin = (S, t, d = 0.8) => Math.min(t, S.at(0.78) - d);
-  // The shared five-part map labels the talker 'stand-in today' (FINISHED-MODEL sec. 2: the English talker is unbuilt; today's talker is a small stand-in).
+  // The shared map (four model parts plus the outside calculator) labels the talker 'stand-in today' (FINISHED-MODEL sec. 2: the English talker is unbuilt; today's talker is a small stand-in).
   // Also make the dimmed boxes easier to read: darker label, sub-label at 32 px.
   const fixMap = (m, talkerSub) => {
     Object.keys(m.parts).forEach((k) => {
@@ -18,12 +18,13 @@ Kit.chapter('ch04', function (Ch) {
     const c = S.c;
     const m = S.modelMap({ x: 100, y: 360, w: 1720, h: 200, highlight: 'thinker' });
     fixMap(m, c.labels.talker);
-    S.stagger([m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker], S.at(0.08), 0.25);
+    S.stagger([m.parts.reader, m.parts.thinker, m.parts.stop, m.parts.talker, m.parts.calc], S.at(0.08), 0.25);
     m.arrows.forEach((a, i) => S.draw(a, S.at(0.3) + i * 0.2, 0.4));
-    // the amber chip hangs under the thinker box (box x 458 to 746, centre 602) and is tied to it
+    // the amber chip hangs under the thinker box (centre m.colC.thinker) and is tied to it
     const svg = S.svg();
-    const tie = S.path(svg, [[602, 564], [602, 606]], { color: C.untested, width: 4, head: 0 });
-    const chip = S.chip('untested', { x: 427, y: 608, label: c.chip });
+    const cx = m.colC.thinker;
+    const tie = S.path(svg, [[cx, 564], [cx, 606]], { color: C.untested, width: 4, head: 0 });
+    const chip = S.chip('untested', { x: cx - 175, y: 608, label: c.chip });
     S.draw(tie, S.at(0.5), 0.3);
     S.pop(chip, S.at(0.5) + 0.2);
     S.pulse(m.parts.thinker, S.at(0.6));
@@ -137,6 +138,8 @@ Kit.chapter('ch04', function (Ch) {
     S.draw(bus, t0 + 1.9, 1.0);
     feeds.forEach((a, i) => S.draw(a, t0 + 2.9 + i * 0.15, 0.4));
     S.pop(S.chip('placeholder', { x: 1400, y: 200, label: c.tag }), S.at(0.1));
+    const tv = S.text(c.labels.tv, { x: 1400, y: 470, w: 420, size: 30, weight: 700, color: C.soft });
+    S.show(tv, t0 + 3.4);
   });
 
   Ch.scene('s07', function (S) {
@@ -187,22 +190,43 @@ Kit.chapter('ch04', function (Ch) {
 
   Ch.scene('s09', function (S) {
     const c = S.c;
-    const r2 = S.box({ x: 160, y: 330, w: 520, h: 120, label: c.labels.r2, color: C.call, size: 40 });
-    const r2r = S.box({ x: 800, y: 330, w: 360, h: 120, label: c.labels.r2r, color: C.calc, size: 40 });
-    const r3 = S.box({ x: 160, y: 580, w: 520, h: 120, label: c.labels.r3, color: C.call, size: 40 });
-    const r3r = S.box({ x: 800, y: 580, w: 360, h: 120, label: c.labels.r3r, color: C.calc, size: 40 });
-    const ans = S.box({ x: 1300, y: 455, w: 500, h: 130, label: c.labels.ans, color: C.talker, size: 44 });
+    // two rows. Each row: the call (written as text) -> the OUTSIDE calculator's reply -> the READER reads it -> added to the notes.
+    const row = (y, lc, lr) => ({
+      call: S.box({ x: 160, y, w: 430, h: 110, label: lc, color: C.call, size: 32 }),
+      rep: S.box({ x: 690, y, w: 270, h: 110, label: lr, color: C.calc, size: 40, border: 5 }),
+      rdr: S.box({ x: 1060, y, w: 250, h: 110, label: c.labels.reader, color: C.reader, size: 40 }),
+      nts: S.box({ x: 1410, y, w: 350, h: 110, label: c.labels.notes, color: C.thinker, size: 40 }),
+    });
+    const R1 = row(270, c.labels.r2, c.labels.r2r), R2 = row(470, c.labels.r3, c.labels.r3r);
+    R1.rep.style.borderStyle = 'dashed'; R2.rep.style.borderStyle = 'dashed';
+    const ans = S.box({ x: 1290, y: 665, w: 470, h: 130, label: c.labels.ans, sub: c.labels.standin, color: C.talker, size: 44, subSize: 30 });
+    const outTag = S.text(c.labels.out, { x: 640, y: 206, w: 370, size: 30, weight: 700, color: C.calc, align: 'center' });
+    const tv = S.text(c.labels.tv, { x: 160, y: 206, w: 470, size: 30, weight: 700, color: C.soft });
+    const plan = S.text(c.labels.plan, { x: 160, y: 665, w: 1060, size: 34, color: C.soft });
     const svg = S.svg();
-    const a1 = S.arrow(svg, 680, 390, 800, 390, { color: C.soft });
-    const a2 = S.path(svg, [[980, 450], [980, 520], [420, 520], [420, 580]], { color: C.soft });
-    const a3 = S.arrow(svg, 680, 640, 800, 640, { color: C.soft });
-    const a4 = S.arrow(svg, 1160, 640, 1300, 540, { color: C.soft });
-    S.show(r2, S.at(0.05));
-    S.draw(a1, fin(S, S.capAt(1)), 0.5); S.show(r2r, fin(S, S.capAt(1)) + 0.5);
-    S.draw(a2, fin(S, S.capAt(2)), 0.6); S.show(r3, fin(S, S.capAt(2)) + 0.4);
-    S.draw(a3, fin(S, S.capAt(2)) + 0.6, 0.4); S.show(r3r, fin(S, S.capAt(2)) + 0.9);
-    S.draw(a4, fin(S, S.capAt(3)), 0.5); S.pop(ans, fin(S, S.capAt(3)) + 0.4);
-    S.show(S.chip('untested', { x: 160, y: 740, label: c.chip }), fin(S, S.capAt(3)) + 0.6);
+    const arr = (R, y) => [
+      S.arrow(svg, 590, y + 55, 690, y + 55, { color: C.soft }),
+      S.arrow(svg, 960, y + 55, 1060, y + 55, { color: C.soft }),
+      S.arrow(svg, 1310, y + 55, 1410, y + 55, { color: C.soft }),
+    ];
+    const A1 = arr(R1, 270), A2 = arr(R2, 470);
+    // the notes of round 2 are what round 3 sees
+    const back = S.path(svg, [[1585, 380], [1585, 425], [375, 425], [375, 470]], { color: C.soft });
+    const toAns = S.arrow(svg, 1525, 580, 1525, 665, { color: C.soft });
+    S.show(R1.call, S.at(0.05)); S.show(tv, S.at(0.05));
+    const t1 = fin(S, S.capAt(1), 3.4);
+    S.draw(A1[0], t1, 0.5); S.show(R1.rep, t1 + 0.5); S.show(outTag, t1 + 0.5);
+    S.draw(A1[1], t1 + 1.2, 0.4); S.show(R1.rdr, t1 + 1.6);
+    S.draw(A1[2], t1 + 2.2, 0.4); S.show(R1.nts, t1 + 2.6);
+    const t2 = fin(S, S.capAt(2), 4.2);
+    S.draw(back, t2, 0.7); S.show(R2.call, t2 + 0.6);
+    S.draw(A2[0], t2 + 1.4, 0.4); S.show(R2.rep, t2 + 1.8);
+    S.draw(A2[1], t2 + 2.4, 0.4); S.show(R2.rdr, t2 + 2.8);
+    S.draw(A2[2], t2 + 3.3, 0.4); S.show(R2.nts, t2 + 3.7);
+    const t3 = fin(S, S.capAt(3), 1.6);
+    S.draw(toAns, t3, 0.5); S.pop(ans, t3 + 0.4);
+    S.show(plan, t3 + 0.8);
+    S.show(S.chip('untested', { x: 160, y: 775, label: c.chip }), t3 + 1.0);
   });
 
   Ch.scene('s10', function (S) {
@@ -284,14 +308,15 @@ Kit.chapter('ch04', function (Ch) {
     S.show(r, S.at(0.05));
     const m = S.modelMap({ x: 100, y: 340, w: 1720, h: 200, highlight: 'thinker' });
     fixMap(m, c.labels.talker);
-    S.stagger([m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker], S.at(0.1), 0.2);
+    S.stagger([m.parts.reader, m.parts.thinker, m.parts.stop, m.parts.talker, m.parts.calc], S.at(0.1), 0.2);
     m.arrows.forEach((a, i) => S.draw(a, S.at(0.25) + i * 0.15, 0.4));
     S.pulse(m.parts.thinker, fin(S, S.capAt(1)));
-    // the amber chip hangs under the stop switch (the bell): box x 1174 to 1462, centre 1318
+    // the amber chip hangs under the stop switch (the bell), tied to its column centre
     const svg = S.svg();
-    const tie = S.path(svg, [[1318, 544], [1318, 586]], { color: C.untested, width: 4, head: 0 });
+    const sx = m.colC.stop;
+    const tie = S.path(svg, [[sx, 544], [sx, 586]], { color: C.untested, width: 4, head: 0 });
     S.draw(tie, fin(S, S.capAt(3)), 0.3);
-    S.pop(S.chip('untested', { x: 1148, y: 588, label: c.chip }), fin(S, S.capAt(3)) + 0.3);
+    S.pop(S.chip('untested', { x: sx - 170, y: 588, label: c.chip }), fin(S, S.capAt(3)) + 0.3);
     S.pulse(m.parts.stop, fin(S, S.capAt(3)));
   });
 });

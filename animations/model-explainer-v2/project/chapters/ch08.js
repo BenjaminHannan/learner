@@ -23,16 +23,12 @@ Kit.chapter('ch08', function (Ch) {
   Ch.scene('s01', function (S) {
     const L = S.c.labels;
     const m = S.modelMap({ x: 100, y: 320, w: 1720, h: 210 });
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const order = ['reader', 'thinker', 'stop', 'talker', 'calc'];
     let t = S.at(0.05);
     order.forEach((k, i) => { S.show(m.parts[k], t + i * 0.3); if (m.arrows[i]) S.draw(m.arrows[i], t + i * 0.3 + 0.3, 0.4); });
-    // The call writer is part of the thinker's output heads, not a fifth box on the map: draw it as a small box inside the Thinker box.
-    const th = m.parts.thinker;
-    th.style.justifyContent = 'flex-start'; th.style.paddingTop = '22px';
-    const cw = S.box({ x: 23, y: 122, w: 232, h: 60, label: L.callwriter, color: C.call, size: 32, parent: th });
     const chips = {};
     order.forEach((k, i) => {
-      const lab = L[k], w = chipW(lab), x = 100 + i * 358 + 144 - w / 2;
+      const lab = L[k], w = chipW(lab), x = m.colC[k] - w / 2;
       if (k === 'reader') chips[k] = S.chip('frozen', { color: C.reader, label: lab, x, y: 575 });
       else if (k === 'calc') chips[k] = S.chip('hand', { label: lab, x, y: 575 });
       else if (k === 'stop') chips[k] = S.chip('untested', { label: lab, x, y: 575 });   // built, never run: amber
@@ -40,8 +36,6 @@ Kit.chapter('ch08', function (Ch) {
     });
     const t0 = S.capAt(0), t1 = S.capAt(1);
     ['thinker', 'stop', 'talker'].forEach((k, i) => S.pop(chips[k], t0 + 0.6 + i * 0.5));
-    S.show(cw, t0 + 1.2);
-    S.pulse(cw, t0 + 3.2);
     S.pop(chips.reader, t1 + 0.4);
     S.pop(chips.calc, t1 + 1.0);
   });
@@ -231,26 +225,30 @@ Kit.chapter('ch08', function (Ch) {
     const L = S.c.labels, N = S.c.nums;
     const svg = S.svg();
     const l1 = S.text(L.lane1, { x: 80, y: 272, w: 250, size: 42, weight: 800, color: C.learned });
-    const kc = S.box({ x: 340, y: 245, w: 340, h: 100, label: L.k, color: C.tested, size: 38 });
-    const r1 = S.box({ x: 760, y: 245, w: 260, h: 100, label: L.r, color: C.calc, size: 38 });
-    const n1 = S.box({ x: 1100, y: 245, w: 340, h: 100, label: L.n, color: C.thinker, size: 38 });
+    const kc = S.box({ x: 340, y: 245, w: 270, h: 100, label: L.k, color: C.tested, size: 38 });
+    const r1 = S.box({ x: 680, y: 245, w: 340, h: 100, label: L.r, color: C.calc, size: 34 });
+    const d1 = S.box({ x: 1090, y: 245, w: 190, h: 100, label: L.rd, color: C.reader, size: 36 });
+    const n1 = S.box({ x: 1350, y: 245, w: 300, h: 100, label: L.n, color: C.thinker, size: 38 });
     const g1 = dashed(S.box({ x: 340, y: 372, w: 340, h: 76, label: L.g, color: C.call, size: 32, border: 3 }));
-    const a1 = S.arrow(svg, 688, 295, 752, 295, { color: C.soft, width: 5, head: 16 });
-    const a2 = S.arrow(svg, 1028, 295, 1092, 295, { color: C.soft, width: 5, head: 16 });
+    const a1 = S.arrow(svg, 618, 295, 672, 295, { color: C.soft, width: 5, head: 16 });
+    const a2 = S.arrow(svg, 1028, 295, 1082, 295, { color: C.soft, width: 5, head: 16 });
+    const a5 = S.arrow(svg, 1288, 295, 1342, 295, { color: C.soft, width: 5, head: 16 });
     const l2 = S.text(L.lane2, { x: 80, y: 542, w: 250, size: 42, weight: 800 });
-    const oc = S.box({ x: 340, y: 515, w: 340, h: 100, label: L.o, color: C.call, size: 38 });
-    const r2 = S.box({ x: 760, y: 515, w: 260, h: 100, label: L.r, color: C.calc, size: 38 });
-    const n2 = S.box({ x: 1100, y: 515, w: 340, h: 100, label: L.n, color: C.thinker, size: 38 });
-    const a3 = S.arrow(svg, 688, 565, 752, 565, { color: C.soft, width: 5, head: 16 });
-    const a4 = S.arrow(svg, 1028, 565, 1092, 565, { color: C.soft, width: 5, head: 16 });
+    const oc = S.box({ x: 340, y: 515, w: 270, h: 100, label: L.o, color: C.call, size: 38 });
+    const r2 = S.box({ x: 680, y: 515, w: 340, h: 100, label: L.r, color: C.calc, size: 34 });
+    const d2 = S.box({ x: 1090, y: 515, w: 190, h: 100, label: L.rd, color: C.reader, size: 36 });
+    const n2 = S.box({ x: 1350, y: 515, w: 300, h: 100, label: L.n, color: C.thinker, size: 38 });
+    const a3 = S.arrow(svg, 618, 565, 672, 565, { color: C.soft, width: 5, head: 16 });
+    const a4 = S.arrow(svg, 1028, 565, 1082, 565, { color: C.soft, width: 5, head: 16 });
+    const a6 = S.arrow(svg, 1288, 565, 1342, 565, { color: C.soft, width: 5, head: 16 });
     const nl = S.text(L.none, { x: 80, y: 738, w: 250, size: 36, weight: 700 });
     const nb = S.bar({ x: 340, y: 728, w: 900, h: 56, value: N.share, max: 100, color: C.soft });
     const nv = S.text('', { x: 1264, y: 722, w: 300, size: 52, weight: 800 });
     const t0 = S.capAt(0), t1 = S.capAt(1), t2 = S.capAt(2);
     S.show(l1, t0); S.show(kc, t0 + 0.4); S.draw(a1, t0 + 0.9, 0.5); S.show(r1, t0 + 1.3);
-    S.draw(a2, t0 + 1.8, 0.5); S.show(n1, t0 + 2.2); S.show(g1, t0 + 3.0);
+    S.draw(a2, t0 + 1.8, 0.5); S.show(d1, t0 + 2.0); S.draw(a5, t0 + 2.3, 0.4); S.show(n1, t0 + 2.6); S.show(g1, t0 + 3.2);
     S.show(l2, t1); S.show(oc, t1 + 0.4); S.draw(a3, t1 + 0.9, 0.5); S.show(r2, t1 + 1.3);
-    S.draw(a4, t1 + 1.8, 0.5); S.show(n2, t1 + 2.2);
+    S.draw(a4, t1 + 1.8, 0.5); S.show(d2, t1 + 2.0); S.draw(a6, t1 + 2.3, 0.4); S.show(n2, t1 + 2.6);
     S.show(nl, t2); S.show(nb.track, t2 + 0.2); S.grow(nb, t2 + 0.6, 1.8);
     S.show(nv, t2 + 0.6, { dur: 0.3 });
     S.count(nv, { from: 0, to: N.share, dec: 1, suf: '%' }, t2 + 0.7, 1.8);

@@ -1,7 +1,7 @@
 {
   "kicker": "Part 4 of 10",
   "title": "Asking the calculator for help",
-  "blurb": "The model can ask an ordinary calculator for exact sums. It writes the question as plain text, and the calculator writes back the answer as plain text.",
+  "blurb": "The model can use an ordinary calculator, outside the model, for exact sums. In the new design (being built), the talker writes the call as plain text at the end of a turn, the calculator writes back plain text, and the whole reader reads the reply. The results here are from the tested version.",
   "accent": "call",
   "scenes": [
     {
@@ -9,11 +9,11 @@
       "duration": 22,
       "heading": "Where we are: the calculator sits outside",
       "caption": [
-        "This part is about the call writer, which writes a request slip, and the calculator, which answers it.",
+        "In the new design, the talker's line calls the calculator, an outside tool, at the end of a turn. The reply starts the next turn, and the whole reader reads it.",
         "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
       ],
       "labels": {
-        "call": "call writer"
+        "chip": "new design: being built, not tested yet"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (parts table) and sec. 4 (rules dated 10-07)"
@@ -27,13 +27,18 @@
       "caption": [
         "Code adds two numbers exactly, every time.",
         "A learned network has to learn each sum from practice.",
-        "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
+        "In the new design, the talker writes its sum on a text slip (made-up numbers here) and sends it to a calculator outside the model. The whole reader reads the reply."
       ],
       "labels": {
         "slip": "call: sub 12 5",
         "back": "reply: 7",
         "calc": "calculator",
-        "why": "our reasoning, not a measured result"
+        "why": "our reasoning, not a measured result",
+        "slipnote": "written by the talker, as text",
+        "calcsub": "outside the model",
+        "backnote": "comes back as text",
+        "reader": "reader",
+        "readersub": "whole reader reads it"
       },
       "src": [
         "GLOSSARY.md (call writer and calculator pictures)",
@@ -44,17 +49,19 @@
     {
       "id": "s03",
       "duration": 26,
-      "heading": "After a round, the call writer reads one vector",
+      "heading": "Tested version: after a round, the call writer reads one vector",
       "caption": [
-        "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers.",
-        "It writes one of nine choices: no call, or one of the eight operations."
+        "In the tested version, after a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers.",
+        "It writes one of nine choices: no call, or one of the eight operations. The new design drops this call writer: the talker writes the call."
       ],
       "labels": {
         "v0": "control vector 0",
         "none": "no call",
         "ops": "8 operations",
         "cw": "call writer",
-        "pic": "picture only: the shading is decoration"
+        "pic": "picture only: the shading is decoration",
+        "cwnote": "tested version only",
+        "chip": "tested version, not the new design"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (call writer row)",
@@ -66,9 +73,9 @@
     {
       "id": "s04",
       "duration": 44,
-      "heading": "The eight operations, one line each",
+      "heading": "The calculator's eight operations, one line each",
       "caption": [
-        "Eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ?\u00a0means the call cannot run."
+        "The outside calculator has eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
       ],
       "ops": [
         {
@@ -122,20 +129,20 @@
     {
       "id": "s05",
       "duration": 45,
-      "heading": "Copying digits: a pointer, a step left, a stop",
+      "heading": "Tested version: copying digits with a pointer, a step left, a stop",
       "question": "Tom has 12 apples. (made-up example)",
       "caption": [
-        "To write the 12 in a call, a learned pointer lands on its last digit, the 2.",
+        "In the tested version, to write the 12 in a call, the call writer's learned pointer lands on its last digit, the 2.",
         "The copy then steps one letter left and copies the 1.",
         "A learned stop head says when to stop.",
-        "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR).",
+        "In the tested version, the copy trick was used for 98% of written operands and, by today's stand-in talker, for 91.5% of answers, on all six separate copies (T1SDR). The planned talker and the new design use no pointer or copying.",
         "Copied here means the copy trick was used, not that the copy was right."
       ],
       "labels": {
         "ptr": "pointer",
         "stop": "stop head",
         "out": "written last digit first",
-        "chip": "tested at 3 million learned numbers (3M)",
+        "chip": "tested version, 3 million learned numbers (3M)",
         "d2": "2",
         "d1": "1",
         "num": "12"
@@ -146,7 +153,7 @@
           "value": 98
         },
         {
-          "label": "answers copied",
+          "label": "answers copied (stand-in talker)",
           "value": 91.5
         }
       ],
@@ -161,10 +168,10 @@
     {
       "id": "s06",
       "duration": 38,
-      "heading": "A number not in the text: 21 cells",
+      "heading": "Call-writer builds: a number not in the text, 21 cells",
       "caption": [
-        "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time.",
-        "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
+        "In the tested version, some call numbers are in neither the question nor a reply, and the call writer builds such a number one digit at a time.",
+        "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text. The new design has no call writer."
       ],
       "labels": {
         "cells": "21 cells: 20 for the longest 64-bit whole number, 1 for the end mark",
@@ -188,10 +195,10 @@
     {
       "id": "s07",
       "duration": 28,
-      "heading": "The calculator: plain Python, no learned numbers",
+      "heading": "The outside calculator: plain Python, no learned numbers",
       "caption": [
-        "The calculator is ordinary Python code. It has 0 learned numbers.",
-        "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
+        "The calculator is ordinary Python code, outside the model. It has 0 learned numbers.",
+        "In the new design, it reads a call (made-up numbers here) and writes the reply as text, which starts the next turn for the whole reader. A call it cannot run gets a question mark."
       ],
       "labels": {
         "in": "call in: sub 12 5",
@@ -199,7 +206,10 @@
         "in2": "call in: div 12 5",
         "out2": "reply out: ?",
         "calc": "calculator",
-        "tag": "hand code, allowed as a tool"
+        "tag": "hand code, allowed as a tool",
+        "calcsub": "outside the model",
+        "frm": "from the talker, as text",
+        "to": "to the whole reader, as text"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row: size 0)",
@@ -211,10 +221,10 @@
     {
       "id": "s08",
       "duration": 42,
-      "heading": "The reply goes into the notes, not the question",
+      "heading": "Tested version: the reply goes through the reader into the notes",
       "caption": [
-        "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies.",
-        "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes.",
+        "In the tested version, in our made-up Tom example, after round 2 the call writer writes sub 12 5 as text, and the outside calculator replies.",
+        "The reply, sub 12 5 = 7, comes back as text. In the tested version the reader's letter window reads it, and it is added to the notes. The new design uses the whole reader, Gemma plus the window.",
         "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
       ],
       "labels": {
@@ -225,7 +235,14 @@
         "rd2": "after round 2",
         "rd3": "after round 3",
         "r1": "sub 12 5 = 7",
-        "r2": "add 7 3 = 10"
+        "r2": "add 7 3 = 10",
+        "cwsub": "tested version only",
+        "calcsub": "outside the model",
+        "reader": "reader",
+        "readersub": "letter window (tested)",
+        "newrd": "new design: whole reader, Gemma plus the window",
+        "callTxt": "call, as text",
+        "replyTxt": "reply, as text"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 steps 2-4 (lines 46-53): worked Tom example",
@@ -237,9 +254,9 @@
     {
       "id": "s09",
       "duration": 38,
-      "heading": "Timing today: calls follow rounds 2 to 8",
+      "heading": "Timing in the tested version: calls follow rounds 2 to 8",
       "caption": [
-        "In the tested design, the first call follows round 2.",
+        "In the tested version, the first call follows round 2.",
         "Call k follows round k plus 1, up to call 7 after round 8.",
         "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
       ],
@@ -304,7 +321,7 @@
       "duration": 42,
       "heading": "Still hand-written, and what build 2 changes",
       "caption": [
-        "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes.",
+        "In the call-writer builds, some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes.",
         "The operation name comes from a fixed list of 8, so a new tool could not be called yet.",
         "The finished design's second build writes the whole call as letters, operation name included.",
         "It is built as code and has never run."
@@ -329,10 +346,10 @@
     {
       "id": "s12",
       "duration": 35,
-      "heading": "The evidence: 6 copies, calculator outside",
+      "heading": "The evidence: tested version, 6 copies, calculator outside",
       "caption": [
         "Each copy starts from its own random start.",
-        "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2).",
+        "The tested version, T1SDR, where the calculator is an outside tool, was compared with a similar model, B2, where the calculator is inside.",
         "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46.",
         "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
       ],
@@ -340,7 +357,7 @@
         "ob": "B2: calc inside",
         "out": "T1SDR: plus 0.62",
         "rng": "likely range",
-        "chip": "tested at 3M, 6 copies",
+        "chip": "tested version: 3M, 6 copies",
         "ticks": [
           "-1",
           "0",
@@ -386,7 +403,7 @@
         "off": "calculator off",
         "zero": "0.0",
         "offsub": "2,085 questions that need it",
-        "chip": "tested at 3M, 6 copies"
+        "chip": "tested version: 3M, 6 copies"
       },
       "chain": {
         "outLo": 99.6,
@@ -406,7 +423,7 @@
     {
       "id": "s13",
       "duration": 44,
-      "heading": "Check 1: the swap test",
+      "heading": "Check 1: the swap test (tested version)",
       "caption": [
         "Swap test: add and sub are secretly swapped inside the calculator. The answer should follow the new reply.",
         "Pass line: 99% or more of counted rows follow the swap. Rows with two possible sources are not counted.",
@@ -417,7 +434,7 @@
       "labels": {
         "pass": "pass line: 99",
         "lost": "copy F: not scored",
-        "chip": "tested on 5 of 6 copies"
+        "chip": "tested version: 5 of 6 copies"
       },
       "vals": [
         {
@@ -451,7 +468,7 @@
     {
       "id": "s14",
       "duration": 45,
-      "heading": "Check 2: the leak test, missed then cleared",
+      "heading": "Check 2: the leak test (tested version), missed then cleared",
       "caption": [
         "Leak check: swap in another question's thinking, then count answers still right, out of 100 (1,360 questions).",
         "Limit written down before the run: 5. Five of six copies read above it, from 5.07 to 5.59.",
@@ -508,18 +525,18 @@
       "duration": 42,
       "heading": "What is tested, and what is not",
       "caption": [
-        "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner).",
+        "Tested version: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner).",
         "Never run together: the borrowed Gemma reader with the outside calculator.",
         "Built, never run: calls at any round.",
-        "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
+        "Remember: in the new design (being built), the talker's line calls the calculator and the whole reader reads the reply. The tested version used a copy trick, with a learned stop."
       ],
       "labels": {
-        "t": "tested: calc outside, 3M",
+        "t": "tested version: calculator outside, 3M",
         "n": "built, never run: Gemma with calc",
         "b": "built, never run: any round",
-        "rem1": "Calls are text.",
-        "rem2": "The calculator replies in text.",
-        "rem3": "A copy trick, with a learned stop, writes most numbers."
+        "rem1": "New design (being built): the talker's line calls the calculator.",
+        "rem2": "Its reply starts the next turn; the whole reader reads it.",
+        "rem3": "Tested version: a copy trick, with a learned stop, writes most numbers."
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row), sec. 5 item 6 (Gemma and calculator never run together), sec. 3 (any-round built, untested)",

@@ -18,12 +18,12 @@ Kit.chapter('ch07', function (Ch) {
     const c = S.c, L = c.labels;
     const m = S.modelMap({ x: 100, y: 215, w: 1720, h: 150, highlight: 'talker' });
     readableDim(m, 'talker');
-    S.stagger([m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker], S.at(0.03), 0.15);
+    S.stagger(m.order.map((k) => m.parts[k]), S.at(0.03), 0.15);
     m.arrows.forEach((a, i) => S.draw(a, S.at(0.06) + i * 0.12, 0.3));
     S.pulse(m.parts.talker, S.at(0.09));
 
     const qBox = S.box({ x: 100, y: 450, w: 470, h: 110, label: L.question, color: C.reader, size: 36 });
-    const rBox = S.box({ x: 100, y: 640, w: 470, h: 110, label: L.replies, color: C.calc, size: 36 });
+    const rBox = S.box({ x: 100, y: 640, w: 470, h: 110, label: L.replies, color: C.reader, size: 36 });
     const stLab = S.text(L.state, { x: 700, y: 392, w: 820, size: 32, weight: 700, color: C.thinker });
     const vec = S.vec({ x: 700, y: 440, n: 8, cell: 46, gap: 6, color: C.thinker, seed: 7 });
     const tk = S.box({ x: 900, y: 580, w: 400, h: 160, label: L.talker, sub: L.talkerSub, color: C.talker, size: 52, subSize: 32 });
@@ -34,23 +34,26 @@ Kit.chapter('ch07', function (Ch) {
     const a2 = S.arrow(svg, 574, 695, 896, 690, { color: C.soft, width: 5 });
     const a3 = S.arrow(svg, 1000, 492, 1000, 576, { color: C.thinker, width: 9, head: 28 });
     const a4 = S.arrow(svg, 1304, 660, 1456, 660, { color: C.talker, width: 6 });
-    const pLab = S.text(L.points, { x: 1030, y: 515, w: 200, size: 34, weight: 700, color: C.thinker });
+    const pLab = S.text(L.points, { x: 1030, y: 515, w: 260, size: 34, weight: 700, color: C.thinker });
+    const todayLab = S.text(L.today, { x: 590, y: 770, w: 300, size: 30, weight: 700, color: C.hand });
     const tag = S.chip('placeholder', { x: 1460, y: 470, label: L.tag });
     const stand = S.chip('tested', { x: 900, y: 760, label: L.chip });
 
     S.show(tk, S.capAt(1));
     S.show(stLab, S.capAt(2));
     S.show(vec, S.capAt(2) + 0.2);
-    S.stagger([qBox, rBox], S.capAt(2) + 0.7, 0.4);
-    S.draw(a1, S.capAt(2) + 1.6, 0.7);
-    S.draw(a2, S.capAt(2) + 2.0, 0.7);
-    S.draw(a3, S.capAt(3), 0.7);
-    S.show(pLab, S.capAt(3) + 0.5);
-    S.draw(a4, S.capAt(3) + 1.3, 0.6);
-    S.pop(ans, S.capAt(3) + 1.9);
-    S.show(ansLab, S.capAt(3) + 1.9);
-    S.show(tag, S.capAt(3) + 2.4);
-    S.pop(stand, S.capAt(3) + 2.8);
+    S.draw(a3, S.capAt(2) + 1.0, 0.7);
+    S.show(pLab, S.capAt(2) + 1.5);
+    S.draw(a4, S.capAt(2) + 2.3, 0.6);
+    S.pop(ans, S.capAt(2) + 2.9);
+    S.show(ansLab, S.capAt(2) + 2.9);
+    S.show(tag, S.capAt(2) + 3.3);
+    // c4: today's stand-in also copies from the question and the notes (not the plan)
+    S.stagger([qBox, rBox], S.capAt(3), 0.4);
+    S.draw(a1, S.capAt(3) + 0.8, 0.7);
+    S.draw(a2, S.capAt(3) + 1.2, 0.7);
+    S.show(todayLab, S.capAt(3) + 1.8);
+    S.pop(stand, S.capAt(3) + 2.4);
   });
 
   // s02: three ways to write an answer, one card each (all made-up examples).
@@ -419,7 +422,7 @@ Kit.chapter('ch07', function (Ch) {
     const m = S.modelMap({ x: 100, y: 705, w: 1720, h: 120, highlight: 'talker' });
     readableDim(m, 'talker');
 
-    S.stagger([m.parts.reader, m.parts.thinker, m.parts.calc, m.parts.stop, m.parts.talker], S.at(0.04), 0.12);
+    S.stagger(m.order.map((k) => m.parts[k]), S.at(0.04), 0.12);
     m.arrows.forEach((a, i) => S.draw(a, S.at(0.06) + i * 0.1, 0.3));
     S.show(cards[0], S.capAt(0) + 0.3);
     S.pop(chips[0], S.capAt(0) + 1.4);

@@ -151,19 +151,19 @@
     },
     {
       "id": "s04",
-      "duration": 25,
-      "heading": "Control vector 0 drives the call writer",
+      "duration": 23.5,
+      "heading": "Tested version: control vector 0 drives the call writer",
       "caption": [
         {
-          "at": 0.024,
-          "text": "After each round from round 2 on, the call writer reads control vector 0."
+          "at": 0.0255,
+          "text": "In the tested version, after each round from round 2 on, the call writer reads control vector 0."
         },
         {
-          "at": 0.3723,
-          "text": "It either writes a request for the calculator, like sub 12 5, or writes nothing."
+          "at": 0.3544,
+          "text": "It either writes a request for the outside calculator, like sub 12 5, or writes nothing."
         },
         {
-          "at": 0.7283,
+          "at": 0.7268,
           "text": "The numbers in the request are usually copied from the question or an earlier reply."
         }
       ],
@@ -178,19 +178,19 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 1, and sec. 2 (Call writer row: shown in T1SDR; Calculator row: T1SDR at 3M, 6 seeds)",
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 2 (tool.py:329-374 copies the numbers; calls need t >= 1, so none after round 1) and sec. 4 (span copy used for 98% of written operands)"
       ],
-      "chip2": "current design: never run as a whole",
+      "chip2": "new design: talker writes the call; never run",
       "atMap": [
         [
           0.0187,
-          0.024
+          0.0255
         ],
         [
           0.3385,
-          0.3723
+          0.3544
         ],
         [
           0.6583,
-          0.7283
+          0.7268
         ]
       ]
     },
@@ -255,26 +255,27 @@
     },
     {
       "id": "s06",
-      "duration": 23,
+      "duration": 23.5,
       "heading": "Round step 1: look at everything",
       "caption": [
         {
-          "at": 0.0261,
+          "at": 0.0255,
           "text": "Each letter of the question is one box. A borrowed reader, Gemma, has already given each letter its meaning."
         },
         {
-          "at": 0.4158,
-          "text": "Each note vector looks at every letter. In later rounds it also looks at every calculator reply."
+          "at": 0.407,
+          "text": "Each note vector looks at every letter. Later it also looks at each reply the whole reader has read."
         },
         {
-          "at": 0.7363,
+          "at": 0.7511,
           "text": "The shading inside each note is a picture only, not real numbers."
         }
       ],
       "tag": "picture only",
       "labels": {
         "q": "Tom has 12 apples.",
-        "look": "Look"
+        "look": "Look",
+        "tv": "Tested version: replies were read by the letter window only. New design: the whole reader."
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Thinker row: every letter and every calculator reply) and sec. 3 item 1 (Gemma reads the question once)",
@@ -283,15 +284,15 @@
       "atMap": [
         [
           0.0214,
-          0.0261
+          0.0255
         ],
         [
           0.3393,
-          0.4158
+          0.407
         ],
         [
           0.6571,
-          0.7363
+          0.7511
         ]
       ]
     },
@@ -412,24 +413,24 @@
     },
     {
       "id": "s09",
-      "duration": 37.5,
+      "duration": 38.5,
       "heading": "Why some questions need several rounds",
       "caption": [
         {
-          "at": 0.016,
-          "text": "Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
+          "at": 0.0156,
+          "text": "Tested version. Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
         },
         {
-          "at": 0.3023,
-          "text": "It copies 12 and 5 from the question. The calculator replies 7, which is added to the notes."
+          "at": 0.2861,
+          "text": "It copies 12 and 5. The outside calculator replies 7. The reader reads it, and adds it to the notes."
         },
         {
-          "at": 0.5084,
+          "at": 0.5054,
           "text": "Round 3 sees that reply. After it, the call writer writes add 7 3, and the calculator replies 10."
         },
         {
-          "at": 0.724,
-          "text": "The talker, which writes the final answer, copies 10 from the last reply. A worked example, traced from the code."
+          "at": 0.7154,
+          "text": "Today's stand-in talker copies 10; the planned one has no pointer. New design: the talker writes calls, and replies start the next turn."
         }
       ],
       "chip": "traced from code, never run as a whole",
@@ -438,7 +439,13 @@
         "r2r": "Reply: 7",
         "r3": "After round 3: add 7 3",
         "r3r": "Reply: 10",
-        "ans": "Answer: 10"
+        "ans": "Answer: 10",
+        "reader": "Reader",
+        "notes": "Added to the notes",
+        "standin": "stand-in talker, today",
+        "out": "outside calculator",
+        "plan": "Today's talker is a stand-in. The planned talker reads the thinker's final thoughts and writes words, with no pointer.",
+        "tv": "Tested design (call writer)"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 items 2-6 (tool.py:329-374, tool.py:155-170, tool.py:368-374)",
@@ -447,19 +454,19 @@
       "atMap": [
         [
           0.0133,
-          0.016
+          0.0156
         ],
         [
           0.2561,
-          0.3023
+          0.2861
         ],
         [
           0.4989,
-          0.5084
+          0.5054
         ],
         [
           0.7417,
-          0.724
+          0.7154
         ]
       ]
     },

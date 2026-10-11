@@ -20,7 +20,7 @@
         "branch origin/claude/project-thread-f1to6a custom_io/models/ledger.py docstring lines 1-8 (parameter-free exact executor inside the model; loop count n_loops)"
       ],
       "design": "Results as of Oct 9. The model tested is an older design: 12 fixed rounds, calculator built in, no learned stop switch.",
-      "notes": "The five-part map always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose."
+      "notes": "The four-part map (calculator outside) always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose."
     },
     {
       "id": "s02",
@@ -269,13 +269,18 @@
       "duration": 35,
       "heading": "Break the calculator, the answer breaks",
       "caption": [
-        "Swap add and subtract inside the calculator (plain code that does the sums), and the answers follow.",
+        "Swap add and subtract in the calculator (plain code that does the sums), and the answers follow.",
         "Of 831 answers the swap changes, 830 followed it.",
         "Switch it off: the score is 0.0 on 2,085 questions that need it."
       ],
       "labels": {
         "thinker": "Thinker",
         "calc": "Calculator",
+        "model": "OLDER DESIGN TESTED HERE",
+        "outside": "built in: does the sums",
+        "call": "call",
+        "reply": "reply",
+        "contrast": "The finished model keeps the calculator outside.",
         "talker": "Talker",
         "add": "add",
         "sub": "subtract"

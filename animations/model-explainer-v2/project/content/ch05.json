@@ -1,25 +1,25 @@
 {
   "kicker": "Part 4 of 10",
   "title": "Asking the calculator for help",
-  "blurb": "The model can ask an ordinary calculator for exact sums. It writes the question as plain text, and the calculator writes back the answer as plain text.",
+  "blurb": "The model can use an ordinary calculator, outside the model, for exact sums. In the new design (being built), the talker writes the call as plain text at the end of a turn, the calculator writes back plain text, and the whole reader reads the reply. The results here are from the tested version.",
   "accent": "call",
   "scenes": [
     {
       "id": "s01",
-      "duration": 21,
+      "duration": 23.5,
       "heading": "Where we are: the calculator sits outside",
       "caption": [
         {
-          "at": 0.0286,
-          "text": "This part is about the call writer, which writes a request slip, and the calculator, which answers it."
+          "at": 0.0255,
+          "text": "In the new design, the talker's line calls the calculator, an outside tool, at the end of a turn. The reply starts the next turn, and the whole reader reads it."
         },
         {
-          "at": 0.5093,
+          "at": 0.552,
           "text": "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
         }
       ],
       "labels": {
-        "call": "call writer"
+        "chip": "new design: being built, not tested yet"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (parts table) and sec. 4 (rules dated 10-07)"
@@ -28,37 +28,42 @@
       "atMap": [
         [
           0.0273,
-          0.0286
+          0.0255
         ],
         [
           0.4977,
-          0.5093
+          0.552
         ]
       ]
     },
     {
       "id": "s02",
-      "duration": 20,
+      "duration": 20.5,
       "heading": "Why a calculator? Code adds exactly",
       "caption": [
         {
-          "at": 0.03,
+          "at": 0.0293,
           "text": "Code adds two numbers exactly, every time."
         },
         {
-          "at": 0.4068,
+          "at": 0.3968,
           "text": "A learned network has to learn each sum from practice."
         },
         {
-          "at": 0.6503,
-          "text": "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
+          "at": 0.6345,
+          "text": "In the new design, the talker writes its sum on a text slip (made-up numbers here) and sends it to a calculator outside the model. The whole reader reads the reply."
         }
       ],
       "labels": {
         "slip": "call: sub 12 5",
         "back": "reply: 7",
         "calc": "calculator",
-        "why": "our reasoning, not a measured result"
+        "why": "our reasoning, not a measured result",
+        "slipnote": "written by the talker, as text",
+        "calcsub": "outside the model",
+        "backnote": "comes back as text",
+        "reader": "reader",
+        "readersub": "whole reader reads it"
       },
       "src": [
         "GLOSSARY.md (call writer and calculator pictures)",
@@ -68,30 +73,30 @@
       "atMap": [
         [
           0.0231,
-          0.03
+          0.0293
         ],
         [
           0.3397,
-          0.4068
+          0.3968
         ],
         [
           0.6564,
-          0.6503
+          0.6345
         ]
       ]
     },
     {
       "id": "s03",
-      "duration": 21,
-      "heading": "After a round, the call writer reads one vector",
+      "duration": 20.5,
+      "heading": "Tested version: after a round, the call writer reads one vector",
       "caption": [
         {
-          "at": 0.0286,
-          "text": "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
+          "at": 0.0293,
+          "text": "In the tested version, after a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
         },
         {
-          "at": 0.557,
-          "text": "It writes one of nine choices: no call, or one of the eight operations."
+          "at": 0.5282,
+          "text": "It writes one of nine choices: no call, or one of the eight operations. The new design drops this call writer: the talker writes the call."
         }
       ],
       "labels": {
@@ -99,7 +104,9 @@
         "none": "no call",
         "ops": "8 operations",
         "cw": "call writer",
-        "pic": "picture only: the shading is decoration"
+        "pic": "picture only: the shading is decoration",
+        "cwnote": "tested version only",
+        "chip": "tested version, not the new design"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (call writer row)",
@@ -110,22 +117,22 @@
       "atMap": [
         [
           0.0231,
-          0.0286
+          0.0293
         ],
         [
           0.4981,
-          0.557
+          0.5282
         ]
       ]
     },
     {
       "id": "s04",
-      "duration": 36,
-      "heading": "The eight operations, one line each",
+      "duration": 36.5,
+      "heading": "The calculator's eight operations, one line each",
       "caption": [
         {
-          "at": 0.0167,
-          "text": "Eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
+          "at": 0.0164,
+          "text": "The outside calculator has eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
         }
       ],
       "ops": [
@@ -179,34 +186,34 @@
       "atMap": [
         [
           0.0136,
-          0.0167
+          0.0164
         ]
       ]
     },
     {
       "id": "s05",
-      "duration": 41.5,
-      "heading": "Copying digits: a pointer, a step left, a stop",
+      "duration": 45,
+      "heading": "Tested version: copying digits with a pointer, a step left, a stop",
       "question": "Tom has 12 apples. (made-up example)",
       "caption": [
         {
-          "at": 0.0145,
-          "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
+          "at": 0.0133,
+          "text": "In the tested version, to write the 12 in a call, the call writer's learned pointer lands on its last digit, the 2."
         },
         {
-          "at": 0.2305,
+          "at": 0.2248,
           "text": "The copy then steps one letter left and copies the 1."
         },
         {
-          "at": 0.3925,
+          "at": 0.3742,
           "text": "A learned stop head says when to stop."
         },
         {
-          "at": 0.5468,
-          "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
+          "at": 0.5165,
+          "text": "In the tested version, the copy trick was used for 98% of written operands and, by today's stand-in talker, for 91.5% of answers, on all six separate copies (T1SDR). The planned talker and the new design use no pointer or copying."
         },
         {
-          "at": 0.8548,
+          "at": 0.8708,
           "text": "Copied here means the copy trick was used, not that the copy was right."
         }
       ],
@@ -214,7 +221,7 @@
         "ptr": "pointer",
         "stop": "stop head",
         "out": "written last digit first",
-        "chip": "tested at 3 million learned numbers (3M)",
+        "chip": "tested version, 3 million learned numbers (3M)",
         "d2": "2",
         "d1": "1",
         "num": "12"
@@ -225,7 +232,7 @@
           "value": 98
         },
         {
-          "label": "answers copied",
+          "label": "answers copied (stand-in talker)",
           "value": 91.5
         }
       ],
@@ -239,38 +246,38 @@
       "atMap": [
         [
           0.0133,
-          0.0145
+          0.0133
         ],
         [
           0.2076,
-          0.2305
+          0.2248
         ],
         [
           0.4018,
-          0.3925
+          0.3742
         ],
         [
           0.596,
-          0.5468
+          0.5165
         ],
         [
           0.7902,
-          0.8548
+          0.8708
         ]
       ]
     },
     {
       "id": "s06",
-      "duration": 24.5,
-      "heading": "A number not in the text: 21 cells",
+      "duration": 25.5,
+      "heading": "Call-writer builds: a number not in the text, 21 cells",
       "caption": [
         {
-          "at": 0.0245,
-          "text": "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time."
+          "at": 0.0235,
+          "text": "In the tested version, some call numbers are in neither the question nor a reply, and the call writer builds such a number one digit at a time."
         },
         {
-          "at": 0.474,
-          "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
+          "at": 0.4855,
+          "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text. The new design has no call writer."
         }
       ],
       "labels": {
@@ -294,26 +301,26 @@
       "atMap": [
         [
           0.0158,
-          0.0245
+          0.0235
         ],
         [
           0.4987,
-          0.474
+          0.4855
         ]
       ]
     },
     {
       "id": "s07",
-      "duration": 15.5,
-      "heading": "The calculator: plain Python, no learned numbers",
+      "duration": 20.5,
+      "heading": "The outside calculator: plain Python, no learned numbers",
       "caption": [
         {
-          "at": 0.0387,
-          "text": "The calculator is ordinary Python code. It has 0 learned numbers."
+          "at": 0.0293,
+          "text": "The calculator is ordinary Python code, outside the model. It has 0 learned numbers."
         },
         {
-          "at": 0.376,
-          "text": "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
+          "at": 0.3366,
+          "text": "In the new design, it reads a call (made-up numbers here) and writes the reply as text, which starts the next turn for the whole reader. A call it cannot run gets a question mark."
         }
       ],
       "labels": {
@@ -322,7 +329,10 @@
         "in2": "call in: div 12 5",
         "out2": "reply out: ?",
         "calc": "calculator",
-        "tag": "hand code, allowed as a tool"
+        "tag": "hand code, allowed as a tool",
+        "calcsub": "outside the model",
+        "frm": "from the talker, as text",
+        "to": "to the whole reader, as text"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row: size 0)",
@@ -333,29 +343,29 @@
       "atMap": [
         [
           0.0214,
-          0.0387
+          0.0293
         ],
         [
           0.4982,
-          0.376
+          0.3366
         ]
       ]
     },
     {
       "id": "s08",
-      "duration": 32,
-      "heading": "The reply goes into the notes, not the question",
+      "duration": 37,
+      "heading": "Tested version: the reply goes through the reader into the notes",
       "caption": [
         {
-          "at": 0.0187,
-          "text": "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies."
+          "at": 0.0162,
+          "text": "In the tested version, in our made-up Tom example, after round 2 the call writer writes sub 12 5 as text, and the outside calculator replies."
         },
         {
-          "at": 0.3369,
-          "text": "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes."
+          "at": 0.3023,
+          "text": "The reply, sub 12 5 = 7, comes back as text. In the tested version the reader's letter window reads it, and it is added to the notes. The new design uses the whole reader, Gemma plus the window."
         },
         {
-          "at": 0.6737,
+          "at": 0.7139,
           "text": "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
         }
       ],
@@ -367,7 +377,14 @@
         "rd2": "after round 2",
         "rd3": "after round 3",
         "r1": "sub 12 5 = 7",
-        "r2": "add 7 3 = 10"
+        "r2": "add 7 3 = 10",
+        "cwsub": "tested version only",
+        "calcsub": "outside the model",
+        "reader": "reader",
+        "readersub": "letter window (tested)",
+        "newrd": "new design: whole reader, Gemma plus the window",
+        "callTxt": "call, as text",
+        "replyTxt": "reply, as text"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 steps 2-4 (lines 46-53): worked Tom example",
@@ -378,33 +395,33 @@
       "atMap": [
         [
           0.0143,
-          0.0187
+          0.0162
         ],
         [
           0.3373,
-          0.3369
+          0.3023
         ],
         [
           0.6603,
-          0.6737
+          0.7139
         ]
       ]
     },
     {
       "id": "s09",
-      "duration": 24.5,
-      "heading": "Timing today: calls follow rounds 2 to 8",
+      "duration": 24,
+      "heading": "Timing in the tested version: calls follow rounds 2 to 8",
       "caption": [
         {
-          "at": 0.0245,
-          "text": "In the tested design, the first call follows round 2."
+          "at": 0.025,
+          "text": "In the tested version, the first call follows round 2."
         },
         {
-          "at": 0.2528,
+          "at": 0.228,
           "text": "Call k follows round k plus 1, up to call 7 after round 8."
         },
         {
-          "at": 0.5917,
+          "at": 0.5739,
           "text": "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
         }
       ],
@@ -441,15 +458,15 @@
       "atMap": [
         [
           0.0158,
-          0.0245
+          0.025
         ],
         [
           0.3377,
-          0.2528
+          0.228
         ],
         [
           0.6596,
-          0.5917
+          0.5739
         ]
       ]
     },
@@ -510,23 +527,23 @@
     },
     {
       "id": "s11",
-      "duration": 29,
+      "duration": 30,
       "heading": "Still hand-written, and what build 2 changes",
       "caption": [
         {
-          "at": 0.0207,
-          "text": "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
+          "at": 0.02,
+          "text": "In the call-writer builds, some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
         },
         {
-          "at": 0.3158,
+          "at": 0.3252,
           "text": "The operation name comes from a fixed list of 8, so a new tool could not be called yet."
         },
         {
-          "at": 0.5946,
+          "at": 0.5948,
           "text": "The finished design's second build writes the whole call as letters, operation name included."
         },
         {
-          "at": 0.8119,
+          "at": 0.8048,
           "text": "It is built as code and has never run."
         }
       ],
@@ -549,41 +566,41 @@
       "atMap": [
         [
           0.0143,
-          0.0207
+          0.02
         ],
         [
           0.2565,
-          0.3158
+          0.3252
         ],
         [
           0.4988,
-          0.5946
+          0.5948
         ],
         [
           0.7411,
-          0.8119
+          0.8048
         ]
       ]
     },
     {
       "id": "s12",
-      "duration": 40,
-      "heading": "The evidence: 6 copies, calculator outside",
+      "duration": 41.5,
+      "heading": "The evidence: tested version, 6 copies, calculator outside",
       "caption": [
         {
-          "at": 0.015,
+          "at": 0.0145,
           "text": "Each copy starts from its own random start."
         },
         {
-          "at": 0.1788,
-          "text": "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2)."
+          "at": 0.1724,
+          "text": "The tested version, T1SDR, where the calculator is an outside tool, was compared with a similar model, B2, where the calculator is inside."
         },
         {
-          "at": 0.3864,
+          "at": 0.4016,
           "text": "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46."
         },
         {
-          "at": 0.787,
+          "at": 0.7878,
           "text": "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
         }
       ],
@@ -591,7 +608,7 @@
         "ob": "B2: calc inside",
         "out": "T1SDR: plus 0.62",
         "rng": "likely range",
-        "chip": "tested at 3M, 6 copies",
+        "chip": "tested version: 3M, 6 copies",
         "ticks": [
           "-1",
           "0",
@@ -618,19 +635,19 @@
       "atMap": [
         [
           0.0171,
-          0.015
+          0.0145
         ],
         [
           0.2579,
-          0.1788
+          0.1724
         ],
         [
           0.4986,
-          0.3864
+          0.4016
         ],
         [
           0.7393,
-          0.787
+          0.7878
         ]
       ]
     },
@@ -661,7 +678,7 @@
         "off": "calculator off",
         "zero": "0.0",
         "offsub": "2,085 questions that need it",
-        "chip": "tested at 3M, 6 copies"
+        "chip": "tested version: 3M, 6 copies"
       },
       "chain": {
         "outLo": 99.6,
@@ -691,7 +708,7 @@
     {
       "id": "s13",
       "duration": 43,
-      "heading": "Check 1: the swap test",
+      "heading": "Check 1: the swap test (tested version)",
       "caption": [
         {
           "at": 0.014,
@@ -717,7 +734,7 @@
       "labels": {
         "pass": "pass line: 99",
         "lost": "copy F: not scored",
-        "chip": "tested on 5 of 6 copies"
+        "chip": "tested version: 5 of 6 copies"
       },
       "vals": [
         {
@@ -773,7 +790,7 @@
     {
       "id": "s14",
       "duration": 46,
-      "heading": "Check 2: the leak test, missed then cleared",
+      "heading": "Check 2: the leak test (tested version), missed then cleared",
       "caption": [
         {
           "at": 0.013,
@@ -864,33 +881,33 @@
     },
     {
       "id": "s15",
-      "duration": 32,
+      "duration": 31.5,
       "heading": "What is tested, and what is not",
       "caption": [
         {
-          "at": 0.0187,
-          "text": "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
+          "at": 0.019,
+          "text": "Tested version: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
         },
         {
-          "at": 0.3629,
+          "at": 0.351,
           "text": "Never run together: the borrowed Gemma reader with the outside calculator."
         },
         {
-          "at": 0.527,
+          "at": 0.5177,
           "text": "Built, never run: calls at any round."
         },
         {
-          "at": 0.6458,
-          "text": "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
+          "at": 0.6384,
+          "text": "Remember: in the new design (being built), the talker's line calls the calculator and the whole reader reads the reply. The tested version used a copy trick, with a learned stop."
         }
       ],
       "labels": {
-        "t": "tested: calc outside, 3M",
+        "t": "tested version: calculator outside, 3M",
         "n": "built, never run: Gemma with calc",
         "b": "built, never run: any round",
-        "rem1": "Calls are text.",
-        "rem2": "The calculator replies in text.",
-        "rem3": "A copy trick, with a learned stop, writes most numbers."
+        "rem1": "New design (being built): the talker's line calls the calculator.",
+        "rem2": "Its reply starts the next turn; the whole reader reads it.",
+        "rem3": "Tested version: a copy trick, with a learned stop, writes most numbers."
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row), sec. 5 item 6 (Gemma and calculator never run together), sec. 3 (any-round built, untested)",
@@ -900,19 +917,19 @@
       "atMap": [
         [
           0.0143,
-          0.0187
+          0.019
         ],
         [
           0.2565,
-          0.3629
+          0.351
         ],
         [
           0.4988,
-          0.527
+          0.5177
         ],
         [
           0.7411,
-          0.6458
+          0.6384
         ]
       ]
     }

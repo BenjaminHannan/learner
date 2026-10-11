@@ -309,6 +309,7 @@
       this.tl.to(e, v, t); return t + v.duration;
     }
     draw(a, t, dur = 0.7) {
+      if (!a) return t;   // tolerate a missing arrow (the model map has 3 inner arrows now, not 4)
       this.tl.set(a.line, { autoAlpha: 1 }, t);
       this.tl.to(a.line, { strokeDashoffset: 0, duration: dur, ease: 'power1.inOut' }, t);
       if (a.head) this.tl.to(a.head, { autoAlpha: 1, duration: 0.2 }, t + dur - 0.05);
@@ -340,31 +341,99 @@
     }
   }
 
-  // The five-part map of the whole machine, reused so every chapter shows the same picture.
-  // o = {x,y,w,h, highlight:'reader'|'thinker'|'calc'|'stop'|'talker'|null, labels:false}
+  // The map of the whole machine, reused so every chapter shows the same picture.
+  // THE MODEL is four parts inside one frame: reader -> thinker -> stop switch -> talker.
+  // The CALCULATOR is NOT part of the model (Ben's rule): it is an outside tool the model uses, like a person using a tool.
+  // It sits outside the frame with a dashed border and no chain arrow. The model works in agent turns (Ben, 10-11): the thinker
+  // thinks until the stop switch ends the turn, the talker writes one line, and a line that starts with a tool's name is a call;
+  // the reply comes back as text and is READ BY THE READER like a new message (never fed into the thinker or the talker any other way).
+  // o = {x, y, w, h, highlight: 'reader'|'thinker'|'stop'|'talker'|'calc'|null, tool: 'above'|'below'|null}
+  // Returns:
+  //   parts   {reader, thinker, stop, talker, calc}: the boxes (hidden; show them as before)
+  //   order   ['reader','thinker','stop','talker','calc']: left-to-right columns
+  //   colX    {key: left x of that column}, colC {key: centre x}: place per-part labels by key, never by the old index
+  //   arrows  the 3 arrows INSIDE the model (reader->thinker, thinker->stop, stop->talker)
+  //   frame, frameLabel: shown automatically together with the first model part you show (S.show / S.pop / S.stagger)
+  //   tool (only with o.tool): {call, reply, callLabel, replyLabel}: hidden; draw the arrows (S.draw) and show the labels
+  //        when the scene explains a call. call = talker -> calculator (the talker's line, a call written as text);
+  //        reply = calculator -> reader (the reply, read by the reader). 'above' needs about 180 px free above the boxes,
+  //        'below' about 180 px free below them.
   Scene.prototype.modelMap = function (o = {}) {
+    const S = this;
     const x = o.x || 100, y = o.y || 300, W = o.w || 1720, H = o.h || 200, hl = o.highlight || null;
     const parts = [
       { k: 'reader', label: 'Reader', sub: 'borrowed', col: C.reader },
       { k: 'thinker', label: 'Thinker', sub: 'ours', col: C.thinker },
-      { k: 'calc', label: 'Calculator', sub: 'outside tool', col: C.calc },
       { k: 'stop', label: 'Stop switch', sub: 'ours', col: C.stop },
       { k: 'talker', label: 'Talker', sub: 'stand-in today', col: C.talker },
+      { k: 'calc', label: 'Calculator', sub: 'outside tool', col: C.calc },
     ];
-    const gap = 70, bw = (W - gap * 4) / 5, out = { parts: {}, arrows: [] };
+    const gap = 70, bw = (W - gap * 4) / 5, pad = 18;
+    const out = { parts: {}, order: parts.map((p) => p.k), colX: {}, colC: {}, arrows: [] };
+    // the frame around the model's four parts (drawn first so it sits behind the boxes)
+    const fx = x - pad, fy = y - pad, fw = 4 * bw + 3 * gap + 2 * pad, fh = H + 2 * pad;
+    const frame = el('div', 'mframe', this.g);
+    Object.assign(frame.style, { position: 'absolute', left: fx + 'px', top: fy + 'px', width: fw + 'px', height: fh + 'px',
+      border: '3px solid ' + C.soft, borderRadius: '26px', background: 'rgba(255,255,255,0.35)', boxSizing: 'border-box' });
+    gsap.set(frame, { autoAlpha: 0 });
+    const flab = el('div', 'mframe-lab', this.g);
+    flab.textContent = 'THE MODEL';
+    Object.assign(flab.style, { position: 'absolute', left: (fx + 28) + 'px', top: (fy - 17) + 'px', padding: '0 12px', background: C.bg,
+      fontSize: '24px', fontWeight: '800', letterSpacing: '0.08em', color: C.soft, lineHeight: '32px', whiteSpace: 'nowrap' });
+    gsap.set(flab, { autoAlpha: 0 });
+    out.frame = frame; out.frameLabel = flab;
     const svg = this.svg({ x: 0, y: 0 });
     parts.forEach((p, i) => {
       const bx = x + i * (bw + gap);
+      out.colX[p.k] = bx; out.colC[p.k] = bx + bw / 2;
       const dim = hl && hl !== p.k;
       const b = this.box({ x: bx, y, w: bw, h: H, label: p.label, sub: p.sub, color: dim ? C.line : p.col, size: 40, subSize: 28, border: 5, fill: dim ? '#FAF6EE' : '#fff', parent: this.g });
+      if (p.k === 'calc') b.style.borderStyle = 'dashed';
       if (dim) { b.querySelectorAll('.lab').forEach((n) => { n.style.color = C.placeholder; }); }
       out.parts[p.k] = b;
-      if (i < parts.length - 1) {
+      if (i < 3) {
         const a = this.arrow(svg, bx + bw + 8, y + H / 2, bx + bw + gap - 8, y + H / 2, { color: C.soft, width: 6, head: 20 });
         out.arrows.push(a);
       }
     });
     out.svg = svg;
+    // optional call / reply arrows between the model and the outside calculator
+    if (o.tool === 'above' || o.tool === 'below') {
+      const up = o.tool === 'above', edge = up ? fy : fy + fh, cedge = up ? y : y + H;
+      const tkx = out.colC.talker, rdx = out.colC.reader, cax = out.colC.calc;
+      const sgn = up ? 1 : -1;
+      const c1 = tkx + 20, c2 = cax - 40, r1 = cax + 90, r2 = rdx + 80;   // r2 clears the THE MODEL label; r1 keeps the reply clear of the call label
+      const call = this.curve(svg, c1, edge, c2, cedge, { color: C.call, width: 5, head: 18, bend: sgn * 90 });
+      const reply = this.curve(svg, r1, cedge, r2, edge, { color: C.reader, width: 5, head: 18, bend: -sgn * 320 });
+      // each label sits ON its arrow's highest (or lowest) point, on a cream tag that hides the line under the words
+      const qmid = (x1, y1, x2, y2, bend) => { const dx = x2 - x1, dy = y2 - y1, dl = Math.hypot(dx, dy) || 1, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        const cx = mx + (dy / dl) * bend, cy = my - (dx / dl) * bend; return [0.25 * x1 + 0.5 * cx + 0.25 * x2, 0.25 * y1 + 0.5 * cy + 0.25 * y2]; };
+      const tag = (str, col, at) => this.text(`<span style="background:${C.bg};padding:0 12px">${str}</span>`, { html: true, x: at[0] - 300, y: at[1] - 17, w: 600, size: 26, weight: 700, align: 'center', color: col, lh: '34px' });
+      const cm = qmid(c1, edge, c2, cedge, sgn * 90);
+      const callLabel = tag("the talker's line calls it", C.call, [cm[0] - 80, cm[1]]);   // nudged left, off the reply arc
+      const replyLabel = tag('the reply, read by the reader', C.reader, qmid(r1, cedge, r2, edge, -sgn * 320));
+      out.tool = { call, reply, callLabel, replyLabel };
+    }
+    // show the frame with whichever model part appears first (chapters only show parts; the frame follows on its own)
+    const trig = new Set(['reader', 'thinker', 'stop', 'talker'].map((k) => out.parts[k]));
+    let fired = false;
+    if (!S._mapWrapped) {
+      S._mapWrapped = true; S._mapHooks = [];
+      const wrap = (name) => {
+        const orig = S[name].bind(S);
+        S[name] = function (e, t, opt) {
+          S._mapHooks.forEach((h) => h(e, t));
+          return orig(e, t, opt);
+        };
+      };
+      wrap('show'); wrap('pop');
+    }
+    S._mapHooks.push((e, t) => {
+      if (fired || !trig.has(e)) return;
+      fired = true;
+      S.tl.to(frame, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' }, t);
+      S.tl.to(flab, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' }, t);
+    });
     return out;
   };
 

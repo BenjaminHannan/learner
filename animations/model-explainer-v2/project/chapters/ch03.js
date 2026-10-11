@@ -19,7 +19,7 @@ Kit.chapter('ch03', function (Ch) {
     return S.box({ x: x, y: y, w: w, h: h, color: color || C.line, fill: fill || '#FFFFFF', r: 8, border: 3 });
   }
 
-  // The shared five-part map dims the parts that are not in focus. Locally: darker grey for the dimmed labels
+  // The shared model map dims the parts that are not in focus. Locally: darker grey for the dimmed labels
   // (about 5.5:1 on cream instead of 3.5:1) and a 30 px subtitle (the kit default is 28 px). Colours only; no layout change.
   function dimMap(m, hl) {
     Object.keys(m.parts).forEach((k) => {
@@ -33,18 +33,20 @@ Kit.chapter('ch03', function (Ch) {
   // ---------- s01: where we are ----------
   Ch.scene('s01', function (S) {
     const c = S.c;
-    const m = S.modelMap({ x: 100, y: 250, w: 1720, h: 190, highlight: 'reader' });
+    const m = S.modelMap({ x: 100, y: 410, w: 1720, h: 190, highlight: 'reader', tool: 'above' });
     dimMap(m, 'reader');
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const order = ['reader', 'thinker', 'stop', 'talker', 'calc'];
     let t = S.at(0.04);
     // the question enters the reader: a plain input card under the Reader box, with an arrow up into it
-    const q = S.box({ x: 100, y: 560, w: 288, h: 100, color: C.soft, fill: '#FFFFFF', label: c.labels.question, size: 36, r: 12, border: 4 });
+    const q = S.box({ x: 100, y: 720, w: 288, h: 100, color: C.soft, fill: '#FFFFFF', label: c.labels.question, size: 36, r: 12, border: 4 });
     const qsvg = S.svg();
-    const qa = S.arrow(qsvg, 244, 560, 244, 440, { color: C.soft, width: 6, head: 20 });
+    const qa = S.arrow(qsvg, 244, 720, 244, 600, { color: C.soft, width: 6, head: 20 });
     S.show(q, t + 0.2);
     S.draw(qa, t + 0.7, 0.5);
     order.forEach((k, i) => { S.show(m.parts[k], t + i * 0.3); if (m.arrows[i]) S.draw(m.arrows[i], t + i * 0.3 + 0.25, 0.4); });
-    const tag = S.text(c.illustration, { x: 100, y: 720, w: 1400, size: 34, color: C.soft });
+    S.show(m.tool.callLabel, t + 1.6); S.draw(m.tool.call, t + 1.6, 0.6);
+    S.show(m.tool.replyLabel, t + 2.2); S.draw(m.tool.reply, t + 2.2, 0.6);
+    const tag = S.text(c.illustration, { x: 440, y: 755, w: 1400, size: 34, color: C.soft });
     S.show(tag, S.capAt(1));
     S.pulse(m.parts.reader, S.capAt(0) + 0.8);
   });
@@ -143,6 +145,7 @@ Kit.chapter('ch03', function (Ch) {
     const vout = S.vec({ x: 1240, y: 450, n: 6, cell: 40, gap: 6, color: C.thinker, seed: 8, dir: 'h' });
     S.show(inLab, S.capAt(0)); S.show(vin, S.capAt(0) + 0.2);
     S.pop(plug, S.capAt(0) + 0.6);
+    S.show(S.text(c.labels.full, { x: 160, y: 700, w: 1600, size: 38, weight: 700, color: C.reader }), S.capAt(1) + 0.6);
     S.draw(a1, S.capAt(0) + 0.9, 0.6);
     S.draw(a2, S.capAt(0) + 1.5, 0.6);
     S.show(outLab, S.capAt(0) + 1.5); S.show(vout, S.capAt(0) + 1.7);
@@ -277,7 +280,7 @@ Kit.chapter('ch03', function (Ch) {
     S.show(chip, S.capAt(2) + 0.2);
   });
 
-  // ---------- s12: calculator replies, read by the window only (built, never run) ----------
+  // ---------- s12: calculator replies: new design = whole reader; built B3 = window only (never run) ----------
   Ch.scene('s12', function (S) {
     const c = S.c;
     const svg = S.svg();
@@ -286,16 +289,21 @@ Kit.chapter('ch03', function (Ch) {
     S.pop(chip, S.capAt(0) + 0.2);
     const slip = S.card({ x: 160, y: 330, w: 620, h: 150, r: 10 });
     const reply = S.text('', { x: 190, y: 370, w: 600, size: 56, weight: 700, mono: true, color: C.calc });
-    S.show(slip, S.capAt(0));
+    const from = S.text(c.labels.from, { x: 160, y: 495, w: 600, size: 32, color: C.soft });
+    S.show(slip, S.capAt(0)); S.show(from, S.capAt(0) + 0.2);
     S.type(reply, c.example, S.capAt(0) + 0.2, 1.4);
     const win = S.box({ x: 1000, y: 330, w: 300, h: 150, color: C.learned, fill: '#E7EFFD', r: 12, border: 4, label: c.labels.win, size: 34 });
     // arrows run edge to edge: slip right edge 780 -> window left edge 1000; slip bottom-right corner -> Gemma left edge 1000
     const a1 = S.arrow(svg, 780, 405, 1000, 405, { color: C.calc, width: 6, head: 20 });
-    S.show(win, S.capAt(1)); S.draw(a1, S.capAt(1) + 0.2, 0.6);
+    S.show(win, S.capAt(0) + 0.8); S.draw(a1, S.capAt(0) + 1.0, 0.6);
     const gem = S.box({ x: 1000, y: 580, w: 300, h: 150, color: C.reader, fill: '#E6F4F4', r: 12, border: 4, label: c.labels.gem, size: 34 });
     const a2 = S.arrow(svg, 780, 480, 1000, 640, { color: C.soft, width: 5, head: 18 });
     const cross = S.text('x', { x: 860, y: 520, w: 60, size: 64, weight: 800, align: 'center', color: C.warn });
-    S.show(gem, S.capAt(1) + 0.3); S.draw(a2, S.capAt(1) + 0.5, 0.5); S.show(cross, S.capAt(1) + 0.8);
+    const old = S.text(c.labels.old, { x: 160, y: 570, w: 640, size: 30, weight: 700, color: C.warn });
+    S.show(gem, S.capAt(0) + 1.4); S.draw(a2, S.capAt(0) + 1.6, 0.5);
+    S.show(cross, S.capAt(1) + 0.3); S.show(old, S.capAt(1) + 0.4);
+    // the X marks the built B3 version only: it leaves before the last caption so the final picture matches the new design (both readers)
+    S.hide(cross, S.capAt(2) + 0.1); S.hide(old, S.capAt(2) + 0.1);
     const tag = S.text(c.illustration, { x: 160, y: 660, w: 1200, size: 34, color: C.soft });
     S.show(tag, S.capAt(2));
   });
@@ -374,17 +382,19 @@ Kit.chapter('ch03', function (Ch) {
   // ---------- s16: recap ----------
   Ch.scene('s16', function (S) {
     const c = S.c;
-    // the three cards and the five-part map share the same left edge (100) and right edge (1820)
+    // the three cards and the model map share the same left edge (100) and right edge (1820)
     const cards = c.cards.map((cd, i) =>
       S.box({ x: 100 + i * 587, y: 260, w: 546, h: 130, color: C.reader, fill: '#FFFFFF', r: 14, border: 6, label: cd.label, sub: cd.sub, size: 36, subSize: 30 }));
     S.show(cards[0], S.capAt(0)); S.show(cards[1], S.capAt(1)); S.show(cards[2], S.capAt(2));
     // status of the "No window" numbers: tested (the s09 result, 2 copies, one kind of question)
     const chip = S.chip(c.chip, { x: 100 + 2 * 587, y: 405, label: c.chip_label });
     S.pop(chip, S.capAt(2) + 0.4);
-    const m = S.modelMap({ x: 100, y: 500, w: 1720, h: 190, highlight: 'reader' });
+    const m = S.modelMap({ x: 100, y: 500, w: 1720, h: 190, highlight: 'reader', tool: 'below' });
     dimMap(m, 'reader');
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const order = ['reader', 'thinker', 'stop', 'talker', 'calc'];
     let t = S.capAt(2) + 0.3;
     order.forEach((k, i) => { S.show(m.parts[k], t + i * 0.2); if (m.arrows[i]) S.draw(m.arrows[i], t + i * 0.2 + 0.15, 0.3); });
+    S.show(m.tool.callLabel, t + 1.1); S.draw(m.tool.call, t + 1.1, 0.5);
+    S.show(m.tool.replyLabel, t + 1.5); S.draw(m.tool.reply, t + 1.5, 0.5);
   });
 });

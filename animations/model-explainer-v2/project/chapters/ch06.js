@@ -2,15 +2,15 @@
 Kit.chapter('ch06', function (Ch) {
   const C = Kit.C;
 
-  // Scene 1: the five-part map with the stop switch lit.
+  // Scene 1: the four-part model map (calculator outside) with the stop switch lit.
   Ch.scene('s01', function (S) {
     const c = S.c;
     const m = S.modelMap({ x: 100, y: 380, w: 1720, h: 240, highlight: 'stop' });
-    const order = ['reader', 'thinker', 'calc', 'stop', 'talker'];
+    const order = ['reader', 'thinker', 'stop', 'talker', 'calc'];
     let t = S.at(0.08);
     order.forEach((k, i) => {
       S.show(m.parts[k], t + i * 0.2);
-      if (m.arrows[i]) S.draw(m.arrows[i], t + i * 0.2 + 0.25, 0.3);
+      if (i >= 1 && i <= 3 && m.arrows[i - 1]) S.draw(m.arrows[i - 1], t + i * 0.2 + 0.25, 0.3);
     });
     S.pulse(m.parts.stop, S.capAt(1));
     const chip = S.chip('untested', { x: 100, y: 690, label: c.chip, size: 34 });

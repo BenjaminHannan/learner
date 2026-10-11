@@ -9,16 +9,15 @@
       "duration": 25.5,
       "heading": "Where we are: practice sets the numbers",
       "caption": [
-        "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far).",
-        "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
+        "Practice sets the numbers inside the thinker, the stop switch (built, not yet run) and the talker (a small stand-in so far; in the new design it writes the calls).",
+        "The borrowed reader stays frozen. The outside calculator is plain code and needs no practice."
       ],
       "labels": {
         "reader": "frozen",
         "thinker": "learned",
-        "calc": "hand-written",
+        "calc": "outside tool",
         "stop": "built, never run",
-        "talker": "learned stand-in",
-        "callwriter": "call writer"
+        "talker": "learned stand-in"
       },
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 table (lines 29-38: reader borrowed and frozen; thinker, call writer, stop, talker learned; calculator hand code, allowed as a tool; line 36 stop 'built, never run'; line 38 talker 'today a small stand-in')",
@@ -189,9 +188,9 @@
       "duration": 36,
       "heading": "Worked steps: practising each call",
       "caption": [
-        "Where a row has worked steps, the answer key gives the right call each round.",
+        "Built version: where a row has worked steps, the key gives the right call each round.",
         "Call loss: was the call slip right? After the last call, the right slip is no call.",
-        "Answer loss: is the final answer right? Counted from the last call round on."
+        "Answer loss: is the final answer right? Counted from the last call round on (built version)."
       ],
       "labels": {
         "round": "round",
@@ -199,7 +198,7 @@
         "r2": "3",
         "r3": "4",
         "key": "answer key",
-        "cw": "call writer",
+        "cw": "call writer (built)",
         "c1": "sub 12 5 = 7",
         "c2": "add 7 3 = 10",
         "c3": "no call",
@@ -207,7 +206,7 @@
         "callLoss": "call loss",
         "ansLoss": "answer loss",
         "ex": "made-up example",
-        "chip": "finished design: built, never run"
+        "chip": "built version: never run"
       },
       "src": [
         "architecture/B3-GROUP1-BUILD-2026-10-09.md lines 53-60 (teacher forcing: op loss on the gold call each call round and no-call after the last; answer loss from the last call round on)",
@@ -220,15 +219,16 @@
       "duration": 31.5,
       "heading": "Teacher forcing: practice follows the key",
       "caption": [
-        "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess.",
-        "At test time there is no key. The model writes its own calls.",
+        "Teacher forcing, built version: the reader reads the key's call and reply, even after a wrong guess.",
+        "At test time there is no key. New design, untested: the talker writes the calls.",
         "Not every row has steps: 124,991 of the 200,000 skills rows (62.5%) the earlier 3M models used have none."
       ],
       "labels": {
         "lane1": "practice",
         "lane2": "test",
         "k": "key's call",
-        "r": "reply",
+        "r": "calculator's reply",
+        "rd": "reader",
         "n": "next round",
         "g": "own guess: graded",
         "o": "own call",
