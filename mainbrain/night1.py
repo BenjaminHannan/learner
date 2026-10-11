@@ -44,6 +44,7 @@ def main(argv=None):
     a.add_argument('--data', default=os.environ.get('CUSTOM_IO_DATA'))
     a.add_argument('--updates', type=int, default=None, help='default: the run plan (visits * rows / new rows per batch)')
     a.add_argument('--parent-dev-cache', default=None)
+    a.add_argument('--lr', type=float, default=None, help='night lr (default: the source run constants)')
     a = a.parse_args(argv)
     assert a.method == 'plain' or a.energy, '--energy is needed for gp and kf'
     torch.set_num_threads(a.threads)
@@ -55,6 +56,8 @@ def main(argv=None):
     cons = [e for e in events if e['event'] == 'start'][0]['constants']
     for k, v in dict(replay_pick=False, replay_fresh=False, addon=None).items():   # keys added to the constants after v4
         cons.setdefault(k, v)
+    if a.lr:
+        cons['lr'] = a.lr
     assert not cons.get('addon') and not cons.get('replay_fresh') and not cons.get('replay_pick'), 'source run must be a plain whole-model run'
     parent = parent_of(a.seed)
     torch.manual_seed(a.seed)
@@ -119,7 +122,7 @@ def main(argv=None):
     T['score'] = round(time.time() - t, 1)
     fam = {f: dict(a=round(v['a'], 1), b=round(v['b'], 1), drop=round(v['drop'], 2), fires=v['fires'])
            for f, v in hm['families'].items()}
-    res = dict(run=a.run, seed=a.seed, method=a.method, energy=a.energy, updates=updates, new_rows=len(new), diary=len(diary),
+    res = dict(run=a.run, seed=a.seed, method=a.method, energy=a.energy, lr=cons['lr'], updates=updates, new_rows=len(new), diary=len(diary),
                frozen=frozen, layers=info, loss_first10=sum(losses[:10]) / 10, loss_last10=sum(losses[-10:]) / 10,
                agreement_before=before, agreement_after=after, quiz_before=100 * q0, quiz_after=100 * q1,
                near_parent=near0, near_after=near1, near_gain=near1 - near0, far_parent=far0, far_after=far1,
