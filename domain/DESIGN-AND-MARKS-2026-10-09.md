@@ -297,3 +297,10 @@ Found in review: the maker's renames, edit (c), touch only capital cell letters,
 - R2: 0.872.
 - Per kind, near: assign add 100, function 95, max min 93, chain 85, abs 70, if else 67, for repeat 35, while 22, list index 5, for sum 2. The same kinds are weak on both seeds, as A26's causes predict.
 - **Code reading passes DM1 and DM3 on both seeds.**
+
+**A8 result: R1 pick gain (Dopamine thread's control, its addendum B6; recorded 12:10 AM ET 10-11).** Shown, one seed:
+- The control `/mnt/project-files/dopamine/r1/sheet-s200-even` ran v7 sheet s200 with an even practice mix every day (`--even-mix --fixed-nights 7`), at the same constants hash. Its night 1 matched v7.
+- Near at night 7: even 50.00 against the rule's 40.24, so **R1 = -9.76**. Reported only; A8 never gated on it.
+- The mean over nights 1-7 is close (35.14 against 34.25). Most of the gap is night 7, and the even run was still rising (+5.95 that night).
+- Suggested cause (the Dopamine thread's reading): the rule follows the 2-night quiz change on about 26 quiz items per kind (1 item = 3.8 points). Kinds whose small quiz stalled lost practice: on the last day SUM got 5.3% and PRODUCT 1.0%. At night 7, even against rule: SUM 33.3 vs 11.7, PRODUCT 46.7 vs 16.7.
+- The pick rule is what the Dopamine thread's race replaces (learned edge and progress motivators against the rule and the even mix). Any change to it (a practice floor per kind, bigger quizzes) waits for that race. It is not stacked on A27.
