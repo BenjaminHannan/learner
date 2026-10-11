@@ -16,16 +16,22 @@ $PY     = 'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
 $EGPATH = 'C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages'
 $SRCB3R = "$CIO\src-b3r"
 $SRCG2  = "$CIO\src-b3g2"
-$SHAB3R = 'TBD'      # group 1 reader-rule commit (on PR #56 8fce7247a8)
+$SHAB3R = 'ca7e1d1b88'   # group 1 reader-rule commit ca7e1d1b8857a72f9c89f376aad20b1f12132fee (on PR #56 8fce7247a8; architecture thread, 7:20 PM ET 11 Oct)
 $SHAG2  = 'TBD'      # group 2 reader-rule commit (on claude/learner-new-g2 1acfde9a73)
 $CAPSG2 = '32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E'      # caps.py the waiter pins for src-b3g2 (unchanged by the reader rules)
 $JSONB3 = 'BD81C67F0B6F33686718587A3FBDCD73E939C1FF9CB832DC6D68F34DEE4F7550'      # g8a/caps_b3.json
 $JSONG2 = @{ 'caps_b3s.json' = '8CBEA48D300A8A0D38D9A89D950274DF08743326CA3F1E9EAFC2763ADD9CBF31'; 'caps_b3g2.json' = 'EE551D3AACBF9EC02D2AC7F5E7E6E12F44E15ABA2C39F5F38C3F1E3EC12D7ED4' }
 # SHA-256 of the files the reader rules change, at each commit (custom_io-relative path -> hash): proves the zip is that commit.
-$EXPB3R = @{}
+$EXPB3R = @{
+  'models\b3.py'              = 'E36C81F778C4CE76DC2CA2DE823137DF2F72A34A945E8513C0509872F7CB9C91'
+  'models\eg.py'              = 'A2CF6259E0412582390FD98FD47E681D6999902748F3A822ABE4AA69EE85FAFB'
+  'models\ledger.py'          = 'FB922235EF49A044407D3BC03012BFD0C881A9B51D437428478F7A591DD4E5A5'
+  'models\tool.py'            = 'B1A062F059645308C04568CD0DE65F03B7B830DCFDF4D57D22602A406202BF65'
+  'tests\test_reader_rule.py' = '0ACBE241545704F912261460A7A682E27790B3361E31B0622208D35D455FEF3D'
+}
 $EXPG2  = @{}
 # CPU test modules that must pass in each new folder (python -m custom_io.tests.<name>: exit 0, no line starting FAIL, a line starting ALL OK or ok).
-$TESTB3R = @('test_g8a', 'test_b3_run')
+$TESTB3R = @('test_reader_rule', 'test_g8a', 'test_b3_run')
 $TESTG2  = @()
 $QB3R   = @('8aB3G1s400', '8aB3G1s401')
 $QG2    = @('8aG2C3S', '8aB3G2s400', '8aG2C10S', '8aC30S')

@@ -577,6 +577,13 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   pinned file hash in g2.zip: refused after group 1's checks; both new folders renamed `.failed-<stamp>`, live folders untouched.
   List only (no zips): checked on the live code, 8aFC2 and infer_speed.py replaced with the old copies kept. Not simulated: the
   v3e step (it runs `swap_v3e.ps1`, tested on its own for addendum U).
+- **Group 1 filled in (7:30 PM ET).** The architecture thread's final group 1 commit is ca7e1d1b88 (parent 8fce7247a8, the PC's
+  code; two Opus reviews, no blocking findings; on claude/project-thread-qtxfp4 through the tree-unchanged merge 77c0a6a9c1). It changes
+  models/{eg,ledger,tool,b3}.py and adds tests/test_reader_rule.py; no new parameters (3M stays 4,041,685). install_rr.ps1 now pins the
+  SHA-256 of those five files and runs `test_reader_rule` first among group 1's CPU tests. Shown in the cloud on the exact commit:
+  test_reader_rule ALL OK (12 s), test_g8a ok, test_b3_run ALL OK. Simulated install of group 1 alone: every check passed, src-b3r
+  swapped, the old code kept; with the parent commit in b3r.zip instead it refused on models\ledger.py and changed nothing live.
+  Group 2 (`$SHAG2`) still waits for the talker thread's G2f head.
 
 ## 30. Addendum Y (2026-10-11, 6:05 PM ET): the talker's first run (G2f) moves before B3 group 1 (waiter v3e, staged)
 
