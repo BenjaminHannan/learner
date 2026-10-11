@@ -496,3 +496,20 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
 - **Install (`swap_v3d.ps1`):** only while v3c still waits for G1; parse check, `infer_speed.py --selftest` on the PC's CPU, copies the
   script and the fc100v2 / fc100v3 card templates, stops v3c by PID and starts v3d. The waiter stops the timing after 120 minutes if it
   hangs; a failure is logged and the chain goes on to g2c3.
+
+## 26. Addendum U (2026-10-11, 10:45 AM ET): inserted jobs from new code (waiter v3e)
+
+- **Why.** The architecture thread (10:32 AM ET 10-11): Ben made creative mode and sleep core parts of run-1. The PC will later need
+  CB-2 (a creative/sleep test on the 10M group 2 seed-400 checkpoint), maybe CB-1 (on the 3M group 2 checkpoint), and the 100M
+  day-and-night phase. Their code does not exist yet and will not live in src-b3g2 (pinned) or src-b3. v3d's inserted jobs only took
+  those two folders, and a waiter swap is easy only while it still waits for G1 (about Mon midday ET).
+- **What v3e changes (inserted jobs only).** A `WORK\insert\<order>-<name>.txt` may name any `src-<name>` folder in custom-io with
+  `caps: <SHA-256 of its caps.py>` (Launch checks it, as for the chain's own queues), or `cmd: <file>.cmd` for a plain script in
+  custom-io that keeps its job in the foreground; the chain waits for it to exit and logs NEEDS ATTENTION every `hours:` (default 48)
+  while it runs, never stopping it. `README.txt` in that folder is no longer taken for a job (v3c/v3d would have refused it and
+  renamed it at the first check point). Cards of inserted jobs now move to `pc-jobs\done` when the next card is installed.
+- **Checked (shown):** both waiters parse under PowerShell 7.4 (cloud); a mocked run of `RunInserts` over nine insert files (good queue,
+  new src with and without caps, cmd, bad cmd path, cmd mixed with queue, bad src, missing keys, README) did what is written above;
+  a mocked `InferStep` wrote the expected cmd file and log lines. Windows PowerShell 5.1 on the PC: parse-checked by `swap_v3e.ps1`.
+- **Checkpoints kept.** local_runner never deletes `checkpoint.pt`; the group 2 checkpoints CB-1/CB-2 need will be at
+  `WORK\results\8aB3G2s400-pc\8aB3G2s400-3M-s400\B3G2\checkpoint.pt` and `WORK\results\8aB3G2-10M-pc\8aB3G2-10M-s400\B3G2\checkpoint.pt`.

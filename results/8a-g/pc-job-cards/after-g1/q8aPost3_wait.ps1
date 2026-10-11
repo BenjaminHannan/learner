@@ -5,6 +5,8 @@
 # GX does not run here: WORK\GX-ON-MAC.txt is set (GX stage 1 ran on rented cards; stage 2 withdrawn).
 # v3d (11 Oct 2026, spec addendum T): fc100 part 3 right after part 2 = answer speed of the same four shapes (custom-io\infer_speed.py, read-only,
 # alone on the GPU, at most about an hour): questions per second at batch 1, 16 and 128 with 12 and 32 thinking rounds -> WORK\fc100-infer.json.
+# v3e (11 Oct 2026, spec addendum U): inserted jobs may come from any src-<name> folder (with its caps.py hash) or be a plain .cmd script
+# (for later creative/sleep jobs on new code), and WORK\insert\README.txt is no longer taken for a job.
 # After gate G1's last PC queue ends, one queue at a time:
 #   1. test GX seed 400 (8aGXs400, src-8gx), skipped if it already has an ok RESULT.json (it may have run beside G1)
 #   2. fc100 part 1 (8aFC, src-b3), then part 2 (8aFC2, src-b3g2), then part 3 (answer speed)  3. g2c3 seed 400 (8aG2C3, src-b3)
@@ -35,6 +37,7 @@ $CAPSG2 = '32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E'    
 $LOG    = "$WORK\q8aPost-waiter.log"
 $CARDS  = @('gx*.md', 'fc100*.md', 'g2c3*.md', 'b3g1*.md', 'b3g2*.md', 'g2c10*.md', 'c30*.md')     # this chain's cards in pc-jobs
 $script:c30done = $false
+$script:icards = @()      # cards of inserted jobs (moved to done like the chain's own)
 function Now { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') }
 function Say($m) { "$(Now) ET $m" | Add-Content -Encoding ascii $LOG }
 function Runner { @(Get-CimInstance Win32_Process -Filter "Name like 'python%'" | Where-Object { $_.CommandLine -like '*local_runner*' }).Count -gt 0 }
@@ -128,7 +131,8 @@ function WaitEnd($q) {
 }
 # Installs pc-jobs\$name from a card template (moves this chain's other cards to done first). $subs: placeholder -> text.
 function NewCard($tpl, $name, $subs) {
-  foreach ($p in $CARDS) { MoveDone $p $name }
+  foreach ($p in @($CARDS + $script:icards)) { MoveDone $p $name }
+  if ($CARDS -notcontains $name -and $script:icards -notcontains $name -and @($CARDS | Where-Object { $name -like $_ }).Count -eq 0) { $script:icards += $name }
   if (-not (Test-Path "$CIO\$tpl")) { Say "template $tpl missing: no card"; return }
   $t = (Get-Content "$CIO\$tpl") -replace '@STARTED@', "$(Now) ET"
   if ($subs) { foreach ($k in $subs.Keys) { $t = $t -replace [regex]::Escape($k), $subs[$k] } }
@@ -192,30 +196,61 @@ function G2Step($q, $tpl, $card) {
   if (Launch $q $SRCG2 $CAPSG2) { $null = NewCard $tpl $card $null; $null = WaitEnd $q; return $true }
   Say "$q did NOT start: NEEDS ATTENTION"; return $false
 }
-# Inserted jobs: another thread adds a job without a waiter swap by putting its queue file in <src>\custom_io\queue_local\<Q>-pc.txt and
-# then a file WORK\insert\<order>-<name>.txt with the lines "queue: <Q>" and "src: src-b3g2" (or "src: src-b3"), optional "card: <file>"
-# (a card template already in custom-io). At each check point (after group 2 at 3M, before g2c10s, before c30s, at the end)
-# every such file runs in name order, alone, through Launch (caps.py hash of that src, failed job folders renamed aside). The file is then
-# renamed <name>.txt.done-<stamp>, or .refused-<stamp> / .notstarted-<stamp>; nothing is deleted.
+# Inserted jobs: another thread adds a job without a waiter swap by writing WORK\insert\<order>-<name>.txt (README.txt is ignored), either
+#   queue: <Q>  +  src: <src folder in custom-io>  [+ caps: <SHA-256 of that src's custom_io\g8a\caps.py>, needed for a src other than
+#   src-b3g2 and src-b3]  [+ card: <template in custom-io>]: the queue file <src>\custom_io\queue_local\<Q>-pc.txt runs through Launch
+#   (caps.py hash of that src, failed job folders renamed aside), or
+#   cmd: <file>.cmd in custom-io  [+ card:]  [+ hours: N, default 48]: that cmd file runs (it must keep its job in the foreground) and the
+#   chain waits for it to exit, with a NEEDS ATTENTION line every N hours while it runs (it is never stopped).
+# At each check point (after group 2 at 3M, before g2c10s, before c30s, at the end) every such file runs in name order, alone. The file is
+# then renamed <name>.txt.done-<stamp>, or .refused-<stamp> / .notstarted-<stamp>; nothing is deleted.
 function RunInserts($where) {
   $dir = "$WORK\insert"
-  foreach ($f in @(Get-ChildItem "$dir\*.txt" -ErrorAction SilentlyContinue | Sort-Object Name)) {
+  $known = @{ 'src-b3g2' = $CAPSG2; 'src-b3' = $CAPSB3 }
+  foreach ($f in @(Get-ChildItem "$dir\*.txt" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne 'README.txt' } | Sort-Object Name)) {
     $kv = @{}
-    foreach ($l in @(Get-Content $f.FullName)) { if ($l -match '^\s*(queue|src|card)\s*:\s*(\S+)\s*$') { $kv[$Matches[1]] = $Matches[2] } }
+    foreach ($l in @(Get-Content $f.FullName)) { if ($l -match '^\s*(queue|src|card|caps|cmd|hours)\s*:\s*(\S+)\s*$') { $kv[$Matches[1]] = $Matches[2] } }
     $stamp = (Get-Date).ToString('yyyyMMdd-HHmm')
-    $srcs = @{ 'src-b3g2' = @($SRCG2, $CAPSG2); 'src-b3' = @($SRCB3, $CAPSB3) }
-    if (-not $kv['queue'] -or -not $kv['src'] -or -not $srcs.ContainsKey($kv['src'])) {
-      Say "insert $($f.Name): needs 'queue: <Q>' and 'src: src-b3g2' or 'src: src-b3': refused, NEEDS ATTENTION"
+    $why = $null
+    if ($kv['cmd']) {
+      if ($kv['queue'] -or $kv['src']) { $why = "'cmd:' goes alone, without 'queue:' or 'src:'" }
+      elseif (($kv['cmd'] -notmatch '^[A-Za-z0-9_.-]+\.cmd$') -or -not (Test-Path "$CIO\$($kv['cmd'])")) { $why = "'cmd:' must name a .cmd file in custom-io" }
+    }
+    elseif (-not $kv['queue'] -or -not $kv['src']) { $why = "needs 'queue: <Q>' and 'src: <folder>', or 'cmd: <file>.cmd'" }
+    elseif (($kv['src'] -notmatch '^src-[A-Za-z0-9_-]+$') -or -not (Test-Path "$CIO\$($kv['src'])\custom_io")) { $why = "'src:' must be a src-<name> folder in custom-io that holds custom_io" }
+    elseif (-not $known.ContainsKey($kv['src']) -and ($kv['caps'] -notmatch '^[0-9A-Fa-f]{64}$')) { $why = "a src other than src-b3g2 or src-b3 needs 'caps: <SHA-256 of its caps.py>'" }
+    if ($why) {
+      Say "insert $($f.Name) refused, NEEDS ATTENTION: $why"
       Rename-Item $f.FullName "$($f.Name).refused-$stamp"; continue
     }
-    $q = $kv['queue']; $sp = $srcs[$kv['src']]
-    $null = WaitFree "before inserted $q"
-    Say "inserted job $($f.Name) ($where): queue $q from $($kv['src'])"
+    $null = WaitFree "before inserted $($f.Name)"
     $tag = 'notstarted'
-    if (Launch $q $sp[0] $sp[1]) {
-      if ($kv['card']) { $null = NewCard $kv['card'] "$($q.ToLower()).md" $null }
-      $null = WaitEnd $q; $tag = 'done'
-    } else { Say "inserted $q did NOT start: NEEDS ATTENTION" }
+    if ($kv['cmd']) {
+      $hrs = 48
+      if ($kv['hours'] -match '^[1-9][0-9]*$') { $hrs = [int]$kv['hours'] }
+      if ((Runner) -or (Test-Path "$WORK\STOP")) { Say "a runner or STOP appeared: inserted $($kv['cmd']) NOT started, NEEDS ATTENTION" }
+      else {
+        Say "inserted job $($f.Name) ($where): runs custom-io\$($kv['cmd']) alone"
+        $p = Start-Process -FilePath 'cmd.exe' -ArgumentList "/c $CIO\$($kv['cmd'])" -PassThru -WindowStyle Hidden
+        $null = $p.Handle       # keeps the handle, so ExitCode can be read after it exits
+        if ($kv['card']) { $null = NewCard $kv['card'] "$([IO.Path]::GetFileNameWithoutExtension($kv['cmd']).ToLower()).md" $null }
+        $m = 0
+        while (-not $p.HasExited) {
+          Start-Sleep -Seconds 60; $m++
+          if ($m % ($hrs * 60) -eq 0) { Say "inserted $($kv['cmd']) still running after $($m / 60) hours: NEEDS ATTENTION (the chain waits for it)" }
+        }
+        Say "inserted $($kv['cmd']) ended (exit $($p.ExitCode))"
+        $tag = 'done'
+      }
+    } else {
+      $q = $kv['queue']
+      $h = if ($known.ContainsKey($kv['src'])) { $known[$kv['src']] } else { $kv['caps'] }
+      Say "inserted job $($f.Name) ($where): queue $q from $($kv['src'])"
+      if (Launch $q "$CIO\$($kv['src'])" $h) {
+        if ($kv['card']) { $null = NewCard $kv['card'] "$($q.ToLower()).md" $null }
+        $null = WaitEnd $q; $tag = 'done'
+      } else { Say "inserted $q did NOT start: NEEDS ATTENTION" }
+    }
     Rename-Item $f.FullName "$($f.Name).$tag-$stamp"
   }
 }
@@ -309,7 +344,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (v3d; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
+Say "post-G1 chain waiter v3 started (v3e; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
 
 # 1. Gate G1 ends.
 $k = 0
