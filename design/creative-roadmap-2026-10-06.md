@@ -1703,6 +1703,16 @@ families x 200, two parents).**
         last_digit, is checked by (1)-(3): its copied pieces of x are swapped, aligned from the number's end.
       - Disclosed defaults accepted: a try that never reads x is rejected, a self re-run that does not match is
         uncheckable, and a '?' reply on an example is rejected.
+    - **Addendum (10-11, 4:35 PM ET, before any B3 number), for Ben's 4:06 and 4:08 PM ET rules.** Tool replies are now
+      read by the reader, and the writer's answer mode reads only the thinker, so it has no copy. Call writing keeps
+      its copy.
+      - Records still come only from tries the checker accepts. A no-call answer has no copy record, so it reads as a
+        constant and gives no record (disclosed). On last_digit, records come from calling tries such as `mod x 10`.
+      - (2) of the build rules, re-binding: if the writer cannot copy from a tool reply, a number in a later call
+        that equals an earlier tool result in the same try is bound to that result. This is safe in the same way as
+        the swap: put back on the query, the bound program is the original try.
+      - CB-0 mark (2) counts uncheckable tries among calling tries only. The share of no-call tries per kind is
+        reported.
   - **CB-1, 3M (B3 group 2, seed 400; seed 401 too if its checkpoint exists when CB-1 starts).** Job 9's design
     ported, with one change: the nights are SCM2's.
     - Start checkpoint (10-11, big-run thread's question): the one the 100M phase will start from. That is after ST1
@@ -1717,7 +1727,10 @@ families x 200, two parents).**
     - Fresh C2 split in B3's format, made by the generator before any B3 run. DEV is used for building and for the
       temperature; TEST (512 questions) is opened once, after N'_B3, W and R are trained.
     - Marks, on every parent run:
-      1. Pooled first try (fits and right): W - N' at least +15 and W - R at least +10, paired intervals above 0.
+      1. Pooled first try: W - N' at least +15 and W - R at least +10, paired intervals above 0. The greedy first try
+         is scored right if it equals the key, with or without a call (addendum 10-11: a no-call answer cannot be
+         checked on the examples, and scoring it as a miss would favour whichever arm calls more). "Fits and
+         right" on calling tries and the no-call share per arm are reported.
       2. reach@4 and the practised-kind check (256 fresh add/mult) no more than 2 points below N'_B3.
       3. Harm, SCM2's: W against N'_B3 passes the 10-08 measure on B3's skills families (harm_look).
       4. Whole chain, since the shipped model is the one after the phase: W's in_dist drop against the B3
@@ -2065,3 +2078,6 @@ CPU):
 - **10-11, 10:35 AM ET:** run-1 creative and sleep phase marks sealed (CB-0 checker gate, CB-1 at 3M, CB-2 at 10M)
   for the architecture thread's default that creative mode and sleep join run-1 (Ben, 10:25 AM ET 10-11). F is left
   out of run-1 on J, S1w and S1f's results.
+- **10-11, 4:35 PM ET:** CB addendum before any B3 number (reader reads tool replies, answer mode has no copy): no-call
+  answers give no records; later calls bind by value to earlier tool results; CB-1 first try scored right against
+  the key with or without a call; CB-0 mark (2) counts calling tries only.
