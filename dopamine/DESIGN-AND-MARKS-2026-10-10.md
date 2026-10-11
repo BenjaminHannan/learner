@@ -126,3 +126,33 @@ commit 8fce7247a for the model, branch claude/project-thread-2kevpk for sleep, c
   rule is in constants but not yet in code; no PPO. Asked the game thread (via the coordinator, 9:50 PM ET) to save per-move
   records so GW-D can train its guesser offline on GW-S's own play. No change to GW-S's marks.
 - *Environment:* the system python here has no torch; D0 runs in a CPU venv (`/tmp/claude-0/v`, torch + numpy).
+
+**B2. D0 result and the next test (10:15 PM ET 10-10; marks below fixed before the run starts).**
+- *D0 = FAIL on its sealed mark (shown, `results/d0/`).* Within-kind AUC of the guesser G, days 2..N pooled: sheet s200
+  0.543 (mark 0.65), sheet s201 0.597, RPN s200 0.573. Brier G 0.284 vs per-kind rate K 0.256 (s200; s201 0.305 vs 0.273).
+  The model's own answer confidence C does no better (0.526 / 0.523 / 0.481). Overall AUC is carried by the kind of problem
+  (K 0.72 on both sheet seeds). RPN shows the guesser lagging the learner: mean V of right tries 0.49 while the day's
+  success jumps (the surprise is mostly "I got better since yesterday").
+- *Read (suggested):* at 3M the only reliable "expected reward" is per kind, and the surprise against it is mostly the
+  model's own improvement, i.e. learning progress. Domain mode's mix rule already practises where its own quiz changed most
+  over 2 nights: that is a kind-level dopamine (Oudeyer's learning progress) the model already has. Per the sealed rule,
+  D1 (problem-level picking) does not run. A post-hoc look at why (stronger regularisation, same-day fit, surface
+  difficulty) is running; it cannot change this verdict.
+- *Next test, R1-D: does the kind-level drive help at all?* Domain mode's addendum A8 wrote this control and it never ran.
+  Arm E = v7 with practice spread evenly every day (`--even-mix --fixed-nights 7`), seed 200, everything else v7 (the same
+  constants file, parent, sk200k TRAIN data, rebuilt here: sha256 010af671..., all 4,096 v7 diary prompts present).
+  Compared with v7 seed 200 (its own picks, 7 nights), both scored by `domain.analyze` on the sealed sheet.v2 panel.
+  - Reproduction check: day 1 is even in both arms, so E's night 1 must equal v7's (loss_first10 32.5206, quiz 19.14). If not,
+    the comparison is reported without a verdict.
+  - Measure: near (7 scored kinds) at night 7, v7 (40.24) minus E.
+  | Verdict | Rule |
+  |---|---|
+  | DRIVE HELPS | v7 - E >= +5.0 points |
+  | PROVED WRONG (the drive does not help) | v7 - E <= -5.0 |
+  | NO DIFFERENCE SHOWN | between |
+  - Reported: per-night near of both arms and their mean over nights 1-7, per-kind near, R3 wasted practice, own quiz.
+  - Prediction (suggested): no difference shown; every kind keeps a 10% share and the mix moves slowly.
+  - What follows: DRIVE HELPS -> the learning-progress drive is the model's dopamine in domain mode, and the learned
+    version (a guesser of its own progress per kind, MAGELLAN-style) is worth building at 10M/30M; otherwise the drive is
+    dropped from claims at 3M. Either way the problem-level guesser is re-checked (D0, free) on the first 10M/30M domain-mode
+    run, and GW-D stays the main dopamine rung (game thread, after GW-S).
