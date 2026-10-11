@@ -70,6 +70,7 @@ def main(argv=None):
     ap.add_argument('--out', required=True)
     ap.add_argument('--dev', required=True)
     ap.add_argument('--threads', type=int, default=4)
+    ap.add_argument('--layers', default=None, help='comma list of Linear names to trim (default: the traced before-the-loop set, M3-0)')
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
     times = {}
@@ -116,6 +117,13 @@ def main(argv=None):
     before += sorted(union - set(before))
     trace_rep = dict(same_set_in_all_six_batches=same, union=before, differences={k: sorted(b ^ union) for k, (b, _) in sets.items() if b != union},
                      also_called_in_loop={n: n in later_any for n in before}, batches={k: len(v) for k, v in batches.items()})
+    traced = list(before)
+    if a.layers:
+        before = [x for x in a.layers.split(',') if x]
+        assert set(before) <= set(traced), f'--layers not all in the traced set {traced}'
+    trace_rep['traced_set'] = traced
+    trace_rep['trimmed_layers'] = before
+    trace_rep['also_called_in_loop'] = {n: n in later_any for n in before}
     before_w = [n + '.weight' for n in before]
     assert all(w in lin for w in before_w)
     log('before-the-loop layers', trace_rep['also_called_in_loop'])
@@ -177,7 +185,7 @@ def main(argv=None):
     bad = [s for s in SUBJ if vs[s] != 'PASS']
     wrong = [s for s in SUBJ if vs[s] == 'PROVED WRONG']
     overall = 'PASS' if not bad else (f'PROVED WRONG ({", ".join(wrong)})' if wrong else f'FAIL ({", ".join(bad)})')
-    result = dict(marks='M3-MARKS-2026-10-11.md', parent=M.PARENT, dev_sha256=dsha, parent_dev_pooled=pooled_dev(par_dev), trace=trace_rep,
+    result = dict(marks='M3-MARKS-2026-10-11.md' + (' (Addendum M3-0b)' if a.layers else ''), parent=M.PARENT, dev_sha256=dsha, parent_dev_pooled=pooled_dev(par_dev), trace=trace_rep,
                   subjects=out, sanity_all_match_m1=all(out[s]['sanity_matches_m1'] for s in SUBJ), overall=overall, timings_s=times,
                   total_secs=round(time.time() - T0, 1), decontam_dropped={s: len(dropped[s]) for s in SUBJ})
     json.dump(result, open(os.path.join(a.out, 'RESULT.json'), 'w'), indent=1, default=str)
