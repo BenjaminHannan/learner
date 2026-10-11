@@ -121,31 +121,42 @@ compare (69 of 280) 0 -> 27.5, of which rows whose exact digit shape never appea
 where far means a longer chain of the same kind of step, the widened practice did transfer; in sheets, where far needs two
 different functions joined in one formula, it did not.
 
-## 5. The test I plan to run next (marks fixed before running; please critique it)
+## 5. Two direct tests since then (shown; marks fixed before each)
 
-From the pre-trained checkpoint, train on 6,000 joined near-grid rows and 6,000 single-kind near rows (made by a
-hand-written generator with a new seed; no overlap with any test row), same loss and row format, 4,000 updates, two arms:
-LA = the rank-8 add-on (lr 1e-3, base frozen); LB = full fine-tune (lr 1e-4). Score held-out F4, F0, F2b and a 420-row
-slice of the training F4 rows at 0, 500, 1,000, 2,000, 4,000 updates.
+Both start from the pre-trained checkpoint and train for 4,000 updates (batch 64, no replay) on 12,000 tool-worked rows,
+half joined formulas and half single-kind near rows. LA = the rank-8 add-on (lr 1e-3, base frozen); LB = every weight
+(lr 1e-4). Joined test rows (F4) are held out.
 
-| Question | Yes | No |
-|---|---|---|
-| Q1 joins learnable at this size and format (LB) | F4 >= 20 | F4 <= 5 while F0 >= 30 |
-| Q2 add-on too small | LB F4 >= 20 and LA F4 <= 5 | LA within 5 points of LB |
-| Q3 memorises, does not generalise | training-slice F4 >= 50 and held-out F4 <= 5 | held-out within 15 of training slice |
+**L1, joins from a hand-written generator** (`K+J` and `(K)*(J)`, all kind pairs, near grids, 2-digit values):
+
+| arm | F4 at 500 / 1,000 / 2,000 / 4,000 updates | training slice at 4,000 | near at 4,000 |
+|---|---|---|---|
+| LA | 3.8 / 16.2 / 44.0 / 69.3 | 79.8 | 92.4 |
+| LB | 12.4 / 46.0 / 80.2 / 88.8 | 97.4 | 98.3 |
+
+**L2, joins made by the mode's own swap tool** (arm LA only, same dose): the test's joins 0.7 -> 2.1; its own joins
+(training slice) 1.9 -> 42.1; near 4.3 -> 60.7; bigger grid 41.4, long range 53.3, other column 44.3, rows 5-6 21.7.
+The 6,000 swap-made joins use 209 formula forms but are dominated by `=R+PRODUCT(R:R)` (878) and `=R+MAX(R:R)` (865), made
+from the one help example with a `+` (`=A1+B2*2`); the test's `(K)*(J)` form never occurs and its `K+J` forms occur
+1-9 times each. Swap-made grids are also odd (one column of 7 numbers, a B column with one number).
+
+**L3, running now:** like L1 but the training joins use only `+` and only 14 of the 21 kind pairs. Scored on the
+practised template with new numbers (S), held-out pairs (HP), the unseen `(K)*(J)` arrangement on practised pairs (HO),
+and both (HPO). Marks: joining carries to new pairs if HP >= 30 and >= S/2; proved wrong if HP <= 5 while S >= 40; the
+same for HO.
 
 ## 6. What I want from you
 
-1. Rank the likely causes of the join failure (F4 at 1% with 660 practice rows) and of the row-5/6 failure (F2b at 9%
-   with 1,800 practice rows). For each, label shown / suggested / untested, and name the evidence above that supports or
-   weakens it. Candidates I can think of (add yours): too few examples; the rank-8 add-on is too small; the 3M model is
-   too small; teacher forcing with no plan, so the first op is chosen from the formula's first function name; the reader
-   is local (window-5 convolutions) so `B5` must be matched to the 5th number after `B:` by attention alone; the number
-   slots or position codes never saw positions this far right.
-2. Is the planned test (section 5) a good one-change test? What would you change **before** running it, and what result
-   would prove your top explanation wrong?
-3. Propose at most three follow-ups, one change at a time, each with pass marks fixed in advance and the result that would
-   prove it wrong. Prefer changes the model could apply to itself (an outside tool it calls, or its own practice choices)
-   over hand-coded fixes; the deployed model must run itself.
-4. A plain-language summary for me (a high-school senior): what is going wrong, what the test will show, and what you would
-   try next, in under 150 words.
+1. Explain L1 vs L2: the model learns joins from 6,000 generator rows (69%) but its own 6,000 swap-made joins teach it
+   only those shapes (42%) and not the test's (2%). Rank the explanations (too few templates; template frequencies;
+   odd grids; something in the architecture, e.g. the local reader or the 16 number slots) and label each shown /
+   suggested / untested.
+2. Predict L3 for both arms before seeing it (S, HP, HO, HPO), with your reasoning. What result would change your mind?
+3. A self-practice loop only has the help page (10 examples) and the tool. How should it make practice that teaches
+   joining as a skill rather than a few templates, without anyone hand-writing the domain's grammar? Give at most three
+   changes, one at a time, each with pass marks fixed in advance and the result that would prove it wrong. Prefer
+   changes the model applies itself (an outside tool it calls, or its own practice choices); the deployed model must run
+   itself. Also say whether you would instead try a bigger model (I can test 10M and 30M later) or an outside tool that
+   splits a formula into pieces the model already solves.
+4. Rows 5-6: references to rows 5 or 6 stay low (8.9% in v9; 21.7% in L2 versus 60.7% near). Why, and the cheapest test?
+5. A plain-language summary for me (a high-school senior), under 150 words.
