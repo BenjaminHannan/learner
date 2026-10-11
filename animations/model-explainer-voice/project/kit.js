@@ -57,7 +57,20 @@
     }
     // ---------- time ----------
     // at(f): f is a fraction 0..1 of THIS scene's length. Prefer it, so slowing a scene stretches the beats with it.
-    at(f) { return this.t0 + Math.max(0, Math.min(1, f)) * this.d; }
+    // If the scene carries atMap ([[oldFraction, newFraction], ...], written by tools/voice/pace.py when captions were re-timed to the narration),
+    // a beat placed at the old fraction keeps its place relative to the captions: fractions are bent through the map piece by piece.
+    at(f) {
+      f = Math.max(0, Math.min(1, f));
+      const m = this.c && this.c.atMap;
+      if (m && m.length) {
+        const A = [[0, 0]].concat(m, [[1, 1]]);
+        for (let i = 0; i < A.length - 1; i++) {
+          const a0 = A[i][0], b0 = A[i][1], a1 = A[i + 1][0], b1 = A[i + 1][1];
+          if (f <= a1) { f = a1 > a0 ? b0 + (f - a0) / (a1 - a0) * (b1 - b0) : b1; break; }
+        }
+      }
+      return this.t0 + f * this.d;
+    }
     // sec(s): seconds after the scene starts (capped inside the scene).
     sec(s) { return this.t0 + Math.max(0, Math.min(s, this.d - 0.05)); }
     // capAt(i): the time caption number i (0-based) starts. Use it to sync a picture with the sentence that explains it.

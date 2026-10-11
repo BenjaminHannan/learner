@@ -6,11 +6,17 @@
   "scenes": [
     {
       "id": "s01",
-      "duration": 29,
+      "duration": 22.5,
       "heading": "Where we are: the thinker",
       "caption": [
-        "This part is the thinker, a team of note-takers that works in rounds.",
-        "We claim the thinking does the work. This chapter tests that claim."
+        {
+          "at": 0.0267,
+          "text": "This part is the thinker, a team of note-takers that works in rounds."
+        },
+        {
+          "at": 0.5493,
+          "text": "We claim the thinking does the work. This chapter tests that claim."
+        }
       ],
       "note": "One round = one lap: look at the whole question, pass notes, think.",
       "src": [
@@ -20,15 +26,31 @@
         "branch origin/claude/project-thread-f1to6a custom_io/models/ledger.py docstring lines 1-8 (parameter-free exact executor inside the model; loop count n_loops)"
       ],
       "design": "Results as of Oct 9. The model tested is an older design: 12 fixed rounds, calculator built in, no learned stop switch.",
-      "notes": "The five-part map always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose."
+      "notes": "The five-part map always draws the finished design (outside calculator, learned stop). The model tested in this chapter (G-B2, 3M, copy 400) has the calculator built in as an exact executor inside the model and 12 fixed rounds with no learned stop, so the extra note says so. Dated 'as of Oct 9' on purpose.",
+      "atMap": [
+        [
+          0.0207,
+          0.0267
+        ],
+        [
+          0.4983,
+          0.5493
+        ]
+      ]
     },
     {
       "id": "s02",
-      "duration": 27,
+      "duration": 17.5,
       "heading": "A score with nothing to compare",
       "caption": [
-        "Our model scored 73.01 points out of 100 on 6,040 questions kept aside.",
-        "That is 4,410 right. But is it the thinking that earns them?"
+        {
+          "at": 0.0343,
+          "text": "Our model scored 73.01 points out of 100 on 6,040 questions kept aside."
+        },
+        {
+          "at": 0.4978,
+          "text": "That is 4,410 right. But is it the thinking that earns them?"
+        }
       ],
       "score": 73.01,
       "unit": "points out of 100",
@@ -41,16 +63,35 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2: 'Shown on one seed'"
       ],
       "notes": "Tested once: 3M size (3,544,913 numbers it learned), seed 400, run on the project's own PC. Re-added from the raw RESULT.json (branch claude/8a-g-pc-results) by me: 1170+863+1178+715+484 = 4410 right of 1360+1200+1360+800+1320 = 6040; 100 x 4410/6040 = 73.01. Chip: 'copy' = one training run with its own random start (seed 400); 3,544,913 = n_params in B2/RESULT.json, the numbers the model learned (the borrowed, frozen Gemma reader, 271,002,624, is on top). Fix pass: the design tag (same fact as the s01 callout) now sits on the number panel with the 73.01, so the caption \"Our model scored 73.01\" is not read as the finished design.",
-      "design": "Older design: 12 fixed rounds, calculator built in."
+      "design": "Older design: 12 fixed rounds, calculator built in.",
+      "atMap": [
+        [
+          0.0222,
+          0.0343
+        ],
+        [
+          0.4981,
+          0.4978
+        ]
+      ]
     },
     {
       "id": "s03",
-      "duration": 26,
+      "duration": 20,
       "heading": "What the 6,040 questions are",
       "caption": [
-        "To score it, we use 6,040 questions kept aside.",
-        "They come in five kinds, from familiar to new.",
-        "They add up to 6,040. The test is called pooled-5."
+        {
+          "at": 0.03,
+          "text": "To score it, we use 6,040 questions kept aside."
+        },
+        {
+          "at": 0.3513,
+          "text": "They come in five kinds, from familiar to new."
+        },
+        {
+          "at": 0.5883,
+          "text": "They add up to 6,040. The test is called pooled-5."
+        }
       ],
       "total": 6040,
       "kinds": [
@@ -81,27 +122,41 @@
         "branch claude/8a-g-pc-results results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json final_eval.{in_dist,answer,frame,vocab,variant}.n = 1360, 1200, 1360, 800, 1320"
       ],
       "notes": "The per-kind question counts are the n fields of the raw file; they sum to 6040. 'Familiar templates' is in_dist (same templates as practice, new questions). Fix pass: on-screen gloss for the code name pooled-5, worded from kit/GLOSSARY.md (pooled-5 = the 6,040 questions kept aside, five kinds pooled into one score out of 100).",
-      "gloss": "pooled-5: five kinds pooled into one score out of 100"
+      "gloss": "pooled-5: five kinds pooled into one score out of 100",
+      "atMap": [
+        [
+          0.0231,
+          0.03
+        ],
+        [
+          0.3397,
+          0.3513
+        ],
+        [
+          0.6564,
+          0.5883
+        ]
+      ]
     },
     {
       "id": "s04",
-      "duration": 30,
+      "duration": 29,
       "heading": "Turning the thinking down",
       "caption": [
         {
-          "at": 0.02,
+          "at": 0.0207,
           "text": "Trained with 12 rounds, it scores 73.01 at 12."
         },
         {
-          "at": 0.2527,
+          "at": 0.2584,
           "text": "Turn the rounds dial down, with no new practice: 2 rounds scores 29.30."
         },
         {
-          "at": 0.518,
+          "at": 0.5293,
           "text": "1 round: 20.00."
         },
         {
-          "at": 0.742,
+          "at": 0.7141,
           "text": "0 rounds, no thinking at all: 0.66. Just 40 right out of 6,040."
         }
       ],
@@ -140,23 +195,41 @@
         "branch claude/8a-g-pc-results B2/RESULT.json config.cfg.n_loops = 12; lesions loops:0/1/2"
       ],
       "notes": "0.66, 73.01 are in the spec; 29.30, 20.00 and the right-counts 1,770 / 1,208 / 40 are re-added from the raw RESULT.json files (sum of correct over in_dist, answer, frame, vocab, variant, divided by 6,040). The 12-round row is the model as trained ('full'); the raw file has no separate loops:12 entry.",
-      "testedChip": "tested: one copy, older design"
+      "testedChip": "tested: one copy, older design",
+      "atMap": [
+        [
+          0.02,
+          0.0207
+        ],
+        [
+          0.2,
+          0.2584
+        ],
+        [
+          0.4,
+          0.5293
+        ],
+        [
+          0.58,
+          0.7141
+        ]
+      ]
     },
     {
       "id": "s05",
-      "duration": 30,
+      "duration": 28.5,
       "heading": "More rounds: no gain",
       "caption": [
         {
-          "at": 0.02,
+          "at": 0.0211,
           "text": "Now turn the dial past its practice, to 24 rounds."
         },
         {
-          "at": 0.3009,
+          "at": 0.2689,
           "text": "The score does not rise: 72.57, which is 27 fewer right (4,410 minus 4,383)."
         },
         {
-          "at": 0.6957,
+          "at": 0.6771,
           "text": "The design we plan to ship adds a learned stop switch, which picks the number of rounds."
         }
       ],
@@ -184,16 +257,39 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row: 'built, never run'; at least 1, at most 32 rounds) and sec. 5 item 13 (depth has a known cost)"
       ],
       "notes": "27 = 4,410 minus 4,383, my subtraction (right answers at 12 rounds minus at 24 rounds). 24 = twice the 12 trained rounds (the raw file's 2 x n_loops lesion).",
-      "testedChip": "tested: one copy, older design"
+      "testedChip": "tested: one copy, older design",
+      "atMap": [
+        [
+          0.02,
+          0.0211
+        ],
+        [
+          0.3389,
+          0.2689
+        ],
+        [
+          0.6578,
+          0.6771
+        ]
+      ]
     },
     {
       "id": "s06",
-      "duration": 36,
+      "duration": 29.5,
       "heading": "Multi-step questions fall hardest",
       "caption": [
-        "A second test, called chain-5: 1,000 multi-step questions kept aside.",
-        "Each calculator step takes its own round, so cutting rounds should hurt most.",
-        "1 round: 0.0. 2 rounds: 1.1. 12 and 24 rounds: 99.9."
+        {
+          "at": 0.0203,
+          "text": "A second test, called chain-5: 1,000 multi-step questions kept aside."
+        },
+        {
+          "at": 0.3322,
+          "text": "Each calculator step takes its own round, so cutting rounds should hurt most."
+        },
+        {
+          "at": 0.6809,
+          "text": "1 round: 0.0. 2 rounds: 1.1. 12 and 24 rounds: 99.9."
+        }
       ],
       "example": "Tom has 12 apples. He gives away 5, then buys 3.",
       "illustration": "made-up example",
@@ -228,16 +324,39 @@
       ],
       "notes": "Not the separate 'multistep' subset (480 rows per split). The Tom example is made up (deep-dive: 'Made up for this page'); its two steps are an illustration of one step per round, in the older design page's words. 12 rounds = the model as trained (chain5 'intact'). Rounds per step: in the model tested, K rounds write K-1 calculator steps (ledger.py docstring) and round 0 only looks (deep-dive), so the two-step Tom example needs three rounds; the old label 'two steps, two rounds' was wrong. The caption says 'should hurt most' (a reading, not a measurement): the numbers show chain-5 falling further than the main test at 1 and 2 rounds (0.0 and 1.1 against 20.00 and 29.30), but custom-io/gpt-b2-leak-and-credit-2026-10-05.md also suggests the answer heads are only trained at the full round count, so the cause is not settled. The heading now states only what was measured. Fix pass: the chart header now names the test (chain-5, 1,000 questions) and carries the green tested chip, so the bars are not read as the made-up Tom example result.",
       "stepsLabel": "two steps, three rounds: the first only looks",
-      "testedChip": "tested: one copy, older design"
+      "testedChip": "tested: one copy, older design",
+      "atMap": [
+        [
+          0.0167,
+          0.0203
+        ],
+        [
+          0.338,
+          0.3322
+        ],
+        [
+          0.6593,
+          0.6809
+        ]
+      ]
     },
     {
       "id": "s07",
-      "duration": 37,
+      "duration": 27,
       "heading": "Break the notes, the answer breaks",
       "caption": [
-        "A lesion test: break one part, and see if the answer breaks.",
-        "Give the talker, which writes the answer, another question's notes: the score falls to 4.19 on familiar questions.",
-        "Shuffle the notes between questions: 6.80."
+        {
+          "at": 0.0222,
+          "text": "A lesion test: break one part, and see if the answer breaks."
+        },
+        {
+          "at": 0.3345,
+          "text": "Give the talker, which writes the answer, another question's notes: the score falls to 4.19 on familiar questions."
+        },
+        {
+          "at": 0.6594,
+          "text": "Shuffle the notes between questions: 6.80."
+        }
       ],
       "labels": {
         "thinker": "Thinker",
@@ -271,16 +390,39 @@
       ],
       "notes": "Same model and seed as the rest of the chapter (G-B2, 3M, seed 400), not the older design numbers in model-deep-dive.html (3.8% / 7.9%). 86.03 and 4.19 are on the 1,360 familiar-template questions only (the donor test's in_dist split; 1,170 right intact, 57 right with a donor's notes, 750 of 1,360 gave the donor's answer). 6.80 = 411/6040, intact 73.01. Shuffle is the notes rolled by one row (each question gets the next question's notes). 55.15 was shown as a bare number under 'points out of 100'; it is a share of answers (750 of 1,360 = 55.147), so the count is written instead.",
       "scoreHead": "points out of 100",
-      "testedChip": "tested: one copy, older design"
+      "testedChip": "tested: one copy, older design",
+      "atMap": [
+        [
+          0.0162,
+          0.0222
+        ],
+        [
+          0.3378,
+          0.3345
+        ],
+        [
+          0.6595,
+          0.6594
+        ]
+      ]
     },
     {
       "id": "s08",
-      "duration": 35,
+      "duration": 24.5,
       "heading": "Break the calculator, the answer breaks",
       "caption": [
-        "Swap add and subtract inside the calculator (plain code that does the sums), and the answers follow.",
-        "Of 831 answers the swap changes, 830 followed it.",
-        "Switch it off: the score is 0.0 on 2,085 questions that need it."
+        {
+          "at": 0.0245,
+          "text": "Swap add and subtract inside the calculator (plain code that does the sums), and the answers follow."
+        },
+        {
+          "at": 0.3294,
+          "text": "Of 831 answers the swap changes, 830 followed it."
+        },
+        {
+          "at": 0.7049,
+          "text": "Switch it off: the score is 0.0 on 2,085 questions that need it."
+        }
       ],
       "labels": {
         "thinker": "Thinker",
@@ -310,23 +452,37 @@
       ],
       "notes": "830 of 831 = 99.88, shown as 99.9. 'Answers the swap changes' = chain-5 rows the intact model got right, answered by a calculator result, where swapping add and subtract changes that result (ledger.py swap_stats: aff). 'Questions that need it' = rows whose right answer is a calculator result (noexec program rows, n 2085): 100.0 with the calculator on, 0.0 off. 99.9 (830 of 831) is a share of the affected answers, not a score, so the shared heading no longer says 'points out of 100'. The 0.0 is a score on the 2,085 rows that need the calculator. In this tested model the calculator is an exact executor inside the model (ledger.py), the older design; see s01. Fix pass: the \"was 100.0\" line now names its question set (2,085 questions), as the caption does.",
       "scoreHead": "out of every 100 counted",
-      "testedChip": "tested: one copy, older design"
+      "testedChip": "tested: one copy, older design",
+      "atMap": [
+        [
+          0.0171,
+          0.0245
+        ],
+        [
+          0.3381,
+          0.3294
+        ],
+        [
+          0.659,
+          0.7049
+        ]
+      ]
     },
     {
       "id": "s09",
-      "duration": 37,
+      "duration": 34,
       "heading": "A small leak with no thinking",
       "caption": [
         {
-          "at": 0.0162,
+          "at": 0.0176,
           "text": "At zero rounds a model should score near zero. Some runs did not."
         },
         {
-          "at": 0.2864,
+          "at": 0.2606,
           "text": "An earlier version, copy 200: with the borrowed Gemma reader 18.09, without it 1.40. Its other copy, 201: 4.49 and 4.34."
         },
         {
-          "at": 0.7109,
+          "at": 0.7137,
           "text": "Our copy 400: 0.96 here, 0.66 on all 6,040. Cause not settled."
         }
       ],
@@ -359,16 +515,39 @@
       "axis": [
         "0",
         "100"
+      ],
+      "atMap": [
+        [
+          0.0162,
+          0.0176
+        ],
+        [
+          0.3378,
+          0.2606
+        ],
+        [
+          0.6595,
+          0.7137
+        ]
       ]
     },
     {
       "id": "s10",
-      "duration": 45,
+      "duration": 37.5,
       "heading": "Side by side with a plain model",
       "caption": [
-        "On this one copy, ours scores 5.9 points more than the plain model (our subtraction: 73.01 minus 67.12).",
-        "But it took 2.7 times longer to train in this run (our division: 6.51 by 2.38 hours).",
-        "Add a calculator to the plain model, no retraining: 69.62 and 99.0. Gap: 3.39 points (our subtraction)."
+        {
+          "at": 0.016,
+          "text": "On this one copy, ours scores 5.9 points more than the plain model (our subtraction: 73.01 minus 67.12)."
+        },
+        {
+          "at": 0.3523,
+          "text": "But it took 2.7 times longer to train in this run (our division: 6.51 by 2.38 hours)."
+        },
+        {
+          "at": 0.6613,
+          "text": "Add a calculator to the plain model, no retraining: 69.62 and 99.0. Gap: 3.39 points (our subtraction)."
+        }
       ],
       "heads": {
         "ours": "Ours, with thinker",
@@ -413,15 +592,35 @@
       "notes": "5.9 = 73.01 - 67.12 = 5.89 (my subtraction). 2.7 = 6.51 / 2.38 = 2.735 (my division; the speed ratio 2.80 / 1.02 = 2.745 also gives 2.7). 3.39 = 73.01 - 69.62 (my subtraction). 69.62 = 4205/6040 summed from PT/RESULT.json lesions.calc over the five splits. The plain model writes its worked steps out as text and then the answer (plain_tf_steps_g, 4 layers, width 256). One copy, seed 400, 3M. The size row 'numbers it learned' = n_params (trainable); both arms also use the same frozen Gemma reader (271,002,624). 'This one copy' and 'in this run': one seed, one PC run; the training-time ratio depends on the shared PC, so it is not a general speed claim. The plain model is the plain step-writing model (G-PT), the yardstick the spec picked by default; the spec lists the choice of plain model as open for the project owner. Fix pass: the 3.39 gap is the main-test row, ours (73.01) minus plain + calculator (69.62); the two cells are outlined on the picture, and the gap note names the pair. The green chip uses the kit default word \"tested\" (no extra words, because this scene is at the 45 s limit).",
       "plainNote": "The plain model writes arithmetic steps as text.",
       "sizeLabel": "Size, numbers it learned",
-      "gapNote": "Gap: ours minus plain + calculator"
+      "gapNote": "Gap: ours minus plain + calculator",
+      "atMap": [
+        [
+          0.0133,
+          0.016
+        ],
+        [
+          0.337,
+          0.3523
+        ],
+        [
+          0.6607,
+          0.6613
+        ]
+      ]
     },
     {
       "id": "s11",
-      "duration": 34,
+      "duration": 19.5,
       "heading": "What this does not show",
       "caption": [
-        "As of Oct 9, one copy at the smallest size is a first result, not proof.",
-        "This is the older design, with 12 fixed rounds and the calculator built in. It says nothing yet about bigger sizes."
+        {
+          "at": 0.0308,
+          "text": "As of Oct 9, one copy at the smallest size is a first result, not proof."
+        },
+        {
+          "at": 0.5211,
+          "text": "This is the older design, with 12 fixed rounds and the calculator built in. It says nothing yet about bigger sizes."
+        }
       ],
       "rows": [
         {
@@ -450,13 +649,28 @@
         "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md sec. 12-13 (addenda G, H: seed 401 and the 10M arms not yet in) and sec. 3 (mark 1 needs both sizes)",
         "big-run/PLAN.md scorecard row 2 ('shown at 3M, one seed ... Not yet at 10M, nor with Gemma and the outside calculator joined')"
       ],
-      "notes": "Seed 401 (3M) and the 10M arms were still running or queued in the project notes of Oct 9; no result file for them existed on branch claude/8a-g-pc-results. Fix pass: the 'unsettled' chip uses the glossary grey (placeholder: no answer yet) instead of a warning orange the glossary does not define. Dated 'as of Oct 9' (the project notes of that day). Row 3 now names the part that is built and never run (the learned stop switch), not the whole finished design, which is only partly built (group 2 and the English talker are not)."
+      "notes": "Seed 401 (3M) and the 10M arms were still running or queued in the project notes of Oct 9; no result file for them existed on branch claude/8a-g-pc-results. Fix pass: the 'unsettled' chip uses the glossary grey (placeholder: no answer yet) instead of a warning orange the glossary does not define. Dated 'as of Oct 9' (the project notes of that day). Row 3 now names the part that is built and never run (the learned stop switch), not the whole finished design, which is only partly built (group 2 and the English talker are not).",
+      "atMap": [
+        [
+          0.0176,
+          0.0308
+        ],
+        [
+          0.4985,
+          0.5211
+        ]
+      ]
     },
     {
       "id": "s12",
-      "duration": 19,
+      "duration": 17,
       "heading": "What to remember",
-      "caption": "Three things to remember.",
+      "caption": [
+        {
+          "at": 0.0353,
+          "text": "Three things to remember."
+        }
+      ],
       "lines": [
         "Less thinking, lower score: 73.01 to 0.66.",
         "Multi-step answers fall hardest: 99.9 to 0.0 at one round.",
@@ -466,7 +680,13 @@
         "animations/source-g1-3m-s400.json",
         "scenes s02 to s11 of this chapter"
       ],
-      "scoreHead": "points out of 100"
+      "scoreHead": "points out of 100",
+      "atMap": [
+        [
+          0.0316,
+          0.0353
+        ]
+      ]
     }
   ]
 }

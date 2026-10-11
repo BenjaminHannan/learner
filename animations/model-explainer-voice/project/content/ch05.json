@@ -6,11 +6,17 @@
   "scenes": [
     {
       "id": "s01",
-      "duration": 22,
+      "duration": 19.5,
       "heading": "Where we are: the calculator sits outside",
       "caption": [
-        "This part is about the call writer, which writes a request slip, and the calculator, which answers it.",
-        "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
+        {
+          "at": 0.0308,
+          "text": "This part is about the call writer, which writes a request slip, and the calculator, which answers it."
+        },
+        {
+          "at": 0.4271,
+          "text": "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
+        }
       ],
       "labels": {
         "call": "call writer"
@@ -18,16 +24,35 @@
       "src": [
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (parts table) and sec. 4 (rules dated 10-07)"
       ],
-      "notes": "FIX PASS: call writer is now wired to the thinker (it reads its vector, s03) and to the calculator (it hands over the slip, s08); dimmed part labels darkened one step."
+      "notes": "FIX PASS: call writer is now wired to the thinker (it reads its vector, s03) and to the calculator (it hands over the slip, s08); dimmed part labels darkened one step.",
+      "atMap": [
+        [
+          0.0273,
+          0.0308
+        ],
+        [
+          0.4977,
+          0.4271
+        ]
+      ]
     },
     {
       "id": "s02",
-      "duration": 26,
+      "duration": 21,
       "heading": "Why a calculator? Code adds exactly",
       "caption": [
-        "Code adds two numbers exactly, every time.",
-        "A learned network has to learn each sum from practice.",
-        "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
+        {
+          "at": 0.0286,
+          "text": "Code adds two numbers exactly, every time."
+        },
+        {
+          "at": 0.3366,
+          "text": "A learned network has to learn each sum from practice."
+        },
+        {
+          "at": 0.6547,
+          "text": "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
+        }
       ],
       "labels": {
         "slip": "call: sub 12 5",
@@ -39,15 +64,35 @@
         "GLOSSARY.md (call writer and calculator pictures)",
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (hand code only as a tool)"
       ],
-      "notes": "The 'why' sentences are our reasoning and are labelled on screen."
+      "notes": "The 'why' sentences are our reasoning and are labelled on screen.",
+      "atMap": [
+        [
+          0.0231,
+          0.0286
+        ],
+        [
+          0.3397,
+          0.3366
+        ],
+        [
+          0.6564,
+          0.6547
+        ]
+      ]
     },
     {
       "id": "s03",
-      "duration": 26,
+      "duration": 23.5,
       "heading": "After a round, the call writer reads one vector",
       "caption": [
-        "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers.",
-        "It writes one of nine choices: no call, or one of the eight operations."
+        {
+          "at": 0.0255,
+          "text": "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
+        },
+        {
+          "at": 0.4778,
+          "text": "It writes one of nine choices: no call, or one of the eight operations."
+        }
       ],
       "labels": {
         "v0": "control vector 0",
@@ -61,14 +106,27 @@
         "custom_io/models/tool.py:15 at 17a356e62 (op head on control token 0; NOOP = no call); call timing tool.py:338 (calls need t >= 1, i.e. after round 2)",
         "custom_io/models/progparse.py:11 (OPS list: NOOP plus 8 operations; at 17a356e62 and on the B3 branch)"
       ],
-      "notes": "The code header calls control vector 0 'control token 0'. Same first vector. 'After a round' (not 'every round'): no call can follow round 1 (tool.py:338), see scene s09. Nine choices = NOOP plus 8 operations (progparse.py:11)."
+      "notes": "The code header calls control vector 0 'control token 0'. Same first vector. 'After a round' (not 'every round'): no call can follow round 1 (tool.py:338), see scene s09. Nine choices = NOOP plus 8 operations (progparse.py:11).",
+      "atMap": [
+        [
+          0.0231,
+          0.0255
+        ],
+        [
+          0.4981,
+          0.4778
+        ]
+      ]
     },
     {
       "id": "s04",
-      "duration": 44,
+      "duration": 39,
       "heading": "The eight operations, one line each",
       "caption": [
-        "Eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
+        {
+          "at": 0.0154,
+          "text": "Eight operations, with made-up numbers 12 and 5. We worked out each result by hand; ? means the call cannot run."
+        }
       ],
       "ops": [
         {
@@ -117,32 +175,38 @@
         "custom_io/models/tool.py:93-103 at 17a356e62 (calc: '?' when it cannot run)",
         "example results computed by hand from those lines, with made-up numbers 12 and 5"
       ],
-      "notes": "12 divided by 5 is not whole, so div gives '?'. mod 12 5 = 2 because 12 = 2 x 5 + 2. cmp returns 1, 0 or -1 as in progparse ex. FIX PASS: caption now says that ? means the call cannot run (div 12 5 is not exact, tool.py:93-103); no result or claim changed. A no-break space keeps the ? with 'means'."
+      "notes": "12 divided by 5 is not whole, so div gives '?'. mod 12 5 = 2 because 12 = 2 x 5 + 2. cmp returns 1, 0 or -1 as in progparse ex. FIX PASS: caption now says that ? means the call cannot run (div 12 5 is not exact, tool.py:93-103); no result or claim changed. A no-break space keeps the ? with 'means'.",
+      "atMap": [
+        [
+          0.0136,
+          0.0154
+        ]
+      ]
     },
     {
       "id": "s05",
-      "duration": 45,
+      "duration": 39,
       "heading": "Copying digits: a pointer, a step left, a stop",
       "question": "Tom has 12 apples. (made-up example)",
       "caption": [
         {
-          "at": 0.0133,
+          "at": 0.0154,
           "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
         },
         {
-          "at": 0.1903,
+          "at": 0.2044,
           "text": "The copy then steps one letter left and copies the 1."
         },
         {
-          "at": 0.3673,
+          "at": 0.3768,
           "text": "A learned stop head says when to stop."
         },
         {
-          "at": 0.5443,
+          "at": 0.5438,
           "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
         },
         {
-          "at": 0.8075,
+          "at": 0.8425,
           "text": "Copied here means the copy trick was used, not that the copy was right."
         }
       ],
@@ -171,15 +235,43 @@
         "custom_io/models/tool.py:222-247 (span copy: one letter left until the learned stop head says stop)",
         "custom_io/results/70-vast-t1sdr/70-t1sdr-s200/T1SDR_s200/RESULT.json (also s201; 80-vast-t1sdr-confirm s204, s205; 80b-pc-t1sdr-confirm s202, s203), key extra.span_use: operand 98.0769 (1581 of 1612 operand sides), answer 91.5 (of 400 rows), identical on all six seeds; computed at custom_io/models/tool.py:659-689"
       ],
-      "notes": "The 98% and 91.5% are shares of uses, not accuracy: free run on 400 test questions that use the calculator (the call-accuracy rows), 1,612 operand sides, of which 1,581 took the copy path (98.0769); 366 of 400 answers were in copy mode (91.5). The same values appear on all six seeds in the raw RESULT.json files (extra.span_use; computed at tool.py:659-689 at 17a356e62). FINISHED sec. 4 gives the same 98% and 91.5%. 3M: the T1SDR copies have 3,314,132 learned numbers (RESULT.json n_params). The start-of-text stop and the 40-letter ceiling are hand-written rules (see s11). 'Copies' = separate trainings of the same model (seeds 200-205). FIX PASS: last caption now reads 'Copied here means the copy trick was used, not that the copy was right', the same word as the bar labels; same claim as before (shares of use, not accuracy)."
+      "notes": "The 98% and 91.5% are shares of uses, not accuracy: free run on 400 test questions that use the calculator (the call-accuracy rows), 1,612 operand sides, of which 1,581 took the copy path (98.0769); 366 of 400 answers were in copy mode (91.5). The same values appear on all six seeds in the raw RESULT.json files (extra.span_use; computed at tool.py:659-689 at 17a356e62). FINISHED sec. 4 gives the same 98% and 91.5%. 3M: the T1SDR copies have 3,314,132 learned numbers (RESULT.json n_params). The start-of-text stop and the 40-letter ceiling are hand-written rules (see s11). 'Copies' = separate trainings of the same model (seeds 200-205). FIX PASS: last caption now reads 'Copied here means the copy trick was used, not that the copy was right', the same word as the bar labels; same claim as before (shares of use, not accuracy).",
+      "atMap": [
+        [
+          0.0133,
+          0.0154
+        ],
+        [
+          0.2076,
+          0.2044
+        ],
+        [
+          0.4018,
+          0.3768
+        ],
+        [
+          0.596,
+          0.5438
+        ],
+        [
+          0.7902,
+          0.8425
+        ]
+      ]
     },
     {
       "id": "s06",
-      "duration": 38,
+      "duration": 26.5,
       "heading": "A number not in the text: 21 cells",
       "caption": [
-        "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time.",
-        "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
+        {
+          "at": 0.0226,
+          "text": "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time."
+        },
+        {
+          "at": 0.5147,
+          "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
+        }
       ],
       "labels": {
         "cells": "21 cells: 20 for the longest 64-bit whole number, 1 for the end mark",
@@ -198,15 +290,31 @@
         "architecture/AUDIT-2026-10-09.md finding B13-13 (CELLS = 11, composed operand limited to 10 characters in T1SDR)",
         "custom_io/data.py (Vocab.decode: stops at the first EOS, so cells after the end mark are not read) on origin/claude/project-thread-qtxfp4"
       ],
-      "notes": "CORRECTED. The first draft used the 10 in 'add 7 3 = 10' as the example of a number built in the cells, but that 10 is the calculator's reply, copied by the talker; in the Tom example no number is built in cells. The cells are for numbers the writer makes up itself (tool.py:40-41). The picture now shows a made-up 10 and says so. Also the 21-cell version is the B3 group 1 build (built, never run); the tested T1SDR copies had CELLS = 11 (tool.py:84 at 17a356e62). Both facts are now on screen. The 21 = 20 + 1 is the code comment's own sum. FIX PASS: '(B3 group 1)' removed from the caption (code name stays in src); the 18 cells after the end mark are dimmed and labelled 'unused here' (decode stops at the first end mark: custom_io/data.py Vocab.decode, and tool.py docstring 'up to the first EOS')."
+      "notes": "CORRECTED. The first draft used the 10 in 'add 7 3 = 10' as the example of a number built in the cells, but that 10 is the calculator's reply, copied by the talker; in the Tom example no number is built in cells. The cells are for numbers the writer makes up itself (tool.py:40-41). The picture now shows a made-up 10 and says so. Also the 21-cell version is the B3 group 1 build (built, never run); the tested T1SDR copies had CELLS = 11 (tool.py:84 at 17a356e62). Both facts are now on screen. The 21 = 20 + 1 is the code comment's own sum. FIX PASS: '(B3 group 1)' removed from the caption (code name stays in src); the 18 cells after the end mark are dimmed and labelled 'unused here' (decode stops at the first end mark: custom_io/data.py Vocab.decode, and tool.py docstring 'up to the first EOS').",
+      "atMap": [
+        [
+          0.0158,
+          0.0226
+        ],
+        [
+          0.4987,
+          0.5147
+        ]
+      ]
     },
     {
       "id": "s07",
-      "duration": 28,
+      "duration": 15.5,
       "heading": "The calculator: plain Python, no learned numbers",
       "caption": [
-        "The calculator is ordinary Python code. It has 0 learned numbers.",
-        "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
+        {
+          "at": 0.0387,
+          "text": "The calculator is ordinary Python code. It has 0 learned numbers."
+        },
+        {
+          "at": 0.3845,
+          "text": "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
+        }
       ],
       "labels": {
         "in": "call in: sub 12 5",
@@ -221,16 +329,35 @@
         "custom_io/models/tool.py:93-103 at 17a356e62 (calc)",
         "custom_io/models/progparse.py:21-30 (ex)"
       ],
-      "notes": "FIX PASS: the picture now shows two calls through the same calculator: sub 12 5 gives 7, div 12 5 gives ? (labels in2/out2 replace 'bad'); the reply box no longer reads 7 for the div call."
+      "notes": "FIX PASS: the picture now shows two calls through the same calculator: sub 12 5 gives 7, div 12 5 gives ? (labels in2/out2 replace 'bad'); the reply box no longer reads 7 for the div call.",
+      "atMap": [
+        [
+          0.0214,
+          0.0387
+        ],
+        [
+          0.4982,
+          0.3845
+        ]
+      ]
     },
     {
       "id": "s08",
-      "duration": 42,
+      "duration": 30.5,
       "heading": "The reply goes into the notes, not the question",
       "caption": [
-        "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies.",
-        "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes.",
-        "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
+        {
+          "at": 0.0197,
+          "text": "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies."
+        },
+        {
+          "at": 0.3528,
+          "text": "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes."
+        },
+        {
+          "at": 0.6998,
+          "text": "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
+        }
       ],
       "labels": {
         "q": "question: not read again",
@@ -247,16 +374,39 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (letter window row) and sec. 5 item 5 (replies read by the letter window only)",
         "custom_io/models/tool.py:155-170, 368-374 (reply read as a short string; thinker keeps its vectors)"
       ],
-      "notes": "Calls follow a round (call k follows round k + 1), so the second call is written after round 3, not in it (FINISHED sec. 3 step 4). The Tom numbers are the project's made-up example. 'Read by the letter window only, not by Gemma' is how B3 group 1 builds it (FINISHED sec. 5 item 5, suggested); not said on screen. FIX PASS: curved arrows now drawn on a layer above the notes card, so their arrowheads show; caption reworded so it wraps evenly ('the calculator replies 10')."
+      "notes": "Calls follow a round (call k follows round k + 1), so the second call is written after round 3, not in it (FINISHED sec. 3 step 4). The Tom numbers are the project's made-up example. 'Read by the letter window only, not by Gemma' is how B3 group 1 builds it (FINISHED sec. 5 item 5, suggested); not said on screen. FIX PASS: curved arrows now drawn on a layer above the notes card, so their arrowheads show; caption reworded so it wraps evenly ('the calculator replies 10').",
+      "atMap": [
+        [
+          0.0143,
+          0.0197
+        ],
+        [
+          0.3373,
+          0.3528
+        ],
+        [
+          0.6603,
+          0.6998
+        ]
+      ]
     },
     {
       "id": "s09",
-      "duration": 38,
+      "duration": 26,
       "heading": "Timing today: calls follow rounds 2 to 8",
       "caption": [
-        "In the tested design, the first call follows round 2.",
-        "Call k follows round k plus 1, up to call 7 after round 8.",
-        "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
+        {
+          "at": 0.0231,
+          "text": "In the tested design, the first call follows round 2."
+        },
+        {
+          "at": 0.2965,
+          "text": "Call k follows round k plus 1, up to call 7 after round 8."
+        },
+        {
+          "at": 0.6158,
+          "text": "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
+        }
       ],
       "labels": {
         "none": "rounds 9-32 (built code): no call",
@@ -287,17 +437,43 @@
         "custom_io/models/tool.py:338, 350 (call timing; no call after round 8 in the tested code)",
         "custom_io/models/tool.py at 17a356e62: :118 (n_loops=8 default), :326, :338 (1 <= t <= N_RES = 7), :350 (k = t - 1); architecture/FINISHED-MODEL-2026-10-09.md sec. 4 hand table (fixed rounds: 8 in T1SDR); the 32-round cap belongs to H1, built, never run (sec. 2 Learned stop row)"
       ],
-      "notes": "CORRECTED. The first draft said 'rounds 9 to 32 cannot call' under a 'tested' chip. T1SDR ran a fixed 8 rounds, so rounds 9 to 32 only exist in the H1 learned-stop code, which has never run. Now said that way. Call k follows round k + 1: t = 1..7 in code is rounds 2..8. FIX PASS: amber 'built, never run' chip added under the 'rounds 9-32 (built code)' box (learned-stop code, built, never run: FINISHED sec. 2 Learned stop row)."
+      "notes": "CORRECTED. The first draft said 'rounds 9 to 32 cannot call' under a 'tested' chip. T1SDR ran a fixed 8 rounds, so rounds 9 to 32 only exist in the H1 learned-stop code, which has never run. Now said that way. Call k follows round k + 1: t = 1..7 in code is rounds 2..8. FIX PASS: amber 'built, never run' chip added under the 'rounds 9-32 (built code)' box (learned-stop code, built, never run: FINISHED sec. 2 Learned stop row).",
+      "atMap": [
+        [
+          0.0158,
+          0.0231
+        ],
+        [
+          0.3377,
+          0.2965
+        ],
+        [
+          0.6596,
+          0.6158
+        ]
+      ]
     },
     {
       "id": "s10",
-      "duration": 39,
+      "duration": 27,
       "heading": "Built, not run: any round, and a tape of 16",
       "caption": [
-        "The project owner chose any time for when a call may follow.",
-        "The finished design's first build lets a call follow any round from 2 to 32.",
-        "The tape (the list of calls and replies so far) holds 16 calls.",
-        "In training, 1 row in 4 gets 0, 1 or 2 extra thinking rounds before each call."
+        {
+          "at": 0.0222,
+          "text": "The project owner chose any time for when a call may follow."
+        },
+        {
+          "at": 0.2291,
+          "text": "The finished design's first build lets a call follow any round from 2 to 32."
+        },
+        {
+          "at": 0.5168,
+          "text": "The tape (the list of calls and replies so far) holds 16 calls."
+        },
+        {
+          "at": 0.7369,
+          "text": "In training, 1 row in 4 gets 0, 1 or 2 extra thinking rounds before each call."
+        }
       ],
       "labels": {
         "any": "rounds 2 to 32",
@@ -312,17 +488,47 @@
         "custom_io/models/b3.py:26 on origin/claude/project-thread-qtxfp4 tip 6ca0234 (TAPE_MIN = 16; line 23 at the PR #56 commit e070556ce5)",
         "custom_io/g8a/configs.py:95 on the same tip (B3_G1 gap_p=0.25; line 90 at e070556ce5)"
       ],
-      "notes": "1 row in 4 is gap_p = 0.25 (configs.py:95); FINISHED sec. 3 says 'a quarter of the rows'. The tape of 4 filled slots is only a picture. FIX PASS: '(B3 group 1)' removed from the caption (code name stays in src); tape label and 'picture only' tag share one line above the slots."
+      "notes": "1 row in 4 is gap_p = 0.25 (configs.py:95); FINISHED sec. 3 says 'a quarter of the rows'. The tape of 4 filled slots is only a picture. FIX PASS: '(B3 group 1)' removed from the caption (code name stays in src); tape label and 'picture only' tag share one line above the slots.",
+      "atMap": [
+        [
+          0.0154,
+          0.0222
+        ],
+        [
+          0.2571,
+          0.2291
+        ],
+        [
+          0.4987,
+          0.5168
+        ],
+        [
+          0.7404,
+          0.7369
+        ]
+      ]
     },
     {
       "id": "s11",
-      "duration": 42,
+      "duration": 28.5,
       "heading": "Still hand-written, and what build 2 changes",
       "caption": [
-        "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes.",
-        "The operation name comes from a fixed list of 8, so a new tool could not be called yet.",
-        "The finished design's second build writes the whole call as letters, operation name included.",
-        "It is built as code and has never run."
+        {
+          "at": 0.0211,
+          "text": "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
+        },
+        {
+          "at": 0.2922,
+          "text": "The operation name comes from a fixed list of 8, so a new tool could not be called yet."
+        },
+        {
+          "at": 0.5759,
+          "text": "The finished design's second build writes the whole call as letters, operation name included."
+        },
+        {
+          "at": 0.8029,
+          "text": "It is built as code and has never run."
+        }
       ],
       "labels": {
         "ops": "operation from a fixed list of 8",
@@ -339,7 +545,25 @@
         "custom_io/models/tool.py:188, 191-197, 222-247 (last letter first; span copy rules)",
         "reviews/pc-handoff-g2-2026-10-09.md and GROUP2-HANDOFF.md on origin/claude/learner-new-g2 (group 2 code built, CPU tests pass, never run on the PC as of Oct 9 evening)"
       ],
-      "notes": "FINISHED sec. 4 lists more hand parts than the four shown (word splitter, 108-character list, worked steps, layout codes, operand slots). FIX PASS: '(B3 group 2)' and 'next build' replaced by 'second build' (heading 'build 2'); amber chip reads 'built, never run' like s06, s10 and s15; boxes spread across the width."
+      "notes": "FINISHED sec. 4 lists more hand parts than the four shown (word splitter, 108-character list, worked steps, layout codes, operand slots). FIX PASS: '(B3 group 2)' and 'next build' replaced by 'second build' (heading 'build 2'); amber chip reads 'built, never run' like s06, s10 and s15; boxes spread across the width.",
+      "atMap": [
+        [
+          0.0143,
+          0.0211
+        ],
+        [
+          0.2565,
+          0.2922
+        ],
+        [
+          0.4988,
+          0.5759
+        ],
+        [
+          0.7411,
+          0.8029
+        ]
+      ]
     },
     {
       "id": "s12",
@@ -351,15 +575,15 @@
           "text": "Each copy starts from its own random start."
         },
         {
-          "at": 0.1313,
+          "at": 0.1303,
           "text": "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2)."
         },
         {
-          "at": 0.3629,
+          "at": 0.3578,
           "text": "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46."
         },
         {
-          "at": 0.7803,
+          "at": 0.77,
           "text": "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
         }
       ],
@@ -390,19 +614,37 @@
         "custom_io/results/RESULTS-T1SDR.md lines 50-72 (6-seed block and table; branch tip 611ed3f4f, first written at 54a12b0d0): per-seed pooled-5 difference +1.94/-0.15/+0.18/+0.89/+0.96/-0.12, chain-5 T1SDR 99.7/99.7/99.8/99.6/99.7/99.8, B2 99.4/99.6/99.6/99.5/99.6/99.7, tool off 0.0",
         "raw RESULT.json for T1SDR s200-s205 (see s05) and B2 (custom_io/results/33-pc-confirm-b2/B2_s200..s205): recomputed pooled-5 over 6,040 questions (in_dist 1360 + answer 1200 + frame 1360 + vocab 800 + variant 1320), mean difference 0.618, sd 0.806, 95% CI -0.23 to +1.46; chain-5 n = 1000; tool-off set n = 2085"
       ],
-      "notes": "Record 13 is relayed, not rechecked; the numbers were rechecked here from the raw RESULT.json files of all twelve runs and match. CORRECTED: the first draft said 'all six copies were within 1.0 of B2'. The mark is one-sided (no copy more than 1.0 BELOW B2); copy A was +1.94 above. Now said that way. Added: the range crosses 0, so the result is 'no clear difference', not 'better' (FINISHED sec. 5 item 1: 'matched'). 'a similar model': T1SDR is B2 with the calculator outside plus copy fixes and drills (tool.py docstring), not a one-change twin. Tool off is 0.0 on five copies and 0.05 on copy D (rounds to 0.0), n = 2,085 questions per copy. The 6,040 count matches GLOSSARY.md and the raw files. FIX PASS: the chain-5 and calculator-off captions moved to the new scene s12b so each result has its own picture; labels 'likely range' and 'plus 0.62' added on the drawing."
+      "notes": "Record 13 is relayed, not rechecked; the numbers were rechecked here from the raw RESULT.json files of all twelve runs and match. CORRECTED: the first draft said 'all six copies were within 1.0 of B2'. The mark is one-sided (no copy more than 1.0 BELOW B2); copy A was +1.94 above. Now said that way. Added: the range crosses 0, so the result is 'no clear difference', not 'better' (FINISHED sec. 5 item 1: 'matched'). 'a similar model': T1SDR is B2 with the calculator outside plus copy fixes and drills (tool.py docstring), not a one-change twin. Tool off is 0.0 on five copies and 0.05 on copy D (rounds to 0.0), n = 2,085 questions per copy. The 6,040 count matches GLOSSARY.md and the raw files. FIX PASS: the chain-5 and calculator-off captions moved to the new scene s12b so each result has its own picture; labels 'likely range' and 'plus 0.62' added on the drawing.",
+      "atMap": [
+        [
+          0.0171,
+          0.0164
+        ],
+        [
+          0.2579,
+          0.1303
+        ],
+        [
+          0.4986,
+          0.3578
+        ],
+        [
+          0.7393,
+          0.77
+        ]
+      ]
     },
     {
       "id": "s12b",
-      "duration": 30,
+      "duration": 27,
       "heading": "More evidence: chain-5 and calculator off",
       "caption": [
         {
-          "at": 0.02,
+          "at": 0.0222,
           "text": "Chain-5, 1,000 multi-step questions: 99.6 to 99.8 with the calculator outside, mean 99.72. Inside: 99.4 to 99.7."
         },
         {
-          "at": 0.5769,
+          "at": 0.6292,
           "text": "Calculator switched off: the 2,085 questions that need it score 0.0."
         }
       ],
@@ -434,31 +676,41 @@
         "custom_io/results/RESULTS-T1SDR.md lines 50-72 (branch tip 611ed3f4f): chain-5 T1SDR 99.7/99.7/99.8/99.6/99.7/99.8, B2 99.4/99.6/99.6/99.5/99.6/99.7, tool off 0.0",
         "raw RESULT.json for T1SDR s200-s205 and B2 (custom_io/results/33-pc-confirm-b2/B2_s200..s205): chain5.intact n = 1000; extra.noexec.program_families n = 2085 (see s12 and verify.md)"
       ],
-      "notes": "NEW SCENE (fix pass). The last two captions of s12 (chain-5 and calculator off) were moved here verbatim, and the picture now draws them. Chain-5 bars: the bar spans the lowest to highest of the six copies (T1SDR 99.6 to 99.8, B2 99.4 to 99.7, per-seed values in verify.md), the dot is the T1SDR mean 99.72. 'Score out of 100' = percent of the 1,000 chain-5 questions answered right (GLOSSARY: score). 0.0 = the 2,085 questions that need the calculator, with the calculator switched off, on all six copies (0.05 on one copy, rounds to 0.0). The axis range 99.3 to 99.9 is only the drawing scale."
+      "notes": "NEW SCENE (fix pass). The last two captions of s12 (chain-5 and calculator off) were moved here verbatim, and the picture now draws them. Chain-5 bars: the bar spans the lowest to highest of the six copies (T1SDR 99.6 to 99.8, B2 99.4 to 99.7, per-seed values in verify.md), the dot is the T1SDR mean 99.72. 'Score out of 100' = percent of the 1,000 chain-5 questions answered right (GLOSSARY: score). 0.0 = the 2,085 questions that need the calculator, with the calculator switched off, on all six copies (0.05 on one copy, rounds to 0.0). The axis range 99.3 to 99.9 is only the drawing scale.",
+      "atMap": [
+        [
+          0.02,
+          0.0222
+        ],
+        [
+          0.4983,
+          0.6292
+        ]
+      ]
     },
     {
       "id": "s13",
-      "duration": 44,
+      "duration": 40,
       "heading": "Check 1: the swap test",
       "caption": [
         {
-          "at": 0.0136,
+          "at": 0.015,
           "text": "Swap test: add and sub are secretly swapped inside the calculator. The answer should follow the new reply."
         },
         {
-          "at": 0.1975,
+          "at": 0.2124,
           "text": "Pass line: 99% or more of counted rows follow the swap. Rows with two possible sources are not counted."
         },
         {
-          "at": 0.3925,
+          "at": 0.4242,
           "text": "Five copies: 99.28 to 99.87, all at 99 or more."
         },
         {
-          "at": 0.5709,
+          "at": 0.6099,
           "text": "The run's own first reading was 97.1 to 97.6. Its scoring rule was corrected after the misses were studied."
         },
         {
-          "at": 0.8057,
+          "at": 0.8634,
           "text": "The sixth copy's saved model was lost, so it is not scored."
         }
       ],
@@ -494,7 +746,29 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 1 (swap holds on 5 of 6 copies; checkpoint lost)",
         "architecture/MARKS-D0-T1-2026-10-07.md lines 190-196 (Amendment 12: unambiguous rows only, lower of two readings, fixed before the six-seed re-score); custom_io/PASS-MARKS.md line 777 (origin/claude/custom-reader-talker-4x309r): run's own text match 97.1-97.6; lines 772 and 830: seed 205 checkpoint lost; raw T1SDR RESULT.json extra.opswap.swap_match 97.47/97.23/97.11/97.34/97.23/97.59 (seeds 200-205); tool.py:25, 97-98 (opswap swaps add and sub)"
       ],
-      "notes": "Copies A-F are seeds 200-205 in order (our labels). Seed 205 is F and is unscored. The 99% pass line is the Amendment 12 definition in the marks file: a row counts only if unambiguous (about 7% of rows were set aside), and each seed is scored by the LOWER of two readings. ADDED caveat: the run's own first reading (text match) was 97.1-97.6. Amendment 12 was ruled after the swap-miss breakdown was read (the marks file itself calls it a post-result scorer definition, bound in the stricter direction between its two corrected readings) and was fixed before the six-seed re-score. 'Lost': both stopped rented boxes were deleted at 10:38 AM ET Oct 9 (PASS-MARKS addendum 23). FIX PASS: pass line shortened so the chips sit below it, not beside it. Grey chip = no result exists for copy F on this check (checkpoint lost)."
+      "notes": "Copies A-F are seeds 200-205 in order (our labels). Seed 205 is F and is unscored. The 99% pass line is the Amendment 12 definition in the marks file: a row counts only if unambiguous (about 7% of rows were set aside), and each seed is scored by the LOWER of two readings. ADDED caveat: the run's own first reading (text match) was 97.1-97.6. Amendment 12 was ruled after the swap-miss breakdown was read (the marks file itself calls it a post-result scorer definition, bound in the stricter direction between its two corrected readings) and was fixed before the six-seed re-score. 'Lost': both stopped rented boxes were deleted at 10:38 AM ET Oct 9 (PASS-MARKS addendum 23). FIX PASS: pass line shortened so the chips sit below it, not beside it. Grey chip = no result exists for copy F on this check (checkpoint lost).",
+      "atMap": [
+        [
+          0.0136,
+          0.015
+        ],
+        [
+          0.2077,
+          0.2124
+        ],
+        [
+          0.4018,
+          0.4242
+        ],
+        [
+          0.5959,
+          0.6099
+        ],
+        [
+          0.79,
+          0.8634
+        ]
+      ]
     },
     {
       "id": "s14",
@@ -506,19 +780,19 @@
           "text": "Leak check: swap in another question's thinking, then count answers still right, out of 100 (1,360 questions)."
         },
         {
-          "at": 0.2405,
+          "at": 0.2372,
           "text": "Limit written down before the run: 5. Five of six copies read above it, from 5.07 to 5.59."
         },
         {
-          "at": 0.4378,
+          "at": 0.4316,
           "text": "B2 (calculator inside) read 3.09 to 3.75 on the same check."
         },
         {
-          "at": 0.6196,
+          "at": 0.6105,
           "text": "It failed the limit. The project owner cleared it on Oct 9; it is disclosed, not a clean pass."
         },
         {
-          "at": 0.8014,
+          "at": 0.7901,
           "text": "Separate reading, zero rounds of thinking: one copy read 12.94, against 10.81 for B2."
         }
       ],
@@ -564,17 +838,51 @@
       "b2": {
         "lo": 3.09,
         "hi": 3.75
-      }
+      },
+      "atMap": [
+        [
+          0.0133,
+          0.0133
+        ],
+        [
+          0.2076,
+          0.2372
+        ],
+        [
+          0.4018,
+          0.4316
+        ],
+        [
+          0.596,
+          0.6105
+        ],
+        [
+          0.7902,
+          0.7901
+        ]
+      ]
     },
     {
       "id": "s15",
-      "duration": 42,
+      "duration": 34,
       "heading": "What is tested, and what is not",
       "caption": [
-        "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner).",
-        "Never run together: the borrowed Gemma reader with the outside calculator.",
-        "Built, never run: calls at any round.",
-        "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
+        {
+          "at": 0.0176,
+          "text": "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
+        },
+        {
+          "at": 0.3114,
+          "text": "Never run together: the borrowed Gemma reader with the outside calculator."
+        },
+        {
+          "at": 0.5274,
+          "text": "Built, never run: calls at any round."
+        },
+        {
+          "at": 0.6944,
+          "text": "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
+        }
       ],
       "labels": {
         "t": "tested: calc outside, 3M",
@@ -588,7 +896,25 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (calculator row), sec. 5 item 6 (Gemma and calculator never run together), sec. 3 (any-round built, untested)",
         "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (6 copies; mark 5 on 5)"
       ],
-      "notes": "'Writes most numbers': 98% of written operands and 91.5% of answers took the copy path (s05); it is a share of uses, not a claim about digits or accuracy. FIX PASS: status chips stacked on top, divider, then the three remember lines below it; Gemma chip now says 'built, never run' (B3 group 1 joins them in code, never run: FINISHED sec. 5 item 6)."
+      "notes": "'Writes most numbers': 98% of written operands and 91.5% of answers took the copy path (s05); it is a share of uses, not a claim about digits or accuracy. FIX PASS: status chips stacked on top, divider, then the three remember lines below it; Gemma chip now says 'built, never run' (B3 group 1 joins them in code, never run: FINISHED sec. 5 item 6).",
+      "atMap": [
+        [
+          0.0143,
+          0.0176
+        ],
+        [
+          0.2565,
+          0.3114
+        ],
+        [
+          0.4988,
+          0.5274
+        ],
+        [
+          0.7411,
+          0.6944
+        ]
+      ]
     }
   ]
 }

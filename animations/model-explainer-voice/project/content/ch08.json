@@ -6,11 +6,17 @@
   "scenes": [
     {
       "id": "s01",
-      "duration": 25.5,
+      "duration": 21.5,
       "heading": "Where we are: practice sets the numbers",
       "caption": [
-        "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far).",
-        "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
+        {
+          "at": 0.0279,
+          "text": "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far)."
+        },
+        {
+          "at": 0.557,
+          "text": "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
+        }
       ],
       "labels": {
         "reader": "frozen",
@@ -24,16 +30,35 @@
         "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 table (lines 29-38: reader borrowed and frozen; thinker, call writer, stop, talker learned; calculator hand code, allowed as a tool; line 36 stop 'built, never run'; line 38 talker 'today a small stand-in')",
         "kit/GLOSSARY.md (frozen, hand-written, learned)"
       ],
-      "notes": "The stop switch (H1) is built but never run (amber chip 'built, never run'); the talker today is a small stand-in that is learned from scratch (blue chip 'learned stand-in'); the English talker is unbuilt (FINISHED line 38). The call writer is not a fifth box on the map: it is part of the thinker's output heads (FINISHED line 35), so the picture draws a small 'call writer' box inside the Thinker box. Fix pass: the stop chip said 'learned' and the talker chip said 'learned' beside a caption that said built-not-run and stand-in; the caption named a call writer that had no box."
+      "notes": "The stop switch (H1) is built but never run (amber chip 'built, never run'); the talker today is a small stand-in that is learned from scratch (blue chip 'learned stand-in'); the English talker is unbuilt (FINISHED line 38). The call writer is not a fifth box on the map: it is part of the thinker's output heads (FINISHED line 35), so the picture draws a small 'call writer' box inside the Thinker box. Fix pass: the stop chip said 'learned' and the talker chip said 'learned' beside a caption that said built-not-run and stand-in; the caption named a call writer that had no box.",
+      "atMap": [
+        [
+          0.0235,
+          0.0279
+        ],
+        [
+          0.498,
+          0.557
+        ]
+      ]
     },
     {
       "id": "s02",
-      "duration": 26,
+      "duration": 22,
       "heading": "The loop: try, check, nudge",
       "caption": [
-        "The model tries a question.",
-        "It is shown the right answer.",
-        "Then every learned setting moves a tiny bit. One nudge is one update."
+        {
+          "at": 0.0273,
+          "text": "The model tries a question."
+        },
+        {
+          "at": 0.3096,
+          "text": "It is shown the right answer."
+        },
+        {
+          "at": 0.5697,
+          "text": "Then every learned setting moves a tiny bit. One nudge is one update."
+        }
       ],
       "labels": {
         "q": "12 minus 5 = ?",
@@ -48,23 +73,37 @@
         "kit/GLOSSARY.md (practice = try, told the right answer, every setting nudged; one nudge = one update)",
         "architecture/model-deep-dive.html line 156-165 (How it learns: question, model tries, compare to the key, nudge the weights, repeat)"
       ],
-      "notes": "The question, the wrong try and the needle angles are all made up to show the idea. 'Every learned setting': the borrowed reader stays frozen (previous scene), so it does not move."
+      "notes": "The question, the wrong try and the needle angles are all made up to show the idea. 'Every learned setting': the borrowed reader stays frozen (previous scene), so it does not move.",
+      "atMap": [
+        [
+          0.0231,
+          0.0273
+        ],
+        [
+          0.3397,
+          0.3096
+        ],
+        [
+          0.6564,
+          0.5697
+        ]
+      ]
     },
     {
       "id": "s03",
-      "duration": 32.5,
+      "duration": 29,
       "heading": "24,000 updates of 256 rows each",
       "caption": [
         {
-          "at": 0.0185,
+          "at": 0.0207,
           "text": "Each update looks at 256 practice rows, then nudges every learned setting once."
         },
         {
-          "at": 0.2943,
+          "at": 0.2511,
           "text": "The 3M test copy, with 3.5 million learned settings, did 24,000 updates."
         },
         {
-          "at": 0.5701,
+          "at": 0.5035,
           "text": "Our multiplication: 24,000 × 256 = 6,144,000 row draws. The pool has 1,418,702 rows, so rows come round again."
         }
       ],
@@ -89,16 +128,39 @@
         "updates": 24000,
         "rows": 256,
         "draws": 6144000
-      }
+      },
+      "atMap": [
+        [
+          0.0185,
+          0.0207
+        ],
+        [
+          0.3385,
+          0.2511
+        ],
+        [
+          0.6585,
+          0.5035
+        ]
+      ]
     },
     {
       "id": "s04",
-      "duration": 32.5,
+      "duration": 25,
       "heading": "The recipe: how each nudge is made",
       "caption": [
-        "AdamW is the nudging rule. The learning rate is how big a nudge may be.",
-        "It starts small, peaks at 1e-3 after a 300-update warm-up, then falls to 10% of the peak.",
-        "Sums run in short numbers (bf16), rows come shuffled, and the start is random."
+        {
+          "at": 0.024,
+          "text": "AdamW is the nudging rule. The learning rate is how big a nudge may be."
+        },
+        {
+          "at": 0.2903,
+          "text": "It starts small, peaks at 1e-3 after a 300-update warm-up, then falls to 10% of the peak."
+        },
+        {
+          "at": 0.6215,
+          "text": "Sums run in short numbers (bf16), rows come shuffled, and the start is random."
+        }
       ],
       "labels": {
         "adamw": "AdamW",
@@ -120,23 +182,37 @@
         "architecture/model-deep-dive.html line 165 (older page, same recipe wording)",
         "whole-model-roadmap/8A-SPEC-2026-10-07.md line 93 (as q33: AdamW, bf16, batch 256)"
       ],
-      "notes": "Warm-up length 300 updates is in the run's RESULT.json config and is the train.py default; the schedule shape (linear warm-up, cosine fall to 10% of peak) is train.py lines 14-20. The curve is still a picture only: its warm-up is drawn far wider than 300 of 24,000 updates. 'Push-size cap' = gradient clipping at 1.0 (it caps the raw push before AdamW, not the learning rate; the first label said 'nudge cap', which read as a second cap on nudge size). bf16 = the sums run in a 16-bit number format (autocast), so 'stored short' was changed to 'run in short numbers'."
+      "notes": "Warm-up length 300 updates is in the run's RESULT.json config and is the train.py default; the schedule shape (linear warm-up, cosine fall to 10% of peak) is train.py lines 14-20. The curve is still a picture only: its warm-up is drawn far wider than 300 of 24,000 updates. 'Push-size cap' = gradient clipping at 1.0 (it caps the raw push before AdamW, not the learning rate; the first label said 'nudge cap', which read as a second cap on nudge size). bf16 = the sums run in a 16-bit number format (autocast), so 'stored short' was changed to 'run in short numbers'.",
+      "atMap": [
+        [
+          0.0185,
+          0.024
+        ],
+        [
+          0.3385,
+          0.2903
+        ],
+        [
+          0.6585,
+          0.6215
+        ]
+      ]
     },
     {
       "id": "s05",
-      "duration": 41.5,
+      "duration": 34.5,
       "heading": "What it practises on",
       "caption": [
         {
-          "at": 0.0145,
+          "at": 0.0174,
           "text": "The 3M test copy practised on a pool of 60 million pieces of text (GPT-2 word pieces)."
         },
         {
-          "at": 0.3289,
+          "at": 0.2599,
           "text": "By word pieces: own text 38%, web text 62%. By rows: own 811,663, web 607,039."
         },
         {
-          "at": 0.6687,
+          "at": 0.6607,
           "text": "Our rows: skills questions and English passages made by our code, plus teaching rows (TEACH) a 1.2-billion-number teacher model wrote earlier."
         }
       ],
@@ -165,16 +241,39 @@
       "nums": {
         "own": 38,
         "web": 62
-      }
+      },
+      "atMap": [
+        [
+          0.0145,
+          0.0174
+        ],
+        [
+          0.3373,
+          0.2599
+        ],
+        [
+          0.6602,
+          0.6607
+        ]
+      ]
     },
     {
       "id": "s06",
-      "duration": 39.5,
+      "duration": 33,
       "heading": "Web text: fill in the missing word",
       "caption": [
-        "FineWeb-Edu web text: a script blanks one word of 3 to 12 letters, and the model must name it.",
-        "Each prompt holds at most 280 letters, blank included, in the 3M runs; the finished design's long pool goes up to 2,000.",
-        "It learns to read English, not write it. Rows without steps add a faint no-call label, weight 0.1."
+        {
+          "at": 0.0182,
+          "text": "FineWeb-Edu web text: a script blanks one word of 3 to 12 letters, and the model must name it."
+        },
+        {
+          "at": 0.3396,
+          "text": "Each prompt holds at most 280 letters, blank included, in the 3M runs; the finished design's long pool goes up to 2,000."
+        },
+        {
+          "at": 0.6578,
+          "text": "It learns to read English, not write it. Rows without steps add a faint no-call label, weight 0.1."
+        }
       ],
       "labels": {
         "pre": "Plants make food from",
@@ -200,16 +299,39 @@
         "w": 0.1,
         "lo": 3,
         "hi": 12
-      }
+      },
+      "atMap": [
+        [
+          0.0152,
+          0.0182
+        ],
+        [
+          0.3376,
+          0.3396
+        ],
+        [
+          0.6599,
+          0.6578
+        ]
+      ]
     },
     {
       "id": "s07",
-      "duration": 36,
+      "duration": 28,
       "heading": "Worked steps: practising each call",
       "caption": [
-        "Where a row has worked steps, the answer key gives the right call each round.",
-        "Call loss: was the call slip right? After the last call, the right slip is no call.",
-        "Answer loss: is the final answer right? Counted from the last call round on."
+        {
+          "at": 0.0214,
+          "text": "Where a row has worked steps, the answer key gives the right call each round."
+        },
+        {
+          "at": 0.2592,
+          "text": "Call loss: was the call slip right? After the last call, the right slip is no call."
+        },
+        {
+          "at": 0.5938,
+          "text": "Answer loss: is the final answer right? Counted from the last call round on."
+        }
       ],
       "labels": {
         "round": "round",
@@ -231,23 +353,37 @@
         "architecture/B3-GROUP1-BUILD-2026-10-09.md lines 53-60 (teacher forcing: op loss on the gold call each call round and no-call after the last; answer loss from the last call round on)",
         "architecture/model-deep-dive.html line 165 (older write-up: losses for operation, pointers, answer, spelling)"
       ],
-      "notes": "This is the finished design's loss schedule (B3 group 1): built, never run. The 3M test copy was an older design with its own losses. Round numbers: no call can follow round 1 (calls need code round index t >= 1), so the first call follows round 2, the second round 3, and 'no call' is trained from round 4 (FINISHED sec. 3 steps 2-5; B3-GROUP1-BUILD lines 47, 57-58). The first version labelled the columns 1, 2, 3, which put a call after round 1. The example is made up."
+      "notes": "This is the finished design's loss schedule (B3 group 1): built, never run. The 3M test copy was an older design with its own losses. Round numbers: no call can follow round 1 (calls need code round index t >= 1), so the first call follows round 2, the second round 3, and 'no call' is trained from round 4 (FINISHED sec. 3 steps 2-5; B3-GROUP1-BUILD lines 47, 57-58). The first version labelled the columns 1, 2, 3, which put a call after round 1. The example is made up.",
+      "atMap": [
+        [
+          0.0167,
+          0.0214
+        ],
+        [
+          0.338,
+          0.2592
+        ],
+        [
+          0.6593,
+          0.5938
+        ]
+      ]
     },
     {
       "id": "s08",
-      "duration": 31.5,
+      "duration": 29.5,
       "heading": "Teacher forcing: practice follows the key",
       "caption": [
         {
-          "at": 0.019,
+          "at": 0.0203,
           "text": "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess."
         },
         {
-          "at": 0.2928,
+          "at": 0.2895,
           "text": "At test time there is no key. The model writes its own calls."
         },
         {
-          "at": 0.5666,
+          "at": 0.5124,
           "text": "Not every row has steps: 124,991 of the 200,000 skills rows (62.5%) the earlier 3M models used have none."
         }
       ],
@@ -271,16 +407,39 @@
       "notes": "Teacher forcing itself is shown in the T1SDR/H1 code (tool.py 351-352); the any-round version with think-only gap rounds is B3 group 1, built, never run. The 62.5% is 124,991 of the 200,000-row skills set the earlier (T1SDR) 3M models trained on; the G1 3M pool holds 501,456 skills rows, whose no-steps share is not stated in the sources, so the caption names the earlier 200,000-row set. The older page's '11 families' disagrees; the caption no longer mentions it (a viewer cannot see that page).",
       "nums": {
         "share": 62.5
-      }
+      },
+      "atMap": [
+        [
+          0.019,
+          0.0203
+        ],
+        [
+          0.3386,
+          0.2895
+        ],
+        [
+          0.6582,
+          0.5124
+        ]
+      ]
     },
     {
       "id": "s09",
-      "duration": 45,
+      "duration": 36,
       "heading": "Fair practice: three rules",
       "caption": [
-        "Rule 1: no answer is cut short. A longer answer is counted, and any count above 0 fails the pass mark.",
-        "Rule 2: exam questions are kept apart: 6,040 rows are never used in practice, though question styles can repeat.",
-        "Rule 3: web text is scanned against exam sets. A last scan, on sealed sets, was pending Oct 9; the 3M runs began before it."
+        {
+          "at": 0.0167,
+          "text": "Rule 1: no answer is cut short. A longer answer is counted, and any count above 0 fails the pass mark."
+        },
+        {
+          "at": 0.3113,
+          "text": "Rule 2: exam questions are kept apart: 6,040 rows are never used in practice, though question styles can repeat."
+        },
+        {
+          "at": 0.6486,
+          "text": "Rule 3: web text is scanned against exam sets. A last scan, on sealed sets, was pending Oct 9; the 3M runs began before it."
+        }
       ],
       "labels": {
         "c1": "No answer cut short",
@@ -308,27 +467,41 @@
         "blue": "blue: practice",
         "grey": "grey: kept aside or web",
         "orange": "orange box: the scan"
-      }
+      },
+      "atMap": [
+        [
+          0.0133,
+          0.0167
+        ],
+        [
+          0.337,
+          0.3113
+        ],
+        [
+          0.6607,
+          0.6486
+        ]
+      ]
     },
     {
       "id": "s10",
-      "duration": 47,
+      "duration": 46.5,
       "heading": "Time: our model versus the plain model",
       "caption": [
         {
-          "at": 0.0128,
+          "at": 0.0129,
           "text": "Ours did 24,000 updates on the project's PC: 1.02 updates a second, 6.51 hours."
         },
         {
-          "at": 0.2316,
+          "at": 0.2318,
           "text": "The plain model, a standard transformer of about the same size, also did 24,000 updates: 2.8 a second, 2.38 hours."
         },
         {
-          "at": 0.4496,
+          "at": 0.4471,
           "text": "Our division: 6.51 ÷ 2.38, about 2.7 times longer. Our other 3M copy took 16.3 hours; a memory spill is the suggested cause."
         },
         {
-          "at": 0.7697,
+          "at": 0.7637,
           "text": "A plan, not a result: the 100M run (about 100 million numbers) is estimated at 3 to 5 weeks on this PC."
         }
       ],
@@ -352,16 +525,43 @@
         "oursH": 6.51,
         "plainH": 2.38,
         "ratio": 2.7
-      }
+      },
+      "atMap": [
+        [
+          0.0133,
+          0.0129
+        ],
+        [
+          0.2561,
+          0.2318
+        ],
+        [
+          0.4989,
+          0.4471
+        ],
+        [
+          0.7417,
+          0.7637
+        ]
+      ]
     },
     {
       "id": "s11",
-      "duration": 43,
+      "duration": 31.5,
       "heading": "Why the thinker is harder to train",
       "caption": [
-        "The same blocks run every round, so the lesson from a wrong answer must travel back through all of them.",
-        "To save memory, training redoes some work instead of storing it: about a third more compute (plan estimate).",
-        "Depth has a known cost: on one old probe, 16 rounds cost 1.2 to 1.9 points. At 100 million numbers it is an open risk."
+        {
+          "at": 0.019,
+          "text": "The same blocks run every round, so the lesson from a wrong answer must travel back through all of them."
+        },
+        {
+          "at": 0.3544,
+          "text": "To save memory, training redoes some work instead of storing it: about a third more compute (plan estimate)."
+        },
+        {
+          "at": 0.6268,
+          "text": "Depth has a known cost: on one old probe, 16 rounds cost 1.2 to 1.9 points. At 100 million numbers it is an open risk."
+        }
       ],
       "labels": {
         "rounds": "rounds",
@@ -384,15 +584,35 @@
         "big-run/PLAN.md sec. 6 line 278 (checkpointing recomputes about a third more)",
         "no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 (16 rounds cost 1.2-1.9 points, one seed, 40-loops-probe; FINISHED cites line 31)"
       ],
-      "notes": "The 'third more' is a suggested plan estimate. The 100M fit in 16 GB with 32 rounds is untested. Fix pass: the outlined box is round 32 (the design allows up to 32 rounds, tool_h1.py CAP = 32), labelled 'up to 32 rounds'; the 16-round probe stays a caption fact and gets its own chip 'tested: old probe, one seed' (INPUT-UNITS line 39: one seed, 40-loops-probe, an older B2 design). The cream fill now marks only the later rounds ('...' and 32) with the key 'later rounds: work redone, not stored': tool_h1.py lines 18-20, 68-71 checkpoints rounds 9..32 only (the drawing is still a picture; '...' stands for rounds 4 to 31). The 'never run' chip now says 'never run at 100M'."
+      "notes": "The 'third more' is a suggested plan estimate. The 100M fit in 16 GB with 32 rounds is untested. Fix pass: the outlined box is round 32 (the design allows up to 32 rounds, tool_h1.py CAP = 32), labelled 'up to 32 rounds'; the 16-round probe stays a caption fact and gets its own chip 'tested: old probe, one seed' (INPUT-UNITS line 39: one seed, 40-loops-probe, an older B2 design). The cream fill now marks only the later rounds ('...' and 32) with the key 'later rounds: work redone, not stored': tool_h1.py lines 18-20, 68-71 checkpoints rounds 9..32 only (the drawing is still a picture; '...' stands for rounds 4 to 31). The 'never run' chip now says 'never run at 100M'.",
+      "atMap": [
+        [
+          0.014,
+          0.019
+        ],
+        [
+          0.3372,
+          0.3544
+        ],
+        [
+          0.6605,
+          0.6268
+        ]
+      ]
     },
     {
       "id": "s12",
-      "duration": 20,
+      "duration": 15,
       "heading": "What changes after practice",
       "caption": [
-        "The model's size stays the same. Only the values of its settings change, by many tiny nudges.",
-        "Real before-and-after values are not shown here. This is an idea, drawn as a picture."
+        {
+          "at": 0.04,
+          "text": "The model's size stays the same. Only the values of its settings change, by many tiny nudges."
+        },
+        {
+          "at": 0.5314,
+          "text": "Real before-and-after values are not shown here. This is an idea, drawn as a picture."
+        }
       ],
       "labels": {
         "before": "before: random start",
@@ -403,16 +623,35 @@
         "architecture/model-deep-dive.html line 165 (from random start; nudge the weights, repeat 24,000 times)",
         "No source lists real before and after setting values, so none are shown."
       ],
-      "notes": "All needle positions are decoration."
+      "notes": "All needle positions are decoration.",
+      "atMap": [
+        [
+          0.03,
+          0.04
+        ],
+        [
+          0.4975,
+          0.5314
+        ]
+      ]
     },
     {
       "id": "s13",
-      "duration": 39,
+      "duration": 32.5,
       "heading": "Recap: what to remember",
       "caption": [
-        "Practice is a loop: try, check the key, nudge. The 3M test ran 24,000 updates, each looking at 256 rows.",
-        "Rows are questions and passages from our code, teaching rows and web blanks, with exam questions kept apart.",
-        "On one 3M copy ours took about 2.7 times longer than the plain model; the finished design is not trained yet."
+        {
+          "at": 0.0185,
+          "text": "Practice is a loop: try, check the key, nudge. The 3M test ran 24,000 updates, each looking at 256 rows."
+        },
+        {
+          "at": 0.3435,
+          "text": "Rows are questions and passages from our code, teaching rows and web blanks, with exam questions kept apart."
+        },
+        {
+          "at": 0.6823,
+          "text": "On one 3M copy ours took about 2.7 times longer than the plain model; the finished design is not trained yet."
+        }
       ],
       "labels": {
         "t1": "the loop",
@@ -442,7 +681,21 @@
       },
       "illustration": {
         "pic": "squares: picture only"
-      }
+      },
+      "atMap": [
+        [
+          0.0154,
+          0.0185
+        ],
+        [
+          0.3376,
+          0.3435
+        ],
+        [
+          0.6598,
+          0.6823
+        ]
+      ]
     }
   ]
 }

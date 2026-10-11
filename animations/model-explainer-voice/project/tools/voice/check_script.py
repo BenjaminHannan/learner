@@ -70,7 +70,7 @@ def scene_text(ch, sid):
             keep = []
 
             def walk(v, key=None):
-                if key in ("src", "notes", "duration", "id", "at"):
+                if key in ("src", "notes", "duration", "id", "at", "atMap"):
                     return
                 if isinstance(v, str):
                     keep.append(v)

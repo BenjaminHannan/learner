@@ -1,6 +1,6 @@
 """Make the speech for every narration segment (free Kokoro voice, runs on the CPU; no network use after the model files are downloaded).
     tools/voice/venv/bin/python tools/voice/tts.py [--script narration/script] [--fallback narration/baseline] [--only ch04 ch05]
-        [--voice af_heart] [--speed 0.92] [--workers 2] [--model PATH] [--voices PATH]
+        [--voice af_heart] [--speed 0.95] [--workers 2] [--model PATH] [--voices PATH]
 Text for a segment = the script text if it exists, else the fallback text (the caption itself). It goes through speakify.speakify first.
 Writes narration/audio/<hash>.wav (mono 24 kHz, 16-bit) and narration/audio/index.json {segment id: {hash, dur, spoken, source}}.
 Cached by hash of (voice, speed, spoken text), so re-running only makes what changed."""
@@ -52,7 +52,7 @@ def main():
     ap.add_argument("--fallback", default=os.path.join(ROOT, "narration", "baseline"))
     ap.add_argument("--only", nargs="*", default=[])
     ap.add_argument("--voice", default="af_heart")
-    ap.add_argument("--speed", type=float, default=0.92)
+    ap.add_argument("--speed", type=float, default=0.95)
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--model", default=os.environ.get("KOKORO_MODEL", "kokoro-v1.0.onnx"))

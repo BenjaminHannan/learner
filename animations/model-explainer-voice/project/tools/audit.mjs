@@ -8,8 +8,9 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const win = {};
 vm.runInNewContext(fs.readFileSync(path.join(root, 'content.js'), 'utf8'), { window: win });
 const CT = win.CONTENT;
+const NARRATED = !!(CT.global && CT.global.narrated);   // narrated video: the voice reads the captions, so only the other on-screen words need reading time
 const want = process.argv.slice(2);
-const SKIP = new Set(['id', 'src', 'notes', 'duration', 'illustration', 'at']);
+const SKIP = new Set(['id', 'src', 'notes', 'duration', 'illustration', 'at', 'atMap']);
 const wc = (s) => String(s).split(/\s+/).filter(Boolean).length;
 function words(v) {
   if (typeof v === 'string') return wc(v);
@@ -25,12 +26,12 @@ for (const cid of CT.order) {
   let sum = 0;
   console.log(`\n${cid}  ${ch.kicker || ''}  ${ch.title || ''}`);
   for (const s of ch.scenes) {
-    const w = words(s);
+    const w = words(NARRATED ? Object.assign({}, s, { caption: [] }) : s);
     const need = 3 + w / 2.6;
     const issues = [];
     if (s.duration + 0.01 < need) issues.push(`TOO SHORT for ${w} words, needs >= ${need.toFixed(1)} s`);
     if (s.duration > 50) issues.push('longer than 50 s: split it');
-    if (s.duration < 10) issues.push('shorter than 10 s');
+    if (s.duration < (NARRATED ? 8 : 10)) issues.push('shorter than ' + (NARRATED ? 8 : 10) + ' s');
     if (s.heading && s.heading.length > 48) issues.push(`heading ${s.heading.length} chars (max 48)`);
     for (const k of ['heading', 'caption']) if (!s[k] || (Array.isArray(s[k]) && !s[k].length)) issues.push('missing ' + k);
     if (!(s.src && s.src.length)) issues.push('missing src');
@@ -43,7 +44,7 @@ for (const cid of CT.order) {
       const start = c.at != null ? c.at * s.duration : first + i * span;
       const next = i < n - 1 ? (caps[i + 1].at != null ? caps[i + 1].at * s.duration : first + (i + 1) * span) : s.duration - 0.7;
       const slot = next - start;
-      if (slot + 0.01 < 1.2 + cw / 2.8) issues.push(`caption ${i + 1} shows ${slot.toFixed(1)} s, needs >= ${(1.2 + cw / 2.8).toFixed(1)} s`);
+      if (!NARRATED && slot + 0.01 < 1.2 + cw / 2.8) issues.push(`caption ${i + 1} shows ${slot.toFixed(1)} s, needs >= ${(1.2 + cw / 2.8).toFixed(1)} s`);
     });
     if (issues.length) flags += issues.length;
     console.log(`  ${s.id.padEnd(5)} ${String(s.duration).padStart(5)} s  ${String(w).padStart(3)} words${issues.length ? '\n        <-- ' + issues.join('\n        <-- ') : ''}`);

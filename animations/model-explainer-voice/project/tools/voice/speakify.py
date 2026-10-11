@@ -83,6 +83,9 @@ LEXICON = [
     (r"GB", "gigabytes"),
     (r"8a-G", "eight A G"),
     (r"8a", "eight A"),
+    (r"LoRA", "Laura"),
+    (r"RPN", "R P N"),
+    (r"in-distribution", "in distribution"),
     (r"GitHub", "GitHub"),
     (r"Gemma", "Gemma"),
 ]
