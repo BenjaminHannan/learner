@@ -304,3 +304,33 @@ Found in review: the maker's renames, edit (c), touch only capital cell letters,
 - The mean over nights 1-7 is close (35.14 against 34.25). Most of the gap is night 7, and the even run was still rising (+5.95 that night).
 - Suggested cause (the Dopamine thread's reading): the rule follows the 2-night quiz change on about 26 quiz items per kind (1 item = 3.8 points). Kinds whose small quiz stalled lost practice: on the last day SUM got 5.3% and PRODUCT 1.0%. At night 7, even against rule: SUM 33.3 vs 11.7, PRODUCT 46.7 vs 16.7.
 - The pick rule is what the Dopamine thread's race replaces (learned edge and progress motivators against the rule and the even mix). Any change to it (a practice floor per kind, bigger quizzes) waits for that race. It is not stacked on A27.
+
+**A27 result: the practice-yield change fails, and is switched off (Opus, 3:05 AM ET 10-11).** Shown, seed 200, routed by the model's own switch:
+- **py (`py-s200-v9`).**
+  - List index near: 0 -> 20, FAIL. The pass mark was +30 and proved wrong was below +10.
+  - Routed DM1: +46.33, within the +43.3 mark. DM3: drop 0.00.
+  - Practice now reached the weak kinds. Day 1 kept 39 list-index rows (0 before) and 66 for-sum rows. For sum rose 1.7 -> 15.0, but day 1 still refused 45 for-sum rows (`gold_ops`, A26).
+  - Other kinds fell: abs 80 -> 57, if else 68 -> 57.
+- **sheet (`sheet-s200-v9`).**
+  - Routed DM1: +29.3 against v7's +38.1, FAIL. The pass mark was +35.1 and proved wrong was below +28.1. DM3: drop 0.00.
+  - SUM 12 -> 27 and PRODUCT 17 -> 38 rose. MAX 73 -> 25, cell arithmetic 43 -> 13 and ABS 37 -> 22 fell.
+  - This matches A27's named risk: practice that keeps the help page's numbers half the time is narrower, and kinds that need new cell positions lose.
+- **Decision.** `relength_each_p` is removed from `domain/constants.json`. The file is back to sha256 `4781b0be...`, the hash of every earlier v7/v8 run, so those runs re-analyse cleanly. The code path stays, off by default.
+- **Reported:** DM2 far is still about 0 on both runs (py +0.0, sheet -0.7).
+
+**A28 checked offline: "keep the night the model's own quiz rates best" does not help (Opus, 3:05 AM ET 10-11).** Shown, no training. On 10 finished runs, the stop night picked by the best own quiz scores, against the last kept night:
+
+| run | change |
+|---|---|
+| sheet-s200-v7 | +1.9 |
+| sheet-s201-v7 | -5.5 |
+| rpn-s200-v7 | -0.5 |
+| py-s200-v8 | -5.0 |
+| py-s201-v8 | -1.3 |
+| py-s200-v9 | -2.2 |
+| sheet-s200-v9 | +0.7 |
+| stats-s200-v8 | 0 |
+| invoice-s200-v8 | +11.9 |
+| sheet-s200-v2 | 0 |
+
+The mean change is 0.0. The quiz (about 26 items per kind) is too noisy to choose a night, the same cause the Dopamine thread found for the pick rule (A8 R1). DM5 keeps the last kept night. No change is made.
