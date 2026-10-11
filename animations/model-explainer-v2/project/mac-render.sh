@@ -10,6 +10,11 @@ OUT=../renders; mkdir -p "$OUT" ../claims
 CH="${*:-ch05 ch04 ch03 ch07 ch08 ch01 ch06 ch00 ch09}"
 sync() { git pull -q --rebase --autostash origin "$BR" >/dev/null 2>&1; }
 push() { for i in 1 2 3 4 5; do sync; git push -q origin "HEAD:$BR" && return 0; sleep $((i*2)); done; echo "push failed" >&2; return 1; }
+if [ $# -eq 0 ]; then
+  echo "waiting for ../READY-ALL (the cloud pushes it when every part is timed)"
+  for i in $(seq 1 120); do sync; [ -e ../READY-ALL ] && break; sleep 20; done
+  [ -e ../READY-ALL ] || { echo "READY-ALL never came" >&2; exit 1; }
+fi
 for c in $CH; do
   sync
   if [ -s "$OUT/$c.mp4" ] || [ -e "../claims/$c" ]; then echo "skip $c (done or claimed)"; continue; fi
