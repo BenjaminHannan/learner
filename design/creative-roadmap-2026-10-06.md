@@ -1696,6 +1696,13 @@ families x 200, two parents).**
       examples, and versions with one constant changed are rejected; (2) uncheckable tries at most 10% of B3's 32
       pass-1 tries per hard kind on DEV; (3) the corrupt-every-key test gives identical records. If (1) or (3)
       fails, or (2) fails after one fix, the checker becomes RM 7b's `check` tool, with its own note.
+    - Build rulings (10-11, fast-sleep bundle 2cf289ca7; marks (1) and (3) pass, (2) waits for the 3M checkpoint):
+      - A merged span is cut at the query number's edges (cut=True), so ' 12' copied as one run gives x plus a
+        separator constant. This is how (1) is meant.
+      - (5) applies only to tries that make a call. A no-call answer, such as a copy of the query's last byte on
+        last_digit, is checked by (1)-(3): its copied pieces of x are swapped, aligned from the number's end.
+      - Disclosed defaults accepted: a try that never reads x is rejected, a self re-run that does not match is
+        uncheckable, and a '?' reply on an example is rejected.
   - **CB-1, 3M (B3 group 2, seed 400; seed 401 too if its checkpoint exists when CB-1 starts).** Job 9's design
     ported, with one change: the nights are SCM2's.
     - Start checkpoint (10-11, big-run thread's question): the one the 100M phase will start from. That is after ST1
