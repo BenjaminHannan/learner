@@ -81,7 +81,7 @@ class FrozenEG:
 
     @torch.no_grad()
     def encode(self, prompts, T, device, chars=True):
-        """(H [B,T,768] in the model's dtype, pooled [B,768] float32); chars=False skips H (None). The last call is memoised, so
+        """(H [B,T,768] (or [B,T,EG_PRE_DIM] with pre=True) in the model's dtype, pooled [B,768] float32); chars=False skips H (None). The last call is memoised, so
         Ledger.run and Ledger.talk on the same batch embed it once."""
         key = (tuple(prompts), T, str(device), self.pre)
         if self._last is not None and self._last[0] == key and (self._last[1][0] is not None or not chars):
@@ -143,19 +143,30 @@ def check(device=None):
     dev = torch.device(device or ('cuda' if torch.cuda.is_available() else 'cpu'))
     eg = FrozenEG().load(dev)
     v = teacher_vec(eg.encode(PROBES, 1, dev, chars=False)[1]).cpu()
-    # the pre state is what we say: 512 wide, and Gemma's own projection of it equals last_hidden_state
-    pe = FrozenEG(pre=True)
-    pe.m, pe.tok = eg.m, eg.tok
-    Hp = pe.encode(PROBES, 64, dev)[0]
-    with torch.no_grad():
-        Hf = eg.encode(PROBES, 64, dev)[0]
-        proj = eg.m.embedding_projection(Hp.to(next(eg.m.parameters()).dtype))
-    pre_diff = (proj.float() - Hf.float()).abs().max().item()
-    pre_ok = Hp.shape[-1] == EG_PRE_DIM and pre_diff <= (1e-4 if dev.type == 'cpu' else 5e-2)
+    # the pre state is what we say: 512 wide, and Gemma's own projection of it equals last_hidden_state.
+    # Gate only on an fp32 comparison on CPU (<= 1e-4); the device (bf16 on cuda) number is printed, never gated.
+    def pre_diff_on(e, d):
+        pe = FrozenEG(pre=True)
+        pe.m, pe.tok = e.m, e.tok
+        Hp = pe.encode(PROBES, 64, d)[0]
+        with torch.no_grad():
+            Hf = e.encode(PROBES, 64, d)[0]
+            proj = e.m.embedding_projection(Hp.to(next(e.m.parameters()).dtype))
+        return Hp.shape[-1], (proj.float() - Hf.float()).abs().max().item()
+    width, dev_diff = pre_diff_on(eg, dev)
+    if dev.type == 'cpu' and next(eg.m.parameters()).dtype == torch.float32:
+        width32, diff32 = width, dev_diff
+    else:
+        cpu = torch.device('cpu')
+        e32 = FrozenEG(path=eg.path).load(cpu)          # fp32 copy on CPU
+        width32, diff32 = pre_diff_on(e32, cpu)
+        del e32
+    pre_ok = width == EG_PRE_DIM and width32 == EG_PRE_DIM and diff32 <= 1e-4
     ref = json.load(open(REF_FILE))
     cos = (v * torch.tensor(ref['vectors'])).sum(-1).tolist()
     out = dict(device=str(dev), transformers=transformers.__version__, path=eg.path, n_text=N_TEXT,
-               probe_cos_vs_build_box=[round(c, 5) for c in cos], pre_width=Hp.shape[-1], pre_projection_max_abs_diff=pre_diff,
+               probe_cos_vs_build_box=[round(c, 5) for c in cos], pre_width=width, pre_projection_max_abs_diff_fp32=diff32,
+               pre_projection_max_abs_diff_bf16=dev_diff if dev.type != 'cpu' else None,
                ok=ref['prompts'] == PROBES and all(c >= 0.999 for c in cos) and pre_ok)
     print(json.dumps(out))
     return out

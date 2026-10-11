@@ -52,7 +52,7 @@ BATCH, PLAIN_BAND, PLAIN_TRIM = 256, 0.02, 0.003
 # {"noplug": true} in the extras (--b2-extra / the `extra` of b2_cfg, b3_cfg, plain_cfg, sizes, pts_cfg) switches the 30M and 100M rungs to width 512, 8 heads, eg_embed + eg_pre +
 # eg_adapter 'none': our model reads Gemma's own 512 numbers (after its final norm, before its 512 -> 768 projection), no learned plug. The key itself never reaches a model:
 # it becomes the cfg keys d / n_heads / eg_embed / eg_pre / eg_adapter. {"blocks": N} beside it overrides the default depth (mlp is solved again). Every arm that has a Gemma
-# front takes it the same way (B2, B3, B3G2, PT / PTS; B3AT needs nothing here once it is built on Ledger: b3_cfg is model-generic). 3M and 10M raise.
+# front takes it the same way (B2, B3, B3G2, PT / PTS; B3AT must extend the group-to-model mapping (`'b3g2' if group == 2 else 'b3'`) in b3_cfg, noplug_target, check_b3, MODEL_OF and ALL_ARMS). 3M and 10M raise.
 NOPLUG = 'noplug'
 NOPLUG_WIDTH, NOPLUG_HEADS = 512, 8
 NOPLUG_BLOCKS = {'30M': 9, '100M': 21}      # default depth; mlp is solved to the target (30M: about 1.253; 100M: about 4.835)
