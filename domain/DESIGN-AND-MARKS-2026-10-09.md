@@ -334,3 +334,15 @@ Found in review: the maker's renames, edit (c), touch only capital cell letters,
 | sheet-s200-v2 | 0 |
 
 The mean change is 0.0. The quiz (about 26 items per kind) is too noisy to choose a night, the same cause the Dopamine thread found for the pick rule (A8 R1). DM5 keeps the last kept night. No change is made.
+
+**A29. Does the main brain's guarded whole-model recipe carry over to code reading? (Opus, 4:40 AM ET 10-11, marks written before the run.)**
+- **Why.** The Main brain thread's arm N (PR #60, `mainbrain/constants-kf97n-lr3e4.json`) learned sheets at seed 200 with no add-on and no switch: near +42.1, in_dist drop 0.66, no family fired. It may replace the add-on, but it has been tried on one subject only. This run uses the same file, unchanged, on the third subject: the A24 py tool.
+- **Run.** `python3 -m mainbrain.fullrun --constants mainbrain/constants-kf97n-lr3e4.json --parent <T1SDR s200> --tool py --seed 200 ...`, from a worktree of PR #60's head (`34b115fe`, which contains this branch up to `0eff9d05`). Output goes to `runs/py-s200-kf97n`. Cloud CPU, 4 threads.
+- **Scoring.** domain.analyze on `py.v2.jsonl` and DEV in_dist. There is no switch: every question goes to the final checkpoint.
+- **Marks, seed 200.**
+  - DM1 near >= +30 is a pass; < +10 proves the carry-over wrong.
+  - DM3, the plain harm measure on the whole model: an in_dist drop <= 1.5 with no family fired is a pass; a drop > 5 proves it wrong.
+  - DM4: the audit is clean. The constants hash differs from `domain/constants.json` by design (the recipe's own file), and this is reported, not failed.
+  - DM5 as before.
+- **Reported:** the result next to the add-on's routed +46.3 (A26) on the same seed, per kind, and DM2.
+- **Order.** The Main brain thread's seed 201 on sheets confirms or refutes the recipe itself. This run only asks whether the recipe needs per-subject settings.
