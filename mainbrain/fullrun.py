@@ -12,8 +12,45 @@ import json
 import sys
 import time
 
+import torch
+
 from domain import mode
 from mainbrain import gp, guess, kf
+
+
+def split_loss(m, stash):
+    """Arm R loss wrapper (instance-level m.loss, see install). Training batches with diary rows: replay half backward now (weighted
+    n_rep/B), grads clipped to norm 1.0, stashed per parameter and zeroed; returns w_new*loss_new + w_rep*loss_rep.detach() so
+    train_night's backward/clip only see the new half. Eval mode, no-grad, or no diary/new rows: the plain loss."""
+    plain = m.loss
+
+    def loss(b):
+        rows = b['rows']
+        B = len(rows)
+        ri = [i for i, r in enumerate(rows) if r.get('source') == 'diary']
+        rs = set(ri)
+        ni = [i for i in range(B) if i not in rs]
+        if not m.training or not torch.is_grad_enabled() or not ri or not ni:
+            return plain(b)
+
+        def part(idx):
+            t = torch.tensor(idx)
+            return {k: (v[t] if torch.is_tensor(v) else [v[i] for i in idx]) for k, v in b.items()}
+        w_rep, w_new = len(ri) / B, len(ni) / B
+        out_r = plain(part(ri))
+        lr_ = out_r[0] if isinstance(out_r, tuple) else out_r
+        (w_rep * lr_).backward()
+        torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+        stash.clear()
+        for p in m.parameters():
+            if p.grad is not None:
+                stash[p] = p.grad.detach().clone()
+                p.grad = None
+        out_n = plain(part(ni))
+        if isinstance(out_n, tuple):
+            return (w_new * out_n[0] + w_rep * lr_.detach(),) + tuple(out_n[1:])
+        return w_new * out_n + w_rep * lr_.detach()
+    return loss
 
 
 def install(cons_path, out=None, seed=None):
@@ -39,13 +76,30 @@ def install(cons_path, out=None, seed=None):
             P, info = gp.projectors(gp.covariances(m, diary), energy)
             wrap = lambda mm, base: gp.GPOptimizer(mm, base, P)
         frozen = gp.freeze_unprojected(m)
-        mode.make_opt = lambda mm, lr: wrap(mm, base_make(mm, lr))
+        free = cons.get('protect_replay') == 'free'
+        stash = {}
+        if free:   # arm R: replay half unprojected (kf.SplitKFOptimizer); guess's BCE (inner train_night) lands in the projected new half
+            assert method == 'kf', 'protect_replay=free needs protect=kf'
+            mode.make_opt = lambda mm, lr: kf.SplitKFOptimizer(mm, base_make(mm, lr), torch.optim.AdamW(
+                [p for p in mm.parameters() if p.requires_grad], lr=lr, betas=(0.9, 0.95), weight_decay=0.0), F, stash)
+        else:
+            mode.make_opt = lambda mm, lr: wrap(mm, base_make(mm, lr))
         extra = dict(g=pg) if 'protect_g' in cons else {}
+        if free:
+            extra['replay'] = 'free'
         print('protect', json.dumps(dict(method=method, energy=energy, **extra, seed=seed, frozen=len(frozen), secs=round(time.time() - t, 1),
                                          free_share={n: v.get('free_share', v.get('free')) for n, v in info.items()})), flush=True)
+        had, prev = 'loss' in m.__dict__, m.__dict__.get('loss')
+        if free:
+            m.loss = split_loss(m, stash)
         try:
             return base_train(m, new, diary, updates, cons, seed, fresh=fresh, picks=picks, addon=addon)
         finally:
+            if free:
+                if had:
+                    m.loss = prev
+                else:
+                    m.__dict__.pop('loss', None)
             mode.make_opt = base_make
             for p in m.parameters():
                 p.requires_grad_(True)

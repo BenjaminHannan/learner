@@ -151,3 +151,37 @@ class KFOptimizer:
 
     def state_dict(self):
         return self.base.state_dict()
+
+
+class SplitKFOptimizer:
+    """Arm R ("protect_replay": "free"): the new-lesson half of a batch is stepped as KFOptimizer does (AdamW with weight decay, then
+    each module's change in [W | b] projected with (U, V, M)); the replay half, whose clipped gradients the loss wrapper stashed
+    (fullrun.split_loss), is stepped by a second AdamW (base_rep, no weight decay) and is NOT projected.
+    `stash` is a dict {param: grad} filled by the wrapper before each step and cleared here. The guess head (guess.make_opt) is a
+    param group of base_new only; it is not in m.parameters(), so base_rep (built from m.parameters()) never contains it."""
+
+    def __init__(self, m, base_new, base_rep, F, stash):
+        self.m, self.base_new, self.base_rep, self.stash = m, base_new, base_rep, stash
+        self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(m) if n in F]
+        self.param_groups = base_new.param_groups
+
+    def step(self):
+        old = [gp.aug_weight(mod).detach().clone() for _, mod, _ in self.mods]
+        self.base_new.step()
+        for (n, mod, f), A0 in zip(self.mods, old):
+            gp.set_aug(mod, A0 + project(gp.aug_weight(mod).detach() - A0, f))
+        for g in self.base_rep.param_groups:
+            for p in g['params']:
+                p.grad = self.stash.get(p)
+        self.base_rep.step()
+        for g in self.base_rep.param_groups:
+            for p in g['params']:
+                p.grad = None
+        self.stash.clear()
+
+    def zero_grad(self, set_to_none=True):
+        self.base_new.zero_grad(set_to_none=set_to_none)
+        self.base_rep.zero_grad(set_to_none=set_to_none)
+
+    def state_dict(self):
+        return self.base_new.state_dict()
