@@ -1,0 +1,402 @@
+{
+  "kicker": "Part 10 of 10",
+  "title": "Creative mode: what it does when it gets stuck",
+  "blurb": "When the model is stuck on a question, it tries many ideas and checks each one against the examples. This part says how that works, what an earlier test found, and what is still only planned as of Oct 11.",
+  "accent": "learned",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 18.5,
+      "heading": "Stuck on a puzzle? You try ideas",
+      "caption": [
+        {
+          "at": 0.0324,
+          "text": "Picture yourself stuck on a puzzle. What do you do?"
+        },
+        {
+          "at": 0.3636,
+          "text": "You try an idea, check it, and try another one."
+        },
+        {
+          "at": 0.6441,
+          "text": "Our model can do the same, but only when it is stuck."
+        }
+      ],
+      "ideas": [
+        "idea 1",
+        "idea 2",
+        "idea 3"
+      ],
+      "puzzle": "stuck?",
+      "chip": "creative mode: only when stuck",
+      "picture": "picture only",
+      "src": [
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 107 (Settled, Ben 10-05: creativity is only for when the model runs into trouble on a task)"
+      ],
+      "notes": "Hook. No numbers. Picture only.",
+      "no": "no",
+      "yes": "fits!",
+      "atMap": [
+        [
+          0.0231,
+          0.0324
+        ],
+        [
+          0.3397,
+          0.3636
+        ],
+        [
+          0.6564,
+          0.6441
+        ]
+      ]
+    },
+    {
+      "id": "s02",
+      "duration": 20.5,
+      "heading": "How it notices it is stuck",
+      "caption": [
+        {
+          "at": 0.0293,
+          "text": "First the model makes one careful best-guess try, with creative mode switched off."
+        },
+        {
+          "at": 0.3192,
+          "text": "Then it checks that try on the question's own examples."
+        },
+        {
+          "at": 0.6316,
+          "text": "If the try does not fit the examples, the model counts itself stuck."
+        }
+      ],
+      "q": "a made-up rule",
+      "examples": [
+        "3 gives 9",
+        "4 gives 16"
+      ],
+      "try": "best guess: add the number to itself",
+      "result": "3 gives 6: does not fit",
+      "badge": "STUCK",
+      "chip": "a fixed script, tested only on older small copies",
+      "picture": "made-up example",
+      "src": [
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md line 20 (stuck test: greedy try with creative off, checked on the question's own examples; fails = stuck; built as a fixed script)",
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md lines 14-16 (passed only on B2-lineage parents)"
+      ],
+      "notes": "3 gives 9 and 4 gives 16 are a made-up example (the rule 'times itself'), labelled on screen.",
+      "atMap": [
+        [
+          0.02,
+          0.0293
+        ],
+        [
+          0.3389,
+          0.3192
+        ],
+        [
+          0.6578,
+          0.6316
+        ]
+      ]
+    },
+    {
+      "id": "s03",
+      "duration": 22,
+      "heading": "Stuck first: lots of tries",
+      "caption": [
+        {
+          "at": 0.0273,
+          "text": "Only then does it try lots of ideas: 32 sampled tries."
+        },
+        {
+          "at": 0.2902,
+          "text": "If none of the 32 fits, it gets 480 more, so 512 in all."
+        },
+        {
+          "at": 0.7665,
+          "text": "A question it already solved gets no extra tries."
+        }
+      ],
+      "tries32": "32 tries",
+      "more480": "+ 480 more tries",
+      "total512": "512 in all",
+      "picture": "picture only: which tries fit is made up",
+      "chip": "tested on older small copies only",
+      "src": [
+        "creative-roadmap/creative-roadmap-2026-10-06.md lines 643-649 (job 8: 32 samples, then 480 more for questions with no example-fitting try, 512 in all; solved questions get nothing more)",
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md line 21 (32 sampled tries, then 480 more only where none fits)"
+      ],
+      "notes": "The grid is a picture. Number of dots equals the numbers 32 and 480; which dots are crossed or green is made up.",
+      "solved": "already solved: no extra tries",
+      "atMap": [
+        [
+          0.0158,
+          0.0273
+        ],
+        [
+          0.3377,
+          0.2902
+        ],
+        [
+          0.6596,
+          0.7665
+        ]
+      ]
+    },
+    {
+      "id": "s04",
+      "duration": 28,
+      "heading": "The example checker keeps what fits",
+      "caption": [
+        {
+          "at": 0.0214,
+          "text": "A checker runs every try on the examples that came with the question. It needs no answer key."
+        },
+        {
+          "at": 0.356,
+          "text": "A try that fits every example is kept. The rest are thrown away."
+        },
+        {
+          "at": 0.5683,
+          "text": "For each question it keeps at most 2 different fitting tries."
+        }
+      ],
+      "examples": "examples: 3 gives 9, 4 gives 16",
+      "tries": [
+        {
+          "t": "add 3 to the number",
+          "r": "3 gives 6: no"
+        },
+        {
+          "t": "times itself",
+          "r": "9 and 16: fits"
+        },
+        {
+          "t": "times 3",
+          "r": "4 gives 12: no"
+        },
+        {
+          "t": "add 6",
+          "r": "4 gives 10: no"
+        }
+      ],
+      "kept": "kept to practise on",
+      "picture": "made-up example",
+      "chip": "a Python script today; the checker for the new design is the main build risk",
+      "src": [
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md line 22 (example checker, Python harness) and lines 38-48 (checker on the new design is the main build risk)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 648 (at most 2 distinct fitting tries per question, a fixed setting in job 8)"
+      ],
+      "notes": "All the numbers in the tries are a made-up example. First try 'add 3' gives 6 for input 3 (not 9). 'add 6' gives 9 for 3 and 10 for 4. 'times 3': 3 gives 9 (fits), 4 gives 12 (no).",
+      "cap2": "at most 2 kept",
+      "atMap": [
+        [
+          0.0167,
+          0.0214
+        ],
+        [
+          0.338,
+          0.356
+        ],
+        [
+          0.6593,
+          0.5683
+        ]
+      ]
+    },
+    {
+      "id": "s05",
+      "duration": 37.5,
+      "heading": "The earlier test, and a near miss",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "We tried it on an older small design, on two trial copies, with development questions."
+        },
+        {
+          "at": 0.2004,
+          "text": "The search worked: it found 180 and 237 checked tries on multi-step questions. The bars were 75 and 90."
+        },
+        {
+          "at": 0.485,
+          "text": "After two nights, first-try scores on multi-step questions rose 10.4 and 9.7 points. The bar was 10."
+        },
+        {
+          "at": 0.7365,
+          "text": "Copy B gained 15 of 154 questions where 16 were needed. Not a pass, and not proved wrong."
+        }
+      ],
+      "leftTitle": "checked tries found",
+      "rightTitle": "first-try gain, points",
+      "left": [
+        {
+          "label": "Copy A (bar 75)",
+          "value": 180
+        },
+        {
+          "label": "Copy B (bar 90)",
+          "value": 237
+        }
+      ],
+      "right": [
+        {
+          "label": "Copy A (bar 10)",
+          "value": 10.4
+        },
+        {
+          "label": "Copy B (bar 10)",
+          "value": 9.7
+        }
+      ],
+      "miss": "Copy B: gained 15 of 154 questions, 16 needed",
+      "chip": "older small design, 2 copies, development questions",
+      "src": [
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 661 (job 8 result; shown, DEV, s100 / s101; climb mark missed as written on s101 by less than one question)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 663 (night-1 multi-step records 180 / 237, needed 75 / 90)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 665 (multi-step first try +10.4 / +9.7; 15 of 154 where the mark needed 16)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md lines 647-650 (climb bar +10 on both parents)"
+      ],
+      "notes": "Copy A = seed s100, copy B = seed s101. 'Checked tries' = the roadmap's multi-step records (night 1). Gain = multi-step first try after night 2 minus before (points). The stricter reading stands: not a pass as written, not proved wrong.",
+      "verdict": "not a pass, not proved wrong",
+      "atMap": [
+        [
+          0.0136,
+          0.016
+        ],
+        [
+          0.2563,
+          0.2004
+        ],
+        [
+          0.4989,
+          0.485
+        ],
+        [
+          0.7415,
+          0.7365
+        ]
+      ]
+    },
+    {
+      "id": "s06",
+      "duration": 36,
+      "heading": "At night it practises what it found",
+      "caption": [
+        {
+          "at": 0.0167,
+          "text": "At night it practises on its own checked tries. That is the sleep from Part 9."
+        },
+        {
+          "at": 0.2115,
+          "text": "Two nights, with a day of search between them."
+        },
+        {
+          "at": 0.3369,
+          "text": "On two copies, harm to old skills was -1.1 and -1.5 points. Below zero means no forgetting."
+        },
+        {
+          "at": 0.6031,
+          "text": "Multi-step first tries matched the standard nights: -1.9 and +1.9 points. A check on six copies has not been run."
+        }
+      ],
+      "steps": [
+        "day 1: search",
+        "night 1: practise",
+        "day 2: search",
+        "night 2: practise"
+      ],
+      "cardA": "old skills, harm in points",
+      "cardB": "multi-step first try vs standard nights, points",
+      "a": [
+        -1.1,
+        -1.5
+      ],
+      "b": [
+        -1.9,
+        1.9
+      ],
+      "chip": "passed on 2 older small copies only",
+      "src": [
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md line 23 (SCM2 nights: 2 nights with a day of search between; PASS on 2 parents: no forgetting -1.1 / -1.5, multi-step first try -1.9 / +1.9 vs W2; 6-parent confirm waits for job 9)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md line 100 (two nights at the middle rate matched the standard two nights' climb, no lost skills)"
+      ],
+      "notes": "Part 9 is 'Learning while it sleeps'.",
+      "atMap": [
+        [
+          0.0158,
+          0.0167
+        ],
+        [
+          0.2572,
+          0.2115
+        ],
+        [
+          0.4987,
+          0.3369
+        ],
+        [
+          0.7401,
+          0.6031
+        ]
+      ]
+    },
+    {
+      "id": "s07",
+      "duration": 42,
+      "heading": "Where it stands as of Oct 11",
+      "caption": [
+        {
+          "at": 0.0143,
+          "text": "As of Oct 11, creative mode is planned for the first big run, in a day-and-night phase after the main training."
+        },
+        {
+          "at": 0.2389,
+          "text": "It has four parts: the stuck test, the stuck-first search, the example checker, and the nights."
+        },
+        {
+          "at": 0.5051,
+          "text": "Dropped from that run: the small creative add-on, because it did not survive the nights."
+        },
+        {
+          "at": 0.6652,
+          "text": "Sealed tests at 3M and 10M are planned, not yet run. So far it passed only on older small designs."
+        }
+      ],
+      "parts": [
+        "stuck test",
+        "stuck-first search",
+        "example checker",
+        "nights"
+      ],
+      "partsChip": "built (unit tests only), not yet run on the big design",
+      "dropped": "dropped: creative add-on",
+      "tests": "sealed tests at 3M and 10M",
+      "testsChip": "planned, not yet run",
+      "src": [
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md lines 8-12 (run-1 = pretraining plus a day-and-night phase) and line 27 (run-1 creative mode = stuck test + stuck-first search + example checker + SCM2 nights; add-on dropped)",
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md line 25 (adapter F: not in run-1, does not survive the worker's sleep)",
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md lines 50-55 (sealed CB-1 at 3M and CB-2 at 10M) and lines 84-98 (CB-0 built, unit tests only; mark 2 needs the 3M checkpoint)",
+        "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md lines 14-16 (all passed only on B2-lineage parents)"
+      ],
+      "notes": "Status only. Nothing has run on the new design.",
+      "atMap": [
+        [
+          0.0143,
+          0.0143
+        ],
+        [
+          0.2565,
+          0.2389
+        ],
+        [
+          0.4988,
+          0.5051
+        ],
+        [
+          0.7411,
+          0.6652
+        ]
+      ]
+    }
+  ]
+}
