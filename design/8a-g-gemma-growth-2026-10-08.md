@@ -497,7 +497,13 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   script and the fc100v2 / fc100v3 card templates, stops v3c by PID and starts v3d. The waiter stops the timing after 120 minutes if it
   hangs; a failure is logged and the chain goes on to g2c3.
 
-## 26. Addendum U (2026-10-11, 10:45 AM ET): inserted jobs from new code (waiter v3e)
+## 26. Addendum U (2026-10-11, 10:35 AM ET): inserted jobs from new code (waiter v3e, staged, not installed)
+
+- **Status (10:40 AM ET):** not installed. The Mac session would not run `swap_v3e.ps1` without Ben's word in its own chat, and the
+  request was withdrawn rather than asking Ben. The PC keeps waiter v3d (c06efc3f55). Until v3e is installed, inserted jobs take only
+  src-b3g2 / src-b3, and `WORK\insert\README.txt` will be refused and renamed at the first check point (a harmless NEEDS ATTENTION line).
+  A creative/sleep job on new code can instead run in a slot held with `WORK\STOP` (the chain waits before its next launch), or v3e can
+  be swapped in by hand between two jobs.
 
 - **Why.** The architecture thread (10:32 AM ET 10-11): Ben made creative mode and sleep core parts of run-1. The PC will later need
   CB-2 (a creative/sleep test on the 10M group 2 seed-400 checkpoint), maybe CB-1 (on the 3M group 2 checkpoint), and the 100M
