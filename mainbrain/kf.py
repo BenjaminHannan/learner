@@ -132,24 +132,42 @@ def project(D, f):
     return V @ ((V.T @ D @ U) * M) @ U.T
 
 
+def project_both(D, f, f0):
+    """project(project(D, f), f0); a missing factor (None) is skipped."""
+    if f is not None:
+        D = project(D, f)
+    if f0 is not None:
+        D = project(D, f0)
+    return D
+
+
 class KFOptimizer:
     """Wraps an optimizer: after each step, each module's change in [W | b] is projected with its (U, V, M).
     refresh (optional): a function returning new factors, called after every `every` steps, so the protected directions
-    follow the weights as they move during a long night (the projection is a small-step rule)."""
+    follow the weights as they move during a long night (the projection is a small-step rule).
+    F0 (optional, arm U "protect_parent"): the factors measured on the parent weights. The change is then projected by the
+    night's own factors and then by F0: D <- project(project(D, F[n]), F0[n]); a module in only one dict gets the one it has.
+    F0=None is the plain behaviour."""
 
-    def __init__(self, m, base, F, refresh=None, every=0):
-        self.m, self.base, self.refresh, self.every, self.n = m, base, refresh, every, 0
+    def __init__(self, m, base, F, refresh=None, every=0, F0=None):
+        self.m, self.base, self.refresh, self.every, self.n, self.F0 = m, base, refresh, every, 0, F0
         self._set(F)
         self.param_groups = base.param_groups
 
     def _set(self, F):
-        self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(self.m) if n in F]
+        if self.F0 is None:
+            self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(self.m) if n in F]
+        else:
+            self.mods = [(n, mod, (F.get(n), self.F0.get(n))) for n, mod in gp.projected_modules(self.m) if n in F or n in self.F0]
 
     def step(self):
         old = [gp.aug_weight(mod).detach().clone() for _, mod, _ in self.mods]
         self.base.step()
         for (n, mod, f), A0 in zip(self.mods, old):
-            gp.set_aug(mod, A0 + project(gp.aug_weight(mod).detach() - A0, f))
+            if self.F0 is None:
+                gp.set_aug(mod, A0 + project(gp.aug_weight(mod).detach() - A0, f))
+            else:
+                gp.set_aug(mod, A0 + project_both(gp.aug_weight(mod).detach() - A0, *f))
         self.n += 1
         if self.refresh and self.every and self.n % self.every == 0:
             was = self.m.training
@@ -192,6 +210,48 @@ class SplitKFOptimizer:
     def zero_grad(self, set_to_none=True):
         self.base_new.zero_grad(set_to_none=set_to_none)
         self.base_rep.zero_grad(set_to_none=set_to_none)
+
+    def state_dict(self):
+        return self.base_new.state_dict()
+
+
+class PrecondReplayKFOptimizer:
+    """Arm R2 ("protect_replay": "precond"): base_new steps the new-lesson half and each module's change in [W | b] is projected
+    (with (U, V, M), then F0 too if given, as KFOptimizer). The replay half's clipped gradient g (stashed by fullrun.split_loss) is
+    then applied as p -= lr * g / (sqrt(v_hat) + eps), v_hat = base_new's bias-corrected second moment of p: no second AdamW, no
+    momentum, no weight decay, no projection. A parameter base_new has no exp_avg_sq for yet is skipped that step. `stash` is
+    cleared each step. The guess head is a param group of base_new only and never has a stashed grad."""
+
+    def __init__(self, m, base_new, F, stash, F0=None):
+        self.m, self.base_new, self.stash, self.F0 = m, base_new, stash, F0
+        if F0 is None:
+            self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(m) if n in F]
+        else:
+            self.mods = [(n, mod, (F.get(n), F0.get(n))) for n, mod in gp.projected_modules(m) if n in F or n in F0]
+        self.param_groups = base_new.param_groups
+
+    def step(self):
+        old = [gp.aug_weight(mod).detach().clone() for _, mod, _ in self.mods]
+        self.base_new.step()
+        for (n, mod, f), A0 in zip(self.mods, old):
+            if self.F0 is None:
+                gp.set_aug(mod, A0 + project(gp.aug_weight(mod).detach() - A0, f))
+            else:
+                gp.set_aug(mod, A0 + project_both(gp.aug_weight(mod).detach() - A0, *f))
+        with torch.no_grad():
+            for grp in self.base_new.param_groups:
+                beta2, eps, lr = grp['betas'][1], grp['eps'], grp['lr']
+                for p in grp['params']:
+                    g = self.stash.get(p)
+                    st = self.base_new.state.get(p)
+                    if g is None or not st or 'exp_avg_sq' not in st:
+                        continue
+                    v_hat = st['exp_avg_sq'] / (1 - beta2 ** float(st['step']))
+                    p.sub_(lr * g / (v_hat.sqrt() + eps))
+        self.stash.clear()
+
+    def zero_grad(self, set_to_none=True):
+        self.base_new.zero_grad(set_to_none=set_to_none)
 
     def state_dict(self):
         return self.base_new.state_dict()

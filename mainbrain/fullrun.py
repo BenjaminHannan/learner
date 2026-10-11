@@ -63,22 +63,34 @@ def install(cons_path, out=None, seed=None):
     mode.CONST_PATH = cons_path
     if 'guess' in cons:   # SB-2 head: installed first, so it is the inner train_night/make_opt (K-FAC is measured on the plain loss)
         guess.install(out, cons['guess']['weight'], cons['guess']['lr'], seed, cons['guess'].get('input', 'ctrl1'))
+    replay = cons.get('protect_replay')
+    assert replay in (None, 'free', 'precond'), replay
+    parent = bool(cons.get('protect_parent'))
+    assert not parent or method == 'kf', 'protect_parent needs protect=kf'
+    keep = {}   # arm U: the parent factors F0, measured once at the first night and kept for the whole run
     base_train, base_make = mode.train_night, mode.make_opt
 
     def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None, addon=None):
         t = time.time()
         for p in m.parameters():
             p.requires_grad_(True)
+        F0 = None
         if method == 'kf':
             F, info = kf.factors(kf.kfac_stats(m, diary, norm='example' if pg == 'example' else None), energy)
-            wrap = lambda mm, base: kf.KFOptimizer(mm, base, F)
+            if parent and 'F0' not in keep:
+                keep['F0'] = F   # night 1: factors measured on the parent weights are F0
+            F0 = keep['F0'] if parent else None
+            wrap = lambda mm, base: kf.KFOptimizer(mm, base, F, F0=F0)
         else:
             P, info = gp.projectors(gp.covariances(m, diary), energy)
             wrap = lambda mm, base: gp.GPOptimizer(mm, base, P)
         frozen = gp.freeze_unprojected(m)
-        free = cons.get('protect_replay') == 'free'
+        free = replay in ('free', 'precond')   # both split the batch (split_loss)
         stash = {}
-        if free:   # arm R: replay half unprojected (kf.SplitKFOptimizer); guess's BCE (inner train_night) lands in the projected new half
+        if replay == 'precond':   # arm R2: replay half stepped with base_new's own second moment (kf.PrecondReplayKFOptimizer)
+            assert method == 'kf', 'protect_replay=precond needs protect=kf'
+            mode.make_opt = lambda mm, lr: kf.PrecondReplayKFOptimizer(mm, base_make(mm, lr), F, stash, F0=F0)
+        elif free:   # arm R: replay half unprojected (kf.SplitKFOptimizer); guess's BCE (inner train_night) lands in the projected new half
             assert method == 'kf', 'protect_replay=free needs protect=kf'
             mode.make_opt = lambda mm, lr: kf.SplitKFOptimizer(mm, base_make(mm, lr), torch.optim.AdamW(
                 [p for p in mm.parameters() if p.requires_grad], lr=lr, betas=(0.9, 0.95), weight_decay=0.0), F, stash)
@@ -86,7 +98,9 @@ def install(cons_path, out=None, seed=None):
             mode.make_opt = lambda mm, lr: wrap(mm, base_make(mm, lr))
         extra = dict(g=pg) if 'protect_g' in cons else {}
         if free:
-            extra['replay'] = 'free'
+            extra['replay'] = replay
+        if parent:
+            extra['parent'] = True
         print('protect', json.dumps(dict(method=method, energy=energy, **extra, seed=seed, frozen=len(frozen), secs=round(time.time() - t, 1),
                                          free_share={n: v.get('free_share', v.get('free')) for n, v in info.items()})), flush=True)
         had, prev = 'loss' in m.__dict__, m.__dict__.get('loss')
