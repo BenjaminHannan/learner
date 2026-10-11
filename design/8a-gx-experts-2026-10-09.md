@@ -270,6 +270,11 @@ the follow-up test, not a change to this one.
 
 ## 16. Addendum I: stage 2 runs on Ben's word after the UNCLEAR stage 1 (written 2026-10-11 about 12:20 UTC, 8:20 AM ET, before any stage 2 run)
 
+**WITHDRAWN 8:11 AM ET 10-11, before anything was queued on the PC.** Ben, after reading the plan: "Ok, you don't have to do that. But
+I do want deep layers in the model at some point", then "add as many layers as possible. don't worry about the experts". Stage 2 does
+not run, and experts drop out of the model (FINISHED-MODEL item 10: run-1 is dense). His depth request goes to the big-run and
+architecture threads, which own the thinker's shape. The text below is kept as written for the record.
+
 - **Why:** section 5 says that on an UNCLEAR stage 1, "Ben decides with one word". Ben, 8:08 AM ET 10-11, after reading the stage 1
   result: "wait what? For the many experts many layers, I wanted both to be true during the same time". This is taken as his go for
   stage 2 (GX-10M: G-B2 10M's 8 blocks with the same 52-expert, top-8 layers). His standing rule (8:50 PM ET 10-10) is not to ask him
