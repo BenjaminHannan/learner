@@ -156,3 +156,18 @@ commit 8fce7247a for the model, branch claude/project-thread-2kevpk for sleep, c
     version (a guesser of its own progress per kind, MAGELLAN-style) is worth building at 10M/30M; otherwise the drive is
     dropped from claims at 3M. Either way the problem-level guesser is re-checked (D0, free) on the first 10M/30M domain-mode
     run, and GW-D stays the main dopamine rung (game thread, after GW-S).
+
+**B3. The ultimate reward is being a good helper (Ben, 9:35-9:40 PM ET 10-10; no marks changed).** Ben: "i want some sort
+of inherent motivator in the model, so it can get substituted with that [the mix rule] if that's better"; "it doesn't
+strictly have to be that ... Like a reward for being curious ... for humans basically all rewards lead back to reproduction
+as the ultimate reward; the model's should be to be a good helper"; "another thing that is important for a good helper is
+charisma ... pleasant to talk to ... would count extra". So the reward is layered, as evolution layers food, friends and
+curiosity under reproduction:
+| Stand-in | Checked by | When |
+|---|---|---|
+| Right answers | the outside tool or checker | now |
+| Curiosity: practise what it is unsure of (edge) or what it is getting better at (progress) | its own learned guesser | now (the motivator race, B4) |
+| The task really got done for the person | the person's verdict, checked against the result | later (needs open tasks and real use) |
+| Pleasant to talk to (clear, kind, to the point, fun to read) | a judge's score, only added on top of right and honest | later, when the model talks (Ben's separate talking-from-scratch session owns talking) |
+Rule (suggested, said to Ben 9:38 PM ET): reward checked helping, never bare approval; a model paid for approval learns to
+flatter. Every later reward gets its own sealed marks before it trains anything.
