@@ -270,7 +270,7 @@ function InferStep {
     'set CUSTOM_IO_EG2=C:\Users\benja\eg2',
     "cd /d $SRCG2",
     "$PY $CIO\infer_speed.py --src $SRCG2 --pool `"$pool`" --caps `"$caps`" --queue $SRCG2\custom_io\queue_local\8aFC2-pc.txt --out `"$WORK\fc100-infer.json`" --busy C:\Users\benja\GPU-BUSY.txt >> $WORK\q8aFCI.log 2>&1")
-  Say 'answer-speed timing of the four 100M shapes starts (fc100 part 3; log WORK\q8aFCI.log)'
+  Say 'answer-speed timing of the 100M shapes starts (fc100 part 3; log WORK\q8aFCI.log)'
   $p = Start-Process -FilePath 'cmd.exe' -ArgumentList "/c $cmd" -PassThru -WindowStyle Hidden
   $null = $p.Handle       # keeps the handle, so ExitCode can be read after it exits
   $null = NewCard 'fc100v3.template.md' 'fc100v3.md' $null
@@ -344,7 +344,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (v3e; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
+Say "post-G1 chain waiter v3 started (v3e; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (the 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
 
 # 1. Gate G1 ends.
 $k = 0

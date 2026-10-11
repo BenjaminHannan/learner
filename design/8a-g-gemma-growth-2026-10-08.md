@@ -550,3 +550,23 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   test_b3, test_b3_run, test_g8a), copy the new 8aFC2 queue and run `fc2check.py`, rewrite the SETUP-OK files.
 - **Blocker:** since 10:36 AM ET 10-11 the Mac session will not run BensPC scripts sent by other threads without Ben's word in its own
   chat. Without the install, the old list and the old code run after G1.
+
+## 29. Addendum X (2026-10-11, 5:20 PM ET): one install script for the reader-rule code (`install_rr.ps1`, staged)
+
+- **What it installs** (whatever its folder holds, so it can run once with everything or once per piece): `b3r.zip` (custom_io of
+  the group 1 reader-rule commit) into src-b3r; `g2.zip` (the group 2 commit) into src-b3g2; the five-shape `8aFC2-pc.txt` of
+  addendum W with `infer_speed.py` (any number of shapes) and the fc100v2 card; and, last, waiter v3e (addendum U) through
+  `swap_v3e.ps1`. The two commit SHAs and the hashes of the files they change are written into the script when the architecture
+  thread sends them; with `TBD` it refuses a zip.
+- **Order and safety.** Only while the waiter still waits for G1 (checked at the start and again just before the swap). Each zip is
+  unpacked beside the live folder as `<name>.new-<stamp>` and checked there: caps.py as pinned (src-b3r: the hash on line 1 of the
+  live B3R-SETUP-OK.txt; src-b3g2: the waiter's 32862AE2...), the caps json files, the commit's changed files; the chain's queue
+  files (the new commit's own copy wins, a missing one comes from the live folder); CPU checks with the GPU hidden: group 1 =
+  `b3_capcheck` (cap 32), `test_g8a`, `test_b3_run` (the checks that already passed on the PC) plus the reader-rule test the
+  architecture thread names; group 2 = `g2check`, `fc2check` on the 8aFC2 list it will run, `infer_speed --selftest`, plus that
+  test. Then the live folder is renamed `<name>.before-rr-<stamp>` (kept) and the new one takes its name, with its SETUP-OK file
+  (line 1 still "caps.py <hash>", plus "commit <sha>", so a rerun skips it). A failed check renames the new folder `.failed-<stamp>`
+  and changes nothing live. The long CPU suites (`test_b3`, `test_b3g2`: over 10 minutes each) run here in the cloud on the exact
+  commits before the package is sent, not beside G1.
+- **Tested (shown, cloud):** parse check, 0 errors. A simulated PC tree (the current two commits as stand-ins, real python checks)
+  is running; its result goes in the next commit.
