@@ -170,3 +170,8 @@ Rung30 rebuilt with budget 123.35M tokens (= 117.8M / 0.955) so cloze chunking s
 
 ### 10.y Exclusion for the 600M pool (2026-10-09, big-run coordinator)
 FineWeb-Edu sample-10BT **shard 013 is excluded from the 600M-token pool** (and from any rung pool). It supplies the distractor padding for the held-out B3-5 long-row test file (`/mnt/project-files/big-run/long-dev/long_dev.jsonl`, built by the 8a build thread). The 8a rung pools read shard 0 only. When building the 600M pool use `web_slice.py --shards` with shards 0-12 only (never 013), and keep the 13-gram gate against long_dev.jsonl as well.
+
+### 10.z 600M web pool built (2026-10-11)
+`web_slice.py` on FineWeb-Edu sample-10BT shards 0, 1, 2 (never 013), leak index = all.npz + 13-gram hashes of `/mnt/project-files/big-run/long-dev/long_dev.jsonl` (all2.npz). Budgets 12.4M / 37.2M / 123.35M / 527.2M tokens (rung100 = 503.4M / 0.955, so cloze pieces reach ~503M). Taken 527.21M tokens; drops: too_hard 1,023,681, quality 219,652, duplicate 3,658, panel_overlap 248. Archive `/mnt/project-files/data-pool/built/web_slices_600M.tgz` sha256 827909cb7ff34249b22dac15a777f8bdcac63a66d0a466bc67bc990f805516d3 (manifest: `data_pool/built/web_slices_600M_MANIFEST.json`).
+**Not identical to the 3ebd488915 slices:** the long-dev overlap gate removed 6 / 20 / 63 docs from rung3 / rung10 / rung30 (and let in 18 / 44 / 114 later docs to fill the budget). The earlier slices therefore contain those 6 / 20 / 63 docs that share 13-grams with the held-out long-row test. Use the new rung files for any new run; runs already trained on the old ones should report this.
+The protected-panel hash over the real protected files is still not run (needs Ben's own typed OK).
