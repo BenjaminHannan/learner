@@ -223,7 +223,9 @@ def main(argv=None):
         for name, cfg in shapes:
             if a.cfg:
                 cfg = dict(cfg, **json.loads(a.cfg))
-            tag = name.split('-')[1]                         # the shape as the queue names it, e.g. 21x512
+            if a.selftest:                                   # no Gemma here: drop the no-plug front's keys (it needs Gemma's 512 width)
+                cfg = {k: v for k, v in cfg.items() if k not in ('eg_pre', 'eg_adapter')}
+            tag = name.split('-')[1]                        # the shape as the queue names it, e.g. 21x512
             if a.shapes and tag not in a.shapes.split(','):
                 continue
             sh = res['shapes'][tag] = dict(job=name, cfg=cfg, cells={})

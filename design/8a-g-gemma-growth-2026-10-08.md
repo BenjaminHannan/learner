@@ -601,3 +601,39 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   group 1 proved wrong on B3-2: group 2 held to the end and run on WORK\G2-GO.txt.
 - **Timing (suggested, not measured):** G1 ends about Monday midday ET; fc100 parts 1-3 and g2c3s come first, so G2f starts Monday
   evening at the earliest and its 3M result lands about Tuesday, as the architecture thread told Ben.
+
+## 31. Addendum Z (2026-10-11, 8:00 PM ET): no plug at 30M and 100M in the post-G1 chain (staged)
+
+- **Why.** Ben, 4:12 PM ET 10-11: "can you remove the converter plug and just have our model match gemma's". The architecture thread
+  built it (7:20 PM ET, claude/project-thread-qtxfp4 at 77c0a6a9c1, merged into B3 group 2 with Ben's rules 1 and 2): at 30M and
+  100M the model is 512 wide and reads Gemma's own 512 numbers (the state after Gemma's final norm, before its 512 -> 768
+  projection) through a zero-start LayerNorm(512); 3M and 10M keep the plug. It asked for c30s to be re-staged with it.
+- **Defaults taken (no OK needed).** (1) c30s (`8aC30S-noplug-pc.txt`): the same job with `--noplug`; at that commit under
+  caps_b3s.json its PTS arm is 9 layers, hidden 2099, 512 wide, 30,003,659 trained (B2 30,000,092), lr 5e-4 (the width rule,
+  every arm at this rung). (2) fc100 part 2 (`8aFC2-noplug-pc.txt`, card `fc100v2-noplug.md`): the five depths measured on the
+  real no-plug 100M front, configs from `configs.b3_cfg('100M', {"eg_embed": true, "noplug": true, "blocks": N}, group 2)`, the
+  architecture thread's counts exactly: 21 (mlp 4.83496) 102,634,902; 26 (3.13379) 102,636,407; 30 (2.18066) 102,630,231;
+  34 (1.45215) 102,630,205; 37 (1.00879) 102,623,523. Every other key of each config is unchanged. (3) The proof the
+  architecture thread asked for before the first no-plug run (`eg check ... pre`) runs inside install_rr.ps1 on the CPU in fp32
+  (the gated number; G1 keeps the GPU); the bf16 GPU number comes from the first no-plug run itself.
+- **When.** Only with a group 2 commit that has the no-plug code (it contains a10b6eacf1). Then the package carries
+  8aFC2-noplug-pc.txt as 8aFC2-pc.txt, fc100v2-noplug.md as fc100v2.md, and 8aC30S-noplug-pc.txt as 8aC30S-pc.txt. Without it,
+  both stay plugged and nothing here is sent.
+- **Install changes.** install_rr.ps1 installs an `8aC30S-pc.txt` from its folder into the new src-b3g2 (only with g2.zip; on a
+  rerun it must equal the live one). A list or c30s queue that will be live and reads Gemma's own numbers ('"eg_pre": true' or
+  `--noplug`) is gated on `python -m custom_io.models.eg check cpu pre` with CUSTOM_IO_EG2 = C:\Users\benja\eg2 ("pre_ok": true:
+  512 wide and Gemma's own projection of it equals its 768 output within 1e-4). g2check.py reads c30s's queue: with `--noplug` it
+  needs job.py's `--noplug` and checks the 30M PTS config under caps_b3s.json (eg_pre, width 512).
+  It now also builds B3 group 2 at 3M (the G2f run) under caps_b3g2.json and prints its count, so a group 2 commit whose 3M model
+  fails its own size check is refused at install. `infer_speed.py --selftest` (no Gemma, tiny width) drops the no-plug keys from
+  the shape it borrows; the real timing run keeps them.
+- **Architecture's answer (7:45 PM ET):** all three defaults right. Its group 2 work is final at 73bc563ec0 (rule 1, answers from
+  thoughts, the answer asked after the last reply is read, the per-row settle fix, and the no-plug merge); the talker thread merges
+  that into G2f, so the install SHA still comes from them (their 3M count about 4,023,302, g2c3 4,022,440).
+- **Tested (shown, cloud, pwsh 7.4.6 on a simulated PC tree; group 1 = ca7e1d1b88, group 2 stand-in = 73bc563ec0; only the process
+  list and the Gemma check are mocked, no Gemma here):** both lists regenerate identically at 77c0a6a9c1 and 73bc563ec0; fc2check
+  prints the five counts above; g2check prints "c30s no plug: PTS 9 layers, hidden 2099 ... lr 0.0005" and "B3G2 3M: 4,081,871" at
+  73bc563ec0, and still passes on the old code with the plugged queue. Full install: every check passed, both folders swapped, the
+  no-plug 8aFC2 and c30s queues live, marker "eg check cpu pre ok (no plug)". The first try failed on the answer-timer selftest
+  (fixed as above) and changed nothing live. Old group 2 code with the no-plug files: refused at g2check ("this job.py has no
+  --noplug"). Gemma proof failing: refused after every other check; both new folders renamed `.failed-<stamp>`, live untouched.

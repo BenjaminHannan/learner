@@ -4,6 +4,8 @@
 #   g2.zip    custom_io of the group 2 reader-rule commit ($SHAG2)   -> src-b3g2  (fc100 part 2, B3 group 2, g2c3s, g2c10s, c30s)
 #   8aFC2-pc.txt + fc2check.py + infer_speed.py + fc100v2.md          -> the five-shape 100M list (addendum W) and its answer timer
 #   q8aPost3_wait.ps1 + swap_v3e.ps1                                  -> waiter v3d -> v3e (addendum U), last
+#   8aC30S-pc.txt (only with g2.zip)                                  -> c30s's queue in the new src-b3g2 (the no-plug c30s, addendum Z)
+# A list or c30s queue that reads Gemma's own 512 numbers (no plug: '"eg_pre": true' or --noplug) is gated on `eg check cpu pre` (fp32, CPU).
 # Only while the post-G1 waiter still waits for G1. Each new code folder is unpacked beside the old one as <name>.new-<stamp> and checked on the CPU
 # (pinned hashes, CPU tests, queue parse, ~100M configs, answer-timer selftest) before anything changes. Then the old folder is renamed
 # <name>.before-rr-<stamp> (kept) and the new one takes its name. A failed check renames the new folder <name>.failed-<stamp>; the old code stays.
@@ -14,6 +16,7 @@ $WORK   = "$CIO\work"
 $LOG    = "$WORK\q8aPost-waiter.log"
 $PY     = 'C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe'
 $EGPATH = 'C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages'
+$EG2    = 'C:\Users\benja\eg2'      # local EmbeddingGemma 2 (CUSTOM_IO_EG2, as the queues set it)
 $SRCB3R = "$CIO\src-b3r"
 $SRCG2  = "$CIO\src-b3g2"
 $SHAB3R = 'ca7e1d1b88'   # group 1 reader-rule commit ca7e1d1b8857a72f9c89f376aad20b1f12132fee (on PR #56 8fce7247a8; architecture thread, 7:20 PM ET 11 Oct)
@@ -38,6 +41,7 @@ $QG2    = @('8aG2C3S', '8aB3G2s400', '8aG2C10S', '8aC30S')
 $STAMP  = (Get-Date).ToString('yyyyMMdd-HHmm')
 $script:made = @()
 $script:swapped = @()
+$script:npok = $false
 function Stamp { (Get-Date).ToString('yyyy-MM-dd HH:mm:ss') + ' ET' }
 # Before the swap: every new folder made so far is renamed .failed-<stamp>, so the old code stays and a rerun unpacks afresh.
 function Fail($m) {
@@ -120,7 +124,9 @@ $doB3R = Test-Path "$IN\b3r.zip"
 $doG2  = Test-Path "$IN\g2.zip"
 $doFC2 = Test-Path "$IN\8aFC2-pc.txt"
 $doV3E = (Test-Path "$IN\swap_v3e.ps1") -and (Test-Path "$IN\q8aPost3_wait.ps1")
+$doC30 = Test-Path "$IN\8aC30S-pc.txt"
 if (-not ($doB3R -or $doG2 -or $doFC2 -or $doV3E)) { Fail "nothing to install in $IN" }
+if ($doC30 -and -not $doG2) { Fail '8aC30S-pc.txt (c30s) is installed only together with g2.zip' }
 if ($doB3R -and $SHAB3R -eq 'TBD') { Fail 'b3r.zip is here but this script has no group 1 commit filled in' }
 if ($doG2 -and $SHAG2 -eq 'TBD') { Fail 'g2.zip is here but this script has no group 2 commit filled in' }
 foreach ($f in @('fc2check.py', 'infer_speed.py', 'fc100v2.md')) { if ($doFC2 -and -not (Test-Path "$IN\$f")) { Fail "8aFC2-pc.txt needs $f beside it" } }
@@ -128,7 +134,7 @@ foreach ($f in @('g2check.py', 'b3_capcheck.py')) { if (-not (Test-Path "$IN\$f"
 foreach ($f in @("$SRCB3R\B3R-SETUP-OK.txt", "$SRCG2\G2-SETUP-OK.txt", "$WORK\b3-inputs\caps_b3.json")) { if (-not (Test-Path $f)) { Fail "$f missing (is the chain installed?)" } }
 $why = StillWaiting
 if ($why) { Fail $why }
-"to install:$(if ($doB3R) { " src-b3r ($SHAB3R)" })$(if ($doG2) { " src-b3g2 ($SHAG2)" })$(if ($doFC2) { ' the five-shape fc100 list' })$(if ($doV3E) { ' waiter v3e' }); the waiter still waits for G1"
+"to install:$(if ($doB3R) { " src-b3r ($SHAB3R)" })$(if ($doG2) { " src-b3g2 ($SHAG2)" })$(if ($doFC2) { ' the five-shape fc100 list' })$(if ($doC30) { ' the c30s queue' })$(if ($doV3E) { ' waiter v3e' }); the waiter still waits for G1"
 
 # 2. Group 1 code: unpack, hashes (caps.py as pinned in the live B3R-SETUP-OK.txt), queues, CPU checks, marker.
 if ($doB3R -and @(Get-Content "$SRCB3R\B3R-SETUP-OK.txt") -match "commit $SHAB3R") { 'src-b3r: this commit is already installed'; $doB3R = $false }
@@ -150,13 +156,18 @@ if ($doB3R) {
 
 # 3. Group 2 code and the fc100 list. The list and the answer timer are checked in the folder that will be live (the new one when g2.zip is here).
 if ($doG2 -and @(Get-Content "$SRCG2\G2-SETUP-OK.txt") -match "commit $SHAG2") { 'src-b3g2: this commit is already installed'; $doG2 = $false }
+if ($doC30 -and -not $doG2) {
+  if ((Hash "$SRCG2\custom_io\queue_local\8aC30S-pc.txt") -eq (Hash "$IN\8aC30S-pc.txt")) { 'src-b3g2: this c30s queue is already installed'; $doC30 = $false }
+  else { Fail 'the c30s queue here differs from the live one, but its group 2 commit is already installed (install the queue by hand)' }
+}
 $g2dir = $SRCG2
 if ($doG2) {
   Unpack "$IN\g2.zip" $SRCG2 $CAPSG2 $JSONG2 $EXPG2
   $g2dir = $script:unpacked
   "src-b3g2: unpacked $SHAG2 into $(Split-Path -Leaf $g2dir); caps.py and both caps files match"
-  Queues $g2dir $SRCG2 ($QG2 + $(if ($doFC2) { @() } else { @('8aFC2') }))
-  if ($doFC2) { Copy-Item -Force "$IN\8aFC2-pc.txt" "$g2dir\custom_io\queue_local\8aFC2-pc.txt"; '  queue 8aFC2: the five-shape list' }
+  Queues $g2dir $SRCG2 (@($QG2 | Where-Object { -not ($doC30 -and $_ -eq '8aC30S') }) + $(if ($doFC2) { @() } else { @('8aFC2') }))
+  if ($doFC2) { Copy-Item -Force "$IN\8aFC2-pc.txt" "$g2dir\custom_io\queue_local\8aFC2-pc.txt"; "  queue 8aFC2: the five-shape list$(if (Select-String -Path "$IN\8aFC2-pc.txt" -Pattern '"eg_pre": true' -SimpleMatch -Quiet) { ' (no plug)' })" }
+  if ($doC30) { Copy-Item -Force "$IN\8aC30S-pc.txt" "$g2dir\custom_io\queue_local\8aC30S-pc.txt"; "  queue 8aC30S: the package's copy$(if (Select-String -Path "$IN\8aC30S-pc.txt" -Pattern '--noplug' -SimpleMatch -Quiet) { ' (no plug)' })" }
   $out = CpuPy $g2dir $EGPATH @("$IN\g2check.py")
   "  g2check: $(($out | Select-Object -Last 1))"
   if ($rc -ne 0 -or -not ("$out" -like '*G2 CPU CHECK OK*')) { $out | Select-Object -Last 8; Fail "g2check failed (rc $rc)" }
@@ -171,11 +182,23 @@ if ($doG2 -or $doFC2) {
   $out = CpuPy $g2dir $EGPATH @($isp, '--src', $g2dir, '--queue', $fcq, '--selftest', "$env:TEMP\infer-selftest-rr-$STAMP")
   "  infer_speed selftest: $(($out | Select-Object -Last 1))"
   if ($rc -ne 0 -or -not ("$out" -like '*INFER SELFTEST OK*')) { $out | Select-Object -Last 8; Fail "infer_speed selftest failed (rc $rc)" }
+  # No plug (Ben, 4:12 PM ET 11 Oct): a list or c30s queue that will be live and reads Gemma's own 512 numbers is gated on the fp32 proof that
+  # this state is Gemma's (512 wide; its own projection of it equals its 768 output within 1e-4). CPU only: G1 keeps the GPU.
+  $npf = @(@($fcq, "$g2dir\custom_io\queue_local\8aC30S-pc.txt") | Where-Object { Test-Path $_ })
+  if (@(Select-String -Path $npf -Pattern '"eg_pre": true', '--noplug' -SimpleMatch).Count) {
+    $keepeg = $env:CUSTOM_IO_EG2
+    $env:CUSTOM_IO_EG2 = $EG2
+    $out = CpuPy $g2dir $EGPATH @('-m', 'custom_io.models.eg', 'check', 'cpu', 'pre')
+    if ($keepeg) { $env:CUSTOM_IO_EG2 = $keepeg } else { Remove-Item Env:\CUSTOM_IO_EG2 -ErrorAction SilentlyContinue }
+    "  eg check cpu pre (no plug): $(($out | Select-Object -Last 1))"
+    if ($rc -ne 0 -or -not ("$out" -like '*"pre_ok": true*')) { $out | Select-Object -Last 8; Fail "the no-plug Gemma proof failed (rc $rc)" }
+    $script:npok = $true
+  }
 }
 if ($doG2) {
   Set-Content -Encoding ascii "$g2dir\G2-SETUP-OK.txt" -Value @("caps.py $CAPSG2", "commit $SHAG2 (reader rules, on 1acfde9a73)",
     "caps_b3s.json $($JSONG2['caps_b3s.json'])", "caps_b3g2.json $($JSONG2['caps_b3g2.json'])",
-    "g2check ok; fc2check ok; infer_speed selftest ok; $(if ($TESTG2.Count) { ($TESTG2 -join ', ') + ' ok; ' })CPU; install_rr.ps1", (Stamp))
+    "g2check ok; fc2check ok; infer_speed selftest ok; $(if ($script:npok) { 'eg check cpu pre ok (no plug); ' })$(if ($TESTG2.Count) { ($TESTG2 -join ', ') + ' ok; ' })CPU; install_rr.ps1", (Stamp))
   'src-b3g2: checks ok, marker written in the new folder'
 }
 
