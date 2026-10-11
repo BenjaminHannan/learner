@@ -246,3 +246,26 @@ every arm's night 1 equals v7's exactly (loss_first10 32.5206, quiz 19.14). Seal
   spent less than even, not more.
 - How strongly they steer (shown, log `motivator_pick`): mean priority of the chosen vs the pool, edge 0.145-0.209 vs
   0.125-0.195 (a mild tilt); progress 0.16-0.26 vs 0.10-0.17 (a stronger tilt, towards cell arithmetic and ABS later).
+
+**B8. Seed 201 and the read of the whole race (5:35 AM ET 10-11).** Shown, `/mnt/project-files/dopamine/r1/*/analysis/`;
+every s201 arm's night 1 equals v7 s201's exactly (loss_first10 35.4724, quiz 20.70). Sealed near split, 7 scored kinds.
+| Arm | s200 night 7 | s201 night 8 | s200 mean nights 1-7 | s201 mean nights 1-8 |
+|---|---|---|---|---|
+| Rule (v7, hand-written) | 40.24 | 54.76 | 34.25 | 42.02 |
+| Even (no drive) | 50.00 | 56.90 | 35.14 | 41.37 |
+| Edge (learned: unsure) | 49.05 | 53.57 | 38.23 | 41.73 |
+| Progress (learned: improving) | 47.14 | 55.48 | 37.48 | 42.62 |
+- Verdicts on the sealed marks: **edge** +8.81 on s200 but -1.19 on s201 -> **not confirmed; the rule stays** (B4 needs
+  seed 201 too). **Progress** +6.90 / +0.72 -> **not confirmed.** **R1-D** (does the rule's drive help?) s200 proved wrong
+  (-9.76), s201 no difference shown (-2.14).
+- Read (suggested): at 3M, how the practice is chosen makes no reliable difference: all four arms finish within 3.3 points
+  on s201, and s200's 10-point gap came from the rule starving SUM and PRODUCT on that seed. Averaged over both seeds the
+  learned motivators' curves sit about 2 points above the rule and even practice (39.98, 40.05 vs 38.14, 38.26), within
+  seed noise. So a learned motivator inside the model does as well as the hand-written rule without needing kind labels,
+  but it is not shown to be better, and Ben's rule ("substitute if better") keeps the hand rule for now. Whether domain mode
+  should still swap a hand rule for an equal learned one under no-hard-coding is the domain-mode thread's call.
+- Why (suggested, from D0/H0/B5): at 3M the model's guess of its own success is about per-kind and noisy, so any drive built
+  on it can only shuffle practice between kinds, and here every kind keeps improving under even practice anyway.
+- What follows (fixed in B2/B4): re-check the guesser (D0, free) and re-race the motivators on the first 10M/30M domain-mode
+  runs, where self-knowledge should be better; SB-2 (Main brain thread) trains the guesser into the thinker; GW-D (game
+  thread, after GW-S) uses dopamine where it should matter most, rewards that arrive many moves later.
