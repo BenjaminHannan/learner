@@ -223,7 +223,7 @@ the follow-up test, not a change to this one.
   to 12,348 MiB used. Seed 400 now runs alone in the post-G1 chain, as first planned. Lesson: on this card, 82-86% busy with two 10M
   runs, a third process takes GPU time from both runs. It does not just fill idle gaps, even though memory fit.
 
-## Addendum G: stage 1 on two rented RTX 5090s, both seeds at once (written 2026-10-11 about 02:30 UTC, 10:30 PM ET 10-10, before any box result)
+## 14. Addendum G: stage 1 on two rented RTX 5090s, both seeds at once (written 2026-10-11 about 02:30 UTC, 10:30 PM ET 10-10, before any box result)
 
 - **Why:** Ben (10:16 PM ET): "how much money would it cost to have the many experts and layers run its test? It would have until 7am tomorrow",
   then (10:19 PM ET): "i just need it by tomorrow at 7am. So if there's a cheaper option, go with that". Sharing the PC failed (addendum F),
