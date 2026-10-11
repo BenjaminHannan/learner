@@ -237,10 +237,11 @@ class B3G2(B3):
         return self.ans_pass(Z, Xc, cmask, cids, self.ckeys(Xc.shape[1], T, le, cmask), te['inp'], te['tgt'], te['fb'], nocopy)
 
     # ---- the loop ----
-    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False):
+    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False, copies=False):
         """n rounds. g (teacher forcing) = dict(L [B] call counts, ids [B][L] call target ids, tape [B][L] entries, has [B] bool) on `sched` [B, tape] (call rounds, -1 = none); the
         call losses are returned (lcall; call_hit / call_n / eos_hit / eos_n; rec: per call round [(row, k, text right, name right)]). Else a free run: halt [B] (rounds used, 0 =
-        running) keeps stopped rows from calling; temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
+        running) keeps stopped rows from calling; temperature > 0 samples the writer (ST1); copies (free run only) asks the writer for its copy record of every placed call -> out['copy_recs'],
+        parallel to out['records']. -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
@@ -263,6 +264,7 @@ class B3G2(B3):
         shown = torch.zeros(B, self.tape, dtype=torch.bool, device=dev)
         nk = [0] * B
         calls, recs, full_ev = [[] for _ in range(B)], [[] for _ in range(B)], []
+        crecs = [[] for _ in range(B)]
         cround = torch.full((B, self.tape), FAR, dtype=torch.long, device=dev)
         nocopy = lesion == 'nocopy'
         lcall, hits = 0.0, dict(call_hit=0, call_n=0, eos_hit=0, eos_n=0)
@@ -322,9 +324,10 @@ class B3G2(B3):
                         pk = lambda x: self.pick(x, si, full)
                         cm = pk(cmask)
                         Zs = pk(Z)
-                        outs, ended = self.writer.greedy(Zs, torch.ones(Zs.shape[:2], dtype=torch.bool, device=dev), pk(Xc), cm, pk(cids),
-                                                         torch.zeros(len(sel), dtype=torch.long, device=dev), nocopy=nocopy,
-                                                         ckeys=self.ckeys(Xc.shape[1], T, le, cm), temperature=temperature, generator=generator)
+                        gr = self.writer.greedy(Zs, torch.ones(Zs.shape[:2], dtype=torch.bool, device=dev), pk(Xc), cm, pk(cids),
+                                                torch.zeros(len(sel), dtype=torch.long, device=dev), nocopy=nocopy,
+                                                ckeys=self.ckeys(Xc.shape[1], T, le, cm), temperature=temperature, generator=generator, **(dict(record=True) if copies else {}))
+                        outs, ended = gr[:2]
                         new_k, placed = {}, []
                         for j, i in enumerate(sel):
                             if not bool(ended[j]):
@@ -339,6 +342,8 @@ class B3G2(B3):
                             r_ = self.dispatch(txt, i, t, lesion, oracle)
                             calls[i].append(r_)
                             recs[i].append((t, txt, r_[4]))
+                            if copies:
+                                crecs[i].append(gr[2][j])
                             new_k.setdefault(nk[i], [''] * B)[i] = self.entry_text(txt, r_[4])
                             cround[i, nk[i]] = t
                             placed.append((i, nk[i]))
@@ -359,19 +364,21 @@ class B3G2(B3):
                 break
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         out = dict(Z=Z, X=X, xm=xm, tape=(Xt, idt, vis), calls=calls, records=recs, le=le, K=K, tape_full=full_ev, cround=cround)
+        if copies:
+            out['copy_recs'] = crecs
         if tf:
             out.update(lcall=lcall, crec=crec, **hits)
         return out
 
     # ---- the run ----
-    def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None, each=None, force=None, temperature=0.0, generator=None):
+    def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None, each=None, force=None, temperature=0.0, generator=None, copies=False):
         """loops / each: a forced run (the stop head ignored). Else the learned stop (B3.run): the batch runs until every row has stopped; each row's state (Z, tape) and calls are
-        the ones at its own stop round. -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
+        the ones at its own stop round. copies: also 'copy_recs' (per row, per kept call, the writer's per-byte copy records). -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
         assert gold is None and force is None and not rounds, 'b3g2 trains through loss(); teacher forcing is internal'
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         if loops is not None or each is not None:
             n = self.n_loops if loops is None else loops
-            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator)
+            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator, copies=copies)
             if each is None:
                 self.last_rounds = [n] * B
                 self.last_tape_full = [any(i == j for j, _ in o['tape_full']) for i in range(B)]
@@ -393,7 +400,7 @@ class B3G2(B3):
                 used[new] = t + 1
             return bool((used > 0).all())
 
-        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator)
+        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator, copies=copies)
         Z, Xt, idt, vis = keep
         u = used.tolist()
         full = [False] * B
@@ -401,21 +408,27 @@ class B3G2(B3):
             full[i] |= t < u[i]
         self.last_rounds, self.last_tape_full = u, full
         return dict(o, Z=Z, tape=(Xt, idt, vis), calls=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['calls'])],
-                    records=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['records'])], rounds=u, tape_full_rows=full)
+                    records=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['records'])], rounds=u, tape_full_rows=full,
+                    **(dict(copy_recs=[[r for c, r in zip(o['records'][i], cr) if c[0] < u[i]] for i, cr in enumerate(o['copy_recs'])]) if copies else {}))
 
     def state_of(self, o):
         return (o['Z'],) + o['tape']
 
     # ---- the talker ----
-    def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None):
+    def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None, copies=None):
         """The writer asked for the answer (mode 1) over [the CURRENT batch's prompt; the state's tape] with the state's Z (the tape is the reasoner's own work, so a donor's
-        tape comes with its state). return_modes: also a mode per row (always 2: one writer, no modes)."""
+        tape comes with its state). return_modes: also a mode per row (always 2: one writer, no modes). copies: a list; the writer's per-byte copy records (one list per row) are
+        appended to it (the return value is unchanged)."""
         Z, Xt, idt, vis = state[:4]
         X, xm = self.read(batch, talker=True)
         Xc, cmask, cids = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1)
         T, le = X.shape[1], Xt.shape[1] // self.tape
-        outs, _ = self.writer.greedy(Z, torch.ones(Z.shape[:2], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
-                                     nocopy=lesion == 'nocopy', ckeys=self.ckeys(Xc.shape[1], T, le, cmask), temperature=temperature, generator=generator)
+        gr = self.writer.greedy(Z, torch.ones(Z.shape[:2], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
+                                nocopy=lesion == 'nocopy', ckeys=self.ckeys(Xc.shape[1], T, le, cmask), temperature=temperature, generator=generator,
+                                **(dict(record=True) if copies is not None else {}))
+        outs = gr[0]
+        if copies is not None:
+            copies.extend(gr[2])
         out = [self.vocab.decode(o) for o in outs]
         return (out, [2] * len(out)) if return_modes else out
 
@@ -435,11 +448,31 @@ class B3G2(B3):
 
     # ---- ST1 ----
     @torch.no_grad()
-    def sample_traces(self, batch, temperature, generator):
-        """ST1: a free run whose calls and answer are SAMPLED from the writer -> per row dict(calls=[(call text, reply)], answer)."""
-        o = self.run(batch, temperature=temperature, generator=generator)
-        ans = self.talk(self.state_of(o), batch, temperature=temperature, generator=generator)
-        return [dict(calls=[(txt, rep) for _, txt, rep in o['records'][i]], answer=ans[i]) for i in range(len(ans))]
+    def sample_traces(self, batch, temperature, generator, copies=True):
+        """ST1: a free run whose calls and answer are SAMPLED from the writer -> per row dict(calls=[(call text, reply)], answer, copies=dict(calls=[per call: [per written byte
+        dict(copied, src, share)]], answer=[...])) (writer.greedy's record; src translated by src_of; trace_loss ignores it). copies=False: no record, no key."""
+        o = self.run(batch, temperature=temperature, generator=generator, copies=copies)
+        cr = [] if copies else None
+        ans = self.talk(self.state_of(o), batch, temperature=temperature, generator=generator, copies=cr)
+        out = [dict(calls=[(txt, rep) for _, txt, rep in o['records'][i]], answer=ans[i]) for i in range(len(ans))]
+        if copies:
+            T, le = batch['prompt_ids'].shape[1], o['tape'][0].shape[1] // self.tape
+            for i, r in enumerate(out):
+                prompt, entries = batch['rows'][i]['prompt'], [self.entry_text(txt, rep) for txt, rep in r['calls']]
+                tr = lambda recs: [dict(x, src=self.src_of(x['src'], prompt, entries, T, le)) for x in recs]
+                r['copies'] = dict(calls=[tr(c) for c in o['copy_recs'][i]], answer=tr(cr[i]))
+        return out
+
+    def src_of(self, j, prompt, entries, T, le):
+        """A writer context index -> ('prompt', char offset in the prompt) / ('tape', entry index, char offset in that entry's text) / None. The context is [the prompt's T
+        byte ids (no BOS; padding after the row's own bytes, never visible); the tape: entry k = LE (le) byte slots at T + k * le, its bytes then padding]. Byte -> char via vocab.offsets."""
+        if j is None:
+            return None
+        k, b = (None, j) if j < T else divmod(j - T, le)
+        text = prompt if k is None else entries[k]
+        off = self.vocab.offsets(text)
+        c = b if off is None else int(np.searchsorted(off, b, side='right')) - 1
+        return ('prompt', c) if k is None else ('tape', k, c)
 
     def trace_loss(self, batch, traces):
         """ST1: the normal loss with the given traces (the model's own calls, the tool's real replies, its answer) in place of progtext's."""
