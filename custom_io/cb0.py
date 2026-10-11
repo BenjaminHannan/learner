@@ -49,7 +49,6 @@ from custom_io.train import lr_at
 
 LR, VISITS, EVERY, N_DRAW, N_PICK = 3e-4, 32, 32, 1024, 256         # the SCM2 recipe
 N1, N2, PER_CAP, T_SAMPLE = 32, 480, 2, 1.0
-LORA_LAYERS = ('q', 'kv', 'o', 'qkv', 'p', 'fc', 'out')             # every nn.Linear of ledger.CBlock
 
 
 def kind_of(row):
