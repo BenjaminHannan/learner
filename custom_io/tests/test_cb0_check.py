@@ -243,14 +243,42 @@ def test_rule5_answer_is_the_last_result():
     assert verdict(row, P.trace([[('g', 'mul '), ('q',), ('g', ' 3')]], [('g', '7')]))['reason'] == 'answer is not the last result'
     # the first result when there are two calls: not the last
     assert verdict(row, P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add '), ('R', 0), ('g', ' 5')]], [('R', 0)]))['verdict'] == 'uncheckable'
-    # no calls at all: uncheckable (even if the answer is right)
+    # no calls, the answer written as a constant: checked by rules 1-4 (ruling c8ff22777a), so it never reads x -> rejected
     t = P.trace([], [('g', '38')])
     v = verdict(row, t)
-    assert v['verdict'] == 'uncheckable' and v['reason'] == 'no calls', v
+    assert v['verdict'] == 'reject' and v['reason'] == 'never reads x', v
     # the last result written as constants (not copied) is the last result, but re-runs as a constant: rejected on the examples
     t = P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add '), ('R', 0), ('g', ' 5')]], [('g', '38')])
     assert t['answer'] == '38' and verdict(row, t)['verdict'] == 'reject'   # (a constant answer never reads x)
-    print('ok rule 5: an answer other than the last result (or a copy of it), or no calls, is uncheckable')
+    print('ok rule 5: with a call, an answer other than the last result (or a copy of it) is uncheckable')
+
+
+def test_no_call_last_digit():
+    """Ruling c8ff22777a: rule 5 applies only to tries that make a call; a no-call answer is checked by rules 1-4."""
+    for xs, q in zip(XS, QS):
+        row = dict(prompt=prompt_of(lambda x: x % 10, xs, q))
+        P = Prog(row['prompt'])
+        n = len(str(q))
+        t = P.trace([], [('qp', n - 1, n)])                                   # the query's last byte copied as the answer
+        v = verdict(row, t)
+        if n == 1:                                                            # a 1-digit query: its last byte IS the whole number, so the copy is x (rule 1): identity, rejected
+            assert v['verdict'] == 'reject' and v['reason'] == 'example mismatch', v
+            continue
+        assert v['verdict'] == 'accept' and v['outputs'] == [str(x % 10) for x in xs], v
+        t = P.trace([], [('g', str((q + 1) % 10))])                           # one constant changed: the last digit written, not copied
+        assert verdict(row, t)['verdict'] == 'reject'
+        if n == 2:                                                            # a 2-digit query: answer = its last byte copied, then '0' written -> 10 * (x mod 10): rejected
+            t = P.trace([], [('qp', 1, 2), ('g', '0')])
+            assert verdict(row, t)['verdict'] == 'reject'
+    # no-call partial copy needing more digits than an example has: uncheckable (rule 3)
+    row = dict(prompt=prompt_of(lambda x: x % 10, [2, 17, 29], 25))
+    P = Prog(row['prompt'])
+    v = verdict(row, P.trace([], [('qp', 0, 1)]))
+    assert v['verdict'] == 'uncheckable' and v['reason'] == 'x too short for a partial copy', v
+    # a no-call answer copying the whole query (identity rule) on last_digit: checked, rejected on the examples
+    v = verdict(row, P.trace([], [('q',)]))
+    assert v['verdict'] == 'reject' and v['reason'] == 'example mismatch', v
+    print('ok no-call answers: checked by rules 1-4 (last_digit last-byte copy accepted, a changed constant rejected)')
 
 
 def test_defaults():
