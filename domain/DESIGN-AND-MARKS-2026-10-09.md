@@ -346,3 +346,12 @@ The mean change is 0.0. The quiz (about 26 items per kind) is too noisy to choos
   - DM5 as before.
 - **Reported:** the result next to the add-on's routed +46.3 (A26) on the same seed, per kind, and DM2.
 - **Order.** The Main brain thread's seed 201 on sheets confirms or refutes the recipe itself. This run only asks whether the recipe needs per-subject settings.
+
+**A29 result: the guarded whole-model recipe carries over to code reading, with no add-on, no switch and no per-subject setting (Opus, 6:15 AM ET 10-11).** Shown, seed 200, `runs/py-s200-kf97n`:
+- **DM1 near:** +47.67 (14.67 -> 62.33), PASS. The add-on with its own switch scored +46.3 on the same seed (A26).
+- **DM3, whole model:** in_dist 90.22 -> 89.78 (drop 0.44), no family fired, PASS.
+- **DM4:** audit clean. The constants hash differs from `domain/constants.json` by design (the recipe's own file); this is reported, not failed. analyze's table prints "PROVED WRONG" for this cell only because it compares against the domain file.
+- **DM5:** PASS. 4 nights; night 3 undone by the total-drift check.
+- **DM2 far:** +3.75 (3.00 -> 6.75), the first far gain above +2 on any py run, but still below +10. It comes from assign add 22.5 -> 32.5 and chain 2.5 -> 27.5.
+- **Per kind, near:** function 97, assign add 98, chain 98, max min 80, abs 80, if else 80, for repeat 62, while 20, list index 7, for sum 2. The weak kinds are the same as with the add-on (A26 causes).
+- **What it means:** one seed. Together with the Main brain thread's sheet result, the same recipe file now passes two subjects. It may replace the add-on once its sheet seed 201 confirms. The Main brain thread reported NaN nights on sheet seed 201, a fault it is fixing. This run had no NaN night.
