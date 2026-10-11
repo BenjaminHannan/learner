@@ -475,3 +475,24 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
 - **Install (`swap_v3c.ps1`):** only while v3b still waits for G1; parse check of the new waiter, `fc2check.py` on the PC's CPU (queue
   parses, eight configs at 95-106M trained), then copies the queues (the old src-b3 `8aFC-pc.txt` kept as `.v3b-<stamp>`) and the card
   templates, makes `WORK\insert`, stops v3b by PID and starts v3c.
+
+## 25. Addendum T (2026-10-11, 10:00 AM ET): fc100 part 3, answer speed (waiter v3d)
+
+- **Why.** Ben, 9:17 AM ET 10-11: "How fast does the model do inference though?" Nothing on the PC has timed answering yet; fc100 part 2
+  times training updates only. The coordinator's default (no OK needed): time answering for the four ~100M shapes when fc100 runs.
+- **What.** `infer_speed.py` runs right after fc100 part 2, alone on the GPU, from src-b3g2. For each of the four shapes (21 x 512,
+  30 x 432, 37 x 384, 54 x 320) a freshly started model (seed 400, bf16 autocast as in training's eval, the frozen EmbeddingGemma 2 reader
+  included) answers dev in_dist questions with exactly 12 or 32 thinking rounds (`loops:K`) at batch 1 (16 questions), 16 (64) and 128
+  (256), one warmup batch on other rows per cell, at most 30 s per cell and 60 minutes in all. Output `WORK\fc100-infer.json`: questions
+  per second, seconds per question, peak memory, writer steps.
+- **Untrained weights, two writer modes.** The writer of an untrained model rarely writes its end mark, so each cell is timed twice:
+  *quiet* (one writer step per round, as a trained model on a round without a calculator call, and an answer of at most max_ans + 1 steps)
+  and *busy* (the writer runs to its cap WCAP every round and for the answer: the slow side). The real model sits between them, near
+  quiet when it makes few calls; `ms_per_writer_step` turns a call count into time. Thinking time itself does not depend on the weights.
+- **Not measured:** the learned stop (meaningless untrained), a bf16 weight copy, batching tricks such as a key-value cache in the writer.
+  So the numbers are a floor for what the finished model can do, not a ceiling.
+- **Checked (shown, cloud CPU at 1acfde9a73, tiny width):** the script runs end to end, quiet writes 1 step per round and 13 answer steps
+  under caps max_ans 12, busy writes 96 (WCAP), the time caps and the per-step cost work. GPU numbers: untested until it runs.
+- **Install (`swap_v3d.ps1`):** only while v3c still waits for G1; parse check, `infer_speed.py --selftest` on the PC's CPU, copies the
+  script and the fc100v2 / fc100v3 card templates, stops v3c by PID and starts v3d. The waiter stops the timing after 120 minutes if it
+  hangs; a failure is logged and the chain goes on to g2c3.

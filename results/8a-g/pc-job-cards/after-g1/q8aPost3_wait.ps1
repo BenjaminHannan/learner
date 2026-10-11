@@ -3,9 +3,11 @@
 # ~100M group 2 shapes (21 x 512, 30 x 432, 37 x 384, 54 x 320; FINISHED-MODEL item 10). Inserted jobs: WORK\insert\*.txt (see RunInserts)
 # run alone at the next check point after group 2 at 3M, so another thread can add a job (the 10M depth pair) without a waiter swap.
 # GX does not run here: WORK\GX-ON-MAC.txt is set (GX stage 1 ran on rented cards; stage 2 withdrawn).
+# v3d (11 Oct 2026, spec addendum T): fc100 part 3 right after part 2 = answer speed of the same four shapes (custom-io\infer_speed.py, read-only,
+# alone on the GPU, at most about an hour): questions per second at batch 1, 16 and 128 with 12 and 32 thinking rounds -> WORK\fc100-infer.json.
 # After gate G1's last PC queue ends, one queue at a time:
 #   1. test GX seed 400 (8aGXs400, src-8gx), skipped if it already has an ok RESULT.json (it may have run beside G1)
-#   2. fc100 part 1 (8aFC, src-b3), then part 2 (8aFC2, src-b3g2)  3. g2c3 seed 400 (8aG2C3, src-b3)
+#   2. fc100 part 1 (8aFC, src-b3), then part 2 (8aFC2, src-b3g2), then part 3 (answer speed)  3. g2c3 seed 400 (8aG2C3, src-b3)
 #   4. B3 group 1 at 3M seed 400 (8aB3G1s400, src-b3r), then b3_readout.py (marks B3-1 to B3-6) into its log
 #   4a. g2c3s (8aG2C3S, src-b3g2), then B3 group 2 at 3M seed 400 (8aB3G2s400, src-b3g2): big-run PLAN.md option A. If group 1 s400 is
 #       proved wrong on B3-1, B3-2 or B3-3, group 2 waits for the bisect: it moves to the end and runs only on WORK\G2-GO.txt.
@@ -217,6 +219,37 @@ function RunInserts($where) {
     Rename-Item $f.FullName "$($f.Name).$tag-$stamp"
   }
 }
+# fc100 part 3: infer_speed.py from src-b3g2 on the pool and caps fc100 parts 1 and 2 made, alone (no runner for 5 minutes first), card fc100v3.md.
+# Lines go to WORK\q8aFCI.log. Stopped after 120 minutes if it is still running (its own cap is 60). A failure is logged; the chain goes on.
+function InferStep {
+  $null = WaitFree 'before the answer-speed timing'
+  $pool = "$WORK\g8a\pools\p10-rung30-s400-a64-L"
+  $caps = "$pool.caps-B3G2\caps.json"
+  foreach ($f in @("$CIO\infer_speed.py", "$pool\dev\in_dist.jsonl", $caps)) { if (-not (Test-Path $f)) { Say "answer-speed timing NOT run: $f missing, NEEDS ATTENTION"; return } }
+  $cmd = "$CIO\q8aFCI_run.cmd"
+  Set-Content -Encoding ascii $cmd -Value @(
+    '@echo off',
+    'set PYTHONUTF8=1',
+    'set PYTHONUNBUFFERED=1',
+    'set PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages',
+    'set CUSTOM_IO_EG2=C:\Users\benja\eg2',
+    "cd /d $SRCG2",
+    "$PY $CIO\infer_speed.py --src $SRCG2 --pool `"$pool`" --caps `"$caps`" --queue $SRCG2\custom_io\queue_local\8aFC2-pc.txt --out `"$WORK\fc100-infer.json`" --busy C:\Users\benja\GPU-BUSY.txt >> $WORK\q8aFCI.log 2>&1")
+  Say 'answer-speed timing of the four 100M shapes starts (fc100 part 3; log WORK\q8aFCI.log)'
+  $p = Start-Process -FilePath 'cmd.exe' -ArgumentList "/c $cmd" -PassThru -WindowStyle Hidden
+  $null = $p.Handle       # keeps the handle, so ExitCode can be read after it exits
+  $null = NewCard 'fc100v3.template.md' 'fc100v3.md' $null
+  for ($m = 0; ($m -lt 120) -and -not $p.HasExited; $m++) { Start-Sleep -Seconds 60 }
+  if (-not $p.HasExited) {
+    foreach ($x in @(Get-CimInstance Win32_Process -Filter "Name like 'python%'" | Where-Object { $_.CommandLine -like '*infer_speed.py*' })) { Stop-Process -Id $x.ProcessId -Force }
+    $bf = 'C:\Users\benja\GPU-BUSY.txt'       # its own line only (as local_runner's Busy does: the file goes when no line is left)
+    if (Test-Path $bf) { $keep = @(Get-Content $bf | Where-Object { $_ -notlike '* 8aFCI/*' }); if ($keep.Count) { Set-Content -Encoding ascii $bf -Value $keep } else { Remove-Item $bf } }
+    Say 'answer-speed timing still running after 120 minutes: stopped, NEEDS ATTENTION (WORK\fc100-infer.json keeps the cells done)'
+    return
+  }
+  $done = @(Select-String -Path "$WORK\q8aFCI.log" -Pattern 'INFER SPEED DONE' -SimpleMatch -ErrorAction SilentlyContinue).Count -gt 0
+  Say "answer-speed timing ended (exit $($p.ExitCode))$(if ($done) { ': WORK\fc100-infer.json' } else { ': no DONE line, NEEDS ATTENTION' })"
+}
 # c30s runs once: at the end, or earlier in the gap while B3 waits for its code. Never when WORK\B3-READY.txt exists.
 function C30($when) {
   if ($script:c30done) { return }
@@ -276,7 +309,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (v3c; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
+Say "post-G1 chain waiter v3 started (v3d; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes) + part 3 (their answer speed), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
 
 # 1. Gate G1 ends.
 $k = 0
@@ -309,6 +342,7 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
 # 3-4. fc100 and g2c3 (src-b3), then B3 3M seed 400 (src-b3r) and its readout.
 B3Step '8aFC' 'fc100.template.md' 'fc100.md'
 $null = G2Step '8aFC2' 'fc100v2.template.md' 'fc100v2.md'
+InferStep
 B3Step '8aG2C3' 'g2c3.template.md' 'g2c3.md'
 $rc400 = B3Seed 400
 
