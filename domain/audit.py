@@ -23,6 +23,7 @@ from domain.panel import OUT_DIR
 
 SOURCES = frozenset({'own', 'tool', 'diary'})
 DECONTAM_SUFFIX = '.v2'   # addendum A10: v2 panels are decontaminated (rows that are also training prompts are dropped)
+DECONTAM_SUFFIXES = (DECONTAM_SUFFIX, '.v3')   # v9 (far transfer, 10-11): the fresh v3 draw is read the same way
 DECONTAM_MAX_FRAC = 0.02  # DM4 fails when more than this share of the run tool's panel rows is dropped
 
 
@@ -31,8 +32,9 @@ def panel_files(suffix=''):
 
 
 def panel_suffix(path):
-    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet.v2.jsonl or rpn.v2.jsonl. Any other name is refused."""
-    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl', os.path.basename(path))
+    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' or '.v3' for sheet.v2.jsonl, sheet.v3.jsonl and the rpn ones. Any other
+    name is refused."""
+    m = re.fullmatch(r'(?:sheet|rpn)(\.v[23])?\.jsonl', os.path.basename(path))
     if not m:
         raise ValueError(f'not a sealed panel file: {path}')
     return m.group(1) or ''
@@ -67,7 +69,7 @@ def audit_rows(rows, panel, tool_panel_rows=None, suffix=''):
     overlap = [dict(id=r['id'], prompt=r['prompt'], panel=panel[r['prompt']]) for r in rows if r['prompt'] in panel]
     zero = [r['id'] for r in rows if not r['steps'] and r['source'] != 'diary']  # A9: diary = the parent's whole own output
     bad = [r['id'] for r in rows if r['source'] not in SOURCES]
-    if suffix == DECONTAM_SUFFIX:
+    if suffix in DECONTAM_SUFFIXES:
         assert tool_panel_rows is not None, 'decontamination needs the run tool panel rows'
         dec = decontam(tool_panel_rows, {r['prompt'] for r in rows})
         dm4_fail = dec['frac'] > DECONTAM_MAX_FRAC
@@ -85,7 +87,7 @@ def audit_run(run_dir, panel_dir=OUT_DIR, suffix=''):
         events = [json.loads(line) for line in f if line.strip()]
     rows = [r for r in events if r['event'] == 'row']
     tool_rows = None
-    if suffix == DECONTAM_SUFFIX:
+    if suffix in DECONTAM_SUFFIXES:
         start = [e for e in events if e['event'] == 'start']
         if not start:
             raise ValueError('no start event: the run tool is unknown')
@@ -97,8 +99,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description='Audit a domain run: training rows against the sealed panels (DM4).')
     ap.add_argument('run_dir')
     ap.add_argument('--panel', default=OUT_DIR, help='folder with the sealed panel files')
-    ap.add_argument('--panel-suffix', default='', choices=['', DECONTAM_SUFFIX],
-                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' for sheet.v2.jsonl and rpn.v2.jsonl")
+    ap.add_argument('--panel-suffix', default='', choices=['', *DECONTAM_SUFFIXES],
+                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' or '.v3' for the decontaminated draws")
     a = ap.parse_args(argv)
     rep = audit_run(a.run_dir, a.panel, a.panel_suffix)
     print(json.dumps(rep, indent=1, sort_keys=True))

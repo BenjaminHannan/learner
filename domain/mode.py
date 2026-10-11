@@ -208,10 +208,60 @@ def vary(example, rng, lmax, p):
     return text, c
 
 
-def draft(tool, example, kind, rng, ctx, edits=None):
-    """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set, lmax).
-    edits: optional Counter that gets this draw's edit counts, kept or not. -> (item, None) or (None, reason)."""
+def pick_example(example, rng):
+    """v9 (domain/far/widen.py): example is a help prompt (a str), or {ring: [prompts]} once the page is widened; then a
+    ring is picked evenly among the rings holding this kind, and an example evenly in it. A str draws nothing from rng, so
+    runs without widening are unchanged. -> (prompt, ring)."""
+    if isinstance(example, str):
+        return example, 1
+    ring = rng.choice(sorted(example))
+    return rng.choice(example[ring]), ring
+
+
+def accept(tool, prompt, ctx):
+    """The tool and cap checks every practice problem passes (no duplicate checks; v9 also uses them for its widened
+    examples). -> (value, steps, None) or (None, None, reason)."""
     cons = ctx['cons']
+    if len(prompt) > MAX_PROMPT:
+        return None, None, 'caps_prompt'
+    if not set(prompt) <= ctx['vchars']:
+        return None, None, 'vocab'
+    if len(re.findall(r'\d+', prompt)) > cons['max_numbers']:
+        return None, None, 'caps_numbers'
+    try:
+        res = tool.evaluate(prompt)
+    except Exception:  # the tool must answer '?' instead of raising; counted, not hidden
+        return None, None, 'tool_exception'
+    value, steps = res['value'], [tuple(s) for s in res['steps']]
+    if value == '?' or any(s[3] == '?' for s in steps):
+        return None, None, 'tool_?'
+    if any(s[1].startswith('-') or s[2].startswith('-') or s[3].startswith('-') for s in steps):
+        return None, None, 'tool_negative'
+    if steps and steps[-1][3] != value:
+        return None, None, 'tool_mismatch'
+    if not steps:  # a single-cell range (e.g. A3:A3) has no working to learn from (addendum A5)
+        return None, None, 'no_steps'
+    if not value or len(value) > MAX_ANS:
+        return None, None, 'caps_answer'
+    if not set(value) <= ctx['vchars']:
+        return None, None, 'vocab'
+    if len(steps) > cons['max_calls']:
+        return None, None, 'caps_calls'
+    if any(len(s[1]) > CELLS_MAX or len(s[2]) > CELLS_MAX for s in steps):
+        return None, None, 'caps_operand'
+    if any(len(f'{s[0]} {s[1]} {s[2]} = {s[3]}') > LE for s in steps):
+        return None, None, 'caps_entry'
+    if any(s[0] not in NAMES[1:] for s in steps):
+        return None, None, 'bad_op'
+    return value, steps, None
+
+
+def draft(tool, example, kind, rng, ctx, edits=None):
+    """One problem from one help example (or, after v9's widening, from {ring: [examples]} of this kind).
+    ctx = dict(vchars, cons, seen, quiz_set, lmax). edits: optional Counter that gets this draw's edit counts, kept or not.
+    -> (item, None) or (None, reason)."""
+    cons = ctx['cons']
+    example, ring = pick_example(example, rng)
     prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'])
     if edits is not None:
         edits.update(counts)
@@ -219,38 +269,10 @@ def draft(tool, example, kind, rng, ctx, edits=None):
         return None, 'quiz_dup'
     if prompt in ctx['seen']:
         return None, 'dup'
-    if len(prompt) > MAX_PROMPT:
-        return None, 'caps_prompt'
-    if not set(prompt) <= ctx['vchars']:
-        return None, 'vocab'
-    if len(re.findall(r'\d+', prompt)) > cons['max_numbers']:
-        return None, 'caps_numbers'
-    try:
-        res = tool.evaluate(prompt)
-    except Exception:  # the tool must answer '?' instead of raising; counted, not hidden
-        return None, 'tool_exception'
-    value, steps = res['value'], [tuple(s) for s in res['steps']]
-    if value == '?' or any(s[3] == '?' for s in steps):
-        return None, 'tool_?'
-    if any(s[1].startswith('-') or s[2].startswith('-') or s[3].startswith('-') for s in steps):
-        return None, 'tool_negative'
-    if steps and steps[-1][3] != value:
-        return None, 'tool_mismatch'
-    if not steps:  # a single-cell range (e.g. A3:A3) has no working to learn from (addendum A5)
-        return None, 'no_steps'
-    if not value or len(value) > MAX_ANS:
-        return None, 'caps_answer'
-    if not set(value) <= ctx['vchars']:
-        return None, 'vocab'
-    if len(steps) > cons['max_calls']:
-        return None, 'caps_calls'
-    if any(len(s[1]) > CELLS_MAX or len(s[2]) > CELLS_MAX for s in steps):
-        return None, 'caps_operand'
-    if any(len(f'{s[0]} {s[1]} {s[2]} = {s[3]}') > LE for s in steps):
-        return None, 'caps_entry'
-    if any(s[0] not in NAMES[1:] for s in steps):
-        return None, 'bad_op'
-    return dict(kind=kind, prompt=prompt, value=value, steps=steps, edits=[e for e in EDITS if counts[e]]), None
+    value, steps, why = accept(tool, prompt, ctx)
+    if why:
+        return None, why
+    return dict(kind=kind, prompt=prompt, value=value, steps=steps, edits=[e for e in EDITS if counts[e]], ring=ring), None
 
 
 def make_quiz(tool, kinds, ex, n, rng, ctx, log):
@@ -271,7 +293,8 @@ def make_quiz(tool, kinds, ex, n, rng, ctx, log):
             got += 1
         if got < quota[k]:
             log('quiz_short', kind=k, wanted=quota[k], got=got)
-    log('quiz_built', n=len(items), per_kind=dict(Counter(i['kind'] for i in items)), discards=dict(disc), tries=sum(disc.values()) + len(items))
+    log('quiz_built', n=len(items), per_kind=dict(Counter(i['kind'] for i in items)), per_ring=dict(Counter(i['ring'] for i in items)),
+        discards=dict(disc), tries=sum(disc.values()) + len(items))
     return items
 
 
@@ -372,7 +395,8 @@ def try_day(m, tool, items, kinds, cons, log, day, write_row):
                 continue
         st[k][row['source']] += 1
         rows.append(row)
-        write_row(day=day, kind=k, id=row['id'], source=row['source'], prompt=row['prompt'], answer=row['answer'], steps=row['steps'])
+        write_row(day=day, kind=k, id=row['id'], source=row['source'], prompt=row['prompt'], answer=row['answer'], steps=row['steps'],
+                  ring=it.get('ring', 1))
     log('try', day=day, n=len(items), rows=len(rows), per_kind={k: dict(v) for k, v in st.items()})
     return rows
 
@@ -654,6 +678,18 @@ def main(argv=None):
     ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=lmax)
     write_row = lambda **kw: log.write('row', **kw)
 
+    if cons.get('widen'):   # v9 (domain/far/widen.py): before day 1 the model widens its help page with the swap tool
+        from domain.far import widen
+        assert cons['widen'] == 'crossover', cons['widen']
+        t = time.time()
+        rings, wst = widen.build(tool, helps, lambda p: accept(tool, p, ctx)[2] is None, random.Random(f'{a.seed}-widen'), cons)
+        ex = widen.by_kind(rings, kinds)
+        with open(os.path.join(a.out, 'widen.json'), 'w') as f:
+            json.dump({str(r): v for r, v in rings.items()}, f)
+        T['widen'] += time.time() - t
+        log('widen', pieces=wst['pieces'], kept=wst['kept'], tries=wst['tries'], per_kind=wst['per_kind'], sha256=wst['sha256'],
+            secs=round(time.time() - t, 1), samples={r: [p for _, p in v[:8]] for r, v in rings.items()})
+
     # step 1: diary (self-replay) and check set, from TRAIN prompts only
     t = time.time()
     train = guard(os.path.join(a.data, 'train.jsonl'))
@@ -698,7 +734,7 @@ def main(argv=None):
         T['practice'] += time.time() - t
         log('practice', day=night, n=len(items), tries=tries, kept_rate=round(len(items) / tries, 4) if tries else None,
             share={k: round(v, 4) for k, v in share.items()}, progress={k: round(v, 4) for k, v in prog.items()},
-            kept=dict(Counter(i['kind'] for i in items)), discards=dict(disc),
+            kept=dict(Counter(i['kind'] for i in items)), kept_ring=dict(Counter(i['ring'] for i in items)), discards=dict(disc),
             edits_drawn=dict(edits), edits_kept=dict(Counter(e for i in items for e in i['edits'])))  # addendum A10 counts
         if len(items) < cons['day_problems']:
             log('practice_short', day=night, n=len(items), wanted=cons['day_problems'])

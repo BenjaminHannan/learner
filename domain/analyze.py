@@ -32,7 +32,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CONST_PATH = os.path.join(HERE, 'constants.json')
 KNOWN_EVENTS = frozenset({'start', 'help', 'deviation', 'row', 'diary', 'quiz_built', 'quiz_short', 'quiz', 'practice',
                           'practice_short', 'try', 'night_plan', 'check', 'night', 'stop_check', 'mix', 'done',
-                          'replay_fresh', 'replay_short', 'replay_pick', 'addon', 'gate'})  # addenda A13, A16, A18, A23
+                          'replay_fresh', 'replay_short', 'replay_pick', 'addon', 'gate',
+                          'widen'})  # addenda A13, A16, A18, A23; v9 (domain/far/widen.py)
 
 # Marks (design sec. 5 table; addenda A2, A6-A8). Values are percentage points.
 DM1_PASS, DM1_PROVED = 30.0, 10.0      # near, After minus Before: pass >= +30; proved wrong < +10
@@ -361,10 +362,10 @@ def main(argv=None):
                bar=('pass: audit exits clean and log constants hash = domain/constants.json; FAIL: more than %g%% of the run '
                     'tool\'s panel rows also in training (dropped), or any zero-step or bad-source row; proved wrong: any row '
                     'from a v1 panel, or a constants hash that differs from the file (per-domain setting)'
-                    % (100 * audit.DECONTAM_MAX_FRAC)) if suffix == audit.DECONTAM_SUFFIX else
+                    % (100 * audit.DECONTAM_MAX_FRAC)) if suffix in audit.DECONTAM_SUFFIXES else
                    ('pass: audit exits clean and log constants hash = domain/constants.json; proved wrong: any panel row '
                     'or a constants hash that differs from the file (per-domain setting)'),
-               decontam=dec if suffix == audit.DECONTAM_SUFFIX else None)
+               decontam=dec if suffix in audit.DECONTAM_SUFFIXES else None)
     T['audit'] = round(time.time() - t, 1)
 
     # DM5: scored near curve, stop night N = nights_run

@@ -1,0 +1,87 @@
+"""v9 (far transfer, 10-11): the swap tool that widens the help page, and the ring pick in the practice maker."""
+import json
+import random
+from collections import Counter
+
+from custom_io.data import ASCII
+from domain import mode
+from domain.far import widen
+from domain.tools import rpn, sheet
+
+CONS = json.load(open(mode.CONST_PATH))
+
+
+def ctx_for(tool):
+    helps = tool.help()
+    return dict(vchars=set(ASCII), cons=CONS, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, CONS['digit_len_extra']))
+
+
+def build(tool, seed=1, ring_max=300, rings=3):
+    cons = dict(CONS, widen_ring_max=ring_max, widen_rings=rings)
+    ctx = ctx_for(tool)
+    return widen.build(tool, tool.help(), lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(seed), cons)
+
+
+def test_pieces_are_balanced_whole_tokens():
+    t = widen.tokens('A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)')
+    got = {''.join(t[i:j]) for i, j in widen.spans(t)}
+    assert 'SUM(A1:A3)' in got and 'A1' in got and '4 7 2' in got
+    assert 'SUM(A1' not in got and 'A1:A3)' not in got          # unbalanced
+    assert not any(x.startswith(' ') or x.endswith(' ') for x in got)
+
+
+def test_ring2_is_fixed_and_every_example_runs_within_caps():
+    for tool in (sheet, rpn):
+        a, sa = build(tool, seed=1)
+        b, sb = build(tool, seed=2)
+        assert a[2] == b[2]                                   # ring 2 is enumerated: no randomness
+        ctx = ctx_for(tool)
+        for r in (2, 3):
+            assert a[r], (tool.NAME, r)
+            for kind, p in a[r]:
+                assert mode.accept(tool, p, ctx)[2] is None, p
+        shapes = [widen.shape(p) for r in a for _, p in a[r]]
+        assert len(shapes) == len(set(shapes))                # one example per digit shape, across rings
+        assert sa['kept'][1] == len(tool.help())
+
+
+def test_ring_examples_keep_the_kind_of_their_help_example():
+    rings, _ = build(sheet, ring_max=3000, rings=2)          # ring 2 in full (the real cap does not bind on it)
+    assert len(rings[2]) < 3000
+    helps = {h['kind'] for h in sheet.help()}
+    assert {k for r in rings for k, _ in rings[r]} <= helps
+    joined = [p for k, p in rings[2] if k == 'cell arithmetic' and 'SUM(' in p]
+    assert joined, 'a SUM piece swapped into the cell arithmetic example'
+
+
+def test_pick_example_on_a_string_draws_nothing():
+    rng = random.Random(5)
+    state = rng.getstate()
+    assert mode.pick_example('rpn: 3 4 +', rng) == ('rpn: 3 4 +', 1)
+    assert rng.getstate() == state                            # runs without widening are unchanged
+
+
+def test_pick_example_is_even_over_rings():
+    rng = random.Random(0)
+    ex = {1: ['a'], 2: ['b%d' % i for i in range(50)], 3: ['c%d' % i for i in range(500)]}
+    c = Counter(mode.pick_example(ex, rng)[1] for _ in range(6000))
+    assert all(1800 < c[r] < 2200 for r in (1, 2, 3)), c
+
+
+def test_draft_from_rings_reaches_far_properties():
+    rings, _ = build(sheet, ring_max=600)
+    ex = widen.by_kind(rings, [h['kind'] for h in sheet.help()])
+    ctx, rng = ctx_for(sheet), random.Random(3)
+    items, tries = [], 0
+    while len(items) < 300 and tries < 200000:
+        tries += 1
+        kind = rng.choice(sorted(ex))
+        it, why = mode.draft(sheet, ex[kind], kind, rng, ctx)
+        if it:
+            ctx['seen'].add(it['prompt'])
+            items.append(it)
+    assert len(items) == 300
+    tall = sum(max(len(c.split()) for c in it['prompt'].split(';')[0].replace('A:', '|').replace('B:', '|').split('|')) >= 5
+               for it in items)
+    assert tall > 30, tall                                     # grids of 5+ rows appear
+    assert Counter(it['ring'] for it in items)[1] > 30
