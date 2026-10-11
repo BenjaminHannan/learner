@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti: test GX seed 400 BESIDE gate G1's two 10M runs (Ben 8:23 PM ET 10-10: "move that to the front of the queue"; spec design/8a-gx-experts-2026-10-09.md addendum F). Started and watched only by gx_share.ps1, which stops this run (never G1) if G1 slows or memory spills. Same file stem and job name as the chain's 8aGXs400 queue, so results land in WORK\results\8aGXs400-pc\8aGX-3M-s400 and the post-G1 chain's own 8aGXs400 launch skips the job once it has RESULT.json. Code = src-8gxs (this branch with the memory cap). Differences from the chain's line: accum B2=8 (the spill rule's first step: same 256 rows per update, smaller passes), this run's PyTorch memory capped at 2,800 MiB (the card had 3,961 MiB free at 8:28 PM ET 10-10), and a lower free-memory need to start.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# ENV CUSTOM_IO_MEM_CAP_MIB=2800
+# ENV PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.8
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 3300
+g8a: 8aGX-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "experts": 52, "top_k": 8}' --accum B2=8

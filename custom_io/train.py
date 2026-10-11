@@ -139,6 +139,21 @@ def main(argv=None):
     cfg = json.loads(args.cfg)
     device = torch.device('cuda' if args.device == 'auto' and torch.cuda.is_available() else 'cpu' if args.device == 'auto' else args.device)
     amp = (lambda: torch.autocast(device.type, dtype=torch.bfloat16)) if args.bf16 and device.type == 'cuda' else contextlib.nullcontext
+    mem_cap = os.environ.get('CUSTOM_IO_MEM_CAP_MIB', '').strip()      # opt-in; unset/empty = no-op
+    if mem_cap:
+        if not mem_cap.isascii() or not mem_cap.isdigit() or int(mem_cap) <= 0:
+            raise SystemExit(f'CUSTOM_IO_MEM_CAP_MIB must be a positive integer (MiB), got {mem_cap!r}')
+        mem_cap = int(mem_cap)
+        if device.type == 'cuda':       # shared card: the cap makes the caching allocator free its cache instead of spilling into Windows shared memory
+            total = torch.cuda.get_device_properties(device).total_memory
+            frac = min(1.0, mem_cap * 2 ** 20 / total)
+            torch.cuda.set_per_process_memory_fraction(frac, device)
+            jprint(event='mem_cap', mib=mem_cap, fraction=round(frac, 4), total_mib=round(total / 2 ** 20))
+        else:
+            jprint(event='mem_cap', mib=mem_cap, ignored='not cuda')
+            mem_cap = None
+    else:
+        mem_cap = None
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed); torch.cuda.manual_seed_all(args.seed)
     t_start = time.time()
     D.set_max_ans(args.max_ans)         # before any data or model is built
@@ -220,6 +235,8 @@ def main(argv=None):
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if mem_cap:
+        result['mem_cap_mib'] = mem_cap
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib

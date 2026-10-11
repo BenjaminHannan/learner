@@ -187,3 +187,27 @@ the follow-up test, not a change to this one.
   different starting weights for the same seed (the first weight created already differs; the code is the same commit that passes on the
   cloud CPU). The installer runs the other 8 tests. Same-machine identity of GX's shared weights with G-B2's is still checked on the PC by
   `test_shared_weights_identical`, so the comparison with G1's PC runs stays like for like.
+
+## 13. Addendum F (Sat Oct 10, 9:15 PM ET, before any GX run): seed 400 may start now, beside G1's two 10M runs
+
+- **Ask:** Ben, 8:23 PM ET: "Can you move that to the front of the queue?" GX was already first after G1. The coordinator's default: start
+  it now beside G1's two 10M runs if it fits on the card and does not badly slow G1; never stop or restart G1.
+- **The card now (shown, PC read 8:28 PM ET):** 82% busy, 12,342 of 16,303 MiB used, so 3,961 MiB free; G1's two B2 processes hold 5,398
+  and 6,190 MiB, 82 MiB shared each. 10M s400 B2 at update 12,000, s401 B2 at 6,500, each about 3,210 s per 500 updates.
+- **What runs:** `custom_io/queue_local/gx-share/gx_share.ps1` sets up `src-8gxs` (this branch; the only code change since c1464d19b7 is an
+  opt-in memory cap in `train.py`, `CUSTOM_IO_MEM_CAP_MIB`, which does nothing when unset; test_moe ALL OK), then starts
+  `gx-share/8aGXs400-pc.txt` if at least 3,500 MiB are free and G1 still runs. Same job name and results folder as the chain's 8aGXs400
+  (`WORK\results\8aGXs400-pc\8aGX-3M-s400`), so analyze_gx reads it as usual and the chain's own launch skips it once it is done.
+- **Differences from the planned run (disclosed; no mark changes):** accumulation 8 instead of 4 (the spill rule's first step: the same 256
+  rows per update, split into 8 passes of 32 rows; the loss is the mean of 8 pass means instead of 4, and the balancing nudge, which runs
+  after every pass, moves 8 times per update instead of 4); this run's PyTorch memory capped at 2,800 MiB; the GPU is shared, which changes
+  speed only. G-B2's controls stay G1's own 3M runs at accumulation 4.
+- **Stop rules (stop GX only, never G1):** shared GPU memory of the python processes more than 400 MiB above its level before GX, or the
+  card's dedicated memory above 16,000 MiB, on 2 checks 60 s apart; or a G1 B2 arm still training going more than 4,300 s since its last
+  500-update line (1.35x its shared pace; it fires mid-stretch, before G1's own share watcher's 5,000 s rule could stop G1 seed 401). A
+  stopped or failed GX folder is renamed aside (never deleted), and the post-G1 chain then runs GX seed 400 alone after G1, exactly as before
+  this addendum (accumulation 4, src-8gx).
+- **Gain (suggested, untested):** it depends on GX's speed while sharing. Waiting means G1 ends about Mon 10-12 midday ET and GX alone takes
+  about 10-12 h. Sharing helps if GX runs faster than about 7 s per update while G1 runs, and it speeds up as G1's arms finish. GX's pace
+  after its first 1,000 updates decides whether it keeps running.
+- Marks X1-X5 and D1-D5, the seed-401 rule (addendum E) and stage 2 unchanged.
