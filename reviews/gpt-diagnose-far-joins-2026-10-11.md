@@ -116,6 +116,11 @@ RPN, same loop (shown, own tries right per ring, nights 1-6): ring 1 (help shape
 ring 3 (90% of rows have 4-5 operators) 1.5-5%, flat. In the old v7 run: help shapes 93% on the test, new operator
 orders 0-5%, 4-5 operators 0%.
 
+RPN v9 final test (shown, seed 200, 10 nights; percent): near 6.7 -> 96.0; far 0.4 -> 7.9; far rows that need no MOD or
+compare (69 of 280) 0 -> 27.5, of which rows whose exact digit shape never appeared in practice (41) 0 -> 19.5. So in RPN,
+where far means a longer chain of the same kind of step, the widened practice did transfer; in sheets, where far needs two
+different functions joined in one formula, it did not.
+
 ## 5. The test I plan to run next (marks fixed before running; please critique it)
 
 From the pre-trained checkpoint, train on 6,000 joined near-grid rows and 6,000 single-kind near rows (made by a
