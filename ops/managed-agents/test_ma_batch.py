@@ -271,6 +271,22 @@ class TestSubmit(Base):
         self.assertIn("will retry", text)
         self.assertEqual((out / "p.md").read_text(), "hi\n")
 
+    def test_poll_loop_does_not_retry_auth_error(self):
+        req = httpx.Request("GET", "http://x")
+        err = anthropic.AuthenticationError("bad key", response=httpx.Response(401, request=req), body=None)
+        self.fake.batches.retrieve_errors = [err]
+        with self.assertRaises(anthropic.AuthenticationError):
+            self.run_ma("batch", "submit", self.write("p.md"), "--wait", "--out-dir", str(self.tmp / "o"))
+
+    def test_poll_loop_retries_server_error(self):
+        req = httpx.Request("GET", "http://x")
+        err = anthropic.InternalServerError("boom", response=httpx.Response(500, request=req), body=None)
+        self.fake.batches.retrieve_errors = [err]
+        self.fake.batches._results = [ok("p", text="hi")]
+        code, text = self.run_ma("batch", "submit", self.write("p.md"), "--wait", "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 0)
+        self.assertIn("will retry", text)
+
     def test_poll_loop_timeout_with_errors_prints_command(self):
         err = anthropic.APIConnectionError(request=httpx.Request("GET", "http://x"))
         self.fake.batches.retrieve_errors = [err] * 5

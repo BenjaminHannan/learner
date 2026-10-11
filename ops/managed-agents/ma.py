@@ -305,7 +305,7 @@ def collect_command(batch_id, out_dir):
 
 
 def wait_ended(c, batch_id, minutes):
-    """Poll until the batch ends. Network and API errors are retried until the deadline."""
+    """Poll until the batch ends. Network errors, 429s and 5xx are retried until the deadline."""
     import anthropic
     deadline = time.monotonic() + minutes * 60
     while True:
@@ -313,6 +313,9 @@ def wait_ended(c, batch_id, minutes):
             if c.messages.batches.retrieve(batch_id).processing_status == "ended":
                 return True
         except (anthropic.APIConnectionError, anthropic.APIStatusError) as err:
+            status = getattr(err, "status_code", None)
+            if status is not None and status != 429 and status < 500:
+                raise  # a bad key or unknown batch will not fix itself
             print(f"Could not check {batch_id} ({type(err).__name__}); will retry.")
         if time.monotonic() >= deadline:
             return False
