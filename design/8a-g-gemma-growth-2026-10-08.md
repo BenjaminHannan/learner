@@ -422,3 +422,26 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   of one. GPU 81% busy, 11.9 GB used, shared memory 164 MiB; no stop rule tripped. New gate ETA about Mon 10-12 midday ET (suggested; the
   10M plain arm's speed is not measured yet).
 - Marks, arms and readout unchanged.
+
+## 23. Addendum R (2026-10-10, 9:15 PM ET): post-G1 chain v3 (group 2 slot, all-steps controls)
+
+- **Why:** Ben's standing rule (8:50 PM ET 10-10): never ask him for an OK; choose the sensible default and do it. Ben's "Option a" (8:23 AM ET 10-10)
+  picked big-run PLAN.md's option A for group 2 (g2c3s, then B3 group 2 at 3M seed 400, after B3 group 1 s400 and before the 10M and 30M
+  controls). The big-run thread's addendum 10-10 9:00 PM ET replaces g2c10 and c30 with all-steps controls g2c10s and c30s (arm PTS under
+  `caps_b3s.json`). Both need a waiter change, and this thread owns the waiter, so one change (v3) carries both.
+- **Order in v3 (`results/8a-g/pc-job-cards/after-g1/q8aPost3_wait.ps1`):** GX s400 (skipped if it already has an ok RESULT.json: the
+  experts thread started it beside G1 at 8:50 PM ET 10-10 with its own watcher; if that watcher stops it, its folder is renamed aside and v3
+  runs it here) -> fc100 -> g2c3 -> B3 group 1 3M s400 + b3_readout -> **g2c3s -> B3 group 2 3M s400** -> [GX s401 if alive] ->
+  [g2c3 s401 + B3 group 1 s401 if alive] -> **g2c10s -> c30s** (c30s may still run earlier in the gap while B3 waits for its code).
+- **Code:** the group 2 jobs run from a new folder `src-b3g2` = `custom_io` of `claude/learner-new-g2` at 1acfde9a73 (its `custom_io` is
+  identical to 9dbcbb579c, the commit the local session tested). caps.py 32862ae2...ea03e, caps_b3s.json 8cbea48d...cbf31, caps_b3g2.json
+  ee551d3a...7ed4 (shown, computed from the commit). Queue files: `8aG2C3S-pc.txt` and `8aB3G2s400-pc.txt` from that branch; new
+  `8aG2C10S-pc.txt` (10M, accum PTS=32 as g2c10's PT=32) and `8aC30S-pc.txt` (30M, accum PTS=64 as c30's PT=64), same pool and steps as
+  the controls they replace. CPU check at 1acfde9a73 (shown, cloud CPU): all four queues parse; PTS passes the size bands at 3M
+  (3,459,328 vs B2 3,500,881), 10M (10,567,168 vs 10,452,505) and 30M (28,841,088 vs 28,934,585), before the caps' position-table growth.
+- **Install (`upgrade_post_g1_v3.ps1`):** only while v2 still waits for G1; unpacks src-b3g2 and checks the three hashes, puts the two caps
+  files in `WORK\b3-inputs`, reruns the CPU check on the PC, writes `src-b3g2\G2-SETUP-OK.txt`, then stops v2 by PID and starts v3. Any
+  failure stops before the waiter is touched. A missing G2-SETUP-OK.txt later makes v3 skip each group 2 job with a NEEDS ATTENTION line.
+- **Untested:** the speed of every group 2 job on the PC; the 10M and 30M accumulations are the old cautious guesses, and G1 showed that
+  16-row passes leave the GPU mostly idle at 10M (addendum Q), so fc100's memory readings should reset them before g2c10s runs (suggested).
+- Marks unchanged (they are the big-run thread's, in PLAN.md).
