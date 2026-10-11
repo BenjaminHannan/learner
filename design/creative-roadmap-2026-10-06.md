@@ -1698,6 +1698,9 @@ families x 200, two parents).**
       fails, or (2) fails after one fix, the checker becomes RM 7b's `check` tool, with its own note.
   - **CB-1, 3M (B3 group 2, seed 400; seed 401 too if its checkpoint exists when CB-1 starts).** Job 9's design
     ported, with one change: the nights are SCM2's.
+    - Start checkpoint (10-11, big-run thread's question): the one the 100M phase will start from. That is after ST1
+      if ST1 is in the shipped model, and the plain group 2 checkpoint if not, or if that is still undecided when CB-1
+      starts. In that case the 100M phase also starts before ST1, unless CB is re-run after ST1.
     - Per parent: the B3 checkpoint goes through job 9's warm-up and stepping-stone sleep to make N'_B3. Pool
       temperature comes from the job-6 rule on DEV.
     - Arms, two nights each, at SCM2's recipe (lr 3e-4, 32 visits, replay picked by the model against a frozen
