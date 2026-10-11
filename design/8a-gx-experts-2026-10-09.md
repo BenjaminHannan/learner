@@ -267,3 +267,26 @@ the follow-up test, not a change to this one.
   37 min (about $0.31). GX trained at 1.26 updates/s against G-B2's 1.46 while the two shared each card (5.3 h against 4.6 h).
 - **PC queue:** the post-G1 chain's GX runs are skipped (GX-ON-MAC.txt, as agreed with the roadmap thread). They would only repeat
   this result.
+
+## 16. Addendum I: stage 2 runs on Ben's word after the UNCLEAR stage 1 (written 2026-10-11 about 12:20 UTC, 8:20 AM ET, before any stage 2 run)
+
+- **Why:** section 5 says that on an UNCLEAR stage 1, "Ben decides with one word". Ben, 8:08 AM ET 10-11, after reading the stage 1
+  result: "wait what? For the many experts many layers, I wanted both to be true during the same time". This is taken as his go for
+  stage 2 (GX-10M: G-B2 10M's 8 blocks with the same 52-expert, top-8 layers). His standing rule (8:50 PM ET 10-10) is not to ask him
+  for OKs.
+- **Where (default, free):** BensPC, first in the roadmap thread's post-G1 chain, after G1's 10M runs end (about Monday 10-12 midday ET).
+  Queue `custom_io/queue_local/8aGXD-pc.txt`: seeds 400 and 401, arms B2, accumulation 16 and MEM as G1's 10M B2, re-set from G1's
+  measured 10M memory before release. Same code tree as the PC's GX setup. The spill rule is unchanged. If Ben says "rent" instead, the runs move to two
+  rented 5090s, each with a same-box G-B2 10M twin as in addendum G (estimated $25, up to $35; untested). The PC runs then do not start.
+- **Judged controls (PC):** G1's own PC runs on the same seeds: G-B2 10M (`8aG1f-10M-s400`, `8aG1s401-10M-s401`) for D1, D3 and D4,
+  and G-PT 3M / 10M for D2. Same device, so no twin is needed.
+- **D2 uses GX-3M, which only ran on the rented boxes.** The device check in addendum H measured box minus PC at about -0.45 on both
+  seeds, which would favour D2. D2 is therefore computed twice: once raw, and once with GX-3M raised by that seed's measured box-minus-PC
+  G-B2 3M gap (+0.45, +0.45). D2 passes only if both pass. This is fixed now, before any stage 2 score.
+- **Unchanged:** marks D1-D5, readout (GO / STOP / UNCLEAR), proved-wrong line, hair rule (at most one use per stage). The seed-401
+  rule (addendum E) applies: seed 401 runs only if seed 400 can still reach GO.
+- **Prediction (suggested, written now): STOP or UNCLEAR.** Stage 1 lost at the same work (-1.41 mean), and the 8a dense results gave
+  little gain from more stored weights. What would prove the prediction wrong: D1 >= +1.0 on both seeds with D4 (even use) passing.
+- **Hours (estimate, untested):** G1's two 10M B2 runs shared the PC at about 6.4 s per update each, so about 3.2 s alone (inferred).
+  GX-3M ran 1.16x G-B2 3M's time on the 5090; at 10M the thinker is a larger share of each step, so 1.2-1.6x is assumed. That gives about
+  25-34 h per seed and 2-3 days for both.
