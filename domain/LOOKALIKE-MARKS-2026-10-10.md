@@ -124,3 +124,27 @@ prompts against 4,096 diary prompts, training accuracy 99.73%).
 - DM5 reads "proved wrong" on its letter (rise over the last night +15.2) only because night 2 dipped and night 3
   recovered; the near score at the stop (99.3) is within 0.3 of the best night.
 - Per sec. 5, no fix is due. Next: `invoice` s200, the same way (started 9:41 PM ET).
+
+## Addendum L3: result on invoice s200, the second look-alike subject (Opus, 10:40 PM ET 10-10)
+
+Shown, from `runs/invoice-s200-v8/analysis/LOOKALIKE_v8.json` and `RESULT.md`. 3 nights (51 minutes), stopped on its
+quiz (2.0 -> 96.9 -> 96.9 -> 87.1; night 3 fell and the final checkpoint is night 3). Switch from `mode.py` (`gate.pt`,
+3,072 against 4,096, training accuracy 99.75%).
+
+| mark | result | verdict |
+|---|---|---|
+| LA1 learns | near 0.3 -> 62.2 routed (+61.9); switched on for every panel question, near and far | PASS |
+| LA2 DEV old skills, routed | in_dist drop 0.00; switched on for 11 of 40 table_calc, 2 arith_bare, 1 verify_claim, none changed | PASS |
+| LA3 look-alike old skills, routed | pooled drop 0.12; row_total 22 -> 21 (3 lost, 2 gained), all else unchanged | PASS |
+
+- Same picture as stats: the switch is fooled by the closest old question ("What is the total qty over all rows?", one
+  word from the new "total price over all rows?": 36 of 100 switched on; row_total 11 of 100), and the add-on leaves those
+  answers alone. Add-on left on for everything: look-alike panel drop 2.12 (none fired), DEV drop 3.31 (fewshot_number_rule,
+  passage_qa, rule_apply, seq_next fired), where the switch stays off.
+- Held-out variants (reported only): switched on for 15 of 100 "total cost of all rows", no answer changed.
+
+**Verdict over both subjects: the switch holds on look-alikes (LA1-LA3 pass on stats and invoice, seed 200).** Suggested
+reason, not tested: two layers cover each other. The switch reliably keeps the add-on off the old skills it would harm
+(far from the subject: rule-from-examples, passages), and the add-on, which reviews old questions in every batch, learns
+to leave the near look-alikes that the switch lets through unchanged. Untested: other seeds, a look-alike family that
+the diary barely covers, and bigger models. Per sec. 5, no fix is due.
