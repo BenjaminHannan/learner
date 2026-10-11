@@ -135,9 +135,10 @@ def teacher_vec(pooled):
     return torch.nn.functional.normalize(pooled[:, :MT_DIM].float(), dim=-1)
 
 
-def check(device=None):
+def check(device=None, pre=False):
     """Load, count, and compare the probe vectors with eg_probe_ref.json (taken on the build box, CPU fp32): cos >= 0.999 each
-    (bf16 on cuda drifts a little)."""
+    (bf16 on cuda drifts a little). pre=True (`check cuda pre`, the 30M/100M no-plug front) also proves the pre state and gates on it;
+    without it the check is the probe check alone, so the plugged 3M/10M setups never depend on the no-plug proof or its extra fp32 load."""
     import json
     import transformers
     dev = torch.device(device or ('cuda' if torch.cuda.is_available() else 'cpu'))
@@ -153,21 +154,23 @@ def check(device=None):
             Hf = e.encode(PROBES, 64, d)[0]
             proj = e.m.embedding_projection(Hp.to(next(e.m.parameters()).dtype))
         return Hp.shape[-1], (proj.float() - Hf.float()).abs().max().item()
-    width, dev_diff = pre_diff_on(eg, dev)
-    if dev.type == 'cpu' and next(eg.m.parameters()).dtype == torch.float32:
-        width32, diff32 = width, dev_diff
-    else:
-        cpu = torch.device('cpu')
-        e32 = FrozenEG(path=eg.path).load(cpu)          # fp32 copy on CPU
-        width32, diff32 = pre_diff_on(e32, cpu)
-        del e32
-    pre_ok = width == EG_PRE_DIM and width32 == EG_PRE_DIM and diff32 <= 1e-4
+    width = dev_diff = diff32 = pre_ok = None
+    if pre:
+        width, dev_diff = pre_diff_on(eg, dev)
+        if dev.type == 'cpu' and next(eg.m.parameters()).dtype == torch.float32:
+            width32, diff32 = width, dev_diff
+        else:
+            cpu = torch.device('cpu')
+            e32 = FrozenEG(path=eg.path).load(cpu)          # fp32 copy on CPU
+            width32, diff32 = pre_diff_on(e32, cpu)
+            del e32
+        pre_ok = width == EG_PRE_DIM and width32 == EG_PRE_DIM and diff32 <= 1e-4
     ref = json.load(open(REF_FILE))
     cos = (v * torch.tensor(ref['vectors'])).sum(-1).tolist()
     out = dict(device=str(dev), transformers=transformers.__version__, path=eg.path, n_text=N_TEXT,
                probe_cos_vs_build_box=[round(c, 5) for c in cos], pre_width=width, pre_projection_max_abs_diff_fp32=diff32,
-               pre_projection_max_abs_diff_bf16=dev_diff if dev.type != 'cpu' else None,
-               ok=ref['prompts'] == PROBES and all(c >= 0.999 for c in cos) and pre_ok)
+               pre_projection_max_abs_diff_device=dev_diff if dev.type != 'cpu' else None, pre_ok=pre_ok,
+               ok=ref['prompts'] == PROBES and all(c >= 0.999 for c in cos) and (pre_ok if pre else True))
     print(json.dumps(out))
     return out
 
@@ -184,4 +187,5 @@ if __name__ == '__main__':
                        vectors=[[round(x, 6) for x in r] for r in v.tolist()]), open(REF_FILE, 'w'))
         print('wrote', REF_FILE)
     else:
-        sys.exit(0 if check(sys.argv[2] if len(sys.argv) > 2 else None)['ok'] else 1)
+        args = sys.argv[2:]
+        sys.exit(0 if check(next((a for a in args if a != 'pre'), None), pre='pre' in args)['ok'] else 1)

@@ -93,7 +93,7 @@ python -c "from huggingface_hub import snapshot_download; snapshot_download('goo
 $env:CUSTOM_IO_EG2 = 'C:\Users\benja\eg2'
 python -m custom_io.models.eg check cuda
 ```
-The last line must print `"ok": true`. It also prints `pre_projection_max_abs_diff_fp32` (gated, must be <= 1e-4; it loads a second fp32 copy on CPU, about 1 GB of RAM) and `pre_projection_max_abs_diff_bf16` (the cuda number, printed only, not gated) for the no-plug front's 512-wide state. (The text part is 271,002,624 params and 3 probe vectors match the build box's within cos 0.999;
+The last line must print `"ok": true`. Before the first 30M/100M no-plug run, also run `python -m custom_io.models.eg check cuda pre`: it proves the no-plug front's 512-wide state (Gemma's own projection of it equals its 768 output), gating on `pre_projection_max_abs_diff_fp32` <= 1e-4 (it loads a second fp32 copy on CPU, about 1 GB of RAM) and printing `pre_projection_max_abs_diff_device` (the cuda number, not gated). Without `pre` the check is the probe check alone, as before. (The text part is 271,002,624 params and 3 probe vectors match the build box's within cos 0.999;
 bf16 on the build box's CPU gave 0.99988 or better). Removing eg_site's numpy keeps the venv's own, the one torch was installed with
 (transformers 5.19 runs on Python 3.10 and only needs numpy >= 1.17). If the paths differ on the PC, edit the two `# ENV` lines of
 `36-pc-eg2.txt` to match. Then launch it as soon as queue 30 is done, ahead of queue 35 (if queue 35 has already started, leave its
