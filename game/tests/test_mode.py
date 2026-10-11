@@ -88,5 +88,15 @@ class SeedsTest(unittest.TestCase):
         self.assertEqual(len(seen), 32 + 12 * 64)
 
 
+class StopDecisionTest(unittest.TestCase):
+
+    def test_fixed_nights_ignores_stop_rule(self):
+        cons = dict(stop_min_rise_points=1.0, max_nights=5)
+        self.assertEqual(mode.stop_decision(0.0, 3, cons), ('quiz_rise_below_1_over_2_nights', False))
+        self.assertEqual(mode.stop_decision(0.0, 3, cons, fixed_nights=4), (None, True))
+        self.assertEqual(mode.stop_decision(0.0, 4, cons, fixed_nights=4), ('fixed_nights', True))
+        self.assertEqual(mode.stop_decision(5.0, 3, cons, fixed_nights=4), (None, False))
+
+
 if __name__ == '__main__':
     unittest.main()

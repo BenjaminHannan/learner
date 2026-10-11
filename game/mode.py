@@ -201,6 +201,18 @@ def pg_day(m, eps, cons, day, write_row, guesser, awake_only=False):
     return rows, prompts, acts, norm, by_src, len(flat) - len(use), info
 
 
+def stop_decision(rise, night, cons, fixed_nights=None):
+    """(stop_reason, ignored): the stop rule's verdict; with fixed_nights it never ends the run before that night."""
+    rule = None
+    if rise is not None and rise < cons['stop_min_rise_points']:
+        rule = 'quiz_rise_below_%g_over_2_nights' % cons['stop_min_rise_points']
+    elif night == cons['max_nights']:
+        rule = 'max_nights'
+    if fixed_nights is None:
+        return rule, False
+    return ('fixed_nights' if night == fixed_nights else None), rule is not None
+
+
 def parse_args(argv=None):
     a = argparse.ArgumentParser(description='Game mode (GW-S): learn Crafter by itself.')
     a.add_argument('--parent', required=True)
@@ -218,6 +230,8 @@ def parse_args(argv=None):
                    help='window: the 8-move window before each first unlock; guess: a learned value guesser with RND curiosity picks the same number of moves')
     a.add_argument('--night', default='copy', choices=['copy', 'pg'],
                    help='copy: the night trains on the kept rows plus diary (default); pg: PPO on every awake move of the day by its advantage (needs --keep guess --picker sample)')
+    a.add_argument('--nights', type=int, default=None,
+                   help='play exactly this many nights; the stop rule is still logged but no longer ends the run')
     a.add_argument('--full-model', action='store_true', help='diagnostic: no add-on, the whole model trains')
     return a.parse_args(argv)
 
@@ -237,10 +251,12 @@ def main(argv=None):
     cons = {**json.loads(draw), **gcons}   # choice: one dict; game keys (episodes_per_day, explore, ...) win on overlap
     if a.smoke:
         cons.update(SMOKE)
+    if a.nights is not None:
+        assert 1 <= a.nights <= cons['max_nights'], '--nights %d must be within 1..max_nights (%d)' % (a.nights, cons['max_nights'])
     commit, dirty = dm.git_info()
     log = dm.Log(a.out)
     parent = dm.guard(a.parent)
-    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, domain_constants=json.loads(draw),
+    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, fixed_nights=a.nights, domain_constants=json.loads(draw),
         game_constants=gcons, domain_constants_sha256=dsha, game_constants_sha256=gsha, cons_used=cons,
         smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data, git_commit=commit, git_dirty_files=dirty)
     write_row = lambda **kw: log.write('row', **kw)
@@ -296,7 +312,7 @@ def main(argv=None):
     hist.append(p0)
     quiz_steps += s0
     all_rows, undo_prev, stop, night, last_ck = [], False, None, 0, None
-    for night in range(1, cons['max_nights'] + 1):
+    for night in range(1, (a.nights or cons['max_nights']) + 1):
         t = time.time()
         eps = play_worlds(m, a.seed, night, cons['episodes_per_day'], cons, log_steps=True, picker=a.picker, temp=temp)
         T['play'] += time.time() - t
@@ -389,11 +405,9 @@ def main(argv=None):
             quiz=round(pq, 3))
 
         rise = hist[night] - hist[night - 2] if night >= 2 else None
-        if rise is not None and rise < cons['stop_min_rise_points']:
-            stop = 'quiz_rise_below_%g_over_2_nights' % cons['stop_min_rise_points']
-        elif night == cons['max_nights']:
-            stop = 'max_nights'
-        log('stop_check', night=night, rise_over_2_nights_points=None if rise is None else round(rise, 3), stop=stop)
+        stop, ignored = stop_decision(rise, night, cons, a.nights)
+        log('stop_check', night=night, rise_over_2_nights_points=None if rise is None else round(rise, 3), stop=stop,
+            **(dict(stop_ignored=True) if ignored else {}))
         if stop:
             break
 
@@ -415,7 +429,7 @@ def main(argv=None):
     else:
         log('gate', skipped='full-model run has no add-on')
     T['gate'] += time.time() - t
-    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, temp_start=temp_start, temp_final=temp, nights_run=night, stop_reason=stop,
+    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, temp_start=temp_start, temp_final=temp, nights_run=night, stop_reason=stop, fixed_nights=a.nights,
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))
