@@ -2,7 +2,7 @@
 
 Plan: /mnt/project-files/game-world/PLAN-AND-MARKS-2026-10-10.md.
 
-  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample] [--keep-awake-only]
+  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample] [--keep-awake-only] [--keep window|guess]
 
 Each night: play 64 practice worlds, keep the steps just before each unlock (the game is the checker), train the add-on
 on them mixed with the model's own old answers (diary), undo if old answers drifted, then the model's own quiz.
@@ -25,7 +25,7 @@ from custom_io.data import DEFAULT_DATA, MAX_PROMPT
 from custom_io.models import load_model
 from domain import mode as dm
 from domain import route
-from game import crafter_text, play
+from game import crafter_text, guess, play
 
 FAMILY = 'game_crafter'
 SMOKE = dict(episodes_per_day=4, quiz_worlds=2, episode_cap=60, diary=128, check=64, max_nights=2)
@@ -116,6 +116,42 @@ def keep_rows(m, eps, cons, day, write_row, awake_only=False):
     return rows, by_src, by_name, refused, n_asleep
 
 
+def keep_guess_rows(m, eps, cons, day, write_row, guesser, awake_only=False):
+    """The learned keep rule (game/guess.py). N = what the window rule would keep this day (same awake_only); keep the N awake
+    moves with the highest advantage. -> (rows, by source, by name, refusals, dropped asleep (as the window rule counts), guess info)."""
+    n_old = sum(len(keep_windows(e['unlocks'], cons['credit_window'])) for e in eps)
+    n_awake = sum(len(keep_windows(e['unlocks'], cons['credit_window'],
+                                   {s for s, st in enumerate(e['steps']) if crafter_text.asleep(st[0])} if awake_only else None))
+                  for e in eps)
+    t0 = time.time()
+    adv, info = guesser.day(day, eps)
+    keys, awake = guess.episode_moves(eps, awake_only)
+    flat = [(e, s) for e in eps for s in range(len(e['steps']))]
+    pick = guess.select(adv, keys, awake, n_awake)
+    info['seconds'] = round(time.time() - t0, 2)
+    rows, by_src, by_name, refused = [], Counter(), Counter(), Counter()
+    for i in pick:
+        e, s = flat[i]
+        prompt, word, src = e['steps'][s][:3]
+        row, why = dm.make_row(m, FAMILY, prompt, word, [], cons, src, allow_zero=True)
+        if row is None:
+            refused[why] += 1
+            continue
+        rows.append(row)
+        by_src[src] += 1
+        by_name['guess'] += 1
+        write_row(day=day, kind='game', id=row['id'], source=src, prompt=prompt, answer=word, steps=[],
+                  world_seed=e['seed'], act_seed=e['act_seed'], step=s, unlock=None, unlock_step=None,
+                  kept_by='guess', advantage=float(adv[i]))
+    kept = adv[pick] if pick else np.zeros(0)
+    info.update(N=n_awake, N_window_all=n_old, kept=len(pick),
+                adv_mean_kept=round(float(kept.mean()), 5) if len(kept) else None,
+                adv_max_kept=round(float(kept.max()), 5) if len(kept) else None,
+                adv_mean_all=round(float(adv.mean()), 5) if len(adv) else None,
+                adv_max_all=round(float(adv.max()), 5) if len(adv) else None)
+    return rows, by_src, by_name, refused, n_old - n_awake, info
+
+
 def parse_args(argv=None):
     a = argparse.ArgumentParser(description='Game mode (GW-S): learn Crafter by itself.')
     a.add_argument('--parent', required=True)
@@ -129,6 +165,8 @@ def parse_args(argv=None):
     a.add_argument('--quiz-picker', default='top', choices=['top', 'sample'], help='with --picker sample: how quiz games choose')
     a.add_argument('--keep-awake-only', action='store_true',
                    help='the keep rule drops kept moves made while the player was asleep (they did nothing)')
+    a.add_argument('--keep', default='window', choices=['window', 'guess'],
+                   help='window: the 8-move window before each first unlock; guess: a learned value guesser with RND curiosity picks the same number of moves')
     a.add_argument('--full-model', action='store_true', help='diagnostic: no add-on, the whole model trains')
     return a.parse_args(argv)
 
@@ -148,7 +186,7 @@ def main(argv=None):
     commit, dirty = dm.git_info()
     log = dm.Log(a.out)
     parent = dm.guard(a.parent)
-    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, domain_constants=json.loads(draw),
+    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, domain_constants=json.loads(draw),
         game_constants=gcons, domain_constants_sha256=dsha, game_constants_sha256=gsha, cons_used=cons,
         smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data, git_commit=commit, git_dirty_files=dirty)
     write_row = lambda **kw: log.write('row', **kw)
@@ -178,6 +216,7 @@ def main(argv=None):
     T['diary'] += time.time() - t
     assert diary and check, 'empty diary or check set'
 
+    guesser = guess.Guesser(a.seed) if a.keep == 'guess' else None
     quiz_picker = a.quiz_picker if a.picker == 'sample' else 'greedy'
 
     def quiz(night):
@@ -205,8 +244,15 @@ def main(argv=None):
         st = episode_stats(eps)
         game_steps += st['steps']
         t = time.time()
-        new, by_src, by_name, refused, n_asleep = keep_rows(m, eps, cons, night, write_row, a.keep_awake_only)
+        ginfo = None
+        if guesser is None:
+            new, by_src, by_name, refused, n_asleep = keep_rows(m, eps, cons, night, write_row, a.keep_awake_only)
+        else:
+            new, by_src, by_name, refused, n_asleep, ginfo = keep_guess_rows(m, eps, cons, night, write_row, guesser, a.keep_awake_only)
         T['keep'] += time.time() - t
+        if ginfo is not None:
+            T['guess'] += ginfo['seconds']
+            log('guess', night=night, **ginfo)
         all_rows += new
         rows_per_night.append(len(new))
         log('day', night=night, episodes=st['episodes'], steps=st['steps'], mean_length=st['mean_length'], deaths=st['deaths'],
@@ -251,6 +297,8 @@ def main(argv=None):
         t = time.time()
         last_ck = os.path.join(a.out, f'night_{night}', 'checkpoint.pt')
         dm.save_ckpt(ck, m, last_ck, addon)
+        if guesser is not None:
+            guesser.save(os.path.join(a.out, f'night_{night}', 'guess.pt'))
         T['save'] += time.time() - t
         pq, sq = quiz(night)
         hist.append(pq)
@@ -286,7 +334,7 @@ def main(argv=None):
     else:
         log('gate', skipped='full-model run has no add-on')
     T['gate'] += time.time() - t
-    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, nights_run=night, stop_reason=stop,
+    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, nights_run=night, stop_reason=stop,
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))
