@@ -261,19 +261,28 @@ def test_stop_and_talk():
         a0 = m.talk(st, b)
         z0 = m.talk((torch.zeros_like(st[0]),) + st[1:], b)
         assert m.generate(b, lesion='zero_state') == z0
-    # nocopy forces the gate in the writer
+    # nocopy (Ben's rule 2): a no-op for answers, which have no copy path (an empty context: gate 1 whatever the lesion); it still forces the CALL writer's gate
     gates = []
     real = m.writer.head
 
     def spy(R, Xc, cmask, cids, nocopy, ckeys):
         p, gate, a = real(R, Xc, cmask, cids, nocopy, ckeys)
-        gates.append((nocopy, float(gate.min())))
+        gates.append((nocopy, float(gate.min()), bool(cmask.any())))
         return p, gate, a
     m.writer.head = spy
     with torch.no_grad():
-        m.generate(b, lesion='nocopy')
-    assert gates and all(nc and g == 1.0 for nc, g in gates), gates
-    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy forces the writer gate')
+        st = m.state(b)
+        assert m.generate(b, lesion='nocopy') == m.talk(m.state(b, lesion='nocopy'), b) == m.talk(m.state(b, lesion='nocopy'), b, lesion='nocopy')
+        gates.clear()
+        assert m.talk(st, b, lesion='nocopy') == m.talk(st, b)
+    assert gates and all(not nc and g == 1.0 and not has for nc, g, has in gates), gates      # the answer: no visible context, gate 1, the lesion never reaches the head
+    m.stop.bias.data.fill_(-50.0)
+    gates.clear()
+    with torch.no_grad():
+        m.run(b, loops=3, lesion='nocopy')
+    assert gates and all(nc and g == 1.0 and has for nc, g, has in gates), gates                  # the calls: the lesion forces their gate
+    m.writer.head = real
+    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy: no-op for answers, forces the call writer gate')
 
 
 def test_st1_interface():

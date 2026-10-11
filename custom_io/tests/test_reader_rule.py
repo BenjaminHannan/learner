@@ -147,6 +147,146 @@ def test_r1_question_path_bit_identical_and_sizes():
     print('ok R3/R4 (f): the question path (read and the loss of a no-call batch) is bit-identical to the old ops; no new parameters')
 
 
+# ---- RULE 2 ----
+def a_state(m, b, texts=None):
+    """A run's state (Z, Xt, idt, vis) with calls scripted, so the tape has content."""
+    texts = texts or [['add 7 5', 'sub 12 3'], ['mul 2 2'], ['note hi'], [], ['add 1 1'], [], ['add 4 4', 'add 1 2'], ['sub 9 1']]
+    Script(m, texts)
+    with torch.no_grad():
+        o = m.run(b, loops=4)
+    m.writer.greedy = m.writer.greedy.real
+    return m.state_of(o)
+
+
+def noisy_writer(m):
+    with torch.no_grad():                       # an untrained writer is near-uniform: give it some structure so strings differ with Z
+        for p in m.writer.parameters():
+            p.add_(torch.randn_like(p) * 0.3)
+    return m
+
+
+def test_r2_answer_reads_z_only():
+    m = noisy_writer(loud(make())).eval()
+    b1 = batch_of(rows(8), V)
+    other = [dict(r, prompt=r['prompt'][::-1] + ' zzz qqq', id=r['id'] + 'x') for r in rows(8)]
+    b2 = batch_of(other, V)
+    st = a_state(m, b1)
+    Z, Xt, idt, vis = st
+    assert vis.any() and Xt.abs().sum() > 0
+    # a different tape: other letters, other ids, other visibility
+    g = torch.Generator().manual_seed(3)
+    st2 = (Z, torch.randn(Xt.shape, generator=g), idt.flip(1), ~vis)
+    answers = [r['answer'] for r in rows(8)]
+    with torch.no_grad():
+        a0 = m.talk(st, b1)
+        outs = [m.talk(st, b2), m.talk(st2, b1), m.talk(st2, b2), m.talk(st, None), m.talk(st, b1, lesion='nocopy')]
+        assert all(o == a0 for o in outs), (a0, outs)
+        f0 = m.forced_answer(st, b1, answers)
+        for f in (m.forced_answer(st, b2, answers), m.forced_answer(st2, b1, answers), m.forced_answer(st2, b2, answers), m.forced_answer(st, b1, answers, nocopy=True)):
+            assert all(torch.equal(x, y) for x, y in zip(f0, f))
+        assert (f0[2] == 0).all(), 'answer copy mass reports 0'
+    print('ok R2 T1 (a): with Z fixed, the prompt, the tape and nocopy leave talk() and the teacher-forced answer bit-identical; copy mass 0')
+
+
+def test_r2_changing_z_changes_the_answer():
+    m = noisy_writer(loud(make())).eval()
+    b = batch_of(rows(8), V)
+    st = a_state(m, b)
+    answers = [r['answer'] for r in rows(8)]
+    Z2 = st[0] + torch.randn(st[0].shape, generator=torch.Generator().manual_seed(1)) * 2.0
+    with torch.no_grad():
+        f0, f1 = m.forced_answer(st, b, answers), m.forced_answer((Z2,) + tuple(st[1:]), b, answers)
+        assert not torch.equal(f0[0], f1[0]), 'the teacher-forced nll follows Z'
+        rolled = m.talk((st[0].roll(1, 0),) + tuple(st[1:]), b)
+        assert m.talk(st, b) != m.talk((Z2,) + tuple(st[1:]), b) or m.talk(st, b) != rolled
+    print('ok R2 T1 (b): changing Z changes the answer log-probs and the written answer')
+
+
+def test_r2_zero_length_context_and_empty_context_shapes():
+    m = noisy_writer(make()).eval()
+    w = m.writer
+    B, d = 3, m.d
+    Z = torch.randn(B, 17, d)
+    zm = torch.ones(B, 17, dtype=torch.bool)
+    mode = torch.ones(B, dtype=torch.long)
+    inp = torch.tensor([[1, 20, 21]] * B)
+    with torch.no_grad():
+        # (1) the shape used everywhere: one fully masked position
+        Xc, cm, ci = m.answer_context(Z)
+        assert Xc.shape == (B, 1, d) and not cm.any()
+        te = ByteWriter.teacher([[20, 21], [], [22]], ci, cm, 69, 1, 2)
+        assert not te['fb'].any()
+        p1, g1, a1 = w.run(Z, zm, Xc, cm, ci, mode, inp, te['fb'][:, :3], False, None)
+        assert (g1 == 1).all() and (a1 == 0).all()
+        # (2) a truly empty context also works through head / run / greedy
+        X0, c0, i0 = torch.zeros(B, 0, d), torch.zeros(B, 0, dtype=torch.bool), torch.zeros(B, 0, dtype=torch.long)
+        p0, g0, a0 = w.run(Z, zm, X0, c0, i0, mode, inp, torch.zeros(B, 3, 0), False, None)
+        assert (g0 == 1).all() and torch.equal(p0, p1), 'empty and masked-dummy contexts give the same distribution'
+        o0, _ = w.greedy(Z, zm, X0, c0, i0, mode)
+        o1, _ = w.greedy(Z, zm, Xc, cm, ci, mode)
+        assert o0 == o1
+    print('ok R2 T1: ByteWriter.head / run / greedy work with a zero-length context and with one fully masked position (same result: gate 1, copy 0)')
+
+
+def test_r2_call_mode_still_copies():
+    m = noisy_writer(make()).eval()
+    b = batch_of(rows(8), V)
+    texts = [['add 7 5'], [], [], [], [], [], [], []]
+    st = a_state(m, b, texts)
+    # call mode (mode 0) keeps its copy context [prompt; visible tape] and ckeys: its gate is not forced to 1 and the context reaches its output
+    X, xm = m.read(b, talker=True)
+    Xc, cm, ci = torch.cat([X, st[1].to(X.dtype)], 1), torch.cat([xm, st[3]], 1), torch.cat([b['prompt_ids'], st[2]], 1)
+    ck = m.ckeys(Xc.shape[1], X.shape[1], st[1].shape[1] // m.tape, cm)
+    zm = torch.ones(8, st[0].shape[1], dtype=torch.bool)
+    inp = torch.full((8, 3), 5)
+    with torch.no_grad():
+        p, g, a = m.writer.run(st[0], zm, Xc, cm, ci, torch.zeros(8, dtype=torch.long), inp, torch.zeros(8, 3, Xc.shape[1]), False, ck)
+        assert (g < 1).all() and a.sum() > 0
+        Xc2 = Xc + torch.randn(Xc.shape) * 3
+        p2, _, _ = m.writer.run(st[0], zm, Xc2, cm, ci, torch.zeros(8, dtype=torch.long), inp, torch.zeros(8, 3, Xc.shape[1]), False, ck)
+        assert not torch.equal(p, p2)
+    print('ok R2 T2: call mode keeps its copy context (gate < 1, attention over [prompt; tape], context-sensitive)')
+
+
+GOLD = dict(call='0x1.2ee1860000000p+7', call_acc='0x0.0p+0', eos_acc='0x0.0p+0', stop_in='0x1.8874b80000000p-15', stop_abs='0x1.28eccd1bf5ea8p+13')       # taken at the rule-1 commit
+
+
+def test_r2_call_and_stop_inputs_unchanged_by_the_answer_rule():
+    m = loud((torch.manual_seed(0), make())[1]).train()
+    cap = {}
+    m.stop.register_forward_hook(lambda mod, inp, out: cap.update(z=inp[0].detach()))
+    b = batch_of(rows(8), V)
+    torch.manual_seed(7)
+    loss, aux = m.loss(b)
+    z = cap['z'].double()
+    got = dict(call=float(aux['call']).hex(), call_acc=float(aux['call_acc']).hex(), eos_acc=float(aux['eos_acc']).hex(), stop_in=float(z.sum()).hex(), stop_abs=float(z.abs().sum()).hex())
+    assert got == GOLD, (got, GOLD)
+    assert torch.isfinite(loss) and float(aux['copy_share']) == 0.0
+    print('ok R2 T2 (d): the call loss, the call/EOS hits and the stop head\'s inputs are bit-identical to the rule-1 commit (the answer term and the stop LABELS, which are built from the answers, change)')
+
+
+def test_r2_lessons_still_run():
+    from custom_io.evalx import donor_eval
+    rs = [dict(r, accepted=[r['answer']]) for r in rows(8)]
+    m = noisy_writer(make()).eval()
+    b = batch_of(rs, V)
+    with torch.no_grad():
+        for les in (None, 'shuffle_state', 'zero_state', 'nocopy', 'noexec', 'opswap', 'loops:2'):
+            out = m.generate(b, lesion=les)
+            assert len(out) == 8 and all(isinstance(x, str) for x in out), les
+        res = donor_eval(m, rs, batch_size=4, device=torch.device('cpu'), return_preds=True)
+    assert res['n'] == 8, res
+    byid = {r['id']: r for r in rs}
+    for rid, (did, pred) in res['preds'].items():       # the answer is the donor's thoughts (its own answer when run alone), whatever the current prompt
+        with torch.no_grad():
+            assert pred == m.generate(batch_of([byid[did]], V))[0], (rid, did)
+    m.train()
+    loss, aux = m.loss(b)
+    loss.backward()
+    assert torch.isfinite(loss)
+    print('ok R2 (e): shuffle_state / zero_state / nocopy / donor swap still run; a donor-swapped row says what the donor alone says')
+
+
 def main():
     for name, fn in list(globals().items()):
         if name.startswith('test_') and callable(fn):

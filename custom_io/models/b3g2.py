@@ -17,15 +17,21 @@ Teacher forcing (loss): B3's schedule (calls at rounds 1..L, or gap rounds with 
 the tape holds the TOOL'S real reply (never the label's: a difference is counted `reply_mismatch`; a drill row carries its drawn strings). Rounds with a call: target = the
 call text; rounds after the row's last call: EOS only; gap rounds: no target. Context [prompt X; tape Xt] masked by the entries visible BEFORE the round's call; Z = every thinker
 vector; the call loss is the sum over rounds of the mean over rows of nll * w_row (1.0 with calls, w_noop without) over the rows that have a target. The per-round answer
-(H1's rule): at every round t >= the row's last call round the writer is asked "answer" (mode 1), teacher forced; the answer loss is the row's mean over those rounds;
-rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); with the selective-read feedback it approximates greedy
-decoding (extra_evals reports how often the label agrees with real greedy decoding). The stop head is H1's on ln_z(control 1), detached, BCE on the 'settled' (or 'right')
+(H1's rule): at every round t >= the row's last call round the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
+those rounds; rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); the answer has no feedback, so it is
+greedy decoding up to numerics (extra_evals reports how often the label agrees with real greedy decoding).
+Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every step,
+but at least the last, and answer in english from that. It literally is a math to language translator." So the ANSWER (mode 1: ans_pass, forced_answer, talk, ST1's sample_traces
+and trace_loss, every eval and lesion) is written from Z only, all thinker vectors of the round (the last round the run used, for talk): an empty context (one fully masked dummy
+position: gate 1, copy 0), so no prompt X, no tape Xt, no copy keys (e_s / e_e), no selective-read feedback; ByteWriter's math is unchanged. Only the CALL writer (mode 0) copies, from
+[prompt; visible tape] with the copy keys, as before. The 'nocopy' lesion is therefore a no-op for answers (it still forces the call writer's gate); the answer copy-mass counters
+(copy_share, extra['g2']['agreement']['copy_share']) are kept and report 0. The stop head is H1's on ln_z(control 1), detached, BCE on the 'settled' (or 'right')
 label; 'settled' only counts in a batch that ran the whole turn (stop_w, H1's rule). Rows before their last call round get label inputs "not right" (no answer pass is run there).
 Ben's rule 1: "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." The tape strings (entries, notes, drill strings, '?') are read by Gemma
 + the letter window exactly like the question (Tool.read_texts -> Ledger.eg_term, via FrozenEG.encode_texts, outside the question's memo), not by the letter window alone.
 Free run: writer.greedy on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop exactly as B3.run.
-state = (Z, Xt, idt, vis); talk(state, batch) = writer.greedy(mode 1) over [the CURRENT prompt; the state's tape], so donor swaps work as today. Lessons that act on Z:
-zero_state, shuffle_state; nocopy forces the writer's gate (calls and answer); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
+state = (Z, Xt, idt, vis); talk(state, batch) = writer.greedy(mode 1) from the state's Z alone (batch and the tape are not read), so a donor swap hands the donor's Z to the writer and the answer follows it. Lessons that act on Z:
+zero_state, shuffle_state; nocopy forces the call writer's gate (answers have no copy path); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
 steps and no readable calls), no_trace (rows with steps and no usable trace), writer_over (a call or answer longer than WCAP gets no target), steps_over (more steps than tape),
 tape_entry_over."""
 import math, random
@@ -221,22 +227,35 @@ class B3G2(B3):
     def pick(x, sel, full):
         return x if full else x[sel]
 
-    def ans_pass(self, Z, Xc, cmask, cids, ck, inp, tgt, fb, nocopy=False):
-        """The answer asked of the writer (mode 1), teacher forced -> (nll [B], right [B], copy mass over the non-EOS target bytes [B], their count [B])."""
+    def answer_context(self, Z):
+        """The answer's (empty) copy context for a state Z [B, n, d]: ONE dummy position, fully masked -> (Xc [B,1,d] zeros, cmask [B,1] False, cids [B,1] zeros). ByteWriter.head
+        then gives gate 1 and copy 0, ByteWriter.teacher gives no selective-read feedback, and nothing but Z reaches the answer. (A zero-length context also runs through head / run /
+        greedy, tests/test_reader_rule.py, but ByteWriter.teacher indexes position 0 of a row, so the one masked position is the shape used everywhere.)"""
+        B, dev = Z.shape[0], Z.device
+        return torch.zeros(B, 1, self.d, dtype=Z.dtype, device=dev), torch.zeros(B, 1, dtype=torch.bool, device=dev), torch.zeros(B, 1, dtype=torch.long, device=dev)
+
+    def answer_teacher(self, Z, ids):
+        """ByteWriter.teacher over the answers' ids with the empty answer context (fb is all zero)."""
+        _, cmask, cids = self.answer_context(Z)
+        return ByteWriter.teacher(ids, cids, cmask, self.WCAP, BOS, EOS)
+
+    def ans_pass(self, Z, inp, tgt, fb):
+        """The answer asked of the writer (mode 1), teacher forced, from the thinker's vectors Z ALONE (Ben's rule 2) -> (nll [B], right [B], copy mass over the non-EOS target bytes
+        [B] (always 0: the answer has no copy path), their count [B]). Z [B, n, d] = every thinker vector of the round (all True in the mask); no prompt, no tape, no copy keys, no
+        feedback (fb is all zero; no refine passes: they would only feed that zero back)."""
         B = Z.shape[0]
-        logp, gate, _ = self.writer(Z, torch.ones(B, Z.shape[1], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(B, dtype=torch.long, device=Z.device), inp, fb,
-                                    nocopy, ck, self.refine)
+        Xc, cmask, cids = self.answer_context(Z)
+        logp, gate, _ = self.writer(Z, torch.ones(B, Z.shape[1], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(B, dtype=torch.long, device=Z.device), inp, fb, False, None, 0)
         tm = (tgt >= 0) & (tgt != EOS)
         return ByteWriter.nll(logp, tgt), ByteWriter.right(logp, tgt), ((1 - gate.detach()) * tm).sum(1), tm.sum(1)
 
     def forced_answer(self, state, batch, answers, nocopy=False):
-        """Teacher-forced answer pass on a state (Z, Xt, idt, vis) and the CURRENT batch -> ans_pass's four [B] tensors (evals)."""
-        Z, Xt, idt, vis = state[:4]
-        X, xm = self.read(batch, talker=True)
-        Xc, cmask, cids = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1)
-        T, le = X.shape[1], Xt.shape[1] // self.tape
-        te = ByteWriter.teacher([self.vocab.encode(a) for a in answers], cids, cmask, self.WCAP, BOS, EOS)
-        return self.ans_pass(Z, Xc, cmask, cids, self.ckeys(Xc.shape[1], T, le, cmask), te['inp'], te['tgt'], te['fb'], nocopy)
+        """Teacher-forced answer pass on a state (Z, Xt, idt, vis) -> ans_pass's four [B] tensors (evals). Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just
+        transcribes the thoughts of the thinker." The answer is written from the thinker's state Z only: `batch` (the prompt), the state's tape and `nocopy` are accepted for the
+        callers' sake and not read (nocopy is a no-op for answers: there is no copy path to lesion)."""
+        Z = state[0]
+        te = self.answer_teacher(Z, [self.vocab.encode(a) for a in answers])
+        return self.ans_pass(Z, te['inp'], te['tgt'], te['fb'])
 
     # ---- the loop ----
     def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False):
@@ -410,14 +429,15 @@ class B3G2(B3):
 
     # ---- the talker ----
     def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None):
-        """The writer asked for the answer (mode 1) over [the CURRENT batch's prompt; the state's tape] with the state's Z (the tape is the reasoner's own work, so a donor's
-        tape comes with its state). return_modes: also a mode per row (always 2: one writer, no modes)."""
-        Z, Xt, idt, vis = state[:4]
-        X, xm = self.read(batch, talker=True)
-        Xc, cmask, cids = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1)
-        T, le = X.shape[1], Xt.shape[1] // self.tape
+        """Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every
+        step, but at least the last, and answer in english from that. It literally is a math to language translator." The writer is asked for the answer (mode 1) from the state's Z
+        ALONE (all thinker vectors of the state's round: the last round the run used): no prompt, no tape, no copy keys, no selective-read feedback (an empty context: gate 1, copy 0).
+        `batch` (the current prompt) is accepted so donor swaps and every caller keep their signature, and is not read: the donor's Z decides the answer. The 'nocopy' lesion is
+        a no-op here (nothing to copy); it still acts on the calls. return_modes: also a mode per row (always 2: one writer, no modes)."""
+        Z = state[0]
+        Xc, cmask, cids = self.answer_context(Z)
         outs, _ = self.writer.greedy(Z, torch.ones(Z.shape[:2], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
-                                     nocopy=lesion == 'nocopy', ckeys=self.ckeys(Xc.shape[1], T, le, cmask), temperature=temperature, generator=generator)
+                                     temperature=temperature, generator=generator)
         out = [self.vocab.decode(o) for o in outs]
         return (out, [2] * len(out)) if return_modes else out
 
@@ -466,11 +486,7 @@ class B3G2(B3):
             return False
 
         o = self.loop(batch, n, g=g, sched=sched, each=keep_round)
-        Xt, idt, vis = o['tape']
-        T, le = o['X'].shape[1], o['le']
-        Xc, cmask, cids = torch.cat([o['X'], Xt.to(o['X'].dtype)], 1), torch.cat([o['xm'], vis], 1), torch.cat([batch['prompt_ids'], idt], 1)
-        ck = self.ckeys(Xc.shape[1], T, le, cmask)
-        te = ByteWriter.teacher([x['ans_ids'] for x in golds], cids, cmask, self.WCAP, BOS, EOS)       # fixed over the rounds t >= last: the whole tape is visible
+        te = self.answer_teacher(per[-1][1], [x['ans_ids'] for x in golds])       # fixed over the rounds t >= last; no context, so no feedback either
         acc, cnt = torch.zeros(B, device=dev), torch.zeros(B, device=dev)
         right = torch.zeros(len(per), B, dtype=torch.bool, device=dev)
         zs, share = [], None
@@ -482,7 +498,7 @@ class B3G2(B3):
             si = ok.nonzero()[:, 0]
             full = bool(ok.all())
             pk = lambda x: x if full else x[si]
-            args = (pk(Z), pk(Xc), pk(cmask), pk(cids), ck if ck is None or ck.dim() == 2 or full else ck[si], pk(te['inp']), pk(te['tgt']), pk(te['fb']))
+            args = (pk(Z), pk(te['inp']), pk(te['tgt']), pk(te['fb']))
             if self.training and torch.is_grad_enabled() and t >= CKPT_FROM:
                 nll, rt, sn, sd = checkpoint(self.ans_pass, *args, use_reentrant=False)
             else:
