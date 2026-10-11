@@ -1,0 +1,50 @@
+day 1: 719 rows, right 0.014
+day 2: 726 rows, right 0.211
+day 3: 940 rows, right 0.449
+day 4: 981 rows, right 0.581
+day 5: 832 rows, right 0.482
+day 6: 801 rows, right 0.544
+day 7: 892 rows, right 0.519
+day 8: 843 rows, right 0.537
+G 0.001 0.62996357779173
+G 0.01 0.6296889898571443
+G 0.1 0.615774781569873
+G 1.0 0.5969038166676975
+G_reader 0.001 0.5453628739026611
+G_reader 0.01 0.5552900082582678
+G_reader 0.1 0.548941721404184
+G_reader 1.0 0.5435031616323155
+crossfit G_reader 0.01 0.5416072045408132
+crossfit G_reader 1.0 0.5403359216578015
+crossfit G 0.01 0.6318043357025855
+crossfit G 1.0 0.6070559191437059
+
+POST-HOC; pooled days 2..8       wkAUC  Brier
+  G_C0.001           0.630  0.225
+  G_C0.01            0.630  0.235
+  G_C0.1             0.616  0.258
+  G_C1.0             0.597  0.305
+  G_reader_C0.001    0.545  0.274
+  G_reader_C0.01     0.555  0.273
+  G_reader_C0.1      0.549  0.275
+  G_reader_C1.0      0.544  0.280
+  G_reader_C0.01     0.542  0.209
+  G_reader_C1.0      0.540  0.253
+  G_C0.01            0.632  0.196
+  G_C1.0             0.607  0.279
+  proxy len_chars       0.581  higher=more wrong
+  proxy n_digit_runs    0.586  higher=more wrong
+  proxy n_digits        0.569  higher=more wrong
+  proxy max_number      0.508  higher=more right
+  proxy n_cell_refs     0.500  higher=more right
+  proxy n_colon_ranges  0.500  higher=more right
+  proxy logistic     0.578  0.275
+per kind, G_reader C=0.01:
+  ABS            n= 1210 succ=0.368 wkAUC=0.534 (5 groups)
+  MAX            n=  674 succ=0.693 wkAUC=0.556 (5 groups)
+  MIN            n=  639 succ=0.745 wkAUC=0.566 (4 groups)
+  PRODUCT        n=  889 succ=0.519 wkAUC=0.578 (6 groups)
+  SUM            n=  743 succ=0.485 wkAUC=0.569 (6 groups)
+  cell arithmetic n= 1094 succ=0.239 wkAUC=0.563 (5 groups)
+  division       n=  766 succ=0.559 wkAUC=0.531 (7 groups)
+runtime 1560.6s

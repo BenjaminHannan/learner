@@ -200,3 +200,16 @@ fixed before either motivator run starts).** Ben 9:35 PM ET: an inherent motivat
 - *Predictions (suggested):* both NO DIFFERENCE SHOWN, given H0. Edge may waste more practice on the untrainable kinds
   (uncertainty-seeking curiosity's "noisy TV" trap: what stays uncertain because it cannot be learned keeps attracting it);
   progress should waste less, since what cannot be learned shows no progress.
+
+**B5. Why D0 failed: post-hoc diagnostic (10:45 PM ET 10-10; cannot change D0's verdict).** Shown, `results/d0/diag/`.
+Within-kind AUC, days 2..N pooled (sheet s200 / sheet s201 / RPN s200):
+- Stronger regularisation helps a little: best G 0.569 / 0.630 / 0.589 (C 0.001-0.1), and at C 0.001 G's Brier (0.227)
+  beats the per-kind rate (0.256) on s200. Ranking within a kind stays weak.
+- Removing the day-to-day model change (fit and test on halves of the same day): G 0.60 / 0.63 / 0.82 (RPN thin and
+  possibly inflated by near-duplicate prompts across halves); reader-only 0.55 / 0.54 / 0.65-0.70. The thinking state adds
+  about 0.05-0.09 over the reader alone.
+- Surface difficulty (prompt length, digit count; a diagnostic, never part of the model): 0.56 / 0.59 / 0.54. The model's
+  own state knows about as much about which problems it will miss as counting digits does.
+- Read (suggested): within a kind, which tries succeed is only weakly predictable at 3M from anything we can see; the
+  model's thinking state carries a little of it, and a head trained into the thinker (the Main brain thread's SB-2) is the
+  fair next test of a per-problem guesser. The motivator race (B4) uses the per-kind level that does work.
