@@ -2052,6 +2052,6 @@ CPU):
 - **10-10, 9:10 PM ET:** APM ruled (fast-sleep ffa1fe72a): mark 1 fails on both parents, not
   proved wrong. The append-only pool neither helps nor harms on SCM2's recipe; the pool is not changed. Next: SCM2
   six-parent confirm and D6 after job 9.
-- **10-11, 10:45 AM ET:** run-1 creative and sleep phase marks sealed (CB-0 checker gate, CB-1 at 3M, CB-2 at 10M)
+- **10-11, 10:35 AM ET:** run-1 creative and sleep phase marks sealed (CB-0 checker gate, CB-1 at 3M, CB-2 at 10M)
   for the architecture thread's default that creative mode and sleep join run-1 (Ben, 10:25 AM ET 10-11). F is left
   out of run-1 on J, S1w and S1f's results.
