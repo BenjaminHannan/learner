@@ -1703,7 +1703,7 @@ families x 200, two parents).**
         last_digit, is checked by (1)-(3): its copied pieces of x are swapped, aligned from the number's end.
       - Disclosed defaults accepted: a try that never reads x is rejected, a self re-run that does not match is
         uncheckable, and a '?' reply on an example is rejected.
-    - **Addendum (10-11, 4:35 PM ET, before any B3 number), for Ben's 4:06 and 4:08 PM ET rules.** Tool replies are now
+    - **Addendum (10-11, 4:30 PM ET, before any B3 number), for Ben's 4:06 and 4:08 PM ET rules.** Tool replies are now
       read by the reader, and the writer's answer mode reads only the thinker, so it has no copy. Call writing keeps
       its copy.
       - Records still come only from tries the checker accepts. A no-call answer has no copy record, so it reads as a
@@ -2078,6 +2078,6 @@ CPU):
 - **10-11, 10:35 AM ET:** run-1 creative and sleep phase marks sealed (CB-0 checker gate, CB-1 at 3M, CB-2 at 10M)
   for the architecture thread's default that creative mode and sleep join run-1 (Ben, 10:25 AM ET 10-11). F is left
   out of run-1 on J, S1w and S1f's results.
-- **10-11, 4:35 PM ET:** CB addendum before any B3 number (reader reads tool replies, answer mode has no copy): no-call
+- **10-11, 4:30 PM ET:** CB addendum before any B3 number (reader reads tool replies, answer mode has no copy): no-call
   answers give no records; later calls bind by value to earlier tool results; CB-1 first try scored right against
   the key with or without a call; CB-0 mark (2) counts calling tries only.
