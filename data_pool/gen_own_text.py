@@ -14,6 +14,7 @@ from multiprocessing import Pool
 
 RUNGS = [(3, 7.6e6), (10, 22.8e6), (30, 72.0e6)]
 FAM_N = 34
+SEED_TAG = "O1"          # the 600M extension uses "O2" (--tag): new draws, same generators
 NO_LEN_FILTER = True   # Ben 2:04 PM ET 10-07: do not cut off long items. skills_curriculum.build drops est_tokens > 62 silently; this script keeps them and counts them.
 
 
@@ -25,12 +26,12 @@ def skills_worker(args):
     max_est = None if NO_LEN_FILTER else MAX_TOKENS_EST
     from skills_curriculum.build import DIFF_WEIGHTS
     from skills_curriculum import verify
-    rng = random.Random(f"own|{fid}")
+    rng = random.Random(f"own|{fid}" if SEED_TAG == "O1" else f"own{SEED_TAG}|{fid}")
     seen, rows, bad, i = set(), [], 0, 0
     rej = collections.Counter()
     for i in range(1, max_draws + 1):
         diff = rng.choices((0, 1, 2), DIFF_WEIGHTS)[0]
-        it = make_item(fid, "O1", i, diff)
+        it = make_item(fid, SEED_TAG, i, diff)
         if max_est is not None and it["est_tokens"] > max_est:
             rej["over_est_tokens"] += 1; continue
         if any(it["flags"].values()):
@@ -47,7 +48,7 @@ def skills_worker(args):
         if probs:
             bad += 1; continue
         seen.add(p)
-        rows.append({"id": f"own-{fid}-{i}", "family": fid, "level": it["level"], "variant": it.get("variant"), "stage": 9,
+        rows.append({"id": f"own-{fid}-{i}" if SEED_TAG == "O1" else f"own{SEED_TAG}-{fid}-{i}", "family": fid, "level": it["level"], "variant": it.get("variant"), "stage": 9,
                      "prompt": p, "answer": it["answer"], "accepted": it["accepted"], "steps": it.get("steps"), "est_tokens": it["est_tokens"]})
         if len(rows) >= target:
             break
@@ -60,7 +61,16 @@ def main():
     ap.add_argument("--teach", required=True); ap.add_argument("--gen-existing", required=True); ap.add_argument("--dev", nargs="*", default=[])
     ap.add_argument("--teach-tokens", type=float, default=None); ap.add_argument("--english-tokens", type=float, default=22.0e6)
     ap.add_argument("--procs", type=int, default=4)
+    ap.add_argument("--tag", default="O1", help="seed tag for the skills draws; O1 = own72, anything else = an extension of fresh rows")
+    ap.add_argument("--english-seed", type=int, default=9001)
+    ap.add_argument("--no-teach", action="store_true", help="extension: TEACH is all used in own72")
+    ap.add_argument("--rung", default=None, help="extension: RUNG=TOKENS, e.g. 100=21.3e6 (replaces the 3/10/30 ladder)")
+    ap.add_argument("--avoid-own", default=None, help="extension: dir of an earlier own set (skills/english/teach.jsonl); its prompts/passages are never repeated")
     a = ap.parse_args()
+    global SEED_TAG, RUNGS
+    SEED_TAG = a.tag
+    if a.rung:
+        k, v = a.rung.split("="); RUNGS = [(int(k), float(v))]
     os.makedirs(a.out, exist_ok=True)
     from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained("LiquidAI/LFM2.5-1.2B-Instruct", revision="0f604ada3f766f9f257460c4c9f0b5d6f69d431b")
@@ -69,12 +79,12 @@ def main():
 
     # ---- TEACH (flattened exactly like gen_control: one question per row)
     teach = []
-    for line in open(a.teach):
+    for line in ([] if a.no_teach else open(a.teach)):
         e = json.loads(line)
         for qi, q in enumerate(e["questions"]):
             teach.append({"id": f"{e['id']}-q{qi}", "kind": e["family"], "source_text": e["source_text"], "paraphrase": e["paraphrase"],
                           "question": q["question"], "type": q["type"], "canonical_answer": q["canonical_answer"], "accepted_answers": q["accepted_answers"]})
-    t_tok = ntok([r["source_text"] + " " + r["question"] + " " + r["canonical_answer"] for r in teach])
+    t_tok = ntok([r["source_text"] + " " + r["question"] + " " + r["canonical_answer"] for r in teach]) if teach else []
     T = sum(t_tok); print("teach rows", len(teach), "tokens", T, flush=True)
 
     # ---- English generator: 12 existing kinds, new seed, avoiding every GEN passage already used
@@ -82,11 +92,16 @@ def main():
     import gen_english as GE
     avoid = {json.loads(l)["source_text"] for l in open(a.gen_existing)}
     avoid |= {r["source_text"] for r in teach}
+    own_prompts = set()
+    if a.avoid_own:
+        for fn in ("english.jsonl", "teach.jsonl"):
+            avoid |= {json.loads(l)["source_text"] for l in open(os.path.join(a.avoid_own, fn))}
+        own_prompts = {json.loads(l)["prompt"] for l in open(os.path.join(a.avoid_own, "skills.jsonl"))}
     fits_rej = collections.Counter(); _fits = GE.fits
     def counting_fits(texts):
         ok = _fits(texts); fits_rej["fits_ok" if ok else "over_48_token_cap_KEPT"] += 1; return True   # Ben: no cut-offs; counted, not dropped
     GE.fits = counting_fits
-    ex = GE.make(int(a.english_tokens / 25 / 2 * 1.3), 9001, "train", avoid=avoid, kinds=12, block_files=GE.BLOCK_R6)
+    ex = GE.make(int(a.english_tokens / 25 / 2 * 1.3), a.english_seed, "train", avoid=avoid, kinds=12, block_files=GE.BLOCK_R6)
     over_by_kind = collections.Counter(); n_by_kind = collections.Counter()
     for e in ex:
         n_by_kind[e["family"]] += 1
@@ -111,6 +126,7 @@ def main():
         for fn in os.listdir(d):
             if fn.endswith(".jsonl"):
                 dev_prompts |= {json.loads(l)["prompt"] for l in open(os.path.join(d, fn))}
+    dev_prompts |= own_prompts
     sys.path.insert(0, a.skills_repo)
     from skills_curriculum import skills  # noqa: F401
     from skills_curriculum.build import train_families
