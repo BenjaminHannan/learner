@@ -247,14 +247,37 @@ def test_rule5_answer_is_the_last_result():
     t = P.trace([], [('g', '38')])
     v = verdict(row, t)
     assert v['verdict'] == 'reject' and v['reason'] == 'never reads x', v
-    # the last result written as constants (not copied) is the last result, but re-runs as a constant: rejected on the examples
+    # Ben's rule 2: the answer is written from the thinker's thoughts, never copied, so its record is empty. An answer equal to the last result (with no copied byte) is bound to that
+    # result (before rule 2 it was a constant and was rejected 'never reads x'); one that differs from the last result is still uncheckable (above).
     t = P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add '), ('R', 0), ('g', ' 5')]], [('g', '38')])
-    assert t['answer'] == '38' and verdict(row, t)['verdict'] == 'reject'   # (a constant answer never reads x)
+    assert t['answer'] == '38' and verdict(row, t)['verdict'] == 'accept'
     print('ok rule 5: with a call, an answer other than the last result (or a copy of it) is uncheckable')
 
 
+def test_rule2_empty_answer_records():
+    """Ben's rule 2: an answer is never copied (all copied=False). A call try whose answer equals the last result is still checkable (bound to the result); a no-call answer is a constant: rejected 'never reads x', never accepted."""
+    xs, q = XS[0], QS[0]
+    for kind in MUT:
+        row, good = reference(kind, xs, q)
+        g2 = copy.deepcopy(good)
+        g2['copies']['answer'] = [dict(copied=False, src=None, share=0.0) for _ in g2['answer']]
+        if g2['calls'] and g2['answer'] == g2['calls'][-1][1]:
+            assert verdict(row, g2)['verdict'] == 'accept', (kind, verdict(row, g2))
+            _, bad = reference(kind, xs, q, **MUT[kind][0])
+            b2 = copy.deepcopy(bad)
+            b2['copies']['answer'] = [dict(copied=False, src=None, share=0.0) for _ in b2['answer']]
+            assert verdict(row, b2)['verdict'] == 'reject'
+    row = dict(prompt=prompt_of(lambda x: x % 10, XS[0], 25))
+    P = Prog(row['prompt'])
+    t = P.trace([], [('g', '5')])                                              # no call, the right last digit, but written: a constant
+    t['copies']['answer'] = [dict(copied=False, src=None, share=0.0)]
+    v = verdict(row, t)
+    assert v['verdict'] == 'reject' and v['reason'] == 'never reads x', v
+    print('ok rule 2 records: call answers equal to the last result stay checkable; a no-call answer is a constant (reject, never reads x)')
+
+
 def test_no_call_last_digit():
-    """Ruling c8ff22777a: rule 5 applies only to tries that make a call; a no-call answer is checked by rules 1-4."""
+    """Ruling c8ff22777a: rule 5 applies only to tries that make a call; a no-call answer is checked by rules 1-4. (Hand-made copy records: after Ben's rule 2 the model cannot write a copied answer byte any more, so on real tries a no-call answer is a constant; see test_rule2_empty_answer_records.)"""
     for xs, q in zip(XS, QS):
         row = dict(prompt=prompt_of(lambda x: x % 10, xs, q))
         P = Prog(row['prompt'])
