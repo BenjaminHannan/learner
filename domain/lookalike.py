@@ -7,6 +7,8 @@ screen (LA0, no model training): the switch exactly as mode.py trains it, from t
 makes for --days days at even mix (seed --seed) against the diary prompts of --diary-run (an earlier run with the same
 parent, data and seed has the identical diary). Reports its on-rates only.
 
+score --gate all scores a run with no switch (a whole-model run): every question goes to the final checkpoint.
+
 score (LA1-LA3, a finished per-tool add-on run): the switch is trained from RUN/log.jsonl as route.py does (v8), or with
 one of the fixes fixed in the marks before any result (F1: risky diary questions, where the model's own answer with the
 add-on on differs from its pre-mode answer, get half of the negative weight; F2: mean and max of the reader's features).
@@ -157,7 +159,7 @@ def risky_weights(run, fin, diary, cache):
 
 def score_run(a):
     summary = json.load(open(os.path.join(a.run, 'summary.json')))
-    assert summary.get('addon') == 'per_tool', 'the switch needs a per-tool add-on run'
+    assert a.gate == 'all' or summary.get('addon') == 'per_tool', 'the switch needs a per-tool add-on run (else --gate all)'
     res = json.load(open(os.path.join(a.run, 'analysis', 'RESULT.json')))
     events = [json.loads(l) for l in open(os.path.join(a.run, 'log.jsonl'))]
     rows = [e for e in events if e['event'] == 'row']
@@ -178,9 +180,13 @@ def score_run(a):
     fin = res['final_checkpoint']
     m = load_model(a.parent).eval()   # the parent's reader = the model's reader with the add-on off
     feat = features_mm if a.gate == 'F2' else route.features
+    if a.gate == 'all':
+        feat = lambda m, prompts: torch.zeros(len(prompts), 1)
     Fp, Fn = feat(m, pos), feat(m, [d['prompt'] for d in diary])
     n_risky = None
-    if a.gate == 'F1':
+    if a.gate == 'all':   # no switch: every question goes to the final checkpoint (a whole-model run, or add-on left on)
+        gate, acc = (lambda F: torch.ones(len(F), dtype=torch.bool)), None
+    elif a.gate == 'F1':
         w, n_risky = risky_weights(a.run, fin, diary, cache)
         gate, acc = train_gate_w(Fp, Fn, w)
     else:
@@ -232,7 +238,7 @@ def score_run(a):
     changed = Counter((r['variant'], 'lost' if h0 > hR else 'gained') for r, h0, hR in zip(lrows, l0['hits'], l_routed) if h0 != hR)
     dev_fam = on_rates(on_d, drows, 'family')
     out = dict(run=a.run, tool=summary['tool'], seed=summary['seed'], gate=a.gate, gate_settings=route.GATE,
-               train=dict(pos=len(pos), neg=len(diary), acc=round(acc, 4), risky_diary=n_risky),
+               train=dict(pos=len(pos), neg=len(diary), acc=None if acc is None else round(acc, 4), risky_diary=n_risky),
                on=dict(panel=on_rates(on_p, prows, 'split'), panel_kind=on_rates(on_p, prows, 'kind'),
                        old_panel=on_rates(on_l, lrows, 'variant'), dev_total=dict(on=int(sum(on_d)), n=len(on_d)),
                        dev_families={k: v for k, v in dev_fam.items() if v['on']}),
@@ -268,7 +274,8 @@ def main(argv=None):
     s.add_argument('--out', required=True)
     r = sub.add_parser('score')
     r.add_argument('--run', required=True)
-    r.add_argument('--gate', default='v8', choices=['v8', 'F1', 'F2'])
+    r.add_argument('--gate', default='v8', choices=['v8', 'F1', 'F2', 'all'],
+                   help="all = no switch, every question to the final checkpoint (whole-model runs)")
     r.add_argument('--out-dir', default=None)
     r.add_argument('--heldout-panel', default=None, help='lookalike-old-heldout.v1.jsonl (addendum L1, reported only)')
     for p in (s, r):
