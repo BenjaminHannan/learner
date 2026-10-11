@@ -14,6 +14,7 @@ import json
 import os
 
 import numpy as np
+import torch
 
 from game.crafter_text import ACTIONS, TextEnv, parse_action
 
@@ -119,49 +120,69 @@ def model_policy(m, bs=64):
     return pol
 
 
-def move_logprobs(m, prompts, bs=64):
-    """Log-probability of each of the 17 move words as the complete answer -> float64 array [len(prompts), 17].
-    Same readout as m.talk (custom_io/models/tool.py:390-402): GEN registers hold the answer units-first, one distribution per
-    register from m.gen_copy; a word scores sum of log p(register k = letter k of the reversed word) + log p(register len = EOS).
-    The registers are parallel (no feedback), so teacher forcing needs one run per prompt; the 17 words are scored together."""
-    import torch
-    from custom_io.data import EOS, Dataset, collate, to_device
+def _chunk_logprobs(m, chunk, ids, msk, n):
+    """Torch [len(chunk), 17] log-probs of the 17 words for one chunk of prompts. Differentiable when called with grad enabled
+    (and the add-on's parameters require grad); move_logprobs calls it under no_grad. One body for both, so they cannot differ."""
+    from custom_io.data import Dataset, collate, to_device
+    ds = Dataset([{'id': f'g{i}', 'prompt': p, 'answer': '', 'accepted': [], 'family': '', 'level': 0}
+                  for i, p in enumerate(chunk)], m.vocab, strict=False)
+    batch = to_device(collate([ds[i] for i in range(len(chunk))]), 'cpu')
+    state = m.state_of(m.run(batch))
+    R, Xt, idt, vis = state[:4]
+    X, xm = m.read(batch, talker=True)
+    Xc, mc = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1)
+    idc = torch.cat([batch['prompt_ids'], idt.long()], 1)
+    p, _ = m.gen_copy(R, Xc, mc, idc)                               # [B, 9, V]
+    lp = p[:, :n].clamp_min(1e-12).log()                            # [B, n, V]
+    g = lp[:, torch.arange(n)[None, :].expand(N_ACTIONS, -1), ids]  # [B, 17, n]: lp[b, k, ids[j, k]]
+    return (g * msk).sum(-1)
+
+
+def _words(m):
+    from custom_io.data import EOS
     n = max(len(w) for w in WORDS) + 1
     ids = torch.zeros(N_ACTIONS, n, dtype=torch.long)
     msk = torch.zeros(N_ACTIONS, n, dtype=torch.bool)
     for j, w in enumerate(WORDS):
         t = m.vocab.encode(w[::-1]) + [EOS]
         ids[j, :len(t)], msk[j, :len(t)] = torch.tensor(t), True
+    return ids, msk, n
+
+
+def move_logprobs_grad(m, prompts):
+    """As move_logprobs for ONE chunk of prompts (the caller sets the chunk size), but with gradients: torch float32 [len(prompts), 17]
+    whose graph reaches the add-on's parameters (the base model is frozen). Call it with grad enabled; the model is put in eval mode."""
+    ids, msk, n = _words(m)
+    m.eval()
+    return _chunk_logprobs(m, prompts, ids, msk, n)
+
+
+def move_logprobs(m, prompts, bs=64):
+    """Log-probability of each of the 17 move words as the complete answer -> float64 array [len(prompts), 17].
+    Same readout as m.talk (custom_io/models/tool.py:390-402): GEN registers hold the answer units-first, one distribution per
+    register from m.gen_copy; a word scores sum of log p(register k = letter k of the reversed word) + log p(register len = EOS).
+    The registers are parallel (no feedback), so teacher forcing needs one run per prompt; the 17 words are scored together.
+    The scoring itself is _chunk_logprobs, shared with move_logprobs_grad (the training version)."""
+    ids, msk, n = _words(m)
     m.eval()
     out = []
     for s in range(0, len(prompts), bs):
-        chunk = prompts[s:s + bs]
-        ds = Dataset([{'id': f'g{i}', 'prompt': p, 'answer': '', 'accepted': [], 'family': '', 'level': 0}
-                      for i, p in enumerate(chunk)], m.vocab, strict=False)
-        batch = to_device(collate([ds[i] for i in range(len(chunk))]), 'cpu')
         with torch.no_grad():
-            state = m.state_of(m.run(batch))
-            R, Xt, idt, vis = state[:4]
-            X, xm = m.read(batch, talker=True)
-            Xc, mc = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1)
-            idc = torch.cat([batch['prompt_ids'], idt.long()], 1)
-            p, _ = m.gen_copy(R, Xc, mc, idc)                               # [B, 9, V]
-            lp = p[:, :n].clamp_min(1e-12).log()                            # [B, n, V]
-            g = lp[:, torch.arange(n)[None, :].expand(N_ACTIONS, -1), ids]  # [B, 17, n]: lp[b, k, ids[j, k]]
-            out.append((g * msk).sum(-1).double().numpy())
+            out.append(_chunk_logprobs(m, prompts[s:s + bs], ids, msk, n).double().numpy())
     return np.concatenate(out) if out else np.zeros((0, N_ACTIONS))
 
 
-def softmax_pick(scores, u):
-    """Index drawn from softmax(scores) by inverse CDF with uniform u in [0, 1)."""
-    p = np.exp(scores - scores.max())
+def softmax_pick(scores, u, temp=1.0):
+    """Index drawn from softmax(scores / temp) by inverse CDF with uniform u in [0, 1). temp 1.0 is the plain softmax (exactly)."""
+    p = np.exp((scores - scores.max()) / temp)
     c = np.cumsum(p)
     return int(min(np.searchsorted(c, u * c[-1], side='right'), len(p) - 1))
 
 
-def move_policy(m, picker, bs=64):
+def move_policy(m, picker, bs=64, temp=1.0):
     """The model's own odds over the 17 moves as a policy. picker 'top': highest log-prob (ties: lowest index in ACTIONS);
-    'sample': draw by softmax of the log-probs with the episode's uniform (play passes it because `samples` is set).
+    'sample': draw by softmax of the log-probs / temp with the episode's uniform (play passes it because `samples` is set).
+    temp (GW-P, addendum A13) only changes 'sample'; the default 1.0 is the old behaviour.
     Always answers one of the 17 words."""
     assert picker in ('top', 'sample'), picker
 
@@ -169,13 +190,14 @@ def move_policy(m, picker, bs=64):
         lp = move_logprobs(m, prompts, bs)
         if picker == 'top':
             return [WORDS[int(np.argmax(r))] for r in lp]
-        return [WORDS[softmax_pick(r, u)] for r, u in zip(lp, us)]
+        return [WORDS[softmax_pick(r, u, temp)] for r, u in zip(lp, us)]
     pick.samples = picker == 'sample'
     pick.picker = picker
+    pick.temp = temp
     return pick
 
 
-def picked_policy(m, picker, bs=64):
+def picked_policy(m, picker, bs=64, temp=1.0):
     """picker 'greedy' = model_policy (as before); 'top' / 'sample' = move_policy."""
     assert picker in ('greedy', 'top', 'sample'), picker
-    return model_policy(m, bs) if picker == 'greedy' else move_policy(m, picker, bs)
+    return model_policy(m, bs) if picker == 'greedy' else move_policy(m, picker, bs, temp)
