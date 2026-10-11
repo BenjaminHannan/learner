@@ -243,3 +243,27 @@ the follow-up test, not a change to this one.
 - **Speed (estimate, untested):** GX did 2.97 s per update sharing the PC (about 1.2-1.5 s alone, inferred). A 5090 ran EGW about 4x the
   PC (shown, PASS-MARKS.md addendum 11), so each box should take about 3-4 h of training plus about 45 min of setup. If the first 500
   GX updates project an end after 6 AM ET, the control moves to a third box.
+
+## 15. Addendum H: stage 1 result (written 2026-10-11 about 09:00 UTC, 5:00 AM ET, after both box runs; marks unchanged)
+
+**Shown** (`custom_io/results/gx-box/`, `python -m custom_io.g8a.analyze_gx --results custom_io/results/gx-box`; pooled-5, same-box pairs):
+
+| Seed | G-B2 3M (box) | GX-3M (box) | GX minus G-B2 | X2 chain-5 | X3 | X4 even use |
+|---|---|---|---|---|---|---|
+| 400 (box A2) | 72.55 | 70.93 | **-1.62** | 99.9 ok | +15.5 ok | fail (block 1: 2 unused, top 3.5x; block 2: 4 unused, top 4.3x) |
+| 401 (box B) | 73.25 | 72.05 | **-1.19** | 100 ok | +22.2 ok | fail (block 1: 2 unused, top 4.4x; block 2: 2 unused, top 4.0x) |
+
+- **Readout by the marks: UNCLEAR.** X1 misses on both seeds (2-seed mean -1.41). STOP and "proved wrong" need X4 to pass, and it
+  failed on both seeds ("experts not evenly used", so it cannot be GO). Stage 2 (GX-10M) does not start.
+- **Where GX lost (shown, in_dist rule families, mean of 2 seeds, GX vs G-B2):** seq_next 36.3 vs 51.3, rule_apply 45.0 vs 62.5,
+  cipher_map 66.3 vs 80.0, order_chain 75.0 vs 85.0. Splits: in_dist 84.4 vs 87.3, answer 70.0 vs 71.9, variant 35.8 vs 33.9.
+- **Even use (suggested, not judged):** while training on the mixed rows (38% questions, 62% web fill-in), use was even at the end.
+  Busiest expert 1.40x / 1.26x an even share, least used 0.66x / 0.77x, inside X4's band (training-log `moe_top` / `moe_low` at
+  update 24,000, which are not per-block). X4 is measured on dev question rows only, where use is uneven. The likely reading
+  (inferred) is that experts specialised by kind of row, not that the balancing failed. That does not change the X4 result.
+- **Device check (reported):** box G-B2 minus PC G1 G-B2 = 72.55 - 73.0 and 73.25 - 73.7, about -0.45 each. The PC values are G1's
+  reported 3M scores, assumed to be the same pooled-5 metric.
+- **Cost and time (shown):** $6.19 of Vast spend (account total). Box B ran about 5.6 h; box A stalled and was replaced after
+  37 min (about $0.31). GX trained at 1.26 updates/s against G-B2's 1.46 while the two shared each card (5.3 h against 4.6 h).
+- **PC queue:** the post-G1 chain's GX runs are skipped (GX-ON-MAC.txt, as agreed with the roadmap thread). They would only repeat
+  this result.
