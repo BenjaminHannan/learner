@@ -228,3 +228,21 @@ Within-kind AUC, days 2..N pooled (sheet s200 / sheet s201 / RPN s200):
   train (A2), and still ended higher. R2 0.915 (v7 0.872).
 - Read (suggested): at 3M, practising evenly beats chasing a noisy progress signal. A drive helps only if its signal is
   less noisy than the gains it chases; the learned motivators (B4) face the same test. Sent to the domain-mode thread.
+
+**B7. The motivator race, seed 200 (2:15 AM ET 10-11).** Shown, `/mnt/project-files/dopamine/r1/*/analysis/RESULT.md`;
+every arm's night 1 equals v7's exactly (loss_first10 32.5206, quiz 19.14). Sealed near split, 7 scored kinds:
+| Arm | Near at night 7 | Minus rule (v7) | Minus even | Mean near, nights 1-7 | Practice on untrainable kinds (MOD/COUNTIF/IF), days with a signal |
+|---|---|---|---|---|---|
+| Rule (v7, hand-written) | 40.24 | 0 | -9.76 | 34.25 | (rule's shares) |
+| Even (no drive) | 50.00 | +9.76 | 0 | 35.14 | about 300 of 1,024 a day |
+| Edge (learned: unsure) | 49.05 | **+8.81** | -0.95 | **38.23** | 194-277 |
+| Progress (learned: improving) | 47.14 | **+6.90** | -2.86 | 37.48 | 141-194 |
+- Verdicts on the sealed B4 mark: **edge REPLACES THE RULE, progress REPLACES THE RULE** (both >= +5), each pending seed 201
+  (queued: edge s201, even s201, then progress s201; 8 nights each, against v7 s201's 54.76).
+- Against no drive, neither motivator is better at night 7 (-0.95, -2.86, one seed). Both climb faster early (mean over
+  nights 1-7: +3.1 and +2.3 over even; edge's night 2 is 33.57 vs 27.62).
+- Predictions: "both no difference" was wrong against the rule (the rule was worse than expected) and right against even.
+  The noisy-TV prediction was half right: progress spent the least on kinds that cannot train, as predicted, but edge
+  spent less than even, not more.
+- How strongly they steer (shown, log `motivator_pick`): mean priority of the chosen vs the pool, edge 0.145-0.209 vs
+  0.125-0.195 (a mild tilt); progress 0.16-0.26 vs 0.10-0.17 (a stronger tilt, towards cell arithmetic and ABS later).
