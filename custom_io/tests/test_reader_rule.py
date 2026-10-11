@@ -95,7 +95,7 @@ def test_r1_question_memo_not_evicted():
     m2.loss(b)[0].backward()
     e = m2._eg[0]
     assert e.passes == 1 and len(e.calls) == 1 and e.text_pass_n >= 1, (e.passes, len(e.calls), e.text_pass_n)
-    print('ok R2 (d): run + talk on a batch with calls embed the question once; replies take their own passes outside the memo')
+    print('ok R1 (d): run + talk on a batch with calls embed the question once; replies take their own passes outside the memo')
 
 
 def test_r1_gradient_reaches_the_adapter_from_replies():
@@ -248,21 +248,75 @@ def test_r2_call_mode_still_copies():
     print('ok R2 T2: call mode keeps its copy context (gate < 1, attention over [prompt; tape], context-sensitive)')
 
 
-GOLD = dict(call='0x1.2ee1860000000p+7', call_acc='0x0.0p+0', eos_acc='0x0.0p+0', stop_in='0x1.8874b80000000p-15', stop_abs='0x1.28eccd1bf5ea8p+13')       # taken at the rule-1 commit
-
-
-def test_r2_call_and_stop_inputs_unchanged_by_the_answer_rule():
-    m = loud((torch.manual_seed(0), make())[1]).train()
-    cap = {}
-    m.stop.register_forward_hook(lambda mod, inp, out: cap.update(z=inp[0].detach()))
+def test_r2_call_and_stop_inputs_do_not_depend_on_the_answer_path():
+    """The call loss and the call/EOS hits come from the call writer alone: replacing the answer pass by a constant leaves them bit-identical (no hard-coded floats)."""
     b = batch_of(rows(8), V)
-    torch.manual_seed(7)
-    loss, aux = m.loss(b)
-    z = cap['z'].double()
-    got = dict(call=float(aux['call']).hex(), call_acc=float(aux['call_acc']).hex(), eos_acc=float(aux['eos_acc']).hex(), stop_in=float(z.sum()).hex(), stop_abs=float(z.abs().sum()).hex())
-    assert got == GOLD, (got, GOLD)
-    assert torch.isfinite(loss) and float(aux['copy_share']) == 0.0
-    print('ok R2 T2 (d): the call loss, the call/EOS hits and the stop head\'s inputs are bit-identical to the rule-1 commit (the answer term and the stop LABELS, which are built from the answers, change)')
+    outs = []
+    for stub in (False, True):
+        m = loud((torch.manual_seed(0), make())[1]).train()
+        if stub:
+            m.ans_pass = lambda Z, inp, tgt, fb: (Z.sum((1, 2)) * 0.0, torch.zeros(Z.shape[0], dtype=torch.bool), torch.zeros(Z.shape[0]), torch.ones(Z.shape[0]))
+        torch.manual_seed(7)
+        loss, aux = m.loss(b)
+        outs.append((float(aux['call']).hex(), float(aux['call_acc']).hex(), float(aux['eos_acc']).hex()))
+        assert torch.isfinite(loss) and float(aux['copy_share']) == 0.0
+    assert outs[0] == outs[1], outs
+    print('ok R2 T2 (d): the call loss and the call/EOS hits are bit-identical whatever the answer pass does')
+
+
+def calling_golds(m, flip):
+    rs = [r for r in rows(8) if r['steps']]
+    b = batch_of(rs, V)
+    golds = m.train_golds(rs)
+    for gd in golds:
+        assert gd['texts']
+        if flip:
+            t = gd['tape'][-1]
+            gd['tape'][-1] = t[:-1] + ('7' if t[-1] != '7' else '3')               # same length, other reply digit
+    return b, golds
+
+
+def test_r2_answer_rounds_come_after_the_last_reply():
+    """Every round at which the answer is asked has a Z that has read the row's last calculator reply: changing only the last reply's text changes Z there."""
+    seen = []
+    for flip in (False, True):
+        m = loud((torch.manual_seed(1), make())[1]).train()
+        m.gap_p = 0.0
+        zs = []
+        real = m.ans_pass
+        m.ans_pass = lambda Z, inp, tgt, fb, real=real, zs=zs: (zs.append(Z.detach().clone()), real(Z, inp, tgt, fb))[1]
+        b, golds = calling_golds(m, flip)
+        torch.manual_seed(5)
+        m._loss(b, golds)
+        seen.append(zs)
+    assert len(seen[0]) == len(seen[1]) and len(seen[0]) > 0
+    for z0, z1 in zip(*seen):
+        assert (z0 - z1).abs().flatten(1).max(1).values.gt(0).all(), 'an answer round whose Z has not read the last reply'
+    print('ok R2 (f): in training, every answer round of a calling row sees the last reply (max|dZ| > 0 for every row at every answer round)')
+
+
+def test_r2_free_runs_read_the_last_reply():
+    """A forced run (loops=2, one call at round 1) and the learned stop both return a Z that has read the last reply; the answer follows the reply."""
+    m = noisy_writer(loud(make())).eval()
+    b = batch_of([dict(id='x', family='copy_word', prompt='Echo: abc', answer='x', steps=[])], V)
+    zs = []
+    for rep in ('12', '99999'):
+        Script(m, [['add 7 5']])
+        with torch.no_grad():
+            o = m.run(b, loops=2, oracle=lambda i, t, call, rep=rep: rep)
+        m.writer.greedy = m.writer.greedy.real
+        assert o['calls'][0] and o['calls'][0][0][4] == rep, o['calls']
+        zs.append(o['Z'])
+    assert not torch.equal(zs[0], zs[1]), 'loops:2 with a call at round 1: Z must have read the reply'
+    # learned stop: a row never stops in the round it called (its Z could not have read the reply)
+    m2 = make().eval()
+    m2.p_stop = lambda z: torch.ones(z.shape[0])
+    Script(m2, [['add 7 5']])
+    with torch.no_grad():
+        o = m2.run(b)
+    m2.writer.greedy = m2.writer.greedy.real
+    assert all(c[0] < o['rounds'][0] - 0 for c in o['calls'][0]) and (not o['calls'][0] or o['rounds'][0] >= o['calls'][0][-1][0] + 2), (o['rounds'], o['calls'])
+    print('ok R2 (g): forced runs settle one more pass after a final call; the learned stop never stops in a round that wrote a call')
 
 
 def test_r2_lessons_still_run():
