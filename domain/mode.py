@@ -688,7 +688,7 @@ def main(argv=None):
             json.dump({str(r): v for r, v in rings.items()}, f)
         T['widen'] += time.time() - t
         log('widen', pieces=wst['pieces'], kept=wst['kept'], tries=wst['tries'], per_kind=wst['per_kind'], sha256=wst['sha256'],
-            secs=round(time.time() - t, 1), samples={r: [p for _, p in v[:8]] for r, v in rings.items()})
+            widen_secs=round(time.time() - t, 1), samples={r: [p for _, p in v[:8]] for r, v in rings.items()})
 
     # step 1: diary (self-replay) and check set, from TRAIN prompts only
     t = time.time()
