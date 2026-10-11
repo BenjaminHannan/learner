@@ -280,3 +280,11 @@ to keep, would likely hit the same wall. GW-D should lead with exploration: a le
 there. Per A7, GW-D runs only if GW-S3 (the sleep-move credit fix) fails S3-2; it then uses the move records in
 `game-world/runs/*/moves/*.jsonl.gz` (view, move, source, step reward, unlocks). Its marks are sealed before any run, by the thread
 that runs it.
+
+**B10. SB-2 read (Main brain thread, Result 12 in `main-brain/MARKS-2026-10-10.md`, 10:35 AM ET 10-11; relayed, checked there).**
+Shown there, one seed: the guesser trained into the body on control 1 ranked within-kind next-day tries at AUC 0.536 (frozen probe
+on the no-head run 0.585, prompt length 0.571), Brier 0.334 vs per-kind rate 0.216, and cost one old skill (seq_next 85 -> 72.5).
+G1 and G2 proved wrong, G3 passed. With D0 (0.54-0.60) this is the second way of asking the 3M model "will I get this right?"
+that stays near chance within a kind. Suggested: at 3M, self-knowledge finer than "which kind is hard" is not there to read out,
+by a fitted probe or by training it in. That leaves the motivator's next rungs as written: SB-2b (their reader mean + round-1
+workspace head, own marks), the 10M/30M re-check, and GW-D led by exploration (B9).
