@@ -1,0 +1,450 @@
+{
+  "kicker": "Part 2 of 8",
+  "title": "The reader: giving every letter a meaning",
+  "blurb": "The reader is a borrowed part. It reads the question once and gives every letter a meaning in context.",
+  "accent": "reader",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 24,
+      "heading": "Where we are: the reader comes first",
+      "caption": [
+        "The question enters the reader first. The reader is a borrowed model called Gemma, and it reads the whole question one time.",
+        "Picture only: a translator who already knows English well. We borrowed him, and we cannot change him."
+      ],
+      "illustration": "analogy only: the translator is a picture, not a real part",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 and sec. 2 (Reader row)",
+        "kit GLOSSARY.md (shared translator picture)"
+      ],
+      "notes": "Map is S.modelMap with highlight reader. Order of the five parts follows GLOSSARY.md. Checker edit: caption 1 now names Gemma as the reader (first use in the chapter), so s02 onward stands alone. Checker edit: the 'picture only' tag now says it is the translator that is only a picture (the map itself is the finished design). Fixer edit: a plain \"the question\" card with an arrow up into the Reader box was added (the caption says the question enters the reader first); the map labels of the dimmed parts are a darker grey (local override, same words).",
+      "labels": {
+        "question": "the question"
+      }
+    },
+    {
+      "id": "s02",
+      "duration": 26,
+      "heading": "Letters versus word pieces",
+      "caption": [
+        "Gemma cuts text into word pieces, called tokens.",
+        "Our thinker, the part that does the thinking, works on letters: one spot for each letter."
+      ],
+      "example": "Tom has 12 apples.",
+      "illustration": "made-up example: where the cuts fall is a picture only, not Gemma's real cut",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 1 (lines 12-13: Gemma cuts text into tokens; the thinker has one spot per letter)"
+      ],
+      "notes": "Only the sentence is real. The token boxes are drawn by hand and are labelled as a made-up example. Checker edit: caption 2 now says in half a sentence what the thinker is. Fixer edit: letters and word-piece boxes are centred on the screen and larger; the arrows end on the boxes. No text or claim changed."
+    },
+    {
+      "id": "s03",
+      "duration": 24,
+      "heading": "Measured: about 3 to 4.3 letters per token",
+      "caption": [
+        "On 20,000 of our skill questions, one token covers 3.08 letters on average.",
+        "On 9,068 web-text chunks of 279 letters, one token covers 4.27 letters on average."
+      ],
+      "labels": {
+        "skills": "skill questions",
+        "web": "web text, 279-letter chunks"
+      },
+      "numbers": {
+        "skills": 3.08,
+        "web": 4.27
+      },
+      "chip": "tested",
+      "chip_label": "measured by count",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 2 table, rows 1 and 2 (lines 38-39: 20,000 rows 3.08; 9,068 rows 4.27; my count 10-09, Gemma tokenizer.json at 914f7f89)"
+      ],
+      "notes": "A ratio (letters per token), not a score out of 100. The sec. 1 text rounds these to 3.1 and 4.3; the table values 3.08 and 4.27 are shown (table used). The row counts 20,000 and 9,068 are from the same table. Checker: Gemma tokenizer and the skill/web files are not on this machine, so the two ratios are the source's own count (not recomputed). Heading says 'about 3 to 4' because 4.27 is above 4. Checker edit: both bars now teal (the reader's tokenizer); indigo is the thinker's colour."
+    },
+    {
+      "id": "s04",
+      "duration": 26,
+      "heading": "The reader reads once, then copies meaning",
+      "caption": [
+        {
+          "at": 0.05,
+          "text": "Gemma reads the whole question one time."
+        },
+        {
+          "at": 0.4,
+          "text": "Each token gets a row of 768 numbers that holds its meaning in context."
+        },
+        {
+          "at": 0.7,
+          "text": "Each letter takes the row of the token it sits in."
+        }
+      ],
+      "labels": {
+        "token": "one token",
+        "row": "768 numbers",
+        "letter": "one letter"
+      },
+      "illustration": "shaded cells are decoration; only the 768 count is a fact",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Reader row, line 31)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 1",
+        "custom_io/models/eg.py lines 10-11 and line 25 [branch learner-new-g2; line 23 on custom-reader-talker-4x309r] (EG_DIM 768; H [B,T,768] is the state of the token that holds each prompt char)"
+      ],
+      "notes": "768 is Gemma's width. Older page architecture/model-deep-dive.html line 69 says 256 numbers per letter; that is the earlier design and is not shown. Fixer edit: the \"shaded cells are decoration\" note now arrives together with the 768 row; the row sits on the arrows' line and both arrows run edge to edge."
+    },
+    {
+      "id": "s05",
+      "duration": 32,
+      "heading": "The borrowed reader: 271,002,624 numbers",
+      "caption": [
+        "The reader holds 271,002,624 numbers, all set before our work began.",
+        "134,217,728 of them are a word table (one row per word piece); 136,784,896 are reading layers (a transformer) plus a step widening rows to 768.",
+        "It is frozen: our practice never changes it. Its own reading limit is 8,192 tokens, which is not our limit."
+      ],
+      "labels": {
+        "table": "word table 134,217,728",
+        "tf": "transformer 136,784,896",
+        "frozen": "borrowed, frozen"
+      },
+      "src": [
+        "custom_io/models/eg.py lines 1-6 (frozen, never trained; text backbone 271,002,624 = 134,217,728 word table + 136,784,896 transformer and its 512 to 768 projection)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Reader row)",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md line 32 (8,192-token model card)"
+      ],
+      "notes": "Sum checked by hand: 134,217,728 + 136,784,896 = 271,002,624. The source calls the first part a 'word table' (an embedding table has one row per word piece by definition); the number of rows is not given in the sources read, so no row count is shown. Borrowed and frozen is shown as a teal text label, not a status chip. The 8,192-token card limit is the source's quote of the model card (not re-fetched). Checker edit: the transformer bar is teal (it is part of the reader), not the thinker's indigo. Checker edit: 'projection' replaced by its plain meaning (eg.py line 6: 512 -> 768 projection)."
+    },
+    {
+      "id": "s06",
+      "duration": 22,
+      "heading": "The converter plug: 768 numbers in",
+      "caption": [
+        "One linear layer, a learned mix of numbers, turns Gemma's 768 numbers into the thinker's row length, its width.",
+        "At width 256 it has 196,864 learned numbers; at width 512 it has 393,728."
+      ],
+      "labels": {
+        "in": "768 in",
+        "out": "thinker width",
+        "plug": "converter plug"
+      },
+      "chip": "learned",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Gemma adapter row, line 32)",
+        "custom_io/models/ledger.py lines 192-202 and 281-293 (eg_proj = nn.Linear(768, d), zero-initialised, applied to Gemma's state)"
+      ],
+      "notes": "Our check: 768 times 256 plus 256 bias = 196,864; 768 times 512 plus 512 = 393,728. Matches the source. The layer norm before the layer (1,536 numbers) is not counted in the source's figure either. Width 256 is the 3M-size model, width 512 the planned 100M thinker (FINISHED sec. 5 item 9). Checker edit: added the illustration tag (the vectors are decoration). Fixer edit: the \"picture only\" note now arrives together with the two cell rows; arrows run edge to edge.",
+      "illustration": "picture only: cell counts and shading are decoration"
+    },
+    {
+      "id": "s07",
+      "duration": 44,
+      "heading": "Four parts added into one letter row",
+      "caption": [
+        "First: which letter it is. A learned row of numbers.",
+        "Second: where it sits in the question. A learned table: 2,000 rows in the planned finished design (B3), 280 in the growth test (G1).",
+        "Third: how far its letter sits from the end of its word. The count is hand-written; the row it picks is learned.",
+        "Fourth: Gemma's meaning, through the converter plug, is added on top. Then the letter window (next scene) reads the sum."
+      ],
+      "labels": {
+        "char": "which letter",
+        "pos": "where in question",
+        "place": "place in word",
+        "gemma": "Gemma meaning",
+        "sum": "added together"
+      },
+      "chip": "hand-written",
+      "chip_label": "place count only",
+      "chip_target": "place",
+      "src": [
+        "custom_io/models/reader.py lines 1-3 (docstring: E_char + E_pos + E_place; place = index from the right end of the word) and lines 62, 71-84 (order: char + pos, then place, then extra added, then the conv blocks)",
+        "custom_io/models/ledger.py lines 281-293 (read(): eg_proj(ln_eg(H)) passed as extra)",
+        "custom_io/g8a/caps_b3.json (max_prompt 2000) and caps_g.json (max_prompt 280); custom_io/g8a/caps.py lines 130-132 (reader.MAX_PROMPT = caps max_prompt, the position table size)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (place code row; group 2 replaces the count) and sec. 7 Q2"
+      ],
+      "notes": "Order checked in code (branch learner-new-g2 and qtxfp4, identical reader.py): Gemma's projection is added after the three parts and before the conv window. Only the place COUNT (word_spans regex) is hand-written; the place ROW (nn.Embedding) is learned. B3 group 1 is built but never run, so the 2,000-row table is a planned setting; G1 (280) is what has run. Checker edit: box colours now follow the glossary (blue learned, brown hand-written, teal Gemma = reader); before, Gemma was coral (the call writer's colour) and the position table indigo (the thinker's colour). Checker edit: 'Part one..four' became 'First..Fourth' so the captions are not mistaken for the video's 'Part 2 of 8' numbering. Fixer edit: the four arrows now end on the top edge of the \"added together\" box. The Gemma box border is the reader teal (#0F8B8D), same as the Reader box; not green."
+    },
+    {
+      "id": "s08",
+      "duration": 31,
+      "heading": "The letter window: each letter sees 4 each side",
+      "caption": [
+        "Two small learned layers read the summed row. They are ours, not borrowed.",
+        "Each layer looks 2 letters left and 2 right, so together a letter sees 4 letters each side.",
+        "The window adds about 0.7 million numbers at width 256, about 2.6 million at 512."
+      ],
+      "labels": {
+        "l1": "layer 1: 2 each side",
+        "l2": "layer 2: 2 more each side"
+      },
+      "chip": "learned",
+      "chip_label": "learned, ours",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (letter window row, line 33)",
+        "custom_io/models/reader.py lines 5-6 and 46-54, 63 (two ConvBlocks, kernel 5, padding 2: plus or minus 2 each, plus or minus 4 in all; layers=2 is the Ledger default, ledger.py __init__ signature, reader_layers=2) [branch learner-new-g2]"
+      ],
+      "notes": "The window is learned, not borrowed. Exact counts from code (my count, not shown): per block conv d*d*5 + d plus LayerNorm 2d; two blocks = 656,896 at width 256 and 2,624,512 at width 512; the on-screen 0.7 million and 2.6 million are the source's rounded values. Fixer edit: picture moved down so the layer-2 label clears the heading; caption 3 shortened by two words so \"512.\" no longer sits alone on a second line (numbers and \"about\" unchanged)."
+    },
+    {
+      "id": "s09",
+      "duration": 38,
+      "heading": "Without the window, cipher puzzles fall",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "Letter-cipher puzzles are one kind of test question: 40 familiar-style ones per copy (a separate training run), scored out of 100."
+        },
+        {
+          "at": 0.27,
+          "text": "With the window, Gemma plus letters scores 97.5 and 95.0 on two copies."
+        },
+        {
+          "at": 0.52,
+          "text": "Without it, Gemma plus letters scores 5.0 and 2.5."
+        },
+        {
+          "at": 0.7,
+          "text": "Letters alone, without it, score 12.5 and 2.5."
+        }
+      ],
+      "labels": {
+        "with": "Gemma + letters, with window",
+        "without": "Gemma + letters, no window",
+        "alone": "letters only, no window",
+        "zero": "0",
+        "full": "100",
+        "scale": "points out of 100"
+      },
+      "numbers": {
+        "ewith1": 97.5,
+        "ewith2": 95,
+        "wo1": 5,
+        "wo2": 2.5,
+        "r0a": 12.5,
+        "r0b": 2.5
+      },
+      "chip": "tested",
+      "chip_label": "2 copies, one kind",
+      "src": [
+        "custom_io/results/RESULTS-EG2.md lines 120-121 (in-distribution cipher_map; copies 200 and 201)",
+        "custom_io/results/46-r0ege-s200/EGE_s200 and 49-ege-s201/EGE_s201 RESULT.json (eg_embed true, 2 window layers): final_eval.in_dist.by_family.cipher_map 39/40 and 38/40",
+        "custom_io/results/44-egr-s200/EGR_s200 and 45-egr-s201/EGR_s201 RESULT.json (eg_embed true, reader_layers 0: Gemma plus letters, no window): 2/40 and 1/40",
+        "custom_io/results/46-r0ege-s200/R0_s200 and 48-r0-s201/R0_s201 RESULT.json (reader_layers 0, no eg_embed: letters alone, no window): 5/40 and 1/40",
+        "swarm/gpt-swarm-team-2026-10-05.md lines 27 and 29 ('letter ciphers (cipher_map)'; 'Held-out test splits, 40 questions per family per split')"
+      ],
+      "notes": "Arms re-read in the result files (branch origin/claude/custom-reader-talker-4x309r): scores are cipher_map inside the in_dist split (same templates as practice, new questions), 40 questions per copy, so 39/40 = 97.5, 38/40 = 95.0, 2/40 = 5.0, 1/40 = 2.5, 5/40 = 12.5. Same two seeds (200, 201) in every arm: first bar of a group is seed 200. Disagreement (1): the brief and FINISHED sec. 2 and sec. 7 Q3 say 100% down to 2.5-10%; the results file says 97.5/95.0 with the window, 5.0/2.5 (EGR) and 12.5/2.5 (R0). Results file used. Checker edit: 'copy' is defined at first use; 'cipher_map' is called letter-cipher puzzles (swarm/gpt-swarm-team-2026-10-05.md line 27: 'letter ciphers (cipher_map)'; 40 questions per family per split, same file line 29). Added the third group (letters alone, 12.5 and 2.5) so every number in the caption is on the picture, and the 40-puzzle count. Fixer edit: a 0 to 100 scale (ticks and labels) was added under the six bars; the bars already ran on a 0 to 100 track (hbars max 100). No value changed."
+    },
+    {
+      "id": "s10",
+      "duration": 36,
+      "heading": "The position table: how long a question can be",
+      "caption": [
+        "The position table has one row per spot, so it sets the longest question: 280 letters in the growth test (G1), 2,000 in planned B3.",
+        "In a sample of 4,000 bAbI test questions (a public set of story puzzles), 32% run over 280 letters and 1% over 2,000."
+      ],
+      "numbers": {
+        "sample": 4000,
+        "over280": 32,
+        "over2000": 1
+      },
+      "labels": {
+        "sample": "4,000 bAbI test questions",
+        "a": "over 280 letters",
+        "b": "over 2,000 letters",
+        "unit": "each square = 1%",
+        "dark": "dark square: also over 280 letters"
+      },
+      "chip": "tested",
+      "chip_label": "measured by count",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 7 Q2 (lines 173-176; 200 per task, bAbI test split)",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 7 (line 123: position table sized to the input cap, nn.Embedding(MAX_PROMPT, d))",
+        "custom_io/g8a/caps_g.json and caps_b3.json (max_prompt 280 and 2000)"
+      ],
+      "notes": "Counts from FINISHED sec. 7 (the architecture thread's own sample; big-run/PLAN.md line 103 repeats it and says 'not rechecked by me'). Checker: the bAbI files are not on this machine, so 4,000 / 32% / 1% are not recounted. 200 per task x 20 tasks = 4,000. Not a score. Checker edit: the first caption now says what the table is for (it sets the longest question) and what bAbI is; chip label no longer names an internal file. Checker edit: the two counts use orange and dark ink; coral and purple belong to the call writer and the stop switch. Fixer edit: added the unit line (each square = 1%) and a colour key (orange swatch = over 280, dark swatch = over 2,000). The dark square is inside the 32 coloured squares because a question over 2,000 letters is also over 280 (logic, not a new count). Duration 33 to 36 for the extra words."
+    },
+    {
+      "id": "s11",
+      "duration": 29,
+      "heading": "A hand-written pattern marks the numbers",
+      "illustration": "picture only: the marked cells are not a real question",
+      "caption": [
+        "A plain pattern, written by hand, finds the numbers in the question.",
+        "It records where each number is, not its value.",
+        "Room to mark: 16 numbers in the calculator-outside model (T1SDR), 91 in the growth test (G1), 240 in planned B3."
+      ],
+      "labels": {
+        "regex": "hand-written pattern",
+        "slots": "number slots",
+        "t1sdr": "calculator-outside model (T1SDR)",
+        "g1": "growth test (G1)",
+        "b3": "planned finished design (B3)"
+      },
+      "numbers": {
+        "t1sdr": 16,
+        "g1": 91,
+        "b3": 240
+      },
+      "chip": "hand-written",
+      "chip_label": "hand-written",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (number finder row, line 89; ledger.py:206)",
+        "custom_io/models/tool.py lines 10-12 (16 workspace slots for the prompt numbers only; the regex only says where a number is) [branch custom-reader-talker-4x309r, also learner-new-g2]",
+        "custom_io/models/ledger.py lines 205-208 [branch custom-reader-talker-4x309r at 17a356e62; line 221 on learner-new-g2] (NUM_RE.finditer fills the first N_NUM slots; N_NUM = 16 in progparse.py line 8)",
+        "custom_io/g8a/caps_g.json (n_num 91); custom_io/g8a/caps_b3.json (n_num 240); caps.py line 141 (pp.N_NUM = caps n_num)"
+      ],
+      "notes": "Planned replacement N1 (learned) is in B3 group 2, not built as a result. 16 (T1SDR) now also read in tool.py lines 10-12. Checker edit: bars now carry their plain names (they were unlabelled); code names stay as small tags after the plain name. Fixer edit: the hand-written-pattern chip now settles centred over the 16-cell row (it hung past the row end); the three marked cells are 3, 8 and 11 (picture only) so they sit under the chip."
+    },
+    {
+      "id": "s12",
+      "duration": 27,
+      "heading": "Calculator replies: read by the window only",
+      "caption": [
+        "In B3, the plain-code calculator's reply, shown as sub 12 5 = 7, is read by the letter window.",
+        "Gemma does not read replies. It read the question once.",
+        "Suggested reasoning: a reply carries nothing Gemma would add."
+      ],
+      "example": "sub 12 5 = 7",
+      "labels": {
+        "win": "letter window",
+        "gem": "Gemma"
+      },
+      "chip": "untested",
+      "chip_label": "built, never tested",
+      "illustration": "suggested reasoning",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 5 (lines 120-122; labelled suggested)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 3",
+        "custom_io/models/b3.py lines 3-4 (B3 group 1: the calculator's entries are read by the letter reader alone, Tool.read_texts; Gemma sees each question once)"
+      ],
+      "notes": "B3 group 1 builds this way; it has never been run (FINISHED sec. 5 item 6: the outside calculator and Gemma have never run together). The reply path is built, the reason is suggested, not measured. Checker edit: the two boxes now carry labels (they were empty), and the caption says 'shown as' to match the glossary (the reply itself is 7). Fixer edit: the amber chip now appears from the first beat (it was only at the last caption) and uses the chapter-wide wording \"built, never tested\". The X on the Gemma path is the as-built design of B3 group 1 (b3.py lines 3-4; FINISHED sec. 5 item 5), never run (item 6); only the reason (a reply adds nothing for Gemma) is \"suggested\", and that tag stays on caption 3. Captions unchanged."
+    },
+    {
+      "id": "s13",
+      "duration": 45,
+      "heading": "The gain: +2.67 points out of 100",
+      "caption": [
+        "On 6,040 test questions kept aside (five kinds, called Pooled-5), six separate training runs (copies) with the reader scored 75.9 to 77.2.",
+        "Eight copies of the same model without the reader scored 73.0 to 74.7.",
+        "On average the reader is ahead by 2.67 points out of 100, in all 6 copies (seeds), at 3M (about 3 million learned numbers)."
+      ],
+      "numbers": {
+        "gain": 2.67,
+        "held": 6040,
+        "copies": 6
+      },
+      "labels": {
+        "ege": "with Gemma: 75.9 to 77.2 (6 copies)",
+        "b2": "without: 73.0 to 74.7 (8 copies)",
+        "how": "2.67 averages six per-copy gaps, not range end minus range end."
+      },
+      "warning": "Caveat: this check missed its leak mark (next scene).",
+      "chip": "tested",
+      "chip_label": "3M size, 6 copies",
+      "src": [
+        "custom_io/results/39-pc-ege-confirm/RESULTS-EG2.md line 108 (EGE 6-seed confirm, seeds 202-207: mean +2.67, ahead 6, per seed +1.14 +2.70 +3.44 +2.63 +3.54 +2.57) [branch origin/claude/custom-reader-talker-4x309r]",
+        "custom_io/results/39-pc-ege-confirm/EGE_s202..s207 and B2_s206, B2_s207; custom_io/results/33-pc-confirm-b2/B2_s200..s205 RESULT.json (pooled-5 recomputed: EGE 75.88-77.19, plain B2 73.00-74.74)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 line 31 (EGE +2.67, 6 of 6 seeds)",
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md line 26 and line 44 (EGE 6 seeds 75.88-77.19; plain B2 8 seeds 73.00-74.74)",
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md line 18"
+      ],
+      "notes": "Re-added from the raw RESULT.json files: pooled-5 = (correct over in_dist, answer, frame, vocab, variant) / 6,040. EGE seeds 202-207: 75.88, 76.72, 77.07, 77.10, 77.19, 76.41 (range 75.88-77.19). Plain B2 seeds 200-207: 73.00, 74.27, 74.74, 74.02, 73.63, 74.47, 73.64, 73.84 (range 73.00-74.74, EIGHT copies; the six matching copies 202-207 range 73.63-74.74). The +2.67 is the source's own average of the six same-seed gaps (EGE minus plain B2 of the same seed), recomputed here as 2.671; it is not the difference of the two ranges. Disagreement (2) from the author is resolved: the top-level custom_io/results/RESULTS-EG2.md (lines 114-116) lists the 6-seed block as 'NOT JUDGED (seeds 202-207 missing)' because it was written before those files were in place; the six EGE result files and the judged block (39-pc-ege-confirm/RESULTS-EG2.md lines 106-112, and PASS-MARKS.md lines 839-845) are on origin/claude/custom-reader-talker-4x309r only (the other branches hold the plain B2 files of queue 33 but not the EGE files). That 6-copy confirm's verdict is FAIL on the leak mark only (marks 1-3 pass); shown in s14. The old on-screen warning '6-copy result files are not in this repo' is removed because it is no longer true and was repo jargon. Fixer edit: caption 1 now says the plain fact first (6,040 test questions kept aside) and gives the code name as a tag; an on-screen line says what 2.67 is: the source's mean of the six per-copy gaps (RESULTS-EG2.md line 108: mean +2.67, per_seed +1.14 +2.70 +3.44 +2.63 +3.54 +2.57), not range end minus range end. No new number is shown. Duration 41 to 45 for the extra words."
+    },
+    {
+      "id": "s14",
+      "duration": 42,
+      "heading": "Caveats: the leak warning light",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "A leak means some answers are right with zero rounds of thinking."
+        },
+        {
+          "at": 0.17,
+          "text": "Averaged over 6 copies, the zero-round leak is 6.59. The pass mark, set in advance as the no-reader average plus 1.0, was 4.62. Missed."
+        },
+        {
+          "at": 0.46,
+          "text": "On seed 200, on familiar questions, the reader version scored 18.09 with zero rounds; the same model without it, 1.40."
+        },
+        {
+          "at": 0.74,
+          "text": "Copies without the reader leak on some seeds too, so the cause is not settled."
+        }
+      ],
+      "numbers": {
+        "leak": 6.59,
+        "limit": 4.62,
+        "ege": 18.09,
+        "other": 1.4
+      },
+      "labels": {
+        "leak": "6-copy average",
+        "limit": "limit 4.62",
+        "ege": "reader version",
+        "other": "without reader",
+        "seed": "seed 200, zero rounds"
+      },
+      "chip": "tested",
+      "chip_label": "tested: leak mark missed",
+      "src": [
+        "custom_io/results/39-pc-ege-confirm/RESULTS-EG2.md line 111 (loops0_mean 6.59, plain_b2_loops0_mean 3.62, mark 4 False) and EGE-CONFIRM-ANALYSIS.json (6.593 and 3.615; limit = 3.615 + 1.0 = 4.615) [branch origin/claude/custom-reader-talker-4x309r]",
+        "custom_io/results/RESULTS-EG2.md lines 11-12 (EGE s200 loops0 18.09; plain B2 1.40 on the same seeds) and custom_io/PASS-MARKS.md lines 343-344, 375 and 378 (B2V 1.40; EGE seed 201 4.49 vs plain 4.34; plain B2 6.76 on screen seed 101) and lines 839-845 (6-seed result: loops:0 6.59 vs 3.62 + 1.0; 'the cause is not settled'; 'a Gemma-reader claim should carry the leak-mark failure beside the +2.67')",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 line 31 (leak mean 6.59 against a limit of 4.62) and sec. 5 item 2 (lines 110-112, 18.09 vs 1.40) and item 4 (plain B2 included on some seeds)"
+      ],
+      "notes": "Raw files: EGE_s200 loops:0 in_dist = 246/1,360 = 18.09; B2V_s200 (plain B2 on the rented 5090, 40-egw-s200) = 19/1,360 = 1.40; queue-33 B2_s200 (PC) = 0/1,360 = 0.00, so '1.40' is the B2V copy the source compares against. Plain copies with a leak: B2_s201 10.81, B2_s207 11.91, B2_s203 5.66 (recomputed). The 2-copy screen also failed its variant and leak marks (RESULTS-EG2 EGE block). The 1.40 comparison is labelled 'the same model without it' (B2V = plain B2, same recipe, other machine). Chip changed from amber to green: these numbers are measured results; the open part (the cause) is said in the caption. 'Familiar questions' = the in_dist split (same templates as practice), 1,360 questions. Fixer edit: the 6-copy bar now starts 0.9 s before caption 2 appears and lands as it fades in, so the number never trails the caption that quotes 6.59."
+    },
+    {
+      "id": "s15",
+      "duration": 25,
+      "heading": "Open question: tokens instead of letters",
+      "illustration": "picture only: the boxes show the idea, not a measured run",
+      "caption": [
+        "A test called TK would let the thinker read one spot per token (word piece) instead of one per letter.",
+        "The code and a PC job file exist, but it has never been run, so there is no result. Letters or tokens is still undecided."
+      ],
+      "chip": "untested",
+      "chip_label": "built, never tested",
+      "src": [
+        "architecture/TOKENS-EXPERIMENT-2026-10-09.md sec. 1 and sec. 3 (the thinker alone reads one pooled spot per token; the letter reader still runs on every letter)",
+        "custom_io/models/ledger.py lines 51-58, 141, 153-154, 295-298 (tok_think code and tok_spots) and custom_io/train.py lines 229-230 [branch learner-new-g2]",
+        "custom_io/queue_local/8aTK-pc-3.txt and 8aTK-card.md (job files and card; start waits for a free PC gap and the project owner's go)",
+        "branch origin/claude/8a-g-pc-results: only 8aG1d and 8aG1e results; no 8aTK result (checked 2026-10-10)",
+        "big-run/PLAN.md line 182 (TK: 'built and reviewed but not run'); architecture/FINISHED-MODEL-2026-10-09.md sec. 6 lines 155-157 ('Letters or tokens is decided before the 30M freeze')"
+      ],
+      "notes": "Disagreement (3) resolved: TOKENS sec. 8 was written before any build; the code (tok_think, test_tok_think.py) and the queue files now exist, and no result file exists, so the amber 'built, never tested' chip is right. Cut rule: the removed 'Chapter 12 covers it' is replaced by a plain statement that stands alone. The earlier word-piece losses (3.1 and 5.4 points) are not shown. Fixer edit: caption 1 reworded (same facts) so its second line is not a single word; the two rows now carry the labels \"letters\" and \"tokens\". Duration 24 to 25 for the two labels.",
+      "labels": {
+        "letters": "letters",
+        "tokens": "tokens"
+      }
+    },
+    {
+      "id": "s16",
+      "duration": 30,
+      "heading": "Recap: what to remember",
+      "cards": [
+        {
+          "label": "Reader",
+          "sub": "borrowed, frozen"
+        },
+        {
+          "label": "Window",
+          "sub": "4 letters each side"
+        },
+        {
+          "label": "No window",
+          "sub": "5.0 and 2.5 out of 100"
+        }
+      ],
+      "caption": [
+        "The reader is borrowed and frozen. It reads the question once.",
+        "Each letter gets a meaning in context, plus a window of 4 letters each side.",
+        "Without the window, the Gemma version scored 5.0 and 2.5 out of 100 on cipher puzzles, in two copies."
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 and sec. 5",
+        "custom_io/results/RESULTS-EG2.md lines 120-121"
+      ],
+      "notes": "Recap only; every number repeats an earlier scene (s09). Checker edit: 'falls to' became 'scored ... in two copies' to keep the strength of s09. Fixer edit: a green chip \"2 copies, one kind\" (same wording and status as s09) now sits under the \"No window\" card; the card row and the five-part map share their left and right edges; dimmed map labels are a darker grey. Duration 29 to 30 for the extra words.",
+      "chip": "tested",
+      "chip_label": "2 copies, one kind"
+    }
+  ]
+}
