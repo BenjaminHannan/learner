@@ -130,6 +130,45 @@ def test_router_feats_decide_what_answer_reads():
         S.workspace_features, S.reader_features, S.both_features = saved
 
 
+def test_two_pieces_three_class_router():
+    """M1c shape: classes none, sheet, py; the shelf takes its piece count from the pieces, not from the module constants."""
+    g = torch.Generator().manual_seed(3)
+    cents = torch.randn(3, 24, generator=g) * 4
+    y = torch.arange(3).repeat_interleave(torch.tensor([40, 20, 20]))
+    Xtr = cents[y] + torch.randn(len(y), 24, generator=g)
+    router = S.fit_router(Xtr, y, classes=('none', 'sheet', 'py'))
+    assert router['classes'] == ['none', 'sheet', 'py'] and router['W'].shape == (3, 24) and router['train_acc'] > 0.97
+    m = tiny()
+    ck = dict(model=m.state_dict(), name='tool', cfg=CFG, chars=CHARS, step=1)
+    sd = m.state_dict()
+    names = ['core.0.fc.weight', 'op_head.weight']
+    pieces = [{n: (torch.randn(sd[n].shape[0], 8) * 0.01, torch.randn(8, sd[n].shape[1])) for n in names} for _ in range(2)]
+    sh = S.Shelf(ck, pieces, router)
+    assert sh.router['classes'] == ['none', 'sheet', 'py']
+    before = {k: v.clone() for k, v in sh.m.state_dict().items()}
+    with sh.use(2) as mm:
+        B, A = pieces[1]['op_head.weight']
+        assert ((mm.state_dict()['op_head.weight'] - before['op_head.weight']) - B @ A).abs().max() < 1e-5
+    assert all(torch.equal(v, sh.m.state_dict()[k]) for k, v in before.items())
+    prompts = [f'{i}+{i}=' for i in range(9)]
+    Xt = cents.repeat_interleave(3, 0) + torch.randn(9, 24, generator=g) * 0.1
+    glance = [([], 'none-answer')] * 9
+    used = []
+    import domain.mode as dm
+    saved = dm.greedy
+    try:
+        def fake(mm, ps, bs=64):
+            used.append(len(ps))
+            return [([], 'k') for _ in ps]
+        dm.greedy = fake
+        ans, r = sh.answer(prompts, features=(Xt, glance))
+    finally:
+        dm.greedy = saved
+    assert r == [0, 0, 0, 1, 1, 1, 2, 2, 2] and used == [3, 3]
+    assert ans == ['none-answer'] * 3 + ['k'] * 6
+    assert sh.numbers()['pieces'] == 2 * sum(B.numel() + A.numel() for B, A in pieces[0].values())
+
+
 if __name__ == '__main__':
     for n, f in list(globals().items()):
         if n.startswith('test_'):

@@ -2,6 +2,8 @@
 
   python -m cohesive.m1 --out /mnt/project-files/cohesive-model/m1 --dev DEV_IN_DIST.jsonl [--threads 4]
   M1b (marks addendum): --out .../m1b --arms T,R,TR --save-arm TR   (TR = reader mean 256 + workspace 2,048 side by side)
+  M1c (marks addendum): --parent <s201 parent> --runs sheet=sheet-s201-v7,py=py-s201-v8 --thresholds final_alone --marks-addendum M1c
+    (any parent and any list of runs: classes = none + the subjects given, one piece per run)
 """
 import argparse
 import json
@@ -64,7 +66,20 @@ def main(argv=None):
     ap.add_argument('--threads', type=int, default=4)
     ap.add_argument('--arms', default='T,R')
     ap.add_argument('--save-arm', default='T')
+    ap.add_argument('--parent', default=PARENT)
+    ap.add_argument('--runs', default=','.join(f'{k}={v}' for k, v in RUNS.items()), help='subject=run_dir_name, comma separated')
+    ap.add_argument('--thresholds', default='own_routed', choices=('own_routed', 'final_alone'),
+                    help='own_routed: the M1 table (OWN); final_alone: near >= final alone near - 3, proved wrong below final alone near - 10')
+    ap.add_argument('--marks-addendum', default=None)
     a = ap.parse_args(argv)
+    run_map = dict(x.split('=', 1) for x in a.runs.split(',') if x)
+    SUBJ = tuple(run_map)
+    CLS = ('none',) + SUBJ
+    NC = len(CLS)
+    assert SUBJ and len(set(SUBJ)) == len(SUBJ), a.runs
+    if a.thresholds == 'own_routed':
+        assert all(s in OWN for s in SUBJ), 'own_routed thresholds exist only for the M1 subjects'
+    PARENT_CK = a.parent
     ARMS = [x for x in a.arms.split(',') if x]
     assert ARMS and all(x in ('T', 'R', 'TR') for x in ARMS) and len(set(ARMS)) == len(ARMS), ARMS
     assert a.save_arm in ARMS, 'save-arm must be one of the arms run'
@@ -81,7 +96,7 @@ def main(argv=None):
     os.makedirs(a.out, exist_ok=True)
     cache = os.path.join(a.out, 'cache')
     os.makedirs(cache, exist_ok=True)
-    for run in RUNS.values():
+    for run in run_map.values():
         src = f'{RUNS_DIR}/{run}/analysis/cache'
         for n in os.listdir(src):
             if n.endswith('.json') and not os.path.exists(os.path.join(cache, n)):
@@ -93,13 +108,14 @@ def main(argv=None):
     deviations = []
 
     # ---- a. pieces
-    ck = torch.load(PARENT, map_location='cpu')
-    m = load_model(PARENT).eval()
+    ck = torch.load(PARENT_CK, map_location='cpu')
+    m = load_model(PARENT_CK).eval()
     lin = S.linear_names(m)
     finals, pieces, piece_rep, results = [], [], {}, {}
     with timed(times, 'pieces'):
-        for s in S.SUBJECTS:
-            res = json.load(open(f'{RUNS_DIR}/{RUNS[s]}/analysis/RESULT.json'))
+        for s in SUBJ:
+            res = json.load(open(f'{RUNS_DIR}/{run_map[s]}/analysis/RESULT.json'))
+            assert res['parent'] == PARENT_CK, f"{s}: run parent {res['parent']} is not --parent {PARENT_CK}"
             results[s] = res
             fin = res['final_checkpoint']
             finals.append(fin)
@@ -109,13 +125,13 @@ def main(argv=None):
             pieces.append(pc)
             piece_rep[s] = dict(checkpoint=fin, tensors_changed=rep['changed'], numbers=rep['numbers'], max_recon_err=rep['max_err'])
             log('piece', s, piece_rep[s])
-    ckpts = [PARENT] + finals                      # index = class index
+    ckpts = [PARENT_CK] + finals                      # index = class index
     csha = [analyze.sha256_file(c) for c in ckpts]
 
     # ---- b. router rows
     cls_prompts = {}
-    for k, s in enumerate(S.SUBJECTS, 1):
-        ev = [json.loads(l) for l in open(f'{RUNS_DIR}/{RUNS[s]}/log.jsonl')]
+    for k, s in enumerate(SUBJ, 1):
+        ev = [json.loads(l) for l in open(f'{RUNS_DIR}/{run_map[s]}/log.jsonl')]
         rows = [e for e in ev if e['event'] == 'row']
         results[s]['_train_prompts'] = {e['prompt'] for e in rows}
         cls_prompts.setdefault(k, set()).update(e['prompt'] for e in rows if e['source'] in ('own', 'tool'))
@@ -130,26 +146,26 @@ def main(argv=None):
     for k in cls_prompts:
         cls_prompts[k] -= both
     train_prompts, train_y = [], []
-    for k in range(6):
+    for k in range(NC):
         ps = sorted(cls_prompts[k])
         train_prompts += ps
         train_y += [k] * len(ps)
-    sizes = {S.CLASSES[k]: len(cls_prompts[k]) for k in range(6)}
+    sizes = {CLS[k]: len(cls_prompts[k]) for k in range(NC)}
     log('class sizes', sizes, 'prompts in two or more classes (dropped from all):', len(both), dict(pair_counts))
     if both:
         deviations.append(f'{len(both)} training prompts appeared in two or more classes and were dropped from every class (pairs: '
                           f'{ {str(k): v for k, v in pair_counts.items()} }); marks file does not say this happens')
 
     # ---- eval sets
-    panels = {s: score.load_panel(f"{PANEL_DIR}/{os.path.basename(results[s]['panel']['path'])}") for s in S.SUBJECTS}
-    for s in S.SUBJECTS:
+    panels = {s: score.load_panel(f"{PANEL_DIR}/{os.path.basename(results[s]['panel']['path'])}") for s in SUBJ}
+    for s in SUBJ:
         assert os.path.exists(results[s]['panel']['path']) or True
-    psha = {s: analyze.sha256_file(f"{PANEL_DIR}/{os.path.basename(results[s]['panel']['path'])}") for s in S.SUBJECTS}
+    psha = {s: analyze.sha256_file(f"{PANEL_DIR}/{os.path.basename(results[s]['panel']['path'])}") for s in SUBJ}
     drows = analyze.load_rows(a.dev)
     lrows, lgroups = lookalike.old_rows(OLD_PANEL)
     hrows, hgroups = lookalike.old_rows(HELD_PANEL)
     lsha, hsha = analyze.sha256_file(OLD_PANEL), analyze.sha256_file(HELD_PANEL)
-    sets = {f'panel:{s}': [r['prompt'] for r in panels[s]] for s in S.SUBJECTS}
+    sets = {f'panel:{s}': [r['prompt'] for r in panels[s]] for s in SUBJ}
     sets['dev'] = [r['prompt'] for r in drows]
     sets['old'] = [r['prompt'] for r in lrows]
     sets['held'] = [r['prompt'] for r in hrows]
@@ -165,13 +181,13 @@ def main(argv=None):
             feats_R[k] = S.reader_features(m, ps)
             log('features', k, len(ps))
     with timed(times, 'fit'):
-        rT = S.fit_router(XT, train_y, kind='workspace (8 control rows x 256, after the last round)')
-        rR = S.fit_router(XR, train_y, kind='reader mean (256)', feats='reader')
+        rT = S.fit_router(XT, train_y, kind='workspace (8 control rows x 256, after the last round)', classes=CLS)
+        rR = S.fit_router(XR, train_y, kind='reader mean (256)', feats='reader', classes=CLS)
         routers = {'T': rT, 'R': rR}
         feats_arm = {'T': feats_T, 'R': feats_R}
         if 'TR' in ARMS:                           # reader first, then workspace; no extra model pass
             routers['TR'] = S.fit_router(torch.cat([XR, XT], 1), train_y, kind='reader mean (256) + workspace (2,048), standardised together',
-                                         feats='reader+workspace')
+                                         feats='reader+workspace', classes=CLS)
             feats_arm['TR'] = {k: torch.cat([feats_R[k], feats_T[k]], 1) for k in sets}
     routers = {x: routers[x] for x in ARMS}
     log('router train acc', {x: round(routers[x]['train_acc'], 4) for x in ARMS})
@@ -185,7 +201,7 @@ def main(argv=None):
     nums = shelf.numbers()
     nums['readout_R_for_comparison'] = sum(rR[k].numel() for k in ('mu', 'sd', 'W', 'b'))
     nums['saved_arm'] = sv
-    nums['parent_plus_five_full_copies'] = nums['parent'] * 6
+    nums['parent_plus_five_full_copies' if len(SUBJ) == 5 else f'parent_plus_{len(SUBJ)}_full_copies'] = nums['parent'] * NC
     nums['file_bytes'] = os.path.getsize(shelf_path)
     log('shelf saved', shelf_path, nums)
 
@@ -193,7 +209,7 @@ def main(argv=None):
     with timed(times, 'equivalence'):
         fresh = S.Shelf.load(shelf_path)
         eq_sets, eq_prompts, eq_src = {}, [], []
-        for s in S.SUBJECTS:
+        for s in SUBJ:
             ix = random.Random(0).sample(range(len(panels[s])), 60)
             eq_sets[f'panel:{s}'] = ix
         eq_sets['dev'] = random.Random(0).sample(range(len(drows)), 200)
@@ -204,7 +220,7 @@ def main(argv=None):
         ans, rt = fresh.answer(eq_prompts)
         same_route = sum(r == routes[sv][k][i] for r, (k, i) in zip(rt, eq_src))
         ref = [None] * len(eq_prompts)
-        for k in range(6):
+        for k in range(NC):
             ix = [j for j, r in enumerate(rt) if r == k]
             if ix:
                 mk = load_model(ckpts[k]).eval()
@@ -213,8 +229,8 @@ def main(argv=None):
         match = [x == y for x, y in zip(ans, ref)]
         eq = dict(n=len(match), share=round(100 * sum(match) / len(match), 3),
                   by_set={k: round(100 * sum(match[j] for j, (kk, _) in enumerate(eq_src) if kk == k) / len(ix), 2) for k, ix in eq_sets.items()},
-                  route_agrees_with_in_memory=f'{same_route}/{len(rt)}', routes=dict(Counter(S.CLASSES[r] for r in rt)),
-                  mismatches=[dict(set=eq_src[j][0], prompt=eq_prompts[j], shelf=ans[j], picked_ckpt=ref[j], cls=S.CLASSES[rt[j]]) for j, ok in enumerate(match) if not ok][:20])
+                  route_agrees_with_in_memory=f'{same_route}/{len(rt)}', routes=dict(Counter(CLS[r] for r in rt)),
+                  mismatches=[dict(set=eq_src[j][0], prompt=eq_prompts[j], shelf=ans[j], picked_ckpt=ref[j], cls=CLS[rt[j]]) for j, ok in enumerate(match) if not ok][:20])
         del fresh
     log('equivalence', json.dumps({k: v for k, v in eq.items() if k != 'mismatches'}))
     if eq['share'] < 99.0:
@@ -227,7 +243,7 @@ def main(argv=None):
     ph, dh, lh, hh = {}, [], [], []
     with timed(times, 'hits'):
         for i, c in enumerate(ckpts):
-            for s in S.SUBJECTS:
+            for s in SUBJ:
                 r, _ = analyze.score_one(c, 'parent' if i == 0 else 'final', panels[s], psha[s], cache)
                 assert [x['id'] for x in r['rows']] == [x['id'] for x in panels[s]]
                 ph[(i, s)] = r['rows']
@@ -237,12 +253,12 @@ def main(argv=None):
             log('hits done for checkpoint', i)
 
     # ---- g, h, i. per arm
-    dropped = {s: set(audit.decontam(panels[s], results[s]['_train_prompts'])['ids']) for s in S.SUBJECTS}
+    dropped = {s: set(audit.decontam(panels[s], results[s]['_train_prompts'])['ids']) for s in SUBJ}
     arms = {}
     for arm in ARMS:
         R = routes[arm]
         out = dict(S1={}, far={}, route_table={}, route_table_near_far={})
-        for j, s in enumerate(S.SUBJECTS, 1):
+        for j, s in enumerate(SUBJ, 1):
             rows = panels[s]
             cl = R[f'panel:{s}']
             routed = [dict(ph[(c, s)][i]) for i, c in enumerate(cl)]
@@ -252,18 +268,19 @@ def main(argv=None):
             near, far = analyze.pooled(routed, scored, 'near', dropped[s]), analyze.pooled(routed, scored, 'far', dropped[s])
             near_par = analyze.pooled(ph[(0, s)], scored, 'near', dropped[s])
             near_fin = analyze.pooled(ph[(j, s)], scored, 'near', dropped[s])
-            thr = round(OWN[s][0] - 3, 2)
+            ref_near = OWN[s][0] if a.thresholds == 'own_routed' else near_fin
+            thr = round(ref_near - 3, 2)
             hair = round(near + 100.0 / nn, 6) >= thr
             passed = near >= thr - 1e-9
-            proved = near < OWN[s][0] - 10
+            proved = near < ref_near - 10
             v = 'PASS' if passed or hair else ('PROVED WRONG' if proved else 'FAIL')
-            out['S1'][s] = dict(near=near, threshold=thr, own_routed_near=OWN[s][0], n_near=nn, parent_near=near_par, final_alone_near=near_fin,
+            out['S1'][s] = dict(near=near, threshold=thr, own_routed_near=OWN[s][0] if s in OWN else None, n_near=nn, parent_near=near_par, final_alone_near=near_fin,
                                 passed_without_hair_miss=passed, hair_miss_used=bool(hair and not passed), verdict=v)
-            out['far'][s] = dict(far=far, own_routed_far=OWN[s][1], n_far=nf, parent_far=analyze.pooled(ph[(0, s)], scored, 'far', dropped[s]),
+            out['far'][s] = dict(far=far, own_routed_far=OWN[s][1] if s in OWN else None, n_far=nf, parent_far=analyze.pooled(ph[(0, s)], scored, 'far', dropped[s]),
                                  final_alone_far=analyze.pooled(ph[(j, s)], scored, 'far', dropped[s]))
             cnt = {sp: Counter(c for c, r in zip(cl, rows) if r['split'] == sp) for sp in ('near', 'far')}
-            out['route_table'][s] = [sum(cnt[sp][c] for sp in cnt) for c in range(6)]
-            out['route_table_near_far'][s] = {sp: [cnt[sp][c] for c in range(6)] for sp in cnt}
+            out['route_table'][s] = [sum(cnt[sp][c] for sp in cnt) for c in range(NC)]
+            out['route_table_near_far'][s] = {sp: [cnt[sp][c] for c in range(NC)] for sp in cnt}
         d_routed = [dh[c][i] for i, c in enumerate(R['dev'])]
         l_routed = [lh[c][i] for i, c in enumerate(R['old'])]
         h_routed = [hh[c][i] for i, c in enumerate(R['held'])]
@@ -274,20 +291,22 @@ def main(argv=None):
         out['S3'] = dict(lookalike.harm_summary(hm_l), verdict=lookalike.la3_rule(hm_l))
         out['heldout'] = dict(lookalike.harm_summary(hm_h), verdict=lookalike.la3_rule(hm_h))
         out['false_on'] = dict(dev=dict(total=sum(c != 0 for c in R['dev']), n=len(drows), by_family=on_rates(R['dev'], drows, 'family'),
-                                        by_class=dict(Counter(S.CLASSES[c] for c in R['dev'] if c))),
+                                        by_class=dict(Counter(CLS[c] for c in R['dev'] if c))),
                                old=dict(total=sum(c != 0 for c in R['old']), n=len(lrows), by_variant=on_rates(R['old'], lrows, 'variant'),
-                                        by_class=dict(Counter(S.CLASSES[c] for c in R['old'] if c))),
+                                        by_class=dict(Counter(CLS[c] for c in R['old'] if c))),
                                held=dict(total=sum(c != 0 for c in R['held']), n=len(hrows), by_variant=on_rates(R['held'], hrows, 'variant'),
-                                         by_class=dict(Counter(S.CLASSES[c] for c in R['held'] if c))))
+                                         by_class=dict(Counter(CLS[c] for c in R['held'] if c))))
         out['false_on_total'] = sum(out['false_on'][k]['total'] for k in ('dev', 'old', 'held'))
-        vs = [out['S1'][s]['verdict'] for s in S.SUBJECTS] + [out['S2']['verdict'], out['S3']['verdict']]
-        out['S1_verdict'] = 'PROVED WRONG' if 'PROVED WRONG' in [out['S1'][s]['verdict'] for s in S.SUBJECTS] else (
-            'PASS' if all(out['S1'][s]['verdict'] == 'PASS' for s in S.SUBJECTS) else 'FAIL')
+        vs = [out['S1'][s]['verdict'] for s in SUBJ] + [out['S2']['verdict'], out['S3']['verdict']]
+        out['S1_verdict'] = 'PROVED WRONG' if 'PROVED WRONG' in [out['S1'][s]['verdict'] for s in SUBJ] else (
+            'PASS' if all(out['S1'][s]['verdict'] == 'PASS' for s in SUBJ) else 'FAIL')
         out['overall'] = 'PROVED WRONG' if 'PROVED WRONG' in (out['S1_verdict'], out['S2']['verdict'], out['S3']['verdict']) else (
             'PASS' if all(x == 'PASS' for x in (out['S1_verdict'], out['S2']['verdict'], out['S3']['verdict'])) else 'FAIL')
         out['train_acc'] = round(routers[arm]['train_acc'], 4)
         arms[arm] = out
     comparison = comparison_TR = None
+    addendum = a.marks_addendum or ('M1b' if 'TR' in ARMS else None)
+    numbers_only = bool(addendum and addendum.startswith('M1c'))   # M1c: no comparison statement is fixed
     if 'T' in arms and 'R' in arms:
         T, Rr = arms['T'], arms['R']
         fewer = Rr['false_on_total'] - T['false_on_total']
@@ -295,8 +314,9 @@ def main(argv=None):
         comparison = dict(false_on_T=T['false_on_total'], false_on_R=Rr['false_on_total'], T_fewer_by=fewer, threshold=20,
                           T_not_worse_than_R_on_S2_S3=not_worse,
                           S2_drop=dict(T=T['S2']['drop'], R=Rr['S2']['drop']), S3_drop=dict(T=T['S3']['drop'], R=Rr['S3']['drop']),
-                          statement='the brain\'s own thinking picks skills better than the reader\'s mean (suggested, one seed)'
-                          if fewer >= 20 and not_worse else 'no difference shown')
+                          statement='no comparison statement is fixed for M1c: numbers and difference only' if numbers_only else (
+                              'the brain\'s own thinking picks skills better than the reader\'s mean (suggested, one seed)'
+                              if fewer >= 20 and not_worse else 'no difference shown'))
     if 'TR' in arms and 'R' in arms:
         X, Rr = arms['TR'], arms['R']
         fewer = Rr['false_on_total'] - X['false_on_total']
@@ -306,15 +326,17 @@ def main(argv=None):
                              TR_not_worse_than_R_on_S1_S2_S3=not_worse,
                              verdicts=dict(TR=dict(S1=X['S1_verdict'], S2=X['S2']['verdict'], S3=X['S3']['verdict']),
                                            R=dict(S1=Rr['S1_verdict'], S2=Rr['S2']['verdict'], S3=Rr['S3']['verdict'])),
-                             near_diff_TR_minus_R={s: round(X['S1'][s]['near'] - Rr['S1'][s]['near'], 4) for s in S.SUBJECTS},
+                             near_diff_TR_minus_R={s: round(X['S1'][s]['near'] - Rr['S1'][s]['near'], 4) for s in SUBJ},
                              S2_drop=dict(TR=X['S2']['drop'], R=Rr['S2']['drop']), S3_drop=dict(TR=X['S3']['drop'], R=Rr['S3']['drop']),
-                             statement='reading its own thinking as well as its reader cuts wrong switch-ons (suggested, one seed)'
-                             if fewer >= 20 and not_worse else 'no difference shown')
-    result = dict(marks='M1-MARKS-2026-10-10.md', marks_addendum='M1b' if 'TR' in ARMS else None, arms_run=ARMS, saved_arm=sv,
+                             statement='no comparison statement is fixed for M1c: numbers and difference only' if numbers_only else (
+                                 'reading its own thinking as well as its reader cuts wrong switch-ons (suggested, one seed)'
+                                 if fewer >= 20 and not_worse else 'no difference shown'))
+    result = dict(marks='M1-MARKS-2026-10-10.md', marks_addendum=addendum, thresholds=a.thresholds, parent=PARENT_CK, subjects=list(SUBJ), classes=list(CLS),
+                  runs=run_map, arms_run=ARMS, saved_arm=sv,
                   dev_sha256=dsha, checkpoints=ckpts, checkpoint_sha256=csha, pieces=piece_rep,
                   class_sizes=sizes, dropped_cross_class=len(both), router_train_acc={x: arms[x]['train_acc'] for x in ARMS},
                   numbers=nums, equivalence=eq, arms=arms, comparison=comparison, comparison_TR=comparison_TR, deviations=deviations, timings_s=times,
-                  total_secs=round(time.time() - T0, 1), decontam_dropped={s: len(dropped[s]) for s in S.SUBJECTS})
+                  total_secs=round(time.time() - T0, 1), decontam_dropped={s: len(dropped[s]) for s in SUBJ})
     with open(os.path.join(a.out, 'RESULT.json'), 'w') as f:
         json.dump(result, f, indent=1, default=str)
     write_md(result, os.path.join(a.out, 'RESULT.md'))
@@ -337,13 +359,13 @@ def write_md(r, path):
     for arm in r['arms_run']:
         A = r['arms'][arm]
         L += [f"## Arm {arm}: overall {A['overall']} (S1 {A['S1_verdict']}, S2 {A['S2']['verdict']}, S3 {A['S3']['verdict']})", '',
-              '| subject | near | threshold | own routed near | parent near | final alone near | verdict | hair-miss used |', '|---|---|---|---|---|---|---|---|']
+              '| subject | near | threshold | own routed near (n/a for final_alone) | parent near | final alone near | verdict | hair-miss used |', '|---|---|---|---|---|---|---|---|']
         for s, x in A['S1'].items():
             L.append(f"| {s} | {x['near']:.2f} | {x['threshold']} | {x['own_routed_near']} | {x['parent_near']:.2f} | {x['final_alone_near']:.2f} | {x['verdict']} | {x['hair_miss_used']} |")
         L += ['', '| subject | far | own routed far | parent far | final alone far |', '|---|---|---|---|---|']
         for s, x in A['far'].items():
             L.append(f"| {s} | {x['far']:.2f} | {x['own_routed_far']} | {x['parent_far']:.2f} | {x['final_alone_far']:.2f} |")
-        L += ['', 'Routing of the subject panels (all rows; columns none, sheet, rpn, stats, invoice, py):', '', '| panel | none | sheet | rpn | stats | invoice | py |', '|---|---|---|---|---|---|---|']
+        L += ['', 'Routing of the subject panels (all rows; columns ' + ', '.join(r['classes']) + '):', '', '| panel | ' + ' | '.join(r['classes']) + ' |', '|---' * (len(r['classes']) + 1) + '|']
         for s, row in A['route_table'].items():
             L.append(f"| {s} | " + ' | '.join(map(str, row)) + ' |')
         L += ['', f"S2 DEV: parent {A['S2']['pooled_parent']} -> {A['S2']['pooled_after']}, drop {A['S2']['drop']}, fired {A['S2']['fired']}, {A['S2']['verdict']}",

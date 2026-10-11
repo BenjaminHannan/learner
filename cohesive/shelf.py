@@ -89,9 +89,12 @@ def both_features(m, prompts, bs=64):
     return torch.cat([reader_features(m, prompts), Xw], 1), glance
 
 
-def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0):
-    """6-way softmax on standardised features; every class's rows share total weight 1/n_classes.
+def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0, classes=None):
+    """n_classes-way softmax on standardised features (default 6; classes, if given, names the classes and sets n_classes);
+    every class's rows share total weight 1/n_classes.
     feats records which features the router reads: 'workspace', 'reader' or 'reader+workspace'."""
+    if classes is not None:
+        n_classes = len(classes)
     assert feats in ('workspace', 'reader', 'reader+workspace'), feats
     X = X.float()
     y = torch.as_tensor(y, dtype=torch.long)
@@ -110,7 +113,7 @@ def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=40
         opt.step()
     with torch.no_grad():
         acc = ((Z @ W.T + b).argmax(1) == y).float().mean().item()
-    return dict(mu=mu, sd=sd, W=W.detach(), b=b.detach(), classes=list(CLASSES[:n_classes]) if n_classes <= 6 else list(range(n_classes)),
+    return dict(mu=mu, sd=sd, W=W.detach(), b=b.detach(), classes=list(classes) if classes is not None else (list(CLASSES[:n_classes]) if n_classes <= 6 else list(range(n_classes))),
                 kind=kind, feats=feats, train_acc=acc, n_train=int(len(y)), class_counts=[int(c) for c in cnt])
 
 
@@ -122,7 +125,7 @@ def route(router, X):
 
 class Shelf:
     def __init__(self, ck, pieces, router):
-        """ck: the parent's checkpoint dict (model, name, cfg, chars, step). pieces: list of {name: (B, A)} in SUBJECTS order."""
+        """ck: the parent's checkpoint dict (model, name, cfg, chars, step). pieces: list of {name: (B, A)}, piece k-1 = class k of the router (SUBJECTS order by default)."""
         self.ck, self.pieces, self.router = ck, pieces, router
         self.m = build(ck['name'], CharVocab(ck['chars']), **ck['cfg'])
         self.m.load_state_dict(ck['model'])
@@ -145,7 +148,7 @@ class Shelf:
 
     @contextlib.contextmanager
     def use(self, k):
-        """Piece k on (k = 1..5 as in CLASSES; 0 = nothing): adds B @ A into each Linear weight in place, restores exactly."""
+        """Piece k on (k = 1..len(pieces), the router's class index; 0 = nothing): adds B @ A into each Linear weight in place, restores exactly."""
         if k == 0:
             yield self.m
             return
@@ -178,7 +181,7 @@ class Shelf:
         r = route(self.router, X).tolist()
         ans = [g[1] for g in glance]
         from domain.mode import greedy
-        for k in range(1, len(CLASSES)):
+        for k in range(1, len(self.pieces) + 1):
             ix = [i for i, c in enumerate(r) if c == k]
             if not ix:
                 continue
