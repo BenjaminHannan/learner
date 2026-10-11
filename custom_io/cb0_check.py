@@ -20,8 +20,10 @@ Disclosed choices (defaults the rules left open):
  * A try whose re-run on the query itself does not reproduce its own calls, replies and answer is UNCHECKABLE ('self re-run mismatch') (the record disagrees with the text).
  * A calculator reply '?' on an example is a REJECT.
  * Partial copies of a reply or call-text token are aligned from the END of that field too (same offset from the end, same length); in a re-run a field too short for it = reject.
- * Merging is literal (rule 1), so a copied separator byte that is consecutive with a copied query digit merges into one span that crosses the number: uncheckable
-   ('ambiguous partial copy'). check_try(..., cut=True) instead cuts spans at the boundaries of the query number and of tape fields (not the default).
+ * Merged spans are CUT at the boundaries of the query number and of tape fields (default cut=True; the rule's "whole-number spans"): a copied separator byte that is
+   consecutive with a copied query digit (e.g. ' 12' copied as one run) is a separate constant, not a span crossing the number. cut=False is the fully literal merge, where
+   such a run is uncheckable ('ambiguous partial copy'); it is kept only to measure how much the cut matters. With the cut, a partial copy is uncheckable only when x_i is too
+   short for it.
  * A record that disagrees with the text (length, a src byte different from the written byte, a src on the tape beyond the entries written so far, non-ASCII text):
    uncheckable ('bad copy record'). copied=True with src None is treated as generated.
  * Swapping is safe against wrong records: put back on the query (x_i = q), the swapped program is the original try, so a value that happens to collide with a rule constant
@@ -223,7 +225,7 @@ def reads_x(temps):
     return dep[-1]
 
 
-def check_try(row, trace, cut=False):
+def check_try(row, trace, cut=True):
     """-> dict(verdict 'accept' | 'reject' | 'uncheckable', reason (a category), detail, outputs [re-run answer per example, None if not run], answer). Reads row['prompt'] only."""
     res = dict(verdict='uncheckable', reason='', detail='', outputs=[], answer=trace.get('answer') if isinstance(trace, dict) else None)
 
@@ -265,7 +267,7 @@ def check_try(row, trace, cut=False):
         return fin('uncheckable', str(e))
 
 
-def check(row, trace, cut=False):
+def check(row, trace, cut=True):
     return check_try(row, trace, cut)['verdict'] == 'accept'
 
 

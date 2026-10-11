@@ -180,9 +180,12 @@ def test_rule2_rebinding():
     # the same operand written as a constant 11 (generated) is not re-bound: rejected
     t2 = P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add 11 '), ('R', 0)]], [('R', 1)])
     assert verdict(dict(prompt=pr), t2)['verdict'] == 'reject'
-    # a span crossing fields of an entry (operand a, the space, operand b) is uncheckable
+    # a run copied across fields of an entry (operand a, the space, operand b): the default cut splits it per field (each re-bound), here giving a 3-operand call -> rejected
+    # on the examples; the fully literal merge (cut=False) leaves a field-crossing span -> uncheckable
     t3 = P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add '), ('E', 0, 4, 4), ('g', ' '), ('R', 0)]], [('R', 1)])
     v = verdict(dict(prompt=pr), t3)
+    assert v['verdict'] == 'reject' and v['reason'] == 'calculator error on an example', v
+    v = verdict(dict(prompt=pr), t3, cut=False)
     assert v['verdict'] == 'uncheckable' and v['reason'] == 'span crosses fields', v
     # a span of separators only is a constant: the ' = ' copied
     t4 = P.trace([[('g', 'mul '), ('q',), ('g', ' 3')], [('g', 'add '), ('T', 0, 1), ('g', ' '), ('R', 0)]], [('R', 1)])
@@ -202,13 +205,12 @@ def test_rule3_partial_copy_from_the_end():
     t = P.trace([[('g', 'add '), ('qp', 0, 1), ('g', ' 0')]], [('R', 0)])
     v = verdict(dict(prompt=pr), t)
     assert v['verdict'] == 'uncheckable' and v['reason'] == 'x too short for a partial copy', v
-    # ambiguous: a span running past the number (the last digit and the space after it) is not inside one number
+    # a run copied past the number (the last digit and the space after it): the default cut splits it at the number's end ('5' + ' ', the space a constant) -> accepted;
+    # the fully literal merge (cut=False) leaves one span that is not inside one number -> uncheckable
     t = P.trace([[('g', 'add '), ('raw', P.qe - 1, 2), ('g', '0')]], [('R', 0)])
-    v = verdict(dict(prompt=pr), t)
+    assert t['calls'][0][0] == 'add 5 0' and verdict(dict(prompt=pr), t)['verdict'] == 'accept'
+    v = verdict(dict(prompt=pr), t, cut=False)
     assert v['verdict'] == 'uncheckable' and v['reason'] == 'ambiguous partial copy', v
-    # cut=True splits the span at the number's end instead: ' 5' + ' ' -> the call text 'add 5 0' is rebuilt (the space is a constant)
-    t = P.trace([[('g', 'add '), ('raw', P.qe - 1, 2), ('g', '0')]], [('R', 0)])
-    assert t['calls'][0][0] == 'add 5 0' and verdict(dict(prompt=pr), t, cut=True)['verdict'] == 'accept'
     print('ok rule 3: partial copies align from the end; ambiguous / too short are uncheckable')
 
 
