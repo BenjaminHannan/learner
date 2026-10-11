@@ -10,6 +10,18 @@ An outside tool, the same for every domain (it knows text, not spreadsheets or R
   ring k > 2 = single swaps on random ring k-1 examples (the run's own random stream), kept by the same rules, until the
            ring holds widen_ring_max examples or the tries run out.
 
+  join ring (only when the constants ask for it, widen_join): one more ring, the next number after the swap rings (ring 4
+           when widen_rings is 3), built after them from examples of rings 1 to widen_rings. A value slot of an example is a
+           well-formed piece whose replacement by `1` still runs. A join replaces one value slot P of a random example by P and
+           a random value piece Q of the help page (a value slot of some help example) joined by a symbol s: `P s Q`,
+           `Q s P`, `(P) s (Q)`, `(Q) s (P)` (bracket forms only when the help page uses both ( and )), `P Q s` or `Q P s`,
+           with an empty or a single-space separator between the three parts. The symbols are the help prompts' own
+           one-character tokens that are not letters, digits, spaces or brackets. A join kind is a (form, symbol) pair.
+           The first 20,000 tries draw join kinds evenly; the kinds with a kept example are the accepted kinds, and the
+           ring then fills an equal quota (widen_ring_max // accepted kinds) per accepted kind (probe examples count).
+           Kept by the same rules as ring 3, until every quota is full or 1000 * widen_ring_max tries are spent.
+           Without widen_join nothing changes (same rings).
+
 A well-formed piece is a run of whole tokens (a token is a run of letters and digits, a run of spaces, or one other
 character) that does not start or end with a space and whose brackets ( ) [ ] { } balance. Each new example keeps the kind
 of the help example it was made from, so the model's own per-kind scores still apply.
@@ -72,6 +84,70 @@ def swap(toks, i, j, piece):
     return ''.join(toks[:i]) + piece + ''.join(toks[j:])
 
 
+def symbols(helps):
+    """The one-character tokens of the help prompts that are not alphanumeric, not spaces and not brackets, sorted."""
+    return sorted({t for h in helps for t in tokens(h['prompt']) if len(t) == 1 and not t.isalnum() and not t.isspace()
+                   and t not in OPEN + CLOSE})
+
+
+def join_form(p, q, s, form, sep):
+    """P and Q joined by symbol s in one of the six forms (0-5), parts separated by sep."""
+    parts = [(p, s, q), (q, s, p), ('(' + p + ')', s, '(' + q + ')'), ('(' + q + ')', s, '(' + p + ')'), (p, q, s), (q, p, s)][form]
+    return sep.join(parts)
+
+
+def value_slots(p, ok):
+    """(tokens, [(i, j)]): the well-formed pieces of prompt p that are value slots, i.e. replacing the piece by 1 still runs."""
+    t = tokens(p)
+    return t, [(i, j) for i, j in spans(t) if ok(swap(t, i, j, '1'))]
+
+
+def join_ring(tool, helps, rings, ok, rng, cons, seen):
+    """-> (examples, tries, info): the join ring, made from rings 1..widen_rings by the rules in the docstring. seen: digit
+    shapes already kept (updated). info: accepted join kinds ('form:symbol') and kept per kind."""
+    ring_max, cap = cons['widen_ring_max'], 1000 * cons['widen_ring_max']
+    syms = symbols(helps)
+    brackets = any('(' in h['prompt'] for h in helps) and any(')' in h['prompt'] for h in helps)
+    kinds = [(f, s) for f in (range(6) if brackets else (0, 1, 4, 5)) for s in syms]
+    slots = {}
+    vq = set()   # value pieces of the help page
+    for h in helps:
+        t, sl = slots.setdefault(h['prompt'], value_slots(h['prompt'], ok))
+        vq.update(''.join(t[i:j]) for i, j in sl)
+    vq = sorted(vq)
+    pool = [x for r in range(1, cons['widen_rings'] + 1) for x in rings[r]]
+    out, tries, kept = [], 0, {}
+    accepted = None   # set after the probe
+    while pool and vq and kinds and len(out) < ring_max and tries < cap:
+        if accepted is not None:
+            open_ = [k for k in accepted if kept[k] < ring_max // len(accepted)]
+            if not open_:
+                break
+        else:
+            open_ = kinds
+        tries += 1
+        kind, p = rng.choice(pool)
+        if p not in slots:
+            slots[p] = value_slots(p, ok)
+        t, sl = slots[p]
+        if not sl:
+            continue
+        i, j = rng.choice(sl)
+        form, s = rng.choice(open_)
+        cand = swap(t, i, j, join_form(''.join(t[i:j]), rng.choice(vq), s, form, rng.choice(['', ' '])))
+        sh = shape(cand)
+        if sh not in seen and ok(cand):
+            seen.add(sh)
+            out.append((kind, cand))
+            kept[(form, s)] = kept.get((form, s), 0) + 1
+        if accepted is None and tries >= 20000:
+            accepted = sorted(kept)
+            if not accepted:
+                break
+    info = dict(accepted=[f'{f}:{s}' for f, s in sorted(kept)], kept={f'{f}:{s}': n for (f, s), n in sorted(kept.items())})
+    return out, tries, info
+
+
 def build(tool, helps, ok, rng, cons):
     """-> (rings, stats). rings: {ring: [(kind, prompt), ...]}. ok(prompt) -> True when the domain's tool runs the prompt
     within the model's caps (mode.accept without the duplicate checks)."""
@@ -110,6 +186,10 @@ def build(tool, helps, ok, rng, cons):
             i, j = rng.choice(spans(t))
             keep(out, kind, swap(t, i, j, rng.choice(piece_list)))
         rings[r], stats['tries'][r] = out, tries
+    if cons.get('widen_join'):   # the join ring, after the swap rings
+        r = n_rings + 1
+        rings[r], stats['tries'][r], stats['join'] = join_ring(tool, helps, rings, ok, rng, cons, seen)
+        stats['symbols'] = symbols(helps)
     stats['kept'] = {r: len(v) for r, v in rings.items()}
     stats['per_kind'] = {r: dict(sorted(_count(k for k, _ in v).items())) for r, v in rings.items()}
     stats['sha256'] = hashlib.sha256(json.dumps({str(r): v for r, v in rings.items()}).encode()).hexdigest()

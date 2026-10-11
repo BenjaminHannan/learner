@@ -158,3 +158,41 @@ def test_eval_sets_l3(tmp_path):
     sets = L.eval_sets(_fake_train('F4-two'), 'l3', L.L3_SEED, l3_path=str(path))
     assert list(sets) == ['S', 'HP', 'HO', 'HPO', 'F0-near', 'F4-two', 'fit'] and len(sets['fit']) == 420
     assert all(len(sets[c]) == 420 for c in L.L3_CELLS)
+
+
+def test_arrangement():
+    f = lambda body: L.arrangement('A: 4 7 2 | B: 3 5 1 ; =' + body)
+    assert f('SUM(A1:A3)+MAX(B1:B3)') == 'plus'
+    assert f('A1+B2*2+PRODUCT(A1:A3)') == 'plus'
+    assert f('SUM(A1:A3)*MAX(B1:B3)') == 'other'
+    assert f('(SUM(A1:A3))*(MAX(B1:B3))') == 'bracket-times'
+    assert f('(A1+B1)*(A2+B2)') == 'bracket-times'
+
+
+@needs_probe
+def test_eval_sets_l4_is_union_of_all_and_l3(tmp_path):
+    if not os.path.exists(L.L3_EVAL_ROWS):
+        pytest.skip('L3 eval file missing')
+    rows = [{'id': f'r{i}', 'kind': 'SUM', 'split': 'mode-two', 'prompt': f'p{i}'} for i in range(500)]
+    s = L.eval_sets(rows, 'l4', L.L4_SEED)
+    assert set(s) == set(L.PROBE_CELLS) | {'fit', 'v3-near', 'v3-far', 'S', 'HP', 'HO', 'HPO'}
+    assert len(s['fit']) == 420 and len(s['S']) == 420
+    assert [r['id'] for r in s['fit']] == ['fit-' + r['id'] for r in random.Random(L.L4_SEED).sample(rows, 420)]
+
+
+@needs_rows
+def test_build_l4_small():
+    torch = pytest.importorskip('torch')
+    if not os.path.exists(L.PARENT):
+        pytest.skip('parent checkpoint missing')
+    import json
+    from custom_io.models import load_model
+    from domain.mode import CONST_PATH
+    ck = torch.load(L.PARENT, map_location='cpu', weights_only=True)
+    m = load_model(L.PARENT).eval()
+    ex = L.read_prompts(L.EXCLUDE_FILES)
+    cons = dict(json.load(open(CONST_PATH)), widen_join=True, widen_ring_max=60)
+    rows, st = L.build_mode_rows(m, ck['chars'], cons, ex, per_cell=4, seed=L.L4_SEED, draw_cap=300000, tag='learn4')
+    assert st['complete'] and len(rows) == 8 and st['widen']['kept'][4] > 0
+    assert all(r['id'].startswith('learn4-') and r['ring'] in (1, 2, 3, 4) for r in rows)
+    assert not {r['prompt'] for r in rows} & ex

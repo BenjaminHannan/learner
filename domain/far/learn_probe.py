@@ -3,7 +3,8 @@
   python3 -m domain.far.learn_probe build
   python3 -m domain.far.learn_probe build-mode     (L2: MARKS-L2; rows from the v9 mode's own practice maker)
   python3 -m domain.far.learn_probe build-l3       (L3: MARKS-L3; '+' joins of training kind pairs; eval cells S/HP/HO/HPO)
-  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3]
+  python3 -m domain.far.learn_probe build-l4      (L4: MARKS-L4; build-mode with the swap tool's join step on, seed 93601)
+  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4]
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -18,6 +19,7 @@ import itertools
 import json
 import os
 import random
+import re
 import time
 from collections import Counter
 
@@ -50,6 +52,10 @@ L3_EVAL_ROWS = os.path.join(LEARN, 'eval-rows-l3.jsonl')
 L3_SPLIT = os.path.join(LEARN, 'pair-split-l3.json')
 L3_CELLS = ('S', 'HP', 'HO', 'HPO')   # (joiner, pair set): S '+' train pairs, HP '+' held-out, HO '*' train, HPO '*' held-out
 L3_EVAL_N = 420
+# L4 (spec: far-transfer/learn/MARKS-L4-2026-10-11.md): L2's rows with the swap tool's join step on (widen_join)
+L4_SEED = 93601
+L4_ROWS = os.path.join(LEARN, 'train-rows-l4.jsonl')   # the first build (record only)
+L4R1_ROWS = os.path.join(LEARN, 'train-rows-l4r1.jsonl')   # R1: value slots and balanced join kinds
 MODE_DRAW_CAP = 20_000_000
 PER_CELL = 6000
 FIT_N = 420
@@ -274,7 +280,7 @@ def far_props(prompt):
                 max_row_ref=p['max_row_ref'] >= 5)
 
 
-def build_mode_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=MODE_SEED, draw_cap=MODE_DRAW_CAP):
+def build_mode_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=MODE_SEED, draw_cap=MODE_DRAW_CAP, tag='learn2'):
     """-> (rows, stats). The v9 mode's own maker (mode.draft over widen.build rings, as mode.main builds them for the sheet
     tool), kinds drawn evenly (round robin over the scored kinds), rings evenly (mode.pick_example), then the mode's make_row
     (source 'tool'). Split by coverage.parse_sheet(...)['two_kinds'] until both cells hold per_cell rows or draw_cap draws."""
@@ -313,40 +319,66 @@ def build_mode_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=MODE
             drops['make_row_' + why] += 1
             continue
         ctx['seen'].add(prompt)
-        rows.append({'id': f'learn2-{cell}-{per[cell]:05d}', 'kind': kind, 'split': cell, 'cell': cell, 'prompt': prompt,
+        rows.append({'id': f'{tag}-{cell}-{per[cell]:05d}', 'kind': kind, 'split': cell, 'cell': cell, 'prompt': prompt,
                      'answer': item['value'], 'n_steps': len(item['steps']), 'ring': item['ring']})
         per[cell] += 1
-    stats = dict(draws=draws, drops=dict(drops), per=per, widen_kept=wst['kept'], widen_sha256=wst['sha256'],
+    stats = dict(draws=draws, drops=dict(drops), per=per, widen_kept=wst['kept'], widen_sha256=wst['sha256'], widen=wst,
                  complete=min(per.values()) >= per_cell)
     return rows, stats
 
 
-def build_mode():
-    if os.path.exists(MODE_ROWS):
-        raise SystemExit(f'refusing to overwrite {MODE_ROWS}')
+def arrangement(prompt):
+    """'plus' (the formula body is a top-level K+J, K and J each a function call or a cell expression), 'bracket-times'
+    (contains )*( ) or 'other'."""
+    body = prompt.partition(';')[2].strip().lstrip('=')
+    def unit(t):
+        t = t.strip()
+        call = re.fullmatch(r'[A-Z]+\((.*)\)', t)
+        if call:   # one call: its first bracket closes at the end
+            depth = 0
+            for k, c in enumerate(t):
+                depth += (c == '(') - (c == ')')
+                if c == ')' and depth == 0:
+                    return k == len(t) - 1
+        return bool(re.fullmatch(r'[0-9A-Z*/+\-]+', t)) and bool(re.search(r'[A-Z][0-9]', t)) and '(' not in t
+    depth = 0
+    for k, c in enumerate(body):
+        depth += (c == '(') - (c == ')')
+        if c == '+' and depth == 0 and unit(body[:k]) and unit(body[k + 1:]):
+            return 'plus'
+    return 'bracket-times' if ')*(' in body else 'other'
+
+
+def build_mode(rows_path=MODE_ROWS, seed=MODE_SEED, join=False, tag='learn2', extra_exclude=()):
+    if os.path.exists(rows_path):
+        raise SystemExit(f'refusing to overwrite {rows_path}')
     import torch
     from custom_io.models import load_model
     from domain.mode import CONST_PATH
     cons = json.load(open(CONST_PATH))
-    random.seed(MODE_SEED)
-    torch.manual_seed(MODE_SEED)
+    if join:
+        cons = dict(cons, widen_join=True)
+    random.seed(seed)
+    torch.manual_seed(seed)
     ck = torch.load(PARENT, map_location='cpu', weights_only=True)
-    torch.manual_seed(MODE_SEED)
+    torch.manual_seed(seed)
     m = load_model(PARENT).eval()
-    exclude = read_prompts(EXCLUDE_FILES)
-    rows, st = build_mode_rows(m, ck['chars'], cons, exclude)
+    exclude = read_prompts(EXCLUDE_FILES + tuple(extra_exclude))
+    rows, st = build_mode_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag)
+    w = st['widen']
     print(f'excluded prompts: {len(exclude)}; draws {st["draws"]}; widen kept {st["widen_kept"]} sha {st["widen_sha256"][:12]}')
+    print(f'widen tries {w["tries"]}; per kind {w["per_kind"]}' + (f'; symbols {"".join(w["symbols"])}; ring 4 accepted join kinds {w["join"]["accepted"]}; kept per join kind {w["join"]["kept"]}' if join else ''))
     print('drops:', st['drops'])
     if not st['complete']:
         print(f'INCOMPLETE: found {st["per"]} (wanted {PER_CELL} each) after {st["draws"]} draws; nothing written')
         raise SystemExit(1)
     assert not {r['prompt'] for r in rows} & exclude and len({r['prompt'] for r in rows}) == len(rows)
-    tmp = MODE_ROWS + '.tmp'
+    tmp = rows_path + '.tmp'
     with open(tmp, 'w') as f:
         for r in rows:
             f.write(json.dumps(r) + '\n')
-    os.rename(tmp, MODE_ROWS)
-    print(f'wrote {len(rows)} rows to {MODE_ROWS}')
+    os.rename(tmp, rows_path)
+    print(f'wrote {len(rows)} rows to {rows_path}')
     print('per kind:', dict(Counter(r['kind'] for r in rows)))
     print('per ring:', dict(sorted(Counter(r['ring'] for r in rows).items())))
     for c in MODE_CELLS:
@@ -357,7 +389,17 @@ def build_mode():
         print(f'  share {k}{">=5" if k != "two_kinds" else ""}: ' +
               ', '.join(f'{c} {100.0 * sum(p[k] for p, r in zip(props, rows) if r["split"] == c) / PER_CELL:.1f}%' for c in MODE_CELLS) +
               f', all {100.0 * sum(p[k] for p in props) / len(rows):.1f}%')
-    print('sha256', sha256_file(MODE_ROWS))
+    if join:
+        two = [r for r in rows if r['split'] == MODE_CELLS[0]]
+        arr = Counter(arrangement(r['prompt']) for r in two)
+        print('  joined rows per arrangement: ' + ', '.join(f'{a} {100.0 * arr[a] / len(two):.1f}% ({arr[a]})'
+                                                           for a in ('plus', 'bracket-times', 'other')))
+        print(f'  joined rows from ring 4: {sum(r["ring"] == 4 for r in two)} of {len(two)}')
+    print('sha256', sha256_file(rows_path))
+
+
+def build_l4(rows_path=L4R1_ROWS):
+    build_mode(rows_path, L4_SEED, True, 'learn4', (MODE_ROWS, L3_TRAIN_ROWS, L3_EVAL_ROWS))
 
 
 def load_jsonl(path):
@@ -369,12 +411,12 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     """The scored cells: name -> rows (each row's id made unique across cells; the row's split is the cell name).
     cells 'l1': F4-two, F0-near, F2b-rows, fit (L1, unchanged). cells 'all' (L2): every probe split (scored kinds), fit,
     and the sealed sheet.v3 panel (scored kinds) as v3-near / v3-far (scoring only). cells 'l3': S, HP, HO, HPO (from the L3 eval
-    file), probe F0-near and F4-two, fit."""
-    assert cells in ('l1', 'all', 'l3'), cells
+    file), probe F0-near and F4-two, fit. cells 'l4': everything in 'all' plus S, HP, HO, HPO."""
+    assert cells in ('l1', 'all', 'l3', 'l4'), cells
     probe = [r for r in load_jsonl(SP.PROBE) if r['kind'] in SP.SCORED]
-    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l3': ('F0-near', 'F4-two')}[cells]
+    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two')}[cells]
     sets = {}
-    if cells == 'l3':
+    if cells in ('l3', 'l4'):
         l3 = load_jsonl(l3_path)
         sets = {c: [r for r in l3 if r['split'] == c] for c in L3_CELLS}
         assert all(len(v) == L3_EVAL_N for v in sets.values()), {k: len(v) for k, v in sets.items()}
@@ -382,7 +424,7 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     joined = [r for r in train_rows if r['split'] in JOINED_CELLS]
     fit = random.Random(fit_seed).sample(joined, FIT_N)
     sets['fit'] = [dict(r, id='fit-' + r['id'], split='fit') for r in fit]
-    if cells == 'all':
+    if cells in ('all', 'l4'):
         for sp in ('near', 'far'):
             sets['v3-' + sp] = [dict(r, id='v3-' + r['id'], split='v3-' + sp) for r in load_jsonl(v3_path)
                                 if r['split'] == sp and r['kind'] in SP.SCORED]
@@ -456,7 +498,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
-    fit_seed = L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
+    fit_seed = L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
     sets = eval_sets(train_rows, cells, fit_seed)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
@@ -510,14 +552,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'train'])
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'train'])
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
     a.add_argument('--out')
     a.add_argument('--rows', default=TRAIN_ROWS, help='training rows (default: the L1 file)')
-    a.add_argument('--cells', choices=['l1', 'all', 'l3'], default='l1',
-               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit')
+    a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4'], default='l1',
+               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO')
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
     a = a.parse_args(argv)
     if a.stage == 'build':
@@ -526,6 +568,8 @@ def main(argv=None):
         build_mode()
     elif a.stage == 'build-l3':
         build_l3()
+    elif a.stage == 'build-l4':
+        build_l4()
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
