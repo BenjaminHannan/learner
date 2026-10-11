@@ -76,7 +76,7 @@ class Net(nn.Module):
         self.pi, self.v = mlp(N_ACTIONS, 0.01), mlp(1, 1.0)
 
 
-def train(steps, out, seed=0, threads=2):
+def train(steps, out, seed=0, threads=2, save_every=0):
     import os
     import crafter  # noqa: F401  (TextEnv needs it)
     torch.set_num_threads(threads)
@@ -109,6 +109,7 @@ def train(steps, out, seed=0, threads=2):
     nd = torch.zeros(ENVS)
     B, mb = ENVS * ROLLOUT, ENVS * ROLLOUT // MINIBATCHES
     t0, total = time.time(), 0
+    ckpt = lambda: dict(state=net.state_dict(), obs_dim=OBS_DIM, seed=seed, steps=total)
     with open(f'{out}/log.jsonl', 'w') as log:
         for up in range(n_updates):
             for g in opt.param_groups:
@@ -166,7 +167,11 @@ def train(steps, out, seed=0, threads=2):
                        mean_unlocks=sum(e[1] for e in done_eps) / n if n else None,
                        mean_length=sum(e[2] for e in done_eps) / n if n else None)
             log.write(json.dumps(rec) + '\n'); log.flush()
-    torch.save(dict(state=net.state_dict(), obs_dim=OBS_DIM, seed=seed, steps=total), f'{out}/ppo.pt')
+            if save_every > 0 and total // save_every > (total - ENVS * ROLLOUT) // save_every:
+                sp = f'{out}/ppo_steps_{total}.pt'
+                torch.save(ckpt(), sp)
+                log.write(json.dumps(dict(event='save', steps=total, path=sp)) + '\n'); log.flush()
+    torch.save(ckpt(), f'{out}/ppo.pt')
     return dict(steps=total, seconds=time.time() - t0, reset_seconds=reset_sec, episodes_started=counter)
 
 
@@ -193,8 +198,9 @@ def main(argv=None):
     ap.add_argument('--out', required=True)
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--threads', type=int, default=2)
+    ap.add_argument('--save-every', type=int, default=0, help='also save DIR/ppo_steps_<S>.pt each time cumulative steps cross a multiple of N (0 = final only)')
     a = ap.parse_args(argv)
-    res = train(a.steps, a.out, a.seed, a.threads)
+    res = train(a.steps, a.out, a.seed, a.threads, a.save_every)
     print(json.dumps(res), flush=True)
 
 

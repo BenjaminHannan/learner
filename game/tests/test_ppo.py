@@ -53,6 +53,23 @@ class TrainSmokeTest(unittest.TestCase):
             eps = play.play(pol, [5_000_002], [[1, 2]], 0.0, 30)
             self.assertEqual(eps[0]['sources']['invalid'], 0)
 
+    def test_save_every(self):
+        with tempfile.TemporaryDirectory() as d:
+            ppo.train(3000, d, seed=0, threads=1, save_every=1024)
+            rows = [json.loads(l) for l in open(f'{d}/log.jsonl')]
+            saves = [r for r in rows if r.get('event') == 'save']
+            self.assertGreaterEqual(len(saves), 2)
+            for r in saves:
+                self.assertTrue(os.path.exists(r['path']))
+                self.assertEqual(r['path'], f"{d}/ppo_steps_{r['steps']}.pt")
+            self.assertEqual(sorted(f for f in os.listdir(d) if f.startswith('ppo_steps_')),
+                             sorted(os.path.basename(r['path']) for r in saves))
+            self.assertTrue(os.path.exists(f'{d}/ppo.pt'))
+            pol = ppo.load_policy(saves[0]['path'])
+            from game.crafter_text import TextEnv
+            txt = TextEnv(seed=5_000_001, length=50).reset()
+            self.assertEqual(len(pol([txt])), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
