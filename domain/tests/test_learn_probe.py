@@ -55,3 +55,54 @@ def test_tiny_train_la(tmp_path):
     finally:
         L.score_step = orig
     assert calls == [0, 3] and spu > 0
+
+
+needs_probe = pytest.mark.skipif(not (os.path.exists(SP.PROBE) and os.path.exists(L.V3_PANEL)), reason='shared probe/panel missing')
+
+
+def _fake_train(joined_cell):
+    return [{'id': f'x{i}', 'kind': 'SUM', 'split': joined_cell if i % 2 else 'other', 'prompt': f'p{i}', 'answer': '1'}
+            for i in range(2000)]
+
+
+@needs_probe
+def test_eval_sets_l1_unchanged():
+    sets = L.eval_sets(_fake_train('F4-two'))
+    assert list(sets) == ['F4-two', 'F0-near', 'F2b-rows', 'fit'] and len(sets['fit']) == 420
+
+
+@needs_probe
+def test_eval_sets_all_cells_and_fit_cell_name():
+    for cell in ('F4-two', 'mode-two'):
+        sets = L.eval_sets(_fake_train(cell), 'all', L.MODE_SEED)
+        assert list(sets)[:12] == list(L.PROBE_CELLS) and 'fit' in sets and {'v3-near', 'v3-far'} <= set(sets)
+        assert len(sets['fit']) == 420 and all(r['split'] == 'fit' for r in sets['fit'])
+        assert all(r['kind'] in SP.SCORED for s in sets.values() for r in s)
+        assert sets['v3-near'] and sets['v3-far']
+        ids = [r['id'] for s in sets.values() for r in s]
+        assert len(ids) == len(set(ids))
+    assert sets['fit'] == L.eval_sets(_fake_train('mode-two'), 'all', L.MODE_SEED)['fit']   # fixed slice
+
+
+def test_far_props():
+    p = L.far_props('A: 1 2 3 4 5 | B: 1 2 3 4 5 ; =SUM(A1:A5)+MAX(B1:B2)')
+    assert p == dict(two_kinds=True, grid_rows=True, max_range_cells=True, max_row_ref=True)
+    assert not L.far_props('A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)')['two_kinds']
+
+
+@needs_rows
+def test_build_mode_small():
+    torch = pytest.importorskip('torch')
+    if not os.path.exists(L.PARENT):
+        pytest.skip('parent checkpoint missing')
+    import json
+    from custom_io.models import load_model
+    from domain.mode import CONST_PATH
+    ck = torch.load(L.PARENT, map_location='cpu', weights_only=True)
+    m = load_model(L.PARENT).eval()
+    ex = L.read_prompts(L.EXCLUDE_FILES)
+    rows, st = L.build_mode_rows(m, ck['chars'], json.load(open(CONST_PATH)), ex, per_cell=4, draw_cap=300000)
+    assert st['complete'] and len(rows) == 8
+    assert {r['split'] for r in rows} == set(L.MODE_CELLS) and all(r['cell'] == r['split'] for r in rows)
+    assert not {r['prompt'] for r in rows} & ex and len({r['prompt'] for r in rows}) == 8
+    assert all(r['kind'] in SP.SCORED and L.far_props(r['prompt'])['two_kinds'] == (r['split'] == 'mode-two') for r in rows)
