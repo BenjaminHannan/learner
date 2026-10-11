@@ -1713,6 +1713,17 @@ families x 200, two parents).**
         the swap: put back on the query, the bound program is the original try.
       - CB-0 mark (2) counts uncheckable tries among calling tries only. The share of no-call tries per kind is
         reported.
+    - **Addendum 2 (10-11, 4:40 PM ET, before any number), for Ben's 4:17 PM ET agent turns.** The talker now writes
+      calls from thoughts too, so no copy record exists anywhere. CB-1 and CB-2 run on the agent model (AT), which is
+      the model the 100M phase will start from.
+      - Binding is by value. A number the try wrote that equals the query number may be x; one that equals an earlier
+        tool result in the same try may be that result.
+      - When a value matches more than once (common, since C2 inputs are 3-9 and rule constants are small), every
+        assignment of each match to variable or constant is tried. The try is accepted if any assignment fits every
+        example; above 16 assignments it is uncheckable. This is as safe as before: every assignment, put back on the
+        query, is the original try, so the record's answer never changes.
+      - Report only: the share of accepted tries where more than one assignment fits, per kind.
+      - If mark (2) still fails after this, the checker becomes the `check` tool, as already sealed.
   - **CB-1, 3M (B3 group 2, seed 400; seed 401 too if its checkpoint exists when CB-1 starts).** Job 9's design
     ported, with one change: the nights are SCM2's.
     - Start checkpoint (10-11, big-run thread's question): the one the 100M phase will start from. That is after ST1
@@ -2081,3 +2092,6 @@ CPU):
 - **10-11, 4:30 PM ET:** CB addendum before any B3 number (reader reads tool replies, answer mode has no copy): no-call
   answers give no records; later calls bind by value to earlier tool results; CB-1 first try scored right against
   the key with or without a call; CB-0 mark (2) counts calling tries only.
+- **10-11, 4:40 PM ET:** CB addendum 2 (agent turns, no copy anywhere): bind by value to the query number and earlier
+  tool results; when a value matches more than once, accept if any assignment fits (cap 16, else uncheckable); CB
+  runs on AT.
