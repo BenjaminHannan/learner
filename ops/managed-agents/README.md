@@ -43,7 +43,30 @@ python3 ops/managed-agents/ma.py review reviews/my-prompt.md --attach /mnt/proje
 python3 ops/managed-agents/ma.py cost --days 30
 ```
 
+Reviews now go through the half-price batch path by default; see the next section.
+
 The latest status is also on the `pc-status` branch (`pc-status.md`, plus `actions.md`, the log of every restart).
+
+## Half-price batch jobs
+
+Anything that can wait up to an hour or so goes through the Message Batches API at 50% of list price: outside-opinion
+reviews, reading or summarising files, scoring. Live PC checks and PC jobs stay Managed Agents sessions.
+
+```sh
+# one request per prompt file; --attach files are shared by all requests; models: haiku (default), sonnet, opus, fable
+python3 ops/managed-agents/ma.py batch submit q1.md q2.md --model sonnet --attach results.json --wait
+python3 ops/managed-agents/ma.py batch status [BATCH_ID]         # one batch, or the 10 newest
+python3 ops/managed-agents/ma.py batch collect BATCH_ID          # write the answers, print the real cost
+python3 ops/managed-agents/ma.py review prompt.md --attach x.json --out reviews/answer.md   # Opus xhigh, half price
+python3 ops/managed-agents/ma.py review prompt.md --repo         # old live session with the repo mounted
+```
+
+- The batch reviewer cannot browse the repo: attach what it needs (files are inlined in full), or use `review --repo`.
+- Batches have no dollar cap, so `ma.py` checks a worst-case estimate (full prompt as cache writes plus all of
+  `--max-tokens` as output) before submitting and refuses if one request is over `--cap-cents` (100; review 300).
+- Answers go to `--out-dir` (`/mnt/project-files/api-batches`, else `ops/managed-agents/batches/`, git-ignored) with a
+  `batch-<id>.json` manifest. Most batches finish within an hour; the limit is 24 hours and results are kept 29 days.
+- Batch commands work as soon as `LEARNER_ANTHROPIC_API_KEY` is set, before any of the Mac setup.
 
 ## Job cards
 

@@ -7,8 +7,16 @@ The reviewer also needs LEARNER_GITHUB_RO_TOKEN (read-only access to the repo).
 
     python3 ops/managed-agents/ma.py status                 # latest BensPC check
     python3 ops/managed-agents/ma.py job "tail the G1 log"  # hand a job to the PC operator
-    python3 ops/managed-agents/ma.py review prompt.md --attach results.json
+    python3 ops/managed-agents/ma.py review prompt.md --attach results.json   # half price, no repo access
+    python3 ops/managed-agents/ma.py review prompt.md --repo                  # live session, repo mounted
+    python3 ops/managed-agents/ma.py batch submit q1.md q2.md --model sonnet --attach data.json --wait
+    python3 ops/managed-agents/ma.py batch status [BATCH_ID]
+    python3 ops/managed-agents/ma.py batch collect BATCH_ID
     python3 ops/managed-agents/ma.py cost --days 30
+
+Anything that can wait up to an hour or so goes through the Message Batches API at 50% of list price
+(`batch ...` and the default `review`). Live PC checks and PC jobs stay Managed Agents sessions.
+Batch commands need only LEARNER_ANTHROPIC_API_KEY (no ids.json, Mac worker or GitHub token).
 """
 import argparse
 import datetime as dt
@@ -27,6 +35,17 @@ REPO_URL = "https://github.com/BenjaminHannan/learner"
 CHECK_SCHEDULE = {"type": "cron", "expression": "*/15 * * * *", "timezone": "America/New_York"}
 BUDGET_CENTS = {"check": 50, "job": 100, "review": 300}
 STALE_MINUTES = 45
+POLL_SECONDS = 30
+MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5",
+          "opus": "claude-opus-5-5", "fable": "claude-fable-5-1"}
+# list price, USD per million tokens: input, output, cache read
+PRICES = {"claude-haiku-5-5": (0.10, 0.50, 0.01), "claude-sonnet-5-5": (2.00, 10.00, 0.20),
+          "claude-opus-5-5": (4.00, 20.00, 0.20), "claude-fable-5-1": (10.00, 50.00, 0.25)}
+HAIKU_LONG = (0.50, 2.50, 0.05)  # Haiku prompts over 100K input tokens
+LONG_PROMPT = 100_000
+BATCH_DISCOUNT = 0.5
+NO_REPO_NOTE = ("NOTE: in this mode you have NO repository and NO tools. Rely only on the prompt and the attached "
+                "files below, and say what you could not check because of that.")
 
 
 def client():
@@ -138,6 +157,246 @@ def finish(c, session_id, minutes, out=None, all_messages=False):
     return 0
 
 
+# ---- Message Batches API (half price) ----
+
+def model_id(name):
+    name = MODELS.get(name, name)
+    if name not in PRICES:
+        sys.exit(f"Unknown model {name!r}. Use {', '.join(MODELS)} or one of: {', '.join(PRICES)}.")
+    return name
+
+
+def batch_cost(model, input_tokens=0, cache_write=0, cache_read=0, output=0):
+    """Dollars at batch price (50% of list) from token counts."""
+    price_in, price_out, price_read = PRICES[model]
+    if model == "claude-haiku-5-5" and input_tokens + cache_write + cache_read > LONG_PROMPT:
+        price_in, price_out, price_read = HAIKU_LONG
+    list_cost = input_tokens * price_in + cache_write * price_in * 1.25 + cache_read * price_read + output * price_out
+    return BATCH_DISCOUNT * list_cost / 1e6
+
+
+def usage_cost(model, usage):
+    n = lambda name: getattr(usage, name, None) or 0
+    return batch_cost(model, n("input_tokens"), n("cache_creation_input_tokens"),
+                      n("cache_read_input_tokens"), n("output_tokens"))
+
+
+def default_out_dir():
+    shared = Path("/mnt/project-files")
+    return shared / "api-batches" if shared.exists() else HERE / "batches"
+
+
+def make_custom_ids(stems):
+    seen, ids = set(), []
+    for stem in stems:
+        base = re.sub(r"[^a-zA-Z0-9_-]", "-", stem)[:64] or "request"
+        cid, n = base, 1
+        while cid in seen:
+            n += 1
+            suffix = f"-{n}"
+            cid = base[:64 - len(suffix)] + suffix
+        seen.add(cid)
+        ids.append(cid)
+    return ids
+
+
+def read_text_file(path):
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        sys.exit(f"{path} is not valid UTF-8; attach text files only.")
+    except OSError as err:
+        sys.exit(f"Cannot read {path}: {err.strerror}")
+
+
+def system_blocks(system_text, attach):
+    """Optional system text, then all attachments as one cached block. Files are read in full."""
+    blocks = []
+    if system_text:
+        blocks.append({"type": "text", "text": system_text})
+    if attach:
+        files = "\n".join(f'<file path="{path}">\n{read_text_file(path)}\n</file>' for path in attach)
+        blocks.append({"type": "text", "text": files, "cache_control": {"type": "ephemeral"}})
+    return blocks
+
+
+def read_prompts(paths):
+    if paths.count("-") > 1:
+        sys.exit("stdin ('-') can be used for one prompt only.")
+    return [("stdin", sys.stdin.read(), "-") if p == "-" else (Path(p).stem, read_text_file(p), p) for p in paths]
+
+
+def submit_batch(c, prompts, model, effort, max_tokens, system, cap_cents, out_dir, out_paths=None):
+    """prompts: [(stem, text, path)]. Checks the worst-case cap, submits one batch, writes the manifest."""
+    cids = make_custom_ids([stem for stem, _, _ in prompts])
+    requests, worst = [], {}
+    for cid, (_, text, _) in zip(cids, prompts):
+        params = {"model": model, "max_tokens": max_tokens, "messages": [{"role": "user", "content": text}],
+                  "output_config": {"effort": effort}}
+        if system:
+            params["system"] = system
+        count_args = {k: params[k] for k in ("model", "system", "messages") if k in params}
+        tokens = c.messages.count_tokens(**count_args).input_tokens
+        worst[cid] = batch_cost(model, cache_write=tokens, output=max_tokens) * 100
+        requests.append({"custom_id": cid, "params": params})
+    over = [(cid, cents) for cid, cents in worst.items() if cents > cap_cents]
+    for cid, cents in over:
+        print(f"REFUSED {cid}: worst case {cents:.1f} cents is over the cap of {cap_cents} cents "
+              f"by {cents - cap_cents:.1f}.")
+    if over:
+        print("Nothing submitted. Shorten the attachments, lower --max-tokens, or raise --cap-cents.")
+        return None
+    total = sum(worst.values())
+    print(f"{len(requests)} request(s) on {model}, worst case ${total / 100:.2f} (batch price).")
+    batch = c.messages.batches.create(requests=requests)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "id": batch.id, "model": model, "effort": effort, "max_tokens": max_tokens,
+        "created": et(getattr(batch, "created_at", None) or dt.datetime.now(dt.timezone.utc)),
+        "worst_case_cents": round(total, 2),
+        "requests": {cid: {"prompt": path, "out": str((out_paths or {}).get(cid) or out_dir / f"{cid}.md")}
+                     for cid, (_, _, path) in zip(cids, prompts)},
+    }
+    (out_dir / f"batch-{batch.id}.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(f"BATCH {batch.id}")
+    return batch.id
+
+
+def collect_command(batch_id, out_dir):
+    return f"python3 ops/managed-agents/ma.py batch collect {batch_id} --out-dir {out_dir}"
+
+
+def wait_ended(c, batch_id, minutes):
+    deadline = time.monotonic() + minutes * 60
+    while True:
+        if c.messages.batches.retrieve(batch_id).processing_status == "ended":
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(POLL_SECONDS)
+
+
+def submit_and_maybe_wait(c, prompts, args, system, out_paths=None):
+    out_dir = args.out_dir or default_out_dir()
+    batch_id = submit_batch(c, prompts, model_id(args.model), args.effort, args.max_tokens, system,
+                            args.cap_cents, out_dir, out_paths)
+    if batch_id is None:
+        return 1
+    command = collect_command(batch_id, out_dir)
+    if not getattr(args, "wait", True):
+        print(f"Collect later with: {command}")
+        return 0
+    if wait_ended(c, batch_id, args.minutes):
+        return collect(c, batch_id, out_dir)
+    print(f"Not finished after {args.minutes:g} min (batches finish within 24 h). Collect later with: {command}")
+    return 0
+
+
+def cmd_batch_submit(args):
+    c = client()
+    prompts = read_prompts(args.prompts)
+    system = system_blocks(read_text_file(args.system).strip() if args.system else None, args.attach)
+    return submit_and_maybe_wait(c, prompts, args, system)
+
+
+def counts_text(batch):
+    rc = batch.request_counts
+    return (f"{rc.processing} processing, {rc.succeeded} succeeded, {rc.errored} errored, "
+            f"{rc.canceled} canceled, {rc.expired} expired")
+
+
+def when_text(value):
+    return et(value) if value else "-"
+
+
+def cmd_batch_status(args):
+    c = client()
+    if args.batch_id:
+        batch = c.messages.batches.retrieve(args.batch_id)
+        print(f"{batch.id}: {batch.processing_status}; {counts_text(batch)}")
+        print(f"created {when_text(batch.created_at)}, ended {when_text(batch.ended_at)}")
+        return 0
+    batches = []
+    for batch in c.messages.batches.list(limit=10):
+        batches.append(batch)
+        if len(batches) >= 10:
+            break
+    for batch in batches:
+        print(f"{batch.id}  {batch.processing_status}  {when_text(batch.created_at)}  {counts_text(batch)}")
+    if not batches:
+        print("No batches yet.")
+    return 0
+
+
+def find_manifest(batch_id, out_dir):
+    path = Path(out_dir) / f"batch-{batch_id}.json"
+    return path, (json.loads(path.read_text()) if path.exists() else None)
+
+
+def result_text(message):
+    return "".join(b.text for b in message.content if getattr(b, "type", None) == "text")
+
+
+def collect(c, batch_id, out_dir):
+    batch = c.messages.batches.retrieve(batch_id)
+    if batch.processing_status != "ended":
+        print(f"{batch_id}: {batch.processing_status}; {counts_text(batch)}. Nothing written yet.")
+        return 0
+    out_dir = Path(out_dir)
+    manifest_path, manifest = find_manifest(batch_id, out_dir)
+    outs = (manifest or {}).get("requests", {})
+    total = 0.0
+    for item in c.messages.batches.results(batch_id):  # any order; keyed by custom_id
+        cid, result = item.custom_id, item.result
+        if result.type != "succeeded":
+            error = getattr(getattr(result, "error", None), "type", None)
+            detail = getattr(getattr(getattr(result, "error", None), "error", None), "type", None)
+            print(f"{cid}: {result.type}" + (f" ({detail or error})" if detail or error else ""))
+            continue
+        msg = result.message
+        out = Path(outs.get(cid, {}).get("out") or out_dir / f"{cid}.md")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(result_text(msg) + "\n")
+        cost = usage_cost(msg.model, msg.usage) if msg.model in PRICES else 0.0
+        total += cost
+        print(f"{cid}: {out}  (${cost:.4f})")
+        if msg.stop_reason in ("refusal", "max_tokens"):
+            print(f"WARNING {cid}: stopped with {msg.stop_reason}; the answer may be missing or cut off.")
+    print(f"total actual cost ${total:.4f} (batch price)")
+    if manifest is not None:
+        manifest["collected"] = et(dt.datetime.now(dt.timezone.utc))
+        manifest["cost_cents"] = round(total * 100, 4)
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    return 0
+
+
+def cmd_batch_collect(args):
+    return collect(client(), args.batch_id, args.out_dir or default_out_dir())
+
+
+def batches_cost(c, since):
+    """(count, running, dollars, unpriced) for batches created at or after `since`."""
+    count = running = unpriced = 0
+    dollars = 0.0
+    for batch in c.messages.batches.list(limit=100):
+        if batch.created_at < since:
+            break
+        count += 1
+        if batch.processing_status != "ended":
+            running += 1
+            continue
+        for item in c.messages.batches.results(batch.id):
+            if item.result.type != "succeeded":
+                continue
+            msg = item.result.message
+            if msg.model in PRICES:
+                dollars += usage_cost(msg.model, msg.usage)
+            else:
+                unpriced += 1
+    return count, running, dollars, unpriced
+
+
 def cmd_setup(args):
     c = client()
     ids = load_ids()
@@ -241,6 +500,18 @@ def cmd_result(args):
 
 
 def cmd_review(args):
+    if args.repo:
+        return cmd_review_repo(args)
+    c = client()
+    system = system_blocks(NO_REPO_NOTE + "\n\n" + load_agent("opus-reviewer")["system"], args.attach)
+    prompts = read_prompts([args.prompt])
+    args.model, args.effort, args.max_tokens, args.out_dir = "opus", "xhigh", 64000, None
+    args.wait = not args.no_wait
+    out_paths = {make_custom_ids([prompts[0][0]])[0]: args.out} if args.out else None
+    return submit_and_maybe_wait(c, prompts, args, system, out_paths)
+
+
+def cmd_review_repo(args):
     c = client()
     ids = load_ids()
     need(ids, "agents.opus-reviewer", "reviewer_env")
@@ -274,7 +545,7 @@ def cmd_review(args):
     print(f"SESSION {session.id}")
     if args.no_wait:
         return 0
-    return finish(c, session.id, args.wait_min, args.out)
+    return finish(c, session.id, args.minutes, args.out)
 
 
 def cmd_cost(args):
@@ -292,6 +563,9 @@ def cmd_cost(args):
         total += cents
         print(f"{name}: {count} sessions, ${cents / 100:.2f}")
     print(f"total, last {args.days} days: ${total / 100:.2f} (list price)")
+    count, running, dollars, unpriced = batches_cost(c, dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=args.days))
+    print(f"batches: {count} created, ${dollars:.2f} actual (batch price), {running} still running"
+          + (f", {unpriced} results with an unknown model not priced" if unpriced else ""))
     return 0
 
 
@@ -325,17 +599,41 @@ def main():
     p.add_argument("--out")
     p.set_defaults(func=cmd_result)
 
-    p = sub.add_parser("review", help="ask the Opus reviewer (prompt file; repo is mounted read-only)")
+    p = sub.add_parser("review", help="ask the Opus reviewer: half-price batch, no repo (--repo for a live session)")
     p.add_argument("prompt")
-    p.add_argument("--attach", nargs="*", default=[], help="files to mount under /mnt/session/uploads/")
-    p.add_argument("--ref", default="main", help="branch to check out")
-    p.add_argument("--budget-cents", type=int, default=BUDGET_CENTS["review"])
-    p.add_argument("--wait-min", type=float, default=60)
+    p.add_argument("--attach", nargs="*", action="extend", default=[],
+                   help="files inlined in the prompt (with --repo: mounted under /mnt/session/uploads/)")
+    p.add_argument("--repo", action="store_true", help="live Managed Agents session with the repo mounted read-only")
+    p.add_argument("--ref", default="main", help="branch to check out (--repo)")
+    p.add_argument("--budget-cents", type=int, default=BUDGET_CENTS["review"], help="session cap (--repo)")
+    p.add_argument("--cap-cents", type=int, default=300, help="worst-case cap per request (batch mode)")
+    p.add_argument("--minutes", "--wait-min", dest="minutes", type=float, default=60)
     p.add_argument("--no-wait", action="store_true")
     p.add_argument("--out")
     p.set_defaults(func=cmd_review)
 
-    p = sub.add_parser("cost", help="list-price spend per agent")
+    b = sub.add_parser("batch", help="half-price Message Batches API jobs").add_subparsers(dest="batch_command", required=True)
+    p = b.add_parser("submit", help="one request per prompt file (or - for stdin)")
+    p.add_argument("prompts", nargs="+", metavar="PROMPT")
+    p.add_argument("--model", default="haiku", help="haiku, sonnet, opus, fable or a full claude-* id")
+    p.add_argument("--effort", default="xhigh", choices=["low", "medium", "high", "xhigh", "max"])
+    p.add_argument("--max-tokens", type=int, default=32000)
+    p.add_argument("--attach", action="append", default=[], metavar="FILE", help="shared by all requests; repeatable")
+    p.add_argument("--system", metavar="FILE", help="extra system text")
+    p.add_argument("--out-dir")
+    p.add_argument("--cap-cents", type=int, default=100, help="worst-case cost cap per request")
+    p.add_argument("--wait", action="store_true", help="poll until done, then collect")
+    p.add_argument("--minutes", type=float, default=60)
+    p.set_defaults(func=cmd_batch_submit)
+    p = b.add_parser("status", help="one batch, or the 10 newest")
+    p.add_argument("batch_id", nargs="?")
+    p.set_defaults(func=cmd_batch_status)
+    p = b.add_parser("collect", help="write the answers of an ended batch and print the real cost")
+    p.add_argument("batch_id")
+    p.add_argument("--out-dir")
+    p.set_defaults(func=cmd_batch_collect)
+
+    p = sub.add_parser("cost", help="spend per agent (list price) and batches (batch price)")
     p.add_argument("--days", type=int, default=30)
     p.set_defaults(func=cmd_cost)
 
