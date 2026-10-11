@@ -50,7 +50,17 @@ class KCovs:
                         f = g.detach().float().flatten(1)
                         mx = f.abs().amax(1)                       # scale by the max first so tiny gradients do not underflow
                         n = torch.where(mx > 0, mx * (f / mx.clamp(min=1e-38)[:, None]).norm(dim=1), torch.ones_like(mx))
-                        g = g / n.view(-1, *([1] * (g.dim() - 1))).to(g.dtype)
+                        v = [-1] + [1] * (g.dim() - 1)
+                        small = (mx > 0) & (mx < 1e-30)            # subnormal gradient: float32 mx*norm underflows to 0 (-> g/0 = inf -> NaN G)
+                        if small.any():                            # redo those examples in float64; healthy examples keep the exact float32 path
+                            f64 = f.double()
+                            m64 = f64.abs().amax(1).clamp(min=1e-300)
+                            n64 = m64 * (f64 / m64[:, None]).norm(dim=1)
+                            g64 = g.detach().double() / n64.view(v)
+                            g64 = torch.where(torch.isfinite(g64), g64, torch.zeros_like(g64)).to(g.dtype)   # non-finite block: skip it
+                            g = torch.where(small.view(v), g64, g / n.view(v).to(g.dtype))
+                        else:
+                            g = g / n.view(v).to(g.dtype)
                     Y = (g.transpose(1, 2) if conv else g).reshape(-1, g.shape[1] if conv else g.shape[-1]).detach().float()
                     Y = Y[Y.abs().sum(1) > 0]
                     if len(Y):
