@@ -26,7 +26,7 @@ window.CONTENT = {
     "ch00": {
       "kicker": "Start here",
       "title": "What you are about to see",
-      "blurb": "This project is building a language model that thinks in careful steps. This opening section covers what it is, the colours and tags, and the words you need. Parts 1 to 8 and a wrap-up follow.",
+      "blurb": "This project is building a language model that thinks in careful steps. This opening section covers what it is, the colours and tags, and the words you need. Parts 1 to 10 and a wrap-up follow.",
       "accent": "thinker",
       "scenes": [
         {
