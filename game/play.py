@@ -45,6 +45,8 @@ def play(policy, seeds, act_seeds, explore, cap, log_steps=False, allow_sealed=F
     """One episode per world seed, all in lockstep, at most `cap` steps each.
 
     policy(prompts) -> list of answer strings (one per prompt), or None for the random arm (every step random).
+    A policy with attribute `samples` true is called policy(prompts, us) instead: us[j] is one uniform number drawn each step from
+    episode j's extra stream np.random.default_rng([*act_seed, 1]) (made only then, so other results are unchanged).
     act_seeds[i] seeds episode i's random stream (an int or a list of ints, as numpy's default_rng takes).
     -> list of dicts, one per episode: seed, act_seed, length, end ('dead' or 'cap'), unlocks [(step, name)],
        sources {own, explore, invalid} counts, and with log_steps also steps [(prompt, action word, source, reward)] and final_health.
@@ -54,6 +56,8 @@ def play(policy, seeds, act_seeds, explore, cap, log_steps=False, allow_sealed=F
         assert not any(is_sealed(s) for s in seeds), 'a sealed world outside game/score.py'
     envs = [TextEnv(seed=int(s), length=int(cap)) for s in seeds]
     rngs = [np.random.default_rng(a) for a in act_seeds]
+    samples = getattr(policy, 'samples', False)
+    srngs = [np.random.default_rng([*np.atleast_1d(a).tolist(), 1]) for a in act_seeds] if samples else None
     texts = [e.reset() for e in envs]
     eps = [dict(seed=int(s), act_seed=a, length=0, end=None, unlocks=[], sources=dict(own=0, explore=0, invalid=0),
                 steps=[] if log_steps else None) for s, a in zip(seeds, act_seeds)]
@@ -61,7 +65,12 @@ def play(policy, seeds, act_seeds, explore, cap, log_steps=False, allow_sealed=F
     prompts = list(texts)
     live = list(range(len(envs)))
     while live:
-        answers = policy([texts[i] for i in live]) if policy is not None else [None] * len(live)
+        if policy is None:
+            answers = [None] * len(live)
+        elif samples:
+            answers = policy([texts[i] for i in live], [srngs[i].random() for i in live])
+        else:
+            answers = policy([texts[i] for i in live])
         assert len(answers) == len(live)
         nxt = []
         for i, ans in zip(live, answers):
@@ -108,3 +117,65 @@ def model_policy(m, bs=64):
     def pol(prompts):
         return [ans for _, ans in greedy(m, prompts, bs=bs)]
     return pol
+
+
+def move_logprobs(m, prompts, bs=64):
+    """Log-probability of each of the 17 move words as the complete answer -> float64 array [len(prompts), 17].
+    Same readout as m.talk (custom_io/models/tool.py:390-402): GEN registers hold the answer units-first, one distribution per
+    register from m.gen_copy; a word scores sum of log p(register k = letter k of the reversed word) + log p(register len = EOS).
+    The registers are parallel (no feedback), so teacher forcing needs one run per prompt; the 17 words are scored together."""
+    import torch
+    from custom_io.data import EOS, Dataset, collate, to_device
+    n = max(len(w) for w in WORDS) + 1
+    ids = torch.zeros(N_ACTIONS, n, dtype=torch.long)
+    msk = torch.zeros(N_ACTIONS, n, dtype=torch.bool)
+    for j, w in enumerate(WORDS):
+        t = m.vocab.encode(w[::-1]) + [EOS]
+        ids[j, :len(t)], msk[j, :len(t)] = torch.tensor(t), True
+    m.eval()
+    out = []
+    for s in range(0, len(prompts), bs):
+        chunk = prompts[s:s + bs]
+        ds = Dataset([{'id': f'g{i}', 'prompt': p, 'answer': '', 'accepted': [], 'family': '', 'level': 0}
+                      for i, p in enumerate(chunk)], m.vocab, strict=False)
+        batch = to_device(collate([ds[i] for i in range(len(chunk))]), 'cpu')
+        with torch.no_grad():
+            state = m.state_of(m.run(batch))
+            R, Xt, idt, vis = state[:4]
+            X, xm = m.read(batch, talker=True)
+            Xc, mc = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1)
+            idc = torch.cat([batch['prompt_ids'], idt.long()], 1)
+            p, _ = m.gen_copy(R, Xc, mc, idc)                               # [B, 9, V]
+            lp = p[:, :n].clamp_min(1e-12).log()                            # [B, n, V]
+            g = lp[:, torch.arange(n)[None, :].expand(N_ACTIONS, -1), ids]  # [B, 17, n]: lp[b, k, ids[j, k]]
+            out.append((g * msk).sum(-1).double().numpy())
+    return np.concatenate(out) if out else np.zeros((0, N_ACTIONS))
+
+
+def softmax_pick(scores, u):
+    """Index drawn from softmax(scores) by inverse CDF with uniform u in [0, 1)."""
+    p = np.exp(scores - scores.max())
+    c = np.cumsum(p)
+    return int(min(np.searchsorted(c, u * c[-1], side='right'), len(p) - 1))
+
+
+def move_policy(m, picker, bs=64):
+    """The model's own odds over the 17 moves as a policy. picker 'top': highest log-prob (ties: lowest index in ACTIONS);
+    'sample': draw by softmax of the log-probs with the episode's uniform (play passes it because `samples` is set).
+    Always answers one of the 17 words."""
+    assert picker in ('top', 'sample'), picker
+
+    def pick(prompts, us=None):
+        lp = move_logprobs(m, prompts, bs)
+        if picker == 'top':
+            return [WORDS[int(np.argmax(r))] for r in lp]
+        return [WORDS[softmax_pick(r, u)] for r, u in zip(lp, us)]
+    pick.samples = picker == 'sample'
+    pick.picker = picker
+    return pick
+
+
+def picked_policy(m, picker, bs=64):
+    """picker 'greedy' = model_policy (as before); 'top' / 'sample' = move_policy."""
+    assert picker in ('greedy', 'top', 'sample'), picker
+    return model_policy(m, bs) if picker == 'greedy' else move_policy(m, picker, bs)

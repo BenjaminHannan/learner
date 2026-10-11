@@ -2,7 +2,7 @@
 
 Plan: /mnt/project-files/game-world/PLAN-AND-MARKS-2026-10-10.md.
 
-  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model]
+  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample]
 
 Each night: play 64 practice worlds, keep the steps just before each unlock (the game is the checker), train the add-on
 on them mixed with the model's own old answers (diary), undo if old answers drifted, then the model's own quiz.
@@ -67,9 +67,10 @@ def episode_stats(eps):
                 source_share={k: round(src[k] / tot, 4) for k in ('own', 'explore', 'invalid')})
 
 
-def play_worlds(m, run_seed, day, n, cons, log_steps):
+def play_worlds(m, run_seed, day, n, cons, log_steps, picker='greedy'):
+    """picker: 'greedy' (the written answer), 'top' or 'sample' (the model's odds over the 17 moves, play.move_policy)."""
     seeds, acts = world_seeds(run_seed, day, n)
-    return play.play(play.model_policy(m), seeds, acts, cons['explore'], cons['episode_cap'], log_steps=log_steps)
+    return play.play(play.picked_policy(m, picker), seeds, acts, cons['explore'], cons['episode_cap'], log_steps=log_steps)
 
 
 def write_moves(path, eps):
@@ -115,6 +116,9 @@ def parse_args(argv=None):
     a.add_argument('--smoke', action='store_true')
     a.add_argument('--data', default=os.environ.get('CUSTOM_IO_DATA', SK200K if os.path.isdir(SK200K) else DEFAULT_DATA))
     a.add_argument('--threads', type=int, default=2)
+    a.add_argument('--picker', default='greedy', choices=['greedy', 'sample'],
+                   help="sample: practice games sample a move from the model's odds over the 17 moves, quiz games take the top one")
+    a.add_argument('--quiz-picker', default='top', choices=['top', 'sample'], help='with --picker sample: how quiz games choose')
     a.add_argument('--full-model', action='store_true', help='diagnostic: no add-on, the whole model trains')
     return a.parse_args(argv)
 
@@ -134,7 +138,7 @@ def main(argv=None):
     commit, dirty = dm.git_info()
     log = dm.Log(a.out)
     parent = dm.guard(a.parent)
-    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, domain_constants=json.loads(draw),
+    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, domain_constants=json.loads(draw),
         game_constants=gcons, domain_constants_sha256=dsha, game_constants_sha256=gsha, cons_used=cons,
         smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data, git_commit=commit, git_dirty_files=dirty)
     write_row = lambda **kw: log.write('row', **kw)
@@ -164,9 +168,11 @@ def main(argv=None):
     T['diary'] += time.time() - t
     assert diary and check, 'empty diary or check set'
 
+    quiz_picker = a.quiz_picker if a.picker == 'sample' else 'greedy'
+
     def quiz(night):
         t = time.time()
-        eps = play_worlds(m, a.seed, 0, cons['quiz_worlds'], cons, log_steps=True)
+        eps = play_worlds(m, a.seed, 0, cons['quiz_worlds'], cons, log_steps=True, picker=quiz_picker)
         T['quiz'] += time.time() - t
         mp = os.path.join(a.out, 'moves', f'quiz_night_{night}.jsonl.gz')
         log('moves', path=mp, lines=write_moves(mp, eps), kind='quiz')
@@ -182,7 +188,7 @@ def main(argv=None):
     all_rows, undo_prev, stop, night, last_ck = [], False, None, 0, None
     for night in range(1, cons['max_nights'] + 1):
         t = time.time()
-        eps = play_worlds(m, a.seed, night, cons['episodes_per_day'], cons, log_steps=True)
+        eps = play_worlds(m, a.seed, night, cons['episodes_per_day'], cons, log_steps=True, picker=a.picker)
         T['play'] += time.time() - t
         mp = os.path.join(a.out, 'moves', f'day_{night}.jsonl.gz')
         log('moves', path=mp, lines=write_moves(mp, eps), kind='practice')
@@ -270,7 +276,7 @@ def main(argv=None):
     else:
         log('gate', skipped='full-model run has no add-on')
     T['gate'] += time.time() - t
-    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, nights_run=night, stop_reason=stop,
+    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, nights_run=night, stop_reason=stop,
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))

@@ -194,6 +194,10 @@ def analyze(a):
     diffs = {'after - before': paired(A, B), 'after - random': paired(A, Rn)}
     if P:
         diffs['after - ppo'] = paired(A, P)
+    for item in getattr(a, 'extra_diff', None) or []:
+        label, _, path = item.partition('=')
+        assert label and path, f'--extra-diff wants LABEL=FILE, got {item!r}'
+        diffs[f'after - {label}'] = paired(A, json.load(open(path)))
     marks = {}
     d, lo, _ = diffs['after - before']
     marks['GW1'] = gw1_rule(d, lo)
@@ -239,6 +243,8 @@ def main(argv=None):
     ap.add_argument('--after', required=True)
     ap.add_argument('--random', required=True)
     ap.add_argument('--ppo')
+    ap.add_argument('--extra-diff', action='append', default=[], metavar='LABEL=FILE',
+                    help='add a paired row "after - LABEL" against another game.score output (repeatable)')
     ap.add_argument('--nights-dir')
     ap.add_argument('--dev')
     ap.add_argument('--out', required=True)

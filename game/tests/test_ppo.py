@@ -52,6 +52,14 @@ class TrainSmokeTest(unittest.TestCase):
             self.assertTrue(all(parse_action(w) is not None for w in words))
             eps = play.play(pol, [5_000_002], [[1, 2]], 0.0, 30)
             self.assertEqual(eps[0]['sources']['invalid'], 0)
+            self.assertFalse(pol.samples)
+            self.assertEqual(eps[0]['unlocks'], play.play(pol, [5_000_002], [[1, 2]], 0.0, 30)[0]['unlocks'])
+            sp = ppo.load_policy(f'{d}/ppo.pt', sample=True)
+            self.assertTrue(sp.samples)
+            run = lambda act: [s[1] for s in play.play(sp, [5_000_002], [act], 0.0, 30, log_steps=True)[0]['steps']]
+            self.assertEqual(run([1, 2]), run([1, 2]))
+            self.assertNotEqual(run([1, 2]), run([9, 9]))
+            self.assertEqual(sp([txt], [0.0]), sp([txt], [0.0]))
 
     def test_save_every(self):
         with tempfile.TemporaryDirectory() as d:

@@ -175,20 +175,25 @@ def train(steps, out, seed=0, threads=2, save_every=0):
     return dict(steps=total, seconds=time.time() - t0, reset_seconds=reset_sec, episodes_started=counter)
 
 
-def load_policy(path, seed=0):   # seed is accepted but unused: the policy is deterministic
-    """policy(prompts) -> list of action words: the argmax word of the trained PPO policy logits (deterministic per world)."""
+def load_policy(path, seed=0, sample=False):   # seed is accepted but unused: the policy is deterministic
+    """policy(prompts) -> list of action words: the argmax word of the trained PPO policy logits (deterministic per world).
+    sample=True: policy(prompts, us) draws each word from softmax(logits) by inverse CDF with the uniform us[j] (play's `samples` interface)."""
     ck = torch.load(path, map_location='cpu')
     net = Net()
     net.load_state_dict(ck['state'])
     net.eval()
 
-    def policy(prompts):
+    def policy(prompts, us=None):
         if not prompts:
             return []
         with torch.no_grad():
             logits = net.pi(torch.from_numpy(np.stack([parse_obs(p) for p in prompts])))
+            if sample:
+                from game.play import softmax_pick
+                return [WORDS[softmax_pick(r, u)] for r, u in zip(logits.double().numpy(), us)]
             idx = logits.argmax(-1)
         return [WORDS[int(i)] for i in idx]
+    policy.samples = sample
     return policy
 
 
