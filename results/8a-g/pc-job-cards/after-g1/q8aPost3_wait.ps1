@@ -1,7 +1,11 @@
 # Post-G1 chain on BensPC, version 3 (10 Oct 2026, spec addendum R; replaces q8aPost2_wait.ps1 while that one still waits for G1).
+# v3c (11 Oct 2026, spec addendum S): fc100 is split. Part 1 (8aFC, src-b3) only builds the pool; part 2 (8aFC2, src-b3g2) measures four
+# ~100M group 2 shapes (21 x 512, 30 x 432, 37 x 384, 54 x 320; FINISHED-MODEL item 10). Inserted jobs: WORK\insert\*.txt (see RunInserts)
+# run alone at the next check point after group 2 at 3M, so another thread can add a job (the 10M depth pair) without a waiter swap.
+# GX does not run here: WORK\GX-ON-MAC.txt is set (GX stage 1 ran on rented cards; stage 2 withdrawn).
 # After gate G1's last PC queue ends, one queue at a time:
 #   1. test GX seed 400 (8aGXs400, src-8gx), skipped if it already has an ok RESULT.json (it may have run beside G1)
-#   2. fc100 (8aFC, src-b3)                                     3. g2c3 seed 400 (8aG2C3, src-b3)
+#   2. fc100 part 1 (8aFC, src-b3), then part 2 (8aFC2, src-b3g2)  3. g2c3 seed 400 (8aG2C3, src-b3)
 #   4. B3 group 1 at 3M seed 400 (8aB3G1s400, src-b3r), then b3_readout.py (marks B3-1 to B3-6) into its log
 #   4a. g2c3s (8aG2C3S, src-b3g2), then B3 group 2 at 3M seed 400 (8aB3G2s400, src-b3g2): big-run PLAN.md option A. If group 1 s400 is
 #       proved wrong on B3-1, B3-2 or B3-3, group 2 waits for the bisect: it moves to the end and runs only on WORK\G2-GO.txt.
@@ -186,6 +190,33 @@ function G2Step($q, $tpl, $card) {
   if (Launch $q $SRCG2 $CAPSG2) { $null = NewCard $tpl $card $null; $null = WaitEnd $q; return $true }
   Say "$q did NOT start: NEEDS ATTENTION"; return $false
 }
+# Inserted jobs: another thread adds a job without a waiter swap by putting its queue file in <src>\custom_io\queue_local\<Q>-pc.txt and
+# then a file WORK\insert\<order>-<name>.txt with the lines "queue: <Q>" and "src: src-b3g2" (or "src: src-b3"), optional "card: <file>"
+# (a card template already in custom-io). At each check point (after group 2 at 3M, before g2c10s, before c30s, at the end)
+# every such file runs in name order, alone, through Launch (caps.py hash of that src, failed job folders renamed aside). The file is then
+# renamed <name>.txt.done-<stamp>, or .refused-<stamp> / .notstarted-<stamp>; nothing is deleted.
+function RunInserts($where) {
+  $dir = "$WORK\insert"
+  foreach ($f in @(Get-ChildItem "$dir\*.txt" -ErrorAction SilentlyContinue | Sort-Object Name)) {
+    $kv = @{}
+    foreach ($l in @(Get-Content $f.FullName)) { if ($l -match '^\s*(queue|src|card)\s*:\s*(\S+)\s*$') { $kv[$Matches[1]] = $Matches[2] } }
+    $stamp = (Get-Date).ToString('yyyyMMdd-HHmm')
+    $srcs = @{ 'src-b3g2' = @($SRCG2, $CAPSG2); 'src-b3' = @($SRCB3, $CAPSB3) }
+    if (-not $kv['queue'] -or -not $kv['src'] -or -not $srcs.ContainsKey($kv['src'])) {
+      Say "insert $($f.Name): needs 'queue: <Q>' and 'src: src-b3g2' or 'src: src-b3': refused, NEEDS ATTENTION"
+      Rename-Item $f.FullName "$($f.Name).refused-$stamp"; continue
+    }
+    $q = $kv['queue']; $sp = $srcs[$kv['src']]
+    $null = WaitFree "before inserted $q"
+    Say "inserted job $($f.Name) ($where): queue $q from $($kv['src'])"
+    $tag = 'notstarted'
+    if (Launch $q $sp[0] $sp[1]) {
+      if ($kv['card']) { $null = NewCard $kv['card'] "$($q.ToLower()).md" $null }
+      $null = WaitEnd $q; $tag = 'done'
+    } else { Say "inserted $q did NOT start: NEEDS ATTENTION" }
+    Rename-Item $f.FullName "$($f.Name).$tag-$stamp"
+  }
+}
 # c30s runs once: at the end, or earlier in the gap while B3 waits for its code. Never when WORK\B3-READY.txt exists.
 function C30($when) {
   if ($script:c30done) { return }
@@ -245,7 +276,7 @@ function B3Alive($rc) {
   return $false
 }
 
-Say "post-G1 chain waiter v3 started (v3b; pid $PID): GX s400 (unless done), fc100, g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s"
+Say "post-G1 chain waiter v3 started (v3c; pid $PID): GX s400 (unless done), fc100 part 1 + part 2 (four 100M shapes), g2c3, B3 3M s400, g2c3s, B3 group 2 3M s400, [GX s401], [g2c3 s401, B3 3M s401], g2c10s, c30s; inserted jobs from WORK\insert after group 2"
 
 # 1. Gate G1 ends.
 $k = 0
@@ -277,6 +308,7 @@ if (Test-Path "$WORK\GX-ON-MAC.txt") {
 
 # 3-4. fc100 and g2c3 (src-b3), then B3 3M seed 400 (src-b3r) and its readout.
 B3Step '8aFC' 'fc100.template.md' 'fc100.md'
+$null = G2Step '8aFC2' 'fc100v2.template.md' 'fc100v2.md'
 B3Step '8aG2C3' 'g2c3.template.md' 'g2c3.md'
 $rc400 = B3Seed 400
 
@@ -293,6 +325,7 @@ if ($g2wrong -match '^(B3-\d)( B3-\d)*$' -and -not (Test-Path "$WORK\G2-GO.txt")
   $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
   $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
 }
+RunInserts 'after group 2 at 3M'
 
 # 5. GX seed 401, only if GX seed 400 is alive.
 if ($gxHere -and (GXAlive)) {
@@ -308,7 +341,9 @@ if (B3Alive $rc400) {
 }
 
 # 7-8. g2c10s, then c30s unless it already ran in a gap or the B3 ladder is ready.
+RunInserts 'before g2c10s'
 $null = G2Step '8aG2C10S' 'g2c10s.template.md' 'g2c10s.md'
+RunInserts 'before c30s'
 WaitFree 'before c30s'
 C30 'end of the chain'
 if ($g2held) {
@@ -318,4 +353,5 @@ if ($g2held) {
     $null = G2Step '8aB3G2s400' 'b3g2.template.md' 'b3g2.md'
   } else { Say 'group 2 dropped (WORK\G2-SKIP.txt)' }
 }
+RunInserts 'end of the chain'
 Say 'chain finished'

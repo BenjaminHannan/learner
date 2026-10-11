@@ -451,3 +451,27 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   B3-3 (read from `WORK\b3g1-s400-readout.json`), group 2 and g2c3s wait for the bisect; they move to the end of the chain and run there only
   on `WORK\G2-GO.txt` (`G2-SKIP.txt` drops them). The rest of the chain does not wait.
 - Marks unchanged (they are the big-run thread's, in PLAN.md).
+
+## 24. Addendum S (2026-10-11, 8:50 AM ET): post-G1 chain v3c (no GX, four 100M shapes, inserted jobs)
+
+- **GX is skipped on the PC.** GX stage 1 ran on two rented 5090s (Ben's yes, 10:24 PM ET 10-10) and lost on both seeds (GX-3M minus
+  the same-box G-B2 3M: -1.62 and -1.19; experts thread, commit 1457feaf57). Ben dropped the deep experts run at 8:11 AM ET 10-11 ("you
+  don't have to do that. But I do want deep layers in the model at some point"; to the experts thread: "add as many layers as possible.
+  don't worry about the experts"). `WORK\GX-ON-MAC.txt` is on the PC (checked 4:50 AM ET 10-11), so the waiter skips GX s400 and s401.
+- **fc100 measures four dense ~100M shapes** (FINISHED-MODEL-2026-10-09.md item 10, rule taken 8:20 AM ET 10-11 by the architecture
+  thread). Part 1 (queue `8aFC`, src-b3) now only builds the B3 3M long-chunk pool, as before, so every later B3 job reuses the same pool;
+  its three ledger 21 x 512 runs are dropped. Part 2 (new queue `8aFC2`, src-b3g2) writes the B3G2 caps beside the pool (a `--maxh 1e-9`
+  B3G2 job, nothing trains), then runs 20 updates (256 rows, no eval) of model `b3g2` at four shapes, 8 heads each: 21 x 512, 30 x 432,
+  37 x 384 and 54 x 320, each at accumulation 64 (4 rows per pass) and 256 (1 row per pass). Config = `configs.b3_cfg('100M', group 2)`
+  under caps_b3g2 (n_loops 12) with blocks and width changed; training draws 4, 8, 16 or 32 rounds per batch, so 20 updates reach the
+  32-round cap with probability about 99.7%. Trained counts (shown, cloud CPU at 1acfde9a73): 102,641,692; 102,972,181; 99,765,806;
+  100,267,567. The eight train lines parse with train.py's own argument parser (shown). Peak memory and speed on the PC: untested.
+- **Inserted jobs.** The 10M depth pair (8 x 256 against about 14 x 192, group 2, seed 400; config from the architecture thread after
+  group 2's 3M readout, marks sealed by the big-run thread) cannot be written yet. Instead of another waiter swap mid-chain, v3c runs any
+  `WORK\insert\<order>-<name>.txt` ("queue: <Q>", "src: src-b3g2" or "src-b3", optional "card:") alone, at check points after group 2 at
+  3M, before g2c10s, before c30s and at the end, then renames the file `.done-<stamp>`. The queue file must already be in that src.
+- **Order now:** fc100 part 1 -> fc100 part 2 -> g2c3 -> B3 group 1 3M s400 -> [group 2 hold rule] g2c3s -> B3 group 2 3M s400 ->
+  [inserted jobs] -> [g2c3 s401 + B3 s401 if alive] -> [inserted] -> g2c10s -> [inserted] -> c30s -> [inserted].
+- **Install (`swap_v3c.ps1`):** only while v3b still waits for G1; parse check of the new waiter, `fc2check.py` on the PC's CPU (queue
+  parses, eight configs at 95-106M trained), then copies the queues (the old src-b3 `8aFC-pc.txt` kept as `.v3b-<stamp>`) and the card
+  templates, makes `WORK\insert`, stops v3b by PID and starts v3c.
