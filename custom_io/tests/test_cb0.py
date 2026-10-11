@@ -30,11 +30,29 @@ def test_eg_cache():
         eg.encode(ps + ['new prompt'], 40, torch.device('cpu'))
         assert eg.passes == 4
     assert 'encode' not in vars(eg)
+    # the reply encoder (encode_texts): same values as the plain one, each distinct text computed once and alone, restored on exit
+    cpu = torch.device('cpu')
+    rs = ['7', '12', '7', 'x = 5', '12']
+    with cb0.eg_cache(m):
+        assert 'encode_texts' in vars(eg)
+        n0 = eg.text_pass_n
+        for T in (12, 3):
+            Ht = eg.encode_texts(rs, T, cpu)
+            assert Ht.shape == (5, T, 768) and torch.equal(Ht, ref.encode_texts(rs, T, cpu))
+        assert eg.text_pass_n - n0 == 3 and sorted(c[0] for c in eg.text_calls[-3:]) == sorted(set(rs))
+        eg.encode_texts(rs + ['new'], 12, cpu)
+        assert eg.text_pass_n - n0 == 4                                              # only the new text
+    assert 'encode_texts' not in vars(eg) and 'encode' not in vars(eg)
+    n0 = eg.text_pass_n
+    eg.encode_texts(rs, 12, cpu)
+    assert eg.text_pass_n - n0 == 1                                                  # uncached again: one batched call
     with cb0.eg_cache(m, max_items=2):
         eg.encode(ps, 40, torch.device('cpu'))
         assert len(eg._cb0_store.d) == 2
+        eg.encode_texts(rs, 12, cpu)
+        assert len(eg._cb0_store.t) == 2
     cb0.clear_eg_cache(m)
-    assert len(eg._cb0_store.d) == 0
+    assert len(eg._cb0_store.d) == 0 and len(eg._cb0_store.t) == 0
     # a model without eg_embed is untouched
     f = FakeDay()
     with cb0.eg_cache(f) as st:

@@ -7,7 +7,7 @@ THE CHECKER. `check(row, trace) -> bool` (does this try fit the question's OWN w
 so nothing here can fall back to reading the answer key. A trace is the dict ST1 uses: dict(calls=[(call text, reply)], answer=str).
 
 1. THE GEMMA INPUT CACHE. B3 with eg_embed reads every question through models/eg.FrozenEG.encode, which memoises only the LAST call, so every try and every night recomputes Gemma.
-eg_cache(model, max_items=20000) is a context manager that wraps that model's encoder (model._eg[0].encode, patched on the instance, restored on exit) with a cache keyed per PROMPT (and device):
+eg_cache(model, max_items=20000) is a context manager that wraps that model's encoder (model._eg[0].encode, and encode_texts, the tool-reply encoder read like the question under Ben's rule 1, each with its own per-text store; patched on the instance, restored on exit) with a cache keyed per PROMPT (and device):
 the H rows of the prompt (one per char, or per byte for ByteVocab, exactly as encode returns them, zero past the prompt) and its pooled vector. Only the missing prompts are computed, each ONE
 PROMPT AT A TIME (batch of one, T = the prompt's own length), so batch composition and padding never enter a cached value; the batch result is stitched in encode's shape, dtype and device
 (H [B, T, 768] zero-padded / truncated to T, pooled [B, 768]; H is None when chars=False). TOLERANCE (disclosed): a value computed alone can differ from the one encode would give inside a
@@ -59,8 +59,9 @@ def kind_of(row):
 class _EGStore:
     """prompt -> (H row [n, 768], pooled [768]) per device, least recently used, at most max_items."""
 
-    def __init__(self, orig, max_items):
-        self.orig, self.max_items, self.d = orig, max_items, collections.OrderedDict()
+    def __init__(self, orig, max_items, orig_texts=None):
+        self.orig, self.orig_texts, self.max_items, self.d = orig, orig_texts, max_items, collections.OrderedDict()
+        self.t = collections.OrderedDict()                                        # text -> H row [n, 768] (the reply encoder, FrozenEG.encode_texts)
         self.misses = self.hits = 0
 
     def row(self, eg, prompt, device):
@@ -77,6 +78,28 @@ class _EGStore:
         while len(self.d) > self.max_items:
             self.d.popitem(last=False)
         return v
+
+    def text_row(self, eg, text, device):
+        key = (text, str(device))
+        v = self.t.get(key)
+        if v is not None:
+            self.t.move_to_end(key)
+            self.hits += 1
+            return v
+        self.misses += 1
+        n = max(int(len(eg.align(text)[1])), 1)
+        v = self.t[key] = self.orig_texts([text], n, device)[0]
+        while len(self.t) > self.max_items:
+            self.t.popitem(last=False)
+        return v
+
+    def encode_texts(self, eg, texts, T, device):
+        rows = [self.text_row(eg, x, device) for x in texts]
+        H = rows[0].new_zeros(len(rows), T, rows[0].shape[-1])
+        for b, h in enumerate(rows):
+            n = min(h.shape[0], T)
+            H[b, :n] = h[:n]
+        return H
 
     def encode(self, eg, prompts, T, device, chars=True):
         rows = [self.row(eg, p, device) for p in prompts]
@@ -101,22 +124,29 @@ def eg_cache(model, max_items=20000):
     if 'encode' in vars(eg) and hasattr(eg, '_cb0_store'):
         yield eg._cb0_store
         return
-    store = getattr(eg, '_cb0_store', None) or _EGStore(eg.encode, max_items)
+    has_t = hasattr(eg, 'encode_texts')
+    store = getattr(eg, '_cb0_store', None) or _EGStore(eg.encode, max_items, eg.encode_texts if has_t else None)
     store.max_items = max_items
-    while len(store.d) > max_items:
-        store.d.popitem(last=False)
+    for d in (store.d, store.t):
+        while len(d) > max_items:
+            d.popitem(last=False)
     eg._cb0_store = store
     eg.encode = lambda prompts, T, device, chars=True: store.encode(eg, prompts, T, device, chars)
+    if has_t:
+        eg.encode_texts = lambda texts, T, device: store.encode_texts(eg, texts, T, device)
     try:
         yield store
     finally:
         del eg.encode                     # back to the class method; the store stays on the encoder
+        if has_t:
+            del eg.encode_texts
 
 
 def clear_eg_cache(model):
     for eg in getattr(model, '_eg', None) or []:
         if hasattr(eg, '_cb0_store'):
             eg._cb0_store.d.clear()
+            eg._cb0_store.t.clear()
 
 
 # ---------------------------------------------------------------- 2. the stuck test and the stuck-first search
