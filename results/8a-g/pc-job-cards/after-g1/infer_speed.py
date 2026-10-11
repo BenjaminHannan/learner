@@ -1,7 +1,7 @@
-"""fc100 part 3 (11 Oct 2026, spec addendum T): how fast the four ~100M B3 group 2 shapes answer. Run from src-b3g2 (custom_io of claude/learner-new-g2 at
+"""fc100 part 3 (11 Oct 2026, spec addendum T): how fast the ~100M B3 group 2 shapes of fc100 part 2 answer. Run from src-b3g2 (custom_io of claude/learner-new-g2 at
 1acfde9a73) by the post-G1 chain waiter v3d right after fc100 part 2 (queue 8aFC2), alone on the GPU. Read-only: it trains nothing, writes one JSON.
 
-For each a64 shape line of the 8aFC2 queue (21 x 512, 30 x 432, 37 x 384, 54 x 320), a freshly started model (seed 400, eval mode, bf16 autocast on cuda as in
+For each a64 shape line of the 8aFC2 queue (as of v3d: 21 x 512, 30 x 432, 37 x 384, 54 x 320), a freshly started model (seed 400, eval mode, bf16 autocast on cuda as in
 training's eval, the frozen EmbeddingGemma 2 front included) answers dev in_dist questions with exactly K thinking rounds (generate lesion 'loops:K'; K = 12, the
 model's n_loops, and 32, the cap) at batch sizes 1, 16 and 128. A timed answer = read the question (Gemma + letter reader) + K rounds + write the answer.
 Weights are untrained, so the writer's per-round notes are timed two ways:
@@ -65,10 +65,10 @@ def main(argv=None):
     ap.add_argument('--batches', default='1,16,128')
     ap.add_argument('--modes', default='quiet,busy')
     ap.add_argument('--cell-s', type=float, default=30.0, help='stop a cell after this many timed seconds (at least one batch)')
-    ap.add_argument('--minutes', type=float, default=60.0, help='whole-run cap: later cells are marked skipped')
+    ap.add_argument('--minutes', type=float, default=75.0, help='whole-run cap: later cells are marked skipped')
     ap.add_argument('--cfg', default=None, help='JSON merged into every shape cfg (CPU dry runs only)')
     ap.add_argument('--busy', default=None, help='shared GPU-BUSY file (one line while this runs)')
-    ap.add_argument('--shapes', default=None, help='comma list of shapes to run, e.g. 21x512 (default: all four)')
+    ap.add_argument('--shapes', default=None, help='comma list of shapes to run, e.g. 21x512 (default: every a64 shape in the queue)')
     ap.add_argument('--src', default=None, help='the code folder holding custom_io (default: the current folder)')
     ap.add_argument('--selftest', default=None, help='a new empty folder: CPU run of one shape at a tiny width on the b3g2 test rows (no Gemma, no GPU)')
     a = ap.parse_args(argv)
@@ -95,7 +95,7 @@ def main(argv=None):
     D.set_max_ans(8)                                     # train.py's order: --max-ans 8, then the caps
     caps = CP.apply(json.load(open(a.caps)))
     shapes = shapes_of(a.queue)
-    assert len(shapes) == 4, f'expected four a64 shapes in {a.queue}, found {len(shapes)}'
+    assert shapes, f'no a64 b3g2 shape lines in {a.queue}'
     rows = load_rows(os.path.join(a.pool, 'dev', 'in_dist.jsonl'))
     rnd = random.Random(400)
     rnd.shuffle(rows)
