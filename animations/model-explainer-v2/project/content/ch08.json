@@ -6,15 +6,15 @@
   "scenes": [
     {
       "id": "s01",
-      "duration": 20.5,
+      "duration": 21,
       "heading": "Where we are: practice sets the numbers",
       "caption": [
         {
-          "at": 0.0293,
+          "at": 0.0286,
           "text": "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far)."
         },
         {
-          "at": 0.657,
+          "at": 0.6596,
           "text": "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
         }
       ],
@@ -34,29 +34,29 @@
       "atMap": [
         [
           0.0235,
-          0.0293
+          0.0286
         ],
         [
           0.498,
-          0.657
+          0.6596
         ]
       ]
     },
     {
       "id": "s02",
-      "duration": 18,
+      "duration": 17.5,
       "heading": "The loop: try, check, nudge",
       "caption": [
         {
-          "at": 0.0333,
+          "at": 0.0343,
           "text": "The model tries a question."
         },
         {
-          "at": 0.2713,
+          "at": 0.2674,
           "text": "It is shown the right answer."
         },
         {
-          "at": 0.4626,
+          "at": 0.4641,
           "text": "Then every learned setting moves a tiny bit. One nudge is one update."
         }
       ],
@@ -77,33 +77,33 @@
       "atMap": [
         [
           0.0231,
-          0.0333
+          0.0343
         ],
         [
           0.3397,
-          0.2713
+          0.2674
         ],
         [
           0.6564,
-          0.4626
+          0.4641
         ]
       ]
     },
     {
       "id": "s03",
-      "duration": 27,
+      "duration": 28,
       "heading": "24,000 updates of 256 rows each",
       "caption": [
         {
-          "at": 0.0222,
+          "at": 0.0214,
           "text": "Each update looks at 256 practice rows, then nudges every learned setting once."
         },
         {
-          "at": 0.2697,
+          "at": 0.26,
           "text": "The 3M test copy, with 3.5 million learned settings, did 24,000 updates."
         },
         {
-          "at": 0.5408,
+          "at": 0.5215,
           "text": "Our multiplication: 24,000 × 256 = 6,144,000 row draws. The pool has 1,418,702 rows, so rows come round again."
         }
       ],
@@ -132,33 +132,33 @@
       "atMap": [
         [
           0.0185,
-          0.0222
+          0.0214
         ],
         [
           0.3385,
-          0.2697
+          0.26
         ],
         [
           0.6585,
-          0.5408
+          0.5215
         ]
       ]
     },
     {
       "id": "s04",
-      "duration": 26,
+      "duration": 27,
       "heading": "The recipe: how each nudge is made",
       "caption": [
         {
-          "at": 0.0231,
+          "at": 0.0222,
           "text": "AdamW is the nudging rule. The learning rate is how big a nudge may be."
         },
         {
-          "at": 0.2791,
+          "at": 0.2729,
           "text": "It starts small, peaks at 1e-3 after a 300-update warm-up, then falls to 10% of the peak."
         },
         {
-          "at": 0.6525,
+          "at": 0.6507,
           "text": "Sums run in short numbers (bf16), rows come shuffled, and the start is random."
         }
       ],
@@ -186,33 +186,33 @@
       "atMap": [
         [
           0.0185,
-          0.0231
+          0.0222
         ],
         [
           0.3385,
-          0.2791
+          0.2729
         ],
         [
           0.6585,
-          0.6525
+          0.6507
         ]
       ]
     },
     {
       "id": "s05",
-      "duration": 35,
+      "duration": 36,
       "heading": "What it practises on",
       "caption": [
         {
-          "at": 0.0171,
+          "at": 0.0167,
           "text": "The 3M test copy practised on a pool of 60 million pieces of text (GPT-2 word pieces)."
         },
         {
-          "at": 0.2349,
+          "at": 0.2455,
           "text": "By word pieces: own text 38%, web text 62%. By rows: own 811,663, web 607,039."
         },
         {
-          "at": 0.6629,
+          "at": 0.6764,
           "text": "Our rows: skills questions and English passages made by our code, plus teaching rows (TEACH) a 1.2-billion-number teacher model wrote earlier."
         }
       ],
@@ -245,15 +245,15 @@
       "atMap": [
         [
           0.0145,
-          0.0171
+          0.0167
         ],
         [
           0.3373,
-          0.2349
+          0.2455
         ],
         [
           0.6602,
-          0.6629
+          0.6764
         ]
       ]
     },
@@ -267,11 +267,11 @@
           "text": "FineWeb-Edu web text: a script blanks one word of 3 to 12 letters, and the model must name it."
         },
         {
-          "at": 0.4021,
+          "at": 0.3969,
           "text": "Each prompt holds at most 280 letters, blank included, in the 3M runs; the finished design's long pool goes up to 2,000."
         },
         {
-          "at": 0.7302,
+          "at": 0.725,
           "text": "It learns to read English, not write it. Rows without steps add a faint no-call label, weight 0.1."
         }
       ],
@@ -307,11 +307,11 @@
         ],
         [
           0.3376,
-          0.4021
+          0.3969
         ],
         [
           0.6599,
-          0.7302
+          0.725
         ]
       ]
     },
@@ -371,19 +371,19 @@
     },
     {
       "id": "s08",
-      "duration": 29,
+      "duration": 29.5,
       "heading": "Teacher forcing: practice follows the key",
       "caption": [
         {
-          "at": 0.0207,
+          "at": 0.0203,
           "text": "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess."
         },
         {
-          "at": 0.3089,
+          "at": 0.3134,
           "text": "At test time there is no key. The model writes its own calls."
         },
         {
-          "at": 0.5138,
+          "at": 0.5148,
           "text": "Not every row has steps: 124,991 of the 200,000 skills rows (62.5%) the earlier 3M models used have none."
         }
       ],
@@ -411,33 +411,33 @@
       "atMap": [
         [
           0.019,
-          0.0207
+          0.0203
         ],
         [
           0.3386,
-          0.3089
+          0.3134
         ],
         [
           0.6582,
-          0.5138
+          0.5148
         ]
       ]
     },
     {
       "id": "s09",
-      "duration": 34.5,
+      "duration": 35,
       "heading": "Fair practice: three rules",
       "caption": [
         {
-          "at": 0.0174,
+          "at": 0.0171,
           "text": "Rule 1: no answer is cut short. A longer answer is counted, and any count above 0 fails the pass mark."
         },
         {
-          "at": 0.3083,
+          "at": 0.3257,
           "text": "Rule 2: exam questions are kept apart: 6,040 rows are never used in practice, though question styles can repeat."
         },
         {
-          "at": 0.6341,
+          "at": 0.6469,
           "text": "Rule 3: web text is scanned against exam sets. A last scan, on sealed sets, was pending Oct 9; the 3M runs began before it."
         }
       ],
@@ -471,15 +471,15 @@
       "atMap": [
         [
           0.0133,
-          0.0174
+          0.0171
         ],
         [
           0.337,
-          0.3083
+          0.3257
         ],
         [
           0.6607,
-          0.6341
+          0.6469
         ]
       ]
     },

@@ -1515,15 +1515,15 @@ window.CONTENT = {
         },
         {
           "id": "s03",
-          "duration": 20.5,
+          "duration": 21,
           "heading": "Measured: about 3 to 4.3 letters per token",
           "caption": [
             {
-              "at": 0.0293,
+              "at": 0.0286,
               "text": "On 20,000 of our skill questions, one token covers 3.08 letters on average."
             },
             {
-              "at": 0.5321,
+              "at": 0.5194,
               "text": "On 9,068 web-text chunks of 279 letters, one token covers 4.27 letters on average."
             }
           ],
@@ -1544,11 +1544,11 @@ window.CONTENT = {
           "atMap": [
             [
               0.025,
-              0.0293
+              0.0286
             ],
             [
               0.4979,
-              0.5321
+              0.5194
             ]
           ]
         },
@@ -2628,15 +2628,15 @@ window.CONTENT = {
               "text": "Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
             },
             {
-              "at": 0.3061,
+              "at": 0.3023,
               "text": "It copies 12 and 5 from the question. The calculator replies 7, which is added to the notes."
             },
             {
-              "at": 0.5122,
+              "at": 0.5084,
               "text": "Round 3 sees that reply. After it, the call writer writes add 7 3, and the calculator replies 10."
             },
             {
-              "at": 0.7278,
+              "at": 0.724,
               "text": "The talker, which writes the final answer, copies 10 from the last reply. A worked example, traced from the code."
             }
           ],
@@ -2659,15 +2659,15 @@ window.CONTENT = {
             ],
             [
               0.2561,
-              0.3061
+              0.3023
             ],
             [
               0.4989,
-              0.5122
+              0.5084
             ],
             [
               0.7417,
-              0.7278
+              0.724
             ]
           ]
         },
@@ -2878,19 +2878,19 @@ window.CONTENT = {
         },
         {
           "id": "s14",
-          "duration": 29,
+          "duration": 30,
           "heading": "First test: thinking on, then off",
           "caption": [
             {
-              "at": 0.0207,
+              "at": 0.02,
               "text": "In the first completed test (older design), one copy at the smallest size scored 73.01 points out of 100 on 6,040 kept-aside questions, thinking on."
             },
             {
-              "at": 0.5232,
+              "at": 0.5478,
               "text": "With thinking switched off (zero rounds), the same copy scored 0.66 points."
             },
             {
-              "at": 0.7522,
+              "at": 0.7691,
               "text": "That is one copy at one size. Part 8 explains the test and its checks."
             }
           ],
@@ -2913,15 +2913,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0182,
-              0.0207
+              0.02
             ],
             [
               0.3384,
-              0.5232
+              0.5478
             ],
             [
               0.6586,
-              0.7522
+              0.7691
             ]
           ]
         },
@@ -3164,28 +3164,28 @@ window.CONTENT = {
         },
         {
           "id": "s05",
-          "duration": 40.5,
+          "duration": 41.5,
           "heading": "Copying digits: a pointer, a step left, a stop",
           "question": "Tom has 12 apples. (made-up example)",
           "caption": [
             {
-              "at": 0.0148,
+              "at": 0.0145,
               "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
             },
             {
-              "at": 0.2361,
+              "at": 0.2305,
               "text": "The copy then steps one letter left and copies the 1."
             },
             {
-              "at": 0.4022,
+              "at": 0.3925,
               "text": "A learned stop head says when to stop."
             },
             {
-              "at": 0.5603,
+              "at": 0.5468,
               "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
             },
             {
-              "at": 0.8557,
+              "at": 0.8548,
               "text": "Copied here means the copy trick was used, not that the copy was right."
             }
           ],
@@ -3218,23 +3218,23 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.0148
+              0.0145
             ],
             [
               0.2076,
-              0.2361
+              0.2305
             ],
             [
               0.4018,
-              0.4022
+              0.3925
             ],
             [
               0.596,
-              0.5603
+              0.5468
             ],
             [
               0.7902,
-              0.8557
+              0.8548
             ]
           ]
         },
@@ -4098,11 +4098,11 @@ window.CONTENT = {
               "text": "Older models were trained for 8 rounds. In a round-count test on two copies, the score on practice-like questions stopped rising at 8 rounds."
             },
             {
-              "at": 0.4616,
+              "at": 0.4655,
               "text": "On all 8 copies we checked (those two and six more), running 16 rounds scored 0.8 to 1.9 points lower than 8 rounds."
             },
             {
-              "at": 0.8275,
+              "at": 0.8314,
               "text": "So too few rounds hurt, and too many may hurt too."
             }
           ],
@@ -4124,33 +4124,33 @@ window.CONTENT = {
             ],
             [
               0.3381,
-              0.4616
+              0.4655
             ],
             [
               0.659,
-              0.8275
+              0.8314
             ]
           ]
         },
         {
           "id": "s06",
-          "duration": 32,
+          "duration": 31,
           "heading": "After each round, a small head says stop or go",
           "caption": [
             {
-              "at": 0.0187,
+              "at": 0.0194,
               "text": "After every round, the stop switch, a small head, reads one of the thinker's note cards."
             },
             {
-              "at": 0.2635,
+              "at": 0.259,
               "text": "It gives a number from 0 to 1. At 0.5 or more, the thinking stops."
             },
             {
-              "at": 0.4715,
+              "at": 0.4737,
               "text": "It always runs at least 1 round, and never more than 32."
             },
             {
-              "at": 0.6461,
+              "at": 0.6539,
               "text": "The stop switch has 257 numbers when each card has 256, and 513 when each has 512."
             }
           ],
@@ -4168,19 +4168,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0187
+              0.0194
             ],
             [
               0.2572,
-              0.2635
+              0.259
             ],
             [
               0.4987,
-              0.4715
+              0.4737
             ],
             [
               0.7401,
-              0.6461
+              0.6539
             ]
           ]
         },
@@ -4230,19 +4230,19 @@ window.CONTENT = {
         },
         {
           "id": "s08",
-          "duration": 21,
+          "duration": 20.5,
           "heading": "How it is taught: the settled label",
           "caption": [
             {
-              "at": 0.0286,
+              "at": 0.0293,
               "text": "Training gives every round a label: stop, or keep going."
             },
             {
-              "at": 0.3658,
+              "at": 0.3635,
               "text": "The label says stop when the answer is right now, or when no later round is right."
             },
             {
-              "at": 0.7168,
+              "at": 0.7231,
               "text": "So the stop switch is also taught to stop on questions it cannot solve."
             }
           ],
@@ -4259,15 +4259,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0194,
-              0.0286
+              0.0293
             ],
             [
               0.3387,
-              0.3658
+              0.3635
             ],
             [
               0.6581,
-              0.7168
+              0.7231
             ]
           ]
         },
@@ -4281,11 +4281,11 @@ window.CONTENT = {
               "text": "Practice uses batches of questions, and some batches run only 8 rounds. There, a question first right at round 10 looks never right."
             },
             {
-              "at": 0.4007,
+              "at": 0.408,
               "text": "So the label says stop at round 1, and the stop switch would learn to stop too early."
             },
             {
-              "at": 0.6979,
+              "at": 0.7053,
               "text": "Fix: the stop switch learns only from batches that run all 32 rounds, about 1 in 4."
             }
           ],
@@ -4307,11 +4307,11 @@ window.CONTENT = {
             ],
             [
               0.3376,
-              0.4007
+              0.408
             ],
             [
               0.6598,
-              0.6979
+              0.7053
             ]
           ]
         },
@@ -4325,11 +4325,11 @@ window.CONTENT = {
               "text": "The label only sees the rounds a question actually ran."
             },
             {
-              "at": 0.28,
+              "at": 0.2808,
               "text": "So a stop that fires early may never be shown a later right answer (suggested)."
             },
             {
-              "at": 0.5643,
+              "at": 0.5651,
               "text": "The first run is planned to report how often questions stop early, and their answers. This is reported only, not a pass mark."
             }
           ],
@@ -4350,11 +4350,11 @@ window.CONTENT = {
             ],
             [
               0.3385,
-              0.28
+              0.2808
             ],
             [
               0.6583,
-              0.5643
+              0.5651
             ]
           ]
         },
@@ -4413,23 +4413,23 @@ window.CONTENT = {
         },
         {
           "id": "s12",
-          "duration": 31.5,
+          "duration": 32,
           "heading": "If it fails: no build switch removes the stop",
           "caption": [
             {
-              "at": 0.019,
+              "at": 0.0187,
               "text": "No build switch removes the stop. The switches cover things like Gemma and calls, not the stop."
             },
             {
-              "at": 0.2531,
+              "at": 0.2491,
               "text": "A trained copy can still be run with the stop ignored and a forced number of rounds, as a test."
             },
             {
-              "at": 0.5211,
+              "at": 0.5129,
               "text": "The nearest model with no stop is the outside-calculator model (T1SDR), with a fixed 8 rounds."
             },
             {
-              "at": 0.7657,
+              "at": 0.7537,
               "text": "The stop has never run. Its first run is planned after the separate G1 size test finishes (not covered here)."
             }
           ],
@@ -4447,37 +4447,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.019
+              0.0187
             ],
             [
               0.2563,
-              0.2531
+              0.2491
             ],
             [
               0.4989,
-              0.5211
+              0.5129
             ],
             [
               0.7415,
-              0.7657
+              0.7537
             ]
           ]
         },
         {
           "id": "s13",
-          "duration": 31,
+          "duration": 31.5,
           "heading": "Fast and slow: one thinker, not two",
           "caption": [
             {
-              "at": 0.0194,
+              "at": 0.019,
               "text": "People talk about fast thinking and slow thinking. Few rounds is like the fast kind, many rounds like the slow kind."
             },
             {
-              "at": 0.3654,
+              "at": 0.3596,
               "text": "We suggest one looped thinker gives both, so no separate fast and slow model is needed (suggested, not tested)."
             },
             {
-              "at": 0.6401,
+              "at": 0.6299,
               "text": "To remember: the stop switch decides, the limit is 32 rounds, and the stop is built but not yet run."
             }
           ],
@@ -4494,15 +4494,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0167,
-              0.0194
+              0.019
             ],
             [
               0.338,
-              0.3654
+              0.3596
             ],
             [
               0.6593,
-              0.6401
+              0.6299
             ]
           ]
         }
@@ -4516,23 +4516,23 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 28.5,
+          "duration": 29,
           "heading": "Where we are: the talker writes the answer",
           "caption": [
             {
-              "at": 0.0211,
+              "at": 0.0207,
               "text": "This is the last stop on the map: the talker."
             },
             {
-              "at": 0.192,
+              "at": 0.1887,
               "text": "Its only job is to write the final answer. It adds no thinking."
             },
             {
-              "at": 0.4005,
+              "at": 0.3936,
               "text": "It reads the thinker's final state, and may copy from the question and the calculator's replies."
             },
             {
-              "at": 0.6466,
+              "at": 0.6355,
               "text": "But only where the thinker points. Today's talker is a small stand-in."
             }
           ],
@@ -4558,41 +4558,41 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0211
+              0.0207
             ],
             [
               0.2,
-              0.192
+              0.1887
             ],
             [
               0.38,
-              0.4005
+              0.3936
             ],
             [
               0.6,
-              0.6466
+              0.6355
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 30,
+          "duration": 30.5,
           "heading": "Three ways the talker writes, today",
           "caption": [
             {
-              "at": 0.02,
+              "at": 0.0197,
               "text": "Today's talker is a small stand-in with three ways to write an answer."
             },
             {
-              "at": 0.2181,
+              "at": 0.2145,
               "text": "Span copy takes a stretch of letters from the question or a reply."
             },
             {
-              "at": 0.4162,
+              "at": 0.4203,
               "text": "A word pointer, a learned pick of a spot, takes one whole word from the question."
             },
             {
-              "at": 0.65,
+              "at": 0.6503,
               "text": "Letter slots spell the answer when it is not in the text."
             }
           ],
@@ -4623,41 +4623,41 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.02
+              0.0197
             ],
             [
               0.23,
-              0.2181
+              0.2145
             ],
             [
               0.43,
-              0.4162
+              0.4203
             ],
             [
               0.62,
-              0.65
+              0.6503
             ]
           ]
         },
         {
           "id": "s03",
-          "duration": 28.5,
+          "duration": 29.5,
           "heading": "Span copy: a pointer, a step left, a stop",
           "caption": [
             {
-              "at": 0.0211,
+              "at": 0.0203,
               "text": "The thinker's final state sets a pointer on the last digit of the last reply: the 0."
             },
             {
-              "at": 0.2797,
+              "at": 0.2815,
               "text": "The copy steps one letter left and takes the 1."
             },
             {
-              "at": 0.4506,
+              "at": 0.4467,
               "text": "Next to the left is a space. A small learned part, the stop head, says stop."
             },
             {
-              "at": 0.6967,
+              "at": 0.6844,
               "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10."
             }
           ],
@@ -4686,41 +4686,41 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0211
+              0.0203
             ],
             [
               0.23,
-              0.2797
+              0.2815
             ],
             [
               0.4,
-              0.4506
+              0.4467
             ],
             [
               0.58,
-              0.6967
+              0.6844
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 36,
+          "duration": 37,
           "heading": "Span copy: how often, and what is hand-written",
           "caption": [
             {
-              "at": 0.0167,
+              "at": 0.0162,
               "text": "In all 6 copies of the 3-million-number model with an outside calculator (T1SDR), span copy wrote 91.5% of answers."
             },
             {
-              "at": 0.3574,
+              "at": 0.3773,
               "text": "That counts how often it was used on 400 familiar calculator questions, not how often it was right."
             },
             {
-              "at": 0.572,
+              "at": 0.5862,
               "text": "The pointer and the stop head are learned. Three small pieces are still hand-written code."
             },
             {
-              "at": 0.7859,
+              "at": 0.7898,
               "text": "The plan: one learned writer replaces them. That build has not been run."
             }
           ],
@@ -4759,19 +4759,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0167
+              0.0162
             ],
             [
               0.24,
-              0.3574
+              0.3773
             ],
             [
               0.44,
-              0.572
+              0.5862
             ],
             [
               0.64,
-              0.7859
+              0.7898
             ]
           ]
         },
@@ -4828,27 +4828,27 @@ window.CONTENT = {
         },
         {
           "id": "s06",
-          "duration": 37.5,
+          "duration": 38,
           "heading": "The 8-letter limit, and the 35-letter path",
           "caption": [
             {
-              "at": 0.016,
+              "at": 0.0158,
               "text": "Today's letter slots hold 8 letters. A longer training answer would be cut to 8."
             },
             {
-              "at": 0.2322,
+              "at": 0.2146,
               "text": "That never happened: 0 of 200,000 training answers were longer than 8."
             },
             {
-              "at": 0.3956,
+              "at": 0.3759,
               "text": "But hiding a word of 9 to 12 letters, in fill-in-the-blank practice, would hit it."
             },
             {
-              "at": 0.5732,
+              "at": 0.5511,
               "text": "The finished design (B3) writes up to 35 letters and counts any longer answer."
             },
             {
-              "at": 0.7435,
+              "at": 0.7168,
               "text": "A count above 0 fails its pass mark, set in advance. Blanks of 9 to 12 letters are safe only here."
             }
           ],
@@ -4885,23 +4885,23 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.016
+              0.0158
             ],
             [
               0.17,
-              0.2322
+              0.2146
             ],
             [
               0.31,
-              0.3956
+              0.3759
             ],
             [
               0.47,
-              0.5732
+              0.5511
             ],
             [
               0.63,
-              0.7435
+              0.7168
             ]
           ]
         },
@@ -4915,11 +4915,11 @@ window.CONTENT = {
               "text": "The finished plan has a real talker of about 25 million numbers (25M) that writes English."
             },
             {
-              "at": 0.2451,
+              "at": 0.2438,
               "text": "It is not built. As built, the 100M-thinker design is 373.1M in all: 271.0M borrowed, frozen reader (Gemma) plus 102.1M trained."
             },
             {
-              "at": 0.7251,
+              "at": 0.7238,
               "text": "How it would learn to write English is not in the plan. A separate team session owns that."
             }
           ],
@@ -4956,11 +4956,11 @@ window.CONTENT = {
             ],
             [
               0.25,
-              0.2451
+              0.2438
             ],
             [
               0.5,
-              0.7251
+              0.7238
             ]
           ]
         },
@@ -5291,15 +5291,15 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 20.5,
+          "duration": 21,
           "heading": "Where we are: practice sets the numbers",
           "caption": [
             {
-              "at": 0.0293,
+              "at": 0.0286,
               "text": "Practice sets the numbers inside the thinker (its call writer too), the stop switch (built, not yet run) and the talker (a small stand-in so far)."
             },
             {
-              "at": 0.657,
+              "at": 0.6596,
               "text": "The borrowed reader stays frozen. The calculator is plain code, so it needs no practice."
             }
           ],
@@ -5319,29 +5319,29 @@ window.CONTENT = {
           "atMap": [
             [
               0.0235,
-              0.0293
+              0.0286
             ],
             [
               0.498,
-              0.657
+              0.6596
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 18,
+          "duration": 17.5,
           "heading": "The loop: try, check, nudge",
           "caption": [
             {
-              "at": 0.0333,
+              "at": 0.0343,
               "text": "The model tries a question."
             },
             {
-              "at": 0.2713,
+              "at": 0.2674,
               "text": "It is shown the right answer."
             },
             {
-              "at": 0.4626,
+              "at": 0.4641,
               "text": "Then every learned setting moves a tiny bit. One nudge is one update."
             }
           ],
@@ -5362,33 +5362,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0333
+              0.0343
             ],
             [
               0.3397,
-              0.2713
+              0.2674
             ],
             [
               0.6564,
-              0.4626
+              0.4641
             ]
           ]
         },
         {
           "id": "s03",
-          "duration": 27,
+          "duration": 28,
           "heading": "24,000 updates of 256 rows each",
           "caption": [
             {
-              "at": 0.0222,
+              "at": 0.0214,
               "text": "Each update looks at 256 practice rows, then nudges every learned setting once."
             },
             {
-              "at": 0.2697,
+              "at": 0.26,
               "text": "The 3M test copy, with 3.5 million learned settings, did 24,000 updates."
             },
             {
-              "at": 0.5408,
+              "at": 0.5215,
               "text": "Our multiplication: 24,000 × 256 = 6,144,000 row draws. The pool has 1,418,702 rows, so rows come round again."
             }
           ],
@@ -5417,33 +5417,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0185,
-              0.0222
+              0.0214
             ],
             [
               0.3385,
-              0.2697
+              0.26
             ],
             [
               0.6585,
-              0.5408
+              0.5215
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 26,
+          "duration": 27,
           "heading": "The recipe: how each nudge is made",
           "caption": [
             {
-              "at": 0.0231,
+              "at": 0.0222,
               "text": "AdamW is the nudging rule. The learning rate is how big a nudge may be."
             },
             {
-              "at": 0.2791,
+              "at": 0.2729,
               "text": "It starts small, peaks at 1e-3 after a 300-update warm-up, then falls to 10% of the peak."
             },
             {
-              "at": 0.6525,
+              "at": 0.6507,
               "text": "Sums run in short numbers (bf16), rows come shuffled, and the start is random."
             }
           ],
@@ -5471,33 +5471,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0185,
-              0.0231
+              0.0222
             ],
             [
               0.3385,
-              0.2791
+              0.2729
             ],
             [
               0.6585,
-              0.6525
+              0.6507
             ]
           ]
         },
         {
           "id": "s05",
-          "duration": 35,
+          "duration": 36,
           "heading": "What it practises on",
           "caption": [
             {
-              "at": 0.0171,
+              "at": 0.0167,
               "text": "The 3M test copy practised on a pool of 60 million pieces of text (GPT-2 word pieces)."
             },
             {
-              "at": 0.2349,
+              "at": 0.2455,
               "text": "By word pieces: own text 38%, web text 62%. By rows: own 811,663, web 607,039."
             },
             {
-              "at": 0.6629,
+              "at": 0.6764,
               "text": "Our rows: skills questions and English passages made by our code, plus teaching rows (TEACH) a 1.2-billion-number teacher model wrote earlier."
             }
           ],
@@ -5530,15 +5530,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0145,
-              0.0171
+              0.0167
             ],
             [
               0.3373,
-              0.2349
+              0.2455
             ],
             [
               0.6602,
-              0.6629
+              0.6764
             ]
           ]
         },
@@ -5552,11 +5552,11 @@ window.CONTENT = {
               "text": "FineWeb-Edu web text: a script blanks one word of 3 to 12 letters, and the model must name it."
             },
             {
-              "at": 0.4021,
+              "at": 0.3969,
               "text": "Each prompt holds at most 280 letters, blank included, in the 3M runs; the finished design's long pool goes up to 2,000."
             },
             {
-              "at": 0.7302,
+              "at": 0.725,
               "text": "It learns to read English, not write it. Rows without steps add a faint no-call label, weight 0.1."
             }
           ],
@@ -5592,11 +5592,11 @@ window.CONTENT = {
             ],
             [
               0.3376,
-              0.4021
+              0.3969
             ],
             [
               0.6599,
-              0.7302
+              0.725
             ]
           ]
         },
@@ -5656,19 +5656,19 @@ window.CONTENT = {
         },
         {
           "id": "s08",
-          "duration": 29,
+          "duration": 29.5,
           "heading": "Teacher forcing: practice follows the key",
           "caption": [
             {
-              "at": 0.0207,
+              "at": 0.0203,
               "text": "Teacher forcing: in practice the next round sees the key's call and reply, even after a wrong guess."
             },
             {
-              "at": 0.3089,
+              "at": 0.3134,
               "text": "At test time there is no key. The model writes its own calls."
             },
             {
-              "at": 0.5138,
+              "at": 0.5148,
               "text": "Not every row has steps: 124,991 of the 200,000 skills rows (62.5%) the earlier 3M models used have none."
             }
           ],
@@ -5696,33 +5696,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.019,
-              0.0207
+              0.0203
             ],
             [
               0.3386,
-              0.3089
+              0.3134
             ],
             [
               0.6582,
-              0.5138
+              0.5148
             ]
           ]
         },
         {
           "id": "s09",
-          "duration": 34.5,
+          "duration": 35,
           "heading": "Fair practice: three rules",
           "caption": [
             {
-              "at": 0.0174,
+              "at": 0.0171,
               "text": "Rule 1: no answer is cut short. A longer answer is counted, and any count above 0 fails the pass mark."
             },
             {
-              "at": 0.3083,
+              "at": 0.3257,
               "text": "Rule 2: exam questions are kept apart: 6,040 rows are never used in practice, though question styles can repeat."
             },
             {
-              "at": 0.6341,
+              "at": 0.6469,
               "text": "Rule 3: web text is scanned against exam sets. A last scan, on sealed sets, was pending Oct 9; the 3M runs began before it."
             }
           ],
@@ -5756,15 +5756,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.0174
+              0.0171
             ],
             [
               0.337,
-              0.3083
+              0.3257
             ],
             [
               0.6607,
-              0.6341
+              0.6469
             ]
           ]
         },
