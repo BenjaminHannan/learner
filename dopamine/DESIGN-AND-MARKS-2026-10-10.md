@@ -269,3 +269,14 @@ every s201 arm's night 1 equals v7 s201's exactly (loss_first10 35.4724, quiz 20
 - What follows (fixed in B2/B4): re-check the guesser (D0, free) and re-race the motivators on the first 10M/30M domain-mode
   runs, where self-knowledge should be better; SB-2 (Main brain thread) trains the guesser into the thinker; GW-D (game
   thread, after GW-S) uses dopamine where it should matter most, rewards that arrive many moves later.
+
+**B9. Input for GW-D from the game thread (10:37 AM ET 10-11; checked against `game-world/PLAN-AND-MARKS-2026-10-10.md` A6-A7).**
+No result here and no marks. Shown there (A6, seeds 200/201): when the game model practised moves picked by its own odds it learned
+nothing (+0.01, -0.08), because its own odds already lock onto one habit and explore less than random play; the earlier gains came
+from lucky random moves. The "beats a normal game AI" pass is withdrawn (PPO played by its own odds gets 3.96 at 40,960 moves).
+What this changes for GW-D (suggested): the sec. 5 item 4 version, where dopamine only re-weights which of the model's own moves
+to keep, would likely hit the same wall. GW-D should lead with exploration: a learned curiosity reward for seeing new things
+(new objects, new unlocks, views the guesser predicts badly), with dopamine (TD error) used for credit on the moves that led
+there. Per A7, GW-D runs only if GW-S3 (the sleep-move credit fix) fails S3-2; it then uses the move records in
+`game-world/runs/*/moves/*.jsonl.gz` (view, move, source, step reward, unlocks). Its marks are sealed before any run, by the thread
+that runs it.
