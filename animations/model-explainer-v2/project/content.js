@@ -1996,19 +1996,19 @@ window.CONTENT = {
         },
         {
           "id": "s13",
-          "duration": 34.5,
+          "duration": 35,
           "heading": "The gain: +2.67 points out of 100",
           "caption": [
             {
-              "at": 0.0174,
+              "at": 0.0171,
               "text": "On 6,040 test questions kept aside (five kinds, called Pooled-5), six separate training runs (copies) with the reader scored 75.9 to 77.2."
             },
             {
-              "at": 0.4529,
+              "at": 0.4616,
               "text": "Eight copies of the same model without the reader scored 73.0 to 74.7."
             },
             {
-              "at": 0.6737,
+              "at": 0.6793,
               "text": "On average the reader is ahead by 2.67 points out of 100, in all 6 copies (seeds), at 3M (about 3 million learned numbers)."
             }
           ],
@@ -2036,37 +2036,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.0174
+              0.0171
             ],
             [
               0.337,
-              0.4529
+              0.4616
             ],
             [
               0.6607,
-              0.6737
+              0.6793
             ]
           ]
         },
         {
           "id": "s14",
-          "duration": 37.5,
+          "duration": 38.5,
           "heading": "Caveats: the leak warning light",
           "caption": [
             {
-              "at": 0.016,
+              "at": 0.0156,
               "text": "A leak means some answers are right with zero rounds of thinking."
             },
             {
-              "at": 0.1655,
+              "at": 0.1607,
               "text": "Averaged over 6 copies, the zero-round leak is 6.59. The pass mark, set in advance as the no-reader average plus 1.0, was 4.62. Missed."
             },
             {
-              "at": 0.5118,
+              "at": 0.5337,
               "text": "On seed 200, on familiar questions, the reader version scored 18.09 with zero rounds; the same model without it, 1.40."
             },
             {
-              "at": 0.8334,
+              "at": 0.8468,
               "text": "Copies without the reader leak on some seeds too, so the cause is not settled."
             }
           ],
@@ -2094,34 +2094,34 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.016
+              0.0156
             ],
             [
               0.17,
-              0.1655
+              0.1607
             ],
             [
               0.46,
-              0.5118
+              0.5337
             ],
             [
               0.74,
-              0.8334
+              0.8468
             ]
           ]
         },
         {
           "id": "s15",
-          "duration": 17.5,
+          "duration": 19,
           "heading": "Open question: tokens instead of letters",
           "illustration": "picture only: the boxes show the idea, not a measured run",
           "caption": [
             {
-              "at": 0.0343,
+              "at": 0.0316,
               "text": "A test called TK would let the thinker read one spot per token (word piece) instead of one per letter."
             },
             {
-              "at": 0.5167,
+              "at": 0.4759,
               "text": "The code and a PC job file exist, but it has never been run, so there is no result. Letters or tokens is still undecided."
             }
           ],
@@ -2142,17 +2142,17 @@ window.CONTENT = {
           "atMap": [
             [
               0.024,
-              0.0343
+              0.0316
             ],
             [
               0.498,
-              0.5167
+              0.4759
             ]
           ]
         },
         {
           "id": "s16",
-          "duration": 26,
+          "duration": 25.5,
           "heading": "Recap: what to remember",
           "cards": [
             {
@@ -2170,15 +2170,15 @@ window.CONTENT = {
           ],
           "caption": [
             {
-              "at": 0.0231,
+              "at": 0.0235,
               "text": "The reader is borrowed and frozen. It reads the question once."
             },
             {
-              "at": 0.2242,
+              "at": 0.2286,
               "text": "Each letter gets a meaning in context, plus a window of 4 letters each side."
             },
             {
-              "at": 0.4802,
+              "at": 0.4896,
               "text": "Without the window, the Gemma version scored 5.0 and 2.5 out of 100 on cipher puzzles, in two copies."
             }
           ],
@@ -2192,15 +2192,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0231
+              0.0235
             ],
             [
               0.3389,
-              0.2242
+              0.2286
             ],
             [
               0.6578,
-              0.4802
+              0.4896
             ]
           ]
         }
@@ -2214,19 +2214,19 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 22,
+          "duration": 21.5,
           "heading": "Where we are: the thinker",
           "caption": [
             {
-              "at": 0.0273,
+              "at": 0.0279,
               "text": "This is the thinker, the second part of the model. It does the thinking."
             },
             {
-              "at": 0.4057,
+              "at": 0.3913,
               "text": "It is ours. It starts from scratch and learns only from our practice."
             },
             {
-              "at": 0.6759,
+              "at": 0.6677,
               "text": "The planned size is about 100 million numbers. That size has never been tested."
             }
           ],
@@ -2240,37 +2240,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.025,
-              0.0273
+              0.0279
             ],
             [
               0.3403,
-              0.4057
+              0.3913
             ],
             [
               0.6556,
-              0.6759
+              0.6677
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 21.5,
+          "duration": 22,
           "heading": "Picture only: a team of note-takers",
           "caption": [
             {
-              "at": 0.0279,
+              "at": 0.0273,
               "text": "Picture only. Think of a small team of note-takers sitting around one question."
             },
             {
-              "at": 0.3043,
+              "at": 0.2974,
               "text": "Each round, every note-taker looks at the whole question again."
             },
             {
-              "at": 0.5309,
+              "at": 0.5188,
               "text": "Then they pass notes to each other and write down what they now believe."
             },
             {
-              "at": 0.8239,
+              "at": 0.8052,
               "text": "The same team, with the same habits, every round."
             }
           ],
@@ -2285,19 +2285,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0222,
-              0.0279
+              0.0273
             ],
             [
               0.2602,
-              0.3043
+              0.2974
             ],
             [
               0.4981,
-              0.5309
+              0.5188
             ],
             [
               0.7361,
-              0.8239
+              0.8052
             ]
           ]
         },
@@ -2319,7 +2319,7 @@ window.CONTENT = {
               "text": "It also keeps 36 memory vectors, where its notes are kept."
             },
             {
-              "at": 0.765,
+              "at": 0.7561,
               "text": "Older builds had 17 vectors: 8 control and 9 memory."
             }
           ],
@@ -2353,25 +2353,25 @@ window.CONTENT = {
             ],
             [
               0.739,
-              0.765
+              0.7561
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 24.5,
+          "duration": 25,
           "heading": "Control vector 0 drives the call writer",
           "caption": [
             {
-              "at": 0.0245,
+              "at": 0.024,
               "text": "After each round from round 2 on, the call writer reads control vector 0."
             },
             {
-              "at": 0.3799,
+              "at": 0.3723,
               "text": "It either writes a request for the calculator, like sub 12 5, or writes nothing."
             },
             {
-              "at": 0.736,
+              "at": 0.7283,
               "text": "The numbers in the request are usually copied from the question or an earlier reply."
             }
           ],
@@ -2390,37 +2390,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0187,
-              0.0245
+              0.024
             ],
             [
               0.3385,
-              0.3799
+              0.3723
             ],
             [
               0.6583,
-              0.736
+              0.7283
             ]
           ]
         },
         {
           "id": "s05",
-          "duration": 36.5,
+          "duration": 36,
           "heading": "Do controls 2 to 7 matter?",
           "caption": [
             {
-              "at": 0.0164,
+              "at": 0.0167,
               "text": "Controls 2 to 7 feed no output. They only pass information along when the notes look at each other."
             },
             {
-              "at": 0.2612,
+              "at": 0.2479,
               "text": "In an older build, switching them off at test time cost 1.6 points on the main test."
             },
             {
-              "at": 0.5062,
+              "at": 0.4963,
               "text": "On the multi-step test they cost 7.8 points: 99.4 fell to 91.6."
             },
             {
-              "at": 0.7498,
+              "at": 0.7483,
               "text": "Those numbers are one copy (seed 200). All six copies of that older design lost points, very unevenly."
             }
           ],
@@ -2445,37 +2445,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0164
+              0.0167
             ],
             [
               0.2565,
-              0.2612
+              0.2479
             ],
             [
               0.4988,
-              0.5062
+              0.4963
             ],
             [
               0.7411,
-              0.7498
+              0.7483
             ]
           ]
         },
         {
           "id": "s06",
-          "duration": 22.5,
+          "duration": 23,
           "heading": "Round step 1: look at everything",
           "caption": [
             {
-              "at": 0.0267,
+              "at": 0.0261,
               "text": "Each letter of the question is one box. A borrowed reader, Gemma, has already given each letter its meaning."
             },
             {
-              "at": 0.4227,
+              "at": 0.4158,
               "text": "Each note vector looks at every letter. In later rounds it also looks at every calculator reply."
             },
             {
-              "at": 0.7503,
+              "at": 0.7363,
               "text": "The shading inside each note is a picture only, not real numbers."
             }
           ],
@@ -2491,45 +2491,45 @@ window.CONTENT = {
           "atMap": [
             [
               0.0214,
-              0.0267
+              0.0261
             ],
             [
               0.3393,
-              0.4227
+              0.4158
             ],
             [
               0.6571,
-              0.7503
+              0.7363
             ]
           ]
         },
         {
           "id": "s07",
-          "duration": 34.5,
+          "duration": 34,
           "heading": "Round steps 2 and 3: compare, then think",
           "caption": [
             {
-              "at": 0.0174,
+              "at": 0.0176,
               "text": "Step 2: the note vectors look at each other. In code this is called self-attention."
             },
             {
-              "at": 0.2104,
+              "at": 0.2134,
               "text": "Each note reads the other notes and keeps what matters from them."
             },
             {
-              "at": 0.3723,
+              "at": 0.3777,
               "text": "The letters are not compared with each other inside the thinker."
             },
             {
-              "at": 0.5238,
+              "at": 0.5315,
               "text": "Step 3: each note goes through a small network."
             },
             {
-              "at": 0.6742,
+              "at": 0.6741,
               "text": "At the 100M step it widens to 4.8 times as many numbers, then squeezes back."
             },
             {
-              "at": 0.8854,
+              "at": 0.8888,
               "text": "Then the notes go on to the next round."
             }
           ],
@@ -2550,27 +2550,27 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.0174
+              0.0176
             ],
             [
               0.1758,
-              0.2104
+              0.2134
             ],
             [
               0.3373,
-              0.3723
+              0.3777
             ],
             [
               0.4988,
-              0.5238
+              0.5315
             ],
             [
               0.6603,
-              0.6742
+              0.6741
             ],
             [
               0.8218,
-              0.8854
+              0.8888
             ]
           ]
         },
@@ -2681,11 +2681,11 @@ window.CONTENT = {
               "text": "After each round, a tiny learned stop switch, the bell, asks: is this settled, or should it think more?"
             },
             {
-              "at": 0.3793,
+              "at": 0.3776,
               "text": "It must think at least 1 round. It can never go past 32 rounds."
             },
             {
-              "at": 0.6532,
+              "at": 0.6516,
               "text": "It learns from a settled label: stop once no later round would have been right."
             }
           ],
@@ -2707,29 +2707,29 @@ window.CONTENT = {
             ],
             [
               0.3387,
-              0.3793
+              0.3776
             ],
             [
               0.6581,
-              0.6532
+              0.6516
             ]
           ]
         },
         {
           "id": "s11",
-          "duration": 28,
+          "duration": 27,
           "heading": "One block: 4,624,281 numbers",
           "caption": [
             {
-              "at": 0.0214,
+              "at": 0.0222,
               "text": "A block is one look, compare and think unit, built from attention and a small network."
             },
             {
-              "at": 0.2719,
+              "at": 0.282,
               "text": "Counting every learned number in one block, where each vector holds 512 numbers (its width), gives 4,624,281."
             },
             {
-              "at": 0.5951,
+              "at": 0.5919,
               "text": "Our arithmetic: 21 blocks alone give 97.1 million. An older plan said 30 blocks, which would give about 139 million."
             }
           ],
@@ -2754,33 +2754,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0214
+              0.0222
             ],
             [
               0.3389,
-              0.2719
+              0.282
             ],
             [
               0.6578,
-              0.5951
+              0.5919
             ]
           ]
         },
         {
           "id": "s12",
-          "duration": 30.5,
+          "duration": 29.5,
           "heading": "Four sizes, counted from the build",
           "caption": [
             {
-              "at": 0.0197,
+              "at": 0.0203,
               "text": "The learned part of the model comes in four sizes, named 3M, 10M, 30M and 100M for their rough size."
             },
             {
-              "at": 0.3198,
+              "at": 0.3184,
               "text": "These are counts from the build. The finished design (B3) has not been run at any of these sizes yet."
             },
             {
-              "at": 0.5966,
+              "at": 0.6046,
               "text": "As built so far, without the planned talker, the whole model at the 100 million step is 373.1 million numbers, borrowed reader included."
             }
           ],
@@ -2806,15 +2806,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0162,
-              0.0197
+              0.0203
             ],
             [
               0.3378,
-              0.3198
+              0.3184
             ],
             [
               0.6595,
-              0.5966
+              0.6046
             ]
           ]
         },
@@ -2832,11 +2832,11 @@ window.CONTENT = {
               "text": "Notes look at letters instead. A rough count: 44 notes, each looking at 81 letters and 27 number slots, gives 4,752 checks per round."
             },
             {
-              "at": 0.5595,
+              "at": 0.5568,
               "text": "Over 8 rounds, the older count, that is 4,752 times 8 = 38,016. At 81 letters, no work is saved."
             },
             {
-              "at": 0.8095,
+              "at": 0.8068,
               "text": "Its gain is structure, not speed. By this count, much longer text would favour the notes, but that is untested."
             }
           ],
@@ -2868,29 +2868,29 @@ window.CONTENT = {
             ],
             [
               0.4988,
-              0.5595
+              0.5568
             ],
             [
               0.7413,
-              0.8095
+              0.8068
             ]
           ]
         },
         {
           "id": "s14",
-          "duration": 28.5,
+          "duration": 29,
           "heading": "First test: thinking on, then off",
           "caption": [
             {
-              "at": 0.0211,
+              "at": 0.0207,
               "text": "In the first completed test (older design), one copy at the smallest size scored 73.01 points out of 100 on 6,040 kept-aside questions, thinking on."
             },
             {
-              "at": 0.5324,
+              "at": 0.5232,
               "text": "With thinking switched off (zero rounds), the same copy scored 0.66 points."
             },
             {
-              "at": 0.7539,
+              "at": 0.7522,
               "text": "That is one copy at one size. Part 8 explains the test and its checks."
             }
           ],
@@ -2913,37 +2913,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0182,
-              0.0211
+              0.0207
             ],
             [
               0.3384,
-              0.5324
+              0.5232
             ],
             [
               0.6586,
-              0.7539
+              0.7522
             ]
           ]
         },
         {
           "id": "s15",
-          "duration": 36,
+          "duration": 35.5,
           "heading": "Not known yet, and what to remember",
           "caption": [
             {
-              "at": 0.0167,
+              "at": 0.0169,
               "text": "Not known: the thinker has never been tested at 100 million numbers."
             },
             {
-              "at": 0.1718,
+              "at": 0.1742,
               "text": "Not known: whether many rounds hurt. One older probe, on one seed, found 16 rounds cost 1.2 to 1.9 points."
             },
             {
-              "at": 0.4321,
+              "at": 0.4382,
               "text": "Experts (many small specialist networks, a few used at a time) are a separate idea, not yet tested and not covered here."
             },
             {
-              "at": 0.6864,
+              "at": 0.6961,
               "text": "Remember: the thinker looks, passes notes and thinks, in rounds. The same blocks run every round. A learned bell is built to say when to stop."
             }
           ],
@@ -2959,19 +2959,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.0167
+              0.0169
             ],
             [
               0.2563,
-              0.1718
+              0.1742
             ],
             [
               0.4989,
-              0.4321
+              0.4382
             ],
             [
               0.7415,
-              0.6864
+              0.6961
             ]
           ]
         }
@@ -2993,7 +2993,7 @@ window.CONTENT = {
               "text": "This part is about the call writer, which writes a request slip, and the calculator, which answers it."
             },
             {
-              "at": 0.5297,
+              "at": 0.5093,
               "text": "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
             }
           ],
@@ -3011,25 +3011,25 @@ window.CONTENT = {
             ],
             [
               0.4977,
-              0.5297
+              0.5093
             ]
           ]
         },
         {
           "id": "s02",
-          "duration": 20.5,
+          "duration": 20,
           "heading": "Why a calculator? Code adds exactly",
           "caption": [
             {
-              "at": 0.0293,
+              "at": 0.03,
               "text": "Code adds two numbers exactly, every time."
             },
             {
-              "at": 0.4058,
+              "at": 0.4068,
               "text": "A learned network has to learn each sum from practice."
             },
             {
-              "at": 0.6434,
+              "at": 0.6503,
               "text": "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
             }
           ],
@@ -3047,15 +3047,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0293
+              0.03
             ],
             [
               0.3397,
-              0.4058
+              0.4068
             ],
             [
               0.6564,
-              0.6434
+              0.6503
             ]
           ]
         },
@@ -3069,7 +3069,7 @@ window.CONTENT = {
               "text": "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
             },
             {
-              "at": 0.5872,
+              "at": 0.557,
               "text": "It writes one of nine choices: no call, or one of the eight operations."
             }
           ],
@@ -3093,7 +3093,7 @@ window.CONTENT = {
             ],
             [
               0.4981,
-              0.5872
+              0.557
             ]
           ]
         },
@@ -3164,28 +3164,28 @@ window.CONTENT = {
         },
         {
           "id": "s05",
-          "duration": 41,
+          "duration": 40.5,
           "heading": "Copying digits: a pointer, a step left, a stop",
           "question": "Tom has 12 apples. (made-up example)",
           "caption": [
             {
-              "at": 0.0146,
+              "at": 0.0148,
               "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
             },
             {
-              "at": 0.234,
+              "at": 0.2361,
               "text": "The copy then steps one letter left and copies the 1."
             },
             {
-              "at": 0.398,
+              "at": 0.4022,
               "text": "A learned stop head says when to stop."
             },
             {
-              "at": 0.5546,
+              "at": 0.5603,
               "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
             },
             {
-              "at": 0.8465,
+              "at": 0.8557,
               "text": "Copied here means the copy trick was used, not that the copy was right."
             }
           ],
@@ -3218,37 +3218,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.0133,
-              0.0146
+              0.0148
             ],
             [
               0.2076,
-              0.234
+              0.2361
             ],
             [
               0.4018,
-              0.398
+              0.4022
             ],
             [
               0.596,
-              0.5546
+              0.5603
             ],
             [
               0.7902,
-              0.8465
+              0.8557
             ]
           ]
         },
         {
           "id": "s06",
-          "duration": 24,
+          "duration": 24.5,
           "heading": "A number not in the text: 21 cells",
           "caption": [
             {
-              "at": 0.025,
+              "at": 0.0245,
               "text": "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time."
             },
             {
-              "at": 0.4688,
+              "at": 0.474,
               "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
             }
           ],
@@ -3273,11 +3273,11 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.025
+              0.0245
             ],
             [
               0.4987,
-              0.4688
+              0.474
             ]
           ]
         },
@@ -3291,7 +3291,7 @@ window.CONTENT = {
               "text": "The calculator is ordinary Python code. It has 0 learned numbers."
             },
             {
-              "at": 0.378,
+              "at": 0.376,
               "text": "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
             }
           ],
@@ -3316,25 +3316,25 @@ window.CONTENT = {
             ],
             [
               0.4982,
-              0.378
+              0.376
             ]
           ]
         },
         {
           "id": "s08",
-          "duration": 31.5,
+          "duration": 32,
           "heading": "The reply goes into the notes, not the question",
           "caption": [
             {
-              "at": 0.019,
+              "at": 0.0187,
               "text": "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies."
             },
             {
-              "at": 0.3331,
+              "at": 0.3369,
               "text": "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes."
             },
             {
-              "at": 0.6752,
+              "at": 0.6737,
               "text": "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
             }
           ],
@@ -3357,15 +3357,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0143,
-              0.019
+              0.0187
             ],
             [
               0.3373,
-              0.3331
+              0.3369
             ],
             [
               0.6603,
-              0.6752
+              0.6737
             ]
           ]
         },
@@ -3379,11 +3379,11 @@ window.CONTENT = {
               "text": "In the tested design, the first call follows round 2."
             },
             {
-              "at": 0.2591,
+              "at": 0.2528,
               "text": "Call k follows round k plus 1, up to call 7 after round 8."
             },
             {
-              "at": 0.598,
+              "at": 0.5917,
               "text": "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
             }
           ],
@@ -3424,11 +3424,11 @@ window.CONTENT = {
             ],
             [
               0.3377,
-              0.2591
+              0.2528
             ],
             [
               0.6596,
-              0.598
+              0.5917
             ]
           ]
         },
@@ -3446,11 +3446,11 @@ window.CONTENT = {
               "text": "The finished design's first build lets a call follow any round from 2 to 32."
             },
             {
-              "at": 0.5069,
+              "at": 0.5024,
               "text": "The tape (the list of calls and replies so far) holds 16 calls."
             },
             {
-              "at": 0.7312,
+              "at": 0.7267,
               "text": "In training, 1 row in 4 gets 0, 1 or 2 extra thinking rounds before each call."
             }
           ],
@@ -3479,11 +3479,11 @@ window.CONTENT = {
             ],
             [
               0.4987,
-              0.5069
+              0.5024
             ],
             [
               0.7404,
-              0.7312
+              0.7267
             ]
           ]
         },
@@ -3497,15 +3497,15 @@ window.CONTENT = {
               "text": "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
             },
             {
-              "at": 0.3039,
+              "at": 0.3158,
               "text": "The operation name comes from a fixed list of 8, so a new tool could not be called yet."
             },
             {
-              "at": 0.5827,
+              "at": 0.5946,
               "text": "The finished design's second build writes the whole call as letters, operation name included."
             },
             {
-              "at": 0.7999,
+              "at": 0.8119,
               "text": "It is built as code and has never run."
             }
           ],
@@ -3532,37 +3532,37 @@ window.CONTENT = {
             ],
             [
               0.2565,
-              0.3039
+              0.3158
             ],
             [
               0.4988,
-              0.5827
+              0.5946
             ],
             [
               0.7411,
-              0.7999
+              0.8119
             ]
           ]
         },
         {
           "id": "s12",
-          "duration": 36.5,
+          "duration": 40,
           "heading": "The evidence: 6 copies, calculator outside",
           "caption": [
             {
-              "at": 0.0164,
+              "at": 0.015,
               "text": "Each copy starts from its own random start."
             },
             {
-              "at": 0.1955,
+              "at": 0.1788,
               "text": "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2)."
             },
             {
-              "at": 0.4229,
+              "at": 0.3864,
               "text": "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46."
             },
             {
-              "at": 0.7692,
+              "at": 0.787,
               "text": "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
             }
           ],
@@ -3597,33 +3597,33 @@ window.CONTENT = {
           "atMap": [
             [
               0.0171,
-              0.0164
+              0.015
             ],
             [
               0.2579,
-              0.1955
+              0.1788
             ],
             [
               0.4986,
-              0.4229
+              0.3864
             ],
             [
               0.7393,
-              0.7692
+              0.787
             ]
           ]
         },
         {
           "id": "s12b",
-          "duration": 27,
+          "duration": 27.5,
           "heading": "More evidence: chain-5 and calculator off",
           "caption": [
             {
-              "at": 0.0222,
+              "at": 0.0218,
               "text": "Chain-5, 1,000 multi-step questions: 99.6 to 99.8 with the calculator outside, mean 99.72. Inside: 99.4 to 99.7."
             },
             {
-              "at": 0.6292,
+              "at": 0.6177,
               "text": "Calculator switched off: the 2,085 questions that need it score 0.0."
             }
           ],
@@ -3659,37 +3659,37 @@ window.CONTENT = {
           "atMap": [
             [
               0.02,
-              0.0222
+              0.0218
             ],
             [
               0.4983,
-              0.6292
+              0.6177
             ]
           ]
         },
         {
           "id": "s13",
-          "duration": 42.5,
+          "duration": 43,
           "heading": "Check 1: the swap test",
           "caption": [
             {
-              "at": 0.0141,
+              "at": 0.014,
               "text": "Swap test: add and sub are secretly swapped inside the calculator. The answer should follow the new reply."
             },
             {
-              "at": 0.261,
+              "at": 0.2646,
               "text": "Pass line: 99% or more of counted rows follow the swap. Rows with two possible sources are not counted."
             },
             {
-              "at": 0.4604,
+              "at": 0.4616,
               "text": "Five copies: 99.28 to 99.87, all at 99 or more."
             },
             {
-              "at": 0.6352,
+              "at": 0.6344,
               "text": "The run's own first reading was 97.1 to 97.6. Its scoring rule was corrected after the misses were studied."
             },
             {
-              "at": 0.8737,
+              "at": 0.8701,
               "text": "The sixth copy's saved model was lost, so it is not scored."
             }
           ],
@@ -3729,23 +3729,23 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.0141
+              0.014
             ],
             [
               0.2077,
-              0.261
+              0.2646
             ],
             [
               0.4018,
-              0.4604
+              0.4616
             ],
             [
               0.5959,
-              0.6352
+              0.6344
             ],
             [
               0.79,
-              0.8737
+              0.8701
             ]
           ]
         },
@@ -3759,19 +3759,19 @@ window.CONTENT = {
               "text": "Leak check: swap in another question's thinking, then count answers still right, out of 100 (1,360 questions)."
             },
             {
-              "at": 0.263,
+              "at": 0.2501,
               "text": "Limit written down before the run: 5. Five of six copies read above it, from 5.07 to 5.59."
             },
             {
-              "at": 0.4416,
+              "at": 0.4464,
               "text": "B2 (calculator inside) read 3.09 to 3.75 on the same check."
             },
             {
-              "at": 0.6165,
+              "at": 0.6213,
               "text": "It failed the limit. The project owner cleared it on Oct 9; it is disclosed, not a clean pass."
             },
             {
-              "at": 0.7923,
+              "at": 0.7971,
               "text": "Separate reading, zero rounds of thinking: one copy read 12.94, against 10.81 for B2."
             }
           ],
@@ -3825,19 +3825,19 @@ window.CONTENT = {
             ],
             [
               0.2076,
-              0.263
+              0.2501
             ],
             [
               0.4018,
-              0.4416
+              0.4464
             ],
             [
               0.596,
-              0.6165
+              0.6213
             ],
             [
               0.7902,
-              0.7923
+              0.7971
             ]
           ]
         },
@@ -3851,15 +3851,15 @@ window.CONTENT = {
               "text": "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
             },
             {
-              "at": 0.3626,
+              "at": 0.3629,
               "text": "Never run together: the borrowed Gemma reader with the outside calculator."
             },
             {
-              "at": 0.5343,
+              "at": 0.527,
               "text": "Built, never run: calls at any round."
             },
             {
-              "at": 0.653,
+              "at": 0.6458,
               "text": "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
             }
           ],
@@ -3883,15 +3883,15 @@ window.CONTENT = {
             ],
             [
               0.2565,
-              0.3626
+              0.3629
             ],
             [
               0.4988,
-              0.5343
+              0.527
             ],
             [
               0.7411,
-              0.653
+              0.6458
             ]
           ]
         }
@@ -3905,19 +3905,19 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 20,
+          "duration": 20.5,
           "heading": "Where we are: the stop switch",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0293,
               "text": "The model thinks in rounds, one lap at a time."
             },
             {
-              "at": 0.5227,
+              "at": 0.5259,
               "text": "The stop switch decides when the thinking is finished."
             },
             {
-              "at": 0.7505,
+              "at": 0.7508,
               "text": "It is built, but it has never been run."
             }
           ],
@@ -3928,15 +3928,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0214,
-              0.03
+              0.0293
             ],
             [
               0.3393,
-              0.5227
+              0.5259
             ],
             [
               0.6571,
-              0.7505
+              0.7508
             ]
           ]
         },
@@ -3950,7 +3950,7 @@ window.CONTENT = {
               "text": "The older design had a dial: the same number of rounds for every question, set by hand (12 in the tested model, 8 in another)."
             },
             {
-              "at": 0.5853,
+              "at": 0.5873,
               "text": "Easy questions may need fewer rounds. Hard questions may need more."
             }
           ],
@@ -3971,7 +3971,7 @@ window.CONTENT = {
             ],
             [
               0.4983,
-              0.5853
+              0.5873
             ]
           ]
         },
@@ -3985,11 +3985,11 @@ window.CONTENT = {
               "text": "We turned the dial down on one trained copy, with no new practice."
             },
             {
-              "at": 0.2228,
+              "at": 0.2218,
               "text": "Points out of 100, on 6,040 questions kept aside (called pooled-5)."
             },
             {
-              "at": 0.4905,
+              "at": 0.4895,
               "text": "Trained at 12 rounds it scored 73.01. With 2 rounds, 29.30. With 1 round, 20.00. With 0 rounds, 0.66."
             }
           ],
@@ -4026,29 +4026,29 @@ window.CONTENT = {
             ],
             [
               0.3382,
-              0.2228
+              0.2218
             ],
             [
               0.6588,
-              0.4905
+              0.4895
             ]
           ]
         },
         {
           "id": "s04",
-          "duration": 29.5,
+          "duration": 30.5,
           "heading": "Multi-step questions needed more rounds",
           "caption": [
             {
-              "at": 0.0203,
+              "at": 0.0197,
               "text": "Chain-5 is a set of 1,000 multi-step questions, scored on the same trained copy."
             },
             {
-              "at": 0.2864,
+              "at": 0.3094,
               "text": "On pooled-5, 1 round scored 20.00. On chain-5 it scored 0.0, and 1.1 at 2 rounds."
             },
             {
-              "at": 0.6184,
+              "at": 0.6306,
               "text": "At the full 12 rounds chain-5 scored 99.9. So this copy needed more rounds on multi-step questions than on pooled-5."
             }
           ],
@@ -4076,15 +4076,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0171,
-              0.0203
+              0.0197
             ],
             [
               0.3381,
-              0.2864
+              0.3094
             ],
             [
               0.659,
-              0.6184
+              0.6306
             ]
           ]
         },
@@ -6684,19 +6684,19 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 26,
+          "duration": 21.5,
           "heading": "Sleep sorts out the day",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0279,
               "text": "People sort out the day's lessons while they sleep."
             },
             {
-              "at": 0.3,
+              "at": 0.2379,
               "text": "This model gets a night too: a day of practice, then a night of study."
             },
             {
-              "at": 0.62,
+              "at": 0.5475,
               "text": "Sleep is not a sixth part. It is a way of learning, tested so far only in research on earlier-design copies."
             }
           ],
@@ -6718,23 +6718,37 @@ window.CONTENT = {
             "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md:15-16 (all results on B2-lineage parents, none on B3)",
             "animations/engage/new-parts/FACTS-sleep.md:14,16 (sleep definition, scope)"
           ],
-          "notes": "First caption is framing (people sleep), no number. Day/night boxes are a picture only."
+          "notes": "First caption is framing (people sleep), no number. Day/night boxes are a picture only.",
+          "atMap": [
+            [
+              0.03,
+              0.0279
+            ],
+            [
+              0.3,
+              0.2379
+            ],
+            [
+              0.62,
+              0.5475
+            ]
+          ]
         },
         {
           "id": "s02",
-          "duration": 28,
+          "duration": 27.5,
           "heading": "By day: a puzzle with a hidden rule",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0218,
               "text": "By day the model gets puzzles with a hidden rule: 2 gives 5, 4 gives 9, 7 gives 15."
             },
             {
-              "at": 0.3,
+              "at": 0.3158,
               "text": "It tries rules. A try counts only if it fits every example, so no answer key is needed."
             },
             {
-              "at": 0.62,
+              "at": 0.5969,
               "text": "Only x times 2 plus 1 fits all three, so 10 gives 21. That try is kept, and the night studies it."
             }
           ],
@@ -6764,7 +6778,21 @@ window.CONTENT = {
           "src": [
             "creative-roadmap/creative-roadmap-page.html:248-256 (examples 2->5, 4->9, 7->15; tries x+3, x*2+1, x*3-1 fit 1, 3, 1 of 3; 'a try counts only if it fits every example'; kept and slept on)"
           ],
-          "notes": "10 -> 21 is our arithmetic (10 x 2 + 1). The whole puzzle is a made-up example."
+          "notes": "10 -> 21 is our arithmetic (10 x 2 + 1). The whole puzzle is a made-up example.",
+          "atMap": [
+            [
+              0.03,
+              0.0218
+            ],
+            [
+              0.3,
+              0.3158
+            ],
+            [
+              0.62,
+              0.5969
+            ]
+          ]
         },
         {
           "id": "s03",
@@ -6772,15 +6800,15 @@ window.CONTENT = {
           "heading": "The old sleep and the newer sleep",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0176,
               "text": "The old sleep scored 71.3 out of 100 on first tries and needed 558 to 610 updates by its formula. An update is a small nudge to every setting."
             },
             {
-              "at": 0.36,
+              "at": 0.4306,
               "text": "The newer sleep used 256 updates a night and averaged 76.1 over six copies."
             },
             {
-              "at": 0.68,
+              "at": 0.6579,
               "text": "But this is not a paired comparison. 71.3 is the old sleep's stored number, from its own near-copy starting copies. Each copy slept once."
             }
           ],
@@ -6802,23 +6830,37 @@ window.CONTENT = {
           "src": [
             "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:8 (76.1 mean of six parents; 71.3 needed), :9 (256 updates; 558-610 by its formula), :27 (not a paired comparison; 71.3 is the research loop's stored number on near-copy parents), :28 (one training run per parent)"
           ],
-          "notes": "Old sleep = research-loop sleep, new sleep = consolidation sleep. 41.6 start and +/-2.5 are left out: no readable primary file."
+          "notes": "Old sleep = research-loop sleep, new sleep = consolidation sleep. 41.6 start and +/-2.5 are left out: no readable primary file.",
+          "atMap": [
+            [
+              0.03,
+              0.0176
+            ],
+            [
+              0.36,
+              0.4306
+            ],
+            [
+              0.68,
+              0.6579
+            ]
+          ]
         },
         {
           "id": "s04",
-          "duration": 36,
+          "duration": 31.5,
           "heading": "One night of the newer sleep",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.019,
               "text": "The model makes its own tries, then sleeps for 256 updates of 1,024 rows. A row is one practice question."
             },
             {
-              "at": 0.36,
+              "at": 0.4133,
               "text": "Half the rows are fresh dreams: new questions written from a program it found, so none is read twice. Half are fresh skills rows."
             },
             {
-              "at": 0.7,
+              "at": 0.7267,
               "text": "Every 32 updates it checks itself on 128 held questions, and keeps its best saved model."
             }
           ],
@@ -6838,24 +6880,38 @@ window.CONTENT = {
           "src": [
             "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:15-18 (recipe: own tries, chain search, 256 updates of 1,024 rows, half fresh dreams, half fresh skills rows, check every 32 updates on 128 held questions, keep best checkpoint)"
           ],
-          "notes": "Flags drawn are one per 32 updates (256 / 32 = 8, not written on screen). Picture only."
+          "notes": "Flags drawn are one per 32 updates (256 / 32 = 8, not written on screen). Picture only.",
+          "atMap": [
+            [
+              0.03,
+              0.019
+            ],
+            [
+              0.36,
+              0.4133
+            ],
+            [
+              0.7,
+              0.7267
+            ]
+          ]
         },
         {
           "id": "s05",
-          "duration": 34,
+          "duration": 35,
           "heading": "Did sleep earn the credit?",
           "caption": [
             {
-              "at": 0.03,
-              "text": "Did old skills get worse? No. Pooled over the six copies they rose by 0.52 points, likely range 0.31 to 0.74."
+              "at": 0.0171,
+              "text": "Did old skills get worse than before the sleep? No. Pooled over the six copies they rose by 0.52 points, likely range 0.31 to 0.74."
             },
             {
-              "at": 0.36,
+              "at": 0.4061,
               "text": "But a control that only practised the same skills rows raised them by 2.11, range 1.88 to 2.32."
             },
             {
-              "at": 0.7,
-              "text": "So the gain is not shown to come from the sleep. Sleep minus control: −1.58."
+              "at": 0.6946,
+              "text": "So sleep did not beat plain practice: sleep minus control is −1.58. The gain is not shown to come from the sleep."
             }
           ],
           "L": {
@@ -6890,31 +6946,45 @@ window.CONTENT = {
           "src": [
             "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:11 (+0.52 [0.31, 0.74]), :12 (-1.58 [-1.79, -1.37]), :22 (replay-only control +2.11 [1.88, 2.32]; the +0.52 is not shown to come from the new skill)"
           ],
-          "notes": "Range of -1.58 is drawn as a bar but its end numbers are not written."
+          "notes": "Range of -1.58 is drawn as a bar but its end numbers are not written.",
+          "atMap": [
+            [
+              0.03,
+              0.0171
+            ],
+            [
+              0.36,
+              0.4061
+            ],
+            [
+              0.7,
+              0.6946
+            ]
+          ]
         },
         {
           "id": "s06",
-          "duration": 48,
+          "duration": 58,
           "heading": "New since Oct 9: two nights in a row",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0103,
               "text": "A two-night recipe, SCM2, passed its test on 2 copies: night, a day of search, night. Reported, not rechecked."
             },
             {
-              "at": 0.24,
+              "at": 0.2388,
               "text": "Skills score, out of 100. Copy 1: 86.7 before, 82.9 after the standard two nights, 87.8 after SCM2."
             },
             {
-              "at": 0.46,
+              "at": 0.485,
               "text": "Copy 2: 87.8 before, 84.7 after the standard two nights, 89.3 after SCM2. No forgetting."
             },
             {
-              "at": 0.68,
+              "at": 0.6884,
               "text": "Learning kept up. On multi-step puzzles, first try against the standard two nights was −1.9 and +1.9. The pass mark was no worse than −2."
             },
             {
-              "at": 0.88,
+              "at": 0.9026,
               "text": "Only 2 copies so far. A check on more copies is still to come."
             }
           ],
@@ -6959,27 +7029,49 @@ window.CONTENT = {
             "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md:23 (SCM2 is the night recipe; two nights with a day of search between; pass on 2 parents; 6-parent confirm waits)",
             "animations/engage/new-parts/FACTS-sleep.md:67,136 (reported by the creative thread, not rechecked; 2-copy DEV screen)"
           ],
-          "notes": "'Before' = the copy before the nights (N'). 'Standard two nights' = W2. The model's own row picking is not claimed to help (FACTS Z-26)."
+          "notes": "'Before' = the copy before the nights (N'). 'Standard two nights' = W2. The model's own row picking is not claimed to help (FACTS Z-26).",
+          "atMap": [
+            [
+              0.03,
+              0.0103
+            ],
+            [
+              0.24,
+              0.2388
+            ],
+            [
+              0.46,
+              0.485
+            ],
+            [
+              0.68,
+              0.6884
+            ],
+            [
+              0.88,
+              0.9026
+            ]
+          ]
         },
         {
           "id": "s07",
-          "duration": 40,
+          "duration": 34,
           "heading": "Planned: sleep inside the first big run",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0176,
               "text": "Planned, not done: sleep becomes part of the first big training run."
             },
             {
-              "at": 0.25,
+              "at": 0.1819,
               "text": "The 100M training itself stays as it is. After it comes a day-and-night phase, and the SCM2 nights are its recipe."
             },
             {
-              "at": 0.55,
+              "at": 0.4619,
               "text": "First it must pass on smaller test models, at 3M and then 10M. Those tests have not run yet. Results so far are from earlier-design copies."
             },
             {
-              "at": 0.82,
+              "at": 0.7952,
               "text": "Planned time: about a week after the main training. An estimate, not measured."
             }
           ],
@@ -6998,23 +7090,41 @@ window.CONTENT = {
           "src": [
             "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md:9-12 (100M pretraining unchanged, plus a day-and-night phase; recipes must pass on 3M and 10M first), :15-16 (all results on B2-lineage parents, none on B3), :23 (SCM2 nights), :56-62 (CB-1 3M, CB-2 10M), :64-67 (about a week of PC after pretraining; not measured), :66 (2 nights plus searches)"
           ],
-          "notes": "Plan only. Night code (CB-0) is built (same file :84-94) but its test on a 3M model has not run (:90)."
+          "notes": "Plan only. Night code (CB-0) is built (same file :84-94) but its test on a 3M model has not run (:90).",
+          "atMap": [
+            [
+              0.03,
+              0.0176
+            ],
+            [
+              0.25,
+              0.1819
+            ],
+            [
+              0.55,
+              0.4619
+            ],
+            [
+              0.82,
+              0.7952
+            ]
+          ]
         },
         {
           "id": "s08",
-          "duration": 24,
+          "duration": 26,
           "heading": "What to remember",
           "caption": [
             {
-              "at": 0.03,
+              "at": 0.0231,
               "text": "Sleep is a night of study after a day of practice. The newer sleep scored 76.1 in 256 updates, not in a paired test."
             },
             {
-              "at": 0.4,
+              "at": 0.44,
               "text": "Two nights in a row kept old skills on 2 copies. Sleep in the first big run is planned, not done."
             },
             {
-              "at": 0.72,
+              "at": 0.7785,
               "text": "Next, Part 10: Creative mode: what it does when it gets stuck."
             }
           ],
@@ -7043,7 +7153,21 @@ window.CONTENT = {
             "architecture/CREATIVE-SLEEP-IN-RUN1-2026-10-11.md:9-12",
             "content/global.json part 10 title"
           ],
-          "notes": "Recap of earlier scenes. Teaser names the topic only."
+          "notes": "Recap of earlier scenes. Teaser names the topic only.",
+          "atMap": [
+            [
+              0.03,
+              0.0231
+            ],
+            [
+              0.4,
+              0.44
+            ],
+            [
+              0.72,
+              0.7785
+            ]
+          ]
         }
       ]
     },
@@ -7055,19 +7179,19 @@ window.CONTENT = {
       "scenes": [
         {
           "id": "s01",
-          "duration": 19.5,
+          "duration": 18.5,
           "heading": "Stuck on a puzzle? You try ideas",
           "caption": [
             {
-              "at": 0.0308,
+              "at": 0.0324,
               "text": "Picture yourself stuck on a puzzle. What do you do?"
             },
             {
-              "at": 0.3812,
+              "at": 0.3636,
               "text": "You try an idea, check it, and try another one."
             },
             {
-              "at": 0.6756,
+              "at": 0.6441,
               "text": "Our model can do the same, but only when it is stuck."
             }
           ],
@@ -7088,15 +7212,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0231,
-              0.0308
+              0.0324
             ],
             [
               0.3397,
-              0.3812
+              0.3636
             ],
             [
               0.6564,
-              0.6756
+              0.6441
             ]
           ]
         },
@@ -7110,11 +7234,11 @@ window.CONTENT = {
               "text": "First the model makes one careful best-guess try, with creative mode switched off."
             },
             {
-              "at": 0.3225,
+              "at": 0.3192,
               "text": "Then it checks that try on the question's own examples."
             },
             {
-              "at": 0.6143,
+              "at": 0.6316,
               "text": "If the try does not fit the examples, the model counts itself stuck."
             }
           ],
@@ -7140,29 +7264,29 @@ window.CONTENT = {
             ],
             [
               0.3389,
-              0.3225
+              0.3192
             ],
             [
               0.6578,
-              0.6143
+              0.6316
             ]
           ]
         },
         {
           "id": "s03",
-          "duration": 21,
+          "duration": 22,
           "heading": "Stuck first: lots of tries",
           "caption": [
             {
-              "at": 0.0286,
+              "at": 0.0273,
               "text": "Only then does it try lots of ideas: 32 sampled tries."
             },
             {
-              "at": 0.2776,
+              "at": 0.2902,
               "text": "If none of the 32 fits, it gets 480 more, so 512 in all."
             },
             {
-              "at": 0.7826,
+              "at": 0.7665,
               "text": "A question it already solved gets no extra tries."
             }
           ],
@@ -7180,15 +7304,15 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0286
+              0.0273
             ],
             [
               0.3377,
-              0.2776
+              0.2902
             ],
             [
               0.6596,
-              0.7826
+              0.7665
             ]
           ]
         },
@@ -7202,11 +7326,11 @@ window.CONTENT = {
               "text": "A checker runs every try on the examples that came with the question. It needs no answer key."
             },
             {
-              "at": 0.3459,
+              "at": 0.356,
               "text": "A try that fits every example is kept. The rest are thrown away."
             },
             {
-              "at": 0.5581,
+              "at": 0.5683,
               "text": "For each question it keeps at most 2 different fitting tries."
             }
           ],
@@ -7245,33 +7369,33 @@ window.CONTENT = {
             ],
             [
               0.338,
-              0.3459
+              0.356
             ],
             [
               0.6593,
-              0.5581
+              0.5683
             ]
           ]
         },
         {
           "id": "s05",
-          "duration": 36.5,
+          "duration": 37.5,
           "heading": "The earlier test, and a near miss",
           "caption": [
             {
-              "at": 0.0164,
+              "at": 0.016,
               "text": "We tried it on an older small design, on two trial copies, with development questions."
             },
             {
-              "at": 0.2107,
+              "at": 0.2004,
               "text": "The search worked: it found 180 and 237 checked tries on multi-step questions. The bars were 75 and 90."
             },
             {
-              "at": 0.5007,
+              "at": 0.485,
               "text": "After two nights, first-try scores on multi-step questions rose 10.4 and 9.7 points. The bar was 10."
             },
             {
-              "at": 0.7342,
+              "at": 0.7365,
               "text": "Copy B gained 15 of 154 questions where 16 were needed. Not a pass, and not proved wrong."
             }
           ],
@@ -7310,41 +7434,41 @@ window.CONTENT = {
           "atMap": [
             [
               0.0136,
-              0.0164
+              0.016
             ],
             [
               0.2563,
-              0.2107
+              0.2004
             ],
             [
               0.4989,
-              0.5007
+              0.485
             ],
             [
               0.7415,
-              0.7342
+              0.7365
             ]
           ]
         },
         {
           "id": "s06",
-          "duration": 34,
+          "duration": 36,
           "heading": "At night it practises what it found",
           "caption": [
             {
-              "at": 0.0176,
+              "at": 0.0167,
               "text": "At night it practises on its own checked tries. That is the sleep from Part 9."
             },
             {
-              "at": 0.2239,
+              "at": 0.2115,
               "text": "Two nights, with a day of search between them."
             },
             {
-              "at": 0.3567,
+              "at": 0.3369,
               "text": "On two copies, harm to old skills was -1.1 and -1.5 points. Below zero means no forgetting."
             },
             {
-              "at": 0.603,
+              "at": 0.6031,
               "text": "Multi-step first tries matched the standard nights: -1.9 and +1.9 points. A check on six copies has not been run."
             }
           ],
@@ -7373,19 +7497,19 @@ window.CONTENT = {
           "atMap": [
             [
               0.0158,
-              0.0176
+              0.0167
             ],
             [
               0.2572,
-              0.2239
+              0.2115
             ],
             [
               0.4987,
-              0.3567
+              0.3369
             ],
             [
               0.7401,
-              0.603
+              0.6031
             ]
           ]
         },
@@ -7399,15 +7523,15 @@ window.CONTENT = {
               "text": "As of Oct 11, creative mode is planned for the first big run, in a day-and-night phase after the main training."
             },
             {
-              "at": 0.2404,
+              "at": 0.2389,
               "text": "It has four parts: the stuck test, the stuck-first search, the example checker, and the nights."
             },
             {
-              "at": 0.512,
+              "at": 0.5051,
               "text": "Dropped from that run: the small creative add-on, because it did not survive the nights."
             },
             {
-              "at": 0.6802,
+              "at": 0.6652,
               "text": "Sealed tests at 3M and 10M are planned, not yet run. So far it passed only on older small designs."
             }
           ],
@@ -7435,15 +7559,15 @@ window.CONTENT = {
             ],
             [
               0.2565,
-              0.2404
+              0.2389
             ],
             [
               0.4988,
-              0.512
+              0.5051
             ],
             [
               0.7411,
-              0.6802
+              0.6652
             ]
           ]
         }

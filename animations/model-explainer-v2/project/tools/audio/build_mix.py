@@ -171,12 +171,47 @@ def probe(path, field='duration'):
 def channels(path):
     return int(run(['ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', path], capture_output=True, text=True).stdout)
 
-def encode(narr, raw, out, total, gain_db, ch):
-    vf = 'pan=stereo|c0=0.7071*c0|c1=0.7071*c0' if ch == 1 else 'anull'     # dual-mono at -3 dB keeps the voice at its own loudness
-    fc = (f'[0:a]aresample=48000,{vf},apad=whole_dur={total:.3f}[v];[v][1:a]amix=inputs=2:normalize=0:duration=first,'
-          f'volume={gain_db:.2f}dB,alimiter=limit=0.708:attack=5:release=60:level=disabled,atrim=end={total:.3f}')
-    run(['ffmpeg', '-y', '-v', 'error', '-i', narr, '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', raw, '-filter_complex', fc,
-         '-ar', '48000', '-ac', '2', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out])
+def add_voice(narr, raw, total, ch):
+    """sum the narration into the stem file in place (mono voice goes to both channels at -3 dB so it keeps its own loudness)"""
+    n = int(round(total * SR)); mm = np.memmap(raw, dtype='<f4', mode='r+', shape=(n, 2)); B = 30 * SR
+    p = subprocess.Popen(['ffmpeg', '-v', 'error', '-i', narr, '-f', 'f32le', '-ac', str(ch), '-ar', str(SR), '-'], stdout=subprocess.PIPE)
+    for a in range(0, n, B):
+        b = min(n, a + B); need = (b - a) * ch * 4; buf = b''
+        while len(buf) < need:
+            c = p.stdout.read(need - len(buf))
+            if not c: break
+            buf += c
+        v = np.frombuffer(buf[: len(buf) // (4 * ch) * 4 * ch], dtype='<f4').reshape(-1, ch)
+        k = len(v)
+        if k: mm[a:a + k] += (v * 0.7071) if ch == 1 else v   # ch==1: broadcast to both columns
+    p.stdout.close(); p.wait(); mm.flush(); del mm
+
+def gain_limit(raw, total, gain_db, ceiling=0.708):
+    """apply gain in place, then a short smooth look-ahead limit around any sample above the ceiling (rare)"""
+    n = int(round(total * SR)); mm = np.memmap(raw, dtype='<f4', mode='r+', shape=(n, 2)); B = 30 * SR; g = db(gain_db); nlim = 0; peak = 0.0
+    W = int(0.005 * SR); win = np.hanning(2 * W + 1); win /= win.sum()
+    for a in range(0, n, B):
+        b = min(n, a + B); x = mm[a:b] * np.float32(g); pk = np.abs(x).max(1); peak = max(peak, float(pk.max()))
+        over = np.nonzero(pk > ceiling)[0]
+        if len(over):
+            need = np.ones(len(x)); need[over] = ceiling / pk[over]; nlim += len(over)
+            lo, hi = max(0, over[0] - 2 * W), min(len(x), over[-1] + 2 * W + 1)
+            seg = need[lo:hi].copy()                                             # grey dilation (min over +-W) then smoothing
+            dil = np.array(seg); 
+            for sh in range(1, W + 1):
+                dil[sh:] = np.minimum(dil[sh:], seg[:-sh]); dil[:-sh] = np.minimum(dil[:-sh], seg[sh:])
+            need[lo:hi] = np.convolve(np.pad(dil, W, constant_values=1.0), win, 'valid')[: hi - lo]
+            x = x * need[:, None].astype(np.float32)
+        mm[a:b] = x
+    mm.flush(); del mm
+    return peak, nlim
+
+def measure_raw(raw):
+    p = run(['ffmpeg', '-hide_banner', '-nostats', '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', raw, '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'], capture_output=True, text=True)
+    js = json.loads(p.stderr[p.stderr.rindex('{'): p.stderr.rindex('}') + 1]); return {k: float(js[k]) for k in ('input_i', 'input_tp', 'input_lra')}
+
+def encode(raw, out):
+    run(['ffmpeg', '-y', '-v', 'error', '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', raw, '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-movflags', '+faststart', out])
 
 def main():
     global T0; T0 = time.time()
@@ -203,15 +238,19 @@ def main():
     per_min = len(events) / (total / 60); log(f'effects kept {len(events)} ({per_min:.2f}/min):', dict(collections.Counter(e['fx'] for e in events)))
     raw = work + '/bed-sfx.f32'; render(parts, total, g, events, raw, work)
     log('rendered stems')
-    out_tmp = work + '/mix.m4a'; ch = channels(narr); gain = 0.0
+    out_tmp = work + '/mix.m4a'; ch = channels(narr)
+    add_voice(narr, raw, total, ch); log('voice added')
+    m0 = measure_raw(raw); gain = TARGET - m0['input_i']
+    log(f'float mix before levelling: {m0["input_i"]:.2f} LUFS, true peak {m0["input_tp"]:.2f} dBTP; gain {gain:+.2f} dB')
+    pk, nl = gain_limit(raw, total, gain); log(f'levelled; sample peak {pk:.3f}, {nl} samples limited')
     for attempt in range(2):
-        encode(narr, raw, out_tmp, total, gain, ch)
+        encode(raw, out_tmp)
         m = loudnorm_json(out_tmp); dur = probe(out_tmp)
-        log(f'attempt {attempt + 1}: gain {gain:+.2f} dB -> {m["input_i"]:.2f} LUFS, true peak {m["input_tp"]:.2f} dBTP, LRA {m["input_lra"]:.1f}, duration {dur:.3f} s')
+        log(f'attempt {attempt + 1}: {m["input_i"]:.2f} LUFS, true peak {m["input_tp"]:.2f} dBTP, LRA {m["input_lra"]:.1f}, duration {dur:.3f} s')
         ok = LUFS_LO <= m['input_i'] <= LUFS_HI and m['input_tp'] <= TP_MAX
-        if ok: break
-        gain += TARGET - m['input_i']
-        if m['input_tp'] + (TARGET - m['input_i']) > TP_MAX - 0.3 and attempt == 0: gain = min(gain, gain - (m['input_tp'] + (TARGET - m['input_i']) - (TP_MAX - 0.3)))
+        if ok or attempt: break
+        d = min(TARGET - m['input_i'], TP_MAX - 0.3 - m['input_tp'])           # fix once: toward -17 LUFS but never above the peak ceiling
+        gain_limit(raw, total, d)
     os.makedirs(os.path.dirname(out), exist_ok=True); shutil.copy(out_tmp, out)
     summary = dict(lufs=m['input_i'], true_peak_dbtp=m['input_tp'], lra=m['input_lra'], duration=dur, narration_duration=nd, effects=len(events),
                    effects_per_min=round(per_min, 2), seconds=round(time.time() - T0, 1), keys={p['id']: p['root'] for p in parts})

@@ -14,7 +14,7 @@
           "text": "This part is about the call writer, which writes a request slip, and the calculator, which answers it."
         },
         {
-          "at": 0.5297,
+          "at": 0.5093,
           "text": "Rule (project rules, Oct 7): hand-written code may run only as an outside tool that the model chooses to call."
         }
       ],
@@ -32,25 +32,25 @@
         ],
         [
           0.4977,
-          0.5297
+          0.5093
         ]
       ]
     },
     {
       "id": "s02",
-      "duration": 20.5,
+      "duration": 20,
       "heading": "Why a calculator? Code adds exactly",
       "caption": [
         {
-          "at": 0.0293,
+          "at": 0.03,
           "text": "Code adds two numbers exactly, every time."
         },
         {
-          "at": 0.4058,
+          "at": 0.4068,
           "text": "A learned network has to learn each sum from practice."
         },
         {
-          "at": 0.6434,
+          "at": 0.6503,
           "text": "So the model writes its sum on a text slip (made-up numbers here) and hands it to a calculator."
         }
       ],
@@ -68,15 +68,15 @@
       "atMap": [
         [
           0.0231,
-          0.0293
+          0.03
         ],
         [
           0.3397,
-          0.4058
+          0.4068
         ],
         [
           0.6564,
-          0.6434
+          0.6503
         ]
       ]
     },
@@ -90,7 +90,7 @@
           "text": "After a round (one lap of the thinker), the call writer reads the thinker's first control vector, a list of numbers."
         },
         {
-          "at": 0.5872,
+          "at": 0.557,
           "text": "It writes one of nine choices: no call, or one of the eight operations."
         }
       ],
@@ -114,7 +114,7 @@
         ],
         [
           0.4981,
-          0.5872
+          0.557
         ]
       ]
     },
@@ -185,28 +185,28 @@
     },
     {
       "id": "s05",
-      "duration": 41,
+      "duration": 40.5,
       "heading": "Copying digits: a pointer, a step left, a stop",
       "question": "Tom has 12 apples. (made-up example)",
       "caption": [
         {
-          "at": 0.0146,
+          "at": 0.0148,
           "text": "To write the 12 in a call, a learned pointer lands on its last digit, the 2."
         },
         {
-          "at": 0.234,
+          "at": 0.2361,
           "text": "The copy then steps one letter left and copies the 1."
         },
         {
-          "at": 0.398,
+          "at": 0.4022,
           "text": "A learned stop head says when to stop."
         },
         {
-          "at": 0.5546,
+          "at": 0.5603,
           "text": "The copy trick was used for 98% of written operands and 91.5% of answers, on all six separate copies (T1SDR)."
         },
         {
-          "at": 0.8465,
+          "at": 0.8557,
           "text": "Copied here means the copy trick was used, not that the copy was right."
         }
       ],
@@ -239,37 +239,37 @@
       "atMap": [
         [
           0.0133,
-          0.0146
+          0.0148
         ],
         [
           0.2076,
-          0.234
+          0.2361
         ],
         [
           0.4018,
-          0.398
+          0.4022
         ],
         [
           0.596,
-          0.5546
+          0.5603
         ],
         [
           0.7902,
-          0.8465
+          0.8557
         ]
       ]
     },
     {
       "id": "s06",
-      "duration": 24,
+      "duration": 24.5,
       "heading": "A number not in the text: 21 cells",
       "caption": [
         {
-          "at": 0.025,
+          "at": 0.0245,
           "text": "Some call numbers are in neither the question nor a reply. The call writer builds such a number one digit at a time."
         },
         {
-          "at": 0.4688,
+          "at": 0.474,
           "text": "Tested copies had 11 cells. The never-run build of the finished design has 21, last digit first; the code flips the text."
         }
       ],
@@ -294,11 +294,11 @@
       "atMap": [
         [
           0.0158,
-          0.025
+          0.0245
         ],
         [
           0.4987,
-          0.4688
+          0.474
         ]
       ]
     },
@@ -312,7 +312,7 @@
           "text": "The calculator is ordinary Python code. It has 0 learned numbers."
         },
         {
-          "at": 0.378,
+          "at": 0.376,
           "text": "It reads a call as text (made-up numbers here) and writes the reply as text. A call it cannot run gets a question mark."
         }
       ],
@@ -337,25 +337,25 @@
         ],
         [
           0.4982,
-          0.378
+          0.376
         ]
       ]
     },
     {
       "id": "s08",
-      "duration": 31.5,
+      "duration": 32,
       "heading": "The reply goes into the notes, not the question",
       "caption": [
         {
-          "at": 0.019,
+          "at": 0.0187,
           "text": "In our made-up Tom example, after round 2 the call writer writes sub 12 5, and the calculator replies."
         },
         {
-          "at": 0.3331,
+          "at": 0.3369,
           "text": "The reply, sub 12 5 = 7, is read as new text by the reader's letter window, which sees nearby letters, and added to the notes."
         },
         {
-          "at": 0.6752,
+          "at": 0.6737,
           "text": "The question is not read again. After round 3 the call writer writes add 7 3, and the calculator replies 10."
         }
       ],
@@ -378,15 +378,15 @@
       "atMap": [
         [
           0.0143,
-          0.019
+          0.0187
         ],
         [
           0.3373,
-          0.3331
+          0.3369
         ],
         [
           0.6603,
-          0.6752
+          0.6737
         ]
       ]
     },
@@ -400,11 +400,11 @@
           "text": "In the tested design, the first call follows round 2."
         },
         {
-          "at": 0.2591,
+          "at": 0.2528,
           "text": "Call k follows round k plus 1, up to call 7 after round 8."
         },
         {
-          "at": 0.598,
+          "at": 0.5917,
           "text": "The tested copies ran 8 rounds. In the built learned-stop code, rounds 9 to 32 cannot call."
         }
       ],
@@ -445,11 +445,11 @@
         ],
         [
           0.3377,
-          0.2591
+          0.2528
         ],
         [
           0.6596,
-          0.598
+          0.5917
         ]
       ]
     },
@@ -467,11 +467,11 @@
           "text": "The finished design's first build lets a call follow any round from 2 to 32."
         },
         {
-          "at": 0.5069,
+          "at": 0.5024,
           "text": "The tape (the list of calls and replies so far) holds 16 calls."
         },
         {
-          "at": 0.7312,
+          "at": 0.7267,
           "text": "In training, 1 row in 4 gets 0, 1 or 2 extra thinking rounds before each call."
         }
       ],
@@ -500,11 +500,11 @@
         ],
         [
           0.4987,
-          0.5069
+          0.5024
         ],
         [
           0.7404,
-          0.7312
+          0.7267
         ]
       ]
     },
@@ -518,15 +518,15 @@
           "text": "Some parts are still ordinary code a person wrote. Four of them are shown here in brown boxes."
         },
         {
-          "at": 0.3039,
+          "at": 0.3158,
           "text": "The operation name comes from a fixed list of 8, so a new tool could not be called yet."
         },
         {
-          "at": 0.5827,
+          "at": 0.5946,
           "text": "The finished design's second build writes the whole call as letters, operation name included."
         },
         {
-          "at": 0.7999,
+          "at": 0.8119,
           "text": "It is built as code and has never run."
         }
       ],
@@ -553,37 +553,37 @@
         ],
         [
           0.2565,
-          0.3039
+          0.3158
         ],
         [
           0.4988,
-          0.5827
+          0.5946
         ],
         [
           0.7411,
-          0.7999
+          0.8119
         ]
       ]
     },
     {
       "id": "s12",
-      "duration": 36.5,
+      "duration": 40,
       "heading": "The evidence: 6 copies, calculator outside",
       "caption": [
         {
-          "at": 0.0164,
+          "at": 0.015,
           "text": "Each copy starts from its own random start."
         },
         {
-          "at": 0.1955,
+          "at": 0.1788,
           "text": "The calculator-outside model (T1SDR) was compared with a similar calculator-inside model (B2)."
         },
         {
-          "at": 0.4229,
+          "at": 0.3864,
           "text": "Pooled-5 (6,040 questions kept aside), T1SDR minus B2: plus 0.62; likely range minus 0.23 to plus 1.46."
         },
         {
-          "at": 0.7692,
+          "at": 0.787,
           "text": "No copy fell over 1.0 below B2. The range includes 0: no clear difference."
         }
       ],
@@ -618,33 +618,33 @@
       "atMap": [
         [
           0.0171,
-          0.0164
+          0.015
         ],
         [
           0.2579,
-          0.1955
+          0.1788
         ],
         [
           0.4986,
-          0.4229
+          0.3864
         ],
         [
           0.7393,
-          0.7692
+          0.787
         ]
       ]
     },
     {
       "id": "s12b",
-      "duration": 27,
+      "duration": 27.5,
       "heading": "More evidence: chain-5 and calculator off",
       "caption": [
         {
-          "at": 0.0222,
+          "at": 0.0218,
           "text": "Chain-5, 1,000 multi-step questions: 99.6 to 99.8 with the calculator outside, mean 99.72. Inside: 99.4 to 99.7."
         },
         {
-          "at": 0.6292,
+          "at": 0.6177,
           "text": "Calculator switched off: the 2,085 questions that need it score 0.0."
         }
       ],
@@ -680,37 +680,37 @@
       "atMap": [
         [
           0.02,
-          0.0222
+          0.0218
         ],
         [
           0.4983,
-          0.6292
+          0.6177
         ]
       ]
     },
     {
       "id": "s13",
-      "duration": 42.5,
+      "duration": 43,
       "heading": "Check 1: the swap test",
       "caption": [
         {
-          "at": 0.0141,
+          "at": 0.014,
           "text": "Swap test: add and sub are secretly swapped inside the calculator. The answer should follow the new reply."
         },
         {
-          "at": 0.261,
+          "at": 0.2646,
           "text": "Pass line: 99% or more of counted rows follow the swap. Rows with two possible sources are not counted."
         },
         {
-          "at": 0.4604,
+          "at": 0.4616,
           "text": "Five copies: 99.28 to 99.87, all at 99 or more."
         },
         {
-          "at": 0.6352,
+          "at": 0.6344,
           "text": "The run's own first reading was 97.1 to 97.6. Its scoring rule was corrected after the misses were studied."
         },
         {
-          "at": 0.8737,
+          "at": 0.8701,
           "text": "The sixth copy's saved model was lost, so it is not scored."
         }
       ],
@@ -750,23 +750,23 @@
       "atMap": [
         [
           0.0136,
-          0.0141
+          0.014
         ],
         [
           0.2077,
-          0.261
+          0.2646
         ],
         [
           0.4018,
-          0.4604
+          0.4616
         ],
         [
           0.5959,
-          0.6352
+          0.6344
         ],
         [
           0.79,
-          0.8737
+          0.8701
         ]
       ]
     },
@@ -780,19 +780,19 @@
           "text": "Leak check: swap in another question's thinking, then count answers still right, out of 100 (1,360 questions)."
         },
         {
-          "at": 0.263,
+          "at": 0.2501,
           "text": "Limit written down before the run: 5. Five of six copies read above it, from 5.07 to 5.59."
         },
         {
-          "at": 0.4416,
+          "at": 0.4464,
           "text": "B2 (calculator inside) read 3.09 to 3.75 on the same check."
         },
         {
-          "at": 0.6165,
+          "at": 0.6213,
           "text": "It failed the limit. The project owner cleared it on Oct 9; it is disclosed, not a clean pass."
         },
         {
-          "at": 0.7923,
+          "at": 0.7971,
           "text": "Separate reading, zero rounds of thinking: one copy read 12.94, against 10.81 for B2."
         }
       ],
@@ -846,19 +846,19 @@
         ],
         [
           0.2076,
-          0.263
+          0.2501
         ],
         [
           0.4018,
-          0.4416
+          0.4464
         ],
         [
           0.596,
-          0.6165
+          0.6213
         ],
         [
           0.7902,
-          0.7923
+          0.7971
         ]
       ]
     },
@@ -872,15 +872,15 @@
           "text": "Tested: the calculator outside the model, at 3M, over six copies (swap check on five; leak check cleared by the owner)."
         },
         {
-          "at": 0.3626,
+          "at": 0.3629,
           "text": "Never run together: the borrowed Gemma reader with the outside calculator."
         },
         {
-          "at": 0.5343,
+          "at": 0.527,
           "text": "Built, never run: calls at any round."
         },
         {
-          "at": 0.653,
+          "at": 0.6458,
           "text": "Remember: the model writes calls as text. The calculator replies as text. A copy trick, with a learned stop, writes most numbers."
         }
       ],
@@ -904,15 +904,15 @@
         ],
         [
           0.2565,
-          0.3626
+          0.3629
         ],
         [
           0.4988,
-          0.5343
+          0.527
         ],
         [
           0.7411,
-          0.653
+          0.6458
         ]
       ]
     }
