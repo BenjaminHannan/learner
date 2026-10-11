@@ -284,13 +284,20 @@ class Ledger(Model):
         if not self.eg_embed or (talker and self.eg_thinker):
             return self.reader(batch)
         ids = batch['prompt_ids']
-        H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device)
+        return self.reader(batch, extra=self.eg_term([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device))
+
+    def eg_term(self, prompts, T, device, memo=True):
+        """The Gemma term added to the reader's input embedding: EmbeddingGemma's per-char states H of `prompts` (width T) -> ln_eg -> the adapter per eg_adapter
+        ('none': LayerNorm only; 'mlp': eg_hid, GELU, eg_proj; 'linear': eg_proj) -> [B, T, d]. memo=True (the question) goes through FrozenEG.encode (its last-call memo
+        lets run and talk embed a batch once); memo=False (tape strings, Tool.read_texts) through FrozenEG.encode_texts, which leaves that memo alone. One function for
+        both, so a tape string is read by exactly what reads the question."""
+        H = self.eg().encode(prompts, T, device)[0] if memo else self.eg().encode_texts(prompts, T, device)
         h = self.ln_eg(H.float())       # H is bf16 on cuda; fp32 here works with or without autocast
         if self.eg_adapter == 'none':
-            return self.reader(batch, extra=h)
+            return h
         if self.eg_adapter == 'mlp':
             h = F.gelu(self.eg_hid(h))
-        return self.reader(batch, extra=self.eg_proj(h))
+        return self.eg_proj(h)
 
     def tok_spots(self, X, xm, batch):
         """tok_think: pool the letters of each EmbeddingGemma token into one spot. X [B,T,d], xm [B,T] -> (Xk [B,K,d], km [B,K] bool), K = the batch's

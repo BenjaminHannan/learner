@@ -12,6 +12,7 @@ encode(prompts, T, device) -> (H, pooled):
   pooled [B, 768] float: mean of last_hidden_state over every token, prefix and <bos>/<eos> included (sentence-transformers mean
       pooling with include_prompt), not normalised: the meaning teacher cuts it to MT_DIM and re-normalises (MRL).
 The weights come from the Hugging Face cache at revision EG_REV, or from the folder in $CUSTOM_IO_EG2 / the Ledger's eg_path.
+encode_texts(texts, T, device) -> H: the same H as encode(..., chars=True)[0] but outside the last-call memo (the tape strings, read like the question).
 by_bytes (V1, ByteVocab): H and every alignment have one row per UTF-8 byte of the prompt (T counts bytes); a byte takes the Gemma token of the character it belongs to,
 so a multi-byte character's bytes all share one token and an ASCII prompt gives exactly the character path's states.
   python -m custom_io.models.eg check     loads it, checks the size and compares 3 probe vectors with the ones taken on the build box."""
@@ -79,6 +80,18 @@ class FrozenEG:
         key = (tuple(prompts), T, str(device))
         if self._last is not None and self._last[0] == key and (self._last[1][0] is not None or not chars):
             return self._last[1]
+        out = self._compute(prompts, T, device, chars)
+        self._last = (key, out)
+        return out
+
+    @torch.no_grad()
+    def encode_texts(self, texts, T, device):
+        """H [B,T,768]: exactly encode(texts, T, device, chars=True)[0], but it never reads or writes the last-call memo, so reading the calculator's replies
+        (Ben's rule 1: every tape string is read by Gemma + the letter window like the question) does not evict the question's states between run and talk."""
+        return self._compute(texts, T, device, True)[0]
+
+    @torch.no_grad()
+    def _compute(self, prompts, T, device, chars):
         self.load(device)
         al = [self.align(p) for p in prompts]
         B, L = len(al), max(len(a[0]) for a in al)
@@ -99,9 +112,7 @@ class FrozenEG:
                 c2t[b, :n], cm[b, :n] = c[:n], True
             c2t, cm = torch.from_numpy(c2t).to(device), torch.from_numpy(cm).to(device)
             H = Ht.gather(1, c2t[..., None].expand(-1, -1, Ht.shape[-1])) * cm[..., None].to(Ht.dtype)
-        out = (H, pooled)
-        self._last = (key, out)
-        return out
+        return (H, pooled)
 
 
 def teacher_vec(pooled):

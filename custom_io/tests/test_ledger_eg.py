@@ -22,6 +22,15 @@ class StubEG:
     def __init__(self):
         self.seen = []
 
+    def encode_texts(self, texts, T, device):
+        """Like FrozenEG.encode_texts: encode(...)[0] without the memo (this stub has none; it logs nothing here)."""
+        seen = getattr(self, 'seen', None)
+        n = len(seen) if seen is not None else 0
+        H = self.encode(texts, T, device)[0]
+        if seen is not None:
+            del seen[n:]
+        return H
+
     def encode(self, prompts, T, device, chars=True):
         self.seen += list(prompts)
         H = torch.zeros(len(prompts), T, 768)

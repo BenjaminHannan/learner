@@ -36,6 +36,15 @@ class StubEG:
     def align(self, prompt):
         return np.zeros(3, np.int32), np.asarray(self.c2t_fn(prompt), np.int16)
 
+    def encode_texts(self, texts, T, device):
+        """Like FrozenEG.encode_texts: encode(...)[0] without the memo (this stub has none; it logs nothing here)."""
+        seen = getattr(self, 'seen', None)
+        n = len(seen) if seen is not None else 0
+        H = self.encode(texts, T, device)[0]
+        if seen is not None:
+            del seen[n:]
+        return H
+
     def encode(self, prompts, T, device, chars=True):
         H = torch.zeros(len(prompts), T, 768)
         for b, p in enumerate(prompts):

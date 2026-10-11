@@ -1,7 +1,9 @@
 """B3 group 1 (architecture/B3-GROUP1-BUILD-2026-10-09.md): H1R (T1SDR + the learned stop, model 'tool_h1') with three switches, all default off, so 'b3' with no
 switches is H1R exactly (tested bit for bit against 17a356e62). Nothing in the switches is a rule: they change what the model may do and what it is shown.
-- eg_embed (Part A, a Tool switch): Gemma reads the question as in G1's EGE. The calculator's entries are read by the letter reader alone (Tool.read_texts), so
-  Gemma sees each question once per batch (FrozenEG.encode's memo shares the pass between run and talk). Gemma's 271,002,624 weights are frozen and counted in
+- eg_embed (Part A, a Tool switch): Gemma reads the question as in G1's EGE. Ben's rule 1: "also for the calculator, it should be read by the reader.
+  It is a fully external tool, just like minecraft." So the calculator's entries (and notes, drill strings, '?') go through Gemma + the letter window exactly like the
+  question (Tool.read_texts -> Ledger.eg_term, the question's own adapter, no new parameters), each as its own prompt via FrozenEG.encode_texts, which leaves the question's
+  memo alone: Gemma still embeds each question once per batch (FrozenEG.encode's memo shares the pass between run and talk) and also each tape string once per read. Gemma's 271,002,624 weights are frozen and counted in
   size()['whole'] only. Ledger creates the Gemma adapter before the tool's new weights, so B3 at a seed does not start identical to T1SDR at that seed.
 - any_round (Part B): a calculator call may be written after ANY round t >= 1 (up to the cap of 32), not only call k at round k + 1. The op head (control 0)
   decides each round, as today; a call goes into the row's next free tape entry (TAPE = max(16, n_res) entries) and its reply is visible from round t + 1. A call

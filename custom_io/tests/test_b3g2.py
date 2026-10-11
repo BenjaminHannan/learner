@@ -261,19 +261,28 @@ def test_stop_and_talk():
         a0 = m.talk(st, b)
         z0 = m.talk((torch.zeros_like(st[0]),) + st[1:], b)
         assert m.generate(b, lesion='zero_state') == z0
-    # nocopy forces the gate in the writer
+    # nocopy (Ben's rule 2): a no-op for answers, which have no copy path (an empty context: gate 1 whatever the lesion); it still forces the CALL writer's gate
     gates = []
     real = m.writer.head
 
     def spy(R, Xc, cmask, cids, nocopy, ckeys):
         p, gate, a = real(R, Xc, cmask, cids, nocopy, ckeys)
-        gates.append((nocopy, float(gate.min())))
+        gates.append((nocopy, float(gate.min()), bool(cmask.any())))
         return p, gate, a
     m.writer.head = spy
     with torch.no_grad():
-        m.generate(b, lesion='nocopy')
-    assert gates and all(nc and g == 1.0 for nc, g in gates), gates
-    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy forces the writer gate')
+        st = m.state(b)
+        assert m.generate(b, lesion='nocopy') == m.talk(m.state(b, lesion='nocopy'), b) == m.talk(m.state(b, lesion='nocopy'), b, lesion='nocopy')
+        gates.clear()
+        assert m.talk(st, b, lesion='nocopy') == m.talk(st, b)
+    assert gates and all(not nc and g == 1.0 and not has for nc, g, has in gates), gates      # the answer: no visible context, gate 1, the lesion never reaches the head
+    m.stop.bias.data.fill_(-50.0)
+    gates.clear()
+    with torch.no_grad():
+        m.run(b, loops=3, lesion='nocopy')
+    assert gates and all(nc and g == 1.0 and has for nc, g, has in gates), gates                  # the calls: the lesion forces their gate
+    m.writer.head = real
+    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy: no-op for answers, forces the call writer gate')
 
 
 def test_st1_interface():
@@ -335,7 +344,7 @@ def child():
     opt = torch.optim.AdamW(m.parameters(), lr=3e-3, betas=(0.9, 0.95), weight_decay=0.0)
     m.train()
     ls, call_acc = [], []
-    N = int(os.environ.get('B3G2_STEPS', 400))
+    N = int(os.environ.get('B3G2_STEPS', 800))
     for s in range(N):
         loss, aux = m.loss(batches[s % 4])
         loss.backward()
@@ -349,10 +358,10 @@ def child():
     assert last < 0.5 * first, (first, last)
     m.eval()
     with torch.no_grad():
-        o = m.run(batches[0])
+        o = m.run(batches[0], loops=3)      # forced rounds 1, 2 (the call rounds of every training row): the learned stop of a 400-step model on 8 rows is a coin flip (it can stop at round 1 before any call)
         ans = m.generate(batches[0])
     nc = sum(len(c) for c in o['calls'])
-    assert len(ans) == 2 and nc > 0 and all(isinstance(a, str) and a for a in ans), (o['calls'], ans)
+    assert len(ans) == 2 and nc > 0 and all(isinstance(a, str) and a for a in ans), (o['calls'], ans, o.get('rounds'), o['records'])
     right = sum(ans[i] == batches[0]['rows'][i]['answer'] for i in range(2))
     # a tiny dev dir, the extra evals
     d = tempfile.mkdtemp()
