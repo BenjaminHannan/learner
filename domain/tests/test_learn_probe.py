@@ -106,3 +106,55 @@ def test_build_mode_small():
     assert {r['split'] for r in rows} == set(L.MODE_CELLS) and all(r['cell'] == r['split'] for r in rows)
     assert not {r['prompt'] for r in rows} & ex and len({r['prompt'] for r in rows}) == 8
     assert all(r['kind'] in SP.SCORED and L.far_props(r['prompt'])['two_kinds'] == (r['split'] == 'mode-two') for r in rows)
+
+
+def test_pair_split_rule():
+    tr, ho = L.pair_split()
+    assert (tr, ho) == L.pair_split()                      # deterministic
+    assert len(tr) == 14 and len(ho) == 7 and not set(tr) & set(ho)
+    assert len(set(tr) | set(ho)) == 21 and all(a != b and a in SP.SCORED and b in SP.SCORED for a, b in tr + ho)
+    for k in SP.SCORED:
+        assert any(k in p for p in tr) and any(k in p for p in ho)
+    part = L.partners_of(tr)
+    assert all(part[k] for k in SP.SCORED) and all((k, j) in tr or (j, k) in tr for k in part for j in part[k])
+
+
+def test_pair_split_redraws_until_rule():
+    # 3 kinds -> 3 pairs, 2 train / 1 held: no kind can be in the lone held-out pair AND all of... rule fails for the third kind
+    # in 4 kinds: 6 pairs, 4 train / 2 held; held pairs must cover all 4 kinds (a perfect matching)
+    tr, ho = L.pair_split(7, ['A', 'B', 'C', 'D'])
+    assert len(tr) == 4 and len(ho) == 2 and len({k for p in ho for k in p}) == 4
+
+
+def test_l3_cells_small():
+    tr, ho = L.pair_split()
+    ex = {'A: 1 | B: 2 ; =SUM(A1:A1)'}
+    trows, _ = L.build_l3_train(random.Random(5), ex, tr, per_cell=14)
+    assert [r['split'] for r in trows] == ['F4-two'] * 14 + ['F0-near'] * 14
+    allowed = {frozenset(p) for p in tr}
+    for r in trows[:14]:
+        assert ')*(' not in r['prompt'] and frozenset((r['kind'], r['partner'])) in allowed
+    train_prompts = {r['prompt'] for r in trows}
+    erows, _ = L.build_l3_eval(random.Random(6), ex, train_prompts, tr, ho, per_cell=14)
+    assert [r['split'] for r in erows] == [c for c in L.L3_CELLS for _ in range(14)]
+    held = {frozenset(p) for p in ho}
+    for r in erows:
+        pr = frozenset((r['kind'], r['partner']))
+        op_star = ')*(' in r['prompt']
+        assert op_star == (r['split'] in ('HO', 'HPO'))
+        assert (pr in held) == (r['split'] in ('HP', 'HPO')) and (pr in allowed) == (r['split'] in ('S', 'HO'))
+        assert r['kind'] in SP.SCORED
+    assert all(sum(r['kind'] == k for r in erows if r['split'] == 'S') == 2 for k in SP.SCORED)
+    ep = [r['prompt'] for r in erows]
+    assert len(set(ep)) == len(ep) and not set(ep) & train_prompts and not set(ep) & ex
+
+
+@needs_probe
+def test_eval_sets_l3(tmp_path):
+    import json
+    rows = [{'id': f'l3-{c}-{i}', 'kind': 'SUM', 'split': c, 'prompt': f'q{c}{i}', 'answer': '1'} for c in L.L3_CELLS for i in range(420)]
+    path = tmp_path / 'e.jsonl'
+    path.write_text(''.join(json.dumps(r) + '\n' for r in rows))
+    sets = L.eval_sets(_fake_train('F4-two'), 'l3', L.L3_SEED, l3_path=str(path))
+    assert list(sets) == ['S', 'HP', 'HO', 'HPO', 'F0-near', 'F4-two', 'fit'] and len(sets['fit']) == 420
+    assert all(len(sets[c]) == 420 for c in L.L3_CELLS)
