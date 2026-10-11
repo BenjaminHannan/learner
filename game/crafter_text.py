@@ -145,6 +145,11 @@ def view_text(env):
     return f"game: {'/'.join(rows)} | {status} | {items_text}"
 
 
+def asleep(view):
+    """True when a text view (view_text) shows the player asleep: the ' zz' mark in the status part."""
+    return 'zz' in view.split(' | ')[1].split(' ')
+
+
 def creature_order(objs):
     """The objects of one chunk, in a fixed order (sorted by position).
 

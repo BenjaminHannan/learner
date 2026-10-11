@@ -119,6 +119,25 @@ class ViewTextTest(unittest.TestCase):
         self.assertEqual(ct.GRID, (9, 7))
         self.assertEqual(ct.OFFSET, (4, 3))
 
+    def test_asleep_mark_is_exact(self):
+        sleep = ct.parse_action('sleep')
+        steps = slept = 0
+        for i in range(6):
+            env = ct.TextEnv(seed=1_000_000 + i)
+            view = env.reset()
+            rng = np.random.default_rng(i)
+            for _ in range(60):
+                action = sleep if rng.random() < 0.3 \
+                    else int(rng.integers(0, len(ct.ACTIONS)))
+                self.assertEqual(ct.asleep(view), bool(env._player.sleeping))
+                steps += 1
+                slept += ct.asleep(view)
+                view, _, done, _ = env.step(action)
+                if done:
+                    break
+        self.assertGreater(slept, 0)
+        print(f'asleep mark: {steps} steps, {slept} asleep, all agree')
+
 
 class ParseActionTest(unittest.TestCase):
 

@@ -2,7 +2,7 @@
 
 Plan: /mnt/project-files/game-world/PLAN-AND-MARKS-2026-10-10.md.
 
-  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample]
+  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample] [--keep-awake-only]
 
 Each night: play 64 practice worlds, keep the steps just before each unlock (the game is the checker), train the add-on
 on them mixed with the model's own old answers (diary), undo if old answers drifted, then the model's own quiz.
@@ -25,7 +25,7 @@ from custom_io.data import DEFAULT_DATA, MAX_PROMPT
 from custom_io.models import load_model
 from domain import mode as dm
 from domain import route
-from game import play
+from game import crafter_text, play
 
 FAMILY = 'game_crafter'
 SMOKE = dict(episodes_per_day=4, quiz_worlds=2, episode_cap=60, diary=128, check=64, max_nights=2)
@@ -34,14 +34,17 @@ SK200K = '/tmp/claude-0/-home-user-learner/a35c4c05-cfae-5dd3-a5ce-480213b76700/
 GATE_MAX = 4096
 
 
-def keep_windows(unlocks, credit_window):
+def keep_windows(unlocks, credit_window, asleep=None):
     """The keep rule. unlocks = [(step, name)] in order. For each unlock at step t keep steps
     max(prev, t - credit_window + 1) .. t, prev = previous kept unlock's step + 1 (0 at the start), so windows never overlap.
-    -> [(step, unlock name, unlock step)]. choice: a second unlock on the same step has an empty window (prev > t)."""
+    -> [(step, unlock name, unlock step)]. choice: a second unlock on the same step has an empty window (prev > t).
+    asleep (optional, a set of steps): those steps are dropped from the windows, which stay the same size (a move made
+    asleep is replaced by 'sleep' in Crafter, so it did nothing)."""
     out, prev = [], 0
     for t, name in unlocks:
         for s in range(max(prev, t - credit_window + 1), t + 1):
-            out.append((s, name, t))
+            if asleep is None or s not in asleep:
+                out.append((s, name, t))
         prev = max(prev, t + 1)
     return out
 
@@ -90,11 +93,16 @@ def write_moves(path, eps):
     return n
 
 
-def keep_rows(m, eps, cons, day, write_row):
-    """Rows from the kept steps of each episode. -> (rows, by source, by unlock name, refusals by reason)."""
+def keep_rows(m, eps, cons, day, write_row, awake_only=False):
+    """Rows from the kept steps of each episode. awake_only: kept moves made while asleep are dropped.
+    -> (rows, by source, by unlock name, refusals by reason, number dropped as asleep)."""
     rows, by_src, by_name, refused = [], Counter(), Counter(), Counter()
+    n_asleep = 0
     for e in eps:
-        for s, name, t in keep_windows(e['unlocks'], cons['credit_window']):
+        zz = {s for s, st in enumerate(e['steps']) if crafter_text.asleep(st[0])} if awake_only else None
+        if awake_only:
+            n_asleep += len(keep_windows(e['unlocks'], cons['credit_window'])) - len(keep_windows(e['unlocks'], cons['credit_window'], zz))
+        for s, name, t in keep_windows(e['unlocks'], cons['credit_window'], zz):
             prompt, word, src = e['steps'][s][:3]
             row, why = dm.make_row(m, FAMILY, prompt, word, [], cons, src, allow_zero=True)
             if row is None:
@@ -105,7 +113,7 @@ def keep_rows(m, eps, cons, day, write_row):
             by_name[name] += 1
             write_row(day=day, kind='game', id=row['id'], source=src, prompt=prompt, answer=word, steps=[],
                       world_seed=e['seed'], act_seed=e['act_seed'], step=s, unlock=name, unlock_step=t)
-    return rows, by_src, by_name, refused
+    return rows, by_src, by_name, refused, n_asleep
 
 
 def parse_args(argv=None):
@@ -119,6 +127,8 @@ def parse_args(argv=None):
     a.add_argument('--picker', default='greedy', choices=['greedy', 'sample'],
                    help="sample: practice games sample a move from the model's odds over the 17 moves, quiz games take the top one")
     a.add_argument('--quiz-picker', default='top', choices=['top', 'sample'], help='with --picker sample: how quiz games choose')
+    a.add_argument('--keep-awake-only', action='store_true',
+                   help='the keep rule drops kept moves made while the player was asleep (they did nothing)')
     a.add_argument('--full-model', action='store_true', help='diagnostic: no add-on, the whole model trains')
     return a.parse_args(argv)
 
@@ -138,7 +148,7 @@ def main(argv=None):
     commit, dirty = dm.git_info()
     log = dm.Log(a.out)
     parent = dm.guard(a.parent)
-    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, domain_constants=json.loads(draw),
+    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, domain_constants=json.loads(draw),
         game_constants=gcons, domain_constants_sha256=dsha, game_constants_sha256=gsha, cons_used=cons,
         smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data, git_commit=commit, git_dirty_files=dirty)
     write_row = lambda **kw: log.write('row', **kw)
@@ -195,13 +205,13 @@ def main(argv=None):
         st = episode_stats(eps)
         game_steps += st['steps']
         t = time.time()
-        new, by_src, by_name, refused = keep_rows(m, eps, cons, night, write_row)
+        new, by_src, by_name, refused, n_asleep = keep_rows(m, eps, cons, night, write_row, a.keep_awake_only)
         T['keep'] += time.time() - t
         all_rows += new
         rows_per_night.append(len(new))
         log('day', night=night, episodes=st['episodes'], steps=st['steps'], mean_length=st['mean_length'], deaths=st['deaths'],
             unlocks=st['unlocks'], source_share=st['source_share'], rows_by_source=dict(by_src),
-            rows_by_unlock=dict(sorted(by_name.items())), refusals=dict(refused))
+            rows_by_unlock=dict(sorted(by_name.items())), refusals=dict(refused), dropped_asleep=n_asleep)
 
         n_new = len(new)
         vis = cons['visits_per_new_row'] / 2 if undo_prev else cons['visits_per_new_row']
@@ -276,7 +286,7 @@ def main(argv=None):
     else:
         log('gate', skipped='full-model run has no add-on')
     T['gate'] += time.time() - t
-    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, nights_run=night, stop_reason=stop,
+    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, nights_run=night, stop_reason=stop,
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))

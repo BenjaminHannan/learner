@@ -30,6 +30,20 @@ class KeepWindowsTest(unittest.TestCase):
     def test_no_unlocks(self):
         self.assertEqual(mode.keep_windows([], 8), [])
 
+    def test_awake_only_drops_exactly_the_asleep_steps(self):
+        unlocks = [(10, 'a'), (14, 'b')]
+        asleep = {4, 5, 12, 20}
+        plain = mode.keep_windows(unlocks, 8)
+        out = mode.keep_windows(unlocks, 8, asleep)
+        self.assertEqual(out, [x for x in plain if x[0] not in asleep])
+        self.assertEqual({x[0] for x in plain} - {x[0] for x in out}, {4, 5, 12})
+
+    def test_awake_only_without_sleep_or_flag_is_unchanged(self):
+        unlocks = [(10, 'a'), (14, 'b'), (30, 'c')]
+        plain = mode.keep_windows(unlocks, 8)
+        self.assertEqual(mode.keep_windows(unlocks, 8, set()), plain)
+        self.assertEqual(mode.keep_windows(unlocks, 8, None), plain)
+
 
 class MovesTest(unittest.TestCase):
 
