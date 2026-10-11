@@ -415,3 +415,31 @@ How to read it:
 - *Shown:* search breadth recovers a lot over the second night (multi-step reach@32 8-9 -> 18-21) but still trails W2 (32 / 25).
 - *Shown:* the climb over N' (+6.5 / +8.4) is still below job 8's +10 mark (report only). So is W2's own (+8.4 / +6.5).
 - *Suggested:* lr 3e-4 with model-picked replay is the first recipe in these screens that keeps old skills across two nights while matching the standard nights' first-try climb. It is a 2-parent screen; a confirm on more parents is the roadmap's call.
+
+## Test APM (finished 01:05 UTC 10-11 = 9:05 PM ET 10-10; roadmap after 03be030d3b, Ben's "Run it" 8:14 PM ET 10-10; `night7d.py apm`, `apm/`)
+
+SCM2's night 2 with ONE change: the record half of each batch is drawn from night 1's records plus night 2's records (1,989 / 1,892 records), not night 2's alone. Same update count, lr, frozen copy (SCM), seed and model-picked skills replay as SCM2, so each record gets ~18.5 visits instead of 32. Marks fixed before the run (78ba7bba8); seq_next / rule_apply added as report only (ba82a6c0f, roadmap 68385622e1).
+
+| | s100 | s101 |
+|---|---|---|
+| (1) pooled first try APM - SCM2 (mark >= +2) | +0.8 [-3.5, +5.1] **miss** | -1.6 [-5.5, +2.0] **miss** |
+| (2) multi-step first try APM - SCM2 (mark >= -2) | -0.6 [-3.9, +1.9] **pass** | 0.0 [-4.5, +4.5] **pass** |
+| (3) night 2's own cost, APM vs SCM | +0.3, nothing fires, **pass** | -0.4 (better), nothing fires, **pass** |
+| proved wrong? (pooled upper end < +1 on both) | no (+5.1) | no (+2.0) |
+| report only: pooled first try N' / SCM / SCM2 / APM | 0.4 / 30.5 / 32.8 / 33.6 | 0.4 / 36.3 / 37.9 / 36.3 |
+| report only: skills in_dist B2 / N' / SCM2 / APM | 89.4 / 86.7 / 87.8 / 87.6 | 90.5 / 87.8 / 89.3 / 89.3 |
+| report only: harm APM vs N' | -0.9 (better), nothing fires | -1.5 (better), nothing fires |
+| report only: seq_next exact N' / SCM / SCM2 / APM | 62.0 / 72.5 / 68.0 / 69.0 | 66.5 / 70.0 / 70.5 / 67.5 |
+| report only: rule_apply exact N' / SCM / SCM2 / APM | 77.5 / 78.5 / 78.5 / 78.5 | 85.0 / 89.5 / 85.0 / 88.0 |
+| report only: multi-step reach@32 SCM / SCM2 / APM | 8.4 / 20.8 / 21.4 (APM - SCM2 +0.6 [-4.5, +6.5]) | 9.1 / 18.2 / 14.3 (-3.9 [-9.1, +1.3]) |
+| report only: record draws night 1 / night 2 (most on one record) | 15,504 / 21,424 (19) | 14,810 / 19,878 (19) |
+| report only: night-2 loss rise picked / random | 0.16 / 0.00 (36 rounds) | 0.14 / 0.00 (33 rounds) |
+| CPU seconds: night 2 (of it, picking) / measures | 2,668 (650) / 176 | 2,521 (605) / 207 |
+
+Verdict: **APM FAILS mark 1 on both parents, not proved wrong.** Drawing night 1's records again in night 2 costs nothing (marks 2 and 3 pass, no skills harm) but does not lift first try by the +2 points asked.
+
+How to read it:
+- *Shown:* re-using yesterday's records in night 2 changes first try by +0.8 / -1.6 points. Both intervals cross 0, so it is neither a gain nor a loss at this size.
+- *Shown:* no forgetting. APM ends 0.9 / 1.5 above N' on skills, nothing fires, and night 2 adds no cost against SCM.
+- *Shown:* the two canary families do not drop in any arm. seq_next and rule_apply sit at or above N' for SCM, SCM2 and APM on both parents (the lr 1e-3 nights took seq_next from 81 to 30).
+- *Suggested:* at a fixed update count, mixing in old records spreads the same training over ~1.7x more records, so night 2's own records get ~58% of SCM2's visits. That may cancel any gain from seeing night 1 again. A version with SCM2's 32 visits per record (more updates) is untested.
