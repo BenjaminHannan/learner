@@ -287,3 +287,13 @@ Found in review: the maker's renames, edit (c), touch only capital cell letters,
 - **Marks, sheet seed 200.** The same rule must not break spreadsheets. Compared with `sheet-s200-v7` routed +38.1: pass needs routed DM1 >= +35.1 and DM3 passing; proved wrong is routed DM1 < +28.1.
 - **Reported for both:** DM2 far, per-kind changes, and practice yields from the log.
 - **Order.** These runs come after py seed 201, which uses A24's marks and the old code. The look-alikes thread's DM5 "keep the best night, picked by the model's own quiz" is a separate later change (A28) and is not part of this test. Disclosed: the stats panel's seed 91021 (look-alikes, PR #59) equals the py panel's seed. The generators differ, and no prompt is shared.
+
+**A26, seed 201 (Opus, 12:05 AM ET 10-11; code and constants of A24-A26, run before A27 was switched on).** Shown:
+- Run `py-s201-v8`: 4 nights, stopped by the quiz rule, no night undone.
+- DM1 near: +46.83 (10.50 -> 57.33), PASS.
+- Routed by its own switch: +46.83, PASS. The switch is on for 100% of panel near rows and for 1 of 1,360 old questions.
+- DM3 routed drop: 0.00, PASS. DM4: PASS (8,101 rows). DM5: PASS (the stop night is the best night).
+- DM2 far: +0.25. With seed 200's -0.5, both seeds are at +2 or less, so **DM2 is proved wrong for py**, as it was for sheets.
+- R2: 0.872.
+- Per kind, near: assign add 100, function 95, max min 93, chain 85, abs 70, if else 67, for repeat 35, while 22, list index 5, for sum 2. The same kinds are weak on both seeds, as A26's causes predict.
+- **Code reading passes DM1 and DM3 on both seeds.**
