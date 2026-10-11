@@ -117,7 +117,7 @@ def draft_pool(tool, kinds, ex, n, rng, ctx):
     return items, disc, tries, edits
 
 
-def motivated_practice(tool, kinds, ex, n, rng, ctx, seed, night, drive, heads, out, mot, m, log):
+def motivated_practice(tool, kinds, ex, n, rng, ctx, seed, night, drive, heads, out, mot, m, log, parent):
     """A day with a signal. heads[k] = fitted head of quiz k. -> (items, disc, tries, edits), like make_practice."""
     pool, disc, tries, edits = draft_pool(tool, kinds, ex, mot['pool_factor'] * n, rng, ctx)
     prompts = [it['prompt'] for it in pool]
@@ -128,7 +128,7 @@ def motivated_practice(tool, kinds, ex, n, rng, ctx, seed, night, drive, heads, 
         p = V * (1 - V)
     else:
         ko = k - mot['window_nights']
-        path = a_parent_of(out)[0] if ko == 0 else os.path.join(out, f'night_{ko}', 'checkpoint.pt')
+        path = parent if ko == 0 else os.path.join(out, f'night_{ko}', 'checkpoint.pt')
         Vo = heads[ko](load_old_features(path, prompts))
         p = np.abs(V - Vo)
     rs = np.random.RandomState(stable_seed(f'{seed}-pick-{night}'))
@@ -144,13 +144,6 @@ def motivated_practice(tool, kinds, ex, n, rng, ctx, seed, night, drive, heads, 
         per_kind_mean_V={kk: round(float(V[pk == kk].mean()), 4) for kk in kinds if (pk == kk).any()},
         pool_tries=tries, pool_discards=dict(disc))
     return chosen, disc, tries, edits
-
-
-_PARENT = []
-
-
-def a_parent_of(_out):
-    return _PARENT
 
 
 def parse_args(argv=None):
@@ -196,7 +189,6 @@ def main(argv=None):
     commit, dirty = git_info()
     log = Log(a.out)
     parent = guard(a.parent)
-    _PARENT[:] = [parent]
     log('start', parent=parent, tool=a.tool, seed=a.seed, smoke=a.smoke, constants_sha256=csha, git_commit=commit,
         git_dirty_files=dirty, constants=cons, smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data,
         even_mix_control=even_mix, fixed_nights_control=a.fixed_nights, drive=a.drive, nights=a.nights, motivator=mot)   # MOTIVATOR: drive, nights, motivator
@@ -255,7 +247,7 @@ def main(argv=None):
         heads[k] = fit_logistic(F, y, C=mot['head_C'])
         Vq = heads[k](F)
         log('motivator_head', k=k, n=len(y), quiz_hit_rate=round(float(y.mean()), 4), feat_dim=int(F.shape[1]),
-            C=mot['head_C'], mean_V_on_quiz=round(float(np.mean(Vq)), 4), secs=round(time.time() - t_h, 1))
+            C=mot['head_C'], mean_V_on_quiz=round(float(np.mean(Vq)), 4), head_secs=round(time.time() - t_h, 1))
         T['head'] += time.time() - t_h
 
     t = time.time()
@@ -273,10 +265,10 @@ def main(argv=None):
     for night in range(1, cons['max_nights'] + 1):
         t = time.time()
         rng = random.Random(f'{a.seed}-day-{night}')
-        first_signal = {'edge': 2, 'progress': 1 + 1 + mot['window_nights'] - 1}.get(a.drive)   # MOTIVATOR: edge day 2, progress day 3
-        if use_head and night >= first_signal and night - 1 - (mot['window_nights'] if a.drive == 'progress' else 0) >= 0:   # MOTIVATOR:
+        first_signal = {'edge': 2, 'progress': 1 + mot['window_nights']}.get(a.drive)   # MOTIVATOR: edge day 2, progress day 3 (needs V from k-w >= 0)
+        if use_head and night >= first_signal:   # MOTIVATOR:
             items, disc, tries, edits = motivated_practice(tool, kinds, ex, cons['day_problems'], rng, ctx, a.seed, night,
-                                                           a.drive, heads, a.out, mot, m, log)
+                                                           a.drive, heads, a.out, mot, m, log, parent)
             signal = True
         else:
             items, disc, tries, edits = make_practice(tool, kinds, ex, share, cons['day_problems'], rng, ctx)
