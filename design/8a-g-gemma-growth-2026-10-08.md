@@ -519,3 +519,16 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   a mocked `InferStep` wrote the expected cmd file and log lines. Windows PowerShell 5.1 on the PC: parse-checked by `swap_v3e.ps1`.
 - **Checkpoints kept.** local_runner never deletes `checkpoint.pt`; the group 2 checkpoints CB-1/CB-2 need will be at
   `WORK\results\8aB3G2s400-pc\8aB3G2s400-3M-s400\B3G2\checkpoint.pt` and `WORK\results\8aB3G2-10M-pc\8aB3G2-10M-s400\B3G2\checkpoint.pt`.
+
+## 27. Addendum V (2026-10-11, 3:50 PM ET): long_dev overlap in the old web slices; the post-G1 chain keeps them
+
+- **Finding (data pool thread, 3:34 PM ET 10-11, commit 4976ed3788):** the new 600M pool's 13-gram gate against the held-out long-row
+  test (`big-run/long-dev/long_dev.jsonl`, used only by B3-5) removed 6 / 20 / 63 documents from rung3 / rung10 / rung30, so the old
+  8a slices (web_slices_8a, which G1 and the whole post-G1 chain use) contain them.
+- **Which long_dev rows (shown, here):** the same overlap rule (data_pool/overlap13.py) over the old slices finds the same 6 / 20 / 63
+  documents. They touch 12 / 21 / 50 of the 1,360 long_dev rows, all of them padded rows (280-2,000 letters); no unpadded row is touched,
+  so the shared text is distractor padding, never a question or an answer. List and script: `results/8a-g/long-dev-overlap/`.
+- **Decision (default, no OK needed):** the post-G1 chain stays on the old slices. Every comparison in it pairs runs on the same pool,
+  its controls must match G1 and each other, and the PC's data step (`get_data.py` at the pinned code) only accepts the web_slices_8a
+  manifest. G1's numbers are unaffected (G1 never scores long_dev). B3-5 is reported twice: on all 1,360 rows and on the 1,310 rows the
+  rung30 list leaves (the conservative list for every rung). New ladders and run-1 use the new 600M files.
