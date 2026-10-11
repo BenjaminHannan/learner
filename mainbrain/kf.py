@@ -115,18 +115,28 @@ def project(D, f):
 
 
 class KFOptimizer:
-    """Wraps an optimizer: after each step, each module's change in [W | b] is projected with its (U, V, M)."""
+    """Wraps an optimizer: after each step, each module's change in [W | b] is projected with its (U, V, M).
+    refresh (optional): a function returning new factors, called after every `every` steps, so the protected directions
+    follow the weights as they move during a long night (the projection is a small-step rule)."""
 
-    def __init__(self, m, base, F):
-        self.base = base
-        self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(m) if n in F]
+    def __init__(self, m, base, F, refresh=None, every=0):
+        self.m, self.base, self.refresh, self.every, self.n = m, base, refresh, every, 0
+        self._set(F)
         self.param_groups = base.param_groups
+
+    def _set(self, F):
+        self.mods = [(n, mod, F[n]) for n, mod in gp.projected_modules(self.m) if n in F]
 
     def step(self):
         old = [gp.aug_weight(mod).detach().clone() for _, mod, _ in self.mods]
         self.base.step()
         for (n, mod, f), A0 in zip(self.mods, old):
             gp.set_aug(mod, A0 + project(gp.aug_weight(mod).detach() - A0, f))
+        self.n += 1
+        if self.refresh and self.every and self.n % self.every == 0:
+            was = self.m.training
+            self._set(self.refresh())   # after this step's update; it clears grads, which train_night clears next anyway
+            self.m.train(was)
 
     def zero_grad(self, set_to_none=True):
         self.base.zero_grad(set_to_none=set_to_none)
