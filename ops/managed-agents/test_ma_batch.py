@@ -4,6 +4,7 @@ import contextlib
 import datetime as dt
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -12,7 +13,15 @@ from types import SimpleNamespace as NS
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import anthropic  # noqa: E402
 import ma  # noqa: E402
+
+REAL_CLIENT = ma.client
+
+try:  # the anthropic SDK's HTTP library is httpx2 in 1.13, httpx in older releases
+    import httpx2 as httpx
+except ImportError:
+    import httpx
 
 NOW = dt.datetime(2026, 10, 11, 12, 0, tzinfo=dt.timezone.utc)
 
@@ -31,16 +40,22 @@ def ok(cid, **kw):
 class FakeBatches:
     def __init__(self, tokens, results=(), status="ended"):
         self.created, self.tokens, self._results, self.status = None, tokens, list(results), status
+        self.archived, self.results_error, self.retrieve_errors = False, None, []
 
     def create(self, requests):
         self.created = requests
         return NS(id="msgbatch_1", created_at=NOW)
 
     def retrieve(self, batch_id):
+        if self.retrieve_errors:
+            raise self.retrieve_errors.pop(0)
         rc = NS(processing=0, succeeded=1, errored=0, canceled=0, expired=0)
-        return NS(id=batch_id, processing_status=self.status, request_counts=rc, created_at=NOW, ended_at=NOW)
+        return NS(id=batch_id, processing_status=self.status, request_counts=rc, created_at=NOW, ended_at=NOW,
+                  archived_at=NOW if self.archived else None)
 
     def results(self, batch_id):
+        if self.results_error:
+            raise self.results_error
         return iter(self._results)
 
     def list(self, limit=None):
@@ -50,12 +65,13 @@ class FakeBatches:
 class FakeClient:
     def __init__(self, tokens=1000, results=(), status="ended"):
         self.batches = FakeBatches(tokens, results, status)
-        self.count_calls = []
+        self.count_calls, self.tokens_by_text = [], {}
         self.messages = NS(batches=self.batches, count_tokens=self.count_tokens)
 
     def count_tokens(self, **kw):
         self.count_calls.append(kw)
-        return NS(input_tokens=self.batches.tokens)
+        text = kw["messages"][0]["content"]
+        return NS(input_tokens=self.tokens_by_text.get(text, self.batches.tokens))
 
 
 class Base(unittest.TestCase):
@@ -64,6 +80,7 @@ class Base(unittest.TestCase):
         self.fake = FakeClient()
         for patcher in (mock.patch.object(ma, "client", lambda: self.fake),
                         mock.patch.object(ma, "IDS_PATH", self.tmp / "no-ids.json"),
+                        mock.patch.object(ma, "default_out_dir", lambda: self.tmp / "default-out"),
                         mock.patch.object(ma.time, "sleep", lambda s: None)):
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -183,6 +200,86 @@ class TestSubmit(Base):
         self.assertIn("batch collect msgbatch_1", text)
 
 
+    def test_mixed_cap_names_only_the_over_cap_prompt(self):
+        self.fake.tokens_by_text = {"BIG": 1_000_000}
+        code, text = self.run_ma("batch", "submit", self.write("small.md", "tiny"), self.write("big.md", "BIG"),
+                                 "--model", "opus", "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 1)
+        self.assertIsNone(self.fake.batches.created)
+        self.assertIn("REFUSED big", text)
+        self.assertNotIn("REFUSED small", text)
+        self.assertIn("--max-tokens", text)  # batch submit has that flag
+
+    def test_whole_batch_ceiling(self):
+        # opus, 1000 tokens, 32000 out: 0.5*(1000*5 + 32000*20)/1e6 = $0.3225 each, under the $1 request cap
+        paths = [self.write(f"p{i}.md", f"t{i}") for i in range(3)]
+        code, text = self.run_ma("batch", "submit", *paths, "--model", "opus", "--max-total-cents", "80",
+                                 "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 1)
+        self.assertIsNone(self.fake.batches.created)
+        self.assertIn("--max-total-cents", text)
+        self.assertFalse((self.tmp / "o").exists())
+        code, _ = self.run_ma("batch", "submit", *paths, "--model", "opus", "--max-total-cents", "120",
+                              "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.fake.batches.created), 3)
+
+    def test_empty_prompt_refused_before_any_api_call(self):
+        code, _ = self.run_ma("batch", "submit", self.write("p.md", "ok"), self.write("e.md", " \n"),
+                              "--out-dir", str(self.tmp / "o"))
+        self.assertIn("e.md is empty; nothing to send", str(code))
+        self.assertEqual(self.fake.count_calls, [])
+        self.assertIsNone(self.fake.batches.created)
+
+    def test_body_size_limit(self):
+        with mock.patch.object(ma, "MAX_BODY_BYTES", 100):
+            code, text = self.run_ma("batch", "submit", self.write("p.md", "x" * 500),
+                                     "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 1)
+        self.assertIsNone(self.fake.batches.created)
+        self.assertIn("split the prompts or shorten the attachments", text.lower())
+
+    def test_unusable_out_dir_stops_before_create(self):
+        blocker = self.write("file.txt")
+        code, _ = self.run_ma("batch", "submit", self.write("p.md"), "--out-dir", blocker + "/sub")
+        self.assertIn("Nothing submitted", str(code))
+        self.assertIsNone(self.fake.batches.created)
+
+    def test_manifest_failure_still_prints_id_and_command(self):
+        out = self.tmp / "o"
+        (out / "batch-msgbatch_1.json").mkdir(parents=True)  # writing the manifest will fail
+        code, text = self.run_ma("batch", "submit", self.write("p.md"), "--out-dir", str(out))
+        self.assertEqual(code, 0)
+        self.assertIn("BATCH msgbatch_1", text)
+        self.assertIn("WARNING: could not write the manifest", text)
+        self.assertIn("batch collect msgbatch_1", text)
+
+    def test_missing_api_key(self):
+        with mock.patch.object(ma, "client", REAL_CLIENT), \
+                mock.patch.dict(os.environ, clear=False) as env:
+            env.pop("LEARNER_ANTHROPIC_API_KEY", None)
+            code, _ = self.run_ma("batch", "submit", self.write("p.md"))
+        self.assertIn("LEARNER_ANTHROPIC_API_KEY is not set", str(code))
+
+    def test_poll_loop_survives_connection_error(self):
+        err = anthropic.APIConnectionError(request=httpx.Request("GET", "http://x"))
+        self.fake.batches.retrieve_errors = [err]
+        self.fake.batches._results = [ok("p", text="hi")]
+        out = self.tmp / "o"
+        code, text = self.run_ma("batch", "submit", self.write("p.md"), "--wait", "--out-dir", str(out))
+        self.assertEqual(code, 0)
+        self.assertIn("will retry", text)
+        self.assertEqual((out / "p.md").read_text(), "hi\n")
+
+    def test_poll_loop_timeout_with_errors_prints_command(self):
+        err = anthropic.APIConnectionError(request=httpx.Request("GET", "http://x"))
+        self.fake.batches.retrieve_errors = [err] * 5
+        code, text = self.run_ma("batch", "submit", self.write("p.md"), "--wait", "--minutes", "0",
+                                 "--out-dir", str(self.tmp / "o"))
+        self.assertEqual(code, 0)
+        self.assertIn("Collect later with: python3 ops/managed-agents/ma.py batch collect msgbatch_1", text)
+
+
 class TestCollect(Base):
     def test_collect(self):
         think = NS(type="thinking", thinking="secret")
@@ -222,6 +319,45 @@ class TestCollect(Base):
         self.assertIn("in_progress", text)
         self.assertFalse(out.exists())
 
+    def test_missing_manifest_warns(self):
+        self.fake.batches._results = [ok("a", text="A")]
+        out = self.tmp / "o"
+        code, text = self.run_ma("batch", "collect", "msgbatch_1", "--out-dir", str(out))
+        self.assertEqual(code, 0)
+        self.assertIn(f"No manifest at {out / 'batch-msgbatch_1.json'}: writing to {out}", text)
+        self.assertIn("review --out was not applied", text)
+        self.assertEqual((out / "a.md").read_text(), "A\n")
+
+    def test_unknown_model_falls_back_to_manifest_model(self):
+        self.fake.batches._results = [ok("a", model="claude-mystery-9", usage=(1000, 2000, 0, 0))]
+        out = self.tmp / "o"
+        out.mkdir()
+        (out / "batch-msgbatch_1.json").write_text(json.dumps({"id": "msgbatch_1", "model": "claude-haiku-5-5",
+                                                                "requests": {}}))
+        _, text = self.run_ma("batch", "collect", "msgbatch_1", "--out-dir", str(out))
+        self.assertIn("($0.0006)", text)  # 0.5*(1000*0.1 + 2000*0.5)/1e6 = 0.00055
+        self.assertNotIn("WARNING", text)
+
+    def test_unknown_model_without_manifest_is_unpriced(self):
+        self.fake.batches._results = [ok("a", model="claude-mystery-9")]
+        _, text = self.run_ma("batch", "collect", "msgbatch_1", "--out-dir", str(self.tmp / "o"))
+        self.assertIn("WARNING a: unknown model 'claude-mystery-9'", text)
+        self.assertIn("total actual cost $0.0000 (batch price), 1 result(s) with an unknown model not priced", text)
+
+    def test_cost_counts_expired_results(self):
+        self.fake.batches.archived = True
+        self.fake.batches.results_error = anthropic.AnthropicError("results expired")
+        code, text = self.run_ma("cost", "--days", "1")
+        self.assertEqual(code, 0)
+        self.assertIn("batches: 1 created, $0.00 actual", text)
+        self.assertIn("1 with results expired", text)
+
+    def test_cost_results_error_without_archived_at(self):
+        self.fake.batches.results_error = anthropic.AnthropicError("no results_url")
+        code, text = self.run_ma("cost", "--days", "1")
+        self.assertEqual(code, 0)
+        self.assertIn("1 with results expired", text)
+
     def test_status_and_cost(self):
         self.fake.batches._results = [ok("a")]
         code, text = self.run_ma("batch", "status", "msgbatch_1")
@@ -248,6 +384,34 @@ class TestReview(Base):
         self.assertIn("outside reviewer", params["system"][0]["text"])
         self.assertIn("cache_control", params["system"][1])
         self.assertEqual(out.read_text(), "review!\n")
+
+    def test_batch_system_text_has_no_repo_paths(self):
+        self.run_ma("review", self.write("prompt.md", "Q?"), "--no-wait")
+        text = self.fake.batches.created[0]["params"]["system"][0]["text"]
+        self.assertNotIn("/workspace", text)
+        self.assertNotIn("/mnt/session", text)
+        self.assertIn("NO repository", text)
+        self.assertIn("Check every factual claim", text)
+
+    def test_out_is_stored_absolute_and_no_wait_prints_command(self):
+        os.chdir(self.tmp)
+        self.addCleanup(os.chdir, os.getcwd())
+        _, text = self.run_ma("review", self.write("prompt.md", "Q?"), "--no-wait", "--out", "rel/answer.md")
+        manifest = json.loads((self.tmp / "default-out" / "batch-msgbatch_1.json").read_text())
+        self.assertEqual(manifest["requests"]["prompt"]["out"], str((self.tmp / "rel" / "answer.md").resolve()))
+        self.assertIn("batch collect msgbatch_1", text)
+
+    def test_review_cap_hint_has_no_max_tokens_flag(self):
+        self.fake.batches.tokens = 2_000_000
+        code, text = self.run_ma("review", self.write("prompt.md", "Q?"), "--no-wait")
+        self.assertEqual(code, 1)
+        self.assertIn("REFUSED", text)
+        self.assertNotIn("--max-tokens", text)
+
+    def test_empty_prompt_refused(self):
+        code, _ = self.run_ma("review", self.write("prompt.md", ""))
+        self.assertIn("prompt.md is empty; nothing to send", str(code))
+        self.assertIsNone(self.fake.batches.created)
 
     def test_repo_flag_uses_session_path(self):
         with mock.patch.object(ma, "cmd_review_repo", return_value=0) as old:

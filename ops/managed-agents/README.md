@@ -5,9 +5,10 @@ Two Claude Managed Agents, paid from Ben's monthly API credit (not from his Clau
 | Agent | Model | Runs where | Does |
 |---|---|---|---|
 | `pc-operator` | Haiku 5.5, xhigh | Ben's Mac, through a self-hosted worker that reaches BensPC over `ssh benspc` | Checks the PC every 15 minutes, restarts jobs only as their job cards say, and runs PC jobs that threads send |
-| `opus-reviewer` | Opus 5.5, xhigh | Anthropic's cloud sandbox, with the repo cloned read-only | Answers the outside-opinion prompts that CLAUDE.md describes, sent straight from a thread |
+| `opus-reviewer` | Opus 5.5, xhigh | Default `review`: a half-price batch request with no repo. `review --repo`: a Managed Agents session in Anthropic's cloud sandbox with the repo cloned read-only (needs `ids.json` and `LEARNER_GITHUB_RO_TOKEN`) | Answers the outside-opinion prompts that CLAUDE.md describes, sent straight from a thread |
 
-Each session has a hard spending cap: $0.50 per scheduled check, $1 per PC job, $3 per review (list price). A check that
+Each Managed Agents session has a hard spending cap: $0.50 per scheduled check, $1 per PC job, $3 per `review --repo`
+(list price). Batch requests have no hard cap; they are checked against a worst-case estimate instead (see below). A check that
 finds nothing to do is about a cent (estimate); `ma.py cost` reports the real spend.
 
 ## One-time setup
@@ -43,7 +44,9 @@ python3 ops/managed-agents/ma.py review reviews/my-prompt.md --attach /mnt/proje
 python3 ops/managed-agents/ma.py cost --days 30
 ```
 
-Reviews now go through the half-price batch path by default; see the next section.
+Reviews go through the half-price batch path by default (no repo; attach what the reviewer needs); see the next section.
+`review` and `batch submit --wait` block until the answer is ready, up to `--minutes` (default 60). A thread should run
+them in the background, or use `--no-wait` and collect later.
 
 The latest status is also on the `pc-status` branch (`pc-status.md`, plus `actions.md`, the log of every restart).
 
@@ -58,14 +61,23 @@ python3 ops/managed-agents/ma.py batch submit q1.md q2.md --model sonnet --attac
 python3 ops/managed-agents/ma.py batch status [BATCH_ID]         # one batch, or the 10 newest
 python3 ops/managed-agents/ma.py batch collect BATCH_ID          # write the answers, print the real cost
 python3 ops/managed-agents/ma.py review prompt.md --attach x.json --out reviews/answer.md   # Opus xhigh, half price
-python3 ops/managed-agents/ma.py review prompt.md --repo         # old live session with the repo mounted
+python3 ops/managed-agents/ma.py review prompt.md --no-wait      # submit, print the collect command, return at once
+python3 ops/managed-agents/ma.py review prompt.md --repo         # live session with the repo mounted (ids.json + GitHub token)
 ```
+
+Defaults: `batch submit` uses Haiku, effort xhigh, 32000 max tokens, caps of 100 cents per request and 500 for the batch
+(`--cap-cents`, `--max-total-cents`), and submits without waiting unless `--wait`. `review` uses Opus, xhigh, 64000 max
+tokens, caps of 300 and 300, and waits up to 60 minutes unless `--no-wait`.
 
 - The batch reviewer cannot browse the repo: attach what it needs (files are inlined in full), or use `review --repo`.
 - Batches have no dollar cap, so `ma.py` checks a worst-case estimate (full prompt as cache writes plus all of
-  `--max-tokens` as output) before submitting and refuses if one request is over `--cap-cents` (100; review 300).
-- Answers go to `--out-dir` (`/mnt/project-files/api-batches`, else `ops/managed-agents/batches/`, git-ignored) with a
-  `batch-<id>.json` manifest. Most batches finish within an hour; the limit is 24 hours and results are kept 29 days.
+  `--max-tokens` as output) before submitting and refuses, submitting nothing, if one request is over `--cap-cents`
+(100; review 300), if the sum is over `--max-total-cents` (500; review 300), or if the request body is over the
+256 MB batch limit.
+- Answers go to `review --out` when given, else to `--out-dir` (`/mnt/project-files/api-batches`, else
+  `ops/managed-agents/batches/`, git-ignored). The `batch-<id>.json` manifest is always written in the out dir. Most
+  batches finish within an hour; the limit is 24 hours and results are kept 29 days (`cost` reports older ones as
+  "results expired"). The BATCH id and the exact collect command are printed right after the batch is created.
 - Batch commands work as soon as `LEARNER_ANTHROPIC_API_KEY` is set, before any of the Mac setup.
 
 ## Job cards
