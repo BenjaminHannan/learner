@@ -570,5 +570,10 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   (line 1 still "caps.py <hash>", plus "commit <sha>", so a rerun skips it). A failed check renames the new folder `.failed-<stamp>`
   and changes nothing live. The long CPU suites (`test_b3`, `test_b3g2`: over 10 minutes each) run here in the cloud on the exact
   commits before the package is sent, not beside G1.
-- **Tested (shown, cloud):** parse check, 0 errors. A simulated PC tree (the current two commits as stand-ins, real python checks)
-  is running; its result goes in the next commit.
+- **Tested (shown, cloud, pwsh 7.4.6 on a simulated PC tree; the current two commits stand in for the new ones; real python checks,
+  only the process list mocked):** parse check 0 errors. Full install: every check passed (b3_capcheck 32, test_g8a, test_b3_run ALL
+  OK, g2check, fc2check 10 runs, infer_speed selftest), both folders swapped, old ones kept as `.before-rr-<stamp>`, about 5 minutes.
+  Rerun: both commits "already installed", only the list refreshed. After "gate G1 has ended": refused, nothing changed. A wrong
+  pinned file hash in g2.zip: refused after group 1's checks; both new folders renamed `.failed-<stamp>`, live folders untouched.
+  List only (no zips): checked on the live code, 8aFC2 and infer_speed.py replaced with the old copies kept. Not simulated: the
+  v3e step (it runs `swap_v3e.ps1`, tested on its own for addendum U).
