@@ -1,0 +1,23 @@
+day 1: 721 rows, greedy right 0.043, features a=256 b=643
+day 2: 711 rows, greedy right 0.190, features a=256 b=643
+day 3: 846 rows, greedy right 0.403, features a=256 b=643
+day 4: 903 rows, greedy right 0.437, features a=256 b=643
+day 5: 940 rows, greedy right 0.454, features a=256 b=643
+day 6: 932 rows, greedy right 0.474, features a=256 b=643
+day 7: 942 rows, greedy right 0.514, features a=256 b=643
+
+own rows with r=0 (expect 0): 0
+pooled days 2..7   AUC   within-kind AUC   Brier
+  G              0.669   0.543 (38 groups)   0.284
+  G_reader       0.689   0.535 (38 groups)   0.265
+  K              0.722   0.500 (38 groups)   0.256
+  C              0.606   0.526 (38 groups)   0.267
+G surprise 0.379; cells r1&V>=.5 930, r1&V<.5 1294, r0&V>=.5 646, r0&V<.5 2404; mean V r1 0.432 r0 0.241
+per day AUC (G / G_reader / K / C):
+  day 2: 0.495 / 0.625 / 0.736 / 0.484
+  day 3: 0.572 / 0.668 / 0.723 / 0.504
+  day 4: 0.688 / 0.684 / 0.725 / 0.492
+  day 5: 0.684 / 0.704 / 0.731 / 0.503
+  day 6: 0.655 / 0.672 / 0.659 / 0.560
+  day 7: 0.652 / 0.607 / 0.580 / 0.553
+runtime 86.7s  wrote /mnt/project-files/dopamine/d0/sheet-s200-v7.json

@@ -1,0 +1,17 @@
+day 1: 861 rows, greedy right 0.053, features a=256 b=643
+day 2: 829 rows, greedy right 0.846, features a=256 b=643
+day 3: 922 rows, greedy right 0.852, features a=256 b=643
+day 4: 922 rows, greedy right 0.888, features a=256 b=643
+
+own rows with r=0 (expect 0): 0
+pooled days 2..4   AUC   within-kind AUC   Brier
+  G              0.621   0.573 (6 groups)   0.406
+  G_reader       0.533   0.526 (6 groups)   0.461
+  K              0.538   0.500 (6 groups)   0.445
+  C              0.554   0.481 (6 groups)   0.371
+G surprise 0.490; cells r1&V>=.5 1123, r1&V<.5 1183, r0&V>=.5 128, r0&V<.5 239; mean V r1 0.488 r0 0.348
+per day AUC (G / G_reader / K / C):
+  day 2: 0.592 / 0.578 / 0.633 / 0.687
+  day 3: 0.695 / 0.550 / 0.503 / 0.459
+  day 4: 0.519 / 0.413 / 0.373 / 0.398
+runtime 40.3s  wrote /mnt/project-files/dopamine/d0/rpn-s200-v7.json
