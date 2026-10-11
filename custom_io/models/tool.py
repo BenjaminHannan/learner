@@ -18,7 +18,7 @@ B2's own pointer-generator (vocabulary readout or copy attention over the contex
 argmax per cell up to the first EOS, reversed. So every digit of a call is written by a learned writer, never by str() of a value.
 Answer: B2's NUM mode (str(value of a slot)) is gone; those rows are GEN rows and the 9 registers write the answer with the same
 pointer-generator, copying from the prompt and the entries. WORD is unchanged.
-Tape: entry k is read by the reader as its own string (positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
+Tape: entry k is read by the reader as its own string (Gemma + the letter window like the question when eg_embed, Ben's rule 1; positions from 0, at most LE = 68 chars), + tape_emb[k]; the thinker cross-attends to
 [prompt-number slots; entries written so far; prompt]. Teacher forcing (training): the entries are the gold calls with their results (the same
 text calc() returns for them, tested), revealed one round at a time, and the call writer is trained by -log p of the gold operand strings
 (either order for ADD MUL MIN MAX, as B2's pointer loss).
@@ -163,7 +163,11 @@ class Tool(Ledger):
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
         """Each string read by the reader on its own -> X [n, le, d], ids [n, le], mask [n, le] (an empty string: all masked, zeros). Only the
-        non-empty strings go through the reader (the reader's output is zero wherever the mask is, so this is the same result, faster)."""
+        non-empty strings go through the reader (the reader's output is zero wherever the mask is, so this is the same result, faster).
+        Ben's rule 1: "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." A tape string (a calculator
+        reply entry, a note, a drill string, '?') is read exactly like the question, as its own prompt: the letter window PLUS the Gemma term (Ledger.eg_term, the
+        question's own adapter, no new parameters) whenever the model has eg_embed, with the question's talker flag (no Gemma term under eg_thinker, where the
+        talker-side reader is B2's own). The strings go through FrozenEG.encode_texts, which does not touch the question's memo."""
         ids = np.full((len(texts), le), PAD, np.int64)
         for i, s in enumerate(texts):
             e = self.vocab.encode(self.vocab.clip(s, le))
@@ -174,7 +178,9 @@ class Tool(Ledger):
         X = torch.zeros(len(texts), le, self.d, device=dev)
         if full:
             ix = torch.tensor(full, device=dev)
-            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': self.vocab.clip(texts[i], le)} for i in full]})
+            rows = [{'prompt': self.vocab.clip(texts[i], le)} for i in full]
+            extra = self.eg_term([r['prompt'] for r in rows], le, dev, memo=False) if self.eg_embed and not self.eg_thinker else None
+            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': rows}, extra=extra)
             X = X.to(Xf.dtype).index_copy(0, ix, Xf)
         return X, ids, mask
 

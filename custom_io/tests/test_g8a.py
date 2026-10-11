@@ -70,6 +70,9 @@ class FakeEG:
         g = torch.Generator().manual_seed(7)
         return torch.randn(len(prompts), T, 768, generator=g).to(device), torch.zeros(len(prompts), 768)
 
+    def encode_texts(self, texts, T, device):
+        return self.encode(texts, T, device)[0]
+
 
 def _batch(vocab):
     from custom_io.data import Dataset, collate

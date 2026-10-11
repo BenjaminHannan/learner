@@ -1,7 +1,7 @@
 """python3 -m custom_io.tests.test_b3   (CPU, a few minutes; no data files, no Gemma: a stub FrozenEG with the real one's memo stands in)
 B3 group 1 (architecture/B3-GROUP1-BUILD-2026-10-09.md): check P (H1R's config on tool_h1 and on b3 with no switches is bit-identical to commit 17a356e62: 50 AdamW
-steps, torch.equal losses and parameters, caps not applied); Part A (Gemma + outside calculator: encode sees prompts only, one Gemma pass per step, the reader's
-output for an entry string does not depend on eg_embed); Part B (calls at any round: tape entries per row, 17th call refused and counted, schedule masks, op loss
+steps, torch.equal losses and parameters, caps not applied); Part A (Gemma + outside calculator: encode sees prompts only, one Gemma pass per step, entry strings go
+through Gemma + the letter window via encode_texts, outside the memo: Ben's rule 1); Part B (calls at any round: tape entries per row, 17th call refused and counted, schedule masks, op loss
 masked at gap rounds and NOOP after, gap draws leave torch's RNG alone, the 32-round fallback, oracle at the scheduled rounds = teacher forcing, default schedule =
 today's); Part C (caps reach every module that defines a cap name; N_REG registers and GEN targets under G1's caps; the cloze chunk parameter keeps today's rows)."""
 import hashlib, json, os, re, subprocess, sys, tempfile, glob, random
@@ -49,6 +49,22 @@ class StubEG:
 
     def __init__(self):
         self.calls, self.passes, self._last = [], 0, None
+        self.text_calls, self.text_pass_n = [], 0       # encode_texts (tape strings, outside the memo): every call's texts, and the count of calls
+        self.offset = {}                                # text -> added to that text's states (a test's way of changing what Gemma says about one string)
+
+    def _H(self, prompts, T):
+        H = torch.zeros(len(prompts), T, 768)
+        for b, p in enumerate(prompts):
+            g = torch.Generator().manual_seed(int(hashlib.sha1(p.encode()).hexdigest()[:8], 16))
+            n = min(len(p), T)
+            H[b, :n] = torch.randn(n, 768, generator=g) + self.offset.get(p, 0.0)
+        return H
+
+    def encode_texts(self, texts, T, device):
+        """Like the real FrozenEG.encode_texts: the same H as encode(...)[0], never reads or writes the memo."""
+        self.text_calls.append(list(texts))
+        self.text_pass_n += 1
+        return self._H(texts, T).to(device)
 
     def align(self, prompt):
         c, t = [], 7
@@ -64,12 +80,7 @@ class StubEG:
         if self._last is not None and self._last[0] == key:
             return self._last[1]
         self.passes += 1
-        H = torch.zeros(len(prompts), T, 768)
-        for b, p in enumerate(prompts):
-            g = torch.Generator().manual_seed(int(hashlib.sha1(p.encode()).hexdigest()[:8], 16))
-            n = min(len(p), T)
-            H[b, :n] = torch.randn(n, 768, generator=g)
-        out = (H.to(device), torch.zeros(len(prompts), 768))
+        out = (self._H(prompts, T).to(device), torch.zeros(len(prompts), 768))
         self._last = (key, out)
         return out
 
@@ -212,21 +223,27 @@ def test_a_gemma_with_calculator():
     assert not any(' = ' in p for c in eg.calls for p in c), 'a calculator entry reached Gemma'
     n0 = len(eg.calls)
     m.read_texts(['add 12 5 = 17', '', 'sub 3 4 = -1'], 'cpu')
-    assert len(eg.calls) == n0, 'read_texts called Gemma'
-    # (c) the reader's output for an entry string is the same with eg_embed on and off, given the same weights
+    assert len(eg.calls) == n0 and eg.text_calls[-1] == ['add 12 5 = 17', 'sub 3 4 = -1'], 'read_texts goes through encode_texts (non-empty strings only), not the memoised encode'
+    # (c) Ben's rule 1 (tests/test_reader_rule.py has the full set): an entry string is read by Gemma + the letter window like the question. eg_proj starts at zero, so at init
+    # the output equals the letter-only one; once eg_proj has learned, it differs.
     off = make(eg_embed=False)
     on = make(eg_embed=True)
     miss, extra = off.load_state_dict(on.state_dict(), strict=False)
     assert not miss and set(extra) == {'ln_eg.weight', 'ln_eg.bias', 'eg_proj.weight', 'eg_proj.bias'}, (miss, extra)
     with torch.no_grad():
-        on.eg_proj.weight.normal_(0, 1.0)
-        for k, v in zip(('add 12 5 = 17', 'mul 30 4 = 120', ''), range(3)):
+        for k in ('add 12 5 = 17', 'mul 30 4 = 120', ''):
             xa, ia, ma = on.read_texts([k], 'cpu')
             xb, ib, mb = off.read_texts([k], 'cpu')
             assert torch.equal(xa, xb) and torch.equal(ia, ib) and torch.equal(ma, mb), k
+        on.eg_proj.weight.normal_(0, 1.0)
+        for k in ('add 12 5 = 17', 'mul 30 4 = 120'):
+            xa, ia, ma = on.read_texts([k], 'cpu')
+            xb, ib, mb = off.read_texts([k], 'cpu')
+            assert not torch.equal(xa, xb) and torch.equal(ia, ib) and torch.equal(ma, mb), k
+        assert torch.equal(on.read_texts([''], 'cpu')[0], off.read_texts([''], 'cpu')[0])
     s = on.size()
     assert s['frozen_borrowed'] == 271_002_624 and s['whole'] == s['trainable'] + 271_002_624
-    print('ok part A: prompts only, one pass per step, entry reading independent of eg_embed, whole =', f"{s['whole']:,}")
+    print('ok part A: questions through encode, one pass per step, entries through encode_texts (rule 1), whole =', f"{s['whole']:,}")
 
 
 def test_a_refusals_kept():

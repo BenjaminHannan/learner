@@ -335,7 +335,7 @@ def child():
     opt = torch.optim.AdamW(m.parameters(), lr=3e-3, betas=(0.9, 0.95), weight_decay=0.0)
     m.train()
     ls, call_acc = [], []
-    N = int(os.environ.get('B3G2_STEPS', 400))
+    N = int(os.environ.get('B3G2_STEPS', 800))
     for s in range(N):
         loss, aux = m.loss(batches[s % 4])
         loss.backward()
@@ -349,10 +349,10 @@ def child():
     assert last < 0.5 * first, (first, last)
     m.eval()
     with torch.no_grad():
-        o = m.run(batches[0])
+        o = m.run(batches[0], loops=3)      # forced rounds 1, 2 (the call rounds of every training row): the learned stop of a 400-step model on 8 rows is a coin flip (it can stop at round 1 before any call)
         ans = m.generate(batches[0])
     nc = sum(len(c) for c in o['calls'])
-    assert len(ans) == 2 and nc > 0 and all(isinstance(a, str) and a for a in ans), (o['calls'], ans)
+    assert len(ans) == 2 and nc > 0 and all(isinstance(a, str) and a for a in ans), (o['calls'], ans, o.get('rounds'), o['records'])
     right = sum(ans[i] == batches[0]['rows'][i]['answer'] for i in range(2))
     # a tiny dev dir, the extra evals
     d = tempfile.mkdtemp()

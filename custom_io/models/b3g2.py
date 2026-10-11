@@ -21,6 +21,8 @@ vector; the call loss is the sum over rounds of the mean over rows of nll * w_ro
 rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); with the selective-read feedback it approximates greedy
 decoding (extra_evals reports how often the label agrees with real greedy decoding). The stop head is H1's on ln_z(control 1), detached, BCE on the 'settled' (or 'right')
 label; 'settled' only counts in a batch that ran the whole turn (stop_w, H1's rule). Rows before their last call round get label inputs "not right" (no answer pass is run there).
+Ben's rule 1: "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." The tape strings (entries, notes, drill strings, '?') are read by Gemma
++ the letter window exactly like the question (Tool.read_texts -> Ledger.eg_term, via FrozenEG.encode_texts, outside the question's memo), not by the letter window alone.
 Free run: writer.greedy on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop exactly as B3.run.
 state = (Z, Xt, idt, vis); talk(state, batch) = writer.greedy(mode 1) over [the CURRENT prompt; the state's tape], so donor swaps work as today. Lessons that act on Z:
 zero_state, shuffle_state; nocopy forces the writer's gate (calls and answer); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
