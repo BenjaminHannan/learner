@@ -532,3 +532,21 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   its controls must match G1 and each other, and the PC's data step (`get_data.py` at the pinned code) only accepts the web_slices_8a
   manifest. G1's numbers are unaffected (G1 never scores long_dev). B3-5 is reported twice: on all 1,360 rows and on the 1,310 rows the
   rung30 list leaves (the conservative list for every rung). New ladders and run-1 use the new 600M files.
+
+## 28. Addendum W (2026-10-11, 4:45 PM ET): new fc100 shape list and new code for the post-G1 chain (staged)
+
+- **Why.** Ben's rules of 4:06-4:17 PM ET 10-11 (project chat; recorded by the architecture thread as FINISHED items 16-18): calculator
+  replies are read by the reader (Gemma + letter window), the talker gets no pointer or copy, no converter plug, agent turns. The
+  architecture thread (4:25-4:38 PM ET) asked: (1) B3 group 1 3M s400 and B3G2 3M s400 run on new commits (group 1 = ca7e1d1b88 under
+  review, parent 8fce7247a8; group 2 later tonight), caps, data and queue lines unchanged; (2) the 10M S runs and the depth twin D are
+  held (they move to the agent model AT; AT-1 at 3M joins after B3G2 when its queue arrives); (3) fc100 part 2 measures five 512-wide
+  shapes instead of the old four.
+- **fc100 part 2 queue (staged in the repo, not yet on the PC):** 21, 26, 30, 34 and 37 layers, d 512, 8 heads, mlp 4.83496 / 3.13379 /
+  2.18066 / 1.45215 / 1.01074; trained counts with today's Gemma plug on (shown, `fc2check.py` at 1acfde9a73): 103,029,142; 103,030,647;
+  103,024,471; 103,024,445; 103,055,688 (102.63M without the plug, as the architecture thread said). Accumulation 64 then 256, 20
+  updates each, as before. Same rule: the deepest shape that fits 16 GB at <= 1.25 x the step time of 21 x 512.
+- **Install plan (no waiter swap):** one Mac install before G1 ends: keep src-b3r and src-b3g2 renamed, unpack the new commits into the
+  same paths, re-check caps.py and the caps json hashes, run the CPU tests the architecture thread names (group 1: test_reader_rule,
+  test_b3, test_b3_run, test_g8a), copy the new 8aFC2 queue and run `fc2check.py`, rewrite the SETUP-OK files.
+- **Blocker:** since 10:36 AM ET 10-11 the Mac session will not run BensPC scripts sent by other threads without Ben's word in its own
+  chat. Without the install, the old list and the old code run after G1.
