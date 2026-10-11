@@ -4,7 +4,8 @@
   python3 -m domain.far.learn_probe build-mode     (L2: MARKS-L2; rows from the v9 mode's own practice maker)
   python3 -m domain.far.learn_probe build-l3       (L3: MARKS-L3; '+' joins of training kind pairs; eval cells S/HP/HO/HPO)
   python3 -m domain.far.learn_probe build-l4      (L4: MARKS-L4; build-mode with the swap tool's join step on, seed 93601)
-  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4]
+  python3 -m domain.far.learn_probe build-l5      (L5: MARKS-L5; training joins over five layouts; eval cells S5/S/HP/HO/HPO)
+  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5]
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -52,6 +53,16 @@ L3_EVAL_ROWS = os.path.join(LEARN, 'eval-rows-l3.jsonl')
 L3_SPLIT = os.path.join(LEARN, 'pair-split-l3.json')
 L3_CELLS = ('S', 'HP', 'HO', 'HPO')   # (joiner, pair set): S '+' train pairs, HP '+' held-out, HO '*' train, HPO '*' held-out
 L3_EVAL_N = 420
+# L5 (spec: far-transfer/learn/MARKS-L5-2026-10-11.md): L3's pair split, training joins spread over five layouts
+L5_SEED = 93701
+L5_EVAL_SEED = 93702
+L5_TRAIN_ROWS = os.path.join(LEARN, 'train-rows-l5.jsonl')
+L5_EVAL_ROWS = os.path.join(LEARN, 'eval-rows-l5.jsonl')
+L5_LAYOUTS = ('K+J', 'K-J', 'K*J', '(K)+(J)', '(K)-(J)')
+L5_PER_LAYOUT = 1200
+L5_S5_PER_LAYOUT = 84
+L5_CELLS = ('S5', 'S', 'HP', 'HO', 'HPO')
+L5_EVAL_N = 420
 # L4 (spec: far-transfer/learn/MARKS-L4-2026-10-11.md): L2's rows with the swap tool's join step on (widen_join)
 L4_SEED = 93601
 L4_ROWS = os.path.join(LEARN, 'train-rows-l4.jsonl')   # the first build (record only)
@@ -156,6 +167,24 @@ def partners_of(pairs, kinds=None):
     return {k: [j for j in kinds if (k, j) in pairs or (j, k) in pairs] for k in kinds}
 
 
+def combine_layout(layout, K, J):
+    """L5's layouts, as P.combine builds them: (formula text, value function of the grid), None-safe through P._bin."""
+    (kt, kf), (jt, jf) = K, J
+    if layout == 'K+J':
+        return P.combine('+', K, J)
+    if layout == '(K)*(J)':
+        return P.combine('*', K, J)
+    if layout == 'K-J':
+        return f'{kt}-{jt}', lambda g: P._bin(lambda x, y: x - y, kf(g), jf(g))
+    if layout == 'K*J':
+        return f'{kt}*{jt}', lambda g: P._bin(lambda x, y: x * y, kf(g), jf(g))
+    if layout == '(K)+(J)':
+        return f'({kt})+({jt})', lambda g: P._bin(lambda x, y: x + y, kf(g), jf(g))
+    if layout == '(K)-(J)':
+        return f'({kt})-({jt})', lambda g: P._bin(lambda x, y: x - y, kf(g), jf(g))
+    raise ValueError(layout)
+
+
 def joined_candidate(kind, partners, op, rng):
     """sheet_probe.candidate's F4-two branch, with the joiner fixed to op and the partner drawn only from `partners`."""
     agg = kind in P.AGG
@@ -163,21 +192,25 @@ def joined_candidate(kind, partners, op, rng):
     K = P.piece(kind, rng, n, None, rng.randint(2, n) if agg else None)
     partner = rng.choice(partners)
     J = P.piece(partner, rng, n, None, 2 if partner in P.AGG else None)
-    formula, fn = P.combine(op, K, J)
+    formula, fn = combine_layout(op, K, J) if op in L5_LAYOUTS + ('(K)*(J)',) else P.combine(op, K, J)
     g = {c: [rng.randint(1, 99) for _ in range(n)] for c in 'AB'}
     return P.render(g, formula), fn, g, formula, partner
 
 
-def draw_joined(rng, pairs, op, total, cell, tag, exclude, seen, help_prompts):
-    """total joined rows (first kind balanced over SCORED by quotas), accepted through sheet_probe.check. -> (rows, stats)."""
+def draw_joined(rng, pairs, op, total, cell, tag, exclude, seen, help_prompts, on_short=False):
+    """total joined rows (first kind balanced over SCORED by quotas), accepted through sheet_probe.check. -> (rows, stats).
+    on_short (L5): a kind that hits MAX_TRIES keeps what it got (stats show it) instead of raising."""
     part = partners_of(pairs)
     q = quotas(total, SP.SCORED)
+    layouted = op in L5_LAYOUTS + ('(K)*(J)',)   # L5: rows carry their layout; L1-L4 callers pass '+' / '*'
     rows, stats = [], {}
     for ki, kind in enumerate(SP.SCORED, 1):
         st = Counter()
         while st['accepted'] < q[kind]:
             st['tries'] += 1
             if st['tries'] > SP.MAX_TRIES:
+                if on_short:
+                    break
                 raise RuntimeError(f'{kind} {cell}: not full after {SP.MAX_TRIES} draws')
             prompt, fn, g, formula, partner = joined_candidate(kind, part[kind], op, rng)
             reason, res = SP.check(prompt, fn(g), help_prompts, exclude, seen)
@@ -185,10 +218,13 @@ def draw_joined(rng, pairs, op, total, cell, tag, exclude, seen, help_prompts):
                 st[reason] += 1
                 continue
             seen.add(prompt)
-            rows.append({'id': f'{tag}-{cell}-{ki:02d}-{st["accepted"]:04d}', 'kind': kind, 'partner': partner, 'split': cell,
-                         'prompt': prompt, 'answer': res['value'], 'n_steps': len(res['steps'])})
+            row = {'id': f'{tag}-{cell}-{ki:02d}-{st["accepted"]:04d}', 'kind': kind, 'partner': partner, 'split': cell,
+                   'prompt': prompt, 'answer': res['value'], 'n_steps': len(res['steps'])}
+            if layouted:
+                row['layout'] = op
+            rows.append(row)
             st['accepted'] += 1
-        stats[(kind, cell)] = st
+        stats[(kind, f'{cell}|{op}' if layouted else cell)] = st
     return rows, stats
 
 
@@ -269,6 +305,99 @@ def build_l3():
             tries = sum(st['tries'] for st_ in (tstats, estats) for (k, c), st in st_.items() if c == cell)
             print(f'  {cell}: {sum(per.values())} rows, tries {tries}; ' + ', '.join(f'{k} {per[k]}' for k in SP.SCORED))
     for path in (L3_SPLIT, L3_TRAIN_ROWS, L3_EVAL_ROWS):
+        print('sha256', sha256_file(path), os.path.basename(path))
+
+
+def build_l5_train(rng, exclude, train_pairs, per_layout=L5_PER_LAYOUT, per_cell=PER_CELL):
+    """-> (rows, stats): per_layout joined rows for each of the five layouts (training pairs; split 'F4-two'), then per_cell
+    F0-near rows (L3's recipe). A layout that cannot fill its share keeps what it got (stats)."""
+    help_list = sheet_tool.help()
+    help_prompts = {h['prompt'] for h in help_list}
+    help_skel = {h['kind']: P.skeleton(h['prompt'].split('; =')[1]) for h in help_list}
+    seen = set()
+    rows, stats = [], {}
+    for i, layout in enumerate(L5_LAYOUTS, 1):
+        rs, st = draw_joined(rng, train_pairs, layout, per_layout, 'F4-two', f'learn5-L{i}', exclude, seen, help_prompts, on_short=True)
+        rows += rs
+        stats.update(st)
+    q = quotas(per_cell, SP.SCORED)
+    for ki, kind in enumerate(SP.SCORED, 1):
+        st = Counter()
+        while st['accepted'] < q[kind]:
+            st['tries'] += 1
+            if st['tries'] > SP.MAX_TRIES:
+                raise RuntimeError(f'{kind} F0-near: not full after {SP.MAX_TRIES} draws')
+            prompt, fn, g, formula = SP.candidate(kind, 'F0-near', rng)
+            reason, res = SP.check(prompt, fn(g), help_prompts, exclude, seen)
+            if reason is None and P.skeleton(formula) != help_skel[kind]:
+                reason = 'near shape'
+            if reason:
+                st[reason] += 1
+                continue
+            seen.add(prompt)
+            rows.append({'id': f'learn5-F0-near-{ki:02d}-{st["accepted"]:04d}', 'kind': kind, 'split': 'F0-near',
+                         'prompt': prompt, 'answer': res['value'], 'n_steps': len(res['steps'])})
+            st['accepted'] += 1
+        stats[(kind, 'F0-near')] = st
+    return rows, stats
+
+
+def build_l5_eval(rng, exclude, train_prompts, train_pairs, held_pairs, per_cell=L5_EVAL_N, per_layout=L5_S5_PER_LAYOUT):
+    """-> (rows, stats): S5 (per_layout rows in each of the five layouts, training pairs), S ('K+J', training pairs),
+    HP ('K+J', held-out), HO ('(K)*(J)', training pairs), HPO ('(K)*(J)', held-out). No prompt in exclude, in the training
+    prompts or in another cell."""
+    help_prompts = {h['prompt'] for h in sheet_tool.help()}
+    seen = set(train_prompts)
+    rows, stats = [], {}
+    for i, layout in enumerate(L5_LAYOUTS, 1):
+        rs, st = draw_joined(rng, train_pairs, layout, per_layout, 'S5', f'l5-L{i}', exclude, seen, help_prompts)
+        rows += rs
+        stats.update(st)
+    spec = {'S': ('K+J', train_pairs), 'HP': ('K+J', held_pairs), 'HO': ('(K)*(J)', train_pairs), 'HPO': ('(K)*(J)', held_pairs)}
+    for cell in L5_CELLS[1:]:
+        op, pairs = spec[cell]
+        rs, st = draw_joined(rng, pairs, op, per_cell, cell, 'l5', exclude, seen, help_prompts)
+        rows += rs
+        stats.update(st)
+    return rows, stats
+
+
+def build_l5():
+    for path in (L5_TRAIN_ROWS, L5_EVAL_ROWS):
+        if os.path.exists(path):
+            raise SystemExit(f'refusing to overwrite {path}')
+    split = json.load(open(L3_SPLIT))   # L3's split, as written: not redrawn
+    train_pairs, held_pairs = [tuple(p) for p in split['train']], [tuple(p) for p in split['held_out']]
+    assert (train_pairs, held_pairs) == pair_split(), 'L3 split file does not match pair_split()'
+    exclude = read_prompts(EXCLUDE_FILES + (TRAIN_ROWS, MODE_ROWS, L3_TRAIN_ROWS, L3_EVAL_ROWS, L4_ROWS, L4R1_ROWS))
+    trows, tstats = build_l5_train(random.Random(L5_SEED), exclude, train_pairs)
+    train_prompts = {r['prompt'] for r in trows}
+    erows, estats = build_l5_eval(random.Random(L5_EVAL_SEED), exclude, train_prompts, train_pairs, held_pairs)
+    eprompts = [r['prompt'] for r in erows]
+    assert len(train_prompts) == len(trows) and len(set(eprompts)) == len(erows)
+    assert not (train_prompts | set(eprompts)) & exclude and not train_prompts & set(eprompts)
+    dump = lambda rs: ''.join(json.dumps(r) + '\n' for r in rs)
+    write_new(L5_TRAIN_ROWS, dump(trows))
+    write_new(L5_EVAL_ROWS, dump(erows))
+    print(f'excluded prompts: {len(exclude)}')
+    for name, rows, stats in (('train', trows, tstats), ('eval', erows, estats)):
+        print(f'{name}: {len(rows)} rows')
+        for cell in dict.fromkeys(r['split'] for r in rows):
+            sub = [r for r in rows if r['split'] == cell]
+            print(f'  {cell}: {len(sub)} rows')
+            for lay in dict.fromkeys(r.get('layout') for r in sub):
+                ls = [r for r in sub if r.get('layout') == lay]
+                key = f'{cell}|{lay}' if lay else cell
+                tries = sum(st['tries'] for (k, c), st in stats.items() if c == key)
+                want = L5_PER_LAYOUT if (name == 'train' and lay) else L5_S5_PER_LAYOUT if lay else None
+                per = Counter(r['kind'] for r in ls)
+                short = f' (SHORT of {want})' if want and len(ls) < want else ''
+                print(f'    {lay or "-"}: {len(ls)} rows{short}, tries {tries}; ' + ', '.join(f'{k} {per[k]}' for k in SP.SCORED))
+        rej = Counter()
+        for st in stats.values():
+            rej.update({k: v for k, v in st.items() if k not in ('tries', 'accepted')})
+        print('  rejections:', dict(rej))
+    for path in (L5_TRAIN_ROWS, L5_EVAL_ROWS):
         print('sha256', sha256_file(path), os.path.basename(path))
 
 
@@ -407,19 +536,24 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 
-def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L3_EVAL_ROWS):
+def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L3_EVAL_ROWS, l5_path=L5_EVAL_ROWS):
     """The scored cells: name -> rows (each row's id made unique across cells; the row's split is the cell name).
     cells 'l1': F4-two, F0-near, F2b-rows, fit (L1, unchanged). cells 'all' (L2): every probe split (scored kinds), fit,
     and the sealed sheet.v3 panel (scored kinds) as v3-near / v3-far (scoring only). cells 'l3': S, HP, HO, HPO (from the L3 eval
-    file), probe F0-near and F4-two, fit. cells 'l4': everything in 'all' plus S, HP, HO, HPO."""
-    assert cells in ('l1', 'all', 'l3', 'l4'), cells
+    file), probe F0-near and F4-two, fit. cells 'l4': everything in 'all' plus S, HP, HO, HPO.
+    cells 'l5': S5, S, HP, HO, HPO (from the L5 eval file), probe F0-near and F4-two, fit."""
+    assert cells in ('l1', 'all', 'l3', 'l4', 'l5'), cells
     probe = [r for r in load_jsonl(SP.PROBE) if r['kind'] in SP.SCORED]
-    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two')}[cells]
+    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two'), 'l5': ('F0-near', 'F4-two')}[cells]
     sets = {}
     if cells in ('l3', 'l4'):
         l3 = load_jsonl(l3_path)
         sets = {c: [r for r in l3 if r['split'] == c] for c in L3_CELLS}
         assert all(len(v) == L3_EVAL_N for v in sets.values()), {k: len(v) for k, v in sets.items()}
+    if cells == 'l5':
+        l5 = load_jsonl(l5_path)
+        sets = {c: [r for r in l5 if r['split'] == c] for c in L5_CELLS}
+        assert all(len(v) == L5_EVAL_N for v in sets.values()), {k: len(v) for k, v in sets.items()}
     sets.update({c: [dict(r, split=c) for r in probe if r['split'] == c] for c in names})
     joined = [r for r in train_rows if r['split'] in JOINED_CELLS]
     fit = random.Random(fit_seed).sample(joined, FIT_N)
@@ -498,7 +632,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
-    fit_seed = L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
+    fit_seed = L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
     sets = eval_sets(train_rows, cells, fit_seed)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
@@ -552,14 +686,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'train'])
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'train'])
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
     a.add_argument('--out')
     a.add_argument('--rows', default=TRAIN_ROWS, help='training rows (default: the L1 file)')
-    a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4'], default='l1',
-               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO')
+    a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4', 'l5'], default='l1',
+               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO; l5 = S5, S, HP, HO, HPO, F0-near, F4-two, fit')
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
     a = a.parse_args(argv)
     if a.stage == 'build':
@@ -568,6 +702,8 @@ def main(argv=None):
         build_mode()
     elif a.stage == 'build-l3':
         build_l3()
+    elif a.stage == 'build-l5':
+        build_l5()
     elif a.stage == 'build-l4':
         build_l4()
     else:

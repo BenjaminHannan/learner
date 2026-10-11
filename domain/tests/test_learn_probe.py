@@ -196,3 +196,49 @@ def test_build_l4_small():
     assert st['complete'] and len(rows) == 8 and st['widen']['kept'][4] > 0
     assert all(r['id'].startswith('learn4-') and r['ring'] in (1, 2, 3, 4) for r in rows)
     assert not {r['prompt'] for r in rows} & ex
+
+
+def test_combine_layout_text_and_value():
+    K = ('SUM(A1:A2)', lambda g: g['A'][0] + g['A'][1])
+    J = ('B1', lambda g: g['B'][0])
+    g = {'A': [5, 4], 'B': [2, 1]}
+    want = {'K+J': ('SUM(A1:A2)+B1', 11), 'K-J': ('SUM(A1:A2)-B1', 7), 'K*J': ('SUM(A1:A2)*B1', 18),
+            '(K)+(J)': ('(SUM(A1:A2))+(B1)', 11), '(K)-(J)': ('(SUM(A1:A2))-(B1)', 7), '(K)*(J)': ('(SUM(A1:A2))*(B1)', 18)}
+    for lay, (text, val) in want.items():
+        t, fn = L.combine_layout(lay, K, J)
+        assert (t, fn(g)) == (text, val), lay
+    none = ('B1', lambda g: None)
+    assert all(L.combine_layout(lay, K, none)[1](g) is None for lay in want)
+
+
+def test_l5_cells_small():
+    tr, ho = L.pair_split()
+    ex = {'A: 1 | B: 2 ; =SUM(A1:A1)'}
+    trows, _ = L.build_l5_train(random.Random(5), ex, tr, per_layout=14, per_cell=14)
+    joined = [r for r in trows if r['split'] == 'F4-two']
+    assert len(joined) == 70 and len(trows) == 84
+    assert [r['layout'] for r in joined] == [lay for lay in L.L5_LAYOUTS for _ in range(14)]
+    allowed = {frozenset(p) for p in tr}
+    assert all(frozenset((r['kind'], r['partner'])) in allowed for r in joined)
+    assert not any(')*(' in r['prompt'] for r in joined)
+    train_prompts = {r['prompt'] for r in trows}
+    erows, _ = L.build_l5_eval(random.Random(6), ex, train_prompts, tr, ho, per_cell=14, per_layout=14)
+    assert [r['split'] for r in erows] == ['S5'] * 70 + [c for c in L.L5_CELLS[1:] for _ in range(14)]
+    held = {frozenset(p) for p in ho}
+    for r in erows:
+        pr = frozenset((r['kind'], r['partner']))
+        assert (pr in held) == (r['split'] in ('HP', 'HPO'))
+        assert (r['layout'] == '(K)*(J)') == (r['split'] in ('HO', 'HPO'))
+        assert (')*(' in r['prompt']) == (r['layout'] == '(K)*(J)')
+    ep = [r['prompt'] for r in erows]
+    assert len(set(ep)) == len(ep) and not set(ep) & train_prompts and not set(ep) & ex
+
+
+@needs_probe
+def test_eval_sets_l5(tmp_path):
+    import json
+    rows = [{'id': f'l5-{c}-{i}', 'kind': 'SUM', 'split': c, 'prompt': f'q{c}{i}', 'answer': '1'} for c in L.L5_CELLS for i in range(420)]
+    path = tmp_path / 'e.jsonl'
+    path.write_text(''.join(json.dumps(r) + '\n' for r in rows))
+    sets = L.eval_sets(_fake_train('F4-two'), 'l5', L.L5_SEED, l5_path=str(path))
+    assert list(sets) == ['S5', 'S', 'HP', 'HO', 'HPO', 'F0-near', 'F4-two', 'fit'] and len(sets['fit']) == 420
