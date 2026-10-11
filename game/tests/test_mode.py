@@ -1,3 +1,7 @@
+import gzip
+import json
+import os
+import tempfile
 import unittest
 
 from game import mode, play
@@ -25,6 +29,34 @@ class KeepWindowsTest(unittest.TestCase):
 
     def test_no_unlocks(self):
         self.assertEqual(mode.keep_windows([], 8), [])
+
+
+class MovesTest(unittest.TestCase):
+
+    def test_rewards_and_roundtrip(self):
+        seeds, acts = mode.world_seeds(200, 1, 2)
+        eps = play.play(None, seeds, acts, 0.0, 30, log_steps=True)
+        for e in eps:
+            self.assertEqual(len(e['steps']), e['length'])
+            self.assertTrue(all(len(s) == 4 for s in e['steps']))
+            tot = sum(s[3] for s in e['steps'])
+            self.assertAlmostEqual(tot, len(e['unlocks']) + (e['final_health'] - 9) / 10, delta=1e-6)
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, 'moves', 'day_1.jsonl.gz')
+            n = mode.write_moves(p, eps)
+            self.assertEqual(n, sum(e['length'] for e in eps))
+            with gzip.open(p, 'rt') as f:
+                recs = [json.loads(x) for x in f]
+        self.assertEqual(len(recs), n)
+        k = 0
+        for e in eps:
+            for t, (view, word, src, rew) in enumerate(e['steps']):
+                r = recs[k]
+                k += 1
+                self.assertEqual((r['world_seed'], r['step'], r['view'], r['move'], r['source']), (e['seed'], t, view, word, src))
+                self.assertEqual(r['reward'], rew)
+                self.assertEqual(r['unlocks'], [nm for u, nm in e['unlocks'] if u == t])
+                self.assertEqual(r['end'], e['end'] if t == e['length'] - 1 else None)
 
 
 class SeedsTest(unittest.TestCase):

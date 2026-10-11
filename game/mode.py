@@ -9,6 +9,7 @@ on them mixed with the model's own old answers (diary), undo if old answers drif
 Writes DIR/log.jsonl, DIR/night_K/checkpoint.pt, DIR/gate.pt and DIR/summary.json. Only practice worlds are ever played.
 """
 import argparse
+import gzip
 import hashlib
 import json
 import math
@@ -71,12 +72,29 @@ def play_worlds(m, run_seed, day, n, cons, log_steps):
     return play.play(play.model_policy(m), seeds, acts, cons['explore'], cons['episode_cap'], log_steps=log_steps)
 
 
+def write_moves(path, eps):
+    """One gzip JSON line per move of every episode (needs log_steps=True). -> number of lines."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    n = 0
+    with gzip.open(path, 'wt', encoding='utf-8') as f:
+        for e in eps:
+            by_step = {}
+            for t, name in e['unlocks']:
+                by_step.setdefault(t, []).append(name)
+            last = len(e['steps']) - 1
+            for t, (view, word, src, reward) in enumerate(e['steps']):
+                f.write(json.dumps(dict(world_seed=e['seed'], act_seed=e['act_seed'], step=t, view=view, move=word, source=src,
+                                        reward=reward, unlocks=by_step.get(t, []), end=e['end'] if t == last else None)) + '\n')
+                n += 1
+    return n
+
+
 def keep_rows(m, eps, cons, day, write_row):
     """Rows from the kept steps of each episode. -> (rows, by source, by unlock name, refusals by reason)."""
     rows, by_src, by_name, refused = [], Counter(), Counter(), Counter()
     for e in eps:
         for s, name, t in keep_windows(e['unlocks'], cons['credit_window']):
-            prompt, word, src = e['steps'][s]
+            prompt, word, src = e['steps'][s][:3]
             row, why = dm.make_row(m, FAMILY, prompt, word, [], cons, src, allow_zero=True)
             if row is None:
                 refused[why] += 1
@@ -148,8 +166,10 @@ def main(argv=None):
 
     def quiz(night):
         t = time.time()
-        eps = play_worlds(m, a.seed, 0, cons['quiz_worlds'], cons, log_steps=False)
+        eps = play_worlds(m, a.seed, 0, cons['quiz_worlds'], cons, log_steps=True)
         T['quiz'] += time.time() - t
+        mp = os.path.join(a.out, 'moves', f'quiz_night_{night}.jsonl.gz')
+        log('moves', path=mp, lines=write_moves(mp, eps), kind='quiz')
         st = episode_stats(eps)
         prog = play.progress(eps)
         log('quiz', night=night, progress=round(prog, 3), unlock_share=st['unlock_share'], mean_length=st['mean_length'])
@@ -164,6 +184,8 @@ def main(argv=None):
         t = time.time()
         eps = play_worlds(m, a.seed, night, cons['episodes_per_day'], cons, log_steps=True)
         T['play'] += time.time() - t
+        mp = os.path.join(a.out, 'moves', f'day_{night}.jsonl.gz')
+        log('moves', path=mp, lines=write_moves(mp, eps), kind='practice')
         st = episode_stats(eps)
         game_steps += st['steps']
         t = time.time()
