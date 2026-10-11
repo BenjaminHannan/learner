@@ -27,15 +27,16 @@ DECONTAM_MAX_FRAC = 0.02  # DM4 fails when more than this share of the run tool'
 
 
 def panel_files(suffix=''):
-    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl')
+    # addendum A26: the py panel (A24) is decontaminated, so it exists only under the v2 naming (py.v2.jsonl = py.jsonl)
+    return (f'sheet{suffix}.jsonl', f'rpn{suffix}.jsonl') + (('py.v2.jsonl',) if suffix == DECONTAM_SUFFIX else ())
 
 
 def panel_suffix(path):
-    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet.v2.jsonl or rpn.v2.jsonl. Any other name is refused."""
-    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl', os.path.basename(path))
+    """'' for sheet.jsonl or rpn.jsonl (v1), '.v2' for sheet.v2.jsonl, rpn.v2.jsonl or py.v2.jsonl. Any other name is refused."""
+    m = re.fullmatch(r'(?:sheet|rpn)(\.v2)?\.jsonl|py(\.v2)\.jsonl', os.path.basename(path))
     if not m:
         raise ValueError(f'not a sealed panel file: {path}')
-    return m.group(1) or ''
+    return m.group(1) or m.group(2) or ''
 
 
 def load_panel_file(path):
@@ -98,7 +99,7 @@ def main(argv=None):
     ap.add_argument('run_dir')
     ap.add_argument('--panel', default=OUT_DIR, help='folder with the sealed panel files')
     ap.add_argument('--panel-suffix', default='', choices=['', DECONTAM_SUFFIX],
-                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' for sheet.v2.jsonl and rpn.v2.jsonl")
+                    help="'' for sheet.jsonl and rpn.jsonl (v1), '.v2' for sheet.v2.jsonl, rpn.v2.jsonl and py.v2.jsonl")
     a = ap.parse_args(argv)
     rep = audit_run(a.run_dir, a.panel, a.panel_suffix)
     print(json.dumps(rep, indent=1, sort_keys=True))

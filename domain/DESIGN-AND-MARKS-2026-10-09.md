@@ -254,3 +254,20 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 - Smoke: practice keeps about 40% of draws on py, against 0.6% on sheets.
 
 Found in review: the maker's renames, edit (c), touch only capital cell letters, so practice programs would keep the help page's variable names. Near panel rows use new names (A24), the same kind of gap as v1's column B. **Edit (e), the same for every domain:** with chance vary_p, one letters-only word that occurs at least twice in the draft (a name the text reuses) is renamed everywhere to a new random word of 1-3 lowercase letters that the text does not already use. Checked: no sheet or RPN help example has a repeated word, so (e) never changes their drafts; the sheet and RPN results stand (their random draws would differ on a re-run). Disclosed: chosen knowing the panel's near rule. Marks unchanged.
+
+**A26. py seed 200 result, and why three kinds learned little (Opus, 10:45 PM ET 10-10, after the run).** Shown:
+- Run `py-s200-v8`, constants sha256 `4781b0be...` (the v7 file, the same as the sheet and RPN runs). 5 nights, stopped by the quiz rule, no night undone.
+- **Marks.**
+  - DM1 near: +46.50 (14.67 -> 61.17), PASS.
+  - Routed by its own switch: +46.3, PASS. The switch is on for 99.8% of panel near rows and for 1 of 1,360 old questions.
+  - DM3 routed drop: 0.00, PASS.
+  - DM4: PASS (9,027 rows, 0 panel overlap, 0 dropped).
+  - DM5: PASS (the stop night is the best night).
+  - DM2 far: -0.5, fail. Proved wrong needs seed 201 at +2 or less as well.
+  - R2: 0.836.
+- **Per kind, near:** function 100, chain 98, assign add 97, max min 85, abs 80, if else 68, while 50, for repeat 33, list index 0, for sum 0.
+- **Audit naming.** The py panel was built once, under the v2 rules (A24). `audit.py` now reads it as `py.v2.jsonl`, a byte-identical copy of `py.jsonl` (same sha256, `.sha256` file beside it). The content is unchanged.
+- **List index got no practice.** Shown by re-drawing 600 drafts from its help example. Edit (a) gives every number a new random length of 1-3 digits, so positions such as `i = 1` and `v[2]` fall outside the 3-item list. The tool rightly answers "?" for 598 of 600 drafts. Day 1 kept 0 list-index rows. For repeat (528 of 600 drafts are "?": loop counts and products grow past the caps) and for sum (452 of 600) are thinned the same way.
+- **For sum cannot be written as a training row.** The row format (custom_io progparse) points every operand at a number in the prompt, one of 4 constants (1, 2, 10, 100), or an earlier result. A loop counter's values (0, 1, 2, 3, ...) are not written in the prompt. So a loop-sum row exists only when the counter values happen to fall in that set: s starts at 0 and the range is 3 or less. Of the 58 re-drawn drafts the tool accepts, 56 are refused (`gold_ops`). Day 1 refused 38.
+- **Both limits sit in the outside parts** (the maker's yield and the row format), not in the model's learning. Every kind with enough kept rows rose.
+- **Next (default, nothing changed):** seed 201 with the same code and constants, per A24's marks. After that, a fix for the maker's yield, the same for every domain, written as A27 with its marks before any run. The row-format limit belongs to the shared format, which this mode does not own. It is recorded here and not changed.
