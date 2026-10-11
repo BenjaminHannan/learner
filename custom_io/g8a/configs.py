@@ -256,8 +256,8 @@ def plain_cfg(rung, b2=None, extra=None):
     """Plain arm config matched to B2's trained size (+-2%): width as B2, nearest layer count with today's 4x feed-forward; only if that is
     outside the band is the feed-forward width trimmed (3M therefore stays plain_tf_steps' own 4 layers x 1024)."""
     r = RUNGS[rung]
-    extra, _, np_ = noplug_split(rung, extra)
-    b2 = b2 or b2_cfg(rung, {NOPLUG: True} if np_ else None)
+    extra, nb, np_ = noplug_split(rung, extra)
+    b2 = b2 or b2_cfg(rung, dict(extra, **{NOPLUG: True}, **({'blocks': nb} if nb else {})) if np_ else None)      # no plug and no b2 given: B2 is built with the rest of the extras and the blocks override too
     target = n('ledger', b2)
     d, h = (b2['d'], b2['n_heads']) if b2.get('eg_pre') else (r['width'], r['heads'])      # no plug: B2's 512 / 8 (eg_pre is the cfg key b2_cfg wrote)
     base = dict(d_model=d, n_heads=h, **({'eg_embed': True} if b2.get('eg_embed') else {}), **({'eg_pre': True} if b2.get('eg_pre') else {}))      # test 8a-G: the plain step arm gets the same frozen-Gemma front (its adapter counts)
@@ -417,10 +417,11 @@ def main(argv=None):
     ap.add_argument('--max-ans', type=int, default=8)
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--tkn', metavar='CAPS_JSON', help='print the 3M rung\'s TK and TKN configs, counts and --b2-extra strings under these caps (e.g. g8a/caps_g.json)')
-    ap.add_argument('--group', type=int, choices=(1, 2), default=1, help='with --b3: the table of B3 group 1 (b3) or group 2 (b3g2; use g8a/caps_b3g2.json)')
-    ap.add_argument('--noplug', metavar='CAPS_JSON', help='print the no-plug 30M and 100M counts with their breakdown (thinker, reader, writer, stop, ln_eg) under these caps (g8a/caps_b3g2.json), for every blocks override, plus the plain step control')
+    ap.add_argument('--group', type=int, choices=(1, 2), default=None, help='with --b3: the table of B3 group 1 (b3) or group 2 (b3g2; use g8a/caps_b3g2.json); default 1. With --noplug the default is 2 (the no-plug arms are B3G2 under caps_b3g2.json); an explicit --group 1 still gives group 1')
+    ap.add_argument('--noplug', metavar='CAPS_JSON', help='print the no-plug 30M and 100M counts with their breakdown (thinker, reader, writer, stop, ln_eg) under these caps (g8a/caps_b3g2.json), for every blocks override, plus the plain step control; --group defaults to 2 here (B3G2)')
     ap.add_argument('--b3', metavar='CAPS_JSON', help='print the B3 rung table (trained / frozen Gemma / whole at 3M, 10M, 30M, 100M) under these caps (g8a/caps_g.json = G1\'s, g8a/caps_b3.json = 2,000 letters)')
     a = ap.parse_args(argv)
+    a.group = a.group or (2 if a.noplug else 1)         # --group not given: 1, except --noplug (B3G2 caps) = 2
     if a.noplug:
         from custom_io.g8a import caps as CP
         CP.apply(json.load(open(a.noplug)))
