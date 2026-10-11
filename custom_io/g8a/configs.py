@@ -97,12 +97,14 @@ B3_G1 = dict(label='settled', span_copy=True, span_idx=True, span_end=True, ans_
 
 
 B3_G2 = dict(B3_G1, no_slots=True, no_place=True, bytes=True, as_written=True)      # B3 group 2 (sec. 1): all switches on; the writer is always on in 'b3g2'
-G2C3 = 4_022_440            # the plain 3M control at caps_b3 (g2c3): group 2's trained count must sit within PLAIN_BAND of it
+G2C3 = 4_022_440            # the plain 3M control at caps_b3 (g2c3): the plain arms' and test_pts' reference (4,022,440)
+G2C3S = 4_023_976           # the plain 3M control with worked steps at caps_b3s (g2c3s; PLAN addendum 10-10 8:55 AM ET): group 2's partner since the 2:35 PM ET addendum and AT-0 (viii)'s reference; b3g2's 3M count sits within PLAIN_BAND of it
 
 
 def b3g2_cfg(rung, extra=None):
-    """B3 group 2 config for a rung: b3_cfg's path with B3_G2 and model 'b3g2'. 3M: the thinker is B2's S shape; if the trained count is outside PLAIN_BAND of g2c3 the writer's
-    MLP ratio is trimmed first (writer_mlp, in steps of 1/16 down from 2.0), then the thinker's feed-forward ratio mlp (hidden units). 10M / 30M: block count to the rung's band (as
+    """B3 group 2 config for a rung: b3_cfg's path with B3_G2 and model 'b3g2'. 3M: the thinker is B2's S shape; since G2f the writer has no copy path and the freed parameters go to its MLP: writer_mlp
+    (1/16 steps, 1/16 to 12) is the value whose trained count is closest to g2c3s (G2C3S; ties: the smaller); only if the count is then outside PLAIN_BAND of G2C3S is the thinker's feed-forward ratio mlp
+    (hidden units) trimmed as before. 10M / 30M: block count to the rung's band (as
     b3_cfg); 100M: 21 x 512, no band. Call after caps.apply (the counts depend on the caps in force)."""
     return b3_cfg(rung, extra, group=2)
 
@@ -120,13 +122,12 @@ def b3_cfg(rung, extra=None, group=1):
     n = lambda model, cfg: globals()['n']('b3g2' if group == 2 else model, cfg)
     if rung == '3M':
         cfg = dict(base, blocks=B2_S['blocks'])
-        if group == 2 and abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:
-            # the writer's MLP first: the largest 1/16 step that lands within PLAIN_BAND - 0.5% of g2c3 (a margin, so the count is not on the edge of the band)
-            best = next((w for w in range(31, 0, -1) if abs(n('b3', dict(cfg, writer_mlp=w / 16)) / G2C3 - 1) <= PLAIN_BAND - 0.005), 1)
-            cfg['writer_mlp'] = best / 16
-            if abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
+        if group == 2:
+            # the writer's MLP: the 1/16 step (1/16 .. 12) whose count is closest to g2c3s (ties: the smaller)
+            cfg['writer_mlp'] = min(range(1, 193), key=lambda w: (abs(n('b3', dict(cfg, writer_mlp=w / 16)) - G2C3S), w)) / 16
+            if abs(n('b3', cfg) / G2C3S - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
                 d = r['width']
-                hid = int(cfg['mlp'] * d) + round((G2C3 - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
+                hid = int(cfg['mlp'] * d) + round((G2C3S - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
                 cfg['mlp'] = round((hid + 0.5) / d, 5)
     elif rung == '100M':
         cfg = dict(base, blocks=r['blocks'])
@@ -148,12 +149,25 @@ def b3_sizes(cfg, model='b3'):
     return dict(trained=s['trainable'], frozen_gemma=s['frozen_borrowed'], whole=s['whole'])
 
 
+def b3g2_breakdown(cfg):
+    """Trained parameters of a b3g2 config by part (G2f's printout): reader (without its place table), place (the reader's), thinker blocks (core), ctrl, step_emb, tape_emb, stop, the Gemma
+    adapter (ln_eg + eg_proj), writer (its MLP fc1 + fc2 apart) and other (src, ln_z). The parts add up to the trained count."""
+    torch.manual_seed(0)
+    m = build('b3g2', vocab(cfg.get('bytes', False)), **cfg)
+    c = lambda *ms: sum(p.numel() for x in ms for p in x.parameters() if p.requires_grad)
+    out = dict(reader=c(m.reader) - c(m.reader.place), place=c(m.reader.place), thinker_blocks=c(m.core), ctrl=c(m.ctrl), step_emb=c(m.step_emb), tape_emb=c(m.tape_emb), stop=c(m.stop),
+               gemma_adapter=c(m.ln_eg, m.eg_proj), writer=c(m.writer), writer_mlp=c(m.writer.fc1, m.writer.fc2), other=c(m.src, m.ln_z))
+    out['total'] = m.n_params()
+    assert out['total'] == sum(v for k, v in out.items() if k not in ('total', 'writer_mlp')), out       # writer_mlp is inside writer
+    return out
+
+
 def check_b3(rung, cfg, group=1):
-    """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3 (4,022,440), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
+    """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3s (4,023,976), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
     100M: no band."""
     c = n('b3g2' if group == 2 else 'b3', cfg)
     if group == 2 and rung == '3M':
-        assert abs(c / G2C3 - 1) <= PLAIN_BAND, f'3M B3G2 {c:,} is more than {100 * PLAIN_BAND:.0f}% from g2c3 {G2C3:,}'
+        assert abs(c / G2C3S - 1) <= PLAIN_BAND, f'3M B3G2 {c:,} is more than {100 * PLAIN_BAND:.0f}% from g2c3s {G2C3S:,}'
     elif rung in ('10M', '30M'):
         assert abs(c / RUNGS[rung]['target'] - 1) <= RUNGS[rung]['band'], f'{rung} B3 {c:,} outside {RUNGS[rung]["target"]:,.0f} +-{100 * RUNGS[rung]["band"]:.0f}%'
     elif rung == '3M' and group == 1:
@@ -331,6 +345,10 @@ def main(argv=None):
             c = r['cfg']
             print(f'{r["rung"]:>5} {r["trained"]:>13,} {r["frozen_gemma"]:>13,} {r["whole"]:>13,}  d {c["d"]} heads {c["n_heads"]} blocks {c["blocks"]} mlp {c["mlp"]} n_loops {c["n_loops"]}'
                   + (f' writer_mlp {c["writer_mlp"]}' if 'writer_mlp' in c else '') + ('   (pool: ' + RUNGS[r['rung']]['pool'] + ')' if isinstance(RUNGS[r['rung']]['pool'], str) else ''))
+        if g2:
+            cfg = b3g2_cfg('3M')
+            bd = b3g2_breakdown(cfg)
+            print(f'3M B3G2 trained {bd["total"]:,} ({100 * (bd["total"] / G2C3S - 1):+.2f}% from g2c3s {G2C3S:,}; writer_mlp {cfg["writer_mlp"]}): ' + ', '.join(f'{k} {v:,}' for k, v in bd.items() if k != 'total'))
         return
     if a.tkn:
         from custom_io.g8a import caps as CP

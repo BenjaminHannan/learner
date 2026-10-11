@@ -47,7 +47,8 @@ def test_deleted_and_paths():
     for d in DELETED + ('ordinal', 'stype', 'vcode', 'op_emb', 'q_a'):
         assert not hasattr(m, d), d
         assert not any(n == d or n.startswith(d + '.') for n in names), d
-    assert hasattr(m, 'e_s') and hasattr(m, 'e_e') and m.WCAP == 69 and m.writer.cap == 69
+    assert 'e_s' in DELETED and 'e_e' in DELETED and not hasattr(m, 'e_s') and not hasattr(m, 'e_e') and not hasattr(m, 'ckeys') and m.WCAP == 69 and m.writer.cap == 69      # G2f: no copy-key layout terms
+    assert not m.writer.copy and not any(hasattr(m.writer, a) for a in ('w_fb', 'g_cp', 'q_cp', 'k_cp')) and not any(n.startswith(('e_s', 'e_e')) for n in names)
     assert m.writer.tok is m.reader.tok and not any(p is m.reader.tok.weight for p in m.writer.parameters())
     b = batch_of(rows(8), V)
     loss, aux = m.loss(b)              # a deleted attribute touched anywhere on a path raises AttributeError
@@ -261,7 +262,7 @@ def test_stop_and_talk():
         a0 = m.talk(st, b)
         z0 = m.talk((torch.zeros_like(st[0]),) + st[1:], b)
         assert m.generate(b, lesion='zero_state') == z0
-    # nocopy (Ben's rule 2): a no-op for answers, which have no copy path (an empty context: gate 1 whatever the lesion); it still forces the CALL writer's gate
+    # nocopy (G2f): a no-op for calls and answers (no line has a copy path: an empty context, gate 1, whatever the lesion); the lesion never reaches the head
     gates = []
     real = m.writer.head
 
@@ -272,17 +273,20 @@ def test_stop_and_talk():
     m.writer.head = spy
     with torch.no_grad():
         st = m.state(b)
-        assert m.generate(b, lesion='nocopy') == m.talk(m.state(b, lesion='nocopy'), b) == m.talk(m.state(b, lesion='nocopy'), b, lesion='nocopy')
+        assert m.generate(b, lesion='nocopy') == m.talk(m.state(b, lesion='nocopy'), b) == m.talk(m.state(b, lesion='nocopy'), b, lesion='nocopy') == m.generate(b)
         gates.clear()
         assert m.talk(st, b, lesion='nocopy') == m.talk(st, b)
     assert gates and all(not nc and g == 1.0 and not has for nc, g, has in gates), gates      # the answer: no visible context, gate 1, the lesion never reaches the head
     m.stop.bias.data.fill_(-50.0)
     gates.clear()
     with torch.no_grad():
-        m.run(b, loops=3, lesion='nocopy')
-    assert gates and all(nc and g == 1.0 and has for nc, g, has in gates), gates                  # the calls: the lesion forces their gate
+        o0 = m.run(b, loops=3)
+        n0 = len(gates)
+        o1 = m.run(b, loops=3, lesion='nocopy')
+    assert n0 and len(gates) == 2 * n0 and all(not nc and g == 1.0 and not has for nc, g, has in gates), gates      # the calls too
+    assert o0['calls'] == o1['calls'] and o0['records'] == o1['records'] and torch.equal(o0['Z'], o1['Z']), 'nocopy changes nothing'
     m.writer.head = real
-    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy: no-op for answers, forces the call writer gate')
+    print('ok stop head rounds, state at the stop round, zero / shuffle / donor on Z, nocopy: a no-op for calls and answers')
 
 
 def test_st1_interface():
@@ -412,20 +416,23 @@ def child_sizes():
     from custom_io.g8a import caps as CP, configs as C
     caps = CP.apply(json.load(open(os.path.join(ROOT, 'custom_io', 'g8a', 'caps_b3g2.json'))))
     rows_ = C.b3g2_table()
-    print(json.dumps(rows_))
+    print(json.dumps(dict(rows=rows_, breakdown=C.b3g2_breakdown(next(r for r in rows_ if r['rung'] == '3M')['cfg']), g2c3s=C.G2C3S)))
 
 
 def test_sizes():
     out = subprocess.run([sys.executable, '-m', 'custom_io.tests.test_b3g2', '--sizes'], cwd=ROOT, env=dict(os.environ, PYTHONPATH=ROOT, OMP_NUM_THREADS='1'), capture_output=True, text=True)
     assert out.returncode == 0, out.stdout[-2000:] + out.stderr[-4000:]
-    rows_ = json.loads(out.stdout.strip().splitlines()[-1])
-    g2c3 = 4_022_440
+    res = json.loads(out.stdout.strip().splitlines()[-1])
+    rows_, bd, g2c3s = res['rows'], res['breakdown'], res['g2c3s']
+    assert g2c3s == 4_023_976
     r3 = next(r for r in rows_ if r['rung'] == '3M')
-    assert abs(r3['trained'] / g2c3 - 1) <= 0.02, (r3['trained'], g2c3)
+    assert abs(r3['trained'] / g2c3s - 1) <= 0.02, (r3['trained'], g2c3s)
+    assert bd['total'] == r3['trained'] and bd['total'] == sum(v for k, v in bd.items() if k not in ('total', 'writer_mlp')), bd
     for r in rows_:
         print('ok size %5s: trained %12s  frozen Gemma %12s  whole %12s  blocks %s mlp %s writer_mlp %s' % (r['rung'], f"{r['trained']:,}", f"{r['frozen_gemma']:,}", f"{r['whole']:,}",
                                                                                                         r['cfg']['blocks'], r['cfg']['mlp'], r['cfg'].get('writer_mlp')))
-    print('ok 3M trained %s is %+.2f%% from g2c3 %s (band +-2%%)' % (f"{r3['trained']:,}", 100 * (r3['trained'] / g2c3 - 1), f"{g2c3:,}"))
+    print('ok 3M trained %s is %+.2f%% from g2c3s %s (band +-2%%), writer_mlp %s' % (f"{r3['trained']:,}", 100 * (r3['trained'] / g2c3s - 1), f"{g2c3s:,}", r3['cfg']['writer_mlp']))
+    print('   breakdown: ' + ', '.join(f'{k} {v:,}' for k, v in bd.items()))
 
 
 if __name__ == '__main__':
