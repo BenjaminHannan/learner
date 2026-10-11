@@ -287,7 +287,7 @@ $g2wrong = "$(& $PY -c "import json,sys; m=json.load(open(sys.argv[1]))['marks']
 $g2held = $false
 if ($g2wrong -match '^(B3-\d)( B3-\d)*$' -and -not (Test-Path "$WORK\G2-GO.txt")) {
   $g2held = $true
-  Say "group 1 s400 proved wrong on $g2wrong: group 2 (g2c3s, B3 group 2) waits for the bisect; it moves to the end of the chain and runs there only on WORK\G2-GO.txt, NEEDS ATTENTION"
+  Say "group 1 s400 proved wrong on ${g2wrong}: group 2 (g2c3s, B3 group 2) waits for the bisect; it moves to the end of the chain and runs there only on WORK\G2-GO.txt, NEEDS ATTENTION"
 } else {
   Say "group 1 s400 proved-wrong marks: $g2wrong. Group 2 runs now."
   $null = G2Step '8aG2C3S' 'g2c3s.template.md' 'g2c3s.md'
