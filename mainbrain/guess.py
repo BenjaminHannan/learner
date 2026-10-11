@@ -17,6 +17,7 @@ import torch
 import torch.nn.functional as F
 
 from custom_io.data import Dataset, collate, to_device
+from custom_io.models.ledger import N_CTRL
 from domain import mode
 
 
@@ -46,6 +47,39 @@ def zf_of(m, rows, grad, bs=64):
     return torch.cat(out)
 
 
+def run_rws1(m, batch):
+    """SB-2b input: reader's masked mean over the question (256) ++ ln_z of all N_CTRL control rows after loop round 1 (t = 0), flattened.
+    -> [B, 9 * d]. Uses loops=1 (iteration 0 is the same computation as iteration 0 of the full run)."""
+    grab = {}
+
+    def each(t, s):
+        if t == 0:                      # called after iteration 0's update: post-update workspace
+            grab['z'] = m.ln_z(s['Z'][:, 0:N_CTRL]).flatten(1)
+    m.run(batch, loops=1, each=each)
+    X, xm = m.read(batch, talker=True)
+    w = xm.float()[..., None]
+    return torch.cat([(X * w).sum(1) / w.sum(1).clamp(min=1), grab['z']], 1)
+
+
+INPUTS = ('ctrl1', 'reader_ws1')
+
+
+def width_of(m, inp):
+    return m.d if inp == 'ctrl1' else m.d * (1 + N_CTRL)
+
+
+def feats_of(m, rows, grad, inp='ctrl1', bs=64):
+    """[B, width] head inputs for rows, with or without grad. 'ctrl1' (default) is exactly zf_of."""
+    assert inp in INPUTS, inp
+    if inp == 'ctrl1':
+        return zf_of(m, rows, grad, bs)
+    out = []
+    with torch.set_grad_enabled(grad):
+        for s in range(0, len(rows), bs):
+            out.append(run_rws1(m, _batch(m, rows[s:s + bs])))
+    return torch.cat(out)
+
+
 def labels(m, rows):
     """(y float tensor, answers): y = 1 if the model's greedy answer equals the row's answer."""
     res = mode.greedy(m, [r['prompt'] for r in rows])
@@ -54,8 +88,9 @@ def labels(m, rows):
 
 
 class Guess:
-    def __init__(self, run_dir, weight, lr, seed, d=None):
-        self.run_dir, self.weight, self.lr, self.seed = run_dir, weight, lr, seed
+    def __init__(self, run_dir, weight, lr, seed, d=None, inp='ctrl1'):
+        assert inp in INPUTS, inp
+        self.run_dir, self.weight, self.lr, self.seed, self.inp = run_dir, weight, lr, seed, inp
         self.d = d
         self.head = None
         self.snap = None            # head state at night start; None between a save and the next night
@@ -79,8 +114,8 @@ class Guess:
     def log_start(self, m, new, night):
         y, ans = labels(m, new)
         with torch.no_grad():
-            p = torch.sigmoid(self.logit(zf_of(m, new, False))).tolist()
-        rec = dict(night=night, head_nights_trained=night - 1,
+            p = torch.sigmoid(self.logit(feats_of(m, new, False, self.inp))).tolist()
+        rec = dict(night=night, input=self.inp, head_nights_trained=night - 1,
                    kind=[self.kinds.get(r['id'], r.get('kind', r.get('family'))) for r in new],
                    y=[int(v) for v in y.tolist()], p=p, prompt=[r['prompt'] for r in new],
                    row_source=[r.get('source') for r in new], success=float(y.mean()) if len(y) else None)
@@ -94,7 +129,7 @@ class Guess:
         def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None, addon=None):
             t0 = time.time()
             if self.head is None:
-                self.make_head(m.d)
+                self.make_head(width_of(m, self.inp))
             if not hasattr(m, '_guess_lsd'):                       # undo support: permanent instance-level wrapper
                 orig_lsd = m.load_state_dict
 
@@ -122,7 +157,7 @@ class Guess:
                     take = min(32 - len(ti), len(order) - pos)
                     ti += [int(i) for i in order[pos:pos + take]]
                     pos += take
-                zf = zf_of(m, [new[i] for i in ti], True)
+                zf = feats_of(m, [new[i] for i in ti], True, self.inp)
                 bce = F.binary_cross_entropy_with_logits(self.logit(zf), y[ti])
                 bces.append(float(bce.detach()))
                 if isinstance(out, tuple):
@@ -146,9 +181,9 @@ class Guess:
         return train_night
 
 
-def install(run_dir, weight, lr, seed):
+def install(run_dir, weight, lr, seed, inp='ctrl1'):
     """Monkeypatch mode (see module docstring for ordering). Returns the Guess."""
-    g = Guess(run_dir, weight, lr, seed)
+    g = Guess(run_dir, weight, lr, seed, inp=inp)
     base_make, base_save, base_try = mode.make_opt, mode.save_ckpt, mode.try_day
 
     def make_opt(m, lr_):

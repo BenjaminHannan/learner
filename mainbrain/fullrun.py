@@ -62,7 +62,7 @@ def install(cons_path, out=None, seed=None):
     assert not cons.get('addon'), 'protection replaces the add-on'
     mode.CONST_PATH = cons_path
     if 'guess' in cons:   # SB-2 head: installed first, so it is the inner train_night/make_opt (K-FAC is measured on the plain loss)
-        guess.install(out, cons['guess']['weight'], cons['guess']['lr'], seed)
+        guess.install(out, cons['guess']['weight'], cons['guess']['lr'], seed, cons['guess'].get('input', 'ctrl1'))
     base_train, base_make = mode.train_night, mode.make_opt
 
     def train_night(m, new, diary, updates, cons, seed, fresh=False, picks=None, addon=None):
