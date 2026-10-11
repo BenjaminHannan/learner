@@ -84,3 +84,18 @@ every training batch; only the run can say.
 
 Rules kept: free compute only (cloud CPU); the mode never reads a panel or DEV file; nothing in training is cut short;
 every step is the deployed model's own (the tools are outside tools it calls).
+
+## Addendum L1 (Opus, 8:45 PM ET 10-10, before any run or score)
+
+A Haiku helper found that four variants listed in sec. 3 never appear in training or DEV in_dist: the curriculum holds
+them out (`larger` and `count_above` of compare_numbers, `sum` of list_stats, and `cost` of table_calc, which sec. 3
+wrongly called `total`). So the parent never trained on "What is the sum of the numbers?".
+- `panel/lookalike-old.v1.jsonl` (LA3, gated) holds the 8 in-distribution variants, 100 rows each: compare_numbers
+  smaller, largest_of, smallest_of; list_stats range, count_even, second_largest; table_calc row_total, column_sum.
+  sha256 e1b896640819f3281b41ea64849f1dfff279f28f3c1706bb74cd0cd082e037c9.
+- `panel/lookalike-old-heldout.v1.jsonl` holds the 4 held-out variants, 100 rows each, drawn with the curriculum's own
+  held-out-variant filter (namespace LV). Scored the same way and **reported only**: it measures questions the parent
+  never trained on. sha256 973bcfbd0ca2ec447c135f47d70e05c02c8b0a503ab128dce7c5e105f584a576.
+- `panel/stats.v2.jsonl` sha256 bab0000578bc5ef110a8bb2aa66eebab9116b764273cfb24d5682b8d94f5ecc2 (700 rows);
+  `panel/invoice.v2.jsonl` sha256 9640d92aa45554dc59d67445fc1a5200c49322fd618e4666519be9e7be9f6b24 (600 rows).
+Bars unchanged.

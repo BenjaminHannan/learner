@@ -197,6 +197,17 @@ def score_run(a):
     dN, _ = analyze.in_dist_one(fin, drows, dsha, cache)
     l0, _ = analyze.in_dist_one(a.parent, lrows, lsha, cache)
     lN, _ = analyze.in_dist_one(fin, lrows, lsha, cache)
+    held = None
+    if a.heldout_panel:   # addendum L1: the curriculum's held-out look-alike variants, reported only
+        hrows, hgroups = old_rows(a.heldout_panel)
+        hsha = analyze.sha256_file(a.heldout_panel)
+        h0, _ = analyze.in_dist_one(a.parent, hrows, hsha, cache)
+        hN, _ = analyze.in_dist_one(fin, hrows, hsha, cache)
+        on_h = gate(feat(m, [r['prompt'] for r in hrows])).tolist()
+        h_routed = [x1 if on else x0 for x0, x1, on in zip(h0['hits'], hN['hits'], on_h)]
+        held = dict(on=on_rates(on_h, hrows, 'variant'),
+                    routed=harm_summary(harm.harm_measure(h0['hits'], h_routed, hgroups, LA_FAMILY_DROP, LA_POOLED_DROP)),
+                    addon_left_on=harm_summary(harm.harm_measure(h0['hits'], hN['hits'], hgroups, LA_FAMILY_DROP, LA_POOLED_DROP)))
 
     on_p = gate(feat(m, [r['prompt'] for r in prows])).tolist()
     on_d = gate(feat(m, [r['prompt'] for r in drows])).tolist()
@@ -233,7 +244,7 @@ def score_run(a):
                LA3=dict(harm_summary(hm_l), verdict=la3_rule(hm_l)),
                old_answers_changed={f'{v} {d}': n for (v, d), n in sorted(changed.items())},
                addon_left_on=dict(dev=harm_summary(left_d, look), old_panel=harm_summary(left_l)),
-               decontam_dropped=len(dropped))
+               heldout_variants_reported=held, decontam_dropped=len(dropped))
     path = os.path.join(out_dir, f'LOOKALIKE_{a.gate}.json')
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
@@ -259,6 +270,7 @@ def main(argv=None):
     r.add_argument('--run', required=True)
     r.add_argument('--gate', default='v8', choices=['v8', 'F1', 'F2'])
     r.add_argument('--out-dir', default=None)
+    r.add_argument('--heldout-panel', default=None, help='lookalike-old-heldout.v1.jsonl (addendum L1, reported only)')
     for p in (s, r):
         p.add_argument('--parent', required=True)
         p.add_argument('--old-panel', required=True)
