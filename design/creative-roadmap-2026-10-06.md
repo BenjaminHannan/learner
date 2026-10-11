@@ -98,8 +98,10 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   middle rate (SCM, 10-10) it cost nothing and learned the new rules as well as the fast night, but its search on
   multi-step rules stayed narrow (about 8-9 per 100 found in 32 tries, against 13-14), so its pre-set mark calls it
   proved wrong. Two nights at the middle rate (SCM2, 10-10) then matched the standard two nights' climb on the new
-  rules with no lost skills, so this is the night recipe going forward; its check on six copies follows job 9. Next,
-  Test APM: on this recipe, keep every past night's finds in the training pool (Ben's 2:54 PM ET 10-08 question).
+  rules with no lost skills, so this is the night recipe going forward; its check on six copies follows job 9. On
+  this recipe, keeping every past night's finds in the training pool (Test APM, Ben's 2:54 PM ET 10-08 question)
+  neither helped nor hurt: at the middle rate the second night already keeps what the first night learned, so the
+  pool stays as it is.
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1646,6 +1648,20 @@ families x 200, two parents).**
   - If APM passes, the pool becomes append-only in new runs and joins the six-parent confirm. Cost: night 2 only,
     about 50 minutes per parent of free cloud CPU. Autonomy: the pool rule is ours; the records are the model's own
     checked finds and the replay pick is the model's.
+- **APM result (fast-sleep ffa1fe72a, 9:05 PM ET 10-10; shown, DEV, s100 / s101): mark 1 fails on both parents, not
+  proved wrong.** Run without a Run card under Ben's standing rule (8:50 PM ET 10-10: no OKs, picks or taps).
+  - (1) Pooled first try APM - SCM2 +0.8 [-3.5, +5.1] / -1.6 [-5.5, +2.0], against at least +2: miss on both.
+    (2) Multi-step first try APM - SCM2 -0.6 / 0.0: met. (3) Night 2's own cost, APM against SCM, +0.3 / -0.4,
+    nothing fires: met. Proved-wrong line not met (upper ends +5.1 / +2.0).
+  - last_digit (51 DEV questions), SCM / SCM2 / APM: 47.1 / 56.9 / 64.7 and 70.6 / 68.6 / 60.8. At 3e-4 night 2 does
+    not erase night 1's last_digit (job 8 at 1e-3: 78 to 57 and 73 to 63), so the pool has little to fix.
+  - Report only: skills against N' -0.9 / -1.5 (better), nothing fires. Canaries N' / SCM / SCM2 / APM: seq_next
+    62.0 / 72.5 / 68.0 / 69.0 and 66.5 / 70.0 / 70.5 / 67.5; rule_apply 77.5 / 78.5 / 78.5 / 78.5 and 85.0 / 89.5 /
+    85.0 / 88.0, no drop in any arm. Multi-step reach@32 SCM2 / APM 20.8 / 21.4 and 18.2 / 14.3.
+  - Shown, 2 parents: on SCM2's recipe an append-only pool neither helps nor harms. The pool is not changed. Untested:
+    the same pool with 32 visits per record (APM's union of 1,989 / 1,892 records got about 18.5 each at SCM2's
+    update count). Not run, since the forgetting it was meant to stop does not show at this rate.
+  - Next: no new sleep screen. The SCM2 six-parent confirm and the D6 gate screen run once job 9 is scored.
 - **Queued by the scorecard (rows 1b and 7):**
   - After job 9 is scored: the learned notebook-gate screen (section 7b, D6), with its sealed marks, on cloud CPU.
     It is built while job 9 runs.
@@ -1980,3 +1996,6 @@ CPU):
 - **10-10, 11:10 AM ET:** SCM2 PASSES (fast-sleep b7ab0fb35, ab33f3f73): two nights at lr 3e-4 with model-picked
   replay keep old skills and match the standard nights' climb on 2 parents; it is the night recipe going forward, with
   its six-parent confirm after job 9 (marks fixed). Next single change is Test APM (append-only pool on this recipe).
+- **10-10, 9:10 PM ET:** APM ruled (fast-sleep ffa1fe72a): mark 1 fails on both parents, not
+  proved wrong. The append-only pool neither helps nor harms on SCM2's recipe; the pool is not changed. Next: SCM2
+  six-parent confirm and D6 after job 9.
