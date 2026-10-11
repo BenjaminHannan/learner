@@ -57,9 +57,11 @@ def _batch(m, chunk):
     return to_device(collate([ds[i] for i in range(len(chunk))]), 'cpu')
 
 
-def workspace_features(m, prompts, bs=64):
+def workspace_features(m, prompts, bs=64, loops=None):
     """The parent's greedy pass exactly as domain.mode.greedy does it, with the workspace captured after the last round.
-    -> (features float32 [N, 2048] = Z[:, :8].flatten(1), [(calls, answer)])."""
+    -> (features float32 [N, 2048] = Z[:, :8].flatten(1), [(calls, answer)]).
+    loops=k (M3-1): only k rounds are run (m.run(batch, loops=k)); the features are Z[:, :8] after round k and there are no
+    glance answers (the second item is None)."""
     m.eval()
     feats, res = [], []
     for s in range(0, len(prompts), bs):
@@ -71,11 +73,15 @@ def workspace_features(m, prompts, bs=64):
             last['Z'] = state['Z']
             return False
         with torch.no_grad():
+            if loops is not None:
+                m.run(batch, loops=loops, each=each)
+                feats.append(last['Z'][:, :N_CTRL].flatten(1).float().clone())
+                continue
             o = m.run(batch, each=each)
             ans = m.talk(m.state_of(o), batch)
         feats.append(last['Z'][:, :N_CTRL].flatten(1).float().clone())
         res += [([(op, a, b, r) for (t, op, a, b, r) in o['calls'][i]], ans[i]) for i in range(len(chunk))]
-    return torch.cat(feats), res
+    return torch.cat(feats), (res if loops is None else None)
 
 
 def reader_features(m, prompts):
@@ -83,13 +89,14 @@ def reader_features(m, prompts):
     return _route.features(m, prompts).float()
 
 
-def both_features(m, prompts, bs=64):
-    """Arm TR: reader mean (256) then workspace (2,048) side by side. -> (float32 [N, 2304], [(calls, answer)] from the glance pass)."""
-    Xw, glance = workspace_features(m, prompts, bs)
+def both_features(m, prompts, bs=64, loops=None):
+    """Arm TR: reader mean (256) then workspace (2,048) side by side. -> (float32 [N, 2304], [(calls, answer)] from the glance pass;
+    None when loops is set)."""
+    Xw, glance = workspace_features(m, prompts, bs, loops)
     return torch.cat([reader_features(m, prompts), Xw], 1), glance
 
 
-def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0, classes=None):
+def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=400, lr=0.01, l2=1e-4, seed=0, classes=None, look_loops=None):
     """n_classes-way softmax on standardised features (default 6; classes, if given, names the classes and sets n_classes);
     every class's rows share total weight 1/n_classes.
     feats records which features the router reads: 'workspace', 'reader' or 'reader+workspace'."""
@@ -114,7 +121,7 @@ def fit_router(X, y, n_classes=6, kind='workspace', feats='workspace', epochs=40
     with torch.no_grad():
         acc = ((Z @ W.T + b).argmax(1) == y).float().mean().item()
     return dict(mu=mu, sd=sd, W=W.detach(), b=b.detach(), classes=list(classes) if classes is not None else (list(CLASSES[:n_classes]) if n_classes <= 6 else list(range(n_classes))),
-                kind=kind, feats=feats, train_acc=acc, n_train=int(len(y)), class_counts=[int(c) for c in cnt])
+                kind=kind, feats=feats, look_loops=look_loops, train_acc=acc, n_train=int(len(y)), class_counts=[int(c) for c in cnt])
 
 
 def route(router, X):
@@ -168,19 +175,26 @@ class Shelf:
 
     def answer(self, prompts, bs=64, features=None):
         """-> (answers in input order, route per prompt). Glance pass -> workspace -> route -> greedy with the piece on."""
+        from domain.mode import greedy
+        ll = self.router.get('look_loops')              # missing key / None = the whole parent pass
         if features is not None:
             X, glance = features
         else:
             feats = self.router.get('feats', 'workspace')
             if feats == 'reader+workspace':
-                X, glance = both_features(self.m, prompts, bs)
+                X, glance = both_features(self.m, prompts, bs) if ll is None else both_features(self.m, prompts, bs, ll)
             else:
-                X, glance = workspace_features(self.m, prompts, bs)
+                X, glance = workspace_features(self.m, prompts, bs) if ll is None else workspace_features(self.m, prompts, bs, ll)
                 if feats == 'reader':
                     X = reader_features(self.m, prompts)
         r = route(self.router, X).tolist()
-        ans = [g[1] for g in glance]
-        from domain.mode import greedy
+        if glance is None:                              # one-round look: "none" answers are the parent's full greedy pass
+            ix0 = [i for i, c in enumerate(r) if c == 0]
+            ans = [None] * len(prompts)
+            for i, (_, a) in zip(ix0, greedy(self.m, [prompts[i] for i in ix0], bs) if ix0 else []):
+                ans[i] = a
+        else:
+            ans = [g[1] for g in glance]
         for k in range(1, len(self.pieces) + 1):
             ix = [i for i, c in enumerate(r) if c == k]
             if not ix:

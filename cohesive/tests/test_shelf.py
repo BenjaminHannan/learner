@@ -169,6 +169,41 @@ def test_two_pieces_three_class_router():
     assert sh.numbers()['pieces'] == 2 * sum(B.numel() + A.numel() for B, A in pieces[0].values())
 
 
+def test_look_loops_one_round_vs_full_pass():
+    """Real toy model: loops=1 features equal Z after round 1 of a full pass; the router's look_loops decides what answer computes."""
+    sh = make_shelf()
+    prompts = [f'{i}+{i}=' for i in range(6)]
+    seen = {}
+
+    def grab(t, state):
+        seen.setdefault(t, state['Z'][:, :S.N_CTRL].flatten(1).float().clone())
+        return False
+    with torch.no_grad():
+        sh.m.run(S._batch(sh.m, prompts), each=grab)
+    X1, g1 = S.workspace_features(sh.m, prompts, loops=1)
+    Xf, gf = S.workspace_features(sh.m, prompts)
+    assert g1 is None and gf is not None and len(gf) == 6
+    assert torch.allclose(X1, seen[0], atol=1e-5) and X1.shape == Xf.shape and not torch.allclose(X1, Xf)
+    # Shelf.answer: look_loops=1 -> one-round features, no glance; missing key -> full pass
+    called = []
+    saved = S.workspace_features
+    import domain.mode as dm
+    saved_g = dm.greedy
+    try:
+        S.workspace_features = lambda m, ps, bs=64, loops=None: (called.append(loops) or (torch.zeros(len(ps), 16), None if loops else [([], 'g')] * len(ps)))
+        dm.greedy = lambda m, ps, bs=64: [([], 'parent-full') for _ in ps]
+        sh.router = S.fit_router(torch.randn(60, 16), torch.arange(60) % 6, look_loops=1)
+        assert sh.router['look_loops'] == 1
+        ans, r = sh.answer(prompts)
+        assert called == [1] and all(a == 'parent-full' for a, c in zip(ans, r) if c == 0)
+        called.clear()
+        sh.router = {k: v for k, v in sh.router.items() if k != 'look_loops'}
+        ans, r = sh.answer(prompts)
+        assert called == [None] and all(a == 'g' for a, c in zip(ans, r) if c == 0)
+    finally:
+        S.workspace_features, dm.greedy = saved, saved_g
+
+
 if __name__ == '__main__':
     for n, f in list(globals().items()):
         if n.startswith('test_'):

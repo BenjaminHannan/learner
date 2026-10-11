@@ -71,6 +71,7 @@ def main(argv=None):
     ap.add_argument('--thresholds', default='own_routed', choices=('own_routed', 'final_alone'),
                     help='own_routed: the M1 table (OWN); final_alone: near >= final alone near - 3, proved wrong below final alone near - 10')
     ap.add_argument('--marks-addendum', default=None)
+    ap.add_argument('--look-loops', type=int, default=None, help='M3-1: workspace features after this many rounds of the parent (default: the whole pass)')
     a = ap.parse_args(argv)
     run_map = dict(x.split('=', 1) for x in a.runs.split(',') if x)
     SUBJ = tuple(run_map)
@@ -80,6 +81,7 @@ def main(argv=None):
     if a.thresholds == 'own_routed':
         assert all(s in OWN for s in SUBJ), 'own_routed thresholds exist only for the M1 subjects'
     PARENT_CK = a.parent
+    LL = a.look_loops
     ARMS = [x for x in a.arms.split(',') if x]
     assert ARMS and all(x in ('T', 'R', 'TR') for x in ARMS) and len(set(ARMS)) == len(ARMS), ARMS
     assert a.save_arm in ARMS, 'save-arm must be one of the arms run'
@@ -173,21 +175,21 @@ def main(argv=None):
     # ---- c. features (parent only)
     feats_T, feats_R, glance = {}, {}, {}
     with timed(times, 'features'):
-        XT, _ = S.workspace_features(m, train_prompts)
+        XT, _ = S.workspace_features(m, train_prompts, loops=LL)
         XR = S.reader_features(m, train_prompts)
         log('training features', tuple(XT.shape), tuple(XR.shape))
         for k, ps in sets.items():
-            feats_T[k], glance[k] = S.workspace_features(m, ps)
+            feats_T[k], glance[k] = S.workspace_features(m, ps, loops=LL)
             feats_R[k] = S.reader_features(m, ps)
             log('features', k, len(ps))
     with timed(times, 'fit'):
-        rT = S.fit_router(XT, train_y, kind='workspace (8 control rows x 256, after the last round)', classes=CLS)
-        rR = S.fit_router(XR, train_y, kind='reader mean (256)', feats='reader', classes=CLS)
+        rT = S.fit_router(XT, train_y, kind='workspace (8 control rows x 256, after the last round)', classes=CLS, look_loops=LL)
+        rR = S.fit_router(XR, train_y, kind='reader mean (256)', feats='reader', classes=CLS, look_loops=LL)
         routers = {'T': rT, 'R': rR}
         feats_arm = {'T': feats_T, 'R': feats_R}
         if 'TR' in ARMS:                           # reader first, then workspace; no extra model pass
             routers['TR'] = S.fit_router(torch.cat([XR, XT], 1), train_y, kind='reader mean (256) + workspace (2,048), standardised together',
-                                         feats='reader+workspace', classes=CLS)
+                                         feats='reader+workspace', classes=CLS, look_loops=LL)
             feats_arm['TR'] = {k: torch.cat([feats_R[k], feats_T[k]], 1) for k in sets}
     routers = {x: routers[x] for x in ARMS}
     log('router train acc', {x: round(routers[x]['train_acc'], 4) for x in ARMS})
@@ -306,7 +308,7 @@ def main(argv=None):
         arms[arm] = out
     comparison = comparison_TR = None
     addendum = a.marks_addendum or ('M1b' if 'TR' in ARMS else None)
-    numbers_only = bool(addendum and addendum.startswith('M1c'))   # M1c: no comparison statement is fixed
+    numbers_only = bool(addendum and addendum.startswith(('M1c', 'M3-1')))   # M1c: no comparison statement is fixed
     if 'T' in arms and 'R' in arms:
         T, Rr = arms['T'], arms['R']
         fewer = Rr['false_on_total'] - T['false_on_total']
@@ -331,11 +333,18 @@ def main(argv=None):
                              statement='no comparison statement is fixed for M1c: numbers and difference only' if numbers_only else (
                                  'reading its own thinking as well as its reader cuts wrong switch-ons (suggested, one seed)'
                                  if fewer >= 20 and not_worse else 'no difference shown'))
+    comparison_M31 = None
+    if addendum == 'M3-1' and 'TR' in arms:
+        X = arms['TR']
+        ok = X['overall'] == 'PASS' and X['false_on_total'] <= 119 + 20
+        comparison_M31 = dict(look_loops=LL, overall_TR=X['overall'], false_on_TR=X['false_on_total'], bar=119 + 20, M1b_TR_false_on=119,
+                              false_on_R=arms['R']['false_on_total'] if 'R' in arms else None,
+                              statement='a one-round look picks skills as well as a full look (suggested, one seed)' if ok else 'the full look is needed')
     result = dict(marks='M1-MARKS-2026-10-10.md', marks_addendum=addendum, thresholds=a.thresholds, parent=PARENT_CK, subjects=list(SUBJ), classes=list(CLS),
                   runs=run_map, arms_run=ARMS, saved_arm=sv,
                   dev_sha256=dsha, checkpoints=ckpts, checkpoint_sha256=csha, pieces=piece_rep,
                   class_sizes=sizes, dropped_cross_class=len(both), router_train_acc={x: arms[x]['train_acc'] for x in ARMS},
-                  numbers=nums, equivalence=eq, arms=arms, comparison=comparison, comparison_TR=comparison_TR, deviations=deviations, timings_s=times,
+                  numbers=nums, equivalence=eq, arms=arms, comparison=comparison, comparison_TR=comparison_TR, comparison_M31=comparison_M31, look_loops=LL, deviations=deviations, timings_s=times,
                   total_secs=round(time.time() - T0, 1), decontam_dropped={s: len(dropped[s]) for s in SUBJ})
     with open(os.path.join(a.out, 'RESULT.json'), 'w') as f:
         json.dump(result, f, indent=1, default=str)
@@ -345,6 +354,7 @@ def main(argv=None):
         log(x, 'overall', A['overall'], '| S1', A['S1_verdict'], 'S2', A['S2']['verdict'], 'S3', A['S3']['verdict'], '| wrong switch-ons', A['false_on_total'])
     log('comparison', comparison)
     log('comparison_TR', comparison_TR)
+    log('comparison_M31', comparison_M31)
 
 
 def write_md(r, path):
@@ -378,6 +388,8 @@ def write_md(r, path):
     L += ['## Comparison rule' + (' (T vs R)' if r.get('comparison') else ''), '', json.dumps(r['comparison'], indent=1), '']
     if r.get('comparison_TR'):
         L += ['## Comparison rule M1b (TR vs R)', '', json.dumps(r['comparison_TR'], indent=1), '']
+    if r.get('comparison_M31'):
+        L += ['## Comparison rule M3-1 (TR vs M1b TR 119 + 20)', '', json.dumps(r['comparison_M31'], indent=1), '']
     L += ['## Deviations', ''] + [f'- {d}' for d in r['deviations']]
     with open(path, 'w') as f:
         f.write('\n'.join(L) + '\n')
