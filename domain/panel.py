@@ -23,6 +23,7 @@ RPN panel (800 rows = 8 kinds x (60 near + 40 far)):
         operators, so no far shape can equal one.
 
 Run from the repo root:  python3 -m domain.panel            (v1: sheet.jsonl, rpn.jsonl; refuses to overwrite)
+                           python3 -m domain.panel --py       (A24: py.jsonl, seed 91021; refuses to overwrite)
                            python3 -m domain.panel --v2       (v2, addendum A10: sheet.v2.jsonl, rpn.v2.jsonl, new seeds)
 It writes sheet.jsonl and rpn.jsonl and a .sha256 for each into OUT_DIR, and refuses to replace existing files unless
 main(overwrite=True) is called.
@@ -36,6 +37,7 @@ import re
 from collections import Counter
 
 from domain.tools import ASCII, MAX_ANS, MAX_PROMPT, N_NUM, N_RES
+from domain.tools import py as py_tool
 from domain.tools import rpn as rpn_tool
 from domain.tools import sheet as sheet_tool
 
@@ -45,6 +47,7 @@ RPN_SEED = 91002
 # rpn.v2.jsonl). The v1 files are never rewritten by the v2 option.
 V2_SHEET_SEED = 91011
 V2_RPN_SEED = 91012
+PY_SEED = 91021  # A24: the third subject (reading code); its own file py.jsonl
 OUT_DIR = '/mnt/project-files/domain-mode/panel'
 NEAR_PER_KIND, FAR_PER_KIND = 60, 40
 MAX_TRIES = 200000  # a cell not full after this many draws is a bug in the generator, not a slow fill
@@ -311,6 +314,182 @@ def build_rpn(seed=RPN_SEED):
                       lambda kind, split, shape: split == 'near' or shape not in help_shapes)
 
 
+# ---------- py panel (A24): 10 kinds x (60 near + 40 far), its own generator ----------
+PY_KINDS = [h['kind'] for h in py_tool.help()]
+PY_KEYWORDS = {'for', 'in', 'range', 'if', 'else', 'while', 'def', 'return', 'print', 'max', 'min', 'abs', 'sum', 'len'}
+PY_NAMES = list('abcdeghkmnpqrstuvwxyz') + ['tot', 'acc', 'cnt', 'num', 'val', 'ans', 'res', 'top', 'low', 'xs']
+PY_FUNCS = ['f', 'g', 'h']
+PY_LOOPVARS = ['i', 'j', 'k', 'n', 't']
+
+
+def py_skeleton(prompt):
+    """The shape of a py prompt: every digit run becomes d, every name that is not a keyword or builtin becomes v."""
+    s = re.sub(r'\d+', 'd', prompt[len('py: '):])
+    return re.sub(r'[A-Za-z_]+', lambda m: m.group(0) if m.group(0) in PY_KEYWORDS else 'v', s)
+
+
+PY_HELP_SKEL = {h['kind']: py_skeleton(h['prompt']) for h in py_tool.help()}
+
+
+def _names(rng, k, pool=PY_NAMES, avoid=()):
+    return rng.sample([n for n in pool if n not in avoid], k)
+
+
+def _lst(vals):
+    return '[' + ', '.join(map(str, vals)) + ']'
+
+
+def py_draw(kind, split, rng):
+    """One py candidate: (prompt, python's own value or None, None). The value is worked out here, in plain Python."""
+    R, near = rng.randint, split == 'near'
+    if kind == 'assign add':
+        x, y = _names(rng, 2)
+        a, b = R(1, 99), R(1, 99)
+        if near:
+            return f'py: {x} = {a}; {y} = {x} + {b}; print({y})', a + b, None
+        x, y, z, w = _names(rng, 4)
+        c, d = R(1, 99), R(1, 9)
+        return (f'py: {x} = {a}; {y} = {x} + {b}; {z} = {y} * {d}; {w} = {z} + {c}; print({w})',
+                (a + b) * d + c, None)
+    if kind == 'chain':
+        x, y, z = _names(rng, 3)
+        a, b, c = R(1, 30), R(2, 9), R(1, 99)
+        if near:
+            return f'py: {x} = {a}; {y} = {x} * {b}; {z} = {y} - {c}; print({z})', (a * b - c if a * b >= c else None), None
+        w, q = _names(rng, 2, avoid=(x, y, z))
+        d, e = R(1, 9), R(1, 50)
+        v = a * b
+        return (f'py: {x} = {a}; {y} = {x} * {b}; {z} = {y} + {d}; {w} = {z} * {c % 9 + 2}; {q} = {w} - {e}; print({q})',
+                ((v + d) * (c % 9 + 2) - e if (v + d) * (c % 9 + 2) >= e else None), None)
+    if kind == 'max min':
+        x, y, z = _names(rng, 3)
+        a, b = R(1, 99), R(1, 99)
+        if near:
+            return f'py: {x} = {a}; {y} = {b}; {z} = max({x}, {y}) - min({x}, {y}); print({z})', abs(a - b), None
+        p, q, r = _names(rng, 3, avoid=(x, y, z))
+        c, d, e, f = R(1, 20), R(1, 20), R(1, 99), R(1, 99)
+        return (f'py: {x} = {c} * {d}; {y} = {e} + {f}; {z} = max({x}, {y}); {p} = min({x}, {y}); {q} = {z} - {p}; print({q})',
+                abs(c * d - (e + f)), None)
+    if kind == 'abs':
+        x, y = _names(rng, 2)
+        a, b = R(1, 99), R(1, 99)
+        if near:
+            return f'py: {x} = {a}; {y} = {b}; print(abs({x} - {y}))', abs(a - b), None
+        c, d, e = R(1, 20), R(1, 20), R(1, 99)
+        return f'py: {x} = {c} * {d}; {y} = {e} + {a}; print(abs({x} - {y}))', abs(c * d - (e + a)), None
+    if kind == 'list index':
+        v, i = _names(rng, 2)
+        vals = [R(1, 99) for _ in range(3)]
+        j = R(0, 2)
+        k = R(0, 2)
+        if near:
+            return f'py: {v} = {_lst(vals)}; {i} = {k}; print({v}[{i}] + {v}[{j}])', vals[k] + vals[j], None
+        vals = [R(1, 99) for _ in range(rng.choice([5, 6]))]
+        j, k, m = (R(0, len(vals) - 1) for _ in range(3))
+        form = rng.choice(['sum', 'idx3'])
+        if form == 'sum':
+            if sum(vals) < vals[k]:
+                return '', None, None
+            return f'py: {v} = {_lst(vals)}; {i} = {k}; print(sum({v}) - {v}[{i}])', sum(vals) - vals[k], None
+        return (f'py: {v} = {_lst(vals)}; {i} = {k}; print({v}[{i}] * {v}[{j}] + {v}[{m}])',
+                vals[k] * vals[j] + vals[m], None)
+    if kind == 'for sum':
+        i = rng.choice(PY_LOOPVARS)
+        s = rng.choice([n for n in PY_NAMES if n != i])
+        a = R(0, 9)
+        if near:
+            n = R(2, 6)
+            return f'py: {s} = {a}; for {i} in range({n}): {s} = {s} + {i}; print({s})', a + sum(range(n)), None
+        n = R(5, 7)
+        if rng.random() < 0.5:
+            return f'py: {s} = {a}; for {i} in range({n}): {s} = {s} + {i}; print({s})', a + sum(range(n)), None
+        v = _names(rng, 1, avoid=(s, i))[0]
+        vals = [R(1, 99) for _ in range(n)]
+        return (f'py: {v} = {_lst(vals)}; {s} = {a}; for {i} in range({n}): {s} = {s} + {v}[{i}]; print({s})',
+                a + sum(vals), None)
+    if kind == 'for repeat':
+        i = rng.choice(PY_LOOPVARS)
+        p = rng.choice([n for n in PY_NAMES if n != i])
+        a, m = R(1, 5), rng.choice([2, 3, 4, 5])
+        if near:
+            n = R(2, 5)
+            return f'py: {p} = {a}; for {i} in range({n}): {p} = {p} * {m}; print({p})', a * m ** n, None
+        n = R(5, 7)
+        k = R(1, 20)
+        if rng.random() < 0.5:
+            m = rng.choice([2, 3])
+            return f'py: {p} = {a}; for {i} in range({n}): {p} = {p} * {m}; print({p})', a * m ** n, None
+        return f'py: {p} = {a}; for {i} in range({n}): {p} = {p} + {k}; print({p})', a + n * k, None
+    if kind == 'if else':
+        x, y = _names(rng, 2)
+        a, b, c = R(1, 99), R(1, 99), R(1, 99)
+        if near:
+            return (f'py: {x} = {a}; if {x} > {b}: {y} = {x} - {b}; else: {y} = {x} + {c}; print({y})',
+                    a - b if a > b else a + c, None)
+        z = _names(rng, 1, avoid=(x, y))[0]
+        d, e = R(1, 20), R(1, 20)
+        t = d * e
+        # a product compared with b; both branches use that product
+        return (f'py: {x} = {d} * {e}; if {x} > {b}: {y} = {x} - {b}; else: {y} = {b} - {x}; {z} = max({y}, {c}); print({z})',
+                max(abs(t - b), c), None)
+    if kind == 'while':
+        n = rng.choice(PY_NAMES)
+        a, m, lim = R(1, 5), rng.choice([2, 3]), R(10, 99)
+        if near:
+            v = a
+            while v < lim:
+                v *= m
+            return f'py: {n} = {a}; while {n} < {lim}: {n} = {n} * {m}; print({n})', v, None
+        step, lim = R(8, 16), R(30, 70)
+        a = R(1, 9)
+        v, it = a, 0
+        while v < lim:
+            v += step
+            it += 1
+        s = rng.choice([q for q in PY_NAMES if q != n])
+        if rng.random() < 0.5:
+            return f'py: {n} = {a}; while {n} < {lim}: {n} = {n} + {step}; print({n})', v, None
+        return f'py: {n} = {a}; while {n} < {lim}: {n} = {n} + {step}; {s} = {n} * 2; print({s})', v * 2, None
+    if kind == 'function':
+        f, x = rng.choice(PY_FUNCS), rng.choice(PY_NAMES)
+        a, b, c = R(2, 9), R(1, 9), R(1, 20)
+        if near:
+            return f'py: def {f}({x}): return {x} * {a} + {b}; print({f}({c}))', c * a + b, None
+        i = rng.choice([q for q in PY_LOOPVARS])
+        s = rng.choice([q for q in PY_NAMES if q not in (i, x)])
+        n = R(2, 3)
+        form = rng.choice(['loop', 'two'])
+        if form == 'loop':
+            return (f'py: def {f}({x}): return {x} + {b}; {s} = 0; for {i} in range({n}): {s} = {s} + {f}({i}); print({s})',
+                    sum(k + b for k in range(n)), None)
+        y = rng.choice([q for q in PY_NAMES if q != x])
+        return (f'py: def {f}({x}, {y}): return max({x}, {y}) - min({x}, {y}); print({f}({a * 3}, {c}) + {f}({b}, {c}))',
+                abs(a * 3 - c) + abs(b - c), None)
+    raise ValueError(kind)
+
+
+def py_shape_ok(kind, split, info):
+    return True
+
+
+def build_py(seed=PY_SEED):
+    rng = random.Random(seed)
+    help_list = py_tool.help()
+    assert [h['kind'] for h in help_list] == PY_KINDS
+    help_prompts = {h['prompt'] for h in help_list}
+
+    def draw(kind, split, rng):
+        prompt, expect, info = py_draw(kind, split, rng)
+        if not prompt:
+            return 'py: print(0)', None, None
+        return prompt, expect, (prompt, py_skeleton(prompt))
+
+    def ok(kind, split, info):
+        prompt, skel = info
+        return split == 'far' or skel == PY_HELP_SKEL[kind]
+    return fill_panel('py', PY_KINDS, rng, draw, py_tool.evaluate, help_prompts, ok)
+
+
 def hard_checks(name, rows, help_prompts):
     """Every cap and rule, asserted over the whole panel. Returns the counts it checked."""
     bad, seen = Counter(), set()
@@ -360,6 +539,20 @@ def report(name, rows, stats):
             print(f"  sample {split} {kind}: {r['prompt']}  ->  {r['answer']}  [{r['n_steps']} steps]")
 
 
+def main_py(overwrite=False):
+    """Build, check and write the py panel (A24): py.jsonl and py.jsonl.sha256. Refuses to replace existing files."""
+    assert (N_NUM, N_RES, MAX_PROMPT, MAX_ANS) == (16, 7, 208, 8)
+    name = 'py.jsonl'
+    for p in (os.path.join(OUT_DIR, name), os.path.join(OUT_DIR, name + '.sha256')):
+        if os.path.exists(p) and not overwrite:
+            raise SystemExit(f'refusing to overwrite {p}')
+    rows, stats = build_py(PY_SEED)
+    print('hard checks:', hard_checks('py', rows, {h['prompt'] for h in py_tool.help()}))
+    report('py', rows, stats)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    print(f'sha256 {name}', write_panel(name, rows))
+
+
 def main(overwrite=False, v2=False):
     """Build, check and write both panels. Without overwrite=True it refuses to replace existing files.
     v2=True writes sheet.v2.jsonl and rpn.v2.jsonl from the v2 seeds (addendum A10); the v1 files are not named here."""
@@ -389,4 +582,7 @@ def main(overwrite=False, v2=False):
 
 if __name__ == '__main__':
     import sys
-    main(v2='--v2' in sys.argv[1:])
+    if '--py' in sys.argv[1:]:
+        main_py()
+    else:
+        main(v2='--v2' in sys.argv[1:])

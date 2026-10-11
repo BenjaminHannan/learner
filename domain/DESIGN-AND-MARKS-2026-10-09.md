@@ -245,3 +245,12 @@ Status at the end of the review fixes: code, tests and the audit changed under d
 - **Constants unchanged** (the v7 file, the same hash as the sheet and RPN runs). Per-tool add-on with its own switch (A22/A23).
 - **Marks, seed 200 (seed 201 runs only if 200 is not proved wrong):** DM1 = near, routed by its own switch, >= +30. DM3 = routed old-skills harm measure passes. DM4 = audit passes (panel collisions <= 2%). DM5 as before. DM2 (far >= +10) is reported. Proved wrong = routed near < +10.
 - Next after this, when the model can write calls as letters and open text (B3 group 2, the talker): flip the direction to "task -> write the program", checked by running it in the same tool. That step is writing code.
+
+**A25. The py tool is built, plus one maker edit found in review (Opus, 9:50 PM ET 10-10, before the run).** Shown:
+- The tool (`domain/tools/py.py`) is an `ast` whitelist walker that never calls exec, eval or compile. It caps loops at 50 iterations, 400 AST nodes and call depth 6. `//` runs only when the division is exact (the calculator's own div).
+- The help page has 10 kinds, 1-4 steps each.
+- The sealed panel `py.jsonl` has 600 near and 400 far rows, sha256 `bdad2e23c07aa1f0...`. Its longest prompt is 98 letters, it uses at most 7 steps, no row is over a cap, and none equals a help prompt.
+- All 56 tests pass, including 8 new ones for the tool and panel.
+- Smoke: practice keeps about 40% of draws on py, against 0.6% on sheets.
+
+Found in review: the maker's renames, edit (c), touch only capital cell letters, so practice programs would keep the help page's variable names. Near panel rows use new names (A24), the same kind of gap as v1's column B. **Edit (e), the same for every domain:** with chance vary_p, one letters-only word that occurs at least twice in the draft (a name the text reuses) is renamed everywhere to a new random word of 1-3 lowercase letters that the text does not already use. Checked: no sheet or RPN help example has a repeated word, so (e) never changes their drafts; the sheet and RPN results stand (their random draws would differ on a re-run). Disclosed: chosen knowing the panel's near rule. Marks unchanged.
