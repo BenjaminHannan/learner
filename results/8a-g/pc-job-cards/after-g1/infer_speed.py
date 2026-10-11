@@ -1,7 +1,7 @@
 """fc100 part 3 (11 Oct 2026, spec addendum T): how fast the ~100M B3 group 2 shapes of fc100 part 2 answer. Run from src-b3g2 (custom_io of claude/learner-new-g2 at
 1acfde9a73) by the post-G1 chain waiter v3d right after fc100 part 2 (queue 8aFC2), alone on the GPU. Read-only: it trains nothing, writes one JSON.
 
-For each a64 shape line of the 8aFC2 queue (as of v3d: 21 x 512, 30 x 432, 37 x 384, 54 x 320), a freshly started model (seed 400, eval mode, bf16 autocast on cuda as in
+For each a64 shape line of the 8aFC2 queue (as of addendum W: five 512-wide shapes, 21, 26, 30, 34 and 37 layers), a freshly started model (seed 400, eval mode, bf16 autocast on cuda as in
 training's eval, the frozen EmbeddingGemma 2 front included) answers dev in_dist questions with exactly K thinking rounds (generate lesion 'loops:K'; K = 12, the
 model's n_loops, and 32, the cap) at batch sizes 1, 16 and 128. A timed answer = read the question (Gemma + letter reader) + K rounds + write the answer.
 Weights are untrained, so the writer's per-round notes are timed two ways:

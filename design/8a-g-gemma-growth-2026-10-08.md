@@ -541,9 +541,11 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   review, parent 8fce7247a8; group 2 later tonight), caps, data and queue lines unchanged; (2) the 10M S runs and the depth twin D are
   held (they move to the agent model AT; AT-1 at 3M joins after B3G2 when its queue arrives); (3) fc100 part 2 measures five 512-wide
   shapes instead of the old four.
-- **fc100 part 2 queue (staged in the repo, not yet on the PC):** 21, 26, 30, 34 and 37 layers, d 512, 8 heads, mlp 4.83496 / 3.13379 /
-  2.18066 / 1.45215 / 1.01074; trained counts with today's Gemma plug on (shown, `fc2check.py` at 1acfde9a73): 103,029,142; 103,030,647;
-  103,024,471; 103,024,445; 103,055,688 (102.63M without the plug, as the architecture thread said). Accumulation 64 then 256, 20
+- **fc100 part 2 queue (staged in the repo, not yet on the PC):** 21, 26, 30, 34 and 37 layers, d 512, 8 heads, mlp 4.8 (the settled
+  21 x 512) / 3.10449 / 2.15723 / 1.43066 / 0.98926, the architecture thread's exact list (4:41 PM ET,
+  `/mnt/project-files/architecture/fc100-512/fc100-512-shapes.json`); trained counts with today's Gemma plug on (shown, `fc2check.py`
+  at 1acfde9a73, equal to that file): 102,641,692; 102,630,897; 102,655,471; 102,641,095; 102,638,513. (A first staged version
+  matched 102.63M without the plug, about 0.4% bigger with it; replaced.) Accumulation 64 then 256, 20
   updates each, as before. Same rule: the deepest shape that fits 16 GB at <= 1.25 x the step time of 21 x 512.
 - **Install plan (no waiter swap):** one Mac install before G1 ends: keep src-b3r and src-b3g2 renamed, unpack the new commits into the
   same paths, re-check caps.py and the caps json hashes, run the CPU tests the architecture thread names (group 1: test_reader_rule,
