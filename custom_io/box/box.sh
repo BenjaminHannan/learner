@@ -12,7 +12,7 @@
 # seconds the box stays up after the loop ends / after a setup failure (the container then exits, so the GPU is no longer billed).
 set -u
 J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
-BR=claude/custom-reader-talker-4x309r
+BR=${BR:-claude/custom-reader-talker-4x309r}      # code branch; vast.py create --env "BR=..." picks another (the GX boxes use claude/project-thread-x2cm2v)
 R=https://github.com/BenjaminHannan/learner
 MAXPAR=${MAXPAR:-6}
 QSUB=${QSUB:-}

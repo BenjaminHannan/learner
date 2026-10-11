@@ -222,3 +222,24 @@ the follow-up test, not a change to this one.
   the GX processes. It renamed the job folder to `8aGX-3M-s400.share-stopped-20261010-2207` (kept, not deleted), and the card went back
   to 12,348 MiB used. Seed 400 now runs alone in the post-G1 chain, as first planned. Lesson: on this card, 82-86% busy with two 10M
   runs, a third process takes GPU time from both runs. It does not just fill idle gaps, even though memory fit.
+
+## Addendum G: stage 1 on two rented RTX 5090s, both seeds at once (written 2026-10-11 about 02:30 UTC, 10:30 PM ET 10-10, before any box result)
+
+- **Why:** Ben (10:16 PM ET): "how much money would it cost to have the many experts and layers run its test? It would have until 7am tomorrow",
+  then (10:19 PM ET): "i just need it by tomorrow at 7am. So if there's a cheaper option, go with that". Sharing the PC failed (addendum F),
+  and the PC is busy with G1 until about Monday midday. The cheapest setup that gives the full 2-seed readout by 7 AM ET Sunday is two rented
+  RTX 5090s, one seed each. One box doing all four runs would likely not finish in time. The cheaper one-seed option cannot give GO (addendum E).
+- **Runs:** box A has seed 400 and box B has seed 401 (`custom_io/queue/gxA`, `gxB`, `custom_io/box/gx_box.sh`). Each box trains GX-3M
+  (`{"eg_embed": true, "experts": 52, "top_k": 8}`) and G-B2 3M (`{"eg_embed": true}`, G1's flags) side by side. Both use arms B2 only,
+  accumulation 4 (the spec's setting, as both G1 3M controls), the same code commit and the same rebuilt data (`get_data` with the
+  manifest hash the PC uses).
+- **Judged control:** this changes, as the project's same-machine rule requires (custom_io/PASS-MARKS.md addenda 10 and 11). X1-X3 compare
+  GX with **G-B2 trained on the same box and seed**. G1's PC G-B2 3M of each seed is reported only, as a device check (box G-B2 minus PC
+  G-B2).
+- **Unchanged:** marks X1-X5, readout, proved-wrong line and hair rule. X5's spill part is n/a (32 GB card). The seed-401 rule (addendum E)
+  is waived only because the deadline does not allow waiting. Its logic still holds for the reading: one seed alone is never GO.
+- **Cost (prices checked live 10:17 PM ET: 5090 from $0.44/h):** about $4-5 expected (untested estimate). Each box stops every job after
+  6.5 h (MAXH) and is destroyed after its results are collected. The hard cap is about $7 for both.
+- **Speed (estimate, untested):** GX did 2.97 s per update sharing the PC (about 1.2-1.5 s alone, inferred). A 5090 ran EGW about 4x the
+  PC (shown, PASS-MARKS.md addendum 11), so each box should take about 3-4 h of training plus about 45 min of setup. If the first 500
+  GX updates project an end after 6 AM ET, the control moves to a third box.
