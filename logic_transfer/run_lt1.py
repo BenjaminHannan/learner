@@ -114,6 +114,8 @@ def build_jobs(plan='lt1', far=False, parents=None, updates=GATE_UPDATES, save_e
         c = course_job(p, arm, 1, prio, parents, updates, save_every)
         jobs.append(c)
         jobs += score_jobs(c, prio, save_every, updates)
+        if plan == 'mac':       # the Mac also full-scores every saved checkpoint, so the dose D can be read later without a new job
+            jobs += [dict(j, priority=prio + 2) for j in score_jobs(c, prio, save_every, updates, full=True)]
         if far:
             jobs += far_jobs(c)
     return {'paths': dict(DEFAULT_PATHS), 'jobs': jobs}
