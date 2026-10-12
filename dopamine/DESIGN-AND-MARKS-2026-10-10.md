@@ -118,9 +118,12 @@ commit 8fce7247a for the model, branch claude/project-thread-2kevpk for sleep, c
   sibling head on detached control 1 (257 numbers at width 256, 513 at 512; counted in the size), trained on the model's own
   checked outcomes; in a game it predicts reward still to come. It adds no round and no call (caps unchanged).
 - *Sleep today:* every kept own answer (up to 2 per question from 32 tries) gets the same 32 visits; per-try pass flags
-  exist only in a cached file, so "weight a found answer by how rarely it is found" (DART-style) was never tried. A caution:
-  the creative S1 loop that used reward minus a group mean as its weight gained as much with shuffled rewards (+17.2/+18.4)
-  as with real ones (+18.0/+16.0). A dopamine weight helps only if it carries information, which D0 checks first. The SCM2
+  exist only in a cached file, so "weight a found answer by how rarely it is found" (DART-style) was never tried.
+  Corrected 9:25 PM ET 10-11 (the first version misread the table and called this a caution): in the creative S1 loop
+  (creative roadmap S1 result, fast-sleep 1478f86f8), reach@32 untrained / shuffled-reward placebo / real reward was
+  24.2 / 25.0 / 42.2 and 27.3 / 25.0 / 43.4, so the real reward beat the placebo by +17.2 / +18.4 and the placebo barely
+  moved. A reward signal there did carry information. A dopamine weight helps only if it carries information, which D0
+  checks first. The SCM2
   night needs the whole 7d chain to run, and that line waits for the big-run thread, so D-sleep stays a proposal.
 - *Game today:* GW-S has not started; play.py discards the step reward and keeps play logs in memory only; the 8-move keep
   rule is in constants but not yet in code; no PPO. Asked the game thread (via the coordinator, 9:50 PM ET) to save per-move
