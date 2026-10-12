@@ -31,3 +31,16 @@ A near-miss counts as a pass for PC-1 only within 0.05. Two seeds = a screen; a 
 - PC-1 pass: confirm on 6 seeds, then try the cross-night archive of unlock moves (API judge's second idea).
 - PC-1 proved wrong while PC-2 passes: bigger steps alone do not help; the bottleneck is elsewhere (credit or exploration).
 - PC-2 proved wrong: the distilled add-on still takes small steps; look at the add-on's capacity (rank 8) before anything else.
+
+## A19b (6:22 AM ET 10-12, before any GW-PC run): the API judge's marks replace the table above
+The judge (Fable 5.1, api-opinions/answers/judge-1-game-world.md sec. 4, written before GW-P8 read out) set marks for this same
+test; they are adopted so the marks do not come from the person who saw GW-P8. Distillation details stay as above.
+| Mark | Pass | Proved wrong |
+|---|---|---|
+| PC-0 validity (not a pass mark) | the distilled night-0 policy (night_0 checkpoint, T = 1) scores within +-0.3 of Before_T0 (3.75 / 3.61) on the 100 sealed maps | outside: the arm is invalid; fix the distillation and rerun |
+| PC-2 mechanism | mean approx KL per night (nights 1-8) >= 3x GW-P8's on both seeds (GW-P8: s200 0.00853, s201 0.00835, so >= 0.0256 / 0.0250) AND the final policy's view dependence, mean KL(q(.\|view) \|\| q-bar) at its final T, >= 2x the parent's at T0 (same views: the Mac GW-P8 night-0 quiz, same machine) | KL per night under 3x on both seeds: the 1/T story is wrong |
+| PC-1 screen | After(GW-PC) - After(GW-P8) >= +0.4 pooled over 2 seeds x 100 maps (paired bootstrap over the 200 pairs) and > 0 on each seed | KL per night >= 3x on both seeds but gain <= +0.1 on both: the limit is the signal, not the step size (next: a cross-night archive of unlock moves) |
+Confirm (later): 6 paired seeds, mean >= +0.3 with the 95% interval above 0. Carried as before: Q-1, Q-2, Q-3, GW4, GW5.
+Checked against the code before adopting (shown): word scores include the end-of-word mark and the answer registers hold the word
+reversed (game/play.py `_words`), so "do" does not absorb "down" by a prefix identity; the view shows the player's facing
+(game/crafter_text.py FACING_CHARS), so "do" is not blind by construction.
