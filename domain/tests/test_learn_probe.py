@@ -476,3 +476,22 @@ def test_build_l8_small(monkeypatch):
     assert len(two) == 4 and all(r['ring'] == 4 and L.far_props(r['prompt'])['two_kinds'] for r in two)   # joined rows: subst ring only
     assert all(r['ring'] in (1, 2, 3) and not L.far_props(r['prompt'])['two_kinds'] for r in rows if r['cell'] == 'mode-one')
     assert all(r['id'].startswith('learn8-') and r['kind'] in SP.SCORED for r in rows) and not {r['prompt'] for r in rows} & ex
+
+
+def test_build_l9_small(monkeypatch):
+    torch = pytest.importorskip('torch')
+    parent = os.environ.get('L8_TEST_PARENT', L.PARENT)
+    if not os.path.exists(parent):
+        pytest.skip('parent checkpoint missing')
+    import json
+    from custom_io.models import load_model
+    from domain.mode import CONST_PATH
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    m = load_model(parent).eval()
+    cons = dict(json.load(open(CONST_PATH)), widen_join_whole=True, widen_ring_max=60)
+    rows, st = L.build_l8_rows(m, ck['chars'], cons, set(), per_cell=4, draw_cap=300000, seed=L.L9_SEED, tag=L.L9_TAG)
+    assert st['complete'] and len(rows) == 8 and 'join_whole' in st['widen']
+    two = [r for r in rows if r['cell'] == 'mode-two']
+    assert len(two) == 4 and all(r['ring'] == 4 and L.far_props(r['prompt'])['two_kinds'] for r in two)   # joined rows: the whole-join ring only
+    assert all(r['ring'] in (1, 2, 3) and not L.far_props(r['prompt'])['two_kinds'] for r in rows if r['cell'] == 'mode-one')
+    assert all(r['id'].startswith('learn9-') and r['kind'] in SP.SCORED for r in rows)

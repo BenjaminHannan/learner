@@ -221,3 +221,62 @@ def test_subst_without_brackets_is_bare():
 def test_join_and_subst_together_refused():
     with pytest.raises(ValueError):
         build_subst(sheet, widen_join=True)
+
+
+# ---- L9 whole-formula join ring (widen_join_whole) ----
+
+def build_whole(tool, seed=1, ring_max=60, **extra):
+    cons = dict(CONS, widen_ring_max=ring_max, widen_rings=3, widen_join_whole=True, **extra)
+    ctx = ctx_for(tool)
+    return widen.build(tool, tool.help(), lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(seed), cons)
+
+
+def test_whole_piece_of_the_cell_arithmetic_example():
+    _, st = build_whole(sheet)
+    w = st['join_whole']['wholes']
+    arith = [v for k, v in w.items() if k.partition(';')[2].strip() == '=A1+B2*2']
+    assert arith == ['A1+B2*2'], w
+
+
+@pytest.mark.xfail(strict=True, reason='the domain-free rule picks the longer grid piece "4 7 2 | B: 3" (replacing it by 1 still runs)')
+def test_whole_piece_of_the_sum_example_is_the_call():
+    _, st = build_whole(sheet)
+    assert st['join_whole']['wholes']['A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)'] == 'SUM(A1:A3)'
+
+
+def test_whole_join_ring_deterministic_and_runs():
+    plain, _ = build(sheet, seed=3, ring_max=60)
+    a, sa = build_whole(sheet, seed=3)
+    b, sb = build_whole(sheet, seed=3)
+    assert a == b and sa['sha256'] == sb['sha256'] and sa['join_whole'] == sb['join_whole']
+    assert all(a[r] == plain[r] for r in (1, 2, 3))
+    assert sorted(a) == [1, 2, 3, 4] and a[4] and sa['kept'][4] == len(a[4]) <= 60
+    info = sa['join_whole']
+    assert info['accepted'] and sum(info['kept'].values()) == len(a[4]) and info['tries'] == sa['tries'][4]
+    ctx = ctx_for(sheet)
+    kinds = {h['kind'] for h in sheet.help()}
+    for kind, p in a[4]:
+        assert kind in kinds and mode.accept(sheet, p, ctx)[2] is None, p
+    shapes = [widen.shape(p) for r in a for _, p in a[r]]
+    assert len(shapes) == len(set(shapes))
+
+
+def test_whole_join_ring_joins_two_calls_at_the_top_level():
+    from domain.far.learn_probe import fn_op_fn
+    a, _ = build_whole(sheet, seed=1)
+    assert any(fn_op_fn(p) for _, p in a[4]), [p for _, p in a[4]][:10]
+
+
+def test_whole_join_refuses_other_ring_flags():
+    with pytest.raises(ValueError):
+        build_whole(sheet, widen_join=True)
+    with pytest.raises(ValueError):
+        build_whole(sheet, widen_subst=3)
+
+
+def test_build_unchanged_with_widen_join_whole_unset():
+    for tool, sha in ((sheet, SHEET_V9_SHA_300_SEED7), (rpn, RPN_V9_SHA_300_SEED7)):
+        cons = dict(CONS, widen_ring_max=300, widen_rings=3, widen_join_whole=False)
+        ctx = ctx_for(tool)
+        _, st = widen.build(tool, tool.help(), lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(7), cons)
+        assert st['sha256'] == sha and 'join_whole' not in st

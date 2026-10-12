@@ -148,10 +148,72 @@ def join_ring(tool, helps, rings, ok, rng, cons, seen):
     return out, tries, info
 
 
+def whole_join_ring(tool, helps, ok, rng, cons, seen):
+    """-> (examples, tries, info): the whole-formula join ring (L9, widen_join_whole). The whole piece of a help example is its
+    longest value slot under R1 (character length of the piece text; ties: first in spans order). Each try: host = a help
+    example, P = its whole piece, Q = the whole piece of a help example (the host included), a join kind (form, symbol) and a
+    separator as in join_ring; P is replaced by P and Q joined. Balanced join kinds as join_ring: the first 20,000 tries keep
+    anything new, the kinds kept by then are the accepted ones and each then fills ring_max // accepted. seen: digit shapes
+    already kept (updated). info: whole piece per help example, accepted join kinds, kept per kind."""
+    ring_max, cap = cons['widen_ring_max'], 1000 * cons['widen_ring_max']
+    runs = tool_runs(tool)
+    syms = symbols(helps)
+    brackets = any('(' in h['prompt'] for h in helps) and any(')' in h['prompt'] for h in helps)
+    kinds = [(f, s) for f in (range(6) if brackets else (0, 1, 4, 5)) for s in syms]
+    hosts = []   # (kind, tokens, (i, j), whole piece text) for each help example that has a value slot
+    wholes = {}
+    for h in helps:
+        t, sl = value_slots(h['prompt'], runs)
+        best = None
+        for i, j in sl:
+            if best is None or len(''.join(t[i:j])) > len(''.join(t[best[0]:best[1]])):
+                best = (i, j)
+        wholes[h['prompt']] = ''.join(t[best[0]:best[1]]) if best else None
+        if best:
+            hosts.append((h['kind'], t, best, ''.join(t[best[0]:best[1]])))
+    out, tries, kept = [], 0, {}
+    accepted = None   # set after the probe
+    while hosts and kinds and len(out) < ring_max and tries < cap:
+        if accepted is not None:
+            open_ = [k for k in accepted if kept.get(k, 0) < ring_max // len(accepted)]
+            if not open_:
+                break
+        else:
+            open_ = kinds
+        tries += 1
+        kind, t, (i, j), p = rng.choice(hosts)
+        q = rng.choice(hosts)[3]
+        form, s = rng.choice(open_)
+        cand = swap(t, i, j, join_form(p, q, s, form, rng.choice(['', ' '])))
+        sh = shape(cand)
+        if sh not in seen and ok(cand):
+            seen.add(sh)
+            out.append((kind, cand))
+            kept[(form, s)] = kept.get((form, s), 0) + 1
+        if accepted is None and tries >= 20000:
+            accepted = sorted(kept)
+            if not accepted:
+                break
+    info = dict(wholes=wholes, accepted=[f'{f}:{s}' for f, s in (accepted if accepted is not None else sorted(kept))],
+                kept={f'{f}:{s}': n for (f, s), n in sorted(kept.items())}, tries=tries)
+    return out, tries, info
+
+
 def layout(text):
     """The whole prompt text with every maximal run of letters and digits written as `x`, then every run of `x` separated only
     by spaces written as one `x` (a list counts once, whatever its length). Domain-free."""
     return re.sub(r'x(?: +x)+', 'x', re.sub(r'[A-Za-z0-9]+', 'x', text))
+
+
+def tool_runs(tool):
+    """-> runs(prompt): R1, the tool computes a value (zero steps and the caps are fine here); candidates still need the full ok."""
+    def runs(prompt):
+        try:
+            res = tool.evaluate(prompt)
+        except Exception:
+            return False
+        return res['value'] not in ('?', 'Fail') and not any(st[3] in ('?', 'Fail') for st in res['steps'])
+    return runs
 
 
 def subst_ring(tool, helps, ok, rng, cons, seen):
@@ -163,12 +225,7 @@ def subst_ring(tool, helps, ok, rng, cons, seen):
     ring_max, cap, max_depth = cons['widen_ring_max'], 1000 * cons['widen_ring_max'], cons['widen_subst']
     brackets = any('(' in h['prompt'] for h in helps) and any(')' in h['prompt'] for h in helps)
 
-    def runs(prompt):   # R1: the tool computes a value (zero steps and the caps are fine here); candidates still need the full ok
-        try:
-            res = tool.evaluate(prompt)
-        except Exception:
-            return False
-        return res['value'] not in ('?', 'Fail') and not any(st[3] in ('?', 'Fail') for st in res['steps'])
+    runs = tool_runs(tool)
     slots = {}
     vq = set()   # value pieces of the help page
     for h in helps:
@@ -220,6 +277,8 @@ def build(tool, helps, ok, rng, cons):
     n_rings, ring_max = cons['widen_rings'], cons['widen_ring_max']
     if cons.get('widen_join') and cons.get('widen_subst'):
         raise ValueError('widen_join and widen_subst are both set: one change at a time')
+    if cons.get('widen_join_whole') and (cons.get('widen_join') or cons.get('widen_subst')):
+        raise ValueError('widen_join_whole with widen_join or widen_subst: one change at a time')
     rings = {1: [(h['kind'], h['prompt']) for h in helps]}
     seen = {shape(p) for _, p in rings[1]}
     piece_list = pieces(helps)
@@ -258,6 +317,9 @@ def build(tool, helps, ok, rng, cons):
         r = n_rings + 1
         rings[r], stats['tries'][r], stats['join'] = join_ring(tool, helps, rings, ok, rng, cons, seen)
         stats['symbols'] = symbols(helps)
+    if cons.get('widen_join_whole'):   # the whole-formula join ring (L9): help examples only, shares `seen`
+        r = n_rings + 1
+        rings[r], stats['tries'][r], stats['join_whole'] = whole_join_ring(tool, helps, ok, rng, cons, seen)
     if cons.get('widen_subst'):   # the substitution ring (L8): starts from ring 1 only, shares `seen` with the swap rings
         r = n_rings + 1
         rings[r], stats['tries'][r], stats['subst'] = subst_ring(tool, helps, ok, rng, cons, seen)

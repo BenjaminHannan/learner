@@ -6,6 +6,7 @@
   python3 -m domain.far.learn_probe build-l4      (L4: MARKS-L4; build-mode with the swap tool's join step on, seed 93601)
   python3 -m domain.far.learn_probe build-l5      (L5: MARKS-L5; training joins over five layouts; eval cells S5/S/HP/HO/HPO)
   python3 -m domain.far.learn_probe build-l8 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L8: MARKS-L8; the substitution ring's joins)
+  python3 -m domain.far.learn_probe build-l9 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L9: MARKS-L9; whole-formula joins)
   python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5|l8]
         [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
         [--guard kf --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
@@ -73,6 +74,8 @@ L4R1_ROWS = os.path.join(LEARN, 'train-rows-l4r1.jsonl')   # R1: value slots and
 L8_SEED = 93801   # L8 (spec: MARKS-L8-2026-10-12.md): joined rows only from widen.subst_ring, not-joined from rings 1-3
 L8_TAG = 'learn8'
 L8_SUBST_DEPTH = 3
+L9_SEED = 93901   # L9 (spec: MARKS-L9-2026-10-12.md): joined rows only from widen.whole_join_ring, not-joined from rings 1-3
+L9_TAG = 'learn9'
 MODE_DRAW_CAP = 20_000_000
 PER_CELL = 6000
 FIT_N = 420
@@ -635,17 +638,42 @@ def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEE
 
 
 def build_l8(rows_out, parent, probe, eval_rows):
+    build_ring_rows(rows_out, parent, probe, eval_rows, L8_SEED, L8_TAG, dict(widen_subst=L8_SUBST_DEPTH), print_subst_ring)
+
+
+def build_l9(rows_out, parent, probe, eval_rows):
+    build_ring_rows(rows_out, parent, probe, eval_rows, L9_SEED, L9_TAG, dict(widen_join_whole=True), print_whole_join_ring)
+
+
+def print_subst_ring(w):
+    sb = w['subst']
+    print(f'subst ring: accepted layouts {sb["accepted"]}; depth {sb["depth"]}; value pieces {sb["vq"]}; top 20 layouts (kept):')
+    for lay, n in sb['top_layouts']:
+        print(f'    {n:5d}  {lay}')
+
+
+def print_whole_join_ring(w):
+    jw = w['join_whole']
+    print('whole piece of each help example:')
+    for prompt, piece in jw['wholes'].items():
+        print(f'    {prompt!r} -> {piece!r}')
+    print(f'whole join ring: {len(jw["accepted"])} accepted join kinds (form:symbol), tries {jw["tries"]}; kept per kind:')
+    for k, n in jw['kept'].items():
+        print(f'    {k!r}: {n}' + ('' if k in jw['accepted'] else '  (not accepted)'))
+
+
+def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, print_ring):
     if os.path.exists(rows_out):
         raise SystemExit(f'refusing to overwrite {rows_out}')
     import torch
     from custom_io.models import load_model
     from domain.far import widen
     from domain.mode import CONST_PATH
-    cons = dict(json.load(open(CONST_PATH)), widen_subst=L8_SUBST_DEPTH)
-    random.seed(L8_SEED)
-    torch.manual_seed(L8_SEED)
+    cons = dict(json.load(open(CONST_PATH)), **cons_extra)
+    random.seed(seed)
+    torch.manual_seed(seed)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
-    torch.manual_seed(L8_SEED)
+    torch.manual_seed(seed)
     m = load_model(parent).eval()
     exclude, missed = read_prompts([probe, eval_rows]), []
     for path in EXCLUDE_FILES[1:]:
@@ -655,14 +683,11 @@ def build_l8(rows_out, parent, probe, eval_rows):
             missed.append(path)
     if missed:
         print('NOT excluded (unreadable): ' + ', '.join(missed))
-    rows, st = build_l8_rows(m, ck['chars'], cons, exclude)
+    rows, st = build_l8_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag)
     w = st['widen']
     print(f'excluded prompts: {len(exclude)}; draws {st["draws"]}; widen kept {st["widen_kept"]} sha {st["widen_sha256"][:12]}')
     print(f'widen tries {w["tries"]}; per kind {w["per_kind"]}')
-    sb = w['subst']
-    print(f'subst ring: accepted layouts {sb["accepted"]}; depth {sb["depth"]}; value pieces {sb["vq"]}; top 20 layouts (kept):')
-    for lay, n in sb['top_layouts']:
-        print(f'    {n:5d}  {lay}')
+    print_ring(w)
     print('drops:', st['drops'])
     print('per cell:', st['per'])
     if not st['complete']:
@@ -1067,8 +1092,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'train'])
-    a.add_argument('--rows-out', default=None, help='build-l8: where to write the rows (required; refuses to overwrite)')
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'train'])
+    a.add_argument('--rows-out', default=None, help='build-l8 / build-l9: where to write the rows (required; refuses to overwrite)')
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
@@ -1105,6 +1130,9 @@ def main(argv=None):
     elif a.stage == 'build-l8':
         assert a.rows_out, 'build-l8 needs --rows-out'
         build_l8(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS)
+    elif a.stage == 'build-l9':
+        assert a.rows_out, 'build-l9 needs --rows-out'
+        build_l9(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work
