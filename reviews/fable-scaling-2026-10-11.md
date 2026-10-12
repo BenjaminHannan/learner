@@ -88,7 +88,7 @@ A 2-seed shape probe at 10M: a deeper reader (23 conv layers) was flat; wider (3
 
 | seed | B2 3M | B2 10M | PT 3M | PT 10M |
 |---|---|---|---|---|
-| 400 | 73.01 | **74.65** (+1.64) | 67.12 | @PT400@ |
+| 400 | 73.01 | **74.65** (+1.64) | 67.12 | pending (done about 11:30 PM tonight) |
 | 401 | 73.68 | training (79%) | 68.01 | not yet run |
 
 - Per dev file at 3M (%), in_dist / answer / frame / vocab / variant / family:
@@ -98,7 +98,7 @@ A 2-seed shape probe at 10M: a deeper reader (23 conv layers) was flat; wider (3
   Of B2's 1,630 (s400) and 1,590 (s401) misses, 836 and 807 are in the `variant` file.
 - Training loss, B2: 1.139 at 3M -> 1.128 at 10M (s400). At 3M the GEN-character part is about 0.86 of it; the program
   part is about 0. PT at 3M: 0.366.
-- 10M per file and per family: @FAM10M@
+- 10M per file and per family: not read yet (pending).
 
 **Per family at 3M, seed 400, all five dev files pooled (rows correct out of n), sorted by B2 minus PT:**
 
@@ -146,7 +146,20 @@ least 12, add 4; otherwise subtract 4. Apply it to 73."; fewshot_number_rule "(4
 
 ## 6. Already queued on the GPU after this test
 
-@B3@
+In this order, each run about 3-7 h at 3M unless noted:
+- **fc100**: fit and speed check of the planned ~100M thinker shapes (no score).
+- **B3 group 2 at 3M ("G2f", seed 400).** This is the next design, and it changes exactly the answer path: every
+  hand-made answer head of B2 (the NUM slot pointer, the WORD pointer and the parallel GEN head) is **deleted** and
+  replaced by ONE small learned **autoregressive byte writer** (one decoder block, attention over the thinker's vectors
+  only, no copy path). After each round the writer is asked "call?" and may write a tool call as text (e.g. `sub 12 5`);
+  the calculator is an external tool whose text reply goes onto a tape that the reader (Gemma + the character window)
+  reads on the next round. The answer is written by the same writer from the thinker's vectors alone, after the thinker
+  has read the last reply. A learned stop head ends the loop. Numbers are bytes,
+  no integer slots. Trained 4,023,302 at 3M; 9,824,546 at 10M; a 10M card exists (about 1-2 days, unmeasured).
+- **B3 group 1 at 3M** (an intermediate step that keeps B2's answer heads but adds the tool tape, any-round calls and
+  span copying); plain controls for B3's longer rows.
+- Later: 10M and 30M rungs of B3; the shipped thinker is planned at ~100M (512 wide, 21-37 blocks, reading Gemma's own
+  512 numbers directly).
 
 ## 7. What I'd like from you
 
@@ -160,7 +173,8 @@ least 12, add 4; otherwise subtract 4. Apply it to 73."; fewshot_number_rule "(4
 3. Is test DS worth about 46 hours of my only GPU? If not, give the **one** test you would run first instead: one change,
    pass marks fixed in advance, the result that would prove your explanation wrong, and the GPU hours on a 16 GB RTX 5070
    Ti (ideally under a day; single-seed screens are fine if you use the noise numbers above).
-4. What design change would most likely make size help a lot in the finished ~100M model, and which part of B2 (or of the
-   queued B3 changes) stands in the way? Be concrete.
+4. Does B3 group 2 (section 6) address the cause you rank first? Would a 3M -> 10M step of B3 group 2 be a better first
+   test than DS? What design change would most likely make size help a lot in the finished ~100M model, and which part
+   of B2 or B3 group 2 stands in the way? Be concrete.
 5. A plain-language summary for me (a high-school senior): what's going on, what to try next and why, in a few short
    paragraphs with no jargon.
