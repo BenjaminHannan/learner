@@ -1,0 +1,101 @@
+{
+ "n_sealed_sessions": 400,
+ "model_seed": 201,
+ "ckpt": "/mnt/project-files/domain-mode/runs/sheet-s201-v7/night_8/checkpoint.pt",
+ "smoke": false,
+ "cache_code_sha256": "2f65e028470dffab18d6244e8cbb06f37755bd0e4fa593de7a453b96fdac1d7f",
+ "mean_effort": {
+  "NONE": 2.9725,
+  "EAGER": 3.260625,
+  "HELPER": 3.3325,
+  "ORACLE": 2.2725
+ },
+ "mean_L": 2.9725,
+ "HELPER-NONE": {
+  "diff": 0.36,
+  "ci95": [
+   0.299375,
+   0.41875
+  ]
+ },
+ "HELPER-EAGER": {
+  "diff": 0.071875,
+  "ci95": [
+   -0.029390624999999983,
+   0.174375
+  ]
+ },
+ "P1-1": {
+  "verdict": "PROVED WRONG (on this seed)",
+  "rule": "pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed"
+ },
+ "P1-2": {
+  "verdict": "wrong on this seed (diff >= 0; proved wrong only if also on the other seed)",
+  "rule": "pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds"
+ },
+ "ORACLE_saving_per_session": 0.7000000000000002,
+ "arms": {
+  "EAGER": {
+   "extras": 1189,
+   "extras_per_session": 2.9725,
+   "wanted_share": 0.3566021867115223,
+   "right_share": 0.6005046257359126,
+   "unwanted_share": 0.6433978132884777,
+   "extras_on_last_request": 400,
+   "extras_per_kind": {
+    "SUM": 346,
+    "MAX": 326,
+    "MIN": 198,
+    "PRODUCT": 6,
+    "cell arithmetic": 57,
+    "division": 2,
+    "MOD": 125,
+    "ABS": 114,
+    "COUNTIF": 6,
+    "IF": 9
+   }
+  },
+  "HELPER": {
+   "extras": 904,
+   "extras_per_session": 2.26,
+   "wanted_share": 0.11504424778761062,
+   "right_share": 0.5719026548672567,
+   "unwanted_share": 0.8849557522123894,
+   "extras_on_last_request": 293,
+   "extras_per_kind": {
+    "SUM": 135,
+    "MAX": 258,
+    "MIN": 74,
+    "PRODUCT": 53,
+    "cell arithmetic": 138,
+    "division": 14,
+    "MOD": 18,
+    "ABS": 64,
+    "COUNTIF": 55,
+    "IF": 95
+   }
+  },
+  "ORACLE": {
+   "extras": 280,
+   "extras_per_session": 0.7,
+   "wanted_share": 1.0,
+   "right_share": 1.0,
+   "unwanted_share": 0.0,
+   "extras_on_last_request": 0,
+   "extras_per_kind": {
+    "SUM": 82,
+    "MAX": 114,
+    "MIN": 52,
+    "PRODUCT": 1,
+    "cell arithmetic": 7,
+    "division": 4,
+    "MOD": 3,
+    "ABS": 17,
+    "COUNTIF": 0,
+    "IF": 0
+   }
+  }
+ },
+ "p1_sessions_py_sha256": "2f65e028470dffab18d6244e8cbb06f37755bd0e4fa593de7a453b96fdac1d7f",
+ "sim_secs": 828.0
+}

@@ -1,0 +1,101 @@
+{
+ "n_sealed_sessions": 400,
+ "model_seed": 200,
+ "ckpt": "/mnt/project-files/domain-mode/runs/sheet-s200-v7/night_7/checkpoint.pt",
+ "smoke": false,
+ "cache_code_sha256": "2f65e028470dffab18d6244e8cbb06f37755bd0e4fa593de7a453b96fdac1d7f",
+ "mean_effort": {
+  "NONE": 2.9725,
+  "EAGER": 3.47,
+  "HELPER": 3.3875,
+  "ORACLE": 2.3925
+ },
+ "mean_L": 2.9725,
+ "HELPER-NONE": {
+  "diff": 0.415,
+  "ci95": [
+   0.358125,
+   0.470625
+  ]
+ },
+ "HELPER-EAGER": {
+  "diff": -0.0825,
+  "ci95": [
+   -0.17625,
+   0.014375
+  ]
+ },
+ "P1-1": {
+  "verdict": "PROVED WRONG (on this seed)",
+  "rule": "pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed"
+ },
+ "P1-2": {
+  "verdict": "neither pass nor wrong",
+  "rule": "pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds"
+ },
+ "ORACLE_saving_per_session": 0.5800000000000001,
+ "arms": {
+  "EAGER": {
+   "extras": 1189,
+   "extras_per_session": 2.9725,
+   "wanted_share": 0.3540790580319596,
+   "right_share": 0.4827586206896552,
+   "unwanted_share": 0.6459209419680404,
+   "extras_on_last_request": 400,
+   "extras_per_kind": {
+    "SUM": 333,
+    "MAX": 341,
+    "MIN": 202,
+    "PRODUCT": 6,
+    "cell arithmetic": 40,
+    "division": 4,
+    "MOD": 134,
+    "ABS": 93,
+    "COUNTIF": 22,
+    "IF": 14
+   }
+  },
+  "HELPER": {
+   "extras": 829,
+   "extras_per_session": 2.0725,
+   "wanted_share": 0.10735826296743065,
+   "right_share": 0.4028950542822678,
+   "unwanted_share": 0.8926417370325693,
+   "extras_on_last_request": 273,
+   "extras_per_kind": {
+    "SUM": 68,
+    "MAX": 152,
+    "MIN": 150,
+    "PRODUCT": 41,
+    "cell arithmetic": 59,
+    "division": 10,
+    "MOD": 39,
+    "ABS": 69,
+    "COUNTIF": 115,
+    "IF": 126
+   }
+  },
+  "ORACLE": {
+   "extras": 232,
+   "extras_per_session": 0.58,
+   "wanted_share": 1.0,
+   "right_share": 1.0,
+   "unwanted_share": 0.0,
+   "extras_on_last_request": 0,
+   "extras_per_kind": {
+    "SUM": 40,
+    "MAX": 94,
+    "MIN": 61,
+    "PRODUCT": 1,
+    "cell arithmetic": 6,
+    "division": 1,
+    "MOD": 6,
+    "ABS": 21,
+    "COUNTIF": 0,
+    "IF": 2
+   }
+  }
+ },
+ "p1_sessions_py_sha256": "2f65e028470dffab18d6244e8cbb06f37755bd0e4fa593de7a453b96fdac1d7f",
+ "sim_secs": 826.6
+}

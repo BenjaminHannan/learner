@@ -362,3 +362,32 @@ of my favorite things you've said today. proactively making my life easier. Also
   wanted, right extra lets the model continue from that answer, so a chain of right guesses can skip several asks.
   Workload: 1,300 sessions, 3,882 rounds, 19,136 distinct candidates (about 8 min of answers per model at 2 threads here).
   Run on the cloud box, not the Mac: the job is about 10 minutes and the Mac's cores are on the Game world runs tonight.
+
+**B13. P1 result (scored 9:20 PM ET 10-11): FAIL. The helper guessed the person's next request well but helped far too
+often. P2 marks sealed below, before any P2 code.** Shown, from `dopamine/results/p1/s{200,201}/RESULT.md` (400 sealed
+sessions, 2.97 requests each; effort = person actions per session, lower is better):
+| | NONE | EAGER | HELPER | ORACLE | HELPER - NONE (95%) | HELPER - EAGER (95%) |
+|---|---|---|---|---|---|---|
+| s200 | 2.97 | 3.47 | 3.39 | 2.39 | +0.42 (+0.36, +0.47) | -0.08 (-0.18, +0.01) |
+| s201 | 2.97 | 3.26 | 3.33 | 2.27 | +0.36 (+0.30, +0.42) | +0.07 (-0.03, +0.17) |
+P1-1 PROVED WRONG on both seeds (the helper made the person do more work). P1-2 neither passed nor proved wrong (wrong on
+s201 only). Reported: EAGER's top guess was the person's next request 35-36% of the time, close to the most possible (60%
+habits on the roughly two thirds of rounds that have a next request, about 40%), so "next need" learned the habits. HELPER
+added an extra on 70-76% of rounds and 89% of its extras were unwanted; its extras averaged -0.20 each although it took
+only those it guessed above zero. ORACLE shows the room: 0.58 and 0.70 actions saved per session.
+Reading (suggested): the help-value head is over-optimistic because HELPER takes the best of about nine noisy guesses each
+round (the winner's curse), and most of its training rewards are small -0.25s with rare +1/-1s. Anticipation works; the
+restraint does not.
+
+**P2 (one change from P1): HELPER asks the help-value head only about the next-need head's top candidate** (adds it when
+V > 0, else nothing), instead of the best V over the whole menu. Everything else as P1: same models, same training
+sessions, same heads, exploring and seeds; V still learns only from HELPER's own extras. New sealed sessions (person seed
+93003, 400 sessions, same habits), because P1's sealed set has been looked at. Marks, each seed, same rules as P1:
+| Mark | Pass | Proved wrong |
+|---|---|---|
+| P2-1 helps | HELPER - NONE <= -0.05, interval upper end < 0 | interval lower end > 0 on either seed |
+| P2-2 holds back | HELPER - EAGER <= -0.10, interval upper end < 0 | HELPER - EAGER >= 0 on both seeds |
+P2 PASSES when both marks pass on both seeds. Prediction (suggested): HELPER now acts mostly on early-round habit
+follow-ups in kinds it gets right (MAX, MIN), so P2-2 should pass; P2-1 is close (a right-and-wanted extra on MAX/MIN is
+worth about +0.2 on average after the misses), so it may read "neither". If P2-2 fails, the head itself is the problem
+(not the choice over the menu), and the next change is a better-calibrated head, not more arms.
