@@ -421,7 +421,7 @@ def test_carry_draw():
         m._turns(b, golds, 3, count=False, carry='draw')
         m.think = th
     finally:
-        M.B3AT.carry_draw = orig
+        M.B3AT.carry_draw = staticmethod(orig)
     assert len(log) == 3 * (max(len(g['texts']) for g in golds) + 1), len(log)
     rows1 = [i for i, g in enumerate(golds) if len(g['texts']) >= 1]
     assert rows1
