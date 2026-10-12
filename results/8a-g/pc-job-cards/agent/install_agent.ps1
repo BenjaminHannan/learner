@@ -109,7 +109,8 @@ for ($t = 0; $t -lt 12; $t++) {
 if ($start -lt 0 -or $lines[$start] -notlike '*(v3e;*') { Fail "the running waiter is not v3e (inserted jobs from another src folder need v3e): $(if ($start -ge 0) { $lines[$start] })" }
 $w = @(Waiters 'q8aPost3_wait.ps1')
 if ($w.Count -ne 1) { Fail "expected one q8aPost3_wait.ps1 waiter, found $($w.Count)" }
-for ($i = $start; $i -lt $lines.Count; $i++) { if ($lines[$i] -like '*8aB3G2s400* ended*' -or $lines[$i] -like '*inserted job*after group 2*') { Fail "the waiter is already past G2f and its first insert check point: $($lines[$i])" } }
+# (from the line after the start line: v3e's own start line says "inserted jobs from WORK\insert after group 2"; 12 Oct 10:50 AM ET it matched)
+for ($i = $start + 1; $i -lt $lines.Count; $i++) { if ($lines[$i] -like '*8aB3G2s400 ended*' -or $lines[$i] -like '*inserted job *(after group 2*') { Fail "the waiter is already past G2f and its first insert check point: $($lines[$i])" } }
 "waiter v3e (pid $($w[0].ProcessId)) is running and has not reached G2f's end; the inserts run at its first check point, right after G2f"
 
 # 2. Unpack and check every piece (nothing live changes here).
