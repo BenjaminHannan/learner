@@ -52,16 +52,54 @@ def _locked(path, wait=30, stale=6 * 3600):
             time.sleep(wait)
 
 
+def caps_dir(a, pdir):
+    """Where caps.json and caps_report.json live. The pool dir is shared by g2c3, fc100 and B3 (same key), and get_caps returns a cached caps.json without looking at
+    --caps-file; so PTS (caps_b3s.json) and B3G2 (caps_b3g2.json: le 95) keep theirs in a sibling dir of the pool, and neither reads nor overwrites the pool's. The
+    pool itself (train.jsonl, dev/) is still shared. Any other arm: the pool dir, as before."""
+    arm = C.B3G2_ARM if C.B3G2_ARM in a.arms else C.PTS_ARM if C.PTS_ARM in a.arms else None
+    if arm is None:
+        return pdir
+    d = pdir.rstrip('/\\') + '.caps-' + arm
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def get_caps(a, pdir):
     """The caps of the whole ladder (addendum F d: set once from the largest pool, the same at every rung), written to the pool dir beside a report of the rows
     of THIS pool and the dev splits that any cap touches (target 0; a run with a touched row stops instead of cutting it)."""
-    f = os.path.join(pdir, 'caps.json')
+    cdir = caps_dir(a, pdir)
+    f = os.path.join(cdir, 'caps.json')
+    pts = C.PTS_ARM in a.arms           # B3 steps-for-all: its caps are g8a/caps_b3s.json, measured with all_steps (the lead writes that file)
+    pts_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3s.json')
+    train_f = os.path.join(pdir, 'train.jsonl')
+    if pts:
+        assert os.path.exists(pts_caps) and a.scale == 1.0, 'PTS needs g8a/caps_b3s.json and --scale 1.0'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.PTS_ARM}, 'PTS pins caps_b3s.json for the whole job: it cannot run beside the B3 / B3G2 arms (their caps are their own)'
+        assert not a.caps_file or json.load(open(a.caps_file)) == json.load(open(pts_caps)), '--caps-file is not caps_b3s.json: PTS pins caps_b3s.json for the whole job'
+    g2 = C.B3G2_ARM in a.arms           # B3G2 pins caps_b3g2.json (caps_b3 + le 95): a different tape width than the pool's cached caps.json (caps_b3, le 68)
+    g2_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3g2.json')
+    if g2:
+        assert set(a.arms) == {C.B3G2_ARM}, 'B3G2 pins caps_b3g2.json for the whole job: it runs alone'
+        assert a.scale == 1.0 and a.caps_file and json.load(open(a.caps_file)) == json.load(open(g2_caps)), 'B3G2 needs --caps-file g8a/caps_b3g2.json (le 95) and --scale 1.0'
     if os.path.exists(f):
-        return json.load(open(f))
+        if not pts:
+            if not g2 or json.load(open(f)) == json.load(open(g2_caps)):
+                return json.load(open(f))
+        # PTS: a cached pool caps.json is used only if it is the pin AND the all_steps report of this very train.jsonl passed (no row over caps, dev included);
+        # otherwise it is measured again below (the report refuses any row longer than the caps' plain_target)
+        try:
+            rep0 = json.load(open(os.path.join(cdir, 'caps_report.json')))
+            if (json.load(open(f)) == json.load(open(pts_caps)) and rep0.get('all_steps') is True and rep0.get('train_bytes') == os.path.getsize(train_f)
+                    and not any(rep0['rows_over_caps'].values()) and not any(rep0['rows_over_caps_dev_with_programs'].values())):
+                return json.load(open(f))
+        except (OSError, ValueError, KeyError):
+            pass
     dev = [os.path.join(pdir, 'dev')] + ([a.big_data] if a.big_data and os.path.isdir(a.big_data) else [])
     own72 = a.own72 or (os.path.join(a.data8a, 'own72') if a.data8a else None)
     web30 = a.web30 or (os.path.join(a.data8a, 'web', 'slice_rung30.jsonl') if a.data8a else None)
     pinned = a.caps_file or (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json') if not (a.recompute_caps or a.cloze_long) else None)      # long-chunk rows (B3) outgrow G1's caps: recompute
+    if pts:
+        pinned = pts_caps               # PTS pins caps_b3s.json (a --caps-file is not taken for it)
     if pinned and a.scale == 1.0:       # addendum G: one set of caps for every rung and every box; a pool row that does not fit stops the job (checked below), nothing is cut
         caps = json.load(open(pinned))
     elif own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
@@ -80,11 +118,13 @@ def get_caps(a, pdir):
     else:       # dry run: the pool's own longest cases
         caps = CP.compute([os.path.join(pdir, 'train.jsonl')] + dev)
     paths = [os.path.join(pdir, 'train.jsonl')] + dev
-    rep = CP.report(caps, paths, progs=True)        # program steps too: a few minutes per pool, against hours of training
-    rep_dev = CP.report(caps, dev, progs=True)
+    rep = CP.report(caps, paths, progs=True, all_steps=pts)        # program steps too: a few minutes per pool, against hours of training
+    rep_dev = CP.report(caps, dev, progs=True, all_steps=pts)
     rep['rows_over_caps_dev_with_programs'] = rep_dev['rows_over_caps']
+    if pts:
+        rep.update(all_steps=True, train_bytes=os.path.getsize(train_f))
     json.dump(caps, open(f, 'w'))
-    json.dump(rep, open(os.path.join(pdir, 'caps_report.json'), 'w'), indent=1)
+    json.dump(rep, open(os.path.join(cdir, 'caps_report.json'), 'w'), indent=1)
     bad = {k: max(rep['rows_over_caps'][k], rep_dev['rows_over_caps'][k]) for k in rep['rows_over_caps'] if rep['rows_over_caps'][k] or rep_dev['rows_over_caps'][k]}
     if bad:
         os.remove(f)
@@ -108,6 +148,7 @@ def parse_accum(s, speed_json, rung):
 def get_pool(a, man_out_dir):
     """Build (or reuse) the pool dir of this rung and seed. Returns (dir, manifest)."""
     R = C.RUNGS[a.rung]
+    assert R['own_rung'] is not None, f'the {a.rung} pool is not built (the 600M pool is the data thread\'s and waits for a GO)'
     key = 'p%d-%s-s%d-a%d%s' % (R['own_rung'], R['web'], a.seed, a.max_ans, '-L' if a.cloze_long else '')
     pdir = os.path.join(a.work, 'pools', key)
     os.makedirs(os.path.dirname(pdir), exist_ok=True)
@@ -159,8 +200,9 @@ def main(argv=None):
     ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')
-    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ARMS))
+    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ALL_ARMS), help='B3 (B3-GROUP1-BUILD): the b3 model at the rung, config from configs.b3_cfg; --b2-extra adds switches to it')
     ap.add_argument('--max-ans', type=int, default=P.HYGIENE_ANS, help='data hygiene limit on answer chars for the pool builder (NOT a model cap: model caps come from caps.json)')
+    ap.add_argument('--noplug', action='store_true', help='the no-plug Gemma front (30M / 100M only; width 512, eg_pre): adds {"noplug": true} to --b2-extra, every Gemma-front arm takes it')
     ap.add_argument('--b2-extra', default='{}', help='JSON reader switches for B2 (stage 2b pick), e.g. {"eg_embed": true}')
     ap.add_argument('--lr-scale', type=float, default=1.0)
     ap.add_argument('--public', choices=['none'] + list(C.PUBLIC), default='none', help='30M rung only: add the public-model arm of mark 5 (pinned revision)')
@@ -181,8 +223,10 @@ def main(argv=None):
     a = ap.parse_args(argv)
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
-    if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM} and a.public == 'none', 'with eg_embed only the B2 and PT arms run (plain_lm and the public model have no Gemma front)'
+    if a.noplug:        # Ben, 4:12 PM ET: 30M / 100M read Gemma's own 512 numbers (configs.NOPLUG); same as --b2-extra '{"noplug": true}'
+        b2_extra[C.NOPLUG] = True
+    if b2_extra.get('eg_embed') or b2_extra.get(C.NOPLUG):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM, C.PTS_ARM} and a.public == 'none', 'with eg_embed only the B2, PT, PTS and B3 arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)
@@ -210,18 +254,29 @@ def main(argv=None):
     caps = get_caps(a, pdir)
     CP.apply(caps)                                  # in this process too, so the parameter counts below include the sized position / place tables
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
-    cfgs, counts = C.sizes(a.rung, b2_extra)
-    C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
+    old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM)]
+    cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
+    if C.PTS_ARM in a.arms:
+        assert b2_extra.get('eg_embed') or b2_extra.get(C.NOPLUG), 'PTS: --b2-extra must carry eg_embed (the G2C3 front, as its PT control)'
+        C.add_pts(a.rung, cfgs, counts, b2_extra)
+    if old:
+        C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
+    for arm_, g_ in ((C.B3_ARM, 1), (C.B3G2_ARM, 2)):
+        if arm_ in a.arms:          # B3 / B3G2 (arm 'B3G2' = model b3g2, caps g8a/caps_b3g2.json): n_loops (and any extra switch) come in through --b2-extra; the count is checked against its band
+            cfgs[arm_] = C.b3_cfg(a.rung, b2_extra, g_)
+            counts[arm_] = C.check_b3(a.rung, cfgs[arm_], g_)
+            sz = C.b3_sizes(cfgs[arm_], C.MODEL_OF[arm_])
+            print(arm_, 'size', json.dumps(sz), flush=True)
     steps = a.steps or man['schedule']['steps']
     pm_dir = base if a.local else os.path.join(base, tag + '-pool')
     os.makedirs(pm_dir, exist_ok=True)
     json.dump(man, open(os.path.join(pm_dir, 'pool_MANIFEST.json' if a.local else 'MANIFEST.json'), 'w'), indent=1)
     for f in ('caps.json', 'caps_report.json'):         # E3: the caps used and the rows any cap touches (target 0), beside the results
-        shutil.copy2(os.path.join(pdir, f), os.path.join(pm_dir, f))
+        shutil.copy2(os.path.join(caps_dir(a, pdir), f), os.path.join(pm_dir, f))
     if emit_on:
         emit(base, tag + '-pool')
     accum = parse_accum(a.accum, a.speed_json, a.rung)
-    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
+    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, lr=C.rung_lr(a.rung, b2_extra) * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
                maxh=a.maxh, dph=a.dph, accum=accum, arms={}, started_unix=t0, pool_build_s=round(time.time() - t0, 1), pool_train_sha256=man['train_sha256'],
                pool_schedule=man['schedule'], b2_extra=b2_extra)
     qdir = None
@@ -244,8 +299,8 @@ def main(argv=None):
                    '--bf16', '--log-every', '500', '--final-eval', '--out', out] + (['--minutes', repr(mins)] if mins else []) + dev_flag
             box['public']['steps'] = psteps
         else:
-            args = C.train_args(a.rung, arm, a.seed, steps, pdir, out=out, minutes=mins, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale,
-                                b2_extra=b2_extra, big_data=a.big_data, caps=os.path.join(pdir, 'caps.json'))
+            args = C.train_args(a.rung, arm, a.seed, steps, pdir, out=out, minutes=mins, lr=C.rung_lr(a.rung, b2_extra) * a.lr_scale,
+                                b2_extra=b2_extra, big_data=a.big_data, caps=os.path.join(caps_dir(a, pdir), 'caps.json'))
             if accum.get(arm, 1) > 1:
                 args += ['--accum', str(accum[arm])]
             cmd = [sys.executable, '-m', 'custom_io.train'] + args + dev_flag

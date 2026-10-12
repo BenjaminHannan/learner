@@ -70,6 +70,9 @@ class FakeEG:
         g = torch.Generator().manual_seed(7)
         return torch.randn(len(prompts), T, 768, generator=g).to(device), torch.zeros(len(prompts), 768)
 
+    def encode_texts(self, texts, T, device):
+        return self.encode(texts, T, device)[0]
+
 
 def _batch(vocab):
     from custom_io.data import Dataset, collate
@@ -145,6 +148,22 @@ def test_3m_band_follows_the_caps():
             "try:\n    C.check_bands('3M', cfgs, dict(counts, B2=int(2 * C.B2_S_PARAMS)), exact_3m=False)\nexcept AssertionError:\n    print('OK')\n")
     p = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     assert p.stdout.strip().endswith('OK'), p.stdout + p.stderr
+
+
+def test_caps_leave_the_round_cap():
+    # H1's round cap (tool_h1.CAP = 32, imported by b3) is not a data cap: caps.apply must not set it to plain_target (it did, 109; roadmap thread 10-09).
+    # Fresh process per caps file: caps patch module globals.
+    import subprocess
+    for f in ('caps_b3.json', 'caps_g.json'):
+        code = ("import json, os; from custom_io.g8a import caps as CP, configs as C\n"
+                f"c = CP.apply(json.load(open(os.path.join(os.path.dirname(C.__file__), {f!r}))))\n"
+                "assert c['plain_target'] != 32\n"
+                "from custom_io.models import tool_h1, b3\n"
+                "m = C.build('b3', C.vocab(), **C.b3_cfg('3M'))\n"
+                "assert (tool_h1.CAP, b3.CAP, m.cap) == (32, 32, 32), (tool_h1.CAP, b3.CAP, m.cap)\n"
+                "print('OK')\n")
+        p = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        assert p.stdout.strip().endswith('OK'), f + ': ' + p.stdout + p.stderr
 
 
 def test_plain_lm_refuses_the_front():

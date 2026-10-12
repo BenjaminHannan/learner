@@ -44,9 +44,10 @@ class PlainStepsG(PlainTFSteps):
     """eg_embed=True (8A-G, test 8a-G): the same frozen EmbeddingGemma 2 front as ledger.py's eg_embed. Every prompt char's input embedding also gets
     eg_proj(ln_eg(H)), H = EmbeddingGemma's state of the token holding that char (models/eg.py, aligned per char), at the real prompt positions only (BOS, SEP, the
     steps / answer positions and padding get nothing). eg_proj is zero-initialised and built last, so at step 0 the model computes exactly what the same-seed model
-    without the front computes. The frozen part is held in a list (never trained, counted or saved); ln_eg + eg_proj count as trained parameters."""
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None, eg_embed=False, eg_path=None):
-        super().__init__(vocab, d_model, n_layers, n_heads, n_loops, place)
+    without the front computes. The frozen part is held in a list (never trained, counted or saved); ln_eg + eg_proj count as trained parameters.
+    eg_pre=True (30M / 100M no plug): d_model must be 512; ln_eg = LayerNorm(512) with weight and bias zero, no eg_proj; ln_eg (1,024) counts as trained."""
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, mlp=4.0, hidden=None, eg_embed=False, eg_path=None, all_steps=False, eg_pre=False):
+        super().__init__(vocab, d_model, n_layers, n_heads, n_loops, place, all_steps)
         h = int(hidden) if hidden is not None else int(mlp * d_model)
         if h != 4 * d_model:      # only then are the blocks rebuilt, so the default really is plain_tf_steps
             self.blocks = nn.ModuleList(FlexBlock(d_model, n_heads, h) for _ in range(n_layers))
@@ -54,8 +55,15 @@ class PlainStepsG(PlainTFSteps):
             for b in self.blocks:
                 for lin in (b.proj, b.out):
                     nn.init.normal_(lin.weight, std=0.02 / math.sqrt(2 * n_layers * n_loops))
-        self.eg_embed, self._front = bool(eg_embed), None
-        if self.eg_embed:       # created after every other module and zero-initialised (building the Linear draws RNG after every plain weight)
+        self.eg_embed, self._front, self.eg_pre = bool(eg_embed), None, bool(eg_pre)
+        if self.eg_pre:         # the no-plug front (Ben, 4:12 PM ET), same switch as ledger.py's eg_pre: Gemma's 512 numbers before its projection, LayerNorm(512) zero-initialised, no eg_proj
+            from custom_io.models.eg import EG_PRE_DIM, FrozenEG
+            assert self.eg_embed and d_model == EG_PRE_DIM, f'eg_pre needs eg_embed=True and d_model = {EG_PRE_DIM}, got eg_embed={eg_embed}, d_model={d_model}'
+            self._eg = [FrozenEG(eg_path, pre=True)]
+            self.ln_eg = nn.LayerNorm(EG_PRE_DIM)
+            nn.init.zeros_(self.ln_eg.weight)
+            nn.init.zeros_(self.ln_eg.bias)
+        elif self.eg_embed:       # created after every other module and zero-initialised (building the Linear draws RNG after every plain weight)
             from custom_io.models.eg import EG_DIM, FrozenEG
             self._eg = [FrozenEG(eg_path)]
             self.ln_eg, self.eg_proj = nn.LayerNorm(EG_DIM), nn.Linear(EG_DIM, d_model)
@@ -72,7 +80,7 @@ class PlainStepsG(PlainTFSteps):
         ids = batch['prompt_ids']
         T = ids.shape[1]
         H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], T, ids.device)
-        f = self.eg_proj(self.ln_eg(H.float())) * batch['prompt_mask'][..., None]
+        f = (self.ln_eg(H.float()) if self.eg_pre else self.eg_proj(self.ln_eg(H.float()))) * batch['prompt_mask'][..., None]
         self._front = F.pad(f, (0, 0, 1, width - 1 - T))
 
     def hidden(self, ids, loops=None, place=None):
@@ -98,6 +106,7 @@ class PlainLM(PlainStepsG):
     def __init__(self, *a, eg_embed=False, **kw):
         assert not eg_embed, 'plain_lm has no EmbeddingGemma front (8a-G fronts the step arm, plain_tf_steps_g, only)'
         super().__init__(*a, **kw)
+        assert not self.all_steps, 'plain_lm reads target_text (no all_steps); the steps-for-all arm is PTS (plain_tf_steps_g)'      # after init: also catches a positional all_steps
 
     def _sequences(self, batch):
         """-> seq [B, W] ids (PAD after the end), tgt [B, W] (-100 where not supervised), W. tgt[i, j] is the id the model must emit at position j."""

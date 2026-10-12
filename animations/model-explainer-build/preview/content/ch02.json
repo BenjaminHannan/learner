@@ -1,0 +1,529 @@
+{
+ "kicker": "Part 2 of 14",
+ "title": "The goal and the rules of the game",
+ "blurb": "What the team wants this model to become, and the rules it set for itself so that its results can be trusted.",
+ "accent": "thinker",
+ "scenes": [
+  {
+   "id": "s01",
+   "duration": 27,
+   "heading": "The goal: think first, then talk",
+   "caption": [
+    {
+     "at": 0.026,
+     "text": "The model should think first and talk second."
+    },
+    {
+     "at": 0.206,
+     "text": "It should learn from a few examples."
+    },
+    {
+     "at": 0.373,
+     "text": "It should beat models of its whole size."
+    },
+    {
+     "at": 0.554,
+     "text": "One day, it should beat Minecraft like a person."
+    }
+   ],
+   "labels": {
+    "g1": "Think first",
+    "g2": "Learn from few examples",
+    "g3": "Beat its whole size",
+    "g4": "Minecraft, like a person",
+    "c1": "tested, 3M, earlier design",
+    "c2": "partly shown",
+    "c3": "never tested",
+    "c4": "plan only"
+   },
+   "src": [
+    "big-run/PLAN.md line 70 (scorecard row 1: think first, talk second; learns from a few examples; B2 +20.3 over a plain transformer, 6 of 6 seeds, 3M)",
+    "big-run/PLAN.md line 77 (row 8: beat models of its whole size; Minecraft; untested)"
+   ],
+   "notes": "Row 1 (a) skills is shown at 3M for the earlier design B2; (b) few examples is partly shown; (c) talking is untested. Row 8 is untested. Minecraft is a plan only."
+  },
+  {
+   "id": "s02",
+   "duration": 34,
+   "heading": "The race, in three steps",
+   "caption": [
+    {
+     "at": 0.021,
+     "text": "Step one: race SmolLM2-360M, a rival with 360 million numbers."
+    },
+    {
+     "at": 0.177,
+     "text": "Pass mark: ahead by 3 points or more on questions kept aside, and ahead on bAbI."
+    },
+    {
+     "at": 0.396,
+     "text": "Rivals with 1 to 2 billion numbers come only later."
+    },
+    {
+     "at": 0.553,
+     "text": "The race has never run: the English talker it needs is not built."
+    }
+   ],
+   "labels": {
+    "s1": "Race a 360 million rival",
+    "s2": "Then 1 to 2 billion",
+    "s3": "Far goal: Minecraft",
+    "c1": "never run",
+    "c2": "later, if funded",
+    "c3": "plan only",
+    "pass": "ahead by 3+ points"
+   },
+   "src": [
+    "big-run/PLAN.md line 77 (row 8: ahead of SmolLM2-360M by >= +3 on sealed sets and ahead on bAbI; 1-2B only after that, if funded; eyes, hands, game loop not built)",
+    "big-run/PLAN.md line 284 (R4: race the 350M-600M size class first)",
+    "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 85-86 (the race against 350M-600M models is the first gate)"
+   ],
+   "notes": "Source says 1-2B models only after the size-class race, if the project owner funds it. No money amount shown."
+  },
+  {
+   "id": "s03",
+   "duration": 34,
+   "heading": "Whole size counts everything",
+   "caption": [
+    {
+     "at": 0.021,
+     "text": "Size counts every number that runs, borrowed ones too."
+    },
+    {
+     "at": 0.191,
+     "text": "As built: the borrowed reader holds 271,002,624 numbers, and our learned parts hold 102.1 million."
+    },
+    {
+     "at": 0.426,
+     "text": "Together that is 373.1 million."
+    },
+    {
+     "at": 0.553,
+     "text": "Planned, parts rounded: reader about 271 million, thinker about 100, talker about 25. The plan says about 397 million."
+    }
+   ],
+   "labels": {
+    "reader": "reader, borrowed",
+    "learned": "learned by us",
+    "pr": "reader",
+    "pt": "thinker",
+    "pk": "talker",
+    "tot1": "as built",
+    "tot2": "planned (parts rounded)",
+    "c1": "counted, not trained yet",
+    "c2": "talker not built"
+   },
+   "nums": {
+    "reader": 271.0,
+    "learned": 102.1,
+    "total": 373.1,
+    "pr": 271,
+    "pt": 100,
+    "pk": 25,
+    "planned": 397
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 21-23 (about 397M planned = reader about 271M + thinker about 100M + talker about 25M; 373.1M whole as built = 102.1M trained + 271.0M frozen Gemma; talker not built)",
+    "architecture/FINISHED-MODEL-2026-10-09.md line 31 (reader 271,002,624)",
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 130-131 (size counts every weight that runs, borrowed included)"
+   ],
+   "notes": "373.1 is as written in the source (271.0 + 102.1). The planned row is the source's own rounded split (reader about 271M, thinker about 100M, talker about 25M, about 397M in all); the three rounded parts add to 396, so the screen says 'parts rounded' beside the 397. It is not 373.1 plus 25, because the plan counts the thinker as about 100M. big-run/PLAN.md line 26 says about 398M; FINISHED-MODEL (source of truth) says about 397M, so 397 is shown. Not trained at the 100M rung yet. Bar lengths are drawn to scale of the millions shown."
+  },
+  {
+   "id": "s04",
+   "duration": 34,
+   "heading": "The size bar: gain more from size",
+   "caption": [
+    {
+     "at": 0.021,
+     "text": "The team's rule: with more numbers, our design must gain more than a plain model does."
+    },
+    {
+     "at": 0.233,
+     "text": "A plain model is a standard model of the same whole size, practised the same way."
+    },
+    {
+     "at": 0.445,
+     "text": "The check climbs a ladder of sizes."
+    },
+    {
+     "at": 0.563,
+     "text": "Not shown yet for the finished design: earlier runs had a bug, so they do not count."
+    }
+   ],
+   "labels": {
+    "ours": "our design",
+    "plain": "plain model",
+    "size": "size",
+    "score": "score",
+    "r1": "3M",
+    "r2": "10M",
+    "r3": "30M",
+    "r4": "100M",
+    "pic": "picture only, not measured",
+    "c1": "not shown yet"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 125-129 (item 7: the finished design must pass the size bar itself; earlier 8a ladder runs had the register bug and do not count either way)",
+    "memory/MEMORY.md line 18 (scaling bar: gain more from extra parameters than the plain model)",
+    "big-run/PLAN.md line 72 (scorecard row 3: untested for the model as specified)",
+    "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 438-439 (every claim is against a plain model of the same whole size, same data)"
+   ],
+   "notes": "The two lines are an illustration. The real earlier numbers belong to a later part."
+  },
+  {
+   "id": "s05",
+   "duration": 34,
+   "heading": "Inside: learned. Outside: hand code",
+   "caption": [
+    {
+     "at": 0.021,
+     "text": "The team's rule: everything inside the model is learned."
+    },
+    {
+     "at": 0.159,
+     "text": "Hand-written code may run only as a tool the model chooses to call, like the calculator."
+    },
+    {
+     "at": 0.371,
+     "text": "A deployed model must do its own learning, sleeping (night study), stopping and picking."
+    },
+    {
+     "at": 0.563,
+     "text": "Not finished: some hand-written steps are still on the answer path."
+    }
+   ],
+   "labels": {
+    "frame": "the model: all learned",
+    "r": "reader",
+    "t": "thinker",
+    "cw": "call writer",
+    "s": "stop switch",
+    "k": "talker",
+    "calc": "calculator",
+    "call": "call",
+    "reply": "reply",
+    "c1": "hand-written, outside tool",
+    "c2": "borrowed",
+    "warn": "some hand-written steps still inside"
+   },
+   "src": [
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 71-77 (rules of 10-07; the calculator, Gemma and safety caps are allowed and stay)",
+    "no-hardcoding/PLAN-AND-MARKS-2026-10-07.md lines 19-23 (hand code only inside a tool the model calls; the deployed model does the rest itself)",
+    "big-run/PLAN.md line 73 (scorecard row 4: red today; hand-written parts left)"
+   ],
+   "notes": "The reader is borrowed and frozen, not learned by us; it is allowed by the project owner's choice. The list of hand-written pieces still to replace belongs to a later part."
+  },
+  {
+   "id": "s06",
+   "duration": 35,
+   "heading": "Rules so the practice stays honest",
+   "caption": [
+    {
+     "at": 0.02,
+     "text": "No practice answer is ever cut short."
+    },
+    {
+     "at": 0.134,
+     "text": "Pass marks are written down before a run."
+    },
+    {
+     "at": 0.259,
+     "text": "Questions kept aside for the exam are never practised on."
+    },
+    {
+     "at": 0.404,
+     "text": "No new teacher: only the 171,940 teaching rows we have, plus human-written web text."
+    },
+    {
+     "at": 0.589,
+     "text": "A win claim needs 6 or more paired copies. A 2-copy screen only decides whether to try."
+    }
+   ],
+   "labels": {
+    "r1": "No cut-off answers",
+    "r2": "Marks first",
+    "r3": "Exam kept aside",
+    "r4": "No new teacher",
+    "r5": "6 paired copies",
+    "t4": "teaching rows",
+    "pic": "picture only"
+   },
+   "src": [
+    "no-hardcoding/PLAN-AND-MARKS-2026-10-07.md line 68 (nothing is cut off: standing rule)",
+    "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 431-432 (marks before the run; 6 or more paired seeds, 2-seed screens only decide whether to confirm)",
+    "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 442-448 (no new teacher; 171,940 TEACH rows; never score on or touch the protected panels)",
+    "architecture/FINISHED-MODEL-2026-10-09.md line 147 (web pool gated by protected-panel hash checks)"
+   ],
+   "notes": "These are the team's own rules, not outside standards. 'Paired' means each copy is compared with a plain-model copy.",
+   "nums": {
+    "teach": 171940
+   }
+  },
+  {
+   "id": "s07",
+   "duration": 40,
+   "heading": "Where the rules slipped, said plainly",
+   "caption": [
+    {
+     "at": 0.017,
+     "text": "Earlier runs cut some practice answers to 8 letters: a bug."
+    },
+    {
+     "at": 0.187,
+     "text": "The fix run reported 0 rows cut, on both copies."
+    },
+    {
+     "at": 0.347,
+     "text": "A calculator-test leak mark was missed as written. The project owner cleared it on Oct 9."
+    },
+    {
+     "at": 0.552,
+     "text": "One copy's saved model was lost, so that copy is unscored."
+    }
+   ],
+   "labels": {
+    "a": "Cut-off answers",
+    "a1": "rows with longer answers",
+    "a2": "rows in the practice pool",
+    "b": "Leak check",
+    "b1": "leak, lowest",
+    "b2": "leak, highest",
+    "b3": "limit",
+    "c": "Lost copy",
+    "c1": "calculator-test copies",
+    "c2": "saved model lost",
+    "tag": "said plainly",
+    "a3": "0 rows cut now, as reported"
+   },
+   "nums": {
+    "long": 191172,
+    "pool": 1655902,
+    "lo": 5.0,
+    "hi": 5.6,
+    "lim": 5,
+    "copies": 6,
+    "lost": 1
+   },
+   "src": [
+    "big-run/PLAN.md line 75 (row 6: register bug cut answers to 8 letters; 191,172 of 1,655,902 pool rows have longer answers; G1 seeds 400 and 401 pass the audit with 0 rows over caps)",
+    "no-hardcoding/PLAN-AND-MARKS-2026-10-07.md line 95 (donor leak 5.0-5.6 against <= 5; cleared by the project owner 8:21 AM ET 10-09; not a pass by the sealed marks alone)",
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 107-108 (seed 205 unscored because its checkpoint was lost)"
+   ],
+   "notes": "Leak = answers right with the thinking turned off. 5.0 to 5.6 is the range over copies in the calculator test (T1SDR). Not the same leak test as in other parts."
+  },
+  {
+   "id": "s08",
+   "duration": 36,
+   "heading": "The spend rule: one big proven run",
+   "caption": [
+    {
+     "at": 0.019,
+     "text": "The team's rule: spend big only on a run that demonstrably works, not on many small tests."
+    },
+    {
+     "at": 0.23,
+     "text": "So it climbs a size ladder on the project's own PC and Macs. No rented machines now."
+    },
+    {
+     "at": 0.44,
+     "text": "The 100 million run waits for the Oct 31 readout, planned."
+    },
+    {
+     "at": 0.591,
+     "text": "Estimate for that run: 3 to 6 weeks on the PC alone."
+    }
+   ],
+   "labels": {
+    "k1": "3M",
+    "k2": "10M",
+    "k3": "30M",
+    "k4": "readout",
+    "k5": "100M run",
+    "c1": "planned",
+    "c2": "planned",
+    "mach": "project PC (16 GB) and Mac laptops",
+    "wk": "3 to 6 weeks, estimate"
+   },
+   "src": [
+    "big-run/PLAN.md lines 3-4 (one big proven run, not a bunch of little tests)",
+    "big-run/PLAN.md lines 26, 43-44 (ladder 3M, 10M, 30M then 100M; Oct 31 readout; 100M run 3 to 6 weeks on the PC alone, suggested)",
+    "memory/MEMORY.md lines 10-11 (no rentals; Mac and 5070 Ti PC only)"
+   ],
+   "notes": "Dates are suggested in the source, so the video says planned. No money amount is shown on purpose."
+  },
+  {
+   "id": "s09",
+   "duration": 34,
+   "heading": "How sure is the team? Not 90% yet",
+   "caption": [
+    {
+     "at": 0.021,
+     "text": "The 90% bar: no weeks-long step starts until the team can truthfully say it is 90% sure the run does what its marks say."
+    },
+    {
+     "at": 0.324,
+     "text": "The plan's own judgement, not measured: about 1 in 3 that the design out-scales a plain model."
+    },
+    {
+     "at": 0.553,
+     "text": "For the Minecraft goal: well under 1 in 10."
+    }
+   ],
+   "labels": {
+    "b1": "out-scales a plain model",
+    "b2": "Minecraft goal",
+    "bar": "90% bar",
+    "v1": "about 1 in 3",
+    "v2": "under 1 in 10",
+    "judge": "judgement, not measured"
+   },
+   "src": [
+    "big-run/PLAN.md line 51 (the 90% bar; about 1 in 3 out-scales; well under 1 in 10 for Minecraft; judgement, not measured)"
+   ],
+   "notes": "Bar for 'about 1 in 3' is drawn at one third of the scale only as a picture of 1 in 3; the source gives no exact percent. 'Under 1 in 10' is drawn as a short bar under a tenth of the scale. Both bars are the plan's own judgement, not measured."
+  },
+  {
+   "id": "s10",
+   "duration": 45,
+   "heading": "The scorecard: nine goals, none green yet",
+   "caption": [
+    {
+     "at": 0.016,
+     "text": "The plan keeps a scorecard of nine goals, each with a pass mark written in advance."
+    },
+    {
+     "at": 0.198,
+     "text": "Part-way shown: skills, its own thinking, running itself, honest practice, creativity, new domains."
+    },
+    {
+     "at": 0.354,
+     "text": "Red: hand-written parts still sit on the answer path. Untested: bigger helps more, and beating its whole size."
+    },
+    {
+     "at": 0.552,
+     "text": "Today, none of the nine is fully green."
+    }
+   ],
+   "src": [
+    "big-run/PLAN.md lines 62-88 (scorecard table, nine rows, status column)",
+    "big-run/PLAN.md line 80 (Today: 0 of 9 fully green; part-green 1, 2, 5, 6, 7 and row 9 partly; red 4)",
+    "big-run/PLAN.md lines 70-78 (rows 3 and 8 untested)"
+   ],
+   "notes": "Row names are our short plain-word versions of the nine principles in the PLAN scorecard (1 think first / few examples; 2 its own brain thinks; 3 bigger helps more; 4 nothing hand-coded inside; 5 runs itself; 6 no shortcuts in training; 7 creative when stuck; 8 beat models of its whole size / Minecraft; 9 learns a new domain by itself). Colours follow the 'Status today' column: part-green rows 1, 2, 5, 6, 7 and 9 (row 9 'partly'), red row 4, untested rows 3 and 8. Half-filled squares are a picture of 'partly', not a measurement.",
+   "rows": [
+    {
+     "name": "Think first",
+     "st": "part"
+    },
+    {
+     "name": "Own thinking",
+     "st": "part"
+    },
+    {
+     "name": "Bigger helps",
+     "st": "none"
+    },
+    {
+     "name": "No hand code",
+     "st": "red"
+    },
+    {
+     "name": "Runs itself",
+     "st": "part"
+    },
+    {
+     "name": "Honest practice",
+     "st": "part"
+    },
+    {
+     "name": "Creative",
+     "st": "part"
+    },
+    {
+     "name": "Beat its size",
+     "st": "none"
+    },
+    {
+     "name": "New domains",
+     "st": "part"
+    }
+   ],
+   "labels": {
+    "l1": "partly shown",
+    "l2": "hand code left",
+    "l3": "not shown yet",
+    "pic": "status colours, not a score",
+    "score": "0 of 9 fully green"
+   }
+  },
+  {
+   "id": "s11",
+   "duration": 29,
+   "heading": "Outside opinions on hard questions",
+   "caption": [
+    {
+     "at": 0.024,
+     "text": "When a hard question has several plausible answers, the team asks other AI reviewers."
+    },
+    {
+     "at": 0.307,
+     "text": "Each prompt asks them to label claims shown, suggested or untested."
+    },
+    {
+     "at": 0.553,
+     "text": "Every reply is checked against the code before anyone acts on it."
+    }
+   ],
+   "labels": {
+    "q": "hard question",
+    "a": "lead AI agent, sees the repo",
+    "b": "web AI model, no repo",
+    "chk": "checked against the code",
+    "c1": "the team's process",
+    "t1": "shown",
+    "t2": "suggested",
+    "t3": "untested"
+   },
+   "src": [
+    "CLAUDE.md lines 3-17 (Outside opinions on hard problems: Astra and GPT web; label claims shown, suggested, untested; one change at a time; check factual claims against the code)"
+   ],
+   "notes": "Process only; no result is claimed."
+  },
+  {
+   "id": "s12",
+   "duration": 28,
+   "heading": "What to remember",
+   "caption": [
+    {
+     "at": 0.025,
+     "text": "The goal: think first, learn from few examples, beat models of its whole size."
+    },
+    {
+     "at": 0.308,
+     "text": "The rules: size counts everything, learned inside, honest practice, marks first."
+    },
+    {
+     "at": 0.554,
+     "text": "Today: none of the nine goals is fully shown yet."
+    }
+   ],
+   "labels": {
+    "n1": "1",
+    "n2": "2",
+    "n3": "3",
+    "w1": "goal",
+    "w2": "rules",
+    "w3": "today",
+    "p1": "think first, few examples, whole size",
+    "p2": "size counts all, learned inside, honest practice, marks first",
+    "p3": "0 of 9 goals fully green"
+   },
+   "src": [
+    "big-run/PLAN.md lines 70-80",
+    "architecture/FINISHED-MODEL-2026-10-09.md lines 71-77, 125-131"
+   ],
+   "notes": "Recap of scenes s01 to s10."
+  }
+ ]
+}

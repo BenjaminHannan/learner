@@ -1,0 +1,12 @@
+{
+ "max_prompt": 2000,
+ "max_ans": 35,
+ "n_num": 240,
+ "w_max": 727,
+ "n_res": 11,
+ "n_reg": 36,
+ "plain_target": 115,
+ "rows": 4156181,
+ "own_rows": 2561232,
+ "source": "largest pool: own72 (rung <= 30) + rung30 web slice (long-chunk cloze rows, data_pool/cloze_long.py, seed 400) + dev; computed 10-09 on cloud CPU (own72 manifest e8f32daf, Oct-7 rung30 slice); matches the data thread's cap check (2000 / 240 / 727); PTS (all-steps plain target) re-measured 10-09 on own72 only (2,561,232 rows, Mac): plain_target 115 vs 109 for the group-1 target on the same rows; web cloze rows carry no steps (unchanged); dev rows not re-measured here, so the job caps report must refuse any row over 115"
+}

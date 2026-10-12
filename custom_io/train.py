@@ -3,7 +3,7 @@ import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
 from custom_io import capcount, data as D
-from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
+from custom_io.data import DEFAULT_DATA, ByteVocab, CharVocab, Dataset, load_rows, to_device, train_batches
 from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
 
@@ -33,10 +33,10 @@ def jprint(**kw):
 
 
 def lesion_names(model):
-    """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n}."""
+    """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n} (or the model's LOOP_SWEEP)."""
     names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
     if getattr(model, 'n_loops', 1) > 1:    # a 1-loop model's sweep is only a format check (loops:1 = intact); skip it
-        names += [f'loops:{k}' for k in sorted({0, 1, 2, 2 * model.n_loops})]
+        names += [f'loops:{k}' for k in (getattr(model, 'LOOP_SWEEP', None) or sorted({0, 1, 2, 2 * model.n_loops}))]
     return names
 
 
@@ -149,7 +149,11 @@ def main(argv=None):
         jprint(event='caps', **_c)
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
-    vocab = CharVocab.get(args.data, args.vocab, rows)
+    if cfg.get('bytes'):                # V1: raw UTF-8 bytes (269 ids), no vocab file; the model's cfg {"bytes": true} says so
+        assert not args.vocab, '--vocab and cfg bytes are exclusive'
+        vocab = ByteVocab()
+    else:
+        vocab = CharVocab.get(args.data, args.vocab, rows)
     batches = train_batches(Dataset(rows, vocab), args.batch, args.order, args.seed)
     dev = subsample(load_rows(os.path.join(args.data, 'dev', 'in_dist.jsonl')), 200)
     model = build(args.model, vocab, **cfg).to(device)
@@ -222,13 +226,15 @@ def main(argv=None):
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={}, cap_hits=capcount.snapshot())
     jprint(event='cap_hits', step=step, **result['cap_hits'])       # scorecard row 6: every count must be 0 (see custom_io/capcount.py)
+    if hasattr(model, '_tk_spots'):         # tok_think: valid letters vs token spots the thinker saw in training (ratio = letters per spot)
+        result['tok_think'] = dict(letters=model._tk_letters, spots=model._tk_spots, ratio=round(model._tk_letters / max(model._tk_spots, 1), 4))
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib
         result['data_manifest_sha256'] = hashlib.sha256(open(mf, 'rb').read()).hexdigest()
     if args.out:
         os.makedirs(args.out, exist_ok=True)
-        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step), os.path.join(args.out, 'checkpoint.pt'))
+        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, vocab='bytes' if vocab.is_bytes else 'chars', step=step), os.path.join(args.out, 'checkpoint.pt'))
     def write():
         result['wall_s'] = time.time() - t_start
         if device.type == 'cuda':       # peaks so far (training, then evals): later queues size --par and # MEM from these

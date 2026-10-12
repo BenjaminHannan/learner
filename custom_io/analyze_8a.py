@@ -25,9 +25,12 @@ from custom_io import analyze as A
 
 RUNGS = ['3M', '10M', '30M']
 ARMS = ['B2', 'PT', 'LLM', 'PUB']
+B3G2 = 'B3G2'
+B3 = 'B3'                       # B3 group 1 (B3-GROUP1-BUILD): loaded and reported apart (b3_report); the B2 marks above never read it
+RUNG_RUNGS = ['3M', '10M', '30M', '100M']
 SEEDS = [400, 401, 402, 403, 404, 405]
-LOCAL = re.compile(r'^8a-(3M|10M|30M)-s(\d+)$')
-VAST = re.compile(r'^8a-(3M|10M|30M)-s(\d+)-(B2|PT|LLM|PUB)$')
+LOCAL = re.compile(r'^8a-(3M|10M|30M|100M)-s(\d+)$')
+VAST = re.compile(r'^8a-(3M|10M|30M|100M)-s(\d+)-(B2|PT|LLM|PUB|B3|B3G2)$')
 
 
 def load(dirs):
@@ -42,7 +45,7 @@ def load(dirs):
             if 'RESULT.json' not in fs:
                 continue
             key = None
-            if base in ARMS and LOCAL.match(parent):
+            if (base in ARMS or base in (B3, B3G2)) and LOCAL.match(parent):
                 m = LOCAL.match(parent)
                 key = (m.group(1), base, int(m.group(2)))
             elif VAST.match(base):
@@ -146,9 +149,48 @@ def analyze(runs, boxes=None, seeds=SEEDS):
     rep['leak_flag_30M_over_3M_by_5'] = None if None in (l3k, l30k) else l30k - l3k > 5
     caps = {r: A.g(next((b for k, b in boxes.items() if k[0] == r), {}), 'caps') for r in RUNGS}
     rep['caps'] = caps
+    rep['b3'] = b3_report(runs, seeds)
+    rep['b3g2'] = b3_report(runs, seeds, B3G2)
     five = [m['ok'] for m in marks]
     verdict = 'PASS' if five == [True] * len(five) else ('FAIL' if False in five else 'incomplete')
     return dict(verdict=verdict, marks=marks, proved_wrong=wrong, stop_rules=stop, reported=rep, seeds=list(seeds))
+
+
+def b3_report(runs, seeds, arm=B3):
+    """B3's items (report-only; nothing here is a mark): per rung, over the seeds that have a B3 run: pooled-5 exact, rounds used at the model's own stop
+    (h1 block), the rounds at which calls happen (histogram), calls per row, rows whose call a full tape refused, and exact match per input-length bucket
+    (<= 280, 281-700, 701-1,300, 1,301-2,000 letters) on every dev split that has rows there. Counts are summed over seeds."""
+    out = {}
+    for rung in RUNG_RUNGS:
+        rs = [(s, runs[(rung, arm, s)]) for s in seeds if (rung, arm, s) in runs]
+        if not rs:
+            continue
+        agg = dict(seeds=[s for s, _ in rs], pooled5=A.stats({s: A.P5(r, None) for s, r in rs}), rounds_mean={s: A.g(r, 'extra', 'h1', 'pooled5', 'mean') for s, r in rs},
+                   tape_full_rows=0, call_rounds={}, calls_per_row={}, by_length={}, plan=[])
+        for s, r in rs:
+            b = A.g(r, 'extra', 'b3') or {}
+            agg['plan'].append(b.get('plan'))
+            for sp, d in (b.get('splits') or {}).items():
+                agg['tape_full_rows'] += d.get('tape_full_rows', 0)
+                for key in ('call_rounds', 'calls_per_row'):
+                    for k, v in d.get(key, {}).items():
+                        agg[key][k] = agg[key].get(k, 0) + v
+                for bk, v in d.get('by_length', {}).items():
+                    e = agg['by_length'].setdefault(sp, {}).setdefault(bk, [0, 0.0])
+                    e[0] += v['n']
+                    e[1] += v['n'] * v['exact'] / 100
+        if arm == B3G2:     # group 2's sealed items (models/b3g2.py g2_evals and Tool's / H1's evals), per seed: B3G2-1 to B3G2-6
+            agg['g2'] = {s: dict(
+                pooled5=A.P5(r, None), chain5=A.g(r, 'chain5', 'intact', 'exact'), leak_loops0=A.g(r, 'chain5', 'loops:0', 'exact'), donor=A.g(r, 'lesions', 'donor', 'in_dist'),
+                loops32=A.g(r, 'chain5', 'loops:32', 'exact'), tool_off_program=A.g(r, 'extra', 'noexec', 'program_families'), tool_off_n=A.g(r, 'extra', 'noexec', 'n'),
+                inverse=A.g(r, 'extra', 'g2', 'inverse'), dev_rows=A.g(r, 'extra', 'g2', 'dev_rows'), agreement=A.g(r, 'extra', 'g2', 'agreement'),
+                writer=A.g(r, 'extra', 'g2', 'writer'), train_counts=A.g(r, 'extra', 'g2', 'train_counts'), call_acc=A.g(r, 'extra', 'op_acc'), call_text=A.g(r, 'extra', 'call_text'),
+                write_copy=A.g(r, 'extra', 'write_copy_u'), opswap=A.g(r, 'extra', 'opswap'), cap_hits=r.get('cap_hits'), h1_chain5=A.g(r, 'extra', 'h1', 'chain5'),
+                steps_unparsed=A.g(r, 'cap_hits', 'steps_unparsed'), no_trace=A.g(r, 'cap_hits', 'no_trace'), writer_over=A.g(r, 'cap_hits', 'writer_over'),
+                tape_entry_over=A.g(r, 'cap_hits', 'tape_entry_over')) for s, r in rs}
+        agg['by_length'] = {sp: {bk: dict(n=n_, exact=100 * c / n_) for bk, (n_, c) in sorted(d.items())} for sp, d in agg['by_length'].items()}
+        out[rung] = agg
+    return out
 
 
 def fmt(v, w=6, p=2):
@@ -167,6 +209,15 @@ def show(res):
         print(f"  {rung}: " + ' '.join(f"{a} {fmt(r['pooled5'][f'{rung}/{a}']['mean'])}" for a in ARMS) + f"  leak {fmt(r['leak_loops0'][rung])}  donor drop {fmt(r['donor_drop'][rung])}")
 
 
+def show_b3(res):
+    for rung, d in (res['reported'].get('b3g2') or {}).items():
+        print(f"  B3G2 {rung}: pooled-5 {fmt(d['pooled5']['mean'])}  per seed: " + json.dumps({s: {k: v.get(k) for k in ('chain5', 'leak_loops0', 'tool_off_program', 'steps_unparsed', 'no_trace', 'writer_over')} for s, v in d['g2'].items()}, default=str))
+    for rung, d in (res['reported'].get('b3') or {}).items():
+        print(f"  B3 {rung}: pooled-5 {fmt(d['pooled5']['mean'])}  tape-full rows {d['tape_full_rows']}  calls/row {d['calls_per_row']}  call rounds {d['call_rounds']}")
+        for sp, bs in d['by_length'].items():
+            print(f"    {sp}: " + '  '.join(f"{bk} letters {v['exact']:.1f} (n {v['n']})" for bk, v in bs.items()))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--results', nargs='+', required=True)
@@ -177,6 +228,7 @@ def main(argv=None):
     res = analyze(runs, boxes, [int(x) for x in a.seeds.split(',')])
     res['skipped'] = skipped
     show(res)
+    show_b3(res)
     if a.out:
         json.dump(res, open(a.out, 'w'), indent=1, default=str)
     return res

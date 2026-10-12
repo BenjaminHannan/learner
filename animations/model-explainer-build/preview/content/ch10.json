@@ -1,0 +1,495 @@
+{
+  "kicker": "Part 10 of 14",
+  "title": "Tests that cannot be gamed",
+  "blurb": "How we test fairly: exams the model never practised, marks written before the run, paired copies, a range of likely error, and honest limits.",
+  "accent": "tested",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 28,
+      "heading": "Why a score alone means little",
+      "caption": [
+        "A score means little if the model has seen the questions before.",
+        "So two models of the same size practise on the same rows, in the same order.",
+        "The exam questions are kept aside. Some sets stay sealed and are never touched while we build."
+      ],
+      "labels": {
+        "practice": "practice rows",
+        "model": "model",
+        "exam": "exam: kept aside",
+        "lock": "sealed sets, never touched"
+      },
+      "locks": [
+        "GOLD-PRIVATE",
+        "reserved",
+        "blind"
+      ],
+      "illustration": "picture only",
+      "src": [
+        "custom-io/gpt-b2-leak-and-credit-2026-10-05.md lines 37-39 (same size, same practice rows, same order)",
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md line 448 (never score on GOLD-PRIVATE, never touch reserved/blind panels)",
+        "whole-model-roadmap/8A-SPEC-2026-10-07.md lines 88-89 (never trained on dev splits behind protected panels)"
+      ],
+      "notes": "The stacks and locks are a picture only. The three lock names are the sealed panels named in the sources; we never read them."
+    },
+    {
+      "id": "s02",
+      "duration": 29,
+      "heading": "Two exams: pooled-5 and chain-5",
+      "caption": [
+        "Exam one, pooled-5, is 6,040 questions kept aside, in five kinds from familiar to new.",
+        "Exam two, chain-5, is 1,000 multi-step questions.",
+        "Our own programs write every question, from 34 made-up families, in short English with short answers."
+      ],
+      "names": {
+        "p": "pooled-5",
+        "c": "chain-5"
+      },
+      "total": 6040,
+      "totalLabel": "questions",
+      "kinds": [
+        {
+          "label": "Familiar",
+          "value": 1360
+        },
+        {
+          "label": "New answers",
+          "value": 1200
+        },
+        {
+          "label": "New sentence frames",
+          "value": 1360
+        },
+        {
+          "label": "New words",
+          "value": 800
+        },
+        {
+          "label": "New wording",
+          "value": 1320
+        }
+      ],
+      "chain": {
+        "value": 1000,
+        "label": "multi-step"
+      },
+      "src": [
+        "architecture/model-deep-dive.html line 166 (How we score it: pooled-5 = 6,040 held-out questions across 5 splits; chain-5 = 1,000 multi-step questions)",
+        "custom-io/gpt-b2-leak-and-credit-2026-10-05.md lines 25-36 (34 synthetic families; short English prompts, short answers; the five dev splits named)",
+        "chapters-out/ch09/g1-3m-s400-extract.json splits (in_dist 1,360; answer 1,200; frame 1,360; vocab 800; variant 1,320; sum 6,040)"
+      ],
+      "notes": "Split sizes sum to 6,040. Plain names match ch09 s03 (in_dist, answer, frame, vocab, variant).",
+      "families": {
+        "n": 34,
+        "label": "made-up families"
+      }
+    },
+    {
+      "id": "s03",
+      "duration": 29,
+      "heading": "Marks written before the run",
+      "caption": [
+        "Before a test, we write down a pass mark, a proved-wrong line, and a prediction.",
+        "Then we run the test, and only then read the result.",
+        "A mark may be tightened before the first run. It is never loosened after a result is seen."
+      ],
+      "steps": [
+        "1. Write the marks",
+        "2. Run the test",
+        "3. Read the result"
+      ],
+      "env": [
+        "pass mark",
+        "proved-wrong line",
+        "prediction"
+      ],
+      "illustration": "picture only",
+      "src": [
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md line 431 (pass mark, proved-wrong result and a prediction are written before the run)",
+        "architecture/MARKS-D0-T1-2026-10-07.md line 34 (may tighten before the first run, never loosen after seeing a result)"
+      ],
+      "notes": "The envelope is a picture only; real marks follow in the next scene."
+    },
+    {
+      "id": "s04",
+      "duration": 35,
+      "heading": "A real mark, sealed before the run",
+      "caption": [
+        "Sealed Oct 9, 12:10 PM, before any run: B3 group 1 must beat its plain partner by 3.0 points.",
+        "Below 1.0 it is proved wrong. From 1.0 to 3.0 it is not shown.",
+        "Each test runs copy 400 first and stops there if it is proved wrong."
+      ],
+      "zones": [
+        {
+          "name": "proved wrong",
+          "range": "below 1.0"
+        },
+        {
+          "name": "not shown",
+          "range": "1.0 to 3.0"
+        },
+        {
+          "name": "pass",
+          "range": "3.0 or more"
+        }
+      ],
+      "prediction": "prediction: 3 to 6",
+      "axis": "points over plain partner (copy 400)",
+      "chip": "B3: never run",
+      "src": [
+        "big-run/PLAN.md lines 220-229 (G2 step 2 marks, B3-1: pass at least +3.0 on seed 400, proved wrong below +1.0; sealed 12:10 PM ET 10-09 before any B3 run; prediction +3 to +6)",
+        "big-run/PLAN.md line 25 (kill-first: seed 400 first, seed 401 only otherwise)",
+        "architecture/MARKS-D0-T1-2026-10-07.md Verdicts line (a mark missed but not proved wrong = not shown)"
+      ],
+      "notes": "B3 group 1 is built (PR #56) but has never been run, so no result is shown. The zone bar is to scale on the axis (units are points). Seed is shown as copy."
+    },
+    {
+      "id": "s05",
+      "duration": 28,
+      "heading": "One run is not enough: paired copies",
+      "caption": [
+        "A copy is one model trained from its own random start. Copy 200 of ours is paired with copy 200 of the plain model.",
+        "A quick screen uses 2 copies and only decides whether to confirm. A claim needs 6 or more paired copies."
+      ],
+      "labels": {
+        "ours": "ours",
+        "plain": "plain",
+        "copies": "copy 200 to 205",
+        "screen": "screen: 2 copies",
+        "claim": "claim: 6 or more"
+      },
+      "illustration": "picture only",
+      "src": [
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 431-432 (6 or more paired seeds before any claim; 2-seed screens only decide whether to confirm; noise rule PR #29)"
+      ],
+      "notes": "The pairs are a picture of the rule, not data. Seed shown as copy."
+    },
+    {
+      "id": "s06",
+      "duration": 37,
+      "heading": "A real result: six paired copies",
+      "caption": [
+        "Oct 7, older design (B2), 3M, copies 200 to 205: pooled-5 means 74.0, 67.1 and 53.7.",
+        "Ours led by 6.9 over the plain model that writes steps, and by 20.3 over the one that answers directly.",
+        "The earlier 2-copy screen gave 73.7, 67.7 and 54.4."
+      ],
+      "bars": [
+        {
+          "label": "Our design (B2)",
+          "value": 74.0
+        },
+        {
+          "label": "Plain, writes steps",
+          "value": 67.1
+        },
+        {
+          "label": "Plain, answers directly",
+          "value": 53.7
+        }
+      ],
+      "gains": [
+        "+6.9",
+        "+20.3"
+      ],
+      "ahead": "ahead on 6 of 6 copies",
+      "chip": "tested: 6 copies, 3M",
+      "caveat": "Caveat: the thinking-off leak check was over 5% on copies 201 and 203.",
+      "src": [
+        "whole-model-roadmap/8A-SPEC-2026-10-07.md lines 185-188 (B2 confirm, seeds 200-205: pooled-5 mean 74.0; plain_tf_steps 67.1; plain_tf 53.7)",
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md lines 365-369 (+20.3 vs plain_tf, CI 19.4 to 21.3; +6.9 vs plain_tf_steps; ahead on 6 of 6; leak check over 5% on seeds 201 and 203)",
+        "architecture/model-deep-dive.html line 166 (2-seed screen: 73.7, 67.7, 54.4)"
+      ],
+      "notes": "Design: older B2 (calculator inside, 3M), not the finished design. No per-copy numbers exist in the sources, so no per-copy bars are drawn. +6.9 and +20.3 are as written in the sources (74.0 minus 67.1 = 6.9 and 74.0 minus 53.7 = 20.3 agree)."
+    },
+    {
+      "id": "s07",
+      "duration": 37,
+      "heading": "A range of likely error",
+      "caption": [
+        "Even paired copies disagree a little, so we give a range of likely error, not one number.",
+        "Calculator outside (T1SDR) minus the older design (B2), over 6 paired copies: plus 0.62, range minus 0.23 to plus 1.46.",
+        "Marks: average at least minus 1.0, low end at least minus 2.0, and 5 of 6 copies within 1.0. All held."
+      ],
+      "axis": "T1SDR minus B2, pooled-5 points",
+      "ticks": [
+        "0",
+        "1"
+      ],
+      "lines": {
+        "m1": "mean mark -1.0",
+        "m2": "low-end mark -2.0"
+      },
+      "mean": {
+        "text": "+0.62",
+        "value": 0.62
+      },
+      "lo": {
+        "text": "-0.23",
+        "value": -0.23
+      },
+      "hi": {
+        "text": "+1.46",
+        "value": 1.46
+      },
+      "chip": "tested: 6 paired copies",
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 (line ~200: pooled-5 T1SDR minus B2 mean +0.62, 95% CI -0.23 to +1.46, 6/6 seeds within 1.0)",
+        "architecture/MARKS-D0-T1-2026-10-07.md Amendment 2 lines 49-58 (marks 1a mean >= -1.0, 1b CI low end >= -2.0, 1c at least 5 of 6 within 1.0)"
+      ],
+      "notes": "Marks 1a, 1b and 1c all held per Record 13 (relayed by another thread, not rechecked). Design: T1SDR vs B2 at 3M. The number line is to scale."
+    },
+    {
+      "id": "s08",
+      "duration": 35,
+      "heading": "Switch a part off and watch",
+      "caption": [
+        "A lesion test switches one part off. If the answers break, that part was doing the work.",
+        "Scores before and after: all three collapse.",
+        "For B3, sealed first: thinking off must score at most half the full score, and above 60% of it is proved wrong."
+      ],
+      "cards": [
+        {
+          "title": "Thinking off",
+          "sub": "6,040 questions",
+          "from": 73.01,
+          "to": 0.66,
+          "dec": 2
+        },
+        {
+          "title": "Another question's notes",
+          "sub": "1,360 questions",
+          "from": 86.03,
+          "to": 4.19,
+          "dec": 2
+        },
+        {
+          "title": "Calculator off",
+          "sub": "2,085 questions",
+          "from": 100.0,
+          "to": 0.0,
+          "dec": 1
+        }
+      ],
+      "chipTested": "tested: 1 copy, 3M",
+      "chipB3": "B3 marks: never run",
+      "src": [
+        "chapters-out/ch09/g1-3m-s400-extract.json (thinking off 73.01 to 0.66; other question's notes 86.03 to 4.19 on 1,360 questions; calculator off 100.0 to 0.0 on 2,085 questions)",
+        "big-run/PLAN.md lines 220-229 (B3-2 thinking-off at most half the full score; proved wrong above 60% of the full score)"
+      ],
+      "notes": "Reused from ch09 (G1 3M, copy 400, one copy). The B3-2 mark is a sealed mark for a design that has not run, so it is shown with the amber chip."
+    },
+    {
+      "id": "s09",
+      "duration": 35,
+      "heading": "The leak light: two different checks",
+      "caption": [
+        "A leak means getting answers right when it should not. A small leak is a warning light.",
+        "Check one, thinking off: the reader version averaged 6.59 against a limit of 4.62. Missed.",
+        "Check two, another question's notes: 5.00 to 5.59 on 6 copies against a limit of 5. The project owner cleared it on Oct 9."
+      ],
+      "check1": {
+        "title": "Thinking off",
+        "limit": 4.62,
+        "got": 6.59
+      },
+      "check2": {
+        "title": "Another question's notes",
+        "limit": 5,
+        "got": 5.59
+      },
+      "labels": {
+        "limit": "limit",
+        "got": "measured",
+        "high": "highest copy"
+      },
+      "chipMissed": "mark missed",
+      "chipCleared": "cleared by owner, disclosed",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md line 31 (EGE confirm: zero-round leak mean 6.59 vs limit 4.62)",
+        "architecture/MARKS-D0-T1-2026-10-07.md Record 13 lines 198-204 (T1SDR donor leak 5.59/5.15/5.59/5.07/5.00/5.59 vs flat limit 5; owner cleared mark 4 on Oct 9)"
+      ],
+      "notes": "Two different measures: check one is the zero-round (thinking off) leak of the reader version EGE; check two is the donor leak of T1SDR (right answers from another question's notes). The clearing was reported by another thread and not rechecked. The bar for check two shows the highest of the six copies."
+    },
+    {
+      "id": "s10",
+      "duration": 34,
+      "heading": "Near-misses: a rule for screens only",
+      "caption": [
+        "On a 2-copy screen, missing a mark by at most 0.5 point still counts, if all else passes and the miss is reported.",
+        "Examples: 98.96 against a mark of 99, and 97.89 against 98.0. The project owner called the first one close enough.",
+        "Proved-wrong lines do not move. A 6-copy confirm gets no such tolerance."
+      ],
+      "rows": [
+        {
+          "mark": "mark 99",
+          "got": "got 98.96"
+        },
+        {
+          "mark": "mark 98.0",
+          "got": "got 97.89"
+        }
+      ],
+      "met": "counts as met on a screen",
+      "confirm": "6-copy confirm: no tolerance",
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md Amendment 10 item 1, lines 160-166 (hair tolerance: screens only, at most 0.5 point; 98.96 vs 99 and 97.89 vs 98.0 pass; 6-seed confirm gets no tolerance)",
+        "big-run/PLAN.md line 229 (hair-miss rule applies on a screen; a confirm still needs the owner's call)"
+      ],
+      "notes": "The 97.89 case was one call over, a count-based mark. Numbers as written in the source."
+    },
+    {
+      "id": "s11",
+      "duration": 40,
+      "heading": "Sleep must not hurt any family",
+      "caption": [
+        "An average can hide a weak spot: new wording scored 36.67 while the average was 73.01.",
+        "So sleep, a night of study, is judged on every family. Harm: familiar down over 1.5, or a family down over 5, range below zero.",
+        "A self-picking sleep trial was proved wrong on harm: 2 to 3 families lost 7 to 11 points."
+      ],
+      "kinds": [
+        {
+          "label": "Familiar",
+          "value": 86.03
+        },
+        {
+          "label": "New answers",
+          "value": 71.92
+        },
+        {
+          "label": "New sentence frames",
+          "value": 86.62
+        },
+        {
+          "label": "New words",
+          "value": 89.38
+        },
+        {
+          "label": "New wording",
+          "value": 36.67
+        }
+      ],
+      "avg": "average 73.01",
+      "rule": {
+        "a": "1.5",
+        "aLabel": "familiar drop",
+        "b": "5",
+        "bLabel": "any family drop"
+      },
+      "result": {
+        "big": "7 to 11",
+        "chip": "proved wrong on harm"
+      },
+      "src": [
+        "chapters-out/ch09/g1-3m-s400-extract.json (per-kind scores 86.03 / 71.92 / 86.62 / 89.38 / 36.67; pooled 73.01 = 4,410 of 6,040)",
+        "big-run/PLAN.md line 74 (row 5: harm if in_dist drops more than 1.5 or any family drops more than 5 with its range below 0; SC proved wrong on harm, 2 to 3 families fell 7 to 11 points per parent)",
+        "memory/MEMORY.md line 13 (same harm rule)"
+      ],
+      "notes": "The sleep trial was reported by the creative thread and not rechecked; it ran on older parent models, not the finished design. The five scores are one copy, 3M, copy 400."
+    },
+    {
+      "id": "s12",
+      "duration": 29,
+      "heading": "Size counts every part",
+      "caption": [
+        "Size counts every number that runs, borrowed ones included.",
+        "Drawn to scale: our learned part is a thin sliver beside the borrowed reader.",
+        "So the 73.01 against 67.12 gap compares learned numbers only, on one copy. A whole-size race is planned, not run."
+      ],
+      "bars": [
+        {
+          "label": "Ours (3M)",
+          "learned": 3544913,
+          "borrowed": 271002624,
+          "total": 274547537
+        },
+        {
+          "label": "Plain model",
+          "learned": 3495936
+        }
+      ],
+      "labels": {
+        "learned": "learned",
+        "borrowed": "borrowed reader",
+        "total": "in all"
+      },
+      "chip": "whole-size race: plan only",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md line 130 (size counts every weight that runs, borrowed ones included)",
+        "chapters-out/ch09/g1-3m-s400-extract.json (our learned 3,544,913; whole size with frozen Gemma 274,547,537; plain model 3,495,936; 73.01 vs 67.12)",
+        "architecture/FINISHED-MODEL-2026-10-09.md line 31 (reader: EmbeddingGemma 2 text part, 271,002,624, borrowed, frozen; 3,544,913 + 271,002,624 = 274,547,537)",
+        "big-run/PLAN.md lines 33, 46, 77 (planned whole-size race, untested)"
+      ],
+      "notes": "Bar widths are to scale (learned part is 1.3% of the whole, our division of 3,544,913 by 274,547,537). The gap is a comparison of learned numbers only; 73.01 minus 67.12 = 5.89 is our subtraction, not drawn.",
+      "scores": {
+        "ours": "73.01",
+        "plain": "67.12"
+      }
+    },
+    {
+      "id": "s13",
+      "duration": 40,
+      "heading": "Checked by reviewers, and still limited",
+      "caption": [
+        "On Oct 9, 20 AI helpers checked every note and code file against the source of truth. A second helper rechecked each finding.",
+        "220 findings survived. The source of truth itself was wrong in 17 small places, and is now fixed.",
+        "A test only fixes what it measures: one clean size, made-up families, and nothing yet on the game goal."
+      ],
+      "audit": {
+        "title": "Oct 9 audit",
+        "found": 220,
+        "rows": [
+          {
+            "label": "high",
+            "value": 14
+          },
+          {
+            "label": "medium",
+            "value": 140
+          },
+          {
+            "label": "low",
+            "value": 66
+          }
+        ]
+      },
+      "limits": [
+        {
+          "kind": "untested",
+          "text": "learned stop: never run"
+        },
+        {
+          "kind": "untested",
+          "text": "finished design B3: never run"
+        },
+        {
+          "kind": "placeholder",
+          "text": "game goal: not touched"
+        }
+      ],
+      "limitsTitle": "Not shown yet",
+      "src": [
+        "architecture/AUDIT-2026-10-09.md lines 5-8 (20 helpers, second helper checks each, 220 findings: 14 high, 140 medium, 66 low; source of truth wrong in 17 small places, fixed; learned stop never run)",
+        "big-run/PLAN.md row 8 (eyes, hands and a game loop are not built)"
+      ],
+      "notes": "The audit file says Haiku helpers; shown as AI helpers. B3 never run is from big-run/PLAN.md lines 220-229."
+    },
+    {
+      "id": "s14",
+      "duration": 22,
+      "heading": "What to remember",
+      "caption": [
+        "Marks are written first, with a line that would prove the idea wrong.",
+        "Six paired copies and a range of likely error come before any claim.",
+        "Every part is counted, and every miss is reported."
+      ],
+      "badges": [
+        "marks first",
+        "6 paired copies",
+        "count every part"
+      ],
+      "src": [
+        "Recap of scenes s03, s05 to s07, s09 to s12 of this chapter"
+      ]
+    }
+  ]
+}

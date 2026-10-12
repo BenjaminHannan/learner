@@ -1,0 +1,8 @@
+# NOT IN USE (Addendum B, 11:50 AM ET 10-09): the M1 measured GX-3M at 25 s/update; use only if a 100-update speed check of a dense 3M run says a run ends in a week or less. # Mac queue for test TK / TKN (design/tokens-experiment-2026-10-09.md, Addendum A: kill-first order). Card: custom_io/queue_local/8aTK-card.md. Run on ONE Mac device only (a pairing is fair only on one device). No ENV lines: the Mac card sets PYTHONPATH and CUSTOM_IO_EG2. Same args as 8aTK-pc.txt.
+# step 2 of 3: TK seed 401, then TKN seed 400. Then the stop check (analyze_tk --stop-check TKN); only on CONTINUE and Ben's go, 8aTK-mac-3.txt.
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aTK-3M-s401 --rung 3M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}' --accum B2=4
+# MEM 12000
+g8a: 8aTKN-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true, "reader_layers": 0, "mlp": 7.29883}' --accum B2=4

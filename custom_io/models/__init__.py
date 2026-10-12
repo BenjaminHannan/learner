@@ -1,6 +1,6 @@
 """Model registry: name -> class. Constructors are Cls(vocab, **cfg) (cfg = the --cfg JSON dict)."""
 import torch
-from custom_io.data import CharVocab
+from custom_io.data import ByteVocab, CharVocab
 from custom_io.models.plain_tf import PlainTF
 
 MODELS = {'plain_tf': PlainTF}
@@ -12,6 +12,9 @@ LAZY = {
     'plain_tf_steps_g': 'custom_io.models.plain_lm:PlainStepsG',        # 8a: plain_tf_steps with a free feed-forward width
     'plain_lm': 'custom_io.models.plain_lm:PlainLM',                    # 8a: the plain LLM recipe arm (next-char loss on web text + question rows)
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
+    'tool_h1': 'custom_io.models.tool_h1:ToolH1',                       # H1: T1 where a learned stop head picks the rounds per turn (cap 32)
+    'b3': 'custom_io.models.b3:B3',                                     # B3 group 1: H1R + eg_embed (Gemma), any_round (calls at any round), gap_p
+    'b3g2': 'custom_io.models.b3g2:B3G2',                               # B3 group 2: b3 + one learned byte writer (calls and answers as text), no_slots / no_place / bytes / as_written
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
 
@@ -30,6 +33,6 @@ def build(name, vocab, **cfg):
 def load_model(path, device='cpu'):
     """Rebuild a model from a train.py checkpoint.pt."""
     ck = torch.load(path, map_location=device)
-    m = build(ck['name'], CharVocab(ck['chars']), **ck['cfg'])
+    m = build(ck['name'], ByteVocab() if ck.get('vocab') == 'bytes' or ck['cfg'].get('bytes') else CharVocab(ck['chars']), **ck['cfg'])
     m.load_state_dict(ck['model'])
     return m.to(device).eval()

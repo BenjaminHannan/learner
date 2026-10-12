@@ -3,6 +3,8 @@ T1 = B2 with the calculator outside (models/tool.py, PASS-MARKS.md addendum 17):
 calculator returns, no look-ahead under teacher forcing, every lesion runs, the replay used by opswap / write_copy, the extra eval, and the
 mechanism: a small T1 learns to write calls whose operands it copies and to copy the result back as its answer, on numbers it never saw."""
 import contextlib, json, os, random, tempfile, time
+from custom_io.tests import legacy_widths
+legacy_widths.apply()      # T1SDR's 11 operand cells / 40-char entries, before CELLS / LE are imported by value
 import torch
 from custom_io.data import DEFAULT_DATA, Dataset, collate, load_rows
 from custom_io.evalx import donor_eval, evaluate

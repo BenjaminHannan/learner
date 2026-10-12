@@ -1,0 +1,566 @@
+{
+  "kicker": "Part 7 of 14",
+  "title": "Writing down the answer",
+  "blurb": "The talker writes only the final answer, copying where the thinker points. Today it is a small stand-in. The talker that writes English is a placeholder.",
+  "accent": "talker",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 34,
+      "heading": "Where we are: the talker writes the answer",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "This is the last stop on the map: the talker."
+        },
+        {
+          "at": 0.2,
+          "text": "Its only job is to write the final answer. It adds no thinking."
+        },
+        {
+          "at": 0.38,
+          "text": "It reads the thinker's final state, and may copy from the question and the calculator's replies."
+        },
+        {
+          "at": 0.6,
+          "text": "But only where the thinker points. Today's talker is a small stand-in."
+        }
+      ],
+      "labels": {
+        "question": "the question",
+        "replies": "the calculator's replies",
+        "state": "thinker's final state",
+        "points": "points",
+        "talker": "Talker",
+        "talkerSub": "adds no thinking",
+        "answer": "answer",
+        "ten": "10",
+        "tag": "made-up example",
+        "chip": "small stand-in today"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 Talker row (line 38): writes only the final answer from the thinker's final state; today a small stand-in",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (lines 19-20): talker copies exact names and digits where the thinker points, adds no thinking of its own",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 4 (line 115): may copy from the question and the calculator replies, only where the thinker points",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 step 6 (line 57): the 10 copied from the last reply (made-up Tom example)"
+      ],
+      "notes": "The talker's input is the thinker's final state, NOT 'notes' (ch09 s07 labelled the talker box 'notes'; FINISHED sec. 5 item 4 says the notebook memory is not read by the talker). BUILDER PLAN: modelMap highlight talker at y 215 h 150. Below: left two small cards (question, replies) at x 100; thinker-state S.vec top middle (x ~620,y 470); Talker box pink x 900 y 540 w 380 h 150; answer box x 1440 w 300 with big pink 10; soft arrows question->talker, replies->talker; a thinker-coloured arrow state->talker labelled points; chip 'made-up example' near answer; placeholder chip label 'small stand-in today' under the talker at the last caption."
+    },
+    {
+      "id": "s02",
+      "duration": 39,
+      "heading": "Three ways the talker writes, today",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "Today's talker is a small stand-in with three ways to write an answer."
+        },
+        {
+          "at": 0.25,
+          "text": "Span copy takes a stretch of letters from the question or a reply."
+        },
+        {
+          "at": 0.45,
+          "text": "A word pointer takes one whole word from the question."
+        },
+        {
+          "at": 0.62,
+          "text": "Letter slots spell the answer when it is not in the text."
+        }
+      ],
+      "labels": {
+        "titles": [
+          "Span copy",
+          "Word pointer",
+          "Letter slots"
+        ],
+        "from": [
+          "add 7 3 = 10",
+          "Tom has 12 apples.",
+          "not in the text"
+        ],
+        "to": [
+          "10",
+          "Tom",
+          "yes"
+        ],
+        "tag": "made-up examples",
+        "gone": "An older mode, where plain code typed the number, is gone."
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 Talker row (line 38): a span copy (its own pointer and stop head), a word pointer, or letter slots; the old number-copy mode is gone",
+        "custom_io/models/tool.py @17a356e62 docstring lines 19-20 (B2's NUM mode, str of a slot value, is gone) and lines 406-417 (answers(): mode 0 span, mode 1 word of the prompt, else GEN letters)"
+      ],
+      "notes": "All three examples are made up (picture only). Word pointer: tool.py answers() copies word w of the row's prompt, found by a hand-written word splitter (FINISHED sec. 4 table, tool.py:411). BUILDER PLAN: three cards x 100/686/1272, y 230, w 546, h 400 (title pink 48px bold; below it from-text mono 36px, an arrow drawn after the cards, and the result in a pink-edged box). Cards appear on captions 1-3; the 'gone' S.note at y 690 w 1720 appears about 0.72; tag chip placeholder 'made-up examples' at x 100 y 770."
+    },
+    {
+      "id": "s03",
+      "duration": 40,
+      "heading": "Span copy: a pointer, a step left, a stop",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "The thinker's final state sets a pointer on the last digit of the last reply: the 0."
+        },
+        {
+          "at": 0.23,
+          "text": "The copy steps one letter left and takes the 1."
+        },
+        {
+          "at": 0.4,
+          "text": "Next to the left is a space. A learned stop head says stop."
+        },
+        {
+          "at": 0.57,
+          "text": "The digits came out last first, 0 then 1. Plain code flips them to read 10."
+        }
+      ],
+      "labels": {
+        "reply1": "sub 12 5 = 7",
+        "reply2": "add 7 3 = 10",
+        "ptr": "pointer",
+        "stop": "stop head",
+        "out": [
+          "0",
+          "1"
+        ],
+        "final": "10",
+        "learnedChip": "pointer and stop head: learned",
+        "handChip": "step left and flip: hand-written",
+        "tag": "made-up example"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table 'Span copy rules' (line 96): start at the pointer's letter, step one letter left, stop at the learned stop head; 'Last letter first' (line 98): the code flips the text",
+        "custom_io/models/tool.py @17a356e62 docstring lines 33-41: a pointer picks the units digit, the copy advances one char left, a learned stop head ends it",
+        "animations/model-explainer-build/chapters-out/ch05/ch05.json s05: same trick for the call writer (made-up Tom example)"
+      ],
+      "notes": "The strings are made-up example replies (picture only). In the T1S docstring the answer pointer reads control vector 1 while the call writer reads vector 0 (tool.py line 41); the video only says 'the thinker's final state'. BUILDER PLAN (copy ch05 s05): two letter rows from S.letters at x 170: reply1 at y 215 size 60 (dim, soft colour), reply2 at y 330 size 80. Pointer box (thinker colour) under index 11 (the 0); tint cells pale pink (#F9C5DA). Output boxes at x 1250 and 1370, y 330 for 0 then 1; stop head box (stop purple) pulses; last caption: final big 10 pops, then the two chips (learned = blue, hand = brown) at y 600/670."
+    },
+    {
+      "id": "s04",
+      "duration": 44,
+      "heading": "Span copy: how often, and what is hand code",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "On every trained copy of the T1SDR model at 3M, span copy wrote 91.5% of the answers."
+        },
+        {
+          "at": 0.22,
+          "text": "That counts how often it was used, not how often it was right."
+        },
+        {
+          "at": 0.42,
+          "text": "The pointer and the stop head are learned. Three small pieces are still hand-written code."
+        },
+        {
+          "at": 0.62,
+          "text": "The plan: one learned writer replaces them. That build has not been run."
+        }
+      ],
+      "labels": {
+        "bars": [
+          {
+            "label": "answers",
+            "value": 91.5
+          },
+          {
+            "label": "numbers in calls",
+            "value": 98
+          }
+        ],
+        "chip": "tested at 3M: how often used",
+        "barNote": "share of uses, not accuracy",
+        "hand": [
+          "step one letter left",
+          "split text into words",
+          "flip last-first text"
+        ],
+        "handChip": "hand-written",
+        "plan": "one learned writer",
+        "planChip": "plan only, not run"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table 'Span copy rules' (line 96): used for 98% of written operands and 91.5% of answers on every T1SDR seed; replaced by O1, the one learned writer",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table 'Word splitter' (line 90) and 'Last letter first' (line 98)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (lines 84-86): B3 group 2 build started 12:15 PM ET 10-09, code only, its 3M run waits for G1",
+        "animations/model-explainer-build/chapters-out/ch05/ch05.json s05 notes: shares of uses, not accuracy"
+      ],
+      "notes": "Shares of uses, not scores. FINISHED sec. 4 is the only source found; the raw per-seed file was not located (same as ch05). No talker-only test exists; the T1SDR runs are the 3M runs where the calculator outside matched B2 over 6 copies (sec. 5 item 1). BUILDER PLAN: left, S.hbars (two rows, suf %, dec 1/0, x 100 y 250 w 600) + chip tested at y 480; right, three brown S.box (hand code) stacked at x 1000..1800, y 230/330/430, arrow to a grey box 'one learned writer' (placeholder colour) at y 570 with chip 'plan only, not run'."
+    },
+    {
+      "id": "s05",
+      "duration": 34,
+      "heading": "Letter slots: spelling an answer",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "When the answer is not in the text, the talker spells it in letter slots."
+        },
+        {
+          "at": 0.22,
+          "text": "There are 9 places: room for 8 letters and an end mark. Each place picks a letter, or copies one."
+        },
+        {
+          "at": 0.48,
+          "text": "They fill last letter first, so yes comes out as s, e, y. The code flips it."
+        }
+      ],
+      "labels": {
+        "slots": [
+          "s",
+          "e",
+          "y",
+          "end"
+        ],
+        "word": "yes",
+        "tag": "made-up answer",
+        "order": "written last letter first",
+        "flip": "the code flips it"
+      },
+      "src": [
+        "custom_io/models/ledger.py:70-72 (N_REG = 9 registers; GEN_MAX = 8 chars + EOS)",
+        "custom_io/models/tool.py @17a356e62 line 417 (letter answer decoded then reversed: out.append(self.vocab.decode(gen_ids[i])[::-1])) and docstring lines 19-20 (GEN pointer-generator copies from the prompt and the entries)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 table 'Last letter first' (line 98)"
+      ],
+      "notes": "'yes' is a made-up answer. Each slot is a pointer-generator: vocabulary readout or copy attention over the context letters. BUILDER PLAN: nine slot boxes (x 160 + i*104, y 330, 90x110, label empty), 8 plain + the 9th labelled 'end' tinted purple-ish soft; fill slots 0..2 with s, e, y then the end mark in slot 3 on captions 2-3 (pop). Then flip: a new mono word 'yes' types out in a pink box below with the flip note. Tag chip placeholder 'made-up answer'. Empty slots 4-7 stay empty/pale."
+    },
+    {
+      "id": "s06",
+      "duration": 44,
+      "heading": "The 8-letter limit, and the 35-letter path",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "Today's answer slots hold 8 letters. A longer training answer would be cut to 8."
+        },
+        {
+          "at": 0.19,
+          "text": "That never happened: 0 of 200,000 training answers were longer than 8."
+        },
+        {
+          "at": 0.33,
+          "text": "But a fill-in blank of 9 to 12 letters would hit it."
+        },
+        {
+          "at": 0.46,
+          "text": "The new build, B3, writes up to 35 letters and counts longer answers, never cutting them."
+        },
+        {
+          "at": 0.63,
+          "text": "A count above 0 fails its sealed mark. Blanks of 9 to 12 letters are safe only here."
+        }
+      ],
+      "labels": {
+        "word": "umbrellas",
+        "cutLabel": "cut off",
+        "tag": "made-up word",
+        "zero": "0 of 200,000",
+        "zeroLabel": "training answers over 8",
+        "bars": [
+          {
+            "label": "today",
+            "value": 8
+          },
+          {
+            "label": "B3 path",
+            "value": 35
+          }
+        ],
+        "unit": "letters",
+        "chipToday": "in the code",
+        "chipB3": "built, never run",
+        "end": "end"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (lines 79-83): T1SDR and H1 hold 8 answer letters; tool.py:510 cuts a longer non-drill training answer to 8; 0 of 200,000 training answers over 8; data.py:109 refuses longer ones; B3 under caps_b3 writes up to 35 letters and counts a longer answer (gen_answer_over); a run with any count above 0 fails its sealed mark; blanks of 9-12 letters safe only on the caps path",
+        "custom_io/models/tool.py @17a356e62 line 510 (ans[:GEN_MAX][::-1]) and custom_io/data.py @17a356e62 line 109 (assert answer length <= MAX_ANS)",
+        "custom_io/g8a/caps_b3.json (max_ans 35) and custom_io/capcount.py:17 (gen_answer_over)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 11 (lines 140-145): blanks of 3-12 letters; 9-12 need the 35-letter path"
+      ],
+      "notes": "'umbrellas' (9 letters) is a made-up word that shows what a cut would do (the last letter is lost); picture only. The 0-of-200,000 count is for T1SDR runs. B3 group 1 is built, never run. BUILDER PLAN: top, nine boxes: first 8 hold u,m,b,r,e,l,l,a and a 9th red-outlined box 's' that gets a 'cut off' tag and fades to dim; middle, big counting '0 of 200,000' text (S.count to 200000 with comma, then fixed '0 of'); bottom, two bars 8 vs 35 letters (S.bar scaled to 35, labels), chips tested/untested: 'shown in the code' (use hand-neutral chip), 'built, never run' amber. Caption 5 text note: sealed mark rule shown as S.note."
+    },
+    {
+      "id": "s07",
+      "duration": 38,
+      "heading": "The planned English talker is not built",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "The finished plan has a real talker, about 25M numbers, that writes English."
+        },
+        {
+          "at": 0.25,
+          "text": "It is not built. As built, the whole model is 373.1M: 271.0M of borrowed, frozen Gemma plus 102.1M trained."
+        },
+        {
+          "at": 0.5,
+          "text": "How it would learn to write English is not in the plan. A separate team session owns that."
+        }
+      ],
+      "labels": {
+        "bars": [
+          {
+            "label": "borrowed, frozen Gemma",
+            "value": 271.0
+          },
+          {
+            "label": "trained thinker and heads",
+            "value": 102.1
+          },
+          {
+            "label": "English talker, planned",
+            "value": 25
+          }
+        ],
+        "total": "373.1M as built",
+        "chip": "placeholder",
+        "note": "Today: short answers only. A number, a copied word, up to 8 letters. No sentences."
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (lines 19-23): talker about 25M planned; 373.1M whole as built (102.1M trained + 271.0M frozen Gemma) because the 25M English talker is not built",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 11 (line 145): how the 25M talker learns to write English is not in the plan; a separate 'talking from scratch' session owns it",
+        "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 91): today the talker writes short answers, a number, a copied word, or up to 8 letters; it does not produce sentences",
+        "big-run/PLAN.md line 148: about 373M as built, about 398M once a 25M talker is added"
+      ],
+      "notes": "The 25M talker is a plan; its bar is drawn grey and outlined only. The 373.1M total does not include it. The planned total is quoted as 397M in FINISHED sec. 1 and 398M in PLAN line 148 (different thinker sizes); the video avoids the planned total. BUILDER PLAN: stacked horizontal strip, widths proportional to 271.0 : 102.1 : 25 across 1500 px (x 160, y 330, h 110): teal, indigo, grey (placeholder fill, outline). Counting labels under each (S.count dec 1, suffix M). Bracket/arrow over the first two parts counting to 373.1M; placeholder chip over the grey part. Note at y 640 appears with caption 3."
+    },
+    {
+      "id": "s08",
+      "duration": 44,
+      "heading": "Older tests of talking English",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "These tests are older, from a design built on borrowed language models. Not today's talker."
+        },
+        {
+          "at": 0.25,
+          "text": "A 350M model as reader and talker scored 66.1. The 1.2B system scored 92.6."
+        },
+        {
+          "at": 0.5,
+          "text": "A small copy talker scored 13.6 on question kinds it never practised. The language-model talker scored 78.2."
+        }
+      ],
+      "labels": {
+        "head": "older English design, not today's talker",
+        "unit": "points out of 100",
+        "panelA": "350M model as reader and talker",
+        "rowsA": [
+          {
+            "label": "350M model",
+            "value": 66.1
+          },
+          {
+            "label": "1.2B system",
+            "value": 92.6
+          }
+        ],
+        "subA": "192 fresh questions, 6 runs",
+        "panelB": "small copy talker, about 2M numbers",
+        "rowsB": [
+          {
+            "label": "copy talker",
+            "value": 13.6
+          },
+          {
+            "label": "language-model talker",
+            "value": 78.2
+          }
+        ],
+        "subB": "384 questions of unpractised kinds, 6 runs",
+        "chip": "tested, older design",
+        "risk": "Talking English from scratch: not shown"
+      },
+      "src": [
+        "notes/hearer-talker/RESULTS-SMALL-LM.md lines 8-16 (verdict table lines 10-11): 1.2B system 92.6% vs 350M system 66.1% (60.9-72.0) on the fresh in-family set FRESH-EN-R3 (192 questions), 6 paired seeds; both marks fail",
+        "reader-talker-compare/RESULTS-CT.md lines 8-15: copy talker 13.6 vs allptr 78.2 on 384 unseen-kind questions (mean of 6 paired seeds); verdict FAILS",
+        "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 92): the same two pairs, quoted as earlier results",
+        "big-run/PLAN.md line 139: 'Talking English from scratch: Not shown, the second big risk'",
+        "idea-swarm/raw/areas/talker.json lines 88, 93, 570, 1350: marks the copy talker as the old 1.2B line"
+      ],
+      "notes": "Two different pairs, two different tests. A: 350M language model used as both reader and talker vs the 1.2B system, exact-match % on 192 fresh questions in the same family. B: the roughly 2M-number copy-and-gate talker (span start/end pointers, a word head, a copy/word gate) vs the language-model talker ('allptr') on 384 questions of question kinds never practised. Both are the older 1.2B-reader line (separate from today's B2/T1SDR talker); the superseded banner on reader-talker-compare/verdict.md says do not act on its recommendation. Copy talker on practised kinds with generated wording scored 97.4 vs 99.7 (RESULTS-CT.md line 18); not shown on screen. PR #54 numbers are NOT used (only in the memory index). BUILDER PLAN: two hbars blocks (x 160/y 300 and y 560, w 640 labelW 360) revealed with captions 2 and 3; panel titles 36px; sub lines 32px soft; header chip tested label 'tested, older design' top right; risk text appears at about 0.62 in an amber/grey S.note."
+    },
+    {
+      "id": "s09",
+      "duration": 42,
+      "heading": "Could the talker answer alone?",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "One check turned the thinking off on one trained copy at 3M. This is the older design: calculator inside, 12 rounds."
+        },
+        {
+          "at": 0.26,
+          "text": "Thinking on scored 73.01. Thinking off scored 0.66, on 6,040 questions kept aside."
+        },
+        {
+          "at": 0.44,
+          "text": "That hints the talker cannot answer alone. One copy is only a hint."
+        },
+        {
+          "at": 0.6,
+          "text": "An earlier Gemma-reader copy scored 18.09 on familiar questions with zero rounds, so 'cannot' is not shown."
+        }
+      ],
+      "labels": {
+        "bars": [
+          {
+            "label": "thinking on",
+            "value": 73.01
+          },
+          {
+            "label": "thinking off",
+            "value": 0.66
+          }
+        ],
+        "unit": "points out of 100",
+        "chip": "suggested, one copy",
+        "earlier": "18.09",
+        "earlierLabel": "an earlier Gemma-reader copy, zero rounds, familiar questions only",
+        "note": "Gemma's meaning also reaches the talker's copy keys. Allowed."
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 (lines 109-112): G1 3M seed 400: 73.01 thinker on, 0.66 thinker off; Gemma-reader arms do answer some questions with zero rounds (EGE 18.09 in-distribution on seed 200)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 items 3-4 (lines 113-119): Gemma also reaches the talker's copy keys, allowed; 'cannot' is not shown (suggested)",
+        "animations/source-g1-3m-s400.json (as cited in ch06 s03): by_thinking_rounds loops:0 0.66, trained rounds 12, 6,040 questions",
+        "memory/gemma-reader-results.md line 14: EGE loops:0 18.09 on seed 200 (4.49 on seed 201)"
+      ],
+      "notes": "Label this whole scene 'suggested', not shown. 73.01 and 0.66 are the older design (calculator inside, 12 fixed rounds), as ch06 s03 says. The 18.09 comes from a different earlier model (EGE, Gemma added before the letter window) on a familiar-question set, so it must NOT share a bar chart with the 6,040-question scores. No leak limit is quoted (4.62 vs 5 conflict between ch03 and ch05). BUILDER PLAN: left, two S.hbars (x 100, y 300, w 600) with unit text; chip 'suggested, one copy'; right, a card (x 1000 y 280 w 780 h 260) with big counting 18.09 (amber) and the small label; S.note for the Gemma copy-keys line at y 620."
+    },
+    {
+      "id": "s10",
+      "duration": 39,
+      "heading": "Web text teaches reading, not writing",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "Free web text, called FineWeb-Edu, enters practice as fill-in-the-blank rows."
+        },
+        {
+          "at": 0.22,
+          "text": "One word of 3 to 12 letters is hidden, and the model must name it."
+        },
+        {
+          "at": 0.44,
+          "text": "So the run teaches reading English, not writing it."
+        },
+        {
+          "at": 0.6,
+          "text": "By plan, 84% of the big run's practice text is web text."
+        }
+      ],
+      "labels": {
+        "sentence": "The cat sat on the",
+        "blank": "____",
+        "fill": "mat",
+        "tag": "made-up sentence",
+        "range": "3 to 12 letters hidden",
+        "chunk": "Chunk shown: up to 280 letters in G1, up to 2,000 in the B3 plan",
+        "web": "web text 84%",
+        "own": "our own rows 16%",
+        "chip": "plan only"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 11 (lines 140-145): FineWeb-Edu enters as fill-in-the-blank rows, one word of 3-12 letters blanked (custom_io/g8a/cloze.py:1-25), at most 280 letters in G1, up to 2,000 in B3's long-chunk pool; so the run teaches reading English, not writing it",
+        "big-run/PLAN.md line 149: about 2.5B word pieces seen, 16% our text and 84% FineWeb-Edu (roadmap sec. 1.2)",
+        "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 94): free human-written web text (FineWeb-Edu) approved for the bigger rungs"
+      ],
+      "notes": "The cat sentence is made up (picture only); the real rows use FineWeb-Edu chunks. The 84/16 split is a plan figure from PLAN line 149, measured in word pieces; 'our own rows' = rows made by our code generators plus the 171,940 TEACH rows (PLAN line 149). The web pool has a gate: it must not be used for training until protected-panel hashes are merged and checked (FINISHED sec. 5 item 12). BUILDER PLAN: left, big mono sentence 'The cat sat on the ____' (S.type) then 'mat' pops in the blank in pink; range tag below; right, chunk note and a two-part stacked bar 84/16 (S.card widths 84% and 16% of 700 px) with chip 'plan only' appearing with caption 4."
+    },
+    {
+      "id": "s11",
+      "duration": 43,
+      "heading": "What would have to be true to win the race",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "The plan's final proof is a race against small public models, such as SmolLM2-360M."
+        },
+        {
+          "at": 0.24,
+          "text": "To win, it must be ahead by at least 3 points on our sealed tests, and ahead on a question set called bAbI."
+        },
+        {
+          "at": 0.5,
+          "text": "The whole size is counted, borrowed numbers too. The race needs the English talker, which does not exist yet."
+        }
+      ],
+      "labels": {
+        "steps": [
+          "English talker built",
+          "Race a same-size model",
+          "Ahead by 3 points, and on bAbI"
+        ],
+        "chips": [
+          "placeholder",
+          "never run",
+          "plan only"
+        ],
+        "chipLabels": [
+          "not built",
+          "never run",
+          "plan only"
+        ],
+        "note": "Plan: not finished by the Oct 31 readout"
+      },
+      "src": [
+        "big-run/PLAN.md line 77 (scorecard row 8): race ahead of SmolLM2-360M by >= +3 on our sealed sets and ahead on bAbI, whole size counted; untested; the race needs the open-English talker",
+        "big-run/PLAN.md lines 284-285 (R4, the race): rivals SmolLM2-360M, LFM2-350M, Qwen3-0.6B; the bAbI part cannot pass until the open-English talker works",
+        "big-run/PLAN.md line 87: not closable by the Oct 31 readout: talker (1c) and the race (8)"
+      ],
+      "notes": "Plan only, nothing run. The video does not say which size model races: PLAN row 8 races the 30M thinker model (about 301M whole as built) while FINISHED keeps the 100M thinker (373.1M whole as built). The Oct 31 date is a plan, stated as 'plan'. BUILDER PLAN: three step boxes left to right (x 160/700/1240, y 300, w 480, h 190) with arrows drawn between; chip under each; the first box pulses at caption 3; S.note with the Oct 31 line at y 620 appears about 0.7."
+    },
+    {
+      "id": "s12",
+      "duration": 32,
+      "heading": "What to remember about the talker",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "It writes only the final answer, copying where the thinker points."
+        },
+        {
+          "at": 0.28,
+          "text": "Today it is a small stand-in, tested only inside the 3M runs."
+        },
+        {
+          "at": 0.5,
+          "text": "The English talker is a placeholder. The model cannot chat."
+        }
+      ],
+      "labels": {
+        "cards": [
+          "Writes only the answer",
+          "Today: a small stand-in",
+          "English talker: not built"
+        ],
+        "chips": [
+          {
+            "kind": "learned",
+            "label": "pointer and stop head: learned"
+          },
+          {
+            "kind": "tested",
+            "label": "ran in 3M tests, never alone"
+          },
+          {
+            "kind": "untested",
+            "label": "35-letter path: never run"
+          },
+          {
+            "kind": "placeholder",
+            "label": "English talker: placeholder"
+          }
+        ]
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 Talker row (line 38) and sec. 5 item 4 (line 115)",
+        "architecture/redesign-ideas-2026-10-07.md sec. 6 (line 91): today the talker writes short answers and does not produce sentences",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (lines 79-83): the 35-letter path is built, not run"
+      ],
+      "notes": "The brief's recap said 'copy talker tested at small size'. No talker-only test exists; the stand-in ran inside T1SDR 3M runs, so the chip says 'ran in 3M tests, never alone'. BUILDER PLAN: three cards (x 100/686/1272, y 260, w 546, h 170, label 44px) appear one per caption; the four chips sit below in two rows (y 520 and 600) and appear with their card's caption (learned with card 1, tested and untested with card 2, placeholder with card 3)."
+    }
+  ]
+}

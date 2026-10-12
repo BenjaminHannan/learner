@@ -99,7 +99,8 @@ def donor_eval(model, rows, batch_size=128, device=None, seed=0, norm=norm, pair
     -> {'exact' (% equal to the current row's accepted answers), 'donor_match' (% equal to the donor row's answer),
         'n' (rows scored), 'skipped' (no donor available), 'by_family': {fam: {exact, donor_match, n}}}.
     pairs: a ([(i, j)], n_skipped) tuple, or a function rows -> that tuple, instead of donor_pairs; norm: the hit normaliser;
-    return_preds: also 'preds' {row id: [donor row id, prediction]}."""
+    return_preds: also 'preds' {row id: [donor row id, prediction]}.
+    (b3g2, Ben's rule 2: the answer is written from the state's Z alone, so the current batch is not read and 'donor_match' is the reading of the donor's thoughts.)"""
     device = device or next(model.parameters()).device
     was_training = model.training
     model.eval()

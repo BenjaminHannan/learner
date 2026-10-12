@@ -1,0 +1,677 @@
+{
+  "kicker": "Part 11 of 14",
+  "title": "Learning while it sleeps",
+  "blurb": "After a day of practice, the model studies what it found and settles it in. Here is how a night of sleep works, what it scored, and what is not shown.",
+  "accent": "learned",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 30,
+      "heading": "Where we are: outside the five parts",
+      "caption": [
+        {
+          "at": 0.023,
+          "text": "Sleep is not a sixth part. It is a way of learning, tested so far only in research."
+        },
+        {
+          "at": 0.333,
+          "text": "After a day of practice, the model studies what it found and settles it in."
+        },
+        {
+          "at": 0.6,
+          "text": "The model runs its own night. The tests used six starting copies from an earlier design."
+        }
+      ],
+      "L": {
+        "day": "Day: practice",
+        "night": "Night: sleep",
+        "chip": "research result",
+        "note": "Earlier design, not the finished model"
+      },
+      "src": [
+        "animations/model-explainer-build/kit/GLOSSARY.md:37 (sleep definition)",
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:4 (the model must run its sleep itself), :23 (parent build, B2 -> N)",
+        "big-run/PLAN.md:184 (shipped model needs sleep; sleep tested on the parents), :191"
+      ],
+      "notes": "Five-part map is the shared kit picture of the finished design; sleep is drawn outside it so it does not read as a sixth part. 'Earlier design' rests on PR #53 line 23 ('B2 -> N' parent build); PLAN line 184 says B3 3M tests are in parallel, so no sleep result on the finished design exists in the sources.",
+      "illustration": "day and night boxes with a moon are a picture only"
+    },
+    {
+      "id": "s02",
+      "duration": 35,
+      "heading": "A puzzle with a hidden rule",
+      "caption": [
+        {
+          "at": 0.02,
+          "text": "A few examples hide a rule: 2 gives 5, 4 gives 9, 7 gives 15."
+        },
+        {
+          "at": 0.282,
+          "text": "The model tries rules. A try counts only if it fits every example, so no answer key is needed."
+        },
+        {
+          "at": 0.6,
+          "text": "Only x times 2 plus 1 fits all three. So 10 gives 21 (our arithmetic: 10 times 2, plus 1)."
+        }
+      ],
+      "L": {
+        "exHead": "examples",
+        "ex": [
+          "2→5",
+          "4→9",
+          "7→15"
+        ],
+        "query": "10→?",
+        "rules": [
+          "x+3",
+          "x×2+1",
+          "x×3−1"
+        ],
+        "fits": [
+          1,
+          3,
+          1
+        ],
+        "fitSuf": " of 3",
+        "answer": "10→21",
+        "tag": "made-up example in the style of the test"
+      },
+      "src": [
+        "creative-roadmap/creative-roadmap-page.html:248-264 (puzzle 2->5, 4->9, 7->15, 10->?; tries x+3, x*2+1, x*3-1; fit counts 1 of 3, 3 of 3, 1 of 3), :251 ('No answer key needed: a try counts only if it fits every example')",
+        "animations/storyboards-2026-10-09.md idea 3 table row 1 (tag 'example in the style of the test')"
+      ],
+      "notes": "The answer 21 is our arithmetic: 10 x 2 + 1. Fit counts checked by hand: x+3 fits 2->5 only; 3x-1 fits 2->5 only; 2x+1 fits 5, 9, 15. The page tags this puzzle 'easy rules only so far'.",
+      "illustration": "the whole puzzle is a picture in the style of the test, not a test question"
+    },
+    {
+      "id": "s03",
+      "duration": 41,
+      "heading": "What the test really is",
+      "caption": [
+        {
+          "at": 0.017,
+          "text": "The test has five kinds of rules, 65 rules in all, as the project's notes describe it."
+        },
+        {
+          "at": 0.218,
+          "text": "The model reads which rule a few new examples show, then answers a new question of that kind on the first try."
+        },
+        {
+          "at": 0.466,
+          "text": "It is not inventing a rule it has never met."
+        },
+        {
+          "at": 0.6,
+          "text": "The notes do not agree on whether these rules were practised before. That is not settled."
+        }
+      ],
+      "L": {
+        "kinds": [
+          "a×x+b",
+          "x²",
+          "x²+k",
+          "last digit of x",
+          "2×(x+k)"
+        ],
+        "n": 65,
+        "nLabel": "rules in all",
+        "ex": "a few new examples",
+        "which": "which rule?",
+        "ans": "first-try answer",
+        "tag": "notes only, report not seen",
+        "pic": "picture only"
+      },
+      "src": [
+        "animations/storyboards-2026-10-09.md:95 (five kinds of rules, 65 rules in all, all seen in practice; reading which rule, not inventing one; quotes the report's caveat; the report itself is not in the snapshot)",
+        "idea-swarm/raw/areas/minecraft.json:1021 (holdout uses the same 65 rules as practice; board claim)",
+        "memory/fast-sleep.md:20 (kinds a*x+b, x^2, x^2+k, x mod 10, 2(x+k))",
+        "creative-roadmap/creative-roadmap-2026-10-06.md:498-499 and creative-roadmap-page.html:528 (early test used 5 never-practised kinds)"
+      ],
+      "notes": "UNSUPPORTED in primary sources: the report fast-sleep/RESEARCH-LOOP-2026-10-07-report.md is not in our copy, so 65 rules, 'seen in practice' and the 'not inventing' caveat come only from the storyboard (and one board claim). The roadmap says the early version of this test used 5 never-practised kinds, so the notes disagree; shown on screen as 'not settled'. Kind names follow memory/fast-sleep.md:20 (x mod 10 shown as 'last digit of x').",
+      "illustration": "the three example cards and the flow are a picture only"
+    },
+    {
+      "id": "s04",
+      "duration": 43,
+      "heading": "Where it started, and the old sleep",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "At the start, the model scored 41.6 out of 100 on this test, as the project's notes say."
+        },
+        {
+          "at": 0.22,
+          "text": "The old sleep lifted that to 71.3, give or take 2.5, averaged over six copies."
+        },
+        {
+          "at": 0.396,
+          "text": "It needed 558 to 610 updates, by its formula. One update is one small nudge to every setting."
+        },
+        {
+          "at": 0.6,
+          "text": "By kind, a×x+b was hardest at 15.5, and x squared easiest at 98.7."
+        }
+      ],
+      "L": {
+        "start": "Start",
+        "old": "Old sleep",
+        "startVal": 41.6,
+        "oldVal": 71.3,
+        "range": "±2.5",
+        "steps": 558,
+        "stepsTo": "to 610",
+        "stepsLabel": "updates, by its formula",
+        "kindHead": "Old sleep, score by kind",
+        "kinds": [
+          "a×x+b",
+          "x²",
+          "x²+k",
+          "last digit of x",
+          "2×(x+k)"
+        ],
+        "kindVals": [
+          15.5,
+          98.7,
+          76.6,
+          93.1,
+          72.5
+        ]
+      },
+      "src": [
+        "memory/fast-sleep.md:20 (old sleep 71.3 +/- 2.5 on s200-s205: 71.1 72.5 73.8 69.5 67.2 73.4; per kind a*x+b 15.5, x^2 98.7, x^2+k 76.6, x mod 10 93.1, 2(x+k) 72.5)",
+        "idea-swarm/raw/areas/minecraft.json:2351 and fastsleep.json:148 (41.6% start; board claims)",
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:9 (558-610 by its formula)",
+        "animations/storyboards-2026-10-09.md idea 3 (41.6, 558 to 610)"
+      ],
+      "notes": "Computed: the six old values 71.1 72.5 73.8 69.5 67.2 73.4 average 71.25, written 71.3; the five kind scores average 71.28 (our addition, matches 71.3). 41.6 appears only in board notes and the storyboard, no primary result file in our copy; the formula for 558-610 is not in our copy, only stated by PR #53 and the storyboard.",
+      "illustration": "none; bars and counters are measurements as stated"
+    },
+    {
+      "id": "s05",
+      "duration": 43,
+      "heading": "One night of the new sleep",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "The model runs its own night: its own tries, at a temperature it picks, plus chain search."
+        },
+        {
+          "at": 0.197,
+          "text": "Then it sleeps for 256 updates, each of 1,024 rows. A row is one practice question."
+        },
+        {
+          "at": 0.368,
+          "text": "Half the rows are fresh dreams, new questions written from a found program, so none is read twice. Half are fresh skills rows."
+        },
+        {
+          "at": 0.6,
+          "text": "Every 32 updates it checks its fit rate on 128 held questions and keeps its best saved model."
+        }
+      ],
+      "L": {
+        "tries": "Its own tries",
+        "search": "Chain search",
+        "rows": "1,024 rows",
+        "dreams": "Fresh dreams",
+        "skills": "Fresh skills rows",
+        "updates": "updates",
+        "total": 256,
+        "check": "check",
+        "keep": "keep best saved model",
+        "pic": "picture only"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:15-18 (recipe)",
+        "creative/consol.py (code named by PR #53 line 31; not read)"
+      ],
+      "notes": "256 / 32 = 8 checks (our division). 'A row is one practice question' and 'fit rate' are plain-words readings of PR #53 wording; 'fit' = how often its tries fit the examples (creative-roadmap-page.html:251). Chain search is named in PR #53 and memory/fast-sleep.md:20 with no further definition in our copy. The 32 here is updates between checks, not the 32-round cap of the thinker.",
+      "illustration": "the row strips and the dream cards are a picture only; the numbers 256, 1,024, 32 and 128 are from the pull request"
+    },
+    {
+      "id": "s06",
+      "duration": 34,
+      "heading": "Six copies, one score",
+      "caption": [
+        {
+          "at": 0.021,
+          "text": "Six separate copies each went through the new sleep. Each score is out of 100."
+        },
+        {
+          "at": 0.31,
+          "text": "Averaged, that is 76.1. Our addition: the six add to 456.7, then divide by 6."
+        },
+        {
+          "at": 0.6,
+          "text": "Copy C scored 71.3. That is its own new score, not the old sleep's average."
+        }
+      ],
+      "L": {
+        "labels": [
+          "copy A",
+          "copy B",
+          "copy C",
+          "copy D",
+          "copy E",
+          "copy F"
+        ],
+        "values": [
+          78.3,
+          77.9,
+          71.3,
+          75.8,
+          76.4,
+          77
+        ],
+        "avg": "average",
+        "avgVal": 76.1,
+        "chip": "six copies, one run each",
+        "note": "Not the old sleep's 71.3"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:8 (76.1% = 78.3, 77.9, 71.3, 75.8, 76.4, 77.0), :28 (one training run per parent)"
+      ],
+      "notes": "Computed: 78.3 + 77.9 + 71.3 + 75.8 + 76.4 + 77.0 = 456.7; 456.7 / 6 = 76.12, written 76.1. Copy letters follow the order listed in the pull request (parents s200-s205).",
+      "illustration": "none; bars are measurements"
+    },
+    {
+      "id": "s07",
+      "duration": 36,
+      "heading": "New sleep next to old sleep",
+      "caption": [
+        {
+          "at": 0.019,
+          "text": "On paper, the new sleep scores 76.1 and the old sleep 71.3."
+        },
+        {
+          "at": 0.241,
+          "text": "It used 256 updates; the old one 558 to 610. Half of 558 is 279 (our arithmetic), and 256 is under it."
+        },
+        {
+          "at": 0.6,
+          "text": "But this is not a paired comparison. 71.3 is the old sleep's stored number, from its own near-copy starting copies."
+        }
+      ],
+      "L": {
+        "scoreHead": "first-try score, out of 100",
+        "old": "Old sleep",
+        "new": "New sleep",
+        "oldVal": 71.3,
+        "newVal": 76.1,
+        "range": "±2.5",
+        "stepsHead": "updates used",
+        "oldSteps": "to 610",
+        "oldStepsVal": 558,
+        "newSteps": 256,
+        "half": "half: 279",
+        "stamp": "not a paired comparison"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:8-9 (76.1, 256 updates, 558-610 by its formula), :27 (Not a paired comparison: 71.3% is the research loop's stored number on its own near-copy parents)",
+        "memory/fast-sleep.md:20 (71.3 +/- 2.5)"
+      ],
+      "notes": "Computed: 558 / 2 = 279. The bar for the old sleep's updates ends at 558 with a light extension to 610.",
+      "illustration": "none; the stamp is a warning label"
+    },
+    {
+      "id": "s08",
+      "duration": 39,
+      "heading": "The pass marks: four met, one not shown",
+      "caption": [
+        {
+          "at": 0.018,
+          "text": "Every pass mark was fixed before the run. Score: 76.1, where 71.3 was needed."
+        },
+        {
+          "at": 0.212,
+          "text": "Updates: 256 each night, under half of the old sleep's."
+        },
+        {
+          "at": 0.363,
+          "text": "Harm measure: did old skills drop? No. Old skills also went up, with a likely range above zero."
+        },
+        {
+          "at": 0.6,
+          "text": "Last: does sleep beat plain practice? That was not shown."
+        }
+      ],
+      "L": {
+        "rows": [
+          {
+            "name": "First-try score",
+            "res": "76.1, needed 71.3",
+            "v": "pass"
+          },
+          {
+            "name": "Updates",
+            "res": "256 each night",
+            "v": "pass"
+          },
+          {
+            "name": "No harm",
+            "res": "+0.12 to +0.82",
+            "v": "pass"
+          },
+          {
+            "name": "Old skills up",
+            "res": "+0.52 [0.31, 0.74]",
+            "v": "pass"
+          },
+          {
+            "name": "Through transfer",
+            "res": "−1.58 [−1.79, −1.37]",
+            "v": "not shown"
+          }
+        ]
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:4 (every pass mark fixed before its run), :7-12 (verdict table)"
+      ],
+      "notes": "Numbers in square brackets are likely ranges. Mark 3 'no harm vs the pre-sleep model (harm_measure)': in_dist +0.12 to +0.82, no family fires on any parent. 'Through transfer' = sleep minus replay-only control, must be above 0.",
+      "illustration": "none"
+    },
+    {
+      "id": "s09",
+      "duration": 43,
+      "heading": "Old skills: no harm, but who gets the credit?",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "Harm measure: did old skills get worse? On every copy they moved +0.12 to +0.82 points."
+        },
+        {
+          "at": 0.218,
+          "text": "Pooled over the six copies, they rose by 0.52, likely range 0.31 to 0.74."
+        },
+        {
+          "at": 0.399,
+          "text": "A replay-only control, practising the same skills rows, raised them by 2.11, range 1.88 to 2.32."
+        },
+        {
+          "at": 0.6,
+          "text": "So the gain is not shown to come from the sleep. Sleep minus control: −1.58."
+        }
+      ],
+      "L": {
+        "axisHead": "change in old-skill score, in points",
+        "ticks": [
+          -2,
+          0,
+          2
+        ],
+        "copyRow": {
+          "label": "Each copy",
+          "lo": 0.12,
+          "hi": 0.82
+        },
+        "rows": [
+          {
+            "label": "Sleep",
+            "v": 0.52,
+            "lo": 0.31,
+            "hi": 0.74
+          },
+          {
+            "label": "Replay-only control",
+            "v": 2.11,
+            "lo": 1.88,
+            "hi": 2.32
+          },
+          {
+            "label": "Sleep minus control",
+            "v": -1.58,
+            "lo": -1.79,
+            "hi": -1.37
+          }
+        ],
+        "chip": "pooled, six copies"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:10 (in_dist +0.12 to +0.82, no family fires), :11 (+0.52 [0.31, 0.74]), :12 (-1.58 [-1.79, -1.37]), :22 (replay-only control +2.11 [1.88, 2.32]; the +0.52 is not shown to come from the new skill)"
+      ],
+      "notes": "The score change is the 'in_dist' measure of PR #53 (questions like the practice ones). The control is the pull request's 'replay-only control with the same skills rows'. Square brackets and 'range' mean likely range.",
+      "illustration": "none; the number line is a measurement plot"
+    },
+    {
+      "id": "s10",
+      "duration": 43,
+      "heading": "Fresh dreams or re-read rows?",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "The old sleep re-reads the day's rows. The new one writes a fresh dream each time, so no row is read twice."
+        },
+        {
+          "at": 0.32,
+          "text": "At equal updates, fresh dreams beat re-read rows by 7.4 (range 3.5 to 11.3) and 5.5 (range 0.8 to 10.2)."
+        },
+        {
+          "at": 0.6,
+          "text": "Two copies, development questions only. Whether fresh dreams cut harm could not be tested: re-read rows did no harm either."
+        }
+      ],
+      "L": {
+        "reread": "Re-read rows",
+        "fresh": "Fresh dreams",
+        "pic": "picture only",
+        "same": "2→5",
+        "diff": [
+          "2→5",
+          "4→9",
+          "7→15",
+          "10→21"
+        ],
+        "head": "fresh dreams minus re-read rows, in points",
+        "ticks": [
+          0,
+          4,
+          8,
+          12
+        ],
+        "rows": [
+          {
+            "label": "Copy 1",
+            "v": 7.4,
+            "lo": 3.5,
+            "hi": 11.3
+          },
+          {
+            "label": "Copy 2",
+            "v": 5.5,
+            "lo": 0.8,
+            "hi": 10.2
+          }
+        ],
+        "chip": "first screen, 2 copies"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:21 (Screen A, 2 parents, DEV: +7.4 [3.5, 11.3] and +5.5 [0.8, 10.2]; A1 could not be tested)",
+        "big-run/PLAN.md:191 (consolidation Screen A is on hold)"
+      ],
+      "notes": "'Development questions' = DEV. The two copies are the two parents of Screen A, not necessarily two of the six.",
+      "illustration": "the stacks of cards are a picture only"
+    },
+    {
+      "id": "s11",
+      "duration": 45,
+      "heading": "What is not shown",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "71.3 is the old sleep's stored number, from its own near-copy starting copies. It is not side by side with 76.1."
+        },
+        {
+          "at": 0.214,
+          "text": "Each copy slept once, so a repeat might score differently."
+        },
+        {
+          "at": 0.326,
+          "text": "The stop rule never ended a night early. Only keeping the best saved model acted."
+        },
+        {
+          "at": 0.477,
+          "text": "Building the copies cost rule-from-examples skills 2.3 points. Sleep won back about 0.5; the control, most."
+        },
+        {
+          "at": 0.637,
+          "text": "Against the earlier model, the harm check still fails on all six copies. Report only."
+        }
+      ],
+      "L": {
+        "tag": "careful",
+        "cards": [
+          "Not a paired comparison",
+          "One training run per copy",
+          "Stop rule never ended a night",
+          "Copies lost 2.3 points before sleep"
+        ],
+        "sub4": "harm check still fails"
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:27-28 (not paired; one run per parent), :24 (stop rule never ended a night early; only keep best checkpoint acted), :23 (B2 -> N costs 2.3 in_dist points; sleep wins back about 0.5; control most; harm_measure against B2 fails on all six; report only)",
+        "memory/fast-sleep.md:20 (in_dist harm of the 71.3 run UNMEASURED)"
+      ],
+      "notes": "Caveat cards use the warning orange, not the amber 'built, never tested' colour. 'saved model' is the plain word for the pull request's 'checkpoint'. 'The model deciding when to stop' is not tested (PR #53 line 24).",
+      "illustration": "none"
+    },
+    {
+      "id": "s12",
+      "duration": 39,
+      "heading": "Follow-ups, all on hold",
+      "caption": [
+        {
+          "at": 0.018,
+          "text": "Next, sleeps where the model picks its own replay rows. SC kept its gain but failed the harm mark."
+        },
+        {
+          "at": 0.286,
+          "text": "On SC, 2 to 3 skill groups fell 6.5 to 11.0 points per copy. SCL, with a slower learning rate, passed its marks."
+        },
+        {
+          "at": 0.6,
+          "text": "Both ran on two other copies, not the six. All of this is on hold; none feeds the first big training run."
+        }
+      ],
+      "L": {
+        "sc": "SC",
+        "scRes": "failed the harm mark",
+        "scl": "SCL",
+        "sclRes": "passed its marks, reported not rechecked",
+        "holdHead": "On hold",
+        "hold": [
+          "SC",
+          "3e-4 learning rate",
+          "fresh-dream screen",
+          "71.3 re-check"
+        ],
+        "chip": "plan only"
+      },
+      "src": [
+        "creative-roadmap/creative-roadmap-2026-10-06.md:1515-1521 (SC result: harm fails on both parents; s100 rule_apply -11.0, seq_next -10.5, list_stats -6.5; s101 order_chain -7.5, seq_next -8.0; first-try gain ratio 1.08 / 1.08 met)",
+        "creative-roadmap/creative-roadmap-2026-10-06.md:1541-1545 (SCL passes on both parents; no family fires; lr 1e-4)",
+        "big-run/PLAN.md:74 (sleep partly failed, SC proved wrong, SCL reported not rechecked), :191 (SC, AP, lr 3e-4, consolidation Screen A, the 71.3% re-check on hold; none feeds the pretraining run)"
+      ],
+      "notes": "Range 6.5 to 11.0 taken from the raw SC result lines (the dossier's '7 to 11' was rounded). Both follow-ups ran on development copies s100 and s101, not the six s200-s205 copies. PLAN line 74 says the SCL pass was reported, not rechecked. 'AP' is not explained anywhere in our copy of the sources.",
+      "illustration": "none"
+    },
+    {
+      "id": "s13",
+      "duration": 45,
+      "heading": "Another test: sleeping on its own tries",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "A different test, from Oct 7: first answer right out of 100, on 5 new rules and 256 development questions."
+        },
+        {
+          "at": 0.216,
+          "text": "Before sleeping: 0.4 for copy A, 1.2 for copy B. Sleeping on tries that failed the check did nothing."
+        },
+        {
+          "at": 0.408,
+          "text": "Sleeping on tries that passed the check: 27.3 and 35.9. The line, set first, was 15 more than before."
+        },
+        {
+          "at": 0.6,
+          "text": "Two copies, one short sleep each. Not comparable with 76.1 or 71.3."
+        }
+      ],
+      "L": {
+        "rows": [
+          {
+            "label": "A, before",
+            "value": 0.4
+          },
+          {
+            "label": "A, failed tries",
+            "value": 0.4
+          },
+          {
+            "label": "A, passed tries",
+            "value": 27.3
+          },
+          {
+            "label": "B, before",
+            "value": 1.2
+          },
+          {
+            "label": "B, failed tries",
+            "value": 1.2
+          },
+          {
+            "label": "B, passed tries",
+            "value": 35.9
+          }
+        ],
+        "line": "needed: 15 more than before",
+        "box": "Different test",
+        "chip": "2 copies"
+      },
+      "src": [
+        "creative-roadmap/creative-roadmap-page.html:414-429 (bars 0.4 / 0.4 / 27.3 and 1.2 / 1.2 / 35.9; 'dashed line = 15 more than before, fixed before the run'), :528 (256 DEV questions; one sleep; first answer = greedy)",
+        "creative-roadmap/creative-roadmap-page.html:524 (C2 first look: 256 questions on 5 never-practised rule kinds)"
+      ],
+      "notes": "The pass lines sit at 0.4 + 15 = 15.4 and 1.2 + 15 = 16.2 (our addition). The page marks this card 'passed'. Different test from the 71.3 / 76.1 scores: 5 new rules, 2 copies, 256 development questions.",
+      "illustration": "none; bars are measurements"
+    },
+    {
+      "id": "s14",
+      "duration": 43,
+      "heading": "What to remember",
+      "caption": [
+        {
+          "at": 0.016,
+          "text": "Sleep is a night of study after a day of practice. The new sleep scored 76.1 in 256 updates, not in a paired test."
+        },
+        {
+          "at": 0.35,
+          "text": "Old skills were not harmed, but sleep is not shown to help them more than plain practice."
+        },
+        {
+          "at": 0.6,
+          "text": "A research result, not yet part of the model. The first big run does not wait for it; a finished model needs it."
+        }
+      ],
+      "L": {
+        "cards": [
+          "76.1 in 256 updates",
+          "No harm found; credit not shown",
+          "Research result, not a part yet"
+        ],
+        "chips": [
+          "tested",
+          "tested",
+          "plan only"
+        ],
+        "compute": "Compute: new sleep, cloud CPU, no money. Old sleep's search: rented card, about $2.9."
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-53-consolidation-sleep.md:8, :22, :27, :29 (cloud CPU, no money)",
+        "memory/fast-sleep.md:20 (old sleep's research loop: Vast 5090, ~$2.9 of $4 cap)",
+        "big-run/PLAN.md:184 (does not block the pretraining launch, a shipped model needs it), :191",
+        "animations/storyboards-2026-10-09.md idea 3 closing line (a research result, not a part of the model yet)"
+      ],
+      "notes": "Compute is stated per run: the pull request says the new sleep ran on the cloud CPU and cost nothing; the memory note says the research loop that gave the old sleep's 71.3 used a rented graphics card for about $2.9 of a $4 limit. These are different runs, so they do not contradict each other. Glossary: no rented machines are being used now.",
+      "illustration": "none"
+    }
+  ]
+}

@@ -28,6 +28,12 @@ def target_text(row):
     return row['answer']
 
 
+def target_text_all(row):
+    """B3 steps-for-all (PTS, all_steps=True): '; '.join(steps) + ' # ' + answer for every row that has steps, else the answer. No family gate, no cut.
+    The same rule as caps.measure(all_steps=True), so the caps report and the trained target are the same string."""
+    return '; '.join(row['steps']) + ' # ' + row['answer'] if row.get('steps') else row['answer']
+
+
 def calc_fill(text):
     """If text ends with an equation 'a op b =' (a step start before it) return the string to force in (' ' + result,
     or the bare result when the '=' had no space before it), else None. Chains of several operators are evaluated
@@ -64,8 +70,9 @@ def final_answer(text):
 class PlainTFSteps(PlainTF):
     LESIONS = ['calc']
 
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False):
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, all_steps=False):
         super().__init__(vocab, d_model, n_layers, n_heads, n_loops)
+        self.all_steps = bool(all_steps)    # B3 steps-for-all (PTS): a plain bool, no weights and no RNG draw, so the default is unchanged
         self.pos = nn.Embedding(MAX_POS, d_model)
         nn.init.normal_(self.pos.weight, std=0.02)
         if place:                   # last, after pos is replaced, so no other weight's init moves (see PlainTF._add_place)
@@ -77,8 +84,13 @@ class PlainTFSteps(PlainTF):
 
     def _targets(self, batch):
         """-> ids [B, A] (target chars + EOS, PAD after), mask [B, A]."""
-        enc = [self.vocab.encode(target_text(r))[:CAP + 12] + [EOS] for r in batch['rows']]
-        capcount.hit('plain_target_over', sum(len(target_text(r)) > CAP + 12 for r in batch['rows']))
+        if self.all_steps:      # PTS: every row with steps, no family gate, no cut (caps refuse any row longer than plain_target)
+            texts = [target_text_all(r) for r in batch['rows']]
+            capcount.hit('plain_target_over', sum(len(t) > CAP for t in texts))
+            enc = [self.vocab.encode(t) + [EOS] for t in texts]
+        else:
+            enc = [self.vocab.encode(target_text(r))[:CAP + 12] + [EOS] for r in batch['rows']]
+            capcount.hit('plain_target_over', sum(len(target_text(r)) > CAP + 12 for r in batch['rows']))
         dev = batch['prompt_ids'].device
         ids = torch.full((len(enc), max(map(len, enc))), PAD, dtype=torch.long)
         for i, e in enumerate(enc):

@@ -1,0 +1,10 @@
+# BensPC RTX 5070 Ti, test TK / TKN (design/tokens-experiment-2026-10-09.md, Addendum B: back on the PC, kill-first). Card: custom_io/queue_local/8aTK-card.md. Code = G1's 612f5c5b01 + caps overlay sha 3da2dfbb + tok_think. B2 arm only, accum B2=4 as G1's 3M runs; controls = G1's G-B2 3M (8aG1d-3M-s400, 8aG1e-3M-s401).
+# step 2 of 3: TK seed 401, then TKN seed 400. Then analyze_tk --stop-check TKN; only on CONTINUE, 8aTK-pc-3.txt.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aTK-3M-s401 --rung 3M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true}' --accum B2=4
+# MEM 12000
+g8a: 8aTKN-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "tok_think": true, "reader_layers": 0, "mlp": 7.29883}' --accum B2=4
