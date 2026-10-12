@@ -27,7 +27,8 @@ from custom_io.models import b3at as M
 from custom_io.tests.test_b3 import batch_of
 from custom_io.tests.test_b3at_core import FAULTS, V, make
 
-SEED, MAX_STEPS = 0, 1500
+SEED, MAX_STEPS = 0, 4000
+CONSEC = 20             # training stops only after line_acc_all == 1.0 on this many consecutive updates (and the eval criteria below)
 TOY_TCAP = 6
 TOY_KS = tuple(int(x) for x in os.environ.get('B3AT_TOY_KS', '3,6').split(','))      # rounds per turn drawn per training batch (the default is the toy's version of (4, 8, 16, 32))
 
@@ -78,28 +79,55 @@ def agreement(m, b, golds, loops=None):
     return dict(lines=n, agree=agree, rate=agree / max(n, 1), bad=bad, tf_line_acc=line_acc, stop_acc=stop_acc, free=o)
 
 
+def matched(m, b, golds, o):
+    """Matched-rounds comparison: teacher forcing where each (row, turn) runs exactly the rounds the free run (learned stop) used for that pair, the Z carried after those rounds, the line read at that
+    round, vs the free run's own line -> dict(lines, agree, rate, bad). The code-consistency number under the learned stop."""
+    T = torch.zeros(len(golds), max(len(g['texts']) for g in golds) + 1, dtype=torch.long)
+    for i, tr in enumerate(o['turn_rounds']):
+        for j, u in enumerate(tr[:T.shape[1]]):
+            T[i, j] = u
+    with torch.no_grad():
+        _, _, info = m._turns(b, golds, M.TCAP, count=False, names=True, rounds=T)
+    n = agree = 0
+    bad = []
+    for i, g in enumerate(golds):
+        fl = free_lines(o, i)
+        for j in range(len(g['texts']) + 1):
+            n += 1
+            ok = j < len(fl) and fl[j] == info['pred'][(i, j)]
+            agree += ok
+            if not ok:
+                bad.append((i, j, info['pred'][(i, j)], fl[j] if j < len(fl) else None))
+    return dict(lines=n, agree=agree, rate=agree / max(n, 1), bad=bad)
+
+
 def train(m, rs, b, golds):
-    """Train until every teacher-forced line is right and the stop head is right on its labels (checked every 25 updates on the eval-mode model), at most MAX_STEPS. -> (steps, seconds, last eval)."""
+    """Train until (a) line_acc_all (measured each update on the plain golds with the loss's own random R and carry draws; drilled rows are not scored) (every (row, turn, round) pair with a target, teacher forced, so round 1 too) was 1.0 on CONSEC consecutive updates, and (b) on the
+    eval-mode model every turn's last-round line is right and the stop head is right on its labels (checked every 100 updates and whenever (a) holds), at most MAX_STEPS.
+    -> (steps, seconds, last eval, the last run of consecutive line_acc_all == 1.0 updates)."""
     torch.manual_seed(SEED)
     opt = torch.optim.AdamW(m.parameters(), lr=3e-3, betas=(0.9, 0.95), weight_decay=0.0)
-    t0, res = time.time(), None
+    t0, res, run = time.time(), None, 0
     for s in range(MAX_STEPS + 1):
-        if s % 25 == 0:
+        if s % 100 == 0 or run >= CONSEC:
             m.eval()
             _, la, sa = tf_lines(m, b, golds)
             res = (la, sa)
             if s % 100 == 0:
-                print('   step %d: teacher-forced line accuracy %.3f, stop accuracy %.3f (%.0fs)' % (s, la, sa, time.time() - t0), flush=True)
-            if la == 1.0 and sa >= 0.98:
-                return s, time.time() - t0, res
+                print('   step %d: teacher-forced line accuracy %.3f, stop accuracy %.3f, consecutive line_acc_all==1 updates %d (%.0fs)' % (s, la, sa, run, time.time() - t0), flush=True)
+            if la == 1.0 and sa >= 0.98 and run >= CONSEC:
+                return s, time.time() - t0, res, run
             if s == MAX_STEPS:
                 break
         m.train()
+        with torch.no_grad():       # the same loss on the PLAIN golds (no answer drill: a drilled row's answer is a drawn number, not what the criterion is about), random R and carry draws, the model before this update
+            _, aux = m._loss(b, golds)
+        run = run + 1 if float(aux['line_acc_all']) == 1.0 else 0
         loss, aux = m.loss(b)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
         opt.step(); opt.zero_grad(set_to_none=True)
-    return s, time.time() - t0, res
+    return s, time.time() - t0, res, run
 
 
 def changed(a, b_, rows):
@@ -132,13 +160,14 @@ def _toy():
     if ck and os.path.exists(ck):
         m.load_state_dict(torch.load(ck))
         m.eval()
-        steps, secs, res = 0, 0.0, tf_lines(m, b, golds)[1:]
+        steps, secs, res, run = 0, 0.0, tf_lines(m, b, golds)[1:], -1
     else:
-        steps, secs, res = train(m, rs, b, golds)
+        steps, secs, res, run = train(m, rs, b, golds)
         if ck:
             torch.save(m.state_dict(), ck)
     m.eval()
-    assert res[0] == 1.0, 'the toy did not reach teacher-forced line accuracy 1.0 in %d updates: %s' % (steps, res)
+    assert res[0] == 1.0 and run >= CONSEC, 'the toy did not reach teacher-forced line accuracy 1.0 with line_acc_all == 1.0 on %d consecutive updates in %d updates: %s (run %d)' % (CONSEC, steps, res, run)
+    print('   training took %d updates (line_acc_all == 1.0 on the last %d consecutive updates)' % (steps, run))
 
     # ---- AT-0 (iii): teacher-forced argmax lines vs the free greedy run ----
     # The sealed check is the free run as the model runs it: the learned stop per turn. The same comparison with K = TCAP forced rounds per turn is printed beside it: it isolates the
@@ -147,6 +176,9 @@ def _toy():
     ag = agreement(m, b, golds)
     o = ag['free']
     agf = agreement(m, b, golds, loops=M.TCAP)
+    mt = matched(m, b, golds, o)
+    print('   matched-rounds (each pair runs the rounds the free run used, %d..%d): teacher-forced argmax vs the free run: %d of %d lines = %.1f%% (first disagreements %s)' % (
+        min(u for r_ in o['turn_rounds'] for u in r_), max(u for r_ in o['turn_rounds'] for u in r_), mt['agree'], mt['lines'], 100 * mt['rate'], mt['bad'][:4]))
     gold_prog = sum(free_lines(o, i) == g['texts'] + [g['ans']] for i, g in enumerate(golds))
     ans_ok = sum(o['answers'][i] == g['ans'] for i, g in enumerate(golds))
     print('   trained %d updates in %.0fs: teacher-forced line accuracy %.3f, stop accuracy %.3f' % (steps, secs, ag['tf_line_acc'], ag['stop_acc']))
@@ -155,6 +187,7 @@ def _toy():
     assert agf['rate'] >= 0.99, 'AT-0 (iii) machinery: teacher-forced vs a free run with the same %d forced rounds per turn: %.3f (%d/%d); first disagreements (row, turn, teacher-forced, free): %s' % (
         M.TCAP, agf['rate'], agf['agree'], agf['lines'], agf['bad'][:6])
     print('ok AT-0 (iii), same rounds: teacher-forced argmax vs the free greedy run with %d forced rounds per turn: %d of %d lines match = %.1f%%' % (M.TCAP, agf['agree'], agf['lines'], 100 * agf['rate']))
+    print('   summary of AT-0 (iii): sealed (learned stop) %.1f%%, matched-rounds %.1f%%, forced-%d-rounds %.1f%%, updates %d' % (100 * ag['rate'], 100 * mt['rate'], M.TCAP, 100 * agf['rate'], steps))
     if ag['rate'] >= 0.99:
         print('ok AT-0 (iii) teacher-forced vs free run (learned stop): %d of %d lines (calls and answers) match = %.1f%% (needs >= 99%%); %d/%d free-run programs are the gold program' % (
             ag['agree'], ag['lines'], 100 * ag['rate'], gold_prog, len(rs)))
@@ -224,7 +257,7 @@ def _toy():
     assert all(snap[k] == 0 for k in FAULTS), {k: snap[k] for k in FAULTS}
     print('ok extra_evals on the trained toy: op_acc %s; agreement table %s (teacher-forced right %.0f%%, greedy right %.0f%%); lines per row by family %s; rounds per turn %s; extra keys %s; fault counters all 0 (turn_cap %d reported)' % (
         json.dumps(oa), ag2['cells'], ag2['tf_right'], ag2['greedy_right'], {k: round(v['lines_per_row'], 2) for k, v in at['by_family'].items()},
-        {k: round(v['mean'], 2) for k, v in at['rounds_by_turn'].items()}, sorted(ex['talker'])[:6], snap['turn_cap']))
+        {k: round(v['mean'], 2) for k, v in at['rounds_by_turn'].items()}, sorted(ex['talker'])[:6], capcount.snapshot()['reported']['turn_cap']))
     assert not fails, 'FAILED:\n  ' + '\n  '.join(fails)
 
 

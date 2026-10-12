@@ -63,7 +63,7 @@ def test_train_py():
     assert all(cap[k] == 0 for k in capcount.NAMES), cap       # every fault counter the code has, not only the b3at ones
     for k in ('turns_over', 'tape_entry_over', 'writer_over', 'unended', 'turn_rounds_over', 'steps_unparsed', 'no_trace', 'steps_over', 'total'):
         assert cap[k] == 0, cap
-    assert 'turn_cap' in cap and 'turn_rounds_capped' in cap, cap       # reported, not faults
+    assert 'turn_cap' in {**cap, **cap.get('reported', {})} and 'turn_rounds_capped' in {**cap, **cap.get('reported', {})}, cap       # reported, not faults
     from custom_io.g8a import caps as CP
     from custom_io.models import load_model
     CP.apply(json.load(open(caps)))           # a checkpoint is rebuilt under the caps it was trained with

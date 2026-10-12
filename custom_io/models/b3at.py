@@ -26,7 +26,8 @@ j + 1). Turn j = 0 .. TURNS - 1 (TURNS = tape + 1 = 17 lines at most), for the r
      first round it fires, or at TCAP (`turn_cap`, reported). A row that stopped, or has finished, keeps its Z (torch.where: B3G2.run's keep logic, per turn).
   2. the talker writes ONE line from Z (talk_rounds 'last': the turn's last round; 'all': the turn's every round, each plus step_emb[min(r, n_loops - 1)], a stopped row keeping the memory of
      its stop round). No EOS within WCAP: counted `unended`, the row answers '' and ends.
-  3. the harness splits the line at its first space. A known tool name (add sub mul div mod min max cmp, note): dispatch (the lesions noexec / opswap and the oracle exactly as B3G2.dispatch,
+  3. the harness splits the line at its first space. THE call rule (is_call, used everywhere a line is classified): a line is a call only if its first word is a tool name AND at least one more token follows;
+a bare 'max' / 'note' is the final answer. A gold answer that would be a call gets no target (`answer_is_call`). THE answer rule (answer_of): a call or a line with no EOS is no answer ('') in run, talk and generate. A known tool name (add sub mul div mod min max cmp, note): dispatch (the lesions noexec / opswap and the oracle exactly as B3G2.dispatch,
      the oracle called as oracle(i, turn, (name, a, b))), and the entry goes in the row's next tape slot (slot j: a live row has written j tool lines). Any other line (including '') is the
      final answer and the row is done. A tool line when the tape is full (turn 16): the row ends with the answer '' and counts `turns_over`.
 run(batch, loops=K) forces K rounds in every turn (the stop head ignored; K = 0 means the talker reads each turn's start Z: the thinker-off check; K > 32 counts `turn_rounds_over`).
@@ -43,7 +44,7 @@ global generator (torch.randint, the stream B3G2 / H1 draw K from); then PER ROW
 row: the talker's teacher-forced NLL of the turn's target line at EVERY round of the turn (H1's rule, per turn), the mean over the row's (turn, round) pairs that have a target; summed
 over rows / B. No w_noop (every turn has a target). Stop head: BCE on the 'settled' label per turn (right at round r and at every later round of that turn), input detached as in B3G2, only
 on (row, turn) pairs with R_i = TCAP (label 'right': every pair). Gradients flow through Z across turns; rounds with global index (rounds so far in the batch) >= CKPT_FROM are
-gradient-checkpointed, the thinker's and the talker's passes alike. aux: stop_pairs (the (row, turn, round) pairs the stop loss counted), line_acc (teacher-forced 'right' at the last round of each turn; line_acc_call / line_acc_ans separately), call / ans (the mean
+gradient-checkpointed, the thinker's and the talker's passes alike. aux: line_acc_all (every (row, turn, round) pair with a target, teacher-forced right), stop_pairs (the (row, turn, round) pairs the stop loss counted), line_acc (teacher-forced 'right' at the last round of each turn; line_acc_call / line_acc_ans separately), call / ans (the mean
 NLL of the call lines / answer lines), stop, stop_acc, rounds (per row), turns, R, copy_share (always 0, key kept for the logs).
 ST1: sample_traces(batch, temperature, generator) = a free run whose every line is sampled -> per row dict(calls=[(line, reply)], answer); trace_loss(batch, traces) = _loss on trace_gold(t).
 Counters (capcount): turns_over, tape_entry_over, writer_over, unended, turn_rounds_over, steps_unparsed, no_trace, steps_over (faults: all read 0 on the sealed runs) and turn_cap,
@@ -66,6 +67,8 @@ TOTAL_CAP = 96              # rounds a row may spend over all its turns in train
 class B3AT(B3G2):
     def __init__(self, vocab, **kw):
         super().__init__(vocab, **kw)
+        assert self.tape == 16, 'the spec allows at most 16 tool turns (TURNS = tape + 1 = 17 lines)'
+        self.trace_stats.update(no_answer=0, answer_is_call=0)      # ST1 traces without an answer target / gold answers that would run as a call
         self.TURNS = self.tape + 1          # lines a row may write: tape entries + the final line (17)
         self.last_turns = None
 
@@ -77,6 +80,28 @@ class B3AT(B3G2):
         valid, S0 = self.num_memory(X, ns, ne)
         Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)
         return dict(X=X, xm=xm, valid=valid, km=km, kvx=[b.kv_of(Xk + self.src.weight[1]) for b in self.core], kvs0=self.slot_kv(S0))
+
+    def is_call(self, line):
+        """THE harness rule for every classification of a written line: it is a tool call only if its first word (split at the first space) is a tool name AND at least one more token follows;
+        a bare 'max' / 'add' / 'note' (or '') is the final answer."""
+        name, _, rest = line.partition(' ')
+        return name in self.tools and bool(rest.strip())
+
+    def answer_of(self, line, ended):
+        """THE answer rule (run, talk, generate): a line that is a call or has no EOS within WCAP is no answer ('')."""
+        return line if ended and not self.is_call(line) else ''
+
+    def make_gold(self, texts, entries, answer, drill=False, no_answer=False):
+        """B3G2's gold; a gold answer that is_call would be run as a call in a free run, so it cannot be given as an answer: no target (ans_ids None), counted `answer_is_call` (fault).
+        no_answer (an ST1 trace whose run ended by unended / turns_over): no answer target either (never a blank EOS), counted in trace_stats['no_answer']."""
+        g = super().make_gold(texts, entries, '' if no_answer else answer, drill)
+        if no_answer:
+            g['ans_ids'] = None
+            self.trace_stats['no_answer'] += 1
+        elif self.is_call(answer):
+            g['ans_ids'] = None
+            capcount.hit('answer_is_call'); self.trace_stats['answer_is_call'] += 1
+        return g
 
     def z0(self, B):
         return torch.cat([self.ctrl.weight, self.reader.place.weight[:N_REG]]).expand(B, -1, -1)
@@ -118,6 +143,7 @@ class B3AT(B3G2):
         done = torch.zeros(B, dtype=torch.bool, device=dev)
         Zf = Z.clone()                                                      # each row's Z of its final turn (the state the final line was written from)
         answers, calls, recs, full_ev = [''] * B, [[] for _ in range(B)], [[] for _ in range(B)], []
+        no_answer = [False] * B                                             # rows that ended by unended / turns_over (no answer at all)
         turn_rounds, lines, total_rounds = [[] for _ in range(B)], [0] * B, [0] * B
         fmem = []                                                           # 'all': (row ids, memory, mask) of the rows that finished in a turn
         g = 0
@@ -168,15 +194,17 @@ class B3AT(B3G2):
                 if not ended[jj]:
                     capcount.hit('unended'); self.free_stats['unended'] += 1
                     fin[i] = True                                           # answers[i] stays ''
+                    no_answer[i] = True
                     continue
                 txt = self.vocab.decode(outs[jj])
-                if txt.partition(' ')[0] not in self.tools:                 # the first word names no tool (including ''): the final answer
+                if not self.is_call(txt):                                   # not a call (first word no tool, or a tool name alone, or ''): the final answer
                     answers[i] = txt
                     fin[i] = True
                 elif j >= self.tape:                                        # a tool line on a full tape: the row ends, no answer
                     capcount.hit('turns_over')
                     full_ev.append((i, j))
                     fin[i] = True
+                    no_answer[i] = True
                 else:
                     r_ = self.dispatch(txt, i, j, lesion, oracle)
                     calls[i].append(r_)
@@ -203,7 +231,7 @@ class B3AT(B3G2):
         vis = mt & shown.gather(1, ent.expand(B, -1))
         self.last_rounds, self.last_turns = total_rounds, lines
         self.last_tape_full = [any(i == r_ for r_, _ in full_ev) for i in range(B)]
-        out = dict(Z=Zf, X=c['X'], xm=c['xm'], tape=(Xt, idt, vis), calls=calls, records=recs, answers=answers, le=le, K=K, tape_full=full_ev, rounds=total_rounds, turns=lines, turn_rounds=turn_rounds)
+        out = dict(Z=Zf, X=c['X'], xm=c['xm'], tape=(Xt, idt, vis), calls=calls, records=recs, answers=answers, le=le, K=K, tape_full=full_ev, rounds=total_rounds, turns=lines, turn_rounds=turn_rounds, no_answer=no_answer)
         if allr:
             nz = Zf.shape[1]
             Mx = max(m.shape[1] for _, m, _ in fmem)
@@ -219,10 +247,11 @@ class B3AT(B3G2):
     # ---- the talker ----
     def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None):
         """The talker's greedy (or sampled) line from the state's Z ALONE (rule 2; `batch`, the state's tape and `lesion` are accepted for the callers' signature and not read: nocopy is a no-op),
-        '' for a line that did not end. A donor's Z writes the donor's line. return_modes: also a mode per row (always 2: one writer, one mode)."""
+        '' for a line that is a call (is_call) or did not end (counted answer_unended): the one answer rule of run. A donor's Z writes the donor's line. return_modes: also a mode per row (always 2: one writer, one mode)."""
         Z, zm = self.writer_view(state)
         outs, ended = self.write_lines(Z, zm, None, temperature, generator)
-        out = [self.vocab.decode(o) if bool(e) else '' for o, e in zip(outs, ended.tolist())]
+        self.free_stats['answer_unended'] += int((~ended.bool()).sum())     # as B3G2.talk: rows whose answer had no EOS within WCAP
+        out = [self.answer_of(self.vocab.decode(o), bool(e)) for o, e in zip(outs, ended.tolist())]
         return (out, [2] * len(out)) if return_modes else out
 
     @torch.no_grad()
@@ -243,7 +272,12 @@ class B3AT(B3G2):
     def sample_traces(self, batch, temperature, generator):
         """ST1: a free run whose every line (calls and the answer) is SAMPLED from the writer -> per row dict(calls=[(line, reply)] for every tool line, answer=the final line)."""
         o = self.run(batch, temperature=temperature, generator=generator)
-        return [dict(calls=[(txt, rep) for _, txt, rep in o['records'][i]], answer=o['answers'][i]) for i in range(len(o['answers']))]
+        return [dict(calls=[(txt, rep) for _, txt, rep in o['records'][i]], answer=o['answers'][i], no_answer=o['no_answer'][i]) for i in range(len(o['answers']))]
+
+    def trace_gold(self, t):
+        """B3G2's, except that a trace whose run ended by unended / turns_over (no_answer) gets NO answer target (never a blank EOS target); counted in trace_stats['no_answer']."""
+        texts = [c for c, _ in t['calls']]
+        return self.make_gold(texts, [self.entry_text(c, rep) for c, rep in t['calls']], t['answer'], no_answer=bool(t.get('no_answer')))
 
     # ---- loss ----
     def _loss(self, batch, golds):
@@ -266,7 +300,7 @@ class B3AT(B3G2):
         with torch.no_grad():
             return torch.sigmoid(self.stop(zdet).float()[..., 0]) >= P_STOP
 
-    def _turns(self, batch, golds, R, count=True, names=False, carry='last'):
+    def _turns(self, batch, golds, R, count=True, names=False, carry='last', rounds=None):
         """Teacher forcing over the turns with R rounds per turn before the per-row cut (module docstring) -> (total loss, aux, info). info['Z'] = each row's Z after its last turn; info['last_right'] = [(row, turn, 'call' | 'ans', right at the
         row's last round of the turn, first word right)] for every (row, turn) with a target (names: the first word is computed only when asked, one more no-grad pass); info['pred'] = {(row, turn): the teacher-forced argmax line} when names. count=False: the cap
         counters are left alone (evals).
@@ -274,6 +308,8 @@ class B3AT(B3G2):
         the next turn is trained on a carried state from every round the learned stop can fire at; the turn still runs all R_i rounds with the line loss at each, gradients flow through the carried Z.
         With probability CARRY_STOP (a per-(row, turn) coin) the carried Z is instead the one after the row's STOP round s_ij (first round whose stop head, on the detached input the stop loss uses, gives sigmoid >= P_STOP, else R_i):
         half the carried states are the state the free run carries, half are uniform over 1..R_i so forced loops:K and a moving stop are covered. s_ij is computed round by round under no_grad (no gradient path, stop loss unchanged).
+        rounds: None (default; everything as above) or a [B, turns] long tensor of per-(row, turn) round counts: a pair with rounds > 0 runs exactly that many rounds (no TOTAL_CAP cut, at most TCAP), a pair with 0 keeps
+        its R_i (the matched-rounds comparison: the free run's own rounds per turn, the line read at that round, the Z carried after those rounds; use with carry='last').
         RNG order (torch's global generator): R (in _loss), then at the start of each turn the carry_draw randint call of B values, then ONE torch.rand(B) call (carry_coin; coin < CARRY_STOP = stop round), whether or not every row runs that turn. 'last' draws nothing."""
         assert carry in ('last', 'draw'), carry
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
@@ -286,7 +322,11 @@ class B3AT(B3G2):
         Xt, idt, mt, le = self.tape_of([(list(x['tape']) + [''] * K)[:K] for x in golds], dev)
         ent = torch.arange(K * le, device=dev) // le
         kvs = self.join_kv(c['kvs0'], [b.kv_of(Xt + self.src.weight[1]) for b in self.core])
-        Lt, Rt = torch.tensor(Ls, device=dev), torch.tensor(Ri, device=dev)
+        Lt, Rt0 = torch.tensor(Ls, device=dev), torch.tensor(Ri, device=dev)
+        Rt = Rt0
+        if rounds is not None:
+            assert rounds.shape[0] == B and carry == 'last', 'the rounds override is for teacher-forced evals (carry last)'
+            rounds = rounds.to(dev).long().clamp(max=TCAP)
         Z = self.z0(B)
         acc, cnt = torch.zeros(B, device=dev), torch.zeros(B, device=dev)
         zero = torch.zeros((), device=dev)
@@ -295,13 +335,16 @@ class B3AT(B3G2):
         hit = dict(call=[0, 0], ans=[0, 0])
         last_right, g, preds = [], 0, {}
         cs_sum, cs_n = zero, zero                                           # carry_stop_round: sum / count of s_ij over the coin rows that ran
+        all_ok, all_n = 0, 0                                                # line_acc_all: right / count over every (row, turn, round) pair with a target
         for j in range(max(Ls) + 1):
             act = Lt >= j
+            if rounds is not None:
+                Rt = torch.where(rounds[:, j] > 0, rounds[:, j], Rt0) if j < rounds.shape[1] else Rt0
             tg = [(x['ids'][j] if j < L else x['ans_ids']) if L >= j else None for x, L in zip(golds, Ls)]
             te = self.answer_teacher(Z, tg)
             has = (te['tgt'] != -100).any(1)                                # over-long lines have no target (writer_over was counted in make_gold)
             mask = torch.cat([c['valid'], mt & (ent[None, :] < j), c['km']], 1)     # entries written in turns < j
-            Rj = max(Ri[i] for i in range(B) if Ls[i] >= j)
+            Rj = max(Ri[i] for i in range(B) if Ls[i] >= j) if rounds is None else int(Rt[act].max())
             hist, zs, right, fr = [], [], torch.zeros(Rj, B, dtype=torch.bool, device=dev), None
             if carry == 'draw':
                 cj, Zc = self.carry_draw(Rt, dev), Z                        # Zc: the Z the next turn starts from (rows not running keep theirs)
@@ -334,6 +377,7 @@ class B3AT(B3G2):
                     acc = acc + torch.zeros(B, device=dev).index_add(0, sel, nll.float())
                     cnt = cnt + torch.zeros(B, device=dev).index_add(0, sel, torch.ones(len(sel), device=dev))
                     right[r, sel] = rt
+                    all_ok += int(rt.sum()); all_n += len(sel)
                     is_call = Lt[sel] > j
                     for kind, sub in (('call', is_call), ('ans', ~is_call)):
                         nll_s[kind][0] += float(nll.detach()[sub].sum()); nll_s[kind][1] += int(sub.sum())
@@ -374,7 +418,7 @@ class B3AT(B3G2):
         total = lines + lstop
         pc = lambda d: d[0] / max(d[1], 1)
         aux = dict(call=pc(nll_s['call']), prog=pc(nll_s['call']), ans=pc(nll_s['ans']), lines=lines, stop=lstop, stop_y=ys / sn_.clamp(min=1), stop_acc=sa_ / sn_.clamp(min=1),
-                   stop_w=float(bool(sn_ > 0)), stop_pairs=float(sn_), line_acc=(hit['call'][0] + hit['ans'][0]) / max(hit['call'][1] + hit['ans'][1], 1), line_acc_call=pc(hit['call']), line_acc_ans=pc(hit['ans']),
+                   stop_w=float(bool(sn_ > 0)), stop_pairs=float(sn_), line_acc=(hit['call'][0] + hit['ans'][0]) / max(hit['call'][1] + hit['ans'][1], 1), line_acc_all=all_ok / max(all_n, 1), line_acc_call=pc(hit['call']), line_acc_ans=pc(hit['ans']),
                    call_acc=pc(hit['call']), rounds=sum(r * (L + 1) for r, L in zip(Ri, Ls)) / B, turns=sum(L + 1 for L in Ls) / B, R=float(R), copy_share=0.0)
         if carry == 'draw':
             aux['carry_stop_round'] = (cs_sum / cs_n.clamp(min=1)).detach()
@@ -392,10 +436,11 @@ class B3AT(B3G2):
         dev, amp = ctx['device'], ctx['amp']
         sl = subsample(prows, 400)
         acc = {m: dict(calls=0, names=0, n_calls=0, prog=0) for m in ('teacher_forced', 'free_run')}
-        fr_ans, ans_tf, by_turn = 0, [0, 0], {}
+        fr_ans, ans_tf, by_turn, row_R = 0, [0, 0], {}, []
         for b in batches(sl):
             rows, B = b['rows'], len(b['rows'])
             golds = self.plain_golds(rows)
+            row_R += [min(TCAP, max(1, TOTAL_CAP // (len(g['texts']) + 1))) for g in golds]
             with amp():
                 _, _, info = self._turns(b, golds, TCAP, count=False, names=True)
             a, okrow = acc['teacher_forced'], [True] * B
@@ -426,7 +471,11 @@ class B3AT(B3G2):
         out['op_acc']['n'] = n
         out['op_acc']['free_run']['answer'] = pc(fr_ans, n)
         out['call_text'] = dict(n_calls=acc['teacher_forced']['n_calls'], stop_calling=pc(ans_tf[0], ans_tf[1]), n_stop_rounds=ans_tf[1])
-        out['at_lines'] = dict(by_turn={k: dict(n=v[1], right=pc(v[0], v[1])) for k, v in sorted(by_turn.items(), key=lambda x: int(x[0]))}, rounds=TCAP, note='teacher forced, R = TCAP before the per-row cut, right at the last round of the turn')
+        rr = {}
+        for r_ in row_R:
+            rr[str(r_)] = rr.get(str(r_), 0) + 1
+        out['at_lines'] = dict(by_turn={k: dict(n=v[1], right=pc(v[0], v[1])) for k, v in sorted(by_turn.items(), key=lambda x: int(x[0]))}, tcap=TCAP, rounds=dict(sorted(rr.items(), key=lambda x: int(x[0]))),
+                               note='teacher forced, R = TCAP before the per-row cut; rounds = the number of rows by their real R_i = min(TCAP, max(1, TOTAL_CAP // (L_i + 1))), the line read at the last round of the turn')
 
     @torch.no_grad()
     def extra_evals(self, ctx):
@@ -436,10 +485,95 @@ class B3AT(B3G2):
         out['at'] = self.at_evals(ctx)
         return out
 
+    @staticmethod
+    def past_trained(turn_rounds):
+        """A8: -> (pairs past the trained budget, pairs). A row that wrote n lines has, in training, a per-turn budget min(TCAP, max(1, TOTAL_CAP // n)); a free-run (row, turn) pair with more rounds is past it."""
+        past = tot = 0
+        for tr in turn_rounds:
+            if tr:
+                bud = min(TCAP, max(1, TOTAL_CAP // len(tr)))
+                past += sum(u > bud for u in tr); tot += len(tr)
+        return past, tot
+
+    @torch.no_grad()
+    def h1_evals(self, ctx):
+        """The inherited H1 block made per TURN (A4; the sealed AT-1e reads B3-4 'per turn and over the whole question'): every (row, turn) pair of a free run is one entry with its rounds, compared with
+        TCAP (the cap of one turn); 'right' is the ROW's final answer right (a turn has no answer of its own). Same keys as tool_h1.h1_evals (cap, splits, split_family, pooled5, big_in_dist, by_family, chain5,
+        one_step, hc_gap, by_program_len; rows = {id: [rounds of each turn]}), plus 'whole_question': total rounds per row (summed over its turns) by split / family, with no cap comparison."""
+        import statistics
+        from custom_io.data import DEV_SPLITS, collate, Dataset, to_device
+        from custom_io.evalx import CHAIN5, ONE_STEP, _dev_rows, is_hit
+        from custom_io.models import progparse as pp
+        was = self.training
+        self.eval()
+        dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
+
+        def runs(rs):
+            res = []
+            for s in range(0, len(rs), bs):
+                ch = rs[s:s + bs]
+                b = to_device(collate([Dataset(ch, self.vocab, strict=False)[i] for i in range(len(ch))]), dev)
+                with amp():
+                    o = self.run(b)
+                res += [(r, tr, is_hit(a, r)) for r, tr, a in zip(ch, o['turn_rounds'], o['answers'])]
+            return res
+        turn_view = lambda res: [(r, u, h) for r, tr, h in res for u in tr]
+        row_view = lambda res: [(r, sum(tr), h) for r, tr, h in res]
+
+        def stats(res):
+            us = [u for _, u, _ in res]
+            if not us:
+                return dict(n=0)
+            hit = [u for _, u, h in res if h]
+            miss = [u for _, u, h in res if not h]
+            early = [h for _, u, h in res if u < TCAP]
+            return dict(n=len(us), mean=sum(us) / len(us), median=statistics.median(us), at_cap=100 * sum(u >= TCAP for u in us) / len(us),
+                        hist={str(k): us.count(k) for k in sorted(set(us))}, mean_right=sum(hit) / len(hit) if hit else None,
+                        mean_wrong=sum(miss) / len(miss) if miss else None, exact=100 * sum(h for _, _, h in res) / len(res),
+                        stops=dict(right=sum(early), wrong=len(early) - sum(early), cap=len(us) - len(early), right_share=100 * sum(early) / len(early) if early else None))
+
+        def stats_q(res):
+            us = [u for _, u, _ in res]
+            return dict(n=0) if not us else dict(n=len(us), mean=sum(us) / len(us), median=statistics.median(us), max=max(us), exact=100 * sum(h for _, _, h in res) / len(res))
+        out = dict(cap=TCAP, p_stop=P_STOP, label=self.label, per='turn', splits={}, rows={})
+        q = dict(per='question', splits={}, by_family={})
+        pooled = []
+        for sp in DEV_SPLITS:
+            res = runs(_dev_rows(ctx['data'], sp, None))
+            out['splits'][sp], q['splits'][sp] = stats(turn_view(res)), stats_q(row_view(res))
+            cells = {}
+            for x in res:
+                cells.setdefault(x[0]['family'], []).append(x)
+            out.setdefault('split_family', {})[sp] = {f: stats(turn_view(v)) for f, v in sorted(cells.items())}
+            if sp != 'family':
+                out['rows'][sp] = {r['id']: tr for r, tr, _ in res}
+                pooled += res
+        out['pooled5'], q['pooled5'] = stats(turn_view(pooled)), stats_q(row_view(pooled))
+        big = runs(_dev_rows(ctx.get('big') or ctx['data'], 'in_dist', None))
+        out['rows']['big_in_dist'] = {r['id']: tr for r, tr, _ in big}
+        fam = {}
+        for x in big:
+            fam.setdefault(x[0]['family'], []).append(x)
+        out['big_in_dist'], q['big_in_dist'] = stats(turn_view(big)), stats_q(row_view(big))
+        out['by_family'], q['by_family'] = {f: stats(turn_view(v)) for f, v in sorted(fam.items())}, {f: stats_q(row_view(v)) for f, v in sorted(fam.items())}
+        c5, one = [x for x in big if x[0]['family'] in CHAIN5], [x for x in big if x[0]['family'] in ONE_STEP]
+        out['chain5'], out['one_step'] = stats(turn_view(c5)), stats(turn_view(one))
+        q['chain5'], q['one_step'] = stats_q(row_view(c5)), stats_q(row_view(one))
+        out['hc_gap'] = out['chain5']['mean'] - out['one_step']['mean'] if c5 and one else None
+        q['hc_gap'] = q['chain5']['mean'] - q['one_step']['mean'] if c5 and one else None
+        by_len = {}
+        for x in big:
+            by_len.setdefault(str(len(pp.row_targets(x[0])['prog'])), []).append(x)
+        out['by_program_len'] = {k: stats(turn_view(v)) for k, v in sorted(by_len.items())}
+        q['by_program_len'] = {k: stats_q(row_view(v)) for k, v in sorted(by_len.items())}
+        out['whole_question'] = q
+        self.train(was)
+        return out
+
     @torch.no_grad()
     def at_evals(self, ctx):
         """Report-only, the agent turns' own numbers on the dev rows (the same rows as g2_evals' agreement table): lines per row, rounds per turn (B3-4 / B3-5 by turn: mean, median, share
-        at TCAP, by the turn index), total rounds per row, turns and rounds per family (by_family: lines and rounds per row, rounds per turn, share of turns at TCAP), and the cap counters (faults and reported). (h1's 'rounds' for b3at are TOTAL rounds over all turns, last_rounds.)"""
+        at TCAP, by the turn index), total rounds per row, turns and rounds per family (by_family: lines and rounds per row, rounds per turn, share of turns at TCAP), and the cap counters (faults and reported). (last_rounds are TOTAL rounds over all turns; the h1 block is made per turn by this class's h1_evals, with a whole_question view.) turn_rounds_past_trained: reported, not a fault."""
         import statistics
         from custom_io.data import DEV_SPLITS, collate, Dataset, to_device
         from custom_io.evalx import _dev_rows, subsample
@@ -453,12 +587,14 @@ class B3AT(B3G2):
                     seen.add(r['id'])
                     rows.append(r)
         sample = subsample(rows, 600)
-        per_turn, turns, tot, fam = {}, {}, [], {}
+        per_turn, turns, tot, fam, past, ptot = {}, {}, [], {}, 0, 0
         for s in range(0, len(sample), bs):
             ch = sample[s:s + bs]
             b = to_device(collate([Dataset(ch, self.vocab, strict=False)[i] for i in range(len(ch))]), dev)
             with amp():
                 o = self.run(b)
+            pp_, pt_ = self.past_trained(o['turn_rounds'])
+            past += pp_; ptot += pt_
             for r, tr, nt, rr in zip(b['rows'], o['turn_rounds'], o['turns'], o['rounds']):
                 turns[str(nt)] = turns.get(str(nt), 0) + 1
                 tot.append(rr)
@@ -471,6 +607,7 @@ class B3AT(B3G2):
                    rounds_by_turn={str(j): st(us) for j, us in sorted(per_turn.items())}, rounds_per_row=st(tot) if tot else dict(n=0),
                    by_family={k: dict(n=v['n'], lines_per_row=v['lines'] / v['n'], rounds_per_row=v['rounds'] / v['n'], rounds_per_turn=v['rounds'] / max(v['lines'], 1),
                                       turn_cap_share=100 * v['turns_at_cap'] / max(v['lines'], 1)) for k, v in sorted(fam.items())}, counters=capcount.snapshot(),
-                   free_unended=self.free_stats['unended'])
+                   free_unended=self.free_stats['unended'],
+                   turn_rounds_past_trained=dict(pairs=past, of=ptot, share=100 * past / max(ptot, 1), note='free-run (row, turn) pairs with more rounds than training gives a row of that many lines: min(TCAP, max(1, TOTAL_CAP // lines))'))
         self.train(was)
         return out

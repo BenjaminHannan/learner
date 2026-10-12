@@ -166,7 +166,7 @@ def test_scripted_free_run():
             o = m.run(batch_of(rows(3), V))
         assert o['turn_rounds'] == [[want or 1] * 3, [want or 1], [want or 1] * 4], o['turn_rounds']
         assert o['rounds'] == [(want or 1) * x for x in (3, 1, 4)]
-        assert capcount.snapshot()['turn_cap'] == (0 if want is None else 8) and capcount.snapshot()['total'] == 0, capcount.snapshot()
+        assert capcount.snapshot()['reported']['turn_cap'] == (0 if want is None else 8) and capcount.snapshot()['total'] == 0, capcount.snapshot()
         sc.off()
     # noexec / opswap act inside the dispatch, the oracle replaces the calculator's reply for a two-token call (called as oracle(i, turn, call))
     seen = []
@@ -327,6 +327,7 @@ def test_talker_sees_only_thoughts():
     plog = []
     for b_, rep in ((bA, 'r1'), (bB, 'r2')):
         m.tools = AnyTool(rep)
+        m.is_call = lambda line: True                                   # every line (even '') is a call here, so the run goes on for all 17 turns whatever the talker writes
         log.clear()
         with torch.no_grad():
             o = m.run(b_, loops=1)
@@ -357,7 +358,7 @@ def test_teacher_forcing_caps_and_keep():
         loss, aux = m._loss(batch_of(rs, V), gl)
         spy.off()
         # R = 32; row 0 has L = 5: R_0 = min(32, 96 // 6) = 16 rounds in each of its 6 turns; row 1 (L = 0) runs 32 rounds in turn 0 and keeps its Z afterwards
-        assert len(spy.think) == 32 + 5 * 16 and capcount.snapshot()['turn_rounds_capped'] == 1 and capcount.snapshot()['total'] == 0, (len(spy.think), capcount.snapshot())
+        assert len(spy.think) == 32 + 5 * 16 and capcount.snapshot()['reported']['turn_rounds_capped'] == 1 and capcount.snapshot()['total'] == 0, (len(spy.think), capcount.snapshot())
         assert aux['R'] == 32.0 and aux['rounds'] == (16 * 6 + 32) / 2 and aux['turns'] == 3.5 and aux['stop_pairs'] == 32.0 and aux['stop_w'] == 1.0, aux
         zin = [sp[0] for sp in spy.think]
         assert all(torch.equal(zin[r][0], zin[16][0]) for r in range(16, 32)), 'row 0 past its R_i keeps its Z'
@@ -371,7 +372,7 @@ def test_teacher_forcing_caps_and_keep():
         capcount.reset()
         m.zero_grad()
         loss, aux = m._loss(batch_of(rs, V), gl)
-        assert capcount.snapshot()['turn_rounds_capped'] == 0 and aux['stop_w'] == 0.0 and aux['stop_pairs'] == 0.0 and torch.isfinite(loss) and aux['rounds'] == 4 * 3.5
+        assert capcount.snapshot()['reported']['turn_rounds_capped'] == 0 and aux['stop_w'] == 0.0 and aux['stop_pairs'] == 0.0 and torch.isfinite(loss) and aux['rounds'] == 4 * 3.5
         # a line that cannot be written in WCAP steps has no target and is counted (never cut): the row's loss only counts its other lines
         capcount.reset()
         long = m.make_gold(['add 1 1'], ['add 1 1 = 2'], 'x' * 90)
@@ -527,14 +528,14 @@ def test_st1_hooks():
     b = batch_of(rs, V)
     gen = torch.Generator().manual_seed(0)
     tr = m.sample_traces(b, 1.0, gen)
-    assert len(tr) == 8 and all(set(t) == {'calls', 'answer'} and isinstance(t['answer'], str) and isinstance(t['calls'], list) for t in tr)
+    assert len(tr) == 8 and all(set(t) == {'calls', 'answer', 'no_answer'} and isinstance(t['answer'], str) and isinstance(t['calls'], list) for t in tr)
     assert m.sample_traces(b, 1.0, torch.Generator().manual_seed(0)) == tr                     # drawn only from the generator
     # well-formed with a scripted talker: every tool line is a (line, reply) pair, notes included, the answer is the final line
     sc = LineScript(m, [['add 3 4', 'sub 7 2', 'five'], ['x'], ['note hi', 'mul 2 3', '6'], [''], ['add 1', 'q'], ['div 7 0', 'r'], ['max 3 9', 'nine'], ['cmp 2 2', 'ok']])
     tr = m.sample_traces(b, 1.0, torch.Generator().manual_seed(0))
     sc.off()
-    assert tr[0] == dict(calls=[('add 3 4', '7'), ('sub 7 2', '5')], answer='five') and tr[1] == dict(calls=[], answer='x') and tr[2] == dict(calls=[('note hi', ''), ('mul 2 3', '6')], answer='6')
-    assert tr[3] == dict(calls=[], answer='') and tr[4]['calls'] == [('add 1', '?')] and tr[6] == dict(calls=[('max 3 9', '9')], answer='nine')
+    assert tr[0] == dict(calls=[('add 3 4', '7'), ('sub 7 2', '5')], answer='five', no_answer=False) and tr[1] == dict(calls=[], answer='x', no_answer=False) and tr[2] == dict(calls=[('note hi', ''), ('mul 2 3', '6')], answer='6', no_answer=False)
+    assert tr[3] == dict(calls=[], answer='', no_answer=False) and tr[4]['calls'] == [('add 1', '?')] and tr[6] == dict(calls=[('max 3 9', '9')], answer='nine', no_answer=False)
     tr = [dict(calls=[('add 3 4', '7'), ('sub 7 2', '5')], answer='5')] * 4 + [dict(calls=[], answer='x')] * 4
     m.train()
     loss, aux = m.trace_loss(b, tr)
@@ -625,7 +626,7 @@ def test_counters():
         m.generate(batch_of(rs, V), 'loops:32')
         sc.off()
     snap = capcount.snapshot()
-    assert all(snap[k] == 0 for k in FAULTS) and snap['total'] == 0 and snap['turn_cap'] == 0 and snap['turn_rounds_capped'] == 0, snap
+    assert all(snap[k] == 0 for k in FAULTS) and snap['total'] == 0 and capcount.snapshot()['reported']['turn_cap'] == 0 and capcount.snapshot()['reported']['turn_rounds_capped'] == 0, snap
     capcount.reset()
     print('ok counters: a forced 17th tool line -> turns_over, a reply over LE -> tape_entry_over, an over-long gold -> writer_over, a line with no EOS -> unended, loops:33 -> turn_rounds_over; normal toy rows leave %s at 0 (turn_cap, turn_rounds_capped reported)' % (list(FAULTS),))
 
@@ -657,9 +658,174 @@ def test_call_evals_and_names():
     print('ok call_evals per turn: teacher-forced line accuracy by turn (%s), free-run program accuracy (a scripted run of the gold lines scores 100)' % out['at_lines']['by_turn'])
 
 
+def scripted_writer(m, per_call):
+    """Replaces model.write_lines by a script on the CALL COUNT: the n-th call writes per_call[n][k] for the k-th Z row (a (text, ended) pair; a short list repeats its last entry). Returns the call log."""
+    log = []
+
+    def wl(Z, zm=None, rows=None, temperature=0.0, generator=None):
+        spec = per_call[min(len(log), len(per_call) - 1)]
+        log.append(Z.shape[0])
+        pick = [spec[min(k, len(spec) - 1)] for k in range(Z.shape[0])]
+        return [m.vocab.encode(t) for t, _ in pick], torch.tensor([e for _, e in pick])
+    m.write_lines = wl
+    return log
+
+
+def test_call_rule_and_answer_gold():
+    """A1: ONE rule, is_call: first word a tool name AND another token; a bare tool name is the final answer, in run, talk, generate, sample_traces, and the gold side."""
+    m = make(11)
+    for line, want in (('max', False), ('add', False), ('note', False), ('', False), ('add ', False), ('foo bar', False), ('max 3', True), ('note hi', True), ('add 1 2', True), ('add 1', True), (' add 1 2', False), ('maxx 3', False)):
+        assert m.is_call(line) == want, (line, want)
+    b = batch_of(rows(4), V)
+    lines = [['add 7 5', 'max'], ['max'], ['note'], ['cmp 3 4', 'add']]
+    sc = LineScript(m, lines)
+    with torch.no_grad():
+        o = m.run(b, loops=1)
+    assert o['answers'] == ['max', 'max', 'note', 'add'] and [len(c) for c in o['calls']] == [1, 0, 0, 1] and o['turns'] == [2, 1, 1, 2] and o['no_answer'] == [False] * 4, (o['answers'], o['calls'])
+    sc.off()
+    # generate (zero_state: talk on the final Z) and talk apply the same rule
+    scripted_writer(m, [[('max', True)]])
+    with torch.no_grad():
+        assert m.generate(b, lesion='zero_state')[0] == 'max'
+        st = m.state_of(m.run(b, loops=1))
+    scripted_writer(m, [[('max 3', True)]])
+    with torch.no_grad():
+        assert m.talk(st, b) == [''] * 4
+    # gold side: a gold answer that would run as a call has no target and is counted answer_is_call; a bare tool name keeps its target
+    capcount.reset()
+    g1 = m.make_gold(['add 1 2'], ['add 1 2 = 3'], 'max')
+    assert g1['ans_ids'] is not None and capcount.snapshot().get('answer_is_call', 0) == 0
+    g2 = m.make_gold(['add 1 2'], ['add 1 2 = 3'], 'max 3')
+    assert g2['ans_ids'] is None and capcount.HITS['answer_is_call'] == 1 and m.trace_stats['answer_is_call'] == 1
+    m.train()
+    rs = rows(2)
+    golds = [g2, m.make_gold([], [], 'add 4 4')]
+    total, aux, info = m._turns(batch_of(rs, V), golds, 2, count=False)
+    assert torch.isfinite(total) and {(i, j) for i, j, *_ in info['last_right']} == {(0, 0)}, info['last_right']      # only row 0's call has a target; no answer target for either row
+    assert capcount.HITS['answer_is_call'] == 2
+    capcount.reset()
+    print('ok call rule: a bare tool name / empty is the answer in run, talk, generate; a tool name + a token is a call; a gold answer that would be a call gets no target and counts answer_is_call')
+
+
+def test_no_answer_traces():
+    """A2: a trace whose run ended by unended / turns_over has no answer target (not a blank EOS) and is counted."""
+    m = make(12)
+    b = batch_of(rows(3), V)
+    LineScript(m, [['add 1 1', 'x'], ['y'], ['add 2 2'] * 20], unended={(0, 1), (1, 0)})
+    gen = torch.Generator().manual_seed(0)
+    tr = m.sample_traces(b, 0.0, gen)
+    assert [t['no_answer'] for t in tr] == [True, True, True] and [t['answer'] for t in tr] == ['', '', ''], tr
+    assert len(tr[2]['calls']) == 16
+    m.trace_stats['no_answer'] = 0
+    gl = [m.trace_gold(t) for t in tr]
+    assert all(g['ans_ids'] is None for g in gl) and m.trace_stats['no_answer'] == 3
+    m.train()
+    total, aux = m.trace_loss(b, tr)
+    assert torch.isfinite(total) and aux['line_acc_ans'] == 0.0 and aux['ans'] == 0.0      # no answer pair was trained
+    total.backward()
+    # a normal trace keeps its answer target
+    LineScript(m, [['add 1 1', '2']] * 3)
+    ok = m.sample_traces(b, 0.0, gen)
+    assert [t['no_answer'] for t in ok] == [False] * 3 and all(m.trace_gold(t)['ans_ids'] == V.encode('2') for t in ok)
+    print('ok ST1 traces ended by unended / turns_over: no_answer flag, gold answer target None (no EOS target), counted in trace_stats[no_answer] (%d), loss backpropagates' % m.trace_stats['no_answer'])
+
+
+def test_answer_unended_and_tape():
+    """A5 talk counts answer_unended; A6 tape must be 16."""
+    m = make(13)
+    b = batch_of(rows(3), V)
+    scripted_writer(m, [[('add 1 1', True)]])
+    st = m.state_of(m.run(b, loops=1))
+    scripted_writer(m, [[('7', True), ('x', False), ('add 1 2', True)]])
+    before = m.free_stats['answer_unended']
+    with torch.no_grad():
+        out = m.talk(st, b)
+    assert out == ['7', '', ''] and m.free_stats['answer_unended'] == before + 1, (out, m.free_stats)
+    assert make(14).tape == 16
+    orig = B3G2.__init__
+
+    def bad(self, *a, **k):
+        orig(self, *a, **k)
+        self.tape = 8
+    B3G2.__init__ = bad
+    try:
+        make(14)
+        raise SystemExit('a tape of 8 must be refused')
+    except AssertionError as e:
+        assert 'at most 16 tool turns' in str(e)
+    finally:
+        B3G2.__init__ = orig
+    print('ok talk counts answer_unended (as B3G2.talk); the answer rule gives \'\' for a call or an unended line; B3AT asserts tape == 16')
+
+
+def dev_dir(rs, tag='d'):
+    import json, os, tempfile
+    from custom_io.data import DEV_SPLITS
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, 'dev'))
+    for sp in list(DEV_SPLITS) + ['in_dist']:
+        with open(os.path.join(d, 'dev', f'{sp}.jsonl'), 'w') as f:
+            for r in rs:
+                f.write(json.dumps(dict(r, id=r['id'] + sp, accepted=[r['answer']], level=2, variant='v', stage=9)) + '\n')
+    return d
+
+
+def test_per_turn_h1_and_past_trained():
+    """A4: the H1 block is per (row, turn) against TCAP, plus a whole-question block; A8: turn_rounds_past_trained; A7: call_evals reports each row's real R_i."""
+    from contextlib import nullcontext
+    m = make(15)
+    rs = [r for r in rows(8) if r['family'] != 'copy_word'][:6]
+    ctx = dict(data=dev_dir(rs), big=None, device=torch.device('cpu'), batch_size=4, amp=nullcontext)
+    saved = (M.TCAP, M.TOTAL_CAP)
+    M.TCAP, M.TOTAL_CAP = 3, 4
+    try:
+        m.stop.weight.data.zero_(); m.stop.bias.data.fill_(-50.0)               # the stop never fires: every turn runs TCAP = 3 rounds
+        calls = [0]
+        real_q = m.question
+
+        def q(batch):
+            calls[0] = 0
+            return real_q(batch)
+        m.question = q
+
+        def wl(Z, zm=None, rows=None, temperature=0.0, generator=None):
+            t, calls[0] = ('add 1 2' if calls[0] == 0 else '3'), calls[0] + 1
+            return [m.vocab.encode(t)] * Z.shape[0], torch.ones(Z.shape[0], dtype=torch.bool)
+        m.write_lines = wl
+        h1 = m.h1_evals(ctx)
+        assert h1['per'] == 'turn' and h1['cap'] == 3 and h1['pooled5']['mean'] == 3 and h1['pooled5']['at_cap'] == 100.0, h1['pooled5']
+        n_rows = h1['pooled5']['n'] // 2                                        # two turns per row
+        q_ = h1['whole_question']
+        assert q_['pooled5']['mean'] == 6 and q_['pooled5']['n'] == n_rows and 'at_cap' not in q_['pooled5'] and q_['by_family'], q_['pooled5']
+        assert all(v == [3, 3] for v in h1['rows']['big_in_dist'].values())
+        at = m.at_evals(ctx)
+        pt = at['turn_rounds_past_trained']
+        assert pt['pairs'] == pt['of'] == 2 * at['n'] and pt['share'] == 100.0, pt            # 2 lines -> budget min(3, 4 // 2) = 2 < 3 rounds
+        M.TOTAL_CAP = 96
+        pt = m.at_evals(ctx)['turn_rounds_past_trained']
+        assert pt['pairs'] == 0 and pt['of'] == 2 * at['n'], pt
+    finally:
+        M.TCAP, M.TOTAL_CAP = saved
+    assert B3AT_past([[30, 5, 24, 25], [32]]) == (2, 5)
+    # A7: the rows' real R_i, not TCAP
+    m2 = make(16)
+    rs8 = [dict(r, accepted=[r['answer']]) for r in rows(8)]
+    real = m2.plain_golds
+    m2.plain_golds = lambda rr: [m2.make_gold(['add 1 2'] * 5, ['add 1 2 = 3'] * 5, '3') if k % 2 else g for k, g in enumerate(real(rr))]
+    out = {}
+    with torch.no_grad():
+        m2.call_evals(out, rs8, lambda sl: iter([batch_of(sl, V)]), dict(device=torch.device('cpu'), amp=nullcontext))
+    assert out['at_lines']['rounds'] == {'16': 4, '32': 4} and out['at_lines']['tcap'] == 32, out['at_lines']
+    print('ok per-turn H1 block (3 rounds per turn = 100%% at the toy cap; whole question 6 per row, no cap), turn_rounds_past_trained scripted (%s), call_evals reports real R_i %s' % (pt, out['at_lines']['rounds']))
+
+
+def B3AT_past(tr):
+    return M.B3AT.past_trained(tr)
+
+
 if __name__ == '__main__':
     torch.set_num_threads(2)
     for f in (test_paths_and_lesions, test_scripted_free_run, test_replies_only_through_read_texts, test_talker_sees_only_thoughts, test_teacher_forcing_caps_and_keep,
-              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_carry_stop, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names):
+              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_carry_stop, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names, test_call_rule_and_answer_gold, test_no_answer_traces, test_answer_unended_and_tape, test_per_turn_h1_and_past_trained):
         f()
     print('ALL OK')

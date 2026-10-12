@@ -32,7 +32,7 @@ from custom_io.tests import test_b3at_run as RUN
 from custom_io.tests import test_b3at_toy as TOY
 
 PRE_PC = ('test_writer', 'test_b3g2', 'test_reader_rule', 'test_b3g2_run', 'test_st1', 'test_talk_rounds', 'test_talker_report')       # AT-BUILD-SPEC sec. 6 item 6 (every B3G2 module)
-ALSO = ('test_g2_input', 'test_g8a')                    # not in the list, but both read code this build touched (g2 input path; configs / job / caps)
+ALSO = ('test_g2_input', 'test_g8a', 'test_no_plug', 'test_b3')       # not in the list, but they read code this build touched (g2 input path; configs / job / caps; the no-plug front; the B3 base)
 ROMAN = ('i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix')
 TOY_OUT = {}                                            # the one toy run feeds (iii) and (iv)
 
