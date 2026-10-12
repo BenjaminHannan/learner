@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti: B3 group 2 as G2Q at 3M, seed 400 = G2f plus the talker reading the question (Ben, project chat 11:30 PM ET 10-11: "that's fine the talker can see the question"; spec talker/G2Q-BUILD-SPEC-2026-10-12.md). Arm B3G2 = class B3G2(B3) with N1 no_slots, O1 learned ByteWriter, P1 no_place, V1 bytes, L1 as_written traces and ST1. cfg talk_question true: the writer's memory is the thinker's vectors plus the question's vectors (the reader's encoding of the question + one learned type vector q_type, +256 trained numbers); no tape, reply, copy key or feedback reaches the writer; the thinker still reads every tool reply; the answer is asked only after the last reply is read; writer_mlp 1.75. 4,023,558 trained (count with the switch on; G2f is 4,023,302). Runs after G2f's seed 400, once its marks are sealed; the big-run thread seals the Q-1 to Q-3 marks before G2Q trains.
+# Accum B3G2=32 is the same cautious guess as group 1 (rows up to 2,000 letters; Mac cost 0.212 s/step at 2,000 letters).
+# Code: the G2Q commit on branch claude/project-thread-emwjvn, installed as its own folder src-g2q (a copy of src-b3g2's layout with this commit's custom_io; never edit src-b3g2, which is G2f's code); the insert file names the folder. Every machine-read line below (ENV, MEM, the job lines) is unchanged.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aB3G2Q-3M-s400 --rung 3M --seed 400 --arms B3G2 --b2-extra '{"eg_embed": true, "talk_question": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=32

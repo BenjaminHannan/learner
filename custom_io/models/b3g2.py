@@ -4,8 +4,8 @@ Ledger / B3 keys, passed through). ST1 (custom_io/st1.py) runs on its checkpoint
 Everything B3 group 1 builds is built (any_round, gap_p, eg_embed, span_copy / span_idx / span_end / ans_drill, H1's 'settled' stop head, in B3's init order), then the heads the
 writer replaces are DELETED (so no other weight's init changes) and the ByteWriter is created LAST, tied to the reader's byte table (self.reader.tok): the op head,
 W_a / W_b, the span pointer (q_s, k_s, g_s, stop_s), the mode head, the word pointer and its keys (q_word, k_word, len_emb, ln_wc, k_wc) and the GEN pointer-generator
-(ln_t, q_cp, k_cp, g_cp, bias). e_s / e_e stay: they are the writer's learned layout terms on its copy keys (which string, how far from its end; judged allowed J2, J3).
-Writer cap WCAP = max(tool.LE, data.MAX_ANS) + 1 steps; cfg writer_inner (default d / 2), writer_mlp (2.0), writer_heads (4), writer_refine (1: Addendum B).
+(ln_t, q_cp, k_cp, g_cp, bias), and (G2f) e_s / e_e, Tool's learned copy-key layout terms (no copy keys are left to carry them). The writer has no copy path at all (ByteWriter copy=False).
+Writer cap WCAP = max(tool.LE, data.MAX_ANS) + 1 steps; cfg writer_inner (default d / 2), writer_mlp (2.0), writer_heads (4), writer_refine (accepted and ignored since G2f: nothing is fed back, so there is nothing to refine).
 
 The loop (B3.loop without number slots and word keys). After each round t >= 1 the writer is asked "call?" (mode 0): writing EOS first = no call; else the text
 is a call, split at its first space: the first word names a tool of the registry {name: fn(rest text) -> reply text}; the calculator registers add sub mul div mod min max
@@ -15,25 +15,32 @@ full tape is not run and is counted (tape_full). Lesions act inside the dispatch
 with a, b the two tokens (else rest, ''), so Tool.sources / replay / write_copy / opswap work unchanged; records [(t, call text, reply)] are the full text, for ST1.
 Teacher forcing (loss): B3's schedule (calls at rounds 1..L, or gap rounds with p gap_p); the gold calls are progtext.steps_of(row, as_written) as text (notes included);
 the tape holds the TOOL'S real reply (never the label's: a difference is counted `reply_mismatch`; a drill row carries its drawn strings). Rounds with a call: target = the
-call text; rounds after the row's last call: EOS only; gap rounds: no target. Context [prompt X; tape Xt] masked by the entries visible BEFORE the round's call; Z = every thinker
-vector; the call loss is the sum over rounds of the mean over rows of nll * w_row (1.0 with calls, w_noop without) over the rows that have a target. The per-round answer
+call text; rounds after the row's last call: EOS only; gap rounds: no target. Z = every thinker
+vector (the call is written from Z alone, call_pass / call_greedy; the prompt X and the tape Xt feed the thinker, never the writer); the call loss is the sum over rounds of the mean over rows of nll * w_row (1.0 with calls, w_noop without) over the rows that have a target. The per-round answer
 (H1's rule): at every round t > the row's last call round (every round for a row with no call; Z has then read the last reply) the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
 those rounds; rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); the answer has no feedback, so it is
 greedy decoding up to numerics (extra_evals reports how often the label agrees with real greedy decoding).
 Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every step,
 but at least the last, and answer in english from that. It literally is a math to language translator." So the ANSWER (mode 1: ans_pass, forced_answer, talk, ST1's sample_traces
-and trace_loss, every eval and lesion) is written from Z only, all thinker vectors of the round (the last round the run used, for talk): an empty context (one fully masked dummy
-position: gate 1, copy 0), so no prompt X, no tape Xt, no copy keys (e_s / e_e), no selective-read feedback; ByteWriter's math is unchanged. Only the CALL writer (mode 0) copies, from
-[prompt; visible tape] with the copy keys, as before. The 'nocopy' lesion is therefore a no-op for answers (it still forces the call writer's gate); the answer copy-mass counters
-(copy_share, extra['g2']['agreement']['copy_share']) are kept and report 0. The stop head is H1's on ln_z(control 1), detached, BCE on the 'settled' (or 'right')
+and trace_loss, every eval and lesion) is written from Z only, all thinker vectors of the round (the last round the run used, for talk), and since G2f (fix 2b) so is the CALL (mode 0:
+call_pass, call_greedy): both go through line_context(Z), an empty context (one fully masked dummy position), so no prompt X, no tape Xt, no prompt or tape ids, no copy keys, no
+selective-read feedback can reach a line. Nothing in B3G2 copies. (The T1-era copy paths in tool.py / b3.py / tool_h1.py belong to B3 group 1, a test step whose talker copies and
+which never shipped; they are dead code for B3G2, which overrides run, loop and loss, and are not touched.) The 'nocopy' lesion is a no-op for calls and answers (it stays in LESIONS so
+every readout keeps its key); the copy-mass counters (copy_share, extra['g2']['agreement']['copy_share']) are kept and report 0. The stop head is H1's on ln_z(control 1), detached, BCE on the 'settled' (or 'right')
 label; 'settled' only counts in a batch that ran the whole turn (stop_w, H1's rule). Rows before their last call round get label inputs "not right" (no answer pass is run there).
 Ben's rule 1: "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." The tape strings (entries, notes, drill strings, '?') are read by Gemma
 + the letter window exactly like the question (Tool.read_texts -> Ledger.eg_term, via FrozenEG.encode_texts, outside the question's memo), not by the letter window alone.
-Free run: writer.greedy on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop exactly as B3.run.
+Free run: the call is written from Z alone (call_greedy) on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop as B3.run, with two rules so that the answer is asked only after the thinker has read the last reply: the learned stop runs with quiet_last (no call is written at the last round) and a row cannot stop on a round where it wrote a call (stop_here gets each round's cround); a forced run (loops:K, each=None) settles: ONE more think pass, per row, only for the rows that wrote a call at the last round, so their Z reads that reply (every other row keeps its Z exactly).
 state = (Z, Xt, idt, vis); talk(state, batch) = writer.greedy(mode 1) from the state's Z alone (batch and the tape are not read), so a donor swap hands the donor's Z to the writer and the answer follows it. Lessons that act on Z:
-zero_state, shuffle_state; nocopy forces the call writer's gate (answers have no copy path); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
+zero_state, shuffle_state; nocopy is a no-op (no line has a copy path); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
 steps and no readable calls), no_trace (rows with steps and no usable trace), writer_over (a call or answer longer than WCAP gets no target), steps_over (more steps than tape),
-tape_entry_over."""
+tape_entry_over.
+Every-round reading (cfg talk_rounds, off by default; Ben: "maybe at every step, but at least the last"): 'last' (default) is everything above, bit-identical to the model without the switch.
+'all': the writer's memory for a line written after round t is the thinker's vectors of EVERY round 0..t of the run, each round's copy plus step_emb[min(r, n_loops - 1)] (so the writer can
+tell rounds apart), all visible: (t + 1) * n_z vectors (n_z = N_CTRL + N_REG = 17), no new parameters. A row that stopped keeps the memory of its stop round (the rest of the memory is masked).
+It applies to calls and answers, teacher forced and free, to talk, sample_traces / trace_loss and the lesions (zero_state / shuffle_state act on everything the writer reads). Still Z only.
+A settle pass (forced run) adds ONE more memory block for the rows that got it: that pass's Z plus step_emb[min(n, n_loops - 1)], visible in their mem_mask; rows without it do not see the block. Under the learned stop (quiet_last, the 'wrote' rule) mem_mask covers rounds 0..stop round of each row. mem_mask is set on every return path of run (loops, each, learned stop). Under 'last' none of this machinery exists.
+The state then carries (Z, Xt, idt, vis, mem, mem_mask); Z is still the last round's vectors (the stop head, the probe), mem / mem_mask are what the writer reads."""
 import math, random
 import numpy as np
 import torch
@@ -50,30 +57,36 @@ from custom_io.models.tool_h1 import CAP, KS, P_STOP, norm, settled
 from custom_io.models.writer import ByteWriter
 
 CKPT_FROM = 8           # rounds t >= 8 (the 9th on) are gradient-checkpointed, thinker and writer alike (H1's rule)
-DELETED = ('op_head', 'W_a', 'W_b', 'q_s', 'k_s', 'g_s', 'stop_s', 'mode_head', 'q_word', 'k_word', 'len_emb', 'ln_wc', 'k_wc', 'ln_t', 'q_cp', 'k_cp', 'g_cp', 'bias')
+DELETED = ('op_head', 'W_a', 'W_b', 'q_s', 'k_s', 'g_s', 'stop_s', 'mode_head', 'q_word', 'k_word', 'len_emb', 'ln_wc', 'k_wc', 'ln_t', 'q_cp', 'k_cp', 'g_cp', 'bias', 'e_s', 'e_e')      # G2f: e_s / e_e too (the copy-key layout terms; nothing copies)
 
 
 class B3G2(B3):
     OPERAND_CELLS = False
-    LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy']      # nowordc is gone: there are no word-content keys
+    LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'no_question']      # no_question: a no-op without talk_question (it keeps its key); nowordc is gone: there are no word-content keys
 
-    def __init__(self, vocab, as_written=True, writer_refine=1, writer_inner=None, writer_mlp=2.0, writer_heads=4, **kw):
+    def __init__(self, vocab, as_written=True, writer_refine=1, writer_inner=None, writer_mlp=2.0, writer_heads=4, talk_rounds='last', talk_question=False, **kw):
         super().__init__(vocab, **kw)
         assert self.any_round, 'b3g2 calls at any round: it needs any_round'
         assert not getattr(self, 'eg_thinker', False), 'b3g2: the thinker reads the question and every reply through the Gemma path (rules 1 and 2); eg_thinker would strip it'
         self.as_written, self.refine = bool(as_written), int(writer_refine)
+        assert talk_rounds in ('last', 'all'), talk_rounds
+        self.talk_rounds = talk_rounds
+        self.talk_question = bool(talk_question)
+        assert not self.talk_question or self.no_place, 'talk_question needs no_place: the reader\'s X would otherwise carry place codes the writer must not read'
         for name in DELETED:        # deleted after everything is built: no RNG draw changes, every other weight starts as in B3
             if hasattr(self, name):
                 delattr(self, name)
-        self.LESIONS = list(B3G2.LESIONS)
+        self.LESIONS = [l for l in B3G2.LESIONS if l != 'no_question' or self.talk_question]      # no_question is listed only with the switch on (an off model pays no extra eval pass)
         self.WCAP = max(LE, D.MAX_ANS) + 1
-        self.writer = ByteWriter(self.d, self.reader.tok, self.WCAP, dk=self.dk, heads=writer_heads, inner=writer_inner or self.d // 2, mlp=writer_mlp)      # created LAST
+        self.writer = ByteWriter(self.d, self.reader.tok, self.WCAP, dk=self.dk, heads=writer_heads, inner=writer_inner or self.d // 2, mlp=writer_mlp, copy=False)      # created LAST; G2f: no copy path
+        if self.talk_question:      # G2Q (talker/G2Q-BUILD-SPEC-2026-10-12.md): the ONE new parameter, created after every other module (no earlier init changes); added to every question position the writer reads
+            self.q_type = nn.Parameter(torch.randn(self.d) * 0.02)
         self.calc_names = tuple(NAMES[1:])
         self.tools = {n: (lambda rest, n=n: self.calculator(n, rest)) for n in self.calc_names}
         self.tools['note'] = lambda rest: ''
         self._tr = {}
         self.trace_stats = dict(rows=0, with_steps=0, calls=0, notes=0, unreadable=0, no_trace=0, over_tape=0, reply_mismatch=0, writer_over=0)
-        self.free_stats = dict(unended=0)
+        self.free_stats = dict(unended=0, answer_unended=0)
 
     # ---- the tools ----
     @staticmethod
@@ -216,47 +229,122 @@ class B3G2(B3):
         return sched, sched.max(1).values.clamp(min=0)
 
     # ---- the writer ----
-    def ckeys(self, N, T, le, mask):
-        """The writer's copy-key layout terms (e_s: which string, e_e: distance from its end) over the context, or None without span_idx."""
-        terms = self.layout_terms(N, T, le, mask, mask.device)
-        out = None
-        for x in terms:
-            out = x if out is None else out + x
-        return out
-
     @staticmethod
     def pick(x, sel, full):
         return x if full else x[sel]
 
-    def answer_context(self, Z):
-        """The answer's (empty) copy context for a state Z [B, n, d]: ONE dummy position, fully masked -> (Xc [B,1,d] zeros, cmask [B,1] False, cids [B,1] zeros). ByteWriter.head
-        then gives gate 1 and copy 0, ByteWriter.teacher gives no selective-read feedback, and nothing but Z reaches the answer. (A zero-length context also runs through head / run /
-        greedy, tests/test_reader_rule.py, but ByteWriter.teacher indexes position 0 of a row, so the one masked position is the shape used everywhere.)"""
+    def line_context(self, Z):
+        """The (empty) context of every line the writer writes, call or answer, for a state Z [B, n, d]: ONE dummy position, fully masked -> (Xc [B,1,d] zeros, cmask [B,1] False,
+        cids [B,1] zeros). The writer has no copy path (G2f), so this only fixes the shapes ByteWriter.teacher / forward / greedy take; nothing but Z reaches a line. (A zero-length
+        context also runs through head / run / greedy, tests/test_reader_rule.py, but ByteWriter.teacher indexes position 0 of a row, so the one masked position is the shape used everywhere.)"""
         B, dev = Z.shape[0], Z.device
         return torch.zeros(B, 1, self.d, dtype=Z.dtype, device=dev), torch.zeros(B, 1, dtype=torch.bool, device=dev), torch.zeros(B, 1, dtype=torch.long, device=dev)
 
+    answer_context = line_context       # the old name
+
+    def memory(self, hist, t):
+        """talk_rounds 'all': the writer's memory after round t -> [B, (t + 1) * n_z, d], the thinker's vectors of rounds 0..t, each round r plus step_emb[min(r, n_loops - 1)] (hist: the rounds' Z so far)."""
+        return torch.cat([hist[r] + self.step_emb.weight[min(r, self.n_loops - 1)].to(hist[r].dtype) for r in range(t + 1)], 1)
+
+    def typed_question(self, X, xm, lesion=None):
+        """G2Q: the question part of the writer's memory = the reader's encoding of the question (the tensor the thinker's question memo reads) + q_type -> (Xq [B,T,d], qm [B,T]), or None
+        when talk_question is off. Padding stays masked (qm = the reader's mask). lesion 'no_question': the whole question mask is zero from the start of the run, so EVERY writer line of the
+        run (each call and the answer, every B3AT turn) reads no question."""
+        if not self.talk_question:
+            return None
+        return (X + self.q_type.to(X.dtype), torch.zeros_like(xm) if lesion == 'no_question' else xm)
+
+    @staticmethod
+    def with_q(Z, zm, q):
+        """The writer's memory for thoughts Z [n,m,d] (mask zm, None = all visible) plus the question part q = (Xq, qm) (None: nothing is added, bit-identical to the model without the switch)."""
+        zm = B3G2.zmask(Z, zm)
+        if q is None:
+            return Z, zm
+        return torch.cat([Z, q[0].to(Z.dtype)], 1), torch.cat([zm, q[1]], 1)
+
+    def state_q(self, state):
+        """The question part (Xq, qm) a state carries (its last two entries under talk_question), else None."""
+        if not self.talk_question:
+            return None
+        Xq, qm = state[-2:]
+        assert torch.is_tensor(Xq) and Xq.dim() == 3 and Xq.is_floating_point() and torch.is_tensor(qm) and qm.dtype == torch.bool and qm.shape == Xq.shape[:2], 'a talk_question state ends with (Xq [B, Lq, d] float, qm [B, Lq] bool)'
+        return (Xq, qm)
+
+    def swap_thoughts(self, donor_state, cur_state):
+        """Donor swaps under G2Q: the DONOR's thoughts with the CURRENT row's own question (the shuffle_state rule: thoughts swapped, own question kept). Off: the donor state, unchanged."""
+        q = self.state_q(donor_state)
+        return donor_state if q is None else tuple(donor_state[:-2]) + tuple(self.state_q(cur_state))
+
+    def writer_view(self, state):
+        """-> (what the writer reads, its mask or None) for a state: Z (all visible) under 'last'; the state's memory and its mask under 'all'."""
+        if self.talk_rounds == 'all' and len(state) > 4 + 2 * self.talk_question:
+            return state[4], state[5]
+        return state[0], None
+
+    def writer_input(self, state):
+        """-> (Z, mask) the writer is called with for a state: writer_view (the thoughts) plus, under talk_question, the state's own question part. Off: exactly writer_view."""
+        Z, zm = self.writer_view(state)
+        q = self.state_q(state)
+        return (Z, zm) if q is None else self.with_q(Z, zm, q)
+
+    @staticmethod
+    def zmask(Z, zm=None):
+        return torch.ones(Z.shape[:2], dtype=torch.bool, device=Z.device) if zm is None else zm
+
+    def lesioned(self, st, name):
+        """zero_state / shuffle_state on a state: they act on everything the writer reads (Z, and under 'all' the memory with its mask)."""
+        q = self.state_q(st)
+        if q is not None:       # G2Q: the lesions scramble the thoughts only; every row keeps its OWN question (no_question masks it)
+            core = self.lesioned_core(st[:-2], name)
+            return core + ((q[0], torch.zeros_like(q[1])) if name == 'no_question' else tuple(q))
+        return self.lesioned_core(st, name)
+
+    def lesioned_core(self, st, name):
+        if name == 'no_question':
+            return tuple(st)
+        f = (lambda x: torch.zeros_like(x)) if name == 'zero_state' else (lambda x: x.roll(1, 0))
+        out = (f(st[0]),) + tuple(st[1:4])
+        if len(st) > 4:
+            out += (f(st[4]), st[5].roll(1, 0) if name == 'shuffle_state' else st[5])        # a row's mask travels with its memory
+        return out
+
+    def call_pass(self, Z, inp, tgt, zm=None):
+        """The call asked of the writer (mode 0), teacher forced, from the thinker's vectors Z ALONE (Ben's rule 2, fix 2b) -> (logp [B,L,V], nll [B], right [B]). Mirrors ans_pass: Z
+        [B, n, d] = every thinker vector of the round (all True in the mask); no prompt X, tape Xt, prompt ids, tape ids, copy keys or feedback can reach it (fb is all zero)."""
+        B = Z.shape[0]
+        Xc, cmask, cids = self.line_context(Z)
+        logp, _, _ = self.writer(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.zeros(B, dtype=torch.long, device=Z.device), inp,
+                                 torch.zeros(B, inp.shape[1], 1, device=Z.device), False, None, 0)
+        return logp, ByteWriter.nll(logp, tgt), ByteWriter.right(logp, tgt)
+
+    def call_greedy(self, Z, temperature=0.0, generator=None, zm=None):
+        """The call written free run (mode 0) from Z alone, as talk does the answer -> (list of B id lists without EOS, ended [B] bool)."""
+        Xc, cmask, cids = self.line_context(Z)
+        return self.writer.greedy(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.zeros(Z.shape[0], dtype=torch.long, device=Z.device),
+                                  temperature=temperature, generator=generator)
+
     def answer_teacher(self, Z, ids):
-        """ByteWriter.teacher over the answers' ids with the empty answer context (fb is all zero)."""
-        _, cmask, cids = self.answer_context(Z)
+        """ByteWriter.teacher over the lines' ids (answers, calls) with the empty context (fb is all zero)."""
+        _, cmask, cids = self.line_context(Z)
         return ByteWriter.teacher(ids, cids, cmask, self.WCAP, BOS, EOS)
 
-    def ans_pass(self, Z, inp, tgt, fb):
+    def ans_pass(self, Z, inp, tgt, fb, zm=None):
         """The answer asked of the writer (mode 1), teacher forced, from the thinker's vectors Z ALONE (Ben's rule 2) -> (nll [B], right [B], copy mass over the non-EOS target bytes
         [B] (always 0: the answer has no copy path), their count [B]). Z [B, n, d] = every thinker vector of the round (all True in the mask); no prompt, no tape, no copy keys, no
         feedback (fb is all zero; no refine passes: they would only feed that zero back)."""
         B = Z.shape[0]
-        Xc, cmask, cids = self.answer_context(Z)
-        logp, gate, _ = self.writer(Z, torch.ones(B, Z.shape[1], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(B, dtype=torch.long, device=Z.device), inp, fb, False, None, 0)
+        Xc, cmask, cids = self.line_context(Z)
+        logp, gate, _ = self.writer(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.ones(B, dtype=torch.long, device=Z.device), inp, fb, False, None, 0)
         tm = (tgt >= 0) & (tgt != EOS)
         return ByteWriter.nll(logp, tgt), ByteWriter.right(logp, tgt), ((1 - gate.detach()) * tm).sum(1), tm.sum(1)
 
     def forced_answer(self, state, batch, answers, nocopy=False):
         """Teacher-forced answer pass on a state (Z, Xt, idt, vis) -> ans_pass's four [B] tensors (evals). Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just
         transcribes the thoughts of the thinker." The answer is written from the thinker's state Z only: `batch` (the prompt), the state's tape and `nocopy` are accepted for the
-        callers' sake and not read (nocopy is a no-op for answers: there is no copy path to lesion)."""
-        Z = state[0]
+        callers' sake and not read (nocopy is a no-op: there is no copy path to lesion)."""
+        Z, zm = self.writer_input(state)
         te = self.answer_teacher(Z, [self.vocab.encode(a) for a in answers])
-        return self.ans_pass(Z, te['inp'], te['tgt'], te['fb'])
+        return self.ans_pass(Z, te['inp'], te['tgt'], te['fb'], zm)
 
     # ---- the loop ----
     def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False, quiet_last=False, settle=False):
@@ -265,6 +353,7 @@ class B3G2(B3):
         running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: a row that wrote a call at the last round gets one more think pass that reads it before Z is returned (per row: every other row keeps its Z exactly); temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
+        q = self.typed_question(X, xm, lesion)        # G2Q: the writer also reads the row's OWN question (None when the switch is off)
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
         valid, S0 = self.num_memory(X, ns, ne)
         Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)
@@ -286,11 +375,11 @@ class B3G2(B3):
         nk = [0] * B
         calls, recs, full_ev = [[] for _ in range(B)], [[] for _ in range(B)], []
         cround = torch.full((B, self.tape), FAR, dtype=torch.long, device=dev)
-        nocopy = lesion == 'nocopy'
         lcall, hits = 0.0, dict(call_hit=0, call_n=0, eos_hit=0, eos_n=0)
         crec = []
         kvs_of = None
-        pids = batch['prompt_ids']
+        hist, M, mm = [], None, None          # talk_rounds 'all': every round's Z so far, and the memory after the current round
+        allr = self.talk_rounds == 'all'
         for t in range(n):
             ts = min(t, self.n_loops - 1)
             vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
@@ -300,8 +389,10 @@ class B3G2(B3):
             Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
                 Z = torch.cat([Z[:, :2], torch.zeros_like(Z[:, 2:N_CTRL]), Z[:, N_CTRL:]], 1)
+            if allr:
+                hist.append(Z)
+                M = self.memory(hist, t)
             if t >= 1 and not (quiet_last and t == n - 1):
-                Xc, cmask, cids = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis], 1), torch.cat([pids, idt], 1)
                 if tf:
                     at = sched == t
                     call, kk = at.any(1), at.int().argmax(1)
@@ -312,14 +403,11 @@ class B3G2(B3):
                         full = len(sel) == B
                         si = torch.tensor(sel, device=dev)
                         pk = lambda x: self.pick(x, si, full)
-                        te = ByteWriter.teacher([tgt[i] for i in sel], pk(cids), pk(cmask), self.WCAP, BOS, EOS)
-                        ck = self.ckeys(Xc.shape[1], T, le, pk(cmask))
-                        Zs = pk(Z)
-                        logp, gate, _ = self.writer(Zs, torch.ones(Zs.shape[:2], dtype=torch.bool, device=dev), pk(Xc), pk(cmask), pk(cids),
-                                                    torch.zeros(len(sel), dtype=torch.long, device=dev), te['inp'], te['fb'], nocopy, ck, self.refine)
-                        nll = ByteWriter.nll(logp, te['tgt'])
+                        Zs, zs_m = self.with_q(pk(M if allr else Z), None, None if q is None else (pk(q[0]), pk(q[1])))        # G2Q: + this row's own question
+                        te = self.answer_teacher(Zs, [tgt[i] for i in sel])
+                        logp, nll, ok = self.call_pass(Zs, te['inp'], te['tgt'], *(() if q is None else (zs_m,)))
                         lcall = lcall + (nll * pk(w_row)).sum() / B
-                        ok = ByteWriter.right(logp, te['tgt']).tolist()
+                        ok = ok.tolist()
                         for j, i in enumerate(sel):
                             if cl[i]:
                                 hits['call_n'] += 1; hits['call_hit'] += ok[j]
@@ -342,11 +430,8 @@ class B3G2(B3):
                         full = len(sel) == B
                         si = torch.tensor(sel, device=dev)
                         pk = lambda x: self.pick(x, si, full)
-                        cm = pk(cmask)
-                        Zs = pk(Z)
-                        outs, ended = self.writer.greedy(Zs, torch.ones(Zs.shape[:2], dtype=torch.bool, device=dev), pk(Xc), cm, pk(cids),
-                                                         torch.zeros(len(sel), dtype=torch.long, device=dev), nocopy=nocopy,
-                                                         ckeys=self.ckeys(Xc.shape[1], T, le, cm), temperature=temperature, generator=generator)
+                        Zg, zg_m = self.with_q(pk(M if allr else Z), None, None if q is None else (pk(q[0]), pk(q[1])))        # G2Q: + this row's own question
+                        outs, ended = self.call_greedy(Zg, temperature, generator, **({} if q is None else dict(zm=zg_m)))
                         new_k, placed = {}, []
                         for j, i in enumerate(sel):
                             if not bool(ended[j]):
@@ -377,7 +462,7 @@ class B3G2(B3):
                                 mt[:, sl] = torch.where(sl_[:, None], mn, mt[:, sl])
                                 shown[sl_, k] = True
                             kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, cround=cround)):
+            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, hist=hist, cround=cround)):
                 break
         if settle and n > 0:
             wrote = (cround == n - 1).any(1)                                    # per row: only a row that wrote a call at the last round has a reply its Z has not read
@@ -386,16 +471,25 @@ class B3G2(B3):
                 kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
                 Zn = self.think(Z + self.step_emb.weight[min(n, self.n_loops - 1)], kvs, kvx, torch.cat([valid, vis, km], 1), n)
                 Z = torch.where(wrote[:, None, None], Zn, Z)                    # every other row keeps its Z exactly: a row's loops:K result never depends on its batch mates
+                if allr:            # the settle pass is one more memory block (its Z plus its step_emb), visible to the rows that got it only
+                    M = torch.cat([M, Zn + self.step_emb.weight[min(n, self.n_loops - 1)].to(Zn.dtype)], 1)
+                    mm = torch.ones(B, M.shape[1], dtype=torch.bool, device=dev)
+                    mm[:, -Zn.shape[1]:] = wrote[:, None]
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         out = dict(Z=Z, X=X, xm=xm, tape=(Xt, idt, vis), calls=calls, records=recs, le=le, K=K, tape_full=full_ev, cround=cround)
+        if allr:
+            out['mem'] = M if n else self.memory([Z], 0)            # every round's vectors (+ the settle block); loops:0: the initial state
+            out['mem_mask'] = mm if mm is not None else torch.ones(out['mem'].shape[:2], dtype=torch.bool, device=dev)       # set on every return path; a learned-stop run() replaces it per row
+        if q is not None:
+            out['q'] = q
         if tf:
             out.update(lcall=lcall, crec=crec, **hits)
         return out
 
     # ---- the run ----
     def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None, each=None, force=None, temperature=0.0, generator=None):
-        """loops / each: a forced run (the stop head ignored). Else the learned stop (B3.run): the batch runs until every row has stopped; each row's state (Z, tape) and calls are
-        the ones at its own stop round. -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
+        """loops / each: a forced run (the stop head ignored; with loops and no each it settles, see loop). Else the learned stop (B3.run): the batch runs (quiet_last: no call at the
+        last round) until every row has stopped, a row never stopping on a round where it wrote a call; each row's state (Z, tape) and calls are the ones at its own stop round. -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
         assert gold is None and force is None and not rounds, 'b3g2 trains through loss(); teacher forcing is internal'
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         if loops is not None or each is not None:
@@ -430,11 +524,15 @@ class B3G2(B3):
         for i, t in o['tape_full']:
             full[i] |= t < u[i]
         self.last_rounds, self.last_tape_full = u, full
+        extra = {}
+        if 'mem' in o:          # talk_rounds 'all': a row that stopped keeps the memory of rounds 0..its stop round (used = rounds run)
+            nz = o['Z'].shape[1]
+            extra['mem_mask'] = (torch.arange(o['mem'].shape[1], device=dev)[None, :] // nz) < used[:, None]
         return dict(o, Z=Z, tape=(Xt, idt, vis), calls=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['calls'])],
-                    records=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['records'])], rounds=u, tape_full_rows=full)
+                    records=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['records'])], rounds=u, tape_full_rows=full, **extra)
 
     def state_of(self, o):
-        return (o['Z'],) + o['tape']
+        return (o['Z'],) + o['tape'] + ((o['mem'], o['mem_mask']) if 'mem' in o else ()) + (tuple(o['q']) if 'q' in o else ())      # G2Q: + (Xq, qm), the row's own question, last
 
     # ---- the talker ----
     def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None):
@@ -442,11 +540,13 @@ class B3G2(B3):
         step, but at least the last, and answer in english from that. It literally is a math to language translator." The writer is asked for the answer (mode 1) from the state's Z
         ALONE (all thinker vectors of the state's round: the last round the run used): no prompt, no tape, no copy keys, no selective-read feedback (an empty context: gate 1, copy 0).
         `batch` (the current prompt) is accepted so donor swaps and every caller keep their signature, and is not read: the donor's Z decides the answer. The 'nocopy' lesion is
-        a no-op here (nothing to copy); it still acts on the calls. return_modes: also a mode per row (always 2: one writer, no modes)."""
-        Z = state[0]
-        Xc, cmask, cids = self.answer_context(Z)
-        outs, _ = self.writer.greedy(Z, torch.ones(Z.shape[:2], dtype=torch.bool, device=Z.device), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
-                                     temperature=temperature, generator=generator)
+        a no-op (nothing copies, here or in the calls). return_modes: also a mode per row (always 2: one writer, no modes). An answer with no EOS within WCAP is cut at the cap: such rows are
+        counted in free_stats['answer_unended'] (the answer side of free_unended; reported by g2_evals, not gated)."""
+        Z, zm = self.writer_input(state)
+        Xc, cmask, cids = self.line_context(Z)
+        outs, ended = self.writer.greedy(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
+                                         temperature=temperature, generator=generator)
+        self.free_stats['answer_unended'] += int((~ended.bool()).sum())        # rows whose answer had no EOS within WCAP (cut at the cap): counted, reported (extra['g2']), not gated
         out = [self.vocab.decode(o) for o in outs]
         return (out, [2] * len(out)) if return_modes else out
 
@@ -457,11 +557,11 @@ class B3G2(B3):
         name, arg = self.check_lesion(lesion)
         if name in ('noexec', 'opswap', 'nocopy'):
             return self.talk(self.state(batch, lesion=name), batch, lesion=name)
+        if name == 'no_question':       # the whole run reads no question (calls and answer), not just the final line
+            return self.talk(self.state(batch, lesion=name), batch)
         st = self.state(batch, arg if name == 'loops' else None)
-        if name == 'zero_state':
-            st = (torch.zeros_like(st[0]),) + tuple(st[1:])
-        elif name == 'shuffle_state':
-            st = (st[0].roll(1, 0),) + tuple(st[1:])
+        if name in ('zero_state', 'shuffle_state'):
+            st = self.lesioned(st, name)
         return self.talk(st, batch)
 
     # ---- ST1 ----
@@ -491,7 +591,7 @@ class B3G2(B3):
         per = []
 
         def keep_round(t, st):
-            per.append((t, st['Z']))
+            per.append((t, st['Z'], self.memory(st['hist'], t) if self.talk_rounds == 'all' else None))        # 'all': the memory after round t, rounds 0..t
             return False
 
         o = self.loop(batch, n, g=g, sched=sched, each=keep_round)
@@ -499,7 +599,7 @@ class B3G2(B3):
         acc, cnt = torch.zeros(B, device=dev), torch.zeros(B, device=dev)
         right = torch.zeros(len(per), B, dtype=torch.bool, device=dev)
         zs, share = [], None
-        for t, Z in per:
+        for t, Z, M in per:
             zs.append(self.ln_z(Z[:, 1].detach()))          # the stop head reads the state detached: its loss trains ln_z and the head, never the loop
             ok = (t > last) | ~g['has']                                        # a call row is asked "answer" only at rounds t > its last call round (Z has then read the last reply); no-call rows at every round
             if not ok.any():
@@ -507,7 +607,8 @@ class B3G2(B3):
             si = ok.nonzero()[:, 0]
             full = bool(ok.all())
             pk = lambda x: x if full else x[si]
-            args = (pk(Z), pk(te['inp']), pk(te['tgt']), pk(te['fb']))
+            zq, zqm = self.with_q(pk(Z if M is None else M), None, None if o.get('q') is None else (pk(o['q'][0]), pk(o['q'][1])))        # G2Q: + the row's own question
+            args = (zq, pk(te['inp']), pk(te['tgt']), pk(te['fb'])) + (() if o.get('q') is None else (zqm,))
             if self.training and torch.is_grad_enabled() and t >= CKPT_FROM:
                 nll, rt, sn, sd = checkpoint(self.ans_pass, *args, use_reentrant=False)
             else:
@@ -583,6 +684,10 @@ class B3G2(B3):
         out.update(super().extra_evals(ctx))
         out['g2'] = self.g2_evals(ctx)
         out['g2']['counters_at_start'] = out.pop('counters_at_start')
+        if 'talker' in out['g2']:
+            out['talker'] = out['g2'].pop('talker')
+        if 'talker_error' in out['g2']:        # the talker readout failed (g2_evals caught it): kept in g2 and repeated beside extra['talker'] (absent) so the failure is seen
+            out['talker_error'] = out['g2']['talker_error']
         return out
 
     @torch.no_grad()
@@ -598,7 +703,7 @@ class B3G2(B3):
         self.eval()
         dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
         out = dict(as_written=self.as_written, writer=dict(params=self.writer.size(), wcap=self.WCAP, refine=self.refine, inner=self.writer.inner, d=self.d),
-                   train_counts=dict(trace=dict(self.trace_stats), drill=dict(self.drill_stats), plan=dict(self.plan_stats)), free_unended=self.free_stats['unended'])
+                   train_counts=dict(trace=dict(self.trace_stats), drill=dict(self.drill_stats), plan=dict(self.plan_stats)))
         rows, seen = [], set()
         srcs = [_dev_rows(ctx['data'], sp, None) for sp in DEV_SPLITS] + ([_dev_rows(ctx['big'], 'in_dist', None)] if ctx.get('big') else [])
         for rs in srcs:
@@ -644,12 +749,15 @@ class B3G2(B3):
         sample = subsample(rows, 600)
         cells = dict(both=0, tf_only=0, greedy_only=0, neither=0)
         sn = sd = 0.0
+        runs = {}           # the talker checks (R1, R2) reuse these free runs: the same 600 dev rows, no second pass
         for b in batches(sample):
             with amp():
                 o = self.run(b)
                 st = self.state_of(o)
                 ans = self.talk(st, b)
                 nll, rt, a, c = self.forced_answer(st, b, [r['answer'] for r in b['rows']])
+            for i, r in enumerate(b['rows']):
+                runs[r['id']] = dict(records=[tuple(x) for x in o['records'][i]], answer=ans[i])
             sn, sd = sn + float(a.sum()), sd + float(c.sum())
             for i, r in enumerate(b['rows']):
                 tf, gr = bool(rt[i]), norm(ans[i]) == norm(r['answer'])
@@ -657,5 +765,13 @@ class B3G2(B3):
         n = max(len(sample), 1)
         out['agreement'] = dict(n=len(sample), agree=100 * (cells['both'] + cells['neither']) / n, cells=cells, tf_right=100 * (cells['both'] + cells['tf_only']) / n,
                                 greedy_right=100 * (cells['both'] + cells['greedy_only']) / n, copy_share=sn / max(sd, 1.0), copy_bytes=sd)
-        self.train(was)
+        try:
+            from custom_io import talker_report
+            out['talker'] = talker_report.talker_evals(self, sample, bs, dev, amp, runs=runs)        # R1 / R2 (G2f); also copied to extra['talker']
+        except Exception:        # a reporting line must never cost the run its other readouts: the traceback is recorded and everything else reaches RESULT.json
+            import traceback
+            out['talker_error'] = traceback.format_exc()
+        finally:
+            self.train(was)
+        out['free_unended'], out['answer_unended'] = self.free_stats['unended'], self.free_stats['answer_unended']        # read after this eval's own run / talk passes
         return out

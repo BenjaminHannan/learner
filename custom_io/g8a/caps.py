@@ -149,7 +149,7 @@ def apply(caps):
     pp.N_NUM, pp.N_RES, pp.W_MAX = caps['n_num'], caps['n_res'], caps['w_max']
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
-    for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3', 'custom_io.models.b3g2', 'custom_io.english', 'custom_io.models.plain_lm'):
+    for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.models.tool_h1', 'custom_io.models.b3', 'custom_io.models.b3g2', 'custom_io.models.b3at', 'custom_io.english', 'custom_io.models.plain_lm'):
         # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
         # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
         m = importlib.import_module(name)

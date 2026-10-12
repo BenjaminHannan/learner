@@ -26,11 +26,12 @@ from custom_io import analyze as A
 RUNGS = ['3M', '10M', '30M']
 ARMS = ['B2', 'PT', 'LLM', 'PUB']
 B3G2 = 'B3G2'
+AT = 'AT'                       # the agent-turn talker (model b3at, class B3AT(B3G2)): reported like B3G2, never a mark
 B3 = 'B3'                       # B3 group 1 (B3-GROUP1-BUILD): loaded and reported apart (b3_report); the B2 marks above never read it
 RUNG_RUNGS = ['3M', '10M', '30M', '100M']
 SEEDS = [400, 401, 402, 403, 404, 405]
 LOCAL = re.compile(r'^8a-(3M|10M|30M|100M)-s(\d+)$')
-VAST = re.compile(r'^8a-(3M|10M|30M|100M)-s(\d+)-(B2|PT|LLM|PUB|B3|B3G2)$')
+VAST = re.compile(r'^8a-(3M|10M|30M|100M)-s(\d+)-(B2|PT|LLM|PUB|B3|B3G2|AT)$')
 
 
 def load(dirs):
@@ -45,7 +46,7 @@ def load(dirs):
             if 'RESULT.json' not in fs:
                 continue
             key = None
-            if (base in ARMS or base in (B3, B3G2)) and LOCAL.match(parent):
+            if (base in ARMS or base in (B3, B3G2, AT)) and LOCAL.match(parent):
                 m = LOCAL.match(parent)
                 key = (m.group(1), base, int(m.group(2)))
             elif VAST.match(base):
@@ -151,6 +152,7 @@ def analyze(runs, boxes=None, seeds=SEEDS):
     rep['caps'] = caps
     rep['b3'] = b3_report(runs, seeds)
     rep['b3g2'] = b3_report(runs, seeds, B3G2)
+    rep['at'] = b3_report(runs, seeds, AT)
     five = [m['ok'] for m in marks]
     verdict = 'PASS' if five == [True] * len(five) else ('FAIL' if False in five else 'incomplete')
     return dict(verdict=verdict, marks=marks, proved_wrong=wrong, stop_rules=stop, reported=rep, seeds=list(seeds))
@@ -179,7 +181,7 @@ def b3_report(runs, seeds, arm=B3):
                     e = agg['by_length'].setdefault(sp, {}).setdefault(bk, [0, 0.0])
                     e[0] += v['n']
                     e[1] += v['n'] * v['exact'] / 100
-        if arm == B3G2:     # group 2's sealed items (models/b3g2.py g2_evals and Tool's / H1's evals), per seed: B3G2-1 to B3G2-6
+        if arm in (B3G2, AT):     # group 2's sealed items (models/b3g2.py g2_evals and Tool's / H1's evals), per seed: B3G2-1 to B3G2-6
             agg['g2'] = {s: dict(
                 pooled5=A.P5(r, None), chain5=A.g(r, 'chain5', 'intact', 'exact'), leak_loops0=A.g(r, 'chain5', 'loops:0', 'exact'), donor=A.g(r, 'lesions', 'donor', 'in_dist'),
                 loops32=A.g(r, 'chain5', 'loops:32', 'exact'), tool_off_program=A.g(r, 'extra', 'noexec', 'program_families'), tool_off_n=A.g(r, 'extra', 'noexec', 'n'),
@@ -187,7 +189,8 @@ def b3_report(runs, seeds, arm=B3):
                 writer=A.g(r, 'extra', 'g2', 'writer'), train_counts=A.g(r, 'extra', 'g2', 'train_counts'), call_acc=A.g(r, 'extra', 'op_acc'), call_text=A.g(r, 'extra', 'call_text'),
                 write_copy=A.g(r, 'extra', 'write_copy_u'), opswap=A.g(r, 'extra', 'opswap'), cap_hits=r.get('cap_hits'), h1_chain5=A.g(r, 'extra', 'h1', 'chain5'),
                 steps_unparsed=A.g(r, 'cap_hits', 'steps_unparsed'), no_trace=A.g(r, 'cap_hits', 'no_trace'), writer_over=A.g(r, 'cap_hits', 'writer_over'),
-                tape_entry_over=A.g(r, 'cap_hits', 'tape_entry_over')) for s, r in rs}
+                tape_entry_over=A.g(r, 'cap_hits', 'tape_entry_over'),
+                turn_cap=A.g(r, 'cap_hits', 'reported', 'turn_cap'), turn_rounds_capped=A.g(r, 'cap_hits', 'reported', 'turn_rounds_capped')) for s, r in rs}
         agg['by_length'] = {sp: {bk: dict(n=n_, exact=100 * c / n_) for bk, (n_, c) in sorted(d.items())} for sp, d in agg['by_length'].items()}
         out[rung] = agg
     return out
@@ -210,8 +213,9 @@ def show(res):
 
 
 def show_b3(res):
-    for rung, d in (res['reported'].get('b3g2') or {}).items():
-        print(f"  B3G2 {rung}: pooled-5 {fmt(d['pooled5']['mean'])}  per seed: " + json.dumps({s: {k: v.get(k) for k in ('chain5', 'leak_loops0', 'tool_off_program', 'steps_unparsed', 'no_trace', 'writer_over')} for s, v in d['g2'].items()}, default=str))
+    for arm_name, key in (('B3G2', 'b3g2'), ('AT', 'at')):
+        for rung, d in (res['reported'].get(key) or {}).items():
+            print(f"  {arm_name} {rung}: pooled-5 {fmt(d['pooled5']['mean'])}  per seed: " + json.dumps({s: {k: v.get(k) for k in ('chain5', 'leak_loops0', 'tool_off_program', 'steps_unparsed', 'no_trace', 'writer_over', 'turn_cap', 'turn_rounds_capped')} for s, v in d['g2'].items()}, default=str))
     for rung, d in (res['reported'].get('b3') or {}).items():
         print(f"  B3 {rung}: pooled-5 {fmt(d['pooled5']['mean'])}  tape-full rows {d['tape_full_rows']}  calls/row {d['calls_per_row']}  call rounds {d['call_rounds']}")
         for sp, bs in d['by_length'].items():

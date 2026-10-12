@@ -242,16 +242,17 @@ def test_d_configs():
     c30 = C.b3_cfg('30M', {'noplug': True}, 2)
     n30 = C.check_b3('30M', c30, 2)
     assert (c30['d'], c30['n_heads'], c30['blocks'], c30['eg_pre'], c30['eg_adapter'], c30['eg_embed']) == (512, 8, 9, True, 'none', True) and 'noplug' not in c30
-    assert abs(n30 / 30e6 - 1) <= 0.05 and abs(c30['mlp'] - 1.253) < 0.01, (n30, c30['mlp'])
+    # re-pinned at the merge with the G2f talker (calls and answers by the copy-free byte writer: fewer writer params): 30M noplug mlp 1.253 -> 1.323 (measured 1.32324)
+    assert abs(n30 / 30e6 - 1) <= 0.05 and abs(c30['mlp'] - 1.323) < 0.01, (n30, c30['mlp'])
     today = C.n('b3g2', C.b3_cfg('100M', None, 2))
-    assert today == 102_641_692
+    assert today == 102_306_203          # re-pinned at the merge: 102,641,692 -> 102,306,203 (G2f dropped the copy path: fewer writer params)
     rows_ = []
     for bl in (None, 26, 30, 34, 37):
         c = C.b3_cfg('100M', dict({'noplug': True}, **({'blocks': bl} if bl else {})), 2)
         cnt = C.check_b3('100M', c, 2)
         assert c['blocks'] == (bl or 21) and abs(cnt / today - 1) <= 0.001, (bl, cnt)
         if bl is None:
-            assert abs(c['mlp'] - 4.835) < 0.005
+            assert abs(c['mlp'] - 4.835) < 0.005      # unchanged by the merge (measured 4.83496)
         bd = C.noplug_breakdown('b3g2', c)
         assert bd['ln_eg'] == 1024 and bd['total'] == cnt
         pc = C.plain_cfg('100M', C.b2_cfg('100M', {'noplug': True, **({'blocks': bl} if bl else {})}))
@@ -276,11 +277,11 @@ def test_d_configs():
 
 # ---- (e) every 3M / 10M config and count unchanged (values taken at 24b0a92112) ----
 def test_e_3m_10m_unchanged():
-    want = {('3M', 1): 4_041_685, ('3M', 2): 4_081_871, ('10M', 1): 9_834_705, ('10M', 2): 9_930_403, ('30M', 1): 29_791_421, ('30M', 2): 30_059_983}
+    want = {('3M', 1): 4_041_685, ('3M', 2): 4_023_302, ('10M', 1): 9_834_705, ('10M', 2): 9_824_546, ('30M', 1): 29_791_421, ('30M', 2): 29_855_694}      # group 2 re-pinned at the merge: 4,081,871 -> 4,023,302, 9,930,403 -> 9,824,546, 30,059,983 -> 29,855,694 (G2f dropped the copy path: fewer writer params; measured at 959c82cd77 before the no-plug merge, identical after)
     for (rung, g), w in want.items():
         c = C.b3_cfg(rung, None, g)
         assert C.n('b3g2' if g == 2 else 'b3', c) == w and 'eg_pre' not in c and c['d'] == (256 if rung != '30M' else 384), (rung, g)
-    assert C.n('b3g2', C.b3_cfg('100M', None, 2)) == 102_641_692
+    assert C.n('b3g2', C.b3_cfg('100M', None, 2)) == 102_306_203      # 102,641,692 -> 102,306,203, see test_d
     for rung, (b2, pt) in {'3M': (4_022_353, 4_022_440), '10M': (9_815_373, 9_814_442), '30M': (29_716_793, 29_556_480)}.items():
         cfgs, cnt = C.sizes(rung, {'eg_embed': True})
         assert (cnt['B2'], cnt['PT']) == (b2, pt) and not any('eg_pre' in c for c in cfgs.values()), rung
@@ -297,9 +298,10 @@ def test_e_3m_10m_unchanged():
     m.train()
     loss, _ = m.loss(batch_of(rows(8), V))
     # pinned at the group 2 head this front is merged onto (9a5203b21b: answers from Z only, asked after the last reply is read; 19.3092 at fix 1
-    # 24b0a92112, 20.5764 at 54d8e6c6d8): measured the same on both sides of the merge
-    assert abs(loss.item() - 25.28279685974121) < 1e-3, loss.item()
-    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 25.2828 as before')
+    # 24b0a92112, 20.5764 at 54d8e6c6d8): measured the same on both sides of that merge. Re-pinned at the merge with the G2f talker: 25.28279685974121 -> 25.89443016052246
+    # (calls are written from Z alone by the copy-free writer: other init draws and a different call loss; the answer schedule is 9a5203b21b's)
+    assert abs(loss.item() - 25.89443016052246) < 1e-3, loss.item()
+    print('ok (e): every 3M / 10M / 30M plug config and count unchanged; the plugged B3G2 loss is 25.8944 (G2f talker)')
 
 
 # ---- (f) g8a/speed.py --noplug builds the cfgs and lr job.py --noplug gives train.py; configs --noplug defaults to group 2 (CPU, nothing is timed) ----
