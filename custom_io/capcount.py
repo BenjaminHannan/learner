@@ -17,13 +17,19 @@ A nonzero count means a row was cut, skipped or reduced to an answer-only row, a
   gen_answer_over      a GEN answer longer than GEN_MAX letters (the register targets are cut)
   operand_cells_over   a calculator operand (tool.py, the outside calculator) with more than CELLS - 1 = 10 characters: cell_ids cuts it
   tape_entry_over      a calculator tape entry (tool.py) longer than LE characters
+  turns_over           agent turns (b3at): a row that wants a 17th line, or a tool line on a full tape (16 entries); the row ends with the answer ''
+  unended              agent turns (b3at, free run): a line with no EOS within WCAP steps; the row answers '' and ends
+  turn_rounds_over     agent turns (b3at): a (row, turn) that ran more than TCAP = 32 rounds (only a forced loops:K with K > 32 can)
   plain_target_over    a plain_tf_steps / plain_lm target longer than CAP + 12 characters (the PTS arm, all_steps: any all-steps target longer than CAP = caps plain_target; it is never cut)
+Reported, not faults (REPORTED; kept out of 'total'): turn_cap (b3at: a turn that hit TCAP with the stop head never firing) and turn_rounds_capped (b3at: rows whose per-turn
+rounds R were cut by TOTAL_CAP in a training batch).
 Counts are per distinct prompt / row id where the code caches (ledger.spans, progparse.row_targets), per call elsewhere.
 """
 from collections import Counter
 
 HITS = Counter()
-NAMES = ('prompt_over_max', 'answer_over_max', 'numbers_over', 'number_clipped', 'words_over', 'steps_over', 'steps_unparsed', 'gen_answer_over', 'plain_target_over', 'operand_cells_over', 'tape_entry_over', 'writer_over', 'no_trace')
+NAMES = ('prompt_over_max', 'answer_over_max', 'numbers_over', 'number_clipped', 'words_over', 'steps_over', 'steps_unparsed', 'gen_answer_over', 'plain_target_over', 'operand_cells_over', 'tape_entry_over', 'writer_over', 'no_trace', 'turns_over', 'unended', 'turn_rounds_over')
+REPORTED = ('turn_cap', 'turn_rounds_capped')
 
 
 def hit(name, n=1):
@@ -33,6 +39,7 @@ def hit(name, n=1):
 def snapshot():
     d = {k: HITS.get(k, 0) for k in NAMES}
     d['total'] = sum(d.values())
+    d.update({k: HITS.get(k, 0) for k in REPORTED})
     return d
 
 

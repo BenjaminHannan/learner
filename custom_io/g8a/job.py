@@ -54,9 +54,9 @@ def _locked(path, wait=30, stale=6 * 3600):
 
 def caps_dir(a, pdir):
     """Where caps.json and caps_report.json live. The pool dir is shared by g2c3, fc100 and B3 (same key), and get_caps returns a cached caps.json without looking at
-    --caps-file; so PTS (caps_b3s.json) and B3G2 (caps_b3g2.json: le 95) keep theirs in a sibling dir of the pool, and neither reads nor overwrites the pool's. The
+    --caps-file; so PTS (caps_b3s.json), B3G2 and AT (caps_b3g2.json: le 95) keep theirs in a sibling dir of the pool, and neither reads nor overwrites the pool's. The
     pool itself (train.jsonl, dev/) is still shared. Any other arm: the pool dir, as before."""
-    arm = C.B3G2_ARM if C.B3G2_ARM in a.arms else C.PTS_ARM if C.PTS_ARM in a.arms else None
+    arm = C.B3G2_ARM if C.B3G2_ARM in a.arms else C.AT_ARM if C.AT_ARM in a.arms else C.PTS_ARM if C.PTS_ARM in a.arms else None
     if arm is None:
         return pdir
     d = pdir.rstrip('/\\') + '.caps-' + arm
@@ -74,13 +74,13 @@ def get_caps(a, pdir):
     train_f = os.path.join(pdir, 'train.jsonl')
     if pts:
         assert os.path.exists(pts_caps) and a.scale == 1.0, 'PTS needs g8a/caps_b3s.json and --scale 1.0'
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.PTS_ARM}, 'PTS pins caps_b3s.json for the whole job: it cannot run beside the B3 / B3G2 arms (their caps are their own)'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.PTS_ARM}, 'PTS pins caps_b3s.json for the whole job: it cannot run beside the B3 / B3G2 / AT arms (their caps are their own)'
         assert not a.caps_file or json.load(open(a.caps_file)) == json.load(open(pts_caps)), '--caps-file is not caps_b3s.json: PTS pins caps_b3s.json for the whole job'
-    g2 = C.B3G2_ARM in a.arms           # B3G2 pins caps_b3g2.json (caps_b3 + le 95): a different tape width than the pool's cached caps.json (caps_b3, le 68)
+    g2 = C.B3G2_ARM in a.arms or C.AT_ARM in a.arms           # B3G2 and AT (the agent-turn model) pin caps_b3g2.json (caps_b3 + le 95): a different tape width than the pool's cached caps.json (caps_b3, le 68)
     g2_caps = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_b3g2.json')
     if g2:
-        assert set(a.arms) == {C.B3G2_ARM}, 'B3G2 pins caps_b3g2.json for the whole job: it runs alone'
-        assert a.scale == 1.0 and a.caps_file and json.load(open(a.caps_file)) == json.load(open(g2_caps)), 'B3G2 needs --caps-file g8a/caps_b3g2.json (le 95) and --scale 1.0'
+        assert len(a.arms) == 1, 'B3G2 / AT pin caps_b3g2.json for the whole job: the arm runs alone'
+        assert a.scale == 1.0 and a.caps_file and json.load(open(a.caps_file)) == json.load(open(g2_caps)), 'B3G2 / AT need --caps-file g8a/caps_b3g2.json (le 95) and --scale 1.0'
     if os.path.exists(f):
         if not pts:
             if not g2 or json.load(open(f)) == json.load(open(g2_caps)):
@@ -200,7 +200,7 @@ def main(argv=None):
     ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')
-    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ALL_ARMS), help='B3 (B3-GROUP1-BUILD): the b3 model at the rung, config from configs.b3_cfg; --b2-extra adds switches to it')
+    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ALL_ARMS), help='B3 (B3-GROUP1-BUILD): the b3 model at the rung, config from configs.b3_cfg; --b2-extra adds switches to it; B3G2 = model b3g2, AT = model b3at (the agent-turn model, configs.b3at_cfg)')
     ap.add_argument('--max-ans', type=int, default=P.HYGIENE_ANS, help='data hygiene limit on answer chars for the pool builder (NOT a model cap: model caps come from caps.json)')
     ap.add_argument('--b2-extra', default='{}', help='JSON reader switches for B2 (stage 2b pick), e.g. {"eg_embed": true}')
     ap.add_argument('--lr-scale', type=float, default=1.0)
@@ -223,7 +223,7 @@ def main(argv=None):
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
     if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
-        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM, C.PTS_ARM} and a.public == 'none', 'with eg_embed only the B2, PT, PTS and B3 arms run (plain_lm and the public model have no Gemma front)'
+        assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM, C.AT_ARM, C.PTS_ARM} and a.public == 'none', 'with eg_embed only the B2, PT, PTS, B3, B3G2 and AT arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
     tag = '8a-%s-s%d' % (a.rung, a.seed)
@@ -251,15 +251,15 @@ def main(argv=None):
     caps = get_caps(a, pdir)
     CP.apply(caps)                                  # in this process too, so the parameter counts below include the sized position / place tables
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
-    old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM)]
+    old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM, C.AT_ARM)]
     cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
     if C.PTS_ARM in a.arms:
         assert b2_extra.get('eg_embed'), 'PTS: --b2-extra must carry eg_embed (the G2C3 front, as its PT control)'
         C.add_pts(a.rung, cfgs, counts, b2_extra)
     if old:
         C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
-    for arm_, g_ in ((C.B3_ARM, 1), (C.B3G2_ARM, 2)):
-        if arm_ in a.arms:          # B3 / B3G2 (arm 'B3G2' = model b3g2, caps g8a/caps_b3g2.json): n_loops (and any extra switch) come in through --b2-extra; the count is checked against its band
+    for arm_, g_ in ((C.B3_ARM, 1), (C.B3G2_ARM, 2), (C.AT_ARM, 3)):
+        if arm_ in a.arms:          # B3 / B3G2 / AT (arm 'B3G2' = model b3g2, arm 'AT' = model b3at, caps g8a/caps_b3g2.json): n_loops (and any extra switch) come in through --b2-extra; the count is checked against its band
             cfgs[arm_] = C.b3_cfg(a.rung, b2_extra, g_)
             counts[arm_] = C.check_b3(a.rung, cfgs[arm_], g_)
             sz = C.b3_sizes(cfgs[arm_], C.MODEL_OF[arm_])

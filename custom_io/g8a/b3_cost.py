@@ -18,6 +18,7 @@ SW = dict(label='settled', span_copy=True, span_idx=True, span_end=True, ans_dri
 
 
 SW2 = dict(SW, no_slots=True, no_place=True, bytes=True, as_written=True)      # B3 group 2 (model b3g2): --b3g2
+SWAT = dict(SW2, gap_p=0)      # B3AT, the agent-turn model (arm AT): --b3at; gap_p is ignored by b3at and 0 in its cfg
 
 
 def make_rows(text, letters, n, seed=0):
@@ -32,15 +33,16 @@ def make_rows(text, letters, n, seed=0):
     return rows
 
 
-def one(label, caps, letters, batch, steps, text, g2=False):
+def one(label, caps, letters, batch, steps, text, g2=False, at=False):
     from custom_io.tests.test_b3 import StubEG
     c = CP.apply(dict(caps))
     from custom_io.models import ledger as L
-    cfg = dict(SMALL, n_loops=max(8, c['n_res'] + 1), **(SW2 if g2 else SW))
+    cfg = dict(SMALL, n_loops=max(8, c['n_res'] + 1), **(SWAT if at else SW2 if g2 else SW))
     torch.manual_seed(0)
     from custom_io.data import ByteVocab
+    g2 = g2 or at       # b3at is group 2's bytes / as_written family
     V = ByteVocab() if g2 else CharVocab.build([])
-    m = build('b3g2' if g2 else 'b3', V, **cfg)
+    m = build('b3at' if at else 'b3g2' if g2 else 'b3', V, **cfg)
     m._eg = [StubEG()]
     rows = make_rows(text, letters, batch)
     b = collate([Dataset(rows, V, strict=False)[i] for i in range(batch)])
@@ -73,14 +75,15 @@ def main(argv=None):
     ap.add_argument('--steps', type=int, default=1)
     ap.add_argument('--text')
     ap.add_argument('--b3g2', action='store_true', help='cost of B3 group 2 (model b3g2: the per-round answer pass and the call writer included)')
+    ap.add_argument('--b3at', action='store_true', help='cost of B3AT (model b3at, arm AT: a talker line per turn, up to 32 rounds per turn)')
     ap.add_argument('--caps', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json'))
     ap.add_argument('--out')
     a = ap.parse_args(argv)
     caps = json.load(open(a.caps))
     text = open(a.text).read() if a.text else synth_text(a.batch * a.letters + 4000)
-    short = one('280 letters', caps, caps['max_prompt'], a.batch, a.steps, text, a.b3g2)
+    short = one('280 letters', caps, caps['max_prompt'], a.batch, a.steps, text, a.b3g2, a.b3at)
     f = a.letters / caps['max_prompt']
-    long = one(f'{a.letters} letters', dict(caps, max_prompt=a.letters, w_max=int(caps['w_max'] * f), n_num=int(caps['n_num'] * f)), a.letters, a.batch, a.steps, text, a.b3g2)
+    long = one(f'{a.letters} letters', dict(caps, max_prompt=a.letters, w_max=int(caps['w_max'] * f), n_num=int(caps['n_num'] * f)), a.letters, a.batch, a.steps, text, a.b3g2, a.b3at)
     print('\nconfig         letters  number slots (padded/filled)  tape  thinker keys/row  step s')
     for r in (short, long):
         print(f"{r['config']:<13} {r['letters_per_row']:>8} {r['number_slots_padded']:>14}/{r['number_slots_filled']:<10} {r['tape_positions']:>6} {r['thinker_keys_per_row']:>14} {r['step_s']:>9}")
