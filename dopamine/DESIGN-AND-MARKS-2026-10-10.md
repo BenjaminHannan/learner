@@ -457,3 +457,42 @@ not there at all, and does behaviour (agreement across thinking lengths) carry m
   "Behaviour beats state" is judged at the largest size; "proved wrong" needs every shippable probe's 16k-to-32k gain
   under 0.01. Smoke (600 rows) cost 0.15 s per question for all 5 runs, so about 80 minutes per seed at 2 threads; run on
   the cloud box (free, idle; the Mac's cores are on the Game world runs tonight).
+
+**B16. Outside opinions on helping and the motivator race (problem 4), checks, and two sealed tests (2:45 AM ET 10-12).**
+Source: `/mnt/project-files/api-opinions/answers/{4-proactive-motivator-fable,4-proactive-motivator-opus,judge-4-proactive-motivator}.md`.
+Hypotheses only; checked here:
+- "Right" for an extra means the model's own answer equals the tool's value of that exact candidate formula
+  (`dopamine/p1_sessions.py` do_cache: `correct = ans == value[p]`). The formula and range come from the builder, so every
+  wrong extra is a value error, by construction. Shown (code).
+- "The edge run logged 10.00% for every kind": shown to be a logging artefact. The `mix` event logs the even share used
+  to draw the 4x pool; the motivator's actual picks are in `motivator_pick` and are uneven (s200 edge day 7: ABS 254,
+  cell arithmetic 206, MOD 154, IF 4 of 1,024).
+- Free re-score of the race with a steadier statistic (suggested; post-hoc, cannot change B7/B8): mean sealed near over
+  each run's last 3 nights (`dm5_curve` in each `analysis/RESULT.json`). s200: rule 40.48, even 43.89, edge 47.22,
+  progress 46.98. s201: rule 51.98, even 50.79, edge 52.14, progress 53.81. Progress - even = +3.10 / +3.02, edge - even =
+  +3.33 / +1.35. A possible reason (suggested): the progress drive spent about 4% of practice on COUNTIF and 0-0.4% on IF,
+  kinds with no training-row form, where even practice spends 10% each.
+
+**P3 (one change from P2): the extra's value comes from the sheet tool instead of the model's own answer** (the model
+still decides whether and what to add; the tool computes it; so a wanted extra is always right). Legal under deployable
+autonomy: the model calls an outside tool. Same models, heads and rules as P2; HELPER's V learns from the new rewards.
+New sealed sessions, person seed 93004 (400), with P2's HELPER rerun on them for the paired comparison.
+| Mark (each seed) | Pass | Proved wrong |
+|---|---|---|
+| P3-1 helps | HELPER-TOOL - NONE <= -0.10, interval upper end < 0 | interval lower end > -0.05 on either seed |
+| P3-2 beats P2 | HELPER-TOOL - P2 HELPER <= -0.15, interval upper end < 0 | (reported) |
+P3 PASSES when both pass on both seeds. Reading fixed now: a pass shows the helping machinery works once unasked work is
+checked, so the shipped form is "compute or check unasked work with a tool before offering it"; it does not show the
+model's own skill is enough.
+
+**M2 (confirm, 6 paired runs): does the "progress" motivator beat even practice?** One change: practice chosen by the
+progress drive (motivator.py `--drive progress`, constants unchanged) instead of even shares (`--drive even`).
+- Pairs: parents T1SDR s200 and s201, each with run seeds 300, 301 and 302 (6 pairs). R1's s200/s201 runs are excluded:
+  they produced the hypothesis. Fixed horizon: exactly 8 nights (`--nights 8`), sheet tool, v7 constants.
+- Statistic: mean sealed near (sheet.v2, 420 questions) over nights 6, 7 and 8, per run; difference progress - even per pair.
+- PASS: mean difference >= +3.0 points, paired t 95% interval lower end > 0, and positive in at least 5 of 6 pairs.
+  PROVED WRONG: mean difference <= 0. Between: no difference. DM3 (old skills) reported for every run.
+- Reported: practice share on COUNTIF, IF and MOD per arm (the suggested mechanism), and edge is not run (one change).
+- If PASS: the progress motivator is proposed (via the coordinator) to replace domain mode's hand rule, per Ben's
+  "substitute if better"; if proved wrong, the 3M motivator work stops until 10M.
+- Where: Ben's Mac (CPU jobs Mac first), 12 runs.
