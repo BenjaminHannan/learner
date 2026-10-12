@@ -637,12 +637,12 @@ def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEE
     return rows, stats
 
 
-def build_l8(rows_out, parent, probe, eval_rows):
-    build_ring_rows(rows_out, parent, probe, eval_rows, L8_SEED, L8_TAG, dict(widen_subst=L8_SUBST_DEPTH), print_subst_ring)
+def build_l8(rows_out, parent, probe, eval_rows, draw_cap=MODE_DRAW_CAP):
+    build_ring_rows(rows_out, parent, probe, eval_rows, L8_SEED, L8_TAG, dict(widen_subst=L8_SUBST_DEPTH), print_subst_ring, draw_cap)
 
 
-def build_l9(rows_out, parent, probe, eval_rows):
-    build_ring_rows(rows_out, parent, probe, eval_rows, L9_SEED, L9_TAG, dict(widen_join_whole=True), print_whole_join_ring)
+def build_l9(rows_out, parent, probe, eval_rows, draw_cap=MODE_DRAW_CAP):
+    build_ring_rows(rows_out, parent, probe, eval_rows, L9_SEED, L9_TAG, dict(widen_join_whole=True), print_whole_join_ring, draw_cap)
 
 
 def print_subst_ring(w):
@@ -656,13 +656,13 @@ def print_whole_join_ring(w):
     jw = w['join_whole']
     print('whole piece of each help example:')
     for prompt, piece in jw['wholes'].items():
-        print(f'    {prompt!r} -> {piece!r}')
+        print(f'    {prompt!r} -> {piece!r}' + ('' if piece else '  (no whole piece: left out of host and Q choices)'))
     print(f'whole join ring: {len(jw["accepted"])} accepted join kinds (form:symbol), tries {jw["tries"]}; kept per kind:')
     for k, n in jw['kept'].items():
         print(f'    {k!r}: {n}' + ('' if k in jw['accepted'] else '  (not accepted)'))
 
 
-def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, print_ring):
+def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, print_ring, draw_cap=MODE_DRAW_CAP):
     if os.path.exists(rows_out):
         raise SystemExit(f'refusing to overwrite {rows_out}')
     import torch
@@ -683,7 +683,7 @@ def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, p
             missed.append(path)
     if missed:
         print('NOT excluded (unreadable): ' + ', '.join(missed))
-    rows, st = build_l8_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag)
+    rows, st = build_l8_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag, draw_cap=draw_cap)
     w = st['widen']
     print(f'excluded prompts: {len(exclude)}; draws {st["draws"]}; widen kept {st["widen_kept"]} sha {st["widen_sha256"][:12]}')
     print(f'widen tries {w["tries"]}; per kind {w["per_kind"]}')
@@ -710,7 +710,7 @@ def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, p
     props = [far_props(r['prompt']) for r in rows]
     for k in ('grid_rows', 'max_range_cells', 'max_row_ref', 'two_kinds'):
         print(f'  share {k}{">=5" if k != "two_kinds" else ""}: ' +
-              ', '.join(f'{c} {100.0 * sum(p[k] for p, r in zip(props, rows) if r["split"] == c) / PER_CELL:.1f}%' for c in MODE_CELLS) +
+              ', '.join(f'{c} {100.0 * sum(p[k] for p, r in zip(props, rows) if r["split"] == c) / max(sum(r["split"] == c for r in rows), 1):.1f}%' for c in MODE_CELLS) +
               f', all {100.0 * sum(p[k] for p in props) / max(len(rows), 1):.1f}%')
     if not st['complete']:
         raise SystemExit(1)
@@ -1094,6 +1094,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
     a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'train'])
     a.add_argument('--rows-out', default=None, help='build-l8 / build-l9: where to write the rows (required; refuses to overwrite)')
+    a.add_argument('--draw-cap', type=int, default=MODE_DRAW_CAP, help='build-l8 / build-l9: stop after this many draws')
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
@@ -1129,10 +1130,10 @@ def main(argv=None):
         build_l4()
     elif a.stage == 'build-l8':
         assert a.rows_out, 'build-l8 needs --rows-out'
-        build_l8(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS)
+        build_l8(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS, a.draw_cap)
     elif a.stage == 'build-l9':
         assert a.rows_out, 'build-l9 needs --rows-out'
-        build_l9(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS)
+        build_l9(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS, a.draw_cap)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work

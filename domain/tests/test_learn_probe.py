@@ -495,3 +495,13 @@ def test_build_l9_small(monkeypatch):
     assert len(two) == 4 and all(r['ring'] == 4 and L.far_props(r['prompt'])['two_kinds'] for r in two)   # joined rows: the whole-join ring only
     assert all(r['ring'] in (1, 2, 3) and not L.far_props(r['prompt'])['two_kinds'] for r in rows if r['cell'] == 'mode-one')
     assert all(r['id'].startswith('learn9-') and r['kind'] in SP.SCORED for r in rows)
+
+
+def test_draw_cap_flag_reaches_the_build(monkeypatch):
+    seen = {}
+    for stage, fn in (('build-l8', 'build_l8'), ('build-l9', 'build_l9')):
+        monkeypatch.setattr(L, fn, lambda *a, _s=stage: seen.__setitem__(_s, a[-1]))
+        L.main([stage, '--rows-out', 'x', '--draw-cap', '123'])
+        assert seen[stage] == 123
+        L.main([stage, '--rows-out', 'x'])
+        assert seen[stage] == L.MODE_DRAW_CAP
