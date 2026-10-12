@@ -130,6 +130,14 @@ def written_calls(records):
     return out
 
 
+OP_BUCKETS = (('1-2', 0, 2), ('3-4', 3, 4), ('5-8', 5, 8), ('9+', 9, 10 ** 9))     # R1 by_operand_len: the gold call's LONGER operand, in bytes as written
+
+
+def op_bucket(g):
+    n = max(len(str(g['a']).encode('utf-8')), len(str(g['b']).encode('utf-8')))
+    return next(name for name, lo, hi in OP_BUCKETS if lo <= n <= hi)
+
+
 def _tally(d, key, name, ops, line):
     c = d.setdefault(key, dict(n_gold_calls=0, name=0, operands=0, line=0))
     c['n_gold_calls'] += 1
@@ -167,10 +175,13 @@ def call_lines(model, rows, runs=None, batch_size=64, device=None, amp=None, per
     the k-th written calculator line is compared with the k-th gold calculator call (notes left out of both). Per gold call: `name` (first word = the gold op), `operands` (both operand
     tokens equal the gold a and b as strings), `line` (the whole text equals the gold line). A gold call with no k-th written line is a miss on all three.
     -> dict(rows (rows with gold calls), n_gold_calls, n_written_calc_lines (lines written on those rows), extra_written (written calculator lines beyond the row's gold count, summed),
-    name / operands / line (counts of gold calls), name_pct / operands_pct / line_pct, pooled=..., by_family={family: same keys}) (+ per_row {id: [[name, operands, line] per gold call]} with per_row=True).
+    name / operands / line (counts of gold calls), name_pct / operands_pct / line_pct, pooled=..., by_family={family: same keys}, by_operand_len={'1-2' | '3-4' | '5-8' | '9+': the same counts
+    over the gold calls whose longer operand has that many bytes as written; reported only, added 10-12 so operand spelling shows by length}) (+ per_row {id: [[name, operands, line] per gold
+    call]} with per_row=True).
     runs: free_runs(...)'s result, to share one pass with R2."""
     runs = free_runs(model, rows, batch_size, device, amp) if runs is None else runs
     tot, fam, per = dict(n_gold_calls=0, name=0, operands=0, line=0), {}, {}
+    dig = {name: dict(n_gold_calls=0, name=0, operands=0, line=0) for name, _, _ in OP_BUCKETS}
     n_rows = n_wr = extra = 0
     fx, fr, fw = {}, {}, {}
     for r in rows:
@@ -185,14 +196,16 @@ def call_lines(model, rows, runs=None, batch_size=64, device=None, amp=None, per
         f = r['family']
         fr[f], fw[f], fx[f] = fr.get(f, 0) + 1, fw.get(f, 0) + nw, fx.get(f, 0) + e
         per[r['id']] = [list(x) for x in res]
-        for nm, op, ln in res:
+        for g, (nm, op, ln) in zip(gold, res):
             _tally(fam, f, nm, op, ln)
+            _tally(dig, op_bucket(g), nm, op, ln)
             for k, v in zip(('name', 'operands', 'line'), (nm, op, ln)):
                 tot[k] += v
             tot['n_gold_calls'] += 1
     out = _pct(tot)
     out.update(rows=n_rows, n_written_calc_lines=n_wr, extra_written=extra,
-               by_family={f: dict(_pct(c), rows=fr[f], n_written_calc_lines=fw[f], extra_written=fx[f]) for f, c in sorted(fam.items())})
+               by_family={f: dict(_pct(c), rows=fr[f], n_written_calc_lines=fw[f], extra_written=fx[f]) for f, c in sorted(fam.items())},
+               by_operand_len={k: _pct(c) for k, c in dig.items()})
     out['pooled'] = {k: out[k] for k in ('rows', 'n_gold_calls', 'n_written_calc_lines', 'extra_written', 'name', 'operands', 'line', 'name_pct', 'operands_pct', 'line_pct')}
     if per_row:
         out['per_row'] = per
@@ -402,6 +415,8 @@ def format_calls(c):
          f'  name {_p(c["name_pct"])}  operands {_p(c["operands_pct"])}  line {_p(c["line_pct"])}']
     for f, v in c['by_family'].items():
         L.append(f'  {f:22s} calls {v["n_gold_calls"]:5d}  name {_f(v["name_pct"], 5)}  operands {_f(v["operands_pct"], 5)}  line {_f(v["line_pct"], 5)}  extra {v["extra_written"]}')
+    for k, v in c.get('by_operand_len', {}).items():
+        L.append(f'  longer operand {k:7s} bytes calls {v["n_gold_calls"]:5d}  operands {_f(v["operands_pct"], 5)}  line {_f(v["line_pct"], 5)}')
     return '\n'.join(L)
 
 

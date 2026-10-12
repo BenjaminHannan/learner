@@ -111,9 +111,22 @@ def test_r1_scripted():
     fam = c['by_family']
     assert set(fam) == {'chain_ops', 'chain_story2'} and fam['chain_story2']['n_gold_calls'] == 4 and fam['chain_ops']['n_gold_calls'] == 6, {f: v['n_gold_calls'] for f, v in fam.items()}
     assert sum(v['line'] for v in fam.values()) == c['line'] and sum(v['extra_written'] for v in fam.values()) == 1
+    dl = c['by_operand_len']
+    assert list(dl) == [k for k, _, _ in R.OP_BUCKETS] and sum(v['n_gold_calls'] for v in dl.values()) == 10
+    assert tuple(sum(v[k] for v in dl.values()) for k in ('name', 'operands', 'line')) == (6, 5, 5), dl
+    want = {}
+    for r in rs:
+        if r['id'] in c['per_row']:
+            for g, x in zip(R.gold_calls(r), c['per_row'][r['id']]):
+                w = want.setdefault(R.op_bucket(g), [0, 0])
+                w[0], w[1] = w[0] + 1, w[1] + x[1]
+    assert {k: [v['n_gold_calls'], v['operands']] for k, v in dl.items() if v['n_gold_calls']} == want, (dl, want)
+    assert R.op_bucket(dict(a='7', b='12')) == '1-2' and R.op_bucket(dict(a='123', b='4')) == '3-4' and R.op_bucket(dict(a='12345678', b='1')) == '5-8' and R.op_bucket(dict(a='1', b='123456789012')) == '9+'
+    assert 'longer operand' in R.format_calls(c)
     # a model with no gold rows in the file -> zeros, not a crash
     z = R.call_lines(m, [rs[1], rs[5]], runs=runs)
     assert z['rows'] == 0 and z['n_gold_calls'] == 0 and z['line_pct'] is None and z['name_pct'] is None and z['operands_pct'] is None and z['by_family'] == {}
+    assert all(v['n_gold_calls'] == 0 and v['operands_pct'] is None for v in z['by_operand_len'].values())
     json.dumps(c)
     # R2 with the same runs: operands per class, answers from the real (untrained) writer are only counted
     cs = R.copyable_split(m, rs, runs=runs, lines=c)
