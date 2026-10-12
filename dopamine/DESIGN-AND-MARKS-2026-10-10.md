@@ -548,3 +548,9 @@ self-quiz rows rank the real practice tries of the next day (the drive's mix) wi
   this pair (G-ceiling, G-transfer) reruns on the first 10M checkpoint.
 - Where: the cloud box after P3 (free; the Mac is on M2 and the Game world runs). About 0.03 s per question, so about
   5 minutes per day per seed.
+- G-transfer code details fixed before the full run (4:05 AM ET 10-12; no mark changed): `dopamine/g_transfer.py` sha256
+  d7751963850... D0's G head reads reader mean + pooled state only (899 inputs, `d0_guess.py` line 214), and that is the
+  head that gave 0.543 / 0.597, so the baseline is that head; the self-quiz head is S900 (adds the talker confidence) as
+  sealed. Like-for-like pairs are reported (self-quiz on 899 inputs; walk-forward on 900); if either pair would flip the
+  verdict, the result is called "not clean" and both are given. Smoke (s200, days 2-3, 300 questions): 0.041 s per
+  self-quiz question, so about 5.5 minutes per day; overlap checks with the quiz and every logged prompt passed.
