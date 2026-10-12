@@ -30,3 +30,12 @@ Anything else: no verdict, reported as is. No hair-miss allowance (this is a con
   T0 parent to T = 1, then learn at T = 1), with its own marks.
 - Proved wrong: the parent's odds carry view information at T0; the T0 starting point stays, and the judge's temperature point
   (T0 ~20 shrinks each night's policy step) is the next thing to test.
+
+## A17b (2:12 AM ET 10-12, still before any GW-B number): also read view dependence at T = 1
+A note from the same API thread (Fable 5.1): at T0 ~20 a mean KL below 0.05 nats is nearly guaranteed by the temperature itself,
+so B-1's KL part could pass for the wrong reason. B-1 is unchanged; reported next to it, not marks:
+- mean KL(q(.|view) || q-bar) at T = 1 on the same views and log-probs (`mean_kl_t1`);
+- how often the top word is the same across views (`top_share`, the most common top word's share; `top_counts` per word).
+Reading: low view dependence at T0 but high at T = 1 means "the temperature hides the view", not "a word-length habit". Both T0
+values are the Before files' own (s200 19.691660968372133, s201 20.368329685910396; the cloud GW-P8 runs reproduce them exactly).
+Code: game/blind.py (fit), `game.score --arm blind`; views = runs-local/gwp8-s20X/moves/quiz_night_0.jsonl.gz of the cloud runs.
