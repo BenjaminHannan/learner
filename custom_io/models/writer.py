@@ -141,18 +141,24 @@ class ByteWriter(nn.Module):
         return v.any(1) & ((logp.argmax(-1) == tgt) | ~v).all(1)
 
     @torch.no_grad()
-    def greedy(self, Z, zmask, Xc, cmask, cids, mode, max_len=None, nocopy=False, ckeys=None, temperature=0.0, generator=None, bos=1, eos=2):
+    def greedy(self, Z, zmask, Xc, cmask, cids, mode, max_len=None, nocopy=False, ckeys=None, temperature=0.0, generator=None, bos=1, eos=2, record=False):
         """Free run, batched (temperature 0 = argmax, else samples the mixture). -> (list of B id lists without EOS, ended [B] bool: wrote EOS
-        within max_len steps, default cap). Feedback for step i is (1 - gate) * attn of step i-1."""
+        within max_len steps, default cap). Feedback for step i is (1 - gate) * attn of step i-1.
+        record=True: a third result, per row a list with one dict(copied, src, share) per WRITTEN byte (EOS excluded). Definition: for the chosen byte c at a step, p(c) = gate *
+        p_vocab(c) + (1 - gate) * copy(c) (see head: 1 - gate is the COPY weight, gate the generate weight). copy part = (1 - gate) * (attention mass on visible context positions
+        holding c); generate part = p(c) - copy part (= gate * p_vocab(c)); share = copy part / p(c) (the model's untempered p, also when sampling); copied = copy part >= generate
+        part; src = argmax of the attention over the visible positions holding c (None if there is none). record=False runs exactly the code it always did."""
         B, N = cids.shape
         T = min(max_len or self.cap, self.cap)
         inp = torch.full((B, 1), bos, dtype=torch.long, device=cids.device)
         fb = torch.zeros(B, 1, N, device=cids.device)
         done = torch.zeros(B, dtype=torch.bool, device=cids.device)
         out = [[] for _ in range(B)]
+        recs = [[] for _ in range(B)]
         for i in range(T):
             p, gate, a = self.run(Z, zmask, Xc, cmask, cids, mode, inp, fb, nocopy, ckeys)
             p = p[:, -1]
+            pr = p
             if temperature > 0:
                 nxt = torch.multinomial(p.pow(1 / temperature) + 1e-12, 1, generator=generator)[:, 0]
             else:
@@ -160,9 +166,15 @@ class ByteWriter(nn.Module):
             nxt = torch.where(done, torch.full_like(nxt, eos), nxt)
             for b in (~done & (nxt != eos)).nonzero()[:, 0].tolist():
                 out[b].append(int(nxt[b]))
+                if record:
+                    hold = (cids[b] == nxt[b]) & cmask[b]
+                    ab = a[b, -1]
+                    cp = float((1 - gate[b, -1]) * ab[hold].sum()) if hold.any() else 0.0
+                    pc = float(pr[b, nxt[b]])
+                    recs[b].append(dict(copied=cp >= pc - cp, src=int(ab.masked_fill(~hold, -1.0).argmax()) if hold.any() else None, share=cp / pc if pc > 0 else 0.0))
             done = done | (nxt == eos)
             if done.all():
                 break
             inp = torch.cat([inp, nxt[:, None]], 1)
             fb = torch.cat([fb, ((1 - gate[:, -1:]) * a[:, -1])[:, None]], 1)
-        return out, done
+        return (out, done, recs) if record else (out, done)

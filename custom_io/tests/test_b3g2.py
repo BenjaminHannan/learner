@@ -293,7 +293,7 @@ def test_st1_interface():
     gen = torch.Generator().manual_seed(0)
     m.eval()
     tr = m.sample_traces(b, 1.0, gen)
-    assert len(tr) == 8 and all(set(t) == {'calls', 'answer'} and isinstance(t['answer'], str) for t in tr)
+    assert len(tr) == 8 and all(set(t) == {'calls', 'answer', 'copies'} and isinstance(t['answer'], str) for t in tr)
     gen2 = torch.Generator().manual_seed(0)
     assert m.sample_traces(b, 1.0, gen2) == tr                       # drawn only from the generator
     tr = [dict(calls=[('add 3 4', '7'), ('sub 7 2', '5')], answer='5')] * 4 + [dict(calls=[], answer='x')] * 4
