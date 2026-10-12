@@ -1,0 +1,319 @@
+{
+ "n_sealed_sessions": 400,
+ "model_seed": 201,
+ "ckpt": "/mnt/project-files/domain-mode/runs/sheet-s201-v7/night_8/checkpoint.pt",
+ "smoke": false,
+ "mean_L": 3.035,
+ "n_training_days": 20,
+ "constants": {
+  "HIDDEN": 32,
+  "LR": 0.002,
+  "EPOCHS_PER_DAY": 8,
+  "ENT_W": 0.05,
+  "CHOOSER_SEED": 7,
+  "TRAIN_SEED": 93006,
+  "SEALED_SEED": 93005,
+  "TOOL_COST": 0.02,
+  "COST": {
+   "0": 0.25,
+   "1": 1.0
+  },
+  "P_THANKS": 0.3
+ },
+ "mean_effort": {
+  "all": {
+   "NONE": 3.035,
+   "EAGER-TOOL": 3.1056999999999992,
+   "HELPER-TOOL": 2.913825,
+   "CHOOSER": 2.9786,
+   "ORACLE": 1.615
+  },
+  "easygoing": {
+   "NONE": 3.1038251366120218,
+   "EAGER-TOOL": 2.4118032786885246,
+   "HELPER-TOOL": 2.759945355191257,
+   "CHOOSER": 2.9392349726775957,
+   "ORACLE": 1.633879781420765
+  },
+  "tidy": {
+   "NONE": 2.9769585253456223,
+   "EAGER-TOOL": 3.6908755760368663,
+   "HELPER-TOOL": 3.043594470046083,
+   "CHOOSER": 3.011797235023041,
+   "ORACLE": 1.599078341013825
+  }
+ },
+ "n_by_person": {
+  "easygoing": 183,
+  "tidy": 217
+ },
+ "training_curve": [
+  {
+   "day": 1,
+   "mean_reward_per_round": -0.36719489097595215,
+   "share_quiet": 0.35974304068522484,
+   "share_own": 0.32119914346895073,
+   "share_tool": 0.31905781584582443,
+   "entropy": 0.9451462626457214
+  },
+  {
+   "day": 2,
+   "mean_reward_per_round": 0.004920286126434803,
+   "share_quiet": 0.3120728929384966,
+   "share_own": 0.1366742596810934,
+   "share_tool": 0.55125284738041,
+   "entropy": 0.497979074716568
+  },
+  {
+   "day": 3,
+   "mean_reward_per_round": -0.0701511800289154,
+   "share_quiet": 0.7170626349892009,
+   "share_own": 0.12311015118790497,
+   "share_tool": 0.15982721382289417,
+   "entropy": 0.5171470046043396
+  },
+  {
+   "day": 4,
+   "mean_reward_per_round": -0.01312638632953167,
+   "share_quiet": 0.7738359201773836,
+   "share_own": 0.06873614190687362,
+   "share_tool": 0.1574279379157428,
+   "entropy": 0.4640083312988281
+  },
+  {
+   "day": 5,
+   "mean_reward_per_round": -0.0216923076659441,
+   "share_quiet": 0.8021978021978022,
+   "share_own": 0.01978021978021978,
+   "share_tool": 0.17802197802197803,
+   "entropy": 0.3890697658061981
+  },
+  {
+   "day": 6,
+   "mean_reward_per_round": -0.014657833613455296,
+   "share_quiet": 0.8388520971302428,
+   "share_own": 0.03532008830022075,
+   "share_tool": 0.12582781456953643,
+   "entropy": 0.3238752484321594
+  },
+  {
+   "day": 7,
+   "mean_reward_per_round": -0.017995545640587807,
+   "share_quiet": 0.844097995545657,
+   "share_own": 0.035634743875278395,
+   "share_tool": 0.12026726057906459,
+   "entropy": 0.3222602605819702
+  },
+  {
+   "day": 8,
+   "mean_reward_per_round": -0.01227171253412962,
+   "share_quiet": 0.8307349665924276,
+   "share_own": 0.028953229398663696,
+   "share_tool": 0.1403118040089087,
+   "entropy": 0.33305028080940247
+  },
+  {
+   "day": 9,
+   "mean_reward_per_round": -0.010044539347290993,
+   "share_quiet": 0.8307349665924276,
+   "share_own": 0.028953229398663696,
+   "share_tool": 0.1403118040089087,
+   "entropy": 0.30720043182373047
+  },
+  {
+   "day": 10,
+   "mean_reward_per_round": 0.0007111146696843207,
+   "share_quiet": 0.8044444444444444,
+   "share_own": 0.008888888888888889,
+   "share_tool": 0.18666666666666668,
+   "entropy": 0.3073194622993469
+  },
+  {
+   "day": 11,
+   "mean_reward_per_round": 0.009861752390861511,
+   "share_quiet": 0.8387096774193549,
+   "share_own": 0.020737327188940093,
+   "share_tool": 0.14055299539170507,
+   "entropy": 0.3224324882030487
+  },
+  {
+   "day": 12,
+   "mean_reward_per_round": -0.02234090492129326,
+   "share_quiet": 0.8136363636363636,
+   "share_own": 0.006818181818181818,
+   "share_tool": 0.17954545454545454,
+   "entropy": 0.28533437848091125
+  },
+  {
+   "day": 13,
+   "mean_reward_per_round": -0.011578943580389023,
+   "share_quiet": 0.7302631578947368,
+   "share_own": 0.019736842105263157,
+   "share_tool": 0.25,
+   "entropy": 0.28502270579338074
+  },
+  {
+   "day": 14,
+   "mean_reward_per_round": 0.02090498059988022,
+   "share_quiet": 0.7941176470588235,
+   "share_own": 0.006787330316742082,
+   "share_tool": 0.19909502262443438,
+   "entropy": 0.22265656292438507
+  },
+  {
+   "day": 15,
+   "mean_reward_per_round": 0.019591398537158966,
+   "share_quiet": 0.8688172043010752,
+   "share_own": 0.008602150537634409,
+   "share_tool": 0.12258064516129032,
+   "entropy": 0.25004148483276367
+  },
+  {
+   "day": 16,
+   "mean_reward_per_round": 0.01902654953300953,
+   "share_quiet": 0.8960176991150443,
+   "share_own": 0.004424778761061947,
+   "share_tool": 0.09955752212389381,
+   "entropy": 0.24511843919754028
+  },
+  {
+   "day": 17,
+   "mean_reward_per_round": 0.018969301134347916,
+   "share_quiet": 0.8728070175438597,
+   "share_own": 0.006578947368421052,
+   "share_tool": 0.1206140350877193,
+   "entropy": 0.22696593403816223
+  },
+  {
+   "day": 18,
+   "mean_reward_per_round": 0.004195014480501413,
+   "share_quiet": 0.8321995464852607,
+   "share_own": 0.009070294784580499,
+   "share_tool": 0.15873015873015872,
+   "entropy": 0.2575550079345703
+  },
+  {
+   "day": 19,
+   "mean_reward_per_round": 0.0008616815321147442,
+   "share_quiet": 0.8095238095238095,
+   "share_own": 0.006802721088435374,
+   "share_tool": 0.1836734693877551,
+   "entropy": 0.2459852397441864
+  },
+  {
+   "day": 20,
+   "mean_reward_per_round": 0.03883146122097969,
+   "share_quiet": 0.7865168539325843,
+   "share_own": 0.020224719101123594,
+   "share_tool": 0.19325842696629214,
+   "entropy": 0.24155789613723755
+  }
+ ],
+ "CHOOSER-HELPER-TOOL": {
+  "diff": 0.06477499999999997,
+  "ci95": [
+   -0.02557562500000001,
+   0.15660812499999985
+  ]
+ },
+ "CHOOSER-EAGER-TOOL": {
+  "diff": -0.12710000000000016,
+  "ci95": [
+   -0.25423062500000015,
+   -0.0026712500000001757
+  ]
+ },
+ "H1-1": {
+  "verdict": "PROVED WRONG (on this seed)",
+  "rule": "pass: CHOOSER - HELPER-TOOL <= -0.10 and CI upper < 0; wrong: diff >= 0 on either seed"
+ },
+ "H1-2": {
+  "verdict": "PASS",
+  "rule": "pass: CHOOSER - EAGER-TOOL <= -0.05 and CI upper < 0"
+ },
+ "H1-3": {
+  "offer_rate_after_thanks": 0.03333333333333333,
+  "offer_rate_after_plain": 0.08362369337979095,
+  "n_after_thanks": 240,
+  "n_after_plain": 574,
+  "gap_points": -5.029036004645762,
+  "verdict": "PROVED WRONG (on this seed)",
+  "rule": "pass: |gap| <= 3 points; wrong: |gap| > 5 points"
+ },
+ "H1-4": {
+  "shown_extras": 147,
+  "used_tool": 147,
+  "share_tool": 1.0,
+  "verdict": "meets 90%",
+  "rule": "reported; >= 90% of shown extras used the tool"
+ },
+ "H1-1_to_3_all_pass_this_seed": false,
+ "chooser_shares": {
+  "all": {
+   "n_rounds_with_candidate": 1214,
+   "quiet": 0.8789126853377265,
+   "own answer": 0.0,
+   "tool": 0.12108731466227347
+  },
+  "easygoing": {
+   "n_rounds_with_candidate": 568,
+   "quiet": 0.8785211267605634,
+   "own answer": 0.0,
+   "tool": 0.12147887323943662
+  },
+  "tidy": {
+   "n_rounds_with_candidate": 646,
+   "quiet": 0.8792569659442725,
+   "own answer": 0.0,
+   "tool": 0.12074303405572756
+  },
+  "position 1": {
+   "n_rounds_with_candidate": 400,
+   "quiet": 0.7725,
+   "own answer": 0.0,
+   "tool": 0.2275
+  },
+  "position 2": {
+   "n_rounds_with_candidate": 400,
+   "quiet": 0.9,
+   "own answer": 0.0,
+   "tool": 0.1
+  },
+  "position 3": {
+   "n_rounds_with_candidate": 276,
+   "quiet": 0.9637681159420289,
+   "own answer": 0.0,
+   "tool": 0.036231884057971016
+  },
+  "position 4": {
+   "n_rounds_with_candidate": 138,
+   "quiet": 0.9565217391304348,
+   "own answer": 0.0,
+   "tool": 0.043478260869565216
+  }
+ },
+ "arm_extras": {
+  "EAGER-TOOL": {
+   "extras_per_session": 3.035,
+   "tool_calls_per_session": 3.035,
+   "wanted_share": 0.39209225700164746,
+   "accepted_share": 0.39209225700164746
+  },
+  "HELPER-TOOL": {
+   "extras_per_session": 1.2225,
+   "tool_calls_per_session": 1.2225,
+   "wanted_share": 0.46830265848670755,
+   "accepted_share": 0.46830265848670755
+  },
+  "CHOOSER": {
+   "extras_per_session": 0.3675,
+   "tool_calls_per_session": 0.3675,
+   "wanted_share": 0.5102040816326531,
+   "accepted_share": 0.5102040816326531
+  }
+ },
+ "oracle_saving_per_session": 1.42,
+ "run_secs": 3293.0,
+ "h1_chooser_py_sha256": "29b76a2a81002310b044e0babfb8b3ddd48cb0d29e6f84a7a594a37937f10ec8",
+ "p1_sessions_py_sha256": "64b77011fcaf1a31c5a273b8b0a2edaa581722f88fd2a1a2ceb332a80d267da6"
+}

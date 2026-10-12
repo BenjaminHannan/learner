@@ -674,3 +674,42 @@ real people. Reported: NONE, EAGER-TOOL, HELPER-TOOL, CHOOSER, ORACLE effort per
   HELPER-TOOL keeps P3's inputs and P3's sealed behaviour (no exploration on sealed sessions). Chooser constants fixed
   from smoke training reward only: hidden 32, lr 2e-3, 8 epochs per day, entropy weight 0.05, seed 7. Smoke (5 days x
   40 sessions, other person seeds): chooser 2.92, HELPER-TOOL 2.67, EAGER-TOOL 3.12, NONE 2.90 (not a result).
+
+**B21. H-1 result (3:20 PM ET 10-12): the learned help chooser taught itself to use the tool and to hold back, but did
+not beat the hand-set helper, did not read the person, and was moved by a meaningless "thanks". FAIL.**
+`dopamine/results/h1/s20x/RESULT.md` (code sha256 29b76a2a..., p1_sessions 64b77011...). The run was restarted once
+after the cloud box rebooted at ~2:10 PM ET (cached answers kept; training rerun from scratch). Effort per session:
+| Arm | s200 all / easygoing / tidy | s201 all / easygoing / tidy |
+|---|---|---|
+| NONE | 3.035 / 3.104 / 2.977 | same |
+| EAGER-TOOL | 3.094 / 2.419 / 3.663 | 3.106 / 2.412 / 3.691 |
+| HELPER-TOOL (P3 rule) | 2.842 / 2.765 / 2.908 | 2.914 / 2.760 / 3.044 |
+| CHOOSER | 2.916 / 2.784 / 3.027 | 2.979 / 2.939 / 3.012 |
+| ORACLE | 1.615 | 1.615 |
+- H1-1: CHOOSER - HELPER-TOOL +0.074 [-0.014, +0.162] and +0.065 [-0.026, +0.157]: PROVED WRONG on both seeds.
+- H1-2: CHOOSER - EAGER-TOOL -0.178 [-0.291, -0.068] and -0.127 [-0.254, -0.003]: passes on both seeds.
+- H1-3: offer rate after "thanks" 15.0% vs 23.0% after a plain round (s200), 3.3% vs 8.4% (s201): gaps -8.0 and -5.0
+  points, PROVED WRONG (it offers less after thanks, not more; either way it reacts to a signal that pays nothing).
+- H1-4: 100% of shown extras used the tool on both seeds: met. Shown.
+- What it learned, shown: from checked effort alone it dropped "own answer" from 32% of rounds on day 1 to 0-2% by day
+  10 and kept only tool-checked extras, and it held back (0.92 and 0.37 extras per session vs 3.04 for eager). What it
+  did not learn: its action shares are the same for both person types (s201 0.879 quiet for both), so it never used the
+  removed/left reactions.
+- Reading (suggested): policy-gradient learning from 3,000 sessions is too little experience; the hand-set helper's value
+  head learns the same one-step choice by direct regression and wins. The "thanks" gap is fitting noise in an input
+  that carries no reward. For the shipped design: the helping drive should be a learned value of acting (act when it
+  beats staying quiet), which is the value-based form of a learned choice, not a separate policy head; whether it can
+  read the person is the open question.
+
+**H-2 (marks sealed 3:25 PM ET 10-12, before code): can the learned help value read the person?** One change from
+HELPER-TOOL (P3's learned help value, act when predicted value > 0, value computed by the tool, 0.02 per call): its
+inputs gain the person's reactions so far this session (accepted, removed, left, corrected) and "thanks" last round.
+Same environment, frozen models, caches and sessions as H-1 (20 training days played in order, 10% exploration on
+training days only, sealed 400 sessions greedy). Paired bootstrap over sealed sessions.
+| Mark (each seed) | Pass | Proved wrong |
+|---|---|---|
+| H2-1 reads the person | HELPER-REACT - HELPER-TOOL <= -0.05, CI upper < 0 | >= 0 on either seed |
+| H2-3 not moved by thanks | offer-rate gap after "thanks" vs plain within 3 points | gap > 5 points |
+Reported: effort by person type, extras after a "removed" vs after a "left" reaction. H-2 PASSES when H2-1 and H2-3 pass
+on both seeds. If it passes, the shipped helping drive is this learned value with the person's reactions as input; if
+H2-1 is proved wrong, reading the person waits for the 10M model and real reaction text.
