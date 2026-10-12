@@ -805,3 +805,29 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   G2Q, g2c3, B3 group 1, the s401 pairs, g2c10s, c30s. It starts about 5 minutes after the install ends, which is about 40 minutes
   after Ben's line in the Mac chat (the morning of 12 Oct, estimate): about a day earlier than addendum AC's estimate, because nothing
   waits for G1's s401 arms.
+
+## 37. Addendum AF (2026-10-12, 8:25 AM ET): G1 seed 400 read; G1 reads Stop (one seed) by addendum I
+
+- **What changed since AE:** the plain 10M s400 rerun (8aG1fR) finished at 4:50 AM ET, before Ben's line in the Mac chat, so it was
+  kept (AE). The Mac read the six G1 RESULT.json files read-only at 8:00 AM ET with `results/8a-g/g1-readout/g1s400_read.py`.
+  Table, per-family gains and the verbatim PC output: `results/8a-g/g1-readout/G1-S400-READOUT-2026-10-12.md` (mirrored).
+- **Shown (pooled-5, 6,040 dev rows):** G-B2 73.01 -> 74.65, **d +1.64**. G-PT 67.12 -> 72.47, **d +5.35**. **Gain difference -3.71.**
+  Ours minus plain: +5.89 at 3M, +2.19 at 10M. Chain-5: G-B2 100.0 at 10M (guard holds); G-PT 98.8. At 10M ours trained 42.7 h
+  at 0.156 updates/s and the plain model 4.1 h at 1.62 updates/s (about 10x; 2.7x at 3M).
+- **Reading by the rules fixed before any 10M result:** addendum I: seed 400's gain difference is at or below -1.0, so 10M s401
+  is not run and **the gate reads Stop (one seed)**. This replaces AE's "G1 ends unscored". Section 4's Go (+1.0 on both seeds)
+  is ruled out. Section 4's prediction (suggested, written 8 Oct: "the screen stops") held on this seed. Mark 1's interval and the
+  "proved wrong" line need more seeds: not claimed. Mark 2: one seed, +1.64. Mark 4 holds (3M mean 73.35). Mark 5 holds. Mark 3
+  (thinker-off) not read here.
+- **Per family (shown):** ours gained more on 7 of 34 families: digits_parity +16.3, kin_chain +10.0, rule_apply +9.5, passage_qa
+  +9.5, verify_claim +6.7, list_stats +2.6, letter_ops +1.0. The plain model's largest leads: arith_bare (+6.2 vs +26.8),
+  backward_solve, table_lookup, cipher_map, chain_ops. Rule families: fewshot_number_rule 10.6 -> 10.6 (plain +4.4), seq_next +1.3
+  (plain +11.2), order_chain -2.5 (plain +2.5).
+- **Catch-up explains part, not all (shown, unweighted family means):** on the 12 families where the plain model sat 10+ points
+  behind ours at 3M, the difference is -7.98; on the other 22 it is still -1.41; on the 29 families where ours was below 90 at 3M,
+  -2.42. Suggested: the flat rule families fit addendum AB's diagnosis (the misses sit on B2's fixed answer heads), which G2f's
+  writer targets. Untested.
+- **What changes:** the s401 rerun 8aG1s401r (B2 + PT 10M, training since 4:52 AM ET; about 43 h + 4 h at seed 400's speeds, so
+  about 4 AM ET Wednesday) is futile by addendum I as well as dropped by Ben (AE). `nog1_go.ps1` stops it once Ben types his line in
+  the Mac chat; nothing else changes. Order unchanged (AB, AD, AE). The size question stays with test WIDE (pass >= 76.31, fail
+  <= 75.01; the plain 10M's 72.47 is reported next to it, not a new mark) and with G2f. The big-run thread is told.
