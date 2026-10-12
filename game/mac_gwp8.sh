@@ -7,7 +7,8 @@
 #   bash mac_gwp8.sh pipeline  (what start runs) train both seeds, score, audit, analyze, push; safe to rerun: finished steps are skipped
 # Env: REPO = a clone of BenjaminHannan/learner (found under ~ when unset); GW8 = work folder (default ~/gw8);
 #      THREADS = torch threads per run (default half the performance cores); GW8_SMOKE=1 = tiny run for testing this script
-#      (smoke flags, 2 nights, 2-map scoring, push --dry-run). Works with macOS bash 3.2 and BSD tools.
+#      (smoke flags, 2 nights, 2-map scoring, push --dry-run); GW8_NOPUSH=1 = never push (cloud scoring of the spare runs).
+#      Works with macOS bash 3.2 and BSD tools.
 set -uo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 GW8=${GW8:-$HOME/gw8}
@@ -199,6 +200,7 @@ pipeline() {
 
 push_results() {
   local R URL W f
+  [ "${GW8_NOPUSH:-0}" = 1 ] && { log "push skipped (GW8_NOPUSH=1)"; return 0; }
   R=$(find_repo) || { log "push: no repo"; return 1; }
   URL=$(git -C "$R" remote get-url origin)
   W="$GW8/results-repo"; [ "$SMOKE" = 1 ] && W="$GW8/smoke-results-repo"
