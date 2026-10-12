@@ -219,6 +219,11 @@ ideas (gifts, plans) are not its job, so no taste judge or novelty score is need
   shown in P0).
 - **D2. The deciding filter is always a real check.** Checkers are part of the task (the target, the examples, the
   simulator or game), never a learned judge's say-so. C4's filter only ranks tries before the real check runs.
+  - *Proposed, not sealed (10-12, "Night mode for uncheckable skills" thread,
+    /mnt/project-files/night-mode/UNCHECKABLE-SKILLS-2026-10-12.md sec. 7; FINISHED item 19).* D2 would be narrowed
+    to goals that have a full check. A goal with no full check would use a learned taste critic that only ranks
+    tries passing every check that exists. Untested; its first screen is TC-1 (toy Paint), and it is not in run-1.
+    D2 stands as written until TC-1 passes; the narrowing is sealed only then.
 - **D3. Teacher where it can answer, creativity where it can't.** The 1.2B writes problems, stepping stones and fading
   hints during training only (lesson 2). It never ships and never judges inside the shipped model. Ben's 09-26 rule
   holds: nothing written or judged by Claude goes into training. Test prompts use one fixed instruction line, the same
@@ -2095,3 +2100,5 @@ CPU):
 - **10-11, 4:40 PM ET:** CB addendum 2 (agent turns, no copy anywhere): bind by value to the query number and earlier
   tool results; when a value matches more than once, accept if any assignment fits (cap 16, else uncheckable); CB
   runs on AT.
+- **10-11, 9:25 PM ET:** recorded the night-mode thread's proposal to narrow D2 (taste critic for goals with no full
+  check) as proposed, not sealed; D2 stands until TC-1 passes.
