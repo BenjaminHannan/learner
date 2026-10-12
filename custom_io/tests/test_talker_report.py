@@ -6,8 +6,9 @@ synthetic state whose answer is linearly readable (and must NOT be read when the
 import json, os, tempfile
 import torch
 import torch.nn as nn
+from custom_io.evalx import subsample
 from custom_io import talker_probe as P, talker_report as R
-from custom_io.data import ByteVocab
+from custom_io.data import ByteVocab, DEV_SPLITS
 from custom_io.models import progtext
 from custom_io.tests.test_b3 import batch_of, rows
 from custom_io.tests.test_b3g2 import V, Script, make
@@ -43,7 +44,7 @@ def test_copyable_rule():
 def test_collision_and_r3():
     rs = [dict(id=f'a{i}', family='A', answer=('1' if i < 5 else str(i))) for i in range(10)] + [dict(id=f'b{i}', family='B', answer=str(i)) for i in range(10)] + [dict(id='c0', family='C', answer='9')]
     c = R.collision(rs)
-    assert abs(c['A']['baseline'] - 100 * 20 / 90) < 1e-9 and c['B']['baseline'] == 0 and c['C']['baseline'] == 0 and c['A']['n'] == 10
+    assert abs(c['A']['baseline'] - 100 * 20 / 90) < 1e-9 and c['B']['baseline'] == 0 and c['C']['baseline'] is None and c['A']['n'] == 10
     fa = lambda ok, n: {'correct': ok, 'n': n}
     def result(shuf):
         return dict(final_eval=dict(in_dist=dict(by_family=dict(A=fa(8, 10), B=fa(6, 10)))),
@@ -58,10 +59,14 @@ def test_collision_and_r3():
     k = R.tk1(R.scrambled_table(result((8, 4)), rs[:20]))
     assert k['reading'] == 'PROVED WRONG' and k['shuffle_state'] == 60.0, k                             # 60 >= 35
     k = R.tk1(R.scrambled_table(result((3, 3)), rs[:20]))
-    assert k['reading'] == 'NOT SHOWN', k                                                               # 30 > 16.1 but 30 < 35
+    assert k['reading'] == 'UNCLEAR' and not k['passes'] and not k['proved_wrong'], k                  # 30 > 16.1 but 30 < 35: neither clause holds
+    both = dict(split='in_dist', families={}, pooled=dict(n=20, full=10.0, shuffle_state=6.0, zero_state=0.0, collision=c['A']['baseline'] / 2 + c['B']['baseline'] / 2))
+    k = R.tk1(both)
+    assert k['reading'] == 'UNCLEAR' and k['passes'] and k['proved_wrong'], k                           # 6 <= 11.1 + 5 AND 6 >= 5: both clauses hold, neither reading is earned
+    assert R.tk1(dict(both, pooled=dict(both['pooled'], collision=None, shuffle_state=2.0)))['reading'].startswith('n/a')
     assert R.tk1(R.scrambled_table(result((2, 1)), None))['reading'].startswith('n/a')
     assert R.scrambled_table(result((2, 1)), rs[:20], 'all')['pooled']['full'] == 70.0 and R.format_table(t).count('\n') >= 4
-    print('ok R3: per-family collision baseline, scrambled table from a RESULT.json, TK-1 reads PASS / PROVED WRONG / NOT SHOWN / n/a')
+    print('ok R3: per-family collision baseline, scrambled table from a RESULT.json, TK-1 reads PASS / PROVED WRONG / UNCLEAR (neither clause, or both) / n/a')
 
 
 def test_r1_scripted():
@@ -79,7 +84,7 @@ def test_r1_scripted():
              [],
              [g['t6'][0], g['t6'][1]],                          # both exact
              ['add 1 1', 'foo 3 4']]                            # wrong operands, then an unknown tool name
-    m.cap = 3                                                   # rounds 0, 1, 2; every row stops after round 2 (the stop head is replaced), so Script sees all 8 rows each time
+    m.cap = 4                                                   # rounds 0..3; the learned stop runs quiet_last (9a5203b21b: no call at the last round, round 3), so calls are asked at rounds 1 and 2 only; every row stops after round 3 (the stop head is replaced), so Script sees all 8 rows each time
     m.p_stop = lambda z: torch.zeros(z.shape[0])
     Script(m, texts)
     b = batch_of(rs, V)
@@ -108,7 +113,7 @@ def test_r1_scripted():
     assert sum(v['line'] for v in fam.values()) == c['line'] and sum(v['extra_written'] for v in fam.values()) == 1
     # a model with no gold rows in the file -> zeros, not a crash
     z = R.call_lines(m, [rs[1], rs[5]], runs=runs)
-    assert z['rows'] == 0 and z['n_gold_calls'] == 0 and z['line_pct'] == 0 and z['by_family'] == {}
+    assert z['rows'] == 0 and z['n_gold_calls'] == 0 and z['line_pct'] is None and z['name_pct'] is None and z['operands_pct'] is None and z['by_family'] == {}
     json.dumps(c)
     # R2 with the same runs: operands per class, answers from the real (untrained) writer are only counted
     cs = R.copyable_split(m, rs, runs=runs, lines=c)
@@ -153,6 +158,18 @@ def test_r2_split():
     pl = R.copyable_split(Plain(), rs)
     assert pl['exact'] == 100.0 and pl['copyable']['operands'] is None
     assert 'copyable' in R.format_split('x', s)
+    # F6: an empty group has no rate: exact None (not 0.0), no gap, printed n/a
+    cps = [r for r in rs if cp[r['id']]]
+    e = R.copyable_split(None, cps, preds={r['id']: r['answer'] for r in cps})
+    assert e['other']['n'] == 0 and e['other']['exact'] is None and e['gap'] is None and e['copyable']['exact'] == 100.0, e
+    ne = R.copyable_split(None, [], preds={})
+    assert ne['n'] == 0 and ne['exact'] is None and ne['copyable']['exact'] is None and ne['gap'] is None
+    assert 'n/a' in R.format_split('e', e) and 'None' not in R.format_split('e', e) and 'n/a' in R.format_split('ne', ne)
+    ge = R.arm_gap(e, e)
+    assert ge['other'] is None and ge['copyable'] == 0.0 and ge['all'] == 0.0, ge
+    assert R.arm_gap(e, s)['other'] is None
+    z = R.call_lines(None, rs, runs={})
+    assert z['name_pct'] is None and 'n/a' in R.format_calls(z) and 'None' not in R.format_calls(z)
     print('ok R2: copyable / other split pooled and per family, gap %+.1f, two-arm gap, a plain arm (answers only)' % s['gap'])
 
 
@@ -160,8 +177,9 @@ def test_r2_cli():
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, 'dev'))
         rs = withacc(rows(12))
-        with open(os.path.join(d, 'dev', 'in_dist.jsonl'), 'w') as f:
-            f.write('\n'.join(json.dumps(r) for r in rs))
+        for sp in DEV_SPLITS:           # every split file holds the same rows (ids de-duplicated): 'all' pools them
+            with open(os.path.join(d, 'dev', sp + '.jsonl'), 'w') as f:
+                f.write('\n'.join(json.dumps(r) for r in rs))
         res = os.path.join(d, 'RESULT.json')
         json.dump(dict(final_eval=dict(in_dist=dict(by_family=dict(chain_ops={'correct': 5, 'n': 6}, copy_word={'correct': 3, 'n': 3}, chain_story2={'correct': 3, 'n': 3}))),
                        lesions=dict(shuffle_state=dict(in_dist=dict(by_family=dict(chain_ops={'correct': 0, 'n': 6}, copy_word={'correct': 0, 'n': 3}, chain_story2={'correct': 0, 'n': 3}))),
@@ -169,6 +187,14 @@ def test_r2_cli():
         out = os.path.join(d, 'out.json')
         rec = R.main(['--result', res, '--data', d, '--json', out])
         assert rec[res]['tk1']['reading'] == 'PASS' and json.load(open(out))[res]['table']['pooled']['n'] == 12, rec[res]['tk1']
+        # F4: the default reading is the pooled dev over all six splits, the in_dist reading sits beside it, labelled
+        assert rec[res]['table']['split'] == 'all' and rec[res]['table_in_dist']['split'] == 'in_dist' and rec[res]['tk1_in_dist']['reading'] == 'PASS'
+        # F5: the baseline rows are the rows the RESULT's accuracies came from: evalx.subsample at the config's eval_max
+        r2 = os.path.join(d, 'RESULT2.json')
+        json.dump(dict(json.load(open(res)), config=dict(eval_max=5)), open(r2, 'w'))
+        rec5 = R.main(['--result', r2, '--data', d, '--split', 'in_dist'])
+        assert abs(rec5[r2]['table']['pooled']['collision'] - R.scrambled_table(json.load(open(res)), subsample(rs, 5))['pooled']['collision']) < 1e-9
+        assert 'table_in_dist' not in rec5[r2]
         # two arms through --run (load_model patched to hand over tiny stub-Gemma models), the gap between them
         import custom_io.models as M
         arms = {'armA': make(0), 'armB': make(1)}
@@ -267,6 +293,269 @@ def test_probe_on_model():
     assert abs(rep['talker_exact'] - 100 * rep['right_n'] / 16) < 1e-9
     P.format_report(rep)
     print('ok probe on a tiny b3g2: collect = state_of(run)[0] flattened (%d numbers per row), report runs end to end (TK-2a %s)' % (c['Z'].shape[1], rep['tk2a']['reading']))
+
+
+def test_probe_reads_what_the_writer_reads():
+    """talk_rounds='all': the writer reads the memory (rounds 0..stop round, masked), so collect() flattens writer_view(state), zero-padded to the longest valid memory; the last round's Z alone
+    (state[0]) is not what it reads, so changing it changes neither the features nor the answers. 'last' is the state's Z as before. Subsampling is bounded and says so."""
+    m = make(7, talk_rounds='all')
+    m.eval()
+    srt = sorted(withacc(rows(16)[::-1]), key=lambda r: len(r['prompt']))
+    ticks = [0]
+
+    def p_stop(z):          # even rows want to stop after round 1, odd rows after round 2: memories of 2 and 3 rounds, so the zero padding is exercised (the call count is reset per run)
+        ticks[0] += 1
+        return torch.tensor([1.0 if ticks[0] >= 2 + j % 2 else 0.0 for j in range(z.shape[0])])
+    real_run = m.run
+    m.p_stop, m.run = p_stop, lambda *a, **k: (ticks.__setitem__(0, 0), real_run(*a, **k))[1]
+    c = P.collect(m, srt, batch_size=16)
+    b = batch_of(srt, V)
+    with torch.no_grad():
+        o = m.run(b)
+    nz, d = 17, o['Z'].shape[2]
+    longest = int(o['mem_mask'].sum(1).max()) // nz
+    assert sorted(set((o['mem_mask'].sum(1) // nz).tolist())) == [2, 3] and longest == 3
+    assert o['Z'].shape[1] == nz and c['Z'].shape == (16, longest * nz * d), (c['Z'].shape, longest, nz, d)
+    assert c['idx'] == list(range(16)) and c['note'] is None
+    v, mk = m.writer_view(m.state_of(o))
+    for i in range(16):           # masked blocks are zero; the valid prefix is the memory
+        k = int(mk[i].sum())
+        assert torch.equal(c['Z'][i, :k * d], v[i, :k].float().flatten()) and not c['Z'][i, k * d:].any()
+    orig = m.state_of
+    m.state_of = lambda o: (o['Z'] + 5.0,) + orig(o)[1:]              # the last round's Z alone is perturbed; the memory is untouched
+    c2 = P.collect(m, srt, batch_size=16)
+    m.state_of = orig
+    assert torch.equal(c['Z'], c2['Z']) and c['ans'] == c2['ans'], 'the probe read something the writer does not read'
+    # bounded memory: too many floats -> rows subsampled evenly, said in the note
+    small = P.collect(m, srt, batch_size=16, max_floats=c['Z'].shape[1] * 5)
+    assert small['Z'].shape == (5, c['Z'].shape[1]) and len(small['idx']) == 5 and small['idx'][0] == 0 and small['idx'][-1] == 15 and 'subsampled to 5 of 16' in small['note'], small['note']
+    assert torch.equal(small['Z'], c['Z'][small['idx']]) and small['ans'] == [c['ans'][i] for i in small['idx']]
+    rep = P.probe_report(m, withacc(rows(40)), withacc(rows(16)[::-1]), batch_size=8)
+    assert rep['n'] == 16 and rep['n_features'] > 0 and rep['subsampled'] == []
+    del m.p_stop, m.run
+    ml = make(7)
+    ml.eval()
+    cl = P.collect(ml, srt, batch_size=16)
+    with torch.no_grad():
+        ol = ml.run(b)
+    assert torch.equal(cl['Z'], ol['Z'].float().flatten(1)), "'last' changed"
+    print('ok probe reads the writer view: %d features = %d rounds x %d x %d under all, perturbing state[0] changes nothing, subsample bounded, last unchanged' % (c['Z'].shape[1], longest, nz, d))
+
+
+def test_probe_report_shares_one_width():
+    """talk_rounds='all': collect() pads to the longest memory of the rows it is given, so train and dev can differ; probe_report pads both to the max of the two (zero blocks), whichever is longer."""
+    m = make(7, talk_rounds='all')
+    m.eval()
+    stop = [2]                  # every row wants to stop after round stop[0]-1: all memories have stop[0] rounds
+    ticks = [0]
+
+    def p_stop(z):
+        ticks[0] += 1
+        return torch.full((z.shape[0],), 1.0 if ticks[0] >= stop[0] else 0.0)
+    real_run = m.run
+    m.p_stop, m.run = p_stop, lambda *a, **k: (ticks.__setitem__(0, 0), real_run(*a, **k))[1]
+    tr, dv = withacc(rows(16)[::-1]), withacc(rows(16))
+    widths = {}
+    for k in (2, 3):
+        stop[0] = k
+        widths[k] = P.collect(m, tr, batch_size=16)['Z'].shape[1]
+    assert widths[3] == widths[2] * 3 // 2, widths
+    orig = P.pack
+    seen = []
+    P.pack = lambda *a, **kw: (lambda r: (seen.append(r['Z'].shape[1]), r)[1])(orig(*a, **kw))
+    try:
+        for tk, dk in ((3, 2), (2, 3)):         # dev memory shorter than train's, then longer
+            seen.clear()
+            gets = iter((tk, dk))
+            real_gather = P.gather
+            P.gather = lambda *a, **kw: (stop.__setitem__(0, next(gets)), real_gather(*a, **kw))[1]
+            try:
+                rep = P.probe_report(m, tr, dv, batch_size=16)
+            finally:
+                P.gather = real_gather
+            assert seen == [widths[3], widths[3]] and rep['n_features'] == widths[3] and rep['n'] == 16, (seen, tk, dk)
+    finally:
+        P.pack = orig
+    print('ok probe_report: train and dev share one width (%d features) whether dev memories are shorter or longer' % widths[3])
+
+
+def test_answer_unended_is_counted():
+    """F11: talk() keeps writer.greedy's 'ended' flag: a row whose answer had no EOS within WCAP is counted in free_stats['answer_unended'] (every path that writes an answer greedily goes
+    through talk: generate, free_runs, sample_traces); reported by g2_evals beside free_unended, not gated."""
+    m = make(3)
+    m.eval()
+    b = batch_of(rows(6), V)
+    with torch.no_grad():
+        st = m.state_of(m.run(b))
+    assert m.free_stats['answer_unended'] == 0
+    real = m.writer.greedy
+
+    class Cut:
+        def __call__(self, Z, zm, Xc, cm, ci, mode, **k):
+            outs, ended = real(Z, zm, Xc, cm, ci, mode, **k)
+            ended = torch.ones_like(ended)
+            ended[:2] = False                           # the first two rows never wrote EOS (an untrained writer never ends any: all rows are forced to ended but these)
+            return outs, ended
+    m.writer.greedy = Cut()
+    try:
+        with torch.no_grad():
+            a1 = m.talk(st, b)
+            assert m.free_stats['answer_unended'] == 2 and len(a1) == 6
+            m.sample_traces(b, 0.0, torch.Generator().manual_seed(0))
+            assert m.free_stats['answer_unended'] == 4, m.free_stats          # sample_traces writes its answers through talk too
+            m.generate(b)
+            assert m.free_stats['answer_unended'] == 6, m.free_stats
+    finally:
+        m.writer.greedy = real
+    print('ok answer side: unended answers counted in free_stats[answer_unended] (talk, sample_traces, generate), not gated')
+
+
+def test_g2_evals_survives_a_talker_failure():
+    """F7: a failure inside the talker readout is recorded as out['talker_error'] (the traceback) and every other g2 readout is still returned (and so reaches RESULT.json)."""
+    import contextlib
+    m = make(3)
+    m.eval()
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, 'dev'))
+        rs = withacc(rows(8))
+        from custom_io.data import DEV_SPLITS as DS
+        for sp in DS:
+            with open(os.path.join(d, 'dev', sp + '.jsonl'), 'w') as f:
+                f.write('\n'.join(json.dumps(r) for r in rs))
+        ctx = dict(data=d, big=None, device=torch.device('cpu'), batch_size=8, amp=contextlib.nullcontext)
+        ok = m.g2_evals(ctx)
+        assert 'talker' in ok and 'talker_error' not in ok and 'answer_unended' in ok
+        real = R.talker_evals
+        R.talker_evals = lambda *a, **k: 1 / 0
+        try:
+            bad = m.g2_evals(ctx)
+        finally:
+            R.talker_evals = real
+        assert 'talker' not in bad and 'ZeroDivisionError' in bad['talker_error'] and 'Traceback' in bad['talker_error']
+        assert bad['agreement']['n'] == ok['agreement']['n'] and bad['inverse']['hidden'] == ok['inverse']['hidden'] and json.dumps(bad) and m.training is False
+        import sys
+        m.train()        # a failing import must still record talker_error and put the model back in its previous (train) mode
+        import custom_io
+        saved = sys.modules.get('custom_io.talker_report')
+        sys.modules['custom_io.talker_report'] = None
+        del custom_io.talker_report          # `from custom_io import talker_report` would otherwise find the package attribute and never reach the import system
+        try:
+            imp = m.g2_evals(ctx)
+        finally:
+            sys.modules['custom_io.talker_report'] = saved
+            custom_io.talker_report = saved
+        assert 'talker' not in imp and 'ModuleNotFoundError' in imp.get('talker_error', repr(imp.keys())) and imp['agreement']['n'] == ok['agreement']['n'] and m.training is True, (imp.get('talker_error'), m.training)
+        m.eval()
+        # answer_unended is read after this eval's own talk passes: every answer forced unended -> the returned count is the eval's own
+        orig = m.writer.greedy
+        def all_unended(*a, **k):
+            outs, ended = orig(*a, **k)
+            return outs, torch.zeros_like(ended)
+        m.writer.greedy = all_unended
+        try:
+            cut = m.g2_evals(ctx)
+        finally:
+            m.writer.greedy = orig
+        assert cut['answer_unended'] > ok['answer_unended'] and cut['answer_unended'] == m.free_stats['answer_unended'], (cut['answer_unended'], ok['answer_unended'])
+    print('ok g2_evals: a talker failure is recorded as talker_error, the other readouts are returned')
+
+
+def test_caps_trained_checkpoint_reloads():
+    """F8: a checkpoint trained under --caps (the PC run's) does not reload with a bare load_model (the reader's position table is sized by the caps); the tools' loader applies the caps
+    first: the --caps path, else the caps the run directory records (RESULT.json config.caps, or the job's caps.json). Checked in FRESH subprocesses (caps.apply patches module globals)."""
+    import subprocess, sys
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    env = dict(os.environ, PYTHONPATH=root, OMP_NUM_THREADS='1')
+    save = """
+import json, os, sys, torch
+from custom_io.g8a import caps as C
+from custom_io.tests.test_b3g2 import G2, V, make
+d = sys.argv[1]
+caps = dict(max_prompt=320, max_ans=8)                     # a bigger prompt cap than today's 208: reader.pos is [320, d], not [208, d]
+json.dump(caps, open(os.path.join(d, 'caps.json'), 'w'))
+C.apply(json.load(open(os.path.join(d, 'caps.json'))))
+m = make(3)
+os.makedirs(os.path.join(d, 'run'))
+torch.save(dict(model=m.state_dict(), name='b3g2', cfg=G2, chars=V.chars, vocab='bytes', step=3), os.path.join(d, 'run', 'checkpoint.pt'))     # train.py's save
+json.dump(dict(config=dict(caps=os.path.join(d, 'caps.json'), cfg=G2)), open(os.path.join(d, 'run', 'RESULT.json'), 'w'))
+torch.save(m.state_dict(), os.path.join(d, 'sd.pt'))
+"""
+    load = """
+import sys, torch
+from custom_io import talker_report as R, talker_probe as P
+from custom_io.models import load_model
+d, mode = sys.argv[1], sys.argv[2]
+run = d + '/run'
+if mode == 'bare':
+    try:
+        load_model(run + '/checkpoint.pt')
+    except RuntimeError as e:
+        print('MISMATCH' if 'size mismatch' in str(e) else 'OTHER ' + str(e)[:200])
+    else:
+        print('LOADED')
+else:
+    m = R.load_checkpoint(run, 'cpu', None if mode == 'auto' else d + '/caps.json')
+    sd = torch.load(d + '/sd.pt')
+    print('SAME' if all(torch.equal(m.state_dict()[k], v) for k, v in sd.items()) else 'DIFFERENT')
+"""
+    with tempfile.TemporaryDirectory() as d:
+        out = subprocess.run([sys.executable, '-c', save, d], cwd=root, env=env, capture_output=True, text=True)
+        assert out.returncode == 0, out.stderr[-3000:]
+        run = lambda mode: subprocess.run([sys.executable, '-c', load, d, mode], cwd=root, env=env, capture_output=True, text=True)
+        b = run('bare')
+        assert b.stdout.strip().endswith('MISMATCH'), (b.stdout, b.stderr[-2000:])
+        for mode in ('auto', 'explicit'):
+            o = run(mode)
+            assert o.returncode == 0 and o.stdout.strip().endswith('SAME') and 'caps applied' in o.stdout, (mode, o.stdout, o.stderr[-3000:])
+        # where the caps are found from a run directory
+        assert R.caps_of_run(os.path.join(d, 'run')) == os.path.join(d, 'caps.json') and R.caps_of_run(os.path.join(d, 'run', 'checkpoint.pt')) == os.path.join(d, 'caps.json')
+        os.remove(os.path.join(d, 'run', 'RESULT.json'))
+        assert R.caps_of_run(os.path.join(d, 'run')) == os.path.join(d, 'caps.json')                  # --local job: caps.json beside the arm dirs
+        os.makedirs(os.path.join(d, 'w', 'tag-B3G2'))
+        os.makedirs(os.path.join(d, 'w', 'tag-pool'))
+        open(os.path.join(d, 'w', 'tag-pool', 'caps.json'), 'w').write('{}')
+        assert R.caps_of_run(os.path.join(d, 'w', 'tag-B3G2')) == os.path.join(d, 'w', 'tag-pool', 'caps.json')     # the job's layout: <tag>-pool beside <tag>-<arm>
+        json.dump(dict(config=dict(caps=None)), open(os.path.join(d, 'w', 'tag-B3G2', 'RESULT.json'), 'w'))
+        assert R.caps_of_run(os.path.join(d, 'w', 'tag-B3G2')) is None                                   # a run that trained without caps gets none
+    print('ok caps: a caps-trained b3g2 checkpoint fails a bare load_model, reloads through load_checkpoint (auto from RESULT.json / --caps) in a fresh process; caps found from the job layout')
+
+
+def test_two_arms_in_one_process():
+    """A caps-trained arm followed by a no-caps arm in ONE process: load_checkpoint resets the caps (caps.apply({})) when the arm has none, so the second arm loads against the defaults."""
+    import subprocess, sys
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    env = dict(os.environ, PYTHONPATH=root, OMP_NUM_THREADS='1')
+    save = """
+import json, os, sys, torch
+from custom_io.g8a import caps as C
+from custom_io.tests.test_b3g2 import G2, V, make
+d, arm = sys.argv[1], sys.argv[2]
+if arm == 'capsarm':
+    json.dump(dict(max_prompt=320, max_ans=8), open(os.path.join(d, 'caps.json'), 'w'))
+    C.apply(json.load(open(os.path.join(d, 'caps.json'))))
+m = make(3)
+os.makedirs(os.path.join(d, arm))
+torch.save(dict(model=m.state_dict(), name='b3g2', cfg=G2, chars=V.chars, vocab='bytes', step=3), os.path.join(d, arm, 'checkpoint.pt'))
+json.dump(dict(config=dict(caps=os.path.join(d, 'caps.json') if arm == 'capsarm' else None, cfg=G2)), open(os.path.join(d, arm, 'RESULT.json'), 'w'))
+torch.save(m.state_dict(), os.path.join(d, arm + '.pt'))
+"""
+    load = """
+import sys, torch
+from custom_io import talker_report as R, data
+d = sys.argv[1]
+for arm in ('capsarm', 'plain'):                       # the caps arm first, then the arm trained without caps, in this one process
+    m = R.load_checkpoint(d + '/' + arm, 'cpu')
+    sd = torch.load(d + '/' + arm + '.pt')
+    print(arm, data.MAX_PROMPT, 'SAME' if all(torch.equal(m.state_dict()[k], v) for k, v in sd.items()) else 'DIFFERENT')
+"""
+    with tempfile.TemporaryDirectory() as d:
+        for arm in ('capsarm', 'plain'):
+            out = subprocess.run([sys.executable, '-c', save, d, arm], cwd=root, env=env, capture_output=True, text=True)
+            assert out.returncode == 0, out.stderr[-3000:]
+        o = subprocess.run([sys.executable, '-c', load, d], cwd=root, env=env, capture_output=True, text=True)
+        lines = o.stdout.strip().splitlines()
+        assert o.returncode == 0 and lines[-2].endswith('320 SAME') and lines[-1] == 'plain 208 SAME', (o.stdout, o.stderr[-3000:])
+    print('ok two arms in one process: the no-caps arm after a caps arm loads against the default caps')
 
 
 if __name__ == '__main__':

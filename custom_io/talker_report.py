@@ -11,8 +11,8 @@ model with .generate (the plain arms).
 
 One free run feeds R1 and R2: free_runs(model, rows) -> {row id: dict(records, answer)}; pass it as `runs=` to both (B3G2.extra_evals does so) and the model runs once.
 CLI (arms = checkpoints, the same dev rows for every arm):
-  python -m custom_io.talker_report --run RUN_DIR [RUN_DIR ...] [--data DIR] [--splits in_dist,answer] [--max N] [--gap A B]
-  python -m custom_io.talker_report --result RESULT.json [--data DIR] [--split in_dist]          (R3 and the TK-1 reading)"""
+  python -m custom_io.talker_report --run RUN_DIR [RUN_DIR ...] [--caps CAPS.json] [--data DIR] [--splits in_dist,answer] [--max N] [--gap A B]
+  python -m custom_io.talker_report --result RESULT.json [--data DIR] [--split all]          (R3 and the TK-1 reading: pooled dev over all six splits by default, the in_dist reading printed beside it)"""
 import argparse, contextlib, json, os, re
 import torch
 from custom_io.data import DEFAULT_DATA, DEV_SPLITS, Dataset, collate, to_device
@@ -23,6 +23,51 @@ from custom_io.models.tool import NAMES, calc
 CALC = tuple(NAMES[1:])
 TK1_SLACK = 5.0          # TK-1 pass: pooled shuffle_state accuracy <= pooled answer-collision baseline + 5 points
 TK1_HALF = 0.5           # TK-1 proved wrong: shuffle_state accuracy >= half of the full accuracy
+
+
+# ---------------------------------------------------------------- loading a checkpoint
+def _ckpt(run):
+    return run if run.endswith('.pt') else os.path.join(run, 'checkpoint.pt')
+
+
+def caps_of_run(run):
+    """The caps.json the job trained this checkpoint under, found from its run directory (a checkpoint.pt does not record them; train.py records `--caps PATH` in RESULT.json's config and
+    g8a/job.py copies the caps used to caps.json in the job's results dir: next to the arm dirs for a --local job, in <tag>-pool beside the <tag>-<arm> dirs otherwise). Looked for in order:
+    RESULT.json config.caps if that file still exists (a RESULT that says caps null means none: None), caps.json in the run dir, caps.json in its parent, caps.json in a '*-pool' sibling
+    (only if exactly one). -> path or None. A run trained under caps does NOT reload without them: the position / place tables are sized by the caps (g8a/caps.py apply)."""
+    d = os.path.dirname(os.path.abspath(_ckpt(run)))
+    rf = os.path.join(d, 'RESULT.json')
+    if os.path.exists(rf):
+        try:
+            cfg = json.load(open(rf)).get('config') or {}
+        except ValueError:
+            cfg = {}
+        if cfg.get('caps') and os.path.exists(cfg['caps']):
+            return cfg['caps']
+        if 'caps' in cfg and not cfg['caps']:          # the run says it trained with no caps
+            return None
+    par = os.path.dirname(d)
+    for f in (os.path.join(d, 'caps.json'), os.path.join(par, 'caps.json')):
+        if os.path.exists(f):
+            return f
+    pools = [os.path.join(par, x, 'caps.json') for x in sorted(os.listdir(par)) if x.endswith('-pool')] if os.path.isdir(par) else []
+    pools = [f for f in pools if os.path.exists(f)]
+    return pools[0] if len(pools) == 1 else None
+
+
+def load_checkpoint(run, device='cpu', caps=None):
+    """custom_io.models.load_model(checkpoint) with the caps the run trained under applied FIRST (custom_io.g8a.caps.apply, as train.py does before it builds anything): `caps` is a caps.json
+    path (the --caps option), else the one caps_of_run finds, else the defaults (caps.apply({}) resets what an earlier arm in this process applied). -> the model. Prints which caps were applied."""
+    from custom_io.models import load_model
+    caps = caps or caps_of_run(run)
+    if caps:
+        from custom_io.g8a import caps as _caps
+        _caps.apply(json.load(open(caps)))
+        print(f'caps applied from {caps}')
+    else:       # caps.apply patched the module globals and nothing resets them: an earlier caps-trained arm in this process must not leak into this one
+        from custom_io.g8a import caps as _caps
+        _caps.apply({})
+    return load_model(_ckpt(run), device)
 
 
 # ---------------------------------------------------------------- running the model
@@ -93,9 +138,14 @@ def _tally(d, key, name, ops, line):
     c['line'] += line
 
 
+def _rate(k, n):
+    """100 * k / n in percent; None (printed n/a) for an empty group, never a 0.0 that reads as a measurement."""
+    return None if n == 0 else 100 * k / n
+
+
 def _pct(c):
-    n = max(c['n_gold_calls'], 1)
-    return dict(c, name_pct=100 * c['name'] / n, operands_pct=100 * c['operands'] / n, line_pct=100 * c['line'] / n)
+    n = c['n_gold_calls']
+    return dict(c, name_pct=_rate(c['name'], n), operands_pct=_rate(c['operands'], n), line_pct=_rate(c['line'], n))
 
 
 def row_calls(row, run):
@@ -181,7 +231,7 @@ def is_copyable(row):
 def copyable_split(model, rows, preds=None, runs=None, lines=None, batch_size=64, device=None, amp=None, norm=norm):
     """R2, the copyable / other split (sealed reporting line, fifth Addendum). A row is `copyable` if its gold answer appears verbatim in the prompt or in the last gold tool reply as a whole
     token (is_copyable). Final-answer accuracy is the evals' own (evalx.is_hit under `norm`), pooled and per family, on the copyable rows and on the others; `gap` = other - copyable
-    (points); and on the copyable rows (and the others) the operand exact-match of R1 (`operands_pct` over their gold calculator calls) when the model has a run (AT-1's reported line).
+    (points; None when either group is empty, as is any exact with n == 0 and an operands_pct with no gold calls: printed n/a); and on the copyable rows (and the others) the operand exact-match of R1 (`operands_pct` over their gold calculator calls) when the model has a run (AT-1's reported line).
     preds: {row id: answer text} if you already have the final answers (all a plain arm needs; no operand numbers then unless runs / lines are given). runs: free_runs(...)'s result.
     lines: call_lines(..., per_row=True)'s result. With none of these the model is run: free_runs if it has run / state_of / talk, else evalx.evaluate's generate.
     -> dict(n, correct, exact, copyable=dict(n, correct, exact, by_family={f: {correct, n, exact}}, operands=dict(n_gold_calls, operands, operands_pct) or None), other=same, gap)."""
@@ -210,26 +260,31 @@ def copyable_split(model, rows, preds=None, runs=None, lines=None, batch_size=64
             p['ops'] += ops
     out = {}
     for k, p in parts.items():
-        out[k] = dict(n=p['n'], correct=p['correct'], exact=100 * p['correct'] / max(p['n'], 1),
-                      by_family={f: dict(c, exact=100 * c['correct'] / max(c['n'], 1)) for f, c in sorted(p['by_family'].items())},
-                      operands=None if per is None else dict(n_gold_calls=p['calls'], operands=p['ops'], operands_pct=100 * p['ops'] / max(p['calls'], 1)))
+        out[k] = dict(n=p['n'], correct=p['correct'], exact=_rate(p['correct'], p['n']),
+                      by_family={f: dict(c, exact=_rate(c['correct'], c['n'])) for f, c in sorted(p['by_family'].items())},
+                      operands=None if per is None else dict(n_gold_calls=p['calls'], operands=p['ops'], operands_pct=_rate(p['ops'], p['calls'])))
     n, c = sum(p['n'] for p in parts.values()), sum(p['correct'] for p in parts.values())
-    return dict(n=n, correct=c, exact=100 * c / max(n, 1), **out, gap=out['other']['exact'] - out['copyable']['exact'])
+    return dict(n=n, correct=c, exact=_rate(c, n), **out, gap=_sub(out['other']['exact'], out['copyable']['exact']))
+
+
+def _sub(x, y):
+    """x - y, None when either is None (an empty group has no rate, so no gap)."""
+    return None if x is None or y is None else x - y
 
 
 def arm_gap(a, b):
     """Two copyable_split results (arm a, arm b) -> a - b in points on copyable, other and all rows (+ operands on copyable when both have them)."""
-    d = {k: a[k]['exact'] - b[k]['exact'] for k in ('copyable', 'other')}
-    d['all'] = a['exact'] - b['exact']
+    d = {k: _sub(a[k]['exact'], b[k]['exact']) for k in ('copyable', 'other')}
+    d['all'] = _sub(a['exact'], b['exact'])
     oa, ob = a['copyable'].get('operands'), b['copyable'].get('operands')
-    d['operands_copyable'] = None if oa is None or ob is None else oa['operands_pct'] - ob['operands_pct']
+    d['operands_copyable'] = None if oa is None or ob is None else _sub(oa['operands_pct'], ob['operands_pct'])
     return d
 
 
 # ---------------------------------------------------------------- R3
 def collision(rows, norm=norm):
     """Answer-collision baseline per family: the chance that a random OTHER row of the same family has the same (normalised) gold answer, sum_a c_a (c_a - 1) / (n (n - 1)), in percent
-    -> {family: dict(n, baseline)}; a family of one row has baseline 0. This is what a swapped-in state's answer scores by luck (shuffle_state hands each row another row's thoughts)."""
+    -> {family: dict(n, baseline)} (baseline None for a family of fewer than 2 rows); a family of fewer than 2 rows has baseline None (no pair to collide; skipped in the pooled weighting, printed n/a). This is what a swapped-in state's answer scores by luck (shuffle_state hands each row another row's thoughts)."""
     fam = {}
     for r in rows:
         fam.setdefault(r['family'], {})
@@ -238,7 +293,7 @@ def collision(rows, norm=norm):
     out = {}
     for f, cs in sorted(fam.items()):
         n = sum(cs.values())
-        out[f] = dict(n=n, baseline=100 * sum(c * (c - 1) for c in cs.values()) / (n * (n - 1)) if n > 1 else 0.0)
+        out[f] = dict(n=n, baseline=100 * sum(c * (c - 1) for c in cs.values()) / (n * (n - 1)) if n > 1 else None)
     return out
 
 
@@ -273,7 +328,7 @@ def scrambled_table(result, rows=None, split='in_dist'):
             if a:
                 tot[k][0] += a[0]
                 tot[k][1] += a[1]
-        if f in col:
+        if f in col and col[f]['baseline'] is not None:
             tot['col'] += col[f]['baseline'] * full[f][1]
             tot['col_n'] += full[f][1]
     pooled = dict(n=tot['n'], full=pc(tot['full']), shuffle_state=pc(tot['shuffle_state']), zero_state=pc(tot['zero_state']), collision=tot['col'] / tot['col_n'] if tot['col_n'] else None)
@@ -281,14 +336,20 @@ def scrambled_table(result, rows=None, split='in_dist'):
 
 
 def tk1(table):
-    """TK-1 (marks 10-11): PASS if the pooled shuffle_state accuracy is at most the pooled collision baseline + 5 points; PROVED WRONG if it is at least half the full accuracy; else NOT SHOWN
-    (and 'n/a' with a missing number). Checked in that order (proved wrong first: a row that is both reads as proved wrong). -> dict(reading, shuffle_state, full, collision, passes, proved_wrong)."""
+    """TK-1 (marks 10-11, with the seventh Addendum's middle zone). Two clauses, both computed and both reported: the PASS clause (pooled shuffle_state accuracy at most the pooled collision
+    baseline + 5 points) and the PROVED-WRONG clause (shuffle_state accuracy at least half the full accuracy). Reading: PASS only when the pass clause holds and the proved-wrong clause does
+    not; PROVED WRONG only when the proved-wrong clause holds and the pass clause does not; UNCLEAR when both hold or neither does (the middle zone: reported, not a pass; with a low full
+    accuracy or a high baseline the two clauses can overlap, and then neither reading is earned); 'n/a' with a missing number (or no rows for the baseline when the proved-wrong clause also fails).
+    -> dict(reading, shuffle_state, full, collision, passes (the pass clause), proved_wrong (the proved-wrong clause))."""
     p = table['pooled']
     if p['shuffle_state'] is None or p['full'] is None:
         return dict(reading='n/a', **{k: p.get(k) for k in ('shuffle_state', 'full', 'collision')}, passes=None, proved_wrong=None)
     wrong = p['shuffle_state'] >= TK1_HALF * p['full'] and p['full'] > 0
     ok = p['collision'] is not None and p['shuffle_state'] <= p['collision'] + TK1_SLACK
-    reading = 'PROVED WRONG' if wrong else 'PASS' if ok else 'NOT SHOWN' if p['collision'] is not None else 'n/a (no rows for the baseline)'
+    if ok != wrong:
+        reading = 'PASS' if ok else 'PROVED WRONG'
+    else:       # both clauses hold, or neither
+        reading = 'UNCLEAR' if p['collision'] is not None else 'n/a (no rows for the baseline)'
     return dict(reading=reading, shuffle_state=p['shuffle_state'], full=p['full'], collision=p['collision'], passes=ok, proved_wrong=wrong)
 
 
@@ -308,13 +369,18 @@ def _f(x, w=6):
     return ' ' * (w - 3) + 'n/a' if x is None else f'{x:{w}.1f}'
 
 
+def _p(x, w=0):
+    """A percent for printing: 'n/a' for None (an empty group), else one decimal and a %."""
+    return ('n/a' if x is None else f'{x:.1f}%').rjust(w + (1 if x is not None else 0))
+
+
 def format_split(name, s):
-    L = [f'== {name}: {s["correct"]}/{s["n"]} = {s["exact"]:.1f}%']
+    L = [f'== {name}: {s["correct"]}/{s["n"]} = {_p(s["exact"])}']
     for k in ('copyable', 'other'):
         p = s[k]
-        op = '' if not p['operands'] else f'   operands {p["operands"]["operands"]}/{p["operands"]["n_gold_calls"]} = {p["operands"]["operands_pct"]:.1f}%'
-        L.append(f'  {k:9s} n={p["n"]:5d} final {p["correct"]:5d} = {p["exact"]:5.1f}%{op}')
-    L.append(f'  gap (other - copyable) {s["gap"]:+.1f} points')
+        op = '' if not p['operands'] else f'   operands {p["operands"]["operands"]}/{p["operands"]["n_gold_calls"]} = {_p(p["operands"]["operands_pct"])}'
+        L.append(f'  {k:9s} n={p["n"]:5d} final {p["correct"]:5d} = {_p(p["exact"], 5)}{op}')
+    L.append(f'  gap (other - copyable) {"n/a" if s["gap"] is None else format(s["gap"], "+.1f")} points')
     fams = sorted(set(s['copyable']['by_family']) | set(s['other']['by_family']))
     L.append('  family                   copyable (n, %)    other (n, %)')
     for f in fams:
@@ -325,9 +391,9 @@ def format_split(name, s):
 
 def format_calls(c):
     L = [f'R1 written call lines: {c["rows"]} rows, {c["n_gold_calls"]} gold calls, {c["n_written_calc_lines"]} written calculator lines, {c["extra_written"]} extra',
-         f'  name {c["name_pct"]:.1f}%  operands {c["operands_pct"]:.1f}%  line {c["line_pct"]:.1f}%']
+         f'  name {_p(c["name_pct"])}  operands {_p(c["operands_pct"])}  line {_p(c["line_pct"])}']
     for f, v in c['by_family'].items():
-        L.append(f'  {f:22s} calls {v["n_gold_calls"]:5d}  name {v["name_pct"]:5.1f}  operands {v["operands_pct"]:5.1f}  line {v["line_pct"]:5.1f}  extra {v["extra_written"]}')
+        L.append(f'  {f:22s} calls {v["n_gold_calls"]:5d}  name {_f(v["name_pct"], 5)}  operands {_f(v["operands_pct"], 5)}  line {_f(v["line_pct"], 5)}  extra {v["extra_written"]}')
     return '\n'.join(L)
 
 
@@ -352,10 +418,11 @@ def dev_rows(data, splits, max_per_split=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--run', nargs='*', default=[], help='run dirs (each with checkpoint.pt) or checkpoint.pt paths: the arms, evaluated on the same dev rows')
+    ap.add_argument('--caps', help='caps.json the checkpoints were trained under (a caps-trained model does not reload without it); default: the one the run directory records (RESULT.json config.caps or the job\'s caps.json)')
     ap.add_argument('--result', nargs='*', default=[], help='RESULT.json files: print R3 and the TK-1 reading')
     ap.add_argument('--data', default=DEFAULT_DATA)
     ap.add_argument('--splits', default='in_dist', help='comma list of dev splits (or all) for --run')
-    ap.add_argument('--split', default='in_dist', help='the dev split (or all) of the --result table')
+    ap.add_argument('--split', default='all', help='the dev split (or all, the default: the six pooled) of the --result table and its TK-1 reading; the in_dist table and reading are printed beside it')
     ap.add_argument('--max', type=int, help='cap rows per dev split')
     ap.add_argument('--gap', nargs=2, type=int, metavar=('A', 'B'), help='arm indexes (0-based, in --run order): print arm A minus arm B')
     ap.add_argument('--device', default='cpu')
@@ -364,13 +431,12 @@ def main(argv=None):
     a = ap.parse_args(argv)
     rec = {}
     if a.run:
-        from custom_io.models import load_model
         splits = DEV_SPLITS if a.splits == 'all' else a.splits.split(',')
         rows = dev_rows(a.data, splits, a.max)
         print(f'{len(rows)} dev rows ({",".join(splits)}); copyable rows {sum(map(is_copyable, rows))}')
         arms = []
         for p in a.run:
-            m = load_model(p if p.endswith('.pt') else os.path.join(p, 'checkpoint.pt'), a.device)
+            m = load_checkpoint(p, a.device, a.caps)
             has_run = all(hasattr(m, x) for x in ('run', 'state_of', 'talk'))
             runs = free_runs(m, rows, a.batch, a.device) if has_run else None
             lines = call_lines(m, rows, runs=runs, per_row=True) if runs is not None else None
@@ -384,16 +450,22 @@ def main(argv=None):
         if a.gap:
             g = arm_gap(arms[a.gap[0]], arms[a.gap[1]])
             rec['gap'] = dict(a=a.run[a.gap[0]], b=a.run[a.gap[1]], **g)
-            print(f'GAP {a.run[a.gap[0]]} minus {a.run[a.gap[1]]} (points): copyable {g["copyable"]:+.1f}  other {g["other"]:+.1f}  all {g["all"]:+.1f}'
-                  + ('' if g['operands_copyable'] is None else f'  operands on copyable {g["operands_copyable"]:+.1f}'))
+            sg = lambda x: 'n/a' if x is None else f'{x:+.1f}'
+            print(f'GAP {a.run[a.gap[0]]} minus {a.run[a.gap[1]]} (points): copyable {sg(g["copyable"])}  other {sg(g["other"])}  all {sg(g["all"])}'
+                  + ('' if g['operands_copyable'] is None else f'  operands on copyable {sg(g["operands_copyable"])}'))
     for p in a.result:
         res = json.load(open(p))
-        splits = DEV_SPLITS if a.split == 'all' else [a.split]
-        t = scrambled_table(res, dev_rows(a.data, splits, None) if os.path.isdir(a.data) else None, a.split)
-        print(p)
-        print(format_table(t))
-        print('TK-1:', json.dumps(tk1(t)))
-        rec[p] = dict(table=t, tk1=tk1(t))
+        emax = (res.get('config') or {}).get('eval_max')     # the baseline rows are the rows the RESULT's accuracies came from: evalx's own subsample of each split at the run's eval_max
+        print(p + (f'  (eval_max {emax}: baseline rows subsampled the same way)' if emax else ''))
+        rec[p] = {}
+        for sp, label in ((a.split, 'TK-1 (pooled dev, %s)' % ('all six splits' if a.split == 'all' else a.split)), ('in_dist', 'TK-1 in_dist (beside it, not the default reading)')):
+            if sp == a.split and label.startswith('TK-1 in_dist'):
+                continue
+            splits = DEV_SPLITS if sp == 'all' else [sp]
+            t = scrambled_table(res, dev_rows(a.data, splits, emax) if os.path.isdir(a.data) else None, sp)
+            print(format_table(t))
+            print(label + ':', json.dumps(tk1(t)))
+            rec[p]['table' if sp == a.split else 'table_in_dist'], rec[p]['tk1' if sp == a.split else 'tk1_in_dist'] = t, tk1(t)
     if a.json:
         json.dump(rec, open(a.json, 'w'), indent=1)
     return rec
