@@ -154,3 +154,24 @@ def test_mean_hidden_score_of_random_programs():
     m = float(np.mean(s))
     print(f"\nMEAN HIDDEN SCORE OF 2000 RANDOM DAY-0 PROGRAMS: {m:.4f}")
     assert 0.0 <= m < 0.5
+
+
+def test_touching_prior_valid_and_seeded():
+    progs = paint.random_programs(np.random.default_rng(3), 3000, "touching")
+    again = paint.random_programs(np.random.default_rng(3), 3000, "touching")
+    assert progs == again
+    ns = set()
+    for p in progs:
+        cmds = parse(p)
+        assert cmds is not None and 1 <= len(cmds) <= 3 and cmds[0][0] in (R, T)
+        ns.add(len(cmds))
+        assert render(cmds).any()
+    assert ns == {1, 2, 3}
+    # touching shapes reach the roof trait far more often than uniform clutter (TC-1b's one change)
+    roofs = [hidden_score.score_grid(render(parse(p)))[1][1] for p in progs]
+    assert np.mean(roofs) > 0.004
+
+
+def test_prior_changes_checkpoint_name(tmp_path):
+    cfg = make_config(small=True, prior="touching")
+    assert cfg.prior == "touching" and make_config(small=True).prior == "clutter"

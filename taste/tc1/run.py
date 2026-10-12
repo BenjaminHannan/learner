@@ -15,7 +15,8 @@ def prepare(seed, cfg, ckpt_dir, log=print):
     k = copyguard.calibrate_k(data.heldback, data.critic)
     os.makedirs(ckpt_dir, exist_ok=True)
     path = os.path.join(ckpt_dir, f"maker-s{seed}-p{cfg.pretrain_programs}-e{cfg.pretrain_epochs}"
-                                  f"-b{cfg.pretrain_batch}-pool{cfg.pool}-ho{cfg.heldout}.pt")
+                                  f"-b{cfg.pretrain_batch}-pool{cfg.pool}-ho{cfg.heldout}"
+                                  + ("" if cfg.prior == "clutter" else f"-{cfg.prior}") + ".pt")
     if os.path.exists(path):
         ck = torch.load(path, weights_only=True)
         log(f"loaded checkpoint {path}")
@@ -55,9 +56,10 @@ def main(argv=None):
     ap.add_argument("--ckpt-dir")
     ap.add_argument("--pretrain-programs", type=int, help="override (timing/smoke only)")
     ap.add_argument("--pretrain-only", action="store_true")
+    ap.add_argument("--prior", choices=["clutter", "touching"], default="clutter")
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
-    cfg = make_config(a.small, a.days, pretrain_programs=a.pretrain_programs)
+    cfg = make_config(a.small, a.days, pretrain_programs=a.pretrain_programs, prior=a.prior)
     os.makedirs(a.out, exist_ok=True)
     ckpt_dir = a.ckpt_dir or os.path.join(a.out, "ckpt")
     if a.pretrain_only or a.arm is None:

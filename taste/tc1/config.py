@@ -20,6 +20,7 @@ class Config:
     pretrain_lr: float = 1e-3
     pretrain_lr_min: float = 1e-4
     pool: int = 20_000
+    prior: str = "clutter"       # day-0 programs: "clutter" (TC-1) or "touching" (TC-1b)
     heldout: int = 2_000
     weight_decay: float = 0.01
     grad_clip: float = 1.0

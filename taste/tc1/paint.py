@@ -92,8 +92,106 @@ def random_program(rng):
     return encode(cmds)
 
 
-def random_programs(rng, n):
-    return [random_program(rng) for _ in range(n)]
+def _tri_height(w):
+    return (w + 1) // 2
+
+
+def _bbox_of(cmd):
+    """(r0, r1, c0, c1) of a command's cells, clipped to the canvas."""
+    t = cmd[0]
+    if t == R:
+        _, r, c, h, w, _ = cmd
+        return r, min(r + h, H) - 1, c, min(c + w, W) - 1
+    if t == T:
+        _, r, c, w, _ = cmd
+        return max(r - _tri_height(w) + 1, 0), r, c, min(c + w, W) - 1
+    _, r, c, _ = cmd
+    return r, r, c, c
+
+
+def _align(rng, lo, hi, size):
+    """Start of a span of `size` cells placed along [lo, hi]: centred, start-flush, end-flush or random."""
+    mode = int(rng.integers(0, 4))
+    if mode == 0:
+        s = lo + ((hi - lo + 1) - size) // 2
+    elif mode == 1:
+        s = lo
+    elif mode == 2:
+        s = hi - size + 1
+    else:
+        s = int(rng.integers(lo - size + 1, hi + 1))
+    return int(np.clip(s, 0, W - 1))
+
+
+def random_program_v2(rng):
+    """TC-1b 'touching shapes' babbling prior: 1-3 shapes, each after the first touches (or sits
+    inside, bottom-aligned) a random earlier shape with a similar size along the touching side.
+    Token list (no BOS) ending with END."""
+    n = int(rng.integers(1, 4))
+    k = int(rng.integers(1, 5))
+    if rng.integers(0, 2) == 0:
+        h, w = int(rng.integers(1, 6)), int(rng.integers(1, 10))
+        cmds = [(R, int(rng.integers(0, H - h + 1)), int(rng.integers(0, W - w + 1)), h, w, k)]
+    else:
+        w = int(rng.integers(1, 10))
+        th = _tri_height(w)
+        cmds = [(T, int(rng.integers(th - 1, H)), int(rng.integers(0, W - w + 1)), w, k)]
+    for _ in range(n - 1):
+        r0, r1, c0, c1 = _bbox_of(cmds[int(rng.integers(0, len(cmds)))])
+        aw, ah = c1 - c0 + 1, r1 - r0 + 1
+        t = (R, T, D)[int(rng.integers(0, 3))]
+        rel = int(rng.integers(0, 5))          # above, below, left, right, inside
+        k = int(rng.integers(1, 5))
+        d = int(rng.integers(-2, 3))
+        if t == D:
+            if rel == 0:
+                r, c = r0 - 1, _align(rng, c0, c1, 1)
+            elif rel == 1:
+                r, c = r1 + 1, _align(rng, c0, c1, 1)
+            elif rel == 2:
+                r, c = _align(rng, r0, r1, 1), c0 - 1
+            elif rel == 3:
+                r, c = _align(rng, r0, r1, 1), c1 + 1
+            else:
+                r, c = r1, _align(rng, c0, c1, 1)
+            cmds.append((D, int(np.clip(r, 0, H - 1)), int(np.clip(c, 0, W - 1)), k))
+        elif t == R:
+            if rel in (0, 1):
+                w, h = int(np.clip(aw + d, 1, 12)), int(rng.integers(1, 6))
+                c = _align(rng, c0, c1, w)
+                r = r0 - h if rel == 0 else r1 + 1
+            elif rel in (2, 3):
+                h, w = int(np.clip(ah + d, 1, 12)), int(rng.integers(1, 10))
+                r = _align(rng, r0, r1, h)
+                c = c0 - w if rel == 2 else c1 + 1
+            else:
+                w, h = int(np.clip(aw + d, 1, aw)), int(rng.integers(1, ah + 1))
+                c = _align(rng, c0, c1, w)
+                r = r1 - h + 1
+            cmds.append((R, int(np.clip(r, 0, H - 1)), int(np.clip(c, 0, W - 1)), h, w, k))
+        else:
+            if rel in (0, 1):
+                w = int(np.clip(aw + d, 1, 12))
+                c = _align(rng, c0, c1, w)
+                r = r0 - 1 if rel == 0 else r1 + _tri_height(w)
+            elif rel in (2, 3):
+                w = int(rng.integers(1, 10))
+                r = r1
+                c = c0 - w if rel == 2 else c1 + 1
+            else:
+                w = int(np.clip(aw + d, 1, min(aw, 2 * ah)))
+                c = _align(rng, c0, c1, w)
+                r = r1
+            cmds.append((T, int(np.clip(r, 0, H - 1)), int(np.clip(c, 0, W - 1)), w, k))
+    return encode(cmds)
+
+
+PRIORS = {"clutter": random_program, "touching": random_program_v2}
+
+
+def random_programs(rng, n, prior="clutter"):
+    f = PRIORS[prior]
+    return [f(rng) for _ in range(n)]
 
 
 def encode_batch(programs):

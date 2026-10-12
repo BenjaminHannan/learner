@@ -76,3 +76,10 @@ the uv-tool pytest site-packages on PYTHONPATH). Pretrain once per seed first (`
 
 ## --small
 requests 64, 2 days, 8,000 pretraining programs (batch 64), pool 2,000, held-out 200, 50 critic steps, 200 eval samples. Smoke only.
+
+## TC-1b (`--prior touching`, `PRIOR=touching bash tc1/run_all.sh ...`)
+TC-1 ended TOY TOO HARD: uniform-clutter day-0 programs almost never put a roof on a body (0.15%), so even oracle picks could not
+teach one. TC-1b's single change is the day-0 prior `paint.random_program_v2` ("touching shapes": 1-3 shapes, each later shape touches
+or sits inside a random earlier one with a similar size along that side). It feeds pretraining, the replay pool and the held-out set;
+the checkpoint name gains `-touching`. Everything else is TC-1. Sealed spec and prior trait rates: UNCHECKABLE-SKILLS-2026-10-12.md
+sec. 8 "TC-1b".

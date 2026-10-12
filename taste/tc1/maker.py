@@ -148,9 +148,9 @@ def pretrain(cfg, seed, log=print):
     of the stream (independent draws)."""
     rng = np.random.default_rng([seed, 1])
     torch.manual_seed(seed)
-    train = encode_batch(random_programs(rng, cfg.pretrain_programs))
-    pool = encode_batch(random_programs(rng, cfg.pool))
-    heldout = encode_batch(random_programs(rng, cfg.heldout))
+    train = encode_batch(random_programs(rng, cfg.pretrain_programs, cfg.prior))
+    pool = encode_batch(random_programs(rng, cfg.pool, cfg.prior))
+    heldout = encode_batch(random_programs(rng, cfg.heldout, cfg.prior))
     model = Maker()
     log(f"maker parameters: {model.n_params()}")
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.pretrain_lr, weight_decay=cfg.weight_decay)
