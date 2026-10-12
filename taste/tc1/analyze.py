@@ -89,14 +89,19 @@ def analyze(d):
     out["C_minus_H_mean"], out["C_minus_B_mean"] = C_H, C_B
     out["verdicts_that_apply"] = [k for k, v in ver.items() if v]
     # precedence when several apply (spec silent): PASS, SHORTCUT, TOY TOO HARD, NO GAIN
-    verdict = next((k for k in ("PASS", "SHORTCUT", "TOY TOO HARD", "NO GAIN") if ver[k]), "UNDERPOWERED")
+    # after the one pre-set extension (12 nights) nothing is UNDERPOWERED any more: the result is final
+    days = max(r["config"]["days"] for r in runs.values())
+    out["nights"], out["prior"] = days, runs[("C", seeds[0])]["config"].get("prior", "clutter")
+    rest = "UNDERPOWERED" if days < 12 else "NOT A PASS (extension done; failing marks above)"
+    verdict = next((k for k in ("PASS", "SHORTCUT", "TOY TOO HARD", "NO GAIN") if ver[k]), rest)
     out["verdict"] = verdict
     return out, runs, pre
 
 
 def md(out, runs, pre):
     L = ["# TC-1 result", ""]
-    L.append(f"Seeds: {out['seeds']}; arms present: {out['arms_present']}; complete: {out['complete']}")
+    L.append(f"Seeds: {out['seeds']}; arms present: {out['arms_present']}; complete: {out['complete']}; "
+             f"nights: {out.get('nights')}; day-0 prior: {out.get('prior')}")
     L.append(f"\n**Verdict: {out['verdict']}**")
     if out.get("verdicts_that_apply") is not None:
         L.append(f"(verdicts whose conditions hold: {out['verdicts_that_apply']})")
