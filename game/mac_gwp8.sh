@@ -7,7 +7,8 @@
 #   bash mac_gwp8.sh pipeline  (what start runs) train both seeds, score, audit, analyze, push; safe to rerun: finished steps are skipped
 # Env: REPO = a clone of BenjaminHannan/learner (found under ~ when unset); GW8 = work folder (default ~/gw8);
 #      THREADS = torch threads per run (default half the performance cores); GW8_SMOKE=1 = tiny run for testing this script
-#      (smoke flags, 2 nights, 2-map scoring, push --dry-run); GW8_NOPUSH=1 = never push (cloud scoring of the spare runs).
+#      (smoke flags, 2 nights, 2-map scoring, push --dry-run); GW8_NOPUSH=1 = never push (cloud scoring of the spare runs);
+#      GW8_TAG = run name (default gwp8; gwpc = GW-PC, addendum A19: adds --start distil and pins its own code commit).
 #      Works with macOS bash 3.2 and BSD tools.
 set -uo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -17,7 +18,12 @@ BRANCH=claude/project-thread-h2ya81
 INPUTS=claude/game-world-inputs
 DATA_BRANCH=claude/project-thread-y0sxwe
 RESULTS=claude/game-world-mac-results
-MARKS_CODE=4fb211347     # game code the GW-P8 marks (A15) were set on; setup refuses code that differs from it
+TAG=${GW8_TAG:-gwp8}
+case "$TAG" in
+  gwp8) MARKS_CODE=4fb211347; EXTRA="" ;;          # game code the GW-P8 marks (A15) were set on; setup refuses code that differs
+  gwpc) MARKS_CODE=GWPC_CODE_PIN; EXTRA="--start distil" ;;   # GW-PC (A19): the reviewed distil code
+  *) echo "unknown GW8_TAG $TAG"; exit 2 ;;
+esac
 SHA_200=22f70906443a9640cee5abf440a7afe229f6d1f167cae3709cbf224bd23cde7f
 SHA_201=edbd1ee4a6b8d2be983de74bbad757d12249cf6671401e0999c3645ffbbfb795
 TRAIN_SHA=010af67124544bda9d4f26d8bd2801427770f1bb38f8c7b79921a36c87b244f5
@@ -136,7 +142,7 @@ start() {
 }
 
 score_seed() {
-  local s=$1 RUN="$RUNS/gwp8-s$1" S="$SCORE_DIR" N="$SCORE_DIR/nights-gwp8-s$1" TH W NW T0 FINAL MOVES NR P PC k
+  local s=$1 RUN="$RUNS/$TAG-s$1" S="$SCORE_DIR" N="$SCORE_DIR/nights-$TAG-s$1" TH W NW T0 FINAL MOVES NR P PC k
   TH=$(threads); W=100; NW=50
   [ "$SMOKE" = 1 ] && { W=2; NW=1; }
   [ -f "$RUN/summary.json" ] || { log "seed $s: no summary.json, scoring skipped"; return 1; }
@@ -150,10 +156,10 @@ score_seed() {
   }
   log "seed $s: scoring (T0 $T0, final $FINAL, moves $MOVES)"
   sc "$S/before-T0-mac-s$s.json" --arm model --picker sample --temp "$T0" --ckpt "$(parent $s)" --worlds $W
-  sc "$S/after-gwp8-s$s.json" --arm model --picker sample --ckpt "$FINAL" --worlds $W
+  sc "$S/after-$TAG-s$s.json" --arm model --picker sample --ckpt "$FINAL" --worlds $W
   k=1
   while [ $k -lt "$NR" ]; do sc "$N/night_$k.json" --arm model --picker sample --ckpt "$RUN/night_$k/checkpoint.pt" --worlds $NW; k=$((k + 1)); done
-  cp -p "$S/before-T0-mac-s$s.json" "$N/night_0.json"; cp -p "$S/after-gwp8-s$s.json" "$N/night_$NR.json"
+  cp -p "$S/before-T0-mac-s$s.json" "$N/night_0.json"; cp -p "$S/after-$TAG-s$s.json" "$N/night_$NR.json"
   # PPO at the first saved step >= this run's game moves (practice + quiz), both ways (A15 Q-2 takes the stronger)
   P=$(( (MOVES + 8191) / 8192 * 8192 )); [ $P -gt 229376 ] && P=229376
   PC="$GW8/inputs/game-world/runs/ppo-s0/ppo_steps_$P.pt"
@@ -161,10 +167,11 @@ score_seed() {
   sc "$S/ppo-$P.json" --arm ppo --ppo-picker argmax --ckpt "$PC" --worlds $W
   "$VPY" -m game.audit "$RUN" > "$GW8/logs/audit-s$s.out" 2>&1; log "seed $s: audit exit $?"
   local XD=""
-  for kv in gwp=after-gwp-s$s gws3=after-gw3-s$s old=after-s$s ppo_argmax=ppo-$P before_T0_cloud=before-T0-s$s before_greedy=before-s$s; do
+  for kv in gwp8=after-gwp8-s$s gwp=after-gwp-s$s gws3=after-gw3-s$s old=after-s$s ppo_argmax=ppo-$P before_T0_cloud=before-T0-s$s before_greedy=before-s$s; do
+    [ "${kv#*=}" = "after-$TAG-s$s" ] && continue   # never against itself
     [ -s "$S/${kv#*=}.json" ] && XD="$XD --extra-diff ${kv%%=*}=$S/${kv#*=}.json"
   done
-  "$VPY" -m game.analyze --run "$RUN" --parent "$(parent $s)" --before "$S/before-T0-mac-s$s.json" --after "$S/after-gwp8-s$s.json" \
+  "$VPY" -m game.analyze --run "$RUN" --parent "$(parent $s)" --before "$S/before-T0-mac-s$s.json" --after "$S/after-$TAG-s$s.json" \
     --random "$S/random.json" --ppo "$S/ppo-sample-$P.json" --nights-dir "$N" --dev "$GW8/sk200k/dev/in_dist.jsonl" \
     --out "$RUN/analysis" --threads "$TH" $XD > "$GW8/logs/analyze-s$s.out" 2>&1
   log "seed $s: analyze exit $?"
@@ -177,15 +184,15 @@ pipeline() {
   TH=$(threads)
   export OMP_NUM_THREADS=$TH MKL_NUM_THREADS=$TH VECLIB_MAXIMUM_THREADS=$TH
   [ "$SMOKE" = 1 ] && NARGS="--smoke --nights 2" || NARGS="--nights 8"
-  log "pipeline start: code $(git rev-parse HEAD), $TH threads per run, smoke=$SMOKE"
+  log "pipeline start ($TAG): code $(git rev-parse HEAD), $TH threads per run, smoke=$SMOKE"
   ( while true; do sleep 1200; push_results > /dev/null 2>&1; done ) &
   PUSHER=$!
   mkdir -p "$RUNS"
   for s in $SEEDS; do
-    if [ -f "$RUNS/gwp8-s$s/summary.json" ]; then log "seed $s: already trained"; continue; fi
-    [ -d "$RUNS/gwp8-s$s" ] && mv "$RUNS/gwp8-s$s" "$RUNS/gwp8-s$s-partial-$(date +%s)"   # a broken earlier try is kept, not deleted
-    "$VPY" -m game.mode --parent "$(parent $s)" --out "$RUNS/gwp8-s$s" --seed $s --threads "$TH" --data "$GW8/sk200k" \
-      --keep-awake-only --keep guess --picker sample --quiz-picker sample --night pg $NARGS > "$GW8/logs/gwp8-s$s.out" 2>&1 &
+    if [ -f "$RUNS/$TAG-s$s/summary.json" ]; then log "seed $s: already trained"; continue; fi
+    [ -d "$RUNS/$TAG-s$s" ] && mv "$RUNS/$TAG-s$s" "$RUNS/$TAG-s$s-partial-$(date +%s)"   # a broken earlier try is kept, not deleted
+    "$VPY" -m game.mode --parent "$(parent $s)" --out "$RUNS/$TAG-s$s" --seed $s --threads "$TH" --data "$GW8/sk200k" \
+      --keep-awake-only --keep guess --picker sample --quiz-picker sample --night pg $NARGS $EXTRA > "$GW8/logs/$TAG-s$s.out" 2>&1 &
     pids="$pids $!"
     log "seed $s: training started (pid $!)"
   done
@@ -225,7 +232,7 @@ push_results() {
 status() {
   local s f
   for s in $SEEDS; do
-    f="$GW8/logs/gwp8-s$s.out"; [ -f "$f" ] || { echo "seed $s: not started"; continue; }
+    f="$GW8/logs/$TAG-s$s.out"; [ -f "$f" ] || { echo "seed $s: not started"; continue; }
     echo "seed $s: nights done $(grep -c '^night ' "$f")/8; last: $(grep -E '^(temp|quiz|night|done) ' "$f" | tail -1 | cut -c1-150)"
     grep -m1 -E 'Traceback|Error|Killed' "$f" > /dev/null && { echo "seed $s ERROR:"; tail -4 "$f"; }
   done
