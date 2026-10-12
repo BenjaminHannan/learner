@@ -746,3 +746,28 @@ kept as `RESULT-H2-void.*`). Found by replaying it with a printout per day: trai
 rounds, sealed day asked nothing. Fix: `if day != 1`. New unit test: with a value head that always says "help", the two
 arms now make the same choice on every round, sealed day included (the old code fails it: 0 sealed extras vs 72).
 Training days are unchanged by the fix; the sealed scoring reruns from the cached next-need guesses.
+
+**B23. H-2 result (4:30 PM ET 10-12): PROVED WRONG. Seeing the person's reactions did not make the learned help value
+better; the shipped helping drive stays HELPER-TOOL.** Fixed code (commit e30c942a3e), same caches, 400 sealed sessions.
+| Seed | NONE | EAGER-TOOL | HELPER-TOOL | HELPER-REACT | REACT - TOOL [95% CI] | H2-1 | thanks gap | H2-3 |
+|---|---|---|---|---|---|---|---|---|
+| s200 | 3.035 | 3.094 | 2.842 | 2.896 | +0.054 [-0.035, +0.142] | PROVED WRONG (>= 0) | +4.34 pts | neither |
+| s201 | 3.035 | 3.106 | 2.914 | 2.924 | +0.010 [-0.077, +0.097] | PROVED WRONG (>= 0) | +4.99 pts | neither |
+- Sealed consequence: reading the person waits for the 10M model and real reaction text. The helping drive that ships
+  is P3's learned help value (act when the tool-checked value beats staying quiet; G-transfer's nightly self-quiz head
+  for the learning side), without person reading.
+- What it did learn (shown): after a "removed" it offered fewer extras than after a "left" (47.7% vs 62.7% on s200,
+  56.4% vs 73.7% on s201), the right direction. What went wrong (shown): it offered more extras after any reaction than
+  HELPER-TOOL does (HELPER-TOOL 33-48% either way), so it paid for the extra boldness with easygoing gains (2.742 vs
+  2.765, 2.753 vs 2.760) smaller than its tidy losses (3.026 vs 2.908, 3.069 vs 3.044). And "thanks" moved it by +4.3
+  and +5.0 points, just under the proved-wrong line (5), the same weakness H-1 showed.
+- Post-hoc headroom check (reported only, not a mark; `dopamine/results/h2/diag_typeknown.py`): TYPE-KNOWN, HELPER-TOOL
+  told the true person type from round 1, beats HELPER-TOOL by only -0.052 [-0.132, +0.030] (s200) and -0.103 [-0.190,
+  -0.015] (s201). So the H2-1 bar (-0.05 with CI below 0) asked a helper that must first earn the type through an
+  unwanted extra to capture about all of the room a perfectly informed one has. Reading (suggested): this bed has too
+  little room for person-reading (short sessions, 0.75 cost gap), so H-2's failure says the bed is too small more than
+  that reading people cannot be learned; the right retest is in the 10M model with real reaction text and longer
+  sessions, as the sealed consequence already says. Untested: whether a value head that gets the reactions as text
+  (not counts) does better.
+- Results: `dopamine/results/h2/s200`, `s201` (RESULT-H2 = fixed run; RESULT-H2-void = the void first run;
+  DIAG-TYPEKNOWN). The diagnostics import the code from a copy of the repo at e30c942a3e.
