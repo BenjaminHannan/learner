@@ -68,6 +68,9 @@ def install(cons_path, out=None, seed=None):
     assert an in (None, 'state'), an
     an_lam = float(cons.get('anchor_lambda', 100.0))
     pad = bool(cons.get('protect_pad_mask'))
+    soft = cons.get('protect_soft')   # graded mask (kf.mask_for soft); missing or null: the hard mask
+    assert soft is None or method == 'kf', 'protect_soft needs protect=kf'
+    assert soft is None or (isinstance(soft, (int, float)) and soft >= 0), soft
     assert not pad or method == 'kf', 'protect_pad_mask masks the K-FAC statistics: needs protect=kf'
     # frozen pre-mode model (arms KL and anchor share it), taken when mode.main builds the model (before any training); the anchor's
     # per-dimension scales are measured once, on the parent over the diary of the first night
@@ -100,7 +103,7 @@ def install(cons_path, out=None, seed=None):
         if method == 'none':
             info = {}
         elif method == 'kf':
-            F, info = kf.factors(kf.kfac_stats(m, diary, norm='example' if pg == 'example' else None, pad_mask=pad), energy)
+            F, info = kf.factors(kf.kfac_stats(m, diary, norm='example' if pg == 'example' else None, pad_mask=pad), energy, soft=soft)
             if parent and 'F0' not in keep:
                 keep['F0'] = F   # night 1: factors measured on the parent weights are F0
             F0 = keep['F0'] if parent else None
@@ -127,6 +130,8 @@ def install(cons_path, out=None, seed=None):
             extra['parent'] = True
         if pad:
             extra['pad_mask'] = True
+        if soft is not None:
+            extra['soft'] = soft
         print('protect', json.dumps(dict(method=method, energy=energy, **extra, seed=seed, frozen=len(frozen), secs=round(time.time() - t, 1),
                                          free_share={n: v.get('free_share', v.get('free')) for n, v in info.items()})), flush=True)
         kls, ans = [], []

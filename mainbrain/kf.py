@@ -177,29 +177,43 @@ def eig(C):
     return lam.flip(0).clamp(min=0).float(), V.flip(1).float()
 
 
-def mask_for(a, g, energy):
-    """M [out, in+1]: 0 on the pairs (j, i) holding the top `energy` share of sum a_i g_j, 1 elsewhere."""
+def mask_for(a, g, energy, soft=None):
+    """M [out, in+1]: 0 on the pairs (j, i) holding the top `energy` share of sum a_i g_j, 1 elsewhere.
+    soft (positive number s, graded mask): inside the set M = min(1, tau / (s * p)), p = g_j a_i, tau = p of the least important
+    pair inside the set (so with s=1 the boundary pair gets 1 and a pair 10x more important gets 0.1); outside M stays 1.
+    soft None or 0: the hard mask above, unchanged."""
     S = g[:, None] * a[None, :]
     flat = S.flatten()
     order = torch.argsort(flat, descending=True)
     cum = torch.cumsum(flat[order], 0) / flat.sum()
     k = int((cum < energy).sum().item()) + 1
     M = torch.ones_like(flat)
-    M[order[:k]] = 0.0
+    if not soft:
+        M[order[:k]] = 0.0
+    else:
+        top = order[:k]
+        tau = flat[order[k - 1]]
+        p = flat[top].clamp(min=1e-30)
+        M[top] = torch.clamp(tau / (soft * p), max=1.0)
     return M.view_as(S), k
 
 
-def factors(stats, energy):
-    """{name: (U, V, M)} and a per-layer summary."""
+def factors(stats, energy, soft=None):
+    """{name: (U, V, M)} and a per-layer summary. soft: see mask_for; adds m_median, frac_gt_0_1 (share of protected pairs with
+    M > 0.1) and soft to each layer's summary."""
     F, info = {}, {}
     for n, (A, G) in stats.items():
         if A is None or G is None:
             continue
         a, U = eig(A)
         g, V = eig(G)
-        M, k = mask_for(a, g, energy)
+        M, k = mask_for(a, g, energy, soft)
         F[n] = (U, V, M)
         info[n] = dict(pairs=M.numel(), protected=k, free_share=round(1 - k / M.numel(), 4))
+        if soft:
+            prot = (g[:, None] * a[None, :]).flatten().argsort(descending=True)[:k]
+            Mp = M.flatten()[prot]
+            info[n].update(m_median=float(Mp.median()), frac_gt_0_1=float((Mp > 0.1).float().mean()), soft=soft)
     return F, info
 
 
