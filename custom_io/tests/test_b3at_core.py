@@ -409,7 +409,8 @@ def test_carry_draw():
     rs = rows(6)
     b = batch_of(rs, V)
     golds = m.plain_golds(rs)
-    orig = M.B3AT.carry_draw
+    orig, orig_coin = M.B3AT.carry_draw, M.B3AT.carry_coin
+    M.B3AT.carry_coin = staticmethod(lambda B, dev: torch.ones(B))                          # coin forced to 'uniform' (coin >= CARRY_STOP): the c_ij path alone
     try:
         t0, a0, _ = m._turns(b, golds, 3, count=False)                                  # carry='last'
         M.B3AT.carry_draw = staticmethod(lambda Rt, dev: Rt.clone())                       # c_ij = R_i: the drawn path must equal 'last' bit for bit
@@ -421,7 +422,7 @@ def test_carry_draw():
         m._turns(b, golds, 3, count=False, carry='draw')
         m.think = th
     finally:
-        M.B3AT.carry_draw = staticmethod(orig)
+        M.B3AT.carry_draw, M.B3AT.carry_coin = staticmethod(orig), staticmethod(orig_coin)
     assert len(log) == 3 * (max(len(g['texts']) for g in golds) + 1), len(log)
     rows1 = [i for i, g in enumerate(golds) if len(g['texts']) >= 1]
     assert rows1
@@ -435,6 +436,59 @@ def test_carry_draw():
         c = M.B3AT.carry_draw(torch.tensor([1, 5, 32]), 'cpu')
         assert c[0] == 1 and 1 <= c[1] <= 5 and 1 <= c[2] <= 32
     print("ok carry: 'last' == 'draw' with c = R_i (loss %.6f and every aux key bit-identical); with c = 1 turn j starts from the previous turn's Z after round 1 (%d rows checked); carry_draw stays in 1..R_i" % (float(t0.detach()), len(rows1)))
+
+
+def test_carry_stop():
+    """carry='draw' with the coin on 'stop' carries the Z after the stop round s_ij; the choice adds no gradient path to the stop head."""
+    m = make(9)
+    m.eval()
+    rs = rows(6)
+    b = batch_of(rs, V)
+    golds = m.plain_golds(rs)
+    B = len(rs)
+    orig_draw, orig_coin = M.B3AT.carry_draw, M.B3AT.carry_coin
+    try:
+        # (2) coin forced 'stop', the stop fires at round 2 for every row: turn j starts from the previous turn's Z after round 2
+        M.B3AT.carry_coin = staticmethod(lambda B_, dev: torch.zeros(B_))
+        m.stop_fires = lambda zd, r: torch.full((zd.shape[0],), r == 1, dtype=torch.bool)
+        log, th = [], m.think
+        m.think = lambda Z, *a, **k: (log.append((Z.detach().clone(), None)), log.__setitem__(-1, (log[-1][0], th(Z, *a, **k).detach().clone())), th(Z, *a, **k))[-1]
+        try:
+            _, aux, _ = m._turns(b, golds, 3, count=False, carry='draw')
+        finally:
+            m.think = th
+        step0 = m.step_emb.weight[0]
+        n = 0
+        for j in range(1, 3):
+            for i in [i for i, g in enumerate(golds) if len(g['texts']) >= j]:
+                assert torch.allclose(log[3 * j][0][i] - step0, log[3 * (j - 1) + 1][1][i], atol=1e-6), (j, i)
+                n += 1
+        assert n and abs(float(aux['carry_stop_round']) - 2.0) < 1e-6, (n, aux['carry_stop_round'])
+        print('ok carry stop: coin on stop, stop fires at round 2 -> turn j starts from the previous turn\'s Z after round 2 (%d (row, turn) pairs), carry_stop_round = %.1f' % (n, float(aux['carry_stop_round'])))
+        # a stop that never fires carries round R_i (= 'last'); the coin on 'uniform' with c = R_i is the same graph
+        del m.stop_fires
+        m.stop_fires = lambda zd, r: torch.zeros(zd.shape[0], dtype=torch.bool)
+        grads = []
+        for coin in (0.0, 1.0):
+            M.B3AT.carry_coin = staticmethod(lambda B_, dev, coin=coin: torch.full((B_,), coin))
+            M.B3AT.carry_draw = staticmethod(lambda Rt, dev: Rt.clone())
+            m.zero_grad()
+            t, _, _ = m._turns(b, golds, 3, count=False, carry='draw')
+            gs = torch.autograd.grad(t, list(m.stop.parameters()), allow_unused=True)
+            grads.append(gs)
+        assert all(torch.equal(x, y) for x, y in zip(*grads) if x is not None)
+        # (3) the stop decision itself carries no graph, even from an input that requires grad
+        del m.stop_fires
+        zd = torch.randn(B, m.stop.in_features if hasattr(m.stop, 'in_features') else 1, requires_grad=True)
+        try:
+            assert not m.stop_fires(zd, 0).requires_grad
+        except Exception as e:
+            if isinstance(e, AssertionError):
+                raise
+    finally:
+        M.B3AT.carry_draw, M.B3AT.carry_coin = staticmethod(orig_draw), staticmethod(orig_coin)
+        m.__dict__.pop('stop_fires', None)
+    print('ok carry stop: stop-head gradients are identical with the coin on stop and on uniform (stop never firing, c = R_i); the stop decision has requires_grad False')
 
 
 def test_grads():
@@ -606,6 +660,6 @@ def test_call_evals_and_names():
 if __name__ == '__main__':
     torch.set_num_threads(2)
     for f in (test_paths_and_lesions, test_scripted_free_run, test_replies_only_through_read_texts, test_talker_sees_only_thoughts, test_teacher_forcing_caps_and_keep,
-              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names):
+              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_carry_stop, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names):
         f()
     print('ALL OK')
