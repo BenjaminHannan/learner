@@ -354,3 +354,11 @@ of my favorite things you've said today. proactively making my life easier. Also
   (and, for s201, PRODUCT and division; sealed near 11-73%), and a wanted extra only pays when right more often than wrong.
   So P1-1 may read "no difference" and the ORACLE ceiling will be small; P1-2 is the informative mark (does the checked
   reward teach holding back where eager helping hurts). If P1-1 is flat, re-run P1 on the first 10M/30M domain-mode models.
+- P1 code details fixed before the full run (9:10 PM ET 10-11; no mark changed): `dopamine/p1_sessions.py` sha256 2f65e028470dffab...
+  Builder: focus cells x, y = c r1, c r1+1; COUNTIF(x:y,">k") with k = (x+y)//2; cell arithmetic x+y*2; IF(c r1>c' r1, c r2,
+  c' r2) with c' the other column; caps as panel.py. Both heads standardise their inputs and fit with max_iter 200. N labels
+  every candidate of a session's last request 0 (there is no next request). V's first input on day 1 is 0 (N is not fit yet).
+  The menu includes the current request's own kind (it can never be the next request unless the person repeats it). One
+  wanted, right extra lets the model continue from that answer, so a chain of right guesses can skip several asks.
+  Workload: 1,300 sessions, 3,882 rounds, 19,136 distinct candidates (about 8 min of answers per model at 2 threads here).
+  Run on the cloud box, not the Mac: the job is about 10 minutes and the Mac's cores are on the Game world runs tonight.
