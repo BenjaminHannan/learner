@@ -76,6 +76,8 @@ L8_TAG = 'learn8'
 L8_SUBST_DEPTH = 3
 L9_SEED = 93901   # L9 (spec: MARKS-L9-2026-10-12.md): joined rows only from widen.whole_join_ring, not-joined from rings 1-3
 L9_TAG = 'learn9'
+L10_SEED = 94001   # L10 (spec: MARKS-L10-2026-10-12.md): joined rows from joinlast.join_last_draft, not-joined from rings 1-3
+L10_TAG = 'learn10'
 MODE_DRAW_CAP = 20_000_000
 PER_CELL = 6000
 FIT_N = 420
@@ -572,10 +574,13 @@ def fn_op_fn(prompt):
     return call(body[:ops[0]]) and call(body[ops[0] + 1:])
 
 
-def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEED, draw_cap=MODE_DRAW_CAP, tag=L8_TAG):
+def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEED, draw_cap=MODE_DRAW_CAP, tag=L8_TAG,
+                  join_kinds=None, census=None):
     """-> (rows, stats). Joined rows ('mode-two') are drafted only from the substitution ring (widen.subst_ring; the host's
     kind is recorded), not-joined rows ('mode-one') from rings 1-3 by kind round robin as build_mode_rows does. The two draws
-    alternate until both cells hold per_cell rows or draw_cap draws. cons must hold widen_subst."""
+    alternate until both cells hold per_cell rows or draw_cap draws. cons must hold widen_subst (or widen_join_whole).
+    L10: join_kinds (the accepted join kinds [(form, symbol)]) makes the joined draws joinlast.join_last_draft instead (no
+    join ring is read; cons holds no ring flag); census (a Census) then counts each of those attempts."""
     from domain import mode
     from domain.far import widen
     tool = sheet_tool
@@ -586,9 +591,11 @@ def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEE
     sr = cons['widen_rings'] + 1
     ex = widen.by_kind({r: v for r, v in rings.items() if r < sr}, kinds)
     assert all(k in ex for k in SP.SCORED), 'a scored kind is not on the help page'
-    host = Pick(p for _, p in rings[sr])
-    host_kind = [k for k, _ in rings[sr]]
-    jex = {sr: host}
+    if join_kinds is None:
+        host = Pick(p for _, p in rings[sr])
+        host_kind = [k for k, _ in rings[sr]]
+        jex = {sr: host}
+    can_join = bool(host) if join_kinds is None else bool(join_kinds)
     rng = random.Random(f'{seed}-train')
     rows, drops, per = [], Counter(), {c: 0 for c in MODE_CELLS}
     draws = nj = shown = 0
@@ -608,8 +615,20 @@ def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEE
                      'answer': item['value'], 'n_steps': len(item['steps']), 'ring': item['ring']})
         per[cell] += 1
 
-    while min(per.values()) < per_cell and draws < draw_cap and host:
-        if per[MODE_CELLS[0]] < per_cell:   # one joined try: the substitution ring only
+    while min(per.values()) < per_cell and draws < draw_cap and can_join:
+        if per[MODE_CELLS[0]] < per_cell and join_kinds is not None:   # one joined try: join-last (L10)
+            from domain.far import joinlast
+            draws += 1
+            item, why = joinlast.join_last_draft(tool, helps, join_kinds, rng, ctx)
+            if census is not None:
+                census.add(item, why)
+            if item is None:
+                drops[why] += 1
+            elif not far_props(item['prompt'])['two_kinds']:
+                drops['join_not_joined'] += 1
+            else:
+                keep(item, item['kind'], MODE_CELLS[0])
+        elif per[MODE_CELLS[0]] < per_cell:   # one joined try: the substitution ring only
             draws += 1
             item, why = mode.draft(tool, jex, None, rng, ctx)
             if item is None:
@@ -645,6 +664,135 @@ def build_l9(rows_out, parent, probe, eval_rows, draw_cap=MODE_DRAW_CAP):
     build_ring_rows(rows_out, parent, probe, eval_rows, L9_SEED, L9_TAG, dict(widen_join_whole=True), print_whole_join_ring, draw_cap)
 
 
+def build_l10(rows_out, parent, probe, eval_rows, draw_cap=MODE_DRAW_CAP):
+    build_ring_rows(rows_out, parent, probe, eval_rows, L10_SEED, L10_TAG, {}, None, draw_cap, join_last=True)
+
+
+def l9_join_kinds(parent_chars):
+    """The accepted (form, symbol) join kinds of L9's ring: widen.build with widen_join_whole, L9's seed and constants (as
+    build-l9 builds them). -> [(form, symbol)], printed."""
+    import json as _json
+    from domain import mode
+    from domain.far import widen
+    cons = dict(_json.load(open(mode.CONST_PATH)), widen_join_whole=True)
+    tool = sheet_tool
+    helps = tool.help()
+    ctx = dict(vchars=set(parent_chars), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    _, wst = widen.build(tool, helps, lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(f'{L9_SEED}-widen'), cons)
+    jw = wst['join_whole']
+    kinds = [(int(k.split(':', 1)[0]), k.split(':', 1)[1]) for k in jw['accepted']]
+    print(f'L9 ring accepted join kinds (form:symbol), {len(kinds)}: {jw["accepted"]}; kept per kind {jw["kept"]}', flush=True)
+    return kinds
+
+
+def _is_call(t):
+    """True when t is exactly one function call NAME(...) (its first bracket closes at the end)."""
+    t = t.strip()
+    if not re.fullmatch(r'[A-Z]+\(.*\)', t):
+        return False
+    d = 0
+    for k, c in enumerate(t):
+        d += (c == '(') - (c == ')')
+        if d == 0 and c == ')':
+            return k == len(t) - 1
+    return False
+
+
+def two_calls(prompt):
+    """True when the formula (after ';' and '=') is two function calls side by side, bare or each in one pair of round brackets,
+    joined by exactly one top-level symbol (a character that is not a letter, digit, space or bracket)."""
+    body = prompt.partition(';')[2].strip().lstrip('=')
+    depth, syms = 0, []
+    for k, c in enumerate(body):
+        depth += (c == '(') - (c == ')')
+        if depth == 0 and not c.isalnum() and c not in ' ()':
+            syms.append(k)
+    if len(syms) != 1:
+        return False
+    def unit(t):
+        t = t.strip()
+        if t.startswith('(') and t.endswith(')') and _is_call(t[1:-1]):
+            d = 0
+            for k, c in enumerate(t):
+                d += (c == '(') - (c == ')')
+                if d == 0:
+                    return k == len(t) - 1
+        return _is_call(t)
+    return unit(body[:syms[0]]) and unit(body[syms[0] + 1:])
+
+
+class Census:
+    """L10 census of join_last_draft attempts: keep-rate, drop reasons, and the far properties of the kept drafts."""
+
+    def __init__(self):
+        self.attempts, self.reasons = 0, Counter()
+        self.kept, self.props = 0, Counter()
+        self.layouts, self.arr, self.digit_runs, self.n_steps = Counter(), Counter(), Counter(), Counter()
+
+    def add(self, item, why):
+        from domain.far import widen
+        self.attempts += 1
+        if item is None:
+            self.reasons[why] += 1
+            return
+        p = item['prompt']
+        self.kept += 1
+        self.props.update(k for k, v in far_props(p).items() if v)
+        self.props.update(k for k, v in (('two_calls', two_calls(p)), ('fn_op_fn', fn_op_fn(p))) if v)
+        self.layouts[widen.layout(p.partition(';')[2])] += 1
+        self.arr[arrangement(p)] += 1
+        self.digit_runs[len(re.findall(r'\d+', p))] += 1
+        self.n_steps[len(item['steps'])] += 1
+
+    def report(self):
+        n = max(self.kept, 1)
+        return dict(attempts=self.attempts, kept=self.kept, keep_rate=self.kept / max(self.attempts, 1),
+                    reasons=dict(self.reasons.most_common()),
+                    share={k: self.props[k] / n for k in ('grid_rows', 'max_range_cells', 'max_row_ref', 'two_kinds', 'two_calls', 'fn_op_fn')},
+                    arrangement={a: self.arr[a] / n for a in ('plus', 'bracket-times', 'other')},
+                    top_layouts=[(l, c, c / n) for l, c in self.layouts.most_common(15)], n_layouts=len(self.layouts),
+                    digit_runs=dict(sorted(self.digit_runs.items())), n_steps=dict(sorted(self.n_steps.items())))
+
+    def print(self):
+        r = self.report()
+        print(f'census: {r["attempts"]} join-last attempts, kept {r["kept"]} (keep-rate {100.0 * r["keep_rate"]:.2f}%)')
+        print('  drop reasons (share of attempts): ' + ', '.join(f'{k} {100.0 * v / max(r["attempts"], 1):.2f}% ({v})' for k, v in r['reasons'].items()))
+        print('  among kept: ' + ', '.join(f'{k}{"" if k in ("two_kinds", "two_calls", "fn_op_fn") else ">=5"} {100.0 * v:.1f}%' for k, v in r['share'].items()))
+        print('  among kept, arrangement: ' + ', '.join(f'{a} {100.0 * v:.1f}%' for a, v in r['arrangement'].items()))
+        print(f'  among kept, top 15 layouts of {r["n_layouts"]} (after the ";"):')
+        for l, c, f in r['top_layouts']:
+            print(f'    {100.0 * f:5.1f}% ({c:5d})  {l}')
+        print('  among kept, digit runs per prompt: ' + ', '.join(f'{k}: {v}' for k, v in r['digit_runs'].items()))
+        print('  among kept, n_steps: ' + ', '.join(f'{k}: {v}' for k, v in r['n_steps'].items()))
+
+
+def census_l10(parent, attempts, out):
+    """Stage census-l10: join_last_draft `attempts` times (ctx as build_l8_rows builds it, from the parent's chars)."""
+    import torch
+    from domain import mode
+    cons = json.load(open(mode.CONST_PATH))
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    kinds = l9_join_kinds(ck['chars'])
+    tool = sheet_tool
+    helps = tool.help()
+    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    from domain.far import joinlast
+    rng = random.Random(f'{L10_SEED}-census')
+    cen = Census()
+    for n in range(attempts):
+        item, why = joinlast.join_last_draft(tool, helps, kinds, rng, ctx)
+        cen.add(item, why)
+        if item is not None:
+            ctx['seen'].add(item['prompt'])
+        if (n + 1) % 2000 == 0:
+            print(f'  {n + 1} attempts: kept {cen.kept}', flush=True)
+    cen.print()
+    rep = dict(cen.report(), seed=L10_SEED, kinds=[f'{f}:{s}' for f, s in kinds])
+    with open(out, 'w') as f:
+        json.dump(rep, f, indent=1)
+    print('wrote', out)
+
+
 def print_subst_ring(w):
     sb = w['subst']
     print(f'subst ring: accepted layouts {sb["accepted"]}; depth {sb["depth"]}; value pieces {sb["vq"]}; top 20 layouts (kept):')
@@ -662,7 +810,7 @@ def print_whole_join_ring(w):
         print(f'    {k!r}: {n}' + ('' if k in jw['accepted'] else '  (not accepted)'))
 
 
-def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, print_ring, draw_cap=MODE_DRAW_CAP):
+def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, print_ring, draw_cap=MODE_DRAW_CAP, join_last=False):
     if os.path.exists(rows_out):
         raise SystemExit(f'refusing to overwrite {rows_out}')
     import torch
@@ -683,11 +831,17 @@ def build_ring_rows(rows_out, parent, probe, eval_rows, seed, tag, cons_extra, p
             missed.append(path)
     if missed:
         print('NOT excluded (unreadable): ' + ', '.join(missed))
-    rows, st = build_l8_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag, draw_cap=draw_cap)
+    kinds, cen = None, None
+    if join_last:   # L10: the joined rows are join-last drafts; the join kinds are L9's accepted ones
+        kinds, cen = l9_join_kinds(ck['chars']), Census()
+    rows, st = build_l8_rows(m, ck['chars'], cons, exclude, seed=seed, tag=tag, draw_cap=draw_cap, join_kinds=kinds, census=cen)
     w = st['widen']
     print(f'excluded prompts: {len(exclude)}; draws {st["draws"]}; widen kept {st["widen_kept"]} sha {st["widen_sha256"][:12]}')
     print(f'widen tries {w["tries"]}; per kind {w["per_kind"]}')
-    print_ring(w)
+    if print_ring:
+        print_ring(w)
+    if cen is not None:
+        cen.print()
     print('drops:', st['drops'])
     print('per cell:', st['per'])
     if not st['complete']:
@@ -1092,13 +1246,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'train'])
-    a.add_argument('--rows-out', default=None, help='build-l8 / build-l9: where to write the rows (required; refuses to overwrite)')
-    a.add_argument('--draw-cap', type=int, default=MODE_DRAW_CAP, help='build-l8 / build-l9: stop after this many draws')
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'build-l10', 'census-l10', 'train'])
+    a.add_argument('--rows-out', default=None, help='build-l8 / build-l9 / build-l10: where to write the rows (required; refuses to overwrite)')
+    a.add_argument('--draw-cap', type=int, default=MODE_DRAW_CAP, help='build-l8 / build-l9 / build-l10: stop after this many draws')
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
     a.add_argument('--out')
+    a.add_argument('--attempts', type=int, default=10000, help='census-l10: join-last attempts (--out: the JSON file)')
     a.add_argument('--rows', default=TRAIN_ROWS, help='training rows (default: the L1 file)')
     a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4', 'l5', 'l8'], default='l1',
                help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO; l5 = S5, S, HP, HO, HPO, F0-near, F4-two, fit; l8 = S5, S, HP, HO, HPO, every probe cell, F4-plus, F4-times, fit')
@@ -1134,6 +1289,12 @@ def main(argv=None):
     elif a.stage == 'build-l9':
         assert a.rows_out, 'build-l9 needs --rows-out'
         build_l9(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS, a.draw_cap)
+    elif a.stage == 'build-l10':
+        assert a.rows_out, 'build-l10 needs --rows-out'
+        build_l10(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS, a.draw_cap)
+    elif a.stage == 'census-l10':
+        assert a.out, 'census-l10 needs --out'
+        census_l10(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work

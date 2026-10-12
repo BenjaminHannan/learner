@@ -148,6 +148,23 @@ def join_ring(tool, helps, rings, ok, rng, cons, seen):
     return out, tries, info
 
 
+def whole_piece(prompt, tool, runs=None):
+    """L9 R1's whole piece of any prompt -> (tokens, (i, j)) or None: a value slot (a well-formed piece whose replacement by `1`
+    still runs) such that the prompt with that piece replaced by `1` is answered `1` by the tool with no calculator steps (the
+    piece that does all the work); several: the longest by character length, ties the first in spans order. runs: tool_runs(tool)
+    (made here when omitted)."""
+    t, sl = value_slots(prompt, runs or tool_runs(tool))
+    best = None
+    for i, j in sl:
+        try:
+            res = tool.evaluate(swap(t, i, j, '1'))
+        except Exception:
+            continue
+        if res['value'] == '1' and not res['steps'] and (best is None or len(''.join(t[i:j])) > len(''.join(t[best[0]:best[1]]))):
+            best = (i, j)
+    return (t, best) if best else None
+
+
 def whole_join_ring(tool, helps, ok, rng, cons, seen):
     """-> (examples, tries, info): the whole-formula join ring (L9, widen_join_whole). The whole piece of a help example is its
     value slot under R1 such that the example with that piece replaced by `1` is answered `1` with no calculator steps (the
@@ -162,23 +179,13 @@ def whole_join_ring(tool, helps, ok, rng, cons, seen):
     syms = symbols(helps)
     brackets = any('(' in h['prompt'] for h in helps) and any(')' in h['prompt'] for h in helps)
     kinds = [(f, s) for f in (range(6) if brackets else (0, 1, 4, 5)) for s in syms]
-    def does_all_the_work(prompt):   # the tool answers `1` with no calculator steps
-        try:
-            res = tool.evaluate(prompt)
-        except Exception:
-            return False
-        return res['value'] == '1' and not res['steps']
     hosts = []   # (kind, tokens, (i, j), whole piece text) for each help example that has a whole piece
     wholes = {}
     for h in helps:
-        t, sl = value_slots(h['prompt'], runs)
-        best = None
-        for i, j in sl:
-            if does_all_the_work(swap(t, i, j, '1')) and (best is None or len(''.join(t[i:j])) > len(''.join(t[best[0]:best[1]]))):
-                best = (i, j)
-        wholes[h['prompt']] = ''.join(t[best[0]:best[1]]) if best else None
-        if best:
-            hosts.append((h['kind'], t, best, wholes[h['prompt']]))
+        w = whole_piece(h['prompt'], tool, runs)
+        wholes[h['prompt']] = ''.join(w[0][w[1][0]:w[1][1]]) if w else None
+        if w:
+            hosts.append((h['kind'], w[0], w[1], wholes[h['prompt']]))
     out, tries, kept = [], 0, {}
     accepted = None   # set after the probe
     while hosts and kinds and len(out) < ring_max and tries < cap:
