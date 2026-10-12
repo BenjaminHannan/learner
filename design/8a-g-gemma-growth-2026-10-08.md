@@ -837,3 +837,42 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   install, so it runs at the waiter's first insert check point after 30-g2q. The chain's own g2c10s step later finds its
   RESULT.json and the queue runner skips it (a run whose RESULT.json exists is skipped). Any 10M agent-model job is inserted as
   50- or later. g2c3, B3 group 1 and the s401 pairs move back by g2c10s's hours.
+
+## 38. Addendum AG (2026-10-12, 7:50 PM ET): the calculator fairness rule; G1 re-read with the plain model's calculator; arm PTC
+
+- **Ben's question (7:36 PM ET, project chat):** "you're telling me that in comparing two models, you gave one a caclulator and the
+  other no calculator and called it fair?" Yes. G1's bar set ours (B2, an exact calculator built in and trained with) against the
+  plain step model scored intact (it does its own arithmetic). The plain model's calculator lesion `calc` (C1': the exact result is
+  forced in whenever its decoded text ends `a op b =`) was in every G1 RESULT.json but was read as a lesion only.
+- **Shown (lesions.calc of G1's three PT RESULT.json, read on the Mac read-only at 7:40 PM ET; pooled-5 over 6,040 rows):** plain
+  with its calculator: 3M s400 4205 = 69.62 (intact 67.12), 3M s401 69.22 (68.01), 10M s400 4408 = 72.98 (72.47). Gain **+3.36**
+  against ours' +1.64: **difference -1.72** (was -3.71). With the 3M seed means: ours +1.30, plain with calculator +3.56.
+- **Shown (unweighted family means of per-family pooled-5):** 21 families without a calculator: ours 62.64 -> 65.38 (+2.74); plain
+  59.65 -> 63.41 (+3.76); plain with calculator 59.69 -> 63.41 (+3.72). 13 calculator families (arith_bare, backward_solve, chain_ops,
+  story_addsub, story_chain3, chain_story2, var_chain, div_exact, table_calc, distance_units, compare_numbers, state_update,
+  percent_rate): ours 88.54 -> 88.64 (+0.10); plain 75.75 -> 83.95 (+8.20); plain with calculator 81.93 -> 85.29 (+3.36). Seed noise
+  on the 21-family block at 3M is about 1.5 (s401: ours 64.16, plain 59.44).
+- **Reading:** G1 stays Stop (one seed). About half the reported gap was the calculator; the rest sits in both blocks. Ours is not at
+  its ceiling on the calculator block (88.6); "Why G1 didn't scale" (PR #71) found its misses are unpractised question wordings, not
+  arithmetic. Suggested, not shown: the plain model's remaining +3.36 there is reading (backward_solve in_dist 26 -> 38, arith_bare
+  variant 23 -> 35 with the calculator on).
+- **Rule from now on (every size test; WIDE tonight first):** report three gain differences, ours minus plain, side by side:
+  (1) pooled-5 against the plain model with its calculator (PT / PTS `calc` lesion; PTC's intact score once it exists); (2) the
+  21-family block and the 13-family block; (3) pooled-5 against the plain model without a calculator (the old number, kept so
+  earlier readouts stay comparable). The scaling bar ([[scaling-bar-ben]]) is judged on (1) from now on; (2) and (3) are reported.
+  Marks already fixed for running tests are unchanged (WIDE's absolute 76.31 / 75.01, G2f's floor, AT-1's gate).
+- **Arm PTC (plain model trained with the calculator; one change from PTS):** PTS's config (same pool p10-rung30-s400-a64-L,
+  caps_b3s.json, Gemma front, seed 400, accum as PTS) plus `calc_train`: in training, the characters the calculator writes (the
+  result after each step `expr =`) are left out of the loss; at test time the calculator writes them (intact = with calculator;
+  lesion `nocalc` = without). The calculator evaluates the whole integer expression before `=` (+ - * / x, precedence, brackets;
+  division only when exact), wider than C1' and close to B3G2's registry. Not covered, disclosed: min / max / mod and `->` updates,
+  which the plain model's steps never write as `expr =`. A gold step whose written result differs from the calculator's stays in the
+  loss and is counted (`calc_mismatch`). PT and PTS are unchanged (calc_train off is byte-identical).
+- **Cost and slot:** one coding pass; about 8 PC hours (3M about 3 h, 10M about 5 h; a guess from G1's plain 2.4 h and 4.1 h with
+  longer rows); $0. Inserts `42-ptc3s` and `43-ptc10s` right after `40-g2c10s`, before `46-tp` and every 10M agent-model job (50+).
+  Modal not used (it needs Ben's words naming the job, and WIDE holds most of this month's $30).
+- **Marks (fixed now, before any PTC run):** M1 works: calc_mismatch at most 0.1% of training rows; PTC 3M pooled-5 at least
+  g2c3s's `calc` pooled-5 minus 2.0. M2 uses the tool (prediction, not a gate): `nocalc` drops PTC's 13-family block by 5 or more
+  at 3M. M3 the question: fair gap = (B3G2 10M - B3G2 3M) - (PTC 10M - PTC 3M), reported beside the same gap with PTS's `calc`
+  lesion. If PTC's gain and PTS-with-calculator's gain differ by more than 1.5, later size reads need a trained PTC; within 1.5,
+  PTS's lesion stands in. Proved wrong ("the calculator explains the size gap"): the fair gap at or below -1.0 on seed 400.
