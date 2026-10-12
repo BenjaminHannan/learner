@@ -212,25 +212,25 @@ def b3_cfg(rung, extra=None, group=1):
         return solve_mlp(mod, dict(base, blocks=nb or NOPLUG_BLOCKS[rung]), noplug_target(rung, extra, group))
     base = dict(dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=loops, mlp=r['mlp']), **gbase)
     base.update(extra or {})
-    n = lambda model, cfg: globals()['n'](mod, cfg)
+    cnt = lambda cfg: n(mod, cfg)       # this group's model (was n('b3', cfg) through a lambda that ignored its model argument)
     if rung == '3M':
         cfg = dict(base, blocks=B2_S['blocks'])
         if group >= 2:
             # the writer's MLP: the 1/16 step (1/16 .. 12) whose count is closest to g2c3s (ties: the smaller)
-            cfg['writer_mlp'] = min(range(1, 193), key=lambda w: (abs(n('b3', dict(cfg, writer_mlp=w / 16)) - G2C3S), w)) / 16
-            if abs(n('b3', cfg) / G2C3S - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
+            cfg['writer_mlp'] = min(range(1, 193), key=lambda w: (abs(cnt(dict(cfg, writer_mlp=w / 16)) - G2C3S), w)) / 16
+            if abs(cnt(cfg) / G2C3S - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
                 d = r['width']
-                hid = int(cfg['mlp'] * d) + round((G2C3S - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
+                hid = int(cfg['mlp'] * d) + round((G2C3S - cnt(cfg)) / (cfg['blocks'] * (2 * d + 1)))
                 cfg['mlp'] = round((hid + 0.5) / d, 5)
     elif rung == '100M':
         cfg = dict(base, blocks=r['blocks'])
     else:
-        c1, per = n('b3', dict(base, blocks=1)), _per_unit(mod, base, 'blocks', 1)
+        c1, per = cnt(dict(base, blocks=1)), _per_unit(mod, base, 'blocks', 1)
         best = min(range(1, 41), key=lambda b: abs(c1 + (b - 1) * per - r['target']))
         cfg = dict(base, blocks=best)
-        if abs(n('b3', cfg) / r['target'] - 1) > r['band']:
+        if abs(cnt(cfg) / r['target'] - 1) > r['band']:
             d = r['width']
-            hid = int(r['mlp'] * d) + round((r['target'] - n('b3', cfg)) / (best * (2 * d + 1)))
+            hid = int(r['mlp'] * d) + round((r['target'] - cnt(cfg)) / (best * (2 * d + 1)))
             cfg['mlp'] = round((hid + 0.5) / d, 5)
     return cfg
 
@@ -270,7 +270,7 @@ def check_b3(rung, cfg, group=1):
         assert rung in NOPLUG_BLOCKS, f'noplug at {rung}'
         drop = ('d', 'n_heads', 'eg_embed', 'eg_pre', 'eg_adapter', 'blocks', 'mlp', 'reader_layers')
         gb = B3_G1 if group == 1 else B3_G2
-        keep = {k: v for k, v in cfg.items() if k not in drop and k not in gb and not (group == 3 and k == 'gap_p')}
+        keep = {k: v for k, v in cfg.items() if k not in drop and k not in gb}
         tgt = noplug_target(rung, keep, group)
         band = RUNGS[rung]['band'] if RUNGS[rung]['band'] is not None else 0.01
         assert abs(c / tgt - 1) <= band, f'{rung} no-plug {c:,} outside {tgt:,.0f} +-{100 * band:.1f}%'
