@@ -155,11 +155,15 @@ foreach ($f in @('g2check.py', 'b3_capcheck.py')) { if (-not (Test-Path "$IN\$f"
 foreach ($f in @("$SRCB3R\B3R-SETUP-OK.txt", "$SRCG2\G2-SETUP-OK.txt", "$WORK\b3-inputs\caps_b3.json")) { if (-not (Test-Path $f)) { Fail "$f missing (is the chain installed?)" } }
 $why = StillWaiting
 if ($why) { Fail $why }
+if ($doB3R -and @(Get-Content "$SRCB3R\B3R-SETUP-OK.txt") -match "commit $SHAB3R") { 'src-b3r: this commit is already installed'; $doB3R = $false }
+if ($doG2 -and @(Get-Content "$SRCG2\G2-SETUP-OK.txt") -match "commit $SHAG2") { 'src-b3g2: this commit is already installed'; $doG2 = $false }
+if ($doFC2 -and -not $doG2 -and ((Hash "$SRCG2\custom_io\queue_local\8aFC2-pc.txt") -eq (Hash "$IN\8aFC2-pc.txt")) -and ((Hash "$CIO\infer_speed.py") -eq (Hash "$IN\infer_speed.py"))) {
+  'src-b3g2: this fc100 list and answer timer are already installed'; $doFC2 = $false
+}
 if ($doB3R -or $doG2 -or $doFC2) { NeedMem $(if ($doG2 -or $doFC2) { 4000 } else { 1500 }) 'the CPU checks (the largest is Gemma in fp32)' }
 "to install:$(if ($doB3R) { " src-b3r ($SHAB3R)" })$(if ($doG2) { " src-b3g2 ($SHAG2)" })$(if ($doFC2) { ' the five-shape fc100 list' })$(if ($doC30) { ' the c30s queue' })$(if ($doV3E) { ' waiter v3e' })$(if ($doWIDE) { ' test WIDE' }); the waiter still waits for G1"
 
 # 2. Group 1 code: unpack, hashes (caps.py as pinned in the live B3R-SETUP-OK.txt), queues, CPU checks, marker.
-if ($doB3R -and @(Get-Content "$SRCB3R\B3R-SETUP-OK.txt") -match "commit $SHAB3R") { 'src-b3r: this commit is already installed'; $doB3R = $false }
 if ($doB3R) {
   $capsr = (Line1 "$SRCB3R\B3R-SETUP-OK.txt") -replace '^caps\.py\s+', ''
   Unpack "$IN\b3r.zip" $SRCB3R $capsr @{ 'caps_b3.json' = $JSONB3 } $EXPB3R
@@ -178,10 +182,6 @@ if ($doB3R) {
 }
 
 # 3. Group 2 code and the fc100 list. The list and the answer timer are checked in the folder that will be live (the new one when g2.zip is here).
-if ($doG2 -and @(Get-Content "$SRCG2\G2-SETUP-OK.txt") -match "commit $SHAG2") { 'src-b3g2: this commit is already installed'; $doG2 = $false }
-if ($doFC2 -and -not $doG2 -and ((Hash "$SRCG2\custom_io\queue_local\8aFC2-pc.txt") -eq (Hash "$IN\8aFC2-pc.txt")) -and ((Hash "$CIO\infer_speed.py") -eq (Hash "$IN\infer_speed.py"))) {
-  'src-b3g2: this fc100 list and answer timer are already installed'; $doFC2 = $false
-}
 if ($doC30 -and -not $doG2) {
   if ((Hash "$SRCG2\custom_io\queue_local\8aC30S-pc.txt") -eq (Hash "$IN\8aC30S-pc.txt")) { 'src-b3g2: this c30s queue is already installed'; $doC30 = $false }
   else { Fail 'the c30s queue here differs from the live one, but its group 2 commit is already installed (install the queue by hand)' }
