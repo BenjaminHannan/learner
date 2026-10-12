@@ -1,5 +1,5 @@
 # CPU check for the swap / install scripts, run from src-b3g2: queue 8aFC2 parses (2 setup lines + one a64 and one a256 run per shape) and each run's
-# config builds at about 100M trained. The models are built on torch's meta device (shapes only, no memory): the 16 GB-class PC is near
+# config builds at about 100M trained. The models are built on torch's meta device (shapes only, no memory): BensPC is near
 # its memory limit while G1 trains, and ten real 100M builds peaked at 3.8 GB (install_rr ran out of memory at the tenth, 9:20 PM ET 11 Oct).
 import sys, json, torch
 sys.path.insert(0, '.')
