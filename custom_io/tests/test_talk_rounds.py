@@ -3,11 +3,12 @@ Every-round reading (G2f build spec section 4; B3G2 cfg talk_rounds, off by defa
 'last' (the default) is bit-identical to the model without the switch: the same parameters, loss, aux, gradients, free run and answers on the same seed, whether the key is left out or
 passed. 'all' adds no parameters; it runs end to end (the loss backpropagates, every parameter that trains under 'last' still gets a gradient, free run, talk, the lesions, ST1's
 sample_traces / trace_loss); the writer sees exactly (t + 1) * n_z vectors after round t (n_z = 17 = the control and register vectors of one round), for calls and answers, teacher forced
-and free; a row that stopped keeps the memory of its stop round; zero_state / shuffle_state act on everything the writer reads (the memory and its mask)."""
+and free; a row that stopped keeps the memory of its stop round (the learned stop runs quiet_last and a row cannot stop on a round where it wrote a call); a forced run's settle pass is one more memory block
+for the rows that got it only; run(each=...) with loops=None returns a mem_mask; zero_state / shuffle_state act on everything the writer reads (the memory and its mask)."""
 import torch
 from custom_io.models.b3g2 import B3G2
 from custom_io.tests.test_b3 import batch_of, rows
-from custom_io.tests.test_b3g2 import V, make
+from custom_io.tests.test_b3g2 import V, Script, make
 
 
 def seen(m, fn):
@@ -143,6 +144,85 @@ def test_all_end_to_end():
     print('ok talk_rounds all: end to end (loss + backward, free run, forced loops 0/1/3, learned stop per row, talk, lessons, donor, sample_traces / trace_loss); the writer sees (t + 1) * %d vectors after round t' % nz)
 
 
+def test_settle_block_is_per_row_memory():
+    """'all' + a forced run's settle pass: the row that wrote a call at the last round gets that pass's Z (plus step_emb[min(n, n_loops - 1)]) as one more memory block, visible in its
+    mem_mask; the row without it does not see the block (scribbling over it changes nothing for that row) and its memory is exactly rounds 0..n-1."""
+    m = make(5, talk_rounds='all').eval()
+    nz, n = 17, 3
+    b = batch_of(rows(8)[:2], V)
+    Script(m, [['', 'add 7 5'], []])                  # row 0 writes a call at round 2 = the last round of loops=3; row 1 never calls
+    with torch.no_grad():
+        o = m.run(b, loops=n)
+    m.writer.greedy = m.writer.greedy.real
+    assert o['calls'][0] and o['calls'][0][0][0] == 2 and not o['calls'][1]
+    M, mm = o['mem'], o['mem_mask']
+    assert M.shape == (2, (n + 1) * nz, m.d) and mm.shape == M.shape[:2]
+    assert mm[0].all() and mm[1, :n * nz].all() and not mm[1, n * nz:].any(), mm.sum(1).tolist()
+    assert torch.equal(M[0, n * nz:], o['Z'][0] + m.step_emb.weight[min(n, m.n_loops - 1)]), 'the settle block = the settle pass Z + its step_emb'
+    with torch.no_grad():
+        Ms = M.clone()
+        Ms[1, n * nz:] += 5.0                        # row 1's masked block: must not matter
+        st, st2 = m.state_of(o), m.state_of(dict(o, mem=Ms))
+        assert m.talk(st, b) == m.talk(st2, b)
+        # row 1 alone (no call, no settle): the same memory without the extra block
+        Script(m, [[]])
+        o1 = m.run(batch_of(rows(8)[1:2], V), loops=n)
+        m.writer.greedy = m.writer.greedy.real
+    assert o1['mem'].shape[1] == n * nz and (o1['mem'][0] - M[1, :n * nz]).abs().max().item() <= 1e-5 and bool(o1['mem_mask'].all()), 'a row without the settle pass keeps rounds 0..n-1 exactly'
+    print('ok talk_rounds all: the settle pass is one more memory block, visible to the row that got it only')
+
+
+def test_each_without_loops_has_mem_mask():
+    """run(each=...) with loops=None used to return no mem_mask (state_of -> KeyError under 'all'): every return path sets it."""
+    m = make(5, talk_rounds='all').eval()
+    nz = 17
+    b = batch_of(rows(8), V)
+    with torch.no_grad():
+        o = m.run(b, each=lambda t, st: False)
+        assert o['mem_mask'].shape == o['mem'].shape[:2] and bool(o['mem_mask'].all()) and o['mem'].shape[1] == m.n_loops * nz
+        assert len(m.state_of(o)) == 6 and len(m.talk(m.state_of(o), b)) == 8
+        o = m.run(b, each=lambda t, st: t >= 1)       # stopped by each after round 1: two rounds of memory
+        assert o['mem'].shape[1] == 2 * nz and bool(o['mem_mask'].all()) and len(m.talk(m.state_of(o), b)) == 8
+        o = m.run(b, loops=0)
+        assert o['mem_mask'].shape == o['mem'].shape[:2] and len(m.talk(m.state_of(o), b)) == 8
+    print("ok talk_rounds all: run(each=...) (loops=None) and loops=0 return a mem_mask; state_of / talk work")
+
+
+def test_learned_stop_memory_covers_each_rows_rounds():
+    """'all' + the learned stop with quiet_last and the 'wrote' rule: a row that wrote a call at round t cannot stop there; mem_mask covers rounds 0..stop round of each row; no call is asked at the last round."""
+    m = make(5, talk_rounds='all').eval()
+    nz = 17
+    b = batch_of(rows(8)[:2], V)
+    asked = []
+
+    def call_greedy(Z, temperature=0.0, generator=None, zm=None):
+        asked.append(Z.shape[0])
+        outs = [m.vocab.encode('add 7 5') if (len(asked) == 1 and j == 0) else [] for j in range(Z.shape[0])]       # row 0 writes a call at round 1 only
+        return outs, torch.ones(Z.shape[0], dtype=torch.bool)
+    real_cg, m.call_greedy = m.call_greedy, call_greedy
+    ticks = [0]
+
+    def p_stop(z):
+        ticks[0] += 1
+        return torch.full((z.shape[0],), 1.0 if ticks[0] >= 2 else 0.0)        # never at round 0; from round 1 on every row wants to stop
+    m.p_stop = p_stop
+    with torch.no_grad():
+        o = m.run(b)
+    assert o['rounds'] == [3, 2], o['rounds']           # row 1 stops after round 1 (rounds=2); row 0 wrote a call at round 1, so it stops only after round 2 (rounds=3)
+    assert o['calls'][0] and o['calls'][0][0][0] == 1 and not o['calls'][1]
+    assert o['mem_mask'].sum(1).tolist() == [3 * nz, 2 * nz] and bool(o['mem_mask'][:, :2 * nz].all())
+    assert len(m.talk(m.state_of(o), b)) == 2
+    m.p_stop = lambda z: torch.zeros(z.shape[0])      # nobody stops by the head: they run to the cap; no call is asked at the last round
+    asked.clear()
+    with torch.no_grad():
+        o = m.run(b)
+    assert o['rounds'] == [m.cap, m.cap] and len(asked) == m.cap - 2, (o['rounds'], len(asked), m.cap)
+    assert bool(o['mem_mask'].all()) and o['mem'].shape[1] == m.cap * nz
+    del m.p_stop
+    m.call_greedy = real_cg
+    print('ok talk_rounds all: learned stop with quiet_last and the wrote rule; mem_mask covers rounds 0..stop round for each row')
+
+
 def test_memory_is_rounds_plus_step_emb():
     m = make(6, talk_rounds='all')
     hist = [torch.randn(2, 17, m.d) for _ in range(4)]
@@ -158,6 +238,6 @@ def test_memory_is_rounds_plus_step_emb():
 
 if __name__ == '__main__':
     torch.set_num_threads(1)
-    for f in (test_last_is_bit_identical, test_all_adds_no_parameters, test_all_end_to_end, test_memory_is_rounds_plus_step_emb):
+    for f in (test_last_is_bit_identical, test_all_adds_no_parameters, test_all_end_to_end, test_settle_block_is_per_row_memory, test_each_without_loops_has_mem_mask, test_learned_stop_memory_covers_each_rows_rounds, test_memory_is_rounds_plus_step_emb):
         f()
     print('ALL OK')

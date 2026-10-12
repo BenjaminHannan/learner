@@ -79,7 +79,7 @@ def test_r1_scripted():
              [],
              [g['t6'][0], g['t6'][1]],                          # both exact
              ['add 1 1', 'foo 3 4']]                            # wrong operands, then an unknown tool name
-    m.cap = 3                                                   # rounds 0, 1, 2; every row stops after round 2 (the stop head is replaced), so Script sees all 8 rows each time
+    m.cap = 4                                                   # rounds 0..3; the learned stop runs quiet_last (9a5203b21b: no call at the last round, round 3), so calls are asked at rounds 1 and 2 only; every row stops after round 3 (the stop head is replaced), so Script sees all 8 rows each time
     m.p_stop = lambda z: torch.zeros(z.shape[0])
     Script(m, texts)
     b = batch_of(rs, V)

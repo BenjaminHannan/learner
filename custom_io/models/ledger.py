@@ -45,6 +45,12 @@ eg_adapter='mlp' (PASS-MARKS.md addendum 8, EGM; default 'linear' = the arms abo
 LayerNorm -> Linear(768, d) -> GELU -> Linear(d, d) (the last one zero-initialised) instead of LayerNorm -> Linear(768, d); +65,792 params at d = 256.
 eg_adapter='none' (addendum 9, EGW; needs d = 768): no adapter. The thinker is built at EmbeddingGemma's width, so each char's input is
 LayerNorm(EmbeddingGemma state) + position + place code, then the reader's final LayerNorm; the thinker's own first layers do the adapting.
+eg_pre=True (the 30M / 100M no-plug front; needs eg_embed, eg_adapter='none' and d = 512; default False = everything above, bit-identical). Ben, 4:12 PM ET: "can you
+remove the converter plug and just have our model match gemma's". Gemma's text model runs at width 512 and only its last layer (embedding_projection, 512 -> 768) widens
+the state, so the thinker is built at 512 and each char reads Gemma's own 512 numbers AFTER its final norm and BEFORE that projection (FrozenEG(pre=True)), through
+ln_eg = LayerNorm(512) whose weight AND bias are zero-initialised (built last, so no other weight's RNG moves; at step 0 the model computes exactly what the same-seed
+model without Gemma computes, the promise the zero-initialised plug gives at 3M / 10M). No eg_proj, no eg_hid: no learned 768 -> width plug. eg_term serves questions and tool
+replies alike (rule 1). 3M and 10M keep the plug.
 eg_thinker=True (PASS-MARKS.md addendum 14, EGK; needs eg_embed with the linear adapter; default False = EGE): the reader runs twice with the same weights.
 The run with the EmbeddingGemma term feeds only the controller's cross-attention to the reader output; the number slots, the WORD content keys and the
 GEN copy keys (everything the talker reads, and the workspace) take B2's own reader output, without EmbeddingGemma. No new parameters (EGE's 3,500,881).
@@ -138,7 +144,7 @@ class Ledger(Model):
     no_slots = False        # N1 (B3 sets it): no number slots; spans() then skips the regex number spans
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, tok_think=False, no_place=False, bytes=False):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, tok_think=False, no_place=False, bytes=False, eg_pre=False):
         super().__init__(vocab)
         self.is_bytes = bool(bytes)
         assert self.is_bytes == bool(getattr(vocab, 'is_bytes', False)), f"cfg bytes={bool(bytes)} but the vocab is {type(vocab).__name__}: V1 needs ByteVocab, and ByteVocab needs bytes"
@@ -148,6 +154,10 @@ class Ledger(Model):
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
         assert eg_adapter in ('linear', 'mlp', 'none'), eg_adapter
         self.eg_adapter = eg_adapter
+        self.eg_pre = bool(eg_pre)
+        if self.eg_pre:
+            from custom_io.models.eg import EG_PRE_DIM
+            assert eg_embed and eg_adapter == 'none' and d == EG_PRE_DIM, f"eg_pre needs eg_embed=True, eg_adapter='none' and d = {EG_PRE_DIM} (Gemma's own width), got eg_embed={eg_embed}, eg_adapter={eg_adapter!r}, d={d}"
         self.eg_thinker = bool(eg_thinker)
         assert not self.eg_thinker or (self.eg_embed and eg_adapter == 'linear' and letters_in), 'eg_thinker needs eg_embed, the linear adapter and letters'
         self.tok_think = bool(tok_think)
@@ -187,9 +197,13 @@ class Ledger(Model):
             nn.init.normal_(self.q_wend.weight, std=0.02)
             nn.init.zeros_(self.q_wend.bias)
         if self.eg_embed or self.eg_teach:      # created after every other module, so every B / B2 / span weight starts identical at the same seed
-            from custom_io.models.eg import EG_DIM, MT_DIM, FrozenEG
-            self._eg = [FrozenEG(eg_path, by_bytes=self.is_bytes)]      # a list, not a submodule: never trained, counted or saved
-        if self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
+            from custom_io.models.eg import EG_DIM, EG_PRE_DIM, MT_DIM, FrozenEG
+            self._eg = [FrozenEG(eg_path, by_bytes=self.is_bytes, pre=self.eg_pre)]      # a list, not a submodule: never trained, counted or saved
+        if self.eg_embed and self.eg_pre:       # no plug: LayerNorm(512) only, weight and bias zero, so the Gemma term is 0 at step 0
+            self.ln_eg = nn.LayerNorm(EG_PRE_DIM)
+            nn.init.zeros_(self.ln_eg.weight)
+            nn.init.zeros_(self.ln_eg.bias)
+        elif self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
             if self.eg_adapter == 'none':       # addendum 9: the thinker is EmbeddingGemma's width, so its states go in through a LayerNorm only
                 assert d == EG_DIM, f"eg_adapter='none' needs d = {EG_DIM}, got {d}"
                 self.ln_eg = nn.LayerNorm(EG_DIM)

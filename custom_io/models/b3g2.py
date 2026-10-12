@@ -17,7 +17,7 @@ Teacher forcing (loss): B3's schedule (calls at rounds 1..L, or gap rounds with 
 the tape holds the TOOL'S real reply (never the label's: a difference is counted `reply_mismatch`; a drill row carries its drawn strings). Rounds with a call: target = the
 call text; rounds after the row's last call: EOS only; gap rounds: no target. Z = every thinker
 vector (the call is written from Z alone, call_pass / call_greedy; the prompt X and the tape Xt feed the thinker, never the writer); the call loss is the sum over rounds of the mean over rows of nll * w_row (1.0 with calls, w_noop without) over the rows that have a target. The per-round answer
-(H1's rule): at every round t >= the row's last call round the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
+(H1's rule): at every round t > the row's last call round (every round for a row with no call; Z has then read the last reply) the writer is asked "answer" (mode 1), teacher forced, from that round's Z ALONE; the answer loss is the row's mean over
 those rounds; rounds t >= 8 are gradient-checkpointed. "Right at round t" = writer.right (every teacher-forced argmax is the gold byte); the answer has no feedback, so it is
 greedy decoding up to numerics (extra_evals reports how often the label agrees with real greedy decoding).
 Ben's rule 2: "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every step,
@@ -30,7 +30,7 @@ every readout keeps its key); the copy-mass counters (copy_share, extra['g2']['a
 label; 'settled' only counts in a batch that ran the whole turn (stop_w, H1's rule). Rows before their last call round get label inputs "not right" (no answer pass is run there).
 Ben's rule 1: "also for the calculator, it should be read by the reader. It is a fully external tool, just like minecraft." The tape strings (entries, notes, drill strings, '?') are read by Gemma
 + the letter window exactly like the question (Tool.read_texts -> Ledger.eg_term, via FrozenEG.encode_texts, outside the question's memo), not by the letter window alone.
-Free run: writer.greedy on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop exactly as B3.run.
+Free run: the call is written from Z alone (call_greedy) on every row still running; an unfinished write (no EOS within WCAP) is not a call (counted `unended`); `each` / the learned stop as B3.run, with two rules so that the answer is asked only after the thinker has read the last reply: the learned stop runs with quiet_last (no call is written at the last round) and a row cannot stop on a round where it wrote a call (stop_here gets each round's cround); a forced run (loops:K, each=None) settles: ONE more think pass, per row, only for the rows that wrote a call at the last round, so their Z reads that reply (every other row keeps its Z exactly).
 state = (Z, Xt, idt, vis); talk(state, batch) = writer.greedy(mode 1) from the state's Z alone (batch and the tape are not read), so a donor swap hands the donor's Z to the writer and the answer follows it. Lessons that act on Z:
 zero_state, shuffle_state; nocopy is a no-op (no line has a copy path); loops:K. nowordc is gone (no word-content keys). Counters: capcount steps_unparsed (rows with
 steps and no readable calls), no_trace (rows with steps and no usable trace), writer_over (a call or answer longer than WCAP gets no target), steps_over (more steps than tape),
@@ -39,6 +39,7 @@ Every-round reading (cfg talk_rounds, off by default; Ben: "maybe at every step,
 'all': the writer's memory for a line written after round t is the thinker's vectors of EVERY round 0..t of the run, each round's copy plus step_emb[min(r, n_loops - 1)] (so the writer can
 tell rounds apart), all visible: (t + 1) * n_z vectors (n_z = N_CTRL + N_REG = 17), no new parameters. A row that stopped keeps the memory of its stop round (the rest of the memory is masked).
 It applies to calls and answers, teacher forced and free, to talk, sample_traces / trace_loss and the lesions (zero_state / shuffle_state act on everything the writer reads). Still Z only.
+A settle pass (forced run) adds ONE more memory block for the rows that got it: that pass's Z plus step_emb[min(n, n_loops - 1)], visible in their mem_mask; rows without it do not see the block. Under the learned stop (quiet_last, the 'wrote' rule) mem_mask covers rounds 0..stop round of each row. mem_mask is set on every return path of run (loops, each, learned stop). Under 'last' none of this machinery exists.
 The state then carries (Z, Xt, idt, vis, mem, mem_mask); Z is still the last round's vectors (the stop head, the probe), mem / mem_mask are what the writer reads."""
 import math, random
 import numpy as np
@@ -66,6 +67,7 @@ class B3G2(B3):
     def __init__(self, vocab, as_written=True, writer_refine=1, writer_inner=None, writer_mlp=2.0, writer_heads=4, talk_rounds='last', **kw):
         super().__init__(vocab, **kw)
         assert self.any_round, 'b3g2 calls at any round: it needs any_round'
+        assert not getattr(self, 'eg_thinker', False), 'b3g2: the thinker reads the question and every reply through the Gemma path (rules 1 and 2); eg_thinker would strip it'
         self.as_written, self.refine = bool(as_written), int(writer_refine)
         assert talk_rounds in ('last', 'all'), talk_rounds
         self.talk_rounds = talk_rounds
@@ -297,10 +299,10 @@ class B3G2(B3):
         return self.ans_pass(Z, te['inp'], te['tgt'], te['fb'], zm)
 
     # ---- the loop ----
-    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False):
+    def loop(self, batch, n, lesion=None, oracle=None, each=None, g=None, sched=None, halt=None, temperature=0.0, generator=None, rec=False, quiet_last=False, settle=False):
         """n rounds. g (teacher forcing) = dict(L [B] call counts, ids [B][L] call target ids, tape [B][L] entries, has [B] bool) on `sched` [B, tape] (call rounds, -1 = none); the
         call losses are returned (lcall; call_hit / call_n / eos_hit / eos_n; rec: per call round [(row, k, text right, name right)]). Else a free run: halt [B] (rounds used, 0 =
-        running) keeps stopped rows from calling; temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
+        running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: a row that wrote a call at the last round gets one more think pass that reads it before Z is returned (per row: every other row keeps its Z exactly); temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
@@ -327,7 +329,7 @@ class B3G2(B3):
         lcall, hits = 0.0, dict(call_hit=0, call_n=0, eos_hit=0, eos_n=0)
         crec = []
         kvs_of = None
-        hist, M = [], None          # talk_rounds 'all': every round's Z so far, and the memory after the current round
+        hist, M, mm = [], None, None          # talk_rounds 'all': every round's Z so far, and the memory after the current round
         allr = self.talk_rounds == 'all'
         for t in range(n):
             ts = min(t, self.n_loops - 1)
@@ -341,7 +343,7 @@ class B3G2(B3):
             if allr:
                 hist.append(Z)
                 M = self.memory(hist, t)
-            if t >= 1:
+            if t >= 1 and not (quiet_last and t == n - 1):
                 if tf:
                     at = sched == t
                     call, kk = at.any(1), at.int().argmax(1)
@@ -410,30 +412,40 @@ class B3G2(B3):
                                 mt[:, sl] = torch.where(sl_[:, None], mn, mt[:, sl])
                                 shown[sl_, k] = True
                             kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, hist=hist)):
+            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, hist=hist, cround=cround)):
                 break
+        if settle and n > 0:
+            wrote = (cround == n - 1).any(1)                                    # per row: only a row that wrote a call at the last round has a reply its Z has not read
+            if bool(wrote.any()):
+                vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
+                kvs, kvs_of = self.join_kv(kvs0, kvt), kvt
+                Zn = self.think(Z + self.step_emb.weight[min(n, self.n_loops - 1)], kvs, kvx, torch.cat([valid, vis, km], 1), n)
+                Z = torch.where(wrote[:, None, None], Zn, Z)                    # every other row keeps its Z exactly: a row's loops:K result never depends on its batch mates
+                if allr:            # the settle pass is one more memory block (its Z plus its step_emb), visible to the rows that got it only
+                    M = torch.cat([M, Zn + self.step_emb.weight[min(n, self.n_loops - 1)].to(Zn.dtype)], 1)
+                    mm = torch.ones(B, M.shape[1], dtype=torch.bool, device=dev)
+                    mm[:, -Zn.shape[1]:] = wrote[:, None]
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         out = dict(Z=Z, X=X, xm=xm, tape=(Xt, idt, vis), calls=calls, records=recs, le=le, K=K, tape_full=full_ev, cround=cround)
         if allr:
-            out['mem'] = M if n else self.memory([Z], 0)            # every round's vectors; run() masks it per row (loops:0: the initial state)
+            out['mem'] = M if n else self.memory([Z], 0)            # every round's vectors (+ the settle block); loops:0: the initial state
+            out['mem_mask'] = mm if mm is not None else torch.ones(out['mem'].shape[:2], dtype=torch.bool, device=dev)       # set on every return path; a learned-stop run() replaces it per row
         if tf:
             out.update(lcall=lcall, crec=crec, **hits)
         return out
 
     # ---- the run ----
     def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None, each=None, force=None, temperature=0.0, generator=None):
-        """loops / each: a forced run (the stop head ignored). Else the learned stop (B3.run): the batch runs until every row has stopped; each row's state (Z, tape) and calls are
-        the ones at its own stop round. -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
+        """loops / each: a forced run (the stop head ignored; with loops and no each it settles, see loop). Else the learned stop (B3.run): the batch runs (quiet_last: no call at the
+        last round) until every row has stopped, a row never stopping on a round where it wrote a call; each row's state (Z, tape) and calls are the ones at its own stop round. -> dict(Z, tape, calls, records, rounds, tape_full_rows, ...); last_rounds / last_tape_full are set."""
         assert gold is None and force is None and not rounds, 'b3g2 trains through loss(); teacher forcing is internal'
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         if loops is not None or each is not None:
             n = self.n_loops if loops is None else loops
-            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator)
+            o = self.loop(batch, n, lesion, oracle, each, temperature=temperature, generator=generator, settle=each is None)
             if each is None:
                 self.last_rounds = [n] * B
                 self.last_tape_full = [any(i == j for j, _ in o['tape_full']) for i in range(B)]
-                if 'mem' in o:
-                    o['mem_mask'] = torch.ones(o['mem'].shape[:2], dtype=torch.bool, device=dev)
             return o
         used = torch.zeros(B, dtype=torch.long, device=dev)
         keep = []
@@ -442,7 +454,8 @@ class B3G2(B3):
             Z = st['Z']
             vis = st['mt'] & st['shown'][:, :st['K']].gather(1, st['ent'].expand(Z.shape[0], -1))
             s = (Z, st['Xt'], st['idt'], vis)
-            new = (used == 0) & ((self.p_stop(self.ln_z(Z[:, 1])) >= P_STOP) | (t + 1 >= self.cap))
+            wrote = (st['cround'] == t).any(1)                                  # a call written this round is not yet read by Z: its row cannot stop here
+            new = (used == 0) & ~wrote & ((self.p_stop(self.ln_z(Z[:, 1])) >= P_STOP) | (t + 1 >= self.cap))
             if new.any():
                 if not keep:
                     keep.extend(x.clone() for x in s)
@@ -452,7 +465,7 @@ class B3G2(B3):
                 used[new] = t + 1
             return bool((used > 0).all())
 
-        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator)
+        o = self.loop(batch, self.cap, lesion, oracle, stop_here, halt=used, temperature=temperature, generator=generator, quiet_last=True)
         Z, Xt, idt, vis = keep
         u = used.tolist()
         full = [False] * B
@@ -517,7 +530,7 @@ class B3G2(B3):
         Ls = [len(x['texts']) for x in golds]
         sched, last = self.plan(Ls, B, dev)                                     # B3's schedule: the calls' rounds
         K = KS[int(torch.randint(len(KS), (1,)))]
-        n = max(K, int(last.max()) + 1)
+        n = max(K, int(last.max()) + 2)               # +2: a call row's answer rounds start at last+1, after the thinker has read the last reply
         g = dict(L=Ls, ids=[x['ids'] for x in golds], tape=[x['tape'] for x in golds], has=torch.tensor([bool(L) for L in Ls], device=dev))
         per = []
 
@@ -532,7 +545,7 @@ class B3G2(B3):
         zs, share = [], None
         for t, Z, M in per:
             zs.append(self.ln_z(Z[:, 1].detach()))          # the stop head reads the state detached: its loss trains ln_z and the head, never the loop
-            ok = last <= t                                                     # the writer is asked "answer" at every round t >= the row's last call round
+            ok = (t > last) | ~g['has']                                        # a call row is asked "answer" only at rounds t > its last call round (Z has then read the last reply); no-call rows at every round
             if not ok.any():
                 continue
             si = ok.nonzero()[:, 0]

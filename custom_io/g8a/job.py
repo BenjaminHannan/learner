@@ -202,6 +202,7 @@ def main(argv=None):
     ap.add_argument('--big-data')
     ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ALL_ARMS), help='B3 (B3-GROUP1-BUILD): the b3 model at the rung, config from configs.b3_cfg; --b2-extra adds switches to it')
     ap.add_argument('--max-ans', type=int, default=P.HYGIENE_ANS, help='data hygiene limit on answer chars for the pool builder (NOT a model cap: model caps come from caps.json)')
+    ap.add_argument('--noplug', action='store_true', help='the no-plug Gemma front (30M / 100M only; width 512, eg_pre): adds {"noplug": true} to --b2-extra, every Gemma-front arm takes it')
     ap.add_argument('--b2-extra', default='{}', help='JSON reader switches for B2 (stage 2b pick), e.g. {"eg_embed": true}')
     ap.add_argument('--lr-scale', type=float, default=1.0)
     ap.add_argument('--public', choices=['none'] + list(C.PUBLIC), default='none', help='30M rung only: add the public-model arm of mark 5 (pinned revision)')
@@ -222,7 +223,9 @@ def main(argv=None):
     a = ap.parse_args(argv)
     t0 = time.time()
     b2_extra = json.loads(a.b2_extra)
-    if b2_extra.get('eg_embed'):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
+    if a.noplug:        # Ben, 4:12 PM ET: 30M / 100M read Gemma's own 512 numbers (configs.NOPLUG); same as --b2-extra '{"noplug": true}'
+        b2_extra[C.NOPLUG] = True
+    if b2_extra.get('eg_embed') or b2_extra.get(C.NOPLUG):        # test 8a-G: every arm that runs has the same frozen-Gemma front; the LLM arm and the public model have none
         assert set(a.arms) <= {C.B2_ARM, C.PT_ARM, C.B3_ARM, C.B3G2_ARM, C.PTS_ARM} and a.public == 'none', 'with eg_embed only the B2, PT, PTS and B3 arms run (plain_lm and the public model have no Gemma front)'
     assert a.public == 'none' or a.rung == '30M', 'the public-model arm belongs to the 30M rung (mark 5)'
     arms = list(a.arms) + ([C.PUB_ARM] if a.public != 'none' else [])
@@ -254,7 +257,7 @@ def main(argv=None):
     old = [x for x in a.arms if x not in (C.B3_ARM, C.B3G2_ARM)]
     cfgs, counts = C.sizes(a.rung, b2_extra) if old else ({}, {})
     if C.PTS_ARM in a.arms:
-        assert b2_extra.get('eg_embed'), 'PTS: --b2-extra must carry eg_embed (the G2C3 front, as its PT control)'
+        assert b2_extra.get('eg_embed') or b2_extra.get(C.NOPLUG), 'PTS: --b2-extra must carry eg_embed (the G2C3 front, as its PT control)'
         C.add_pts(a.rung, cfgs, counts, b2_extra)
     if old:
         C.check_bands(a.rung, cfgs, counts, exact_3m=all(caps[k] == CP.TODAY[k] for k in CP.TODAY))   # a run outside its band does not count: refuse before training
@@ -273,7 +276,7 @@ def main(argv=None):
     if emit_on:
         emit(base, tag + '-pool')
     accum = parse_accum(a.accum, a.speed_json, a.rung)
-    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
+    box = dict(rung=a.rung, seed=a.seed, steps=steps, cfgs=cfgs, trained_params=counts, lr=C.rung_lr(a.rung, b2_extra) * a.lr_scale, lr_scale=a.lr_scale, caps=caps,
                maxh=a.maxh, dph=a.dph, accum=accum, arms={}, started_unix=t0, pool_build_s=round(time.time() - t0, 1), pool_train_sha256=man['train_sha256'],
                pool_schedule=man['schedule'], b2_extra=b2_extra)
     qdir = None
@@ -296,7 +299,7 @@ def main(argv=None):
                    '--bf16', '--log-every', '500', '--final-eval', '--out', out] + (['--minutes', repr(mins)] if mins else []) + dev_flag
             box['public']['steps'] = psteps
         else:
-            args = C.train_args(a.rung, arm, a.seed, steps, pdir, out=out, minutes=mins, lr=C.RUNGS[a.rung]['lr'] * a.lr_scale,
+            args = C.train_args(a.rung, arm, a.seed, steps, pdir, out=out, minutes=mins, lr=C.rung_lr(a.rung, b2_extra) * a.lr_scale,
                                 b2_extra=b2_extra, big_data=a.big_data, caps=os.path.join(caps_dir(a, pdir), 'caps.json'))
             if accum.get(arm, 1) > 1:
                 args += ['--accum', str(accum[arm])]
