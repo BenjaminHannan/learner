@@ -227,8 +227,8 @@ status() {
     echo "seed $s: nights done $(grep -c '^night ' "$f")/8; last: $(grep -E '^(temp|quiz|night|done) ' "$f" | tail -1 | cut -c1-150)"
     grep -m1 -E 'Traceback|Error|Killed' "$f" > /dev/null && { echo "seed $s ERROR:"; tail -4 "$f"; }
   done
-  pgrep -f "game\.(mode|score|analyze|audit)" > /dev/null && echo "running: $(pgrep -f 'game\.(mode|score|analyze|audit)' | wc -l | tr -d ' ') game processes" \
-    || echo "no game process running"
+  local n; n=$(pgrep -f "$VPY -m game\." | wc -l | tr -d ' ')
+  [ "$n" -gt 0 ] && echo "running: $n game processes" || echo "no game process running"
   [ -f "$GW8/logs/pipeline.out" ] && tail -2 "$GW8/logs/pipeline.out"
 }
 
