@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 
-from .paint import parse, render, encode_batch, CTX
+from .paint import parse, render, encode_batch, CTX, canonical
 from .maker import Maker, train_steps
 from .copyguard import CopyGuard
 from . import critic as critic_mod
@@ -100,6 +100,24 @@ def pick_keys(arm, tb, n_use, critic_logits=None, oracle_scores=None):
     return np.where(passing, key, np.inf)
 
 
+def pick_distinct(keys, grids, n_tries, u):
+    """TC-1b variety guard: requests in order; each takes its best try (ties broken by u) whose folded
+    picture is not already kept tonight, else nothing. -1 = no pick."""
+    seen, out = set(), np.full(len(keys), -1, dtype=np.int64)
+    for i, row in enumerate(keys):
+        order = np.random.default_rng(int(u[i] * 2**32)).permutation(len(row))
+        order = order[np.argsort(row[order], kind="stable")]
+        for j in order:
+            if not np.isfinite(row[j]):
+                break
+            c = canonical(grids[i * n_tries + j])
+            if c not in seen:
+                seen.add(c)
+                out[i] = j
+                break
+    return out
+
+
 def pick(arm, tb, n_use=None, critic_logits=None, oracle_scores=None):
     n_use = n_use or tb.n_tries
     return select(pick_keys(arm, tb, n_use, critic_logits, oracle_scores), tb.u_pick)
@@ -168,7 +186,10 @@ def run_arm(arm, seed, cfg, data, k, state, pool, evaluator=None, oracle_scores=
             osc = np.zeros(tb.grids.shape[0])
             m = tb.passing.reshape(-1)
             osc[m] = oracle_scores(tb.grids[m])
-        idx = pick(arm, tb, None, logits, osc)
+        if cfg.distinct:
+            idx = pick_distinct(pick_keys(arm, tb, tb.n_tries, logits, osc), tb.grids, tb.n_tries, tb.u_pick)
+        else:
+            idx = pick(arm, tb, None, logits, osc)
         flat = tb.tokens
         kept = [flat[i * tb.n_tries + j] for i, j in enumerate(idx) if j >= 0]
         n_none = int((idx < 0).sum())
@@ -176,6 +197,7 @@ def run_arm(arm, seed, cfg, data, k, state, pool, evaluator=None, oracle_scores=
             fill = np.random.default_rng([seed, day, 99991]).integers(0, len(kept), n_none)
             kept = kept + [kept[i] for i in fill]
         rec["filled"] = n_none
+        rec["distinct_kept"] = len(set(tuple(r) for r in kept))
         rec["rows_trained"] = len(kept)
         rec["kept_mean_ncmd"] = float(np.mean([sum(1 for t in r if t in (3, 4, 5)) for r in kept])) if kept else None
         kept_log.append([tuple(r) for r in kept])

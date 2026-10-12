@@ -4,7 +4,7 @@
 # PRIOR=touching is TC-1b (structured day-0 programs); default clutter is TC-1.
 set -u
 OUT=${1:?out dir}; CK=${2:?ckpt dir}; PAR=${PAR:-4}; PRIOR=${PRIOR:-clutter}
-SEEDS=${SEEDS:-"1 2 3"}; DAYS=${DAYS:-6}   # extension: SEEDS="1 2 3 4 5 6" DAYS=12
+SEEDS=${SEEDS:-"1 2 3"}; DAYS=${DAYS:-6}; DISTINCT=${DISTINCT:+--distinct}  # TC-1c: DISTINCT=1   # extension: SEEDS="1 2 3 4 5 6" DAYS=12
 mkdir -p "$OUT" "$CK" "$OUT/logs"
 log() { echo "$(date -u +%FT%TZ) $*" | tee -a "$OUT/progress.log"; }
 
@@ -29,10 +29,10 @@ if [ "$phase" = all ] || [ "$phase" = arms ]; then
     jobs+=("$a $s")
   done; done
   log "arms to run: ${#jobs[@]} at $PAR in parallel"
-  printf '%s\n' "${jobs[@]}" | PRIOR="$PRIOR" DAYS="$DAYS" xargs -P "$PAR" -L 1 bash -c '
+  printf '%s\n' "${jobs[@]}" | PRIOR="$PRIOR" DAYS="$DAYS" DISTINCT="$DISTINCT" xargs -P "$PAR" -L 1 bash -c '
     a=$0; s=$1
     echo "$(date -u +%FT%TZ) arm $a s$s start" >> "'"$OUT"'/progress.log"
-    python3 -m tc1.run --arm "$a" --seed "$s" --out "'"$OUT"'" --ckpt-dir "'"$CK"'" --prior "$PRIOR" --days "$DAYS" --threads 1 > "'"$OUT"'/logs/$a-s$s.log" 2>&1
+    python3 -m tc1.run --arm "$a" --seed "$s" --out "'"$OUT"'" --ckpt-dir "'"$CK"'" --prior "$PRIOR" --days "$DAYS" $DISTINCT --threads 1 > "'"$OUT"'/logs/$a-s$s.log" 2>&1
     echo "$(date -u +%FT%TZ) arm $a s$s exit $?" >> "'"$OUT"'/progress.log"'
   python3 -m tc1.analyze "$OUT" > "$OUT/logs/analyze.log" 2>&1
   log "analyze exit $?"

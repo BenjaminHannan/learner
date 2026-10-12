@@ -203,5 +203,18 @@ def encode_batch(programs):
     return out
 
 
+def canonical(g):
+    """Folded picture key: drawn cells moved to the top-left corner, mirror folded."""
+    def tight(a):
+        rows, cols = np.flatnonzero(a.any(1)), np.flatnonzero(a.any(0))
+        out = np.zeros_like(a)
+        sub = a[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+        out[:sub.shape[0], :sub.shape[1]] = sub
+        return out
+    g1 = tight(g)
+    g2 = tight(g1[:, ::-1])
+    return min(g1.tobytes(), g2.tobytes())
+
+
 def draws(grid):
     return bool(np.any(grid))

@@ -13,6 +13,7 @@ class Config:
     night_kept: int = 32
     night_replay: int = 32
     night_lr: float = 3e-4
+    distinct: bool = False      # TC-1c: each folded picture kept at most once a night
     # day-0 pretraining
     pretrain_programs: int = 200_000
     pretrain_epochs: int = 2

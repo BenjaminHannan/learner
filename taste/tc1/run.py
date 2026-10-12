@@ -57,9 +57,11 @@ def main(argv=None):
     ap.add_argument("--pretrain-programs", type=int, help="override (timing/smoke only)")
     ap.add_argument("--pretrain-only", action="store_true")
     ap.add_argument("--prior", choices=["clutter", "touching"], default="clutter")
+    ap.add_argument("--distinct", action="store_true", help="TC-1c variety guard on each night's picks")
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
-    cfg = make_config(a.small, a.days, pretrain_programs=a.pretrain_programs, prior=a.prior)
+    cfg = make_config(a.small, a.days, pretrain_programs=a.pretrain_programs, prior=a.prior,
+                      distinct=a.distinct or None)
     os.makedirs(a.out, exist_ok=True)
     ckpt_dir = a.ckpt_dir or os.path.join(a.out, "ckpt")
     if a.pretrain_only or a.arm is None:

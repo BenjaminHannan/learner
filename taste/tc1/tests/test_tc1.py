@@ -175,3 +175,14 @@ def test_touching_prior_valid_and_seeded():
 def test_prior_changes_checkpoint_name(tmp_path):
     cfg = make_config(small=True, prior="touching")
     assert cfg.prior == "touching" and make_config(small=True).prior == "clutter"
+
+
+def test_pick_distinct_skips_pictures_already_kept():
+    g = np.zeros((2 * 3, 12, 12), dtype=np.int8)
+    g[0, 0, 0:3] = 1; g[1, 5, 5] = 2; g[2, 3, 3] = 3          # request 0: three pictures
+    g[3, 4, 2:5] = 1; g[4, 0, 0] = 3; g[5, 1, 1] = 4          # request 1: try 0 is request 0's best, shifted
+    keys = np.array([[0.0, 1.0, 2.0], [0.0, 5.0, np.inf]])
+    idx = night.pick_distinct(keys, g, 3, np.array([0.3, 0.6]))
+    assert list(idx) == [0, 1]
+    keys2 = np.array([[0.0, np.inf, np.inf], [0.0, np.inf, np.inf]])
+    assert list(night.pick_distinct(keys2, g, 3, np.array([0.3, 0.6]))) == [0, -1]

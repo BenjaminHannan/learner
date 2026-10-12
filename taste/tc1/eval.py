@@ -1,20 +1,8 @@
 """Measurement after each night (uses the hidden score; never feeds back into training)."""
 import numpy as np
 from collections import Counter
-from .paint import parse, render, CTX
+from .paint import parse, render, CTX, canonical
 from . import hidden_score
-
-
-def canonical(g):
-    def tight(a):
-        rows, cols = np.flatnonzero(a.any(1)), np.flatnonzero(a.any(0))
-        out = np.zeros_like(a)
-        sub = a[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
-        out[:sub.shape[0], :sub.shape[1]] = sub
-        return out
-    g1 = tight(g)
-    g2 = tight(g1[:, ::-1])
-    return min(g1.tobytes(), g2.tobytes())
 
 
 def sample_metrics(maker, guard, seed, night, ti, temp, n):
