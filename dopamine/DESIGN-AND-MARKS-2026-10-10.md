@@ -738,3 +738,11 @@ as sealed: mean sealed near (sheet.v2, 420 questions, 7 scored kinds) over night
 - Reading (suggested): at 256 per night the even arm spends 30% of its budget on 3 kinds the panel does not score and
   still reaches 71% (s200) and 82% (s201) of INFORMED's score; the headroom a perfect practice picker could buy is about +5 to +7.5 points, which
   is real but at the edge of what one run per arm can separate. Results: `dopamine/results/bq/`.
+
+H-2 first run void (4:25 PM ET 10-12; no mark changed): the H-2 pre-run note was wrong to say HELPER-REACT was HELPER-TOOL
+line for line. `helper_react_actions` asked its value head only on training days 2-20 (`if day > 1`), never on the
+sealed day (day 0), so on sealed sessions it never acted and scored exactly NONE (3.035 on both seeds; first-run outputs
+kept as `RESULT-H2-void.*`). Found by replaying it with a printout per day: training days 2-20 acted on 31-45% of
+rounds, sealed day asked nothing. Fix: `if day != 1`. New unit test: with a value head that always says "help", the two
+arms now make the same choice on every round, sealed day included (the old code fails it: 0 sealed extras vs 72).
+Training days are unchanged by the fix; the sealed scoring reruns from the cached next-need guesses.

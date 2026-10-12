@@ -312,7 +312,7 @@ def helper_react_actions(T):
                     c, pn = T.top[r], T.ptop[r]
                 x = np.concatenate([[pn], T.F[T.cpid[c if c is not None else T.top[r]]], P.onehot(T.ridx[[r]])[0], cnt[s],
                                     [T.thanks_prev[r]]])[None]
-                if day > 1:
+                if day != 1:  # later training days and the sealed day (day 0)
                     if (not sealed) and rs.rand() < 0.10:
                         hp = True
                     elif v_model is not None:

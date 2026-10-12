@@ -101,6 +101,18 @@ def test_h2_react_and_nhead_cache():
     # HELPER-REACT acts only with a candidate and uses the tool only
     re = H.helper_react_actions(T1)
     assert set(np.unique(re)) <= {0, 2} and not re[~T1.has].any()
+    # with a value head that always says "help", both arms make the same choice on every round, sealed day included
+    class Yes:
+        def fit(self, X, y): return self
+        def predict(self, X): return np.ones(len(X))
+    real = H.P.mlp
+    H.P.mlp = lambda kind, seed: Yes()
+    try:
+        re_y, ht_y = H.helper_react_actions(T1), H.helper_tool_actions(T1)
+    finally:
+        H.P.mlp = real
+    sealed_r = T1.round_day == 0
+    assert np.array_equal(re_y, ht_y) and (re_y[sealed_r & T1.has] == 2).all()
     # reaction bookkeeping
     cnt = np.zeros((2, 4))
     H.reaction_update(cnt, np.array([0, 1]), np.array([True, True]), np.array([False, False]), np.array([True, True]),
