@@ -9,7 +9,8 @@
   python3 -m domain.far.learn_probe build-l9 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L9: MARKS-L9; whole-formula joins)
   python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5|l8]
         [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
-        [--guard kf --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
+        [--guard kf|kfsoft --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
+       [--kl-replay-rows 32 --kl-weight 10]        (L11, only with --guard kfsoft: graded mask + KL-to-parent replay, Main brain c823e4b9a)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -978,13 +979,18 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
-def check_guard_args(arm, guard, guard_src, energy=0.99, every=500):
-    """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work."""
+def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None):
+    """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work.
+    kl_rows / kl_weight (None = not given) are for --guard kfsoft only; kfsoft needs both, rows >= 1 and weight > 0."""
+    if guard != 'kfsoft' and (kl_rows is not None or kl_weight is not None):
+        raise SystemExit('--kl-replay-rows / --kl-weight apply to --guard kfsoft only')
     if not guard:
         return
     if arm != 'LB':
         raise SystemExit('--guard applies to arm LB only')
-    if guard != 'kf':
+    if guard == 'kfsoft' and (kl_rows is None or kl_weight is None or kl_rows < 1 or kl_weight <= 0):
+        raise SystemExit('--guard kfsoft needs --kl-replay-rows >= 1 and --kl-weight > 0')
+    if guard not in ('kf', 'kfsoft'):
         raise SystemExit(f'unknown guard {guard}')
     if not guard_src or not os.path.isdir(guard_src):
         raise SystemExit('--guard needs --guard-src DIR (the folder holding mainbrain/)')
@@ -1003,6 +1009,9 @@ def addon_size(arm, cons, rank=None, alpha=None):
 
 DEV_IN_DIST = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k/dev/in_dist.jsonl'
 GUARD_COMMIT = '5ca34e99938981a6448ba298a1a2127c468a46b0'
+GUARD_COMMIT_SOFT = 'c823e4b9a49c477751f6ad95e764097258b1aece'   # --guard kfsoft: Main brain's shipped guard (graded mask + KL replay)
+GUARD_SOFT_FILES = ('kf.py', 'gp.py', 'klreplay.py', 'fullrun.py')
+KL_REPLAY_SEED = SEED + 11   # RandomState drawing the diary rows for the KL replay, one draw of --kl-replay-rows per update
 GUARD_CONSTANTS = 'constants-kf99n-lr3e4.json'   # in the guard source folder's mainbrain/: the s200 sheet run's constants (diary 4096, check 512)
 DIARY_DATA = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k'
 DIARY_SEED = 200
@@ -1049,6 +1058,23 @@ def load_guard(src):
     for mod in (kf, gp):
         assert os.path.abspath(mod.__file__).startswith(os.path.abspath(src)), (mod.__file__, src)
     return kf, gp
+
+
+def verify_guard_commit(src, commit=GUARD_COMMIT_SOFT, files=GUARD_SOFT_FILES):
+    """Check the guard source folder's mainbrain/ files are byte-identical to `commit` (git blob hashes, looked up in this repo).
+    -> 'verified' when all match; 'unverified (...)' when git cannot resolve the commit here; a mismatch refuses."""
+    import subprocess
+    here = os.path.dirname(os.path.abspath(__file__))
+    for f in files:
+        path = os.path.join(src, 'mainbrain', f)
+        try:
+            mine = subprocess.run(['git', 'hash-object', path], capture_output=True, text=True, check=True).stdout.strip()
+            want = subprocess.run(['git', '-C', here, 'rev-parse', f'{commit}:mainbrain/{f}'], capture_output=True, text=True, check=True).stdout.strip()
+        except (subprocess.CalledProcessError, OSError) as e:
+            return f'unverified ({f}: {type(e).__name__})'
+        if mine != want:
+            raise SystemExit(f'guard source {path} does not match commit {commit[:9]} ({mine[:9]} != {want[:9]})')
+    return 'verified'
 
 
 def file_sha256(path):
@@ -1124,8 +1150,8 @@ class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
     wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
 
-    def __init__(self, kf, gp, m, diary, energy, make_base):
-        self.kf, self.gp, self.m, self.diary, self.energy = kf, gp, m, diary, energy
+    def __init__(self, kf, gp, m, diary, energy, make_base, soft=None):
+        self.kf, self.gp, self.m, self.diary, self.energy, self.soft = kf, gp, m, diary, energy, soft
         self.measure_secs, self.measures = 0.0, 0
         F = self.measure()
         self.frozen = gp.freeze_unprojected(m)
@@ -1136,7 +1162,8 @@ class Guarded:
         t = time.time()
         for p in self.m.parameters():
             p.requires_grad_(True)
-        F, info = self.kf.factors(self.kf.kfac_stats(self.m, self.diary, norm='example'), self.energy)
+        stats = self.kf.kfac_stats(self.m, self.diary, norm='example')
+        F, info = self.kf.factors(stats, self.energy) if self.soft is None else self.kf.factors(stats, self.energy, soft=self.soft)
         self.gp.freeze_unprojected(self.m)   # kfac_stats switched to eval mode and set requires_grad
         self.m.train()
         self.info = info
@@ -1153,7 +1180,8 @@ class Guarded:
 
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
-          guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None):
+          guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
+          kl_replay_rows=None, kl_weight=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1166,7 +1194,10 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     extra = {'addon_rank': rank, 'addon_alpha': alpha}
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
-    check_guard_args(arm, guard, guard_src, guard_energy, guard_every)
+    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight)
+    soft_guard = guard == 'kfsoft'
+    guard_commit = GUARD_COMMIT_SOFT if soft_guard else GUARD_COMMIT
+    commit_check = verify_guard_commit(guard_src) if soft_guard else None
     os.makedirs(out, exist_ok=True)
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
@@ -1197,13 +1228,26 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             kf, gp = load_guard(guard_src)
             diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache)
             m.eval()
-            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']))
+            if soft_guard:   # frozen parent for the KL replay, taken before any update; Main brain's own klreplay (c823e4b9a)
+                import importlib
+                klreplay = importlib.import_module('mainbrain.klreplay')
+                assert os.path.abspath(klreplay.__file__).startswith(os.path.abspath(guard_src)), klreplay.__file__
+                kl_parent = klreplay.frozen_copy(m)
+                kl_ds = Dataset(diary, m.vocab)
+                kl_rng = np.random.RandomState(KL_REPLAY_SEED)
+                kls = []
+            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=1 if soft_guard else None)
             opt = guarded.opt
+            if soft_guard:
+                m.loss = klreplay.wrap(m, kl_parent, float(kl_weight), kls)
             params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
-            extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=GUARD_COMMIT,
+            extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=guard_commit,
                          guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
                          guard_frozen=len(guarded.frozen))
-            print(f'LB+kf guard: trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
+            if soft_guard:
+                extra.update(guard_soft=1, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
+                             kl_replay_seed=KL_REPLAY_SEED, kl_replay_pool=len(diary))
+            print(f'LB+{guard} guard' + (f' (graded mask soft=1, {kl_replay_rows} diary rows/update at {kl_weight}x KL, source {commit_check})' if soft_guard else '') + f': trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
         else:
             opt = make_opt(m, cons['lr'])
             print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
@@ -1219,7 +1263,10 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     for u, ni in enumerate(batch_order(len(rows), cons['batch'], updates, SEED), 1):
         t0 = time.time()
         m.train()
-        b = to_device(collate([ds[i] for i in ni]), 'cpu')
+        items = [ds[i] for i in ni]
+        if soft_guard:   # + diary rows (source 'diary'), told apart by klreplay.wrap, which weights the KL by n_rep/B
+            items += [kl_ds[int(j)] for j in kl_rng.randint(0, len(diary), size=kl_replay_rows)]
+        b = to_device(collate(items), 'cpu')
         o = m.loss(b)
         loss = o[0] if isinstance(o, tuple) else o
         loss.backward()
@@ -1228,6 +1275,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         opt.zero_grad(set_to_none=True)
         losses.append(float(loss.detach()))
         t_train += time.time() - t0
+        if soft_guard and kls and u % log_every == 0:
+            print(f'{arm} replay KL mean over last {min(len(kls), log_every)} updates: {np.mean(kls[-log_every:]):.5f}', flush=True)
         if u % log_every == 0 or u == updates:
             k = u % log_every or log_every
             print(f'{arm} update {u}: {time.time() - t_seg:.1f}s for last {k} ({(time.time() - t_seg) / k:.3f} s/update), '
@@ -1239,6 +1288,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             score_step(ck, m, addon, sets, out, arm, u, t_train, threads, ex(), hf(u), keep_final and u == last)
             t_seg = time.time()
     m.eval()
+    if soft_guard and kls:
+        extra['replay_kl_mean'] = round(float(np.mean(kls)), 6)
+        print(f'replay_kl {json.dumps(dict(mean=extra["replay_kl_mean"], n=len(kls), weight=kl_weight, rows=kl_replay_rows))}', flush=True)
     print(f'{arm} done: {updates} updates, train {t_train:.1f}s ({t_train / max(updates, 1):.3f} s/update)'
           + (f'; guard measuring {guarded.measure_secs:.1f}s in {guarded.measures} measures' if guarded else ''), flush=True)
     return t_train / max(updates, 1)
@@ -1263,7 +1315,10 @@ def main(argv=None):
     a.add_argument('--harm-steps', default='', help='comma list of steps (among --steps) at which to measure old-skill harm against the parent')
     a.add_argument('--dev', default=DEV_IN_DIST, help='DEV in_dist.jsonl for the harm measure')
     a.add_argument('--keep-final', action='store_true', help="do not delete the last step's checkpoint")
-    a.add_argument('--guard', choices=['kf'], default=None, help='arm LB only: the main-brain K-FAC guard')
+    a.add_argument('--guard', choices=['kf', 'kfsoft'], default=None,
+               help='arm LB only: the main-brain K-FAC guard; kfsoft = graded mask (soft=1) + KL replay (needs --kl-replay-rows, --kl-weight; source commit ' + GUARD_COMMIT_SOFT[:9] + ')')
+    a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
+    a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
     a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
@@ -1297,14 +1352,15 @@ def main(argv=None):
         census_l10(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
-        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work
+        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight)   # refuse before any work
         from domain.mode import CONST_PATH
         addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
               train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha,
               harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
-              parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache)
+              parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
+              kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight)
 
 
 if __name__ == '__main__':

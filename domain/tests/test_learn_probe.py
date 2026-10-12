@@ -299,6 +299,58 @@ def test_guard_args_refused():
         L.main(['train', '--arm', 'LA', '--out', 'x', '--guard', 'kf', '--guard-src', '/tmp'])
 
 
+def test_kfsoft_args(monkeypatch):
+    L.check_guard_args('LB', 'kfsoft', '/tmp', kl_rows=32, kl_weight=10.0)
+    for arm, guard, src, kw in (('LA', 'kfsoft', '/tmp', dict(kl_rows=32, kl_weight=10.0)),    # LB only
+                                ('LB', 'kfsoft', '/tmp', {}),                                  # kl flags required
+                                ('LB', 'kfsoft', '/tmp', dict(kl_rows=32)),
+                                ('LB', 'kfsoft', '/tmp', dict(kl_rows=0, kl_weight=10.0)),
+                                ('LB', 'kfsoft', '/tmp', dict(kl_rows=32, kl_weight=0.0)),
+                                ('LB', 'kf', '/tmp', dict(kl_rows=32, kl_weight=10.0)),        # kl flags only with kfsoft
+                                ('LB', None, None, dict(kl_weight=10.0)),
+                                ('LB', 'kfsoft', '/nonexistent-dir', dict(kl_rows=32, kl_weight=10.0))):
+        with pytest.raises(SystemExit):
+            L.check_guard_args(arm, guard, src, **kw)
+    with pytest.raises(SystemExit):
+        L.main(['train', '--arm', 'LB', '--out', 'x', '--guard', 'kf', '--guard-src', '/tmp', '--kl-weight', '10'])
+    seen = {}
+    monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
+    L.main(['train', '--arm', 'LB', '--out', 'x', '--guard', 'kfsoft', '--guard-src', '/tmp', '--kl-replay-rows', '32', '--kl-weight', '10'])
+    assert seen['guard'] == 'kfsoft' and seen['kl_replay_rows'] == 32 and seen['kl_weight'] == 10.0
+    L.main(['train', '--arm', 'LB', '--out', 'x'])
+    assert seen['kl_replay_rows'] is None and seen['kl_weight'] is None
+
+
+def test_verify_guard_commit_mismatch(tmp_path):
+    (tmp_path / 'mainbrain').mkdir()
+    for f in L.GUARD_SOFT_FILES:
+        (tmp_path / 'mainbrain' / f).write_text('not the real file\n')
+    r = None
+    try:
+        r = L.verify_guard_commit(str(tmp_path))
+    except SystemExit:
+        return   # commit resolvable here and the files differ: refused
+    assert r.startswith('unverified')   # commit not in this clone
+
+
+@pytest.mark.skipif(not os.environ.get('L8_TEST_PARENT') or not os.path.isdir(os.environ.get('L11_TEST_SRC', '')),
+                    reason='needs L8_TEST_PARENT and L11_TEST_SRC (folder whose mainbrain/ is Main brain c823e4b9a)')
+def test_kfsoft_smoke_two_updates(tmp_path):
+    pytest.importorskip('torch')
+    import json
+    parent = os.environ['L8_TEST_PARENT']
+    diary = os.environ.get('L11_TEST_DIARY')
+    rows = [json.loads(x) for x in open(L.TRAIN_ROWS)][:80] if os.path.exists(L.TRAIN_ROWS) else None
+    if rows is None or not diary or not os.path.exists(diary):
+        pytest.skip('needs shared rows and L11_TEST_DIARY')
+    rp = tmp_path / 'rows.jsonl'
+    rp.write_text(''.join(json.dumps(r) + '\n' for r in rows))
+    L.train('LB', 2, 1, str(tmp_path / 'o'), [0, 2], parent=parent, train_path=str(rp), cells='l1', guard='kfsoft', guard_src=os.environ['L11_TEST_SRC'],
+            diary_cache=diary, diary_compare='none', kl_replay_rows=4, kl_weight=10.0)
+    recs = [json.loads(x) for x in open(tmp_path / 'o' / 'scores.jsonl')]
+    assert recs[-1]['guard'] == 'kfsoft' and recs[-1]['guard_src_commit'] == L.GUARD_COMMIT_SOFT and recs[-1]['kl_replay_rows'] == 4
+
+
 def test_new_flags_default_off(monkeypatch):
     seen = {}
     monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
