@@ -1,7 +1,7 @@
 """R4, the answer-in-thoughts linear probe, and the TK-2 readings (talker thread, G2f; talker/G2F-BUILD-SPEC-2026-10-11.md sec. 5; marks: talker/MARKS-TALKER-CHECKS-2026-10-11.md). Read-only: the model is never trained.
 
-Ben's design note (sec. 6) names the check: "a linear probe on the thoughts when the talker is wrong". On a b3g2 or b3at checkpoint (any model whose state_of(run(batch))[0] is what its
-talker reads) a LINEAR probe is fit on the state the final line was written from, the flattened Z the talker read ([n vectors x d] -> n * d numbers; standardised on the train rows), to
+Ben's design note (sec. 6) names the check: "a linear probe on the thoughts when the talker is wrong". On a b3g2 or b3at checkpoint (any model whose state_of(run(batch)) holds what its
+talker reads: its writer_view(state) when it has one, else state[0]) a LINEAR probe is fit on the state the final line was written from, flattened: what the writer reads (talk_rounds='last': the last round's Z; 'all': the memory of all rounds run, masked blocks zeroed, zero-padded to the longest valid memory; [n vectors x d] -> n * d numbers; standardised on the train rows), to
 predict the gold answer's first 8 bytes: one softmax per byte position, 8 positions, the answer EOS-padded (a shorter answer is followed by the EOS class), a longer one cut at 8.
 The probe is fit on TRAIN rows (the model's own free run on them, learned stop) with weight decay chosen on a held-out 10% of those rows (early stopping on the same split), and scored on DEV rows.
 A dev row is READ when the probe's argmax is the gold 8-byte target at all 8 positions (a byte the train rows never showed cannot be predicted: a miss).
@@ -15,14 +15,14 @@ The talker is RIGHT on a row when its own free-run final line is a hit under eva
 Readings (marks file, written before any model trained). TK-2a (the probe is strong enough): right_read >= 80% AND control (all dev rows) <= collision baseline + 5. If TK-2a fails, TK-2b is
 VOID and is reported as void, never read. TK-2b (a routing rule, not a pass/fail): K >= 50%: the thinker knew and the talker failed (next single change in the talker: talk_rounds='all' first, then a
 bigger talker); K <= 20%: the answer is not in the last round's thoughts (next change on the thinker side); between: every-round reading first (built, cheapest).
-CLI: python -m custom_io.talker_probe --run RUN_DIR --data DIR [--n-train 3000] [--splits in_dist] [--max N]"""
+CLI: python -m custom_io.talker_probe --run RUN_DIR --data DIR [--n-train 3000] [--splits in_dist] [--max N] [--caps CAPS.json]"""
 import argparse, contextlib, json, os
 import numpy as np
 import torch
 import torch.nn.functional as F
 from custom_io.data import DEFAULT_DATA, DEV_SPLITS, load_rows
 from custom_io.evalx import is_hit, norm, subsample
-from custom_io.talker_report import _batches, _nullamp, collision, dev_rows
+from custom_io.talker_report import _batches, _nullamp, collision, dev_rows, load_checkpoint
 
 NB = 8                          # answer bytes read
 EOSC = 256                      # the EOS class after the answer's last byte
@@ -43,25 +43,65 @@ def bucket_of(answer):
     return next(name for name, lo, hi in BUCKETS if lo <= n <= hi)
 
 
+MAX_FLOATS = 2e8                # collect(): rows x features above this and the rows are subsampled evenly (about 800 MB of float32)
+
+
 @torch.no_grad()
-def collect(model, rows, batch_size=64, device=None, amp=None):
-    """The free run (model.run, learned stop) then model.talk on its state, in no_grad batches -> dict(Z [N, n * d] float32 cpu, the flattened state_of(o)[0] the talker reads, in the order of `rows`;
-    ans [N] the talker's final lines; hit [N] bool, is_hit under evalx's scoring)."""
+def collect(model, rows, batch_size=64, device=None, amp=None, max_floats=MAX_FLOATS):
+    """The free run (model.run, learned stop) then model.talk on its state, in no_grad batches -> dict(Z [N, F] float32 cpu, what the WRITER reads, flattened, in the order of `rows`;
+    ans [N] the talker's final lines; hit [N] bool, is_hit under evalx's scoring; idx [N] the positions in `rows` the entries are (all of them unless subsampled); note None, or the sentence
+    saying the rows were subsampled).
+    What is read is model.writer_view(state): under talk_rounds='last' (and for a model with no writer_view) the state's Z, [n vectors x d] -> n * d numbers, exactly as before; under
+    talk_rounds='all' the writer reads the MEMORY (the thinker's vectors of rounds 0..its stop round, with the mask that hides the rest), so the probe reads the memory with its masked blocks
+    zeroed, flattened, and zero-padded to the longest VALID memory among the collected rows (longest valid rounds x n_z x d numbers; not to the cap). A probe fed the last round's Z alone
+    would be reading something the writer never saw.
+    Only the RETURNED array is bounded: every row's features are materialised first (as a list of tensors) and only then subsampled, so the peak during collection is the full set. If rows x
+    features would exceed `max_floats` (about 2e8) the returned rows are subsampled evenly (the linspace rule of evalx.subsample) and `note` says so (a caller scoring against the rows must
+    use rows[i] for i in idx). probe_report pads train and dev to one shared width (see pack)."""
+    return pack(*gather(model, rows, batch_size, device, amp), max_floats=max_floats)
+
+
+@torch.no_grad()
+def gather(model, rows, batch_size=64, device=None, amp=None):
+    """collect's first half -> (Z list of per-row 1-D tensors at their own widths, ans, hit)."""
     device = device or next(model.parameters()).device
     was = model.training
     model.eval()
     amp = amp or _nullamp
     Z, ans = [None] * len(rows), [None] * len(rows)
+    view = getattr(model, 'writer_view', None)
     for idx, b in _batches(model, rows, batch_size, device):
         with amp():
             o = model.run(b)
             st = model.state_of(o)
             a = model.talk(st, b)
-        z = st[0].float().flatten(1).cpu()
+            v, m = view(st) if view else (st[0], None)
+        v = v.float()
+        if m is None:
+            z = v.flatten(1).cpu()
+        else:       # masked blocks zeroed; trimmed to this batch's longest valid memory (the valid part of a row is a prefix: rounds 0..stop round)
+            z = (v * m[..., None].to(v.dtype))[:, :int(m.sum(1).max())].flatten(1).cpu()
         for j, i in enumerate(idx):
             Z[i], ans[i] = z[j], a[j]
     model.train(was)
-    return dict(Z=torch.stack(Z) if Z else torch.zeros(0, 0), ans=ans, hit=torch.tensor([is_hit(a, r) for a, r in zip(ans, rows)], dtype=torch.bool))
+    hit = torch.tensor([is_hit(a, r) for a, r in zip(ans, rows)], dtype=torch.bool)
+    return Z, ans, hit
+
+
+def pack(Z, ans, hit, max_floats=MAX_FLOATS, width=None):
+    """collect's second half: zero-pad the rows to `width` (default: the longest of them; a wider shared width must be >= that) and subsample evenly if rows x width > max_floats."""
+    if not Z:
+        return dict(Z=torch.zeros(0, 0), ans=ans, hit=hit, idx=[], note=None)
+    width = max(max(len(z) for z in Z), width or 0)                   # the longest valid memory x d (under 'last': n * d)
+    keep, note = list(range(len(Z))), None
+    if len(Z) * width > max_floats:
+        k = max(1, int(max_floats // width))
+        keep = np.linspace(0, len(Z) - 1, k).astype(int).tolist() if k < len(Z) else keep
+        note = f'subsampled to {len(keep)} of {len(Z)} rows ({len(keep)} x {width} = {len(keep) * width:.3g} floats; limit {max_floats:.3g})'
+    out = torch.zeros(len(keep), width)
+    for r, i in enumerate(keep):
+        out[r, :len(Z[i])] = Z[i]
+    return dict(Z=out, ans=[ans[i] for i in keep], hit=hit[keep], idx=keep, note=note)
 
 
 class Probe:
@@ -159,11 +199,12 @@ def _rate(mask, sel):
 
 
 def _target_collision(rows):
-    """The collision baseline on the first-8-byte targets (not the normalised answers): -> {family: baseline %}, and the pooled mean weighted by rows."""
+    """The collision baseline on the first-8-byte targets (not the normalised answers): -> {family: baseline % or None}, and the pooled mean weighted by rows (families with a baseline only)."""
     fake = [dict(family=r['family'], answer=' '.join(map(str, target_of(r['answer'])))) for r in rows]
     c = collision(fake, norm=lambda s: s)
-    n = sum(v['n'] for v in c.values())
-    return {f: v['baseline'] for f, v in c.items()}, (sum(v['baseline'] * v['n'] for v in c.values()) / n if n else None)
+    live = [v for v in c.values() if v['baseline'] is not None]          # a family of one row has no baseline (None): out of the pooled weighting
+    n = sum(v['n'] for v in live)
+    return {f: v['baseline'] for f, v in c.items()}, (sum(v['baseline'] * v['n'] for v in live) / n if n else None)
 
 
 def read_dev(probe, dev, rows):
@@ -223,11 +264,15 @@ def train_rows(data, n, seed=0):
 def probe_report(model, train, dev, batch_size=64, device=None, amp=None, **fit_kw):
     """R4 end to end: collect the model's states on `train` and `dev` rows, fit the probe on the train states, score it on the dev states -> read_dev's dict plus fit=dict(wd, heldout_loss, ...),
     n_train and the talker's own dev accuracy (talker_exact, %)."""
-    tr = collect(model, train, batch_size, device, amp)
-    probe, info = fit_probe(tr['Z'], [r['answer'] for r in train], **fit_kw)
-    dv = collect(model, dev, batch_size, device, amp)
-    rep = read_dev(probe, dv, dev)
-    rep.update(fit=info, n_train=len(train), talker_exact=100 * float(dv['hit'].float().mean()) if len(dev) else None)
+    gt, gd = gather(model, train, batch_size, device, amp), gather(model, dev, batch_size, device, amp)
+    width = max([len(z) for z in gt[0] + gd[0]] or [0])               # train and dev share one width (zero blocks are what a masked memory already looks like)
+    tr = pack(*gt, width=width)
+    probe, info = fit_probe(tr['Z'], [train[i]['answer'] for i in tr['idx']], **fit_kw)
+    dv = pack(*gd, width=width)
+    dev_used = [dev[i] for i in dv['idx']]
+    rep = read_dev(probe, dv, dev_used)
+    rep.update(fit=info, n_train=len(tr['idx']), talker_exact=100 * float(dv['hit'].float().mean()) if len(dev_used) else None, n_features=int(tr['Z'].shape[1]),
+               subsampled=[x for x in (tr['note'] and 'train ' + tr['note'], dv['note'] and 'dev ' + dv['note']) if x])
     return rep
 
 
@@ -238,6 +283,7 @@ def format_report(rep):
          f'  shuffled-state control: all rows {f(rep["control"])}%  right rows {f(rep["control_right"])}%   collision baseline {f(rep["collision"])}%',
          f'  TK-2a {rep["tk2a"]["reading"]}   TK-2b {rep["tk2b"]["reading"]} (K {f(rep["tk2b"]["K"])}, n wrong {rep["tk2b"]["n_wrong"]})',
          f'  {"":22s}{"n":>6}{"right":>6}{"wrong":>6}{"r.read":>8}{"K":>8}{"ctrl":>8}{"collide":>8}']
+    L += [f'  NOTE {x}' for x in rep.get('subsampled', [])]
     for title, d in (('by family', rep['by_family']), ('by answer length (bytes)', rep['by_length'])):
         L.append(f'  [{title}]')
         for k, c in d.items():
@@ -252,12 +298,12 @@ def main(argv=None):
     ap.add_argument('--n-train', type=int, default=3000)
     ap.add_argument('--splits', default='in_dist')
     ap.add_argument('--max', type=int, help='cap rows per dev split')
+    ap.add_argument('--caps', help='caps.json the checkpoint was trained under (default: the one the run directory records, see talker_report.caps_of_run)')
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--batch', type=int, default=64)
     ap.add_argument('--json', help='write the report here')
     a = ap.parse_args(argv)
-    from custom_io.models import load_model
-    m = load_model(a.run if a.run.endswith('.pt') else os.path.join(a.run, 'checkpoint.pt'), a.device)
+    m = load_checkpoint(a.run, a.device, a.caps)
     splits = DEV_SPLITS if a.splits == 'all' else a.splits.split(',')
     rep = probe_report(m, train_rows(a.data, a.n_train), dev_rows(a.data, splits, a.max), a.batch, a.device)
     print(format_report(rep))

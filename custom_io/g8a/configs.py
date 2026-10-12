@@ -244,6 +244,13 @@ def b3g2_breakdown(cfg):
     return out
 
 
+def format_b3g2_breakdown(bd, cfg):
+    """The 3M printout of b3g2_breakdown: the parts as a comma list, the writer's MLP shown INSIDE the writer ('writer 1,234 [of which mlp 567]'), so the listed top-level parts add up to the
+    trained count (the old line listed writer and writer_mlp side by side and its parts summed to more than the total)."""
+    parts = ', '.join(f'{k} {v:,}' + (f' [of which mlp {bd["writer_mlp"]:,}]' if k == 'writer' else '') for k, v in bd.items() if k not in ('total', 'writer_mlp'))
+    return f'3M B3G2 trained {bd["total"]:,} ({100 * (bd["total"] / G2C3S - 1):+.2f}% from g2c3s {G2C3S:,}; writer_mlp {cfg["writer_mlp"]}): ' + parts
+
+
 def check_b3(rung, cfg, group=1):
     """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3s (4,023,976), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
     100M: no band."""
@@ -462,7 +469,7 @@ def main(argv=None):
         if g2:
             cfg = b3g2_cfg('3M')
             bd = b3g2_breakdown(cfg)
-            print(f'3M B3G2 trained {bd["total"]:,} ({100 * (bd["total"] / G2C3S - 1):+.2f}% from g2c3s {G2C3S:,}; writer_mlp {cfg["writer_mlp"]}): ' + ', '.join(f'{k} {v:,}' for k, v in bd.items() if k != 'total'))
+            print(format_b3g2_breakdown(bd, cfg))
         return
     if a.tkn:
         from custom_io.g8a import caps as CP

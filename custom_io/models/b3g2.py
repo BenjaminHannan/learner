@@ -82,7 +82,7 @@ class B3G2(B3):
         self.tools['note'] = lambda rest: ''
         self._tr = {}
         self.trace_stats = dict(rows=0, with_steps=0, calls=0, notes=0, unreadable=0, no_trace=0, over_tape=0, reply_mismatch=0, writer_over=0)
-        self.free_stats = dict(unended=0)
+        self.free_stats = dict(unended=0, answer_unended=0)
 
     # ---- the tools ----
     @staticmethod
@@ -488,11 +488,13 @@ class B3G2(B3):
         step, but at least the last, and answer in english from that. It literally is a math to language translator." The writer is asked for the answer (mode 1) from the state's Z
         ALONE (all thinker vectors of the state's round: the last round the run used): no prompt, no tape, no copy keys, no selective-read feedback (an empty context: gate 1, copy 0).
         `batch` (the current prompt) is accepted so donor swaps and every caller keep their signature, and is not read: the donor's Z decides the answer. The 'nocopy' lesion is
-        a no-op (nothing copies, here or in the calls). return_modes: also a mode per row (always 2: one writer, no modes)."""
+        a no-op (nothing copies, here or in the calls). return_modes: also a mode per row (always 2: one writer, no modes). An answer with no EOS within WCAP is cut at the cap: such rows are
+        counted in free_stats['answer_unended'] (the answer side of free_unended; reported by g2_evals, not gated)."""
         Z, zm = self.writer_view(state)
         Xc, cmask, cids = self.line_context(Z)
-        outs, _ = self.writer.greedy(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
-                                     temperature=temperature, generator=generator)
+        outs, ended = self.writer.greedy(Z, self.zmask(Z, zm), Xc, cmask, cids, torch.ones(Z.shape[0], dtype=torch.long, device=Z.device),
+                                         temperature=temperature, generator=generator)
+        self.free_stats['answer_unended'] += int((~ended.bool()).sum())        # rows whose answer had no EOS within WCAP (cut at the cap): counted, reported (extra['g2']), not gated
         out = [self.vocab.decode(o) for o in outs]
         return (out, [2] * len(out)) if return_modes else out
 
@@ -627,7 +629,10 @@ class B3G2(B3):
         out.update(super().extra_evals(ctx))
         out['g2'] = self.g2_evals(ctx)
         out['g2']['counters_at_start'] = out.pop('counters_at_start')
-        out['talker'] = out['g2'].pop('talker')
+        if 'talker' in out['g2']:
+            out['talker'] = out['g2'].pop('talker')
+        if 'talker_error' in out['g2']:        # the talker readout failed (g2_evals caught it): kept in g2 and repeated beside extra['talker'] (absent) so the failure is seen
+            out['talker_error'] = out['g2']['talker_error']
         return out
 
     @torch.no_grad()
@@ -643,7 +648,7 @@ class B3G2(B3):
         self.eval()
         dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
         out = dict(as_written=self.as_written, writer=dict(params=self.writer.size(), wcap=self.WCAP, refine=self.refine, inner=self.writer.inner, d=self.d),
-                   train_counts=dict(trace=dict(self.trace_stats), drill=dict(self.drill_stats), plan=dict(self.plan_stats)), free_unended=self.free_stats['unended'])
+                   train_counts=dict(trace=dict(self.trace_stats), drill=dict(self.drill_stats), plan=dict(self.plan_stats)))
         rows, seen = [], set()
         srcs = [_dev_rows(ctx['data'], sp, None) for sp in DEV_SPLITS] + ([_dev_rows(ctx['big'], 'in_dist', None)] if ctx.get('big') else [])
         for rs in srcs:
@@ -705,7 +710,13 @@ class B3G2(B3):
         n = max(len(sample), 1)
         out['agreement'] = dict(n=len(sample), agree=100 * (cells['both'] + cells['neither']) / n, cells=cells, tf_right=100 * (cells['both'] + cells['tf_only']) / n,
                                 greedy_right=100 * (cells['both'] + cells['greedy_only']) / n, copy_share=sn / max(sd, 1.0), copy_bytes=sd)
-        from custom_io import talker_report
-        out['talker'] = talker_report.talker_evals(self, sample, bs, dev, amp, runs=runs)        # R1 / R2 (G2f); also copied to extra['talker']
-        self.train(was)
+        try:
+            from custom_io import talker_report
+            out['talker'] = talker_report.talker_evals(self, sample, bs, dev, amp, runs=runs)        # R1 / R2 (G2f); also copied to extra['talker']
+        except Exception:        # a reporting line must never cost the run its other readouts: the traceback is recorded and everything else reaches RESULT.json
+            import traceback
+            out['talker_error'] = traceback.format_exc()
+        finally:
+            self.train(was)
+        out['free_unended'], out['answer_unended'] = self.free_stats['unended'], self.free_stats['answer_unended']        # read after this eval's own run / talk passes
         return out

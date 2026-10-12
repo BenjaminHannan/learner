@@ -416,7 +416,9 @@ def child_sizes():
     from custom_io.g8a import caps as CP, configs as C
     caps = CP.apply(json.load(open(os.path.join(ROOT, 'custom_io', 'g8a', 'caps_b3g2.json'))))
     rows_ = C.b3g2_table()
-    print(json.dumps(dict(rows=rows_, breakdown=C.b3g2_breakdown(next(r for r in rows_ if r['rung'] == '3M')['cfg']), g2c3s=C.G2C3S)))
+    r3 = next(r for r in rows_ if r['rung'] == '3M')
+    bd = C.b3g2_breakdown(r3['cfg'])
+    print(json.dumps(dict(rows=rows_, breakdown=bd, g2c3s=C.G2C3S, printed=C.format_b3g2_breakdown(bd, r3['cfg']))))
 
 
 def test_sizes():
@@ -433,6 +435,17 @@ def test_sizes():
                                                                                                         r['cfg']['blocks'], r['cfg']['mlp'], r['cfg'].get('writer_mlp')))
     print('ok 3M trained %s is %+.2f%% from g2c3s %s (band +-2%%), writer_mlp %s' % (f"{r3['trained']:,}", 100 * (r3['trained'] / g2c3s - 1), f"{g2c3s:,}", r3['cfg']['writer_mlp']))
     print('   breakdown: ' + ', '.join(f'{k} {v:,}' for k, v in bd.items()))
+    # the printed 3M line: the writer's MLP is nested inside the writer, so the listed top-level parts add up to the trained count
+    import re
+    line = res['printed']
+    assert '[of which mlp' in line and ', writer_mlp ' not in line.split('):', 1)[1], line
+    parts = line.split('):', 1)[1]
+    top = re.sub(r'\[of which mlp [\d,]+\]', '', parts)
+    listed = [int(x.replace(',', '')) for x in re.findall(r' ([\d,]+)(?:\s*,|\s*$)', top)]
+    assert len(listed) == len(bd) - 2 and sum(listed) == bd['total'] == r3['trained'], (listed, bd)
+    nested = int(re.search(r'of which mlp ([\d,]+)', parts).group(1).replace(',', ''))
+    assert nested == bd['writer_mlp'] <= bd['writer'], (nested, bd)
+    print('ok printed 3M line: %d listed parts sum to %s; the writer MLP (%s) is inside the writer (%s)' % (len(listed), f"{sum(listed):,}", f"{nested:,}", f"{bd['writer']:,}"))
 
 
 if __name__ == '__main__':
