@@ -1,4 +1,5 @@
-# Started detached by g1recover.ps1 after Ben's PC restart (11 Oct 2026; spec addendum AC). Log WORK\q8aG1recover.log.
+# Started detached by g1recover.ps1 after Ben's PC restart (11 Oct 2026; spec addendum AC), or by nog1_go.ps1 after it stops the G1 reruns
+# (12 Oct; addendum AE: it renames g1recover-plan.json aside first, so step 2 below finds no plan). Log WORK\q8aG1recover.log.
 #   1. The install (install_rr.ps1 in this folder, with its own checks; output WORK\in-rr2-install.txt) while the PC's memory is still free,
 #      then agent\install_agent.ps1 if present (AT-1 + G2Q; output WORK\in-agent-install.txt). Its result does not hold G1 back.
 #      With NO-G1-RERUN.txt here (Ben, 1:17 AM ET 12 Oct; addendum AE) no G1 arm reruns: WORK\G1-DONE.txt is written after a clean install_rr.
@@ -61,7 +62,7 @@ if (Test-Path "$IN\agent\install_agent.ps1") {
 
 # 2. G1.
 $plan = $null
-try { $plan = Get-Content "$WORK\g1recover-plan.json" -Raw | ConvertFrom-Json } catch { }
+try { $plan = Get-Content "$WORK\g1recover-plan.json" -Raw -ErrorAction Stop | ConvertFrom-Json } catch { }
 $qs = @(); if ($plan) { $qs = @($plan.PSObject.Properties | ForEach-Object { $_.Name }) }
 if (-not $qs.Count -and (Test-Path "$IN\NO-G1-RERUN.txt")) {
   # No G1 rerun (Ben, 1:17 AM ET 12 Oct): the chain starts once the new code is in. Only after a clean install_rr, so the chain never starts

@@ -13,6 +13,7 @@
 # The CPU tests hide the GPU, so G1 keeps it. It stops nothing but (for v3e) the idle waiter, never touches G1's runs, and deletes nothing.
 # Memory: each CPU step first needs its estimate plus 2 GB free to commit (NeedMem); G1 holds most of the PC's memory, and the 9:20 PM ET
 # 11 Oct run ran out in fc2check. A run that stops there changes nothing; run it again when a G1 run has ended. Pieces already installed are skipped.
+# 12 Oct (addendum AE): test_reader_rule runs through run_tests.py (beside this file): G2f's bit pin of five numbers allows this CPU's rounding.
 $IN     = Split-Path -Parent $MyInvocation.MyCommand.Path
 $CIO    = 'C:\Users\benja\custom-io'
 $WORK   = "$CIO\work"
@@ -96,10 +97,14 @@ function CpuPy($dir, $pp, $pyargs) {
   if ($keep) { $env:PYTHONPATH = $keep } else { Remove-Item Env:\PYTHONPATH -ErrorAction SilentlyContinue }
   return $out
 }
+# test_reader_rule runs through run_tests.py when it is here (addendum AE): the same tests in the same order, but G2f's bit pin of five numbers
+# (taken on the cloud CPU) is compared allowing this CPU's rounding; its line starting MACHINE ROUNDING is shown with the exact numbers.
 function Tests($dir, $pp, $mods) {
   foreach ($t in $mods) {
     NeedMem 1500 $t
-    $out = CpuPy $dir $pp @('-m', "custom_io.tests.$t")
+    if ($t -eq 'test_reader_rule' -and (Test-Path "$IN\run_tests.py")) { $out = CpuPy $dir $pp @("$IN\run_tests.py", "custom_io.tests.$t") }
+    else { $out = CpuPy $dir $pp @('-m', "custom_io.tests.$t") }
+    $out | Where-Object { $_ -like 'MACHINE ROUNDING*' } | ForEach-Object { "  $_" }
     "  ${t}: $(($out | Select-Object -Last 1))"
     if ($rc -ne 0 -or @($out -match '^FAIL').Count -or -not @($out -match '^(ALL OK|ok\s)').Count) { $out | Select-Object -Last 8; Fail "$t failed (rc $rc) in $(Split-Path -Leaf $dir)" }
   }
