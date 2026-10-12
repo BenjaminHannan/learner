@@ -2,6 +2,9 @@
 $W = 'C:\Users\benja\custom-io\work'
 '== install (WORK\in-rr2-install.txt)'
 Get-Content "$W\in-rr2-install.txt" -ErrorAction SilentlyContinue
+'== AT-1 + G2Q install (WORK\in-agent-install.txt)'
+Get-Content "$W\in-agent-install.txt" -ErrorAction SilentlyContinue
+"== WORK\G1-DONE.txt: $(if (Test-Path "$W\G1-DONE.txt") { (@(Get-Content "$W\G1-DONE.txt") -join ' | ') } else { 'none' })"
 '== recovery log, last 15'
 Get-Content "$W\q8aG1recover.log" -Tail 15 -ErrorAction SilentlyContinue
 '== post-G1 waiter log, last 6'

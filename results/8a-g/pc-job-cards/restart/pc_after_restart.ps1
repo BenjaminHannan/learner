@@ -1,6 +1,7 @@
 # Started detached by g1recover.ps1 after Ben's PC restart (11 Oct 2026; spec addendum AC). Log WORK\q8aG1recover.log.
-#   1. The install (install_rr.ps1 in this folder, with its own checks; output WORK\in-rr2-install.txt) while the PC's memory is still free.
-#      Its result does not hold G1 back: G1 starts after it either way.
+#   1. The install (install_rr.ps1 in this folder, with its own checks; output WORK\in-rr2-install.txt) while the PC's memory is still free,
+#      then agent\install_agent.ps1 if present (AT-1 + G2Q; output WORK\in-agent-install.txt). Its result does not hold G1 back.
+#      With NO-G1-RERUN.txt here (Ben, 1:17 AM ET 12 Oct; addendum AE) no G1 arm reruns: WORK\G1-DONE.txt is written after a clean install_rr.
 #   2. G1's reruns from WORK\g1recover-plan.json: s400 (8aG1fR) first. s401 (8aG1s401r) starts beside it only once s400 trains and the
 #      PC has room (free commit >= s400's python memory + 4 GB, GPU memory used <= 9,000 MiB; two runs on the card is how G1 ran before),
 #      else when s400's runner ends. Each start writes q<Q>_run.cmd and its card in pc-jobs, as the G1 waiters did.
@@ -39,18 +40,39 @@ function Start-G1($q, $card) {
 
 Say "pc_after_restart started (pid $PID)"
 # 1. The install.
+$rrok = $false
 if (Test-Path "$IN\install_rr.ps1") {
   Say "install_rr.ps1 running (free to commit $(FreeMB) MB); output WORK\in-rr2-install.txt"
   & powershell -NoProfile -ExecutionPolicy Bypass -File "$IN\install_rr.ps1" 2>&1 | ForEach-Object { "$_" } | Out-File -Encoding ascii "$WORK\in-rr2-install.txt"
   $out = @(Get-Content "$WORK\in-rr2-install.txt")
   $fails = @($out | Where-Object { $_ -like 'FAILED*' })
+  $rrok = (-not $fails.Count) -and @($out | Where-Object { $_ -like 'INSTALL RR DONE*' }).Count -gt 0
   Say "install_rr.ps1 ended: $(if ($fails.Count) { $fails -join ' | ' } else { 'no FAILED line' }); last line: $($out | Select-Object -Last 1)"
 } else { Say 'no install_rr.ps1 here: install skipped' }
+# 1b. The talker thread's AT-1 and G2Q (spec addendum AD), after install_rr (they need waiter v3e). Their result does not hold the chain back:
+#     they can be installed again later, until G2f ends.
+if (Test-Path "$IN\agent\install_agent.ps1") {
+  Say "install_agent.ps1 running (free to commit $(FreeMB) MB); output WORK\in-agent-install.txt"
+  & powershell -NoProfile -ExecutionPolicy Bypass -File "$IN\agent\install_agent.ps1" 2>&1 | ForEach-Object { "$_" } | Out-File -Encoding ascii "$WORK\in-agent-install.txt"
+  $out = @(Get-Content "$WORK\in-agent-install.txt")
+  $fails = @($out | Where-Object { $_ -like 'FAILED*' })
+  Say "install_agent.ps1 ended: $(if ($fails.Count) { ($fails -join ' | ') + ', NEEDS ATTENTION' } else { 'no FAILED line' }); last line: $($out | Select-Object -Last 1)"
+}
 
 # 2. G1.
 $plan = $null
 try { $plan = Get-Content "$WORK\g1recover-plan.json" -Raw | ConvertFrom-Json } catch { }
 $qs = @(); if ($plan) { $qs = @($plan.PSObject.Properties | ForEach-Object { $_.Name }) }
+if (-not $qs.Count -and (Test-Path "$IN\NO-G1-RERUN.txt")) {
+  # No G1 rerun (Ben, 1:17 AM ET 12 Oct): the chain starts once the new code is in. Only after a clean install_rr, so the chain never starts
+  # on the old code; otherwise it waits (NEEDS ATTENTION) and the install is run again.
+  if ($rrok) {
+    Set-Content -Encoding ascii "$WORK\G1-DONE.txt" -Value @("G1 ended without reruns: Ben, 1:17 AM ET 12 Oct, ""I don't think you should rerun g1, it's not worth it"" (spec addendum AE)",
+      "written by pc_after_restart.ps1 $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss')) ET after install_rr.ps1 ended with INSTALL RR DONE")
+    Say 'G1 not rerun (NO-G1-RERUN.txt): wrote WORK\G1-DONE.txt; the post-G1 chain starts after 5 quiet minutes'
+  } else { Say 'G1 not rerun, but install_rr.ps1 did not end with INSTALL RR DONE: WORK\G1-DONE.txt NOT written, the chain waits, NEEDS ATTENTION' }
+  exit
+}
 if (-not $qs.Count) { Say 'no G1 rerun planned: done'; exit }
 $s400 = $qs -contains '8aG1fR'; $s401 = $qs -contains '8aG1s401r'
 if ($s400) { $null = Start-G1 '8aG1fR' 'g1fr' }

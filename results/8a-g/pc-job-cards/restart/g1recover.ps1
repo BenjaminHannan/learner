@@ -58,14 +58,19 @@ if ((Get-FileHash "$SRC\custom_io\g8a\caps.py").Hash -ne $CAPS) { Say 'NOTHING S
 foreach ($f in @('8aG1fR-pc.txt', '8aG1s401r-pc.txt', 'g1fr.template.md', 'g1s401r.template.md', 'pc_after_restart.ps1')) { if (-not (Test-Path "$IN\$f")) { Say "NOTHING STARTED: $f missing in $IN"; exit 1 } }
 if (-not (Test-Path "$CIO\q8aPost3_wait.ps1")) { Say 'NOTHING STARTED: custom-io\q8aPost3_wait.ps1 missing'; exit 1 }
 
-# 3. The plan: rerun only the arms without an ok RESULT.json (accum as G1: B2 16, PT 8).
+# 3. The plan: rerun only the arms without an ok RESULT.json (accum as G1: B2 16, PT 8). With NO-G1-RERUN.txt beside this script (Ben, 1:17 AM ET
+# 12 Oct: "I don't think you should rerun g1, it's not worth it"; spec addendum AE) nothing of G1 reruns: pc_after_restart.ps1 installs, then
+# writes WORK\G1-DONE.txt so the chain starts.
 $todo = @{}
+$nog1 = Test-Path "$IN\NO-G1-RERUN.txt"
+if ($nog1) { Say "plan: NO-G1-RERUN.txt is here: no G1 arm reruns ($(@(Get-Content "$IN\NO-G1-RERUN.txt") -join ' '))" }
 foreach ($q in @(@('8aG1fR', 's400'), @('8aG1s401r', 's401'))) {
+  if ($nog1) { break }
   $need = @(@('B2', 'PT') | Where-Object { -not $arms["$($q[1]) $_"] })
   if ($need.Count) { $todo[$q[0]] = @{ arms = ($need -join ' '); accum = (@($need | ForEach-Object { if ($_ -eq 'B2') { 'B2=16' } else { 'PT=8' } }) -join ',') } }
 }
 foreach ($k in $todo.Keys) { Say "plan: queue $k runs arms $($todo[$k].arms) (accum $($todo[$k].accum))" }
-if (-not $todo.Count) { Say 'plan: every G1 arm has an ok RESULT.json; no G1 rerun' }
+if (-not $todo.Count -and -not $nog1) { Say 'plan: every G1 arm has an ok RESULT.json; no G1 rerun' }
 if ($Plan) { 'PLAN ONLY: nothing changed'; exit 0 }
 
 # 4. Queues, stale files, cards.
