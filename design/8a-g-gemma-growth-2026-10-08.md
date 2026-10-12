@@ -664,3 +664,42 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
     thinker-off scores; hours.
 - **Order on the PC (default taken, no OK needed):** the 3M run first in the post-G1 chain (about 6.5 h), the 10M run (about
   40 h at G1's 6.24 s per update) after fc100 and the talker's first run (G2f). Not part of G1's readout.
+
+## 33. Addendum AB (2026-10-11, 10:05 PM ET, before any run): test DS dropped; test WIDE instead (outside opinions)
+
+- **Asked** (Ben, 9:17 PM ET: "if you come back inconclusive, ask fable 5.1 what to do in the api call"; 9:19 PM ET: "use this", the
+  Managed Agents Deep researcher). Brief `reviews/fable-scaling-2026-10-11.md` (Fable 5.1, xhigh, API: 4.5 min, about $1.02);
+  `reviews/deep-research-scaling-2026-10-11.md` (Managed Agents deep researcher, Opus 5.5, web: 8 min, $4.41 list). Answers:
+  `reviews/fable-scaling-answer-2026-10-11.md`, `reviews/deep-research-scaling-answer-2026-10-11.md` (mirrored under
+  /mnt/project-files/whole-model-roadmap/reviews/).
+- **Both:** more rows of the same kinds will not make size help at 10M; grow width, not depth, first; the autoregressive writer
+  (B3 group 2, G2f) is the main fix. Fable ranks first: "the thinker has nothing left to learn from its signal, and the answer
+  path can't express the remaining answers". It also points out that `frame` and `vocab` (86.6, 89.4) equal `in_dist` (86.0), so
+  B2 generalises across wordings; my "same wordings" guess in addendum AA is contradicted.
+- **Free diagnostic Fable asked for, done from the 3M s400 RESULT.json (shown):** on the 400-row program check, teacher-forced
+  and free-run op and program accuracy are 100%; the program loss is 0 at the end of training. Of the nine families where the
+  plain model beats B2, eight have **0% program coverage** (no calculator program at all; compare_numbers is the exception), and
+  their answers go through the WORD pointer or the parallel GEN head: table_lookup GEN 67.5% / WORD 31.0%, rule_apply 57.5 / 40.5,
+  fewshot_number_rule GEN 96.0, passage_qa WORD 66.0, digits_parity GEN 61.5, seq_next GEN 100, kin_chain 50 / 50, list_stats NUM
+  70.5 (prog 37). So the misses sit on B2's answer heads, not on its programs (Fable's "right program, wrong pointer" branch: G2f's
+  writer is the right fix).
+- **Test DS (addendum AA) is dropped** before any run: its hypothesis is weakened (plain model +3.77 on identical rows; B2 already
+  fits its programs), it cannot add unseen structures by construction, and its pass and fail lines are about one paired sd apart.
+- **Test WIDE (one change: the shape).** B2 seed 400 at about 10M **by width**: d 448, 7 heads (64 per head, as at 3M), 2 blocks,
+  mlp 4.8, reader 2 layers, 12 rounds, eg_embed: the 3M shape with only the width changed; 10,173,509 trained under G1's caps
+  (the deep 10M: 10,496,537). lr 1e-3 x 256/448 = 5.71e-4 (the width rule of the 30M rung and of 8a's W probe). G1's code
+  (612f5c5b01 + the caps fix) plus one added rung row (`10MW`) in configs.py, in a new folder src-wide; G1's 10M pool
+  p10-rung30-s400-a64 (reused, same rows and order), 24,000 updates of 256 rows, accumulation 8. B2 only.
+  - **Pass:** pooled-5 >= 76.31 (>= +3.3 over 3M's 73.01) with chain-5 >= 99: depth was the wrong axis; grow width at every rung
+    and revisit the 100M shape list (21-37 blocks at 512).
+  - **Fail (proves "adding B2 parameters any way helps" wrong):** <= 75.01 (+2.0). Then the answer heads are the only path to
+    scaling, and B3 group 2 carries it.
+  - **Between:** seed 401 wide.
+  - **Reported:** minus the deep 10M (74.65), training loss and its GEN part, per file, the nine B2-losing families, hours.
+  - **Cost (untested):** 12-20 h on the PC (Fable's estimate).
+- **Order after G1 (default taken):** fc100, g2c3s, **G2f** (B3 group 2 3M s400; Fable's floor: >= 67 = the plain model's level,
+  >= 71 = it kept B2's strengths), then **WIDE** (an inserted job, waiter v3e, check point "after group 2 at 3M"), then the rest of
+  the chain. A B3 group 2 10M step follows only if G2f clears 67; its shape (wide or deep) is set by WIDE. Its marks get their own
+  addendum before it runs.
+- **Flagged for Ben, not changed:** both answers warn that the G2f writer reads only the thinker's vectors (no view of the question
+  or the tape), which Ben's rule 2 requires. G2f's score is the first evidence.
