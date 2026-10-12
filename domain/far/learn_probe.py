@@ -79,6 +79,9 @@ L9_SEED = 93901   # L9 (spec: MARKS-L9-2026-10-12.md): joined rows only from wid
 L9_TAG = 'learn9'
 L10_SEED = 94001   # L10 (spec: MARKS-L10-2026-10-12.md): joined rows from joinlast.join_last_draft, not-joined from rings 1-3
 L10_TAG = 'learn10'
+L12_SEED = L10_SEED + 1   # L12 (spec: MARKS-L12-2026-10-12.md): join-last with piece 1 drawn from the v9 widened rings 1-3
+L12_TAG = 'learn12'
+L9_ROWS = os.path.join(LEARN, 'train-rows-l9.jsonl')
 MODE_DRAW_CAP = 20_000_000
 PER_CELL = 6000
 FIT_N = 420
@@ -794,6 +797,197 @@ def census_l10(parent, attempts, out):
     print('wrote', out)
 
 
+def far_factors(prompt):
+    """How many of grid_rows>=5, max_range_cells>=5, max_row_ref>=5 the prompt has (0-3)."""
+    p = far_props(prompt)
+    return sum(p[k] for k in ('grid_rows', 'max_range_cells', 'max_row_ref'))
+
+
+def l12_pick(tool, helps, ctx, cons, seed_str):
+    """L12: piece 1 drawn the way the v9 mode draws every practice example. Builds the widened rings exactly as build_mode_rows
+    does (widen.build with ctx's accept, random.Random(seed_str)), then returns (pick, wst). pick(rng) -> (prompt, kind): kind
+    round robin over SP.SCORED (a counter in the closure), then mode.pick_example(ex[kind], rng); pick.last_ring is the ring."""
+    from domain import mode
+    from domain.far import widen
+    kinds = [h['kind'] for h in helps]
+    rings, wst = widen.build(tool, helps, lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(seed_str), cons)
+    ex = widen.by_kind(rings, kinds)
+    assert all(k in ex for k in SP.SCORED), 'a scored kind is not on the help page'
+    count = [0]
+
+    def pick(rng):
+        kind = SP.SCORED[count[0] % len(SP.SCORED)]
+        count[0] += 1
+        prompt, ring = mode.pick_example(ex[kind], rng)
+        pick.last_ring = ring
+        return prompt, kind
+    pick.last_ring = None
+    return pick, wst
+
+
+class Census12(Census):
+    """Census plus L12's columns: share of kept with two or more far factors; ring of piece 1 for attempts and for kept."""
+
+    def __init__(self):
+        super().__init__()
+        self.far2 = 0
+        self.ring_attempts, self.ring_kept = Counter(), Counter()
+
+    def add(self, item, why, ring=None):
+        super().add(item, why)
+        self.ring_attempts[ring] += 1
+        if item is not None:
+            self.ring_kept[ring] += 1
+            self.far2 += far_factors(item['prompt']) >= 2
+
+    def report(self):
+        r = super().report()
+        n = max(self.kept, 1)
+        na = max(self.attempts, 1)
+        r['share']['two_or_more_far'] = self.far2 / n
+        r['ring_attempts'] = {str(k): v / na for k, v in sorted(self.ring_attempts.items(), key=lambda kv: str(kv[0]))}
+        r['ring_kept'] = {str(k): v / n for k, v in sorted(self.ring_kept.items(), key=lambda kv: str(kv[0]))}
+        r['ring_kept_counts'] = {str(k): v for k, v in sorted(self.ring_kept.items(), key=lambda kv: str(kv[0]))}
+        return r
+
+    def print(self):
+        super().print()
+        r = self.report()
+        print(f'  among kept: two or more far factors {100.0 * r["share"]["two_or_more_far"]:.1f}%')
+        print('  piece-1 ring, share of attempts: ' + ', '.join(f'{k} {100.0 * v:.1f}%' for k, v in r['ring_attempts'].items()))
+        print('  piece-1 ring, share of kept: ' + ', '.join(f'{k} {100.0 * v:.1f}% ({r["ring_kept_counts"][k]})' for k, v in r['ring_kept'].items()))
+
+
+def census_l12(parent, attempts, out):
+    """Stage census-l12: census-l10 with piece 1 from the v9 widened rings (l12_pick); seed as L10."""
+    import torch
+    from domain import mode
+    cons = json.load(open(mode.CONST_PATH))
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    kinds = l9_join_kinds(ck['chars'])
+    tool = sheet_tool
+    helps = tool.help()
+    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    pick, wst = l12_pick(tool, helps, ctx, cons, f'{L10_SEED}-widen')
+    print(f'widen kept {wst["kept"]} sha {wst["sha256"][:12]}; per kind {wst["per_kind"]}', flush=True)
+    from domain.far import joinlast
+    rng = random.Random(f'{L10_SEED}-census')
+    cen = Census12()
+    for n in range(attempts):
+        item, why = joinlast.join_last_draft(tool, helps, kinds, rng, ctx, pick=pick)
+        cen.add(item, why, pick.last_ring)
+        if item is not None:
+            ctx['seen'].add(item['prompt'])
+        if (n + 1) % 2000 == 0:
+            print(f'  {n + 1} attempts: kept {cen.kept}', flush=True)
+    cen.print()
+    rep = dict(cen.report(), seed=L10_SEED, kinds=[f'{f}:{s}' for f, s in kinds], widen_sha256=wst['sha256'])
+    with open(out, 'w') as f:
+        json.dump(rep, f, indent=1)
+    print('wrote', out)
+
+
+def build_l12(rows_out, parent, probe, eval_rows, base_rows, draw_cap=MODE_DRAW_CAP, per_cell=PER_CELL):
+    """Stage build-l12: PER_CELL joined rows (join-last, piece 1 from l12_pick; ids learn12-mode-two-NNNNN) + the 'mode-one'
+    rows of base_rows (L9's file) copied unchanged. Excludes the probe, the L5 eval rows and the other exclusion files."""
+    if os.path.exists(rows_out):
+        raise SystemExit(f'refusing to overwrite {rows_out}')
+    import torch
+    from domain import mode
+    from domain.mode import CONST_PATH
+    cons = json.load(open(CONST_PATH))
+    random.seed(L12_SEED)
+    torch.manual_seed(L12_SEED)
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    base = [r for r in load_jsonl(base_rows) if r['cell'] == MODE_CELLS[1]]
+    assert len(base) == per_cell, f'{base_rows}: {len(base)} rows of cell {MODE_CELLS[1]}, wanted {per_cell}'
+    exclude, missed = read_prompts([probe, eval_rows]), []
+    for path in EXCLUDE_FILES[1:]:
+        try:
+            exclude |= read_prompts([path])
+        except OSError:
+            missed.append(path)
+    if missed:
+        print('NOT excluded (unreadable): ' + ', '.join(missed))
+    kinds = l9_join_kinds(ck['chars'])
+    tool = sheet_tool
+    helps = tool.help()
+    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    pick, wst = l12_pick(tool, helps, ctx, cons, f'{L12_SEED}-widen')
+    from domain.far import joinlast, widen
+    from custom_io.models import load_model
+    torch.manual_seed(L12_SEED)
+    m = load_model(parent).eval()
+    rng = random.Random(f'{L12_SEED}-train')
+    cen, drops, rows = Census12(), Counter(), []
+    draws = 0
+    while len(rows) < per_cell and draws < draw_cap:
+        draws += 1
+        item, why = joinlast.join_last_draft(tool, helps, kinds, rng, ctx, pick=pick)
+        cen.add(item, why, pick.last_ring)
+        if item is None:
+            drops[why] += 1
+            continue
+        prompt = item['prompt']
+        if not far_props(prompt)['two_kinds']:
+            drops['join_not_joined'] += 1
+            continue
+        if prompt in exclude:
+            ctx['seen'].add(prompt)
+            drops['in_probe_or_panel'] += 1
+            continue
+        row, why = mode.make_row(m, 'domain_sheet', prompt, item['value'], item['steps'], cons, 'tool')
+        if row is None:
+            drops['make_row_' + why] += 1
+            continue
+        ctx['seen'].add(prompt)
+        rows.append({'id': f'{L12_TAG}-{MODE_CELLS[0]}-{len(rows):05d}', 'kind': item['kind'], 'split': MODE_CELLS[0], 'cell': MODE_CELLS[0],
+                     'prompt': prompt, 'answer': item['value'], 'n_steps': len(item['steps']), 'ring': item['ring']})
+        if draws % 1_000_000 == 0:
+            print(f'  {draws} draws: kept {len(rows)}', flush=True)
+    complete = len(rows) >= per_cell
+    print(f'excluded prompts: {len(exclude)}; draws {draws}; widen kept {wst["kept"]} sha {wst["sha256"][:12]}')
+    print(f'widen tries {wst["tries"]}; per kind {wst["per_kind"]}')
+    cen.print()
+    print('drops:', dict(drops))
+    print('per cell:', {MODE_CELLS[0]: len(rows), MODE_CELLS[1]: len(base)})
+    if not complete:
+        print(f'INCOMPLETE: found {len(rows)} joined rows (wanted {per_cell}) after {draws} draws; nothing written')
+    if rows:
+        lay = Counter(widen.layout(r['prompt'].partition(';')[2]) for r in rows)
+        print(f'  joined rows: top 15 layouts of {len(lay)} (after the ";"):')
+        for l, n in lay.most_common(15):
+            print(f'    {100.0 * n / len(rows):5.1f}% ({n:5d})  {l}')
+        arr = Counter(arrangement(r['prompt']) for r in rows)
+        print('  joined rows per arrangement: ' + ', '.join(f'{a} {100.0 * arr[a] / len(rows):.1f}% ({arr[a]})' for a in ('plus', 'bracket-times', 'other')))
+        f = sum(fn_op_fn(r['prompt']) for r in rows)
+        print(f'  joined rows fn-op-fn (top level exactly two single calls joined by one + or one *): {100.0 * f / len(rows):.1f}% ({f})')
+        print('  joined rows per ring: ' + str(dict(sorted(Counter(r['ring'] for r in rows).items(), key=lambda kv: str(kv[0])))) +
+              '; per host kind: ' + str(dict(Counter(r['kind'] for r in rows))))
+        fp = [far_props(r['prompt']) for r in rows]
+        print('  joined rows far-factor shares: ' + ', '.join(f'{k}>=5 {100.0 * sum(p[k] for p in fp) / len(rows):.1f}%' for k in ('grid_rows', 'max_range_cells', 'max_row_ref')) +
+              f', two or more far factors {100.0 * sum(far_factors(r["prompt"]) >= 2 for r in rows) / len(rows):.1f}%')
+    allrows = rows + base
+    for c in MODE_CELLS:
+        rs = [r for r in allrows if r['split'] == c]
+        print(f'  {c}: {len(rs)} rows; kinds {dict(Counter(r["kind"] for r in rs))}; rings {dict(sorted(Counter(r["ring"] for r in rs).items(), key=lambda kv: str(kv[0])))}')
+    props = [far_props(r['prompt']) for r in allrows]
+    for k in ('grid_rows', 'max_range_cells', 'max_row_ref', 'two_kinds'):
+        print(f'  share {k}{">=5" if k != "two_kinds" else ""}: ' +
+              ', '.join(f'{c} {100.0 * sum(p[k] for p, r in zip(props, allrows) if r["split"] == c) / max(sum(r["split"] == c for r in allrows), 1):.1f}%' for c in MODE_CELLS) +
+              f', all {100.0 * sum(p[k] for p in props) / max(len(allrows), 1):.1f}%')
+    if not complete:
+        raise SystemExit(1)
+    assert not {r['prompt'] for r in rows} & exclude and len({r['prompt'] for r in allrows}) == len(allrows)
+    tmp = rows_out + '.tmp'
+    with open(tmp, 'w') as fh:
+        for r in allrows:
+            fh.write(json.dumps(r) + '\n')
+    os.rename(tmp, rows_out)
+    print(f'wrote {len(allrows)} rows to {rows_out}')
+    print('sha256', sha256_file(rows_out))
+
+
 def print_subst_ring(w):
     sb = w['subst']
     print(f'subst ring: accepted layouts {sb["accepted"]}; depth {sb["depth"]}; value pieces {sb["vq"]}; top 20 layouts (kept):')
@@ -1330,9 +1524,10 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'build-l10', 'census-l10', 'train'])
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'build-l9', 'build-l10', 'census-l10', 'build-l12', 'census-l12', 'train'])
     a.add_argument('--rows-out', default=None, help='build-l8 / build-l9 / build-l10: where to write the rows (required; refuses to overwrite)')
     a.add_argument('--draw-cap', type=int, default=MODE_DRAW_CAP, help='build-l8 / build-l9 / build-l10: stop after this many draws')
+    a.add_argument('--base-rows', default=L9_ROWS, help="build-l12: rows file whose 'mode-one' rows are copied unchanged (L9's train-rows-l9.jsonl)")
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
@@ -1382,6 +1577,12 @@ def main(argv=None):
     elif a.stage == 'census-l10':
         assert a.out, 'census-l10 needs --out'
         census_l10(a.parent, a.attempts, a.out)
+    elif a.stage == 'build-l12':
+        assert a.rows_out, 'build-l12 needs --rows-out'
+        build_l12(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS, a.base_rows, a.draw_cap)
+    elif a.stage == 'census-l12':
+        assert a.out, 'census-l12 needs --out'
+        census_l12(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight)   # refuse before any work

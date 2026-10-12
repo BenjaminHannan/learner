@@ -31,12 +31,18 @@ def whole_pieces(tool, helps, ctx):
     return cache[key]
 
 
-def join_last_draft(tool, helps, kinds, rng, ctx, piece_tries=20, join_tries=5):
+def join_last_draft(tool, helps, kinds, rng, ctx, piece_tries=20, join_tries=5, pick=None):
     """One joined problem, drafted join-last. kinds: the accepted join kinds [(form, symbol)]. -> (item, None) or (None, reason);
-    item as mode.draft's (kind = piece 1's kind, ring 'joinlast'). Reasons: mode.draft's own, 'no_whole_1', 'piece2', 'join'."""
+    item as mode.draft's (kind = piece 1's kind, ring 'joinlast'). Reasons: mode.draft's own, 'no_whole_1', 'piece2', 'join'.
+    L12: pick (optional) is a function rng -> (prompt, kind) that gives piece 1's example (e.g. a widened-ring example); None keeps
+    L10's draw, a plain help example (rng.choice(helps)). Piece 2 always comes from the help page's whole pieces."""
     cons = ctx['cons']
-    h = rng.choice(helps)
-    item1, why = mode.draft(tool, h['prompt'], h['kind'], rng, ctx)
+    if pick is None:
+        h = rng.choice(helps)
+        ex1, kind1 = h['prompt'], h['kind']
+    else:
+        ex1, kind1 = pick(rng)
+    item1, why = mode.draft(tool, ex1, kind1, rng, ctx)
     if item1 is None:
         return None, why
     w = widen.whole_piece(item1['prompt'], tool)
