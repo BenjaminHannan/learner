@@ -40,7 +40,7 @@ Reading: low view dependence at T0 but high at T = 1 means "the temperature hide
 values are the Before files' own (s200 19.691660968372133, s201 20.368329685910396; the cloud GW-P8 runs reproduce them exactly).
 Code: game/blind.py (fit), `game.score --arm blind`; views = runs-local/gwp8-s20X/moves/quiz_night_0.jsonl.gz of the cloud runs.
 
-## Result (2:35 AM ET 10-12): B-1 says "artefact" on both seeds (shown)
+## Result (2:29 AM ET 10-12): B-1 says "artefact" on both seeds (shown)
 | seed | Before_T0 | Blind | Before - Blind (95%) | mean KL at T0 | mean KL at T = 1 | top word the same | Blind - Random (95%) |
 |---|---|---|---|---|---|---|---|
 | 200 | 3.75 | 3.78 | -0.03 (-0.33 to +0.23) | 0.029 | 0.051 | 97.8% of views | +1.47 (+1.17 to +1.77) |
