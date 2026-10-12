@@ -5,7 +5,8 @@
   python3 -m domain.far.learn_probe build-l3       (L3: MARKS-L3; '+' joins of training kind pairs; eval cells S/HP/HO/HPO)
   python3 -m domain.far.learn_probe build-l4      (L4: MARKS-L4; build-mode with the swap tool's join step on, seed 93601)
   python3 -m domain.far.learn_probe build-l5      (L5: MARKS-L5; training joins over five layouts; eval cells S5/S/HP/HO/HPO)
-  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5]
+  python3 -m domain.far.learn_probe build-l8 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L8: MARKS-L8; the substitution ring's joins)
+  python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5|l8]
         [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
         [--guard kf --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
 
@@ -69,6 +70,9 @@ L5_EVAL_N = 420
 L4_SEED = 93601
 L4_ROWS = os.path.join(LEARN, 'train-rows-l4.jsonl')   # the first build (record only)
 L4R1_ROWS = os.path.join(LEARN, 'train-rows-l4r1.jsonl')   # R1: value slots and balanced join kinds
+L8_SEED = 93801   # L8 (spec: MARKS-L8-2026-10-12.md): joined rows only from widen.subst_ring, not-joined from rings 1-3
+L8_TAG = 'learn8'
+L8_SUBST_DEPTH = 3
 MODE_DRAW_CAP = 20_000_000
 PER_CELL = 6000
 FIT_N = 420
@@ -533,6 +537,168 @@ def build_l4(rows_path=L4R1_ROWS):
     build_mode(rows_path, L4_SEED, True, 'learn4', (MODE_ROWS, L3_TRAIN_ROWS, L3_EVAL_ROWS))
 
 
+class Pick(list):
+    """A list of prompts that remembers the index rng.choice last took (so the host's kind can be recovered after mode.draft)."""
+    last = None
+
+    def __getitem__(self, i):
+        self.last = i
+        return super().__getitem__(i)
+
+
+def fn_op_fn(prompt):
+    """True when the formula's top level (bracket depth 0, after the first '=') is exactly two parts joined by one '+' or one
+    '*' and both parts are a single function call NAME(...)."""
+    body = prompt.partition(';')[2].strip().lstrip('=')
+    depth, ops = 0, []
+    for k, c in enumerate(body):
+        depth += (c == '(') - (c == ')')
+        if depth == 0 and c in '+*':
+            ops.append(k)
+    if len(ops) != 1:
+        return False
+    def call(t):
+        if not re.fullmatch(r'[A-Z]+\(.*\)', t.strip()):
+            return False
+        d = 0
+        for k, c in enumerate(t.strip()):
+            d += (c == '(') - (c == ')')
+            if d == 0 and c == ')':
+                return k == len(t.strip()) - 1
+        return False
+    return call(body[:ops[0]]) and call(body[ops[0] + 1:])
+
+
+def build_l8_rows(m, parent_chars, cons, exclude, per_cell=PER_CELL, seed=L8_SEED, draw_cap=MODE_DRAW_CAP, tag=L8_TAG):
+    """-> (rows, stats). Joined rows ('mode-two') are drafted only from the substitution ring (widen.subst_ring; the host's
+    kind is recorded), not-joined rows ('mode-one') from rings 1-3 by kind round robin as build_mode_rows does. The two draws
+    alternate until both cells hold per_cell rows or draw_cap draws. cons must hold widen_subst."""
+    from domain import mode
+    from domain.far import widen
+    tool = sheet_tool
+    helps = tool.help()
+    kinds = [h['kind'] for h in helps]
+    ctx = dict(vchars=set(parent_chars), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    rings, wst = widen.build(tool, helps, lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(f'{seed}-widen'), cons)
+    sr = cons['widen_rings'] + 1
+    ex = widen.by_kind({r: v for r, v in rings.items() if r < sr}, kinds)
+    assert all(k in ex for k in SP.SCORED), 'a scored kind is not on the help page'
+    host = Pick(p for _, p in rings[sr])
+    host_kind = [k for k, _ in rings[sr]]
+    jex = {sr: host}
+    rng = random.Random(f'{seed}-train')
+    rows, drops, per = [], Counter(), {c: 0 for c in MODE_CELLS}
+    draws = nj = shown = 0
+
+    def keep(item, kind, cell):
+        prompt = item['prompt']
+        if prompt in exclude:
+            ctx['seen'].add(prompt)
+            drops['in_probe_or_panel'] += 1
+            return
+        row, why = mode.make_row(m, 'domain_sheet', prompt, item['value'], item['steps'], cons, 'tool')
+        if row is None:
+            drops['make_row_' + why] += 1
+            return
+        ctx['seen'].add(prompt)
+        rows.append({'id': f'{tag}-{cell}-{per[cell]:05d}', 'kind': kind, 'split': cell, 'cell': cell, 'prompt': prompt,
+                     'answer': item['value'], 'n_steps': len(item['steps']), 'ring': item['ring']})
+        per[cell] += 1
+
+    while min(per.values()) < per_cell and draws < draw_cap and host:
+        if per[MODE_CELLS[0]] < per_cell:   # one joined try: the substitution ring only
+            draws += 1
+            item, why = mode.draft(tool, jex, None, rng, ctx)
+            if item is None:
+                drops[why] += 1
+            elif not far_props(item['prompt'])['two_kinds']:
+                drops['subst_not_joined'] += 1
+            else:
+                keep(item, host_kind[host.last], MODE_CELLS[0])
+        if per[MODE_CELLS[1]] < per_cell:   # one not-joined try: rings 1-3, kinds round robin
+            draws += 1
+            kind = SP.SCORED[nj % len(SP.SCORED)]
+            nj += 1
+            item, why = mode.draft(tool, ex[kind], kind, rng, ctx)
+            if item is None:
+                drops[why] += 1
+            elif far_props(item['prompt'])['two_kinds']:
+                drops['swap_joined'] += 1
+            else:
+                keep(item, kind, MODE_CELLS[1])
+        if draws >= shown + 1_000_000:
+            shown = draws
+            print(f'  {draws} draws: kept {per}', flush=True)
+    stats = dict(draws=draws, drops=dict(drops), per=per, widen_kept=wst['kept'], widen_sha256=wst['sha256'], widen=wst,
+                 complete=min(per.values()) >= per_cell)
+    return rows, stats
+
+
+def build_l8(rows_out, parent, probe, eval_rows):
+    if os.path.exists(rows_out):
+        raise SystemExit(f'refusing to overwrite {rows_out}')
+    import torch
+    from custom_io.models import load_model
+    from domain.far import widen
+    from domain.mode import CONST_PATH
+    cons = dict(json.load(open(CONST_PATH)), widen_subst=L8_SUBST_DEPTH)
+    random.seed(L8_SEED)
+    torch.manual_seed(L8_SEED)
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    torch.manual_seed(L8_SEED)
+    m = load_model(parent).eval()
+    exclude, missed = read_prompts([probe, eval_rows]), []
+    for path in EXCLUDE_FILES[1:]:
+        try:
+            exclude |= read_prompts([path])
+        except OSError:
+            missed.append(path)
+    if missed:
+        print('NOT excluded (unreadable): ' + ', '.join(missed))
+    rows, st = build_l8_rows(m, ck['chars'], cons, exclude)
+    w = st['widen']
+    print(f'excluded prompts: {len(exclude)}; draws {st["draws"]}; widen kept {st["widen_kept"]} sha {st["widen_sha256"][:12]}')
+    print(f'widen tries {w["tries"]}; per kind {w["per_kind"]}')
+    sb = w['subst']
+    print(f'subst ring: accepted layouts {sb["accepted"]}; depth {sb["depth"]}; value pieces {sb["vq"]}; top 20 layouts (kept):')
+    for lay, n in sb['top_layouts']:
+        print(f'    {n:5d}  {lay}')
+    print('drops:', st['drops'])
+    print('per cell:', st['per'])
+    if not st['complete']:
+        print(f'INCOMPLETE: found {st["per"]} (wanted {PER_CELL} each) after {st["draws"]} draws; nothing written')
+    two = [r for r in rows if r['split'] == MODE_CELLS[0]]
+    if two:
+        lay = Counter(widen.layout(r['prompt'].partition(';')[2]) for r in two)
+        print(f'  joined rows: top 15 layouts of {len(lay)} (after the ";"):')
+        for l, n in lay.most_common(15):
+            print(f'    {100.0 * n / len(two):5.1f}% ({n:5d})  {l}')
+        arr = Counter(arrangement(r['prompt']) for r in two)
+        print('  joined rows per arrangement: ' + ', '.join(f'{a} {100.0 * arr[a] / len(two):.1f}% ({arr[a]})'
+                                                           for a in ('plus', 'bracket-times', 'other')))
+        f = sum(fn_op_fn(r['prompt']) for r in two)
+        print(f'  joined rows fn-op-fn (top level exactly two single calls joined by one + or one *): {100.0 * f / len(two):.1f}% ({f})')
+        print('  joined rows per ring: ' + str(dict(sorted(Counter(r['ring'] for r in two).items()))) + '; per host kind: ' + str(dict(Counter(r['kind'] for r in two))))
+    for c in MODE_CELLS:
+        rs = [r for r in rows if r['split'] == c]
+        print(f'  {c}: {len(rs)} rows; kinds {dict(Counter(r["kind"] for r in rs))}; rings {dict(sorted(Counter(r["ring"] for r in rs).items()))}')
+    props = [far_props(r['prompt']) for r in rows]
+    for k in ('grid_rows', 'max_range_cells', 'max_row_ref', 'two_kinds'):
+        print(f'  share {k}{">=5" if k != "two_kinds" else ""}: ' +
+              ', '.join(f'{c} {100.0 * sum(p[k] for p, r in zip(props, rows) if r["split"] == c) / PER_CELL:.1f}%' for c in MODE_CELLS) +
+              f', all {100.0 * sum(p[k] for p in props) / max(len(rows), 1):.1f}%')
+    if not st['complete']:
+        raise SystemExit(1)
+    assert not {r['prompt'] for r in rows} & exclude and len({r['prompt'] for r in rows}) == len(rows)
+    tmp = rows_out + '.tmp'
+    with open(tmp, 'w') as f:
+        for r in rows:
+            f.write(json.dumps(r) + '\n')
+    os.rename(tmp, rows_out)
+    print(f'wrote {len(rows)} rows to {rows_out}')
+    print('sha256', sha256_file(rows_out))
+
+
 def load_jsonl(path):
     with open(path) as f:
         return [json.loads(line) for line in f if line.strip()]
@@ -543,20 +709,25 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     cells 'l1': F4-two, F0-near, F2b-rows, fit (L1, unchanged). cells 'all' (L2): every probe split (scored kinds), fit,
     and the sealed sheet.v3 panel (scored kinds) as v3-near / v3-far (scoring only). cells 'l3': S, HP, HO, HPO (from the L3 eval
     file), probe F0-near and F4-two, fit. cells 'l4': everything in 'all' plus S, HP, HO, HPO.
-    cells 'l5': S5, S, HP, HO, HPO (from the L5 eval file), probe F0-near and F4-two, fit."""
-    assert cells in ('l1', 'all', 'l3', 'l4', 'l5'), cells
+    cells 'l5': S5, S, HP, HO, HPO (from the L5 eval file), probe F0-near and F4-two, fit.
+    cells 'l8': S5, S, HP, HO, HPO, every probe cell, F4-plus / F4-times (F4-two without / with ')*('), fit; no v3 panel."""
+    assert cells in ('l1', 'all', 'l3', 'l4', 'l5', 'l8'), cells
     probe = [r for r in load_jsonl(probe_path or SP.PROBE) if r['kind'] in SP.SCORED]
-    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two'), 'l5': ('F0-near', 'F4-two')}[cells]
+    names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two'), 'l5': ('F0-near', 'F4-two'), 'l8': PROBE_CELLS}[cells]
     sets = {}
     if cells in ('l3', 'l4'):
         l3 = load_jsonl(l3_path)
         sets = {c: [r for r in l3 if r['split'] == c] for c in L3_CELLS}
         assert all(len(v) == L3_EVAL_N for v in sets.values()), {k: len(v) for k, v in sets.items()}
-    if cells == 'l5':
+    if cells in ('l5', 'l8'):
         l5 = load_jsonl(l5_path)
         sets = {c: [r for r in l5 if r['split'] == c] for c in L5_CELLS}
         assert all(len(v) == L5_EVAL_N for v in sets.values()), {k: len(v) for k, v in sets.items()}
     sets.update({c: [dict(r, split=c) for r in probe if r['split'] == c] for c in names})
+    if cells == 'l8':
+        f4 = [r for r in probe if r['split'] == 'F4-two']
+        sets['F4-plus'] = [dict(r, id='plus-' + r['id'], split='F4-plus') for r in f4 if ')*(' not in r['prompt']]
+        sets['F4-times'] = [dict(r, id='times-' + r['id'], split='F4-times') for r in f4 if ')*(' in r['prompt']]
     joined = [r for r in train_rows if r['split'] in JOINED_CELLS]
     fit = random.Random(fit_seed).sample(joined, FIT_N)
     sets['fit'] = [dict(r, id='fit-' + r['id'], split='fit') for r in fit]
@@ -821,7 +992,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
-    fit_seed = L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
+    fit_seed = L8_SEED if cells == 'l8' else L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
     ev = {'l3_path': eval_rows or L3_EVAL_ROWS, 'l5_path': eval_rows or L5_EVAL_ROWS}
     sets = eval_sets(train_rows, cells, fit_seed, probe_path=probe, **ev)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
@@ -896,14 +1067,15 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
 
 def main(argv=None):
     a = argparse.ArgumentParser(description='L1: can the 3M model learn joined formulas? (diagnosis only)')
-    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'train'])
+    a.add_argument('stage', choices=['build', 'build-mode', 'build-l3', 'build-l4', 'build-l5', 'build-l8', 'train'])
+    a.add_argument('--rows-out', default=None, help='build-l8: where to write the rows (required; refuses to overwrite)')
     a.add_argument('--arm', choices=['LA', 'LB'])
     a.add_argument('--updates', type=int, default=4000)
     a.add_argument('--threads', type=int, default=1)
     a.add_argument('--out')
     a.add_argument('--rows', default=TRAIN_ROWS, help='training rows (default: the L1 file)')
-    a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4', 'l5'], default='l1',
-               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO; l5 = S5, S, HP, HO, HPO, F0-near, F4-two, fit')
+    a.add_argument('--cells', choices=['l1', 'all', 'l3', 'l4', 'l5', 'l8'], default='l1',
+               help='scored sets: l1 = four cells; all = L2 (probe splits, fit, v3); l3 = S, HP, HO, HPO, F0-near, F4-two, fit; l4 = all + S, HP, HO, HPO; l5 = S5, S, HP, HO, HPO, F0-near, F4-two, fit; l8 = S5, S, HP, HO, HPO, every probe cell, F4-plus, F4-times, fit')
     a.add_argument('--addon-rank', type=int, default=None, help="arm LA only: add-on rank (default: the mode's constant)")
     a.add_argument('--addon-alpha', type=float, default=None, help="arm LA only: add-on alpha (default: the mode's constant)")
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
@@ -930,6 +1102,9 @@ def main(argv=None):
         build_l5()
     elif a.stage == 'build-l4':
         build_l4()
+    elif a.stage == 'build-l8':
+        assert a.rows_out, 'build-l8 needs --rows-out'
+        build_l8(a.rows_out, a.parent, a.probe, a.eval_rows or L5_EVAL_ROWS)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work

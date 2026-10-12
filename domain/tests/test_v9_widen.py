@@ -1,5 +1,6 @@
 """v9 (far transfer, 10-11): the swap tool that widens the help page, and the ring pick in the practice maker."""
 import json
+import pytest
 import random
 from collections import Counter
 
@@ -159,3 +160,64 @@ def test_value_slots_replace_by_one_still_runs():
     p = sheet.help()[0]['prompt']
     t, sl = widen.value_slots(p, lambda x: mode.accept(sheet, x, ctx)[2] is None)
     assert sl and all(mode.accept(sheet, widen.swap(t, i, j, '1'), ctx)[2] is None for i, j in sl)
+
+
+# ---- L8 substitution ring (widen_subst) ----
+
+def build_subst(tool, seed=1, ring_max=60, subst=3, **extra):
+    cons = dict(CONS, widen_ring_max=ring_max, widen_rings=3, widen_subst=subst, **extra)
+    ctx = ctx_for(tool)
+    return widen.build(tool, tool.help(), lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(seed), cons)
+
+
+def test_layout_is_domain_free():
+    assert widen.layout('A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)+MAX(B1:B2)') == 'x: x | x: x ; =x(x:x)+x(x:x)'
+
+
+def test_build_unchanged_without_widen_subst():
+    for tool, sha in ((sheet, SHEET_V9_SHA_300_SEED7), (rpn, RPN_V9_SHA_300_SEED7)):
+        rings, st = build(tool, seed=7, ring_max=300)
+        assert st['sha256'] == sha and 'subst' not in st
+        cons = dict(CONS, widen_ring_max=300, widen_rings=3, widen_subst=0)   # 0 = off
+        ctx = ctx_for(tool)
+        r0, s0 = widen.build(tool, tool.help(), lambda p: mode.accept(tool, p, ctx)[2] is None, random.Random(7), cons)
+        assert s0['sha256'] == sha and r0 == rings
+
+
+def test_subst_ring_deterministic_and_runs():
+    plain, _ = build(sheet, seed=3, ring_max=60)
+    a, sa = build_subst(sheet, seed=3)
+    b, sb = build_subst(sheet, seed=3)
+    assert a == b and sa['sha256'] == sb['sha256']
+    assert all(a[r] == plain[r] for r in (1, 2, 3))           # the swap rings are the same with the substitution on
+    assert sorted(a) == [1, 2, 3, 4] and a[4] and sa['kept'][4] == len(a[4]) <= 60
+    info = sa['subst']
+    assert info['vq'] > 0 and info['accepted'] > 0 and set(info['depth']) <= {1, 2, 3} and sum(info['depth'].values()) == len(a[4])
+    ctx = ctx_for(sheet)
+    kinds = {h['kind'] for h in sheet.help()}
+    for kind, p in a[4]:
+        assert kind in kinds and mode.accept(sheet, p, ctx)[2] is None, p
+    shapes = [widen.shape(p) for r in a for _, p in a[r]]
+    assert len(shapes) == len(set(shapes))
+
+
+def test_subst_ring_reaches_two_function_calls():
+    import re
+    a, _ = build_subst(sheet, seed=1)
+    two = [p for _, p in a[4] if len(re.findall(r'[A-Z]+\(', p.partition(';')[2])) >= 2]
+    assert two, [p for _, p in a[4]][:10]
+
+
+def test_subst_makes_bracketed_substitutions():
+    a, _ = build_subst(sheet, seed=1, ring_max=200)
+    assert any('(' + v + ')' in p.partition(';')[2].replace('=(', '=') for _, p in a[4] for v in ('5', '2', 'B1', 'A1')), 'a wrapped piece'
+
+
+def test_subst_without_brackets_is_bare():
+    a, st = build_subst(rpn, seed=1, ring_max=40)
+    assert a[4] and not any('(' in p for _, p in a[4])
+
+
+def test_join_and_subst_together_refused():
+    with pytest.raises(ValueError):
+        build_subst(sheet, widen_join=True)

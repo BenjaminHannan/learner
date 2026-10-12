@@ -148,10 +148,78 @@ def join_ring(tool, helps, rings, ok, rng, cons, seen):
     return out, tries, info
 
 
+def layout(text):
+    """The whole prompt text with every maximal run of letters and digits written as `x`, then every run of `x` separated only
+    by spaces written as one `x` (a list counts once, whatever its length). Domain-free."""
+    return re.sub(r'x(?: +x)+', 'x', re.sub(r'[A-Za-z0-9]+', 'x', text))
+
+
+def subst_ring(tool, helps, ok, rng, cons, seen):
+    """-> (examples, tries, info): the substitution ring (L8, widen_subst = max depth). Starts from the help examples (ring 1
+    only); each try picks a pool entry of depth < max, one of its value slots, and one value piece Q of the help page, and
+    replaces the slot by Q (wrapped in round brackets with chance 1/2 when the help page uses them). A kept result joins the
+    pool one level deeper. Balanced layouts: the first 20,000 tries keep anything new; the layouts kept by then are the
+    accepted ones and each then fills ring_max // accepted. seen: digit shapes already kept (updated)."""
+    ring_max, cap, max_depth = cons['widen_ring_max'], 1000 * cons['widen_ring_max'], cons['widen_subst']
+    brackets = any('(' in h['prompt'] for h in helps) and any(')' in h['prompt'] for h in helps)
+
+    def runs(prompt):   # R1: the tool computes a value (zero steps and the caps are fine here); candidates still need the full ok
+        try:
+            res = tool.evaluate(prompt)
+        except Exception:
+            return False
+        return res['value'] not in ('?', 'Fail') and not any(st[3] in ('?', 'Fail') for st in res['steps'])
+    slots = {}
+    vq = set()   # value pieces of the help page
+    for h in helps:
+        t, sl = slots.setdefault(h['prompt'], value_slots(h['prompt'], runs))
+        vq.update(''.join(t[i:j]) for i, j in sl)
+    vq = sorted(vq)
+    pool = [(h['kind'], h['prompt'], 0) for h in helps]
+    eligible = [e for e in pool if e[2] < max_depth]   # pool entries a try may pick, in pool order
+    out, tries, kept, depth = [], 0, {}, {}
+    accepted = None   # set after the probe
+    while eligible and vq and len(out) < ring_max and tries < cap:
+        if accepted is not None and all(kept.get(k, 0) >= ring_max // len(accepted) for k in accepted):
+            break
+        tries += 1
+        kind, p, d = rng.choice(eligible)
+        if p not in slots:
+            slots[p] = value_slots(p, runs)
+        t, sl = slots[p]
+        if sl:
+            i, j = rng.choice(sl)
+            q = rng.choice(vq)
+            if brackets and rng.random() < 0.5:
+                q = '(' + q + ')'
+            cand = swap(t, i, j, q)
+            if cand != p:
+                lay = layout(cand)
+                if accepted is None or (lay in accepted and kept.get(lay, 0) < ring_max // len(accepted)):   # layout quota open
+                    sh = shape(cand)
+                    if sh not in seen and ok(cand):
+                        seen.add(sh)
+                        out.append((kind, cand))
+                        kept[lay] = kept.get(lay, 0) + 1
+                        depth[d + 1] = depth.get(d + 1, 0) + 1
+                        pool.append((kind, cand, d + 1))
+                        if d + 1 < max_depth:
+                            eligible.append(pool[-1])
+        if accepted is None and tries >= 20000:
+            accepted = set(kept)
+            if not accepted:
+                break
+    top = sorted(kept.items(), key=lambda kv: (-kv[1], kv[0]))[:20]
+    info = dict(accepted=len(accepted if accepted is not None else kept), top_layouts=top, depth=dict(sorted(depth.items())), vq=len(vq))
+    return out, tries, info
+
+
 def build(tool, helps, ok, rng, cons):
     """-> (rings, stats). rings: {ring: [(kind, prompt), ...]}. ok(prompt) -> True when the domain's tool runs the prompt
     within the model's caps (mode.accept without the duplicate checks)."""
     n_rings, ring_max = cons['widen_rings'], cons['widen_ring_max']
+    if cons.get('widen_join') and cons.get('widen_subst'):
+        raise ValueError('widen_join and widen_subst are both set: one change at a time')
     rings = {1: [(h['kind'], h['prompt']) for h in helps]}
     seen = {shape(p) for _, p in rings[1]}
     piece_list = pieces(helps)
@@ -190,6 +258,9 @@ def build(tool, helps, ok, rng, cons):
         r = n_rings + 1
         rings[r], stats['tries'][r], stats['join'] = join_ring(tool, helps, rings, ok, rng, cons, seen)
         stats['symbols'] = symbols(helps)
+    if cons.get('widen_subst'):   # the substitution ring (L8): starts from ring 1 only, shares `seen` with the swap rings
+        r = n_rings + 1
+        rings[r], stats['tries'][r], stats['subst'] = subst_ring(tool, helps, ok, rng, cons, seen)
     stats['kept'] = {r: len(v) for r, v in rings.items()}
     stats['per_kind'] = {r: dict(sorted(_count(k for k, _ in v).items())) for r, v in rings.items()}
     stats['sha256'] = hashlib.sha256(json.dumps({str(r): v for r, v in rings.items()}).encode()).hexdigest()

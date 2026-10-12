@@ -424,3 +424,55 @@ def test_diary_cache_and_compare_skipped(tmp_path):
     log.write_text(''.join(json.dumps({'event': 'row', 'kind': 'diary', 'day': 0, **r}) + '\n' for r in rows[:3]))
     _, cmp = L.build_parent_diary(None, None, None, str(out), log_path=str(log), cache=str(cache))
     assert cmp['same_prompt_set'] == 3 and cmp['only_mine'] == 1
+
+
+def test_fn_op_fn():
+    f = lambda body: L.fn_op_fn('A: 4 7 2 | B: 3 5 1 ; =' + body)
+    assert f('SUM(A1:A3)+MAX(B1:B3)') and f('SUM(A1:A3)*MAX((B1+1):B3)')
+    assert not f('SUM(A1:A3)+MAX(B1:B3)+A1') and not f('(SUM(A1:A3))*(MAX(B1:B3))') and not f('SUM(A1:A3)+B1')
+    assert not f('SUM(A1:A3)') and not f('SUM(A1:A3)-MAX(B1:B3)')
+
+
+def test_pick_records_the_host_index():
+    p = L.Pick(['a', 'b', 'c'])
+    assert random.Random(4).choice(p) == p[p.last] and p.last in (0, 1, 2)
+
+
+def test_eval_sets_l8(tmp_path):
+    import json
+    probe = [{'id': f'p{c}{i}', 'kind': 'SUM', 'split': c, 'prompt': f'p{c}{i}' + (')*(' if i % 2 else ''), 'answer': '1'}
+             for c in L.PROBE_CELLS for i in range(4)]
+    pp = tmp_path / 'probe.jsonl'
+    pp.write_text(''.join(json.dumps(r) + '\n' for r in probe))
+    ev = [{'id': f'e-{c}-{i}', 'kind': 'SUM', 'split': c, 'prompt': f'q{c}{i}', 'answer': '1'} for c in L.L5_CELLS for i in range(L.L5_EVAL_N)]
+    ep = tmp_path / 'e.jsonl'
+    ep.write_text(''.join(json.dumps(r) + '\n' for r in ev))
+    sets = L.eval_sets(_fake_train('mode-two'), 'l8', L.L8_SEED, l5_path=str(ep), probe_path=str(pp))
+    assert list(sets) == list(L.L5_CELLS) + list(L.PROBE_CELLS) + ['F4-plus', 'F4-times', 'fit']
+    f4 = sets['F4-two']
+    assert len(sets['F4-plus']) == len(sets['F4-times']) == 2 and len(f4) == 4
+    assert all(')*(' not in r['prompt'] for r in sets['F4-plus']) and all(')*(' in r['prompt'] for r in sets['F4-times'])
+
+
+def test_build_l8_small(monkeypatch):
+    torch = pytest.importorskip('torch')
+    parent = os.environ.get('L8_TEST_PARENT', L.PARENT)
+    if not os.path.exists(parent):
+        pytest.skip('parent checkpoint missing')
+    import json, re
+    real = L.far_props
+    # plumbing only: the real parser finds no two-kind formula in a ring_max-60 ring (no help value slot is a whole call), so
+    # call a bracket-free formula 'joined' (subst ring: cell arithmetic / division hosts; rings 1-3 give the calls)
+    monkeypatch.setattr(L, 'far_props', lambda p: dict(real(p), two_kinds='(' not in p.partition(';')[2]))
+    from custom_io.models import load_model
+    from domain.mode import CONST_PATH
+    ck = torch.load(parent, map_location='cpu', weights_only=True)
+    m = load_model(parent).eval()
+    ex = set()
+    cons = dict(json.load(open(CONST_PATH)), widen_subst=3, widen_ring_max=60)
+    rows, st = L.build_l8_rows(m, ck['chars'], cons, ex, per_cell=4, draw_cap=300000)
+    assert st['complete'] and len(rows) == 8
+    two = [r for r in rows if r['cell'] == 'mode-two']
+    assert len(two) == 4 and all(r['ring'] == 4 and L.far_props(r['prompt'])['two_kinds'] for r in two)   # joined rows: subst ring only
+    assert all(r['ring'] in (1, 2, 3) and not L.far_props(r['prompt'])['two_kinds'] for r in rows if r['cell'] == 'mode-one')
+    assert all(r['id'].startswith('learn8-') and r['kind'] in SP.SCORED for r in rows) and not {r['prompt'] for r in rows} & ex
