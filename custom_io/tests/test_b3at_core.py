@@ -402,6 +402,41 @@ def test_teacher_forced_thinker_equals_free_run():
     print('ok teacher-forced thinker state == free-run state on the same lines (3 rounds per turn, max |diff| %.2g), talk_rounds last and all' % float((info['Z'] - o['Z']).abs().max()))
 
 
+def test_carry_draw():
+    """_turns carry='last' (the default; evals) is the old path; carry='draw' (_loss) starts the next turn from the Z after a drawn round c_ij in 1..R_i. Tested with c forced through carry_draw."""
+    m = make(9)
+    m.eval()
+    rs = rows(6)
+    b = batch_of(rs, V)
+    golds = m.plain_golds(rs)
+    orig = M.B3AT.carry_draw
+    try:
+        t0, a0, _ = m._turns(b, golds, 3, count=False)                                  # carry='last'
+        M.B3AT.carry_draw = staticmethod(lambda Rt, dev: Rt.clone())                       # c_ij = R_i: the drawn path must equal 'last' bit for bit
+        t1, a1, _ = m._turns(b, golds, 3, count=False, carry='draw')
+        assert torch.equal(t0, t1) and all(torch.equal(torch.as_tensor(a0[k]), torch.as_tensor(a1[k])) for k in a0), (float(t0), float(t1))
+        M.B3AT.carry_draw = staticmethod(lambda Rt, dev: torch.ones_like(Rt))              # c_ij = 1
+        log, th = [], m.think
+        m.think = lambda Z, *a, **k: (log.append((Z.detach().clone(), None)), log.__setitem__(-1, (log[-1][0], th(Z, *a, **k).detach().clone())), th(Z, *a, **k))[-1]
+        m._turns(b, golds, 3, count=False, carry='draw')
+        m.think = th
+    finally:
+        M.B3AT.carry_draw = orig
+    assert len(log) == 3 * (max(len(g['texts']) for g in golds) + 1), len(log)
+    rows1 = [i for i, g in enumerate(golds) if len(g['texts']) >= 1]
+    assert rows1
+    step0 = m.step_emb.weight[0]
+    for j in range(1, 3):                                                                   # turn j starts (log index 3 j) from the first turn's Z after round 1 (index 3 (j - 1)), for the rows that ran turn j
+        for i in [i for i, g in enumerate(golds) if len(g['texts']) >= j]:
+            assert torch.allclose(log[3 * j][0][i] - step0, log[3 * (j - 1)][1][i], atol=1e-6), (j, i)
+    assert not torch.allclose(log[3][0][rows1[0]] - step0, log[2][1][rows1[0]], atol=1e-4)      # and not the Z after round 3 ('last')
+    assert torch.equal(M.B3AT.carry_draw(torch.tensor([1, 5, 32]), 'cpu')[:1], torch.ones(1, dtype=torch.long))
+    for _ in range(20):
+        c = M.B3AT.carry_draw(torch.tensor([1, 5, 32]), 'cpu')
+        assert c[0] == 1 and 1 <= c[1] <= 5 and 1 <= c[2] <= 32
+    print("ok carry: 'last' == 'draw' with c = R_i (loss %.6f and every aux key bit-identical); with c = 1 turn j starts from the previous turn's Z after round 1 (%d rows checked); carry_draw stays in 1..R_i" % (float(t0.detach()), len(rows1)))
+
+
 def test_grads():
     import custom_io.models.b3at as MM
     MM.KS_T = (32,)
@@ -571,6 +606,6 @@ def test_call_evals_and_names():
 if __name__ == '__main__':
     torch.set_num_threads(2)
     for f in (test_paths_and_lesions, test_scripted_free_run, test_replies_only_through_read_texts, test_talker_sees_only_thoughts, test_teacher_forcing_caps_and_keep,
-              test_teacher_forced_thinker_equals_free_run, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names):
+              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names):
         f()
     print('ALL OK')

@@ -39,7 +39,7 @@ nocopy a no-op; loops:K forced; ctl27 as B3G2).
 Training (teacher forcing, _loss(batch, golds) with B3G2's golds): a row with L gold lines c_1..c_L (calls and notes, as written) and answer a: turn j < L targets c_{j+1}, turn L targets a.
 The entries are the golds' tape (the tool's real reply; a drill row's drawn strings), entry j visible from turn j + 1. ONE R per batch is drawn from KS_T = (4, 8, 16, 32) with torch's
 global generator (torch.randint, the stream B3G2 / H1 draw K from); then PER ROW R_i = min(R, max(1, TOTAL_CAP // (L_i + 1))), TOTAL_CAP = 96, and every row with R_i < R counts in
-`turn_rounds_capped` (reported). Row i runs R_i rounds in each of its L_i + 1 turns; rows step turns in lockstep and a row past its R_i in a turn (or past its last turn) keeps its Z. Loss per
+`turn_rounds_capped` (reported). Row i runs R_i rounds in each of its L_i + 1 turns; rows step turns in lockstep and a row past its R_i in a turn (or past its last turn) keeps its Z. The Z the next turn starts from is the row's Z after a round c_ij drawn uniformly from 1..R_i (one torch.randint call per turn, after R), so the next turn has seen a carried state from every round the learned stop can fire at; the turn still runs all R_i rounds with the line loss at each, and R per batch is unchanged (_turns carry='draw', used by _loss; evals and tests keep carry='last'). Loss per
 row: the talker's teacher-forced NLL of the turn's target line at EVERY round of the turn (H1's rule, per turn), the mean over the row's (turn, round) pairs that have a target; summed
 over rows / B. No w_noop (every turn has a target). Stop head: BCE on the 'settled' label per turn (right at round r and at every later round of that turn), input detached as in B3G2, only
 on (row, turn) pairs with R_i = TCAP (label 'right': every pair). Gradients flow through Z across turns; rounds with global index (rounds so far in the batch) >= CKPT_FROM are
@@ -246,13 +246,22 @@ class B3AT(B3G2):
     # ---- loss ----
     def _loss(self, batch, golds):
         R = KS_T[int(torch.randint(len(KS_T), (1,)))]
-        total, aux, _ = self._turns(batch, golds, R)
+        total, aux, _ = self._turns(batch, golds, R, carry='draw')
         return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
 
-    def _turns(self, batch, golds, R, count=True, names=False):
+    @staticmethod
+    def carry_draw(Rt, dev):
+        """c_ij for one turn: ONE torch.randint call of B values on the global generator, mapped to 1..R_i (modulo; the bias is below 1e-8). Tests may replace this method."""
+        return (1 + torch.randint(0, 2 ** 31 - 1, (len(Rt),)).to(dev) % Rt).long()
+
+    def _turns(self, batch, golds, R, count=True, names=False, carry='last'):
         """Teacher forcing over the turns with R rounds per turn before the per-row cut (module docstring) -> (total loss, aux, info). info['Z'] = each row's Z after its last turn; info['last_right'] = [(row, turn, 'call' | 'ans', right at the
         row's last round of the turn, first word right)] for every (row, turn) with a target (names: the first word is computed only when asked, one more no-grad pass); info['pred'] = {(row, turn): the teacher-forced argmax line} when names. count=False: the cap
-        counters are left alone (evals)."""
+        counters are left alone (evals).
+        carry: which Z the next turn starts from. 'last' (evals, tests; the default) = the row's Z after its R_i rounds. 'draw' (_loss) = the row's Z after a round c_ij drawn uniformly from 1..R_i, so
+        the next turn is trained on a carried state from every round the learned stop can fire at; the turn still runs all R_i rounds with the line loss at each, gradients flow through the carried Z.
+        RNG order (torch's global generator): R (in _loss), then at the start of each turn ONE torch.randint call of B values (carry_draw), whether or not every row runs that turn. 'last' draws nothing."""
+        assert carry in ('last', 'draw'), carry
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         Ls = [len(x['texts']) for x in golds]
         Ri = [min(R, max(1, TOTAL_CAP // (L + 1))) for L in Ls]
@@ -279,10 +288,14 @@ class B3AT(B3G2):
             mask = torch.cat([c['valid'], mt & (ent[None, :] < j), c['km']], 1)     # entries written in turns < j
             Rj = max(Ri[i] for i in range(B) if Ls[i] >= j)
             hist, zs, right, fr = [], [], torch.zeros(Rj, B, dtype=torch.bool, device=dev), None
+            if carry == 'draw':
+                cj, Zc = self.carry_draw(Rt, dev), Z                        # Zc: the Z the next turn starts from (rows not running keep theirs)
             for r in range(Rj):
                 runm = act & (Rt > r)
                 Zn = self.think(Z + self.step_emb.weight[min(r, self.n_loops - 1)], kvs, c['kvx'], mask, g)
                 Z = torch.where(runm[:, None, None], Zn, Z)                # a row past its R_i in this turn, or past its last turn, keeps its Z
+                if carry == 'draw':
+                    Zc = torch.where((runm & (cj == r + 1))[:, None, None], Z, Zc)
                 if allr:
                     hist.append(Z)
                     M = self.memory(hist, r)
@@ -321,6 +334,8 @@ class B3AT(B3G2):
                             hit[kind][0] += ok_[q]; hit[kind][1] += 1
                             last_right.append((i, j, kind, bool(ok_[q]), nm_[q]))
                 g += 1
+            if carry == 'draw':
+                Z = Zc                                                      # the next turn starts from the drawn round's Z
             # the stop head's loss for this turn: 'settled' (right now or no later round of the turn is right) on the pairs that ran the whole turn
             logit = self.stop(torch.stack(zs)).float()[..., 0]                # [Rj, B]
             y = (settled(right) if self.label == 'settled' else right).float()
