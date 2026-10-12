@@ -230,7 +230,7 @@ def is_copyable(row):
 
 def copyable_split(model, rows, preds=None, runs=None, lines=None, batch_size=64, device=None, amp=None, norm=norm):
     """R2, the copyable / other split (sealed reporting line, fifth Addendum). A row is `copyable` if its gold answer appears verbatim in the prompt or in the last gold tool reply as a whole
-    token (is_copyable). Final-answer accuracy is the evals' own (evalx.is_hit under `norm`), pooled and per family, on the copyable rows and on the others; `gap` = other - copyable
+    token (is_copyable). Final-answer accuracy is the evals' own (evalx.is_hit under `norm`), pooled and per family, on the copyable rows and on the others; inside copyable also `in_question` (the answer is in the prompt) and `only_in_reply` (in the last gold tool reply, not in the prompt), each with n, accuracy and operand exact-match, pooled and per family; `gap` = other - copyable
     (points; None when either group is empty, as is any exact with n == 0 and an operands_pct with no gold calls: printed n/a); and on the copyable rows (and the others) the operand exact-match of R1 (`operands_pct` over their gold calculator calls) when the model has a run (AT-1's reported line).
     preds: {row id: answer text} if you already have the final answers (all a plain arm needs; no operand numbers then unless runs / lines are given). runs: free_runs(...)'s result.
     lines: call_lines(..., per_row=True)'s result. With none of these the model is run: free_runs if it has run / state_of / talk, else evalx.evaluate's generate.
@@ -245,25 +245,29 @@ def copyable_split(model, rows, preds=None, runs=None, lines=None, batch_size=64
     per = (lines or {}).get('per_row')
     if per is None and runs is not None:
         per = call_lines(model, rows, runs=runs, per_row=True)['per_row']
-    parts = {k: dict(n=0, correct=0, by_family={}, ops=0, calls=0) for k in ('copyable', 'other')}
+    parts = {k: dict(n=0, correct=0, by_family={}, ops=0, calls=0) for k in ('copyable', 'other', 'in_question', 'only_in_reply')}
     for r in rows:
         if r['id'] not in preds:
             continue
-        p, hit = parts['copyable' if is_copyable(r) else 'other'], int(is_hit(preds[r['id']], r, norm))
-        p['n'] += 1
-        p['correct'] += hit
-        c = p['by_family'].setdefault(r['family'], dict(correct=0, n=0))
-        c['correct'] += hit
-        c['n'] += 1
-        for _, ops, _ in (per or {}).get(r['id'], []):
-            p['calls'] += 1
-            p['ops'] += ops
+        kind = ['other'] if not is_copyable(r) else ['copyable', 'in_question' if _token_in(r['answer'], r['prompt']) else 'only_in_reply']
+        hit = int(is_hit(preds[r['id']], r, norm))
+        for k in kind:
+            p = parts[k]
+            p['n'] += 1
+            p['correct'] += hit
+            c = p['by_family'].setdefault(r['family'], dict(correct=0, n=0))
+            c['correct'] += hit
+            c['n'] += 1
+            for _, ops, _ in (per or {}).get(r['id'], []):
+                p['calls'] += 1
+                p['ops'] += ops
     out = {}
     for k, p in parts.items():
         out[k] = dict(n=p['n'], correct=p['correct'], exact=_rate(p['correct'], p['n']),
                       by_family={f: dict(c, exact=_rate(c['correct'], c['n'])) for f, c in sorted(p['by_family'].items())},
                       operands=None if per is None else dict(n_gold_calls=p['calls'], operands=p['ops'], operands_pct=_rate(p['ops'], p['calls'])))
-    n, c = sum(p['n'] for p in parts.values()), sum(p['correct'] for p in parts.values())
+    out['copyable']['in_question'], out['copyable']['only_in_reply'] = out.pop('in_question'), out.pop('only_in_reply')     # the third split lives INSIDE copyable ('copyable' and 'other' keep their meaning)
+    n, c = sum(parts[k]['n'] for k in ('copyable', 'other')), sum(parts[k]['correct'] for k in ('copyable', 'other'))
     return dict(n=n, correct=c, exact=_rate(c, n), **out, gap=_sub(out['other']['exact'], out['copyable']['exact']))
 
 
@@ -376,16 +380,20 @@ def _p(x, w=0):
 
 def format_split(name, s):
     L = [f'== {name}: {s["correct"]}/{s["n"]} = {_p(s["exact"])}']
-    for k in ('copyable', 'other'):
-        p = s[k]
+    for k, p in (('copyable', s['copyable']), ('  in_question', s['copyable'].get('in_question')), ('  only_in_reply', s['copyable'].get('only_in_reply')), ('other', s['other'])):
+        if p is None:       # a result saved before the third split
+            continue
         op = '' if not p['operands'] else f'   operands {p["operands"]["operands"]}/{p["operands"]["n_gold_calls"]} = {_p(p["operands"]["operands_pct"])}'
-        L.append(f'  {k:9s} n={p["n"]:5d} final {p["correct"]:5d} = {_p(p["exact"], 5)}{op}')
+        L.append(f'  {k:15s} n={p["n"]:5d} final {p["correct"]:5d} = {_p(p["exact"], 5)}{op}')
     L.append(f'  gap (other - copyable) {"n/a" if s["gap"] is None else format(s["gap"], "+.1f")} points')
     fams = sorted(set(s['copyable']['by_family']) | set(s['other']['by_family']))
-    L.append('  family                   copyable (n, %)    other (n, %)')
+    L.append('  family                   copyable (n, %)    in_question (n, %)  only_in_reply (n, %)  other (n, %)')
     for f in fams:
-        a, b = s['copyable']['by_family'].get(f), s['other']['by_family'].get(f)
-        L.append(f'  {f:22s} {a["n"] if a else 0:6d} {_f(a and a["exact"])}   {b["n"] if b else 0:6d} {_f(b and b["exact"])}')
+        cells = []
+        for g in (s['copyable'], s['copyable'].get('in_question') or {}, s['copyable'].get('only_in_reply') or {}, s['other']):
+            a = (g.get('by_family') or {}).get(f)
+            cells.append(f'{a["n"] if a else 0:6d} {_f(a and a["exact"])}')
+        L.append(f'  {f:22s} ' + '   '.join(cells))
     return '\n'.join(L)
 
 

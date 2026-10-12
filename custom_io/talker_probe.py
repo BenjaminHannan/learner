@@ -1,4 +1,5 @@
 """R4, the answer-in-thoughts linear probe, and the TK-2 readings (talker thread, G2f; talker/G2F-BUILD-SPEC-2026-10-11.md sec. 5; marks: talker/MARKS-TALKER-CHECKS-2026-10-11.md). Read-only: the model is never trained.
+With talk_question on, the probe still reads the thinker part only (writer_view), on purpose: TK-2 asks whether the answer is in the THOUGHTS.
 
 Ben's design note (sec. 6) names the check: "a linear probe on the thoughts when the talker is wrong". On a b3g2 or b3at checkpoint (any model whose state_of(run(batch)) holds what its
 talker reads: its writer_view(state) when it has one, else state[0]) a LINEAR probe is fit on the state the final line was written from, flattened: what the writer reads (talk_rounds='last': the last round's Z; 'all': the memory of all rounds run, masked blocks zeroed, zero-padded to the longest valid memory; [n vectors x d] -> n * d numbers; standardised on the train rows), to

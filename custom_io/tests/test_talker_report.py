@@ -173,6 +173,37 @@ def test_r2_split():
     print('ok R2: copyable / other split pooled and per family, gap %+.1f, two-arm gap, a plain arm (answers only)' % s['gap'])
 
 
+def test_r2_third_split():
+    """F2: inside copyable, in_question (answer in the prompt) and only_in_reply (in the last gold reply, not in the prompt); copyable / other keep their meaning. Counted independently with re."""
+    import re
+    rs = withacc(rows(8) + EXTRA)
+    preds = {r['id']: r['answer'] for r in rs}
+    preds['t0'], preds['m1'], preds['o1'] = 'wrong', 'wrong', 'wrong'
+    s = R.copyable_split(None, rs, preds=preds)
+    inq = lambda r: re.search(r'(?<![A-Za-z0-9])' + re.escape(r['answer']) + r'(?![A-Za-z0-9])', r['prompt']) is not None
+    exp = {'in_question': [r for r in rs if R.is_copyable(r) and inq(r)], 'only_in_reply': [r for r in rs if R.is_copyable(r) and not inq(r)], 'other': [r for r in rs if not R.is_copyable(r)]}
+    exp['copyable'] = exp['in_question'] + exp['only_in_reply']
+    assert len(exp['in_question']) > 0 and len(exp['only_in_reply']) > 0 and len(exp['other']) == 1, {k: len(v) for k, v in exp.items()}
+    for k, g in exp.items():
+        part = s[k] if k in ('copyable', 'other') else s['copyable'][k]
+        ok = sum(preds[r['id']] == r['answer'] for r in g)
+        assert part['n'] == len(g) and part['correct'] == ok and abs(part['exact'] - 100 * ok / len(g)) < 1e-9, (k, part['n'], len(g))
+        fams = {}
+        for r in g:
+            c = fams.setdefault(r['family'], [0, 0])
+            c[0] += preds[r['id']] == r['answer']
+            c[1] += 1
+        assert {f: (v['correct'], v['n']) for f, v in part['by_family'].items()} == {f: tuple(v) for f, v in fams.items()}, k
+    assert s['copyable']['n'] == s['copyable']['in_question']['n'] + s['copyable']['only_in_reply']['n'] and s['other']['n'] == 1 and s['n'] == len(rs)
+    txt = R.format_split('x', s)
+    assert 'in_question' in txt and 'only_in_reply' in txt and 'None' not in txt
+    # operand exact-match rides along: an empty third group is n/a, not an error
+    cps = [r for r in rs if inq(r)]
+    e = R.copyable_split(None, cps, preds={r['id']: r['answer'] for r in cps})
+    assert e['copyable']['only_in_reply']['n'] == 0 and e['copyable']['only_in_reply']['exact'] is None and 'None' not in R.format_split('e', e)
+    print('ok R2: in_question %d / only_in_reply %d inside copyable %d, other %d; counts, accuracies and per-family n match an independent count' % (len(exp['in_question']), len(exp['only_in_reply']), len(exp['copyable']), len(exp['other'])))
+
+
 def test_r2_cli():
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, 'dev'))

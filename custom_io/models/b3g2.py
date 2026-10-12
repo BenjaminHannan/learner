@@ -262,6 +262,11 @@ class B3G2(B3):
         """The question part (Xq, qm) a state carries (its last two entries under talk_question), else None."""
         return tuple(state[-2:]) if self.talk_question else None
 
+    def swap_thoughts(self, donor_state, cur_state):
+        """Donor swaps under G2Q: the DONOR's thoughts with the CURRENT row's own question (the shuffle_state rule: thoughts swapped, own question kept). Off: the donor state, unchanged."""
+        q = self.state_q(donor_state)
+        return donor_state if q is None else tuple(donor_state[:-2]) + tuple(self.state_q(cur_state))
+
     def writer_view(self, state):
         """-> (what the writer reads, its mask or None) for a state: Z (all visible) under 'last'; the state's memory and its mask under 'all'."""
         if self.talk_rounds == 'all' and len(state) > 4 + 2 * self.talk_question:

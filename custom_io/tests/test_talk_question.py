@@ -271,6 +271,42 @@ def test_lesions_and_no_question():
         print(f'ok {kind}: no_question == the thoughts-only writer with the same weights (answers, log-probs{", forced answers" if kind == "b3g2" else ""}); zero_state / shuffle_state scramble the thoughts only, every row keeps its own question; talk_rounds last and all')
 
 
+# ---- donor swaps (F1) ----
+def test_donor_swap_keeps_own_question():
+    from custom_io.evalx import donor_eval
+    rs = rows(8)
+    b = batch_of(rs, V)
+    d = batch_of(rs[::-1], V)          # another set of rows as the donor batch (same padded width)
+    for kind in KINDS:
+        for mode in ('last', 'all'):
+            m = noisy_writer(loud(make(kind, 21, talk_question=True, talk_rounds=mode))).eval()
+            with torch.no_grad():
+                cur_st, don_st = m.state_of(m.run(b)), m.state_of(m.run(d))
+                sw = m.swap_thoughts(don_st, cur_st)
+                assert len(sw) == len(don_st) and all(torch.equal(x, y) for x, y in zip(sw[:-2], don_st[:-2]))
+                assert torch.equal(sw[-2], cur_st[-2]) and torch.equal(sw[-1], cur_st[-1]) and not torch.equal(cur_st[-2], don_st[-2]), 'donor thoughts + CURRENT question'
+                rec = Rec(m)
+                m.talk(sw, b)
+                rec.close()
+                Zin, zmin = rec.calls[-1][1], rec.calls[-1][2]
+                thoughts = don_st[0] if mode == 'last' else don_st[4]
+                n = thoughts.shape[1]
+                assert torch.equal(Zin[:, :n], thoughts) and torch.equal(Zin[:, n:], cur_st[-2] ) and torch.equal(zmin[:, n:], cur_st[-1]), 'the writer memory = donor thoughts + current question'
+            # the real donor path (evalx.donor_eval) goes through swap_thoughts
+            calls = []
+            real = m.swap_thoughts
+            m.swap_thoughts = lambda a, c: calls.append(1) or real(a, c)
+            rr = [dict(r, accepted=[r['answer']], level=1) for r in rows(8)]
+            donor_eval(m, rr, batch_size=4, device='cpu', pairs=([(0, 1), (1, 2), (2, 3), (3, 0)], 0))
+            assert calls, 'donor_eval did not splice the current question'
+            del m.swap_thoughts
+        # switch off: unchanged (the donor state goes through as it is)
+        off = make(kind, 21)
+        st = off.state_of(off.run(b))
+        assert off.swap_thoughts(st, st) is st
+        print(f'ok {kind}: donor swap = donor thoughts + the CURRENT row\'s own question (tensors checked, last and all); donor_eval splices; switch off hands the donor state through unchanged')
+
+
 # ---- (7) ----
 def test_3m_count():
     from custom_io.g8a import caps as CP, configs as C
@@ -333,6 +369,7 @@ if __name__ == '__main__':
     test_source_check()
     test_every_parameter_gets_a_gradient()
     test_lesions_and_no_question()
+    test_donor_swap_keeps_own_question()
     test_3m_count()
     test_train_py()
     print('ALL OK')

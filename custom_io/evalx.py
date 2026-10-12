@@ -114,7 +114,10 @@ def donor_eval(model, rows, batch_size=128, device=None, seed=0, norm=norm, pair
         cur, don = collate([ds[i] for i, _ in chunk]), collate([ds[j] for _, j in chunk])
         T = max(cur['prompt_ids'].shape[1], don['prompt_ids'].shape[1])
         cur, don = (to_device(_pad_prompt(b, T), device) for b in (cur, don))
-        out = model.talk(model.state(don), cur)
+        st = model.state(don)
+        if getattr(model, 'talk_question', False):      # G2Q: the donor's thoughts, the CURRENT row's own question (B3G2.swap_thoughts)
+            st = model.swap_thoughts(st, model.state(cur))
+        out = model.talk(st, cur)
         assert len(out) == len(chunk)
         for (i, _), p in zip(chunk, out):
             preds[i] = p
