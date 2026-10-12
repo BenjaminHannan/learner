@@ -322,6 +322,15 @@ def test_probe_on_model():
     assert rep['n'] == 16 and rep['n_train'] == 40 and rep['fit']['n_heldout'] == 4 and rep['right_n'] + rep['wrong_n'] == 16
     assert rep['tk2a']['reading'] in ('PASS', 'FAIL', 'n/a') and rep['tk2b']['reading'] and json.dumps(rep)
     assert abs(rep['talker_exact'] - 100 * rep['right_n'] / 16) < 1e-9
+    tl = rep['train_by_length']
+    assert list(tl) == [k for k, _, _ in P.LONG_BUCKETS] and sum(c['n'] for c in tl.values()) == 40, tl
+    _, tans, thit = P.gather(m, tr_rows, 8)
+    assert thit.tolist() == [a.strip().lower() == r['answer'].lower() for a, r in zip(tans, tr_rows)]
+    assert P.train_by_length(tr_rows, thit) == tl, (P.train_by_length(tr_rows, thit), tl)
+    long = [dict(answer='x' * k) for k in (1, 4, 5, 8, 9, 16, 17, 35)]
+    got = P.train_by_length(long, torch.tensor([True, False, True, True, False, False, True, True]))
+    assert {k: (c['n'], c['exact']) for k, c in got.items()} == {'1-4': (2, 50.0), '5-8': (2, 100.0), '9-16': (2, 0.0), '17+': (2, 100.0)}, got
+    assert 'talker exact on the train rows by answer length' in P.format_report(rep)
     P.format_report(rep)
     print('ok probe on a tiny b3g2: collect = state_of(run)[0] flattened (%d numbers per row), report runs end to end (TK-2a %s)' % (c['Z'].shape[1], rep['tk2a']['reading']))
 

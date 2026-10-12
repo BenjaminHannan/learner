@@ -13,6 +13,8 @@ The talker is RIGHT on a row when its own free-run final line is a hit under eva
                 own gold answer; it can only succeed by answer collision. Reported on all dev rows and on the right rows, with the answer-collision baseline of the same rows (the chance that a
                 random other row of the family has the same first-8-byte target).
   each of these pooled, per family and by gold answer length in bytes (1-2, 3-4, 5-8, 9+; 9+ is read on its first 8 bytes).
+  train_by_length  (reported only, not a mark) the talker's own exact-match on the probe's train rows by answer length (1-4, 5-8, 9-16, 17+ bytes, whole answers): the dev splits hold short
+                answers, so this is where spelling of 9 to 35-byte answers shows (on the training distribution).
 Readings (marks file, written before any model trained). TK-2a (the probe is strong enough): right_read >= 80% AND control (all dev rows) <= collision baseline + 5. If TK-2a fails, TK-2b is
 VOID and is reported as void, never read. TK-2b (a routing rule, not a pass/fail): K >= 50%: the thinker knew and the talker failed (next single change in the talker: talk_rounds='all' first, then a
 bigger talker); K <= 20%: the answer is not in the last round's thoughts (next change on the thinker side); between: every-round reading first (built, cheapest).
@@ -28,6 +30,7 @@ from custom_io.talker_report import _batches, _nullamp, collision, dev_rows, loa
 NB = 8                          # answer bytes read
 EOSC = 256                      # the EOS class after the answer's last byte
 BUCKETS = (('1-2', 0, 2), ('3-4', 3, 4), ('5-8', 5, 8), ('9+', 9, 10 ** 9))
+LONG_BUCKETS = (('1-4', 0, 4), ('5-8', 5, 8), ('9-16', 9, 16), ('17+', 17, 10 ** 9))     # train_by_length: the talker's own exact on the probe's train rows, whole answers
 RIGHT_MIN = 80.0                # TK-2a: the probe reads at least this share of talker-right rows
 CTRL_SLACK = 5.0                # TK-2a: control <= collision baseline + this
 K_HIGH, K_LOW = 50.0, 20.0      # TK-2b: K >= 50 talker failed, K <= 20 not in the thoughts
@@ -262,9 +265,21 @@ def train_rows(data, n, seed=0):
     return subsample(load_rows(os.path.join(data, 'train.jsonl')), n)
 
 
+def train_by_length(rows, hit):
+    """The talker's own exact-match (evalx is_hit, the WHOLE answer, never cut at NB) on the probe's train rows by gold answer length in bytes (LONG_BUCKETS) -> {bucket: dict(n, exact %)}.
+    Reported only, not a mark (added 10-12 after the outside opinions on the talker): the dev splits hold short answers, so this is the one readout of whether the talker spells answers of
+    9 to 35 bytes. These are rows of the training pool, so it measures spelling on the training distribution, not transfer."""
+    n = [len(r['answer'].encode('utf-8')) for r in rows]
+    out = {}
+    for name, lo, hi in LONG_BUCKETS:
+        sel = torch.tensor([lo <= x <= hi for x in n], dtype=torch.bool)
+        out[name] = dict(n=int(sel.sum()), exact=_rate(hit, sel))
+    return out
+
+
 def probe_report(model, train, dev, batch_size=64, device=None, amp=None, **fit_kw):
     """R4 end to end: collect the model's states on `train` and `dev` rows, fit the probe on the train states, score it on the dev states -> read_dev's dict plus fit=dict(wd, heldout_loss, ...),
-    n_train and the talker's own dev accuracy (talker_exact, %)."""
+    n_train, the talker's own dev accuracy (talker_exact, %) and its exact on all the train rows by answer length (train_by_length, whole answers; reported only)."""
     gt, gd = gather(model, train, batch_size, device, amp), gather(model, dev, batch_size, device, amp)
     width = max([len(z) for z in gt[0] + gd[0]] or [0])               # train and dev share one width (zero blocks are what a masked memory already looks like)
     tr = pack(*gt, width=width)
@@ -273,7 +288,7 @@ def probe_report(model, train, dev, batch_size=64, device=None, amp=None, **fit_
     dev_used = [dev[i] for i in dv['idx']]
     rep = read_dev(probe, dv, dev_used)
     rep.update(fit=info, n_train=len(tr['idx']), talker_exact=100 * float(dv['hit'].float().mean()) if len(dev_used) else None, n_features=int(tr['Z'].shape[1]),
-               subsampled=[x for x in (tr['note'] and 'train ' + tr['note'], dv['note'] and 'dev ' + dv['note']) if x])
+               subsampled=[x for x in (tr['note'] and 'train ' + tr['note'], dv['note'] and 'dev ' + dv['note']) if x], train_by_length=train_by_length(train, gt[2]))
     return rep
 
 
@@ -285,6 +300,8 @@ def format_report(rep):
          f'  TK-2a {rep["tk2a"]["reading"]}   TK-2b {rep["tk2b"]["reading"]} (K {f(rep["tk2b"]["K"])}, n wrong {rep["tk2b"]["n_wrong"]})',
          f'  {"":22s}{"n":>6}{"right":>6}{"wrong":>6}{"r.read":>8}{"K":>8}{"ctrl":>8}{"collide":>8}']
     L += [f'  NOTE {x}' for x in rep.get('subsampled', [])]
+    if rep.get('train_by_length'):
+        L.append('  talker exact on the train rows by answer length (whole answer, reported only): ' + '   '.join(f'{k} {f(c["exact"])}% (n {c["n"]})' for k, c in rep['train_by_length'].items()))
     for title, d in (('by family', rep['by_family']), ('by answer length (bytes)', rep['by_length'])):
         L.append(f'  [{title}]')
         for k, c in d.items():
