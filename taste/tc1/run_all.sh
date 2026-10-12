@@ -32,7 +32,7 @@ if [ "$phase" = all ] || [ "$phase" = arms ]; then
   printf '%s\n' "${jobs[@]}" | PRIOR="$PRIOR" DAYS="$DAYS" xargs -P "$PAR" -L 1 bash -c '
     a=$0; s=$1
     echo "$(date -u +%FT%TZ) arm $a s$s start" >> "'"$OUT"'/progress.log"
-    python3 -m tc1.run --arm "$a" --seed "$s" --out "'"$OUT"'" --ckpt-dir "'"$CK"'" --prior "$PRIOR" --threads 1 > "'"$OUT"'/logs/$a-s$s.log" 2>&1
+    python3 -m tc1.run --arm "$a" --seed "$s" --out "'"$OUT"'" --ckpt-dir "'"$CK"'" --prior "$PRIOR" --days "$DAYS" --threads 1 > "'"$OUT"'/logs/$a-s$s.log" 2>&1
     echo "$(date -u +%FT%TZ) arm $a s$s exit $?" >> "'"$OUT"'/progress.log"'
   python3 -m tc1.analyze "$OUT" > "$OUT/logs/analyze.log" 2>&1
   log "analyze exit $?"
