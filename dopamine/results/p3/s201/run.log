@@ -1,0 +1,47 @@
+[     2.7s] 1300 sessions built
+[     2.7s] 19337 distinct prompts, 19337 distinct candidates, 35381 menu entries, 3905 rounds
+[     4.0s] features 128/19337  0s
+[     7.3s] features 2688/19337  3s
+[    10.7s] features 5248/19337  7s
+[    14.1s] features 7808/19337  10s
+[    17.2s] features 10368/19337  13s
+[    20.5s] features 12928/19337  17s
+[    23.5s] features 15488/19337  20s
+[    26.6s] features 18048/19337  23s
+[    28.1s] features done (19337, 256) in 24s (1.3 ms/prompt)
+[    34.3s] answers 256/19337  6s
+[    98.0s] answers 2816/19337  70s
+[   167.9s] answers 5376/19337  140s
+[   234.0s] answers 7936/19337  206s
+[   327.4s] answers 10496/19337  299s
+[   393.7s] answers 13056/19337  366s
+[   455.3s] answers 15616/19337  427s
+[   522.4s] answers 18176/19337  494s
+[   550.5s] answers done 19337 in 522s (27.0 ms per candidate answer); overall right 0.432
+[   551.8s] cache saved
+# P3 session sheets (tool-computed extras), model seed 201
+
+sealed person seed 93004, 400 sessions, mean requests 3.030
+
+| Arm | mean effort |
+|---|---|
+| NONE | 3.0300 |
+| EAGER-TOOL | 2.4656 |
+| HELPER-TOOL | 2.5281 |
+| P2 HELPER | 3.0500 |
+| P2 EAGER | 3.3506 |
+| HELPER-GATED (reported) | 2.7581 |
+| ORACLE | 1.7300 |
+
+| Paired difference | mean | 95% interval |
+|---|---|---|
+| HELPER-TOOL - NONE | -0.5019 | [-0.5806, -0.4225] |
+| HELPER-TOOL - P2 HELPER | -0.5219 | [-0.6169, -0.4263] |
+| HELPER-GATED - NONE (reported) | -0.2719 | [-0.3381, -0.2069] |
+
+P3-1: PASS (pass: diff <= -0.10 and CI upper < 0; wrong: CI lower > -0.05 on either seed)
+P3-2: PASS (pass: diff <= -0.15 and CI upper < 0)
+
+HELPER-TOOL extras/session 1.705, wanted share 0.435, extras on last request 161
+
+p1_sessions.py sha256: 64b77011fcaf1a31c5a273b8b0a2edaa581722f88fd2a1a2ceb332a80d267da6

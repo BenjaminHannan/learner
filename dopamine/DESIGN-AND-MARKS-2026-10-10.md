@@ -554,3 +554,29 @@ self-quiz rows rank the real practice tries of the next day (the drive's mix) wi
   sealed. Like-for-like pairs are reported (self-quiz on 899 inputs; walk-forward on 900); if either pair would flip the
   verdict, the result is called "not clean" and both are given. Smoke (s200, days 2-3, 300 questions): 0.041 s per
   self-quiz question, so about 5.5 minutes per day; overlap checks with the quiz and every logged prompt passed.
+
+**B18. P3 result (3:52 AM ET 10-12): helping unasked saves effort once the unasked work is checked. PASS, both seeds.**
+Same frozen models and heads as P2, new sealed person seed 93004 (400 sessions, 3.03 requests each), code sha256
+64b77011... (the committed `dopamine/p1_sessions.py`). Results: `dopamine/results/p3/s20x/RESULT-P3.md`. Mean actions
+per session (lower is better):
+| Arm | s200 | s201 |
+|---|---|---|
+| NONE (never helps) | 3.030 | 3.030 |
+| HELPER-TOOL (P3: tool computes the extra) | 2.595 | 2.528 |
+| HELPER-GATED (model answers, tool checks, wrong ones hidden; reported) | 2.809 | 2.758 |
+| P2 HELPER (model's own answers shown) | 3.186 | 3.050 |
+| EAGER-TOOL (always adds the top guess, tool computes it) | 2.475 | 2.466 |
+| ORACLE | 1.730 | 1.730 |
+- P3-1 HELPER-TOOL - NONE: -0.435 [-0.513, -0.358] s200, -0.502 [-0.581, -0.423] s201: PASS.
+- P3-2 HELPER-TOOL - P2 HELPER: -0.591 [-0.697, -0.489], -0.522 [-0.617, -0.426]: PASS. Shown.
+- Reported, no mark: HELPER-GATED - NONE -0.221 [-0.278, -0.164], -0.272 [-0.338, -0.207]. The deployable form ("check
+  your unasked work before offering it") saves about 7-9% of the person's actions; showing unchecked work (P2) saves
+  nothing or costs. Shown.
+- Reported, not expected: EAGER-TOOL beats HELPER-TOOL (2.47 vs 2.60 / 2.53): once extras are always right, an unwanted
+  one costs only 0.25 and about 41-44% of extras are wanted, so acting more often pays and the help-value head is too
+  cautious. This depends on the 0.25 cost, a design number not measured on people (untested). The ceiling is far off:
+  the perfect helper saves 1.30 actions, HELPER-TOOL about a third of that.
+- Reading fixed in B16: the helping machinery works once unasked work is checked; it does not show the model's own skill
+  is enough. Decision: the FINISHED-MODEL helping item gains one line, "unasked work is computed or checked by a tool
+  before it is offered; a mismatch is never shown" (sent to Architecture via the coordinator). No more P tests at 3M; the
+  P2 rule and HELPER-GATED rerun on the first 10M/30M sheet models, where the gated arm is the one that counts.
