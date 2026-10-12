@@ -10,8 +10,11 @@ the pin (relative), and stop_in is within 1e-9 x stop_abs of it (about 50 to 200
 no copying) runs as written, the exact numbers are printed, and every other test and comparison is unchanged.
 
   python run_tests.py custom_io.tests.test_reader_rule      (run from the src folder, as python -m would: that folder leads sys.path)
+
+A module without that pinned test (B3 group 1's test_reader_rule at ca7e1d1b88, whose __main__ block first applies legacy_widths) runs
+exactly as `python -m` runs it (runpy, run_name '__main__'), with nothing changed (12 Oct, 9:49 AM ET install: run that way it failed).
 """
-import importlib, os, sys, traceback
+import importlib, importlib.util, os, runpy, sys, traceback
 
 PINNED = 'test_r2_call_and_stop_inputs_unchanged_by_the_answer_rule'
 KEYS = {'call', 'call_acc', 'eos_acc', 'stop_in', 'stop_abs'}
@@ -47,6 +50,11 @@ class NearGold(dict):
 
 def main(name):
     sys.path[0] = os.getcwd()               # as python -m: the current folder first, not this script's folder
+    spec = importlib.util.find_spec(name)
+    if PINNED not in open(spec.origin, encoding='utf-8').read():
+        print(f'run_tests: {name} has no {PINNED}; it runs as python -m runs it', flush=True)
+        runpy.run_module(name, run_name='__main__', alter_sys=True)
+        return 0
     mod = importlib.import_module(name)
     if callable(getattr(mod, PINNED, None)) and isinstance(getattr(mod, 'GOLD', None), dict) and set(mod.GOLD) == KEYS:
         mod.GOLD = NearGold(mod.GOLD)
