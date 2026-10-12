@@ -13,3 +13,8 @@ claude/project-thread-trabt2 at c823e4b9a. Harm = DEV in_dist (1,360 rows, paren
 
 Reference (shown, L7): hard lock (N99) HO 9.3, drop 7.8; unguarded HO 35.0, drop 53.2.
 Reported at 1,000 / 2,000 / 4,000: HO and DEV drop (plus every L5 cell, F4, F0).
+
+Note before training (shown in the 20-update smoke, 3:05 PM ET): `klreplay.wrap` weighs each update as (64/96) x the
+plain loss on the 64 join rows + (32/96) x 10 x the KL on the 32 diary rows, exactly as `fullrun.py` uses it, so the
+join rows' loss is two thirds of L7-LBG's. Smoke: harm at 20 updates 90.22 -> 90.22; about 8.5 s per update while two
+other runs shared the CPU (plain `kf`: about 3.0). L11 starts when L9's training ends (chained), 4 threads.
