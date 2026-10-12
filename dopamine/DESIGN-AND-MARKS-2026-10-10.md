@@ -603,3 +603,63 @@ per session (lower is better):
   it for this one is the next motivator change, but only after M2 reads: if M2 shows practice choice does not matter at
   3M (proved wrong), the swap waits for 10M with the rest of the motivator work. D1 as sealed in section 7 is not run
   (its guesser was the drift-prone one).
+
+**B20. Ben's ask "a model that truly wants to help and to learn" (9:30 AM ET 10-12): outside opinions, the case, and two
+sealed tests (marks sealed 10:00 AM ET 10-12, before any code).** Ben: "I want it to really be like an inherent
+motivator. Like the model truly wants to be a good helper and to learn. I want those two things to be rewarded with
+dopamine." Papers: `/mnt/project-files/papers/inherent-motivator-papers-2026-10-12.md` (two Haiku readers, 24 papers).
+Outside answers (batch, $0.93): `/mnt/project-files/api-opinions/answers/7-motivator-{fable,opus}.md`, brief
+`reviews/api-inherent-motivator-2026-10-12.md`. Hypotheses only; checked here.
+- Both answers agree (suggested, and I agree): today nothing in the model "wants" anything. Dopamine d = r - V is a
+  teaching signal, and no learned choice is trained by it; every choice is our formula (edge, progress) or our threshold
+  (help value > 0). Buildable meaning of "wants X": a learned choice head whose weights move only by d computed from a
+  checked X outcome, so its choices follow X when X moves and fade when the reward is shuffled.
+- Learning should be rewarded as checked per-kind progress on a self-quiz the model neither writes nor picks; never as
+  prediction error (noisy-TV, arXiv 1808.04355), never as change in V. Helping stays checked effort saved; praise never
+  reaches the reward. One currency later: learning valued as future checked help (weight progress by how often the
+  person asks for that kind).
+- Both: the current practice bed (1,024 problems over 10 kinds) cannot tell motivators apart, because even practice lifts
+  every learnable kind; a fair test needs a bed where choosing matters. Opus: qualify the bed first with a yardstick.
+- Opus, checked against B16/B18: P3's checked form saved effort only because our harness hid wrong extras; that gate is
+  our rule, not the model's choice. A learned help chooser that decides itself whether to use the tool is the step that
+  makes helping the model's own.
+- Not adopted now: a meta-learned intrinsic reward (LIRPG, arXiv 1804.06459): too few outer samples (one sealed score per
+  night, 8 nights per run). Noise kind and composite kinds in the bed: need tool changes; skipped in the first bed.
+- Cited papers not in the Haiku sheet, IDs checked from memory only: Graves et al. 1704.03003 (learning-progress bandit
+  curricula), Matiisen et al. 1707.00183 (teacher-student curricula), van Seijen et al. 1706.04208 (per-component value
+  heads), Jiang et al. 2010.03934 (prioritized level replay), Schmidhuber 0812.4360 (compression progress).
+
+**BQ: does a scarce-practice bed let practice choice matter at 3M? (yardstick, no learned part, never shipped)**
+One change between arms: practice shares. EVEN = even over all 10 sheet kinds. INFORMED = even over the 7 kinds the
+sealed panel scores (SUM, MAX, MIN, PRODUCT, cell arithmetic, division, ABS), none on MOD, COUNTIF, IF; picked with
+hindsight, so it only measures headroom. Both arms: practice budget 256 problems per night instead of 1,024 (the bed),
+parents T1SDR s200 and s201, run seed 310, exactly 8 nights, sheet tool, v7 constants otherwise, `dopamine/motivator.py`.
+- Statistic: mean sealed near (sheet.v2, 420 questions) over nights 6-8; INFORMED - EVEN per parent.
+- PASS (the bed has room for a chooser): >= +5.0 on both parents. NO ROOM: <= +2.0 on either parent. Between: one retry
+  at 128 problems per night with the same marks; if that is not a PASS either, 3M cannot test practice choosers and the
+  practice actor waits for 10M (M2 stays the 3M word on practice choice).
+- Reported: per-kind near, DM3 (old skills), seconds per night.
+- If PASS, next (marks sealed before its code): PA-1, a learned practice chooser (small MLP over per-kind features: recent
+  self-quiz accuracy and progress, mean V, share; softmax shares with a 2% floor and entropy bonus; trained nightly by
+  REINFORCE with advantage = checked self-quiz progress minus a learned critic's prediction) vs EVEN in the bed, plus a
+  shuffled-reward placebo arm. The reward is computed by the night routine from tool verdicts on a self-quiz the chooser
+  cannot pick.
+
+**H-1: a learned help chooser that reads the person and decides itself whether to use the tool.**
+Same frozen 3M sheet models and next-need head as P3; scripted person as P3 except one environment change for every arm:
+each session's person is "easygoing" (unwanted extra costs 0.25) or "tidy" (costs 1.0), 50/50, never told to the helper;
+and the person says "thanks" on 30% of rounds at random (changes no reward). Actions per round for the chooser: stay
+quiet; add N's top guess with the model's own answer; add it with the value computed by the sheet tool (costs 0.02 of an
+action per call). Chooser: a small MLP on [N's top probability, reader mean of the candidate, round, extras accepted and
+rejected so far this session, "thanks" last round]; actor-critic (advantage = reward - learned critic), entropy bonus,
+trained over 20 days x 150 sessions (person seed 93006; constants fixed in the code before the run), then frozen. Sealed:
+400 new sessions, person seed 93005.
+| Mark (each seed, paired bootstrap over sealed sessions) | Pass | Proved wrong |
+|---|---|---|
+| H1-1 beats the hand helper | CHOOSER - HELPER-TOOL (P3's rule, help value > 0, value from the tool) <= -0.10 actions, CI upper < 0 | CHOOSER - HELPER-TOOL >= 0 on either seed |
+| H1-2 reads the person | CHOOSER - EAGER-TOOL <= -0.05, CI upper < 0 | (reported) |
+| H1-3 not bought by praise | offer rate after a "thanks" round within 3 points of after a plain round | gap > 5 points |
+| H1-4 checks its own work | >= 90% of the chooser's shown extras used the tool | (reported) |
+H-1 PASSES when H1-1, H1-2 and H1-3 pass on both seeds. Reading fixed now: a pass shows the model can learn, from checked
+effort alone, both whether to help this person and to use the tool for unasked work; it does not show anything about
+real people. Reported: NONE, EAGER-TOOL, HELPER-TOOL, CHOOSER, ORACLE effort per person type.
