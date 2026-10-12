@@ -450,3 +450,10 @@ not there at all, and does behaviour (agreement across thinking lengths) carry m
   checkpoint at matched success. If PASS with P: the next test is P on live nights (walk-forward, read-only), 2 seeds,
   with its own marks; the shipped form replaces string equality with the model's own log-probability of its first answer
   under the longer run (their rule-check point), tested before shipping.
+- G-ceiling code details fixed before the full run (2:25 AM ET 10-12; no mark changed): `dopamine/g_ceiling.py` sha256
+  58e6e64c437990e5... Questions come from domain mode's own make_practice (even share, the run's constants and help examples), with
+  the run's own quiz prompts excluded. S900 = reader mean + pooled state + talker confidence (D0's G used the first two).
+  The talker confidence is the mean log-probability of its own answer, so it is the log-probability feature in P too.
+  "Behaviour beats state" is judged at the largest size; "proved wrong" needs every shippable probe's 16k-to-32k gain
+  under 0.01. Smoke (600 rows) cost 0.15 s per question for all 5 runs, so about 80 minutes per seed at 2 threads; run on
+  the cloud box (free, idle; the Mac's cores are on the Game world runs tonight).
