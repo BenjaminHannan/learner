@@ -39,3 +39,16 @@ so B-1's KL part could pass for the wrong reason. B-1 is unchanged; reported nex
 Reading: low view dependence at T0 but high at T = 1 means "the temperature hides the view", not "a word-length habit". Both T0
 values are the Before files' own (s200 19.691660968372133, s201 20.368329685910396; the cloud GW-P8 runs reproduce them exactly).
 Code: game/blind.py (fit), `game.score --arm blind`; views = runs-local/gwp8-s20X/moves/quiz_night_0.jsonl.gz of the cloud runs.
+
+## Result (2:35 AM ET 10-12): B-1 says "artefact" on both seeds (shown)
+| seed | Before_T0 | Blind | Before - Blind (95%) | mean KL at T0 | mean KL at T = 1 | top word the same | Blind - Random (95%) |
+|---|---|---|---|---|---|---|---|
+| 200 | 3.75 | 3.78 | -0.03 (-0.33 to +0.23) | 0.029 | 0.051 | 97.8% of views | +1.47 (+1.17 to +1.77) |
+| 201 | 3.61 | 3.67 | -0.06 (-0.38 to +0.24) | 0.022 | 0.056 | 98.4% of views | +1.36 (+1.08 to +1.66) |
+Views: 5,849 / 5,327 from the night-0 quizzes. The habit: s200 `do` 60%, `up` 23%; s201 `do` 53%, `up` 28%; every other word <= 4%.
+`do` and `up` are the only two-letter words of the 17.
+- Shown: the untrained parent at T0 does not use the view; a fixed habit with the same odds scores the same on the sealed maps,
+  and the top word is `do` on ~98% of views even at T = 1, so this is not the temperature hiding a view-reading policy.
+- Suggested (not tested): the habit comes from the unnormalised letter sum favouring two-letter words.
+- So GW-P's After (3.87 / 3.97) is only +0.09 / +0.30 above a view-blind habit. Next, as planned in A17: GW-PC (distil the T0
+  parent to T = 1, then learn at T = 1), marks written before it runs, after GW-P8 reads out. Files: game/results/gwb-RESULT.json.
