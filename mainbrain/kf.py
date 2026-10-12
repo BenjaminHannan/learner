@@ -22,15 +22,81 @@ from mainbrain import gp
 
 class KCovs:
     """Forward hooks: input covariance A (with a constant 1) per module, and a tensor hook on the module's output that adds
-    the covariance G of the gradient arriving there. All-zero rows are skipped."""
+    the covariance G of the gradient arriving there. All-zero rows are skipped.
+    pad_mask (constants "protect_pad_mask"): positions that are padding also stay out of A and G, and the per-example
+    normalisation of G sees only the example's real positions. Layers whose inputs have a position axis that is aligned with a
+    padding mask get it (self.masked lists them, name -> number of hooked calls that used it):
+      - reader.blocks.*.conv (Conv1d): output positions where the reader's prompt_mask is False. The reader runs on the prompt
+        and, per tape entry, on the entry's chars; a forward pre-hook on the reader takes the mask of whichever batch it is given.
+      - core.*.kv, the call on the prompt memory X (mask = batch prompt_mask) and the call on the tape memory Xt (mask = the
+        positions where Xt is exactly 0, i.e. padding chars and empty entries). Found by call order inside Tool.run (kvx, kvs0, kvt),
+        through an instance-level kv_of wrapper and an instance-level run wrapper, removed by close().
+    Everything else is as without the flag: the slot call of core.*.kv (no prompt position), the thinker rounds (core.*.q/o/qkv/p/fc/out,
+    17 tokens), the heads (op_head, W_a, W_b, q_s, g_s, mode_head, q_word, stop_s), the cell / word axes (q_cp, g_cp, k_word, k_wc), and
+    k_cp / k_s (their padded rows are exact zeros already, so the all-zero-row rule drops them)."""
 
-    def __init__(self, m, norm=None):
+    def __init__(self, m, norm=None, pad_mask=False):
         assert norm in (None, 'example'), norm
         self.norm = norm
+        self.pad_mask = bool(pad_mask)
+        self.masked = {}
+        self.rmask = None        # reader's prompt_mask while the reader runs
+        self.pending = {}        # kv module name -> mask of the call about to run
+        self.restore = []
+        self.hs = []
         self.mods = gp.projected_modules(m)
+        if self.pad_mask:
+            self._install_mask(m)
         self.A = {n: None for n, _ in self.mods}
         self.G = {n: None for n, _ in self.mods}
-        self.hs = [mod.register_forward_hook(self._hook(n)) for n, mod in self.mods]
+        self.hs += [mod.register_forward_hook(self._hook(n)) for n, mod in self.mods]
+
+    def _install_mask(self, m):
+        st = dict(pm=None, calls={})
+        rd = m.reader
+        self.hs.append(rd.register_forward_pre_hook(lambda mod, a: setattr(self, 'rmask', a[0]['prompt_mask'])))
+        self.hs.append(rd.register_forward_hook(lambda mod, a, o: setattr(self, 'rmask', None)))
+        prev_run = m.__dict__.get('run')
+        orig_run = m.run
+
+        def run(batch, *a, **k):
+            st['pm'], st['calls'] = batch['prompt_mask'], {}
+            return orig_run(batch, *a, **k)
+        m.run = run
+        self.restore.append(lambda: m.__dict__.pop('run', None) if prev_run is None else m.__dict__.__setitem__('run', prev_run))
+        ref = m.src.weight[1].detach()
+        for i, blk in enumerate(m.core):
+            name = 'core.%d.kv' % i
+            prev_kv = blk.__dict__.get('kv_of')
+            orig_kv = blk.kv_of
+
+            def kv_of(mem, name=name, orig_kv=orig_kv):
+                c = st['calls'].get(name, 0)
+                st['calls'][name] = c + 1
+                if c == 0:                                  # kvx: the prompt memory X + src[1]
+                    assert mem.shape[1] == st['pm'].shape[1], (mem.shape, st['pm'].shape)
+                    self.pending[name] = st['pm']
+                elif c >= 2:                                # kvt: the tape memory Xt + src[1] (c == 1 is the 16 number slots)
+                    self.pending[name] = (mem.detach().float() - ref.float()).abs().amax(-1) > 0
+                return orig_kv(mem)
+            blk.kv_of = kv_of
+            self.restore.append(lambda blk=blk, prev_kv=prev_kv: blk.__dict__.pop('kv_of', None) if prev_kv is None else blk.__dict__.__setitem__('kv_of', prev_kv))
+
+    def _pmask(self, name, mod, x):
+        """[B, T] bool mask of the real positions for this hooked call, or None (no mask for this layer / call)."""
+        if not self.pad_mask:
+            return None
+        if isinstance(mod, torch.nn.Conv1d):
+            pm = self.rmask
+            if pm is not None:
+                assert x.shape[0] == pm.shape[0] and x.shape[2] == pm.shape[1] and mod.stride[0] == 1 and 2 * mod.padding[0] + 1 == mod.kernel_size[0]
+        else:
+            pm = self.pending.pop(name, None)
+            if pm is not None:
+                assert x.shape[:2] == pm.shape, (name, x.shape, pm.shape)
+        if pm is not None:
+            self.masked[name] = self.masked.get(name, 0) + 1
+        return pm
 
     def _add(self, d, name, X):
         c = X.T @ X
@@ -38,14 +104,20 @@ class KCovs:
 
     def _hook(self, name):
         def hook(mod, inp, out):
+            pm = self._pmask(name, mod, inp[0])
             X = gp._rows_of(inp[0].detach().float(), mod)
-            X = X[X.abs().sum(1) > 0]
+            keep = X.abs().sum(1) > 0
+            if pm is not None:
+                keep = keep & pm.reshape(-1)
+            X = X[keep]
             if len(X):
                 self._add(self.A, name, torch.cat([X, torch.ones(len(X), 1)], 1))
             if out.requires_grad:
                 conv = isinstance(mod, torch.nn.Conv1d)
 
                 def ghook(g):
+                    if pm is not None:                   # padded positions: out of G and out of the per-example norm
+                        g = g * (pm[:, None, :] if conv else pm[..., None]).to(g.dtype)
                     if self.norm == 'example':   # g has the batch as dim 0 ([B, T, out], Conv1d [B, out, T], or [B, out])
                         f = g.detach().float().flatten(1)
                         mx = f.abs().amax(1)                       # scale by the max first so tiny gradients do not underflow
@@ -71,16 +143,18 @@ class KCovs:
     def close(self):
         for h in self.hs:
             h.remove()
+        for r in self.restore:
+            r()
 
 
-def kfac_stats(m, rows, bs=64, norm=None):
+def kfac_stats(m, rows, bs=64, norm=None, pad_mask=False, report=None):
     """A and G per module over the model's own old answers (rows' targets), eval mode (no drills). Parameters' grads are
     cleared afterwards. norm='example': each example's output-gradient block is scaled to unit Frobenius norm per layer
-    before it enters G (A unchanged). -> {name: (A, G)}."""
+    before it enters G (A unchanged). pad_mask: see KCovs (report, a dict, gets .masked of the pass). -> {name: (A, G)}."""
     was = {n: p.requires_grad for n, p in m.named_parameters()}
     for p in m.parameters():
         p.requires_grad_(True)
-    kc = KCovs(m, norm)
+    kc = KCovs(m, norm, pad_mask)
     m.eval()
     try:
         ds = Dataset(rows, m.vocab)
@@ -91,6 +165,8 @@ def kfac_stats(m, rows, bs=64, norm=None):
             m.zero_grad(set_to_none=True)
     finally:
         kc.close()
+        if report is not None:
+            report.update(kc.masked)
         for n, p in m.named_parameters():
             p.requires_grad_(was[n])
     return {n: (kc.A[n], kc.G[n]) for n, _ in kc.mods}

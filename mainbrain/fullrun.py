@@ -16,7 +16,7 @@ import time
 import torch
 
 from domain import mode
-from mainbrain import gp, guess, kf, klreplay
+from mainbrain import anchor, gp, guess, kf, klreplay
 
 
 def split_loss(m, stash):
@@ -64,7 +64,14 @@ def install(cons_path, out=None, seed=None):
     rl = cons.get('replay_loss', 'ce')
     assert rl in ('ce', 'kl'), rl
     kl_w = float(cons.get('replay_kl_weight', 10.0))
-    klstate = {'parent': None}   # arm KL: frozen pre-mode model, taken when mode.main builds the model (before any training)
+    an = cons.get('anchor')
+    assert an in (None, 'state'), an
+    an_lam = float(cons.get('anchor_lambda', 100.0))
+    pad = bool(cons.get('protect_pad_mask'))
+    assert not pad or method == 'kf', 'protect_pad_mask masks the K-FAC statistics: needs protect=kf'
+    # frozen pre-mode model (arms KL and anchor share it), taken when mode.main builds the model (before any training); the anchor's
+    # per-dimension scales are measured once, on the parent over the diary of the first night
+    klstate = {'parent': None, 'sig': None}
     assert not cons.get('addon'), 'protection replaces the add-on'
     mode.CONST_PATH = cons_path
     if 'guess' in cons:   # SB-2 head: installed first, so it is the inner train_night/make_opt (K-FAC is measured on the plain loss)
@@ -75,7 +82,7 @@ def install(cons_path, out=None, seed=None):
     assert not parent or method == 'kf', 'protect_parent needs protect=kf'
     keep = {}   # arm U: the parent factors F0, measured once at the first night and kept for the whole run
     base_train, base_make = mode.train_night, mode.make_opt
-    if rl == 'kl':
+    if rl == 'kl' or an:
         base_load = mode.load_model
 
         def load_model(*a, **k):
@@ -93,7 +100,7 @@ def install(cons_path, out=None, seed=None):
         if method == 'none':
             info = {}
         elif method == 'kf':
-            F, info = kf.factors(kf.kfac_stats(m, diary, norm='example' if pg == 'example' else None), energy)
+            F, info = kf.factors(kf.kfac_stats(m, diary, norm='example' if pg == 'example' else None, pad_mask=pad), energy)
             if parent and 'F0' not in keep:
                 keep['F0'] = F   # night 1: factors measured on the parent weights are F0
             F0 = keep['F0'] if parent else None
@@ -118,9 +125,11 @@ def install(cons_path, out=None, seed=None):
             extra['replay'] = replay
         if parent:
             extra['parent'] = True
+        if pad:
+            extra['pad_mask'] = True
         print('protect', json.dumps(dict(method=method, energy=energy, **extra, seed=seed, frozen=len(frozen), secs=round(time.time() - t, 1),
                                          free_share={n: v.get('free_share', v.get('free')) for n, v in info.items()})), flush=True)
-        kls = []
+        kls, ans = [], []
         had, prev = 'loss' in m.__dict__, m.__dict__.get('loss')
         if rl == 'kl':
             assert not free, 'replay_loss=kl replaces the split replay half'
@@ -128,6 +137,21 @@ def install(cons_path, out=None, seed=None):
                 klstate['parent'] = klreplay.frozen_copy(m)
             extra['replay_loss'] = 'kl'
             m.loss = klreplay.wrap(m, klstate['parent'], kl_w, kls)
+        if an:
+            assert not free, 'anchor replaces nothing of the split replay half; not combined with protect_replay'
+            if klstate['parent'] is None:
+                klstate['parent'] = klreplay.frozen_copy(m)
+            if klstate['sig'] is None:   # subject start: the first night, before any update
+                t1 = time.time()
+                sr, ss, sinfo = anchor.collect_sigmas(klstate['parent'], diary)
+                klstate['sig'] = (sr, ss)
+                sinfo['secs'] = round(time.time() - t1, 1)
+                print('anchor_sigma', json.dumps(sinfo), flush=True)
+                if out:
+                    os.makedirs(out, exist_ok=True)
+                    with open(os.path.join(out, 'anchor.jsonl'), 'a') as f_:
+                        f_.write(json.dumps(dict(sigma=sinfo)) + '\n')
+            m.loss = anchor.wrap(m, klstate['parent'], klstate['sig'][0], klstate['sig'][1], an_lam, ans)
         if free:
             m.loss = split_loss(m, stash)
         try:
@@ -140,7 +164,14 @@ def install(cons_path, out=None, seed=None):
                     os.makedirs(out, exist_ok=True)
                     with open(os.path.join(out, 'replay_kl.jsonl'), 'a') as f_:
                         f_.write(json.dumps(rec) + '\n')
-            if free or rl == 'kl':
+            if an and ans:
+                rec = dict(night=None if seed is None else seed % 1000, anchor_mean=sum(ans) / len(ans), n=len(ans), lam=an_lam)
+                print('anchor', json.dumps(rec), flush=True)
+                if out:
+                    os.makedirs(out, exist_ok=True)
+                    with open(os.path.join(out, 'anchor.jsonl'), 'a') as f_:
+                        f_.write(json.dumps(rec) + '\n')
+            if free or rl == 'kl' or an:
                 if had:
                     m.loss = prev
                 else:
