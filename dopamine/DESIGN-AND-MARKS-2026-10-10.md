@@ -295,3 +295,62 @@ next-day tries at 0.523 (frozen probe 0.585), Brier 0.293 vs 0.219, and again co
 Both trained-in heads lost an old skill and read worse than a probe refit on all past days. Design decision (from their
 suggestion, matching sec. 3 and H0): the guesser stays a read-only head on the shared state, no gradient into the body, refit on
 all past days, as `dopamine/motivator.py` already does. SB-2 variants are stopped. Open rungs: the 10M/30M re-check and GW-D (B9).
+
+**B12. Proactive helpfulness joins the good-helper reward (Ben, 8:45 PM ET 10-11; P1 marks sealed here, before any P1 code
+or run).** Ben, replying to a coordinator post that gave him one line covering every thread's Mac/PC approvals: "That is one
+of my favorite things you've said today. proactively making my life easier. Also, add that to the model as part of it's goals".
+
+- **What it means:** noticing what will save the person effort before they ask, and doing it; when the step is not allowed
+  unasked, offering it in one line. Ben's own example is batching: one approval line instead of one per thread.
+- **Reward (a new rung under "good helper" in B3):** the person's effort saved, counted in their own actions (asks, turns,
+  approvals, corrections), and only on checked outcomes. An unasked step the person turns out to want, checked right: +1
+  (an ask they skipped). An unasked step they did not want: -0.25 (they had to read it). An unasked step they wanted but
+  got wrong: -1 (they were misled and still had to ask). Praise or thanks without a checked saving earns nothing (that
+  path teaches flattery and busywork). Batching counts the same way: fewer person actions for the same checked result.
+- **Hard limits (outside the reward, never traded for it):** a step that cannot be undone, spends money, deletes, or goes
+  beyond what the person allowed is never done unasked; it is offered in one line. Pleasantness (B3) still counts only on
+  top of right and honest.
+- **Inside the model (per B11):** two read-only heads on the shared state, no gradient into the body, refit on all past
+  sessions. "Next need" guesses what the person will ask next (labels: what people actually ask next). "Help value"
+  guesses the effort an unasked step will save (labels: the checked rewards above, so its error is the dopamine signal).
+  The model takes an unasked step when its help-value guess is above zero. The list of possible next steps comes from an
+  outside tool the model calls ("what could I work out here"), per the deployable-autonomy rule.
+
+**P1, "session sheets" (offline, frozen model, free CPU). Marks sealed now.**
+- Models: the v7 sheet finals from the race, frozen: `sheet-s200-v7/night_7` and `sheet-s201-v7/night_8` checkpoints,
+  add-on on. Only the two heads learn.
+- Person (outside test tool, person seeds 93001 training and 93002 sealed, never shown to the model): a session is one
+  grid (3-4 rows, values 1-99) and L requests, L uniform in {2, 3, 4}. Every request is built from a focus (one column,
+  rows r1..r2) with the near shapes the model practised; the exact builder per kind is fixed in `dopamine/p1_sessions.py`
+  before any run and its sha256 goes in the result. Request 1: a random kind of all 10 on a random focus. Each later
+  request: with 0.6 the person's habit on the same focus (SUM->MAX, MAX->MIN, MIN->SUM, PRODUCT->SUM, cell
+  arithmetic->ABS, division->cell arithmetic, MOD->division, ABS->MOD, COUNTIF->SUM, IF->MAX), else a random kind on a
+  random focus. A request whose tool answer is '?' is redrawn.
+- Menu (the outside tool): after each answer, one candidate per kind built from the current request's focus with the same
+  builder; '?' candidates are dropped. So a habit follow-up is always on the menu; a random one usually is not.
+- Each round the model may add at most one unasked candidate. Wanted = equals the person's next request exactly; right =
+  the model's greedy answer equals the tool's. Rewards +1 / -0.25 / -1 as above. A wanted, right extra means the person
+  skips that request. Person effort per session = L minus the sum of extra rewards (so never adding anything costs L).
+- Data: 6 training days x 150 sessions, then 400 sealed sessions. Each candidate's reader features and greedy-answer
+  correctness are cached once per model, so every arm sees the same sessions and the same answers (paired).
+- Heads (sklearn MLP, one hidden layer of 64, alpha 1e-3, fixed seed; refit after each day on all past days, frozen for the
+  sealed sessions): next need N, input = reader mean of the current prompt, reader mean of the candidate, round one-hot,
+  label = candidate is the next request (every round gives labels, whatever the arm did); help value V, input = N's
+  probability for the candidate, reader mean of the candidate, round one-hot, label = the reward of extras the HELPER arm
+  actually took (bandit feedback only).
+- Arms: NONE never adds. EAGER adds N's top candidate every round (day 1: a random candidate). HELPER adds the candidate
+  with the highest V when V > 0 (day 1: a random candidate on half the rounds; days 2-6: also N's top candidate on 10% of
+  rounds whatever V says; sealed: no exploring). ORACLE (reported only) adds the next request's candidate only when the
+  cached answer is right: the ceiling.
+- Marks, each seed, sealed sessions, paired bootstrap 95% interval over sessions (10,000 resamples, seed 0), effort in
+  person actions per session:
+  | Mark | Pass | Proved wrong |
+  |---|---|---|
+  | P1-1 helps | HELPER - NONE <= -0.05, interval upper end < 0 | interval lower end > 0 on either seed (it adds work) |
+  | P1-2 holds back | HELPER - EAGER <= -0.10, interval upper end < 0 | HELPER - EAGER >= 0 on both seeds |
+  P1 PASSES when both marks pass on both seeds. Reported: ORACLE saving, extras per session, wanted / right / unwanted
+  shares, extras per kind (kind labels used for scoring only), extras on the last request.
+- Prediction written before the run (suggested): the frozen models are right more than half the time only on MAX and MIN
+  (and, for s201, PRODUCT and division; sealed near 11-73%), and a wanted extra only pays when right more often than wrong.
+  So P1-1 may read "no difference" and the ORACLE ceiling will be small; P1-2 is the informative mark (does the checked
+  reward teach holding back where eager helping hurts). If P1-1 is flat, re-run P1 on the first 10M/30M domain-mode models.
