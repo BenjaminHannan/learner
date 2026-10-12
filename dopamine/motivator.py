@@ -157,7 +157,9 @@ def parse_args(argv=None):
     a.add_argument('--threads', type=int, default=4)
     a.add_argument('--even-mix', action='store_true')
     a.add_argument('--fixed-nights', type=int, default=None)
-    a.add_argument('--drive', choices=['rule', 'even', 'edge', 'progress'], default='rule')   # MOTIVATOR:
+    a.add_argument('--drive', choices=['rule', 'even', 'edge', 'progress', 'informed'], default='rule')   # MOTIVATOR: informed = even over --informed-kinds
+    a.add_argument('--informed-kinds', default=None, help='comma-separated kind names; required for --drive informed')   # MOTIVATOR:
+    a.add_argument('--day-problems', type=int, default=None, help='override cons[day_problems] (practice per night)')   # MOTIVATOR:
     a.add_argument('--nights', type=int, default=None, help='run exactly N nights (no early stop; the stop rule is still logged)')   # MOTIVATOR:
     a.add_argument('--motivator-json', default=MOT_PATH)   # MOTIVATOR:
     return a.parse_args(argv)
@@ -179,6 +181,10 @@ def main(argv=None):
         mot['head_C'] = 0.1
     if a.smoke:
         cons.update(SMOKE)
+    if a.day_problems is not None:   # MOTIVATOR: after the smoke constants, so an explicit value wins; every use below reads cons['day_problems']
+        assert a.day_problems > 0, '--day-problems must be positive'   # MOTIVATOR:
+        cons['day_problems'] = a.day_problems   # MOTIVATOR:
+    assert (a.drive == 'informed') == (a.informed_kinds is not None), '--informed-kinds goes with (and only with) --drive informed'   # MOTIVATOR:
     rule_max_nights = cons['max_nights']      # MOTIVATOR: the max the plain rule would have used
     if a.fixed_nights:
         assert a.even_mix, '--fixed-nights is for the even-mix control only'
@@ -191,7 +197,9 @@ def main(argv=None):
     parent = guard(a.parent)
     log('start', parent=parent, tool=a.tool, seed=a.seed, smoke=a.smoke, constants_sha256=csha, git_commit=commit,
         git_dirty_files=dirty, constants=cons, smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data,
-        even_mix_control=even_mix, fixed_nights_control=a.fixed_nights, drive=a.drive, nights=a.nights, motivator=mot)   # MOTIVATOR: drive, nights, motivator
+        even_mix_control=even_mix, fixed_nights_control=a.fixed_nights, drive=a.drive, nights=a.nights, motivator=mot,
+        **({} if a.day_problems is None else dict(day_problems_override=a.day_problems)),
+        **({} if a.informed_kinds is None else dict(informed_kinds=a.informed_kinds)))   # MOTIVATOR: drive, nights, motivator, day_problems_override, informed_kinds
 
     tool = importlib.import_module(f'domain.tools.{a.tool}')
     assert tool.NAME == a.tool, (tool.NAME, a.tool)
@@ -259,6 +267,10 @@ def main(argv=None):
         fit_head(0, hits0)   # MOTIVATOR:
 
     share = {k: 1 / len(kinds) for k in kinds}
+    if a.drive == 'informed':   # MOTIVATOR: even over the listed kinds, 0 elsewhere, every day (no head, no pool)
+        ik = [x.strip() for x in a.informed_kinds.split(',')]   # MOTIVATOR:
+        assert ik and len(set(ik)) == len(ik) and all(x in kinds for x in ik), ('--informed-kinds must be distinct real kinds', ik, kinds)   # MOTIVATOR:
+        share = {k: (1 / len(ik) if k in ik else 0.0) for k in kinds}   # MOTIVATOR:
     all_practice = []
     prog = {k: 0.0 for k in kinds}
     visits, undo_prev, stop, night, last_ck = cons['visits_per_new_row'], False, None, 0, None
@@ -375,7 +387,7 @@ def main(argv=None):
             stop = None
         elif stop:
             break
-        if a.drive == 'rule':   # MOTIVATOR: edge/progress/even keep the even share (the motivator ignores the share on signal days)
+        if a.drive == 'rule':   # MOTIVATOR: edge/progress/even/informed keep the even share (the motivator ignores the share on signal days)
             share, prog = make_mix(kinds, hist_k, night, cons)
         if even_mix:
             share = {k: 1 / len(kinds) for k in kinds}
@@ -391,7 +403,8 @@ def main(argv=None):
         torch.save(gate.state, os.path.join(a.out, 'gate.pt'))
         log('gate', pos=len(pos), neg=len(diary), train_acc=round(gacc, 4), path=os.path.join(a.out, 'gate.pt'))
     summary = dict(parent=parent, tool=a.tool, seed=a.seed, smoke=a.smoke, even_mix_control=even_mix, nights_run=night, stop_reason=stop,
-                   addon=cons['addon'], drive=a.drive, motivator=mot, nights_arg=a.nights,   # MOTIVATOR:
+                   addon=cons['addon'], drive=a.drive, motivator=mot, nights_arg=a.nights,
+                   day_problems_override=a.day_problems, informed_kinds=a.informed_kinds,   # MOTIVATOR:
                    quiz_pooled_history=[round(100 * p, 2) for p in hist_p],
                    quiz_per_kind_history=[{k: round(v, 4) for k, v in h.items()} for h in hist_k],
                    quiz_per_kind_final={k: round(v, 4) for k, v in final.items()},

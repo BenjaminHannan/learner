@@ -83,3 +83,12 @@ if __name__ == '__main__':
     test_smoke_edge()
     test_smoke_progress()
     print('all ok')
+
+
+def test_new_switches_parse():
+    from dopamine.motivator import parse_args
+    a = parse_args(['--parent', 'x', '--tool', 'sheet', '--out', 'o', '--seed', '1'])
+    assert a.day_problems is None and a.informed_kinds is None and a.drive == 'rule'
+    a = parse_args(['--parent', 'x', '--tool', 'sheet', '--out', 'o', '--seed', '1', '--drive', 'informed',
+                    '--informed-kinds', 'SUM,MAX', '--day-problems', '256'])
+    assert a.drive == 'informed' and a.informed_kinds == 'SUM,MAX' and a.day_problems == 256

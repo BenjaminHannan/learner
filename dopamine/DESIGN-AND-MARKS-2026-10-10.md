@@ -663,3 +663,14 @@ trained over 20 days x 150 sessions (person seed 93006; constants fixed in the c
 H-1 PASSES when H1-1, H1-2 and H1-3 pass on both seeds. Reading fixed now: a pass shows the model can learn, from checked
 effort alone, both whether to help this person and to use the tool for unasked work; it does not show anything about
 real people. Reported: NONE, EAGER-TOOL, HELPER-TOOL, CHOOSER, ORACLE effort per person type.
+- BQ and H-1 code details fixed before the full runs (10:35 AM ET 10-12; no mark changed). BQ: `dopamine/motivator.py`
+  gains `--day-problems` and `--drive informed --informed-kinds`; with neither switch the log is identical to the old code
+  (smoke diff: only paths and timings differ), so M2 on the Mac stays comparable. "Even over the listed kinds" is the
+  draw share; kept counts follow each kind's draft acceptance (smoke day 1: cell arithmetic 94, ABS 60, others 16-23 of
+  256), the same mechanism every even arm has always used. H-1: `dopamine/h1_chooser.py`. The person type must be
+  readable for H1-2 to be fair, so reactions show it the way its cost arises: a tidy person removes an unwanted extra
+  (seen as "removed"), an easygoing one leaves it ("left"); a wanted-but-wrong extra is "corrected" by either. The
+  chooser's "accepted and rejected so far" input is these four counts (accepted, removed, left, corrected).
+  HELPER-TOOL keeps P3's inputs and P3's sealed behaviour (no exploration on sealed sessions). Chooser constants fixed
+  from smoke training reward only: hidden 32, lr 2e-3, 8 epochs per day, entropy weight 0.05, seed 7. Smoke (5 days x
+  40 sessions, other person seeds): chooser 2.92, HELPER-TOOL 2.67, EAGER-TOOL 3.12, NONE 2.90 (not a result).
