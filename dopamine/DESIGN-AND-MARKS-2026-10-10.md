@@ -771,3 +771,17 @@ better; the shipped helping drive stays HELPER-TOOL.** Fixed code (commit e30c94
   (not counts) does better.
 - Results: `dopamine/results/h2/s200`, `s201` (RESULT-H2 = fixed run; RESULT-H2-void = the void first run;
   DIAG-TYPEKNOWN). The diagnostics import the code from a copy of the repo at e30c942a3e.
+
+**B24. BQ retry at 128 problems per night (5:45 PM ET 10-12): not a PASS, so by the sealed rule 3M cannot test practice
+choosers; PA-1 (learned practice chooser) waits for 10M and M2 stays the 3M word on practice choice.** Same statistic.
+| Parent | INFORMED near n6/n7/n8 (mean) | EVEN near n6/n7/n8 (mean) | INFORMED - EVEN | Verdict |
+|---|---|---|---|---|
+| T1SDR s200 | 13.10 / 13.33 / 13.81 (13.41) | 10.00 / 13.57 / 14.52 (12.70) | +0.72 | NO ROOM (<= +2) |
+| T1SDR s201 | 18.33 / 21.90 / 25.24 (21.82) | 9.52 / 12.38 / 14.76 (12.22) | +9.60 | >= +5 |
+- Reported: DM3 old skills (in_dist, parent -> night 8): s200 83.60 INFORMED, 81.91 EVEN; s201 84.71 INFORMED, 85.59
+  EVEN. Seconds per run: about 2,800 INFORMED, 2,200 EVEN (8 nights). Results `dopamine/results/bq/p*-dp128/`.
+- Reading (suggested): the four INFORMED - EVEN gaps are +7.54, +4.92 (256) and +0.72, +9.60 (128). The same change
+  swings by 9 points between parents, so at 3M one run per arm cannot separate a +5 effect: run-to-run noise is about
+  as big as the room a perfect practice picker has. A chooser test at 3M would need many paired seeds per arm to read,
+  which is the M2 design (6 pairs), and M2 already measures practice choice there. Shown: picking the right kinds with
+  hindsight helps on 3 of 4 runs; untested: whether a learned picker can find them without hindsight.
