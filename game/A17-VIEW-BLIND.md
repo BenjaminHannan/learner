@@ -1,6 +1,6 @@
-# Addendum A17 (2:15 AM ET 10-12): GW-B, does the untrained parent read the view at all?
+# Addendum A17 (2:07 AM ET 10-12): GW-B, does the untrained parent read the view at all?
 
-Written 2:15 AM ET 10-12, before any GW-B number exists. Commit time = seal (the shared folder is unreadable tonight).
+Written 2:07 AM ET 10-12, before any GW-B number exists. Commit time = seal (the shared folder is unreadable tonight).
 GW-P8 (A15/A16) is not changed by this.
 
 ## Why
