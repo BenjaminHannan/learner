@@ -496,3 +496,8 @@ progress drive (motivator.py `--drive progress`, constants unchanged) instead of
 - If PASS: the progress motivator is proposed (via the coordinator) to replace domain mode's hand rule, per Ben's
   "substitute if better"; if proved wrong, the 3M motivator work stops until 10M.
 - Where: Ben's Mac (CPU jobs Mac first), 12 runs.
+- Note before P3 runs (3:15 AM ET 10-12; no mark changed): per the outside thread's cross-problem note, HELPER-TOOL is a
+  ceiling (right by construction), so P3 also reports a pre-registered control, HELPER-GATED: the model answers the
+  extra, the tool checks it, and a mismatching extra is never shown (reward 0); the help-value head learns from those
+  rewards. This is the deployable form ("check your unasked work before offering it"). Reported only, no mark. The
+  suggested even-vs-even A/A pair is not added to M2: its paired t interval over 6 pairs already measures run-to-run noise.

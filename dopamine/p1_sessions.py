@@ -240,7 +240,7 @@ def mlp(kind, seed):
     return make_pipeline(StandardScaler(), cls(hidden_layer_sizes=(64,), alpha=1e-3, random_state=seed, max_iter=200))
 
 
-def simulate(Z, helper='menu', tool_values=False):
+def simulate(Z, helper='menu', tool_values=False, gated=False):
     from sklearn.exceptions import ConvergenceWarning
     warnings.simplefilter('ignore', ConvergenceWarning)
     F, correct = Z['feats'], Z['correct']
@@ -257,6 +257,8 @@ def simulate(Z, helper='menu', tool_values=False):
     if tool_values:   # P3 (B16): the extra's value comes from the sheet tool, so every extra is right
         right = np.ones_like(right)
     rew = np.where(cwant == 1, np.where(right, R_RIGHT, R_WRONG), R_UNWANTED)
+    if gated:   # P3 control (B16 note): the model answers, the tool checks, a mismatching extra is never shown (reward 0)
+        rew = np.where(right, rew, 0.0)
 
     # decision for each arm in a set of rounds (given N probabilities pn for every candidate row, V values or None)
     def rows_of(r):
@@ -427,14 +429,17 @@ def do_p3(a):
     Z = load_cache(a.dir)
     arms2, _, L = simulate(Z, 'top1')
     arms3, stats3, _ = simulate(Z, 'top1', tool_values=True)
+    armsg, statsg, _ = simulate(Z, 'top1', gated=True)
     S = len(L)
     res = {'test': 'P3', 'n_sealed_sessions': S, 'model_seed': int(Z['seed']), 'ckpt': str(Z['ckpt']),
            'sealed_seed': int(Z['sealed_seed']) if 'sealed_seed' in Z else SEALED_SEED,
            'mean_effort': {'NONE': float(arms3['NONE'].mean()), 'EAGER-TOOL': float(arms3['EAGER'].mean()),
                            'HELPER-TOOL': float(arms3['HELPER'].mean()), 'P2 HELPER': float(arms2['HELPER'].mean()),
-                           'P2 EAGER': float(arms2['EAGER'].mean()), 'ORACLE': float(arms3['ORACLE'].mean())}}
+                           'P2 EAGER': float(arms2['EAGER'].mean()), 'HELPER-GATED (reported)': float(armsg['HELPER'].mean()),
+                           'ORACLE': float(arms3['ORACLE'].mean())}}
     d1, d2 = arms3['HELPER'] - arms3['NONE'], arms3['HELPER'] - arms2['HELPER']
-    for name, d in (('HELPER-TOOL - NONE', d1), ('HELPER-TOOL - P2 HELPER', d2)):
+    d3 = armsg['HELPER'] - arms3['NONE']
+    for name, d in (('HELPER-TOOL - NONE', d1), ('HELPER-TOOL - P2 HELPER', d2), ('HELPER-GATED - NONE (reported)', d3)):
         lo, hi = boot(d)
         res[name] = {'diff': float(d.mean()), 'ci95': [lo, hi]}
     r1, r2 = res['HELPER-TOOL - NONE'], res['HELPER-TOOL - P2 HELPER']
@@ -453,7 +458,7 @@ def do_p3(a):
           f"sealed person seed {res['sealed_seed']}, {S} sessions, mean requests {L.mean():.3f}", '',
           '| Arm | mean effort |', '|---|---|'] + [f'| {k} | {v:.4f} |' for k, v in res['mean_effort'].items()]
     md += ['', '| Paired difference | mean | 95% interval |', '|---|---|---|']
-    for n in ('HELPER-TOOL - NONE', 'HELPER-TOOL - P2 HELPER'):
+    for n in ('HELPER-TOOL - NONE', 'HELPER-TOOL - P2 HELPER', 'HELPER-GATED - NONE (reported)'):
         md.append(f"| {n} | {res[n]['diff']:+.4f} | [{res[n]['ci95'][0]:+.4f}, {res[n]['ci95'][1]:+.4f}] |")
     md += ['', f"P3-1: {res['P3-1']['verdict']} ({res['P3-1']['rule']})", f"P3-2: {res['P3-2']['verdict']} ({res['P3-2']['rule']})",
            '', f"HELPER-TOOL extras/session {res['HELPER-TOOL']['extras_per_session']:.3f}, wanted share "
