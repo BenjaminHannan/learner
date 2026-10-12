@@ -759,3 +759,45 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   the zip, low memory (each refused with nothing changed but a kept .failed folder), and the gate on pass / proved wrong / missing pair.
 - **Needs:** one Mac job (Ben's yes in the Mac chat), sent together with G2Q's install so he types one yes. Not before the recovery
   job (addendum AC) has run, because install_agent needs waiter v3e.
+
+## 36. Addendum AE (2026-10-12, 1:55 AM ET): no G1 reruns; G1 read from what exists; the PC install fixed; Modal
+
+- **Ben, 1:17 AM ET:** "I don't think you should rerun g1, it's not worth it". The two 10M reruns of addendum AC (8aG1fR: s400 PT;
+  8aG1s401r: s401 B2 + PT) are dropped. Ben, 1:15 AM ET: "you can use $30/month as of now on the gpus there" (Modal).
+- **G1 read from what exists (shown, from the RESULT.json files):** 3M: G-B2 73.01 vs G-PT 67.12 (s400), 73.68 vs 68.01 (s401).
+  10M: G-B2 s400 74.65, so d(G-B2) = +1.64 on one seed. The plain 10M arm (s400 stopped at update 16,500 of 24,000 in the restart)
+  and both s401 10M arms were never finished. **So mark 1 (Ben's bar: ours gains more from size than the plain model) cannot be
+  scored, and G1 ends unscored.** Mark 2 has one seed and no interval; mark 4 holds on the two-seed screen (3M mean 73.35 >= 72.0).
+  Ben's own reading of the one number stands (9:16 PM ET 10-11: "not scaling to the degree that I wanted"). The size question moves
+  to test WIDE (addendum AB) and to the writer (G2f): those are the next scaling evidence, not a G1 rerun.
+- **What happened on the PC (shown, the Mac's 12:58 AM ET and 1:22 AM ET reports):** the 10:25 PM ET recovery job (addendum AC) ran
+  at 12:38 AM ET, before Ben's message. It restarted the waiter (v3d) and started 8aG1fR at 12:41 AM ET. Its install stopped at one
+  test in G2f's code: `test_reader_rule.test_r2_call_and_stop_inputs_unchanged_by_the_answer_rule` pins five numbers to the last bit
+  (float.hex). On BensPC the three call numbers matched the pin to the bit; the stop head's input sums did not (stop_abs
+  0x1.2905bcc9c0e26p+13 vs 0x1.2905bcd29db68p+13, a gap of 1.8e-9 of itself; stop_in a gap of 4.6e-12 of stop_abs). The same commit
+  passes the bit pin on the cloud CPU (torch 2.14.1+cpu, 1 and 4 threads; shown here). So it is this CPU's rounding, not a code
+  change (inferred from those two facts). Nothing was swapped: the install's checks run before any change, as designed.
+- **Fix (rehearsed):** `after-g1/run_tests.py` runs a test module as its own main() does, with that one comparison allowing 1e-7
+  relative (call, stop_abs; call_acc and eos_acc exact) and 1e-9 x stop_abs (stop_in), about 50 to 200 times the PC's gaps; the
+  rest of that test (finite loss, no copying) and every other test run as written, and the exact numbers are printed (MACHINE
+  ROUNDING line). install_rr.ps1 uses it for test_reader_rule only. Checked on the CPU at 74d6e92c75: the exact pin passes, the PC's
+  numbers as the pin pass, the pre-G2f pin (a real change: call 129.9 vs 151.4) FAILS. The talker thread owns the test; a tolerance
+  in their next commit would make this wrapper unneeded (suggested).
+- **Stopping the reruns (rehearsed on a fake PC, pwsh 7.4.6):** `restart/nog1_go.ps1` refuses if the chain is past G1, G1-DONE.txt or
+  STOP exists, the waiter is not running once, or a non-G1 queue runner runs. Otherwise it stops the old pc_after_restart.ps1 first
+  (else it starts s401 when s400's runner ends), then the 8aG1fR / 8aG1s401r cmd trees and python processes, keeps their logs and
+  partial folders, renames the plan aside (so nothing restarts G1), moves the cards to done, renames the killed run's GPU-BUSY.txt and
+  pool locks aside, and starts pc_after_restart.ps1: install_rr, then install_agent (AT-1 + G2Q, addendum AD), then
+  `WORK\G1-DONE.txt` only after a clean install_rr. The waiter cannot start the old chain in between: without G1-DONE.txt or s401's ok
+  RESULT.json it keeps waiting. Scenarios: go, install fails (no G1-DONE), past G1, G1-DONE present, another runner, a process that
+  will not stop, no waiter, no NO-G1-RERUN.txt. Sent to the Mac at about 1:50 AM ET under Ben's 1:18 AM ET line in the Mac chat ("yes,
+  run the roadmap thread's PC installs and next jobs, and don't ask me again for its jobs").
+- **Modal (the $30/month):** G2f stays on the PC: the AT-1 gate reads its RESULT.json there, and a second copy would duplicate it.
+  **Test WIDE is offered to Modal** (standalone; nothing waits on it; 12-40 h of PC time otherwise), with a rule fixed before any
+  number: probe about 300 updates per GPU type (bf16 needed, so no T4); projected cost = 24,000 x s/update x price + 15%; run only if
+  that is <= $20 and the wall time <= 20 h (one Modal call; train.py saves only at the end), with a hard stop at $24; else WIDE stays
+  on the PC. A Modal WIDE differs from the PC runs only in the GPU (bf16 summing order; disclosed, as for accumulation). If it runs
+  there, `WORK\insert\20-wide.txt` is taken off the PC's list.
+- **Order and dates:** unchanged order (addenda AB, AD): fc100 parts 1-3, g2c3s, G2f, the AT-1 gate, AT-1, WIDE (unless on Modal),
+  G2Q, g2c3, B3 group 1, the s401 pairs, g2c10s, c30s. It starts about 5 minutes after the install ends tonight (estimate: 2:30 to
+  3 AM ET), about a day earlier than addendum AC's estimate, because nothing waits for G1.
