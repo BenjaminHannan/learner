@@ -1,0 +1,911 @@
+{
+ "run": "/Users/ben-hannan/gw8/runs/gwp8-s201",
+ "parent": "/Users/ben-hannan/gw8/inputs/checkpoints/cio-1007/70-t1sdr-s201/T1SDR_s201/checkpoint.pt",
+ "final_checkpoint": "/Users/ben-hannan/gw8/runs/gwp8-s201/night_8/checkpoint.pt",
+ "marks": {
+  "GW1": {
+   "value": 0.58,
+   "lo": 0.24,
+   "bar": "pass: d >= 1.5 and interval low end > 0; proved wrong: d < 0.5",
+   "verdict": "FAIL",
+   "hair_miss_used": false
+  },
+  "GW2": {
+   "value": 2.0,
+   "bar": "pass: share >= 10%; proved wrong: <= 2%",
+   "verdict": "PROVED WRONG",
+   "hair_miss_used": false,
+   "ladder_share": {
+    "before": {
+     "place_table": 20.0,
+     "make_wood_sword": 0.0,
+     "make_wood_pickaxe": 4.0,
+     "collect_stone": 1.0,
+     "make_stone_pickaxe": 0.0
+    },
+    "after": {
+     "place_table": 22.0,
+     "make_wood_sword": 2.0,
+     "make_wood_pickaxe": 2.0,
+     "collect_stone": 0.0,
+     "make_stone_pickaxe": 0.0
+    },
+    "random": {
+     "place_table": 4.0,
+     "make_wood_sword": 0.3333,
+     "make_wood_pickaxe": 0.3333,
+     "collect_stone": 0.0,
+     "make_stone_pickaxe": 0.0
+    },
+    "ppo": {
+     "place_table": 23.0,
+     "make_wood_sword": 2.0,
+     "make_wood_pickaxe": 5.0,
+     "collect_stone": 0.0,
+     "make_stone_pickaxe": 0.0
+    }
+   }
+  },
+  "GW3": {
+   "value": 0.31,
+   "hi": 0.58,
+   "bar": "pass: e >= 0; proved wrong: e <= -1.0 and interval high end < 0",
+   "verdict": "PASS",
+   "hair_miss_used": false
+  },
+  "GW4": {
+   "value": 0.0,
+   "fired": [],
+   "verdict": "PASS",
+   "bar": "pass: in_dist drop <= 1.5 and no family fired (routed by the run switch); proved wrong: drop > 5"
+  },
+  "GW5": {
+   "value": 0,
+   "verdict": "PASS",
+   "bar": "pass: game.audit finds no problem; proved wrong: sealed or quiz world in a training row, or changed constants"
+  },
+  "GW6": {
+   "stop_night": 8,
+   "p_stop": 18.727273,
+   "p_prev": 19.454545,
+   "best": 19.454545,
+   "best_night": 7,
+   "rise_last_night": -0.727272,
+   "verdict": "PASS",
+   "bar": "pass: p_S >= best - 3 and p_S - p_(S-1) <= 3; proved wrong: rise > 5, or S >= best night + 4 and p_S < best - 5"
+  }
+ },
+ "arms": {
+  "before": {
+   "arm": "model",
+   "ckpt": "/Users/ben-hannan/gw8/inputs/checkpoints/cio-1007/70-t1sdr-s201/T1SDR_s201/checkpoint.pt",
+   "gate": null,
+   "picker": "sample",
+   "ppo_picker": null,
+   "temp": 20.368329364318342,
+   "worlds": 100,
+   "cap": 1000,
+   "share": {
+    "collect_coal": 0.0,
+    "collect_diamond": 0.0,
+    "collect_drink": 53.0,
+    "collect_iron": 0.0,
+    "collect_sapling": 90.0,
+    "collect_stone": 1.0,
+    "collect_wood": 68.0,
+    "defeat_skeleton": 2.0,
+    "defeat_zombie": 6.0,
+    "eat_cow": 6.0,
+    "eat_plant": 0.0,
+    "make_iron_pickaxe": 0.0,
+    "make_iron_sword": 0.0,
+    "make_stone_pickaxe": 0.0,
+    "make_stone_sword": 0.0,
+    "make_wood_pickaxe": 4.0,
+    "make_wood_sword": 0.0,
+    "place_furnace": 0.0,
+    "place_plant": 39.0,
+    "place_stone": 1.0,
+    "place_table": 20.0,
+    "wake_up": 71.0
+   },
+   "mean_unlocks": 3.61,
+   "progress": 16.40909090909091,
+   "crafter_score": 3.230334391175683,
+   "mean_length": 184.85,
+   "sources_share": {
+    "own": 0.8961319989180416,
+    "explore": 0.10386800108195834,
+    "invalid": 0.0
+   },
+   "seconds": 616.8
+  },
+  "after": {
+   "arm": "model",
+   "ckpt": "/Users/ben-hannan/gw8/runs/gwp8-s201/night_8/checkpoint.pt",
+   "gate": null,
+   "picker": "sample",
+   "ppo_picker": null,
+   "temp": 20.977978,
+   "worlds": 100,
+   "cap": 1000,
+   "share": {
+    "collect_coal": 0.0,
+    "collect_diamond": 0.0,
+    "collect_drink": 34.0,
+    "collect_iron": 0.0,
+    "collect_sapling": 100.0,
+    "collect_stone": 0.0,
+    "collect_wood": 59.0,
+    "defeat_skeleton": 1.0,
+    "defeat_zombie": 9.0,
+    "eat_cow": 9.0,
+    "eat_plant": 0.0,
+    "make_iron_pickaxe": 0.0,
+    "make_iron_sword": 0.0,
+    "make_stone_pickaxe": 0.0,
+    "make_stone_sword": 0.0,
+    "make_wood_pickaxe": 2.0,
+    "make_wood_sword": 2.0,
+    "place_furnace": 0.0,
+    "place_plant": 92.0,
+    "place_stone": 0.0,
+    "place_table": 22.0,
+    "wake_up": 89.0
+   },
+   "mean_unlocks": 4.19,
+   "progress": 19.045454545454547,
+   "crafter_score": 3.2685939001843547,
+   "mean_length": 177.76,
+   "sources_share": {
+    "own": 0.8986836183618362,
+    "explore": 0.10131638163816381,
+    "invalid": 0.0
+   },
+   "seconds": 589.7
+  },
+  "random": {
+   "arm": "random",
+   "ckpt": null,
+   "gate": null,
+   "worlds": 100,
+   "cap": 1000,
+   "share": {
+    "collect_coal": 0.0,
+    "collect_diamond": 0.0,
+    "collect_drink": 12.0,
+    "collect_iron": 0.0,
+    "collect_sapling": 51.3333,
+    "collect_stone": 0.0,
+    "collect_wood": 22.3333,
+    "defeat_skeleton": 0.0,
+    "defeat_zombie": 0.0,
+    "eat_cow": 0.0,
+    "eat_plant": 0.0,
+    "make_iron_pickaxe": 0.0,
+    "make_iron_sword": 0.0,
+    "make_stone_pickaxe": 0.0,
+    "make_stone_sword": 0.0,
+    "make_wood_pickaxe": 0.3333,
+    "make_wood_sword": 0.3333,
+    "place_furnace": 0.0,
+    "place_plant": 46.3333,
+    "place_stone": 0.0,
+    "place_table": 4.0,
+    "wake_up": 94.0
+   },
+   "mean_unlocks": 2.3066666666666666,
+   "progress": 10.484848484848484,
+   "crafter_score": 1.512527127257202,
+   "mean_length": 168.01,
+   "sources_share": {
+    "own": 0.0,
+    "explore": 1.0,
+    "invalid": 0.0
+   },
+   "seconds": 599.3
+  },
+  "ppo": {
+   "arm": "ppo",
+   "ckpt": "/Users/ben-hannan/gw8/inputs/game-world/runs/ppo-s0/ppo_steps_147456.pt",
+   "gate": null,
+   "picker": null,
+   "ppo_picker": "sample",
+   "temp": null,
+   "worlds": 100,
+   "cap": 1000,
+   "share": {
+    "collect_coal": 0.0,
+    "collect_diamond": 0.0,
+    "collect_drink": 28.0,
+    "collect_iron": 0.0,
+    "collect_sapling": 90.0,
+    "collect_stone": 0.0,
+    "collect_wood": 49.0,
+    "defeat_skeleton": 0.0,
+    "defeat_zombie": 4.0,
+    "eat_cow": 8.0,
+    "eat_plant": 0.0,
+    "make_iron_pickaxe": 0.0,
+    "make_iron_sword": 0.0,
+    "make_stone_pickaxe": 0.0,
+    "make_stone_sword": 0.0,
+    "make_wood_pickaxe": 5.0,
+    "make_wood_sword": 2.0,
+    "place_furnace": 0.0,
+    "place_plant": 84.0,
+    "place_stone": 0.0,
+    "place_table": 23.0,
+    "wake_up": 95.0
+   },
+   "mean_unlocks": 3.88,
+   "progress": 17.636363636363637,
+   "crafter_score": 3.0317233026787376,
+   "mean_length": 177.72,
+   "sources_share": {
+    "own": 0.8970290344361918,
+    "explore": 0.10297096556380823,
+    "invalid": 0.0
+   },
+   "seconds": 63.7
+  }
+ },
+ "differences": {
+  "after - before": [
+   0.58,
+   0.24,
+   0.92
+  ],
+  "after - random": [
+   1.8833333333333329,
+   1.6233333333333335,
+   2.133333333333334
+  ],
+  "after - ppo": [
+   0.31,
+   0.04,
+   0.58
+  ],
+  "after - gwp": [
+   0.22,
+   -0.07,
+   0.52
+  ],
+  "after - gws3": [
+   0.76,
+   0.46,
+   1.05
+  ],
+  "after - old": [
+   0.87,
+   0.6,
+   1.13
+  ],
+  "after - ppo_argmax": [
+   1.66,
+   1.39,
+   1.95
+  ],
+  "after - before_T0_cloud": [
+   0.58,
+   0.24,
+   0.92
+  ],
+  "after - before_greedy": [
+   1.98,
+   1.67,
+   2.29
+  ]
+ },
+ "night_progress": [
+  15.090909090909092,
+  16.0,
+  18.454545454545453,
+  18.181818181818183,
+  17.545454545454547,
+  18.09090909090909,
+  18.272727272727273,
+  19.454545454545453,
+  18.727272727272727
+ ],
+ "old_skills": {
+  "routed": {
+   "in_dist_a": 90.88235294117646,
+   "in_dist_b": 90.88235294117646,
+   "in_dist_drop": 0.0,
+   "families": {
+    "arith_bare": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "backward_solve": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "chain_ops": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "chain_story2": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "cipher_map": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "compare_numbers": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "copy_word": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "digits_parity": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "distance_units": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "div_exact": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "fewshot_number_rule": {
+     "a": 47.5,
+     "b": 47.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "group_induct": {
+     "a": 92.5,
+     "b": 92.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "kin_chain": {
+     "a": 87.5,
+     "b": 87.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "letter_ops": {
+     "a": 97.5,
+     "b": 97.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "list_index": {
+     "a": 75.0,
+     "b": 75.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "list_stats": {
+     "a": 92.5,
+     "b": 92.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "object_track": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "odd_one_out": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "order_chain": {
+     "a": 67.5,
+     "b": 67.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "passage_qa": {
+     "a": 97.5,
+     "b": 97.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "percent_rate": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "prop_eval": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "rule_apply": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "seq_cycle": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "seq_next": {
+     "a": 85.0,
+     "b": 85.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "state_update": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "story_addsub": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "story_chain3": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "syllogism": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "table_calc": {
+     "a": 55.0,
+     "b": 55.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "table_lookup": {
+     "a": 27.5,
+     "b": 27.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "var_chain": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "verify_claim": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "word_filter": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    }
+   },
+   "fired": [],
+   "passes": true,
+   "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+  },
+  "always_on": {
+   "in_dist_a": 90.88235294117646,
+   "in_dist_b": 90.29411764705883,
+   "in_dist_drop": 0.5882352941176379,
+   "families": {
+    "arith_bare": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "backward_solve": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "chain_ops": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "chain_story2": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "cipher_map": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "compare_numbers": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "copy_word": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "digits_parity": {
+     "a": 95.0,
+     "b": 97.5,
+     "drop": -2.5,
+     "lo": 0.0,
+     "hi": 7.5,
+     "fires": false
+    },
+    "distance_units": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "div_exact": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "fewshot_number_rule": {
+     "a": 47.5,
+     "b": 42.5,
+     "drop": 5.0,
+     "lo": -15.0,
+     "hi": 5.0,
+     "fires": false
+    },
+    "group_induct": {
+     "a": 92.5,
+     "b": 92.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "kin_chain": {
+     "a": 87.5,
+     "b": 82.5,
+     "drop": 5.0,
+     "lo": -12.5,
+     "hi": 0.0,
+     "fires": false
+    },
+    "letter_ops": {
+     "a": 97.5,
+     "b": 95.0,
+     "drop": 2.5,
+     "lo": -7.5,
+     "hi": 0.0,
+     "fires": false
+    },
+    "list_index": {
+     "a": 75.0,
+     "b": 72.5,
+     "drop": 2.5,
+     "lo": -7.5,
+     "hi": 0.0,
+     "fires": false
+    },
+    "list_stats": {
+     "a": 92.5,
+     "b": 92.5,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "object_track": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "odd_one_out": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "order_chain": {
+     "a": 67.5,
+     "b": 65.0,
+     "drop": 2.5,
+     "lo": -7.5,
+     "hi": 0.0,
+     "fires": false
+    },
+    "passage_qa": {
+     "a": 97.5,
+     "b": 87.5,
+     "drop": 10.0,
+     "lo": -20.0,
+     "hi": -2.5,
+     "fires": true
+    },
+    "percent_rate": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "prop_eval": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "rule_apply": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "seq_cycle": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "seq_next": {
+     "a": 85.0,
+     "b": 87.5,
+     "drop": -2.5,
+     "lo": -5.0,
+     "hi": 10.0,
+     "fires": false
+    },
+    "state_update": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "story_addsub": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "story_chain3": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "syllogism": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "table_calc": {
+     "a": 55.0,
+     "b": 55.0,
+     "drop": -0.0,
+     "lo": -7.5,
+     "hi": 7.5,
+     "fires": false
+    },
+    "table_lookup": {
+     "a": 27.5,
+     "b": 30.0,
+     "drop": -2.5,
+     "lo": 0.0,
+     "hi": 7.5,
+     "fires": false
+    },
+    "var_chain": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "verify_claim": {
+     "a": 95.0,
+     "b": 95.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    },
+    "word_filter": {
+     "a": 100.0,
+     "b": 100.0,
+     "drop": -0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "fires": false
+    }
+   },
+   "fired": [
+    "passage_qa"
+   ],
+   "passes": false,
+   "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+  },
+  "info": {
+   "n": 1360,
+   "dev_sha256": "f975d9fb312c02d759df991fa3bbb9ac73912d5f77cdc0e6991abd7980158b86",
+   "routed_on": 0.0
+  }
+ },
+ "run_summary": {
+  "nights_run": 8,
+  "stop_reason": "fixed_nights",
+  "quiz_history": [
+   15.625,
+   16.619,
+   17.33,
+   18.466,
+   16.903,
+   18.182,
+   19.176,
+   18.182,
+   18.892
+  ],
+  "rows_per_night": [
+   9975,
+   9542,
+   10066,
+   9747,
+   8906,
+   9832,
+   9340,
+   9413
+  ],
+  "game_steps": 90364,
+  "quiz_steps": 50426
+ }
+}

@@ -1,0 +1,76 @@
+# Game-world result (run /Users/ben-hannan/gw8/runs/gwp8-s201)
+
+Sealed scoring on 100 worlds; one seed only.
+
+| mark | verdict | value | bar |
+|---|---|---|---|
+| GW1 | FAIL | 0.58 | pass: d >= 1.5 and interval low end > 0; proved wrong: d < 0.5 |
+| GW2 | PROVED WRONG | 2.0 | pass: share >= 10%; proved wrong: <= 2% |
+| GW3 | PASS | 0.31 | pass: e >= 0; proved wrong: e <= -1.0 and interval high end < 0 |
+| GW4 | PASS | 0.0 | pass: in_dist drop <= 1.5 and no family fired (routed by the run switch); proved wrong: drop > 5 |
+| GW5 | PASS | 0 | pass: game.audit finds no problem; proved wrong: sealed or quiz world in a training row, or changed constants |
+| GW6 | PASS |  | pass: p_S >= best - 3 and p_S - p_(S-1) <= 3; proved wrong: rise > 5, or S >= best night + 4 and p_S < best - 5 |
+
+GW1: {"lo": 0.24}
+
+GW3: {"hi": 0.58}
+
+GW4: {"fired": []}
+
+## Per-achievement unlock share (percent of sealed worlds)
+
+| achievement | before | after | random | ppo |
+|---|---|---|---|---|
+| collect_coal | 0.0 | 0.0 | 0.0 | 0.0 |
+| collect_diamond | 0.0 | 0.0 | 0.0 | 0.0 |
+| collect_drink | 53.0 | 34.0 | 12.0 | 28.0 |
+| collect_iron | 0.0 | 0.0 | 0.0 | 0.0 |
+| collect_sapling | 90.0 | 100.0 | 51.3 | 90.0 |
+| collect_stone | 1.0 | 0.0 | 0.0 | 0.0 |
+| collect_wood | 68.0 | 59.0 | 22.3 | 49.0 |
+| defeat_skeleton | 2.0 | 1.0 | 0.0 | 0.0 |
+| defeat_zombie | 6.0 | 9.0 | 0.0 | 4.0 |
+| eat_cow | 6.0 | 9.0 | 0.0 | 8.0 |
+| eat_plant | 0.0 | 0.0 | 0.0 | 0.0 |
+| make_iron_pickaxe | 0.0 | 0.0 | 0.0 | 0.0 |
+| make_iron_sword | 0.0 | 0.0 | 0.0 | 0.0 |
+| make_stone_pickaxe | 0.0 | 0.0 | 0.0 | 0.0 |
+| make_stone_sword | 0.0 | 0.0 | 0.0 | 0.0 |
+| make_wood_pickaxe | 4.0 | 2.0 | 0.3 | 5.0 |
+| make_wood_sword | 0.0 | 2.0 | 0.3 | 2.0 |
+| place_furnace | 0.0 | 0.0 | 0.0 | 0.0 |
+| place_plant | 39.0 | 92.0 | 46.3 | 84.0 |
+| place_stone | 1.0 | 0.0 | 0.0 | 0.0 |
+| place_table | 20.0 | 22.0 | 4.0 | 23.0 |
+| wake_up | 71.0 | 89.0 | 94.0 | 95.0 |
+
+| arm | unlocks/episode | progress % | Crafter score % | mean length | own-action share |
+|---|---|---|---|---|---|
+| before | 3.610 | 16.41 | 3.23 | 184.8 | 0.896 |
+| after | 4.190 | 19.05 | 3.27 | 177.8 | 0.899 |
+| random | 2.307 | 10.48 | 1.51 | 168.0 | 0.000 |
+| ppo | 3.880 | 17.64 | 3.03 | 177.7 | 0.897 |
+
+## Paired differences in unlocks per episode (95% bootstrap, 2000 draws)
+
+| difference | mean | low | high |
+|---|---|---|---|
+| after - before | +0.580 | +0.240 | +0.920 |
+| after - random | +1.883 | +1.623 | +2.133 |
+| after - ppo | +0.310 | +0.040 | +0.580 |
+| after - gwp | +0.220 | -0.070 | +0.520 |
+| after - gws3 | +0.760 | +0.460 | +1.050 |
+| after - old | +0.870 | +0.600 | +1.130 |
+| after - ppo_argmax | +1.660 | +1.390 | +1.950 |
+| after - before_T0_cloud | +0.580 | +0.240 | +0.920 |
+| after - before_greedy | +1.980 | +1.670 | +2.290 |
+
+## The run
+
+stop reason: fixed_nights; nights run: 8
+quiz curve (progress %, night 0 first): [15.625, 16.619, 17.33, 18.466, 16.903, 18.182, 19.176, 18.182, 18.892]
+rows per night: [9975, 9542, 10066, 9747, 8906, 9832, 9340, 9413]
+game steps used: practice 90364, quiz 50426
+sealed progress on first 50 worlds per night: [15.09, 16.0, 18.45, 18.18, 17.55, 18.09, 18.27, 19.45, 18.73]
+old skills: routed drop 0.00 (fired []); add-on always on: drop 0.59 (fired ['passage_qa']); switch sent 0.000 of DEV rows to the add-on
+
