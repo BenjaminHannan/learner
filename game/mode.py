@@ -292,7 +292,7 @@ def main(argv=None):
     guesser = guess.Guesser(a.seed) if a.keep == 'guess' else None
     quiz_picker = a.quiz_picker if a.picker == 'sample' else 'greedy'
 
-    game_steps = 0
+    game_steps, t0_fitted = 0, None
     temp = temp_start = 1.0   # the policy temperature: 1 for every run but --night pg (addendum A13)
     if a.night == 'pg':
         # order chosen: harvest views from the first quiz worlds at T = 1, fit T0, then play the real night-0 quiz at T0
@@ -315,8 +315,9 @@ def main(argv=None):
                           unlock=None, unlock_step=None, kept_by='distil')
             dstats, _ = distil.run(m, addon, views, distil.targets(m, views, temp), seed=a.seed * 1000 + 999)
             T['distil'] += dstats['seconds']
-            log('distil', **dstats)
-            temp = temp_start = 1.0   # the flatness now lives in the add-on
+            log('distil', T0=temp, **dstats)
+            t0_fitted, temp = temp, 1.0
+            temp_start = temp   # the flatness now lives in the add-on
             t = time.time()
             dck = os.path.join(a.out, 'night_0', 'checkpoint.pt')
             dm.save_ckpt(ck, m, dck, addon)
@@ -462,6 +463,8 @@ def main(argv=None):
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))
+    if a.start == 'distil':
+        summary['t0_fitted'] = t0_fitted
     with open(os.path.join(a.out, 'summary.json'), 'w') as f:
         json.dump(summary, f, indent=1)
     log('done', nights_run=night, stop_reason=stop, final_checkpoint=last_ck, total_seconds=summary['total_seconds'])
