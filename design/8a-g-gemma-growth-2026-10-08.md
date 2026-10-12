@@ -791,7 +791,10 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   `WORK\G1-DONE.txt` only after a clean install_rr. The waiter cannot start the old chain in between: without G1-DONE.txt or s401's ok
   RESULT.json it keeps waiting. Scenarios: go, install fails (no G1-DONE), past G1, G1-DONE present, another runner, a process that
   will not stop, no waiter, no NO-G1-RERUN.txt. Sent to the Mac at about 1:50 AM ET under Ben's 1:18 AM ET line in the Mac chat ("yes,
-  run the roadmap thread's PC installs and next jobs, and don't ask me again for its jobs").
+  run the roadmap thread's PC installs and next jobs, and don't ask me again for its jobs"). **The Mac held it (1:39 AM ET), rightly:**
+  stopping a running job and the test tolerance are not clearly covered by that line, and Ben's 1:17 AM ET words were not said in the
+  Mac chat. It asks Ben there: "stop G1" and whether he accepts the 1e-7 tolerance. Until then 8aG1fR (the plain 10M s400 arm) keeps
+  training; if it finishes first, its RESULT.json is kept and G1 seed 400 becomes readable (ours +1.64 against the plain arm's gain).
 - **Modal (the $30/month):** G2f stays on the PC: the AT-1 gate reads its RESULT.json there, and a second copy would duplicate it.
   **Test WIDE is offered to Modal** (standalone; nothing waits on it; 12-40 h of PC time otherwise), with a rule fixed before any
   number: probe about 300 updates per GPU type (bf16 needed, so no T4); projected cost = 24,000 x s/update x price + 15%; run only if
@@ -799,5 +802,6 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   on the PC. A Modal WIDE differs from the PC runs only in the GPU (bf16 summing order; disclosed, as for accumulation). If it runs
   there, `WORK\insert\20-wide.txt` is taken off the PC's list.
 - **Order and dates:** unchanged order (addenda AB, AD): fc100 parts 1-3, g2c3s, G2f, the AT-1 gate, AT-1, WIDE (unless on Modal),
-  G2Q, g2c3, B3 group 1, the s401 pairs, g2c10s, c30s. It starts about 5 minutes after the install ends tonight (estimate: 2:30 to
-  3 AM ET), about a day earlier than addendum AC's estimate, because nothing waits for G1.
+  G2Q, g2c3, B3 group 1, the s401 pairs, g2c10s, c30s. It starts about 5 minutes after the install ends, which is about 40 minutes
+  after Ben's line in the Mac chat (the morning of 12 Oct, estimate): about a day earlier than addendum AC's estimate, because nothing
+  waits for G1's s401 arms.
