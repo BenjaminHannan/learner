@@ -713,3 +713,10 @@ training days only, sealed 400 sessions greedy). Paired bootstrap over sealed se
 Reported: effort by person type, extras after a "removed" vs after a "left" reaction. H-2 PASSES when H2-1 and H2-3 pass
 on both seeds. If it passes, the shipped helping drive is this learned value with the person's reactions as input; if
 H2-1 is proved wrong, reading the person waits for the 10M model and real reaction text.
+
+H-2 pre-run note (3:25 PM ET 10-12, before the full runs; no mark changed): HELPER-REACT is `helper_react_actions` in
+`dopamine/h1_chooser.py`, run by `run --arms h2`. It is HELPER-TOOL line for line (same RNG stream and draw order, same
+MLP regressor and seeds, same 10% exploration on training days only, same per-day refit on its own extras) except that it
+plays session by session, because its reaction counts depend on its own earlier actions, and its value inputs gain the
+four counts and "thanks" last round. With the tool every shown extra is right, so "corrected" stays 0 for both arms. The
+N head's next-need guesses are cached once per seed in `nhead.npz` (same fits as H-1). Run with BLAS threads = 1.

@@ -157,7 +157,7 @@ def do_cache(a):
 class Tables:
     """Everything the arms need, per round, from a cache dict Z (N head fitted day by day exactly as in p1_sessions)."""
 
-    def __init__(self, Z, n_seed_base=100):
+    def __init__(self, Z, n_seed_base=100, nhead_path=None):
         warnings.simplefilter('ignore')
         self.Z = Z
         F, ptr, cpid, cwant = Z['feats'], Z['cand_ptr'], Z['cand_pid'], Z['cand_wanted']
@@ -171,25 +171,33 @@ class Tables:
         self.round_day = np.where(Z['sess_split'][Z['round_sess']] == 1, 0, Z['sess_day'][Z['round_sess']])
         self.D = int(Z['sess_day'].max())
         cand_day = self.round_day[row_round]
-        Xn = np.concatenate([F[Z['round_cur']][row_round], F[cpid], P.onehot(ridx[row_round])], 1)
         self.first_round = np.zeros(self.S, int)
         self.first_round[Z['round_sess'][::-1]] = np.arange(R)[::-1]
         # N head, refit after each training day on all past days; day d is scored by the model fitted on days < d
-        pn_all = np.zeros(len(cwant))
-        n_model = None
+        pn_all = None
         self.N_secs = []
-        for day in list(range(1, self.D + 1)) + [0]:
-            rows_d = np.where(cand_day == day)[0]
-            if len(rows_d) == 0:
-                continue
-            if n_model is not None:
-                pn_all[rows_d] = n_model.predict_proba(Xn[rows_d])[:, 1] if len(n_model.classes_) == 2 else 0.0
-            if day == 0:
-                break
-            t = time.time()
-            n_model = P.mlp('clf', n_seed_base + day).fit(Xn[(cand_day >= 1) & (cand_day <= day)],
-                                                           cwant[(cand_day >= 1) & (cand_day <= day)])
-            self.N_secs.append(time.time() - t)
+        if nhead_path and os.path.exists(nhead_path):
+            z = np.load(nhead_path)
+            if z['pn_all'].shape == (len(cwant),) and int(z['n_rounds']) == R and int(z['n_base']) == n_seed_base:
+                pn_all = z['pn_all']
+        if pn_all is None:
+            Xn = np.concatenate([F[Z['round_cur']][row_round], F[cpid], P.onehot(ridx[row_round])], 1)
+            pn_all = np.zeros(len(cwant))
+            n_model = None
+            for day in list(range(1, self.D + 1)) + [0]:
+                rows_d = np.where(cand_day == day)[0]
+                if len(rows_d) == 0:
+                    continue
+                if n_model is not None:
+                    pn_all[rows_d] = n_model.predict_proba(Xn[rows_d])[:, 1] if len(n_model.classes_) == 2 else 0.0
+                if day == 0:
+                    break
+                t = time.time()
+                n_model = P.mlp('clf', n_seed_base + day).fit(Xn[(cand_day >= 1) & (cand_day <= day)],
+                                                               cwant[(cand_day >= 1) & (cand_day <= day)])
+                self.N_secs.append(time.time() - t)
+            if nhead_path:
+                np.savez_compressed(nhead_path, pn_all=pn_all, n_rounds=R, n_base=n_seed_base)
         self.pn_all = pn_all
         # top guess per round (day 1: random candidate, N not fitted yet)
         rs = np.random.RandomState(21)
@@ -269,6 +277,73 @@ def helper_tool_actions(T):
     return acts
 
 
+def reaction_update(cnt, s_ids, shown, accepted, unwanted, tidy, corrected):
+    """In place: counts [accepted, removed, left, corrected] of sessions s_ids after a round."""
+    cnt[s_ids, 0] += shown & accepted
+    cnt[s_ids, 1] += shown & unwanted & tidy
+    cnt[s_ids, 2] += shown & unwanted & ~tidy
+    cnt[s_ids, 3] += corrected
+
+
+def helper_react_actions(T):
+    """HELPER-REACT (H-2): HELPER-TOOL with the value head's inputs extended by the four reaction counts so far this session
+    and "thanks" last round. Played session by session in round order (the counts depend on its own earlier actions), on
+    training days and on the sealed day. Everything else as helper_tool_actions (same RNG stream order, MLP regressor and
+    seeds, tool value, 0.02 cost, 10% exploration on training days only, refit per day on all past rounds it acted on)."""
+    acts = np.zeros(T.R, int)
+    rs = np.random.RandomState(12)
+    rows_h, x_h, rew_h = [], [], []
+    v_model = None
+    cnt = np.zeros((T.S, 4))
+    for day in list(range(1, T.D + 1)) + [0]:
+        sealed = day == 0
+        sess = np.where((T.Z['sess_split'] == 1) if sealed else ((T.Z['sess_split'] == 0) & (T.Z['sess_day'] == day)))[0]
+        for s in sess:
+            for t in range(T.L[s]):
+                r = T.first_round[s] + t
+                if not T.has[r]:
+                    continue
+                rr = np.arange(T.ptr[r], T.ptr[r + 1])
+                hp = False
+                if day == 1:
+                    c = rr[rs.randint(len(rr))] if rs.rand() < 0.5 else None
+                    hp, pn = c is not None, 0.0
+                else:
+                    c, pn = T.top[r], T.ptop[r]
+                x = np.concatenate([[pn], T.F[T.cpid[c if c is not None else T.top[r]]], P.onehot(T.ridx[[r]])[0], cnt[s],
+                                    [T.thanks_prev[r]]])[None]
+                if day > 1:
+                    if (not sealed) and rs.rand() < 0.10:
+                        hp = True
+                    elif v_model is not None:
+                        hp = v_model.predict(x)[0] > 0
+                if hp:
+                    acts[r] = 2
+                    wanted = bool(T.cwant[c] == 1)
+                    reaction_update(cnt, np.array([s]), np.array([True]), np.array([wanted]), np.array([not wanted]),
+                                    np.array([T.ptype[r] == 1]), np.array([False]))
+                    if not sealed:
+                        x_h.append(x[0]), rew_h.append((1.0 if wanted else -T.cost[r]) - TOOL_COST)
+        if sealed:
+            break
+        if len(x_h) >= 5:
+            v_model = P.mlp('reg', 200 + day).fit(np.array(x_h), np.array(rew_h))
+    return acts
+
+
+def prev_reaction_rates(T, acts, rounds):
+    """Extras rate in rounds >= 2 after a 'removed' vs after a 'left' reaction (previous round: tool extra, unwanted)."""
+    prev = rounds - 1
+    later = T.ridx[rounds] > 0
+    shown_prev = acts[np.maximum(prev, 0)] > 0
+    unw = shown_prev & ~T.wt[np.maximum(prev, 0)] & later
+    rem, lef = unw & (T.ptype[np.maximum(prev, 0)] == 1), unw & (T.ptype[np.maximum(prev, 0)] == 0)
+    now = acts[rounds] > 0
+    f = lambda m: (float(now[m].mean()) if m.any() else None, int(m.sum()))
+    return {'after_removed': f(rem), 'after_left': f(lef)}
+
+
+
 # ---------- CHOOSER ----------
 
 def build_inputs(T, rounds, cnt):
@@ -299,12 +374,8 @@ def play(T, sessions, act_fn):
         shown = a > 0
         wt = T.wt[rounds]
         good = wt & ((a == 2) | T.rt[rounds])
-        tidy = T.ptype[rounds] == 1
         # reactions: accepted (wanted, right); unwanted -> tidy removes it, easygoing leaves it; wanted but wrong -> corrected
-        cnt[s_t, 0] += shown & good
-        cnt[s_t, 1] += shown & ~wt & tidy
-        cnt[s_t, 2] += shown & ~wt & ~tidy
-        cnt[s_t, 3] += shown & wt & ~good
+        reaction_update(cnt, s_t, shown, good, ~wt, T.ptype[rounds] == 1, shown & wt & ~good)
     return acts, (np.concatenate(recX) if recX else None), (np.concatenate(recA) if recA else None), \
         (np.concatenate(recR) if recR else None)
 
@@ -368,14 +439,58 @@ def train_chooser(T, log=print):
 
 # ---------- run ----------
 
-def run_all(Z, log=print):
+def run_h2(Z, T, ht_acts=None, log=print):
+    """H-2: HELPER-REACT vs HELPER-TOOL on the sealed sessions (no CHOOSER)."""
     t0 = time.time()
-    T = Tables(Z)
+    ht_acts = helper_tool_actions(T) if ht_acts is None else ht_acts
+    re_acts = helper_react_actions(T)
+    sealed = np.where(Z['sess_split'] == 1)[0]
+    eager = np.where(T.has, 2, 0)
+    rounds_s = np.where(T.round_day == 0)[0]
+    sidx = {s_: i for i, s_ in enumerate(sealed)}
+    pos = np.array([sidx[s_] for s_ in Z['round_sess'][rounds_s]])
+    Ls = T.L[sealed].astype(float)
+
+    def effort(acts):
+        return Ls - np.bincount(pos, weights=T.rew(acts[rounds_s], rounds_s), minlength=len(sealed))
+    arms = {'NONE': Ls.copy(), 'EAGER-TOOL': effort(eager), 'HELPER-TOOL': effort(ht_acts), 'HELPER-REACT': effort(re_acts)}
+    pt = Z['sess_ptype'][sealed]
+    h2 = {'mean_effort': {'all': {k: float(v.mean()) for k, v in arms.items()},
+                          'easygoing': {k: float(v[pt == 0].mean()) for k, v in arms.items()},
+                          'tidy': {k: float(v[pt == 1].mean()) for k, v in arms.items()}}}
+    d = arms['HELPER-REACT'] - arms['HELPER-TOOL']
+    lo, hi = P.boot(d)
+    h2['HELPER-REACT-HELPER-TOOL'] = {'diff': float(d.mean()), 'ci95': [lo, hi]}
+    h2['H2-1'] = {'verdict': 'PASS' if (d.mean() <= -0.05 and hi < 0) else ('PROVED WRONG (on this seed)' if d.mean() >= 0 else 'neither pass nor wrong'),
+                  'rule': 'pass: HELPER-REACT - HELPER-TOOL <= -0.05 and CI upper < 0; wrong: diff >= 0 on either seed'}
+    sh = re_acts[rounds_s] > 0
+    later, th = T.ridx[rounds_s] > 0, T.thanks_prev[rounds_s] == 1
+    a_t, a_p = sh[later & th], sh[later & ~th]
+    gap = 100 * (a_t.mean() - a_p.mean()) if len(a_t) and len(a_p) else float('nan')
+    h2['H2-3'] = {'offer_rate_after_thanks': float(a_t.mean()), 'offer_rate_after_plain': float(a_p.mean()), 'n_after_thanks': int(len(a_t)),
+                  'n_after_plain': int(len(a_p)), 'gap_points': float(gap),
+                  'verdict': 'PASS' if abs(gap) <= 3 else ('PROVED WRONG (on this seed)' if abs(gap) > 5 else 'neither pass nor wrong'),
+                  'rule': 'pass: |gap| <= 3 points; wrong: |gap| > 5 points'}
+    h2['H2_pass_this_seed'] = bool(h2['H2-1']['verdict'] == 'PASS' and h2['H2-3']['verdict'] == 'PASS')
+    h2['extras_rate_after_reaction'] = {'HELPER-REACT': prev_reaction_rates(T, re_acts, rounds_s),
+                                        'HELPER-TOOL': prev_reaction_rates(T, ht_acts, rounds_s)}
+    a = re_acts[rounds_s]
+    h2['HELPER-REACT_extras'] = {'extras_per_session': float((a > 0).sum() / len(sealed)),
+                                 'wanted_share': float(T.wt[rounds_s][a > 0].mean()) if (a > 0).any() else None}
+    h2['n_by_person'] = {'easygoing': int((pt == 0).sum()), 'tidy': int((pt == 1).sum())}
+    h2['model_seed'], h2['ckpt'], h2['smoke'] = int(Z['seed']), str(Z['ckpt']), bool(Z['smoke'])
+    h2['secs'] = round(time.time() - t0, 1)
+    return h2, ht_acts
+
+
+def run_all(Z, log=print, nhead_path=None):
+    t0 = time.time()
+    T = Tables(Z, nhead_path=nhead_path)
     log(f'N head fitted ({len(T.N_secs)} fits, {sum(T.N_secs):.0f}s); {T.D} training days')
     greedy_fn, curve = train_chooser(T, log)
     sealed = np.where(Z['sess_split'] == 1)[0]
     ch_acts, _, _, _ = play(T, sealed, lambda X, rounds: greedy_fn(X, rounds))
-    ht_acts = helper_tool_actions(T)
+    h2, ht_acts = run_h2(Z, T, None, log)
     eager = np.where(T.has, 2, 0)
     rounds_s = np.where(T.round_day == 0)[0]
     sidx = {s: i for i, s in enumerate(sealed)}
@@ -448,6 +563,7 @@ def run_all(Z, log=print):
                 'accepted_share': float(good[m].mean()) if m.any() else None}
     res['arm_extras'] = {'EAGER-TOOL': arm_stats(eager), 'HELPER-TOOL': arm_stats(ht_acts), 'CHOOSER': arm_stats(ch_acts)}
     res['oracle_saving_per_session'] = float(oracle_save.mean())
+    res['h2'] = h2
     res['run_secs'] = round(time.time() - t0, 1)
     return res
 
@@ -458,6 +574,36 @@ def _any_wanted(T, rounds):
     for i, r in enumerate(rounds):
         out[i] = T.cwant[T.ptr[r]:T.ptr[r + 1]].any()
     return out
+
+
+def h2_md(h2):
+    e = h2['mean_effort']
+    md = ['', '## H-2: HELPER-REACT (HELPER-TOOL + reaction counts and thanks in the value head)', '',
+          '| Arm | all | easygoing | tidy |', '|---|---|---|---|']
+    md += [f"| {k} | {e['all'][k]:.4f} | {e['easygoing'][k]:.4f} | {e['tidy'][k]:.4f} |" for k in e['all']]
+    d, g = h2['HELPER-REACT-HELPER-TOOL'], h2['H2-3']
+    md += ['', f"HELPER-REACT - HELPER-TOOL: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}] (10,000 resamples, seed 0)", '',
+           f"H2-1: {h2['H2-1']['verdict']}  ({h2['H2-1']['rule']})",
+           f"H2-3: {g['verdict']}  offer rate after thanks {100 * g['offer_rate_after_thanks']:.1f}% (n {g['n_after_thanks']}) vs after plain "
+           f"{100 * g['offer_rate_after_plain']:.1f}% (n {g['n_after_plain']}), gap {g['gap_points']:+.2f} points  ({g['rule']})",
+           f"H-2 passes on this seed: {h2['H2_pass_this_seed']} (H-2 passes only if so on both seeds)", '',
+           '| Extras rate in the next round | after removed | after left |', '|---|---|---|']
+    fm = lambda t: f'{100 * t[0]:.1f}% (n {t[1]})' if t[0] is not None else f'- (n {t[1]})'
+    for k, v in h2['extras_rate_after_reaction'].items():
+        md.append(f"| {k} | {fm(v['after_removed'])} | {fm(v['after_left'])} |")
+    return md
+
+
+def write_h2_outputs(h2, out):
+    h2 = dict(h2)
+    h2['h1_chooser_py_sha256'] = code_sha()
+    h2['p1_sessions_py_sha256'] = code_sha(P.__file__)
+    json.dump(h2, open(os.path.join(out, 'RESULT-H2.json'), 'w'), indent=1)
+    md = [f"# H-2 results, model seed {h2['model_seed']}{' (SMOKE)' if h2['smoke'] else ''}", f"checkpoint: {h2['ckpt']}",
+          f"sealed sessions by person: {h2['n_by_person']}"] + h2_md(h2) + ['', f"h1_chooser.py sha256: {h2['h1_chooser_py_sha256']}",
+                                                                         f"p1_sessions.py sha256: {h2['p1_sessions_py_sha256']}"]
+    open(os.path.join(out, 'RESULT-H2.md'), 'w').write('\n'.join(md) + '\n')
+    return '\n'.join(md)
 
 
 def write_outputs(res, out):
@@ -494,6 +640,7 @@ def write_outputs(res, out):
            '| Training day | reward/round | quiet | own | tool | entropy |', '|---|---|---|---|---|---|']
     md += [f"| {c['day']} | {c['mean_reward_per_round']:+.4f} | {c['share_quiet']:.2f} | {c['share_own']:.2f} | {c['share_tool']:.2f} | "
            f"{c['entropy']:.3f} |" for c in res['training_curve']]
+    md += h2_md(res['h2'])
     md += ['', f"constants: {json.dumps(res['constants'])}", f"h1_chooser.py sha256: {res['h1_chooser_py_sha256']}",
            f"p1_sessions.py sha256: {res['p1_sessions_py_sha256']}"]
     open(os.path.join(out, 'RESULT.md'), 'w').write('\n'.join(md) + '\n')
@@ -504,7 +651,13 @@ def do_run(a):
     import torch
     torch.set_num_threads(a.threads)
     Z = P.load_cache(a.dir)
-    res = run_all(Z, P.log)
+    nh = os.path.join(a.dir, 'nhead.npz')
+    if a.arms == 'h2':
+        T = Tables(Z, nhead_path=nh)
+        h2, _ = run_h2(Z, T, None, P.log)
+        print(write_h2_outputs(h2, a.out or a.dir))
+        return
+    res = run_all(Z, P.log, nhead_path=nh)
     print(write_outputs(res, a.out or a.dir))
 
 
@@ -521,6 +674,8 @@ def main(argv=None):
     r.add_argument('--dir', required=True)
     r.add_argument('--out', default=None)
     r.add_argument('--threads', type=int, default=1)
+    r.add_argument('--arms', choices=['all', 'h2'], default='all',
+                   help='h2: only NONE/EAGER-TOOL/HELPER-TOOL/HELPER-REACT (no CHOOSER training); writes RESULT-H2.*')
     a = ap.parse_args(argv)
     do_cache(a) if a.cmd == 'cache' else do_run(a)
 

@@ -85,6 +85,31 @@ def test_run_all_toy():
     assert os.path.exists(os.path.join(d, 'RESULT.json')) and os.path.exists(os.path.join(d, 'RESULT.md'))
 
 
+def test_h2_react_and_nhead_cache():
+    import tempfile
+    Z = toy_cache()
+    d = tempfile.mkdtemp()
+    nh = os.path.join(d, 'nhead.npz')
+    T1 = H.Tables(Z, nhead_path=nh)
+    assert os.path.exists(nh) and len(T1.N_secs) > 0
+    T2 = H.Tables(Z, nhead_path=nh)
+    assert len(T2.N_secs) == 0 and np.array_equal(T1.pn_all, T2.pn_all) and np.array_equal(T1.top, T2.top)
+    h2, ht = H.run_h2(Z, T1, None, lambda *a: None)
+    assert np.array_equal(ht, H.helper_tool_actions(T1))
+    ea = h2['mean_effort']['all']
+    assert abs(ea['NONE'] - 3.0) < 1e-9
+    # HELPER-REACT acts only with a candidate and uses the tool only
+    re = H.helper_react_actions(T1)
+    assert set(np.unique(re)) <= {0, 2} and not re[~T1.has].any()
+    # reaction bookkeeping
+    cnt = np.zeros((2, 4))
+    H.reaction_update(cnt, np.array([0, 1]), np.array([True, True]), np.array([False, False]), np.array([True, True]),
+                      np.array([True, False]), np.array([False, False]))
+    assert cnt[0].tolist() == [0, 1, 0, 0] and cnt[1].tolist() == [0, 0, 1, 0]
+    H.write_h2_outputs(h2, d)
+    assert os.path.exists(os.path.join(d, 'RESULT-H2.md'))
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):
