@@ -42,7 +42,7 @@ joins), and the parent T1SDR s200.
 L8-LB F4: W 3, P 45-70, T 35-60. L8-LA64 F4: W 4, T 25-45. L7-LB F4: W 46, T 55-80. F5 (L8-LB): T 10-30. First errors on
 L8-LB F4: mostly at the first call of the second piece or the final join, not inside K.
 
-## Result (shown, Mon Oct 12, 10:25 AM ET; domain/far/join_gap.py, outputs in the session scratchpad a1/)
+## Result (shown, Mon Oct 12, 10:00 AM ET; domain/far/join_gap.py, outputs in the session scratchpad a1/)
 
 Split rule as written, plus one shown necessity: a cell-arithmetic piece `Rr+Rr*2` contains a top-level `+` and `*`, so
 it is read as one piece in the `K+J` form (73 of 420 F4 rows, 66 of 420 F5 rows need this; every row then splits).
