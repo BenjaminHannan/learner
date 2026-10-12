@@ -394,3 +394,19 @@ P2 PASSES when both marks pass on both seeds. Prediction (suggested): HELPER now
 follow-ups in kinds it gets right (MAX, MIN), so P2-2 should pass; P2-1 is close (a right-and-wanted extra on MAX/MIN is
 worth about +0.2 on average after the misses), so it may read "neither". If P2-2 fails, the head itself is the problem
 (not the choice over the menu), and the next change is a better-calibrated head, not more arms.
+
+**B14. P2 result (scored 9:35 PM ET 10-11): FAIL, but the restraint now works.** Shown, from
+`dopamine/results/p2/s{200,201}/RESULT.md` (new sealed person seed 93003, 400 sessions, 2.99 requests each):
+| | NONE | EAGER | HELPER | ORACLE | HELPER - NONE (95%) | HELPER - EAGER (95%) |
+|---|---|---|---|---|---|---|
+| s200 | 2.99 | 3.50 | 3.10 | 2.42 | +0.11 (+0.04, +0.18) | -0.40 (-0.48, -0.32) |
+| s201 | 2.99 | 3.38 | 3.03 | 2.31 | +0.04 (-0.03, +0.11) | -0.35 (-0.43, -0.27) |
+P2-2 PASSES on both seeds: judged only on its best guess, the help-value head cut extras from 3.0 to 1.1-1.3 per session and
+stopped most extras after the last request (131 and 160 of 400 vs EAGER's 400). P2-1 is PROVED WRONG on s200 (it still
+adds a little work) and neither on s201, so P2 fails. Its extras were wanted 35% of the time, no more often than EAGER's.
+Post-hoc ceiling (suggested; `dopamine/diag/p2_kind_ceiling.py`, uses kind labels, so it is a yardstick, not a model): a
+helper that knows exactly how often each follow-up is wanted and how often each kind is right (counted on the training
+days) saves only 0.08 actions per session on both seeds (1.0 and 0.8 extras). So at 3M the model's answers are wrong too
+often for unasked help to pay much, even with perfect judgement; the learned head is about 0.1-0.2 below that yardstick.
+Decision: no more P-tests on 3M models. The design (B12) stands; the next P run uses the same code and P2's rule on the
+first 10M/30M domain-mode sheet models, where more right answers raise the ceiling. Marks for that run reuse P2's table.

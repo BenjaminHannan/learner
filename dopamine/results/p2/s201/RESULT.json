@@ -1,0 +1,104 @@
+{
+ "test": "P2",
+ "helper_rule": "top1",
+ "n_sealed_sessions": 400,
+ "model_seed": 201,
+ "ckpt": "/mnt/project-files/domain-mode/runs/sheet-s201-v7/night_8/checkpoint.pt",
+ "sealed_seed": 93003,
+ "smoke": false,
+ "cache_code_sha256": "de050bc9fc24dce08ba6e16eb80dfb1890836b49246169d7d9f9aa75c1f29950",
+ "mean_effort": {
+  "NONE": 2.9925,
+  "EAGER": 3.380625,
+  "HELPER": 3.03125,
+  "ORACLE": 2.3075
+ },
+ "mean_L": 2.9925,
+ "HELPER-NONE": {
+  "diff": 0.03875,
+  "ci95": [
+   -0.0325,
+   0.11
+  ]
+ },
+ "HELPER-EAGER": {
+  "diff": -0.349375,
+  "ci95": [
+   -0.42625,
+   -0.2725
+  ]
+ },
+ "P2-1": {
+  "verdict": "neither pass nor wrong",
+  "rule": "pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed"
+ },
+ "P2-2": {
+  "verdict": "PASS",
+  "rule": "pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds"
+ },
+ "ORACLE_saving_per_session": 0.685,
+ "arms": {
+  "EAGER": {
+   "extras": 1197,
+   "extras_per_session": 2.9925,
+   "wanted_share": 0.3208020050125313,
+   "right_share": 0.5680868838763575,
+   "unwanted_share": 0.6791979949874687,
+   "extras_on_last_request": 400,
+   "extras_per_kind": {
+    "SUM": 354,
+    "MAX": 291,
+    "MIN": 205,
+    "PRODUCT": 7,
+    "cell arithmetic": 64,
+    "division": 3,
+    "MOD": 133,
+    "ABS": 116,
+    "COUNTIF": 9,
+    "IF": 15
+   }
+  },
+  "HELPER": {
+   "extras": 526,
+   "extras_per_session": 1.315,
+   "wanted_share": 0.34980988593155893,
+   "right_share": 0.6425855513307985,
+   "unwanted_share": 0.6501901140684411,
+   "extras_on_last_request": 160,
+   "extras_per_kind": {
+    "SUM": 152,
+    "MAX": 163,
+    "MIN": 81,
+    "PRODUCT": 2,
+    "cell arithmetic": 32,
+    "division": 0,
+    "MOD": 33,
+    "ABS": 53,
+    "COUNTIF": 3,
+    "IF": 7
+   }
+  },
+  "ORACLE": {
+   "extras": 274,
+   "extras_per_session": 0.685,
+   "wanted_share": 1.0,
+   "right_share": 1.0,
+   "unwanted_share": 0.0,
+   "extras_on_last_request": 0,
+   "extras_per_kind": {
+    "SUM": 86,
+    "MAX": 96,
+    "MIN": 47,
+    "PRODUCT": 5,
+    "cell arithmetic": 12,
+    "division": 0,
+    "MOD": 3,
+    "ABS": 25,
+    "COUNTIF": 0,
+    "IF": 0
+   }
+  }
+ },
+ "p1_sessions_py_sha256": "de050bc9fc24dce08ba6e16eb80dfb1890836b49246169d7d9f9aa75c1f29950",
+ "sim_secs": 685.7
+}
