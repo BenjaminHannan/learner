@@ -72,10 +72,11 @@ class B3G2(B3):
         assert talk_rounds in ('last', 'all'), talk_rounds
         self.talk_rounds = talk_rounds
         self.talk_question = bool(talk_question)
+        assert not self.talk_question or self.no_place, 'talk_question needs no_place: the reader\'s X would otherwise carry place codes the writer must not read'
         for name in DELETED:        # deleted after everything is built: no RNG draw changes, every other weight starts as in B3
             if hasattr(self, name):
                 delattr(self, name)
-        self.LESIONS = list(B3G2.LESIONS)
+        self.LESIONS = [l for l in B3G2.LESIONS if l != 'no_question' or self.talk_question]      # no_question is listed only with the switch on (an off model pays no extra eval pass)
         self.WCAP = max(LE, D.MAX_ANS) + 1
         self.writer = ByteWriter(self.d, self.reader.tok, self.WCAP, dk=self.dk, heads=writer_heads, inner=writer_inner or self.d // 2, mlp=writer_mlp, copy=False)      # created LAST; G2f: no copy path
         if self.talk_question:      # G2Q (talker/G2Q-BUILD-SPEC-2026-10-12.md): the ONE new parameter, created after every other module (no earlier init changes); added to every question position the writer reads
@@ -245,10 +246,13 @@ class B3G2(B3):
         """talk_rounds 'all': the writer's memory after round t -> [B, (t + 1) * n_z, d], the thinker's vectors of rounds 0..t, each round r plus step_emb[min(r, n_loops - 1)] (hist: the rounds' Z so far)."""
         return torch.cat([hist[r] + self.step_emb.weight[min(r, self.n_loops - 1)].to(hist[r].dtype) for r in range(t + 1)], 1)
 
-    def typed_question(self, X, xm):
+    def typed_question(self, X, xm, lesion=None):
         """G2Q: the question part of the writer's memory = the reader's encoding of the question (the tensor the thinker's question memo reads) + q_type -> (Xq [B,T,d], qm [B,T]), or None
-        when talk_question is off. Padding stays masked (qm = the reader's mask)."""
-        return (X + self.q_type.to(X.dtype), xm) if self.talk_question else None
+        when talk_question is off. Padding stays masked (qm = the reader's mask). lesion 'no_question': the whole question mask is zero from the start of the run, so EVERY writer line of the
+        run (each call and the answer, every B3AT turn) reads no question."""
+        if not self.talk_question:
+            return None
+        return (X + self.q_type.to(X.dtype), torch.zeros_like(xm) if lesion == 'no_question' else xm)
 
     @staticmethod
     def with_q(Z, zm, q):
@@ -260,7 +264,11 @@ class B3G2(B3):
 
     def state_q(self, state):
         """The question part (Xq, qm) a state carries (its last two entries under talk_question), else None."""
-        return tuple(state[-2:]) if self.talk_question else None
+        if not self.talk_question:
+            return None
+        Xq, qm = state[-2:]
+        assert torch.is_tensor(Xq) and Xq.dim() == 3 and Xq.is_floating_point() and torch.is_tensor(qm) and qm.dtype == torch.bool and qm.shape == Xq.shape[:2], 'a talk_question state ends with (Xq [B, Lq, d] float, qm [B, Lq] bool)'
+        return (Xq, qm)
 
     def swap_thoughts(self, donor_state, cur_state):
         """Donor swaps under G2Q: the DONOR's thoughts with the CURRENT row's own question (the shuffle_state rule: thoughts swapped, own question kept). Off: the donor state, unchanged."""
@@ -345,7 +353,7 @@ class B3G2(B3):
         running) keeps stopped rows from calling; quiet_last: no call is written at the last round (its Z could not read it); settle: a row that wrote a call at the last round gets one more think pass that reads it before Z is returned (per row: every other row keeps its Z exactly); temperature > 0 samples the writer (ST1). -> dict(Z, tape (Xt, idt, vis), calls, records, le, K, tape_full, ...)."""
         X, xm = self.read(batch, talker=True)
         B, T, dev = X.shape[0], X.shape[1], X.device
-        q = self.typed_question(X, xm)        # G2Q: the writer also reads the row's OWN question (None when the switch is off)
+        q = self.typed_question(X, xm, lesion)        # G2Q: the writer also reads the row's OWN question (None when the switch is off)
         ns, ne = (None, None) if self.no_slots else self.tokenize(batch)[:2]
         valid, S0 = self.num_memory(X, ns, ne)
         Xk, km = self.tok_spots(X, xm, batch) if self.tok_think else (X, xm)
@@ -549,8 +557,10 @@ class B3G2(B3):
         name, arg = self.check_lesion(lesion)
         if name in ('noexec', 'opswap', 'nocopy'):
             return self.talk(self.state(batch, lesion=name), batch, lesion=name)
+        if name == 'no_question':       # the whole run reads no question (calls and answer), not just the final line
+            return self.talk(self.state(batch, lesion=name), batch)
         st = self.state(batch, arg if name == 'loops' else None)
-        if name in ('zero_state', 'shuffle_state', 'no_question'):
+        if name in ('zero_state', 'shuffle_state'):
             st = self.lesioned(st, name)
         return self.talk(st, batch)
 

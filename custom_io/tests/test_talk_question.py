@@ -96,15 +96,15 @@ def test_off_is_bit_identical():
                 o = m.run(b)
                 st = m.state_of(o)
                 ans = m.talk(st, b)
-                les = [m.generate(b, lesion=x) for x in (None, 'zero_state', 'shuffle_state', 'no_question', 'loops:3')]
+                les = [m.generate(b, lesion=x) for x in (None, 'zero_state', 'shuffle_state', 'loops:3')]
             assert not hasattr(m, 'q_type') and not m.talk_question and len(st) == 4 and 'q' not in o
-            assert 'no_question' in m.LESIONS and les[3] == les[0], 'no_question must be a no-op without the switch'
+            assert 'no_question' not in m.LESIONS, 'no_question is listed only with the switch on (no extra eval pass, no extra RESULT key)'
             outs.append((loss.detach(), aux, grads, o['records'], ans, les, {k: v.clone() for k, v in m.state_dict().items()}))
         a, c = outs
         assert torch.equal(a[0], c[0]) and all(torch.equal(torch.as_tensor(a[1][k]), torch.as_tensor(c[1][k])) for k in a[1]), 'loss / aux'
         assert a[2].keys() == c[2].keys() and all(torch.equal(a[2][k], c[2][k]) for k in a[2]), 'gradients'
         assert a[3] == c[3] and a[4] == c[4] and a[5] == c[5] and all(torch.equal(a[6][k], c[6][k]) for k in a[6])
-        print(f'ok {kind} talk_question off (default and explicit): loss, aux, gradients, free run, answers, lessons and weights bit-identical; no q_type; no_question is a no-op')
+        print(f'ok {kind} talk_question off (default and explicit): loss, aux, gradients, free run, answers, lessons and weights bit-identical; no q_type; no_question is not listed')
 
 
 # ---- (2) and (3) ----
@@ -196,7 +196,7 @@ def test_source_check():
                 args = c.args + [kw.value for kw in c.keywords]
                 if f == 'self.typed_question':
                     q += 1
-                    assert ast.unparse(c) in ('self.typed_question(X, xm)', "self.typed_question(c['X'], c['xm'])"), ast.unparse(c)      # the question's own encoding, nothing else
+                    assert ast.unparse(c) in ('self.typed_question(X, xm, lesion)', "self.typed_question(c['X'], c['xm'])", "self.typed_question(c['X'], c['xm'], lesion)"), ast.unparse(c)      # the question's own encoding, nothing else
                     continue
                 if not (f == 'self.writer' or (f.startswith('self.writer.') and f.split('.')[-1] in ('greedy', 'run', 'forward', 'head')) or f.split('.')[-1] in sinks):
                     continue
@@ -269,6 +269,31 @@ def test_lesions_and_no_question():
                 names = [m.generate(b, lesion=x) for x in ('zero_state', 'shuffle_state', 'no_question')]
                 assert [len(x) for x in names] == [len(rs)] * 3
         print(f'ok {kind}: no_question == the thoughts-only writer with the same weights (answers, log-probs{", forced answers" if kind == "b3g2" else ""}); zero_state / shuffle_state scramble the thoughts only, every row keeps its own question; talk_rounds last and all')
+
+
+# ---- no_question masks the whole run (F5), listed only with the switch on (F6) ----
+def test_no_question_masks_every_line():
+    rs = rows(8)
+    b = batch_of(rs, V)
+    for kind in KINDS:
+        m = noisy_writer(loud(make(kind, 21, talk_question=True))).eval()
+        assert 'no_question' in m.LESIONS and 'no_question' not in make(kind, 21).LESIONS
+        with torch.no_grad():
+            Lq = m.state_of(m.run(b))[-1].shape[1]
+            for les, want in ((None, True), ('no_question', False)):
+                rec = Rec(m)
+                if kind == 'b3g2':      # scripted calls so the run writes calls as well as the answer
+                    Script(m, [['add 7 5', 'sub 12 3'], ['mul 2 2'], ['note hi'], [], ['add 1 1'], [], ['add 4 4', 'add 1 2'], ['sub 9 1']])
+                m.generate(b, lesion=les)
+                if kind == 'b3g2':
+                    m.writer.greedy = rec.real[1]
+                rec.close()
+                assert len(rec.calls) > 0
+                seen = [bool(c[2][:, -Lq:].any()) for c in rec.calls]
+                assert any(seen) == want and (want or not any(seen)), (kind, les, seen)
+                if want:
+                    assert any(seen)
+        print(f'ok {kind}: no_question leaves no unmasked question position in any of {len(rec.calls)} writer calls of the run; intact run sees it; listed only with talk_question')
 
 
 # ---- donor swaps (F1) ----
@@ -369,6 +394,7 @@ if __name__ == '__main__':
     test_source_check()
     test_every_parameter_gets_a_gradient()
     test_lesions_and_no_question()
+    test_no_question_masks_every_line()
     test_donor_swap_keeps_own_question()
     test_3m_count()
     test_train_py()

@@ -133,7 +133,7 @@ class B3AT(B3G2):
         assert gold is None and force is None and not rounds and each is None, 'b3at trains through loss(); teacher forcing is internal, and a free run has no per-round callback'
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         c = self.question(batch)
-        q = self.typed_question(c['X'], c['xm'])        # G2Q: the row's OWN question joins what the writer reads (None when off)
+        q = self.typed_question(c['X'], c['xm'], lesion)        # G2Q: the row's OWN question joins what the writer reads (None when off)
         Z = self.z0(B)
         K, le, allr = self.tape, LE, self.talk_rounds == 'all'
         Xt, idt, mt, le = self.tape_of([[''] * K for _ in range(B)], dev, le)
@@ -267,7 +267,9 @@ class B3AT(B3G2):
             return self.run(batch, lesion=name)['answers']
         if name == 'loops':
             return self.run(batch, loops=arg)['answers']
-        if name in ('zero_state', 'shuffle_state') or (name == 'no_question' and self.talk_question):             # on Z (no_question: the question part masked; a no-op, the intact run, without talk_question)  (and the memory) before the final line
+        if name == 'no_question':       # the question is masked for every line of the run (every turn's calls and the answer); the switch is off: not listed
+            return self.run(batch, lesion=name)['answers']
+        if name in ('zero_state', 'shuffle_state'):             # on Z (and the memory) before the final line
             return self.talk(self.lesioned(self.state_of(self.run(batch)), name), batch)
         return self.run(batch)['answers']                       # intact, and nocopy (a no-op: nothing copies)
 
