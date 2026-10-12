@@ -570,13 +570,21 @@ class B3AT(B3G2):
         self.train(was)
         return out
 
+    def gold_calls(self, r):
+        """Number of gold lines of the row's as-written trace that are calls under is_call (notes count: they are tape lines, a 'note x' is_call). B3G2.build_trace's reading (progtext.steps_of; unreadable, empty or over-tape = no trace = 0) without touching its counters."""
+        from custom_io.models import progtext
+        calls = progtext.steps_of(r, self.as_written)[0] if r.get('steps') else None
+        if not calls or len(calls) > self.tape:
+            return 0
+        return sum(self.is_call(progtext.text(c)) for c in calls)
+
     @torch.no_grad()
     def at_evals(self, ctx):
         """Report-only, the agent turns' own numbers on the dev rows (the same rows as g2_evals' agreement table): lines per row, rounds per turn (B3-4 / B3-5 by turn: mean, median, share
         at TCAP, by the turn index), total rounds per row, turns and rounds per family (by_family: lines and rounds per row, rounds per turn, share of turns at TCAP), and the cap counters (faults and reported). (last_rounds are TOTAL rounds over all turns; the h1 block is made per turn by this class's h1_evals, with a whole_question view.) turn_rounds_past_trained: reported, not a fault."""
         import statistics
         from custom_io.data import DEV_SPLITS, collate, Dataset, to_device
-        from custom_io.evalx import _dev_rows, subsample
+        from custom_io.evalx import _dev_rows, is_hit, subsample
         was = self.training
         self.eval()
         dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
@@ -588,6 +596,7 @@ class B3AT(B3G2):
                     rows.append(r)
         sample = subsample(rows, 600)
         per_turn, turns, tot, fam, past, ptot = {}, {}, [], {}, 0, 0
+        gb = {k: dict(n=0, right=0, turns=0, turn_cap=0, rounds=0, past=0) for k in ('0', '1-2', '3+')}
         for s in range(0, len(sample), bs):
             ch = sample[s:s + bs]
             b = to_device(collate([Dataset(ch, self.vocab, strict=False)[i] for i in range(len(ch))]), dev)
@@ -595,7 +604,11 @@ class B3AT(B3G2):
                 o = self.run(b)
             pp_, pt_ = self.past_trained(o['turn_rounds'])
             past += pp_; ptot += pt_
-            for r, tr, nt, rr in zip(b['rows'], o['turn_rounds'], o['turns'], o['rounds']):
+            for ri, (r, tr, nt, rr) in enumerate(zip(b['rows'], o['turn_rounds'], o['turns'], o['rounds'])):
+                g = self.gold_calls(r)
+                g = gb['0' if g == 0 else '1-2' if g <= 2 else '3+']
+                pp1, _ = self.past_trained([tr])
+                g['n'] += 1; g['right'] += is_hit(o['answers'][ri], r); g['turns'] += len(tr); g['turn_cap'] += sum(u >= TCAP for u in tr); g['rounds'] += sum(tr); g['past'] += pp1
                 turns[str(nt)] = turns.get(str(nt), 0) + 1
                 tot.append(rr)
                 f = fam.setdefault(r['family'], dict(n=0, lines=0, rounds=0, turns_at_cap=0))
@@ -609,5 +622,8 @@ class B3AT(B3G2):
                                       turn_cap_share=100 * v['turns_at_cap'] / max(v['lines'], 1)) for k, v in sorted(fam.items())}, counters=capcount.snapshot(),
                    free_unended=self.free_stats['unended'],
                    turn_rounds_past_trained=dict(pairs=past, of=ptot, share=100 * past / max(ptot, 1), note='free-run (row, turn) pairs with more rounds than training gives a row of that many lines: min(TCAP, max(1, TOTAL_CAP // lines))'))
+        out['by_gold_calls'] = {k: dict(n=g['n'], accuracy=100 * g['right'] / max(g['n'], 1), turn_cap=g['turn_cap'], turn_cap_share=100 * g['turn_cap'] / max(g['turns'], 1), mean_turns=g['turns'] / max(g['n'], 1),
+                                        mean_rounds_per_turn=g['rounds'] / max(g['turns'], 1), turn_rounds_past_trained=dict(pairs=g['past'], of=g['turns'], share=100 * g['past'] / max(g['turns'], 1))) for k, g in gb.items()}
+        out['by_gold_calls_note'] = 'report only: rows by gold calls = lines of the as-written steps that are calls under is_call (notes included: tape lines); no trace = 0. accuracy = is_hit of the free run answer; turn_cap = free-run turns with rounds >= TCAP (a stop firing exactly at TCAP is not told apart)'
         self.train(was)
         return out

@@ -819,6 +819,41 @@ def test_per_turn_h1_and_past_trained():
     print('ok per-turn H1 block (3 rounds per turn = 100%% at the toy cap; whole question 6 per row, no cap), turn_rounds_past_trained scripted (%s), call_evals reports real R_i %s' % (pt, out['at_lines']['rounds']))
 
 
+def test_by_gold_calls():
+    """at_evals' by_gold_calls: rows split by their gold call count (0 / 1-2 / 3+), n sums to the rows, accuracy equals an independent count of the same free run."""
+    import json
+    from contextlib import nullcontext
+    from custom_io.data import DEV_SPLITS, collate, Dataset, to_device
+    from custom_io.evalx import _dev_rows, is_hit
+    m = make(21)
+    z = lambda i: dict(id=f'g{i}', family='copy_word', prompt=f'Echo: sune{i} Give only the answer.', answer=f'sune{i}', steps=[])
+    one = lambda i, a: dict(id=f'g{i}', family='chain_ops', prompt=f'Tom has {a} apples and buys 20 more. How many apples now?', answer=str(a + 20), steps=[f'{a} + 20 = {a + 20}'])
+    three = lambda i, a: dict(id=f'g{i}', family='chain_ops', prompt=f'Tom has {a} apples and buys 20 more. Then he buys 5 more. Then he loses 3. How many?', answer=str(a + 22),
+                              steps=[f'{a} + 20 = {a + 20}', f'{a + 20} + 5 = {a + 25}', f'{a + 25} - 3 = {a + 22}'])
+    rs = [z(0), one(1, 10), three(2, 10), z(3), one(4, 11), three(5, 12)]
+    assert [m.gold_calls(r) for r in rs] == [0, 1, 3, 0, 1, 3]
+    ctx = dict(data=dev_dir(rs), big=None, device=torch.device('cpu'), batch_size=4, amp=nullcontext)
+    at = m.at_evals(ctx)
+    g = at['by_gold_calls']
+    assert set(g) == {'0', '1-2', '3+'} and sum(v['n'] for v in g.values()) == at['n'] == 6 * len(DEV_SPLITS) and all(v['n'] > 0 for v in g.values()), g
+    seen, dev = set(), []
+    for sp in DEV_SPLITS:
+        for r in _dev_rows(ctx['data'], sp, None):
+            if r['id'] not in seen:
+                seen.add(r['id']); dev.append(r)
+    hit = {'0': 0, '1-2': 0, '3+': 0}
+    for s0 in range(0, len(dev), 4):
+        ch = dev[s0:s0 + 4]
+        with torch.no_grad():
+            o = m.run(to_device(collate([Dataset(ch, m.vocab, strict=False)[i] for i in range(len(ch))]), ctx['device']))
+        for r, a in zip(ch, o['answers']):
+            n = m.gold_calls(r)
+            hit['0' if n == 0 else '1-2' if n <= 2 else '3+'] += is_hit(a, r)
+    for k, v in g.items():
+        assert abs(v['accuracy'] - 100 * hit[k] / v['n']) < 1e-9, (k, v, hit)
+    print('ok by_gold_calls: ' + json.dumps(g))
+
+
 def B3AT_past(tr):
     return M.B3AT.past_trained(tr)
 
@@ -826,6 +861,6 @@ def B3AT_past(tr):
 if __name__ == '__main__':
     torch.set_num_threads(2)
     for f in (test_paths_and_lesions, test_scripted_free_run, test_replies_only_through_read_texts, test_talker_sees_only_thoughts, test_teacher_forcing_caps_and_keep,
-              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_carry_stop, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names, test_call_rule_and_answer_gold, test_no_answer_traces, test_answer_unended_and_tape, test_per_turn_h1_and_past_trained):
+              test_teacher_forced_thinker_equals_free_run, test_carry_draw, test_carry_stop, test_grads, test_st1_hooks, test_counters, test_call_evals_and_names, test_call_rule_and_answer_gold, test_no_answer_traces, test_answer_unended_and_tape, test_per_turn_h1_and_past_trained, test_by_gold_calls):
         f()
     print('ALL OK')
