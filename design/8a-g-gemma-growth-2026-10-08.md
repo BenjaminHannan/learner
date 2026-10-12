@@ -731,3 +731,31 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   test_reader_rule, test_b3g2_run, test_talk_rounds, test_b3g2 (each under 0.5 GB; test_no_plug, 4.8 GB, left out); a memory guard
   before each CPU step (estimate + 2 GB free to commit, Gemma fp32 4 GB); v3e skipped if it already runs; test WIDE last.
 - **Cost:** G1's end moves by about a day (estimate). The order after G1 is unchanged (addendum AB).
+
+## 35. Addendum AD (2026-10-12, 12:15 AM ET, before any G2f or agent-model number): AT-1 goes in right after G2f, gated (staged)
+
+- **Ask:** the Build the talker thread sent the AT-1 queue (`custom_io/queue_local/8aAT-3M-s400-pc.txt` at **6e72a5fae5**, PR #69,
+  arm AT = B3AT, the agent-turn model, 4,023,302 trained at 3M; AT-0 passed on 31a078a2ac) to run after G2f seed 400, per the big-run
+  PLAN's sealed gate (sixth Addendum 10-11 (3)): **AT-1 runs only if G2f seed 400 is not proved wrong on B3G2-1 to B3G2-3.** It also
+  said a G2Q queue (the talker that also reads the question) will follow. The order is this thread's call (PLAN eleventh Addendum (6)).
+- **Order (my default, no OK needed):** at the waiter's first insert check point, right after g2c3s and G2f: the gate, then
+  **AT-1**, then test WIDE (20-wide.txt), then **G2Q as a side run (30-g2q.txt, when its files arrive)**; then g2c3 and B3 group 1 as
+  before. AT-1 goes first because the agent model is the finished design and its 10M date (Oct 31 to mid-November) waits on it.
+  G2Q after WIDE either way: if G2f is proved wrong, AT-1 does not run and G2Q starts about half a day later than it could have.
+- **Which lines the gate can read there (shown from the waiter's order):** group 1 has not run at that point (G2f moved before it,
+  addendum Y), so only the proved-wrong lines that do not need group 1 are read: B3G2-1's "below g2c3s"; B3G2-2's "thinker-off
+  (loops:0) above 60% of the full score"; B3G2-3's "calculator off within 10 points of intact". **B3G2-1's "more than 6.0 below
+  group 1" and B3G2-2's "chain-5 more than 5 below group 1" are read by hand when group 1 lands**; if either proves G2f wrong then,
+  AT-1's result is reported with that flag and the big-run thread decides (its gate wording assumed group 1 first). "Cannot tell"
+  (a missing or failed result) counts as not passing: AT-1 does not start and the log says NEEDS ATTENTION.
+- **How (files in `results/8a-g/pc-job-cards/agent/`, rehearsed in a fake PC tree, pwsh 7.4.6):** `install_agent.ps1` unpacks
+  6e72a5fae5's custom_io as `src-at` (caps.py 4334…62D3, caps_b3g2.json = G2f's, 8 pinned files; b3g2.py, writer.py and b3.py are
+  byte for byte G2f's), copies the queue as `8aAT-pc.txt` (job 8aAT-3M-s400, spill names 8aATb, 8aATc), runs `atcheck.py` (queue
+  parses; arm AT builds b3at at 4,023,302) and test_b3at_core + test_b3at_run on the CPU with the memory guard, then writes
+  `WORK\insert\10-g2fgate.txt` (cmd: g2f_gate.cmd) and `11-at.txt` (queue 8aAT, src-at, card at.template.md). It refuses unless the
+  waiter is v3e and has not ended G2f. `g2f_gate.ps1` runs `g2f_gate.py` (standard library) on the newest ok RESULT.json of G2f
+  (8aB3G2s400*) and g2c3s (8aG2C3S*); on anything but "not proved wrong" it turns 11-at.txt into `cmd: at_skipped.cmd` (a no-op),
+  keeping the original as 11-at.txt.gated-<stamp>. Rehearsed: install, rerun (DONE), waiter past G2f, waiter v3d, a changed file in
+  the zip, low memory (each refused with nothing changed but a kept .failed folder), and the gate on pass / proved wrong / missing pair.
+- **Needs:** one Mac job (Ben's yes in the Mac chat), sent together with G2Q's install so he types one yes. Not before the recovery
+  job (addendum AC) has run, because install_agent needs waiter v3e.
