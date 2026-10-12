@@ -1146,6 +1146,38 @@ def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_pa
     return diary, cmp
 
 
+def kl_replay_loss(m, parent, weight, kls, klreplay):
+    """Instance-level loss for --guard kfsoft. Same logic as klreplay.wrap (split the batch by row source 'diary'; the plain loss
+    when not training / no grad / no diary or no new rows; tuple shape and aux 'replay_kl' kept; every KL appended to kls), but
+    combined as Main brain's answer (L11) says: plain loss on the new rows at weight 1 + weight x klreplay.replay_kl's KL
+    (the mean over the diary rows), NOT wrap's (n_new/B, n_rep/B) split. replay_kl itself is Main brain's (c823e4b9a)."""
+    plain = m.loss
+
+    def part(b, idx):
+        import torch
+        t = torch.tensor(idx)
+        return {k: (v[t] if torch.is_tensor(v) else [v[i] for i in idx]) for k, v in b.items()}
+
+    def loss(b):
+        import torch
+        rows = b['rows']
+        ri = [i for i, r in enumerate(rows) if r.get('source') == 'diary']
+        rs = set(ri)
+        ni = [i for i in range(len(rows)) if i not in rs]
+        if not m.training or not torch.is_grad_enabled() or not ri or not ni:
+            return plain(b)
+        out_n = plain(part(b, ni))
+        kl, _ = klreplay.replay_kl(m, parent, part(b, ri))
+        kls.append(float(kl.detach()))
+        if isinstance(out_n, tuple):
+            aux = out_n[1]
+            if isinstance(aux, dict):
+                aux = dict(aux, replay_kl=float(kl.detach()))
+            return (out_n[0] + weight * kl, aux) + tuple(out_n[2:])
+        return out_n + weight * kl
+    return loss
+
+
 class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
     wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
@@ -1239,7 +1271,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=1 if soft_guard else None)
             opt = guarded.opt
             if soft_guard:
-                m.loss = klreplay.wrap(m, kl_parent, float(kl_weight), kls)
+                m.loss = kl_replay_loss(m, kl_parent, float(kl_weight), kls, klreplay)   # not klreplay.wrap: weights 1 + kl_weight, see its docstring
             params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
             extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=guard_commit,
                          guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
@@ -1264,7 +1296,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         t0 = time.time()
         m.train()
         items = [ds[i] for i in ni]
-        if soft_guard:   # + diary rows (source 'diary'), told apart by klreplay.wrap, which weights the KL by n_rep/B
+        if soft_guard:   # + diary rows (source 'diary'), told apart by kl_replay_loss
             items += [kl_ds[int(j)] for j in kl_rng.randint(0, len(diary), size=kl_replay_rows)]
         b = to_device(collate(items), 'cpu')
         o = m.loss(b)

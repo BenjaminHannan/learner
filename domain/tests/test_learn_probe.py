@@ -321,6 +321,36 @@ def test_kfsoft_args(monkeypatch):
     assert seen['kl_replay_rows'] is None and seen['kl_weight'] is None
 
 
+def test_kl_replay_loss_combination():
+    torch = pytest.importorskip('torch')
+    w = torch.tensor(2.0, requires_grad=True)
+
+    class M:
+        training = True
+
+        def loss(self, b):
+            return (w * len(b['rows']), {'a': 1}, 'extra')
+
+    class KR:
+        seen = []
+
+        @staticmethod
+        def replay_kl(m, parent, b):
+            KR.seen.append(len(b['rows']))
+            return w * 3.0, {}
+    m, kls = M(), []
+    f = L.kl_replay_loss(m, 'p', 10.0, kls, KR)
+    rows = [{'source': 'tool'}] * 4 + [{'source': 'diary'}] * 2
+    out = f({'rows': rows, 'x': torch.arange(6)})
+    assert out[0].item() == pytest.approx(2.0 * 4 + 10.0 * 6.0)    # plain(new rows) at weight 1 + 10 x KL, no n/B scaling
+    assert out[1] == {'a': 1, 'replay_kl': 6.0} and out[2] == 'extra' and kls == [6.0] and KR.seen == [2]
+    assert f({'rows': rows[:4], 'x': torch.arange(4)})[0].item() == pytest.approx(8.0) and KR.seen == [2]   # no diary rows: plain
+    with torch.no_grad():
+        assert f({'rows': rows, 'x': torch.arange(6)})[0].item() == pytest.approx(12.0)                    # no grad: plain on all rows
+    m.training = False
+    assert f({'rows': rows, 'x': torch.arange(6)})[0].item() == pytest.approx(12.0) and len(kls) == 1
+
+
 def test_verify_guard_commit_mismatch(tmp_path):
     (tmp_path / 'mainbrain').mkdir()
     for f in L.GUARD_SOFT_FILES:

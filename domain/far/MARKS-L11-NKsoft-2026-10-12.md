@@ -18,3 +18,9 @@ Note before training (shown in the 20-update smoke, 3:05 PM ET): `klreplay.wrap`
 plain loss on the 64 join rows + (32/96) x 10 x the KL on the 32 diary rows, exactly as `fullrun.py` uses it, so the
 join rows' loss is two thirds of L7-LBG's. Smoke: harm at 20 updates 90.22 -> 90.22; about 8.5 s per update while two
 other runs shared the CPU (plain `kf`: about 3.0). L11 starts when L9's training ends (chained), 4 threads.
+
+Change before training (Main brain's answer, relayed 3:24 PM ET): the loss is the plain join loss on the 64 new rows at
+weight 1, exactly as L7-LBG, plus 10 x `klreplay.replay_kl` (Main brain's own function, c823e4b9a; the KL averaged over
+the 32 diary rows), not `wrap`'s 64/96 and 32/96 weighting. Code: `learn_probe.kl_replay_loss`, with a test. Smoke at 5
+updates (3:40 PM ET): harm 90.22 -> 90.22, replay KL 1e-6, about 8.1 s per update beside L9, and about 8 minutes to
+measure the guard before the first update. Marks unchanged.
