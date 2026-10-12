@@ -1,7 +1,7 @@
 """C2 example checker for B3 group 2 ("re-run on the examples"). A C2 question is a single-input number rule written as
     Examples: x1 -> y1; x2 -> y2; x3 -> y3. Now q -> ?
 B3G2 answers by writing tool calls ("mul 12 12") and then the answer. The checker asks of ONE try (the calls, replies and answer a sampled run wrote, plus, if the writer
-still copies, its copy record, models/writer.py greedy(record=True), translated by B3G2.sample_traces into 'copies'): is the try a PROGRAM in the query that is also right on every
+still copies, its copy record, models/writer.py greedy(record=True), as 'copies'; B3G2 since G2f writes calls and answers from thoughts and gives none): is the try a PROGRAM in the query that is also right on every
 example? It re-runs the try on example i with the query number replaced by x_i, executes the calls in order with the real calculator, and compares the re-run answer with y_i.
 Accepted only if it reproduces EVERY example. It reads ONLY row['prompt'] and the trace (calls, answer, copies): never row['answer'], row['accepted'], kind.
 

@@ -285,7 +285,9 @@ def test_row_losses():
     assert a == b and len(a) == 5 and all(math.isfinite(x) for x in a)                     # identical draws, identical losses for a copy
     frozen = copy.deepcopy(m)
     with torch.no_grad():
-        m.writer.parameters().__next__().add_(0.5)
+        g = torch.Generator().manual_seed(1)
+        for p in m.writer.parameters():                                                   # noise on every writer weight (a shift of the vocabulary bias alone is softmax-invariant)
+            p.add_(0.1 * torch.randn(p.shape, generator=g))
     c = cb0.row_losses(m, rs, mk_real, 3)
     assert c != a                                                                         # the weights matter
     assert cb0.row_losses(m, rs, mk_real, 3) == c and cb0.row_losses(frozen, rs, mk_real, 3) == a   # repeatable

@@ -3,6 +3,13 @@ Prints seconds per update, torch.cuda.max_memory_allocated and, when an arm's pe
 make it fit (train.py --accum; still 256 rows per update). Then the hours and dollars each rung's schedule would take at those speeds.
 
   python -m custom_io.g8a.speed --data WORK/data --out OUT [--rungs 3M 10M 30M] [--arms B2 PT LLM] [--updates 200] [--mem-gb 15] [--dph 0] [--public pythia31m]
+  python -m custom_io.g8a.speed --data WORK/data --out OUT --noplug [--rungs 30M 100M] [--arms B2 PT]      # the no-plug Gemma front (512 wide), as job.py --noplug
+
+--noplug (NO-PLUG-BUILD-SPEC-2026-10-11): adds {"noplug": true} to the extras exactly as job.py --noplug does and takes the lr from configs.rung_lr, so the 512-wide
+30M / 100M shapes are timed (and their accum worked out) as job.py will run them. The arms are then B2 and PT (plain_lm and the public model have no Gemma front); the
+model reads EmbeddingGemma 2 in the timed loop (CUSTOM_IO_EG2 or the hub revision, transformers >= 5.19). The 100M rung has no pool yet, so it gets no schedule / cost
+lines, only its seconds per update, peak memory and accum. job.py takes a blocks override only through --b2-extra '{"noplug": true, "blocks": N}'; this probe times the
+default depth (30M 9 blocks, 100M 21).
 
 Rows: needs no web data. Half the rows (by count; 38% by word pieces) are real skills rows from DATA/train.jsonl, half are cloze rows made by g8a.cloze from
 pseudo-documents (concatenated skills prompts), so the row lengths and the copy-heavy cloze shape are those of the real pool; content does not matter for speed.
@@ -18,6 +25,17 @@ from custom_io.g8a import configs as C
 from custom_io.g8a.pool import schedule
 from custom_io.models import build
 from custom_io.train import split_batch
+
+
+def rung_setup(rung, b2_extra=None, noplug=False):
+    """(cfgs, counts, lr) the probe times at a rung: the calls job.py makes (configs.sizes with the same extras, --noplug adding configs.NOPLUG, and configs.rung_lr of those
+    extras), so the shapes timed here are the shapes job.py trains. Raises ValueError for 3M / 10M with noplug (configs.noplug_split)."""
+    ex = dict(b2_extra or {})
+    if noplug:
+        ex[C.NOPLUG] = True
+    cfgs, counts = C.sizes(rung, ex)
+    C.check_bands(rung, cfgs, counts, exact_3m=False)
+    return cfgs, counts, C.rung_lr(rung, ex)
 
 
 def probe_rows(data_dir, n=3000, seed=0):
@@ -101,8 +119,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--data', required=True, help='skills build dir with train.jsonl (WORK/data)')
     ap.add_argument('--out', required=True)
-    ap.add_argument('--rungs', nargs='+', default=list(C.RUNGS), choices=list(C.RUNGS))
-    ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ARMS))
+    ap.add_argument('--rungs', nargs='+', choices=list(C.RUNGS), help='default 3M 10M 30M (with --noplug: 30M 100M)')
+    ap.add_argument('--arms', nargs='+', choices=list(C.ARMS), help='default B2 PT LLM (with --noplug: B2 PT)')
+    ap.add_argument('--noplug', action='store_true', help='the no-plug Gemma front (30M / 100M only; width 512, eg_pre), as job.py --noplug: adds {"noplug": true} to the extras, lr from configs.rung_lr; arms B2 / PT only')
     ap.add_argument('--public', nargs='*', default=[], choices=list(C.PUBLIC))
     ap.add_argument('--updates', type=int, default=200)
     ap.add_argument('--warmup', type=int, default=10)
@@ -114,6 +133,13 @@ def main(argv=None):
     ap.add_argument('--caps', help='caps-global.json of the ladder (default: the worst cases measured on the old own72 + rung30 slice)')
     ap.add_argument('--device', default='auto')
     a = ap.parse_args(argv)
+    a.rungs = a.rungs or (['30M', '100M'] if a.noplug else list(C.LADDER))      # not list(C.RUNGS): 100M has no pool, so it only runs when asked for (and then with --noplug)
+    a.arms = a.arms or ([C.B2_ARM, C.PT_ARM] if a.noplug else list(C.ARMS))
+    if a.noplug:        # refuse before anything is timed (job.py: only the Gemma-front arms run, and noplug_split raises for 3M / 10M)
+        if not set(a.rungs) <= set(C.NOPLUG_BLOCKS):
+            ap.error(f'--noplug is for the 30M and 100M rungs only (got {" ".join(a.rungs)})')
+        if C.LLM_ARM in a.arms or a.public:
+            ap.error('--noplug: only the B2 and PT arms run (plain_lm and the public model have no Gemma front)')
     device = torch.device('cuda' if a.device == 'auto' and torch.cuda.is_available() else 'cpu' if a.device == 'auto' else a.device)
     os.makedirs(a.out, exist_ok=True)
     rows = probe_rows(a.data)
@@ -129,15 +155,14 @@ def main(argv=None):
     print(json.dumps(dict(event='start', gpu=gpu, probe_rows=len(rows), mean_row_chars=round(mean_chars, 1), updates=a.updates, batch=a.batch, mem_gb=a.mem_gb)), flush=True)
     out = dict(caps=caps, gpu=gpu, updates=a.updates, batch=a.batch, mem_gb=a.mem_gb, rungs={}, public={})
     for rung in a.rungs:
-        cfgs, counts = C.sizes(rung, b2_extra)
-        C.check_bands(rung, cfgs, counts, exact_3m=False)
+        cfgs, counts, lr = rung_setup(rung, b2_extra, a.noplug)
         out['rungs'][rung] = {}
         for arm in a.arms:
             res, accum = None, 1
             tries = []
             while accum <= a.max_accum:
                 try:
-                    dt, peak, n = time_arm(C.MODEL_OF[arm], cfgs[arm], rows, a.batch, accum, a.updates, a.warmup, device, True, C.RUNGS[rung]['lr'])
+                    dt, peak, n = time_arm(C.MODEL_OF[arm], cfgs[arm], rows, a.batch, accum, a.updates, a.warmup, device, True, lr)
                     tries.append(dict(accum=accum, s_per_update=dt, peak_gb=peak))
                     res = dict(accum=accum, micro_batch=a.batch // accum, s_per_update=dt, peak_gb=peak, n_params=n)
                     if peak is None or peak <= a.mem_gb:
@@ -152,6 +177,10 @@ def main(argv=None):
             r = dict(res or dict(accum=None, s_per_update=None, peak_gb=None, n_params=counts[arm]), tries=tries, fits=bool(res and (res['peak_gb'] is None or res['peak_gb'] <= a.mem_gb)))
             out['rungs'][rung][arm] = r
             print(json.dumps(dict(event='speed', rung=rung, arm=arm, **{k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items() if k != 'tries'})), flush=True)
+        if isinstance(C.RUNGS[rung]['seen'], str):      # 100M: its pool is not built (configs.RUNGS says so), so there is no schedule to cost; speed, memory and accum stand
+            out['rungs'][rung]['_schedule'] = dict(steps=None, note=C.RUNGS[rung]['seen'])
+            print(json.dumps(dict(event='rung', rung=rung, steps=None, note='pool not built: no schedule or cost')), flush=True)
+            continue
         # the schedule this rung would run (mean row pieces from the probe rows' own accounting) and its cost at the measured speeds
         mean_pieces = 40.0
         sch = schedule(rung, mean_pieces, 10 ** 9)

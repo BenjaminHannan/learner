@@ -694,81 +694,54 @@ def test_greedy_record_meaning():
     print('ok writer.greedy record: copied / src / share as defined (random, copy-only, generate-only, nocopy, by hand)')
 
 
-def test_sample_traces_copies():
-    m = make(11)
+def quiet_writer(m):
+    """A tiny B3G2 whose writer writes short ASCII lines and whose run goes to the cap (3 call rounds)."""
     m.eval()
     bias = m.writer.bias.data
     bias[:] = 0.0
     bias[N_SPECIAL + 128:] = -30.0                                         # ASCII only, so text length = byte length
     bias[[i for i in range(N_SPECIAL) if i != EOS]] = -30.0                # no special ids: decode would drop them
     bias[EOS] = 6.0
-    m.writer.g_cp.bias.data[:] = 0.0
-    m.stop.bias.data[:] = -20.0                                            # never the learned stop: the run goes to the cap (3 call rounds)
+    m.stop.bias.data[:] = -20.0                                            # never the learned stop
     m.cap = 4
+    return m
+
+
+def test_sample_traces_no_copy_record():
+    """G2f (Ben's rule 2: calls and answers are written from the thinker's thoughts): the writer has no copy path, so sample_traces gives exactly the calls and the answer, with no copy
+    record, and the checker reads every number by value (creative roadmap addendum 2). trace_loss takes the traces as they come."""
+    m = quiet_writer(make(11))
+    assert not m.writer.copy and not hasattr(m.writer, 'g_cp')
     rs = rows(8)
     b = batch_of(rs, V)
-    gen = torch.Generator().manual_seed(3)
     before = {k: v.clone() for k, v in m.state_dict().items()}
-    tr = m.sample_traces(b, 1.0, gen)
+    tr = m.sample_traces(b, 1.0, torch.Generator().manual_seed(3))
     assert all(before[k].equal(v) for k, v in m.state_dict().items())
-    ncalls, ncopied = 0, 0
-    for r, t in zip(rs, tr):
-        assert set(t) == {'calls', 'answer', 'copies'} and set(t['copies']) == {'calls', 'answer'}
-        assert len(t['copies']['calls']) == len(t['calls'])
-        ents = [C.entry_of(c, rep) for c, rep in t['calls']]
-        for k, ((txt, rep), recs) in enumerate(zip(t['calls'], t['copies']['calls'])):
-            ncalls += 1
-            assert len(recs) == len(txt.encode()) == len(txt)
-            for ch, x in zip(txt, recs):
-                if x['src'] is not None:
-                    ncopied += 1
-                    s = x['src']
-                    if s[0] == 'prompt':
-                        assert r['prompt'][s[1]] == ch
-                    else:
-                        assert s[0] == 'tape' and s[1] < k and ents[s[1]][s[2]] == ch      # a tape source is an EARLIER entry
-        assert len(t['copies']['answer']) == len(t['answer'].encode())
-        for ch, x in zip(t['answer'], t['copies']['answer']):
-            if x['src'] is not None:
-                s = x['src']
-                assert (r['prompt'][s[1]] if s[0] == 'prompt' else ents[s[1]][s[2]]) == ch
-    assert ncalls >= 3 and ncopied >= 3, (ncalls, ncopied)
-    # trace_loss ignores `copies` (and the dict with the key removed gives the same loss)
+    assert all(set(t) == {'calls', 'answer'} and isinstance(t['answer'], str) for t in tr)
+    ncalls = sum(len(t['calls']) for t in tr)
+    assert ncalls >= 3, ncalls
     m.train()
     l1, _ = m.trace_loss(b, tr)
-    assert torch.isfinite(l1) and all(m.trace_gold(t) == m.trace_gold(dict(t, copies=None)) for t in tr)       # the gold is built from calls and answer only
-    m.eval()
-    assert all('copies' not in t for t in m.sample_traces(b, 1.0, torch.Generator().manual_seed(3), copies=False))
-    # the position mapping with a non-ASCII prompt: char offset of a byte
-    assert m.src_of(None, 'x', [], 5, 4) is None
-    assert m.src_of(2, 'aébc', [], 6, 4) == ('prompt', 1) and m.src_of(3, 'aébc', [], 6, 4) == ('prompt', 2) and m.src_of(1, 'aébc', [], 6, 4) == ('prompt', 1)
-    assert m.src_of(6 + 4 + 2, 'p', ['ab', 'cdef'], 6, 4) == ('tape', 1, 2) and m.src_of(6 + 1, 'p', ['ab', 'cdef'], 6, 4) == ('tape', 0, 1)
-    print('ok sample_traces copies: %d calls, %d copied bytes; lengths equal the call texts, sources hold the written byte, trace_loss ignores them' % (ncalls, ncopied))
+    assert torch.isfinite(l1)
+    print('ok sample_traces (G2f): %d calls, no copy record; trace_loss runs on them' % ncalls)
 
 
-def test_checker_on_real_traces_with_and_without_records():
-    """A tiny real B3G2 (random weights) on C2-shaped prompts: the checker runs on its real tries, with copy records (calls still copy) and without (copies=False), and gives the same verdicts
-    where the records are not needed; counts add up."""
-    m = make(11)
-    m.eval()
-    bias = m.writer.bias.data
-    bias[:] = 0.0
-    bias[N_SPECIAL + 128:] = -30.0
-    bias[[i for i in range(N_SPECIAL) if i != EOS]] = -30.0
-    bias[EOS] = 6.0
-    m.writer.g_cp.bias.data[:] = 0.0
-    m.stop.bias.data[:] = -20.0
-    m.cap = 4
+def test_checker_on_real_traces():
+    """A tiny real B3G2 (random weights) on C2-shaped prompts: the checker runs on its real tries (no copy record: every number is read by value) and its counts add up; the same tries
+    with the stripped record styles give the same verdicts."""
+    m = quiet_writer(make(11))
     rs = [dict(id=f'c{i}', family='c2', prompt=prompt_of(list(KINDS.values())[i % 5], [2, 7, 13], 11 + i), answer='0', steps=[]) for i in range(16)]
     b = batch_of(rs, V)
-    for copies in (True, False):
-        tr = m.sample_traces(b, 1.0, torch.Generator().manual_seed(3), copies=copies)
-        vs = [C.check_try(r, t) for r, t in zip(rs, tr)]
-        s = C.summarise(vs)
-        assert s['n'] == 16 and sum(s['verdict'].values()) == 16 and s['calling'] + s['no_call'] == 16 and s['calling'] == sum(bool(t['calls']) for t in tr)
-        assert all(v['verdict'] in ('accept', 'reject', 'uncheckable') and v['calls'] == len(t['calls']) for v, t in zip(vs, tr))
-        assert all(v['verdict'] == 'reject' and v['reason'] == 'never reads x' for v, t in zip(vs, tr) if not t['calls'])         # a no-call answer is a constant
-    print('ok checker on real B3G2 tries: %d tries, %d calling, with and without copy records' % (s['n'], s['calling']))
+    tr = m.sample_traces(b, 1.0, torch.Generator().manual_seed(3))
+    vs = [C.check_try(r, t) for r, t in zip(rs, tr)]
+    s = C.summarise(vs)
+    assert s['n'] == 16 and sum(s['verdict'].values()) == 16 and s['calling'] + s['no_call'] == 16 and s['calling'] == sum(bool(t['calls']) for t in tr)
+    assert all(v['verdict'] in ('accept', 'reject', 'uncheckable') and v['calls'] == len(t['calls']) for v, t in zip(vs, tr))
+    assert all(v['verdict'] == 'reject' and v['reason'] == 'never reads x' for v, t in zip(vs, tr) if not t['calls'])         # a no-call answer is a constant
+    assert not any(v['path'] in ('copy', 'mixed') for v in vs)                              # no copy record is ever read ('' = stopped before the path, e.g. rule 5)
+    for style in ('empty', 'short', 'false'):
+        assert [(v['verdict'], v['reason']) for v in vs] == [(w['verdict'], w['reason']) for w in (C.check_try(r, strip(t, style)) for r, t in zip(rs, tr))], style
+    print('ok checker on real B3G2 tries: %d tries, %d calling, read by value (no copy record; stripped styles agree)' % (s['n'], s['calling']))
 
 
 if __name__ == '__main__':

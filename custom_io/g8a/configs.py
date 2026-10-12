@@ -48,6 +48,79 @@ PUBLIC = {
 }
 BATCH, PLAIN_BAND, PLAIN_TRIM = 256, 0.02, 0.003
 
+# ---- the no-plug front (Ben, 4:12 PM ET: "can you remove the converter plug and just have our model match gemma's"; NO-PLUG-BUILD-SPEC-2026-10-11 sec. 2.4) ----
+# {"noplug": true} in the extras (--b2-extra / the `extra` of b2_cfg, b3_cfg, plain_cfg, sizes, pts_cfg) switches the 30M and 100M rungs to width 512, 8 heads, eg_embed + eg_pre +
+# eg_adapter 'none': our model reads Gemma's own 512 numbers (after its final norm, before its 512 -> 768 projection), no learned plug. The key itself never reaches a model:
+# it becomes the cfg keys d / n_heads / eg_embed / eg_pre / eg_adapter. {"blocks": N} beside it overrides the default depth (mlp is solved again). Every arm that has a Gemma
+# front takes it the same way (B2, B3, B3G2, PT / PTS; B3AT must extend the group-to-model mapping (`'b3g2' if group == 2 else 'b3'`) in b3_cfg, noplug_target, check_b3, MODEL_OF and ALL_ARMS). 3M and 10M raise.
+NOPLUG = 'noplug'
+NOPLUG_WIDTH, NOPLUG_HEADS = 512, 8
+NOPLUG_BLOCKS = {'30M': 9, '100M': 21}      # default depth; mlp is solved to the target (30M: about 1.253; 100M: about 4.835)
+
+
+def noplug_split(rung, extra):
+    """extra -> (extra without the noplug key and without a `blocks` override, blocks or None, noplug on?). Raises for 3M and 10M."""
+    ex = dict(extra or {})
+    if not ex.pop(NOPLUG, False):
+        return ex, None, False
+    if rung not in NOPLUG_BLOCKS:
+        raise ValueError(f"noplug is for the 30M and 100M rungs only: Gemma's own 512 numbers need a 512-wide model, and {rung} stays at width {RUNGS[rung]['width']} with the plug (3M and 10M are test scaffolding)")
+    return ex, ex.pop('blocks', None), True
+
+
+def rung_lr(rung, b2_extra=None):
+    """The rung's lr. No plug at 30M: the model is 512 wide, so the width rule 1e-3 * 256 / width gives 5e-4 (the 100M rule), not the 384-wide 30M value. Disclosed default."""
+    return 1e-3 * 256 / NOPLUG_WIDTH if (b2_extra or {}).get(NOPLUG) else RUNGS[rung]['lr']
+
+
+def noplug_front():
+    return dict(d=NOPLUG_WIDTH, n_heads=NOPLUG_HEADS, eg_embed=True, eg_pre=True, eg_adapter='none')
+
+
+def solve_mlp(model, cfg, target):
+    """cfg with the feed-forward ratio `mlp` set so the trained count of `model` lands as near `target` as one hidden unit allows (hidden = int(mlp * d), 2d + 1 params per
+    hidden unit per block, mlp = (hidden + 0.5) / d, as b2_cfg's trim)."""
+    d, c, best = cfg['d'], dict(cfg), None
+    for _ in range(4):
+        cur = n(model, c)
+        if best is None or abs(cur - target) < abs(best[0] - target):
+            best = (cur, c)
+        if cur == target:
+            break
+        hid = int(c['mlp'] * d) + round((target - cur) / (c['blocks'] * (2 * d + 1)))
+        c = dict(c, mlp=round((hid + 0.5) / d, 5))
+    h0 = int(best[1]['mlp'] * d)
+    for h in (h0 - 1, h0 + 1):      # the neighbours, in case the solve stopped one unit off
+        c = dict(best[1], mlp=round((h + 0.5) / d, 5))
+        if abs(n(model, c) - target) < abs(best[0] - target):
+            best = (n(model, c), c)
+    return best[1]
+
+
+def noplug_target(rung, extra=None, group=2):
+    """The count the no-plug arms are solved to: 30M = the rung's 30.0M; 100M = today's (plugged, 21 x 512, mlp 4.8) B3 group `group` count under the caps in force and the same
+    other extras (102,641,692 for B3G2 under caps_b3g2.json)."""
+    if rung == '30M':
+        return RUNGS[rung]['target']
+    ex, _, _ = noplug_split(rung, extra)
+    return n('b3g2' if group == 2 else 'b3', b3_cfg(rung, ex, group))
+
+
+def noplug_breakdown(model, cfg):
+    """{piece: params} of a built model by top-level module: thinker ('core'), reader, writer, stop, ln_eg, other; no plug line (asserts there is no eg_proj / eg_hid)."""
+    torch.manual_seed(0)
+    m = build(model, vocab(cfg.get('bytes', False)), **cfg)
+    out = {}
+    for k, p in m.named_parameters():
+        out[k.split('.')[0]] = out.get(k.split('.')[0], 0) + p.numel()
+    assert 'eg_proj' not in out and 'eg_hid' not in out, 'no plug: the model must have no eg_proj / eg_hid'
+    names = {'core': 'thinker', 'reader': 'reader', 'writer': 'writer', 'stop': 'stop', 'ln_eg': 'ln_eg'}
+    res = {}
+    for k, v in out.items():
+        res[names.get(k, 'other')] = res.get(names.get(k, 'other'), 0) + v
+    res['total'] = sum(out.values())
+    return res
+
 
 def vocab(bytes=False):
     """The vocab every count / size is built with: the 108-id CharVocab, or (V1 cfg {"bytes": true}) the 269-id ByteVocab."""
@@ -79,6 +152,10 @@ def _per_unit(model, cfg, key, base_v):
 def b2_cfg(rung, extra=None):
     """B2 config for a rung (copy talker on, 8 rounds). `extra` = reader switches, e.g. {"eg_embed": true} once stage 2b picks EGE."""
     r = RUNGS[rung]
+    extra, nb, np_ = noplug_split(rung, extra)
+    if np_:         # no plug: width 512 on Gemma's own numbers; default depth, mlp solved to the target (see noplug_target)
+        base = dict(dict(noplug_front(), reader_layers=2, n_loops=8, mlp=r['mlp'], copy=True), **extra)
+        return solve_mlp('ledger', dict(base, blocks=nb or NOPLUG_BLOCKS[rung]), noplug_target(rung, extra))
     if rung == '3M':
         cfg = dict(B2_S)
     else:
@@ -97,12 +174,14 @@ B3_G1 = dict(label='settled', span_copy=True, span_idx=True, span_end=True, ans_
 
 
 B3_G2 = dict(B3_G1, no_slots=True, no_place=True, bytes=True, as_written=True)      # B3 group 2 (sec. 1): all switches on; the writer is always on in 'b3g2'
-G2C3 = 4_022_440            # the plain 3M control at caps_b3 (g2c3): group 2's trained count must sit within PLAIN_BAND of it
+G2C3 = 4_022_440            # the plain 3M control at caps_b3 (g2c3): the plain arms' and test_pts' reference (4,022,440)
+G2C3S = 4_023_976           # the plain 3M control with worked steps at caps_b3s (g2c3s; PLAN addendum 10-10 8:55 AM ET): group 2's partner since the 2:35 PM ET addendum and AT-0 (viii)'s reference; b3g2's 3M count sits within PLAIN_BAND of it
 
 
 def b3g2_cfg(rung, extra=None):
-    """B3 group 2 config for a rung: b3_cfg's path with B3_G2 and model 'b3g2'. 3M: the thinker is B2's S shape; if the trained count is outside PLAIN_BAND of g2c3 the writer's
-    MLP ratio is trimmed first (writer_mlp, in steps of 1/16 down from 2.0), then the thinker's feed-forward ratio mlp (hidden units). 10M / 30M: block count to the rung's band (as
+    """B3 group 2 config for a rung: b3_cfg's path with B3_G2 and model 'b3g2'. 3M: the thinker is B2's S shape; since G2f the writer has no copy path and the freed parameters go to its MLP: writer_mlp
+    (1/16 steps, 1/16 to 12) is the value whose trained count is closest to g2c3s (G2C3S; ties: the smaller); only if the count is then outside PLAIN_BAND of G2C3S is the thinker's feed-forward ratio mlp
+    (hidden units) trimmed as before. 10M / 30M: block count to the rung's band (as
     b3_cfg); 100M: 21 x 512, no band. Call after caps.apply (the counts depend on the caps in force)."""
     return b3_cfg(rung, extra, group=2)
 
@@ -115,18 +194,22 @@ def b3_cfg(rung, extra=None, group=1):
     r = RUNGS[rung]
     loops = max(8, L.N_RES + 1)
     mod = 'b3g2' if group == 2 else 'b3'
+    extra, nb, np_ = noplug_split(rung, extra)
+    if np_:         # no plug; model-generic (any arm built on Ledger takes eg_pre: B3AT adds its group / model name here after the merge)
+        base = dict(dict(noplug_front(), reader_layers=2, n_loops=loops, mlp=r['mlp']), **(B3_G2 if group == 2 else B3_G1))
+        base.update(extra)
+        return solve_mlp(mod, dict(base, blocks=nb or NOPLUG_BLOCKS[rung]), noplug_target(rung, extra, group))
     base = dict(dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=loops, mlp=r['mlp']), **(B3_G2 if group == 2 else B3_G1))
     base.update(extra or {})
     n = lambda model, cfg: globals()['n']('b3g2' if group == 2 else model, cfg)
     if rung == '3M':
         cfg = dict(base, blocks=B2_S['blocks'])
-        if group == 2 and abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:
-            # the writer's MLP first: the largest 1/16 step that lands within PLAIN_BAND - 0.5% of g2c3 (a margin, so the count is not on the edge of the band)
-            best = next((w for w in range(31, 0, -1) if abs(n('b3', dict(cfg, writer_mlp=w / 16)) / G2C3 - 1) <= PLAIN_BAND - 0.005), 1)
-            cfg['writer_mlp'] = best / 16
-            if abs(n('b3', cfg) / G2C3 - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
+        if group == 2:
+            # the writer's MLP: the 1/16 step (1/16 .. 12) whose count is closest to g2c3s (ties: the smaller)
+            cfg['writer_mlp'] = min(range(1, 193), key=lambda w: (abs(n('b3', dict(cfg, writer_mlp=w / 16)) - G2C3S), w)) / 16
+            if abs(n('b3', cfg) / G2C3S - 1) > PLAIN_BAND:       # then the thinker's feed-forward ratio
                 d = r['width']
-                hid = int(cfg['mlp'] * d) + round((G2C3 - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
+                hid = int(cfg['mlp'] * d) + round((G2C3S - n('b3', cfg)) / (cfg['blocks'] * (2 * d + 1)))
                 cfg['mlp'] = round((hid + 0.5) / d, 5)
     elif rung == '100M':
         cfg = dict(base, blocks=r['blocks'])
@@ -148,12 +231,40 @@ def b3_sizes(cfg, model='b3'):
     return dict(trained=s['trainable'], frozen_gemma=s['frozen_borrowed'], whole=s['whole'])
 
 
+def b3g2_breakdown(cfg):
+    """Trained parameters of a b3g2 config by part (G2f's printout): reader (without its place table), place (the reader's), thinker blocks (core), ctrl, step_emb, tape_emb, stop, the Gemma
+    adapter (ln_eg + eg_proj), writer (its MLP fc1 + fc2 apart) and other (src, ln_z). The parts add up to the trained count."""
+    torch.manual_seed(0)
+    m = build('b3g2', vocab(cfg.get('bytes', False)), **cfg)
+    c = lambda *ms: sum(p.numel() for x in ms for p in x.parameters() if p.requires_grad)
+    out = dict(reader=c(m.reader) - c(m.reader.place), place=c(m.reader.place), thinker_blocks=c(m.core), ctrl=c(m.ctrl), step_emb=c(m.step_emb), tape_emb=c(m.tape_emb), stop=c(m.stop),
+               gemma_adapter=c(m.ln_eg, m.eg_proj), writer=c(m.writer), writer_mlp=c(m.writer.fc1, m.writer.fc2), other=c(m.src, m.ln_z))
+    out['total'] = m.n_params()
+    assert out['total'] == sum(v for k, v in out.items() if k not in ('total', 'writer_mlp')), out       # writer_mlp is inside writer
+    return out
+
+
+def format_b3g2_breakdown(bd, cfg):
+    """The 3M printout of b3g2_breakdown: the parts as a comma list, the writer's MLP shown INSIDE the writer ('writer 1,234 [of which mlp 567]'), so the listed top-level parts add up to the
+    trained count (the old line listed writer and writer_mlp side by side and its parts summed to more than the total)."""
+    parts = ', '.join(f'{k} {v:,}' + (f' [of which mlp {bd["writer_mlp"]:,}]' if k == 'writer' else '') for k, v in bd.items() if k not in ('total', 'writer_mlp'))
+    return f'3M B3G2 trained {bd["total"]:,} ({100 * (bd["total"] / G2C3S - 1):+.2f}% from g2c3s {G2C3S:,}; writer_mlp {cfg["writer_mlp"]}): ' + parts
+
+
 def check_b3(rung, cfg, group=1):
-    """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3 (4,022,440), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
+    """Group 2 (b3g2): 3M within PLAIN_BAND of g2c3s (4,023,976), 10M / 30M in the rung band, 100M no band. Group 1: 10M / 30M: trained count within the rung's band of its target; 3M: within 12% of G-B2 (EGE) under the same caps (the tool, its tape and the stop head add about 8%);
     100M: no band."""
     c = n('b3g2' if group == 2 else 'b3', cfg)
+    if cfg.get('eg_pre'):       # no plug: 30M in its band, 100M within 1% of today's count (under the same other extras)
+        assert rung in NOPLUG_BLOCKS, f'noplug at {rung}'
+        drop = ('d', 'n_heads', 'eg_embed', 'eg_pre', 'eg_adapter', 'blocks', 'mlp', 'reader_layers')
+        keep = {k: v for k, v in cfg.items() if k not in drop and k not in (B3_G2 if group == 2 else B3_G1)}
+        tgt = noplug_target(rung, keep, group)
+        band = RUNGS[rung]['band'] if RUNGS[rung]['band'] is not None else 0.01
+        assert abs(c / tgt - 1) <= band, f'{rung} no-plug {c:,} outside {tgt:,.0f} +-{100 * band:.1f}%'
+        return c
     if group == 2 and rung == '3M':
-        assert abs(c / G2C3 - 1) <= PLAIN_BAND, f'3M B3G2 {c:,} is more than {100 * PLAIN_BAND:.0f}% from g2c3 {G2C3:,}'
+        assert abs(c / G2C3S - 1) <= PLAIN_BAND, f'3M B3G2 {c:,} is more than {100 * PLAIN_BAND:.0f}% from g2c3s {G2C3S:,}'
     elif rung in ('10M', '30M'):
         assert abs(c / RUNGS[rung]['target'] - 1) <= RUNGS[rung]['band'], f'{rung} B3 {c:,} outside {RUNGS[rung]["target"]:,.0f} +-{100 * RUNGS[rung]["band"]:.0f}%'
     elif rung == '3M' and group == 1:
@@ -166,10 +277,11 @@ def plain_cfg(rung, b2=None, extra=None):
     """Plain arm config matched to B2's trained size (+-2%): width as B2, nearest layer count with today's 4x feed-forward; only if that is
     outside the band is the feed-forward width trimmed (3M therefore stays plain_tf_steps' own 4 layers x 1024)."""
     r = RUNGS[rung]
-    b2 = b2 or b2_cfg(rung)
+    extra, nb, np_ = noplug_split(rung, extra)
+    b2 = b2 or b2_cfg(rung, dict(extra, **{NOPLUG: True}, **({'blocks': nb} if nb else {})) if np_ else None)      # no plug and no b2 given: B2 is built with the rest of the extras and the blocks override too
     target = n('ledger', b2)
-    d, h = r['width'], r['heads']
-    base = dict(d_model=d, n_heads=h, **({'eg_embed': True} if b2.get('eg_embed') else {}))      # test 8a-G: the plain step arm gets the same frozen-Gemma front (its adapter counts)
+    d, h = (b2['d'], b2['n_heads']) if b2.get('eg_pre') else (r['width'], r['heads'])      # no plug: B2's 512 / 8 (eg_pre is the cfg key b2_cfg wrote)
+    base = dict(d_model=d, n_heads=h, **({'eg_embed': True} if b2.get('eg_embed') else {}), **({'eg_pre': True} if b2.get('eg_pre') else {}))      # test 8a-G: the plain step arm gets the same frozen-Gemma front (its adapter counts)
     c1, per = n('plain_tf_steps_g', dict(base, n_layers=1)), _per_unit('plain_tf_steps_g', base, 'n_layers', 1)
     best = min(range(1, 61), key=lambda L: abs(c1 + (L - 1) * per - target))
     cfg = dict(base, n_layers=best)
@@ -227,6 +339,14 @@ def check_bands(rung, cfgs=None, counts=None, exact_3m=True):
     """Assert section 2's bands. Returns the counts. A run outside its band does not count (the launcher refuses it)."""
     cfgs, counts = (cfgs, counts) if cfgs else sizes(rung)
     r, b2 = RUNGS[rung], counts[B2_ARM]
+    if cfgs[B2_ARM].get('eg_pre'):      # no plug (30M / 100M): B2 solved to the target, the plain arms within PLAIN_BAND of B2
+        keep = {k: v for k, v in cfgs[B2_ARM].items() if k in ('n_loops',)}
+        tgt = noplug_target(rung, keep)
+        assert abs(b2 / tgt - 1) <= (r['band'] or 0.01), f'{rung} no-plug B2 {b2:,} outside {tgt:,.0f}'
+        for a in (PT_ARM, PTS_ARM):
+            if a in counts:
+                assert abs(counts[a] / b2 - 1) <= PLAIN_BAND, f'{rung} {a} {counts[a]:,} is not within {100 * PLAIN_BAND:.0f}% of B2 {b2:,}'
+        return counts
     eg = bool(cfgs[B2_ARM].get('eg_embed'))
     ref = B2_S_PARAMS + (eg_adapter_params(r['width']) if eg else 0)      # test 8a-G: B2_S + the adapter (EGE-3M, 3,500,881 at the old caps)
     if rung == '3M':
@@ -258,7 +378,7 @@ def train_args(rung, arm, seed, steps, data, out=None, minutes=None, lr=None, b2
             add_pts(rung, cfgs, counts, b2_extra)
         check_bands(rung, cfgs, counts, exact_3m=not caps)
     a = ['--model', MODEL_OF[arm], '--cfg', json.dumps(cfgs[arm], sort_keys=True), '--data', data, '--steps', str(int(steps)), '--batch', str(BATCH),
-         '--lr', repr(lr if lr is not None else RUNGS[rung]['lr']), '--seed', str(seed), '--log-every', '500', '--final-eval', '--max-ans', str(max_ans)]
+         '--lr', repr(lr if lr is not None else rung_lr(rung, b2_extra)), '--seed', str(seed), '--log-every', '500', '--final-eval', '--max-ans', str(max_ans)]
     if caps:
         a += ['--caps', caps]
     if bf16:
@@ -318,9 +438,24 @@ def main(argv=None):
     ap.add_argument('--max-ans', type=int, default=8)
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--tkn', metavar='CAPS_JSON', help='print the 3M rung\'s TK and TKN configs, counts and --b2-extra strings under these caps (e.g. g8a/caps_g.json)')
-    ap.add_argument('--group', type=int, choices=(1, 2), default=1, help='with --b3: the table of B3 group 1 (b3) or group 2 (b3g2; use g8a/caps_b3g2.json)')
+    ap.add_argument('--group', type=int, choices=(1, 2), default=None, help='with --b3: the table of B3 group 1 (b3) or group 2 (b3g2; use g8a/caps_b3g2.json); default 1. With --noplug the default is 2 (the no-plug arms are B3G2 under caps_b3g2.json); an explicit --group 1 still gives group 1')
+    ap.add_argument('--noplug', metavar='CAPS_JSON', help='print the no-plug 30M and 100M counts with their breakdown (thinker, reader, writer, stop, ln_eg) under these caps (g8a/caps_b3g2.json), for every blocks override, plus the plain step control; --group defaults to 2 here (B3G2)')
     ap.add_argument('--b3', metavar='CAPS_JSON', help='print the B3 rung table (trained / frozen Gemma / whole at 3M, 10M, 30M, 100M) under these caps (g8a/caps_g.json = G1\'s, g8a/caps_b3.json = 2,000 letters)')
     a = ap.parse_args(argv)
+    a.group = a.group or (2 if a.noplug else 1)         # --group not given: 1, except --noplug (B3G2 caps) = 2
+    if a.noplug:
+        from custom_io.g8a import caps as CP
+        CP.apply(json.load(open(a.noplug)))
+        g, mod = a.group, 'b3g2' if a.group == 2 else 'b3'
+        for rung, blocks in (('30M', (None,)), ('100M', (None, 26, 30, 34, 37))):
+            for bl in blocks:
+                ex = dict({NOPLUG: True}, **({'blocks': bl} if bl else {}))
+                cfg = b3_cfg(rung, ex, g)
+                c = check_b3(rung, cfg, g)
+                bd = noplug_breakdown(mod, cfg)
+                pt = plain_cfg(rung, b2_cfg(rung, ex))
+                print(f'{rung} noplug {mod} blocks {cfg["blocks"]} mlp {cfg["mlp"]}: trained {c:,}  ' + '  '.join(f'{k} {v:,}' for k, v in bd.items()) + f'  | plain step control {n("plain_tf_steps_g", pt):,} ({pt["n_layers"]} layers, hidden {pt.get("hidden", 4 * pt["d_model"])}, {100 * (n("plain_tf_steps_g", pt) / c - 1):+.2f}% vs {mod})')
+        return
     if a.b3:
         from custom_io.g8a import caps as CP
         caps = CP.apply(json.load(open(a.b3)))
@@ -331,6 +466,10 @@ def main(argv=None):
             c = r['cfg']
             print(f'{r["rung"]:>5} {r["trained"]:>13,} {r["frozen_gemma"]:>13,} {r["whole"]:>13,}  d {c["d"]} heads {c["n_heads"]} blocks {c["blocks"]} mlp {c["mlp"]} n_loops {c["n_loops"]}'
                   + (f' writer_mlp {c["writer_mlp"]}' if 'writer_mlp' in c else '') + ('   (pool: ' + RUNGS[r['rung']]['pool'] + ')' if isinstance(RUNGS[r['rung']]['pool'], str) else ''))
+        if g2:
+            cfg = b3g2_cfg('3M')
+            bd = b3g2_breakdown(cfg)
+            print(format_b3g2_breakdown(bd, cfg))
         return
     if a.tkn:
         from custom_io.g8a import caps as CP
