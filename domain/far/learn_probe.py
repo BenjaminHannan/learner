@@ -6,6 +6,8 @@
   python3 -m domain.far.learn_probe build-l4      (L4: MARKS-L4; build-mode with the swap tool's join step on, seed 93601)
   python3 -m domain.far.learn_probe build-l5      (L5: MARKS-L5; training joins over five layouts; eval cells S5/S/HP/HO/HPO)
   python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5]
+        [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
+        [--guard kf --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -567,7 +569,7 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     return sets
 
 
-def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None):
+def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None, harm_fn=None, keep=False):
     from domain.mode import save_ckpt
     from domain.score import score
     t0 = time.time()
@@ -582,11 +584,16 @@ def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None)
         h = sum(hit[r['id']] for r in rs)
         cells[name] = {'n': len(rs), 'hits': h, 'pct': round(100.0 * h / len(rs), 2)}
     secs = round(time.time() - t0, 1)
+    harm = harm_fn(path, step) if harm_fn else None   # before the checkpoint is deleted
     with open(os.path.join(out, 'scores.jsonl'), 'a') as f:
         rec = {'arm': arm, 'step': step, 'cells': cells, 'secs': secs, 'train_secs': round(t_train, 1)}
         rec.update(extra or {})
+        if harm is not None:
+            rec['harm'] = harm
         f.write(json.dumps(rec) + '\n')
     print(f'{arm} step {step}: ' + ' '.join(f'{k} {v["pct"]:.1f}' for k, v in cells.items()) + f' (score {secs}s)', flush=True)
+    if keep:   # --keep-final: the last step's checkpoint stays
+        return
     os.remove(path)   # the checkpoint is only a vehicle for the scorer
     os.rmdir(os.path.dirname(path))
 
@@ -621,6 +628,20 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
+def check_guard_args(arm, guard, guard_src, energy=0.99, every=500):
+    """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work."""
+    if not guard:
+        return
+    if arm != 'LB':
+        raise SystemExit('--guard applies to arm LB only')
+    if guard != 'kf':
+        raise SystemExit(f'unknown guard {guard}')
+    if not guard_src or not os.path.isdir(guard_src):
+        raise SystemExit('--guard needs --guard-src DIR (the folder holding mainbrain/)')
+    if not 0 < energy < 1 or every < 1:
+        raise SystemExit('--guard-energy must be in (0,1) and --guard-every >= 1')
+
+
 def addon_size(arm, cons, rank=None, alpha=None):
     """(rank, alpha) for arm LA: the mode's constants unless overridden. LB has no add-on: overrides are refused."""
     if arm != 'LA':
@@ -630,8 +651,131 @@ def addon_size(arm, cons, rank=None, alpha=None):
     return (cons['addon_rank'] if rank is None else rank), (cons['addon_alpha'] if alpha is None else alpha)
 
 
+DEV_IN_DIST = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k/dev/in_dist.jsonl'
+GUARD_COMMIT = '5ca34e99938981a6448ba298a1a2127c468a46b0'
+GUARD_CONSTANTS = 'constants-kf99n-lr3e4.json'   # in the guard source folder's mainbrain/: the s200 sheet run's constants (diary 4096, check 512)
+DIARY_DATA = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k'
+DIARY_SEED = 200
+DIARY_LOG = '/mnt/project-files/main-brain/runs/sheet-s200-kf99n/log.jsonl'
+
+
+def make_harm_fn(parent, dev, out):
+    """-> f(ckpt_path, step) -> dict: old-skill harm of the checkpoint against the parent on the DEV in_dist rows (domain/harm.py).
+    The parent's hits are computed once and cached to OUT/parent-hits.json."""
+    from custom_io.data import load_rows
+    from domain import harm
+    rows = load_rows(dev)
+    cache = os.path.join(out, 'parent-hits.json')
+    t0 = time.time()
+    if os.path.exists(cache):
+        parent_hits = json.load(open(cache))['hits']
+    else:
+        parent_hits, acc = harm.in_dist_hits(parent, rows)
+        with open(cache, 'w') as f:
+            json.dump({'parent': parent, 'dev': dev, 'n': len(rows), 'exact': acc, 'ids': [r['id'] for r in rows], 'hits': parent_hits}, f)
+    print(f'harm: parent hits on {len(rows)} in_dist rows ({time.time() - t0:.1f}s)', flush=True)
+
+    def fn(path, step):
+        t = time.time()
+        hits, _ = harm.in_dist_hits(path, rows)
+        h = harm.harm_measure(parent_hits, hits, rows, 5.0, 1.5)
+        res = {'in_dist_a': round(h['in_dist_a'], 2), 'in_dist_b': round(h['in_dist_b'], 2), 'in_dist_drop': round(h['in_dist_drop'], 2),
+               'fired': h['fired'], 'passes': bool(h['passes']), 'n': len(rows),
+               'family_drops': {f: round(v['drop'], 1) for f, v in h['families'].items()}, 'secs': round(time.time() - t, 1)}
+        print(f'harm step {step}: in_dist {res["in_dist_a"]} -> {res["in_dist_b"]} (drop {res["in_dist_drop"]}), '
+              f'fired {res["fired"]}, {"PASS" if res["passes"] else "FAIL"}, n {res["n"]}', flush=True)
+        return res
+    return fn
+
+
+def load_guard(src):
+    """Put the guard source folder first on sys.path; -> (kf, gp) from it."""
+    import importlib
+    import sys
+    sys.path.insert(0, os.path.abspath(src))
+    for name in ('mainbrain.kf', 'mainbrain.gp', 'mainbrain'):
+        sys.modules.pop(name, None)
+    kf, gp = importlib.import_module('mainbrain.kf'), importlib.import_module('mainbrain.gp')
+    for mod in (kf, gp):
+        assert os.path.abspath(mod.__file__).startswith(os.path.abspath(src)), (mod.__file__, src)
+    return kf, gp
+
+
+def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_path=DIARY_LOG):
+    """The parent's own answers on training prompts, rebuilt as domain/mode.py main does (pool of the data folder's train file,
+    shuffled by Random(f'{seed}-diary'), the first `check` held out, then build_diary). Diary size/check from the guard
+    source's kf99n constants (the s200 sheet run's). Cached to OUT/diary.jsonl; prompts compared with the run's diary rows.
+    -> (diary rows, compare dict)."""
+    from domain import mode
+    cons = dict(json.load(open(os.path.join(src, 'mainbrain', GUARD_CONSTANTS))))
+    helps = sheet_tool.help()
+    ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
+    pool = []
+    with open(mode.guard(os.path.join(data, 'train.jsonl'))) as f:
+        for line in f:
+            p = json.loads(line)['prompt']
+            if len(p) <= mode.MAX_PROMPT and set(p) <= ctx['vchars']:
+                pool.append(p)
+    pool = list(dict.fromkeys(pool))
+    random.Random(f'{seed}-diary').shuffle(pool)
+    t0 = time.time()
+    events = []
+    diary, check, pos = mode.build_diary(m, pool, cons, ctx, lambda ev, **kw: events.append((ev, kw)), lambda **kw: None)
+    secs = round(time.time() - t0, 1)
+    with open(os.path.join(out, 'diary.jsonl'), 'w') as f:
+        for r in diary:
+            f.write(json.dumps(r) + '\n')
+    cmp = {'n': len(diary), 'check': len(check), 'scanned': pos, 'secs': secs, 'log': log_path}
+    if os.path.exists(log_path):
+        ref = [(r['prompt'], r['answer']) for r in load_jsonl(log_path) if r.get('event') == 'row' and r.get('kind') == 'diary' and r.get('day') == 0]
+        mine = [(r['prompt'], r['answer']) for r in diary]
+        rp, mp = {p for p, _ in ref}, {p for p, _ in mine}
+        ra = dict(ref)
+        cmp.update(ref_n=len(ref), same_prompt_set=len(rp & mp), only_mine=len(mp - rp), only_ref=len(rp - mp),
+                   same_position=sum(a[0] == b[0] for a, b in zip(ref, mine)),
+                   same_answer_on_shared=sum(ra.get(p) == a for p, a in mine if p in rp))
+    else:
+        cmp['ref_n'] = None
+    with open(os.path.join(out, 'diary-compare.json'), 'w') as f:
+        json.dump(cmp, f, indent=1)
+    print(f'diary: built {len(diary)} rows (check {len(check)}, scanned {pos}) in {secs}s; vs {log_path}: {cmp}', flush=True)
+    return diary, cmp
+
+
+class Guarded:
+    """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
+    wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
+
+    def __init__(self, kf, gp, m, diary, energy, make_base):
+        self.kf, self.gp, self.m, self.diary, self.energy = kf, gp, m, diary, energy
+        self.measure_secs, self.measures = 0.0, 0
+        F = self.measure()
+        self.frozen = gp.freeze_unprojected(m)
+        self.base = make_base()   # after freezing
+        self.opt = kf.KFOptimizer(m, self.base, F)
+
+    def measure(self):
+        t = time.time()
+        for p in self.m.parameters():
+            p.requires_grad_(True)
+        F, info = self.kf.factors(self.kf.kfac_stats(self.m, self.diary, norm='example'), self.energy)
+        self.gp.freeze_unprojected(self.m)   # kfac_stats switched to eval mode and set requires_grad
+        self.m.train()
+        self.info = info
+        self.measures += 1
+        dt = time.time() - t
+        self.measure_secs += dt
+        print(f'guard: measured F #{self.measures} in {dt:.1f}s; mean free share {np.mean([v["free_share"] for v in info.values()]):.4f}', flush=True)
+        return F
+
+    def refresh(self):
+        self.opt = self.kf.KFOptimizer(self.m, self.base, self.measure())
+        return self.opt
+
+
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
-          addon_rank=None, addon_alpha=None):
+          addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
+          guard_every=500, guard_src=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -642,6 +786,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     cons = json.load(open(CONST_PATH))
     rank, alpha = addon_size(arm, cons, addon_rank, addon_alpha)
     extra = {'addon_rank': rank, 'addon_alpha': alpha}
+    harm_steps = set(harm_steps)
+    assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
+    check_guard_args(arm, guard, guard_src, guard_energy, guard_every)
     os.makedirs(out, exist_ok=True)
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
@@ -655,6 +802,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     rows, drops = make_rows(m, train_rows, cons)
     print(f'{arm}: {len(rows)} of {len(train_rows)} rows usable; dropped {dict(drops)}', flush=True)
     ds = Dataset(rows, m.vocab)
+    harm_fn = make_harm_fn(parent, dev, out) if harm_steps else None
+    guarded = None
     if arm == 'LA':
         addon = AddOn(m, rank, alpha, SEED)
         addon.on = True
@@ -665,13 +814,28 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         addon = None
         params = list(m.parameters())
         assert all(p.requires_grad for p in params)
-        opt = make_opt(m, cons['lr'])
-        print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
+        if guard:
+            kf, gp = load_guard(guard_src)
+            diary, _ = build_parent_diary(m, ck, guard_src, out)
+            m.eval()
+            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']))
+            opt = guarded.opt
+            params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
+            extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=GUARD_COMMIT,
+                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary),
+                         guard_frozen=len(guarded.frozen))
+            print(f'LB+kf guard: trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
+        else:
+            opt = make_opt(m, cons['lr'])
+            print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
     torch.manual_seed(SEED)   # ans_drill draws from the model's own RNG in train mode
     t_train, t_seg, losses = 0.0, time.time(), []
     steps = set(steps)
+    last = max(steps)
+    ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else extra
+    hf = lambda u: harm_fn if u in harm_steps else None
     if 0 in steps:
-        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, extra)
+        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, ex(), hf(0), keep_final and last == 0)
     t_seg = time.time()
     for u, ni in enumerate(batch_order(len(rows), cons['batch'], updates, SEED), 1):
         t0 = time.time()
@@ -690,11 +854,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             print(f'{arm} update {u}: {time.time() - t_seg:.1f}s for last {k} ({(time.time() - t_seg) / k:.3f} s/update), '
                   f'loss {np.mean(losses[-k:]):.4f}', flush=True)
             t_seg = time.time()
+        if guarded and u % guard_every == 0 and u < updates:   # re-measure F on the current weights; same base AdamW and state
+            opt = guarded.refresh()
         if u in steps:
-            score_step(ck, m, addon, sets, out, arm, u, t_train, threads, extra)
+            score_step(ck, m, addon, sets, out, arm, u, t_train, threads, ex(), hf(u), keep_final and u == last)
             t_seg = time.time()
     m.eval()
-    print(f'{arm} done: {updates} updates, train {t_train:.1f}s ({t_train / max(updates, 1):.3f} s/update)', flush=True)
+    print(f'{arm} done: {updates} updates, train {t_train:.1f}s ({t_train / max(updates, 1):.3f} s/update)'
+          + (f'; guard measuring {guarded.measure_secs:.1f}s in {guarded.measures} measures' if guarded else ''), flush=True)
     return t_train / max(updates, 1)
 
 
@@ -711,6 +878,13 @@ def main(argv=None):
     a.add_argument('--addon-rank', type=int, default=None, help="arm LA only: add-on rank (default: the mode's constant)")
     a.add_argument('--addon-alpha', type=float, default=None, help="arm LA only: add-on alpha (default: the mode's constant)")
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
+    a.add_argument('--harm-steps', default='', help='comma list of steps (among --steps) at which to measure old-skill harm against the parent')
+    a.add_argument('--dev', default=DEV_IN_DIST, help='DEV in_dist.jsonl for the harm measure')
+    a.add_argument('--keep-final', action='store_true', help="do not delete the last step's checkpoint")
+    a.add_argument('--guard', choices=['kf'], default=None, help='arm LB only: the main-brain K-FAC guard')
+    a.add_argument('--guard-energy', type=float, default=0.99)
+    a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
+    a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a = a.parse_args(argv)
     if a.stage == 'build':
         build()
@@ -724,9 +898,12 @@ def main(argv=None):
         build_l4()
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
+        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work
         addon_size(a.arm, {}, a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
-              train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha)
+              train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha,
+              harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
+              guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src)
 
 
 if __name__ == '__main__':

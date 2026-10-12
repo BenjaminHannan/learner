@@ -284,3 +284,97 @@ def test_addon_override_reaches_addon(tmp_path, monkeypatch):
             L.train('LA', 1, 1, str(tmp_path / str(len(kw))), [0], **kw)
         cons = __import__('json').load(open(M.CONST_PATH))
         assert seen == [want or (cons['addon_rank'], cons['addon_alpha'])]
+
+
+def test_guard_args_refused():
+    with pytest.raises(SystemExit):
+        L.check_guard_args('LA', 'kf', '/tmp')
+    with pytest.raises(SystemExit):
+        L.check_guard_args('LB', 'kf', None)
+    with pytest.raises(SystemExit):
+        L.check_guard_args('LB', 'kf', '/nonexistent-dir')
+    L.check_guard_args('LB', None, None)   # no guard: nothing to check
+    L.check_guard_args('LB', 'kf', '/tmp')
+    with pytest.raises(SystemExit):
+        L.main(['train', '--arm', 'LA', '--out', 'x', '--guard', 'kf', '--guard-src', '/tmp'])
+
+
+def test_new_flags_default_off(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
+    L.main(['train', '--arm', 'LB', '--out', 'x'])
+    assert seen['harm_steps'] == [] and seen['keep_final'] is False and seen['guard'] is None
+    L.main(['train', '--arm', 'LB', '--out', 'x', '--harm-steps', '1000,2000', '--keep-final', '--guard', 'kf',
+            '--guard-every', '250', '--guard-src', '/tmp'])
+    assert seen['harm_steps'] == [1000, 2000] and seen['keep_final'] and seen['guard'] == 'kf' and seen['guard_every'] == 250
+    assert seen['dev'] == L.DEV_IN_DIST and seen['guard_energy'] == 0.99
+
+
+def test_harm_steps_must_be_scored_steps(tmp_path):
+    pytest.importorskip('torch')
+    with pytest.raises(AssertionError):
+        L.train('LB', 5, 1, str(tmp_path / 'o'), [0, 5], harm_steps=[3])
+
+
+def test_score_step_harm_and_keep(tmp_path, monkeypatch):
+    import domain.mode as M
+    import domain.score as S
+    monkeypatch.setattr(M, 'save_ckpt', lambda ck, m, path, addon=None: (os.makedirs(os.path.dirname(path), exist_ok=True), open(path, 'w').close()))
+    monkeypatch.setattr(S, 'score', lambda path, rows, name: {'rows': [{'id': r['id'], 'hit': 1} for r in rows]})
+    m = type('X', (), {'eval': lambda s: s})()
+    sets = {'c': [{'id': 'a'}, {'id': 'b'}]}
+    calls = []
+    hf = lambda path, step: (calls.append((os.path.exists(path), step)), {'in_dist_drop': 0.5, 'fired': [], 'passes': True, 'n': 2})[1]
+    L.score_step({}, m, None, sets, str(tmp_path), 'LB', 1, 0.0, 1, {'k': 1}, hf, False)
+    L.score_step({}, m, None, sets, str(tmp_path), 'LB', 2, 0.0, 1, {'k': 1}, None, True)
+    recs = [__import__('json').loads(x) for x in open(tmp_path / 'scores.jsonl')]
+    assert calls == [(True, 1)]                              # harm sees the checkpoint before it is deleted
+    assert recs[0]['harm']['passes'] and 'harm' not in recs[1]
+    assert not (tmp_path / 'step_1').exists() and (tmp_path / 'step_2' / 'checkpoint.pt').exists()
+
+
+def test_guarded_swaps_factors_keeps_base(monkeypatch):
+    class Base:
+        pass
+
+    class KF:
+        n = 0
+
+        class KFOptimizer:
+            def __init__(self, m, base, F):
+                self.base, self.F = base, F
+
+        @staticmethod
+        def kfac_stats(m, diary, norm=None):
+            assert norm == 'example'
+            return {}
+
+        @staticmethod
+        def factors(stats, energy):
+            KF.n += 1
+            return {'gen': KF.n}, {'l': {'free_share': 0.5}}
+
+    class GP:
+        frozen = 0
+
+        @staticmethod
+        def freeze_unprojected(m):
+            GP.frozen += 1
+            return ['x']
+
+    class M:
+        mode = []
+
+        def parameters(self):
+            return iter([])
+
+        def train(self, on=True):
+            self.mode.append(on)
+
+    bases = []
+    g = L.Guarded(KF, GP, M(), [], 0.99, lambda: bases.append(Base()) or bases[-1])
+    first = g.opt
+    assert first.F == {'gen': 1} and first.base is bases[0] and GP.frozen == 2   # measured, froze, froze again after kfac_stats
+    new = g.refresh()
+    assert new is not first and new.base is first.base and new.F == {'gen': 2} and len(bases) == 1 and g.measures == 2
+    assert M.mode[-1] is True   # training mode restored
