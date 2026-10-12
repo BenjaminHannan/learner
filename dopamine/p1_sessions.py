@@ -1,7 +1,8 @@
 """P1 "session sheets": offline test of proactive helping (DESIGN-AND-MARKS-2026-10-10.md, B12; marks sealed there).
 
   python -m dopamine.p1_sessions cache --seed 200 --ckpt PATH --out DIR [--threads 2] [--smoke]
-  python -m dopamine.p1_sessions sim --dir DIR
+  python -m dopamine.p1_sessions sim --dir DIR [--helper menu|top1] [--tag P1]
+P2 (B13): cache --sealed-seed 93003, sim --helper top1 --tag P2 (HELPER's V judges only the next-need head's top candidate).
 
 A scripted person asks 2-4 sheet requests per session on one grid (3-4 rows, values 1-99). After each request the frozen
 model may add one unasked "extra" from a menu of candidate formulas built on the same cells. Rewards: wanted (equals the
@@ -119,7 +120,7 @@ def make_session(person_seed, index):
     return {'grid': grid, 'L': L, 'requests': reqs, 'menus': menus}
 
 
-def all_sessions(smoke=False):
+def all_sessions(smoke=False, sealed_seed=SEALED_SEED):
     """[(split, day, index_in_split, session)]; split 0 training (days 1..6), 1 sealed (day 0)."""
     days, per, sealed = (2, 10, 20) if smoke else (DAYS, PER_DAY, N_SEALED)
     out = []
@@ -127,7 +128,7 @@ def all_sessions(smoke=False):
         for j in range(per):
             out.append((0, d + 1, d * per + j, make_session(TRAIN_SEED, d * per + j)))
     for j in range(sealed):
-        out.append((1, 0, j, make_session(SEALED_SEED, j)))
+        out.append((1, 0, j, make_session(sealed_seed, j)))
     return out
 
 
@@ -149,7 +150,7 @@ def do_cache(a):
     from dopamine.motivator import reader_features
     out = a.out
     os.makedirs(out, exist_ok=True)
-    sess = all_sessions(a.smoke)
+    sess = all_sessions(a.smoke, a.sealed_seed)
     log(f'{len(sess)} sessions built')
     pid, prompts, value = {}, [], {}
 
@@ -207,7 +208,7 @@ def do_cache(a):
                         round_sess=np.array(r_sess), round_idx=np.array(r_idx), round_cur=np.array(r_cur),
                         round_next=np.array(r_next), cand_ptr=np.array(c_ptr), cand_pid=np.array(c_pid),
                         cand_kind=np.array(c_kind), cand_wanted=np.array(c_wanted, np.int8),
-                        seed=np.array(a.seed), ckpt=np.array(a.ckpt), smoke=np.array(bool(a.smoke)),
+                        seed=np.array(a.seed), ckpt=np.array(a.ckpt), smoke=np.array(bool(a.smoke)), sealed_seed=np.array(a.sealed_seed),
                         code_sha256=np.array(code_sha()))
     json.dump({'seed': a.seed, 'ckpt': a.ckpt, 'smoke': a.smoke, 'code_sha256': code_sha(), 'feature_secs': tf, 'answer_secs': tg,
                'n_candidate_answers': len(cands), 'n_prompts': len(prompts)}, open(os.path.join(out, 'cache_info.json'), 'w'))
@@ -239,7 +240,7 @@ def mlp(kind, seed):
     return make_pipeline(StandardScaler(), cls(hidden_layer_sizes=(64,), alpha=1e-3, random_state=seed, max_iter=200))
 
 
-def simulate(Z, ckpt_seed=0):
+def simulate(Z, helper='menu'):
     from sklearn.exceptions import ConvergenceWarning
     warnings.simplefilter('ignore', ConvergenceWarning)
     F, correct = Z['feats'], Z['correct']
@@ -294,6 +295,11 @@ def simulate(Z, ckpt_seed=0):
                 explore = (not sealed) and rs['HELPER'].rand() < 0.10
                 if explore:
                     hp = rr[np.argmax(pn_all[rr])]
+                elif v_model is not None and helper == 'top1':   # P2: V judges only N's top candidate
+                    c0 = rr[np.argmax(pn_all[rr])]
+                    Xv = np.concatenate([[[pn_all[c0]]], F[cpid[[c0]]], onehot(ridx[[r]])], 1)
+                    if v_model.predict(Xv)[0] > 0:
+                        hp = c0
                 elif v_model is not None:
                     Xv = np.concatenate([pn_all[rr][:, None], F[cpid[rr]], onehot(ridx[[r] * len(rr)])], 1)
                     vv = v_model.predict(Xv)
@@ -357,9 +363,11 @@ def boot(diff, n=10000, seed=0):
 def do_sim(a):
     Z = load_cache(a.dir)
     t = time.time()
-    arms, stats, L = simulate(Z)
+    arms, stats, L = simulate(Z, a.helper)
+    T = a.tag
     S = len(L)
-    res = {'n_sealed_sessions': S, 'model_seed': int(Z['seed']), 'ckpt': str(Z['ckpt']),
+    res = {'test': T, 'helper_rule': a.helper, 'n_sealed_sessions': S, 'model_seed': int(Z['seed']), 'ckpt': str(Z['ckpt']),
+           'sealed_seed': int(Z['sealed_seed']) if 'sealed_seed' in Z else SEALED_SEED,
            'smoke': bool(Z['smoke']) if 'smoke' in Z else None,
            'cache_code_sha256': str(Z['code_sha256']) if 'code_sha256' in Z else None,
            'mean_effort': {k: float(v.mean()) for k, v in arms.items()},
@@ -370,10 +378,10 @@ def do_sim(a):
         res[name] = {'diff': float(d.mean()), 'ci95': [lo, hi]}
     r1, r2 = res['HELPER-NONE'], res['HELPER-EAGER']
     lo1, hi1 = r1['ci95']
-    res['P1-1'] = {'verdict': 'PASS' if (r1['diff'] <= -0.05 and hi1 < 0) else
+    res[f'{T}-1'] = {'verdict': 'PASS' if (r1['diff'] <= -0.05 and hi1 < 0) else
                    ('PROVED WRONG (on this seed)' if lo1 > 0 else 'neither pass nor wrong'),
                    'rule': 'pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed'}
-    res['P1-2'] = {'verdict': 'PASS' if (r2['diff'] <= -0.10 and r2['ci95'][1] < 0) else
+    res[f'{T}-2'] = {'verdict': 'PASS' if (r2['diff'] <= -0.10 and r2['ci95'][1] < 0) else
                    ('wrong on this seed (diff >= 0; proved wrong only if also on the other seed)' if r2['diff'] >= 0
                     else 'neither pass nor wrong'),
                    'rule': 'pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds'}
@@ -388,15 +396,16 @@ def do_sim(a):
     res['p1_sessions_py_sha256'] = code_sha()
     res['sim_secs'] = round(time.time() - t, 1)
     json.dump(res, open(os.path.join(a.dir, 'RESULT.json'), 'w'), indent=1)
-    md = [f"# P1 session sheets, model seed {res['model_seed']}", '', f"checkpoint: {res['ckpt']}",
+    md = [f"# {T} session sheets, model seed {res['model_seed']}, helper rule {a.helper}", '', f"checkpoint: {res['ckpt']}",
+          f"sealed person seed: {res['sealed_seed']}",
           f"sealed sessions: {S}, mean requests per session {res['mean_L']:.3f}", '',
           '| Arm | mean effort (person actions / session) |', '|---|---|']
     md += [f'| {k} | {v:.4f} |' for k, v in res['mean_effort'].items()]
     md += ['', '| Paired difference | mean | 95% interval (10,000 resamples, seed 0) |', '|---|---|---|']
     for n in ('HELPER-NONE', 'HELPER-EAGER'):
         md.append(f"| {n} | {res[n]['diff']:+.4f} | [{res[n]['ci95'][0]:+.4f}, {res[n]['ci95'][1]:+.4f}] |")
-    md += ['', f"P1-1: {res['P1-1']['verdict']}  ({res['P1-1']['rule']})",
-           f"P1-2: {res['P1-2']['verdict']}  ({res['P1-2']['rule']})", '',
+    md += ['', f"{T}-1: {res[f'{T}-1']['verdict']}  ({res[f'{T}-1']['rule']})",
+           f"{T}-2: {res[f'{T}-2']['verdict']}  ({res[f'{T}-2']['rule']})", '',
            f"ORACLE saving per session: {res['ORACLE_saving_per_session']:.4f}", '',
            '| Arm | extras/session | wanted | right | unwanted | extras on last request |', '|---|---|---|---|---|---|']
     for k, v in res['arms'].items():
@@ -420,8 +429,11 @@ def main(argv=None):
     c.add_argument('--out', required=True)
     c.add_argument('--threads', type=int, default=2)
     c.add_argument('--smoke', action='store_true')
+    c.add_argument('--sealed-seed', type=int, default=SEALED_SEED)
     s = sub.add_parser('sim')
     s.add_argument('--dir', required=True)
+    s.add_argument('--helper', choices=['menu', 'top1'], default='menu')
+    s.add_argument('--tag', default='P1')
     a = ap.parse_args(argv)
     if a.cmd == 'cache':
         do_cache(a)
