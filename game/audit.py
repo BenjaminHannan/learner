@@ -4,7 +4,7 @@
 
 Checks every 'row' event. A game row (kind 'game'): world_seed is not sealed and not a quiz world of this run
 (practice_seed(seed, 0, i)); day >= 1 and world_seed == practice_seed(seed, day, i) for some i < episodes_per_day;
-unlock_step - credit_window < step <= unlock_step (rows with kept_by 'guess' or 'pg' have no unlock and skip this one); steps == []; answer is one of the 17 words; source is own, explore
+unlock_step - credit_window < step <= unlock_step (rows with kept_by 'guess', 'pg' or 'distil' have no unlock and skip this one); steps == []; answer is one of the 17 words; source is own, explore
 or invalid. A diary row has source 'diary'. Any other row is a problem. The constants sha256s in the start event must
 equal the files' sha256 now. proved_wrong = a sealed or quiz world in a training row, or a changed constants file.
 """
@@ -69,7 +69,7 @@ def audit_events(events, domain_sha=None, game_sha=None):
                                                               if day < 100):
                 problems.append(f'{rid}: world {w} is not a practice world of day {day}')
             t, u = r.get('step'), r.get('unlock_step')
-            if r.get('kept_by') in ('guess', 'pg'):
+            if r.get('kept_by') in ('guess', 'pg', 'distil'):
                 if t is None:
                     problems.append(f'{rid}: guess row has no step')
             elif t is None or u is None or not (u - window < t <= u):

@@ -32,7 +32,7 @@ A near-miss counts as a pass for PC-1 only within 0.05. Two seeds = a screen; a 
 - PC-1 proved wrong while PC-2 passes: bigger steps alone do not help; the bottleneck is elsewhere (credit or exploration).
 - PC-2 proved wrong: the distilled add-on still takes small steps; look at the add-on's capacity (rank 8) before anything else.
 
-## A19b (6:22 AM ET 10-12, before any GW-PC run): the API judge's marks replace the table above
+## A19b (6:13 AM ET 10-12, before any GW-PC run): the API judge's marks replace the table above
 The judge (Fable 5.1, api-opinions/answers/judge-1-game-world.md sec. 4, written before GW-P8 read out) set marks for this same
 test; they are adopted so the marks do not come from the person who saw GW-P8. Distillation details stay as above.
 | Mark | Pass | Proved wrong |

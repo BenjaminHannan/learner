@@ -2,7 +2,7 @@
 
 Plan: /mnt/project-files/game-world/PLAN-AND-MARKS-2026-10-10.md.
 
-  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample] [--keep-awake-only] [--keep window|guess] [--night copy|pg]
+  python -m game.mode --parent CKPT --out DIR --seed N [--smoke] [--data DIR] [--threads N] [--full-model] [--picker greedy|sample] [--quiz-picker top|sample] [--keep-awake-only] [--keep window|guess] [--night copy|pg] [--start t0|distil]
 
 Each night: play 64 practice worlds, keep the steps just before each unlock (the game is the checker), train the add-on
 on them mixed with the model's own old answers (diary), undo if old answers drifted, then the model's own quiz.
@@ -25,7 +25,7 @@ from custom_io.data import DEFAULT_DATA, MAX_PROMPT
 from custom_io.models import load_model
 from domain import mode as dm
 from domain import route
-from game import crafter_text, guess, pg, play
+from game import crafter_text, distil, guess, pg, play
 
 FAMILY = 'game_crafter'
 SMOKE = dict(episodes_per_day=4, quiz_worlds=2, episode_cap=60, diary=128, check=64, max_nights=2)
@@ -230,6 +230,8 @@ def parse_args(argv=None):
                    help='window: the 8-move window before each first unlock; guess: a learned value guesser with RND curiosity picks the same number of moves')
     a.add_argument('--night', default='copy', choices=['copy', 'pg'],
                    help='copy: the night trains on the kept rows plus diary (default); pg: PPO on every awake move of the day by its advantage (needs --keep guess --picker sample)')
+    a.add_argument('--start', default='t0', choices=['t0', 'distil'],
+                   help='t0: play at the fitted T0 (default); distil: first distil the T0 policy into the add-on, then play at T = 1 (needs --night pg)')
     a.add_argument('--nights', type=int, default=None,
                    help='play exactly this many nights; the stop rule is still logged but no longer ends the run')
     a.add_argument('--full-model', action='store_true', help='diagnostic: no add-on, the whole model trains')
@@ -241,6 +243,7 @@ def main(argv=None):
     if a.night == 'pg':
         assert a.keep == 'guess' and a.picker == 'sample', '--night pg needs --keep guess and --picker sample'
         assert not a.full_model, '--night pg trains the add-on only'
+    assert a.start == 't0' or (a.night == 'pg' and not a.full_model), '--start distil needs --night pg and the add-on'
     a.out = os.path.abspath(a.out)
     torch.set_num_threads(a.threads)
     T, t_run = Counter(), time.time()
@@ -256,7 +259,7 @@ def main(argv=None):
     commit, dirty = dm.git_info()
     log = dm.Log(a.out)
     parent = dm.guard(a.parent)
-    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, fixed_nights=a.nights, domain_constants=json.loads(draw),
+    log('start', parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, start=a.start, fixed_nights=a.nights, domain_constants=json.loads(draw),
         game_constants=gcons, domain_constants_sha256=dsha, game_constants_sha256=gsha, cons_used=cons,
         smoke_updates=SMOKE_UPDATES if a.smoke else None, data=a.data, git_commit=commit, git_dirty_files=dirty)
     write_row = lambda **kw: log.write('row', **kw)
@@ -289,12 +292,38 @@ def main(argv=None):
     guesser = guess.Guesser(a.seed) if a.keep == 'guess' else None
     quiz_picker = a.quiz_picker if a.picker == 'sample' else 'greedy'
 
+    game_steps = 0
     temp = temp_start = 1.0   # the policy temperature: 1 for every run but --night pg (addendum A13)
     if a.night == 'pg':
         # order chosen: harvest views from the first quiz worlds at T = 1, fit T0, then play the real night-0 quiz at T0
         temp, tinfo = start_temp(m, a.seed, cons, quiz_picker)
         temp_start = temp
         log('temp', **tinfo)
+        if a.start == 'distil':
+            t = time.time()
+            eps = play_worlds(m, a.seed, distil.DISTIL_DAY, cons['episodes_per_day'], cons, log_steps=True, picker=a.picker, temp=temp)
+            T['play'] += time.time() - t
+            mp = os.path.join(a.out, 'moves', 'distil_day.jsonl.gz')
+            log('moves', path=mp, lines=write_moves(mp, eps), kind='distil')
+            game_steps += sum(e['length'] for e in eps)
+            flat = [(e, s) for e in eps for s in range(len(e['steps']))]
+            flat = flat[::max(len(flat) // distil.DISTIL_VIEWS, 1)][:distil.DISTIL_VIEWS]
+            views = [e['steps'][s][0] for e, s in flat]
+            for k, (e, s) in enumerate(flat):
+                write_row(day=distil.DISTIL_DAY, kind='game', id=f'distil_{k}', source=e['steps'][s][2], prompt=views[k],
+                          answer=e['steps'][s][1], steps=[], world_seed=e['seed'], act_seed=e['act_seed'], step=s,
+                          unlock=None, unlock_step=None, kept_by='distil')
+            dstats, _ = distil.run(m, addon, views, distil.targets(m, views, temp), seed=a.seed * 1000 + 999)
+            T['distil'] += dstats['seconds']
+            log('distil', **dstats)
+            temp = temp_start = 1.0   # the flatness now lives in the add-on
+            t = time.time()
+            dck = os.path.join(a.out, 'night_0', 'checkpoint.pt')
+            dm.save_ckpt(ck, m, dck, addon)
+            with open(os.path.join(a.out, 'night_0', 'policy_temp.json'), 'w') as f:
+                json.dump(dict(T=temp), f)
+            T['save'] += time.time() - t
+            log('distil_checkpoint', path=dck)
 
     def quiz(night):
         t = time.time()
@@ -307,7 +336,7 @@ def main(argv=None):
         log('quiz', night=night, progress=round(prog, 3), unlock_share=st['unlock_share'], mean_length=st['mean_length'])
         return prog, st['steps']
 
-    hist, quiz_steps, game_steps, rows_per_night = [], 0, 0, []
+    hist, quiz_steps, rows_per_night = [], 0, []
     p0, s0 = quiz(0)
     hist.append(p0)
     quiz_steps += s0
@@ -429,7 +458,7 @@ def main(argv=None):
     else:
         log('gate', skipped='full-model run has no add-on')
     T['gate'] += time.time() - t
-    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, temp_start=temp_start, temp_final=temp, nights_run=night, stop_reason=stop, fixed_nights=a.nights,
+    summary = dict(parent=parent, seed=a.seed, smoke=a.smoke, full_model=a.full_model, picker=a.picker, quiz_picker=a.quiz_picker, keep_awake_only=a.keep_awake_only, keep=a.keep, night=a.night, start=a.start, temp_start=temp_start, temp_final=temp, nights_run=night, stop_reason=stop, fixed_nights=a.nights,
                    quiz_history=[round(p, 3) for p in hist], rows_per_night=rows_per_night, game_steps=game_steps,
                    quiz_steps=quiz_steps, final_checkpoint=last_ck, domain_constants_sha256=dsha, game_constants_sha256=gsha,
                    git_commit=commit, seconds={k: round(v, 1) for k, v in T.items()}, total_seconds=round(time.time() - t_run, 1))
