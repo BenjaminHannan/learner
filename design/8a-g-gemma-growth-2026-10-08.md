@@ -637,3 +637,30 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   no-plug 8aFC2 and c30s queues live, marker "eg check cpu pre ok (no plug)". The first try failed on the answer-timer selftest
   (fixed as above) and changed nothing live. Old group 2 code with the no-plug files: refused at g2check ("this job.py has no
   --noplug"). Gemma proof failing: refused after every other check; both new folders renamed `.failed-<stamp>`, live untouched.
+
+## 32. Addendum AA (2026-10-11, 9:35 PM ET, before any run): does size help more when practice rows grow with it? (test DS)
+
+- **Why.** Ben, 9:16 PM ET 10-11, on G1's first 10M number (G-B2 seed 400: 73.01 at 3M -> 74.65 at 10M, +1.64): "that's not
+  scaling to the degree that I wante dit to". Beating the plain model's gain is not enough; size has to clearly lift our score.
+- **What the 3M seed 400 results show (shown, `claude/8a-g-pc-results` 532ebdc, G-B2 RESULT.json):** 2,560 of the 6,040 pooled-5
+  rows are in families the 3M model already gets 40/40; of the 1,630 rows it misses, 836 are in the `variant` file (known skills,
+  new wordings; 484/1,320 = 36.7%). 3M and 10M train on the same pool (`p10-rung30-s400-a64`: 1,418,702 rows, 60.0M pieces, of
+  which 501,456 skills rows), 24,000 updates of 256 rows, so 4.33 passes; 259.9M pieces seen at both sizes.
+- **Explanations (suggested, untested):** (1) the score left to gain sits mostly in new wordings, which the same rows cannot
+  teach at any size; (2) the 10M has 3x the parameters and no more rows (6 pool pieces per parameter against 17 at 3M);
+  (3) the 10M was grown in depth only (2 -> 8 blocks, width 256, the 3M's lr), and 8a's probe hinted width grows better
+  (+1.0 vs +0.2, two seeds). This test changes (2) only.
+- **The one change.** G-B2, seed 400, at 3M and at 10M, trained on the 30M rung's pool (`p30-rung30-s400-a64`: own_rung 30, all
+  72M own pieces, 190M pieces, nested: every row of the 10M pool is in it) instead of the 10M pool. Everything else as G1: code
+  612f5c5b01 + the caps fix, caps_g.json, shapes, lr, accumulation (B2 3M 4, 10M 16), and **24,000 updates of 256 rows** (the
+  same compute; each row is drawn about 1.4 times instead of 4.3). The job needs a pool-rung switch (G1's job.py builds the pool
+  of the model's own rung); that patch goes in a new source folder, G1's src-8ag is not touched.
+- **Marks (fixed now, seed 400; d_big = 10M - 3M pooled-5, both on the 30M pool; G1's d = +1.64):**
+  - **Pass:** d_big >= +3.3 (double G1's gain), with chain-5 >= 99 at both sizes.
+  - **Proved wrong** (for "more practice rows let size help"): d_big < +2.0. Then the next fix is new kinds of practice
+    (wordings, skills), not more rows of the same kinds.
+  - **Between:** run the seed 401 pair before deciding.
+  - **Reported:** 3M on the 30M pool minus G1's 3M (what more rows give at 3M); per-file gains, the `variant` file above all;
+    thinker-off scores; hours.
+- **Order on the PC (default taken, no OK needed):** the 3M run first in the post-G1 chain (about 6.5 h), the 10M run (about
+  40 h at G1's 6.24 s per update) after fc100 and the talker's first run (G2f). Not part of G1's readout.
