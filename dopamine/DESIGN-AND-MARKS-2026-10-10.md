@@ -720,3 +720,21 @@ MLP regressor and seeds, same 10% exploration on training days only, same per-da
 plays session by session, because its reaction counts depend on its own earlier actions, and its value inputs gain the
 four counts and "thanks" last round. With the tool every shown extra is right, so "corrected" stays 0 for both arms. The
 N head's next-need guesses are cached once per seed in `nhead.npz` (same fits as H-1). Run with BLAS threads = 1.
+
+**B22. BQ result (3:55 PM ET 10-12): between the bars, so the sealed retry at 128 problems per night runs.** Statistic
+as sealed: mean sealed near (sheet.v2, 420 questions, 7 scored kinds) over nights 6-8, INFORMED - EVEN per parent.
+| Parent | INFORMED near n6/n7/n8 (mean) | EVEN near n6/n7/n8 (mean) | INFORMED - EVEN | Verdict |
+|---|---|---|---|---|
+| T1SDR s200 | 24.76 / 24.29 / 28.10 (25.72) | 15.24 / 17.38 / 21.90 (18.17) | +7.54 | >= +5 |
+| T1SDR s201 | 27.62 / 26.90 / 28.10 (27.54) | 17.86 / 25.95 / 24.05 (22.62) | +4.92 | between (+2, +5) |
+- Not a PASS (s201 is 0.08 short of +5.0, less than one question's worth), not NO ROOM (neither <= +2.0). The sealed
+  rule says one retry at 128 problems per night with the same marks; started 3:52 PM ET on both parents
+  (`dopamine/results/bq/run_bq128.sh`, run dirs `-dp128`). The near miss does not change the rule.
+- Reported. Per kind (near, parent -> night 8), INFORMED vs EVEN: s200 MAX 68.3 vs 41.7, SUM 23.3 vs 11.7, PRODUCT 18.3
+  vs 8.3, MIN 48.3 vs 60.0; s201 division 25.0 vs 10.0, PRODUCT 25.0 vs 16.7, MAX 63.3 vs 53.3, MIN 51.7 vs 58.3. DM3 old
+  skills (in_dist, parent -> night 8): s200 90.22 -> 82.65 INFORMED, 84.34 EVEN; s201 90.88 -> 83.16 INFORMED, 81.69
+  EVEN (all arms lose 6-9 points; the 3M add-on is off outside its tool, so this is the domain mode's known in_dist cost,
+  not a BQ effect). Seconds per night (s201, uncontended): about 605 INFORMED, 475 EVEN.
+- Reading (suggested): at 256 per night the even arm spends 30% of its budget on 3 kinds the panel does not score and
+  still gets two thirds of the way; the headroom a perfect practice picker could buy is about +5 to +7.5 points, which
+  is real but at the edge of what one run per arm can separate. Results: `dopamine/results/bq/`.
