@@ -703,3 +703,31 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   addendum before it runs.
 - **Flagged for Ben, not changed:** both answers warn that the G2f writer reads only the thinker's vectors (no view of the question
   or the tape), which Ben's rule 2 requires. G2f's score is the first evidence.
+- **Install (staged 10:30 PM ET):** `results/8a-g/pc-job-cards/wide/` holds `configs.py` (G1's file plus the `10MW` row only,
+  sha 4d273a64...), queue `8aWIDE-pc.txt`, `widecheck.py` (CPU, meta device: 10,173,509 trained, 448 wide, 2 blocks, 12 rounds; peak
+  0.3 GB), card `wide.template.md` (spill rule accum 8 -> 16 -> 32), and `install_wide.ps1`: copies src-8ag's custom_io to src-wide
+  (G1's caps.py, caps_g.json and configs.py hashes checked first; src-8ag is never changed), runs widecheck, then writes
+  `WORK\insert\20-wide.txt` (needs waiter v3e). install_rr.ps1 calls it last. **Accumulation 8, not 16 (suggested):** per micro-batch,
+  WIDE's activations are about 0.9-1.05x those of the deep 10M at 16 (32 rows x 2 blocks x 448 against 16 x 8 x 256), which ran
+  without a spill.
+
+## 34. Addendum AC (2026-10-11, 10:30 PM ET): Ben's PC restart, G1 reruns, and the install with free memory
+
+- **What happened (shown/inferred):** Ben restarted BensPC at about 9:45 PM ET ("I need to restart my pc", then "It's breaking a
+  ton"); I missed his question. train.py saves only at the end of a run, so the runs in progress are lost: 10M s400's plain arm (PT;
+  its B2 arm finished, 74.65, and is kept) and 10M s401's B2 arm. The waiters and queue runners stopped too. The PC's memory was
+  short before the restart (install_rr ran out at 9:20 PM ET); that is a likely cause of the trouble (inferred, not checked).
+- **Recovery** (`results/8a-g/pc-job-cards/restart/`, rehearsed in a fake PC tree): `g1recover.ps1` reports what survived and,
+  only if nothing of G1 or the chain runs, (1) writes rerun queues for the arms without an ok RESULT.json: **8aG1fR** (s400, PT
+  only, accum 8) and **8aG1s401r** (s401, B2 + PT, accum 16 / 8), same settings and seeds as G1, new folders, so the finished B2
+  folder is never written to; (2) renames the stale GPU-BUSY.txt and pool locks aside, moves the dead cards to done; (3) restarts the
+  post-G1 waiter (still v3d; it reads s401's end through the glob `8aG1s401*`, which 8aG1s401r matches); (4) starts
+  `pc_after_restart.ps1` detached: **the install first** (install_rr.ps1: group 1 ca7e1d1b88, group 2 = G2f 74d6e92c75, the no-plug
+  lists, waiter v3e, test WIDE), while the memory is free, then G1: s400 at once, s401 beside it only when s400 trains and free
+  commit >= s400's python memory + 4 GB and GPU memory used <= 9,000 MiB, else after s400.
+- **Addendum I's futility rule** (skip s401 if s400's gain difference <= -1.0) is now read by hand when s400 PT lands: g1_futility.py
+  expects both arms in one job folder.
+- **install_rr.ps1 changes:** group 2 filled (74d6e92c75: b3g2, writer, b3, eg, ledger, tool, configs, job pinned); CPU tests
+  test_reader_rule, test_b3g2_run, test_talk_rounds, test_b3g2 (each under 0.5 GB; test_no_plug, 4.8 GB, left out); a memory guard
+  before each CPU step (estimate + 2 GB free to commit, Gemma fp32 4 GB); v3e skipped if it already runs; test WIDE last.
+- **Cost:** G1's end moves by about a day (estimate). The order after G1 is unchanged (addendum AB).

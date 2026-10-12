@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti: G1fR = 10M s400 of gate G1, rerun after Ben's PC restart (11 Oct 2026, about 9:45 PM ET; spec addendum AC). Only the arms
+# without an ok RESULT.json under WORK\results\8aG1f*-pc\8aG1f*-10M-s400 run (g1recover.ps1 fills @ARMS@ and @ACCUM@): the B2 arm finished
+# before the restart and stays where it is; the PT arm was lost (train.py saves only at the end). Same settings as 8aG1f otherwise.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG1fR-10M-s400 --rung 10M --seed 400 --arms @ARMS@ --b2-extra '{"eg_embed": true}' --accum @ACCUM@

@@ -14,8 +14,8 @@ runs: 8a-data (checks G1's inputs), 8aFC2-caps-3M-s400 (writes WORK\g8a\pools\p1
   runs of 20 updates (256 rows each, no eval): the five shapes at accumulation 64 (4 rows per pass), then the five at 256 (1 row per
   pass). All d 512, 8 heads, NO PLUG (Ben, 4:12 PM ET 11 Oct: Gemma's own 512 numbers through a zero-start LayerNorm(512); "eg_pre": true
   in each --cfg; install_rr.ps1 proved that state with `eg check cpu pre` before installing); trained counts (b3g2, caps_b3g2; the
-  architecture thread's no-plug list of 7:20 PM ET, configs.b3_cfg 100M noplug): 21 layers (mlp 4.83496) = 102,634,902;
-  26 (3.13379) = 102,636,407; 30 (2.18066) = 102,630,231; 34 (1.45215) = 102,630,205; 37 (1.00879) = 102,623,523.
+  architecture thread's no-plug list of 7:20 PM ET, configs.b3_cfg 100M noplug, counted at G2f's 74d6e92c75): 21 layers (mlp 4.83496)
+  = 102,299,413; 26 (3.13379) = 102,300,918; 30 (2.18066) = 102,294,742; 34 (1.45215) = 102,294,716; 37 (1.00879) = 102,288,034.
 launch: 1. SRC\G2-SETUP-OK.txt must exist, Get-FileHash SRC\custom_io\g8a\caps.py must be
      32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E, WORK\g8a\pools\p10-rung30-s400-a64-L must exist (fc100 part 1),
      and WORK\STOP must not exist; else stop, report.
