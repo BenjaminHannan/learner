@@ -580,3 +580,26 @@ per session (lower is better):
   is enough. Decision: the FINISHED-MODEL helping item gains one line, "unasked work is computed or checked by a tool
   before it is offered; a mismatch is never shown" (sent to Architecture via the coordinator). No more P tests at 3M; the
   P2 rule and HELPER-GATED rerun on the first 10M/30M sheet models, where the gated arm is the one that counts.
+
+**B19. G-transfer result (5:20 AM ET 10-12): a head fit on a nightly self-quiz ranks the real practice. PASS, both seeds.**
+`dopamine/results/gt/s20x/RESULT.md`, code sha256 d7751963850... Pooled over days 2..N, 38 day x kind groups each:
+| head | s200 within-kind / Brier | s201 within-kind / Brier |
+|---|---|---|
+| self-quiz, 8,000 rows (S900) | 0.642 / 0.2016 | 0.671 / 0.1902 |
+| self-quiz, 2,500 rows | 0.607 / 0.2365 | 0.628 / 0.2261 |
+| D0 walk-forward (baseline, reproduced exactly) | 0.543 / 0.2844 | 0.597 / 0.3051 |
+| per-kind rate, past days (D0's K) | 0.500 / 0.2556 | 0.500 / 0.2735 |
+| per-kind rate, self-quiz | 0.500 / 0.2050 | 0.500 / 0.2037 |
+- PASS (>= 0.62 and >= baseline + 0.05) holds on both seeds (+0.099, +0.074); PROVED WRONG does not. Like-for-like pairs
+  (self-quiz on 899 inputs 0.641 / 0.671; walk-forward on 900 inputs 0.543 / 0.597) give the same verdict: clean. The
+  self-quiz head also beats the self-quiz per-kind rate on Brier, pooled (0.2016 vs 0.2050; 0.1902 vs 0.2037), so
+  D0's original pair of marks (>= 0.65 within kind and Brier below K) is met on s201 and missed by 0.008 on s200. Shown.
+- Rows matter: 2,500 self-quiz rows lose 0.035-0.045 within kind (consistent with G-ceiling). The self-quiz is answered
+  on the even mix (14-45% right) and transfers to the drive's mix (19-58% right). Cost at 3M: 0.024 s per question at
+  2 threads, about 3 minutes per night for 8,000, plus about 2 minutes drafting. Untested: the cost at 100M.
+- Decision: the shipped guesser recipe is a read-only S900 head refit each night on a self-quiz of the current model
+  (about 8,000 fresh checked tries, never trained on, a fixed routine); the FINISHED-MODEL guesser line is updated via the
+  coordinator. The motivator's own head (`motivator.py`: reader-only, fit on the run's quiz) is the weaker recipe; swapping
+  it for this one is the next motivator change, but only after M2 reads: if M2 shows practice choice does not matter at
+  3M (proved wrong), the swap waits for 10M with the rest of the motivator work. D1 as sealed in section 7 is not run
+  (its guesser was the drift-prone one).
