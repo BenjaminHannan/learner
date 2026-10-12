@@ -249,7 +249,7 @@ def b3g2_breakdown(cfg, model='b3g2'):
     m = build(model, vocab(cfg.get('bytes', False)), **cfg)
     c = lambda *ms: sum(p.numel() for x in ms for p in x.parameters() if p.requires_grad)
     out = dict(reader=c(m.reader) - c(m.reader.place), place=c(m.reader.place), thinker_blocks=c(m.core), ctrl=c(m.ctrl), step_emb=c(m.step_emb), tape_emb=c(m.tape_emb), stop=c(m.stop),
-               gemma_adapter=c(m.ln_eg, m.eg_proj), writer=c(m.writer), writer_mlp=c(m.writer.fc1, m.writer.fc2), other=c(m.src, m.ln_z))
+               gemma_adapter=c(m.ln_eg, m.eg_proj), writer=c(m.writer), writer_mlp=c(m.writer.fc1, m.writer.fc2), other=c(m.src, m.ln_z) + (m.q_type.numel() if getattr(m, 'talk_question', False) else 0))      # G2Q: q_type (d numbers) is in 'other'
     out['total'] = m.n_params()
     assert out['total'] == sum(v for k, v in out.items() if k not in ('total', 'writer_mlp')), out       # writer_mlp is inside writer
     return out

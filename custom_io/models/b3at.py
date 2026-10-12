@@ -133,6 +133,7 @@ class B3AT(B3G2):
         assert gold is None and force is None and not rounds and each is None, 'b3at trains through loss(); teacher forcing is internal, and a free run has no per-round callback'
         B, dev = batch['prompt_ids'].shape[0], batch['prompt_ids'].device
         c = self.question(batch)
+        q = self.typed_question(c['X'], c['xm'])        # G2Q: the row's OWN question joins what the writer reads (None when off)
         Z = self.z0(B)
         K, le, allr = self.tape, LE, self.talk_rounds == 'all'
         Xt, idt, mt, le = self.tape_of([[''] * K for _ in range(B)], dev, le)
@@ -185,7 +186,8 @@ class B3AT(B3G2):
             full = len(sel) == B
             si = torch.tensor(sel, device=dev)
             pk = lambda x: x if full else x[si]
-            outs, ended = self.write_lines(pk(M if allr else Z), pk(mm) if allr else None, sel, temperature, generator)
+            Zw, zw_m = self.with_q(pk(M if allr else Z), pk(mm) if allr else None, None if q is None else (pk(q[0]), pk(q[1])))        # G2Q: + each row's own question
+            outs, ended = self.write_lines(Zw, zw_m if (allr or q is not None) else None, sel, temperature, generator)
             ended = [bool(x) for x in ended.tolist()]
             ul = used.tolist()
             new, fin = [''] * B, torch.zeros(B, dtype=torch.bool, device=dev)
@@ -239,16 +241,18 @@ class B3AT(B3G2):
             for fi, m, mk in fmem:
                 mem[fi, :m.shape[1]], mmask[fi, :m.shape[1]] = m, mk
             out.update(mem=mem, mem_mask=mmask)
+        if q is not None:
+            out['q'] = q
         return out
 
     def state_of(self, o):
-        return (o['Z'],) + o['tape'] + ((o['mem'], o['mem_mask']) if 'mem' in o else ())
+        return (o['Z'],) + o['tape'] + ((o['mem'], o['mem_mask']) if 'mem' in o else ()) + (tuple(o['q']) if 'q' in o else ())      # G2Q: + (Xq, qm) last
 
     # ---- the talker ----
     def talk(self, state, batch, lesion=None, return_modes=False, temperature=0.0, generator=None):
         """The talker's greedy (or sampled) line from the state's Z ALONE (rule 2; `batch`, the state's tape and `lesion` are accepted for the callers' signature and not read: nocopy is a no-op),
         '' for a line that is a call (is_call) or did not end (counted answer_unended): the one answer rule of run. A donor's Z writes the donor's line. return_modes: also a mode per row (always 2: one writer, one mode)."""
-        Z, zm = self.writer_view(state)
+        Z, zm = self.writer_input(state)
         outs, ended = self.write_lines(Z, zm, None, temperature, generator)
         self.free_stats['answer_unended'] += int((~ended.bool()).sum())     # as B3G2.talk: rows whose answer had no EOS within WCAP
         out = [self.answer_of(self.vocab.decode(o), bool(e)) for o, e in zip(outs, ended.tolist())]
@@ -263,7 +267,7 @@ class B3AT(B3G2):
             return self.run(batch, lesion=name)['answers']
         if name == 'loops':
             return self.run(batch, loops=arg)['answers']
-        if name in ('zero_state', 'shuffle_state'):             # on Z (and the memory) before the final line
+        if name in ('zero_state', 'shuffle_state') or (name == 'no_question' and self.talk_question):             # on Z (no_question: the question part masked; a no-op, the intact run, without talk_question)  (and the memory) before the final line
             return self.talk(self.lesioned(self.state_of(self.run(batch)), name), batch)
         return self.run(batch)['answers']                       # intact, and nocopy (a no-op: nothing copies)
 
@@ -318,6 +322,7 @@ class B3AT(B3G2):
         if count and any(r < R for r in Ri):
             capcount.hit('turn_rounds_capped', sum(r < R for r in Ri))
         c, allr = self.question(batch), self.talk_rounds == 'all'
+        qq = self.typed_question(c['X'], c['xm'])        # G2Q (None when off)
         K = max(1, max(Ls))
         Xt, idt, mt, le = self.tape_of([(list(x['tape']) + [''] * K)[:K] for x in golds], dev)
         ent = torch.arange(K * le, device=dev) // le
@@ -369,7 +374,8 @@ class B3AT(B3G2):
                 if len(sel):
                     full = len(sel) == B
                     pk = lambda x: x if full else x[sel]
-                    args = (pk(M if allr else Z), pk(te['inp']), pk(te['tgt']), pk(te['fb']))
+                    zq, zqm = self.with_q(pk(M if allr else Z), None, None if qq is None else (pk(qq[0]), pk(qq[1])))        # G2Q: + each row's own question
+                    args = (zq, pk(te['inp']), pk(te['tgt']), pk(te['fb'])) + (() if qq is None else (zqm,))
                     if self.training and torch.is_grad_enabled() and g >= CKPT_FROM:
                         nll, rt, _, _ = checkpoint(self.ans_pass, *args, use_reentrant=False)
                     else:
@@ -387,8 +393,8 @@ class B3AT(B3G2):
                         nm_ = [False] * len(fin_)
                         if names:
                             with torch.no_grad():
-                                zr = M[fin_] if allr else Z[fin_]
-                                pred = self.line_logp(zr, te['inp'][fin_]).argmax(-1).cpu()
+                                zr, zrm = self.with_q(M[fin_] if allr else Z[fin_], None, None if qq is None else (qq[0][fin_], qq[1][fin_]))
+                                pred = self.line_logp(zr, te['inp'][fin_], *(() if qq is None else (zrm,))).argmax(-1).cpu()
                             tgt_ = te['tgt'][fin_].cpu()
                             for q in range(len(fin_)):
                                 w = lambda ids: self.vocab.decode([x for x in ids if x >= 0]).split(' ')[0]
