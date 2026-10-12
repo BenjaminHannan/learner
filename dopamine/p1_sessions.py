@@ -240,7 +240,7 @@ def mlp(kind, seed):
     return make_pipeline(StandardScaler(), cls(hidden_layer_sizes=(64,), alpha=1e-3, random_state=seed, max_iter=200))
 
 
-def simulate(Z, helper='menu'):
+def simulate(Z, helper='menu', tool_values=False):
     from sklearn.exceptions import ConvergenceWarning
     warnings.simplefilter('ignore', ConvergenceWarning)
     F, correct = Z['feats'], Z['correct']
@@ -254,6 +254,8 @@ def simulate(Z, helper='menu'):
     cand_day = round_day[row_round]
     Xn = np.concatenate([F[Z['round_cur']][row_round], F[cpid], onehot(ridx[row_round])], 1)
     right = (correct[cpid] == 1)
+    if tool_values:   # P3 (B16): the extra's value comes from the sheet tool, so every extra is right
+        right = np.ones_like(right)
     rew = np.where(cwant == 1, np.where(right, R_RIGHT, R_WRONG), R_UNWANTED)
 
     # decision for each arm in a set of rounds (given N probabilities pn for every candidate row, V values or None)
@@ -420,6 +422,47 @@ def do_sim(a):
     print('\n'.join(md))
 
 
+def do_p3(a):
+    """P3 (B16): HELPER with tool-computed extras vs NONE and vs P2's HELPER, on the same sealed sessions."""
+    Z = load_cache(a.dir)
+    arms2, _, L = simulate(Z, 'top1')
+    arms3, stats3, _ = simulate(Z, 'top1', tool_values=True)
+    S = len(L)
+    res = {'test': 'P3', 'n_sealed_sessions': S, 'model_seed': int(Z['seed']), 'ckpt': str(Z['ckpt']),
+           'sealed_seed': int(Z['sealed_seed']) if 'sealed_seed' in Z else SEALED_SEED,
+           'mean_effort': {'NONE': float(arms3['NONE'].mean()), 'EAGER-TOOL': float(arms3['EAGER'].mean()),
+                           'HELPER-TOOL': float(arms3['HELPER'].mean()), 'P2 HELPER': float(arms2['HELPER'].mean()),
+                           'P2 EAGER': float(arms2['EAGER'].mean()), 'ORACLE': float(arms3['ORACLE'].mean())}}
+    d1, d2 = arms3['HELPER'] - arms3['NONE'], arms3['HELPER'] - arms2['HELPER']
+    for name, d in (('HELPER-TOOL - NONE', d1), ('HELPER-TOOL - P2 HELPER', d2)):
+        lo, hi = boot(d)
+        res[name] = {'diff': float(d.mean()), 'ci95': [lo, hi]}
+    r1, r2 = res['HELPER-TOOL - NONE'], res['HELPER-TOOL - P2 HELPER']
+    res['P3-1'] = {'verdict': 'PASS' if (r1['diff'] <= -0.10 and r1['ci95'][1] < 0) else
+                   ('PROVED WRONG (on this seed)' if r1['ci95'][0] > -0.05 else 'neither pass nor wrong'),
+                   'rule': 'pass: diff <= -0.10 and CI upper < 0; wrong: CI lower > -0.05 on either seed'}
+    res['P3-2'] = {'verdict': 'PASS' if (r2['diff'] <= -0.15 and r2['ci95'][1] < 0) else 'not passed',
+                   'rule': 'pass: diff <= -0.15 and CI upper < 0'}
+    st = stats3['HELPER']; e = max(st['extras'], 1)
+    res['HELPER-TOOL'] = {'extras_per_session': st['extras'] / S, 'wanted_share': st['wanted'] / e,
+                          'extras_on_last_request': st['last'],
+                          'extras_per_kind': {KINDS[i]: int(st['kinds'][i]) for i in range(len(KINDS))}}
+    res['p1_sessions_py_sha256'] = code_sha()
+    json.dump(res, open(os.path.join(a.dir, 'RESULT-P3.json'), 'w'), indent=1)
+    md = [f"# P3 session sheets (tool-computed extras), model seed {res['model_seed']}", '',
+          f"sealed person seed {res['sealed_seed']}, {S} sessions, mean requests {L.mean():.3f}", '',
+          '| Arm | mean effort |', '|---|---|'] + [f'| {k} | {v:.4f} |' for k, v in res['mean_effort'].items()]
+    md += ['', '| Paired difference | mean | 95% interval |', '|---|---|---|']
+    for n in ('HELPER-TOOL - NONE', 'HELPER-TOOL - P2 HELPER'):
+        md.append(f"| {n} | {res[n]['diff']:+.4f} | [{res[n]['ci95'][0]:+.4f}, {res[n]['ci95'][1]:+.4f}] |")
+    md += ['', f"P3-1: {res['P3-1']['verdict']} ({res['P3-1']['rule']})", f"P3-2: {res['P3-2']['verdict']} ({res['P3-2']['rule']})",
+           '', f"HELPER-TOOL extras/session {res['HELPER-TOOL']['extras_per_session']:.3f}, wanted share "
+           f"{res['HELPER-TOOL']['wanted_share']:.3f}, extras on last request {res['HELPER-TOOL']['extras_on_last_request']}",
+           '', f"p1_sessions.py sha256: {res['p1_sessions_py_sha256']}"]
+    open(os.path.join(a.dir, 'RESULT-P3.md'), 'w').write('\n'.join(md) + '\n')
+    print('\n'.join(md))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -434,9 +477,13 @@ def main(argv=None):
     s.add_argument('--dir', required=True)
     s.add_argument('--helper', choices=['menu', 'top1'], default='menu')
     s.add_argument('--tag', default='P1')
+    p3 = sub.add_parser('p3')
+    p3.add_argument('--dir', required=True)
     a = ap.parse_args(argv)
     if a.cmd == 'cache':
         do_cache(a)
+    elif a.cmd == 'p3':
+        do_p3(a)
     else:
         do_sim(a)
 
