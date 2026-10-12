@@ -410,3 +410,43 @@ days) saves only 0.08 actions per session on both seeds (1.0 and 0.8 extras). So
 often for unasked help to pay much, even with perfect judgement; the learned head is about 0.1-0.2 below that yardstick.
 Decision: no more P-tests on 3M models. The design (B12) stands; the next P run uses the same code and P2's rule on the
 first 10M/30M domain-mode sheet models, where more right answers raise the ceiling. Marks for that run reuse P2's table.
+
+**B15. Outside opinions on the guesser, and the G-ceiling test (marks sealed 2:10 AM ET 10-12, before any code).** The
+"Overnight outside opinions via API" thread sent the guesser problem (D0, SB-2, SB-2b) to Fable 5.1 and Opus 5.5 and had
+Fable judge both: `/mnt/project-files/api-opinions/answers/{3-guesser-fable,3-guesser-opus,judge-3-guesser}.md`.
+Hypotheses only; checked against the code here before use.
+- Their free pre-step, "does the Brier baseline use the scored day's own labels (hindsight)?": **no, shown.** D0's K is the
+  per-kind rate over days before the scored day (`dopamine/d0_guess.py` line 10), so it lags rather than peeks. SB-2's
+  baseline is the per-kind rate on the quiz after night K-1, i.e. the same model on separate questions before day K's tries
+  (`mainbrain/guess_score.py` lines 24-25 on the Main brain branch). No Brier verdict so far was too harsh for that reason.
+- Agreed with them: keep the guesser read-only (B11); within-kind ranking is not what practice choice needs at 3M (B7/B8),
+  but it is what helping unasked on single questions needs (B14's yardstick is kind-level only).
+- New idea worth a test: read the model's behaviour, not one pooled state. Answer the same question with different
+  thinking lengths; if the answers agree, trust it more (their line for Ben: "answer quickly and slowly; trust it when the
+  answers agree").
+
+**G-ceiling test (no training).** One question: is within-kind self-knowledge at 3M limited by day-to-day drift and data, or
+not there at all, and does behaviour (agreement across thinking lengths) carry more of it than the pooled state?
+- Models, frozen: the v7 sheet nights nearest 40% pooled quiz, s200 night 4 (38.67) and s201 night 4 (37.89).
+- Data: 32,000 fresh practice questions per seed from domain mode's own generator (`draft()`, even share over the run's
+  kinds, its own seed), deduplicated, each labelled right/wrong by the tool against the model's normal answer (8 loops).
+- Probes (logistic, L2 C = 1, standardised, D0's `fit_logistic`): S900 = D0's 900 inputs (reader mean, pooled state,
+  confidence); P = process features from the model's own runs: whether the answers at forced 2, 4, 16 and 32 loops equal the
+  normal answer (4 flags), the number of distinct answers over the 5 runs, the talker's log-probability of its answer if
+  the code exposes it, the number of calculator calls, whether the last call's result equals the answer, prompt length;
+  S900+P; length only; and a diagnostic never to ship (operand count, longest digit run).
+- Fit: 5-fold cross-fit stratified by kind, on nested random subsets of 2,500 / 8,000 / 16,000 / 32,000 rows; scored on
+  out-of-fold guesses. Within-kind AUC as D0 (groups with >= 10 right and >= 10 wrong, row-weighted); Brier vs the frozen
+  model's own per-kind rate on the same rows (fair here: no drift).
+- Baseline: D0 walk-forward S900 within-kind AUC, s200 0.543, s201 0.597 (`dopamine/results/d0/sheet-s20x-v7.json`).
+- Marks, each must hold on both seeds (S900, P and S900+P count as shippable; length and the diagnostic do not):
+  | Mark | Holds when |
+  |---|---|
+  | Drift is a main limit | S900 at 2,500 rows >= baseline + 0.05 |
+  | Readable with enough data (PASS) | any shippable probe >= 0.65 at <= 16,000 rows |
+  | Behaviour beats state | P >= 0.62 and P >= S900 at equal rows |
+  | PROVED WRONG | every shippable probe < 0.62 at 32,000 rows and gains < 0.01 from 16,000 to 32,000 |
+  If PROVED WRONG: stop within-kind guesser work at 3M, keep the per-kind level guess, rerun this test on the first 10M
+  checkpoint at matched success. If PASS with P: the next test is P on live nights (walk-forward, read-only), 2 seeds,
+  with its own marks; the shipped form replaces string equality with the model's own log-probability of its first answer
+  under the longer run (their rule-check point), tested before shipping.
