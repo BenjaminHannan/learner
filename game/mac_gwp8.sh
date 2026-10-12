@@ -146,8 +146,9 @@ score_seed() {
   TH=$(threads); W=100; NW=50
   [ "$SMOKE" = 1 ] && { W=2; NW=1; }
   [ -f "$RUN/summary.json" ] || { log "seed $s: no summary.json, scoring skipped"; return 1; }
-  set -- $("$VPY" -c "import json; s=json.load(open('$RUN/summary.json')); print(repr(s['temp_start']), s['final_checkpoint'], s['game_steps'] + s['quiz_steps'], s['nights_run'])")
-  T0=$1; FINAL=$2; MOVES=$3; NR=$4
+  # T0 = the parent's fitted temperature (GW-PC plays from T = 1, so its fitted T0 is in t0_fitted); TF = the final policy's T
+  set -- $("$VPY" -c "import json; s=json.load(open('$RUN/summary.json')); print(repr(s.get('t0_fitted', s['temp_start'])), s['final_checkpoint'], s['game_steps'] + s['quiz_steps'], s['nights_run'], repr(s['temp_final']))")
+  T0=$1; FINAL=$2; MOVES=$3; NR=$4; TF=$5
   mkdir -p "$N"
   sc() {  # sc OUT ARGS...: score unless OUT already exists
     local out=$1; shift
@@ -159,7 +160,19 @@ score_seed() {
   sc "$S/after-$TAG-s$s.json" --arm model --picker sample --ckpt "$FINAL" --worlds $W
   k=1
   while [ $k -lt "$NR" ]; do sc "$N/night_$k.json" --arm model --picker sample --ckpt "$RUN/night_$k/checkpoint.pt" --worlds $NW; k=$((k + 1)); done
-  cp -p "$S/before-T0-mac-s$s.json" "$N/night_0.json"; cp -p "$S/after-$TAG-s$s.json" "$N/night_$NR.json"
+  if [ -f "$RUN/night_0/checkpoint.pt" ]; then   # GW-PC: the distilled night-0 policy (A19b PC-0 validity), 100 maps, T from its folder
+    sc "$S/night0-$TAG-s$s.json" --arm model --picker sample --ckpt "$RUN/night_0/checkpoint.pt" --worlds $W
+    cp -p "$S/night0-$TAG-s$s.json" "$N/night_0.json"
+    # view dependence (A19b PC-2): final policy at its T and the parent at T0, on the Mac GW-P8 night-0 quiz views
+    local QV="$RUNS/gwp8-s$s/moves/quiz_night_0.jsonl.gz"
+    [ -s "$S/viewdep-$TAG-s$s.json" ] || "$VPY" -m game.blind --ckpt "$FINAL" --temp "$TF" --moves "$QV" --out "$S/viewdep-$TAG-s$s.json" \
+      --threads "$TH" >> "$GW8/logs/score-s$s.out" 2>&1 || log "seed $s: view dependence (final) failed"
+    [ -s "$S/viewdep-parent-s$s.json" ] || "$VPY" -m game.blind --ckpt "$(parent $s)" --temp "$T0" --moves "$QV" --out "$S/viewdep-parent-s$s.json" \
+      --threads "$TH" >> "$GW8/logs/score-s$s.out" 2>&1 || log "seed $s: view dependence (parent) failed"
+  else
+    cp -p "$S/before-T0-mac-s$s.json" "$N/night_0.json"
+  fi
+  cp -p "$S/after-$TAG-s$s.json" "$N/night_$NR.json"
   # PPO at the first saved step >= this run's game moves (practice + quiz), both ways (A15 Q-2 takes the stronger)
   P=$(( (MOVES + 8191) / 8192 * 8192 )); [ $P -gt 229376 ] && P=229376
   PC="$GW8/inputs/game-world/runs/ppo-s0/ppo_steps_$P.pt"
@@ -221,6 +234,9 @@ push_results() {
   # everything small; night 0-7 checkpoints and files over 20 MB stay on the Mac and are listed in NOT-PUSHED.txt
   find logs "${SCORE_DIR#$GW8/}" "${RUNS#$GW8/}" -type f -size -20M ! -path '*/night_[0-7]/checkpoint.pt' ! -name '.*' 2>/dev/null |
     while read -r f; do mkdir -p "$W/$(dirname "$f")"; cp -p "$f" "$W/$f"; done
+  for f in "${RUNS#$GW8/}"/*/log.jsonl; do   # a finished run's log (often > 20 MB) goes up gzipped, once it can no longer change
+    [ -f "$(dirname "$f")/summary.json" ] && [ ! -s "$W/$f.gz" ] && { mkdir -p "$W/$(dirname "$f")"; gzip -n -c "$f" > "$W/$f.gz"; }
+  done
   find "${RUNS#$GW8/}" -type f \( -size +20M -o -path '*/night_[0-7]/checkpoint.pt' \) -exec ls -l {} \; > "$W/NOT-PUSHED.txt" 2>/dev/null
   git -C "$W" add -A
   git -C "$W" commit -q -m "GW-P8 Mac results $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
