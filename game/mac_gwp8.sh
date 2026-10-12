@@ -21,7 +21,7 @@ RESULTS=claude/game-world-mac-results
 TAG=${GW8_TAG:-gwp8}
 case "$TAG" in
   gwp8) MARKS_CODE=4fb211347; EXTRA="" ;;          # game code the GW-P8 marks (A15) were set on; setup refuses code that differs
-  gwpc) MARKS_CODE=GWPC_CODE_PIN; EXTRA="--start distil" ;;   # GW-PC (A19): the reviewed distil code
+  gwpc) MARKS_CODE=dc349958b; EXTRA="--start distil" ;;   # GW-PC (A19): the reviewed distil code
   *) echo "unknown GW8_TAG $TAG"; exit 2 ;;
 esac
 SHA_200=22f70906443a9640cee5abf440a7afe229f6d1f167cae3709cbf224bd23cde7f
@@ -77,7 +77,7 @@ setup() {
   if [ -e "$GW8/code/.git" ]; then git -C "$GW8/code" checkout -q --detach "origin/$BRANCH" || die "checkout code"
   else git -C "$R" worktree add -q --detach "$GW8/code" "origin/$BRANCH" || die "worktree add"; fi
   CODE_SHA=$(git -C "$GW8/code" rev-parse HEAD)
-  git -C "$GW8/code" diff --quiet "$MARKS_CODE" HEAD -- game domain custom_io ':(exclude)*.md' ':(exclude)*.sh' \
+  git -C "$GW8/code" diff --quiet "$MARKS_CODE" HEAD -- game domain custom_io ':(exclude)*.md' ':(exclude)*.sh' ':(exclude)game/results' \
     || die "game code at $CODE_SHA differs from the marks commit $MARKS_CODE"
   log "code $CODE_SHA (game code = marks commit $MARKS_CODE)"
 
@@ -153,7 +153,7 @@ score_seed() {
   sc() {  # sc OUT ARGS...: score unless OUT already exists
     local out=$1; shift
     [ -s "$out" ] && return 0
-    "$VPY" -m game.score "$@" --threads "$TH" --out "$out" >> "$GW8/logs/score-s$s.out" 2>&1 || log "seed $s: score failed for $out"
+    "$VPY" -m game.score "$@" --threads "$TH" --out "$out" >> "$GW8/logs/score-$TAG-s$s.out" 2>&1 || log "seed $s: score failed for $out"
   }
   log "seed $s: scoring (T0 $T0, final $FINAL, moves $MOVES)"
   sc "$S/before-T0-mac-s$s.json" --arm model --picker sample --temp "$T0" --ckpt "$(parent $s)" --worlds $W
@@ -166,9 +166,9 @@ score_seed() {
     # view dependence (A19b PC-2): final policy at its T and the parent at T0, on the Mac GW-P8 night-0 quiz views
     local QV="$RUNS/gwp8-s$s/moves/quiz_night_0.jsonl.gz"
     [ -s "$S/viewdep-$TAG-s$s.json" ] || "$VPY" -m game.blind --ckpt "$FINAL" --temp "$TF" --moves "$QV" --out "$S/viewdep-$TAG-s$s.json" \
-      --threads "$TH" >> "$GW8/logs/score-s$s.out" 2>&1 || log "seed $s: view dependence (final) failed"
+      --threads "$TH" >> "$GW8/logs/score-$TAG-s$s.out" 2>&1 || log "seed $s: view dependence (final) failed"
     [ -s "$S/viewdep-parent-s$s.json" ] || "$VPY" -m game.blind --ckpt "$(parent $s)" --temp "$T0" --moves "$QV" --out "$S/viewdep-parent-s$s.json" \
-      --threads "$TH" >> "$GW8/logs/score-s$s.out" 2>&1 || log "seed $s: view dependence (parent) failed"
+      --threads "$TH" >> "$GW8/logs/score-$TAG-s$s.out" 2>&1 || log "seed $s: view dependence (parent) failed"
   else
     cp -p "$S/before-T0-mac-s$s.json" "$N/night_0.json"
   fi
@@ -178,7 +178,7 @@ score_seed() {
   PC="$GW8/inputs/game-world/runs/ppo-s0/ppo_steps_$P.pt"
   sc "$S/ppo-sample-$P.json" --arm ppo --ppo-picker sample --ckpt "$PC" --worlds $W
   sc "$S/ppo-$P.json" --arm ppo --ppo-picker argmax --ckpt "$PC" --worlds $W
-  "$VPY" -m game.audit "$RUN" > "$GW8/logs/audit-s$s.out" 2>&1; log "seed $s: audit exit $?"
+  "$VPY" -m game.audit "$RUN" > "$GW8/logs/audit-$TAG-s$s.out" 2>&1; log "seed $s: audit exit $?"
   local XD=""
   for kv in gwp8=after-gwp8-s$s gwp=after-gwp-s$s gws3=after-gw3-s$s old=after-s$s ppo_argmax=ppo-$P before_T0_cloud=before-T0-s$s before_greedy=before-s$s; do
     [ "${kv#*=}" = "after-$TAG-s$s" ] && continue   # never against itself
@@ -186,7 +186,7 @@ score_seed() {
   done
   "$VPY" -m game.analyze --run "$RUN" --parent "$(parent $s)" --before "$S/before-T0-mac-s$s.json" --after "$S/after-$TAG-s$s.json" \
     --random "$S/random.json" --ppo "$S/ppo-sample-$P.json" --nights-dir "$N" --dev "$GW8/sk200k/dev/in_dist.jsonl" \
-    --out "$RUN/analysis" --threads "$TH" $XD > "$GW8/logs/analyze-s$s.out" 2>&1
+    --out "$RUN/analysis" --threads "$TH" $XD > "$GW8/logs/analyze-$TAG-s$s.out" 2>&1
   log "seed $s: analyze exit $?"
 }
 
@@ -239,7 +239,7 @@ push_results() {
   done
   find "${RUNS#$GW8/}" -type f \( -size +20M -o -path '*/night_[0-7]/checkpoint.pt' \) -exec ls -l {} \; > "$W/NOT-PUSHED.txt" 2>/dev/null
   git -C "$W" add -A
-  git -C "$W" commit -q -m "GW-P8 Mac results $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+  git -C "$W" commit -q -m "$TAG Mac results $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
   if [ "$SMOKE" = 1 ]; then git -C "$W" push --dry-run origin "HEAD:refs/heads/$RESULTS"
   else git -C "$W" push -q origin "HEAD:refs/heads/$RESULTS"; fi
   log "push exit $?"
