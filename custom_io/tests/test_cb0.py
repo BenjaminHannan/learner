@@ -309,14 +309,9 @@ def test_cycle_smoke():
     print('ok cycle smoke (real tiny B3G2): %d records, losses finite' % res['records']['n'])
 
 
-if __name__ == '__main__':
-    for f in (test_eg_cache, test_day, test_records, test_night_fake, test_night_warm, test_row_losses, test_cycle_smoke):
-        f()
-    print('ALL OK')
-
-
 class FakeC2(nn.Module):
-    """C2 rows with hand-made copy records (test_cb0_check.reference): each sampled try is the kind's reference program with prob 0.5, else a one-constant mutant."""
+    """C2 rows with hand-made tries (test_cb0_check.reference): each sampled try is the kind's reference program with prob 0.5, else a one-constant mutant. style: 'copy' = the hand-made copy
+    records; 'absent' / 'empty' / 'false' = the same tries with no copy record (test_cb0_check.strip: no 'copies' key, empty records, all-uncopied records)."""
 
     def __init__(self, table):
         super().__init__()
@@ -332,31 +327,89 @@ class FakeC2(nn.Module):
         return out
 
 
-def test_corrupt_every_key_records():
-    """CB-0 mark (3) end to end: day + records with the real checker give IDENTICAL records when every answer key, accepted list and kind is corrupted or deleted."""
+def c2_rows(style):
     from custom_io import cb0_check as C
-    from custom_io.tests.test_cb0_check import reference, MUT, XS, QS
+    from custom_io.tests.test_cb0_check import reference, strip, MUT, XS, QS
     rows, table = [], {}
     for kind in MUT:
         for j, (xs, q) in enumerate(zip(XS, QS)):
             row, good = reference(kind, xs, q)
             _, bad = reference(kind, xs, q, **MUT[kind][0])
+            if style != 'copy':
+                good, bad = strip(good, style), strip(bad, style)
             assert C.check(row, good) and not C.check(row, bad)
             rows.append(dict(row, id=f'{kind}{j}', kind=kind, answer=good['answer'], accepted=[good['answer']]))
             table[row['prompt']] = (good, bad)
+    return rows, table
+
+
+def test_corrupt_every_key_records():
+    """CB-0 mark (3) end to end: day + records with the real checker give IDENTICAL records when every answer key, accepted list and kind is corrupted or deleted, with the copy records and
+    without any (the talker cannot copy): and the same records either way."""
+    from custom_io import cb0_check as C
     mb = lambda rs: dict(rows=rs)
-    m = FakeC2(table)
+    seen = {}
+    for style in ('copy', 'absent', 'empty', 'false'):
+        rows, table = c2_rows(style)
+        m = FakeC2(table)
 
-    def recs_of(rs):
-        d = cb0.day(m, rs, mb, C.check, seed=3, n1=4, n2=8, batch_size=5)
-        rec, cnt = cb0.records(rs, d, seed=4)
-        return d, [(r['id'], r['trace']['calls'], r['trace']['answer']) for r in rec]
+        def recs_of(rs):
+            d = cb0.day(m, rs, mb, C.check, seed=3, n1=4, n2=8, batch_size=5)
+            rec, cnt = cb0.records(rs, d, seed=4)
+            return d, [(r['id'], r['trace']['calls'], r['trace']['answer']) for r in rec]
 
-    d0, r0 = recs_of(rows)
-    assert r0 and not any(d0['greedy_fit'])                    # the greedy try is the mutant: every row stuck; records come from the search
-    bad_rows = [dict(r, answer='999999', accepted=['-1'], kind='square' if r['kind'] != 'square' else 'affine') for r in rows]
-    gone = [{k: v for k, v in r.items() if k not in ('answer', 'accepted', 'kind')} for r in rows]
-    for rs in (bad_rows, gone):
-        d1, r1 = recs_of(rs)
-        assert r1 == r0 and d1['fit'] == d0['fit']
-    print(f'ok corrupt-every-key: {len(r0)} records identical with keys corrupted / deleted')
+        d0, r0 = recs_of(rows)
+        assert r0 and not any(d0['greedy_fit'])                    # the greedy try is the mutant: every row stuck; records come from the search
+        bad_rows = [dict(r, answer='999999', accepted=['-1'], kind='square' if r['kind'] != 'square' else 'affine') for r in rows]
+        gone = [{k: v for k, v in r.items() if k not in ('answer', 'accepted', 'kind')} for r in rows]
+        for rs in (bad_rows, gone):
+            d1, r1 = recs_of(rs)
+            assert r1 == r0 and d1['fit'] == d0['fit']
+        seen[style] = (r0, d0['fit'])
+    assert all(v == seen['copy'] for v in seen.values())                       # the same tries are recorded whether or not a copy record is there
+    print(f"ok corrupt-every-key: {len(seen['copy'][0])} records identical with keys corrupted / deleted, with and without copy records")
+
+
+def test_day_checker_report():
+    """The day's checker report (check_try's dict as the check): per pass and kind, the no-call share, the uncheckable tries among the calling ones, and the share of accepted tries with more
+    than one fitting assignment; the fits are those of the bool check."""
+    from custom_io import cb0_check as C
+    rows, table = c2_rows('absent')
+    # one more variety of tries: a no-call try, an uncheckable try, a try with several fitting assignments
+    nocall = dict(calls=[], answer='1')
+    unch = dict(calls=[('add 1 1', '2')], answer='3')
+    extra = {}
+    for r in rows:
+        good, bad = table[r['prompt']]
+        extra[r['prompt']] = (good, nocall if r['kind'] == 'last_digit' else (unch if r['kind'] == 'square' else bad))
+    mb = lambda rs: dict(rows=rs)
+    d_bool = cb0.day(FakeC2(extra), rows, mb, C.check, seed=3, n1=1, n2=8, batch_size=5)
+    d = cb0.day(FakeC2(extra), rows, mb, C.check_try, seed=3, n1=1, n2=8, batch_size=5)
+    assert d_bool['checker'] is None and d['fit'] == d_bool['fit'] and d['greedy_fit'] == d_bool['greedy_fit'] and d['tries'] == d_bool['tries']
+    ck = d['checker']
+    assert set(ck) == {'greedy', 'pass1', 'pass2'}
+    p1 = ck['pass1']
+    assert p1['all']['n'] == len(rows)                                              # n1 = 1 try per row
+    assert p1['all']['n'] == sum(p1['by_kind'][k]['n'] for k in p1['by_kind']) and sorted(p1['by_kind']) == sorted(C_KINDS)
+    g = ck['greedy']['by_kind']                                                  # the greedy try is always the 'bad' one: no call on last_digit, an answer that is not the last result on square
+    assert g['last_digit']['no_call'] == g['last_digit']['n'] == 3 and g['last_digit']['no_call_share'] == 1.0 and g['last_digit']['uncheckable_calling'] == 0
+    assert g['last_digit']['uncheckable_calling_share'] is None and g['last_digit']['reason'] == {'reject/never reads x': 3}              # no calling try: no rate
+    assert g['square']['uncheckable_calling'] == g['square']['calling'] == 3 and g['square']['uncheckable_calling_share'] == 1.0 and g['square']['no_call'] == 0
+    assert g['affine']['uncheckable_calling'] == 0 and g['affine']['verdict'] == {'reject': 3}
+    ld = p1['by_kind']['last_digit']
+    assert ld['no_call'] == ld['n'] - ld['calling'] and ld['no_call_share'] == ld['no_call'] / ld['n'] and ld['uncheckable_calling'] == 0      # a no-call try is never uncheckable
+    assert d['drawn']['pass2_rows'] > 0 and ck['greedy']['all']['n'] == len(rows) and ck['pass2']['all']['n'] == 8 * d['drawn']['pass2_rows']
+    assert ck['greedy']['all']['verdict'].get('accept', 0) == sum(d['greedy_fit']) and p1['all']['verdict'].get('accept', 0) == sum(f[0] for f in d['fit'])      # accepted = the fits
+    assert 0 <= p1['all']['accepted_multi'] <= p1['all']['accepted'] and p1['all']['accepted'] > 0
+    print('ok day checker report: per pass and kind, no-call share, uncheckable among calling, multi-fit share')
+
+
+C_KINDS = ['affine', 'double_add', 'last_digit', 'sq_plus', 'square']
+
+
+if __name__ == '__main__':
+    for f in (test_eg_cache, test_day, test_records, test_night_fake, test_night_warm, test_row_losses, test_cycle_smoke, test_corrupt_every_key_records, test_day_checker_report):
+        f()
+    print('ALL OK')
+
+

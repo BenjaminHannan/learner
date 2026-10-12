@@ -1,38 +1,62 @@
-"""C2 example checker for B3 group 2 ("copy-swap re-run"). A C2 question is a single-input number rule written as
+"""C2 example checker for B3 group 2 ("re-run on the examples"). A C2 question is a single-input number rule written as
     Examples: x1 -> y1; x2 -> y2; x3 -> y3. Now q -> ?
-B3G2 answers by writing tool calls ("mul 12 12") and then the answer. The checker asks of ONE try (the calls, replies and answer a sampled run wrote, plus the writer's
-copy record, models/writer.py greedy(record=True), translated by B3G2.sample_traces into 'copies'): is the try a PROGRAM in the query that is also right on every example?
-It re-runs the try on example i by swapping the values the writer COPIED from the query for x_i, executes the calls in order with the real calculator, and compares the re-run
-answer with y_i. Accepted only if it reproduces EVERY example. It reads ONLY row['prompt'] and the trace (calls, answer, copies): never row['answer'], row['accepted'], kind.
+B3G2 answers by writing tool calls ("mul 12 12") and then the answer. The checker asks of ONE try (the calls, replies and answer a sampled run wrote, plus, if the writer
+still copies, its copy record, models/writer.py greedy(record=True), translated by B3G2.sample_traces into 'copies'): is the try a PROGRAM in the query that is also right on every
+example? It re-runs the try on example i with the query number replaced by x_i, executes the calls in order with the real calculator, and compares the re-run answer with y_i.
+Accepted only if it reproduces EVERY example. It reads ONLY row['prompt'] and the trace (calls, answer, copies): never row['answer'], row['accepted'], kind.
+
+TWO WAYS TO KNOW WHICH NUMBERS ARE THE QUERY (decided per call, from the call's own record, never from a flag):
+ * BINDING BY VALUE (creative roadmap, CB-0 addenda 1 and 2, 10-11; the path whenever a call's copy record has no copied byte, absent or empty included: the talker writes calls and
+   answers from the thinker's thoughts, so no byte is ever copied). Every number the call text wrote is an operand token (-?digits). A token equal, as a string, to the query number
+   MAY be x; a token equal to the reply of an EARLIER call in the same try MAY be that result; any token may be a constant. When a token matches more than once every choice is a separate
+   assignment (constant, x, each matching earlier result). The try is run once per assignment, over the product of the choices of the whole try, and ACCEPTED if ANY assignment
+   reproduces every example. Above MAX_ASSIGN (16) assignments the try is UNCHECKABLE ('too many assignments'). Every assignment, put back on the query (x_i = q), reproduces the original
+   try (calls, replies, answer); this is asserted in code (AssertionError if it ever fails: a bug, not a verdict). Safety is the same as the copy swap's: the record's answer is the
+   original try's answer under every assignment, so an assignment can only make the checker accept a try that is right on all examples; a wrong binding is a reject, never a record.
+   The final answer of a calling try is the last tool result (rule 5, below) and is bound to it; a NO-CALL answer has no record and reads as a constant (addendum 1): rejected 'never
+   reads x', so it gives no record. (A kind such as last_digit gets its records from calling tries like `mod x 10`.)
+ * THE COPY RECORD (old checkpoints and any call whose record has at least one copied byte with a source): the rules 1-4 below, unchanged. A call with a copied byte is read by the
+   record ONLY (a number it generated stays a constant, as before); a call whose record has no copied byte is read by value. A try may mix the two, call by call.
 
 Rules (sealed by the creative roadmap thread; each has a test in tests/test_cb0_check.py):
  1. Consecutive copied bytes from consecutive source positions merge into spans. A span that is a whole query number is the variable x (re-bound to x_i).
  2. A copy from an earlier tool entry's reply field is re-bound to the re-run's reply of that entry; a copy from an earlier entry's call-text field (a token: tool name or an
-    operand) is re-bound to that token's re-run value; a span that crosses fields is uncheckable. A span lying only in the separators (spaces, ' = ') is a constant.
+    operand) is re-bound to that token's re-run value; a span that crosses fields is uncheckable. A span lying only in the separators (spaces, ' = ') is a constant. (By value, the same
+    thing is: a token that equals an earlier reply may be that reply.)
  3. A partial copy of the query number aligns from the number's END (same offset from the end, same length, in x_i). A span that overlaps the query number but is not inside it,
-    or an x_i too short for it: uncheckable.
- 4. Copies from the example lines (any prompt text outside the query number) stay constants; bytes the writer generated (not copied) are constants.
+    or an x_i too short for it: uncheckable. (Copy records only: by value a token is a whole number.)
+ 4. Copies from the example lines (any prompt text outside the query number) stay constants; bytes the writer generated (not copied) are constants. (Copy records only: by value a
+    generated number equal to x may be x.)
  5. A try that makes a call: the final answer must be the last tool result (equal to the last call's reply text, which the answer then re-runs as written: a copy of it
     re-binds, generated bytes stay constants); else uncheckable. Ben's rule 2 (10-11): an answer is transcribed from the thinker's thoughts, never copied, so its record has no copied byte; an answer equal to the last result with such an empty record is bound to that result (else every call try would read as a constant and be rejected 'never reads x'). A try with NO call is checked by rules 1-4 alone (roadmap ruling c8ff22777a, 10-11): its copied pieces of x
-    are swapped (a partial copy aligned from the number's end, e.g. the query's last byte on last_digit) and written bytes stay constants. On a one-digit query the last
+    are swapped (a partial copy aligned from the number's end, e.g. the query's last byte on last_digit) and written bytes stay constants; with no copied byte (every real try since Ben's rule 2) it is one constant. On a one-digit query the last
     byte is the whole number, so that copy is x itself (rule 1) and the identity is rejected on examples with two digits.
 
 Disclosed choices (defaults the rules left open):
- * A try that never reads x (no span bound to x, directly or through re-bound results, reaching the answer) is REJECTED ('never reads x').
- * A try whose re-run on the query itself does not reproduce its own calls, replies and answer is UNCHECKABLE ('self re-run mismatch') (the record disagrees with the text).
- * A calculator reply '?' on an example is a REJECT.
+ * A try that never reads x (no span / token bound to x, directly or through re-bound results, reaching the answer) is REJECTED ('never reads x').
+ * A try whose re-run on the query itself does not reproduce its own calls, replies and answer is UNCHECKABLE ('self re-run mismatch') (the record disagrees with the text, or a reply is not
+   the calculator's).
+ * A calculator reply '?' on an example is a REJECT (of that assignment).
+ * By value: a token is a number only if it is -?digits as a whole (whitespace-separated); equality with x or with a reply is string equality; the tool name, anything not a number and the
+   separators are constants; the answer of a calling try is bound only to the last result (its one choice), never enumerated, and never to x; assignments are counted over the calls' number
+   tokens (a token with k matches has k + 1 choices) and the limit is on their product (16 is checkable, 17 is not). The reason for a rejected try is that of the first assignment (in
+   enumeration order: constants first) that reads x and fails, else 'never reads x'.
  * Partial copies of a reply or call-text token are aligned from the END of that field too (same offset from the end, same length); in a re-run a field too short for it = reject.
  * Merged spans are CUT at the boundaries of the query number and of tape fields (default cut=True; the rule's "whole-number spans"): a copied separator byte that is
    consecutive with a copied query digit (e.g. ' 12' copied as one run) is a separate constant, not a span crossing the number. cut=False is the fully literal merge, where
    such a run is uncheckable ('ambiguous partial copy'); it is kept only to measure how much the cut matters. With the cut, a partial copy is uncheckable only when x_i is too
    short for it.
- * A record that disagrees with the text (length, a src byte different from the written byte, a src on the tape beyond the entries written so far, non-ASCII text):
-   uncheckable ('bad copy record'). copied=True with src None is treated as generated.
+ * A record that disagrees with the text (length, a src byte different from the written byte, a src on the tape beyond the entries written so far, non-ASCII text) AND has a copied byte:
+   uncheckable ('bad copy record'). copied=True with src None is treated as generated. A record with no copied byte is not read at all (its length is not checked); an absent 'copies', an
+   absent / short list of call records or an empty record is "no copied byte".
  * Swapping is safe against wrong records: put back on the query (x_i = q), the swapped program is the original try, so a value that happens to collide with a rule constant
    (a wrongly-recorded copy, a constant equal to x) can only turn into a false REJECT on an example, never an accept of a try that is wrong.
-summarise(verdicts) counts verdicts and reasons (for the uncheckable-rate measurement)."""
+check_try's result also carries calls (how many the try made), assignments (how many were tried), fits (how many reproduce every example) and path ('value' / 'copy' / 'mixed' /
+'none' = no call). summarise(verdicts) counts verdicts and reasons (for the uncheckable-rate measurement) and the CB-0 mark 2 / addendum figures; Tally keeps them per kind and per pass
+(cb0.day fills one when its check returns check_try's dict)."""
+import itertools
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 
 from custom_io.models import tool as T
 from custom_io.models import b3g2 as G2
@@ -42,6 +66,8 @@ NUM = r'-?\d+'
 SHAPE = re.compile(rf'Examples: ({NUM}) -> ({NUM})((?:; {NUM} -> {NUM})*)\. Now ({NUM}) -> \?\s*')
 PAIR = re.compile(rf'; ({NUM}) -> ({NUM})')
 CALC = tuple(T.NAMES[1:])
+NUMTOK = re.compile(NUM, re.ASCII)
+MAX_ASSIGN = 16                                                                     # addendum 2: above this many assignments a try is uncheckable
 
 
 class Unch(Exception):
@@ -87,21 +113,81 @@ def layout(call, reply):
 
 
 class Trace:
-    """The row's try, ready to template: strings (the calls then the answer), their copy records, the tape entries."""
+    """The row's try, ready to template: strings (the calls then the answer), their copy records (None = none), the tape entries."""
 
     def __init__(self, trace, prompt, pq, cut):
+        if not isinstance(trace, dict):
+            raise Unch('malformed trace')
         calls, ans, cp = trace.get('calls'), trace.get('answer'), trace.get('copies')
         try:
             self.calls = [(str(a), str(b)) for a, b in calls]
-            self.answer = ans
-            self.recs = list(cp['calls']) + [cp['answer']]
         except Exception:
             raise Unch('malformed trace')
-        if not isinstance(self.answer, str) or len(self.recs) != len(self.calls) + 1:
+        self.answer = ans
+        if not isinstance(ans, str):
             raise Unch('malformed trace')
+        if cp is None:
+            self.recs = [None] * (len(self.calls) + 1)                                     # no record at all: every string is read by value
+        else:
+            cc = cp.get('calls') if isinstance(cp, dict) else 0
+            if cc is None:
+                cc = []
+            if not isinstance(cc, (list, tuple)) or len(cc) > len(self.calls):
+                raise Unch('malformed trace')
+            self.recs = list(cc) + [None] * (len(self.calls) - len(cc)) + [cp.get('answer')]
         self.prompt, self.pq, self.cut = prompt, pq, cut
         self.entries = [entry_of(c, r) for c, r in self.calls]
         self.lay = [layout(c, r) for c, r in self.calls]
+
+    def copied(self, idx):
+        """Does string idx (a call, or the answer = len(calls)) have a record with a copied byte (copied, with a source)? Only then is the copy record read; else it is read by value."""
+        rec = self.recs[idx]
+        if rec is None:
+            return False
+        if not isinstance(rec, (list, tuple)):
+            raise Unch('bad copy record')
+        return any(isinstance(r, dict) and r.get('copied') and r.get('src') is not None for r in rec)
+
+
+class Choice(list):
+    """The alternatives for one number token read by value: [constant, x (if it equals the query), each earlier result it equals]; each alternative is a segment."""
+
+
+def value_plan(tr, idx, xs):
+    """Call idx, read by value -> [segment | Choice]: the text split into whitespace and tokens; a number token that equals the query string xs may be x, one that equals the reply of an
+    earlier call may be that call's result, any may be a constant (the first alternative); everything else is a constant."""
+    out = []
+
+    def const(t):
+        if out and out[-1][0] == 'c':
+            out[-1] = ('c', out[-1][1] + t)
+        else:
+            out.append(('c', t))
+    for piece in re.split(r'(\s+)', tr.calls[idx][0]):
+        if piece == '':
+            continue
+        alts = []
+        if NUMTOK.fullmatch(piece):
+            if piece == xs:
+                alts.append(('x',))
+            alts += [('r', k, True, 0, len(piece)) for k in range(idx) if tr.calls[k][1] == piece]
+        if alts:
+            out.append(Choice([('c', piece)] + alts))
+        else:
+            const(piece)
+    return out
+
+
+def plan_of(tr, idx, xs):
+    """String idx (a call, or the answer = len(calls)) -> ([segment | Choice], 'copy' | 'value'): the copy record's template when the record has a copied byte, else binding by value
+    (the answer: of a calling try the last result, of a no-call try a constant)."""
+    if tr.copied(idx):
+        return template(tr, idx), 'copy'
+    if idx < len(tr.calls):
+        return value_plan(tr, idx, xs), 'value'
+    if tr.calls:                                                                      # rule 5 under Ben's rule 2: the answer is written from thoughts; equal to the last result IS that result
+        return ([('r', len(tr.calls) - 1, True, 0, len(tr.answer))] if tr.answer else []), 'value'
+    return ([('c', tr.answer)] if tr.answer else []), 'value'                          # addendum 1: a no-call answer is a constant
 
 
 def region(tr, src):
@@ -227,9 +313,58 @@ def reads_x(temps):
     return dep[-1]
 
 
+def n_assignments(plans):
+    """How many assignments the plans have: the product of the number of alternatives of every Choice."""
+    n = 1
+    for plan in plans:
+        for it in plan:
+            if isinstance(it, Choice):
+                n *= len(it)
+    return n
+
+
+def assignments(plans):
+    """Every assignment of the plans' Choices, constants first -> an iterator of temps (a list of segment lists, one per string)."""
+    where = [(i, j) for i, plan in enumerate(plans) for j, it in enumerate(plan) if isinstance(it, Choice)]
+    for pick in itertools.product(*[range(len(plans[i][j])) for i, j in where]):
+        temps = [list(plan) for plan in plans]
+        for (i, j), c in zip(where, pick):
+            temps[i][j] = plans[i][j][c]
+        yield temps
+
+
+def run_assignment(tr, temps, p, pure_value):
+    """One assignment -> (verdict 'accept' | 'reject', reason, detail, outputs, reads x). First the assignment is put back on the query: it must reproduce the original try (calls, replies and
+    answer). With a copy record in the try a mismatch is a record that disagrees with the text (Unch); a pure value-bound try cannot mismatch (checked: the calculator gives the written replies,
+    and every choice is a token equal to the query or to an earlier result), so there it is asserted."""
+    q = p['texts']['query']
+    try:
+        ents, ans = execute(tr, temps, q, False)
+    except Rej:
+        raise Unch('self re-run mismatch', 'a re-bound field is missing on the query itself')
+    if ents != tr.calls or ans != tr.answer:
+        if pure_value:
+            raise AssertionError('a value assignment put back on the query did not reproduce the try: %r -> %r, %r' % (temps, ents, ans))
+        raise Unch('self re-run mismatch')
+    outputs = [None] * len(p['texts']['examples'])
+    if not reads_x(temps):
+        return 'reject', 'never reads x', '', outputs, False
+    for i, (xs, ys) in enumerate(p['texts']['examples']):
+        try:
+            _, out = execute(tr, temps, xs, True)
+        except Rej as e:
+            return 'reject', str(e), f'example {i}', outputs, True
+        outputs[i] = out
+        if out != ys:
+            return 'reject', 'example mismatch', f'example {i}: {out!r} != {ys!r}', outputs, True
+    return 'accept', 'reproduces every example', '', outputs, True
+
+
 def check_try(row, trace, cut=True):
-    """-> dict(verdict 'accept' | 'reject' | 'uncheckable', reason (a category), detail, outputs [re-run answer per example, None if not run], answer). Reads row['prompt'] only."""
-    res = dict(verdict='uncheckable', reason='', detail='', outputs=[], answer=trace.get('answer') if isinstance(trace, dict) else None)
+    """-> dict(verdict 'accept' | 'reject' | 'uncheckable', reason (a category), detail, outputs [re-run answer per example, None if not run], answer, calls (how many calls the try made),
+    assignments (how many were run), fits (how many of them reproduce every example), path). Reads row['prompt'] only."""
+    res = dict(verdict='uncheckable', reason='', detail='', outputs=[], answer=trace.get('answer') if isinstance(trace, dict) else None,
+               calls=len(trace['calls']) if isinstance(trace, dict) and isinstance(trace.get('calls'), (list, tuple)) else 0, assignments=0, fits=0, path='')
 
     def fin(v, reason, detail=''):
         res.update(verdict=v, reason=reason, detail=detail)
@@ -243,36 +378,81 @@ def check_try(row, trace, cut=True):
         tr = Trace(trace, pr, p['spans']['query'], cut)
         if tr.calls and tr.answer != tr.calls[-1][1]:
             return fin('uncheckable', 'answer is not the last result')           # rule 5 (tries that make a call; a no-call answer is checked by rules 1-4)
-        temps = [template(tr, i) for i in range(len(tr.calls) + 1)]
-        if tr.calls and tr.answer and tr.answer == tr.calls[-1][1] and not any(isinstance(r, dict) and r.get('copied') for r in tr.recs[-1]):
-            temps[-1] = [('r', len(tr.calls) - 1, True, 0, len(tr.answer))]   # rule 5 under Ben's rule 2: the answer is written from thoughts (no copy record), so an answer equal to the last result IS that result
-        q = p['texts']['query']
-        try:
-            ents, ans = execute(tr, temps, q, False)
-        except Rej:
-            return fin('uncheckable', 'self re-run mismatch', 'a re-bound field is missing on the query itself')
-        if ents != tr.calls or ans != tr.answer:
-            return fin('uncheckable', 'self re-run mismatch')
-        res['outputs'] = [None] * len(p['texts']['examples'])
-        if not reads_x(temps):
-            return fin('reject', 'never reads x')
-        for i, (xs, ys) in enumerate(p['texts']['examples']):
-            try:
-                _, out = execute(tr, temps, xs, True)
-            except Rej as e:
-                return fin('reject', str(e), f'example {i}')
-            res['outputs'][i] = out
-            if out != ys:
-                return fin('reject', 'example mismatch', f'example {i}: {out!r} != {ys!r}')
-        return fin('accept', 'reproduces every example')
+        built = [plan_of(tr, i, p['texts']['query']) for i in range(len(tr.calls) + 1)]
+        plans, kinds = [b[0] for b in built], [b[1] for b in built]
+        res['path'] = 'none' if not tr.calls else ('copy' if all(k == 'copy' for k in kinds[:-1]) else ('value' if all(k == 'value' for k in kinds[:-1]) else 'mixed'))
+        if [run_call(c) for c, _ in tr.calls] != [r for _, r in tr.calls]:
+            return fin('uncheckable', 'self re-run mismatch')                    # a written reply is not the calculator's
+        n = n_assignments(plans)
+        res['assignments'] = n
+        if n > MAX_ASSIGN:
+            return fin('uncheckable', 'too many assignments', f'{n} > {MAX_ASSIGN}')
+        pure_value = all(k == 'value' for k in kinds)
+        outs = [run_assignment(tr, temps, p, pure_value) for temps in assignments(plans)]
+        assert len(outs) == n
+        fits = [o for o in outs if o[0] == 'accept']
+        res['fits'] = len(fits)
+        if fits:
+            res['outputs'] = fits[0][3]
+            return fin('accept', fits[0][1])
+        v, reason, detail, outputs, _ = next((o for o in outs if o[4]), outs[0])      # the first assignment that read x and failed, else the first ('never reads x')
+        res['outputs'] = outputs
+        return fin('reject', reason, detail)
     except Unch as e:
-        return fin('uncheckable', str(e))
+        return fin('uncheckable', e.args[0], e.args[1] if len(e.args) > 1 else '')
 
 
 def check(row, trace, cut=True):
     return check_try(row, trace, cut)['verdict'] == 'accept'
 
 
+class Counts:
+    """The tallies of one set of check_try results (one kind, or all). as_dict(): n; verdict / reason counts; the CB-0 mark 2 and addenda figures:
+    calling / no_call (tries that made a call / none) and no_call_share (of n); uncheckable_calling (uncheckable tries among the calling ones: mark 2 counts those only) with its share of the
+    calling tries (uncheckable_calling_share, the mark 2 rate) and of all tries (uncheckable_calling_of_tries); accepted, accepted_multi (accepted with more than one fitting assignment)
+    and accepted_multi_share (of the accepted); path counts. A share is None when its denominator is 0."""
+
+    def __init__(self):
+        self.n = self.calling = self.unch_calling = self.accepted = self.multi = 0
+        self.verdict, self.reason, self.path = Counter(), Counter(), Counter()
+
+    def add(self, v):
+        self.n += 1
+        self.verdict[v['verdict']] += 1
+        self.reason[f"{v['verdict']}/{v['reason']}"] += 1
+        calling = v.get('calls', 0) > 0
+        self.calling += calling
+        self.unch_calling += calling and v['verdict'] == 'uncheckable'
+        if v['verdict'] == 'accept':
+            self.accepted += 1
+            self.multi += v.get('fits', 0) > 1
+        if v.get('path'):
+            self.path[v['path']] += 1
+
+    def as_dict(self):
+        share = lambda a, b: a / b if b else None
+        return dict(n=self.n, verdict=dict(self.verdict), reason=dict(self.reason), calling=self.calling, no_call=self.n - self.calling, no_call_share=share(self.n - self.calling, self.n),
+                    uncheckable_calling=self.unch_calling, uncheckable_calling_share=share(self.unch_calling, self.calling), uncheckable_calling_of_tries=share(self.unch_calling, self.n),
+                    accepted=self.accepted, accepted_multi=self.multi, accepted_multi_share=share(self.multi, self.accepted), path=dict(self.path))
+
+
 def summarise(verdicts):
-    """A list of check_try results -> dict(n, verdict={name: count}, reason={'verdict/reason': count}): the reason counts the uncheckable-rate mark is measured from."""
-    return dict(n=len(verdicts), verdict=dict(Counter(v['verdict'] for v in verdicts)), reason=dict(Counter(f"{v['verdict']}/{v['reason']}" for v in verdicts)))
+    """A list of check_try results -> Counts.as_dict(): n, verdict={name: count}, reason={'verdict/reason': count} (the uncheckable-rate measurement), and the mark 2 / addenda figures."""
+    c = Counts()
+    for v in verdicts:
+        c.add(v)
+    return c.as_dict()
+
+
+class Tally:
+    """Counts per kind (add(kind, check_try result)); summary() -> dict(by_kind={kind: Counts.as_dict()}, all=Counts.as_dict()). The kind is for the report only; the checker never reads it."""
+
+    def __init__(self):
+        self.kinds, self.total = defaultdict(Counts), Counts()
+
+    def add(self, kind, v):
+        self.kinds[kind].add(v)
+        self.total.add(v)
+
+    def summary(self):
+        return dict(by_kind={k: c.as_dict() for k, c in sorted(self.kinds.items())}, all=self.total.as_dict())

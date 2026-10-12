@@ -4,7 +4,10 @@ creative/sleep.py (_order, check_visits). Self-contained: only custom_io, torch 
 (choices, picks), torch.manual_seed(seed) (the night's training draws); scoring is isolated (see row_losses).
 
 THE CHECKER. `check(row, trace) -> bool` (does this try fit the question's OWN worked examples) is supplied by the caller and is a REQUIRED argument of day / cycle: there is no default,
-so nothing here can fall back to reading the answer key. A trace is the dict ST1 uses: dict(calls=[(call text, reply)], answer=str).
+so nothing here can fall back to reading the answer key. A trace is the dict ST1 uses: dict(calls=[(call text, reply)], answer=str), plus 'copies' when the writer still copies.
+A check may return check_try's dict (cb0_check.check_try) instead of a bool: a try fits when its 'verdict' is 'accept', and the day also writes d['checker'] = dict(greedy, pass1, pass2), each
+cb0_check.Tally.summary() (per kind, and all): the no-call share, the uncheckable tries among the calling ones (CB-0 mark 2), and the share of accepted tries with more than one fitting
+assignment (creative roadmap addenda 1 and 2). With a bool check d['checker'] is None.
 
 1. THE GEMMA INPUT CACHE. B3 with eg_embed reads every question through models/eg.FrozenEG.encode, which memoises only the LAST call, so every try and every night recomputes Gemma.
 eg_cache(model, max_items=20000) is a context manager that wraps that model's encoder (model._eg[0].encode, and encode_texts, the tool-reply encoder read like the question under Ben's rule 1, each with its own per-text store; patched on the instance, restored on exit) with a cache keyed per PROMPT (and device):
@@ -166,8 +169,20 @@ def _sample(model, rows, make_batch, n, T, seed, batch_size):
 
 def day(model, rows, make_batch, check, seed, T=T_SAMPLE, n1=N1, n2=N2, batch_size=64):
     """day_f on a B3G2: greedy try, pass 1 (n1 tries, seed), pass 2 (n2 tries, seed + 1000, only rows with no pass-1 fit); plain sampling.
-    -> dict(greedy_fit [bool per row], tries [list per row, sampling order], fit [bool per try, per row], fit1 [pass 1 has a fit], fit_final, drawn=dict(greedy, pass1, pass2, pass2_rows))."""
+    -> dict(greedy_fit [bool per row], tries [list per row, sampling order], fit [bool per try, per row], fit1 [pass 1 has a fit], fit_final, drawn=dict(greedy, pass1, pass2, pass2_rows),
+    checker = None, or (the check returned check_try's dict) dict(greedy, pass1, pass2) of cb0_check.Tally.summary(): per kind and all, the figures of the module docstring)."""
     rows = list(rows)
+    tally = {}
+
+    def fits(which, r, t):
+        v = check(r, t)
+        if not isinstance(v, dict):
+            return bool(v)
+        if which not in tally:
+            from custom_io.cb0_check import Tally
+            tally[which] = Tally()
+        tally[which].add(kind_of(r), v)
+        return v['verdict'] == 'accept'
     was = model.training
     model.eval()
     try:
@@ -177,21 +192,23 @@ def day(model, rows, make_batch, check, seed, T=T_SAMPLE, n1=N1, n2=N2, batch_si
                 ts = model.sample_traces(make_batch(rows[a:a + batch_size]), 0.0, gen)
                 assert len(ts) == len(rows[a:a + batch_size])
                 gt += ts
-            gf = [bool(check(r, t)) for r, t in zip(rows, gt)]
+            gf = [fits('greedy', r, t) for r, t in zip(rows, gt)]
             t1 = _sample(model, rows, make_batch, n1, T, seed, batch_size)
             tries = [list(t) for t in t1]
-            fit = [[bool(check(r, x)) for x in t] for r, t in zip(rows, tries)]
+            fit = [[fits('pass1', r, x) for x in t] for r, t in zip(rows, tries)]
             fit1 = [any(f) for f in fit]
             more = [i for i, f in enumerate(fit1) if not f]
             if more:
                 t2 = _sample(model, [rows[i] for i in more], make_batch, n2, T, seed + 1000, batch_size)
                 for i, t in zip(more, t2):
                     tries[i] += t
-                    fit[i] += [bool(check(rows[i], x)) for x in t]
+                    fit[i] += [fits('pass2', rows[i], x) for x in t]
     finally:
         model.train(was)
+    from_tally = lambda k: tally[k].summary() if k in tally else None
     return dict(greedy_fit=gf, tries=tries, fit=fit, fit1=fit1, fit_final=[any(f) for f in fit],
-                drawn=dict(greedy=len(rows), pass1=n1 * len(rows), pass2=n2 * len(more), pass2_rows=len(more)))
+                drawn=dict(greedy=len(rows), pass1=n1 * len(rows), pass2=n2 * len(more), pass2_rows=len(more)),
+                checker=dict(greedy=from_tally('greedy'), pass1=from_tally('pass1'), pass2=from_tally('pass2')) if tally else None)
 
 
 # ---------------------------------------------------------------- 3. records
