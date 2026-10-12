@@ -736,5 +736,5 @@ as sealed: mean sealed near (sheet.v2, 420 questions, 7 scored kinds) over night
   EVEN (all arms lose 6-9 points; the 3M add-on is off outside its tool, so this is the domain mode's known in_dist cost,
   not a BQ effect). Seconds per night (s201, uncontended): about 605 INFORMED, 475 EVEN.
 - Reading (suggested): at 256 per night the even arm spends 30% of its budget on 3 kinds the panel does not score and
-  still gets two thirds of the way; the headroom a perfect practice picker could buy is about +5 to +7.5 points, which
+  still reaches 71% (s200) and 82% (s201) of INFORMED's score; the headroom a perfect practice picker could buy is about +5 to +7.5 points, which
   is real but at the edge of what one run per arm can separate. Results: `dopamine/results/bq/`.
