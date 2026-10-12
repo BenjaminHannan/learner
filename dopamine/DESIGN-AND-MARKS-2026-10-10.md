@@ -501,3 +501,50 @@ progress drive (motivator.py `--drive progress`, constants unchanged) instead of
   extra, the tool checks it, and a mismatching extra is never shown (reward 0); the help-value head learns from those
   rewards. This is the deployable form ("check your unasked work before offering it"). Reported only, no mark. The
   suggested even-vs-even A/A pair is not added to M2: its paired t interval over 6 pairs already measures run-to-run noise.
+
+**B17. G-ceiling result (3:40 AM ET 10-12): the guess is readable from the model's state; behaviour adds nothing at 3M.**
+Frozen v7 sheet night 4 models, 32,000 fresh questions each (success 0.333 s200, 0.309 s201), 5-fold cross-fit by kind.
+Results: `dopamine/results/gc/s20x/RESULT.md` (copies in `/mnt/project-files/dopamine/gc/`). Within-kind AUC:
+| probe | s200 2.5k / 8k / 16k / 32k | s201 2.5k / 8k / 16k / 32k |
+|---|---|---|
+| S900 (state) | 0.637 / 0.662 / 0.696 / 0.703 | 0.656 / 0.685 / 0.690 / 0.704 |
+| P (behaviour) | 0.603 / 0.603 / 0.594 / 0.594 | 0.563 / 0.568 / 0.568 / 0.567 |
+| S900+P | 0.638 / 0.662 / 0.696 / 0.703 | 0.653 / 0.684 / 0.689 / 0.704 |
+| length only | 0.599 / 0.587 / 0.575 / 0.575 | 0.580 / 0.580 / 0.574 / 0.571 |
+| diagnostic (never shipped) | 0.590 / 0.568 / 0.562 / 0.562 | 0.568 / 0.562 / 0.565 / 0.564 |
+- Marks (B15), both seeds: "Drift is a main limit" HOLDS (0.637 vs 0.593 needed; 0.656 vs 0.647). "Readable with enough
+  data" PASSES (S900 0.696 / 0.690 at 16k). "Behaviour beats state" does not hold (P 0.59 / 0.57, below S900 at every
+  size; adding P to S900 changes nothing). PROVED WRONG does not hold. Shown.
+- Brier: S900 beats the frozen model's own per-kind rate from 8k rows on (32k: 0.1538 vs 0.1698 s200, 0.1252 vs 0.1397
+  s201) but is worse at 2.5k (0.2001 vs 0.1744; 0.1625 vs 0.1370): 900 inputs on 2,000 training rows is overconfident.
+  Shown.
+- Checked: none of the 32,000 questions was a practice prompt of its run (0 overlap with the 10,091 / 10,830 logged rows),
+  so the signal is not "I trained on this one". Shown.
+- Reading (suggested): at 3M the model's state does carry "will I get this one right" within a kind, worth ~0.70 AUC once
+  the head has ~16k rows from the same model. D0 failed (0.54 / 0.60) because its rows came from earlier, different
+  models (drift) and there were few of them, not because the signal is absent. The "answer quickly and slowly, trust
+  agreement" idea is not supported at 3M; the shipped head stays a reader of state. Untested: whether the 0.70 is the
+  model knowing itself or the head reading question difficulty from the reader; for helping and practice either is useful.
+- Decision: the guesser's rows should come from the model as it is now, not from past days. Next test, G-transfer below.
+
+**G-transfer (no training; marks sealed 3:45 AM ET 10-12, before any code).** One change from D0: the head is fit on a
+nightly self-quiz of the current model instead of on past days' practice. Question: does a head fit on fresh, even-share
+self-quiz rows rank the real practice tries of the next day (the drive's mix) within kind?
+- Runs: v7 sheet s200 and s201 (D0's runs). For each day d = 2..N that D0 scored: the model that tried day d (night d-1)
+  answers 8,000 fresh questions (make_practice, even share, the run's constants, own seed per day, the run's quiz and all
+  logged practice prompts excluded), tool-labelled, never trained on. Fit S900 (D0's fit_logistic, C = 1, standardised)
+  on those; score day d's logged practice tries (the same rows D0 scored, features by D0's own pass).
+- Baseline, same rows, same script: D0's walk-forward S900 (fit on days < d); must reproduce D0's 0.543 / 0.597 within
+  0.01 or both numbers are reported and the run is not judged.
+- Statistic: within-kind AUC pooled over days 2..N, groups = day x kind with >= 10 right and >= 10 wrong, row-weighted.
+| Mark (each seed) | Holds when |
+|---|---|
+| PASS | self-quiz head >= 0.62 and >= baseline + 0.05 |
+| PROVED WRONG | self-quiz head <= baseline + 0.01 on either seed |
+  Reported: Brier vs the self-quiz's own per-kind rate and vs D0's K; the same head fit on 2,500 of the 8,000 rows.
+- If PASS: the shipped guesser is a read-only head refit each night on a self-quiz of the current model (a fixed routine:
+  the model's own checked tries, never trained on), and D1 ("go where the surprises are") becomes testable again with its
+  own marks. If PROVED WRONG: the signal does not carry to the real practice mix; within-kind guesser work stops at 3M and
+  this pair (G-ceiling, G-transfer) reruns on the first 10M checkpoint.
+- Where: the cloud box after P3 (free; the Mac is on M2 and the Game world runs). About 0.03 s per question, so about
+  5 minutes per day per seed.
