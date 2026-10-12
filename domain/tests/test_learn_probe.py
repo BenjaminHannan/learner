@@ -378,3 +378,49 @@ def test_guarded_swaps_factors_keeps_base(monkeypatch):
     new = g.refresh()
     assert new is not first and new.base is first.base and new.F == {'gen': 2} and len(bases) == 1 and g.measures == 2
     assert M.mode[-1] is True   # training mode restored
+
+
+def test_main_la_without_addon_flags_uses_constants(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
+    L.main(['train', '--arm', 'LA', '--out', 'x'])   # used to raise KeyError
+    assert seen['addon_rank'] is None and seen['addon_alpha'] is None
+
+
+def test_new_path_flags_defaults_and_overrides(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
+    L.main(['train', '--arm', 'LB', '--out', 'x'])
+    assert seen['parent'] == L.PARENT and seen['probe'] == SP.PROBE and seen['eval_rows'] is None
+    assert seen['diary_compare'] == L.DIARY_LOG and seen['diary_cache'] is None
+    L.main(['train', '--arm', 'LB', '--out', 'x', '--parent', '/a', '--probe', '/b', '--eval-rows', '/c',
+            '--diary-compare', 'none', '--diary-cache', '/d'])
+    assert (seen['parent'], seen['probe'], seen['eval_rows'], seen['diary_compare'], seen['diary_cache']) == ('/a', '/b', '/c', 'none', '/d')
+
+
+def test_eval_sets_probe_and_eval_rows_local(tmp_path):
+    import json
+    probe = [{'id': f'p{c}{i}', 'kind': 'SUM', 'split': c, 'prompt': f'p{c}{i}', 'answer': '1'} for c in ('F0-near', 'F4-two') for i in range(3)]
+    pp = tmp_path / 'probe.jsonl'
+    pp.write_text(''.join(json.dumps(r) + '\n' for r in probe))
+    ev = [{'id': f'e-{c}-{i}', 'kind': 'SUM', 'split': c, 'prompt': f'q{c}{i}', 'answer': '1'} for c in L.L5_CELLS for i in range(L.L5_EVAL_N)]
+    ep = tmp_path / 'e.jsonl'
+    ep.write_text(''.join(json.dumps(r) + '\n' for r in ev))
+    sets = L.eval_sets(_fake_train('F4-two'), 'l5', L.L5_SEED, l5_path=str(ep), probe_path=str(pp))
+    assert len(sets['F0-near']) == 3 and len(sets['S5']) == L.L5_EVAL_N
+
+
+def test_diary_cache_and_compare_skipped(tmp_path):
+    import json
+    rows = [{'prompt': f'p{i}', 'answer': str(i)} for i in range(4)]
+    cache = tmp_path / 'diary.jsonl'
+    cache.write_text(''.join(json.dumps(r) + '\n' for r in rows))
+    out = tmp_path / 'o'
+    out.mkdir()
+    diary, cmp = L.build_parent_diary(None, None, None, str(out), log_path='none', cache=str(cache))   # nothing else is read
+    assert diary == rows and cmp['compare'] == 'skipped' and cmp['sha256'] == L.file_sha256(str(cache))
+    assert json.load(open(out / 'diary-compare.json'))['compare'] == 'skipped'
+    log = tmp_path / 'log.jsonl'
+    log.write_text(''.join(json.dumps({'event': 'row', 'kind': 'diary', 'day': 0, **r}) + '\n' for r in rows[:3]))
+    _, cmp = L.build_parent_diary(None, None, None, str(out), log_path=str(log), cache=str(cache))
+    assert cmp['same_prompt_set'] == 3 and cmp['only_mine'] == 1

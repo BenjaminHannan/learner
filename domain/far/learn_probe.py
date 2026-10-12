@@ -538,14 +538,14 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 
-def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L3_EVAL_ROWS, l5_path=L5_EVAL_ROWS):
+def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L3_EVAL_ROWS, l5_path=L5_EVAL_ROWS, probe_path=None):
     """The scored cells: name -> rows (each row's id made unique across cells; the row's split is the cell name).
     cells 'l1': F4-two, F0-near, F2b-rows, fit (L1, unchanged). cells 'all' (L2): every probe split (scored kinds), fit,
     and the sealed sheet.v3 panel (scored kinds) as v3-near / v3-far (scoring only). cells 'l3': S, HP, HO, HPO (from the L3 eval
     file), probe F0-near and F4-two, fit. cells 'l4': everything in 'all' plus S, HP, HO, HPO.
     cells 'l5': S5, S, HP, HO, HPO (from the L5 eval file), probe F0-near and F4-two, fit."""
     assert cells in ('l1', 'all', 'l3', 'l4', 'l5'), cells
-    probe = [r for r in load_jsonl(SP.PROBE) if r['kind'] in SP.SCORED]
+    probe = [r for r in load_jsonl(probe_path or SP.PROBE) if r['kind'] in SP.SCORED]
     names = {'l1': ('F4-two', 'F0-near', 'F2b-rows'), 'all': PROBE_CELLS, 'l4': PROBE_CELLS, 'l3': ('F0-near', 'F4-two'), 'l5': ('F0-near', 'F4-two')}[cells]
     sets = {}
     if cells in ('l3', 'l4'):
@@ -701,11 +701,47 @@ def load_guard(src):
     return kf, gp
 
 
-def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_path=DIARY_LOG):
+def file_sha256(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for blk in iter(lambda: f.read(1 << 20), b''):
+            h.update(blk)
+    return h.hexdigest()
+
+
+def compare_diary(diary, log_path, cmp):
+    """Fill cmp with how the diary's prompts/answers compare with the main-brain run's day-0 diary rows in log_path.
+    log_path None / 'none' -> 'skipped'; a missing file -> ref_n None."""
+    if log_path is None or str(log_path).lower() == 'none':
+        cmp['log'] = None
+        cmp['compare'] = 'skipped'
+    elif os.path.exists(log_path):
+        ref = [(r['prompt'], r['answer']) for r in load_jsonl(log_path) if r.get('event') == 'row' and r.get('kind') == 'diary' and r.get('day') == 0]
+        mine = [(r['prompt'], r['answer']) for r in diary]
+        rp, mp = {p for p, _ in ref}, {p for p, _ in mine}
+        ra = dict(ref)
+        cmp.update(ref_n=len(ref), same_prompt_set=len(rp & mp), only_mine=len(mp - rp), only_ref=len(rp - mp),
+                   same_position=sum(a[0] == b[0] for a, b in zip(ref, mine)),
+                   same_answer_on_shared=sum(ra.get(p) == a for p, a in mine if p in rp))
+    else:
+        cmp['ref_n'] = None
+    return cmp
+
+
+def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_path=DIARY_LOG, cache=None):
     """The parent's own answers on training prompts, rebuilt as domain/mode.py main does (pool of the data folder's train file,
     shuffled by Random(f'{seed}-diary'), the first `check` held out, then build_diary). Diary size/check from the guard
-    source's kf99n constants (the s200 sheet run's). Cached to OUT/diary.jsonl; prompts compared with the run's diary rows.
-    -> (diary rows, compare dict)."""
+    source's kf99n constants (the s200 sheet run's). Written to OUT/diary.jsonl; prompts compared with the run's diary rows
+    (log_path 'none' skips the comparison). cache: an existing diary.jsonl is loaded instead of rebuilding (nothing else read).
+    -> (diary rows, compare dict; has 'sha256' of the diary file used)."""
+    if cache and os.path.exists(cache):
+        diary = load_jsonl(cache)
+        cmp = {'n': len(diary), 'cache': cache, 'sha256': file_sha256(cache), 'log': log_path}
+        compare_diary(diary, log_path, cmp)
+        with open(os.path.join(out, 'diary-compare.json'), 'w') as f:
+            json.dump(cmp, f, indent=1)
+        print(f'diary: loaded {len(diary)} rows from {cache} (sha256 {cmp["sha256"][:12]}); {cmp}', flush=True)
+        return diary, cmp
     from domain import mode
     cons = dict(json.load(open(os.path.join(src, 'mainbrain', GUARD_CONSTANTS))))
     helps = sheet_tool.help()
@@ -722,20 +758,12 @@ def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_pa
     events = []
     diary, check, pos = mode.build_diary(m, pool, cons, ctx, lambda ev, **kw: events.append((ev, kw)), lambda **kw: None)
     secs = round(time.time() - t0, 1)
-    with open(os.path.join(out, 'diary.jsonl'), 'w') as f:
+    dpath = os.path.join(out, 'diary.jsonl')
+    with open(dpath, 'w') as f:
         for r in diary:
             f.write(json.dumps(r) + '\n')
-    cmp = {'n': len(diary), 'check': len(check), 'scanned': pos, 'secs': secs, 'log': log_path}
-    if os.path.exists(log_path):
-        ref = [(r['prompt'], r['answer']) for r in load_jsonl(log_path) if r.get('event') == 'row' and r.get('kind') == 'diary' and r.get('day') == 0]
-        mine = [(r['prompt'], r['answer']) for r in diary]
-        rp, mp = {p for p, _ in ref}, {p for p, _ in mine}
-        ra = dict(ref)
-        cmp.update(ref_n=len(ref), same_prompt_set=len(rp & mp), only_mine=len(mp - rp), only_ref=len(rp - mp),
-                   same_position=sum(a[0] == b[0] for a, b in zip(ref, mine)),
-                   same_answer_on_shared=sum(ra.get(p) == a for p, a in mine if p in rp))
-    else:
-        cmp['ref_n'] = None
+    cmp = {'n': len(diary), 'check': len(check), 'scanned': pos, 'secs': secs, 'log': log_path, 'sha256': file_sha256(dpath)}
+    compare_diary(diary, log_path, cmp)
     with open(os.path.join(out, 'diary-compare.json'), 'w') as f:
         json.dump(cmp, f, indent=1)
     print(f'diary: built {len(diary)} rows (check {len(check)}, scanned {pos}) in {secs}s; vs {log_path}: {cmp}', flush=True)
@@ -775,7 +803,7 @@ class Guarded:
 
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
-          guard_every=500, guard_src=None):
+          guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -794,7 +822,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
     fit_seed = L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
-    sets = eval_sets(train_rows, cells, fit_seed)
+    ev = {'l3_path': eval_rows or L3_EVAL_ROWS, 'l5_path': eval_rows or L5_EVAL_ROWS}
+    sets = eval_sets(train_rows, cells, fit_seed, probe_path=probe, **ev)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
     torch.manual_seed(SEED)
@@ -816,13 +845,13 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         assert all(p.requires_grad for p in params)
         if guard:
             kf, gp = load_guard(guard_src)
-            diary, _ = build_parent_diary(m, ck, guard_src, out)
+            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache)
             m.eval()
             guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']))
             opt = guarded.opt
             params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
             extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=GUARD_COMMIT,
-                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary),
+                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
                          guard_frozen=len(guarded.frozen))
             print(f'LB+kf guard: trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
         else:
@@ -884,6 +913,11 @@ def main(argv=None):
     a.add_argument('--guard', choices=['kf'], default=None, help='arm LB only: the main-brain K-FAC guard')
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
+    a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
+    a.add_argument('--probe', default=SP.PROBE, help='sheet probe file (default: the shared probe)')
+    a.add_argument('--eval-rows', default=None, help='eval file for --cells l3/l4 (default eval-rows-l3) or l5 (default eval-rows-l5)')
+    a.add_argument('--diary-compare', default=DIARY_LOG, help="main-brain log to compare the diary with; 'none' skips (recorded as skipped)")
+    a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a = a.parse_args(argv)
     if a.stage == 'build':
@@ -899,11 +933,13 @@ def main(argv=None):
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every)   # refuse before any work
-        addon_size(a.arm, {}, a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
+        from domain.mode import CONST_PATH
+        addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
               train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha,
               harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
-              guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src)
+              guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
+              parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache)
 
 
 if __name__ == '__main__':
