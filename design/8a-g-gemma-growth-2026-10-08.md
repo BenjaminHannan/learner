@@ -831,3 +831,9 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   about 4 AM ET Wednesday) is futile by addendum I as well as dropped by Ben (AE). `nog1_go.ps1` stops it once Ben types his line in
   the Mac chat; nothing else changes. Order unchanged (AB, AD, AE). The size question stays with test WIDE (pass >= 76.31, fail
   <= 75.01; the plain 10M's 72.47 is reported next to it, not a new mark) and with G2f. The big-run thread is told.
+- **Order change (big-run's suggestion, 8:30 AM ET; the plain gain must be measured at the B3 caps before any 10M agent-model
+  readout):** g2c10s (8aG2C10S, the plain 10M twin at the B3 caps) moves up to run right after G2Q. How: one file,
+  `WORK\insert\40-g2c10s.txt` = `queue: 8aG2C10S` / `src: src-b3g2` / `card: g2c10s.template.md`, written by a Mac job after the
+  install, so it runs at the waiter's first insert check point after 30-g2q. The chain's own g2c10s step later finds its
+  RESULT.json and the queue runner skips it (a run whose RESULT.json exists is skipped). Any 10M agent-model job is inserted as
+  50- or later. g2c3, B3 group 1 and the s401 pairs move back by g2c10s's hours.
