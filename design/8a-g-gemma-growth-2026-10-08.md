@@ -859,7 +859,7 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
 - **Rule from now on (every size test; WIDE tonight first):** report three gain differences, ours minus plain, side by side:
   (1) pooled-5 against the plain model with its calculator (PT / PTS `calc` lesion; PTC's intact score once it exists); (2) the
   21-family block and the 13-family block; (3) pooled-5 against the plain model without a calculator (the old number, kept so
-  earlier readouts stay comparable). The scaling bar ([[scaling-bar-ben]]) is judged on (1) from now on; (2) and (3) are reported.
+  earlier readouts stay comparable). The scaling bar (Ben's rule of 8 Oct: ours must gain more from size than the plain model) is judged on (1) from now on; (2) and (3) are reported.
   Marks already fixed for running tests are unchanged (WIDE's absolute 76.31 / 75.01, G2f's floor, AT-1's gate).
 - **Arm PTC (plain model trained with the calculator; one change from PTS):** PTS's config (same pool p10-rung30-s400-a64-L,
   caps_b3s.json, Gemma front, seed 400, accum as PTS) plus `calc_train`: in training, the characters the calculator writes (the
