@@ -44,3 +44,13 @@ Confirm (later): 6 paired seeds, mean >= +0.3 with the 95% interval above 0. Car
 Checked against the code before adopting (shown): word scores include the end-of-word mark and the answer registers hold the word
 reversed (game/play.py `_words`), so "do" does not absorb "down" by a prefix identity; the view shows the player's facing
 (game/crafter_text.py FACING_CHARS), so "do" is not blind by construction.
+
+## A19c (7:01 AM ET 10-12, before any GW-PC number): code pin, Mac start, distillation probe
+- Code: game code = commit dc349958b (game/distil.py, `--start distil` in game/mode.py); game/mac_gwp8.sh refuses other game code.
+  Started on Ben's Mac at 6:42 AM ET (GW8_TAG=gwpc, 3 torch threads a run, next to the Dopamine thread's M2 jobs). Nothing above
+  changes; thread count changes speed, not the method.
+- Probe (not a run that counts, cloud box): the s200 parent, T0 19.69, 4,096 views of the cloud GW-P8 night-0 quiz (quiz worlds,
+  never sealed), the distillation exactly as above but run past the stop rule. Held-out KL: 14.12 before, then 3.39, 1.12, 0.25,
+  0.096, 0.049 (the stop rule would end here, pass 5), 0.035, 0.031. Mean entropy at T = 1: 0.003 before, 1.18 at pass 5, target
+  1.32. Shown: the distillation converges well inside 12 passes; PC-0 (sealed-map score of the distilled policy) still decides
+  validity.
