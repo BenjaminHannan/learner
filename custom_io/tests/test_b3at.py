@@ -1,4 +1,4 @@
-"""python3 -m custom_io.tests.test_b3at   (CPU, stub Gemma; OMP_NUM_THREADS=2; about an hour: the toy trains, the B3G2 modules re-run, the speed run does 100 updates)
+"""python3 -m custom_io.tests.test_b3at   (CPU, stub Gemma; OMP_NUM_THREADS=2; about an hour: the toy trains, the B3G2 modules re-run, the speed run times 100 micro-batches at 280 letters and 20 at 2,000)
 The ONE module that runs the nine sealed AT-0 checks (architecture/AT-BUILD-SPEC-2026-10-11.md sec. 6; big-run PLAN.md sixth Addendum item (4)) in order, each printing exactly one line
 'ok AT-0 (k) <what was shown, with the numbers>' (or 'FAIL AT-0 (k) ...'), then 'ALL OK'. A failing check does not stop the later ones (the run is long): every failure is printed and the
 module ends with a non-zero exit and no 'ALL OK'. Nothing here is weakened: each check is the test of the module that owns it, called as written.
@@ -14,10 +14,10 @@ module ends with a non-zero exit and no 'ALL OK'. Nothing here is weakened: each
   (vii)  every cap in the turn loop has a counter, all read 0      test_b3at_core.test_counters and test_teacher_forcing_caps_and_keep, plus test_b3at_run.test_train_py
                                                                    (train.py --model b3at end to end: every capcount fault counter 0 on a tiny run)
   (viii) trained count at 3M within 2% of g2c3s                    test_b3at_run.test_3m_count (printed with its breakdown)
-  (ix)   seconds per update and peak memory                        custom_io/at0_speed.py, 100 updates at 3M on CPU: REPORTED, NOT GATED
+  (ix)   seconds per update and peak memory                        custom_io/at0_speed.py at 3M on CPU, per micro-batch and the accum-32 update estimate: REPORTED, NOT GATED
 Ben's rules the checks stand on: tool replies reach the model ONLY as text read by the reader (read_texts: Gemma + letter window) [(i)]; the talker reads ONLY the thinker's vectors, for calls
 and answers alike [(ii)]; everything inside the model is learned (hand-written code only inside tools the model calls) [(iii), (iv)]; no training target is ever truncated [(vii)].
-Dev aids (the sealed run sets neither): AT0_CHECKS=i,ii,... runs only those checks; AT0_SPEED_UPDATES=N sets the number of updates of (ix) (default 100, the sealed number)."""
+Dev aids (the sealed run sets neither): AT0_CHECKS=i,ii,... runs only those checks; AT0_SPEED_UPDATES=N / AT0_SPEED_LONG=M set the micro-batches (ix) times at 280 / 2,000 letters (default 100 / 20)."""
 import contextlib
 import io
 import os
@@ -116,12 +116,12 @@ def check_vi():
     for mod in PRE_PC + ALSO:
         t = time.time()
         p = subprocess.run([sys.executable, '-m', 'custom_io.tests.' + mod], env=env, capture_output=True, text=True)
-        lines = [ln for ln in (p.stdout + '\n' + p.stderr).splitlines() if ln.strip()]
+        lines = [ln for ln in p.stdout.splitlines() if ln.strip()]        # the module's own printed lines: a warning on stderr (test_b3's) is not its last line
         last = lines[-1].strip() if lines else '(no output)'
         good = p.returncode == 0 and (last.startswith('ALL OK') or (mod == 'test_g8a' and last.startswith('ok ') and not any(ln.startswith('FAIL') for ln in lines)))       # test_g8a has no ALL OK line: exit code 0 and no FAIL line
         got.append('%s: %s [rc %d, %.0fs]' % (mod, last, p.returncode, time.time() - t))
         if not good:
-            bad.append('%s: %s\n%s' % (mod, last, '\n'.join(lines[-12:])))
+            bad.append('%s: %s\n%s' % (mod, last, '\n'.join((lines + [ln for ln in p.stderr.splitlines() if ln.strip()])[-12:])))
     if bad:
         raise AssertionError('pre-PC list: ' + '; '.join(got) + '\n' + '\n'.join(bad))
     return '%d modules (the %d B3G2 modules of the list + %s), last lines: ' % (len(PRE_PC + ALSO), len(PRE_PC), ', '.join(ALSO)) + '; '.join(got)
@@ -137,14 +137,15 @@ def check_viii():
 
 def check_ix():
     from custom_io import at0_speed
-    n = int(os.environ.get('AT0_SPEED_UPDATES', '100'))
+    n = int(os.environ.get('AT0_SPEED_UPDATES', '100'))        # micro-batches timed at 280 letters (the sealed 100)
+    nl = int(os.environ.get('AT0_SPEED_LONG', '20'))           # and at 2,000 letters, the job's longest rows
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        at0_speed.main(['--updates', str(n), '--threads', '2'])
+        at0_speed.main(['--micro-short', str(n), '--micro-long', str(nl), '--threads', '2'])
     last = [ln for ln in buf.getvalue().splitlines() if ln.startswith('AT-0 (ix)')]
-    assert last, buf.getvalue()[-400:]
+    assert len(last) == 2, buf.getvalue()[-400:]
     first = [ln for ln in buf.getvalue().splitlines() if ln.startswith('b3at 3M')]
-    return '%d updates; %s%s' % (n, last[-1].replace('AT-0 (ix) ', '', 1), ('; ' + first[0]) if first else '')
+    return '%d + %d micro-batches; %s%s' % (n, nl, ' || '.join(ln.replace('AT-0 (ix) ', '', 1) for ln in last), ('; ' + first[0]) if first else '')
 
 
 CHECKS = dict(zip(ROMAN, (check_i, check_ii, check_iii, check_iv, check_v, check_vi, check_vii, check_viii, check_ix)))
