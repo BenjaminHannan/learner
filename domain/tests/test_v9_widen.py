@@ -238,10 +238,14 @@ def test_whole_piece_of_the_cell_arithmetic_example():
     assert arith == ['A1+B2*2'], w
 
 
-@pytest.mark.xfail(strict=True, reason='the domain-free rule picks the longer grid piece "4 7 2 | B: 3" (replacing it by 1 still runs)')
-def test_whole_piece_of_the_sum_example_is_the_call():
+def test_whole_pieces_of_call_and_division_examples():
     _, st = build_whole(sheet)
-    assert st['join_whole']['wholes']['A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)'] == 'SUM(A1:A3)'
+    w = st['join_whole']['wholes']
+    assert w['A: 4 7 2 | B: 3 5 1 ; =SUM(A1:A3)'] == 'SUM(A1:A3)'
+    assert w['A: 4 7 2 | B: 3 5 1 ; =MAX(A1:A3)'] == 'MAX(A1:A3)'
+    div = [v for k, v in w.items() if k.endswith('=A1/B1')]
+    assert div == ['A1/B1'], w
+    assert all(w.values()), w
 
 
 def test_whole_join_ring_deterministic_and_runs():
