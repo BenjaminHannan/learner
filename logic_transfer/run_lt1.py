@@ -35,6 +35,8 @@ CKPTS = '/mnt/project-files/checkpoints/cio-1007'
 PARENTS = {'s200': f'{CKPTS}/70-t1sdr-s200/T1SDR_s200/checkpoint.pt',
            's201': f'{CKPTS}/70-t1sdr-s201/T1SDR_s201/checkpoint.pt',
            's204': f'{CKPTS}/80-t1sdr-s204/T1SDR_s204/checkpoint.pt'}
+if os.environ.get('LT1_PARENTS_DIR'):      # e.g. a checkout of branch claude/lt1-parent-checkpoints/t1sdr (Mac); same sha256 as above
+    PARENTS = {p: os.path.join(os.environ['LT1_PARENTS_DIR'], f'T1SDR_{p}.pt') for p in ('s200', 's201', 's204')}
 DEFAULT_PATHS = {'ROOT': str(SP / 'lt1'), 'DATA': str(SP / 'data/sk200k'), 'BIG': str(SP / 'data/sk200k_big'),
                  'FAR': str(SP / 'far_inputs'), 'REPO': str(REPO)}
 LEARN = '/mnt/project-files/far-transfer/learn'
@@ -42,8 +44,8 @@ FAR_STEPS = '0,500,1000,2000'
 FAR_UPDATES = 2000
 
 # make_rows spec: (kind, split, n, seed, converted file name relative to ROWS)
-TRAIN_ROWS = [('logic', 'train', 120000, 11, 'logic_train.jsonl'), ('placebo', 'train', 120000, 12, 'placebo_train.jsonl')]
-EVAL_ROWS = [('logic', 'gate', 1600, 21, 'eval/logic_gate.jsonl'),               # held-out wording, 400 per depth 0-3
+TRAIN_ROWS = [('logic', 'train', 130000, 11, 'logic_train.jsonl'), ('placebo', 'train', 130000, 12, 'placebo_train.jsonl')]
+EVAL_ROWS = [('logic', 'gate', 1608, 21, 'eval/logic_gate.jsonl'),               # held-out wording, 400 per depth 0-3
              ('logic', 'test_sampler', 1600, 22, 'eval/logic_test_sampler.jsonl'),
              ('logic', 'dev', 1200, 23, 'eval/logic_dev.jsonl'),
              ('logic', 'test_deeper', 800, 24, 'eval/logic_test_deeper.jsonl'),
@@ -91,15 +93,21 @@ def far_jobs(course, priority=3, far_updates=FAR_UPDATES, far_steps=FAR_STEPS):
 def build_jobs(plan='lt1', far=False, parents=None, updates=GATE_UPDATES, save_every=SAVE_EVERY):
     """plan 'gate': s200 arms L and C to `updates` updates (priority 0) + logic-only scoring of every saved checkpoint (priority 0) + logic-only
     baselines of the three parents. plan 'screen': s200 P (1), s201 {L,P,C} (1), s204 {L,P,C} (2), each with logic-only scoring of its
-    checkpoints at its own priority. plan 'lt1' = gate + screen. Full scoring is not queued. far=True adds a far job per course."""
+    checkpoints at its own priority. plan 'lt1' = gate + screen. plan 'cloud' = gate + s200 P (one machine per parent); plan 'mac' =
+    s201 and s204 {L,P,C} with their parent baselines. Full scoring is not queued. far=True adds a far job per course."""
     parents = parents or PARENTS
     jobs = [{'name': 'make_rows', 'stage': 'make_rows', 'args': {}, 'deps': [], 'priority': 0, 'light': True}]
     plans = []
-    if plan in ('gate', 'lt1'):
+    base = {'lt1': list(parents), 'gate': list(parents), 'cloud': ['s200'], 'mac': ['s201', 's204'], 'screen': []}[plan]
+    for p in base:
+        jobs.append({'name': f'scoreL-parent-{p}', 'stage': 'score', 'deps': ['make_rows'], 'priority': 0, 'light': True,
+                     'args': {'ckpt': parents[p], 'logic_dir': '{ROWS}/eval', 'logic_only': True, 'threads': 1}})
+    if plan in ('gate', 'lt1', 'cloud'):
         plans += [('s200', 'L', 0), ('s200', 'C', 0)]
-        for p in parents:
-            jobs.append({'name': f'scoreL-parent-{p}', 'stage': 'score', 'deps': ['make_rows'], 'priority': 0, 'light': True,
-                         'args': {'ckpt': parents[p], 'logic_dir': '{ROWS}/eval', 'logic_only': True, 'threads': 1}})
+    if plan == 'cloud':
+        plans += [('s200', 'P', 1)]
+    if plan == 'mac':
+        plans += [(p, arm, i) for i, p in enumerate(('s201', 's204'), 1) for arm in 'LPC']
     if plan in ('screen', 'lt1'):
         plans += [('s200', 'P', 1)] + [('s201', arm, 1) for arm in 'LPC'] + [('s204', arm, 2) for arm in 'LPC']
     for p, arm, prio in plans:
@@ -137,6 +145,27 @@ def make_rows(out, spec=None):
             summary[rel]['prompts_also_in_train'] = len(ps & tr)
     json.dump(summary, open(out / 'summary.json', 'w'), indent=1)
     print(json.dumps(summary, indent=1))
+
+
+def setup_data(curriculum, out):
+    """Build sk200k (40 dev rows per cell) and sk200k_big (200 per cell), seed 1, exactly as custom_io/local_runner.setup does, and check
+    the hashes against skills_curriculum/FULL-BUILD-MANIFEST-200k-seed1.json (train.jsonl must match in both)."""
+    cur, out = Path(curriculum), Path(out)
+    ref = json.load(open(cur / 'skills_curriculum' / 'FULL-BUILD-MANIFEST-200k-seed1.json'))['files_sha256']
+    for name, per_cell in (('sk200k', 40), ('sk200k_big', 200)):
+        d = out / name
+        try:
+            have = json.load(open(d / 'manifest.json'))['files_sha256']
+        except (OSError, KeyError, ValueError):
+            have = None
+        if not (have and (have == ref if name == 'sk200k' else have.get('train.jsonl') == ref['train.jsonl'])):
+            subprocess.run([sys.executable, '-m', 'skills_curriculum.build', '--out', str(d), '--train', '200000', '--dev-per-cell',
+                            str(per_cell), '--seed', '1'], cwd=cur, check=True)
+            have = json.load(open(d / 'manifest.json'))['files_sha256']
+        ok = have == ref if name == 'sk200k' else have.get('train.jsonl') == ref['train.jsonl']
+        if not ok:
+            raise SystemExit(f'{name}: hash mismatch against FULL-BUILD-MANIFEST-200k-seed1.json')
+        print(f'{name}: ok')
 
 
 # ---------------------------------------------------------------- commands
@@ -290,7 +319,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('plan')
-    p.add_argument('--plan', default='lt1', choices=['lt1', 'gate', 'screen'])
+    p.add_argument('--plan', default='lt1', choices=['lt1', 'gate', 'screen', 'cloud', 'mac'])
     p.add_argument('--far', action='store_true')
     p.add_argument('--out')
     r = sp.add_parser('run')
@@ -301,12 +330,17 @@ def main(argv=None):
     r.add_argument('--only')
     r.add_argument('--dry-run', action='store_true')
     r.add_argument('--light-workers', type=int, default=1)
-    r.add_argument('--plan', default='lt1', choices=['lt1', 'gate', 'screen'], help='when --jobs is not given')
+    r.add_argument('--plan', default='lt1', choices=['lt1', 'gate', 'screen', 'cloud', 'mac'], help='when --jobs is not given')
     r.add_argument('--far', action='store_true')
     m = sp.add_parser('make-rows')
     m.add_argument('--out', required=True)
+    d = sp.add_parser('setup-data')
+    d.add_argument('--curriculum', required=True, help='dir holding skills_curriculum/ (from branch claude/project-thread-y0sxwe)')
+    d.add_argument('--out', default=str(SP / 'data'))
     a = ap.parse_args(argv)
-    if a.cmd == 'make-rows':
+    if a.cmd == 'setup-data':
+        setup_data(a.curriculum, a.out)
+    elif a.cmd == 'make-rows':
         make_rows(a.out)
     elif a.cmd == 'plan':
         doc = build_jobs(a.plan, a.far)
