@@ -87,3 +87,12 @@ Setup = L11's recipe with the hard mask (kf.factors soft=None, energy 0.99) and 
 Between 10 and 25: a point on the curve. Prediction (suggested, untested): HO <= 10, because the lock's mask does not depend on the replay term and the soft 10 point (every pair at most 10% speed) only reached 14.1.
 Ship rule, fixed now: ship the guard that passes the old-skill marks on both seeds (DM1 >= +30, DM3) with the higher join-test HO. NK30 and NK-soft10 both pass s200; NK30 passes s201; NK-soft10's s201 is running.
 If NK-soft10 passes s201 and NK30's join HO is below 14.1: ship NK-soft10 (it keeps more transfer at equal old-skill safety), reported with the one-seed caveat. If NK30's join HO >= 14.1: ship NK30 (no softness constant).
+
+### Result 37, arm NK-soft10 seed 201, full run: PASS, so NK-soft10 passes both seeds on the old-skill marks (4:50 PM ET 10-13)
+runs/sheet-s201-kf99n-kl10-soft10 (12 nights, none undone; scored from local copies, mount down).
+- **DM1 near +65.48** (0.95 -> 66.43): pass. **DM3 pass: pooled drop 0.96 (90.88 -> 89.93), nothing fired at the end.** DM5 pass (+2.14). Per-night pooled drop: 0.37, 0.59, 0.88, 0.88, 0.96, 0.88, 0.74, 0.66, 0.66, 0.74, 0.81, 0.96.
+- **Caveat, said plainly:** fewshot_number_rule fired on nights 3, 4 and 6, and at night 12 it reads 47.5 -> 35.0, a 12.5-point drop whose paired interval (-30 to +2.5) just reaches zero, so it does not fire by the rule. The end verdict
+  is clean on the rule; the family itself dropped 5 of 40 questions. Same family, same pattern as NK-soft (nights 3, 6, 7). NK30 on s201: 47.5 -> 40.0 (interval -20 to +5).
+- Both-seed table (near / pooled drop / fired at the end): NK-soft10 s200 +57.9 / 0.44 / none; s201 +65.5 / 0.96 / none. NK30 s200 +63.1 / 0.22 / none; s201 +65.0 / 0.44 / none. NK30 slips less and learns about as much;
+  NK-soft10 keeps more transfer (join HO 14.1 vs the hard lock's 9.3 without KL).
+- Open: the ship decision waits for Far transfer's NK30 join test (L14, marks and ship rule fixed in the 2:58 PM ET entry above). Rule: ship the guard that passes both seeds with the higher join-test HO.
