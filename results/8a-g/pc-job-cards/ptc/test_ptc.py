@@ -4,9 +4,9 @@ step `expr =`) out of the loss, and the intact model decodes with the calculator
   1  calc_full: the whole integer expression, precedence, brackets, negatives, exact division only; garbage never raises.
   2  mask = generate: a model that writes the gold text (a poison character where the calculator writes) gets exactly the masked positions forced, and the text comes
      out equal to the gold; a gold step with another result stays in the loss and is counted (calc_mismatch).
-  3  calc_train off = the base code (commit 1acfde9a73): same weights at the same seed, loss, target ids, a trained model's decodes (intact and `calc`), LESIONS, cap
+  3  calc_train off = the base code (commit 74d6e92c75): same weights at the same seed, loss, target ids, a trained model's decodes (intact and `calc`), LESIONS, cap
      counters, the old arms' sizes and train_args. The base tree is a git archive (or the tree named by PTC_ORIG_TREE, which the PC check uses).
-  4  PTC: count = PTS at 3M and 10M, cfg = PTS cfg + calc_train, LESIONS ['nocalc'], train_args builds, job.py caps handling = PTS's.
+  4  PTC: count = PTS at 3M and 10M (and at 30M with the no-plug front of 74d6e92c75), cfg = PTS cfg + calc_train, LESIONS ['nocalc'], train_args builds, job.py caps handling = PTS's.
   5  masked loss: the loss ignores the calculator characters (no gradient there, targets -100) and the width W is that of calc_train off.
 caps.apply mutates module globals, so everything that applies caps runs in a subprocess."""
 import json, os, random, subprocess, sys, tempfile, types
@@ -18,7 +18,7 @@ from custom_io.models import build
 from custom_io.models import plain_tf_steps as M
 from custom_io.models.plain_tf_steps import calc_full, calc_mask, calc_fill, target_text_all
 
-BASE = '1acfde9a73'
+BASE = '74d6e92c75'
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 G8A = os.path.join(ROOT, 'custom_io', 'g8a')
 V = CharVocab.build([])
@@ -264,6 +264,18 @@ def count_rows():
             except AssertionError as e:
                 guards.append(str(e))
         res[rung] = dict(counts=counts, PTS_cfg=cfgs['PTS'], PTC_cfg=cfgs['PTC'], args=a, guards=guards)
+    # the no-plug front of 74d6e92c75 (30M / 100M only, width 512, eg_pre): PTC takes it as PTS does (job.py's front asserts, check_bands' no-plug branch)
+    npx = {C.NOPLUG: True}
+    cfgs, counts = C.sizes('30M', npx)
+    C.add_pts('30M', cfgs, counts, npx)
+    C.add_ptc('30M', cfgs, counts, npx)
+    C.check_bands('30M', cfgs, counts, exact_3m=False)
+    try:
+        C.check_bands('30M', cfgs, dict(counts, PTC=int(counts['PTC'] * 1.05)), exact_3m=False)
+        off_band = ''
+    except AssertionError as e:
+        off_band = str(e)
+    res['30M-noplug'] = dict(counts=counts, PTS_cfg=cfgs['PTS'], PTC_cfg=cfgs['PTC'], off_band=off_band)
     return res
 
 
@@ -275,6 +287,7 @@ def sub(*flags):
 
 def test_ptc_arm():
     r = sub('--count')
+    npl = r.pop('30M-noplug')
     for rung, x in r.items():
         c = x['counts']
         assert c['PTC'] == c['PTS'] == c['PT'], (rung, c)
@@ -282,6 +295,9 @@ def test_ptc_arm():
         a = x['args']
         assert a[a.index('--model') + 1] == 'plain_tf_steps_g' and json.loads(a[a.index('--cfg') + 1]) == x['PTC_cfg'] and '--caps' in a and '--final-eval' in a, a
         assert 'needs --caps' in x['guards'][0] and 'not within' in x['guards'][1], x['guards']
+    c = npl['counts']
+    assert c['PTC'] == c['PTS'] == c['PT'] and npl['PTC_cfg'] == dict(npl['PTS_cfg'], calc_train=True) and npl['PTC_cfg']['eg_pre'] and npl['PTC_cfg']['d_model'] == 512, npl
+    assert 'PTC' in npl['off_band'] and 'not within' in npl['off_band'], npl['off_band']          # the no-plug band check covers PTC
     m = build('plain_tf_steps_g', V, d_model=32, n_layers=1, n_heads=4, all_steps=True, calc_train=True)
     assert m.LESIONS == ['nocalc'] and build('plain_tf_steps_g', V, d_model=32, n_layers=1, n_heads=4, all_steps=True).LESIONS == ['calc']
     from custom_io.train import lesion_names
@@ -297,8 +313,8 @@ def test_ptc_arm():
         raise SystemExit('plain_lm accepted calc_train')
     except AssertionError:
         pass
-    print('ok PTC: count %s (3M) and %s (10M) = PTS = PT; cfg = PTS cfg + calc_train; LESIONS [nocalc] (PTS keeps [calc]); train_args builds, refused without --caps / eg_embed' %
-          (f"{r['3M']['counts']['PTC']:,}", f"{r['10M']['counts']['PTC']:,}"))
+    print('ok PTC: count %s (3M) and %s (10M) = PTS = PT; cfg = PTS cfg + calc_train; LESIONS [nocalc] (PTS keeps [calc]); train_args builds, refused without --caps / eg_embed; '
+          'no plug 30M (d 512, eg_pre): %s = PTS = PT, band check covers PTC' % (f"{r['3M']['counts']['PTC']:,}", f"{r['10M']['counts']['PTC']:,}", f"{npl['counts']['PTC']:,}"))
 
 
 def rowline(**kw):
