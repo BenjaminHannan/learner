@@ -24,3 +24,17 @@ weight 1, exactly as L7-LBG, plus 10 x `klreplay.replay_kl` (Main brain's own fu
 the 32 diary rows), not `wrap`'s 64/96 and 32/96 weighting. Code: `learn_probe.kl_replay_loss`, with a test. Smoke at 5
 updates (3:40 PM ET): harm 90.22 -> 90.22, replay KL 1e-6, about 8.1 s per update beside L9, and about 8 minutes to
 measure the guard before the first update. Marks unchanged.
+
+## Result (shown, Mon Oct 12, 9:42 PM ET; one run, loss = plain + 10 x KL, commit 012410692)
+
+| step | HO | DEV drop (in_dist 90.22 -> ...) | S5 | HP | HPO | F0 near | F4 test joins | fit |
+|---|---|---|---|---|---|---|---|---|
+| 1,000 | 0.2 | 0.74 (89.49) | 4.5 | 1.9 | 0.7 | 29.5 | 1.2 | 4.5 |
+| 2,000 | 2.4 | 0.51 (89.71) | 11.2 | 8.1 | 0.5 | 49.8 | 6.2 | 11.7 |
+| 4,000 | **26.4** | **0.59 (89.63)** | 42.4 | 22.4 | 13.6 | 75.7 | 32.6 | 46.2 |
+
+No old-skill group fired at any step; replay KL mean 0.0098; guard measuring 1,481 s in 8 measures; 3.2 s/update.
+**PASS** on both marks (HO >= 25 and drop < 7.8), HO by only 1.4. For comparison at 4,000 (L7): no guard HO 35.0 / drop 53.2 /
+S5 88.3 / F4 45.7; hard N99 guard HO 9.3 / drop 7.8 / S5 20.2 / F4 13.6. Limits: one seed; learning is slow until 2,000
+and still rising fast at 4,000, so the HO pass is not a confirmed one (the >= 6 paired seeds rule is not met).
+Sent to the coordinator 9:43 PM ET.
