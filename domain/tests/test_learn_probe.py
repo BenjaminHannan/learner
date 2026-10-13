@@ -321,6 +321,9 @@ def test_kfsoft_args(monkeypatch):
     L.main(['train', '--arm', 'LB', '--out', 'x', '--guard', 'kfsoft', '--guard-src', '/tmp', '--kl-replay-rows', '32', '--kl-weight', '10', '--guard-soft', '10'])
     assert seen['guard_soft'] == 10.0   # L13
     L.check_guard_args('LB', 'kfsoft', '/tmp', kl_rows=32, kl_weight=10.0, soft=10.0)
+    L.check_guard_args('LB', 'kfsoft', '/tmp', kl_rows=32, kl_weight=30.0, soft='hard')   # L14
+    L.main(['train', '--arm', 'LB', '--out', 'x', '--guard', 'kfsoft', '--guard-src', '/tmp', '--kl-replay-rows', '32', '--kl-weight', '30', '--guard-soft', 'hard'])
+    assert seen['guard_soft'] == 'hard' and seen['kl_weight'] == 30.0
     for guard, kw in (('kfsoft', dict(kl_rows=32, kl_weight=10.0, soft=0.0)), ('kf', dict(soft=10.0)), (None, dict(soft=10.0))):
         with pytest.raises(SystemExit):
             L.check_guard_args('LB', guard, '/tmp', **kw)

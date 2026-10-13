@@ -1176,11 +1176,12 @@ def batch_order(n, batch, updates, seed):
 def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None):
     """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work.
     kl_rows / kl_weight (None = not given) are for --guard kfsoft only; kfsoft needs both, rows >= 1 and weight > 0.
-    soft (None = not given, 1 is used) is the graded-mask softness of --guard kfsoft (L13: 10), > 0."""
+    soft (None = not given, 1 is used) is the graded-mask softness of --guard kfsoft (L13: 10), > 0, or 'hard' (L14: the hard
+    mask, kf.factors soft=None, with the KL replay)."""
     if guard != 'kfsoft' and (kl_rows is not None or kl_weight is not None or soft is not None):
         raise SystemExit('--kl-replay-rows / --kl-weight / --guard-soft apply to --guard kfsoft only')
-    if soft is not None and soft <= 0:
-        raise SystemExit('--guard-soft must be > 0')
+    if soft is not None and soft != 'hard' and soft <= 0:
+        raise SystemExit("--guard-soft must be > 0 or 'hard'")
     if not guard:
         return
     if arm != 'LB':
@@ -1424,7 +1425,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
     check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft)
-    soft_value = 1 if guard_soft is None else (int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11
+    soft_value = (1 if guard_soft is None else None if guard_soft == 'hard' else
+                  int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11; None = the hard mask (L14)
     soft_guard = guard == 'kfsoft'
     guard_commit = GUARD_COMMIT_SOFT if soft_guard else GUARD_COMMIT
     commit_check = verify_guard_commit(guard_src) if soft_guard else None
@@ -1477,7 +1479,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             if soft_guard:
                 extra.update(guard_soft=soft_value, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
                              kl_replay_seed=KL_REPLAY_SEED, kl_replay_pool=len(diary))
-            print(f'LB+{guard} guard' + (f' (graded mask soft={soft_value}, {kl_replay_rows} diary rows/update at {kl_weight}x KL, source {commit_check})' if soft_guard else '') + f': trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
+            print(f'LB+{guard} guard' + (f' ({'hard mask' if soft_value is None else f'graded mask soft={soft_value}'}, {kl_replay_rows} diary rows/update at {kl_weight}x KL, source {commit_check})' if soft_guard else '') + f': trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
         else:
             opt = make_opt(m, cons['lr'])
             print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
@@ -1550,7 +1552,7 @@ def main(argv=None):
                help='arm LB only: the main-brain K-FAC guard; kfsoft = graded mask (soft=1) + KL replay (needs --kl-replay-rows, --kl-weight; source commit ' + GUARD_COMMIT_SOFT[:9] + ')')
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
-    a.add_argument('--guard-soft', type=float, default=None, help='--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10')
+    a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
     a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
@@ -1590,6 +1592,7 @@ def main(argv=None):
         census_l12(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
+        a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
         from domain.mode import CONST_PATH
         addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
