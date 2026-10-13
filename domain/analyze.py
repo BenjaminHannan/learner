@@ -395,7 +395,8 @@ def main(argv=None):
     # A8 R2 (self-knowledge across all kinds) and R3 (wasted practice)
     quiz_final = summary['quiz_per_kind_final']
     hist = summary['quiz_per_kind_history']
-    assert set(quiz_final) == set(kinds), 'quiz kinds differ from the help kinds'
+    has_join_kind = 'join' in quiz_final   # v10 (A30): the join-last practice kind is quizzed too; the panel has no kind of that name
+    assert set(quiz_final) - {'join'} == set(kinds), 'quiz kinds differ from the help kinds'
     near_final_all = {k: scores[N]['by_kind_split'][k]['near'] for k in kinds}
     r2 = spearman([quiz_final[k] for k in kinds], [near_final_all[k] for k in kinds])
     practice = [e for e in events if e['event'] == 'practice']
@@ -425,6 +426,16 @@ def main(argv=None):
                              share_last_pct=round(100 * share_last.get(k, 0.0), 2), kept_last=kept_last.get(k, 0),
                              undo_rows=undo_rows.get(k, 0), own_rows=own[k], tool_rows=tool_rows[k],
                              own_not_tool=own_not[k]))
+    if has_join_kind:
+        jrows = Counter((e.get('day'), e['source']) for e in events if e['event'] == 'row' and e['kind'] == 'join')
+        per_kind.append(dict(kind='join (practice kind; panel join split above)', scored=None, near0=None, nearN=None, far0=None, farN=None,
+                             quiz0=round(100 * hist[0]['join'], 2), quizN=round(100 * hist[-1]['join'], 2),
+                             share_last_pct=round(100.0 * kept_last.get('join', 0) / max(1, sum(kept_last.values())), 2),
+                             kept_last=kept_last.get('join', 0), undo_rows=undo_rows.get('join', 0), own_rows=own['join'],
+                             tool_rows=tool_rows['join'], own_not_tool=own_not['join']))
+        days = sorted({d for d, _ in jrows})
+        notes.append('join rows kept per day (own / tool): ' + '; '.join(
+            f'day {d}: {jrows.get((d, "own"), 0)} / {jrows.get((d, "tool"), 0)}' for d in days))
     if unknown:
         notes.append(f'log has event types outside the mode list: {unknown}')
     notes.append(f'undone nights: {sorted(undone) or "none"} (the check events in the log hold each night\'s drop)')
@@ -503,7 +514,7 @@ def render_md(res):
               '| kind | scored | near parent -> final | far parent -> final | own quiz night 0 -> last | last-day mix share | last-day kept | undo rows | try own / tool |',
               '|---|---|---|---|---|---|---|---|---|']
     for r in res['per_kind']:
-        lines.append(f'| {r["kind"]} | {"yes" if r["scored"] else "no (A2)"} | {pc(r["near0"])} -> {pc(r["nearN"])} | '
+        lines.append(f'| {r["kind"]} | {"n/a" if r["scored"] is None else ("yes" if r["scored"] else "no (A2)")} | {pc(r["near0"])} -> {pc(r["nearN"])} | '
                      f'{pc(r["far0"])} -> {pc(r["farN"])} | {pc(r["quiz0"])} -> {pc(r["quizN"])} | {pc(r["share_last_pct"])}% | '
                      f'{r["kept_last"]} | {r["undo_rows"]} | {r["own_rows"]} / {r["tool_rows"]} |')
     a8 = res['a8']
