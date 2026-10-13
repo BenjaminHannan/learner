@@ -67,3 +67,23 @@ Facts: hard lock (NK30) passes both seeds and probably blocks transfer; softness
   hard 9.3, soft 1 26.4): **Pass:** HO >= 25 and DEV drop < 7.8. **Proved wrong:** HO <= 10 or DEV drop >= 7.8. Between 10 and 25 is reported as a point on the curve, neither pass nor wrong.
 - Ship rule if the dial has no sweet spot (soft 10 fails the join test, or fails seq_next): the shipped guard is NK30 (passes old skills on both seeds), transfer handled by the add-on path, and the
   shared-brain-transfer claim is dropped for now. Said out loud: that outcome would mean the guard that protects old skills at the level the marks demand also blocks learning that reuses old directions.
+
+### Result 36, arm NK-soft10 (graded mask at softness 10 + 10x KL) seed 200 full run: PASS; its join test (Far transfer L13) lands between the marks (2:55 PM ET 10-13)
+runs/sheet-s200-kf99n-kl10-soft10 (9 nights, none undone, stop = quiz rise < 1 over 2 nights; scored from local copies, mount down). Seed 201 is still training (night 9+).
+- **DM1 near +57.86** (2.14 -> 60.00): pass. **DM3 pass: pooled drop 0.44 (90.22 -> 89.78), nothing fired on any of the 9 nights.** seq_next 85 -> 82.5 (softness 1: 72.5, fired from night 2); other largest
+  moves rule_apply 97.5 -> 92.5, kin_chain 95 -> 92.5. DM2 far +1.07 (fails as always). DM5 reads PROVED WRONG (stopped at night 9 with a +5.48 rise; not in this arm's marks).
+  Marks (8:55 AM ET): s200 pass = DM1 >= +30 and DM3 passes at the end: **met**. Per-night pooled drop: 0.37, 0.44, 0.44, 0.44, 0.51, 0.59, 0.59, 0.51, 0.44.
+- **Join test, soft 10 (Far transfer L13, one run, 4,000 updates): HO 14.1, DEV drop 0.44, nothing fired at 4,000** (seq_next fired at the 2,000 check, then did not at 4,000). Marks: pass HO >= 25 and drop < 7.8;
+  proved wrong HO <= 10 or drop >= 7.8; between = a point on the curve. **14.1 is between.**
+- Curve at 4,000 updates (HO / DEV drop): unguarded 35.0 / 53.2; soft 1 + KL 26.4 / 0.59; **soft 10 + KL 14.1 / 0.44**; hard lock (no KL replay) 9.3 / 7.8. One run per point; the hard-lock point had no KL replay.
+- Reading (shown, one seed per point): the softness dial trades transfer for old-skill protection smoothly: softness 1 transfers (26.4) and loses seq_next on s200; softness 10 keeps old skills on s200 and transfers about
+  half as much (14.1); the hard lock transfers least. No point passes both marks on seed 200 so far. Softness 3 (between) lost seq_next in its 3-night screen, so a softness between 3 and 10 would land HO somewhere between
+  14.1 and 26.4 at best, below the 25 line unless it also kept seq_next, which the data do not suggest. Said plainly: with these marks, the dial has no sweet spot yet.
+- Open: NK-soft10 seed 201 (running). NK30's own join test (hard lock + 30x KL), offered by Far transfer, would say whether KL replay changes the hard lock's transfer: marks below.
+
+### Marks for the NK30 join test (Far transfer L14; written 2:58 PM ET 10-13, before it runs)
+Setup = L11's recipe with the hard mask (kf.factors soft=None, energy 0.99) and 30x KL on 32 diary rows per update (the NK30 training recipe), lr 1e-4, 4,000 updates, same rows and seed.
+**Pass:** HO >= 25 and DEV drop < 7.8 (the hard lock with KL transfers: then NK30 passes both sides and is the ship candidate). **Proved wrong:** HO <= 10 (the hard lock still blocks transfer with KL).
+Between 10 and 25: a point on the curve. Prediction (suggested, untested): HO <= 10, because the lock's mask does not depend on the replay term and the soft 10 point (every pair at most 10% speed) only reached 14.1.
+Ship rule, fixed now: ship the guard that passes the old-skill marks on both seeds (DM1 >= +30, DM3) with the higher join-test HO. NK30 and NK-soft10 both pass s200; NK30 passes s201; NK-soft10's s201 is running.
+If NK-soft10 passes s201 and NK30's join HO is below 14.1: ship NK-soft10 (it keeps more transfer at equal old-skill safety), reported with the one-seed caveat. If NK30's join HO >= 14.1: ship NK30 (no softness constant).
