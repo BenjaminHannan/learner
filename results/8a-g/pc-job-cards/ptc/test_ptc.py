@@ -313,8 +313,8 @@ def test_ptc_arm():
         raise SystemExit('plain_lm accepted calc_train')
     except AssertionError:
         pass
-    print('ok PTC: count %s (3M) and %s (10M) = PTS = PT; cfg = PTS cfg + calc_train; LESIONS [nocalc] (PTS keeps [calc]); train_args builds, refused without --caps / eg_embed; '
-          'no plug 30M (d 512, eg_pre): %s = PTS = PT, band check covers PTC' % (f"{r['3M']['counts']['PTC']:,}", f"{r['10M']['counts']['PTC']:,}", f"{npl['counts']['PTC']:,}"))
+    print('ok PTC: count %s (3M), %s (10M), %s (30M no plug) = PTS = PT; cfg = PTS cfg + calc_train; LESIONS [nocalc] (PTS keeps [calc]); train_args builds, refused without --caps / eg_embed' %
+          (f"{r['3M']['counts']['PTC']:,}", f"{r['10M']['counts']['PTC']:,}", f"{npl['counts']['PTC']:,}"))
 
 
 def rowline(**kw):

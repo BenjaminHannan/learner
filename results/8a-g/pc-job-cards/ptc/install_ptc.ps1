@@ -25,7 +25,7 @@ $FILES = @(
   @{ f = 'plain_lm.py';        rel = 'models\plain_lm.py';       o = 'E90ACCF2E332D08A1E14CD2B5B537A9BE97BC93C44D48ED14DFE26FA8567AD10';        n = 'F0E5FE42662EADC862E300DADE9470EB4AFA2898AF228A5F8061DA86C4CEF90B' },
   @{ f = 'configs.py';         rel = 'g8a\configs.py';           o = '31287A25A6AD9CBF48973520F1174C788A3DB5CE61F607265AA5EC8FA99BD5DA';         n = '48AA19CCB8B329FE11E45E42A17872D2581298CDBC03C2B11E3E034ADC887ECF' },
   @{ f = 'job.py';             rel = 'g8a\job.py';               o = 'A590E3F176159F531571B1E5AE95BD48D2160238CB999ADD5EB6BE7734FE6A1A';             n = 'EB0CF9DB191A75992F8ED24464D996B7EAABC86538843762B23E1A8C5F3C6888' },
-  @{ f = 'test_ptc.py';        rel = 'tests\test_ptc.py';        o = $null;                 n = '152D694A6B5798AA9CC0C352E5BA746E4D61F80F71BE0EB62E062C9BD1F6F972' })
+  @{ f = 'test_ptc.py';        rel = 'tests\test_ptc.py';        o = $null;                 n = 'E81321ABB89F34B3AC4D048467ED11EC349EDDFA2E07E0F91C8AA5475EA054DC' })
 $QUEUES = @('8aPTC3S', '8aPTC10S')
 $INSERTS = @(@{ name = '13-ptc3s.txt'; q = '8aPTC3S'; card = 'ptc3s.template.md' }, @{ name = '14-ptc10s.txt'; q = '8aPTC10S'; card = 'ptc10s.template.md' })
 $STAMP  = (Get-Date).ToString('yyyyMMdd-HHmm')
