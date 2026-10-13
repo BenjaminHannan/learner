@@ -10,7 +10,7 @@
   python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5|l8]
         [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
         [--guard kf|kfsoft --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
-       [--kl-replay-rows 32 --kl-weight 10]        (L11, only with --guard kfsoft: graded mask + KL-to-parent replay, Main brain c823e4b9a)
+       [--kl-replay-rows 32 --kl-weight 10 [--guard-soft 10]]        (L11 / L13, only with --guard kfsoft: graded mask (soft 1; L13: 10) + KL-to-parent replay, Main brain c823e4b9a)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -1173,11 +1173,14 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
-def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None):
+def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None):
     """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work.
-    kl_rows / kl_weight (None = not given) are for --guard kfsoft only; kfsoft needs both, rows >= 1 and weight > 0."""
-    if guard != 'kfsoft' and (kl_rows is not None or kl_weight is not None):
-        raise SystemExit('--kl-replay-rows / --kl-weight apply to --guard kfsoft only')
+    kl_rows / kl_weight (None = not given) are for --guard kfsoft only; kfsoft needs both, rows >= 1 and weight > 0.
+    soft (None = not given, 1 is used) is the graded-mask softness of --guard kfsoft (L13: 10), > 0."""
+    if guard != 'kfsoft' and (kl_rows is not None or kl_weight is not None or soft is not None):
+        raise SystemExit('--kl-replay-rows / --kl-weight / --guard-soft apply to --guard kfsoft only')
+    if soft is not None and soft <= 0:
+        raise SystemExit('--guard-soft must be > 0')
     if not guard:
         return
     if arm != 'LB':
@@ -1407,7 +1410,7 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1420,7 +1423,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     extra = {'addon_rank': rank, 'addon_alpha': alpha}
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
-    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight)
+    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft)
+    soft_value = 1 if guard_soft is None else (int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11
     soft_guard = guard == 'kfsoft'
     guard_commit = GUARD_COMMIT_SOFT if soft_guard else GUARD_COMMIT
     commit_check = verify_guard_commit(guard_src) if soft_guard else None
@@ -1462,7 +1466,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 kl_ds = Dataset(diary, m.vocab)
                 kl_rng = np.random.RandomState(KL_REPLAY_SEED)
                 kls = []
-            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=1 if soft_guard else None)
+            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=soft_value if soft_guard else None)
             opt = guarded.opt
             if soft_guard:
                 m.loss = kl_replay_loss(m, kl_parent, float(kl_weight), kls, klreplay)   # not klreplay.wrap: weights 1 + kl_weight, see its docstring
@@ -1471,9 +1475,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                          guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
                          guard_frozen=len(guarded.frozen))
             if soft_guard:
-                extra.update(guard_soft=1, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
+                extra.update(guard_soft=soft_value, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
                              kl_replay_seed=KL_REPLAY_SEED, kl_replay_pool=len(diary))
-            print(f'LB+{guard} guard' + (f' (graded mask soft=1, {kl_replay_rows} diary rows/update at {kl_weight}x KL, source {commit_check})' if soft_guard else '') + f': trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
+            print(f'LB+{guard} guard' + (f' (graded mask soft={soft_value}, {kl_replay_rows} diary rows/update at {kl_weight}x KL, source {commit_check})' if soft_guard else '') + f': trainable params {sum(p.numel() for p in params)} (frozen {len(guarded.frozen)} tensors), lr {cons["lr"]}', flush=True)
         else:
             opt = make_opt(m, cons['lr'])
             print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
@@ -1546,6 +1550,7 @@ def main(argv=None):
                help='arm LB only: the main-brain K-FAC guard; kfsoft = graded mask (soft=1) + KL replay (needs --kl-replay-rows, --kl-weight; source commit ' + GUARD_COMMIT_SOFT[:9] + ')')
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
+    a.add_argument('--guard-soft', type=float, default=None, help='--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10')
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
     a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
@@ -1585,7 +1590,7 @@ def main(argv=None):
         census_l12(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
-        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight)   # refuse before any work
+        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
         from domain.mode import CONST_PATH
         addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
@@ -1593,7 +1598,7 @@ def main(argv=None):
               harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
-              kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight)
+              kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft)
 
 
 if __name__ == '__main__':
