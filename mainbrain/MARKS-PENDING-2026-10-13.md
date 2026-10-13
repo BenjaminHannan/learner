@@ -28,3 +28,18 @@ runs/sheet-s200-kf99n-kl10-soft (12 nights, none undone; scored from local copie
   Full-run marks: pass = DM1 >= +30 and DM3 passes on both seeds; proved wrong = pooled drop >= 1.84, or 2+ families fired at the end, or DM1 < +10.
 - NK30 seed 200 (hard lock + KL 30x) is still training (night 5 of 12 at 4:57 AM ET); its marks are those of Result 30. If it passes s200, NK30 is the old-skills guard that passes both seeds; whether the
   hard lock blocks transfer for it is unmeasured (the hard lock without KL got HO 9.3).
+
+### Result 33, arm NK-soft30 3-night screen on seed 200: PROVED WRONG (6:58 AM ET 10-13); arm NK-soft3 marks written now (before it runs)
+runs/screen-s200-NKsoft30-n3 (3 nights, none undone, scored from local copies).
+- Near +37.38 at night 3 (2.14 -> 39.52), pooled drop 0.59, agreement 97.46, **seq_next fired at night 3 (85.0 -> 75.0)**; night 2 clean (pooled 0.44), night 1 clean (0.22). Marks (4:58 AM ET): proved wrong =
+  seq_next fires on night 2 or night 3: **PROVED WRONG**. Other family moves (none fired): rule_apply 97.5 -> 92.5, passage_qa 97.5 -> 95, fewshot_number_rule 50 -> 45.
+- Shown: 30x KL delayed the seq_next fire by one night (NK-soft 10x fired from night 2) but did not prevent it; with the soft mask at soft=1 the KL weight is not what protects seq_next. Same seed with the
+  hard lock (N99) kept it.
+- **Next, arm NK-soft3 = NK-soft with protect_soft 3 (one change vs NK-soft: the softness constant; KL stays 10x).** M = min(1, tau / (3 p)): the boundary pair moves at 1/3 speed and a pair 10x more
+  important at 3.3%; soft = 1 is the NK-soft run, and soft -> infinity is the hard lock (N99 passed s200). Flag: soft is now a global constant of the same kind as `energy` (one value for every subject, not
+  tuned per family); soft = 1 had no constant, soft = 3 is a dial between the two measured ends.
+  3-night screen on seed 200 (constants-kf99n-kl10-soft3-lr3e4-n3.json, folder runs/screen-s200-NKsoft3-n3).
+  **Pass:** seq_next does not fire on nights 2 or 3, nothing fired at night 3, pooled drop at night 3 <= 0.9, no night undone (agreement >= 97), near at night 3 >= +25 (NK-soft s200 night 3 was +38.1).
+  **Proved wrong:** seq_next fires on night 2 or 3, or near at night 3 < +10. If it passes: the full run on s200 (constants-kf99n-kl10-soft3-lr3e4.json), then s201, then the join test with soft 3
+  (Far transfer's L11 recipe, soft=3, through the coordinator): pass = HO >= 25 and DEV drop < 7.8, proved wrong = HO <= 10 or drop >= 7.8. If it fails the screen: soft 10 (Fable's backup 2) is next.
+  Honest expectation (suggested, untested): the harder the mask, the lower the HO; soft = 3 may land between 9.3 (hard) and 26.4 (soft = 1), so the join test, not the screen, decides.
