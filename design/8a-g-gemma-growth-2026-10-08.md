@@ -910,3 +910,36 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   when the 10M lands, A10-1 is read against PTS's `calc` lesion, labelled so.
 - **Install:** both packages go in through the Mac (Remote Control session) after `install_agent`, in its steps after the answer
   speed timing; deadline: before G2f ends.
+
+## 40. Addendum AI (2026-10-12, 10:45 PM ET): the 10M agent run gets checkpoint and resume; the Vast kit; the install changes
+
+- **Why (shown, addendum AC and `custom_io/train.py` at 6e72a5fae5).** `train.py` wrote `checkpoint.pt` once, after the last update,
+  with no optimizer state and no resume. Ben's PC restart on 10-11 killed two multi-day 10M runs for that reason. 8aAT10M is watched
+  at 100 to 200 PC hours, so it is the run most exposed to a restart. AT-1's code (`src-at`) stays untouched.
+- **What changed (647bb4b9eb, `results/8a-g/pc-job-cards/at10m/`).** One changed file, `overlay/train.py` (sha256 e75e45fa...), plus
+  one new test (`overlay/tests/test_ckpt.py`). Two flags, both default off: `--ckpt-every N` writes `AT\ckpt\step-<k>.pt` and a JSON
+  sidecar every N updates and after the last (temp file, fsync, rename; newest 2 kept; about 118 MB each at 10M, estimated);
+  `--resume` takes the newest checkpoint whose sidecar and sha256 match, falls back past a corrupt one, refuses if the config hash
+  or the data id differs (`--accum` is left out of the hash so the out-of-memory relaunch can continue), and starts at step 0 when
+  none exists, so one command line serves the first start and every restart. The queue line is now
+  `--train-extra '--ckpt-every 500 --resume'`. Only 3 base lines were altered (import, one print, the result `config=` line); the
+  rest are additions.
+- **Tests (shown, CPU, tiny models; re-run by this thread, "ALL OK"):** flags off equals the base train.py bit for bit (plain model
+  and the agent model); an interrupted run (hard kill after the step-30 checkpoint, then `--resume`) equals the uninterrupted run bit
+  for bit, including the model's own random streams (`_drill_rng`, `_gap_rng`); a corrupt, truncated or sidecar-less newest checkpoint
+  falls back; a changed lr, steps or data refuses; an interrupted write leaves the previous checkpoint intact. Suggested, untested:
+  the CUDA path and Windows file handling; a resume on a different GPU or driver is correct but not bit-identical. Not exact after a
+  resume: counters kept once per distinct row in an empty cache (a zero count stays zero, so the AT-1f "every cap counter 0" reading
+  is unaffected).
+- **Install changes.** `install_at10m.ps1` now builds `src-at10m` (a copy of `src-at` plus the overlay), runs `at10mcheck.py` and
+  the checkpoint test on the CPU (about 5 minutes), and writes `15-at10mgate.txt` and `16-at10m.txt` with `src: src-at10m` and the
+  `caps:` line v3e needs. The earlier staged copy (`in-at10m`, ebb67ff415, no overlay, inserts say `src: src-at`) must not be
+  installed; the Mac stages the new package as `in-at10m2`. The installer's count line prints PTS 10M = 9,814,442 (computed at
+  6e72a5fae5); the run itself, at the g2c10s / PTC code (1acfde9a73), is 9,815,978 (addendum AH).
+- **Vast kit (133764d062, `at10m/vast/`, nothing launched).** One RTX 5090 for 8aAT10M after the AT-1 gate reads "not proved wrong":
+  `at10m_box.sh` (carries the overlay, sha256 checked), `vast.py`, a speed guard that stops the job if the projected cost passes
+  `PROJ_CAP_USD`, and `selftest.sh`. Weekly cap $50 (Ben, 9:10 PM ET 10-12); tally `/mnt/project-files/vast/SPEND.md`; credit read
+  $0.21, so Ben must add credit before any rental. `MAXH` defaults to 40 and must be raised for a 100-hour run. A process death on a
+  live box resumes; a lost box takes its checkpoints with it unless `EXPORT_CK_EVERY_H` exports them and `vast.py collectck` pulls them.
+  If the run moves to Vast, the PC insert `16-at10m` is turned into a no-op (`cmd: at10m_skipped.cmd`, original kept) so the PC does
+  not also run it. Marks and gate lines are unchanged (big-run's eighteenth Addendum; A10-1 to A10-4).
