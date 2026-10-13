@@ -405,3 +405,21 @@ The mean change is 0.0. The quiz (about 26 items per kind) is too noisy to choos
 - **Untested:** that more nights or more join visits would reach +20 here; that the stop rule is what limited the joins; why near rose more than v9's (+47.9 vs +36.2: rank 64 versus rank 8, or the new panel).
 - **What the marks say:** the idea is **not proved wrong** (J >= +8) and **not shown to work** (J < +20). The lab's lesson survives the real nightly loop, weakly, when fed half the practice. Far stays flat, as the lab predicted.
 - **Per A30's order:** seed 201 was started right away (6:00 AM ET, `runs/sheet-s201-v10`, parent T1SDR s201, same constants file and panel). The natural-weight arm is not run: it is only for a fed arm that passes. If seed 201 also lands between +8 and +20, the one change to try next is the stop rule only (12 fixed nights, so the join curve is not cut off), with J >= +20 a pass and J < +12 proved wrong, written before that run.
+
+**A30 result, seed 201, and the verdict on v10: joins do not reach +20 in the real loop; join-last is not added to the mode (Sonnet, 8:35 AM ET 10-13).** Shown, from `runs/sheet-s201-v10/analysis` (run 5:54 to 8:27 AM ET, 7 nights, 9,201 s, same constants file and panel; parent T1SDR s201):
+
+| mark | seed 201 | seed 200 |
+|---|---|---|
+| J join split, add-on on or routed (the switch sent 100% of join questions to the add-on) | 0.71 -> 7.62 (**+6.90, PROVED WRONG: below +8**) | 0.24 -> 10.00 (+9.76, FAIL, not proved wrong) |
+| DM1 near | 0.24 -> 43.10 (+42.86, PASS) | 3.10 -> 50.95 (+47.86, PASS) |
+| DM2 far | 0.00 -> 1.43 (+1.43) | 1.43 -> 0.36 (-1.07) |
+| DM3 harm, routed | in_dist 90.88 -> 90.88, drop 0.00, nothing fired, PASS | 90.22 -> 90.22, PASS |
+| DM3 harm, add-on left on | 90.88 -> 73.97 (harm.py fails) | 90.22 -> 73.46 |
+| DM4 / DM5 | audit clean, 0 panel rows in training, hash match / PASS (last night 43.10, rise +1.19) | PASS / PASS |
+
+- **Join curve, seed 201, by night:** 0.71, 1.67, 1.43, 3.57, 5.95, 3.33, 3.81, 7.62. Noisy, rising about +1 a night.
+- **Two seeds together:** join gain +9.8 and +6.9 (mean +8.3) against the pass bar of +20 and the lab's 44.3. Both near passes, far flat, routed harm 0.
+- **Verdict (the marks as written):** seed 200 lands in the middle band and seed 201 is under +8, so the fed 50% join share in the real nightly loop is **proved wrong for reaching +20 at this volume** (about 65K join visits a seed). It is not proved that joins cannot be learned: the curve rose on both seeds and was still rising when the stop rule fired.
+- **Suggested, not shown:** the lab's 44.3 needed about twice the join volume and a join-only run of updates; the loop shares its updates with replay and ten other kinds. A dedicated join stage after the nights (Far's lab recipe, 4,000 updates) is where this belongs, not a fixed share inside the nights.
+- **Untested:** 12 fixed nights, more visits per join row, or a join-only stage inside the mode. None is queued. The conditional "12 fixed nights" follow-up written above is void, because it applied only if seed 201 also landed between +8 and +20.
+- **Decision:** join-last is not added to the default nightly loop. `joinlast` and `joinlast_share` stay in `domain/mode.py`, off by default (they are keys of `constants-v10-sheet.json` only), so the lab can reuse the kind. The near gain without a join share is already on record (v7, v9).
