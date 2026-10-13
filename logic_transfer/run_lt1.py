@@ -123,7 +123,10 @@ def build_jobs(plan='lt1', far=False, parents=None, updates=GATE_UPDATES, save_e
 
 # ---------------------------------------------------------------- make_rows
 
-def make_rows(out, spec=None):
+OPTIONS_V2 = True       # format v2: answer words listed in the prompt (see MARKS addendum 1); rows are generated 21 chars shorter to fit
+
+
+def make_rows(out, spec=None, options=OPTIONS_V2):
     """Generate (logicgen CLI, run from the repo root) and convert every row file; write summary.json (counts, train/eval overlap)."""
     from logic_transfer import rows as R
     out = Path(out)
@@ -134,9 +137,9 @@ def make_rows(out, spec=None):
     for kind, split, n, seed, rel in (spec or TRAIN_ROWS + EVAL_ROWS):
         raw = out / 'raw' / f'{kind}_{split}.jsonl'
         subprocess.run([sys.executable, '-m', 'logicgen.make', '--kind', kind, '--split', split, '--n', str(n), '--seed', str(seed),
-                        '--max-chars', '208', '--out', str(raw)], check=True, cwd=REPO)
+                        '--max-chars', str(208 - (R.OPTIONS_CHARS if options else 0)), '--out', str(raw)], check=True, cwd=REPO)
         dst = out / rel
-        R.convert(raw, dst)
+        R.convert(raw, dst, options)
         summary[rel] = R.verify(dst)
         summary[rel].update(seed=seed, kind=kind, split=split)
         prompts[rel] = {json.loads(l)['prompt'] for l in open(dst)}

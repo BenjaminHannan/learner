@@ -19,23 +19,41 @@ META_KEYS = ('kind', 'split', 'label', 'depth', 'program', 'n_rules', 'n_facts',
              'template_set', 'query', 'ctx', 'pkind', 'template_ids', 'chars')
 
 
-def convert_row(g):
+OPTIONS = ('true', 'false', 'unknown')
+OPTIONS_CHARS = 21          # len(' (false/true/unknown)'): generate with --max-chars 208 - OPTIONS_CHARS so the suffixed prompt fits
+
+
+def options_suffix(row_id):
+    """' (a/b/c)': the three answer words in a per-row (hash-seeded) random order. The answer is then a word of the prompt, so the model
+    can COPY it (WORD mode) instead of writing 4-7 letters through the 9-register generator; answer position carries no information."""
+    import hashlib
+    h = int(hashlib.sha256(row_id.encode()).hexdigest(), 16)
+    o = list(OPTIONS)
+    for i in range(len(o) - 1, 0, -1):
+        j = h % (i + 1)
+        h //= (i + 1)
+        o[i], o[j] = o[j], o[i]
+    return ' (' + '/'.join(o) + ')'
+
+
+def convert_row(g, options=False):
     meta = {k: g[k] for k in META_KEYS if k in g}
     meta['proof'] = list(g.get('steps') or [])
     meta['gen_id'] = g['id']
-    return {'id': 'lt-' + g['id'], 'prompt': g['question'], 'answer': g['answer'], 'accepted': [g['answer']],
+    prompt = g['question'] + (options_suffix(g['id']) if options else '')
+    return {'id': 'lt-' + g['id'], 'prompt': prompt, 'answer': g['answer'], 'accepted': [g['answer']],
             'family': FAMILY[g['kind']], 'level': int(g['depth']) if g.get('depth') is not None else 0, 'stage': STAGE,
             'variant': g['split'], 'steps': ['none'], 'meta': meta}
 
 
-def convert(src, dst):
+def convert(src, dst, options=False):
     n = 0
     seen = set()
     with open(src) as f, open(dst, 'w') as o:
         for line in f:
             if not line.strip():
                 continue
-            r = convert_row(json.loads(line))
+            r = convert_row(json.loads(line), options)
             assert r['id'] not in seen, f'duplicate id {r["id"]}'
             seen.add(r['id'])
             o.write(json.dumps(r) + '\n')
@@ -77,6 +95,7 @@ def main(argv=None):
     c.add_argument('--in', dest='src', required=True)
     c.add_argument('--out', required=True)
     c.add_argument('--vocab', help='checkpoint whose chars to check against (default: all printable ASCII)')
+    c.add_argument('--options', action='store_true', help="append ' (true/false/unknown)' in a per-row random order (format v2)")
     v = sub.add_parser('verify')
     v.add_argument('path')
     v.add_argument('--vocab')
@@ -86,7 +105,7 @@ def main(argv=None):
         import torch
         chars = torch.load(a.vocab, map_location='cpu', weights_only=True)['chars']
     if a.cmd == 'convert':
-        n = convert(a.src, a.out)
+        n = convert(a.src, a.out, a.options)
         print(f'converted {n} rows -> {a.out}')
         path = a.out
     else:
