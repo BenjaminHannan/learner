@@ -43,3 +43,27 @@ runs/screen-s200-NKsoft30-n3 (3 nights, none undone, scored from local copies).
   **Proved wrong:** seq_next fires on night 2 or 3, or near at night 3 < +10. If it passes: the full run on s200 (constants-kf99n-kl10-soft3-lr3e4.json), then s201, then the join test with soft 3
   (Far transfer's L11 recipe, soft=3, through the coordinator): pass = HO >= 25 and DEV drop < 7.8, proved wrong = HO <= 10 or drop >= 7.8. If it fails the screen: soft 10 (Fable's backup 2) is next.
   Honest expectation (suggested, untested): the harder the mask, the lower the HO; soft = 3 may land between 9.3 (hard) and 26.4 (soft = 1), so the join test, not the screen, decides.
+
+### Result 34, arm NK-soft3 3-night screen on seed 200: PROVED WRONG (8:50 AM ET 10-13)
+runs/screen-s200-NKsoft3-n3 (3 nights, none undone). Near +34.29 at night 3 (2.14 -> 36.43), pooled drop 0.81, agreement 98.05, **seq_next fired at night 3 (85.0 -> 75.0)**; nights 1 and 2 clean.
+Marks (7:00 AM ET): proved wrong = seq_next fires on night 2 or 3: **PROVED WRONG**. Softness 3 did not stop seq_next either (softness 1: fired night 2; 1 + KL 30x: night 3; 3: night 3).
+
+### Result 35, arm NK30 (hard lock + 30x KL replay) seed 200, full run: PASS, so NK30 passes both seeds (8:50 AM ET 10-13)
+runs/sheet-s200-kf99n-kl30 (11 nights, none undone, stop = quiz rise < 1 over 2 nights; trained locally 1:10-6:xx AM ET, scored from local copies, mount down).
+- **DM1 near +63.10** (2.14 -> 65.24): pass. **DM3 pass: pooled drop 0.22 (90.22 -> 90.00), nothing fired** (largest: seq_next 85 -> 80, list_stats 92.5 -> 90, fewshot_number_rule 50 -> 47.5). DM5 pass (rise +0.71).
+  DM2 far -0.36 (fails, as in every run). Marks (Result 30): pass = DM1 >= +30 and DM3 passes, seed 200 with the same file: **met.**
+- NK30 table (near / pooled drop / fired): s201 +65.0 / 0.44 / none; s200 +63.1 / 0.22 / none. Against N99: s201 +60.7 / 1.84 (fail), s200 +55.0 / 0.74 (pass). The 30x KL on the hard lock learns more than N99
+  and slips less on both seeds. Two seeds, not the six paired seeds a confirm needs; it passes the pass marks, it is not a six-seed confirm.
+- **NK30 is the first whole-model guard to pass DM1 + DM3 on both seeds.** Its open question is transfer: the hard lock without KL got HO 9.3 on the join test, and a KL term only adds restoring force. Predicted
+  (suggested, untested): NK30's join test lands near or below 10. Not worth 10 h of Far transfer's CPU unless NK-soft10 fails to find a middle.
+
+### Marks for arm NK-soft10 (written 8:55 AM ET 10-13, before it runs): the dial's other end
+Facts: hard lock (NK30) passes both seeds and probably blocks transfer; softness 1 passes the join test (HO 26.4) and seq_next breaks on s200; softness 3 and KL 30x did not stop seq_next. Softness 10 is Fable's backup 2
+(every protected pair at most 10% speed). One change vs NK-soft: protect_soft 10 (KL stays 10x). It is a dial, not a new idea; soft is a global constant like `energy`, not tuned per family.
+- **Full run on seed 200** (the failing seed; a 3-night screen could pass falsely, because the seq_next fire is moving later as softness rises): constants-kf99n-kl10-soft10-lr3e4.json, folder
+  runs/sheet-s200-kf99n-kl10-soft10, up to 12 nights. **Pass:** DM1 >= +30 and DM3 passes at the end (seq_next quiet, nothing fired, pooled drop <= 1.5). **Proved wrong:** seq_next fires at the end, or 2+ families
+  fired, or pooled drop >= 1.84, or DM1 < +10. Per-night harm_nights reported. On pass: seed 201 with the same file.
+- **Join test with soft 10** (Far transfer, L11's recipe, soft=10; asked through the coordinator in parallel, because the join result is independent of seq_next and it fills in the HO-vs-softness curve:
+  hard 9.3, soft 1 26.4): **Pass:** HO >= 25 and DEV drop < 7.8. **Proved wrong:** HO <= 10 or DEV drop >= 7.8. Between 10 and 25 is reported as a point on the curve, neither pass nor wrong.
+- Ship rule if the dial has no sweet spot (soft 10 fails the join test, or fails seq_next): the shipped guard is NK30 (passes old skills on both seeds), transfer handled by the add-on path, and the
+  shared-brain-transfer claim is dropped for now. Said out loud: that outcome would mean the guard that protects old skills at the level the marks demand also blocks learning that reuses old directions.
