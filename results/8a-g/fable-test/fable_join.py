@@ -31,8 +31,8 @@ M = dict(
     wrong_overlap=60.0,         # W1   overlap < 60%: seed-noise-limited
     wrong_task_loss=0.25,       # W2   task-row loss >= 0.25 for all sizes and still equal: schedule-limited (E3)
     wrong_mem_drop=0.05,        # W3   10M task-row loss >= 0.05 below 3M while dev misses are unchanged: memorisation
-    dev_unchanged=0.7,          # W3   "dev misses unchanged" = |pooled-5 gain| <= 0.7 points (the 3M seed gap is 0.67); given by Ben, not by Fable
-    raw_flag=5.0)               # P3a  flag when the raw_mode==0 rate differs from the chosen==0 rate by more than 5 points (given by Ben)
+    dev_unchanged=0.7,          # W3   "dev misses unchanged" = |pooled-5 gain| <= 0.7 points (the 3M seed gap is 0.67); set by the roadmap thread (not by Fable)
+    raw_flag=5.0)               # P3a  flag when the raw_mode==0 rate differs from the chosen==0 rate by more than 5 points (set by the roadmap thread, not by Fable)
 
 # Figures quoted in prompts/wide-10m-scaling.md and the WIDE readout (shown there from the result files). u21 / u13 are UNWEIGHTED family means.
 ORIG = {'s400': dict(pooled5=73.01, misses=1630, u21=62.64, u13=88.54, calc_misses=270, noncalc_misses=1360, zero4_misses=501),
