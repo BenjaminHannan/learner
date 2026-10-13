@@ -943,3 +943,36 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   live box resumes; a lost box takes its checkpoints with it unless `EXPORT_CK_EVERY_H` exports them and `vast.py collectck` pulls them.
   If the run moves to Vast, the PC insert `16-at10m` is turned into a no-op (`cmd: at10m_skipped.cmd`, original kept) so the PC does
   not also run it. Marks and gate lines are unchanged (big-run's eighteenth Addendum; A10-1 to A10-4).
+
+## 41. Addendum AJ (2026-10-13, 8:00 AM ET): the PC disk was full; the chain restarts on hold; PTC rebuilt on the PC's code; the Vast rental gate
+
+- **What happened (shown by the PC's Mac Remote Control session).** BensPC's C: drive had 0.01 GB free. Ben's own files fill it (Flight Simulator data
+  169 GB, `C:\llm` 162 GB, Qwen models 104 GB, WSL 34 GB); the project (`custom-io`) is only 11 GB. The disk was already full by about 4:50 PM ET on 10-12
+  (the 30x512 fc100 checkpoint save failed at 16:51). From 9:58 PM ET on, fc100 part 3 (its `fc100-infer.json` is 0 bytes), g2c3s, G2f (8aB3G2s400, dead
+  after 6 minutes) and g2c3 all failed. **G2f never produced a result.** The pool `p10-rung30-s400-a64-L` is intact. A stray `8aB3G1s400` hit CUDA out of memory at
+  step 0 and left nothing usable; its "24,000 steps in 808.9 s" were the planned steps and the wrapper time, not training. Cause of that out-of-memory: not shown.
+- **fc100 part 2 (8aFC2, the no-plug card; raw evidence in `/mnt/project-files/whole-model-roadmap/fc100-fitcheck-2026-10-12/`).** Shown: 21x512 and 26x512 have a
+  RESULT.json (peak 4558.4 and 4855.9 MiB, step-20 time 5236.4 and 6091.1 s); 30, 34 and 37 x 512 trained 20 updates (8028.6 / 8620.8 / 8504.1 s) and then
+  `torch.save` failed on the full disk, so they have no RESULT.json and no logged memory; the five accum-64 arms all ran out of memory at 8.6 to 9.1 GiB
+  allocated while PyTorch reported 4.2 to 4.9 GiB free. Suggested, untested: a per-process ceiling near 10 GiB on this Windows (WDDM) PC, shared with the
+  desktop and a Qwen 27B llama-server. The queue lines' `--max-ans 8` is replaced by the caps file's 35 (`train.py`: `args.max_ans = caps['max_ans']`), so RESULT's 35 is
+  expected. FINISHED-MODEL item 10 (26x512, 1.16x the 21x512 step time) stands on one run per shape on a shared PC, so a few percent of noise.
+- **Restart (staged by hand, nothing started).** The waiter (v3e, sha256 b03a14a7...) was restarted with `WORK\STOP` present, so it idles at "waiting for gate G1" and
+  launches nothing. A fresh start line resets the installers' "past G2f" check. Installed again since: the agent package (AT-1, G2Q), `12-g2c10s`, TP, D and the
+  10M agent package with checkpoint and resume (`src-at10m`, 647bb4b9eb). Two inserts added: `47-fc2rerun` (queue 8aFC2, src-b3g2: the clean fc100 part 2 rerun) and
+  `48-fc3infer` (cmd `q8aFCI_run.cmd`: the answer-speed read), so the 7 to 9 hour rerun runs after the first batch, not before G2f. Release (needs at least 50 GB free,
+  which only Ben deleting the Flight Simulator data folder provides): rename `src-b3g2\custom_io\queue_local\8aFC2-pc.txt` aside so the waiter skips fc100 parts 2 and 3,
+  remove `WORK\STOP`, restore the queue file once g2c3s has started.
+- **PTC rebuilt on the PC's code (c2bf1a71c7).** The PTC package of addendum AH was built on 1acfde9a73, but the PC's `src-b3g2` is 74d6e92c75 (reader rules plus the G2f writer,
+  via `install_rr`); `install_ptc` therefore refused (`plain_lm.py` hash mismatch, shown). PTS (g2c3s, g2c10s) and G2f run at 74d6e92c75, so PTC must too. The rebase
+  merged the three changed files onto 74d6e92c75 (`plain_lm.py`, `job.py`, `configs.py`; `plain_tf_steps.py` and `capcount.py` are identical at both commits). One addition beyond the old
+  patch: PTC takes the no-plug front the way PTS does and joins the no-plug band check (30M and 100M only; the 3M and 10M queues are unaffected). Shown, CPU: trained counts at
+  74d6e92c75 are unchanged, PTC = PTS = PT = 4,023,976 (3M), 9,815,978 (10M), and 30,003,659 at 30M no plug; the PTC queue lines equal the PTS control lines except arm and names (accum 16 and
+  32); `test_ptc` and `ptccheck` pass (re-run by this thread on a fresh `git archive` tree); `install_ptc.ps1` was rehearsed with the Windows cmdlets stubbed. Untested: Windows
+  PowerShell 5.1, the real waiter reading the inserts, any GPU run, and PTC with the real Gemma no-plug front beyond building and counting it. The installer checks only `caps.py`
+  and the five replaced files in `src-b3g2`.
+- **Vast rental gate (`/mnt/project-files/vast/AT10M-RENTAL-GATE.md`, Ben 7:02 AM ET 10-13: "don't rent the 5090 for the 10M agent run unless you're more than 90% confident it will work").**
+  "Work" = the rented run finishes with a valid RESULT.json inside the budget (not "the model passes its marks"). Gate R1 to R7: AT-1a/c/d/f not proved wrong; AT-1 peak memory and
+  speed scaled to 10M; offline box checks; CUDA checkpoint-and-resume test on the PC; 5090 hours at most 60% of the PC's and cost at most $45; one rehearsal of at most $2.50; then a
+  failure-mode table and a plain number above 90%. Today's estimate is about 60 to 70% (suggested, not measured), so the PC runs 8aAT10M. If the accum-64 ceiling above holds, the
+  agent model's accum 64 is a guess to check at AT-1 before either machine starts.
