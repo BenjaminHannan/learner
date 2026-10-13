@@ -13,7 +13,8 @@ cloud scoring in the session scratchpad.
 | PC-2: mean approx KL per night, nights 1-6 (GW-P8 0.00853 / 0.00835; bar 3x on nights 1-8) | 0.0189 = 2.2x | 0.0209 = 2.5x |
 | ratios clipped by the PPO rule per night (GW-P8: 3-11%) | 17-26% | 17-26% |
 | policy temperature, night 0 to night 6 | 1.000 to 1.048 | 1.000 to 1.048 |
-| night-32-world quiz progress, nights 0..6 (GW-P8: 16.6 to 18.8 / 15.1 to 18.3) | 17.0 14.8 16.3 15.3 16.2 14.9 16.1 | 17.5 15.3 16.5 15.2 17.6 17.2 16.1 |
+| practice-quiz progress (32 worlds), nights 0..6 | 17.0 14.8 16.3 15.3 16.2 14.9 16.1 | 17.5 15.3 16.5 15.2 17.6 17.2 16.1 |
+| sealed-map progress at night 6, 50 maps: GW-PC vs GW-P8 (A18 row) | 16.1 vs 18.8 | 16.2 vs 18.3 |
 | night 6, 50 sealed maps | 3.54 | 3.56 |
 | GW-P8 night 6, same 50 maps | 4.14 | 4.02 |
 | GW-PC night 6 - GW-P8 night 6 (paired, 95%) | -0.60 (-1.0 to -0.2) | -0.46 (-0.82 to -0.10) |
@@ -31,7 +32,8 @@ cloud scoring in the session scratchpad.
 
 ## Reading
 - Shown: moving the flat start into the add-on did make the policy valid (PC-0) and the steps about 2.2-2.5x bigger, but the
-  quiz and the sealed score did not rise, while GW-P8's did at the same nights. Learning got no faster.
+  practice quiz did not rise (s201 returned to its start level at night 4) and the sealed score at night 6 did not rise, while
+  GW-P8's did at the same night. Learning got no faster.
 - Shown: the PPO clip fires 17-26% of the time (GW-P8: 3-11%), so steps at T = 1 run into the clip, not only into the temperature.
 - Suggested (untested): the 1/T story was not the main limit; the limit is the signal (few rewarded moves, credit across
   ~170 steps) or the clip and the learning rate, not the step size alone. This is the "limit is the signal" branch of A19b, reached
