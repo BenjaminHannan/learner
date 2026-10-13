@@ -384,3 +384,24 @@ The mean change is 0.0. The quiz (about 26 items per kind) is too noisy to choos
 *Reference points on record before the run.* v9 sheet s200: near +36.2, far -0.7, F4 (lab probe) 1.4. L12 lab LA64: F4 44.3, held-out layout 45, F5 3.8 / 4.0.
 
 *Constants files after the merge with Far's branch.* `domain/constants.json` now carries v9's widen keys (sha256 `a2f87dd1...`, the hash in Far's v9 runs). The v7 and v8 file (sha256 `4781b0be...`, the hash in every earlier run) is kept as `domain/constants-v7.json`: re-analyse an older run with `python3 -m domain.analyze ... --constants domain/constants-v7.json`. The v10 file is `domain/constants-v10-sheet.json`.
+
+**A30 result, seed 200: near passes, joins land in the middle (+9.8, not +20), far does not move (Sonnet, 6:00 AM ET 10-13).** Shown, from `runs/sheet-s200-v10/analysis/RESULT.json` and `ROUTE.json` (run 2:34 to 5:36 AM ET, 8 nights, 10,921 s, stop rule: quiz rise below 1 over 2 nights, no night undone, panel `sheet.v4`, constants hash match):
+
+| mark | value | verdict |
+|---|---|---|
+| J join split, add-on on (unrouted) | 0.24 -> 10.00 (+9.76, n 420) | **FAIL (not proved wrong: >= +8)** |
+| J join split, routed by the model's own switch | 0.24 -> 10.00 (+9.76); the switch sent 100% of the join questions to the add-on | **FAIL (not proved wrong)** |
+| DM1 near, unrouted and routed | 3.10 -> 50.95 (+47.86, n 420 scored) | PASS (v9 sheet s200 was +36.2) |
+| DM2 far | 1.43 -> 0.36 (-1.07) | not moved, as predicted (<= +5) |
+| DM3 harm, routed (the product) | in_dist 90.22 -> 90.22, drop 0.00, nothing fired | PASS (the switch sent 1 of 1,360 DEV questions to the add-on) |
+| DM3 harm, add-on left on | 90.22 -> 73.46, harm.py fails | reported (the A19 pattern: harm is removed by the switch, not by the add-on) |
+| DM4 | audit clean, 0 panel rows in training, 11,685 rows, constants hash = `constants-v10-sheet.json` | PASS |
+| DM5 | last night 50.95 = best, rise +0.24 | PASS |
+
+- **Join curve by night (add-on on):** 0.24, 0.71, 1.67, 3.57, 3.81, 6.43, 7.38, 6.43, 10.00. Still rising when the stop rule fired (+3.57 on the last night). The model's own join quiz (23 questions) read 4.35% at the end, so the quiz cannot see join progress and the stop rule ended the run on the other kinds' quiz rise.
+- **Where the joins land:** by first piece, MAX 16.7, ABS 13.3, division 11.7, PRODUCT 10.0, SUM 10.0, MIN 5.0, cell arithmetic 3.3; by length of the working, 3 steps 12.6, 4 steps 9.2, 5 steps 10.8, 6 steps 3.0.
+- **Join practice actually delivered:** 512 join rows a night (the 50% share held), 4,096 distinct join rows over 8 nights, 8 of them solved by the model itself and the rest taught by the tool's working; about 65K join-row visits in all (16 visits each), about half the lab's 128K.
+- **Suggested (not shown):** the gap to the lab's 44.3 is mostly join volume: Far's L9 curve for the same add-on reads 15.5 at about 64K visits, so 10.0 is a little under the lab's own curve at this volume, not far under it. A second possible cause is that the join rows share their nights with replay and 10 other kinds.
+- **Untested:** that more nights or more join visits would reach +20 here; that the stop rule is what limited the joins; why near rose more than v9's (+47.9 vs +36.2: rank 64 versus rank 8, or the new panel).
+- **What the marks say:** the idea is **not proved wrong** (J >= +8) and **not shown to work** (J < +20). The lab's lesson survives the real nightly loop, weakly, when fed half the practice. Far stays flat, as the lab predicted.
+- **Per A30's order:** seed 201 was started right away (6:00 AM ET, `runs/sheet-s201-v10`, parent T1SDR s201, same constants file and panel). The natural-weight arm is not run: it is only for a fed arm that passes. If seed 201 also lands between +8 and +20, the one change to try next is the stop rule only (12 fixed nights, so the join curve is not cut off), with J >= +20 a pass and J < +12 proved wrong, written before that run.
