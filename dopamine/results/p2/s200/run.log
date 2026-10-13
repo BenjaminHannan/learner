@@ -1,0 +1,66 @@
+[     2.7s] 1300 sessions built
+[     2.8s] 19453 distinct prompts, 19453 distinct candidates, 35237 menu entries, 3890 rounds
+[     3.2s] features 128/19453  0s
+[     6.1s] features 2688/19453  3s
+[     8.8s] features 5248/19453  6s
+[    11.6s] features 7808/19453  9s
+[    14.2s] features 10368/19453  11s
+[    16.8s] features 12928/19453  14s
+[    19.4s] features 15488/19453  16s
+[    21.9s] features 18048/19453  19s
+[    23.5s] features done (19453, 256) in 20s (1.0 ms/prompt)
+[    30.9s] answers 256/19453  7s
+[    89.8s] answers 2816/19453  66s
+[   146.1s] answers 5376/19453  123s
+[   201.3s] answers 7936/19453  178s
+[   256.7s] answers 10496/19453  233s
+[   312.0s] answers 13056/19453  288s
+[   366.3s] answers 15616/19453  343s
+[   423.5s] answers 18176/19453  400s
+[   452.9s] answers done 19453 in 429s (22.1 ms per candidate answer); overall right 0.339
+[   453.8s] cache saved
+# P2 session sheets, model seed 200, helper rule top1
+
+checkpoint: /mnt/project-files/domain-mode/runs/sheet-s200-v7/night_7/checkpoint.pt
+sealed person seed: 93003
+sealed sessions: 400, mean requests per session 2.993
+
+| Arm | mean effort (person actions / session) |
+|---|---|
+| NONE | 2.9925 |
+| EAGER | 3.5025 |
+| HELPER | 3.1025 |
+| ORACLE | 2.4175 |
+
+| Paired difference | mean | 95% interval (10,000 resamples, seed 0) |
+|---|---|---|
+| HELPER-NONE | +0.1100 | [+0.0425, +0.1762] |
+| HELPER-EAGER | -0.4000 | [-0.4838, -0.3181] |
+
+P2-1: PROVED WRONG (on this seed)  (pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed)
+P2-2: PASS  (pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds)
+
+ORACLE saving per session: 0.5750
+
+| Arm | extras/session | wanted | right | unwanted | extras on last request |
+|---|---|---|---|---|---|
+| EAGER | 2.993 | 0.335 | 0.474 | 0.665 | 400 |
+| HELPER | 1.140 | 0.351 | 0.546 | 0.649 | 131 |
+| ORACLE | 0.575 | 1.000 | 1.000 | 0.000 | 0 |
+
+Extras per kind (kind labels used for scoring only):
+
+| Kind | EAGER | HELPER | ORACLE |
+|---|---|---|---|
+| SUM | 346 | 103 | 45 |
+| MAX | 306 | 147 | 86 |
+| MIN | 208 | 103 | 60 |
+| PRODUCT | 9 | 6 | 0 |
+| cell arithmetic | 29 | 11 | 12 |
+| division | 4 | 0 | 0 |
+| MOD | 148 | 36 | 6 |
+| ABS | 107 | 36 | 21 |
+| COUNTIF | 21 | 5 | 0 |
+| IF | 19 | 9 | 0 |
+
+p1_sessions.py sha256: de050bc9fc24dce08ba6e16eb80dfb1890836b49246169d7d9f9aa75c1f29950

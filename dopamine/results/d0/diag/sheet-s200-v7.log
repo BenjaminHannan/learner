@@ -1,0 +1,43 @@
+loaded cached features /mnt/project-files/dopamine/d0/diag/sheet-s200-v7.npz
+G 0.001 0.5690291590254453
+G 0.01 0.5566403807781383
+G 0.1 0.547967662875243
+G 1.0 0.5428088501817513
+G_reader 0.001 0.5301049269019621
+G_reader 0.01 0.5407289444620771
+G_reader 0.1 0.5394133073282157
+G_reader 1.0 0.5347889544630415
+crossfit G_reader 0.01 0.5456537986031457
+crossfit G_reader 1.0 0.5472200889498513
+crossfit G 0.01 0.5962623561396234
+crossfit G 1.0 0.5810792993687339
+
+POST-HOC; pooled days 2..7       wkAUC  Brier
+  G_C0.001           0.569  0.227
+  G_C0.01            0.557  0.234
+  G_C0.1             0.548  0.252
+  G_C1.0             0.543  0.284
+  G_reader_C0.001    0.530  0.259
+  G_reader_C0.01     0.541  0.257
+  G_reader_C0.1      0.539  0.260
+  G_reader_C1.0      0.535  0.265
+  G_reader_C0.01     0.546  0.209
+  G_reader_C1.0      0.547  0.246
+  G_C0.01            0.596  0.207
+  G_C1.0             0.581  0.297
+  proxy len_chars       0.563  higher=more wrong
+  proxy n_digit_runs    0.558  higher=more wrong
+  proxy n_digits        0.557  higher=more wrong
+  proxy max_number      0.506  higher=more wrong
+  proxy n_cell_refs     0.500  higher=more right
+  proxy n_colon_ranges  0.500  higher=more right
+  proxy logistic     0.560  0.258
+per kind, G_reader C=0.01:
+  ABS            n= 1117 succ=0.306 wkAUC=0.546 (6 groups)
+  MAX            n=  550 succ=0.704 wkAUC=0.540 (6 groups)
+  MIN            n=  646 succ=0.680 wkAUC=0.507 (6 groups)
+  PRODUCT        n=  488 succ=0.389 wkAUC=0.576 (4 groups)
+  SUM            n=  629 succ=0.447 wkAUC=0.576 (6 groups)
+  cell arithmetic n= 1456 succ=0.295 wkAUC=0.516 (5 groups)
+  division       n=  388 succ=0.399 wkAUC=0.571 (5 groups)
+runtime 464.9s

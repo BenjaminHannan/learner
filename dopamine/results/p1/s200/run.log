@@ -1,0 +1,65 @@
+[     2.5s] 1300 sessions built
+[     2.6s] 19136 distinct prompts, 19136 distinct candidates, 35160 menu entries, 3882 rounds
+[     2.9s] features 128/19136  0s
+[     5.6s] features 2688/19136  3s
+[     8.0s] features 5248/19136  5s
+[    10.5s] features 7808/19136  8s
+[    12.8s] features 10368/19136  10s
+[    15.1s] features 12928/19136  12s
+[    17.5s] features 15488/19136  15s
+[    20.1s] features 18048/19136  17s
+[    21.2s] features done (19136, 256) in 18s (1.0 ms/prompt)
+[    29.5s] answers 256/19136  8s
+[    85.8s] answers 2816/19136  65s
+[   142.5s] answers 5376/19136  121s
+[   199.1s] answers 7936/19136  178s
+[   255.1s] answers 10496/19136  234s
+[   311.4s] answers 13056/19136  290s
+[   367.6s] answers 15616/19136  346s
+[   422.8s] answers 18176/19136  402s
+[   443.5s] answers done 19136 in 422s (22.1 ms per candidate answer); overall right 0.336
+[   444.4s] cache saved
+# P1 session sheets, model seed 200
+
+checkpoint: /mnt/project-files/domain-mode/runs/sheet-s200-v7/night_7/checkpoint.pt
+sealed sessions: 400, mean requests per session 2.973
+
+| Arm | mean effort (person actions / session) |
+|---|---|
+| NONE | 2.9725 |
+| EAGER | 3.4700 |
+| HELPER | 3.3875 |
+| ORACLE | 2.3925 |
+
+| Paired difference | mean | 95% interval (10,000 resamples, seed 0) |
+|---|---|---|
+| HELPER-NONE | +0.4150 | [+0.3581, +0.4706] |
+| HELPER-EAGER | -0.0825 | [-0.1762, +0.0144] |
+
+P1-1: PROVED WRONG (on this seed)  (pass: diff <= -0.05 and CI upper < 0; wrong: CI lower > 0 on either seed)
+P1-2: neither pass nor wrong  (pass: diff <= -0.10 and CI upper < 0; wrong: diff >= 0 on both seeds)
+
+ORACLE saving per session: 0.5800
+
+| Arm | extras/session | wanted | right | unwanted | extras on last request |
+|---|---|---|---|---|---|
+| EAGER | 2.973 | 0.354 | 0.483 | 0.646 | 400 |
+| HELPER | 2.072 | 0.107 | 0.403 | 0.893 | 273 |
+| ORACLE | 0.580 | 1.000 | 1.000 | 0.000 | 0 |
+
+Extras per kind (kind labels used for scoring only):
+
+| Kind | EAGER | HELPER | ORACLE |
+|---|---|---|---|
+| SUM | 333 | 68 | 40 |
+| MAX | 341 | 152 | 94 |
+| MIN | 202 | 150 | 61 |
+| PRODUCT | 6 | 41 | 1 |
+| cell arithmetic | 40 | 59 | 6 |
+| division | 4 | 10 | 1 |
+| MOD | 134 | 39 | 6 |
+| ABS | 93 | 69 | 21 |
+| COUNTIF | 22 | 115 | 0 |
+| IF | 14 | 126 | 2 |
+
+p1_sessions.py sha256: 2f65e028470dffab18d6244e8cbb06f37755bd0e4fa593de7a453b96fdac1d7f

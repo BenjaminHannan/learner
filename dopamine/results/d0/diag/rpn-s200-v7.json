@@ -1,0 +1,185 @@
+{
+ "run": "/mnt/project-files/domain-mode/runs/rpn-s200-v7",
+ "post_hoc": true,
+ "days": 4,
+ "best_C_G_reader": 0.1,
+ "sweep": {
+  "G_C0.001": {
+   "within_kind_auc": 0.5637250081336506,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.5619672410085289,
+   "brier": 0.32589132455423436
+  },
+  "G_C0.01": {
+   "within_kind_auc": 0.5730957692381818,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.575885440421977,
+   "brier": 0.330685577211562
+  },
+  "G_C0.1": {
+   "within_kind_auc": 0.5885779650254906,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.6008351628614844,
+   "brier": 0.3623875684309772
+  },
+  "G_C1.0": {
+   "within_kind_auc": 0.5733781151502967,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.6205113541029089,
+   "brier": 0.4064343650394433
+  },
+  "G_reader_C0.001": {
+   "within_kind_auc": 0.49033128053436337,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.5150466381977119,
+   "brier": 0.41966460227211405
+  },
+  "G_reader_C0.01": {
+   "within_kind_auc": 0.5082104371743293,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.5157272463021475,
+   "brier": 0.43500138323685944
+  },
+  "G_reader_C0.1": {
+   "within_kind_auc": 0.5268610921521807,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.525714224945705,
+   "brier": 0.448152674502901
+  },
+  "G_reader_C1.0": {
+   "within_kind_auc": 0.5257897611927925,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.5331170196927338,
+   "brier": 0.4612487653211205
+  }
+ },
+ "same_day_crossfit": {
+  "G_reader_C0.01": {
+   "within_kind_auc": 0.6544108280629458,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.7473443286202798,
+   "brier": 0.10296632383120476
+  },
+  "G_reader_C1.0": {
+   "within_kind_auc": 0.6994907507929083,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.7605263841985485,
+   "brier": 0.11395599347797308
+  },
+  "G_C0.01": {
+   "within_kind_auc": 0.8219165704602713,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.8577493613390964,
+   "brier": 0.08203686536217927
+  },
+  "G_C1.0": {
+   "within_kind_auc": 0.8097544902768976,
+   "groups": 6,
+   "rows": 2322,
+   "auc": 0.842810249768995,
+   "brier": 0.09583059643778886
+  }
+ },
+ "proxy_direct": {
+  "len_chars": {
+   "within_kind_auc_raw": 0.5401151579567551,
+   "sign_agnostic": 0.5401151579567551,
+   "direction": "higher=more right"
+  },
+  "n_digit_runs": {
+   "within_kind_auc_raw": 0.5,
+   "sign_agnostic": 0.5,
+   "direction": "higher=more right"
+  },
+  "n_digits": {
+   "within_kind_auc_raw": 0.5401151579567551,
+   "sign_agnostic": 0.5401151579567551,
+   "direction": "higher=more right"
+  },
+  "max_number": {
+   "within_kind_auc_raw": 0.5124802130731803,
+   "sign_agnostic": 0.5124802130731803,
+   "direction": "higher=more right"
+  },
+  "n_cell_refs": {
+   "within_kind_auc_raw": 0.5,
+   "sign_agnostic": 0.5,
+   "direction": "higher=more right"
+  },
+  "n_colon_ranges": {
+   "within_kind_auc_raw": 0.5,
+   "sign_agnostic": 0.5,
+   "direction": "higher=more right"
+  }
+ },
+ "proxy_logistic": {
+  "within_kind_auc": 0.47058243735330707,
+  "groups": 6,
+  "rows": 2322,
+  "auc": 0.5963710353987111,
+  "brier": 0.41983739779698054
+ },
+ "per_kind_G_reader_bestC": {
+  "a b *": {
+   "n": 39,
+   "success_rate": 1.0,
+   "within_kind_auc": null,
+   "day_groups": 0,
+   "rows_in_auc": 0
+  },
+  "a b +": {
+   "n": 45,
+   "success_rate": 1.0,
+   "within_kind_auc": null,
+   "day_groups": 0,
+   "rows_in_auc": 0
+  },
+  "a b + c *": {
+   "n": 358,
+   "success_rate": 0.9273743016759777,
+   "within_kind_auc": 0.503309968847352,
+   "day_groups": 1,
+   "rows_in_auc": 238
+  },
+  "a b + c d + *": {
+   "n": 1026,
+   "success_rate": 0.8128654970760234,
+   "within_kind_auc": 0.5565540293275135,
+   "day_groups": 2,
+   "rows_in_auc": 1022
+  },
+  "a b -": {
+   "n": 374,
+   "success_rate": 0.8128342245989305,
+   "within_kind_auc": 0.3033026755852843,
+   "day_groups": 1,
+   "rows_in_auc": 277
+  },
+  "a b /": {
+   "n": 26,
+   "success_rate": 0.8461538461538461,
+   "within_kind_auc": null,
+   "day_groups": 0,
+   "rows_in_auc": 0
+  },
+  "a b c * +": {
+   "n": 805,
+   "success_rate": 0.906832298136646,
+   "within_kind_auc": 0.5742300946265618,
+   "day_groups": 2,
+   "rows_in_auc": 785
+  }
+ },
+ "runtime_seconds": 707.7
+}

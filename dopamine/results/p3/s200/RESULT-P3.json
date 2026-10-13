@@ -1,0 +1,63 @@
+{
+ "test": "P3",
+ "n_sealed_sessions": 400,
+ "model_seed": 200,
+ "ckpt": "/mnt/project-files/domain-mode/runs/sheet-s200-v7/night_7/checkpoint.pt",
+ "sealed_seed": 93004,
+ "mean_effort": {
+  "NONE": 3.03,
+  "EAGER-TOOL": 2.475,
+  "HELPER-TOOL": 2.595,
+  "P2 HELPER": 3.18625,
+  "P2 EAGER": 3.555,
+  "HELPER-GATED (reported)": 2.809375,
+  "ORACLE": 1.73
+ },
+ "HELPER-TOOL - NONE": {
+  "diff": -0.435,
+  "ci95": [
+   -0.513125,
+   -0.3574843750000002
+  ]
+ },
+ "HELPER-TOOL - P2 HELPER": {
+  "diff": -0.59125,
+  "ci95": [
+   -0.696875,
+   -0.4887343750000002
+  ]
+ },
+ "HELPER-GATED - NONE (reported)": {
+  "diff": -0.220625,
+  "ci95": [
+   -0.2775,
+   -0.164375
+  ]
+ },
+ "P3-1": {
+  "verdict": "PASS",
+  "rule": "pass: diff <= -0.10 and CI upper < 0; wrong: CI lower > -0.05 on either seed"
+ },
+ "P3-2": {
+  "verdict": "PASS",
+  "rule": "pass: diff <= -0.15 and CI upper < 0"
+ },
+ "HELPER-TOOL": {
+  "extras_per_session": 1.685,
+  "wanted_share": 0.4065281899109792,
+  "extras_on_last_request": 170,
+  "extras_per_kind": {
+   "SUM": 195,
+   "MAX": 185,
+   "MIN": 107,
+   "PRODUCT": 2,
+   "cell arithmetic": 15,
+   "division": 0,
+   "MOD": 87,
+   "ABS": 70,
+   "COUNTIF": 9,
+   "IF": 4
+  }
+ },
+ "p1_sessions_py_sha256": "64b77011fcaf1a31c5a273b8b0a2edaa581722f88fd2a1a2ceb332a80d267da6"
+}

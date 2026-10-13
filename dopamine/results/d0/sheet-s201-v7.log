@@ -1,0 +1,25 @@
+day 1: 719 rows, greedy right 0.014, features a=256 b=643
+day 2: 726 rows, greedy right 0.211, features a=256 b=643
+day 3: 940 rows, greedy right 0.449, features a=256 b=643
+day 4: 981 rows, greedy right 0.581, features a=256 b=643
+day 5: 832 rows, greedy right 0.482, features a=256 b=643
+day 6: 801 rows, greedy right 0.544, features a=256 b=643
+day 7: 892 rows, greedy right 0.519, features a=256 b=643
+day 8: 843 rows, greedy right 0.537, features a=256 b=643
+
+own rows with r=0 (expect 0): 0
+pooled days 2..8   AUC   within-kind AUC   Brier
+  G              0.671   0.597 (38 groups)   0.305
+  G_reader       0.706   0.544 (38 groups)   0.280
+  K              0.722   0.500 (38 groups)   0.273
+  C              0.590   0.523 (38 groups)   0.275
+G surprise 0.396; cells r1&V>=.5 1229, r1&V<.5 1669, r0&V>=.5 633, r0&V<.5 2484; mean V r1 0.426 r0 0.231
+per day AUC (G / G_reader / K / C):
+  day 2: 0.617 / 0.515 / 0.617 / 0.452
+  day 3: 0.687 / 0.613 / 0.692 / 0.506
+  day 4: 0.607 / 0.650 / 0.616 / 0.489
+  day 5: 0.653 / 0.797 / 0.819 / 0.534
+  day 6: 0.676 / 0.652 / 0.645 / 0.566
+  day 7: 0.698 / 0.727 / 0.727 / 0.576
+  day 8: 0.720 / 0.673 / 0.643 / 0.508
+runtime 96.5s  wrote /mnt/project-files/dopamine/d0/sheet-s201-v7.json
