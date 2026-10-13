@@ -876,3 +876,37 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   at 3M. M3 the question: fair gap = (B3G2 10M - B3G2 3M) - (PTC 10M - PTC 3M), reported beside the same gap with PTS's `calc`
   lesion. If PTC's gain and PTS-with-calculator's gain differ by more than 1.5, later size reads need a trained PTC; within 1.5,
   PTS's lesion stands in. Proved wrong ("the calculator explains the size gap"): the fair gap at or below -1.0 on seed 400.
+
+## 39. Addendum AH (2026-10-12, 8:15 PM ET): first-batch order; the waiter's one-listing catch; PTC and 8aAT10M built
+
+- **Order change (big-run's suggestion, 7:5x PM ET; verdict: do).** The size read of the finished design needs PTC either way, and
+  G2Q (a change to the older group 2 model) and T-P (a G1 side test Ben did not want) need nothing from it. First insert batch, in
+  name order: `05-g1diag` (D), `10-g2fgate`, `11-at` (AT-1), `12-g2c10s` (was 40), `13-ptc3s`, `14-ptc10s` (was 42/43 in AG),
+  `15-at10mgate`, `16-at10m`, then `30-g2q`, `46-tp`. Cons accepted: G2Q's 3M read moves back by PTC's hours and the 10M run's
+  days; if G2Q later passes, the 10M read is of the thoughts-only agent model, which is still the size question for the thinker.
+- **Catch (shown, `q8aPost3_wait.ps1` RunInserts):** the waiter lists `WORK\insert` once per check point (one `Get-ChildItem`
+  before its loop) and re-reads each file's content only when it reaches it. The first check point is right after G2f. An insert
+  file that appears after G2f ends waits for the next check point (after g2c3, B3 group 1 and the s401 pairs: days). So every
+  first-batch file must be on the PC before G2f ends, and a gate works by rewriting a later file's content (as `10-g2fgate` does).
+  This held for AF's "50 or later" 10M plan too.
+- **PTC built (e61ec1a88f, `results/8a-g/pc-job-cards/ptc/`):** overlay files on src-b3g2 (1acfde9a73): `plain_tf_steps.py`
+  (calc_full, calc_mask, calc_train, a separate loss mask so the width W is unchanged), `plain_lm.py`, `configs.py` (arm PTC),
+  `job.py` (PTC takes PTS's caps path), `capcount.py` (calc_mismatch, calc_forced, calc_rows reach RESULT.json; kept out of
+  `total`). One rule beyond AG: a calculator string followed by another digit in the gold text is a mismatch (left in the loss).
+  Queues 8aPTC3S (accum 16) and 8aPTC10S (accum 32), as g2c3s and g2c10s. Counts (shown, CPU, at 1acfde9a73): PTC = PTS = PT,
+  4,023,976 at 3M and 9,815,978 at 10M. Tests (re-run by this thread on a fresh overlay, 12:12 AM ET 10-13): calc_train off equals
+  the base bit for bit (weights, loss over 40 updates, decodes, lesions, counters); mask equals generate on 16 real-format rows;
+  "all test_ptc checks passed". `install_ptc.ps1` rehearsed with pwsh on a fake PC tree (DONE, again, past check point, bad hash,
+  failed check); not run on Windows PowerShell 5.1 yet.
+- **8aAT10M built (0cefb49961 + ebb67ff415, `results/8a-g/pc-job-cards/at10m/`):** B3AT, arm AT, 10M, seed 400, src-at (6e72a5fae5),
+  same pool and caps_b3g2.json as AT-1, accum AT=64 (a memory guess: B3G2's 10M value; spill doubles it). Trained 9,824,546 (shape S:
+  7 blocks x 256, 4 heads, mlp 4.8, 12 loops; -1.75% of the 10M target), +0.09% over PTC / g2c10s's 9,815,978 at the code they run.
+  `15-at10mgate` reads AT-1, G2f and g2c3s RESULT.json against big-run PLAN's eighteenth Addendum gate lines (AT-1a, AT-1c, AT-1d;
+  AT-1f from the end-of-training `cap_hits` line in AT's stdout.txt, not RESULT.json's post-evaluation snapshot; AT-1b and AT-1e
+  reported after, not gated) and turns `16-at10m` into a no-op unless every gated line reads not proved wrong (cannot tell = stop).
+  Seconds per update: `train` lines every 500 steps in AT\stdout.txt and RESULT.json `steps_per_s`.
+- **Marks for the 10M read:** big-run PLAN's eighteenth Addendum, A10-1 to A10-4 (A10-1 is AG's M3 fair gap against PTC, pass at
+  least +1.0, proved wrong at most -1.0; A10-2 the own gain, WIDE's lines +3.3 / +2.0). Not restated here. If PTC has not finished
+  when the 10M lands, A10-1 is read against PTS's `calc` lesion, labelled so.
+- **Install:** both packages go in through the Mac (Remote Control session) after `install_agent`, in its steps after the answer
+  speed timing; deadline: before G2f ends.
