@@ -1,6 +1,6 @@
 # Run by the post-G1 chain waiter (v3e) as the inserted job WORK\insert\15-at10mgate.txt (cmd: at10m_gate.cmd), at the check point where the waiter reaches it (first batch: after
 # 14-ptc10s, just before 16-at10m). Big-run PLAN.md eighteenth Addendum 10-12 (2). It reads AT-1 (8aAT, 3M, seed 400) against G2f and g2c3s (at10m_gate.py: AT-1a, AT-1c, AT-1d, AT-1f
-# if its counters are in RESULT.json; AT-1b and AT-1e are not gated) and, unless that says "not proved wrong", turns WORK\insert\16-at10m.txt (the agent model at 10M, queue 8aAT10M
+# from the end-of-training cap_hits line in AT\stdout.txt, not gated if unreadable; AT-1b and AT-1e are not gated) and, unless that says "not proved wrong", turns WORK\insert\16-at10m.txt (the agent model at 10M, queue 8aAT10M
 # from src-at) into a no-op (cmd: at10m_skipped.cmd), keeping the original beside it as 16-at10m.txt.gated-<stamp>. Proved wrong, "cannot tell" (a file or key missing, AT-1 skipped)
 # and any error all skip. It starts and stops nothing and deletes nothing; it ends in seconds. Log: the waiter's log; full output WORK\at10m-gate.txt and WORK\at10m-gate.json.
 # (The waiter lists WORK\insert once per check point but reads each file's content when it reaches it, so this rewrite is seen when it gets to 16-at10m.txt.)

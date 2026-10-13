@@ -8,7 +8,7 @@ log: C:\Users\benja\custom-io\work\q8aAT10M.log
 stall_minutes: 1800
 paths: SRC = C:\Users\benja\custom-io\src-at (custom_io of the B3AT commit 6e72a5fae5, branch claude/project-thread-emwjvn; never edit it)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
 starts_when: started by the post-G1 chain waiter v3e as the inserted job WORK\insert\16-at10m.txt, after 14-ptc10s and before 30-g2q, and only if
-  at10m_gate.ps1 (15-at10mgate.txt, just before it) found AT-1 (8aAT, 3M, s400) not proved wrong on AT-1a, AT-1c, AT-1d (and AT-1f if its counters are in RESULT.json) against G2f and g2c3s. Accum AT=64 (a memory guess, B3G2's value at 10M).
+  at10m_gate.ps1 (15-at10mgate.txt, just before it) found AT-1 (8aAT, 3M, s400) not proved wrong on AT-1a, AT-1c, AT-1d (and AT-1f from the end-of-training cap_hits line in AT\stdout.txt) against G2f and g2c3s. Accum AT=64 (a memory guess, B3G2's value at 10M).
 stall_check: Windows does not refresh LastWriteTime of a file that is still open, so never use it. The live log is the
   running job's AT\stdout.txt under WORK\results\Q-pc\ (before it exists the job is building the pool: look for a
   python process with custom_io.g8a.job in its command line). Stalled = its last "step" is the same as in the

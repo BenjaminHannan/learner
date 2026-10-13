@@ -3,13 +3,15 @@ WORK\\insert\\16-at10m.txt (queue 8aAT10M) runs only if AT-1 (8aAT, 3M, seed 400
   AT-1a  proved wrong = pooled-5 more than 6.0 below G2f's (same dev rows), or below g2c3s's
   AT-1c  proved wrong = calculator off (noexec) within 10 points of the full score on the program questions (extra.noexec.program_families vs extra.noexec.intact; as B3-3)
   AT-1d  proved wrong = chain-5 more than 5 below G2f's, or thinker-off (loops:0) pooled-5 above 60% of the full score
-  AT-1f  proved wrong = any cap counter above 0 in AT's run (turns_over, tape_entry_over, writer_over, unended, turn_rounds_over, steps_unparsed, no_trace, steps_over, answer_is_call),
-         gated only if the counters (RESULT.json cap_hits) are there; otherwise "AT-1f counters not in RESULT.json: reported later, not gated".
+  AT-1f  proved wrong = any cap counter above 0 at the END OF TRAINING (turns_over, tape_entry_over, writer_over, unended, turn_rounds_over, steps_unparsed, no_trace, steps_over,
+         answer_is_call): the last {"event": "cap_hits"} line WITHOUT "final" in AT's stdout.txt (next to RESULT.json; train.py prints it right after training, before any evaluation).
+         RESULT.json's cap_hits is the snapshot AFTER the final evaluations (dev rows count too): it is only printed as a report line, never gated. If stdout.txt or that line cannot
+         be read, AT-1f is "not gated, reported later" (not cannot-tell).
   AT-1b (reply swap) and AT-1e (stop and long input) are not gated: reported after the run.
 pooled-5 = 100 * sum(correct) / sum(n) over in_dist, answer, frame, vocab, variant (final_eval; lesions['loops:0'] for the lesion). The thresholds are the sealed ones, unchanged.
 Standard library only; read-only (writes only --out).
 
-  python -I at10m_gate.py --at AT\\RESULT.json --g2f B3G2\\RESULT.json --pair PTS\\RESULT.json [--out FILE.json]
+  python -I at10m_gate.py --at AT\\RESULT.json [--at-stdout AT\\stdout.txt] --g2f B3G2\\RESULT.json --pair PTS\\RESULT.json [--out FILE.json]
   python -I at10m_gate.py --selftest
 
 Exit 0 = not proved wrong (16-at10m runs), 3 = proved wrong (it does not), 2 = cannot tell: a file or key missing, a seed that is not 400 (it does not).
@@ -46,6 +48,25 @@ def load(path):
         return None
 
 
+def train_counters(path):
+    """The last cap_hits event without 'final' in a train.py stdout.txt (the end-of-training snapshot) -> dict, or None if the file or such a line cannot be read."""
+    last = None
+    try:
+        for ln in open(path, errors='replace'):
+            ln = ln.strip()
+            if not ln.startswith('{') or 'cap_hits' not in ln:
+                continue
+            try:
+                e = json.loads(ln)
+            except ValueError:
+                continue
+            if isinstance(e, dict) and e.get('event') == 'cap_hits' and not e.get('final'):
+                last = e
+    except Exception:
+        return None
+    return last if last and all(k in last for k in COUNTERS[:5]) else None
+
+
 def num(v):
     return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
 
@@ -57,6 +78,7 @@ def f(v):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--at', help="AT-1's AT RESULT.json (8aAT, 3M, seed 400)")
+    ap.add_argument('--at-stdout', help="AT's stdout.txt (default: stdout.txt beside --at)")
     ap.add_argument('--g2f', help="G2f's B3G2 RESULT.json (8aB3G2s400, 3M, seed 400)")
     ap.add_argument('--pair', help="g2c3s's PTS RESULT.json (8aG2C3S, 3M, seed 400)")
     ap.add_argument('--out')
@@ -87,12 +109,16 @@ def main(argv=None):
     L['AT-1d thinker-off'] = dict(loops0=off, full=full, share=share, wrong=None if share is None else share > 0.6)
     d3 = None if None in (c5, c5g) else c5 - c5g
     L['AT-1d chain-5 vs G2f'] = dict(at=c5, g2f=c5g, diff=d3, wrong=None if d3 is None else d3 < -5.0)
-    ch = g(t, 'cap_hits')
-    if isinstance(ch, dict) and all(k in ch for k in COUNTERS[:5]):
+    so = a.at_stdout or os.path.join(os.path.dirname(a.at), 'stdout.txt')
+    ch = train_counters(so)
+    post = g(t, 'cap_hits')
+    post_bad = {k: post[k] for k in COUNTERS if isinstance(post, dict) and num(post.get(k)) is not None and post[k] > 0}
+    if ch is not None:
         bad = {k: ch[k] for k in COUNTERS if num(ch.get(k)) is not None and ch[k] > 0}
-        L['AT-1f counters'] = dict(counters={k: ch.get(k) for k in COUNTERS}, nonzero=bad, wrong=bool(bad))
+        L['AT-1f counters'] = dict(source=so, counters={k: ch.get(k) for k in COUNTERS}, nonzero=bad, wrong=bool(bad))
     else:
-        L['AT-1f counters'] = dict(counters=None, wrong=False, note='not in RESULT.json')
+        L['AT-1f counters'] = dict(source=so, counters=None, wrong=False, note='training-time cap_hits line not readable')
+    L['AT-1f counters']['post_eval_nonzero_report_only'] = post_bad
     rep['report'] = dict(seeds=seeds, n_pooled=(n_at, n_g, n_p), steps=g(t, 'steps'), steps_per_s=g(t, 'steps_per_s'), peak_mem_mib=g(t, 'peak_mem_mib'),
                          n_params=g(t, 'n_params'), reply_swap_extra_keys=sorted(g(t, 'extra') or {}))
     say(f"AT-1 {a.at}: {'ok' if t else 'NO ok final eval'}; G2f {a.g2f}: {'ok' if b else 'NO ok final eval'}; g2c3s {a.pair}: {'ok' if p else 'NO ok final eval'}; seeds {seeds}")
@@ -100,9 +126,10 @@ def main(argv=None):
     say(f"AT-1c: calculator off {f(nx)}% vs intact {f(nxi)}% on the program questions (proved wrong if within 10)")
     say(f"AT-1d: chain-5 AT {f(c5)} - G2f {f(c5g)} = {f(d3)} (proved wrong below -5.0); loops:0 pooled-5 {f(off)} = {f(None if share is None else 100 * share)}% of full (proved wrong above 60%)")
     if L['AT-1f counters'].get('counters') is None:
-        say('AT-1f counters not in RESULT.json: reported later, not gated')
+        say(f'AT-1f counters not found in {so} (no readable cap_hits line without "final"): reported later, not gated')
     else:
-        say(f"AT-1f: cap counters {L['AT-1f counters']['counters']} (proved wrong if any is above 0)")
+        say(f"AT-1f: end-of-training cap counters {L['AT-1f counters']['counters']} (proved wrong if any is above 0)")
+    say(f"report only: RESULT.json cap_hits (after the final evaluations) nonzero = {post_bad if isinstance(post, dict) else 'not in RESULT.json'}")
     say('AT-1b (reply swap) and AT-1e (stop and long input) are not gated: reported after the run')
     if len({n for n in (n_at, n_g, n_p) if n is not None}) > 1:
         say(f'WARNING: pooled-5 row counts differ (AT, G2f, g2c3s) = {(n_at, n_g, n_p)}: the "same dev rows" premise is not shown')
@@ -137,14 +164,25 @@ def selftest():
     td = tempfile.mkdtemp(prefix='at10mgate-')
     ok = True
 
-    def run(name, want, at=True, g2f=True, pair=True, **kw):
+    def run(name, want, at=True, g2f=True, pair=True, train=0, **kw):
         nonlocal ok
         paths = {}
+        sd = os.path.join(td, str(len(os.listdir(td))))
+        os.makedirs(sd)
         for k, present, r in (('at', at, kw.get('at_r') or fake()), ('g2f', g2f, fake(pooled=61.0, chain5=99.8)), ('pair', pair, fake(pooled=55.0))):
-            pth = os.path.join(td, name.replace(' ', '_') + '-' + k + '.json')
+            pth = os.path.join(sd, k + '.json') if k != 'at' else os.path.join(sd, 'RESULT.json')
             if present:
                 json.dump(r, open(pth, 'w'))
             paths[k] = pth
+        if train is not None and at:      # AT's stdout.txt: the step-0 line, the end-of-training line (train = dict of hits, 0 = none), the final-evaluation line
+            z = {k: 0 for k in COUNTERS}
+            end = dict(z, **(train if isinstance(train, dict) else {}))
+            post = dict(end, **(kw.get('post') or {}))
+            with open(os.path.join(sd, 'stdout.txt'), 'w') as fh:
+                fh.write(json.dumps(dict(event='train', step=500, loss=1.0)) + '\n')
+                fh.write(json.dumps(dict(event='cap_hits', step=0, **z, total=0)) + '\n')
+                fh.write(json.dumps(dict(event='cap_hits', step=100, **end, total=sum(end.values()))) + '\n')
+                fh.write(json.dumps(dict(event='cap_hits', step=100, final=True, **post, total=sum(post.values()))) + '\n')
         import io, contextlib
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
@@ -160,8 +198,9 @@ def selftest():
     run('AT-1c calculator-off within 10 (78.5 vs 88.0)', 3, at_r=fake(pooled=60.0, nx=78.5, nxi=88.0))
     run('AT-1d thinker-off above 60%', 3, at_r=fake(pooled=60.0, loops0=40.0))
     run('AT-1d chain-5 more than 5 below G2f', 3, at_r=fake(pooled=60.0, chain5=94.7))
-    run('AT-1f a counter above 0', 3, at_r=dict(fake(pooled=60.0), cap_hits=dict({k: 0 for k in COUNTERS}, turns_over=2)))
-    run('AT-1f counters not in RESULT.json: not gated', 0, at_r=fake(pooled=60.0, counters=False))
+    run('AT-1f a training-time counter above 0', 3, train=dict(turns_over=2))
+    run('AT-1f only the post-eval snapshot has a hit: passes', 0, post=dict(writer_over=5), at_r=dict(fake(pooled=60.0), cap_hits=dict({k: 0 for k in COUNTERS}, writer_over=5)))
+    run('AT-1f stdout.txt missing: not gated', 0, train=None)
     run('AT-1 missing', 2, at=False)
     run('G2f missing', 2, g2f=False)
     run('g2c3s missing', 2, pair=False)
