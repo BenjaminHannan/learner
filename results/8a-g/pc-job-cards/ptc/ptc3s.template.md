@@ -6,7 +6,7 @@ gpu: yes
 started: @STARTED@
 log: C:\Users\benja\custom-io\work\q8aPTC3S.log
 stall_minutes: 600
-paths: SRC = C:\Users\benja\custom-io\src-ptc (custom_io of claude/learner-new-g2 at 1acfde9a73 = src-b3g2 + the PTC overlay files from install_ptc.ps1; never edit it, never edit src-b3g2)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
+paths: SRC = C:\Users\benja\custom-io\src-ptc (custom_io at commit 74d6e92c75, the reader-rule + G2f code = src-b3g2, + the PTC overlay files from install_ptc.ps1; never edit it, never edit src-b3g2)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
 starts_when: started by the post-G1 chain waiter v3e (C:\Users\benja\custom-io\q8aPost3_wait.ps1, log WORK\q8aPost-waiter.log) as the inserted job
   WORK\insert\13-ptc3s.txt, at its insert check point after group 2 at 3M, right after 11-at and 12-g2c10s and before 14-ptc10s, 30-g2q and 46-tp.
   Accum PTC=16, as g2c3s's PTS=16 (cautious: long rows pad micro-batches to up to 2,000 letters).

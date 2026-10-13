@@ -1,7 +1,7 @@
 # CPU check for install_ptc.ps1, run from the new src-ptc folder (cwd = its root, which holds custom_io):
 #   python ptccheck.py PATH_TO_ORIGINAL_ROOT        (C:\Users\benja\custom-io\src-b3g2, read only)
 # No GPU and no EmbeddingGemma weights (eg_embed models are only counted). Prints PTC CPU CHECK OK at the end.
-#  (i)   the six files PTC replaced: the originals (src-b3g2) are 1acfde9a73's by sha256, the new ones are the shipped overlay by sha256
+#  (i)   the six files PTC replaced: the originals (src-b3g2) are 74d6e92c75's by sha256, the new ones are the shipped overlay by sha256
 #  (ii)  custom_io.tests.test_ptc, run with the original tree named by PTC_ORIG_TREE: calc_full cases; mask == generate (forced positions == masked
 #        positions, text == gold); masked loss (no gradient on calculator characters, same width W); PTC count == PTS at 3M and 10M and LESIONS
 #        ['nocalc']; job caps handling == PTS's; calc_train off == the original files (same weights at the same seed, loss, targets, trained decodes
@@ -12,13 +12,13 @@ import sys, os, re, json, hashlib, subprocess, argparse
 
 ORIG = os.path.abspath(sys.argv[1])
 NEW = os.getcwd()
-PINS = {   # path under custom_io: (sha256 at 1acfde9a73, sha256 of the PTC file)
+PINS = {   # path under custom_io: (sha256 at 74d6e92c75, sha256 of the PTC file)
     'capcount.py': ('92E4CE46013CCC67CBAD583AC9EDB52E76F7504CB004FD236255A2EB89F22C3F', 'E3C43AC13DC76420BBE3DD442456489CB998402F07E4413E39EFE6A8EEA0C97F'),
     'models/plain_tf_steps.py': ('E3418B45FB339C38F90765CC7929C4B60E97453E28E375102EF15BFF64F76226', 'C39CDF1DC91EDDA7A0F11CF658FAF22148E533759227FC72153DAAFDEAAC4225'),
-    'models/plain_lm.py': ('CDC9DE0BCA66A6FF58AA2FC50865B24D4A72F6CB6E1BA06AB9E596B01437CDF6', '582B463F871F1FB1857C82E070C948550A744CC2C96258ECE6F1DC1ADBCAC697'),
-    'g8a/configs.py': ('550AC52D25F83177620A1C7C47042BE7FD966C888A383DAC664E95E879A573BD', '862D2ADF252CA454DF815F2BA97EF265D072ED18098AE761C12455C149716E2C'),
-    'g8a/job.py': ('28E09E53F0CA7FDFC45ABE3174E7189F21F166AFBDC20D2B0C591D47CFD54242', '5F432C282C263FD37ED2306CC3DC5024EEA2DE6BDC94BDEE843D5D92003567FF'),
-    'tests/test_ptc.py': (None, 'BBB44E5ED38C77D28F776DD32B51A540A89220F3121D928DA7CBF0D971F06FD0'),
+    'models/plain_lm.py': ('E90ACCF2E332D08A1E14CD2B5B537A9BE97BC93C44D48ED14DFE26FA8567AD10', 'F0E5FE42662EADC862E300DADE9470EB4AFA2898AF228A5F8061DA86C4CEF90B'),
+    'g8a/configs.py': ('31287A25A6AD9CBF48973520F1174C788A3DB5CE61F607265AA5EC8FA99BD5DA', '48AA19CCB8B329FE11E45E42A17872D2581298CDBC03C2B11E3E034ADC887ECF'),
+    'g8a/job.py': ('A590E3F176159F531571B1E5AE95BD48D2160238CB999ADD5EB6BE7734FE6A1A', 'EB0CF9DB191A75992F8ED24464D996B7EAABC86538843762B23E1A8C5F3C6888'),
+    'tests/test_ptc.py': (None, '152D694A6B5798AA9CC0C352E5BA746E4D61F80F71BE0EB62E062C9BD1F6F972'),
 }
 CAPS_PY = '32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E'
 sys.path.insert(0, NEW)
@@ -31,11 +31,11 @@ def sha(p):
 # (i)
 for rel, (o, n) in PINS.items():
     if o is not None:
-        assert sha(os.path.join(ORIG, 'custom_io', rel)) == o.upper(), f'{rel} in {ORIG} is not 1acfde9a73\'s ({sha(os.path.join(ORIG, "custom_io", rel))})'
+        assert sha(os.path.join(ORIG, 'custom_io', rel)) == o.upper(), f'{rel} in {ORIG} is not 74d6e92c75\'s ({sha(os.path.join(ORIG, "custom_io", rel))})'
     assert sha(os.path.join(NEW, 'custom_io', rel)) == n.upper(), f'{rel} here is not the PTC file ({sha(os.path.join(NEW, "custom_io", rel))})'
 for root in (ORIG, NEW):
     assert sha(os.path.join(root, 'custom_io', 'g8a', 'caps.py')) == CAPS_PY, f'caps.py in {root} changed'
-print('(i) six replaced files: originals = 1acfde9a73 (sha256), new = the PTC overlay; caps.py unchanged in both')
+print('(i) six replaced files: originals = 74d6e92c75 (sha256), new = the PTC overlay; caps.py unchanged in both')
 
 # (ii)
 env = dict(os.environ, PYTHONPATH=os.pathsep.join([NEW] + ([os.environ['PYTHONPATH']] if os.environ.get('PYTHONPATH') else [])), OMP_NUM_THREADS='1', PTC_ORIG_TREE=ORIG, PYTHONUTF8='1')

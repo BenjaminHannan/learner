@@ -6,7 +6,7 @@ gpu: yes
 started: @STARTED@
 log: C:\Users\benja\custom-io\work\q8aPTC10S.log
 stall_minutes: 600
-paths: SRC = C:\Users\benja\custom-io\src-ptc (custom_io of claude/learner-new-g2 at 1acfde9a73 = src-b3g2 + the PTC overlay files from install_ptc.ps1; never edit it, never edit src-b3g2)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
+paths: SRC = C:\Users\benja\custom-io\src-ptc (custom_io at commit 74d6e92c75, the reader-rule + G2f code = src-b3g2, + the PTC overlay files from install_ptc.ps1; never edit it, never edit src-b3g2)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
 starts_when: started by the post-G1 chain waiter v3e (C:\Users\benja\custom-io\q8aPost3_wait.ps1, log WORK\q8aPost-waiter.log) as the inserted job
   WORK\insert\14-ptc10s.txt, right after 13-ptc3s and before 30-g2q and 46-tp. Accum PTC=32, as g2c10s's PTS=32 (cautious: long rows pad micro-batches to up to 2,000 letters).
 launch: for a manual relaunch only: as fc100.md's launch steps 1-4 (SRC src-ptc and its caps.py hash, step 6 below), with 8aPTC10S in place

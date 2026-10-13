@@ -2,8 +2,8 @@
 # inserted jobs of the post-G1 chain waiter v3e: WORK\insert\13-ptc3s.txt (queue 8aPTC3S, 3M) and WORK\insert\14-ptc10s.txt (queue 8aPTC10S, 10M), which run
 # after 11-at and 12-g2c10s and before 30-g2q and 46-tp. Run from the folder the Mac copied (in-ptc): it needs plain_tf_steps.py, plain_lm.py, configs.py,
 # job.py, capcount.py, test_ptc.py, ptccheck.py, 8aPTC3S-pc.txt, 8aPTC10S-pc.txt, ptc3s.template.md and ptc10s.template.md beside it.
-# src-b3g2 (group 2's code, custom_io at 1acfde9a73) is copied, never changed, to src-ptc.new-<stamp>; the six files PTC replaces are checked against
-# 1acfde9a73's sha256 before and after the copy, the overlays are put in, the two queue files go into custom_io\queue_local, and ptccheck.py runs on the CPU
+# src-b3g2 (group 2's code, custom_io at 74d6e92c75: reader rules + G2f writer) is copied, never changed, to src-ptc.new-<stamp>; the six files PTC replaces are checked against
+# 74d6e92c75's sha256 before and after the copy, the overlays are put in, the two queue files go into custom_io\queue_local, and ptccheck.py runs on the CPU
 # (no GPU, no EmbeddingGemma weights). Only then is the folder renamed src-ptc, the card templates copied into custom-io and the two insert files written
 # (each with the caps: line v3e needs for a src other than src-b3g2 / src-b3). A failed check renames the new folder src-ptc.failed-<stamp> and changes nothing
 # else. Only while the waiter is v3e and has not passed its first insert check point (right after G2f). It stops nothing, never touches the chain's runs,
@@ -17,15 +17,15 @@ $EGPATH = 'C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages'
 $SRCB   = "$CIO\src-b3g2"
 $SRCP   = "$CIO\src-ptc"
 $INS    = "$WORK\insert"
-$CAPS   = '32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E'   # g8a\caps.py of src-b3g2 (1acfde9a73); src-ptc keeps it unchanged
-# the six files PTC replaces: file here -> path under custom_io, sha256 at 1acfde9a73 (none for the new test), sha256 of the PTC file
+$CAPS   = '32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E'   # g8a\caps.py of src-b3g2 (74d6e92c75); src-ptc keeps it unchanged
+# the six files PTC replaces: file here -> path under custom_io, sha256 at 74d6e92c75 (none for the new test), sha256 of the PTC file
 $FILES = @(
   @{ f = 'capcount.py';        rel = 'capcount.py';              o = '92E4CE46013CCC67CBAD583AC9EDB52E76F7504CB004FD236255A2EB89F22C3F';        n = 'E3C43AC13DC76420BBE3DD442456489CB998402F07E4413E39EFE6A8EEA0C97F' },
   @{ f = 'plain_tf_steps.py';  rel = 'models\plain_tf_steps.py'; o = 'E3418B45FB339C38F90765CC7929C4B60E97453E28E375102EF15BFF64F76226';  n = 'C39CDF1DC91EDDA7A0F11CF658FAF22148E533759227FC72153DAAFDEAAC4225' },
-  @{ f = 'plain_lm.py';        rel = 'models\plain_lm.py';       o = 'CDC9DE0BCA66A6FF58AA2FC50865B24D4A72F6CB6E1BA06AB9E596B01437CDF6';        n = '582B463F871F1FB1857C82E070C948550A744CC2C96258ECE6F1DC1ADBCAC697' },
-  @{ f = 'configs.py';         rel = 'g8a\configs.py';           o = '550AC52D25F83177620A1C7C47042BE7FD966C888A383DAC664E95E879A573BD';         n = '862D2ADF252CA454DF815F2BA97EF265D072ED18098AE761C12455C149716E2C' },
-  @{ f = 'job.py';             rel = 'g8a\job.py';               o = '28E09E53F0CA7FDFC45ABE3174E7189F21F166AFBDC20D2B0C591D47CFD54242';             n = '5F432C282C263FD37ED2306CC3DC5024EEA2DE6BDC94BDEE843D5D92003567FF' },
-  @{ f = 'test_ptc.py';        rel = 'tests\test_ptc.py';        o = $null;                 n = 'BBB44E5ED38C77D28F776DD32B51A540A89220F3121D928DA7CBF0D971F06FD0' })
+  @{ f = 'plain_lm.py';        rel = 'models\plain_lm.py';       o = 'E90ACCF2E332D08A1E14CD2B5B537A9BE97BC93C44D48ED14DFE26FA8567AD10';        n = 'F0E5FE42662EADC862E300DADE9470EB4AFA2898AF228A5F8061DA86C4CEF90B' },
+  @{ f = 'configs.py';         rel = 'g8a\configs.py';           o = '31287A25A6AD9CBF48973520F1174C788A3DB5CE61F607265AA5EC8FA99BD5DA';         n = '48AA19CCB8B329FE11E45E42A17872D2581298CDBC03C2B11E3E034ADC887ECF' },
+  @{ f = 'job.py';             rel = 'g8a\job.py';               o = 'A590E3F176159F531571B1E5AE95BD48D2160238CB999ADD5EB6BE7734FE6A1A';             n = 'EB0CF9DB191A75992F8ED24464D996B7EAABC86538843762B23E1A8C5F3C6888' },
+  @{ f = 'test_ptc.py';        rel = 'tests\test_ptc.py';        o = $null;                 n = '152D694A6B5798AA9CC0C352E5BA746E4D61F80F71BE0EB62E062C9BD1F6F972' })
 $QUEUES = @('8aPTC3S', '8aPTC10S')
 $INSERTS = @(@{ name = '13-ptc3s.txt'; q = '8aPTC3S'; card = 'ptc3s.template.md' }, @{ name = '14-ptc10s.txt'; q = '8aPTC10S'; card = 'ptc10s.template.md' })
 $STAMP  = (Get-Date).ToString('yyyyMMdd-HHmm')
@@ -72,9 +72,9 @@ if ($w.Count -ne 1) { Fail "expected one q8aPost3_wait.ps1 waiter, found $($w.Co
 for ($i = $start + 1; $i -lt $lines.Count; $i++) { if ($lines[$i] -like '*8aB3G2s400 ended*' -or $lines[$i] -like '*inserted job *(after group 2*') { Fail "the waiter is already past G2f and its first insert check point: $($lines[$i])" } }
 "waiter v3e (pid $($w[0].ProcessId)) is running and has not reached its first insert check point; 13-ptc3s and 14-ptc10s run there, after 11-at and 12-g2c10s"
 
-# 2. Copy src-b3g2 (never changed) and check it is 1acfde9a73's where PTC replaces or relies on it.
+# 2. Copy src-b3g2 (never changed) and check it is 74d6e92c75's where PTC replaces or relies on it.
 if ((Hash "$SRCB\custom_io\g8a\caps.py") -ne $CAPS) { Fail "$SRCB\custom_io\g8a\caps.py is not group 2's ($(Hash "$SRCB\custom_io\g8a\caps.py"))" }
-foreach ($x in $FILES) { if ($x.o -and (Hash "$SRCB\custom_io\$($x.rel)") -ne $x.o) { Fail "$SRCB\custom_io\$($x.rel) is not 1acfde9a73's ($(Hash "$SRCB\custom_io\$($x.rel)"))" } }
+foreach ($x in $FILES) { if ($x.o -and (Hash "$SRCB\custom_io\$($x.rel)") -ne $x.o) { Fail "$SRCB\custom_io\$($x.rel) is not 74d6e92c75's ($(Hash "$SRCB\custom_io\$($x.rel)"))" } }
 $new = "$SRCP.new-$STAMP"
 if (Test-Path $new) { Fail "$new already exists" }
 New-Item -ItemType Directory $new | Out-Null
@@ -91,7 +91,7 @@ foreach ($q in $QUEUES) {
   Copy-Item -Force "$IN\$q-pc.txt" "$new\custom_io\queue_local\$q-pc.txt"
   if ((Hash "$new\custom_io\queue_local\$q-pc.txt") -ne (Hash "$IN\$q-pc.txt")) { Fail "$q-pc.txt did not copy" }
 }
-"src-ptc: copied src-b3g2's custom_io into $(Split-Path -Leaf $new) (caps.py and the 5 replaced files were 1acfde9a73's); the 6 PTC files and the 2 queue files are in"
+"src-ptc: copied src-b3g2's custom_io into $(Split-Path -Leaf $new) (caps.py and the 5 replaced files were 74d6e92c75's); the 6 PTC files and the 2 queue files are in"
 
 # 3. CPU check: calc_full, mask == generate, masked loss, counts == PTS at 3M and 10M, calc_train off == the originals, both queues through job.py's parser.
 NeedMem 2000 'ptccheck (python + torch, small models and two counted ones on the CPU)'
@@ -103,11 +103,11 @@ Pop-Location
 Remove-Item Env:\CUDA_VISIBLE_DEVICES, Env:\PYTHONPATH, Env:\PYTHONDONTWRITEBYTECODE -ErrorAction SilentlyContinue
 $out | Select-Object -Last 4 | ForEach-Object { "  ptccheck: $_" }
 if ($rc -ne 0 -or -not ("$out" -like '*PTC CPU CHECK OK*')) { $out | Select-Object -Last 12; Fail "ptccheck failed (rc $rc)" }
-# src-b3g2 itself must still be 1acfde9a73's (the check ran from the copy)
+# src-b3g2 itself must still be 74d6e92c75's (the check ran from the copy)
 foreach ($x in $FILES) { if ($x.o -and (Hash "$SRCB\custom_io\$($x.rel)") -ne $x.o) { Fail "$SRCB\custom_io\$($x.rel) changed during the check" } }
 $capsNew = Hash "$new\custom_io\g8a\caps.py"
 if ($capsNew -ne $CAPS) { Fail "caps.py of the new folder is $capsNew" }
-Set-Content -Encoding ascii "$new\PTC-SETUP-OK.txt" -Value @("caps.py $CAPS (src-b3g2's, unchanged)", 'base: src-b3g2 = custom_io at 1acfde9a73',
+Set-Content -Encoding ascii "$new\PTC-SETUP-OK.txt" -Value @("caps.py $CAPS (src-b3g2's, unchanged)", 'base: src-b3g2 = custom_io at 74d6e92c75',
   (@($FILES | ForEach-Object { "$($_.rel) $($_.n)$(if ($_.o) { " (was $($_.o))" } else { ' (new)' })" })),
   'queues 8aPTC3S and 8aPTC10S in custom_io\queue_local; ptccheck ok (CPU); install_ptc.ps1', (Stamp))
 
@@ -131,7 +131,7 @@ foreach ($i in $INSERTS) {
   if ((Hash "$CIO\$($i.card)") -ne (Hash "$IN\$($i.card)")) { "FAILED: $($i.card) did not copy to custom-io (src-ptc is in place; no insert written)"; exit 1 }
 }
 foreach ($i in $INSERTS) { Set-Content -Encoding ascii "$INS\$($i.name)" -Value $want[$i.name] }
-"$(Stamp) install_ptc.ps1: src-ptc (src-b3g2 + the PTC overlay, 1acfde9a73) and WORK\insert\13-ptc3s.txt + 14-ptc10s.txt (arm PTC, seed 400, 3M and 10M) installed" | Add-Content -Encoding ascii $LOG
+"$(Stamp) install_ptc.ps1: src-ptc (src-b3g2 + the PTC overlay, 74d6e92c75) and WORK\insert\13-ptc3s.txt + 14-ptc10s.txt (arm PTC, seed 400, 3M and 10M) installed" | Add-Content -Encoding ascii $LOG
 "src-ptc: in place; card templates ptc3s.template.md and ptc10s.template.md in custom-io; WORK\insert:"
 foreach ($i in $INSERTS) { "  $($i.name): $(@(Get-Content "$INS\$($i.name)") -join ' | ')" }
 'INSTALL PTC DONE'
