@@ -225,7 +225,9 @@ def test_v2_audit_fails_only_above_two_percent_of_the_tool_panel():
 def test_panel_suffix_names_the_version():
     assert audit.panel_suffix('/x/sheet.v2.jsonl') == '.v2' and audit.panel_suffix('rpn.v2.jsonl') == '.v2'
     assert audit.panel_suffix('/x/sheet.jsonl') == '' and audit.panel_suffix('rpn.jsonl') == ''
-    for bad in ('sheet.v3.jsonl', 'other.jsonl', 'sheet.v2.json'):
+    assert audit.panel_suffix('/x/sheet.v3.jsonl') == '.v3'   # v9 (far transfer): the fresh v3 draw
+    assert audit.panel_suffix('/x/sheet.v4.jsonl') == '.v4'   # v10 (addendum A30): the sheet-only draw with a join split
+    for bad in ('sheet.v5.jsonl', 'rpn.v4.jsonl', 'other.jsonl', 'sheet.v2.json'):
         try:
             audit.panel_suffix(bad)
         except ValueError:

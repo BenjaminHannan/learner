@@ -32,11 +32,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CONST_PATH = os.path.join(HERE, 'constants.json')
 KNOWN_EVENTS = frozenset({'start', 'help', 'deviation', 'row', 'diary', 'quiz_built', 'quiz_short', 'quiz', 'practice',
                           'practice_short', 'try', 'night_plan', 'check', 'night', 'stop_check', 'mix', 'done',
-                          'replay_fresh', 'replay_short', 'replay_pick', 'addon', 'gate'})  # addenda A13, A16, A18, A23
+                          'replay_fresh', 'replay_short', 'replay_pick', 'addon', 'gate',
+                          'widen', 'joinlast'})  # addenda A13, A16, A18, A23; v9 (domain/far/widen.py); v10 (A30, joinlast)
 
 # Marks (design sec. 5 table; addenda A2, A6-A8). Values are percentage points.
 DM1_PASS, DM1_PROVED = 30.0, 10.0      # near, After minus Before: pass >= +30; proved wrong < +10
 DM2_PASS, DM2_LOW = 10.0, 2.0          # far: pass >= +10; "<= +2 on both seeds" is proved wrong (needs two seeds)
+J_PASS, J_PROVED = 20.0, 8.0           # v10 (addendum A30), join split, After minus Before: pass >= +20; proved wrong < +8
 DM3_PROVED = 5.0                       # in_dist drop > 5 is proved wrong (the pass rule is harm.py's)
 DM5_BACK, DM5_RISE, DM5_PROVED = 3.0, 3.0, 5.0
 DM5_PAST_BEST = 4                      # proved wrong: runs >= 4 nights past the best night with DM3 failing (design table)
@@ -140,6 +142,14 @@ def dm2_rule(d):
     return dict(value=d, bar='pass >= +10; "<= +2 on both seeds" is proved wrong', verdict=verdict, note=note)
 
 
+def j_rule(d):
+    """v10 (addendum A30): d = join(After) - join(Before), points, over the scored kinds of the sheet.v4 join split.
+    PASS >= +20; PROVED WRONG < +8; else FAIL."""
+    d = round(d, 6)
+    verdict = 'PASS' if d >= J_PASS else ('PROVED WRONG' if d < J_PROVED else 'FAIL')
+    return dict(value=d, bar='pass >= +20; proved wrong < +8', verdict=verdict)
+
+
 def dm3_rule(harm_res):
     """harm_res: harm.harm_measure output. PROVED WRONG if the in_dist drop > 5; PASS if harm.py passes; else FAIL."""
     drop = round(harm_res['in_dist_drop'], 6)
@@ -232,6 +242,7 @@ def parse_args(argv=None):
     a.add_argument('--dev', required=True, help='the skills DEV in_dist jsonl (harm check)')
     a.add_argument('--out', required=True, help='folder for RESULT.json, RESULT.md and cache/ (new or existing)')
     a.add_argument('--threads', type=int, default=1)
+    a.add_argument('--constants', default=None, help='the constants file the run used (v10: a per-run file); default domain/constants.json')
     return a.parse_args(argv)
 
 
@@ -310,6 +321,14 @@ def main(argv=None):
     dm2['hair_miss_met'] = round(dm2['value'] + 100.0 / n_far, 6) >= DM2_PASS
     dm2['before'], dm2['after'] = far0, farN
     dm2['seed'] = summary['seed']
+    # v10 (addendum A30): the join split (two scored kinds joined by + or *), reported when the panel has one
+    n_join = sum(1 for r in panel_rows if r['split'] == 'join' and r['kind'] in scored and r['id'] not in dropped)
+    join_curve = [pooled(scores[k]['rows'], scored, 'join', dropped) for k in range(N + 1)] if n_join else None
+    jm = None
+    if n_join:
+        jm = j_rule(join_curve[N] - join_curve[0])
+        jm['before'], jm['after'], jm['n'], jm['seed'] = join_curve[0], join_curve[N], n_join, summary['seed']
+        print('scored join curve (night 0..N):', join_curve, flush=True)
 
     # DM3: harm check on the skills DEV in_dist file (parent against final)
     t = time.time()
@@ -341,7 +360,8 @@ def main(argv=None):
     if audit_rep is not None and audit_rep.get('decontam') and audit_rep['decontam']['dropped'] != dec['dropped']:
         notes.append('DM4 audit and DM1/DM2/DM5 scoring count different dropped rows: %d and %d'
                      % (audit_rep['decontam']['dropped'], dec['dropped']))
-    const_sha = sha256_file(CONST_PATH)
+    const_path = a.constants or CONST_PATH
+    const_sha = sha256_file(const_path)
     start = [e for e in events if e['event'] == 'start']
     log_sha = start[0].get('constants_sha256') if start else None
     const_ok = log_sha == const_sha
@@ -361,10 +381,10 @@ def main(argv=None):
                bar=('pass: audit exits clean and log constants hash = domain/constants.json; FAIL: more than %g%% of the run '
                     'tool\'s panel rows also in training (dropped), or any zero-step or bad-source row; proved wrong: any row '
                     'from a v1 panel, or a constants hash that differs from the file (per-domain setting)'
-                    % (100 * audit.DECONTAM_MAX_FRAC)) if suffix == audit.DECONTAM_SUFFIX else
+                    % (100 * audit.DECONTAM_MAX_FRAC)) if suffix in audit.DECONTAM_SUFFIXES else
                    ('pass: audit exits clean and log constants hash = domain/constants.json; proved wrong: any panel row '
                     'or a constants hash that differs from the file (per-domain setting)'),
-               decontam=dec if suffix == audit.DECONTAM_SUFFIX else None)
+               decontam=dec if suffix in audit.DECONTAM_SUFFIXES else None)
     T['audit'] = round(time.time() - t, 1)
 
     # DM5: scored near curve, stop night N = nights_run
@@ -422,7 +442,7 @@ def main(argv=None):
                                in_dist_drop=round(harm_res['in_dist_drop'], 4), fired=harm_res['fired'],
                                families={f: {k2: (round(v, 4) if isinstance(v, float) else v) for k2, v in d.items()}
                                          for f, d in harm_res['families'].items()}),
-               dm5_curve=near_curve, a8=a8, per_kind=per_kind,
+               dm5_curve=near_curve, join=None if jm is None else dict(mark=jm, curve=join_curve), a8=a8, per_kind=per_kind,
                learned=summary.get('kinds_learned'), not_learned=summary.get('kinds_not_learned'),
                notes=notes, one_seed_only=True, timings=T)
     with open(os.path.join(out, 'RESULT.json'), 'w', encoding='utf-8') as f:
@@ -472,6 +492,13 @@ def render_md(res):
     for k, v in enumerate(res['dm5_curve']):
         ch = '' if k == 0 else sg(v - res['dm5_curve'][k - 1])
         lines.append(f'| {k}{" (parent)" if k == 0 else ""} | {pc(v)} | {ch} |')
+    if res.get('join'):
+        jm, jc = res['join']['mark'], res['join']['curve']
+        lines += ['', '## Join split (v10, addendum A30; scored kinds, pooled, percent)', '',
+                  f'- J mark: {sg(jm["value"])} pts ({pc(jm["before"])} -> {pc(jm["after"])}, n {jm["n"]}); bar {jm["bar"]}; verdict {jm["verdict"]} (seed {jm["seed"]}, one seed only).',
+                  '', '| night | join | change |', '|---|---|---|']
+        for k, v in enumerate(jc):
+            lines.append(f'| {k}{" (parent)" if k == 0 else ""} | {pc(v)} | {"" if k == 0 else sg(v - jc[k - 1])} |')
     lines += ['', '## Per kind (undo rows: this kind\'s training rows from nights that were undone; try counts from the try events)', '',
               '| kind | scored | near parent -> final | far parent -> final | own quiz night 0 -> last | last-day mix share | last-day kept | undo rows | try own / tool |',
               '|---|---|---|---|---|---|---|---|---|']

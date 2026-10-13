@@ -232,10 +232,60 @@ def vary(example, rng, lmax, p, each_p=False):
     return text, c
 
 
-def draft(tool, example, kind, rng, ctx, edits=None):
-    """One problem from one help example. ctx = dict(vchars, cons, seen, quiz_set, lmax).
-    edits: optional Counter that gets this draw's edit counts, kept or not. -> (item, None) or (None, reason)."""
+def pick_example(example, rng):
+    """v9 (domain/far/widen.py): example is a help prompt (a str), or {ring: [prompts]} once the page is widened; then a
+    ring is picked evenly among the rings holding this kind, and an example evenly in it. A str draws nothing from rng, so
+    runs without widening are unchanged. -> (prompt, ring)."""
+    if isinstance(example, str):
+        return example, 1
+    ring = rng.choice(sorted(example))
+    return rng.choice(example[ring]), ring
+
+
+def accept(tool, prompt, ctx):
+    """The tool and cap checks every practice problem passes (no duplicate checks; v9 also uses them for its widened
+    examples). -> (value, steps, None) or (None, None, reason)."""
     cons = ctx['cons']
+    if len(prompt) > MAX_PROMPT:
+        return None, None, 'caps_prompt'
+    if not set(prompt) <= ctx['vchars']:
+        return None, None, 'vocab'
+    if len(re.findall(r'\d+', prompt)) > cons['max_numbers']:
+        return None, None, 'caps_numbers'
+    try:
+        res = tool.evaluate(prompt)
+    except Exception:  # the tool must answer '?' instead of raising; counted, not hidden
+        return None, None, 'tool_exception'
+    value, steps = res['value'], [tuple(s) for s in res['steps']]
+    if value == '?' or any(s[3] == '?' for s in steps):
+        return None, None, 'tool_?'
+    if any(s[1].startswith('-') or s[2].startswith('-') or s[3].startswith('-') for s in steps):
+        return None, None, 'tool_negative'
+    if steps and steps[-1][3] != value:
+        return None, None, 'tool_mismatch'
+    if not steps:  # a single-cell range (e.g. A3:A3) has no working to learn from (addendum A5)
+        return None, None, 'no_steps'
+    if not value or len(value) > MAX_ANS:
+        return None, None, 'caps_answer'
+    if not set(value) <= ctx['vchars']:
+        return None, None, 'vocab'
+    if len(steps) > cons['max_calls']:
+        return None, None, 'caps_calls'
+    if any(len(s[1]) > CELLS_MAX or len(s[2]) > CELLS_MAX for s in steps):
+        return None, None, 'caps_operand'
+    if any(len(f'{s[0]} {s[1]} {s[2]} = {s[3]}') > LE for s in steps):
+        return None, None, 'caps_entry'
+    if any(s[0] not in NAMES[1:] for s in steps):
+        return None, None, 'bad_op'
+    return value, steps, None
+
+
+def draft(tool, example, kind, rng, ctx, edits=None):
+    """One problem from one help example (or, after v9's widening, from {ring: [examples]} of this kind).
+    ctx = dict(vchars, cons, seen, quiz_set, lmax). edits: optional Counter that gets this draw's edit counts, kept or not.
+    -> (item, None) or (None, reason)."""
+    cons = ctx['cons']
+    example, ring = pick_example(example, rng)
     prompt, counts = vary(example, rng, ctx['lmax'], cons['vary_p'], cons.get('relength_each_p', False))
     if edits is not None:
         edits.update(counts)
@@ -243,38 +293,30 @@ def draft(tool, example, kind, rng, ctx, edits=None):
         return None, 'quiz_dup'
     if prompt in ctx['seen']:
         return None, 'dup'
-    if len(prompt) > MAX_PROMPT:
-        return None, 'caps_prompt'
-    if not set(prompt) <= ctx['vchars']:
-        return None, 'vocab'
-    if len(re.findall(r'\d+', prompt)) > cons['max_numbers']:
-        return None, 'caps_numbers'
-    try:
-        res = tool.evaluate(prompt)
-    except Exception:  # the tool must answer '?' instead of raising; counted, not hidden
-        return None, 'tool_exception'
-    value, steps = res['value'], [tuple(s) for s in res['steps']]
-    if value == '?' or any(s[3] == '?' for s in steps):
-        return None, 'tool_?'
-    if any(s[1].startswith('-') or s[2].startswith('-') or s[3].startswith('-') for s in steps):
-        return None, 'tool_negative'
-    if steps and steps[-1][3] != value:
-        return None, 'tool_mismatch'
-    if not steps:  # a single-cell range (e.g. A3:A3) has no working to learn from (addendum A5)
-        return None, 'no_steps'
-    if not value or len(value) > MAX_ANS:
-        return None, 'caps_answer'
-    if not set(value) <= ctx['vchars']:
-        return None, 'vocab'
-    if len(steps) > cons['max_calls']:
-        return None, 'caps_calls'
-    if any(len(s[1]) > CELLS_MAX or len(s[2]) > CELLS_MAX for s in steps):
-        return None, 'caps_operand'
-    if any(len(f'{s[0]} {s[1]} {s[2]} = {s[3]}') > LE for s in steps):
-        return None, 'caps_entry'
-    if any(s[0] not in NAMES[1:] for s in steps):
-        return None, 'bad_op'
-    return dict(kind=kind, prompt=prompt, value=value, steps=steps, edits=[e for e in EDITS if counts[e]]), None
+    value, steps, why = accept(tool, prompt, ctx)
+    if why:
+        return None, why
+    return dict(kind=kind, prompt=prompt, value=value, steps=steps, edits=[e for e in EDITS if counts[e]], ring=ring), None
+
+
+JOIN_KIND = 'join'   # v10 (addendum A30): the join-last kind, drafted by domain/far/joinlast.py
+
+
+def draw_item(tool, kind, ex, rng, ctx, edits=None):
+    """One practice or quiz draft of this kind: draft() on the kind's example, or, for the join kind (cons joinlast), a join-last draft
+    (domain/far/joinlast.py): piece 1 drawn the way every practice example is (a kind evenly, a ring evenly, the A10 edits), piece 2 a
+    whole piece of a help example with only its own text edited, then the two joined by an accepted (form, symbol). A join with a call
+    that has no row form (A2) is not kept, so every kept join problem can train. -> (item, None) or (None, reason)."""
+    jl = ctx.get('joinlast')
+    if jl is None or kind != JOIN_KIND:
+        return draft(tool, ex[kind], kind, rng, ctx, edits=edits)
+    from domain.far import joinlast
+    item, why = joinlast.join_last_draft(tool, jl['helps'], jl['kinds'], rng, ctx, pick=jl['pick'])
+    if item is None:
+        return None, why
+    if any(st[0] in NO_ROW_FORM for st in item['steps']):
+        return None, 'no_row_form'
+    return dict(item, kind=JOIN_KIND, piece1=item['kind'], ring=4), None
 
 
 def make_quiz(tool, kinds, ex, n, rng, ctx, log):
@@ -285,7 +327,7 @@ def make_quiz(tool, kinds, ex, n, rng, ctx, log):
         got, tries = 0, 0
         while got < quota[k] and tries < QUIZ_OVERDRAW * quota[k] + 300:
             tries += 1
-            item, why = draft(tool, ex[k], k, rng, ctx)
+            item, why = draw_item(tool, k, ex, rng, ctx)
             if item is None:
                 disc[why] += 1
                 continue
@@ -295,23 +337,31 @@ def make_quiz(tool, kinds, ex, n, rng, ctx, log):
             got += 1
         if got < quota[k]:
             log('quiz_short', kind=k, wanted=quota[k], got=got)
-    log('quiz_built', n=len(items), per_kind=dict(Counter(i['kind'] for i in items)), discards=dict(disc), tries=sum(disc.values()) + len(items))
+    log('quiz_built', n=len(items), per_kind=dict(Counter(i['kind'] for i in items)), per_ring=dict(Counter(i['ring'] for i in items)),
+        discards=dict(disc), tries=sum(disc.values()) + len(items))
     return items
 
 
 def make_practice(tool, kinds, ex, share, n, rng, ctx):
-    """One day's practice: a kind by the day's mix for each draft, kept if draft() accepts it. Over-draws, capped.
+    """One day's practice: a kind by the day's mix for each draft, kept if the draft is accepted. Over-draws, capped.
+    v10 (cons joinlast_share): the join kind's share of the day's kept problems is that fraction of n, drawn first; the day's mix
+    covers the rest (the join kind leaves the mix). Without joinlast_share the join kind, if any, is one more kind of the mix.
     -> (items, discards, tries, edits drawn). Short days are logged by the caller (practice_short)."""
     items, disc, tries, cap, edits = [], Counter(), 0, PRACTICE_OVERDRAW * n, Counter()
-    weights = [share[k] for k in kinds]
+    jl = ctx.get('joinlast')
+    fixed = JOIN_KIND if jl and jl.get('share') is not None else None
+    want = int(round(jl['share'] * n)) if fixed else 0
+    weights = [0.0 if k == fixed else share[k] for k in kinds]
+    got_join = 0
     while len(items) < n and tries < cap:
         tries += 1
-        kind = rng.choices(kinds, weights=weights)[0]
-        item, why = draft(tool, ex[kind], kind, rng, ctx, edits=edits)
+        kind = fixed if fixed and got_join < want else rng.choices(kinds, weights=weights)[0]
+        item, why = draw_item(tool, kind, ex, rng, ctx, edits=edits)
         if item is None:
             disc[why] += 1
             continue
         ctx['seen'].add(item['prompt'])
+        got_join += item['kind'] == fixed
         items.append(item)
     return items, disc, tries, edits
 
@@ -396,7 +446,8 @@ def try_day(m, tool, items, kinds, cons, log, day, write_row):
                 continue
         st[k][row['source']] += 1
         rows.append(row)
-        write_row(day=day, kind=k, id=row['id'], source=row['source'], prompt=row['prompt'], answer=row['answer'], steps=row['steps'])
+        write_row(day=day, kind=k, id=row['id'], source=row['source'], prompt=row['prompt'], answer=row['answer'], steps=row['steps'],
+                  ring=it.get('ring', 1))
     log('try', day=day, n=len(items), rows=len(rows), per_kind={k: dict(v) for k, v in st.items()})
     return rows
 
@@ -631,6 +682,7 @@ def parse_args(argv=None):
     a.add_argument('--out', required=True, help='new folder for log.jsonl, night_K/, summary.json')
     a.add_argument('--seed', type=int, required=True)
     a.add_argument('--smoke', action='store_true')
+    a.add_argument('--constants', default=None, help='a constants file instead of domain/constants.json (v10: the run records its sha256)')
     a.add_argument('--data', default=os.environ.get('CUSTOM_IO_DATA', DEFAULT_DATA), help='folder with train.jsonl')
     a.add_argument('--threads', type=int, default=4)
     a.add_argument('--even-mix', action='store_true',
@@ -641,7 +693,10 @@ def parse_args(argv=None):
 
 
 def main(argv=None):
+    global CONST_PATH
     a = parse_args(argv)
+    if a.constants:
+        CONST_PATH = a.constants
     torch.set_num_threads(a.threads)
     T, t_run = Counter(), time.time()
     raw = open(CONST_PATH, 'rb').read()
@@ -677,6 +732,32 @@ def main(argv=None):
     addon = None   # addendum A18: built after the diary and check set, which are the pre-mode self's
     ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=lmax)
     write_row = lambda **kw: log.write('row', **kw)
+
+    if cons.get('widen'):   # v9 (domain/far/widen.py): before day 1 the model widens its help page with the swap tool
+        from domain.far import widen
+        assert cons['widen'] == 'crossover', cons['widen']
+        t = time.time()
+        rings, wst = widen.build(tool, helps, lambda p: accept(tool, p, ctx)[2] is None, random.Random(f'{a.seed}-widen'), cons)
+        ex = widen.by_kind(rings, kinds)
+        with open(os.path.join(a.out, 'widen.json'), 'w') as f:
+            json.dump({str(r): v for r, v in rings.items()}, f)
+        T['widen'] += time.time() - t
+        log('widen', pieces=wst['pieces'], kept=wst['kept'], tries=wst['tries'], per_kind=wst['per_kind'], sha256=wst['sha256'],
+            widen_secs=round(time.time() - t, 1), samples={r: [p for _, p in v[:8]] for r, v in rings.items()})
+
+    if cons.get('joinlast'):   # v10 (addendum A30): one more kind, the join-last drafts of two pieces
+        from domain.far import joinlast
+        t = time.time()
+        jkinds = joinlast.accepted_kinds(tool, helps, lambda p: accept(tool, p, ctx)[2] is None, random.Random(f'{a.seed}-joinkinds'))
+        base = list(kinds)
+
+        def pick(rng):   # piece 1: a kind evenly, then an example of that kind the way every practice draw picks it
+            k = rng.choice(base)
+            return pick_example(ex[k], rng)[0], k
+        ctx['joinlast'] = dict(helps=helps, kinds=jkinds, pick=pick, share=cons.get('joinlast_share'))
+        kinds, ex[JOIN_KIND] = kinds + [JOIN_KIND], None
+        T['widen'] += time.time() - t
+        log('joinlast', accepted=[f'{f}:{s}' for f, s in jkinds], share=cons.get('joinlast_share'), took=round(time.time() - t, 1))
 
     # step 1: diary (self-replay) and check set, from TRAIN prompts only
     t = time.time()
@@ -722,7 +803,7 @@ def main(argv=None):
         T['practice'] += time.time() - t
         log('practice', day=night, n=len(items), tries=tries, kept_rate=round(len(items) / tries, 4) if tries else None,
             share={k: round(v, 4) for k, v in share.items()}, progress={k: round(v, 4) for k, v in prog.items()},
-            kept=dict(Counter(i['kind'] for i in items)), discards=dict(disc),
+            kept=dict(Counter(i['kind'] for i in items)), kept_ring=dict(Counter(i['ring'] for i in items)), discards=dict(disc),
             edits_drawn=dict(edits), edits_kept=dict(Counter(e for i in items for e in i['edits'])))  # addendum A10 counts
         if len(items) < cons['day_problems']:
             log('practice_short', day=night, n=len(items), wanted=cons['day_problems'])

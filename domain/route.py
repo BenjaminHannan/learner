@@ -108,6 +108,10 @@ def main(argv=None):
     nearR = analyze.pooled(routed, scored, 'near', dropped)
     far0 = analyze.pooled(p0['rows'], scored, 'far', dropped)
     farR = analyze.pooled(routed, scored, 'far', dropped)
+    # v10 (addendum A30): the join split of sheet.v4, routed the same way (None when the panel has no join rows)
+    has_join = any(r['split'] == 'join' for r in panel_rows)
+    join0 = analyze.pooled(p0['rows'], scored, 'join', dropped) if has_join else None
+    joinR = analyze.pooled(routed, scored, 'join', dropped) if has_join else None
     hm = harm.harm_measure(d0['hits'], dev_routed, dev_rows, family_drop=5.0, in_dist_drop=1.5)
     out = dict(run=a.run, gate=GATE, train=dict(pos=len(pos), neg=len(neg), acc=round(train_acc, 4)),
                routed_on=dict(panel_near=round(sum(o for o, r in zip(on_panel, panel_rows) if r['split'] == 'near')
@@ -118,13 +122,17 @@ def main(argv=None):
                DM1=dict(near_parent=near0, near_routed=nearR, gain=round(nearR - near0, 4),
                         verdict='PASS' if nearR - near0 >= 30 else ('PROVED WRONG' if nearR - near0 < 10 else 'FAIL')),
                far=dict(parent=far0, routed=farR),
+               join=None if not has_join else dict(parent=join0, routed=joinR, gain=round(joinR - join0, 4),
+                                                   on=round(sum(o for o, r in zip(on_panel, panel_rows) if r['split'] == 'join')
+                                                            / max(1, sum(r['split'] == 'join' for r in panel_rows)), 4),
+                                                   verdict=analyze.j_rule(joinR - join0)['verdict']),
                DM3=dict(in_dist_parent=round(hm['in_dist_a'], 4), in_dist_routed=round(hm['in_dist_b'], 4),
                         drop=round(hm['in_dist_drop'], 4), fired=hm['fired'], verdict='PASS' if hm['passes'] else
                         ('PROVED WRONG' if hm['in_dist_drop'] > analyze.DM3_PROVED else 'FAIL')))
     path = os.path.join(a.run, 'analysis', 'ROUTE.json')
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
-    print(json.dumps({k: out[k] for k in ('train', 'routed_on', 'DM1', 'DM3')}, indent=1))
+    print(json.dumps({k: out[k] for k in ('train', 'routed_on', 'DM1', 'far', 'join', 'DM3')}, indent=1))
     print('wrote', path)
 
 
