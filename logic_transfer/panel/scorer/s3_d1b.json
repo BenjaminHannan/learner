@@ -1,0 +1,400 @@
+{
+ "tag": "d1b",
+ "ckpt": "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/lt2/diag/D1b/checkpoint-3500.pt",
+ "threads": 1,
+ "torch": "2.14.1+cpu",
+ "subset": {
+  "n": 400,
+  "first_id": "lt-logic-gate-21-000000",
+  "last_id": "lt-logic-gate-21-001607",
+  "labels": {
+   "false": 137,
+   "unknown": 115,
+   "true": 148
+  },
+  "levels": {
+   "0": 101,
+   "2": 94,
+   "3": 107,
+   "1": 98
+  }
+ },
+ "t_analyze_s": 63.5,
+ "analyze_run1_correct": 143,
+ "analyze_rerun_identical_json": true,
+ "analyze_rerun_identical_preds": true,
+ "analyze_subset": {
+  "correct": 143,
+  "n": 400,
+  "exact": 35.75,
+  "by_level": {
+   "0": {
+    "correct": 34,
+    "n": 101
+   },
+   "2": {
+    "correct": 33,
+    "n": 94
+   },
+   "3": {
+    "correct": 43,
+    "n": 107
+   },
+   "1": {
+    "correct": 33,
+    "n": 98
+   }
+  },
+  "by_label": {
+   "false": {
+    "correct": 63,
+    "n": 137
+   },
+   "unknown": {
+    "correct": 27,
+    "n": 115
+   },
+   "true": {
+    "correct": 53,
+    "n": 148
+   }
+  },
+  "by_depth": {
+   "0": {
+    "correct": 34,
+    "n": 101
+   },
+   "2": {
+    "correct": 33,
+    "n": 94
+   },
+   "3": {
+    "correct": 43,
+    "n": 107
+   },
+   "1": {
+    "correct": 33,
+    "n": 98
+   }
+  },
+  "by_depth_label": {
+   "0": {
+    "false": {
+     "correct": 19,
+     "n": 37
+    },
+    "true": {
+     "correct": 8,
+     "n": 36
+    },
+    "unknown": {
+     "correct": 7,
+     "n": 28
+    }
+   },
+   "2": {
+    "false": {
+     "correct": 16,
+     "n": 36
+    },
+    "unknown": {
+     "correct": 4,
+     "n": 21
+    },
+    "true": {
+     "correct": 13,
+     "n": 37
+    }
+   },
+   "3": {
+    "false": {
+     "correct": 12,
+     "n": 33
+    },
+    "true": {
+     "correct": 21,
+     "n": 42
+    },
+    "unknown": {
+     "correct": 10,
+     "n": 32
+    }
+   },
+   "1": {
+    "false": {
+     "correct": 16,
+     "n": 31
+    },
+    "true": {
+     "correct": 11,
+     "n": 33
+    },
+    "unknown": {
+     "correct": 6,
+     "n": 34
+    }
+   }
+  },
+  "answer_words": {
+   "logic_fc": {
+    "false": {
+     "false": 63,
+     "unknown": 27,
+     "true": 47
+    },
+    "unknown": {
+     "false": 47,
+     "true": 41,
+     "unknown": 27
+    },
+    "true": {
+     "false": 49,
+     "true": 53,
+     "unknown": 46
+    }
+   }
+  },
+  "noop_round1": {
+   "n": 400,
+   "noop": 400,
+   "frac": 1.0
+  }
+ },
+ "own_decode_equals_analyze_preds": true,
+ "own_decode_n_diff": 0,
+ "mode_counts_NUM0_WORD1_GEN2": [
+  0,
+  400,
+  0
+ ],
+ "hit_by_mode": {
+  "0": [
+   0,
+   0
+  ],
+  "1": [
+   143,
+   400
+  ],
+  "2": [
+   0,
+   0
+  ]
+ },
+ "word_pointer_landing_among_WORD_mode_rows": {
+  "suffix_option3": 134,
+  "suffix_option1": 137,
+  "suffix_option2": 129
+ },
+ "hit_by_landing": {
+  "suffix_option3": [
+   44,
+   134
+  ],
+  "suffix_option1": [
+   52,
+   137
+  ],
+  "suffix_option2": [
+   47,
+   129
+  ]
+ },
+ "predicted_word_among_WORD_mode_rows": {
+  "false": 159,
+  "unknown": 100,
+  "true": 141
+ },
+ "gen_mode_prediction_texts_top": [],
+ "train_style_lword_NLL_mean(ln3=1.0986)": 1.1197,
+ "train_style_lmode_CE_mean": 0.0,
+ "mean_pointer_mass_on_3_option_words": 0.9923,
+ "mean_pointer_mass_on_gold_word_set": 0.3387,
+ "accuracy_subset": 0.3575,
+ "accuracy_subset_correct_n": [
+  143,
+  400
+ ],
+ "batch_sensitivity": {
+  "sorted_bs1": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143,
+   "secs": 42.3
+  },
+  "sorted_bs16": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143,
+   "secs": 18.5
+  },
+  "sorted_bs64": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143,
+   "secs": 19.0
+  },
+  "sorted_bs128": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143,
+   "secs": 24.4
+  },
+  "file_order_bs128": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143
+  },
+  "reverse_file_order_bs128": {
+   "n_diff_vs_bs128_sorted": 0,
+   "correct": 143
+  }
+ },
+ "t_full_s": 178.5,
+ "full_logic_gate": {
+  "correct": 591,
+  "n": 1608,
+  "exact": 36.7537,
+  "by_level": {
+   "0": {
+    "correct": 147,
+    "n": 402
+   },
+   "1": {
+    "correct": 149,
+    "n": 402
+   },
+   "2": {
+    "correct": 155,
+    "n": 402
+   },
+   "3": {
+    "correct": 140,
+    "n": 402
+   }
+  },
+  "by_label": {
+   "false": {
+    "correct": 253,
+    "n": 536
+   },
+   "true": {
+    "correct": 214,
+    "n": 536
+   },
+   "unknown": {
+    "correct": 124,
+    "n": 536
+   }
+  },
+  "by_depth_label": {
+   "0": {
+    "false": {
+     "correct": 80,
+     "n": 134
+    },
+    "true": {
+     "correct": 38,
+     "n": 134
+    },
+    "unknown": {
+     "correct": 29,
+     "n": 134
+    }
+   },
+   "1": {
+    "true": {
+     "correct": 54,
+     "n": 134
+    },
+    "false": {
+     "correct": 72,
+     "n": 134
+    },
+    "unknown": {
+     "correct": 23,
+     "n": 134
+    }
+   },
+   "2": {
+    "false": {
+     "correct": 57,
+     "n": 134
+    },
+    "unknown": {
+     "correct": 38,
+     "n": 134
+    },
+    "true": {
+     "correct": 60,
+     "n": 134
+    }
+   },
+   "3": {
+    "false": {
+     "correct": 44,
+     "n": 134
+    },
+    "true": {
+     "correct": 62,
+     "n": 134
+    },
+    "unknown": {
+     "correct": 34,
+     "n": 134
+    }
+   }
+  },
+  "answer_words": {
+   "logic_fc": {
+    "false": {
+     "false": 253,
+     "true": 169,
+     "unknown": 114
+    },
+    "true": {
+     "unknown": 140,
+     "true": 214,
+     "false": 182
+    },
+    "unknown": {
+     "true": 205,
+     "unknown": 124,
+     "false": 207
+    }
+   }
+  },
+  "noop_round1": {
+   "n": 1608,
+   "noop": 1608,
+   "frac": 1.0
+  }
+ },
+ "full_vs_saved_score_json_identical": {
+  "correct": true,
+  "n": true,
+  "exact": true,
+  "by_level": true,
+  "by_label": true,
+  "by_depth_label": true,
+  "answer_words": true,
+  "noop_round1": true,
+  "by_depth": true
+ },
+ "full_own_decode_equals_analyze": true,
+ "full_mode_counts_NUM0_WORD1_GEN2": [
+  0,
+  1608,
+  0
+ ],
+ "full_hit_by_mode": {
+  "0": [
+   0,
+   0
+  ],
+  "1": [
+   591,
+   1608
+  ],
+  "2": [
+   0,
+   0
+  ]
+ },
+ "wall_s": 566.3
+}

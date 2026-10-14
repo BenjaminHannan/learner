@@ -1,0 +1,25 @@
+(1) free-run vs teacher-forced on 128 logic_dev rows: max|d lword|=3.81e-06  max|d lmode|=3.81e-06  calculator calls made in free run=0  all 7 rounds NOOP=True  generate()==argmax-word decode in 128/128
+(2) train-style mixed batch: shape (64, 208) (4 sk200k rows + 60 logic rows, padded to the longest), sk prompt lens [32, 39, 74, 53]
+    same 60 logic rows: char ids identical in 60/60; max over rows of max|lword_train_path - lword_score_path| = 2.86e-06 (mean 3.24e-07); padded widths 208 vs 208
+(3) D1b-3500, train mode, 256 train logic rows (4x64), model.loss exactly as course.py slice: total=1.0597  mode=0.0000 word=1.0597 prog(NOOP terms)=0.0000 gen=0.0000 span_ans=0.0000 stop=0.0000   [logged loss_mix, update 3400-3500 window: 1.0554 / 1.0354]
+    same model on 256 HELD-OUT logic_dev rows: total=1.0427 word=1.0427 mode=0.0000   (ln 3 = 1.0986)
+(4) D1b-3500 lword gradient over 6 independent 64-row batches: mean|g| gold=0.709 shuf=1.024 | mean cos(gold_i,gold_j)=-0.0161  cos(gold_i,shuf_j)=+0.0043  cos(shuf_i,shuf_j)=+0.0878
+    lword grad norms by group on one gold batch (value 1.0519): {'reader(char table,pos,place,2 conv blocks,LN)': 0.555943, 'thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)': 0.335235, 'word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)': 0.326838}
+(5) logic_dev            depth 0: n= 120 acc(argmax over 3 options)=0.375  mean[nll(wrong label) - nll(gold)]=+0.1036 +- 0.0620
+(5) logic_dev            depth 1: n= 360 acc(argmax over 3 options)=0.375  mean[nll(wrong label) - nll(gold)]=+0.1284 +- 0.0235
+(5) logic_dev            depth 2: n= 360 acc(argmax over 3 options)=0.408  mean[nll(wrong label) - nll(gold)]=+0.1663 +- 0.0268
+(5) logic_dev            depth 3: n= 360 acc(argmax over 3 options)=0.369  mean[nll(wrong label) - nll(gold)]=+0.1511 +- 0.0244
+    logic_dev ALL: n=1200 acc=0.383 gap=+0.1441 +- 0.0144
+(5) logic_test_sampler   depth 1: n= 356 acc(argmax over 3 options)=0.424  mean[nll(wrong label) - nll(gold)]=+0.1223 +- 0.0254
+(5) logic_test_sampler   depth 2: n= 357 acc(argmax over 3 options)=0.443  mean[nll(wrong label) - nll(gold)]=+0.1609 +- 0.0285
+(5) logic_test_sampler   depth 3: n= 354 acc(argmax over 3 options)=0.460  mean[nll(wrong label) - nll(gold)]=+0.2782 +- 0.0371
+(5) logic_test_sampler   depth None: n= 533 acc(argmax over 3 options)=0.310  mean[nll(wrong label) - nll(gold)]=+0.1470 +- 0.0124
+    logic_test_sampler ALL: n=1600 acc=0.398 gap=+0.1736 +- 0.0126
+(5) logic_test_deeper    depth 4: n= 400 acc(argmax over 3 options)=0.380  mean[nll(wrong label) - nll(gold)]=+0.0932 +- 0.0218
+(5) logic_test_deeper    depth 5: n= 400 acc(argmax over 3 options)=0.383  mean[nll(wrong label) - nll(gold)]=+0.1659 +- 0.0235
+    logic_test_deeper ALL: n=800 acc=0.381 gap=+0.1295 +- 0.0160
+(5) logic_gate           depth 0: n= 402 acc(argmax over 3 options)=0.366  mean[nll(wrong label) - nll(gold)]=+0.0801 +- 0.0227
+(5) logic_gate           depth 1: n= 402 acc(argmax over 3 options)=0.376  mean[nll(wrong label) - nll(gold)]=+0.1131 +- 0.0274
+(5) logic_gate           depth 2: n= 402 acc(argmax over 3 options)=0.388  mean[nll(wrong label) - nll(gold)]=+0.1032 +- 0.0296
+(5) logic_gate           depth 3: n= 402 acc(argmax over 3 options)=0.356  mean[nll(wrong label) - nll(gold)]=+0.0704 +- 0.0276
+    logic_gate ALL: n=1608 acc=0.371 gap=+0.0917 +- 0.0135
