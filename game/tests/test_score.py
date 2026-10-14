@@ -145,6 +145,20 @@ class Analyze(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(out, 'RESULT.md')))
 
 
+class OracleArm(unittest.TestCase):
+    def test_oracle_arm(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = os.path.join(td, 'oracle.json')
+            score.main(['--arm', 'oracle', '--worlds', '2', '--cap', '30', '--out', p])
+            with open(p) as f:
+                res = json.load(f)
+        self.assertEqual((res['arm'], res['worlds'], len(res['per_world'])), ('oracle', 2, 2))
+        self.assertTrue(all(play.is_sealed(w['seed']) for w in res['per_world']))
+        self.assertEqual(sum(res['sources_share'].values()), 1.0)
+        self.assertEqual(res['sources_share']['invalid'], 0.0)
+        self.assertGreater(res['sources_share']['own'], 0.8)
+
+
 @unittest.skipUnless(os.path.exists(PARENT), 'parent checkpoint not available')
 class Scoring(unittest.TestCase):
     def check(self, res, arm_name):

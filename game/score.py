@@ -1,11 +1,12 @@
 """Sealed scoring of Crafter arms (game-world test GW-S). The only module that plays sealed worlds.
 
-  python -m game.score --arm model|random|ppo|blind [--ckpt CKPT] [--probs Q.json] [--gate GATE] [--picker greedy|top|sample] [--ppo-picker argmax|sample] [--temp FLOAT | --temp-from DIR] --out OUT.json [--first 0] [--worlds 100] [--threads 2]
+  python -m game.score --arm model|random|ppo|blind|oracle [--ckpt CKPT] [--probs Q.json] [--gate GATE] [--picker greedy|top|sample] [--ppo-picker argmax|sample] [--temp FLOAT | --temp-from DIR] --out OUT.json [--first 0] [--worlds 100] [--threads 2]
 
 Worlds are SEALED_BASE + k for k in first .. first + worlds - 1, one episode each (the random arm: three, act seeds
 [a, k] for a = 0, 1, 2, reported as the per-world mean). Model arm: act seed [7, k], explore from game/constants.json.
 PPO arm: act seed [7, k], explore from game/constants.json, policy from game.ppo.load_policy(ckpt) (a callable prompts -> answers, as play wants).
 Blind arm: act seed [7, k], explore as above, the move is drawn from the fixed distribution qbar in --probs (game.blind), ignoring the view.
+Oracle arm (GW-L, addendum A22): act seed [7, k], explore as above, the policy is the hand-written labeller game.oracle (no --ckpt).
 --picker sample: the model arm draws a move by softmax of those log-probs. --ppo-picker sample: the PPO arm draws from its own
 action probabilities. Samples use the episode's extra stream (play.play `samples`). --picker top: the model arm plays the move with the highest log-probability among the 17 words (play.move_policy); greedy
 (default) is the model's own written answer.
@@ -21,7 +22,7 @@ import time
 import torch
 from crafter import constants as crafter_constants
 
-from game import blind, play
+from game import blind, oracle, play
 
 ACH = list(crafter_constants.achievements)
 assert len(ACH) == play.ACHIEVEMENTS
@@ -95,6 +96,8 @@ def run(arm, ckpt, first, worlds, cap, gate=None, picker='greedy', ppo_picker=No
             from custom_io.models import load_model
             m = load_model(ckpt).eval()
             pol, explore = play.picked_policy(m, picker, temp=temp), play.load_constants()[0]['explore']
+        elif arm == 'oracle':
+            pol, explore = oracle.oracle_policy(), play.load_constants()[0]['explore']
         elif arm == 'blind':
             with open(probs) as f:
                 qbar = json.load(f)['qbar']
@@ -114,7 +117,7 @@ def run(arm, ckpt, first, worlds, cap, gate=None, picker='greedy', ppo_picker=No
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description='Score one arm on the sealed Crafter worlds.')
-    ap.add_argument('--arm', required=True, choices=['model', 'random', 'ppo', 'blind'])
+    ap.add_argument('--arm', required=True, choices=['model', 'random', 'ppo', 'blind', 'oracle'])
     ap.add_argument('--ckpt')
     ap.add_argument('--gate')
     ap.add_argument('--picker', default='greedy', choices=['greedy', 'top', 'sample'])
@@ -128,7 +131,7 @@ def main(argv=None):
     ap.add_argument('--threads', type=int, default=2)
     ap.add_argument('--cap', type=int, default=None, help=argparse.SUPPRESS)   # tests only; default: constants.json
     a = ap.parse_args(argv)
-    assert a.arm in ('random', 'blind') or a.ckpt, '--ckpt is required for the model and ppo arms'
+    assert a.arm in ('random', 'blind', 'oracle') or a.ckpt, '--ckpt is required for the model and ppo arms'
     assert (a.arm == 'blind') == bool(a.probs), '--probs is required for (and only for) the blind arm'
     assert a.picker == 'greedy' or a.arm == 'model', '--picker top / sample is for the model arm'
     assert a.arm == 'model' or (a.temp is None and a.temp_from is None), '--temp / --temp-from are for the model arm'
