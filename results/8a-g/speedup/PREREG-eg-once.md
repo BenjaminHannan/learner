@@ -27,3 +27,6 @@ E4 (300-update loss trace, seed 400, same rows, bf16 on the GPU): mean over upda
 
 ## What I will not claim
 Any number from the 4090 as the PC's number; any gain on arms I did not time (B3G2 is timed separately); that two runs with different passes are comparable.
+
+## Amendment 1 (10-14 about 12:10 AM ET, still before any GPU number)
+The harness helper found on a CPU stub that E1 rule 3 ("no worse than 1.5 times the old path's own spread") fails on noise when the old spread is tiny or zero (the old path can be nearly batch-invariant). Rule 3 now passes whenever the largest per-row gap (1 - mean cosine) is <= 1e-4, which is far below bf16 rounding and five times tighter than rule 2's 5e-4. Rules 1 and 2 are unchanged, so nothing looser than the registered per-position and per-row limits can pass.
