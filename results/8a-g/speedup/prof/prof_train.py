@@ -1775,7 +1775,15 @@ def e1_metrics(old_a, old_b, once, row_id, n_rows):
 def e2_metrics(old, once):
     d = (old.double() - once.double()).abs()
     m = float(d.max()) if d.numel() else 0.0
-    return dict(max_abs_diff=m, limit=E2_MAX_ABS, passed=bool(m <= E2_MAX_ABS), n_values=int(d.numel()))
+    out = dict(max_abs_diff=m, limit=E2_MAX_ABS, passed=bool(m <= E2_MAX_ABS), n_values=int(d.numel()))
+    if d.numel():        # scale diagnostics only (NOT pass marks): is 1e-4 absolute small or large against the values themselves?
+        a = old.double().abs().reshape(-1)
+        mx, i = float(a.max()), int(d.reshape(-1).argmax())
+        sub = a[::max(1, a.numel() // 4_000_000)]
+        out.update(max_abs_value=mx, mean_abs_value=float(a.mean()), p999_abs_value=float(sub.sort().values[int(0.999 * (sub.numel() - 1))]),
+                   max_abs_diff_over_max_abs_value=m / max(mx, 1e-300), value_at_max_diff=float(old.double().reshape(-1)[i]),
+                   rel_diff_at_max_diff=m / max(float(a[i]), 1e-300), position_of_max_diff_flat=i)
+    return out
 
 
 def e4_metrics(old, var, lo=E4_LO, hi=E4_HI):
@@ -1910,7 +1918,7 @@ def sec_equiv(world, args):
     bf16 = lambda: torch.autocast(world.device.type, dtype=torch.bfloat16)
     fp32 = contextlib.nullcontext
     accum = args.accum
-    out = dict(tag=world.tag(), pinned=pin, K0=k0, bf16_on_cpu=world.device.type != 'cuda', rows=len(first['rows']), specs={},
+    out = dict(tag=world.tag(), pinned=pin, K0=k0, on_cpu=world.device.type != 'cuda', rows=len(first['rows']), specs={},
                prereg='PREREG-eg-once.md: E1 vectors (bf16 GPU), E2 vectors (fp32 CPU, 64 rows), E3 loss + gradient (fp32 CPU), E4 loss trace (bf16 GPU, 300 updates)',
                limits=dict(E1_position_cos=E1_POS_COS, E1_row_mean_cos=E1_ROW_COS, E1_x_old_spread=E1_SPREAD_X, E2_max_abs=E2_MAX_ABS, E3_loss_rel=E3_LOSS_REL, E3_grad_cos=E3_GRAD_COS,
                            E4_mean_abs=E4_MEAN_ABS, E4_diff_of_means=E4_MEAN_DIFF, E4_window=[E4_LO + 1, E4_HI]),
@@ -2131,7 +2139,7 @@ def render_md(res):
             L += table(['variant', 'median s/update', 'speed vs baseline', 'peak GB', 'runs'], [(k, f1(v['s_per_update_median'], 4), f1(v['speed_vs_baseline'], 3), f1(v['peak_gb'], 2), '; '.join('OOM' if r.get('oom') else r.get('skipped', f'{r.get("s_per_update", 0):.4f}') for r in v['runs'])) for k, v in s['specs'].items()])
         elif name == 'equiv':
             lim = s['limits']
-            L += [f'pre-registration: {s["prereg"]}', f'stochastic parts pinned: {s["pinned"]} (K0 {s["K0"]}); rows {s["rows"]}; bf16 autocast on CPU: {s["bf16_on_cpu"]}; E3 setting: {s["E3_setting"]}', '']
+            L += [f'pre-registration: {s["prereg"]}', f'stochastic parts pinned: {s["pinned"]} (K0 {s["K0"]}); rows {s["rows"]}; on CPU (fp32, no autocast): {s["on_cpu"]}; E3 setting: {s["E3_setting"]}', '']
             e1, e2 = s.get('E1'), s.get('E2')
             if e1 and 'once_vs_old' in e1:
                 g, sp = e1['once_vs_old'], e1['old_vs_old_half_accum']
@@ -2146,6 +2154,9 @@ def render_md(res):
                 L += [f'E1: {e1.get("skipped") or e1.get("error")}', '']
             if e2 and 'max_abs_diff' in e2:
                 L += [f'### E2: eg_once vs the old path, {e2["rows"]} rows, {e2["setting"]} (registered setting met: {e2["registered_setting"]}): max abs diff of H {e2["max_abs_diff"]:.3e} (limit {e2["limit"]:g}). **E2: {"PASS" if e2["passed"] else "FAIL"}**', '']
+                if 'max_abs_value' in e2:
+                    L += [f'scale (diagnostic, not a mark): max |H| {e2["max_abs_value"]:.4g}, p99.9 |H| {e2["p999_abs_value"]:.4g}, mean |H| {e2["mean_abs_value"]:.4g}; max abs diff / max |H| {e2["max_abs_diff_over_max_abs_value"]:.3e}; '
+                          f'the largest difference sits on a value of {e2["value_at_max_diff"]:.4g} (relative {e2["rel_diff_at_max_diff"]:.3e})', '']
             elif e2:
                 L += [f'E2: {e2.get("skipped") or e2.get("error")}', '']
             L += ['### E3: loss and gradient of one update (rule: loss rel diff <= %g and gradient cosine >= %g; token-mean weighting changes = NOT EXACT)' % (lim['E3_loss_rel'], lim['E3_grad_cos']), '']
