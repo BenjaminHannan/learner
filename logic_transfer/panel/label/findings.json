@@ -1,0 +1,24 @@
+{
+  "dimension": "gold labels (independent re-derivation from the rendered prompt text)",
+  "status": "instrument-ok",
+  "headline": "Gold labels are correct on 100% of 267,608 audited rows (parser coverage 100%, zero disagreements, zero leakage); labels cannot explain the chance-level result. One separate defect: logic_test_sampler is composed so that a polarity-only rule scores 65% on its pooled depth 2-3 slice.",
+  "note": "findings.md was not written because the harness blocks report .md files from subagents; the full write-up is carried in the structured result (claims/defects) and in examples.txt, agg*.json, leak.json, holdout.json, structure.json. Reproduce: bash run_all.sh in this directory.",
+  "files": [
+    "rlib.py", "reader_b.py", "audit_rows.py", "analyze1.py", "analyze2.py", "analyze3.py", "analyze4.py", "analyze6.py", "analyze7.py",
+    "analyze8.py", "analyze9.py", "leak.py", "holdout.py", "structure_overlap.py", "train_cross.py", "examples.py", "run_all.sh",
+    "examples.txt", "agg1.json", "agg2.json", "agg3.json", "agg4.json", "agg6.json", "agg7.json", "agg8.json", "agg9.json",
+    "agg10_polarity_only.json", "leak.json", "holdout.json", "structure.json", "readerb.json", "train_cross.json", "perrow/"
+  ],
+  "key_numbers": {
+    "rows_audited": {"eval": 7608, "logic_train": 130000, "placebo_train": 130000},
+    "parser_coverage_pct": 100.0,
+    "agreement_with_gold_pct": 100.0,
+    "text_equals_stored_program": "100% of rows",
+    "stored_level_equals_min_proof_size": "100% of true/false rows",
+    "textbook_logic_differs_pct": {"gate": 0.37, "dev": 0.75, "sampler": 2.62, "deeper": 0.12, "placebo_dev": 1.67, "placebo_test_wording": 1.08, "logic_train_20k": 0.49, "placebo_train_20k": 1.63},
+    "placebo_lookup_only_solver_accuracy": 1.0,
+    "exact_duplicates_train_or_eval": 0,
+    "gate_problems_with_identical_logic_structure_in_logic_train": "855/1608",
+    "sampler_polarity_only_accuracy_pooled_depth_2_3": 0.651
+  }
+}

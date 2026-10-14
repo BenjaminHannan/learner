@@ -1,0 +1,169 @@
+{
+ "freerun_vs_tf": {
+  "max_abs_dlword": 3.814697265625e-06,
+  "max_abs_dlmode": 3.814697265625e-06,
+  "calls": 0,
+  "all_noop": true,
+  "generate_equals_argmax": 128
+ },
+ "train_vs_score_path": {
+  "char_ids_identical": 60,
+  "max_abs_dlword": 2.86102294921875e-06,
+  "mean_abs_dlword": 3.238519032796224e-07,
+  "width_train": 208,
+  "width_score": 208
+ },
+ "loss_mix_repro": {
+  "total": 1.059734046459198,
+  "prog": 4.377171380909317e-08,
+  "mode": 3.6977816080252524e-06,
+  "word": 1.0597302913665771,
+  "gen": 0.0,
+  "span_call": 0.0,
+  "span_ans": 0.0,
+  "stop": 0.0
+ },
+ "loss_dev256": {
+  "total": 1.0426709651947021,
+  "word": 1.0426677465438843,
+  "mode": 3.126907813566504e-06
+ },
+ "grad_consistency": {
+  "cos_gold_gold": -0.01607355090479056,
+  "cos_gold_shuf": 0.004326796671375632,
+  "cos_shuf_shuf": 0.08784665614366531,
+  "mean_norm_gold": 0.7089683413505554,
+  "mean_norm_shuf": 1.0242971181869507,
+  "grad_norm_groups": {
+   "mode head": 0.0,
+   "op head": 0.0,
+   "other(W_a)": 0.0,
+   "other(W_b)": 0.0,
+   "other(bias)": 0.0,
+   "other(e_e)": 0.0,
+   "other(e_s)": 0.0,
+   "other(g_cp)": 0.0,
+   "other(g_s)": 0.0,
+   "other(k_cp)": 0.0,
+   "other(k_s)": 0.0,
+   "other(ln_t)": 0.0,
+   "other(q_cp)": 0.0,
+   "other(q_s)": 0.0,
+   "other(stop_s)": 0.0,
+   "other(tape_emb)": 0.0,
+   "reader(char table,pos,place,2 conv blocks,LN)": 0.555943,
+   "thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)": 0.335235,
+   "word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)": 0.326838
+  }
+ },
+ "by_depth": {
+  "logic_dev|depth0": {
+   "n": 120,
+   "acc": 0.375,
+   "gap_wrong_minus_gold": 0.10359085911413347,
+   "se": 0.06202896267210573
+  },
+  "logic_dev|depth1": {
+   "n": 360,
+   "acc": 0.375,
+   "gap_wrong_minus_gold": 0.1284360679163493,
+   "se": 0.023514845351923868
+  },
+  "logic_dev|depth2": {
+   "n": 360,
+   "acc": 0.4083333333333333,
+   "gap_wrong_minus_gold": 0.16630627094627518,
+   "se": 0.026758468921247686
+  },
+  "logic_dev|depth3": {
+   "n": 360,
+   "acc": 0.36944444444444446,
+   "gap_wrong_minus_gold": 0.1510842229837843,
+   "se": 0.024414756274216045
+  },
+  "logic_dev|ALL": {
+   "n": 1200,
+   "acc": 0.38333333333333336,
+   "gap_wrong_minus_gold": 0.14410705446533598,
+   "se": 0.014354380960789292
+  },
+  "logic_test_sampler|depth1": {
+   "n": 356,
+   "acc": 0.4241573033707865,
+   "gap_wrong_minus_gold": 0.1223497511259417,
+   "se": 0.025362579029691076
+  },
+  "logic_test_sampler|depth2": {
+   "n": 357,
+   "acc": 0.4425770308123249,
+   "gap_wrong_minus_gold": 0.16088343698704985,
+   "se": 0.028527164667114916
+  },
+  "logic_test_sampler|depth3": {
+   "n": 354,
+   "acc": 0.4604519774011299,
+   "gap_wrong_minus_gold": 0.2782036798867701,
+   "se": 0.03709437261477601
+  },
+  "logic_test_sampler|depthNone": {
+   "n": 533,
+   "acc": 0.30956848030018763,
+   "gap_wrong_minus_gold": 0.14702013946103115,
+   "se": 0.012417086647122365
+  },
+  "logic_test_sampler|ALL": {
+   "n": 1600,
+   "acc": 0.398125,
+   "gap_wrong_minus_gold": 0.1736485846361614,
+   "se": 0.012591627680054665
+  },
+  "logic_test_deeper|depth4": {
+   "n": 400,
+   "acc": 0.38,
+   "gap_wrong_minus_gold": 0.09316460411898796,
+   "se": 0.02177255260434422
+  },
+  "logic_test_deeper|depth5": {
+   "n": 400,
+   "acc": 0.3825,
+   "gap_wrong_minus_gold": 0.16588996906658793,
+   "se": 0.023473474245153603
+  },
+  "logic_test_deeper|ALL": {
+   "n": 800,
+   "acc": 0.38125,
+   "gap_wrong_minus_gold": 0.12952728659278795,
+   "se": 0.016049802367243488
+  },
+  "logic_gate|depth0": {
+   "n": 402,
+   "acc": 0.3656716417910448,
+   "gap_wrong_minus_gold": 0.08010413910942389,
+   "se": 0.022690545215256458
+  },
+  "logic_gate|depth1": {
+   "n": 402,
+   "acc": 0.3756218905472637,
+   "gap_wrong_minus_gold": 0.11311488027591247,
+   "se": 0.027407903936076214
+  },
+  "logic_gate|depth2": {
+   "n": 402,
+   "acc": 0.3880597014925373,
+   "gap_wrong_minus_gold": 0.10324135733349532,
+   "se": 0.0296094510590219
+  },
+  "logic_gate|depth3": {
+   "n": 402,
+   "acc": 0.35572139303482586,
+   "gap_wrong_minus_gold": 0.07042243136088536,
+   "se": 0.02756120502346554
+  },
+  "logic_gate|ALL": {
+   "n": 1608,
+   "acc": 0.3712686567164179,
+   "gap_wrong_minus_gold": 0.09172070201992925,
+   "se": 0.013462703168254406
+  }
+ }
+}

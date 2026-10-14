@@ -1,0 +1,133 @@
+T1 COVERAGE  (means; unseen = share of rows with >=1 template id absent from train)
+file                       n sampler   tset     unseen  nrul  nfac  ndis nsent chars   p10   p90
+logic_train           130000 label-fir train         -  2.69  1.93  1.57  5.62 173.5   132   204
+placebo_train         130000 label-fir train         -  2.47  2.48  1.89  5.94 177.5   139   205
+logic_dev               1200 label-fir train       0.0  2.69  1.95  1.57  5.64 173.3   131   203
+logic_gate              1608 label-fir heldout   100.0  2.44  1.93  1.65  5.38 165.1   113   202
+logic_test_sampler      1600 rule-firs train       0.0  3.24  2.15  3.37  6.39 187.6   165   205
+logic_test_deeper        800 label-fir train       0.0  4.54  1.23  0.11  6.77 196.6   183   207
+placebo_dev             1200 label-fir train       0.0  2.48  2.49  1.92  5.97 178.4   139   205
+placebo_test_wording    1200 label-fir heldout   100.0  2.64  2.54  1.86  6.18 182.0   153   204
+
+depth x label counts
+logic_train           {'0|false': 4333, '0|true': 4333, '0|unknown': 4333, '1|false': 13000, '1|true': 13000, '1|unknown': 13000, '2|false': 13000, '2|true': 13000, '2|unknown': 13000, '3|false': 13000, '3|true': 13001, '3|unknown': 13000}
+placebo_train         {'0|false': 43333, '0|true': 43334, '0|unknown': 43333}
+logic_dev             {'0|false': 40, '0|true': 40, '0|unknown': 40, '1|false': 120, '1|true': 120, '1|unknown': 120, '2|false': 120, '2|true': 120, '2|unknown': 120, '3|false': 120, '3|true': 120, '3|unknown': 120}
+logic_gate            {'0|false': 134, '0|true': 134, '0|unknown': 134, '1|false': 134, '1|true': 134, '1|unknown': 134, '2|false': 134, '2|true': 134, '2|unknown': 134, '3|false': 134, '3|true': 134, '3|unknown': 134}
+logic_test_sampler    {'0|unknown': 533, '1|false': 178, '1|true': 178, '2|false': 178, '2|true': 179, '3|false': 177, '3|true': 177}
+logic_test_deeper     {'4|false': 134, '4|true': 133, '4|unknown': 133, '5|false': 133, '5|true': 134, '5|unknown': 133}
+placebo_dev           {'0|false': 400, '0|true': 400, '0|unknown': 400}
+placebo_test_wording  {'0|false': 400, '0|true': 400, '0|unknown': 400}
+
+sentence-role share of sentences (%), and per-kind unseen % in eval
+logic_train           FN=11.8 FP=22.5 Q=17.8 R1=9.5 R2=8.2 R3=7.7 R4=9.7 R5=12.9
+placebo_train         FN=16.7 FP=25.0 Q=16.8 R1=8.7 R2=7.3 R3=6.4 R4=8.5 R5=10.5
+logic_dev             FN=11.9 FP=22.7 Q=17.7 R1=9.6 R2=8.2 R3=7.7 R4=9.4 R5=12.9
+logic_gate            FN=12.7 FP=23.3 Q=18.6 R1=8.6 R2=8.3 R3=7.9 R4=8.7 R5=11.9
+logic_test_sampler    FN=9.0 FP=24.7 Q=15.7 R1=13.2 R2=10.5 R3=7.4 R4=11.4 R5=8.1
+logic_test_deeper     FN=5.2 FP=13.0 Q=14.8 R1=24.0 R2=14.7 R3=2.4 R4=14.1 R5=11.9
+placebo_dev           FN=16.7 FP=25.0 Q=16.7 R1=8.9 R2=7.4 R3=6.5 R4=8.7 R5=10.0
+placebo_test_wording  FN=15.6 FP=25.5 Q=16.2 R1=8.4 R2=8.1 R3=7.4 R4=8.8 R5=10.0
+
+T2a PAIRS (entity,predicate), eval vs matching train file
+train: logic ctx pairs distinct 141833 (repeat mean 2.87, seen-once 49.8%), placebo 149240 (3.04, 46.8%); 149 entities, 1407 predicates; possible pairs 209643
+eval file              ctxP ctx_unseen qry_unseen qry_unseen_any pred_un memchk
+logic_gate             4663      18.1%      17.4%       3.8%       0  35.6%
+logic_dev              3668      17.9%      16.6%       2.8%       0  32.5%
+logic_test_sampler     4495      18.5%      17.2%       3.1%       0  34.4%
+logic_test_deeper      2040      17.8%      17.8%       3.9%       0  27.6%
+placebo_dev            4026      15.6%      15.6%       4.3%       0  32.7%
+placebo_test_wording   4121      16.3%      14.4%       2.9%       0  36.6%
+
+T2b ROLES: supporting fact position and distance to query sentence (median [p10-p90]); ent2ent = query entity vs supporting-fact entity (chars)
+placebo_dev           false|d0     n=400  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=50[1-116] gap_far=50[1-116] ent2ent=75[28-145] prev_sent_share=0.21
+placebo_dev           true|d0      n=400  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=47[1-111] gap_far=47[1-111] ent2ent=72[25-139] prev_sent_share=0.258
+placebo_dev           unknown|d0   n=400  ctx_sent=5[4-6] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+placebo_test_wording  false|d0     n=400  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=52[1-115] gap_far=52[1-115] ent2ent=81[28-142] prev_sent_share=0.193
+placebo_test_wording  true|d0      n=400  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=48[1-114] gap_far=48[1-114] ent2ent=82[28-144] prev_sent_share=0.205
+placebo_test_wording  unknown|d0   n=400  ctx_sent=5[4-6] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+logic_gate            false|d0     n=134  ctx_sent=3[2-4] fact_idx=1[0-2] gap_near=28[1-68] gap_far=28[1-68] ent2ent=56[25-97] prev_sent_share=0.343
+logic_gate            false|d1     n=134  ctx_sent=4[3-5] fact_idx=2[0-3] gap_near=1[1-47] gap_far=74[29-105] ent2ent=74[28-129] prev_sent_share=0.56
+logic_gate            false|d2     n=134  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=1[1-37] gap_far=95[59-127] ent2ent=81[25-139] prev_sent_share=0.619
+logic_gate            false|d3     n=134  ctx_sent=5[5-6] fact_idx=2[0-4] gap_near=1[1-24] gap_far=118[91-135] ent2ent=92[28-152] prev_sent_share=0.799
+logic_gate            true|d0      n=134  ctx_sent=3[2-4] fact_idx=1[0-2] gap_near=28[1-79] gap_far=28[1-79] ent2ent=61[27-106] prev_sent_share=0.328
+logic_gate            true|d1      n=134  ctx_sent=4[3-5] fact_idx=1[0-3] gap_near=1[1-46] gap_far=73[29-111] ent2ent=72[26-133] prev_sent_share=0.567
+logic_gate            true|d2      n=134  ctx_sent=5[4-6] fact_idx=2[0-4] gap_near=1[1-38] gap_far=99[58-128] ent2ent=89[29-148] prev_sent_share=0.649
+logic_gate            true|d3      n=134  ctx_sent=5[5-6] fact_idx=2[0-5] gap_near=1[1-26] gap_far=114[91-137] ent2ent=91[27-150] prev_sent_share=0.769
+logic_gate            unknown|d0   n=134  ctx_sent=3[2-4] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+logic_gate            unknown|d1   n=134  ctx_sent=4[3-5] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+logic_gate            unknown|d2   n=134  ctx_sent=5[4-6] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+logic_gate            unknown|d3   n=134  ctx_sent=5[5-6] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+logic_test_sampler    false        n=532  ctx_sent=5[5-6] fact_idx=2[0-4] gap_near=1[1-57] gap_far=101[61-130] ent2ent=84[25-146] prev_sent_share=0.585
+logic_test_sampler    true         n=534  ctx_sent=6[5-6] fact_idx=2[0-4] gap_near=1[1-51] gap_far=104[63-134] ent2ent=86[27-150] prev_sent_share=0.534
+logic_test_sampler    unknown      n=532  ctx_sent=5[5-6] fact_idx=- gap_near=- gap_far=- ent2ent=- prev_sent_share=-
+
+T2c FAMILIES (parent s200 accuracy from RESULT.json final_eval; n=40 each)
+family             n  chars  sent inprm indist  frame  varnt answers
+syllogism       5093   71.1   4.0  0.00  100.0  100.0   47.5 [['yes', 3416], ['no', 1677]]
+prop_eval       5027   96.1   6.0  1.00  100.0   97.5   77.5 [['true', 2943], ['false', 2084]]
+verify_claim    5047   49.5   2.7  0.00   97.5   90.0   65.0 [['no', 2532], ['yes', 2515]]
+kin_chain       4121   93.7   4.4  0.43   95.0   85.0   75.0 
+order_chain     5091  111.4   5.1  0.67   62.5   57.5   22.5 
+rule_apply      5079  108.6   4.9  0.39   97.5   82.5    0.0 
+object_track    5166  131.6   5.3  1.00  100.0   95.0   25.0 
+story_chain3    4095  125.2   4.3  0.52   97.5   97.5  100.0 
+passage_qa      3998  102.0   4.7  0.67   97.5   97.5   57.5 
+chain_ops       3931  143.8   5.6  0.06  100.0  100.0   97.5 
+
+T3 SHORTCUTS: chi-square p / Cramer V per variable and file
+file                  suffix_perm     answer_slot     q_template      q_has_unknown_w neg_cue_count   n_sentences     chars_decile    n_FN_sentences  n_distractors   depth          
+logic_train           p=0.59 V=0.01   p=0.26 V=0.00   p=0.15 V=0.01   p=0.0051 V=0.01 p=0 V=0.11      p=0.62 V=0.01   p=0.96 V=0.01   p=1.2e-28 V=0.02 p=0.24 V=0.00   p=1 V=0.00     
+placebo_train         p=0.87 V=0.00   p=0.74 V=0.00   p=0.032 V=0.01  p=0.0058 V=0.01 p=0 V=0.11      p=8.9e-26 V=0.02 p=1.3e-19 V=0.02 p=0 V=0.12      p=0 V=0.08      -              
+logic_dev             p=0.57 V=0.06   p=0.4 V=0.04    p=0.48 V=0.08   p=0.89 V=0.01   p=0.00018 V=0.13 p=0.34 V=0.06   p=0.72 V=0.08   p=0.0043 V=0.08 p=0.76 V=0.03   p=1 V=0.00     
+logic_gate            p=0.94 V=0.04   p=0.72 V=0.03   p=0.78 V=0.03   p=0.68 V=0.02   p=0.018 V=0.09  p=0.089 V=0.07  p=0.48 V=0.07   p=0.25 V=0.04   p=0.35 V=0.04   p=1 V=0.00     
+logic_test_sampler    p=0.16 V=0.07   p=0.47 V=0.03   p=0.98 V=0.04   p=0.9 V=0.01    p=2.9e-11 V=0.15 p=1.6e-10 V=0.13 p=0.11 V=0.09   p=0.34 V=0.04   p=5.9e-289 V=0.66 p=0 V=0.71     
+logic_test_deeper     p=0.63 V=0.07   p=0.57 V=0.04   p=0.93 V=0.07   p=0.47 V=0.04   p=3.6e-23 V=0.29 p=0.7 V=0.04    p=0.65 V=0.10   p=0.21 V=0.06   p=0.66 V=0.03   p=1 V=0.00     
+placebo_dev           p=0.16 V=0.08   p=0.79 V=0.03   p=0.15 V=0.09   p=0.22 V=0.05   p=5e-05 V=0.13  p=0.12 V=0.07   p=0.59 V=0.08   p=6.7e-10 V=0.14 p=0.036 V=0.07  -              
+placebo_test_wording  p=0.13 V=0.08   p=0.44 V=0.04   p=0.085 V=0.07  p=0.89 V=0.01   p=0.00097 V=0.12 p=0.49 V=0.06   p=0.73 V=0.08   p=1.5e-08 V=0.13 p=0.0013 V=0.09 -              
+
+LR cross-fit (30k train rows) logic_train: OOF acc | eval acc per file | OOF logloss (ln3=1.0986)
+  counts  OOF 36.85 ll 1.0913 | gate=36.3 dev=39.8 test_sampler=37.8 test_deeper=26.8
+  tids    OOF 34.11 ll 1.1054 | gate=34.8 dev=34.8 test_sampler=35.2 test_deeper=33.0
+  suffix  OOF 33.17 ll 1.1000 | gate=33.5 dev=34.5 test_sampler=31.1 test_deeper=31.1
+  delex   OOF 34.29 ll 1.1066 | gate=31.7 dev=35.0 test_sampler=37.2 test_deeper=34.9
+  words   OOF 33.68 ll 1.1193 | gate=32.6 dev=32.9 test_sampler=32.0 test_deeper=29.8
+  chars   OOF 33.49 ll 1.1388 | gate=33.1 dev=32.4 test_sampler=33.4 test_deeper=29.8
+  all     OOF 35.37 ll 1.1074 | gate=34.3 dev=35.8 test_sampler=36.6 test_deeper=27.2
+LR cross-fit (30k train rows) placebo_train: OOF acc | eval acc per file | OOF logloss (ln3=1.0986)
+  counts  OOF 39.55 ll 1.0696 | p_dev=41.2 p_test_wording=39.9
+  tids    OOF 37.45 ll 1.0911 | p_dev=36.7 p_test_wording=38.7
+  suffix  OOF 33.19 ll 1.1016 | p_dev=31.5 p_test_wording=30.6
+  delex   OOF 36.14 ll 1.1043 | p_dev=33.7 p_test_wording=36.5
+  words   OOF 35.46 ll 1.1115 | p_dev=35.9 p_test_wording=36.8
+  chars   OOF 34.79 ll 1.1310 | p_dev=34.0 p_test_wording=33.7
+  all     OOF 38.38 ll 1.0946 | p_dev=37.2 p_test_wording=39.8
+
+audit.py classifiers fitted on 6000 v2 train rows, applied to eval (nb / centroid / tree), majority 33.3
+  logic_train   basic logic_gate             41.3  39.0  40.4
+  logic_train   basic logic_dev              38.2  37.5  37.8
+  logic_train   basic logic_test_sampler     48.2  46.5  56.3
+  logic_train   basic logic_test_deeper      36.5  38.5  34.9
+  logic_train   full  logic_gate             42.2  44.8  50.4
+  logic_train   full  logic_dev              36.9  38.0  42.6
+  logic_train   full  logic_test_sampler     33.3  44.4  61.2
+  logic_train   full  logic_test_deeper      33.2  36.2  34.8
+  placebo_train basic placebo_dev            46.8  43.2  53.6
+  placebo_train basic placebo_test_wording   46.2  45.1  50.3
+  placebo_train full  placebo_dev            92.2  92.2  92.2
+  placebo_train full  placebo_test_wording   91.6  91.4  91.6
+
+singleton-predicate lookup (distinct,singleton,nsent) OOF / eval
+  logic_train   singleton_preds+distinct_preds+n_sent    OOF 44.60 ll 1.0285 eval {'logic_gate': 42.54, 'logic_dev': 44.42, 'logic_test_sampler': 39.44, 'logic_test_deeper': 28.0}
+  logic_train   singleton_preds only                     OOF 43.27 ll 1.0435 eval {'logic_gate': 43.16, 'logic_dev': 43.0, 'logic_test_sampler': 36.75, 'logic_test_deeper': 34.75}
+  logic_train   distinct_preds only                      OOF 39.07 ll 1.0783 eval {'logic_gate': 38.56, 'logic_dev': 38.25, 'logic_test_sampler': 34.62, 'logic_test_deeper': 40.0}
+  placebo_train singleton_preds+distinct_preds+n_sent    OOF 38.16 ll 1.0836 eval {'placebo_dev': 37.67, 'placebo_test_wording': 36.92}
+  placebo_train singleton_preds only                     OOF 35.73 ll 1.0961 eval {'placebo_dev': 35.5, 'placebo_test_wording': 35.17}
+  placebo_train distinct_preds only                      OOF 33.91 ll 1.0972 eval {'placebo_dev': 33.67, 'placebo_test_wording': 33.33}
+
+T4 LADDER on depth-0 rows (accuracy %)
+  placebo_dev           d0: {'S3_text_match_any_sentence_presence': 65.25, 'S3_text_match_any_sentence_polarity': 98.92, 'S5_text_match_fact_sentences_only_presence': 65.92, 'S5_text_match_fact_sentences_only_polarity': 100.0, 'majority_const_true': 33.33}
+  placebo_test_wording  d0: {'S3_text_match_any_sentence_presence': 66.58, 'S3_text_match_any_sentence_polarity': 98.67, 'S5_text_match_fact_sentences_only_presence': 67.17, 'S5_text_match_fact_sentences_only_polarity': 100.0, 'majority_const_true': 33.33}
+  logic_gate            d0: {'S3_text_match_any_sentence_presence': 66.42, 'S3_text_match_any_sentence_polarity': 100.0, 'S5_text_match_fact_sentences_only_presence': 66.42, 'S5_text_match_fact_sentences_only_polarity': 100.0, 'majority_const_true': 33.33}
+  single-feature gain over majority (pts), placebo_train: {'n_rules': 0.77, 'n_facts': 3.32, 'n_distractors': 3.65, 'chars': -0.18, 'qpred_in_fact': -0.88, 'qpred_mentions': 8.52, 'q_neg': -1.82, 'qent_first_pos': 0.82, 'qent_fact_count': 2.08, 'qpred_is_conclusion': -0.47, 'qpred_is_premise': 4.32, 'ent_pred_stated_any_pol': 33.28, 'pred_pol_stated_any_ent': 23.02}
+  single-feature gain over majority (pts), logic_train:   {'n_rules': -0.48, 'n_facts': -0.62, 'n_distractors': -0.72, 'chars': -0.08, 'qpred_in_fact': 0.07, 'qpred_mentions': 0.58, 'q_neg': 1.32, 'qent_first_pos': 3.85, 'qent_fact_count': 3.38, 'qpred_is_conclusion': -0.47, 'qpred_is_premise': 0.62, 'ent_pred_stated_any_pol': 2.05, 'pred_pol_stated_any_ent': 3.03}

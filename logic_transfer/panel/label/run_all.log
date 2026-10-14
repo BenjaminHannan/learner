@@ -1,0 +1,217 @@
+logic_gate 1608 0.5s
+logic_dev 1200 0.4s
+logic_test_sampler 1600 0.6s
+logic_test_deeper 800 0.3s
+placebo_dev 1200 0.4s
+placebo_test_wording 1200 0.4s
+logic_train 130000 43.9s
+placebo_train 130000 45.1s
+== logic_gate:all n=1608 parsed=1608 (100.000%) fid=1608 ids_match=1608 ans_in_opts=1608 meta=ans:1608 fwd_agree=1608 (100.000%) contra=0 classical_agree=1602 incons=0
+   errors []
+   agree_by_label {'false': (536, 536), 'true': (536, 536), 'unknown': (536, 536)}
+   agree_by_level {'0': (402, 402), '1': (402, 402), '2': (402, 402), '3': (402, 402)}
+   balance {'false': 536, 'true': 536, 'unknown': 536} by level {'0': {'false': 134, 'true': 134, 'unknown': 134}, '1': {'true': 134, 'false': 134, 'unknown': 134}, '2': {'false': 134, 'unknown': 134, 'true': 134}, '3': {'false': 134, 'true': 134, 'unknown': 134}}
+== logic_dev:all n=1200 parsed=1200 (100.000%) fid=1200 ids_match=1200 ans_in_opts=1200 meta=ans:1200 fwd_agree=1200 (100.000%) contra=0 classical_agree=1191 incons=3
+   errors []
+   agree_by_label {'unknown': (400, 400), 'false': (400, 400), 'true': (400, 400)}
+   agree_by_level {'0': (120, 120), '1': (360, 360), '2': (360, 360), '3': (360, 360)}
+   balance {'unknown': 400, 'false': 400, 'true': 400} by level {'0': {'unknown': 40, 'true': 40, 'false': 40}, '1': {'false': 120, 'unknown': 120, 'true': 120}, '2': {'unknown': 120, 'false': 120, 'true': 120}, '3': {'unknown': 120, 'false': 120, 'true': 120}}
+== logic_test_sampler:all n=1600 parsed=1600 (100.000%) fid=1600 ids_match=1600 ans_in_opts=1600 meta=ans:1600 fwd_agree=1600 (100.000%) contra=0 classical_agree=1558 incons=8
+   errors []
+   agree_by_label {'true': (534, 534), 'false': (533, 533), 'unknown': (533, 533)}
+   agree_by_level {'0': (533, 533), '1': (356, 356), '2': (357, 357), '3': (354, 354)}
+   balance {'true': 534, 'false': 533, 'unknown': 533} by level {'0': {'unknown': 533}, '1': {'true': 178, 'false': 178}, '2': {'false': 178, 'true': 179}, '3': {'true': 177, 'false': 177}}
+== logic_test_deeper:all n=800 parsed=800 (100.000%) fid=800 ids_match=800 ans_in_opts=800 meta=ans:800 fwd_agree=800 (100.000%) contra=0 classical_agree=799 incons=0
+   errors []
+   agree_by_label {'true': (267, 267), 'false': (267, 267), 'unknown': (266, 266)}
+   agree_by_level {'4': (400, 400), '5': (400, 400)}
+   balance {'true': 267, 'false': 267, 'unknown': 266} by level {'4': {'false': 134, 'true': 133, 'unknown': 133}, '5': {'true': 134, 'false': 133, 'unknown': 133}}
+== placebo_dev:all n=1200 parsed=1200 (100.000%) fid=1200 ids_match=1200 ans_in_opts=1200 meta=ans:1200 fwd_agree=1200 (100.000%) contra=0 classical_agree=1180 incons=2
+   errors []
+   agree_by_label {'false': (400, 400), 'unknown': (400, 400), 'true': (400, 400)}
+   agree_by_level {'0': (1200, 1200)}
+   balance {'false': 400, 'unknown': 400, 'true': 400} by level {'0': {'false': 400, 'unknown': 400, 'true': 400}}
+== placebo_test_wording:all n=1200 parsed=1200 (100.000%) fid=1200 ids_match=1200 ans_in_opts=1200 meta=ans:1200 fwd_agree=1200 (100.000%) contra=0 classical_agree=1187 incons=3
+   errors []
+   agree_by_label {'unknown': (400, 400), 'true': (400, 400), 'false': (400, 400)}
+   agree_by_level {'0': (1200, 1200)}
+   balance {'unknown': 400, 'true': 400, 'false': 400} by level {'0': {'unknown': 400, 'true': 400, 'false': 400}}
+== logic_train:sample20k n=20000 parsed=20000 (100.000%) fid=20000 ids_match=20000 ans_in_opts=20000 meta=ans:20000 fwd_agree=20000 (100.000%) contra=0 classical_agree=19902 incons=10
+   errors []
+   agree_by_label {'unknown': (6556, 6556), 'false': (6779, 6779), 'true': (6665, 6665)}
+   agree_by_level {'0': (2028, 2028), '1': (6075, 6075), '2': (5935, 5935), '3': (5962, 5962)}
+   balance {'unknown': 6556, 'false': 6779, 'true': 6665} by level {'0': {'unknown': 665, 'false': 661, 'true': 702}, '1': {'unknown': 1989, 'false': 2119, 'true': 1967}, '2': {'false': 1962, 'true': 2046, 'unknown': 1927}, '3': {'unknown': 1975, 'false': 2037, 'true': 1950}}
+== logic_train:full130k n=130000 parsed=130000 (100.000%) fid=130000 ids_match=130000 ans_in_opts=130000 meta=ans:130000 fwd_agree=130000 (100.000%) contra=0 classical_agree=129349 incons=82
+   errors []
+   agree_by_label {'unknown': (43333, 43333), 'false': (43333, 43333), 'true': (43334, 43334)}
+   agree_by_level {'0': (12999, 12999), '1': (39000, 39000), '2': (39000, 39000), '3': (39001, 39001)}
+   balance {'unknown': 43333, 'false': 43333, 'true': 43334} by level {'0': {'unknown': 4333, 'false': 4333, 'true': 4333}, '1': {'unknown': 13000, 'false': 13000, 'true': 13000}, '2': {'unknown': 13000, 'false': 13000, 'true': 13000}, '3': {'false': 13000, 'unknown': 13000, 'true': 13001}}
+== placebo_train:sample20k n=20000 parsed=20000 (100.000%) fid=20000 ids_match=20000 ans_in_opts=20000 meta=ans:20000 fwd_agree=20000 (100.000%) contra=0 classical_agree=19674 incons=33
+   errors []
+   agree_by_label {'unknown': (6708, 6708), 'true': (6717, 6717), 'false': (6575, 6575)}
+   agree_by_level {'0': (20000, 20000)}
+   balance {'unknown': 6708, 'true': 6717, 'false': 6575} by level {'0': {'unknown': 6708, 'true': 6717, 'false': 6575}}
+== placebo_train:full130k n=130000 parsed=130000 (100.000%) fid=130000 ids_match=130000 ans_in_opts=130000 meta=ans:130000 fwd_agree=130000 (100.000%) contra=0 classical_agree=127830 incons=151
+   errors []
+   agree_by_label {'unknown': (43333, 43333), 'false': (43333, 43333), 'true': (43334, 43334)}
+   agree_by_level {'0': (130000, 130000)}
+   balance {'unknown': 43333, 'false': 43333, 'true': 43334} by level {'0': {'unknown': 43333, 'false': 43333, 'true': 43334}}
+logic_gate: N=1608 classical!=gold 6 (0.37%)  gold-unknown but classically entailed 6 (1.12% of unknown rows)  inconsistent KB 0 (0.00%)
+     {('false', 'false'): 536, ('true', 'true'): 536, ('unknown', 'unknown'): 530, ('unknown', 'false'): 3, ('unknown', 'true'): 3}
+     unknown rows classically entailed by level: {0: (0, 134), 1: (0, 134), 2: (3, 134), 3: (3, 134)}
+logic_dev: N=1200 classical!=gold 9 (0.75%)  gold-unknown but classically entailed 6 (1.50% of unknown rows)  inconsistent KB 3 (0.25%)
+     {('unknown', 'unknown'): 394, ('false', 'false'): 399, ('true', 'true'): 398, ('true', 'inconsistent'): 2, ('unknown', 'true'): 3, ('unknown', 'false'): 3, ('false', 'inconsistent'): 1}
+     unknown rows classically entailed by level: {0: (0, 40), 1: (3, 120), 2: (0, 120), 3: (3, 120)}
+logic_test_sampler: N=1600 classical!=gold 42 (2.62%)  gold-unknown but classically entailed 34 (6.38% of unknown rows)  inconsistent KB 8 (0.50%)
+     {('true', 'true'): 532, ('false', 'false'): 531, ('true', 'inconsistent'): 2, ('unknown', 'unknown'): 495, ('unknown', 'true'): 19, ('unknown', 'false'): 15, ('unknown', 'inconsistent'): 4, ('false', 'inconsistent'): 2}
+     unknown rows classically entailed by level: {0: (34, 533)}
+logic_test_deeper: N=800 classical!=gold 1 (0.12%)  gold-unknown but classically entailed 1 (0.38% of unknown rows)  inconsistent KB 0 (0.00%)
+     {('true', 'true'): 267, ('false', 'false'): 267, ('unknown', 'unknown'): 265, ('unknown', 'true'): 1}
+     unknown rows classically entailed by level: {4: (1, 133), 5: (0, 133)}
+placebo_dev: N=1200 classical!=gold 20 (1.67%)  gold-unknown but classically entailed 18 (4.50% of unknown rows)  inconsistent KB 2 (0.17%)
+     {('false', 'false'): 400, ('unknown', 'unknown'): 381, ('true', 'true'): 399, ('unknown', 'true'): 6, ('unknown', 'false'): 12, ('unknown', 'inconsistent'): 1, ('true', 'inconsistent'): 1}
+     unknown rows classically entailed by level: {0: (18, 400)}
+placebo_test_wording: N=1200 classical!=gold 13 (1.08%)  gold-unknown but classically entailed 10 (2.50% of unknown rows)  inconsistent KB 3 (0.25%)
+     {('unknown', 'unknown'): 389, ('true', 'true'): 399, ('false', 'false'): 399, ('unknown', 'inconsistent'): 1, ('unknown', 'false'): 5, ('unknown', 'true'): 5, ('false', 'inconsistent'): 1, ('true', 'inconsistent'): 1}
+     unknown rows classically entailed by level: {0: (10, 400)}
+logic_train: N=20000 classical!=gold 98 (0.49%)  gold-unknown but classically entailed 88 (1.34% of unknown rows)  inconsistent KB 10 (0.05%)
+     {('unknown', 'unknown'): 6466, ('false', 'false'): 6774, ('true', 'true'): 6662, ('unknown', 'false'): 39, ('unknown', 'true'): 49, ('false', 'inconsistent'): 5, ('unknown', 'inconsistent'): 2, ('true', 'inconsistent'): 3}
+     unknown rows classically entailed by level: {0: (0, 665), 1: (29, 1989), 2: (31, 1927), 3: (28, 1975)}
+placebo_train: N=20000 classical!=gold 326 (1.63%)  gold-unknown but classically entailed 293 (4.37% of unknown rows)  inconsistent KB 33 (0.17%)
+     {('unknown', 'unknown'): 6404, ('true', 'true'): 6704, ('false', 'false'): 6566, ('unknown', 'true'): 146, ('false', 'inconsistent'): 9, ('unknown', 'false'): 147, ('true', 'inconsistent'): 13, ('unknown', 'inconsistent'): 11}
+     unknown rows classically entailed by level: {0: (293, 6708)}
+logic_gate: true/false rows 1072: stored level == min proof SIZE 1072; == min proof HEIGHT 1072; size not computed 0
+    unknown rows 536: stored level histogram {0: 134, 1: 134, 2: 134, 3: 134}; meta.depth None: 0
+logic_dev: true/false rows 800: stored level == min proof SIZE 800; == min proof HEIGHT 800; size not computed 0
+    unknown rows 400: stored level histogram {0: 40, 1: 120, 2: 120, 3: 120}; meta.depth None: 0
+logic_test_sampler: true/false rows 1067: stored level == min proof SIZE 1067; == min proof HEIGHT 1055; size not computed 0
+    unknown rows 533: stored level histogram {0: 533}; meta.depth None: 533
+logic_test_deeper: true/false rows 534: stored level == min proof SIZE 534; == min proof HEIGHT 534; size not computed 0
+    unknown rows 266: stored level histogram {4: 133, 5: 133}; meta.depth None: 0
+placebo_dev: true/false rows 800: stored level == min proof SIZE 800; == min proof HEIGHT 800; size not computed 0
+    unknown rows 400: stored level histogram {0: 400}; meta.depth None: 0
+placebo_test_wording: true/false rows 800: stored level == min proof SIZE 800; == min proof HEIGHT 800; size not computed 0
+    unknown rows 400: stored level histogram {0: 400}; meta.depth None: 0
+logic_train: true/false rows 86667: stored level == min proof SIZE 86667; == min proof HEIGHT 86667; size not computed 0
+    unknown rows 43333: stored level histogram {0: 4333, 1: 13000, 2: 13000, 3: 13000}; meta.depth None: 0
+placebo_train: true/false rows 86667: stored level == min proof SIZE 86667; == min proof HEIGHT 86667; size not computed 0
+    unknown rows 43333: stored level histogram {0: 43333}; meta.depth None: 0
+logic_gate             N=  1608 MT=0(0.00%) CLS=6(0.37%) DIST=26(1.62%) DIST2=26(1.62%) PNEG=88(5.47%) ANY_alt_differs=120(7.46%) | hasDISTtpl=164 hasPNEGtpl=175 CLS_incons=0 CLS-differs-but-MT-ok=6
+logic_dev              N=  1200 MT=0(0.00%) CLS=9(0.75%) DIST=37(3.08%) DIST2=58(4.83%) PNEG=121(10.08%) ANY_alt_differs=188(15.67%) | hasDISTtpl=160 hasPNEGtpl=212 CLS_incons=3 CLS-differs-but-MT-ok=9
+logic_test_sampler     N=  1600 MT=14(0.88%) CLS=42(2.62%) DIST=12(0.75%) DIST2=20(1.25%) PNEG=185(11.56%) ANY_alt_differs=241(15.06%) | hasDISTtpl=238 hasPNEGtpl=397 CLS_incons=8 CLS-differs-but-MT-ok=28
+logic_test_deeper      N=   800 MT=0(0.00%) CLS=1(0.12%) DIST=9(1.12%) DIST2=17(2.12%) PNEG=189(23.62%) ANY_alt_differs=207(25.88%) | hasDISTtpl=37 hasPNEGtpl=293 CLS_incons=0 CLS-differs-but-MT-ok=1
+placebo_dev            N=  1200 MT=18(1.50%) CLS=20(1.67%) DIST=2(0.17%) DIST2=3(0.25%) PNEG=0(0.00%) ANY_alt_differs=23(1.92%) | hasDISTtpl=148 hasPNEGtpl=207 CLS_incons=2 CLS-differs-but-MT-ok=2
+placebo_test_wording   N=  1200 MT=11(0.92%) CLS=13(1.08%) DIST=0(0.00%) DIST2=0(0.00%) PNEG=0(0.00%) ANY_alt_differs=13(1.08%) | hasDISTtpl=133 hasPNEGtpl=149 CLS_incons=3 CLS-differs-but-MT-ok=2
+logic_train            N= 20000 MT=0(0.00%) CLS=98(0.49%) DIST=490(2.45%) DIST2=814(4.07%) PNEG=1830(9.15%) ANY_alt_differs=2725(13.62%) | hasDISTtpl=2607 hasPNEGtpl=3567 CLS_incons=10 CLS-differs-but-MT-ok=98
+placebo_train          N= 20000 MT=293(1.47%) CLS=326(1.63%) DIST=22(0.11%) DIST2=44(0.22%) PNEG=0(0.00%) ANY_alt_differs=370(1.85%) | hasDISTtpl=2321 hasPNEGtpl=3500 CLS_incons=33 CLS-differs-but-MT-ok=33
+logic_gate {'n': 1608, 'reader_failed': 0, 'same_as_parser_A': 1608, 'label_agree_via_B': 1608}
+logic_dev {'n': 1200, 'reader_failed': 0, 'same_as_parser_A': 1200, 'label_agree_via_B': 1200}
+logic_test_sampler {'n': 1600, 'reader_failed': 0, 'same_as_parser_A': 1600, 'label_agree_via_B': 1600}
+logic_test_deeper {'n': 800, 'reader_failed': 0, 'same_as_parser_A': 800, 'label_agree_via_B': 800}
+placebo_dev {'n': 1200, 'reader_failed': 0, 'same_as_parser_A': 1200, 'label_agree_via_B': 1200}
+placebo_test_wording {'n': 1200, 'reader_failed': 0, 'same_as_parser_A': 1200, 'label_agree_via_B': 1200}
+logic_train {'n': 20000, 'reader_failed': 0, 'same_as_parser_A': 20000, 'label_agree_via_B': 20000}
+placebo_train {'n': 20000, 'reader_failed': 0, 'same_as_parser_A': 20000, 'label_agree_via_B': 20000}
+logic_train n 130000 exact-dup excess 0 S1-dup excess 3 S2-dup excess 93 S1 groups with >1 label 0 S2 groups with >1 label 0
+placebo_train n 130000 exact-dup excess 0 S1-dup excess 3 S2-dup excess 76 S1 groups with >1 label 0 S2 groups with >1 label 0
+logic_gate             vs logic_train   : exact    0/1608  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 402, 1: 402, 2: 402, 3: 402}
+logic_gate             vs placebo_train : exact    0/1608  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 402, 1: 402, 2: 402, 3: 402}
+logic_dev              vs logic_train   : exact    0/1200  S1    0  S2    1 (train label agrees 1, differs 0)  S2 by level {0: 1} of {0: 120, 1: 360, 2: 360, 3: 360}
+logic_dev              vs placebo_train : exact    0/1200  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 120, 1: 360, 2: 360, 3: 360}
+logic_test_sampler     vs logic_train   : exact    0/1600  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 533, 1: 356, 2: 357, 3: 354}
+logic_test_sampler     vs placebo_train : exact    0/1600  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 533, 1: 356, 2: 357, 3: 354}
+logic_test_deeper      vs logic_train   : exact    0/800  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {4: 400, 5: 400}
+logic_test_deeper      vs placebo_train : exact    0/800  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {4: 400, 5: 400}
+placebo_dev            vs logic_train   : exact    0/1200  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 1200}
+placebo_dev            vs placebo_train : exact    0/1200  S1    0  S2    1 (train label agrees 1, differs 0)  S2 by level {0: 1} of {0: 1200}
+placebo_test_wording   vs logic_train   : exact    0/1200  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 1200}
+placebo_test_wording   vs placebo_train : exact    0/1200  S1    0  S2    0 (train label agrees 0, differs 0)  S2 by level {} of {0: 1200}
+{"logic_train": {"n": 130000, "exact_dup_excess": 0, "S1_dup_excess": 3, "S2_dup_excess": 93, "S1_groups_label_conflict": 0, "S2_groups_label_conflict": 0, "distinct_S1": 129997, "distinct_S2": 129907}, "placebo_train": {"n": 130000, "exact_dup_excess": 0, "S1_dup_excess": 3, "S2_dup_excess": 76, "S1_groups_label_conflict": 0, "S2_groups_label_conflict": 0, "distinct_S1": 129997, "distinct_S2": 129924}}
+{}
+{'logic_gate': {'n': 1608, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}, 'logic_dev': {'n': 1200, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}, 'logic_test_sampler': {'n': 1600, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}, 'logic_test_deeper': {'n': 800, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}, 'placebo_dev': {'n': 1200, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}, 'placebo_test_wording': {'n': 1200, 'internal_exact_dups': 0, 'internal_S1_dups': 0, 'internal_S2_dups': 0}}
+{'exact_body_overlap': 0, 'same_context_text_overlap': 0, 'distinct_contexts_logic': 130000, 'distinct_contexts_placebo': 130000}
+logic_gate {'rows': 1608, 'meta_template_set': {'heldout': 1608}, 'rows_with_any_heldout_template': 1608, 'rows_with_all_templates_heldout': 1608, 'heldout_sentence_share_by_kind': {'R3': 1.0, 'FP': 1.0, 'Q': 1.0, 'R5': 1.0, 'FN': 1.0, 'R2': 1.0, 'R4': 1.0, 'R1': 1.0}}
+logic_dev {'rows': 1200, 'meta_template_set': {'train': 1200}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'R2': 0.0, 'FP': 0.0, 'R1': 0.0, 'R4': 0.0, 'FN': 0.0, 'Q': 0.0, 'R3': 0.0, 'R5': 0.0}}
+logic_test_sampler {'rows': 1600, 'meta_template_set': {'train': 1600}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'FP': 0.0, 'R5': 0.0, 'Q': 0.0, 'R2': 0.0, 'FN': 0.0, 'R4': 0.0, 'R1': 0.0, 'R3': 0.0}}
+logic_test_deeper {'rows': 800, 'meta_template_set': {'train': 800}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'R2': 0.0, 'R1': 0.0, 'R4': 0.0, 'FP': 0.0, 'Q': 0.0, 'FN': 0.0, 'R5': 0.0, 'R3': 0.0}}
+placebo_dev {'rows': 1200, 'meta_template_set': {'train': 1200}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'FP': 0.0, 'R2': 0.0, 'R4': 0.0, 'Q': 0.0, 'R5': 0.0, 'FN': 0.0, 'R1': 0.0, 'R3': 0.0}}
+placebo_test_wording {'rows': 1200, 'meta_template_set': {'heldout': 1200}, 'rows_with_any_heldout_template': 1200, 'rows_with_all_templates_heldout': 1200, 'heldout_sentence_share_by_kind': {'FN': 1.0, 'FP': 1.0, 'R5': 1.0, 'Q': 1.0, 'R4': 1.0, 'R2': 1.0, 'R3': 1.0, 'R1': 1.0}}
+logic_train {'rows': 130000, 'meta_template_set': {'train': 130000}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'R1': 0.0, 'FN': 0.0, 'FP': 0.0, 'Q': 0.0, 'R4': 0.0, 'R3': 0.0, 'R2': 0.0, 'R5': 0.0}}
+placebo_train {'rows': 130000, 'meta_template_set': {'train': 130000}, 'rows_with_any_heldout_template': 0, 'rows_with_all_templates_heldout': 0, 'heldout_sentence_share_by_kind': {'R5': 0.0, 'R1': 0.0, 'FP': 0.0, 'FN': 0.0, 'Q': 0.0, 'R4': 0.0, 'R3': 0.0, 'R2': 0.0}}
+{'R1:11': ['ones'], 'R2:2': ['none'], 'R2:11': ['nothing'], 'R3:5': ['one'], 'R5:2': ['when'], 'R5:5': ['when'], 'R5:8': ['given'], 'FP:2': ['know'], 'FP:5': ['was'], 'FP:8': ['truly'], 'FN:2': ['know'], 'FN:5': ['was'], 'FN:8': ['truly'], 'Q:8': ['so'], 'Q:11': ['decide']}
+held-out templates: 30  with >=1 word absent from every train template: 15
+duplicate masked template strings: []
+logic_gate {"logic_train": {"n": 1608, "same_structure_in_train": 855, "label_present_in_train_group": 855, "by_level": {"0": [246, 402], "1": [208, 402], "2": [180, 402], "3": [221, 402]}}, "placebo_train": {"n": 1608, "same_structure_in_train": 96, "label_present_in_train_group": 96, "by_level": {"0": [89, 402], "1": [5, 402], "2": [2, 402], "3": [0, 402]}}}
+logic_dev {"logic_train": {"n": 1200, "same_structure_in_train": 614, "label_present_in_train_group": 614, "by_level": {"0": [74, 120], "1": [189, 360], "2": [159, 360], "3": [192, 360]}}, "placebo_train": {"n": 1200, "same_structure_in_train": 30, "label_present_in_train_group": 30, "by_level": {"0": [26, 120], "1": [2, 360], "2": [0, 360], "3": [2, 360]}}}
+logic_test_sampler {"logic_train": {"n": 1600, "same_structure_in_train": 1, "label_present_in_train_group": 1, "by_level": {"0": [0, 533], "1": [1, 356], "2": [0, 357], "3": [0, 354]}}, "placebo_train": {"n": 1600, "same_structure_in_train": 0, "label_present_in_train_group": 0, "by_level": {"0": [0, 533], "1": [0, 356], "2": [0, 357], "3": [0, 354]}}}
+logic_test_deeper {"logic_train": {"n": 800, "same_structure_in_train": 0, "label_present_in_train_group": 0, "by_level": {"4": [0, 400], "5": [0, 400]}}, "placebo_train": {"n": 800, "same_structure_in_train": 0, "label_present_in_train_group": 0, "by_level": {"4": [0, 400], "5": [0, 400]}}}
+placebo_dev {"logic_train": {"n": 1200, "same_structure_in_train": 39, "label_present_in_train_group": 39, "by_level": {"0": [39, 1200]}}, "placebo_train": {"n": 1200, "same_structure_in_train": 462, "label_present_in_train_group": 462, "by_level": {"0": [462, 1200]}}}
+placebo_test_wording {"logic_train": {"n": 1200, "same_structure_in_train": 7, "label_present_in_train_group": 7, "by_level": {"0": [7, 1200]}}, "placebo_train": {"n": 1200, "same_structure_in_train": 442, "label_present_in_train_group": 442, "by_level": {"0": [442, 1200]}}}
+logic_gate {"N": 1608, "lookup_only_acc": 0.5, "lookup_by_level": {"0": 1.0, "1": 0.3333333333333333, "2": 0.3333333333333333, "3": 0.3333333333333333}, "label_x_query_neg": {"false|pos": 276, "false|neg": 260, "true|pos": 268, "true|neg": 268, "unknown|pos": 284, "unknown|neg": 252}, "delete_one_sentence_label_changed": {"false": [326, 536], "true": [326, 536], "unknown": [0, 536]}, "shuffled_gold_agreement": 0.3358208955223881, "rows_with_case_split_pair": 14}
+logic_dev {"N": 1200, "lookup_only_acc": 0.4, "lookup_by_level": {"0": 1.0, "1": 0.3333333333333333, "2": 0.3333333333333333, "3": 0.3333333333333333}, "label_x_query_neg": {"false|pos": 217, "false|neg": 183, "true|pos": 216, "true|neg": 184, "unknown|pos": 225, "unknown|neg": 175}, "delete_one_sentence_label_changed": {"unknown": [0, 400], "false": [270, 400], "true": [255, 400]}, "shuffled_gold_agreement": 0.3275, "rows_with_case_split_pair": 24}
+logic_test_sampler {"N": 1600, "lookup_only_acc": 0.333125, "lookup_by_level": {"0": 1.0, "1": 0.0, "2": 0.0, "3": 0.0}, "label_x_query_neg": {"false|pos": 205, "false|neg": 328, "true|pos": 367, "true|neg": 167, "unknown|pos": 259, "unknown|neg": 274}, "delete_one_sentence_label_changed": {"true": [277, 534], "false": [264, 533], "unknown": [0, 533]}, "shuffled_gold_agreement": 0.34375, "rows_with_case_split_pair": 45}
+logic_test_deeper {"N": 800, "lookup_only_acc": 0.3325, "lookup_by_level": {"4": 0.3325, "5": 0.3325}, "label_x_query_neg": {"false|pos": 135, "false|neg": 132, "true|pos": 166, "true|neg": 101, "unknown|pos": 160, "unknown|neg": 106}, "delete_one_sentence_label_changed": {"true": [260, 267], "false": [264, 267], "unknown": [0, 266]}, "shuffled_gold_agreement": 0.36625, "rows_with_case_split_pair": 0}
+placebo_dev {"N": 1200, "lookup_only_acc": 1.0, "lookup_by_level": {"0": 1.0}, "label_x_query_neg": {"false|pos": 192, "false|neg": 208, "true|pos": 183, "true|neg": 217, "unknown|pos": 176, "unknown|neg": 224}, "delete_one_sentence_label_changed": {"false": [82, 400], "unknown": [0, 400], "true": [84, 400]}, "shuffled_gold_agreement": 0.325, "rows_with_case_split_pair": 20}
+placebo_test_wording {"N": 1200, "lookup_only_acc": 1.0, "lookup_by_level": {"0": 1.0}, "label_x_query_neg": {"false|pos": 173, "false|neg": 227, "true|pos": 188, "true|neg": 212, "unknown|pos": 189, "unknown|neg": 211}, "delete_one_sentence_label_changed": {"unknown": [0, 400], "true": [81, 400], "false": [91, 400]}, "shuffled_gold_agreement": 0.33916666666666667, "rows_with_case_split_pair": 17}
+logic_train {"N": 20000, "lookup_only_acc": 0.39595, "lookup_by_level": {"0": 1.0, "1": 0.3274074074074074, "2": 0.32468407750631845, "3": 0.33126467628312645}, "label_x_query_neg": {"false|pos": 3333, "false|neg": 3446, "true|pos": 3673, "true|neg": 2992, "unknown|pos": 3494, "unknown|neg": 3062}, "delete_one_sentence_label_changed": {"unknown": [0, 6556], "false": [4400, 6779], "true": [4311, 6665]}, "shuffled_gold_agreement": 0.3363, "rows_with_case_split_pair": 333}
+placebo_train {"N": 20000, "lookup_only_acc": 1.0, "lookup_by_level": {"0": 1.0}, "label_x_query_neg": {"false|pos": 3238, "false|neg": 3337, "true|pos": 3361, "true|neg": 3356, "unknown|pos": 3446, "unknown|neg": 3262}, "delete_one_sentence_label_changed": {"unknown": [0, 6708], "true": [1369, 6717], "false": [1374, 6575]}, "shuffled_gold_agreement": 0.33755, "rows_with_case_split_pair": 238}
+logic_gate {"N": 1608, "prompt_body_eq_raw_question": 1608, "answer_eq_raw_answer_label": 1608, "program_eq": 1608, "level_eq_depth_or0": 1608, "gold_position_in_options": {"true:0": 192, "true:1": 176, "true:2": 168, "false:0": 173, "false:1": 180, "false:2": 183, "unknown:0": 191, "unknown:1": 174, "unknown:2": 171}, "chi2_df4": 2.06}
+logic_dev {"N": 1200, "prompt_body_eq_raw_question": 1200, "answer_eq_raw_answer_label": 1200, "program_eq": 1200, "level_eq_depth_or0": 1200, "gold_position_in_options": {"true:0": 129, "true:1": 132, "true:2": 139, "false:0": 124, "false:1": 137, "false:2": 139, "unknown:0": 148, "unknown:1": 130, "unknown:2": 122}, "chi2_df4": 4.04}
+logic_test_sampler {"N": 1600, "prompt_body_eq_raw_question": 1600, "answer_eq_raw_answer_label": 1600, "program_eq": 1600, "level_eq_depth_or0": 1600, "gold_position_in_options": {"true:0": 167, "true:1": 182, "true:2": 185, "false:0": 175, "false:1": 169, "false:2": 189, "unknown:0": 153, "unknown:1": 196, "unknown:2": 184}, "chi2_df4": 3.58}
+logic_test_deeper {"N": 800, "prompt_body_eq_raw_question": 800, "answer_eq_raw_answer_label": 800, "program_eq": 800, "level_eq_depth_or0": 800, "gold_position_in_options": {"true:0": 78, "true:1": 94, "true:2": 95, "false:0": 95, "false:1": 85, "false:2": 87, "unknown:0": 81, "unknown:1": 89, "unknown:2": 96}, "chi2_df4": 2.92}
+placebo_dev {"N": 1200, "prompt_body_eq_raw_question": 1200, "answer_eq_raw_answer_label": 1200, "program_eq": 1200, "level_eq_depth_or0": 1200, "gold_position_in_options": {"true:0": 136, "true:1": 124, "true:2": 140, "false:0": 129, "false:1": 127, "false:2": 144, "unknown:0": 124, "unknown:1": 139, "unknown:2": 137}, "chi2_df4": 1.71}
+placebo_test_wording {"N": 1200, "prompt_body_eq_raw_question": 1200, "answer_eq_raw_answer_label": 1200, "program_eq": 1200, "level_eq_depth_or0": 1200, "gold_position_in_options": {"true:0": 130, "true:1": 129, "true:2": 141, "false:0": 132, "false:1": 137, "false:2": 131, "unknown:0": 144, "unknown:1": 140, "unknown:2": 116}, "chi2_df4": 3.77}
+logic_train {"N": 130000, "prompt_body_eq_raw_question": 130000, "answer_eq_raw_answer_label": 130000, "program_eq": 130000, "level_eq_depth_or0": 130000, "gold_position_in_options": {"true:0": 14349, "true:1": 14466, "true:2": 14519, "false:0": 14498, "false:1": 14234, "false:2": 14601, "unknown:0": 14471, "unknown:1": 14484, "unknown:2": 14378}, "chi2_df4": 5.33}
+placebo_train {"N": 130000, "prompt_body_eq_raw_question": 130000, "answer_eq_raw_answer_label": 130000, "program_eq": 130000, "level_eq_depth_or0": 130000, "gold_position_in_options": {"true:0": 14524, "true:1": 14352, "true:2": 14458, "false:0": 14492, "false:1": 14522, "false:2": 14319, "unknown:0": 14455, "unknown:1": 14487, "unknown:2": 14391}, "chi2_df4": 1.95}
+logic_gate {'n_templates_seen': 30, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 140, 'max_rows_per_template': 622, 'q_template_label_max_dev_from_third': 0.027}
+logic_dev {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 39, 'max_rows_per_template': 241, 'q_template_label_max_dev_from_third': 0.067}
+logic_test_sampler {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 48, 'max_rows_per_template': 410, 'q_template_label_max_dev_from_third': 0.04}
+logic_test_deeper {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 3, 'max_rows_per_template': 172, 'q_template_label_max_dev_from_third': 0.103}
+placebo_dev {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 38, 'max_rows_per_template': 284, 'q_template_label_max_dev_from_third': 0.122}
+placebo_test_wording {'n_templates_seen': 30, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 106, 'max_rows_per_template': 575, 'q_template_label_max_dev_from_third': 0.061}
+logic_train {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 644, 'max_rows_per_template': 3835, 'q_template_label_max_dev_from_third': 0.023}
+placebo_train {'n_templates_seen': 72, 'min_agreement_over_templates': 1.0, 'min_rows_per_template': 627, 'max_rows_per_template': 4564, 'q_template_label_max_dev_from_third': 0.02}
+{
+ "label_by_level": {
+  "0": {
+   "unknown": 533
+  },
+  "1": {
+   "true": 178,
+   "false": 178
+  },
+  "2": {
+   "false": 178,
+   "true": 179
+  },
+  "3": {
+   "true": 177,
+   "false": 177
+  }
+ },
+ "pooled_depth2_3_n": 711,
+ "pooled_depth2_3_constant_answer_acc": {
+  "true": 0.5007032348804501,
+  "false": 0.49929676511954996,
+  "unknown": 0.0
+ },
+ "polarity_only_rule": {
+  "rule": {
+   "True": "false",
+   "False": "true"
+  },
+  "acc_all": 0.434375,
+  "acc_pooled_depth2_3": 0.6511954992967651,
+  "pooled_table": {
+   "True": {
+    "false": 216,
+    "true": 109
+   },
+   "False": {
+    "true": 247,
+    "false": 139
+   }
+  }
+ }
+}
+polarity-only accuracy by file: {'logic_gate': 0.3433, 'logic_dev': 0.3408, 'logic_test_sampler': 0.4344, 'logic_test_deeper': 0.3725, 'placebo_dev': 0.3467, 'placebo_test_wording': 0.3467, 'logic_train': 0.3559, 'placebo_train': 0.3401}
