@@ -2152,7 +2152,7 @@ def render_md(res):
                            [(f'old accum {e1["accum_old"]} vs old accum {e1["accum_half"]} (the old path\'s own spread)', f'{sp["min_pos_cos"]:.6f}', f'{sp["positions_below_limit"]}', f'{sp["min_row_mean_cos"]:.6f}', f'{sp["rows_below_limit"]}', f'{sp["max_row_gap"]:.3e}'),
                             (f'eg_once vs old accum {e1["accum_old"]}', f'{g["min_pos_cos"]:.6f}', f'{g["positions_below_limit"]}', f'{g["min_row_mean_cos"]:.6f}', f'{g["rows_below_limit"]}', f'{g["max_row_gap"]:.3e}')])
                 L += [f'rules as registered: (1) every position cos >= {lim["E1_position_cos"]}: {"PASS" if e1["rule1_every_position_cos_ge_0_998"] else "FAIL"}; (2) every row-mean cos >= {lim["E1_row_mean_cos"]}: '
-                      f'{"PASS" if e1["rule2_every_row_mean_cos_ge_0_9995"] else "FAIL"}; (3) eg_once gap <= {lim["E1_x_old_spread"]} x the old spread (ratio {f1(e1["gap_over_spread"], 2)}): '
+                      f'{"PASS" if e1["rule2_every_row_mean_cos_ge_0_9995"] else "FAIL"}; (3) eg_once gap <= {lim["E1_x_old_spread"]} x the old spread (ratio {f1(e1["gap_over_spread"], 2)}) or <= the 1e-4 floor of amendment 1 (gap {e1["once_vs_old"]["max_row_gap"]:.2e}): '
                       f'{"PASS" if e1["rule3_gap_le_1_5x_old_spread"] else "FAIL"}. **E1 overall: {"PASS" if e1["passed"] else "FAIL"}**', '']
             elif e1:
                 L += [f'E1: {e1.get("skipped") or e1.get("error")}', '']

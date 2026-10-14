@@ -43,3 +43,12 @@ For E2-type checks: pass if max abs difference <= 1e-5 x max |H| (about 80 fp32 
 3. E2 is re-run under the new rule on fresh pool rows (not the 64 rows that prompted the change) and must pass there. `prof_train.py` at the next commit prints both wordings and the sha256 of the 64 prompts used; use `--seed 401` and `--seed 402` on the Mac sample so the rows differ from the first run (seed 400).
 4. Adoption of any variant still needs E1 (bf16 on the GPU), the 300-update loss trace (E4) and the speed on the PC's own card. E1, E3, E4 are unchanged.
 eg_once is the only candidate. `sortpad` and `bigmb` change per-token weights on the plain arms (loss rel 2.3e-3, gradient cosine 0.95), so they stay off PTS, PTC, g2c10s and anything compared with them unless the old weights are restored (`oldw`).
+
+## Result log 2: E2 on fresh rows (Mac CPU fp32, real Gemma, PTS 3M accum 16; harness bbaa4a9a16, prof_train.py sha256 91041f40...; 10-13 11:41 to 11:45 PM ET)
+Rows: 64 each, from a 20,049-row sample of the -L pool; prompt hashes differ (seed 401: ccb8ba1e22ae..., seed 402: f0fd2653c1b2...); seed 400's hash was not recorded in the first run.
+| seed | max abs diff | max abs value | diff / max | registered wording (abs 1e-4) | revised rule (1e-5 x max) | E1 | E3 eg_once |
+|---|---|---|---|---|---|---|---|
+| 400 (first run, the 64 rows that prompted the change) | 1.389e-03 | 588.1 | 2.4e-6 | FAIL | would pass (post hoc, not counted) | PASS | PASS |
+| 401 (fresh) | 0 (identical) | 854.3 | 0 | PASS | PASS | PASS | PASS |
+| 402 (fresh) | 2.154e-03 | 564.2 | 3.8e-6 | FAIL | PASS | PASS | PASS |
+Condition 3 of big-run (E2 must pass under the revised rule on fresh rows) is met on both fresh seeds. The registered wording fails on one of the two (1 of 3 runs identical, 2 of 3 differ at the 1e-6 relative level), which fits fp32 rounding that depends on how the rows are batched (suggested). E1 rule 3 passes on seeds 401 and 402 through the 1e-4 floor (amendment 1): ratios 6.6 and 3.1 against the old spread (the spread is ~3e-12 and the gap 1e-11 to 2e-11, both far below 1e-4); the harness md now prints the floor beside the ratio. Nothing here is a GPU number; adoption still needs bf16 E1, the 300-update trace E4 and the speed on the PC's own card.
