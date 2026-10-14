@@ -1,4 +1,4 @@
-# A24 (6:25 PM ET 10-14): SQ, can a search through copies of the game supply practice labels without the hand-written labeller? (marks fixed before any number)
+# A24 (6:16 PM ET 10-14): SQ, can a search through copies of the game supply practice labels without the hand-written labeller? (marks fixed before any number)
 
 Written after GW-L (A22/A23) and before any search code ran on a state. Context (all **shown**, A23): the 3M model with the rank-8 add-on learns a map-to-move rule from
 64,000 labelled views (held-out S accuracy 62.4% / 64.8% against 27.2% for the best fixed word; sealed 6.50 / 7.10 unlocks against GW-P8 After 4.15 / 4.19), but every label came
