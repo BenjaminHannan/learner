@@ -114,14 +114,14 @@ while true; do
     if [ "$s" != "$last" ]; then
       last=$s
       grep -q '^STOP' $G && { say "LT2 STOP"; break; }
-      RUNGS=$(grep -m1 -oE '^RUNGS=.*' $G | cut -d= -f2-); PROCS=$(grep -m1 -oE '^PROCS=[0-9]+' $G | cut -d= -f2); UPDATES=$(grep -m1 -oE '^UPDATES=[0-9]+' $G | cut -d= -f2); MIXFRAC=$(grep -m1 -oE '^MIXFRAC=[0-9.]+' $G | cut -d= -f2)
-      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000} MIXFRAC=${MIXFRAC:-0.25} code=$(git -C mine rev-parse --short HEAD)"
+      RUNGS=$(grep -m1 -oE '^RUNGS=.*' $G | cut -d= -f2-); PROCS=$(grep -m1 -oE '^PROCS=[0-9]+' $G | cut -d= -f2); UPDATES=$(grep -m1 -oE '^UPDATES=[0-9]+' $G | cut -d= -f2); MIXFRAC=$(grep -m1 -oE '^MIXFRAC=[0-9.]+' $G | cut -d= -f2); LR=$(grep -m1 -oE '^LR=[0-9.e-]+' $G | cut -d= -f2)
+      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000} MIXFRAC=${MIXFRAC:-0.25} LR=${LR:-1e-4} code=$(git -C mine rev-parse --short HEAD)"
       do_rung() {
         r=$1
         say "RUNG $r START code=$(git -C mine rev-parse --short HEAD)"
         for k in $(seq 1 540); do [ -f $J/w/ladder/rows/rung$r/summary.json ] && break; grep -q Traceback $J/out/build-rung$r.log 2>/dev/null && break; sleep 20; done
         [ -f $J/w/ladder/rows/rung$r/summary.json ] || { say "RUNG $r rows missing"; tail -5 $J/out/build-rung$r.log; return; }
-        (cd mine && $LT run --rung $r --work $J/w/ladder --parents-dir $PD --sk200k $J/data --device cuda --procs ${PROCS:-6} --threads 1 --updates ${UPDATES:-8000} --mix-frac ${MIXFRAC:-0.25} \
+        (cd mine && $LT run --rung $r --work $J/w/ladder --parents-dir $PD --sk200k $J/data --device cuda --procs ${PROCS:-6} --threads 1 --updates ${UPDATES:-8000} --mix-frac ${MIXFRAC:-0.25} --lr ${LR:-1e-4} \
            --eval-n 0 > $J/out/rung$r-run.log 2>&1); echo "rung $r run rc=$?"; tail -4 $J/out/rung$r-run.log
         (cd mine && timeout 1500 $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log
         (cd mine && timeout 1500 $LT report --work $J/w/ladder --rung $r > $J/w/ladder/rung$r/report.json 2>$J/out/rung$r-report.err)
