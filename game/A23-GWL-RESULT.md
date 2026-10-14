@@ -73,3 +73,31 @@ views as the 16k runs (kept as is; the new train set drops any view that is in i
 - Suggested, untested: size is not the limit at 3M for these basics; the limit is how the model finds good labels by itself. Candidate label sources that need no hand-written
   labeller (all untested): hindsight labels from the model's own unlocks with a longer or smarter window than the 8-move rule of GW-S; search with the game as a tool (copy the world,
   look ahead, label the first move of the best path, then distil: expert iteration); a learned value used to relabel.
+
+## L-3: the label-cost curve, N = 1,000 / 4,000 / 16,000 / 64,000 (11:05 AM ET 10-14; same constants, same 2,000 held-out views, nothing tuned)
+Epochs were the fixed A22 numbers (40 / 20 / 10 / 10), so the update counts were 160 / 320 / 630 / 2,500: **label count and update count are confounded**
+(more labels means more updates here); this curve says how the fixed recipe scales, not what the labels alone are worth. All **shown**. S = the 1,491
+map-dependent held-out views; always `do` = 27.2%. "vs After" = paired 95% interval of sealed unlocks minus GW-P8 After (4.15 / 4.19).
+| labelled views | seed | training accuracy, last epoch | S accuracy | L-1 gap | sealed unlocks (sampled, T = 1) | minus GW-P8 After |
+|---|---|---|---|---|---|---|
+| 1,000 | 200 | 0.66 | 25.8% | -1.4 | 4.18 | +0.03 (-0.40 to +0.45) |
+| 1,000 | 201 | 0.59 | 24.5% | -2.7 | 3.50 | -0.69 (-1.02 to -0.35) |
+| 4,000 | 200 | 0.52 | 27.7% | +0.5 | 4.42 | +0.27 (-0.14 to +0.71) |
+| 4,000 | 201 | 0.46 | 31.3% | +4.2 | 3.47 | -0.72 (-1.09 to -0.34) |
+| 16,000 | 200 | 0.56 | 41.9% | +14.8 | 4.88 | +0.73 (+0.28 to +1.17) |
+| 16,000 | 201 | 0.54 | 45.4% | +18.3 | 4.62 | +0.43 (+0.04 to +0.82) |
+| 64,000 | 200 | 0.71 | 62.4% | +35.3 | 6.50 | +2.35 (+1.87 to +2.79) |
+| 64,000 | 201 | queued (running) | | | | |
+
+- Shown: with 1,000 labels the student memorises its labelled views (training accuracy 0.59 to 0.66) and reads the map no better than the fixed word (S 24.5 to 25.8%,
+  below 27.2%); sealed play is at the reward-trained level (3.5 / 4.18, parent T0 about 3.6-3.8) or below it. At 4,000 labels held-out S accuracy is still within
+  +0.5 to +4.2 points of the fixed word (L-1 would read "proved wrong" for 4k: < +5 on both seeds). The map-reading gain appears between 4,000 and 16,000 labelled views
+  and keeps rising to 64,000 (seed 200). L-3 (smallest N where +20 holds) is therefore **somewhere in 16,000 to 64,000 on seed 200 only**; 64,000 is the only size tested above
+  +20, and no size between 16,000 and 64,000 was run.
+- Shown: with 1,000 and 4,000 labels the sealed score is not above the reward-trained runs on either seed (the 4k seed 200 interval includes 0), so with this recipe a few thousand
+  labels do not beat the sparse reward, and tens of thousands do. (Suggested, untested: a label budget a person could write by hand would not be enough for this recipe.)
+- Suggested, untested: the 1k and 4k runs are short (160 and 320 updates) and the first epochs show an unstable loss (loss 45 to 3 in the first ten epochs of 1k), so some of the
+  4k/1k deficit is the fixed recipe (lr 1e-3, no warm-up) and the small step count, not the label count. A run at 4,000 labels with the 16k run's update count would separate the two
+  (not scheduled; it would be a new design, with marks fixed first).
+- Not shown: why the 1,000-label student ends below the fixed word on S (memorisation of 1,000 views is the obvious reading; the per-word table shows `do` 47% on seed 200 against 33% on seed 201,
+  so the two seeds fall into different habits).
