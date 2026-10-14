@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """A stand-in for custom_io.local_runner + g8a.job + train.py, for test_supervisor.py only (Linux, no GPU).
 
-fake_runner.py --work W --queue Q.txt-path --job J --arm B3G2 --steps N --step-s 0.02 --ckpt-every 100 [--crash-at K] [--nan-at K] [--offset X] [--seg2-offset X]
+fake_runner.py --work W --queue Q.txt-path --job J --arm B3G2 --steps N --step-s 0.02 --ckpt-every 100 [--crash-at K] [--nan-at K] [--offset X] [--seg2-offset X] [--jitter X] [--force-resume-step K]
 The "runner" starts one child ("train", same command line + --child) in its own process group and, like g8a.job --local, writes the job-level RESULT.json
 (status ok / arm_failed) when the child ends; the child writes OUT/events.jsonl like train.py does with --ckpt-every / --resume (events: segment, resumed, train),
 OUT/ckpt/step-<k>.pt/.json, and OUT/RESULT.json at the end. The loss is a deterministic function of the update, so a resume reproduces it exactly."""
-import argparse, json, math, os, subprocess, sys, time
+import argparse, json, math, os, subprocess, sys, time, zlib
 from pathlib import Path
 
 
-def loss_at(step, offset, seg_offset, seg):
+def loss_at(step, offset, seg_offset, seg, jitter=0.0, job=''):
     base = 6.0 * math.exp(-step / 150.0) + 1.0 + 0.04 * (((step * 7919) % 13) - 6) / 6.0
-    return base + offset + (seg_offset if seg >= 2 else 0.0)
+    noise = jitter * ((zlib.crc32(f'{job}:{step}'.encode()) % 2001) - 1000) / 1000.0          # +-jitter, different for every job name (two resumes of one checkpoint)
+    return base + offset + (seg_offset if seg >= 2 else 0.0) + noise
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
     ap.add_argument('--work'); ap.add_argument('--queue'); ap.add_argument('--job'); ap.add_argument('--arm', default='B3G2')
     ap.add_argument('--steps', type=int, default=900); ap.add_argument('--step-s', type=float, default=0.02); ap.add_argument('--ckpt-every', type=int, default=100)
     ap.add_argument('--crash-at', type=int, default=0); ap.add_argument('--crash-always', action='store_true')
-    ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0)
+    ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0); ap.add_argument('--jitter', type=float, default=0.0); ap.add_argument('--force-resume-step', type=int, default=0)
     ap.add_argument('--child', action='store_true'); ap.add_argument('--busy', default='')
     ap.add_argument('--device', default='cuda'); ap.add_argument('--hang-at', type=int, default=0); ap.add_argument('--die-after-resume-once', action='store_true')
     a = ap.parse_args()
@@ -60,7 +61,7 @@ def main():
     jp(event='start', device=a.device)
     step, t0 = 0, time.time()
     if side:
-        step = int(side[-1].stem.split('-')[1])
+        step = a.force_resume_step or int(side[-1].stem.split('-')[1])
         jp(event='resumed', step=step, msg=f'RESUMED step={step}')
     el = 0.0
     while step < a.steps:
@@ -73,7 +74,7 @@ def main():
         if a.crash_at and step == a.crash_at and (a.crash_always or not (arm / 'crashed.flag').exists()):
             (arm / 'crashed.flag').write_text('x')
             sys.exit(1)
-        loss = float('nan') if (a.nan_at and step == a.nan_at) else loss_at(step, a.offset, a.seg2_offset, seg)
+        loss = float('nan') if (a.nan_at and step == a.nan_at) else loss_at(step, a.offset, a.seg2_offset, seg, a.jitter, a.job)
         jp(event='train', step=step, loss=round(loss, 5), lr=1e-3, elapsed=round(el, 3))
         if not math.isfinite(loss):
             json.dump(dict(status='nonfinite_loss', steps=step), open(arm / 'RESULT.json', 'w'))

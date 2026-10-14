@@ -42,6 +42,12 @@ Owner: Whole-model roadmap thread. Written 10-14 (ET). Nothing here starts a tra
 4. After trace A, if 4,000 MiB are free: the **accum-32 baseline** starts alongside (about 60-80 min; the main run slows a little while it shares the card), is stopped at update 300, and the compare is written (`COMPARE-g2fa4.md`).
 5. The run goes on to update 24,000 and its final evaluation (RESULT.json), restarting itself after any death; `DONE-g2fa4.txt` marks the end. `status.md` is the one-screen state: speed, ETA, restarts, GPU peak, both verdicts.
 
+## After the run: the resume-noise probe
+Registered in TRACE-A-READING-2026-10-14.md ("How the run will be judged", item 2). It resumes the kept step-200 checkpoint twice (R1, R2) for updates 201-250 and compares both with the run's own logged updates (C): n = largest |R1 - R2| (the card's own noise), d = largest |R - C|; **PASS if d <= max(0.10, 3n)**.
+`python g2fa4_supervisor.py --plan plan.json probe-resume --keep C:\Users\benja\custom-io\work\g2fa4\ckpt-keep --step 200 --upto 250 [--job g2fa4]`
+Needs: `step-200.pt` and `step-200.json` in `--keep` (copied, never moved or deleted); the main run finished (`ALL-DONE.txt`) or halted (`ARMED.txt` gone); an idle card (nvidia-smi readable, free MiB at least `gpu.need_free_mib`, no runner of the plan); the main run's `events.jsonl` holding updates 201-250. It refuses with a message (exit 2) otherwise.
+It writes the queues `<queue>n1` / `n2` (the main queue file with only the job name changed), puts a copy of the checkpoint in each probe's `ckpt\`, runs each until update 250 (30 min limit, no retry), kills it like any job, and writes `PROBE-RESUME-<job>.json` and `.md` (plain words first, then the per-update table) into the state dir. Exit 0 = PASS, 1 = FAIL. Never touches the main run's files or the Qwen server. Tested on Linux with a fake runner (`tests/test_probe.py`); **Windows behaviour untested**.
+
 ## What it never does
 Delete anything (replaced files are renamed `.aside-<stamp>`); touch the Qwen server or any process that is not a `custom_io` job of its plan; edit code, caps, data, marks or the registered G2f line; start without `ARMED.txt`; restart forever (three restarts in a row with no new update stops it, so does a `--resume refused`, an out-of-order status, a train.py that ended with a status other than ok, a run on another device than `cuda`, or no trace-A verdict by update 100 past the reading point); stop a running job except for the planned kill and a failed trace A.
 

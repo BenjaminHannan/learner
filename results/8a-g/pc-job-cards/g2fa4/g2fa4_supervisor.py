@@ -9,6 +9,7 @@
   python g2fa4_supervisor.py arm "<Ben's go line, with its time>"   writes ARMED.txt; `run` does nothing until it exists (the boot task starts `run` after every restart)
   python g2fa4_supervisor.py disarm      renames ARMED.txt: the loop leaves; a running job goes on
   python g2fa4_supervisor.py halt        disarm + stop the plan's runners (their checkpoints stay): only on Ben's word
+  python g2fa4_supervisor.py probe-resume --keep DIR --step 200 --upto 250   after the run: resume the kept checkpoint twice on the idle card, compare with the run's own updates
   python g2fa4_supervisor.py selftest    CUDA check in this very context (the boot task runs as SYSTEM): writes selftest.txt
 
 It starts nothing by itself: `run` does nothing until ARMED.txt exists, which the Mac helper writes (`arm`) on Ben's go line; after that the boot task
@@ -305,6 +306,17 @@ def compare(ea, eb, rules):
     r['verdict'] = 'FAIL' if (f1 or f2) else 'PASS' if (p1 and p2) else 'UNCLEAR'
     r['read_as'] = 'GO' if r['verdict'] in ('PASS', 'UNCLEAR') else 'NO-GO: fall back to accum 8, then 32 (big-run)'
     return r
+
+
+def resume_probe_verdict(C, R1, R2):
+    """The registered resume-noise rule (TRACE-A-READING item 2): C = the run's continuous updates, R1 / R2 = two resumes of the same checkpoint (equal-length lists).
+    n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise."""
+    assert len(C) == len(R1) == len(R2) and C, 'the three loss lists must have the same non-zero length'
+    d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
+    n, d = max(d12), max(d1 + d2)
+    lim = max(0.10, 3 * n)
+    return dict(n=n, d=d, limit=lim, verdict='PASS' if d <= lim else 'FAIL', mean_abs_r1_r2=mean(d12), mean_abs_r1_c=mean(d1), mean_abs_r2_c=mean(d2),
+                diff_r1_r2=d12, diff_r1_c=d1, diff_r2_c=d2)
 
 
 # ---------------------------------------------------------------- the supervisor
@@ -681,6 +693,45 @@ class Sup:
             self.log('baseline runner is gone before update %d: restarting it (resume)' % up)
             self.start(job, base=True)
 
+    # ---- the resume-noise probe (after the run: two resumes of the kept checkpoint on the idle card)
+    def probe_job(self, job, tag):
+        """the plan job under probe names: the first '-' of queue and job name gets the tag (8aB3G2A4-pc -> 8aB3G2A4n1-pc); never has a baseline."""
+        nm = lambda x: x.replace('-', tag + '-', 1) if '-' in x else x + tag
+        rc = job.get('runner_cmd')
+        return dict(job, id=job['id'] + tag, queue=nm(job['queue']), job=nm(job['job']), baseline=None,
+                    runner_cmd=[c.replace(job['job'], nm(job['job'])) for c in rc] if rc else None)
+
+    def probe_run(self, job, pj, keep, step, upto):
+        """one probe: queue copy with only the job name changed, a copy of the kept checkpoint, run until update `upto`, kill. -> (Events of the probe, why-not or None)."""
+        qd = Path(job['src']) / 'custom_io' / 'queue_local'
+        lines = (qd / (job['queue'] + '.txt')).read_text(encoding='utf-8').splitlines(True)
+        new = [ln.replace(job['job'], pj['job']) if ln.startswith('g8a:') else ln for ln in lines]
+        if new == lines:
+            return None, f'job name {job["job"]} not found on a g8a: line of {job["queue"]}.txt'
+        aside(qd / (pj['queue'] + '.txt'))
+        (qd / (pj['queue'] + '.txt')).write_text(''.join(new), encoding='utf-8')
+        aside(self.out_dir(pj))                                              # an earlier probe's folder moves aside
+        ck = self.arm_dir(pj) / 'ckpt'
+        ck.mkdir(parents=True)
+        for ext in ('pt', 'json'):
+            shutil.copy2(keep / f'step-{step}.{ext}', ck / f'step-{step}.{ext}')
+        self.start(pj)
+        ev, t0, why = Events(self.arm_dir(pj) / 'events.jsonl'), time.time(), None
+        while True:
+            time.sleep(self.plan.get('poll_s', 15))
+            ev.update()
+            if ev.last_step >= upto or ev.nonfinite:
+                break
+            if not self.find(pj.get('runner_match', 'local_runner'), pj['queue']):
+                why = f'the probe runner died at update {ev.last_step}'
+                break
+            if time.time() - t0 > self.plan.get('probe_limit_s', 1800):
+                why = f'30 min limit: only update {ev.last_step} of {upto}'
+                break
+        if not self.kill_job(pj, why=why or f'probe reached update {ev.last_step}'):
+            why = (why or '') + ' (KILL FAILED: look at the processes before anything else)'
+        return ev.update(), why
+
     # ---- reports
     @staticmethod
     def md_trace_a(job, r):
@@ -696,6 +747,24 @@ class Sup:
         for k in ('diff_of_means', 'last_n_diff', 'report_beside', 'read_as', 'why'):
             if k in r:
                 L.append(f'- {k}: {json.dumps(r[k])}')
+        return '\n'.join(L) + '\n'
+
+    @staticmethod
+    def md_probe(r):
+        f = lambda x: f'{x:.4f}'
+        L = [f'# Resume-noise probe for {r["job"]}: {r["verdict"]}', '',
+             f'In plain words: the training run was restarted twice, on purpose, from the same saved copy (update {r["step"]}) on an idle card, and each restart redid updates {r["step"] + 1} to {r["upto"]}. '
+             "We compare the two restarts with each other (that gap, n, is the card's own run-to-run noise) and each with what the real run logged (gap d). "
+             'If the restarts differ from the real run by no more than the larger of 0.10 and 3 times the noise, the restart is as good as never stopping (PASS); '
+             'if more, the restored state is wrong somewhere and the run is not read (FAIL).', '']
+        if r['why_fail']:
+            L += ['Problems: ' + '; '.join(r['why_fail']), '']
+        if 'n' in r:
+            L += [f'- n = largest |R1 - R2| = {r["n"]:.4f}; d = largest |R - C| = {r["d"]:.4f}; limit max(0.10, 3n) = {r["limit"]:.4f}',
+                  f'- mean abs difference: R1-R2 {r["mean_abs_r1_r2"]:.4f}, R1-C {r["mean_abs_r1_c"]:.4f}, R2-C {r["mean_abs_r2_c"]:.4f}', '',
+                  '| update | C (run) | R1 | R2 | abs R1-R2 | abs R1-C | abs R2-C |', '|---|---|---|---|---|---|---|']
+            for i, s in enumerate(r['steps']):
+                L.append(f'| {s} | {f(r["C"][i])} | {f(r["R1"][i])} | {f(r["R2"][i])} | {f(r["diff_r1_r2"][i])} | {f(r["diff_r1_c"][i])} | {f(r["diff_r2_c"][i])} |')
         return '\n'.join(L) + '\n'
 
 
@@ -804,6 +873,68 @@ def halt(a):
     return 0
 
 
+def first_per_step(train, lo, hi):
+    """step -> loss of the first logged line per step in lo..hi."""
+    d = {}
+    for e in train:
+        if lo <= e['step'] <= hi:
+            d.setdefault(e['step'], e['loss'])
+    return d
+
+
+def probe_resume(a):
+    """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused."""
+    sup = Sup(a.plan)
+    job = next((j for j in sup.plan['jobs'] if a.job in (None, j['id'])), None)
+    if job is None:
+        print(f'refused: no job {a.job} in the plan')
+        return 2
+    keep, step, upto = Path(a.keep), a.step, a.upto
+    steps = list(range(step + 1, upto + 1))
+    if not (sup.sd / 'ALL-DONE.txt').exists() and (sup.sd / 'ARMED.txt').exists():
+        print('refused: the supervised run is armed and not finished (ALL-DONE.txt missing): halt it first, or wait; the probe never competes with it')
+        return 2
+    g, need = gpu_mem(), sup.plan['gpu']['need_free_mib']
+    if not g or g[1] - g[0] < need:
+        print(f'refused: the card is not idle ({"no GPU reading" if not g else f"{g[1] - g[0]} MiB free, need {need}"})')
+        return 2
+    sup.procs(True)
+    qs = [(j, q) for j in sup.plan['jobs'] for q in [j['queue']] + ([j['baseline']['queue']] if j.get('baseline') else [])]
+    busy = [(q, pid) for j, q in qs for pid in sup.find(j.get('runner_match', 'local_runner'), q)]
+    if busy:
+        print(f'refused: a runner of the plan is running: {busy}')
+        return 2
+    miss = [f'step-{step}.{x}' for x in ('pt', 'json') if not (keep / f'step-{step}.{x}').exists()]
+    C = first_per_step(sup.events(job).train, step + 1, upto)
+    if miss or any(s not in C for s in steps):
+        print(f'refused: missing {miss or "logged updates %d..%d of the main run in %s" % (step + 1, upto, sup.arm_dir(job) / "events.jsonl")}')
+        return 2
+    R, why = {}, []
+    for tag in ('n1', 'n2'):
+        pj = sup.probe_job(job, tag)
+        sup.log(f'PROBE {tag}: {pj["queue"]} / {pj["job"]} from {keep} step-{step}')
+        ev, bad = sup.probe_run(job, pj, keep, step, upto)
+        if bad:
+            why.append(f'{tag}: {bad}')
+        if ev is None:
+            continue
+        rs = next((s for _, s in ev.resumed), None)
+        if rs != step:
+            why.append(f'{tag}: resumed at {rs}, not {step}')
+            continue
+        R[tag] = first_per_step([e for e in ev.train if e['seg'] >= ev.resumed[0][0]], step + 1, upto)
+        if any(s not in R[tag] for s in steps):
+            why.append(f'{tag}: updates missing (first {[s for s in steps if s not in R[tag]][:5]})')
+    r = dict(job=job['id'], step=step, upto=upto, keep=str(keep), why_fail=why, verdict='FAIL')
+    if not why:
+        r.update(resume_probe_verdict([C[s] for s in steps], [R['n1'][s] for s in steps], [R['n2'][s] for s in steps]))
+        r.update(steps=steps, C=[C[s] for s in steps], R1=[R['n1'][s] for s in steps], R2=[R['n2'][s] for s in steps])
+    jdump(sup.sd / f'PROBE-RESUME-{job["id"]}.json', r)
+    (sup.sd / f'PROBE-RESUME-{job["id"]}.md').write_text(Sup.md_probe(r), encoding='utf-8')
+    sup.log(f'PROBE RESUME: {r["verdict"]} n={r.get("n")} d={r.get("d")} limit={r.get("limit")} {why or ""}')
+    return 0 if r['verdict'] == 'PASS' else 1
+
+
 def selftest(a):
     """CUDA in the context this process runs in (the boot task runs as SYSTEM): imports torch with the queue's PYTHONPATH and touches the GPU."""
     sup = Sup(a.plan)
@@ -839,11 +970,18 @@ def main(argv=None):
     ar.add_argument('text')
     for c in ('disarm', 'halt', 'selftest'):
         sp.add_parser(c)
+    pr = sp.add_parser('probe-resume')
+    pr.add_argument('--keep', required=True)
+    pr.add_argument('--step', type=int, required=True)
+    pr.add_argument('--upto', type=int, required=True)
+    pr.add_argument('--job')
     a = ap.parse_args(argv)
     if a.cmd == 'run':
         return run_loop(a)
     if a.cmd == 'preflight':
         return preflight(a)
+    if a.cmd == 'probe-resume':
+        return probe_resume(a)
     if a.cmd in ('clear', 'arm', 'disarm', 'halt', 'selftest'):
         return globals()[a.cmd](a)
     print((Sup(a.plan).sd / 'status.md').read_text(encoding='utf-8'))

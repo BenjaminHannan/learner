@@ -345,6 +345,9 @@ if __name__ == '__main__':
                     t()
                 finally:
                     cleanup()
+        if not only:
+            r = subprocess.run([PY, str(HERE / 'test_probe.py')])           # the resume-noise probe has its own file
+            assert r.returncode == 0, 'tests/test_probe.py failed'
         print('ALL OK')
     finally:
         cleanup()
