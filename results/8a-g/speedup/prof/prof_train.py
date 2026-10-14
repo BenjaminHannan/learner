@@ -1741,7 +1741,8 @@ def grad_compare(gb, gv):
 # Fixed tolerances, PREREG-eg-once.md (written before any GPU number; never changed after seeing numbers)
 E1_POS_COS, E1_ROW_COS, E1_SPREAD_X = 0.998, 0.9995, 1.5       # E1: bf16 on the GPU, per valid char position / per-row mean / x the old path's own spread
 E1_GAP_FLOOR = 1e-4                                            # E1 rule 3 floor (PREREG amendment, before any GPU number): a largest row gap (1 - mean cos) <= 1e-4 passes rule 3 whatever the old spread
-E2_MAX_ABS = 1e-4                                              # E2: fp32 on CPU, 64 rows, max abs difference of H
+E2_MAX_ABS = 1e-4                                              # E2: fp32 on CPU, 64 rows, max abs difference of H (registered wording; FAILED on the Mac 10-13)
+E2_REL = 1e-5                                                  # E2 revised after seeing the CPU result (PREREG amendment 2, accepted by big-run 10-14 with 4 conditions): max abs diff <= E2_REL x max |H|; counts only on rows other than the 64 that prompted it
 E3_LOSS_REL, E3_GRAD_COS = 1e-5, 0.99999                       # E3: fp32 on CPU, one update
 E4_MEAN_ABS, E4_MEAN_DIFF, E4_LO, E4_HI = 0.02, 0.01, 100, 300   # E4: mean |dloss| and |difference of means| over updates 101..300
 
@@ -1776,7 +1777,9 @@ def e2_metrics(old, once):
     d = (old.double() - once.double()).abs()
     m = float(d.max()) if d.numel() else 0.0
     out = dict(max_abs_diff=m, limit=E2_MAX_ABS, passed=bool(m <= E2_MAX_ABS), n_values=int(d.numel()))
-    if d.numel():        # scale diagnostics only (NOT pass marks): is 1e-4 absolute small or large against the values themselves?
+    if d.numel():
+        out.update(limit_relative=E2_REL, passed_relative=bool(m <= E2_REL * float(old.double().abs().max())))
+        # the fields below are scale diagnostics only (not pass marks): how big is the difference against the values themselves?
         a = old.double().abs().reshape(-1)
         mx, i = float(a.max()), int(d.reshape(-1).argmax())
         sub = a[::max(1, a.numel() // 4_000_000)]
@@ -1864,8 +1867,9 @@ def run_e2(world, args, batch):
     old = states_old(eg, prompts, mask, T, dev, cuts)
     once, st = states_once(eg, prompts, mask, T, dev, cuts, args.eg_once_budget)
     out = e2_metrics(old, once)
-    out.update(rows=len(rows), micro_batch_rows=per, dtype=str(old.dtype), setting=setting, eg_once_stats=st, registered_setting=bool(world.eg_mode == 'real' and old.dtype == torch.float32))
-    log(f'E2 ({setting}): max abs diff {out["max_abs_diff"]:.3e} (limit {E2_MAX_ABS:g}) -> {"PASS" if out["passed"] else "FAIL"}')
+    import hashlib
+    out.update(rows_prompts_sha256=hashlib.sha256('\n'.join(prompts).encode('utf-8', 'replace')).hexdigest(), seed=args.seed, rows=len(rows), micro_batch_rows=per, dtype=str(old.dtype), setting=setting, eg_once_stats=st, registered_setting=bool(world.eg_mode == 'real' and old.dtype == torch.float32))
+    log(f'E2 ({setting}): max abs diff {out["max_abs_diff"]:.3e} (registered limit {E2_MAX_ABS:g}) -> {"PASS" if out["passed"] else "FAIL"}; revised relative rule ({E2_REL:g} x max |H|) -> {"PASS" if out.get("passed_relative") else "FAIL"} (seed {args.seed})')
     return out
 
 
@@ -2153,7 +2157,9 @@ def render_md(res):
             elif e1:
                 L += [f'E1: {e1.get("skipped") or e1.get("error")}', '']
             if e2 and 'max_abs_diff' in e2:
-                L += [f'### E2: eg_once vs the old path, {e2["rows"]} rows, {e2["setting"]} (registered setting met: {e2["registered_setting"]}): max abs diff of H {e2["max_abs_diff"]:.3e} (limit {e2["limit"]:g}). **E2: {"PASS" if e2["passed"] else "FAIL"}**', '']
+                L += [f'### E2: eg_once vs the old path, {e2["rows"]} rows, {e2["setting"]} (registered setting met: {e2["registered_setting"]}): max abs diff of H {e2["max_abs_diff"]:.3e} (limit {e2["limit"]:g}). **E2 (registered wording, abs 1e-4): {"PASS" if e2["passed"] else "FAIL"}**', '']
+                if 'passed_relative' in e2:
+                    L += [f'E2 revised after seeing the CPU result (max abs diff <= {e2["limit_relative"]:g} x max |H|; counts only on rows other than the 64 of the first CPU run; this run: seed {e2.get("seed")}, prompts sha256 {str(e2.get("rows_prompts_sha256"))[:16]}): **{"PASS" if e2["passed_relative"] else "FAIL"}**', '']
                 if 'max_abs_value' in e2:
                     L += [f'scale (diagnostic, not a mark): max |H| {e2["max_abs_value"]:.4g}, p99.9 |H| {e2["p999_abs_value"]:.4g}, mean |H| {e2["mean_abs_value"]:.4g}; max abs diff / max |H| {e2["max_abs_diff_over_max_abs_value"]:.3e}; '
                           f'the largest difference sits on a value of {e2["value_at_max_diff"]:.4g} (relative {e2["rel_diff_at_max_diff"]:.3e})', '']
