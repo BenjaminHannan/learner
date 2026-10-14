@@ -154,6 +154,14 @@ def falsifier(work, rung, runs):
     return decided, below >= FALSIFY_RUNS, dict(dev_at_2000=seen, below=below, reported=len(seen))
 
 
+def auto_gpu_cap_gb(procs, n_runs):
+    """Even split of the card over the runs alive at once (a.procs of them, at most n_runs), floored to 0.1 GB."""
+    import torch
+    total = torch.cuda.get_device_properties(0).total_memory / 2**30
+    n = max(1, min(procs, n_runs))
+    return math.floor(max(2.0, (total - 0.6 - 0.4 * n) / n) * 10) / 10
+
+
 def cmd_run(a):
     rung = a.rung
     d, summ = ensure_rows(a.work, rung)
@@ -165,6 +173,9 @@ def cmd_run(a):
     abort = os.path.join(out_root, 'ABORT')
     if os.path.exists(abort) and not a.keep_abort:
         os.unlink(abort)
+    if a.device == 'cuda' and not a.gpu_mem_gb and not a.dry:
+        a.gpu_mem_gb = auto_gpu_cap_gb(a.procs, len(runs))
+        print(f'gpu cap per run: {a.gpu_mem_gb} GB ({a.procs} runs at once)', flush=True)
     evs = [f'--eval={n}={d}/{n}.jsonl' for n in EVALS[rung]]
     assert all(os.path.exists(f'{d}/{n}.jsonl') for n in EVALS[rung]), f'missing eval file for rung {rung} in {d}'
 
@@ -494,7 +505,7 @@ def main(argv=None):
     r.add_argument('--poll', type=float, default=20)
     r.add_argument('--no-falsifier', dest='falsifier', action='store_false')
     r.add_argument('--keep-abort', action='store_true')
-    r.add_argument('--gpu-mem-gb', type=float, default=3.5, help='cuda: per-process cap on the caching allocator (the card is shared by every run of every rung at once; an out-of-memory then waits and retries inside the run)')
+    r.add_argument('--gpu-mem-gb', type=float, default=None, help='cuda: per-process cap on the caching allocator (the card is shared by the runs of a rung; an out-of-memory then waits and retries inside the run). Default: the card split evenly over the runs alive at once, minus 0.4 GB CUDA context and 0.6 GB spare each (24 GB card, 6 runs: 3.4 GB; 3 runs: 7.3 GB)')
     r.add_argument('--stagger', type=float, default=6, help='seconds between process starts (memory peak while loading rows)')
     r.add_argument('--retries', type=int, default=1, help='restart a run that exits non-zero (same seed, from scratch) this many times')
     r.add_argument('--retry-wait', type=float, default=30)
