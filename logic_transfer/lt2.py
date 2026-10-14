@@ -41,14 +41,16 @@ def parent_path(parents_dir, parent):
 
 
 # eval files per rung (names = files in rows/rung<r>/); the first is the PRIMARY one whose accuracy is tracked at 2,000 / 4,000 / 8,000 updates
-EVALS = {0: ('dev', 'wording', 'newwords'), 1: ('dev', 'newwords'), 2: ('dev', 'newwords'), 3: ('dev', 'wording'), 4: ('dev', 'gate'),
+EVALS = {0: ('dev', 'wording', 'newwords'), 1: ('dev', 'newwords'), 2: ('dev', 'newwords', 'hard'), 3: ('dev', 'wording'), 4: ('dev', 'gate'),
          5: ('gate', 'dev', 'deeper')}
+R2_HARD_MIN = 80.0       # Addendum 3: accuracy on the hard-negative subset of dev (hard.py) that a binding-free reader cannot reach (31-37%)
 R5_DEPTH_BARS = {'0': 80.0, '1': 80.0, '2': 65.0, '3': 55.0}      # the LT-1 G-PASS bars (gate accuracy by depth)
 
 
 def ensure_rows(work, rung, n_train=None, build=True):
-    """Build (or find) the rung's row files; when logic_transfer/ladder-hashes.json lists the rung, every listed file's BYTES on disk must hash to the
-    sealed value (a box that built different rows, a truncated or edited file, or an old build in the work dir stops here, not three hours later)."""
+    """Build (or find) the rung's row files; ladder-hashes.json must list the rung and every listed file's BYTES on disk must hash to the sealed value
+    (a box that built different rows, a truncated or edited file, or an old build in the work dir stops here, not three hours later). Rung 2 also gets
+    hard.jsonl (hard.py: the hard negatives of dev, derived from the sealed dev file; it is sealed too)."""
     from logic_transfer import ladder
     d = os.path.join(work, 'rows', f'rung{rung}')
     summ = os.path.join(d, 'summary.json')
@@ -56,13 +58,17 @@ def ensure_rows(work, rung, n_train=None, build=True):
         assert build, f'rung{rung}: no row summary at {summ} (reports never start a build)'
         ladder.build(rung, os.path.join(work, 'rows'), n_train=n_train)
     s = json.load(open(summ))
+    if rung == 2:
+        from logic_transfer import hard
+        hard.make_hard(d)
     hp = os.path.join(HERE, 'ladder-hashes.json')
-    if os.path.exists(hp):
-        want = json.load(open(hp)).get(f'rung{rung}')
-        assert want, f'ladder-hashes.json has no entry for rung{rung}: refusing to run on unsealed rows'
-        for name, h in want.items():
-            got = ladder.sha256(os.path.join(d, name + '.jsonl'))
-            assert got == h, f'rung{rung}/{name}: file on disk hashes to {got[:12]} but ladder-hashes.json says {h[:12]}'
+    assert os.path.exists(hp), f'{hp} is missing: refusing to run on unsealed rows'
+    want = json.load(open(hp)).get(f'rung{rung}')
+    assert want, f'ladder-hashes.json has no entry for rung{rung}: refusing to run on unsealed rows'
+    for name, h in want.items():
+        got = ladder.sha256(os.path.join(d, name + '.jsonl'))
+        assert got == h, f'rung{rung}/{name}: file on disk hashes to {got[:12]} but ladder-hashes.json says {h[:12]}'
+    print(f'seal verified: rung{rung} ' + ' '.join(f'{n}={h[:8]}' for n, h in sorted(want.items())), flush=True)
     return d, s
 
 
@@ -72,12 +78,15 @@ def thresholds(rung, summ):
     def base(f):
         """Baseline + 25 floored to 2 decimals from the EXACT hit count (rung 1: 800/1200 + 25 = 91.6667 -> 91.66, so 1100/1200 right passes)."""
         cb = summ['files'][f]['count_baseline']
-        exact = 100.0 * cb['hit'] / cb['n'] if 'hit' in cb else cb['acc']
+        hit = cb['hit'] if 'hit' in cb else round(cb['acc'] * cb['n'] / 100.0)      # exact while n < 10,000 (a summary built before 'hit' existed)
+        exact = 100.0 * hit / cb['n']
         return math.floor((exact + MARGIN) * 100 + 1e-9) / 100.0 - MARGIN
     if rung in (0, 3):
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('wording', None, max(WORD_MIN, base('wording') + MARGIN))]
-    if rung in (1, 2):
+    if rung == 1:
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN))]
+    if rung == 2:
+        return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('hard', None, R2_HARD_MIN)]
     if rung == 4:
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('gate', None, max(75.0, base('gate') + MARGIN))]
     if rung == 5:
@@ -236,6 +245,7 @@ def run_summary(work, rung, p, s, th):
     us = sorted(by_u)
     out['pass_streak2'] = any(holds(by_u[a_]) and holds(by_u[b_]) for a_, b_ in zip(us, us[1:]))     # the stop rule's own condition (two whole-file evals in a row)
     out['holds_at_last_full_eval'] = bool(us) and holds(by_u[us[-1]])
+    out['stopped_on_marks'] = (st or {}).get('reason') == 'marks'      # the stop rule's own verdict (on CPU it is two prefix evals + a whole-file confirm, so pass_streak2 alone undercounts)
     allp = {}
     for e in ev:                                           # prefix (non-full) evals too
         allp.setdefault(e['update'], {})[e['name']] = e
@@ -259,13 +269,22 @@ def run_summary(work, rung, p, s, th):
     out['last_dev'] = (last_dev[-1]['update'], last_dev[-1]['exact'], last_dev[-1]['full']) if last_dev else None
     if rung == 5:
         gl = [e for e in ev if e['name'] == 'gate' and e['full']]
-        out['gate_by_depth_last'] = {lv: round(eval_pct(gl[-1], lv), 1) for lv in R5_DEPTH_BARS} if gl else None
+        out['gate_by_depth_last'] = {lv: round(eval_pct(gl[-1], lv), 2) for lv in R5_DEPTH_BARS} if gl else None
     nw = [e for e in ev if e['name'] == 'newwords']
     out['newwords_last'] = (nw[-1]['update'], nw[-1]['exact']) if nw else None
     lf = [e for e in ev if e['name'] == prim and e['full'] and e.get('by_label')]
     out['label_recall_last'] = ({k: round(100.0 * c / max(n, 1), 1) for k, (c, n) in lf[-1]['by_label'].items()} if lf else None)
+    hd = [e for e in ev if e['name'] == 'hard' and e['full']]
+    out['hard_last'] = (hd[-1]['update'], round(hd[-1]['exact'], 2), hd[-1]['correct'], hd[-1]['n']) if hd else None
+    out['probes'], out['probe_ctl'] = None, None
     pj = os.path.join(rd, 'probe.json')
-    out['probes'] = json.load(open(pj))['probes'] if os.path.exists(pj) else None
+    if os.path.exists(pj):
+        try:
+            pobj = json.load(open(pj))
+            out['probes'] = pobj['probes']
+            out['probe_ctl'] = {k: v for k, v in pobj.items() if k != 'probes'}       # original_dev, original_dev_true_false_rows, checkpoint_meets_marks, n_rows
+        except (ValueError, KeyError) as ex:
+            out['probe_error'] = f'probe.json unreadable: {ex}'
     return out
 
 
@@ -286,31 +305,60 @@ def cuda_available():
 
 
 def probe_runs(work, rung, rows, device, n=600):
-    """Counterfactual probes (probes.py; rungs 0-2, reported never gated) on the checkpoint of every run that PASSED its marks; writes
-    <run>/probe.json and fills rows[i]['probes']. A run whose probe fails keeps probes=None and an 'error' note (the report never aborts)."""
-    from logic_transfer import probes
-    from custom_io.data import load_rows
-    rws = load_rows(os.path.join(work, 'rows', f'rung{rung}', 'dev.jsonl'), keep=None)[:n]
+    """Counterfactual probes (probes.py; rungs 0-2, reported never gated) on the final checkpoint of every run whose marks HOLD at its last whole-file eval
+    (stopped on marks, or still holding at the end); a run that passed once and fell back is not probed (it would show a failing checkpoint beside a PASS).
+    Writes <run>/probe.json (with the checkpoint's sha and the code sha) and fills rows[i]['probes'] / ['probe_ctl']. A probe that fails keeps probes=None
+    and a 'probe_error' note (the report never aborts); a CUDA out-of-memory on a shared card is retried."""
+    try:
+        from logic_transfer import probes
+        from custom_io.data import load_rows
+        from logic_transfer.course import oom_retry
+        rws = load_rows(os.path.join(work, 'rows', f'rung{rung}', 'dev.jsonl'), keep=None)[:n]
+    except Exception as ex:                      # noqa: BLE001
+        for x in rows:
+            x['probe_error'] = f'setup: {type(ex).__name__}: {ex}'[:300]
+        return
+    sha = _code_sha()
     for x in rows:
-        if not x['pass'] or x['state'] != 'done':
+        if x['state'] != 'done' or not (x['stopped_on_marks'] or x['holds_at_last_full_eval']):
             continue
         rd = os.path.join(work, f'rung{rung}', x['run'])
         pj, ck = os.path.join(rd, 'probe.json'), os.path.join(rd, 'checkpoint.pt')
-        if not os.path.exists(pj) and os.path.exists(ck):
+        have = None
+        if os.path.exists(pj):
             try:
-                json.dump(probes.run(ck, rws, rung, device), open(pj, 'w'), indent=1)
+                have = json.load(open(pj))
+            except ValueError:
+                have = None
+        if (have is None or have.get('code') != sha) and os.path.exists(ck):
+            try:
+                res = oom_retry(lambda: probes.run(ck, rws, rung, device), [0], tries=20)
+                res['code'] = sha
+                json.dump(res, open(pj + '.tmp', 'w'), indent=1)
+                os.replace(pj + '.tmp', pj)
+                have = res
             except Exception as ex:               # noqa: BLE001  (a reported-only instrument must not take the report down)
                 x['probe_error'] = f'{type(ex).__name__}: {ex}'[:300]
-                continue
-        if os.path.exists(pj):
-            x['probes'] = json.load(open(pj))['probes']
+                if have is None:
+                    continue
+        if have is not None:
+            x['probes'] = have.get('probes')
+            x['probe_ctl'] = {k: v for k, v in have.items() if k != 'probes'}
+
+
+PROBE_VALUE = {'swap_answer': 'acc', 'swap_entity': 'acc', 'flip_query': 'acc', 'drop_support': 'acc', 'drop_answer': 'still_old_word'}
 
 
 def summarise_probes(rows):
+    """Mean / min / max over the probed runs of each probe's headline number (PROBE_VALUE) and of the controls (original_dev, original_dev_true_false_rows)."""
     acc = {}
     for x in rows:
         for name, d in (x.get('probes') or {}).items():
-            acc.setdefault(name, []).append(list(d.values())[1] if len(d) > 1 else list(d.values())[0])
+            acc.setdefault(name, []).append(d[PROBE_VALUE.get(name, 'acc')] if PROBE_VALUE.get(name, 'acc') in d else list(d.values())[-1])
+        for k in ('original_dev', 'original_dev_true_false_rows'):
+            v = (x.get('probe_ctl') or {}).get(k)
+            if v is not None:
+                acc.setdefault('ctl:' + k, []).append(v)
     return {k: dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v)) for k, v in acc.items()}
 
 

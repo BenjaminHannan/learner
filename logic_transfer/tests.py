@@ -182,6 +182,53 @@ class Thresholds(unittest.TestCase):
         self.assertGreater(th[0][2], 91.6)
 
 
+class ThresholdsMore(unittest.TestCase):
+    def test_r1_mark_without_hit_field_is_the_same(self):
+        from logic_transfer import lt2
+        summ = {'files': {'dev': {'count_baseline': {'acc': 66.67, 'n': 1200}}}}
+        self.assertEqual(lt2.thresholds(1, summ)[0][2], 91.66)
+
+    def test_r2_gate_has_hard_negative_subset(self):
+        from logic_transfer import lt2
+        summ = {'files': {'dev': {'count_baseline': {'acc': 45.33, 'hit': 544, 'n': 1200}}}}
+        th = lt2.thresholds(2, summ)
+        self.assertEqual([(f, v) for f, _, v in th], [('dev', 90.0), ('hard', 80.0)])
+        self.assertIn('hard', lt2.EVALS[2])
+
+    def test_marks_string_roundtrip_through_course_parser(self):
+        from logic_transfer import lt2
+        summ = {'files': {'gate': {'count_baseline': {'acc': 33.3, 'hit': 400, 'n': 1200}}}}
+        th = lt2.thresholds(5, summ)
+        back = course.parse_marks(lt2.marks_string(th))
+        self.assertEqual([(f, lv) for f, lv, _ in back], [(f, lv) for f, lv, _ in th])
+
+
+class HardNegatives(unittest.TestCase):
+    def _row(self, facts, query, answer):
+        return {'id': 'x', 'answer': answer, 'prompt': ' '.join(facts + [query]) + ' (true/false/unknown)'}
+
+    def test_hard_needs_entity_and_predicate_in_different_facts(self):
+        from logic_transfer import hard
+        self.assertTrue(hard.is_hard(self._row(['Bob is not red.', 'Ann is blue.'], 'Is Bob blue?', 'unknown')))
+        self.assertFalse(hard.is_hard(self._row(['Bob is not red.', 'Ann is green.'], 'Is Bob blue?', 'unknown')))       # predicate nowhere
+        self.assertFalse(hard.is_hard(self._row(['Bob is blue.', 'Ann is green.'], 'Is Bob blue?', 'true')))             # answered row
+        self.assertFalse(hard.is_hard(self._row(['Bob is blue.', 'Ann is blue.'], 'Is Bob not blue?', 'false')))
+
+    def test_make_hard_is_deterministic_subset_of_dev(self):
+        import tempfile, json as _j
+        from logic_transfer import hard
+        with tempfile.TemporaryDirectory() as d:
+            rows = [self._row(['Bob is not red.', 'Ann is blue.'], 'Is Bob blue?', 'unknown'), self._row(['Bob is blue.'], 'Is Bob blue?', 'true')]
+            with open(d + '/dev.jsonl', 'w') as f:
+                for r in rows:
+                    f.write(_j.dumps(r) + '\n')
+            self.assertEqual(hard.make_hard(d), 1)
+            a = open(d + '/hard.jsonl').read()
+            hard.make_hard(d)
+            self.assertEqual(a, open(d + '/hard.jsonl').read())
+            self.assertTrue(_j.loads(a)['id'].endswith('-hard'))
+
+
 class Schedule(unittest.TestCase):
     def test_sk_slots_identical_across_arms(self):
         a = course.schedule(7, 200000, None, 64, 0.25, 300)             # control arm

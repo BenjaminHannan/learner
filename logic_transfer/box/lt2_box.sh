@@ -12,7 +12,11 @@
 #   `bash -c` command line and killed the whole box script), result blocks written whole under a lock (parallel rungs could interleave their base64 lines),
 #   `wait` only on rung jobs, code sha in every ORDER / RUNG line, memory line after setup, driver tail in each rung block, rung rows built by this code
 #   (the order's rungs' rows are hash-checked against logic_transfer/ladder-hashes.json when the rung runs).
-# Env: GOFILE (order file name under logic_transfer/box/, default GO.txt), BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
+# v3 (2026-10-14, after the second outside review + the slow Xeon Phi host of box 4): watchdog and over() both count from T0 (script start) and the script ends itself
+#   20 min after MAXH; the watchdog kills only `lt2 run` and `course` (not indist/report); `timeout` on indist/report; full run/indist/report/build logs go into the rung
+#   block; the indist files in a block are only that rung's; a `HB` heartbeat line per rung every 10 min (runs alive, min/max update, slowest s/update); CPU model +
+#   true core count in the READY line; BUILD env = which rungs' rows to build (default all; build only what the box will run).
+# Env: BUILD (rungs whose rows to build, default "1 2 3 4 5"), GOFILE (order file name under logic_transfer/box/, default GO.txt), BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
 # No credential is on the box; nothing listens.
 set -u
 J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
@@ -24,6 +28,11 @@ T0=$(date +%s)
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 die() { say "LT2-FAIL $*"; sleep $FAIL_SLEEP; exit 1; }
 say "LT2 START"
+if [ "$MAXH" != 0 ]; then   # cost cap, all on the T0 clock: after MAXH hours every run is killed (results of what finished are still printed by the rung loop), 20 min later the script ends itself
+  # anchored patterns: only processes whose command line STARTS with `<something>python* -m logic_transfer.<lt2 run|course>` (this script's own `bash -c` command line contains this text and must not match)
+  ( sleep $(awk "BEGIN{print int($MAXH*3600)}"); say "LT2 MAXH $MAXH h: killing runs"; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.lt2 run'; sleep 1; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.course' ) &
+  ( sleep $(awk "BEGIN{print int($MAXH*3600+1200)}"); say "LT2 HARD END (MAXH + 20 min)"; kill -9 $$ ) &
+fi
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; free -g | head -2; nproc
 command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git >/dev/null) || die git
 git clone -q --depth 1 --filter=blob:none --sparse -b $BR $R mine && (cd mine && git sparse-checkout set custom_io logicgen logic_transfer && git log -1 --format='mine %H') || die clone-mine
@@ -49,15 +58,26 @@ emit() {  # name dir...: tar the small outputs (no .pt, no stdout logs) and prin
   if command -v flock >/dev/null; then ( flock 9; cat $B ) 9>$J/res/emit.lock; else cat $B; fi
 }
 over() { [ "$MAXH" != 0 ] && [ $(( $(date +%s) - T0 )) -ge $(awk "BEGIN{print int($MAXH*3600)}") ]; }
-say "LT2 READY code=$(git -C mine rev-parse --short HEAD) mem=$(free -g | awk 'NR==2{print $2" GB total, "$7" GB available"}') cgroup=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo na) cores=$(nproc)"
-if [ "$MAXH" != 0 ]; then   # cost cap: after MAXH hours every run is killed (results of what finished are still printed by the rung loop)
-  # anchored: only processes whose command line STARTS with `<something>python* -m logic_transfer.<driver|course>` (this script's own command line, which contains
-  # the text of the next lines, starts with `bash -c` and must not match)
-  ( sleep $(awk "BEGIN{print int($MAXH*3600)}"); say "LT2 MAXH $MAXH h: killing runs"; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.lt2'; sleep 1; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.course' ) &
-fi
+say "LT2 READY code=$(git -C mine rev-parse --short HEAD) mem=$(free -g | awk 'NR==2{print $2" GB total, "$7" GB available"}') cgroup=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo na) cores=$(nproc --all) cpu.max=$(cat /sys/fs/cgroup/cpu.max 2>/dev/null || echo na) cpu=\"$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | sed 's/^ *//')\""
 # rows of rungs 1-5 are built in the background (deterministic; sha256 checked against logic_transfer/ladder-hashes.json when listed) while the agreement run goes
 mkdir -p $J/w/ladder/rows
-for r in 1 2 3 4 5; do (cd mine && nohup python -m logic_transfer.ladder build --rung $r --out $J/w/ladder/rows > $J/out/build-rung$r.log 2>&1 &); done
+for r in ${BUILD:-1 2 3 4 5}; do (cd mine && nohup python -m logic_transfer.ladder build --rung $r --out $J/w/ladder/rows > $J/out/build-rung$r.log 2>&1 &); done
+
+hb() {  # one line per rung: runs with a log, how many stopped, min/max update, slowest median s/update
+  python - <<'PY'
+import glob, json, os
+rows = {}
+for f in sorted(glob.glob('/job/w/ladder/rung*/*/log.jsonl')):
+    try:
+        d = json.loads(open(f).read().strip().splitlines()[-1])
+    except Exception:
+        continue
+    rows.setdefault(f.split('/')[4], []).append((d.get('update'), d.get('s_per_update_median') or 0, os.path.exists(os.path.dirname(f) + '/stop.json')))
+for r, v in rows.items():
+    print('HB', r, 'runs', len(v), 'stopped', sum(x[2] for x in v), 'update min', min(x[0] for x in v), 'max', max(x[0] for x in v), 'slowest s/update', max(x[1] for x in v))
+PY
+}
+( while true; do sleep 600; hb; done ) &
 
 # ---- 1. agreement + speed rehearsal (rung 0, one run, 500 updates); AGREE=0 skips it (checked once already: loss window 0.53361 vs CPU 0.5336, identical scores and predictions) ----
 if [ "${AGREE:-1}" = 1 ]; then
@@ -93,11 +113,15 @@ while true; do
         [ -f $J/w/ladder/rows/rung$r/summary.json ] || { say "RUNG $r rows missing"; tail -5 $J/out/build-rung$r.log; return; }
         (cd mine && $LT run --rung $r --work $J/w/ladder --parents-dir $PD --sk200k $J/data --device cuda --procs ${PROCS:-6} --threads 1 --updates ${UPDATES:-8000} \
            --eval-n 0 > $J/out/rung$r-run.log 2>&1); echo "rung $r run rc=$?"; tail -4 $J/out/rung$r-run.log
-        (cd mine && $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log
-        (cd mine && $LT report --work $J/w/ladder --rung $r > $J/w/ladder/rung$r/report.json 2>$J/out/rung$r-report.err)
+        (cd mine && timeout 1500 $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log
+        (cd mine && timeout 1500 $LT report --work $J/w/ladder --rung $r > $J/w/ladder/rung$r/report.json 2>$J/out/rung$r-report.err)
+        mkdir -p $J/w/ladder/rung$r
         tail -n 80 $J/out/rung$r-run.log > $J/w/ladder/rung$r/driver-tail.txt 2>/dev/null
-        emit lt2-rung$r ladder/rung$r ladder/indist ladder/rows/rung$r/summary.json
-        say "RUNG $r DONE"
+        cp $J/out/rung$r-run.log $J/out/rung$r-indist.log $J/out/rung$r-report.err $J/out/build-rung$r.log $J/w/ladder/rung$r/ 2>/dev/null
+        for d in $J/w/ladder/rung$r/s*-s*; do [ -f $d/stdout.log ] && tail -n 40 $d/stdout.log > $d/stdout-tail.txt; done
+        IND=$(cd $J/w && ls ladder/indist/rung$r-*.json ladder/indist/parent-*-rung$r.json 2>/dev/null)
+        emit lt2-rung$r ladder/rung$r $IND ladder/rows/rung$r/summary.json
+        if [ -s $J/w/ladder/rung$r/report.json ]; then say "RUNG $r DONE"; else say "RUNG $r FAILED (empty report.json; see rung$r-report.err in the block)"; fi
       }
       if grep -q '^PARRUNGS=1' $G; then   # all rungs of this order at once (each rung has its own PROCS runs); watch RAM: ~3.3 GB per run
         pids=""; for r in $RUNGS; do do_rung $r & pids="$pids $!"; done; [ -n "$pids" ] && wait $pids   # NOT a bare `wait`: the MAXH watchdog is a background job too

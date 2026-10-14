@@ -155,11 +155,58 @@ def audit(rung, d, names, train_rows=None, nmax=70000):
 EVAL_FILES = {1: ['dev', 'wording', 'newwords'], 2: ['dev', 'wording', 'newwords'], 4: ['dev', 'gate'], 5: ['dev', 'gate', 'deeper']}
 
 
+def feats_shallow(r):
+    """Rungs 4-5 (REPORT-ONLY, marks Addendum 3): the local structure around the query that needs no derivation chain. For every rule whose head is the query
+    predicate (and whose entity is the query entity or universal): the head's polarity relative to the query plus a status per premise literal (G given for the
+    query entity, X its complement given, D some rule concludes it, A absent); plus the polarity of every given fact about the query entity and predicate."""
+    import collections
+    from logicgen import checker as ck
+    facts, rules, q = ck.parse_program(r['meta']['program'])
+    qneg, qp, qe = q
+    given = collections.defaultdict(set)
+    for f in facts:
+        given[f[2]].add((f[0], f[1]))
+
+    def status(lit, ent):
+        if (lit[0], lit[1]) in given[ent]:
+            return 'G'
+        if (not lit[0], lit[1]) in given[ent]:
+            return 'X'
+        if any(ru.rhs == (lit[0], lit[1]) and ru.ent in (None, ent) for ru in rules):
+            return 'D'
+        return 'A'
+    sig = []
+    for ru in rules:
+        if ru.rhs[1] == qp and ru.ent in (None, qe):
+            sig.append(('s' if ru.rhs[0] == qneg else 'o') + ''.join(sorted(status(l, qe) for l in ru.lhs)))
+    qfact = ''.join(sorted(('s' if f[0] == qneg else 'o') for f in facts if f[1] == qp and f[2] == qe))
+    return dict(depth=r['level'], sig=tuple(sorted(sig)), qfact=qfact)
+
+
+def shallow_ceiling(d, names, nmax=70000):
+    """What a lookup on feats_shallow (train-fitted, never following a chain) scores on each eval file, whole and by depth: the 'shallow ceiling' printed next to
+    the R5 bars. A depth-2/3 accuracy above it is the only kind of number that can be read as chaining (Addendum 3)."""
+    def load(n):
+        out = []
+        for l in open(f'{d}/{n}.jsonl'):
+            if l.strip():
+                r = json.loads(l)
+                out.append((feats_shallow(r), r['answer']))
+        return out
+    tr = load('train')[:nmax]
+    res = {}
+    for n in names:
+        ev = load(n)
+        res[n] = dict(acc=lookup(tr, ev, ('sig', 'qfact')), by_depth=lookup(tr, ev, ('sig', 'qfact'), by_depth=True))
+    return res
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--rows', required=True)
     ap.add_argument('--rungs', type=int, nargs='+', default=[1, 2, 4, 5])
     ap.add_argument('--out')
+    ap.add_argument('--shallow', action='store_true', help='also print the report-only shallow-reader ceiling of rungs 4-5')
     a = ap.parse_args(argv)
     allres, bad = {}, 0
     for r in a.rungs:
@@ -176,6 +223,11 @@ def main(argv=None):
             print(f'rung{r} {name}: worst lookup {v["worst"]}' + (f'  worst type-gain {v["worst_gain"]}  class share {v["class_share"]}' if 'class_share' in v else '')
                   + (f'  worst by depth {v["worst_by_depth"]}' if 'worst_by_depth' in v else '') + f'  ok={v["ok"]}', flush=True)
             bad += not v['ok']
+    if a.shallow:
+        for r in a.rungs:
+            if r in (4, 5):
+                allres[f'rung{r}_shallow_ceiling'] = shallow_ceiling(f'{a.rows}/rung{r}', EVAL_FILES[r])
+                print(f'rung{r} shallow-reader ceiling (report only):', json.dumps(allres[f'rung{r}_shallow_ceiling']), flush=True)
     if a.out:
         json.dump(allres, open(a.out, 'w'), indent=1)
     return 1 if bad else 0

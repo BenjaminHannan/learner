@@ -19,8 +19,15 @@ def main(argv=None):
     a = ap.parse_args(argv)
     cur = json.load(open(a.out)) if os.path.exists(a.out) else {}
     for r in a.rungs:
-        s = json.load(open(os.path.join(a.rows, f'rung{r}', 'summary.json')))
-        cur[f'rung{r}'] = {name: info['sha256'] for name, info in s['files'].items()}
+        from logic_transfer import ladder
+        d = os.path.join(a.rows, f'rung{r}')
+        s = json.load(open(os.path.join(d, 'summary.json')))
+        names = list(s['files'])
+        if r == 2:                                       # the hard-negative subset of dev (Addendum 3) is sealed with the rung
+            from logic_transfer import hard
+            hard.make_hard(d)
+            names.append('hard')
+        cur[f'rung{r}'] = {name: ladder.sha256(os.path.join(d, name + '.jsonl')) for name in names}      # re-hashed from the bytes on disk, not copied from summary.json
         if r == 3:
             for name, pre in LT1_PREFIX.items():
                 got = cur['rung3'][name]
