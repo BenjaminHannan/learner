@@ -43,9 +43,12 @@ def list_procs():
     """[(pid, command line)] of every python / llama process (all that the supervisor ever looks at)."""
     out = []
     if NT:
-        ps = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -or $_.Name -like 'llama*' -or $_.Name -like 'ollama*' } | "
+        ps = ("$ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
+              "Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -or $_.Name -like 'llama*' -or $_.Name -like 'ollama*' } | "
               "ForEach-Object { '{0}|{1}' -f $_.ProcessId, $_.CommandLine }")
-        r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True, timeout=120)
+        r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120)
+        if r.returncode != 0:
+            raise RuntimeError('process listing failed (rc %s): %s' % (r.returncode, r.stderr.strip()[:200]))
         for ln in r.stdout.splitlines():
             pid, _, cmd = ln.partition('|')
             if pid.strip().isdigit():
@@ -53,17 +56,18 @@ def list_procs():
     else:
         for d in glob.glob('/proc/[0-9]*'):
             try:
+                comm = open(d + '/comm').read().strip()
                 cmd = open(d + '/cmdline', 'rb').read().replace(b'\0', b' ').decode('utf-8', 'replace').strip()
             except OSError:
                 continue
-            if cmd:
+            if cmd and comm.startswith(('python', 'llama', 'ollama')):          # like the Windows listing: only python / llama processes
                 out.append((int(os.path.basename(d)), cmd))
     return out
 
 
 def kill_tree(pid):
     if NT:
-        subprocess.run(['taskkill', '/PID', str(pid), '/T', '/F'], capture_output=True, text=True, timeout=120)
+        return subprocess.run(['taskkill', '/PID', str(pid), '/T', '/F'], capture_output=True, text=True, timeout=120).returncode == 0
     else:
         import signal
         try:
@@ -92,10 +96,40 @@ def spawn_detached(cmd, cwd, env, logpath):
     log = open(logpath, 'ab')
     kw = dict(cwd=str(cwd), env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
     if NT:
-        kw['creationflags'] = 0x00000008 | 0x00000200 | 0x08000000     # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+        kw['creationflags'] = 0x00000200 | 0x08000000     # CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW (no visible console; DETACHED_PROCESS would give each child its own window)
     else:
         kw['start_new_session'] = True
     return subprocess.Popen(cmd, **kw)
+
+
+def boot_time():
+    """seconds since the epoch at which this machine booted (rounded to 10 s), or None."""
+    try:
+        if NT:
+            import ctypes
+            up = ctypes.windll.kernel32.GetTickCount64() / 1000.0
+        else:
+            up = float(open('/proc/uptime').read().split()[0])
+        return round((time.time() - up) / 10) * 10
+    except Exception:
+        return None
+
+
+def acquire_lock(path):
+    """An OS-level lock on `path`, held for the life of the process (so it does not matter which user or context a second supervisor runs in). -> file object or None."""
+    f = open(path, 'a+')
+    try:
+        if NT:
+            import msvcrt
+            f.seek(0)
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        f.close()
+        return None
+    return f
 
 
 # ---------------------------------------------------------------- small helpers
@@ -147,6 +181,7 @@ class Events:
     def reset(self):
         self.off, self.seg, self.train, self.resumed, self.segments = 0, 0, [], [], []
         self.last_step, self.nonfinite, self.last_elapsed = 0, False, 0.0
+        self.device, self.ckpt_failed, self.ckpts = None, 0, 0
 
     def update(self):
         try:
@@ -170,6 +205,12 @@ class Events:
                 self.segments.append(e)
             elif ev == 'resumed':
                 self.resumed.append((self.seg, e.get('step')))
+            elif ev == 'start':
+                self.device = e.get('device')
+            elif ev == 'ckpt_failed':
+                self.ckpt_failed += 1
+            elif ev == 'ckpt':
+                self.ckpts += 1
             elif ev == 'train':
                 loss = e.get('loss')
                 if not isinstance(loss, (int, float)) or not math.isfinite(loss):
@@ -218,7 +259,10 @@ def trace_a(ev, rules, max_used_mib):
     # the resume: the earlier segment's updates after the checkpoint, redone by the resumed segment (the first resume that has any such updates)
     r['resume'] = None
     for seg2, rstep in ev.resumed:
-        s1 = {e['step']: e['loss'] for e in ev.train if e['seg'] == seg2 - 1 and e['step'] > rstep}
+        s1 = {}
+        for e in ev.train:
+            if e['seg'] < seg2 and e['step'] > rstep:          # the latest earlier line for each step (a segment that died before its first update has none)
+                s1[e['step']] = e['loss']
         s2 = {e['step']: e['loss'] for e in ev.train if e['seg'] == seg2}
         common = sorted(set(s1) & set(s2))
         if common:
@@ -305,7 +349,10 @@ class Sup:
     # ---- processes (one listing per cycle: the PowerShell query takes a second or two on Windows)
     def procs(self, fresh=False):
         if fresh or not hasattr(self, '_p'):
-            self._p = list_procs()
+            p = list_procs()
+            if os.getpid() not in [x for x, _ in p]:           # a listing that lacks this very process is broken (Windows is still starting up): never act on it
+                raise RuntimeError('the process listing does not contain this process: not acting on it')
+            self._p = p
         return self._p
 
     def find(self, match, queue):
@@ -337,13 +384,24 @@ class Sup:
         q = job['baseline']['queue'] if base else job['queue']
         jn = job['baseline']['job'] if base else job['job']
         pids = self.find(job.get('runner_match', 'local_runner'), q)
-        for pid in pids:
-            kill_tree(pid)
-        time.sleep(2)
-        for pid in self.strays(jn):
-            kill_tree(pid)
-        self.log(f'KILLED {q} (runner pids {pids}): {why}')
-        self.after_kill(job, base)
+        gone = False
+        for attempt in range(3):
+            for pid in pids:
+                kill_tree(pid)
+            time.sleep(2)
+            for pid in self.strays(jn):
+                kill_tree(pid)
+            time.sleep(1)
+            self.procs(True)
+            pids = self.find(job.get('runner_match', 'local_runner'), q) + self.strays(jn)
+            if not pids:
+                gone = True
+                break
+        self.log(f'{"KILLED" if gone else "KILL FAILED (processes still alive: %s)" % pids} {q}: {why}')
+        if gone:
+            self.js(job)['verified_dead_at' if not base else 'base_dead_at'] = time.time()
+            self.after_kill(job, base)
+        return gone
 
     def after_kill(self, job, base=False):
         """clean what a killed run leaves: its GPU-BUSY lines and stale pool locks (renamed, never deleted), a job-level arm_failed RESULT.json (renamed)."""
@@ -369,6 +427,13 @@ class Sup:
         r = jload(rj)
         if r and r.get('status') != 'ok':
             self.log(f'job-level RESULT.json ({r.get("status")}) moved aside: {aside(rj)}')
+
+    def ev_age(self, job, base=False):
+        """seconds since events.jsonl was last written (a huge number if it does not exist)."""
+        try:
+            return time.time() - os.path.getmtime(self.arm_dir(job, base) / 'events.jsonl')
+        except OSError:
+            return 1e9
 
     # ---- state of a job
     def arm_ok(self, job, base=False):
@@ -462,20 +527,45 @@ class Sup:
 
     def running(self, job, js, ev, pids):
         up = job['trace_a']['upto'] if job.get('trace_a') else None
+        now_t = time.time()
+        # progress clock for the stall watchdog (a hung process, a stale lock, a full disk: the runner is alive but nothing moves)
+        if ev.last_step != js.get('wd_step'):
+            js['wd_step'], js['wd_t'] = ev.last_step, now_t
+        stall = now_t - max(js.get('wd_t', now_t), js.get('launched_t', 0))
+        if ev.last_step < job['steps'] and stall > self.plan.get('stall_warn_s', 1200) and not js.get('stall_warned'):
+            js['stall_warned'] = True
+            (self.sd / 'ATTENTION-stall.txt').write_text(f'{ts()} {job["id"]}: no new update for {stall / 60:.0f} min at update {ev.last_step}; the runner is alive\n', encoding='utf-8')
+            self.log(f'STALL: no new update for {stall / 60:.0f} min at update {ev.last_step}')
+        if ev.last_step < job['steps'] and stall > self.plan.get('stall_kill_s', 3600):
+            js['stall_warned'] = False
+            js['wd_t'] = now_t
+            js['restarts'].append(dict(at=ts(), step=ev.last_step, planned=False, stall=True))
+            self.kill_job(job, why=f'no new update for {stall / 60:.0f} min: restart from the newest checkpoint')
+            return
+        # the run must be on the GPU: a driver swap can leave torch without CUDA, and train.py would quietly go on at CPU speed
+        want_dev = self.plan.get('device', 'cuda')                      # 'cpu' only in the test of the supervisor against the real train.py
+        if ev.device and not str(ev.device).startswith(want_dev):
+            self.kill_job(job, why=f'train.py started on "{ev.device}", not {want_dev}')
+            return self.stop(job, f'train.py started on the device "{ev.device}" instead of {want_dev} (driver / torch CUDA problem after an update?); it was stopped, nothing restarts until this is fixed')
+        if ev.ckpt_failed >= 3 and not (self.sd / 'ATTENTION-ckpt.txt').exists():
+            (self.sd / 'ATTENTION-ckpt.txt').write_text(f'{ts()} {job["id"]}: {ev.ckpt_failed} checkpoint writes failed (disk full? file locked?); a restart would lose more than 100 updates\n', encoding='utf-8')
+            self.log(f'ATTENTION: {ev.ckpt_failed} checkpoint writes failed')
         # the planned kill-and-resume test (R4): once, in the middle of a checkpoint interval
         if job.get('kill_resume_at') and not js['kill_done'] and not ev.resumed and ev.last_step >= job['kill_resume_at']:
             ck = sorted(glob.glob(str(self.arm_dir(job) / 'ckpt' / 'step-*.pt')))
             if not ck:
-                js['kill_done'] = 'skipped: no checkpoint file at update %d' % ev.last_step
-                self.log(f'planned kill SKIPPED: no checkpoint at update {ev.last_step}; trace A cannot pass')
-            else:
-                js['kill_done'] = f'killed at update {ev.last_step}, newest checkpoint {os.path.basename(ck[-1])}'
-                js['restarts'].append(dict(at=ts(), step=ev.last_step, planned=True))
-                self.kill_job(job, why=f'planned kill-and-resume test at update {ev.last_step} (Ben\'s go line; big-run R4)')
+                if self.kill_job(job, why=f'no checkpoint file at update {ev.last_step}'):
+                    self.stop(job, f'no checkpoint was written by update {ev.last_step} (--ckpt-every 100): the checkpoint path does not work on this card; stopped rather than run 15 h unprotected')
                 return
+            msg = f'killed at update {ev.last_step}, newest checkpoint {os.path.basename(ck[-1])}'
+            if self.kill_job(job, why=f'planned kill-and-resume test at update {ev.last_step} (Ben\'s go line; big-run R4)'):
+                js['kill_done'] = msg
+                js['restarts'].append(dict(at=ts(), step=ev.last_step, planned=True))
+            return                                           # not killed: tried again next cycle
         # trace A once the resumed segment has reached update `upto`
-        if up and ev.resumed and not js.get('traceA') and ev.last_step >= up and ev.seg > 1:
+        if up and not js.get('traceA') and ev.last_step >= up and (ev.resumed and ev.seg > 1):
             r = trace_a(ev, job['trace_a'], js['max_used_mib'])
+            r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
             js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'])
             jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
             (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
@@ -483,6 +573,9 @@ class Sup:
             if r['verdict'] == 'FAIL':
                 self.kill_job(job, why='trace A failed')
                 self.stop(job, 'trace A FAILED: ' + '; '.join(r['why_fail']) + ' (registered fallback: accum 8, then 32; a new run name each)')
+        elif up and not js.get('traceA') and ev.last_step >= up + 100:
+            self.kill_job(job, why='trace A could not be evaluated')
+            self.stop(job, f'update {ev.last_step} reached with no trace A verdict (no resume happened): stopped so the run is not left ungated')
 
     def finish(self, job, js, res):
         js['status'] = 'done'
@@ -503,24 +596,45 @@ class Sup:
         bad = self.fatal_text(job)
         if bad:
             return self.stop(job, f'train.py says "{bad}": a restart would refuse the same way')
-        # the GPU must be free: Ben's other programs (the Qwen server) are never touched
+        # nothing may be started on a guess: the GPU reading is mandatory, and the GPU must be free (Ben's other programs, the Qwen server, are never touched)
         need = job.get('need_free_mib', self.plan['gpu']['need_free_mib'])
-        if g and g[1] - g[0] < need:
+        if not g:
+            self.log('no GPU reading (nvidia-smi failed): nothing is started')
+            return
+        if g[1] - g[0] < need:
             who = [f'pid {p} {c[:60]}' for p, c in self.procs() if 'llama' in c or 'ollama' in c]
             if not js.get('waiting_gpu') or time.time() - js['waiting_gpu'] > 600:
                 js['waiting_gpu'] = time.time()
                 self.log(f'WAITING for the GPU: {g[1] - g[0]} MiB free, need {need}; other GPU users seen: {who or "unknown"}')
             return
         js['waiting_gpu'] = None
-        last = js.get('step_at_launch')
-        if last is not None:
+        # a runner this supervisor cannot see (another context) would still be writing events.jsonl: wait for 3 quiet minutes unless this supervisor killed it
+        if self.ev_age(job) < self.plan.get('quiet_s', 180) and js.get('verified_dead_at', 0) < time.time() - self.ev_age(job):
+            if not js.get('waiting_quiet'):
+                js['waiting_quiet'] = True
+                self.log(f'events.jsonl was written {self.ev_age(job):.0f} s ago by a runner that is not listed: waiting until it is quiet for {self.plan.get("quiet_s", 180)} s')
+            return
+        js['waiting_quiet'] = False
+        # a death across a reboot is not a crash; a death with no new update since the last start is
+        last, bt = js.get('step_at_launch'), boot_time()
+        rebooted = bt is not None and js.get('boot_at_launch') is not None and abs(bt - js['boot_at_launch']) > 120
+        if last is not None and not rebooted:
             js['no_progress'] = js['no_progress'] + 1 if ev.last_step <= last else 0
+        elif rebooted:
+            js['no_progress'] = 0
         if js['no_progress'] >= self.plan.get('max_no_progress', 3):
             return self.stop(job, f'{js["no_progress"]} restarts in a row with no new update (stuck at {ev.last_step})')
+        # the baseline shares the card: if the main run died, the baseline goes first (it could be what filled the card), then the main run restarts alone
+        if js['base']['status'] == 'running':
+            self.kill_job(job, base=True, why='the main run died while the baseline shared the card')
+            js['base']['status'] = 'abandoned'
+            (self.sd / 'ATTENTION-baseline.txt').write_text(f'{ts()} the main run died at update {ev.last_step} while the accum-32 baseline ran; the baseline was stopped and is NOT redone automatically\n', encoding='utf-8')
         self.after_kill(job)
-        js['step_at_launch'] = ev.last_step
+        if not (self.sd / 'ARMED.txt').exists():                    # halt / disarm while this cycle was running
+            return
+        js['step_at_launch'], js['boot_at_launch'], js['launched_t'], js['gpu_at_launch'] = ev.last_step, bt, time.time(), g[0]
         if not js['restarts'] or js['restarts'][-1].get('launched'):
-            js['restarts'].append(dict(at=ts(), step=ev.last_step, planned=False, first=not js['restarts']))
+            js['restarts'].append(dict(at=ts(), step=ev.last_step, planned=False, first=not js['restarts'], rebooted=bool(rebooted)))
         js['restarts'][-1].update(launched=ts())
         self.start(job)
 
@@ -530,7 +644,8 @@ class Sup:
         if not base or js['status'] == 'stopped' or b['status'] in ('done', 'abandoned', 'failed'):
             return
         if b['status'] == 'waiting':
-            if js.get('traceA', {}).get('verdict') == 'PASS' and g and g[1] - g[0] >= base['need_free_mib'] and not (Path(self.plan['work']) / 'STOP').exists():
+            if js.get('traceA', {}).get('verdict') == 'PASS' and g and g[1] - g[0] >= base['need_free_mib'] and not (Path(self.plan['work']) / 'STOP').exists() \
+                    and (self.sd / 'ARMED.txt').exists():
                 b['status'] = 'running'
                 b['started'] = ts()
                 self.start(job, base=True)
@@ -552,7 +667,9 @@ class Sup:
         elif not pids:
             if (Path(self.plan['work']) / 'STOP').exists():
                 return
-            if g and g[1] - g[0] < base['need_free_mib']:
+            if not g or g[1] - g[0] < base['need_free_mib']:
+                return
+            if self.ev_age(job, base=True) < self.plan.get('quiet_s', 180) and self.js(job).get('base_dead_at', 0) < time.time() - self.ev_age(job, base=True):
                 return
             b['restarts'] = b.get('restarts', 0) + 1
             if b['restarts'] > 4:
@@ -568,7 +685,7 @@ class Sup:
     @staticmethod
     def md_trace_a(job, r):
         L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
-             f'- finite: {r["finite"]}; GPU memory in use, peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]})',
+             f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
              f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
              f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- notes: {r["notes"] or "none"}']
         return '\n'.join(L) + '\n'
@@ -585,26 +702,24 @@ class Sup:
 # ---------------------------------------------------------------- commands
 def run_loop(a):
     sup = Sup(a.plan)
-    lock = sup.sd / 'supervisor.lock'
-    me = os.getpid()
-    old = jload(lock)
-    if old and old.get('pid') != me and any(pid == old['pid'] and SELF_NAME in cmd for pid, cmd in list_procs()):
-        print(f'another supervisor runs (pid {old["pid"]}); this one exits')
+    if (sup.sd / 'STOPPED.txt').exists() or (sup.sd / 'ALL-DONE.txt').exists() or not (sup.sd / 'ARMED.txt').exists():
+        why = 'STOPPED.txt exists' if (sup.sd / 'STOPPED.txt').exists() else 'ALL-DONE.txt exists' if (sup.sd / 'ALL-DONE.txt').exists() else 'not armed (ARMED.txt missing; the Mac writes it with `arm` on Ben\'s go line)'
+        print(f'{ts()} nothing to do: {why}')                       # printed, not logged: the boot task starts this every few minutes
         return 0
-    if not (sup.sd / 'ARMED.txt').exists():
-        sup.log('not armed: ARMED.txt is missing, nothing is started (the Mac writes it with `arm` on Ben\'s go line)')
+    lock = acquire_lock(sup.sd / 'supervisor.lock')
+    if lock is None:
+        print(f'{ts()} another supervisor holds supervisor.lock; this one exits')
         return 0
-    jdump(lock, dict(pid=me, started=ts()))
-    sup.log(f'supervisor started, pid {me}, plan {sup.plan_path}, jobs {[j["id"] for j in sup.plan["jobs"]]}')
+    sup.log(f'supervisor started, pid {os.getpid()}, plan {sup.plan_path}, jobs {[j["id"] for j in sup.plan["jobs"]]}')
     while True:
         try:
             s = sup.cycle()
-        except Exception as e:                          # never die on a transient error (a failed nvidia-smi, a half-written file)
+        except Exception as e:                          # never die on a transient error (a failed nvidia-smi or process listing, a half-written file)
             import traceback
-            sup.log('cycle error: ' + traceback.format_exc().replace('\n', ' | '))
+            sup.log('cycle error: ' + traceback.format_exc().replace('\n', ' | ')[-700:])
             s = 30
         if s is None:
-            sup.log('supervisor leaves the loop (see STOPPED.txt / ALL-DONE.txt)')
+            sup.log('supervisor leaves the loop (see STOPPED.txt / ALL-DONE.txt / ARMED.txt)')
             return 0
         time.sleep(s)
 
@@ -636,7 +751,8 @@ def preflight(a):
     for j in pl['jobs']:
         qp = Path(j['src']) / 'custom_io' / 'queue_local' / (j['queue'] + '.txt')
         row(qp.exists(), 'queue file', str(qp))
-        row((Path(j['src']) / 'G2FA4-SETUP-OK.txt').exists(), 'installer ran (G2FA4-SETUP-OK.txt)', j['src'])
+        mk = Path(j['src']) / 'G2FA4-SETUP-OK.txt'
+        row(mk.exists() and 'tests passed' in mk.read_text(errors='replace'), 'installer ran and its CPU tests passed (G2FA4-SETUP-OK.txt)', mk.read_text(errors='replace').strip() if mk.exists() else 'MISSING')
         row(not self_out_exists(sup, j), 'no earlier output for the job name', str(sup.out_dir(j)))
     print('READY' if ok else 'NOT READY')
     return 0 if ok else 1
@@ -699,13 +815,16 @@ def selftest(a):
         if line.startswith('#') and line[1:].split()[:1] == ['ENV']:
             k, _, v = line[1:].strip()[3:].strip().partition('=')
             env[k.strip()] = v.strip()
-    code = 'import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else "-", torch.cuda.mem_get_info() if torch.cuda.is_available() else "-")'
-    r = subprocess.run([sup.plan['python'], '-c', code], capture_output=True, text=True, env=env, timeout=300)
+    code = ('import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else "-", torch.cuda.mem_get_info() if torch.cuda.is_available() else "-")\n'
+            'import custom_io.models.b3g2, custom_io.models.eg as E; print("b3g2 import ok")\n'
+            'import os; print("EG2 dir", os.environ.get("CUSTOM_IO_EG2"), os.path.isdir(os.environ.get("CUSTOM_IO_EG2", "")))\n'
+            'm = E.FrozenEG().load(torch.device("cuda")) if torch.cuda.is_available() else None; print("FrozenEG on cuda ok" if m is not None else "no cuda")')
+    r = subprocess.run([sup.plan['python'], '-c', code], capture_output=True, text=True, env=env, cwd=j['src'], timeout=900)
     who = os.environ.get('USERNAME') or os.environ.get('USER') or '?'
     txt = f'{ts()} user={who} rc={r.returncode}\nstdout: {r.stdout.strip()}\nstderr: {r.stderr.strip()[-600:]}\ngpu_mem: {gpu_mem()}\n'
     (sup.sd / 'selftest.txt').write_text(txt, encoding='utf-8')
     print(txt)
-    return 0 if r.returncode == 0 and ' True ' in r.stdout else 1
+    return 0 if r.returncode == 0 and ' True ' in r.stdout and 'FrozenEG on cuda ok' in r.stdout else 1
 
 
 def main(argv=None):

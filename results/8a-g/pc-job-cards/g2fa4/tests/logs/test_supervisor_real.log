@@ -1,0 +1,52 @@
+2026-10-14 20:58:16 STARTED runner MAIN-pc pid 4035: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/MAIN-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job MAIN-3M --accum 4 --steps 420 --ckpt-every 100
+2026-10-14 21:00:32 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 21:00:33 STARTED runner MAIN-pc pid 4138: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/MAIN-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job MAIN-3M --accum 4 --steps 420 --ckpt-every 100
+2026-10-14 21:03:28 TRACE A: PASS []
+2026-10-14 21:03:28 STARTED runner BASE-pc pid 4185: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/BASE-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job BASE-3M --accum 32 --steps 420 --ckpt-every 50
+2026-10-14 21:05:25 DONE g2fa4: {'steps': 420, 'steps_per_s': 1.1428527239051907, 'train_s': 367.50142097473145, 'peak_mem_mib': None, 'peak_reserved_mib': None, 'n_params': 88758, 'resumed_from': [100]}
+2026-10-14 21:11:32 KILLED BASE-pc: baseline reached update 300
+2026-10-14 21:11:32 COMPARE accum 4 vs 32: FAIL (NO-GO: fall back to accum 8, then 32 (big-run)) diff of means 0.44834506666666396 last-n 0.34231780000000045
+2026-10-14 21:11:33 ALL DONE
+{
+ "status": "done",
+ "kill_done": "killed at update 150, newest checkpoint step-100.pt",
+ "traceA": {
+  "verdict": "PASS",
+  "why_fail": []
+ },
+ "compare": {
+  "verdict": "FAIL",
+  "read_as": "NO-GO: fall back to accum 8, then 32 (big-run)",
+  "why": null
+ },
+ "why": null
+}
+# Trace A for g2fa4: PASS
+
+rules (big-run, fixed before the run): {"upto": 300, "peak_limit_mib": 12288, "first_n": 50, "last_n": 50, "resume_first_diff": 0.01, "resume_mean_abs": 0.02, "resume_max_abs": 0.1}
+
+- finite: True; GPU memory in use (whole card, sampled every poll), peak: 2000 MiB (limit 12288); in use before the run started: 2000 MiB
+- loss: mean of updates 1..50 = 18.162335000000006, mean of the last 50 of 300 = 2.947583, falls: True
+- resume: {"resumed_step": 100, "n_redone": 50, "first_diff": 0.0, "mean_abs": 0.0, "max_abs": 0.0}
+- failures: none
+- notes: none
+
+# Accum 4 against the accum-32 baseline, first 300 updates: FAIL
+
+rules (big-run): {"upto": 300, "last_n": 50, "diff_mean_pass": 0.03, "diff_mean_fail": 0.06, "last_n_pass": 0.05, "last_n_fail": 0.1, "report_from": 101}
+
+- diff_of_means: 0.44834506666666396
+- last_n_diff: 0.34231780000000045
+- report_beside: {"from_update": 101, "mean_abs_diff": 0.6668554000000002, "diff_of_means": 0.5537957999999974, "earlier_limits": "0.02 and 0.01 (assumed identical loop-length draws; not the gate)"}
+- read_as: "NO-GO: fall back to accum 8, then 32 (big-run)"
+
+2026-10-14 20:58:16 STARTED runner MAIN-pc pid 4035: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/MAIN-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job MAIN-3M --accum 4 --steps 420 --ckpt-every 100
+2026-10-14 21:00:32 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 21:00:33 STARTED runner MAIN-pc pid 4138: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/MAIN-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job MAIN-3M --accum 4 --steps 420 --ckpt-every 100
+2026-10-14 21:03:28 TRACE A: PASS []
+2026-10-14 21:03:28 STARTED runner BASE-pc pid 4185: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/real_train_runner.py --work /tmp/tmpxved386q/work --queue /tmp/tmpxved386q/src/custom_io/queue_local/BASE-pc.txt --tree /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g2ck --busy /tmp/tmpxved386q/GPU-BUSY.txt --job BASE-3M --accum 32 --steps 420 --ckpt-every 50
+2026-10-14 21:05:25 DONE g2fa4: {'steps': 420, 'steps_per_s': 1.1428527239051907, 'train_s': 367.50142097473145, 'peak_mem_mib': None, 'peak_reserved_mib': None, 'n_params': 88758, 'resumed_from': [100]}
+2026-10-14 21:11:32 KILLED BASE-pc: baseline reached update 300
+2026-10-14 21:11:32 COMPARE accum 4 vs 32: FAIL (NO-GO: fall back to accum 8, then 32 (big-run)) diff of means 0.44834506666666396 last-n 0.34231780000000045
+2026-10-14 21:11:33 ALL DONE
+ok real overlay train.py under the supervisor

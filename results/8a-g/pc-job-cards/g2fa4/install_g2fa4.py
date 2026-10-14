@@ -8,8 +8,11 @@ It starts no training job and changes nothing that already exists (a folder or f
  2. src-b3g2ck = a copy of src-b3g2 with ONE changed file, custom_io/train.py (the checkpoint / resume overlay of the AT run) and the new tests; src-b3g2 stays untouched;
  3. the two queue files; WORK\\g2fa4\\ with the supervisor and plan.json (its pins are the hashes of what was just checked);
  4. CPU tests of the overlay on the b3g2 model (tiny; the test also runs the Windows file handling: os.replace over a file, fsync): flags off == the unmodified train.py,
-    a kill in the middle of a checkpoint interval + --resume == the uninterrupted run, bit for bit;
- 5. with --register: three scheduled tasks (boot as SYSTEM, logon as this user, selftest as SYSTEM). They do nothing until the supervisor is armed (`arm`).
+    a kill in the middle of a checkpoint interval + --resume == the uninterrupted run. Bit for bit when this CPU is reproducible; the PC's is not (the unmodified train.py
+    differs from itself), so the test first measures that noise and allows 20x it (see overlay-tests/test_ckpt_b3g2.py);
+ 5. with --register: scheduled tasks via PowerShell (Register-ScheduledTask): G2FA4-SUPERVISOR (SYSTEM, highest rights; at startup and every 5 min, no time limit, a second instance is ignored),
+    G2FA4-SUPERVISOR-LOGON (this user, DISABLED: the fallback if the selftest shows that SYSTEM cannot use the GPU; enable it only then, and disable the first),
+    G2FA4-SELFTEST (SYSTEM, run on demand). They do nothing until the supervisor is armed (`arm`).
 --check only does step 1 and reports. Exit 0 = installed (or checked) fine."""
 import argparse, hashlib, json, os, shutil, subprocess, sys, time
 from pathlib import Path
@@ -115,6 +118,13 @@ def main():
         for f in (IN / 'overlay' / 'tests' / 'test_ckpt.py', IN / 'overlay-tests' / 'test_ckpt_b3g2.py'):
             shutil.copy2(f, SRC / 'custom_io' / 'tests' / f.name)
         print(f'copied {SRC0} -> {SRC}; train.py replaced by the overlay; two tests added')
+    for f in (IN / 'overlay' / 'tests' / 'test_ckpt.py', IN / 'overlay-tests' / 'test_ckpt_b3g2.py'):          # the tests are always the pack's (a kept src-b3g2ck may hold older ones)
+        dst = SRC / 'custom_io' / 'tests' / f.name
+        if not dst.exists() or sha(dst) != sha(f):
+            if dst.exists():
+                aside(dst)
+            shutil.copy2(f, dst)
+            print(f'test file {f.name} refreshed in {SRC}')
     for rel, want in PINS0.items():
         if rel != 'train.py':
             row(sha(SRC / 'custom_io' / rel) == want, f'src-b3g2ck {rel}')
@@ -147,23 +157,37 @@ def main():
     pp.write_text(json.dumps(plan, indent=1))
     print(f'wrote {pp}')
     # 4. CPU tests of the overlay on b3g2 (also the Windows file handling)
+    tests = 'skipped'
     if not a.skip_tests:
         env = dict(os.environ, PYTHONPATH=EGPATH, BASE_TREE=str(SRC0), OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', PYTHONUTF8='1')
         t0 = time.time()
         r = subprocess.run([PY, '-m', 'custom_io.tests.test_ckpt_b3g2'], cwd=str(SRC), env=env, capture_output=True, text=True, timeout=3600)
         (STATE / f'install-test-{STAMP}.txt').write_text(r.stdout + '\n--- stderr ---\n' + r.stderr[-6000:], encoding='utf-8')
-        row(r.returncode == 0 and 'ALL OK' in r.stdout, f'CPU test of the checkpoint overlay on b3g2 ({time.time() - t0:.0f} s)', r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-300:])
-        if r.returncode != 0:
+        good = row(r.returncode == 0 and 'ALL OK' in r.stdout, f'CPU test of the checkpoint overlay on b3g2 ({time.time() - t0:.0f} s)', r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-300:])
+        tests = 'passed' if good else 'FAILED'
+        if not good:
             print(r.stdout[-1500:], r.stderr[-1500:])
-    done.write_text(f'{STAMP} installed: src-b3g2 ({COMMIT}) + overlay train.py {OVERLAY_TRAIN}; tests {"skipped" if a.skip_tests else "passed" if ok_all else "FAILED"}\n', encoding='ascii')
-    # 5. scheduled tasks
+    if tests == 'FAILED':
+        done.unlink(missing_ok=True)                     # no mark: the supervisor's preflight stays red
+    else:
+        done.write_text(f'{STAMP} installed: src-b3g2 ({COMMIT}) + overlay train.py {OVERLAY_TRAIN}; tests {tests}\n', encoding='ascii')
+    # 5. scheduled tasks (PowerShell, so the settings schtasks cannot set are set: no 72 h limit, repeat every 5 min, ignore a second instance)
     if a.register and ok_all:
-        run = f'"{PY}" "{sup}" --plan "{pp}" run'
-        st = f'"{PY}" "{sup}" --plan "{pp}" selftest'
-        for name, extra, tr in (('G2FA4-SUPERVISOR', ['/SC', 'ONSTART', '/RU', 'SYSTEM', '/RL', 'HIGHEST'], run), ('G2FA4-SUPERVISOR-LOGON', ['/SC', 'ONLOGON'], run),
-                                ('G2FA4-SELFTEST', ['/SC', 'ONCE', '/ST', '00:00', '/RU', 'SYSTEM', '/RL', 'HIGHEST'], st)):
-            r = subprocess.run(['schtasks', '/Create', '/TN', name, '/TR', tr, '/F'] + extra, capture_output=True, text=True)
-            row(r.returncode == 0, f'scheduled task {name}', (r.stdout + r.stderr).strip()[:200])
+        def ps_task(name, trig, user, disabled=False, ondemand=False, tail='run'):
+            arg = f'"{sup}" --plan "{pp}" {tail}'
+            script = (
+                f"$a = New-ScheduledTaskAction -Execute '{PY}' -Argument '{arg}'; "
+                f"$s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; "
+                f"$p = {user}; {trig} "
+                f"Register-ScheduledTask -TaskName '{name}' -Action $a -Trigger $t -Settings $s -Principal $p -Force | Out-Null; "
+                + (f"Disable-ScheduledTask -TaskName '{name}' | Out-Null; " if disabled else '') + f"(Get-ScheduledTask -TaskName '{name}').State")
+            r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', script], capture_output=True, text=True)
+            row(r.returncode == 0, f'scheduled task {name}', (r.stdout + r.stderr).strip().replace('\n', ' ')[:200])
+        sysp = "New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest"
+        every5 = "$t = @((New-ScheduledTaskTrigger -AtStartup), (New-ScheduledTaskTrigger -Once -At '00:00' -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 3650)));"
+        ps_task('G2FA4-SUPERVISOR', every5, sysp)
+        ps_task('G2FA4-SUPERVISOR-LOGON', "$t = New-ScheduledTaskTrigger -AtLogOn;", "New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest", disabled=True)
+        ps_task('G2FA4-SELFTEST', "$t = New-ScheduledTaskTrigger -Once -At '00:00';", sysp, tail='selftest')
     print('G2FA4 INSTALL DONE' if ok_all else 'G2FA4 INSTALL FINISHED WITH [FIX] LINES')
     return 0 if ok_all else 1
 

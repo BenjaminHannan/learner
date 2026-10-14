@@ -21,6 +21,7 @@ def main():
     ap.add_argument('--crash-at', type=int, default=0); ap.add_argument('--crash-always', action='store_true')
     ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0)
     ap.add_argument('--child', action='store_true'); ap.add_argument('--busy', default='')
+    ap.add_argument('--device', default='cuda'); ap.add_argument('--hang-at', type=int, default=0); ap.add_argument('--die-after-resume-once', action='store_true')
     a = ap.parse_args()
     q = Path(a.queue).stem
     out = Path(a.work) / 'results' / q / a.job
@@ -53,6 +54,10 @@ def main():
     seg = 1 + sum(1 for ln in open(arm / 'events.jsonl') if '"segment"' in ln)
     jp(event='segment', ckpt_every=a.ckpt_every, resume=True)
     side = sorted(ck.glob('step-*.json'), key=lambda p: int(p.stem.split('-')[1]))
+    if a.die_after_resume_once and side and not (arm / 'died.flag').exists():
+        (arm / 'died.flag').write_text('x')              # a segment that dies before its first update
+        sys.exit(1)
+    jp(event='start', device=a.device)
     step, t0 = 0, time.time()
     if side:
         step = int(side[-1].stem.split('-')[1])
@@ -62,6 +67,9 @@ def main():
         time.sleep(a.step_s)
         step += 1
         el += a.step_s
+        if a.hang_at and step == a.hang_at and not (arm / 'hung.flag').exists():
+            (arm / 'hung.flag').write_text('x')
+            time.sleep(3600)
         if a.crash_at and step == a.crash_at and (a.crash_always or not (arm / 'crashed.flag').exists()):
             (arm / 'crashed.flag').write_text('x')
             sys.exit(1)

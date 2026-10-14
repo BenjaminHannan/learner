@@ -17,7 +17,7 @@ S.gpu_mem = lambda: tuple(GPU)
 LIVE = []
 
 
-def plan_for(tmp, steps=900, main_extra=(), base_extra=(), **jobkw):
+def plan_for(tmp, steps=900, main_extra=(), base_extra=(), planextra={}, **jobkw):
     work = Path(tmp) / 'work'
     (work / 'g8a' / 'pools').mkdir(parents=True)
     src = Path(tmp) / 'src'
@@ -32,8 +32,9 @@ def plan_for(tmp, steps=900, main_extra=(), base_extra=(), **jobkw):
                baseline=dict(queue='BASE-pc', job='BASE-3M', upto=300, need_free_mib=4000))
     job['baseline']['runner_cmd'] = common + ['--job', 'BASE-3M'] + list(base_extra)
     job.update(jobkw)
-    plan = dict(version=1, work=str(work), busy=str(Path(tmp) / 'GPU-BUSY.txt'), python=PY, state_dir=str(Path(tmp) / 'state'), poll_s=0.1, max_no_progress=2,
-                gpu=dict(need_free_mib=9500), jobs=[job])
+    plan = dict(version=1, work=str(work), busy=str(Path(tmp) / 'GPU-BUSY.txt'), python=PY, state_dir=str(Path(tmp) / 'state'), poll_s=0.1, max_no_progress=2, quiet_s=0.3,
+                stall_warn_s=600, stall_kill_s=1200, gpu=dict(need_free_mib=9500), jobs=[job])
+    plan.update(planextra)
     p = Path(tmp) / 'plan.json'
     p.write_text(json.dumps(plan))
     (Path(plan['state_dir'])).mkdir(parents=True, exist_ok=True)
@@ -52,9 +53,13 @@ def drive(sup, until, timeout=90):
 
 
 def cleanup():
-    for pid, cmd in S.list_procs():
-        if 'fake_runner' in cmd and 'test_supervisor' not in cmd:
+    for _ in range(50):
+        left = [pid for pid, cmd in S.list_procs() if 'fake_runner' in cmd and 'test_supervisor' not in cmd]
+        if not left:
+            return
+        for pid in left:
             S.kill_tree(pid)
+        time.sleep(0.2)
 
 
 def js(sup):
@@ -213,6 +218,106 @@ def t_arm_halt():
         assert ck, 'events kept'
         print('ok not armed = nothing starts; arm starts; halt stops the runners and disarms (events kept)')
 
+def t_device_cpu():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, main_extra=['--device', 'cpu']))
+        s = drive(sup, lambda x: False, 60)
+        assert s is None and js(sup)['status'] == 'stopped' and 'cpu' in js(sup)['why'], js(sup)
+        assert not sup.find('fake_runner', 'MAIN-pc')
+        print('ok a run that started on the CPU is stopped:', js(sup)['why'][:90])
+
+
+def t_stall():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, main_extra=['--hang-at', '400'], planextra=dict(stall_warn_s=1.5, stall_kill_s=4)))
+        drive(sup, lambda x: False, 120)
+        assert js(sup)['status'] == 'done' and (sup.sd / 'ATTENTION-stall.txt').exists(), js(sup)
+        print('ok a hung run: warned after 1.5 s, killed after 4 s, resumed from the checkpoint, finished')
+
+
+def t_main_dies_with_baseline():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, steps=1200, main_extra=['--crash-at', '500'], base_extra=['--step-s', '0.08']))
+        drive(sup, lambda x: False, 120)
+        j = js(sup)
+        assert j['status'] == 'done' and j['base']['status'] == 'abandoned' and (sup.sd / 'ATTENTION-baseline.txt').exists(), (j['status'], j['base'])
+        assert j['no_progress'] == 0
+        print('ok the main run died while the baseline shared the card: baseline stopped first, main resumed and finished (baseline abandoned, flagged)')
+
+
+def t_no_checkpoint():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, main_extra=['--ckpt-every', '100000']))
+        s = drive(sup, lambda x: False, 60)
+        assert s is None and js(sup)['status'] == 'stopped' and 'no checkpoint' in js(sup)['why'], js(sup)
+        print('ok no checkpoint by update 150 stops the run instead of leaving it unprotected')
+
+
+def t_empty_segment():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, main_extra=['--die-after-resume-once']))
+        drive(sup, lambda x: False, 120)
+        j = js(sup)
+        assert j['status'] == 'done' and j['traceA']['verdict'] == 'PASS', j
+        print('ok a resumed segment that died before its first update does not break trace A')
+
+
+def t_lock():
+    with tempfile.TemporaryDirectory() as tmp:
+        a = S.acquire_lock(Path(tmp) / 'x.lock')
+        assert a is not None and S.acquire_lock(Path(tmp) / 'x.lock') is None
+        a.close()
+        assert S.acquire_lock(Path(tmp) / 'x.lock') is not None
+        print('ok the OS-level lock admits one holder at a time')
+
+
+def t_kill_fails_then_works():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, steps=1500))
+        real = S.kill_tree
+        S.kill_tree = lambda pid: None                                  # taskkill "fails"
+        try:
+            drive(sup, lambda x: 'KILL FAILED' in (x.sd / 'supervisor.log').read_text(), 60)
+            assert not js(sup)['kill_done'], 'kill_done set although the kill failed'
+        finally:
+            S.kill_tree = real
+        for pid, cmd in S.list_procs():                                 # clean the processes the failed kills left
+            if 'fake_runner' in cmd and 'test_supervisor' not in cmd:
+                real(pid)
+        time.sleep(1)
+        drive(sup, lambda x: False, 120)
+        assert js(sup)['status'] == 'done' and js(sup)['traceA']['verdict'] == 'PASS', js(sup)
+        print('ok a failed kill is not counted as done; it is retried')
+
+
+def t_reboot_not_crash():
+    with tempfile.TemporaryDirectory() as tmp:
+        GPU[0] = 2000
+        sup = S.Sup(plan_for(tmp, main_extra=['--crash-at', '10', '--crash-always'], kill_resume_at=0))
+        n = [0]
+
+        def bt():
+            n[0] += 1000
+            return n[0]
+        real = S.boot_time
+        S.boot_time = bt
+        try:
+            t0 = time.time()
+            while time.time() - t0 < 12:
+                assert sup.cycle() is not None, js(sup)
+                time.sleep(0.1)
+        finally:
+            S.boot_time = real
+            cleanup()
+        assert js(sup)['status'] != 'stopped' and len(js(sup)['restarts']) >= 4, js(sup)
+        print('ok deaths across a reboot are not counted as crashes (%d launches, still not stopped)' % len(js(sup)['restarts']))
+
 
 def t_stale_busy_lock():
     with tempfile.TemporaryDirectory() as tmp:
@@ -223,7 +328,7 @@ def t_stale_busy_lock():
         Path(sup.plan['busy']).write_text('custom-io MAIN-pc/MAIN-3M 1234 old\ncustom-io other-pc/x 99 keep\n')
         sup.cycle()
         pools = work / 'g8a' / 'pools'
-        assert not (pools / 'p10-rung30-s400-a64-L.lock').exists() and list(pools.glob('*.lock.aside-*')), list(pools.iterdir())
+        assert not (pools / 'p10-rung30-s400-a64-L.lock').exists() and list(pools.glob('*.lock.aside-*')), (list(pools.iterdir()), [(p, c[:80]) for p, c in S.list_procs() if 'custom_io' in c or 'fake_runner' in c])
         b = Path(sup.plan['busy']).read_text()
         assert 'other-pc/x' in b and 'MAIN-pc/MAIN-3M 1234' not in b, b
         cleanup()
@@ -231,7 +336,7 @@ def t_stale_busy_lock():
 
 
 if __name__ == '__main__':
-    todo = [t_happy, t_crash, t_loop, t_nan, t_memory, t_resume_mismatch, t_compare_fail, t_unclear, t_adopt_and_reboot, t_gpu_held, t_arm_halt, t_stale_busy_lock]
+    todo = [t_happy, t_crash, t_loop, t_nan, t_memory, t_resume_mismatch, t_compare_fail, t_unclear, t_adopt_and_reboot, t_gpu_held, t_arm_halt, t_stale_busy_lock, t_device_cpu, t_stall, t_main_dies_with_baseline, t_no_checkpoint, t_empty_segment, t_lock, t_kill_fails_then_works, t_reboot_not_crash]
     only = sys.argv[1:]
     try:
         for t in todo:

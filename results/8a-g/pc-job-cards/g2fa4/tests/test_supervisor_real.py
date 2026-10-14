@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory() as tmp:
                compare=dict(upto=300, last_n=50, diff_mean_pass=0.03, diff_mean_fail=0.06, last_n_pass=0.05, last_n_fail=0.10, report_from=101),
                baseline=dict(queue='BASE-pc', job='BASE-3M', upto=300, need_free_mib=4000, runner_cmd=c + ['--job', 'BASE-3M', '--accum', '32', '--steps', '420', '--ckpt-every', '50']))
     plan = dict(version=1, work=str(work), busy=str(Path(tmp) / 'GPU-BUSY.txt'), python=sys.executable, state_dir=str(Path(tmp) / 'state'), poll_s=2, max_no_progress=3,
-                gpu=dict(need_free_mib=9500), jobs=[job])
+                device='cpu', gpu=dict(need_free_mib=9500), jobs=[job])
     (Path(tmp) / 'plan.json').write_text(json.dumps(plan))
     (Path(tmp) / 'state').mkdir()
     (Path(tmp) / 'state' / 'ARMED.txt').write_text('test\n')
