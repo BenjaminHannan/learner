@@ -2,6 +2,8 @@
 
   python -m game.search sq --out DIR [--workers 4] [--p-repeat 0.75] [--k 16] [--h 24] [--worlds N]
   python -m game.search report --out DIR [--json FILE]
+  python -m game.search expert --out DIR [--workers 4] [--worlds 16] [--first 0] [--cap 1000]      (addendum A25, SE)
+  python -m game.search expert-report --out DIR [--worlds 16]
 
 A decision state is a live TextEnv. For each of the 17 first moves, K rollouts run on fresh deep copies (each given a fresh random future by
 re-seeding the shared world.random): take the first move, then H - 1 more steps with a sticky random policy (repeat the last action with
@@ -30,6 +32,8 @@ CHANCE_ORACLE = 0.5       # as game.probe.CHANCE_ORACLE: the states are the prob
 SAMPLE_FROM, SAMPLE_EVERY = 3, 4
 MIN_WORLDS, MIN_NAV = 48, 300
 SQ0_BAR, SQ1_PASS, SQ1_WRONG, SQ2_PASS, SQ2_WRONG = 0.80, 0.25, 0.10, 0.60, 0.35
+EXPERT_RUN = 393          # practice run seed of the search expert's worlds (A25)
+SE_PASS, SE_WRONG = 6.0, 4.5
 
 
 def pick(means):
@@ -160,6 +164,102 @@ def sq(out, workers, k, h, p_repeat, worlds=None):
     return load_all(out)
 
 
+def expert_episode(i, k=K, h=H, gamma=GAMMA, p_repeat=P_REPEAT, cap=None, explore=None, max_steps=None):
+    """The search expert plays practice world i of run EXPERT_RUN: each step it searches a copy of the world (search_means, pick); with no
+    signal it takes the sticky random policy's next action. The act rule is play.play's (A25): act stream default_rng([7, i]) draws one uniform
+    number and one random action every step; below `explore` the step takes the random action instead. -> dict like play.play's episodes."""
+    seed = play.practice_seed(EXPERT_RUN, 0, i)
+    assert not play.is_sealed(seed), seed
+    consts = play.load_constants()[0]
+    cap = cap or consts['episode_cap']
+    explore = consts['explore'] if explore is None else explore
+    env = TextEnv(seed=seed, length=cap)
+    env.reset()
+    act, tail = np.random.default_rng([7, i]), np.random.default_rng([EXPERT_RUN, i, 10 ** 6])
+    ep = dict(world=i, seed=seed, length=0, end=None, unlocks=[], sources=dict(search=0, fallback=0, explore=0), seconds=0.0)
+    seen, last, done, t, t0 = set(), 0, False, 0, time.time()
+    while not done and (max_steps is None or t < max_steps):
+        j = pick(search_means(env, np.random.default_rng([EXPERT_RUN, i, t]), k, h, gamma, p_repeat))
+        if j is not None:
+            own, src = j, 'search'
+        else:
+            own, src = (last if tail.random() < p_repeat else int(tail.integers(play.N_ACTIONS))), 'fallback'
+        last = own
+        u, r = act.random(), int(act.integers(play.N_ACTIONS))
+        if u < explore:
+            own, src = r, 'explore'
+        ep['sources'][src] += 1
+        _, _, done, info = env.step(own)
+        for name, count in sorted(info['achievements'].items()):
+            if count > 0 and name not in seen:
+                seen.add(name)
+                ep['unlocks'].append((t, name))
+        t += 1
+    ep['length'], ep['seconds'] = t, round(time.time() - t0, 1)
+    ep['end'] = 'dead' if info['inventory']['health'] <= 0 else 'cap'
+    return ep
+
+
+def run_expert_world(i, out, **kw):
+    """expert_episode, written to OUT/expert-i.json (skipped if it exists)."""
+    path = os.path.join(out, f'expert-{i}.json')
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    ep = expert_episode(i, **kw)
+    tmp = path + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(ep, f)
+    os.replace(tmp, path)
+    return ep
+
+
+def _expert_job(args):
+    return run_expert_world(args[0], args[1], cap=args[2])
+
+
+def reference_arms(worlds, first, cap):
+    """The labeller and the random policy on the same worlds under the same act rule (act stream [7, i]). -> {arm: [episodes]}"""
+    seeds = [play.practice_seed(EXPERT_RUN, 0, i) for i in range(first, first + worlds)]
+    acts = [[7, i] for i in range(first, first + worlds)]
+    explore = play.load_constants()[0]['explore']
+    return dict(oracle=play.play(oracle.oracle_policy(), seeds, acts, explore, cap),
+                random=play.play(None, seeds, acts, explore, cap))
+
+
+def expert_verdict(mean):
+    """A25 verdict from the search expert's mean unlocks a game on the practice worlds."""
+    return 'pass' if mean >= SE_PASS else 'proved wrong' if mean <= SE_WRONG else 'no verdict'
+
+
+def expert_report(out, worlds):
+    from game import analyze
+    eps = [json.load(open(os.path.join(out, f'expert-{i}.json'))) for i in range(worlds)]
+    ref = json.load(open(os.path.join(out, 'ref.json')))
+    u = {'search': [len(e['unlocks']) for e in eps], **{a: [len(e['unlocks']) for e in v] for a, v in ref.items()}}
+    mean = {a: sum(v) / len(v) for a, v in u.items()}
+    paired = {f'search_minus_{a}': analyze.boot_diff(u['search'], u[a]) for a in ('oracle', 'random')}
+    names = sorted({n for e in eps for _, n in e['unlocks']})
+    steps = sum(e['length'] for e in eps)
+    src = {s: sum(e['sources'][s] for e in eps) / steps for s in ('search', 'fallback', 'explore')}
+    return dict(worlds=worlds, mean_unlocks=mean, paired=paired, verdict=expert_verdict(mean['search']),
+                achievements={n: sum(any(m == n for _, m in e['unlocks']) for e in eps) / worlds for n in names},
+                mean_length=steps / worlds, ends=dict(Counter(e['end'] for e in eps)), sources_share=src,
+                seconds_per_step=sum(e['seconds'] for e in eps) / steps)
+
+
+def sq_expert(out, workers, worlds, first, cap):
+    os.makedirs(out, exist_ok=True)
+    ref_path = os.path.join(out, 'ref.json')
+    if not os.path.exists(ref_path):
+        ref = reference_arms(worlds, first, cap)
+        with open(ref_path, 'w') as f:
+            json.dump({a: [dict(unlocks=e['unlocks'], length=e['length']) for e in v] for a, v in ref.items()}, f)
+    with mp.Pool(workers) as pool:
+        for ep in pool.imap_unordered(_expert_job, [(i, out, cap) for i in range(first, first + worlds)], chunksize=1):
+            print(f"world {ep['world']}: {len(ep['unlocks'])} unlocks, {ep['length']} steps, {ep['seconds']} s", flush=True)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description='Search labels (A24, SQ).')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -173,7 +273,26 @@ def main(argv=None):
     b = sub.add_parser('report')
     b.add_argument('--out', required=True)
     b.add_argument('--json', default=None)
+    c = sub.add_parser('expert')
+    c.add_argument('--out', required=True)
+    c.add_argument('--workers', type=int, default=4)
+    c.add_argument('--worlds', type=int, default=16)
+    c.add_argument('--first', type=int, default=0)
+    c.add_argument('--cap', type=int, default=None)
+    d = sub.add_parser('expert-report')
+    d.add_argument('--out', required=True)
+    d.add_argument('--worlds', type=int, default=16)
     args = ap.parse_args(argv)
+    if args.cmd == 'expert':
+        sq_expert(args.out, args.workers, args.worlds, args.first, args.cap or play.load_constants()[0]['episode_cap'])
+        print(json.dumps(expert_report(args.out, args.worlds), indent=1))
+        return
+    if args.cmd == 'expert-report':
+        rep = expert_report(args.out, args.worlds)
+        print(json.dumps(rep, indent=1))
+        with open(os.path.join(args.out, 'expert-report.json'), 'w') as f:
+            json.dump(rep, f, indent=1)
+        return
     if args.cmd == 'sq':
         sq(args.out, args.workers, args.k, args.h, args.p_repeat, args.worlds)
     rows, worlds = load_all(args.out)

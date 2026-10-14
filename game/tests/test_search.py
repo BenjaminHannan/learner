@@ -116,5 +116,46 @@ class OneWorld(unittest.TestCase):
         self.assertFalse(play.is_sealed(play.practice_seed(search.RUN_SEED, 0, 99)))
 
 
+class Expert(unittest.TestCase):
+    def test_expert_verdict(self):
+        v = search.expert_verdict
+        self.assertEqual([v(6.0), v(5.99), v(4.51), v(4.5), v(2.31), v(8.23)],
+                         ['pass', 'no verdict', 'no verdict', 'proved wrong', 'proved wrong', 'pass'])
+
+    def test_expert_episode_is_deterministic_and_follows_the_act_rule(self):
+        a = search.expert_episode(0, k=1, h=3, max_steps=8)
+        b = search.expert_episode(0, k=1, h=3, max_steps=8)
+        a.pop('seconds'), b.pop('seconds')
+        self.assertEqual(a, b)
+        self.assertEqual(a['length'], 8)
+        self.assertEqual(sum(a['sources'].values()), 8)
+        self.assertEqual(a['seed'], play.practice_seed(search.EXPERT_RUN, 0, 0))
+        # explore = 1 makes every step the act stream's random action
+        c = search.expert_episode(0, k=1, h=3, max_steps=5, explore=1.0)
+        self.assertEqual(c['sources'], dict(search=0, fallback=0, explore=5))
+
+    def test_act_stream_matches_play_play(self):
+        # the expert's random actions must be the ones play.play draws for act seed [7, i] (same stream, same order)
+        seed = play.practice_seed(search.EXPERT_RUN, 0, 3)
+        ref = play.play(None, [seed], [[7, 3]], 0.1, 12, log_steps=True)[0]['steps']
+        rng = np.random.default_rng([7, 3])
+        draws = [(rng.random(), int(rng.integers(play.N_ACTIONS))) for _ in range(12)]
+        self.assertEqual([play.WORDS[r] for _, r in draws], [w for _, w, _, _ in ref])
+
+    def test_run_expert_world_resumable(self):
+        with tempfile.TemporaryDirectory() as d:
+            a = search.run_expert_world(1, d, k=1, h=3, max_steps=4)
+            path = os.path.join(d, 'expert-1.json')
+            stamp = os.path.getmtime(path)
+            self.assertEqual(a, search.run_expert_world(1, d, k=1, h=3, max_steps=4))
+            self.assertEqual(stamp, os.path.getmtime(path))
+
+    def test_reference_arms_use_the_same_worlds(self):
+        ref = search.reference_arms(2, 0, 30)
+        self.assertEqual(sorted(ref), ['oracle', 'random'])
+        self.assertTrue(all(len(v) == 2 for v in ref.values()))
+        self.assertEqual([e['seed'] for e in ref['oracle']], [play.practice_seed(search.EXPERT_RUN, 0, i) for i in range(2)])
+
+
 if __name__ == '__main__':
     unittest.main()
