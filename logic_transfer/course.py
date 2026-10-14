@@ -18,6 +18,7 @@ Output: OUT/checkpoint.pt (same keys as the parent: model, name, cfg, chars, ste
 updates, s/update), OUT/run.json.
 """
 import argparse
+import gc
 import hashlib
 import json
 import os
@@ -30,6 +31,27 @@ import numpy as np
 import torch
 
 MIX_STREAM = 1_000_003      # the extra-slot stream is RandomState(seed + MIX_STREAM)
+
+
+def is_oom(e):
+    return isinstance(e, torch.OutOfMemoryError) or 'out of memory' in str(e).lower()
+
+
+def oom_retry(fn, counter, tries=80):
+    """Run fn(); when the (shared) GPU is full, free this process's cache, wait a few seconds and run it again. Many small courses share one card
+    (the first LT-2 waves lost half their runs to CUDA out-of-memory with 12 processes on a 24 GB card); a retry reproduces the same update
+    (batch, schedule and answer-drill RNG are re-seeded inside fn), so waiting changes the speed, never the result. counter[0] counts the retries."""
+    for _ in range(tries):
+        try:
+            return fn()
+        except (torch.OutOfMemoryError, RuntimeError) as e:        # CUDA 'out of memory' also surfaces as AcceleratorError (a RuntimeError)
+            if not is_oom(e):
+                raise
+            counter[0] += 1
+            gc.collect()
+            torch.cuda.empty_cache()
+            time.sleep(3 + random.random() * 9)
+    return fn()
 
 
 def n_mix(batch, mix_frac):
@@ -154,12 +176,16 @@ def main(argv=None):
     ap.add_argument('--eval-every', type=int, default=250)
     ap.add_argument('--eval-n', type=int, default=0, help='periodic evals use the first N rows of each file (0 = the whole file); stop checks always confirm on the whole file')
     ap.add_argument('--eval-batch', type=int, default=128)
+    ap.add_argument('--gpu-mem-gb', type=float, default=0, help='cuda: cap this process caching allocator at N GB (0 = no cap); the allocator then frees cached blocks before it fails')
     ap.add_argument('--abort-file', help='stop (reason abort) at the next periodic eval once this file exists')
     ap.add_argument('--stop-marks', default='', help="'NAME>=X,NAME@L>=Y' percent marks; stop when they hold at two consecutive evals and the full files confirm")
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
     dev = torch.device(a.device)
     assert a.device == 'cpu' or torch.cuda.is_available(), 'no CUDA device'
+    ooms = [0]
+    if a.device == 'cuda' and a.gpu_mem_gb:
+        torch.cuda.set_per_process_memory_fraction(min(1.0, a.gpu_mem_gb * (1 << 30) / torch.cuda.get_device_properties(0).total_memory))
     from custom_io import data as D
     from custom_io.data import Dataset, collate, load_rows, to_device
     from custom_io.evalx import evaluate
@@ -169,7 +195,7 @@ def main(argv=None):
     t_start = time.time()
     ck = torch.load(a.parent, map_location='cpu', weights_only=True)
     torch.manual_seed(a.seed); random.seed(a.seed); np.random.seed(a.seed)
-    model = load_model(a.parent).to(dev)
+    model = oom_retry(lambda: load_model(a.parent).to(dev), ooms)
     model.train()
     train_path = os.path.join(a.data, 'train.jsonl')
     sk_rows = load_rows(train_path)
@@ -205,7 +231,7 @@ def main(argv=None):
         for name, (_, rows) in evals.items():
             t = time.time()
             sub = rows[:n] if n else rows
-            r = evaluate(model, sub, a.eval_batch, dev, by_label=True)
+            r = oom_retry(lambda: evaluate(model, sub, a.eval_batch, dev, by_label=True), ooms)
             res[name] = r
             elog.write(json.dumps(dict(update=u, name=name, n=r['n'], correct=r['correct'], exact=round(r['exact'], 3),
                                        by_level={lv: [c['correct'], c['n']] for lv, c in sorted(r['by_level'].items())},
@@ -221,18 +247,23 @@ def main(argv=None):
         t0 = time.time()
         for g in opt.param_groups:
             g['lr'] = lr_at(u - 1, a.warmup, a.lr)
-        model._drill_rng = random.Random(f'ans_drill|{a.seed}|{u}')
         items = [sk_ds[int(i)] for i in sk_idx[u - 1]] + [mix_ds[int(i)] for i in ex_idx[u - 1]]
-        batch = to_device(collate(items), dev)
-        out = model.loss(batch)
-        loss = out[0] if isinstance(out, tuple) else out
-        loss.backward()
+
+        def fwd_bwd():
+            opt.zero_grad(set_to_none=True)                  # a retry after an out-of-memory error starts from clean gradients
+            model._drill_rng = random.Random(f'ans_drill|{a.seed}|{u}')
+            batch = to_device(collate(items), dev)
+            out = model.loss(batch)
+            l_ = out[0] if isinstance(out, tuple) else out
+            l_.backward()
+            return l_
+        loss = oom_retry(fwd_bwd, ooms) if a.device == 'cuda' else fwd_bwd()
         if a.slice_every and u % a.slice_every == 0 and k:
             keep_rng = model._drill_rng
             with torch.no_grad():
                 for name, sl, acc in (('cur', items[:a.batch - k], win_cur), ('mix', items[a.batch - k:], win_mix)):
                     model._drill_rng = random.Random(f'slice|{a.seed}|{u}|{name}')
-                    o2 = model.loss(to_device(collate(sl), dev))
+                    o2 = oom_retry(lambda: model.loss(to_device(collate(sl), dev)), ooms)
                     acc.append(float((o2[0] if isinstance(o2, tuple) else o2).detach()))
             model._drill_rng = keep_rng
         torch.nn.utils.clip_grad_norm_(model.parameters(), a.grad_clip)
@@ -267,7 +298,9 @@ def main(argv=None):
             rec = dict(update=u, loss=round(last, 5),
                        loss_cur=round(float(np.mean(win_cur)), 5) if win_cur else None,
                        loss_mix=round(float(np.mean(win_mix)), 5) if win_mix else None, n_slice=len(win_cur), lr=opt.param_groups[0]['lr'], s_per_update=round(float(np.mean(win_t)), 4),
-                       s_per_update_median=round(float(np.median(win_t)), 4), elapsed=round(time.time() - t_start, 1))
+                       s_per_update_median=round(float(np.median(win_t)), 4), elapsed=round(time.time() - t_start, 1),
+                       oom_retries=ooms[0], gpu_peak_alloc_mb=(round(torch.cuda.max_memory_allocated() / 2**20) if a.device == 'cuda' else None),
+                       gpu_peak_reserved_mb=(round(torch.cuda.max_memory_reserved() / 2**20) if a.device == 'cuda' else None))
             log.write(json.dumps(rec) + '\n'); log.flush()
             print(json.dumps(rec), flush=True)
             win_loss, win_t, win_cur, win_mix = [], [], [], []
@@ -297,6 +330,8 @@ def main(argv=None):
                eval_files_sha256={n: sha256(p) for n, (p, _) in evals.items()},
                sk_idx_sha256=hashlib.sha256(sk_idx.tobytes()).hexdigest(), ex_idx_sha256=hashlib.sha256(ex_idx.tobytes()).hexdigest(),
                final_loss_window=last, steady_median_s_per_update=round(float(np.median(t_all[min(5, len(t_all) - 1):])), 4),
+               oom_retries=ooms[0], gpu_peak_alloc_mb=(round(torch.cuda.max_memory_allocated() / 2**20) if a.device == 'cuda' else None),
+               gpu_peak_reserved_mb=(round(torch.cuda.max_memory_reserved() / 2**20) if a.device == 'cuda' else None),
                train_s=round(sum(t_all), 1), eval_s=round(eval_s_total, 1), wall_s=round(time.time() - t_start, 1),
                drill_stats=getattr(model, 'drill_stats', None))
     json.dump(run, open(os.path.join(a.out, 'run.json'), 'w'), indent=1)

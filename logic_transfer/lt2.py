@@ -164,7 +164,7 @@ def cmd_run(a):
              '--mix-frac', '0.25', '--updates', str(a.updates), '--batch', '64', '--lr', '1e-4', '--warmup', '100', '--seed', str(s),
              '--threads', str(a.threads), '--device', a.device, '--out', os.path.join(out_root, run_name(p, s)), '--log-every', '250',
              '--eval-every', str(a.eval_every), '--eval-n', str(a.eval_n), '--stop-marks', marks_string(th), '--abort-file', abort,
-             '--slice-every', '25'] + evs
+             '--slice-every', '25'] + (['--gpu-mem-gb', str(a.gpu_mem_gb)] if a.device == 'cuda' and a.gpu_mem_gb else []) + evs
         return c
     print(f'rung {rung}: marks {marks_string(th)}; {len(runs)} runs; device {a.device}; procs {a.procs} x {a.threads} threads', flush=True)
     todo = [(p, s) for p, s in runs if run_state(os.path.join(out_root, run_name(p, s))) != 'done']
@@ -173,7 +173,7 @@ def cmd_run(a):
             print(' '.join(cmd(p, s)))
         return
     live, t0, attempts = {}, time.time(), {}
-    env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(HERE), os.environ.get('PYTHONPATH')])))
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(HERE), os.environ.get('PYTHONPATH')])), PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True')
     last_note = 0
     while todo or live:
         while todo and len(live) < a.procs:
@@ -446,6 +446,7 @@ def main(argv=None):
     r.add_argument('--poll', type=float, default=20)
     r.add_argument('--no-falsifier', dest='falsifier', action='store_false')
     r.add_argument('--keep-abort', action='store_true')
+    r.add_argument('--gpu-mem-gb', type=float, default=3.5, help='cuda: per-process cap on the caching allocator (the card is shared by every run of every rung at once; an out-of-memory then waits and retries inside the run)')
     r.add_argument('--stagger', type=float, default=6, help='seconds between process starts (memory peak while loading rows)')
     r.add_argument('--retries', type=int, default=1, help='restart a run that exits non-zero (same seed, from scratch) this many times')
     r.add_argument('--retry-wait', type=float, default=30)
