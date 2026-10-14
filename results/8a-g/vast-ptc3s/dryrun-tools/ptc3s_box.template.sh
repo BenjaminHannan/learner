@@ -51,8 +51,8 @@
 #   PROF_PLAN    default | b3sweep | b3ab. b3sweep changes only these defaults: MAXH 3, PROF_MAXMIN 150, PROF_JOB_MIN 20, PROF_JOB_STEPS 50.
 #
 # PROF_PLAN=b3ab (needs PROFILE=1; added 2026-10-14): the B3G2 speed A/B of results/8a-g/speedup/PREREG-b3g2-speed-ab.md. Same stages setup, code, gemma, data, skills and the same pool-building smoke
-# (50 updates). Then ONLY, each under its own timeout and never fatal: i1_b3g2_profile (B3G2 3M at accum 4: breakdown, throughput, padding, syncs), i2_b3g2_abequiv (mark 6: the variants tf32, pad64,
-# unfused, nosync against the reference on one update) and i3_b3g2_abbench (reference accum 4; B arms accum 8,16,2 and the single variants; 3 interleaved rounds A,B,A,B,A,B; 10 warm-up and 40 timed
+# (50 updates). Then ONLY, each under its own timeout and never fatal: i1_b3g2_profile (B3G2 3M at accum 4: profiler = GPU busy share for mark 8, and syncs), i2_b3g2_abequiv (mark 6: the variants nosync, pad64p, pad64,
+# tf32, unfused against the reference on one update) and i3_b3g2_abbench (reference accum 4; B arms in this order: the single variants nosync, pad64p, pad64, tf32, unfused, THEN accum 8,16,2; 3 interleaved rounds A,B,A,B,A,B; 10 warm-up and 40 timed
 # updates; median s/update, A spread, peak GB, dollar lines from DPH), and LAST i4_b3g2_pair (added 2026-10-14): the registered accum-4 against accum-32 loss comparison on the SAME GPU. i4 fetches the PC's
 # src-b3g2 (custom_io at B3G2_SHA = 74d6e92c75, the pin list PINS0 of install_g2fa4.py checked against git by gen_box.py), builds the two job commands from the pack's queue lines 8aB3G2A4-pc.txt and
 # 8aB3G2A4b32-pc.txt with local_runner's own parse_queue / command (as the job smoke and the AT runs do), changes nothing but --accum B3G2=4 / B3G2=32 and --train-extra (here '--log-every 1' ONLY: no
@@ -61,8 +61,8 @@
 # registered one), checks that the process group is gone before the next one starts, and exports each run's train lines as pair_a4_events.jsonl / pair_a32_events.jsonl (B3G2/events.jsonl when the run has
 # one, else the train event lines of B3G2/stdout.txt) in the profrun block, with one 'PROF-PAIR' marker line per run (last step, s/update from the elapsed field, nvidia-smi peak memory). The box
 # does NOT compare the two runs: that is done offline. i4 is skipped when fewer than PROF_PAIR_NEED_MIN (105 = 25 + 80) minutes of the PROF_MAXMIN budget are left; it is never fatal.
-#   b3ab changes only these defaults: MAXH 4.5, PROF_MAXMIN 190, PROF_JOB_MIN 20, PROF_JOB_STEPS 50 (MAXH was 3 and PROF_MAXMIN 120 before i4 was added; b3sweep keeps 3 and 150). PROF_B3P_MIN (15), PROF_ABE_MIN (20),
-#   PROF_ABB_MIN (75): timeouts of i1, i2, i3 in minutes. PROF_PAIR_A4_MIN (25), PROF_PAIR_A32_MIN (80), PROF_PAIR_NEED_MIN (105): i4. PROF_PAIR_TRAIN_EXTRA ('--log-every 1') is a CPU dry-run hook.
+#   b3ab changes only these defaults: MAXH 5.5, PROF_MAXMIN 285, PROF_JOB_MIN 20, PROF_JOB_STEPS 50 (b3sweep keeps 3 and 150). PROF_B3P_MIN (20), PROF_ABE_MIN (20),
+#   PROF_ABB_MIN (125; abbench starts no new arm after minute PROF_ABB_MIN - 25): timeouts of i1, i2, i3 in minutes. b3ab refuses DPH=0 and MAXH x DPH above PROF_STAGE_CAP_USD (3.0). PROF_PAIR_A4_MIN (25), PROF_PAIR_A32_MIN (80), PROF_PAIR_NEED_MIN (105): i4. PROF_PAIR_TRAIN_EXTRA ('--log-every 1') is a CPU dry-run hook.
 #   DPH should be the offer's dph_total: abbench prints its money lines from it (0 = no dollar figures); the box prints the rental so far and the MAXH ceiling in dollars.
 #   PROF_SWEEP_MIN (45) and PROF_CMP_MIN (15): timeouts of h1 and h2 in minutes; PROF_AT_MIN (40): timeout of each AT run; PROF_AT_STEPS (300); PROF_AT_TRAIN_EXTRA ('--log-every 20');
 #   PROF_AT_FROM_STEP (40): the speed is taken from the log lines at and after this step.
@@ -84,7 +84,7 @@ PROFILE=${PROFILE:-0}
 PROF_PLAN=${PROF_PLAN:-default}
 if [ "$PROFILE" = 1 ]; then D_MAXH=2; D_END=300; D_FAIL=600; else D_MAXH=6; D_END=600; D_FAIL=1800; fi
 [ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3sweep ] && D_MAXH=3
-[ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3ab ] && D_MAXH=4.5
+[ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3ab ] && D_MAXH=5.5
 MAXH=${MAXH:-$D_MAXH}; END_SLEEP=${END_SLEEP:-$D_END}; FAIL_SLEEP=${FAIL_SLEEP:-$D_FAIL}; TFVER=${TFVER:-5.19.0}; EG=${EG:-1}
 DPH=${DPH:-0}; PROJ_CAP_USD=${PROJ_CAP_USD:-4.0}; GUARD_STEP=${GUARD_STEP:-1000}; EXTRA_H=${EXTRA_H:-0.5}; STEPS=24000
 EXPORT_CK=${EXPORT_CK:-1}; PACE=${PACE:-100}; CK_ROUNDS=${CK_ROUNDS:-3}; TICK_EVERY=${TICK_EVERY:-180}
@@ -92,7 +92,7 @@ PTC_DRY=${PTC_DRY:-0}; PTC_DRY_EXTRA=${PTC_DRY_EXTRA:-[]}; PTC_DRY_EG=${PTC_DRY_
 PROF_SHA=@@PROF_SHA@@          # branch claude/project-thread-yha868: results/8a-g/speedup/prof (prof_train.py, the GPU profiling harness; PROFILE=1 only)
 PROF_DIR=results/8a-g/speedup
 PROF_PY_SHA=@@PROF_PY_SHA@@    # sha256 of prof/prof_train.py at PROF_SHA
-if [ "$PROF_PLAN" = b3ab ]; then D_PMAX=190; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'      # plan b3ab: as b3sweep; 190 min with i4_b3g2_pair
+if [ "$PROF_PLAN" = b3ab ]; then D_PMAX=285; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'      # plan b3ab: as b3sweep; 285 min with i4_b3g2_pair (smoke 10 + i1 20 + i2 20 + i3 125 leave the 105 the pair needs)
 elif [ "$PROF_PLAN" = b3sweep ]; then D_PMAX=150; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'; else D_PMAX=75; D_PJOBMIN=45; D_PJOBSTEPS=300; D_PLOGE='--log-every 50'; fi      # plan b3sweep: the smoke only builds the pool
 PROF_MAXMIN=${PROF_MAXMIN:-$D_PMAX}; PROF_MIN_LEFT=${PROF_MIN_LEFT:-240}; PROF_JOB_MIN=${PROF_JOB_MIN:-$D_PJOBMIN}; PROF_STEP_MIN=${PROF_STEP_MIN:-25}; PROF_JOB_STEPS=${PROF_JOB_STEPS:-$D_PJOBSTEPS}
 PROF_JOB_TRAIN_EXTRA=${PROF_JOB_TRAIN_EXTRA:-}; [ -n "$PROF_JOB_TRAIN_EXTRA" ] || PROF_JOB_TRAIN_EXTRA=$D_PLOGE
@@ -103,7 +103,7 @@ AT_SHA=@@AT_SHA@@          # branch claude/project-thread-emwjvn: custom_io of s
 AT_CAPS_SHA=@@AT_CAPS_SHA@@   # g8a/caps_b3g2.json (also the file of 74d6e92c75)
 PROF_SWEEP_MIN=${PROF_SWEEP_MIN:-45}; PROF_CMP_MIN=${PROF_CMP_MIN:-15}; PROF_AT_MIN=${PROF_AT_MIN:-40}; PROF_AT_STEPS=${PROF_AT_STEPS:-300}; PROF_AT_FROM_STEP=${PROF_AT_FROM_STEP:-40}
 PROF_AT_TRAIN_EXTRA=${PROF_AT_TRAIN_EXTRA:-}; [ -n "$PROF_AT_TRAIN_EXTRA" ] || PROF_AT_TRAIN_EXTRA='--log-every 20'
-PROF_B3P_MIN=${PROF_B3P_MIN:-15}; PROF_ABE_MIN=${PROF_ABE_MIN:-20}; PROF_ABB_MIN=${PROF_ABB_MIN:-75}      # PROF_PLAN=b3ab only: timeouts of i1, i2, i3 in minutes
+PROF_B3P_MIN=${PROF_B3P_MIN:-20}; PROF_ABE_MIN=${PROF_ABE_MIN:-20}; PROF_ABB_MIN=${PROF_ABB_MIN:-125}      # PROF_PLAN=b3ab only: timeouts of i1, i2, i3 in minutes
 PROF_PAIR_A4_MIN=${PROF_PAIR_A4_MIN:-25}; PROF_PAIR_A32_MIN=${PROF_PAIR_A32_MIN:-80}; PROF_PAIR_NEED_MIN=${PROF_PAIR_NEED_MIN:-105}; PROF_PAIR_STEP=${PROF_PAIR_STEP:-300}      # PROF_PLAN=b3ab, stage i4_b3g2_pair: timeouts of the two jobs, the budget needed, the update each job is stopped at
 PROF_PAIR_TRAIN_EXTRA=${PROF_PAIR_TRAIN_EXTRA:-'--log-every 1'}      # (changed only by the CPU dry run, with the tiny-shape flags it needs)
 B3G2_SHA=@@B3G2_SHA@@      # custom_io of the PC's src-b3g2 (the code of the G2f runs); pins = PINS0 of results/8a-g/pc-job-cards/g2fa4/install_g2fa4.py, read by gen_box.py and checked against git
@@ -683,17 +683,18 @@ B3QPINS
 }
 prof_b3ab() {   # PROF_PLAN=b3ab (POOL is set): the profiler and syncs at accum 4, the equivalence of the variants (mark 6), then the A/B bench; each stage non-fatal under its own timeout
   local B3 mm
-  say "PROF PLAN b3ab: B3G2 at accum 4: profiler and syncs, abequiv (mark 6), abbench (PREREG-b3g2-speed-ab.md: A = accum 4; B = accum 8,16,2 and tf32, pad64, unfused, nosync; 3 interleaved rounds), then i4_b3g2_pair (src-b3g2, accum 4 then 32, $PROF_PAIR_STEP updates each); DPH=$DPH; no AT-1, no PTC stages; budget $PROF_MAXMIN min from the start of stage prof"
+  say "PROF PLAN b3ab: B3G2 at accum 4: profiler and syncs, abequiv (mark 6), abbench (PREREG-b3g2-speed-ab.md: A = accum 4; B = nosync, pad64p, pad64, tf32, unfused first, then accum 8, 16, 2; 3 interleaved rounds), then i4_b3g2_pair (src-b3g2, accum 4 then 32, $PROF_PAIR_STEP updates each); DPH=$DPH; no AT-1, no PTC stages; budget $PROF_MAXMIN min from the start of stage prof"
   if [ -f $S/custom_io/g8a/caps_b3g2.json ] && [ -f $S/custom_io/models/b3g2.py ]; then
     B3="--arm B3G2 --rung 3M --accum 4 --data $POOL --pkg-root $S --caps $S/custom_io/g8a/caps_b3g2.json"
     PSTEP_MIN=$PROF_B3P_MIN
-    pstep i1_b3g2_profile b3g2_profile.json $B3 --sections breakdown,throughput,padding,syncs
+    pstep i1_b3g2_profile b3g2_profile.json $B3 --sections profiler,syncs
+    [ -f $PRAW/b3g2_profile.md ] && { echo "--- b3g2_profile.md (GPU busy share at accum 4, mark 8)"; head -n 60 $PRAW/b3g2_profile.md | cut -c1-300; }
     PSTEP_MIN=$PROF_ABE_MIN
     pstep i2_b3g2_abequiv b3g2_abequiv.json $B3 --sections abequiv
     grep -E -e 'abequiv|mark 6|mark6' $PRAW/i2_b3g2_abequiv.log 2>/dev/null | tail -n 24 | cut -c1-260
     [ -f $PRAW/b3g2_abequiv.md ] && { echo "--- b3g2_abequiv.md"; head -n 40 $PRAW/b3g2_abequiv.md | cut -c1-300; }
-    PSTEP_MIN=$PROF_ABB_MIN; mm=$(awk "BEGIN{print int($PROF_ABB_MIN * 0.6)}")
-    pstep i3_b3g2_abbench b3g2_abbench.json $B3 --sections abbench --ab-accums 8,16,2 --ab-variants tf32,pad64,unfused,nosync --ab-rounds 3 --ab-warmup 10 --ab-updates 40 --ab-max-min $mm --ab-partial $PRAW/b3g2_abbench.partial.json --ab-equiv-json $PRAW/b3g2_abequiv.json --dph $DPH
+    PSTEP_MIN=$PROF_ABB_MIN; mm=$(awk "BEGIN{print int($PROF_ABB_MIN - 25)}")      # an arm starts only before this minute: the longest arm (accum 16) takes about 21 min
+    pstep i3_b3g2_abbench b3g2_abbench.json $B3 --sections abbench --ab-accums 8,16,2 --ab-variants nosync,pad64p,pad64,tf32,unfused --ab-rounds 3 --ab-warmup 10 --ab-updates 40 --ab-max-min $mm --ab-partial $PRAW/b3g2_abbench.partial.json --ab-equiv-json $PRAW/b3g2_abequiv.json --dph $DPH
     grep -E -e 'abbench|MARK|mark [0-9]|USD|usd|dph' $PRAW/i3_b3g2_abbench.log 2>/dev/null | tail -n 40 | cut -c1-300
     [ -f $PRAW/b3g2_abbench.md ] && { echo "--- b3g2_abbench.md"; head -n 80 $PRAW/b3g2_abbench.md | cut -c1-300; }
     PSTEP_MIN=
@@ -840,6 +841,7 @@ say "CIO START"; stage setup
 say "PTC3S START job=$RUN maxh=$MAXH dph=$DPH guard=$(if [ "$PROFILE" = 1 ]; then echo OFF-profile-mode; elif [ "$DPH" != 0 ]; then echo on; else echo OFF-set-DPH; fi) cap_usd=$PROJ_CAP_USD tf=$TFVER eg=$EG dry=$PTC_DRY base=$BASE_SHA overlay=$OVL_SHA"
 [ "$EG" = 1 ] || die "EG=1 is required: the job has eg_embed"
 case $PROFILE in 0|1) ;; *) FAIL_SLEEP=120; die "PROFILE must be 0 or 1 (got '$PROFILE')";; esac
+[ "$PROF_PLAN" = b3ab ] && [ "$PROFILE" = 1 ] && { [ "$DPH" != 0 ] || { FAIL_SLEEP=120; die "PROF_PLAN=b3ab needs DPH (the offer's dph_total): the registered money lines and the stage cap need it"; }; awk "BEGIN{exit !($MAXH * $DPH > ${PROF_STAGE_CAP_USD:-3.0})}" && { FAIL_SLEEP=120; die "PROF_PLAN=b3ab: MAXH x DPH = $(awk "BEGIN{print $MAXH * $DPH}") USD is above the stage cap ${PROF_STAGE_CAP_USD:-3.0} USD: lower MAXH"; }; }
 case $PROF_PLAN in default) ;; b3sweep|b3ab) [ "$PROFILE" = 1 ] || { FAIL_SLEEP=120; die "PROF_PLAN=$PROF_PLAN needs PROFILE=1"; };; *) FAIL_SLEEP=120; die "PROF_PLAN must be default, b3sweep or b3ab (got '$PROF_PLAN')";; esac
 if [ "$PROFILE" = 1 ]; then
   say "PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=$PROF_MAXMIN PROF_JOB_STEPS=$PROF_JOB_STEPS PROF_COMPILE=$PROF_COMPILE end_sleep=$END_SLEEP$([ "$PROF_PLAN" != default ] && echo " PROF_PLAN=$PROF_PLAN"))"
