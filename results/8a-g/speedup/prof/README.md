@@ -34,6 +34,13 @@ python prof_train.py $C --device cpu --eg real --sections equiv --equiv-check --
 
 The GPU command also runs E2 (it loads a second, fp32, CPU copy of Gemma for it). `--seed 400` (default) and the first 256 rows of that seed's shuffled iterator are the "one fixed batch".
 
+B3G2 accum sweep (PREREG-b3g2-accum.md; speed, memory and rounds per micro-batch, then the pinned-K comparison):
+
+```
+python prof_train.py --arm B3G2 --rung 3M --accum 32 --data $POOL --pkg-root $S --caps $S/custom_io/g8a/caps_b3g2.json \
+  --sections accumsweep,accumcmp --accum-list 32,16,8,4 --accum-updates 40 --accum-warmup 10 --accum-rounds 2 --out out/accum.json
+```
+
 ## What the equiv section reports
 
 - **E1** (runs when an equiv spec contains `eg_once`, or `--equiv-vectors yes`): Gemma state H at every valid char position, eg_once vs the old path at the job's accum; the old path's own spread (accum vs accum/2); rules as registered: every position cos >= 0.998; every row's mean cos >= 0.9995; eg_once's largest per-row mean-cosine gap <= 1.5 x the old path's own largest gap. "registered setting met" says whether it ran as bf16 + GPU + real Gemma; anything else is only a plumbing check.
@@ -52,6 +59,8 @@ The GPU command also runs E2 (it loads a second, fp32, CPU copy of Gemma for it)
 | sweep | accum 1,2,4,8,16,32 on the same rows: s/update and peak memory; OOM caught. Each point starts from a cold tokenizer cache. |
 | syncs | CUDA only: every host-device sync in an update by python file:line (`torch.cuda.set_sync_debug_mode('warn')`). |
 | bench / equiv | above. |
+| accumsweep | B3G2 micro-batch size sweep for `../PREREG-b3g2-accum.md`: `--accum-list` (default 32,16,8,4), `--accum-rounds` rounds (default 2), a fresh Trainer per (round, accum), `--accum-warmup` (default 10) then `--accum-updates` (default 40) free-running timed updates on the same rows; median s/update, peak allocated GB, mean thinker rounds per micro-batch (read from the model's own `rounds` aux), speed against the reference accum (first of the list, 32), the marks (speed >= 1.3x, memory <= 10 GB, rounds rise > 25 %), and whether prediction 3 is proved wrong. OOM is caught per accum and not retried. Not in the default section list. |
+| accumcmp | descriptive, no pass bar: one update on the same first 256 rows with the loop length K pinned (`--equiv-pin`, default 1), the reference accum against each candidate in `--accum-list`: loss difference, gradient cosine and relative L2, fp32 (and bf16 on CUDA, `--equiv-precisions`), plus the reference run twice as the noise floor. Not in the default section list. |
 
 ## Variants (`--variant a,b`; `--list-variants`)
 

@@ -544,6 +544,100 @@ def test_run_e1_e2_with_a_batch_shape_dependent_gemma():
     assert e2['passed'] and e2['rows'] == min(64, len(b['rows']))
 
 
+# ---------------------------------------------------------------------------------------------------------------------------------- PREREG-b3g2-accum.md
+def test_parse_accums_and_marks_by_hand():
+    assert prof.parse_accums('32,16,8,4') == [32, 16, 8, 4] and prof.parse_accums('32;4') == [32, 4]
+    for bad in ('', '32,32', '0,4', '32,-1'):
+        try:
+            prof.parse_accums(bad)
+        except SystemExit:
+            continue
+        raise AssertionError(f'{bad!r} should be refused')
+    pts = {32: dict(s_median=7.2, peak_gb=1.5, rounds_mean=20.0), 16: dict(s_median=4.0, peak_gb=2.0, rounds_mean=21.0),
+           8: dict(s_median=6.0, peak_gb=11.0, rounds_mean=27.0), 4: dict(s_median=None, peak_gb=None, rounds_mean=None)}
+    m = prof.accum_marks(pts, 32)
+    pa = m['per_accum']
+    assert pa[32]['speed_vs_ref'] == 1.0 and pa[32]['meets_speed_mark'] is False                       # the reference does not beat itself
+    assert abs(pa[16]['speed_vs_ref'] - 1.8) < 1e-12 and pa[16]['meets_speed_mark'] is True and pa[16]['fits_memory_mark'] is True and pa[16]['rounds_rise_over_25pct'] is False
+    assert abs(pa[8]['speed_vs_ref'] - 1.2) < 1e-12 and pa[8]['meets_speed_mark'] is False and pa[8]['fits_memory_mark'] is False        # 11 GB > 10
+    assert abs(pa[8]['rounds_vs_ref'] - 1.35) < 1e-12 and pa[8]['rounds_rise_over_25pct'] is True
+    assert pa[4]['speed_vs_ref'] is None and pa[4]['meets_speed_mark'] is None and pa[4]['fits_memory_mark'] is None
+    assert m['mark3_prediction_proved_wrong'] is False                                                    # accum 16 reached 1.8x
+    pts[16]['s_median'] = 6.0                                                                             # both 16 and 8 at 1.2x: the prediction is proved wrong
+    assert prof.accum_marks(pts, 32)['mark3_prediction_proved_wrong'] is True
+    assert prof.accum_marks({32: pts[32], 16: pts[16]}, 32)['mark3_prediction_proved_wrong'] is None      # accum 8 missing: cannot tell
+    assert prof.accum_marks({16: pts[16]}, 32)['per_accum'][16]['speed_vs_ref'] is None                  # no reference: nothing claimed
+
+
+def test_rounds_sums_and_merge_by_hand():
+    a = prof.rounds_sums([(8, 10.0), (8, 20.0), (16, None)])
+    assert a == dict(n=2, sum=30.0, sumsq=500.0, rows=16, rows_x_rounds=240.0, min=10.0, max=20.0)
+    assert prof.rounds_sums([(8, None)]) is None and prof.rounds_merge([None, None]) is None
+    m = prof.rounds_merge([a, prof.rounds_sums([(32, 30.0), (32, 30.0)])])
+    assert m['micro_batches'] == 4 and abs(m['mean_per_micro_batch'] - 22.5) < 1e-12
+    assert abs(m['mean_per_row'] - (240.0 + 32 * 30 * 2) / (16 + 64)) < 1e-12 and m['min'] == 10.0 and m['max'] == 30.0
+    assert abs(m['sem_per_micro_batch'] - math.sqrt(((10 - 22.5) ** 2 + (20 - 22.5) ** 2 + 2 * 7.5 ** 2) / 3 / 4)) < 1e-9
+
+
+def _accum_args(arm, *extra):
+    a = prof.build_parser().parse_args(argv(arm, '--accum-list', '4,2', '--accum-updates', '2', '--accum-warmup', '1', '--accum-rounds', '2', '--chunk', '2', *extra))
+    a.accum = 4
+    return a
+
+
+def test_accumsweep_b3g2_numbers_marks_and_oom():
+    w, _ = world('B3G2')
+    out = prof.sec_accumsweep(w, _accum_args('B3G2'))
+    p4, p2 = out['points']['4'], out['points']['2']
+    assert out['reference_accum'] == 4 and out['accums'] == [4, 2] and p4['speed_vs_ref'] == 1.0 and p2['speed_vs_ref'] > 0
+    assert p4['s_per_update_median'] > 0 and p4['median_of_chunks'] > 0 and len(p4['runs']) == 2 and p4['peak_alloc_gb'] is None and p4['fits_memory_mark'] is None      # CPU: no peak
+    assert p4['rounds_per_micro_batch']['micro_batches'] == 2 * 2 * 4 and p2['rounds_per_micro_batch']['micro_batches'] == 2 * 2 * 2        # rounds x updates x micro-batches
+    assert p4['rounds_per_micro_batch']['mean_per_micro_batch'] >= 4 and p4['rounds_vs_ref'] == 1.0 and out['mark3_prediction_proved_wrong'] is None
+    orig = prof.Trainer.update
+
+    def update(self, timed=False):
+        if self.accum == 2:
+            raise RuntimeError('CUDA out of memory. Tried to allocate 20.00 GiB')
+        return orig(self, timed)
+    prof.Trainer.update = update
+    try:
+        oom = prof.sec_accumsweep(w, _accum_args('B3G2'))
+    finally:
+        prof.Trainer.update = orig
+    assert oom['points']['2']['oom'] is True and oom['points']['2']['s_per_update_median'] is None and len(oom['points']['2']['runs']) == 1      # not tried again in round 2
+    assert oom['points']['4']['oom'] is False and oom['points']['4']['s_per_update_median'] > 0 and oom['points']['2']['speed_vs_ref'] is None
+
+
+def test_accumsweep_plain_arm_has_no_rounds():
+    w, _ = world('PTS')
+    out = prof.sec_accumsweep(w, _accum_args('PTS'))
+    for pt in out['points'].values():
+        assert pt['rounds_per_micro_batch'] is None and pt['rounds_vs_ref'] is None and pt['s_per_update_median'] > 0
+
+
+def test_accumcmp_b3g2_pinned_k_and_noise_floor():
+    w, _ = world('B3G2')
+    a = _accum_args('B3G2')
+    out = prof.sec_accumcmp(w, a)
+    assert out['pinned'] is True and isinstance(out['K0'], int) and out['K0'] >= 8 and out['precisions'] == ['fp32'] and out['candidates'] == [2] and out['rows'] == 16
+    res = out['results']['fp32']
+    assert res['reference_rerun']['grad_cos'] > 1 - 1e-9 and res['reference_rerun']['abs_loss'] < 1e-6                 # the same setting twice: the noise floor
+    c = res['candidates']['2']
+    assert c['grad_cos'] > 0.999 and c['rel_loss_diff'] < 1e-3 and c['micro_batch_rows'] == 8 and c['abs_loss_diff'] >= 0      # same maths with K pinned: only the partition differs
+    a0 = _accum_args('B3G2', '--equiv-pin', '0')
+    assert prof.sec_accumcmp(w, a0)['K0'] is None
+
+
+def test_accum_sections_end_to_end_markdown():
+    world('B3G2')                                                                     # loads the package once, as the other end-to-end test does
+    out = os.path.join(tempfile.mkdtemp(prefix='prof_acc_'), 'a.json')
+    res = prof.main(argv('B3G2', '--sections', 'accumcmp,accumsweep', '--accum-list', '4,2', '--accum-updates', '2', '--accum-warmup', '1', '--accum-rounds', '1', '--chunk', '2', out=out))
+    md = open(os.path.splitext(out)[0] + '.md').read()
+    assert '## accumsweep' in md and '## accumcmp' in md and 'speed mark' in md and 'noise floor' in md and 'PREREG-b3g2-accum.md' in md
+    assert sorted(res['sections']) == ['accumcmp', 'accumsweep'] and 'error' not in res['sections']['accumsweep'] and 'error' not in res['sections']['accumcmp']
+    assert 'accumsweep' not in prof.DEFAULT_SECTIONS and prof.DEFAULT_SECTIONS == 'breakdown,throughput,profiler,padding,sweep,syncs'        # the defaults are as before
+
+
 ALL = [(n, f) for n, f in sorted(globals().items()) if n.startswith('test_') and callable(f)]
 
 

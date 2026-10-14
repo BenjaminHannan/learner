@@ -19,6 +19,10 @@ Sections (--sections, comma list; default breakdown,throughput,profiler,padding,
   sweep       seconds per update and peak memory for accum in 1 2 4 8 16 32 (same rows; OOM caught).
   syncs       CUDA only: every host-device synchronisation in an update, by python file:line (torch.cuda.set_sync_debug_mode).
   bench       --bench-list "baseline;sortpad;sortpad,bigmb": A/B/A/B free-running seconds per update of each variant spec.
+  accumsweep  (PREREG-b3g2-accum.md) --accum-list 32,16,8,4: free-running s/update (>= 40 timed updates after 10 warm-up, 2 interleaved rounds, median), peak allocated GB (OOM caught),
+              mean thinker rounds per micro-batch, and the pre-registered marks as flags (speed >= 1.3x, memory <= 10 GB, rounds rise > 25 %). Any arm; rounds need b3g2 / tool_h1.
+  accumcmp    (PREREG-b3g2-accum.md) one update on the same 256 rows with K and the stochastic parts pinned: the first accum of --accum-list against each other one, loss difference and
+              gradient cosine / relative L2 (descriptive, no pass bar), plus the reference run twice as a noise floor.
   equiv       (--equiv-check) each variant vs baseline on the same seed and the same 256 rows: loss diff, gradient cosine / relative L2 in fp32 and bf16 autocast,
               then --curve-updates updates of loss curve.
 Variants (--variant a,b composes; see --list-variants): sortpad sortpad_tokw oldw bigmb tf32 sdpa compile compile_ro eg_sorted eg_once prefetch.
@@ -33,7 +37,7 @@ import torch.nn.functional as F
 
 T0 = time.time()
 PK = None                       # the custom_io modules (load_pkg)
-SECTION_ORDER = ('breakdown', 'throughput', 'profiler', 'padding', 'sweep', 'syncs', 'bench', 'equiv')
+SECTION_ORDER = ('breakdown', 'throughput', 'profiler', 'padding', 'sweep', 'syncs', 'bench', 'equiv', 'accumsweep', 'accumcmp')
 DEFAULT_SECTIONS = 'breakdown,throughput,profiler,padding,sweep,syncs'
 ACCUMS = (1, 2, 4, 8, 16, 32)
 # the accum each PC queue line uses (8aG2C3S / 8aPTC3S: PTS=16, PTC=16; 8aB3G2s400: B3G2=32); PT / B2 are guesses, override with --accum
@@ -1059,6 +1063,7 @@ class Trainer:
         self.tokw = False
         self.oldw, self.row_w, self.part_w = False, None, None
         self.step = 0
+        self.aux_log = None           # accumsweep: a list that _micro fills with (rows, aux 'rounds') of every micro-batch; None = nothing recorded (every other section)
         self.lr_steps, self.lr_warmup = args.lr_steps, args.lr_warmup
         self.rec = Recorder(self.clock)
         self.instr = None
@@ -1180,6 +1185,8 @@ class Trainer:
                 with self._fwd_ctx(box):
                     out = self.model.loss(mb)
             l_i, a_i = out if isinstance(out, tuple) else (out, {})
+            if self.aux_log is not None:                         # b3g2 / tool_h1 return rounds = n (a python float, no sync) in their aux dict
+                self.aux_log.append((nrow, a_i.get('rounds') if isinstance(a_i, dict) else None))
             if self.tokw:
                 if not box:
                     raise Skip('sortpad_tokw: this model\'s loss made no F.cross_entropy call')
@@ -2063,6 +2070,169 @@ def loss_curves(world, args, spec, k0, cache=None):
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
+# accum sweep (PREREG-b3g2-accum.md): new sections `accumsweep` and `accumcmp`; nothing above this line behaves differently because of them
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+# Marks of PREREG-b3g2-accum.md (fixed before any B3G2 number at another accum; printed next to the numbers, never changed after seeing them)
+ACCUM_SPEED_X, ACCUM_MEM_GB, ACCUM_ROUNDS_RISE = 1.3, 10.0, 1.25       # speed counts at >= 1.3x of the reference accum; memory fits at <= 10 GB peak allocated; rounds rise report at > +25 %
+
+
+def parse_accums(s):
+    """'32,16,8,4' -> [32, 16, 8, 4] (the first is the reference); positive integers, no repeats."""
+    out = [int(x) for x in str(s).replace(';', ',').split(',') if x.strip()]
+    if not out or any(k < 1 for k in out) or len(set(out)) != len(out):
+        raise SystemExit(f'--accum-list {s!r}: want distinct positive integers, e.g. 32,16,8,4 (the first is the reference)')
+    return out
+
+
+def rounds_sums(aux_log):
+    """[(rows, rounds or None)] of the micro-batches of some updates -> sums that can be merged across runs; None when the model reports no rounds (the plain arms)."""
+    xs = [(int(r), float(n)) for r, n in aux_log if n is not None]
+    if not xs:
+        return None
+    return dict(n=len(xs), sum=sum(n for _, n in xs), sumsq=sum(n * n for _, n in xs), rows=sum(r for r, _ in xs), rows_x_rounds=sum(r * n for r, n in xs), min=min(n for _, n in xs), max=max(n for _, n in xs))
+
+
+def rounds_merge(parts):
+    """Merge rounds_sums() of several runs -> descriptive numbers (mean thinker rounds per micro-batch, its standard error, and per row), or None."""
+    parts = [p for p in parts if p]
+    if not parts:
+        return None
+    n, s, ss = sum(p['n'] for p in parts), sum(p['sum'] for p in parts), sum(p['sumsq'] for p in parts)
+    rows, rxr = sum(p['rows'] for p in parts), sum(p['rows_x_rounds'] for p in parts)
+    mean = s / n
+    var = max(ss / n - mean * mean, 0.0) * n / max(n - 1, 1)
+    return dict(micro_batches=n, mean_per_micro_batch=mean, sem_per_micro_batch=math.sqrt(var / n), mean_per_row=rxr / max(rows, 1), min=min(p['min'] for p in parts), max=max(p['max'] for p in parts))
+
+
+def accum_marks(points, ref):
+    """Descriptive flags of the PREREG-b3g2-accum.md marks, from {accum: dict(s_median, peak_gb, rounds_mean, oom)}: speed vs the reference accum (>= 1.3x counts), memory (<= 10 GB fits),
+    rounds per micro-batch against the reference (> +25 % is reported with the speed), and the prediction (accum 8 gives 2x to 3x) which is proved wrong if both accum 16 and accum 8 are under 1.3x."""
+    r = points.get(ref) or {}
+    out = {}
+    for k, p in points.items():
+        d = dict(speed_vs_ref=None, meets_speed_mark=None, fits_memory_mark=None, rounds_vs_ref=None, rounds_rise_over_25pct=None)
+        if p.get('s_median') and r.get('s_median'):
+            d['speed_vs_ref'] = r['s_median'] / p['s_median']
+            d['meets_speed_mark'] = bool(d['speed_vs_ref'] >= ACCUM_SPEED_X)
+        if p.get('peak_gb') is not None:
+            d['fits_memory_mark'] = bool(p['peak_gb'] <= ACCUM_MEM_GB)
+        if p.get('rounds_mean') and r.get('rounds_mean'):
+            d['rounds_vs_ref'] = p['rounds_mean'] / r['rounds_mean']
+            d['rounds_rise_over_25pct'] = bool(d['rounds_vs_ref'] > ACCUM_ROUNDS_RISE)
+        out[k] = d
+    sp = [out[k]['speed_vs_ref'] for k in (16, 8) if k in out]
+    wrong = None if (len(sp) < 2 or any(x is None for x in sp)) else bool(all(x < ACCUM_SPEED_X for x in sp))
+    return dict(per_accum=out, mark3_prediction_proved_wrong=wrong)
+
+
+def sec_accumsweep(world, args):
+    """PREREG-b3g2-accum.md, speed and memory: free-running s/update and peak allocated GB for each accum of --accum-list (the first is the reference), the same rows at every accum
+    (batch_seed fixed), --accum-warmup untimed updates then --accum-updates timed ones in chunks of --chunk, --accum-rounds rounds interleaved (32 16 8 4 32 16 8 4); OOM is caught
+    (that accum is then not tried again). Also the mean thinker rounds per micro-batch (aux['rounds'] of the model's loss) over the timed updates of each accum."""
+    accums, names = parse_accums(args.accum_list), parse_variants(args.variant)
+    runs, dead = {k: [] for k in accums}, set()
+    for r in range(args.accum_rounds):
+        for k in accums:
+            if k in dead:
+                continue
+            rec, tr = dict(round=r + 1), None
+            try:
+                log(f'accumsweep round {r + 1}/{args.accum_rounds}: accum {k} ({-(-args.batch // k)} rows per micro-batch)')
+                tr = Trainer(world, args, names, accum=k, batch_seed=args.seed + 606)
+                cold_eg(world)
+                for _ in range(args.accum_warmup):
+                    tr.update()
+                if world.device.type == 'cuda':
+                    torch.cuda.reset_peak_memory_stats()
+                tr.aux_log = []
+                per = free_run(tr, args.accum_updates, args.chunk)
+                s = stats(per)
+                rec.update(s_per_update=s['mean'], median_chunk=s['median'], chunk_values=per, peak_mem=peak_mem(world.device), rounds_sums=rounds_sums(tr.aux_log), oom=False)
+            except Exception as e:                                       # noqa: BLE001
+                if is_oom(e):
+                    rec.update(oom=True, peak_mem=peak_mem(world.device))
+                    dead.add(k)
+                elif isinstance(e, Skip):
+                    rec.update(skipped=str(e))
+                    dead.add(k)
+                else:
+                    raise
+            finally:
+                if tr is not None:
+                    tr.close()
+                tr = None
+                cleanup(world.device)
+            runs[k].append(rec)
+            rs = rounds_merge([rec.get('rounds_sums')])
+            log(f'  accum {k} round {r + 1}: ' + ('OOM' if rec.get('oom') else rec.get('skipped') or f'{rec["s_per_update"]:.4f} s/update, peak alloc {rec["peak_mem"]["allocated_gb"]} GB'
+                + (f', rounds per micro-batch {rs["mean_per_micro_batch"]:.2f}' if rs else '')))
+    pts, flat = {}, {}
+    for k in accums:
+        ok = [x for x in runs[k] if x.get('s_per_update')]
+        chunks = [v for x in ok for v in x['chunk_values']]
+        peaks = [x['peak_mem']['allocated_gb'] for x in runs[k] if x.get('peak_mem', {}).get('allocated_gb') is not None]
+        rs = rounds_merge([x.get('rounds_sums') for x in ok])
+        pt = dict(accum=k, micro_batch_rows=-(-args.batch // k), runs=[{kk: vv for kk, vv in x.items() if kk != 'rounds_sums'} for x in runs[k]], oom=any(x.get('oom') for x in runs[k]),
+                  s_per_update_median=float(np.median([x['s_per_update'] for x in ok])) if ok else None, median_of_chunks=float(np.median(chunks)) if chunks else None,
+                  timed_updates=sum(args.accum_updates for _ in ok), peak_alloc_gb=max(peaks) if peaks else None, rounds_per_micro_batch=rs)
+        pts[str(k)] = pt
+        flat[k] = dict(s_median=pt['s_per_update_median'], peak_gb=pt['peak_alloc_gb'], rounds_mean=rs['mean_per_micro_batch'] if rs else None)
+    marks = accum_marks(flat, accums[0])
+    for k in accums:
+        pts[str(k)].update(marks['per_accum'][k])
+    return dict(tag=world.tag(accum=accums[0], variant=args.variant), reference_accum=accums[0], accums=accums, rounds=args.accum_rounds, timed_updates_per_run=args.accum_updates, warmup=args.accum_warmup,
+                chunk=args.chunk, points=pts, mark3_prediction_proved_wrong=marks['mark3_prediction_proved_wrong'],
+                marks=dict(speed_counts_at_x=ACCUM_SPEED_X, memory_fits_at_gb=ACCUM_MEM_GB, rounds_rise_reported_above=ACCUM_ROUNDS_RISE, source='PREREG-b3g2-accum.md, fixed before any number'),
+                note='s_per_update_median = median over the rounds of each round\'s mean s/update (the bench convention); median_of_chunks = median over every timed chunk of every round. peak_alloc_gb is torch '
+                     'max_memory_allocated in GiB, reset before each timed run. rounds_per_micro_batch = mean of aux["rounds"] (n = max(K, longest call chain + 2), K drawn per micro-batch) over the timed updates. '
+                     'A different accum is a new recipe (b3g2 draws one K per micro-batch), never the registered G2f.')
+
+
+def sec_accumcmp(world, args):
+    """PREREG-b3g2-accum.md, maths (descriptive, no pass bar): ONE update on the same --batch rows (the first batch of --seed), the rounds K and the stochastic parts pinned (--equiv-pin 1,
+    as the equiv section does), reference accum (the first of --accum-list) against each other accum: loss difference, gradient cosine / relative L2; plus the reference run twice (the noise
+    floor of the setting). Precisions: --equiv-precisions (default fp32 and bf16 on CUDA, fp32 on CPU)."""
+    accums = parse_accums(args.accum_list)
+    ref, cands = accums[0], accums[1:]
+    first = next(world.batches(args.seed))
+    pin = args.equiv_pin != 0
+    k0 = rounds_needed(world, [first]) if pin else None
+    if pin:
+        log(f'accumcmp: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0={k0} where the model has them); reference accum {ref}, candidates {cands}')
+    precs = [p for p in (args.equiv_precisions or ('fp32,bf16' if world.device.type == 'cuda' else 'fp32')).split(',') if p]
+
+    def lg(acc, prec):
+        tr = Trainer(world, args, [], accum=acc)
+        restore = pin_stochastic(tr, k0) if pin else (lambda: None)
+        try:
+            return tr.loss_and_grad(first, contextlib.nullcontext if prec == 'fp32' else (lambda: torch.autocast(world.device.type, dtype=torch.bfloat16)))
+        finally:
+            restore()
+            tr.close(); cleanup(world.device)
+    out = dict(tag=world.tag(accum=ref), reference_accum=ref, candidates=cands, pinned=pin, K0=k0, rows=len(first['rows']), precisions=precs, on_cpu=world.device.type != 'cuda', results={},
+               note='descriptive only: no pass bar. K pinned means every accum runs the same number of thinker rounds, so this isolates the partition (how rows share a micro-batch and its loss average).')
+    for prec in precs:
+        lb, gb = lg(ref, prec)
+        lb2, gb2 = lg(ref, prec)
+        res = dict(reference_loss=lb, reference_rerun=dict(abs_loss=abs(lb2 - lb), **grad_compare(gb, gb2)), candidates={})
+        for k in cands:
+            try:
+                lv, gv = lg(k, prec)
+                res['candidates'][str(k)] = dict(accum=k, micro_batch_rows=-(-args.batch // k), loss=lv, abs_loss_diff=abs(lv - lb), rel_loss_diff=abs(lv - lb) / max(abs(lb), 1e-300), **grad_compare(gb, gv))
+                c = res['candidates'][str(k)]
+                log(f'accumcmp {prec}: accum {ref} vs {k}: |dloss| {c["abs_loss_diff"]:.3e} (rel {c["rel_loss_diff"]:.3e}), grad cos {c["grad_cos"]:.8f}, rel L2 {c["grad_rel_l2"]:.3e}; '
+                    f'rerun floor: cos {res["reference_rerun"]["grad_cos"]:.8f}')
+            except Exception as e:                                       # noqa: BLE001
+                if not is_oom(e):
+                    raise
+                cleanup(world.device)
+                res['candidates'][str(k)] = dict(accum=k, oom=True)
+                log(f'accumcmp {prec}: accum {k} OOM')
+        out['results'][prec] = res
+    return out
+
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
 # markdown
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 def label(tag):
@@ -2188,6 +2358,30 @@ def render_md(res):
                           + ('**E4: PASS**' if e4['passed'] else '**E4: FAIL**' if e4['registered_window'] else '(shorter than the registered 300 updates: not the check)'), '']
                 if 'prefetch_batches_identical' in r:
                     L += [f'prefetch batches identical to the plain iterator: {r["prefetch_batches_identical"]}', '']
+        elif name == 'accumsweep':
+            mk = s['marks']
+            L += [f'reference accum {s["reference_accum"]}; {s["rounds"]} rounds x {s["timed_updates_per_run"]} timed updates after {s["warmup"]} warm-up (chunks of {s["chunk"]}); marks ({mk["source"]}): speed counts at >= {mk["speed_counts_at_x"]}x, '
+                  f'memory fits at <= {mk["memory_fits_at_gb"]} GB peak allocated, a rise of rounds per micro-batch above +{100 * (mk["rounds_rise_reported_above"] - 1):.0f} % is reported with the speed', '']
+            rows = []
+            for k, p in s['points'].items():
+                rr = p.get('rounds_per_micro_batch')
+                rows.append((k, p['micro_batch_rows'], 'OOM' if p['oom'] else f1(p['s_per_update_median'], 4), f1(p['median_of_chunks'], 4), f1(p.get('speed_vs_ref'), 3),
+                             {True: 'yes', False: 'no', None: '-'}[p.get('meets_speed_mark')], f1(p['peak_alloc_gb'], 2), {True: 'yes', False: 'no', None: '-'}[p.get('fits_memory_mark')],
+                             f1(rr['mean_per_micro_batch'], 2) if rr else '-', f1(rr['sem_per_micro_batch'], 2) if rr else '-', f1(p.get('rounds_vs_ref'), 3), {True: 'yes', False: 'no', None: '-'}[p.get('rounds_rise_over_25pct')],
+                             '; '.join('OOM' if r_.get('oom') else r_.get('skipped', f'{r_.get("s_per_update", 0):.4f}') for r_ in p['runs'])))
+            L += table(['accum', 'rows/micro-batch', 'median s/update', 'median of chunks', 'speed vs ref', 'speed mark', 'peak alloc GB', 'memory mark', 'rounds/micro-batch', 'sem', 'rounds vs ref', 'rise > 25 %', 's/update per round'], rows)
+            w = s['mark3_prediction_proved_wrong']
+            L += [f'prediction (accum 8 gives 2x to 3x) proved wrong (both accum 16 and accum 8 under {mk["speed_counts_at_x"]}x): ' + ('cannot tell (accum 16 or 8 missing, or no reference)' if w is None else 'YES' if w else 'no'), '', s['note'], '']
+        elif name == 'accumcmp':
+            L += [f'one update, {s["rows"]} rows, stochastic parts pinned: {s["pinned"]} (K0 {s["K0"]}); on CPU: {s["on_cpu"]}; reference accum {s["reference_accum"]}', '']
+            rows = []
+            for prec, res in s['results'].items():
+                rr = res['reference_rerun']
+                rows.append((f'{s["reference_accum"]} again ({prec})', f'{rr["abs_loss"]:.2e}', '-', f'{rr["grad_cos"]:.8f}', f'{rr["grad_rel_l2"]:.2e}', 'noise floor'))
+                for k, c in res['candidates'].items():
+                    rows.append((f'{k} ({prec})', 'OOM', '', '', '', '') if c.get('oom') else (f'{k} ({prec})', f'{c["abs_loss_diff"]:.2e}', f'{c["rel_loss_diff"]:.2e}', f'{c["grad_cos"]:.8f}', f'{c["grad_rel_l2"]:.2e}', ''))
+            L += table([f'accum vs {s["reference_accum"]}', '|d loss|', 'rel d loss', 'grad cosine', 'grad rel L2', 'note'], rows)
+            L += [s['note'], '']
     return '\n'.join(L) + '\n'
 
 
@@ -2249,6 +2443,10 @@ def build_parser():
     ap.add_argument('--curve-schedule', choices=['real', 'short'], default='real', help='E4 lr schedule: real = the job\'s (--lr-steps / --lr-warmup), short = cosine over the curve only')
     ap.add_argument('--equiv-vectors', choices=['auto', 'yes', 'no'], default='auto', help='E1 / E2 (Gemma vectors, eg_once vs old): auto = when an equiv spec contains eg_once')
     ap.add_argument('--bigmb-accum', type=int)
+    ap.add_argument('--accum-list', default='32,16,8,4', help='sections accumsweep / accumcmp (PREREG-b3g2-accum.md): comma list of accum values, the FIRST is the reference')
+    ap.add_argument('--accum-updates', type=int, default=40, help='accumsweep: timed updates per accum and round (the pre-registration wants at least 40)')
+    ap.add_argument('--accum-warmup', type=int, default=10, help='accumsweep: untimed updates before each timed run')
+    ap.add_argument('--accum-rounds', type=int, default=2, help='accumsweep: rounds, the accums interleaved in each (A B C D A B C D)')
     ap.add_argument('--pad-multiple', type=int, default=0, help='sortpad: round trimmed widths up to a multiple (default 1; 16 when a compile variant is on)')
     ap.add_argument('--sdpa-backend', choices=['auto', 'flash', 'efficient', 'math', 'cudnn'], default='auto')
     ap.add_argument('--compile-backend', default='inductor')
@@ -2278,7 +2476,8 @@ def main(argv=None):
     world = World(a)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     res = dict(meta=world.meta(), sections={})
-    runners = dict(breakdown=sec_breakdown, throughput=sec_throughput, profiler=sec_profiler, padding=sec_padding, sweep=sec_sweep, syncs=sec_syncs, bench=sec_bench, equiv=sec_equiv)
+    runners = dict(breakdown=sec_breakdown, throughput=sec_throughput, profiler=sec_profiler, padding=sec_padding, sweep=sec_sweep, syncs=sec_syncs, bench=sec_bench, equiv=sec_equiv,
+                   accumsweep=sec_accumsweep, accumcmp=sec_accumcmp)
 
     def write():
         res['meta']['n_params'] = world.n_params
