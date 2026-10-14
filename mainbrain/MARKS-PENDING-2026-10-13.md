@@ -96,3 +96,15 @@ runs/sheet-s201-kf99n-kl10-soft10 (12 nights, none undone; scored from local cop
 - Both-seed table (near / pooled drop / fired at the end): NK-soft10 s200 +57.9 / 0.44 / none; s201 +65.5 / 0.96 / none. NK30 s200 +63.1 / 0.22 / none; s201 +65.0 / 0.44 / none. NK30 slips less and learns about as much;
   NK-soft10 keeps more transfer (join HO 14.1 vs the hard lock's 9.3 without KL).
 - Open: the ship decision waits for Far transfer's NK30 join test (L14, marks and ship rule fixed in the 2:58 PM ET entry above). Rule: ship the guard that passes both seeds with the higher join-test HO.
+
+### Result 38, NK30 join test (Far transfer L14): PROVED WRONG, and the ship decision (8:55 PM ET 10-13)
+Far transfer's L14 (hard mask + 30x KL replay on 32 diary rows, L11's recipe, one run, 4,000 updates; files far-transfer/learn/L14-LBnk30/, domain/far/MARKS-L14-NK30-2026-10-13.md, PR #73):
+**HO 9.8, DEV drop 0.29, nothing fired.** Marks (2:58 PM ET): proved wrong HO <= 10: **PROVED WRONG**, as predicted. The KL replay fixed the hard lock's DEV drop (7.8 -> 0.29) but did not help transfer (9.3 -> 9.8).
+- Curve at 4,000 updates (HO / DEV drop): unguarded 35.0 / 53.2; soft 1 + KL 26.4 / 0.59; soft 10 + KL 14.1 / 0.44; hard + 30x KL 9.8 / 0.29; hard, no KL 9.3 / 7.8. One run per point. 9.8 is 41 of 420 rows, about 2 standard errors below the soft 10 point; the difference between 14.1 and 9.8 is suggestive, not firm.
+- **Ship rule applied (fixed 2:58 PM ET, before the run): NK-soft10 passes both seeds (Results 36, 37) and its join HO 14.1 is above NK30's 9.8, so NK-soft10 is the guard for the finished model:** constants-kf99n-kl10-soft10-lr3e4.json
+  (protect kf, energy 0.99, per-example G, protect_soft 10, 10x KL replay, lr 3e-4, total undo at 97). NK30 stays on record as the guard with the lowest slip that blocks transfer.
+- **What this does and does not show, said plainly.** Shown (two seeds for old skills, one run for transfer): night mode can learn a new subject (+58 to +65 near) with the old skills holding (pooled drop 0.44 to 0.96, no family fired at the end).
+  Not solved: transfer. NK-soft10 reached HO 14.1 where the unguarded model reached 35.0 (40%), and the pass line was 25: the join-test mark is NOT met by any setting that also passes the old-skill marks on both seeds.
+  So the shipped guard keeps old skills and partly keeps the ability to reuse them in a new layout; the "shared brain transfers like an unguarded model" claim is not earned. DM2 far fails in every run, as always.
+- Weak points to carry: fewshot_number_rule slips in every arm (NK-soft10 s201 47.5 -> 35.0, interval just reaching zero); NK-soft10's join test is one run; the two seeds are not the six paired seeds a confirm needs; the home self-check (training rows) failed and is
+  not the shipped monitor (suggestion: a small never-trained exam). Nothing was pushed to main.
