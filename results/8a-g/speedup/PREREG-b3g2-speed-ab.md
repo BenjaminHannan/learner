@@ -38,5 +38,8 @@ All variants live in the harness (monkeypatch or a patched copy of the tree on t
 - A claim about accuracy. Speed only, one seed, one box, one host (the same B3G2 accum 32 took 11.57 s here and 7.2 s on another 4090 box: speed depends on the host CPU).
 - A PC-card number.
 
+## Amendment 1 (10-14 about 5:55 PM ET; written BEFORE any run of this sweep; the original marks above stay as written)
+The builder's CPU check found that `pad64` is not bit-identical in the gradient in fp32 (relative difference about 1e-8): zero-padding lengthens the reductions, and floating-point sums change in the last bits when terms are added in a different grouping. Mark 6's wording "bit-exact on CPU in fp32" was over-strict for `pad64` (my error in the specification, not a property of the variant). Reading used for `pad64` only: mark 6's bf16 bar (relative loss difference at most 1e-4, gradient cosine at least 0.9999) stays, and the fp32 CPU check becomes "equal to rounding: relative gradient difference at most 1e-6 and a loss difference at most 1e-6 relative". `nosync` and `unfused` keep the bit-exact requirement on CPU fp32 (`nosync` reads the same values from the CPU; `unfused` only changes the optimizer kernel; an optimizer-kernel change is checked on the GPU by the bf16 bar, since fused and unfused AdamW round differently, CPU has no fused kernel). The CPU checks are the builder's tests on a tiny config; the rental cannot repeat them (`bit_exact_cpu_fp32` is None on a GPU box), so on the rental only the bf16 bar is checked.
+
 ## Result log
 (empty: filled after the run, results unedited, in the order of the tables above)
