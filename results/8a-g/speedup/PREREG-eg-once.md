@@ -30,3 +30,11 @@ Any number from the 4090 as the PC's number; any gain on arms I did not time (B3
 
 ## Amendment 1 (10-14 about 12:10 AM ET, still before any GPU number)
 The harness helper found on a CPU stub that E1 rule 3 ("no worse than 1.5 times the old path's own spread") fails on noise when the old spread is tiny or zero (the old path can be nearly batch-invariant). Rule 3 now passes whenever the largest per-row gap (1 - mean cosine) is <= 1e-4, which is far below bf16 rounding and five times tighter than rule 2's 5e-4. Rules 1 and 2 are unchanged, so nothing looser than the registered per-position and per-row limits can pass.
+
+## Result log 1: CPU fp32 check on the Mac, real EmbeddingGemma 2 (10-13 11:18 to 11:36 PM ET; harness 6a870a767c then daee2fd9e9; PTS 3M accum 16, 20,049-row sample of the -L pool, caps_b3s.json)
+- **E2 FAILED as registered.** Max abs difference of H over 64 rows = 1.389e-03 against the limit 1e-4.
+- Scale diagnostic (added after the first run, not a mark): max |H| 588.1, p99.9 |H| 274.7, mean |H| 34.6. The difference is 2.4e-6 of the largest value, and 5.5e-6 relative at the worst element (251.2). fp32 rounding is 1.2e-7 per operation, so about 40 roundings of error after 24 layers is what reordering the sums would give (suggested). The same vectors give cosine 1 - 4e-12 on all 256 rows (E1 plumbing passes), and one update's loss is identical and the gradient cosine 1.00000000 with relative L2 5e-8 (E3 passes for eg_once, eg_sorted, prefetch, sortpad,oldw and bigmb,oldw). Plain `sortpad` and `bigmb` are NOT EXACT on the plain arms (they change per-token weights; loss rel 2.3e-3, gradient cosine 0.9496) unless `oldw` restores the old weights.
+- My absolute 1e-4 limit ignored the size of H (values up to 588). That is my error, but the registered result stays FAIL in the record.
+
+## Amendment 2 (PROPOSED, post hoc, not applied to the result above)
+For any later E2-type check: pass if max abs difference <= 1e-5 x max |H|. It would pass the check above (2.4e-6) and is still about 80 fp32 roundings wide. Until the big-run thread agrees, eg_once is not adopted anywhere; nothing is adoptable yet anyway because the GPU numbers (E1 bf16, E4 loss trace, speed) do not exist. E1, E3 and E4 as registered are unchanged.
