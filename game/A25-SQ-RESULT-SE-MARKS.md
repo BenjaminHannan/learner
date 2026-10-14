@@ -1,4 +1,4 @@
-# A25 (7:55 PM ET 10-14): SQ result (instrument check failed, no verdict) and the replacement gate SE: how well does the search play by itself? (marks fixed before the SE run)
+# A25 (7:41 PM ET 10-14): SQ result (instrument check failed, no verdict) and the replacement gate SE: how well does the search play by itself? (marks fixed before the SE run)
 
 ## SQ result (A24 as written; code commit 5c78dcfbd3; all **shown**)
 2,283 decisions over 48 practice worlds (run seed 392), 2.84 s a decision (4 cores, 36 min); the uniform-rollout control on the same states, 2.87 s, 36 min.
