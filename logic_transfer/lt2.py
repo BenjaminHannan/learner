@@ -181,7 +181,7 @@ def cmd_run(a):
 
     def cmd(p, s):
         c = [sys.executable, '-m', 'logic_transfer.course', '--parent', parent_path(a.parents_dir, p), '--data', a.sk200k, '--mix', f'{d}/train.jsonl',
-             '--mix-frac', '0.25', '--updates', str(a.updates), '--batch', '64', '--lr', '1e-4', '--warmup', '100', '--seed', str(s),
+             '--mix-frac', str(a.mix_frac), '--updates', str(a.updates), '--batch', '64', '--lr', '1e-4', '--warmup', '100', '--seed', str(s),
              '--threads', str(a.threads), '--device', a.device, '--out', os.path.join(out_root, run_name(p, s)), '--log-every', '250',
              '--eval-every', str(a.eval_every), '--eval-n', str(a.eval_n), '--stop-marks', marks_string(th), '--abort-file', abort,
              '--slice-every', '25'] + (['--gpu-mem-gb', str(a.gpu_mem_gb)] if a.device == 'cuda' and a.gpu_mem_gb else []) + evs
@@ -231,7 +231,7 @@ def cmd_run(a):
         if time.time() - last_note > 600:
             last_note = time.time()
             print(f'[{time.time() - t0:.0f}s] ' + ' '.join(f'{run_name(*k)}:{(read_evals(os.path.join(out_root, run_name(*k))) or [{"update": 0}])[-1]["update"]}' for k in live), flush=True)
-    json.dump(dict(rung=rung, marks=marks_string(th), runs=[run_name(p, s) for p, s in runs], wall_s=round(time.time() - t0, 1), device=a.device),
+    json.dump(dict(rung=rung, marks=marks_string(th), runs=[run_name(p, s) for p, s in runs], wall_s=round(time.time() - t0, 1), device=a.device, mix_frac=a.mix_frac, updates=a.updates),
               open(os.path.join(out_root, 'DONE.json'), 'w'), indent=1)
     print('all runs finished', flush=True)
 
@@ -381,6 +381,15 @@ def summarise_recall(rows):
     return {k: dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v)) for k, v in sorted(acc.items())}
 
 
+def _recipe(work, rung):
+    """mix_frac / updates / device the rung's runs were ordered with (DONE.json); None for a rung ordered before these fields existed (0.25, 8000)."""
+    try:
+        d = json.load(open(os.path.join(work, f'rung{rung}', 'DONE.json')))
+        return dict(mix_frac=d.get('mix_frac'), updates=d.get('updates'), device=d.get('device'), wall_s=d.get('wall_s'))
+    except (OSError, ValueError):
+        return None
+
+
 def cmd_report(a):
     rungs = a.rung or sorted(int(x[5:]) for x in os.listdir(a.work) if x.startswith('rung') and os.path.isdir(os.path.join(a.work, x)))
     res = {}
@@ -415,7 +424,7 @@ def cmd_report(a):
                                 n_carried=sum(u in x['dev_at_carried'] for x in rows))
         res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r] if 'count_baseline' in summ['files'].get(k, {})}, n_pass=n_pass, n_runs=len(rows),
                                verdict=verdict, dev_stats=stats, label_recall=summarise_recall(rows), probe_summary=summarise_probes(rows),
-                               code=_code_sha(), runs=rows, falsifier=dec[2])
+                               code=_code_sha(), recipe=_recipe(a.work, r), runs=rows, falsifier=dec[2])
     print(json.dumps(res, indent=1))
     return res
 
@@ -505,6 +514,7 @@ def main(argv=None):
     r.add_argument('--poll', type=float, default=20)
     r.add_argument('--no-falsifier', dest='falsifier', action='store_false')
     r.add_argument('--keep-abort', action='store_true')
+    r.add_argument('--mix-frac', type=float, default=0.25, help='share of every batch drawn from the rung train file (the sealed recipe is 0.25; Addendum 4 pre-registers 0.5 as the first change after a FAIL)')
     r.add_argument('--gpu-mem-gb', type=float, default=None, help='cuda: per-process cap on the caching allocator (the card is shared by the runs of a rung; an out-of-memory then waits and retries inside the run). Default: the card split evenly over the runs alive at once, minus 0.4 GB CUDA context and 0.6 GB spare each (24 GB card, 6 runs: 3.4 GB; 3 runs: 7.3 GB)')
     r.add_argument('--stagger', type=float, default=6, help='seconds between process starts (memory peak while loading rows)')
     r.add_argument('--retries', type=int, default=1, help='restart a run that exits non-zero (same seed, from scratch) this many times')
