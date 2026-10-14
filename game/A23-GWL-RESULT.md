@@ -46,3 +46,30 @@ cow 70%, furnace 31%, stone pickaxe 7%). Random 2.31; GW-P8 After 4.15 / 4.19.
 ## Pre-registered next (A22 "anything between")
 One run at N = 64,000 on seed 200 (10 epochs, the same constants), with the same held-out views. The smaller label counts (4,000 and 1,000)
 are running first and give the label-cost curve (L-3).
+
+## Result at N = 64,000, seed 200 (8:33 AM ET 10-14; the pre-registered follow-up; code commit be63ed157d, which adds resumable training; the math is unchanged, tested)
+Same constants (10 epochs, 2,500 updates, 6.9 h on 4 threads, the box restarted twice before this run and the run was not hit), same 2,000 held-out
+views as the 16k runs (kept as is; the new train set drops any view that is in it), a new train list of 64,000 unique views (practice run seed 390).
+| | N = 16,000 (seed 200) | N = 64,000 (seed 200) |
+|---|---|---|
+| Held-out accuracy on S (1,491 views; always `do` = 27.2%) | 41.9% | **62.4%** |
+| L-1 gap | +14.8 | **+35.3** |
+| held-out accuracy, all 2,000 views | 49.0% | 67.3% |
+| training accuracy at the last epoch (running mean) | 0.56 | 0.71 |
+| Sealed unlocks a game, sampled T = 1 | 4.88 | **6.50** |
+| minus GW-P8 After (4.15), paired 95% | +0.73 (+0.28 to +1.17) | **+2.35 (+1.87 to +2.79)** |
+| minus untrained parent at T0 | +1.13 (+0.72 to +1.53) | +2.75 (+2.29 to +3.20) |
+| Sealed unlocks a game, top move | 3.91 | 5.89 |
+- Per-word accuracy on S: left 58.8%, right 54.8%, up 58.9%, down 54.6%, do 77.3% (16k: 25 to 56%). Most common slips: `right` read as `up` (55 views), `do` as `left`, `down` as `left` or `do`.
+- Sealed achievements (% of maps): wood 97, table 96, **wood pickaxe 83**, wood sword 67, stone 40, drink 57, zombie 52, sapling 38, cow 29, plant 31, wake-up 35,
+  coal 10, furnace 3, stone pickaxe 2. The labeller itself (8.23): wood pickaxe 98, stone 83, zombie 78. The student has not reached the labeller (6.50 against 8.23).
+- Against A22 as written: its marks are defined at N = 16,000 on both seeds and read **no verdict** there. At N = 64,000 seed 200 meets both bars (L-1 +35.3 >= +20; L-2 +2.35 >= +1.0
+  with the interval above 0), as a one-seed screen. Seed 201 at N = 64,000 is queued (needed before it can be called a pass on both seeds); the 4,000 and 1,000 runs (L-3) are running.
+- Shown: a 3M model with a rank-8 add-on, read through the 17-word scorer, learns a map-to-move rule from labelled views, and the held-out accuracy and sealed play keep rising with
+  the number of labels (16k to 64k: +20 points, +1.6 unlocks). Held-out accuracy is still climbing at 10 epochs on both sizes, so these are floors.
+- Shown: the reward-driven runs (GW-P8, 87,000 sparse-reward moves, 4.15) are far below a student that saw 64,000 labelled views. What is not shown: that the model can get
+  such labels without the hand-written labeller. The labeller is the whole teacher here (it encodes where trees, water and cows are, when to craft); this is a capacity result,
+  not a self-teaching result.
+- Suggested, untested: size is not the limit at 3M for these basics; the limit is how the model finds good labels by itself. Candidate label sources that need no hand-written
+  labeller (all untested): hindsight labels from the model's own unlocks with a longer or smarter window than the 8-move rule of GW-S; search with the game as a tool (copy the world,
+  look ahead, label the first move of the best path, then distil: expert iteration); a learned value used to relabel.
