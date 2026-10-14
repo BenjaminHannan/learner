@@ -13,3 +13,5 @@ echo "PROFILE=1, PROF_PLAN=default:";           show PROFILE=1 PROF_PLAN=default
 echo "PROFILE=1, PROF_PLAN=b3sweep:";           show PROFILE=1 PROF_PLAN=b3sweep
 echo "PROFILE=1, b3sweep, explicit overrides:"; show PROFILE=1 PROF_PLAN=b3sweep MAXH=4 PROF_MAXMIN=100 PROF_JOB_STEPS=60 PROF_AT_MIN=30 "PROF_JOB_TRAIN_EXTRA=--log-every 5"
 echo "PROFILE=1, PROF_PLAN=default, explicit overrides:"; show PROFILE=1 MAXH=4 PROF_MAXMIN=100 PROF_JOB_STEPS=60
+echo "PROFILE=1, PROF_PLAN=b3ab:";              show PROFILE=1 PROF_PLAN=b3ab
+echo "PROFILE=1, b3ab, explicit overrides:";    show PROFILE=1 PROF_PLAN=b3ab MAXH=4 PROF_MAXMIN=100 PROF_JOB_STEPS=60 "PROF_JOB_TRAIN_EXTRA=--log-every 5"

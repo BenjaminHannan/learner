@@ -34,7 +34,8 @@ t = t.replace('@@CLOZE_SHA@@', cloze).replace('@@CAPS_PY_SHA@@', caps_py).replac
 # PROFILE mode (added 2026-10-14): the profiling harness commit as the coordinator named it, and the sha256 of prof_train.py read from that commit with git (not typed)
 # re-pinned 2026-10-14 from 6a870a767c6231fe6c2489b84752ffdafd7824fa to the newest harness commit (E2 scale diagnostics, relative E2 rule, E1-floor text, CPU/bf16 label)
 # re-pinned 2026-10-14 (PROF_PLAN=b3sweep) to the commit that adds the accumsweep and accumcmp sections; PROF_SHA in the environment overrides (a check, never used for the committed script)
-PROF_SHA = os.environ.get('PROF_SHA', '1d728b99ef7180c567b285b07ede9aac7a46427a')
+# re-pinned 2026-10-14 (PROF_PLAN=b3ab) to the commit that adds the unfused, pad64 and nosync variants and the abequiv and abbench sections
+PROF_SHA = os.environ.get('PROF_SHA', 'b5a85790f2cba5a538bf8b3609899591cf282843')
 WT = '/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1'
 assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', PROF_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'harness commit not in the repo'
 blob = subprocess.run(['git', '-C', WT, 'show', PROF_SHA + ':results/8a-g/speedup/prof/prof_train.py'], capture_output=True, check=True).stdout
