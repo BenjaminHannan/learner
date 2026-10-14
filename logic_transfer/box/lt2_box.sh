@@ -12,7 +12,7 @@
 #   `bash -c` command line and killed the whole box script), result blocks written whole under a lock (parallel rungs could interleave their base64 lines),
 #   `wait` only on rung jobs, code sha in every ORDER / RUNG line, memory line after setup, driver tail in each rung block, rung rows built by this code
 #   (the order's rungs' rows are hash-checked against logic_transfer/ladder-hashes.json when the rung runs).
-# Env: BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
+# Env: GOFILE (order file name under logic_transfer/box/, default GO.txt), BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
 # No credential is on the box; nothing listens.
 set -u
 J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
@@ -78,7 +78,7 @@ last=""
 while true; do
   over && { say "LT2 MAXH $MAXH h reached"; break; }
   (cd mine && git fetch -q --depth 1 origin $BR && git reset -q --hard FETCH_HEAD) 2>/dev/null
-  G=mine/logic_transfer/box/GO.txt
+  G=mine/logic_transfer/box/${GOFILE:-GO.txt}      # GOFILE: a box can follow its own order file (two boxes on one branch do not share orders)
   if [ -f $G ]; then
     s=$(sha256sum $G | cut -c1-16)
     if [ "$s" != "$last" ]; then
