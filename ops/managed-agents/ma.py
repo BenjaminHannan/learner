@@ -35,7 +35,7 @@ HERE = Path(__file__).resolve().parent
 IDS_PATH = HERE / "ids.json"
 ET = ZoneInfo("America/New_York")
 REPO_URL = "https://github.com/BenjaminHannan/learner"
-CHECK_SCHEDULE = {"type": "cron", "expression": "*/15 * * * *", "timezone": "America/New_York"}
+CHECK_SCHEDULE = {"type": "cron", "expression": "*/30 * * * *", "timezone": "America/New_York"}
 BUDGET_CENTS = {"check": 50, "job": 100, "review": 300}
 TOTAL_CAP_CENTS = {"batch": 500, "review": 300}  # worst case for a whole batch
 MAX_BODY_BYTES = 256 * 1024 * 1024  # Message Batches request size limit
@@ -485,7 +485,7 @@ def cmd_setup(args):
         ids["reviewer_env"] = env.id
     print(f"reviewer environment: {ids['reviewer_env']}")
     deployment = dict(
-        name="benspc-check-15min",
+        name="benspc-check-30min",
         agent=agent_ref(agents["pc-operator"]),
         environment_id=ids["pc_env"],
         schedule=CHECK_SCHEDULE,
@@ -642,7 +642,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("setup", help="create or update the agents, reviewer environment and 15-minute check")
+    p = sub.add_parser("setup", help="create or update the agents, reviewer environment and 30-minute check")
     p.add_argument("--env-id", help="the self-hosted environment made in the Console (env_...)")
     p.set_defaults(func=cmd_setup)
 
@@ -650,8 +650,8 @@ def main():
     p.add_argument("--wait-min", type=float, default=15)
     p.set_defaults(func=cmd_check_now)
 
-    sub.add_parser("pause", help="pause the 15-minute check").set_defaults(func=lambda a: cmd_pause(a, True))
-    sub.add_parser("unpause", help="resume the 15-minute check").set_defaults(func=lambda a: cmd_pause(a, False))
+    sub.add_parser("pause", help="pause the 30-minute check").set_defaults(func=lambda a: cmd_pause(a, True))
+    sub.add_parser("unpause", help="resume the 30-minute check").set_defaults(func=lambda a: cmd_pause(a, False))
     sub.add_parser("status", help="print the latest BensPC report").set_defaults(func=cmd_status)
 
     p = sub.add_parser("job", help="hand a job to the PC operator (text, or - for stdin)")

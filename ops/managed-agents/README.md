@@ -4,7 +4,7 @@ Two Claude Managed Agents, paid from Ben's monthly API credit (not from his Clau
 
 | Agent | Model | Runs where | Does |
 |---|---|---|---|
-| `pc-operator` | Haiku 5.5, xhigh | Ben's Mac, through a self-hosted worker that reaches BensPC over `ssh benspc` | Checks the PC every 15 minutes, restarts jobs only as their job cards say, and runs PC jobs that threads send |
+| `pc-operator` | Haiku 5.5, xhigh | Ben's Mac, through a self-hosted worker that reaches BensPC over `ssh benspc` | Checks the PC every 30 minutes, restarts jobs only as their job cards say, and runs PC jobs that threads send |
 | `opus-reviewer` | Opus 5.5, xhigh | Default `review`: a half-price batch request with no repo. `review --repo`: a Managed Agents session in Anthropic's cloud sandbox with the repo cloned read-only (needs `ids.json` and `LEARNER_GITHUB_RO_TOKEN`) | Answers the outside-opinion prompts that CLAUDE.md describes, sent straight from a thread |
 
 Each Managed Agents session has a hard spending cap: $0.50 per scheduled check, $1 per PC job, $3 per `review --repo`
@@ -27,9 +27,9 @@ Then any new thread session (which picks up the two variables):
 
 ```sh
 pip install anthropic pyyaml
-python3 ops/managed-agents/ma.py setup --env-id env_...   # creates the agents and the paused 15-minute check
+python3 ops/managed-agents/ma.py setup --env-id env_...   # creates the agents and the paused 30-minute check
 python3 ops/managed-agents/ma.py check-now                # one test check on the real PC
-python3 ops/managed-agents/ma.py unpause                  # start the 15-minute schedule
+python3 ops/managed-agents/ma.py unpause                  # start the 30-minute schedule
 ```
 
 Commit `ids.json` afterwards (it holds IDs only, no secrets). Rerun `setup` after editing an agent file; it updates the

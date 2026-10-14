@@ -23,7 +23,7 @@ try:  # the anthropic SDK's HTTP library is httpx2 in 1.13, httpx in older relea
 except ImportError:
     import httpx
 
-NOW = dt.datetime(2026, 10, 11, 12, 0, tzinfo=dt.timezone.utc)
+NOW = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)  # real time: `cost --days 1` windows on the real clock
 
 
 def msg(text="answer", stop="end_turn", model="claude-haiku-5-5", usage=(1000, 2000, 0, 0), blocks=None):
