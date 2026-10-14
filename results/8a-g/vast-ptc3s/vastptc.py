@@ -6,6 +6,8 @@
   python3 vastptc.py KIT_VAST_PY status|tail|collect|collectck|destroy|credit ...      (the kit's own arguments, unchanged)
   python3 vastptc.py KIT_VAST_PY create --offer ID --label ptcprof --env "PROFILE=1 MAXH=2 DPH=0.40 END_SLEEP=300 FAIL_SLEEP=300"     (the PROFILE rental: RUNBOOK.md section 9;
                                                   its result blocks are named profjob and profrun and need only `collect`)
+  python3 vastptc.py KIT_VAST_PY create --offer ID --label b3sweep --env "PROFILE=1 PROF_PLAN=b3sweep MAXH=3 DPH=0.46 END_SLEEP=300 FAIL_SLEEP=300"     (the B3G2 accum sweep plus two AT-1
+                                                  speed runs: RUNBOOK.md section 9b; same two result blocks, same `collect`)
 
 KIT_VAST_PY is the path of the kit's vast.py (see RUNBOOK.md for how to get it and which sha256 it must have). Three changes are made to the loaded module before its
 main() runs, nothing else:

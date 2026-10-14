@@ -153,7 +153,7 @@ Expected differences, none of which is a defect: GPU (4090 vs 5070 Ti), torch an
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `create` returns an error naming size or length | the script is 53 KB (35 KB before PROFILE mode was added); the kit's box.sh was 7.7 KB (untested limit; the 37 KB `at10m_box.sh` of branch vast-at10m-tmp was never launched either) | do not retry blindly; tell the roadmap thread. A short bootstrap that fetches the script by commit and sha256 would need the script on GitHub first |
+| `create` returns an error naming size or length | the script is 72,310 bytes (72 KB; the 53 KB script of the PROFILE-only version ran in the real 10-14 rental, above that size nothing is tested; 35 KB before PROFILE mode was added); the kit's box.sh was 7.7 KB (untested limit; the 37 KB `at10m_box.sh` of branch vast-at10m-tmp was never launched either) | do not retry blindly; tell the roadmap thread. A short bootstrap that fetches the script by commit and sha256 would need the script on GitHub first |
 | Log stays empty after `running` | args not run (bash error) or logging delay | S1 |
 | `CIO-FAIL pip` | PyPI unreachable | one retry costs little; S8 |
 | `CIO-FAIL eg-download` | Hugging Face rate limit for the box IP, six tries failed | destroy, try another host later |
@@ -167,11 +167,11 @@ Expected differences, none of which is a defect: GPU (4090 vs 5070 Ti), torch an
 
 **What it is.** The full job (sections 1 to 8) is below the confidence bar for a first attempt (DRYRUN.md section 6: about 45 %). This rental runs the same `ptc3s_box.sh` with `PROFILE=1`. Stages setup, code, gemma, data and skills are the job's, unchanged. Then, instead of the 24,000 updates, stage `prof` does three things:
 
-1. fetches the profiling harness (branch `claude/project-thread-yha868`, commit `ca542f77a9d3f6afb4a6850936e62da5b54a45ec`, folder `results/8a-g/speedup`; re-pinned from `6a870a767c` after the harness got the E2 scale diagnostics, the relative E2 rule, the E1-floor text and a CPU/bf16 label fix) and checks `prof_train.py` against sha256 `2f1410fea1e5754c785188c30fe22368fbd42b6bc45ff54304e59896c3fe479b` (taken from that commit with git; a different file stops the box with `CIO-FAIL`);
+1. fetches the profiling harness (branch `claude/project-thread-yha868`, commit `1d728b99ef7180c567b285b07ede9aac7a46427a`, folder `results/8a-g/speedup`; re-pinned from `6a870a767c` to `ca542f77a9` (E2 scale diagnostics, the relative E2 rule, the E1-floor text, a CPU/bf16 label fix) and then to `1d728b99ef` (adds the sections `accumsweep` and `accumcmp` for plan b3sweep, section 9b; nothing the six default harness commands use was changed, 30 of 30 harness tests pass) and checks `prof_train.py` against sha256 `e2b5cbcd60d30e61885977f27beab52b2a5f23f43de29d9a7748498036203829` (taken from that commit with git; a different file stops the box with `CIO-FAIL`; **the commit must be on GitHub before any rental**);
 2. runs the **production-speed smoke**: the queue-built job command (`cmd.job.sh`, the PC runner's own flags) with `--out` moved to its own folder and `--steps 300 --train-extra '--log-every 50'` appended, under a 45-minute timeout. It builds the real pool `p10-rung30-s400-a64-L`, trains 300 updates with the real data, caps and Gemma front, and runs the real final evaluation (intact, lesions, chain-5). The box prints the seconds per update and how long the final evaluation took (`PROF-JOB` lines), which are the two numbers the cost guard's `EXTRA_H` (0.5 hours) and the 24,000-update estimate need. The PC run of the sibling arm (g2c3s, PTS 3M accum 16: `train_s` 25,786 s, `wall_s` 25,845 s) shows that start-up plus the whole final evaluation took about 1 minute there (shown, figures as given to me; that result file is not in this worktree), so `EXTRA_H=0.5` is conservative;
 3. runs six harness commands on that pool, each under its own timeout, a failure is logged and the next one still runs: `a_profile` (PTC accum 16, all default sections), `b_bench` (PTC accum 16, `--sections bench`, 100 timed updates after 20 warm-up, 2 rounds, 7 variants), `c_equiv` (PTC, `--sections equiv --equiv-check --curve-updates 0`, 8 variants: E1 on the GPU in bf16, E2, E3), `d_e4` (PTC, the 300-update loss trace for `eg_once` only), `f1_b3g2_profile` (B3G2 accum 32, sections breakdown, throughput, padding, syncs; no profiler), `f2_b3g2_bench` (B3G2, bench of `baseline;eg_once`, 40 timed updates after 10 warm-up). The CPU E2/E3 runs of the harness README are **not** made. B3G2 runs on the PTC pool (the harness README's own `$POOL` convention), with `--caps custom_io/g8a/caps_b3g2.json` of the assembled tree (the file and `models/b3g2.py` exist there, shown).
 
-With `PROFILE` unset the script is the job of sections 1 to 8, byte for byte the same code path except for the lines listed in DRYRUN.md section 9 (shown by a diff and by a full default dry run). The speed guard is off in PROFILE mode, no checkpoint is exported, and the hard stop is `MAXH=2`. Labels below: shown = seen in the CPU dry run, suggested = reasoned, untested = needs the real box.
+`PROF_PLAN=b3sweep` (section 9b) replaces the six harness commands of item 3 by the B3G2 accum sweep and two AT-1 speed runs; everything else in this section is the default plan. With `PROFILE` unset the script is the job of sections 1 to 8, byte for byte the same code path except for the lines listed in DRYRUN.md section 9 (shown by a diff and by a full default dry run). The speed guard is off in PROFILE mode, no checkpoint is exported, and the hard stop is `MAXH=2`. Labels below: shown = seen in the CPU dry run, suggested = reasoned, untested = needs the real box.
 
 ### Cost and time at $0.40 per hour
 
@@ -209,7 +209,7 @@ Write the SPEND.md row first, as in section 2 (suggested text: `8aPTC3S profile 
 | `CIO START`, `PTC3S START ... guard=OFF-profile-mode`, `PROF MODE: ...` | **the `PROF MODE` line must be there**. If it is not, `PROFILE=1` did not arrive and the box will run the 24,000-update job: destroy at once |
 | the `# nvidia-smi`, `# pip list` and `# torch` block | GPU name, driver, CUDA, cuDNN, torch, transformers, numpy, CPU: the PC-versus-box version comparison (also in `profrun/prof_env.txt`) |
 | `STAGE code`, `CODE-ID ...`, `STAGE gemma` (`eg check cuda`), `STAGE data`, `STAGE skills` | as in section 4 |
-| `STAGE prof`, `PROF START ...`, `PROF-HARNESS commit ca542f77a9... prof_train.py sha256 2f1410fea1... = the pinned value` | harness fetched and checked |
+| `STAGE prof`, `PROF START ...`, `PROF-HARNESS commit 1d728b99ef... prof_train.py sha256 e2b5cbcd60... = the pinned value` | harness fetched and checked |
 | `PROF-JOB START`, `TICK ... stage=prof-job ... step=N loss=X` | the smoke; TICK shows the step every 3 minutes (the log is read every 50 updates) |
 | `PROF-JOB END rc=0`, `RESULT-SUMMARY {...}` | `job_status ok`, `arm_status ok`, `steps 300`, `n_params 4023976`, `cap_total 0`, `final_eval true`, `chain5 true`, `lesions [... nocalc ...]` |
 | `PROF-JOB train step=50 ... step=300 ... elapsed_s=` | six lines |
@@ -260,3 +260,98 @@ Size: files over 400 KB are gzipped, and if the `profrun` archive would pass 2,0
 1. Shake-out (each is a yes or no, from the tail): `eg check cuda` rc 0; harness hash line says "the pinned value"; `RESULT-SUMMARY` as in the table above; `PROF-JOB pool` hash equal to the CPU box's; every `PROF STEP ... rc=0`.
 2. The numbers the coordinator asked for: `sec_per_update_first_to_last_log` and `final_eval_phase_s` (then the full-job estimate: 24,000 times the first, plus the second, plus about 0.7 h of set-up); GPU name, driver, torch and CUDA lines of `prof_env.txt` against the PC's.
 3. The speed-up question: `bench.md` and the E1 to E4 verdicts in `equiv_gpu.md` and `equiv_e4.md`, read against `PREREG-eg-once.md` (pass marks fixed there before any GPU number; this runbook does not change them).
+
+### 9b. Plan b3sweep (added 2026-10-14): the B3G2 micro-batch (accum) sweep and two speed runs of the agent-turn model AT-1
+
+**What it is.** The PROFILE rental of 10-14 showed that B3G2 3M at accum 32 takes 7.2 s per update on the 4090 and is not limited by Gemma. `results/8a-g/speedup/PREREG-b3g2-accum.md` fixes the marks for the next test (accum 32, 16, 8, 4). Big-run also asked for a measurement-only production smoke of AT-1 (agent-turn model B3AT, arm AT, 3M, seed 400) so that the AT-1 against G2f speed ratio is measured and not guessed. This plan does both on one cheap rental. It is selected with `PROFILE=1 PROF_PLAN=b3sweep`; with `PROF_PLAN` unset (or `default`) everything in this section 9 above is unchanged (shown: DRYRUN.md section 10).
+
+Stages setup, code, gemma, data and skills are the PROFILE ones. Then stage `prof` does:
+
+1. fetches the harness (commit `1d728b99ef7180c567b285b07ede9aac7a46427a` of branch `claude/project-thread-yha868`, which adds the sections `accumsweep` and `accumcmp` to `prof_train.py`; sha256 `e2b5cbcd60d30e61885977f27beab52b2a5f23f43de29d9a7748498036203829`, read from that commit with git). **This commit must be pushed to GitHub before the rental, otherwise the box stops with `CIO-FAIL fetch-prof`.** The one pin serves both plans, so the default plan also runs this harness (its six commands use code paths that did not change; 30 of 30 harness tests pass, the original 24 among them);
+2. a shortened **production smoke**, only to build the pool `p10-rung30-s400-a64-L`: the queue-built job command with `--steps 50` (`PROF_JOB_STEPS=50`), timeout 20 minutes (`PROF_JOB_MIN`). It keeps the pool check and the `PROF-JOB` lines;
+3. **h1_b3g2_accumsweep** (timeout 45 min): B3G2 3M, batch 256, accum 32, 16, 8, 4; 10 warm-up updates and 40 timed updates per run, 2 rounds interleaved (32 16 8 4 32 16 8 4), the same rows at every accum; median seconds per update, peak allocated GB, and the mean number of thinker rounds per micro-batch (read from the model's own output), with the four marks of the pre-registration printed next to the numbers. An out-of-memory at some accum is caught and recorded, the other accums go on;
+4. **h2_b3g2_accumcmp** (timeout 15 min): ONE update on the same 256 rows with the loop length K and the random parts pinned, accum 32 against 16, 8 and 4: loss difference and gradient cosine (descriptive, no pass bar), in fp32 and bf16, plus accum 32 run twice as the noise floor;
+5. **at_g1** (timeout 40 min): arm AT of `custom_io` at `6e72a5fae514a343c217c4d95cde37bc3b587c8e` (the PC's `src-at`; fetched and checked against 11 sha256 values: the 10 pins of the AT10M kit, each also compared with git, and the queue file `8aAT-3M-s400-pc.txt`), the PC's own queue line turned into a command by `local_runner`'s `parse_queue` and `command` (the same method the PTC job uses), the same pool, `caps_b3g2.json` and readout flags as G2f, accum `AT=32`, `--steps 300 --train-extra '--log-every 20'`;
+6. **at_g2** (timeout 40 min): the same at the fastest swept accum that is not 32 and has peak allocated at most 10 GB (read from the sweep's json by `at_pick.py`; accum 8 when none qualifies or the sweep failed).
+
+AT is measured for **speed only**. `train.py` writes `AT/RESULT.json` right after the last update and then starts the final evaluation; the box stops the AT job at that moment (a stop is printed as `training finished, job stopped by the box before its final evaluation`). No readout and no RESULT checks are made. Seconds per update = the median of the differences between consecutive train log lines from step 40 on. A run that the timeout ends still counts: its log lines are data, and the last step reached is printed. Missing code, a caps mismatch or an out-of-memory in an AT stage is printed as `PROF-AT ... FAILED` with the last log lines, the other stages go on, and `PROF DONE` lists it. There is **no** PTC stage, no E4 trace and no a_profile in this plan.
+
+Everything here is labelled: shown = seen in the CPU dry run (DRYRUN.md section 10), suggested = reasoned, untested = needs the real box.
+
+#### Commands
+
+```
+$V search --gpu "RTX 4090" --n 8
+$V create --offer OFFER_ID --label b3sweep --env "PROFILE=1 PROF_PLAN=b3sweep MAXH=3 DPH=<dph_total> END_SLEEP=300 FAIL_SLEEP=300"
+$V status --id INSTANCE_ID
+$V tail --id INSTANCE_ID --n 250
+$V collect --id INSTANCE_ID --out ./collected_b3sweep      # as soon as PROF RESULT PRINTED shows; the blocks are profjob and profrun, as in the default plan
+$V destroy --id INSTANCE_ID
+```
+`MAXH=3` is also the plan's default; `PROF_MAXMIN` defaults to 150 minutes counted from the start of stage prof (the budget never passes `MAXH` minus 7 minutes). Other settings, all optional: `PROF_SWEEP_MIN=45`, `PROF_CMP_MIN=15`, `PROF_AT_MIN=40`, `PROF_AT_STEPS=300`, `PROF_AT_TRAIN_EXTRA='--log-every 20'` (a value with spaces cannot go through `--env`; leave the default), `PROF_AT_FROM_STEP=40`, `PROF_JOB_STEPS=50`, `PROF_JOB_MIN=20`. Write the SPEND.md row first (suggested text: `8aPTC3S b3sweep rental | 1 x RTX 4090 ($DPH/h) | start ET | | about $1.2, MAXH=3`).
+
+#### Time and cost at $0.46 per hour
+
+| Part | Time | Label |
+|---|---|---|
+| create to script start (image pull) | 3 to 10 min | suggested |
+| setup, code, gemma, data, skills | about 17 min (16.5 min on the real 4090 rental of 10-14: `stages.txt`, the data stage 13 of them) | shown on the real rental, host-dependent |
+| pool-building smoke (50 updates) | about 5 to 6 min | suggested: pool build 100 s (99.5 s shown on the 4090 box), arm start and 50 updates about 1.5 min, final evaluation about 1 min |
+| h1 sweep | about 25 to 35 min; hard limit 45 | untested. Accum 32 alone is 100 updates at about 7.2 s = 12 min (7.2 s shown by the 10-14 rental); the other three accums should be faster |
+| h2 comparison | 3 to 8 min; hard limit 15 | untested |
+| AT code fetch and checks | 1 to 2 min | suggested |
+| at_g1 | **most likely the full 40 min** | untested. Start-up of the arm includes a check of the pool's caps (a few minutes, once per pool, job.py's own text). If AT-1 is 2 to 4 times slower than G2f's 7.2 s (Big-run's guess, untested), 300 updates would need 70 to 145 minutes, so the timeout will end the run after roughly 80 to 170 updates. That is enough: the speed comes from the log lines after step 40 |
+| at_g2 | up to 40 min, less if the picked accum is much faster | untested |
+| printing, `END_SLEEP` | 2 min, 5 min | printing shown on the CPU box |
+| **Expected total** | **about 2.4 h of script time (2.0 to 3.0 h), 2.5 to 2.7 h with the image pull: $1.15 to $1.25** | suggested |
+| **Worst case** | `MAXH=3` h from script start (the stage budget ends 7 minutes before it) + `END_SLEEP` (5 min) + image pull (about 6 min, up to 10) = **about 3.2 h, $1.47** if the box is destroyed right after `CIO DONE`; every extra hour left running costs $0.46 | rule |
+
+The PROFILE rental of 10-14 used about 70 minutes of stage prof; this plan is longer because of the two AT runs (up to 80 of its roughly 145 minutes).
+
+#### What you should see in the tail (new lines; the rest is as in the table above)
+
+| Line | Meaning |
+|---|---|
+| `PROF MODE: ... (PROF_MAXMIN=150 PROF_JOB_STEPS=50 ... PROF_PLAN=b3sweep)` and later `PROF PLAN b3sweep (PROF_PLAN): ...` | **both must be there.** Without `PROF_PLAN=b3sweep` on the `PROF MODE` line the box runs the default PROFILE plan: destroy at once and fix the env line |
+| `PROF-JOB END rc=0`, `RESULT-SUMMARY {...}` with `steps 50` | the pool exists. `final_eval true` is expected here too |
+| `PROF STEP h1_b3g2_accumsweep start ... end rc=0 secs=N` | the sweep. Between the two lines the log shows `accum K round R: X s/update, peak alloc Y GB, rounds per micro-batch Z`, eight times (4 accums x 2 rounds), then the table of `b3g2_accumsweep.md` (speed against accum 32, the marks) |
+| `PROF STEP h2_b3g2_accumcmp ...` | the log shows `accumcmp fp32: accum 32 vs K: \|dloss\| ..., grad cos ...` and the same for bf16, then the table of `b3g2_accumcmp.md` |
+| `PROF-AT code: custom_io at 6e72a5fae5...`, `PROF-AT code ok: 11 pinned files match`, `CMD 8aAT-3M-s400 mem 9000 MiB: ...` | AT code fetched and checked; the second line shows the exact AT command the PC runner would use (compare it with the queue file) |
+| `PROF-AT cmd: ...`, `PROF-AT at_g1 START ...`, then every 2 minutes `PROF-AT at_g1 progress: step=N loss=X elapsed_s=T gpu_used_mib=M` | AT-1 is running at accum 32. The first progress lines may have no step yet: the arm first checks the pool's caps and builds the model. The TICK lines in this plan keep repeating the last train line of the pool-building smoke (`step=50 ...`, frozen, shown in the CPU dry run); they prove the box is alive, not the AT progress. The AT progress is the `PROF-AT ... progress` line |
+| `PROF-AT at_g1 END rc=N secs=S (TIMEOUT)` or `(training finished, job stopped by the box ...)` | how it ended |
+| `PROF-AT at_g1 train step=20 ... step=...` | the train lines (every 20 updates) |
+| `PROF-AT at_g1 accum AT=32: ended=...; last step reached N of 300` | the last step reached |
+| `PROF-AT at_g1 SPEED: X s/update = median of N consecutive differences ...` | **the AT-1 speed number** |
+| `PROF-AT at_g1 PEAK: X GB allocated` (training finished) or `no RESULT.json ...; nvidia-smi highest used memory X MiB` (cut by the timeout; includes cached memory, so it is an upper bound) | peak memory |
+| `PROF-AT at_g1 RATIO to B3G2 on this box at the same accum 32: Rx` | AT seconds per update divided by the B3G2 sweep's median at the same accum, both on this box (different timers: the harness's free-running mean against train.py's log differences) |
+| `PROF-AT pick: accum 32: ..., accum 16: ... (not eligible) ...` and `PROF-AT pick: accum N is the fastest ...` (or `... accum 8 (the default)`) | which accum at_g2 uses and why |
+| `PROF-AT at_g2 ...` | the same lines for at_g2 |
+| `PROF-AT ... FAILED, no speed ...: CUDA out of memory` (or `caps / assertion`, `import or file missing`, `not classified`) followed by the last 8 log lines | an AT stage failed; the plan continues. The word after the colon is a guess from the log text: `caps / assertion` is chosen whenever the log mentions `--caps-file`, which the job's usage text also does after a bad flag (shown in the dry run), so read the lines under it, not only the label. `PROF DONE failed=[at_g1(no-speed,rcN)]` lists it |
+| `PROF printing`, `RBEGIN\|profjob`, `RBEGIN\|profrun`, `PROF RESULT PRINTED`, `PROF-STEPS`, `PROF DONE`, `CIO DONE` | as in the default plan. `PROF DONE failed=none` needs: no step with a non-zero return code, and a speed number from both AT runs. A timed-out AT run with a speed number is not a failure |
+
+#### Stop rules (b3sweep)
+
+P1 to P8 above apply with these changes: P2 also holds when the `PROF MODE` line lacks `PROF_PLAN=b3sweep`; P3 allows 60 minutes to reach `STAGE prof` as before; P4 also covers a harness commit that is not on GitHub (`CIO-FAIL fetch-prof`); **P7 is $1.60** (the worst case above is $1.47). An AT stage that fails does not need an early destroy: the next stage costs nothing extra. No new TICK for 20 minutes (P6) still applies (the TICK's `step=` value stays at the smoke's last step; the changing `ram_avail` and `gpu` fields and the `PROF-AT ... progress` lines every 2 minutes are the signs of life).
+
+#### What comes out (names of the printed blocks and files)
+
+Block `profjob`: as in the default plan (the 50-update smoke). Block `profrun` additionally holds:
+
+| File | Content |
+|---|---|
+| `b3g2_accumsweep.md` / `.json` | per accum: median s/update, median of chunks, peak allocated GB, mean thinker rounds per micro-batch (with its standard error), speed against accum 32, the marks (speed counts at 1.3x, memory fits at 10 GB, rounds rise above 25 %), and whether the prediction "accum 8 gives 2x to 3x" is proved wrong (both accum 16 and 8 under 1.3x) |
+| `b3g2_accumcmp.md` / `.json` | per precision: loss and gradient of accum 32 against 16, 8, 4 with K pinned: absolute and relative loss difference, gradient cosine and relative L2, and the noise floor (accum 32 run twice) |
+| `at_setup.md` | the 11 AT pins and the AT command line |
+| `at_g1.json`, `at_g2.json` | per AT run: accum, how it ended, last step, the train events, the consecutive-difference speeds, their median, the peak, the ratio to the sweep; `at_g1.log.tail`, `at_g2.log.tail` hold the last 1,500 lines of the job logs |
+| `h1_b3g2_accumsweep.log.tail`, `h2_b3g2_accumcmp.log.tail` | the logs of the two harness runs (a sweep cut by its timeout leaves its finished accums there) |
+| `prof_status.txt` | adds `plan=b3sweep at_sha=... at_g2_accum=N` |
+
+#### How to read it
+
+1. Shake-out: `PROF MODE` and `PROF PLAN` lines; harness hash line says "the pinned value"; `PROF-JOB END rc=0`; both `PROF STEP h1/h2 ... rc=0`; `PROF-AT code ok`.
+2. The pre-registered question: `b3g2_accumsweep.md` against `PREREG-b3g2-accum.md` (marks fixed there; this runbook changes none). Any other accum is a new recipe and never the registered G2f. The K-pinned comparison is descriptive.
+3. The AT-1 question: `PROF-AT at_g1 SPEED` and `RATIO`. A cut run (`TIMEOUT`) has a valid speed if `n_intervals` is at least 2. The AT-1 / G2f ratio for the plan of record is Big-run's to make; this rental only supplies the boxed numbers.
+
+#### What the CPU dry run could and could not prove (full list: DRYRUN.md section 10.5)
+
+Proved on the CPU (shown): the stage wiring, the timeouts and the budget, the AT code fetch and pin checks, the AT command built by `local_runner`, the AT job started through the real train path on a tiny CPU shape, the stop on `RESULT.json`, the median of consecutive differences and its printing, the accum pick on synthetic and on real (CPU) sweep files, the timeout path with partial data, non-fatal failures, and the block collection through the offline Vast-kit test. **Not proved:** any GPU number or GPU behaviour of the sweep or of AT, that the AT code works with transformers 5.19.0 on the 4090 (the AT10M kit defaults to 5.17.0), that AT accepts the pool and the caps file that the PTC smoke built (job.py's own checks decide; the CPU run reused a PTC-built pool, shown), AT's real memory and speed, the size limit of Vast's `create` for a script of 72,310 bytes (the 53 KB script of the 10-14 rental was accepted by Vast, as that rental ran; the limit above that is unknown), and that GitHub serves the pinned harness commit once it is pushed.

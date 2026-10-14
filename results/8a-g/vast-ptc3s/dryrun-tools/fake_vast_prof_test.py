@@ -2,10 +2,11 @@
 usage: python3 fake_vast_prof_test.py KIT_VAST_PY VASTPTC_PY LOGFILE OUTDIR [SCRIPT]
  A  create with the PROFILE env words: the PUT body, the script inside it (byte for byte), the exports line, sizes
  B  tail: the kit's tail hides R| lines; the markers a person looks for are in the last lines
- C  collect on the finished log: both blocks (profjob, profrun) decode, the sha256 checks pass, the files that come out
+ C  collect on the finished log: both blocks (profjob, profrun) decode, the sha256 checks pass, the files that come out (FAKE_ENV, FAKE_EXPECT, FAKE_GREP: see the end of the file)
 """
 import io
 import json
+import os
 import runpy
 import sys
 import urllib.request
@@ -56,7 +57,8 @@ def run(argv):
     return buf.getvalue()
 
 
-out = run(['create', '--offer', '111', '--label', 'ptcprof', '--env', 'PROFILE=1 MAXH=2 DPH=0.40 END_SLEEP=300 FAIL_SLEEP=300'])
+ENVW = os.environ.get('FAKE_ENV', 'PROFILE=1 MAXH=2 DPH=0.40 END_SLEEP=300 FAIL_SLEEP=300')      # FAKE_ENV="PROFILE=1 PROF_PLAN=b3sweep MAXH=3 ..." for the b3sweep plan
+out = run(['create', '--offer', '111', '--label', 'ptcprof', '--env', ENVW])
 print('A create printed:', out.strip())
 m, url, body = [c for c in state['calls'] if c[0] == 'PUT'][-1]
 args = body['args']
@@ -78,3 +80,13 @@ files = sorted(p.relative_to(cdir) for p in cdir.rglob('*') if p.is_file())
 print('C %d files extracted:' % len(files))
 for f in files:
     print('C   ', f, (cdir / f).stat().st_size)
+
+# FAKE_EXPECT=name1,name2: every name must be among the extracted files (a PASS / FAIL line); FAKE_GREP=file:text checks that the file contains the text
+exp = [x for x in os.environ.get('FAKE_EXPECT', '').split(',') if x]
+names = {f.name for f in files}
+for x in exp:
+    print('C expect', x, 'PASS' if x in names else 'FAIL')
+for g in [x for x in os.environ.get('FAKE_GREP', '').split(';') if x]:
+    fn, _, txt = g.partition(':')
+    hit = [f for f in files if f.name == fn and txt in (cdir / f).read_text(errors='replace')]
+    print('C grep', fn, repr(txt), 'PASS' if hit else 'FAIL')

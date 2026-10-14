@@ -39,6 +39,18 @@
 #   PROF_COMPILE 1 adds the torch.compile variant (eg_once,sortpad,oldw,compile) to the bench list (default 0).
 #   PROF_DRY_ARGS, PROF_DRY_FAIL, PROF_DRY_HANG   CPU dry-run hooks of stage prof: extra harness flags appended to every run (tiny shapes), a step name whose run gets a bad flag,
 #                a step name whose run is replaced by `sleep 3600`. Need PTC_DRY=1; never set on Vast. PROFILE=1 with PTC_DRY=1 is refused on a box that has a GPU.
+#
+# PROF_PLAN=b3sweep (needs PROFILE=1; default plan = the six harness runs above; added 2026-10-14): the cheap B3G2 micro-batch (accum) sweep of results/8a-g/speedup/PREREG-b3g2-accum.md
+# plus two speed-only runs of the agent-turn model AT-1. Stages setup, code, gemma, data, skills and the pool-building job smoke are the PROFILE ones (the smoke is shortened to
+# PROF_JOB_STEPS=50: it is there to build the pool p10-rung30-s400-a64-L and to keep the pool check). Then ONLY, each under its own timeout and never fatal: h1_b3g2_accumsweep (B3G2 3M,
+# accum 32,16,8,4, 10 warm-up and 40 timed updates, 2 rounds, median s/update, peak allocated GB, mean thinker rounds per micro-batch), h2_b3g2_accumcmp (one update on the same 256 rows
+# with K pinned: loss difference and gradient cosine of accum 32 against 16, 8, 4), at_g1 (arm AT of custom_io at AT_SHA = the PC's src-at, the PC's queue line 8aAT-3M-s400-pc.txt through
+# local_runner's own parse_queue/command, --steps 300 --train-extra '--log-every 20' at accum 32) and at_g2 (the same at the fastest swept accum that is not 32 and peaks at <= 10 GB;
+# accum 8 when none qualifies or the sweep failed). AT is measured for speed only (s/update = median of consecutive differences of the train log lines from step 40 on, peak GB, last step
+# reached when the timeout ends it); the box stops the AT job when AT/RESULT.json appears (training over; no final evaluation, no readout, no RESULT checks). No PTC stage, no E4, no a_profile.
+#   PROF_PLAN    default | b3sweep. b3sweep changes only these defaults: MAXH 3, PROF_MAXMIN 150, PROF_JOB_MIN 20, PROF_JOB_STEPS 50.
+#   PROF_SWEEP_MIN (45) and PROF_CMP_MIN (15): timeouts of h1 and h2 in minutes; PROF_AT_MIN (40): timeout of each AT run; PROF_AT_STEPS (300); PROF_AT_TRAIN_EXTRA ('--log-every 20');
+#   PROF_AT_FROM_STEP (40): the speed is taken from the log lines at and after this step.
 set -u
 J=${J:-/job}; mkdir -p $J/out $J/res $J/state $J/w $J/work; cd $J || exit 1
 R=https://github.com/BenjaminHannan/learner
@@ -54,7 +66,9 @@ CAPS_PY_SHA=@@CAPS_PY_SHA@@   # g8a/caps.py of 74d6e92c75 (install_ptc.ps1's $CA
 CAPS_B3S_SHA=@@CAPS_B3S_SHA@@ # g8a/caps_b3s.json of 74d6e92c75 (the PC's work\b3-inputs copy)
 EG2_ST_SHA=197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79       # model.safetensors of google/embeddinggemma-2 at 914f7f89 (Hugging Face API lfs oid)
 PROFILE=${PROFILE:-0}
+PROF_PLAN=${PROF_PLAN:-default}
 if [ "$PROFILE" = 1 ]; then D_MAXH=2; D_END=300; D_FAIL=600; else D_MAXH=6; D_END=600; D_FAIL=1800; fi
+[ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3sweep ] && D_MAXH=3
 MAXH=${MAXH:-$D_MAXH}; END_SLEEP=${END_SLEEP:-$D_END}; FAIL_SLEEP=${FAIL_SLEEP:-$D_FAIL}; TFVER=${TFVER:-5.19.0}; EG=${EG:-1}
 DPH=${DPH:-0}; PROJ_CAP_USD=${PROJ_CAP_USD:-4.0}; GUARD_STEP=${GUARD_STEP:-1000}; EXTRA_H=${EXTRA_H:-0.5}; STEPS=24000
 EXPORT_CK=${EXPORT_CK:-1}; PACE=${PACE:-100}; CK_ROUNDS=${CK_ROUNDS:-3}; TICK_EVERY=${TICK_EVERY:-180}
@@ -62,10 +76,17 @@ PTC_DRY=${PTC_DRY:-0}; PTC_DRY_EXTRA=${PTC_DRY_EXTRA:-[]}; PTC_DRY_EG=${PTC_DRY_
 PROF_SHA=@@PROF_SHA@@          # branch claude/project-thread-yha868: results/8a-g/speedup/prof (prof_train.py, the GPU profiling harness; PROFILE=1 only)
 PROF_DIR=results/8a-g/speedup
 PROF_PY_SHA=@@PROF_PY_SHA@@    # sha256 of prof/prof_train.py at PROF_SHA
-PROF_MAXMIN=${PROF_MAXMIN:-75}; PROF_MIN_LEFT=${PROF_MIN_LEFT:-240}; PROF_JOB_MIN=${PROF_JOB_MIN:-45}; PROF_STEP_MIN=${PROF_STEP_MIN:-25}; PROF_JOB_STEPS=${PROF_JOB_STEPS:-300}
-PROF_JOB_TRAIN_EXTRA=${PROF_JOB_TRAIN_EXTRA:-}; [ -n "$PROF_JOB_TRAIN_EXTRA" ] || PROF_JOB_TRAIN_EXTRA='--log-every 50'
+if [ "$PROF_PLAN" = b3sweep ]; then D_PMAX=150; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'; else D_PMAX=75; D_PJOBMIN=45; D_PJOBSTEPS=300; D_PLOGE='--log-every 50'; fi      # plan b3sweep: the smoke only builds the pool
+PROF_MAXMIN=${PROF_MAXMIN:-$D_PMAX}; PROF_MIN_LEFT=${PROF_MIN_LEFT:-240}; PROF_JOB_MIN=${PROF_JOB_MIN:-$D_PJOBMIN}; PROF_STEP_MIN=${PROF_STEP_MIN:-25}; PROF_JOB_STEPS=${PROF_JOB_STEPS:-$D_PJOBSTEPS}
+PROF_JOB_TRAIN_EXTRA=${PROF_JOB_TRAIN_EXTRA:-}; [ -n "$PROF_JOB_TRAIN_EXTRA" ] || PROF_JOB_TRAIN_EXTRA=$D_PLOGE
 PROF_COMPILE=${PROF_COMPILE:-0}; PROF_MAX_BYTES=${PROF_MAX_BYTES:-2000000}
 PROF_DRY_ARGS=${PROF_DRY_ARGS:-}; PROF_DRY_FAIL=${PROF_DRY_FAIL:-}; PROF_DRY_HANG=${PROF_DRY_HANG:-}
+# PROF_PLAN=b3sweep only (see the header): AT-1 = custom_io at AT_SHA (the PC's src-at), pins from the AT10M kit and git, the timeouts and the AT run settings
+AT_SHA=@@AT_SHA@@          # branch claude/project-thread-emwjvn: custom_io of src-at (the AT10M kit's SRC_SHA)
+AT_CAPS_SHA=@@AT_CAPS_SHA@@   # g8a/caps_b3g2.json (also the file of 74d6e92c75)
+PROF_SWEEP_MIN=${PROF_SWEEP_MIN:-45}; PROF_CMP_MIN=${PROF_CMP_MIN:-15}; PROF_AT_MIN=${PROF_AT_MIN:-40}; PROF_AT_STEPS=${PROF_AT_STEPS:-300}; PROF_AT_FROM_STEP=${PROF_AT_FROM_STEP:-40}
+PROF_AT_TRAIN_EXTRA=${PROF_AT_TRAIN_EXTRA:-}; [ -n "$PROF_AT_TRAIN_EXTRA" ] || PROF_AT_TRAIN_EXTRA='--log-every 20'
+PSTEP_MIN=; AT_G2_ACCUM=
 T0=${T0:-$(date +%s)}
 W=$J/work; D=$W/data; DB=$W/data_big          # the PC's WORK, with its folder names
 S=$J/src-ptc                                   # = the PC's src-ptc (custom_io inside)
@@ -74,6 +95,7 @@ RES=$W/results/$QNAME; O=$RES/$RUN             # = WORK\results\8aPTC3S-pc\8aPTC
 OV=$J/ovl/$OVL_DIR; B=$J/base/custom_io
 TLOG=$O/PTC/stdout.txt                         # the training log the TICK lines read (PROFILE mode: the job smoke's)
 OP=$RES/profjob; PE=$RES/profrun; PRAW=$J/profraw   # PROFILE mode: job smoke folder, printed harness outputs, raw harness outputs
+SAT=$J/src-at                                  # PROF_PLAN=b3sweep: the PC's src-at (custom_io at AT_SHA)
 WATCH=
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 stage() { echo "$1" > $J/state/stage; echo "$1 $(date -u +%FT%TZ)" >> $J/state/stages.txt; echo "=== STAGE $1 $(date -u +%FT%TZ)"; }
@@ -227,7 +249,7 @@ pstep() {       # NAME OUTFILE ARGS... : one harness run, output PRAW/OUTFILE (+
     say "PROF SKIP $nm: budget left $l s (minimum $PROF_MIN_LEFT s; PROF_MAXMIN=$PROF_MAXMIN MAXH=$MAXH), MAXH reached: $([ -e $J/state/maxh ] && echo yes || echo no)"
     PSKIP="$PSKIP $nm"; echo "$nm skipped 0 0" >> $J/state/prof_steps.txt; return 0
   fi
-  t=$(awk "BEGIN{print int($PROF_STEP_MIN * 60)}"); [ $t -gt $l ] && t=$l
+  t=$(awk "BEGIN{print int(${PSTEP_MIN:-$PROF_STEP_MIN} * 60)}"); [ $t -gt $l ] && t=$l
   A=("$@" --out "$PRAW/$of"); read -r -a DA <<< "$PROF_DRY_ARGS"; A+=(${DA[@]+"${DA[@]}"})
   [ "$PROF_DRY_FAIL" = "$nm" ] && A+=(--dry-run-bad-flag)
   stage prof-$nm
@@ -256,6 +278,7 @@ prof_emit() {   # the job smoke folder and the harness outputs as two RBEGIN blo
   for f in $PRAW/*.log; do [ -f "$f" ] || continue; tail -n 1500 $f | cut -c1-400 > $PE/${f##*/}.tail; done
   cp $J/out/prof_env.txt $J/state/stages.txt $J/state/prof_steps.txt $PE/ 2>/dev/null
   echo "failed=[$PFAIL] skipped=[$PSKIP] maxh_hit=$([ -e $J/state/maxh ] && echo yes || echo no) budget_min=$PROF_MAXMIN pool=${POOL:-none}" > $PE/prof_status.txt
+  [ "$PROF_PLAN" = b3sweep ] && echo "plan=b3sweep at_sha=$AT_SHA at_g2_accum=${AT_G2_ACCUM:-none}" >> $PE/prof_status.txt
   find $PE -type f -size +400k ! -name '*.gz' -exec gzip -9 {} +
   while :; do      # keep the printout far below the 20,000-line window of the Vast log read (3 MB = 10,000 lines of 300 characters): drop the largest .json until the archive fits
     tar -czf $J/res/profrun.chk.tgz -C $RES profrun 2>/dev/null; sz=$(stat -c %s $J/res/profrun.chk.tgz)
@@ -268,10 +291,222 @@ prof_emit() {   # the job smoke folder and the harness outputs as two RBEGIN blo
   n=$(grep -c '^R|' $J/state/emit.out)
   say "PROF RESULT PRINTED blocks=profjob,profrun r_lines=$n (the Vast log read window is 20000 lines) failed=[$PFAIL] skipped=[$PSKIP]"
 }
+# ---- PROFILE=1 PROF_PLAN=b3sweep only: the B3G2 accum sweep (PREREG-b3g2-accum.md) and two AT-1 speed runs, instead of the six harness runs
+prof_b3_helpers() {   # four small python helpers, written once (stdlib only)
+  cat > $J/mkcmd_at.py <<'PY'
+import json, os, shlex, sys
+from pathlib import Path
+from custom_io.local_runner import parse_queue, command
+queue, work, outroot, code, device, extra = sys.argv[1], Path(sys.argv[2]).resolve(), Path(sys.argv[3]), sys.argv[4], sys.argv[5], json.loads(sys.argv[6])
+runs = parse_queue(queue, work)
+assert [(r[0], r[1]) for r in runs] == [('8a-data', 'g8a-data'), ('8aAT-3M-s400', 'g8a')], [(r[0], r[1]) for r in runs]
+state = Path(os.environ['J']) / 'state'
+name, kind, args, mem = runs[1]
+line = ' '.join(shlex.quote(c) for c in command(kind, args + extra, work, outroot / name, device))
+(state / 'cmd.at.txt').write_text(line + '\n')                      # what the PC runner would write as cmd.txt for the AT line
+(state / 'cmd.at.mem').write_text('%d\n' % mem)
+print('CMD', name, 'mem', mem, 'MiB:', line)
+PY
+  cat > $J/atcmd.py <<'PY'
+import shlex, sys
+src, dst, code, out, accum, steps, extra = sys.argv[1:8]
+t = shlex.split(open(src).read())
+assert t.count('--out') == 1 and t.count('--accum') == 1, t
+t[t.index('--out') + 1] = out
+i = t.index('--accum') + 1
+assert t[i] == 'AT=32', 'the queue line is not accum AT=32: ' + t[i]
+t[i] = 'AT=' + accum
+t += ['--steps', steps, '--train-extra', extra]                     # the last --steps / --train-extra win in argparse (job.py: --steps is for dry runs)
+line = ' '.join(shlex.quote(x) for x in t)
+open(dst, 'w').write('#!/bin/bash\ncd %s || exit 1\nexec %s\n' % (shlex.quote(code), line))
+print('PROF-AT cmd:', line)
+PY
+  cat > $J/at_report.py <<'PY'
+import json, os, re, statistics, sys
+out, name, accum, from_step, steps, rc, how, joblog, outjson, sweepjson = sys.argv[1:11]
+accum, from_step, steps = int(accum), int(from_step), int(steps)
+def load(p):
+    try:
+        return json.load(open(p))
+    except Exception:
+        return {}
+def read(p):
+    try:
+        return open(p, errors='replace').read()
+    except OSError:
+        return ''
+so, jl = read(os.path.join(out, 'AT', 'stdout.txt')), read(joblog)
+ev = []
+for ln in so.splitlines():
+    if '"event": "train"' in ln:
+        try:
+            ev.append(json.loads(ln[ln.index('{'):]))
+        except ValueError:
+            pass
+res = load(os.path.join(out, 'AT', 'RESULT.json'))
+for e in ev:
+    print('PROF-AT %s train step=%s loss=%s lr=%s elapsed_s=%s' % (name, e.get('step'), e.get('loss'), e.get('lr'), e.get('elapsed')))
+iv = [(b['elapsed'] - a['elapsed']) / (b['step'] - a['step']) for a, b in zip(ev, ev[1:]) if a.get('step', 0) >= from_step and b['step'] > a['step']]
+spu = round(statistics.median(iv), 4) if iv else None
+d = dict(name=name, accum=accum, steps_asked=steps, from_step=from_step, rc=int(rc), ended=how, last_step=ev[-1]['step'] if ev else None, train_events=[dict(step=e.get('step'), loss=e.get('loss'), elapsed=e.get('elapsed')) for e in ev],
+         interval_s_per_update=[round(x, 4) for x in iv], median_s_per_update=spu, n_intervals=len(iv), updates_per_hour=round(3600 / spu) if spu else None)
+if ev and ev[0].get('step'):
+    d['first_log_s_per_update_incl_start'] = round(ev[0]['elapsed'] / ev[0]['step'], 4)
+d['peak_mem_mib'], d['peak_reserved_mib'], d['n_params'], d['train_s'] = res.get('peak_mem_mib'), res.get('peak_reserved_mib'), res.get('n_params'), res.get('train_s')
+try:
+    used = [int(x) for x in read(os.path.join(out, 'gpu_used_mib.txt')).split()]
+except ValueError:
+    used = []
+d['gpu_used_max_mib_nvidia_smi'] = max(used) if used else None
+d['peak_alloc_gb'] = round(res['peak_mem_mib'] / 1024, 2) if res.get('peak_mem_mib') else None
+print('PROF-AT %s accum AT=%d: ended=%s (rc %s); last step reached %s of %d' % (name, accum, how, rc, d['last_step'], steps))
+if spu:
+    print('PROF-AT %s SPEED: %s s/update = median of %d consecutive differences of the log lines from step %d on (%d updates/hour)' % (name, spu, len(iv), from_step, d['updates_per_hour']))
+else:
+    print('PROF-AT %s NO SPEED: fewer than 2 train log lines at or after step %d (log lines found: %d)' % (name, from_step, len(ev)))
+if d['peak_alloc_gb'] is not None:
+    print('PROF-AT %s PEAK: %.2f GB allocated (torch max_memory_allocated, RESULT.json peak_mem_mib %s; reserved %s MiB)' % (name, d['peak_alloc_gb'], res.get('peak_mem_mib'), res.get('peak_reserved_mib')))
+elif res:
+    print('PROF-AT %s PEAK: RESULT.json has no peak_mem_mib (train.py records it on CUDA only); nvidia-smi highest used memory %s MiB (includes cached memory: an upper bound, not the allocated peak)' % (name, d['gpu_used_max_mib_nvidia_smi']))
+else:
+    print('PROF-AT %s PEAK: no RESULT.json (training did not finish); nvidia-smi highest used memory %s MiB (includes cached memory: an upper bound, not the allocated peak)' % (name, d['gpu_used_max_mib_nvidia_smi']))
+sp = ((load(sweepjson).get('sections') or {}).get('accumsweep') or {}).get('points') or {}
+b = (sp.get(str(accum)) or {}).get('s_per_update_median')
+if b and spu:
+    d['b3g2_sweep_s_per_update_same_accum'] = b
+    d['ratio_at_over_b3g2_same_accum'] = round(spu / b, 2)
+    print('PROF-AT %s RATIO to B3G2 on this box at the same accum %d: %.2fx (B3G2 %.3f s/update from the harness sweep, a free-running mean over its timed updates; AT from train.py log lines; different timers, suggested comparison)' % (name, accum, spu / b, b))
+if not spu:
+    txt = so + '\n' + jl
+    cls = 'CUDA out of memory' if re.search('out of memory', txt, re.I) else 'caps / assertion' if re.search('--caps-file|AssertionError|caps_b3g2', txt) else 'import or file missing' if re.search('ModuleNotFoundError|ImportError|No such file|FileNotFoundError', txt) else 'not classified'
+    d['failure_class'] = cls
+    print('PROF-AT %s FAILED, no speed (%d train lines): %s. Last lines of the job log:' % (name, len(ev), cls))
+    for ln in [x for x in (jl.splitlines() + so.splitlines()) if x.strip()][-8:]:
+        print('  | ' + ln[:300])
+json.dump(d, open(outjson, 'w'), indent=1)
+sys.exit(0 if spu else 1)
+PY
+  cat > $J/at_pick.py <<'PY'
+import json, sys
+def say(s):
+    print(s, file=sys.stderr)
+try:
+    pts = json.load(open(sys.argv[1]))['sections']['accumsweep']['points']
+    assert isinstance(pts, dict) and pts
+except Exception as e:
+    say('PROF-AT pick: the sweep json is missing, failed or has no points (%s: %s): accum 8 (the default)' % (type(e).__name__, str(e)[:100]))
+    print(8)
+    sys.exit(0)
+best, rows = None, []
+for k, v in pts.items():
+    a, s, g = int(k), v.get('s_per_update_median'), v.get('peak_alloc_gb')
+    ok = a != 32 and not v.get('oom') and s is not None and g is not None and g <= 10.0
+    rows.append('accum %d: %s s/update, peak %s GB, oom %s%s' % (a, s, g, bool(v.get('oom')), '' if ok else ' (not eligible)'))
+    if ok and (best is None or s < best[1]):
+        best = (a, s, g)
+say('PROF-AT pick: ' + '; '.join(rows))
+if best:
+    say('PROF-AT pick: accum %d is the fastest swept accum other than 32 with peak allocated <= 10 GB (%.3f s/update, %.2f GB)' % best)
+    print(best[0])
+else:
+    say('PROF-AT pick: no swept accum other than 32 qualifies (fits in 10 GB with a speed): accum 8 (the default)')
+    print(8)
+PY
+}
+at_prepare() {   # src-at = custom_io at AT_SHA (the PC's src-at), pins checked, the AT job command from the queue file with local_runner's own parse_queue / command; 0 = ready, 1 = not (non-fatal)
+  local f h npin=0
+  say "PROF-AT code: custom_io at $AT_SHA (branch claude/project-thread-emwjvn, the PC's src-at); pins as in the AT10M kit"
+  if ! fetch_sha $SAT $AT_SHA custom_io; then
+    say "PROF-AT FAILED: cannot fetch custom_io at $AT_SHA: the AT stages are skipped"; PFAIL="$PFAIL at-fetch"; return 1
+  fi
+  cat > $J/out/at_pins.txt <<'ATPINS'
+@@AT_PINS@@
+ATPINS
+  while read -r f h; do
+    [ "$(sha $SAT/custom_io/$f)" = "$h" ] || { say "PROF-AT FAILED: src-at file $f is not commit ${AT_SHA:0:10}'s (got $(sha $SAT/custom_io/$f), want $h): the AT stages are skipped"; PFAIL="$PFAIL at-pin($f)"; return 1; }
+    npin=$((npin + 1))      # (not n: retry() sets a global n)
+  done < $J/out/at_pins.txt
+  mkdir -p $W/b3-inputs; cp $SAT/custom_io/g8a/caps_b3g2.json $W/b3-inputs/caps_b3g2.json
+  [ "$(sha $W/b3-inputs/caps_b3g2.json)" = "$AT_CAPS_SHA" ] || { say "PROF-AT FAILED: the caps_b3g2.json copy is not the pinned one: the AT stages are skipped"; PFAIL="$PFAIL at-caps"; return 1; }
+  if ! (cd $SAT && export J PYTHONPATH=$SAT && python $J/mkcmd_at.py $SAT/custom_io/queue_local/8aAT-3M-s400-pc.txt $W $RES $SAT cuda "$PTC_DRY_EXTRA") > $J/out/mkcmd_at.log 2>&1; then
+    tail -n 12 $J/out/mkcmd_at.log | cut -c1-400; say "PROF-AT FAILED: the AT job command could not be built from the queue file: the AT stages are skipped"; PFAIL="$PFAIL at-cmd"; return 1
+  fi
+  cut -c1-1800 $J/out/mkcmd_at.log
+  mkdir -p $PRAW; { echo "# AT-1 code on this box: custom_io at $AT_SHA; every file below was sha256-checked"; cat $J/out/at_pins.txt; echo; cat $J/out/mkcmd_at.log; } > $PRAW/at_setup.md
+  say "PROF-AT code ok: $npin pinned files match, caps_b3g2.json copied to $W/b3-inputs, the AT command is built (queue file 8aAT-3M-s400-pc.txt, local_runner's own parse_queue and command)"
+  return 0
+}
+at_run() {   # NAME ACCUM : one AT-1 speed run (the real train path, --steps PROF_AT_STEPS) under its own timeout and the stage budget; never fatal; speed only, no readout, no RESULT checks
+  local nm=$1 ac=$2 l t t1 t2 rc ao wp how ar
+  l=$(prof_left)
+  if [ -e $J/state/maxh ] || [ "$l" -lt "$PROF_MIN_LEFT" ]; then
+    say "PROF SKIP $nm: budget left $l s (minimum $PROF_MIN_LEFT s; PROF_MAXMIN=$PROF_MAXMIN MAXH=$MAXH), MAXH reached: $([ -e $J/state/maxh ] && echo yes || echo no)"
+    PSKIP="$PSKIP $nm"; echo "$nm skipped 0 0" >> $J/state/prof_steps.txt; return 0
+  fi
+  t=$(awk "BEGIN{print int($PROF_AT_MIN * 60)}"); [ $t -gt $l ] && t=$l
+  ao=$RES/at/$nm; rm -rf $ao; mkdir -p $ao
+  if ! python $J/atcmd.py $J/state/cmd.at.txt $J/state/cmd.$nm.sh $SAT $ao $ac $PROF_AT_STEPS "$PROF_AT_TRAIN_EXTRA" > $J/out/$nm.cmd.log 2>&1; then
+    tail -n 5 $J/out/$nm.cmd.log | cut -c1-400; say "PROF-AT FAILED $nm: the AT command could not be edited"; PFAIL="$PFAIL $nm(cmd)"; return 0
+  fi
+  cut -c1-1800 $J/out/$nm.cmd.log; cp $J/state/cmd.$nm.sh $ao/cmd.sh.txt
+  [ "$PROF_DRY_FAIL" = "$nm" ] && sed -i '$ s/$/ --dry-run-bad-flag/' $J/state/cmd.$nm.sh
+  stage prof-$nm
+  say "PROF-AT $nm START: arm AT (B3AT) 3M, accum AT=$ac, --steps $PROF_AT_STEPS, --train-extra '$PROF_AT_TRAIN_EXTRA', out $ao; timeout $t s (budget left $l s); the box stops the job when AT/RESULT.json appears (training is over, the final evaluation is not wanted)"
+  rm -f $J/state/at_stopped
+  ( i=0; while :; do      # peak GPU memory by nvidia-smi (a fallback when the run is cut before RESULT.json), a progress line every 2 minutes, and the stop as soon as training is over
+      u=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -n 1); [ -n "$u" ] && echo "$u" >> $ao/gpu_used_mib.txt
+      if [ -f $ao/AT/RESULT.json ]; then touch $J/state/at_stopped; sleep 2; kill_cur; exit 0; fi
+      i=$((i + 1)); [ $((i % 24)) = 0 ] && echo "PROF-AT $nm progress: $(grep -h '"event": "train"' $ao/AT/stdout.txt 2>/dev/null | tail -n 1 | sed -n 's/.*"step": \([0-9]*\), "loss": \([0-9.eE+-]*\), .*"elapsed": \([0-9.]*\).*/step=\1 loss=\2 elapsed_s=\3/p') gpu_used_mib=${u:-none}"
+      sleep 5
+    done ) &
+  wp=$!
+  t1=$(date +%s)
+  if [ "$PROF_DRY_HANG" = "$nm" ]; then runp $PRAW/$nm.log $SAT timeout -k 30 $t sleep 3600
+  else runp $PRAW/$nm.log $SAT timeout -k 30 $t bash $J/state/cmd.$nm.sh; fi
+  rc=$?; t2=$(( $(date +%s) - t1 ))
+  kill $wp 2>/dev/null; wait $wp 2>/dev/null
+  how=ended; [ $rc = 124 ] && how=TIMEOUT; [ -e $J/state/at_stopped ] && how="training finished, job stopped by the box before its final evaluation"; [ -e $J/state/maxh ] && how="MAXH reached"
+  echo "$nm $rc $t2 $t" >> $J/state/prof_steps.txt
+  say "PROF-AT $nm END rc=$rc secs=$t2 ($how)"
+  tail -n 300 $ao/AT/stdout.txt 2>/dev/null | cut -c1-600 > $PRAW/$nm.train.log      # the arm's own stdout (train events, errors); its last 1,500 lines go into the profrun block as $nm.train.log.tail
+  python $J/at_report.py $ao $nm $ac $PROF_AT_FROM_STEP $PROF_AT_STEPS $rc "$how" $PRAW/$nm.log $PRAW/$nm.json $PRAW/b3g2_accumsweep.json > $J/out/$nm.report.log 2>&1; ar=$?
+  cut -c1-420 $J/out/$nm.report.log
+  [ $ar = 0 ] || PFAIL="$PFAIL $nm(no-speed,rc$rc)"
+  return 0
+}
+prof_b3sweep() {   # PROF_PLAN=b3sweep (POOL is set): the B3G2 accum sweep, the pinned-K comparison, then the two AT-1 speed runs; each stage non-fatal under its own timeout
+  local B3 ga
+  say "PROF PLAN b3sweep: B3G2 accum sweep 32,16,8,4 (PREREG-b3g2-accum.md), K-pinned comparison, AT-1 speed at accum 32 and at the fastest swept accum under 10 GB; no PTC stages, no E4, no a_profile; budget $PROF_MAXMIN min from the start of stage prof"
+  prof_b3_helpers
+  if [ -f $S/custom_io/g8a/caps_b3g2.json ] && [ -f $S/custom_io/models/b3g2.py ]; then
+    B3="--arm B3G2 --rung 3M --accum 32 --data $POOL --pkg-root $S --caps $S/custom_io/g8a/caps_b3g2.json"
+    PSTEP_MIN=$PROF_SWEEP_MIN
+    pstep h1_b3g2_accumsweep b3g2_accumsweep.json $B3 --sections accumsweep --accum-list 32,16,8,4 --accum-updates 40 --accum-warmup 10 --accum-rounds 2
+    grep -E -e 'accumsweep round|accum [0-9]+ round|OOM' $PRAW/h1_b3g2_accumsweep.log 2>/dev/null | tail -n 24 | cut -c1-260
+    [ -f $PRAW/b3g2_accumsweep.md ] && { echo "--- b3g2_accumsweep.md"; head -n 60 $PRAW/b3g2_accumsweep.md | cut -c1-300; }
+    PSTEP_MIN=$PROF_CMP_MIN
+    pstep h2_b3g2_accumcmp b3g2_accumcmp.json $B3 --sections accumcmp --accum-list 32,16,8,4
+    grep -E -e 'accumcmp' $PRAW/h2_b3g2_accumcmp.log 2>/dev/null | tail -n 20 | cut -c1-260
+    [ -f $PRAW/b3g2_accumcmp.md ] && { echo "--- b3g2_accumcmp.md"; head -n 40 $PRAW/b3g2_accumcmp.md | cut -c1-300; }
+    PSTEP_MIN=
+  else
+    say "PROF B3G2 sweep not made: $S/custom_io/g8a/caps_b3g2.json or $S/custom_io/models/b3g2.py is missing in the assembled tree"; PFAIL="$PFAIL b3g2-files-missing"
+  fi
+  if at_prepare; then
+    at_run at_g1 32
+    ga=$(python $J/at_pick.py $PRAW/b3g2_accumsweep.json 2> $J/out/at_pick.log); cat $J/out/at_pick.log | cut -c1-700
+    case $ga in ''|*[!0-9]*|0) ga=8;; esac
+    AT_G2_ACCUM=$ga
+    at_run at_g2 $ga
+  else
+    PSKIP="$PSKIP at_g1 at_g2"
+  fi
+}
 prof_main() {   # never returns: ends with CIO DONE / CIO-FAIL and a sleep
   local rc jok t l PJ0 PJ1 BL EL PC B3 d alt
   stage prof; PT0=$(date +%s)
   say "PROF START job smoke of $PROF_JOB_STEPS updates, then the harness (commit $PROF_SHA); budget $PROF_MAXMIN min, maxh $MAXH h, speed guard OFF, up $(( (PT0 - T0) / 60 )) min so far"
+  [ "$PROF_PLAN" = b3sweep ] && say "PROF PLAN b3sweep (PROF_PLAN): pool-building smoke of $PROF_JOB_STEPS updates, then ONLY the B3G2 accum sweep, the K-pinned comparison and two AT-1 speed runs; maxh $MAXH h, budget $PROF_MAXMIN min"
   mkdir -p $PRAW $OP
   fetch_sha $J/prof $PROF_SHA $PROF_DIR || die fetch-prof
   [ "$(sha $PY)" = "$PROF_PY_SHA" ] || die "prof_train.py is not the pinned one (got $(sha $PY))"
@@ -367,6 +602,7 @@ PY
     say "PROF no pool with a train.jsonl under $W/g8a/pools: no harness run"; PFAIL="$PFAIL no-pool"
   else
     say "PROF harness pool $POOL ($(stat -c %s $POOL/train.jsonl) bytes), --pkg-root $S, CUSTOM_IO_EG2=${CUSTOM_IO_EG2:-unset}"
+    if [ "$PROF_PLAN" = b3sweep ]; then prof_b3sweep; else
     PC="--arm PTC --rung 3M --accum 16 --data $POOL --pkg-root $S"
     BL="baseline;eg_once;sortpad,oldw;sortpad,bigmb,oldw;eg_once,sortpad,oldw;eg_once,sortpad,bigmb,oldw,prefetch;tf32"; [ "$PROF_COMPILE" = 1 ] && BL="$BL;eg_once,sortpad,oldw,compile"
     EL="eg_once;sortpad,oldw;sortpad,bigmb,oldw;eg_once,sortpad,oldw;sortpad;bigmb;tf32;prefetch"
@@ -380,6 +616,7 @@ PY
       pstep f2_b3g2_bench b3g2_bench.json $B3 --sections bench --updates 40 --warmup 10 --bench-list "baseline;eg_once"
     else
       say "PROF B3G2 runs not made: $S/custom_io/g8a/caps_b3g2.json or $S/custom_io/models/b3g2.py is missing in the assembled tree"; PFAIL="$PFAIL b3g2-files-missing"
+    fi
     fi
   fi
   stage result
@@ -401,8 +638,9 @@ say "CIO START"; stage setup
 say "PTC3S START job=$RUN maxh=$MAXH dph=$DPH guard=$(if [ "$PROFILE" = 1 ]; then echo OFF-profile-mode; elif [ "$DPH" != 0 ]; then echo on; else echo OFF-set-DPH; fi) cap_usd=$PROJ_CAP_USD tf=$TFVER eg=$EG dry=$PTC_DRY base=$BASE_SHA overlay=$OVL_SHA"
 [ "$EG" = 1 ] || die "EG=1 is required: the job has eg_embed"
 case $PROFILE in 0|1) ;; *) FAIL_SLEEP=120; die "PROFILE must be 0 or 1 (got '$PROFILE')";; esac
+case $PROF_PLAN in default) ;; b3sweep) [ "$PROFILE" = 1 ] || { FAIL_SLEEP=120; die "PROF_PLAN=b3sweep needs PROFILE=1"; };; *) FAIL_SLEEP=120; die "PROF_PLAN must be default or b3sweep (got '$PROF_PLAN')";; esac
 if [ "$PROFILE" = 1 ]; then
-  say "PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=$PROF_MAXMIN PROF_JOB_STEPS=$PROF_JOB_STEPS PROF_COMPILE=$PROF_COMPILE end_sleep=$END_SLEEP)"
+  say "PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=$PROF_MAXMIN PROF_JOB_STEPS=$PROF_JOB_STEPS PROF_COMPILE=$PROF_COMPILE end_sleep=$END_SLEEP$([ "$PROF_PLAN" = b3sweep ] && echo " PROF_PLAN=b3sweep"))"
   [ -z "$PROF_DRY_ARGS$PROF_DRY_FAIL$PROF_DRY_HANG" ] || [ "$PTC_DRY" = 1 ] || die "PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast"
   if [ "$PTC_DRY" = 1 ] && command -v nvidia-smi >/dev/null && nvidia-smi -L 2>/dev/null | grep -q GPU; then die "PROFILE=1 with PTC_DRY=1 on a box that has a GPU: PTC_DRY is for the CPU dry run only"; fi
 fi
