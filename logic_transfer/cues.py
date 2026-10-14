@@ -117,7 +117,7 @@ def audit(rung, d, names, train_rows=None, nmax=70000):
         return out
     tr = train_rows if train_rows is not None else rd('train', nmax)
     res = {}
-    if rung in (1, 2):
+    if rung in (1, 2, 6):
         common = _common()
         ftr = [(feats12(r['prompt'], common), r['answer']) for r in tr]
         cut = len(ftr) - min(20000, len(ftr) // 5)
@@ -152,7 +152,7 @@ def audit(rung, d, names, train_rows=None, nmax=70000):
     return res
 
 
-EVAL_FILES = {1: ['dev', 'wording', 'newwords'], 2: ['dev', 'wording', 'newwords'], 4: ['dev', 'gate'], 5: ['dev', 'gate', 'deeper']}
+EVAL_FILES = {1: ['dev', 'wording', 'newwords'], 2: ['dev', 'wording', 'newwords'], 6: ['dev', 'newwords'], 4: ['dev', 'gate'], 5: ['dev', 'gate', 'deeper']}
 
 
 def feats_shallow(r):

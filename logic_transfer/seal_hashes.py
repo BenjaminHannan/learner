@@ -23,7 +23,7 @@ def main(argv=None):
         d = os.path.join(a.rows, f'rung{r}')
         s = json.load(open(os.path.join(d, 'summary.json')))
         names = list(s['files'])
-        if r == 2:                                       # the hard-negative subset of dev (Addendum 3) is sealed with the rung
+        if r in (2, 6):                                  # the hard-negative subset of dev (Addendum 3) is sealed with the rung
             from logic_transfer import hard
             hard.make_hard(d)
             names.append('hard')

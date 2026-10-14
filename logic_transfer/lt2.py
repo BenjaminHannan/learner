@@ -42,7 +42,7 @@ def parent_path(parents_dir, parent):
 
 # eval files per rung (names = files in rows/rung<r>/); the first is the PRIMARY one whose accuracy is tracked at 2,000 / 4,000 / 8,000 updates
 EVALS = {0: ('dev', 'wording', 'newwords'), 1: ('dev', 'newwords'), 2: ('dev', 'newwords', 'hard'), 3: ('dev', 'wording'), 4: ('dev', 'gate'),
-         5: ('gate', 'dev', 'deeper')}
+         5: ('gate', 'dev', 'deeper'), 6: ('dev', 'newwords', 'hard')}
 R2_HARD_MIN = 80.0       # Addendum 3: accuracy on the hard-negative subset of dev (hard.py) that a binding-free reader cannot reach (31-37%)
 R5_DEPTH_BARS = {'0': 80.0, '1': 80.0, '2': 65.0, '3': 55.0}      # the LT-1 G-PASS bars (gate accuracy by depth)
 
@@ -58,7 +58,7 @@ def ensure_rows(work, rung, n_train=None, build=True):
         assert build, f'rung{rung}: no row summary at {summ} (reports never start a build)'
         ladder.build(rung, os.path.join(work, 'rows'), n_train=n_train)
     s = json.load(open(summ))
-    if rung == 2:
+    if rung in (2, 6):
         from logic_transfer import hard
         hard.make_hard(d)
     hp = os.path.join(HERE, 'ladder-hashes.json')
@@ -85,7 +85,7 @@ def thresholds(rung, summ):
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('wording', None, max(WORD_MIN, base('wording') + MARGIN))]
     if rung == 1:
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN))]
-    if rung == 2:
+    if rung in (2, 6):          # rung 6 = rung 2 with exactly one distractor (Addendum 7): the same two marks
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('hard', None, R2_HARD_MIN)]
     if rung == 4:
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('gate', None, max(75.0, base('gate') + MARGIN))]
@@ -287,6 +287,13 @@ def run_summary(work, rung, p, s, th):
     out['label_recall_last'] = ({k: round(100.0 * c / max(n, 1), 1) for k, (c, n) in lf[-1]['by_label'].items()} if lf else None)
     hd = [e for e in ev if e['name'] == 'hard' and e['full']]
     out['hard_last'] = (hd[-1]['update'], round(hd[-1]['exact'], 2), hd[-1]['correct'], hd[-1]['n']) if hd else None
+    cj = os.path.join(rd, 'confusion.json')
+    out['confusion'] = None
+    if os.path.exists(cj):
+        try:
+            out['confusion'] = json.load(open(cj))['confusion']
+        except (ValueError, KeyError):
+            out['confusion'] = None
     out['probes'], out['probe_ctl'] = None, None
     pj = os.path.join(rd, 'probe.json')
     if os.path.exists(pj):
@@ -357,6 +364,61 @@ def probe_runs(work, rung, rows, device, n=600):
             x['probe_ctl'] = {k: v for k, v in have.items() if k != 'probes'}
 
 
+CONFUSION_FILES = ('dev', 'hard')
+
+
+def confusion_runs(work, rung, rows, device):
+    """Report-only instrument (Addendum 7): what each FINISHED run's final checkpoint answers on dev and on the hard subset, by gold label
+    (confusion[file][gold][said], said in true / false / unknown / other = not one of the three words), for passing and failing runs alike (probes cover
+    passing runs only). Writes <run>/confusion.json (with the checkpoint's sha and the code sha) and fills rows[i]['confusion']; a failure keeps
+    confusion=None and a 'confusion_error' note (the report never aborts); a CUDA out-of-memory on a shared card is retried."""
+    try:
+        import torch
+        from custom_io.data import load_rows
+        from custom_io.evalx import evaluate
+        from custom_io.models import load_model
+        from logic_transfer.course import oom_retry
+        sets = {n: load_rows(os.path.join(work, 'rows', f'rung{rung}', n + '.jsonl'), keep=None) for n in CONFUSION_FILES}
+    except Exception as ex:                      # noqa: BLE001
+        for x in rows:
+            x['confusion_error'] = f'setup: {type(ex).__name__}: {ex}'[:300]
+        return
+    sha = _code_sha()
+    words = ('true', 'false', 'unknown')
+
+    def one(ck):
+        m = load_model(ck, device)
+        res = {}
+        for n, rws in sets.items():
+            r = evaluate(m, rws, 128, torch.device(device), return_preds=True)
+            tab = {g: {w: 0 for w in words + ('other',)} for g in words}
+            for row in rws:
+                said = r['preds'].get(row['id'])
+                tab[row['answer']][said if said in words else 'other'] += 1
+            res[n] = dict(n=len(rws), correct=r['correct'], table=tab)
+        return res
+    for x in rows:
+        rd = os.path.join(work, f'rung{rung}', x['run'])
+        cj, ck = os.path.join(rd, 'confusion.json'), os.path.join(rd, 'checkpoint.pt')
+        if x['state'] != 'done' or not os.path.exists(ck):
+            continue
+        have = None
+        if os.path.exists(cj):
+            try:
+                have = json.load(open(cj))
+            except ValueError:
+                have = None
+        if have is None or have.get('code') != sha:
+            try:
+                have = dict(confusion=oom_retry(lambda: one(ck), [0], tries=20), code=sha)
+                json.dump(have, open(cj + '.tmp', 'w'), indent=1)
+                os.replace(cj + '.tmp', cj)
+            except Exception as ex:               # noqa: BLE001  (a reported-only instrument must not take the report down)
+                x['confusion_error'] = f'{type(ex).__name__}: {ex}'[:300]
+                continue
+        x['confusion'] = have['confusion']
+
+
 PROBE_VALUE = {'swap_answer': 'acc', 'swap_entity': 'acc', 'flip_query': 'acc', 'drop_support': 'acc', 'drop_answer': 'still_old_word'}
 
 
@@ -398,8 +460,10 @@ def cmd_report(a):
         th = thresholds(r, summ)
         rows = [run_summary(a.work, r, p, s, th) for p, s in all_runs()]
         pdev = {'auto': 'cuda' if cuda_available() else None, 'cpu': 'cpu', 'cuda': 'cuda', 'off': None}[a.probes]
-        if r <= 2 and pdev:
+        if (r <= 2 or r == 6) and pdev:
             probe_runs(a.work, r, rows, pdev)
+        if r in (2, 6) and pdev:
+            confusion_runs(a.work, r, rows, pdev)
         n_pass = sum(x['pass'] for x in rows)
         finished = all(x['state'] in ('done', 'failed') for x in rows)
         n_failed = sum(x['state'] == 'failed' for x in rows)

@@ -195,6 +195,29 @@ class ThresholdsMore(unittest.TestCase):
         self.assertEqual([(f, v) for f, _, v in th], [('dev', 90.0), ('hard', 80.0)])
         self.assertIn('hard', lt2.EVALS[2])
 
+    def test_rung6_is_rung2_marks_on_the_two_fact_rows(self):
+        from logic_transfer import lt2
+        summ = {'files': {'dev': {'count_baseline': {'acc': 52.59, 'hit': 203, 'n': 386}}}}
+        th = lt2.thresholds(6, summ)
+        self.assertEqual([(f, v) for f, _, v in th], [('dev', 90.0), ('hard', 80.0)])
+        self.assertEqual(lt2.EVALS[6], lt2.EVALS[2])
+
+    def test_rung6_filter_keeps_only_one_distractor_rows(self):
+        import tempfile, json as _j
+        from logic_transfer import ladder
+        with tempfile.TemporaryDirectory() as out:
+            os.makedirs(out + '/rung2')
+            os.makedirs(out + '/rung6')
+            rows = [{'id': f'r{i}', 'meta': {'n_distractors': i % 3 + 1}} for i in range(9)]
+            for n in ladder.TWO_FACT_FILES:
+                ladder.write_rows(f'{out}/rung2/{n}.jsonl', rows)
+            open(out + '/rung2/summary.json', 'w').write('{}')
+            summ = {'files': {}}
+            ladder.build_two_fact(out + '/rung6', out, summ)
+            got = ladder.read(out + '/rung6/dev.jsonl')
+            self.assertEqual([r['id'] for r in got], ['r0', 'r3', 'r6'])
+            self.assertEqual(sorted(summ['files']), sorted(ladder.TWO_FACT_FILES))
+
     def test_marks_string_roundtrip_through_course_parser(self):
         from logic_transfer import lt2
         summ = {'files': {'gate': {'count_baseline': {'acc': 33.3, 'hit': 400, 'n': 1200}}}}

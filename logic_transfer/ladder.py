@@ -1,6 +1,6 @@
 """LT-2 learnability ladder: row files, count baseline, independent label check (marks: MARKS-LT2-2026-10-14.md).
 
-  python -m logic_transfer.ladder build --rung 0..5 --out DIR [--n-train 130000] [--n-eval 1200] [--n-new 600]
+  python -m logic_transfer.ladder build --rung 0..6 --out DIR [--n-train 130000] [--n-eval 1200] [--n-new 600]
   python -m logic_transfer.ladder baseline --train TRAIN.jsonl EVAL.jsonl [...]
 
 build writes DIR/rung<r>/{train,dev[,wording],newwords}.jsonl (converted rows, options suffix, <= 208 chars) and DIR/rung<r>/summary.json:
@@ -96,7 +96,7 @@ LOGIC_SPECS = {
     5: [('train', 'train', 130000, 0, None), ('dev', 'dev', 1200, 1, None), ('gate', 'gate', 1608, 2, None), ('deeper', 'test_deeper', 800, 3, None)],
 }
 TRAIN_N = {1: 36000}     # rung 1: the common-word true/false prompt space is only ~22k per label; a bigger train file would exhaust it and tie word type to the label
-RUNG_SEED_BASE = {0: 100, 3: None, 1: 1110, 2: 1120, 4: 1140, 5: 1150}     # v2 (Addendum 2): rungs 1, 2, 4, 5 were rebuilt, so their ids / seeds differ from v1 (110/120/140/150)
+RUNG_SEED_BASE = {0: 100, 3: None, 1: 1110, 2: 1120, 4: 1140, 5: 1150, 6: None}     # v2 (Addendum 2): rungs 1, 2, 4, 5 were rebuilt, so their ids / seeds differ from v1 (110/120/140/150)
 
 
 def train_n(rung):
@@ -142,9 +142,25 @@ def build_placebo(d, n_train, summary):
     shutil.rmtree(gen)
 
 
+TWO_FACT_FILES = ('train', 'dev', 'newwords')       # rung 6 (Addendum 7): the rung-2 files restricted to rows with exactly ONE distractor (two facts); wording is not evaluated there
+
+
+def build_two_fact(d, out, summary):
+    """Rung 6 = rung 2 with exactly one distractor. The rows are the sealed rung-2 rows with meta.n_distractors == 1, in file order, ids unchanged (rung 6 runs
+    never see the rung-2 files, so the id-keyed loss cache cannot collide); rung 2 is built first when missing (byte-deterministic, hashes checked later).
+    A subset of a train-disjoint eval file is train-disjoint; the count baseline is refitted on the filtered train file."""
+    src = os.path.join(out, 'rung2')
+    if not os.path.exists(os.path.join(src, 'summary.json')):
+        build(2, out)
+    for name in TWO_FACT_FILES:
+        rows = [r for r in read(os.path.join(src, name + '.jsonl')) if r['meta']['n_distractors'] == 1]
+        write_rows(os.path.join(d, name + '.jsonl'), rows)
+        summary['files'][name] = dict(filter='rung2 rows with meta.n_distractors == 1', source=f'rung2/{name}')
+
+
 def build(rung, out, n_train=None, n_eval=1200, n_new=600):
     kind = f'rung{rung}'
-    assert 0 <= rung <= 5
+    assert 0 <= rung <= 6
     n_train = n_train or train_n(rung)
     d = os.path.join(out, kind)
     os.makedirs(d, exist_ok=True)
@@ -159,6 +175,8 @@ def build(rung, out, n_train=None, n_eval=1200, n_new=600):
             summary['files'][name] = dict(gen=st)
     elif rung == 3:
         build_placebo(d, n_train, summary)
+    elif rung == 6:
+        build_two_fact(d, out, summary)
     else:
         build_logic(rung, d, n_train, summary)
     train_rows = read(os.path.join(d, 'train.jsonl'))
