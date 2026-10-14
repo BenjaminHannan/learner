@@ -7,3 +7,4 @@ Finished project videos (orphan branch; never merged to main). Files: YYYY-MM-DD
 - model-explainer-v2-narrated-1080p.mp4 (2026-10-11): too big for GitHub (311 MB); in the project files under animations/
 - 2026-10-13: [2026-10-13-morning-recap.mp4](2026-10-13-morning-recap.mp4) (morning recap)
 - 2026-10-14: [reinforcement-learning.mp4](reinforcement-learning.mp4) (explainer, 5.8 min)
+- 2026-10-14: [2026-10-14-morning-recap.mp4](2026-10-14-morning-recap.mp4) (morning recap)
