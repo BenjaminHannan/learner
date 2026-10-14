@@ -1,0 +1,212 @@
+{
+ "meta": {
+  "arm": "PTC",
+  "rung": "3M",
+  "accum": 16,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "plain_tf_steps_g",
+  "cfg": {
+   "d_model": 256,
+   "n_heads": 4,
+   "eg_embed": true,
+   "n_layers": 4,
+   "hidden": 1066,
+   "all_steps": true,
+   "calc_train": true
+  },
+  "n_params": 4023976,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3s.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 115,
+   "le": 68
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "PTC",
+   "--rung",
+   "3M",
+   "--accum",
+   "16",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--sections",
+   "bench",
+   "--updates",
+   "100",
+   "--warmup",
+   "20",
+   "--bench-rounds",
+   "2",
+   "--bench-list",
+   "baseline;eg_once;sortpad,oldw;sortpad,bigmb,oldw;eg_once,sortpad,oldw;eg_once,sortpad,bigmb,oldw,prefetch;tf32",
+   "--out",
+   "/job/profraw/bench.json"
+  ],
+  "started": "2026-10-14T06:04:04",
+  "finished": "2026-10-14T06:18:55"
+ },
+ "sections": {
+  "bench": {
+   "tag": {
+    "arm": "PTC",
+    "rung": "3M",
+    "accum": 16,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128"
+   },
+   "rounds": 2,
+   "specs": {
+    "baseline": {
+     "runs": [
+      {
+       "s_per_update": 0.618758869599551,
+       "peak_gb": 2.089445114135742,
+       "accum": 16
+      },
+      {
+       "s_per_update": 0.9109057422494515,
+       "peak_gb": 2.089445114135742,
+       "accum": 16
+      }
+     ],
+     "s_per_update_median": 0.7648323059245012,
+     "s_per_update_min": 0.618758869599551,
+     "peak_gb": 2.089445114135742,
+     "speed_vs_baseline": 1.0
+    },
+    "eg_once": {
+     "runs": [
+      {
+       "s_per_update": 0.41371436004992573,
+       "peak_gb": 2.4855422973632812,
+       "accum": 16
+      },
+      {
+       "s_per_update": 0.4245440290006809,
+       "peak_gb": 2.4855422973632812,
+       "accum": 16
+      }
+     ],
+     "s_per_update_median": 0.4191291945253033,
+     "s_per_update_min": 0.41371436004992573,
+     "peak_gb": 2.4855422973632812,
+     "speed_vs_baseline": 1.8248127687471971
+    },
+    "sortpad,oldw": {
+     "runs": [
+      {
+       "s_per_update": 0.5692761266650632,
+       "peak_gb": 2.089132785797119,
+       "accum": 16
+      },
+      {
+       "s_per_update": 0.6338027268834412,
+       "peak_gb": 2.089132785797119,
+       "accum": 16
+      }
+     ],
+     "s_per_update_median": 0.6015394267742522,
+     "s_per_update_min": 0.5692761266650632,
+     "peak_gb": 2.089132785797119,
+     "speed_vs_baseline": 1.271458314920279
+    },
+    "sortpad,bigmb,oldw": {
+     "runs": [
+      {
+       "s_per_update": 0.38340773215750235,
+       "peak_gb": 3.556077480316162,
+       "accum": 8
+      },
+      {
+       "s_per_update": 0.38267739352071656,
+       "peak_gb": 3.556077480316162,
+       "accum": 8
+      }
+     ],
+     "s_per_update_median": 0.3830425628391094,
+     "s_per_update_min": 0.38267739352071656,
+     "peak_gb": 3.556077480316162,
+     "speed_vs_baseline": 1.9967292936209706
+    },
+    "eg_once,sortpad,oldw": {
+     "runs": [
+      {
+       "s_per_update": 0.43538295885082334,
+       "peak_gb": 2.4856739044189453,
+       "accum": 16
+      },
+      {
+       "s_per_update": 0.41823490971699356,
+       "peak_gb": 2.4856739044189453,
+       "accum": 16
+      }
+     ],
+     "s_per_update_median": 0.4268089342839084,
+     "s_per_update_min": 0.41823490971699356,
+     "peak_gb": 2.4856739044189453,
+     "speed_vs_baseline": 1.7919782002870248
+    },
+    "eg_once,sortpad,bigmb,oldw,prefetch": {
+     "runs": [
+      {
+       "s_per_update": 0.39556301999604326,
+       "peak_gb": 3.6112513542175293,
+       "accum": 8
+      },
+      {
+       "s_per_update": 0.32774071833118795,
+       "peak_gb": 3.6112513542175293,
+       "accum": 8
+      }
+     ],
+     "s_per_update_median": 0.3616518691636156,
+     "s_per_update_min": 0.32774071833118795,
+     "peak_gb": 3.6112513542175293,
+     "speed_vs_baseline": 2.1148302307777707
+    },
+    "tf32": {
+     "runs": [
+      {
+       "s_per_update": 0.6155971319181843,
+       "peak_gb": 2.089445114135742,
+       "accum": 16
+      },
+      {
+       "s_per_update": 0.6442791833914816,
+       "peak_gb": 2.089445114135742,
+       "accum": 16
+      }
+     ],
+     "s_per_update_median": 0.629938157654833,
+     "s_per_update_min": 0.6155971319181843,
+     "peak_gb": 2.089445114135742,
+     "speed_vs_baseline": 1.214138716047714
+    }
+   },
+   "wall_s": 890.5
+  }
+ }
+}

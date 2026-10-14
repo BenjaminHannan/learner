@@ -1,0 +1,134 @@
+{
+ "meta": {
+  "arm": "B3G2",
+  "rung": "3M",
+  "accum": 32,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "b3g2",
+  "cfg": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "label": "settled",
+   "span_copy": true,
+   "span_idx": true,
+   "span_end": true,
+   "ans_drill": 0.25,
+   "eg_embed": true,
+   "any_round": true,
+   "gap_p": 0.25,
+   "no_slots": true,
+   "no_place": true,
+   "bytes": true,
+   "as_written": true,
+   "blocks": 2,
+   "writer_mlp": 1.75
+  },
+  "n_params": 4023302,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "le": 95
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "B3G2",
+   "--rung",
+   "3M",
+   "--accum",
+   "32",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--caps",
+   "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+   "--sections",
+   "bench",
+   "--updates",
+   "40",
+   "--warmup",
+   "10",
+   "--bench-list",
+   "baseline;eg_once",
+   "--out",
+   "/job/profraw/b3g2_bench.json"
+  ],
+  "started": "2026-10-14T06:36:34",
+  "finished": "2026-10-14T06:59:37"
+ },
+ "sections": {
+  "bench": {
+   "tag": {
+    "arm": "B3G2",
+    "rung": "3M",
+    "accum": 32,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128"
+   },
+   "rounds": 2,
+   "specs": {
+    "baseline": {
+     "runs": [
+      {
+       "s_per_update": 7.257067269040272,
+       "peak_gb": 1.4993939399719238,
+       "accum": 32
+      },
+      {
+       "s_per_update": 7.153455352096352,
+       "peak_gb": 1.4993939399719238,
+       "accum": 32
+      }
+     ],
+     "s_per_update_median": 7.2052613105683125,
+     "s_per_update_min": 7.153455352096352,
+     "peak_gb": 1.4993939399719238,
+     "speed_vs_baseline": 1.0
+    },
+    "eg_once": {
+     "runs": [
+      {
+       "s_per_update": 6.826471627695718,
+       "peak_gb": 2.4621028900146484,
+       "accum": 32
+      },
+      {
+       "s_per_update": 6.351239411212736,
+       "peak_gb": 2.4621028900146484,
+       "accum": 32
+      }
+     ],
+     "s_per_update_median": 6.588855519454228,
+     "s_per_update_min": 6.351239411212736,
+     "peak_gb": 2.4621028900146484,
+     "speed_vs_baseline": 1.093552786108921
+    }
+   },
+   "wall_s": 1382.4
+  }
+ }
+}
