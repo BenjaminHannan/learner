@@ -87,13 +87,13 @@ map-dependent held-out views; always `do` = 27.2%. "vs After" = paired 95% inter
 | 16,000 | 200 | 0.56 | 41.9% | +14.8 | 4.88 | +0.73 (+0.28 to +1.17) |
 | 16,000 | 201 | 0.54 | 45.4% | +18.3 | 4.62 | +0.43 (+0.04 to +0.82) |
 | 64,000 | 200 | 0.71 | 62.4% | +35.3 | 6.50 | +2.35 (+1.87 to +2.79) |
-| 64,000 | 201 | queued (running) | | | | |
+| 64,000 | 201 | 0.72 | 64.8% | +37.6 | 7.10 | +2.91 (+2.41 to +3.39) |
 
 - Shown: with 1,000 labels the student memorises its labelled views (training accuracy 0.59 to 0.66) and reads the map no better than the fixed word (S 24.5 to 25.8%,
   below 27.2%); sealed play is at the reward-trained level (3.5 / 4.18, parent T0 about 3.6-3.8) or below it. At 4,000 labels held-out S accuracy is still within
   +0.5 to +4.2 points of the fixed word (L-1 would read "proved wrong" for 4k: < +5 on both seeds). The map-reading gain appears between 4,000 and 16,000 labelled views
-  and keeps rising to 64,000 (seed 200). L-3 (smallest N where +20 holds) is therefore **somewhere in 16,000 to 64,000 on seed 200 only**; 64,000 is the only size tested above
-  +20, and no size between 16,000 and 64,000 was run.
+  and keeps rising to 64,000 (seed 200). L-3 (smallest N where +20 holds) is therefore **somewhere in 16,000 to 64,000** (both seeds: +14.8 / +18.3 at 16,000, +35.3 / +37.6 at 64,000); no size between
+  16,000 and 64,000 was run.
 - Shown: with 1,000 and 4,000 labels the sealed score is not above the reward-trained runs on either seed (the 4k seed 200 interval includes 0), so with this recipe a few thousand
   labels do not beat the sparse reward, and tens of thousands do. (Suggested, untested: a label budget a person could write by hand would not be enough for this recipe.)
 - Suggested, untested: the 1k and 4k runs are short (160 and 320 updates) and the first epochs show an unstable loss (loss 45 to 3 in the first ten epochs of 1k), so some of the
@@ -101,3 +101,28 @@ map-dependent held-out views; always `do` = 27.2%. "vs After" = paired 95% inter
   (not scheduled; it would be a new design, with marks fixed first).
 - Not shown: why the 1,000-label student ends below the fixed word on S (memorisation of 1,000 views is the obvious reading; the per-word table shows `do` 47% on seed 200 against 33% on seed 201,
   so the two seeds fall into different habits).
+
+## Result at N = 64,000, seed 201 (10:10 PM ET 10-14; same constants and code be63ed157d as seed 200; 2,500 updates, 6.9 h on 4 threads, not resumed)
+All **shown**. Same 2,000 held-out views and the same 64,000-view train list as seed 200 (both from the practice run seed 390; held-out from seed 391).
+| | seed 200 | seed 201 |
+|---|---|---|
+| Held-out accuracy on S (always `do` = 27.2%) | 62.4% | **64.8%** |
+| L-1 gap (bar +20) | +35.3 | **+37.6** |
+| held-out accuracy, all 2,000 views | 67.3% | 69.4% |
+| training accuracy at the last epoch (running mean) | 0.71 | 0.72 |
+| Sealed unlocks a game, sampled T = 1 | 6.50 | **7.10** |
+| minus GW-P8 After (4.15 / 4.19), paired 95% | +2.35 (+1.87 to +2.79) | **+2.91 (+2.41 to +3.39)** |
+| minus untrained parent at T0 | +2.75 (+2.29 to +3.20) | +3.49 (+2.96 to +3.99) |
+| Sealed unlocks a game, top move | 5.89 | 6.29 (+2.10, 1.64 to 2.52 vs After) |
+- Seed 201 sealed achievements (% of maps): wood 100, table 99, **wood pickaxe 91**, wood sword 81, zombie 67, drink 51, sapling 47, stone 43, plant 42, wake-up 36, cow 18,
+  place stone 13, coal 10, stone sword 6, furnace 4, stone pickaxe 2; no iron, diamond or iron tools. The labeller itself (8.23): wood pickaxe 98, stone 83, zombie 78,
+  furnace 31, stone pickaxe 7. The student is below the labeller on stone (43 vs 83) and furnace (4 vs 31) and not yet at 8.23 (7.10).
+- Per-word accuracy on S (seed 201): left 60.0%, right 61.1%, up 51.7%, down 64.4%, do 79.5%. Most common slips: `up`, `right` and `left` read as `down` (46, 42, 39 views), then `up` as `right`.
+- **Marks.** A22 defines L-1 and L-2 at N = 16,000 and they read "no verdict" there on both seeds (above). The pre-registered follow-up at N = 64,000 now meets both bars on **both**
+  seeds: L-1 +35.3 / +37.6 (bar +20), L-2 +2.35 / +2.91 (bar +1.0, intervals above 0). Two seeds is a screen by the project rule (>= 6 paired seeds to confirm), and the 64,000 runs
+  are one train list; so this is a **two-seed pass at 64,000**, not a confirmed one. The seed-to-seed spread at 64,000 is 0.6 unlocks, larger than the 16,000 spread (0.26) but both are well above the GW-P8 runs.
+- Shown: size is not the wall for these basics: the same 3M parent and rank-8 add-on go from reward-trained 4.15 / 4.19 to 6.50 / 7.10 when given 64,000 labelled views, and the held-out
+  accuracy on map-dependent views goes from the fixed word's 27% to 62 to 65%. Training accuracy was still rising at the last epoch (0.71 / 0.72), so these are floors.
+- Not shown (and the thing that matters next): that the model can get such labels without the hand-written labeller. This is a capacity result, not a self-teaching result. The labeller
+  encodes where trees, water and cows are and when to craft; every point above the reward-trained runs here came from it. Next step is a label source that needs no hand-written game
+  knowledge (see reviews/gpt-diagnose-labels-2026-10-14.md); nothing is scheduled until that prompt's answer comes back, and no other candidate has been started.
