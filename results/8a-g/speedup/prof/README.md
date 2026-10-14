@@ -41,6 +41,16 @@ python prof_train.py --arm B3G2 --rung 3M --accum 32 --data $POOL --pkg-root $S 
   --sections accumsweep,accumcmp --accum-list 32,16,8,4 --accum-updates 40 --accum-warmup 10 --accum-rounds 2 --out out/accum.json
 ```
 
+B3G2 speed A/B (PREREG-b3g2-speed-ab.md; accum 4 is the reference; the cheap wins ONE at a time on top of it; mark 6 first, then the paired timing with the money lines):
+
+```
+python prof_train.py --arm B3G2 --rung 3M --accum 4 --data $POOL --pkg-root $S --caps $S/custom_io/g8a/caps_b3g2.json \
+  --sections profiler,syncs --out out/ab_profile.json
+python prof_train.py $B3 --sections abequiv --ab-variants tf32,pad64,unfused,nosync --out out/ab_equiv.json
+python prof_train.py $B3 --sections abbench --ab-accums 8,16,2 --ab-variants tf32,pad64,unfused,nosync --ab-rounds 3 --ab-warmup 10 --ab-updates 40 \
+  --dph 0.46 --ab-equiv-json out/ab_equiv.json --ab-partial out/ab_bench.partial.json --out out/ab_bench.json
+```
+
 ## What the equiv section reports
 
 - **E1** (runs when an equiv spec contains `eg_once`, or `--equiv-vectors yes`): Gemma state H at every valid char position, eg_once vs the old path at the job's accum; the old path's own spread (accum vs accum/2); rules as registered: every position cos >= 0.998; every row's mean cos >= 0.9995; eg_once's largest per-row mean-cosine gap <= 1.5 x the old path's own largest gap. "registered setting met" says whether it ran as bf16 + GPU + real Gemma; anything else is only a plumbing check.
@@ -61,6 +71,8 @@ python prof_train.py --arm B3G2 --rung 3M --accum 32 --data $POOL --pkg-root $S 
 | bench / equiv | above. |
 | accumsweep | B3G2 micro-batch size sweep for `../PREREG-b3g2-accum.md`: `--accum-list` (default 32,16,8,4), `--accum-rounds` rounds (default 2), a fresh Trainer per (round, accum), `--accum-warmup` (default 10) then `--accum-updates` (default 40) free-running timed updates on the same rows; median s/update, peak allocated GB, mean thinker rounds per micro-batch (read from the model's own `rounds` aux), speed against the reference accum (first of the list, 32), the marks (speed >= 1.3x, memory <= 10 GB, rounds rise > 25 %), and whether prediction 3 is proved wrong. OOM is caught per accum and not retried. Not in the default section list. |
 | accumcmp | descriptive, no pass bar: one update on the same first 256 rows with the loop length K pinned (`--equiv-pin`, default 1), the reference accum against each candidate in `--accum-list`: loss difference, gradient cosine and relative L2, fp32 (and bf16 on CUDA, `--equiv-precisions`), plus the reference run twice as the noise floor. Not in the default section list. |
+| abequiv | mark 6 of `../PREREG-b3g2-speed-ab.md`: one update on the same first 256 rows, K and the stochastic parts pinned, the reference (`--accum`) against each of `--ab-variants` alone: relative loss difference, gradient cosine and relative L2, the parameters' change after one optimizer step, bit-exactness, the reference run twice as the noise floor, and the booleans of the 1e-4 / 0.9999 bar (read in bf16 autocast where run, else fp32). pad64 / nosync / unfused must also be bit-exact in fp32 on the CPU: only a CPU run can say (`bit_exact_cpu_fp32` is None on a GPU run; the tiny-config CPU tests of `test_prof.py` are that evidence). Not in the default section list. |
+| abbench | the paired speed A/B of `../PREREG-b3g2-speed-ab.md`: A = `--accum` (4); B arms = `--ab-accums` (8,16,2) and, one variant alone at the reference accum, `--ab-variants`; per arm `--ab-rounds` (3) interleaved rounds A,B,A,B,A,B of `--ab-warmup` (10) + `--ab-updates` (40) updates (a fresh Trainer per run, same rows): median s/update and per-round values, A's spread, peak allocated GB, thinker rounds per micro-batch, wall minutes; the flags of marks 1, 2, 4, 5, 7, the predictions of marks 3 and 8 as fields, and (`--dph`) per arm cost, dollars per 1,000 updates and the cost of a 24,000-update run. Mark 5 reads mark 6 from this process's abequiv or `--ab-equiv-json`. `--ab-partial` keeps the arms done if a timeout ends the run; `--ab-max-min` skips arms not started in time. Not in the default section list. |
 
 ## Variants (`--variant a,b`; `--list-variants`)
 
@@ -76,6 +88,9 @@ python prof_train.py --arm B3G2 --rung 3M --accum 32 --data $POOL --pkg-root $S 
 | compile / compile_ro | `torch.compile(dynamic=True)` on each controller block (default / reduce-overhead); skipped cleanly on CPU and on failure; `compile_stats` counts graphs/recompiles; sortpad rounds widths to 16 when a compile variant is on (`--pad-multiple`) | rounding only |
 | eg_sorted | the frozen Gemma runs on length-sorted chunks of each micro-batch, scattered back to row order | rounding only |
 | prefetch | thread + queue, pinned memory, side stream; same order and content | exact; limited by the GIL (collate is Python-bound) |
+| unfused | AdamW with fused=False (a CONTROL: train.py already uses fused AdamW on CUDA) | loss and gradient cannot change; the optimizer step differs at rounding (abequiv reports it) |
+| pad64 | widths that vary per micro-batch rounded up to a multiple of 64: the prompt columns (own widest row, never past the batch width), the Gemma token width of the question's call, the teacher-forced tape entry width (`--pad64-parts`; `--list-variants` has the full list of what is and is not padded). Not with sortpad or eg_once / eg_sorted | masks unchanged; on the tiny CPU b3g2 the loss is identical and the gradient equal to about 1e-8 relative but NOT bit for bit (summation order over more columns): mark 6's CPU bit-exact clause fails for it |
+| nosync | B3G2 only: the per-round syncs whose values are on the CPU already (writer.py:121 and :138 through `answer_teacher`, b3g2.py:350 and the `nonzero` after it) read from the CPU schedule / are copied async; rebuilt from the model's own source with exact text edits (refused with Skip if the text is not found once) | exact: same lists, same tensors, bit for bit on the CPU; the syncs on GPU values stay (see `--list-variants`) |
 
 ## Caveats
 
