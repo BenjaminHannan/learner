@@ -32,7 +32,8 @@ t = t.replace('@@CODE_IDENTITY_PY@@\n', ci)
 t = t.replace('@@PKG_PINS@@', '\n'.join(pkg)).replace('@@OVERLAY_PINS@@', '\n'.join(overlay))
 t = t.replace('@@CLOZE_SHA@@', cloze).replace('@@CAPS_PY_SHA@@', caps_py).replace('@@CAPS_B3S_SHA@@', caps_b3s)
 # PROFILE mode (added 2026-10-14): the profiling harness commit as the coordinator named it, and the sha256 of prof_train.py read from that commit with git (not typed)
-PROF_SHA = '6a870a767c6231fe6c2489b84752ffdafd7824fa'
+# re-pinned 2026-10-14 from 6a870a767c6231fe6c2489b84752ffdafd7824fa to the newest harness commit (E2 scale diagnostics, relative E2 rule, E1-floor text, CPU/bf16 label)
+PROF_SHA = 'ca542f77a9d3f6afb4a6850936e62da5b54a45ec'
 WT = '/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1'
 assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', PROF_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'harness commit not in the repo'
 blob = subprocess.run(['git', '-C', WT, 'show', PROF_SHA + ':results/8a-g/speedup/prof/prof_train.py'], capture_output=True, check=True).stdout
