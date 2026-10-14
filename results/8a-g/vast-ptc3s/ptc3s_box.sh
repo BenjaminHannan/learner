@@ -89,9 +89,9 @@ MAXH=${MAXH:-$D_MAXH}; END_SLEEP=${END_SLEEP:-$D_END}; FAIL_SLEEP=${FAIL_SLEEP:-
 DPH=${DPH:-0}; PROJ_CAP_USD=${PROJ_CAP_USD:-4.0}; GUARD_STEP=${GUARD_STEP:-1000}; EXTRA_H=${EXTRA_H:-0.5}; STEPS=24000
 EXPORT_CK=${EXPORT_CK:-1}; PACE=${PACE:-100}; CK_ROUNDS=${CK_ROUNDS:-3}; TICK_EVERY=${TICK_EVERY:-180}
 PTC_DRY=${PTC_DRY:-0}; PTC_DRY_EXTRA=${PTC_DRY_EXTRA:-[]}; PTC_DRY_EG=${PTC_DRY_EG:-0}; STOP_AFTER=${STOP_AFTER:-}
-PROF_SHA=87c5cf3c7437914e089a1dcb3293c680c55f6202          # branch claude/project-thread-yha868: results/8a-g/speedup/prof (prof_train.py, the GPU profiling harness; PROFILE=1 only)
+PROF_SHA=75cd5fcc01875bfefccbb8ebde09fde53ebd0490          # branch claude/project-thread-yha868: results/8a-g/speedup/prof (prof_train.py, the GPU profiling harness; PROFILE=1 only)
 PROF_DIR=results/8a-g/speedup
-PROF_PY_SHA=b29c6bd60fb4f0024fa32d663544b9e8609082582998b0226bb25d7a2453062a    # sha256 of prof/prof_train.py at PROF_SHA
+PROF_PY_SHA=a078a8d6e3bd7733ed183562e7ea91d98e4040daea29a073de5370d7afd04af3    # sha256 of prof/prof_train.py at PROF_SHA
 if [ "$PROF_PLAN" = b3ab ]; then D_PMAX=285; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'      # plan b3ab: as b3sweep; 285 min with i4_b3g2_pair (smoke 10 + i1 20 + i2 20 + i3 125 leave the 105 the pair needs)
 elif [ "$PROF_PLAN" = b3sweep ]; then D_PMAX=150; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'; else D_PMAX=75; D_PJOBMIN=45; D_PJOBSTEPS=300; D_PLOGE='--log-every 50'; fi      # plan b3sweep: the smoke only builds the pool
 PROF_MAXMIN=${PROF_MAXMIN:-$D_PMAX}; PROF_MIN_LEFT=${PROF_MIN_LEFT:-240}; PROF_JOB_MIN=${PROF_JOB_MIN:-$D_PJOBMIN}; PROF_STEP_MIN=${PROF_STEP_MIN:-25}; PROF_JOB_STEPS=${PROF_JOB_STEPS:-$D_PJOBSTEPS}

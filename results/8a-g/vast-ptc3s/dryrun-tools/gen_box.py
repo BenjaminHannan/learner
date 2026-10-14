@@ -36,7 +36,8 @@ t = t.replace('@@CLOZE_SHA@@', cloze).replace('@@CAPS_PY_SHA@@', caps_py).replac
 # re-pinned 2026-10-14 from 6a870a767c6231fe6c2489b84752ffdafd7824fa to the newest harness commit (E2 scale diagnostics, relative E2 rule, E1-floor text, CPU/bf16 label)
 # re-pinned 2026-10-14 (PROF_PLAN=b3sweep) to the commit that adds the accumsweep and accumcmp sections; PROF_SHA in the environment overrides (a check, never used for the committed script)
 # re-pinned 2026-10-14 (PROF_PLAN=b3ab) to the commit that adds the unfused, pad64 and nosync variants and the abequiv and abbench sections
-PROF_SHA = os.environ.get('PROF_SHA', 'b5a85790f2cba5a538bf8b3609899591cf282843')
+# re-pinned 2026-10-14 (PROF_PLAN=b3ab, final) to the commit with the review fixes (arm order, pad64p, mark 6 label, error isolation, half-done setup undo)
+PROF_SHA = os.environ.get('PROF_SHA', '75cd5fcc01875bfefccbb8ebde09fde53ebd0490')
 assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', PROF_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'harness commit not in the repo'
 blob = subprocess.run(['git', '-C', WT, 'show', PROF_SHA + ':results/8a-g/speedup/prof/prof_train.py'], capture_output=True, check=True).stdout
 import hashlib
