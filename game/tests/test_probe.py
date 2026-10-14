@@ -50,6 +50,17 @@ class Smoke(unittest.TestCase):
     def tearDownClass(cls):
         cls.td.cleanup()
 
+    def test_gen_bigger_train_with_the_same_heldout(self):
+        out = os.path.join(self.td.name, 'data-big')
+        probe.gen(out, smoke=True, train_views=300, reuse_heldout=self.data)
+        tr, ho = lines(os.path.join(out, 'train.jsonl')), lines(os.path.join(out, 'heldout.jsonl'))
+        self.assertEqual(ho, lines(os.path.join(self.data, 'heldout.jsonl')))
+        self.assertEqual(len(tr), 300)
+        self.assertEqual(len({r['view'] for r in tr}), 300)
+        self.assertFalse({r['view'] for r in tr} & {r['view'] for r in ho})
+        for r in tr:
+            self.assertEqual((r['label'], r['reason']), oracle.label(r['view']))
+
     def test_gen(self):
         tr, ho = lines(os.path.join(self.data, 'train.jsonl')), lines(os.path.join(self.data, 'heldout.jsonl'))
         self.assertEqual((len(tr), len(ho)), (200, 40))

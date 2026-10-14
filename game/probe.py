@@ -90,16 +90,26 @@ def read_jsonl(path):
         return [json.loads(line) for line in f]
 
 
-def gen(out, smoke=False):
+def gen(out, smoke=False, train_views=None, reuse_heldout=None):
+    """train_views: a larger train set than TRAIN_VIEWS (A22's pre-registered N = 64,000 run). reuse_heldout: a folder whose
+    heldout.jsonl is kept as it is (so accuracies stay comparable) and whose views are dropped from the new train set."""
     t0 = time.time()
     n_train, n_held = SMOKE_VIEWS if smoke else (TRAIN_VIEWS, HELD_VIEWS)
+    n_train = train_views or n_train
     wpd = SMOKE_WORLDS if smoke else WORLDS_PER_DAY
     cap = SMOKE_CAP if smoke else play.load_constants()[0]['episode_cap']
-    train, ts = collect(TRAIN_RUN, n_train, wpd, cap)
-    train_all = {r['view'] for r in train}
-    held, hs = collect(HELD_RUN, n_held, wpd, cap, exclude=train_all)
-    for rows in (train, held):
-        random.Random(SHUFFLE_SEED).shuffle(rows)
+    if reuse_heldout:
+        held = read_jsonl(os.path.join(reuse_heldout, 'heldout.jsonl'))
+        hs = dict(reused_from=reuse_heldout)
+        train, ts = collect(TRAIN_RUN, n_train, wpd, cap, exclude={r['view'] for r in held})
+        train_all = {r['view'] for r in train}
+        random.Random(SHUFFLE_SEED).shuffle(train)
+    else:
+        train, ts = collect(TRAIN_RUN, n_train, wpd, cap)
+        train_all = {r['view'] for r in train}
+        held, hs = collect(HELD_RUN, n_held, wpd, cap, exclude=train_all)
+        for rows in (train, held):
+            random.Random(SHUFFLE_SEED).shuffle(rows)
     train, held = train[:n_train], held[:n_held]
     os.makedirs(out, exist_ok=True)
     write_jsonl(os.path.join(out, 'train.jsonl'), train)
@@ -210,6 +220,8 @@ def main(argv=None):
     g = sub.add_parser('gen')
     g.add_argument('--out', required=True)
     g.add_argument('--smoke', action='store_true')
+    g.add_argument('--train-views', type=int, default=None, help='a larger train set (A22: the N = 64,000 run)')
+    g.add_argument('--reuse-heldout', default=None, help='folder whose heldout.jsonl is kept; its views are dropped from the new train set')
     t = sub.add_parser('train')
     t.add_argument('--parent', required=True)
     t.add_argument('--data', required=True)
@@ -227,7 +239,7 @@ def main(argv=None):
     e.add_argument('--names', nargs='+')
     a = ap.parse_args(argv)
     if a.cmd == 'gen':
-        info = gen(a.out, a.smoke)
+        info = gen(a.out, a.smoke, a.train_views, a.reuse_heldout)
         print('gen', 'train', info['train']['count'], 'heldout', info['heldout']['count'], 'seconds', info['seconds'], flush=True)
         return
     torch.set_num_threads(a.threads)
