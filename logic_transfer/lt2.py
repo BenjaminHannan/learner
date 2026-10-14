@@ -111,6 +111,8 @@ def dev_at(evals, u):
 def run_state(run_dir):
     if os.path.exists(os.path.join(run_dir, 'run.json')):
         return 'done'
+    if os.path.exists(os.path.join(run_dir, 'failure.txt')):
+        return 'failed'
     return 'running' if os.path.exists(run_dir) else 'todo'
 
 
@@ -162,7 +164,7 @@ def cmd_run(a):
         for p, s in todo:
             print(' '.join(cmd(p, s)))
         return
-    live, t0 = {}, time.time()
+    live, t0, attempts = {}, time.time(), {}
     env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(HERE), os.environ.get('PYTHONPATH')])))
     last_note = 0
     while todo or live:
@@ -170,15 +172,28 @@ def cmd_run(a):
             p, s = todo.pop(0)
             rd = os.path.join(out_root, run_name(p, s))
             os.makedirs(rd, exist_ok=True)
+            attempts[(p, s)] = attempts.get((p, s), 0) + 1
+            for stale in ('failure.txt', 'stop.json'):
+                if os.path.exists(os.path.join(rd, stale)):
+                    os.unlink(os.path.join(rd, stale))
             lf = open(os.path.join(rd, 'stdout.log'), 'w')
             live[(p, s)] = (subprocess.Popen(cmd(p, s), stdout=lf, stderr=subprocess.STDOUT, env=env, cwd=os.path.dirname(HERE)), lf)
-            print(f'started {run_name(p, s)} at {time.time() - t0:.0f}s', flush=True)
+            print(f'started {run_name(p, s)} (attempt {attempts[(p, s)]}) at {time.time() - t0:.0f}s', flush=True)
+            time.sleep(a.stagger)                     # loading 330k rows peaks at several GB per process: do not start everything in the same seconds
         time.sleep(a.poll)
         for k, (pr, lf) in list(live.items()):
             if pr.poll() is not None:
                 lf.close()
                 del live[k]
                 print(f'finished {run_name(*k)} rc={pr.returncode} at {time.time() - t0:.0f}s', flush=True)
+                if pr.returncode != 0:
+                    rd = os.path.join(out_root, run_name(*k))
+                    tail = ''.join(open(os.path.join(rd, 'stdout.log'), errors='replace').readlines()[-40:])
+                    open(os.path.join(rd, 'failure.txt'), 'w').write(f'rc={pr.returncode} attempt={attempts[k]}\n{tail}')
+                    print(f'--- {run_name(*k)} failed (rc={pr.returncode}, attempt {attempts[k]}); last lines:\n{tail[-1500:]}\n---', flush=True)
+                    if attempts[k] <= a.retries and not os.path.exists(abort):
+                        todo.insert(0, k)
+                        time.sleep(a.retry_wait)
         if rung == 0 and a.falsifier and not os.path.exists(abort):
             decided, fired, detail = falsifier(a.work, rung, runs)
             if decided and fired:
@@ -237,12 +252,15 @@ def cmd_report(a):
         th = thresholds(r, summ)
         rows = [run_summary(a.work, r, p, s, th) for p, s in all_runs()]
         n_pass = sum(x['pass'] for x in rows)
-        finished = all(x['state'] == 'done' for x in rows)
+        finished = all(x['state'] in ('done', 'failed') for x in rows)
+        n_failed = sum(x['state'] == 'failed' for x in rows)
         dec = falsifier(a.work, r, all_runs()) if r == 0 else (False, False, None)
         if r == 0 and dec[0] and dec[1]:
             verdict = 'FALSIFIED (interface cannot learn a label at this share)'
         elif n_pass >= 5:
             verdict = 'PASS'
+        elif finished and n_failed:
+            verdict = f'INCOMPLETE ({n_failed} runs crashed; no reading)'
         elif finished and n_pass <= 1:
             verdict = 'FAIL'
         elif finished:
@@ -344,6 +362,9 @@ def main(argv=None):
     r.add_argument('--poll', type=float, default=20)
     r.add_argument('--no-falsifier', dest='falsifier', action='store_false')
     r.add_argument('--keep-abort', action='store_true')
+    r.add_argument('--stagger', type=float, default=6, help='seconds between process starts (memory peak while loading rows)')
+    r.add_argument('--retries', type=int, default=1, help='restart a run that exits non-zero (same seed, from scratch) this many times')
+    r.add_argument('--retry-wait', type=float, default=30)
     r.add_argument('--dry', action='store_true')
     q = sub.add_parser('report')
     q.add_argument('--work', required=True)
