@@ -4,6 +4,8 @@
   python3 vastptc.py KIT_VAST_PY search --gpu "RTX 4090" --n 8
   python3 vastptc.py KIT_VAST_PY create --offer ID --label ptc3s --env "MAXH=6 DPH=0.38 PROJ_CAP_USD=4"
   python3 vastptc.py KIT_VAST_PY status|tail|collect|collectck|destroy|credit ...      (the kit's own arguments, unchanged)
+  python3 vastptc.py KIT_VAST_PY create --offer ID --label ptcprof --env "PROFILE=1 MAXH=2 DPH=0.40 END_SLEEP=300 FAIL_SLEEP=300"     (the PROFILE rental: RUNBOOK.md section 9;
+                                                  its result blocks are named profjob and profrun and need only `collect`)
 
 KIT_VAST_PY is the path of the kit's vast.py (see RUNBOOK.md for how to get it and which sha256 it must have). Three changes are made to the loaded module before its
 main() runs, nothing else:

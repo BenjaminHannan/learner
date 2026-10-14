@@ -153,7 +153,7 @@ Expected differences, none of which is a defect: GPU (4090 vs 5070 Ti), torch an
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `create` returns an error naming size or length | the script is 35 KB; the kit's box.sh was 7.7 KB (untested limit) | do not retry blindly; tell the roadmap thread. A short bootstrap that fetches the script by commit and sha256 would need the script on GitHub first |
+| `create` returns an error naming size or length | the script is 53 KB (35 KB before PROFILE mode was added); the kit's box.sh was 7.7 KB (untested limit; the 37 KB `at10m_box.sh` of branch vast-at10m-tmp was never launched either) | do not retry blindly; tell the roadmap thread. A short bootstrap that fetches the script by commit and sha256 would need the script on GitHub first |
 | Log stays empty after `running` | args not run (bash error) or logging delay | S1 |
 | `CIO-FAIL pip` | PyPI unreachable | one retry costs little; S8 |
 | `CIO-FAIL eg-download` | Hugging Face rate limit for the box IP, six tries failed | destroy, try another host later |
@@ -162,3 +162,101 @@ Expected differences, none of which is a defect: GPU (4090 vs 5070 Ti), torch an
 | `GUARD STOP` | slow host | S3 |
 | `CIO-FAIL rows touch the global caps` | a pool row is over the pinned caps | stop; the PC job would stop the same way (`on_refuse`); report only |
 | out of GPU memory | other process on the card or wrong GPU | read `RESULT-SUMMARY`, `peak_mem_mib`; the job asks for 9,000 MiB free (the queue's MEM line) |
+
+## 9. PROFILE rental (added 2026-10-14): one 4090 for about 1.5 to 2 hours to run every box step on a real GPU and profile the training update
+
+**What it is.** The full job (sections 1 to 8) is below the confidence bar for a first attempt (DRYRUN.md section 6: about 45 %). This rental runs the same `ptc3s_box.sh` with `PROFILE=1`. Stages setup, code, gemma, data and skills are the job's, unchanged. Then, instead of the 24,000 updates, stage `prof` does three things:
+
+1. fetches the profiling harness (branch `claude/project-thread-yha868`, commit `6a870a767c6231fe6c2489b84752ffdafd7824fa`, folder `results/8a-g/speedup`) and checks `prof_train.py` against sha256 `912045830f968526e9d92f5a48fe46e47a78b4c08a69b301b05f4f3e3728dbe1` (taken from that commit with git; a different file stops the box with `CIO-FAIL`);
+2. runs the **production-speed smoke**: the queue-built job command (`cmd.job.sh`, the PC runner's own flags) with `--out` moved to its own folder and `--steps 300 --train-extra '--log-every 50'` appended, under a 45-minute timeout. It builds the real pool `p10-rung30-s400-a64-L`, trains 300 updates with the real data, caps and Gemma front, and runs the real final evaluation (intact, lesions, chain-5). The box prints the seconds per update and how long the final evaluation took (`PROF-JOB` lines), which are the two numbers the cost guard's `EXTRA_H` (0.5, a guess) and the 24,000-update estimate need;
+3. runs six harness commands on that pool, each under its own timeout, a failure is logged and the next one still runs: `a_profile` (PTC accum 16, all default sections), `b_bench` (PTC accum 16, `--sections bench`, 100 timed updates after 20 warm-up, 2 rounds, 7 variants), `c_equiv` (PTC, `--sections equiv --equiv-check --curve-updates 0`, 8 variants: E1 on the GPU in bf16, E2, E3), `d_e4` (PTC, the 300-update loss trace for `eg_once` only), `f1_b3g2_profile` (B3G2 accum 32, sections breakdown, throughput, padding, syncs; no profiler), `f2_b3g2_bench` (B3G2, bench of `baseline;eg_once`, 40 timed updates after 10 warm-up). The CPU E2/E3 runs of the harness README are **not** made. B3G2 runs on the PTC pool (the harness README's own `$POOL` convention), with `--caps custom_io/g8a/caps_b3g2.json` of the assembled tree (the file and `models/b3g2.py` exist there, shown).
+
+With `PROFILE` unset the script is the job of sections 1 to 8, byte for byte the same code path except for the lines listed in DRYRUN.md section 9 (shown by a diff and by a full default dry run). The speed guard is off in PROFILE mode, no checkpoint is exported, and the hard stop is `MAXH=2`. Labels below: shown = seen in the CPU dry run, suggested = reasoned, untested = needs the real box.
+
+### Cost and time at $0.40 per hour
+
+| Part | Time | Label |
+|---|---|---|
+| create to script start (image pull) | 3 to 10 min | suggested |
+| setup, code, gemma, data, skills | 20 to 45 min (CPU box, from scratch: 19 and about 28 minutes in two runs, the data stage 15 and 20 minutes of it, on one CPU core) | shown on the CPU box, host-dependent |
+| job smoke: pool, arm start, 300 updates, final eval | 10 to 45 min | pool 107 to 110 s and arm start 40 to 44 s shown on the CPU box; the 300 updates and above all the final evaluation (chain-5, lesions; the guard's `EXTRA_H` guesses 30 min) are untested. The timeout `PROF_JOB_MIN=45` cuts the smoke if the final evaluation runs on, and the smoke's time is taken from the same `PROF_MAXMIN` budget as the six harness runs |
+| harness, six runs | the rest of the stage budget `PROF_MAXMIN` (75 min counted from the start of stage prof, job smoke included); each run is cut to what is left, the last ones are skipped with a `PROF SKIP` line when less than 4 minutes are left | untested; a rough guess is 40 to 60 min for all six (B3G2 updates are slow) |
+| printing, `END_SLEEP` | 1 min, 5 min | shown for the printing |
+| **Typical total** | **1.5 to 2 hours, $0.60 to $0.80** | suggested |
+| **Worst case** | `MAXH=2` h from script start + `END_SLEEP` (5 min) + image pull (about 6 min) = about 2.2 h, $0.87 at $0.40 and $1.31 at the $0.60 limit | rule |
+
+It is not a one-hour rental: the data stage alone is 15 to 20 minutes on a single core. Raise `PROF_MAXMIN` only together with `MAXH` (the budget never reaches past `MAXH` minus 7 minutes). Ben's cap of $5 is far away; stop rule P7 is $1.50.
+
+### Commands
+
+```
+$V search --gpu "RTX 4090" --n 8        # same rule as section 3: dph_total at most 0.60 (2 h x 0.60 = $1.20)
+$V create --offer OFFER_ID --label ptcprof --env "PROFILE=1 MAXH=2 DPH=<dph_total> END_SLEEP=300 FAIL_SLEEP=300"
+$V status --id INSTANCE_ID
+$V tail --id INSTANCE_ID --n 250        # the kit hides the R| payload lines
+$V collect --id INSTANCE_ID --out ./collected_prof      # as soon as PROF RESULT PRINTED shows; takes about a minute
+$V destroy --id INSTANCE_ID
+$V credit
+```
+Write the SPEND.md row first, as in section 2 (suggested text: `8aPTC3S profile rental | 1 x RTX 4090 ($DPH/h) | start ET | | about $0.7, MAXH=2`). `PROJ_CAP_USD` is not used in PROFILE mode. Other settings (defaults are right): `PROF_MAXMIN=75`, `PROF_JOB_MIN=45`, `PROF_STEP_MIN=25`, `PROF_JOB_STEPS=300`, `PROF_COMPILE=1` (adds the `torch.compile` variant `eg_once,sortpad,oldw,compile` to the bench list; off by default because compile can take many minutes).
+
+`collectck` is not needed: no checkpoint parts are printed. The box stays up `END_SLEEP` (300 s) after `PROF DONE`; collect inside that time, then destroy (a destroyed or ended box may no longer give its log; untested).
+
+### What you should see in the tail (in this order)
+
+| Line | Meaning |
+|---|---|
+| `CIO START`, `PTC3S START ... guard=OFF-profile-mode`, `PROF MODE: ...` | **the `PROF MODE` line must be there**. If it is not, `PROFILE=1` did not arrive and the box will run the 24,000-update job: destroy at once |
+| the `# nvidia-smi`, `# pip list` and `# torch` block | GPU name, driver, CUDA, cuDNN, torch, transformers, numpy, CPU: the PC-versus-box version comparison (also in `profrun/prof_env.txt`) |
+| `STAGE code`, `CODE-ID ...`, `STAGE gemma` (`eg check cuda`), `STAGE data`, `STAGE skills` | as in section 4 |
+| `STAGE prof`, `PROF START ...`, `PROF-HARNESS commit 6a870a767c... prof_train.py sha256 912045830f... = the pinned value` | harness fetched and checked |
+| `PROF-JOB START`, `TICK ... stage=prof-job ... step=N loss=X` | the smoke; TICK shows the step every 3 minutes (the log is read every 50 updates) |
+| `PROF-JOB END rc=0`, `RESULT-SUMMARY {...}` | `job_status ok`, `arm_status ok`, `steps 300`, `n_params 4023976`, `cap_total 0`, `final_eval true`, `chain5 true`, `lesions [... nocalc ...]` |
+| `PROF-JOB train step=50 ... step=300 ... elapsed_s=` | six lines |
+| `PROF-JOB timing {...}` | `sec_per_update_first_to_last_log` (the speed number to quote: update 50 to update 300, so the first 50 updates with their start-up work are left out), `sec_per_update_overall` (all 300), `pool_build_s`, `startup_before_train_s`, `final_eval_phase_s` (final evaluation, chain-5 and lesions; the checkpoint save is counted before it), `peak_mem_mib` |
+| `PROF-JOB projection for the 24,000-update job` | training hours at the measured speed, and the final-evaluation hours to compare with `EXTRA_H=0.5` |
+| `PROF-JOB pool {...}` | `train_sha256`, `train_bytes`, `rows`, `pieces`, `passes` of the pool this box built; the CPU box built `27234f3e9861ce5f8c6db18371f27c5f52826712398b90a4e946e952ff8791fe`, 485,544,869 bytes, 1,343,273 rows, 60,008,258 pieces three times (shown); the same value is expected here (suggested) |
+| `PROF STEP a_profile start ... end rc=0 secs=N`, then the headline lines of that run (`throughput:`, `E1`, `E3`, `E4`, `-> {...}` for the accum sweep) | one start line, one end line and up to 40 headline lines per run; `rc=124 TIMEOUT` means its timeout ended it (its json keeps the sections finished before that) |
+| `PROF SKIP name: budget left N s ...` | the stage budget ran out, or `MAXH` was reached; the run was not started |
+| `PROF printing`, `RBEGIN|profjob`, `RBEGIN|profrun`, `PROF RESULT PRINTED ... r_lines=N failed=[...] skipped=[...]` | **collect now** |
+| `PROF-STEPS`, `PROF DONE failed=none skipped=[]`, `CIO DONE` | all six runs and the smoke ended with rc 0 |
+| `PROF DONE failed=[...]`, `CIO-FAIL PROFILE: ...` | a step failed, timed out, or `MAXH` was reached. The results that exist were printed before this line; collect them all the same |
+
+### Stop rules (PROFILE)
+
+| # | Rule | Action |
+|---|---|---|
+| P1 | Not `running` 15 min after create, or no `CIO START` 15 min after `running` | S1 |
+| P2 | **No `PROF MODE` line**, or `STAGE train` appears | destroy at once (this is the 24,000-update job) |
+| P3 | `STAGE prof` not reached 60 minutes after `CIO START` | read the last TICK. A download or slice build that is still moving may have 10 more minutes; otherwise destroy (a late start shortens the stage budget, which always ends 7 minutes before `MAXH`) |
+| P4 | `CIO-FAIL fetch-prof`, or `prof_train.py is not the pinned one` | destroy; nothing can be profiled. Report |
+| P5 | `PROF-JOB END` with `rc` not 0 or `final_eval false` | let the harness runs go on if the pool exists (cheap), but the shake-out found a defect of the real job: read `RESULT-SUMMARY` and the log tail, report it |
+| P6 | No new TICK for 20 minutes | `status`; destroy if not `running`; else wait 10 more minutes, then destroy |
+| P7 | Cost so far reaches $1.50 for any reason | destroy |
+| P8 | `PROF RESULT PRINTED`, `CIO DONE` or `CIO-FAIL` | collect, then destroy at once |
+
+After destroy: `$V credit` shows no instance; update the SPEND.md row with the actual cost.
+
+### What comes out (names of the printed blocks and files)
+
+Block **`profjob`** (the smoke; folder `profjob/` after collect): `PTC/RESULT.json` (steps, `n_params`, `train_s`, `steps_per_s`, `peak_mem_mib`, `cap_hits`, `final_eval`, `lesions`), `PTC/stdout.events.txt` (the train events with `elapsed`, then the evaluation events), `RESULT.json` and `box.json` (`pool_build_s`, `started_unix`, the arm's `wall_s`), `pool_MANIFEST.json`, `caps.json`, `caps_report.json`, `cmd.prof.sh.txt` (the exact command), `box/` (setup logs, `code_identity.txt`, `versions.txt`, `prof_env.txt`, `eg_check.log` ...). The checkpoint is not included.
+
+Block **`profrun`** (folder `profrun/`):
+
+| File | Content |
+|---|---|
+| `profile.md` / `.json`, `profile.profiler.md` | PTC accum 16, sections breakdown (ms per update by stage and by module), throughput (s/update, peak memory), profiler (top-25 CUDA kernels, GPU-busy fraction, launch-bound verdict), padding, sweep (accum 1 to 32; an OOM at accum 1 is a result), syncs (every host-device sync by python line). The raw `*.profiler.json` and traces are never printed |
+| `bench.md` / `.json` | seven variants, median s/update and speed against `baseline` (the pre-registered mark in `PREREG-eg-once.md` is a median of at least 1.3 times over at least 100 timed updates after 20 warm-up) |
+| `equiv_gpu.md` / `.json` | E1 (Gemma vectors, `eg_once` against the old path, bf16, GPU, real Gemma: look for "registered setting met: True"), E2, E3 (loss and gradient) for eight variants |
+| `equiv_e4.md` / `.json` | E4, the 300-update loss trace for `eg_once` |
+| `b3g2_profile.md` / `.json`, `b3g2_bench.md` / `.json` | B3G2 accum 32: breakdown, throughput, padding, syncs; bench of `baseline;eg_once` |
+| `a_profile.log.tail` ... `f2_b3g2_bench.log.tail` | the last 1,500 lines of each run's log (a bench that is cut by its timeout leaves its numbers only here) |
+| `prof_env.txt`, `stages.txt`, `prof_steps.txt`, `prof_status.txt` | versions and hardware; start time of every stage (how long data and skills took); return code, seconds and timeout of every step; failed and skipped steps |
+
+Size: files over 400 KB are gzipped, and if the `profrun` archive would pass 2,000,000 bytes (about 9,000 log lines) the largest `.json` files are dropped, with a `PROF WARN` line (their `.md` stays). The Vast log read window is 20,000 lines; the tiny CPU shapes printed 156 to 168 `R|` lines (shown), so a real run is expected to stay far below the window (suggested).
+
+### What to check first
+
+1. Shake-out (each is a yes or no, from the tail): `eg check cuda` rc 0; harness hash line says "the pinned value"; `RESULT-SUMMARY` as in the table above; `PROF-JOB pool` hash equal to the CPU box's; every `PROF STEP ... rc=0`.
+2. The numbers the coordinator asked for: `sec_per_update_first_to_last_log` and `final_eval_phase_s` (then the full-job estimate: 24,000 times the first, plus the second, plus about 0.7 h of set-up); GPU name, driver, torch and CUDA lines of `prof_env.txt` against the PC's.
+3. The speed-up question: `bench.md` and the E1 to E4 verdicts in `equiv_gpu.md` and `equiv_e4.md`, read against `PREREG-eg-once.md` (pass marks fixed there before any GPU number; this runbook does not change them).

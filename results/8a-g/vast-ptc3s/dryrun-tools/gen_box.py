@@ -24,13 +24,23 @@ up = open(S + '/docs/upgrade_post_g1_v3.ps1').read()
 caps_b3s = re.search(r"'caps_b3s.json' = '([0-9A-F]{64})'", up).group(1).lower()
 post = open(S + '/docs/install_post_g1.ps1').read()
 cloze = re.search(r"\$LONG\s+= '([0-9A-F]{64})'", post).group(1).lower()
-t = open(S + '/ptc3s_box.template.sh').read()
+import os
+t = open(os.environ.get('TEMPLATE', S + '/ptc3s_box.template.sh')).read()       # TEMPLATE=...frozen.sh regenerates the frozen script (a check that the pipeline is unchanged)
 ci = open('/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1/results/8a-g/vast-ptc3s/code_identity.py', newline='').read()
 assert 'PYID' not in ci and '\r' not in ci and ci.endswith('\n')
 t = t.replace('@@CODE_IDENTITY_PY@@\n', ci)
 t = t.replace('@@PKG_PINS@@', '\n'.join(pkg)).replace('@@OVERLAY_PINS@@', '\n'.join(overlay))
 t = t.replace('@@CLOZE_SHA@@', cloze).replace('@@CAPS_PY_SHA@@', caps_py).replace('@@CAPS_B3S_SHA@@', caps_b3s)
+# PROFILE mode (added 2026-10-14): the profiling harness commit as the coordinator named it, and the sha256 of prof_train.py read from that commit with git (not typed)
+PROF_SHA = '6a870a767c6231fe6c2489b84752ffdafd7824fa'
+WT = '/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1'
+assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', PROF_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'harness commit not in the repo'
+blob = subprocess.run(['git', '-C', WT, 'show', PROF_SHA + ':results/8a-g/speedup/prof/prof_train.py'], capture_output=True, check=True).stdout
+import hashlib
+prof_py = hashlib.sha256(blob).hexdigest()
+t = t.replace('@@PROF_SHA@@', PROF_SHA).replace('@@PROF_PY_SHA@@', prof_py)
 assert '@@' not in t
+print('PROF_SHA', PROF_SHA, 'prof_train.py sha256', prof_py, len(blob), 'bytes')
 out = sys.argv[1]
 open(out, 'w', newline='\n').write(t)
 print('wrote', out, len(t), 'bytes; caps_py', caps_py, 'caps_b3s', caps_b3s, 'cloze', cloze)
