@@ -52,7 +52,8 @@ fi
 mkdir -p $J/w/ladder/rows
 for r in 1 2 3 4 5; do (cd mine && nohup python -m logic_transfer.ladder build --rung $r --out $J/w/ladder/rows > $J/out/build-rung$r.log 2>&1 &); done
 
-# ---- 1. agreement + speed rehearsal (rung 0, one run, 500 updates) ----
+# ---- 1. agreement + speed rehearsal (rung 0, one run, 500 updates); AGREE=0 skips it (checked once already: loss window 0.53361 vs CPU 0.5336, identical scores and predictions) ----
+if [ "${AGREE:-1}" = 1 ]; then
 (cd mine && $LT run --rung 0 --work $J/w/agree --parents-dir $PD --sk200k $J/data --device cuda --procs 1 --threads 2 --updates 500 --eval-n 400 \
    --runs s200:1 --no-falsifier > $J/out/agree-run.log 2>&1); echo "agree-run rc=$?"
 tail -3 $J/out/agree-run.log
@@ -62,6 +63,7 @@ if [ -f $CK ]; then
 fi
 nvidia-smi --query-gpu=name,memory.used --format=csv,noheader
 emit lt2-agree agree/rung0/s200-s1 agree/agree.json agree/rows/rung0/summary.json agree/rung0/DONE.json
+fi
 say "LT2 AGREE DONE"
 
 # ---- 2. orders from GO.txt ----
@@ -90,7 +92,7 @@ while true; do
         say "RUNG $r DONE"
       }
       if grep -q '^PARRUNGS=1' $G; then   # all rungs of this order at once (each rung has its own PROCS runs); watch RAM: ~3.3 GB per run
-        for r in $RUNGS; do do_rung $r & done; wait
+        pids=""; for r in $RUNGS; do do_rung $r & pids="$pids $!"; done; wait $pids   # NOT a bare `wait`: the MAXH watchdog is a background job too
       else
         for r in $RUNGS; do over && break; do_rung $r; done
       fi
