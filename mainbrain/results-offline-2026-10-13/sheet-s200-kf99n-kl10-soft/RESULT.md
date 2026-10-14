@@ -1,0 +1,68 @@
+# Domain run analysis: sheet seed 200
+
+- Run: `/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/runs/sheet-s200-kf99n-kl10-soft`
+- Parent: `/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/parents/s200/checkpoint.pt`
+- Final: `/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/runs/sheet-s200-kf99n-kl10-soft/night_12/checkpoint.pt` (night 12, stop: quiz_rise_below_1_over_2_nights)
+- One seed only (seed 200). Seed-based bars say so.
+- Scored kinds (7): SUM, MAX, MIN, PRODUCT, cell arithmetic, division, ABS
+- Unscored, A2 (run log deviation event (A2); ops ['cmp', 'mod']): MOD ['mod'], COUNTIF ['add', 'cmp', 'max'], IF ['add', 'cmp', 'max', 'mul', 'sub']
+
+## Marks
+
+| Mark | Value | Bar | Verdict |
+|---|---|---|---|
+| DM1 near, scored kinds (After minus Before) | +62.62 pts (2.14 -> 64.76) | pass >= +30; proved wrong < +10 (seed 200, one seed only) | PASS |
+| DM2 far, scored kinds (After minus Before) | -0.71 pts (1.07 -> 0.36) | pass >= +10; "<= +2 on both seeds" is proved wrong (seed 200, one seed only) | FAIL (<= +2 on this seed: PROVED WRONG needs seed 201 also <= +2 (one seed only)) |
+| DM3 harm: in_dist drop | +0.81 pts (fired: seq_next) | pass: in_dist drop <= 1.5 and no family fired; proved wrong: drop > 5 | FAIL |
+| DM4 audit and constants | rows ?, panel overlap ?, decontam dropped n/a (v1) by kind n/a, zero-step ?, bad source ?; audit exit None; constants hash match False | pass: audit exits clean and log constants hash = domain/constants.json; FAIL: more than 2% of the run tool's panel rows also in training (dropped), or any zero-step or bad-source row; proved wrong: any row from a v1 panel, or a constants hash that differs from the file (per-domain setting) | PROVED WRONG |
+| DM5 stop night N=12 | score(N) 64.76, best 64.76 (night 12), rise over last night +3.33 | pass: score(N) >= best - 3 and rise <= 3; proved wrong: rise > 5, or >= 4 nights past the best with DM3 not passing | FAIL |
+
+- Ben's hair-miss rule (one question = 0.24 pts near, 0.36 pts far): DM1 met: yes; DM2 met: no.
+- DM3 detail: in_dist 90.22 -> 89.41; harm.py pass = False.
+- DM5 nights after the stop do not exist: "would it have kept rising" is not measured. Rise is the scored near score, not the quiz.
+- DM4 also needs no person step in the log: every event type in the log is one the mode writes (yes). Checked by event type only.
+- Learned (summary, reported): ['SUM', 'MAX', 'MIN', 'cell arithmetic', 'ABS']. Not learned: ['PRODUCT', 'division', 'MOD', 'COUNTIF', 'IF'].
+
+## DM5 curve (scored near, pooled, percent)
+
+| night | near | change |
+|---|---|---|
+| 0 (parent) | 2.14 |  |
+| 1 | 16.90 | +14.76 |
+| 2 | 28.57 | +11.67 |
+| 3 | 40.24 | +11.67 |
+| 4 | 47.86 | +7.62 |
+| 5 | 50.48 | +2.62 |
+| 6 | 57.38 | +6.90 |
+| 7 | 60.71 | +3.33 |
+| 8 | 59.76 | -0.95 |
+| 9 | 62.14 | +2.38 |
+| 10 | 63.57 | +1.43 |
+| 11 | 61.43 | -2.14 |
+| 12 | 64.76 | +3.33 |
+
+## Per kind (undo rows: this kind's training rows from nights that were undone; try counts from the try events)
+
+| kind | scored | near parent -> final | far parent -> final | own quiz night 0 -> last | last-day mix share | last-day kept | undo rows | try own / tool |
+|---|---|---|---|---|---|---|---|---|
+| SUM | yes | 0.00 -> 58.33 | 0.00 -> 0.00 | 3.85 -> 84.62 | 30.87% | 237 | 0 | 383 / 622 |
+| MAX | yes | 1.67 -> 90.00 | 0.00 -> 0.00 | 11.54 -> 88.46 | 15.93% | 122 | 0 | 265 / 510 |
+| MIN | yes | 13.33 -> 86.67 | 5.00 -> 2.50 | 19.23 -> 92.31 | 5.98% | 35 | 0 | 223 / 534 |
+| PRODUCT | yes | 0.00 -> 46.67 | 0.00 -> 0.00 | 3.85 -> 69.23 | 15.93% | 105 | 0 | 325 / 574 |
+| cell arithmetic | yes | 0.00 -> 61.67 | 0.00 -> 0.00 | 0.00 -> 80.77 | 10.96% | 231 | 0 | 56 / 3421 |
+| division | yes | 0.00 -> 56.67 | 2.50 -> 0.00 | 15.38 -> 69.23 | 5.98% | 30 | 0 | 389 / 432 |
+| MOD | no (A2) | 10.00 -> 13.33 | 2.50 -> 0.00 | 8.00 -> 8.00 | 6.18% | 133 | 0 | 0 / 0 |
+| ABS | yes | 0.00 -> 53.33 | 0.00 -> 0.00 | 0.00 -> 84.00 | 6.18% | 122 | 0 | 967 / 1886 |
+| COUNTIF | no (A2) | 6.67 -> 0.00 | 0.00 -> 2.50 | 20.00 -> 0.00 | 1.00% | 8 | 0 | 0 / 0 |
+| IF | no (A2) | 6.67 -> 21.67 | 7.50 -> 5.00 | 4.00 -> 16.00 | 1.00% | 1 | 0 | 0 / 0 |
+
+## A8 (reported, not gated)
+
+- R2 self-knowledge (Spearman, 10 kinds, own final quiz vs panel near at the final night): 0.9179.
+- R3 wasted practice: 1.0% of the last day's mix went to kinds whose own quiz never rose above night 0: COUNTIF.
+- R1 pick gain: not computed here (needs the even-mix control run).
+
+## Notes
+
+- DM4 audit could not run: FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/offline/panel/rpn.v2.jsonl'
+- undone nights: none (the check events in the log hold each night's drop)
