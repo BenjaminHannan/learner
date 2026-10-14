@@ -1,6 +1,6 @@
 """Fill the pin blocks of ptc3s_box.template.sh from the PTC package README (the pinned copy fetched from c2bf1a71c7), install_ptc.ps1 and the PC's own scripts.
 Every value is read from a source file, none is typed here; the box script re-checks them against README.md / install_ptc.ps1 at run time as well."""
-import re, subprocess, sys
+import os, re, subprocess, sys
 S = '/tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox'
 OV = S + '/ovl/results/8a-g/pc-job-cards/ptc'
 readme = open(OV + '/README.md').read()
@@ -26,7 +26,8 @@ post = open(S + '/docs/install_post_g1.ps1').read()
 cloze = re.search(r"\$LONG\s+= '([0-9A-F]{64})'", post).group(1).lower()
 import os
 t = open(os.environ.get('TEMPLATE', S + '/ptc3s_box.template.sh')).read()       # TEMPLATE=...frozen.sh regenerates the frozen script (a check that the pipeline is unchanged)
-ci = open('/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1/results/8a-g/vast-ptc3s/code_identity.py', newline='').read()
+WT = os.environ.get('GEN_WT') or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..'))       # the work tree the git reads and code_identity.py come from: the checkout this file is in (GEN_WT overrides; the work tree the first versions named has been removed)
+ci = open(WT + '/results/8a-g/vast-ptc3s/code_identity.py', newline='').read()
 assert 'PYID' not in ci and '\r' not in ci and ci.endswith('\n')
 t = t.replace('@@CODE_IDENTITY_PY@@\n', ci)
 t = t.replace('@@PKG_PINS@@', '\n'.join(pkg)).replace('@@OVERLAY_PINS@@', '\n'.join(overlay))
@@ -36,7 +37,6 @@ t = t.replace('@@CLOZE_SHA@@', cloze).replace('@@CAPS_PY_SHA@@', caps_py).replac
 # re-pinned 2026-10-14 (PROF_PLAN=b3sweep) to the commit that adds the accumsweep and accumcmp sections; PROF_SHA in the environment overrides (a check, never used for the committed script)
 # re-pinned 2026-10-14 (PROF_PLAN=b3ab) to the commit that adds the unfused, pad64 and nosync variants and the abequiv and abbench sections
 PROF_SHA = os.environ.get('PROF_SHA', 'b5a85790f2cba5a538bf8b3609899591cf282843')
-WT = '/home/user/learner/.claude/worktrees/agent-ad724fe9f9d0de7d1'
 assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', PROF_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'harness commit not in the repo'
 blob = subprocess.run(['git', '-C', WT, 'show', PROF_SHA + ':results/8a-g/speedup/prof/prof_train.py'], capture_output=True, check=True).stdout
 import hashlib
@@ -64,6 +64,40 @@ qb = subprocess.run(['git', '-C', WT, 'show', AT_SHA + ':custom_io/' + qf], capt
 at_pins.append('%s %s' % (qf, hashlib.sha256(qb).hexdigest()))
 t = t.replace('@@AT_PINS@@', '\n'.join(at_pins)).replace('@@AT_SHA@@', AT_SHA).replace('@@AT_CAPS_SHA@@', a_caps_json)
 print('AT pins:', len(at_pins), 'files at', AT_SHA[:10])
+# PROF_PLAN=b3ab, stage i4_b3g2_pair: the PC's src-b3g2 = custom_io at B3G2_SHA (74d6e92c75, the code of the G2f runs). Three sources must agree: PINS0 of install_g2fa4.py (the pack's pin list), the files of the
+# commit as git has them, and the queue files of the pack (read with git at Q_SHA, the commit that last changed the pack's queue/ and install_g2fa4.py); none of the hashes is typed here
+B3G2_SHA = '74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6'
+Q_SHA = '758cfcad5bd08befa1a2fa179c8e88a66f2b9f39'
+assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', B3G2_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'B3G2 commit not in the repo'
+assert subprocess.run(['git', '-C', WT, 'cat-file', '-t', Q_SHA], capture_output=True, text=True).stdout.strip() == 'commit', 'pack commit not in the repo'
+PK = 'results/8a-g/pc-job-cards/g2fa4/'
+def gshow(rev, path):
+    return subprocess.run(['git', '-C', WT, 'show', rev + ':' + path], capture_output=True, check=True).stdout
+inst = gshow(Q_SHA, PK + 'install_g2fa4.py').decode()
+pins0 = re.search(r'^PINS0 = \{\n(.*?)^\}', inst, re.M | re.S).group(1)
+b3_pins = []
+for ln in pins0.splitlines():
+    m = re.match(r"\s+'([^']+)': '([0-9a-f]{64})',", ln)
+    assert m, ln
+    g = gshow(B3G2_SHA, 'custom_io/' + m.group(1))
+    assert hashlib.sha256(g).hexdigest() == m.group(2), ('install_g2fa4.py PINS0 differs from git', m.group(1))
+    b3_pins.append('%s %s' % (m.group(1), m.group(2)))
+assert len(b3_pins) == 8 and any(x.startswith('g8a/caps_b3g2.json ') for x in b3_pins), b3_pins
+b3_caps = [x.split()[1] for x in b3_pins if x.startswith('g8a/caps_b3g2.json ')][0]
+assert b3_caps == a_caps_json      # the same caps file as the AT-1 code's
+def qextract(name):      # the box needs the queue lines only: the MEM line and the g8a line (the comments and the Windows ENV lines are not used on Linux); the full file's hash is recorded
+    full = gshow(Q_SHA, PK + 'queue/' + name)
+    keep = [l for l in full.decode().splitlines() if re.match(r'# MEM \d+$', l) or l.startswith('g8a: ')]
+    assert len([l for l in keep if l.startswith('g8a: ')]) == 1, keep
+    return hashlib.sha256(full).hexdigest(), '\n'.join(keep) + '\n'
+q4_full, q4_txt = qextract('8aB3G2A4-pc.txt')
+q32_full, q32_txt = qextract('8aB3G2A4b32-pc.txt')
+assert '--accum B3G2=4 ' in q4_txt and '--accum B3G2=32 ' in q32_txt
+b3_qpins = ['8aB3G2A4-pc.txt %s' % hashlib.sha256(q4_txt.encode()).hexdigest(), '8aB3G2A4b32-pc.txt %s' % hashlib.sha256(q32_txt.encode()).hexdigest()]
+t = t.replace('@@B3G2_PINS@@', '\n'.join(b3_pins)).replace('@@B3G2_SHA@@', B3G2_SHA).replace('@@B3G2_QPINS@@', '\n'.join(b3_qpins))
+t = t.replace('@@B3G2_Q4@@\n', q4_txt).replace('@@B3G2_Q32@@\n', q32_txt)
+t = t.replace('@@B3G2_Q4_FULL@@', q4_full).replace('@@B3G2_Q32_FULL@@', q32_full).replace('@@B3G2_Q_SHA@@', Q_SHA)
+print('B3G2 pins:', len(b3_pins), 'files at', B3G2_SHA[:10], '; queue extracts', b3_qpins)
 assert '@@' not in t
 print('PROF_SHA', PROF_SHA, 'prof_train.py sha256', prof_py, len(blob), 'bytes')
 out = sys.argv[1]

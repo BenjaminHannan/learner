@@ -53,8 +53,16 @@
 # PROF_PLAN=b3ab (needs PROFILE=1; added 2026-10-14): the B3G2 speed A/B of results/8a-g/speedup/PREREG-b3g2-speed-ab.md. Same stages setup, code, gemma, data, skills and the same pool-building smoke
 # (50 updates). Then ONLY, each under its own timeout and never fatal: i1_b3g2_profile (B3G2 3M at accum 4: breakdown, throughput, padding, syncs), i2_b3g2_abequiv (mark 6: the variants tf32, pad64,
 # unfused, nosync against the reference on one update) and i3_b3g2_abbench (reference accum 4; B arms accum 8,16,2 and the single variants; 3 interleaved rounds A,B,A,B,A,B; 10 warm-up and 40 timed
-# updates; median s/update, A spread, peak GB, dollar lines from DPH). No AT-1 run, no PTC stage, no E4, no a_profile. The harness decides the marks; the box only runs it and prints the lines.
-#   b3ab changes only these defaults: MAXH 3, PROF_MAXMIN 120, PROF_JOB_MIN 20, PROF_JOB_STEPS 50. PROF_B3P_MIN (15), PROF_ABE_MIN (20), PROF_ABB_MIN (75): timeouts of i1, i2, i3 in minutes.
+# updates; median s/update, A spread, peak GB, dollar lines from DPH), and LAST i4_b3g2_pair (added 2026-10-14): the registered accum-4 against accum-32 loss comparison on the SAME GPU. i4 fetches the PC's
+# src-b3g2 (custom_io at B3G2_SHA = 74d6e92c75, the pin list PINS0 of install_g2fa4.py checked against git by gen_box.py), builds the two job commands from the pack's queue lines 8aB3G2A4-pc.txt and
+# 8aB3G2A4b32-pc.txt with local_runner's own parse_queue / command (as the job smoke and the AT runs do), changes nothing but --accum B3G2=4 / B3G2=32 and --train-extra (here '--log-every 1' ONLY: no
+# --ckpt-every, no --resume, so the unmodified train.py of the pin list runs), and runs them one after the other in their own output folders: accum 4 (timeout PROF_PAIR_A4_MIN = 25 min), then accum 32
+# (PROF_PAIR_A32_MIN = 80 min). The box stops each job as soon as its train log reaches step 300 (--steps is not given: the job would otherwise train 24,000 updates and the lr schedule must stay the
+# registered one), checks that the process group is gone before the next one starts, and exports each run's train lines as pair_a4_events.jsonl / pair_a32_events.jsonl (B3G2/events.jsonl when the run has
+# one, else the train event lines of B3G2/stdout.txt) in the profrun block, with one 'PROF-PAIR' marker line per run (last step, s/update from the elapsed field, nvidia-smi peak memory). The box
+# does NOT compare the two runs: that is done offline. i4 is skipped when fewer than PROF_PAIR_NEED_MIN (105 = 25 + 80) minutes of the PROF_MAXMIN budget are left; it is never fatal.
+#   b3ab changes only these defaults: MAXH 4.5, PROF_MAXMIN 190, PROF_JOB_MIN 20, PROF_JOB_STEPS 50 (MAXH was 3 and PROF_MAXMIN 120 before i4 was added; b3sweep keeps 3 and 150). PROF_B3P_MIN (15), PROF_ABE_MIN (20),
+#   PROF_ABB_MIN (75): timeouts of i1, i2, i3 in minutes. PROF_PAIR_A4_MIN (25), PROF_PAIR_A32_MIN (80), PROF_PAIR_NEED_MIN (105): i4. PROF_PAIR_TRAIN_EXTRA ('--log-every 1') is a CPU dry-run hook.
 #   DPH should be the offer's dph_total: abbench prints its money lines from it (0 = no dollar figures); the box prints the rental so far and the MAXH ceiling in dollars.
 #   PROF_SWEEP_MIN (45) and PROF_CMP_MIN (15): timeouts of h1 and h2 in minutes; PROF_AT_MIN (40): timeout of each AT run; PROF_AT_STEPS (300); PROF_AT_TRAIN_EXTRA ('--log-every 20');
 #   PROF_AT_FROM_STEP (40): the speed is taken from the log lines at and after this step.
@@ -75,7 +83,8 @@ EG2_ST_SHA=197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79     
 PROFILE=${PROFILE:-0}
 PROF_PLAN=${PROF_PLAN:-default}
 if [ "$PROFILE" = 1 ]; then D_MAXH=2; D_END=300; D_FAIL=600; else D_MAXH=6; D_END=600; D_FAIL=1800; fi
-[ "$PROFILE" = 1 ] && { [ "$PROF_PLAN" = b3sweep ] || [ "$PROF_PLAN" = b3ab ]; } && D_MAXH=3
+[ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3sweep ] && D_MAXH=3
+[ "$PROFILE" = 1 ] && [ "$PROF_PLAN" = b3ab ] && D_MAXH=4.5
 MAXH=${MAXH:-$D_MAXH}; END_SLEEP=${END_SLEEP:-$D_END}; FAIL_SLEEP=${FAIL_SLEEP:-$D_FAIL}; TFVER=${TFVER:-5.19.0}; EG=${EG:-1}
 DPH=${DPH:-0}; PROJ_CAP_USD=${PROJ_CAP_USD:-4.0}; GUARD_STEP=${GUARD_STEP:-1000}; EXTRA_H=${EXTRA_H:-0.5}; STEPS=24000
 EXPORT_CK=${EXPORT_CK:-1}; PACE=${PACE:-100}; CK_ROUNDS=${CK_ROUNDS:-3}; TICK_EVERY=${TICK_EVERY:-180}
@@ -83,7 +92,7 @@ PTC_DRY=${PTC_DRY:-0}; PTC_DRY_EXTRA=${PTC_DRY_EXTRA:-[]}; PTC_DRY_EG=${PTC_DRY_
 PROF_SHA=b5a85790f2cba5a538bf8b3609899591cf282843          # branch claude/project-thread-yha868: results/8a-g/speedup/prof (prof_train.py, the GPU profiling harness; PROFILE=1 only)
 PROF_DIR=results/8a-g/speedup
 PROF_PY_SHA=b29c6bd60fb4f0024fa32d663544b9e8609082582998b0226bb25d7a2453062a    # sha256 of prof/prof_train.py at PROF_SHA
-if [ "$PROF_PLAN" = b3ab ]; then D_PMAX=120; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'      # plan b3ab: as b3sweep, a shorter budget
+if [ "$PROF_PLAN" = b3ab ]; then D_PMAX=190; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'      # plan b3ab: as b3sweep; 190 min with i4_b3g2_pair
 elif [ "$PROF_PLAN" = b3sweep ]; then D_PMAX=150; D_PJOBMIN=20; D_PJOBSTEPS=50; D_PLOGE='--log-every 10'; else D_PMAX=75; D_PJOBMIN=45; D_PJOBSTEPS=300; D_PLOGE='--log-every 50'; fi      # plan b3sweep: the smoke only builds the pool
 PROF_MAXMIN=${PROF_MAXMIN:-$D_PMAX}; PROF_MIN_LEFT=${PROF_MIN_LEFT:-240}; PROF_JOB_MIN=${PROF_JOB_MIN:-$D_PJOBMIN}; PROF_STEP_MIN=${PROF_STEP_MIN:-25}; PROF_JOB_STEPS=${PROF_JOB_STEPS:-$D_PJOBSTEPS}
 PROF_JOB_TRAIN_EXTRA=${PROF_JOB_TRAIN_EXTRA:-}; [ -n "$PROF_JOB_TRAIN_EXTRA" ] || PROF_JOB_TRAIN_EXTRA=$D_PLOGE
@@ -95,6 +104,10 @@ AT_CAPS_SHA=ee551d3aacbf9ec02d2ac7f5e7e6e12f44e15aba2c39f5f38c3f1e3ec12d7ed4   #
 PROF_SWEEP_MIN=${PROF_SWEEP_MIN:-45}; PROF_CMP_MIN=${PROF_CMP_MIN:-15}; PROF_AT_MIN=${PROF_AT_MIN:-40}; PROF_AT_STEPS=${PROF_AT_STEPS:-300}; PROF_AT_FROM_STEP=${PROF_AT_FROM_STEP:-40}
 PROF_AT_TRAIN_EXTRA=${PROF_AT_TRAIN_EXTRA:-}; [ -n "$PROF_AT_TRAIN_EXTRA" ] || PROF_AT_TRAIN_EXTRA='--log-every 20'
 PROF_B3P_MIN=${PROF_B3P_MIN:-15}; PROF_ABE_MIN=${PROF_ABE_MIN:-20}; PROF_ABB_MIN=${PROF_ABB_MIN:-75}      # PROF_PLAN=b3ab only: timeouts of i1, i2, i3 in minutes
+PROF_PAIR_A4_MIN=${PROF_PAIR_A4_MIN:-25}; PROF_PAIR_A32_MIN=${PROF_PAIR_A32_MIN:-80}; PROF_PAIR_NEED_MIN=${PROF_PAIR_NEED_MIN:-105}; PROF_PAIR_STEP=${PROF_PAIR_STEP:-300}      # PROF_PLAN=b3ab, stage i4_b3g2_pair: timeouts of the two jobs, the budget needed, the update each job is stopped at
+PROF_PAIR_TRAIN_EXTRA=${PROF_PAIR_TRAIN_EXTRA:-'--log-every 1'}      # (changed only by the CPU dry run, with the tiny-shape flags it needs)
+B3G2_SHA=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6      # custom_io of the PC's src-b3g2 (the code of the G2f runs); pins = PINS0 of results/8a-g/pc-job-cards/g2fa4/install_g2fa4.py, read by gen_box.py and checked against git
+B3G2_Q_SHA=758cfcad5bd08befa1a2fa179c8e88a66f2b9f39  # the commit the pack's queue lines come from: 8aB3G2A4-pc.txt (full file sha256 ca604529ed14c3f83f25e130d1f8a5d660784444cd45c976ea3071c4e04f45fe) and 8aB3G2A4b32-pc.txt (d44ddf2709ac9ffc6edb0d56dfbeb2bd2e30ef795d60a5b78d14c17d29f629ae); their MEM and g8a lines are embedded below
 PSTEP_MIN=; AT_G2_ACCUM=
 T0=${T0:-$(date +%s)}
 W=$J/work; D=$W/data; DB=$W/data_big          # the PC's WORK, with its folder names
@@ -105,6 +118,7 @@ OV=$J/ovl/$OVL_DIR; B=$J/base/custom_io
 TLOG=$O/PTC/stdout.txt                         # the training log the TICK lines read (PROFILE mode: the job smoke's)
 OP=$RES/profjob; PE=$RES/profrun; PRAW=$J/profraw   # PROFILE mode: job smoke folder, printed harness outputs, raw harness outputs
 SAT=$J/src-at                                  # PROF_PLAN=b3sweep: the PC's src-at (custom_io at AT_SHA)
+SB3=$J/src-b3g2                                # PROF_PLAN=b3ab, stage i4: the PC's src-b3g2 (custom_io at B3G2_SHA)
 WATCH=
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 stage() { echo "$1" > $J/state/stage; echo "$1 $(date -u +%FT%TZ)" >> $J/state/stages.txt; echo "=== STAGE $1 $(date -u +%FT%TZ)"; }
@@ -279,7 +293,7 @@ prof_emit() {   # the job smoke folder and the harness outputs as two RBEGIN blo
   touch $J/state/prof_emitted
   mkdir -p $OP $PRAW; boxfiles $OP
   rm -rf $PE; mkdir -p $PE
-  for f in $PRAW/*.json $PRAW/*.md; do
+  for f in $PRAW/*.json $PRAW/*.md $PRAW/*.jsonl; do
     [ -f "$f" ] || continue; b=${f##*/}
     case $b in *.profiler.json|*trace*) continue;; esac        # the raw profiler output and traces can be huge: only the .profiler.md travels
     cp $f $PE/
@@ -288,7 +302,7 @@ prof_emit() {   # the job smoke folder and the harness outputs as two RBEGIN blo
   cp $J/out/prof_env.txt $J/state/stages.txt $J/state/prof_steps.txt $PE/ 2>/dev/null
   echo "failed=[$PFAIL] skipped=[$PSKIP] maxh_hit=$([ -e $J/state/maxh ] && echo yes || echo no) budget_min=$PROF_MAXMIN pool=${POOL:-none}" > $PE/prof_status.txt
   [ "$PROF_PLAN" = b3sweep ] && echo "plan=b3sweep at_sha=$AT_SHA at_g2_accum=${AT_G2_ACCUM:-none}" >> $PE/prof_status.txt
-  find $PE -type f -size +400k ! -name '*.gz' -exec gzip -9 {} +
+  find $PE -type f -size +400k ! -name '*.gz' -exec gzip -9 {} +      # (the pair_*_events.jsonl of i4 are about 100 KB each: far below)
   while :; do      # keep the printout far below the 20,000-line window of the Vast log read (3 MB = 10,000 lines of 300 characters): drop the largest .json until the archive fits
     tar -czf $J/res/profrun.chk.tgz -C $RES profrun 2>/dev/null; sz=$(stat -c %s $J/res/profrun.chk.tgz)
     [ "$sz" -le "$PROF_MAX_BYTES" ] && break
@@ -521,9 +535,176 @@ prof_b3sweep() {   # PROF_PLAN=b3sweep (POOL is set): the B3G2 accum sweep, the 
     PSKIP="$PSKIP at_g1 at_g2"
   fi
 }
+# ---- PROFILE=1 PROF_PLAN=b3ab, last stage: i4_b3g2_pair
+prof_pair_helpers() {   # PROF_PLAN=b3ab, stage i4: two small python helpers, written once (stdlib + local_runner of src-b3g2)
+  cat > $J/mkcmd_pair.py <<'PY'
+import json, shlex, sys
+from pathlib import Path
+from custom_io.local_runner import parse_queue, command
+q4, q32, work, code, device, extra, tx, o4, o32, d4, d32 = sys.argv[1:12]
+work, extra = Path(work).resolve(), json.loads(extra)
+NAMES = {'a4': ('8aB3G2A4-3M-s400', '4'), 'a32': ('8aB3G2A4b32-3M-s400', '32')}
+toks = {}
+for key, q, out, dst in (('a4', q4, o4, d4), ('a32', q32, o32, d32)):
+    runs = parse_queue(q, work)
+    assert [(r[0], r[1]) for r in runs] == [(NAMES[key][0], 'g8a')], [(r[0], r[1]) for r in runs]
+    name, kind, args, mem = runs[0]
+    t = list(command(kind, args + extra, work, Path(out), device))      # local_runner's own command, --out = the folder given
+    assert t.count('--out') == 1 and t.count('--accum') == 1, t
+    i = t.index('--accum') + 1
+    assert t[i] == 'B3G2=' + NAMES[key][1], 'the queue line is not accum B3G2=%s: %s' % (NAMES[key][1], t[i])
+    old = []
+    while '--train-extra' in t:      # the queue's own value (--ckpt-every ... --resume) and any dry-run one are dropped; ours is the only one
+        j = t.index('--train-extra'); old.append(t[j + 1]); del t[j:j + 2]
+    t += ['--train-extra', tx]
+    toks[key] = (t, old, mem)
+    line = ' '.join(shlex.quote(x) for x in t)
+    open(dst, 'w').write('#!/bin/bash\ncd %s || exit 1\nexec %s\n' % (shlex.quote(code), line))
+    print('PROF-PAIR cmd %s (MEM %s MiB; queue --train-extra was %s): %s' % (key, mem, old, line))
+def norm(t):
+    t = list(t); t[t.index('--out') + 1] = 'OUT'; t[t.index('--accum') + 1] = 'ACCUM'; return t
+same = norm(toks['a4'][0]) == norm(toks['a32'][0])
+print('PROF-PAIR the two commands are identical except --out and --accum: %s' % ('yes' if same else 'NO'))
+sys.exit(0 if same else 1)
+PY
+  cat > $J/pair_report.py <<'PY'
+import json, statistics, sys
+key, accum, stepn, ev_path, outjson, rc, how, gpu = sys.argv[1:9]
+accum, stepn, rc = int(accum), int(stepn), int(rc)
+ev = []
+try:
+    for ln in open(ev_path, errors='replace'):
+        if '"event": "train"' in ln:
+            try:
+                ev.append(json.loads(ln[ln.index('{'):]))
+            except ValueError:
+                pass
+except OSError:
+    pass
+try:
+    used = [int(x) for x in open(gpu).read().split()]
+except (OSError, ValueError):
+    used = []
+last = ev[-1] if ev else {}
+ls, le = last.get('step'), last.get('elapsed')
+spu = round(le / ls, 4) if ls and le is not None else None
+iv = [(b['elapsed'] - a['elapsed']) / (b['step'] - a['step']) for a, b in zip(ev, ev[1:]) if a.get('step', 0) >= 40 and b['step'] > a['step']]
+med = round(statistics.median(iv), 4) if iv else None
+d = dict(run=key, accum=accum, stop_step=stepn, rc=rc, ended=how, n_train_lines=len(ev), last_step=ls, elapsed_s_at_last_step=le, s_per_update_elapsed_over_step=spu, median_s_per_update_from_step_40=med, n_intervals=len(iv),
+         loss_at_last_step=last.get('loss'), gpu_used_max_mib_nvidia_smi=max(used) if used else None)
+json.dump(d, open(outjson, 'w'), indent=1)
+print('PROF-PAIR %s accum %d: %s (rc %d); %d train lines, last step %s of %d; elapsed %s s => %s s/update (elapsed/step, includes start-up); median of consecutive differences from step 40 on: %s s/update (%d intervals); loss at last step %s; peak: %s' % (
+    key, accum, how, rc, len(ev), ls, stepn, le, spu, med, len(iv), last.get('loss'),
+    ('%d MiB nvidia-smi highest used (includes cached memory: an upper bound, not the allocated peak; no RESULT.json on a stopped job)' % max(used)) if used else 'n/a (no nvidia-smi sample)'))
+sys.exit(0 if ls and ls >= stepn else 1)
+PY
+}
+pair_alive() { ps -eo args= 2>/dev/null | grep -F -- "--out $1 " | grep -v -F grep > /dev/null; }      # is a job with this --out still running
+pair_run() {   # KEY(a4|a32) ACCUM MINUTES : one job (the real train path), stopped by the box at step PROF_PAIR_STEP, own timeout and the stage budget; returns 2 when a process survived (do not go on), else 0 (a failure goes to PFAIL)
+  local key=$1 ac=$2 mins=$3 nm=i4_$1 l t t1 t2 rc po wp how ar ev
+  l=$(prof_left)
+  if [ -e $J/state/maxh ] || [ "$l" -lt "$PROF_MIN_LEFT" ]; then
+    say "PROF SKIP $nm: budget left $l s (minimum $PROF_MIN_LEFT s; PROF_MAXMIN=$PROF_MAXMIN MAXH=$MAXH), MAXH reached: $([ -e $J/state/maxh ] && echo yes || echo no)"
+    PSKIP="$PSKIP $nm"; echo "$nm skipped 0 0" >> $J/state/prof_steps.txt; return 0
+  fi
+  t=$(awk "BEGIN{print int($mins * 60)}"); [ $t -gt $l ] && t=$l
+  po=$RES/pair/$key; rm -rf $po; mkdir -p $po
+  [ "$PROF_DRY_FAIL" = "$nm" ] && sed -i '$ s/$/ --dry-run-bad-flag/' $J/state/cmd.$nm.sh
+  cp $J/state/cmd.$nm.sh $po/cmd.sh.txt
+  stage prof-$nm
+  say "PROF-PAIR $nm START: arm B3G2 3M seed 400, accum B3G2=$ac, --train-extra '$PROF_PAIR_TRAIN_EXTRA', out $po; the box stops the job at step $PROF_PAIR_STEP; timeout $t s (budget left $l s)"
+  rm -f $J/state/pair_stopped
+  ( i=0; while :; do      # peak GPU memory by nvidia-smi, a progress line every 2 minutes, and the stop as soon as the train log shows step PROF_PAIR_STEP
+      s=$(grep -h '"event": "train"' $po/B3G2/stdout.txt 2>/dev/null | tail -n 1 | sed -n 's/.*"event": "train", "step": \([0-9]*\),.*/\1/p')
+      if [ $((i % 3)) = 0 ]; then u=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -n 1); [ -n "$u" ] && echo "$u" >> $po/gpu_used_mib.txt; fi
+      if [ -n "$s" ] && [ "$s" -ge "$PROF_PAIR_STEP" ]; then touch $J/state/pair_stopped; sleep 1; kill_cur; exit 0; fi
+      i=$((i + 1)); [ $((i % 60)) = 0 ] && echo "PROF-PAIR $nm progress: step=${s:-none} gpu_used_mib=${u:-none}"
+      sleep 2
+    done ) &
+  wp=$!
+  t1=$(date +%s)
+  if [ "$PROF_DRY_HANG" = "$nm" ]; then runp $PRAW/$nm.log $SB3 timeout -k 30 $t sleep 3600
+  else runp $PRAW/$nm.log $SB3 timeout -k 30 $t bash $J/state/cmd.$nm.sh; fi
+  rc=$?; t2=$(( $(date +%s) - t1 ))
+  kill $wp 2>/dev/null; wait $wp 2>/dev/null
+  how=ended; [ $rc = 124 ] && how=TIMEOUT; [ -e $J/state/pair_stopped ] && how="stopped by the box at step $PROF_PAIR_STEP"; [ -e $J/state/maxh ] && how="MAXH reached"
+  echo "$nm $rc $t2 $t" >> $J/state/prof_steps.txt
+  say "PROF-PAIR $nm END rc=$rc secs=$t2 ($how)"
+  for k in $(seq 1 12); do pair_alive $po || break; sleep 5; done      # the process must be gone before the next job starts (a shared GPU would spoil the timing)
+  if pair_alive $po; then
+    say "PROF-PAIR $nm process still alive 60 s after the stop: killing it"; pkill -KILL -f -- "--out $po " 2>/dev/null; sleep 10
+  fi
+  if pair_alive $po; then say "PROF-PAIR $nm PROCESS NOT GONE: the next job is not started"; PFAIL="$PFAIL $nm(alive)"; return 2; fi
+  say "PROF-PAIR $nm process gone: yes"
+  ev=$po/B3G2/events.jsonl
+  if [ -s $ev ]; then cp $ev $PRAW/pair_${key}_events.jsonl; say "PROF-PAIR $nm events: B3G2/events.jsonl ($(wc -l < $ev) lines) -> pair_${key}_events.jsonl"
+  else grep -h '"event": "train"' $po/B3G2/stdout.txt 2>/dev/null | sed 's/^[^{]*//' > $PRAW/pair_${key}_events.jsonl; say "PROF-PAIR $nm events: the train lines of B3G2/stdout.txt ($(wc -l < $PRAW/pair_${key}_events.jsonl) lines) -> pair_${key}_events.jsonl"; fi
+  tail -n 100 $po/B3G2/stdout.txt 2>/dev/null | cut -c1-600 > $PRAW/pair_${key}.stdout.log
+  python $J/pair_report.py $key $ac $PROF_PAIR_STEP $PRAW/pair_${key}_events.jsonl $PRAW/pair_${key}_summary.json $rc "$how" $po/gpu_used_mib.txt > $J/out/$nm.report.log 2>&1; ar=$?
+  cut -c1-700 $J/out/$nm.report.log
+  if [ $ar != 0 ]; then
+    PFAIL="$PFAIL $nm(last-step<$PROF_PAIR_STEP,rc$rc)"; tail -n 6 $PRAW/$nm.log | cut -c1-300
+  elif [ $rc != 0 ] && [ ! -e $J/state/pair_stopped ]; then PFAIL="$PFAIL $nm(rc$rc)"
+  fi
+  return 0
+}
+prof_b3g2_pair() {   # i4_b3g2_pair, the last stage of PROF_PLAN=b3ab: the registered accum-4 against accum-32 loss comparison on this GPU, 300 updates each, accum 4 first; never fatal; no comparison on the box
+  local nm=i4_b3g2_pair l f h npin=0 r
+  l=$(prof_left)
+  if [ -e $J/state/maxh ] || [ "$l" -lt $((PROF_PAIR_NEED_MIN * 60)) ]; then
+    say "PROF SKIP $nm: budget left $l s (needs $PROF_PAIR_NEED_MIN min = $((PROF_PAIR_NEED_MIN * 60)) s; PROF_MAXMIN=$PROF_MAXMIN MAXH=$MAXH), MAXH reached: $([ -e $J/state/maxh ] && echo yes || echo no)"
+    PSKIP="$PSKIP $nm"; echo "$nm skipped 0 0" >> $J/state/prof_steps.txt; return 0
+  fi
+  stage prof-$nm
+  say "PROF-PAIR code: custom_io at $B3G2_SHA (the PC's src-b3g2); pins = PINS0 of install_g2fa4.py; queue lines of the pack at ${B3G2_Q_SHA:0:10}; budget left $l s"
+  if ! fetch_sha $SB3 $B3G2_SHA custom_io; then
+    say "PROF-PAIR FAILED: cannot fetch custom_io at $B3G2_SHA: i4 is skipped"; PFAIL="$PFAIL i4-fetch"; return 0
+  fi
+  cat > $J/out/b3g2_pins.txt <<'B3PINS'
+models/b3g2.py a4c61f0b567ec7e62b3233549be63eca7bca2a3f35a934dfc217fa49390868ce
+models/writer.py f3a40ad58749bbc24a964942dc650c79864d6a74442628aac7d752730e73309e
+g8a/caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e
+g8a/caps_b3g2.json ee551d3aacbf9ec02d2ac7f5e7e6e12f44e15aba2c39f5f38c3f1e3ec12d7ed4
+g8a/job.py a590e3f176159f531571b1e5ae95bd48d2160238cb999add5eb6be7734fe6a1a
+g8a/configs.py 31287a25a6ad9cbf48973520f1174c788a3db5ce61f607265aa5ec8fa99bd5da
+local_runner.py 0562a4bb065a02f6c048d919d68bb6d445f36e357518dc8826d9d545323db4ef
+train.py e05762ecca1af18f6260f09e5974e03b884e2f5ff5c21a4b801eed913d16793d
+B3PINS
+  while read -r f h; do
+    [ "$(sha $SB3/custom_io/$f)" = "$h" ] || { say "PROF-PAIR FAILED: src-b3g2 file $f is not commit ${B3G2_SHA:0:10}'s (got $(sha $SB3/custom_io/$f), want $h): i4 is skipped"; PFAIL="$PFAIL i4-pin($f)"; return 0; }
+    npin=$((npin + 1))
+  done < $J/out/b3g2_pins.txt
+  cat > $J/out/8aB3G2A4-pc.txt <<'B3Q4'
+# MEM 3000
+# MEM 9000
+g8a: 8aB3G2A4-3M-s400 --rung 3M --seed 400 --arms B3G2 --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=4 --device cuda --train-extra '--ckpt-every 100 --log-every 1 --resume'
+B3Q4
+  cat > $J/out/8aB3G2A4b32-pc.txt <<'B3Q32'
+# MEM 3500
+g8a: 8aB3G2A4b32-3M-s400 --rung 3M --seed 400 --arms B3G2 --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=32 --device cuda --train-extra '--ckpt-every 50 --log-every 1 --resume'
+B3Q32
+  cat > $J/out/b3g2_qpins.txt <<'B3QPINS'
+8aB3G2A4-pc.txt 3911730625b08b16c0d9401a49280ce176845216c75d11c437f12405b10518ce
+8aB3G2A4b32-pc.txt 208a15724449d00b7a963bf89889457351c201c2e2a71a7a459ab52994164997
+B3QPINS
+  while read -r f h; do
+    [ "$(sha $J/out/$f)" = "$h" ] || { say "PROF-PAIR FAILED: the queue lines $f are not the pinned ones (got $(sha $J/out/$f), want $h): i4 is skipped"; PFAIL="$PFAIL i4-queue($f)"; return 0; }
+  done < $J/out/b3g2_qpins.txt
+  mkdir -p $W/b3-inputs; cp $SB3/custom_io/g8a/caps_b3g2.json $W/b3-inputs/caps_b3g2.json
+  [ "$(sha $W/b3-inputs/caps_b3g2.json)" = "$(awk '$1 == "g8a/caps_b3g2.json" {print $2}' $J/out/b3g2_pins.txt)" ] || { say "PROF-PAIR FAILED: the caps_b3g2.json copy is not the pinned one: i4 is skipped"; PFAIL="$PFAIL i4-caps"; return 0; }
+  prof_pair_helpers
+  if ! (cd $SB3 && export J PYTHONPATH=$SB3 && python $J/mkcmd_pair.py $J/out/8aB3G2A4-pc.txt $J/out/8aB3G2A4b32-pc.txt $W $SB3 cuda "$PTC_DRY_EXTRA" "$PROF_PAIR_TRAIN_EXTRA" $RES/pair/a4 $RES/pair/a32 $J/state/cmd.i4_a4.sh $J/state/cmd.i4_a32.sh) > $J/out/mkcmd_pair.log 2>&1; then
+    tail -n 12 $J/out/mkcmd_pair.log | cut -c1-600; say "PROF-PAIR FAILED: the job commands could not be built from the queue lines: i4 is skipped"; PFAIL="$PFAIL i4-cmd"; return 0
+  fi
+  cut -c1-1800 $J/out/mkcmd_pair.log
+  { echo "# B3G2 pair on this box: custom_io at $B3G2_SHA; every file below was sha256-checked"; cat $J/out/b3g2_pins.txt; echo; cat $J/out/mkcmd_pair.log; } > $PRAW/pair_setup.md
+  say "PROF-PAIR code ok: $npin pinned files match, caps_b3g2.json copied to $W/b3-inputs, the two commands are built (local_runner's own parse_queue and command); accum 4 first (timeout $PROF_PAIR_A4_MIN min), then accum 32 ($PROF_PAIR_A32_MIN min), $PROF_PAIR_STEP updates each"
+  pair_run a4 4 $PROF_PAIR_A4_MIN; r=$?
+  [ $r = 2 ] || pair_run a32 32 $PROF_PAIR_A32_MIN
+}
 prof_b3ab() {   # PROF_PLAN=b3ab (POOL is set): the profiler and syncs at accum 4, the equivalence of the variants (mark 6), then the A/B bench; each stage non-fatal under its own timeout
   local B3 mm
-  say "PROF PLAN b3ab: B3G2 at accum 4: profiler and syncs, abequiv (mark 6), abbench (PREREG-b3g2-speed-ab.md: A = accum 4; B = accum 8,16,2 and tf32, pad64, unfused, nosync; 3 interleaved rounds); DPH=$DPH; no AT-1, no PTC stages; budget $PROF_MAXMIN min from the start of stage prof"
+  say "PROF PLAN b3ab: B3G2 at accum 4: profiler and syncs, abequiv (mark 6), abbench (PREREG-b3g2-speed-ab.md: A = accum 4; B = accum 8,16,2 and tf32, pad64, unfused, nosync; 3 interleaved rounds), then i4_b3g2_pair (src-b3g2, accum 4 then 32, $PROF_PAIR_STEP updates each); DPH=$DPH; no AT-1, no PTC stages; budget $PROF_MAXMIN min from the start of stage prof"
   if [ -f $S/custom_io/g8a/caps_b3g2.json ] && [ -f $S/custom_io/models/b3g2.py ]; then
     B3="--arm B3G2 --rung 3M --accum 4 --data $POOL --pkg-root $S --caps $S/custom_io/g8a/caps_b3g2.json"
     PSTEP_MIN=$PROF_B3P_MIN
@@ -540,13 +721,14 @@ prof_b3ab() {   # PROF_PLAN=b3ab (POOL is set): the profiler and syncs at accum 
   else
     say "PROF B3G2 runs not made: $S/custom_io/g8a/caps_b3g2.json or $S/custom_io/models/b3g2.py is missing in the assembled tree"; PFAIL="$PFAIL b3g2-files-missing"
   fi
+  prof_b3g2_pair      # i4_b3g2_pair: LAST, after i1, i2 and i3 (its own code, src-b3g2; skipped when PROF_PAIR_NEED_MIN minutes of the budget are not left)
   awk -v up=$(( $(date +%s) - T0 )) -v dph=$DPH -v maxh=$MAXH 'BEGIN{printf "PROF COST DPH=%s USD/h: up %.1f min = %.2f USD so far; MAXH %s h ceiling = %.2f USD (the rental, from DPH x time, not a bill)\n", dph, up/60, up/3600*dph, maxh, maxh*dph}'
 }
 prof_main() {   # never returns: ends with CIO DONE / CIO-FAIL and a sleep
   local rc jok t l PJ0 PJ1 BL EL PC B3 d alt
   stage prof; PT0=$(date +%s)
   say "PROF START job smoke of $PROF_JOB_STEPS updates, then the harness (commit $PROF_SHA); budget $PROF_MAXMIN min, maxh $MAXH h, speed guard OFF, up $(( (PT0 - T0) / 60 )) min so far"
-  [ "$PROF_PLAN" = b3ab ] && say "PROF PLAN b3ab (PROF_PLAN): pool-building smoke of $PROF_JOB_STEPS updates, then ONLY the profiler and syncs at accum 4, abequiv and abbench; maxh $MAXH h, budget $PROF_MAXMIN min, DPH $DPH"
+  [ "$PROF_PLAN" = b3ab ] && say "PROF PLAN b3ab (PROF_PLAN): pool-building smoke of $PROF_JOB_STEPS updates, then ONLY the profiler and syncs at accum 4, abequiv and abbench, then i4_b3g2_pair (accum 4 and accum 32, $PROF_PAIR_STEP updates each, src-b3g2); maxh $MAXH h, budget $PROF_MAXMIN min, DPH $DPH"
   [ "$PROF_PLAN" = b3sweep ] && say "PROF PLAN b3sweep (PROF_PLAN): pool-building smoke of $PROF_JOB_STEPS updates, then ONLY the B3G2 accum sweep, the K-pinned comparison and two AT-1 speed runs; maxh $MAXH h, budget $PROF_MAXMIN min"
   mkdir -p $PRAW $OP
   fetch_sha $J/prof $PROF_SHA $PROF_DIR || die fetch-prof
