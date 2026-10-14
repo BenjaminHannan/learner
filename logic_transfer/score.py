@@ -48,7 +48,7 @@ def git_sha():
 
 
 @torch.no_grad()
-def round1_noop(model, rows, bs=128):
+def round1_noop(model, rows, bs=128, device='cpu'):
     """-> {n, noop, frac}: free-run round-1 op of the rows is NOOP (op index 0). Same batching as evaluate()."""
     from custom_io.data import Dataset, collate, to_device
     was = model.training
@@ -57,7 +57,7 @@ def round1_noop(model, rows, bs=128):
     order = sorted(range(len(rows)), key=lambda i: len(rows[i]['prompt']))
     noop = 0
     for s in range(0, len(order), bs):
-        b = to_device(collate([ds[i] for i in order[s:s + bs]]), torch.device('cpu'))
+        b = to_device(collate([ds[i] for i in order[s:s + bs]]), torch.device(device))
         o = model.run(b)
         noop += int((o['steps'][0][0].argmax(-1) == 0).sum())
     model.train(was)
@@ -83,14 +83,14 @@ def cell(d, key, hit):
     c['n'] += 1
 
 
-def analyze(model, rows, bs, logic=False):
-    res = evaluate(model, rows, bs, torch.device('cpu'), return_preds=True)
+def analyze(model, rows, bs, logic=False, device='cpu'):
+    res = evaluate(model, rows, bs, torch.device(device), return_preds=True)
     preds = res['preds']
     out = {'correct': res['correct'], 'n': res['n'], 'exact': round(res['exact'], 4), 'by_family': res['by_family'],
            'by_level': res['by_level']}
     out['answer_words'] = answer_words(rows, preds)
     calc = rows if logic else [r for r in rows if pp.row_targets(r)['prog']]
-    out['noop_round1'] = round1_noop(model, calc, bs) if calc else {'n': 0, 'noop': 0, 'frac': None}
+    out['noop_round1'] = round1_noop(model, calc, bs, device) if calc else {'n': 0, 'noop': 0, 'frac': None}
     if logic:
         bl, bd, bdl = {}, {}, {}
         for r in rows:
@@ -112,32 +112,34 @@ def main(argv=None):
     ap.add_argument('--logic-dir', help='dir of jsonl files (converted logic/placebo rows) scored as extra splits')
     ap.add_argument('--logic-only', action='store_true', help='score only the --logic-dir files (cheap gate scoring)')
     ap.add_argument('--threads', type=int, default=1)
+    ap.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
+    ap.add_argument('--dev-splits', help='comma list of the skills_curriculum dev splits to score (default: all six)')
     ap.add_argument('--eval-batch', type=int, default=128, help='128 = train.py default (batch composition affects padding only)')
-    ap.add_argument('--bf16', action='store_true', help='CPU bf16 autocast (not the GPU numbers either; default is fp32)')
+    ap.add_argument('--bf16', action='store_true', help='CPU bf16 autocast (default is fp32)')
     ap.add_argument('--save-preds', action='store_true', help='also write OUT.preds.json ({split: {row id: prediction}})')
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
     assert a.logic_only and a.logic_dir or a.big, 'need --big-data (or --logic-only with --logic-dir)'
     torch.set_num_threads(a.threads)
     t0 = time.time()
-    model = load_model(a.ckpt, 'cpu')
+    model = load_model(a.ckpt, a.device)
     amp = (lambda: torch.autocast('cpu', dtype=torch.bfloat16)) if a.bf16 else contextlib.nullcontext
     splits, secs, preds, files = {}, {}, {}, {}
     if not a.logic_only:
-        for s in DEV_SPLITS:
+        for s in (a.dev_splits.split(',') if a.dev_splits else DEV_SPLITS):
             t = time.time()
             with amp():
-                splits[s], preds[s] = analyze(model, _dev_rows(a.big, s, None), a.eval_batch)
+                splits[s], preds[s] = analyze(model, _dev_rows(a.big, s, None), a.eval_batch, device=a.device)
             secs[s] = round(time.time() - t, 1)
     if a.logic_dir:
         for p in sorted(glob.glob(os.path.join(a.logic_dir, '*.jsonl'))):
             name = os.path.splitext(os.path.basename(p))[0]
             t = time.time()
             with amp():
-                splits[name], preds[name] = analyze(model, load_rows(p, keep=None), a.eval_batch, logic=True)
+                splits[name], preds[name] = analyze(model, load_rows(p, keep=None), a.eval_batch, logic=True, device=a.device)
             secs[name] = round(time.time() - t, 1)
             files[name] = sha256(p)
-    res = {'ckpt': a.ckpt, 'ckpt_sha256': sha256(a.ckpt), 'big_data': a.big, 'device': 'cpu',
+    res = {'ckpt': a.ckpt, 'ckpt_sha256': sha256(a.ckpt), 'big_data': a.big, 'device': a.device,
            'dtype': 'bfloat16-autocast' if a.bf16 else 'float32', 'threads': a.threads, 'eval_batch': a.eval_batch,
            'torch': torch.__version__, 'git_sha': git_sha(), 'logic_only': a.logic_only, 'logic_files_sha256': files,
            'splits': splits, 'split_seconds': secs, 'wall_s': round(time.time() - t0, 1)}

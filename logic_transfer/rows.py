@@ -13,10 +13,10 @@ import argparse
 import json
 import sys
 
-FAMILY = {'logic': 'logic_fc', 'placebo': 'logic_placebo'}
+FAMILY = {'logic': 'logic_fc', 'placebo': 'logic_placebo', 'rung0': 'lad_r0', 'rung1': 'lad_r1', 'rung2': 'lad_r2'}
 STAGE = 9
 META_KEYS = ('kind', 'split', 'label', 'depth', 'program', 'n_rules', 'n_facts', 'n_distractors', 'sampler',
-             'template_set', 'query', 'ctx', 'pkind', 'template_ids', 'chars')
+             'template_set', 'query', 'ctx', 'pkind', 'template_ids', 'chars', 'sub', 'f2_triple')
 
 
 OPTIONS = ('true', 'false', 'unknown')

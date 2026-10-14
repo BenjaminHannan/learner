@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from logic_transfer import course, rows, run_lt1
+from logic_transfer import course, ladder, rows, run_lt1, verify_rungs
 
 PARENT = run_lt1.PARENTS['s200']
 
@@ -54,6 +54,52 @@ class RowConverter(unittest.TestCase):
                 open(p, 'w').write(json.dumps(rows.convert_row(g)) + '\n')
                 with self.assertRaises(AssertionError):
                     rows.verify(p)
+
+
+class Marks(unittest.TestCase):
+    def test_parse_and_hold(self):
+        m = course.parse_marks('dev>=90, gate@2>=65')
+        self.assertEqual(m, [('dev', None, 90.0), ('gate', '2', 65.0)])
+        res = {'dev': {'exact': 91.0, 'by_level': {}}, 'gate': {'exact': 50.0, 'by_level': {'2': {'correct': 70, 'n': 100}}}}
+        self.assertTrue(course.marks_hold(res, m))
+        res['gate']['by_level']['2']['correct'] = 64
+        self.assertFalse(course.marks_hold(res, m))
+        self.assertFalse(course.marks_hold({'dev': res['dev']}, m))             # a missing file is not a pass
+        self.assertFalse(course.marks_hold(res, []))                            # no marks never stops a run
+
+
+class LadderRows(unittest.TestCase):
+    """Rungs 0-2: shape, exact label thirds, no train/eval prompt overlap, and the independent solver agrees on every row."""
+
+    def test_build_and_independent_check(self):
+        with tempfile.TemporaryDirectory() as d:
+            for rung in (0, 1, 2):
+                s = ladder.build(rung, d, n_train=300, n_eval=60, n_new=30)
+                for name, info in s['files'].items():
+                    self.assertEqual(info['independent_label_check']['agreement'], 1.0, (rung, name))
+                    self.assertLessEqual(info['verify']['max_prompt_chars'], 208)
+                    self.assertEqual(sorted(info['labels'].values()), [info['n'] // 3] * 3 if info['n'] % 3 == 0 else sorted(info['labels'].values()))
+                    self.assertEqual(info['distinct_prompts'], info['n'])
+                    if name != 'train':
+                        self.assertEqual(info['overlap_with_train_prompts'], 0)
+
+    def test_solver_catches_wrong_labels(self):
+        with tempfile.TemporaryDirectory() as d:
+            s = ladder.build(1, d, n_train=30, n_eval=30, n_new=30)
+            p = os.path.join(d, 'rung1', 'dev.jsonl')
+            rs = [json.loads(l) for l in open(p)]
+            for r in rs:
+                r['answer'] = {'true': 'false', 'false': 'unknown', 'unknown': 'true'}[r['answer']]
+            bad = os.path.join(d, 'bad.jsonl')
+            open(bad, 'w').write(''.join(json.dumps(r) + '\n' for r in rs))
+            self.assertEqual(verify_rungs.check_file(bad)['agree'], 0)
+
+    def test_r1_count_baseline_is_two_thirds(self):
+        """negation count alone separates true/false from unknown only partly: the lookup scores 2/3 on R1 (the +25 rule then needs ~92%)."""
+        with tempfile.TemporaryDirectory() as d:
+            s = ladder.build(1, d, n_train=3000, n_eval=600, n_new=30)
+            b = s['files']['dev']['count_baseline']['acc']
+            self.assertTrue(60 <= b <= 72, b)
 
 
 class Schedule(unittest.TestCase):
@@ -200,6 +246,36 @@ class EndToEnd(unittest.TestCase):
         for f in ('log.jsonl', 'run.json'):
             self.assertTrue(os.path.exists(os.path.join(l1, f)))
         self.assertEqual(rl['mix_sha256'], hashlib.sha256(open(self.mix, 'rb').read()).hexdigest())
+
+
+    def test_eval_and_early_stop(self):
+        """--eval / --stop-marks: marks that always hold stop the run at the second periodic eval (after a full confirm); marks that never hold
+        run to the budget and end with a full eval; eval.jsonl and stop.json are written; the saved step is the stopped one."""
+        import torch
+        ev = os.path.join(self.d.name, 'ev.jsonl')
+        with open(ev, 'w') as o:
+            for i in range(12):
+                g = gen_row(i, split='dev', answer=('true', 'false', 'unknown')[i % 3]); g['id'] = g['id'].replace('train', 'dev')
+                o.write(json.dumps(rows.convert_row(g, options=True)) + '\n')
+        base = ['--parent', PARENT, '--data', os.path.join(self.d.name, 'data'), '--updates', '8', '--warmup', '2', '--seed', '1', '--threads', '1',
+                '--log-every', '2', '--slice-every', '0', '--eval', f'dev={ev}', '--eval-every', '2', '--eval-n', '6']
+        out = os.path.join(self.d.name, 'stop')
+        run = course.main(base + ['--mix', self.mix, '--out', out, '--stop-marks', 'dev>=0'])
+        st = json.load(open(os.path.join(out, 'stop.json')))
+        self.assertEqual((st['reason'], st['update']), ('marks', 4))
+        self.assertEqual(run['updates_done'], 4)
+        self.assertEqual(torch.load(os.path.join(out, 'checkpoint.pt'), weights_only=True)['step'], 24004)
+        el = [json.loads(l) for l in open(os.path.join(out, 'eval.jsonl'))]
+        self.assertEqual([(e['update'], e['n'], e['full']) for e in el], [(2, 6, False), (4, 6, False), (4, 12, True)])
+        self.assertIn('dev', st['full_eval'])
+        out2 = os.path.join(self.d.name, 'nostop')
+        run2 = course.main(base + ['--mix', self.mix, '--out', out2, '--stop-marks', 'dev>=101'])
+        st2 = json.load(open(os.path.join(out2, 'stop.json')))
+        self.assertEqual((st2['reason'], st2['update'], st2['marks_hold']), ('max_updates', 8, False))
+        self.assertEqual(run2['updates_done'], 8)
+        el2 = [json.loads(l) for l in open(os.path.join(out2, 'eval.jsonl'))]
+        self.assertEqual([(e['update'], e['full']) for e in el2], [(2, False), (4, False), (6, False), (8, True)])
+        self.assertEqual(st2['full_eval']['dev']['n'], 12)
 
 
 if __name__ == '__main__':

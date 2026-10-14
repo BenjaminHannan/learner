@@ -1,0 +1,334 @@
+"""LT-2 ladder driver: run the six runs of one rung and read them by the sealed marks (MARKS-LT2-2026-10-14.md).
+
+  python -m logic_transfer.lt2 run    --rung R --work DIR --parents-dir DIR --sk200k DIR [--device cpu|cuda] [--procs 3] [--threads 1]
+                                      [--updates 8000] [--eval-every 250] [--eval-n 400] [--runs s200:1,s200:2,...] [--dry]
+  python -m logic_transfer.lt2 report --work DIR [--rung R ...]
+  python -m logic_transfer.lt2 agree  --ckpt CKPT --rows ROWS.jsonl [--n N]       (same checkpoint, CPU vs GPU decoding)
+  python -m logic_transfer.lt2 indist --work DIR --rung R --parents-dir DIR --big-data DIR [--device cuda]   (non-logic in_dist, parents vs stop checkpoints)
+
+Layout: DIR/rows/rung<r>/{train,dev,wording,newwords}.jsonl (built here if missing, byte-for-byte deterministic, hashes checked against
+ladder-hashes.json when it lists them), DIR/rung<r>/<parent>-s<seed>/ = one course run (course.py outputs), DIR/rung<r>/DONE.json.
+Runs: 3 parents (s200, s201, s204) x course seeds 1, 2. Gate files: dev (and wording on rung 0); stop thresholds are max(90, baseline+25)
+for dev and max(80, baseline+25) for wording, baseline = the train-fitted count baseline of that file (F3), so a run stops only when ALL its
+marks hold. new-words is evaluated and reported, never gated. Rung 0 also carries the falsifier: when every run has either stopped or reached
+2,000 updates and >= 5 of 6 are below 50% dev at 2,000, the driver writes ABORT and the runs end at their next eval.
+"""
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PARENTS = ('s200', 's201', 's204')
+SEEDS = (1, 2)
+DEV_MIN, WORD_MIN, MARGIN = 90.0, 80.0, 25.0
+FALSIFY_AT, FALSIFY_BELOW, FALSIFY_RUNS = 2000, 50.0, 5
+
+
+def run_name(parent, seed):
+    return f'{parent}-s{seed}'
+
+
+def all_runs():
+    return [(p, s) for p in PARENTS for s in SEEDS]
+
+
+def parent_path(parents_dir, parent):
+    return os.path.join(parents_dir, f'T1SDR_{parent}.pt')
+
+
+def gate_files(rung):
+    return ('dev', 'wording') if rung == 0 else ('dev',)
+
+
+def ensure_rows(work, rung, n_train=130000):
+    from logic_transfer import ladder
+    d = os.path.join(work, 'rows', f'rung{rung}')
+    summ = os.path.join(d, 'summary.json')
+    if not os.path.exists(summ):
+        ladder.build(rung, os.path.join(work, 'rows'), n_train=n_train)
+    s = json.load(open(summ))
+    hp = os.path.join(HERE, 'ladder-hashes.json')
+    if os.path.exists(hp):
+        want = json.load(open(hp)).get(f'rung{rung}')
+        if want:
+            for name, h in want.items():
+                got = s['files'][name]['sha256']
+                assert got == h, f'rung{rung}/{name}: built {got[:12]} but ladder-hashes.json says {h[:12]}'
+    return d, s
+
+
+def thresholds(rung, summ):
+    out = {'dev': max(DEV_MIN, summ['files']['dev']['count_baseline']['acc'] + MARGIN)}
+    if rung == 0:
+        out['wording'] = max(WORD_MIN, summ['files']['wording']['count_baseline']['acc'] + MARGIN)
+    return out
+
+
+def marks_string(th):
+    return ','.join(f'{k}>={v:g}' for k, v in th.items())
+
+
+def read_evals(run_dir):
+    p = os.path.join(run_dir, 'eval.jsonl')
+    if not os.path.exists(p):
+        return []
+    out = []
+    for l in open(p):
+        try:
+            out.append(json.loads(l))
+        except ValueError:
+            pass                                    # a half-written last line while the run is going
+    return out
+
+
+def dev_at(evals, u):
+    """Latest dev eval at update <= u (None if none yet)."""
+    c = [e for e in evals if e['name'] == 'dev' and e['update'] <= u]
+    return max(c, key=lambda e: (e['update'], e['full'])) if c else None
+
+
+def run_state(run_dir):
+    if os.path.exists(os.path.join(run_dir, 'run.json')):
+        return 'done'
+    return 'running' if os.path.exists(run_dir) else 'todo'
+
+
+def falsifier(work, rung, runs):
+    """-> (decided, fired, detail). fired = >= 5 of the 6 runs are below 50% dev at 2,000 updates (a run that stopped earlier on its marks
+    counts as above). decided once that is settled: 5 runs already below, or 2 runs already at/above 50%, or every run has reported."""
+    below, seen = 0, []
+    for p, s in runs:
+        rd = os.path.join(work, f'rung{rung}', run_name(p, s))
+        ev = read_evals(rd)
+        st = os.path.join(rd, 'stop.json')
+        stopped = json.load(open(st)) if os.path.exists(st) else None
+        e = dev_at(ev, FALSIFY_AT)
+        by_marks = stopped is not None and stopped['reason'] == 'marks' and (e is None or e['update'] < FALSIFY_AT)
+        if by_marks:
+            seen.append(100.0)
+        elif e is not None and e['update'] >= FALSIFY_AT:
+            seen.append(round(e['exact'], 1))
+            below += e['exact'] < FALSIFY_BELOW
+    n_not_below = len(seen) - below
+    decided = below >= FALSIFY_RUNS or n_not_below >= len(runs) - FALSIFY_RUNS + 1 or len(seen) == len(runs)
+    return decided, below >= FALSIFY_RUNS, dict(dev_at_2000=seen, below=below, reported=len(seen))
+
+
+def cmd_run(a):
+    rung = a.rung
+    d, summ = ensure_rows(a.work, rung)
+    th = thresholds(rung, summ)
+    runs = [tuple(x.split(':')) for x in a.runs.split(',')] if a.runs else all_runs()
+    runs = [(p, int(s)) for p, s in runs]
+    out_root = os.path.join(a.work, f'rung{rung}')
+    os.makedirs(out_root, exist_ok=True)
+    abort = os.path.join(out_root, 'ABORT')
+    if os.path.exists(abort) and not a.keep_abort:
+        os.unlink(abort)
+    evs = [f'--eval=dev={d}/dev.jsonl', f'--eval=newwords={d}/newwords.jsonl']
+    if rung == 0:
+        evs.insert(1, f'--eval=wording={d}/wording.jsonl')
+
+    def cmd(p, s):
+        c = [sys.executable, '-m', 'logic_transfer.course', '--parent', parent_path(a.parents_dir, p), '--data', a.sk200k, '--mix', f'{d}/train.jsonl',
+             '--mix-frac', '0.25', '--updates', str(a.updates), '--batch', '64', '--lr', '1e-4', '--warmup', '100', '--seed', str(s),
+             '--threads', str(a.threads), '--device', a.device, '--out', os.path.join(out_root, run_name(p, s)), '--log-every', '250',
+             '--eval-every', str(a.eval_every), '--eval-n', str(a.eval_n), '--stop-marks', marks_string(th), '--abort-file', abort,
+             '--slice-every', '25'] + evs
+        return c
+    print(f'rung {rung}: thresholds {th}; {len(runs)} runs; device {a.device}; procs {a.procs} x {a.threads} threads', flush=True)
+    todo = [(p, s) for p, s in runs if run_state(os.path.join(out_root, run_name(p, s))) != 'done']
+    if a.dry:
+        for p, s in todo:
+            print(' '.join(cmd(p, s)))
+        return
+    live, t0 = {}, time.time()
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(HERE), os.environ.get('PYTHONPATH')])))
+    last_note = 0
+    while todo or live:
+        while todo and len(live) < a.procs:
+            p, s = todo.pop(0)
+            rd = os.path.join(out_root, run_name(p, s))
+            os.makedirs(rd, exist_ok=True)
+            lf = open(os.path.join(rd, 'stdout.log'), 'w')
+            live[(p, s)] = (subprocess.Popen(cmd(p, s), stdout=lf, stderr=subprocess.STDOUT, env=env, cwd=os.path.dirname(HERE)), lf)
+            print(f'started {run_name(p, s)} at {time.time() - t0:.0f}s', flush=True)
+        time.sleep(a.poll)
+        for k, (pr, lf) in list(live.items()):
+            if pr.poll() is not None:
+                lf.close()
+                del live[k]
+                print(f'finished {run_name(*k)} rc={pr.returncode} at {time.time() - t0:.0f}s', flush=True)
+        if rung == 0 and a.falsifier and not os.path.exists(abort):
+            decided, fired, detail = falsifier(a.work, rung, runs)
+            if decided and fired:
+                open(abort, 'w').write(json.dumps(detail))
+                print(f'R0 FALSIFIER FIRED {detail}: ABORT written', flush=True)
+                todo.clear()
+        if time.time() - last_note > 600:
+            last_note = time.time()
+            print(f'[{time.time() - t0:.0f}s] ' + ' '.join(f'{run_name(*k)}:{(read_evals(os.path.join(out_root, run_name(*k))) or [{"update": 0}])[-1]["update"]}' for k in live), flush=True)
+    json.dump(dict(rung=rung, thresholds=th, runs=[run_name(p, s) for p, s in runs], wall_s=round(time.time() - t0, 1), device=a.device),
+              open(os.path.join(out_root, 'DONE.json'), 'w'), indent=1)
+    print('all runs finished', flush=True)
+
+
+def run_summary(work, rung, p, s, th):
+    rd = os.path.join(work, f'rung{rung}', run_name(p, s))
+    ev = read_evals(rd)
+    st = json.load(open(os.path.join(rd, 'stop.json'))) if os.path.exists(os.path.join(rd, 'stop.json')) else None
+    out = dict(run=run_name(p, s), state=run_state(rd), stop=(st or {}).get('reason'), updates=(st or {}).get('update'))
+    full = [e for e in ev if e['full']]
+    ok_at = None
+    by_u = {}
+    for e in full:
+        by_u.setdefault(e['update'], {})[e['name']] = e['exact']
+    for u in sorted(by_u):
+        if all(by_u[u].get(k, -1) >= v for k, v in th.items()):
+            ok_at = u
+            break
+    out['pass'] = ok_at is not None
+    out['pass_update'] = ok_at
+
+    def acc_at(u):
+        if ok_at is not None and ok_at <= u:
+            e = [x for x in full if x['name'] == 'dev' and x['update'] == ok_at]
+            return e[0]['exact'] if e else None
+        e = dev_at(ev, u)
+        return e['exact'] if e else None
+    out['dev_at'] = {str(u): acc_at(u) for u in (2000, 4000, 8000)}
+    last_dev = [e for e in ev if e['name'] == 'dev']
+    out['last_dev'] = (last_dev[-1]['update'], last_dev[-1]['exact'], last_dev[-1]['full']) if last_dev else None
+    nw = [e for e in ev if e['name'] == 'newwords']
+    out['newwords_last'] = (nw[-1]['update'], nw[-1]['exact']) if nw else None
+    return out
+
+
+def cmd_report(a):
+    rungs = a.rung or sorted(int(x[5:]) for x in os.listdir(a.work) if x.startswith('rung') and os.path.isdir(os.path.join(a.work, x)))
+    res = {}
+    for r in rungs:
+        d, summ = ensure_rows(a.work, r)
+        th = thresholds(r, summ)
+        rows = [run_summary(a.work, r, p, s, th) for p, s in all_runs()]
+        n_pass = sum(x['pass'] for x in rows)
+        finished = all(x['state'] == 'done' for x in rows)
+        dec = falsifier(a.work, r, all_runs()) if r == 0 else (False, False, None)
+        if r == 0 and dec[0] and dec[1]:
+            verdict = 'FALSIFIED (interface cannot learn a label at this share)'
+        elif n_pass >= 5:
+            verdict = 'PASS'
+        elif finished and n_pass <= 1:
+            verdict = 'FAIL'
+        elif finished:
+            verdict = 'MIXED'
+        else:
+            verdict = 'PENDING'
+        stats = {}
+        for u in ('2000', '4000', '8000'):
+            v = [x['dev_at'][u] for x in rows if x['dev_at'][u] is not None]
+            if v:
+                stats[u] = dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v))
+        res[f'rung{r}'] = dict(thresholds=th, baseline={k: summ['files'][k]['count_baseline']['acc'] for k in th}, n_pass=n_pass, n_runs=len(rows),
+                               verdict=verdict, dev_stats=stats, runs=rows, falsifier=dec[2])
+    print(json.dumps(res, indent=1))
+    return res
+
+
+def cmd_agree(a):
+    """The GPU path must reproduce the CPU numbers: one checkpoint, the same rows, decoded on CPU and on the GPU (fp32 both)."""
+    import torch
+    from custom_io.data import load_rows
+    from custom_io.evalx import evaluate
+    from custom_io.models import load_model
+    rows = load_rows(a.rows, keep=None)
+    rows = rows[:a.n] if a.n else rows
+    out = {'ckpt': a.ckpt, 'rows': a.rows, 'n': len(rows)}
+    preds = {}
+    for dev in ('cpu', 'cuda'):
+        if dev == 'cuda' and not torch.cuda.is_available():
+            out['cuda'] = None
+            continue
+        t = time.time()
+        m = load_model(a.ckpt, dev)
+        r = evaluate(m, rows, 128, torch.device(dev), return_preds=True)
+        preds[dev] = r['preds']
+        out[dev] = dict(correct=r['correct'], exact=round(r['exact'], 3), s=round(time.time() - t, 1))
+    if 'cpu' in preds and 'cuda' in preds:
+        same = sum(preds['cpu'][k] == preds['cuda'][k] for k in preds['cpu'])
+        out['prediction_agreement'] = round(same / len(rows), 4)
+        out['accuracy_gap_points'] = round(abs(out['cpu']['exact'] - out['cuda']['exact']), 3)
+    print(json.dumps(out))
+    if a.out:
+        json.dump(out, open(a.out, 'w'), indent=1)
+    return out
+
+
+def cmd_indist(a):
+    """Non-logic in_dist accuracy (score.py on the curriculum's in_dist dev split) of each parent and of each stopped checkpoint; delta = run - parent."""
+    outdir = os.path.join(a.work, 'indist')
+    os.makedirs(outdir, exist_ok=True)
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(HERE), os.environ.get('PYTHONPATH')])))
+
+    def score(ckpt, dst):
+        if not os.path.exists(dst):
+            subprocess.run([sys.executable, '-m', 'logic_transfer.score', '--ckpt', ckpt, '--big-data', a.big_data, '--dev-splits', 'in_dist',
+                            '--device', a.device, '--out', dst], check=True, env=env, cwd=os.path.dirname(HERE), stdout=subprocess.DEVNULL)
+        sp = json.load(open(dst))['splits']['in_dist']
+        return round(100.0 * sp['correct'] / sp['n'], 2), sp['n']
+    par = {p: score(parent_path(a.parents_dir, p), os.path.join(outdir, f'parent-{p}.json')) for p in PARENTS}
+    res = {}
+    for p, s in all_runs():
+        ck = os.path.join(a.work, f'rung{a.rung}', run_name(p, s), 'checkpoint.pt')
+        if not os.path.exists(ck):
+            continue
+        acc, n = score(ck, os.path.join(outdir, f'rung{a.rung}-{run_name(p, s)}.json'))
+        res[run_name(p, s)] = dict(in_dist=acc, n=n, parent=par[p][0], delta=round(acc - par[p][0], 2), flag=('DROP>3' if acc - par[p][0] < -3 else None))
+    out = dict(rung=a.rung, parents={p: v[0] for p, v in par.items()}, runs=res)
+    json.dump(out, open(os.path.join(outdir, f'rung{a.rung}-summary.json'), 'w'), indent=1)
+    print(json.dumps(out))
+    return out
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest='cmd', required=True)
+    g = sub.add_parser('agree')
+    g.add_argument('--ckpt', required=True)
+    g.add_argument('--rows', required=True)
+    g.add_argument('--n', type=int, default=0)
+    g.add_argument('--out')
+    d = sub.add_parser('indist')
+    d.add_argument('--work', required=True)
+    d.add_argument('--rung', type=int, required=True)
+    d.add_argument('--parents-dir', required=True)
+    d.add_argument('--big-data', required=True)
+    d.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
+    r = sub.add_parser('run')
+    r.add_argument('--rung', type=int, required=True)
+    r.add_argument('--work', required=True)
+    r.add_argument('--parents-dir', required=True)
+    r.add_argument('--sk200k', required=True)
+    r.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
+    r.add_argument('--procs', type=int, default=3)
+    r.add_argument('--threads', type=int, default=1)
+    r.add_argument('--updates', type=int, default=8000)
+    r.add_argument('--eval-every', type=int, default=250)
+    r.add_argument('--eval-n', type=int, default=400, help='0 = whole file at every eval (GPU)')
+    r.add_argument('--runs', help='comma list parent:seed, default all six')
+    r.add_argument('--poll', type=float, default=20)
+    r.add_argument('--no-falsifier', dest='falsifier', action='store_false')
+    r.add_argument('--keep-abort', action='store_true')
+    r.add_argument('--dry', action='store_true')
+    q = sub.add_parser('report')
+    q.add_argument('--work', required=True)
+    q.add_argument('--rung', type=int, action='append')
+    a = ap.parse_args(argv)
+    return {'run': cmd_run, 'report': cmd_report, 'agree': cmd_agree, 'indist': cmd_indist}[a.cmd](a)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,7 +1,8 @@
 """Continue training a parent checkpoint for a short 'course' (LT-1).
 
   python -m logic_transfer.course --parent CKPT --data SK200K_DIR [--mix ROWS.jsonl] [--mix-frac 0.25] --updates 4000
-        --batch 64 --lr 1e-4 --warmup 100 --seed 1 --threads 4 --out DIR [--log-every 250]
+        --batch 64 --lr 1e-4 --warmup 100 --seed 1 --threads 4 --out DIR [--log-every 250] [--device cpu|cuda]
+        [--eval NAME=ROWS.jsonl ...] [--eval-every 250] [--eval-n 400] [--stop-marks 'dev>=90,wording>=80'] [--abort-file PATH]
 
 Loss, optimiser and model are those of custom_io.train for this cfg (model.loss incl. ans_drill; AdamW betas (0.9, 0.95), weight
 decay 0.1 on matrices only, clip 1.0). lr: linear warmup, then constant.
@@ -87,11 +88,43 @@ def make_optimizer(model, lr):
 def save(out, name, model, ck, updates):
     """Same keys as the parent's checkpoint (train.py): model replaced, step = parent step + updates so far."""
     o = dict(ck)
-    o['model'] = {kk: v.detach().clone() for kk, v in model.state_dict().items()}
+    o['model'] = {kk: v.detach().cpu().clone() for kk, v in model.state_dict().items()}
     o['step'] = int(ck.get('step', 0)) + updates
     tmp = os.path.join(out, name + '.tmp')
     torch.save(o, tmp)
     os.replace(tmp, os.path.join(out, name))        # atomic: a driver watching for the file never sees a half-written one
+
+
+def parse_marks(spec):
+    """'dev>=90,gate@2>=65' -> [(file name, by_level key or None, threshold in percent)]."""
+    out = []
+    for part in (spec or '').split(','):
+        part = part.strip()
+        if not part:
+            continue
+        lhs, thr = part.split('>=')
+        name, _, lvl = lhs.partition('@')
+        out.append((name.strip(), lvl.strip() or None, float(thr)))
+    return out
+
+
+def mark_value(res, level):
+    """Accuracy in percent from an evalx result: the whole file, or one by_level cell."""
+    if level is None:
+        return res['exact']
+    c = res['by_level'].get(level)
+    return 100.0 * c['correct'] / c['n'] if c and c['n'] else float('nan')
+
+
+def marks_hold(results, marks):
+    """results {file name: evalx result}; all marks must be satisfied (missing file or empty cell = not satisfied)."""
+    return bool(marks) and all(n in results and mark_value(results[n], l) >= t for n, l, t in marks)
+
+
+def summarise(full):
+    """{file: evalx result} -> compact JSON-able {file: {correct, n, exact, by_level}}."""
+    return {n: dict(correct=r['correct'], n=r['n'], exact=round(r['exact'], 3),
+                    by_level={lv: [c['correct'], c['n']] for lv, c in sorted(r['by_level'].items())}) for n, r in full.items()}
 
 
 def lr_at(step, warmup, base):
@@ -111,22 +144,32 @@ def main(argv=None):
     ap.add_argument('--grad-clip', type=float, default=1.0)
     ap.add_argument('--seed', type=int, required=True)
     ap.add_argument('--threads', type=int, default=1)
+    ap.add_argument('--device', choices=['cpu', 'cuda'], default='cpu')
     ap.add_argument('--out', required=True)
     ap.add_argument('--log-every', type=int, default=250)
     ap.add_argument('--save-every', type=int, default=0, help='save OUT/checkpoint-<update>.pt every N updates (0 = only the final checkpoint.pt)')
     ap.add_argument('--slice-every', type=int, default=5, help='every N updates also measure the loss of the curriculum slice and of the mix slice of that '
                     'batch separately (extra no-grad forwards, ~3%% of the time at 5); 0 = off')
+    ap.add_argument('--eval', action='append', default=[], metavar='NAME=ROWS.jsonl', help='converted rows scored every --eval-every updates (repeatable)')
+    ap.add_argument('--eval-every', type=int, default=250)
+    ap.add_argument('--eval-n', type=int, default=0, help='periodic evals use the first N rows of each file (0 = the whole file); stop checks always confirm on the whole file')
+    ap.add_argument('--eval-batch', type=int, default=128)
+    ap.add_argument('--abort-file', help='stop (reason abort) at the next periodic eval once this file exists')
+    ap.add_argument('--stop-marks', default='', help="'NAME>=X,NAME@L>=Y' percent marks; stop when they hold at two consecutive evals and the full files confirm")
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
+    dev = torch.device(a.device)
+    assert a.device == 'cpu' or torch.cuda.is_available(), 'no CUDA device'
     from custom_io import data as D
     from custom_io.data import Dataset, collate, load_rows, to_device
+    from custom_io.evalx import evaluate
     from custom_io.models import load_model
     D.set_max_ans(8)
     os.makedirs(a.out, exist_ok=True)
     t_start = time.time()
     ck = torch.load(a.parent, map_location='cpu', weights_only=True)
     torch.manual_seed(a.seed); random.seed(a.seed); np.random.seed(a.seed)
-    model = load_model(a.parent)
+    model = load_model(a.parent).to(dev)
     model.train()
     train_path = os.path.join(a.data, 'train.jsonl')
     sk_rows = load_rows(train_path)
@@ -136,6 +179,16 @@ def main(argv=None):
         assert not clash, f'mix ids collide with sk200k ids (progparse caches by id): {sorted(clash)[:3]}'
     sk_ds = Dataset(sk_rows, model.vocab)
     mix_ds = Dataset(mix_rows, model.vocab) if mix_rows is not None else sk_ds
+    evals = {}
+    for spec in a.eval:
+        name, _, path = spec.partition('=')
+        assert name and path, f'--eval wants NAME=PATH, got {spec!r}'
+        evals[name] = (path, load_rows(path, keep=None))
+        if mix_rows is not None:
+            clash = {r['id'] for r in evals[name][1]} & {r['id'] for r in mix_rows}
+            assert not clash, f'eval file {name} shares ids with the mix file: {sorted(clash)[:3]}'
+    marks = parse_marks(a.stop_marks)
+    assert all(n in evals for n, _, _ in marks), f'--stop-marks names a file not given with --eval: {marks}'
     k = n_mix(a.batch, a.mix_frac)
     need = a.updates * k
     if mix_rows is not None and need > len(mix_rows):
@@ -144,15 +197,32 @@ def main(argv=None):
     opt = make_optimizer(model, a.lr)
     n_params = model.n_params()
     log = open(os.path.join(a.out, 'log.jsonl'), 'w')
+    elog = open(os.path.join(a.out, 'eval.jsonl'), 'w')
+
+    def run_evals(u, n):
+        """Score every eval file on its first n rows (0 = all) -> {name: evalx result}; one line each in eval.jsonl."""
+        res = {}
+        for name, (_, rows) in evals.items():
+            t = time.time()
+            sub = rows[:n] if n else rows
+            r = evaluate(model, sub, a.eval_batch, dev)
+            res[name] = r
+            elog.write(json.dumps(dict(update=u, name=name, n=r['n'], correct=r['correct'], exact=round(r['exact'], 3),
+                                       by_level={lv: [c['correct'], c['n']] for lv, c in sorted(r['by_level'].items())},
+                                       full=(n == 0 or n >= len(rows)), eval_s=round(time.time() - t, 1))) + '\n')
+        elog.flush()
+        return res
+
     t_all, win_loss, win_t, last = [], [], [], None
     win_cur, win_mix, saved = [], [], []
+    streak, stop, last_full, eval_s_total, done = 0, None, None, 0.0, 0
     for u in range(1, a.updates + 1):
         t0 = time.time()
         for g in opt.param_groups:
             g['lr'] = lr_at(u - 1, a.warmup, a.lr)
         model._drill_rng = random.Random(f'ans_drill|{a.seed}|{u}')
         items = [sk_ds[int(i)] for i in sk_idx[u - 1]] + [mix_ds[int(i)] for i in ex_idx[u - 1]]
-        batch = to_device(collate(items), 'cpu')
+        batch = to_device(collate(items), dev)
         out = model.loss(batch)
         loss = out[0] if isinstance(out, tuple) else out
         loss.backward()
@@ -161,7 +231,7 @@ def main(argv=None):
             with torch.no_grad():
                 for name, sl, acc in (('cur', items[:a.batch - k], win_cur), ('mix', items[a.batch - k:], win_mix)):
                     model._drill_rng = random.Random(f'slice|{a.seed}|{u}|{name}')
-                    o2 = model.loss(to_device(collate(sl), 'cpu'))
+                    o2 = model.loss(to_device(collate(sl), dev))
                     acc.append(float((o2[0] if isinstance(o2, tuple) else o2).detach()))
             model._drill_rng = keep_rng
         torch.nn.utils.clip_grad_norm_(model.parameters(), a.grad_clip)
@@ -171,11 +241,27 @@ def main(argv=None):
         if not np.isfinite(lv):
             sys.exit(f'non-finite loss at update {u}')
         win_loss.append(lv); win_t.append(dt); t_all.append(dt)
+        done = u
         if a.save_every and u % a.save_every == 0 and u < a.updates:
             was = model.training
             model.eval(); save(a.out, f'checkpoint-{u}.pt', model, ck, u); model.train(was)
             saved.append(u)
-        if u % a.log_every == 0 or u == a.updates:
+        if evals and a.eval_every and u % a.eval_every == 0 and u < a.updates:
+            te = time.time()
+            res = run_evals(u, a.eval_n)
+            streak = streak + 1 if marks_hold(res, marks) else 0
+            if a.abort_file and os.path.exists(a.abort_file):
+                stop = dict(reason='abort', update=u)
+                last_full = summarise(res)
+            elif streak >= 2:
+                full = res if a.eval_n == 0 else run_evals(u, 0)
+                if marks_hold(full, marks):
+                    stop = dict(reason='marks', update=u)
+                    last_full = summarise(full)
+                else:
+                    streak = 0
+            eval_s_total += time.time() - te
+        if u % a.log_every == 0 or u == a.updates or stop:
             last = float(np.mean(win_loss))
             rec = dict(update=u, loss=round(last, 5),
                        loss_cur=round(float(np.mean(win_cur)), 5) if win_cur else None,
@@ -184,22 +270,36 @@ def main(argv=None):
             log.write(json.dumps(rec) + '\n'); log.flush()
             print(json.dumps(rec), flush=True)
             win_loss, win_t, win_cur, win_mix = [], [], [], []
+        if stop:
+            break
     model.eval()
-    save(a.out, 'checkpoint.pt', model, ck, a.updates)
-    if a.updates in saved or (a.save_every and a.updates % a.save_every == 0):
-        last_ck = os.path.join(a.out, f'checkpoint-{a.updates}.pt')
+    if evals:
+        te = time.time()
+        if stop is None:                                    # ran the full budget: the last word is a whole-file eval of everything
+            full = run_evals(done, 0)
+            last_full = summarise(full)
+            stop = dict(reason='max_updates', update=done, marks_hold=marks_hold(full, marks) if marks else None)
+        stop['full_eval'] = last_full
+        stop['marks'] = a.stop_marks
+        eval_s_total += time.time() - te
+        json.dump(stop, open(os.path.join(a.out, 'stop.json'), 'w'), indent=1)
+        print('stop ' + json.dumps({k2: v for k2, v in stop.items() if k2 != 'full_eval'}), flush=True)
+    save(a.out, 'checkpoint.pt', model, ck, done)
+    if done in saved or (a.save_every and done % a.save_every == 0):
+        last_ck = os.path.join(a.out, f'checkpoint-{done}.pt')
         if not os.path.exists(last_ck):
             os.link(os.path.join(a.out, 'checkpoint.pt'), last_ck)
-    run = dict(args=vars(a), argv=sys.argv, git_sha=git_sha(), torch=torch.__version__, n_params=n_params,
-               arm='C' if not a.mix else 'mix', k_mix_slots=k, sk_slots=a.batch - k,
+    run = dict(args=vars(a), argv=sys.argv, git_sha=git_sha(), torch=torch.__version__, n_params=n_params, device=a.device,
+               arm='C' if not a.mix else 'mix', k_mix_slots=k, sk_slots=a.batch - k, updates_done=done,
                parent_sha256=sha256(a.parent), sk_train_sha256=sha256(train_path),
                mix_sha256=sha256(a.mix) if a.mix else None, n_sk_rows=len(sk_rows), n_mix_rows=len(mix_rows) if mix_rows else None,
+               eval_files_sha256={n: sha256(p) for n, (p, _) in evals.items()},
                sk_idx_sha256=hashlib.sha256(sk_idx.tobytes()).hexdigest(), ex_idx_sha256=hashlib.sha256(ex_idx.tobytes()).hexdigest(),
                final_loss_window=last, steady_median_s_per_update=round(float(np.median(t_all[min(5, len(t_all) - 1):])), 4),
-               train_s=round(sum(t_all), 1), wall_s=round(time.time() - t_start, 1),
+               train_s=round(sum(t_all), 1), eval_s=round(eval_s_total, 1), wall_s=round(time.time() - t_start, 1),
                drill_stats=getattr(model, 'drill_stats', None))
     json.dump(run, open(os.path.join(a.out, 'run.json'), 'w'), indent=1)
-    print(f'done {a.updates} updates, median {run["steady_median_s_per_update"]} s/update, wall {run["wall_s"]}s', flush=True)
+    print(f'done {done} updates, median {run["steady_median_s_per_update"]} s/update, wall {run["wall_s"]}s', flush=True)
     return run
 
 
