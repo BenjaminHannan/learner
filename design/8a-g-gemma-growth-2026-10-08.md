@@ -976,3 +976,13 @@ From `architecture/AUDIT-2026-10-09.md` (12:20 PM ET). Nothing here changes a ma
   speed scaled to 10M; offline box checks; CUDA checkpoint-and-resume test on the PC; 5090 hours at most 60% of the PC's and cost at most $45; one rehearsal of at most $2.50; then a
   failure-mode table and a plain number above 90%. Today's estimate is about 60 to 70% (suggested, not measured), so the PC runs 8aAT10M. If the accum-64 ceiling above holds, the
   agent model's accum 64 is a guess to check at AT-1 before either machine starts.
+
+## 42. Addendum AK (2026-10-14, 2:35 AM ET): status marks from Ben's merged list; the speed study; G2f's first speed reading
+
+- **Ben's merged action list (2:16 AM ET 10-14, his words in the thread).** Tiered seed rule: 5 or more seeds to act on anything, 3 is screening only, report mean, spread and worst seed, no best-of-seeds.
+  Quarantined, not to be used: the WIDE 73.3 / 75 / 76.3 set (WIDE pooled-5 73.328, fail line 75.01, pass line 76.31) and every "join-last" figure. Effect on this spec:
+  - **WIDE (section 41 and the 10-13 readout): UNPOWERED and quarantined.** One seed (400) at one size; its marks are not a verdict. The readout file carries the same line.
+  - **G1 (addendum AF, "Stop", ours +1.64 vs plain +5.35, and the with-calculator re-read in AG): UNPOWERED.** One seed per condition at 10M; the marks were written for a screen, and under the 5-seed rule they do not authorise action. Nothing already decided on them is undone here; the decision to re-test (paired seeds, per-family scores) is Ben's list item "noise floor + WIDE re-adjudication".
+  - Every size readout this thread writes from now on reports mean, spread and worst seed, and says the seed count next to the number.
+- **Speed study (Ben 9:47 PM ET 10-13).** Marks and the equivalence checks are in `results/8a-g/speedup/PREREG-eg-once.md` (written before any GPU number). The merged list's premise "rows repeat 16 times per update" is not right: an update holds 256 different rows and the frozen reader is called 16 times (16 rows each). The candidate is one reader pass per update (`eg_once`). Fused AdamW is already on (`train.py` line 170). No change is made to any queued or running job; adoption needs Ben's word, E1/E3/E4, and timing on the PC's own card.
+- **G2f first speed reading (Mac, 2:18 AM ET 10-14, one train line):** step 500 at elapsed 6,068.9 s = 12.1 s per step (0.082 updates/s) against 0.93 for g2c3s, which projects about 81 h for 24,000 steps (end about Fri 10-17, 8 AM ET) against the 26 to 40 h guess in the earlier notes. One line only, start-up cost not separated; the step-1000 line settles it. The old guess is withdrawn.
