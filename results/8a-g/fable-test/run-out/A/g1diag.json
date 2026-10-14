@@ -1,0 +1,2840 @@
+{
+ "meta": {
+  "device": "cpu",
+  "amp": "fp32",
+  "n_reg": 36,
+  "register_shape": [
+   "B",
+   36,
+   256
+  ],
+  "blocks": {
+   "3M": 2,
+   "10M": 8
+  },
+  "max_rows": null,
+  "eval_batch": 128,
+  "trained_params": {
+   "3M": 3544913,
+   "10M": 10496537
+  },
+  "caps": {
+   "max_prompt": 280,
+   "max_ans": 35,
+   "n_num": 91,
+   "w_max": 208,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109
+  }
+ },
+ "selfcheck": {
+  "rows": 6200,
+  "mismatches_chosen_vs_generate": {
+   "3M": 0,
+   "10M": 0
+  },
+  "mismatches_mirror_vs_talk_output_and_mode": {
+   "3M": 0,
+   "10M": 0
+  },
+  "total_mismatches": 0
+ },
+ "oracle": {
+  "pooled5": {
+   "3M": {
+    "n": 6040,
+    "correct": 4411,
+    "exact": 73.02980132450331,
+    "oracle_correct": 4450,
+    "oracle_exact": 73.67549668874172
+   },
+   "10M": {
+    "n": 6040,
+    "correct": 4511,
+    "exact": 74.68543046357615,
+    "oracle_correct": 4550,
+    "oracle_exact": 75.33112582781457
+   },
+   "gain": {
+    "normal": 1.6556291390728433,
+    "oracle": 1.6556291390728575,
+    "error_ratio_normal": 0.9386126457949663,
+    "error_ratio_oracle": 0.9371069182389937
+   }
+  },
+  "block13": {
+   "3M": {
+    "n": 2440,
+    "correct": 2170,
+    "exact": 88.93442622950819,
+    "oracle_correct": 2175,
+    "oracle_exact": 89.13934426229508
+   },
+   "10M": {
+    "n": 2440,
+    "correct": 2169,
+    "exact": 88.89344262295081,
+    "oracle_correct": 2172,
+    "oracle_exact": 89.01639344262296
+   },
+   "gain": {
+    "normal": -0.04098360655737565,
+    "oracle": -0.12295081967212695,
+    "error_ratio_normal": 1.0037037037037038,
+    "error_ratio_oracle": 1.0113207547169811
+   }
+  },
+  "block21": {
+   "3M": {
+    "n": 3600,
+    "correct": 2241,
+    "exact": 62.25,
+    "oracle_correct": 2275,
+    "oracle_exact": 63.19444444444444
+   },
+   "10M": {
+    "n": 3600,
+    "correct": 2342,
+    "exact": 65.05555555555556,
+    "oracle_correct": 2378,
+    "oracle_exact": 66.05555555555556
+   },
+   "gain": {
+    "normal": 2.805555555555557,
+    "oracle": 2.8611111111111143,
+    "error_ratio_normal": 0.9256806475349522,
+    "error_ratio_oracle": 0.9222641509433962
+   }
+  },
+  "by_split": {
+   "in_dist": {
+    "3M": {
+     "n": 1360,
+     "correct": 1171,
+     "exact": 86.1029411764706,
+     "oracle_correct": 1176,
+     "oracle_exact": 86.47058823529412
+    },
+    "10M": {
+     "n": 1360,
+     "correct": 1203,
+     "exact": 88.45588235294117,
+     "oracle_correct": 1207,
+     "oracle_exact": 88.75
+    }
+   },
+   "answer": {
+    "3M": {
+     "n": 1200,
+     "correct": 864,
+     "exact": 72.0,
+     "oracle_correct": 867,
+     "oracle_exact": 72.25
+    },
+    "10M": {
+     "n": 1200,
+     "correct": 873,
+     "exact": 72.75,
+     "oracle_correct": 878,
+     "oracle_exact": 73.16666666666667
+    }
+   },
+   "frame": {
+    "3M": {
+     "n": 1360,
+     "correct": 1178,
+     "exact": 86.61764705882354,
+     "oracle_correct": 1185,
+     "oracle_exact": 87.13235294117646
+    },
+    "10M": {
+     "n": 1360,
+     "correct": 1196,
+     "exact": 87.94117647058823,
+     "oracle_correct": 1200,
+     "oracle_exact": 88.23529411764706
+    }
+   },
+   "vocab": {
+    "3M": {
+     "n": 800,
+     "correct": 716,
+     "exact": 89.5,
+     "oracle_correct": 720,
+     "oracle_exact": 90.0
+    },
+    "10M": {
+     "n": 800,
+     "correct": 734,
+     "exact": 91.75,
+     "oracle_correct": 741,
+     "oracle_exact": 92.625
+    }
+   },
+   "variant": {
+    "3M": {
+     "n": 1320,
+     "correct": 482,
+     "exact": 36.515151515151516,
+     "oracle_correct": 502,
+     "oracle_exact": 38.03030303030303
+    },
+    "10M": {
+     "n": 1320,
+     "correct": 505,
+     "exact": 38.25757575757576,
+     "oracle_correct": 524,
+     "oracle_exact": 39.696969696969695
+    }
+   },
+   "family": {
+    "3M": {
+     "n": 160,
+     "correct": 2,
+     "exact": 1.25,
+     "oracle_correct": 3,
+     "oracle_exact": 1.875
+    },
+    "10M": {
+     "n": 160,
+     "correct": 3,
+     "exact": 1.875,
+     "oracle_correct": 4,
+     "oracle_exact": 2.5
+    }
+   }
+  },
+  "block_families": {
+   "block13": [
+    "arith_bare",
+    "backward_solve",
+    "chain_ops",
+    "story_addsub",
+    "story_chain3",
+    "chain_story2",
+    "var_chain",
+    "div_exact",
+    "table_calc",
+    "distance_units",
+    "compare_numbers",
+    "state_update",
+    "percent_rate"
+   ],
+   "block21": [
+    "cipher_map",
+    "clock_date",
+    "copy_word",
+    "digits_parity",
+    "fewshot_number_rule",
+    "group_induct",
+    "kin_chain",
+    "letter_ops",
+    "list_index",
+    "list_stats",
+    "object_track",
+    "odd_one_out",
+    "op_define",
+    "order_chain",
+    "passage_qa",
+    "prop_eval",
+    "rule_apply",
+    "seq_cycle",
+    "seq_next",
+    "string_transform",
+    "syllogism",
+    "table_lookup",
+    "unit_convert",
+    "verify_claim",
+    "word_filter"
+   ],
+   "block13_missing": []
+  },
+  "by_split_blocks": {
+   "in_dist": {
+    "block13": {
+     "3M": {
+      "n": 520,
+      "correct": 520,
+      "exact": 100.0,
+      "oracle_correct": 520,
+      "oracle_exact": 100.0
+     },
+     "10M": {
+      "n": 520,
+      "correct": 520,
+      "exact": 100.0,
+      "oracle_correct": 520,
+      "oracle_exact": 100.0
+     }
+    },
+    "block21": {
+     "3M": {
+      "n": 840,
+      "correct": 651,
+      "exact": 77.5,
+      "oracle_correct": 656,
+      "oracle_exact": 78.0952380952381
+     },
+     "10M": {
+      "n": 840,
+      "correct": 683,
+      "exact": 81.30952380952381,
+      "oracle_correct": 687,
+      "oracle_exact": 81.78571428571429
+     }
+    }
+   },
+   "answer": {
+    "block13": {
+     "3M": {
+      "n": 520,
+      "correct": 520,
+      "exact": 100.0,
+      "oracle_correct": 520,
+      "oracle_exact": 100.0
+     },
+     "10M": {
+      "n": 520,
+      "correct": 520,
+      "exact": 100.0,
+      "oracle_correct": 520,
+      "oracle_exact": 100.0
+     }
+    },
+    "block21": {
+     "3M": {
+      "n": 680,
+      "correct": 344,
+      "exact": 50.588235294117645,
+      "oracle_correct": 347,
+      "oracle_exact": 51.029411764705884
+     },
+     "10M": {
+      "n": 680,
+      "correct": 353,
+      "exact": 51.911764705882355,
+      "oracle_correct": 358,
+      "oracle_exact": 52.64705882352941
+     }
+    }
+   },
+   "frame": {
+    "block13": {
+     "3M": {
+      "n": 520,
+      "correct": 520,
+      "exact": 100.0,
+      "oracle_correct": 520,
+      "oracle_exact": 100.0
+     },
+     "10M": {
+      "n": 520,
+      "correct": 517,
+      "exact": 99.42307692307692,
+      "oracle_correct": 517,
+      "oracle_exact": 99.42307692307692
+     }
+    },
+    "block21": {
+     "3M": {
+      "n": 840,
+      "correct": 658,
+      "exact": 78.33333333333333,
+      "oracle_correct": 665,
+      "oracle_exact": 79.16666666666667
+     },
+     "10M": {
+      "n": 840,
+      "correct": 679,
+      "exact": 80.83333333333333,
+      "oracle_correct": 683,
+      "oracle_exact": 81.30952380952381
+     }
+    }
+   },
+   "vocab": {
+    "block13": {
+     "3M": {
+      "n": 360,
+      "correct": 358,
+      "exact": 99.44444444444444,
+      "oracle_correct": 358,
+      "oracle_exact": 99.44444444444444
+     },
+     "10M": {
+      "n": 360,
+      "correct": 356,
+      "exact": 98.88888888888889,
+      "oracle_correct": 356,
+      "oracle_exact": 98.88888888888889
+     }
+    },
+    "block21": {
+     "3M": {
+      "n": 440,
+      "correct": 358,
+      "exact": 81.36363636363636,
+      "oracle_correct": 362,
+      "oracle_exact": 82.27272727272727
+     },
+     "10M": {
+      "n": 440,
+      "correct": 378,
+      "exact": 85.9090909090909,
+      "oracle_correct": 385,
+      "oracle_exact": 87.5
+     }
+    }
+   },
+   "variant": {
+    "block13": {
+     "3M": {
+      "n": 520,
+      "correct": 252,
+      "exact": 48.46153846153846,
+      "oracle_correct": 257,
+      "oracle_exact": 49.42307692307692
+     },
+     "10M": {
+      "n": 520,
+      "correct": 256,
+      "exact": 49.23076923076923,
+      "oracle_correct": 259,
+      "oracle_exact": 49.80769230769231
+     }
+    },
+    "block21": {
+     "3M": {
+      "n": 800,
+      "correct": 230,
+      "exact": 28.75,
+      "oracle_correct": 245,
+      "oracle_exact": 30.625
+     },
+     "10M": {
+      "n": 800,
+      "correct": 249,
+      "exact": 31.125,
+      "oracle_correct": 265,
+      "oracle_exact": 33.125
+     }
+    }
+   }
+  }
+ },
+ "compare_g1": {
+  "3M": {
+   "g1_pooled5": 73.01324503311258,
+   "g1_correct": 4410,
+   "g1_n": 6040,
+   "d_pooled5": 73.02980132450331,
+   "d_correct": 4411,
+   "d_n": 6040,
+   "diff_points": 0.016556291390728006,
+   "diff_rows": 1,
+   "by_split": {
+    "in_dist": {
+     "g1": 1170,
+     "d": 1171,
+     "n": 1360
+    },
+    "answer": {
+     "g1": 863,
+     "d": 864,
+     "n": 1200
+    },
+    "frame": {
+     "g1": 1178,
+     "d": 1178,
+     "n": 1360
+    },
+    "vocab": {
+     "g1": 715,
+     "d": 716,
+     "n": 800
+    },
+    "variant": {
+     "g1": 484,
+     "d": 482,
+     "n": 1320
+    },
+    "family": {
+     "g1": 4,
+     "d": 2,
+     "n": 160
+    }
+   },
+   "g1_in_dist": 86.02941176470588
+  },
+  "10M": {
+   "g1_pooled5": 74.6523178807947,
+   "g1_correct": 4509,
+   "g1_n": 6040,
+   "d_pooled5": 74.68543046357615,
+   "d_correct": 4511,
+   "d_n": 6040,
+   "diff_points": 0.03311258278145601,
+   "diff_rows": 2,
+   "by_split": {
+    "in_dist": {
+     "g1": 1201,
+     "d": 1203,
+     "n": 1360
+    },
+    "answer": {
+     "g1": 875,
+     "d": 873,
+     "n": 1200
+    },
+    "frame": {
+     "g1": 1195,
+     "d": 1196,
+     "n": 1360
+    },
+    "vocab": {
+     "g1": 732,
+     "d": 734,
+     "n": 800
+    },
+    "variant": {
+     "g1": 506,
+     "d": 505,
+     "n": 1320
+    },
+    "family": {
+     "g1": 3,
+     "d": 3,
+     "n": 160
+    }
+   },
+   "g1_in_dist": 88.30882352941177
+  },
+  "g1_gain": 1.6390728476821153
+ },
+ "ledger": {
+  "3M": {
+   "wrong_by_split_family_chosen_gold": {
+    "answer|cipher_map|GEN|gold GEN": 13,
+    "answer|digits_parity|GEN|gold GEN": 32,
+    "answer|fewshot_number_rule|GEN|gold GEN": 32,
+    "answer|fewshot_number_rule|GEN|gold NUM": 3,
+    "answer|list_index|GEN|gold GEN": 15,
+    "answer|list_index|NUM|gold GEN": 1,
+    "answer|list_index|WORD|gold WORD": 3,
+    "answer|list_stats|GEN|gold GEN": 19,
+    "answer|list_stats|GEN|gold NUM": 1,
+    "answer|list_stats|NUM|gold GEN": 1,
+    "answer|list_stats|NUM|gold NUM": 11,
+    "answer|object_track|WORD|gold WORD": 13,
+    "answer|odd_one_out|NUM|gold NUM": 1,
+    "answer|order_chain|WORD|gold WORD": 9,
+    "answer|passage_qa|GEN|gold GEN": 12,
+    "answer|rule_apply|GEN|gold GEN": 34,
+    "answer|seq_cycle|WORD|gold WORD": 30,
+    "answer|seq_next|GEN|gold GEN": 34,
+    "answer|table_lookup|GEN|gold GEN": 30,
+    "answer|table_lookup|WORD|gold WORD": 2,
+    "answer|word_filter|GEN|gold GEN": 40,
+    "family|clock_date|GEN|gold GEN": 8,
+    "family|clock_date|GEN|gold WORD": 1,
+    "family|clock_date|NUM|gold GEN": 26,
+    "family|clock_date|WORD|gold GEN": 5,
+    "family|op_define|NUM|gold GEN": 38,
+    "family|string_transform|GEN|gold GEN": 38,
+    "family|string_transform|GEN|gold WORD": 1,
+    "family|string_transform|WORD|gold GEN": 1,
+    "family|unit_convert|NUM|gold NUM": 39,
+    "family|unit_convert|WORD|gold NUM": 1,
+    "frame|cipher_map|GEN|gold GEN": 13,
+    "frame|digits_parity|GEN|gold GEN": 9,
+    "frame|fewshot_number_rule|GEN|gold GEN": 34,
+    "frame|group_induct|WORD|gold WORD": 1,
+    "frame|kin_chain|GEN|gold GEN": 11,
+    "frame|kin_chain|WORD|gold GEN": 1,
+    "frame|letter_ops|GEN|gold GEN": 1,
+    "frame|list_index|GEN|gold GEN": 5,
+    "frame|list_index|NUM|gold GEN": 4,
+    "frame|list_stats|GEN|gold GEN": 1,
+    "frame|list_stats|NUM|gold GEN": 1,
+    "frame|list_stats|NUM|gold NUM": 1,
+    "frame|object_track|WORD|gold WORD": 11,
+    "frame|order_chain|GEN|gold GEN": 5,
+    "frame|order_chain|WORD|gold GEN": 1,
+    "frame|order_chain|WORD|gold WORD": 2,
+    "frame|passage_qa|GEN|gold GEN": 9,
+    "frame|rule_apply|GEN|gold GEN": 14,
+    "frame|seq_cycle|WORD|gold WORD": 8,
+    "frame|seq_next|GEN|gold GEN": 14,
+    "frame|table_lookup|GEN|gold GEN": 25,
+    "frame|verify_claim|GEN|gold GEN": 9,
+    "frame|word_filter|GEN|gold GEN": 1,
+    "frame|word_filter|GEN|gold NUM": 1,
+    "in_dist|cipher_map|GEN|gold GEN": 13,
+    "in_dist|digits_parity|GEN|gold GEN": 9,
+    "in_dist|fewshot_number_rule|GEN|gold GEN": 35,
+    "in_dist|fewshot_number_rule|GEN|gold NUM": 1,
+    "in_dist|kin_chain|GEN|gold GEN": 9,
+    "in_dist|letter_ops|GEN|gold GEN": 4,
+    "in_dist|list_index|GEN|gold GEN": 6,
+    "in_dist|list_index|WORD|gold WORD": 1,
+    "in_dist|list_stats|NUM|gold GEN": 1,
+    "in_dist|list_stats|NUM|gold NUM": 2,
+    "in_dist|object_track|WORD|gold WORD": 13,
+    "in_dist|odd_one_out|NUM|gold NUM": 2,
+    "in_dist|order_chain|GEN|gold GEN": 6,
+    "in_dist|order_chain|WORD|gold GEN": 2,
+    "in_dist|passage_qa|GEN|gold GEN": 8,
+    "in_dist|rule_apply|GEN|gold GEN": 12,
+    "in_dist|rule_apply|GEN|gold NUM": 1,
+    "in_dist|seq_cycle|WORD|gold WORD": 10,
+    "in_dist|seq_next|GEN|gold GEN": 19,
+    "in_dist|table_lookup|GEN|gold GEN": 28,
+    "in_dist|table_lookup|WORD|gold WORD": 1,
+    "in_dist|verify_claim|GEN|gold GEN": 5,
+    "in_dist|word_filter|GEN|gold GEN": 1,
+    "variant|arith_bare|NUM|gold NUM": 13,
+    "variant|backward_solve|NUM|gold NUM": 31,
+    "variant|chain_story2|NUM|gold NUM": 21,
+    "variant|compare_numbers|NUM|gold GEN": 16,
+    "variant|compare_numbers|NUM|gold NUM": 24,
+    "variant|copy_word|GEN|gold WORD": 5,
+    "variant|copy_word|WORD|gold WORD": 26,
+    "variant|digits_parity|GEN|gold GEN": 36,
+    "variant|digits_parity|NUM|gold GEN": 1,
+    "variant|distance_units|NUM|gold NUM": 30,
+    "variant|div_exact|NUM|gold NUM": 23,
+    "variant|fewshot_number_rule|GEN|gold GEN": 36,
+    "variant|fewshot_number_rule|GEN|gold NUM": 2,
+    "variant|group_induct|WORD|gold WORD": 21,
+    "variant|kin_chain|GEN|gold GEN": 2,
+    "variant|letter_ops|GEN|gold GEN": 34,
+    "variant|letter_ops|WORD|gold GEN": 6,
+    "variant|list_index|GEN|gold WORD": 1,
+    "variant|list_index|WORD|gold WORD": 28,
+    "variant|list_stats|NUM|gold GEN": 40,
+    "variant|object_track|WORD|gold WORD": 36,
+    "variant|odd_one_out|NUM|gold NUM": 22,
+    "variant|order_chain|GEN|gold GEN": 3,
+    "variant|order_chain|WORD|gold WORD": 24,
+    "variant|passage_qa|GEN|gold GEN": 2,
+    "variant|passage_qa|GEN|gold WORD": 23,
+    "variant|percent_rate|NUM|gold NUM": 26,
+    "variant|prop_eval|WORD|gold WORD": 16,
+    "variant|rule_apply|GEN|gold GEN": 40,
+    "variant|seq_cycle|GEN|gold NUM": 1,
+    "variant|seq_cycle|WORD|gold NUM": 19,
+    "variant|seq_next|GEN|gold GEN": 40,
+    "variant|story_addsub|NUM|gold NUM": 16,
+    "variant|syllogism|GEN|gold GEN": 21,
+    "variant|table_calc|NUM|gold GEN": 40,
+    "variant|table_lookup|GEN|gold GEN": 17,
+    "variant|table_lookup|GEN|gold NUM": 19,
+    "variant|table_lookup|WORD|gold WORD": 1,
+    "variant|var_chain|NUM|gold NUM": 28,
+    "variant|verify_claim|GEN|gold GEN": 18,
+    "variant|verify_claim|WORD|gold GEN": 4,
+    "variant|word_filter|GEN|gold GEN": 26,
+    "vocab|kin_chain|GEN|gold GEN": 11,
+    "vocab|letter_ops|GEN|gold GEN": 3,
+    "vocab|list_index|GEN|gold GEN": 6,
+    "vocab|list_index|NUM|gold GEN": 3,
+    "vocab|list_index|WORD|gold WORD": 3,
+    "vocab|object_track|WORD|gold WORD": 7,
+    "vocab|order_chain|GEN|gold GEN": 4,
+    "vocab|order_chain|WORD|gold GEN": 1,
+    "vocab|order_chain|WORD|gold WORD": 2,
+    "vocab|passage_qa|GEN|gold GEN": 14,
+    "vocab|rule_apply|WORD|gold WORD": 5,
+    "vocab|table_calc|NUM|gold NUM": 2,
+    "vocab|table_lookup|GEN|gold GEN": 22,
+    "vocab|table_lookup|GEN|gold NUM": 1
+   },
+   "wrong_pooled5_gold_chosen_workspace": {
+    "gold GEN|chosen GEN|workspace holds gold False": 793,
+    "gold GEN|chosen GEN|workspace holds gold True": 109,
+    "gold GEN|chosen NUM|workspace holds gold False": 99,
+    "gold GEN|chosen NUM|workspace holds gold True": 9,
+    "gold GEN|chosen WORD|workspace holds gold False": 15,
+    "gold NUM|chosen GEN|workspace holds gold True": 30,
+    "gold NUM|chosen NUM|workspace holds gold False": 147,
+    "gold NUM|chosen NUM|workspace holds gold True": 106,
+    "gold NUM|chosen WORD|workspace holds gold True": 19,
+    "gold WORD|chosen GEN|workspace holds gold False": 29,
+    "gold WORD|chosen WORD|workspace holds gold False": 273
+   },
+   "wrong_per_split": {
+    "in_dist": 189,
+    "answer": 336,
+    "frame": 182,
+    "vocab": 84,
+    "variant": 838,
+    "family": 158
+   }
+  },
+  "10M": {
+   "wrong_by_split_family_chosen_gold": {
+    "answer|cipher_map|GEN|gold GEN": 15,
+    "answer|digits_parity|GEN|gold GEN": 32,
+    "answer|fewshot_number_rule|GEN|gold GEN": 32,
+    "answer|fewshot_number_rule|GEN|gold NUM": 3,
+    "answer|list_index|GEN|gold GEN": 16,
+    "answer|list_index|WORD|gold WORD": 7,
+    "answer|list_stats|GEN|gold GEN": 18,
+    "answer|list_stats|GEN|gold NUM": 1,
+    "answer|list_stats|NUM|gold GEN": 2,
+    "answer|list_stats|NUM|gold NUM": 10,
+    "answer|object_track|WORD|gold WORD": 14,
+    "answer|odd_one_out|NUM|gold NUM": 2,
+    "answer|order_chain|WORD|gold WORD": 12,
+    "answer|passage_qa|GEN|gold GEN": 11,
+    "answer|rule_apply|GEN|gold GEN": 21,
+    "answer|seq_cycle|WORD|gold WORD": 31,
+    "answer|seq_next|GEN|gold GEN": 30,
+    "answer|table_lookup|GEN|gold GEN": 29,
+    "answer|table_lookup|WORD|gold WORD": 1,
+    "answer|word_filter|GEN|gold GEN": 40,
+    "family|clock_date|GEN|gold GEN": 30,
+    "family|clock_date|NUM|gold GEN": 5,
+    "family|clock_date|NUM|gold WORD": 1,
+    "family|clock_date|WORD|gold GEN": 4,
+    "family|op_define|GEN|gold GEN": 2,
+    "family|op_define|NUM|gold GEN": 38,
+    "family|string_transform|GEN|gold GEN": 34,
+    "family|string_transform|GEN|gold WORD": 1,
+    "family|string_transform|WORD|gold GEN": 5,
+    "family|unit_convert|GEN|gold NUM": 4,
+    "family|unit_convert|NUM|gold NUM": 33,
+    "frame|cipher_map|GEN|gold GEN": 17,
+    "frame|digits_parity|GEN|gold GEN": 7,
+    "frame|fewshot_number_rule|GEN|gold GEN": 36,
+    "frame|group_induct|WORD|gold WORD": 1,
+    "frame|kin_chain|GEN|gold GEN": 7,
+    "frame|letter_ops|GEN|gold GEN": 2,
+    "frame|list_index|GEN|gold GEN": 3,
+    "frame|list_stats|GEN|gold GEN": 1,
+    "frame|list_stats|NUM|gold GEN": 1,
+    "frame|list_stats|NUM|gold NUM": 1,
+    "frame|object_track|WORD|gold WORD": 7,
+    "frame|order_chain|GEN|gold GEN": 5,
+    "frame|order_chain|WORD|gold GEN": 1,
+    "frame|order_chain|WORD|gold WORD": 1,
+    "frame|passage_qa|GEN|gold GEN": 5,
+    "frame|rule_apply|GEN|gold GEN": 10,
+    "frame|seq_cycle|WORD|gold WORD": 9,
+    "frame|seq_next|GEN|gold GEN": 14,
+    "frame|story_addsub|GEN|gold NUM": 1,
+    "frame|story_chain3|NUM|gold NUM": 1,
+    "frame|table_calc|NUM|gold NUM": 1,
+    "frame|table_lookup|GEN|gold GEN": 23,
+    "frame|table_lookup|GEN|gold NUM": 1,
+    "frame|table_lookup|WORD|gold WORD": 1,
+    "frame|verify_claim|GEN|gold GEN": 6,
+    "frame|word_filter|GEN|gold NUM": 2,
+    "in_dist|cipher_map|GEN|gold GEN": 12,
+    "in_dist|digits_parity|GEN|gold GEN": 10,
+    "in_dist|fewshot_number_rule|GEN|gold GEN": 34,
+    "in_dist|fewshot_number_rule|GEN|gold NUM": 1,
+    "in_dist|group_induct|WORD|gold WORD": 1,
+    "in_dist|kin_chain|GEN|gold GEN": 6,
+    "in_dist|letter_ops|GEN|gold GEN": 3,
+    "in_dist|list_index|GEN|gold GEN": 1,
+    "in_dist|list_index|GEN|gold NUM": 1,
+    "in_dist|list_stats|NUM|gold NUM": 1,
+    "in_dist|object_track|WORD|gold WORD": 9,
+    "in_dist|odd_one_out|NUM|gold NUM": 1,
+    "in_dist|order_chain|GEN|gold GEN": 8,
+    "in_dist|order_chain|WORD|gold GEN": 2,
+    "in_dist|order_chain|WORD|gold WORD": 2,
+    "in_dist|passage_qa|GEN|gold GEN": 4,
+    "in_dist|rule_apply|GEN|gold GEN": 8,
+    "in_dist|rule_apply|GEN|gold NUM": 1,
+    "in_dist|seq_cycle|WORD|gold WORD": 4,
+    "in_dist|seq_next|GEN|gold GEN": 20,
+    "in_dist|table_lookup|GEN|gold GEN": 25,
+    "in_dist|verify_claim|GEN|gold GEN": 3,
+    "variant|arith_bare|NUM|gold NUM": 4,
+    "variant|backward_solve|NUM|gold NUM": 30,
+    "variant|chain_story2|NUM|gold NUM": 24,
+    "variant|compare_numbers|GEN|gold GEN": 16,
+    "variant|compare_numbers|GEN|gold NUM": 2,
+    "variant|compare_numbers|NUM|gold NUM": 21,
+    "variant|copy_word|GEN|gold WORD": 31,
+    "variant|copy_word|WORD|gold WORD": 7,
+    "variant|digits_parity|GEN|gold GEN": 18,
+    "variant|distance_units|NUM|gold NUM": 30,
+    "variant|div_exact|GEN|gold NUM": 9,
+    "variant|div_exact|NUM|gold NUM": 20,
+    "variant|fewshot_number_rule|GEN|gold GEN": 36,
+    "variant|fewshot_number_rule|GEN|gold NUM": 2,
+    "variant|group_induct|WORD|gold WORD": 22,
+    "variant|kin_chain|GEN|gold GEN": 2,
+    "variant|letter_ops|GEN|gold GEN": 40,
+    "variant|list_index|WORD|gold WORD": 33,
+    "variant|list_stats|NUM|gold GEN": 40,
+    "variant|object_track|WORD|gold WORD": 39,
+    "variant|odd_one_out|NUM|gold NUM": 29,
+    "variant|order_chain|GEN|gold GEN": 3,
+    "variant|order_chain|WORD|gold WORD": 23,
+    "variant|passage_qa|GEN|gold WORD": 23,
+    "variant|percent_rate|NUM|gold NUM": 26,
+    "variant|prop_eval|WORD|gold WORD": 14,
+    "variant|rule_apply|GEN|gold GEN": 40,
+    "variant|seq_cycle|WORD|gold NUM": 16,
+    "variant|seq_next|GEN|gold GEN": 40,
+    "variant|story_addsub|NUM|gold NUM": 17,
+    "variant|syllogism|GEN|gold GEN": 21,
+    "variant|table_calc|NUM|gold GEN": 40,
+    "variant|table_lookup|GEN|gold GEN": 16,
+    "variant|table_lookup|GEN|gold NUM": 19,
+    "variant|table_lookup|WORD|gold WORD": 1,
+    "variant|var_chain|NUM|gold NUM": 25,
+    "variant|verify_claim|GEN|gold GEN": 10,
+    "variant|word_filter|GEN|gold GEN": 26,
+    "vocab|kin_chain|GEN|gold GEN": 5,
+    "vocab|letter_ops|GEN|gold GEN": 2,
+    "vocab|list_index|GEN|gold GEN": 4,
+    "vocab|list_index|NUM|gold GEN": 2,
+    "vocab|list_index|WORD|gold WORD": 8,
+    "vocab|object_track|WORD|gold WORD": 5,
+    "vocab|order_chain|GEN|gold GEN": 4,
+    "vocab|order_chain|WORD|gold GEN": 1,
+    "vocab|order_chain|WORD|gold WORD": 2,
+    "vocab|passage_qa|GEN|gold GEN": 4,
+    "vocab|table_calc|NUM|gold NUM": 4,
+    "vocab|table_lookup|GEN|gold GEN": 21,
+    "vocab|table_lookup|GEN|gold NUM": 1,
+    "vocab|word_filter|GEN|gold NUM": 1,
+    "vocab|word_filter|NUM|gold GEN": 2
+   },
+   "wrong_pooled5_gold_chosen_workspace": {
+    "gold GEN|chosen GEN|workspace holds gold False": 731,
+    "gold GEN|chosen GEN|workspace holds gold True": 91,
+    "gold GEN|chosen NUM|workspace holds gold False": 85,
+    "gold GEN|chosen NUM|workspace holds gold True": 2,
+    "gold GEN|chosen WORD|workspace holds gold False": 4,
+    "gold NUM|chosen GEN|workspace holds gold False": 10,
+    "gold NUM|chosen GEN|workspace holds gold True": 35,
+    "gold NUM|chosen NUM|workspace holds gold False": 141,
+    "gold NUM|chosen NUM|workspace holds gold True": 106,
+    "gold NUM|chosen WORD|workspace holds gold True": 16,
+    "gold WORD|chosen GEN|workspace holds gold False": 54,
+    "gold WORD|chosen WORD|workspace holds gold False": 254
+   },
+   "wrong_per_split": {
+    "in_dist": 157,
+    "answer": 327,
+    "frame": 164,
+    "vocab": 66,
+    "variant": 815,
+    "family": 157
+   }
+  },
+  "fixed_broken_3M_to_10M": {
+   "by_split_family": {
+    "answer|arith_bare": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|backward_solve": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|chain_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|chain_story2": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|cipher_map": {
+     "fixed": 2,
+     "broken": 4,
+     "both_right": 23,
+     "both_wrong": 11
+    },
+    "answer|compare_numbers": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|copy_word": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|digits_parity": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 8,
+     "both_wrong": 32
+    },
+    "answer|distance_units": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|div_exact": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|fewshot_number_rule": {
+     "fixed": 2,
+     "broken": 2,
+     "both_right": 3,
+     "both_wrong": 33
+    },
+    "answer|kin_chain": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|letter_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|list_index": {
+     "fixed": 2,
+     "broken": 6,
+     "both_right": 15,
+     "both_wrong": 17
+    },
+    "answer|list_stats": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 8,
+     "both_wrong": 31
+    },
+    "answer|object_track": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 26,
+     "both_wrong": 13
+    },
+    "answer|odd_one_out": {
+     "fixed": 1,
+     "broken": 2,
+     "both_right": 37,
+     "both_wrong": 0
+    },
+    "answer|order_chain": {
+     "fixed": 1,
+     "broken": 4,
+     "both_right": 27,
+     "both_wrong": 8
+    },
+    "answer|passage_qa": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 28,
+     "both_wrong": 11
+    },
+    "answer|percent_rate": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|rule_apply": {
+     "fixed": 15,
+     "broken": 2,
+     "both_right": 4,
+     "both_wrong": 19
+    },
+    "answer|seq_cycle": {
+     "fixed": 1,
+     "broken": 2,
+     "both_right": 8,
+     "both_wrong": 29
+    },
+    "answer|seq_next": {
+     "fixed": 7,
+     "broken": 3,
+     "both_right": 3,
+     "both_wrong": 27
+    },
+    "answer|state_update": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|story_addsub": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|story_chain3": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|table_calc": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|table_lookup": {
+     "fixed": 2,
+     "broken": 0,
+     "both_right": 8,
+     "both_wrong": 30
+    },
+    "answer|var_chain": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "answer|word_filter": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "family|clock_date": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "family|op_define": {
+     "fixed": 0,
+     "broken": 2,
+     "both_right": 0,
+     "both_wrong": 38
+    },
+    "family|string_transform": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "family|unit_convert": {
+     "fixed": 3,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 37
+    },
+    "frame|arith_bare": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|backward_solve": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|chain_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|chain_story2": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|cipher_map": {
+     "fixed": 2,
+     "broken": 6,
+     "both_right": 21,
+     "both_wrong": 11
+    },
+    "frame|compare_numbers": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|copy_word": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|digits_parity": {
+     "fixed": 4,
+     "broken": 2,
+     "both_right": 29,
+     "both_wrong": 5
+    },
+    "frame|distance_units": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|div_exact": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|fewshot_number_rule": {
+     "fixed": 2,
+     "broken": 4,
+     "both_right": 2,
+     "both_wrong": 32
+    },
+    "frame|group_induct": {
+     "fixed": 1,
+     "broken": 1,
+     "both_right": 38,
+     "both_wrong": 0
+    },
+    "frame|kin_chain": {
+     "fixed": 5,
+     "broken": 0,
+     "both_right": 28,
+     "both_wrong": 7
+    },
+    "frame|letter_ops": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 38,
+     "both_wrong": 1
+    },
+    "frame|list_index": {
+     "fixed": 7,
+     "broken": 1,
+     "both_right": 30,
+     "both_wrong": 2
+    },
+    "frame|list_stats": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 37,
+     "both_wrong": 3
+    },
+    "frame|object_track": {
+     "fixed": 4,
+     "broken": 0,
+     "both_right": 29,
+     "both_wrong": 7
+    },
+    "frame|odd_one_out": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|order_chain": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 32,
+     "both_wrong": 7
+    },
+    "frame|passage_qa": {
+     "fixed": 4,
+     "broken": 0,
+     "both_right": 31,
+     "both_wrong": 5
+    },
+    "frame|percent_rate": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|prop_eval": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|rule_apply": {
+     "fixed": 7,
+     "broken": 3,
+     "both_right": 23,
+     "both_wrong": 7
+    },
+    "frame|seq_cycle": {
+     "fixed": 3,
+     "broken": 4,
+     "both_right": 28,
+     "both_wrong": 5
+    },
+    "frame|seq_next": {
+     "fixed": 4,
+     "broken": 4,
+     "both_right": 22,
+     "both_wrong": 10
+    },
+    "frame|state_update": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|story_addsub": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 39,
+     "both_wrong": 0
+    },
+    "frame|story_chain3": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 39,
+     "both_wrong": 0
+    },
+    "frame|syllogism": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|table_calc": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 39,
+     "both_wrong": 0
+    },
+    "frame|table_lookup": {
+     "fixed": 3,
+     "broken": 3,
+     "both_right": 12,
+     "both_wrong": 22
+    },
+    "frame|var_chain": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "frame|verify_claim": {
+     "fixed": 3,
+     "broken": 0,
+     "both_right": 31,
+     "both_wrong": 6
+    },
+    "frame|word_filter": {
+     "fixed": 1,
+     "broken": 1,
+     "both_right": 37,
+     "both_wrong": 1
+    },
+    "in_dist|arith_bare": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|backward_solve": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|chain_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|chain_story2": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|cipher_map": {
+     "fixed": 3,
+     "broken": 2,
+     "both_right": 25,
+     "both_wrong": 10
+    },
+    "in_dist|compare_numbers": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|copy_word": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|digits_parity": {
+     "fixed": 2,
+     "broken": 3,
+     "both_right": 28,
+     "both_wrong": 7
+    },
+    "in_dist|distance_units": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|div_exact": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|fewshot_number_rule": {
+     "fixed": 3,
+     "broken": 2,
+     "both_right": 2,
+     "both_wrong": 33
+    },
+    "in_dist|group_induct": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 39,
+     "both_wrong": 0
+    },
+    "in_dist|kin_chain": {
+     "fixed": 4,
+     "broken": 1,
+     "both_right": 30,
+     "both_wrong": 5
+    },
+    "in_dist|letter_ops": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 36,
+     "both_wrong": 3
+    },
+    "in_dist|list_index": {
+     "fixed": 7,
+     "broken": 2,
+     "both_right": 31,
+     "both_wrong": 0
+    },
+    "in_dist|list_stats": {
+     "fixed": 3,
+     "broken": 1,
+     "both_right": 36,
+     "both_wrong": 0
+    },
+    "in_dist|object_track": {
+     "fixed": 8,
+     "broken": 4,
+     "both_right": 23,
+     "both_wrong": 5
+    },
+    "in_dist|odd_one_out": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 38,
+     "both_wrong": 1
+    },
+    "in_dist|order_chain": {
+     "fixed": 0,
+     "broken": 4,
+     "both_right": 28,
+     "both_wrong": 8
+    },
+    "in_dist|passage_qa": {
+     "fixed": 5,
+     "broken": 1,
+     "both_right": 31,
+     "both_wrong": 3
+    },
+    "in_dist|percent_rate": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|prop_eval": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|rule_apply": {
+     "fixed": 5,
+     "broken": 1,
+     "both_right": 26,
+     "both_wrong": 8
+    },
+    "in_dist|seq_cycle": {
+     "fixed": 8,
+     "broken": 2,
+     "both_right": 28,
+     "both_wrong": 2
+    },
+    "in_dist|seq_next": {
+     "fixed": 5,
+     "broken": 6,
+     "both_right": 15,
+     "both_wrong": 14
+    },
+    "in_dist|state_update": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|story_addsub": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|story_chain3": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|syllogism": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|table_calc": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|table_lookup": {
+     "fixed": 5,
+     "broken": 1,
+     "both_right": 10,
+     "both_wrong": 24
+    },
+    "in_dist|var_chain": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "in_dist|verify_claim": {
+     "fixed": 3,
+     "broken": 1,
+     "both_right": 34,
+     "both_wrong": 2
+    },
+    "in_dist|word_filter": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 39,
+     "both_wrong": 0
+    },
+    "variant|arith_bare": {
+     "fixed": 9,
+     "broken": 0,
+     "both_right": 27,
+     "both_wrong": 4
+    },
+    "variant|backward_solve": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 9,
+     "both_wrong": 30
+    },
+    "variant|chain_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "variant|chain_story2": {
+     "fixed": 0,
+     "broken": 3,
+     "both_right": 16,
+     "both_wrong": 21
+    },
+    "variant|compare_numbers": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 39
+    },
+    "variant|copy_word": {
+     "fixed": 1,
+     "broken": 8,
+     "both_right": 1,
+     "both_wrong": 30
+    },
+    "variant|digits_parity": {
+     "fixed": 19,
+     "broken": 0,
+     "both_right": 3,
+     "both_wrong": 18
+    },
+    "variant|distance_units": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 10,
+     "both_wrong": 30
+    },
+    "variant|div_exact": {
+     "fixed": 2,
+     "broken": 8,
+     "both_right": 9,
+     "both_wrong": 21
+    },
+    "variant|fewshot_number_rule": {
+     "fixed": 1,
+     "broken": 1,
+     "both_right": 1,
+     "both_wrong": 37
+    },
+    "variant|group_induct": {
+     "fixed": 2,
+     "broken": 3,
+     "both_right": 16,
+     "both_wrong": 19
+    },
+    "variant|kin_chain": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 38,
+     "both_wrong": 2
+    },
+    "variant|letter_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "variant|list_index": {
+     "fixed": 1,
+     "broken": 5,
+     "both_right": 6,
+     "both_wrong": 28
+    },
+    "variant|list_stats": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "variant|object_track": {
+     "fixed": 0,
+     "broken": 3,
+     "both_right": 1,
+     "both_wrong": 36
+    },
+    "variant|odd_one_out": {
+     "fixed": 1,
+     "broken": 8,
+     "both_right": 10,
+     "both_wrong": 21
+    },
+    "variant|order_chain": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 13,
+     "both_wrong": 26
+    },
+    "variant|passage_qa": {
+     "fixed": 2,
+     "broken": 0,
+     "both_right": 15,
+     "both_wrong": 23
+    },
+    "variant|percent_rate": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 14,
+     "both_wrong": 26
+    },
+    "variant|prop_eval": {
+     "fixed": 2,
+     "broken": 0,
+     "both_right": 24,
+     "both_wrong": 14
+    },
+    "variant|rule_apply": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "variant|seq_cycle": {
+     "fixed": 8,
+     "broken": 4,
+     "both_right": 16,
+     "both_wrong": 12
+    },
+    "variant|seq_next": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "variant|state_update": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "variant|story_addsub": {
+     "fixed": 0,
+     "broken": 1,
+     "both_right": 23,
+     "both_wrong": 16
+    },
+    "variant|story_chain3": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "variant|syllogism": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 19,
+     "both_wrong": 21
+    },
+    "variant|table_calc": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 0,
+     "both_wrong": 40
+    },
+    "variant|table_lookup": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 3,
+     "both_wrong": 36
+    },
+    "variant|var_chain": {
+     "fixed": 3,
+     "broken": 0,
+     "both_right": 12,
+     "both_wrong": 25
+    },
+    "variant|verify_claim": {
+     "fixed": 17,
+     "broken": 5,
+     "both_right": 13,
+     "both_wrong": 5
+    },
+    "variant|word_filter": {
+     "fixed": 2,
+     "broken": 2,
+     "both_right": 12,
+     "both_wrong": 24
+    },
+    "vocab|chain_ops": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|chain_story2": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|copy_word": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|distance_units": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|div_exact": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|kin_chain": {
+     "fixed": 7,
+     "broken": 1,
+     "both_right": 28,
+     "both_wrong": 4
+    },
+    "vocab|letter_ops": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 37,
+     "both_wrong": 2
+    },
+    "vocab|list_index": {
+     "fixed": 3,
+     "broken": 5,
+     "both_right": 23,
+     "both_wrong": 9
+    },
+    "vocab|object_track": {
+     "fixed": 3,
+     "broken": 1,
+     "both_right": 32,
+     "both_wrong": 4
+    },
+    "vocab|order_chain": {
+     "fixed": 1,
+     "broken": 1,
+     "both_right": 32,
+     "both_wrong": 6
+    },
+    "vocab|passage_qa": {
+     "fixed": 11,
+     "broken": 1,
+     "both_right": 25,
+     "both_wrong": 3
+    },
+    "vocab|percent_rate": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|rule_apply": {
+     "fixed": 5,
+     "broken": 0,
+     "both_right": 35,
+     "both_wrong": 0
+    },
+    "vocab|state_update": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|story_addsub": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|story_chain3": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|syllogism": {
+     "fixed": 0,
+     "broken": 0,
+     "both_right": 40,
+     "both_wrong": 0
+    },
+    "vocab|table_calc": {
+     "fixed": 1,
+     "broken": 3,
+     "both_right": 35,
+     "both_wrong": 1
+    },
+    "vocab|table_lookup": {
+     "fixed": 1,
+     "broken": 0,
+     "both_right": 17,
+     "both_wrong": 22
+    },
+    "vocab|word_filter": {
+     "fixed": 0,
+     "broken": 3,
+     "both_right": 37,
+     "both_wrong": 0
+    }
+   },
+   "by_split": {
+    "in_dist": {
+     "fixed": 64,
+     "broken": 32
+    },
+    "answer": {
+     "fixed": 35,
+     "broken": 26
+    },
+    "frame": {
+     "fixed": 51,
+     "broken": 33
+    },
+    "vocab": {
+     "fixed": 33,
+     "broken": 15
+    },
+    "variant": {
+     "fixed": 74,
+     "broken": 51
+    },
+    "family": {
+     "fixed": 3,
+     "broken": 2
+    }
+   },
+   "pooled5": {
+    "fixed": 257,
+    "broken": 157,
+    "both_wrong": 1372
+   },
+   "mode_transitions": {
+    "broken|answer|GEN->GEN": 11,
+    "broken|answer|NUM->NUM": 2,
+    "broken|answer|WORD->WORD": 13,
+    "broken|family|NUM->GEN": 1,
+    "broken|family|NUM->NUM": 1,
+    "broken|frame|GEN->GEN": 23,
+    "broken|frame|NUM->GEN": 2,
+    "broken|frame|NUM->NUM": 2,
+    "broken|frame|WORD->WORD": 6,
+    "broken|in_dist|GEN->GEN": 21,
+    "broken|in_dist|NUM->GEN": 1,
+    "broken|in_dist|NUM->NUM": 1,
+    "broken|in_dist|WORD->WORD": 9,
+    "broken|variant|GEN->GEN": 8,
+    "broken|variant|NUM->NUM": 20,
+    "broken|variant|WORD->GEN": 8,
+    "broken|variant|WORD->WORD": 15,
+    "broken|vocab|GEN->GEN": 2,
+    "broken|vocab|GEN->NUM": 2,
+    "broken|vocab|NUM->GEN": 1,
+    "broken|vocab|NUM->NUM": 3,
+    "broken|vocab|WORD->WORD": 7,
+    "fixed|answer|GEN->GEN": 28,
+    "fixed|answer|NUM->NUM": 2,
+    "fixed|answer|WORD->WORD": 5,
+    "fixed|family|NUM->NUM": 3,
+    "fixed|frame|GEN->GEN": 37,
+    "fixed|frame|NUM->GEN": 4,
+    "fixed|frame|WORD->GEN": 1,
+    "fixed|frame|WORD->WORD": 9,
+    "fixed|in_dist|GEN->GEN": 42,
+    "fixed|in_dist|NUM->GEN": 1,
+    "fixed|in_dist|NUM->NUM": 3,
+    "fixed|in_dist|WORD->WORD": 18,
+    "fixed|variant|GEN->GEN": 40,
+    "fixed|variant|GEN->WORD": 1,
+    "fixed|variant|NUM->GEN": 2,
+    "fixed|variant|NUM->NUM": 15,
+    "fixed|variant|WORD->GEN": 2,
+    "fixed|variant|WORD->WORD": 14,
+    "fixed|vocab|GEN->GEN": 22,
+    "fixed|vocab|NUM->GEN": 1,
+    "fixed|vocab|NUM->NUM": 1,
+    "fixed|vocab|WORD->WORD": 9
+   }
+  }
+ },
+ "knockout": {
+  "intact_in_dist": 88.45588235294117,
+  "n": 1360,
+  "blocks": 8,
+  "note": "every round; model.core replaced by a ModuleList without the blocks (run() builds K/V and zips core per call), restored after",
+  "runs": {
+   "skip_0": {
+    "blocks_removed": [
+     0
+    ],
+    "exact": 32.720588235294116,
+    "cost": 55.73529411764706
+   },
+   "skip_1": {
+    "blocks_removed": [
+     1
+    ],
+    "exact": 62.13235294117647,
+    "cost": 26.323529411764703
+   },
+   "skip_2": {
+    "blocks_removed": [
+     2
+    ],
+    "exact": 84.33823529411765,
+    "cost": 4.117647058823522
+   },
+   "skip_3": {
+    "blocks_removed": [
+     3
+    ],
+    "exact": 86.61764705882354,
+    "cost": 1.8382352941176379
+   },
+   "skip_4": {
+    "blocks_removed": [
+     4
+    ],
+    "exact": 85.66176470588235,
+    "cost": 2.794117647058826
+   },
+   "skip_5": {
+    "blocks_removed": [
+     5
+    ],
+    "exact": 83.38235294117646,
+    "cost": 5.07352941176471
+   },
+   "skip_6": {
+    "blocks_removed": [
+     6
+    ],
+    "exact": 87.05882352941177,
+    "cost": 1.397058823529406
+   },
+   "skip_7": {
+    "blocks_removed": [
+     7
+    ],
+    "exact": 83.97058823529412,
+    "cost": 4.485294117647058
+   },
+   "skip_2-7": {
+    "blocks_removed": [
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "exact": 16.102941176470587,
+    "cost": 72.35294117647058
+   }
+  }
+ },
+ "train_loss": {
+  "source": "train-sample.jsonl",
+  "seen": {
+   "web": 2000,
+   "skill": 2000
+  },
+  "k": 2000,
+  "groups": {
+   "web": {
+    "n": 2000,
+    "3M": {
+     "total": 2.4760023016929624,
+     "prog": 2.719222280546774e-06,
+     "op_acc": 0.0,
+     "mode": 0.44796268284320834,
+     "ans": 0.0,
+     "word": 0.31275134992599485,
+     "gen": 1.7152855484485625,
+     "copy_share": 0.013216422684490681
+    },
+    "10M": {
+     "total": 2.468474071979523,
+     "prog": 1.64659865640715e-06,
+     "op_acc": 0.0,
+     "mode": 0.4492718575000763,
+     "ans": 0.0,
+     "word": 0.312350031375885,
+     "gen": 1.706850537776947,
+     "copy_share": 0.018416174918413162
+    }
+   },
+   "skill": {
+    "n": 2000,
+    "3M": {
+     "total": 0.11151299573201687,
+     "prog": -0.005478284307348077,
+     "op_acc": 1.0,
+     "mode": 0.006731794421459199,
+     "ans": 0.0038720668256282805,
+     "word": 0.02536389422416687,
+     "gen": 0.08102352367481216,
+     "copy_share": 0.7722405080795288
+    },
+    "10M": {
+     "total": 0.10371652146428824,
+     "prog": -0.005466560138389468,
+     "op_acc": 1.0,
+     "mode": 0.007348934980822378,
+     "ans": 0.004015127122402191,
+     "word": 0.024297633171081544,
+     "gen": 0.07352138634026051,
+     "copy_share": 0.7639641432762146
+    }
+   }
+  },
+  "note": "row-weighted mean of model.loss() terms on group-only batches of 64, teacher forced, no_grad; op_acc / copy_share are batch means"
+ },
+ "dev_loss": {
+  "by_family": {
+   "arith_bare": {
+    "n": 160,
+    "3M": {
+     "total": 0.656551406642393,
+     "prog": 0.6565412498348451,
+     "op_acc": 0.9937500059604645,
+     "mode": 9.76763772086997e-06,
+     "ans": 3.814697202564332e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 0.05337242425230215,
+     "prog": 0.05336568269558484,
+     "op_acc": 0.9988636374473572,
+     "mode": 6.609380193367542e-06,
+     "ans": 1.3113022223620874e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "backward_solve": {
+    "n": 160,
+    "3M": {
+     "total": 6.3827359883816825,
+     "prog": 6.382731878087725,
+     "op_acc": 0.9738636314868927,
+     "mode": 4.323562052377383e-06,
+     "ans": 5.364417976494451e-08,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 4.467937985206845,
+     "prog": 4.4679332002660885,
+     "op_acc": 0.9693181812763214,
+     "mode": 4.541860107565299e-06,
+     "ans": 3.576278739814143e-08,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "chain_ops": {
+    "n": 200,
+    "3M": {
+     "total": -0.002694193045317661,
+     "prog": -0.0027016918145818638,
+     "op_acc": 1.0,
+     "mode": 6.9409110437845815e-06,
+     "ans": 5.578994716870512e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": -0.00248736643261509,
+     "prog": -0.002492017338227015,
+     "op_acc": 1.0,
+     "mode": 3.821244990831474e-06,
+     "ans": 8.296966711895947e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "chain_story2": {
+    "n": 200,
+    "3M": {
+     "total": 0.6772069316357374,
+     "prog": 0.6771999467164278,
+     "op_acc": 0.9904545426368714,
+     "mode": 5.154594964551506e-06,
+     "ans": 1.8501281942917557e-06,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 1.1075607862323522,
+     "prog": 1.1075546558946372,
+     "op_acc": 0.9890909075737,
+     "mode": 5.255913674773183e-06,
+     "ans": 8.773803585881979e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "cipher_map": {
+    "n": 120,
+    "3M": {
+     "total": 0.17883237699667612,
+     "prog": 4.960388878316735e-06,
+     "op_acc": 0.0,
+     "mode": 0.00020039365820897123,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 0.17862701912721,
+     "copy_share": 0.9997596939404806
+    },
+    "10M": {
+     "total": 0.2011023759841919,
+     "prog": 2.59694968463009e-06,
+     "op_acc": 0.0,
+     "mode": 8.673650881974027e-05,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 0.20101303855578104,
+     "copy_share": 0.9996727903683981
+    }
+   },
+   "compare_numbers": {
+    "n": 160,
+    "3M": {
+     "total": 4.614873266458744,
+     "prog": 3.448075956264802,
+     "op_acc": 0.9772727340459824,
+     "mode": 0.8072103024292119,
+     "ans": 3.9964915288237535e-06,
+     "word": 0.0,
+     "gen": 0.35958266258239746,
+     "copy_share": 0.010046063922345638
+    },
+    "10M": {
+     "total": 1.4864893792691873,
+     "prog": 0.821665195915557,
+     "op_acc": 0.9753787815570831,
+     "mode": 0.006945105499653437,
+     "ans": 2.0569563304206895e-05,
+     "word": 0.0,
+     "gen": 0.6578584909439087,
+     "copy_share": 9.720399975776672e-05
+    }
+   },
+   "copy_word": {
+    "n": 200,
+    "3M": {
+     "total": 0.5399206540700107,
+     "prog": 2.678099896513686e-07,
+     "op_acc": 0.0,
+     "mode": 0.07709859795577359,
+     "ans": 0.0,
+     "word": 0.4628217744826998,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 1.379021842333168,
+     "prog": 1.2506018816083042e-06,
+     "op_acc": 0.0,
+     "mode": 0.7102571559880744,
+     "ans": 0.0,
+     "word": 0.668763456344459,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "digits_parity": {
+    "n": 160,
+    "3M": {
+     "total": 0.9736392833292484,
+     "prog": 0.0034723205254181266,
+     "op_acc": 0.0,
+     "mode": 0.00027420644983067177,
+     "ans": 0.0,
+     "word": 4.6491622072153405e-06,
+     "gen": 0.969888124614954,
+     "copy_share": 0.24016578793816734
+    },
+    "10M": {
+     "total": 0.8855455629527569,
+     "prog": 1.026661010206098e-06,
+     "op_acc": 0.0,
+     "mode": 0.000836249157146085,
+     "ans": 0.0,
+     "word": 6.18815436581599e-05,
+     "gen": 0.884646400809288,
+     "copy_share": 0.2344312682744203
+    }
+   },
+   "distance_units": {
+    "n": 200,
+    "3M": {
+     "total": 4.666569520836492,
+     "prog": 4.666561570790509,
+     "op_acc": 0.9872727274894715,
+     "mode": 7.634713165316498e-06,
+     "ans": 2.002716037452501e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 4.793105031666528,
+     "prog": 4.793100977960694,
+     "op_acc": 0.9863636374473572,
+     "mode": 3.6799837289436254e-06,
+     "ans": 2.765655509051612e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "div_exact": {
+    "n": 200,
+    "3M": {
+     "total": 2.125785869842548,
+     "prog": 2.1257786964508796,
+     "op_acc": 0.9990909099578857,
+     "mode": 7.125108095351607e-06,
+     "ans": 3.8146973579955556e-08,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 3.914246308316888,
+     "prog": 3.9142417604905857,
+     "op_acc": 0.9945454597473145,
+     "mode": 4.391063703224063e-06,
+     "ans": 2.8610230629055877e-08,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "fewshot_number_rule": {
+    "n": 160,
+    "3M": {
+     "total": 1.7614498138427734,
+     "prog": 2.8895785533222806e-06,
+     "op_acc": 0.0,
+     "mode": 0.16848400607705116,
+     "ans": 0.12462831176526379,
+     "word": 0.0,
+     "gen": 1.468334585428238,
+     "copy_share": 0.05515826493501663
+    },
+    "10M": {
+     "total": 1.7140770256519318,
+     "prog": 5.654202936966612e-07,
+     "op_acc": 0.0,
+     "mode": 0.16645087208598852,
+     "ans": 0.10281269885672373,
+     "word": 0.0,
+     "gen": 1.444812849164009,
+     "copy_share": 0.06532629579305649
+    }
+   },
+   "group_induct": {
+    "n": 120,
+    "3M": {
+     "total": 0.6107147261500359,
+     "prog": 2.781549638767681e-09,
+     "op_acc": 0.0,
+     "mode": 0.0008813789463602006,
+     "ans": 0.0,
+     "word": 0.609833354751269,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 0.6273834307988485,
+     "prog": 1.7007057229179168e-07,
+     "op_acc": 0.0,
+     "mode": 0.00033176194604796666,
+     "ans": 0.0,
+     "word": 0.6270515049497286,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "kin_chain": {
+    "n": 200,
+    "3M": {
+     "total": 0.2523490691324696,
+     "prog": 0.0,
+     "op_acc": 0.0,
+     "mode": 0.008369913205388001,
+     "ans": 0.0,
+     "word": 9.270667869714089e-05,
+     "gen": 0.24388644695281983,
+     "copy_share": 6.567247910425067e-05
+    },
+    "10M": {
+     "total": 0.14845240996801295,
+     "prog": 2.6226040228394254e-09,
+     "op_acc": 0.0,
+     "mode": 0.005386074499983806,
+     "ans": 0.0,
+     "word": 0.0008998727797006722,
+     "gen": 0.1421664573252201,
+     "copy_share": 8.492025153827854e-06
+    }
+   },
+   "letter_ops": {
+    "n": 200,
+    "3M": {
+     "total": 0.836542671395,
+     "prog": 1.1553816466047805e-05,
+     "op_acc": 0.0,
+     "mode": 0.06969298563199118,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 0.766838151938282,
+     "copy_share": 0.6466940224170685
+    },
+    "10M": {
+     "total": 0.6906196417286992,
+     "prog": 4.155389974869195e-06,
+     "op_acc": 0.0,
+     "mode": 0.0012471032358007505,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 0.6893683969276025,
+     "copy_share": 0.646612012386322
+    }
+   },
+   "list_index": {
+    "n": 200,
+    "3M": {
+     "total": 1.4929279088974,
+     "prog": 1.1444084435652257e-08,
+     "op_acc": 0.0,
+     "mode": 0.12966641187667846,
+     "ans": 6.979703812248772e-07,
+     "word": 0.9623138800263404,
+     "gen": 0.4009468913078308,
+     "copy_share": 0.0004001897352281958
+    },
+    "10M": {
+     "total": 1.7275181740522385,
+     "prog": 7.118034449433708e-05,
+     "op_acc": 0.0,
+     "mode": 0.04328801706433296,
+     "ans": 7.461309360223823e-06,
+     "word": 1.360576941817999,
+     "gen": 0.3235745422542095,
+     "copy_share": 0.00013667932216776535
+    }
+   },
+   "list_stats": {
+    "n": 160,
+    "3M": {
+     "total": 4.835545286536217,
+     "prog": 0.586344390454542,
+     "op_acc": 0.75,
+     "mode": 2.6624260544776917,
+     "ans": 0.19966321624815464,
+     "word": 0.0,
+     "gen": 1.3871113923378289,
+     "copy_share": 0.061453068474293104
+    },
+    "10M": {
+     "total": 5.119560232385993,
+     "prog": 1.137724292785606,
+     "op_acc": 0.75,
+     "mode": 2.019240665715188,
+     "ans": 0.2468461813405156,
+     "word": 0.0,
+     "gen": 1.7157492014812306,
+     "copy_share": 0.016359846682462376
+    }
+   },
+   "object_track": {
+    "n": 200,
+    "3M": {
+     "total": 1.3943612217903136,
+     "prog": 8.54727147725498e-08,
+     "op_acc": 0.0,
+     "mode": 0.00018860136042349042,
+     "ans": 0.0,
+     "word": 1.3941725075244904,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 1.997750949859619,
+     "prog": 1.6093252730442487e-09,
+     "op_acc": 0.0,
+     "mode": 0.0002251641475595534,
+     "ans": 0.0,
+     "word": 1.9975257366895676,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "odd_one_out": {
+    "n": 160,
+    "3M": {
+     "total": 0.5090201436541975,
+     "prog": 0.0,
+     "op_acc": 0.0,
+     "mode": 0.0005046320366091095,
+     "ans": 0.5085155172273517,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 0.8093111081980169,
+     "prog": 2.9593028898489138e-06,
+     "op_acc": 0.0,
+     "mode": 0.00023346456373474211,
+     "ans": 0.8090746649540961,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "order_chain": {
+    "n": 200,
+    "3M": {
+     "total": 2.4299198150634767,
+     "prog": 4.3213546323528363e-07,
+     "op_acc": 0.0,
+     "mode": 0.02784726027457509,
+     "ans": 0.0,
+     "word": 2.2807798139750957,
+     "gen": 0.12129231989383697,
+     "copy_share": 0.0001498890149377985
+    },
+    "10M": {
+     "total": 2.2968212962150574,
+     "prog": 7.808207591608606e-09,
+     "op_acc": 0.0,
+     "mode": 0.02655068006424699,
+     "ans": 0.0,
+     "word": 2.139269319176674,
+     "gen": 0.13100137412548066,
+     "copy_share": 1.530329127490404e-05
+    }
+   },
+   "passage_qa": {
+    "n": 200,
+    "3M": {
+     "total": 1.5112536013126374,
+     "prog": 1.617065933601225e-07,
+     "op_acc": 0.0,
+     "mode": 0.8923980268620653,
+     "ans": 0.0,
+     "word": 0.39933145046088614,
+     "gen": 0.219523985683918,
+     "copy_share": 0.0779539093375206
+    },
+    "10M": {
+     "total": 2.025043497979641,
+     "prog": 9.936082696526682e-06,
+     "op_acc": 0.0,
+     "mode": 1.1329137167020236,
+     "ans": 0.0,
+     "word": 0.7301098538187943,
+     "gen": 0.16201014928519725,
+     "copy_share": 0.08358911126852035
+    }
+   },
+   "percent_rate": {
+    "n": 200,
+    "3M": {
+     "total": 3.243501839513192,
+     "prog": 3.243253546685446,
+     "op_acc": 0.9881818175315857,
+     "mode": 6.855681704109884e-06,
+     "ans": 0.0002415562421077766,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 2.103617677465081,
+     "prog": 2.1036120121949353,
+     "op_acc": 0.9881818175315857,
+     "mode": 5.573608905251603e-06,
+     "ans": 6.675720314319733e-08,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "prop_eval": {
+    "n": 120,
+    "3M": {
+     "total": 1.1488620510014396,
+     "prog": 1.6745778405417393e-06,
+     "op_acc": 0.0,
+     "mode": 0.00022136905802957094,
+     "ans": 0.0,
+     "word": 1.1486389954807237,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 1.2715511439989011,
+     "prog": 1.248714198709422e-07,
+     "op_acc": 0.0,
+     "mode": 0.00017557227935564393,
+     "ans": 0.0,
+     "word": 1.2713754654008274,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "rule_apply": {
+    "n": 200,
+    "3M": {
+     "total": 1.2302621126174926,
+     "prog": 2.7140126803715248e-06,
+     "op_acc": 0.0,
+     "mode": 0.018356853137083816,
+     "ans": 0.0019387293606996537,
+     "word": 0.0517395031551132,
+     "gen": 1.1582242846488953,
+     "copy_share": 0.1271739512681961
+    },
+    "10M": {
+     "total": 1.0023442395031452,
+     "prog": 4.799738549898791e-06,
+     "op_acc": 0.0,
+     "mode": 0.02162032819906017,
+     "ans": 0.007620511204004287,
+     "word": 0.002899045906997344,
+     "gen": 0.9701995611190796,
+     "copy_share": 0.10396801930619404
+    }
+   },
+   "seq_cycle": {
+    "n": 160,
+    "3M": {
+     "total": 5.331191077828407,
+     "prog": 1.3500013208711525e-07,
+     "op_acc": 0.0,
+     "mode": 3.132557538585388,
+     "ans": 0.6414969563484192,
+     "word": 1.5571365654468536,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 4.183767206966877,
+     "prog": 6.162302010892518e-07,
+     "op_acc": 0.0,
+     "mode": 2.0403501964756288,
+     "ans": 0.619920551776886,
+     "word": 1.5234959125518799,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "seq_next": {
+    "n": 160,
+    "3M": {
+     "total": 1.4280462339520454,
+     "prog": 0.00016739609147720103,
+     "op_acc": 0.0,
+     "mode": 0.0016893164720386267,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 1.4261895269155502,
+     "copy_share": 0.1615660898387432
+    },
+    "10M": {
+     "total": 1.5569794028997421,
+     "prog": 2.09543825064884e-05,
+     "op_acc": 0.0,
+     "mode": 0.0006925707712071016,
+     "ans": 0.0,
+     "word": 0.0,
+     "gen": 1.5562659054994583,
+     "copy_share": 0.16362324729561806
+    }
+   },
+   "state_update": {
+    "n": 200,
+    "3M": {
+     "total": -0.020078662037849426,
+     "prog": -0.020089850202202796,
+     "op_acc": 1.0,
+     "mode": 7.688353616686072e-06,
+     "ans": 3.499984836707881e-06,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": -0.020440791547298432,
+     "prog": -0.02045578584074974,
+     "op_acc": 1.0,
+     "mode": 1.443127384845866e-05,
+     "ans": 5.626678529324636e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "story_addsub": {
+    "n": 200,
+    "3M": {
+     "total": 0.8355415457015625,
+     "prog": 0.8355332302628085,
+     "op_acc": 0.992727267742157,
+     "mode": 5.7679216297401584e-06,
+     "ans": 2.5844573769973067e-06,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 0.8674431112627644,
+     "prog": 0.8674399788907976,
+     "op_acc": 0.9918181777000428,
+     "mode": 3.0368510124390014e-06,
+     "ans": 1.0490417352571058e-07,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "story_chain3": {
+    "n": 200,
+    "3M": {
+     "total": -0.0026573360664770007,
+     "prog": -0.003445940970141237,
+     "op_acc": 1.0,
+     "mode": 0.00040200359726441095,
+     "ans": 2.7179718600223166e-07,
+     "word": 0.00013024807194597087,
+     "gen": 0.00025608144933357834,
+     "copy_share": 0.0001791238784790039
+    },
+    "10M": {
+     "total": 0.004909530132135842,
+     "prog": 0.003903750320750987,
+     "op_acc": 0.9995454549789429,
+     "mode": 0.00019010859505215195,
+     "ans": 0.0,
+     "word": 6.584167481378244e-05,
+     "gen": 0.0007498295279219746,
+     "copy_share": 0.10695263743400574
+    }
+   },
+   "syllogism": {
+    "n": 160,
+    "3M": {
+     "total": 1.3855794027331285,
+     "prog": 2.384185071591105e-09,
+     "op_acc": 0.0,
+     "mode": 9.736061838339083e-05,
+     "ans": 0.0,
+     "word": 2.706050850065367e-06,
+     "gen": 1.385479311207746,
+     "copy_share": 0.6426694840192795
+    },
+    "10M": {
+     "total": 1.5834413085394772,
+     "prog": 1.021892044830719e-06,
+     "op_acc": 0.0,
+     "mode": 0.00021359183301683515,
+     "ans": 0.0,
+     "word": 3.354549562573084e-05,
+     "gen": 1.5831931559605437,
+     "copy_share": 1.1119107739432366e-05
+    }
+   },
+   "table_calc": {
+    "n": 200,
+    "3M": {
+     "total": 2.29999226629734,
+     "prog": 0.29988135397434235,
+     "op_acc": 0.8,
+     "mode": 0.5536399840940248,
+     "ans": 1.1956691764680728e-06,
+     "word": 0.0,
+     "gen": 1.4464696884155273,
+     "copy_share": 0.05704629421234131
+    },
+    "10M": {
+     "total": 3.0127060655504465,
+     "prog": 0.47945299819111825,
+     "op_acc": 0.8,
+     "mode": 1.5140432178754963,
+     "ans": 4.62532045730768e-07,
+     "word": 0.0,
+     "gen": 1.0192091941833497,
+     "copy_share": 0.025880593061447143
+    }
+   },
+   "table_lookup": {
+    "n": 200,
+    "3M": {
+     "total": 1.6258291482925415,
+     "prog": 1.700583680985801e-06,
+     "op_acc": 0.0,
+     "mode": 0.45735928174108265,
+     "ans": 0.28874599896371367,
+     "word": 0.06838785335421563,
+     "gen": 0.8113343358039856,
+     "copy_share": 0.007310041273012757
+    },
+    "10M": {
+     "total": 1.5812624335289,
+     "prog": 2.664920202732901e-07,
+     "op_acc": 0.0,
+     "mode": 0.49291523061692716,
+     "ans": 0.27488107688259333,
+     "word": 0.04520143521949649,
+     "gen": 0.7682644367218018,
+     "copy_share": 0.057237595319747925
+    }
+   },
+   "var_chain": {
+    "n": 160,
+    "3M": {
+     "total": 5.708588495384902,
+     "prog": 5.706337975803763,
+     "op_acc": 0.9761363565921783,
+     "mode": 7.083197829160781e-06,
+     "ans": 0.0022432464174784172,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    },
+    "10M": {
+     "total": 5.138130831997842,
+     "prog": 5.138067104388028,
+     "op_acc": 0.9778409153223038,
+     "mode": 6.515506470350374e-06,
+     "ans": 5.6904555822967495e-05,
+     "word": 0.0,
+     "gen": 0.0,
+     "copy_share": 0.0
+    }
+   },
+   "verify_claim": {
+    "n": 120,
+    "3M": {
+     "total": 3.0362339417139688,
+     "prog": 2.8507560046443055,
+     "op_acc": 0.9560606082280477,
+     "mode": 0.0072830330464057624,
+     "ans": 0.0,
+     "word": 2.8483072431602825e-05,
+     "gen": 0.17816646893819174,
+     "copy_share": 0.007056386844245329
+    },
+    "10M": {
+     "total": 0.6136816143989563,
+     "prog": 0.32582356727895484,
+     "op_acc": 0.9901515245437622,
+     "mode": 0.027734893975624193,
+     "ans": 0.0,
+     "word": 3.5762786865234375e-07,
+     "gen": 0.260122815767924,
+     "copy_share": 0.003498257835114297
+    }
+   },
+   "word_filter": {
+    "n": 200,
+    "3M": {
+     "total": 1.4947619535028935,
+     "prog": 0.0,
+     "op_acc": 0.0,
+     "mode": 0.015361248701810836,
+     "ans": 1.1178851354998188e-05,
+     "word": 0.0,
+     "gen": 1.479389511421323,
+     "copy_share": 0.00044328483163553757
+    },
+    "10M": {
+     "total": 1.3616485722362994,
+     "prog": 4.35028500618273e-05,
+     "op_acc": 0.0,
+     "mode": 0.04431400668981951,
+     "ans": 3.7384032793852384e-06,
+     "word": 0.0,
+     "gen": 1.3172873688861728,
+     "copy_share": 7.980335703905439e-05
+    }
+   }
+  },
+  "pooled5": {
+   "n": 6040,
+   "3M": {
+    "total": 1.8703926528233021,
+    "prog": 0.8926948585937436,
+    "mode": 0.25411230840340493,
+    "ans": 0.04874800342492563,
+    "word": 0.26227103888212144,
+    "gen": 0.41256643287497896
+   },
+   "10M": {
+    "total": 1.7621941895303437,
+    "prog": 0.7528813048264432,
+    "mode": 0.24496598273916614,
+    "ans": 0.0564735558697222,
+    "word": 0.3080543368174996,
+    "gen": 0.39981899423963607
+   }
+  },
+  "note": "gold log-likelihood = the teacher-forced loss on the 5 dev splits (pooled-5), batches of 64 grouped by split x family"
+ },
+ "rules": {
+  "R1": {
+   "rule": "oracle-mode 10M gain >= +3.0 (vs +1.64) -> routing masks the thinker (cause 6) -> marginal mode loss test next",
+   "oracle_gain_10M_minus_3M": 1.6556291390728575,
+   "normal_gain_D": 1.6556291390728433,
+   "normal_gain_G1": 1.6390728476821153,
+   "oracle_pooled5": {
+    "3M": 73.67549668874172,
+    "10M": 75.33112582781457
+   },
+   "threshold": 3.0,
+   "fires": false
+  },
+  "R2": {
+   "rule": "skipping blocks 3-8 at 10M costs < 1.0 point in_dist -> idle depth (cause 7 or 2) -> short lr test (5e-4 vs 1e-3)",
+   "blocks": 8,
+   "intact_in_dist": 88.45588235294117,
+   "skip_3_to_8_in_dist": 16.102941176470587,
+   "cost_points": 72.35294117647058,
+   "threshold": 1.0,
+   "fires": false,
+   "note": null
+  },
+  "R3": {
+   "rule": "skill-term (non-cloze) teacher-forced train loss at 10M <= half of 3M, with dev flat (G1 gain +1.64) -> memorisation (cause 2) confirmed",
+   "skill_total_3M": 0.11151299573201687,
+   "skill_total_10M": 0.10371652146428824,
+   "ratio_10M_over_3M": 0.930084612860148,
+   "half_condition": false,
+   "skill_terms": {
+    "3M": {
+     "total": 0.11151299573201687,
+     "prog": -0.005478284307348077,
+     "mode": 0.006731794421459199,
+     "ans": 0.0038720668256282805,
+     "word": 0.02536389422416687,
+     "gen": 0.08102352367481216
+    },
+    "10M": {
+     "total": 0.10371652146428824,
+     "prog": -0.005466560138389468,
+     "mode": 0.007348934980822378,
+     "ans": 0.004015127122402191,
+     "word": 0.024297633171081544,
+     "gen": 0.07352138634026051
+    }
+   },
+   "dev_gain_G1": 1.64,
+   "dev_gain_D_recomputed": 1.6556291390728433,
+   "dev_flat_cutoff": 3.0,
+   "dev_flat": true,
+   "dev_flat_note": "the sealed rule gives no cutoff for \"dev flat\"; D reads it as D's recomputed normal pooled-5 gain < 3.0; judge from the numbers",
+   "fires": false
+  }
+ },
+ "wall_s": 3734.648449897766
+}
