@@ -124,7 +124,18 @@ def gen(out, smoke=False, train_views=None, reuse_heldout=None):
     return info
 
 
+SAVE_EVERY = 25   # updates between resume files (the box restarts now and then; a restart costs at most this many updates)
+
+
+def _save_resume(path, **st):
+    tmp = path + '.tmp'
+    torch.save(st, tmp)
+    os.replace(tmp, path)
+
+
 def train(parent, data, n, seed, out, epochs=None):
+    """Resumable: every SAVE_EVERY updates the add-on, optimiser, shuffle state and epoch position go to OUT/resume.pt; a run started
+    again with the same arguments continues from it and ends on exactly the weights an uninterrupted run would (tested)."""
     from custom_io.models import load_model
     from domain import mode as dm
     t0 = time.time()
@@ -143,11 +154,21 @@ def train(parent, data, n, seed, out, epochs=None):
     params = addon.params()
     opt = torch.optim.Adam(params, lr=LR)
     gen_ = torch.Generator().manual_seed(seed)
-    per_epoch, updates = [], 0
-    for _ in range(epochs):
-        order = torch.randperm(n, generator=gen_)
-        losses, hits = [], 0
-        for i in range(0, n, MINIBATCH):
+    per_epoch, updates, epoch0, pos0, order, losses, hits, resumed = [], 0, 0, 0, None, [], 0, False
+    os.makedirs(out, exist_ok=True)
+    rpath = os.path.join(out, 'resume.pt')
+    if os.path.exists(rpath):
+        st = torch.load(rpath, map_location='cpu', weights_only=True)
+        assert (st['n'], st['seed'], st['epochs'], st['parent']) == (n, seed, epochs, parent), 'resume.pt is from another run'
+        addon.restore(st['addon'])
+        opt.load_state_dict(st['opt'])
+        gen_.set_state(st['gen'])
+        per_epoch, updates, epoch0, pos0, order, losses, hits, resumed = (st['per_epoch'], st['updates'], st['epoch'], st['pos'],
+                                                                          st['order'], st['losses'], st['hits'], True)
+    for epoch in range(epoch0, epochs):
+        if order is None:
+            order, pos0, losses, hits = torch.randperm(n, generator=gen_), 0, [], 0
+        for i in range(pos0, n, MINIBATCH):
             ix = order[i:i + MINIBATCH]
             opt.zero_grad(set_to_none=True)
             mb = 0.0
@@ -163,14 +184,21 @@ def train(parent, data, n, seed, out, epochs=None):
             opt.step()
             updates += 1
             losses.append(mb)
+            if updates % SAVE_EVERY == 0:
+                _save_resume(rpath, n=n, seed=seed, epochs=epochs, parent=parent, addon=addon.snapshot(), opt=opt.state_dict(),
+                             gen=gen_.get_state(), per_epoch=per_epoch, updates=updates, epoch=epoch, pos=i + MINIBATCH,
+                             order=order, losses=losses, hits=hits)
         per_epoch.append(dict(loss=round(float(np.mean(losses)), 5), accuracy=round(hits / n, 4)))
+        order, pos0 = None, 0
     m.eval()
     dm.save_ckpt(ck, m, os.path.join(out, 'checkpoint.pt'), addon)
     info = dict(parent=parent, n=n, epochs=epochs, seed=seed, updates=updates, lr=LR, minibatch=MINIBATCH,
                 addon_rank=cons['addon_rank'], addon_alpha=cons['addon_alpha'], addon_params=addon.n_params(),
-                per_epoch=per_epoch, seconds=round(time.time() - t0, 1))
+                per_epoch=per_epoch, resumed=resumed, seconds=round(time.time() - t0, 1))
     with open(os.path.join(out, 'train.json'), 'w') as f:
         json.dump(info, f, indent=1)
+    if os.path.exists(rpath):
+        os.remove(rpath)
     return info
 
 

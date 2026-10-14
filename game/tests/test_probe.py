@@ -87,6 +87,50 @@ class Smoke(unittest.TestCase):
                     self.assertEqual(f.read(), g.read())
 
     @unittest.skipUnless(os.path.exists(PARENT), 'parent checkpoint not available')
+    def test_train_resumes_to_the_same_weights(self):
+        """200 smoke views, minibatch 100 -> 2 updates an epoch, 2 epochs, a resume file after every update. A run stopped after update
+        1 (mid-epoch), 2 (epoch end) or 3 (mid-epoch again) and started again ends on the weights of the uninterrupted run."""
+        import torch
+        from unittest import mock
+        from custom_io.models import load_model
+
+        class Stop(Exception):
+            pass
+
+        real_save = probe._save_resume
+
+        def run(out, stop_after=None):
+            saved = []
+
+            def saving(path, **st):
+                real_save(path, **st)
+                saved.append(1)
+                if len(saved) == stop_after:
+                    raise Stop
+
+            with mock.patch.object(probe, 'SAVE_EVERY', 1), mock.patch.object(probe, 'MINIBATCH', 100):
+                if stop_after:
+                    with mock.patch.object(probe, '_save_resume', saving):
+                        return probe.train(PARENT, self.data, 200, 200, out, 2)
+                return probe.train(PARENT, self.data, 200, 200, out, 2)
+
+        base = os.path.join(self.td.name, 'resume-base')
+        info0 = run(base)
+        self.assertEqual((info0['updates'], info0['resumed']), (4, False))
+        w0 = load_model(os.path.join(base, 'checkpoint.pt')).state_dict()
+        for stop_after in (1, 2, 3):
+            out = os.path.join(self.td.name, f'resume-{stop_after}')
+            with self.assertRaises(Stop):
+                run(out, stop_after)
+            self.assertTrue(os.path.exists(os.path.join(out, 'resume.pt')))
+            info = run(out)
+            self.assertTrue(info['resumed'])
+            self.assertFalse(os.path.exists(os.path.join(out, 'resume.pt')))
+            self.assertEqual((info['updates'], info['per_epoch']), (info0['updates'], info0['per_epoch']))
+            w = load_model(os.path.join(out, 'checkpoint.pt')).state_dict()
+            self.assertTrue(all(torch.equal(w0[k], w[k]) for k in w0))
+
+    @unittest.skipUnless(os.path.exists(PARENT), 'parent checkpoint not available')
     def test_train_and_eval(self):
         from custom_io.models import load_model
         out = os.path.join(self.td.name, 'run')
