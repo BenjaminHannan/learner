@@ -1262,6 +1262,51 @@ def test_pad64p_prompt_width_only_never_above_the_cap_and_equal_to_rounding():
 
 
 
+def test_pad64_setup_that_skips_half_way_leaves_nothing_patched_and_a_failed_a_run_skips_b():
+    w, a = world('B3G2')
+    a.pad64_parts = 'prompt,gemma,tape'
+    eg = w_eg = None
+    orig = prof.patched_fn
+    calls = []
+
+    def second_call_skips(*x, **k):                                            # the Gemma part patches first, the tape part second: the second patched_fn raises Skip
+        calls.append(1)
+        if len(calls) == 2:
+            raise prof.Skip('forced: the patched text is not in this tree')
+        return orig(*x, **k)
+    prof.patched_fn = second_call_skips
+    try:
+        try:
+            prof.Trainer(w, a, ['pad64'], accum=4)
+            raise AssertionError('the forced Skip did not stop the trainer')
+        except prof.Skip:
+            pass
+    finally:
+        prof.patched_fn = orig
+    base = prof.Trainer(w, a, [], accum=4)
+    try:
+        eg = base.model.eg()
+        assert not any(k in eg.__dict__ for k in ('encode', '_compute', '_pad64_width')) and not any(k in base.model.__dict__ for k in ('tape_of', '_pad64_width')), 'nothing of the failed setup stays patched'
+    finally:
+        base.close()
+    # a failed A (reference) run ends the arm at once: B is not run
+    ran = []
+    orig_run = prof.ab_run
+
+    def fake_run(world_, args_, names, accum):
+        ran.append((tuple(names), accum))
+        return dict(error=dict(type='RuntimeError', message='fake A failure', traceback_tail=[]), wall_s=3.0) if not names and accum == args_.accum else dict(round_median=1.0, wall_s=1.0, oom=False)
+    prof.ab_run = fake_run
+    prof.AB_STATE.clear()
+    try:
+        res = prof.sec_abbench(w, _ab_args('B3G2', '--ab-accums', '', '--ab-variants', 'nosync', '--ab-rounds', '2', '--ab-updates', '1', '--chunk', '1'))
+    finally:
+        prof.ab_run = orig_run
+    assert ran == [((), a.accum if hasattr(a, 'accum') else 4)] or len(ran) == 1, ran
+    arm = res['arms']['nosync']
+    assert arm['error']['run'] == 'A' and arm['b_runs'] == [] and arm['wall_min_arm'] > 0 and res['complete']
+
+
 ALL = [(n, f) for n, f in sorted(globals().items()) if n.startswith('test_') and callable(f)]
 
 

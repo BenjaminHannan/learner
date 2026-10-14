@@ -1274,12 +1274,18 @@ class Trainer:
         self.rec = Recorder(self.clock)
         self.instr = None
         self.variants = []
+        v = None
         try:
             for n in self.var_names:
                 v = VARIANTS[n](self)
                 v.setup()
                 self.variants.append(v)
         except BaseException:
+            if v is not None and v not in self.variants:      # a setup that raised half way (a Skip): undo what it already patched, or a later baseline trainer would run on the patched shared objects
+                try:
+                    v.teardown()
+                except BaseException:                            # noqa: BLE001
+                    pass
             self.close()
             raise
 
@@ -1457,7 +1463,10 @@ def peak_mem(device):
 def cleanup(device):
     gc.collect()
     if device.type == 'cuda':
-        torch.cuda.empty_cache()
+        try:
+            torch.cuda.empty_cache()
+        except Exception as e:                                           # noqa: BLE001  (a sticky CUDA error: the run that follows fails fast and is recorded; the section must still write its files)
+            log(f'!!!!!! cleanup: torch.cuda.empty_cache raised {type(e).__name__}: {str(e)[:200]} (a broken CUDA context? the next runs will probably fail fast)')
 
 
 def reset_peak(device):
@@ -2822,6 +2831,10 @@ def sec_abbench(world, args):
             for r in range(args.ab_rounds):
                 log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: A (accum {ref}, {args.variant or "baseline"})')
                 a_runs.append(ab_run(world, args, base, ref))
+                if any(a_runs[-1].get(k) for k in ('oom', 'skipped', 'error')):      # the reference run itself failed: B would only cost time, end the arm now
+                    xa = a_runs[-1]
+                    log(f'!!!!!! abbench arm {arm["name"]} round {r + 1}: the A run did not finish ({"OOM" if xa.get("oom") else xa.get("skipped") or xa["error"]["type"] + ": " + xa["error"]["message"][:200]}) -- B is not run, this arm is ended, the remaining arms still run')
+                    break
                 log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: B (accum {arm["accum"]}, {",".join(arm["names"]) or "baseline"})')
                 b_runs.append(ab_run(world, args, arm['names'], arm['accum']))
                 la, lb = a_runs[-1], b_runs[-1]
