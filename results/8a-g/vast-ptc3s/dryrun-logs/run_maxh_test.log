@@ -1,0 +1,20 @@
+=== CIO START 2026-10-14T02:15:41Z
+=== STAGE setup 2026-10-14T02:15:41Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=0.006 dph=0 guard=OFF-set-DPH cap_usd=4.0 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-14T02:15:41Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           5           5           4           9           9
+4
+tmpfs            16G  4.8G   11G  31% /dev/shm
+TICK at=2026-10-14T02:15:41Z stage=setup up_min=0 log= bytes= last= | mb data8a= skills= pools= free=11235 ram_avail=10170 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.4.6', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.14.1+cpu cuda None'}
+=== STAGE code 2026-10-14T02:15:45Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-14T02:15:52Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-14T02:15:52Z
+TICK at=2026-10-14T02:16:01Z stage=code up_min=0 log=ptccheck.log bytes=106 last=(i) six replaced files: originals = 74d6e92c75 (sha256), new = the PTC overlay; caps.py unchanged in both  | mb data8a= skills= pools= free=11116 ram_avail=9450 | gpu 
+=== CIO MAXH 0.006 h reached: stopping the running step (training saves nothing before its end) 2026-10-14T02:16:21Z
+(i) six replaced files: originals = 74d6e92c75 (sha256), new = the PTC overlay; caps.py unchanged in both
+=== CIO-FAIL maxh 2026-10-14T02:16:21Z
+=== STAGE failed 2026-10-14T02:16:21Z
+--- tail of /dev/shm/ptcdry/J2/out/ptccheck.log
+(i) six replaced files: originals = 74d6e92c75 (sha256), new = the PTC overlay; caps.py unchanged in both
+run_dry exit 1
