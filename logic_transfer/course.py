@@ -205,10 +205,11 @@ def main(argv=None):
         for name, (_, rows) in evals.items():
             t = time.time()
             sub = rows[:n] if n else rows
-            r = evaluate(model, sub, a.eval_batch, dev)
+            r = evaluate(model, sub, a.eval_batch, dev, by_label=True)
             res[name] = r
             elog.write(json.dumps(dict(update=u, name=name, n=r['n'], correct=r['correct'], exact=round(r['exact'], 3),
                                        by_level={lv: [c['correct'], c['n']] for lv, c in sorted(r['by_level'].items())},
+                                       by_label={lb: [c['correct'], c['n']] for lb, c in sorted(r['by_label'].items())},
                                        full=(n == 0 or n >= len(rows)), eval_s=round(time.time() - t, 1))) + '\n')
         elog.flush()
         return res

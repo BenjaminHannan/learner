@@ -101,6 +101,86 @@ class LadderRows(unittest.TestCase):
             b = s['files']['dev']['count_baseline']['acc']
             self.assertTrue(60 <= b <= 72, b)
 
+    def test_rung12_word_type_and_length_cues_are_gone(self):
+        """v2 rows (Addendum 2): the nonsense/common word type of the predicates and the text length carry no label beyond polarity."""
+        from logic_transfer import cues
+        with tempfile.TemporaryDirectory() as d:
+            for rung in (1, 2):
+                ladder.build(rung, d, n_train=30000, n_eval=600, n_new=30)
+                res = cues.audit(rung, os.path.join(d, f'rung{rung}'), ['dev'])
+                self.assertTrue(res['train_holdout']['ok'], (rung, res['train_holdout']))
+                self.assertLessEqual(res['dev']['class_share_gap'], 6.0, (rung, res['dev']['class_share']))
+
+    def test_r1_unknown_replacement_has_same_length_and_type(self):
+        from logicgen import rungs
+        common = cues_common()
+        for r in rungs.make_rows('rung1', 'dev', 300, 5):
+            body, _ = verify_rungs.split_options(r['question'] + ' (true/false/unknown)')
+            ss = [x.strip() for x in verify_rungs.sentences(body)]
+            f, q = verify_rungs.FACT.match(ss[0]), verify_rungs.QUERY.match(ss[1])
+            if r['answer'] == 'unknown':
+                if f.group(1) != q.group(1):
+                    self.assertEqual(len(f.group(1)), len(q.group(1)))
+                if f.group(3) != q.group(3):
+                    self.assertEqual(len(f.group(3)), len(q.group(3)))
+                    self.assertEqual(f.group(3) in common, q.group(3) in common)
+
+    def test_f2_key_has_entity_counts(self):
+        import random
+        from logicgen import matched
+        row = None
+        for t in range(200):
+            row = matched.candidate('train', 'logic', 1, 'true', random.Random(f'k{t}'), 'x', 208)
+            if row:
+                break
+        self.assertIsNotNone(row)
+        self.assertEqual(len(matched.triple(row)), 5)
+
+
+def cues_common():
+    from logicgen.lexicon import COMMON_WORDS
+    return frozenset(COMMON_WORDS)
+
+
+class RunSummary(unittest.TestCase):
+    """dev_at carries a stopping evaluation forward only for runs that stopped on their marks (review finding)."""
+
+    def _run(self, work, name, evals, stop):
+        rd = os.path.join(work, 'rung0', name)
+        os.makedirs(rd)
+        open(os.path.join(rd, 'eval.jsonl'), 'w').write(''.join(json.dumps(e) + '\n' for e in evals))
+        open(os.path.join(rd, 'run.json'), 'w').write('{}')
+        if stop:
+            open(os.path.join(rd, 'stop.json'), 'w').write(json.dumps(stop))
+
+    def test_carry_only_for_runs_that_stopped_on_marks(self):
+        from logic_transfer import lt2
+        ev = lambda u, name, x, full=True: dict(update=u, name=name, n=100, correct=int(x), exact=float(x), by_level={'0': [int(x), 100]}, by_label={'true': [int(x), 100]}, full=full, eval_s=1.0)
+        th = [('dev', None, 90.0), ('wording', None, 80.0)]
+        with tempfile.TemporaryDirectory() as d:
+            self._run(d, 's200-s1', [ev(500, 'dev', 100), ev(500, 'wording', 100)], dict(reason='marks', update=500))
+            # passed once at 250, then fell back and trained on to 8000: nothing may be carried
+            self._run(d, 's201-s1', [ev(250, 'dev', 95), ev(250, 'wording', 95), ev(2000, 'dev', 40), ev(2000, 'wording', 40), ev(8000, 'dev', 41), ev(8000, 'wording', 41)],
+                      dict(reason='max_updates', update=8000))
+            a = lt2.run_summary(d, 0, 's200', 1, th)
+            b = lt2.run_summary(d, 0, 's201', 1, th)
+        self.assertEqual(a['dev_at'], {'2000': 100.0, '4000': 100.0, '8000': 100.0})
+        self.assertEqual(a['dev_at_carried'], ['2000', '4000', '8000'])
+        self.assertTrue(a['pass'])
+        self.assertEqual(b['dev_at'], {'2000': 40.0, '4000': 40.0, '8000': 41.0})
+        self.assertEqual(b['dev_at_carried'], [])
+        self.assertEqual(a['label_recall_last'], {'true': 100.0})
+
+
+class Thresholds(unittest.TestCase):
+    def test_r1_mark_floors_so_the_exact_boundary_passes(self):
+        from logic_transfer import lt2
+        summ = {'files': {'dev': {'count_baseline': {'acc': 66.67, 'hit': 800, 'n': 1200}}}}
+        th = lt2.thresholds(1, summ)
+        self.assertEqual(th[0][0], 'dev')
+        self.assertLessEqual(th[0][2], 100.0 * 1100 / 1200)       # 1100/1200 = 91.6667 passes
+        self.assertGreater(th[0][2], 91.6)
+
 
 class Schedule(unittest.TestCase):
     def test_sk_slots_identical_across_arms(self):

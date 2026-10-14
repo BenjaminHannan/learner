@@ -7,10 +7,14 @@ Every probe edits the prompt TEXT of an eval row, re-derives the gold label of t
 by id). Probes:
   rung 0  swap_answer   "The answer is W." -> "The answer is W'." (W' != W): gold = W'
           drop_answer   the answer sentence deleted: no gold exists; reported = how often the ORIGINAL word is still produced (chance ~ 1/3)
-  rung 1,2 swap_entity  the queried entity replaced by one that appears nowhere in the prompt: gold = unknown
-          flip_query    the query's "not" toggled: true <-> false, unknown stays
-          drop_support  the fact about the queried (entity, predicate) deleted (true/false rows only): gold = unknown
-Moving with content = accuracy on the edited rows near 100%; ignoring it = near the share a fixed answer would get.
+  rung 1,2 (original true/false rows only: on an unknown row "unknown" is already right, so editing it shows nothing)
+          swap_entity   the queried entity replaced by a lexicon entity that appears nowhere in the prompt: gold = unknown
+          flip_query    the query's "not" toggled: true <-> false
+          drop_support  the fact about the queried (entity, predicate) removed (rung 2) or replaced by an unrelated fact (rung 1, so the text keeps
+                        its trained one-fact form): gold = unknown
+Moving with content = accuracy on the edited rows near 100% AND original_dev near 100% (a model that always says "unknown" would score 100% on
+swap_entity / drop_support, but then original_dev, on the same rows' unedited form, is near the share of unknown rows, not near 100%).
+drop_answer is reported as the distribution of what the model says now (true / false / unknown / other = not one of the three words).
 """
 import argparse
 import json
@@ -20,7 +24,6 @@ import re
 from logic_transfer import rows as R
 from logic_transfer import verify_rungs as V
 
-ENT_POOL = ['Zed', 'Quin', 'Rhea', 'Odin', 'Mira', 'Tove', 'Ugo', 'Wren', 'Xan', 'Yara']      # names outside the generator's lexicon is fine for a probe
 WORDS = ('true', 'false', 'unknown')
 
 
@@ -48,23 +51,31 @@ def cf_rung0(rows, rng):
 
 
 def cf_rung12(rows, rng):
+    from logicgen import rungs as G
+    cap = lambda w: w[:1].upper() + w[1:]
+    ents, preds = [cap(w) for w in G.ENTS['main']], G.COMMON['main']      # words the model has seen in training (main sets), never held-out words
     swap, flip, drop = [], [], []
     for r in rows:
+        if r['answer'] == 'unknown':
+            continue
         body, suf = _suffix(r['prompt'])
         ss = [s.strip() for s in V.sentences(body)]
         q = V.QUERY.match(ss[-1])
         if not q:
             continue
         qe, qn, qp = q.group(1), q.group(2), q.group(3)
-        used = {m.group(1) for s in ss[:-1] for m in [V.FACT.match(s)] if m}
-        e2 = rng.choice([e for e in ENT_POOL if e not in used and e != qe])
-        sw = ss[:-1] + [f'Is {e2} {qn or ""}{qp}?']
-        swap.append(_new(r, 'swap', ' '.join(sw), suf, 'unknown'))
-        fl = ss[:-1] + [f'Is {qe} {"" if qn else "not "}{qp}?']
-        flip.append(_new(r, 'flip', ' '.join(fl), suf, {'true': 'false', 'false': 'true', 'unknown': 'unknown'}[r['answer']]))
-        if r['answer'] != 'unknown':
-            keep = [s for s in ss[:-1] if not (V.FACT.match(s) and V.FACT.match(s).group(1) == qe and V.FACT.match(s).group(3) == qp)]
-            drop.append(_new(r, 'drop', ' '.join(keep + [ss[-1]]), suf, 'unknown'))
+        facts = ss[:-1]
+        used = {m.group(1) for s in facts for m in [V.FACT.match(s)] if m}
+        e2 = rng.choice([e for e in ents if e not in used and e != qe])
+        swap.append(_new(r, 'swap', ' '.join(facts + [f'Is {e2} {qn or ""}{qp}?']), suf, 'unknown'))
+        fl = facts + [f'Is {qe} {"" if qn else "not "}{qp}?']
+        flip.append(_new(r, 'flip', ' '.join(fl), suf, {'true': 'false', 'false': 'true'}[r['answer']]))
+        keep = [s for s in facts if not (V.FACT.match(s) and V.FACT.match(s).group(1) == qe and V.FACT.match(s).group(3) == qp)]
+        if not keep:                                                # rung 1: the only fact was the supporting one -> an unrelated fact takes its place
+            e3 = rng.choice([e for e in ents if e != qe])
+            p3 = rng.choice([w for w in preds if w != qp])
+            keep = [f'{e3} is {"not " if rng.random() < 0.5 else ""}{p3}.']
+        drop.append(_new(r, 'drop', ' '.join(keep + [ss[-1]]), suf, 'unknown'))
     return {'swap_entity': swap, 'flip_query': flip, 'drop_support': drop}
 
 
@@ -75,7 +86,7 @@ def check_gold(cfs, rung):
         if name == 'drop_answer':
             continue
         for r in rs:
-            lab, err = V.check_r0(r) if rung == 0 else V.check_r12(r, 'any')       # 'any': an edit may leave 0-5 facts
+            lab, err = V.check_r0(r) if rung == 0 else V.check_r12(r, 'any')       # 'any': an edit may leave 1-3 facts
             if err or lab != r['answer']:
                 bad += 1
     return bad
@@ -100,7 +111,14 @@ def run(ckpt, rows, rung, device='cpu', seed=7):
             d['says_unknown'] = d['acc']
         if name == 'drop_answer':
             d['still_old_word'] = d.pop('acc')
+            c = {w: 0 for w in WORDS + ('other',)}
+            for p in r['preds'].values():
+                c[p if p in WORDS else 'other'] += 1
+            d['says'] = {k: round(100.0 * v / len(rs), 1) for k, v in c.items()}
         out['probes'][name] = d
+    if rung != 0:
+        sub = [r for r in rows if r['answer'] != 'unknown']
+        out['original_dev_true_false_rows'] = round(evaluate(m, sub, 128, torch.device(device))['exact'], 2) if sub else None
     return out
 
 

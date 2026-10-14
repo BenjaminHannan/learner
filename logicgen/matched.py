@@ -2,12 +2,15 @@
 
 The instrument panel found that unknown rows carry one fresh predicate that occurs exactly once (the broken chain's near-miss), so
 (distinct predicates, singleton predicates, sentence count) alone predicts the label at 43-45% on logic rows. Here every (depth, label)
-cell of a file is generated so that the JOINT distribution of that triple is identical across the three labels:
+cell of a file is generated so that the JOINT distribution of that key is identical across the three labels:
 
-  1. a pilot of `pilot` ordinary candidates per (depth, label) estimates p_{d,l}(triple);
-  2. the target pi_d(triple) = min over labels of p_{d,l}(triple) (cells below `min_p` dropped), renormalised;
-  3. each slot of the plan (exact label thirds per depth, as generate.make_plan) is given a target triple drawn from quotas
-     n_{d,l} * pi_d(triple) (largest-remainder rounding), then candidates are drawn until one hits that triple.
+  1. a pilot of `pilot` ordinary candidates per (depth, label) estimates p_{d,l}(key);
+  2. the target pi_d(key) = min over labels of p_{d,l}(key) (cells below `min_p` dropped), renormalised;
+  3. each slot of the plan (exact label thirds per depth, as generate.make_plan) is given a target key drawn from quotas
+     n_{d,l} * pi_d(key) (largest-remainder rounding), then candidates are drawn until one hits that key.
+
+v2 (marks Addendum 2): the key also holds the entity analogue, (distinct entities, singleton entities). The review of the v1 rows found that
+unknown rows swap in the 'other' entity, so entity counts alone predicted the label at 51-61% (the depth-3 bar is 55%).
 
 The pilot uses its own seed stream (f"{seed}|{split}|pilot|..."), so it never overlaps the kept rows. Rows are otherwise exactly
 generate.make_rows' label-first rows (same templates, checker, depth rules). Only label-first splits are supported (F1: no rule-first
@@ -21,7 +24,8 @@ from . import checker as ck
 
 
 def triple(row):
-    """(distinct predicates, singleton predicates, sentence count) from the stored program, as in the panel's leak probe."""
+    """(distinct predicates, singleton predicates, sentence count, distinct entities, singleton entities) from the stored program (the first three
+    as in the panel's leak probe). Name kept from v1; it is a 5-tuple now."""
     facts, rules, query = ck.parse_program(row["program"])
     cnt = Counter()
     for f in facts:
@@ -30,7 +34,8 @@ def triple(row):
         for _, p in ru.lhs + (ru.rhs,):
             cnt[p] += 1
     cnt[query[1]] += 1
-    return (len(cnt), sum(v == 1 for v in cnt.values()), len(row["template_ids"]))
+    ents = Counter([f[2] for f in facts] + [ru.ent for ru in rules if ru.ent] + [query[2]])
+    return (len(cnt), sum(v == 1 for v in cnt.values()), len(row["template_ids"]), len(ents), sum(v == 1 for v in ents.values()))
 
 
 def candidate(split, kind, depth, label, rng, ident, max_chars):

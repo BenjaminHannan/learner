@@ -15,6 +15,7 @@ marks hold. new-words is evaluated and reported, never gated. Rung 0 also carrie
 """
 import argparse
 import json
+import math
 import os
 import subprocess
 import sys
@@ -45,27 +46,34 @@ EVALS = {0: ('dev', 'wording', 'newwords'), 1: ('dev', 'newwords'), 2: ('dev', '
 R5_DEPTH_BARS = {'0': 80.0, '1': 80.0, '2': 65.0, '3': 55.0}      # the LT-1 G-PASS bars (gate accuracy by depth)
 
 
-def ensure_rows(work, rung, n_train=130000):
+def ensure_rows(work, rung, n_train=None, build=True):
+    """Build (or find) the rung's row files; when logic_transfer/ladder-hashes.json lists the rung, every listed file's BYTES on disk must hash to the
+    sealed value (a box that built different rows, a truncated or edited file, or an old build in the work dir stops here, not three hours later)."""
     from logic_transfer import ladder
     d = os.path.join(work, 'rows', f'rung{rung}')
     summ = os.path.join(d, 'summary.json')
     if not os.path.exists(summ):
+        assert build, f'rung{rung}: no row summary at {summ} (reports never start a build)'
         ladder.build(rung, os.path.join(work, 'rows'), n_train=n_train)
     s = json.load(open(summ))
     hp = os.path.join(HERE, 'ladder-hashes.json')
     if os.path.exists(hp):
         want = json.load(open(hp)).get(f'rung{rung}')
-        if want:
-            for name, h in want.items():
-                got = s['files'][name]['sha256']
-                assert got == h, f'rung{rung}/{name}: built {got[:12]} but ladder-hashes.json says {h[:12]}'
+        assert want, f'ladder-hashes.json has no entry for rung{rung}: refusing to run on unsealed rows'
+        for name, h in want.items():
+            got = ladder.sha256(os.path.join(d, name + '.jsonl'))
+            assert got == h, f'rung{rung}/{name}: file on disk hashes to {got[:12]} but ladder-hashes.json says {h[:12]}'
     return d, s
 
 
 def thresholds(rung, summ):
     """The rung's marks as [(eval file, by_level key or None, percent threshold)] (MARKS-LT2 + Addendum 1). Baselines are the train-fitted count
     baselines of the same file (F3): a mark is max(bar, baseline + 25)."""
-    base = lambda f: summ['files'][f]['count_baseline']['acc']
+    def base(f):
+        """Baseline + 25 floored to 2 decimals from the EXACT hit count (rung 1: 800/1200 + 25 = 91.6667 -> 91.66, so 1100/1200 right passes)."""
+        cb = summ['files'][f]['count_baseline']
+        exact = 100.0 * cb['hit'] / cb['n'] if 'hit' in cb else cb['acc']
+        return math.floor((exact + MARGIN) * 100 + 1e-9) / 100.0 - MARGIN
     if rung in (0, 3):
         return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('wording', None, max(WORD_MIN, base('wording') + MARGIN))]
     if rung in (1, 2):
@@ -224,16 +232,29 @@ def run_summary(work, rung, p, s, th):
             break
     out['pass'] = ok_at is not None
     out['pass_update'] = ok_at
+    holds = lambda dct: all(f in dct and eval_pct(dct[f], lv) >= v for f, lv, v in th)
+    us = sorted(by_u)
+    out['pass_streak2'] = any(holds(by_u[a_]) and holds(by_u[b_]) for a_, b_ in zip(us, us[1:]))     # the stop rule's own condition (two whole-file evals in a row)
+    out['holds_at_last_full_eval'] = bool(us) and holds(by_u[us[-1]])
+    allp = {}
+    for e in ev:                                           # prefix (non-full) evals too
+        allp.setdefault(e['update'], {})[e['name']] = e
+    out['near'] = ok_at is None and any(holds(d_) for d_ in allp.values())      # marks met on a prefix eval but never confirmed on the whole file
     prim = EVALS[rung][0]
 
     def acc_at(u):
-        """Primary-file accuracy at update u: the latest eval at or before u; a run that passed at or before u carries its passing eval forward."""
-        if ok_at is not None and ok_at <= u:
-            return round(by_u[ok_at][prim]['exact'], 2) if prim in by_u[ok_at] else None
+        """Primary-file accuracy at update u: the latest eval at or before u. A run that STOPPED on its marks at update <= u is not evaluated after
+        it stopped; its stopping evaluation is carried forward and the cell is listed in out['dev_at_carried'] (a run that merely passed once and then
+        went on training is NOT carried: its own later evals are read)."""
+        if st and st.get('reason') == 'marks' and st['update'] <= u and st['update'] in by_u and prim in by_u[st['update']]:
+            carried.append(str(u))
+            return round(by_u[st['update']][prim]['exact'], 2)
         c = [e for e in ev if e['name'] == prim and e['update'] <= u]
         return max(c, key=lambda e: (e['update'], e['full']))['exact'] if c else None
+    carried = []
     out['primary_file'] = prim
     out['dev_at'] = {str(u): acc_at(u) for u in (2000, 4000, 8000)}
+    out['dev_at_carried'] = carried
     last_dev = [e for e in ev if e['name'] == prim]
     out['last_dev'] = (last_dev[-1]['update'], last_dev[-1]['exact'], last_dev[-1]['full']) if last_dev else None
     if rung == 5:
@@ -241,16 +262,76 @@ def run_summary(work, rung, p, s, th):
         out['gate_by_depth_last'] = {lv: round(eval_pct(gl[-1], lv), 1) for lv in R5_DEPTH_BARS} if gl else None
     nw = [e for e in ev if e['name'] == 'newwords']
     out['newwords_last'] = (nw[-1]['update'], nw[-1]['exact']) if nw else None
+    lf = [e for e in ev if e['name'] == prim and e['full'] and e.get('by_label')]
+    out['label_recall_last'] = ({k: round(100.0 * c / max(n, 1), 1) for k, (c, n) in lf[-1]['by_label'].items()} if lf else None)
+    pj = os.path.join(rd, 'probe.json')
+    out['probes'] = json.load(open(pj))['probes'] if os.path.exists(pj) else None
     return out
+
+
+def _code_sha():
+    """Short git sha of the code that produced this report (the box refreshes its code between orders; a report shows which state it ran)."""
+    try:
+        return subprocess.run(['git', '-C', HERE, 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, timeout=10).stdout.strip() or None
+    except Exception:
+        return None
+
+
+def cuda_available():
+    try:
+        import torch
+        return torch.cuda.is_available()
+    except Exception:
+        return False
+
+
+def probe_runs(work, rung, rows, device, n=600):
+    """Counterfactual probes (probes.py; rungs 0-2, reported never gated) on the checkpoint of every run that PASSED its marks; writes
+    <run>/probe.json and fills rows[i]['probes']. A run whose probe fails keeps probes=None and an 'error' note (the report never aborts)."""
+    from logic_transfer import probes
+    from custom_io.data import load_rows
+    rws = load_rows(os.path.join(work, 'rows', f'rung{rung}', 'dev.jsonl'), keep=None)[:n]
+    for x in rows:
+        if not x['pass'] or x['state'] != 'done':
+            continue
+        rd = os.path.join(work, f'rung{rung}', x['run'])
+        pj, ck = os.path.join(rd, 'probe.json'), os.path.join(rd, 'checkpoint.pt')
+        if not os.path.exists(pj) and os.path.exists(ck):
+            try:
+                json.dump(probes.run(ck, rws, rung, device), open(pj, 'w'), indent=1)
+            except Exception as ex:               # noqa: BLE001  (a reported-only instrument must not take the report down)
+                x['probe_error'] = f'{type(ex).__name__}: {ex}'[:300]
+                continue
+        if os.path.exists(pj):
+            x['probes'] = json.load(open(pj))['probes']
+
+
+def summarise_probes(rows):
+    acc = {}
+    for x in rows:
+        for name, d in (x.get('probes') or {}).items():
+            acc.setdefault(name, []).append(list(d.values())[1] if len(d) > 1 else list(d.values())[0])
+    return {k: dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v)) for k, v in acc.items()}
+
+
+def summarise_recall(rows):
+    acc = {}
+    for x in rows:
+        for lab, v in (x.get('label_recall_last') or {}).items():
+            acc.setdefault(lab, []).append(v)
+    return {k: dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v)) for k, v in sorted(acc.items())}
 
 
 def cmd_report(a):
     rungs = a.rung or sorted(int(x[5:]) for x in os.listdir(a.work) if x.startswith('rung') and os.path.isdir(os.path.join(a.work, x)))
     res = {}
     for r in rungs:
-        d, summ = ensure_rows(a.work, r)
+        d, summ = ensure_rows(a.work, r, build=False)
         th = thresholds(r, summ)
         rows = [run_summary(a.work, r, p, s, th) for p, s in all_runs()]
+        pdev = {'auto': 'cuda' if cuda_available() else None, 'cpu': 'cpu', 'cuda': 'cuda', 'off': None}[a.probes]
+        if r <= 2 and pdev:
+            probe_runs(a.work, r, rows, pdev)
         n_pass = sum(x['pass'] for x in rows)
         finished = all(x['state'] in ('done', 'failed') for x in rows)
         n_failed = sum(x['state'] == 'failed' for x in rows)
@@ -271,9 +352,11 @@ def cmd_report(a):
         for u in ('2000', '4000', '8000'):
             v = [x['dev_at'][u] for x in rows if x['dev_at'][u] is not None]
             if v:
-                stats[u] = dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v))
-        res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r][:2] if 'count_baseline' in summ['files'][k]}, n_pass=n_pass, n_runs=len(rows),
-                               verdict=verdict, dev_stats=stats, runs=rows, falsifier=dec[2])
+                stats[u] = dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v),
+                                n_carried=sum(u in x['dev_at_carried'] for x in rows))
+        res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r] if 'count_baseline' in summ['files'][k]}, n_pass=n_pass, n_runs=len(rows),
+                               verdict=verdict, dev_stats=stats, label_recall=summarise_recall(rows), probe_summary=summarise_probes(rows),
+                               code=_code_sha(), runs=rows, falsifier=dec[2])
     print(json.dumps(res, indent=1))
     return res
 
@@ -301,6 +384,7 @@ def cmd_agree(a):
         same = sum(preds['cpu'][k] == preds['cuda'][k] for k in preds['cpu'])
         out['prediction_agreement'] = round(same / len(rows), 4)
         out['accuracy_gap_points'] = round(abs(out['cpu']['exact'] - out['cuda']['exact']), 3)
+        out['agree_ok'] = out['accuracy_gap_points'] <= 1.0 and out['prediction_agreement'] >= 0.98       # Addendum 1 condition (a); condition (b) is the loss window in run logs
     print(json.dumps(out))
     if a.out:
         json.dump(out, open(a.out, 'w'), indent=1)
@@ -319,7 +403,7 @@ def cmd_indist(a):
                             '--device', a.device, '--out', dst], check=True, env=env, cwd=os.path.dirname(HERE), stdout=subprocess.DEVNULL)
         sp = json.load(open(dst))['splits']['in_dist']
         return round(100.0 * sp['correct'] / sp['n'], 2), sp['n']
-    par = {p: score(parent_path(a.parents_dir, p), os.path.join(outdir, f'parent-{p}.json')) for p in PARENTS}
+    par = {p: score(parent_path(a.parents_dir, p), os.path.join(outdir, f'parent-{p}-rung{a.rung}.json')) for p in PARENTS}      # per-rung file: rungs run at once on the box
     res = {}
     for p, s in all_runs():
         ck = os.path.join(a.work, f'rung{a.rung}', run_name(p, s), 'checkpoint.pt')
@@ -369,6 +453,7 @@ def main(argv=None):
     q = sub.add_parser('report')
     q.add_argument('--work', required=True)
     q.add_argument('--rung', type=int, action='append')
+    q.add_argument('--probes', choices=['auto', 'cpu', 'cuda', 'off'], default='auto', help='counterfactual probes on passing rung 0-2 checkpoints (auto: on when a GPU is present)')
     a = ap.parse_args(argv)
     return {'run': cmd_run, 'report': cmd_report, 'agree': cmd_agree, 'indist': cmd_indist}[a.cmd](a)
 

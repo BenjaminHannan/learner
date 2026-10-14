@@ -8,6 +8,10 @@
 #      run, six runs each: parents s200 s201 s204 x course seeds 1 2; in order, or all at once with a line `PARRUNGS=1`) and optionally `PROCS=6`, `UPDATES=8000`; a line `STOP` ends the box.
 #      After each rung: in_dist scoring of the parents and the stopped checkpoints, then result block "lt2-rung<r>" (no .pt files).
 # Result blocks are printed into the container log as base64 (RBEGIN|name|sha|size, R|name|..., REND|name), read with vast.py collect.
+# v2 (2026-10-14, after the outside review): anchored pkill in the watchdog (an unanchored `pkill -f logic_transfer.lt2` also matched this script's own
+#   `bash -c` command line and killed the whole box script), result blocks written whole under a lock (parallel rungs could interleave their base64 lines),
+#   `wait` only on rung jobs, code sha in every ORDER / RUNG line, memory line after setup, driver tail in each rung block, rung rows built by this code
+#   (the order's rungs' rows are hash-checked against logic_transfer/ladder-hashes.json when the rung runs).
 # Env: BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
 # No credential is on the box; nothing listens.
 set -u
@@ -36,17 +40,20 @@ export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PA
 export PYTHONPATH=$J/mine
 PD=$J/par/t1sdr
 LT="python -m logic_transfer.lt2"
-emit() {  # name dir...: tar the small outputs (no .pt, no stdout logs) and print them as base64 lines
-  n=$1; shift; T=$J/res/$n.tgz
+emit() {  # name dir...: tar the small outputs (no .pt, no stdout logs) and print them as ONE block of base64 lines (built whole, printed under a lock)
+  n=$1; shift; T=$J/res/$n.tgz; B=$J/res/$n.blk
   tar -czf $T --exclude='*.pt' --exclude='stdout.log' --exclude='train.jsonl' --exclude='dev.jsonl' --exclude='wording.jsonl' --exclude='newwords.jsonl' \
       --exclude='gate.jsonl' --exclude='deeper.jsonl' -C $J/w "$@" 2>/dev/null
   h=$(sha256sum $T | cut -c1-64)
-  echo "RBEGIN|$n|$h|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$n|/"; echo "REND|$n"
+  { echo "RBEGIN|$n|$h|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$n|/"; echo "REND|$n"; } > $B
+  if command -v flock >/dev/null; then ( flock 9; cat $B ) 9>$J/res/emit.lock; else cat $B; fi
 }
 over() { [ "$MAXH" != 0 ] && [ $(( $(date +%s) - T0 )) -ge $(awk "BEGIN{print int($MAXH*3600)}") ]; }
-say "LT2 READY"
+say "LT2 READY code=$(git -C mine rev-parse --short HEAD) mem=$(free -g | awk 'NR==2{print $2" GB total, "$7" GB available"}') cgroup=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo na) cores=$(nproc)"
 if [ "$MAXH" != 0 ]; then   # cost cap: after MAXH hours every run is killed (results of what finished are still printed by the rung loop)
-  ( sleep $(awk "BEGIN{print int($MAXH*3600)}"); say "LT2 MAXH $MAXH h: killing runs"; pkill -f logic_transfer.lt2; pkill -f logic_transfer.course ) &
+  # anchored: only processes whose command line STARTS with `<something>python* -m logic_transfer.<driver|course>` (this script's own command line, which contains
+  # the text of the next lines, starts with `bash -c` and must not match)
+  ( sleep $(awk "BEGIN{print int($MAXH*3600)}"); say "LT2 MAXH $MAXH h: killing runs"; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.lt2'; sleep 1; pkill -f '^[^ ]*python[^ ]* -m logic_transfer\.course' ) &
 fi
 # rows of rungs 1-5 are built in the background (deterministic; sha256 checked against logic_transfer/ladder-hashes.json when listed) while the agreement run goes
 mkdir -p $J/w/ladder/rows
@@ -78,21 +85,22 @@ while true; do
       last=$s
       grep -q '^STOP' $G && { say "LT2 STOP"; break; }
       RUNGS=$(grep -m1 -oE '^RUNGS=.*' $G | cut -d= -f2-); PROCS=$(grep -m1 -oE '^PROCS=[0-9]+' $G | cut -d= -f2); UPDATES=$(grep -m1 -oE '^UPDATES=[0-9]+' $G | cut -d= -f2)
-      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000}"
+      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000} code=$(git -C mine rev-parse --short HEAD)"
       do_rung() {
         r=$1
-        say "RUNG $r START"
-        for k in $(seq 1 360); do [ -f $J/w/ladder/rows/rung$r/summary.json ] && break; grep -q Traceback $J/out/build-rung$r.log 2>/dev/null && break; sleep 20; done
+        say "RUNG $r START code=$(git -C mine rev-parse --short HEAD)"
+        for k in $(seq 1 540); do [ -f $J/w/ladder/rows/rung$r/summary.json ] && break; grep -q Traceback $J/out/build-rung$r.log 2>/dev/null && break; sleep 20; done
         [ -f $J/w/ladder/rows/rung$r/summary.json ] || { say "RUNG $r rows missing"; tail -5 $J/out/build-rung$r.log; return; }
         (cd mine && $LT run --rung $r --work $J/w/ladder --parents-dir $PD --sk200k $J/data --device cuda --procs ${PROCS:-6} --threads 1 --updates ${UPDATES:-8000} \
            --eval-n 0 > $J/out/rung$r-run.log 2>&1); echo "rung $r run rc=$?"; tail -4 $J/out/rung$r-run.log
         (cd mine && $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log
         (cd mine && $LT report --work $J/w/ladder --rung $r > $J/w/ladder/rung$r/report.json 2>$J/out/rung$r-report.err)
+        tail -n 80 $J/out/rung$r-run.log > $J/w/ladder/rung$r/driver-tail.txt 2>/dev/null
         emit lt2-rung$r ladder/rung$r ladder/indist ladder/rows/rung$r/summary.json
         say "RUNG $r DONE"
       }
       if grep -q '^PARRUNGS=1' $G; then   # all rungs of this order at once (each rung has its own PROCS runs); watch RAM: ~3.3 GB per run
-        pids=""; for r in $RUNGS; do do_rung $r & pids="$pids $!"; done; wait $pids   # NOT a bare `wait`: the MAXH watchdog is a background job too
+        pids=""; for r in $RUNGS; do do_rung $r & pids="$pids $!"; done; [ -n "$pids" ] && wait $pids   # NOT a bare `wait`: the MAXH watchdog is a background job too
       else
         for r in $RUNGS; do over && break; do_rung $r; done
       fi

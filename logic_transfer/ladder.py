@@ -55,7 +55,7 @@ def count_baseline(train_rows, eval_rows):
     gmaj = sorted(glob.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
     pred = {k: sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))[0][0] for k, c in tab.items()}
     hit = sum(pred.get(count_key(r['prompt']), gmaj) == r['answer'] for r in eval_rows)
-    out = dict(acc=round(100.0 * hit / max(len(eval_rows), 1), 2), n=len(eval_rows), table_size=len(pred))
+    out = dict(acc=round(100.0 * hit / max(len(eval_rows), 1), 2), hit=hit, n=len(eval_rows), table_size=len(pred))
     lv = defaultdict(lambda: [0, 0])
     for r in eval_rows:
         lv[str(r['level'])][0] += pred.get(count_key(r['prompt']), gmaj) == r['answer']
@@ -95,13 +95,25 @@ LOGIC_SPECS = {
     4: [('train', 'train', 130000, 0, [1]), ('dev', 'dev', 1200, 1, [1]), ('gate', 'gate', 1200, 2, [1])],
     5: [('train', 'train', 130000, 0, None), ('dev', 'dev', 1200, 1, None), ('gate', 'gate', 1608, 2, None), ('deeper', 'test_deeper', 800, 3, None)],
 }
+TRAIN_N = {1: 36000}     # rung 1: the common-word true/false prompt space is only ~22k per label; a bigger train file would exhaust it and tie word type to the label
+RUNG_SEED_BASE = {0: 100, 3: None, 1: 1110, 2: 1120, 4: 1140, 5: 1150}     # v2 (Addendum 2): rungs 1, 2, 4, 5 were rebuilt, so their ids / seeds differ from v1 (110/120/140/150)
+
+
+def train_n(rung):
+    return TRAIN_N.get(rung, 130000)
+
+
+def seed_base(rung):
+    return RUNG_SEED_BASE[rung]
+
+
 ATTACK_MAX = 37.0        # F2 check (marks): the panel's (distinct, singleton, sentences) lookup must score <= 37% on every eval file
 
 
 def build_logic(rung, d, n_train, summary):
     """Rungs 4-5: logic rows with F2 rejection matching. Returns nothing; fills summary['files'][name]['gen'] and ['f2_attack']."""
     from logicgen import matched
-    base = 100 + 10 * rung
+    base = seed_base(rung)
     raw_train, train_q = None, None
     for name, split, n, off, depths in LOGIC_SPECS[rung]:
         n = n_train if name == 'train' else n
@@ -130,12 +142,13 @@ def build_placebo(d, n_train, summary):
     shutil.rmtree(gen)
 
 
-def build(rung, out, n_train=130000, n_eval=1200, n_new=600):
+def build(rung, out, n_train=None, n_eval=1200, n_new=600):
     kind = f'rung{rung}'
     assert 0 <= rung <= 5
+    n_train = n_train or train_n(rung)
     d = os.path.join(out, kind)
     os.makedirs(d, exist_ok=True)
-    base = 100 + 10 * rung
+    base = seed_base(rung)
     summary = dict(rung=rung, kind=kind, files={})
     if rung <= 2:
         summary['seeds'] = dict(train=base, dev=base + 1, wording=base + 2, newwords=base + 3)
@@ -170,7 +183,7 @@ def main(argv=None):
     b = sub.add_parser('build')
     b.add_argument('--rung', type=int, required=True)
     b.add_argument('--out', required=True)
-    b.add_argument('--n-train', type=int, default=130000)
+    b.add_argument('--n-train', type=int, default=None, help='default: ladder.train_n(rung) (130000; 36000 for rung 1)')
     b.add_argument('--n-eval', type=int, default=1200)
     b.add_argument('--n-new', type=int, default=600)
     c = sub.add_parser('baseline')

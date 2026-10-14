@@ -7,6 +7,13 @@ logic_transfer.rows.convert_row turns them into custom_io rows. Fully determinis
 Splits: train, dev (train templates, main words), wording (held-out FP/FN/Q templates, main words; rung0 only differs from dev),
 newwords (train templates, the held-out 20% of entity / predicate words). Main words never include a held-out word.
 Label balance: exactly 1/3 per label; rung1/2 unknown rows cycle other-entity / other-predicate / both equally.
+
+v2 (marks Addendum 2): in rungs 1-2 the word TYPE of the predicates (nonsense vs common word) must carry no label information. v1 alternated
+the type on every draw, so a different query predicate almost always had the opposite type (a 86%-accurate shortcut that needs no word
+comparison). Now each row's type is a plan slot (exactly half and half inside every (label, unknown-subtype) cell), the query predicate always
+has the type of the fact predicate, and distractor predicates take a coin-flipped type. Rung 0 is unchanged (byte-identical rows).
+Also in v2 (rungs 1-2): a replacement entity / predicate in an unknown row has the SAME LENGTH as the word it replaces, so the length of the text
+(and 'same length' as a stand-in for 'same word') says nothing about the label; only reading the words does.
 """
 import hashlib
 import random
@@ -59,6 +66,41 @@ class Pool:
                 return w
 
 
+_COMMON_SET = frozenset(COMMON_WORDS)
+
+
+def word_class(w):
+    return "c" if w in _COMMON_SET else "n"
+
+
+def pred_cls(pool, cls, avoid=(), length=None):
+    """A predicate word of type cls ('n' nonsense / 'c' common); cls=None -> a coin flip; length -> exactly that many letters (None: any).
+    Rungs 1-2 only (rung 0 keeps Pool.pred)."""
+    if cls is None:
+        cls = "n" if pool.rng.random() < 0.5 else "c"
+    for _ in range(100000):
+        if cls == "n":
+            w = nonsense_word(pool.rng)
+            if is_new(w) != (pool.wset == "new"):
+                continue
+        else:
+            w = pool.rng.choice(COMMON[pool.wset])
+        if w not in avoid and (length is None or len(w) == length):
+            pool.preds.add(w)
+            return w
+    raise ValueError(f"no {cls} predicate of length {length} outside {sorted(avoid)} in set {pool.wset}")
+
+
+def ent_len(pool, length, avoid=()):
+    """An entity word of exactly `length` letters outside avoid (a ValueError when the pool has none: the caller then redraws the row)."""
+    cands = [w for w in ENTS[pool.wset] if len(w) == length and w not in avoid]
+    if not cands:
+        raise ValueError(f"no entity of length {length}")
+    e = pool.rng.choice(cands)
+    pool.ents.add(e)
+    return e
+
+
 def plain_fact(lit):
     return f"{T.cap(lit[2])} is {'not ' if lit[0] else ''}{lit[1]}."
 
@@ -81,23 +123,41 @@ def plan(n, seed, kind, split):
     return out
 
 
-def _r1_core(rng, pool, label, sub):
-    e, p = pool.ent(), pool.pred()
+def plan_cls(slots):
+    """Type of the fact predicate for each slot of a plan: alternates 'n' / 'c' inside every (label, sub) cell, so it is independent of the label
+    and of the unknown subtype (the plan is already shuffled, so the position carries nothing)."""
+    seen, out = {}, []
+    for label, sub in slots:
+        k = seen.get((label, sub), 0)
+        seen[(label, sub)] = k + 1
+        out.append("n" if k % 2 == 0 else "c")
+    return out
+
+
+def _r1_core(rng, pool, label, sub, cls):
+    e, p = pool.ent(), pred_cls(pool, cls)
     fact = (rng.random() < 0.5, p, e)
     if label == "true":
         q = fact
     elif label == "false":
         q = neg_lit(fact)
     else:
-        e2 = pool.ent(avoid={e}) if sub in ("ent", "both") else e
-        p2 = pool.pred(avoid={p}) if sub in ("pred", "both") else p
+        e2 = ent_len(pool, len(e), avoid={e}) if sub in ("ent", "both") else e
+        p2 = pred_cls(pool, word_class(p), avoid={p}, length=len(p)) if sub in ("pred", "both") else p
         q = (rng.random() < 0.5, p2, e2)
     return fact, q
 
 
-def build_rung12(rng, kind, label, sub, wset):
+def build_rung12(rng, kind, label, sub, wset, cls):
     pool = Pool(rng, wset)
-    fact, q = _r1_core(rng, pool, label, sub)
+    try:
+        fact, q = _r1_core(rng, pool, label, sub, cls)
+    except ValueError:
+        return None
+    return _r12_rest(rng, pool, kind, label, sub, wset, fact, q)
+
+
+def _r12_rest(rng, pool, kind, label, sub, wset, fact, q):
     facts = [fact]
     n_dis = 0
     if kind == "rung2":
@@ -107,9 +167,9 @@ def build_rung12(rng, kind, label, sub, wset):
             for _try in range(50):
                 how = rng.choice(["same_ent", "same_pred", "other"])
                 e_d = q[2] if how == "same_ent" else (pool.ent() if how == "same_pred" or how == "other" else q[2])
-                p_d = q[1] if how == "same_pred" else pool.pred()
+                p_d = q[1] if how == "same_pred" else pred_cls(pool, None)
                 if how == "same_ent":
-                    p_d = pool.pred(avoid={q[1], fact[1]})
+                    p_d = pred_cls(pool, None, avoid={q[1], fact[1]})
                 if how == "same_pred":
                     e_d = pool.ent(avoid={q[2], fact[2]})
                 if (e_d, p_d) in pairs:
@@ -156,11 +216,13 @@ def make_rows(kind, split, n, seed, max_chars=208, max_tries=400, exclude=None):
     tset, wset = SPLITS[split]
     rows, stats = [], {"attempts": 0, "accepted": 0}
     seen = set(exclude or ())
-    for i, (label, sub) in enumerate(plan(n, seed, kind, split)):
+    slots = plan(n, seed, kind, split)
+    classes = plan_cls(slots) if kind != "rung0" else [None] * len(slots)
+    for i, (label, sub) in enumerate(slots):
         for t in range(max_tries):
             rng = random.Random(f"{seed}|{kind}|{split}|{i}|{t}")
             stats["attempts"] += 1
-            d = build_rung0(rng, label, tset, wset) if kind == "rung0" else build_rung12(rng, kind, label, sub, wset)
+            d = build_rung0(rng, label, tset, wset) if kind == "rung0" else build_rung12(rng, kind, label, sub, wset, classes[i])
             if d is None or len(d["question"]) > max_chars or d["question"] in seen:
                 continue
             seen.add(d["question"])
