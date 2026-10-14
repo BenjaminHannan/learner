@@ -25,7 +25,7 @@ command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git >
 git clone -q --depth 1 --filter=blob:none --sparse -b $BR $R mine && (cd mine && git sparse-checkout set custom_io logicgen logic_transfer && git log -1 --format='mine %H') || die clone-mine
 git clone -q --depth 1 --filter=blob:none --sparse -b claude/project-thread-y0sxwe $R cur && (cd cur && git sparse-checkout set skills_curriculum) || die clone-cur
 git clone -q --depth 1 --filter=blob:none --sparse -b $PBR $R par && (cd par && git sparse-checkout set t1sdr) || die clone-parents
-(cd par/t1sdr && sha256sum -c SHA256SUMS) || die parent-hash
+(cd par && sha256sum -c t1sdr/SHA256SUMS) || die parent-hash
 (cd cur && python -m skills_curriculum.build --out $J/data --train 200000 --dev-per-cell 40 --seed 1 > $J/out/build.log 2>&1) || die build
 python -c "import json; a=json.load(open('$J/cur/skills_curriculum/FULL-BUILD-MANIFEST-200k-seed1.json'))['files_sha256']; b=json.load(open('$J/data/manifest.json'))['files_sha256']; assert a==b, 'curriculum hash mismatch'; print('curriculum hashes match')" || die hash
 (cd cur && python -m skills_curriculum.build --out $J/data_big --train 200000 --dev-per-cell 200 --seed 1 > $J/out/build_big.log 2>&1) || die build-big
