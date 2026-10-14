@@ -657,10 +657,11 @@ def _b3g2_update(w, a, spec, b, k0, amp=contextlib.nullcontext, **kw):
 
 
 def test_new_variants_listed_documented_and_composable():
-    for n in ('unfused', 'pad64', 'nosync', 'tf32'):
+    for n in ('unfused', 'pad64', 'pad64p', 'nosync', 'tf32'):
         assert n in prof.VARIANTS and len(prof.VARIANTS[n].doc) > 80, n
     assert prof.parse_variants('nosync,pad64,tf32,unfused') == ['tf32', 'unfused', 'nosync', 'pad64']
-    for bad in ('pad64,sortpad', 'pad64,sortpad_tokw', 'pad64,eg_once', 'pad64,eg_sorted'):
+    assert prof.parse_variants('pad64p,nosync') == ['nosync', 'pad64p'] and prof.parse_variants('pad64p,eg_once') == ['pad64p', 'eg_once'], 'pad64p only cuts the prompt columns: it composes with the Gemma front variants'
+    for bad in ('pad64,sortpad', 'pad64,sortpad_tokw', 'pad64,eg_once', 'pad64,eg_sorted', 'pad64p,sortpad', 'pad64p,sortpad_tokw', 'pad64,pad64p'):
         try:
             prof.parse_variants(bad)
         except SystemExit:
@@ -670,7 +671,7 @@ def test_new_variants_listed_documented_and_composable():
     with contextlib.redirect_stdout(buf):
         prof.main(['--list-variants', '--out', os.path.join(tempfile.gettempdir(), 'unused.json')])
     listed = buf.getvalue()
-    assert all(any(line.startswith(n) for line in listed.splitlines()) for n in ('unfused', 'pad64', 'nosync', 'tf32'))
+    assert all(any(line.startswith(n) for line in listed.splitlines()) for n in ('unfused', 'pad64', 'pad64p', 'nosync', 'tf32'))
 
 
 def test_unfused_builds_the_optimizer_with_fused_false():
@@ -688,13 +689,18 @@ def test_unfused_builds_the_optimizer_with_fused_false():
     finally:
         torch.optim.AdamW = orig
     assert seen == [True, False, False], 'train.py: fused on cuda by default; fused=False overrides; cpu unfused'
-    base, unf = prof.Trainer(w, a, [], accum=4, batch_seed=3), prof.Trainer(w, a, ['unfused'], accum=4, batch_seed=3)
-    try:
-        assert not unf.opt.param_groups[0]['fused']
-        base.update(); unf.update()
-        assert all(torch.equal(p, q) for p, q in zip(base.model.parameters(), unf.model.parameters())), 'on the CPU both are the same unfused AdamW'
-    finally:
-        base.close(); unf.close()
+
+    def one_update(names):                                                   # ONE trainer at a time, as ab_run does: Trainer() reseeds the global RNG, so both updates draw the same K
+        tr = prof.Trainer(w, a, names, accum=4, batch_seed=3)
+        prof.seed_all(a.seed)                                                # (explicitly, right before the update: nothing built in between may move the stream)
+        try:
+            assert not tr.opt.param_groups[0]['fused']
+            tr.update()
+            return [p.detach().clone() for p in tr.model.parameters()]
+        finally:
+            tr.close()
+    base, unf = one_update([]), one_update(['unfused'])
+    assert all(torch.equal(p, q) for p, q in zip(base, unf)), 'on the CPU both are the same unfused AdamW'
 
 
 def test_pad64_widths_masks_and_the_maths():
@@ -842,9 +848,10 @@ def test_ab_helpers_parse_money_and_mark6_by_hand():
     assert not c2['meets_bar'], 'relative loss difference 2e-4 is over the bar'
     c3 = prof.ab_compare(one, (1.0, torch.tensor([1.0, 0.02]), torch.tensor([1.0, 0.0])))
     assert not c3['meets_bar'] and c3['grad_cos'] < 0.9999, 'gradient cosine 0.9998 is under the bar'
-    assert prof.ab_mark6('nosync', c0, c0) == dict(bar_holds=True, bit_exact_required=True, bit_exact_cpu_fp32=True, holds=True, verdict='holds')
+    nos = prof.ab_mark6('nosync', c0, c0)
+    assert nos['bar_holds'] and nos['bit_exact_required'] and nos['bit_exact_cpu_fp32'] is True and nos['holds'] is True and nos['verdict'] == 'holds' and nos['label'] == 'bar_and_cpu_fp32'
     pad = prof.ab_mark6('pad64', c1, c1)
-    assert pad['bar_holds'] and pad['bit_exact_cpu_fp32'] is False and pad['holds'] is False and pad['verdict'] == 'NOT EXACT', 'bar met but not bit exact on the CPU: NOT EXACT'
+    assert pad['bar_holds'] and pad['bit_exact_cpu_fp32'] is False and pad['equal_to_rounding_cpu_fp32'] is False and pad['holds'] is False and pad['verdict'] == 'NOT EXACT', 'gradient 1e-3 off: not equal to rounding'
     assert prof.ab_mark6('pad64', c1, None)['holds'] is True and prof.ab_mark6('pad64', c1, None)['bit_exact_cpu_fp32'] is None, 'not checkable here: the bar alone decides, and says so'
     assert prof.ab_mark6('tf32', c1, c1)['holds'] is True, 'tf32 may differ in the last bits'
     assert prof.ab_mark6('tf32', c2, c0)['holds'] is False and prof.ab_mark6('unfused', c3, c0)['bar_holds'] is False
@@ -867,6 +874,7 @@ def test_ab_marks_by_hand():
     assert prof.ab_marks('variant', [2.0, 2.0, 2.0], [1.9, 1.9, 1.9], b_peak_gb=11.0, mark6=True)['mark5_counts'] is False, 'over 10 GB'
     nopeak = prof.ab_marks('variant', [2.0, 2.0, 2.0], [1.8, 1.8, 1.8], b_peak_gb=None, mark6=True)
     assert nopeak['mark5_counts_without_mark6'] is None and nopeak['mark5_counts'] is None, 'peak unknown (CPU): cannot tell'
+    assert prof.ab_marks('variant', [2.0, 2.0, 2.0], [1.8, 1.8, 1.8], b_peak_gb=None, mark6=False)['mark5_counts'] is False, 'NOT EXACT never counts, even when the memory is not known'
     assert prof.ab_marks('variant', [2.0, 2.0, 2.0], [2.2, 2.2, 2.2], b_peak_gb=None, mark6=True)['mark5_counts'] is False, 'already failing on speed: False whatever the memory'
     noisy = prof.ab_marks('variant', [2.0, 2.3, 2.1], [1.7, 1.75, 1.8], b_peak_gb=4.0, mark6=True)
     assert abs(noisy['a_spread'] - 1.15) < 1e-12 and noisy['inside_noise'] is True, 'a difference of 15 % is under 2 x the 15 % spread'
@@ -911,7 +919,7 @@ def test_abbench_and_abequiv_end_to_end_on_the_tiny_b3g2():
     d = tempfile.mkdtemp(prefix='prof_ab_')
     out, partial = os.path.join(d, 'ab.json'), os.path.join(d, 'ab.partial.json')
     prof.AB_STATE.clear()
-    res = prof.main(argv('B3G2', '--sections', 'abbench,abequiv', '--ab-accums', '2', '--ab-variants', 'nosync,pad64,unfused', '--ab-warmup', '1', '--ab-updates', '2', '--ab-rounds', '2', '--chunk', '2',
+    res = prof.main(argv('B3G2', '--sections', 'abbench,abequiv', '--ab-accums', '2', '--ab-variants', 'nosync,pad64p,pad64,unfused', '--ab-warmup', '1', '--ab-updates', '2', '--ab-rounds', '2', '--chunk', '2',
                          '--dph', '0.5', '--ab-partial', partial, out=out))
     S = res['sections']
     assert 'error' not in S['abequiv'] and 'error' not in S['abbench'], (S['abequiv'].get('error'), S['abbench'].get('error'))
@@ -920,10 +928,16 @@ def test_abbench_and_abequiv_end_to_end_on_the_tiny_b3g2():
     for v in ('nosync', 'unfused'):
         e = eq['variants'][v]
         assert e['fp32']['bit_exact'] and e['fp32']['bit_exact_step'] and e['mark6']['holds'] and e['mark6']['bit_exact_cpu_fp32'] is True, v
-    p = eq['variants']['pad64']
-    assert p['fp32']['grad_rel_l2'] < 1e-6 and p['fp32']['rel_loss_diff'] <= 1e-9 and p['mark6']['holds'] == (p['mark6']['bar_holds'] and p['fp32']['bit_exact']), 'pad64: the mark follows the bit-exact clause'
-    assert eq['mark6_by_variant'] == {v: r['mark6']['holds'] for v, r in eq['variants'].items()}
-    assert sorted(ab['arms']) == ['accum 2', 'nosync', 'pad64', 'unfused'] and ab['complete'] and ab['dph'] == 0.5 and ab['mark6_used'] == eq['mark6_by_variant']
+    for v in ('pad64', 'pad64p'):
+        p = eq['variants'][v]
+        assert p['fp32']['grad_rel_l2'] < 1e-6 and p['fp32']['rel_loss_diff'] <= 1e-9 and p['mark6']['equal_to_rounding_cpu_fp32'] is True, v
+        assert p['mark6']['holds'] is True and p['mark6']['cpu_fp32_rule'] == 'equal_to_rounding' and p['mark6']['label'] == 'bar_and_cpu_fp32', f'{v}: Amendment 1: the CPU clause is equal to rounding, not bit for bit'
+    assert eq['mark6_by_variant'] == {v: r['mark6']['holds'] for v, r in eq['variants'].items()} and sorted(eq['mark6_by_variant']) == ['nosync', 'pad64', 'pad64p', 'unfused']
+    assert all(r['mark6']['rerun_noise_floor'] == {k: eq['reference']['fp32']['rerun'][k] for k in ('rel_loss_diff', 'grad_cos', 'grad_rel_l2', 'bit_exact')} for r in eq['variants'].values()), 'the verdict sits beside the rerun floor'
+    assert eq['mark6_label_by_variant'] == dict(nosync='bar_and_cpu_fp32', pad64='bar_and_cpu_fp32', pad64p='bar_and_cpu_fp32', unfused='bar_only_by_rule') and eq['errors'] == []
+    assert list(ab['arms']) == ['nosync', 'pad64p', 'pad64', 'unfused', 'accum 2'] == ab['arm_order'], 'the variants first (in the order given), THEN the accum rows'
+    assert ab['complete'] and ab['dph'] == 0.5 and ab['mark6_used'] == eq['mark6_by_variant'] and ab['mark6_label_used'] == eq['mark6_label_by_variant'] and ab['errors'] == []
+    assert 'B <= 0.95' in ab['marks']['mark5_reading'] and 'all 2 rounds completed' in ab['marks']['mark5_reading']
     for k, arm in ab['arms'].items():
         assert arm['rounds_completed'] == 2 and len(arm['a_runs']) == len(arm['b_runs']) == 2 and arm['wall_min_arm'] > 0, k
         assert abs(arm['cost_arm_usd'] - arm['wall_min_arm'] / 60 * 0.5) < 1e-12 and arm['money']['usd_24000_run'] > 0, k
@@ -931,16 +945,17 @@ def test_abbench_and_abequiv_end_to_end_on_the_tiny_b3g2():
         assert len(m['a_round_medians']) == len(m['b_round_medians']) == 2 and m['a_spread'] >= 1 and m['speed_vs_a'] > 0, k
         assert arm['rounds_per_micro_batch']['a']['micro_batches'] == 2 * 2 * 4, 'A: 2 rounds x 2 updates x accum 4'
     assert ab['arms']['accum 2']['rounds_per_micro_batch']['b']['micro_batches'] == 2 * 2 * 2 and 'mark1_speed_counts' in ab['arms']['accum 2']['marks'] and ab['arms']['accum 2']['marks']['mark2_memory_fits'] is None
-    for v in ('nosync', 'pad64', 'unfused'):
+    for v in ('nosync', 'pad64p', 'pad64', 'unfused'):
         m = ab['arms'][v]['marks']
-        assert m['mark6_holds'] == eq['mark6_by_variant'][v] and m['mark5_counts'] in (False, None), 'CPU: no peak memory, so a win can never be confirmed here'
+        assert m['mark6_holds'] == eq['mark6_by_variant'][v] and m['mark6_label'] == eq['mark6_label_by_variant'][v] and m['mark5_counts'] in (False, None), 'CPU: no peak memory, so a win can never be confirmed here'
     assert ab['arms']['nosync']['a_runs'][0]['wall_s'] > 0 and ab['arms']['nosync']['b_runs'][0]['variant_stats']['nosync']['loop_reads_from_cpu_schedule'] > 0
     assert ab['reference']['spread'] >= 1 and ab['reference']['money']['usd_per_1000_updates'] > 0 and ab['wall_min_total'] > 0 and abs(ab['cost_total_usd'] - ab['wall_min_total'] / 60 * 0.5) < 1e-12
     assert 'proved_wrong' in ab['predictions']['mark3'] and ab['predictions']['nosync']['prediction'].startswith('at least 5 %')
     part = json.load(open(partial))
     assert sorted(part['arms']) == sorted(ab['arms']) and part['complete'] is False
     md = open(os.path.splitext(out)[0] + '.md').read()
-    for text in ('## abequiv', '## abbench', 'mark 6 of PREREG-b3g2-speed-ab.md', 'NOT EXACT' if not p['mark6']['holds'] else 'mark 6: holds', 'USD per 1,000 updates', 'predictions (suggested, untested', 'money (dph 0.5'):
+    for text in ('## abequiv', '## abbench', 'mark 6 of PREREG-b3g2-speed-ab.md', 'mark 6: holds (bar_and_cpu_fp32)', 'mark 6: holds (bar_only_by_rule)', 'USD per 1,000 updates', 'predictions (suggested, untested', 'money (dph 0.5',
+                 'B <= 0.95', 'arm order (variants first, then the accum rows): nosync, pad64p, pad64, unfused, accum 2', 'pad64p'):
         assert text in md, text
     assert 'abbench' not in prof.DEFAULT_SECTIONS and prof.SECTION_ORDER.index('abequiv') < prof.SECTION_ORDER.index('abbench')
     # mark 6 from an earlier abequiv run (--ab-equiv-json), when abequiv did not run in this process
@@ -977,6 +992,274 @@ def test_abbench_oom_skip_and_budget():
     assert 'B3G2' in sk['arms']['nosync']['skipped'] and 'marks' not in sk['arms']['nosync'] and sk['arms']['unfused']['marks']['b_median'] > 0
     eq = prof.sec_abequiv(wp, _ab_args('PTS', '--ab-variants', 'nosync,unfused'))
     assert 'B3G2' in eq['variants']['nosync']['skipped'] and eq['variants']['unfused']['mark6']['holds'] and eq['mark6_by_variant'] == {'unfused': True}
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------- review fixes (arm order, mark 6, mark 5, errors, memory, pad64p)
+def test_ab_arm_order_is_one_constant_variants_first_and_the_budget_skips_accum_rows_not_cheap_wins():
+    assert prof.AB_ARM_ORDER == ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'accum 8', 'accum 16', 'accum 2')
+    ap = prof.build_parser().parse_args(argv('B3G2'))
+    assert ap.ab_variants == 'nosync,pad64p,pad64,tf32,unfused' and ap.ab_accums == '8,16,2', 'both CLI defaults come from the one constant'
+    arms = prof.ab_arms(4, [], prof.parse_ab_accums(ap.ab_accums, 4), prof.parse_ab_variants(ap.ab_variants))
+    assert [a['name'] for a in arms] == list(prof.AB_ARM_ORDER) and [a['kind'] for a in arms] == ['variant'] * 5 + ['accum'] * 3
+    assert [a['names'] for a in arms[:5]] == [['nosync'], ['pad64p'], ['pad64'], ['tf32'], ['unfused']] and [a['accum'] for a in arms] == [4] * 5 + [8, 16, 2]
+    assert [a['name'] for a in prof.ab_arms(4, [], [2, 8], ['unfused', 'nosync'])] == ['unfused', 'nosync', 'accum 2', 'accum 8'], 'the existing options override: their order is kept, variants still before accums'
+    # the --ab-max-min cutoff with a fake run (one minute each): 3 rounds x 2 runs = 6 min per arm, budget 7 min -> the first two arms run, the rest are skipped, and those are accum rows and the last cheap wins
+    w, _ = world('B3G2')
+    prof.AB_STATE.clear()
+    clock, calls = [time.time()], []
+
+    def fake_run(world_, args_, names, accum):
+        calls.append((tuple(names), accum))
+        clock[0] += 60.0
+        return dict(round_median=1.0, round_mean=1.0, chunk_values=[1.0], peak_mem=dict(allocated_gb=1.0), rounds_sums=None, oom=False, wall_s=60.0)
+    orig_run, orig_time = prof.ab_run, prof.time
+    prof.ab_run, prof.time = fake_run, types.SimpleNamespace(time=lambda: clock[0], perf_counter=time.perf_counter)
+    try:
+        res = prof.sec_abbench(w, _ab_args('B3G2', '--ab-rounds', '3', '--ab-max-min', '7'))
+    finally:
+        prof.ab_run, prof.time = orig_run, orig_time
+    ran = [k for k, a in res['arms'].items() if a['a_runs']]
+    assert list(res['arms']) == list(prof.AB_ARM_ORDER) == res['arm_order'] and ran == ['nosync', 'pad64p'], ran
+    assert [k for k, a in res['arms'].items() if 'skipped' in a] == ['pad64', 'tf32', 'unfused', 'accum 8', 'accum 16', 'accum 2']
+    assert len(calls) == 12 and calls[0] == ((), 4) and calls[1] == (('nosync',), 4) and calls[7] == (('pad64p',), 4)
+
+
+def _cmp(loss_off=0.0, grad_off=0.0, exact=False):
+    """A fake ab_compare() result: the loss off by loss_off (relative), the 2-vector gradient off by grad_off (relative L2)."""
+    one = (1.0, torch.tensor([1.0, 0.0]), torch.tensor([1.0, 0.0]))
+    return prof.ab_compare(one, one if exact else (1.0 + loss_off, torch.tensor([1.0, grad_off]), torch.tensor([1.0, 0.0])))
+
+
+def test_mark6_without_the_cpu_check_is_the_bf16_bar_only_and_says_so():
+    assert prof.MARK6_BAR_ONLY_TEXT == 'CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run'
+    near, far, exact = _cmp(5e-7, 5e-7), _cmp(5e-5, 1e-3), _cmp(exact=True)               # near: equal to rounding; far: meets the bf16 bar but is not; exact: bit for bit
+    assert near['meets_bar'] and far['meets_bar'] and not near['bit_exact'] and not far['bit_exact'] and exact['bit_exact']
+    for v in ('pad64', 'pad64p', 'nosync', 'unfused', 'tf32'):                                # no CPU comparison (the box): the bar alone decides, bit_exact_cpu_fp32 is None and is NOT a pass of anything
+        m = prof.ab_mark6(v, far, None)
+        assert m['label'] == 'bf16_bar_only' and m['note'] == prof.MARK6_BAR_ONLY_TEXT and m['bit_exact_cpu_fp32'] is None and m['equal_to_rounding_cpu_fp32'] is None, v
+        assert m['cpu_fp32_checked'] is False and m['cpu_fp32_clause_holds'] is None and m['holds'] is True and m['verdict'] == 'holds', v
+        bad = prof.ab_mark6(v, _cmp(2e-4, 0.0), None)                                           # relative loss difference over 1e-4
+        assert bad['holds'] is False and bad['verdict'] == 'NOT EXACT' and bad['label'] == 'bf16_bar_only', v
+        assert prof.ab_mark6(v, _cmp(0.0, 0.02), None)['holds'] is False, 'gradient cosine under 0.9999'
+    assert prof.ab_mark6('pad64', far, None, 'fp32')['label'] == 'fp32_bar_only', 'the label names the precision the bar was read in'
+    # a CPU run (Amendment 1): pad64 / pad64p equal to rounding (relative gradient and loss difference <= 1e-6), nosync bit for bit, unfused and tf32 the bar only
+    for v in ('pad64', 'pad64p'):
+        ok = prof.ab_mark6(v, near, near)
+        assert ok['holds'] and ok['equal_to_rounding_cpu_fp32'] is True and ok['bit_exact_cpu_fp32'] is False and ok['cpu_fp32_rule'] == 'equal_to_rounding' and ok['label'] == 'bar_and_cpu_fp32', v
+        assert prof.ab_mark6(v, exact, exact)['holds'] is True
+        for off in ((5e-7, 2e-6), (2e-6, 5e-7)):                                              # gradient off by 2e-6, or the loss off by 2e-6
+            c = _cmp(*off)
+            m = prof.ab_mark6(v, c, c)
+            assert c['meets_bar'] and m['bar_holds'] and m['equal_to_rounding_cpu_fp32'] is False and m['holds'] is False and m['verdict'] == 'NOT EXACT', (v, off)
+    assert prof.ab_mark6('nosync', exact, exact)['holds'] and not prof.ab_mark6('nosync', near, near)['holds'], 'nosync is bit for bit or nothing'
+    for v in ('unfused', 'tf32'):
+        m = prof.ab_mark6(v, far, far)
+        assert m['holds'] is True and m['cpu_fp32_rule'] == 'bar_only' and m['label'] == 'bar_only_by_rule' and m['cpu_fp32_clause_holds'] is None, v
+        assert prof.ab_mark6(v, _cmp(2e-4, 0.0), far)['holds'] is False
+    # the same on a real section: the tiny b3g2 on the CPU with the bf16 comparison only (no fp32 comparison -> no CPU check, as on every GPU run)
+    w, _ = world('B3G2')
+    prof.AB_STATE.clear()
+    d = tempfile.mkdtemp(prefix='prof_bf16_')
+    out = os.path.join(d, 'bf16.json')
+    res = prof.main(argv('B3G2', '--sections', 'abequiv,abbench', '--ab-variants', 'pad64p,nosync', '--ab-accums', '', '--equiv-precisions', 'bf16', '--ab-warmup', '1', '--ab-updates', '1', '--ab-rounds', '1', '--chunk', '1', out=out))
+    eq, ab = res['sections']['abequiv'], res['sections']['abbench']
+    assert ab['mark6_label_used'] == dict(pad64p='bf16_bar_only', nosync='bf16_bar_only') and ab['arms']['pad64p']['marks']['mark6_label'] == 'bf16_bar_only', 'mark 5 carries the label of the check mark 6 rests on'
+    assert 'error' not in eq and eq['precisions'] == ['bf16'] and eq['mark6_label_by_variant'] == dict(pad64p='bf16_bar_only', nosync='bf16_bar_only')
+    for v in ('pad64p', 'nosync'):
+        m = eq['variants'][v]['mark6']
+        assert m['label'] == 'bf16_bar_only' and m['bit_exact_cpu_fp32'] is None and m['note'] == prof.MARK6_BAR_ONLY_TEXT and eq['variants'][v]['cpu_bit_exact_note'] == prof.MARK6_BAR_ONLY_TEXT
+    md = open(os.path.splitext(out)[0] + '.md').read()
+    assert 'mark 6: holds (bf16_bar_only)' in md and prof.MARK6_BAR_ONLY_TEXT in md and 'yes (bf16_bar_only)' in md and 'mark 6 labelled bf16_bar_only above rests on the bar alone' in md
+    assert json.load(open(out))['sections']['abequiv']['variants']['pad64p']['mark6']['label'] == 'bf16_bar_only'
+
+
+def test_mark5_needs_every_round_completed_and_prints_its_reading():
+    full = prof.ab_marks('variant', [2.0] * 3, [1.8] * 3, b_peak_gb=4.0, mark6=True, rounds_expected=3)
+    assert full['mark5_counts'] is True and full['incomplete'] is False and full['rounds_completed'] == 3 and full['mark5_status'] == 'counts'
+    part = prof.ab_marks('variant', [2.0] * 2, [1.8] * 2, b_peak_gb=4.0, mark6=True, rounds_expected=3)
+    assert part['incomplete'] is True and part['rounds_completed'] == 2 and part['rounds_expected'] == 3 and part['b_below_a_completed_rounds'] is True
+    assert part['b_below_a_every_round'] is False and part['mark5_counts'] is False and part['mark5_status'].startswith('incomplete, cannot count'), 'B is below A in the rounds it has, but it does not have all of them'
+    assert prof.ab_marks('variant', [2.0] * 3, [1.8] * 3, b_peak_gb=4.0, mark6=True)['incomplete'] is False, 'no expectation given: as many as it has'
+    assert prof.ab_marks('accum', [2.0] * 2, [1.0] * 2, b_peak_gb=4.0, rounds_expected=3)['incomplete'] is True
+    edge = prof.ab_marks('variant', [2.0] * 3, [1.9] * 3, b_peak_gb=4.0, mark6=True, rounds_expected=3)
+    assert edge['b_lower_by_5pct'] is True and edge['mark5_counts'] is True, 'B <= 0.95 A counts'
+    assert prof.ab_marks('variant', [2.0] * 3, [1.9001] * 3, b_peak_gb=4.0, mark6=True, rounds_expected=3)['mark5_counts'] is False
+    run = lambda ms, peak=None: dict(round_median=ms, wall_s=60, peak_mem=dict(allocated_gb=peak), rounds_sums=None)
+    arm = dict(name='nosync', kind='variant', accum=4, names=['nosync'])
+    res = prof.ab_arm_result(arm, [run(2.0), run(2.0), run(2.0)], [run(1.8, 4.0), run(1.8, 4.0), dict(oom=True, peak_mem=dict(allocated_gb=30.0), wall_s=10)], 4, 0.5, {'nosync': True}, rounds=3, mark6_labels={'nosync': 'bf16_bar_only'})
+    assert res['rounds_completed'] == 2 and res['rounds_expected'] == 3 and res['marks']['incomplete'] and res['marks']['mark5_counts'] is False and res['marks']['mark6_label'] == 'bf16_bar_only'
+    assert 'incomplete, cannot count' in res['marks']['mark5_status']
+    whole = prof.ab_arm_result(arm, [run(2.0)] * 3, [run(1.8, 4.0)] * 3, 4, 0.5, {'nosync': True}, rounds=3)
+    assert whole['marks']['mark5_counts'] is True and whole['rounds_expected'] == 3 and 'error' not in whole
+    assert '{rounds}' in prof.AB_MARK5_READING and 'B <= 0.95' in prof.AB_MARK5_READING and 'incomplete, cannot count' in prof.AB_MARK5_READING
+    # a real section with a run that dies in round 2: the arm keeps round 1, is incomplete, and cannot count; the next arm still runs
+    w, _ = world('B3G2')
+    prof.AB_STATE.clear(); prof.AB_STATE['mark6'] = {'nosync': True}
+    state, orig_init, orig_update = dict(n=0), prof.Trainer.__init__, prof.Trainer.update
+
+    def init(self, world_, args_, variants=(), **kw):
+        orig_init(self, world_, args_, variants, **kw)
+        if list(variants) == ['nosync']:
+            state['n'] += 1
+            self._doomed = state['n'] == 2                                                  # the second nosync run (round 2's B run)
+
+    def update(self, timed=False):
+        if getattr(self, '_doomed', False):
+            raise RuntimeError('fake bug on the second nosync run')
+        return orig_update(self, timed)
+    prof.Trainer.__init__, prof.Trainer.update = init, update
+    try:
+        ab = prof.sec_abbench(w, _ab_args('B3G2', '--ab-accums', '', '--ab-variants', 'nosync,unfused', '--ab-rounds', '2', '--ab-updates', '1', '--chunk', '1'))
+    finally:
+        prof.Trainer.__init__, prof.Trainer.update = orig_init, orig_update
+    ns = ab['arms']['nosync']
+    assert ns['rounds_completed'] == 1 and ns['rounds_expected'] == 2 and ns['marks']['incomplete'] and ns['marks']['mark5_counts'] is False and 'incomplete' in ns['marks']['mark5_status']
+    assert ns['error']['type'] == 'RuntimeError' and ns['error']['run'] == 'B' and ns['error']['round'] == 2 and ab['errors'] == [ns['error']]
+    assert ab['arms']['unfused']['rounds_completed'] == 2 and not ab['arms']['unfused']['marks']['incomplete'] and ab['complete']
+
+
+class _Boom(prof.Variant):
+    name = 'boom'
+    doc = 'a fake variant whose setup raises an ordinary exception (not OOM, not Skip)'
+
+    def setup(self):
+        raise ValueError('boom: a fake bug in a variant')
+
+
+@contextlib.contextmanager
+def _boom_variant():
+    prof.VARIANTS['boom'], saved = _Boom, prof.SETUP_ORDER
+    prof.SETUP_ORDER = saved + ('boom',)
+    try:
+        yield
+    finally:
+        prof.VARIANTS.pop('boom', None)
+        prof.SETUP_ORDER = saved
+
+
+def test_abbench_and_abequiv_isolate_errors_per_arm_and_per_variant():
+    w, _ = world('B3G2')
+    prof.AB_STATE.clear()
+    d = tempfile.mkdtemp(prefix='prof_err_')
+    out, partial = os.path.join(d, 'err.json'), os.path.join(d, 'err.partial.json')
+    with _boom_variant():
+        res = prof.main(argv('B3G2', '--sections', 'abequiv,abbench', '--ab-accums', '2', '--ab-variants', 'boom,nosync', '--ab-warmup', '1', '--ab-updates', '1', '--ab-rounds', '1', '--chunk', '1',
+                             '--ab-partial', partial, out=out))
+    S = res['sections']
+    assert 'error' not in S['abequiv'] and 'error' not in S['abbench'], 'the sections themselves finished'
+    eq, ab = S['abequiv'], S['abbench']
+    # abequiv: the variant is recorded as failed, the next one still has its mark 6
+    be = eq['variants']['boom']
+    assert be['error']['type'] == 'ValueError' and 'boom' in be['error']['message'] and be['error']['traceback_tail'] and 'mark6' not in be, be
+    assert any('setup' in ln for ln in be['error']['traceback_tail']), 'the tail of the traceback names where it happened'
+    assert eq['errors'] == [dict(variant='boom', **be['error'])] and eq['mark6_by_variant'] == {'nosync': True} and eq['variants']['nosync']['mark6']['holds']
+    # abbench: the arm is recorded as failed, the remaining arms ran, and the section finished and wrote its files
+    assert list(ab['arms']) == ['boom', 'nosync', 'accum 2'] and ab['complete']
+    bo = ab['arms']['boom']
+    assert bo['error']['arm'] == 'boom' and bo['error']['run'] == 'B' and bo['error']['round'] == 1 and bo['error']['type'] == 'ValueError' and 'boom' in bo['error']['message'] and bo['error']['traceback_tail']
+    assert 'marks' not in bo and bo['rounds_completed'] == 0 and bo['wall_min_arm'] > 0, 'what the failed arm cost is still counted'
+    assert ab['errors'] == [bo['error']]
+    for k in ('nosync', 'accum 2'):
+        assert 'error' not in ab['arms'][k] and ab['arms'][k]['marks']['b_median'] > 0 and ab['arms'][k]['rounds_completed'] == 1, k
+    assert ab['arms']['nosync']['marks']['mark6_holds'] is True
+    md = open(os.path.splitext(out)[0] + '.md').read()
+    assert 'ERRORS in 1 arm(s)' in md and 'ERRORS in 1 variant(s)' in md and 'ValueError' in md and '**ERROR**' in md, 'the markdown shows them'
+    js = json.load(open(out))['sections']
+    assert js['abbench']['errors'][0]['type'] == 'ValueError' and js['abequiv']['errors'][0]['variant'] == 'boom'
+    part = json.load(open(partial))
+    assert sorted(part['arms']) == ['accum 2', 'boom', 'nosync'] and part['errors'][0]['arm'] == 'boom'
+    # an error inside the harness's own bookkeeping for an arm is isolated too
+    prof.AB_STATE.clear()
+    orig = prof.ab_arm_result
+    prof.ab_arm_result = lambda arm, *a, **k: (_ for _ in ()).throw(KeyError('fake bookkeeping bug')) if arm['name'] == 'nosync' else orig(arm, *a, **k)
+    try:
+        bk = prof.sec_abbench(w, _ab_args('B3G2', '--ab-accums', '', '--ab-variants', 'nosync,unfused', '--ab-rounds', '1', '--ab-updates', '1', '--chunk', '1'))
+    finally:
+        prof.ab_arm_result = orig
+    assert bk['arms']['nosync']['error']['run'] == 'bookkeeping' and bk['arms']['nosync']['error']['type'] == 'KeyError' and bk['arms']['nosync']['wall_min_arm'] > 0
+    assert bk['arms']['unfused']['marks']['b_median'] > 0 and bk['complete'] and len(bk['errors']) == 1
+
+
+def test_ab_run_resets_the_peak_first_and_frees_the_trainer_before_cleanup():
+    import weakref
+    w, _ = world('B3G2')
+    a = _ab_args('B3G2', '--ab-updates', '1', '--chunk', '1')
+    orig_T, orig_cleanup, orig_reset = prof.Trainer, prof.cleanup, prof.reset_peak
+
+    def run(boom):
+        events, refs = [], []
+
+        class T(orig_T):
+            def __init__(self, *args, **kw):
+                super().__init__(*args, **kw)
+                refs.append(weakref.ref(self))
+                events.append('trainer')
+
+            def update(self, timed=False):
+                events.append('update')
+                if boom and events.count('update') == 2:
+                    raise RuntimeError('fake bug in the timed update')
+                return super().update(timed)
+        prof.Trainer = T
+        prof.cleanup = lambda device: events.append(('cleanup', [r() is None for r in refs]))
+        prof.reset_peak = lambda device: events.append('reset')
+        try:
+            rec = prof.ab_run(w, a, [], 4)
+        finally:
+            prof.Trainer, prof.cleanup, prof.reset_peak = orig_T, orig_cleanup, orig_reset
+        return rec, events
+    rec, ev = run(False)
+    assert ev[:5] == ['reset', 'trainer', 'update', 'reset', 'update'], ev          # reset at the START (before the Trainer and the warm-up), again after the warm-up
+    assert ev[-1] == ('cleanup', [True]), 'the trainer (model, optimizer, batches) is gone BEFORE the cache is emptied'
+    assert 'round_median' in rec and 'error' not in rec
+    rec, ev = run(True)                                                              # an exception in the timed update: the traceback must not pin the trainer either
+    assert rec['error']['type'] == 'RuntimeError' and 'fake bug' in rec['error']['message'] and rec['error']['traceback_tail'] and 'round_median' not in rec and rec['wall_s'] > 0
+    assert ev[0] == 'reset' and ev[-1] == ('cleanup', [True]), ev
+    # on the CPU the real helpers do nothing and do not fail; the guard is the device type plus torch.cuda.is_available()
+    prof.reset_peak(torch.device('cpu'))
+    assert prof.peak_mem(torch.device('cpu'))['allocated_gb'] is None
+
+
+def test_pad64p_prompt_width_only_never_above_the_cap_and_equal_to_rounding():
+    w, a = world('B3G2')
+    b = first_batch(w, a)
+    k0 = prof.rounds_needed(w, [b])
+    T, cap = b['prompt_ids'].shape[1], w.caps['max_prompt']
+    assert T <= cap
+    lens = {r['id']: int(m.sum()) for r, m in zip(b['rows'], b['prompt_mask'])}
+    base, pad = prof.Trainer(w, a, [], accum=4), prof.Trainer(w, a, ['pad64p'], accum=4)
+    try:
+        assert pad.var_names == ['pad64p'] and pad.variants[0].parts == {'prompt'}
+        pb, pp = base._split(prof.PK.D.to_device(base._prep(b), w.device)), pad._split(prof.PK.D.to_device(pad._prep(b), w.device))
+        assert _ids(pb) == _ids(pp), 'same rows, same order, same micro-batch sizes (nothing is sorted)'
+        for p in pp:
+            n, own = p['prompt_ids'].shape[1], max(lens[r['id']] for r in p['rows'])
+            assert own <= n <= min(T, cap), (own, n, T, cap)                                         # never below the micro-batch's real widest, never above the batch width / the cap
+            assert n == min(T, -(-own // 64) * 64), 'the own widest row rounded up to a multiple of 64, or the batch width'
+            assert p['prompt_mask'].shape == p['prompt_ids'].shape and int(p['prompt_mask'].sum()) == sum(lens[r['id']] for r in p['rows']), 'masks unchanged'
+        assert any(p['prompt_ids'].shape[1] < T for p in pp) and 0 < pad.variant_stats()['pad64p']['prompt_columns_kept_share'] < 1
+        # hand-made widths, batch width 130, four micro-batches of two rows: widest 70 -> 128; widest 60 -> 64; widest 129 -> 192 would pass the batch width, so 130; widest 64 stays 64
+        v, n_rows = pad.variants[0], 8
+        hb = dict(prompt_ids=torch.arange(n_rows * 130).reshape(n_rows, 130), prompt_mask=torch.ones(n_rows, 130, dtype=torch.bool), rows=list(range(n_rows)), _len=[70, 5, 60, 1, 129, 3, 64, 2])
+        widths = [p['prompt_ids'].shape[1] for p in v.split(hb, 4)]
+        assert widths == [128, 64, 130, 64], widths
+        assert [p['prompt_ids'].shape[1] for p in v.split(dict(hb, _len=[1] * 8), 2)] == [64, 64]
+        # the Gemma token width and the tape width stay exact (what pad64 adds): nothing of them is patched
+        eg = pad.model.eg()
+        assert not any(k in eg.__dict__ for k in ('encode', '_compute', '_pad64_width')) and not any(k in pad.model.__dict__ for k in ('tape_of', '_pad64_width'))
+    finally:
+        base.close(); pad.close()
+    l0, g0, _ = _b3g2_update(w, a, '', b, k0)
+    l1, g1, st = _b3g2_update(w, a, 'pad64p', b, k0)
+    assert abs(l1 - l0) <= 1e-6 * abs(l0) and float((g1 - g0).norm() / g0.norm()) <= 1e-6, 'equal to rounding on the CPU in fp32 (Amendment 1)'
+    zero = torch.zeros(1, dtype=torch.double)
+    cmp = prof.ab_compare((l0, g0, zero), (l1, g1, zero))
+    m = prof.ab_mark6('pad64p', cmp, cmp)
+    assert m['holds'] and m['equal_to_rounding_cpu_fp32'] is True and m['cpu_fp32_rule'] == 'equal_to_rounding'
+    assert st['pad64p']['prompt_columns_kept_share'] < 1
+    # pad64 (all three parts) is still its own variant with its own parts
+    assert prof.Pad64.FIXED_PARTS is None and prof.Pad64P.FIXED_PARTS == ('prompt',) and prof.Pad64P.name == 'pad64p' and 'pad64p' in prof.AB_ARM_ORDER
+
 
 
 ALL = [(n, f) for n, f in sorted(globals().items()) if n.startswith('test_') and callable(f)]

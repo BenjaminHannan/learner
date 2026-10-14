@@ -25,17 +25,19 @@ Sections (--sections, comma list; default breakdown,throughput,profiler,padding,
               gradient cosine / relative L2 (descriptive, no pass bar), plus the reference run twice as a noise floor.
   equiv       (--equiv-check) each variant vs baseline on the same seed and the same 256 rows: loss diff, gradient cosine / relative L2 in fp32 and bf16 autocast,
               then --curve-updates updates of loss curve.
-  abequiv     (PREREG-b3g2-speed-ab.md, mark 6) one update on the same 256 rows with K and the stochastic parts pinned: the reference (--accum) against each of --ab-variants (tf32,pad64,
-              unfused,nosync): relative loss difference, gradient cosine (bf16 autocast on CUDA), the harness's own rerun noise floor (reference against itself), the parameters' change after
-              one optimizer step, bit-exactness in fp32 on the CPU, and the booleans of mark 6 (1e-4 / 0.9999).
-  abbench     (PREREG-b3g2-speed-ab.md) the paired speed A/B: reference A = --accum; B arms = --ab-accums (8,16,2) and, ONE variant alone at the reference accum, --ab-variants. Per arm
-              --ab-rounds (3) interleaved rounds A,B,A,B,A,B of --ab-warmup (10) warm-up and --ab-updates (40) timed updates: median s/update, per-round values, A's spread, peak allocated
-              GB (OOM caught), mean thinker rounds per micro-batch, wall minutes; marks 1, 2, 4, 5, 7 as flags, the predictions of marks 3 / 8 as fields, and the money lines (--dph).
-Variants (--variant a,b composes; see --list-variants): sortpad sortpad_tokw oldw bigmb tf32 sdpa compile compile_ro eg_sorted eg_once prefetch unfused pad64 nosync.
+  abequiv     (PREREG-b3g2-speed-ab.md, mark 6) one update on the same 256 rows with K and the stochastic parts pinned: the reference (--accum) against each of --ab-variants (default
+              nosync,pad64p,pad64,tf32,unfused): relative loss difference, gradient cosine (bf16 autocast on CUDA), the harness's own rerun noise floor (reference against itself), the parameters'
+              change after one optimizer step, bit-exactness / equality to rounding in fp32 on the CPU (Amendment 1), and the booleans of mark 6 (1e-4 / 0.9999). Without a CPU fp32 comparison
+              (any GPU run) mark 6 is the bf16 bar alone and is labelled 'bf16_bar_only'. An error in one variant is recorded for it and the others still run.
+  abbench     (PREREG-b3g2-speed-ab.md) the paired speed A/B: reference A = --accum; B arms, in this order (AB_ARM_ORDER): ONE variant alone at the reference accum, --ab-variants (nosync, pad64p,
+              pad64, tf32, unfused), THEN --ab-accums (8,16,2). Per arm --ab-rounds (3) interleaved rounds A,B,A,B,A,B of --ab-warmup (10) warm-up and --ab-updates (40) timed updates: median
+              s/update, per-round values, A's spread, peak allocated GB (OOM caught), mean thinker rounds per micro-batch, wall minutes; marks 1, 2, 4, 5, 7 as flags, the predictions of marks
+              3 / 8 as fields, and the money lines (--dph). An arm that raises is recorded (type, message, traceback tail) and the remaining arms still run.
+Variants (--variant a,b composes; see --list-variants): sortpad sortpad_tokw oldw bigmb tf32 sdpa compile compile_ro eg_sorted eg_once prefetch unfused pad64 pad64p nosync.
 The equiv section implements the fixed checks of PREREG-eg-once.md: E1 / E2 (Gemma vectors, eg_once vs the old path), E3 (loss + gradient of one update, with a per-token
 weighting report), E4 (300-update loss trace).
 """
-import argparse, collections, contextlib, datetime, gc, importlib, inspect, json, math, os, platform, queue, random, sys, textwrap, threading, time, types, warnings, zlib
+import argparse, collections, contextlib, datetime, gc, importlib, inspect, json, math, os, platform, queue, random, sys, threading, time, traceback, types, warnings, zlib
 import numpy as np
 import torch
 import torch.nn as nn
@@ -1078,6 +1080,7 @@ class Pad64(Variant):
     name = 'pad64'
     MULT = 64
     PARTS = ('prompt', 'gemma', 'tape')
+    FIXED_PARTS = None                  # a subclass that pins its parts regardless of --pad64-parts (Pad64P)
     doc = ('widths that vary between micro-batches are rounded UP to a multiple of 64, masks unchanged. Tensors padded (--pad64-parts, default all three): (prompt) prompt_ids and prompt_mask [B, T]: each '
            'micro-batch is cut to its own widest row rounded up to 64, never past the batch width T that split_batch keeps today (rows stay in their original order, nothing is sorted); '
            '(gemma) the token width L of the frozen Gemma pass over a micro-batch\'s prompts (FrozenEG.encode: ids padded with the pad token, attention_mask 0, so the real tokens\' states are the same '
@@ -1087,7 +1090,7 @@ class Pad64(Variant):
 
     def setup(self):
         tr = self.tr
-        self.parts = {p.strip() for p in getattr(tr.a, 'pad64_parts', ','.join(self.PARTS)).split(',') if p.strip()}
+        self.parts = set(self.FIXED_PARTS) if self.FIXED_PARTS else {p.strip() for p in getattr(tr.a, 'pad64_parts', ','.join(self.PARTS)).split(',') if p.strip()}
         bad = self.parts - set(self.PARTS)
         if bad:
             raise Skip(f'pad64: unknown --pad64-parts {sorted(bad)}; known: {list(self.PARTS)}')
@@ -1140,6 +1143,15 @@ class Pad64(Variant):
 
     def stats(self):
         return dict(prompt_columns_kept_share=self.cols_kept / self.cols_full) if self.cols_full else {}
+
+
+class Pad64P(Pad64):
+    name = 'pad64p'
+    FIXED_PARTS = ('prompt',)
+    doc = ('pad64 for the PROMPT width only (the reading of PREREG-b3g2-speed-ab.md: "the padded width of the per-micro-batch inputs rounded up to a multiple of 64 instead of the batch\'s widest"): '
+           'prompt_ids and prompt_mask [B, T] of each micro-batch are cut to the micro-batch\'s own widest row rounded up to a multiple of 64, never past the batch width T that split_batch keeps today '
+           '(which is never past the caps\' max_prompt) and never below the micro-batch\'s real widest row; rows stay in their original order, nothing is sorted, masks unchanged. The Gemma token width '
+           'and the teacher-forced tape width stay EXACT (those two are what pad64 adds). Not with pad64, sortpad or eg_once / eg_sorted. The same equal-to-rounding reading of mark 6 as pad64 (Amendment 1).')
 
 
 class NoSync(Variant):
@@ -1196,8 +1208,8 @@ class NoSync(Variant):
     def stats(self):
         return dict(loop_reads_from_cpu_schedule=self.n_cpu, loop_reads_original_fallback=self.n_fallback, teacher_calls_cpu_context=self.n_teacher)
 
-VARIANTS = {c.name: c for c in (Variant, SortPad, SortPadTokW, OldW, BigMB, TF32, SDPA, Compile, CompileRO, EGSorted, EGOnce, Prefetch, Unfused, Pad64, NoSync)}
-SETUP_ORDER = ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'baseline', 'pad64', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch')       # prefetch last: it needs the final prep chain
+VARIANTS = {c.name: c for c in (Variant, SortPad, SortPadTokW, OldW, BigMB, TF32, SDPA, Compile, CompileRO, EGSorted, EGOnce, Prefetch, Unfused, Pad64, Pad64P, NoSync)}
+SETUP_ORDER = ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch')       # prefetch last: it needs the final prep chain
 
 
 def parse_variants(spec):
@@ -1211,8 +1223,10 @@ def parse_variants(spec):
         raise SystemExit('compile and compile_ro are alternatives')
     if 'eg_sorted' in names and 'eg_once' in names:
         raise SystemExit('eg_sorted and eg_once are alternatives (both replace FrozenEG.encode)')
-    if 'pad64' in names and any(n.startswith('sortpad') for n in names):
-        raise SystemExit('pad64 and sortpad / sortpad_tokw are alternatives (both cut the micro-batches\' prompt columns)')
+    if 'pad64' in names and 'pad64p' in names:
+        raise SystemExit('pad64 and pad64p are alternatives (pad64p is the prompt part of pad64 alone)')
+    if any(n in ('pad64', 'pad64p') for n in names) and any(n.startswith('sortpad') for n in names):
+        raise SystemExit('pad64 / pad64p and sortpad / sortpad_tokw are alternatives (both cut the micro-batches\' prompt columns)')
     if 'pad64' in names and any(n in ('eg_sorted', 'eg_once') for n in names):
         raise SystemExit('pad64 and eg_sorted / eg_once are alternatives (all replace FrozenEG.encode)')
     if 'oldw' in names and 'sortpad_tokw' in names:
@@ -1444,6 +1458,12 @@ def cleanup(device):
     gc.collect()
     if device.type == 'cuda':
         torch.cuda.empty_cache()
+
+
+def reset_peak(device):
+    """torch.cuda.reset_peak_memory_stats() on a CUDA run; nothing on the CPU."""
+    if device.type == 'cuda' and torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
 
 
 def is_oom(e):
@@ -1693,7 +1713,10 @@ def sec_profiler(world, args):
                               for t, e in cpu_rows[:25]]
         out['tag'] = world.tag(accum=tr.accum, variant=args.variant)
         out['schedule'] = dict(wait=w, warmup=wu, active=act)
-        log(f'profiler: ' + (out['launch_bound']['verdict'] if 'launch_bound' in out else 'CPU-only run (no CUDA kernels)'))
+        c = out.get('cuda')                      # the GPU busy share beside the verdict, on one greppable line (PREREG-b3g2-speed-ab.md: "its busy share at accum 4 ... printed beside the table")
+        busy = (f'GPU busy {100 * c["gpu_busy_fraction_of_wall"]:.1f} % of wall, idle gap {100 * c["idle_gap_fraction_of_wall"]:.1f} % (accum {tr.accum}, {act} profiled updates, profiler overhead inflates wall): '
+                if c and c.get('gpu_busy_fraction_of_wall') is not None else '')
+        log(f'profiler: ' + busy + (out['launch_bound']['verdict'] if 'launch_bound' in out else 'CPU-only run (no CUDA kernels)'))
         return out
     finally:
         tr.close(); cleanup(world.device)
@@ -2432,11 +2455,20 @@ def sec_accumcmp(world, args):
 # (ACCUM_SPEED_X, ACCUM_MEM_GB, ACCUM_ROUNDS_RISE) with the reference accum 4.
 AB_WIN_DROP = 0.05                          # mark 5: the median of B is at least 5 % lower than the median of A
 AB_EQ_LOSS_REL, AB_EQ_GRAD_COS = 1e-4, 0.9999       # mark 6: relative loss difference at most 1e-4, gradient cosine at least 0.9999 (bf16 autocast)
+AB_ROUND_REL = 1e-6                         # Amendment 1, 'equal to rounding' (pad64, pad64p; fp32 on the CPU): relative gradient difference at most 1e-6 and loss difference at most 1e-6 relative
+# Amendment 1: what a CPU fp32 run adds to the bar. bit_exact: loss equal and gradient bit for bit (nosync). equal_to_rounding: AB_ROUND_REL on both (pad64, pad64p: zero-padding lengthens the reductions, the sums
+# move in the last bits). bar_only: nothing beyond the bar (tf32 differs in the last bits by design; unfused only changes the optimizer kernel and the CPU has no fused kernel, so both arms run the same one).
+AB_CPU_RULE = dict(nosync='bit_exact', pad64='equal_to_rounding', pad64p='equal_to_rounding', unfused='bar_only', tf32='bar_only')
+MARK6_BAR_ONLY_TEXT = 'CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run'
 AB_NOISE_X = 2.0                            # mark 7: a difference under twice A's spread is inside noise
 AB_NOTHING, AB_SMALL = 0.02, 0.05           # mark 7: under 2 % does nothing, 2 % to 5 % is small (reported, not recommended)
-AB_EXACT_VARIANTS = ('pad64', 'nosync', 'unfused')       # mark 6: these must also be bit-exact on the CPU in fp32 (tf32 is allowed to differ in the last bits)
 AB_RUN_UPDATES = 24000                      # the job: a full B3G2 run is 24,000 updates
-AB_STATE = {}                               # sec_abequiv leaves {'mark6': {variant: bool}} here for sec_abbench of the same process
+# The arms of abbench in the order they run: the cheap-win variants first, THEN the accum rows (an --ab-max-min cutoff must never skip the cheap wins). This one tuple is the default of both
+# --ab-variants and --ab-accums; passing either option overrides its part (the order of the list given is kept; variants still run before accums).
+AB_ARM_ORDER = ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'accum 8', 'accum 16', 'accum 2')
+AB_MARK5_READING = ('mark 5 as coded: B below A in EVERY round (all {rounds} rounds completed; an arm with fewer is "incomplete, cannot count"), the median of B at least 5 % lower than the median of A, '
+                    'i.e. B <= 0.95 x A (slightly stricter than "speed at least 1.05x", which would allow B <= 0.9524 x A), peak allocated <= 10 GB, and mark 6 holds')
+AB_STATE = {}                               # sec_abequiv leaves {'mark6': {variant: bool}, 'mark6_label': {variant: str}} here for sec_abbench of the same process
 
 
 def parse_ab_accums(s, ref):
@@ -2456,6 +2488,26 @@ def parse_ab_variants(s):
     return names
 
 
+def ab_default_variants():
+    return ','.join(n for n in AB_ARM_ORDER if not n.startswith('accum '))
+
+
+def ab_default_accums():
+    return ','.join(n.split()[1] for n in AB_ARM_ORDER if n.startswith('accum '))
+
+
+def ab_arms(ref, base, accums, vnames):
+    """The B arms in the order they run: the variants (one alone on top of `base` at the reference accum) in the order given, THEN the accum rows in the order given."""
+    return ([dict(name=v, kind='variant', accum=ref, names=parse_variants(','.join(base + [v]))) for v in vnames]
+            + [dict(name=f'accum {k}', kind='accum', accum=k, names=base) for k in accums])
+
+
+def exc_record(e, tail=12):
+    """An exception as data for the json / markdown: its type, its message and the last `tail` lines of its traceback."""
+    lines = [ln for ln in ''.join(traceback.format_exception(type(e), e, e.__traceback__)).rstrip().splitlines() if ln.strip().strip('^~')]     # without the ^^^^ marker lines
+    return dict(type=type(e).__name__, message=str(e)[:2000], traceback_tail=lines[-tail:])
+
+
 def ab_money(s_per_update, dph):
     """Dollars from the offer's all-in price: updates per hour, dollars per 1,000 updates, the cost of a 24,000-update run at that speed. dph missing (0 / None) = no dollar figures, never a guess."""
     if not s_per_update:
@@ -2464,10 +2516,11 @@ def ab_money(s_per_update, dph):
     return dict(updates_per_hour=3600 / s_per_update, usd_per_1000_updates=1000 * s_per_update / 3600 * dph if dph else None, hours_24000_run=h, usd_24000_run=h * dph if dph else None)
 
 
-def ab_marks(kind, a_med, b_med, b_peak_gb=None, rounds_vs_a=None, mark6=None):
-    """The marks of PREREG-b3g2-speed-ab.md for ONE arm, from A's and B's round medians (seconds per update, one per round, A and B paired by round), B's peak allocated GB, B's mean thinker
-    rounds per micro-batch over A's (accum rows) and whether mark 6 held (variants; None = not known). kind 'accum': marks 1, 2, 4. kind 'variant': mark 5 (every round B below A, B's median
-    at least 5 % below A's, peak at most 10 GB, mark 6; None where a part is unknown and the rest does not already decide it). Both: mark 7 (A's spread = largest / smallest A round median;
+def ab_marks(kind, a_med, b_med, b_peak_gb=None, rounds_vs_a=None, mark6=None, rounds_expected=None):
+    """The marks of PREREG-b3g2-speed-ab.md for ONE arm, from A's and B's round medians (seconds per update, one per COMPLETED round, A and B paired by round), B's peak allocated GB, B's mean thinker
+    rounds per micro-batch over A's (accum rows) and whether mark 6 held (variants; None = not known). rounds_expected = the rounds the arm was meant to have (--ab-rounds; None = as many as it has).
+    kind 'accum': marks 1, 2, 4. kind 'variant': mark 5 (B below A in EVERY round, which needs every round completed: an arm with fewer is 'incomplete, cannot count'; B's median at least 5 % below
+    A's, i.e. B <= 0.95 A; peak at most 10 GB; mark 6; None where a part is unknown and the rest does not already decide it). Both: mark 7 (A's spread = largest / smallest A round median;
     inside noise = the relative difference is under twice (spread - 1), whatever its sign; size class by the relative difference: under 2 % does nothing, 2 % to 5 % small, else large)."""
     a_med, b_med = [float(x) for x in a_med], [float(x) for x in b_med]
     a, b = float(np.median(a_med)), float(np.median(b_med))
@@ -2475,8 +2528,12 @@ def ab_marks(kind, a_med, b_med, b_peak_gb=None, rounds_vs_a=None, mark6=None):
     drop = 1 - b / a                                                          # positive: B is faster
     d = abs(drop)
     fits = None if b_peak_gb is None else bool(b_peak_gb <= ACCUM_MEM_GB)
+    n_done = len(a_med)
+    incomplete = bool(rounds_expected is not None and n_done < rounds_expected)
+    below = bool(all(y < x for x, y in zip(a_med, b_med)))
     out = dict(a_median=a, b_median=b, a_round_medians=a_med, b_round_medians=b_med, speed_vs_a=a / b, b_lower_than_a_by=drop, a_spread=spread,
-               b_below_a_every_round=bool(all(y < x for x, y in zip(a_med, b_med))), fits_memory_mark=fits,
+               rounds_completed=n_done, rounds_expected=rounds_expected if rounds_expected is not None else n_done, incomplete=incomplete,
+               b_below_a_completed_rounds=below, b_below_a_every_round=bool(below and not incomplete), fits_memory_mark=fits,
                inside_noise=bool(d < AB_NOISE_X * (spread - 1)), size_class='does nothing' if d < AB_NOTHING else 'small, reported, not recommended' if d < AB_SMALL else 'large')
     if kind == 'accum':
         out.update(mark1_speed_counts=bool(a / b >= ACCUM_SPEED_X), mark2_memory_fits=fits, rounds_vs_a=rounds_vs_a,
@@ -2485,7 +2542,9 @@ def ab_marks(kind, a_med, b_med, b_peak_gb=None, rounds_vs_a=None, mark6=None):
         parts = [out['b_below_a_every_round'], bool(drop >= AB_WIN_DROP)]
         without6 = False if not all(parts) else fits                          # None when only the memory is unknown
         out.update(b_lower_by_5pct=parts[1], mark6_holds=mark6, mark5_counts_without_mark6=without6,
-                   mark5_counts=False if without6 is False else (None if (without6 is None or mark6 is None) else bool(without6 and mark6)))
+                   mark5_counts=False if (without6 is False or mark6 is False) else (None if (without6 is None or mark6 is None) else True))      # NOT EXACT (mark 6 False): never counts, whatever the memory
+        out['mark5_status'] = (f'incomplete, cannot count ({n_done} of {rounds_expected} rounds completed)' if incomplete else 'counts' if out['mark5_counts'] else
+                               'does not count' if out['mark5_counts'] is False else 'open (peak memory or mark 6 not known)')
     return out
 
 
@@ -2527,14 +2586,23 @@ def ab_compare(base, var):
     return out
 
 
-def ab_mark6(variant, cmp_bar, cpu_fp32):
-    """Mark 6 for one variant: the bar (relative loss difference <= 1e-4 and gradient cosine >= 0.9999, in the precision cmp_bar was made in) and, for pad64 / nosync / unfused, bit-exactness of
-    loss and gradient in fp32 on the CPU (cpu_fp32 = the fp32 comparison when this run is on the CPU, else None = not checkable here). A variant that fails is NOT EXACT and its speed is not
-    a recommendation. `bar_holds` is the bar alone, so a reader can see which clause failed."""
-    needs = variant in AB_EXACT_VARIANTS
-    exact = None if cpu_fp32 is None else cpu_fp32['bit_exact']
-    holds = bool(cmp_bar['meets_bar'] and (exact is not False if needs else True))
-    return dict(bar_holds=cmp_bar['meets_bar'], bit_exact_required=needs, bit_exact_cpu_fp32=exact, holds=holds, verdict='holds' if holds else 'NOT EXACT')
+def ab_mark6(variant, cmp_bar, cpu_fp32, bar_prec='bf16'):
+    """Mark 6 for one variant (PREREG-b3g2-speed-ab.md with Amendment 1): the bar (relative loss difference <= 1e-4 and gradient cosine >= 0.9999, in the precision cmp_bar was made in, bar_prec)
+    and, ONLY when the CPU fp32 comparison was run (cpu_fp32 = that comparison on a CPU run; None = not run, as on every GPU run), the CPU clause of AB_CPU_RULE: nosync bit-exact (loss equal and
+    gradient bit for bit), pad64 and pad64p equal to rounding (relative gradient difference and relative loss difference both <= AB_ROUND_REL), tf32 and unfused nothing beyond the bar. With no CPU
+    comparison the verdict rests on the bar alone and says so: label '<bar_prec>_bar_only' (bf16_bar_only on the box) and the sentence MARK6_BAR_ONLY_TEXT; None never counts as a pass of the CPU clause.
+    A variant whose bar fails is NOT EXACT and mark 5 cannot count it. `bar_holds` is the bar alone, `cpu_fp32_clause_holds` the CPU clause alone (None = not applicable / not run)."""
+    rule = AB_CPU_RULE.get(variant, 'bar_only')
+    checked = cpu_fp32 is not None
+    exact = cpu_fp32['bit_exact'] if checked else None
+    rounding = bool(cpu_fp32['rel_loss_diff'] <= AB_ROUND_REL and cpu_fp32['grad_rel_l2'] <= AB_ROUND_REL) if checked else None
+    clause = None if (not checked or rule == 'bar_only') else (exact if rule == 'bit_exact' else rounding)
+    holds = bool(cmp_bar['meets_bar'] and clause is not False)
+    label = f'{bar_prec}_bar_only' if not checked else 'bar_only_by_rule' if rule == 'bar_only' else 'bar_and_cpu_fp32'
+    note = (MARK6_BAR_ONLY_TEXT if not checked else 'the bar alone is the rule for this variant (Amendment 1); the CPU comparison is shown for information' if rule == 'bar_only' else
+            f'bar and the CPU fp32 clause ({rule.replace("_", " ")})')
+    return dict(bar_holds=cmp_bar['meets_bar'], bar_precision=bar_prec, label=label, cpu_fp32_checked=checked, cpu_fp32_rule=rule, bit_exact_required=bool(rule == 'bit_exact'),
+                bit_exact_cpu_fp32=exact, equal_to_rounding_cpu_fp32=rounding, cpu_fp32_clause_holds=clause, holds=holds, verdict='holds' if holds else 'NOT EXACT', note=note)
 
 
 def ab_step_delta(tr):
@@ -2553,8 +2621,9 @@ def sec_abequiv(world, args):
     """PREREG-b3g2-speed-ab.md, mark 6: ONE update on the same --batch rows (the first batch of --seed), the rounds K and the stochastic parts pinned (--equiv-pin 1, as accumcmp), at the
     reference accum (--accum): the reference (--variant, normally none) against each of --ab-variants alone. Per precision (--equiv-precisions; default fp32 and bf16 autocast on CUDA, fp32 on
     the CPU): relative loss difference, gradient cosine / relative L2, the parameters' change after one optimizer step, bit-exactness, and the reference run twice as the harness's own noise floor.
-    The bar of mark 6 is read in bf16 where it was run (else fp32, said in `bar_precision`). Bit-exactness on the CPU in fp32 is only checkable on a CPU run (else None: the tiny-config CPU tests
-    of test_prof.py are that evidence)."""
+    The bar of mark 6 is read in bf16 where it was run (else fp32, said in `bar_precision`). The CPU fp32 clause of Amendment 1 (see ab_mark6) is only checkable on a CPU run; on a GPU run mark 6
+    is the bar alone, labelled 'bf16_bar_only' with the sentence MARK6_BAR_ONLY_TEXT (the tiny-config CPU tests of test_prof.py are the CPU evidence). An exception in one variant (not OOM / Skip)
+    is recorded for that variant (`error`: type, message, traceback tail), printed loudly, and the other variants still run."""
     variants, base = parse_ab_variants(args.ab_variants), parse_variants(args.variant)
     first = next(world.batches(args.seed))
     pin = args.equiv_pin != 0
@@ -2574,8 +2643,10 @@ def sec_abequiv(world, args):
             restore()
             tr.close(); cleanup(world.device)
     out = dict(tag=world.tag(accum=args.accum, variant=args.variant), reference_accum=args.accum, variants_tested=variants, pinned=pin, K0=k0, rows=len(first['rows']), precisions=precs, on_cpu=cpu, reference={}, variants={},
-               limits=dict(loss_rel=AB_EQ_LOSS_REL, grad_cos=AB_EQ_GRAD_COS, exact_variants=list(AB_EXACT_VARIANTS)),
-               note='mark 6 of PREREG-b3g2-speed-ab.md. bit_exact = loss equal and gradient bit for bit; on the CPU in fp32 it is required of pad64, nosync and unfused, not of tf32. step_* = the parameters\' '
+               limits=dict(loss_rel=AB_EQ_LOSS_REL, grad_cos=AB_EQ_GRAD_COS, equal_to_rounding_rel=AB_ROUND_REL, cpu_fp32_rule=dict(AB_CPU_RULE)),
+               note='mark 6 of PREREG-b3g2-speed-ab.md with Amendment 1. bit_exact = loss equal and gradient bit for bit. On a CPU fp32 run: nosync must be bit-exact; pad64 and pad64p must be equal to rounding '
+                    f'(relative gradient difference and relative loss difference at most {AB_ROUND_REL:g}); tf32 and unfused are bar-only (unfused only changes the optimizer kernel and the CPU has no fused one). '
+                    f'On a run with no CPU fp32 comparison (every GPU run) mark 6 is the bf16 bar alone, labelled bf16_bar_only: {MARK6_BAR_ONLY_TEXT}. step_* = the parameters\' '
                     'change after one optimizer step (descriptive; for unfused it is where fused and unfused AdamW differ, the loss and gradient cannot).')
     refs = {}
     for prec in precs:
@@ -2583,9 +2654,9 @@ def sec_abequiv(world, args):
         again = run(base, prec)
         out['reference'][prec] = dict(loss=refs[prec][0], rerun=ab_compare(refs[prec], again))
         log(f'abequiv {prec}: reference loss {refs[prec][0]:.6f}; rerun noise floor: grad cos {out["reference"][prec]["rerun"]["grad_cos"]:.10f}, bit exact {out["reference"][prec]["rerun"]["bit_exact"]}')
-    mark6 = {}
+    mark6, labels = {}, {}
     for v in variants:
-        res = dict(variant=v)
+        res, failed = dict(variant=v), False
         try:
             for prec in precs:
                 res[prec] = ab_compare(refs[prec], run(parse_variants(','.join(base + [v])), prec))
@@ -2593,38 +2664,51 @@ def sec_abequiv(world, args):
                 log(f'abequiv {v} {prec}: rel loss {c["rel_loss_diff"]:.3e} grad cos {c["grad_cos"]:.10f} rel L2 {c["grad_rel_l2"]:.3e} step cos {c["step_cos"]:.10f} bit exact {c["bit_exact"]}')
             bar_prec = 'bf16' if 'bf16' in precs else precs[0]
             res['bar_precision'] = bar_prec
-            res['mark6'] = ab_mark6(v, res[bar_prec], res['fp32'] if (cpu and 'fp32' in precs) else None)
-            res['cpu_bit_exact_note'] = ('checked here, fp32 on the CPU' if cpu and 'fp32' in precs else 'not checkable on this run (not a CPU fp32 run): see the CPU tests of test_prof.py')
+            res['mark6'] = ab_mark6(v, res[bar_prec], res['fp32'] if (cpu and 'fp32' in precs) else None, bar_prec)
+            floor = out['reference'][bar_prec]['rerun']                  # the bar is read beside the harness's own rerun noise floor (the reference against itself, same precision)
+            res['mark6']['rerun_noise_floor'] = {k: floor[k] for k in ('rel_loss_diff', 'grad_cos', 'grad_rel_l2', 'bit_exact')}
+            res['cpu_bit_exact_note'] = 'checked here, fp32 on the CPU' if res['mark6']['cpu_fp32_checked'] else MARK6_BAR_ONLY_TEXT
             if v == 'tf32' and cpu:
                 res['cpu_bit_exact_note'] += '; TF32 does nothing on the CPU, so this comparison cannot test it'
-            mark6[v] = res['mark6']['holds']
-            log(f'abequiv {v}: mark 6 {res["mark6"]["verdict"]} (bar in {bar_prec}: {res["mark6"]["bar_holds"]}, bit exact on CPU fp32: {res["mark6"]["bit_exact_cpu_fp32"]})')
+            mark6[v], labels[v] = res['mark6']['holds'], res['mark6']['label']
+            log(f'abequiv {v}: mark 6 {res["mark6"]["verdict"]} [{res["mark6"]["label"]}] (bar in {bar_prec}: {res["mark6"]["bar_holds"]}, rel loss {res[bar_prec]["rel_loss_diff"]:.2e} / grad cos {res[bar_prec]["grad_cos"]:.10f}, '
+                f'rerun floor {floor["rel_loss_diff"]:.2e} / {floor["grad_cos"]:.10f}; CPU fp32 clause {res["mark6"]["cpu_fp32_rule"]}: {res["mark6"]["cpu_fp32_clause_holds"]}, bit exact on CPU fp32: '
+                f'{res["mark6"]["bit_exact_cpu_fp32"]})' + ('' if res['mark6']['cpu_fp32_checked'] else f': {MARK6_BAR_ONLY_TEXT}'))
         except Skip as e:
             res['skipped'] = str(e)
             log(f'abequiv {v}: skipped ({e})')
         except Exception as e:                                           # noqa: BLE001
-            if not is_oom(e):
-                raise
-            cleanup(world.device)
-            res['skipped'] = 'OOM'
-            log(f'abequiv {v}: OOM')
+            failed = True
+            if is_oom(e):
+                res['skipped'] = 'OOM'
+                log(f'abequiv {v}: OOM')
+            else:                                                        # one variant's bug must not cost the others: record it, say so loudly, go on
+                res['error'] = exc_record(e)
+                log(f'!!!!!! abequiv {v}: ERROR {res["error"]["type"]}: {res["error"]["message"][:300]} -- no mark 6 for this variant (mark 5 stays open); the remaining variants still run')
+        if failed:
+            cleanup(world.device)                                        # after the except block: the exception (and the trainer its traceback holds) is gone by now
         out['variants'][v] = res
+    out['errors'] = [dict(variant=v, **r['error']) for v, r in out['variants'].items() if r.get('error')]
     out['mark6_by_variant'] = mark6
-    AB_STATE['mark6'] = mark6
+    out['mark6_label_by_variant'] = labels
+    AB_STATE['mark6'], AB_STATE['mark6_label'] = mark6, labels
     return out
 
 
 def ab_run(world, args, names, accum):
     """One timed run of the A/B: a fresh trainer on the same rows (batch_seed fixed), a cold Gemma alignment cache, --ab-warmup untimed updates, then --ab-updates timed ones in chunks of --chunk
-    (free-running, one sync at each end of a chunk). -> dict(round_median = median of the chunks' s/update, round_mean, chunk_values, peak_mem, rounds_sums, wall_s) or oom / skipped."""
+    (free-running, one sync at each end of a chunk). -> dict(round_median = median of the chunks' s/update, round_mean, chunk_values, peak_mem, rounds_sums, wall_s) or oom / skipped / error
+    (type, message, traceback tail: any other exception ends THIS run only, the caller ends the arm and goes on). The peak counters are reset at the START of the run, so a run that dies in
+    warm-up does not report the previous run's peak (they are reset again after warm-up: the reported peak is the timed updates'). The trainer, with its model, optimizer and batch iterator,
+    is dropped and collected BEFORE the cache is emptied, so the next run starts from freed memory."""
     t0, tr, rec = time.time(), None, {}
     try:
+        reset_peak(world.device)
         tr = Trainer(world, args, names, accum=accum, batch_seed=args.seed + 707)
         cold_eg(world)
         for _ in range(args.ab_warmup):
             tr.update()
-        if world.device.type == 'cuda':
-            torch.cuda.reset_peak_memory_stats()
+        reset_peak(world.device)
         tr.aux_log = []
         per = free_run(tr, args.ab_updates, args.chunk)
         rec.update(round_median=float(np.median(per)), round_mean=float(np.mean(per)), chunk_values=per, peak_mem=peak_mem(world.device), rounds_sums=rounds_sums(tr.aux_log), oom=False)
@@ -2636,33 +2720,43 @@ def ab_run(world, args, names, accum):
         elif isinstance(e, Skip):
             rec.update(skipped=str(e))
         else:
-            raise
+            rec.update(error=exc_record(e))                              # no peak: a run that died is not a measurement
+            log(f'!!!!!! abbench: a run (accum {accum}, {",".join(names) or "baseline"}) raised {rec["error"]["type"]}: {rec["error"]["message"][:300]}')
     finally:
         if tr is not None:
             tr.close()
+        tr = None                                                        # model, optimizer, batch iterator: nothing may hold them while the cache is emptied
+        gc.collect()
         cleanup(world.device)
     rec['wall_s'] = time.time() - t0
     return rec
 
 
-def ab_mark6_source(args):
-    """{variant: bool} of mark 6 for mark 5: from this process's abequiv, else from --ab-equiv-json (the json of an earlier abequiv run), else {} (mark 5 then says None)."""
-    if AB_STATE.get('mark6'):
-        return dict(AB_STATE['mark6'])
+def ab_mark6_source(args, key='mark6', json_key='mark6_by_variant', say=True):
+    """{variant: bool} of mark 6 for mark 5: from this process's abequiv, else from --ab-equiv-json (the json of an earlier abequiv run), else {} (mark 5 then says None).
+    key / json_key 'mark6_label' / 'mark6_label_by_variant': the same for the label of the check each verdict rests on ('bf16_bar_only' ...)."""
+    if AB_STATE.get(key):
+        return dict(AB_STATE[key])
     if args.ab_equiv_json:
         try:
-            return dict(json.load(open(args.ab_equiv_json))['sections']['abequiv']['mark6_by_variant'])
+            return dict(json.load(open(args.ab_equiv_json))['sections']['abequiv'][json_key])
         except Exception as e:                                           # noqa: BLE001
-            log(f'abbench: --ab-equiv-json {args.ab_equiv_json!r} unreadable ({e!r}): mark 6 unknown, mark 5 stays open')
+            if say:
+                log(f'abbench: --ab-equiv-json {args.ab_equiv_json!r} unreadable ({e!r}): mark 6 unknown, mark 5 stays open')
     return {}
 
 
-def ab_arm_result(arm, a_runs, b_runs, ref, dph, mark6):
-    """One arm's record from its paired runs: the marks, the money, the wall minutes. Pure given the runs."""
+def ab_arm_result(arm, a_runs, b_runs, ref, dph, mark6, rounds=None, mark6_labels=None):
+    """One arm's record from its paired runs: the marks, the money, the wall minutes. Pure given the runs. rounds = --ab-rounds (an arm with fewer completed rounds is `incomplete` and mark 5 cannot
+    count it; None = as many as it has); mark6_labels = {variant: label of the check its mark 6 rests on}. A run that raised (rec['error']) ends the arm: the error is the arm's `error`."""
     ok = [(x, y) for x, y in zip(a_runs, b_runs) if x.get('round_median') and y.get('round_median')]
     res = dict(name=arm['name'], kind=arm['kind'], accum=arm['accum'], variants=arm['names'], a_runs=[{k: v for k, v in r.items() if k != 'rounds_sums'} for r in a_runs],
-               b_runs=[{k: v for k, v in r.items() if k != 'rounds_sums'} for r in b_runs], rounds_completed=len(ok), oom=any(r.get('oom') for r in b_runs),
+               b_runs=[{k: v for k, v in r.items() if k != 'rounds_sums'} for r in b_runs], rounds_completed=len(ok), rounds_expected=rounds if rounds is not None else len(a_runs), oom=any(r.get('oom') for r in b_runs),
                wall_min_a=sum(r['wall_s'] for r in a_runs) / 60, wall_min_b=sum(r['wall_s'] for r in b_runs) / 60)
+    for i in range(max(len(a_runs), len(b_runs))):
+        for who, runs in (('A', a_runs), ('B', b_runs)):
+            if i < len(runs) and runs[i].get('error') and 'error' not in res:
+                res['error'] = dict(arm=arm['name'], run=who, round=i + 1, **runs[i]['error'])
     res['wall_min_arm'] = res['wall_min_a'] + res['wall_min_b']
     res['cost_arm_usd'] = res['wall_min_arm'] / 60 * dph if dph else None
     skip = next((r['skipped'] for r in b_runs if r.get('skipped')), None)
@@ -2674,20 +2768,33 @@ def ab_arm_result(arm, a_runs, b_runs, ref, dph, mark6):
     res['rounds_per_micro_batch'] = dict(a=ra, b=rb)
     if ok:
         res['marks'] = ab_marks(arm['kind'], [x['round_median'] for x, _ in ok], [y['round_median'] for _, y in ok], res['peak_alloc_gb'],
-                                (rb['mean_per_micro_batch'] / ra['mean_per_micro_batch']) if (ra and rb) else None, mark6.get(arm['name']))
+                                (rb['mean_per_micro_batch'] / ra['mean_per_micro_batch']) if (ra and rb) else None, mark6.get(arm['name']), res['rounds_expected'])
+        if arm['kind'] == 'variant':
+            res['marks']['mark6_label'] = (mark6_labels or {}).get(arm['name'])
         res['money'] = ab_money(res['marks']['b_median'], dph)
     return res
 
 
+def ab_arm_failed(arm, a_runs, b_runs, dph, e):
+    """The record of an arm whose own bookkeeping raised (a bug there, not in a run: runs record their errors themselves): what its runs had cost, the error, no marks."""
+    res = dict(name=arm['name'], kind=arm['kind'], accum=arm['accum'], variants=arm['names'], a_runs=a_runs, b_runs=b_runs, rounds_completed=0, oom=False,
+               wall_min_a=sum(r.get('wall_s', 0.0) for r in a_runs) / 60, wall_min_b=sum(r.get('wall_s', 0.0) for r in b_runs) / 60, error=dict(arm=arm['name'], run='bookkeeping', round=None, **exc_record(e)))
+    res['wall_min_arm'] = res['wall_min_a'] + res['wall_min_b']
+    res['cost_arm_usd'] = res['wall_min_arm'] / 60 * dph if dph else None
+    return res
+
+
 def sec_abbench(world, args):
-    """PREREG-b3g2-speed-ab.md, speed: reference A = the reference accum (--accum, with --variant on top if given); B arms = --ab-accums (A's variants at another accum) and --ab-variants (ONE variant
-    alone at the reference accum, never combined). Per arm --ab-rounds interleaved rounds A,B,A,B,A,B (each a fresh trainer on the same rows: --ab-warmup untimed updates, --ab-updates timed, chunks
-    of --chunk). OOM in a B run ends that arm (reported as OOM). --ab-max-min: arms not started within that many minutes of the section's start are skipped (reported). --ab-partial: the
-    json so far is rewritten after every arm. The flags of the pre-registration are in `marks`; the predictions of marks 3 and 8 in `predictions`; the money in `money` (needs --dph)."""
+    """PREREG-b3g2-speed-ab.md, speed: reference A = the reference accum (--accum, with --variant on top if given); B arms = --ab-variants (ONE variant alone at the reference accum, never combined)
+    and --ab-accums (A's variants at another accum). The arms run in the order of AB_ARM_ORDER (the variants first, then the accum rows) unless the options give another order. Per arm --ab-rounds
+    interleaved rounds A,B,A,B,A,B (each a fresh trainer on the same rows: --ab-warmup untimed updates, --ab-updates timed, chunks of --chunk). OOM in a run ends that arm (reported as OOM); any
+    other exception ends that arm too: it is recorded (`error` of the arm and `errors` of the section: arm, run, type, message, traceback tail), printed loudly, and the remaining arms still run.
+    --ab-max-min: arms not started within that many minutes of the section's start are skipped (reported). --ab-partial: the json so far is rewritten after every arm. The flags of the
+    pre-registration are in `marks`; the predictions of marks 3 and 8 in `predictions`; the money in `money` (needs --dph)."""
     ref, base, dph = args.accum, parse_variants(args.variant), args.dph
     accums, vnames = parse_ab_accums(args.ab_accums, ref), parse_ab_variants(args.ab_variants)
-    arms = [dict(name=f'accum {k}', kind='accum', accum=k, names=base) for k in accums] + [dict(name=v, kind='variant', accum=ref, names=parse_variants(','.join(base + [v]))) for v in vnames]
-    mark6 = ab_mark6_source(args)
+    arms = ab_arms(ref, base, accums, vnames)
+    mark6, mark6_labels = ab_mark6_source(args), ab_mark6_source(args, 'mark6_label', 'mark6_label_by_variant', say=False)
     t_sec, results = time.time(), {}
 
     def build(done=False):
@@ -2697,9 +2804,10 @@ def sec_abbench(world, args):
         refr = dict(accum=ref, variants=base, round_medians_all_arms=a_all, s_per_update_median=float(np.median(a_all)) if a_all else None, spread=(max(a_all) / min(a_all)) if a_all else None)
         refr['money'] = ab_money(refr['s_per_update_median'], dph)
         return dict(tag=world.tag(accum=ref, variant=args.variant), complete=done, reference_accum=ref, rounds=args.ab_rounds, warmup=args.ab_warmup, timed_updates=args.ab_updates, chunk=args.chunk, dph=dph,
-                    arms=results, reference=refr, predictions=ab_predictions(pts, ref), mark6_used=mark6, wall_min_total=wall, cost_total_usd=wall / 60 * dph if dph else None,
+                    arm_order=[a['name'] for a in arms], arms=results, errors=[v['error'] for v in results.values() if v.get('error')], reference=refr, predictions=ab_predictions(pts, ref),
+                    mark6_used=mark6, mark6_label_used=mark6_labels, wall_min_total=wall, cost_total_usd=wall / 60 * dph if dph else None,
                     marks=dict(speed_counts_at_x=ACCUM_SPEED_X, memory_fits_at_gb=ACCUM_MEM_GB, rounds_rise_reported_above=ACCUM_ROUNDS_RISE, b_lower_by=AB_WIN_DROP, noise_x=AB_NOISE_X,
-                               does_nothing_under=AB_NOTHING, small_under=AB_SMALL, source='PREREG-b3g2-speed-ab.md, fixed before any number'),
+                               does_nothing_under=AB_NOTHING, small_under=AB_SMALL, mark5_reading=AB_MARK5_READING.format(rounds=args.ab_rounds), source='PREREG-b3g2-speed-ab.md, fixed before any number'),
                     note='round value = median of the chunks\' s/update (chunk = --chunk updates between two syncs); an arm\'s median = median of its round values; A is re-run in every arm, A and B alternate '
                          '(A,B,A,B,A,B), so A\'s spread is that arm\'s own. speed_vs_a = A median / B median; b_lower_than_a_by = 1 - B/A (positive: B faster). inside_noise: |b_lower_than_a_by| < '
                          f'{AB_NOISE_X:g} x (A spread - 1). peak_alloc_gb = torch max_memory_allocated in GiB, reset before each timed run. cost_arm_usd = (A + B wall minutes) / 60 x dph. One seed, one box, one host.')
@@ -2710,21 +2818,32 @@ def sec_abbench(world, args):
             log(f'abbench: arm {arm["name"]} skipped (--ab-max-min {args.ab_max_min:g})')
             continue
         a_runs, b_runs = [], []
-        for r in range(args.ab_rounds):
-            log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: A (accum {ref}, {args.variant or "baseline"})')
-            a_runs.append(ab_run(world, args, base, ref))
-            log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: B (accum {arm["accum"]}, {",".join(arm["names"]) or "baseline"})')
-            b_runs.append(ab_run(world, args, arm['names'], arm['accum']))
-            la, lb = a_runs[-1], b_runs[-1]
-            log(f'  A {la.get("round_median", float("nan")):.4f} s/update' + ('' if la.get('round_median') else ' (OOM or skipped)') + f'; B ' + ('OOM' if lb.get('oom') else lb.get('skipped') or f'{lb["round_median"]:.4f} s/update, peak alloc {lb["peak_mem"]["allocated_gb"]} GB'))
-            if lb.get('oom') or lb.get('skipped') or la.get('oom') or la.get('skipped'):
-                break
-        results[arm['name']] = ab_arm_result(arm, a_runs, b_runs, ref, dph, mark6)
+        try:
+            for r in range(args.ab_rounds):
+                log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: A (accum {ref}, {args.variant or "baseline"})')
+                a_runs.append(ab_run(world, args, base, ref))
+                log(f'abbench arm {arm["name"]} round {r + 1}/{args.ab_rounds}: B (accum {arm["accum"]}, {",".join(arm["names"]) or "baseline"})')
+                b_runs.append(ab_run(world, args, arm['names'], arm['accum']))
+                la, lb = a_runs[-1], b_runs[-1]
+                log(f'  A ' + (f'{la["round_median"]:.4f} s/update' if la.get('round_median') else 'OOM, skipped or ERROR') + '; B '
+                    + ('OOM' if lb.get('oom') else lb.get('skipped') or ('ERROR' if lb.get('error') else f'{lb["round_median"]:.4f} s/update, peak alloc {lb["peak_mem"]["allocated_gb"]} GB')))
+                for who, x in (('A', la), ('B', lb)):
+                    if x.get('error'):
+                        log(f'!!!!!! abbench arm {arm["name"]} round {r + 1}: the {who} run raised {x["error"]["type"]}: {x["error"]["message"][:300]} -- this arm is ended, the remaining arms still run')
+                if any(x.get(k) for x in (la, lb) for k in ('oom', 'skipped', 'error')):
+                    break
+            results[arm['name']] = ab_arm_result(arm, a_runs, b_runs, ref, dph, mark6, args.ab_rounds, mark6_labels)
+        except Exception as e:                                           # noqa: BLE001  (the runs record their own errors; this is the bookkeeping around them)
+            results[arm['name']] = ab_arm_failed(arm, a_runs, b_runs, dph, e)
+            log(f'!!!!!! abbench arm {arm["name"]}: ERROR in the harness bookkeeping, {type(e).__name__}: {str(e)[:300]} -- this arm is ended, the remaining arms still run')
+        if results[arm['name']].get('error'):
+            cleanup(world.device)                                        # after the except block: the exception and the frames it held are gone by now
         m = results[arm['name']].get('marks')
         if m:
             mo = results[arm['name']]['money']
             log(f'abbench arm {arm["name"]}: A {m["a_median"]:.4f} B {m["b_median"]:.4f} s/update (speed {m["speed_vs_a"]:.3f}x, A spread {m["a_spread"]:.3f}, {m["size_class"]}{", inside noise" if m["inside_noise"] else ""}); '
-                f'wall {results[arm["name"]]["wall_min_arm"]:.1f} min' + (f', arm cost ${results[arm["name"]]["cost_arm_usd"]:.3f}, ${mo["usd_per_1000_updates"]:.3f} per 1,000 updates, ${mo["usd_24000_run"]:.2f} per 24,000-update run' if dph else ''))
+                f'wall {results[arm["name"]]["wall_min_arm"]:.1f} min' + (f', arm cost ${results[arm["name"]]["cost_arm_usd"]:.3f}, ${mo["usd_per_1000_updates"]:.3f} per 1,000 updates, ${mo["usd_24000_run"]:.2f} per 24,000-update run' if dph else '')
+                + (f'; mark 5: {m["mark5_status"]}' if 'mark5_status' in m else '') + (f'; INCOMPLETE ({m["rounds_completed"]} of {m["rounds_expected"]} rounds)' if m['incomplete'] else ''))
         if args.ab_partial:
             try:
                 json.dump(build(False), open(args.ab_partial, 'w'), indent=1, default=str)
@@ -2886,7 +3005,9 @@ def render_md(res):
         elif name == 'abequiv':
             lim = s['limits']
             L += [f'mark 6 of PREREG-b3g2-speed-ab.md: one update, {s["rows"]} rows, stochastic parts pinned: {s["pinned"]} (K0 {s["K0"]}); reference accum {s["reference_accum"]}; on CPU: {s["on_cpu"]}; '
-                  f'bar: relative loss difference <= {lim["loss_rel"]:g} and gradient cosine >= {lim["grad_cos"]:g}', '']
+                  f'bar: relative loss difference <= {lim["loss_rel"]:g} and gradient cosine >= {lim["grad_cos"]:g}, beside the reference rerun noise floor below; with a CPU fp32 comparison (Amendment 1) also: '
+                  f'nosync bit-exact, pad64 / pad64p equal to rounding (relative gradient and loss difference <= {lim["equal_to_rounding_rel"]:g}), tf32 and unfused bar only. '
+                  f'A mark 6 labelled bf16_bar_only rests on the bar alone: {MARK6_BAR_ONLY_TEXT}', '']
             rows = []
             for prec in s['precisions']:
                 rr = s['reference'][prec]['rerun']
@@ -2895,40 +3016,56 @@ def render_md(res):
                 if 'skipped' in r:
                     rows.append((v, 'skipped', r['skipped'], '', '', '', '', ''))
                     continue
+                if 'error' in r:
+                    rows.append((v, '**ERROR**', f'{r["error"]["type"]}: {r["error"]["message"][:120]}'.replace('|', '/').replace('\n', ' '), '', '', '', '', 'no mark 6'))
+                    continue
                 for prec in s['precisions']:
                     c = r[prec]
                     rows.append((f'{v} ({prec})', f'{c["rel_loss_diff"]:.2e}', f'{c["grad_cos"]:.10f}', f'{c["grad_rel_l2"]:.2e}', f'{c["step_cos"]:.10f}', c['bit_exact'], 'bar met' if c['meets_bar'] else 'bar NOT met',
-                                 f'**mark 6: {r["mark6"]["verdict"]}**' if prec == r['bar_precision'] else ''))
+                                 f'**mark 6: {r["mark6"]["verdict"]} ({r["mark6"]["label"]})**' if prec == r['bar_precision'] else ''))
             L += table(['vs reference', 'rel d loss', 'grad cosine', 'grad rel L2', 'step cosine', 'bit exact (loss + grad)', 'bar', 'mark 6'], rows)
-            L += [f'{v}: bar in {r["bar_precision"]}: {r["mark6"]["bar_holds"]}; bit exact required: {r["mark6"]["bit_exact_required"]}; bit exact in fp32 on the CPU: {r["mark6"]["bit_exact_cpu_fp32"]} ({r["cpu_bit_exact_note"]})'
-                  for v, r in s['variants'].items() if 'mark6' in r] + ['', s['note'], '']
+            L += [f'{v}: mark 6 {r["mark6"]["verdict"]} [{r["mark6"]["label"]}]; bar in {r["bar_precision"]}: {r["mark6"]["bar_holds"]}; CPU fp32 clause ({r["mark6"]["cpu_fp32_rule"]}): {r["mark6"]["cpu_fp32_clause_holds"]}; '
+                  f'bit exact in fp32 on the CPU: {r["mark6"]["bit_exact_cpu_fp32"]}; equal to rounding: {r["mark6"]["equal_to_rounding_cpu_fp32"]} ({r["cpu_bit_exact_note"]})'
+                  for v, r in s['variants'].items() if 'mark6' in r]
+            if s.get('errors'):
+                L += ['', f'**ERRORS in {len(s["errors"])} variant(s); the other variants ran:**', ''] + table(['variant', 'exception', 'message', 'traceback tail'], [
+                    (e['variant'], e['type'], e['message'][:200].replace('|', '/').replace('\n', ' '), '<br>'.join(x.replace('|', '/') for x in e['traceback_tail'][-6:])) for e in s['errors']])
+            L += ['', s['note'], '']
         elif name == 'abbench':
             mk = s['marks']
             L += [f'reference A = accum {s["reference_accum"]}{" + " + s["tag"]["variant"] if s["tag"].get("variant") else ""}; {s["rounds"]} interleaved rounds A,B,A,B,A,B x {s["timed_updates"]} timed updates after {s["warmup"]} warm-up (chunks of {s["chunk"]}); '
                   f'marks ({mk["source"]}): speed counts at >= {mk["speed_counts_at_x"]}x, memory fits at <= {mk["memory_fits_at_gb"]} GB, rounds rise reported above +{100 * (mk["rounds_rise_reported_above"] - 1):.0f} %, a cheap win needs B '
                   f'{100 * mk["b_lower_by"]:.0f} % lower in the median and below A in every round, mark 7: inside noise under {mk["noise_x"]:g} x A\'s spread, under {100 * mk["does_nothing_under"]:.0f} % does nothing, '
-                  f'{100 * mk["does_nothing_under"]:.0f} to {100 * mk["small_under"]:.0f} % small; complete: {s["complete"]}', '']
+                  f'{100 * mk["does_nothing_under"]:.0f} to {100 * mk["small_under"]:.0f} % small; complete: {s["complete"]}', '',
+                  f'arm order (variants first, then the accum rows): {", ".join(s["arm_order"])}', '', mk['mark5_reading'] + '.', '']
+            if s.get('errors'):
+                L += [f'**ERRORS in {len(s["errors"])} arm(s); the remaining arms ran:**', ''] + table(['arm', 'run', 'round', 'exception', 'message', 'traceback tail'], [
+                    (e['arm'], e['run'], e['round'], e['type'], e['message'][:200].replace('|', '/').replace('\n', ' '), '<br>'.join(x.replace('|', '/') for x in e['traceback_tail'][-6:])) for e in s['errors']])
             yn = {True: 'yes', False: 'no', None: '-'}
             rows, rows2, rows3 = [], [], []
             for k, a in s['arms'].items():
                 m = a.get('marks')
                 if not m:
-                    rows.append((k, a['kind'], 'OOM' if a.get('oom') else 'skipped: ' + str(a.get('skipped', 'no completed round')), '', '', '', '', '', '', '', ''))
+                    rows.append((k, a['kind'], f'**ERROR** {a["error"]["type"]}' if a.get('error') else 'OOM' if a.get('oom') else 'skipped: ' + str(a.get('skipped', 'no completed round')), '', '', '', '', '', '', '', ''))
                     continue
                 accum = a['kind'] == 'accum'
                 rr = a['rounds_per_micro_batch']
                 rows.append((k, a['kind'], f'{m["a_median"]:.4f}', f'{m["b_median"]:.4f}', f'{m["speed_vs_a"]:.3f}', f'{100 * m["b_lower_than_a_by"]:+.1f} %', ', '.join(f'{x:.3f}' for x in m['a_round_medians']),
-                             ', '.join(f'{x:.3f}' for x in m['b_round_medians']), f'{m["a_spread"]:.3f}', f1(a['peak_alloc_gb'], 2), f'{m["size_class"]}{"; inside noise" if m["inside_noise"] else ""}'))
+                             ', '.join(f'{x:.3f}' for x in m['b_round_medians']), f'{m["a_spread"]:.3f}', f1(a['peak_alloc_gb'], 2), f'{m["size_class"]}{"; inside noise" if m["inside_noise"] else ""}'
+                             + (f'; INCOMPLETE ({m["rounds_completed"]} of {m["rounds_expected"]} rounds)' if m['incomplete'] else '') + ('; ERROR in a later round' if a.get('error') else '')))
                 if accum:
                     rows2.append((k, yn[m['mark1_speed_counts']], yn[m['mark2_memory_fits']], f1(m['rounds_vs_a'], 3), yn[m['mark4_rounds_rise_over_25pct']],
                                   f1(rr['b']['mean_per_micro_batch'], 2) if rr.get('b') else '-', f1(rr['a']['mean_per_micro_batch'], 2) if rr.get('a') else '-'))
                 else:
-                    rows3.append((k, yn[m['b_below_a_every_round']], yn[m['b_lower_by_5pct']], yn[m['fits_memory_mark']], yn[m['mark6_holds']], yn[m['mark5_counts_without_mark6']], f'**{yn[m["mark5_counts"]]}**'))
+                    rows3.append((k, 'incomplete' if m['incomplete'] else yn[m['b_below_a_every_round']], yn[m['b_lower_by_5pct']], yn[m['fits_memory_mark']], yn[m['mark6_holds']] + (f' ({m["mark6_label"]})' if m.get('mark6_label') else ''),
+                                  yn[m['mark5_counts_without_mark6']], f'**{m["mark5_status"]}**' if m['incomplete'] else f'**{yn[m["mark5_counts"]]}**'))
             L += table(['arm', 'kind', 'A median s/update', 'B median s/update', 'speed (A/B)', 'B lower than A by', 'A round medians', 'B round medians', 'A spread (max/min)', 'peak alloc GB', 'mark 7'], rows)
             if rows2:
                 L += ['accum rows (marks 1, 2, 4):', ''] + table(['arm', 'mark 1: speed >= 1.3x', 'mark 2: <= 10 GB', 'rounds vs A', 'mark 4: rise > 25 %', 'B rounds/micro-batch', 'A rounds/micro-batch'], rows2)
             if rows3:
-                L += ['cheap wins (mark 5; mark 6 comes from abequiv):', ''] + table(['arm', 'B below A every round', 'B >= 5 % lower', 'peak <= 10 GB', 'mark 6 holds', 'counts (without mark 6)', 'mark 5: counts'], rows3)
+                L += ['cheap wins (mark 5; mark 6 comes from abequiv, with the label of the check it rests on):', ''] + table(['arm', 'B below A every round', 'B >= 5 % lower (B <= 0.95 A)', 'peak <= 10 GB', 'mark 6 holds', 'counts (without mark 6)', 'mark 5: counts'], rows3)
+            if any((a.get('marks') or {}).get('mark6_label', '') and a['marks']['mark6_label'].endswith('_bar_only') for a in s['arms'].values()):
+                L += [f'mark 6 labelled bf16_bar_only above rests on the bar alone: {MARK6_BAR_ONLY_TEXT}.', '']
             pr = s['predictions']
             L += ['predictions (suggested, untested; marks 3 and 8):', ''] + table(['prediction', 'measured', 'proved wrong'], [
                 (v.get('prediction') or v['note'], v.get('prediction_met', v.get('mark1_measured', v.get('mark1', ''))), yn[v['proved_wrong']] if 'proved_wrong' in v else '') for v in pr.values()])
@@ -3004,8 +3141,8 @@ def build_parser():
     ap.add_argument('--accum-updates', type=int, default=40, help='accumsweep: timed updates per accum and round (the pre-registration wants at least 40)')
     ap.add_argument('--accum-warmup', type=int, default=10, help='accumsweep: untimed updates before each timed run')
     ap.add_argument('--accum-rounds', type=int, default=2, help='accumsweep: rounds, the accums interleaved in each (A B C D A B C D)')
-    ap.add_argument('--ab-accums', default='8,16,2', help='section abbench (PREREG-b3g2-speed-ab.md): the accum B arms against the reference --accum (empty = none)')
-    ap.add_argument('--ab-variants', default='tf32,pad64,unfused,nosync', help='sections abbench / abequiv: variants, each ONE alone on top of the reference at --accum (empty = none)')
+    ap.add_argument('--ab-accums', default=ab_default_accums(), help='section abbench (PREREG-b3g2-speed-ab.md): the accum B arms against the reference --accum (empty = none); they run AFTER the variant arms (AB_ARM_ORDER)')
+    ap.add_argument('--ab-variants', default=ab_default_variants(), help='sections abbench / abequiv: variants, each ONE alone on top of the reference at --accum (empty = none); the default order is AB_ARM_ORDER, the cheap wins first; the order given is kept')
     ap.add_argument('--ab-rounds', type=int, default=3, help='abbench: interleaved rounds A,B,A,B,A,B per arm (the pre-registration wants 3)')
     ap.add_argument('--ab-warmup', type=int, default=10, help='abbench: untimed updates before each timed run (at least 10)')
     ap.add_argument('--ab-updates', type=int, default=40, help='abbench: timed updates per run (at least 40)')
@@ -3013,7 +3150,7 @@ def build_parser():
     ap.add_argument('--ab-partial', help='abbench: rewrite this json after every arm (a timeout then keeps the arms done)')
     ap.add_argument('--ab-equiv-json', help='abbench: the json of an earlier abequiv run, for mark 6 of mark 5 when abequiv did not run in this process')
     ap.add_argument('--dph', type=float, default=0.0, help='abbench: the offer\'s all-in dollars per hour (dph_total); 0 = no dollar figures')
-    ap.add_argument('--pad64-parts', default='prompt,gemma,tape', help='pad64: which widths are rounded up to 64 (comma list of prompt, gemma, tape)')
+    ap.add_argument('--pad64-parts', default='prompt,gemma,tape', help='pad64: which widths are rounded up to 64 (comma list of prompt, gemma, tape); pad64p is always the prompt part alone')
     ap.add_argument('--pad-multiple', type=int, default=0, help='sortpad: round trimmed widths up to a multiple (default 1; 16 when a compile variant is on)')
     ap.add_argument('--sdpa-backend', choices=['auto', 'flash', 'efficient', 'math', 'cudnn'], default='auto')
     ap.add_argument('--compile-backend', default='inductor')
