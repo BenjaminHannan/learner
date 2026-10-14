@@ -39,8 +39,10 @@ def parent_path(parents_dir, parent):
     return os.path.join(parents_dir, f'T1SDR_{parent}.pt')
 
 
-def gate_files(rung):
-    return ('dev', 'wording') if rung == 0 else ('dev',)
+# eval files per rung (names = files in rows/rung<r>/); the first is the PRIMARY one whose accuracy is tracked at 2,000 / 4,000 / 8,000 updates
+EVALS = {0: ('dev', 'wording', 'newwords'), 1: ('dev', 'newwords'), 2: ('dev', 'newwords'), 3: ('dev', 'wording'), 4: ('dev', 'gate'),
+         5: ('gate', 'dev', 'deeper')}
+R5_DEPTH_BARS = {'0': 80.0, '1': 80.0, '2': 65.0, '3': 55.0}      # the LT-1 G-PASS bars (gate accuracy by depth)
 
 
 def ensure_rows(work, rung, n_train=130000):
@@ -61,14 +63,30 @@ def ensure_rows(work, rung, n_train=130000):
 
 
 def thresholds(rung, summ):
-    out = {'dev': max(DEV_MIN, summ['files']['dev']['count_baseline']['acc'] + MARGIN)}
-    if rung == 0:
-        out['wording'] = max(WORD_MIN, summ['files']['wording']['count_baseline']['acc'] + MARGIN)
-    return out
+    """The rung's marks as [(eval file, by_level key or None, percent threshold)] (MARKS-LT2 + Addendum 1). Baselines are the train-fitted count
+    baselines of the same file (F3): a mark is max(bar, baseline + 25)."""
+    base = lambda f: summ['files'][f]['count_baseline']['acc']
+    if rung in (0, 3):
+        return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('wording', None, max(WORD_MIN, base('wording') + MARGIN))]
+    if rung in (1, 2):
+        return [('dev', None, max(DEV_MIN, base('dev') + MARGIN))]
+    if rung == 4:
+        return [('dev', None, max(DEV_MIN, base('dev') + MARGIN)), ('gate', None, max(75.0, base('gate') + MARGIN))]
+    if rung == 5:
+        return [('gate', lv, bar) for lv, bar in R5_DEPTH_BARS.items()] + [('gate', None, base('gate') + MARGIN)]
+    raise ValueError(rung)
 
 
 def marks_string(th):
-    return ','.join(f'{k}>={v:g}' for k, v in th.items())
+    return ','.join(f"{f}{'@' + lv if lv else ''}>={v:g}" for f, lv, v in th)
+
+
+def eval_pct(e, level):
+    """Accuracy in percent of one eval.jsonl record: the whole file or one by_level cell ([correct, n])."""
+    if level is None:
+        return e['exact']
+    c = e['by_level'].get(level)
+    return 100.0 * c[0] / c[1] if c and c[1] else float('nan')
 
 
 def read_evals(run_dir):
@@ -128,9 +146,8 @@ def cmd_run(a):
     abort = os.path.join(out_root, 'ABORT')
     if os.path.exists(abort) and not a.keep_abort:
         os.unlink(abort)
-    evs = [f'--eval=dev={d}/dev.jsonl', f'--eval=newwords={d}/newwords.jsonl']
-    if rung == 0:
-        evs.insert(1, f'--eval=wording={d}/wording.jsonl')
+    evs = [f'--eval={n}={d}/{n}.jsonl' for n in EVALS[rung]]
+    assert all(os.path.exists(f'{d}/{n}.jsonl') for n in EVALS[rung]), f'missing eval file for rung {rung} in {d}'
 
     def cmd(p, s):
         c = [sys.executable, '-m', 'logic_transfer.course', '--parent', parent_path(a.parents_dir, p), '--data', a.sk200k, '--mix', f'{d}/train.jsonl',
@@ -139,7 +156,7 @@ def cmd_run(a):
              '--eval-every', str(a.eval_every), '--eval-n', str(a.eval_n), '--stop-marks', marks_string(th), '--abort-file', abort,
              '--slice-every', '25'] + evs
         return c
-    print(f'rung {rung}: thresholds {th}; {len(runs)} runs; device {a.device}; procs {a.procs} x {a.threads} threads', flush=True)
+    print(f'rung {rung}: marks {marks_string(th)}; {len(runs)} runs; device {a.device}; procs {a.procs} x {a.threads} threads', flush=True)
     todo = [(p, s) for p, s in runs if run_state(os.path.join(out_root, run_name(p, s))) != 'done']
     if a.dry:
         for p, s in todo:
@@ -171,7 +188,7 @@ def cmd_run(a):
         if time.time() - last_note > 600:
             last_note = time.time()
             print(f'[{time.time() - t0:.0f}s] ' + ' '.join(f'{run_name(*k)}:{(read_evals(os.path.join(out_root, run_name(*k))) or [{"update": 0}])[-1]["update"]}' for k in live), flush=True)
-    json.dump(dict(rung=rung, thresholds=th, runs=[run_name(p, s) for p, s in runs], wall_s=round(time.time() - t0, 1), device=a.device),
+    json.dump(dict(rung=rung, marks=marks_string(th), runs=[run_name(p, s) for p, s in runs], wall_s=round(time.time() - t0, 1), device=a.device),
               open(os.path.join(out_root, 'DONE.json'), 'w'), indent=1)
     print('all runs finished', flush=True)
 
@@ -185,23 +202,28 @@ def run_summary(work, rung, p, s, th):
     ok_at = None
     by_u = {}
     for e in full:
-        by_u.setdefault(e['update'], {})[e['name']] = e['exact']
+        by_u.setdefault(e['update'], {})[e['name']] = e
     for u in sorted(by_u):
-        if all(by_u[u].get(k, -1) >= v for k, v in th.items()):
+        if all(f in by_u[u] and eval_pct(by_u[u][f], lv) >= v for f, lv, v in th):
             ok_at = u
             break
     out['pass'] = ok_at is not None
     out['pass_update'] = ok_at
+    prim = EVALS[rung][0]
 
     def acc_at(u):
+        """Primary-file accuracy at update u: the latest eval at or before u; a run that passed at or before u carries its passing eval forward."""
         if ok_at is not None and ok_at <= u:
-            e = [x for x in full if x['name'] == 'dev' and x['update'] == ok_at]
-            return e[0]['exact'] if e else None
-        e = dev_at(ev, u)
-        return e['exact'] if e else None
+            return round(by_u[ok_at][prim]['exact'], 2) if prim in by_u[ok_at] else None
+        c = [e for e in ev if e['name'] == prim and e['update'] <= u]
+        return max(c, key=lambda e: (e['update'], e['full']))['exact'] if c else None
+    out['primary_file'] = prim
     out['dev_at'] = {str(u): acc_at(u) for u in (2000, 4000, 8000)}
-    last_dev = [e for e in ev if e['name'] == 'dev']
+    last_dev = [e for e in ev if e['name'] == prim]
     out['last_dev'] = (last_dev[-1]['update'], last_dev[-1]['exact'], last_dev[-1]['full']) if last_dev else None
+    if rung == 5:
+        gl = [e for e in ev if e['name'] == 'gate' and e['full']]
+        out['gate_by_depth_last'] = {lv: round(eval_pct(gl[-1], lv), 1) for lv in R5_DEPTH_BARS} if gl else None
     nw = [e for e in ev if e['name'] == 'newwords']
     out['newwords_last'] = (nw[-1]['update'], nw[-1]['exact']) if nw else None
     return out
@@ -232,7 +254,7 @@ def cmd_report(a):
             v = [x['dev_at'][u] for x in rows if x['dev_at'][u] is not None]
             if v:
                 stats[u] = dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v))
-        res[f'rung{r}'] = dict(thresholds=th, baseline={k: summ['files'][k]['count_baseline']['acc'] for k in th}, n_pass=n_pass, n_runs=len(rows),
+        res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r][:2] if 'count_baseline' in summ['files'][k]}, n_pass=n_pass, n_runs=len(rows),
                                verdict=verdict, dev_stats=stats, runs=rows, falsifier=dec[2])
     print(json.dumps(res, indent=1))
     return res
