@@ -68,7 +68,7 @@ def ensure_rows(work, rung, n_train=None, build=True):
     for name, h in want.items():
         got = ladder.sha256(os.path.join(d, name + '.jsonl'))
         assert got == h, f'rung{rung}/{name}: file on disk hashes to {got[:12]} but ladder-hashes.json says {h[:12]}'
-    print(f'seal verified: rung{rung} ' + ' '.join(f'{n}={h[:8]}' for n, h in sorted(want.items())), flush=True)
+    print(f'seal verified: rung{rung} ' + ' '.join(f'{n}={h[:8]}' for n, h in sorted(want.items())), file=sys.stderr, flush=True)      # stderr: `report` prints JSON on stdout
     return d, s
 
 
@@ -413,7 +413,7 @@ def cmd_report(a):
             if v:
                 stats[u] = dict(mean=round(sum(v) / len(v), 1), min=round(min(v), 1), max=round(max(v), 1), n=len(v),
                                 n_carried=sum(u in x['dev_at_carried'] for x in rows))
-        res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r] if 'count_baseline' in summ['files'][k]}, n_pass=n_pass, n_runs=len(rows),
+        res[f'rung{r}'] = dict(marks=marks_string(th), baseline={k: summ['files'][k]['count_baseline']['acc'] for k in EVALS[r] if 'count_baseline' in summ['files'].get(k, {})}, n_pass=n_pass, n_runs=len(rows),
                                verdict=verdict, dev_stats=stats, label_recall=summarise_recall(rows), probe_summary=summarise_probes(rows),
                                code=_code_sha(), runs=rows, falsifier=dec[2])
     print(json.dumps(res, indent=1))
