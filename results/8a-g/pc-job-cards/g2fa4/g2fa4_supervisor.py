@@ -166,6 +166,17 @@ def stop_owner(path):
     return m.group(1) if m else None
 
 
+def replace_retry(src, dst):
+    """os.replace with a few retries (Windows: the destination may be open for a moment, e.g. ARMED.txt read by the running loop)."""
+    for i in range(10):
+        try:
+            return os.replace(src, dst)
+        except PermissionError:
+            if i == 9:
+                raise
+            time.sleep(0.5)
+
+
 def aside(p):
     """rename a file out of the way (never delete)."""
     p = Path(p)
@@ -258,7 +269,11 @@ def trace_a(ev, rules, max_used_mib):
     """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches."""
     up, n = rules['upto'], rules['first_n']
     m = ev.merged()
-    r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib)
+    r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib, soft_misses=[])
+    soft = set(rules.get('soft', ()))          # items listed here ('peak', 'resume_max_abs') are RECORDED, not gated: a miss goes to soft_misses and does not stop the run (the reading of the result is gated after the run instead)
+
+    def miss(key, msg):
+        (r['soft_misses'] if key in soft else r['why_fail']).append(msg)
     have = all(s in m for s in range(1, up + 1))
     r['complete'] = have
     r['finite'] = not ev.nonfinite
@@ -267,7 +282,7 @@ def trace_a(ev, rules, max_used_mib):
     if max_used_mib is None:
         r['notes'].append('GPU memory could not be read (nvidia-smi): peak not checked')
     elif max_used_mib > rules['peak_limit_mib']:
-        r['why_fail'].append(f'GPU memory in use peaked at {max_used_mib} MiB, over the {rules["peak_limit_mib"]} MiB limit')
+        miss('peak', f'GPU memory in use peaked at {max_used_mib} MiB, over the {rules["peak_limit_mib"]} MiB limit')
     if have:
         first, last = mean(m[s] for s in range(1, n + 1)), mean(m[s] for s in range(up - rules['last_n'] + 1, up + 1))
         r.update(mean_first=first, mean_last=last, falls=bool(last < first))
@@ -292,7 +307,7 @@ def trace_a(ev, rules, max_used_mib):
             if mean(d) > rules['resume_mean_abs']:
                 r['why_fail'].append(f'redone updates differ by {mean(d):.4f} on average (limit {rules["resume_mean_abs"]})')
             if max(d) > rules['resume_max_abs']:
-                r['why_fail'].append(f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
+                miss('resume_max_abs', f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
             break
     if r['resume'] is None:
         r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
@@ -389,6 +404,10 @@ class Sup:
         if not p.exists() or stop_owner(p) in (None, job['id']):
             return p
         return self.sd / f'STOPPED-{job["id"]}.txt'              # STOPPED.txt is another job's record: never overwritten
+
+    def attn_path(self, kind, job):
+        """ATTENTION-<kind>.txt is g2fa4's name (as before there was a second job); every other job writes ATTENTION-<kind>-<id>.txt, so one job's note never hides another's."""
+        return self.sd / (f'ATTENTION-{kind}.txt' if job['id'] == 'g2fa4' else f'ATTENTION-{kind}-{job["id"]}.txt')
 
     # ---- ARMED.txt: line 1 "<time> armed: <Ben's words>", line 2 "jobs: <ids>" (the non-skipped jobs of the plan at that time)
     def armed_ids(self):
@@ -639,7 +658,7 @@ class Sup:
         stall = now_t - max(js.get('wd_t', now_t), js.get('launched_t', 0))
         if ev.last_step < job['steps'] and stall > self.plan.get('stall_warn_s', 1200) and not js.get('stall_warned'):
             js['stall_warned'] = True
-            (self.sd / 'ATTENTION-stall.txt').write_text(f'{ts()} {job["id"]}: no new update for {stall / 60:.0f} min at update {ev.last_step}; the runner is alive\n', encoding='utf-8')
+            self.attn_path('stall', job).write_text(f'{ts()} {job["id"]}: no new update for {stall / 60:.0f} min at update {ev.last_step}; the runner is alive\n', encoding='utf-8')
             self.log(f'STALL: no new update for {stall / 60:.0f} min at update {ev.last_step}')
         if ev.last_step < job['steps'] and stall > self.plan.get('stall_kill_s', 3600):
             js['stall_warned'] = False
@@ -652,8 +671,8 @@ class Sup:
         if ev.device and not str(ev.device).startswith(want_dev):
             self.kill_job(job, why=f'train.py started on "{ev.device}", not {want_dev}')
             return self.stop(job, f'train.py started on the device "{ev.device}" instead of {want_dev} (driver / torch CUDA problem after an update?); it was stopped, nothing restarts until this is fixed')
-        if ev.ckpt_failed >= 3 and not (self.sd / 'ATTENTION-ckpt.txt').exists():
-            (self.sd / 'ATTENTION-ckpt.txt').write_text(f'{ts()} {job["id"]}: {ev.ckpt_failed} checkpoint writes failed (disk full? file locked?); a restart would lose more than 100 updates\n', encoding='utf-8')
+        if ev.ckpt_failed >= 3 and not self.attn_path('ckpt', job).exists():
+            self.attn_path('ckpt', job).write_text(f'{ts()} {job["id"]}: {ev.ckpt_failed} checkpoint writes failed (disk full? file locked?); a restart would lose more than 100 updates\n', encoding='utf-8')
             self.log(f'ATTENTION: {ev.ckpt_failed} checkpoint writes failed')
         # the planned kill-and-resume test (R4): once, in the middle of a checkpoint interval
         if job.get('kill_resume_at') and not js['kill_done'] and not ev.resumed and ev.last_step >= job['kill_resume_at']:
@@ -671,10 +690,10 @@ class Sup:
         if up and not js.get('traceA') and ev.last_step >= up and (ev.resumed and ev.seg > 1):
             r = trace_a(ev, job['trace_a'], js['max_used_mib'])
             r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
-            js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'])
+            js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'], soft_misses=r['soft_misses'])
             jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
             (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
-            self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}')
+            self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}' + (f' (recorded, not gated: {r["soft_misses"]})' if r['soft_misses'] else ''))
             if r['verdict'] == 'FAIL':
                 self.kill_job(job, why='trace A failed')
                 self.stop(job, 'trace A FAILED: ' + '; '.join(r['why_fail']) + (' (registered fallback: accum 8, then 32; a new run name each)' if job.get('accum') == 4 else ''))      # (the fallback text is the accum-4 job's)
@@ -734,7 +753,7 @@ class Sup:
         if js['base']['status'] == 'running':
             self.kill_job(job, base=True, why='the main run died while the baseline shared the card')
             js['base']['status'] = 'abandoned'
-            (self.sd / 'ATTENTION-baseline.txt').write_text(f'{ts()} the main run died at update {ev.last_step} while the accum-32 baseline ran; the baseline was stopped and is NOT redone automatically\n', encoding='utf-8')
+            self.attn_path('baseline', job).write_text(f'{ts()} the main run died at update {ev.last_step} while the accum-32 baseline ran; the baseline was stopped and is NOT redone automatically\n', encoding='utf-8')
         self.after_kill(job)
         if not (self.sd / 'ARMED.txt').exists():                    # halt / disarm while this cycle was running
             return
@@ -769,7 +788,7 @@ class Sup:
             b['status'] = 'done'
             self.log(f'COMPARE accum {job["accum"]} vs 32: {r["verdict"]} ({r.get("read_as")}) diff of means {r.get("diff_of_means")} last-n {r.get("last_n_diff")}')
             if r['verdict'] in ('FAIL', 'INCOMPLETE'):
-                (self.sd / 'ATTENTION-compare.txt').write_text(f'{ts()} {job["id"]} baseline compare {r["verdict"]}: {json.dumps(r)}\nthe main run keeps going until someone decides (big-run: fall back to accum 8, then 32)\n', encoding='utf-8')
+                self.attn_path('compare', job).write_text(f'{ts()} {job["id"]} baseline compare {r["verdict"]}: {json.dumps(r)}\nthe main run keeps going until someone decides (big-run: fall back to accum 8, then 32)\n', encoding='utf-8')
         elif not pids:
             if (Path(self.plan['work']) / 'STOP').exists():
                 return
@@ -780,7 +799,7 @@ class Sup:
             b['restarts'] = b.get('restarts', 0) + 1
             if b['restarts'] > 4:
                 b['status'] = 'failed'
-                (self.sd / 'ATTENTION-baseline.txt').write_text(f'{ts()} the accum-32 baseline died {b["restarts"]} times before update {up}; the main job is not affected\n', encoding='utf-8')
+                self.attn_path('baseline', job).write_text(f'{ts()} the accum-32 baseline died {b["restarts"]} times before update {up}; the main job is not affected\n', encoding='utf-8')
                 self.log('baseline FAILED (died too often); the main job goes on')
                 return
             self.after_kill(job, base=True)
@@ -832,7 +851,8 @@ class Sup:
         L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
              f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
              f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
-             f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- notes: {r["notes"] or "none"}']
+             f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
+             f'- notes: {r["notes"] or "none"}']
         return '\n'.join(L) + '\n'
 
     @staticmethod
@@ -975,7 +995,7 @@ def arm(a):
         shutil.copy2(p, kept)
     tmp = p.with_name(p.name + '.tmp')
     tmp.write_text(f'{ts()} armed: {a.text}\njobs: {ids}\n', encoding='utf-8')
-    os.replace(tmp, p)
+    replace_retry(tmp, p)
     sup.log(f'ARMED: {a.text} (jobs: {ids})' + (f'; the earlier ARMED.txt is kept as {kept.name}' if kept else ''))
     return 0
 

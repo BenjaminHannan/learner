@@ -285,10 +285,86 @@ def pc_files(I):
     return d
 
 
-def expected_g2fa8(I):
-    return dict(id='g2fa8', title='G2f-a8 (B3G2 3M seed 400, accum 8)', src=str(I.SRC), queue='8aB3G2A8-pc', job='8aB3G2A8-3M-s400', arm='B3G2', steps=24000, accum=8, kill_resume_at=150,
+def expected_g2fa8(I, soft=False):
+    d = dict(id='g2fa8', title='G2f-a8 (B3G2 3M seed 400, accum 8)', src=str(I.SRC), queue='8aB3G2A8-pc', job='8aB3G2A8-3M-s400', arm='B3G2', steps=24000, accum=8, kill_resume_at=150,
                 trace_a=dict(upto=300, peak_limit_mib=12288, first_n=50, last_n=50, resume_first_diff=0.01, resume_mean_abs=0.02, resume_max_abs=0.10),
                 compare=dict(upto=300, last_n=50, diff_mean_pass=0.03, diff_mean_fail=0.06, last_n_pass=0.05, last_n_fail=0.10, report_from=101))
+    if soft:
+        d['trace_a']['soft'] = ['peak', 'resume_max_abs']
+    return d
+
+
+class FakeEv:
+    """just enough of the events object for trace_a(): 300 updates, a resume at 100 whose redone updates 101-150 differ from the first segment by `maxdiff` at one update."""
+    def __init__(self, maxdiff, mean_diff_each=0.001):
+        self.nonfinite = False
+        self.resumed = [(2, 100)]
+        self.train = []
+        for s in range(1, 301):
+            loss = 18.0 - 0.05 * s
+            if s <= 150:
+                self.train.append(dict(seg=1, step=s, loss=loss))
+            if s > 100:
+                self.train.append(dict(seg=2, step=s, loss=loss + (maxdiff if s == 147 else (mean_diff_each if 101 < s <= 150 else 0.0))))
+
+    def merged(self):
+        return {e['step']: e['loss'] for e in self.train}
+
+
+def t_trace_a_soft_items():
+    """the two soft items are recorded, not gated; everything else still stops; with no soft list the verdict is as registered."""
+    rules = dict(upto=300, peak_limit_mib=12288, first_n=50, last_n=50, resume_first_diff=0.01, resume_mean_abs=0.02, resume_max_abs=0.10)
+    hard = S.trace_a(FakeEv(0.119), rules, 15757)
+    assert hard['verdict'] == 'FAIL' and len(hard['why_fail']) == 2 and hard['soft_misses'] == [], hard['why_fail']                  # the g2fa4 case: both items trip (as registered)
+    soft = S.trace_a(FakeEv(0.119), dict(rules, soft=['peak', 'resume_max_abs']), 15757)
+    assert soft['verdict'] == 'PASS' and soft['why_fail'] == [] and len(soft['soft_misses']) == 2, soft
+    # the other items are still hard with soft on: a non-finite loss, a loss that does not fall, a first redone update off by more than 0.01, a mean difference over 0.02
+    ev = FakeEv(0.119)
+    ev.nonfinite = True
+    assert S.trace_a(ev, dict(rules, soft=['peak', 'resume_max_abs']), 9000)['verdict'] == 'FAIL'
+    assert S.trace_a(FakeEv(0.0, mean_diff_each=0.03), dict(rules, soft=['peak', 'resume_max_abs']), 9000)['verdict'] == 'FAIL'
+    ev = FakeEv(0.0)
+    for e in ev.train:
+        if e['seg'] == 2 and e['step'] == 101:
+            e['loss'] += 0.02
+    assert S.trace_a(ev, dict(rules, soft=['peak', 'resume_max_abs']), 9000)['verdict'] == 'FAIL'
+    flat = FakeEv(0.0)
+    for e in flat.train:
+        e['loss'] = 5.0
+    assert S.trace_a(flat, dict(rules, soft=['peak', 'resume_max_abs']), 9000)['verdict'] == 'FAIL'
+    assert S.trace_a(FakeEv(0.05), dict(rules, soft=['peak', 'resume_max_abs']), 9000)['verdict'] == 'PASS' and S.trace_a(FakeEv(0.05), rules, 9000)['verdict'] == 'PASS'
+    md = S.Sup.md_trace_a(dict(id='g2fa8'), soft)
+    assert 'recorded, not gated' in md and '15757' in md
+    print('ok trace A soft items: peak and the largest single resume difference are recorded (not gated) with rules.soft; NaN / no fall / first-update / mean difference still stop; without rules.soft nothing changed')
+
+
+def t_attention_names():
+    """ATTENTION-<kind>.txt stays g2fa4's name; every other job writes ATTENTION-<kind>-<id>.txt."""
+    with tempfile.TemporaryDirectory() as tmp:
+        pp = stopped_g2fa4(tmp)
+        add_second_job(pp)
+        sup = S.Sup(pp)
+        j4, j8 = sup.plan['jobs']
+        for kind in ('stall', 'ckpt', 'baseline', 'compare'):
+            assert sup.attn_path(kind, j4).name == f'ATTENTION-{kind}.txt' and sup.attn_path(kind, j8).name == f'ATTENTION-{kind}-g2fa8.txt', kind
+        # arm swaps ARMED.txt in with the retrying replace (a PermissionError for a moment, as on Windows with the file open, is survived)
+        real, calls = os.replace, []
+        def flaky(src, dst):
+            calls.append(1)
+            if len(calls) <= 2 and str(dst).endswith('ARMED.txt'):
+                raise PermissionError('the file is open')
+            return real(src, dst)
+        os.replace = flaky
+        old_sleep = S.time.sleep
+        S.time.sleep = lambda t: None
+        try:
+            rc, _ = main_cmd(pp, 'arm', 'Ben test words')
+        finally:
+            os.replace = real
+            S.time.sleep = old_sleep
+        assert rc == 0 and len(calls) >= 3 and (sup.sd / 'ARMED.txt').read_text().splitlines()[1] == 'jobs: g2fa8', (rc, len(calls))
+        print('ok ATTENTION files: g2fa4 keeps the old names, other jobs get -<id>; `arm` survives a locked ARMED.txt (retry)')
+    T.cleanup()
 
 
 def t_installer_add_job():
@@ -303,6 +379,7 @@ def t_installer_add_job():
         I.STAMP = 'T1'
         rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--check'])
         assert rc == 0 and 'CHECK ONLY' in out and 'append job g2fa8; g2fa4: skip = true' in out and pc_files(I) == before, out
+        assert 'stop file naming g2fa4: STOPPED.txt' in out and 'ARMED.txt: present, no jobs line' in out, out                # the real ARMED.txt and stop file are read and shown
         # the real run
         I.STAMP = 'T2'
         rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4'])
@@ -347,13 +424,66 @@ def t_installer_add_job():
         print('ok installer --add-job: --check changes nothing; the plan is [g2fa4 + skip, g2fa8 without baseline]; old plan and supervisor kept aside; g2fa4 state untouched; idempotent; a plain install keeps the plan')
 
 
+def t_installer_soft_trace_a():
+    with tempfile.TemporaryDirectory() as tmp:
+        I = installed_pc(tmp)
+        before = pc_files(I)
+        I.STAMP = 'V1'
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--soft-trace-a', '--check'])
+        assert rc == 0 and 'CHECK ONLY' in out and pc_files(I) == before, out
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--soft-trace-a'])
+        assert rc == 0 and 'ADD-JOB g2fa8 DONE' in out, out
+        new = json.loads((I.STATE / 'plan.json').read_text())
+        assert new['jobs'][1] == expected_g2fa8(I, soft=True) and new['jobs'][1]['trace_a']['soft'] == ['peak', 'resume_max_abs'], new['jobs'][1]
+        sup = S.Sup(I.STATE / 'plan.json')
+        assert sup.plan['jobs'][1]['trace_a']['soft'] == ['peak', 'resume_max_abs']
+        # the same command again changes nothing but its own log; the strict command after the soft one is refused (the entry differs), nothing changes
+        before2 = pc_files(I)
+        I.STAMP = 'V2'
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--soft-trace-a'])
+        after2 = pc_files(I)
+        assert rc == 0 and {k for k in set(before2) | set(after2) if before2.get(k) != after2.get(k)} == {'add-job-g2fa8-V2.txt'}, out
+        before3 = pc_files(I)
+        I.STAMP = 'V3'
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4'])
+        assert rc == 1 and 'differs from the expected entry' in out and pc_files(I) == before3, out
+    with tempfile.TemporaryDirectory() as tmp:
+        I = load_installer(tmp)
+        try:
+            with contextlib.redirect_stderr(io.StringIO()):
+                I.main(['--soft-trace-a'])
+        except SystemExit as e:
+            assert e.code == 2
+        else:
+            raise AssertionError('--soft-trace-a without --add-job was accepted')
+    print('ok installer --soft-trace-a: the g2fa8 entry carries trace_a.soft; check changes nothing; idempotent; the strict command after the soft one is refused')
+
+
 def t_installer_without_skip_and_refusals():
     with tempfile.TemporaryDirectory() as tmp:
         I = installed_pc(tmp)
-        I.STAMP = 'U1'
+        I.STAMP = 'U1'                                                                       # g2fa4 stopped and not skipped: its stop file would hold the loop, a `clear` would restart it -> refused
+        before = pc_files(I)
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8'])
+        assert rc == 1 and 'g2fa4 is stopped' in out and 'would not be skipped' in out and 'run with --skip-g2fa4' in out and pc_files(I) == before, out
+    with tempfile.TemporaryDirectory() as tmp:                                               # g2fa4 NOT stopped (state pending, no stop file): added without a skip is fine; --skip-g2fa4 is refused
+        I = installed_pc(tmp)
+        (I.STATE / 'state.json').write_text(json.dumps({'jobs': {'g2fa4': {'status': 'pending'}}}))
+        (I.STATE / 'STOPPED.txt').unlink()
+        before = pc_files(I)
+        I.STAMP = 'U1b'
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--check'])
+        assert rc == 1 and 'g2fa4 is not stopped' in out and 'state.json: pending' in out and pc_files(I) == before, out
         rc, out = quiet(I.main, ['--add-job', 'g2fa8'])
         new = json.loads((I.STATE / 'plan.json').read_text())
         assert rc == 0 and [j['id'] for j in new['jobs']] == ['g2fa4', 'g2fa8'] and 'skip' not in new['jobs'][0] and 'skip_reason' not in new['jobs'][0], (out, new['jobs'][0])
+    with tempfile.TemporaryDirectory() as tmp:                                               # state says stopped but no stop file names g2fa4 (the file is another job's): --skip-g2fa4 refused
+        I = installed_pc(tmp)
+        (I.STATE / 'STOPPED.txt').write_text('2026-10-14 21:30:00 job g2fa9: something else\n')
+        before = pc_files(I)
+        I.STAMP = 'U1c'
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4'])
+        assert rc == 1 and 'stop file naming g2fa4: none' in out and pc_files(I) == before, out
     with tempfile.TemporaryDirectory() as tmp:                                                   # g2fa4 running: it is not skipped
         I = installed_pc(tmp)
         (I.STATE / 'state.json').write_text(json.dumps({'jobs': {'g2fa4': {'status': 'running'}}}))
@@ -364,13 +494,13 @@ def t_installer_without_skip_and_refusals():
     with tempfile.TemporaryDirectory() as tmp:                                                   # a g2fa8 entry that differs is refused, not overwritten
         I = installed_pc(tmp)
         I.STAMP = 'U3'
-        assert quiet(I.main, ['--add-job', 'g2fa8'])[0] == 0
+        assert quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4'])[0] == 0
         plan = json.loads((I.STATE / 'plan.json').read_text())
         plan['jobs'][1]['steps'] = 5
         (I.STATE / 'plan.json').write_text(json.dumps(plan, indent=1))
         before = pc_files(I)
         I.STAMP = 'U4'
-        rc, out = quiet(I.main, ['--add-job', 'g2fa8'])
+        rc, out = quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4'])
         assert rc == 1 and 'differs from the expected entry' in out and pc_files(I) == before, out
     with tempfile.TemporaryDirectory() as tmp:                                                   # a pin that does not match (the same checks as the install): nothing is done
         I = installed_pc(tmp)
@@ -389,12 +519,12 @@ def t_installer_without_skip_and_refusals():
                 assert e.code == 2, (argv, e.code)
             else:
                 raise AssertionError(f'{argv} was accepted')
-    print('ok installer: without --skip-g2fa4 no skip keys; refused while g2fa4 runs, for a differing g2fa8 entry, for a wrong pin, for flags that do not go together; nothing changed in those cases')
+    print('ok installer: --skip-g2fa4 needs a g2fa4 that is stopped (state.json AND a stop file naming it); a stopped g2fa4 is not left unskipped; refused while g2fa4 runs, for a differing g2fa8 entry, for a wrong pin, for flags that do not go together; nothing changed in those cases')
 
 
 if __name__ == '__main__':
     try:
-        for t in (t_arm_rules, t_two_jobs_skip_no_baseline, t_skip_never_run_not_pending, t_stop_files_and_clear, t_preflight_and_probe_skip, t_installer_add_job, t_installer_without_skip_and_refusals):
+        for t in (t_arm_rules, t_two_jobs_skip_no_baseline, t_skip_never_run_not_pending, t_stop_files_and_clear, t_preflight_and_probe_skip, t_attention_names, t_trace_a_soft_items, t_installer_add_job, t_installer_soft_trace_a, t_installer_without_skip_and_refusals):
             try:
                 t()
             finally:

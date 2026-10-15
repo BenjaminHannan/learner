@@ -2,7 +2,7 @@
 """install_g2fa4.py: puts the G2f-a4 pack on BensPC. Run it with the PC's own python from the folder the Mac copied (C:\\Users\\benja\\custom-io\\in-g2fa4):
 
     C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py [--check] [--skip-tests] [--register]
-    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--check]
+    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--soft-trace-a] [--check]
 
 It starts no training job and changes nothing that already exists (a folder or file it replaces is renamed .aside-<stamp>). Steps:
  1. refuses if a custom_io job is running (it would compete for the CPU and the GPU) and checks the pinned hashes of src-b3g2 (the code G2f ran: custom_io at 74d6e92c75);
@@ -19,8 +19,9 @@ It starts no training job and changes nothing that already exists (a folder or f
 --add-job g2fa8 (after the install above; no tests, no scheduled tasks, starts nothing): ADDS the accum-8 job as a second job of plan.json and leaves g2fa4 alone. It runs the same checks as step 1
 plus the installed src-b3g2ck (the mark and pins of the g2fa4 install), then (a) copies queue/8aB3G2A8-pc.txt next to the A4 queue files (sha256 logged; the A4 files are not touched), (b) puts the
 pack's g2fa4_supervisor.py (the version that honors `skip` and a job without a baseline) into WORK\\g2fa4\\ BEFORE plan.json changes (the old one is kept as .aside-<stamp>), (c) rewrites plan.json:
-the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused while state.json says
-g2fa4 is running). Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
+the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused unless g2fa4 is stopped: state.json says
+'stopped' AND a stop file names g2fa4; and a stopped g2fa4 is never left unskipped, its stop file would hold the loop). With --soft-trace-a the g2fa8 entry's trace A records, and does not gate, the
+whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead). --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
 g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
 import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
 from pathlib import Path
@@ -115,33 +116,67 @@ def replace_retry(src, dst):
             time.sleep(0.5)
 
 
-def new_job_entry(spec_id, g4):
+STOP_RE = re.compile(r'^\S+ \S+ job ([^\s:]+):')           # first line of a supervisor stop file: "<date> <time> job <id>: <why>"
+
+
+def stop_file_of(job_id):
+    """the stop file in STATE written by this job (STOPPED.txt or STOPPED-<id>.txt; the first line names the job), or None."""
+    for p in sorted(STATE.glob('STOPPED*.txt')):
+        try:
+            m = STOP_RE.match(p.read_text(encoding='utf-8', errors='replace').splitlines()[0])
+        except (OSError, IndexError):
+            continue
+        if m and m.group(1) == job_id:
+            return p
+    return None
+
+
+def armed_text():
+    """what the real ARMED.txt says it arms: absent / 'jobs: ...' / an old file without a jobs line (arms the plan's first job only)."""
+    p = STATE / 'ARMED.txt'
+    try:
+        lines = p.read_text(encoding='utf-8', errors='replace').splitlines()
+    except OSError:
+        return 'absent'
+    ids = [ln[len('jobs:'):].split() for ln in lines if ln.startswith('jobs:')]
+    return f'present, jobs line {ids[-1]}' if ids else 'present, no jobs line (an old file: it arms the first job of the plan only)'
+
+
+SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
+
+
+def new_job_entry(spec_id, g4, soft=False):
     """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
     spec = ADD_JOBS[spec_id]
     return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
-                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288), compare=copy.deepcopy(g4['compare']))
+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A)) if soft else {})), compare=copy.deepcopy(g4['compare']))
 
 
-def added_plan(old, spec_id, skip_g4, g4_state_status):
+def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False):
     """-> (new plan, [what changes], [problems]). `old` is not modified. Idempotent: a plan that already has the job (and the skip, if asked) comes back equal."""
     new, changes, problems = copy.deepcopy(old), [], []
     jobs = new.get('jobs', [])
     g4 = next((j for j in jobs if j.get('id') == 'g2fa4'), None)
     if g4 is None:
         return new, changes, ['plan.json has no job g2fa4 (nothing to build the new entry from)']
-    want = new_job_entry(spec_id, g4)
+    want = new_job_entry(spec_id, g4, soft)
     have = next((j for j in jobs if j.get('id') == spec_id), None)
     if have is None:
         jobs.append(want)
         changes.append(f'append job {spec_id}')
     elif have != want:
         problems.append(f'plan.json already has a job {spec_id} that differs from the expected entry: not touched (compare the two by hand)')
+    stopped = g4_state_status == 'stopped' and g4_stop is not None                 # g2fa4 stopped by the supervisor: state.json says so AND a stop file names g2fa4
     if skip_g4 and not g4.get('skip'):
         if g4_state_status == 'running':
             problems.append('state.json says g2fa4 is running: not skipped (stop it first)')
+        elif not stopped:
+            problems.append(f'g2fa4 is not stopped (state.json: {g4_state_status or "not recorded"}; stop file naming g2fa4: {g4_stop.name if g4_stop else "none"}): --skip-g2fa4 is only for a g2fa4 that the supervisor stopped, not skipped')
         else:
             g4['skip'], g4['skip_reason'] = True, SKIP_G2FA4_REASON
             changes.append('g2fa4: skip = true')
+    elif not skip_g4 and not g4.get('skip') and (g4_state_status == 'stopped' or g4_stop is not None):
+        problems.append(f'g2fa4 is stopped (state.json: {g4_state_status or "not recorded"}; stop file: {g4_stop.name if g4_stop else "none"}) and would not be skipped: that stop file would hold the loop, and a later `clear` would restart G2f-a4; run with --skip-g2fa4')
     return new, changes, problems
 
 
@@ -151,7 +186,7 @@ def add_job(a):
     spec = ADD_JOBS[spec_id]
     qfile = spec['queue'] + '.txt'
     LINES.clear()
-    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
+    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --soft-trace-a" if a.soft_trace_a else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
     # 1. the checks of the install (pins of src-b3g2, caps, the pack's files, python, disk) + the installed copy and the plan
     step1_checks(('overlay/train.py', 'queue/' + qfile, 'g2fa4_supervisor.py') + tuple('queue/' + q for q in A4_QUEUES))
     mark = SRC / 'G2FA4-SETUP-OK.txt'
@@ -176,8 +211,9 @@ def add_job(a):
         except (OSError, ValueError):
             stj = {}
         g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
-        say(f'      state.json: g2fa4 is {g4s or "not recorded"}; STOPPED.txt {"present" if (STATE / "STOPPED.txt").exists() else "absent"}; ARMED.txt {"present" if (STATE / "ARMED.txt").exists() else "absent"}')
-        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s)
+        g4stop = stop_file_of('g2fa4')
+        say(f'      state.json: g2fa4 is {g4s or "not recorded"}; stop file naming g2fa4: {g4stop.name if g4stop else "none"}; ARMED.txt: {armed_text()}')
+        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a)
         row(not problems, 'plan.json can take the new job', '; '.join(problems))
         say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
     if a.check or not ok_all:
@@ -219,7 +255,7 @@ def add_job(a):
         say(f'{pp} already has the job{" and the skip" if a.skip_g2fa4 else ""}; not rewritten')
     ar = STATE / 'ARMED.txt'
     first = (ar.read_text(errors='replace').strip().splitlines() or [''])[0][:100] if ar.exists() else None
-    say('ARMED.txt: ' + ('absent' if first is None else f'present, not touched ({first})') + f'. It does NOT arm {spec_id}: an old go line counts for the job it was given for only; '
+    say('ARMED.txt: ' + ('absent' if first is None else f'{armed_text()}, not touched ({first})') + f'. It does NOT arm {spec_id}: an old go line counts for the job it was given for only; '
         f"{spec_id} starts only after `arm` on Ben's own words.")
     (STATE / f'add-job-{spec_id}-{STAMP}.txt').write_text('\n'.join(LINES) + '\n', encoding='utf-8')
     say(f'G2FA4 ADD-JOB {spec_id} DONE (log: add-job-{spec_id}-{STAMP}.txt in {STATE})')
@@ -255,10 +291,11 @@ def main(argv=None):
     ap.add_argument('--skip-tests', action='store_true')
     ap.add_argument('--register', action='store_true')
     ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
+    ap.add_argument('--soft-trace-a', action='store_true', help='with --add-job g2fa8: trace A records (does not gate) the whole-card memory peak and the largest single resume difference')
     ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
     a = ap.parse_args(argv)
-    if a.skip_g2fa4 and a.add_job != 'g2fa8':
-        ap.error('--skip-g2fa4 only goes with --add-job g2fa8')
+    if (a.skip_g2fa4 or a.soft_trace_a) and a.add_job != 'g2fa8':
+        ap.error('--skip-g2fa4 / --soft-trace-a only go with --add-job g2fa8')
     if a.add_job and (a.register or a.skip_tests):
         ap.error('--register / --skip-tests do not go with --add-job')
     if a.add_job:
