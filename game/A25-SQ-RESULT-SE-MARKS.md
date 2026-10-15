@@ -44,3 +44,26 @@ One set of worlds and one search rng stream: SE is a screen (project rule: >= 6 
 | Play value of the search expert | measures what matters (teacher quality), independent of the labeller's choices; fixed bars from known numbers; about 1.5 h of free CPU; the labeller and random arms come for free on the same worlds | a 24-move look-ahead at 2.8 s a step makes the teacher slow (distilling it later costs hours per 10,000 labels); one set of 16 worlds is a screen with wide intervals (about +-1.1); a high score would still not show the student learns it |
 | Rerun SQ with more rollouts and the oracle yardstick | keeps A24 unchanged | answers a question (agreement) whose answer cannot decide anything: shown above that the search follows rewards the labeller ignores |
 Verdict: do the play test. Disagreement with the labeller was the symptom; the teacher's own score is the test.
+
+## SE result (9:10 PM ET 10-14; code commit 1b16ba2def; the marks above, nothing changed; all **shown**)
+16 practice worlds first (run seed 393, worlds 0 to 15): search expert 4.875 unlocks a game, the labeller 8.875, random 2.69 on the same worlds and act streams: between 4.5 and 6.0, so by the marks the
+16 more worlds (16 to 31) were run, then the same bars on all 32. Cost 48 min for 16 worlds on 4 cores (2.8 s a step), 32 min for the second 16.
+| 32 practice worlds, cap 1000, explore 0.10 | mean unlocks a game | paired difference, 95% |
+|---|---|---|
+| search expert (SE) | **4.75** (bootstrap interval 4.41 to 5.13; first 16: 4.875, second 16: 4.625; sd over worlds 1.08) | |
+| the hand-written labeller (reference) | 8.91 | search minus labeller -4.16 (-4.78 to -3.53) |
+| uniform random policy | 2.44 | search minus random +2.31 (+1.69 to +2.97) |
+- **Verdict by the marks: no verdict** (4.5 < 4.75 < 6.0), after the one allowed extension. The interval for the search expert's mean (4.41 to 5.13) excludes the pass bar (6.0); the proved-wrong bar (4.5) is inside it. Nothing is built on the search expert: no distillation, A26 not written.
+- Achievements (share of the 32 worlds): sapling 100%, plant 100%, wake_up 100%, wood 69%, drink 38%, cow 31%, table 28%, wood pickaxe 3%, wood sword 3%, zombie 3%; no stone, coal or iron.
+  The labeller (8.23 on sealed worlds): wood 100, table 100, wood pickaxe 98, stone 83. Every game ended in death (mean 190 steps; the labeller about 270).
+- Where the steps came from: 9.1% searched with a label, 80.7% the fallback (a sticky random walk, because the search found no signal), 10.2% the act rule's random move. The search had a signal on about one step in eleven.
+- **What it means (suggested, untested):** a reward-only look-ahead of 24 moves behaves like a random walk that grabs the one-time achievements that are within a few moves (sapling, plant, wake_up: all 32 games). The long chain that the
+  labeller plays (walk to a tree, collect, table, pickaxe, stone) is not found, because nothing earns reward until the end of it. It lands where every other reward-only label source landed:
+  the 8-move hindsight copy 3.3 to 3.5, the learned-value guesser 1.8 / 3.2, the PPO-clipped night 4.15 / 4.19, a PPO network 3.7 to 4.4, this search 4.75 (different worlds from the sealed ones; the sealed scale reads about the same).
+  The gap to 6.5 or more is not capacity (A23) and not noise (the search's labels repeat 81% of the time); it is the long chain with no early signal.
+- Not shown: that a longer look-ahead or more rollouts would close it (untested; a 64-move look-ahead costs 2.7x and the real world cannot be copied anyway); that a learned dense signal would (untested).
+
+## Standing of the label-source question after A22 to A25
+Shown: the 3M model with the rank-8 add-on learns the map-to-move rule from 64,000 labelled views (6.50 / 7.10) but every reward-only label source tried (hindsight copy, learned value, PPO, search through copies of the game) stays at 3.3 to 4.8.
+The labeller's advantage is the chain wood, table, pickaxe, stone. A label source without the hand-written chain needs a dense signal for that chain that is learned, not written (the learned-drive thread is the natural home), or a curriculum the model finds itself.
+Nothing further is scheduled in this thread; the next move waits for that signal or for the outside answer (`reviews/gpt-diagnose-labels-2026-10-14.md`, now with this evidence added).
