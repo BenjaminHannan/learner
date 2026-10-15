@@ -28,7 +28,7 @@ EVENT_TYPES = tuple(crafter_constants.achievements)
 KEEP_FRAC, MAX_LEN, W_RATIO, BUFFER_CAP = 0.3, 12, 20.0, 20_000
 EPOCHS, LR, MINIBATCH, CHUNK = 3, 1e-3, 256, 64
 CHUNKS, GAMES_PER_CHUNK = 4, 100          # 400 games an iteration: 4 practice "days" of 100 worlds
-SNAPSHOTS = (8, 16, 24)                   # iterations whose merged checkpoint is saved for sealed scoring
+SNAPSHOTS = (8, 16, 20, 24)                 # iterations whose merged checkpoint is saved for sealed scoring
 ACT_TAG = 9
 
 
@@ -53,8 +53,9 @@ def segments(events, game):
     return out
 
 
-def keep_segments(segs):
+def keep_segments(segs, rare_below=0):
     """Per event type: sort by (length, game, end), take the first ceil(KEEP_FRAC n), drop those longer than MAX_LEN.
+    A27 (rare_below > 0): a type with fewer than rare_below segments keeps every segment of at most MAX_LEN moves.
     -> (kept segments, {type: longest kept length})."""
     by = {}
     for s in segs:
@@ -62,7 +63,8 @@ def keep_segments(segs):
     kept, thr = [], {}
     for ty in sorted(by):
         ss = sorted(by[ty], key=lambda s: (s['length'], s['game'], s['end']))
-        sel = [s for s in ss[:math.ceil(KEEP_FRAC * len(ss))] if s['length'] <= MAX_LEN]
+        take = ss if len(ss) < rare_below else ss[:math.ceil(KEEP_FRAC * len(ss))]
+        sel = [s for s in take if s['length'] <= MAX_LEN]
         if sel:
             thr[ty] = max(s['length'] for s in sel)
             kept += sel
@@ -202,6 +204,24 @@ def train_rows(m, addon, opt, gen, rows, epochs=EPOCHS):
     return losses
 
 
+def ready_stats(games):
+    """A27 instrument (harness only, never a teacher): a pickaxe-ready state has a table within one cell (3x3), wood >= 1 and no wood pickaxe.
+    -> games that reach one, ready states, and the share of moves played in them that were `wpick`."""
+    wpick = play.WORDS.index('wpick')
+    n_games = n_states = n_wpick = 0
+    for g in games:
+        hit = False
+        for v, a in zip(g['views'], g['actions']):
+            pv = oracle.parse_view(v)
+            inv = pv.items.get
+            if inv('wood', 0) >= 1 and not inv('wood_pickaxe', 0) and any(oracle._cell(pv, x, y) == 't' for x in (-1, 0, 1) for y in (-1, 0, 1)):
+                hit = True
+                n_states += 1
+                n_wpick += a == wpick
+        n_games += hit
+    return dict(ready_games=n_games, ready_states=n_states, wpick_share=round(n_wpick / n_states, 4) if n_states else None)
+
+
 # ---------- the loop ----------
 
 def iteration_stats(k, temp, games, segs, kept, thr, rows_new, n_train, n_buffer, losses, rows_all_sample, secs_play, secs_train):
@@ -224,10 +244,10 @@ def iteration_stats(k, temp, games, segs, kept, thr, rows_new, n_train, n_buffer
                 kept_rows=dict(sorted(rows_by.items())), longest_kept=thr, new_rows=len(rows_new), train_rows=n_train, buffer_before=n_buffer,
                 loss_first=round(losses[0], 4) if losses else None, loss_last=round(losses[-1], 4) if losses else None, updates=len(losses),
                 oracle_agreement_kept=agree(rows_new), oracle_agreement_all_played=agree(rows_all_sample),
-                seconds_play=round(secs_play, 1), seconds_train=round(secs_train, 1))
+                ready=ready_stats(games), seconds_play=round(secs_play, 1), seconds_train=round(secs_train, 1))
 
 
-def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64):
+def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare_below=0):
     from custom_io.models import load_model
     from domain import mode as dm
     assert run_seed in (394, 395) or smoke, run_seed
@@ -260,7 +280,7 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64):
         games = play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs)
         t2 = time.time()
         segs = [s for gi, g in enumerate(games) for s in segments(g['events'], gi)]
-        kept, thr = keep_segments(segs)
+        kept, thr = keep_segments(segs, rare_below)
         weights = type_weights(Counter(s['type'] for s in segs))
         rows_new = rows_of(kept, games, weights)
         buffer = prune_buffer(buffer, thr)
@@ -274,7 +294,7 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64):
         history.append(stats)
         with open(os.path.join(out, f'iter-{k}.json'), 'w') as f:
             json.dump(stats, f, indent=1)
-        print(k, {x: stats[x] for x in ('mean_unlocks', 'g_wood', 'g_table', 'g_pick', 'g_stone', 'new_rows', 'train_rows', 'seconds_play', 'seconds_train')}, flush=True)
+        print(k, {x: stats[x] for x in ('mean_unlocks', 'g_wood', 'g_table', 'g_pick', 'g_stone', 'new_rows', 'train_rows', 'ready', 'seconds_play', 'seconds_train')}, flush=True)
         if k in SNAPSHOTS or k == iterations:
             m.eval()
             dm.save_ckpt(ck, m, os.path.join(out, f'checkpoint-iter{k}.pt'), addon)
@@ -297,9 +317,10 @@ def main(argv=None):
     r.add_argument('--iterations', type=int, default=24)
     r.add_argument('--threads', type=int, default=2)
     r.add_argument('--smoke', action='store_true')
+    r.add_argument('--keep-rare-below', type=int, default=0, help='A27: types with fewer segments than this keep every segment of at most 12 moves (0 = the A26 rule)')
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
-    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke)
+    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke, rare_below=a.keep_rare_below)
 
 
 if __name__ == '__main__':

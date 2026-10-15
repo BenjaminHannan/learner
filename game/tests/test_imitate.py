@@ -16,6 +16,14 @@ from game import imitate, play
 PARENT = os.environ.get('GWF_PARENT', '/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/checkpoint.pt')
 
 
+def _view(table, items):
+    """A 9x7 text view: the player (facing up) at the centre, a table cell offset by `table`, status and items as given."""
+    rows = [['.'] * 9 for _ in range(7)]
+    rows[3][4] = '^'
+    rows[3 + table[1]][4 + table[0]] = 't'
+    return 'game: ' + '/'.join(''.join(r) for r in rows) + ' | h9 f9 d9 e9 | ' + items
+
+
 class Pure(unittest.TestCase):
     def test_segments_run_between_events_of_any_type(self):
         segs = imitate.segments([(3, 'a'), (3, 'b'), (7, 'a'), (9, 'c')], game=4)
@@ -36,6 +44,28 @@ class Pure(unittest.TestCase):
         # ceil: 4 segments keep 2
         four = [dict(type='W', game=g, start=0, end=g, length=g + 1) for g in range(4)]
         self.assertEqual(len(imitate.keep_segments(four)[0]), 2)
+
+    def test_rare_types_keep_every_segment_within_the_cap(self):
+        segs = [dict(type='X', game=g, start=0, end=g, length=g + 1) for g in range(10)]            # 10 segments, lengths 1..10
+        segs += [dict(type='Y', game=g, start=0, end=g, length=g + 1) for g in range(200)]           # common type
+        segs += [dict(type='R', game=g, start=0, end=19 + g, length=10 + 6 * g) for g in range(4)]   # lengths 10, 16, 22, 28
+        base, _ = imitate.keep_segments(segs)
+        self.assertEqual(sum(s['type'] == 'X' for s in base), 3)                                      # A26 rule: fastest 30%
+        kept, thr = imitate.keep_segments(segs, rare_below=100)
+        self.assertEqual(sorted(s['length'] for s in kept if s['type'] == 'X'), list(range(1, 11)))
+        self.assertEqual(sum(s['type'] == 'Y' for s in kept), 12)                                    # common types unchanged: fastest 60, of which 12 are within the cap
+        self.assertEqual([s['length'] for s in kept if s['type'] == 'R'], [10])                      # 12-move cap still applies
+        self.assertEqual(thr['X'], 10)
+        self.assertEqual(imitate.keep_segments(segs, rare_below=0)[0], base)
+
+    def test_ready_stats_counts_pickaxe_ready_states(self):
+        ready = _view(table=(1, 0), items='wood1')                 # table next to the player, wood in hand
+        far = _view(table=(3, 0), items='wood1')                   # table two cells away: not within crafter's `nearby`
+        has_pick = _view(table=(1, 0), items='wood1 wpk1')
+        no_wood = _view(table=(1, 0), items='none')
+        games = [dict(views=[ready, ready, far, has_pick, no_wood], actions=[play.WORDS.index('wpick'), 0, 0, 0, 0])]
+        self.assertEqual(imitate.ready_stats(games), dict(ready_games=1, ready_states=2, wpick_share=0.5))
+        self.assertEqual(imitate.ready_stats([]), dict(ready_games=0, ready_states=0, wpick_share=None))
 
     def test_weights_are_rarity_with_a_20_to_1_floor(self):
         w = imitate.type_weights({'a': 100, 'b': 1, 'c': 1_000_000, 'd': 0})
