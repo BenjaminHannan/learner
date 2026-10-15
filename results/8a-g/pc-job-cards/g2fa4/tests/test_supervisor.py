@@ -2,7 +2,8 @@
 """python3 tests/test_supervisor.py   (Linux, no GPU, about a minute): the supervisor against tests/fake_runner.py, a stand-in for local_runner + train.py.
 Scenarios: happy path (kill-and-resume at update 150, trace A, baseline alongside, compare, done), a crash that leaves a job-level arm_failed RESULT.json,
 a crash loop, a NaN, GPU memory over the limit, a resume that does not match, a failing compare, a supervisor that dies and a new one that adopts the run,
-a rebooted PC (the runner killed from outside), the GPU held by another program."""
+a rebooted PC (the runner killed from outside), the GPU held by another program. At its end it runs test_probe.py (the resume-noise probe) and test_addjob.py (a second job next to a stopped,
+skipped g2fa4: skip, no baseline, per-job arming and stop files; the installer's --add-job)."""
 import json, os, signal, subprocess, sys, tempfile, time
 from pathlib import Path
 
@@ -348,6 +349,8 @@ if __name__ == '__main__':
         if not only:
             r = subprocess.run([PY, str(HERE / 'test_probe.py')])           # the resume-noise probe has its own file
             assert r.returncode == 0, 'tests/test_probe.py failed'
+            r = subprocess.run([PY, str(HERE / 'test_addjob.py')])          # so has the second job (g2fa8) next to a stopped, skipped g2fa4, and the installer's --add-job
+            assert r.returncode == 0, 'tests/test_addjob.py failed'
         print('ALL OK')
     finally:
         cleanup()

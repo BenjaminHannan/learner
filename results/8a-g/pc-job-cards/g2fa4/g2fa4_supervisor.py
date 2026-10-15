@@ -5,8 +5,10 @@
   python g2fa4_supervisor.py run         the loop: start / resume the current job, the planned kill-and-resume test, trace A, the accum-32 baseline,
                                          restart after any death (including a reboot: a scheduled task starts this at boot), finish, next job
   python g2fa4_supervisor.py status      print status.md
-  python g2fa4_supervisor.py clear [ID]  after a STOPPED.txt has been read and the cause removed: let the loop go on
-  python g2fa4_supervisor.py arm "<Ben's go line, with its time>"   writes ARMED.txt; `run` does nothing until it exists (the boot task starts `run` after every restart)
+  python g2fa4_supervisor.py clear [ID]  after a STOPPED.txt has been read and the cause removed: let the loop go on (a stopped job writes STOPPED.txt, or STOPPED-<id>.txt when
+                                         STOPPED.txt is another job's; `clear` moves aside the stop files of the jobs it releases, never those of a skipped job)
+  python g2fa4_supervisor.py arm "<Ben's go line, with its time>"   writes ARMED.txt (its second line `jobs: <ids>` names the non-skipped jobs it arms); `run` does nothing until it
+                                         exists and names the job to run (an ARMED.txt without that line, written before, arms the plan's first job only); the boot task starts `run` after every restart
   python g2fa4_supervisor.py disarm      renames ARMED.txt: the loop leaves; a running job goes on
   python g2fa4_supervisor.py halt        disarm + stop the plan's runners (their checkpoints stay): only on Ben's word
   python g2fa4_supervisor.py probe-resume --keep DIR --step 200 --upto 250   after the run: resume the kept checkpoint twice on the idle card, compare with the run's own updates
@@ -18,6 +20,9 @@ restarts it after every reboot. Every long job runs with --ckpt-every N --resume
 What it never does: delete anything (files it replaces are renamed .aside-<stamp>), touch a process it did not start or that is not a custom_io job
 of the plan, edit code, caps, data or marks, or stop a running job except for the two registered reasons (the planned kill at update `kill_resume_at`
 and a failed trace A: a non-finite loss or a GPU peak over the limit).
+
+A job of plan.json with "skip": true is never started, resumed, evaluated or counted as pending, and nothing of it is touched (its results, its stop file, its entry of state.json);
+one log line says so. A job without a "baseline" entry has no baseline run and no compare, and its end does not wait for either.
 """
 import argparse, datetime, glob, json, math, os, re, shutil, subprocess, sys, time
 from pathlib import Path
@@ -146,6 +151,19 @@ def jdump(p, obj):
     tmp = p.with_name(p.name + '.tmp')
     tmp.write_text(json.dumps(obj, indent=1), encoding='utf-8')
     os.replace(tmp, p)
+
+
+STOP_RE = re.compile(r'^\S+ \S+ job ([^\s:]+):')           # first line of a stop file: "<date> <time> job <id>: <why>"
+
+
+def stop_owner(path):
+    """the id of the job that wrote a stop file (STOPPED.txt written before there were per-job names is read the same way), or None when the file cannot be read that way."""
+    try:
+        first = Path(path).read_text(encoding='utf-8', errors='replace').splitlines()[0]
+    except (OSError, IndexError):
+        return None
+    m = STOP_RE.match(first)
+    return m.group(1) if m else None
 
 
 def aside(p):
@@ -333,6 +351,70 @@ class Sup:
         self.st = jload(self.state_path, {'jobs': {}})
         self.ev = {}
         self.bev = {}
+        self._noted = set()
+
+    # ---- jobs that are skipped (plan.json "skip": true): not started, resumed, evaluated or counted; nothing of theirs is read from state.json or written to it
+    def active_jobs(self):
+        return [j for j in self.plan['jobs'] if not j.get('skip')]
+
+    def skipped_ids(self):
+        return {j['id'] for j in self.plan['jobs'] if j.get('skip')}
+
+    def note_skipped(self):
+        """one log line per skipped job per supervisor process. The shared status.md describes the job that runs, so a skipped job's last status.md is first copied to status-<id>.md (once, never over a file)."""
+        for j in self.plan['jobs']:
+            if j.get('skip') and j['id'] not in self._noted:
+                self._noted.add(j['id'])
+                self.log(f'job {j["id"]} is skipped (plan.json skip: {j.get("skip_reason") or "no reason given"}): never started, resumed or evaluated; its files and state are not touched')
+                snap, cur = self.sd / f'status-{j["id"]}.md', self.sd / 'status.md'
+                try:
+                    if cur.exists() and not snap.exists() and f'job {j["id"]} (' in cur.read_text(encoding='utf-8', errors='replace'):
+                        shutil.copy2(cur, snap)
+                        self.log(f'the last status.md of {j["id"]} is kept as {snap.name}')
+                except OSError as e:
+                    self.log(f'status of the skipped job {j["id"]} could not be copied: {e}')
+
+    # ---- stop files: STOPPED.txt (the old name) or STOPPED-<id>.txt; each names its job in its first line
+    def stop_files(self):
+        """[(path, id of the job that wrote it or None)]"""
+        return [(p, stop_owner(p)) for p in sorted(self.sd.glob('STOPPED*.txt'))]
+
+    def blocking_stops(self):
+        """the stop files that hold the loop: all except those of skipped jobs (a file whose owner cannot be read blocks, as STOPPED.txt always did)."""
+        sk = self.skipped_ids()
+        return [p for p, o in self.stop_files() if o not in sk]
+
+    def stop_path(self, job):
+        p = self.sd / 'STOPPED.txt'
+        if not p.exists() or stop_owner(p) in (None, job['id']):
+            return p
+        return self.sd / f'STOPPED-{job["id"]}.txt'              # STOPPED.txt is another job's record: never overwritten
+
+    # ---- ARMED.txt: line 1 "<time> armed: <Ben's words>", line 2 "jobs: <ids>" (the non-skipped jobs of the plan at that time)
+    def armed_ids(self):
+        """None = no ARMED.txt; 'first' = a file without a jobs line (written before there were any); else the list of ids."""
+        p = self.sd / 'ARMED.txt'
+        try:
+            lines = p.read_text(encoding='utf-8', errors='replace').splitlines()
+        except OSError:
+            return None
+        ids = None
+        for ln in lines:
+            if ln.startswith('jobs: ') or ln == 'jobs:':
+                ids = ln[len('jobs:'):].split()
+        return 'first' if ids is None else ids
+
+    def armed_text(self):
+        ids = self.armed_ids()
+        return 'nothing (no ARMED.txt)' if ids is None else f'the first job of the plan, {self.plan["jobs"][0]["id"]}, only (an old file without a jobs line)' if ids == 'first' else f'jobs {ids}'
+
+    def armed_for(self, job):
+        ids = self.armed_ids()
+        if ids is None:
+            return False
+        if ids == 'first':
+            return job['id'] == self.plan['jobs'][0]['id']       # an old file armed the plan as it was, i.e. its first job; a job added later waits for its own `arm`
+        return job['id'] in ids
 
     # ---- paths of a job
     def res(self, queue):
@@ -353,7 +435,8 @@ class Sup:
         return d[key].update()
 
     def js(self, job):
-        return self.st['jobs'].setdefault(job['id'], dict(status='pending', restarts=[], no_progress=0, kill_done=False, max_used_mib=None, base=dict(status='waiting')))
+        return self.st['jobs'].setdefault(job['id'], dict(status='pending', restarts=[], no_progress=0, kill_done=False, max_used_mib=None,
+                                                          base=dict(status='waiting' if job.get('baseline') else 'none')))
 
     def save(self):
         jdump(self.state_path, self.st)
@@ -467,8 +550,9 @@ class Sup:
         js = self.js(job)
         js['status'] = 'stopped'
         js['why'] = why
-        (self.sd / 'STOPPED.txt').write_text(f'{ts()} job {job["id"]}: {why}\nread status.md and supervisor.log; after the cause is removed: python {SELF_NAME}.py clear {job["id"]}\n', encoding='utf-8')
-        self.log(f'STOPPED job {job["id"]}: {why}')
+        sp = self.stop_path(job)
+        sp.write_text(f'{ts()} job {job["id"]}: {why}\nread status.md and supervisor.log; after the cause is removed: python {SELF_NAME}.py clear {job["id"]}\n', encoding='utf-8')
+        self.log(f'STOPPED job {job["id"]}: {why}' + (f' ({sp.name})' if sp.name != 'STOPPED.txt' else ''))
         self.save()
 
     def write_status(self, job, runner_pids):
@@ -485,7 +569,10 @@ class Sup:
         L.append(f'max GPU memory in use seen: {js["max_used_mib"]} MiB; planned kill-and-resume: {js["kill_done"]}')
         if js.get('traceA'):
             L.append(f'trace A: **{js["traceA"]["verdict"]}** {js["traceA"]["why_fail"] or ""} (TRACE-A-{job["id"]}.md)')
-        L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
+        if job.get('baseline'):
+            L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
+        else:
+            L.append('baseline: none in this job')
         try:
             L += ['', 'last log lines:'] + ['    ' + x for x in (self.sd / 'supervisor.log').read_text(encoding='utf-8').splitlines()[-6:]]
         except OSError:
@@ -496,14 +583,16 @@ class Sup:
     def cycle(self):
         """-> seconds to sleep, or None when everything is finished / stopped."""
         self.plan = jload(self.plan_path, self.plan)          # re-read: jobs can be appended while it runs
+        self.note_skipped()
         if not (self.sd / 'ARMED.txt').exists():
             self.log('not armed (ARMED.txt missing): the loop leaves')
             return None
-        if (self.sd / 'STOPPED.txt').exists():
+        if self.blocking_stops():                             # (a stop file of a skipped job does not count)
             return None
         self.procs(True)
-        job = next((j for j in self.plan['jobs'] if self.js(j)['status'] not in ('done',)), None)
-        late = [j for j in self.plan['jobs'] if j is not job and self.js(j)['base']['status'] == 'running']     # a finished job's baseline still running
+        act = self.active_jobs()                              # skipped jobs are never looked at again: no state entry is made for them, none is read
+        job = next((j for j in act if self.js(j)['status'] not in ('done',)), None)
+        late = [j for j in act if j is not job and self.js(j)['base']['status'] == 'running']     # a finished job's baseline still running
         for j in late:
             self.baseline(j, self.js(j), gpu_mem())
         if late:
@@ -512,8 +601,12 @@ class Sup:
             return self.plan.get('poll_s', 15)
         if job is None:
             if not (self.sd / 'ALL-DONE.txt').exists():
-                (self.sd / 'ALL-DONE.txt').write_text(f'{ts()} every job of the plan is done\n', encoding='utf-8')
+                sk = sorted(self.skipped_ids())
+                (self.sd / 'ALL-DONE.txt').write_text(f'{ts()} every job of the plan is done' + (f' (skipped: {", ".join(sk)})' if sk else '') + '\n', encoding='utf-8')
                 self.log('ALL DONE')
+            return None
+        if not self.armed_for(job):
+            self.log(f'ARMED.txt does not arm job {job["id"]} (it arms {self.armed_text()}): the loop leaves; `arm` on Ben\'s go line arms it')
             return None
         js = self.js(job)
         poll = self.plan.get('poll_s', 15)
@@ -584,7 +677,7 @@ class Sup:
             self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}')
             if r['verdict'] == 'FAIL':
                 self.kill_job(job, why='trace A failed')
-                self.stop(job, 'trace A FAILED: ' + '; '.join(r['why_fail']) + ' (registered fallback: accum 8, then 32; a new run name each)')
+                self.stop(job, 'trace A FAILED: ' + '; '.join(r['why_fail']) + (' (registered fallback: accum 8, then 32; a new run name each)' if job.get('accum') == 4 else ''))      # (the fallback text is the accum-4 job's)
         elif up and not js.get('traceA') and ev.last_step >= up + 100:
             self.kill_job(job, why='trace A could not be evaluated')
             self.stop(job, f'update {ev.last_step} reached with no trace A verdict (no resume happened): stopped so the run is not left ungated')
@@ -592,8 +685,9 @@ class Sup:
     def finish(self, job, js, res):
         js['status'] = 'done'
         js['result'] = {k: res.get(k) for k in ('steps', 'steps_per_s', 'train_s', 'peak_mem_mib', 'peak_reserved_mib', 'n_params', 'resumed_from')}
-        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n'
-                                                      f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n', encoding='utf-8')
+        tail = (f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n' if job.get('baseline')
+                else 'no baseline in this job (no compare was made here).\n')
+        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + tail, encoding='utf-8')
         self.log(f'DONE {job["id"]}: {js["result"]}')
         if js['base']['status'] == 'waiting':          # trace A never passed (or no room): there is nothing to compare any more
             js['base']['status'] = 'abandoned'
@@ -771,8 +865,12 @@ class Sup:
 # ---------------------------------------------------------------- commands
 def run_loop(a):
     sup = Sup(a.plan)
-    if (sup.sd / 'STOPPED.txt').exists() or (sup.sd / 'ALL-DONE.txt').exists() or not (sup.sd / 'ARMED.txt').exists():
-        why = 'STOPPED.txt exists' if (sup.sd / 'STOPPED.txt').exists() else 'ALL-DONE.txt exists' if (sup.sd / 'ALL-DONE.txt').exists() else 'not armed (ARMED.txt missing; the Mac writes it with `arm` on Ben\'s go line)'
+    stops = sup.blocking_stops()                                      # (a stop file of a skipped job does not count)
+    nxt = next((j for j in sup.active_jobs() if sup.st['jobs'].get(j['id'], {}).get('status') != 'done'), None)
+    if stops or (sup.sd / 'ALL-DONE.txt').exists() or not (sup.sd / 'ARMED.txt').exists() or (nxt is not None and not sup.armed_for(nxt)):
+        why = (f'{stops[0].name} exists' if stops else 'ALL-DONE.txt exists' if (sup.sd / 'ALL-DONE.txt').exists() else
+               'not armed (ARMED.txt missing; the Mac writes it with `arm` on Ben\'s go line)' if not (sup.sd / 'ARMED.txt').exists() else
+               f'ARMED.txt does not arm job {nxt["id"]} (it arms {sup.armed_text()}); the Mac writes it with `arm` on Ben\'s go line')
         print(f'{ts()} nothing to do: {why}')                       # printed, not logged: the boot task starts this every few minutes
         return 0
     lock = acquire_lock(sup.sd / 'supervisor.lock')
@@ -816,8 +914,15 @@ def preflight(a):
     busy = [(p, c[:90]) for p, c in list_procs() if 'custom_io' in c and SELF_NAME not in c]
     row(not busy, 'no other custom_io job running', str(busy))
     row(not (Path(pl['work']) / 'STOP').exists(), 'no WORK\\STOP file')
-    row(not (sup.sd / 'STOPPED.txt').exists(), 'no STOPPED.txt of the supervisor')
+    blocking = sup.blocking_stops()
+    row(not blocking, 'no STOPPED.txt of the supervisor', str([p.name for p in blocking]) if blocking else '')
+    for p, o in sup.stop_files():
+        if p not in blocking:
+            print(f'[info] {p.name} belongs to the skipped job {o}: it does not hold the loop')
     for j in pl['jobs']:
+        if j.get('skip'):
+            print(f'[skip] job {j["id"]} is skipped in plan.json ({j.get("skip_reason") or "no reason given"}): not checked')
+            continue
         qp = Path(j['src']) / 'custom_io' / 'queue_local' / (j['queue'] + '.txt')
         row(qp.exists(), 'queue file', str(qp))
         mk = Path(j['src']) / 'G2FA4-SETUP-OK.txt'
@@ -833,11 +938,19 @@ def self_out_exists(sup, j):
 
 
 def clear(a):
+    """releases the jobs named (all non-skipped ones without an id): their stop files are moved aside, their 'stopped' state goes back to 'pending'. A skipped job (its stop file, its state) is a record and stays as it is."""
     sup = Sup(a.plan)
-    p = sup.sd / 'STOPPED.txt'
-    if p.exists():
-        sup.log(f'STOPPED.txt cleared: {aside(p)}')
-    for j in sup.plan['jobs']:
+    sk = sup.skipped_ids()
+    if a.id is not None and a.id not in {j['id'] for j in sup.plan['jobs']}:
+        print(f'refused: no job {a.id} in the plan (jobs: {[j["id"] for j in sup.plan["jobs"]]})')
+        return 2
+    if a.id in sk:
+        print(f'refused: job {a.id} is skipped in plan.json: its stop file and its state are kept as they are (take "skip" out of the plan first if it is to run again)')
+        return 2
+    for p, owner in sup.stop_files():
+        if owner not in sk and (a.id is None or owner in (None, a.id)):
+            sup.log(f'{p.name} cleared: {aside(p)}')
+    for j in sup.active_jobs():
         if a.id in (None, j['id']):
             js = sup.js(j)
             if js['status'] == 'stopped':
@@ -848,9 +961,22 @@ def clear(a):
 
 
 def arm(a):
+    """ARMED.txt: line 1 `<time> armed: <Ben's words>`, line 2 `jobs: <ids of the non-skipped jobs of the plan>`. The earlier file (an earlier go line) is kept as .aside-<stamp>; the new one is swapped in with one os.replace (a running loop never sees none)."""
     sup = Sup(a.plan)
-    (sup.sd / 'ARMED.txt').write_text(f'{ts()} armed: {a.text}\n', encoding='utf-8')
-    sup.log(f'ARMED: {a.text}')
+    ids = ' '.join(j['id'] for j in sup.active_jobs())
+    p = sup.sd / 'ARMED.txt'
+    kept = None
+    if p.exists():
+        kept = p.with_name(p.name + '.aside-' + stamp())
+        for n in range(1, 100):
+            if not kept.exists():
+                break
+            kept = p.with_name(f'{p.name}.aside-{stamp()}-{n}')              # two arms in one second: never over an earlier copy
+        shutil.copy2(p, kept)
+    tmp = p.with_name(p.name + '.tmp')
+    tmp.write_text(f'{ts()} armed: {a.text}\njobs: {ids}\n', encoding='utf-8')
+    os.replace(tmp, p)
+    sup.log(f'ARMED: {a.text} (jobs: {ids})' + (f'; the earlier ARMED.txt is kept as {kept.name}' if kept else ''))
     return 0
 
 
@@ -885,9 +1011,12 @@ def first_per_step(train, lo, hi):
 def probe_resume(a):
     """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused."""
     sup = Sup(a.plan)
-    job = next((j for j in sup.plan['jobs'] if a.job in (None, j['id'])), None)
+    job = next((j for j in sup.plan['jobs'] if a.job == j['id'] or (a.job is None and not j.get('skip'))), None)          # without --job: the first job that is not skipped
     if job is None:
-        print(f'refused: no job {a.job} in the plan')
+        print(f'refused: no job {a.job or "that is not skipped"} in the plan')
+        return 2
+    if job.get('skip'):
+        print(f'refused: job {job["id"]} is skipped in plan.json; the probe does not touch a skipped job')
         return 2
     keep, step, upto = Path(a.keep), a.step, a.upto
     steps = list(range(step + 1, upto + 1))
@@ -938,7 +1067,7 @@ def probe_resume(a):
 def selftest(a):
     """CUDA in the context this process runs in (the boot task runs as SYSTEM): imports torch with the queue's PYTHONPATH and touches the GPU."""
     sup = Sup(a.plan)
-    j = sup.plan['jobs'][0]
+    j = (sup.active_jobs() or sup.plan['jobs'])[0]                       # (every job of the plan has the same ENV lines)
     qf = Path(j['src']) / 'custom_io' / 'queue_local' / (j['queue'] + '.txt')
     env = dict(os.environ, PYTHONUTF8='1')
     for raw in open(qf, encoding='utf-8'):

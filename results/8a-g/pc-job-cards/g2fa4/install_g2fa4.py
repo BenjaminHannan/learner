@@ -2,6 +2,7 @@
 """install_g2fa4.py: puts the G2f-a4 pack on BensPC. Run it with the PC's own python from the folder the Mac copied (C:\\Users\\benja\\custom-io\\in-g2fa4):
 
     C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py [--check] [--skip-tests] [--register]
+    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--check]
 
 It starts no training job and changes nothing that already exists (a folder or file it replaces is renamed .aside-<stamp>). Steps:
  1. refuses if a custom_io job is running (it would compete for the CPU and the GPU) and checks the pinned hashes of src-b3g2 (the code G2f ran: custom_io at 74d6e92c75);
@@ -13,8 +14,15 @@ It starts no training job and changes nothing that already exists (a folder or f
  5. with --register: scheduled tasks via PowerShell (Register-ScheduledTask): G2FA4-SUPERVISOR (SYSTEM, highest rights; at startup and every 5 min, no time limit, a second instance is ignored),
     G2FA4-SUPERVISOR-LOGON (this user, DISABLED: the fallback if the selftest shows that SYSTEM cannot use the GPU; enable it only then, and disable the first),
     G2FA4-SELFTEST (SYSTEM, run on demand). They do nothing until the supervisor is armed (`arm`).
---check only does step 1 and reports. Exit 0 = installed (or checked) fine."""
-import argparse, hashlib, json, os, shutil, subprocess, sys, time
+--check only does step 1 and reports. Exit 0 = installed (or checked) fine.
+
+--add-job g2fa8 (after the install above; no tests, no scheduled tasks, starts nothing): ADDS the accum-8 job as a second job of plan.json and leaves g2fa4 alone. It runs the same checks as step 1
+plus the installed src-b3g2ck (the mark and pins of the g2fa4 install), then (a) copies queue/8aB3G2A8-pc.txt next to the A4 queue files (sha256 logged; the A4 files are not touched), (b) puts the
+pack's g2fa4_supervisor.py (the version that honors `skip` and a job without a baseline) into WORK\\g2fa4\\ BEFORE plan.json changes (the old one is kept as .aside-<stamp>), (c) rewrites plan.json:
+the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused while state.json says
+g2fa4 is running). Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
+g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
+import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
 from pathlib import Path
 
 IN = Path(__file__).resolve().parent
@@ -51,13 +59,26 @@ def sha(p):
     return h.hexdigest()
 
 
+# jobs that --add-job can add to an installed plan (queue file in the pack's queue/ folder; everything else of the entry is copied from the g2fa4 entry of the plan)
+ADD_JOBS = {
+    'g2fa8': dict(title='G2f-a8 (B3G2 3M seed 400, accum 8)', queue='8aB3G2A8-pc', job='8aB3G2A8-3M-s400', accum=8),
+}
+SKIP_G2FA4_REASON = 'trace A FAIL recorded, gate 3 FAIL on the 4090; replaced by g2fa8'
+A4_QUEUES = ('8aB3G2A4-pc.txt', '8aB3G2A4b32-pc.txt')
+
 ok_all = True
+LINES = []                                   # every line printed by row() / say(): the log of an --add-job run
+
+
+def say(msg=''):
+    print(msg, flush=True)
+    LINES.append(msg)
 
 
 def row(good, what, detail=''):
     global ok_all
     ok_all = ok_all and good
-    print(f'[{"ok" if good else "FIX"}] {what} {detail}', flush=True)
+    say(f'[{"ok" if good else "FIX"}] {what} {detail}')
     return good
 
 
@@ -79,30 +100,172 @@ def procs():
     return [ln.partition('|')[::2] for ln in r.stdout.splitlines() if '|' in ln]
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--check', action='store_true')
-    ap.add_argument('--skip-tests', action='store_true')
-    ap.add_argument('--register', action='store_true')
-    a = ap.parse_args()
-    print(f'install_g2fa4 {STAMP} from {IN}')
-    # 1. nothing running, pins of src-b3g2
+def shaq(p):
+    return sha(p) if Path(p).is_file() else None
+
+
+def replace_retry(src, dst):
+    """os.replace with a few retries (Windows: the destination may be open for a moment, e.g. plan.json read by the supervisor)."""
+    for i in range(10):
+        try:
+            return os.replace(src, dst)
+        except PermissionError:
+            if i == 9:
+                raise
+            time.sleep(0.5)
+
+
+def new_job_entry(spec_id, g4):
+    """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
+    spec = ADD_JOBS[spec_id]
+    return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288), compare=copy.deepcopy(g4['compare']))
+
+
+def added_plan(old, spec_id, skip_g4, g4_state_status):
+    """-> (new plan, [what changes], [problems]). `old` is not modified. Idempotent: a plan that already has the job (and the skip, if asked) comes back equal."""
+    new, changes, problems = copy.deepcopy(old), [], []
+    jobs = new.get('jobs', [])
+    g4 = next((j for j in jobs if j.get('id') == 'g2fa4'), None)
+    if g4 is None:
+        return new, changes, ['plan.json has no job g2fa4 (nothing to build the new entry from)']
+    want = new_job_entry(spec_id, g4)
+    have = next((j for j in jobs if j.get('id') == spec_id), None)
+    if have is None:
+        jobs.append(want)
+        changes.append(f'append job {spec_id}')
+    elif have != want:
+        problems.append(f'plan.json already has a job {spec_id} that differs from the expected entry: not touched (compare the two by hand)')
+    if skip_g4 and not g4.get('skip'):
+        if g4_state_status == 'running':
+            problems.append('state.json says g2fa4 is running: not skipped (stop it first)')
+        else:
+            g4['skip'], g4['skip_reason'] = True, SKIP_G2FA4_REASON
+            changes.append('g2fa4: skip = true')
+    return new, changes, problems
+
+
+def add_job(a):
+    """--add-job: see the docstring. -> exit code."""
+    spec_id = a.add_job
+    spec = ADD_JOBS[spec_id]
+    qfile = spec['queue'] + '.txt'
+    LINES.clear()
+    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
+    # 1. the checks of the install (pins of src-b3g2, caps, the pack's files, python, disk) + the installed copy and the plan
+    step1_checks(('overlay/train.py', 'queue/' + qfile, 'g2fa4_supervisor.py') + tuple('queue/' + q for q in A4_QUEUES))
+    mark = SRC / 'G2FA4-SETUP-OK.txt'
+    mt = mark.read_text(errors='replace').strip() if mark.exists() else ''
+    row(OVERLAY_TRAIN in mt and 'tests passed' in mt, 'src-b3g2ck\\G2FA4-SETUP-OK.txt (overlay train.py, tests passed)', mt[:120] or 'MISSING')
+    for rel, want in PINS0.items():
+        if rel != 'train.py':
+            row(shaq(SRC / 'custom_io' / rel) == want, f'src-b3g2ck {rel}')
+    row(shaq(SRC / 'custom_io' / 'train.py') == OVERLAY_TRAIN, 'src-b3g2ck train.py = overlay')
+    loops = [(p, c[:90]) for p, c in procs() if 'g2fa4_supervisor' in c and c.strip().endswith(' run')]
+    row(not loops, 'no supervisor loop (run) is alive', str(loops))
+    row(not (STATE / 'ALL-DONE.txt').exists(), 'no ALL-DONE.txt (the loop would not start with it)')
+    pp = STATE / 'plan.json'
+    try:
+        old = json.loads(pp.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        old = None
+    row(old is not None, 'plan.json of the install', str(pp))
+    if old is not None:
+        try:
+            stj = json.loads((STATE / 'state.json').read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            stj = {}
+        g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
+        say(f'      state.json: g2fa4 is {g4s or "not recorded"}; STOPPED.txt {"present" if (STATE / "STOPPED.txt").exists() else "absent"}; ARMED.txt {"present" if (STATE / "ARMED.txt").exists() else "absent"}')
+        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s)
+        row(not problems, 'plan.json can take the new job', '; '.join(problems))
+        say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
+    if a.check or not ok_all:
+        say('CHECK ONLY (nothing changed)' if a.check else 'NOT DONE: fix the [FIX] lines first (nothing changed)')
+        return 0 if ok_all else 1
+    # 2. the queue file next to the A4 ones (a different file is renamed .aside-<stamp>; the A4 files are only read)
+    ql = SRC / 'custom_io' / 'queue_local'
+    ql.mkdir(exist_ok=True)
+    want_sha, dst = sha(IN / 'queue' / qfile), ql / qfile
+    if dst.exists() and sha(dst) == want_sha:
+        say(f'queue file {qfile} is already in place; kept; sha256 {want_sha}')
+    else:
+        if dst.exists():
+            aside(dst)
+        shutil.copy2(IN / 'queue' / qfile, dst)
+        say(f'queue file {qfile} copied to {ql}; sha256 {want_sha}')
+    for q in A4_QUEUES:
+        say(f'queue file {q} (not touched): ' + (f'sha256 {sha(ql / q)}, ' + ('same as the pack' if sha(ql / q) == sha(IN / 'queue' / q) else 'DIFFERENT from the pack') if (ql / q).exists() else 'MISSING'))
+    # 3. the supervisor that honors `skip` and a job without a baseline goes in BEFORE plan.json changes; the old one stays as .aside-<stamp>; the swap is one os.replace
+    STATE.mkdir(parents=True, exist_ok=True)
+    sup, newsup = STATE / 'g2fa4_supervisor.py', IN / 'g2fa4_supervisor.py'
+    if sup.exists() and sha(sup) == sha(newsup):
+        say('g2fa4_supervisor.py in place is the pack\'s; kept')
+    else:
+        if sup.exists():
+            shutil.copy2(sup, sup.with_name(sup.name + '.aside-' + STAMP))
+        tmp = sup.with_name(sup.name + '.new')
+        shutil.copy2(newsup, tmp)
+        replace_retry(tmp, sup)
+        say(f'g2fa4_supervisor.py replaced by the pack\'s (sha256 {sha(newsup)}); the old one is kept as {sup.name}.aside-{STAMP}')
+    # 4. plan.json: the old one is kept as plan.json.aside-<stamp>, the new one is written to a temp file and swapped in with one os.replace
+    if new != old:
+        shutil.copy2(pp, pp.with_name(pp.name + '.aside-' + STAMP))
+        tmp = pp.with_name(pp.name + '.new')
+        tmp.write_text(json.dumps(new, indent=1), encoding='utf-8')
+        replace_retry(tmp, pp)
+        say(f'wrote {pp} (jobs {[j["id"] for j in new["jobs"]]}); the old plan is kept as {pp.name}.aside-{STAMP}')
+    else:
+        say(f'{pp} already has the job{" and the skip" if a.skip_g2fa4 else ""}; not rewritten')
+    ar = STATE / 'ARMED.txt'
+    first = (ar.read_text(errors='replace').strip().splitlines() or [''])[0][:100] if ar.exists() else None
+    say('ARMED.txt: ' + ('absent' if first is None else f'present, not touched ({first})') + f'. It does NOT arm {spec_id}: an old go line counts for the job it was given for only; '
+        f"{spec_id} starts only after `arm` on Ben's own words.")
+    (STATE / f'add-job-{spec_id}-{STAMP}.txt').write_text('\n'.join(LINES) + '\n', encoding='utf-8')
+    say(f'G2FA4 ADD-JOB {spec_id} DONE (log: add-job-{spec_id}-{STAMP}.txt in {STATE})')
+    return 0
+
+
+def step1_checks(pack_files):
+    """step 1 (shared by the install and --add-job): nothing running, pins of src-b3g2, the caps file, the pack's files, python, disk. -> path of WORK\\b3-inputs\\caps_b3g2.json"""
     busy = [(p, c[:100]) for p, c in procs() if 'custom_io' in c and 'install_g2fa4' not in c]
     row(not busy, 'no custom_io job is running', str(busy))
     sf = SRC0 / 'G2-SETUP-OK.txt'
-    print('      src-b3g2\\G2-SETUP-OK.txt:', sf.read_text(errors='replace').replace('\n', ' | ')[:300] if sf.exists() else 'MISSING', '(information; the hashes below decide)')
+    say('      src-b3g2\\G2-SETUP-OK.txt: ' + (sf.read_text(errors='replace').replace('\n', ' | ')[:300] if sf.exists() else 'MISSING') + ' (information; the hashes below decide)')
     for rel, want in PINS0.items():
         p = SRC0 / 'custom_io' / rel
         h = sha(p) if p.exists() else None
         row(h == want, f'src-b3g2 {rel}', (h or 'MISSING')[:12])
     cb = WORK / 'b3-inputs' / 'caps_b3g2.json'
     row(cb.exists() and sha(cb) == CAPS_B3G2_WORK, 'WORK\\b3-inputs\\caps_b3g2.json', (sha(cb)[:12] if cb.exists() else 'MISSING'))
-    for rel in ('overlay/train.py', 'overlay/tests/test_ckpt.py', 'overlay-tests/test_ckpt_b3g2.py', 'queue/8aB3G2A4-pc.txt', 'queue/8aB3G2A4b32-pc.txt', 'g2fa4_supervisor.py'):
+    for rel in pack_files:
         row((IN / rel).exists(), f'pack file {rel}')
     row((IN / 'overlay' / 'train.py').exists() and sha(IN / 'overlay' / 'train.py') == OVERLAY_TRAIN, 'overlay train.py hash', OVERLAY_TRAIN[:12])
     row(Path(PY).exists(), 'python', PY)
     du = shutil.disk_usage(str(WORK))
     row(du.free > float(os.environ.get('G2FA4_MINFREE_GB', 30)) * 2 ** 30, 'disk', f'{du.free / 2 ** 30:.0f} GB free')
+    return cb
+
+
+def main(argv=None):
+    global ok_all
+    ok_all = True
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--check', action='store_true')
+    ap.add_argument('--skip-tests', action='store_true')
+    ap.add_argument('--register', action='store_true')
+    ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
+    ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
+    a = ap.parse_args(argv)
+    if a.skip_g2fa4 and a.add_job != 'g2fa8':
+        ap.error('--skip-g2fa4 only goes with --add-job g2fa8')
+    if a.add_job and (a.register or a.skip_tests):
+        ap.error('--register / --skip-tests do not go with --add-job')
+    if a.add_job:
+        return add_job(a)
+    print(f'install_g2fa4 {STAMP} from {IN}')
+    # 1. nothing running, pins of src-b3g2
+    cb = step1_checks(('overlay/train.py', 'overlay/tests/test_ckpt.py', 'overlay-tests/test_ckpt_b3g2.py', 'queue/8aB3G2A4-pc.txt', 'queue/8aB3G2A4b32-pc.txt', 'g2fa4_supervisor.py'))
     if a.check or not ok_all:
         print('CHECK ONLY' if a.check else 'NOT INSTALLED: fix the [FIX] lines first')
         return 0 if ok_all else 1
@@ -152,10 +315,14 @@ def main():
                    compare=dict(upto=300, last_n=50, diff_mean_pass=0.03, diff_mean_fail=0.06, last_n_pass=0.05, last_n_fail=0.10, report_from=101),
                    baseline=dict(queue='8aB3G2A4b32-pc', job='8aB3G2A4b32-3M-s400', upto=300, need_free_mib=4000))])
     pp = STATE / 'plan.json'
-    if pp.exists() and json.loads(pp.read_text()) != plan:
-        aside(pp)
-    pp.write_text(json.dumps(plan, indent=1))
-    print(f'wrote {pp}')
+    cur = json.loads(pp.read_text()) if pp.exists() else None
+    if cur and ([j.get('id') for j in cur.get('jobs', [])] != ['g2fa4'] or any(j.get('skip') for j in cur.get('jobs', []))):
+        print(f'{pp} holds more than the plain g2fa4 job ({[j.get("id") for j in cur["jobs"]]}, skip: {[j.get("id") for j in cur["jobs"] if j.get("skip")]}): kept as it is (--add-job changes it)')
+    else:
+        if pp.exists() and cur != plan:
+            aside(pp)
+        pp.write_text(json.dumps(plan, indent=1))
+        print(f'wrote {pp}')
     # 4. CPU tests of the overlay on b3g2 (also the Windows file handling)
     tests = 'skipped'
     if not a.skip_tests:
