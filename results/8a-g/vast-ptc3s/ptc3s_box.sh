@@ -62,7 +62,7 @@
 # one, else the train event lines of B3G2/stdout.txt) in the profrun block, with one 'PROF-PAIR' marker line per run (last step, s/update from the elapsed field, nvidia-smi peak memory). The box
 # does NOT compare the two runs: that is done offline. i4 is skipped when fewer than PROF_PAIR_NEED_MIN (105 = 25 + 80) minutes of the PROF_MAXMIN budget are left; it is never fatal.
 #   b3ab changes only these defaults: MAXH 5.5, PROF_MAXMIN 285, PROF_JOB_MIN 20, PROF_JOB_STEPS 50 (b3sweep keeps 3 and 150). PROF_B3P_MIN (20), PROF_ABE_MIN (20),
-#   PROF_ABB_MIN (125; abbench starts no new arm after minute PROF_ABB_MIN - 25): timeouts of i1, i2, i3 in minutes. b3ab refuses DPH=0 and MAXH x DPH above PROF_STAGE_CAP_USD (3.0). PROF_PAIR_A4_MIN (25), PROF_PAIR_A32_MIN (80), PROF_PAIR_NEED_MIN (105): i4. PROF_PAIR_TRAIN_EXTRA ('--log-every 1') is a CPU dry-run hook.
+#   PROF_ABB_MIN (125; abbench starts no new arm after minute PROF_ABB_MIN - 25): timeouts of i1, i2, i3 in minutes. b3ab refuses DPH=0 and MAXH x DPH above PROF_STAGE_CAP_USD (3.0). PROF_AB_ACCUMS (default 8,16,2) and PROF_AB_VARIANTS (default nosync,pad64p,pad64,tf32,unfused) choose the abbench arms; set to the empty string to leave a group out (added 2026-10-15 for a short second rental of the accum rows). PROF_PAIR_A4_MIN (25), PROF_PAIR_A32_MIN (80), PROF_PAIR_NEED_MIN (105): i4. PROF_PAIR_TRAIN_EXTRA ('--log-every 1') is a CPU dry-run hook.
 #   DPH should be the offer's dph_total: abbench prints its money lines from it (0 = no dollar figures); the box prints the rental so far and the MAXH ceiling in dollars.
 #   PROF_SWEEP_MIN (45) and PROF_CMP_MIN (15): timeouts of h1 and h2 in minutes; PROF_AT_MIN (40): timeout of each AT run; PROF_AT_STEPS (300); PROF_AT_TRAIN_EXTRA ('--log-every 20');
 #   PROF_AT_FROM_STEP (40): the speed is taken from the log lines at and after this step.
@@ -715,7 +715,7 @@ prof_b3ab() {   # PROF_PLAN=b3ab (POOL is set): the profiler and syncs at accum 
     grep -E -e 'abequiv|mark 6|mark6' $PRAW/i2_b3g2_abequiv.log 2>/dev/null | tail -n 24 | cut -c1-260
     [ -f $PRAW/b3g2_abequiv.md ] && { echo "--- b3g2_abequiv.md"; head -n 40 $PRAW/b3g2_abequiv.md | cut -c1-300; }
     PSTEP_MIN=$PROF_ABB_MIN; mm=$(awk "BEGIN{print int($PROF_ABB_MIN - 25)}")      # an arm starts only before this minute: the longest arm (accum 16) takes about 21 min
-    pstep i3_b3g2_abbench b3g2_abbench.json $B3 --sections abbench --ab-accums 8,16,2 --ab-variants nosync,pad64p,pad64,tf32,unfused --ab-rounds 3 --ab-warmup 10 --ab-updates 40 --ab-max-min $mm --ab-partial $PRAW/b3g2_abbench.partial.json --ab-equiv-json $PRAW/b3g2_abequiv.json --dph $DPH
+    pstep i3_b3g2_abbench b3g2_abbench.json $B3 --sections abbench --ab-accums "${PROF_AB_ACCUMS-8,16,2}" --ab-variants "${PROF_AB_VARIANTS-nosync,pad64p,pad64,tf32,unfused}" --ab-rounds 3 --ab-warmup 10 --ab-updates 40 --ab-max-min $mm --ab-partial $PRAW/b3g2_abbench.partial.json --ab-equiv-json $PRAW/b3g2_abequiv.json --dph $DPH
     grep -E -e 'abbench|MARK|mark [0-9]|USD|usd|dph' $PRAW/i3_b3g2_abbench.log 2>/dev/null | tail -n 40 | cut -c1-300
     [ -f $PRAW/b3g2_abbench.md ] && { echo "--- b3g2_abbench.md"; head -n 80 $PRAW/b3g2_abbench.md | cut -c1-300; }
     PSTEP_MIN=
