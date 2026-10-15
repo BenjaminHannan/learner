@@ -45,7 +45,7 @@ One set of worlds and one search rng stream: SE is a screen (project rule: >= 6 
 | Rerun SQ with more rollouts and the oracle yardstick | keeps A24 unchanged | answers a question (agreement) whose answer cannot decide anything: shown above that the search follows rewards the labeller ignores |
 Verdict: do the play test. Disagreement with the labeller was the symptom; the teacher's own score is the test.
 
-## SE result (9:10 PM ET 10-14; code commit 1b16ba2def; the marks above, nothing changed; all **shown**)
+## SE result (9:05 PM ET 10-14; code commit 1b16ba2def; the marks above, nothing changed; all **shown**)
 16 practice worlds first (run seed 393, worlds 0 to 15): search expert 4.875 unlocks a game, the labeller 8.875, random 2.69 on the same worlds and act streams: between 4.5 and 6.0, so by the marks the
 16 more worlds (16 to 31) were run, then the same bars on all 32. Cost 48 min for 16 worlds on 4 cores (2.8 s a step), 32 min for the second 16.
 | 32 practice worlds, cap 1000, explore 0.10 | mean unlocks a game | paired difference, 95% |

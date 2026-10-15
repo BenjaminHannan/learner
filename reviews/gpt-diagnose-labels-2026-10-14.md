@@ -37,12 +37,23 @@ trains; the base model is frozen. Score = mean number of distinct achievements (
    teacher model. The game can be treated as an outside tool the model calls. Whether the game's world can be copied and stepped forward for look-ahead is untested (it is a Python object with
    random generators; we have not tried).
 
+## Update 9:08 PM ET 10-14: candidate (B), search with the game as a tool, was tried and does not reach the labeller (shown)
+The game can be copied and replayed exactly (a copy takes 2 ms; about 2,000 steps a second a core), so we tried candidate (B) in its simplest form, with no hand-written game knowledge: at each step, for each of the 17 first moves,
+16 look-aheads of 24 steps on fresh copies of the world (random futures; after the first move the look-ahead repeats its last action with chance 0.75, else takes a uniform word), scored by the game's own reward only (+1 per new achievement,
++-0.1 per health point, discounted 0.95), take the best first move when it clearly beats the average, else a sticky random move. Played alone on 32 practice worlds (never the sealed ones) it makes 4.75 unlocks a game (95% interval 4.4 to 5.1),
+against 8.9 for the hand-written labeller and 2.4 for a random policy on the same worlds. It always gets the three cheapest achievements (sapling, plant, wake_up; the search picks `sleep` while wake_up is still open, and we suspect, untested, that sleeping at full energy wakes the player at once), wood in 69% of games,
+a table in 28%, a wood pickaxe in 3%, and no stone. It had a clear best move on only 9% of steps; the other 81% was a random walk. Re-searching the same states with a different random seed gave the same word 81% of the time, so the labels are reliable, not noise.
+It follows the one-time rewards that are within a few moves, which the hand-written labeller ignores, so agreement with the labeller (1.4% on map-dependent views) was the wrong test of a teacher; the teacher's own score is the test. Every reward-only label source we tried
+now sits at 3.3 to 4.8 (8-move hindsight copy 3.3 to 3.5, learned value guesser 1.8 / 3.2, PPO-clipped night 4.15 / 4.19, this search 4.75), while labels from the hand-written chain (wood, table, pickaxe, stone) give 6.5 and 7.1 with 64,000 labels.
+So candidate (B) as built is out (shown), and the question for you is sharper: **what dense or learned signal for the chain "walk to a tree, collect wood, make a table, make a pickaxe, mine stone" can the model get without anyone writing the chain down?**
+Please say which of these you would try first and why: (E) a curiosity or novelty bonus on the observation (new items in the inventory line, new map cells), (F) a longer look-ahead with the search seeded from the model's own policy, (G) learning a world model and searching in it,
+(H) something else. The same rules apply below (one change, marks fixed in advance, labels shown / suggested / untested).
+
 ## What I want from you
 1. Label every claim "shown" (follows from the numbers above), "suggested" (plausible, untested) or "untested".
-2. The gap is: reward-only learning gives about 4 unlocks, a perfect teacher gives 6.5 at 64,000 labels and 8.2 for the teacher itself. Which cheap, deployable label source (no hand-written game knowledge)
+2. The gap is: reward-only learning gives about 4 to 4.8 unlocks, a perfect teacher gives 6.5 at 64,000 labels and 8.2 for the teacher itself. Which cheap, deployable label source (no hand-written game knowledge)
    would most likely close part of that gap? Candidates we see (add others, but then pick one): (A) hindsight labels from the model's own unlocks with a longer or smarter window than "the 8 moves before an unlock";
-   (B) search with the game as a tool (copy the world, look ahead, label the first move of the best path found, distil into the add-on, repeat: expert iteration); (C) a learned value or inverse-dynamics
-   model used to relabel the model's own recorded moves; (D) something else.
+   (B) search with the game as a tool (tried above: 4.75, out as built); (C) a learned value or inverse-dynamics model used to relabel the model's own recorded moves; (E), (F), (G) above; (D) something else.
 3. Give ONE change to try next, not a list. Fix the pass marks in advance (a number on the 100 sealed maps and a paired-seed rule: >= 6 paired seeds to confirm, two seeds are only a screen),
    say what the baseline is, and state the result that would prove the change wrong.
 4. Tell me what you would NOT trust about the numbers above (for example 100-map noise, two seeds, that half of the labelled views come from the labeller's own play, that training had not converged).
