@@ -53,3 +53,32 @@ Stone games stayed at 0 to 7 of 400 on both seeds (seed 201: 7 in round 9). Kept
 - **Gate A by the marks (round 8): no pass** (needed >= 40 pickaxe games on both seeds; got 1 and 24) **and not proved wrong** (needed both seeds below 1.5 x their round-1 count; seed 201 has 24 against 7). "Anything else: continue to the round-16 gate." Both loops are running to round 16.
 - Round-8 sealed scores (100 maps, sample, T = 1; reported, not marked): seed 200 **3.65** (GW-P8 After -0.50, 95% -0.85 to -0.16; untrained T0 -0.10); seed 201 **4.37** (+0.18, -0.19 to +0.57; T0 +0.76, +0.36 to +1.19). Wood pickaxe 2% and 11% of maps, stone 0% and 5%.
 - Reading (suggested, untested): seed 201 is climbing (table 55 -> 140 games, mean unlocks 3.57 -> 4.24, round-9 sealed not scored) and seed 200 fell back at round 8 (wood 122: a bad round, partly recovered at 9). Two seeds, 400 games a round and counts of 1 to 34 pickaxe games are noisy; a rise from 7 to 34 and a fall to 1 are both inside what a few lucky games do. Nothing here yet beats the reward-trained level on the sealed maps by the screen's bar (5.2).
+
+## Gate B result (rounds 10 to 16; read 2:20 PM ET 10-15; code commit d8d93de149, nothing changed since the marks; all **shown**)
+Games of 400 (practice worlds), rounds 10 to 16 (round 1 is the untrained parent):
+| round | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|---|---|---|---|---|---|---|---|
+| seed 200: games with wood pickaxe | 16 | 16 | 10 | 16 | 16 | 17 | 18 |
+| seed 201: games with wood pickaxe | 15 | 27 | 17 | 11 | 24 | 21 | **49** |
+| seed 200: games with stone | 0 | 0 | 0 | 2 | 2 | 0 | **1** |
+| seed 201: games with stone | 1 | 3 | 4 | 2 | 3 | 1 | **4** |
+| seed 200: games with table | 80 | 129 | 91 | 153 | 117 | 120 | 134 |
+| seed 201: games with table | 101 | 118 | 163 | 83 | 156 | 168 | 155 |
+| seed 200: mean unlocks | 3.70 | 3.92 | 3.75 | 3.92 | 3.85 | 3.85 | 4.00 |
+| seed 201: mean unlocks | 3.80 | 3.90 | 4.24 | 3.76 | 4.28 | 4.20 | 4.10 |
+- **Gate B by the marks (round 16): no pass** (needed g_stone >= 10 on both; got 1 and 4) **and not proved wrong** (needed < 3 on both; seed 201 has 4). The marks say "anything else: stop and report, no verdict". **GW-F as specified is stopped here, with no verdict.** Nothing is claimed beyond that.
+- Round-16 sealed scores (100 maps, sample, T = 1; reported, not marked; the final screen's bars were 5.2 pass and < 4.6 proved wrong, which would apply to the last round run): seed 200 **3.93** (GW-P8 After -0.22, 95% -0.59 to +0.14; untrained T0 +0.18, -0.22 to +0.58; wood pickaxe on 3% of maps, stone 0%); seed 201 **3.93** (-0.26, -0.61 to +0.09; T0 +0.32, -0.08 to +0.73; pickaxe 6%, stone 0%). Round 8 for comparison: 3.65 and 4.37. So after 16 rounds both loops sit at the level of the reward-trained runs (4.15 / 4.19) or a little under it, and far under the 5.2 bar.
+- Both loops are on the **table** link and not past it: games with a table rose from 70 / 55 (round 1) to 134 / 155 (round 16), but games with stone stayed 0 to 7 of 400.
+
+## Why it stalls (post-hoc diagnosis on the saved play files; instruments only, not marks; **shown**)
+1. **The "pickaxe rule" is barely learned, although the state it needs is reached more often.** A "pickaxe-ready" state: a table within one cell (crafter's `nearby`, 3x3), wood >= 1, no wood pickaxe (the state where the hand-written labeller always says `wpick`). Games that reach one, and how often the moves played in those states were `wpick`:
+| | round 1 | round 8 | round 16 |
+|---|---|---|---|
+| seed 200: games reaching a ready state / games that made the pickaxe | 34 / 3 | 19 / 1 | 55 / 18 |
+| seed 200: share of ready-state moves that were `wpick` | 0.3% | 0.6% | 4.3% |
+| seed 201: games reaching a ready state / games that made the pickaxe | 35 / 7 | 56 / 24 | 75 / 49 |
+| seed 201: share of ready-state moves that were `wpick` | 1.4% | 3.0% | 7.9% |
+   The rule is moving the right way but slowly: after 16 rounds the model still plays `wpick` in under 8% of the ready-state moves where the labeller plays it 100% of the time.
+2. **The training set has almost no rows for it.** In round 16 the loops kept: seed 200, 7 of 21 wood-pickaxe segments (9 rows) and 3 of 9 stone segments (8 rows); seed 201, 23 of 74 pickaxe segments (24 rows) and 10 of 31 stone segments (10 rows), out of 3,800 to 3,900 new rows a round, of which 1,800 to 2,100 are sapling rows. About 90 updates a round. For comparison, GW-L's 64,000 labels took 2,500 updates to reach 62 to 65% agreement. The keep rule (fastest 30% of each type's segments) discards 70% of the rare events themselves: 17 of 21 and 66 of 74 pickaxe segments are within the 12-move cap, so almost everything that is dropped is dropped by the 30% rule. Seed 201's 74 pickaxe events include repeats (the counter rises on every craft).
+3. **Suggested, untested:** the loop is a slow snowball for the pickaxe link (ready-state share and pickaxe games are rising on seed 201), starved by a keep rule that was fixed with common events in mind. Whether the stone link follows is not shown: stone events are 9 to 31 a round.
+4. **What it does not say:** that a larger keep share fixes it (the rows would go from about 9 to 24 up to about 17 to 66 a round, a factor of about 3, still tiny next to the sapling rows), that seed 201's 49 in round 16 is more than a lucky round (it is far above its previous seven rounds, 11 to 27, but it is one round on one seed), or that the plateau is not capacity (the GW-L result says capacity is fine when the rows exist).
