@@ -58,7 +58,7 @@ Verdict: do the play test. Disagreement with the labeller was the symptom; the t
   The labeller (8.23 on sealed worlds): wood 100, table 100, wood pickaxe 98, stone 83. Every game ended in death (mean 190 steps; the labeller about 270).
 - Where the steps came from: 9.1% searched with a label, 80.7% the fallback (a sticky random walk, because the search found no signal), 10.2% the act rule's random move. The search had a signal on about one step in eleven.
 - **What it means (suggested, untested):** a reward-only look-ahead of 24 moves behaves like a random walk that grabs the one-time achievements that are within a few moves (sapling, plant, wake_up: all 32 games). The long chain that the
-  labeller plays (walk to a tree, collect, table, pickaxe, stone) is not found, because nothing earns reward until the end of it. It lands where every other reward-only label source landed:
+  labeller plays (walk to a tree, collect, table, pickaxe, stone) is not found, because each link pays only after the walk to it and only if the link before it happened (corrected in A26: every link of the chain is a +1 reward of its own; the wall is the unrewarded walk and the rarity of each prerequisite, not a missing reward). It lands where every other reward-only label source landed:
   the 8-move hindsight copy 3.3 to 3.5, the learned-value guesser 1.8 / 3.2, the PPO-clipped night 4.15 / 4.19, a PPO network 3.7 to 4.4, this search 4.75 (different worlds from the sealed ones; the sealed scale reads about the same).
   The gap to 6.5 or more is not capacity (A23) and not noise (the search's labels repeat 81% of the time); it is the long chain with no early signal.
 - Not shown: that a longer look-ahead or more rollouts would close it (untested; a 64-move look-ahead costs 2.7x and the real world cannot be copied anyway); that a learned dense signal would (untested).
@@ -67,3 +67,6 @@ Verdict: do the play test. Disagreement with the labeller was the symptom; the t
 Shown: the 3M model with the rank-8 add-on learns the map-to-move rule from 64,000 labelled views (6.50 / 7.10) but every reward-only label source tried (hindsight copy, learned value, PPO, search through copies of the game) stays at 3.3 to 4.8.
 The labeller's advantage is the chain wood, table, pickaxe, stone. A label source without the hand-written chain needs a dense signal for that chain that is learned, not written (the learned-drive thread is the natural home), or a curriculum the model finds itself.
 Nothing further is scheduled in this thread; the next move waits for that signal or for the outside answer (`reviews/gpt-diagnose-labels-2026-10-14.md`, now with this evidence added).
+
+## Outside answer (added 9:22 PM ET 10-14)
+Fable 5.1 (xhigh, batch, $0.69) answered the refreshed prompt; its answer, my checks of its claims and the resulting test (GW-F, marks fixed before any code ran on a game) are in `game/A26-GWF-MARKS.md`. Two corrections it forced here: the chain is rewarded link by link (see above), and the SE fallback share (80.7%) is a different number from the 81% re-search agreement of SQ.
