@@ -1,0 +1,11 @@
+[   12.5s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   12.5s] === section profiler
+[   30.2s] profiler: schedule wait 1 warmup 1 active 2
+/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+[  175.7s] profiler: 1,412,496 events collected, analysing ...
+[  189.1s] profiler: GPU busy 99.8 % of wall, idle gap 0.2 % (accum 4, 2 profiled updates, profiler overhead inflates wall): GPU-bound
+[  195.3s] === section syncs
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:1270: UserWarning: Synchronization debug mode is a prototype feature and does not yet detect all synchronizing operations (Triggered internally at /pytorch/torch/csrc/cuda/Module.cpp:1003.)
+  torch._C._cuda_set_sync_debug_mode(debug_mode)
+[  227.8s] done /job/profraw/b3g2_profile.json /job/profraw/b3g2_profile.md
