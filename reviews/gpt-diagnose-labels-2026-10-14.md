@@ -20,22 +20,23 @@ trains; the base model is frozen. Score = mean number of distinct achievements (
 2. Shown (new, "GW-L"): we asked whether the model can read the map at all. A hand-written labeller (a pure function of the view: it finds the nearest tree, water or cow
    by breadth-first search over the walkable cells, steps toward it, uses `do` when facing it, crafts a table and wood tools when it has the wood, plants a sapling,
    walks on, and so on) gives the "right" move for any view. We recorded views from games where each step is the labeller's move half the time and a random move
-   the other half, and trained the add-on by cross entropy on the labelled word (fixed constants, 10 epochs, no tuning). The labeller itself, played with our usual 10% random moves, scores
+   the other half, and trained the add-on by cross entropy on the labelled word (fixed constants, 10 epochs at 16,000 labels and more epochs at fewer, no tuning). The labeller itself, played with our usual 10% random moves, scores
    8.23 unlocks a game on the 100 held-out maps.
    Held-out accuracy is on views where the right move depends on the map (always saying `do` scores 27.2% there); sealed play samples from the model's own odds:
    | labelled views | seed | held-out accuracy | sealed unlocks a game (95% interval vs the PPO-clipped run) |
    |---|---|---|---|
-   | 16,000 | 200 | 41.9% | 4.88 (+0.73, 0.28 to 1.17) |
-   | 16,000 | 201 | 45.4% | 4.62 (+0.43, 0.04 to 0.82) |
-   | 64,000 | 200 | 62.4% | 6.50 (+2.35, 1.87 to 2.79) |
-   Training accuracy was still rising at the last epoch in every run, so these are floors. With 64,000 labels the model makes a wood pickaxe on 83% of maps and stone on 40%
-   (the PPO-clipped runs: 2 to 3% and 0%). Seed 201 at 64,000 and the 1,000 and 4,000 label runs are still running.
+   | 1,000 | 200 / 201 | 25.8% / 24.5% | 4.18 (+0.03) / 3.50 (-0.69, below) |
+   | 4,000 | 200 / 201 | 27.7% / 31.3% | 4.42 (+0.27) / 3.47 (-0.72, below) |
+   | 16,000 | 200 / 201 | 41.9% / 45.4% | 4.88 (+0.73, 0.28 to 1.17) / 4.62 (+0.43, 0.04 to 0.82) |
+   | 64,000 | 200 / 201 | 62.4% / 64.8% | 6.50 (+2.35, 1.87 to 2.79) / 7.10 (+2.91, 2.41 to 3.39) |
+   Training accuracy was still rising at the last epoch in every run, so these are floors (the update counts were 160, 320, 630 and 2,500, so label count and update count are confounded). With 64,000 labels the model makes a wood pickaxe on 83% and 91% of maps and stone on 40% and 43%
+   (the PPO-clipped runs: 2 to 3% and 0%). Below 16,000 labels it reads the map no better than the fixed word.
 3. So (shown) capacity is not the wall: the 3M model with this add-on and this scorer can learn a map-to-move rule when it is told the answer. What we have not shown is that the model
    can get such labels itself. The labeller is a hand-written teacher; our rule is that everything the finished model does is learned, hand-written code may live only inside an outside tool
    the model chooses to call (like a calculator), and nothing a researcher knows about the game may be needed at run time.
 4. Constraints: free CPU only (4 cores; the model plays about 60 moves a second, a training update on 256 views takes about 10 seconds), runs of up to about 10 hours, no GPU, no new
-   teacher model. The game can be treated as an outside tool the model calls. Whether the game's world can be copied and stepped forward for look-ahead is untested (it is a Python object with
-   random generators; we have not tried).
+   teacher model. The game can be treated as an outside tool the model calls. The game's world can be copied and stepped forward (shown, see the update below), but the real
+   targets of this work (Minecraft, a spreadsheet) cannot be copied, so anything that depends on copying the world is a research instrument for the game, not a deployable method.
 
 ## Update 9:08 PM ET 10-14: candidate (B), search with the game as a tool, was tried and does not reach the labeller (shown)
 The game can be copied and replayed exactly (a copy takes 2 ms; about 2,000 steps a second a core), so we tried candidate (B) in its simplest form, with no hand-written game knowledge: at each step, for each of the 17 first moves,
@@ -54,6 +55,9 @@ Please say which of these you would try first and why: (E) a curiosity or novelt
 2. The gap is: reward-only learning gives about 4 to 4.8 unlocks, a perfect teacher gives 6.5 at 64,000 labels and 8.2 for the teacher itself. Which cheap, deployable label source (no hand-written game knowledge)
    would most likely close part of that gap? Candidates we see (add others, but then pick one): (A) hindsight labels from the model's own unlocks with a longer or smarter window than "the 8 moves before an unlock";
    (B) search with the game as a tool (tried above: 4.75, out as built); (C) a learned value or inverse-dynamics model used to relabel the model's own recorded moves; (E), (F), (G) above; (D) something else.
+2b. Specific question from the project: is there a **learned, deployable way past the long-chain wall** (find a tree, collect wood, make a table, make a wood pickaxe, mine stone; nothing is rewarded until the end of the chain, and the model's own score-only
+   learning never gets there) that does **not** need a separate learned-drive or learned-reward signal trained at 10M-parameter scale first? (A separate project line is building such a learned "that was progress" drive; at 3M parameters its tests failed for being too small, and it waits
+   for a 10M model. We want to know what can be done now, at 3M, in the meantime.) Name the mechanism, say what it would learn from, and say why it should or should not reach the wood, table, pickaxe and stone steps. If you think the answer is "no, not at 3M", say so and say what you would build instead.
 3. Give ONE change to try next, not a list. Fix the pass marks in advance (a number on the 100 sealed maps and a paired-seed rule: >= 6 paired seeds to confirm, two seeds are only a screen),
    say what the baseline is, and state the result that would prove the change wrong.
 4. Tell me what you would NOT trust about the numbers above (for example 100-map noise, two seeds, that half of the labelled views come from the labeller's own play, that training had not converged).
