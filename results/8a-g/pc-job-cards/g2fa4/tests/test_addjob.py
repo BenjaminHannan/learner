@@ -202,7 +202,30 @@ def t_arm_rules():
         # nothing armed at all
         (sd / 'ARMED.txt').unlink()
         assert not S.Sup(pp).armed_for(g8)
-        print('ok arm: the jobs line names the non-skipped jobs; an old ARMED.txt arms the first job only; a one-job plan is armed as before')
+        # the jobs line is line 2 only: "jobs:" inside line 1 or on a later line arms nothing (an old go line stays an old go line)
+        (sd / 'ARMED.txt').write_text('2026-10-14 15:55:00 armed: Ben go\nsome text\njobs: g2fa8\n')
+        assert S.Sup(pp).armed_ids() == 'first' and not S.Sup(pp).armed_for(g8)
+        (sd / 'ARMED.txt').write_text('2026-10-14 15:55:00 armed: jobs: g2fa8\n')
+        assert S.Sup(pp).armed_ids() == 'first'
+        (sd / 'ARMED.txt').write_text('2026-10-14 15:55:00 armed: go\r\njobs: g2fa8\r\n')                            # CRLF still reads
+        assert S.Sup(pp).armed_ids() == ['g2fa8']
+        # an ARMED.txt that cannot be read for a moment (Windows: open elsewhere): retried; if it stays unreadable the decision of the last look stands (a running loop does not leave)
+        sup2 = S.Sup(pp)
+        assert sup2.armed_ids() == ['g2fa8']
+        real_read, calls = Path.read_text, []
+        def locked(self, *a, **k):
+            if self.name == 'ARMED.txt':
+                calls.append(1)
+                raise PermissionError('open elsewhere')
+            return real_read(self, *a, **k)
+        old_sleep = S.time.sleep
+        Path.read_text, S.time.sleep = locked, (lambda t: None)
+        try:
+            assert sup2.armed_ids() == ['g2fa8'] and len(calls) == 5, (sup2.armed_ids(), len(calls))
+            assert S.Sup(pp).armed_ids() is None                                                      # never looked before and unreadable: not armed (fails safe)
+        finally:
+            Path.read_text, S.time.sleep = real_read, old_sleep
+        print('ok arm: the jobs line names the non-skipped jobs; an old ARMED.txt arms the first job only; the jobs line is line 2 only; an unreadable ARMED.txt is retried and the last decision stands; a one-job plan is armed as before')
 
 
 def t_preflight_and_probe_skip():

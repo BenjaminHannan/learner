@@ -98,6 +98,8 @@ def procs():
         return [(str(p), c) for p, c in S.list_procs()]
     ps = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' } | ForEach-Object { '{0}|{1}' -f $_.ProcessId, $_.CommandLine }")
     r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True, timeout=120)
+    if r.returncode != 0 or not r.stdout.strip():                           # this installer is itself a python process, so an empty list means the listing failed
+        return [('?', f'custom_io: the process listing FAILED (rc {r.returncode}): {r.stderr.strip()[:120]}')]
     return [ln.partition('|')[::2] for ln in r.stdout.splitlines() if '|' in ln]
 
 

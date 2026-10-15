@@ -401,7 +401,7 @@ class Sup:
 
     def stop_path(self, job):
         p = self.sd / 'STOPPED.txt'
-        if not p.exists() or stop_owner(p) in (None, job['id']):
+        if not p.exists() or stop_owner(p) == job['id']:
             return p
         return self.sd / f'STOPPED-{job["id"]}.txt'              # STOPPED.txt is another job's record: never overwritten
 
@@ -413,15 +413,22 @@ class Sup:
     def armed_ids(self):
         """None = no ARMED.txt; 'first' = a file without a jobs line (written before there were any); else the list of ids."""
         p = self.sd / 'ARMED.txt'
-        try:
-            lines = p.read_text(encoding='utf-8', errors='replace').splitlines()
-        except OSError:
-            return None
+        for i in range(5):
+            try:
+                lines = p.read_text(encoding='utf-8', errors='replace').splitlines()
+                break
+            except FileNotFoundError:
+                self._armed_seen = None
+                return None
+            except OSError:                                          # Windows: the file is open for a moment (the swap of `arm`, a scanner); try again, then let the last decision stand
+                if i == 4:
+                    return getattr(self, '_armed_seen', None)
+                time.sleep(0.2)
         ids = None
-        for ln in lines:
-            if ln.startswith('jobs: ') or ln == 'jobs:':
-                ids = ln[len('jobs:'):].split()
-        return 'first' if ids is None else ids
+        if len(lines) > 1 and (lines[1].startswith('jobs: ') or lines[1] == 'jobs:'):         # line 2 only: a "jobs:" line inside the words of line 1 or later never arms
+            ids = lines[1][len('jobs:'):].split()
+        self._armed_seen = 'first' if ids is None else ids
+        return self._armed_seen
 
     def armed_text(self):
         ids = self.armed_ids()
