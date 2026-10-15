@@ -104,6 +104,7 @@ def test_analyze_events_fake_cuda():
     evs = [Ev('gemm', 'DeviceType.CUDA', 0, 10), Ev('softmax', 'DeviceType.CUDA', 5, 20), Ev('gemm', 'DeviceType.CUDA', 30, 40),
            Ev('Memcpy DtoH (Device -> Pageable)', 'DeviceType.CUDA', 45, 46)]
     evs += [Ev('cudaLaunchKernel', 'DeviceType.CPU', cpu_self=2.0) for _ in range(3)] + [Ev('cudaStreamSynchronize', 'DeviceType.CPU', cpu_self=1.0)]
+    evs.append(Ev('ProfilerStep#7', 'DeviceType.CUDA', 0, 62))               # torch's annotation over the whole step: must not count as a kernel or as busy time (GPU-RUN-3 boxes 1-3 printed busy 0.998 because of it)
     out = prof.analyze_events(evs, n_updates=1, wall_s=62e-6, is_cuda=True)
     c = out['cuda']
     assert c['kernels_per_update'] == 3                                      # the memcpy is not a kernel

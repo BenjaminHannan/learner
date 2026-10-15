@@ -69,4 +69,19 @@ An independent review of the harness and box plan (done before renting) found pl
 Amendment 4 point 2 says a round is read if its A median lies within 10 % of "the arm's fastest A round". That wording has a hole: an arm that ran entirely inside a slow stretch (box 1: `pad64p`, `pad64`, A 5.5 s/update in all three rounds) would count as normal against its own fastest round. What was meant, and what Amendment 4 point 1 already did by hand for box 1, is the fastest A round of the same box over ALL arms. Rule as it stands from now: **the reference is the fastest A round on the same box over all arms (box 1: 2.215 s/update; box 3: read from its own file); a round is "normal speed" if its A median is at most 10 % above that reference; an arm needs 3 normal-speed rounds to be decided, otherwise it stays "regime-confounded".** For box 1 this gives exactly the classification of Amendment 4 point 1 (unchanged by this amendment). Accum rows and the controls are not read through this rule. All dollar figures: wall time x the billed rate $0.4563/h.
 
 ## Result log
-(empty: filled after the run, results unedited, in the order of the tables above)
+**Result log 1 (10-15, boxes 1 to 3; full report `GPU-RUN-3-2026-10-15.md`).** The unedited harness outputs are `gpu-run-3-box1/`, `gpu-run-3-box2/`, `gpu-run-3-box3/` (`b3g2_abbench.md/json`, `b3g2_abequiv.md`, `b3g2_profile.md`, pair events and summaries, `hostmon.csv` on box 3). The harness's own dollar lines used the rate given at creation (box 1 0.3696, box 2 0.5304, box 3 0.4563 $/h) and are not the billed rates (0.4563, 0.4563, 0.4163); the report recomputes. Marks as applied (Amendment 5's regime rule; box 1 slow stretch not read):
+
+| mark | result |
+|---|---|
+| 1 | accum 8 0.688x (box 2), 0.693x (box 1); accum 16 0.372x (box 2): fail |
+| 2 | accum 8 4.47 GB, accum 16 2.52 GB: pass |
+| 3 | prediction right (neither passes mark 1) |
+| 4 | no rise: 0.924 and 0.928 of A's rounds per micro-batch |
+| 5 | none counts. Box 3 (3 of 3 normal rounds each): `nosync` -0.1 %, `pad64p` +2.2 %, `pad64` -2.0 %, `tf32` +0.1 %. Box 1 normal rounds: `unfused` +0.2 % (3 of 3), `nosync` +1.2 % (2 of 3), `tf32` -0.2 % (1 of 3); `pad64p` +7.2 % and `pad64` +2.9 % came from the slow stretch only and are not read |
+| 6 | holds for all five variants on the bf16 bar (`bf16_bar_only`); CPU fp32 clauses are in `test_prof.py` |
+| 7 | box 3 A spreads 1.008 to 1.019: `nosync`, `pad64`, `tf32` "does nothing, inside noise"; `pad64p` "small, reported, not recommended" |
+| 8 | `tf32` right; `pad64` right; `unfused` proved wrong; `nosync` proved wrong |
+
+Pair stage (registered gate-3 rule, `gpu_run_3_pairs.py`): accum 4 s400 minus accum 32 s400 +0.211 (last 50 +0.023) FAIL (box 1, read 10-14, unchanged); accum 4 s401 minus accum 32 s400 +0.251 FAIL; accum 8 s400 (box 3) minus accum 32 s400 (box 1) +0.109 (last 50 +0.018) FAIL on the first number; accum 4 s401 minus accum 4 s400 +0.040 UNCLEAR (noise of the statistic, one pair). Steady s/update (updates 51 to 300): accum 4 2.243 (s400) and 2.205 (s401), accum 8 3.426, accum 32 11.308.
+
+Defect found while reading (not a mark): the harness's `profiler` section counted torch's `ProfilerStep` range as a kernel, so it printed GPU busy 0.998 and "GPU-bound" on all three boxes. Corrected by subtraction from the saved tables: real kernel time about 1.4 s per update, 39 to 41 % of the profiled wall (profiler overhead inflates wall), mean kernel about 18.7 us. Fixed in `prof_train.py` with a test that fails on the old code; the three boxes ran the old code; nothing else in this log depends on that section.

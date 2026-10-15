@@ -1609,6 +1609,8 @@ def analyze_events(evs, n_updates, wall_s, is_cuda):
         dt = str(getattr(e, 'device_type', '')).upper()
         nm = getattr(e, 'name', '') or getattr(e, 'key', '')
         if 'CUDA' in dt:
+            if str(nm).startswith('ProfilerStep'):                 # torch's per-step annotation is a CUDA-side range over the whole step, not a kernel (it made the busy share 1.0 on GPU-RUN-3 boxes 1 to 3)
+                continue
             kern.append(e)
         else:
             cpu_self += float(getattr(e, 'self_cpu_time_total', 0.0) or 0.0)
