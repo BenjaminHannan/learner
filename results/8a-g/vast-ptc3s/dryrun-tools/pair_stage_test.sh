@@ -14,7 +14,7 @@ cutfn() {   # NAME : the function's text from SCRIPT
     $0 ~ "^" n "\\(\\) \\{" { on = 1; multi = ($0 ~ /\{[[:space:]]*(#.*)?$/); print; if (!multi) { exit } ; next }
     on { print; if ($0 == "}") exit }' $SCRIPT
 }
-for f in say stage sha kill_cur runp prof_left prof_pair_helpers pair_alive pair_run prof_b3g2_pair; do cutfn $f; done > $T/funcs.sh
+for f in say stage sha kill_cur runp prof_left prof_pair_helpers pair_alive pair_run pair_derive prof_b3g2_pair; do cutfn $f; done > $T/funcs.sh
 grep -E '^(PROF_PAIR_[A-Z0-9_]+=|B3G2_SHA=|B3G2_Q_SHA=)' $SCRIPT | sed 's/ \{1,\}#.*$//' > $T/vars.sh
 { cat $T/vars.sh; } >/dev/null
 echo "cut: $(grep -c . $T/funcs.sh) lines of functions, vars: $(cat $T/vars.sh | tr '\n' ' ' | cut -c1-300)"
@@ -39,7 +39,7 @@ real_runp=$(declare -f runp | sed '1s/runp/real_runp/')
 eval "$real_runp"
 runp() {
   local a=() x
-  for x in "$@"; do case $x in */cmd.i4_a4.sh|*/cmd.i4_a32.sh) a+=("$FAKEJOB" "$x");; *) a+=("$x");; esac; done
+  for x in "$@"; do case $x in */cmd.i4_*.sh) a+=("$FAKEJOB" "$x");; *) a+=("$x");; esac; done
   real_runp "${a[@]}"
 }
 prof_b3g2_pair
@@ -81,6 +81,7 @@ case $CASE in
   nobudget) export PROF_MAXMIN=100;;
   tamper) export TAMPER=models/b3g2.py;;
   nofetch) export NOFETCH=1;;
+  controls) export PROF_PAIR_RUNS=a8:8:400:1,a4s401:4:401:1;;
 esac
 # speed the test: timeouts of 1 and 2 minutes, a stop at step 60 instead of 300
 export PROF_PAIR_A4_MIN=${PROF_PAIR_A4_MIN:-1} PROF_PAIR_A32_MIN=${PROF_PAIR_A32_MIN:-2} PROF_PAIR_STEP=${PROF_PAIR_STEP:-60}
@@ -88,5 +89,5 @@ export PROF_PAIR_A4_MIN=${PROF_PAIR_A4_MIN:-1} PROF_PAIR_A32_MIN=${PROF_PAIR_A32
 bash $T/drv.sh 2>&1 | sed 's/\x1b//g' | cut -c1-900
 echo "--- fake.log"; cat $FAKE_LOG
 echo "--- leftover job processes:"; ps -eo args= | grep -F "$T" | grep -v -F grep | cut -c1-120
-for k in a4 a32; do [ -f $J/profraw/pair_${k}_events.jsonl ] && echo "pair_${k}_events.jsonl: $(wc -l < $J/profraw/pair_${k}_events.jsonl) lines, first: $(head -n 1 $J/profraw/pair_${k}_events.jsonl | cut -c1-120), last: $(tail -n 1 $J/profraw/pair_${k}_events.jsonl | cut -c1-120)"; done
+for k in a4 a32 a8 a4s401; do [ -f $J/profraw/pair_${k}_events.jsonl ] && echo "pair_${k}_events.jsonl: $(wc -l < $J/profraw/pair_${k}_events.jsonl) lines, first: $(head -n 1 $J/profraw/pair_${k}_events.jsonl | cut -c1-120), last: $(tail -n 1 $J/profraw/pair_${k}_events.jsonl | cut -c1-120)"; done
 true
