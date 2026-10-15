@@ -38,3 +38,18 @@ Shown if it passes: a deployable, hand-written-chain-free label source (the game
 |---|---|---|
 | GW-F | no hand-written chain, no world copy, no extra model; free CPU; uses only signals the game itself gives; a leading indicator at iteration 8 stops it early; deployable shape (the finished agent is the LM alone) | near to the old copy rule, which plateaued at 3.3 to 3.5; sharpening can kill exploration; the pickaxe link may start from too few events; about 9 h to the first gate, 24 h if it keeps passing; 400 games an iteration is about 75,000 moves, so eight iterations play about 600,000 moves, seven times the 87,000 of the whole PPO-clipped run: a different move budget |
 Verdict: do it. Reason: it is the only candidate on the table that is both deployable and cheap, and the first gate is nine hours of free CPU.
+
+## Gate A result (rounds 1 to 8; read 7:16 AM ET 10-15; code commit d8d93de149, nothing changed since the marks; all **shown**)
+Per round, games of 400 (practice worlds, the policy's own sampling with 10% random moves; round 1 is the untrained parent at T0). Each round took about 1 h on 2 threads (play about 40 min, training 10 to 22 min).
+| round | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| seed 200: games with wood pickaxe | 3 | 3 | 10 | 16 | 12 | 16 | 20 | **1** | 10 |
+| seed 201: games with wood pickaxe | 7 | 4 | 5 | 21 | 13 | 19 | 34 | **24** | 25 |
+| seed 200: games with table | 70 | 51 | 78 | 86 | 61 | 78 | 96 | 49 | 59 |
+| seed 201: games with table | 55 | 44 | 32 | 91 | 81 | 79 | 119 | 113 | 140 |
+| seed 200: mean unlocks of the 400 games | 3.73 | 3.28 | 3.65 | 3.81 | 3.68 | 3.82 | 3.84 | 3.31 | 3.56 |
+| seed 201: mean unlocks of the 400 games | 3.57 | 3.58 | 3.18 | 3.84 | 3.67 | 3.69 | 4.01 | 4.10 | 4.24 |
+Stone games stayed at 0 to 7 of 400 on both seeds (seed 201: 7 in round 9). Kept rows are mostly the cheap events (round 8, seed 201: sapling 1,453, drink 1,506, wood 572, plant 389, zombie 168; wood pickaxe 33 rows, stone 6); the kept moves agree with the hand-written labeller on its `nav` / `act` views 21 to 22% (round 1: 10%; all moves played: 6 to 9%), an instrument report only.
+- **Gate A by the marks (round 8): no pass** (needed >= 40 pickaxe games on both seeds; got 1 and 24) **and not proved wrong** (needed both seeds below 1.5 x their round-1 count; seed 201 has 24 against 7). "Anything else: continue to the round-16 gate." Both loops are running to round 16.
+- Round-8 sealed scores (100 maps, sample, T = 1; reported, not marked): seed 200 **3.65** (GW-P8 After -0.50, 95% -0.85 to -0.16; untrained T0 -0.10); seed 201 **4.37** (+0.18, -0.19 to +0.57; T0 +0.76, +0.36 to +1.19). Wood pickaxe 2% and 11% of maps, stone 0% and 5%.
+- Reading (suggested, untested): seed 201 is climbing (table 55 -> 140 games, mean unlocks 3.57 -> 4.24, round-9 sealed not scored) and seed 200 fell back at round 8 (wood 122: a bad round, partly recovered at 9). Two seeds, 400 games a round and counts of 1 to 34 pickaxe games are noisy; a rise from 7 to 34 and a fall to 1 are both inside what a few lucky games do. Nothing here yet beats the reward-trained level on the sealed maps by the screen's bar (5.2).
