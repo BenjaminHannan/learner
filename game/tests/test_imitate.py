@@ -151,6 +151,17 @@ class Smoke(unittest.TestCase):
             with open(os.path.join(a, 'iter-2.json')) as f:
                 self.assertEqual(json.load(f)['temp'], 1.0)
 
+    def test_lookahead_smoke_writes_labels_and_trains(self):
+        with tempfile.TemporaryDirectory() as a:
+            imitate.run(PARENT, 200, 394, 19.69, a, iterations=1, smoke=True, label_rule='lookahead', epochs=1, workers=1)
+            with open(os.path.join(a, 'iter-1.json')) as f:
+                st = json.load(f)
+            self.assertEqual(st['segments'], {})
+            self.assertGreater(st['lookahead']['states'], 0)
+            self.assertEqual(st['new_rows'], st['lookahead']['labelled'])
+            self.assertTrue(os.path.exists(os.path.join(a, 'labels-1-0.json.gz')))
+            self.assertTrue(os.path.exists(os.path.join(a, 'checkpoint-iter1.pt')))
+
     def test_sealed_run_seed_refused_outside_smoke(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(AssertionError):

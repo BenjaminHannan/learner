@@ -21,7 +21,7 @@ import numpy as np
 import torch
 from crafter import constants as crafter_constants
 
-from game import oracle, pg, play
+from game import lookahead, oracle, pg, play
 from game.crafter_text import TextEnv, parse_action
 
 EVENT_TYPES = tuple(crafter_constants.achievements)
@@ -149,6 +149,30 @@ def play_games(policy, seeds, act_seeds, explore, cap):
     return games
 
 
+def label_chunks(games, k, out, chunks, per_chunk, cap, workers):
+    """One-step lookahead rows (game.lookahead) of an iteration's games, chunk by chunk (each chunk saved when labelled, so a restart loses at most one).
+    -> (rows, stats)."""
+    rows, parts = [], []
+    for c in range(chunks):
+        path = os.path.join(out, f'labels-{k}-{c}.json.gz')
+        if os.path.exists(path):
+            with gzip.open(path, 'rt') as f:
+                part = json.load(f)
+        else:
+            rs, st = lookahead.label_games(games[c * per_chunk:(c + 1) * per_chunk], cap, workers)
+            part = dict(rows=rs, stats=st)
+            tmp = path + '.tmp'
+            with gzip.open(tmp, 'wt') as f:
+                json.dump(part, f)
+            os.replace(tmp, path)
+        rows += part['rows']
+        parts.append(part['stats'])
+    stats = dict(states=sum(p['states'] for p in parts), labelled=sum(p['labelled'] for p in parts), ties=sum(p['ties'] for p in parts),
+                 by_word=dict(sum((Counter(p['by_word']) for p in parts), Counter()).most_common()),
+                 by_type=dict(sum((Counter(p['by_type']) for p in parts), Counter()).most_common()))
+    return rows, stats
+
+
 def _games_path(out, k, c):
     return os.path.join(out, f'play-{k}-{c}.json.gz')
 
@@ -247,10 +271,11 @@ def iteration_stats(k, temp, games, segs, kept, thr, rows_new, n_train, n_buffer
                 ready=ready_stats(games), seconds_play=round(secs_play, 1), seconds_train=round(secs_train, 1))
 
 
-def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare_below=0):
+def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare_below=0, label_rule='segments', epochs=EPOCHS, workers=2):
     from custom_io.models import load_model
     from domain import mode as dm
-    assert run_seed in (394, 395) or smoke, run_seed
+    assert run_seed in (394, 395, 396, 397) or smoke, run_seed
+    assert label_rule in ('segments', 'lookahead'), label_rule
     chunks, per_chunk, cap = (1, 3, 40) if smoke else (CHUNKS, GAMES_PER_CHUNK, play.load_constants()[0]['episode_cap'])
     explore = play.load_constants()[0]['explore']
     os.makedirs(out, exist_ok=True)
@@ -279,18 +304,28 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare
         t1 = time.time()
         games = play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs)
         t2 = time.time()
-        segs = [s for gi, g in enumerate(games) for s in segments(g['events'], gi)]
-        kept, thr = keep_segments(segs, rare_below)
-        weights = type_weights(Counter(s['type'] for s in segs))
-        rows_new = rows_of(kept, games, weights)
+        la_stats = None
+        if label_rule == 'lookahead':
+            rows_new, la_stats = label_chunks(games, k, out, chunks, per_chunk, cap, workers)
+            weights = type_weights(Counter(r['type'] for r in rows_new))
+            for r in rows_new:
+                r['weight'] = weights[r['type']]
+            segs, kept, thr = [], [], {}
+        else:
+            segs = [s for gi, g in enumerate(games) for s in segments(g['events'], gi)]
+            kept, thr = keep_segments(segs, rare_below)
+            weights = type_weights(Counter(s['type'] for s in segs))
+            rows_new = rows_of(kept, games, weights)
         buffer = prune_buffer(buffer, thr)
         train_set = training_set(rows_new, buffer, rng)
-        losses = train_rows(m, addon, opt, gen, train_set) if train_set else []
+        losses = train_rows(m, addon, opt, gen, train_set, epochs) if train_set else []
         n_buffer = len(buffer)
         buffer = (buffer + rows_new)[-BUFFER_CAP:]
         t3 = time.time()
         sample = [dict(view=v, action=a) for g in games[:50] for v, a in zip(g['views'], g['actions'])][:20000]
         stats = iteration_stats(k, temp, games, segs, kept, thr, rows_new, len(train_set), n_buffer, losses, sample, t2 - t1, t3 - t2)
+        if la_stats is not None:
+            stats['lookahead'] = la_stats
         history.append(stats)
         with open(os.path.join(out, f'iter-{k}.json'), 'w') as f:
             json.dump(stats, f, indent=1)
@@ -317,10 +352,13 @@ def main(argv=None):
     r.add_argument('--iterations', type=int, default=24)
     r.add_argument('--threads', type=int, default=2)
     r.add_argument('--smoke', action='store_true')
+    r.add_argument('--label-rule', choices=('segments', 'lookahead'), default='segments', help='A29: lookahead = one-step first-unlock labels (an instrument)')
+    r.add_argument('--epochs', type=int, default=EPOCHS)
+    r.add_argument('--workers', type=int, default=2, help='processes for the lookahead replay-and-fork')
     r.add_argument('--keep-rare-below', type=int, default=0, help='A27: types with fewer segments than this keep every segment of at most 12 moves (0 = the A26 rule)')
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
-    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke, rare_below=a.keep_rare_below)
+    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke, rare_below=a.keep_rare_below, label_rule=a.label_rule, epochs=a.epochs, workers=a.workers)
 
 
 if __name__ == '__main__':
