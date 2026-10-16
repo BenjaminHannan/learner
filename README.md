@@ -10,3 +10,4 @@ Finished project videos (orphan branch; never merged to main). Files: YYYY-MM-DD
 - 2026-10-14: [2026-10-14-morning-recap.mp4](2026-10-14-morning-recap.mp4) (morning recap)
 - 2026-10-15: [2026-10-15-morning-recap.mp4](2026-10-15-morning-recap.mp4) (morning recap)
 - 2026-10-16: [sleep.mp4](animations/explainers/sleep.mp4) (explainer: sleep, 5 min 34 s)
+- 2026-10-16: [2026-10-16-morning-recap.mp4](2026-10-16-morning-recap.mp4) (morning recap)
