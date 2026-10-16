@@ -27,11 +27,14 @@ WHAT IT DOES NOT DO
   estimate, not a measurement, and the report shows a low and a high version.  A count of ops is shown; a launch count is suggested.
 
 USE
-  python attrib.py natural --out RUN.json                        # real 3M shape, seed 400, one warm-up update then one instrumented update (natural K draws)
-  python attrib.py pinned --ks 4,8,12,16,24,32 --out RUN.json    # one micro-batch per K (forward + backward), K pinned; for the fit  ops = a + b n
-  python attrib.py rows --out RUN.json                           # batch 64 vs 256 at accum 4, K pinned: does the per-round count depend on the rows?
-  python attrib.py report RUN1.json RUN2.json ... --md OUT.md --json OUT.json
-  (--tiny for the d 48 smoke shape, --pkg-root for the folder that contains custom_io/, default /home/user/src-g2f)
+  python attrib.py natural --n-updates 5 --out RUN.json          # real 3M shape, seed 400, one warm-up update then 5 instrumented updates (natural K draws)
+  python attrib.py pinned --ks 4,8,12,16,24,32 --out RUN.json    # one micro-batch (forward + backward) per K, K pinned; for the fit  ops = a + b n
+  python attrib.py rows --batches 64,256 --k 16 --out RUN.json   # batch 64 vs 256 at accum 4, K pinned: does the per-round count depend on the rows?
+  python attrib.py multi --ks 16,32 --out RUN.json               # same on rows with 3 to 9 calls (the synthetic rows have 0 or 2)
+  add --autocast for torch.autocast('cpu', bfloat16); --tiny for the d 48 smoke shape; --synth-letters N for the longest synthetic prompt (default: the caps' 2000, ~13 GB of RAM at
+  batch 256 / accum 4; every op count is independent of the width, shown by the report's width check); --pkg-root for the folder that contains custom_io/ (default /home/user/src-g2f)
+  python attrib.py report --natural N.json --pinned P.json --rows-json R.json [--autocast-json A.json --width W.json --multi M.json] --md OUT.md --json OUT.json
+  python test_attrib.py                                           # 17 tests, about a minute
 """
 import argparse, collections, contextlib, json, math, os, re, sys, time, types
 import numpy as np
@@ -165,8 +168,8 @@ def op_kind(func):
 KERNEL_TABLE = {
     # matmuls: one cuBLAS / cutlass call (a split-K reduce kernel is ignored)
     'mm': 1, 'addmm': 1, 'bmm': 1, 'baddbmm': 1,
-    # normalisation: forward is one kernel; backward = grad_input kernel + gamma/beta kernel(s)
-    'native_layer_norm': 1, 'native_layer_norm_backward': (2, 3),
+    # normalisation: forward is one kernel; backward = grad_input kernel + gamma/beta kernel
+    'native_layer_norm': 1, 'native_layer_norm_backward': 2,           # grad_input + one gamma/beta kernel: the PTC profile shows one GammaBetaBackward per layer-norm forward (480 and 480)
     # composite-explicit backward ops the dispatch mode sees as ONE op that CUDA runs as zeros + copy
     'select_backward': 2, 'slice_backward': 2, 'diagonal_backward': 2,
     # sorting-based scatter: embedding_dense_backward and index_put_ with accumulate=True sort the indices (cub radix sort) before the segmented add
@@ -346,6 +349,9 @@ def _has_device_target(a, k):
         if isinstance(x, str):
             return True
     return False
+
+
+NOSYNC_LINES = {'writer.py:138', 'writer.py:121', 'b3g2.py:350', 'b3g2.py:374'}       # removed by the harness's `nosync` variant (prof_train.NoSync doc); GPU-RUN-3: -0.1 % to +1.2 % speed
 
 
 # Hand-read notes per sync site (SUGGESTED: from reading the source at 74d6e92c75, and for the 'sync' class cross-checked against the GPU record, gpu-run-3-box1/
@@ -675,6 +681,7 @@ class Replica:
         self.opt = prof.make_opt(self.model, world.lr, world.device, fused=fused)
         self.it = world.batches(seed if batch_seed is None else batch_seed)
         self.step = 0
+        self.run_loss = 0.0
         self.autocast = autocast
         self.amp = (lambda: torch.autocast('cpu', dtype=torch.bfloat16)) if autocast else contextlib.nullcontext
 
@@ -719,10 +726,12 @@ class Replica:
         with ctx:
             dev = self.next_batch()
             parts = PK.TR.split_batch(dev, self.accum)
-            loss, ns = 0.0, []
+            loss, ns, aux = 0.0, [], {}
             for mb in parts:
                 l_i, a_i = self.micro(mb, len(parts), inst)
                 loss = loss + l_i.detach() / len(parts)
+                for k_, v_ in a_i.items():                               # train.py's aux averaging (a few tiny ops per micro-batch)
+                    aux[k_] = aux.get(k_, 0.0) + v_.detach() / len(parts) if torch.is_tensor(v_) else aux.get(k_, 0.0) + v_ / len(parts)
                 ns.append(a_i.get('rounds') if isinstance(a_i, dict) else None)
             if inst is not None:
                 inst.phase = 'clip'
@@ -731,6 +740,9 @@ class Replica:
                 inst.phase = 'optimizer'
             self.opt.step()
             self.opt.zero_grad(set_to_none=True)
+            if inst is not None:
+                inst.phase = 'forward'
+            self.run_loss = self.run_loss + loss.detach()                  # train.py: run_loss += loss.detach(); run_n += 1
             if inst is not None:
                 inst.phase = 'prep'
         self.step += 1
@@ -783,8 +795,9 @@ def optimizer_info(replica):
     groups = [[p.numel() for p in g['params']] for g in replica.opt.param_groups]
     adam = sum(multi_tensor_launches(g, 4) for g in groups)
     gn = [p.numel() for p in ps]
+    # clip_grad_norm_ (foreach): _foreach_norm (multi-tensor launches + 1 cleanup), then stack, linalg_vector_norm, add, reciprocal, mul, clamp (6 single launches), then _foreach_mul_ (multi-tensor launches)
     return dict(n_param_tensors=len(ps), n_params=sum(gn), groups=[len(g) for g in groups], fused_adamw_launches=adam, step_counter_launches=len(groups),
-                clip_norm_launches=multi_tensor_launches(gn, 1) + 3, clip_mul_launches=multi_tensor_launches(gn, 1))
+                clip_norm_launches=multi_tensor_launches(gn, 1) + 1 + 6, clip_mul_launches=multi_tensor_launches(gn, 1))
 
 
 def sums(rows, **flt):
@@ -836,7 +849,7 @@ def get_world(tiny=False, batch=256, accum=4, rows=2000, seed=400, pkg_root=None
     return _WORLDS[key]
 
 
-def run_update(world, accum=4, seed=None, warmup=1, autocast=False, ks=None, extra=None, n_updates=1):
+def run_update(world, accum=4, seed=None, warmup=1, autocast=False, ks=None, extra=None, n_updates=1, on_each=None):
     """warm-up update(s) plain, then n_updates instrumented updates (each with its own Instrument).  ks: pin KS to this tuple.  -> (list of packed runs, last inst, replica)"""
     rep = Replica(world, accum=accum, seed=seed, autocast=autocast)
     cm = pin_ks(ks) if ks else contextlib.nullcontext()
@@ -851,6 +864,8 @@ def run_update(world, accum=4, seed=None, warmup=1, autocast=False, ks=None, ext
             finally:
                 inst.uninstall()
             outs.append(pack_run(inst, rep, dict(update_result=r, kind='update', autocast=autocast, ks=ks, accum=accum, update_index=i, **(extra or {}))))
+            if on_each is not None:
+                on_each(outs[-1])                                  # a long run keeps what it has finished if the box kills it
     return outs, inst, rep
 
 
@@ -915,16 +930,26 @@ def meta_of(world, args):
     return m
 
 
+def k_stream(world, n_updates=12, accum=4, seed=None):
+    """The loop-length draws K = KS[torch.randint] of the first n_updates updates of a trainer seeded like the harness's (torch seed, model built, then one draw per micro-batch): [[K x accum] per update]."""
+    seed = world.a.seed if seed is None else seed
+    prof.seed_all(seed)
+    world.new_model(seed)
+    KS = PK.models.b3g2.KS
+    return [[KS[int(torch.randint(len(KS), (1,)))] for _ in range(accum)] for _ in range(n_updates)]
+
+
 def cmd_natural(args):
     w = get_world(args.tiny, args.batch, args.accum, args.rows, args.seed, args.pkg_root, args.synth_letters)
-    out = dict(meta=meta_of(w, args), runs=[])
+    out = dict(meta=meta_of(w, args), runs=[], k_stream=k_stream(w, 12, args.accum))
     t = time.time()
-    runs, inst, rep = run_update(w, args.accum, warmup=args.warmup, autocast=args.autocast, extra=dict(tag='natural'), n_updates=args.n_updates)
-    for r in runs:
+
+    def each(r):
         r['wall_s_total'] = time.time() - t
         out['runs'].append(r)
+        json.dump(out, open(args.out, 'w'))
         prof.log(f"natural update {r['update_index']}: rounds per micro-batch {r['update_result']['rounds']}")
-    json.dump(out, open(args.out, 'w'))
+    run_update(w, args.accum, warmup=args.warmup, autocast=args.autocast, extra=dict(tag='natural'), n_updates=args.n_updates, on_each=each)
     prof.log(f"natural done, {time.time() - t:.0f} s total")
 
 
@@ -975,6 +1000,8 @@ GPU = dict(kernels=75966, kernels_profile=75967, cuda_launch=70618, cu_launch=53
            sync_debug_per_update=1319.5)
 PTC_KERNELS_PER_UPDATE, PTC_ACCUM = 47878, 16                    # gpu-run-1/profrun/profile.profiler.md: PTC 3M accum 16, one Gemma call per micro-batch
 GEMMA_CALLS_PER_MB = 63.4 / 32                                    # gpu-run-1/profrun/b3g2_profile.md, accum 32: eg.gemma_forward calls per update / micro-batches
+PROFILED_N = (32, 16, 16, 7, 16, 16, 16, 32)             # the micro-batch round counts of the GPU profile's two updates, inferred (see estimate_tables)
+GPU_GEMMA_PER_MB_BOUND = GEMMA_CALLS_PER_MB * PTC_KERNELS_PER_UPDATE / PTC_ACCUM        # upper bound: Gemma launches per micro-batch
 ROW = dict(phase=0, region=1, rnd=2, op=3, kind=4, count=5, lo=6, hi=7, mem=8)
 
 
@@ -1140,15 +1167,18 @@ def additivity(pinned):
     return out, ref
 
 
-def sync_table(runs, gpu):
-    """Sync census of natural update runs: per site: count per update, per round, per micro-batch, kind, class, GPU per update."""
+def sync_table(runs, gpu, gpu_rounds=75.5, gpu_mbs=4):
+    """Sync census of natural update runs: per site: count per update, per round (rounds-tagged), per micro-batch (not round-tagged), the same scaled to the GPU profile's rounds and
+    micro-batches, kind, class, and the GPU record's count.  Implicit index sites that are the two halves of one source line (index + index_put_) are one line: the larger count."""
     agg = collections.defaultdict(lambda: dict(total=0, rounds=0, fixed=0, kinds=set(), regions=collections.Counter(), phases=collections.Counter()))
     n_up, tot_rounds, tot_mb = 0, 0.0, 0
     for run in runs:
         n_up += 1
         for m in run['mbs']:
             tot_rounds += m['n']; tot_mb += 1
-            for kind, site, ph, rnd, reg, c in [(*x[:4], x[4], x[5]) if len(x) == 6 else (*x[:4], 'n/a', x[4]) for x in m['sync']]:
+            for x in m['sync']:
+                kind, site, ph, rnd = x[:4]
+                reg, c = (x[4], x[5]) if len(x) == 6 else ('n/a', x[4])
                 a = agg[site]
                 a['total'] += c; a['kinds'].add(kind); a['regions'][reg] += c; a['phases'][ph] += c
                 a['rounds' if rnd is not None else 'fixed'] += c
@@ -1157,17 +1187,35 @@ def sync_table(runs, gpu):
                 a['total'] += c; a['kinds'].add('implicit'); a['regions']['n/a'] += c; a['phases'][ph] += c
                 a['rounds' if rnd is not None else 'fixed'] += c
         for x in run.get('update', {}).get('sync', []):
-            kind, site, ph, rnd, reg, c = (*x[:4], x[4], x[5]) if len(x) == 6 else (*x[:4], 'n/a', x[4])
+            kind, site, ph, rnd = x[:4]
+            reg, c = (x[4], x[5]) if len(x) == 6 else ('n/a', x[4])
             a = agg[site]
             a['total'] += c; a['kinds'].add(kind); a['phases'][ph] += c; a['fixed'] += c
-    rows = []
+    # merge the index / index_put halves of one line
+    merged = {}
     for site, a in agg.items():
+        key = site.split(' ')[0] if '[' in site else site
+        if key in merged and '[' in site and '[' in merged[key][0]:
+            if a['total'] > merged[key][1]['total']:
+                merged[key] = (site, a)
+        else:
+            merged[key] = (site, a)
+    rows = []
+    for key, (site, a) in merged.items():
         base = site.split(' ')[0]
         cls, txt = site_class(site, a, gpu)
-        rows.append(dict(site=site, kind='/'.join(sorted(a['kinds'])), per_update=a['total'] / n_up, per_round=a['rounds'] / tot_rounds if tot_rounds else 0.0,
-                         per_mb=a['fixed'] / tot_mb if tot_mb else 0.0, cls=cls, note=txt,
-                         gpu_per_update=(gpu or {}).get('sites', {}).get(base), phases=dict(a['phases'])))
-    rows.sort(key=lambda r: (-r['per_update']))
+        per_round = a['rounds'] / tot_rounds if tot_rounds else 0.0
+        per_mb = a['fixed'] / tot_mb if tot_mb else 0.0
+        label = base + (' (index / index_put_)' if '[' in site else '')
+        rows.append(dict(site=label, kind='/'.join(sorted(a['kinds'])), per_update=a['total'] / n_up, per_round=per_round, per_mb=per_mb, scaled=per_round * gpu_rounds + per_mb * gpu_mbs,
+                         per_round_equiv=a['total'] / tot_rounds if tot_rounds else 0.0, cls=cls, note=txt, gpu_per_update=(gpu or {}).get('sites', {}).get(base), phases=dict(a['phases'])))
+    seen = {r['site'].split(' ')[0] for r in rows}
+    for base, g in ((gpu or {}).get('sites') or {}).items():
+        if base not in seen:
+            rows.append(dict(site=base, kind='?', per_update=0.0, per_round=0.0, per_mb=0.0, scaled=0.0, per_round_equiv=0.0, cls='gpu-only',
+                             note='in the GPU record only: the real Gemma front (eg.py / transformers masking_utils); this CPU run has a stub there', gpu_per_update=g, phases={}))
+    order = {'sync': 0, 'gpu-only': 1, 'stub': 2, 'noop': 3, 'host': 4, 'no-sync': 5, 'unclassified': 6}
+    rows.sort(key=lambda r: (order.get(r['cls'], 9), -r['per_update'], -(r['gpu_per_update'] or 0)))
     return rows, dict(updates=n_up, rounds=tot_rounds, mbs=tot_mb)
 
 
@@ -1186,19 +1234,36 @@ def site_class(site, a, gpu=None):
 
 
 def cross_check(fits_by_op, gpu, mb_rounds_per_update):
-    """GPU profiler CPU-op call counts per update vs the CPU dispatch-level counts evaluated at the profiled updates' rounds."""
+    """GPU profiler CPU-op call counts per update vs the CPU dispatch-level counts evaluated at the profiled updates' rounds.  Only ops that are one launch each are compared
+    (mm, addmm, layer norm, add + add_, mul, sum, pow, _to_copy); view ops are not launches and the profiler counts them at every nesting level."""
     rows = []
-    for gname, ops in (('aten::mm', ['mm']), ('aten::addmm', ['addmm']), ('aten::native_layer_norm', ['native_layer_norm']), ('aten::add', ['add']), ('aten::add_', ['add_']),
-                       ('aten::mul', ['mul']), ('aten::sum', ['sum']), ('aten::pow', ['pow']), ('aten::_to_copy', ['_to_copy']), ('aten::select', ['select']),
-                       ('aten::view', ['view']), ('aten::transpose', ['transpose']), ('aten::slice', ['slice'])):
-        g = (gpu or {}).get('ops', {}).get(gname)
-        pred = sum(fits_by_op.get(o, 0.0) for o in ops)
-        rows.append(dict(op=gname, gpu_per_update=g, cpu_pred_per_update=pred, ratio=(pred / g) if g else None))
+    for gname, gops, cops in (('aten::mm', ['aten::mm'], ['mm']), ('aten::addmm', ['aten::addmm'], ['addmm']), ('aten::native_layer_norm', ['aten::native_layer_norm'], ['native_layer_norm']),
+                              ('aten::add + aten::add_', ['aten::add', 'aten::add_'], ['add', 'add_']), ('aten::mul', ['aten::mul'], ['mul']), ('aten::sum', ['aten::sum'], ['sum']),
+                              ('aten::pow', ['aten::pow'], ['pow']), ('aten::_to_copy', ['aten::_to_copy'], ['_to_copy'])):
+        g = sum((gpu or {}).get('ops', {}).get(n, 0.0) for n in gops) or None
+        pred = sum(fits_by_op.get(o, 0.0) for o in cops)
+        rows.append(dict(op=gname, gpu_per_update=g, cpu_pred_per_update=pred, ratio=(pred / g) if g else None, gpu_minus_cpu=(g - pred) if g else None))
     return rows
 
 
+FILL_OPS = ('zeros', 'new_zeros', 'zeros_like', 'ones', 'ones_like', 'full', 'full_like', 'fill_', 'fill', 'new_ones', 'new_full')
+
+
+def groups_of(r):
+    """Names an op row is counted under in the cross-checks: its base name, plus 'fill-type' for the zero / one fills and 'index_put_acc' for the sort-based accumulating scatter."""
+    b = base_name(r[3])
+    g = [b]
+    if b in FILL_OPS:
+        g.append('fill-type')
+    if b in ('index_put_', 'index_put') and '|acc' in r[3]:
+        g.append('index_put_acc')
+    if b.startswith('_scaled_dot_product') and not b.endswith('backward'):
+        g.append('sdpa_fwd')
+    return g
+
+
 def op_fits(pinned, n_mb, accum=4):
-    """Per base op name (all overloads, regions, phases; device rows): a + b n fit over the pinned runs, evaluated per update at n_mb rounds per micro-batch."""
+    """Per op group (see groups_of; all overloads, regions, phases; device rows): a + b n fit over the pinned runs, evaluated per update at n_mb rounds per micro-batch."""
     names = set()
     per_run = []
     for run in pinned:
@@ -1206,7 +1271,8 @@ def op_fits(pinned, n_mb, accum=4):
         c = collections.Counter()
         for r in m['T']:
             if dev(r):
-                c[base_name(r[3])] += r[5]
+                for g in groups_of(r):
+                    c[g] += r[5]
         per_run.append((m['n'], c))
         names |= set(c)
     out = {}
@@ -1214,6 +1280,23 @@ def op_fits(pinned, n_mb, accum=4):
         f = lstsq([n for n, _ in per_run], [c.get(nm, 0) for _, c in per_run])
         out[nm] = accum * (f['a'] + f['b'] * n_mb)
     return out
+
+
+def kernel_name_checks(fo, gpu):
+    """GPU profile kernels (top 25 by time, counts over 2 profiled updates) against the CPU op counts that should launch them one for one, at the same rounds."""
+    if not gpu:
+        return []
+    ks = (gpu.get('cuda') or {}).get('top_kernels') or []
+    def cnt(sub):
+        return sum(k['count'] for k in ks if sub in k['name']) / 2.0
+    rows = []
+    for label, sub, key in (('layer-norm forward kernel', 'vectorized_layer_norm_kernel', 'native_layer_norm'), ('memory-efficient attention forward (two tile variants listed)', 'fmha_cutlassF', 'sdpa_fwd'),
+                            ('torch.cat kernel', 'CatArrayBatchedCopy', 'cat'), ('bf16 fill kernel (zeros / ones / new_zeros)', 'FillFunctor<c10::BFloat16>', 'fill-type'),
+                            ('indexing_backward_kernel (sort-based index_put_ accumulate)', 'indexing_backward_kernel', 'index_put_acc')):
+        g = cnt(sub)
+        if g:
+            rows.append(dict(kernel=label, gpu_kernel=sub, gpu_per_update=g, cpu_op=key, cpu_per_update=fo.get(key, 0.0), ratio=fo.get(key, 0.0) / g))
+    return rows
 
 
 def gemma_bound():
@@ -1266,6 +1349,7 @@ def build_report(inp, gpu):
     res = dict(inputs={k: len(v) for k, v in inp.items() if isinstance(v, list)})
     nat, pin = inp.get('natural') or [], inp.get('pinned') or []
     res['meta'] = inp.get('meta')
+    res['k_stream'] = inp.get('k_stream')
     # ---- the pinned reference run: per-round table, fixed part, fit, additivity
     ref = max(pin, key=lambda r: r['mbs'][0]['n'])
     rm = ref['mbs'][0]
@@ -1298,6 +1382,17 @@ def build_report(inp, gpu):
         if r[1] == 'grad_accumulate' and r[4] == 'kernel' and r[2] is not None and 4 <= r[2] <= nref - 3:
             ops_engine[base_name(r[3])] += r[5]
     res['engine_ops_per_round'] = {k: v / (nref - 6) for k, v in ops_engine.most_common(8)}
+    # ---- which ops fill a steady round
+    ts = [t for t in range(n_loops, nref - 1)] or [t for t in range(1, nref - 1)]
+    byop = collections.defaultdict(lambda: [0.0, collections.Counter()])
+    totk = 0.0
+    for r in rm['T']:
+        if r[2] in set(ts) and dev(r) and r[4] == 'kernel':
+            b = base_name(r[3])
+            byop[b][0] += r[5] / len(ts)
+            byop[b][1][f'{r[1]}/{r[0]}'] += r[5] / len(ts)
+            totk += r[5] / len(ts)
+    res['top_ops'] = dict(rounds=[ts[0], ts[-1]], total=totk, ops=[dict(op=k, per_round=v[0], share=v[0] / totk, where=[(w, c) for w, c in v[1].most_common(3)]) for k, v in sorted(byop.items(), key=lambda kv: -kv[1][0])[:16]])
     # ---- C2
     c2 = []
     for c in cls:
@@ -1381,34 +1476,51 @@ def build_report(inp, gpu):
                             fixed=(tally(m0['T'], lambda r: dev(r) and r[2] is None)['kernel'], tally(wm['T'], lambda r: dev(r) and r[2] is None)['kernel']))
     # ---- C4: syncs
     if nat:
-        st, tot = sync_table(nat, gpu)
+        st, tot = sync_table(nat, gpu, (gpu or {}).get('rounds_per_update') or 75.5)
         res['sync'] = dict(rows=st, totals=tot)
         sync_rows = [r for r in st if r['cls'] == 'sync']
         by_kind = collections.defaultdict(float)
         for r in sync_rows:
-            for k in r['kind'].split('/'):
-                by_kind[k] += r['per_round']
-        res['sync']['per_round_sync_sites'] = sum(r['per_round'] for r in sync_rows)
+            by_kind[r['kind'].split('/')[0] if r['kind'] in ('D2H', 'H2D', 'implicit') else r['kind']] += r['per_round_equiv']
+        res['sync']['per_round_equiv_sync_lines'] = sum(r['per_round_equiv'] for r in sync_rows)
         res['sync']['per_round_by_kind'] = dict(by_kind)
-        res['sync']['per_mb_sync_sites'] = sum(r['per_mb'] for r in sync_rows)
-        res['sync']['per_update_sync_sites'] = sum(r['per_update'] for r in sync_rows)
+        res['sync']['scaled_total_sync_lines'] = sum(r['scaled'] for r in sync_rows)
+        res['sync']['gpu_same_lines'] = sum(r['gpu_per_update'] or 0 for r in sync_rows)
+        res['sync']['gpu_only_lines'] = sum(r['gpu_per_update'] or 0 for r in st if r['cls'] == 'gpu-only')
+        res['sync']['n_sync_lines'] = len(sync_rows)
     # ---- kernel estimate
     est = {}
     if nat:
         opt = nat[0]['optimizer']
-        upd_extra = opt['clip_norm_launches'] + opt['clip_mul_launches'] + opt['fused_adamw_launches'] + opt['step_counter_launches'] + 8
-        est['update_parts_launches'] = dict(clip=opt['clip_norm_launches'] + opt['clip_mul_launches'], adamw=opt['fused_adamw_launches'] + opt['step_counter_launches'], loss_average=8, optimizer_info=opt)
+        loops = [sum(r[6] for r in run.get('update', {}).get('T', []) if dev(r) and r[0] in ('prep', 'forward')) for run in nat]
+        loop_launches = sum(loops) / len(loops) if loops else 8
+        upd_extra = opt['clip_norm_launches'] + opt['clip_mul_launches'] + opt['fused_adamw_launches'] + opt['step_counter_launches'] + loop_launches
+        est['update_parts_launches'] = dict(clip=opt['clip_norm_launches'] + opt['clip_mul_launches'], adamw=opt['fused_adamw_launches'] + opt['step_counter_launches'], loss_average=loop_launches, optimizer_info=opt)
         gr = (gpu or {}).get('rounds_per_update') or 75.5
+        measured = collections.defaultdict(list)                     # exact micro-batch totals of the pinned runs, by n
+        for run in pin:
+            m = run['mbs'][0]
+            t = tally(m['T'], dev)
+            measured[int(m['n'])].append(dict(kernel=t['kernel'], lo=t['lo'], hi=t['hi']))
+
+        def mb_cost(n, key):
+            if float(n).is_integer() and int(n) in measured:
+                return sum(x[key] for x in measured[int(n)]) / len(measured[int(n)])
+            return predict_cum(pt, n, key)
         cases = {}
         for name, per_mb_ns in (('population mean (17.28 rounds per micro-batch, assumed mix n = 10.56, 10.56, 16, 32)', [10.56, 10.56, 16.0, 32.0]),
-                                (f'the two profiled updates ({gr:g} rounds per update, same mix scaled)', [x * gr / 69.12 for x in (10.56, 10.56, 16.0, 32.0)]),
+                                (f'the two profiled updates ({gr:g} rounds per update): n = 32, 16, 16, 7 and 16, 16, 16, 32 (inferred, see the text)', None),
                                 ('4 micro-batches of 17.28 rounds (linear fit)', [17.28] * 4)):
             row = {}
             for key in ('lo', 'hi', 'kernel'):
-                piece = sum(predict_cum(pt, n, key) for n in per_mb_ns)
-                lin = sum(fits['launches_' + key]['a'] + fits['launches_' + key]['b'] * n for n in per_mb_ns) if key != 'kernel' else sum(fits['kernel_ops_device']['a'] + fits['kernel_ops_device']['b'] * n for n in per_mb_ns)
+                if per_mb_ns is None:
+                    piece = sum(mb_cost(n, key) for n in PROFILED_N) / 2.0
+                    lin = sum(fits['launches_' + key]['a'] + fits['launches_' + key]['b'] * n for n in PROFILED_N) / 2.0 if key != 'kernel' else sum(fits['kernel_ops_device']['a'] + fits['kernel_ops_device']['b'] * n for n in PROFILED_N) / 2.0
+                else:
+                    piece = sum(predict_cum(pt, n, key) for n in per_mb_ns)
+                    lin = sum(fits['launches_' + key]['a'] + fits['launches_' + key]['b'] * n for n in per_mb_ns) if key != 'kernel' else sum(fits['kernel_ops_device']['a'] + fits['kernel_ops_device']['b'] * n for n in per_mb_ns)
                 row[key] = dict(piecewise=piece + (upd_extra if key != 'kernel' else 0), linear=lin + (upd_extra if key != 'kernel' else 0))
-            row['rounds'] = sum(per_mb_ns)
+            row['rounds'] = sum(PROFILED_N) / 2.0 if per_mb_ns is None else sum(per_mb_ns)
             cases[name] = row
         est['cases'] = cases
         est['gpu'] = dict(GPU)
@@ -1448,32 +1560,31 @@ def build_report(inp, gpu):
             fo[k] = fo.get(k, 0) + v
         res['cross_check'] = cross_check(fo, gpu, gr)
         res['cross_check_rounds'] = gr
-    # ---- multi-call rows
+        res['kernel_name_checks'] = kernel_name_checks(fo, gpu)
+    # ---- multi-call rows (compared with the harness rows at the same K over the same rounds)
     mr = inp.get('multi') or []
     if mr:
-        mm = []
+        pk = {r['mbs'][0]['K']: r for r in pin}
+        mm, rr_ = [], []
         for run in mr:
             m = run['mbs'][0]
-            n = int(m['n'])
-            ts = list(range(3, n - 1))
-            rows_t = [r for r in m['T'] if r[2] in set(ts) and dev(r) and r[4] == 'kernel']
-            tot = sum(r[5] for r in rows_t) / len(ts)
-            wr = sum(r[5] for r in rows_t if r[1] in WRITER_REGIONS) / len(ts)
-            mm.append(dict(K=m['K'], n=n, per_round_kernel_ops=tot, writer_per_round=wr, share=wr / tot if tot else None, host_ops_per_round=sum(r[5] for r in m['T'] if r[2] in set(ts) and r[1] == 'teacher_host' and r[4] == 'kernel') / len(ts),
-                           early_rounds=[tally([r for r in m['T'] if r[2] == t and dev(r)])['kernel'] for t in range(min(n, 12))]))
-        res['multi'] = mm
-        # the same for the plain-synthetic reference run with the same K
-        pk = {r['mbs'][0]['K']: r for r in pin}
-        res['multi_ref'] = []
-        for e in mm:
-            if e['K'] in pk:
-                m = pk[e['K']]['mbs'][0]
-                ts = list(range(3, int(m['n']) - 1))
-                rows_t = [r for r in m['T'] if r[2] in set(ts) and dev(r) and r[4] == 'kernel']
+            if m['K'] not in pk:
+                continue
+            m0 = pk[m['K']]['mbs'][0]
+            n, n0 = int(m['n']), int(m0['n'])
+            ts = set(range(3, min(n, n0) - 1))
+
+            def stat(mb):
+                rows_t = [r for r in mb['T'] if r[2] in ts and dev(r) and r[4] == 'kernel']
                 tot = sum(r[5] for r in rows_t) / len(ts)
                 wr = sum(r[5] for r in rows_t if r[1] in WRITER_REGIONS) / len(ts)
-                res['multi_ref'].append(dict(K=e['K'], n=int(m['n']), per_round_kernel_ops=tot, writer_per_round=wr, share=wr / tot,
-                                             early_rounds=[tally([r for r in m['T'] if r[2] == t and dev(r)])['kernel'] for t in range(min(int(m['n']), 12))]))
+                return dict(n=int(mb['n']), K=mb['K'], per_round_kernel_ops=tot, writer_per_round=wr, share=wr / tot if tot else None,
+                            host_ops_per_round=sum(r[5] for r in mb['T'] if r[2] in ts and r[1] == 'teacher_host' and r[4] == 'kernel') / len(ts),
+                            early_rounds=[tally([r for r in mb['T'] if r[2] == t and dev(r)])['kernel'] for t in range(min(int(mb['n']), 12))])
+            e, r = stat(m), stat(m0)
+            e['rounds_compared'] = [min(ts), max(ts)]
+            mm.append(e); rr_.append(r)
+        res['multi'], res['multi_ref'] = mm, rr_
     # ---- validation numbers
     allk = [r for run in nat + pin for r in all_rows(run) if r[4] == 'kernel']
     tot = sum(r[5] for r in allk)
@@ -1483,6 +1594,27 @@ def build_report(inp, gpu):
     bwo = sum(r[5] for r in bw if r[1] == 'other')
     eng = sum(r[5] for run in nat + pin for r in all_rows(run) if r[4] == 'kernel' and r[1] == 'grad_accumulate')
     bwall = sum(r[5] for run in nat + pin for r in all_rows(run) if r[4] == 'kernel' and r[0] in ('backward', 'recompute'))
+    srcs = collections.Counter()
+    for run in pin + nat:
+        for r in all_rows(run):
+            if r[1] == 'grad_accumulate' and r[4] == 'kernel' and '@' in r[3]:
+                srcs[r[3].split('@')[1]] += r[5]
+    res['engine_sources'] = dict(srcs)
+    chk = inp.get('natural_check') or []
+    if chk and nat:
+        def strip(rows):
+            d = collections.Counter()
+            for r in rows:
+                d[(r[0], r[1], r[2], r[3].split('@')[0], r[4])] += r[5]
+            return d
+        pairs = [(a_, b_) for a_, b_ in zip(nat, chk) if [m['n'] for m in a_['mbs']] == [m['n'] for m in b_['mbs']]]
+        same = 0
+        tot_ops = 0
+        for a_, b_ in pairs:
+            ok_ = all(strip(x['T']) == strip(y['T']) for x, y in zip(a_['mbs'], b_['mbs']))
+            same += ok_
+            tot_ops += sum(r[5] for x in a_['mbs'] for r in x['T'])
+        res['determinism_real_shape'] = dict(updates_compared=len(pairs), identical=same, ops_compared=tot_ops)
     res['validation'] = dict(kernel_ops_total=tot, kernel_ops_other=oth, share_not_other=1 - oth / tot if tot else None, backward_kernel_ops_excl_engine=bwt, backward_other=bwo,
                              share_backward_forward_region=1 - bwo / bwt if bwt else None, engine_share_of_backward=eng / bwall if bwall else None,
                              untagged_nodes=sum(m['nodes'].get('untagged', 0) for run in nat + pin for m in run['mbs']), reachable_nodes=sum(m['nodes'].get('reachable', 0) for run in nat + pin for m in run['mbs']),
@@ -1502,10 +1634,12 @@ def verdicts(res):
     ok = f['r2'] > 0.99 and f['max_rel_resid'] < 0.05 and fixed_share < 0.10
     cl = res['classes']
     steady = [c['per_round']['kernel'] for c in cl if c['name'].startswith('t = 1') or 'recomputed' in c['name']]
-    out['C1'] = ('shown, with a caveat' if ok else 'unclear',
-                 f"device kernel ops per micro-batch = {f['a']:.0f} + {f['b']:.1f} n (R2 {f['r2']:.4f}, worst point {pct(f['max_rel_resid'])} off) over n = {int(res['fit_points'][0]['n'])}..{int(res['fit_points'][-1]['n'])}; the "
-                 f"part that does not depend on n (rounds-tagged None) is {fixed['kernel']} ops ({pct(fixed_share)} of a 17.28-round micro-batch); the marginal round costs {', '.join(f'{x:.0f}' for x in steady)} ops in the successive round classes "
-                 f"(it steps up when the answer pass, then the thinker, start being recomputed), so the line is a fit to a three-slope curve")
+    gm = GPU_GEMMA_PER_MB_BOUND
+    out['C1'] = ('shown for the model side (a line to within ' + pct(f['max_rel_resid']) + '); the Gemma front\'s fixed part is untested' if ok else 'unclear',
+                 f"device kernel ops per micro-batch: a straight line {f['a']:.0f} + {f['b']:.0f} n (R2 {f['r2']:.4f}, worst point {pct(f['max_rel_resid'])} off) over n = {int(res['fit_points'][0]['n'])}..{int(res['fit_points'][-1]['n'])}. "
+                 f"The honest form is fixed part + sum of per-round costs: the model-side fixed part is {fixed['kernel']} ops ({pct(fixed_share)} of a 17.28-round micro-batch, small), and a round costs "
+                 f"{', '.join(f'{x:.0f}' for x in steady)} ops in the successive round classes (t 1..7, 8..11, 12 and later): it steps up when the answer pass, then the thinker, start being recomputed, which is why the line's intercept is negative. "
+                 f"The real run also calls the Gemma front about twice per micro-batch whatever n is (stub here, so uncounted); the PTC profile bounds that at {gm:,.0f} launches per micro-batch, so \"small fixed part\" is untested for the whole micro-batch")
     # C2
     sh = [c['kernel']['share'] for c in res['c2']]
     steady_c2 = [c for c in res['c2'] if not c['name'].startswith('t = 0') and not c['name'].startswith('last')]
@@ -1514,7 +1648,7 @@ def verdicts(res):
     folded = [c['kernel']['share_folded'] for c in steady_c2 if c['kernel'].get('share_folded') is not None]
     lab2 = 'shown' if lo_sh >= 0.5 else ('killed' if hi_sh < 0.5 and not (folded and min(folded) >= 0.5) else 'unclear')
     if lo_sh < 0.5 <= hi_sh or (folded and min(folded) >= 0.5 > lo_sh):
-        lab2 = 'unclear: depends on where the engine\'s gradient additions are counted'
+        lab2 = f"unclear: {pct(lo_sh, 0)} to {pct(hi_sh, 0)} by region" + (f", {pct(min(folded), 0)} to {pct(max(folded), 0)} with the writers' share of gradient accumulation" if folded else '')
     out['C2'] = (lab2, f"writer passes (call + answer, forward + backward + recompute) are {pct(lo_sh)} to {pct(hi_sh)} of the per-round device kernel ops of the steady rounds"
                        + (f"; {pct(min(folded))} to {pct(max(folded))} when the engine's gradient additions are attributed to the region that produced the gradient" if folded else ''))
     c3 = res.get('c3')
@@ -1525,12 +1659,12 @@ def verdicts(res):
                                                   f"{c3['n_differ_device']} of {c3['n_op_keys']} (phase, region, op) cells differ on the device side; the CPU-tensor teacher does depend on the rows: {c3['host_cpu_ops_per_round'][0]:.0f} vs {c3['host_cpu_ops_per_round'][1]:.0f} CPU ops per round")
     sy = res.get('sync')
     if sy:
-        per = sy['per_round_sync_sites']
+        per = sy['per_round_equiv_sync_lines']
         gpu_per = GPU['stream_syncs'] / (4 * GPU['rounds_per_mb'])
-        out['C4'] = ('shown for the count and the call sites' if 15 <= per <= 21 else 'unclear',
-                     f"{per:.1f} blocking host-device calls per round at {len([r for r in sy['rows'] if r['cls'] == 'sync' and r['per_round'] > 0.05])} named lines "
-                     f"({sy['per_round_by_kind'].get('D2H', 0):.1f} device-to-host, {sy['per_round_by_kind'].get('H2D', 0):.1f} host-to-device, {sy['per_round_by_kind'].get('implicit', 0):.1f} implicit via indexing); "
-                     f"the GPU profile gives 1,305 / (4 x 17.28) = {gpu_per:.1f} per round, and 1,319.5 / 75.5 rounds = {1319.5 / 75.5:.1f} on the profiled updates")
+        out['C4'] = (f'shown: {per:.0f} per round at the profiled updates\' 75.5 rounds, from named lines (the 19 divides by 69.1 rounds)' if 15 <= per <= 21 else 'unclear',
+                     f"{per:.1f} blocking host-device calls per round at {sy['n_sync_lines']} named lines ({sy['per_round_by_kind'].get('D2H', 0):.1f} device-to-host, {sy['per_round_by_kind'].get('H2D', 0):.1f} host-to-device, "
+                     f"{sy['per_round_by_kind'].get('implicit', 0):.1f} implicit via two-index assignment); scaled to the GPU profile's 75.5 rounds and 4 micro-batches these lines give {f0(sy['scaled_total_sync_lines'])} per update against "
+                     f"{f0(sy['gpu_same_lines'])} at the same lines in the GPU record (the record's total 1,319.5 also has {sy['gpu_only_lines']:.0f} in the real Gemma front). The GPU profile's 1,305 / (4 x 17.28) = {gpu_per:.1f} per round, and 1,319.5 / 75.5 = {1319.5 / 75.5:.1f} on the profiled updates")
     return out
 
 
@@ -1587,6 +1721,10 @@ def render_md(res, gpu):
     A('## Kernel estimate against the GPU profile (75,966 kernels per update)')
     A('')
     A(estimate_tables(res, gpu))
+    A('## What this points at (suggested, untested)')
+    A('')
+    A(points_text(res))
+    A('')
     # ---- bias
     A('## How the synthetic rows bias this')
     A('')
@@ -1626,16 +1764,29 @@ def natural_tables(res):
     nat = res['natural']
     if not nat:
         return 'not run'
-    for u in nat:
-        out.append(f"**Update {u['update']}**: rounds per micro-batch {[int(x) for x in u['rounds_per_mb']]} (K {u['K_per_mb']}), {int(u['rounds'])} rounds, device kernel ops {f0(u['kernel_ops_device'])}, "
-                   f"estimated CUDA launches {rng_(u['launches_lo'], u['launches_hi'])} (stub Gemma and CPU-tensor teacher excluded); CPU-tensor teacher ops {f0(u['host_ops'])}; "
-                   f"the per-round table predicts the device kernel ops to {pct(abs(u['pred_err']))} ({'over' if u['pred_err'] > 0 else 'under'}).")
+    u = nat[0]
+    out.append(f"**Update 0 (the first instrumented update, right after the warm-up update)**: rounds per micro-batch {[int(x) for x in u['rounds_per_mb']]} (K {u['K_per_mb']}), {int(u['rounds'])} rounds, device kernel ops {f0(u['kernel_ops_device'])}, "
+               f"estimated CUDA launches {rng_(u['launches_lo'], u['launches_hi'])} (stub Gemma and CPU-tensor teacher excluded); CPU-tensor teacher ops {f0(u['host_ops'])}.")
+    out.append('')
+    pt = u['phase_table']
+    rows = [[p['phase'], f0(p['ops']), f0(p['view']), f0(p['nolaunch']), f0(p['kernel']), '0 (CPU tensors)' if p['phase'].startswith('host') else ('n/a (stub)' if 'stub' in p['phase'] else rng_(p['lo'], p['hi']))] for p in pt]
+    dv = [p for p in pt if not p['phase'].startswith('host') and 'stub' not in p['phase']]
+    rows.append(['**device total**', f0(sum(p['ops'] for p in dv)), f0(sum(p['view'] for p in dv)), f0(sum(p['nolaunch'] for p in dv)), f"**{f0(sum(p['kernel'] for p in dv))}**", f"**{rng_(sum(p['lo'] for p in dv), sum(p['hi'] for p in dv))}**"])
+    out.append(md_table(['phase', 'all ops', 'views (no kernel)', 'host-scalar / alloc', 'kernel ops', 'est. CUDA launches'], rows))
+    out.append('')
+    if len(nat) > 1:
+        out.append('All natural updates (the same replica, successive batches; each has its own K draws):')
         out.append('')
-        out.append(md_table(['phase', 'all ops', 'views (no kernel)', 'host-scalar / alloc', 'kernel ops', 'est. CUDA launches'],
-                            [[p['phase'], f0(p['ops']), f0(p['view']), f0(p['nolaunch']), f0(p['kernel']), '0 (CPU tensors)' if p['phase'].startswith('host') else ('n/a (stub)' if 'stub' in p['phase'] else rng_(p['lo'], p['hi']))] for p in u['phase_table']]))
+        rr = []
+        for x in nat:
+            ph = {p['phase']: p for p in x['phase_table']}
+            rr.append([x['update'], str([int(n) for n in x['rounds_per_mb']]), int(x['rounds']), f0(x['kernel_ops_device']), rng_(x['launches_lo'], x['launches_hi']), f"{x['launches_lo'] / x['rounds']:.0f} to {x['launches_hi'] / x['rounds']:.0f}",
+                       f0(x['host_ops']), pct(abs(x['pred_err']), 2) + (' over' if x['pred_err'] > 0 else ' under')])
+        out.append(md_table(['update', 'rounds per micro-batch', 'rounds', 'device kernel ops', 'est. CUDA launches', 'launches per round (all-in)', 'CPU teacher ops', 'per-round model predicts kernel ops to'], rr))
         out.append('')
     out.append('"Forward" excludes the train-loop ops and the stub Gemma; "backward" includes the autograd engine\'s own gradient additions (region grad_accumulate); "recompute" is the checkpoint re-forward '
-               'the engine triggers inside backward (answer pass from round 8, thinker from round 12). The clip and AdamW launch numbers come from the multi-tensor-apply model (`multi_tensor_launches`), not from the CPU op list.')
+               'the engine triggers inside backward (answer pass from round 8, thinker from round 12; the non-reentrant checkpoint stops re-running a function once the saved tensors backward needs are rebuilt, so a recompute is shorter than the forward). '
+               'The clip and AdamW launch numbers come from the multi-tensor-apply model (`multi_tensor_launches`), not from the CPU op list (which shows the same ops: one `_foreach_norm`, one `_foreach_mul_`, two `_fused_adamw_`).')
     return '\n'.join(out)
 
 
@@ -1660,6 +1811,12 @@ def round_tables(res):
         out.append(f"**{c['name']}**  (views, which launch nothing: {f1(pr['view'])} per round)")
         out.append('')
         out.append(md_table(['region', 'forward', 'backward', 'recompute', 'total kernel ops', 'est. CUDA launches'], rows))
+        out.append('')
+    to = res.get('top_ops')
+    if to:
+        out.append(f"**Which ATen ops fill a steady round** (rounds {to['rounds'][0]} to {to['rounds'][1]} of the n = {ref['n']} run; {to['total']:.0f} device kernel ops per round; one row per op name, all overloads):")
+        out.append('')
+        out.append(md_table(['op', 'per round', 'share', 'where (region/phase: per round)'], [[x['op'], f1(x['per_round']), pct(x['share'], 1), ', '.join(f'{w} {c:.1f}' for w, c in x['where'])] for x in to['ops']]))
         out.append('')
     eb = res.get('engine_ops_per_round')
     if eb:
@@ -1754,43 +1911,63 @@ def sync_tables(res, gpu):
         return 'not run'
     out = []
     tot = sy['totals']
-    out.append(f"Counted over {tot['updates']} natural update(s), {int(tot['rounds'])} rounds, {tot['mbs']} micro-batches. 'class': **sync** = a device tensor in the real run (the call waits for the CUDA stream: a device-to-host read, "
-               f"or a pageable host-to-device copy with non_blocking=False, which ends in a stream synchronise); **host** = CPU tensor in the real run (no device involved, counted here only because a CPU run cannot tell); "
-               f"**noop** = `.to(dev)` of a tensor already there; **stub** = this harness's stand-in for the Gemma front. The class column is read from the source (suggested); the GPU column is the GPU-RUN-3 record "
-               f"(`set_sync_debug_mode('warn')`, 2 profiled updates, {gpu['rounds_per_update'] if gpu else '?'} rounds per update).")
+    gr = (gpu or {}).get('rounds_per_update') or 75.5
+    out.append(f"Counted over {tot['updates']} natural update(s), {int(tot['rounds'])} rounds, {tot['mbs']} micro-batches. Class (read from the source, suggested): **sync** = a device tensor in the real run, so on CUDA the call waits for the stream "
+               f"(a device-to-host read, or a pageable host-to-device copy with non_blocking=False, which ends in a stream synchronise); **host** = a CPU tensor in the real run (counted here only because a CPU run cannot tell); "
+               f"**noop** = `.to(dev)` of a tensor already there; **stub** = this harness's stand-in for the Gemma front; **no-sync** = a tensor-index call the GPU record does not flag; **gpu-only** = lines of the real Gemma front. "
+               f"\"Scaled\" = per-round count x {gr:g} rounds + per-micro-batch count x 4, i.e. what this code would do in the GPU record's two profiled updates; the GPU column is that record (`set_sync_debug_mode('warn')`).")
     out.append('')
     rows = []
     for r in sy['rows']:
         g = r['gpu_per_update']
-        rows.append([r['site'], r['kind'], r['cls'], f1(r['per_update']), f"{r['per_round']:.2f}" if r['per_round'] else '', f"{r['per_mb']:.2f}" if r['per_mb'] else '',
-                     f1(g) if g is not None else '', f"{g / gpu['rounds_per_update']:.2f}" if (g is not None and gpu and gpu.get('rounds_per_update')) else '', r['note']])
-    out.append(md_table(['call site', 'kind', 'class', 'per update (CPU run)', 'per round', 'per micro-batch (no round)', 'GPU per update', 'GPU per round', 'what it is'], rows))
+        rows.append([r['site'], r['kind'], r['cls'], f1(r['per_update']), f1(r['scaled']) if r['cls'] != 'gpu-only' else '', f1(g) if g is not None else '',
+                     f"{r['scaled'] / g:.2f}" if (g and r['scaled']) else '', r['note']])
+    for rr_, r in zip(rows, sy['rows']):
+        rr_.insert(3, 'yes' if r['site'].split(' ')[0] in NOSYNC_LINES else '')
+    out.append(md_table(['call site', 'kind', 'class', 'removed by the harness\'s nosync', 'per update (this run)', 'scaled to the GPU rounds', 'GPU per update', 'CPU / GPU', 'what it is'], rows))
     out.append('')
-    sy_rows = [r for r in sy['rows'] if r['cls'] == 'sync']
-    out.append(f"Sum over the **sync** lines: {sy['per_round_sync_sites']:.2f} per round (device-to-host {sy['per_round_by_kind'].get('D2H', 0):.2f}, host-to-device {sy['per_round_by_kind'].get('H2D', 0):.2f}, implicit via indexing "
-               f"{sy['per_round_by_kind'].get('implicit', 0):.2f}) plus {sy['per_mb_sync_sites']:.2f} per micro-batch outside the rounds.")
+    ns = [r for r in sy['rows'] if r['cls'] == 'sync' and r['site'].split(' ')[0] in NOSYNC_LINES]
+    out.append(f"The harness's `nosync` variant (GPU-RUN-3: -0.1 % to +1.2 % speed, i.e. nothing) removed the four lines marked: {sum(r['per_round_equiv'] for r in ns):.1f} of the {sy['per_round_equiv_sync_lines']:.1f} syncs per round; "
+               f"the other {sy['per_round_equiv_sync_lines'] - sum(r['per_round_equiv'] for r in ns):.1f} per round read values computed on the device (`ok`, the answer-loop masks) or are the two index assignments and stay.")
+    out.append('')
+    out.append(f"**Sum over the {sy['n_sync_lines']} sync lines**: {sy['per_round_equiv_sync_lines']:.2f} per round (per update / rounds: device-to-host {sy['per_round_by_kind'].get('D2H', 0):.2f}, host-to-device {sy['per_round_by_kind'].get('H2D', 0):.2f}, "
+               f"implicit via two-index assignment {sy['per_round_by_kind'].get('implicit', 0):.2f}); scaled: {f0(sy['scaled_total_sync_lines'])} per update; the same lines in the GPU record: {f0(sy['gpu_same_lines'])}; "
+               f"GPU lines this run cannot reproduce (real Gemma front): {sy['gpu_only_lines']:.0f}.")
     if gpu:
-        gr = gpu['rounds_per_update']
         out.append('')
-        out.append(md_table(['', 'per update', 'per round'],
-                            [['GPU, cudaStreamSynchronize (profiler)', '1,305', f'{1305 / gr:.2f} (at {gr:g} rounds) / {1305 / (4 * 17.28):.2f} (at 69.1 rounds, the 17.28 mean)'],
-                             ['GPU, sync-debug warnings summed over lines', '1,319.5', f'{1319.5 / gr:.2f}'],
-                             ['GPU, DtoH copies (profiler)', '745', f'{745 / gr:.2f}'],
-                             ['GPU, HtoD copies (profiler)', '561.5', f'{561.5 / gr:.2f}'],
-                             ['this CPU census, sync lines at the same rounds', f1(sy['per_round_sync_sites'] * gr + sy['per_mb_sync_sites'] * 4), f"{(sy['per_round_sync_sites'] * gr + sy['per_mb_sync_sites'] * 4) / gr:.2f}"],
-                             ['this CPU census, at 69.12 rounds (17.28 x 4)', f1(sy['per_round_sync_sites'] * 69.12 + sy['per_mb_sync_sites'] * 4), f"{(sy['per_round_sync_sites'] * 69.12 + sy['per_mb_sync_sites'] * 4) / 69.12:.2f}"]]))
+        out.append(md_table(['', 'per update', f'per round (at {gr:g} rounds)', 'per round (at 69.1 rounds = 4 x 17.28)'],
+                            [['GPU cudaStreamSynchronize (profiler)', '1,305', f'{1305 / gr:.2f}', f'{1305 / 69.12:.2f}'],
+                             ['GPU sync-debug warnings summed over lines', '1,319.5', f'{1319.5 / gr:.2f}', f'{1319.5 / 69.12:.2f}'],
+                             ['GPU device-to-host copies (profiler)', '745', f'{745 / gr:.2f}', f'{745 / 69.12:.2f}'],
+                             ['GPU host-to-device copies (profiler)', '561.5', f'{561.5 / gr:.2f}', f'{561.5 / 69.12:.2f}'],
+                             ['this CPU census, the sync lines, scaled', f0(sy['scaled_total_sync_lines']), f"{sy['scaled_total_sync_lines'] / gr:.2f}", f"{(sy['per_round_equiv_sync_lines'] * 69.12):.0f} / 69.12 = {sy['per_round_equiv_sync_lines']:.2f}"]]))
+        out.append('')
+        out.append('The claim "about 19 per round" is the profiler\'s 1,305 divided by 4 x 17.28 rounds; the profiled updates had 75.5 rounds (b3g2.py:551 runs once per round), which gives 17.3. Either way the syncs scale with rounds, 4 teacher-copy waits + 2 teacher `.cpu()` + 3 schedule `tolist` + 1 `torch.tensor(sel)` + 1 `ok.tolist` + 1 `nonzero` + 3 reads in the answer loop + 2 two-index assignments = 17 per round. '
+                   'Device-to-host copies per round in the GPU profile (9.9) equal the number of D2H lines here (2 + 3 + 1 + 1 + 3 = 10).')
     return '\n'.join(out)
+
+
+def kstream_text(res):
+    ks = res.get('k_stream')
+    if not ks:
+        return 'update 1: K 4, 16, 8, 8; update 2: 32, 4, 16, 16; update 3: 32, 16, 16, 8; update 4: 16, 8, 32, 4; update 5: 32, 32, 16, 16; update 6: 16, 16, 16, 4; update 7: 32, 16, 16, 4; update 8: 16, 16, 16, 32'
+    return '; '.join(f'update {u}: K {", ".join(str(k) for k in kk)}' for u, kk in enumerate(ks) if 1 <= u <= 8)
 
 
 def estimate_tables(res, gpu):
     e = res['estimate']
-    if not e:
-        return 'not run'
+    if not e or 'update_parts_launches' not in e:
+        return 'not run (needs a natural update)'
     out = []
     up = e['update_parts_launches']
-    out.append(f"How the estimate is built (suggested, not measured): per micro-batch the pinned-run fit or the per-round table gives the estimated launches (CUDA launches per ATen op from `KERNEL_TABLE` in attrib.py: one per kernel op by default, "
+    out.append(f"How the estimate is built (suggested, not measured): per micro-batch the per-round table gives the estimated launches (CUDA launches per ATen op from `KERNEL_TABLE` in attrib.py: one per kernel op by default, "
                f"with overrides for SDPA with a bool mask, the layer-norm backward, index_put with accumulate, embedding backward, select / slice backward; a same-dtype contiguous copy is a memcpy, not a launch); "
-               f"per update add clip_grad_norm_ ({up['clip']} launches by the multi-tensor-apply model), fused AdamW ({up['adamw']}) and the loss average ({up['loss_average']}). `low` and `high` are the two ends of the override brackets.")
+               f"per update add clip_grad_norm_ ({up['clip']} launches by the multi-tensor-apply model), fused AdamW ({up['adamw']}) and the train loop's loss and aux averaging ({up['loss_average']:.0f}). `low` and `high` are the two ends of the override brackets. "
+               f"The micro-batch round counts of the real pool are not measured here. Case 1 takes the GPU record's mean of 17.28 with K from (4, 8, 16, 32) and n = max(K, last + 2): last + 2 = 10.56 for the two small K gives the mix (10.56, 10.56, 16, 32). "
+               f"Case 2 is the GPU profile's own two updates, whose rounds are known: b3g2.py:551 runs once per round and the record has 75.5 per update, i.e. 151 over the two. The loop length is K = KS[torch.randint] and the K stream of seed 400 is the same here "
+               f"(the K lists of my natural updates are the stream; counting stream updates from 0, my natural update 0 is stream update 1 because the warm-up update came first: {kstream_text(res)}), so the profiled updates were two consecutive updates of that stream with K sums of 148 ((32,32,16,16) and (16,16,16,4) = updates 5 and 6, or (32,16,16,4) and (16,16,16,32) = updates 7 and 8, "
+               f"the profiler's default warm-up), and 151 = 148 + 3 means the one K = 4 draw ran n = 7 (7 is also what the harness rows give for that draw). Either way the micro-batch round counts are {{7, 16, 16, 16, 16, 16, 32, 32}}, "
+               f"and case 2 is the estimate for exactly that mix, using the measured totals of the pinned runs with those n.")
     out.append('')
     rows = []
     for name, c in e['cases'].items():
@@ -1798,105 +1975,181 @@ def estimate_tables(res, gpu):
                      f"{pct(c['lo']['piecewise'] / GPU['kernels'])} to {pct(c['hi']['piecewise'] / GPU['kernels'])}"])
     out.append(md_table(['rounds assumed', 'rounds per update', 'est. launches (per-round table)', 'est. launches (linear fit)', 'ratio to 75,966 (per-round table)'], rows))
     out.append('')
-    ac = e.get('autocast')
     gm = e['gemma_bound']
     c2 = list(e['cases'].values())[1]
     est_lo, est_hi = c2['lo']['piecewise'], c2['hi']['piecewise']
     gap_lo, gap_hi = GPU['kernels_profile'] - est_hi, GPU['kernels_profile'] - est_lo
-    out.append(f"**Ratio.** Without the Gemma front and without bf16 casts, the model-side estimate at the profiled updates' rounds is {rng_(est_lo, est_hi)} launches, i.e. {pct(est_lo / GPU['kernels'])} to {pct(est_hi / GPU['kernels'])} "
-               f"of the 75,966 kernels the GPU profile counted. The gap is {rng_(gap_lo, gap_hi)} launches per update.")
+    out.append(f"**Ratio.** The model-side estimate (no Gemma front, no bf16 casts) at the profiled updates' rounds is {rng_(est_lo, est_hi)} launches, **{pct(est_lo / GPU['kernels'], 0)} to {pct(est_hi / GPU['kernels'], 0)} of the 75,966 kernels** "
+               f"the GPU profile counted (per round, all-in: {est_lo / 75.5:.0f} to {est_hi / 75.5:.0f} against the profile's {GPU['kernels'] / 75.5:.0f}). The gap is {rng_(gap_lo, gap_hi)} launches per update.")
     out.append('')
-    out.append('What can fill it (each labelled):')
-    out.append('')
-    items = []
+    cc = res.get('cross_check')
+    if cc:
+        out.append(f"**What the GPU profile itself says about the gap.** The profile lists the 25 CPU ops with the most self time, with call counts. For the ops that are one launch each, the CPU dispatch count at the same rounds ({res['cross_check_rounds']:g}) "
+                   f"is compared with the GPU's call count per update:")
+        out.append('')
+        out.append(md_table(['aten op', 'GPU calls per update', 'CPU dispatch count at the same rounds', 'CPU / GPU', 'GPU minus CPU'],
+                            [[x['op'], f0(x['gpu_per_update']) if x['gpu_per_update'] else 'not in the top 25', f0(x['cpu_pred_per_update']), f"{x['ratio']:.2f}" if x['ratio'] else '', f0(x['gpu_minus_cpu']) if x['gpu_minus_cpu'] is not None else ''] for x in cc]))
+        out.append('')
+        extra = [x for x in cc if x['gpu_minus_cpu'] and x['gpu_minus_cpu'] > 0 and x['op'] in ('aten::mm', 'aten::add + aten::add_', 'aten::mul', 'aten::pow', 'aten::_to_copy')]
+        tot = sum(x['gpu_minus_cpu'] for x in extra)
+        res['estimate']['gpu_only_launching_ops'] = dict(ops={x['op']: x['gpu_minus_cpu'] for x in extra}, total=tot)
+        out.append(f"`addmm`, layer norm and `sum` agree to within 1 % (ratio 0.99 to 1.01): the CPU run sees the op sequence the GPU ran for the model. The ops that the GPU has and the CPU run does not are "
+                   + ', '.join(f"{x['op']} +{f0(x['gpu_minus_cpu'])}" for x in extra) + f" per update, {f0(tot)} calls in all, each about one launch. That is {pct(tot / gap_hi if gap_hi else 0, 0)} to {pct(tot / gap_lo if gap_lo else 0, 0)} of the gap "
+                   f"(suggested: `_to_copy` is the bf16 autocast casts, which a plain CPU run does not make; `pow` appears nowhere in this model's CPU op stream, and the extra `mul` and `mm` are what a Gemma front looks like: RMSNorm pow / mean / rsqrt / mul, and bias-free q/k/v/o/gate/up/down linears). "
+                   f"The profile counts calls at every dispatcher nesting level, so these numbers are indications, not launch counts.")
+        out.append('')
+        kn = res.get('kernel_name_checks')
+        if kn:
+            out.append('Kernel-name sanity checks of the launch table (the GPU profile\'s top-25 kernels by time, counts per update, against the CPU op that should launch each one for one):')
+            out.append('')
+            out.append(md_table(['GPU kernel', 'GPU launches per update', 'CPU op at the same rounds', 'CPU ops per update', 'CPU / GPU'],
+                                [[x['kernel'], f0(x['gpu_per_update']), x['cpu_op'], f0(x['cpu_per_update']), f"{x['ratio']:.2f}"] for x in kn]))
+            out.append('')
+            out.append('The layer-norm, attention-forward, cat and fill kernels are launched about once per CPU op, as the table assumes. What the top 25 cannot confirm is the kernels around them: the bool-mask conversion and padding before the attention kernel (the table says 3 to 5 extra '
+                       'launches per masked SDPA forward) and the sort kernels of the scatter (6 to 9 per accumulating index_put_ in total); those two brackets are untested.')
+            out.append('')
+    ac = e.get('autocast')
     if ac:
-        scale = lambda x: x / ac['n']
-        d_lo, d_hi = ac['launches_lo'][1] - ac['launches_lo'][0], ac['launches_hi'][1] - ac['launches_hi'][0]
         per_round_cast = (ac['kernel_ops'][1] - ac['kernel_ops'][0]) / ac['n']
-        items.append(f"- **bf16 autocast casts** (shown for CPU autocast, suggested for CUDA's): the CPU autocast run of the n = {int(ac['n'])} micro-batch makes {ac['casts_per_mb']} `_to_copy` casts ({ac['casts_per_round']:.1f} per round) and "
-                     f"changes the kernel ops by {ac['kernel_ops'][1] - ac['kernel_ops'][0]:+,} ({per_round_cast:+.1f} per round); at the profiled updates' rounds that is about {f0(per_round_cast * 75.5)} extra ops. "
-                     f"The GPU profile has {f0(ac['gpu_to_copy_per_update'] or 0)} `aten::_to_copy` per update = {ac['gpu_to_copy_per_round']:.0f} per round (profiler level, includes casts of grads in backward), against {ac['casts_per_round']:.1f} per round counted here: "
-                     f"CPU autocast's cast list is shorter than CUDA's (no layer_norm / softmax / pow fp32 casts), so this is a floor.")
-    items.append(f"- **The real Gemma front** (untested here: only a stub runs on this box). The GPU PTC profile at accum 16 has {PTC_KERNELS_PER_UPDATE:,} kernels per update for one Gemma call per micro-batch plus the small PTC transformer, so one Gemma call plus one PTC micro-batch is at most "
-                 f"{PTC_KERNELS_PER_UPDATE / PTC_ACCUM:,.0f} launches; B3G2 calls the front {gm['calls_per_mb']:.2f} times per micro-batch (question, tape strings: 63.4 calls per 32 micro-batches at accum 32), so at most {f0(gm['upper_per_update_accum4'])} launches per update ({pct(gm['upper_per_update_accum4'] / GPU['kernels'])} of the total) can be Gemma. Suggested, as an upper bound only.")
-    items.append("- **SDPA and other table entries**: low-to-high already spans the SDPA mask conversion / pad (4 to 6 launches forward) and the sort-based scatter (6 to 9). A wrong backend (e.g. flash instead of memory-efficient) moves this by a few hundred launches, not thousands (suggested).")
-    items.append("- **Things the CPU run cannot see**: bf16 `copy_` / cast kernels around cuBLAS, fp32 islands in autocast (`pow`, softmax, nll), allocator `zero_` fills, cuBLAS split-K reduce kernels, the `cuLaunchKernel` path (5,318 per update) that cutlass / flash use (untested).")
-    out.extend(items)
+        out.append(f"**Casts under CPU autocast** (shown for CPU's cast list; CUDA's list is longer): one micro-batch with n = {int(ac['n'])} under `torch.autocast('cpu', bfloat16)` makes {ac['casts_per_mb']} dtype-changing `_to_copy` calls ({ac['casts_per_round']:.1f} per round) "
+                   f"and changes the device kernel ops from {f0(ac['kernel_ops'][0])} to {f0(ac['kernel_ops'][1])} ({per_round_cast:+.1f} per round, {pct((ac['kernel_ops'][1] - ac['kernel_ops'][0]) / ac['kernel_ops'][0], 0)}). "
+                   f"The GPU profile has {f0(ac['gpu_to_copy_per_update'] or 0)} `aten::_to_copy` per update = {ac['gpu_to_copy_per_round']:.0f} per round, so CUDA autocast (casts before every linear, fp32 islands for layer norm / softmax / pow, grad casts in backward, and the Gemma front's own) "
+                   f"makes several times as many casts as CPU autocast: the CPU number is a floor.")
+        out.append('')
+    out.append(f"**The real Gemma front** (untested here: only a stub runs on this box). The GPU PTC profile at accum 16 has {PTC_KERNELS_PER_UPDATE:,} kernels per update for one Gemma call per micro-batch plus the small PTC transformer, so one Gemma call plus one PTC micro-batch is at most "
+               f"{PTC_KERNELS_PER_UPDATE / PTC_ACCUM:,.0f} launches; B3G2 calls the front {gm['calls_per_mb']:.2f} times per micro-batch (question and tape strings: 63.4 calls per 32 micro-batches in the accum-32 profile), so at most {f0(gm['upper_per_update_accum4'])} launches per update "
+               f"({pct(gm['upper_per_update_accum4'] / GPU['kernels'], 0)} of the total) can be Gemma (suggested, an upper bound only).")
     out.append('')
-    if res.get('cross_check'):
-        out.append(f"**Op-level cross-check** against the GPU profile's `aten::` call counts (profiler level, per update, 2 updates averaged; the CPU column is the dispatch-level count evaluated at {res['cross_check_rounds']:g} rounds): ")
-        out.append('')
-        out.append(md_table(['aten op', 'GPU calls per update', 'CPU dispatch count at the same rounds', 'CPU / GPU'],
-                            [[x['op'], f0(x['gpu_per_update']) if x['gpu_per_update'] else 'not in the top 25', f0(x['cpu_pred_per_update']), f"{x['ratio']:.2f}" if x['ratio'] else ''] for x in res['cross_check']]))
-        out.append('')
-        out.append('A ratio near 1 means the CPU run sees the same op sequence the GPU ran (mm, addmm, layer norm). The profiler counts calls at every dispatcher level (an `aten::mul` inside a composite op counts too) and the autocast casts '
-                   'are in the GPU numbers only, so views, `_to_copy`, `copy_` and the elementwise ops are not expected to match one to one.')
+    out.append("**Other things a CPU run cannot see** (untested): cuBLAS split-K reduce kernels, allocator zero fills, the `cuLaunchKernel` path (5,318 per update) that cutlass / flash kernels use, and any table entry that is wrong: the low-to-high bracket covers the SDPA mask conversion / pad (4 to 6 launches forward) and the sort-based scatter (6 to 9), "
+               "so a wrong SDPA backend moves the estimate by a few hundred launches, not thousands (suggested).")
     return '\n'.join(out)
 
 
 def summary_text(res, gpu, v):
-    """The plain-language lead: what the numbers say, in a few sentences (built from the result so it cannot drift from the tables)."""
-    nat = res['natural']
+    """The plain-language lead, built from the result so it cannot drift from the tables."""
     est = res['estimate']
     out = ['### In plain words', '']
     f = res['fits']['kernel_ops_device']
     fx = res['fixed']['totals']
     cl = res['classes']
+    c17 = next(c for c in cl if c['name'].startswith('t = 1'))
     top = max(cl, key=lambda c: c['per_round']['kernel'])
-    out.append(f"- **Shown (CPU op counts):** a micro-batch of n thinker rounds costs about {f['a']:.0f} + {f['b']:.0f} n device kernel ops, of which only {fx['kernel']} (about {fx['kernel']} + the reader and tape) happen once per micro-batch. "
-               f"A round costs {cl[1]['per_round']['kernel']:.0f} kernel ops in rounds 1 to 7 and {top['per_round']['kernel']:.0f} once the answer pass and the thinker are being recomputed ({top['name']}). "
-               f"Launch-bound training is therefore a per-round story: every extra round is another ~{top['per_round']['lo']:.0f} to {top['per_round']['hi']:.0f} estimated CUDA launches.")
+    eng = sum(c['kernel']['engine'] for c in res['c2']) / sum(c['kernel']['total'] for c in res['c2'])
+    out.append(f"- **Shown (CPU op counts):** the launches of this training are a per-round story. A micro-batch costs a fixed {fx['kernel']} device kernel ops (reader, tape, loss tail, parameter grads: {pct(fx['kernel'] / (fx['kernel'] + f['b'] * 17.28), 1)} of a 17.28-round micro-batch) "
+               f"plus about {c17['per_round']['kernel']:.0f} per round in rounds 1 to 7, rising to {top['per_round']['kernel']:.0f} per round once the answer pass and the thinker are being recomputed. In estimated CUDA launches a round is "
+               f"{c17['per_round']['lo']:.0f} to {c17['per_round']['hi']:.0f}, later {top['per_round']['lo']:.0f} to {top['per_round']['hi']:.0f}.")
     wr = [c['kernel']['share'] for c in res['c2'] if c['name'].startswith('t = 1') or 'recomputed' in c['name']]
-    out.append(f"- **Shown:** the two writer passes (call_pass, ans_pass; forward, backward and recompute) are {pct(min(wr))} to {pct(max(wr))} of the per-round device kernel ops. The thinker is a minority; the autograd engine\'s own "
-               f"gradient additions (one add per use of every shared weight and activation, every round) are a large separate slice ({pct(sum(c['kernel']['engine'] for c in res['c2']) / sum(c['kernel']['total'] for c in res['c2']))} of the per-round ops).")
+    fd = [c['kernel']['share_folded'] for c in res['c2'] if (c['name'].startswith('t = 1') or 'recomputed' in c['name']) and c['kernel'].get('share_folded') is not None]
+    out.append(f"- **Shown:** the two writer passes (call_pass, ans_pass; forward, backward and recompute) are {pct(min(wr))} to {pct(max(wr))} of the per-round device kernel ops: about half, not clearly over it. "
+               f"The thinker is {pct(sum(res['classes'][1]['cells'].get(f'{p}|thinker', [0])[0] for p in ('forward', 'backward', 'recompute')) / res['classes'][1]['per_round']['kernel'], 0)} to "
+               f"{pct(sum(res['classes'][-2]['cells'].get(f'{p}|thinker', [0])[0] for p in ('forward', 'backward', 'recompute')) / res['classes'][-2]['per_round']['kernel'], 0)} of a round. "
+               f"The autograd engine's own gradient additions (one add for every extra use of a shared weight or activation, every round) are {pct(eng, 0)} of the per-round ops and sit in neither."
+               + (f" Attributed to the pass that produced the gradient they would lift the writers to {pct(min(fd))} to {pct(max(fd))}." if fd else ''))
     if 'c3' in res:
         a, b = res['c3']['device_kernel_ops_per_round']
         out.append(f"- **Shown:** the per-round device op count does not depend on the rows ({a:.1f} at {res['c3']['rows'][0]} rows, {b:.1f} at {res['c3']['rows'][1]}). The CPU-tensor teacher does ({res['c3']['host_cpu_ops_per_round'][0]:.0f} vs {res['c3']['host_cpu_ops_per_round'][1]:.0f} CPU ops per round): "
-                   f"it is host python time, not launches.")
+                   f"that is host python time, not launches.")
     sy = res.get('sync')
     if sy:
-        out.append(f"- **Shown (call sites), suggested (what CUDA does at each):** {sy['per_round_sync_sites']:.0f} blocking host-device calls per round at named lines (teacher `.cpu()` x2 and `.to(dev)` x4, the schedule `.tolist()` x3 and `nonzero`, "
-                   f"`torch.tensor(sel, device=)`, `ok.tolist()`, three `bool` / `nonzero` reads in `_loss`, and the two two-index assignments the GPU record also flags). That matches the GPU record line for line; the \"about 19\" in C4 is 1,305 / (4 x 17.28) with the population "
-                   f"mean rounds; at the profiled updates' own 75.5 rounds it is 17.3.")
+        out.append(f"- **Shown (the call sites and counts), suggested (that CUDA waits at each):** {sy['per_round_equiv_sync_lines']:.1f} blocking host-device calls per round at {sy['n_sync_lines']} named lines (all in `ByteWriter.teacher`, `B3G2.loop` and the answer loop of `B3G2._loss`), "
+                   f"{sy['per_round_by_kind'].get('D2H', 0):.0f} of them device-to-host reads. They scale with the rounds. The \"about 19\" is 1,305 / (4 x 17.28); at the profiled updates' own 75.5 rounds the GPU record gives 17.3 and this census 17.")
     if est and est.get('cases'):
         c = list(est['cases'].values())[1]
-        out.append(f"- **Suggested (an estimate, not a measurement):** the model-side launch estimate is {pct(c['lo']['piecewise'] / GPU['kernels'], 0)} to {pct(c['hi']['piecewise'] / GPU['kernels'], 0)} of the 75,966 kernels per update; the rest is the Gemma front, bf16 casts and table error, "
-                   f"not separable here (see the estimate section).")
+        g = est.get('gpu_only_launching_ops')
+        out.append(f"- **Suggested (an estimate, not a measurement):** the model-side launch estimate is {pct(c['lo']['piecewise'] / GPU['kernels'], 0)} to {pct(c['hi']['piecewise'] / GPU['kernels'], 0)} of the 75,966 kernels per update. "
+                   + (f"The ops the GPU profile lists beyond what this CPU run has (bf16 casts, the Gemma front's matmuls and RMSNorm-style `pow` / `mul`) come to about {f0(g['total'])} calls per update, which is the size of the gap." if g else '')
+                   + " The model code itself, with `addmm` and layer norm matching the GPU's counts to 1 %, is not where the missing launches are.")
     out.append('')
     return '\n'.join(out)
 
 
+COMMANDS = '''cd launch; export OMP_NUM_THREADS=1
+python attrib.py natural --threads 1 --synth-letters 300 --n-updates 5 --out natural5b.json         # seed 400, 1 warm-up update, then 5 instrumented updates (final code)
+python attrib.py pinned  --threads 1 --synth-letters 300 --ks 4,6,8,10,12,14,16,20,24,32 --out pinned.json      # one micro-batch (64 rows) per K, fwd + backward
+python attrib.py rows    --threads 1 --synth-letters 300 --batches 64,256 --k 16 --out rows.json                # 16 vs 64 rows per micro-batch
+python attrib.py rows    --threads 1 --synth-letters 2000 --batches 64 --k 16 --out width2000_b64.json         # the width check
+python attrib.py pinned  --threads 1 --synth-letters 300 --ks 16 --autocast --out autocast16.json             # CPU autocast bf16 casts
+python attrib.py multi   --threads 1 --synth-letters 300 --ks 16,32 --out multi.json                          # rows with 3 to 9 calls
+python attrib.py report --natural natural5b.json --natural-check natural5.json --pinned pinned.json --rows-json rows.json --autocast-json autocast16.json --width width2000_b64.json --multi multi.json --md ATTRIB-CPU-2026-10-16.md --json ATTRIB-CPU-2026-10-16.json'''
+# natural5.json is the same five updates counted by an earlier revision of the instrument (before the train loop's aux averaging and the producer tags were added); it is only compared with natural5b.json.
+
+
 def setup_notes(res):
     m = res.get('meta') or {}
+    return ('Commands (every number below is regenerated from the raw runs by the last one):\n\n```\n' + COMMANDS + '\n```\n\n' + _setup_notes(res))
+
+
+def _setup_notes(res):
+    m = res.get('meta') or {}
     return ('Common to every run: arm B3G2, rung 3M (4,023,302 trained parameters), caps `caps_b3g2.json`, stub Gemma front, device cpu, torch ' + str(m.get('torch', '2.11.0+cpu')) + ', seed 400, rows from `prof_train.synth_rows` '
-            '(half skills-shaped rows with two worked steps, half cloze rows with none), `n_loops` = ' + str(m.get('n_loops')) + '. One CPU thread per run except the very first sizing run. '
+            '(half skills-shaped rows with two worked steps, half cloze rows with none), `n_loops` = ' + str(m.get('n_loops')) + '. One CPU thread per run. '
             '**Deviation from the brief:** the synthetic prompts are at most 300 letters, not the caps\' 2,000, because the 2,000-letter shape needs 13 GB of RAM on this shared box; every op count is independent of the padded width '
             '(shown by the width check below). The update is replicated, not called: `Replica.update` does split_batch, `model.loss(mb)` under the (here empty) autocast, `(l / k).backward()`, `clip_grad_norm_(1.0)`, fused AdamW step and `zero_grad(set_to_none=True)` '
             'as train.py does; the optimizer is built `fused=True` even on CPU so that its op sequence is the CUDA one (the harness builds it fused only on CUDA).')
 
 
+def points_text(res):
+    cl = res['classes']
+    c17 = next(c for c in cl if c['name'].startswith('t = 1'))
+    top = max(cl, key=lambda c: c['per_round']['kernel'])
+    eng = res.get('engine_by_producer_per_round') or {}
+    to = res.get('top_ops') or {}
+    add = next((x for x in to.get('ops', []) if x['op'] == 'add'), None)
+    return ('- Launch count is set by rounds, not by rows: about ' + f"{c17['per_round']['lo']:.0f} to {top['per_round']['hi']:.0f}" + f" model-side launches per round (about {17.28 * c17['per_round']['lo']:,.0f} to {17.28 * top['per_round']['hi']:,.0f} in a 17.28-round micro-batch), the same at 16 or 64 rows (C3). "
+            'Bigger micro-batches change how many micro-batches (and fixed parts, and K draws) there are, not the ops per round; removing syncs removes waits, not launches.\n'
+            + (f"- The single biggest op is `add` ({add['share'] * 100:.0f} % of a steady round's kernel ops), and most of it is the autograd engine adding gradients of shared weights and activations once per use per round " + f"({sum(eng.values()):.0f} per round: thinker {eng.get('thinker', 0):.0f}, call writer {eng.get('call_writer', 0):.0f}, answer writer {eng.get('answer_writer', 0):.0f}). A change that accumulates those gradients in fewer launches (or shares fewer weights per round) removes more launches than any single forward op can (untested).\n" if add and eng else '')
+            + (lambda a, b, c: f"- Checkpointing adds to the per-round count: {a:.0f} kernel ops in rounds 1 to 7, {b:.0f} from round 8 (answer pass recomputed, +{100 * (b / a - 1):.0f} %), {c:.0f} from round 12 (thinker too, +{100 * (c / b - 1):.0f} %), so the checkpoint start is a launch lever as well as a memory one (untested).\n")(
+                c17['per_round']['kernel'], cl[2]['per_round']['kernel'], cl[3]['per_round']['kernel'])
+            + '- The two things this CPU run cannot count are the bf16 casts (the GPU profile has 13k `_to_copy` per update) and the Gemma front (at most 24k launches per update by the PTC bound, fixed per micro-batch): together they are about as many launches as the model-side ops. A GPU run with the profiler\'s per-kernel names grouped by region would settle both (untested).')
+
+
+def host_share_text(res):
+    sh = []
+    for u in res['natural']:
+        pt = {p['phase']: p for p in u['phase_table']}
+        h = [p for p in u['phase_table'] if p['phase'].startswith('host')][0]['ops']
+        d = sum(p['ops'] for p in u['phase_table'] if not p['phase'].startswith('host') and 'stub' not in p['phase'])
+        sh.append(h / (h + d))
+    return f"the teacher is {pct(min(sh), 0)} to {pct(max(sh), 0)} of all dispatched ops of the natural updates, views included" if sh else 'n/a'
+
+
 def bias_text(res):
     out = []
-    out.append('The harness\'s synthetic rows have 0 calls (cloze rows) or 2 calls (skills rows), so `last + 2` is about 4 to 7 and K decides n; the real pool has more calls per row: 37 % of rows have calls and the mean of 17.28 rounds per micro-batch with K drawn from (4, 8, 16, 32) '
-               'needs n = max(K, last + 2) to be about 10 for the two small K, i.e. the longest program in a 64-row micro-batch has about 8 or 9 calls. What that changes and what it does not:')
+    out.append('The harness\'s synthetic rows have 0 calls (cloze rows) or 2 calls (skills rows), so `last + 2` is about 4 to 7 and K decides n; the real pool has more calls per row: 37 % of rows have calls (GPU-RUN-1 padding section), and the GPU record\'s mean of 17.28 rounds per micro-batch with K drawn '
+               'from (4, 8, 16, 32) needs n = max(K, last + 2) to be about 10 for the two small K, i.e. the longest program in a 64-row micro-batch is several calls long. What that changes and what it does not:')
     out.append('')
     out.append('- **Per-round op counts of the writer passes: nothing**, because `call_pass` and `ans_pass` run once per round whatever the call text length (the length L only changes tensor sizes, not the number of ops). Shown by the per-round tables above (they repeat from round to round) and by the multi-call run below.')
-    out.append('- **Subset indexing: a little.** While some rows are still "inside" their program (round <= the longest call round) the loop and `_loss` select rows (`pk(x) = x[si]`: four index ops per round for the answer pass, one `torch.tensor(sel)` and the call-pass rows); with the real pool that applies to about 10 rounds per micro-batch instead of about 2. The multi-call run measures the size of this.')
     mr, ref = res.get('multi'), res.get('multi_ref')
     if mr and ref:
         rows = []
         for e in mr:
             r = next((x for x in ref if x['K'] == e['K']), None)
             if r:
-                rows.append([e['K'], int(e['n']), f"{r['per_round_kernel_ops']:.1f}", f"{e['per_round_kernel_ops']:.1f}", pct(r['share']), pct(e['share']), f"{e['host_ops_per_round']:.0f}"])
+                rows.append([e['K'], f"{int(r['n'])} / {int(e['n'])}", f"{e['rounds_compared'][0]} to {e['rounds_compared'][1]}", f"{r['per_round_kernel_ops']:.1f}", f"{e['per_round_kernel_ops']:.1f}", f"{100 * (e['per_round_kernel_ops'] / r['per_round_kernel_ops'] - 1):+.1f} %", pct(r['share']), pct(e['share']), f"{e['host_ops_per_round']:.0f}"])
         out.append('')
-        out.append(md_table(['K', 'n (multi-call)', 'device kernel ops per steady round, harness rows', 'same, multi-call rows', 'writer share, harness rows', 'writer share, multi-call rows', 'CPU teacher ops per round, multi-call rows'], rows))
+        out.append(md_table(['K', 'n (harness rows / multi-call rows)', 'rounds compared', 'device kernel ops per round, harness rows', 'same, multi-call rows', 'change', 'writer share, harness rows', 'writer share, multi-call rows', 'CPU teacher ops per round, multi-call rows'], rows))
         out.append('')
-        e = mr[0]
-        out.append(f"Kernel ops of rounds 0 to 11 on the multi-call rows ({', '.join(str(x) for x in e['early_rounds'])}) show where the subset path applies.")
-    out.append('- **The CPU-tensor teacher: a lot more host work**, because `ByteWriter.teacher` loops over rows and bytes in python (rows with a call text cost ~8 CPU ops per byte); that is host time (no launch), and it grows with the calls per row.')
-    out.append('- **The tape**: K = the longest call list in the micro-batch sets the tape width (K x le), so the thinker\'s keys/values per round are longer with the real pool; that is tensor size, not op count.')
+        e0 = mr[0]
+        r0 = next((x for x in ref if x['K'] == e0['K']), None)
+        dif = [e - r for e, r in zip(e0['early_rounds'], r0['early_rounds'])] if r0 else []
+        out.append(f"- **Subset indexing: about +{max(dif) if dif else 0} kernel ops per round ({100 * max(dif) / r0['per_round_kernel_ops']:.0f} %) in the rounds where some rows are still \"inside\" their program.** While round <= the longest call round the loop and `_loss` select rows "
+                   f"(`pk(x) = x[si]`: four index ops per round for the answer pass, one `torch.tensor(sel)` and the call-pass rows). Device kernel ops of rounds 0 to 11 on the multi-call rows at K = {e0['K']}: {', '.join(str(x) for x in e0['early_rounds'])}"
+                   + (f"; on the harness rows: {', '.join(str(x) for x in r0['early_rounds'])}" if r0 else '') + '.')
+        dsh = [100 * (e['share'] - next(x for x in ref if x['K'] == e['K'])['share']) for e in mr if any(x['K'] == e['K'] for x in ref)]
+        out.append(f"- **Writer share: {', '.join(f'{d:+.1f}' for d in dsh)} points on the multi-call rows** (the extra ops are index ops of the loop and the loss tail, not writer ops), so the harness rows slightly overstate the writer share against a pool with more calls per row; "
+                   "that is a shift of under one point against a 45 to 51 % share and does not change any verdict. The multi-call rows are a stress case (their longest program with gaps needs 24 rounds at K = 16, while the GPU profile's own K = 4 draw ran only 7 rounds, see the estimate section), so this is an upper bound on the effect.")
+    out.append('- **The CPU-tensor teacher: a lot more host work**, because `ByteWriter.teacher` loops over rows and bytes in python (about 8 CPU ops per byte of a row with a call text); that is host time (no launch), and it grows with the calls per row and with the rows. Its share of the dispatched ops is large here (' + host_share_text(res) + ') and it is not part of any launch figure.')
+    out.append('- **The tape**: K = the longest call list in the micro-batch sets the tape width (K x le), so the thinker\'s keys and values per round are longer with the real pool; that is tensor size, not op count.')
     return '\n'.join(out)
+
+
+def engine_text(res):
+    e = res.get('engine_sources') or {}
+    tot = sum(e.values())
+    if not tot:
+        return 'the producer split needs the pinned runs'
+    fwd = sum(v for k, v in e.items() if k not in ('param', 'engine'))
+    return f"{pct(fwd / tot, 1)} are additions of a gradient that a named forward region's backward produced (tagged with that region), {pct(e.get('param', 0) / tot, 1)} are the parameters' own AccumulateGrad, {pct(e.get('engine', 0) / tot, 1)} have no producer"
 
 
 def validation_text(res):
@@ -1904,9 +2157,13 @@ def validation_text(res):
     nat = res['natural']
     lines = [f"- Region coverage (shown): {pct(v['share_not_other'], 3)} of {f0(v['kernel_ops_total'])} kernel ops over all runs have a region other than 'other' (brief: >= 99 %).",
              f"- Backward attribution (shown): {pct(v['share_backward_forward_region'], 3)} of {f0(v['backward_kernel_ops_excl_engine'])} backward + recompute kernel ops (the engine's own additions excepted) carry the region of a forward op (brief: >= 95 %); "
-             f"{v['untagged_nodes']} of {f0(v['reachable_nodes'])} autograd nodes reachable from the losses were not found by the forward tagger. The engine's own additions are {pct(v['engine_share_of_backward'])} of all backward + recompute kernel ops and are filed under grad_accumulate, by design not a forward region.",
+             f"{v['untagged_nodes']} of {f0(v['reachable_nodes'])} autograd nodes reachable from the losses were not found by the forward tagger. The engine's own additions are {pct(v['engine_share_of_backward'])} of all backward + recompute kernel ops and are filed under grad_accumulate, "
+             f"by design not a forward region; of those, {engine_text(res)}.",
              f"- Thinker recompute round check (shown): the round the think wrapper saw agrees with the round of the node that asked for the recompute in {f0(v['think_round_check']['equal'])} ops, disagrees in {v['think_round_check']['differ']}.",
-             "- Counts identical across two runs, the sync wrapper restoring torch exactly, and the instrument leaving loss and weights bit-identical are unit tests (`test_attrib.py`, 15 tests, all pass)."]
+             "- Counts identical across two runs, the sync wrapper restoring torch exactly, and the instrument leaving loss and weights bit-identical are unit tests (`test_attrib.py`, 17 tests, all pass)."]
+    dr = res.get('determinism_real_shape')
+    if dr:
+        lines.append(f"- Determinism at the real shape (shown): {dr['identical']} of {dr['updates_compared']} natural updates counted in a second, separate process (an earlier revision of the engine tagging, so op names are compared without the producer suffix) give identical micro-batch tallies, cell for cell ({f0(dr['ops_compared'])} ops).")
     if nat:
         err = [abs(u['pred_err']) for u in nat if u['pred_err'] is not None]
         lines.append(f"- Out-of-sample check of the per-round model (shown): the fixed part plus per-round totals of the n = {res['reference']['n']} reference run predict the device kernel ops of {len(nat)} complete natural update(s) to within {pct(max(err))} (their row mixes, plan and gap draws are not the reference's).")
@@ -1922,6 +2179,23 @@ def not_claimed_text(res):
             '- Host python time of the teacher loops was not measured on a device-attached run.')
 
 
+def compact_run(run):
+    """A natural update without its per-round tags (they are only needed for the pinned runs): rows merged over the rounds, round -> 'r' or None."""
+    out = dict(run)
+    out['mbs'] = []
+    for m in run['mbs']:
+        agg = {}
+        for r in m['T']:
+            k = (r[0], r[1], None if r[2] is None else 'r', r[3], r[4])
+            v = agg.setdefault(k, [0, 0, 0, 0])
+            for i in range(4):
+                v[i] += r[5 + i]
+        mm = dict(m)
+        mm['T'] = [[*k, *v] for k, v in agg.items()]
+        out['mbs'].append(mm)
+    return out
+
+
 def load_inputs(a):
     def get(path):
         return json.load(open(path)) if path and os.path.exists(path) else None
@@ -1932,6 +2206,9 @@ def load_inputs(a):
             if path_d:
                 inp[k] += path_d['runs']
     inp['meta'] = (pin or nat or {}).get('meta')
+    inp['k_stream'] = (nat or {}).get('k_stream') if isinstance(nat, dict) else None
+    chk = get(getattr(a, 'natural_check', None))
+    inp['natural_check'] = chk['runs'] if chk else []
     return inp
 
 
@@ -1943,10 +2220,16 @@ def report_main(a):
     if a.md:
         open(a.md, 'w').write(md)
     if a.json:
+        raw = dict(inp)
+        raw['natural'] = [compact_run(r) for r in inp['natural']]
+        raw.pop('natural_check', None)                       # only its comparison with the natural run is kept (report.determinism_real_shape)
         out = dict(report=res, gpu_facts=GPU, gpu_profile=dict(rounds_per_update=(gpu or {}).get('rounds_per_update'), sync_sites=(gpu or {}).get('sites'), top_cpu_ops_per_update=(gpu or {}).get('ops')),
                    kernel_table=dict(KERNEL_TABLE={k: v for k, v in KERNEL_TABLE.items()}, SDPA_FWD=SDPA_FWD, SDPA_BWD=SDPA_BWD, INDEX_PUT_ACC=INDEX_PUT_ACC),
-                   site_notes={k: list(v) for k, v in SITE_NOTES.items()}, raw=inp)
-        json.dump(out, open(a.json, 'w'), default=lambda o: list(o) if isinstance(o, (set, tuple)) else str(o))
+                   site_notes={k: list(v) for k, v in SITE_NOTES.items()},
+                   raw_note=('raw = the packed tallies of every run, rows [phase, region, round, op, kind, count, launches_low, launches_high, memcpy]; the natural updates keep a round only as "r" (some round) or null (once per micro-batch) '
+                             'to keep the file small, the per-round data are in the pinned runs; sync rows [kind, site, phase, round, region, count]'),
+                   raw=raw)
+        json.dump(out, open(a.json, 'w'), separators=(',', ':'), default=lambda o: list(o) if isinstance(o, (set, tuple)) else str(o))
     print(md if not a.md else f'wrote {a.md}')
     return res
 
@@ -1973,6 +2256,7 @@ def main(argv=None):
     ap.add_argument('--md')
     ap.add_argument('--json')
     ap.add_argument('--natural')
+    ap.add_argument('--natural-check', dest='natural_check', help='an earlier natural run of the same updates: compared cell by cell (determinism at the real shape)')
     ap.add_argument('--pinned')
     ap.add_argument('--rows-json', dest='rows_json')
     ap.add_argument('--autocast-json', dest='autocast_json')

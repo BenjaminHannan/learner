@@ -1,0 +1,36 @@
+[    0.0s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_1_2_loss_aux_and_every_gradient_bit_equal_each_arm (5.9s)
+PASS test_2b_a_second_batch_and_seed_also_equal (4.7s)
+PASS test_3_three_full_updates_all_parameters_equal_each_arm (10.5s)
+PASS test_3b_three_updates_k_forced_32_and_4_each_arm (16.1s)
+PASS test_3c_parameters_really_moved (2.7s)
+PASS test_4_k_forced_32_and_4_cover_checkpointed_rounds (5.4s)
+PASS test_4b_checkpoint_recompute_does_not_use_or_fill_the_cache (0.3s)
+PASS test_5_free_run_bitwise_identical_with_kvcat_and_cache_invalidated_after_calls (2.6s)
+PASS test_5b_cache_cleared_after_every_entry_point_and_after_an_exception (0.5s)
+PASS test_5c_stale_cache_is_impossible_for_inplace_or_new_tensors (0.0s)
+PASS test_6_teardown_restores_everything_by_identity (0.0s)
+[   48.8s] world: arm PTS model plain_tf_steps_g (92,688 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_6b_skips_when_not_applicable_and_registry (0.0s)
+PASS test_6c_source_guard_refuses_other_code (0.0s)
+SKIP test_7_real_3m_shape_one_micro_batch_of_64_rows_k16: set EXACT_ARMS_REAL=1 (about 10 minutes at 1 thread, 3 passes at the real 3M shape)
+PASS test_7_tiny_op_and_sync_counts_baseline_vs_each_arm (1.5s)
+PASS test_8_host_time_of_one_teacher_call_cpu (1.0s)
+SKIP test_8_real_host_time_of_one_teacher_call_cpu_real_golds: set EXACT_ARMS_REAL=1
+SKIP test_8_real_teacher_time_inside_one_micro_batch_cpu: set EXACT_ARMS_REAL=1
+PASS test_8_teacher_time_inside_one_micro_batch_cpu (0.2s)
+SKIP test_9_real_resident_memory_of_the_forward_graph_baseline_vs_kvcat: set EXACT_ARMS_REAL=1
+PASS test_answer_teacher_variant_returns_the_same_four_tensors (0.4s)
+PASS test_bf16_cpu_autocast_kvcat_bit_equality (15.4s)
+PASS test_bf16_cpu_autocast_three_updates_kvcat (12.6s)
+PASS test_teacher_np_equals_bytewriter_teacher_for_random_targets (1.2s)
+PASS test_the_original_teacher_feedback_is_zero_for_line_context (0.1s)
+25 of 25 ran without failure in 81.2s
+[    0.0s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_3c_parameters_really_moved (3.4s)
+[   11.5s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 2000 data synthetic(max_letters=300) caps caps_b3g2.json device cpu eg stub
+PASS test_7_real_3m_shape_one_micro_batch_of_64_rows_k16 (58.1s)
+PASS test_8_real_host_time_of_one_teacher_call_cpu_real_golds (1.3s)
+PASS test_8_real_teacher_time_inside_one_micro_batch_cpu (10.3s)
+PASS test_9_real_resident_memory_of_the_forward_graph_baseline_vs_kvcat (67.1s)
+25 of 25 ran without failure in 140.2s

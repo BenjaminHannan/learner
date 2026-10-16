@@ -1,0 +1,557 @@
+{
+ "bf16_cpu_autocast": {
+  "grad_dtype": [
+   "torch.float32",
+   "torch.float32",
+   "torch.float32"
+  ],
+  "note": "torch.autocast(cpu, bfloat16) over model.loss, tiny shape",
+  "results": {
+   "fastteach|K=32": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   },
+   "fastteach|K=model draw": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   },
+   "kvcat,fastteach|K=32": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   },
+   "kvcat,fastteach|K=model draw": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   },
+   "kvcat|K=32": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   },
+   "kvcat|K=model draw": {
+    "grads_differing": 0,
+    "loss_bit_equal": true,
+    "max_abs_grad_diff": 0.0,
+    "n_grads": 72
+   }
+  }
+ },
+ "host_ms_per_teacher_call_cpu_64_rows_real_3m_golds": {
+  "answers (ans_ids, every row)": {
+   "baseline": 5.209,
+   "fastteach": 0.055,
+   "n_bytes": 369,
+   "nosync": 5.26,
+   "rows_with_target": 64
+  },
+  "first calls (None for rows without a call)": {
+   "baseline": 6.246,
+   "fastteach": 0.051,
+   "n_bytes": 379,
+   "nosync": 6.826,
+   "rows_with_target": 32
+  },
+  "stop lines ([] for rows with calls, None else)": {
+   "baseline": 0.332,
+   "fastteach": 0.022,
+   "n_bytes": 32,
+   "nosync": 0.342,
+   "rows_with_target": 32
+  }
+ },
+ "host_ms_per_teacher_call_cpu_64_rows_tiny_world": {
+  "answers (ans_ids, every row)": {
+   "baseline": 4.063,
+   "fastteach": 0.081,
+   "n_bytes": 369,
+   "nosync": 5.526,
+   "rows_with_target": 64
+  },
+  "first calls (None for rows without a call)": {
+   "baseline": 5.948,
+   "fastteach": 0.054,
+   "n_bytes": 373,
+   "nosync": 6.433,
+   "rows_with_target": 32
+  },
+  "stop lines ([] for rows with calls, None else)": {
+   "baseline": 0.319,
+   "fastteach": 0.019,
+   "n_bytes": 32,
+   "nosync": 0.291,
+   "rows_with_target": 32
+  }
+ },
+ "real_3m_k16_64rows": {
+  "K": 16,
+  "baseline": {
+   "aten_cat_backward": 63,
+   "aten_cat_forward": 143,
+   "backward_seconds_with_counters": 11.45,
+   "blocking_h2d_to_calls": 67,
+   "forward_seconds_with_counters": 7.25,
+   "host_sync_call_sites_executed": {
+    "cpu": 32,
+    "nonzero": 31,
+    "to_blocking": 67,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 207,
+   "nonblocking_h2d_to_calls": 0,
+   "nonblocking_sites": {},
+   "nonview_aten_ops_backward": 5168,
+   "nonview_aten_ops_forward": 13630,
+   "nonview_aten_ops_total": 18798,
+   "rounds": 16.0,
+   "sync_sites": {
+    "cpu @ writer.py:121": 32,
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "to_blocking @ writer.py:138": 64,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 1114,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 1116,
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__bool__ @ writer.py:135": 1082,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {}
+  },
+  "blocks": 2,
+  "fastteach": {
+   "aten_cat_backward": 63,
+   "aten_cat_forward": 143,
+   "backward_seconds_with_counters": 10.76,
+   "blocking_h2d_to_calls": 3,
+   "forward_seconds_with_counters": 8.18,
+   "grads_differing": 0,
+   "host_sync_call_sites_executed": {
+    "nonzero": 31,
+    "to_blocking": 3,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 111,
+   "loss_bit_equal": true,
+   "n_grads": 98,
+   "nonblocking_h2d_to_calls": 48,
+   "nonblocking_sites": {
+    "to_nonblocking @ test_exact_arms.py:235": 48
+   },
+   "nonview_aten_ops_backward": 5168,
+   "nonview_aten_ops_forward": 3304,
+   "nonview_aten_ops_total": 8472,
+   "rounds": 16.0,
+   "sync_sites": {
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 32,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 34,
+   "top_op_deltas_vs_baseline": {
+    "aten::_local_scalar_dense": -1082,
+    "aten::any": -1082,
+    "aten::bitwise_and": -1082,
+    "aten::bitwise_and_": -942,
+    "aten::copy_": -4034,
+    "aten::eq": -2024,
+    "aten::full": -32,
+    "aten::zeros": -48
+   },
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {
+    "fastteach": {
+     "teacher_calls_numpy": 16
+    }
+   }
+  },
+  "kvcat": {
+   "aten_cat_backward": 63,
+   "aten_cat_forward": 83,
+   "backward_seconds_with_counters": 8.32,
+   "blocking_h2d_to_calls": 67,
+   "forward_seconds_with_counters": 3.87,
+   "grads_differing": 0,
+   "host_sync_call_sites_executed": {
+    "cpu": 32,
+    "nonzero": 31,
+    "to_blocking": 67,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 207,
+   "loss_bit_equal": true,
+   "n_grads": 98,
+   "nonblocking_h2d_to_calls": 0,
+   "nonblocking_sites": {},
+   "nonview_aten_ops_backward": 4988,
+   "nonview_aten_ops_forward": 13570,
+   "nonview_aten_ops_total": 18558,
+   "rounds": 16.0,
+   "sync_sites": {
+    "cpu @ writer.py:121": 32,
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "to_blocking @ writer.py:138": 64,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 1114,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 1116,
+   "top_op_deltas_vs_baseline": {
+    "aten::add": -60,
+    "aten::cat": -60,
+    "aten::select_backward": -120
+   },
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__bool__ @ writer.py:135": 1082,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {
+    "kvcat": {
+     "cat_cache_bypassed_in_backward": 8,
+     "cat_cache_hits": 30,
+     "cat_cache_misses": 2,
+     "entries_cleared_at_call_end": 1
+    }
+   }
+  },
+  "n_trained_params": 4023302,
+  "rows_per_micro_batch": 64
+ },
+ "resident_memory_cpu_fp32_forward_graph_real_3m_64rows_width300_k16": {
+  "baseline": {
+   "arms": [],
+   "retained_by_forward_graph_kb": 3271980,
+   "rss_after_backward_kb": 2840500,
+   "rss_after_forward_kb": 3883180,
+   "rss_before_forward_kb": 611200
+  },
+  "kvcat": {
+   "arms": [
+    "kvcat"
+   ],
+   "retained_by_forward_graph_kb": 2231664,
+   "rss_after_backward_kb": 2777960,
+   "rss_after_forward_kb": 2843148,
+   "rss_before_forward_kb": 611484
+  }
+ },
+ "teacher_time_in_one_forward_cpu_real_3m_64rows_k16": {
+  "baseline": {
+   "forward_seconds_total": 3.24,
+   "teacher_calls": 16,
+   "teacher_seconds": 0.0285
+  },
+  "fastteach": {
+   "forward_seconds_total": 3.456,
+   "teacher_calls": 16,
+   "teacher_seconds": 0.0056
+  }
+ },
+ "teacher_time_in_one_forward_cpu_tiny_4rows_k16": {
+  "baseline": {
+   "forward_seconds_total": 0.057,
+   "teacher_calls": 16,
+   "teacher_seconds": 0.0026
+  },
+  "fastteach": {
+   "forward_seconds_total": 0.162,
+   "teacher_calls": 16,
+   "teacher_seconds": 0.0023
+  }
+ },
+ "tiny_k16_4rows": {
+  "K": 16,
+  "baseline": {
+   "aten_cat_backward": 55,
+   "aten_cat_forward": 111,
+   "backward_seconds_with_counters": 0.23,
+   "blocking_h2d_to_calls": 67,
+   "forward_seconds_with_counters": 0.17,
+   "host_sync_call_sites_executed": {
+    "cpu": 32,
+    "nonzero": 31,
+    "to_blocking": 67,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 207,
+   "nonblocking_h2d_to_calls": 0,
+   "nonblocking_sites": {},
+   "nonview_aten_ops_backward": 4155,
+   "nonview_aten_ops_forward": 3650,
+   "nonview_aten_ops_total": 7805,
+   "rounds": 16.0,
+   "sync_sites": {
+    "cpu @ writer.py:121": 32,
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "to_blocking @ writer.py:138": 64,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 97,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 99,
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__bool__ @ writer.py:135": 65,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {}
+  },
+  "fastteach": {
+   "aten_cat_backward": 55,
+   "aten_cat_forward": 111,
+   "backward_seconds_with_counters": 0.19,
+   "blocking_h2d_to_calls": 3,
+   "forward_seconds_with_counters": 0.16,
+   "host_sync_call_sites_executed": {
+    "nonzero": 31,
+    "to_blocking": 3,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 111,
+   "nonblocking_h2d_to_calls": 48,
+   "nonblocking_sites": {
+    "to_nonblocking @ test_exact_arms.py:235": 48
+   },
+   "nonview_aten_ops_backward": 4155,
+   "nonview_aten_ops_forward": 2946,
+   "nonview_aten_ops_total": 7101,
+   "rounds": 16.0,
+   "sync_sites": {
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 32,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 34,
+   "top_op_deltas_vs_baseline": {
+    "aten::_local_scalar_dense": -65,
+    "aten::any": -65,
+    "aten::bitwise_and": -65,
+    "aten::bitwise_and_": -57,
+    "aten::copy_": -250,
+    "aten::eq": -122,
+    "aten::full": -32,
+    "aten::zeros": -48
+   },
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {
+    "fastteach": {
+     "teacher_calls_numpy": 16
+    }
+   }
+  },
+  "kvcat": {
+   "aten_cat_backward": 55,
+   "aten_cat_forward": 81,
+   "backward_seconds_with_counters": 0.17,
+   "blocking_h2d_to_calls": 67,
+   "forward_seconds_with_counters": 0.16,
+   "host_sync_call_sites_executed": {
+    "cpu": 32,
+    "nonzero": 31,
+    "to_blocking": 67,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 207,
+   "nonblocking_h2d_to_calls": 0,
+   "nonblocking_sites": {},
+   "nonview_aten_ops_backward": 4065,
+   "nonview_aten_ops_forward": 3620,
+   "nonview_aten_ops_total": 7685,
+   "rounds": 16.0,
+   "sync_sites": {
+    "cpu @ writer.py:121": 32,
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "to_blocking @ writer.py:138": 64,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 97,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 99,
+   "top_op_deltas_vs_baseline": {
+    "aten::add": -30,
+    "aten::cat": -30,
+    "aten::select_backward": -60
+   },
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__bool__ @ writer.py:135": 65,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {
+    "kvcat": {
+     "cat_cache_bypassed_in_backward": 4,
+     "cat_cache_hits": 15,
+     "cat_cache_misses": 1,
+     "entries_cleared_at_call_end": 1
+    }
+   }
+  },
+  "kvcat,fastteach": {
+   "aten_cat_backward": 55,
+   "aten_cat_forward": 81,
+   "backward_seconds_with_counters": 0.19,
+   "blocking_h2d_to_calls": 3,
+   "forward_seconds_with_counters": 0.15,
+   "host_sync_call_sites_executed": {
+    "nonzero": 31,
+    "to_blocking": 3,
+    "tolist": 60,
+    "torch.tensor(device=)": 17
+   },
+   "host_sync_total": 111,
+   "nonblocking_h2d_to_calls": 48,
+   "nonblocking_sites": {
+    "to_nonblocking @ test_exact_arms.py:235": 48
+   },
+   "nonview_aten_ops_backward": 4065,
+   "nonview_aten_ops_forward": 2916,
+   "nonview_aten_ops_total": 6981,
+   "rounds": 16.0,
+   "sync_sites": {
+    "nonzero @ b3g2.py:374": 15,
+    "nonzero @ b3g2.py:553": 16,
+    "to_blocking @ b3g2.py:224": 1,
+    "to_blocking @ b3g2.py:567": 1,
+    "to_blocking @ tool.py:175": 1,
+    "tolist @ b3g2.py:350": 45,
+    "tolist @ b3g2.py:361": 15,
+    "torch.tensor(device=) @ b3g2.py:355": 15,
+    "torch.tensor(device=) @ b3g2.py:536": 1,
+    "torch.tensor(device=) @ tool.py:180": 1
+   },
+   "tensor_truth_value_reads": {
+    "__bool__": 32,
+    "__int__": 2
+   },
+   "tensor_truth_value_total": 34,
+   "top_op_deltas_vs_baseline": {
+    "aten::_local_scalar_dense": -65,
+    "aten::add": -30,
+    "aten::any": -65,
+    "aten::bitwise_and": -65,
+    "aten::bitwise_and_": -57,
+    "aten::cat": -30,
+    "aten::copy_": -250,
+    "aten::eq": -122,
+    "aten::full": -32,
+    "aten::select_backward": -60,
+    "aten::zeros": -48
+   },
+   "truth_value_sites": {
+    "__bool__ @ b3g2.py:551": 16,
+    "__bool__ @ b3g2.py:554": 16,
+    "__int__ @ b3g2.py:534": 1,
+    "__int__ @ b3g2.py:535": 1
+   },
+   "variant_stats": {
+    "fastteach": {
+     "teacher_calls_numpy": 16
+    },
+    "kvcat": {
+     "cat_cache_bypassed_in_backward": 4,
+     "cat_cache_hits": 15,
+     "cat_cache_misses": 1,
+     "entries_cleared_at_call_end": 1
+    }
+   }
+  },
+  "rows_per_micro_batch": 4
+ }
+}

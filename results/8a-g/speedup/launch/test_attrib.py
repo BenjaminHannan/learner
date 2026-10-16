@@ -234,6 +234,57 @@ def test_region_rules_by_hand():
     assert r(()) is None and r(('data.py:to_device',)) == 'train_loop'
 
 
+def test_report_builds_end_to_end_on_the_tiny_shape():
+    """The whole report chain (fits, per-round classes, C2, C3, C4, estimate, markdown, json) on tiny runs: it must run, name every section and agree with itself."""
+    import json
+    w = world()
+    pin = []
+    for k in (8, 12, 16):
+        r, _, _ = attrib.run_single(w, 4, k)
+        pin.append(r)
+    nat, _, _ = attrib.run_update(w, 4, warmup=1, ks=(12,), n_updates=2)
+    rows = []
+    for b in (8, 16):
+        r, _, _ = attrib.run_single(attrib.get_world(tiny=True, batch=b, accum=4, rows=600, pkg_root=attrib.DEFAULT_PKG), 4, 12)
+        rows.append(r)
+    inp = dict(natural=nat, pinned=pin, rows=rows, autocast=[], width=[], multi=[], meta=attrib.meta_of(w, None))
+    gpu = attrib.load_gpu()
+    res = attrib.build_report(inp, gpu)
+    md = attrib.render_md(res, gpu)
+    attrib.render_md(attrib.build_report(inp, None), None)                       # and without the GPU record
+    for head in ('## Verdicts on the four claims', '## Per-update totals by phase', '## Per-round table', '## C1:', '## C2:', '## C3:', '## C4:', '## Kernel estimate', '## How the synthetic rows bias this',
+                 '## Does the instrument itself hold?', '## Not claimed'):
+        assert head in md, head
+    json.dumps(res, default=lambda o: list(o) if isinstance(o, (set, tuple)) else str(o))
+    f = res['fits']['kernel_ops_device']
+    assert f['b'] > 100 and f['r2'] > 0.98
+    # the per-round model predicts the natural updates' kernel ops (tiny: rounds are all K = 12 or the longest program)
+    assert all(abs(u['pred_err']) < 0.05 for u in res['natural']), [u['pred_err'] for u in res['natural']]
+    assert set(res['c2'][1]['kernel']) >= {'share', 'engine', 'share_no_engine'}
+    assert 0.2 < res['c2'][1]['kernel']['share'] < 0.8
+    assert res['validation']['share_not_other'] >= 0.99 and res['validation']['untagged_nodes'] == 0
+    assert res['c3']['n_differ_device'] <= 0.05 * res['c3']['n_op_keys']
+    if gpu:
+        assert res['sync']['n_sync_lines'] >= 10 and 14 <= res['sync']['per_round_equiv_sync_lines'] <= 20, res['sync']['per_round_equiv_sync_lines']
+
+
+def test_compact_run_keeps_the_totals():
+    run, _, _ = one_update()
+    c = attrib.compact_run(run)
+    key = lambda rows: sorted(((r[0], r[1], r[3], r[4], r[5], r[6], r[7], r[8]) for r in rows), key=str)
+    for m, mc in zip(run['mbs'], c['mbs']):
+        tot = lambda rows: [sum(r[5 + i] for r in rows) for i in range(4)]
+        assert tot(m['T']) == tot(mc['T'])
+        by = lambda rows, f: sorted(f(rows).items(), key=str)
+        def agg(rows):
+            d = {}
+            for r in rows:
+                k = (r[0], r[1], r[3], r[4], r[2] is None)
+                d[k] = d.get(k, 0) + r[5]
+            return d
+        assert agg(m['T']) == agg(mc['T'])
+
+
 ALL = [(n, f) for n, f in sorted(globals().items()) if n.startswith('test_') and callable(f)]
 
 
