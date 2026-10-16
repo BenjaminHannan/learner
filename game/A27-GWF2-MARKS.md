@@ -29,3 +29,19 @@ Shown if it passes: the A26 loop was starved of rare rows and the snowball start
 | stop here and wait for the 10M learned drive | zero cost | learns nothing new for 9 h of free CPU; the 10M drive has a long queue |
 | expert-iteration first | the other outside-answer candidate | the search expert is no better than the model at the pickaxe (1 of 32 worlds), 2.8 s a step |
 Verdict: do A27. Reason: it is the only candidate whose failure would also say something clear (rare rows are not the problem) and the cost is free CPU.
+
+## Result (round 24 done, sealed screen scored 1:29 AM ET 10-16)
+Rounds 17 to 24 ran as marked on both seeds (the loops were killed and restarted three times by container restarts; each restart resumed from the saved state and the per-chunk play files, so no round was changed). Files: `game/results/A27/` (`A27-RESULT.json`, the four sealed per-world files, the 16 round files).
+
+| seed | sealed r16 (A26) | sealed r24 | paired change (SE) | pickaxe maps r16 -> r24 | mean g_stone r21-24 | practice unlocks r17 -> r24 | ready-state wpick share r24 |
+|---|---|---|---|---|---|---|---|
+| 200 | 3.93 | **4.03** | +0.10 (0.16) | 3 -> 4 of 100 | 1.25 | 3.81 -> 4.14 | 6.2% |
+| 201 | 3.93 | **4.55** | +0.62 (0.17) | 6 -> 19 of 100 | 5.75 | 3.97 -> 4.62 | 7.7% (10 to 13% in r20 to 23) |
+
+**Marks read literally (shown):** pass needed both >= 5.2, pickaxe >= 25% on both, mean g_stone(21 to 24) >= 10 on both: none met. Proved wrong needed both < 4.6: 4.03 and 4.55, so **A27 is PROVED WRONG by the rule fixed in advance.** Gate C at round 20 had not stopped it (seed 201 mean g_pick(17 to 20) 38.5, above 25), so it ran the full 24.
+
+**Plain reading.** Keeping every rare segment did not start the snowball. Seed 200 did not move (+0.10 against a standard error of 0.16). Seed 201 did move: +0.62 on the same 100 sealed maps (about 3.6 standard errors paired), and its pickaxe maps went from 6 to 19, so the change helped one seed, partly, and was far from the 5.2 line. Seed 201's score of 4.55 sits 0.05 under the 4.6 proved-wrong line, which is inside the 100-map noise (SE 0.16); the mark was fixed in advance and I do not move it.
+
+**Prediction scored (A28 census: "A27 flat").** Right for seed 200, wrong for seed 201 (shown). The census said the rule does not raise the pickaxe-to-other ratio in ready states, and the ready-state `wpick` share stayed low (2 to 6% seed 200, 8 to 13% seed 201, labeller 100%), so conflict is still alive; but seed 201 rose anyway, so the conflict reading does not explain everything. Why seed 201 rose is **untested**; the two seeds differ from the start (A28 census, round 16: seed 201 had 684 ready-state visits and seed 200 420), so a seed effect is as likely as a rule effect and two seeds cannot tell them apart.
+
+**What this leaves.** Shown: rare-row starvation is not the whole wall at this scale (the same result as the stopped A26 loop, with a small partial lift on one seed). Suggested: the wall also includes the ready-state label conflict (the model sees `do` and `wsword` rows in the same state and picks them about 90% of the time). Untested: anything about a different label rule on the model's own states. The next candidate remains the one-step lookahead instrument, GW-O (A29, marks `game/A29-GWO-MARKS.md`, code ready and tested). It is on hold: Ben's handover (10-15) says no new runs without a Muse packet, so it starts only when one arrives.
