@@ -1,0 +1,28 @@
+##### fake_vast_test.py (vastptc.py + the kit's vast.py, urllib replaced)
+A create printed: {"success": true, "new_contract": 4242, "error": null, "msg": null, "at": "2026-10-14T04:54:20Z"}
+A PUT https://console.vast.ai/api/v0/asks/111/ | keys ['args', 'client_id', 'disk', 'image', 'label', 'runtype', 'target_state'] | image pytorch/pytorch:2.11.0-cuda12.8-cudnn9-runtime | disk 80 | runtype args
+A args[0:2] ['bash', '-c'] | args[3] cio | len(args[2]) 53268 bytes 53268
+A exports line: export MAXPAR=5 QSUB= MAXH=6 DPH=0.38 PROJ_CAP_USD=4 END_SLEEP=600 FAIL_SLEEP=900
+A script after the exports line is ptc3s_box.sh byte for byte: True
+A body mentions a key/token/bearer word: False
+B search printed: {"id": 111, "gpu_name": "RTX 4090", "gpu_ram": 24564, "dph_total": 0.38, "reliability": 0.99, "inet_down": 900.0, "cpu_cores_effective": 16.0, "cpu_ram": 64000, "disk_space": 200, "cuda_max_good": 12.9, "geolocation": "XX"}
+B filter: {"verified": {"eq": true}, "rentable": {"eq": true}, "rented": {"eq": false}, "type": "on-demand", "num_gpus": {"eq": 1}, "gpu_ram": {"gte": 23000}, "reliability": {"gte": 0.98}, "cuda_max_good": {"gte": 12.8}, "disk_space": {"gte": 60}, "inet_down": {"gte": 300}, "cpu_cores_effective": {"gte": 8}, "order": [["dph_total", "asc"]], "limit": 300}
+C collect printed: {"8aPTC3S-3M-s400": "ok"}
+C extracted: ['8aPTC3S-3M-s400/PTC/RESULT.json', '8aPTC3S-3M-s400/PTC/stdout.events.txt', '8aPTC3S-3M-s400/PTC/stdout.tail.txt', '8aPTC3S-3M-s400/RESULT.json', '8aPTC3S-3M-s400/box.json', '8aPTC3S-3M-s400/box/PTC-SETUP-OK.txt', '8aPTC3S-3M-s400/box/box.txt', '8aPTC3S-3M-s400/box/build.log', '8aPTC3S-3M-s400/box/build_big.log', '8aPTC3S-3M-s400/box/cmd.data.txt', '8aPTC3S-3M-s400/box/cmd.job.txt', '8aPTC3S-3M-s400/box/code_files.sha256'] ...
+D log lines 124518 | RESULT PRINTED at line 130 | CKFULL lines at [132, 41568, 83004]
+D ck_started_at_result_printed: 10 polls, 6.8 virtual minutes; first: {"t_min": 0.1, "parts": 1, "ckpts_done": [], "announced": 1, "ckdone": null, "results": ["8aPTC3S-3M-s400"]}
+D ck_started_at_result_printed: last: {"t_min": 6.8, "parts": 5, "ckpts_done": ["8aPTC3S-3M-s400/PTC"], "announced": 1, "ckdone": null, "results": ["8aPTC3S-3M-s400"]}
+D ck_started_at_result_printed: checkpoint.pt 16114485 bytes sha256 1d1f674b00aed8a6
+D ck_started_at_result_printed: RESULT.json True
+D ck_started_at_round2: 23 polls, 16.6 virtual minutes; first: {"t_min": 0.1, "parts": 1, "ckpts_done": [], "announced": 1, "ckdone": null, "results": []}
+D ck_started_at_round2: last: {"t_min": 16.6, "parts": 5, "ckpts_done": ["8aPTC3S-3M-s400/PTC"], "announced": 1, "ckdone": 15, "results": ["8aPTC3S-3M-s400"]}
+D ck_started_at_round2: checkpoint.pt 16114485 bytes sha256 1d1f674b00aed8a6
+D ck_started_at_round2: RESULT.json True
+D ck_started_mid_round2: 19 polls, 13.6 virtual minutes; first: {"t_min": 0.1, "parts": 1, "ckpts_done": [], "announced": 1, "ckdone": null, "results": []}
+D ck_started_mid_round2: last: {"t_min": 13.6, "parts": 5, "ckpts_done": ["8aPTC3S-3M-s400/PTC"], "announced": 1, "ckdone": 15, "results": ["8aPTC3S-3M-s400"]}
+D ck_started_mid_round2: checkpoint.pt 16114485 bytes sha256 1d1f674b00aed8a6
+D ck_started_mid_round2: RESULT.json True
+##### kit_bug_test.py (the unpatched kit on the same log)
+kit OUT (module default for collectck result blocks): /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/custom_io/results
+1 collect on a log with checkpoint parts raised: ValueError: too many values to unpack (expected 4)
+2 --out given as /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/kit_bug_out/c2 ; result block landed in: ['kit_default_OUT/8aPTC3S-3M-s400/RESULT.json']

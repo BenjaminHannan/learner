@@ -1,0 +1,12 @@
+local_runner.parse_queue / command from /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/g8job/cio/custom_io/local_runner.py
+A8 runs (name, kind, MEM MiB): [('8a-data', 'g8a-data', 3000), ('8aB3G2A8-3M-s400', 'g8a', 9000)]
+ENV lines equal: True | {'PYTHONPATH': 'C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages', 'CUSTOM_IO_EG2': 'C:\\Users\\benja\\eg2'}
+--- g8a-data: 8a-data (A4) vs 8a-data (A8); MEM 3000 MiB in both; 1 differing token(s) of 13
+    token 6: A4 'C:/Users/benja/custom-io/work/results/8aB3G2A4-pc/8a-data'
+              A8 'C:/Users/benja/custom-io/work/results/8aB3G2A8-pc/8a-data'
+--- g8a: 8aB3G2A4-3M-s400 (A4) vs 8aB3G2A8-3M-s400 (A8); MEM 9000 MiB in both; 2 differing token(s) of 32
+    token 7: A4 'C:/Users/benja/custom-io/work/results/8aB3G2A4-pc/8aB3G2A4-3M-s400'
+              A8 'C:/Users/benja/custom-io/work/results/8aB3G2A8-pc/8aB3G2A8-3M-s400'
+    token 27: A4 'B3G2=4'
+              A8 'B3G2=8'
+OK: after undoing 8aB3G2A8 -> 8aB3G2A4 (in --out) and --accum B3G2=8 -> 4, the A8 command equals the A4 command, token for token

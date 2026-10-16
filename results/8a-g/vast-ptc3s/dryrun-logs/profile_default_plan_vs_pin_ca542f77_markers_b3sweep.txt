@@ -1,0 +1,51 @@
+PROFILE=1 default plan of the re-pinned script (dry_p7_repin.log) against the b3sweep script with PROF_PLAN unset (dry_f_profdefault.log):
+marker lines: old 55, new 55
+diff lines: 48
+--- old
++++ new
+@@ -21,2 +21,2 @@
+-=== PROF START job smoke of 2 updates, then the harness (commit ca542f77a9d3f6afb4a6850936e62da5b54a45ec); budget 75 min, maxh 3 h, speed guard OFF, up 3 min so far TS
+-=== PROF-HARNESS commit ca542f77a9d3f6afb4a6850936e62da5b54a45ec; prof_train.py sha256 2f1410fea1e5754c785188c30fe22368fbd42b6bc45ff54304e59896c3fe479b = the pinned value; test_prof.py bb69c8ce082830aae753bfe7bf17687c7608ec97e9cd9c70d714770fa8577ad9; README.md 35484e467e042f9cec4d3ab6dc88a9233b93fb
++=== PROF START job smoke of 2 updates, then the harness (commit 1d728b99ef7180c567b285b07ede9aac7a46427a); budget 75 min, maxh 3 h, speed guard OFF, up 4 min so far TS
++=== PROF-HARNESS commit 1d728b99ef7180c567b285b07ede9aac7a46427a; prof_train.py sha256 e2b5cbcd60d30e61885977f27beab52b2a5f23f43de29d9a7748498036203829 = the pinned value; test_prof.py f160c8064f43627749436b59cc61c2f162bfb6f8b9786e368230b44a218876ba; README.md 4e0fe73a695cc16fe5dabd8bebbe1aea443976
+@@ -24,2 +24,2 @@
+-=== PROF-JOB START: the queue-built job command, --steps 2, --train-extra '--log-every 1 --batch 16 --eval-max 16', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob; timeout 2700 s (budget left 4498 s) TS
+-=== PROF-JOB END rc=0 secs=485 maxh_hit=no TS
++=== PROF-JOB START: the queue-built job command, --steps 2, --train-extra '--log-every 1 --batch 16 --eval-max 16', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob; timeout 2700 s (budget left 4475 s) TS
++=== PROF-JOB END rc=0 secs=432 maxh_hit=no TS
+@@ -29,2 +29,2 @@
+-=== PROF STEP a_profile start: timeout 1500 s, budget left 4013 s TS
+-=== PROF STEP a_profile end rc=0 secs=12 TS
++=== PROF STEP a_profile start: timeout 1500 s, budget left 4043 s TS
++=== PROF STEP a_profile end rc=0 secs=14 TS
+@@ -32,2 +32,2 @@
+-=== PROF STEP b_bench start: timeout 1500 s, budget left 4001 s TS
+-=== PROF STEP b_bench end rc=0 secs=8 TS
++=== PROF STEP b_bench start: timeout 1500 s, budget left 4029 s TS
++=== PROF STEP b_bench end rc=0 secs=9 TS
+@@ -35,2 +35,2 @@
+-=== PROF STEP c_equiv start: timeout 1500 s, budget left 3993 s TS
+-=== PROF STEP c_equiv end rc=0 secs=17 TS
++=== PROF STEP c_equiv start: timeout 1500 s, budget left 4020 s TS
++=== PROF STEP c_equiv end rc=0 secs=20 TS
+@@ -38,2 +38,2 @@
+-=== PROF STEP d_e4 start: timeout 1500 s, budget left 3976 s TS
+-=== PROF STEP d_e4 end rc=0 secs=8 TS
++=== PROF STEP d_e4 start: timeout 1500 s, budget left 4000 s TS
++=== PROF STEP d_e4 end rc=0 secs=9 TS
+@@ -41,2 +41,2 @@
+-=== PROF STEP f1_b3g2_profile start: timeout 1500 s, budget left 3968 s TS
+-=== PROF STEP f1_b3g2_profile end rc=0 secs=31 TS
++=== PROF STEP f1_b3g2_profile start: timeout 1500 s, budget left 3991 s TS
++=== PROF STEP f1_b3g2_profile end rc=0 secs=36 TS
+@@ -44,2 +44,2 @@
+-=== PROF STEP f2_b3g2_bench start: timeout 1500 s, budget left 3937 s TS
+-=== PROF STEP f2_b3g2_bench end rc=0 secs=31 TS
++=== PROF STEP f2_b3g2_bench start: timeout 1500 s, budget left 3955 s TS
++=== PROF STEP f2_b3g2_bench end rc=0 secs=36 TS
+@@ -47 +47 @@
+-=== PROF printing: block profjob (job smoke folder), block profrun (23 files, archive 22488 bytes) TS
++=== PROF printing: block profjob (job smoke folder), block profrun (23 files, archive 23048 bytes) TS
+@@ -52 +52 @@
+-=== PROF RESULT PRINTED blocks=profjob,profrun r_lines=174 (the Vast log read window is 20000 lines) failed=[] skipped=[] TS
++=== PROF RESULT PRINTED blocks=profjob,profrun r_lines=185 (the Vast log read window is 20000 lines) failed=[] skipped=[] TS

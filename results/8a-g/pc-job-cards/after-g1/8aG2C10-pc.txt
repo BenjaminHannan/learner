@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: g2c10 = G2's plain control at 10M (G-PT 10M at caps_b3 on the B3 pool p10-rung30-s400-a64-L, shared by 3M and 10M as in G1), seed 400. PLAN.md substitution 4. Code src-b3 = custom_io at 71299b1a47. Accum PT=32 is cautious (spec addendum N).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG2C10-10M-s400 --rung 10M --seed 400 --arms PT --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3.json --accum PT=32

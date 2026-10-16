@@ -1,0 +1,168 @@
+=== CIO START 2026-10-14T04:00:25Z
+=== STAGE setup 2026-10-14T04:00:25Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=3 dph=0.4 guard=OFF-profile-mode cap_usd=4.0 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-14T04:00:25Z
+=== PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=4 PROF_JOB_STEPS=2 PROF_COMPILE=0 end_sleep=20) 2026-10-14T04:00:25Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           5           7           4           8          10
+4
+tmpfs            16G  4.5G   12G  29% /dev/shm
+TICK at=2026-10-14T04:00:25Z stage=setup up_min=0 log=f2_b3g2_bench.log bytes= last= | mb data8a=1627 skills=111 pools=467 free=11570 ram_avail=10822 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.4.6', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.14.1+cpu cuda None'}
+# date 2026-10-14T04:00:30Z
+# uname
+Linux vm 6.18.44-fc-v114 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux
+# python
+Python 3.11.15
+# nvidia-smi
+cio: line 432: nvidia-smi: command not found
+# nvidia-smi gpu csv
+cio: line 433: nvidia-smi: command not found
+# pip list | grep -i -E "torch|transformers|numpy" (and the other pinned packages)
+accelerate                1.15.0
+huggingface_hub           1.33.0
+numpy                     2.4.6
+pyarrow                   26.0.0
+safetensors               0.8.0
+tokenizers                0.23.2
+torch                     2.14.1+cpu
+transformers              5.19.0
+# torch
+torch 2.14.1+cpu cuda None cudnn None cuda_available False
+tf32 matmul False tf32 cudnn True float32_matmul_precision highest
+# cpu
+CPU(s):                                  4
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+               total        used        free      shared  buff/cache   available
+Mem:           16093        5401        7239        4537        8320       10691
+tmpfs            16G  4.5G   12G  29% /dev/shm
+=== STAGE code 2026-10-14T04:00:32Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-14T04:00:39Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-14T04:00:39Z
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK
+=== CODE-ID 8aPTC3S-pc-047f8ed212 (PC: WORK\code\8aPTC3S-pc-<same 10 hex>); code_identity.py (CRLF as LF): CODE-HASH-LF 47d676dde1 FILES-LIST-SHA256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2 (118 files) ; raw-bytes file list sha256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2; caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e 2026-10-14T04:01:08Z
+CMD 8a-data mem 3000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.get_data --work /dev/shm/ptcdry/J/work --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8a-data --data-pool /dev/shm/ptcdry/J/work/8a-inputs/data-pool --own-xz /dev/shm/ptcdry/J/work/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+CMD 8aPTC3S-3M-s400 mem 9000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8aPTC3S-3M-s400 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu -
+CHILD-ENV (added to the environment): {'PYTORCH_CUDA_ALLOC_CONF': 'expandable_segments:True'}
+QUEUE-ENV (the PC's # ENV lines, Windows paths, not used here): {"PYTHONPATH": "C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages", "CUSTOM_IO_EG2": "C:\\Users\\benja\\eg2"}
+=== STAGE gemma 2026-10-14T04:01:08Z
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+=== STAGE data 2026-10-14T04:01:21Z
+=== data branches fetched at 3d0afbeadd5f1775c7c92195348bab6f66da767d and 8d012f1f97bd8203b15e88e369dc856721e13e6a; building the 8a data (FineWeb-Edu shard 0 is 2.15 GB; the slices must hash to the manifest) 2026-10-14T04:01:27Z
+[get_data 04:01:28] teach.jsonl ok (already there)
+[get_data 04:01:29] web slices ok (already there) ['slice_rung10.jsonl', 'slice_rung3.jsonl', 'slice_rung30.jsonl']
+[get_data 04:01:29] READY /dev/shm/ptcdry/J/work/data8a
+=== STAGE skills 2026-10-14T04:01:29Z
+TICK at=2026-10-14T04:02:26Z stage=skills up_min=2 log=build.log bytes=480 last={"counts": {"train": 200000, "dev_answer": 1200, "dev_frame": 1360, "dev_vocab": 800, "dev_variant": 1320, "de | mb data8a=1627 skills=111 pools=467 free=11572 ram_avail=10437 | gpu 
+curriculum hashes match
+big build train.jsonl hash matches
+=== STAGE prof 2026-10-14T04:04:24Z
+=== PROF START job smoke of 2 updates, then the harness (commit 6a870a767c6231fe6c2489b84752ffdafd7824fa); budget 4 min, maxh 3 h, speed guard OFF, up 3 min so far 2026-10-14T04:04:24Z
+TICK at=2026-10-14T04:04:26Z stage=prof up_min=4 log=build_big.log bytes=723 last={"counts": {"train": 200000, "dev_answer": 6000, "dev_frame": 6800, "dev_vocab": 4000, "dev_variant": 6600, "d | mb data8a=1627 skills=111 pools=467 free=11590 ram_avail=10804 | gpu 
+=== PROF-HARNESS commit 6a870a767c6231fe6c2489b84752ffdafd7824fa; prof_train.py sha256 912045830f968526e9d92f5a48fe46e47a78b4c08a69b301b05f4f3e3728dbe1 = the pinned value; test_prof.py bb69c8ce082830aae753bfe7bf17687c7608ec97e9cd9c70d714770fa8577ad9; README.md 35484e467e042f9cec4d3ab6dc88a9233b93fb4a5651f94678fab9a46f295062; PREREG-eg-once.md 9388b108603bd02a543bb657e278056af519ebc1943bf88bc14783af5fd53c60 2026-10-14T04:04:26Z
+PROF-JOB cmd: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu --steps 2 --big-data '' --tra
+=== STAGE prof-job 2026-10-14T04:04:26Z
+=== PROF-JOB START: the queue-built job command, --steps 2, --train-extra '--log-every 1 --batch 16 --eval-max 2', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob; timeout 300 s (budget left 238 s) 2026-10-14T04:04:26Z
+=== PROF-JOB END rc=0 secs=82 maxh_hit=no 2026-10-14T04:05:48Z
+pool reused p10-rung30-s400-a64-L
+{"rung": "3M", "seed": 400, "steps": 2, "wall_s": 80.3, "cost_usd": 0.0}
+RESULT-SUMMARY {"job_status": "ok", "arm_status": "ok", "steps": 2, "n_params": 4023976, "steps_per_s": 0.113, "train_s": 18, "wall_s": 76, "peak_mem_mib": null, "cap_total": 0, "calc_mismatch": 0, "calc_rows": 32, "calc_forced": 16, "final_eval": true, "chain5": false, "lesions": ["nocalc"]}
+PROF-JOB train step=1 loss=4.71416 lr=3.3e-06 elapsed_s=13.8 cap_hits=0
+PROF-JOB train step=2 loss=4.7024 lr=6.7e-06 elapsed_s=17.8 cap_hits=0
+PROF-JOB timing {"steps": 2, "train_s": 17.8, "steps_per_s_result": 0.11253548994445257, "sec_per_update_overall": 8.8861, "sec_per_update_first_to_last_log": 4.0, "first_log_step": 1, "last_log_step": 2, "job_wall_s": 82.0, "pool_build_s": 1.0, "arm_wall_s": 79.2, "final_eval_phase_s": 38.5, "startup_before_train_s": 21.1, "peak_mem_mib": null, "peak_reserved_mib": null}
+PROF-JOB projection for the 24,000-update job (this speed, suggested): train_h=26.67 final_eval_h=0.011 (the guard's EXTRA_H default is 0.5)
+PROF-JOB pool {"train_sha256": "27234f3e9861ce5f8c6db18371f27c5f52826712398b90a4e946e952ff8791fe", "train_bytes": 485544869, "rows": 1343273, "pieces": 60008258, "schedule_steps": 24000, "passes": 4.574}
+=== PROF harness pool /dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L (485544869 bytes), --pkg-root /dev/shm/ptcdry/J/src-ptc, CUSTOM_IO_EG2=/dev/shm/ptcdry/J/eg2 2026-10-14T04:05:48Z
+=== STAGE prof-a_profile 2026-10-14T04:05:48Z
+=== PROF STEP a_profile start: timeout 156 s, budget left 156 s 2026-10-14T04:05:48Z
+=== PROF STEP a_profile end rc=0 secs=13 2026-10-14T04:06:01Z
+[    1.0s] === section breakdown
+[    2.7s] === section throughput
+[    3.2s] throughput: 0.1703 s/update (5.87 updates/s), accum 16, variant baseline
+[    3.3s] === section profiler
+[    7.3s] === section padding
+[    7.3s] === section sweep
+[    8.3s]   -> {"accum": 1, "micro_batch_rows": 32, "s_per_update": 0.139, "oom": false} peak_gb None
+[    8.8s]   -> {"accum": 2, "micro_batch_rows": 16, "s_per_update": 0.1091, "oom": false} peak_gb None
+[    9.2s]   -> {"accum": 4, "micro_batch_rows": 8, "s_per_update": 0.0981, "oom": false} peak_gb None
+[    9.7s]   -> {"accum": 8, "micro_batch_rows": 4, "s_per_update": 0.1292, "oom": false} peak_gb None
+[   10.1s]   -> {"accum": 16, "micro_batch_rows": 2, "s_per_update": 0.0969, "oom": false} peak_gb None
+[   10.5s]   -> {"accum": 32, "micro_batch_rows": 1, "s_per_update": 0.154, "oom": false} peak_gb None
+[   10.5s] === section syncs
+[   10.5s] section syncs skipped: sync audit needs CUDA (torch.cuda.set_sync_debug_mode)
+=== STAGE prof-b_bench 2026-10-14T04:06:01Z
+=== PROF STEP b_bench start: timeout 143 s, budget left 143 s 2026-10-14T04:06:01Z
+=== PROF STEP b_bench end rc=0 secs=8 2026-10-14T04:06:09Z
+[    0.9s] === section bench
+[    0.9s] bench round 1/1: baseline
+[    2.4s] throughput: 0.1746 s/update (5.73 updates/s), accum 16, variant baseline
+[    2.5s] bench round 1/1: eg_once
+[    3.2s] throughput: 0.2136 s/update (4.68 updates/s), accum 16, variant eg_once
+[    3.3s] bench round 1/1: sortpad,oldw
+[    3.6s] throughput: 0.1142 s/update (8.76 updates/s), accum 16, variant sortpad,oldw
+[    3.8s] bench round 1/1: sortpad,bigmb,oldw
+[    4.1s] throughput: 0.0954 s/update (10.48 updates/s), accum 8, variant bigmb,sortpad,oldw
+[    4.2s] bench round 1/1: eg_once,sortpad,oldw
+[    4.7s] throughput: 0.1653 s/update (6.05 updates/s), accum 16, variant sortpad,oldw,eg_once
+[    4.9s] bench round 1/1: eg_once,sortpad,bigmb,oldw,prefetch
+[    5.2s] throughput: 0.1209 s/update (8.27 updates/s), accum 8, variant bigmb,sortpad,oldw,eg_once,prefetch
+[    5.3s] bench round 1/1: tf32
+[    5.9s] throughput: 0.1512 s/update (6.61 updates/s), accum 16, variant tf32
+=== STAGE prof-c_equiv 2026-10-14T04:06:09Z
+=== PROF STEP c_equiv start: timeout 135 s, budget left 135 s 2026-10-14T04:06:09Z
+=== PROF STEP c_equiv end rc=2 secs=1 2026-10-14T04:06:10Z
+                     [--no-bf16] [--seed SEED] --out OUT [--sections SECTIONS]
+prof_train.py: error: unrecognized arguments: --dry-run-bad-flag
+                     [--bigmb-accum BIGMB_ACCUM] [--pad-multiple PAD_MULTIPLE]
+                     [--sdpa-backend {auto,flash,efficient,math,cudnn}]
+                     [--compile-backend COMPILE_BACKEND] [--compile-cpu]
+                     [--eg-chunks EG_CHUNKS] [--eg-once-budget EG_ONCE_BUDGET]
+                     [--prefetch-depth PREFETCH_DEPTH]
+prof_train.py: error: unrecognized arguments: --dry-run-bad-flag
+=== STAGE prof-d_e4 2026-10-14T04:06:10Z
+=== PROF STEP d_e4 start: timeout 134 s, budget left 134 s 2026-10-14T04:06:10Z
+=== PROF STEP d_e4 end rc=0 secs=8 2026-10-14T04:06:18Z
+[    0.8s] === section equiv
+[    1.0s] E1 (torch.float32, cpu, eg stub): min position cos 1.000000, min row-mean cos 1.000000, max row gap once 0.000e+00 vs old spread 0.000e+00 -> PASS
+[    1.2s] E2 (stub front (plumbing only)): max abs diff 0.000e+00 (limit 0.0001) -> PASS
+[    3.0s] E3 eg_once: loss rel 0.00e+00 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: weights unchanged -> PASS
+[    6.1s] E4 eg_once: updates 3..6: mean |dloss| 0.0000 (limit 0.02), diff of means 0.0000 (limit 0.01) -> not the registered window
+=== STAGE prof-f1_b3g2_profile 2026-10-14T04:06:19Z
+=== PROF STEP f1_b3g2_profile start: timeout 126 s, budget left 126 s 2026-10-14T04:06:19Z
+TICK at=2026-10-14T04:06:26Z stage=prof-f1_b3g2_profile up_min=6 log=f1_b3g2_profile.log bytes=293 last=[    1.9s] breakdown: 1 warmup + 2 timed updates (variant baseline, accum 32, hooks top)  | mb data8a=1627 skills=111 pools=467 free=11555 ram_avail=10265 | gpu 
+=== PROF STEP f1_b3g2_profile end rc=0 secs=30 2026-10-14T04:06:49Z
+[    0.8s] === section breakdown
+[   15.3s] === section throughput
+[   28.7s] throughput: 4.3500 s/update (0.23 updates/s), accum 32, variant baseline
+[   28.8s] === section padding
+[   28.8s] === section syncs
+[   28.8s] section syncs skipped: sync audit needs CUDA (torch.cuda.set_sync_debug_mode)
+=== PROF SKIP f2_b3g2_bench: budget left 95 s (minimum 100 s; PROF_MAXMIN=4 MAXH=3), MAXH reached: no 2026-10-14T04:06:49Z
+=== STAGE result 2026-10-14T04:06:49Z
+=== PROF printing: block profjob (job smoke folder), block profrun (18 files, archive 19737 bytes) 2026-10-14T04:06:49Z
+RBEGIN|profjob|001eaf80e12eee4375d72006f59d5653f32bbe01bc01af242f96898661aba4e8|15288
+REND|profjob
+RBEGIN|profrun|6641433e7491fae36ab7785367f8bcde7479665bbdbdc9d859466510e5ffd507|19737
+REND|profrun
+=== PROF RESULT PRINTED blocks=profjob,profrun r_lines=156 (the Vast log read window is 20000 lines) failed=[ c_equiv(rc2)] skipped=[ f2_b3g2_bench] 2026-10-14T04:06:50Z
+=== PROF-STEPS (name rc seconds timeout_s): 2026-10-14T04:06:50Z
+job 0 82 300
+a_profile 0 13 156
+b_bench 0 8 143
+c_equiv 2 1 135
+d_e4 0 8 134
+f1_b3g2_profile 0 30 126
+f2_b3g2_bench skipped 0 0
+=== STAGE failed 2026-10-14T04:06:50Z
+=== PROF DONE failed=[ c_equiv(rc2)] skipped=[ f2_b3g2_bench] maxh_hit=no up_min=6 2026-10-14T04:06:50Z
+=== CIO-FAIL PROFILE: a step failed or MAXH was reached (the results above are what exists). Collect them, then destroy the box 2026-10-14T04:06:50Z
+run_dry exit 1

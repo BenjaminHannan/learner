@@ -1,0 +1,206 @@
+{
+ "meta": {
+  "arm": "B3G2",
+  "rung": "3M",
+  "accum": 32,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "b3g2",
+  "cfg": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "label": "settled",
+   "span_copy": true,
+   "span_idx": true,
+   "span_end": true,
+   "ans_drill": 0.25,
+   "eg_embed": true,
+   "any_round": true,
+   "gap_p": 0.25,
+   "no_slots": true,
+   "no_place": true,
+   "bytes": true,
+   "as_written": true,
+   "blocks": 2,
+   "writer_mlp": 1.75
+  },
+  "n_params": 4023302,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "le": 95
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "B3G2",
+   "--rung",
+   "3M",
+   "--accum",
+   "32",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--caps",
+   "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+   "--sections",
+   "accumcmp",
+   "--accum-list",
+   "32,16,8,4",
+   "--out",
+   "/job/profraw/b3g2_accumcmp.json"
+  ],
+  "started": "2026-10-14T11:22:05",
+  "finished": "2026-10-14T11:22:55"
+ },
+ "sections": {
+  "accumcmp": {
+   "tag": {
+    "arm": "B3G2",
+    "rung": "3M",
+    "accum": 32,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128"
+   },
+   "reference_accum": 32,
+   "candidates": [
+    16,
+    8,
+    4
+   ],
+   "pinned": true,
+   "K0": 8,
+   "rows": 256,
+   "precisions": [
+    "fp32",
+    "bf16"
+   ],
+   "on_cpu": false,
+   "results": {
+    "fp32": {
+     "reference_loss": 22.686006546020508,
+     "reference_rerun": {
+      "abs_loss": 0.0,
+      "grad_cos": 0.9999999999998211,
+      "grad_rel_l2": 5.144059504286104e-07,
+      "grad_max_abs": 7.867813110351562e-06,
+      "grad_norm_base": 580.129452596853,
+      "grad_norm_var": 580.1294525919124
+     },
+     "candidates": {
+      "16": {
+       "accum": 16,
+       "micro_batch_rows": 16,
+       "loss": 22.686010360717773,
+       "abs_loss_diff": 3.814697265625e-06,
+       "rel_loss_diff": 1.6815199527896457e-07,
+       "grad_cos": 0.9999998743992802,
+       "grad_rel_l2": 0.0005013789940827116,
+       "grad_max_abs": 0.00718359649181366,
+       "grad_norm_base": 580.129452596853,
+       "grad_norm_var": 580.1371543604885
+      },
+      "8": {
+       "accum": 8,
+       "micro_batch_rows": 32,
+       "loss": 22.686004638671875,
+       "abs_loss_diff": 1.9073486328125e-06,
+       "rel_loss_diff": 8.407599763948229e-08,
+       "grad_cos": 0.9999998685381364,
+       "grad_rel_l2": 0.0005136570139783298,
+       "grad_max_abs": 0.00893402099609375,
+       "grad_norm_base": 580.129452596853,
+       "grad_norm_var": 580.1469720616748
+      },
+      "4": {
+       "accum": 4,
+       "micro_batch_rows": 64,
+       "loss": 22.686006546020508,
+       "abs_loss_diff": 0.0,
+       "rel_loss_diff": 0.0,
+       "grad_cos": 0.999999880604081,
+       "grad_rel_l2": 0.000488937732182846,
+       "grad_max_abs": 0.008044004440307617,
+       "grad_norm_base": 580.129452596853,
+       "grad_norm_var": 580.1388880060726
+      }
+     }
+    },
+    "bf16": {
+     "reference_loss": 22.686220169067383,
+     "reference_rerun": {
+      "abs_loss": 0.0,
+      "grad_cos": 0.9999999914707748,
+      "grad_rel_l2": 0.00013061425321955303,
+      "grad_max_abs": 0.005859375,
+      "grad_norm_base": 581.3552016687867,
+      "grad_norm_var": 581.3550794780192
+     },
+     "candidates": {
+      "16": {
+       "accum": 16,
+       "micro_batch_rows": 16,
+       "loss": 22.68634796142578,
+       "abs_loss_diff": 0.0001277923583984375,
+       "rel_loss_diff": 5.633038798269362e-06,
+       "grad_cos": 0.9999994889093673,
+       "grad_rel_l2": 0.0010110537095649513,
+       "grad_max_abs": 0.0244140625,
+       "grad_norm_base": 581.3552016687867,
+       "grad_norm_var": 581.3509106132146
+      },
+      "8": {
+       "accum": 8,
+       "micro_batch_rows": 32,
+       "loss": 22.68718719482422,
+       "abs_loss_diff": 0.0009670257568359375,
+       "rel_loss_diff": 4.262612941376965e-05,
+       "grad_cos": 0.9999990905013656,
+       "grad_rel_l2": 0.001349228073636123,
+       "grad_max_abs": 0.0419921875,
+       "grad_norm_base": 581.3552016687867,
+       "grad_norm_var": 581.3765711346722
+      },
+      "4": {
+       "accum": 4,
+       "micro_batch_rows": 64,
+       "loss": 22.686195373535156,
+       "abs_loss_diff": 2.47955322265625e-05,
+       "rel_loss_diff": 1.092977677276145e-06,
+       "grad_cos": 0.9999985361313499,
+       "grad_rel_l2": 0.001713077538969683,
+       "grad_max_abs": 0.0810546875,
+       "grad_norm_base": 581.3552016687867,
+       "grad_norm_var": 581.3060651567987
+      }
+     }
+    }
+   },
+   "note": "descriptive only: no pass bar. K pinned means every accum runs the same number of thinker rounds, so this isolates the partition (how rows share a micro-batch and its loss average).",
+   "wall_s": 50.0
+  }
+ }
+}

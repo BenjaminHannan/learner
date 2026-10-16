@@ -1,0 +1,71 @@
+{
+ "heldout": 2000,
+ "subset": 1491,
+ "train_n": 4000,
+ "checkpoints": {
+  "student": {
+   "ckpt": "/tmp/claude-0/-home-user-learner/a35c4c05-cfae-5dd3-a5ce-480213b76700/scratchpad/glprobe/run/s200/n4000/checkpoint.pt",
+   "accuracy_all": 0.3685,
+   "accuracy_subset": 0.277,
+   "per_word_subset": {
+    "left": {
+     "count": 255,
+     "accuracy": 0.3333
+    },
+    "right": {
+     "count": 270,
+     "accuracy": 0.3296
+    },
+    "up": {
+     "count": 292,
+     "accuracy": 0.3493
+    },
+    "down": {
+     "count": 264,
+     "accuracy": 0.0417
+    },
+    "do": {
+     "count": 405,
+     "accuracy": 0.3111
+    },
+    "plant": {
+     "count": 5,
+     "accuracy": 0.0
+    }
+   },
+   "top_confusions_subset": [
+    {
+     "label": "do",
+     "predicted": "up",
+     "count": 94
+    },
+    {
+     "label": "up",
+     "predicted": "left",
+     "count": 88
+    },
+    {
+     "label": "do",
+     "predicted": "left",
+     "count": 85
+    },
+    {
+     "label": "right",
+     "predicted": "up",
+     "count": 84
+    },
+    {
+     "label": "do",
+     "predicted": "right",
+     "count": 75
+    }
+   ]
+  }
+ },
+ "baseline": {
+  "word_subset": "do",
+  "accuracy_subset": 0.2716,
+  "word_all": "do",
+  "accuracy_all": 0.2025
+ }
+}

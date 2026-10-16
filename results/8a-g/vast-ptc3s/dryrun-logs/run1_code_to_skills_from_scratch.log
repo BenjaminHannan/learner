@@ -1,0 +1,47 @@
+=== CIO START 2026-10-14T00:27:32Z
+=== STAGE setup 2026-10-14T00:27:32Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=6 dph=0 cap_usd=4.0 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-14T00:27:32Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           1          12           0           2          14
+4
+tmpfs            16G  697M   16G   5% /dev/shm
+TICK at=2026-10-14T00:27:32Z stage=setup up_min=0 log= bytes= last= | mb data8a= skills= pools= free=15397 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.4.6', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.14.1+cpu cuda None'}
+=== STAGE code 2026-10-14T00:27:37Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-14T00:27:43Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-14T00:27:43Z
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK
+=== CODE-ID 8aPTC3S-pc-047f8ed212 (PC: WORK\code\8aPTC3S-pc-<same 10 hex>); code_hash with CRLF as LF 47d676dde1; tree sha256 of the file list 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2, LF-normalised list 121bef31d25f02751c91ad2d3623df0744e247885966565152b7b5b93410e67a; caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e 2026-10-14T00:28:24Z
+CMD 8a-data mem 3000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.get_data --work /dev/shm/ptcdry/J/work --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8a-data --data-pool /dev/shm/ptcdry/J/work/8a-inputs/data-pool --own-xz /dev/shm/ptcdry/J/work/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+CMD 8aPTC3S-3M-s400 mem 9000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8aPTC3S-3M-s400 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16
+CHILD-ENV (added to the environment): {'PYTORCH_CUDA_ALLOC_CONF': 'expandable_segments:True'}
+QUEUE-ENV (the PC's # ENV lines, Windows paths, not used here): {"PYTHONPATH": "C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages", "CUSTOM_IO_EG2": "C:\\Users\\benja\\eg2"}
+=== STAGE gemma 2026-10-14T00:28:24Z
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+=== STAGE data 2026-10-14T00:28:56Z
+=== data branches fetched at 3d0afbeadd5f1775c7c92195348bab6f66da767d and 8d012f1f97bd8203b15e88e369dc856721e13e6a; building the 8a data (FineWeb-Edu shard 0 is 2.15 GB; the slices must hash to the manifest) 2026-10-14T00:29:02Z
+TICK at=2026-10-14T00:29:32Z stage=data up_min=2 log=get_data.log bytes=503 last=[get_data 00:29:14] downloading FineWeb-Edu 000_00000.parquet  | mb data8a=3423 skills= pools= free=10184 | gpu 
+TICK at=2026-10-14T00:31:32Z stage=data up_min=4 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5145 skills= pools= free=8463 | gpu 
+TICK at=2026-10-14T00:33:32Z stage=data up_min=6 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5280 skills= pools= free=8328 | gpu 
+TICK at=2026-10-14T00:35:32Z stage=data up_min=8 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5411 skills= pools= free=8197 | gpu 
+TICK at=2026-10-14T00:37:33Z stage=data up_min=10 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5486 skills= pools= free=8122 | gpu 
+TICK at=2026-10-14T00:39:33Z stage=data up_min=12 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5561 skills= pools= free=8047 | gpu 
+TICK at=2026-10-14T00:41:33Z stage=data up_min=14 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5635 skills= pools= free=7973 | gpu 
+TICK at=2026-10-14T00:43:33Z stage=data up_min=16 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5709 skills= pools= free=7899 | gpu 
+TICK at=2026-10-14T00:45:33Z stage=data up_min=18 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5784 skills= pools= free=7824 | gpu 
+TICK at=2026-10-14T00:47:33Z stage=data up_min=20 log=get_data.log bytes=593 last=[get_data 00:29:42] building web slices: rung3=1.24e+07,rung10=3.72e+07,rung30=1.2335e+08  | mb data8a=5857 skills= pools= free=7751 | gpu 
+{"tokens_taken": 123350426, "drops": {"too_hard": 235045, "quality": 51152, "duplicate": 109}}
+[get_data 00:49:19] web slices verified {'slice_rung3.jsonl': '59c70dc5e2c3', 'slice_rung10.jsonl': '5a5f23e70f8f', 'slice_rung30.jsonl': '442a93647acf'}
+[get_data 00:49:19] READY /dev/shm/ptcdry/J/work/data8a
+=== STAGE skills 2026-10-14T00:49:19Z
+TICK at=2026-10-14T00:49:33Z stage=skills up_min=22 log=build.log bytes=0 last= | mb data8a=5915 skills=0 pools= free=7665 | gpu 
+curriculum hashes match
+TICK at=2026-10-14T00:51:33Z stage=skills up_min=24 log=build_big.log bytes=0 last= | mb data8a=5915 skills=111 pools= free=7555 | gpu 
+big build train.jsonl hash matches
+=== STOP-AFTER skills (dry-run hook) 2026-10-14T00:53:21Z
+run_dry exit 0
