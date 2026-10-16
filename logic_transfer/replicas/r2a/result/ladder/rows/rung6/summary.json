@@ -1,0 +1,137 @@
+{
+ "rung": 6,
+ "kind": "rung6",
+ "files": {
+  "train": {
+   "filter": "rung2 rows with meta.n_distractors == 1",
+   "source": "rung2/train",
+   "path": "rung6/train.jsonl",
+   "n": 43146,
+   "sha256": "dfcd5d2ce7ad9fad951e1295055e853dd3db48265df03e46388070b7342680b2",
+   "labels": {
+    "unknown": 14428,
+    "true": 14442,
+    "false": 14276
+   },
+   "distinct_prompts": 43146,
+   "verify": {
+    "n": 43146,
+    "no_program": 43146,
+    "max_prompt_chars": 83,
+    "answer_mode_NUM_WORD_GEN": [
+     0,
+     43146,
+     0
+    ],
+    "unk_chars": 0
+   },
+   "independent_label_check": {
+    "file": "/job/w/ladder/rows/rung6/train.jsonl",
+    "n": 43146,
+    "agree": 43146,
+    "agreement": 1.0,
+    "labels": {
+     "unknown": 14428,
+     "true": 14442,
+     "false": 14276
+    },
+    "errors": {},
+    "first_wrong": []
+   }
+  },
+  "dev": {
+   "filter": "rung2 rows with meta.n_distractors == 1",
+   "source": "rung2/dev",
+   "path": "rung6/dev.jsonl",
+   "n": 386,
+   "sha256": "b40b61e381f6b1588f2e120a858f9cf19981ab549dc42e7b40500ce30c01c427",
+   "labels": {
+    "unknown": 135,
+    "false": 142,
+    "true": 109
+   },
+   "distinct_prompts": 386,
+   "verify": {
+    "n": 386,
+    "no_program": 386,
+    "max_prompt_chars": 82,
+    "answer_mode_NUM_WORD_GEN": [
+     0,
+     386,
+     0
+    ],
+    "unk_chars": 0
+   },
+   "overlap_with_train_prompts": 0,
+   "count_baseline": {
+    "acc": 52.59,
+    "hit": 203,
+    "n": 386,
+    "table_size": 4,
+    "by_level": {
+     "0": 52.59
+    }
+   },
+   "independent_label_check": {
+    "file": "/job/w/ladder/rows/rung6/dev.jsonl",
+    "n": 386,
+    "agree": 386,
+    "agreement": 1.0,
+    "labels": {
+     "unknown": 135,
+     "false": 142,
+     "true": 109
+    },
+    "errors": {},
+    "first_wrong": []
+   }
+  },
+  "newwords": {
+   "filter": "rung2 rows with meta.n_distractors == 1",
+   "source": "rung2/newwords",
+   "path": "rung6/newwords.jsonl",
+   "n": 205,
+   "sha256": "6af2a481523641b2b4dd9d936f4631b2f9e1d6666f00b8d0d978316c3aad5fcf",
+   "labels": {
+    "unknown": 58,
+    "false": 71,
+    "true": 76
+   },
+   "distinct_prompts": 205,
+   "verify": {
+    "n": 205,
+    "no_program": 205,
+    "max_prompt_chars": 83,
+    "answer_mode_NUM_WORD_GEN": [
+     0,
+     205,
+     0
+    ],
+    "unk_chars": 0
+   },
+   "overlap_with_train_prompts": 0,
+   "count_baseline": {
+    "acc": 51.71,
+    "hit": 106,
+    "n": 205,
+    "table_size": 4,
+    "by_level": {
+     "0": 51.71
+    }
+   },
+   "independent_label_check": {
+    "file": "/job/w/ladder/rows/rung6/newwords.jsonl",
+    "n": 205,
+    "agree": 205,
+    "agreement": 1.0,
+    "labels": {
+     "unknown": 58,
+     "false": 71,
+     "true": 76
+    },
+    "errors": {},
+    "first_wrong": []
+   }
+  }
+ }
+}
