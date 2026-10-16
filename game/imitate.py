@@ -28,7 +28,7 @@ EVENT_TYPES = tuple(crafter_constants.achievements)
 KEEP_FRAC, MAX_LEN, W_RATIO, BUFFER_CAP = 0.3, 12, 20.0, 20_000
 EPOCHS, LR, MINIBATCH, CHUNK = 3, 1e-3, 256, 64
 CHUNKS, GAMES_PER_CHUNK = 4, 100          # 400 games an iteration: 4 practice "days" of 100 worlds
-SNAPSHOTS = (8, 16, 20, 24)                 # iterations whose merged checkpoint is saved for sealed scoring
+SNAPSHOTS = (3, 8, 16, 20, 24)                 # iterations whose merged checkpoint is saved for sealed scoring
 ACT_TAG = 9
 
 
