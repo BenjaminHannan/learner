@@ -7,16 +7,19 @@
 PACE=${PACE:-100}
 PFX=${PFX:-ck}      # block-label prefix; give a second export on the same box its own (the collector keys blocks by label)
 LOG=${LOG:-/proc/1/fd/1}
+CKROOT=${CKROOT:-$J/w}      # the checkpoints are $CKROOT/<job>/<run>/checkpoint.pt (job = the folder two levels above the file); LT-2 keeps them under $J/w/ladder/rung<r>/<run>/, so it sets CKROOT=$J/w/ladder
+LOCK=${CKLOCK:-$J/print.lock}   # one lock for every writer to the log (LT-2's result blocks use $J/res/emit.lock: set CKLOCK to that)
 N=0
 # first re-print the small result tarballs of the jobs named in RESULTS (their first print is buried under the export)
 for r in ${RESULTS:-}; do
   T=$J/res/re-$r.tgz; tar -czf $T --exclude='*.pt' --exclude='stdout.txt' -C $J/w $r 2>/dev/null
-  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$J/print.lock >> $LOG
+  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$LOCK >> $LOG
   sleep 30
 done
 for c in $GLOB; do
   run=$(basename $(dirname $c)); job=$(basename $(dirname $(dirname $c)))
-  T=$J/res/ck-$job-$run.tgz; tar -czf $T -C $J/w $job/$run/checkpoint.pt
+  T=$J/res/ck-$job-$run.tgz; tar -czf $T -C $CKROOT $job/$run/checkpoint.pt || { echo "CKFAIL|$job/$run|tar" >> $LOG; continue; }
+  [ -s $T ] || { echo "CKFAIL|$job/$run|empty tar" >> $LOG; continue; }
   full=$(sha256sum $T | cut -c1-64)
   rm -f $J/res/ck-$job-$run.part.*
   split -b 3000000 -d -a 3 $T $J/res/ck-$job-$run.part.
@@ -24,7 +27,7 @@ for c in $GLOB; do
   echo "CKFULL|$job/$run|$full|$n" >> $LOG
   for p in $(ls $J/res/ck-$job-$run.part.* | sort); do
     k=$((10#${p##*.})); N=$((N + 1)); h=$(sha256sum $p | cut -c1-64)
-    ( flock 9; echo "RBEGIN|$PFX$N|$h|$(stat -c %s $p)|$job/$run|$k|$n"; base64 -w 480 $p | sed "s/^/R|$PFX$N|/"; echo "REND|$PFX$N" ) 9>$J/print.lock >> $LOG
+    ( flock 9; echo "RBEGIN|$PFX$N|$h|$(stat -c %s $p)|$job/$run|$k|$n"; base64 -w 480 $p | sed "s/^/R|$PFX$N|/"; echo "REND|$PFX$N" ) 9>$LOCK >> $LOG
     echo "part $PFX$N $job/$run $k/$n"
     sleep $PACE
   done

@@ -16,6 +16,9 @@
 #   20 min after MAXH; the watchdog kills only `lt2 run` and `course` (not indist/report); `timeout` on indist/report; full run/indist/report/build logs go into the rung
 #   block; the indist files in a block are only that rung's; a `HB` heartbeat line per rung every 10 min (runs alive, min/max update, slowest s/update); CPU model +
 #   true core count in the READY line; BUILD env = which rungs' rows to build (default all; build only what the box will run).
+# v4 (2026-10-16, Recipe 2 replicas; sealed training code unchanged): order keys EXPORT=1 (print each run's final checkpoint through custom_io/box/ck_export.sh as soon as the run has
+#   written it: logic_transfer/box/lt2_export.sh) and NOINDIST=1 (skip the in-distribution scoring: the replicas are scored afterwards on free CPU); ck_export.sh got CKROOT / CKLOCK
+#   (the LT-2 layout is $J/w/ladder/rung<r>/<run>/checkpoint.pt; before, its tar came out empty without an error). Read with vast.py collectck --want "rung<r>/<run> ...".
 # Env: BUILD (rungs whose rows to build, default "1 2 3 4 5"), GOFILE (order file name under logic_transfer/box/, default GO.txt), BR (branch), MAXH (stop everything after that many hours of uptime), END_SLEEP / FAIL_SLEEP (seconds the box idles after a clean end / a setup failure).
 # No credential is on the box; nothing listens.
 set -u
@@ -58,6 +61,7 @@ emit() {  # name dir...: tar the small outputs (no .pt, no stdout logs) and prin
   if command -v flock >/dev/null; then ( flock 9; cat $B ) 9>$J/res/emit.lock; else cat $B; fi
 }
 over() { [ "$MAXH" != 0 ] && [ $(( $(date +%s) - T0 )) -ge $(awk "BEGIN{print int($MAXH*3600)}") ]; }
+CKX=$J/mine/custom_io/box/ck_export.sh; . $J/mine/logic_transfer/box/lt2_export.sh
 say "LT2 READY code=$(git -C mine rev-parse --short HEAD) mem=$(free -g | awk 'NR==2{print $2" GB total, "$7" GB available"}') cgroup=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo na) cores=$(nproc --all) cpu.max=$(cat /sys/fs/cgroup/cpu.max 2>/dev/null || echo na) cpu=\"$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | sed 's/^ *//')\""
 # rows of rungs 1-5 are built in the background (deterministic; sha256 checked against logic_transfer/ladder-hashes.json when listed) while the agreement run goes
 mkdir -p $J/w/ladder/rows
@@ -114,16 +118,17 @@ while true; do
     if [ "$s" != "$last" ]; then
       last=$s
       grep -q '^STOP' $G && { say "LT2 STOP"; break; }
-      RUNGS=$(grep -m1 -oE '^RUNGS=.*' $G | cut -d= -f2-); PROCS=$(grep -m1 -oE '^PROCS=[0-9]+' $G | cut -d= -f2); UPDATES=$(grep -m1 -oE '^UPDATES=[0-9]+' $G | cut -d= -f2); MIXFRAC=$(grep -m1 -oE '^MIXFRAC=[0-9.]+' $G | cut -d= -f2); LR=$(grep -m1 -oE '^LR=[0-9.e-]+' $G | cut -d= -f2)
-      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000} MIXFRAC=${MIXFRAC:-0.25} LR=${LR:-1e-4} code=$(git -C mine rev-parse --short HEAD)"
+      RUNGS=$(grep -m1 -oE '^RUNGS=.*' $G | cut -d= -f2-); PROCS=$(grep -m1 -oE '^PROCS=[0-9]+' $G | cut -d= -f2); UPDATES=$(grep -m1 -oE '^UPDATES=[0-9]+' $G | cut -d= -f2); MIXFRAC=$(grep -m1 -oE '^MIXFRAC=[0-9.]+' $G | cut -d= -f2); LR=$(grep -m1 -oE '^LR=[0-9.e-]+' $G | cut -d= -f2); EXPORT=$(grep -m1 -oE '^EXPORT=1' $G | cut -d= -f2); NOINDIST=$(grep -m1 -oE '^NOINDIST=1' $G | cut -d= -f2)
+      say "LT2 ORDER $s RUNGS=$RUNGS PROCS=${PROCS:-6} UPDATES=${UPDATES:-8000} MIXFRAC=${MIXFRAC:-0.25} LR=${LR:-1e-4} EXPORT=${EXPORT:-0} NOINDIST=${NOINDIST:-0} code=$(git -C mine rev-parse --short HEAD)"
       do_rung() {
         r=$1
         say "RUNG $r START code=$(git -C mine rev-parse --short HEAD)"
         for k in $(seq 1 540); do [ -f $J/w/ladder/rows/rung$r/summary.json ] && break; grep -q Traceback $J/out/build-rung$r.log 2>/dev/null && break; sleep 20; done
         [ -f $J/w/ladder/rows/rung$r/summary.json ] || { say "RUNG $r rows missing"; tail -5 $J/out/build-rung$r.log; return; }
+        EXPID=""; if [ "${EXPORT:-0}" = 1 ]; then lt2_export_loop $r & EXPID=$!; fi
         (cd mine && $LT run --rung $r --work $J/w/ladder --parents-dir $PD --sk200k $J/data --device cuda --procs ${PROCS:-6} --threads 1 --updates ${UPDATES:-8000} --mix-frac ${MIXFRAC:-0.25} --lr ${LR:-1e-4} \
            --eval-n 0 > $J/out/rung$r-run.log 2>&1); echo "rung $r run rc=$?"; tail -4 $J/out/rung$r-run.log
-        (cd mine && timeout 1500 $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log
+        if [ "${NOINDIST:-0}" != 1 ]; then (cd mine && timeout 1500 $LT indist --work $J/w/ladder --rung $r --parents-dir $PD --big-data $J/data_big --device cuda > $J/out/rung$r-indist.log 2>&1); tail -c 600 $J/out/rung$r-indist.log; fi
         (cd mine && timeout 1500 $LT report --work $J/w/ladder --rung $r > $J/w/ladder/rung$r/report.json 2>$J/out/rung$r-report.err)
         mkdir -p $J/w/ladder/rung$r
         tail -n 80 $J/out/rung$r-run.log > $J/w/ladder/rung$r/driver-tail.txt 2>/dev/null
@@ -131,6 +136,7 @@ while true; do
         for d in $J/w/ladder/rung$r/s*-s*; do [ -f $d/stdout.log ] && tail -n 40 $d/stdout.log > $d/stdout-tail.txt; done
         IND=$(cd $J/w && ls ladder/indist/rung$r-*.json ladder/indist/parent-*-rung$r.json 2>/dev/null)
         emit lt2-rung$r ladder/rung$r $IND ladder/rows/rung$r/summary.json
+        [ -n "$EXPID" ] && wait $EXPID     # NOT a bare `wait`: the MAXH watchdog is a background job too
         if [ -s $J/w/ladder/rung$r/report.json ]; then say "RUNG $r DONE"; else say "RUNG $r FAILED (empty report.json; see rung$r-report.err in the block)"; fi
       }
       if grep -q '^PARRUNGS=1' $G; then   # all rungs of this order at once (each rung has its own PROCS runs); watch RAM: ~3.3 GB per run
