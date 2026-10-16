@@ -4,7 +4,7 @@ Adapted from scripts/cap256_launch/ultracode_vast.py on claude/ultracode-learnin
 
 The proxy adds the Vast key to console.vast.ai requests; this script never reads or prints a key.
   search [--gpu "RTX 5090"] [--n 8]       cheapest verified offers (reliability >= 0.98, CUDA >= 12.8)
-  create --offer ID [--label L] [--maxpar 5]
+  create --offer ID [--label L] [--maxpar 5] [--qsub /sub] [--br BRANCH]
   status --id ID
   tail --id ID [--n 60]                   last log lines (result lines hidden)
   collect --id ID [--out DIR]             decode every finished job's RBEGIN/R|/REND block, check sha256, extract
@@ -64,7 +64,8 @@ def search(a):
 
 def create(a):
     script = BOX.read_text()
-    args = ['bash', '-c', 'export MAXPAR=%d QSUB=%s\n' % (a.maxpar, a.qsub) + script, 'cio']
+    br = ' BR=%s' % a.br if a.br else ''
+    args = ['bash', '-c', 'export MAXPAR=%d QSUB=%s%s\n' % (a.maxpar, a.qsub, br) + script, 'cio']
     body = {'client_id': 'me', 'image': IMAGE, 'disk': 80, 'label': a.label, 'runtype': 'args', 'args': args,
             'target_state': 'running'}
     r = call('PUT', '/asks/%s/' % a.offer, body, timeout=120)
@@ -255,6 +256,7 @@ def main():
     ap.add_argument('--label', default='claude-custom-io')
     ap.add_argument('--maxpar', type=int, default=5)
     ap.add_argument('--qsub', default='')
+    ap.add_argument('--br', default='', help='create: branch the box clones and polls (default: box.sh BR=)')
     ap.add_argument('--id')
     ap.add_argument('--out', default=str(OUT))
     ap.add_argument('--seen', default='')

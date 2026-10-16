@@ -8,7 +8,7 @@
 # custom_io/queue/STOP ends the loop; custom_io/queue/REPRINT (one job name per line) re-prints finished results.
 set -u
 J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
-BR=claude/custom-reader-talker-4x309r
+BR=${BR:-claude/custom-reader-talker-4x309r}   # vast.py create --br overrides the branch the box clones and polls
 R=https://github.com/BenjaminHannan/learner
 MAXPAR=${MAXPAR:-6}
 QSUB=${QSUB:-}
