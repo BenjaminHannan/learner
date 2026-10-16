@@ -12,4 +12,4 @@ Copied byte for byte from `/mnt/project-files/far-transfer/learn/` on 2026-10-16
 ## Not here
 
 - **L12-LA64 and L12-LB final step-4000 checkpoints**: the folders `far-transfer/learn/L12-LA64/step_4000/` and `L12-LB/step_4000/` in the shared project folder are empty (both folders last changed 2026-10-13 05:43 UTC), so there is nothing to copy from here. A search of the whole shared folder and this container found no L12 `checkpoint.pt`. The Far transfer thread would have to supply them from its own scratch space, if they still exist. L12 figures are quarantined (join-last, Ben 10-14).
-- **glprobe/run** (GW-L students and labeller raw per-world score files, GW-L eval files): lives in the Game world thread's own scratch space; it is being copied to the shared folder first.
+- **glprobe/run** (GW-L students and labeller raw per-world score files, GW-L eval files): not under this folder; it is in `results/game-world/glprobe-run/` (see `results/game-world/README.md`).
