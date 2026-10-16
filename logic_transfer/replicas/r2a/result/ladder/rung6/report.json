@@ -1,0 +1,613 @@
+{
+ "rung6": {
+  "marks": "dev>=90,hard>=80",
+  "baseline": {
+   "dev": 52.59,
+   "newwords": 51.71
+  },
+  "n_pass": 0,
+  "n_runs": 6,
+  "verdict": "FAIL",
+  "dev_stats": {
+   "2000": {
+    "mean": 48.1,
+    "min": 43.5,
+    "max": 54.7,
+    "n": 6,
+    "n_carried": 0
+   },
+   "4000": {
+    "mean": 52.8,
+    "min": 47.7,
+    "max": 56.7,
+    "n": 6,
+    "n_carried": 0
+   },
+   "8000": {
+    "mean": 65.5,
+    "min": 62.7,
+    "max": 68.7,
+    "n": 6,
+    "n_carried": 0
+   }
+  },
+  "label_recall": {
+   "false": {
+    "mean": 89.6,
+    "min": 81.7,
+    "max": 95.1,
+    "n": 6
+   },
+   "true": {
+    "mean": 75.4,
+    "min": 69.7,
+    "max": 80.7,
+    "n": 6
+   },
+   "unknown": {
+    "mean": 32.1,
+    "min": 20.7,
+    "max": 46.7,
+    "n": 6
+   }
+  },
+  "probe_summary": {},
+  "code": "e730652d",
+  "recipe": {
+   "mix_frac": 0.5,
+   "updates": 8000,
+   "lr": 0.0001,
+   "device": "cuda",
+   "wall_s": 3636.1
+  },
+  "runs": [
+   {
+    "run": "s200-s1",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 52.85,
+     "4000": 55.699,
+     "8000": 68.653
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     68.653,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     70.244
+    ],
+    "label_recall_last": {
+     "false": 83.8,
+     "true": 76.1,
+     "unknown": 46.7
+    },
+    "hard_last": [
+     8000,
+     37.5,
+     12,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 265,
+      "table": {
+       "true": {
+        "true": 83,
+        "false": 6,
+        "unknown": 20,
+        "other": 0
+       },
+       "false": {
+        "true": 7,
+        "false": 119,
+        "unknown": 16,
+        "other": 0
+       },
+       "unknown": {
+        "true": 23,
+        "false": 49,
+        "unknown": 63,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 12,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 5,
+        "false": 15,
+        "unknown": 12,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   },
+   {
+    "run": "s200-s2",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 46.114,
+     "4000": 55.699,
+     "8000": 65.544
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     65.544,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     68.78
+    ],
+    "label_recall_last": {
+     "false": 92.3,
+     "true": 74.3,
+     "unknown": 30.4
+    },
+    "hard_last": [
+     8000,
+     12.5,
+     4,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 253,
+      "table": {
+       "true": {
+        "true": 81,
+        "false": 11,
+        "unknown": 17,
+        "other": 0
+       },
+       "false": {
+        "true": 2,
+        "false": 131,
+        "unknown": 9,
+        "other": 0
+       },
+       "unknown": {
+        "true": 33,
+        "false": 61,
+        "unknown": 41,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 4,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 6,
+        "false": 22,
+        "unknown": 4,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   },
+   {
+    "run": "s201-s1",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 46.114,
+     "4000": 50.259,
+     "8000": 64.767
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     64.767,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     62.927
+    ],
+    "label_recall_last": {
+     "false": 89.4,
+     "true": 69.7,
+     "unknown": 34.8
+    },
+    "hard_last": [
+     8000,
+     21.88,
+     7,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 250,
+      "table": {
+       "true": {
+        "true": 76,
+        "false": 14,
+        "unknown": 19,
+        "other": 0
+       },
+       "false": {
+        "true": 1,
+        "false": 127,
+        "unknown": 14,
+        "other": 0
+       },
+       "unknown": {
+        "true": 34,
+        "false": 54,
+        "unknown": 47,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 7,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 6,
+        "false": 19,
+        "unknown": 7,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   },
+   {
+    "run": "s201-s2",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 43.523,
+     "4000": 47.668,
+     "8000": 66.062
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     66.062,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     69.268
+    ],
+    "label_recall_last": {
+     "false": 95.1,
+     "true": 76.1,
+     "unknown": 27.4
+    },
+    "hard_last": [
+     8000,
+     9.38,
+     3,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 255,
+      "table": {
+       "true": {
+        "true": 83,
+        "false": 20,
+        "unknown": 6,
+        "other": 0
+       },
+       "false": {
+        "true": 1,
+        "false": 135,
+        "unknown": 6,
+        "other": 0
+       },
+       "unknown": {
+        "true": 39,
+        "false": 59,
+        "unknown": 37,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 3,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 8,
+        "false": 21,
+        "unknown": 3,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   },
+   {
+    "run": "s204-s1",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 54.663,
+     "4000": 56.736,
+     "8000": 62.694
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     62.694,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     65.854
+    ],
+    "label_recall_last": {
+     "false": 81.7,
+     "true": 75.2,
+     "unknown": 32.6
+    },
+    "hard_last": [
+     8000,
+     18.75,
+     6,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 242,
+      "table": {
+       "true": {
+        "true": 82,
+        "false": 9,
+        "unknown": 18,
+        "other": 0
+       },
+       "false": {
+        "true": 12,
+        "false": 116,
+        "unknown": 14,
+        "other": 0
+       },
+       "unknown": {
+        "true": 35,
+        "false": 56,
+        "unknown": 44,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 6,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 6,
+        "false": 20,
+        "unknown": 6,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   },
+   {
+    "run": "s204-s2",
+    "state": "done",
+    "stop": "max_updates",
+    "updates": 8000,
+    "pass": false,
+    "pass_update": null,
+    "pass_streak2": false,
+    "holds_at_last_full_eval": false,
+    "stopped_on_marks": false,
+    "near": false,
+    "primary_file": "dev",
+    "dev_at": {
+     "2000": 45.078,
+     "4000": 50.518,
+     "8000": 65.026
+    },
+    "dev_at_carried": [],
+    "last_dev": [
+     8000,
+     65.026,
+     true
+    ],
+    "newwords_last": [
+     8000,
+     68.78
+    ],
+    "label_recall_last": {
+     "false": 95.1,
+     "true": 80.7,
+     "unknown": 20.7
+    },
+    "hard_last": [
+     8000,
+     9.38,
+     3,
+     32
+    ],
+    "confusion": {
+     "dev": {
+      "n": 386,
+      "correct": 251,
+      "table": {
+       "true": {
+        "true": 88,
+        "false": 5,
+        "unknown": 16,
+        "other": 0
+       },
+       "false": {
+        "true": 5,
+        "false": 135,
+        "unknown": 2,
+        "other": 0
+       },
+       "unknown": {
+        "true": 47,
+        "false": 60,
+        "unknown": 28,
+        "other": 0
+       }
+      }
+     },
+     "hard": {
+      "n": 32,
+      "correct": 3,
+      "table": {
+       "true": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "false": {
+        "true": 0,
+        "false": 0,
+        "unknown": 0,
+        "other": 0
+       },
+       "unknown": {
+        "true": 10,
+        "false": 19,
+        "unknown": 3,
+        "other": 0
+       }
+      }
+     }
+    },
+    "probes": null,
+    "probe_ctl": null
+   }
+  ],
+  "falsifier": null
+ }
+}
