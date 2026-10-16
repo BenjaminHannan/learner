@@ -334,6 +334,26 @@ class FakeEv:
         return {e['step']: e['loss'] for e in self.train}
 
 
+def t_clear_after_trace_a_fail_resumes():
+    """the accum-8 case: trace A FAIL recorded, the run stopped; `clear` alone lets the run continue from its last checkpoint and trace A is not evaluated again (its FAIL stays on record)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        pp = stopped_g2fa4(tmp)
+        sd = Path(tmp) / 'state'
+        sup = S.Sup(pp)
+        fail = json.dumps(sup.st['jobs']['g2fa4']['traceA'], sort_keys=True)
+        r, _ = main_cmd(pp, 'clear')
+        assert r == 0 and not (sd / 'STOPPED.txt').exists(), sorted(p.name for p in sd.iterdir())
+        sup = S.Sup(pp)
+        assert sup.st['jobs']['g2fa4']['status'] == 'pending' and sup.st['jobs']['g2fa4']['traceA']['verdict'] == 'FAIL'
+        s = T.drive(sup, lambda x: False, 120)
+        j = sup.st['jobs']['g2fa4']
+        assert s is None and j['status'] == 'done', j
+        assert (sd / 'ALL-DONE.txt').exists() and not (sd / 'STOPPED.txt').exists() and sup.blocking_stops() == [], sorted(p.name for p in sd.iterdir())
+        assert json.dumps(j['traceA'], sort_keys=True) == fail, 'trace A was evaluated again or its record changed'
+        T.cleanup()
+        print('ok clear after a trace A FAIL: the run continues to ALL-DONE, trace A is not evaluated again, its FAIL stays on record')
+
+
 def t_trace_a_soft_items():
     """the two soft items are recorded, not gated; everything else still stops; with no soft list the verdict is as registered."""
     rules = dict(upto=300, peak_limit_mib=12288, first_n=50, last_n=50, resume_first_diff=0.01, resume_mean_abs=0.02, resume_max_abs=0.10)
@@ -547,7 +567,7 @@ def t_installer_without_skip_and_refusals():
 
 if __name__ == '__main__':
     try:
-        for t in (t_arm_rules, t_two_jobs_skip_no_baseline, t_skip_never_run_not_pending, t_stop_files_and_clear, t_preflight_and_probe_skip, t_attention_names, t_trace_a_soft_items, t_installer_add_job, t_installer_soft_trace_a, t_installer_without_skip_and_refusals):
+        for t in (t_arm_rules, t_two_jobs_skip_no_baseline, t_skip_never_run_not_pending, t_stop_files_and_clear, t_clear_after_trace_a_fail_resumes, t_preflight_and_probe_skip, t_attention_names, t_trace_a_soft_items, t_installer_add_job, t_installer_soft_trace_a, t_installer_without_skip_and_refusals):
             try:
                 t()
             finally:
