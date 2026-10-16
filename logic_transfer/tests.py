@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from logic_transfer import course, ladder, rows, run_lt1, verify_rungs
+from logic_transfer import course, ladder, rows, run_lt1, state_probe, swap_probe, verify_rungs
 
 PARENT = run_lt1.PARENTS['s200']
 
@@ -252,6 +252,160 @@ class HardNegatives(unittest.TestCase):
             self.assertTrue(_j.loads(a)['id'].endswith('-hard'))
 
 
+class SwapProbe(unittest.TestCase):
+    """Swap-pair binding probe (PREREG-SWAP-PROBE-2026-10-16.md): small build on CPU; every check of the real build runs here too."""
+
+    SIZES = dict(n_dev=64, n_nw=32, n_wm=16)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.d = tempfile.TemporaryDirectory()
+        cls.train = os.path.join(cls.d.name, 'train.jsonl')
+        with open(cls.train, 'w') as f:
+            f.write(json.dumps({'id': 'x', 'prompt': 'Bob is red. Ann is blue. Is Bob red? (true/false/unknown)'}) + '\n')
+        cls.out = os.path.join(cls.d.name, 'rows')
+        cls.summary = swap_probe.build(cls.train, cls.out, log=lambda *a: None, **cls.SIZES)
+        cls.rows = {n: swap_probe.read(os.path.join(cls.out, n + '.jsonl')) for n in ('dev_pairs', 'nw_pairs', 'wm')}
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.d.cleanup()
+
+    def pairs(self, name):
+        out = {}
+        for r in self.rows[name]:
+            out.setdefault(r['meta']['pair_id'], {})[r['meta']['member']] = r
+        return out
+
+    def test_counts_and_balance(self):
+        self.assertEqual({n: len(v) for n, v in self.rows.items()}, {'dev_pairs': 128, 'nw_pairs': 64, 'wm': 32})
+        for name, n in (('dev_pairs', 64), ('nw_pairs', 32)):
+            for member, ans in (('bound', {'true', 'false'}), ('split', {'unknown'})):
+                rs = [r for r in self.rows[name] if r['meta']['member'] == member]
+                self.assertEqual(len(rs), n)
+                self.assertEqual({r['answer'] for r in rs}, ans)
+                for rel in ('equal', 'differ'):
+                    sub = [r for r in rs if r['meta']['not_rel'] == rel]
+                    self.assertEqual(len(sub), n // 2)
+                    for k in ('q_neg', 'a_first', 'pA', 'word_type'):
+                        self.assertEqual(sum(bool(r['meta'][k]) if k != 'word_type' else r['meta'][k] == 'n' for r in sub), n // 4, (name, member, rel, k))
+                    self.assertTrue(all((r['meta']['pA'] == r['meta']['pB']) == (rel == 'equal') for r in sub))
+        self.assertEqual({r['meta']['member'] for r in self.rows['wm']}, {'wm_ent', 'wm_pred'})
+        self.assertEqual({r['answer'] for r in self.rows['wm']}, {'unknown'})
+        self.assertEqual({r['meta']['vocab'] for r in self.rows['dev_pairs'] + self.rows['wm']}, {'dev'})
+        self.assertEqual({r['meta']['vocab'] for r in self.rows['nw_pairs']}, {'newwords'})
+
+    def test_full_size_plan_is_balanced(self):
+        from collections import Counter
+        for n in (swap_probe.N_DEV, swap_probe.N_NW):
+            sl = swap_probe.plan(n, swap_probe.SEED, 'dev')
+            self.assertEqual(len(sl), n)
+            for rel in ('equal', 'differ'):
+                sub = [x for x in sl if x['not_rel'] == rel]
+                self.assertEqual(len(sub), n // 2)
+                for k in ('q_neg', 'a_first', 'pA', 'cls'):
+                    c = Counter(x[k] for x in sub)
+                    self.assertEqual(sorted(c.values()), [n // 4, n // 4], (n, rel, k))
+                c = Counter((x['q_neg'], x['a_first']) for x in sub)
+                self.assertEqual(sorted(c.values()), [n // 8] * 4)
+        self.assertEqual(swap_probe.plan(64, 1, 'dev'), swap_probe.plan(64, 1, 'dev'))
+
+    def test_pairs_share_everything_but_the_exchange(self):
+        from logic_transfer import hard
+        for name in ('dev_pairs', 'nw_pairs'):
+            for pid, pr in self.pairs(name).items():
+                b, s = pr['bound'], pr['split']
+                m = b['meta']
+                self.assertEqual(len(b['prompt']), len(s['prompt']))
+                self.assertEqual(sorted(b['prompt']), sorted(s['prompt']))
+                self.assertEqual(verify_rungs.split_options(b['prompt'])[1], verify_rungs.split_options(s['prompt'])[1])
+                self.assertTrue(b['prompt'].endswith(rows.options_suffix(pid)))                  # the option order follows the PAIR id
+                self.assertEqual((len(m['prop_X']), m['prop_X'] == m['prop_Y'], m['ent_A'] == m['ent_B']), (len(m['prop_Y']), False, False))
+                self.assertFalse(hard.is_hard(b))
+                self.assertTrue(hard.is_hard(s))
+                self.assertEqual(s['meta']['name_fact'], 'first' if m['a_first'] else 'second')
+                self.assertEqual(s['meta']['prop_fact'], 'second' if m['a_first'] else 'first')
+                self.assertEqual((s['meta']['name_fact_neg'], s['meta']['prop_fact_neg']), (m['pA'], m['pB']))
+                self.assertEqual(b['family'], 'lad_r2')
+                self.assertLessEqual(len(b['prompt']), 208)
+
+    def test_gold_is_the_checkers_and_the_independent_reader(self):
+        from logicgen import checker as ck
+        allr = [r for v in self.rows.values() for r in v]
+        for r in allr:
+            self.assertEqual(ck.run_program(r['meta']['program']), r['answer'])
+            self.assertEqual(verify_rungs.label_of(r), (r['answer'], None))
+        self.assertEqual(swap_probe.check_labels(allr), len(allr))
+        bad = dict(allr[0], answer='false' if allr[0]['answer'] != 'false' else 'true')
+        with self.assertRaises(AssertionError):
+            swap_probe.check_labels([bad])
+
+    def test_word_missing_controls(self):
+        bound = {r['id']: r for r in self.rows['dev_pairs'] if r['meta']['member'] == 'bound'}
+        self.assertEqual(swap_probe.check_wm(self.rows['wm'], bound), 32)
+        for r in self.rows['wm']:
+            b = bound[r['meta']['source_row']]
+            self.assertEqual(r['meta']['sub'], r['meta']['member'][3:])
+            self.assertEqual(verify_rungs.split_options(r['prompt'])[1], verify_rungs.split_options(b['prompt'])[1])
+        ent = [r for r in self.rows['wm'] if r['meta']['member'] == 'wm_ent']
+        pred = [r for r in self.rows['wm'] if r['meta']['member'] == 'wm_pred']
+        self.assertEqual((len(ent), len(pred)), (16, 16))
+        self.assertFalse({r['meta']['pair_id'] for r in ent} & {r['meta']['pair_id'] for r in pred})
+
+    def test_no_train_prompt_no_duplicates_and_deterministic(self):
+        tb = {swap_probe.body(r['prompt']) for r in swap_probe.read(self.train)}
+        ps = [r['prompt'] for v in self.rows.values() for r in v]
+        self.assertEqual(len(set(ps)), len(ps))
+        self.assertFalse(tb & {swap_probe.body(p) for p in ps})
+        self.assertEqual(self.summary['checks']['overlap_with_train_ignoring_options'], 0)
+        d2 = os.path.join(self.d.name, 'rows2')
+        s2 = swap_probe.build(self.train, d2, log=lambda *a: None, **self.SIZES)
+        self.assertEqual({n: i['sha256'] for n, i in s2['files'].items()}, {n: i['sha256'] for n, i in self.summary['files'].items()})
+        with open(os.path.join(self.out, 'BUILD.json')) as f:
+            self.assertEqual(json.load(f)['files']['wm']['sha256'], self.summary['files']['wm']['sha256'])
+
+    def test_train_prompt_is_replaced_not_kept(self):
+        """A train prompt (any option order) is never emitted: ban the first bound prompt and the pair is redrawn."""
+        first = self.rows['dev_pairs'][0]
+        with tempfile.TemporaryDirectory() as d:
+            tr = os.path.join(d, 'train.jsonl')
+            other_order = verify_rungs.split_options(first['prompt'])[0] + ' (unknown/true/false)'
+            with open(tr, 'w') as f:
+                f.write(json.dumps({'id': 'x', 'prompt': other_order}) + '\n')
+            s = swap_probe.build(tr, os.path.join(d, 'rows'), log=lambda *a: None, **self.SIZES)
+            rs = swap_probe.read(os.path.join(d, 'rows', 'dev_pairs.jsonl'))
+            self.assertNotIn(swap_probe.body(first['prompt']), {swap_probe.body(r['prompt']) for r in rs})
+            self.assertEqual(s['checks']['overlap_with_train_ignoring_options'], 0)
+
+    def test_pair_check_fails_loudly(self):
+        pid, pr = next(iter(self.pairs('dev_pairs').items()))
+        b, s = pr['bound'], pr['split']
+        self.assertEqual(swap_probe.check_pairs({pid: (b, s)}), 1)
+        with self.assertRaises(AssertionError):
+            swap_probe.check_pairs({pid: (b, dict(s, prompt=b['prompt']))})                      # not swapped
+        with self.assertRaises(AssertionError):
+            swap_probe.check_pairs({pid: (s, s)})                                                # two splits: is_hard on the 'bound' member
+        with self.assertRaises(AssertionError):
+            swap_probe.check_pairs({pid: (b, dict(s, prompt=s['prompt'].replace('Is ', 'Is not ', 1)))})
+
+
+    def test_readout_helpers(self):
+        self.assertEqual(swap_probe.auc([3, 4], [1, 2]), 1.0)
+        self.assertEqual(swap_probe.auc([1, 2], [3, 4]), 0.0)
+        self.assertEqual(swap_probe.auc([1, 1], [1, 1]), 0.5)
+        self.assertAlmostEqual(swap_probe.auc([1, 3], [2]), 0.5)
+        b = swap_probe.boot([1.0] * 10)
+        self.assertEqual((b['mean'], b['lo'], b['hi']), (1.0, 1.0, 1.0))
+        self.assertEqual(swap_probe.boot([0.0, 1.0] * 50), swap_probe.boot([0.0, 1.0] * 50))     # fixed seed
+        # "Kyle is not safe. Beth is weak. Is Kyle not weak?": name fact says not-safe (polarities agree -> true), property fact says weak (differ -> false)
+        prompt = 'Kyle is not safe. Beth is weak. Is Kyle not weak? (true/false/unknown)'
+        for ans, want in (('true', dict(frac_name=1.0, frac_prop=0.0, frac_first=1.0, frac_last=0.0)), ('false', dict(frac_name=0.0, frac_prop=1.0, frac_first=0.0, frac_last=1.0))):
+            w = swap_probe.which_fact([(prompt, dict(pred=ans, argmax=ans))], 'greedy')
+            self.assertEqual({k: w[k] for k in want}, want)
+        w = swap_probe.which_fact([(prompt, dict(pred='unknown', argmax='unknown'))], 'greedy')
+        self.assertEqual((w['n'], w['n_commit'], w['frac_name']), (1, 0, None))
+
+
 class Schedule(unittest.TestCase):
     def test_sk_slots_identical_across_arms(self):
         a = course.schedule(7, 200000, None, 64, 0.25, 300)             # control arm
@@ -426,6 +580,39 @@ class EndToEnd(unittest.TestCase):
         el2 = [json.loads(l) for l in open(os.path.join(out2, 'eval.jsonl'))]
         self.assertEqual([(e['update'], e['full']) for e in el2], [(2, False), (4, False), (6, False), (8, True)])
         self.assertEqual(st2['full_eval']['dev']['n'], 12)
+
+class StateProbe(unittest.TestCase):
+    """State probe (logic_transfer/state_probe.py): the CV and the null control, on synthetic features (no checkpoint)."""
+
+    def data(self, shift):
+        rng = np.random.RandomState(0)
+        g = np.repeat([f'p{i}' for i in range(200)], 2)
+        y = np.tile([0, 1], 200)
+        X = rng.randn(400, 8)
+        X[:, 0] += shift * y
+        return X, y, g
+
+    def test_folds_group_pairs(self):
+        _, _, g = self.data(0)
+        fo = state_probe.pair_folds(g, 5, 'a')
+        self.assertEqual(sorted(set(fo.values())), [0, 1, 2, 3, 4])
+        self.assertEqual(fo, state_probe.pair_folds(g, 5, 'a'))
+        self.assertNotEqual(fo, state_probe.pair_folds(g, 5, 'b'))
+
+    def test_probe_finds_signal_and_null(self):
+        X, y, g = self.data(2.0)
+        self.assertGreater(state_probe.cv_probe(X, y, g)['auc'], 0.85)
+        X, y, g = self.data(0.0)
+        self.assertLess(abs(state_probe.cv_probe(X, y, g)['auc'] - 0.5), 0.1)
+
+    def test_shuffle_is_pair_level(self):
+        X, y, g = self.data(2.0)
+        ys = state_probe.shuffled(y, g, 'a')
+        for p in set(g):
+            self.assertEqual(sorted(ys[g == p]), [0, 1])
+        self.assertTrue(0.3 < (ys != y).mean() < 0.7)
+        self.assertLess(abs(state_probe.cv_probe(X, ys, g)['auc'] - 0.5), 0.1)
+
 
 
 if __name__ == '__main__':
