@@ -7,6 +7,7 @@ MODELS = {'plain_tf': PlainTF}
 # designs from custom_io/PASS-MARKS.md, imported lazily so each lives in its own file: name -> 'module:Class'
 LAZY = {
     'register_loop': 'custom_io.models.register_loop:RegisterLoop',     # A (steps=True) and A0 (steps=False)
+    'register_scratch': 'custom_io.models.register_scratch:RegisterLoopScratch',   # A + scratch slots taught the next step value
     'ledger': 'custom_io.models.ledger:Ledger',                         # B (Ledger-lite)
     'plain_tf_steps': 'custom_io.models.plain_tf_steps:PlainTFSteps',   # writes steps then ' # ' answer; C1' decode
 }
