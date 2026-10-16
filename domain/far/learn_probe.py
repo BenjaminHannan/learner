@@ -8,9 +8,32 @@
   python3 -m domain.far.learn_probe build-l8 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L8: MARKS-L8; the substitution ring's joins)
   python3 -m domain.far.learn_probe build-l9 --rows-out PATH --parent CKPT --probe PATH --eval-rows PATH   (L9: MARKS-L9; whole-formula joins)
   python3 -m domain.far.learn_probe train --arm LA|LB --updates 4000 --threads N --out DIR [--steps 0,500,1000,2000,4000] [--rows PATH] [--cells l1|all|l3|l4|l5|l8]
-        [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
+        [--harm-steps 1000,2000,4000 | --no-harm] [--dev PATH [--dev-any]] [--harm-dev-big PATH] [--keep-final]
+        (L7 / C2: old-skill harm vs the parent, kept final checkpoint. C2: the harm instrument is ALWAYS ON - without --harm-steps it runs at every
+        --steps entry > 0; --no-harm restores none. --dev defaults to $CUSTOM_IO_DATA/dev/in_dist.jsonl and its sha256 must be the skills DEV
+        in_dist (f975d9fb...) unless --dev-any; --harm-dev-big scores a second, larger DEV as well (it must contain that DEV: its lines for the DEV's ids hash to the same sha256, unless --dev-any). Each harm step writes OUT/harm-rows-step{N}.json
+        (and harm-rows-big-step{N}.json): the paired per-row hits, for pairing across arms and seeds. The whole harm call runs with torch / random /
+        numpy RNG state saved and restored, so it cannot move a training stream.)
         [--guard kf|kfsoft --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
        [--kl-replay-rows 32 --kl-weight 10 [--guard-soft 10]]        (L11 / L13, only with --guard kfsoft: graded mask (soft 1; L13: 10) + KL-to-parent replay, Main brain c823e4b9a)
+        [--guard replay --kl-replay-rows 32 --kl-weight 10 --guard-src DIR [--replay-loss kl|ce] [--diary-cache F --diary-compare none | --diary-any]]
+        (C1, arm LB only: the replay ALONE - no K-FAC mask, no Guarded wrapper, nothing frozen (unless --replay-freeze, A1F), the unguarded LB optimizer. The diary is built as for
+        kfsoft and each update appends --kl-replay-rows diary rows from RandomState(KL_REPLAY_SEED) (the stream follows --seed). --replay-loss kl
+        (default) = weight x KL to the frozen parent (klreplay from --guard-src, commit-checked); ce = weight x the plain loss on the diary rows, whose
+        targets are the parent's own greedy answers. --guard-soft is refused with it.)
+        [--replay-freeze]        (A1F, only with --guard replay: before the optimizer is built, freeze exactly the tensors the K-FAC guard freezes -
+        gp.freeze_unprojected from --guard-src (commit-checked) - so the trainable set and the clip set are L11's (Guarded's), with NO projection and
+        NO mask and no Guarded wrapper; the optimizer is make_opt over the model as for the unguarded path, which leaves requires_grad False
+        tensors out of its groups (so not even weight decay moves them). Records replay_freeze true and guard_frozen = the number of tensors frozen,
+        with guard_commit_check / guard_src_commit as kfsoft records them. Against L11 (kfsoft soft 1, 32 diary rows, 10x KL) the weight update is the
+        same but for the K-FAC projection: test_a1f_is_one_change_vs_l11 shows equal state_dict hashes at every scored step when kfsoft's KFOptimizer.step
+        is a pass-through (real kfac_stats / factors, re-measures included). The only other differences are not in the weights: no F is ever measured
+        for A1F (no measure_secs / measures on its records, and its run is that much cheaper), its records carry guard 'replay' (not 'kfsoft') and no
+        guard_energy / guard_every / guard_soft / guard_norm keys, and the running replay_kl_mean rides on each step's record where kfsoft's does not.)
+        [--stop-if-drop 1000:3.0,2000:3.0]        (futility stop, any arm: STEP:DROP pairs, each STEP a harm step. After the harm measure at STEP, if
+        in_dist_drop >= DROP the step's record gets futility_stop {step, drop, limit}, a line is printed, and training stops there - no further
+        update or score. Records stop_if_drop = {step: limit} on every record of a run that sets it. With --keep-final the step the run
+        stops at keeps its checkpoint, as the last step does.)
        [--seed N] [--first-call-weight W]        (R1, Oct 2026: --seed re-points the run seed (module SEED and the import-derived
         KL_REPLAY_SEED together; the eval fit seed, chosen before it applies, and the build-time streams stay as shipped);
         --first-call-weight (default 1.0 = shipped) weights the first call's losses (the call writer's token losses
@@ -24,6 +47,7 @@ train: parent checkpoint + the mode's make_row / make_opt / AddOn / loss, on tho
 Diagnosis only: the mode is not run and no panel row is trained.
 """
 import argparse
+import contextlib
 import hashlib
 import itertools
 import json
@@ -35,6 +59,7 @@ from collections import Counter
 
 import numpy as np
 
+from custom_io.data import DEFAULT_DATA
 from domain import panel as P
 from domain.far import sheet_probe as SP
 from domain.tools import sheet as sheet_tool
@@ -1118,7 +1143,41 @@ def eval_sets(train_rows, cells='l1', fit_seed=SEED, v3_path=V3_PANEL, l3_path=L
     return sets
 
 
-def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None, harm_fn=None, keep=False):
+def parse_stop_if_drop(spec, harm_steps=None):
+    """--stop-if-drop 'STEP:DROP[,STEP:DROP...]' (e.g. '1000:3.0,2000:3.0') -> {step: limit} (int -> float), None for no spec.
+    Refused (SystemExit): a malformed pair, a STEP given twice, a DROP that is not a number > 0, and (when harm_steps is given) a STEP that
+    is not a harm step - the stop reads the harm measure of that step, which exists only at the harm steps."""
+    if spec is None:
+        return None
+    out = {}
+    for tok in spec.split(','):
+        try:
+            k, v = tok.split(':')
+            step, limit = int(k), float(v)
+        except ValueError:
+            raise SystemExit(f"--stop-if-drop wants 'STEP:DROP[,STEP:DROP...]', got {tok!r}") from None
+        if not limit > 0 or limit == float('inf'):
+            raise SystemExit(f'--stop-if-drop {tok!r}: DROP must be a number > 0')
+        if step in out:
+            raise SystemExit(f'--stop-if-drop names step {step} twice')
+        out[step] = limit
+    if harm_steps is not None:
+        bad = sorted(set(out) - set(harm_steps))
+        if bad:
+            raise SystemExit(f'--stop-if-drop steps {bad} are not harm steps (harm steps: {sorted(harm_steps)})')
+    return out
+
+
+def futility_stop(limits, step, harm):
+    """The futility-stop decision: -> {'step', 'drop', 'limit'} when `step` has a limit in `limits` ({step: limit}, from
+    parse_stop_if_drop) and the harm record's in_dist_drop (the main DEV's, 2 dp as recorded) is >= it; else None."""
+    if not limits or harm is None or step not in limits:
+        return None
+    drop, limit = harm['in_dist_drop'], limits[step]
+    return {'step': step, 'drop': drop, 'limit': limit} if drop >= limit else None
+
+
+def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None, harm_fn=None, keep=False, stop_limits=None, keep_final=False):
     from domain.mode import save_ckpt
     from domain.score import score
     t0 = time.time()
@@ -1138,13 +1197,22 @@ def score_step(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None,
         rec = {'arm': arm, 'step': step, 'cells': cells, 'secs': secs, 'train_secs': round(t_train, 1)}
         rec.update(extra or {})
         if harm is not None:
+            harm = dict(harm)
+            big = harm.pop('harm_big', None)   # --harm-dev-big: the bigger DEV's record sits beside 'harm', not inside it
             rec['harm'] = harm
+            if big is not None:
+                rec['harm_big'] = big
+        stop = futility_stop(stop_limits, step, harm)   # --stop-if-drop: rides on this step's record
+        if stop:
+            rec['futility_stop'] = stop
         f.write(json.dumps(rec) + '\n')
     print(f'{arm} step {step}: ' + ' '.join(f'{k} {v["pct"]:.1f}' for k, v in cells.items()) + f' (score {secs}s)', flush=True)
-    if keep:   # --keep-final: the last step's checkpoint stays
-        return
-    os.remove(path)   # the checkpoint is only a vehicle for the scorer
-    os.rmdir(os.path.dirname(path))
+    if stop:
+        print(f'{arm} FUTILITY STOP at step {step}: in_dist_drop {stop["drop"]} >= limit {stop["limit"]}; training stops here', flush=True)
+    if not (keep or (stop and keep_final)):   # --keep-final: the last step's checkpoint stays, and so does the step a futility stop ends the run at
+        os.remove(path)   # the checkpoint is only a vehicle for the scorer
+        os.rmdir(os.path.dirname(path))
+    return stop
 
 
 def make_rows(m, train_rows, cons):
@@ -1177,13 +1245,23 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
-def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None):
+def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None, replay_loss=None, replay_freeze=False):
     """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work.
-    kl_rows / kl_weight (None = not given) are for --guard kfsoft only; kfsoft needs both, rows >= 1 and weight > 0.
+    kl_rows / kl_weight (None = not given) are for --guard kfsoft and --guard replay only; both need both, rows >= 1 and weight > 0.
     soft (None = not given, 1 is used) is the graded-mask softness of --guard kfsoft (L13: 10), > 0, or 'hard' (L14: the hard
-    mask, kf.factors soft=None, with the KL replay)."""
-    if guard != 'kfsoft' and (kl_rows is not None or kl_weight is not None or soft is not None):
+    mask, kf.factors soft=None, with the KL replay); --guard replay has no mask, so --guard-soft is refused with it.
+    replay_loss (None = not given; 'kl' is used) is --replay-loss of --guard replay: 'kl' or 'ce'; refused with any other guard.
+    replay_freeze (False = not given) is --replay-freeze (A1F): valid only with --guard replay, refused with any other guard or none."""
+    if guard not in ('kfsoft', 'replay') and (kl_rows is not None or kl_weight is not None or soft is not None):
         raise SystemExit('--kl-replay-rows / --kl-weight / --guard-soft apply to --guard kfsoft only')
+    if guard == 'replay' and soft is not None:
+        raise SystemExit('--guard-soft applies to --guard kfsoft only: --guard replay has no mask')
+    if replay_loss is not None and guard != 'replay':
+        raise SystemExit('--replay-loss applies to --guard replay only')
+    if replay_freeze and guard != 'replay':
+        raise SystemExit('--replay-freeze applies to --guard replay only')
+    if replay_loss is not None and replay_loss not in REPLAY_LOSSES:
+        raise SystemExit(f'--replay-loss must be one of {REPLAY_LOSSES}')
     if soft is not None and soft != 'hard' and soft <= 0:
         raise SystemExit("--guard-soft must be > 0 or 'hard'")
     if not guard:
@@ -1192,11 +1270,13 @@ def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None
         raise SystemExit('--guard applies to arm LB only')
     if guard == 'kfsoft' and (kl_rows is None or kl_weight is None or kl_rows < 1 or kl_weight <= 0):
         raise SystemExit('--guard kfsoft needs --kl-replay-rows >= 1 and --kl-weight > 0')
-    if guard not in ('kf', 'kfsoft'):
+    if guard == 'replay' and (kl_rows is None or kl_weight is None or kl_rows < 1 or kl_weight <= 0):
+        raise SystemExit('--guard replay needs --kl-replay-rows >= 1 and --kl-weight > 0')
+    if guard not in ('kf', 'kfsoft', 'replay'):
         raise SystemExit(f'unknown guard {guard}')
     if not guard_src or not os.path.isdir(guard_src):
         raise SystemExit('--guard needs --guard-src DIR (the folder holding mainbrain/)')
-    if not 0 < energy < 1 or every < 1:
+    if guard != 'replay' and (not 0 < energy < 1 or every < 1):
         raise SystemExit('--guard-energy must be in (0,1) and --guard-every >= 1')
 
 
@@ -1209,44 +1289,139 @@ def addon_size(arm, cons, rank=None, alpha=None):
     return (cons['addon_rank'] if rank is None else rank), (cons['addon_alpha'] if alpha is None else alpha)
 
 
-DEV_IN_DIST = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k/dev/in_dist.jsonl'
+DEV_IN_DIST = os.path.join(DEFAULT_DATA, 'dev', 'in_dist.jsonl')   # custom_io.data.DEFAULT_DATA honours $CUSTOM_IO_DATA (read at import)
+DEV_IN_DIST_SHA256 = 'f975d9fb312c02d759df991fa3bbb9ac73912d5f77cdc0e6991abd7980158b86'   # the skills seed-1 DEV in_dist file (1,360 rows) the harm numbers are quoted on
 GUARD_COMMIT = '5ca34e99938981a6448ba298a1a2127c468a46b0'
 GUARD_COMMIT_SOFT = 'c823e4b9a49c477751f6ad95e764097258b1aece'   # --guard kfsoft: Main brain's shipped guard (graded mask + KL replay)
 GUARD_SOFT_FILES = ('kf.py', 'gp.py', 'klreplay.py', 'fullrun.py')
+REPLAY_LOSSES = ('kl', 'ce')   # --guard replay: the replay half is weight x KL to the frozen parent, or weight x the model's own loss on the diary rows
 KL_REPLAY_SEED = SEED + 11   # RandomState drawing the diary rows for the KL replay, one draw of --kl-replay-rows per update
 GUARD_CONSTANTS = 'constants-kf99n-lr3e4.json'   # in the guard source folder's mainbrain/: the s200 sheet run's constants (diary 4096, check 512)
-DIARY_DATA = '/tmp/claude-0/-home-user-learner/fb790cc1-3a66-56ad-bced-917dde5a53d7/scratchpad/sk200k'
+DIARY_DATA = DEFAULT_DATA   # the skills build whose train.jsonl the diary pool is read from ($CUSTOM_IO_DATA)
+DIARY_TRAIN_SHA256 = '010af67124544bda9d4f26d8bd2801427770f1bb38f8c7b79921a36c87b244f5'   # the skills seed-1 200k build's train.jsonl (q33's file, custom_io/PASS-MARKS.md): the diary pool must come from it
 DIARY_SEED = 200
 DIARY_LOG = '/mnt/project-files/main-brain/runs/sheet-s200-kf99n/log.jsonl'
 
 
-def make_harm_fn(parent, dev, out):
+@contextlib.contextmanager
+def rng_isolated():
+    """C2: run a block without moving any training stream. torch's global generator (state AND initial_seed, which
+    torch.manual_seed inside the block would move and which model construction reads), python's random and numpy's global
+    state are saved before and restored after, so the old-skill harm instrument cannot change a training stream. Measured: a
+    harm.in_dist_hits call (load_model builds the net before loading the weights) DOES advance torch's global RNG; evaluate()'s
+    greedy decoding draws nothing."""
+    import torch
+    t_state, t_seed, py_state, np_state = torch.get_rng_state(), torch.initial_seed(), random.getstate(), np.random.get_state()
+    try:
+        yield
+    finally:
+        torch.manual_seed(t_seed)
+        torch.set_rng_state(t_state)
+        random.setstate(py_state)
+        np.random.set_state(np_state)
+
+
+def isolate_rng(fn):
+    """fn wrapped in rng_isolated()."""
+    def wrapped(*a, **kw):
+        with rng_isolated():
+            return fn(*a, **kw)
+    return wrapped
+
+
+def dev_provenance(dev, dev_any=False, expected=DEV_IN_DIST_SHA256):
+    """-> (sha256 of the DEV file, checked). A file that is not the expected skills DEV in_dist is refused (SystemExit) unless
+    dev_any (--dev-any), which records checked False: the harm numbers are then on a file nobody has vouched for. A missing
+    file is a SystemExit naming the ways out (the default --dev needs $CUSTOM_IO_DATA, which is read when custom_io.data is
+    imported)."""
+    if not os.path.isfile(dev):
+        raise SystemExit(f'--dev {dev} not found (set CUSTOM_IO_DATA to the skills build, pass --dev, or pass --no-harm / --harm-steps "")')
+    sha = file_sha256(dev)
+    if sha != expected and not dev_any:
+        raise SystemExit(f'--dev {dev} has sha256 {sha}, not the skills DEV in_dist {expected} (pass --dev-any to measure harm on another file)')
+    return sha, not dev_any
+
+
+def big_dev_provenance(dev_big, dev, dev_any=False, expected=DEV_IN_DIST_SHA256):
+    """-> (sha256 of the --harm-dev-big file, checked). The big DEV must contain the main DEV: its raw lines for the main DEV's
+    ids, taken in the main DEV's order, must hash to `expected` (the main DEV file's sha256; true of the skills big DEV, whose
+    1,360 rows are the per-family prefix of its 6,800). Refused (SystemExit) otherwise, or when the file is missing or lacks an
+    id, unless dev_any, which records checked False. Ids are compared as the DEV rows' 'id' field."""
+    if not os.path.isfile(dev_big):
+        raise SystemExit(f'--harm-dev-big {dev_big} not found')
+    sha = file_sha256(dev_big)
+    if dev_any:
+        return sha, False
+    by_id = {}
+    for line in open(dev_big, 'rb').read().split(b'\n'):
+        if line.strip():
+            by_id[json.loads(line)['id']] = line
+    ids = [json.loads(line)['id'] for line in open(dev, 'rb').read().split(b'\n') if line.strip()]
+    missing = [i for i in ids if i not in by_id]
+    got = None if missing else hashlib.sha256(b''.join(by_id[i] + b'\n' for i in ids)).hexdigest()
+    if got != expected:
+        raise SystemExit(f'--harm-dev-big {dev_big} does not contain the skills DEV in_dist: its lines for the {len(ids)} DEV ids '
+                         + (f'lack {len(missing)} of them' if missing else f'hash to {got}, not {expected}') + ' (pass --dev-any to score another file)')
+    return sha, True
+
+
+def make_harm_fn(parent, dev, out, dev_any=False, dev_big=None):
     """-> f(ckpt_path, step) -> dict: old-skill harm of the checkpoint against the parent on the DEV in_dist rows (domain/harm.py).
-    The parent's hits are computed once and cached to OUT/parent-hits.json."""
+    The parent's hits are computed once and cached to OUT/parent-hits.json (with the DEV file's sha256, which must be
+    DEV_IN_DIST_SHA256 unless dev_any; every harm record carries dev_sha256 and dev_sha256_checked). At each call the paired per-row
+    result is written to OUT/harm-rows-step{N}.json = {step, dev, dev_sha256, ids, family, parent_hits, child_hits}, so
+    arms and seeds can be paired later. dev_big (--harm-dev-big): a second, larger DEV scored the same way (its parent hits cached
+    in OUT/parent-hits-big.json, its rows in OUT/harm-rows-big-step{N}.json); its result is the 'harm_big' key of the returned dict. It must contain the checked DEV
+    (big_dev_provenance) unless dev_any, and carries dev_sha256_checked like the main one.
+    All of it runs under rng_isolated(): switching harm on cannot change any training stream."""
     from custom_io.data import load_rows
     from domain import harm
-    rows = load_rows(dev)
-    cache = os.path.join(out, 'parent-hits.json')
-    t0 = time.time()
-    if os.path.exists(cache):
-        parent_hits = json.load(open(cache))['hits']
-    else:
-        parent_hits, acc = harm.in_dist_hits(parent, rows)
-        with open(cache, 'w') as f:
-            json.dump({'parent': parent, 'dev': dev, 'n': len(rows), 'exact': acc, 'ids': [r['id'] for r in rows], 'hits': parent_hits}, f)
-    print(f'harm: parent hits on {len(rows)} in_dist rows ({time.time() - t0:.1f}s)', flush=True)
 
-    def fn(path, step):
+    def prepare(path, cache_name, tag, sha, checked):
+        rows = load_rows(path)
+        ids = [r['id'] for r in rows]
+        cache = os.path.join(out, cache_name)
+        t0 = time.time()
+        if os.path.exists(cache):
+            c = json.load(open(cache))
+            if c.get('ids', ids) != ids or c.get('parent', parent) != parent or c.get('dev_sha256', sha) != sha:
+                raise SystemExit(f'{cache} was made for another parent / DEV file: refusing to pair against it')
+            parent_hits = c['hits']
+        else:
+            parent_hits, acc = harm.in_dist_hits(parent, rows)
+            with open(cache, 'w') as f:
+                json.dump({'parent': parent, 'dev': path, 'dev_sha256': sha, 'n': len(rows), 'exact': acc, 'ids': ids, 'hits': parent_hits}, f)
+        print(f'harm{tag}: parent hits on {len(rows)} in_dist rows ({time.time() - t0:.1f}s)', flush=True)
+        return dict(path=path, rows=rows, ids=ids, sha=sha, checked=checked, parent_hits=parent_hits, tag=tag)
+
+    def measure(d, ckpt, step, rows_name):
         t = time.time()
-        hits, _ = harm.in_dist_hits(path, rows)
+        rows, parent_hits = d['rows'], d['parent_hits']
+        hits, _ = harm.in_dist_hits(ckpt, rows)
         h = harm.harm_measure(parent_hits, hits, rows, 5.0, 1.5)
         res = {'in_dist_a': round(h['in_dist_a'], 2), 'in_dist_b': round(h['in_dist_b'], 2), 'in_dist_drop': round(h['in_dist_drop'], 2),
                'fired': h['fired'], 'passes': bool(h['passes']), 'n': len(rows),
-               'family_drops': {f: round(v['drop'], 1) for f, v in h['families'].items()}, 'secs': round(time.time() - t, 1)}
-        print(f'harm step {step}: in_dist {res["in_dist_a"]} -> {res["in_dist_b"]} (drop {res["in_dist_drop"]}), '
+               'family_drops': {f: round(v['drop'], 1) for f, v in h['families'].items()}, 'secs': round(time.time() - t, 1),
+               'dev': d['path'], 'dev_sha256': d['sha']}
+        if d['checked'] is not None:
+            res['dev_sha256_checked'] = d['checked']
+        with open(os.path.join(out, f'{rows_name}{step}.json'), 'w') as f:
+            json.dump({'step': step, 'dev': d['path'], 'dev_sha256': d['sha'], 'ids': d['ids'], 'family': [r['family'] for r in rows],
+                       'parent_hits': parent_hits, 'child_hits': hits}, f)
+        print(f'harm{d["tag"]} step {step}: in_dist {res["in_dist_a"]} -> {res["in_dist_b"]} (drop {res["in_dist_drop"]}), '
               f'fired {res["fired"]}, {"PASS" if res["passes"] else "FAIL"}, n {res["n"]}', flush=True)
         return res
-    return fn
+
+    with rng_isolated():
+        main_dev = prepare(dev, 'parent-hits.json', '', *dev_provenance(dev, dev_any))
+        big_dev = prepare(dev_big, 'parent-hits-big.json', '-big', *big_dev_provenance(dev_big, dev, dev_any)) if dev_big else None   # must contain the checked main DEV unless dev_any
+
+    def fn(path, step):
+        res = measure(main_dev, path, step, 'harm-rows-step')
+        if big_dev:
+            res['harm_big'] = measure(big_dev, path, step, 'harm-rows-big-step')
+        return res
+    return isolate_rng(fn)
 
 
 def load_guard(src):
@@ -1306,11 +1481,14 @@ def compare_diary(diary, log_path, cmp):
     return cmp
 
 
-def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_path=DIARY_LOG, cache=None):
+def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_path=DIARY_LOG, cache=None, data_any=False):
     """The parent's own answers on training prompts, rebuilt as domain/mode.py main does (pool of the data folder's train file,
     shuffled by Random(f'{seed}-diary'), the first `check` held out, then build_diary). Diary size/check from the guard
     source's kf99n constants (the s200 sheet run's). Written to OUT/diary.jsonl; prompts compared with the run's diary rows
     (log_path 'none' skips the comparison). cache: an existing diary.jsonl is loaded instead of rebuilding (nothing else read).
+    A rebuild refuses (SystemExit) a train file whose sha256 is not DIARY_TRAIN_SHA256 unless data_any (--diary-any): $CUSTOM_IO_DATA
+    decides which build the pool is read from, and the log comparison alone would not notice another build; the train file's
+    sha256 and whether it was checked go into the compare dict.
     -> (diary rows, compare dict; has 'sha256' of the diary file used)."""
     if cache and os.path.exists(cache):
         diary = load_jsonl(cache)
@@ -1321,11 +1499,15 @@ def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_pa
         print(f'diary: loaded {len(diary)} rows from {cache} (sha256 {cmp["sha256"][:12]}); {cmp}', flush=True)
         return diary, cmp
     from domain import mode
+    tpath = mode.guard(os.path.join(data, 'train.jsonl'))
+    tsha = file_sha256(tpath)
+    if tsha != DIARY_TRAIN_SHA256 and not data_any:
+        raise SystemExit(f'diary pool: {tpath} has sha256 {tsha}, not the skills seed-1 build {DIARY_TRAIN_SHA256} (set CUSTOM_IO_DATA, use --diary-cache, or pass --diary-any)')
     cons = dict(json.load(open(os.path.join(src, 'mainbrain', GUARD_CONSTANTS))))
     helps = sheet_tool.help()
     ctx = dict(vchars=set(ck['chars']), cons=cons, seen=set(), quiz_set=set(), lmax=mode.lmax_of(helps, cons['digit_len_extra']))
     pool = []
-    with open(mode.guard(os.path.join(data, 'train.jsonl'))) as f:
+    with open(tpath) as f:
         for line in f:
             p = json.loads(line)['prompt']
             if len(p) <= mode.MAX_PROMPT and set(p) <= ctx['vchars']:
@@ -1340,7 +1522,8 @@ def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_pa
     with open(dpath, 'w') as f:
         for r in diary:
             f.write(json.dumps(r) + '\n')
-    cmp = {'n': len(diary), 'check': len(check), 'scanned': pos, 'secs': secs, 'log': log_path, 'sha256': file_sha256(dpath)}
+    cmp = {'n': len(diary), 'check': len(check), 'scanned': pos, 'secs': secs, 'log': log_path, 'sha256': file_sha256(dpath),
+           'train_sha256': tsha, 'train_sha256_checked': not data_any}
     compare_diary(diary, log_path, cmp)
     with open(os.path.join(out, 'diary-compare.json'), 'w') as f:
         json.dump(cmp, f, indent=1)
@@ -1478,6 +1661,74 @@ def kl_replay_loss(m, parent, weight, kls, klreplay):
     return loss
 
 
+def ce_replay_loss(m, weight, ces):
+    """Instance-level loss for --guard replay --replay-loss ce. The structure of kl_replay_loss with the KL swapped for the
+    plain loss on the diary rows: split the batch by row source 'diary'; the plain loss when not training / no grad / no diary or
+    no new rows; tuple shape kept, aux gets 'replay_ce'; every replay loss appended to ces. Combined as plain loss on the new
+    rows (weight 1) + weight x plain loss on the diary rows (the mean over them), where plain is the model's own Tool loss and
+    the diary rows' targets are the parent's own greedy answers (build_parent_diary). No frozen parent is needed."""
+    plain = m.loss
+
+    def part(b, idx):
+        import torch
+        t = torch.tensor(idx)
+        return {k: (v[t] if torch.is_tensor(v) else [v[i] for i in idx]) for k, v in b.items()}
+
+    def loss(b):
+        import torch
+        rows = b['rows']
+        ri = [i for i, r in enumerate(rows) if r.get('source') == 'diary']
+        rs = set(ri)
+        ni = [i for i in range(len(rows)) if i not in rs]
+        if not m.training or not torch.is_grad_enabled() or not ri or not ni:
+            return plain(b)
+        out_n = plain(part(b, ni))
+        out_r = plain(part(b, ri))
+        ce = out_r[0] if isinstance(out_r, tuple) else out_r
+        ces.append(float(ce.detach()))
+        if isinstance(out_n, tuple):
+            aux = out_n[1]
+            if isinstance(aux, dict):
+                aux = dict(aux, replay_ce=float(ce.detach()))
+            return (out_n[0] + weight * ce, aux) + tuple(out_n[2:])
+        return out_n + weight * ce
+    return loss
+
+
+def load_klreplay(src):
+    """Main brain's klreplay (c823e4b9a) from the guard source folder: src first on sys.path, the module's file asserted to lie under src."""
+    import importlib
+    import sys
+    sys.path.insert(0, os.path.abspath(src))
+    for name in ('mainbrain.klreplay', 'mainbrain'):
+        sys.modules.pop(name, None)
+    klreplay = importlib.import_module('mainbrain.klreplay')
+    assert os.path.abspath(klreplay.__file__).startswith(os.path.abspath(src)), klreplay.__file__
+    return klreplay
+
+
+def setup_replay_arm(m, cons, make_opt, replay_loss, weight, log, klreplay=None, freeze=None):
+    """--guard replay (arm LB): no K-FAC mask, no Guarded wrapper, nothing frozen (unless freeze=..., A1F / --replay-freeze). m.loss becomes the replay loss ('kl':
+    kl_replay_loss against klreplay.frozen_copy(m), taken now, before any update; 'ce': ce_replay_loss); every replay value is
+    appended to `log`. The optimizer is make_opt(m, cons['lr']) exactly as the unguarded LB path builds it. -> (opt, params).
+    freeze (A1F, --replay-freeze; None = nothing frozen, as shipped): a callable m -> frozen names, i.e. the guard source's
+    gp.freeze_unprojected. It runs after the KL parent copy is taken and BEFORE the optimizer is built, so make_opt (which keeps only
+    requires_grad parameters, as under Guarded, whose make_base is called after its freeze) builds its groups from the trainable set alone and the
+    frozen tensors are in no group - no gradient, no weight decay. params (the clip set) is then the trainable set, as under Guarded."""
+    assert replay_loss in REPLAY_LOSSES, replay_loss
+    if replay_loss == 'kl':
+        m.loss = kl_replay_loss(m, klreplay.frozen_copy(m), float(weight), log, klreplay)
+    else:
+        m.loss = ce_replay_loss(m, float(weight), log)
+    params = list(m.parameters())
+    assert all(p.requires_grad for p in params)
+    if freeze is not None:
+        frozen = freeze(m)
+        params = [p for p in m.parameters() if p.requires_grad]
+        assert len(frozen) == len(list(m.parameters())) - len(params), (len(frozen), len(params))
+    return make_opt(m, cons['lr']), params
+
+
 class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
     wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
@@ -1513,7 +1764,8 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, replay_loss=None, dev_any=False,
+          harm_dev_big=None, diary_any=False, replay_freeze=False, stop_if_drop=None):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1528,12 +1780,25 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     extra = {'addon_rank': rank, 'addon_alpha': alpha}
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
-    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft)
+    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft, replay_loss, replay_freeze)
+    stop_limits = None if stop_if_drop is None else dict(stop_if_drop)   # {step: limit} from parse_stop_if_drop; None = no futility stop
+    if stop_limits is not None:
+        bad = sorted(set(stop_limits) - harm_steps)
+        if bad:
+            raise SystemExit(f'--stop-if-drop steps {bad} are not harm steps (harm steps: {sorted(harm_steps)})')
+    if harm_steps:
+        dev_provenance(dev, dev_any)   # refuse a DEV file that is not the expected one before any work
+        if harm_dev_big:
+            big_dev_provenance(harm_dev_big, dev, dev_any)   # likewise the big DEV: it must contain the checked one
     soft_value = (1 if guard_soft is None else None if guard_soft == 'hard' else
                   int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11; None = the hard mask (L14)
     soft_guard = guard == 'kfsoft'
+    replay_arm = guard == 'replay'   # C1: replay only, no mask, no Guarded wrapper, nothing frozen (unless --replay-freeze, A1F)
+    replay_kind = (replay_loss or 'kl') if replay_arm else None
+    use_replay = soft_guard or replay_arm
     guard_commit = GUARD_COMMIT_SOFT if soft_guard else GUARD_COMMIT
-    commit_check = verify_guard_commit(guard_src) if soft_guard else None
+    commit_check = verify_guard_commit(guard_src) if soft_guard or replay_kind == 'kl' or replay_freeze else None   # replay_freeze: gp.freeze_unprojected comes from the source
+    kls, ces = [], []   # replay values per update: the KL (kfsoft, replay kl) or the replay-row loss (replay ce)
     os.makedirs(out, exist_ok=True)
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
@@ -1542,6 +1807,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     if seed is not None:
         apply_run_seed(seed)   # after fit_seed is chosen: the eval fit sample is a held stream, identical across run seeds (U2)
     extra.update(seed=SEED, first_call_weight=first_call_weight)
+    if stop_limits:
+        extra['stop_if_drop'] = {str(k): v for k, v in sorted(stop_limits.items())}
     ev = {'l3_path': eval_rows or L3_EVAL_ROWS, 'l5_path': eval_rows or L5_EVAL_ROWS}
     sets = eval_sets(train_rows, cells, fit_seed, probe_path=probe, **ev)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
@@ -1553,7 +1820,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     rows, drops = make_rows(m, train_rows, cons)
     print(f'{arm}: {len(rows)} of {len(train_rows)} rows usable; dropped {dict(drops)}', flush=True)
     ds = Dataset(rows, m.vocab)
-    harm_fn = make_harm_fn(parent, dev, out) if harm_steps else None
+    harm_fn = make_harm_fn(parent, dev, out, dev_any, harm_dev_big) if harm_steps else None
     guarded = None
     if arm == 'LA':
         addon = AddOn(m, rank, alpha, SEED)
@@ -1565,9 +1832,29 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         addon = None
         params = list(m.parameters())
         assert all(p.requires_grad for p in params)
-        if guard:
+        if replay_arm:
+            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache, data_any=diary_any)
+            m.eval()
+            klreplay = load_klreplay(guard_src) if replay_kind == 'kl' else None
+            kl_ds = Dataset(diary, m.vocab)
+            kl_rng = np.random.RandomState(KL_REPLAY_SEED)
+            freeze = load_guard(guard_src)[1].freeze_unprojected if replay_freeze else None   # A1F: the guard source's own freeze, before the optimizer
+            opt, params = setup_replay_arm(m, cons, make_opt, replay_kind, kl_weight, ces if replay_kind == 'ce' else kls, klreplay, freeze)
+            extra.update(guard='replay', replay_loss=replay_kind, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
+                         kl_replay_seed=KL_REPLAY_SEED, kl_replay_pool=len(diary), guard_diary_n=len(diary),
+                         guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache)
+            if replay_kind == 'kl' or replay_freeze:   # guard_src_commit as kfsoft records it: A1F vs L11 shows gp.freeze_unprojected is from one source
+                extra.update(guard_commit_check=commit_check, guard_src_commit=GUARD_COMMIT_SOFT)
+            n_frozen = sum(1 for p in m.parameters() if not p.requires_grad)
+            if replay_freeze:
+                extra.update(replay_freeze=True, guard_frozen=n_frozen)
+            print(f'LB+replay ({replay_kind}, {kl_replay_rows} diary rows/update at {kl_weight}x'
+                  + (f', source {commit_check}' if replay_kind == 'kl' or replay_freeze else '')
+                  + (f'; no mask, frozen as the guard freezes: {n_frozen} tensors' if replay_freeze else '; no mask, nothing frozen')
+                  + f'): trainable params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
+        elif guard:
             kf, gp = load_guard(guard_src)
-            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache)
+            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache, data_any=diary_any)
             m.eval()
             if soft_guard:   # frozen parent for the KL replay, taken before any update; Main brain's own klreplay (c823e4b9a)
                 import importlib
@@ -1596,16 +1883,22 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     t_train, t_seg, losses = 0.0, time.time(), []
     steps = set(steps)
     last = max(steps)
-    ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else extra
+    rlog = ces if replay_kind == 'ce' else kls
+    rkey = 'replay_ce_mean' if replay_kind == 'ce' else 'replay_kl_mean'
+    ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else (
+        dict(extra, **{rkey: round(float(np.mean(rlog)), 6)}) if replay_arm and rlog else extra)   # replay arm: the running mean so far rides on each step's record
     hf = lambda u: harm_fn if u in harm_steps else None
+    sk = {'stop_limits': stop_limits, 'keep_final': keep_final} if stop_limits else {}   # passed only when a futility stop is set: score_step's other callers see the shipped call; keep_final lets a stopped run keep the checkpoint it stopped at
+    stopped = None
     if 0 in steps:
-        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, ex(), hf(0), keep_final and last == 0)
+        score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, ex(), hf(0), keep_final and last == 0, **sk)   # step 0 is the parent: drop 0, it can never reach a limit > 0
     t_seg = time.time()
+    done = updates
     for u, ni in enumerate(batch_order(len(rows), cons['batch'], updates, SEED), 1):
         t0 = time.time()
         m.train()
         items = [ds[i] for i in ni]
-        if soft_guard:   # + diary rows (source 'diary'), told apart by kl_replay_loss
+        if use_replay:   # + diary rows (source 'diary'), told apart by kl_replay_loss / ce_replay_loss
             items += [kl_ds[int(j)] for j in kl_rng.randint(0, len(diary), size=kl_replay_rows)]
         b = to_device(collate(items), 'cpu')
         o = m.loss(b)
@@ -1616,8 +1909,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         opt.zero_grad(set_to_none=True)
         losses.append(float(loss.detach()))
         t_train += time.time() - t0
-        if soft_guard and kls and u % log_every == 0:
-            print(f'{arm} replay KL mean over last {min(len(kls), log_every)} updates: {np.mean(kls[-log_every:]):.5f}', flush=True)
+        if use_replay and rlog and u % log_every == 0:
+            print(f'{arm} replay {"CE" if replay_kind == "ce" else "KL"} mean over last {min(len(rlog), log_every)} updates: {np.mean(rlog[-log_every:]):.5f}', flush=True)
         if u % log_every == 0 or u == updates:
             k = u % log_every or log_every
             print(f'{arm} update {u}: {time.time() - t_seg:.1f}s for last {k} ({(time.time() - t_seg) / k:.3f} s/update), '
@@ -1626,15 +1919,31 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         if guarded and u % guard_every == 0 and u < updates:   # re-measure F on the current weights; same base AdamW and state
             opt = guarded.refresh()
         if u in steps:
-            score_step(ck, m, addon, sets, out, arm, u, t_train, threads, ex(), hf(u), keep_final and u == last)
+            stopped = score_step(ck, m, addon, sets, out, arm, u, t_train, threads, ex(), hf(u), keep_final and u == last, **sk)
             t_seg = time.time()
+            if stopped:   # futility stop: its record is written; no further update, no further score
+                done = u
+                break
     m.eval()
-    if soft_guard and kls:
-        extra['replay_kl_mean'] = round(float(np.mean(kls)), 6)
-        print(f'replay_kl {json.dumps(dict(mean=extra["replay_kl_mean"], n=len(kls), weight=kl_weight, rows=kl_replay_rows))}', flush=True)
-    print(f'{arm} done: {updates} updates, train {t_train:.1f}s ({t_train / max(updates, 1):.3f} s/update)'
+    if use_replay and rlog:
+        extra[rkey] = round(float(np.mean(rlog)), 6)
+        print(f'{rkey[:-5]} {json.dumps(dict(mean=extra[rkey], n=len(rlog), weight=kl_weight, rows=kl_replay_rows))}', flush=True)
+    print(f'{arm} done: {done} updates' + (f' of {updates} (futility stop)' if stopped else '')
+          + f', train {t_train:.1f}s ({t_train / max(done, 1):.3f} s/update)'
           + (f'; guard measuring {guarded.measure_secs:.1f}s in {guarded.measures} measures' if guarded else ''), flush=True)
-    return t_train / max(updates, 1)
+    return t_train / max(done, 1)
+
+
+def resolve_harm_steps(steps, harm_steps=None, no_harm=False):
+    """C2: the harm instrument is always on. --no-harm -> [] (and refuses --harm-steps beside it); an explicit --harm-steps list
+    (comma string, '' = none) is used as given; otherwise every entry of `steps` that is > 0 (step 0 is the parent itself)."""
+    if no_harm:
+        if harm_steps:
+            raise SystemExit('--no-harm and --harm-steps are exclusive')
+        return []
+    if harm_steps is None:
+        return [s for s in steps if s > 0]
+    return [int(x) for x in harm_steps.split(',') if x]
 
 
 def main(argv=None):
@@ -1654,13 +1963,19 @@ def main(argv=None):
     a.add_argument('--addon-rank', type=int, default=None, help="arm LA only: add-on rank (default: the mode's constant)")
     a.add_argument('--addon-alpha', type=float, default=None, help="arm LA only: add-on alpha (default: the mode's constant)")
     a.add_argument('--steps', default=DEFAULT_STEPS, help='comma list of update counts to score at')
-    a.add_argument('--harm-steps', default='', help='comma list of steps (among --steps) at which to measure old-skill harm against the parent')
-    a.add_argument('--dev', default=DEV_IN_DIST, help='DEV in_dist.jsonl for the harm measure')
+    a.add_argument('--harm-steps', default=None, help='comma list of steps (among --steps) at which to measure old-skill harm against the parent; default: every --steps entry > 0 (the harm instrument is always on)')
+    a.add_argument('--no-harm', action='store_true', help='no old-skill harm measure at all (the pre-C2 default)')
+    a.add_argument('--dev', default=DEV_IN_DIST, help='DEV in_dist.jsonl for the harm measure (default: $CUSTOM_IO_DATA/dev/in_dist.jsonl); its sha256 must be ' + DEV_IN_DIST_SHA256[:12] + ' unless --dev-any')
+    a.add_argument('--dev-any', action='store_true', help='allow a --dev file whose sha256 is not the skills DEV in_dist (recorded as dev_sha256_checked false)')
+    a.add_argument('--harm-dev-big', default=None, help='a second, larger DEV (e.g. the 6,800-row in_dist) also scored at every harm step: record key harm_big, parent hits cached in OUT/parent-hits-big.json')
     a.add_argument('--keep-final', action='store_true', help="do not delete the last step's checkpoint")
-    a.add_argument('--guard', choices=['kf', 'kfsoft'], default=None,
-               help='arm LB only: the main-brain K-FAC guard; kfsoft = graded mask (soft=1) + KL replay (needs --kl-replay-rows, --kl-weight; source commit ' + GUARD_COMMIT_SOFT[:9] + ')')
-    a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
-    a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
+    a.add_argument('--guard', choices=['kf', 'kfsoft', 'replay'], default=None,
+               help='arm LB only: the main-brain K-FAC guard; kfsoft = graded mask (soft=1) + KL replay (needs --kl-replay-rows, --kl-weight; source commit ' + GUARD_COMMIT_SOFT[:9] + '); replay = the replay alone (no mask, nothing frozen unless --replay-freeze, every weight at the unguarded LB lr; needs --kl-replay-rows, --kl-weight, --guard-src for the diary; --replay-loss picks the form)')
+    a.add_argument('--replay-loss', choices=list(REPLAY_LOSSES), default=None, help='--guard replay only: kl (default) = weight x KL to the frozen parent over the diary rows; ce = weight x the plain loss on the diary rows (targets: the parent\'s own greedy answers)')
+    a.add_argument('--replay-freeze', action='store_true', help="--guard replay only (A1F): freeze exactly the tensors the K-FAC guard freezes (gp.freeze_unprojected from --guard-src), before the optimizer is built; no projection, no mask, no Guarded; records replay_freeze and guard_frozen")
+    a.add_argument('--stop-if-drop', default=None, help="futility stop, 'STEP:DROP[,STEP:DROP...]' (e.g. 1000:3.0,2000:3.0): each STEP must be a harm step; if the harm measure at STEP has in_dist_drop >= DROP the step's record gets futility_stop and training stops there (with --keep-final the stopped step's checkpoint is kept)")
+    a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft / replay only: diary rows added to every update (seeded draw)')
+    a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft / replay only: weight on the KL to the frozen parent (replay: or the CE) over those rows')
     a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
@@ -1669,6 +1984,7 @@ def main(argv=None):
     a.add_argument('--eval-rows', default=None, help='eval file for --cells l3/l4 (default eval-rows-l3) or l5 (default eval-rows-l5)')
     a.add_argument('--diary-compare', default=DIARY_LOG, help="main-brain log to compare the diary with; 'none' skips (recorded as skipped)")
     a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
+    a.add_argument('--diary-any', action='store_true', help='arm LB guard: allow a rebuilt diary pool from a train.jsonl whose sha256 is not the skills seed-1 build (' + DIARY_TRAIN_SHA256[:12] + '; recorded as train_sha256_checked false)')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a.add_argument('--seed', type=int, default=None, help='train only (R1): the run seed, driving the torch seedings, the data order and the KL replay stream; default None = the shipped module SEED (93301), every stream as shipped')
     a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss, renormalised per trace to the uniform-weight trace mean; default 1.0 = uniform (shipped)")
@@ -1706,16 +2022,22 @@ def main(argv=None):
         if a.first_call_weight <= 0:
             raise SystemExit('--first-call-weight must be > 0')
         a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
-        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
+        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft, a.replay_loss, a.replay_freeze)   # refuse before any work
+        steps = [int(x) for x in a.steps.split(',')]
+        harm_steps = resolve_harm_steps(steps, a.harm_steps, a.no_harm)
+        stop_if_drop = parse_stop_if_drop(a.stop_if_drop, harm_steps)
+        if a.harm_dev_big and not harm_steps:
+            raise SystemExit('--harm-dev-big needs harm steps (--harm-steps, or --steps with an entry > 0, and not --no-harm)')
         from domain.mode import CONST_PATH
         addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
-        train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
+        train(a.arm, a.updates, a.threads, a.out, steps,
               train_path=a.rows, cells=a.cells, addon_rank=a.addon_rank, addon_alpha=a.addon_alpha,
-              harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
+              harm_steps=harm_steps, dev=a.dev, keep_final=a.keep_final, guard=a.guard,
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
-              parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
+              parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache, diary_any=a.diary_any,
               kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
-              seed=a.seed, first_call_weight=a.first_call_weight)
+              seed=a.seed, first_call_weight=a.first_call_weight, replay_loss=a.replay_loss, dev_any=a.dev_any, harm_dev_big=a.harm_dev_big,
+              replay_freeze=a.replay_freeze, stop_if_drop=stop_if_drop)
 
 
 if __name__ == '__main__':
