@@ -24,3 +24,6 @@ Rounds: 7 (about 80 to 90 minutes each: play about 45, replay-and-fork about 15 
 | wait for the 10M drive | zero cost | learns nothing for hours; the 10M queue is long |
 | the label-rule swap | deployable | A28's counterfactual says it leaves the rows' ratio unchanged (0.1 to 0.16) |
 Verdict: do it; the earlier it starts the earlier A27's prediction and this test meet.
+
+## Addendum (9:08 PM ET 10-15; no mark changes)
+Where it runs: the coordinator asked for GW-O to run on Ben's Mac today (the cloud box is busy with A27 and running both made each about 6x slower). `game/mac_gwo.sh` runs the same two loops there (same code; the only difference from code commit 55fc44b4fa is that the round-3 checkpoint is also saved, commit 7251d5eac3), checks the round-3 mark, scores rounds 3 and 7 on the 100 sealed maps on the Mac, and pushes small results to branch `claude/game-world-mac-results`. Marks, run seeds (396, 397), constants and baselines are unchanged. If the Mac sleeps or refuses, the loops resume from `state.pt` there or here.
