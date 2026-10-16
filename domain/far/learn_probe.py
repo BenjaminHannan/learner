@@ -11,6 +11,10 @@
         [--harm-steps 1000,2000,4000 [--dev PATH]] [--keep-final]                 (L7: old-skill harm vs the parent, kept final checkpoint)
         [--guard kf|kfsoft --guard-energy 0.99 --guard-every 500 --guard-src DIR]        (L7, arm LB only: the main-brain K-FAC guard)
        [--kl-replay-rows 32 --kl-weight 10 [--guard-soft 10]]        (L11 / L13, only with --guard kfsoft: graded mask (soft 1; L13: 10) + KL-to-parent replay, Main brain c823e4b9a)
+       [--seed N] [--first-call-weight W]        (R1, Oct 2026: --seed re-points the run seed (module SEED and the import-derived
+        KL_REPLAY_SEED together; the eval fit seed, chosen before it applies, and the build-time streams stay as shipped);
+        --first-call-weight (default 1.0 = shipped) weights the first call's losses (the call writer's token losses
+        and round 0's span_call term), renormalised per trace to the uniform-weight trace mean - see install_first_call_weight)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -1344,6 +1348,104 @@ def build_parent_diary(m, ck, src, out, data=DIARY_DATA, seed=DIARY_SEED, log_pa
     return diary, cmp
 
 
+def apply_run_seed(seed):
+    """R1 (pairing-map decisions U2): point the train run's seed at `seed`. Sets the module SEED and KL_REPLAY_SEED together,
+    before train() consumes either: KL_REPLAY_SEED is derived from SEED at import time (module level, above), so a patch of
+    SEED alone would silently leave the KL replay stream at the shipped SEED + 11, shared across all seeds. Streams that read
+    the module SEED at call time follow the run seed: torch.manual_seed(SEED) at both sites, batch_order(..., SEED) (data
+    order), AddOn(..., SEED) (arm LA only), and through torch.initial_seed() at model construction the model's ans_drill
+    stream. Held streams do not move: the eval fit seed is chosen in train() before this is called, the diary pool shuffle is
+    random.Random('200-diary'), and the build-time streams hang off their own constants (93501 / 93701 / 93702)."""
+    global SEED, KL_REPLAY_SEED
+    SEED = seed
+    KL_REPLAY_SEED = seed + 11
+
+
+def install_first_call_weight(m, weight):
+    """R1 (pairing-map decisions U3): replace m.call_loss and m.span_terms with copies of Tool.call_loss and
+    Tool.span_terms (custom_io/models/tool.py) in which the FIRST call's losses carry `weight`, renormalised per trace
+    by the trace's inverse mean call weight, renorm = n_calls / (weight + n_calls - 1) (the pairing map: 'loss
+    renormalised per trace to the uniform-weight trace mean'; a trace whose calls all lost the same amount contributes
+    exactly its uniform-weight loss, and the effective learning rate is unchanged across arms). Weighted: round 0's op
+    CE and operand-string NLL in call_loss, and round 0's span_call contribution in span_terms — the whole of the first
+    call's loss. In call_loss every round carries renorm and round 0 carries renorm x weight; in span_terms ONLY round
+    0 changes (fac0 = renorm x weight there) — later span rounds, the stop term, span_share and the returned Mn (which
+    span_loss turns into span_ans) are the shipped computations, unweighted, and span_ans itself is never weighted. The
+    mode / word / gen terms are not call losses and are untouched. A row with no call is untouched: its round-0 op CE
+    predicts NOOP, which is not a first call, and all its span rounds are off. hits / tot are computed from the
+    unweighted quantities, exactly as shipped. At weight 1.0 every factor is exactly 1.0 and the arithmetic is the
+    shipped arithmetic in the shipped order, so the result is bit-identical to the unmodified trainer (train() still
+    installs this only for weight != 1.0)."""
+    import torch
+    import torch.nn.functional as F
+    from custom_io.models.ledger import COMM
+    from custom_io.models.tool import CELLS
+
+    def factors(g):
+        """Per trace: (renorm, first) — renorm = n_calls / (weight + n_calls - 1), the inverse mean call weight;
+        first = `weight` on rows whose round 0 is a real call, else 1."""
+        n_calls = (g['op'] > 0).sum(1)
+        renorm = torch.where(n_calls > 0, n_calls.float() / (weight + (n_calls - 1).float()),
+                             torch.ones_like(n_calls, dtype=torch.float32))   # per trace: 1 / mean call weight
+        first = torch.where(g['op'][:, 0] > 0, float(weight), 1.0)   # rows whose round 0 is a real call
+        return renorm, first
+
+    def call_loss(steps, g, B):
+        dev = g['op'].device
+        w_row = torch.where(g['has'], 1.0, m.w_noop)
+        comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
+        renorm, first = factors(g)
+        lop = lcall = 0.0
+        hits = tot = 0
+        sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
+        for s, st in enumerate(steps):
+            fac = renorm * first if s == 0 else renorm
+            lg, p = st[0].float(), st[1]
+            lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row * fac).mean()
+            lp = torch.log(p + 1e-6)
+            la, lb = lp[:, :CELLS], lp[:, CELLS:]
+            ta, tb = g['ca'][:, s], g['cb'][:, s]
+            lab, lba = sc(la, ta) + sc(lb, tb), sc(la, tb) + sc(lb, ta)
+            nll = -torch.where(comm[:, s], torch.logaddexp(lab, lba), lab)
+            lcall = lcall + (nll * (g['op'][:, s] > 0) * fac).sum() / B
+            hits += ((lg.argmax(-1) == g['op'][:, s]) & g['has']).sum()
+            tot += g['has'].sum()
+        return lop, lcall, hits, tot
+
+    def span_terms(o, g, batch, B):
+        """A copy of Tool.span_terms (custom_io/models/tool.py) with one change: round 0's span_call contribution
+        carries fac0 = renorm x first, the same per-trace factor round 0's call terms carry in call_loss above.
+        Everything else — later rounds, the stop term, span_share, the returned Mn — is the shipped computation,
+        unweighted. Reached exactly where the shipped method is: Tool.loss calls span_loss, which calls
+        self.span_terms (and ToolH1's loss calls self.span_terms directly), so the instance attribute is picked up."""
+        dev, T = batch['prompt_ids'].device, batch['prompt_ids'].shape[1]
+        Ma, Mb, Mn, (cs, ts, ys) = m.span_gold(batch['rows'], T, o['le'], o['K'], g.get('rowg'))
+        Ma, Mb, Mn = (torch.from_numpy(x).to(dev) for x in (Ma, Mb, Mn))
+        lse = lambda lg, M: torch.logsumexp(lg.masked_fill(~M, -1e9), -1) - torch.logsumexp(lg, -1)
+        side = lambda lg, gl, M: torch.where(M.any(-1), F.logsigmoid(gl) + lse(lg, M), F.logsigmoid(-gl))
+        comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
+        renorm, first = factors(g)
+        fac0 = renorm * first
+        lsc, n_span, n_side = 0.0, 0, 0
+        for s, st in enumerate(o['steps']):
+            sp, ma, mb, on = st[2], Ma[:, s], Mb[:, s], g['op'][:, s] > 0
+            lab = side(sp['la'], sp['ga'], ma) + side(sp['lb'], sp['gb'], mb)
+            lba = side(sp['la'], sp['ga'], mb) + side(sp['lb'], sp['gb'], ma)
+            nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
+            lsc = lsc + ((nll * on * fac0).sum() if s == 0 else (nll * on).sum()) / B
+            n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
+        if cs:
+            lstop = F.binary_cross_entropy_with_logits(m.stop_logit(torch.tensor(cs, device=dev), torch.tensor(ts, device=dev)),
+                                                       torch.tensor(ys, device=dev))
+        else:
+            lstop = torch.zeros((), device=dev)
+        return dict(span_call=lsc, stop=lstop, span_share=n_span / max(n_side, 1)), Mn
+
+    m.call_loss = call_loss
+    m.span_terms = span_terms
+    return call_loss
+
+
 def kl_replay_loss(m, parent, weight, kls, klreplay):
     """Instance-level loss for --guard kfsoft. Same logic as klreplay.wrap (split the batch by row source 'diary'; the plain loss
     when not training / no grad / no diary or no new rows; tuple shape and aux 'replay_kl' kept; every KL appended to kls), but
@@ -1411,13 +1513,15 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None, guard_soft=None):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
     from domain.mode import AddOn, CONST_PATH, make_opt
     torch.set_num_threads(threads)
     assert arm in ('LA', 'LB')
+    assert seed is None or isinstance(seed, int), seed
+    assert first_call_weight > 0, first_call_weight
     assert steps and max(steps) <= updates and min(steps) >= 0, (steps, updates)
     cons = json.load(open(CONST_PATH))
     rank, alpha = addon_size(arm, cons, addon_rank, addon_alpha)
@@ -1435,12 +1539,17 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
     fit_seed = L8_SEED if cells == 'l8' else L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
+    if seed is not None:
+        apply_run_seed(seed)   # after fit_seed is chosen: the eval fit sample is a held stream, identical across run seeds (U2)
+    extra.update(seed=SEED, first_call_weight=first_call_weight)
     ev = {'l3_path': eval_rows or L3_EVAL_ROWS, 'l5_path': eval_rows or L5_EVAL_ROWS}
     sets = eval_sets(train_rows, cells, fit_seed, probe_path=probe, **ev)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
     torch.manual_seed(SEED)
     m = load_model(parent).eval()
+    if first_call_weight != 1.0:
+        install_first_call_weight(m, float(first_call_weight))
     rows, drops = make_rows(m, train_rows, cons)
     print(f'{arm}: {len(rows)} of {len(train_rows)} rows usable; dropped {dict(drops)}', flush=True)
     ds = Dataset(rows, m.vocab)
@@ -1561,6 +1670,8 @@ def main(argv=None):
     a.add_argument('--diary-compare', default=DIARY_LOG, help="main-brain log to compare the diary with; 'none' skips (recorded as skipped)")
     a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
+    a.add_argument('--seed', type=int, default=None, help='train only (R1): the run seed, driving the torch seedings, the data order and the KL replay stream; default None = the shipped module SEED (93301), every stream as shipped')
+    a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss, renormalised per trace to the uniform-weight trace mean; default 1.0 = uniform (shipped)")
     a = a.parse_args(argv)
     if a.stage == 'build':
         build()
@@ -1592,6 +1703,8 @@ def main(argv=None):
         census_l12(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
+        if a.first_call_weight <= 0:
+            raise SystemExit('--first-call-weight must be > 0')
         a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
         from domain.mode import CONST_PATH
@@ -1601,7 +1714,8 @@ def main(argv=None):
               harm_steps=[int(x) for x in a.harm_steps.split(',') if x], dev=a.dev, keep_final=a.keep_final, guard=a.guard,
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
-              kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft)
+              kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
+              seed=a.seed, first_call_weight=a.first_call_weight)
 
 
 if __name__ == '__main__':
