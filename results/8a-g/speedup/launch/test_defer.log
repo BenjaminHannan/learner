@@ -1,0 +1,142 @@
+PASS test_answer_pairs_order_and_the_last_round_always_has_every_row_ok (0.0s)
+[    0.1s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_defer_composes_with_nosync_and_pad64p_and_is_registered (1.3s)
+PASS test_pack_roundtrip (0.0s)
+PASS test_shown_cround_and_lists_equal_the_original_loops_reads (0.2s)
+    T1 (informational) CPU bf16 autocast: loss rel diff 2.96e-06, grad cos 0.99999190, rel L2 4.03e-03, rng equal True
+PASS test_t1_bf16_on_the_cpu_is_informational_only (0.6s)
+    T1/T2 16 rows, K 8: loss rel diff 0.00e+00 (bitwise True); aux equal; grad cos min over 72 tensors 1.0000000000, all 1.0000000000, max abs 1.91e-06, max rel to max|g| 1.01e-07, rel L2 7.24e-08, grad bitwise False; RNG states equal True
+    T1/T2 16 rows, K drawn (KS default): loss rel diff 0.00e+00 (bitwise True); aux equal; grad cos min over 72 tensors 1.0000000000, all 1.0000000000, max abs 1.53e-05, max rel to max|g| 1.34e-07, rel L2 9.98e-08, grad bitwise False; RNG states equal True
+    T1/T2 4 rows (micro-batch 1), K 16: loss rel diff 0.00e+00 (bitwise True); aux equal; grad cos min over 72 tensors 1.0000000000, all 1.0000000000, max abs 7.63e-06, max rel to max|g| 1.57e-07, rel L2 9.77e-08, grad bitwise False; RNG states equal True
+PASS test_t1_t2_values_aux_gradients_and_rng_match_on_a_fixed_batch (2.3s)
+    T3 K=4 (short: n = max(4, last + 2)): rows 16 n 7 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 7.1e-08 | call passes full/subset 3/3, answer passes 1/6, gapped 2, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 K=32 (rounds past CKPT_FROM 8 and n_loops): rows 16 n 32 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 1.0e-07 | call passes full/subset 28/3, answer passes 50/6, gapped 2, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 K=16, 4-row micro-batch (subsets): rows 4 n 16 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 9.8e-08 | call passes full/subset 15/0, answer passes 21/3, gapped 0, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 gap_p = 1 (every call row gapped): rows 16 n 16 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 8.3e-08 | call passes full/subset 10/5, answer passes 17/7, gapped 8, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 ans_drill = 1 (drilled rows): rows 16 n 8 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 9.3e-08 | call passes full/subset 4/3, answer passes 2/6, gapped 2, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 gap_p = 1 and ans_drill = 1, K 32: rows 16 n 32 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 8.9e-08 | call passes full/subset 26/5, answer passes 49/7, gapped 8, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 only rows with calls (every row selected at the call rounds): rows 8 n 8 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 8.3e-08 | call passes full/subset 7/0, answer passes 5/0, gapped 0, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 only rows without calls (EOS-only targets, every round): rows 8 n 8 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 7.3e-08 | call passes full/subset 7/0, answer passes 8/0, gapped 0, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 writer cap 7: calls and answers over the cap get no target: rows 16 n 8 loss rel 0.0e+00 grad cos min 1.000000000 rel L2 7.8e-08 | call passes full/subset 4/3, answer passes 2/6, gapped 2, call_acc 0.000 eos_acc 0.000 share 0.0
+    T3 coverage reached: {'full_call': 104, 'subset_call': 22, 'full_ans': 155, 'subset_ans': 41, 'gapped': 24, 'drilled': 27, 'nocall_rows': 58, 'over': 16, 'n_max': 32, 'n_min': 7}
+PASS test_t3_coverage_rounds_gaps_drill_nocall_rows_full_and_subset_overcap (4.9s)
+    T3 forced n=2: copy_share None in both arms, loss rel 0.0e+00, grad cos min 1.000000000
+    T3 forced n=3: copy_share None in both arms, loss rel 8.5e-08, grad cos min 1.000000000
+    T3 forced n=4: copy_share 0.0 in both arms, loss rel 0.0e+00, grad cos min 1.000000000
+    T3 forced n=5: copy_share 0.0 in both arms, loss rel 0.0e+00, grad cos min 1.000000000
+PASS test_t3_last_round_with_no_ok_rows_is_unreachable_through_loss_but_handled_at_a_forced_short_n (0.7s)
+PASS test_t4_applicable_rule_and_fallback_counter (0.0s)
+PASS test_t4_fallbacks_are_bitwise_the_original (2.4s)
+[   20.0s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 2000 data synthetic(max_letters=700) caps caps_b3g2.json device cpu eg stub
+    T5 real 3M shape, values: loss 53.068157 vs 53.068157 rel diff 0.00e+00; grad cos min 1.000000000 all 1.0000000000 rel L2 6.26e-08 max abs 3.81e-06; aux bad []; rng equal True; CPU wall fwd+bwd (2 threads, includes model build) baseline 31.1s defer 20.5s
+        defer stats: {'numerics': "NUMERICS-CHANGING ('near'): per-row maths identical, floating-point rounding is not (batched GEMMs, a longer padded call width, one-shot parameter-gradient reductions); the thinker is bit-identical, the writer's loss and gradient are equal up to rounding", 'deferred_losses': 1, 'fallback_losses': 0, 'call_pairs_per_micro_batch': 941.0, 'answer_pairs_per_micro_batch': 903.0, 'mean_call_width': 16.0, 'max_call_width': 16, 'mean_rounds': 16.0, 'mean_rows_per_micro_batch': 64.0}
+    T5 REAL 3M shape (4,023,302 params), 64 rows, K 16: rows 64, rounds n 16
+        non-view ATen ops (fwd+bwd), device-side (ByteWriter.teacher's host-tensor ops excluded): baseline 8,502   defer 3,346   ratio 0.394   (host ops in teacher: 9,590 / 0; view ops: 21,834 / 4,320)
+        host-sync call sites hit:     baseline 1,240   defer 14   (per round: 77.50 / 0.88)
+        split of those sites:          baseline {'gpu_waits': 237, 'host_only': 993, 'nonblocking': 0, 'other': 10}   defer {'gpu_waits': 1, 'host_only': 2, 'nonblocking': 1, 'other': 10}
+        -> sites that would WAIT on a GPU in b3g2/writer/defer: baseline 237 (14.81 per round), defer 1 (0.062 per round)
+          __bool__               writer.py:135   baseline    991  defer      0
+          to(device)             writer.py:138   baseline     64  defer      0
+          tolist                 b3g2.py:350   baseline     45  defer      0
+          cpu                    writer.py:121   baseline     32  defer      0
+          nonzero                b3g2.py:553   baseline     16  defer      0
+          __bool__               b3g2.py:554   baseline     16  defer      0
+          __bool__               b3g2.py:551   baseline     16  defer      0
+          nonzero                b3g2.py:374   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:355   baseline     15  defer      0
+          tolist                 b3g2.py:361   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:536   baseline      1  defer      0
+          to(device)             b3g2.py:224   baseline      1  defer      0
+          to(device)             b3g2.py:567   baseline      1  defer      0
+          __int__                b3g2.py:534   baseline      1  defer      0
+          __int__                b3g2.py:535   baseline      1  defer      0
+          to(device)             prof_train.py:1050  baseline      0  defer      1
+          __int__                defer.py:236   baseline      0  defer      1
+          to(device)             defer.py:294   baseline      0  defer      1
+          tolist                 defer.py:299   baseline      0  defer      1
+        by file (baseline -> defer): b3g2.py 143->0, defer.py 0->3, prof_train.py 8->9, tool.py 2->2, writer.py 1087->0
+        ops removed most: aten.add.Tensor 1,255, aten.mm.default 559, aten.sum.dim_IntList 413, aten.addmm.default 296, aten.zeros.default 242, aten.native_layer_norm.default 200, aten.native_layer_norm_backward.default 160, aten.ones.default 134
+PASS test_t5_counts_real_3m_shape (97.7s)
+    T5 tiny, 4-row micro-batch, K 16: rows 4, rounds n 16
+        non-view ATen ops (fwd+bwd), device-side (ByteWriter.teacher's host-tensor ops excluded): baseline 7,131   defer 2,012   ratio 0.282   (host ops in teacher: 688 / 0; view ops: 7,916 / 2,456)
+        host-sync call sites hit:     baseline 316   defer 14   (per round: 19.75 / 0.88)
+        split of those sites:          baseline {'gpu_waits': 237, 'host_only': 69, 'nonblocking': 0, 'other': 10}   defer {'gpu_waits': 1, 'host_only': 2, 'nonblocking': 1, 'other': 10}
+        -> sites that would WAIT on a GPU in b3g2/writer/defer: baseline 237 (14.81 per round), defer 1 (0.062 per round)
+          __bool__               writer.py:135   baseline     67  defer      0
+          to(device)             writer.py:138   baseline     64  defer      0
+          tolist                 b3g2.py:350   baseline     45  defer      0
+          cpu                    writer.py:121   baseline     32  defer      0
+          nonzero                b3g2.py:553   baseline     16  defer      0
+          __bool__               b3g2.py:554   baseline     16  defer      0
+          __bool__               b3g2.py:551   baseline     16  defer      0
+          nonzero                b3g2.py:374   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:355   baseline     15  defer      0
+          tolist                 b3g2.py:361   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:536   baseline      1  defer      0
+          to(device)             b3g2.py:224   baseline      1  defer      0
+          to(device)             b3g2.py:567   baseline      1  defer      0
+          __int__                b3g2.py:534   baseline      1  defer      0
+          __int__                b3g2.py:535   baseline      1  defer      0
+          to(device)             prof_train.py:1050  baseline      0  defer      1
+          __int__                defer.py:236   baseline      0  defer      1
+          to(device)             defer.py:294   baseline      0  defer      1
+          tolist                 defer.py:299   baseline      0  defer      1
+        by file (baseline -> defer): b3g2.py 143->0, defer.py 0->3, prof_train.py 8->9, tool.py 2->2, writer.py 163->0
+    T5 tiny, 16-row batch, K 16: rows 16, rounds n 16
+        non-view ATen ops (fwd+bwd), device-side (ByteWriter.teacher's host-tensor ops excluded): baseline 7,163   defer 2,012   ratio 0.281   (host ops in teacher: 2,412 / 0; view ops: 10,254 / 2,456)
+        host-sync call sites hit:     baseline 494   defer 14   (per round: 30.88 / 0.88)
+        split of those sites:          baseline {'gpu_waits': 237, 'host_only': 247, 'nonblocking': 0, 'other': 10}   defer {'gpu_waits': 1, 'host_only': 2, 'nonblocking': 1, 'other': 10}
+        -> sites that would WAIT on a GPU in b3g2/writer/defer: baseline 237 (14.81 per round), defer 1 (0.062 per round)
+          __bool__               writer.py:135   baseline    245  defer      0
+          to(device)             writer.py:138   baseline     64  defer      0
+          tolist                 b3g2.py:350   baseline     45  defer      0
+          cpu                    writer.py:121   baseline     32  defer      0
+          nonzero                b3g2.py:553   baseline     16  defer      0
+          __bool__               b3g2.py:554   baseline     16  defer      0
+          __bool__               b3g2.py:551   baseline     16  defer      0
+          nonzero                b3g2.py:374   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:355   baseline     15  defer      0
+          tolist                 b3g2.py:361   baseline     15  defer      0
+          torch.tensor(device=)  b3g2.py:536   baseline      1  defer      0
+          to(device)             b3g2.py:224   baseline      1  defer      0
+          to(device)             b3g2.py:567   baseline      1  defer      0
+          __int__                b3g2.py:534   baseline      1  defer      0
+          __int__                b3g2.py:535   baseline      1  defer      0
+          to(device)             prof_train.py:1050  baseline      0  defer      1
+          __int__                defer.py:236   baseline      0  defer      1
+          to(device)             defer.py:294   baseline      0  defer      1
+          tolist                 defer.py:299   baseline      0  defer      1
+        by file (baseline -> defer): b3g2.py 143->0, defer.py 0->3, prof_train.py 8->9, tool.py 2->2, writer.py 341->0
+PASS test_t5_counts_tiny (2.0s)
+[  112.2s] world: arm PTS model plain_tf_steps_g (92,688 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_t6_teardown_restores_the_patched_attributes_by_identity (0.1s)
+    T7 20 updates (tiny, accum 4, lr over 60 steps): per-update |loss diff| max 7.629e-06 mean 6.676e-07 (loss range 16.792..91.254); relative max 9.14e-08; final parameters: max abs diff 1.542e-06, rel L2 2.280e-07; first-update diff 0.00e+00; defer stats 80 deferred, 0 fallback
+PASS test_t7_twenty_updates_baseline_vs_defer_same_seed (23.7s)
+PASS test_t8_exact_arms_are_registered_when_the_file_exists_and_a_broken_one_is_survived (0.0s)
+prof_launch: registered ['defer']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'defer', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'defer', 'accum 8', 'accum 16', 'accum 2')
+[  135.9s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+[  135.9s] === section abequiv
+[  135.9s] abequiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them); reference accum 4, variants ['defer']
+[  136.7s] abequiv fp32: reference loss 23.403172; rerun noise floor: grad cos 1.0000000000, bit exact True
+[  137.0s] abequiv defer fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 7.425e-08 step cos 1.0000000000 bit exact False
+[  137.0s] abequiv defer: mark 6 holds [bar_only_by_rule] (bar in fp32: True, rel loss 0.00e+00 / grad cos 1.0000000000, rerun floor 0.00e+00 / 1.0000000000; CPU fp32 clause bar_only: None, bit exact on CPU fp32: False)
+[  137.0s] done /tmp/defer_t8_dv_70dr6/ab.json /tmp/defer_t8_dv_70dr6/ab.md
+    T8 abequiv defer (tiny, fp32 CPU): rel loss 0.00e+00, grad cos 1.000000000000, rel L2 7.43e-08, step cos 0.999999999972, bit exact False, mark 6 holds [bar_only_by_rule]; rerun floor bit exact True
+prof_launch: registered ['defer']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'defer', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'defer', 'accum 8', 'accum 16', 'accum 2')
+[  137.0s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+[  137.0s] === section abbench
+[  137.0s] abbench arm defer round 1/1: A (accum 4, baseline)
+[  140.3s] abbench arm defer round 1/1: B (accum 4, defer)
+[  142.4s]   A 1.2365 s/update; B 0.7352 s/update, peak alloc None GB
+[  142.4s] abbench arm defer: A 1.2365 B 0.7352 s/update (speed 1.682x, A spread 1.000, large); wall 0.1 min; mark 5: open (peak memory or mark 6 not known)
+[  142.4s] done /tmp/defer_t8_dv_70dr6/bench.json /tmp/defer_t8_dv_70dr6/bench.md
+prof_launch: registered ['defer']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'defer', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'defer', 'accum 8', 'accum 16', 'accum 2')
+[  142.5s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+[  142.5s] === section breakdown
+[  142.5s] breakdown: 1 warmup + 2 timed updates (variant defer, accum 4, hooks top)
+[  143.8s]   breakdown update 1/2: wall 919 ms  fetch 0 h2d 0 fwd 350 bwd 551 opt 5
+[  144.4s]   breakdown update 2/2: wall 564 ms  fetch 0 h2d 0 fwd 221 bwd 327 opt 3
+[  144.5s] done /tmp/defer_t8_dv_70dr6/bd.json /tmp/defer_t8_dv_70dr6/bd.md
+PASS test_t8_the_runner_runs_abequiv_for_defer_and_registers_exact_arms (8.6s)
+PASS test_teacher_np_equals_bytewriter_teacher_including_none_empty_and_over_cap (0.0s)
+17 of 17 passed in 144.5s
