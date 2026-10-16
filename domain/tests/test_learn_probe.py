@@ -395,7 +395,9 @@ def test_new_flags_default_off(monkeypatch):
     seen = {}
     monkeypatch.setattr(L, 'train', lambda *a, **k: seen.update(k))
     L.main(['train', '--arm', 'LB', '--out', 'x'])
-    assert seen['harm_steps'] == [] and seen['keep_final'] is False and seen['guard'] is None
+    assert seen['harm_steps'] == [500, 1000, 2000, 4000] and seen['keep_final'] is False and seen['guard'] is None   # C2: the harm instrument is on by default (every --steps entry > 0)
+    L.main(['train', '--arm', 'LB', '--out', 'x', '--no-harm'])
+    assert seen['harm_steps'] == []
     L.main(['train', '--arm', 'LB', '--out', 'x', '--harm-steps', '1000,2000', '--keep-final', '--guard', 'kf',
             '--guard-every', '250', '--guard-src', '/tmp'])
     assert seen['harm_steps'] == [1000, 2000] and seen['keep_final'] and seen['guard'] == 'kf' and seen['guard_every'] == 250
