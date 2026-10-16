@@ -1,0 +1,1791 @@
+{
+ "prereg": "logic_transfer/PREREG-SWAP-PROBE-2026-10-16.md",
+ "bootstrap": {
+  "resamples": 2000,
+  "seed": 20261016,
+  "unit": "pair",
+  "ci": "percentile 95%"
+ },
+ "definitions": {
+  "B": "mean over pairs of logP(unknown|split) - logP(unknown|bound), nats",
+  "acc_split": "greedy (Tool.talk) answer == unknown on split members",
+  "u_bound": "greedy answer == unknown on bound members",
+  "pointer_auc": "pooled Mann-Whitney AUC of logP(unknown), split vs bound members",
+  "word_missing": "B_wm / pointer_auc: word-missing row vs its own source bound row; unknown_recall: greedy answer == unknown",
+  "suffix_argmax": "same with the answer = best-scoring option word by logP instead of the greedy answer",
+  "which_fact": "of rows where the committed answer is true / false: fraction equal to the answer implied by the fact holding the query name / property / the first / the last fact"
+ },
+ "checkpoints": {
+  "parent-s200": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.08894346743302019,
+    "min_word": 1.698304257641281e-12,
+    "mean_span": 0.00031047230789153047,
+    "mean_gen": 0.9107460596285082,
+    "greedy_mode_word": 0.08557692307692308,
+    "rows_p_word_ge_099": 0.04461538461538461,
+    "greedy_in_options": 0.005192307692307692
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.17275086581707,
+      "lo": -0.05672400417923927,
+      "hi": 0.40120602600276467,
+      "n": 800,
+      "frac_pairs_positive": 0.515
+     },
+     "pointer_auc_equal": 0.5110984375,
+     "mean_lp_unknown_bound_equal": -19.192712069153785,
+     "mean_lp_unknown_split_equal": -19.019961203336717,
+     "acc_split_equal": 0.0,
+     "u_bound_equal": 0.0,
+     "acc_bound_equal": 0.00125,
+     "acc_split_equal_argmax": 0.2,
+     "u_bound_equal_argmax": 0.19375,
+     "acc_bound_equal_argmax": 0.40875,
+     "B_differ": {
+      "mean": 0.020176824033260345,
+      "lo": -0.2354200124591589,
+      "hi": 0.27816841668635606,
+      "n": 800,
+      "frac_pairs_positive": 0.5025
+     },
+     "pointer_auc_differ": 0.5006046875,
+     "mean_lp_unknown_bound_differ": -19.947291078269483,
+     "mean_lp_unknown_split_differ": -19.927114254236223,
+     "acc_split_differ": 0.00125,
+     "u_bound_differ": 0.0,
+     "acc_bound_differ": 0.0025,
+     "acc_split_differ_argmax": 0.17875,
+     "u_bound_differ_argmax": 0.18625,
+     "acc_bound_differ_argmax": 0.3925,
+     "u_bound": 0.0,
+     "acc_bound": 0.001875,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 5,
+      "commit_rate": 0.00625,
+      "frac_name": 0.4,
+      "frac_prop": 0.6,
+      "frac_first": 0.4,
+      "frac_last": 0.6
+     },
+     "u_bound_argmax": 0.19,
+     "acc_bound_argmax": 0.400625,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 657,
+      "commit_rate": 0.82125,
+      "frac_name": 0.4779299847792998,
+      "frac_prop": 0.5220700152207002,
+      "frac_first": 0.5007610350076104,
+      "frac_last": 0.4992389649923896
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": -0.11546692689259846,
+      "lo": -0.5252134150664012,
+      "hi": 0.2808294456005096,
+      "n": 300,
+      "frac_pairs_positive": 0.4866666666666667
+     },
+     "pointer_auc_equal": 0.49946666666666667,
+     "mean_lp_unknown_bound_equal": -19.02995122273763,
+     "mean_lp_unknown_split_equal": -19.145418149630228,
+     "acc_split_equal": 0.0,
+     "u_bound_equal": 0.0,
+     "acc_bound_equal": 0.0033333333333333335,
+     "acc_split_equal_argmax": 0.20666666666666667,
+     "u_bound_equal_argmax": 0.19,
+     "acc_bound_equal_argmax": 0.38333333333333336,
+     "B_differ": {
+      "mean": -0.4500241486231486,
+      "lo": -0.8707939668496449,
+      "hi": -0.04680497999986048,
+      "n": 300,
+      "frac_pairs_positive": 0.45666666666666667
+     },
+     "pointer_auc_differ": 0.47674444444444447,
+     "mean_lp_unknown_bound_differ": -19.658223344484966,
+     "mean_lp_unknown_split_differ": -20.108247493108113,
+     "acc_split_differ": 0.0,
+     "u_bound_differ": 0.0,
+     "acc_bound_differ": 0.0033333333333333335,
+     "acc_split_differ_argmax": 0.16333333333333333,
+     "u_bound_differ_argmax": 0.16333333333333333,
+     "acc_bound_differ_argmax": 0.4166666666666667,
+     "u_bound": 0.0,
+     "acc_bound": 0.0033333333333333335,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 2,
+      "commit_rate": 0.006666666666666667,
+      "frac_name": 0.5,
+      "frac_prop": 0.5,
+      "frac_first": 0.0,
+      "frac_last": 1.0
+     },
+     "u_bound_argmax": 0.17666666666666667,
+     "acc_bound_argmax": 0.4,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 251,
+      "commit_rate": 0.8366666666666667,
+      "frac_name": 0.4541832669322709,
+      "frac_prop": 0.545816733067729,
+      "frac_first": 0.4820717131474104,
+      "frac_last": 0.5179282868525896
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.3316314673423767,
+      "lo": -0.1981322756409645,
+      "hi": 0.8738835136592388,
+      "n": 400
+     },
+     "pointer_auc": 0.51624375,
+     "unknown_recall": 0.0,
+     "unknown_recall_argmax": 0.1775
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": -0.258469523191452,
+      "lo": -0.5686210627555847,
+      "hi": 0.06871762752532948,
+      "n": 400
+     },
+     "pointer_auc": 0.4869875,
+     "unknown_recall": 0.0,
+     "unknown_recall_argmax": 0.18
+    }
+   }
+  },
+  "parent-s201": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.01849857422080088,
+    "min_word": 2.3508488558587892e-11,
+    "mean_span": 2.9296637640368324e-05,
+    "mean_gen": 0.9814721286718179,
+    "greedy_mode_word": 0.016923076923076923,
+    "rows_p_word_ge_099": 0.011538461538461539,
+    "greedy_in_options": 0.004423076923076923
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": -0.13959735929965972,
+      "lo": -0.4729840350598097,
+      "hi": 0.20625712981820105,
+      "n": 800,
+      "frac_pairs_positive": 0.4775
+     },
+     "pointer_auc_equal": 0.4947359375,
+     "mean_lp_unknown_bound_equal": -29.707127723693848,
+     "mean_lp_unknown_split_equal": -29.84672508299351,
+     "acc_split_equal": 0.0,
+     "u_bound_equal": 0.0,
+     "acc_bound_equal": 0.0025,
+     "acc_split_equal_argmax": 0.23875,
+     "u_bound_equal_argmax": 0.24,
+     "acc_bound_equal_argmax": 0.3875,
+     "B_differ": {
+      "mean": -0.12319164037704468,
+      "lo": -0.5075224954485894,
+      "hi": 0.25247626887261865,
+      "n": 800,
+      "frac_pairs_positive": 0.48625
+     },
+     "pointer_auc_differ": 0.49461015625,
+     "mean_lp_unknown_bound_differ": -29.081566255688667,
+     "mean_lp_unknown_split_differ": -29.20475789606571,
+     "acc_split_differ": 0.0,
+     "u_bound_differ": 0.0,
+     "acc_bound_differ": 0.0025,
+     "acc_split_differ_argmax": 0.23125,
+     "u_bound_differ_argmax": 0.2325,
+     "acc_bound_differ_argmax": 0.36,
+     "u_bound": 0.0,
+     "acc_bound": 0.0025,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 4,
+      "commit_rate": 0.005,
+      "frac_name": 0.75,
+      "frac_prop": 0.25,
+      "frac_first": 0.0,
+      "frac_last": 1.0
+     },
+     "u_bound_argmax": 0.23625000000000002,
+     "acc_bound_argmax": 0.37375,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 615,
+      "commit_rate": 0.76875,
+      "frac_name": 0.4861788617886179,
+      "frac_prop": 0.5138211382113821,
+      "frac_first": 0.46504065040650405,
+      "frac_last": 0.5349593495934959
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": -0.21955849726994833,
+      "lo": -0.7387336387435595,
+      "hi": 0.2550075875520699,
+      "n": 300,
+      "frac_pairs_positive": 0.4666666666666667
+     },
+     "pointer_auc_equal": 0.4809555555555556,
+     "mean_lp_unknown_bound_equal": -29.14952182451884,
+     "mean_lp_unknown_split_equal": -29.369080321788786,
+     "acc_split_equal": 0.0,
+     "u_bound_equal": 0.0,
+     "acc_bound_equal": 0.006666666666666667,
+     "acc_split_equal_argmax": 0.23666666666666666,
+     "u_bound_equal_argmax": 0.21666666666666667,
+     "acc_bound_equal_argmax": 0.4266666666666667,
+     "B_differ": {
+      "mean": 0.1546726163228353,
+      "lo": -0.5089706215858459,
+      "hi": 0.8258178017139434,
+      "n": 300,
+      "frac_pairs_positive": 0.5066666666666667
+     },
+     "pointer_auc_differ": 0.5120333333333333,
+     "mean_lp_unknown_bound_differ": -29.959113181432087,
+     "mean_lp_unknown_split_differ": -29.804440565109253,
+     "acc_split_differ": 0.0,
+     "u_bound_differ": 0.0,
+     "acc_bound_differ": 0.0,
+     "acc_split_differ_argmax": 0.19666666666666666,
+     "u_bound_differ_argmax": 0.20333333333333334,
+     "acc_bound_differ_argmax": 0.41,
+     "u_bound": 0.0,
+     "acc_bound": 0.0033333333333333335,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 2,
+      "commit_rate": 0.006666666666666667,
+      "frac_name": 0.5,
+      "frac_prop": 0.5,
+      "frac_first": 0.5,
+      "frac_last": 0.5
+     },
+     "u_bound_argmax": 0.21000000000000002,
+     "acc_bound_argmax": 0.41833333333333333,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 241,
+      "commit_rate": 0.8033333333333333,
+      "frac_name": 0.49377593360995853,
+      "frac_prop": 0.5062240663900415,
+      "frac_first": 0.42323651452282157,
+      "frac_last": 0.5767634854771784
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": -0.21282865047454835,
+      "lo": -0.9506800385713577,
+      "hi": 0.5358492532074449,
+      "n": 400
+     },
+     "pointer_auc": 0.4984375,
+     "unknown_recall": 0.0,
+     "unknown_recall_argmax": 0.2075
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.2080827534198761,
+      "lo": -0.17433098101615904,
+      "hi": 0.6076743938326831,
+      "n": 400
+     },
+     "pointer_auc": 0.50544375,
+     "unknown_recall": 0.0,
+     "unknown_recall_argmax": 0.21
+    }
+   }
+  },
+  "parent-s204": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.18608285983593323,
+    "min_word": 2.4381434371445465e-12,
+    "mean_span": 0.0019219689954560184,
+    "mean_gen": 0.8119951710373855,
+    "greedy_mode_word": 0.18461538461538463,
+    "rows_p_word_ge_099": 0.14576923076923076,
+    "greedy_in_options": 0.030576923076923078
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.059237646793772,
+      "lo": -0.29405773113756006,
+      "hi": 0.3848278899455325,
+      "n": 800,
+      "frac_pairs_positive": 0.52875
+     },
+     "pointer_auc_equal": 0.5093,
+     "mean_lp_unknown_bound_equal": -22.62618511812063,
+     "mean_lp_unknown_split_equal": -22.566947471326856,
+     "acc_split_equal": 0.00125,
+     "u_bound_equal": 0.0025,
+     "acc_bound_equal": 0.01625,
+     "acc_split_equal_argmax": 0.25125,
+     "u_bound_equal_argmax": 0.25,
+     "acc_bound_equal_argmax": 0.3825,
+     "B_differ": {
+      "mean": -0.2032558896765113,
+      "lo": -0.6835887819025666,
+      "hi": 0.2746531385304402,
+      "n": 800,
+      "frac_pairs_positive": 0.495
+     },
+     "pointer_auc_differ": 0.49225546875,
+     "mean_lp_unknown_bound_differ": -21.88714331522584,
+     "mean_lp_unknown_split_differ": -22.09039920490235,
+     "acc_split_differ": 0.00375,
+     "u_bound_differ": 0.00125,
+     "acc_bound_differ": 0.0125,
+     "acc_split_differ_argmax": 0.21125,
+     "u_bound_differ_argmax": 0.21375,
+     "acc_bound_differ_argmax": 0.3975,
+     "u_bound": 0.001875,
+     "acc_bound": 0.014375,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 21,
+      "commit_rate": 0.02625,
+      "frac_name": 0.42857142857142855,
+      "frac_prop": 0.5714285714285714,
+      "frac_first": 0.47619047619047616,
+      "frac_last": 0.5238095238095238
+     },
+     "u_bound_argmax": 0.231875,
+     "acc_bound_argmax": 0.39,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 631,
+      "commit_rate": 0.78875,
+      "frac_name": 0.4896988906497623,
+      "frac_prop": 0.5103011093502378,
+      "frac_first": 0.45641838351822506,
+      "frac_last": 0.5435816164817749
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": -0.18726234205067158,
+      "lo": -0.8091393190963815,
+      "hi": 0.4379923912168789,
+      "n": 300,
+      "frac_pairs_positive": 0.51
+     },
+     "pointer_auc_equal": 0.5006222222222222,
+     "mean_lp_unknown_bound_equal": -23.755721852704884,
+     "mean_lp_unknown_split_equal": -23.942984194755553,
+     "acc_split_equal": 0.0,
+     "u_bound_equal": 0.01,
+     "acc_bound_equal": 0.006666666666666667,
+     "acc_split_equal_argmax": 0.26666666666666666,
+     "u_bound_equal_argmax": 0.2833333333333333,
+     "acc_bound_equal_argmax": 0.35333333333333333,
+     "B_differ": {
+      "mean": 0.35241818209489184,
+      "lo": -0.45075056253373624,
+      "hi": 1.1473108477840814,
+      "n": 300,
+      "frac_pairs_positive": 0.5033333333333333
+     },
+     "pointer_auc_differ": 0.5113222222222222,
+     "mean_lp_unknown_bound_differ": -23.85642157395681,
+     "mean_lp_unknown_split_differ": -23.504003391861914,
+     "acc_split_differ": 0.0033333333333333335,
+     "u_bound_differ": 0.0,
+     "acc_bound_differ": 0.023333333333333334,
+     "acc_split_differ_argmax": 0.18333333333333332,
+     "u_bound_differ_argmax": 0.2,
+     "acc_bound_differ_argmax": 0.36333333333333334,
+     "u_bound": 0.005,
+     "acc_bound": 0.015000000000000001,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 3,
+      "commit_rate": 0.01,
+      "frac_name": 0.3333333333333333,
+      "frac_prop": 0.6666666666666666,
+      "frac_first": 0.6666666666666666,
+      "frac_last": 0.3333333333333333
+     },
+     "u_bound_argmax": 0.24166666666666667,
+     "acc_bound_argmax": 0.35833333333333334,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 245,
+      "commit_rate": 0.8166666666666667,
+      "frac_name": 0.4448979591836735,
+      "frac_prop": 0.5551020408163265,
+      "frac_first": 0.5061224489795918,
+      "frac_last": 0.49387755102040815
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 1.2233025374310091,
+      "lo": 0.437769567092997,
+      "hi": 1.971121740747825,
+      "n": 400
+     },
+     "pointer_auc": 0.5441375,
+     "unknown_recall": 0.015,
+     "unknown_recall_argmax": 0.255
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": -0.09222889982163907,
+      "lo": -0.6217840946484358,
+      "hi": 0.42687343446351567,
+      "n": 400
+     },
+     "pointer_auc": 0.50199375,
+     "unknown_recall": 0.0025,
+     "unknown_recall_argmax": 0.24
+    }
+   }
+  },
+  "s200-s1": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.99995656269101,
+    "min_word": 0.9289409518241882,
+    "mean_span": 3.3101222115376725e-06,
+    "mean_gen": 4.012862210193915e-05,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 0.9996153846153846,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.2551976529508829,
+      "lo": 0.21013212931901218,
+      "hi": 0.30568092985346446,
+      "n": 800,
+      "frac_pairs_positive": 0.59625
+     },
+     "pointer_auc_equal": 0.5870703125,
+     "mean_lp_unknown_bound_equal": -1.4001106224791147,
+     "mean_lp_unknown_split_equal": -1.1449129695282318,
+     "acc_split_equal": 0.255,
+     "u_bound_equal": 0.18875,
+     "acc_bound_equal": 0.805,
+     "acc_split_equal_argmax": 0.255,
+     "u_bound_equal_argmax": 0.18875,
+     "acc_bound_equal_argmax": 0.805,
+     "B_differ": {
+      "mean": 0.5943183706726995,
+      "lo": 0.5392966773755979,
+      "hi": 0.6502838564210979,
+      "n": 800,
+      "frac_pairs_positive": 0.78375
+     },
+     "pointer_auc_differ": 0.7177328125,
+     "mean_lp_unknown_bound_differ": -1.5185484793921933,
+     "mean_lp_unknown_split_differ": -0.9242301087194937,
+     "acc_split_differ": 0.51375,
+     "u_bound_differ": 0.20625,
+     "acc_bound_differ": 0.71375,
+     "acc_split_differ_argmax": 0.51375,
+     "u_bound_differ_argmax": 0.20625,
+     "acc_bound_differ_argmax": 0.71375,
+     "u_bound": 0.1975,
+     "acc_bound": 0.759375,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 389,
+      "commit_rate": 0.48625,
+      "frac_name": 0.46786632390745503,
+      "frac_prop": 0.532133676092545,
+      "frac_first": 0.4601542416452442,
+      "frac_last": 0.5398457583547558
+     },
+     "u_bound_argmax": 0.1975,
+     "acc_bound_argmax": 0.759375,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 389,
+      "commit_rate": 0.48625,
+      "frac_name": 0.46786632390745503,
+      "frac_prop": 0.532133676092545,
+      "frac_first": 0.4601542416452442,
+      "frac_last": 0.5398457583547558
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": 0.2549609054159373,
+      "lo": 0.18137594299639265,
+      "hi": 0.33228089787997306,
+      "n": 300,
+      "frac_pairs_positive": 0.6066666666666667
+     },
+     "pointer_auc_equal": 0.5951444444444445,
+     "mean_lp_unknown_bound_equal": -1.2989537819102406,
+     "mean_lp_unknown_split_equal": -1.0439928764943034,
+     "acc_split_equal": 0.25666666666666665,
+     "u_bound_equal": 0.20666666666666667,
+     "acc_bound_equal": 0.78,
+     "acc_split_equal_argmax": 0.25666666666666665,
+     "u_bound_equal_argmax": 0.20666666666666667,
+     "acc_bound_equal_argmax": 0.78,
+     "B_differ": {
+      "mean": 0.5708360183114807,
+      "lo": 0.4784694422988687,
+      "hi": 0.6626037569708811,
+      "n": 300,
+      "frac_pairs_positive": 0.8
+     },
+     "pointer_auc_differ": 0.7034333333333334,
+     "mean_lp_unknown_bound_differ": -1.4551889825488131,
+     "mean_lp_unknown_split_differ": -0.8843529642373323,
+     "acc_split_differ": 0.48333333333333334,
+     "u_bound_differ": 0.25333333333333335,
+     "acc_bound_differ": 0.6766666666666666,
+     "acc_split_differ_argmax": 0.48333333333333334,
+     "u_bound_differ_argmax": 0.25333333333333335,
+     "acc_bound_differ_argmax": 0.6766666666666666,
+     "u_bound": 0.23,
+     "acc_bound": 0.7283333333333333,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 155,
+      "commit_rate": 0.5166666666666667,
+      "frac_name": 0.45161290322580644,
+      "frac_prop": 0.5483870967741935,
+      "frac_first": 0.49032258064516127,
+      "frac_last": 0.5096774193548387
+     },
+     "u_bound_argmax": 0.23,
+     "acc_bound_argmax": 0.7283333333333333,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 155,
+      "commit_rate": 0.5166666666666667,
+      "frac_name": 0.45161290322580644,
+      "frac_prop": 0.5483870967741935,
+      "frac_first": 0.49032258064516127,
+      "frac_last": 0.5096774193548387
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.6359241144056432,
+      "lo": 0.5430171013700019,
+      "hi": 0.7323091689943685,
+      "n": 400
+     },
+     "pointer_auc": 0.73470625,
+     "unknown_recall": 0.44,
+     "unknown_recall_argmax": 0.44
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.625065082940273,
+      "lo": 0.5447323300799762,
+      "hi": 0.7099451405914441,
+      "n": 400
+     },
+     "pointer_auc": 0.727775,
+     "unknown_recall": 0.5175,
+     "unknown_recall_argmax": 0.5175
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 6,
+     "commit_rate": 0.35294117647058826,
+     "frac_name": 0.6666666666666666,
+     "frac_prop": 0.3333333333333333,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 20,
+     "commit_rate": 0.625,
+     "frac_name": 0.9,
+     "frac_prop": 0.8,
+     "frac_first": 0.85,
+     "frac_last": 0.85
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 6,
+     "commit_rate": 0.35294117647058826,
+     "frac_name": 0.6666666666666666,
+     "frac_prop": 0.3333333333333333,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 20,
+     "commit_rate": 0.625,
+     "frac_name": 0.9,
+     "frac_prop": 0.8,
+     "frac_first": 0.85,
+     "frac_last": 0.85
+    },
+    "greedy_unknown_acc": 0.375
+   }
+  },
+  "s200-s2": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.9998420563798684,
+    "min_word": 0.7721313834190369,
+    "mean_span": 4.0934468729088226e-06,
+    "mean_gen": 0.00015385239108632807,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 0.9980769230769231,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.022604688918218017,
+      "lo": 0.004172550804447383,
+      "hi": 0.041022606438258655,
+      "n": 800,
+      "frac_pairs_positive": 0.5275
+     },
+     "pointer_auc_equal": 0.5102359375,
+     "mean_lp_unknown_bound_equal": -1.439541188860312,
+     "mean_lp_unknown_split_equal": -1.4169364999420941,
+     "acc_split_equal": 0.07375,
+     "u_bound_equal": 0.07375,
+     "acc_bound_equal": 0.92375,
+     "acc_split_equal_argmax": 0.07375,
+     "u_bound_equal_argmax": 0.07375,
+     "acc_bound_equal_argmax": 0.92375,
+     "B_differ": {
+      "mean": 0.10925194649025798,
+      "lo": 0.04862059449695517,
+      "hi": 0.17215759187308133,
+      "n": 800,
+      "frac_pairs_positive": 0.5425
+     },
+     "pointer_auc_differ": 0.5522375,
+     "mean_lp_unknown_bound_differ": -1.340528546483256,
+     "mean_lp_unknown_split_differ": -1.231276599992998,
+     "acc_split_differ": 0.2275,
+     "u_bound_differ": 0.14875,
+     "acc_bound_differ": 0.7925,
+     "acc_split_differ_argmax": 0.2275,
+     "u_bound_differ_argmax": 0.14875,
+     "acc_bound_differ_argmax": 0.7925,
+     "u_bound": 0.11124999999999999,
+     "acc_bound": 0.858125,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 618,
+      "commit_rate": 0.7725,
+      "frac_name": 0.13106796116504854,
+      "frac_prop": 0.8689320388349514,
+      "frac_first": 0.49514563106796117,
+      "frac_last": 0.5048543689320388
+     },
+     "u_bound_argmax": 0.11124999999999999,
+     "acc_bound_argmax": 0.858125,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 618,
+      "commit_rate": 0.7725,
+      "frac_name": 0.13106796116504854,
+      "frac_prop": 0.8689320388349514,
+      "frac_first": 0.49514563106796117,
+      "frac_last": 0.5048543689320388
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": 0.0050632152458031975,
+      "lo": -0.020419730133066576,
+      "hi": 0.0302592494698862,
+      "n": 300,
+      "frac_pairs_positive": 0.5233333333333333
+     },
+     "pointer_auc_equal": 0.5037666666666667,
+     "mean_lp_unknown_bound_equal": -1.4400516524910927,
+     "mean_lp_unknown_split_equal": -1.4349884372452895,
+     "acc_split_equal": 0.08,
+     "u_bound_equal": 0.08,
+     "acc_bound_equal": 0.9133333333333333,
+     "acc_split_equal_argmax": 0.08,
+     "u_bound_equal_argmax": 0.08,
+     "acc_bound_equal_argmax": 0.9133333333333333,
+     "B_differ": {
+      "mean": 0.05749320020278295,
+      "lo": -0.0329380194414407,
+      "hi": 0.15333798669651147,
+      "n": 300,
+      "frac_pairs_positive": 0.5033333333333333
+     },
+     "pointer_auc_differ": 0.5265444444444445,
+     "mean_lp_unknown_bound_differ": -1.3243779090543588,
+     "mean_lp_unknown_split_differ": -1.2668847088515758,
+     "acc_split_differ": 0.2,
+     "u_bound_differ": 0.14,
+     "acc_bound_differ": 0.7866666666666666,
+     "acc_split_differ_argmax": 0.2,
+     "u_bound_differ_argmax": 0.14,
+     "acc_bound_differ_argmax": 0.7866666666666666,
+     "u_bound": 0.11000000000000001,
+     "acc_bound": 0.85,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 240,
+      "commit_rate": 0.8,
+      "frac_name": 0.11666666666666667,
+      "frac_prop": 0.8833333333333333,
+      "frac_first": 0.4875,
+      "frac_last": 0.5125
+     },
+     "u_bound_argmax": 0.11000000000000001,
+     "acc_bound_argmax": 0.85,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 240,
+      "commit_rate": 0.8,
+      "frac_name": 0.11666666666666667,
+      "frac_prop": 0.8833333333333333,
+      "frac_first": 0.4875,
+      "frac_last": 0.5125
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.021562813520431517,
+      "lo": -0.005113051252905279,
+      "hi": 0.04798290519695727,
+      "n": 400
+     },
+     "pointer_auc": 0.5122875,
+     "unknown_recall": 0.1125,
+     "unknown_recall_argmax": 0.1125
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.6555829521009582,
+      "lo": 0.5850156112387558,
+      "hi": 0.7240398461807054,
+      "n": 400
+     },
+     "pointer_auc": 0.78245,
+     "unknown_recall": 0.52,
+     "unknown_recall_argmax": 0.52
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 15,
+     "commit_rate": 0.8823529411764706,
+     "frac_name": 0.2,
+     "frac_prop": 0.8,
+     "frac_first": 0.4666666666666667,
+     "frac_last": 0.5333333333333333
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 28,
+     "commit_rate": 0.875,
+     "frac_name": 0.5714285714285714,
+     "frac_prop": 0.8928571428571429,
+     "frac_first": 0.7142857142857143,
+     "frac_last": 0.75
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 15,
+     "commit_rate": 0.8823529411764706,
+     "frac_name": 0.2,
+     "frac_prop": 0.8,
+     "frac_first": 0.4666666666666667,
+     "frac_last": 0.5333333333333333
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 28,
+     "commit_rate": 0.875,
+     "frac_name": 0.5714285714285714,
+     "frac_prop": 0.8928571428571429,
+     "frac_first": 0.7142857142857143,
+     "frac_last": 0.75
+    },
+    "greedy_unknown_acc": 0.125
+   }
+  },
+  "s201-s1": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.9999487585746325,
+    "min_word": 0.9684642553329468,
+    "mean_span": 3.0536249007212096e-06,
+    "mean_gen": 4.818788179214653e-05,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 0.9996153846153846,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": -0.006401506662368775,
+      "lo": -0.024992842465639112,
+      "hi": 0.010667697413824487,
+      "n": 800,
+      "frac_pairs_positive": 0.49
+     },
+     "pointer_auc_equal": 0.5007234375,
+     "mean_lp_unknown_bound_equal": -1.269334609284997,
+     "mean_lp_unknown_split_equal": -1.2757361159473657,
+     "acc_split_equal": 0.11375,
+     "u_bound_equal": 0.12125,
+     "acc_bound_equal": 0.87875,
+     "acc_split_equal_argmax": 0.11375,
+     "u_bound_equal_argmax": 0.12125,
+     "acc_bound_equal_argmax": 0.87875,
+     "B_differ": {
+      "mean": -0.0020386980194598437,
+      "lo": -0.043248205411480736,
+      "hi": 0.04079837199626487,
+      "n": 800,
+      "frac_pairs_positive": 0.495
+     },
+     "pointer_auc_differ": 0.5000953125,
+     "mean_lp_unknown_bound_differ": -1.0244045193959028,
+     "mean_lp_unknown_split_differ": -1.0264432174153626,
+     "acc_split_differ": 0.3175,
+     "u_bound_differ": 0.32,
+     "acc_bound_differ": 0.58125,
+     "acc_split_differ_argmax": 0.3175,
+     "u_bound_differ_argmax": 0.32,
+     "acc_bound_differ_argmax": 0.58125,
+     "u_bound": 0.22062500000000002,
+     "acc_bound": 0.73,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 546,
+      "commit_rate": 0.6825,
+      "frac_name": 0.152014652014652,
+      "frac_prop": 0.847985347985348,
+      "frac_first": 0.5036630036630036,
+      "frac_last": 0.49633699633699635
+     },
+     "u_bound_argmax": 0.22062500000000002,
+     "acc_bound_argmax": 0.73,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 546,
+      "commit_rate": 0.6825,
+      "frac_name": 0.152014652014652,
+      "frac_prop": 0.847985347985348,
+      "frac_first": 0.5036630036630036,
+      "frac_last": 0.49633699633699635
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": 0.004591499467690786,
+      "lo": -0.02255876118938128,
+      "hi": 0.03303240471084911,
+      "n": 300,
+      "frac_pairs_positive": 0.5233333333333333
+     },
+     "pointer_auc_equal": 0.5045666666666667,
+     "mean_lp_unknown_bound_equal": -1.2634464600682258,
+     "mean_lp_unknown_split_equal": -1.258854960600535,
+     "acc_split_equal": 0.13333333333333333,
+     "u_bound_equal": 0.12666666666666668,
+     "acc_bound_equal": 0.8733333333333333,
+     "acc_split_equal_argmax": 0.13333333333333333,
+     "u_bound_equal_argmax": 0.12666666666666668,
+     "acc_bound_equal_argmax": 0.8733333333333333,
+     "B_differ": {
+      "mean": -0.0026816970109939577,
+      "lo": -0.07613187290479739,
+      "hi": 0.06865699260123066,
+      "n": 300,
+      "frac_pairs_positive": 0.5233333333333333
+     },
+     "pointer_auc_differ": 0.4992888888888889,
+     "mean_lp_unknown_bound_differ": -1.0343998996168375,
+     "mean_lp_unknown_split_differ": -1.0370815966278315,
+     "acc_split_differ": 0.35333333333333333,
+     "u_bound_differ": 0.32666666666666666,
+     "acc_bound_differ": 0.58,
+     "acc_split_differ_argmax": 0.35333333333333333,
+     "u_bound_differ_argmax": 0.32666666666666666,
+     "acc_bound_differ_argmax": 0.58,
+     "u_bound": 0.22666666666666668,
+     "acc_bound": 0.7266666666666666,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 194,
+      "commit_rate": 0.6466666666666666,
+      "frac_name": 0.18041237113402062,
+      "frac_prop": 0.8195876288659794,
+      "frac_first": 0.4742268041237113,
+      "frac_last": 0.5257731958762887
+     },
+     "u_bound_argmax": 0.22666666666666668,
+     "acc_bound_argmax": 0.7266666666666666,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 194,
+      "commit_rate": 0.6466666666666666,
+      "frac_name": 0.18041237113402062,
+      "frac_prop": 0.8195876288659794,
+      "frac_first": 0.4742268041237113,
+      "frac_last": 0.5257731958762887
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": -0.003456610282883048,
+      "lo": -0.023783422637498004,
+      "hi": 0.016114021228160705,
+      "n": 400
+     },
+     "pointer_auc": 0.5014,
+     "unknown_recall": 0.1975,
+     "unknown_recall_argmax": 0.1975
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.42275468722567894,
+      "lo": 0.370743648361502,
+      "hi": 0.4785538051302719,
+      "n": 400
+     },
+     "pointer_auc": 0.73891875,
+     "unknown_recall": 0.5775,
+     "unknown_recall_argmax": 0.5775
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 10,
+     "commit_rate": 0.5882352941176471,
+     "frac_name": 0.0,
+     "frac_prop": 1.0,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 25,
+     "commit_rate": 0.78125,
+     "frac_name": 0.6,
+     "frac_prop": 1.0,
+     "frac_first": 0.8,
+     "frac_last": 0.8
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 10,
+     "commit_rate": 0.5882352941176471,
+     "frac_name": 0.0,
+     "frac_prop": 1.0,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 25,
+     "commit_rate": 0.78125,
+     "frac_name": 0.6,
+     "frac_prop": 1.0,
+     "frac_first": 0.8,
+     "frac_last": 0.8
+    },
+    "greedy_unknown_acc": 0.21875
+   }
+  },
+  "s201-s2": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.999969861381329,
+    "min_word": 0.9934198260307312,
+    "mean_span": 2.426616457169103e-06,
+    "mean_gen": 2.771153034586142e-05,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 1.0,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.002003982421010733,
+      "lo": -0.016108507215045392,
+      "hi": 0.01921443404676391,
+      "n": 800,
+      "frac_pairs_positive": 0.505
+     },
+     "pointer_auc_equal": 0.5024796875,
+     "mean_lp_unknown_bound_equal": -1.3866592627204954,
+     "mean_lp_unknown_split_equal": -1.3846552802994847,
+     "acc_split_equal": 0.065,
+     "u_bound_equal": 0.07875,
+     "acc_bound_equal": 0.92125,
+     "acc_split_equal_argmax": 0.065,
+     "u_bound_equal_argmax": 0.07875,
+     "acc_bound_equal_argmax": 0.92125,
+     "B_differ": {
+      "mean": 0.013866282873786986,
+      "lo": -0.02725416863686405,
+      "hi": 0.05540615976578553,
+      "n": 800,
+      "frac_pairs_positive": 0.50625
+     },
+     "pointer_auc_differ": 0.51119375,
+     "mean_lp_unknown_bound_differ": -1.225963267222978,
+     "mean_lp_unknown_split_differ": -1.212096984349191,
+     "acc_split_differ": 0.17625,
+     "u_bound_differ": 0.16625,
+     "acc_bound_differ": 0.735,
+     "acc_split_differ_argmax": 0.17625,
+     "u_bound_differ_argmax": 0.16625,
+     "acc_bound_differ_argmax": 0.735,
+     "u_bound": 0.1225,
+     "acc_bound": 0.828125,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 659,
+      "commit_rate": 0.82375,
+      "frac_name": 0.09863429438543247,
+      "frac_prop": 0.9013657056145675,
+      "frac_first": 0.5022761760242792,
+      "frac_last": 0.4977238239757208
+     },
+     "u_bound_argmax": 0.1225,
+     "acc_bound_argmax": 0.828125,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 659,
+      "commit_rate": 0.82375,
+      "frac_name": 0.09863429438543247,
+      "frac_prop": 0.9013657056145675,
+      "frac_first": 0.5022761760242792,
+      "frac_last": 0.4977238239757208
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": 0.02074078217148781,
+      "lo": -0.015708462012310825,
+      "hi": 0.057945539802312845,
+      "n": 300,
+      "frac_pairs_positive": 0.5366666666666666
+     },
+     "pointer_auc_equal": 0.5077,
+     "mean_lp_unknown_bound_equal": -1.4224799577395122,
+     "mean_lp_unknown_split_equal": -1.4017391755680244,
+     "acc_split_equal": 0.07666666666666666,
+     "u_bound_equal": 0.05333333333333334,
+     "acc_bound_equal": 0.9466666666666667,
+     "acc_split_equal_argmax": 0.07666666666666666,
+     "u_bound_equal_argmax": 0.05333333333333334,
+     "acc_bound_equal_argmax": 0.9466666666666667,
+     "B_differ": {
+      "mean": 0.014306433610618114,
+      "lo": -0.0666983098598818,
+      "hi": 0.09365825575372824,
+      "n": 300,
+      "frac_pairs_positive": 0.5066666666666667
+     },
+     "pointer_auc_differ": 0.5091555555555556,
+     "mean_lp_unknown_bound_differ": -1.2296023015181223,
+     "mean_lp_unknown_split_differ": -1.2152958679075043,
+     "acc_split_differ": 0.18666666666666668,
+     "u_bound_differ": 0.17666666666666667,
+     "acc_bound_differ": 0.73,
+     "acc_split_differ_argmax": 0.18666666666666668,
+     "u_bound_differ_argmax": 0.17666666666666667,
+     "acc_bound_differ_argmax": 0.73,
+     "u_bound": 0.115,
+     "acc_bound": 0.8383333333333334,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 244,
+      "commit_rate": 0.8133333333333334,
+      "frac_name": 0.12295081967213115,
+      "frac_prop": 0.8770491803278688,
+      "frac_first": 0.4426229508196721,
+      "frac_last": 0.5573770491803278
+     },
+     "u_bound_argmax": 0.115,
+     "acc_bound_argmax": 0.8383333333333334,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 244,
+      "commit_rate": 0.8133333333333334,
+      "frac_name": 0.12295081967213115,
+      "frac_prop": 0.8770491803278688,
+      "frac_first": 0.4426229508196721,
+      "frac_last": 0.5573770491803278
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.02154199218377471,
+      "lo": -0.0031385557097382845,
+      "hi": 0.046545826992019985,
+      "n": 400
+     },
+     "pointer_auc": 0.51025625,
+     "unknown_recall": 0.14,
+     "unknown_recall_argmax": 0.14
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.530022288026521,
+      "lo": 0.46687939964418185,
+      "hi": 0.590269280869339,
+      "n": 400
+     },
+     "pointer_auc": 0.7598,
+     "unknown_recall": 0.5125,
+     "unknown_recall_argmax": 0.5125
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 14,
+     "commit_rate": 0.8235294117647058,
+     "frac_name": 0.0,
+     "frac_prop": 1.0,
+     "frac_first": 0.5714285714285714,
+     "frac_last": 0.42857142857142855
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 29,
+     "commit_rate": 0.90625,
+     "frac_name": 0.5172413793103449,
+     "frac_prop": 1.0,
+     "frac_first": 0.7931034482758621,
+     "frac_last": 0.7241379310344828
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 14,
+     "commit_rate": 0.8235294117647058,
+     "frac_name": 0.0,
+     "frac_prop": 1.0,
+     "frac_first": 0.5714285714285714,
+     "frac_last": 0.42857142857142855
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 29,
+     "commit_rate": 0.90625,
+     "frac_name": 0.5172413793103449,
+     "frac_prop": 1.0,
+     "frac_first": 0.7931034482758621,
+     "frac_last": 0.7241379310344828
+    },
+    "greedy_unknown_acc": 0.09375
+   }
+  },
+  "s204-s1": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.9998490557189171,
+    "min_word": 0.847152054309845,
+    "mean_span": 1.364813189164128e-05,
+    "mean_gen": 0.0001373007927521104,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 0.9971153846153846,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.004758194526657462,
+      "lo": -0.006409164355136454,
+      "hi": 0.01740360188949853,
+      "n": 800,
+      "frac_pairs_positive": 0.51875
+     },
+     "pointer_auc_equal": 0.5032125,
+     "mean_lp_unknown_bound_equal": -1.0993988711107523,
+     "mean_lp_unknown_split_equal": -1.0946406765840948,
+     "acc_split_equal": 0.16,
+     "u_bound_equal": 0.16,
+     "acc_bound_equal": 0.84,
+     "acc_split_equal_argmax": 0.16,
+     "u_bound_equal_argmax": 0.16,
+     "acc_bound_equal_argmax": 0.84,
+     "B_differ": {
+      "mean": 0.031729937298223376,
+      "lo": -0.000927244076738134,
+      "hi": 0.06361401341157033,
+      "n": 800,
+      "frac_pairs_positive": 0.53125
+     },
+     "pointer_auc_differ": 0.51948125,
+     "mean_lp_unknown_bound_differ": -1.0176224876847118,
+     "mean_lp_unknown_split_differ": -0.9858925503864885,
+     "acc_split_differ": 0.28375,
+     "u_bound_differ": 0.2575,
+     "acc_bound_differ": 0.64625,
+     "acc_split_differ_argmax": 0.28375,
+     "u_bound_differ_argmax": 0.2575,
+     "acc_bound_differ_argmax": 0.64625,
+     "u_bound": 0.20875,
+     "acc_bound": 0.743125,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 573,
+      "commit_rate": 0.71625,
+      "frac_name": 0.1431064572425829,
+      "frac_prop": 0.8568935427574171,
+      "frac_first": 0.5095986038394416,
+      "frac_last": 0.49040139616055844
+     },
+     "u_bound_argmax": 0.20875,
+     "acc_bound_argmax": 0.743125,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 573,
+      "commit_rate": 0.71625,
+      "frac_name": 0.1431064572425829,
+      "frac_prop": 0.8568935427574171,
+      "frac_first": 0.5095986038394416,
+      "frac_last": 0.49040139616055844
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": -0.007943340291579564,
+      "lo": -0.02598953224718571,
+      "hi": 0.010686053105940414,
+      "n": 300,
+      "frac_pairs_positive": 0.48
+     },
+     "pointer_auc_equal": 0.49291111111111113,
+     "mean_lp_unknown_bound_equal": -1.0741496257980665,
+     "mean_lp_unknown_split_equal": -1.0820929660896461,
+     "acc_split_equal": 0.16333333333333333,
+     "u_bound_equal": 0.17666666666666667,
+     "acc_bound_equal": 0.8233333333333334,
+     "acc_split_equal_argmax": 0.16333333333333333,
+     "u_bound_equal_argmax": 0.17666666666666667,
+     "acc_bound_equal_argmax": 0.8233333333333334,
+     "B_differ": {
+      "mean": -0.023341996222734453,
+      "lo": -0.07389744278788567,
+      "hi": 0.028916847224036847,
+      "n": 300,
+      "frac_pairs_positive": 0.4666666666666667
+     },
+     "pointer_auc_differ": 0.48533333333333334,
+     "mean_lp_unknown_bound_differ": -0.9770594557126363,
+     "mean_lp_unknown_split_differ": -1.0004014519353708,
+     "acc_split_differ": 0.28,
+     "u_bound_differ": 0.25666666666666665,
+     "acc_bound_differ": 0.63,
+     "acc_split_differ_argmax": 0.28,
+     "u_bound_differ_argmax": 0.25666666666666665,
+     "acc_bound_differ_argmax": 0.63,
+     "u_bound": 0.21666666666666667,
+     "acc_bound": 0.7266666666666667,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 216,
+      "commit_rate": 0.72,
+      "frac_name": 0.1712962962962963,
+      "frac_prop": 0.8287037037037037,
+      "frac_first": 0.47685185185185186,
+      "frac_last": 0.5231481481481481
+     },
+     "u_bound_argmax": 0.21666666666666667,
+     "acc_bound_argmax": 0.7266666666666667,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 216,
+      "commit_rate": 0.72,
+      "frac_name": 0.1712962962962963,
+      "frac_prop": 0.8287037037037037,
+      "frac_first": 0.47685185185185186,
+      "frac_last": 0.5231481481481481
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.007732983743771911,
+      "lo": -0.0079713262419682,
+      "hi": 0.024345106862252573,
+      "n": 400
+     },
+     "pointer_auc": 0.5079125,
+     "unknown_recall": 0.2225,
+     "unknown_recall_argmax": 0.2225
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.32742474012076855,
+      "lo": 0.27770583820561295,
+      "hi": 0.3777814351112756,
+      "n": 400
+     },
+     "pointer_auc": 0.705625,
+     "unknown_recall": 0.465,
+     "unknown_recall_argmax": 0.465
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 14,
+     "commit_rate": 0.8235294117647058,
+     "frac_name": 0.14285714285714285,
+     "frac_prop": 0.8571428571428571,
+     "frac_first": 0.5714285714285714,
+     "frac_last": 0.42857142857142855
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 26,
+     "commit_rate": 0.8125,
+     "frac_name": 0.5384615384615384,
+     "frac_prop": 0.9230769230769231,
+     "frac_first": 0.7692307692307693,
+     "frac_last": 0.6923076923076923
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 14,
+     "commit_rate": 0.8235294117647058,
+     "frac_name": 0.14285714285714285,
+     "frac_prop": 0.8571428571428571,
+     "frac_first": 0.5714285714285714,
+     "frac_last": 0.42857142857142855
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 26,
+     "commit_rate": 0.8125,
+     "frac_name": 0.5384615384615384,
+     "frac_prop": 0.9230769230769231,
+     "frac_first": 0.7692307692307693,
+     "frac_last": 0.6923076923076923
+    },
+    "greedy_unknown_acc": 0.1875
+   }
+  },
+  "s204-s2": {
+   "p_mode": {
+    "n": 5200,
+    "mean_word": 0.9999964754283428,
+    "min_word": 0.9980555772781372,
+    "mean_span": 3.405388341668198e-07,
+    "mean_gen": 3.1936687907729575e-06,
+    "greedy_mode_word": 1.0,
+    "rows_p_word_ge_099": 1.0,
+    "greedy_in_options": 1.0
+   },
+   "vocab": {
+    "dev": {
+     "B_equal": {
+      "mean": 0.009983863157685846,
+      "lo": -0.005025819837581366,
+      "hi": 0.024600825825240452,
+      "n": 800,
+      "frac_pairs_positive": 0.5025
+     },
+     "pointer_auc_equal": 0.506346875,
+     "mean_lp_unknown_bound_equal": -1.4298717565322294,
+     "mean_lp_unknown_split_equal": -1.4198878933745436,
+     "acc_split_equal": 0.0725,
+     "u_bound_equal": 0.075,
+     "acc_bound_equal": 0.92375,
+     "acc_split_equal_argmax": 0.0725,
+     "u_bound_equal_argmax": 0.075,
+     "acc_bound_equal_argmax": 0.92375,
+     "B_differ": {
+      "mean": 0.11172958267852665,
+      "lo": 0.07605478384066373,
+      "hi": 0.14902418687450683,
+      "n": 800,
+      "frac_pairs_positive": 0.565
+     },
+     "pointer_auc_differ": 0.57159296875,
+     "mean_lp_unknown_bound_differ": -1.3252533277496696,
+     "mean_lp_unknown_split_differ": -1.213523745071143,
+     "acc_split_differ": 0.1325,
+     "u_bound_differ": 0.0825,
+     "acc_bound_differ": 0.845,
+     "acc_split_differ_argmax": 0.1325,
+     "u_bound_differ_argmax": 0.0825,
+     "acc_bound_differ_argmax": 0.845,
+     "u_bound": 0.07875,
+     "acc_bound": 0.8843749999999999,
+     "which_fact_differ_split": {
+      "n": 800,
+      "n_commit": 694,
+      "commit_rate": 0.8675,
+      "frac_name": 0.16714697406340057,
+      "frac_prop": 0.8328530259365994,
+      "frac_first": 0.49279538904899134,
+      "frac_last": 0.5072046109510087
+     },
+     "u_bound_argmax": 0.07875,
+     "acc_bound_argmax": 0.8843749999999999,
+     "which_fact_differ_split_argmax": {
+      "n": 800,
+      "n_commit": 694,
+      "commit_rate": 0.8675,
+      "frac_name": 0.16714697406340057,
+      "frac_prop": 0.8328530259365994,
+      "frac_first": 0.49279538904899134,
+      "frac_last": 0.5072046109510087
+     }
+    },
+    "newwords": {
+     "B_equal": {
+      "mean": -0.0019169415719807149,
+      "lo": -0.020732710792372624,
+      "hi": 0.016840353194934623,
+      "n": 300,
+      "frac_pairs_positive": 0.48333333333333334
+     },
+     "pointer_auc_equal": 0.49835555555555555,
+     "mean_lp_unknown_bound_equal": -1.450082992333919,
+     "mean_lp_unknown_split_equal": -1.4519999339058995,
+     "acc_split_equal": 0.06,
+     "u_bound_equal": 0.056666666666666664,
+     "acc_bound_equal": 0.9366666666666666,
+     "acc_split_equal_argmax": 0.06,
+     "u_bound_equal_argmax": 0.056666666666666664,
+     "acc_bound_equal_argmax": 0.9366666666666666,
+     "B_differ": {
+      "mean": 0.05952708793183168,
+      "lo": 0.0038433178396274645,
+      "hi": 0.11356522394406295,
+      "n": 300,
+      "frac_pairs_positive": 0.54
+     },
+     "pointer_auc_differ": 0.5400111111111111,
+     "mean_lp_unknown_bound_differ": -1.2850294028719267,
+     "mean_lp_unknown_split_differ": -1.225502314940095,
+     "acc_split_differ": 0.12333333333333334,
+     "u_bound_differ": 0.08666666666666667,
+     "acc_bound_differ": 0.8533333333333334,
+     "acc_split_differ_argmax": 0.12333333333333334,
+     "u_bound_differ_argmax": 0.08666666666666667,
+     "acc_bound_differ_argmax": 0.8533333333333334,
+     "u_bound": 0.07166666666666667,
+     "acc_bound": 0.895,
+     "which_fact_differ_split": {
+      "n": 300,
+      "n_commit": 263,
+      "commit_rate": 0.8766666666666667,
+      "frac_name": 0.16730038022813687,
+      "frac_prop": 0.8326996197718631,
+      "frac_first": 0.4714828897338403,
+      "frac_last": 0.5285171102661597
+     },
+     "u_bound_argmax": 0.07166666666666667,
+     "acc_bound_argmax": 0.895,
+     "which_fact_differ_split_argmax": {
+      "n": 300,
+      "n_commit": 263,
+      "commit_rate": 0.8766666666666667,
+      "frac_name": 0.16730038022813687,
+      "frac_prop": 0.8326996197718631,
+      "frac_first": 0.4714828897338403,
+      "frac_last": 0.5285171102661597
+     }
+    }
+   },
+   "word_missing": {
+    "ent": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.036837989073246716,
+      "lo": 0.015347596855834126,
+      "hi": 0.05914907365525141,
+      "n": 400
+     },
+     "pointer_auc": 0.52684375,
+     "unknown_recall": 0.07,
+     "unknown_recall_argmax": 0.07
+    },
+    "pred": {
+     "n": 400,
+     "B_wm": {
+      "mean": 0.3547696114331484,
+      "lo": 0.29517516057239845,
+      "hi": 0.41642758226039583,
+      "n": 400
+     },
+     "pointer_auc": 0.67975625,
+     "unknown_recall": 0.305,
+     "unknown_recall_argmax": 0.305
+    }
+   },
+   "hard32": {
+    "differ": {
+     "n": 17,
+     "n_commit": 16,
+     "commit_rate": 0.9411764705882353,
+     "frac_name": 0.0625,
+     "frac_prop": 0.9375,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all": {
+     "n": 32,
+     "n_commit": 29,
+     "commit_rate": 0.90625,
+     "frac_name": 0.4827586206896552,
+     "frac_prop": 0.9655172413793104,
+     "frac_first": 0.7241379310344828,
+     "frac_last": 0.7241379310344828
+    },
+    "differ_argmax": {
+     "n": 17,
+     "n_commit": 16,
+     "commit_rate": 0.9411764705882353,
+     "frac_name": 0.0625,
+     "frac_prop": 0.9375,
+     "frac_first": 0.5,
+     "frac_last": 0.5
+    },
+    "all_argmax": {
+     "n": 32,
+     "n_commit": 29,
+     "commit_rate": 0.90625,
+     "frac_name": 0.4827586206896552,
+     "frac_prop": 0.9655172413793104,
+     "frac_first": 0.7241379310344828,
+     "frac_last": 0.7241379310344828
+    },
+    "greedy_unknown_acc": 0.09375
+   }
+  }
+ },
+ "lineage_delta": {
+  "s200-s1": {
+   "parent": "parent-s200",
+   "dev_B_equal": 0.08244678713381293,
+   "dev_B_differ": 0.5741415466394392,
+   "dev_acc_split_equal": 0.255,
+   "dev_acc_split_differ": 0.5125000000000001,
+   "dev_pointer_auc_equal": 0.07597187500000002,
+   "newwords_B_equal": 0.37042783230853576,
+   "newwords_B_differ": 1.0208601669346293,
+   "newwords_acc_split_equal": 0.25666666666666665,
+   "newwords_acc_split_differ": 0.48333333333333334,
+   "newwords_pointer_auc_equal": 0.0956777777777778
+  },
+  "s200-s2": {
+   "parent": "parent-s200",
+   "dev_B_equal": -0.15014617689885199,
+   "dev_B_differ": 0.08907512245699763,
+   "dev_acc_split_equal": 0.07375,
+   "dev_acc_split_differ": 0.22625,
+   "dev_pointer_auc_equal": -0.0008624999999999883,
+   "newwords_B_equal": 0.12053014213840166,
+   "newwords_B_differ": 0.5075173488259316,
+   "newwords_acc_split_equal": 0.08,
+   "newwords_acc_split_differ": 0.2,
+   "newwords_pointer_auc_equal": 0.004300000000000026
+  },
+  "s201-s1": {
+   "parent": "parent-s201",
+   "dev_B_equal": 0.13319585263729095,
+   "dev_B_differ": 0.12115294235758484,
+   "dev_acc_split_equal": 0.11375,
+   "dev_acc_split_differ": 0.3175,
+   "dev_pointer_auc_equal": 0.0059875000000000345,
+   "newwords_B_equal": 0.2241499967376391,
+   "newwords_B_differ": -0.15735431333382927,
+   "newwords_acc_split_equal": 0.13333333333333333,
+   "newwords_acc_split_differ": 0.35333333333333333,
+   "newwords_pointer_auc_equal": 0.023611111111111138
+  },
+  "s201-s2": {
+   "parent": "parent-s201",
+   "dev_B_equal": 0.14160134172067046,
+   "dev_B_differ": 0.13705792325083166,
+   "dev_acc_split_equal": 0.065,
+   "dev_acc_split_differ": 0.17625,
+   "dev_pointer_auc_equal": 0.007743750000000049,
+   "newwords_B_equal": 0.24029927944143614,
+   "newwords_B_differ": -0.14036618271221718,
+   "newwords_acc_split_equal": 0.07666666666666666,
+   "newwords_acc_split_differ": 0.18666666666666668,
+   "newwords_pointer_auc_equal": 0.02674444444444446
+  },
+  "s204-s1": {
+   "parent": "parent-s204",
+   "dev_B_equal": -0.054479452267114536,
+   "dev_B_differ": 0.23498582697473466,
+   "dev_acc_split_equal": 0.15875,
+   "dev_acc_split_differ": 0.28,
+   "dev_pointer_auc_equal": -0.0060875000000000234,
+   "newwords_B_equal": 0.17931900175909202,
+   "newwords_B_differ": -0.3757601783176263,
+   "newwords_acc_split_equal": 0.16333333333333333,
+   "newwords_acc_split_differ": 0.27666666666666667,
+   "newwords_pointer_auc_equal": -0.0077111111111110575
+  },
+  "s204-s2": {
+   "parent": "parent-s204",
+   "dev_B_equal": -0.04925378363608615,
+   "dev_B_differ": 0.31498547235503793,
+   "dev_acc_split_equal": 0.07125,
+   "dev_acc_split_differ": 0.12875,
+   "dev_pointer_auc_equal": -0.002953125000000001,
+   "newwords_B_equal": 0.18534540047869086,
+   "newwords_B_differ": -0.29289109416306014,
+   "newwords_acc_split_equal": 0.06,
+   "newwords_acc_split_differ": 0.12000000000000001,
+   "newwords_pointer_auc_equal": -0.002266666666666639
+  },
+  "s200-mean": {
+   "dev_B_equal": -0.03384969488251953,
+   "dev_B_differ": 0.3316083345482184,
+   "dev_acc_split_equal": 0.164375,
+   "dev_acc_split_differ": 0.369375,
+   "dev_pointer_auc_equal": 0.03755468750000002,
+   "newwords_B_equal": 0.24547898722346873,
+   "newwords_B_differ": 0.7641887578802804,
+   "newwords_acc_split_equal": 0.16833333333333333,
+   "newwords_acc_split_differ": 0.3416666666666667,
+   "newwords_pointer_auc_equal": 0.049988888888888916
+  },
+  "s201-mean": {
+   "dev_B_equal": 0.1373985971789807,
+   "dev_B_differ": 0.12910543280420825,
+   "dev_acc_split_equal": 0.08937500000000001,
+   "dev_acc_split_differ": 0.246875,
+   "dev_pointer_auc_equal": 0.006865625000000042,
+   "newwords_B_equal": 0.23222463808953764,
+   "newwords_B_differ": -0.14886024802302322,
+   "newwords_acc_split_equal": 0.105,
+   "newwords_acc_split_differ": 0.27,
+   "newwords_pointer_auc_equal": 0.0251777777777778
+  },
+  "s204-mean": {
+   "dev_B_equal": -0.051866617951600344,
+   "dev_B_differ": 0.2749856496648863,
+   "dev_acc_split_equal": 0.11499999999999999,
+   "dev_acc_split_differ": 0.20437500000000003,
+   "dev_pointer_auc_equal": -0.004520312500000012,
+   "newwords_B_equal": 0.18233220111889142,
+   "newwords_B_differ": -0.3343256362403432,
+   "newwords_acc_split_equal": 0.11166666666666666,
+   "newwords_acc_split_differ": 0.19833333333333333,
+   "newwords_pointer_auc_equal": -0.004988888888888848
+  }
+ },
+ "calls": {
+  "binding_absent": {
+   "rule": "B_eq < 0.25 nats in >= 5 of 6 replicas AND probe AUC < 0.65",
+   "behavioural_half_holds": true,
+   "n_B_eq_below": 5,
+   "replicas": [
+    "s200-s2",
+    "s201-s1",
+    "s201-s2",
+    "s204-s1",
+    "s204-s2"
+   ],
+   "probe_half": "pending"
+  },
+  "present_not_read_out": {
+   "rule": "probe AUC >= 0.75 in >= 4 of 6 replicas while pointer AUC < 0.65",
+   "behavioural_half_holds": true,
+   "n_pointer_auc_below": 6,
+   "replicas_pointer_auc_below": [
+    "s200-s1",
+    "s200-s2",
+    "s201-s1",
+    "s201-s2",
+    "s204-s1",
+    "s204-s2"
+   ],
+   "probe_half": "pending (needs probe AUC >= 0.75 in >= 4 of 6, on replicas that are in this list)"
+  },
+  "partly_expressed": {
+   "rule": "B_eq >= 0.5 nats in >= 4 of 6 replicas",
+   "holds": false,
+   "n_B_eq_at_least": 0,
+   "replicas": [],
+   "probe_half": "none (fully behavioural)"
+  },
+  "note": "the two hold-calls need the probe AUC; instrument-broken (behavioural parts): label disagreement 0 and train overlap 0 from BUILD.json; shuffled-label and word-missing probe AUC pending",
+  "B_eq_dev": {
+   "s200-s1": 0.2551976529508829,
+   "s200-s2": 0.022604688918218017,
+   "s201-s1": -0.006401506662368775,
+   "s201-s2": 0.002003982421010733,
+   "s204-s1": 0.004758194526657462,
+   "s204-s2": 0.009983863157685846
+  },
+  "pointer_auc_eq_dev": {
+   "s200-s1": 0.5870703125,
+   "s200-s2": 0.5102359375,
+   "s201-s1": 0.5007234375,
+   "s201-s2": 0.5024796875,
+   "s204-s1": 0.5032125,
+   "s204-s2": 0.506346875
+  }
+ }
+}
