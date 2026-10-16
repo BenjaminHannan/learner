@@ -1,0 +1,364 @@
+{
+ "ckpt": "/Users/ben-hannan/creative/ckpt/B2_s101.pt",
+ "warm": true,
+ "visits": 4,
+ "lr": 0.0003,
+ "n_samples": 32,
+ "spec": {
+  "dropped_kinds": [],
+  "held_out": [
+   "affine",
+   "square",
+   "sq_plus",
+   "last_digit",
+   "double_add"
+  ],
+  "kind_seal": "26d8fcb2267287df0fa78da488bd3bb1751177e1090f2ec2c533f527de593b23",
+  "not_shown_representable": {
+   "affine": [
+    [
+     3,
+     15
+    ],
+    [
+     5,
+     13
+    ],
+    [
+     6,
+     15
+    ]
+   ]
+  },
+  "practised": [
+   "add",
+   "mult"
+  ],
+  "ref_steps": {
+   "add(10,)": 1,
+   "add(11,)": 2,
+   "add(12,)": 2,
+   "add(13,)": 3,
+   "add(14,)": 3,
+   "add(15,)": 3,
+   "add(16,)": 3,
+   "add(17,)": 4,
+   "add(18,)": 3,
+   "add(19,)": 3,
+   "add(20,)": 2,
+   "add(21,)": 3,
+   "add(22,)": 3,
+   "add(23,)": 4,
+   "add(24,)": 3,
+   "add(25,)": 3,
+   "add(26,)": 4,
+   "add(27,)": 4,
+   "add(28,)": 4,
+   "add(29,)": 4,
+   "add(3,)": 2,
+   "add(30,)": 3,
+   "add(4,)": 2,
+   "add(5,)": 2,
+   "add(6,)": 3,
+   "add(7,)": 3,
+   "add(8,)": 2,
+   "add(9,)": 2,
+   "affine(3, 10)": 3,
+   "affine(3, 11)": 4,
+   "affine(3, 12)": 4,
+   "affine(3, 13)": 5,
+   "affine(3, 14)": 4,
+   "affine(3, 3)": 4,
+   "affine(3, 4)": 3,
+   "affine(3, 5)": 4,
+   "affine(3, 6)": 3,
+   "affine(3, 7)": 4,
+   "affine(3, 8)": 4,
+   "affine(3, 9)": 4,
+   "affine(4, 10)": 3,
+   "affine(4, 11)": 4,
+   "affine(4, 12)": 4,
+   "affine(4, 13)": 5,
+   "affine(4, 14)": 4,
+   "affine(4, 15)": 5,
+   "affine(4, 3)": 4,
+   "affine(4, 4)": 3,
+   "affine(4, 5)": 4,
+   "affine(4, 6)": 4,
+   "affine(4, 7)": 4,
+   "affine(4, 8)": 3,
+   "affine(4, 9)": 4,
+   "affine(5, 10)": 3,
+   "affine(5, 11)": 4,
+   "affine(5, 12)": 4,
+   "affine(5, 14)": 5,
+   "affine(5, 15)": 4,
+   "affine(5, 3)": 4,
+   "affine(5, 4)": 4,
+   "affine(5, 5)": 3,
+   "affine(5, 6)": 4,
+   "affine(5, 7)": 4,
+   "affine(5, 8)": 4,
+   "affine(5, 9)": 4,
+   "affine(6, 10)": 4,
+   "affine(6, 11)": 5,
+   "affine(6, 12)": 4,
+   "affine(6, 13)": 5,
+   "affine(6, 14)": 5,
+   "affine(6, 3)": 4,
+   "affine(6, 4)": 4,
+   "affine(6, 5)": 4,
+   "affine(6, 6)": 4,
+   "affine(6, 7)": 5,
+   "affine(6, 8)": 4,
+   "affine(6, 9)": 5,
+   "double_add(3,)": 3,
+   "double_add(4,)": 3,
+   "double_add(5,)": 2,
+   "double_add(6,)": 3,
+   "double_add(7,)": 3,
+   "double_add(8,)": 3,
+   "double_add(9,)": 3,
+   "last_digit()": 1,
+   "mult(3,)": 2,
+   "mult(4,)": 2,
+   "mult(5,)": 2,
+   "mult(6,)": 3,
+   "mult(7,)": 3,
+   "mult(8,)": 2,
+   "mult(9,)": 2,
+   "sq_plus(3,)": 3,
+   "sq_plus(4,)": 3,
+   "sq_plus(5,)": 4,
+   "sq_plus(6,)": 4,
+   "sq_plus(7,)": 4,
+   "sq_plus(8,)": 3,
+   "sq_plus(9,)": 3,
+   "square()": 1
+  },
+  "sizes": {
+   "dev": 256,
+   "labelled": 512,
+   "pool": 1024,
+   "test": 512,
+   "warm": 2048
+  },
+  "usable_counts": {
+   "add": 28,
+   "affine": 49,
+   "double_add": 7,
+   "last_digit": 1,
+   "mult": 7,
+   "sq_plus": 7,
+   "square": 1
+  }
+ },
+ "note": "no mask; luck and reach over samples with repeats in sampling order; temperature picked on DEV (tuning split); test/pool/labelled never opened",
+ "warmup": {
+  "updates": 256,
+  "records": 2048,
+  "replay": 200000,
+  "seconds": 368.1258211135864,
+  "last_loss": 1.6073046922683716
+ },
+ "floor": {
+  "mean_per_try": 0.0016083984375,
+  "n_dev": 256
+ },
+ "temps": {
+  "0.5": {
+   "cold_start_ok": false,
+   "sameness_ok": true,
+   "verdict": "stop: cold start (stepping stones first)",
+   "reach32": 0.01953125,
+   "floor_reach32": 0.04824614113521625,
+   "reach4": 0.0,
+   "floor_reach4": 0.006392924582920552,
+   "luck": 0.00146484375,
+   "distinct_rules": 5.69921875,
+   "distinct_accepted": 0.01953125,
+   "unresolved": 0.0,
+   "n_samples": 8192,
+   "by_kind": {
+    "affine": {
+     "n": 52,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "double_add": {
+     "n": 51,
+     "reach32": 0.0784313725490196,
+     "reach4": 0.0,
+     "luck": 0.006740196078431373
+    },
+    "last_digit": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "sq_plus": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "square": {
+     "n": 51,
+     "reach32": 0.0196078431372549,
+     "reach4": 0.0,
+     "luck": 0.0006127450980392157
+    }
+   },
+   "key_luck": 0.00146484375,
+   "seconds": 67.94833111763
+  },
+  "0.7": {
+   "cold_start_ok": false,
+   "sameness_ok": true,
+   "verdict": "stop: cold start (stepping stones first)",
+   "reach32": 0.03515625,
+   "floor_reach32": 0.04824614113521625,
+   "reach4": 0.0078125,
+   "floor_reach4": 0.006392924582920552,
+   "luck": 0.0015869140625,
+   "distinct_rules": 8.04296875,
+   "distinct_accepted": 0.03515625,
+   "unresolved": 0.0,
+   "n_samples": 8192,
+   "by_kind": {
+    "affine": {
+     "n": 52,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "double_add": {
+     "n": 51,
+     "reach32": 0.13725490196078433,
+     "reach4": 0.0392156862745098,
+     "luck": 0.006740196078431373
+    },
+    "last_digit": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "sq_plus": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "square": {
+     "n": 51,
+     "reach32": 0.0392156862745098,
+     "reach4": 0.0,
+     "luck": 0.0012254901960784314
+    }
+   },
+   "key_luck": 0.0015869140625,
+   "seconds": 67.41676187515259
+  },
+  "1.0": {
+   "cold_start_ok": false,
+   "sameness_ok": true,
+   "verdict": "stop: cold start (stepping stones first)",
+   "reach32": 0.03125,
+   "floor_reach32": 0.04824614113521625,
+   "reach4": 0.0078125,
+   "floor_reach4": 0.006392924582920552,
+   "luck": 0.0013427734375,
+   "distinct_rules": 11.75390625,
+   "distinct_accepted": 0.03125,
+   "unresolved": 0.0,
+   "n_samples": 8192,
+   "by_kind": {
+    "affine": {
+     "n": 52,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "double_add": {
+     "n": 51,
+     "reach32": 0.09803921568627451,
+     "reach4": 0.0196078431372549,
+     "luck": 0.004901960784313725
+    },
+    "last_digit": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "sq_plus": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "square": {
+     "n": 51,
+     "reach32": 0.058823529411764705,
+     "reach4": 0.0196078431372549,
+     "luck": 0.001838235294117647
+    }
+   },
+   "key_luck": 0.0013427734375,
+   "seconds": 66.53022694587708
+  },
+  "1.4": {
+   "cold_start_ok": false,
+   "sameness_ok": true,
+   "verdict": "stop: cold start (stepping stones first)",
+   "reach32": 0.0625,
+   "floor_reach32": 0.04824614113521625,
+   "reach4": 0.015625,
+   "floor_reach4": 0.006392924582920552,
+   "luck": 0.0025634765625,
+   "distinct_rules": 15.796875,
+   "distinct_accepted": 0.0703125,
+   "unresolved": 0.0,
+   "n_samples": 8192,
+   "by_kind": {
+    "affine": {
+     "n": 52,
+     "reach32": 0.019230769230769232,
+     "reach4": 0.0,
+     "luck": 0.0006009615384615385
+    },
+    "double_add": {
+     "n": 51,
+     "reach32": 0.09803921568627451,
+     "reach4": 0.0196078431372549,
+     "luck": 0.004901960784313725
+    },
+    "last_digit": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "sq_plus": {
+     "n": 51,
+     "reach32": 0.0,
+     "reach4": 0.0,
+     "luck": 0.0
+    },
+    "square": {
+     "n": 51,
+     "reach32": 0.19607843137254902,
+     "reach4": 0.058823529411764705,
+     "luck": 0.007352941176470588
+    }
+   },
+   "key_luck": 0.0025634765625,
+   "seconds": 64.24151587486267
+  }
+ },
+ "best_temperature": 1.4,
+ "verdict": "stop: cold start (stepping stones first)"
+}

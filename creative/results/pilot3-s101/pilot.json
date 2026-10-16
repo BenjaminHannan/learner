@@ -1,0 +1,651 @@
+{
+ "ckpt": "/Users/ben-hannan/creative/ckpt/B2_s101.pt",
+ "seed": 0,
+ "no_replay": false,
+ "notes": "Gates rewritten 10-06 AFTER seeing DEV numbers from the second pilot (feasibility check, not a claim): signal = accepted try on >= 100 practice puzzles; aim = luck / rules_share >= 0.082 (2x the value-blind follower); sameness >= 4; rules_share reported, never gated. Marks re-scaled to ratio + guard (L1 1.6x and +3, L2 1.4x and +2.5, G0 1.5x and +3, PC 1.6x and +3). PC gave +2 points on the first (failed) warm-up and that was known when the marks were re-scaled. T1 and T1b stay sealed. The PC dose grid (lr x visits per record, picked within a 2-point skills-harm limit) was added AFTER the PC gate missed on DEV in pilot 2; it applies to every arm the same way (in T1 updates = visits x W records / 32); T1 and T1b were never read. Try sampler = the level-4 used-number + exact-division mask (creative/legal.py, from PR #45): disclosed test scaffolding, chosen AFTER the DEV numbers; the same sampler runs for every arm so it favours none; the mask never reads the target; T1 and T1b were never read. F1 uses the plain greedy try.",
+ "sampler": "masked level 4",
+ "ladder_rungs": [
+  {
+   "warm3": 1500,
+   "dreams": 0,
+   "max_visits": 4,
+   "tag": "",
+   "n_records": 3000,
+   "updates": 375,
+   "loss_last": 1.150203561782837,
+   "temperature": {
+    "best": 0.21,
+    "evaluated": {
+     "0.14": {
+      "reach4": 0.41197565455377955,
+      "reach32": 0.6796875,
+      "distinct_rules": 9.6484375,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "0.21": {
+      "reach4": 0.4185361947080697,
+      "reach32": 0.7421875,
+      "distinct_rules": 10.6328125,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "0.31": {
+      "reach4": 0.41703649189862424,
+      "reach32": 0.78125,
+      "distinct_rules": 11.5859375,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "0.47": {
+      "reach4": 0.40160185102135565,
+      "reach32": 0.828125,
+      "distinct_rules": 13.125,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "0.7": {
+      "reach4": 0.36700280491067655,
+      "reach32": 0.875,
+      "distinct_rules": 15.453125,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "1.0": {
+      "reach4": 0.32754477119378395,
+      "reach32": 0.9296875,
+      "distinct_rules": 18.28125,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "1.5": {
+      "reach4": 0.28136570357014756,
+      "reach32": 0.953125,
+      "distinct_rules": 22.2421875,
+      "rules_share": 1.0,
+      "eligible": true
+     },
+     "2.0": {
+      "reach4": 0.2493232165814563,
+      "reach32": 0.9296875,
+      "distinct_rules": 25.09375,
+      "rules_share": 1.0,
+      "eligible": true
+     }
+    },
+    "widened": 4,
+    "edge_note": null
+   },
+   "gate": {
+    "rules_share": 1.0,
+    "distinct_rules": 10.6328125,
+    "distinct": 10.6328125,
+    "luck": 0.1337252020573108,
+    "reach4": 0.4185361947080697,
+    "reach32": 0.7421875,
+    "hit_given_rules": 0.1337252020573108,
+    "dup_drop_rate": 0.9347867752755151,
+    "unresolved": 0.0,
+    "nobranch_distinct_rules": 5.53125,
+    "nobranch_distinct": 5.53125,
+    "nobranch_rules_share": 1.0,
+    "practice_solved": 811,
+    "signal_ok": true,
+    "aim_ok": true,
+    "sameness_ok": true,
+    "verdict": "pass"
+   }
+  }
+ ],
+ "floors": {
+  "rules_only_per_try": 0.024129231770833332,
+  "exact_legal_per_try": 0.040216935765866685
+ },
+ "replay_rows": 200000,
+ "skills_raw": {
+  "pooled5": 0.998,
+  "n5": 1000,
+  "in_dist": 0.9052941176470588,
+  "n_in_dist": 6800
+ },
+ "warmed": {
+  "warm3": 1500,
+  "temperature": 0.21,
+  "gate": {
+   "rules_share": 1.0,
+   "distinct_rules": 10.6328125,
+   "distinct": 10.6328125,
+   "luck": 0.1337252020573108,
+   "reach4": 0.4185361947080697,
+   "reach32": 0.7421875,
+   "hit_given_rules": 0.1337252020573108,
+   "dup_drop_rate": 0.9347867752755151,
+   "unresolved": 0.0,
+   "nobranch_distinct_rules": 5.53125,
+   "nobranch_distinct": 5.53125,
+   "nobranch_rules_share": 1.0,
+   "practice_solved": 811,
+   "signal_ok": true,
+   "aim_ok": true,
+   "sameness_ok": true,
+   "verdict": "pass"
+  },
+  "headroom": {
+   "dev_luck": 0.1337252020573108,
+   "dev_first_try": 0.0859375,
+   "dev_first_try_masked": 0.203125,
+   "dev_plain_rules_share": 0.369140625,
+   "dev_plain_luck": 0.0859375,
+   "dev_reach4": 0.4185361947080697
+  },
+  "scoreboard": {
+   "n_puzzles": 128,
+   "n_tries": 1361,
+   "luck": 0.1337252020573108,
+   "stop_luck": 0.1337252020573108,
+   "rules_share": 1.0,
+   "unresolved": 0.0,
+   "reach4": 0.4185361947080697,
+   "reach32": 0.7421875,
+   "distinct": 10.6328125,
+   "distinct_accepted": 1.421875,
+   "distinct_rules": 10.6328125,
+   "kept_per_puzzle": 10.6328125,
+   "raw_per_puzzle": 163.046875,
+   "dup_drop_rate": 0.9347867752755151,
+   "twin_luck": 0.055841293166789124,
+   "aim": 0.07788390889052169,
+   "first_try": 0.0859375,
+   "first_try_masked": 0.203125,
+   "plain_rules_share": 0.369140625,
+   "plain_luck": 0.0859375,
+   "plain_hit_given_legal": 0.2328042328042328
+  },
+  "aim": {
+   "own": {
+    "luck": 0.1337252020573108,
+    "reach4": 0.4185361947080697,
+    "reach32": 0.7421875,
+    "distinct_rules": 10.6328125,
+    "rules_share": 1.0
+   },
+   "twin": {
+    "luck": 0.041181041181041184,
+    "reach4": 0.15241815476190476,
+    "reach32": 0.3203125,
+    "distinct_rules": 10.0546875,
+    "rules_share": 1.0
+   },
+   "rules": {
+    "luck": 0.0419921875,
+    "reach4": 0.15748140294771967,
+    "reach32": 0.8125,
+    "distinct_rules": 32.0,
+    "rules_share": 1.0
+   },
+   "own_minus_rules_luck": 0.09173301455731081,
+   "own_minus_twin_luck": 0.09254416087626963
+  },
+  "skills": {
+   "pooled5": 0.997,
+   "n5": 1000,
+   "in_dist": 0.8952941176470588,
+   "n_in_dist": 6800
+  },
+  "harm_pooled5_points": 0.10000000000000009
+ },
+ "pc_n": {
+  "dev_luck": 0.1337252020573108,
+  "dev_twin_luck": 0.055841293166789124,
+  "dev_reach4": 0.4185361947080697,
+  "dev_first_try": 0.0859375,
+  "dev_first_try_masked": 0.203125,
+  "dev_plain_luck": 0.0859375,
+  "dev_plain_rules_share": 0.369140625,
+  "dev_plain_hit_given_legal": 0.2328042328042328,
+  "skills_harm_points": 0.0,
+  "loss_split": {
+   "puzzle_rows": 4.856256723403931,
+   "replay_rows": 0.0386969200335443
+  }
+ },
+ "pc_grid": [
+  {
+   "lr": 0.0003,
+   "visits": 4,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.14243542435424356,
+   "dev_twin_luck": 0.05387453874538745,
+   "dev_reach4": 0.44631388576701075,
+   "dev_reach32": 0.796875,
+   "dev_first_try": 0.125,
+   "dev_first_try_masked": 0.2578125,
+   "dev_plain_luck": 0.09765625,
+   "dev_plain_rules_share": 0.353515625,
+   "dev_plain_hit_given_legal": 0.27624309392265195,
+   "dev_aim": 0.08856088560885611,
+   "luck_gain": 0.8710222296932746,
+   "luck_ratio": 1.0651352337699203,
+   "first_try_gain": 3.90625,
+   "loss_last": 1.9529747247695923,
+   "loss_split_after": {
+    "puzzle_rows": 3.8225338459014893,
+    "replay_rows": 0.03646298544481397
+   },
+   "skills": {
+    "pooled5": 0.9940000000000001,
+    "n5": 1000,
+    "in_dist": 0.8923529411764706,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.29999999999998916,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 8,
+   "updates": 344,
+   "n_records": 1377,
+   "dev_luck": 0.14563106796116504,
+   "dev_twin_luck": 0.05339805825242718,
+   "dev_reach4": 0.45616913468475967,
+   "dev_reach32": 0.7734375,
+   "dev_first_try": 0.140625,
+   "dev_first_try_masked": 0.28125,
+   "dev_plain_luck": 0.134765625,
+   "dev_plain_rules_share": 0.4248046875,
+   "dev_plain_hit_given_legal": 0.31724137931034485,
+   "dev_aim": 0.09223300970873785,
+   "luck_gain": 1.190586590385423,
+   "luck_ratio": 1.0890323268964044,
+   "first_try_gain": 5.46875,
+   "loss_last": 1.6476021885871888,
+   "loss_split_after": {
+    "puzzle_rows": 3.206546127796173,
+    "replay_rows": 0.04210240859538317
+   },
+   "skills": {
+    "pooled5": 0.996,
+    "n5": 1000,
+    "in_dist": 0.8913235294117646,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.10000000000000009,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 16,
+   "updates": 688,
+   "n_records": 1377,
+   "dev_luck": 0.1548154815481548,
+   "dev_twin_luck": 0.05490549054905491,
+   "dev_reach4": 0.4774046266233766,
+   "dev_reach32": 0.765625,
+   "dev_first_try": 0.1484375,
+   "dev_first_try_masked": 0.3125,
+   "dev_plain_luck": 0.142578125,
+   "dev_plain_rules_share": 0.4033203125,
+   "dev_plain_hit_given_legal": 0.35351089588377727,
+   "dev_aim": 0.09990999099909989,
+   "luck_gain": 2.1090279490843993,
+   "luck_ratio": 1.1577135735551576,
+   "first_try_gain": 6.25,
+   "loss_last": 1.0111920535564423,
+   "loss_split_after": {
+    "puzzle_rows": 1.9563056528568268,
+    "replay_rows": 0.0739777497947216
+   },
+   "skills": {
+    "pooled5": 0.993,
+    "n5": 1000,
+    "in_dist": 0.8911764705882353,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.40000000000000036,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 32,
+   "updates": 1377,
+   "n_records": 1377,
+   "dev_luck": 0.13966480446927373,
+   "dev_twin_luck": 0.048417132216014895,
+   "dev_reach4": 0.43027484668109667,
+   "dev_reach32": 0.671875,
+   "dev_first_try": 0.1875,
+   "dev_first_try_masked": 0.3046875,
+   "dev_plain_luck": 0.181640625,
+   "dev_plain_rules_share": 0.4296875,
+   "dev_plain_hit_given_legal": 0.42272727272727273,
+   "dev_aim": 0.09124767225325883,
+   "luck_gain": 0.5939602411962924,
+   "luck_ratio": 1.0444164773773712,
+   "first_try_gain": 10.15625,
+   "loss_last": 0.5478669047355652,
+   "loss_split_after": {
+    "puzzle_rows": 0.9718964099884033,
+    "replay_rows": 0.07219769014045596
+   },
+   "skills": {
+    "pooled5": 0.991,
+    "n5": 1000,
+    "in_dist": 0.8880882352941177,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.6000000000000005,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.001,
+   "visits": 4,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.14135338345864662,
+   "dev_twin_luck": 0.05263157894736842,
+   "dev_reach4": 0.4320425234487735,
+   "dev_reach32": 0.7734375,
+   "dev_first_try": 0.1015625,
+   "dev_first_try_masked": 0.25,
+   "dev_plain_luck": 0.0927734375,
+   "dev_plain_rules_share": 0.3349609375,
+   "dev_plain_hit_given_legal": 0.27696793002915454,
+   "dev_aim": 0.0887218045112782,
+   "luck_gain": 0.762818140133581,
+   "luck_ratio": 1.0570437081715276,
+   "first_try_gain": 1.5625,
+   "loss_last": 1.9866928815841676,
+   "loss_split_after": {
+    "puzzle_rows": 3.725760817527771,
+    "replay_rows": 0.24229417741298676
+   },
+   "skills": {
+    "pooled5": 0.983,
+    "n5": 1000,
+    "in_dist": 0.8520588235294118,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 1.4000000000000012,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.001,
+   "visits": 8,
+   "updates": 344,
+   "n_records": 1377,
+   "dev_luck": 0.1518456375838926,
+   "dev_twin_luck": 0.04614093959731544,
+   "dev_reach4": 0.45945252664002667,
+   "dev_reach32": 0.7578125,
+   "dev_first_try": 0.171875,
+   "dev_first_try_masked": 0.28125,
+   "dev_plain_luck": 0.1416015625,
+   "dev_plain_rules_share": 0.4072265625,
+   "dev_plain_hit_given_legal": 0.34772182254196643,
+   "dev_aim": 0.10570469798657717,
+   "luck_gain": 1.8120435526581797,
+   "luck_ratio": 1.1355050151191088,
+   "first_try_gain": 8.59375,
+   "loss_last": 1.7014017343521117,
+   "loss_split_after": {
+    "puzzle_rows": 3.128507137298584,
+    "replay_rows": 0.21525751799345016
+   },
+   "skills": {
+    "pooled5": 0.96,
+    "n5": 1000,
+    "in_dist": 0.8463235294117646,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 3.7000000000000033,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.001,
+   "visits": 16,
+   "updates": 688,
+   "n_records": 1377,
+   "dev_luck": 0.1541970802919708,
+   "dev_twin_luck": 0.055656934306569344,
+   "dev_reach4": 0.46016977813852816,
+   "dev_reach32": 0.734375,
+   "dev_first_try": 0.1484375,
+   "dev_first_try_masked": 0.2421875,
+   "dev_plain_luck": 0.1416015625,
+   "dev_plain_rules_share": 0.4521484375,
+   "dev_plain_hit_given_legal": 0.31317494600431967,
+   "dev_aim": 0.09854014598540145,
+   "luck_gain": 2.0471878234659986,
+   "luck_ratio": 1.1530891553701772,
+   "first_try_gain": 6.25,
+   "loss_last": 0.9440502643585205,
+   "loss_split_after": {
+    "puzzle_rows": 1.5871405005455017,
+    "replay_rows": 0.1759897917509079
+   },
+   "skills": {
+    "pooled5": 0.993,
+    "n5": 1000,
+    "in_dist": 0.8625,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.40000000000000036,
+   "within_skills_limit": true
+  },
+  {
+   "lr": 0.003,
+   "visits": 4,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.13507625272331156,
+   "dev_twin_luck": 0.054466230936819175,
+   "dev_reach4": 0.4260417304305172,
+   "dev_reach32": 0.7890625,
+   "dev_first_try": 0.078125,
+   "dev_first_try_masked": 0.21875,
+   "dev_plain_luck": 0.078125,
+   "dev_plain_rules_share": 0.3984375,
+   "dev_plain_hit_given_legal": 0.19607843137254902,
+   "dev_aim": 0.08061002178649238,
+   "luck_gain": 0.1351050666000747,
+   "luck_ratio": 1.0101031865737748,
+   "first_try_gain": -0.78125,
+   "loss_last": 2.3665902376174928,
+   "loss_split_after": {
+    "puzzle_rows": 4.098065674304962,
+    "replay_rows": 0.6560090780258179
+   },
+   "skills": {
+    "pooled5": 0.856,
+    "n5": 1000,
+    "in_dist": 0.7144117647058823,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 14.100000000000001,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.003,
+   "visits": 8,
+   "updates": 344,
+   "n_records": 1377,
+   "dev_luck": 0.1383495145631068,
+   "dev_twin_luck": 0.05744336569579288,
+   "dev_reach4": 0.434178234959485,
+   "dev_reach32": 0.7421875,
+   "dev_first_try": 0.1015625,
+   "dev_first_try_masked": 0.2421875,
+   "dev_plain_luck": 0.1015625,
+   "dev_plain_rules_share": 0.396484375,
+   "dev_plain_hit_given_legal": 0.2561576354679803,
+   "dev_aim": 0.08090614886731391,
+   "luck_gain": 0.462431250579598,
+   "luck_ratio": 1.0345807105515843,
+   "first_try_gain": 1.5625,
+   "loss_last": 2.0966866850852965,
+   "loss_split_after": {
+    "puzzle_rows": 3.5913161039352417,
+    "replay_rows": 0.5169521346688271
+   },
+   "skills": {
+    "pooled5": 0.91,
+    "n5": 1000,
+    "in_dist": 0.7386764705882354,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 8.699999999999996,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.003,
+   "visits": 16,
+   "updates": 688,
+   "n_records": 1377,
+   "dev_luck": 0.15737410071942445,
+   "dev_twin_luck": 0.05665467625899281,
+   "dev_reach4": 0.4641150516150516,
+   "dev_reach32": 0.75,
+   "dev_first_try": 0.1484375,
+   "dev_first_try_masked": 0.2578125,
+   "dev_plain_luck": 0.15234375,
+   "dev_plain_rules_share": 0.5009765625,
+   "dev_plain_hit_given_legal": 0.30409356725146197,
+   "dev_aim": 0.10071942446043164,
+   "luck_gain": 2.364889866211364,
+   "luck_ratio": 1.1768469839513003,
+   "first_try_gain": 6.25,
+   "loss_last": 1.483613419532776,
+   "loss_split_after": {
+    "puzzle_rows": 2.3206807374954224,
+    "replay_rows": 0.4668475016951561
+   },
+   "skills": {
+    "pooled5": 0.92,
+    "n5": 1000,
+    "in_dist": 0.7454411764705883,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 7.699999999999996,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.01,
+   "visits": 4,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.12900763358778625,
+   "dev_twin_luck": 0.05725190839694656,
+   "dev_reach4": 0.4129729466815864,
+   "dev_reach32": 0.71875,
+   "dev_first_try": 0.09375,
+   "dev_first_try_masked": 0.1875,
+   "dev_plain_luck": 0.068359375,
+   "dev_plain_rules_share": 0.44921875,
+   "dev_plain_hit_given_legal": 0.15217391304347827,
+   "dev_aim": 0.07175572519083968,
+   "luck_gain": -0.47175684695245634,
+   "luck_ratio": 0.9647219193020719,
+   "first_try_gain": 0.78125,
+   "loss_last": 3.034788131713867,
+   "loss_split_after": {
+    "puzzle_rows": 4.49012291431427,
+    "replay_rows": 1.7858511805534363
+   },
+   "skills": {
+    "pooled5": 0.499,
+    "n5": 1000,
+    "in_dist": 0.4472058823529412,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 49.8,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.01,
+   "visits": 8,
+   "updates": 344,
+   "n_records": 1377,
+   "dev_luck": 0.13089005235602094,
+   "dev_twin_luck": 0.06207928197456993,
+   "dev_reach4": 0.4090055777555778,
+   "dev_reach32": 0.734375,
+   "dev_first_try": 0.1015625,
+   "dev_first_try_masked": 0.234375,
+   "dev_plain_luck": 0.0771484375,
+   "dev_plain_rules_share": 0.4033203125,
+   "dev_plain_hit_given_legal": 0.19128329297820823,
+   "dev_aim": 0.068810770381451,
+   "luck_gain": -0.28351497012898685,
+   "luck_ratio": 0.9787986882227719,
+   "first_try_gain": 1.5625,
+   "loss_last": 2.9377899408340453,
+   "loss_split_after": {
+    "puzzle_rows": 4.329955458641052,
+    "replay_rows": 1.4625133275985718
+   },
+   "skills": {
+    "pooled5": 0.52,
+    "n5": 1000,
+    "in_dist": 0.48,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 47.699999999999996,
+   "within_skills_limit": false
+  },
+  {
+   "lr": 0.01,
+   "visits": 16,
+   "updates": 688,
+   "n_records": 1377,
+   "dev_luck": 0.1372854914196568,
+   "dev_twin_luck": 0.05382215288611544,
+   "dev_reach4": 0.42775098165723163,
+   "dev_reach32": 0.7421875,
+   "dev_first_try": 0.0546875,
+   "dev_first_try_masked": 0.21875,
+   "dev_plain_luck": 0.0625,
+   "dev_plain_rules_share": 0.3916015625,
+   "dev_plain_hit_given_legal": 0.1596009975062344,
+   "dev_aim": 0.08346333853354135,
+   "luck_gain": 0.3560289362345981,
+   "luck_ratio": 1.026623922099741,
+   "first_try_gain": -3.125,
+   "loss_last": 2.722191023826599,
+   "loss_split_after": {
+    "puzzle_rows": 4.027382135391235,
+    "replay_rows": 1.3681809306144714
+   },
+   "skills": {
+    "pooled5": 0.282,
+    "n5": 1000,
+    "in_dist": 0.4719117647058823,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 71.50000000000001,
+   "within_skills_limit": false
+  }
+ ],
+ "pc_choice": {
+  "lr": 0.0003,
+  "visits": 16,
+  "updates": 688,
+  "dose_extended": true,
+  "rule": "masked DEV luck among settings with skills harm <= 2.0 points; freeze lr and visits, in T1 every arm uses updates = visits x W records / 32",
+  "note": "chosen on DEV with the PC arm only; freeze before any T1 run"
+ },
+ "pc_gate": {
+  "pc_minus_n_luck_points": 2.1090279490843993,
+  "pc_over_n_luck": 1.1577135735551576,
+  "first_try_gain_points": 6.25,
+  "needed_points": 3.0,
+  "needed_ratio": 1.6,
+  "passes": false,
+  "temperature": 0.21,
+  "with_replay": true,
+  "skills_harm_points": 0.40000000000000036,
+  "stop_rule": "C1 stops with T1 and T1b sealed if the gate misses on either parent at every setting within the skills limit; if it passes on both parents: freeze the setting and run the power simulation before sealing."
+ },
+ "wall_s": 15665.39077591896
+}

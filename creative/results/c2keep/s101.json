@@ -1,0 +1,572 @@
+{
+ "ckpt": "/Users/ben-hannan/creative/ckpt/B2_s101.pt",
+ "seed": 0,
+ "spec": "C2 job 7, \"keep the parts\" (roadmap sec. 7, decided 10-07). CPU, DEV only.  python3 -m creative.c2_keep --ckpt B2_s100.pt --warmed warm4.pt --out DIR --skills-train ... --skills-data ...",
+ "note": "DEV only; test/labelled never opened; plain samples, no mask, repeats counted; the one change is the warm add/mult replay in every sleep; night 2 continues from the night-1 model (as in job 6)",
+ "warm": {
+  "source": "/Users/ben-hannan/creative/c2stones-s101/warm4.pt"
+ },
+ "N'": {
+  "sleep": {
+   "updates": 256,
+   "records": 2048,
+   "visits_per_record": 4.0,
+   "last_loss": 1.2470762848854064
+  },
+  "practised": {
+   "reach32": 0.61328125,
+   "first_sample": 0.203125
+  },
+  "skills": {
+   "pooled5": 0.9890000000000001,
+   "n5": 1000,
+   "in_dist": 0.8777941176470588,
+   "n_in_dist": 6800
+  },
+  "skills_harm_vs_warmed": -0.10000000000001119,
+  "cold_start": {
+   "best_T": 3.0,
+   "reach32": 0.28125,
+   "floor_reach32": 0.04824614113521625,
+   "sameness_ok": true,
+   "verdict": "pass",
+   "passes": true
+  },
+  "grid": {
+   "0.5": {
+    "reach32": 0.05078125,
+    "sameness_ok": true,
+    "distinct_rules": 4.21484375
+   },
+   "0.7": {
+    "reach32": 0.09765625,
+    "sameness_ok": true,
+    "distinct_rules": 6.01171875
+   },
+   "1.0": {
+    "reach32": 0.1328125,
+    "sameness_ok": true,
+    "distinct_rules": 8.6875
+   },
+   "1.4": {
+    "reach32": 0.16015625,
+    "sameness_ok": true,
+    "distinct_rules": 12.328125
+   },
+   "2.0": {
+    "reach32": 0.265625,
+    "sameness_ok": true,
+    "distinct_rules": 16.0
+   },
+   "3.0": {
+    "reach32": 0.28125,
+    "sameness_ok": true,
+    "distinct_rules": 16.93359375
+   },
+   "4.0": {
+    "reach32": 0.25390625,
+    "sameness_ok": true,
+    "distinct_rules": 14.296875
+   },
+   "6.0": {
+    "reach32": 0.109375,
+    "sameness_ok": true,
+    "distinct_rules": 9.12109375
+   }
+  },
+  "parts_kept": {
+   "practised_ge_50": true,
+   "cold_start": true,
+   "skills_ok": true,
+   "passes": true
+  }
+ },
+ "pool_temperature": {
+  "chosen": 3.0,
+  "rule": "best DEV reach@32 among temperatures passing sameness (as job 6)"
+ },
+ "arms": {
+  "N'": {
+   "greedy": {
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "fits": 0.019230769230769232,
+      "right": 0.019230769230769232
+     },
+     "square": {
+      "n": 51,
+      "fits": 0.0,
+      "right": 0.0
+     },
+     "sq_plus": {
+      "n": 51,
+      "fits": 0.0,
+      "right": 0.0
+     },
+     "last_digit": {
+      "n": 51,
+      "fits": 0.0196078431372549,
+      "right": 0.0
+     },
+     "double_add": {
+      "n": 51,
+      "fits": 0.0,
+      "right": 0.0
+     }
+    },
+    "fits": 0.0078125,
+    "right": 0.00390625,
+    "multi_right": 0.006493506493506494
+   },
+   "reach4": 0.0703125,
+   "reach32": 0.28125,
+   "multi_reach4": 0.012987012987012988,
+   "multi_reach32": 0.05194805194805195,
+   "reach_by_kind": {
+    "affine": {
+     "reach4": 0.0,
+     "reach32": 0.019230769230769232
+    },
+    "double_add": {
+     "reach4": 0.0392156862745098,
+     "reach32": 0.13725490196078433
+    },
+    "last_digit": {
+     "reach4": 0.0784313725490196,
+     "reach32": 0.45098039215686275
+    },
+    "sq_plus": {
+     "reach4": 0.0,
+     "reach32": 0.0
+    },
+    "square": {
+     "reach4": 0.23529411764705882,
+     "reach32": 0.803921568627451
+    }
+   },
+   "practised": {
+    "reach32": 0.61328125,
+    "first_sample": 0.203125
+   },
+   "skills": {
+    "pooled5": 0.9890000000000001,
+    "n5": 1000,
+    "in_dist": 0.8777941176470588,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 0.0
+  },
+  "PC'": {
+   "sleep": {
+    "updates": 614,
+    "records": 614,
+    "visits_per_record": 32.0,
+    "last_loss": -0.07036276124417781
+   },
+   "greedy": {
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "fits": 0.038461538461538464,
+      "right": 0.038461538461538464
+     },
+     "square": {
+      "n": 51,
+      "fits": 0.0196078431372549,
+      "right": 0.0196078431372549
+     },
+     "sq_plus": {
+      "n": 51,
+      "fits": 0.6078431372549019,
+      "right": 0.6078431372549019
+     },
+     "last_digit": {
+      "n": 51,
+      "fits": 0.0,
+      "right": 0.0
+     },
+     "double_add": {
+      "n": 51,
+      "fits": 0.4117647058823529,
+      "right": 0.4117647058823529
+     }
+    },
+    "fits": 0.21484375,
+    "right": 0.21484375,
+    "multi_right": 0.35064935064935066
+   },
+   "reach4": 0.26171875,
+   "reach32": 0.4375,
+   "multi_reach4": 0.4090909090909091,
+   "multi_reach32": 0.6233766233766234,
+   "reach_by_kind": {
+    "affine": {
+     "reach4": 0.07692307692307693,
+     "reach32": 0.21153846153846154
+    },
+    "double_add": {
+     "reach4": 0.47058823529411764,
+     "reach32": 0.7843137254901961
+    },
+    "last_digit": {
+     "reach4": 0.0,
+     "reach32": 0.0
+    },
+    "sq_plus": {
+     "reach4": 0.6862745098039216,
+     "reach32": 0.8823529411764706
+    },
+    "square": {
+     "reach4": 0.0784313725490196,
+     "reach32": 0.3137254901960784
+    }
+   },
+   "practised": {
+    "reach32": 0.859375,
+    "first_sample": 0.6015625
+   },
+   "skills": {
+    "pooled5": 0.971,
+    "n5": 1000,
+    "in_dist": 0.8430882352941177,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 1.8000000000000127
+  },
+  "W' night 1": {
+   "sleep": {
+    "updates": 330,
+    "records": 330,
+    "visits_per_record": 32.0,
+    "last_loss": 0.36255555003881457
+   },
+   "greedy": {
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "fits": 0.019230769230769232,
+      "right": 0.019230769230769232
+     },
+     "square": {
+      "n": 51,
+      "fits": 0.9803921568627451,
+      "right": 0.9803921568627451
+     },
+     "sq_plus": {
+      "n": 51,
+      "fits": 0.0,
+      "right": 0.0
+     },
+     "last_digit": {
+      "n": 51,
+      "fits": 0.9019607843137255,
+      "right": 0.9019607843137255
+     },
+     "double_add": {
+      "n": 51,
+      "fits": 0.0392156862745098,
+      "right": 0.0392156862745098
+     }
+    },
+    "fits": 0.38671875,
+    "right": 0.38671875,
+    "multi_right": 0.01948051948051948
+   },
+   "reach4": 0.33984375,
+   "reach32": 0.44140625,
+   "multi_reach4": 0.012987012987012988,
+   "multi_reach32": 0.07792207792207792,
+   "reach_by_kind": {
+    "affine": {
+     "reach4": 0.0,
+     "reach32": 0.019230769230769232
+    },
+    "double_add": {
+     "reach4": 0.0392156862745098,
+     "reach32": 0.19607843137254902
+    },
+    "last_digit": {
+     "reach4": 0.7647058823529411,
+     "reach32": 1.0
+    },
+    "sq_plus": {
+     "reach4": 0.0,
+     "reach32": 0.0196078431372549
+    },
+    "square": {
+     "reach4": 0.9019607843137255,
+     "reach32": 0.9803921568627451
+    }
+   },
+   "practised": {
+    "reach32": 0.84765625,
+    "first_sample": 0.515625
+   },
+   "skills": {
+    "pooled5": 0.972,
+    "n5": 1000,
+    "in_dist": 0.8425,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 1.7000000000000126,
+   "parts_kept": true
+  },
+  "W' night 2": {
+   "sleep": {
+    "updates": 745,
+    "records": 745,
+    "visits_per_record": 32.0,
+    "last_loss": 0.28933670222759245
+   },
+   "greedy": {
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "fits": 0.0,
+      "right": 0.0
+     },
+     "square": {
+      "n": 51,
+      "fits": 0.9411764705882353,
+      "right": 0.9411764705882353
+     },
+     "sq_plus": {
+      "n": 51,
+      "fits": 0.0196078431372549,
+      "right": 0.0196078431372549
+     },
+     "last_digit": {
+      "n": 51,
+      "fits": 0.9411764705882353,
+      "right": 0.9411764705882353
+     },
+     "double_add": {
+      "n": 51,
+      "fits": 0.09803921568627451,
+      "right": 0.09803921568627451
+     }
+    },
+    "fits": 0.3984375,
+    "right": 0.3984375,
+    "multi_right": 0.03896103896103896
+   },
+   "reach4": 0.3671875,
+   "reach32": 0.45703125,
+   "multi_reach4": 0.032467532467532464,
+   "multi_reach32": 0.09740259740259741,
+   "reach_by_kind": {
+    "affine": {
+     "reach4": 0.0,
+     "reach32": 0.038461538461538464
+    },
+    "double_add": {
+     "reach4": 0.09803921568627451,
+     "reach32": 0.2549019607843137
+    },
+    "last_digit": {
+     "reach4": 0.8431372549019608,
+     "reach32": 1.0
+    },
+    "sq_plus": {
+     "reach4": 0.0,
+     "reach32": 0.0
+    },
+    "square": {
+     "reach4": 0.9019607843137255,
+     "reach32": 1.0
+    }
+   },
+   "practised": {
+    "reach32": 0.96484375,
+    "first_sample": 0.84765625
+   },
+   "skills": {
+    "pooled5": 0.976,
+    "n5": 1000,
+    "in_dist": 0.8438235294117646,
+    "n_in_dist": 6800
+   },
+   "skills_harm_points": 1.3000000000000123
+  }
+ },
+ "night1_records": {
+  "n": 330,
+  "by_kind": {
+   "affine": 9,
+   "double_add": 17,
+   "last_digit": 94,
+   "sq_plus": 4,
+   "square": 206
+  }
+ },
+ "PC'": {
+  "records": 614
+ },
+ "dose_grid": [
+  {
+   "lr": 0.0003,
+   "visits": 4,
+   "updates": 76,
+   "records": 614,
+   "visits_per_record": 3.960912052117264,
+   "last_loss": 3.8112090110778807,
+   "multi_first_try": 0.05844155844155844,
+   "pooled_first_try": 0.0546875,
+   "reach4": 0.015625,
+   "practised_reach32": 0.52734375,
+   "skills_harm_points": 0.20000000000001128,
+   "eligible": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 8,
+   "updates": 153,
+   "records": 614,
+   "visits_per_record": 7.973941368078176,
+   "last_loss": 2.562564992904663,
+   "multi_first_try": 0.11038961038961038,
+   "pooled_first_try": 0.06640625,
+   "reach4": 0.015625,
+   "practised_reach32": 0.63671875,
+   "skills_harm_points": 0.9000000000000119,
+   "eligible": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 16,
+   "updates": 307,
+   "records": 614,
+   "visits_per_record": 16.0,
+   "last_loss": 1.070191204547882,
+   "multi_first_try": 0.14285714285714285,
+   "pooled_first_try": 0.08984375,
+   "reach4": 0.046875,
+   "practised_reach32": 0.6796875,
+   "skills_harm_points": 0.7000000000000117,
+   "eligible": true
+  },
+  {
+   "lr": 0.0003,
+   "visits": 32,
+   "updates": 614,
+   "records": 614,
+   "visits_per_record": 32.0,
+   "last_loss": 0.09710370469838381,
+   "multi_first_try": 0.22077922077922077,
+   "pooled_first_try": 0.1328125,
+   "reach4": 0.140625,
+   "practised_reach32": 0.7578125,
+   "skills_harm_points": 0.6000000000000116,
+   "eligible": true
+  },
+  {
+   "lr": 0.001,
+   "visits": 4,
+   "updates": 76,
+   "records": 614,
+   "visits_per_record": 3.960912052117264,
+   "last_loss": 3.5291418552398683,
+   "multi_first_try": 0.14285714285714285,
+   "pooled_first_try": 0.10546875,
+   "reach4": 0.01171875,
+   "practised_reach32": 0.45703125,
+   "skills_harm_points": 3.300000000000014,
+   "eligible": false
+  },
+  {
+   "lr": 0.001,
+   "visits": 8,
+   "updates": 153,
+   "records": 614,
+   "visits_per_record": 7.973941368078176,
+   "last_loss": 2.0686556935310363,
+   "multi_first_try": 0.15584415584415584,
+   "pooled_first_try": 0.09765625,
+   "reach4": 0.02734375,
+   "practised_reach32": 0.6328125,
+   "skills_harm_points": 1.6000000000000125,
+   "eligible": true
+  },
+  {
+   "lr": 0.001,
+   "visits": 16,
+   "updates": 307,
+   "records": 614,
+   "visits_per_record": 16.0,
+   "last_loss": 0.5065981894731522,
+   "multi_first_try": 0.2727272727272727,
+   "pooled_first_try": 0.1640625,
+   "reach4": 0.14453125,
+   "practised_reach32": 0.7421875,
+   "skills_harm_points": 2.100000000000013,
+   "eligible": false
+  },
+  {
+   "lr": 0.001,
+   "visits": 32,
+   "updates": 614,
+   "records": 614,
+   "visits_per_record": 32.0,
+   "last_loss": -0.07036276124417781,
+   "multi_first_try": 0.35064935064935066,
+   "pooled_first_try": 0.21484375,
+   "reach4": 0.26171875,
+   "practised_reach32": 0.859375,
+   "skills_harm_points": 1.8000000000000127,
+   "eligible": true
+  }
+ ],
+ "dose_choice": {
+  "lr": 0.001,
+  "visits": 32,
+  "rule": "best multi-step greedy first try then reach@4 among settings with skills harm <= 2 and fresh add/mult reach@32 >= 50%; frozen"
+ },
+ "feasibility": {
+  "pcp_minus_np_multi_first_try_points": 34.41558441558441,
+  "ci": [
+   27.27272727272727,
+   42.2077922077922
+  ],
+  "threshold": 10.0,
+  "passes": true,
+  "n_multi_dev": 154
+ },
+ "night2_records": {
+  "n": 745,
+  "by_kind": {
+   "affine": 7,
+   "double_add": 46,
+   "last_digit": 280,
+   "sq_plus": 7,
+   "square": 405
+  }
+ },
+ "climb": {
+  "multi_W2_minus_Nprime": {
+   "points": 3.2467532467532467,
+   "lo": 0.0,
+   "hi": 6.493506493506493
+  },
+  "multi_W1_minus_Nprime": {
+   "points": 1.2987012987012987,
+   "lo": 0.0,
+   "hi": 3.2467532467532463
+  },
+  "by_kind_W2_minus_Nprime_points": {
+   "affine": -1.9230769230769231,
+   "square": 94.11764705882352,
+   "sq_plus": 1.9607843137254901,
+   "last_digit": 94.11764705882352,
+   "double_add": 9.803921568627452
+  },
+  "pooled_W2_minus_Nprime_points": 39.453125,
+  "parts_kept_after_night2": true,
+  "marks": {
+   "pass_if": "multi-step first try W(night 2) - N >= +10 with the paired 95% interval above 0, both parents",
+   "wrong_if": "parts kept and the interval upper end < +3, both parents"
+  }
+ },
+ "verdict": "between the marks (comes back to the roadmap thread)",
+ "seconds": 8332.156782150269
+}
