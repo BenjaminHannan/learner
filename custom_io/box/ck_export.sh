@@ -8,6 +8,7 @@ PACE=${PACE:-100}
 PFX=${PFX:-ck}      # block-label prefix; give a second export on the same box its own (the collector keys blocks by label)
 LOG=${LOG:-/proc/1/fd/1}
 CKROOT=${CKROOT:-$J/w}      # the checkpoints are $CKROOT/<job>/<run>/checkpoint.pt (job = the folder two levels above the file); LT-2 keeps them under $J/w/ladder/rung<r>/<run>/, so it sets CKROOT=$J/w/ladder
+PART=${CKPART:-3000000}   # bytes per part (the collector reads the newest 9000 log lines: a part is about 2.8 lines per KB, so keep PART x 1.33 / 480 well under 9000 lines)
 LOCK=${CKLOCK:-$J/print.lock}   # one lock for every writer to the log (LT-2's result blocks use $J/res/emit.lock: set CKLOCK to that)
 N=0
 # first re-print the small result tarballs of the jobs named in RESULTS (their first print is buried under the export)
@@ -18,13 +19,14 @@ for r in ${RESULTS:-}; do
 done
 for c in $GLOB; do
   run=$(basename $(dirname $c)); job=$(basename $(dirname $(dirname $c)))
-  T=$J/res/ck-$job-$run.tgz; tar -czf $T -C $CKROOT $job/$run/checkpoint.pt || { echo "CKFAIL|$job/$run|tar" >> $LOG; continue; }
+  T=$J/res/ck-$job-$run.tgz; [ -s $T ] || tar -czf $T -C $CKROOT $job/$run/checkpoint.pt || { echo "CKFAIL|$job/$run|tar" >> $LOG; continue; }   # an existing tgz is reused: a second pass prints the SAME bytes (parts of two passes must combine)
   [ -s $T ] || { echo "CKFAIL|$job/$run|empty tar" >> $LOG; continue; }
   full=$(sha256sum $T | cut -c1-64)
   rm -f $J/res/ck-$job-$run.part.*
-  split -b 3000000 -d -a 3 $T $J/res/ck-$job-$run.part.
+  split -b $PART -d -a 3 $T $J/res/ck-$job-$run.part.
   n=$(ls $J/res/ck-$job-$run.part.* | wc -l)
   echo "CKFULL|$job/$run|$full|$n" >> $LOG
+  echo "CKSHA|$job/$run|$(sha256sum $CKROOT/$job/$run/checkpoint.pt | cut -c1-64)|$(stat -c %s $CKROOT/$job/$run/checkpoint.pt)" >> $LOG   # the checkpoint file itself, as it is on the box: the collector checks the reassembled file against it
   for p in $(ls $J/res/ck-$job-$run.part.* | sort); do
     k=$((10#${p##*.})); N=$((N + 1)); h=$(sha256sum $p | cut -c1-64)
     ( flock 9; echo "RBEGIN|$PFX$N|$h|$(stat -c %s $p)|$job/$run|$k|$n"; base64 -w 480 $p | sed "s/^/R|$PFX$N|/"; echo "REND|$PFX$N" ) 9>$LOCK >> $LOG

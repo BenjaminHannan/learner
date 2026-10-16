@@ -172,6 +172,7 @@ def collectck(a):
     parts = out / 'parts'
     parts.mkdir(parents=True, exist_ok=True)
     full, nparts, done_ck, saved, ckdone, t0 = {}, {}, set(), set(), None, time.time()
+    fsha = {}                                           # CKSHA lines: job/run -> (sha256, size) of the checkpoint file on the box
     for p in out.glob('*/*/checkpoint.pt'):
         done_ck.add('%s/%s' % (p.parent.parent.name, p.parent.name))
     while time.time() - t0 < a.max_min * 60:
@@ -181,6 +182,9 @@ def collectck(a):
             if ln.startswith('CKFULL|'):
                 _, jr, h, n = ln.split('|')
                 full[jr] = (h, int(n))
+            elif ln.startswith('CKSHA|'):
+                _, jr, h, n = ln.split('|')
+                fsha[jr] = (h, int(n))
             elif ln.startswith('CKDONE|'):
                 ckdone = int(ln.split('|')[1])
             elif ln.startswith('RBEGIN|'):
@@ -224,7 +228,15 @@ def collectck(a):
                 if h is None or hashlib.sha256(raw).hexdigest() == h:    # no CKFULL seen: gzip's own CRC checks it
                     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
                         t.extractall(out, filter='data')
+                    f = out / jr / 'checkpoint.pt'
+                    got = hashlib.sha256(f.read_bytes()).hexdigest() if f.exists() else None
+                    if jr in fsha and got != fsha[jr][0]:           # the box printed another file sha than the one reassembled: do not count it, say so, wait for another pass
+                        print(json.dumps({'WARNING': 'checkpoint sha differs from the box', 'ck': jr, 'box': fsha[jr][0][:16], 'got': (got or 'none')[:16]}), flush=True)
+                        if f.exists():
+                            f.unlink()
+                        continue
                     (out / (jr.replace('/', '__') + '.tgz.sha256')).write_text(hashlib.sha256(raw).hexdigest() + '\n')
+                    (out / (jr.replace('/', '__') + '.sha256')).write_text('%s  %s/checkpoint.pt  (box: %s)\n' % (got, jr, fsha[jr][0] if jr in fsha else 'not printed'))
                     done_ck.add(jr)
         have = sorted(p.name for p in parts.iterdir())
         print(json.dumps({'t_min': round((time.time() - t0) / 60, 1), 'parts': len(have), 'ckpts_done': sorted(done_ck),
