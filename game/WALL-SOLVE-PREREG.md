@@ -152,3 +152,7 @@ gives a first unlock one step ahead: no walk, no navigation, ties `wpick` / `wsw
   `default_rng([9, run seed, day, i])`, explore 0.10, sample T = 1, cap 1000: the A26 play rule with the GW-L checkpoint as the policy.
 - One play pass serves both: Z8 uses all 400 games; Z7 uses the first 200 (days 0 and 1), as written, and also reports all 400.
 - Check before any reading: the loaded checkpoints must reproduce A23's held-out S top-1 (62.4% / 64.8%) to 0.1 point.
+- (20:56 UTC, run launched 20:54, no full-run number seen.) Reproduction check passed exactly: held-out S top-1 62.44% / 64.79%
+  (A23 62.44 / 64.79). Z7's **primary** reading = top-1 on every visited nav / act view of the first 200 games (days 0-1), minus the
+  held-out S top-1; unique-view and all-400 versions are secondary. A 4-game smoke test printed one number (seed 200: -14.4 points on
+  470 views); it is not read. Z8 is read under the A27 rule as written; the A26-rule numbers are reported.
