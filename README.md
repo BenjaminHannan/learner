@@ -9,3 +9,4 @@ Finished project videos (orphan branch; never merged to main). Files: YYYY-MM-DD
 - 2026-10-14: [reinforcement-learning.mp4](reinforcement-learning.mp4) (explainer, 5.8 min)
 - 2026-10-14: [2026-10-14-morning-recap.mp4](2026-10-14-morning-recap.mp4) (morning recap)
 - 2026-10-15: [2026-10-15-morning-recap.mp4](2026-10-15-morning-recap.mp4) (morning recap)
+- 2026-10-16: [sleep.mp4](sleep.mp4) (explainer: sleep, 5 min 34 s)
