@@ -143,3 +143,12 @@ gives a first unlock one step ahead: no walk, no navigation, ties `wpick` / `wsw
 | T3 coverage | not tested at the pickaxe link (on-policy anyway) | stone >= 15% would show the stone states are reached on-policy |
 
 ## 5. Kill list and open list: in the final report (written after the tests).
+
+## Addendum before Z7 / Z8 run (20:30 UTC Oct 16; no reading changed)
+- Z1 to Z5 have run (results in the final report). Z6 cannot run: no GW-F / GW-F2 checkpoint exists on any branch (record search).
+- Z7 and Z8 run in this cloud container (4 free CPU cores, $0), **not on the Mac** (GW-O untouched). Inputs from
+  `origin/claude/project-thread-yha868:results/game-world/glprobe-run/` (GW-L 64k checkpoints s200 / s201, held-out views).
+- Practice run seeds **398** (seed 200) and **399** (seed 201), unused anywhere in the record; days 0 to 3, worlds 0 to 99, act stream
+  `default_rng([9, run seed, day, i])`, explore 0.10, sample T = 1, cap 1000: the A26 play rule with the GW-L checkpoint as the policy.
+- One play pass serves both: Z8 uses all 400 games; Z7 uses the first 200 (days 0 and 1), as written, and also reports all 400.
+- Check before any reading: the loaded checkpoints must reproduce A23's held-out S top-1 (62.4% / 64.8%) to 0.1 point.
