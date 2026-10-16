@@ -16,7 +16,7 @@ until [ -f $W/COLLECTED ]; do
   $V collectck --id $ID --out $W/collected --want "$WANT" --max-min 100 >> $W/collect.log 2>&1
   tail -n 1 $W/collect.log | cut -c1-300 | tee -a $LOG
   if complete; then touch $W/COLLECTED; else
-    $V status --id $ID 2>&1 | tee -a $LOG | grep -q '"actual_status": *"running"' || { say "box not running any more"; break; }
+    $V status --id $ID 2>&1 | tee -a $LOG | grep -q '"cur_state": *null' && { say "box is gone (no instance record)"; break; }
   fi
 done
 [ -f $W/COLLECTED ] || fail "collectck did not finish (see collect.log)"
