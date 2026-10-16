@@ -1,0 +1,21 @@
+run        status   steps train_min  in_dist  chain5  stair_final | intact  zero  shuffle  scr_cost(int-shuf) | swap
+base_s100  ok       24000     16.9    84.85   67.50      66.53  |  84.85  82.13   83.38     1.47  (zero cost 2.72; chain5 67.5/51.5/57.4) | swap identical=True differ=0/7200 vsRESULT={'exact_delta': {'in_dist': 0.0, 'answer': 0.0, 'frame': 0.0, 'vocab': 0.0, 'variant': 0.0, 'family': 0.0}, 'chain5_hits_differ': 0}
+    (reference, untaught) base scratch next-value staircase rows: [0.0, 5.9, 6.3, 6.7, 6.4, 6.3]
+arm_s100  ok       24000     20.0    82.06   51.90      50.31  |  82.06  82.35   81.91     0.15  (zero cost -0.29; chain5 51.9/51.6/51.1)
+    scratch next-value staircase_rows: by_round [59.7, 49.3, 49.8, 51.1, 49.9, 49.2] scored [962, 962, 962, 962, 962, 962] excluded [0, 0, 0, 0, 0, 0]
+    scratch next-value in_dist_rows: by_round [79.5, 82.3, 82.7, 82.1, 82.0, 81.7] scored [1358, 1358, 1358, 1358, 1358, 1358] excluded [2, 2, 2, 2, 2, 2]
+base_s101  ok       24000     17.4    82.43   62.20      60.81  |  82.43  81.32   81.84     0.59  (zero cost 1.10; chain5 62.2/52.8/55.3) | swap identical=True differ=0/7200 vsRESULT={'exact_delta': {'in_dist': 0.0, 'answer': 0.0, 'frame': 0.0, 'vocab': 0.0, 'variant': 0.0, 'family': 0.0}, 'chain5_hits_differ': 0}
+    (reference, untaught) base scratch next-value staircase rows: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+arm_s101  ok       24000     18.9    81.76   47.10      45.01  |  81.76  82.06   81.69     0.07  (zero cost -0.29; chain5 47.1/47.3/46.6)
+    scratch next-value staircase_rows: by_round [55.2, 45.0, 45.9, 46.0, 44.5, 44.6] scored [962, 962, 962, 962, 962, 962] excluded [0, 0, 0, 0, 0, 0]
+    scratch next-value in_dist_rows: by_round [80.9, 80.6, 81.6, 81.9, 81.5, 81.7] scored [1358, 1358, 1358, 1358, 1358, 1358] excluded [2, 2, 2, 2, 2, 2]
+base_s102  ok       24000     17.2    85.29   60.40      58.94  |  85.29  85.15   84.63     0.66  (zero cost 0.15; chain5 60.4/56.8/56.3) | swap identical=True differ=0/7200 vsRESULT={'exact_delta': {'in_dist': 0.0, 'answer': 0.0, 'frame': 0.0, 'vocab': 0.0, 'variant': 0.0, 'family': 0.0}, 'chain5_hits_differ': 0}
+    (reference, untaught) base scratch next-value staircase rows: [0.4, 5.8, 6.1, 5.7, 5.6, 5.7]
+arm_s102  ok       24000     19.3    82.79   53.20      51.56  |  82.79  83.01   82.65     0.15  (zero cost -0.22; chain5 53.2/53.9/53.5)
+    scratch next-value staircase_rows: by_round [58.2, 50.0, 51.6, 52.1, 51.9, 51.8] scored [962, 962, 962, 962, 962, 962] excluded [0, 0, 0, 0, 0, 0]
+    scratch next-value in_dist_rows: by_round [81.8, 82.4, 83.2, 82.8, 82.7, 82.8] scored [1358, 1358, 1358, 1358, 1358, 1358] excluded [2, 2, 2, 2, 2, 2]
+
+in_dist: base mean 84.19 SD 1.54 | arm mean 82.21 worst 81.76 | diff -1.99 vs threshold 3.09
+  answer win: False (diff>=thr False; worst arm > base mean False)
+scramble cost (intact - shuffle, in_dist): base [1.47, 0.59, 0.66] mean 0.91 | arm [0.15, 0.07, 0.15] mean 0.12
+  every arm cost > every base cost: False
