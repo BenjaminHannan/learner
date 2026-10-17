@@ -485,6 +485,7 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
     device = hidden.device
     mentions = model._mentions(batch)
     episode = model._start(batch, hidden, store, mentions)
+    episode.hard = True
     everyone = torch.arange(count, device=device)
     if store is not None and count:
         gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
@@ -510,7 +511,7 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
             top = store.top(scores, config.top_k)
             if step == 0:
                 first_top = torch.where(top == store.null, torch.full_like(top, -1), top)
-            model._insert(episode, store, index, top.masked_fill(((ask <= 0) | done).unsqueeze(1), -1))
+            model._insert(episode, store, index, model._choose(episode, index, store, scores, ask, done))
         running[index[done]] = False
     tokens, lengths = model._greedy(batch, episode, mentions, stop)
     return Answers(tokens, lengths, used, first_top, episode.fetched, halt_prob)

@@ -193,8 +193,16 @@ class CardWriter(nn.Module):
         weight = weight / total[slot]
         pooled = torch.zeros(visits * lines, hidden.shape[-1], device=hidden.device).index_add(
             0, slot, weight.unsqueeze(-1) * hidden[real].float()).view(visits, lines, -1)
-        return CardStore.write(self.key(pooled), self.value(pooled), batch,
+        return CardStore.write(self._keys(pooled, batch), self._values(pooled, batch), batch,
                                self.null_key, self.null_value)
+
+    def _keys(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[B, L, dk] card keys before CardStore.write normalises them."""
+        return self.key(pooled)
+
+    def _values(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[B, L, d] card values."""
+        return self.value(pooled)
 
 
 class ThinkLayer(nn.Module):
@@ -317,6 +325,13 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    hard: bool = False                          # answer paths: discrete decisions (row halting)
+    history: Optional[list] = None              # steal 3: register states [Q, registers, d] entering each loop
+    keep: Optional[torch.Tensor] = None         # steal 5: [Q, registers] share of each register still updating
+    ponder: Optional[list] = None               # steal 5: per-loop keep terms for the ponder cost
+    ask_cache: Optional[torch.Tensor] = None    # steal 7: [Q, L + 1] ASK scores at the last refresh
+    ask_query: Optional[torch.Tensor] = None    # steal 7: [Q, dk] unit query at the last refresh
+    ask_age: Optional[torch.Tensor] = None      # steal 7: [Q] loops since the last refresh
 
 
 class PremonitionMini(nn.Module):
@@ -483,17 +498,36 @@ class PremonitionMini(nn.Module):
     def _step(self, episode: _Episode, index: torch.Tensor, step: int, store: Optional[CardStore]
               ) -> tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
         """One loop for questions `index`: (rows, halt logit, ask logit, ASK scores)."""
-        rows = self.think(episode.x[index], episode.valid[index], step)
+        rows = self.think(self._loop_input(episode, index, step), episode.valid[index], step)
+        rows = self._loop_output(episode, index, step, rows)
         episode.x = episode.x.index_copy(0, index, rows.to(episode.x.dtype))
         register = _norm(rows[:, self._register_base])
         halt = self.heads.halt(register).squeeze(-1).float()
         if store is None:
             return rows, halt, None, None
         ask = self.heads.ask(register).squeeze(-1).float()
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias,
-                           episode.fetched[index], questions=index)
+        scores = self._ask_scores(episode, index, step, store, register)
         return rows, halt, ask, scores
+
+    def _loop_input(self, episode: _Episode, index: torch.Tensor, step: int) -> torch.Tensor:
+        """[n, R, d] rows fed to loop `step` for questions `index`."""
+        return episode.x[index]
+
+    def _loop_output(self, episode: _Episode, index: torch.Tensor, step: int, rows: torch.Tensor) -> torch.Tensor:
+        """[n, R, d] rows a loop leaves behind, from the think block's output `rows`."""
+        return rows
+
+    def _ask_scores(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
+                    register: torch.Tensor) -> torch.Tensor:
+        """[n, L + 1] ASK scores of questions `index` from their normed register 0."""
+        return store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
+                         self.heads.log_kappa.exp(), self.think.age_bias,
+                         episode.fetched[index], questions=index)
+
+    def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
+                ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
+        """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`."""
+        return store.top(scores, self.config.top_k).masked_fill(((ask <= 0) | stop).unsqueeze(1), -1)
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
@@ -607,7 +641,7 @@ class PremonitionMini(nn.Module):
                 continue
             cards = self._teacher_cards(store, episode, index, need, gold[index], generator)
             if mode == "own" and p_own > 0:
-                own = store.top(scores.detach(), config.top_k).masked_fill((ask <= 0).unsqueeze(1), -1)
+                own = self._choose(episode, index, store, scores.detach(), ask, torch.zeros_like(going))
                 own = F.pad(own, (0, cards.shape[1] - own.shape[1]), value=-1)
                 pick = torch.rand(index.numel(), device=device, generator=generator) < p_own
                 cards = torch.where(pick.unsqueeze(1), own, cards)
@@ -704,6 +738,7 @@ class PremonitionMini(nn.Module):
                            torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
+        episode.hard = True
         limit = min(max_loops or config.max_loops, config.max_loops)
         running = torch.ones(count, dtype=torch.bool, device=device)
         used = torch.zeros(count, dtype=torch.long, device=device)
@@ -722,8 +757,7 @@ class PremonitionMini(nn.Module):
                 top = store.top(scores, config.top_k)
                 if step == 0:
                     first_top = torch.where(top == store.null, torch.full_like(top, -1), top)
-                cards = top.masked_fill(((ask <= 0) | done).unsqueeze(1), -1)
-                self._insert(episode, store, index, cards)
+                self._insert(episode, store, index, self._choose(episode, index, store, scores, ask, done))
             running[index[done]] = False
         tokens, lengths = self._greedy(batch, episode, mentions, stop)
         return Answers(tokens, lengths, used, first_top, episode.fetched, halt_prob)
