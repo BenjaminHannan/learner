@@ -159,3 +159,16 @@ teaches no walks.
   round-7 pass with wood on 80% of maps or fewer would also kill the lead theory.)
 
 Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent implementations, the Z7 / Z8 result and reproduction JSONs, and the Z7 / Z8 code as it ran (its paths point at the session scratchpad). The 400-game play files are not committed (3 MB a seed); they can be rebuilt from run seeds 398 / 399.
+
+## GW-LS start record (Oct 17; written before any round-3 or round-4 number exists; no mark changed)
+- **Authorized:** Ben's Oct 17 instruction, relayed by the coordinator ("every blocker gets this goal treatment; GW-LS is AUTHORIZED to start under
+  its already-sealed marks"). Started at about 14:49 UTC Oct 17 on this cloud container's free CPU ($0), both seeds in parallel, 2 threads each.
+- **Code (DRAFT pending coordinator code review):** `game/imitate.py` gains `--day-offset` (default 0, so every earlier run is unchanged) and allows
+  run seeds 398 / 399, but only with day offset >= 4. New files: `game/gwls.sh` (launcher), `game/gwls_report.py` (per-round report and the
+  round-4 indicator) and `game/gwls_final.py` (the single sealed read at round 8 and the final marks). An independent audit found no blocking issue.
+  `game/tests/test_imitate.py`: 15 tests pass, including the real smoke and resume tests.
+- **Reading of the round-4 sentence, fixed now.** The sentence is "on both seeds, ratio <= 0.5 or non-habit drop >= 0.5". It is read per seed:
+  a seed trips if either condition holds, and the stop fires only if both seeds trip. "Means of rounds 3 and 4" for the ratio = the mean of
+  the two per-round W_w / A_w values (A27 rule). The other reading ("ratio on both seeds" or "drop on both seeds") is also computed, and any
+  disagreement is reported.
+- **Results are provisional until the coordinator reviews the code.** If the review changes the code in a way that matters, the affected rounds re-run.
