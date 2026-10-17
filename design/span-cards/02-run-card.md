@@ -1,6 +1,7 @@
 # Run card SC-1: span cards vs per-line cards (pre-registered)
 
-Status: DRAFT for coordinator review. **No run is booked or started.** Training needs the coordinator's gate
+Status: DRAFT. Terms confirmed by the coordinator (Q21, 2026-10-17). It may be sealed once the Q20 code
+review passes on the whole draft (including `premonition/span_cards.py`). **No run is booked or started.** Training needs the coordinator's gate
 (see `03-funding-bid.md`). Bars, predictions and guards below are fixed now, before any run. After the
 coordinator approves this card, it is sealed (`shasum -a 256` of this file plus every code file in section 9)
 before the first registered run. Nothing in it may change after sealing; a FAIL gets exactly one
@@ -11,12 +12,13 @@ The card writer. LINE = today's `CardWriter` (one card per non-question line). S
 (`premonition/span_cards.py`; design: `01-design.md`). Everything else is shared and identical: reader, think
 loop, ASK, binder, decoder, losses, curriculum, optimiser, data order, FLOP budget and evaluation code.
 
-## 2. Terms in the brief that this repo does not define (coordinator: confirm or replace)
-Searched the whole repo; the newest dated content is 2026-09-30. Each mapping below is my proposal.
+## 2. Terms in the brief that this repo does not define (CONFIRMED by the coordinator, Q21)
+The repo was searched; its newest dated content is 2026-09-30. The coordinator confirmed every mapping below
+as written, with the primary ruler fixed as `far`.
 
 | Brief's term | Not found as such. Mapped to | Source |
 |---|---|---|
-| far held-out join score (primary ruler) | own-retrieval exact match on the **`far`** slice (knowable, evidence outside A's 736-token cut) of the **held-out split**, label-free regime, v2 tokenizer, scored once through the sealed procedure. There is no "join" slice. If "join" means multi-step evidence, the coordinator should pick `far_deep` (far and depth >= 2) instead, **before sealing**. | `premonition/slices.py:94-100, 147-153`; `exp1.py:8` |
+| far held-out join score (primary ruler) | own-retrieval exact match on the **`far`** slice (knowable, evidence outside A's 736-token cut) of the **held-out split**, label-free regime, v2 tokenizer, scored once through the sealed procedure. There is no "join" slice. **Primary = `far`** (Q21). `far_deep` (far and depth >= 2) is reported as a **secondary slice only**. | `premonition/slices.py:94-100, 147-153`; `exp1.py:8` |
 | house-form bars | the code policy: one-sided alpha = 0.01, paired by question, at least 100 paired items, minimum effect 3 points | `learnlab/policy.py:8-14`; `premonition/exp1.paired` |
 | house family rule | a claim holds for a family of seeds iff it holds in >= 2 of 3 seeds, judged per seed, never averaged | `tests/test_fable_dispatcher_probes26.py:541`; `artifacts/claude-fewex-20260927/PASSMARKS.md:9` |
 | DEV slip | a drop on the development split (`validation`). Defined in G2 below. | `exp1.py:8` |
@@ -31,8 +33,10 @@ Searched the whole repo; the newest dated content is 2026-09-30. Each mapping be
   `train_d` sets it, stop at F +/- 5%.
 - **Parent P_s (s = 0, 1, 2):** LINE trained from scratch with seed s to **5% of F** (the end of the gold
   phase). The branch point is the start of the teacher phase, so SPAN's gate experiences both the teacher and
-  own phases. If the coordinator already holds a per-line, label-free, v2 D checkpoint of this recipe, it may
-  replace P_s; that must be stated before sealing.
+  own phases. P_s is built fresh inside Stage 1 (Q21: the coordinator holds no substitutable checkpoint).
+- **Pairing scope:** the arms share the parent, data order and seeds. They are **not** bit-paired after the
+  branch: SPAN's store is wider (token columns), so the same generator seed draws different teacher cards.
+  Per-question pairing of the test is unaffected.
 - **Arms from P_s, for the remaining 95% of F:**
   - LINE: P_s continued unchanged.
   - SPAN: `SpanCardMini` loaded from P_s (the gate is new; every other weight is P_s's).
@@ -63,8 +67,9 @@ Cell B is conditional: it runs only if Cell A passes guards G1-G4 for SPAN (sect
 is "the mechanism breaks retrieval on today's data", and B is not funded.
 
 ## 5. Evaluation sets (all label-free, own retrieval, `PremonitionMini.answer`, greedy)
-- **E1 (primary, sealed):** the held-out split's `far` slice (or `far_deep`, see section 2), scored once per
-  arm per seed by the coordinator's sealed procedure. This session never loads it.
+- **E1 (primary, sealed):** the held-out split's `far` slice, scored once per arm per seed by the
+  coordinator's sealed procedure. `far_deep` is reported as a secondary slice, with no verdict. This session
+  never loads it.
 - **E2 DEV:** the `validation` split: overall, `near`, `far`, `multi_hop`.
 - **E3 (secondary, sealed):** E1's split passed through `reflow_cache(merge=0.30, split=0.30, seed=777)`,
   with the same slice. The reflow seed differs from training's, and so do the rates.

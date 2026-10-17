@@ -149,7 +149,10 @@ unchanged.
 2. **Rate (budget) loss.** H-Net's ratio loss
    `L_rate = N/(N-1) * ((N-1) * F * G + (1-F) * (1-G))`,
    where `F` is the share of tokens that start a hard card, `G` is the mean `p`, and `N` is the target tokens
-   per card. It is minimised at `F = G = 1/N` (value 1). **`N` is set to the training cache's mean tokens per
+   per card. Correction (found in code review of the draft): the loss is bilinear in (F, G), so
+   `F = G = 1/N` (value 1) is a saddle, not a minimum. It works because `F` is a hard count with no gradient.
+   Only `G` is trained, and `dL/dG ∝ N·F - 1` pushes the gate down when there are too many cards and up when
+   there are too few, and is zero at `F = 1/N`. This is H-Net's own usage. **`N` is set to the training cache's mean tokens per
    non-question line**, so the span arm stores the same number of cards as the per-line arm on average.
    Any gain must come from placement, not from storing more. Weight `w_rate = 0.03` (H-Net's value; an
    assumption, not tuned).
@@ -185,7 +188,8 @@ accuracy, slices and asked-rate stay valid. Its line-based recall@4 and `cards` 
 for span cards and are superseded by `card_economy` (below), which is layout-aware and runs on both arms.
 
 ### 3.5 Cost
-- Parameters: `+2d + 1` for the gate (257 at d = 128, +0.01%). Nothing else is added.
+- Parameters: `+2d + 2` for the gate (a `2d + 1` linear plus the newline weight; 258 at d = 128, +0.01%).
+  Nothing else is added.
 - Training FLOPs: the surrogate is a banded `[K, K + W]` product per 64-token chunk, about `2 * (K + W) * d`
   multiply-adds per token (about 33k), against D's about 18 MFLOP per token by hand (+0.2%). It is charged by
   the same `FlopCounterMode` fit as every contender.
@@ -221,6 +225,23 @@ precedent for adding a new file).
 | F6 | Wipe leak: a card straddling the window start | handled by the first-line rule; checked by a unit test | test |
 | F7 | Surrogate and forward disagree (STE bias) | gate oscillates near 1/2 | share of `p` in (0.4, 0.6) |
 | F8 | Branch-point shock (a loss jump right after branching) | none expected: the function is identical at the branch | step-0 loss of both arms equal, tested |
+
+## 5b. $0 checks run on the draft (2026-10-17, CPU, this session)
+- Unit tests: 22 span-card and 11 reflow tests, plus the existing model, card-pool, train, data and
+  pool-control suites. Result: 88 passed, 1 skipped (a pre-existing skip).
+- Real data at full size (d = 128, v2; 256 generated train visits): the branch-point `answer()` tokens, loops
+  and `first_top` of SPAN-at-init equal the per-line parent's on 12 visits. `card_economy` is identical for
+  both (1,076 cards, line_aligned 1.0, gold_missing 0).
+- Overhead (one CPU sample, not used for costing): writer forward+backward 0.16 s vs 0.06 s; a full own-mode
+  step 27.7 s vs 24.2 s (about +15%), mostly the wider token-indexed store. Stage 0 measures it on GPU.
+- Tiny-preset smoke, 300 steps per arm on real data: stable, with similar losses (6.46 vs 6.42), `L_rate`
+  about 1.000, and 11.0-11.3 tokens per card against N = 11.17. The gate barely moved (newline weight 8 to
+  7.99, bias -4 to -3.97) and the DEV layout stayed 100% line-aligned. Open observation for the reviewer: at
+  that identical layout, the arms' DEV `null_share` differed (SPAN 0.16, LINE 0.016) and so did
+  `fetches_per_q` (10.6 vs 14.9). The likely cause is trajectory noise: the wider store makes the same
+  generator seed draw different teacher cards, so the arms are paired by parent, data and seed, not bitwise
+  after the branch. That was not confirmed (the seed-noise check was stopped). If G1's absolute margins are
+  inside seed noise, G1 is flaky. The bars are not changed here; a change would go to Ben.
 
 ## 6. What this does not claim
 - Nothing is trained. No accuracy claim of any kind is made here.

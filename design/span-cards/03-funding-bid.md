@@ -1,6 +1,12 @@
 # Funding bid SC-1 (to the coordinator)
 
-Status: BID. Nothing is booked. $0 work (design, code, tests, run card, local data pilots) is done under the
+Status: BID. Nothing is booked.
+**Ruling (Q22, 2026-10-17):** Stage 0 is YES in principle, with a hard stop at $0.50, on an on-demand box only.
+It books ONLY after the Q20 code review passes and `span_cards.py` is committed. The overhead placeholder below
+is filled from the Stage 0 measurement itself. Stages 1 and 2 are NOT booked: Stage 1 waits for the Stage 0
+report (projected ≤ $18, branch-point check identical, smoke finite), a sealed card and the coordinator's
+queue call. Stage 2 waits for Stage 1's G1-G4 and next week's cap. If Stage 0 projects Stage 1 above $18,
+stop and re-bid (no seed cut). $0 work (design, code, tests, run card, local data pilots) is done under the
 standing pre-approval. **No training rental starts until the coordinator gates it**, one stage at a time.
 
 ## Ask, in one line
@@ -23,7 +29,8 @@ same box rate, and is included in the Stage 1/2 caps.
   label-free 52k-token batch (41 visits, 422 questions; `flops.measure_mini`, this session). Curriculum-weighted
   ≈ 1.2e12 per step, so a full run at F ≈ 3.15e16 (design/06 §4) is **≈ 26,000 steps / ≈ 1.35B tokens**.
 - Plan size: 0.15 (parents) + 5.7 (Cell A) + 5.7 (Cell B) = 11.55 full-run equivalents.
-- SPAN overhead vs LINE: **OVERHEAD_PLACEHOLDER**
+- SPAN overhead vs LINE: **to be filled from the Stage 0 GPU measurement (Q22).** CPU pre-measure, for
+  context only and not used for costing: about +15% wall per own-mode step (27.7 s vs 24.2 s, one sample).
 - **Unknown: GPU seconds per step.** The think loop is Python-level (up to 8 loops × per-question gathers), so D
   is launch-bound, not FLOP-bound; nothing in the repo measures it on a GPU. CPU (4 threads) is 23 s/step.
   Assuming 0.3-1.0 s/step: 2.2-7.2 h per full run, Stage 1 ≈ 13-42 GPU-h, Stage 2 the same.
