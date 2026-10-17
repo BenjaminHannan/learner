@@ -188,3 +188,12 @@ Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent 
   - s200: non-habit 5.8825 against 5.72; first seed 4,980,400; days {4..7}; played agreement 36.38% against 36.51%; total 7.082 against 6.915.
   - s201: non-habit 5.8975 against 5.87; first seed 4,990,400; days {4..7}; played agreement 37.32% against 37.27%; total 7.160 against 7.125.
 - **V2 PASS:** 28f6fcc42 was committed 14:56:17 UTC. iter-3.json was written 18,476 s (s200) and 19,651 s (s201) later.
+
+## GW-LS round-4 leading indicator (read 22:12 UTC Oct 17, by the sealed rule; practice games only)
+- s200: mean of rounds 3-4: ratio W_w / A_w 3.04 (stop line 0.5); non-habit 5.7475 (stop line 5.22, i.e. 5.72 - 0.5).
+- s201: ratio 7.02 (stop line 0.5); non-habit 6.1463 (stop line 5.37).
+- **Branch: CONTINUE** (no seed trips; the alternative reading gives the same branch). Rounds 5 to 8 run.
+- Reported, not marked (practice, rounds 1 -> 4):
+  - s200 stone games 49.8 -> 35.8%; played agreement 36.4 -> 27.7%; non-habit 5.88 -> 5.67.
+  - s201 stone games 47.5 -> 43.5%; played agreement 37.3 -> 30.0%; non-habit 5.90 -> 5.99.
+  - The final mark needs stone >= +10 points on the sealed screen on both seeds; practice stone is moving the other way on s200.
