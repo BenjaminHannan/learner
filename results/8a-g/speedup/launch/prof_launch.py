@@ -7,7 +7,11 @@ run the new arms with the same code and the same options as the old ones.
   python prof_launch.py <same> --variant defer --sections profiler,syncs --out out/defer_profile.json
 
 New arms (all of them go through prof_train's own machinery; none edits custom_io):
+  same          the do-nothing arm (baseline under another name) for the A-A noise control.
   defer         defer.py: the deferred batched writer (attack A). NUMERICS-CHANGING ('near').
+
+--deterministic  sets CUBLAS_WORKSPACE_CONFIG=:4096:8 before torch is imported and torch.use_deterministic_algorithms(True, warn_only=True) (kvcat's exactness check).
+Every abbench run record gains started_utc / ended_utc / timed_start_utc / timed_end_utc and rounds_seq; every run writes <out>.launch.json (host CPU model, versions, switch).
   <the classes of exact_arms.NEW_VARIANTS>   if a file exact_arms.py sits in this folder (another agent writes it): `import exact_arms`, then every Variant class in its list NEW_VARIANTS is
                 registered under its `name`. A class may set `ab_cpu_rule` ('bit_exact', 'equal_to_rounding' or 'bar_only'; default 'bar_only', the weakest) for mark 6's CPU clause.
                 A failing import is printed loudly and skipped (the other arms still run).
@@ -22,7 +26,13 @@ rule pad64 and pad64p have. Reason: the arm is numerics-changing by construction
 CPU in fp32 it meets the rounding rule by more than 10x (test_defer.py: loss rel diff 0 to 1e-7, gradient rel L2 7e-8 to 1.1e-7), so the weaker 'bar_only' would only let a real semantics bug of up
 to 1e-4 loss / 0.9999 cosine through on the CPU. The clause is used only on a CPU fp32 run (ab_mark6 never applies it on a GPU run: there the bar alone decides, in bf16, and says so).
 """
-import importlib, os, sys, traceback
+import datetime, importlib, json, os, platform, socket, sys, time, traceback
+
+# --deterministic (GPU-RUN-4 condition 3): must act BEFORE torch is imported (CUBLAS_WORKSPACE_CONFIG is read when CUDA/cuBLAS starts), so it is taken off argv here, first.
+DETERMINISTIC = '--deterministic' in sys.argv[1:]
+if DETERMINISTIC:
+    sys.argv = [sys.argv[0]] + [a for a in sys.argv[1:] if a != '--deterministic']
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROFDIR = os.path.normpath(os.path.join(HERE, '..', 'prof'))
@@ -33,7 +43,71 @@ import prof_train as prof                                                    # n
 import defer                                                                  # noqa: E402
 
 CPU_RULES = ('bit_exact', 'equal_to_rounding', 'bar_only')
-EXPLICIT_RULE = dict(defer='equal_to_rounding')
+EXPLICIT_RULE = dict(defer='equal_to_rounding', same='bit_exact')
+
+if DETERMINISTIC:
+    import torch                                                             # noqa: E402  (already imported by prof_train, after the env var was set)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+
+class Same(prof.Variant):
+    """The do-nothing arm (GPU-RUN-4 condition 3): exactly the baseline under another name, so the A-A noise control runs through abbench (prof_train refuses the name 'baseline' as a B
+    arm). setup / teardown / every hook are the base class's no-ops: B runs the same code as A, the same rows, the same seed."""
+    name, doc = 'same', 'baseline under another name: the A-A noise control (does nothing)'
+    ab_cpu_rule = 'bit_exact'
+
+
+# ---- bench records: wall-clock start / end and the rounds of every micro-batch, per run (condition 3; mark 4 needs the sequence, mark 3 the clock times) ----
+_LAST_AUX = {}
+_orig_free_run, _orig_ab_run = prof.free_run, prof.ab_run
+
+
+def _utc(t):
+    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+
+def free_run(tr, n, chunk):
+    """prof_train.free_run, then keep the (rows, rounds) of every timed micro-batch, in order, and the clock time of every chunk end."""
+    t0 = time.time()
+    per = _orig_free_run(tr, n, chunk)
+    _LAST_AUX['seq'] = [None if r is None else float(r) for _, r in list(getattr(tr, 'aux_log', []) or [])]
+    _LAST_AUX['timed_start'], _LAST_AUX['timed_end'] = t0, time.time()
+    return per
+
+
+def ab_run(world, args, names, accum):
+    """prof_train.ab_run plus: started_utc / ended_utc (the whole run, warm-up included), timed_start_utc / timed_end_utc (the 40 timed updates), rounds_seq (thinker rounds of every timed
+    micro-batch, in order: A and B rounds must match exactly, mark 4), host / pid."""
+    _LAST_AUX.clear()
+    t0 = time.time()
+    rec = _orig_ab_run(world, args, names, accum)
+    t1 = time.time()
+    rec.update(started_utc=_utc(t0), ended_utc=_utc(t1), t_start=t0, t_end=t1, host=socket.gethostname(), pid=os.getpid(), arm_names=list(names), accum=accum)
+    if 'seq' in _LAST_AUX:
+        rec.update(rounds_seq=_LAST_AUX['seq'], timed_start_utc=_utc(_LAST_AUX['timed_start']), timed_end_utc=_utc(_LAST_AUX['timed_end']),
+                   t_timed_start=_LAST_AUX['timed_start'], t_timed_end=_LAST_AUX['timed_end'])
+    return rec
+
+
+prof.free_run, prof.ab_run = free_run, ab_run          # sec_abbench / sec_throughput look these names up in prof_train's globals at call time
+
+
+def host_info():
+    """What GPU-RUN-4 records about the box (condition 6): host CPU model, cores, torch / CUDA / driver versions, the deterministic switch."""
+    import torch
+    cpu = None
+    try:
+        for line in open('/proc/cpuinfo'):
+            if line.lower().startswith('model name'):
+                cpu = line.split(':', 1)[1].strip()
+                break
+    except OSError:
+        cpu = platform.processor() or None
+    info = dict(host=socket.gethostname(), cpu_model=cpu, logical_cpus=os.cpu_count(), python=platform.python_version(), torch=torch.__version__, cuda=torch.version.cuda,
+                cudnn=torch.backends.cudnn.version() if torch.backends.cudnn.is_available() else None, gpu=torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+                deterministic=DETERMINISTIC, cublas_workspace_config=os.environ.get('CUBLAS_WORKSPACE_CONFIG'), deterministic_algorithms=torch.are_deterministic_algorithms_enabled(),
+                argv=sys.argv[1:], started_utc=_utc(time.time()))
+    return info
 
 
 def _insert_after(seq, name, anchor):
@@ -85,15 +159,38 @@ def load_exact_arms(say=print, module='exact_arms'):
 
 
 def register_all(say=print, exact_module='exact_arms'):
-    names = register(defer.NEW_VARIANTS, say)
+    names = register([Same], say)
+    names += register(defer.NEW_VARIANTS, say)
     names += register(load_exact_arms(say, exact_module), say)
     return names
+
+
+def _out_path(argv):
+    a = list(sys.argv[1:] if argv is None else argv)
+    for i, x in enumerate(a):
+        if x == '--out' and i + 1 < len(a):
+            return a[i + 1]
+        if x.startswith('--out='):
+            return x.split('=', 1)[1]
+    return None
 
 
 def main(argv=None):
     names = register_all()
     print(f'prof_launch: registered {names}; setup order {prof.SETUP_ORDER}; ab arm order {prof.AB_ARM_ORDER}', flush=True)
-    return prof.main(argv)
+    info = host_info()
+    print('prof_launch: host ' + json.dumps(info), flush=True)
+    out = _out_path(argv)
+    side = (os.path.splitext(out)[0] + '.launch.json') if out else None
+    if side:                                                             # a sidecar beside prof_train's json: host, versions, switch, clock (prof_train's own json is not edited)
+        os.makedirs(os.path.dirname(side) or '.', exist_ok=True)
+        json.dump(info, open(side, 'w'), indent=1)
+    try:
+        return prof.main(argv)
+    finally:
+        if side:
+            info['ended_utc'] = _utc(time.time())
+            json.dump(info, open(side, 'w'), indent=1)
 
 
 if __name__ == '__main__':
