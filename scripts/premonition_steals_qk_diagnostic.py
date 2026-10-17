@@ -50,9 +50,10 @@ def first_ask(model: PremonitionMini, batches: list) -> dict:
     config = model.config
     groups: dict[str, dict[str, list[float]]] = {
         name: {field: [] for field in FIELDS}
-        for name in ("fetched_correct", "fetched_wrong", "eligible_gold", "eligible_nongold")}
+        for name in ("fetched_correct", "fetched_wrong", "eligible_gold", "eligible_nongold", "outranking_wrong")}
+    paired: dict[str, list[float]] = {"raw_key_norm_gap": [], "cos_gap": [], "margin": []}
     stats = dict(questions=0, told=0, fetched_real=0, fetched_null=0, questions_with_null=0, questions_with_gold=0,
-                 gold_in_top_k=0, gold_total=0)
+                 gold_in_top_k=0, gold_total=0, ranked=0, gold_first=0)
     raw_hook: dict[str, torch.Tensor] = {}
     handle = model.writer.key.register_forward_hook(lambda _m, _a, out: raw_hook.__setitem__("keys", out.detach()))
     try:
@@ -92,8 +93,25 @@ def first_ask(model: PremonitionMini, batches: list) -> dict:
                 "value_norm": store.values.float().norm(dim=-1)[visit],
                 "raw_query_norm": raw_query.norm(dim=-1).unsqueeze(1).expand_as(cos),
                 "cos": cos, "kappa_cos": kappa * cos, "age_bias": bias}
+            # Rank view: with one gold card and top-4 fetches, 3 of 4 fetches are "wrong" by construction, so the
+            # sharper question is which wrong cards OUTRANK the best gold card, and how they differ from it.
+            score = scores[:, :store.null].float()
+            have = (real_gold & eligible).any(1)
+            gold_best = score.masked_fill(~(real_gold & eligible), float("-inf")).max(1).values
+            wrong_ok = eligible & ~real_gold
+            wrong_best, wrong_at = score.masked_fill(~wrong_ok, float("-inf")).max(1)
+            outrank = wrong_ok & (score > gold_best.unsqueeze(1)) & have.unsqueeze(1)
+            stats["ranked"] += int(have.sum())
+            stats["gold_first"] += int((have & (gold_best > wrong_best)).sum())
+            gold_at = score.masked_fill(~(real_gold & eligible), float("-inf")).argmax(1)
+            rows_q = torch.nonzero(have & torch.isfinite(wrong_best)).squeeze(1)
+            raw_norm = raw_keys.norm(dim=-1)[visit]
+            paired["raw_key_norm_gap"] += (raw_norm[rows_q, wrong_at[rows_q]] - raw_norm[rows_q, gold_at[rows_q]]).tolist()
+            paired["cos_gap"] += (cos[rows_q, wrong_at[rows_q]] - cos[rows_q, gold_at[rows_q]]).tolist()
+            paired["margin"] += (gold_best[rows_q] - wrong_best[rows_q]).tolist()
             masks = {"fetched_correct": fetched & real_gold, "fetched_wrong": fetched & ~real_gold & told.unsqueeze(1),
-                     "eligible_gold": eligible & real_gold, "eligible_nongold": eligible & ~real_gold & told.unsqueeze(1)}
+                     "eligible_gold": eligible & real_gold, "eligible_nongold": eligible & ~real_gold & told.unsqueeze(1),
+                     "outranking_wrong": outrank}
             for name, mask in masks.items():
                 for field, value in quantities.items():
                     groups[name][field] += value[mask].tolist()
@@ -103,6 +121,8 @@ def first_ask(model: PremonitionMini, batches: list) -> dict:
                      for name, fields in groups.items()}, "fetch": stats}
     out["fetch"]["null_fetch_rate_per_question"] = stats["questions_with_null"] / max(stats["questions"], 1)
     out["fetch"]["recall_at_k"] = stats["gold_in_top_k"] / max(stats["gold_total"], 1)
+    out["fetch"]["gold_ranked_first"] = stats["gold_first"] / max(stats["ranked"], 1)
+    out["paired_best_wrong_minus_gold"] = {name: summary(values) for name, values in paired.items()}
     out["kappa"] = float(model.heads.log_kappa.exp())
     return out
 
@@ -119,6 +139,9 @@ def report_line(label: str, result: dict) -> str:
         lines.append(f"    {field:<18}" + "".join(f"{cell(g, field):>20}" for g in result["cards"]))
     counts = {g: result["cards"][g]["raw_key_norm"]["count"] for g in result["cards"]}
     lines.append(f"    {'count':<18}" + "".join(f"{counts[g]:>20}" for g in result["cards"]))
+    pair = result["paired_best_wrong_minus_gold"]
+    lines.append(f"    gold ranked first {fetch['gold_ranked_first']:.3f}; best wrong minus gold (mean/median): "
+                 + ", ".join(f"{k} {v['mean']:.3f}/{v['median']:.3f}" for k, v in pair.items() if v["count"]))
     return "\n".join(lines)
 
 
