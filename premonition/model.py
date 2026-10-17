@@ -26,7 +26,7 @@ import torch.nn.functional as F
 from learnlab.core import IGNORE_INDEX
 from premonition.batch import PAD_ID, VisitBatch
 from premonition.config import MiniConfig
-from premonition.store import CardStore, age_bucket, set_cross_entropy
+from premonition.store import CardStore, age_bucket, set_cross_entropy, set_cross_entropy_with_sink
 
 MODES = ("gold", "teacher", "own")
 ROW_QUESTION, ROW_SLOT, ROW_CARD, ROW_REGISTER = range(4)
@@ -239,7 +239,14 @@ class Think(nn.Module):
         self.step = nn.Embedding(config.max_loops, d)
         self.age = nn.Embedding(config.age_buckets, d) if config.store else None
         self.age_bias = nn.Parameter(torch.zeros(config.age_buckets)) if config.store else None
-        self.binder = nn.Linear(2 * d, 2 * d) if config.store and config.pointers else None
+        bind = config.store and config.pointers
+        self.binder = nn.Linear(2 * d, 2 * d) if bind and not config.delta_bind else None
+        if config.delta_bind:                  # steal 1: key-addressed delta rule replaces the binder
+            rows = config.delta_bind_rows
+            self.delta_address = nn.Linear(config.key_dim, rows) if bind else None
+            self.delta_write = nn.Linear(2 * d, d // rows + 1) if bind else None
+        if config.fetch_gate and config.store:  # steal 2: per-head gate on fetched card values
+            self.fetch_gate = nn.Linear(2 * d, config.n_heads)
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
         x = x + self.step.weight[step]
@@ -252,6 +259,23 @@ class Think(nn.Module):
         gate, content = self.binder(torch.cat([slot, value.to(slot.dtype)], dim=-1)).chunk(2, -1)
         return slot + torch.sigmoid(gate.float()) * (torch.tanh(content.float()) - slot)
 
+    def delta_bind(self, slot: torch.Tensor, value: torch.Tensor, key: torch.Tensor) -> torch.Tensor:
+        """S <- S + beta kappa (w - kappa^T S)^T on S = slot.view(a, d / a); kappa = normalize(W_a key)."""
+        rows = self.delta_address.out_features
+        kappa = F.normalize(self.delta_address(key).float(), dim=-1)                      # [m, a]
+        beta, write = self.delta_write(torch.cat([slot, value.to(slot.dtype)], dim=-1)).float() \
+            .split([1, slot.shape[-1] // rows], dim=-1)
+        matrix = slot.float().view(slot.shape[0], rows, -1)                               # [m, a, b]
+        error = torch.tanh(write) - torch.einsum("ma,mab->mb", kappa, matrix)             # w - kappa^T S
+        matrix = matrix + torch.sigmoid(beta).unsqueeze(-1) * kappa.unsqueeze(-1) * error.unsqueeze(1)
+        return matrix.reshape(slot.shape[0], -1)
+
+    def gate_values(self, register: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
+        """[n, K, d] card values times sigmoid(W_g [normed register 0; v]) per head (fp32); register [n, d]."""
+        pair = torch.cat([register.unsqueeze(1).expand(-1, value.shape[1], -1), value.float()], dim=-1)
+        gate = torch.sigmoid(self.fetch_gate(pair).float())                               # [n, K, H]
+        return value.float() * gate.repeat_interleave(value.shape[-1] // gate.shape[-1], dim=-1)
+
 
 class Heads(nn.Module):
     """On register 0: query 128 -> 64, ASK and HALT logits, ASK temperature kappa."""
@@ -263,6 +287,8 @@ class Heads(nn.Module):
         self.ask = nn.Linear(d, 1) if config.store else None
         self.halt = nn.Linear(d, 1)
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
+        if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, starts at -kappa_init
+            self.ask_sink = nn.Parameter(torch.tensor(-config.kappa_init))
 
 
 class Decoder(nn.Module):
@@ -282,6 +308,10 @@ class Decoder(nn.Module):
         self.norm3 = nn.LayerNorm(d)
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
+        if config.fetch_gate:                      # steal 2: headwise sigmoid gate on cross-attention
+            self.cross_gate = nn.Linear(d, config.n_heads)
+        if config.fetch_sink:                      # steal 2: one sink logit per head (extra zero key and value)
+            self.cross_sink = nn.Parameter(torch.full((config.n_heads,), config.sink_init))
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         n, length, width = x.shape
@@ -291,12 +321,28 @@ class Decoder(nn.Module):
         q, k = rope(q, positions, self.base), rope(k, positions, self.base)
         attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         x = x + self.proj(attended.transpose(1, 2).reshape(n, length, width))
-        q = self.cross_q(self.norm2(x)).view(n, length, heads, -1).transpose(1, 2)
+        normed = self.norm2(x)
+        q = self.cross_q(normed).view(n, length, heads, -1).transpose(1, 2)
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
-        attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if hasattr(self, "cross_sink"):
+            attended = self._sink_attention(q, k, v, valid)
+        else:
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if hasattr(self, "cross_gate"):
+            attended = attended * torch.sigmoid(self.cross_gate(normed).float()).transpose(1, 2).unsqueeze(-1)
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
         return self.norm(x)
+
+    def _sink_attention(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
+                        valid: torch.Tensor) -> torch.Tensor:
+        """Cross-attention with a per-head sink: a zero key and value whose logit is b_h (q . 0 = 0)."""
+        n, heads, length, _ = q.shape
+        k, v = (torch.cat([t, torch.zeros_like(t[:, :, :1])], dim=2) for t in (k, v))
+        mask = torch.zeros(n, 1, 1, valid.shape[1], dtype=q.dtype, device=q.device) \
+            .masked_fill(~valid[:, None, None, :], -math.inf).expand(n, heads, length, -1)
+        sink = self.cross_sink.to(q.dtype).view(1, heads, 1, 1).expand(n, heads, length, 1)
+        return F.scaled_dot_product_attention(q, k, v, attn_mask=torch.cat([mask, sink], dim=-1))
 
 
 # ----------------------------------------------------------------------------- the model
@@ -380,6 +426,15 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        with torch.no_grad():
+            if config.fetch_gate:                  # steal 2: gates start open
+                self.decoder.cross_gate.bias.fill_(config.fetch_gate_bias)
+                if hasattr(self.think, "fetch_gate"):
+                    self.think.fetch_gate.bias.fill_(config.fetch_gate_bias)
+            if config.fetch_sink:                  # steal 2: decoder sinks at sink_init, ASK sink a no-op
+                self.decoder.cross_sink.fill_(config.sink_init)
+                if hasattr(self.heads, "ask_sink"):
+                    self.heads.ask_sink.fill_(-config.kappa_init)
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -468,6 +523,8 @@ class PremonitionMini(nn.Module):
         if not real.any():
             return
         values, ents, lines = store.gather(cards, episode.q_visit[index])
+        if hasattr(self.think, "fetch_gate"):
+            values = self.think.gate_values(_norm(episode.x[index, self._register_base]), values)
         bucket = age_bucket(episode.q_line[index].unsqueeze(1) - lines, config.age_buckets)
         bucket = torch.where(lines >= 0, bucket, torch.zeros_like(bucket))
         rows = values.float() + self.think.age(bucket).float() \
@@ -481,8 +538,11 @@ class PremonitionMini(nn.Module):
         episode.count = episode.count.index_add(0, index, real.long().sum(1))
         episode.fetched = episode.fetched.index_put(
             (who[real], cards[real]), torch.ones_like(cards[real], dtype=torch.bool))
-        if self.think.binder is None:
+        delta = hasattr(self.think, "delta_address") and self.think.delta_address is not None
+        if self.think.binder is None and not delta:
             return
+        if delta:
+            keys = store.gather_keys(cards, episode.q_visit[index])                # [n, K, dk]
         for k in range(cards.shape[1]):
             ent = ents[:, k]                                                   # [n, E]
             repeat = (ent.unsqueeze(2) == ent.unsqueeze(1)).tril(-1).any(2)
@@ -493,7 +553,12 @@ class PremonitionMini(nn.Module):
             owner = index.unsqueeze(1).expand_as(ent)
             state = episode.x[owner[bind], slot[bind]]
             value = values[:, k].unsqueeze(1).expand(-1, ent.shape[1], -1)[bind]
-            episode.x = episode.x.index_put((owner[bind], slot[bind]), self.think.bind(state, value))
+            if delta:
+                key = keys[:, k].unsqueeze(1).expand(-1, ent.shape[1], -1)[bind]
+                bound = self.think.delta_bind(state, value, key)
+            else:
+                bound = self.think.bind(state, value)
+            episode.x = episode.x.index_put((owner[bind], slot[bind]), bound)
 
     def _step(self, episode: _Episode, index: torch.Tensor, step: int, store: Optional[CardStore]
               ) -> tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
@@ -527,7 +592,11 @@ class PremonitionMini(nn.Module):
     def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
                 ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
         """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`."""
-        return store.top(scores, self.config.top_k).masked_fill(((ask <= 0) | stop).unsqueeze(1), -1)
+        top = store.top(scores, self.config.top_k).masked_fill(((ask <= 0) | stop).unsqueeze(1), -1)
+        if hasattr(self.heads, "ask_sink"):        # steal 2: cards scoring at or below the sink are not fetched
+            below = scores.gather(1, top.clamp_min(0)) <= self.heads.ask_sink.float()
+            top = top.masked_fill(below, -1)
+        return top
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
@@ -631,7 +700,9 @@ class PremonitionMini(nn.Module):
             need = gold[index] & ~episode.fetched[index]
             asks = need.any(1)
             bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
-            if asks.any():
+            if hasattr(self.heads, "ask_sink"):    # steal 2: every row counts; nothing-to-fetch rows target the sink
+                set_terms.append(set_cross_entropy_with_sink(scores, need, self.heads.ask_sink))
+            elif asks.any():
                 set_terms.append(set_cross_entropy(scores[asks], need[asks]))
             if step == 0:
                 metrics["recall_at_k"] = self._recall(store, episode, index, rows, gold).detach()

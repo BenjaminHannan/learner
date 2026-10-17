@@ -35,6 +35,16 @@ def set_cross_entropy(scores: torch.Tensor, target: torch.Tensor) -> torch.Tenso
     return torch.logsumexp(scores, 1) - torch.logsumexp(scores.masked_fill(~target, NEG_INF), 1)
 
 
+def set_cross_entropy_with_sink(scores: torch.Tensor, target: torch.Tensor, sink: torch.Tensor) -> torch.Tensor:
+    """[n]: set cross-entropy with one extra sink logit in every denominator.
+
+    Rows with an empty `target` (nothing left to fetch) take the sink as their target.
+    """
+    logits = torch.cat([scores, sink.float().expand(scores.shape[0], 1)], dim=1)
+    target = torch.cat([target, ~target.any(1, keepdim=True)], dim=1)
+    return torch.logsumexp(logits, 1) - torch.logsumexp(logits.masked_fill(~target, NEG_INF), 1)
+
+
 @dataclass
 class CardStore:
     keys: torch.Tensor          # [B, L, dk] unit length
@@ -135,6 +145,14 @@ class CardStore:
                            torch.full_like(self.ents[visit, line], -1))
         return values, ents, torch.where(real, line, torch.full_like(line, -1))
 
+    def gather_keys(self, index: torch.Tensor, q_visit: torch.Tensor) -> torch.Tensor:
+        """[n, K, dk] unit keys of card indices; the NULL key for NULL, -1 and padding."""
+        n, count = index.shape
+        real = (index >= 0) & (index < self.lines)
+        line = index.clamp(0, self.lines - 1)
+        visit = q_visit.unsqueeze(1).expand(n, count)
+        return torch.where(real.unsqueeze(-1), self.keys[visit, line], self.null_key.expand(n, count, -1))
+
     def gold(self, gold_lines: torch.Tensor, q_visit: torch.Tensor,
              q_line: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """(G [Q, L + 1] bool, told [Q] bool, missing [Q] long).
@@ -173,4 +191,4 @@ class CardStore:
         return digest.hexdigest()
 
 
-__all__ = ["CardStore", "age_bucket", "set_cross_entropy"]
+__all__ = ["CardStore", "age_bucket", "set_cross_entropy", "set_cross_entropy_with_sink"]
