@@ -195,6 +195,33 @@ class AllOffIsBitIdenticalTest(unittest.TestCase):
         self.assertNotEqual(differences(run_modes(new, batch, 0), run_modes(old, batch, 0)), [])
 
 
+class PairedInitTest(unittest.TestCase):
+    """At a given seed a steal leaves every shared weight and the RNG stream as the flag-off model has them, so a
+    paired A/B differs only in the steal. delta_bind is the exception: it removes the binder, whose draws go."""
+
+    def test_shared_weights_match_the_flag_off_model(self) -> None:
+        for variant in VARIANTS:
+            for seed in SEEDS:
+                off, off_rng = build(PremonitionMini, tiny(variant), seed)
+                reference = off.state_dict()
+                for label, flags in SINGLE.items():
+                    if label == "delta_bind":
+                        continue
+                    with self.subTest(variant=variant, seed=seed, flag=label):
+                        on, on_rng = build(PremonitionMini, tiny(variant, **flags), seed)
+                        self.assertTrue(torch.equal(on_rng, off_rng))
+                        for name, value in on.state_dict().items():
+                            if name in reference:
+                                self.assertTrue(torch.equal(value, reference[name]), name)
+
+    def test_steal_weights_depend_on_the_seed(self) -> None:
+        a, _ = build(PremonitionMini, tiny(fetch_gate=True), 0)
+        b, _ = build(PremonitionMini, tiny(fetch_gate=True), 1)
+        c, _ = build(PremonitionMini, tiny(fetch_gate=True), 0)
+        self.assertFalse(torch.equal(a.decoder.cross_gate.weight, b.decoder.cross_gate.weight))
+        self.assertTrue(torch.equal(a.decoder.cross_gate.weight, c.decoder.cross_gate.weight))
+
+
 class EachFlagRunsTest(unittest.TestCase):
     """Any single steal on, and all of them together: builds, trains, answers, steps; counts match."""
 

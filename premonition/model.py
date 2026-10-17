@@ -32,6 +32,17 @@ from premonition.store import CardStore, age_bucket, set_cross_entropy, set_cros
 
 MODES = ("gold", "teacher", "own")
 ROW_QUESTION, ROW_SLOT, ROW_CARD, ROW_REGISTER = range(4)
+STEAL_SEED = 7100                     # offset of the side stream that initialises steal modules
+
+
+def _aside(build):
+    """Build a steal module off the global RNG stream and mark it, so `reset_parameters` initialises it on a side
+    stream: at a given seed every shared weight is then the same with the steal on or off (paired A/Bs)."""
+    with torch.random.fork_rng(devices=[]):
+        module = build()
+    for part in module.modules():
+        part._steal = True
+    return module
 
 
 # ----------------------------------------------------------------------------- primitives
@@ -198,10 +209,10 @@ class CardWriter(nn.Module):
         self.engram = config.engram
         if config.engram:
             self.engram_heads, self.engram_rows = config.engram_heads, config.engram_rows
-            self.engram_tables = nn.ModuleList(nn.Embedding(config.engram_rows, d // config.engram_heads)
-                                               for _ in range(config.engram_heads))
-            self.engram_key = nn.Linear(d, d)
-            self.engram_value = nn.Linear(d, d)
+            self.engram_tables = _aside(lambda: nn.ModuleList(nn.Embedding(config.engram_rows, d // config.engram_heads)
+                                                              for _ in range(config.engram_heads)))
+            self.engram_key = _aside(lambda: nn.Linear(d, d))
+            self.engram_value = _aside(lambda: nn.Linear(d, d))
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> CardStore:
         visits, lines = batch.line_start.shape
@@ -305,10 +316,10 @@ class Think(nn.Module):
         self.binder = nn.Linear(2 * d, 2 * d) if bind and not config.delta_bind else None
         if config.delta_bind:                  # steal 1: key-addressed delta rule replaces the binder
             rows = config.delta_bind_rows
-            self.delta_address = nn.Linear(config.key_dim, rows) if bind else None
-            self.delta_write = nn.Linear(2 * d, d // rows + 1) if bind else None
+            self.delta_address = _aside(lambda: nn.Linear(config.key_dim, rows)) if bind else None
+            self.delta_write = _aside(lambda: nn.Linear(2 * d, d // rows + 1)) if bind else None
         if config.fetch_gate and config.store:  # steal 2: per-head gate on fetched card values
-            self.fetch_gate = nn.Linear(2 * d, config.n_heads)
+            self.fetch_gate = _aside(lambda: nn.Linear(2 * d, config.n_heads))
         self.loop_query = nn.Parameter(torch.zeros(config.max_loops, d)) if config.loop_attnres else None
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
@@ -349,7 +360,7 @@ class Heads(nn.Module):
         self.query = nn.Linear(d, config.key_dim) if config.store else None
         self.ask = nn.Linear(d, 1) if config.store else None
         self.halt = nn.Linear(d, 1)
-        self.row_halt = nn.Linear(d, 1) if config.row_halt else None
+        self.row_halt = _aside(lambda: nn.Linear(d, 1)) if config.row_halt else None
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
         if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, starts at -kappa_init
             self.ask_sink = nn.Parameter(torch.tensor(-config.kappa_init))
@@ -376,7 +387,7 @@ class Decoder(nn.Module):
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
         if config.fetch_gate:                      # steal 2: headwise sigmoid gate on cross-attention
-            self.cross_gate = nn.Linear(d, config.n_heads)
+            self.cross_gate = _aside(lambda: nn.Linear(d, config.n_heads))
         if config.fetch_sink:                      # steal 2: one sink logit per head (extra zero key and value)
             self.cross_sink = nn.Parameter(torch.full((config.n_heads,), config.sink_init))
         if config.qk_norm_all:                                   # steal 6: self- and cross-attention q/k norms
@@ -476,12 +487,21 @@ class PremonitionMini(nn.Module):
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.normal_(module.weight, std=0.02)
-                nn.init.zeros_(module.bias)
-            elif isinstance(module, nn.Embedding) and module is not self.embed:
-                nn.init.normal_(module.weight, std=0.02)
+        def generic(modules: Iterable[nn.Module]) -> None:
+            for module in modules:
+                if isinstance(module, nn.Linear):
+                    nn.init.normal_(module.weight, std=0.02)
+                    nn.init.zeros_(module.bias)
+                elif isinstance(module, nn.Embedding) and module is not self.embed:
+                    nn.init.normal_(module.weight, std=0.02)
+
+        generic(m for m in self.modules() if not getattr(m, "_steal", False))
+        steal = [m for m in self.modules() if getattr(m, "_steal", False)]
+        if steal:                                  # steal modules: same inits, on their own stream (see _aside)
+            seed = (STEAL_SEED + torch.initial_seed()) % 2 ** 63
+            with torch.random.fork_rng(devices=[]):
+                torch.manual_seed(seed)
+                generic(steal)
         for module in self.modules():
             outs = []
             if id(module) in residual:
