@@ -63,9 +63,11 @@ from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
 from premonition.config import MiniConfig
 from premonition.flops import FlopFit, fit_flops, measure_mini
 from premonition.model import Answers, PremonitionMini
+from premonition.muon import MuonAdamW, muon_param_groups
 from premonition.pointer import answer_text
 
 Log = Callable[[str], None]
+OPTIMIZERS = ("adamw", "muon")
 FORMAT = "premonition-mini-checkpoint"
 FORMAT_VERSION = 1
 
@@ -230,10 +232,16 @@ class MiniTrainer(Trainer):
 
     def __init__(self, model: PremonitionMini, config: TrainConfig, device: Union[str, torch.device] = "cpu", *,
                  flop_budget: float, curriculum: Curriculum = Curriculum(), tolerance: float = BUDGET_TOLERANCE,
-                 seed: int = 0, fit: Optional[FlopFit] = None) -> None:
+                 seed: int = 0, fit: Optional[FlopFit] = None, optimizer: str = "adamw") -> None:
         if not flop_budget > 0:
             raise ValueError("flop_budget must be positive")
+        if optimizer not in OPTIMIZERS:
+            raise ValueError(f"unknown optimizer {optimizer!r}; choose from {OPTIMIZERS}")
         super().__init__(model, config, device)
+        self.optimizer_name = optimizer
+        if optimizer == "muon":           # Muon on the hidden matrices, AdamW elsewhere (SPEC section 8)
+            self.optimizer = MuonAdamW(muon_param_groups(self.model, config.weight_decay), lr=config.lr,
+                                       betas=(config.beta1, config.beta2), eps=config.eps)
         self.flop_budget = float(flop_budget)
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
@@ -736,6 +744,7 @@ def checkpoint_config(trainer: MiniTrainer, *, contender: str, tokenizer: Option
                   "fit": None if trainer.fit is None else {"a": trainer.fit.a, "b": trainer.fit.b,
                                                            "worst_residual": trainer.fit.worst}},
         "tokenizer": dict(tokenizer or {}), "detector": {"sha256": detector}, "data": dict(data or {}),
+        **({"optimizer": trainer.optimizer_name} if trainer.optimizer_name != "adamw" else {}),   # steal 8
         **dict(extra or {}),
     }
 
@@ -767,7 +776,8 @@ def resume_trainer(path: Union[str, Path], device: Union[str, torch.device] = "c
     trainer = MiniTrainer(model, trainer_config, device, flop_budget=config["flops"]["budget"],
                           curriculum=Curriculum(**config["curriculum"]), tolerance=config["flops"]["tolerance"],
                           seed=config["seed"], fit=None if fit is None else FlopFit(fit["a"], fit["b"],
-                                                                                    fit["worst_residual"]))
+                                                                                    fit["worst_residual"]),
+                          optimizer=config.get("optimizer", "adamw"))
     loaded = load_checkpoint(path, trainer.model, optimizer=trainer.optimizer, map_location=device,
                              restore_rng=True)
     trainer.load_state_dict(loaded["trainer"])
@@ -1007,7 +1017,7 @@ def format_record(record: Mapping[str, Any]) -> str:
 def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
               eval_batches: int = 4, lr: float = 3e-3, warmup_steps: int = 20, log_every: int = 25,
               eval_every: int = 0, max_seconds: Optional[float] = None, config_overrides: Optional[dict] = None,
-              on_log: Optional[Callable[[dict[str, Any]], None]] = None) -> dict[str, Any]:
+              on_log: Optional[Callable[[dict[str, Any]], None]] = None, optimizer: str = "adamw") -> dict[str, Any]:
     """Build step 4: train D (or a control) at the tiny preset on the far-fact toy under the curriculum.
 
     The FLOP budget is `steps` batches' worth (`budget_for_steps`); the report holds the training report,
@@ -1020,7 +1030,8 @@ def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits:
     settings.update(config_overrides or {})
     model = PremonitionMini(MiniConfig.preset(variant, "tiny", vocab_size=spec.vocab_size, **settings))
     trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
-                                                   eval_every=eval_every), "cpu", flop_budget=1.0, seed=seed)
+                                                   eval_every=eval_every), "cpu", flop_budget=1.0, seed=seed,
+                          optimizer=optimizer)
     stream = (label_free(b) for b in toy_stream(spec, visits, seed))
     head = [next(stream) for _ in range(2)]
     trainer.calibrate(head)

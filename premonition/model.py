@@ -16,6 +16,8 @@ the model trains under bf16 autocast. The controls are config flags: `store=Fals
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
+import hashlib
 import math
 from typing import Any, Iterable, Optional
 
@@ -172,8 +174,16 @@ class Reader(nn.Module):
         return self.norm(x)
 
 
+@lru_cache(maxsize=None)
+def engram_indices(spelling: str, heads: int, rows: int) -> tuple[int, ...]:
+    """Table row of a name in each Engram head: blake2b of "head:spelling" mod rows (never Python's hash())."""
+    return tuple(int.from_bytes(hashlib.blake2b(f"{h}:{spelling}".encode(), digest_size=8).digest(), "big") % rows
+                 for h in range(heads))
+
+
 class CardWriter(nn.Module):
-    """p = attention pool of a line's reader states; k = normalize(W_k p), v = W_v p; NULL card."""
+    """p = attention pool of a line's reader states; k = normalize(W_k p), v = W_v p; NULL card.
+    With `engram` the value also gets a gated lookup of the line's name spellings (steal 4)."""
 
     def __init__(self, config: MiniConfig) -> None:
         super().__init__()
@@ -185,6 +195,13 @@ class CardWriter(nn.Module):
         self.null_value = nn.Parameter(torch.empty(d))
         self.pos_dim = config.pos_key_dim if config.key_split else 0     # steal 6: position sub-key width
         self.pos_base = config.key_pos_base
+        self.engram = config.engram
+        if config.engram:
+            self.engram_heads, self.engram_rows = config.engram_heads, config.engram_rows
+            self.engram_tables = nn.ModuleList(nn.Embedding(config.engram_rows, d // config.engram_heads)
+                                               for _ in range(config.engram_heads))
+            self.engram_key = nn.Linear(d, d)
+            self.engram_value = nn.Linear(d, d)
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> CardStore:
         visits, lines = batch.line_start.shape
@@ -212,7 +229,38 @@ class CardWriter(nn.Module):
 
     def _values(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
         """[B, L, d] card values."""
-        return self.value(pooled)
+        value = self.value(pooled)
+        return self._engram(pooled, value, batch) if self.engram else value
+
+    def _engram(self, pooled: torch.Tensor, value: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """value + alpha W_V e on lines with a name; e = mean over the line's names of the concatenated head rows,
+        alpha = sigmoid(<norm(p), norm(W_K e)> / sqrt(d)). Lines with no name are returned unchanged."""
+        ents = batch.line_ents.cpu()                                         # [B, L, M]; -1 padding
+        rows = max(int(ents.max()) + 1, 1)
+        table = torch.zeros(ents.shape[0], rows + 1, self.engram_heads, dtype=torch.long)   # last row: padding
+        where, hashed = [], []
+        for visit, names in enumerate(batch.names[:ents.shape[0]]):
+            for ent in ents[visit].unique().tolist():
+                if ent >= 0:
+                    try:
+                        spelling = names.spelling(ent)
+                    except KeyError:
+                        spelling = f"<ent {ent}>"
+                    where.append((visit, ent))
+                    hashed.append(engram_indices(spelling, self.engram_heads, self.engram_rows))
+        if where:
+            visits, found = torch.tensor(where).unbind(1)
+            table[visits, found] = torch.tensor(hashed)
+        mapped = torch.where(ents >= 0, ents, torch.full_like(ents, rows))
+        index = table[torch.arange(ents.shape[0]).view(-1, 1, 1), mapped]    # [B, L, M, H]
+        index, named = index.to(value.device), (ents >= 0).to(value.device)  # named: [B, L, M]
+        looked = torch.cat([t(index[..., h]) for h, t in enumerate(self.engram_tables)], dim=-1)   # [B, L, M, d]
+        count = named.sum(-1, keepdim=True)
+        e = (looked * named.unsqueeze(-1)).sum(2) / count.clamp_min(1)       # [B, L, d]
+        alpha = torch.sigmoid((_norm(pooled) * _norm(self.engram_key(e))).sum(-1, keepdim=True)
+                              / math.sqrt(pooled.shape[-1]))
+        added = value + (alpha * self.engram_value(e).float()).to(value.dtype)
+        return torch.where(count > 0, added, value)
 
 
 class ThinkLayer(nn.Module):
