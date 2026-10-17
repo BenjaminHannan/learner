@@ -1,0 +1,4 @@
+Positive controls for the restart gate (CPU only). Results: RESULTS.md. Raw per-update traces (every train-line field, C and every resume): raw/*.json (`rep_*` = healthy replicates, `weights_eps_sweep.json`).
+
+Rerun: build the tree (`git archive 74d6e92c75 custom_io | tar -x -C $SCRATCH/tree`, copy the pack's `overlay/train.py` over `custom_io/train.py` and the two test files into `custom_io/tests/`), make the toy data with `custom_io.tests.test_ckpt.make_data()` into `$SCRATCH/data`, then
+`export SCRATCH=... TREE=$SCRATCH/tree DATA=$SCRATCH/data; python3 orchestrate.py main --e1 1 --e2 8 --extra-eps 0.01 0.3` (then `wsweep`, `repeat --accum 4 8 --eps 1 --n 3`, `report`). One run alone: `POSCTRL_TREE=$TREE NOISE_EPS=1 FAULT=opt_reset OMP_NUM_THREADS=1 python3 posctrl.py <train.py args> --resume` (see the posctrl.py docstring).

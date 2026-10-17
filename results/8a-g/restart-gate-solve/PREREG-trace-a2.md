@@ -38,3 +38,22 @@ Apply to `PROBE-RESUME-g2fa8.json` (`drafts/rejudge_probe.py` implements it):
 - **Copy step-200 before any `clear`/re-arm of g2fa8.** The overlay keeps the newest 2 checkpoints (`CKPT_KEEP = 2`). A continued run writes step-400 and deletes step-200.
 - **C must be one continuous segment over 201-250.** `probe_resume` takes C as the first logged line per step. For g2fa8 that holds: the only restart was the planned one at 150, which redid 101-150. Check `events.jsonl` for any other `resumed` event between 200 and 250 before reading.
 - **An accum-4 probe is refused as the plan stands.** g2fa4 is `skip: true`, and `probe_resume` refuses skipped jobs. It is not needed for the accum-8 verdict.
+
+---
+
+## Amendment 1 (2026-10-17 ~22:05 UTC): after the CPU positive controls (`posctrl/RESULTS.md`), before any GPU probe number
+Everything above stays as written. These changes are made because the positive controls showed two gaps in the design (shown on CPU, emulated noise):
+
+**A1.1 The first redone update cannot see optimizer-state faults.** Its loss is a forward pass computed before the optimizer step. Lost AdamW state (`opt_reset`, `opt_moments_zero`) and an off-by-one lr schedule (`lr_step_off`) gave **exactly 0** at the first redone update. They first showed at the second: `opt_reset` 0.0145-0.98, `opt_moments_zero` 0.106-1.01, `lr_step_off` 0.028-0.077, against a healthy maximum of 7e-5 to 0.009 at that update for noise up to 1 (posctrl Table C). So:
+- **Layer R adds an early-window item (hard):** max |ΔL| over the 2nd and 3rd redone updates (GPU: 102-103) **≤ 0.005**. Derived from: GPU healthy at accum 4 ≤ 2e-4 over 101-107 (TRACE-A-READING), which leaves about 25x headroom (about 15x at accum 8 with the diagnosis's 1.7x). The smallest optimizer/lr fault signature on CPU at that update (0.0145 and 0.028) is about 3-6x above it. Falsified by: a healthy GPU resume over 0.005 at 102-103, or a GPU positive control with lost optimizer state under it. The CPU-to-GPU scale transfer is **untested**.
+- **Layer R adds an exact-field item (hard):** at the first redone update, the logged fields that are data/RNG-derived (`lr`, `rounds`, `plan_*`) must be **equal**. They carry no rounding noise. `lr_step_off` showed in `lr` at that update, and the RNG faults in `rounds` and `plan_*` (posctrl). The pack's own CPU test already treats these fields as exact.
+- **Layer P adds P1b:** the same early-window item on probe updates 202-203.
+
+**A1.2 Tighten the first-update item from 0.01 to exact (recommendation; Ben's bar).** A 1e-3 relative weight corruption gave 7.3e-4 to 0.0145 at the first redone update (linear in its size; posctrl Table D). Part of that range is under 0.01, and the mean statistic cannot see it (bug-to-noise ratio about 1 once noise is about 0.1 % of the loss). On the PC card at accum 4 the first redone update was 0.0 exactly. Proposed: ≤ 1e-4 (the log resolution allows exact; 1e-4 leaves room for logging).
+
+**A1.3 A ratio failure alone means "measure more", not "broken".** One healthy CPU cell gave D/N = 3.13 with C the most distant of five runs. Three replicates of that cell gave 0.85-1.24. This is the heavy tail `sims/` predicts. Re-judgment rule §4 is amended:
+- **OUTSIDE** only if P1 or P1b fails, or if after the 4-resume calibration D̄ > L(a, w).
+- If P1, P1b and P2 pass and P3 (or D̄/N̄ ≤ 2) fails, the verdict is **UNRESOLVED: run the calibration** (2 more resumes at step-200, judge D̄ against L).
+- INSIDE as before.
+
+**What the positive controls say about where bugs are caught:** every fault class tried was caught by the start-of-redo checks: the exact first update (data, RNG, weights), the exact fields (lr, RNG), and the early window (optimizer, lr). Each was caught with ≥ 3x margin at bf16-like noise. The window mean caught nothing those miss. This supports moving the mean from the running gate to the record (shown on CPU; untested on GPU).

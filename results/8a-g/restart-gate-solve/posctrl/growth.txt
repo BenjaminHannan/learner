@@ -1,0 +1,11 @@
+Healthy mean |dL| (R vs C and R vs R pairs pooled, 10 comparisons) by update bucket: does the divergence grow over the redo window (the GPU gate shows <=2e-4 over updates 31..37 and up to 0.12 near the end)?
+| accum | NOISE_EPS | 31-37 | 38-47 | 48-60 | ratio (48-60)/(31-37) |
+|---|---|---|---|---|---|
+| 4 | 0.01 | 2.65e-04 | 3.06e-04 | 4.69e-04 | 1.8 |
+| 4 | 0.3 | 2.08e-03 | 5.93e-03 | 8.49e-03 | 4.1 |
+| 4 | 1 | 5.03e-03 | 6.89e-03 | 1.36e-02 | 2.7 |
+| 4 | 8 | 7.47e-02 | 2.18e-01 | 4.85e-01 | 6.5 |
+| 8 | 0.01 | 9.77e-05 | 1.78e-04 | 7.59e-04 | 7.8 |
+| 8 | 0.3 | 2.36e-03 | 6.90e-03 | 1.01e-02 | 4.3 |
+| 8 | 1 | 7.23e-03 | 1.96e-02 | 3.31e-02 | 4.6 |
+| 8 | 8 | 1.19e-01 | 3.58e-01 | 4.99e-01 | 4.2 |
