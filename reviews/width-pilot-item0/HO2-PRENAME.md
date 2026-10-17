@@ -12,3 +12,16 @@ Written and committed before any HO2 row is drawn.
   - HO2: sha256 of `eval-rows-ho2.jsonl`, recorded in the next commit together with the file.
 - **Use:** final checkpoint only, all runs, never a tuning target (spec §4).
 - **Rule:** if the draw comes up short of 420, it is reported and **not** redrawn with another seed.
+
+## Generated and frozen (next commit after the pre-name)
+
+- **HO2:** `reviews/width-pilot-item0/eval-rows-ho2.jsonl`, 420 rows, **sha256 `eed9703a2d5058bd8d785bf25f43e71eace4c71636fc7dae3eb3f843eaabf3c5`**.
+  - 60 per kind.
+  - Steps 3/4/5/6/7: 105/149/136/25/5.
+  - 1,836 tries.
+  - Not short, so no redraw.
+- **HO1:** re-confirmed by the same script, **sha256 `3aba6de17b8a2bb596414004fef2b2d673b0f740701642d703a167e883698b8e`**.
+- **Generator:** `gen_ho2.py`.
+  - It asserts the L5 inputs are the recorded files (15cda9d3 / 2d927fdb).
+  - It asserts disjointness from every L5 train and eval prompt and from the exclusion set.
+  - It refuses to overwrite.
