@@ -4,6 +4,8 @@
 
 From the size-versus-stall session (`beautiful-model`). This goes to the coordinator under Ben's funding rule of Oct 17. Nothing is booked, rented or queued. All code named here is a draft until the coordinator reviews it.
 
+> **Bid C (10-17, coordinator order):** the B2 creative model widened cleanly, priced in `reviews/width-pilot-bid-C-2026-10-17.md`: before the gate about $14.0–24.4 ($0 on BensPC), expected about $20–36, worst about $27–47, 3–4 weeks, peak week ≤ about $21. **Bid A's** amended numbers are in `reviews/width-pilot-v2-amendment-2026-10-17.md` §C.
+
 ## 1. Blocker: the v2 spec is not reachable from this session
 
 The goal says to follow the v2 spec's staging and gates exactly. The spec is `hidden_files/deep3-work/deep3-stage3-pilot-v2.md`; the synthesis is `hidden_files/deep3-blocker-2-pilot-sharpening.md`. I could not find either:
