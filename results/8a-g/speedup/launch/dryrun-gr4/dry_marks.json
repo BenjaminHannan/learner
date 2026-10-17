@@ -1,0 +1,682 @@
+{
+ "sheet": "PREREG-launch-defer.md (amended 10-17)",
+ "mark2": {
+  "defer": {
+   "bar": true,
+   "bar_precision": "fp32",
+   "rel_loss_diff": 0.0,
+   "grad_cos": 0.9999999999999909,
+   "E4": {
+    "passed": false,
+    "registered_window": false,
+    "mean_abs_diff": 0.0,
+    "diff_of_means": 0.0,
+    "updates": 6
+   },
+   "holds": null,
+   "label": "numerics-changing"
+  },
+  "kvcat": {
+   "holds": true,
+   "how": "baseline rerun bitwise in fp32: kvcat must be bitwise",
+   "kvcat_bit_exact": true,
+   "label": "exact-candidate (treated as numbers-changing in this run)",
+   "deterministic": true
+  }
+ },
+ "mark7": {
+  "holds": null,
+  "why": "profiler cuda counts missing (CPU run or failed step)",
+  "base": null,
+  "defer": null
+ },
+ "boxes": [
+  {
+   "box": "/tmp/claude-0/-home-user-learner/8d3f8c47-740b-5557-af0c-e857f34ee897/scratchpad/dry_box1",
+   "host": {
+    "hostname": "vm",
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "torch": "2.11.0+cpu",
+    "cuda": null,
+    "gpu": null,
+    "host_txt": "# GPU-RUN-4 host: vm\nmodel name\t: Intel(R) Xeon(R) Processor @ 2.10GHz\n2\ntorch 2.11.0+cpu cuda None cudnn None"
+   },
+   "references": {
+    "base4": 0.7848977550000882,
+    "defer4": 0.4479813579999927,
+    "kvdefer4": 0.43897084950003773,
+    "base8": 1.5933089750000136,
+    "defer8": 0.6983973879999894
+   },
+   "hostmon": {
+    "samples": 21,
+    "trainer_mhz_median": 2100.0,
+    "rule_e_struck": false,
+    "gpu_util_median": null
+   },
+   "arms": {
+    "d4": {
+     "arm": "d4",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 0.7942883485000038,
+       "b": 0.5215081935000399,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(b) chunk 1 0.6455 / median 0.6096 = 1.059",
+        "(b) chunk 2 0.9431 / median 1.0099 = 0.934"
+       ],
+       "b_why": [
+        "(a) 0.5215 > 1.1 x ref 0.4480",
+        "(b) chunk 1 0.4865 / median 0.4036 = 1.205",
+        "(b) chunk 2 0.5566 / median 0.5885 = 0.946"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:37:39.429944Z",
+        "2026-10-17T15:37:42.607130Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:37:43.127473Z",
+        "2026-10-17T15:37:45.213529Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 0.7848977550000882,
+       "b": 0.4479813579999927,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(b) chunk 1 0.3594 / median 0.4036 = 0.890",
+        "(b) chunk 2 0.5366 / median 0.5885 = 0.912"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:37:46.001885Z",
+        "2026-10-17T15:37:49.141495Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:37:49.651924Z",
+        "2026-10-17T15:37:51.443867Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 0.793402981249983,
+       "b": 0.4580321164999077,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(b) chunk 1 0.5715 / median 0.6096 = 0.938"
+       ],
+       "b_why": [
+        "(b) chunk 1 0.3341 / median 0.4036 = 0.828"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:37:52.272653Z",
+        "2026-10-17T15:37:55.446283Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:37:55.941911Z",
+        "2026-10-17T15:37:57.774059Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "aa": {
+     "arm": "aa",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 0.9379957047500511,
+       "b": 0.8175386974999128,
+       "a_normal": false,
+       "b_normal": true,
+       "a_why": [
+        "(a) 0.9380 > 1.1 x ref 0.7849",
+        "(b) chunk 1 0.6884 / median 0.6096 = 1.129",
+        "(b) chunk 2 1.1876 / median 1.0099 = 1.176"
+       ],
+       "b_why": [],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:02.456555Z",
+        "2026-10-17T15:38:06.208567Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:07.126652Z",
+        "2026-10-17T15:38:10.396833Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 0.8712322884999821,
+       "b": 0.7967411544998413,
+       "a_normal": false,
+       "b_normal": true,
+       "a_why": [
+        "(a) 0.8712 > 1.1 x ref 0.7849",
+        "(b) chunk 1 0.6623 / median 0.6096 = 1.086",
+        "(b) chunk 2 1.0802 / median 1.0099 = 1.070"
+       ],
+       "b_why": [],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:11.254566Z",
+        "2026-10-17T15:38:14.739516Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:15.537590Z",
+        "2026-10-17T15:38:18.724575Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 0.794111995750086,
+       "b": 0.865793408749937,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(a) 0.8658 > 1.1 x ref 0.7849",
+        "(b) chunk 1 0.7420 / median 0.6096 = 1.217"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:19.733562Z",
+        "2026-10-17T15:38:22.910031Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:23.957732Z",
+        "2026-10-17T15:38:27.420928Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "k4": {
+     "arm": "k4",
+     "secondary": true,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 0.4828562594999539,
+       "b": 0.5179864085000645,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(b) chunk 1 0.3706 / median 0.4036 = 0.918"
+       ],
+       "b_why": [
+        "(a) 0.5180 > 1.1 x ref 0.4390"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:45.152948Z",
+        "2026-10-17T15:38:47.084400Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:47.663163Z",
+        "2026-10-17T15:38:49.735131Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 0.5704905889999736,
+       "b": 0.5368486310001117,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 0.5705 > 1.1 x ref 0.4480",
+        "(b) chunk 1 0.4367 / median 0.4036 = 1.082",
+        "(b) chunk 2 0.7043 / median 0.5885 = 1.197"
+       ],
+       "b_why": [
+        "(a) 0.5368 > 1.1 x ref 0.4390",
+        "(b) chunk 1 0.4373 / median 0.3726 = 1.174"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:50.423445Z",
+        "2026-10-17T15:38:52.705431Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:53.348898Z",
+        "2026-10-17T15:38:55.496315Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 0.5416812832501137,
+       "b": 0.43897084950003773,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 0.5417 > 1.1 x ref 0.4480",
+        "(b) chunk 1 0.4564 / median 0.4036 = 1.131",
+        "(b) chunk 2 0.6270 / median 0.5885 = 1.065"
+       ],
+       "b_why": [
+        "(b) chunk 2 0.5151 / median 0.6364 = 0.809"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:38:56.241828Z",
+        "2026-10-17T15:38:58.408573Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:38:58.976214Z",
+        "2026-10-17T15:39:00.732117Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "d8": {
+     "arm": "d8",
+     "secondary": true,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 1.856830277749964,
+       "b": 0.6983973879999894,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 1.8568 > 1.1 x ref 1.5933",
+        "(b) chunk 1 2.0671 / median 1.6019 = 1.290"
+       ],
+       "b_why": [
+        "(b) chunk 1 0.6684 / median 0.7827 = 0.854",
+        "(b) chunk 2 0.7284 / median 0.7775 = 0.937"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:39:06.476532Z",
+        "2026-10-17T15:39:13.903886Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:39:14.577747Z",
+        "2026-10-17T15:39:17.371362Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 1.6302158632501005,
+       "b": 0.9022049890000972,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(a) 0.9022 > 1.1 x ref 0.6984",
+        "(b) chunk 1 0.9080 / median 0.7827 = 1.160",
+        "(b) chunk 2 0.8964 / median 0.7775 = 1.153"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:39:18.706700Z",
+        "2026-10-17T15:39:25.227589Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:39:25.975450Z",
+        "2026-10-17T15:39:29.584292Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 1.5933089750000136,
+       "b": 0.7801222432499344,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(a) 0.7801 > 1.1 x ref 0.6984",
+        "no host-monitor sample in the timed window"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:39:30.772894Z",
+        "2026-10-17T15:39:37.146152Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:39:37.897864Z",
+        "2026-10-17T15:39:41.018374Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    }
+   },
+   "mark5": null,
+   "mark5_value": null,
+   "box_counts": false,
+   "machine": "dry1",
+   "image": "local",
+   "dph": null,
+   "P6": {
+    "R": null,
+    "dead": null,
+    "why": "needs the baseline profiled kernel ms and the in-box unprofiled A median"
+   }
+  },
+  {
+   "box": "/tmp/claude-0/-home-user-learner/8d3f8c47-740b-5557-af0c-e857f34ee897/scratchpad/dry_box2",
+   "host": {
+    "hostname": "vm",
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "torch": "2.11.0+cpu",
+    "cuda": null,
+    "gpu": null,
+    "host_txt": "# GPU-RUN-4 host: vm\nmodel name\t: Intel(R) Xeon(R) Processor @ 2.10GHz\n2\ntorch 2.11.0+cpu cuda None cudnn None"
+   },
+   "references": {
+    "base4": 0.8274671984997894,
+    "defer4": 0.5068648892497549,
+    "kvdefer4": null,
+    "base8": null,
+    "defer8": null
+   },
+   "hostmon": {
+    "samples": 5,
+    "trainer_mhz_median": 2100.0,
+    "rule_e_struck": false,
+    "gpu_util_median": null
+   },
+   "arms": {
+    "d4": {
+     "arm": "d4",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 0.9129464604998248,
+       "b": 0.5150552974998845,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 0.9129 > 1.1 x ref 0.8275"
+       ],
+       "b_why": [
+        "(b) chunk 1 0.4228 / median 0.3974 = 1.064"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:53:16.102643Z",
+        "2026-10-17T15:53:19.754458Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:53:20.372878Z",
+        "2026-10-17T15:53:22.433121Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 0.8274671984997894,
+       "b": 0.5068648892497549,
+       "a_normal": false,
+       "b_normal": true,
+       "a_why": [
+        "(b) chunk 2 1.0096 / median 1.1829 = 0.853"
+       ],
+       "b_why": [],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:53:23.355694Z",
+        "2026-10-17T15:53:26.665597Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:53:27.557243Z",
+        "2026-10-17T15:53:29.584723Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 0.9138008687500587,
+       "b": 0.5319818714997382,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 0.9138 > 1.1 x ref 0.8275"
+       ],
+       "b_why": [
+        "(b) chunk 2 0.6666 / median 0.6168 = 1.081"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:53:30.621862Z",
+        "2026-10-17T15:53:34.277102Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:53:34.962445Z",
+        "2026-10-17T15:53:37.090391Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "aa": {
+     "arm": "aa",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 0.9011495679999371,
+       "b": 0.9512954364997768,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(a) 0.9513 > 1.1 x ref 0.8275",
+        "(b) chunk 1 0.6948 / median 0.6501 = 1.069"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:53:42.358003Z",
+        "2026-10-17T15:53:45.962633Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:53:46.995470Z",
+        "2026-10-17T15:53:50.800681Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 0.9885655784999017,
+       "b": 0.8659801919998245,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "(a) 0.9886 > 1.1 x ref 0.8275",
+        "(b) chunk 1 0.7251 / median 0.6501 = 1.115",
+        "(b) chunk 2 1.2521 / median 1.1829 = 1.058"
+       ],
+       "b_why": [
+        "(b) chunk 2 1.0819 / median 1.1829 = 0.915"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:53:51.759089Z",
+        "2026-10-17T15:53:55.713373Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:53:56.714843Z",
+        "2026-10-17T15:54:00.178785Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 0.9097043667500202,
+       "b": 0.9232437422499515,
+       "a_normal": false,
+       "b_normal": false,
+       "a_why": [
+        "no host-monitor sample in the timed window"
+       ],
+       "b_why": [
+        "(a) 0.9232 > 1.1 x ref 0.8275",
+        "no host-monitor sample in the timed window"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-17T15:54:01.040852Z",
+        "2026-10-17T15:54:04.679691Z"
+       ],
+       "b_window": [
+        "2026-10-17T15:54:05.667229Z",
+        "2026-10-17T15:54:09.360281Z"
+       ]
+      }
+     ],
+     "read_rounds": 0,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": null,
+     "peak_a_gb": null,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "k4": {
+     "arm": "k4",
+     "status": "missing",
+     "file": "gr4_bench_k4.json"
+    },
+    "d8": {
+     "arm": "d8",
+     "status": "missing",
+     "file": "gr4_bench_d8.json"
+    }
+   },
+   "mark5": null,
+   "mark5_value": null,
+   "box_counts": false,
+   "machine": "dry2",
+   "image": "local",
+   "dph": null
+  }
+ ],
+ "P6": {
+  "R": null,
+  "dead": null,
+  "why": "needs the baseline profiled kernel ms and the in-box unprofiled A median"
+ },
+ "predictions": {
+  "P1": [
+   {
+    "box": 1,
+    "speed": null,
+    "right": null
+   },
+   {
+    "box": 2,
+    "speed": null,
+    "right": null
+   }
+  ],
+  "P2": {
+   "d8": null,
+   "d4": null,
+   "right": null,
+   "secondary": true
+  },
+  "P3": {
+   "k4": null,
+   "right": null
+  },
+  "P4": "not tested in this run (PC)",
+  "P5": {
+   "base_gb": null,
+   "defer_gb": null,
+   "right": null
+  },
+  "K4_peak_gb": null
+ },
+ "outcome": {
+  "d4_wins": [
+   false,
+   false
+  ],
+  "d4_speeds": [
+   null,
+   null
+  ],
+  "boxes_count": [
+   false,
+   false
+  ],
+  "replication_hosts_distinct": false,
+  "replication_same_env": true,
+  "mark7": null,
+  "mark2_defer": null,
+  "p1_kill_by_box": [
+   false,
+   false
+  ],
+  "defer_inefficient_by_box": [
+   false,
+   false
+  ],
+  "p6_R": null,
+  "p6_dead": null,
+  "voided_boxes": [
+   1,
+   2
+  ],
+  "allows": "a box failed mark 5 (or its AA is undecided): nothing on that box counts; undecided"
+ }
+}
