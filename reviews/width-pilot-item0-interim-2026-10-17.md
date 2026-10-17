@@ -78,10 +78,30 @@ The regeneration ran in Python 3.13, with tracked code unedited and every path r
 
 **Second HO cell:** not generated yet. It is to be drawn as a disjoint `(K)*(J)` cell on training pairs with a new, pre-named eval seed, then hashed. I hold this until the coordinator rules, because the cell must be frozen in Item 0 and not chosen afterwards.
 
+
+## 5. 0(b) the 2× arm: no exact 2.0× at a fixed d_head 64 (shown, CPU count of the `tool` model)
+
+Embedding tables (all `nn.Embedding`) total 100,864 at the base. Non-embedding parameters are therefore 3,213,268 at d256 / 4 heads.
+
+| Width | Heads (d_head) | Non-embedding | Ratio | Total ratio |
+|---|---|---|---|---|
+| d256 (base) | 4 (64) | 3,213,268 | 1.00× | 1.00× |
+| d320 | 5 (64) | 4,983,484 | 1.55× | 1.54× |
+| **d384** | **6 (64)** | 7,139,234 | **2.22×** | 2.20× |
+| d360 | 9 (40) | 6,285,708 | 1.96× | 1.94× |
+| d368 | 23 (16) | 6,563,688 | 2.04× | 2.02× |
+
+At the spec's fixed d_head, the nearest arm is **d384 (2.22×)**. Exact 2× would break the fixed-d_head rule. **The coordinator must choose:** d384 at 2.22×, or a different head size. Whichever is chosen, the measured ratio goes on the run card, and every SUCCESS wording uses the measured multiple, not "2×".
+
+## 6. After file 2 of 2 (the synthesis, delivered 10-17)
+
+The synthesis matches the spec. It does **not** contain the playbook (`deep2-blocker-2-stall.md`: Frozen-F, Logged-L and the full Item 0 list). So section 3's three requests stand, with the d_head choice above added as a fourth.
+
 ## 3. What I need from the coordinator
 
 1. **File 2 of 2, and the playbook** (`deep2-blocker-2-stall.md`, sections 0 and Items 0–8: Frozen-F, Logged-L, the full Item 0 list).
 2. **A written choice between reading (a) and reading (b)** for "from scratch under the L13 guard". Under (b), also the KL target and the mask source.
 3. **How looped blocks count** for the axis gate's "layers".
+4. **The 2× arm's shape:** d384 / 6 heads (2.22× non-embedding at d_head 64), or exact 2× at another head size (section 5).
 
 Nothing is booked. Item 1 ($0.74) will be bid only once a trainer to calibrate exists.
