@@ -7,6 +7,7 @@ THINK    per question: question rows, entity slots, fetched cards and registers,
          shared 2-layer block looped up to 8 times; register 0 drives ASK and HALT.
 DECODER  one block, causal self-attention + cross-attention to the think rows; the
          tied head also covers ENT ids, which the detokeniser turns into spellings.
+         `decoder_reader_kv` adds a second cross-attention, to the reader's finished states.
 
 Everything a question sees is causal: reader states up to its "[answer]" token and
 cards on earlier lines (plus NULL). The minGRU scan runs in fp32 (log space), so
@@ -29,6 +30,7 @@ from premonition.config import MiniConfig
 from premonition.store import CardStore, age_bucket, set_cross_entropy
 
 MODES = ("gold", "teacher", "own")
+READER_KV_INIT_SEED = 7100                  # + model seed: the reader cross-attention's own generator
 ROW_QUESTION, ROW_SLOT, ROW_CARD, ROW_REGISTER = range(4)
 
 
@@ -257,8 +259,30 @@ class Heads(nn.Module):
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
 
 
+class ReaderAttention(nn.Module):
+    """Pre-norm cross-attention to the reader's finished states; KV projected once per visit."""
+
+    def __init__(self, config: MiniConfig) -> None:
+        super().__init__()
+        d = config.d_model
+        self.heads = config.n_heads
+        self.norm = nn.LayerNorm(d)
+        self.query = nn.Linear(d, d)
+        self.kv = nn.Linear(d, 2 * d)
+        self.out = nn.Linear(d, d)
+
+    def forward(self, x: torch.Tensor, kv: torch.Tensor, keep: torch.Tensor) -> torch.Tensor:
+        """x [n, T, d], kv [n, S, 2d] from `self.kv(hidden)`, keep [n, S] -> residual update."""
+        n, length, width = x.shape
+        q = self.query(self.norm(x)).view(n, length, self.heads, -1).transpose(1, 2)
+        k, v = kv.view(n, kv.shape[1], 2, self.heads, -1).permute(2, 0, 3, 1, 4)
+        attended = F.scaled_dot_product_attention(q, k, v, attn_mask=keep[:, None, None, :])
+        return self.out(attended.transpose(1, 2).reshape(n, length, width))
+
+
 class Decoder(nn.Module):
-    """One block: causal self-attention (RoPE), cross-attention to the think rows, MLP x2."""
+    """One block: causal self-attention (RoPE), cross-attention to the think rows, with
+    `decoder_reader_kv` cross-attention to the reader states, MLP x2."""
 
     def __init__(self, config: MiniConfig) -> None:
         super().__init__()
@@ -274,8 +298,16 @@ class Decoder(nn.Module):
         self.norm3 = nn.LayerNorm(d)
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
+        self.reader_attn = None
+        if config.decoder_reader_kv:
+            with torch.random.fork_rng(devices=[]):      # construction must not consume the global stream
+                self.reader_attn = ReaderAttention(config)
 
-    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
+                reader: Optional[tuple[torch.Tensor, torch.Tensor]] = None) -> torch.Tensor:
+        """`reader` = (KV [n, S, 2d], keep [n, S]) of the reader states; required with `decoder_reader_kv`."""
+        if (reader is None) != (self.reader_attn is None):
+            raise ValueError("reader memory must be given exactly when decoder_reader_kv is set")
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
@@ -287,6 +319,8 @@ class Decoder(nn.Module):
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
+        if reader is not None:
+            x = x + self.reader_attn(x, *reader)
         x = x + self.mlp(self.norm3(x))
         return self.norm(x)
 
@@ -317,6 +351,7 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    reader: Optional[tuple[torch.Tensor, torch.Tensor]] = None   # decoder_reader_kv: KV [B, S, 2d], keep [Q, S]
 
 
 class PremonitionMini(nn.Module):
@@ -324,6 +359,9 @@ class PremonitionMini(nn.Module):
 
     def __init__(self, config: MiniConfig) -> None:
         super().__init__()
+        if config.decoder_reader_kv and (type(self)._decode_logits is not PremonitionMini._decode_logits
+                                         or type(self)._greedy is not PremonitionMini._greedy):
+            raise NotImplementedError(f"decoder_reader_kv is not wired into {type(self).__name__}'s decoder")
         self.config = config
         self.embed = nn.Embedding(config.total_vocab, config.d_model)
         self.reader = Reader(config)
@@ -338,8 +376,12 @@ class PremonitionMini(nn.Module):
         config, d = self.config, self.config.d_model
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
-        residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
+        residual_std = self._residual_std
+        fresh = set(map(id, self.decoder.reader_attn.modules())) \
+            if self.decoder.reader_attn is not None else set()
         for module in self.modules():
+            if id(module) in fresh:
+                continue
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, std=0.02)
                 nn.init.zeros_(module.bias)
@@ -365,6 +407,25 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        if self.decoder.reader_attn is not None:
+            self.reset_reader_kv()
+
+    @property
+    def _residual_std(self) -> float:
+        return 0.02 / math.sqrt(2 * (len(self.config.reader) + self.config.think_layers + 1))
+
+    def reset_reader_kv(self, seed: Optional[int] = None) -> None:
+        """Initialise the reader cross-attention like the other decoder linears (residual std on
+        its output), from Generator(READER_KV_INIT_SEED + seed), seed defaulting to the global
+        seed: the global stream and every shared weight stay those of the model without it."""
+        attn = self.decoder.reader_attn
+        seed = torch.initial_seed() if seed is None else seed
+        generator = torch.Generator().manual_seed((READER_KV_INIT_SEED + seed) % 2 ** 63)
+        with torch.no_grad():
+            for linear, std in ((attn.query, 0.02), (attn.kv, 0.02), (attn.out, self._residual_std)):
+                linear.weight.copy_(torch.randn(linear.weight.shape, generator=generator) * std)
+                linear.bias.zero_()
+            attn.norm.reset_parameters()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -495,9 +556,31 @@ class PremonitionMini(nn.Module):
                            episode.fetched[index], questions=index)
         return rows, halt, ask, scores
 
-    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
-                       ) -> torch.Tensor:
-        return self.decoder(self.embed(inputs), rows, valid)
+    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor,
+                       reader: Optional[tuple[torch.Tensor, torch.Tensor]] = None) -> torch.Tensor:
+        return self.decoder(self.embed(inputs), rows, valid, reader)
+
+    def _reader_kv(self, batch: VisitBatch, hidden: torch.Tensor, low: Optional[torch.Tensor] = None
+                   ) -> tuple[torch.Tensor, torch.Tensor]:
+        """The decoder's reader memory: KV of the reader states [B, S, 2d] and, per question, the
+        real tokens up to and incl. its "[answer]" (from `low` on, after a store wipe) [Q, S]."""
+        end = batch.q_span[:, 1]
+        width = int(end.max().item())
+        position = torch.arange(width, device=hidden.device)
+        keep = (batch.line_of[batch.q_visit, :width] >= 0) & (position < end.unsqueeze(1))
+        if low is not None:
+            keep &= position >= low.unsqueeze(1)
+        return self.decoder.reader_attn.kv(hidden[:, :width]), keep
+
+    @staticmethod
+    def _reader_memory(episode: _Episode, index: Optional[torch.Tensor] = None) -> dict[str, Any]:
+        """Decoder kwargs: {} without decoder_reader_kv (the call is then exactly the old one)."""
+        if episode.reader is None:
+            return {}
+        kv, keep = episode.reader
+        if index is None:
+            return {"reader": (kv[episode.q_visit], keep)}
+        return {"reader": (kv[episode.q_visit[index]], keep[index])}
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
@@ -533,6 +616,8 @@ class PremonitionMini(nn.Module):
 
         device = hidden.device
         episode = self._start(batch, hidden, store, self._mentions(batch))
+        if config.decoder_reader_kv:
+            episode.reader = self._reader_kv(batch, hidden)
         told_lines = (batch.gold_lines >= 0).sum(1).clamp_min(1)
         if loops is not None:
             n_loops = torch.full((count,), loops, dtype=torch.long, device=device)
@@ -568,7 +653,8 @@ class PremonitionMini(nn.Module):
             pairs += index.numel()
             rows, halt, ask, scores = self._step(episode, index, step, store)
             # L_ans (deep supervision) and the HALT target.
-            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index])
+            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index],
+                                             **self._reader_memory(episode, index))
             target = targets[index]
             keep = target != IGNORE_INDEX
             logits = F.linear(hidden_ans[keep], self.embed.weight).float()
@@ -704,6 +790,8 @@ class PremonitionMini(nn.Module):
                            torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
+        if config.decoder_reader_kv:
+            episode.reader = self._reader_kv(batch, hidden, low)
         limit = min(max_loops or config.max_loops, config.max_loops)
         running = torch.ones(count, dtype=torch.bool, device=device)
         used = torch.zeros(count, dtype=torch.long, device=device)
@@ -743,7 +831,8 @@ class PremonitionMini(nn.Module):
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence)[:, -1]
+            hidden = self._decode_logits(episode.x, episode.valid, sequence,
+                                         **self._reader_memory(episode))[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)
@@ -802,5 +891,5 @@ def crop_to_windows(batch: VisitBatch, window_line: torch.Tensor) -> VisitBatch:
     )
 
 
-__all__ = ["Answers", "CardWriter", "Decoder", "MODES", "PremonitionMini", "Reader", "Think",
-           "crop_to_windows", "min_gru_scan", "rope"]
+__all__ = ["Answers", "CardWriter", "Decoder", "MODES", "PremonitionMini", "READER_KV_INIT_SEED", "Reader",
+           "ReaderAttention", "Think", "crop_to_windows", "min_gru_scan", "rope"]
