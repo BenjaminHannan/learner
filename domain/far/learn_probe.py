@@ -15,6 +15,7 @@
         KL_REPLAY_SEED together; the eval fit seed, chosen before it applies, and the build-time streams stay as shipped);
         --first-call-weight (default 1.0 = shipped) weights the first call's losses (the call writer's token losses
         and round 0's span_call term), renormalised per trace to the uniform-weight trace mean - see install_first_call_weight)
+        [--log-update-rms]        (C8, opt-in, read-only: grad-norm and per-group update-rms history -> OUT/update-rms.json; off = unchanged)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -27,6 +28,7 @@ import argparse
 import hashlib
 import itertools
 import json
+import math
 import os
 import random
 import re
@@ -1478,6 +1480,63 @@ def kl_replay_loss(m, parent, weight, kls, klreplay):
     return loss
 
 
+# C8 (opt-in, --log-update-rms): grad-norm and per-group update-size logging. Mirrors custom_io/train.py's update_group / GradStats /
+# snapshot_params / update_rms (that change is not in this checkout's custom_io/train.py, so the helpers are copied, not imported).
+# Read-only: every function runs under no_grad, draws no random numbers and never writes a param, a grad or optimizer state.
+def update_group(name):
+    """Parameter name -> its module path cut to the first two components: 'blocks.0.qkv.weight' -> 'blocks.0', 'tok.weight' -> 'tok'."""
+    return '.'.join(name.split('.')[:-1][:2]) or name
+
+
+def sig6(x):
+    return float(f'{x:.6g}')
+
+
+class GradStats:
+    """Grad norms over one log interval -> mean, max and the fraction of steps above `clip`. Same as custom_io.train.GradStats."""
+    def __init__(self, clip):
+        self.clip, self.n = clip, 0
+
+    def add(self, gn):
+        import torch
+        with torch.no_grad():
+            gn = gn.detach().float()
+            z = torch.zeros_like(gn)
+            if not self.n:
+                self.sum, self.max, self.fired = z, z, z.clone()
+            self.sum, self.max, self.fired = self.sum + gn, torch.maximum(self.max, gn), self.fired + (gn > self.clip).float()
+            self.n += 1
+
+    def pop(self):
+        import torch
+        s, m, f = torch.stack([self.sum, self.max, self.fired]).tolist()
+        n, self.n = self.n, 0
+        return dict(grad_norm_mean=sig6(s / n), grad_norm_max=sig6(m), clip_frac=sig6(f / n))
+
+
+def snapshot_params(named):
+    """Copies of the trainable tensors in `named` (an iterable of (name, tensor)) as they are now: [(name, tensor, copy)]."""
+    import torch
+    with torch.no_grad():
+        return [(n, p, p.detach().clone()) for n, p in named if p.requires_grad]
+
+
+def update_rms(snap):
+    """After opt.step(): rms(delta) / rms(param before) over everything snapshotted and per update_group; a group whose before-norm is 0
+    is skipped. -> (all, {group: ratio}). Same as custom_io.train.update_rms."""
+    import torch
+    with torch.no_grad():
+        ss = {}
+        for n, p, b in snap:
+            ss.setdefault(update_group(n), []).append(torch.stack([torch.linalg.vector_norm(p.detach() - b, dtype=torch.float64).square(),
+                                                                   torch.linalg.vector_norm(b, dtype=torch.float64).square()]))
+        ss = {g: torch.stack(v).sum(0) for g, v in ss.items()}
+        vals = dict(zip(ss, torch.stack(list(ss.values())).tolist()))
+    ratio = lambda d, b: sig6(math.sqrt(d / b)) if b > 0 else None
+    tot = [sum(v[i] for v in vals.values()) for i in (0, 1)]
+    return ratio(*tot), {g: ratio(d, b) for g, (d, b) in vals.items() if b > 0}
+
+
 class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
     wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
@@ -1513,7 +1572,7 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, log_update_rms=False):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1598,6 +1657,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     last = max(steps)
     ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else extra
     hf = lambda u: harm_fn if u in harm_steps else None
+    gstats, update_log, rms_path = None, [], os.path.join(out, 'update-rms.json')
+    if log_update_rms:   # C8, opt-in and read-only. Cadence: the progress-print points (every --log-every updates and the last update)
+        gstats = GradStats(1.0)   # 1.0 = the clip below
+        if arm == 'LA':   # the add-on's A / B are bare tensors, not module parameters: name them by the Linear they sit on
+            rms_named = lambda: [(f'{name}.{t}', x) for name, _, A, B in addon.layers for t, x in (('A', A), ('B', B))]
+        else:
+            rms_named = m.named_parameters   # evaluated at the snapshot, so tensors --guard froze are skipped
+        extra['update_rms_log'] = update_log   # the history so far rides on every scores.jsonl record; OUT/update-rms.json holds it whole
     if 0 in steps:
         score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, ex(), hf(0), keep_final and last == 0)
     t_seg = time.time()
@@ -1611,7 +1678,16 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         o = m.loss(b)
         loss = o[0] if isinstance(o, tuple) else o
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(params, 1.0)
+        gn = torch.nn.utils.clip_grad_norm_(params, 1.0)   # the return value is the total grad norm BEFORE clipping
+        log_now = u % log_every == 0 or u == updates
+        if log_update_rms:
+            gstats.add(gn)
+            snap = snapshot_params(rms_named()) if log_now else None
+        # Grad norm = gn, the raw total norm BEFORE the clip. With --guard (kf / kfsoft) nothing rewrites the gradients between here and
+        # the optimizer: mainbrain KFOptimizer.step() (kf.py, c823e4b9a) runs base.step() on the clipped p.grad as it is and projects
+        # the weight CHANGE [W|b] afterwards. So there is no guard-modified gradient to measure; the gradient the optimizer uses is this
+        # one, clipped (norm min(gn, 1.0)). The projection does land inside the snapshot/update_rms window, so upd_rms is the update
+        # as applied, after the guard. If a guard that masks p.grad is ever used, measure the norm here, after it, right before opt.step().
         opt.step()
         opt.zero_grad(set_to_none=True)
         losses.append(float(loss.detach()))
@@ -1623,6 +1699,13 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             print(f'{arm} update {u}: {time.time() - t_seg:.1f}s for last {k} ({(time.time() - t_seg) / k:.3f} s/update), '
                   f'loss {np.mean(losses[-k:]):.4f}', flush=True)
             t_seg = time.time()
+            if log_update_rms:
+                rec = dict(update=u, **gstats.pop())
+                rec['upd_rms_all'], rec['upd_rms'] = update_rms(snap)   # rms(delta) / rms(param before) of this one update
+                update_log.append(rec)
+                with open(rms_path, 'w') as f:
+                    json.dump(update_log, f, indent=1)
+                print(f'{arm} update_rms {json.dumps(rec)}', flush=True)
         if guarded and u % guard_every == 0 and u < updates:   # re-measure F on the current weights; same base AdamW and state
             opt = guarded.refresh()
         if u in steps:
@@ -1662,6 +1745,7 @@ def main(argv=None):
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
     a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
+    a.add_argument('--log-update-rms', action='store_true', help="train only (C8): log pre-clip grad-norm stats and per-group update rms (rms(delta)/rms(param before) of one update, groups = module path cut to two components) every --log-every updates and at the last update; with --guard the update rms is the update as applied, after the guard's projection; history in OUT/update-rms.json and on each scores.jsonl record; default off = training unchanged")
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
     a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
@@ -1715,7 +1799,7 @@ def main(argv=None):
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
               kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
-              seed=a.seed, first_call_weight=a.first_call_weight)
+              seed=a.seed, first_call_weight=a.first_call_weight, log_update_rms=a.log_update_rms)
 
 
 if __name__ == '__main__':
