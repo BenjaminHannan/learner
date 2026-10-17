@@ -1,0 +1,19 @@
+V1 (round 1, per seed)
+  seed 200
+    [INFO   ] iter-1 mean_unlocks vs Z8: 7.082 vs Z8 6.915: abs diff 0.167
+    [INFO   ] iter-1 played agreement vs Z8: 0.3638 vs Z8 0.3651: diff -0.0013 (imitate 50-game sample, views 7373)
+    [PASS   ] non-habit per game vs reference: 5.8825 (count 2353 / 400) vs ref 5.72: diff +0.1625, tolerance 0.3
+    [PASS   ] first game seed: play-1-0 first seed 4,980,400 (expected 4,980,400)
+    [PASS   ] all round-1 seeds on days 4-7: games 400, distinct seeds 400, days [4, 5, 6, 7], per chunk (n, days) [(100, [4]), (100, [5]), (100, [6]), (100, [7])], bad []
+  seed 201
+    [INFO   ] iter-1 mean_unlocks vs Z8: 7.16 vs Z8 7.125: abs diff 0.035
+    [INFO   ] iter-1 played agreement vs Z8: 0.3732 vs Z8 0.3727: diff +0.0005 (imitate 50-game sample, views 7699)
+    [PASS   ] non-habit per game vs reference: 5.8975 (count 2359 / 400) vs ref 5.87: diff +0.0275, tolerance 0.3
+    [PASS   ] first game seed: play-1-0 first seed 4,990,400 (expected 4,990,400)
+    [PASS   ] all round-1 seeds on days 4-7: games 400, distinct seeds 400, days [4, 5, 6, 7], per chunk (n, days) [(100, [4]), (100, [5]), (100, [6]), (100, [7])], bad []
+  V1 verdict: PASS
+V2 (commit time earlier than iter-3.json mtime)
+  seed 200: [PASS] commit time 1792248977 < iter-3.json mtime 1792267453 (iter-3 is +18476 s after the commit)
+  seed 201: [PASS] commit time 1792248977 < iter-3.json mtime 1792268628 (iter-3 is +19651 s after the commit)
+  V2 verdict: PASS
+gwls_checks exit code: 0
