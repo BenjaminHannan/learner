@@ -50,6 +50,12 @@ Full design: `reviews/size-vs-stall-solve-2026-10-16.md`, sections 3–4. In sho
 - **C8 draft:** an opt-in `--log-update-rms` flag in `custom_io/train.py` that logs pre-clip grad norm, clip-fire rate and per-module update-RMS. Its tests require training to be bit-identical with the flag off and with it on. This is host-agnostic: both candidate hosts train through `custom_io/train.py` or an overlay of it.
 - **Bar calculator draft:** `custom_io/pilot_bars.py`. It computes each contrast's own sigma_d over **units** (parents or seeds, not replicates, so there is no pseudo-replication), with a t interval and a mechanical verdict from a sealed rule file. It is validated by reproducing the record's 8a interval (B2 +0.49, CI −0.74 to +1.72).
 
+- **Size check (shown, CPU, 10-17):** the T1SDR `tool` model widens through its existing `d` argument, so Bid B's parents need **no model code change**. The counts are:
+  - d256: 3,314,132;
+  - **d448 / 7 heads: 9,854,600** (2.97×, inside 10M ± 5%);
+  - d512 / 8 heads: 12,807,534;
+  - d768 / 12 heads: 28,487,944 (the 30M guard).
+
 ## 5. What I need back
 
 1. **R1:** the v2 spec and the synthesis text.
