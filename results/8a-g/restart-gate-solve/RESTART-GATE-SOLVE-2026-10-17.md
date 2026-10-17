@@ -9,7 +9,7 @@ Files in this folder:
 | `BRIEF-FOR-BEN.md` | the one page for Ben | final |
 | `PREREG-trace-a2.md` | the corrected gate, the measurement plan and the 0.0282 re-judgment rule, committed (8bdabbe2fd, 21:00 UTC) **before** any probe or positive-control number | pre-registered draft |
 | `sims/` | false-alarm simulations behind the bar's multiplier | shown (simulation) |
-| `posctrl/` | CPU positive controls: what a really broken restore looks like next to emulated GPU noise | see §2b |
+| `posctrl/` | CPU positive controls: what a really broken restore looks like next to emulated GPU noise | shown (CPU, emulated noise) |
 | `drafts/` | draft code (probe checkpoint guard, mean-form fields, soft-able mean item, `rejudge_probe.py`) + tests | draft, for code review |
 
 ---
@@ -45,9 +45,19 @@ None of these overturns the diagnosis. Items 2 and 3 change the probe procedure 
 
 Full text, fixed before any number: `PREREG-trace-a2.md`. In short:
 
-**Layer R, the running gate (stops the run):** NaN/Inf, loss falls, and the **first redone update within 0.01**, all unchanged. The first redone update is where a broken restore is loud and rounding noise is zero. The forward pass is deterministic, and on the PC at accum 4 update 101 was exact, 0.0. The redone-window **mean and max become recorded, not gated** (recommendation).
+**Layer R, the running gate (stops the run).** These are the start-of-redo checks, where a broken restore is loud and rounding noise is zero or nearly so:
+- NaN/Inf and loss falls (unchanged);
+- the **first redone update** (kept at 0.01; recommended tightened to ≤ 1e-4, since on the PC at accum 4 it was exactly 0.0);
+- **exact `lr`/`rounds`/`plan_*` at the first redone update** (new, Amendment 1);
+- **max |ΔL| ≤ 0.005 on redone updates 2-3** (new, Amendment 1; this is what catches lost optimizer state).
 
-**Layer P, the reading gate (decides whether the result counts):** probe-resume at step 200 on the card. P1: update 201 exact for both resumes. P2: the registered d ≤ max(0.10, 3n), unchanged. P3: D̄ ≤ max(0.02, 2·N̄) (mean form, new).
+The redone-window **mean and max become recorded, not gated** (recommendation).
+
+**Layer P, the reading gate (decides whether the result counts):** probe-resume at step 200 on the card.
+- P1: update 201 exact for both resumes.
+- P1b: updates 202-203 within 0.005.
+- P2: the registered d ≤ max(0.10, 3n), unchanged.
+- P3: D̄ ≤ max(0.02, 2·N̄) (mean form, new). A P3 failure alone triggers the 4-resume calibration; it is not a fail.
 
 **The bar in house form:** *L(a, w) = max(0.02, 2.0 × largest of 6 pairwise mean |Ri−Rj| from 4 fresh resumes, accum a, window w, PC card).*
 - **Derived from:** measured resume-vs-resume noise plus exchangeability. Healthy false-alarm rate ≤ 5.2 % even if the 50 updates carry one effective sample, 0.1 % at lag-1 ρ = 0.8 (`sims/fa_sim2.out.txt`).
@@ -67,10 +77,33 @@ Full text, fixed before any number: `PREREG-trace-a2.md`. In short:
 - The CPU test reproduces kill+resume bit-for-bit at accum 8 (settled).
 - Under the corrected gate: Layer R **would not have stopped the run**. Against the provisional 0.05, 0.0282 passes (56 % of the limit). Layer P: pending the probe.
 - **The goal's criterion 2:** the corrected gate passes accum-4's 0.0167. Under Layer R the mean is recorded only. Under the provisional numeric rule 0.0167 is below the 0.02 floor. That pass is **by construction** (floor ≥ 0.0167) and is not an independent test of the gate. The honest test is the probe.
-- **What would make the verdict OUTSIDE:** update 201 not exact, or R1 ≈ R2 while both sit far from C (D̄/N̄ > 2 with P2 failing). **UNRESOLVED, not FAIL:** if N̄(201-250) < 0.0141, the calmer probe window cannot vouch for 101-150. Settling that needs a fresh run with two extra resumes of step-100.
+- **What would make the verdict OUTSIDE (as amended):** update 201 not exact, updates 202-203 over 0.005, or (after the 4-resume calibration) D̄ > L.
+- **UNRESOLVED, not FAIL**, in two cases:
+  - a ratio or P2 failure with the start-of-redo checks clean. Next step: calibrate.
+  - N̄(201-250) < 0.0141, so the calmer probe window cannot vouch for 101-150. Settling that needs a fresh run with two extra resumes of step-100.
+- **Read the accum-8 record too.** If update 101 was exact and 102-103 are under 0.005 in the PC's own trace-A record, the re-judgment strengthens before any probe. The positive controls say those are exactly the places a restore bug would show.
 
 ### 2b. Positive controls (CPU, $0): can the gate tell a broken restore from noise?
-POSCTRL_PLACEHOLDER
+Full tables: `posctrl/RESULTS.md`. Setup:
+- **Model and data:** the pack's tiny b3g2 on CPU (torch 2.14.1), checkpoint at 30, redo 31-60, accum 4 and 8. Restore is bit-exact with no noise (shown).
+- **Emulated GPU noise:** `grad += eps·rms(grad)·N(0,1)` after every micro-batch backward, with per-process entropy, at eps 0 / 0.01 (bf16-like) / 0.3 / 1 / 8.
+- **Faults injected right after the checkpoint loads:** optimizer state cleared, Adam moments zeroed, data position +1, RNG streams not restored (all / global / model-only), lr schedule off by one, weights × (1 + 1e-3·N).
+
+| fault class | first redone update (31) | 2nd redone update (32) vs healthy max there | window mean, bug ÷ healthy (eps 0.01 / 0.3 / 1) |
+|---|---|---|---|
+| data position, RNG streams | loud (0.88-45) | — | 138-3907 |
+| model-only RNG streams | small (0.0015-0.064); `plan_*` fields differ | — | 10-236 |
+| weights × (1+1e-3) | 7.3e-4-0.0145 | — | **0.9-9.8 (invisible to the mean)** |
+| optimizer state cleared / moments zeroed | **exactly 0 (invisible)** | 0.0145-1.01 vs ≤ 0.009 | 1.4-778 |
+| lr off by one | 0 in the loss; the `lr` field differs | 0.028-0.077 vs ≤ 0.009 | 5.8-280 |
+| healthy | exactly 0 in every resume at every eps | — | — (D/N 0.60-1.24, one draw 3.13) |
+
+What this means for the gate (shown on CPU; the scale transfer to the GPU is untested):
+- **Every bug class was caught at the start of the redo.** The exact first update catches data, RNG and weights faults. The exact fields catch lr and RNG faults. Updates k+2..k+3 catch optimizer and lr faults, each with ≥ 3x margin over healthy noise at bf16-like eps.
+- **The window mean added nothing.** It was blind to a 1e-3 weight corruption.
+- **The old first-update limit of 0.01 is too loose for the weight fault**, which landed partly under it. Hence PREREG **Amendment 1**: Layer R gains an early-window item (≤ 0.005 on updates k+2..k+3) and an exact-field item (`lr`, `rounds`, `plan_*`), and I recommend tightening the first update to ≤ 1e-4. Layer P gains P1b (the early window on 202-203).
+- **A failed ratio means "calibrate", not "broken".** The 3.13 healthy draw is the heavy tail the simulations predict.
+- **Caveat on scale:** to make the toy's healthy drift as large as the GPU's 0.017-0.028, the emulated noise had to be strong enough to damage training (loss level 19-22 vs 7.9). At bf16-like eps the toy drifts 40-90x less than the GPU. So the CPU run shows **where** bugs appear and how sharply. It does not show that the GPU's 0.0282 contains no small bug. That part is the probe's job.
 
 ## 3. The determinism option, priced
 
@@ -105,7 +138,7 @@ The expensive design choice is not cadence or segmentation. It is a **running st
 ## 5. Recommendation: gate-fix (with the probe as the decider)
 
 **Gate-fix (recommended).**
-1. Read-only, no halt: the Mac reads `TRACE-A-g2fa8.md`, the `state.json` traceA entry and the g2fa8 `events.jsonl` lines 101-150 from the PC. Bring back: first redone difference, max difference, and the per-update R and C. If update 101 is exact and the growth profile looks like accum 4's, the re-judgment strengthens at $0.
+1. Read-only, no halt: the Mac reads `TRACE-A-g2fa8.md`, the `state.json` traceA entry and the g2fa8 `events.jsonl` lines 101-150 from the PC. Bring back: the first redone difference (update 101) and the `lr`/`rounds`/`plan_*` fields there, |ΔL| at 102-103, the max difference, and the per-update R and C. If 101 is exact, the fields are equal, 102-103 are under 0.005, and the growth profile looks like accum 4's, the re-judgment strengthens at $0. Those are exactly the places the positive controls say a restore bug shows.
 2. Coordinator's call, no halt: **copy** (never move) g2fa8's `B3G2\ckpt\step-200.pt/.json` (and step-300) into `work\g2fa4\ckpt-keep-g2fa8\`. Check the sidecar says `"accum": 8`.
 3. **Ben's halt go**, then `probe-resume --keep ...\ckpt-keep-g2fa8 --step 200 --upto 250 --job g2fa8` (~10 min, $0). Then `drafts/rejudge_probe.py PROBE-RESUME-g2fa8.json`, which gives INSIDE / UNRESOLVED / OUTSIDE.
 4. If INSIDE, Ben decides two things: (a) adopt trace A2 (mean recorded at run time, reading gated by P1-P3); (b) **continue g2fa8 from step 300** (`arm` on his typed words + `clear g2fa8`; ccdbd06e9b tested that a clear after a recorded trace-A FAIL continues to ALL-DONE without re-evaluating trace A). The alternative is a fresh rerun under the new variant (needs the reviewed drafts installed).
