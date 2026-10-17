@@ -106,6 +106,15 @@ class Pure(unittest.TestCase):
         days = {imitate.day_of(k, c) for k in range(1, 25) for c in range(4)}
         self.assertEqual(len(days), 96)
 
+    def test_day_offset_zero_is_unchanged_and_four_shifts_by_four(self):
+        # DRAFT pending coordinator review (GW-LS)
+        for k in range(1, 25):
+            for c in range(4):
+                self.assertEqual(imitate.day_of(k, c, 0), imitate.day_of(k, c))
+                self.assertEqual(imitate.day_of(k, c, 4), imitate.day_of(k, c) + 4)
+        self.assertEqual([imitate.day_of(k, c, 4) for k in (1, 2) for c in range(4)], [4, 5, 6, 7, 8, 9, 10, 11])
+        self.assertEqual(imitate.day_of(8, 3, 4), 35)
+
 
 class Playing(unittest.TestCase):
     def test_play_games_matches_play_play(self):
