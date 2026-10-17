@@ -240,6 +240,7 @@ class Think(nn.Module):
         self.age = nn.Embedding(config.age_buckets, d) if config.store else None
         self.age_bias = nn.Parameter(torch.zeros(config.age_buckets)) if config.store else None
         self.binder = nn.Linear(2 * d, 2 * d) if config.store and config.pointers else None
+        self.loop_query = nn.Parameter(torch.zeros(config.max_loops, d)) if config.loop_attnres else None
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
         x = x + self.step.weight[step]
@@ -262,6 +263,7 @@ class Heads(nn.Module):
         self.query = nn.Linear(d, config.key_dim) if config.store else None
         self.ask = nn.Linear(d, 1) if config.store else None
         self.halt = nn.Linear(d, 1)
+        self.row_halt = nn.Linear(d, 1) if config.row_halt else None
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
 
 
@@ -380,6 +382,10 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        if config.loop_attnres:
+            nn.init.zeros_(self.think.loop_query)                      # uniform mix at init
+        if config.row_halt:
+            nn.init.constant_(self.heads.row_halt.bias, config.row_halt_bias)
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -446,9 +452,15 @@ class PremonitionMini(nn.Module):
         valid.append(torch.ones(count, config.registers, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line)
+        if config.loop_attnres:
+            episode.history = [episode.x[:, config.rows - config.registers:]]     # v_0: the initial registers
+        if config.row_halt:
+            episode.keep = torch.ones(count, config.registers, device=device)
+            episode.ponder = []
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -511,10 +523,34 @@ class PremonitionMini(nn.Module):
 
     def _loop_input(self, episode: _Episode, index: torch.Tensor, step: int) -> torch.Tensor:
         """[n, R, d] rows fed to loop `step` for questions `index`."""
-        return episode.x[index]
+        x = episode.x[index]
+        if not self.config.loop_attnres or step == 0:
+            return x
+        # AttnRes: register row r of loop t is sum_i alpha_i v_i[r] over the t + 1 register states so far,
+        # alpha = softmax_i(loop_query[t] . norm(v_i[r])). Card and slot rows pass through unmixed.
+        past = torch.stack([v[index] for v in episode.history[:step + 1]])              # [t + 1, n, R, d]
+        alpha = torch.softmax((_norm(past) * self.think.loop_query[step].float()).sum(-1), dim=0)
+        mix = (alpha.unsqueeze(-1) * past.float()).sum(0)
+        return torch.cat([x[:, :self._register_base], mix.to(x.dtype)], dim=1)
 
     def _loop_output(self, episode: _Episode, index: torch.Tensor, step: int, rows: torch.Tensor) -> torch.Tensor:
         """[n, R, d] rows a loop leaves behind, from the think block's output `rows`."""
+        config, base = self.config, self._register_base
+        if config.row_halt and step >= 1:
+            # Each register row halts with p = sigmoid(router(register entering the loop)); keep is the share
+            # still updating: soft in training, sticky and discrete on the answer paths.
+            before = episode.x[index][:, base:]
+            p = torch.sigmoid(self.heads.row_halt(_norm(before)).squeeze(-1).float())        # [n, R]
+            keep = episode.keep[index]
+            keep = keep * (p <= 0.5).float() if episode.hard else keep * (1.0 - p)
+            episode.keep = episode.keep.index_copy(0, index, keep)
+            episode.ponder.append(keep.flatten())
+            moved = before + keep.unsqueeze(-1).to(before.dtype) * (rows[:, base:] - before)
+            rows = torch.cat([rows[:, :base], moved.to(rows.dtype)], dim=1)
+        if config.loop_attnres:
+            # v_{t+1}: this loop's registers for `index`; questions that already stopped carry their last state.
+            latest = episode.history[-1].index_copy(0, index, rows[:, base:].to(episode.history[-1].dtype))
+            episode.history.append(latest)
         return rows
 
     def _ask_scores(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
@@ -526,8 +562,12 @@ class PremonitionMini(nn.Module):
 
     def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
                 ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
-        """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`."""
-        return store.top(scores, self.config.top_k).masked_fill(((ask <= 0) | stop).unsqueeze(1), -1)
+        """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`
+        (or register 0 has halted, under row_halt)."""
+        cut = (ask <= 0) | stop
+        if episode.keep is not None:
+            cut = cut | (episode.keep[index, 0] < 0.5)
+        return store.top(scores, self.config.top_k).masked_fill(cut.unsqueeze(1), -1)
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
@@ -536,7 +576,8 @@ class PremonitionMini(nn.Module):
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
                 loops: Optional[int] = None, weights: Optional[dict[str, float]] = None,
-                generator: Optional[torch.Generator] = None) -> dict[str, Any]:
+                generator: Optional[torch.Generator] = None,
+                depth_cap: Optional[int] = None) -> dict[str, Any]:
         """The four losses of design/06 §3 and their weighted sum under "loss".
 
         mode "gold": every gold card (NULL when never told) is loaded before loop 1; 2 loops.
@@ -544,7 +585,8 @@ class PremonitionMini(nn.Module):
             distractors while G minus F is non-empty; ceil(|G| / 4) + 3 loops.
         mode "own": like "teacher", but each (question, loop) uses the model's own top-k
             (when its ASK logit > 0) with probability p_own; max_loops loops.
-        `loops` overrides the loop count. Default weights come from the config, except
+        `loops` overrides the loop count; `depth_cap` clamps it (random_depth: sampled here from `generator`
+        when training without one). Default weights come from the config, except
         that "gold" leaves out L_ask and L_halt (the 0-5% phase trains L_lm + L_ans only).
         """
         if mode not in MODES:
@@ -566,6 +608,11 @@ class PremonitionMini(nn.Module):
             return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
         device = hidden.device
+        if config.random_depth and depth_cap is None and torch.is_grad_enabled():
+            depth_cap = int(torch.randint(config.random_depth_min, config.max_loops + 1, (1,), generator=generator,
+                                          device=None if generator is None else generator.device).item())
+        if depth_cap is not None and depth_cap < 1:
+            raise ValueError("depth_cap must be at least 1")
         episode = self._start(batch, hidden, store, self._mentions(batch))
         told_lines = (batch.gold_lines >= 0).sum(1).clamp_min(1)
         if loops is not None:
@@ -577,6 +624,8 @@ class PremonitionMini(nn.Module):
         else:
             n_loops = torch.full((count,), config.max_loops, dtype=torch.long, device=device)
         n_loops = n_loops.clamp(1, config.max_loops)
+        if depth_cap is not None:
+            n_loops = n_loops.clamp_max(depth_cap)
 
         gold = None
         if store is not None:
@@ -650,6 +699,8 @@ class PremonitionMini(nn.Module):
 
         l_ans = torch.cat(ans_terms).sum() / pairs
         l_halt = torch.cat(halt_terms).mean()
+        if episode.ponder:
+            l_halt = l_halt + config.row_halt_cost * torch.cat(episode.ponder).mean()
         l_ask = zero
         if bce_terms:
             l_ask = torch.cat(bce_terms).mean()

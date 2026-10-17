@@ -103,8 +103,9 @@ class Curriculum:
         return Plan("own", "own", self.p_own_max * ramp)
 
 
-def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Tensor:
-    """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU."""
+def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig, depth_cap: Optional[int] = None) -> torch.Tensor:
+    """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU;
+    `depth_cap` (random_depth) clamps them."""
     count = batch.q_visit.shape[0]
     if mode == "gold":
         loops = torch.full((count,), 2, dtype=torch.long)
@@ -115,7 +116,8 @@ def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Ten
         loops = torch.full((count,), config.max_loops, dtype=torch.long)
     else:
         raise ValueError(f"unknown mode {mode!r}")
-    return loops.clamp(1, config.max_loops)
+    loops = loops.clamp(1, config.max_loops)
+    return loops if depth_cap is None else loops.clamp_max(depth_cap)
 
 
 def mini_train_config(**overrides: Any) -> TrainConfig:
@@ -243,6 +245,7 @@ class MiniTrainer(Trainer):
         self.question_loops = 0
         self.questions = 0
         self.generator = torch.Generator(device=self.device).manual_seed(seed)
+        self.depth_cap: Optional[int] = None    # random_depth: this step's loop cap, sampled before batch_cost
 
     # ------------------------------------------------------------------ FLOPs
     def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
@@ -263,7 +266,7 @@ class MiniTrainer(Trainer):
     def batch_cost(self, batch: VisitBatch, plan: Plan) -> tuple[float, torch.Tensor]:
         if self.fit is None:
             raise RuntimeError("call calibrate() or pass fit= before training")
-        loops = planned_loops(batch, plan.mode, self.model.config)
+        loops = planned_loops(batch, plan.mode, self.model.config, self.depth_cap)
         return self.fit(batch.tokens.numel(), int(loops.sum())), loops
 
     def plan(self) -> Plan:
@@ -303,7 +306,8 @@ class MiniTrainer(Trainer):
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
-                out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator)
+                extra = {} if self.depth_cap is None else {"depth_cap": self.depth_cap}
+                out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator, **extra)
         finally:
             for hook in hooks:
                 hook.remove()
@@ -400,6 +404,10 @@ class MiniTrainer(Trainer):
             if batch is None:
                 break
             plan = self.plan()
+            if self.model.config.random_depth:      # before batch_cost, so the charge matches the loops run
+                low, high = self.model.config.random_depth_min, self.model.config.max_loops
+                self.depth_cap = int(torch.randint(low, high + 1, (1,), generator=self.generator,
+                                                   device=self.generator.device).item())
             cost, loops = self.batch_cost(batch, plan)
             if self.flops + cost > ceiling:
                 stop = "flop budget (the next batch would pass the tolerance)"
