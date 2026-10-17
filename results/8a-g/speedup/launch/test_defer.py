@@ -1,7 +1,7 @@
 """CPU tests for defer.py (the deferred batched writer, attack A) and prof_launch.py. Tiny shape, stub Gemma, synthetic rows, fp32 on the CPU; no GPU, no network.
 
   python test_defer.py                         (a mini runner calls every test_* and prints PASS / FAIL / SKIP; no pytest needed)
-  DEFER_REAL_SHAPE=1 python test_defer.py      (adds T5 at the REAL 3M model shape (4,023,302 params), one 64-row micro-batch of batch 256 / accum 4, K pinned to 16: about 5 minutes, 5 GB, 2 threads;
+  DEFER_REAL_SHAPE=1 python test_defer.py      (adds two tests at the REAL 3M model shape (4,023,302 params): T5 counts, one 64-row micro-batch of batch 256 / accum 4, K pinned to 16, and the saved-for-backward bytes at K 16 (64 rows) and K 32 (16 rows): about 3 minutes, 5 GB, 2 threads;
                                                 the synthetic prompts are cut at 700 letters (DEFER_REAL_LETTERS=0: the caps' full 2000, about 11 GB peak, which the shared 16 GB box killed once);
                                                 op and sync-site counts do not depend on the prompt width)
   python -m pytest -q test_defer.py            (works too)
@@ -12,7 +12,9 @@ torch.nonzero made from Python; on the CPU nothing waits, so the count says how 
 `int(torch.randint(...))`, a CPU generator draw) are counted too; the per-site table in the report tells them apart.
 
 The custom_io package is found as in test_prof.py: $PROF_PKG_ROOT or $CUSTOM_IO_ROOT (the folder that CONTAINS custom_io/), else an importable one, else `git archive 74d6e92c75 custom_io`.
-Tests T1-T8 are those of the S2 task: T1 values, T2 RNG, T3 coverage, T4 fallbacks, T5 counts, T6 teardown, T7 20-update run, T8 the runner.
+Tests T1-T8 are those of the S2 task: T1 values, T2 RNG, T3 coverage, T4 fallbacks, T5 counts, T6 teardown, T7 20-update run, T8 the runner. Added after review: the same T1 / T3 with a NON-TRIVIAL ByteWriter.right
+(the real one is all False at init, which hides the right[] scatter, the hit counters and the stop label), a mutation test of those marks, saved-for-backward bytes (memory proxy), op counts by prompt width,
+the instance-_loss fallback, and registration of the real exact arms. The runner prints passed / skipped / failed apart (a skip is not a pass).
 """
 import collections, contextlib, importlib.util, inspect, json, math, os, random, subprocess, sys, tempfile, time, types, unittest
 import numpy as np
@@ -161,6 +163,56 @@ def check_close(c, what, loss_rel=1e-6, cos=0.999999):
     assert c['loss_rel'] <= loss_rel, (what, c['loss_rel'])
     assert c['grad_cos_min'] >= cos, (what, c['grad_cos_min'])
     assert c['rng_equal'], what
+
+
+RIGHT_MARGIN = []                                                              # smallest distance of nll * 10 to an integer seen by nontrivial_right's stand-in (see there)
+
+
+@contextlib.contextmanager
+def nontrivial_right():
+    """ByteWriter.right made NON-TRIVIAL for BOTH arms (class-level, restored on exit; defer's source-hash guard for `right` is moved with it).
+
+    Why: at init no writer is right about anything, so the real `right` is False for every pair and call_acc = eos_acc = right_last = 0 and the stop label (`settled(right)`) is all True in both
+    arms. Then a scrambled right[] scatter, swapped call / EOS hit counters or a wrong stop label still give "every aux key equal". This stand-in is a deterministic function of the target AND of
+    the pair's mean target nll, quantised at 0.1, so it differs from pair to pair (rounds, rows, call vs EOS-only) and mixes True and False. It is a TEST DEVICE for the bookkeeping (scatter,
+    counters, label), not a statement about the real writer's accuracy.
+    Fragility, and the guard: a pair whose nll * 10 sits within rounding of an integer could flip between the arms (the arms differ by about 1e-7 relative). The stand-in records the smallest
+    distance of nll * 10 to an integer in RIGHT_MARGIN; the tests assert it is >= 5e-5 (that is 5e-6 in nll, about 8 times the rounding between the arms, which is 6e-7 in nll), so a flip fails loudly as a
+    margin error and not as a mystery."""
+    import custom_io.models.writer as W
+    BW = W.ByteWriter
+    orig, old_hash = BW.__dict__['right'], defer.SRC_HASH_WRITER['right']
+
+    def right(logp, tgt):
+        v = tgt != -100
+        lp = logp.gather(-1, tgt.clamp(min=0)[..., None])[..., 0]
+        q = -(lp * v).sum(1) / v.sum(1).clamp(min=1) * 10.0
+        if bool(v.any(1).any()):
+            RIGHT_MARGIN.append(float((q - q.round()).abs()[v.any(1)].min().detach()))
+        return v.any(1) & (((tgt.clamp(min=0).sum(1) + q.floor().long()) % 3) != 2)
+    BW.right = staticmethod(right)
+    defer.SRC_HASH_WRITER['right'] = defer.src_hash(right)
+    del RIGHT_MARGIN[:]
+    try:
+        yield
+    finally:
+        BW.right = orig
+        defer.SRC_HASH_WRITER['right'] = old_hash
+
+
+AUX_LOG = []                                                                  # the baseline aux of every T3 scenario run (filled by test_t3_coverage_...)
+AUX_BOOKKEEPING = ('call_acc', 'eos_acc', 'right_last', 'stop_y', 'stop_acc')
+
+
+def assert_margin():
+    """The guard of nontrivial_right: no pair sat within 5e-5 (in nll * 10) of a quantisation edge."""
+    assert RIGHT_MARGIN and min(RIGHT_MARGIN) >= 5e-5, ('a pair of the nontrivial-right stand-in is too close to its quantisation edge; the arms could flip on rounding', min(RIGHT_MARGIN or [None]))
+    say(f'nontrivial right: smallest distance of nll*10 to an edge over {len(RIGHT_MARGIN)} passes: {min(RIGHT_MARGIN):.2e} (>= 5e-5 required; rounding between the arms is about 6e-6 in these units)')
+
+
+def nontrivial_keys(auxes):
+    """Which of call_acc / eos_acc / right_last / stop_y / stop_acc are strictly between 0 and 1 in at least one of the aux dicts (so they cannot be matched by a 0 / 1 constant)."""
+    return {k for k in AUX_BOOKKEEPING if any(0.0 < f(x[k]) < 1.0 for x in auxes)}
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- pure functions
@@ -333,6 +385,7 @@ def test_t3_coverage_rounds_gaps_drill_nocall_rows_full_and_subset_overcap():
         r1 = run_one(w, a, ['defer'], mb, K, tweak=tweak)
         c = compare(r0, r1)
         check_close(c, name)
+        AUX_LOG.append(r0['aux'])
         n = int(r0['aux']['rounds'])
         NL = r0['model'].n_loops
         seen['full_call'] += sum(s == B for s in spy.call); seen['subset_call'] += sum(s < B for s in spy.call)
@@ -342,7 +395,7 @@ def test_t3_coverage_rounds_gaps_drill_nocall_rows_full_and_subset_overcap():
         Ls = [len(x['texts']) for x in r0['model'].plain_golds(mb['rows'])]
         seen['nocall_rows'] += sum(L == 0 for L in Ls)
         say(f'T3 {name}: rows {B} n {n} loss rel {c["loss_rel"]:.1e} grad cos min {c["grad_cos_min"]:.9f} rel L2 {c["grad_rel_l2"]:.1e} | call passes full/subset {sum(s == B for s in spy.call)}/{sum(s < B for s in spy.call)}, '
-            f'answer passes {sum(s == B for s in spy.ans)}/{sum(s < B for s in spy.ans)}, gapped {int(r0["aux"]["plan_gapped"])}, call_acc {r0["aux"]["call_acc"]:.3f} eos_acc {r0["aux"]["eos_acc"]:.3f} share {f(r0["aux"]["copy_share"])}')
+            f'answer passes {sum(s == B for s in spy.ans)}/{sum(s < B for s in spy.ans)}, gapped {int(r0["aux"]["plan_gapped"])}, call_acc {r0["aux"]["call_acc"]:.3f} eos_acc {r0["aux"]["eos_acc"]:.3f} right_last {f(r0["aux"]["right_last"]):.3f} stop_y {f(r0["aux"]["stop_y"]):.3f} stop_acc {f(r0["aux"]["stop_acc"]):.3f} share {f(r0["aux"]["copy_share"])}')
         return r0, r1, c
 
     scenario('K=4 (short: n = max(4, last + 2))', mb16, 4)
@@ -402,6 +455,80 @@ def test_t3_last_round_with_no_ok_rows_is_unreachable_through_loss_but_handled_a
         share = out[0]['aux']['copy_share']
         assert (share is None) == expect_none and (out[1]['aux']['copy_share'] is None) == expect_none, (n_forced, share)
         say(f'T3 forced n={n_forced}: copy_share {f(share)} in both arms, loss rel {c["loss_rel"]:.1e}, grad cos min {c["grad_cos_min"]:.9f}')
+
+
+def test_t1_t3_with_a_nontrivial_right_the_scatter_counters_and_stop_label_are_really_compared():
+    """The reviewer's defect: with the real `right` (all False at init) 'every aux key equal' says nothing about the right[] scatter, the call / EOS hit counters or the stop label. Here BOTH
+    arms run with `nontrivial_right()`. Asserted: the bookkeeping aux values are not all 0 / 1 (so they can be matched only by being computed right), then they are equal arm to arm."""
+    w, a = world()
+    cases = [('16 rows, K 8', full_batch(w), 8, None), ('16 rows, K 32 (rounds past CKPT_FROM)', full_batch(w), 32, None), ('4 rows, K 16', micro_batch(w, 1), 16, None),
+             ("16 rows, K 16, label 'right' (stop_w = 1)", full_batch(w), 16, lambda m: setattr(m, 'label', 'right'))]
+    seen = []
+    with nontrivial_right():
+        for name, mb, K, tweak in cases:
+            r0 = run_one(w, a, [], mb, K, tweak=tweak)
+            r1 = run_one(w, a, ['defer'], mb, K, tweak=tweak)
+            c = compare(r0, r1)
+            check_close(c, name)
+            assert r1['stats']['defer']['deferred_losses'] == 1
+            seen.append(r0['aux'])
+            say(f'T1 nontrivial right, {name}: ' + ', '.join(f'{k} {f(r0["aux"][k]):.4f}/{f(r1["aux"][k]):.4f}' for k in AUX_BOOKKEEPING) + f'; loss rel {c["loss_rel"]:.1e}, grad rel L2 {c["grad_rel_l2"]:.1e}')
+    assert_margin()
+    nt = nontrivial_keys(seen)
+    assert nt >= {'call_acc', 'right_last', 'stop_y', 'stop_acc'}, ('these must be strictly between 0 and 1 in some case', nt)
+    say(f'T1 nontrivial right: strictly between 0 and 1 in at least one case: {sorted(nt)}')
+
+
+def test_t3_coverage_scenarios_again_with_a_nontrivial_right():
+    """The nine T3 scenarios, both arms with `nontrivial_right()`; the bookkeeping aux values must be non-trivial somewhere in them (call_acc, eos_acc, right_last, stop_y, stop_acc)."""
+    del AUX_LOG[:]
+    with nontrivial_right():
+        test_t3_coverage_rounds_gaps_drill_nocall_rows_full_and_subset_overcap()
+    assert_margin()
+    nt = nontrivial_keys(AUX_LOG)
+    assert nt >= set(AUX_BOOKKEEPING), ('every one of these must be strictly between 0 and 1 in some scenario', nt, [{k: f(x[k]) for k in AUX_BOOKKEEPING} for x in AUX_LOG])
+    say(f'T3 nontrivial right: {len(AUX_LOG)} scenarios; strictly between 0 and 1 somewhere: {sorted(nt)}')
+    del AUX_LOG[:]
+
+
+def test_t3_forced_short_n_again_with_a_nontrivial_right():
+    with nontrivial_right():
+        test_t3_last_round_with_no_ok_rows_is_unreachable_through_loss_but_handled_at_a_forced_short_n()
+
+
+def test_the_t1_marks_catch_a_scrambled_scatter_swapped_counters_and_a_wrong_stop_label():
+    """Mutation check of the test itself (the reviewer's mut.py, kept): Defer.loss is replaced, by prof.patched_fn (a rebuild from its own source with exact edits; no file is edited), by
+    five WRONG versions. Under `nontrivial_right()` the T1 marks (check_close) must FAIL on every one; the unmutated loss passes them. (With the real all-False `right` they would pass: that is
+    why the test above exists.)"""
+    w, a = world()
+    mb = full_batch(w)
+    orig = defer.Defer.loss
+    mutations = [
+        ('answer right[] scatter reversed', [("right.view(-1)[pk['a_flat']] = rt_a", "right.view(-1)[pk['a_flat'].flip(0)] = rt_a")]),
+        ('call / EOS hit counters swapped', [("hits['call_n'], hits['call_hit'] = n_call, sum(rc[:n_call])", "hits['call_n'], hits['call_hit'] = n_call, sum(rc[n_call:])")]),
+        ('stop label ignores settled()', [("y = (settled(right) if m.label == 'settled' else right).to(dev).float()", "y = right.to(dev).float()")]),
+        ('call nll left in bucket order (c_inv dropped)', [(".index_select(0, pk['c_inv'])", "")]),
+        ('stop head reads the wrong round', [("zst = Zall.view(n, B, nz, d)[:, :, 1].detach()", "zst = Zall.view(n, B, nz, d)[:, :, 1].detach().flip(0)")]),
+    ]
+    try:
+        with nontrivial_right():
+            r0 = run_one(w, a, [], mb, 8)
+            c = compare(r0, run_one(w, a, ['defer'], mb, 8))
+            check_close(c, 'unmutated')
+            for name, edits in mutations:
+                defer.Defer.loss = prof.patched_fn(orig, edits)
+                try:
+                    cm = compare(r0, run_one(w, a, ['defer'], mb, 8))
+                    try:
+                        check_close(cm, name)
+                    except AssertionError as e:
+                        say(f'mutation "{name}": caught ({str(e)[:110]})')
+                    else:
+                        raise AssertionError(f'the T1 marks did NOT catch the mutation "{name}"')
+                finally:
+                    defer.Defer.loss = orig
+    finally:
+        defer.Defer.loss = orig
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- T4
@@ -479,11 +606,13 @@ def test_t4_fallbacks_are_bitwise_the_original():
                 m.train()
             return dict(Z=o['Z'], records=o['records'], rounds=o['rounds'], ans=ans, Z2=o2['Z'], gen=gen)
 
+        # the REAL fallbacks (they go through defer's _loss and back to the original): eval-mode loss, no_grad loss, talk_rounds='all' loss. The loop(rec=True) and free-run checks only show that
+        # setup() left those methods alone (defer replaces neither), so they are labelled UNTOUCHED.
         both(eval_loss, 'eval-mode loss')
         both(nograd_loss, 'training mode, no_grad loss')
-        both(rec_loop, 'loop(rec=True), the call_evals path')
+        both(rec_loop, 'UNTOUCHED loop(rec=True) (the call_evals path): defer does not replace loop, so this only shows setup() left it alone')
         both(all_rounds_loss, "talk_rounds='all' loss + gradient")
-        both(free_run, 'free run (run / talk / loops:3 / generate)')
+        both(free_run, 'UNTOUCHED free run (run / talk / loops:3 / generate): same, only shows setup() left these methods alone')
         assert v.n_deferred == 0 and v.n_fallback == 3, (v.n_deferred, v.n_fallback)       # eval, no_grad, talk_rounds all: three losses; the loop / free-run paths never reach _loss
         assert v.n_deferred == 0
     finally:
@@ -504,6 +633,81 @@ def test_t4_applicable_rule_and_fallback_counter():
         assert v.applicable(m)
     finally:
         tr.close()
+
+
+def test_t4_fallback_goes_to_an_instance_loss_set_before_defer_not_to_the_class():
+    """The fallback must be the _loss the instance had when defer was set up (a variant set up earlier may have wrapped it), and teardown must put that wrapper back."""
+    w, a = world()
+    _load()
+    m = w.new_model(400)
+    mb = full_batch(w)
+    calls = []
+    cls_loss = type(m)._loss
+
+    def wrapped(batch, golds):
+        calls.append(1)
+        return cls_loss(m, batch, golds)
+    m._loss = wrapped
+    v = defer.Defer(types.SimpleNamespace(model=m, a=a))
+    v.setup()
+    try:
+        m.eval()
+        torch.manual_seed(3)
+        m.loss(mb)                                                                # eval -> fallback -> the instance wrapper
+        assert calls == [1] and v.n_fallback == 1 and v.n_deferred == 0, (calls, v.n_fallback)
+    finally:
+        m.train()
+        v.teardown()
+    assert m.__dict__['_loss'] is wrapped, 'teardown puts the earlier instance _loss back'
+
+
+def test_saved_for_backward_bytes_tiny_defer_is_close_to_the_baseline():
+    """The reviewer's memory worry (shown on the tiny shape, CPU): the bytes of the unique storages autograd saves for backward in one forward. First version of defer (no answer-pass
+    checkpoint, every call pair padded to the longest call): 1.07x at K 8, 1.59x at K 32. With the checkpoint for rounds >= 8 and the EOS-only pairs at width 1 the ratio must stay <= 1.15.
+    GPU peak memory is a different number and is untested."""
+    w, a = world()
+    mb = full_batch(w)
+    out = {}
+    for K in (8, 32):
+        b = saved_bytes(w, a, [], mb, K)
+        d = saved_bytes(w, a, ['defer'], mb, K)
+        out[K] = d[0] / b[0]
+        say(f'memory (tiny, 16 rows, K {K}, rounds {b[1]}): saved-for-backward baseline {b[0] / 1e6:.2f} MB, defer {d[0] / 1e6:.2f} MB, ratio {d[0] / b[0]:.3f}; defer stats call pairs {d[2]}, EOS-only {d[3]}, answer pairs {d[4]}, call width {d[5]}')
+        assert d[0] / b[0] <= 1.15, (K, d[0] / b[0])
+
+
+def saved_bytes(w, a, names, mb, K):
+    """-> (bytes of the unique storages saved for backward during ONE forward m.loss(mb), rounds, call pairs, EOS-only pairs, answer pairs, max call width) (the last four None for the baseline)."""
+    tr = prof.Trainer(w, a, names, accum=4)
+    try:
+        m = tr.model
+        seen = {}
+
+        def pack(t):
+            try:
+                seen[(t.untyped_storage().data_ptr(), t.untyped_storage().nbytes())] = t.untyped_storage().nbytes()
+            except Exception:                                                  # noqa: BLE001
+                pass
+            return t
+        torch.manual_seed(5)
+        with forced_ks(K), torch.autograd.graph.saved_tensors_hooks(pack, lambda t: t):
+            loss, aux = m.loss(mb)
+        st = tr.variant_stats().get('defer', {})
+        return (sum(seen.values()), int(aux['rounds']), st.get('call_pairs_per_micro_batch'), st.get('eos_only_pairs_per_micro_batch'), st.get('answer_pairs_per_micro_batch'), st.get('max_call_width'))
+    finally:
+        tr.close()
+
+
+def test_t5_op_counts_do_not_move_with_the_prompt_width():
+    """Tiny model, synthetic prompts cut at 60 and at 280 letters, the same K: the ATen op counts of defer (and of the baseline) are the same to within 1 percent. (Was an unlogged ad hoc run.)"""
+    res = {}
+    for letters in (60, 280):
+        w, a = world('B3G2', '--synth-letters', str(letters))
+        mb = full_batch(w)
+        res[letters] = (counts_of(w, a, [], mb, 16)['ops'], counts_of(w, a, ['defer'], mb, 16)['ops'])
+    say(f'T5 op counts (baseline, defer) by prompt width: 60 letters {res[60]}, 280 letters {res[280]}')
+    for i in (0, 1):
+        assert abs(res[60][i] - res[280][i]) <= 0.01 * res[280][i], res
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- T5
@@ -710,6 +914,30 @@ def _t5_real():
     _CACHE['real_counts'] = (c0, c1)
 
 
+def test_t5_saved_for_backward_bytes_real_3m_shape_k16_and_k32():
+    """DEFER_REAL_SHAPE=1 only. The real 3M model (WCAP 96, V 269), 700-letter synthetic prompts: bytes saved for backward in one forward (no backward), baseline vs defer, for K 16 on the first
+    32 rows of the real 64-row micro-batch and K 32 (the largest of KS, the worst case for the pairs kept alive) on its first 16 rows (64 rows needs about 5 GB at K 16 and 10 GB at K 32, and the
+    shared 16 GB box has killed these runs when other jobs were running; a 64-row K 16 run measured ratio 1.006 once, not logged). 2 threads, a few minutes. The synthetic calls are short (the longest call of the micro-batch gives call width 16); the
+    real pool's calls go up to WCAP - 1 = 95 bytes, so the real width, and with it the call logp tensors, are larger than measured here. The GPU peak is not this number; this is the closest
+    thing measurable here."""
+    if os.environ.get('DEFER_REAL_SHAPE') != '1':
+        raise unittest.SkipTest('set DEFER_REAL_SHAPE=1 (a few minutes, 2 threads, about 5 GB)')
+    torch.set_num_threads(int(os.environ.get('DEFER_THREADS', '2')))
+    try:
+        w, a = real_world()
+        prof.PK.CP.apply(json.load(open(w.caps_path)))                          # World() applies its caps GLOBALLY; worlds built since (the tiny ones) left theirs: the real model needs the real position table
+        mb = prof.PK.TR.split_batch(full_batch(w, seed=400), 4)[0]
+        for K, rows in ((16, 32), (32, 16)):
+            sub = mb if rows == len(mb['rows']) else pick_rows(mb, list(range(rows)))
+            b = saved_bytes(w, a, [], sub, K)
+            d = saved_bytes(w, a, ['defer'], sub, K)
+            say(f'memory REAL 3M shape, {rows} rows, K {K} (rounds {b[1]}): saved-for-backward baseline {b[0] / 1e6:.1f} MB, defer {d[0] / 1e6:.1f} MB, ratio {d[0] / b[0]:.3f}; '
+                f'defer call pairs {d[2]}, EOS-only {d[3]}, answer pairs {d[4]}, call width {d[5]}')
+            assert d[0] / b[0] <= 1.25, (K, d[0] / b[0])
+    finally:
+        torch.set_num_threads(1)
+
+
 # ---------------------------------------------------------------------------------------------------------------------------------- T6
 def test_t6_teardown_restores_the_patched_attributes_by_identity():
     w, a = world()
@@ -760,7 +988,7 @@ def test_t6_teardown_restores_the_patched_attributes_by_identity():
 def test_defer_composes_with_nosync_and_pad64p_and_is_registered():
     w, a = world()
     assert 'defer' in prof.VARIANTS and len(prof.VARIANTS['defer'].doc) > 300 and 'NUMERICS-CHANGING' in prof.VARIANTS['defer'].doc
-    assert prof.parse_variants('defer,nosync') == ['nosync', 'defer'] and prof.AB_CPU_RULE['defer'] == 'bar_only'
+    assert prof.parse_variants('defer,nosync') == ['nosync', 'defer'] and prof.AB_CPU_RULE['defer'] == 'equal_to_rounding'
     mb = full_batch(w)
     r = run_one(w, a, ['defer'], mb, 8)
     r2 = run_one(w, a, ['nosync', 'defer'], mb, 8)
@@ -800,7 +1028,7 @@ def test_t7_twenty_updates_baseline_vs_defer_same_seed():
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- T8
-def test_t8_the_runner_runs_abequiv_for_defer_and_registers_exact_arms():
+def test_t8_the_runner_runs_abequiv_for_defer_and_registers_the_exact_arms_of_the_folder():
     _load()
     d = tempfile.mkdtemp(prefix='defer_t8_')
     out = os.path.join(d, 'ab.json')
@@ -812,7 +1040,9 @@ def test_t8_the_runner_runs_abequiv_for_defer_and_registers_exact_arms():
     v = S['variants']['defer']
     assert 'error' not in v and 'skipped' not in v, v
     mk = v['mark6']
-    assert mk['cpu_fp32_rule'] == 'bar_only' and mk['label'] == 'bar_only_by_rule' and mk['holds'] and mk['bar_holds'] and mk['cpu_fp32_checked'] and mk['bit_exact_cpu_fp32'] is False
+    assert mk['cpu_fp32_rule'] == 'equal_to_rounding' and mk['label'] == 'bar_and_cpu_fp32' and mk['holds'] and mk['bar_holds'] and mk['cpu_fp32_checked'] and mk['bit_exact_cpu_fp32'] is False
+    assert mk['equal_to_rounding_cpu_fp32'] is True and mk['cpu_fp32_clause_holds'] is True, mk
+    assert v['fp32']['rel_loss_diff'] <= prof.AB_ROUND_REL and v['fp32']['grad_rel_l2'] <= prof.AB_ROUND_REL
     assert S['mark6_by_variant'] == {'defer': True} and S['errors'] == []
     say(f'T8 abequiv defer (tiny, fp32 CPU): rel loss {v["fp32"]["rel_loss_diff"]:.2e}, grad cos {v["fp32"]["grad_cos"]:.12f}, rel L2 {v["fp32"]["grad_rel_l2"]:.2e}, step cos {v["fp32"]["step_cos"]:.12f}, '
         f'bit exact {v["fp32"]["bit_exact"]}, mark 6 {mk["verdict"]} [{mk["label"]}]; rerun floor bit exact {S["reference"]["fp32"]["rerun"]["bit_exact"]}')
@@ -831,56 +1061,92 @@ def test_t8_the_runner_runs_abequiv_for_defer_and_registers_exact_arms():
     assert 'error' not in res3['sections']['breakdown'], res3['sections']['breakdown'].get('error')
 
 
-def test_t8_exact_arms_are_registered_when_the_file_exists_and_a_broken_one_is_survived():
-    _load()
+@contextlib.contextmanager
+def registries_restored():
     saved = (dict(prof.VARIANTS), prof.SETUP_ORDER, dict(prof.AB_CPU_RULE), prof.AB_ARM_ORDER)
+    try:
+        yield
+    finally:
+        prof.VARIANTS.clear(); prof.VARIANTS.update(saved[0]); prof.SETUP_ORDER = saved[1]; prof.AB_CPU_RULE.clear(); prof.AB_CPU_RULE.update(saved[2]); prof.AB_ARM_ORDER = saved[3]
+
+
+def test_t8_fake_exact_arms_module_is_registered_and_a_broken_one_is_survived():
+    """Under a module name that is NOT 'exact_arms' (prof_launch.register_all(exact_module=...)), loaded from a temp dir, so this test never depends on what sits in the launch folder."""
+    _load()
     d = tempfile.mkdtemp(prefix='defer_exact_')
-    if os.path.exists(os.path.join(HERE, 'exact_arms.py')):
-        raise unittest.SkipTest('a real exact_arms.py sits in the launch folder and shadows the fake one; test_t8_the_runner... covers the real registration')
-    sys.modules.pop('exact_arms', None)
+    mod = 'fake_exact_arms_for_test'
+    sys.modules.pop(mod, None)
     sys.path.insert(0, d)
     try:
-        open(os.path.join(d, 'exact_arms.py'), 'w').write(
-            'import prof_train as prof\n'
-            'class FakeExact(prof.Variant):\n    name = "fake_exact"\n    doc = "a fake"\n    ab_cpu_rule = "bit_exact"\n'
-            'NEW_VARIANTS = [FakeExact]\n')
-        names = prof_launch.register_all(lambda *x: None)
-        assert 'defer' in names and 'fake_exact' in names
-        assert prof.VARIANTS['fake_exact'].name == 'fake_exact' and prof.AB_CPU_RULE['fake_exact'] == 'bit_exact' and prof.AB_CPU_RULE['defer'] == 'bar_only'
-        assert prof.SETUP_ORDER.index('fake_exact') < prof.SETUP_ORDER.index('baseline') and prof.AB_ARM_ORDER.index('fake_exact') < prof.AB_ARM_ORDER.index('accum 8')
-        assert 'fake_exact' in prof.ab_default_variants().split(',') and prof.parse_variants('fake_exact,defer,nosync') == ['nosync', 'fake_exact', 'defer']
-        assert prof.parse_ab_variants('defer,fake_exact') == ['defer', 'fake_exact']
-        names2 = prof_launch.register_all(lambda *x: None)                       # idempotent
-        assert names2 == names and prof.SETUP_ORDER.count('defer') == 1 and prof.AB_ARM_ORDER.count('defer') == 1
-        # a broken exact_arms.py: reported, defer still registered
-        sys.modules.pop('exact_arms', None)
-        open(os.path.join(d, 'exact_arms.py'), 'w').write('raise RuntimeError("boom")\n')
-        msgs = []
-        assert prof_launch.load_exact_arms(msgs.append) == [] and msgs and 'NOT registered' in msgs[0]
+        with registries_restored():
+            open(os.path.join(d, mod + '.py'), 'w').write(
+                'import prof_train as prof\n'
+                'class FakeExact(prof.Variant):\n    name = "fake_exact"\n    doc = "a fake"\n    ab_cpu_rule = "bit_exact"\n'
+                'NEW_VARIANTS = [FakeExact]\n')
+            names = prof_launch.register_all(lambda *x: None, exact_module=mod)
+            assert 'defer' in names and 'fake_exact' in names
+            assert prof.VARIANTS['fake_exact'].name == 'fake_exact' and prof.AB_CPU_RULE['fake_exact'] == 'bit_exact' and prof.AB_CPU_RULE['defer'] == 'equal_to_rounding'
+            assert prof.SETUP_ORDER.index('fake_exact') < prof.SETUP_ORDER.index('baseline') and prof.AB_ARM_ORDER.index('fake_exact') < prof.AB_ARM_ORDER.index('accum 8')
+            assert 'fake_exact' in prof.ab_default_variants().split(',') and prof.parse_variants('fake_exact,defer,nosync') == ['nosync', 'fake_exact', 'defer']
+            assert prof.parse_ab_variants('defer,fake_exact') == ['defer', 'fake_exact']
+            names2 = prof_launch.register_all(lambda *x: None, exact_module=mod)     # idempotent
+            assert names2 == names and prof.SETUP_ORDER.count('defer') == 1 and prof.AB_ARM_ORDER.count('defer') == 1
+            # a broken module: reported, defer still registered
+            sys.modules.pop(mod, None)
+            open(os.path.join(d, mod + '.py'), 'w').write('raise RuntimeError("boom")\n')
+            msgs = []
+            assert prof_launch.load_exact_arms(msgs.append, mod) == [] and msgs and 'NOT registered' in msgs[0]
+            # a missing module: silently no arms
+            assert prof_launch.load_exact_arms(msgs.append, 'no_such_exact_arms_module') == []
     finally:
         sys.path.remove(d)
-        sys.modules.pop('exact_arms', None)
-        prof.VARIANTS.clear(); prof.VARIANTS.update(saved[0]); prof.SETUP_ORDER = saved[1]; prof.AB_CPU_RULE.clear(); prof.AB_CPU_RULE.update(saved[2]); prof.AB_ARM_ORDER = saved[3]
+        sys.modules.pop(mod, None)
+
+
+def test_t8_the_real_exact_arms_of_the_folder_are_registered_with_their_rules_and_positions():
+    """If exact_arms.py sits in this folder (another agent's file, only READ here): every class of its NEW_VARIANTS is registered under its name, with AB_CPU_RULE equal to the class's ab_cpu_rule
+    (default bar_only), SETUP_ORDER after its anchor (setup_after, default nosync) and before 'baseline', AB_ARM_ORDER after 'unfused' and before 'accum 8'. Skipped (and counted as skipped)
+    when there is no exact_arms.py."""
+    _load()
+    if not os.path.exists(os.path.join(HERE, 'exact_arms.py')):
+        raise unittest.SkipTest('no exact_arms.py in the launch folder')
+    with registries_restored():
+        names = prof_launch.register_all(lambda *x: None)
+        mod = importlib.import_module('exact_arms')
+        arms = list(mod.NEW_VARIANTS)
+        assert arms and set(c.name for c in arms) <= set(names), (names, [c.name for c in arms])
+        for cls in arms:
+            n = cls.name
+            assert prof.VARIANTS[n] is cls, n
+            assert prof.AB_CPU_RULE[n] == (getattr(cls, 'ab_cpu_rule', None) or 'bar_only'), (n, prof.AB_CPU_RULE[n])
+            anchor = getattr(cls, 'setup_after', 'nosync')
+            assert prof.SETUP_ORDER.index(anchor) < prof.SETUP_ORDER.index(n) < prof.SETUP_ORDER.index('baseline'), (n, prof.SETUP_ORDER)
+            assert prof.AB_ARM_ORDER.index('unfused') < prof.AB_ARM_ORDER.index(n) < prof.AB_ARM_ORDER.index('accum 8'), (n, prof.AB_ARM_ORDER)
+            assert n in prof.ab_default_variants().split(',')
+        say('T8 real exact arms registered: ' + ', '.join(f'{c.name} (rule {prof.AB_CPU_RULE[c.name]}, setup index {prof.SETUP_ORDER.index(c.name)}, ab index {prof.AB_ARM_ORDER.index(c.name)})' for c in arms))
 
 
 ALL = [(n, fn) for n, fn in sorted(globals().items()) if n.startswith('test_') and callable(fn)]
 
 
 def main():
-    bad, t_all = 0, time.time()
+    """Runs every test_*; prints PASS / SKIP / FAIL; the last line counts the three APART (a skipped test did not run: it is not a pass)."""
+    bad, skipped, passed, t_all = 0, 0, 0, time.time()
     for n, fn in ALL:
         t0 = time.time()
         try:
             fn()
+            passed += 1
             print(f'PASS {n} ({time.time() - t0:.1f}s)', flush=True)
         except unittest.SkipTest as e:
+            skipped += 1
             print(f'SKIP {n}: {e}', flush=True)
         except Exception:                                                        # noqa: BLE001
             import traceback
             bad += 1
             print(f'FAIL {n} ({time.time() - t0:.1f}s)', flush=True)
             traceback.print_exc()
-    print(f'{len(ALL) - bad} of {len(ALL)} passed in {time.time() - t_all:.1f}s', flush=True)
+    print(f'{passed} passed, {skipped} skipped, {bad} failed (of {len(ALL)}) in {time.time() - t_all:.1f}s', flush=True)
     return 1 if bad else 0
 
 

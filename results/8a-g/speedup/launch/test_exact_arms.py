@@ -1,16 +1,19 @@
-"""CPU tests for exact_arms.py (the candidate-EXACT arms 'kvcat' and 'fastteach'): fp32 on the CPU, stub Gemma, synthetic rows; no GPU, no network. The tiny tests take a few minutes in all.
+"""CPU tests for exact_arms.py (the candidate-EXACT arms 'kvcat' and 'fastteach'): fp32 on the CPU at 1 thread, stub Gemma, synthetic rows; no GPU, no network. The tiny tests take about 1.5 minutes.
 
-  python test_exact_arms.py                    (a mini runner calls every test_* and prints PASS / FAIL / SKIP; no pytest needed)
-  EXACT_ARMS_REAL=1 python test_exact_arms.py  also runs the REAL 3M shape tests: ONE micro-batch of 64 rows, K pinned to 16 (about 10 minutes at 1 thread) and writes exact_arms_counts.json
+  python test_exact_arms.py                    (a mini runner calls every test_* and prints PASS / FAIL / SKIP and a summary of passed / skipped / failed / selected; no pytest needed)
+  EXACT_ARMS_REAL=1 python test_exact_arms.py  also runs the REAL 3M shape tests: ONE micro-batch of 64 rows, K pinned to 16 (about 3 minutes at 1 thread, more while the box is busy)
+  EXACT_ARMS_WRITE=1 ...                       the counts are written to exact_arms_counts.json ONLY with this set (that file is the record the report cites); otherwise to a scratch file in the temp dir
+  python test_exact_arms.py --box-ckpt <prof_launch arguments>
+                                               the CHECK FOR THE CUDA BOX (see box_ckpt_check): K forced to 32 so that rounds t >= n_loops are checkpointed, bf16 autocast, baseline vs baseline, then baseline vs kvcat
 
-What is shown here (and only here): for each arm separately against train.py's own code, same seed, same batches, fp32 on the CPU: loss tensors and aux, every parameter gradient, three full
-updates (split -> micro-batch loss -> backward -> clip_grad_norm_ -> AdamW, fused=False on the CPU) and all parameters afterwards, torch.equal each time; with K forced to 4, 32 (checkpointed rounds)
+What is shown here (and only here): for each arm separately against train.py's own code, same seed, same batches, fp32 on the CPU at 1 thread: loss tensors and aux, every parameter gradient, three full
+updates (split -> micro-batch loss -> backward -> clip_grad_norm_ -> AdamW, fused=False on the CPU) and all parameters afterwards, BITWISE each time (same() compares the int bit patterns, so -0.0 and +0.0 differ); with K forced to 4, 32 (checkpointed rounds)
 and to the tiny model's own draws; the free run (run / talk / generate, no_grad, eval) with calls written so that the tape K/V is rebuilt; teardown identity; ATen dispatch and host-sync
-call-site counts. What is NOT shown: anything on CUDA (kernel selection, timing, launches, memory), bf16 on CUDA. bf16 here means torch.autocast('cpu', dtype=torch.bfloat16).
+call-site counts. What is NOT shown: anything on CUDA (kernel selection, timing, launches, memory), bf16 on CUDA, bit-equality at 2 or more CPU threads (the unmodified code is not run-to-run bitwise there: test_7b records it). bf16 here means torch.autocast('cpu', dtype=torch.bfloat16).
 
 The package is found through $PROF_PKG_ROOT / $CUSTOM_IO_ROOT (the folder that CONTAINS custom_io/), else /home/user/src-g2f (custom_io at 74d6e92c75), else the tests skip.
 """
-import collections, contextlib, json, os, random, sys, time, types, unittest
+import collections, contextlib, json, os, random, sys, tempfile, time, types, unittest
 import numpy as np
 import torch
 
@@ -21,6 +24,7 @@ import prof_launch                                                           # n
 prof = ea.prof
 
 OUT = os.path.join(HERE, 'exact_arms_counts.json')
+SCRATCH_OUT = os.path.join(tempfile.gettempdir(), 'exact_arms_counts_scratch.json')
 _CACHE = {}
 ARMS = ('kvcat', 'fastteach')
 DEFAULT_PKG = '/home/user/src-g2f'
@@ -92,12 +96,21 @@ def micro_batches(w, a, cpu, accum=4):
     return [{k: v for k, v in mb.items() if not k.startswith('_')} for mb in prof.PK.TR.split_batch(dev, accum)]
 
 
+_INT_OF = {2: torch.int16, 4: torch.int32, 8: torch.int64}
+
+
+def bits(x):
+    """The tensor's bit pattern as integers (a float tensor is viewed as an int of the same width), so -0.0 and +0.0, and NaNs with different payloads, are different."""
+    x = x.detach().contiguous()
+    return x.view(_INT_OF[x.element_size()]) if (x.is_floating_point() or x.is_complex()) else x
+
+
 def same(x, y):
-    """Bitwise-equal values for tensors, nan-aware for floats; None == None."""
+    """BITWISE-equal values for tensors (same dtype, same shape, same bit pattern: -0.0 != +0.0); plain == for other values (a nan float equals a nan float); None == None."""
     if torch.is_tensor(x) or torch.is_tensor(y):
         if not (torch.is_tensor(x) and torch.is_tensor(y)) or x.dtype != y.dtype or x.shape != y.shape:
             return False
-        return bool(((x == y) | (torch.isnan(x) & torch.isnan(y))).all()) if x.is_floating_point() else bool(torch.equal(x, y))
+        return bool(torch.equal(bits(x), bits(y)))
     if isinstance(x, float) and isinstance(y, float) and x != x and y != y:
         return True
     return x == y
@@ -160,6 +173,7 @@ class OpCounter(torch.utils._python_dispatch.TorchDispatchMode):
     def __init__(self):
         super().__init__()
         self.ops, self.views = collections.Counter(), collections.Counter()
+        self.in_teacher, self.teacher_ops = False, collections.Counter()     # non-view ops dispatched while ByteWriter.teacher runs (count_micro sets the flag)
 
     def __torch_dispatch__(self, func, types_, args=(), kwargs=None):
         sch = func._schema
@@ -168,6 +182,8 @@ class OpCounter(torch.utils._python_dispatch.TorchDispatchMode):
             self.views[name] += 1
         else:
             self.ops[name] += 1
+            if self.in_teacher:
+                self.teacher_ops[name] += 1
         return func(*args, **(kwargs or {}))
 
     @property
@@ -247,6 +263,16 @@ def count_micro(w, a, names, mb, K, amp=contextlib.nullcontext, grads=False):
             w.eg._last = None; w.eg.load(w.device)                          # the stub front memoises its last call: forget it, so every counted pass does the same front work
         tr.model.zero_grad(set_to_none=True)
         fo, bo, sc = OpCounter(), OpCounter(), SyncCounter()
+        BW = prof.PK.models.writer.ByteWriter
+        orig_teacher = BW.__dict__['teacher']                              # installed AFTER the arms' setup (their source-hash guard reads the original text); restored below
+
+        def counted_teacher(*a, **kw):
+            fo.in_teacher = True
+            try:
+                return orig_teacher.__func__(*a, **kw)
+            finally:
+                fo.in_teacher = False
+        BW.teacher = staticmethod(counted_teacher)
         t0 = time.time()
         with forced_K(K), pretend_cuda_copies():
             torch.manual_seed(1234)
@@ -258,16 +284,19 @@ def count_micro(w, a, names, mb, K, amp=contextlib.nullcontext, grads=False):
                 (l / 4).backward()
         t2 = time.time()
         g = [None if p.grad is None else p.grad.detach().clone() for p in tr.model.parameters()] if grads else None
-        return dict(fwd_ops=dict(fo.ops), fwd_views=dict(fo.views), bwd_ops=dict(bo.ops), bwd_views=dict(bo.views), n_fwd=fo.total, n_bwd=bo.total,
+        return dict(fwd_ops=dict(fo.ops), fwd_views=dict(fo.views), bwd_ops=dict(bo.ops), bwd_views=dict(bo.views), n_fwd=fo.total, n_bwd=bo.total, teacher_ops=dict(fo.teacher_ops),
                     syncs=dict(sc.kinds), sync_sites=dict(sc.sites), rounds=float(aux['rounds']), loss=l.detach(), grads=g, stats=tr.variant_stats(), fwd_s=t1 - t0, bwd_s=t2 - t1)
     finally:
+        BW.teacher = orig_teacher
         tr.close()
 
 
 def save_counts(key, data):
-    cur = json.load(open(OUT)) if os.path.exists(OUT) else {}
+    """The record file exact_arms_counts.json is written ONLY when EXACT_ARMS_WRITE=1; otherwise the numbers (timings are noisy) go to a scratch file in the temp dir."""
+    path = OUT if os.environ.get('EXACT_ARMS_WRITE') == '1' else SCRATCH_OUT
+    cur = json.load(open(path)) if os.path.exists(path) else {}
     cur[key] = data
-    json.dump(cur, open(OUT, 'w'), indent=1, sort_keys=True)
+    json.dump(cur, open(path, 'w'), indent=1, sort_keys=True)
 
 
 SYNC_KINDS = ('tolist', 'item', 'cpu', 'nonzero', 'numpy', 'to_blocking', 'torch.tensor(device=)')        # calls that wait for the device (or copy pageable host memory to it) when the tensor is on CUDA
@@ -277,7 +306,8 @@ TRUTH_KINDS = ('__bool__', '__int__', '__float__', '__index__')                 
 def summarize(c):
     sy = collections.Counter(c['syncs'])
     sites = collections.Counter(c['sync_sites'])
-    return dict(rounds=c['rounds'], nonview_aten_ops_forward=c['n_fwd'], nonview_aten_ops_backward=c['n_bwd'], nonview_aten_ops_total=c['n_fwd'] + c['n_bwd'],
+    return dict(rounds=c['rounds'], nonview_aten_ops_inside_bytewriter_teacher=sum(c['teacher_ops'].values()), nonview_aten_ops_outside_bytewriter_teacher=c['n_fwd'] + c['n_bwd'] - sum(c['teacher_ops'].values()),
+                nonview_aten_ops_forward=c['n_fwd'], nonview_aten_ops_backward=c['n_bwd'], nonview_aten_ops_total=c['n_fwd'] + c['n_bwd'],
                 aten_cat_forward=c['fwd_ops'].get('aten::cat', 0), aten_cat_backward=c['bwd_ops'].get('aten::cat', 0),
                 host_sync_call_sites_executed={k: sy[k] for k in SYNC_KINDS if sy.get(k)}, host_sync_total=sum(sy[k] for k in SYNC_KINDS),
                 blocking_h2d_to_calls=sy.get('to_blocking', 0), nonblocking_h2d_to_calls=sy.get('to_nonblocking', 0),
@@ -376,8 +406,11 @@ def test_1_2_loss_aux_and_every_gradient_bit_equal_each_arm():
     for arm in ARMS + ('kvcat,fastteach', 'nosync,fastteach,kvcat'):
         got = micro_pass(w, a, arm.split(','))
         assert_micro_equal(base, got, arm)
-    st = got['stats']
-    assert st['kvcat']['cat_cache_hits'] > 0 and st['fastteach']['teacher_calls_numpy'] > 0, 'the arms really ran'
+        st = got['stats']
+        if 'kvcat' in arm:
+            assert st['kvcat']['cat_cache_hits'] > 0, f'{arm}: the kvcat cache really hit (else equality is vacuous)'
+        if 'fastteach' in arm:
+            assert st['fastteach']['teacher_calls_numpy'] > 0, f'{arm}: fastteach really ran'
 
 
 def test_2b_a_second_batch_and_seed_also_equal():
@@ -430,8 +463,8 @@ def test_3_three_full_updates_all_parameters_equal_each_arm():
     l0, p0, _ = train_updates(w, a, [])
     for arm in ARMS + ('kvcat,fastteach',):
         l1, p1, st = train_updates(w, a, arm.split(','))
-        assert all(torch.equal(x, y) for x, y in zip(l0, l1)), f'{arm}: update losses differ'
-        assert sorted(p0) == sorted(p1) and all(torch.equal(p0[k], p1[k]) for k in p0), f'{arm}: parameters differ after 3 updates: {[k for k in p0 if not torch.equal(p0[k], p1[k])][:5]}'
+        assert all(same(x, y) for x, y in zip(l0, l1)), f'{arm}: update losses differ'
+        assert sorted(p0) == sorted(p1) and all(same(p0[k], p1[k]) for k in p0), f'{arm}: parameters differ after 3 updates: {[k for k in p0 if not same(p0[k], p1[k])][:5]}'
 
 
 def test_3b_three_updates_k_forced_32_and_4_each_arm():
@@ -440,7 +473,7 @@ def test_3b_three_updates_k_forced_32_and_4_each_arm():
         l0, p0, _ = train_updates(w, a, [], K=K)
         for arm in ARMS:
             l1, p1, _ = train_updates(w, a, [arm], K=K)
-            assert all(torch.equal(x, y) for x, y in zip(l0, l1)) and all(torch.equal(p0[k], p1[k]) for k in p0), f'{arm} K={K}'
+            assert all(same(x, y) for x, y in zip(l0, l1)) and all(same(p0[k], p1[k]) for k in p0), f'{arm} K={K}'
 
 
 def test_3c_parameters_really_moved():
@@ -463,12 +496,20 @@ def fake_call_greedy(m):
     return call_greedy
 
 
-def free_run_results(w, a, names):
+def no_call_greedy(m):
+    """The same stand-in with a writer that never writes a call: the tape (and so its K/V) is never rebuilt."""
+    def call_greedy(Z, temperature=0.0, generator=None, zm=None):
+        return [[] for _ in range(Z.shape[0])], torch.ones(Z.shape[0], dtype=torch.bool)
+    return call_greedy
+
+
+def free_run_results(w, a, names, writes_calls=True):
+    mk = fake_call_greedy if writes_calls else no_call_greedy
     tr = prof.Trainer(w, a, prof.parse_variants(','.join(names)), accum=4)
     try:
         m = tr.model
         m.eval()
-        m.call_greedy = fake_call_greedy(m)
+        m.call_greedy = mk(m)
         res = []
         mbs = micro_batches(w, a, cpu_batch(w))
         with torch.no_grad():
@@ -479,7 +520,7 @@ def free_run_results(w, a, names):
                 o2 = m.run(mb, loops=6)                                     # a forced run (settles)
                 res.append(('run6', o2['Z'], o2['tape'], o2['calls'], o2['records'], m.talk(m.state_of(o2), mb)))
                 res.append(('generate', m.generate(mb)))
-            m.call_greedy = fake_call_greedy(m)
+            m.call_greedy = mk(m)
             res.append(('loop-direct', m.loop(mbs[2], 5)['Z']))              # a direct loop() call (call_evals does this)
         return res, tr.variant_stats(), [len(c) for r in res if r[0] in ('run', 'run6') for c in r[3]]
     finally:
@@ -501,7 +542,10 @@ def test_5_free_run_bitwise_identical_with_kvcat_and_cache_invalidated_after_cal
         assert deep_same(base, got), f'{arm}: free run differs'
         if 'kvcat' in arm:
             s = st['kvcat']
-            assert s['cat_cache_misses'] > 4 and s['cat_cache_hits'] > 0, s       # misses beyond one per run: the cache was invalidated by the rebuilt tape K/V, not served stale
+            # The EQUALITY above is what proves a rebuilt tape is not served stale (a stale-cache mutant, key = block only, fails it). The counts only show that the rebuild happens: the same free run with a
+            # writer that writes NO call (tape K/V never rebuilt) must miss strictly less than the run with calls. (Each entry point clears the cache when it starts, so the miss count alone proves nothing.)
+            _, st0, n0 = free_run_results(w, a, arm, writes_calls=False)
+            assert sum(n0) == 0 and s['cat_cache_hits'] > 0 and s['cat_cache_misses'] > st0['kvcat']['cat_cache_misses'], (s, st0['kvcat'])
 
 
 def test_5b_cache_cleared_after_every_entry_point_and_after_an_exception():
@@ -670,7 +714,7 @@ def test_bf16_cpu_autocast_three_updates_kvcat():
     l0, p0, _ = train_updates(w, a, [], amp=amp)
     for arm in ARMS:
         l1, p1, _ = train_updates(w, a, [arm], amp=amp)
-        assert all(torch.equal(x, y) for x, y in zip(l0, l1)) and all(torch.equal(p0[k], p1[k]) for k in p0), arm
+        assert all(same(x, y) for x, y in zip(l0, l1)) and all(same(p0[k], p1[k]) for k in p0), arm
 
 
 # ================================================================================================================================ test 7: op and sync counts
@@ -702,7 +746,7 @@ def test_7_tiny_op_and_sync_counts_baseline_vs_each_arm():
 
 def test_7_real_3m_shape_one_micro_batch_of_64_rows_k16():
     if not os.environ.get('EXACT_ARMS_REAL'):
-        raise unittest.SkipTest('set EXACT_ARMS_REAL=1 (about 10 minutes at 1 thread, 3 passes at the real 3M shape)')
+        raise unittest.SkipTest('set EXACT_ARMS_REAL=1 (about 1 minute at 1 thread: 3 passes at the real 3M shape)')
     w, a = world_real()
     cpu = next(w.batches(7))
     mb = micro_batches(w, a, cpu)[0]
@@ -725,6 +769,30 @@ def test_7_real_3m_shape_one_micro_batch_of_64_rows_k16():
     for arm in ARMS:
         assert out[arm]['loss_bit_equal'] and out[arm]['grads_differing'] == 0, (arm, out[arm])
         assert out[arm]['nonview_aten_ops_total'] < out['baseline']['nonview_aten_ops_total']
+    # the 2-block, K = 16 shape is the only place the per-block key id(blk) is exercised and rounds 12..15 are checkpointed: assert that the cache hit and that the recompute bypassed it
+    ks = out['kvcat']['variant_stats']['kvcat']
+    assert out['blocks'] == 2 and ks['cat_cache_hits'] > 0 and ks['cat_cache_bypassed_in_backward'] > 0, ks
+
+
+def test_7b_real_two_threads_is_the_baseline_itself_run_to_run_bitwise():
+    """RECORDS (no assertion on the outcome) what happens at 2 CPU threads, real 3M shape, ONE 64-row micro-batch, K = 16: the unmodified code against ITSELF (base vs base2), then kvcat and fastteach against the
+    first baseline, by bit pattern. If base vs base2 already differs, no arm can be bit-identical at 2 threads and the 1-thread result is the one that proves the arm."""
+    if not os.environ.get('EXACT_ARMS_REAL'):
+        raise unittest.SkipTest('set EXACT_ARMS_REAL=1')
+    w, a = world_real()
+    mbs = micro_batches(w, a, cpu_batch(w))[:1]
+    torch.set_num_threads(2)
+    try:
+        runs = {n: micro_pass(w, a, names, K=16, mbs=mbs) for n, names in (('base', []), ('base2', []), ('kvcat', ['kvcat']), ('fastteach', ['fastteach']))}
+    finally:
+        torch.set_num_threads(1)
+
+    def cmp(x, y):
+        bad = [i for i, (p, q) in enumerate(zip(x['grads'], y['grads'])) if not same(p, q)]
+        mx = max([float((p.double() - q.double()).abs().max()) for p, q in zip(x['grads'], y['grads']) if p is not None] + [0.0])
+        return dict(loss_bit_equal=bool(same(x['loss'][0], y['loss'][0])), grads_differing=len(bad), n_grads=len(x['grads']), max_abs_grad_diff=mx)
+    save_counts('real_3m_k16_64rows_TWO_threads', dict(base_vs_base2=cmp(runs['base'], runs['base2']), base_vs_kvcat=cmp(runs['base'], runs['kvcat']), base_vs_fastteach=cmp(runs['base'], runs['fastteach']),
+                                                        base2_vs_kvcat=cmp(runs['base2'], runs['kvcat']), threads=2, K=16, rows=64))
 
 
 # ================================================================================================================================ host time of one teacher call
@@ -804,7 +872,8 @@ def teacher_time_inside_micro_batch(w, a, names, mb, K):
 def test_8_teacher_time_inside_one_micro_batch_cpu():
     w, a = world()
     mb = micro_batches(w, a, cpu_batch(w))[0]
-    base, fast = teacher_time_inside_micro_batch(w, a, [], mb, 16), teacher_time_inside_micro_batch(w, a, ['fastteach'], mb, 16)
+    best = lambda names: min((teacher_time_inside_micro_batch(w, a, names, mb, 16) for _ in range(5)), key=lambda r: r['teacher_seconds'])      # best of 5: a shared box makes one tiny timing noisy
+    base, fast = best([]), best(['fastteach'])
     assert fast['teacher_calls'] == base['teacher_calls'] and fast['teacher_seconds'] < base['teacher_seconds']
     save_counts('teacher_time_in_one_forward_cpu_tiny_4rows_k16', dict(baseline=base, fastteach=fast))
 
@@ -815,7 +884,8 @@ def test_8_real_teacher_time_inside_one_micro_batch_cpu():
     w, a = world_real()
     mb = micro_batches(w, a, cpu_batch(w))[0]
     teacher_time_inside_micro_batch(w, a, [], mb, 16)                          # warm-up (allocator, stub front)
-    base, fast = teacher_time_inside_micro_batch(w, a, [], mb, 16), teacher_time_inside_micro_batch(w, a, ['fastteach'], mb, 16)
+    best = lambda names: min((teacher_time_inside_micro_batch(w, a, names, mb, 16) for _ in range(3)), key=lambda r: r['teacher_seconds'])
+    base, fast = best([]), best(['fastteach'])
     assert fast['teacher_calls'] == base['teacher_calls'] and fast['teacher_seconds'] < base['teacher_seconds']
     save_counts('teacher_time_in_one_forward_cpu_real_3m_64rows_k16', dict(baseline=base, fastteach=fast))
 
@@ -857,6 +927,71 @@ def test_9_real_resident_memory_of_the_forward_graph_baseline_vs_kvcat():
     assert out['kvcat']['retained_by_forward_graph_kb'] < out['baseline']['retained_by_forward_graph_kb']
 
 
+def test_same_is_bitwise_signed_zero_and_nan_payload():
+    z, nz = torch.zeros(3), torch.zeros(3)
+    nz[1] = -0.0
+    assert torch.equal(z, nz) and not same(z, nz), 'torch.equal calls -0.0 == +0.0; same() must not'
+    assert same(z, torch.zeros(3)) and not same(z, torch.zeros(3, dtype=torch.float64)) and not same(z, torch.zeros(4))
+    b = torch.tensor([1.0, 2.0], dtype=torch.bfloat16)
+    assert same(b, b.clone()) and not same(b, b + 0.0078125)
+    n1, n2 = torch.tensor([float('nan')]), torch.tensor([float('nan')]).view(torch.int32).add(1).view(torch.float32)
+    assert same(n1, n1.clone()) and not same(n1, n2)
+    assert same(torch.tensor([3, 4]), torch.tensor([3, 4])) and same(None, None) and not same(None, torch.zeros(1))
+
+
+def box_ckpt_check(argv, K=32, n_micro=2, say=print):
+    """THE CHECK FOR THE CUDA BOX that abequiv does NOT cover. abequiv pins K to K0 = max(8, longest gold program + 2); the real model has n_loops 12 and the thinker only checkpoints rounds t >= 12, so
+    unless a row has a program of 11+ calls, abequiv never reaches kvcat's checkpoint path (the branch that reads torch._C._current_graph_task_id() on the autograd engine's device thread during the
+    recompute), which is exactly what changes on CUDA. Here K is forced to `K` (32: rounds 12..31 are checkpointed) as test_4 does, under bf16 autocast of the arguments' device, on the first `n_micro`
+    micro-batches of the arguments' data. Runs: base, base2, base3 (the same code three times), kvcat, fastteach. Reports, by bit pattern: the baseline against itself (the run-to-run noise of the unmodified code
+    on this box: CUDA attention backward may be non-deterministic), base vs kvcat, base vs fastteach. PASS bar, fixed here before any CUDA number exists: let N = the set of gradient indices that differ in ANY
+    pair of the three baselines, and M = the largest absolute gradient difference in any such pair; an arm passes if its differing gradients are all in N and its largest absolute difference is <= 4 M (so a
+    baseline that repeats bitwise forces the arm to be bitwise equal; the factor 4 is a judgement, not derived), and its losses are bit-equal whenever the baseline's are; AND kvcat's
+    cat_cache_bypassed_in_backward > 0 and cat_cache_hits > 0 (else the checkpoint path was not run and nothing was checked).
+    argv: the prof_launch arguments (--arm B3G2 --rung 3M --accum 4 --batch 256 --data $POOL --pkg-root $S --caps ... [--device cuda]). -> (ok, dict)."""
+    ap = prof.build_parser()
+    a = ap.parse_args(list(argv))
+    a.accum = a.accum or prof.ARM_INFO[a.arm]['accum']
+    prof.load_pkg(a.pkg_root)
+    prof_launch.register(ea.NEW_VARIANTS)
+    w = prof.World(a)
+    amp = lambda: torch.autocast(w.device.type, dtype=torch.bfloat16)
+    mbs = micro_batches(w, a, cpu_batch(w), a.accum)[:n_micro]
+    runs = {n: micro_pass(w, a, names, K=K, amp=amp, mbs=mbs, accum=a.accum) for n, names in (('base', []), ('base2', []), ('base3', []), ('kvcat', ['kvcat']), ('fastteach', ['fastteach']))}
+    assert all(float(x['rounds']) >= K for x in runs['base']['aux']), 'K is forced'
+
+    def diff(x, y):
+        idx = {i for i, (p, q) in enumerate(zip(x['grads'], y['grads'])) if not same(p, q)}
+        mx = max([float((p.double() - q.double()).abs().max()) for p, q in zip(x['grads'], y['grads']) if p is not None] + [0.0])
+        return idx, mx, all(same(p, q) for p, q in zip(x['loss'], y['loss']))
+    pairs = [diff(runs[p], runs[q]) for p, q in (('base', 'base2'), ('base', 'base3'), ('base2', 'base3'))]
+    N, M, base_loss_eq = set().union(*[i for i, _, _ in pairs]), max(m for _, m, _ in pairs), all(l for _, _, l in pairs)
+    res = dict(device=str(w.device), K=K, micro_batches=len(mbs), bf16_autocast=w.device.type, n_grads=len(runs['base']['grads']),
+               baseline_vs_itself=dict(gradients_differing_in_any_pair=len(N), max_abs_grad_diff_any_pair=M, losses_bit_equal=base_loss_eq), kvcat_stats=runs['kvcat']['stats']['kvcat'])
+    ok = True
+    for arm in ('kvcat', 'fastteach'):
+        idx, mx, leq = diff(runs['base'], runs[arm])
+        c = dict(gradients_differing=len(idx), gradients_differing_outside_baseline_noise_set=len(idx - N), max_abs_grad_diff=mx, loss_bit_equal=leq)
+        c['passes'] = bool(not (idx - N) and mx <= 4 * M and (leq or not base_loss_eq))
+        res['base_vs_' + arm] = c
+        ok &= c['passes']
+    ks = res['kvcat_stats']
+    res['checkpoint_path_ran'] = bool(ks['cat_cache_bypassed_in_backward'] > 0 and ks['cat_cache_hits'] > 0)
+    ok &= res['checkpoint_path_ran']
+    res['PASS'] = bool(ok)
+    say('BOX_CKPT_JSON ' + json.dumps(res))
+    return ok, res
+
+
+def test_box_ckpt_check_runs_on_the_tiny_cpu_world():
+    """The box check itself, exercised on the CPU (bf16 CPU autocast, tiny shape): it must run end to end, find the checkpoint path (bypass > 0), and pass at 1 thread."""
+    _load()
+    ok, res = box_ckpt_check(['--arm', 'B3G2', '--tiny', '--data', 'synthetic', '--rows', '600', '--batch', '16', '--accum', '4', '--eg', 'stub', '--device', 'cpu', '--out', os.devnull], say=lambda *x: None)
+    assert res['checkpoint_path_ran'] and res['kvcat_stats']['cat_cache_bypassed_in_backward'] > 0, res
+    assert ok, res
+    save_counts('box_ckpt_check_run_on_tiny_cpu_bf16', res)
+
+
 ALL = [(n, f) for n, f in sorted(globals().items()) if n.startswith('test_') and callable(f)]
 
 
@@ -864,24 +999,30 @@ def main():
     if sys.argv[1:2] == ['--rss']:
         rss_child([x for x in sys.argv[2].split(',') if x]) if len(sys.argv) > 2 else rss_child([])
         return 0
-    bad, t_all = 0, time.time()
+    if sys.argv[1:2] == ['--box-ckpt']:
+        ok, _ = box_ckpt_check(sys.argv[2:])
+        print('BOX CKPT CHECK: ' + ('PASS' if ok else 'FAIL'), flush=True)
+        return 0 if ok else 1
+    n_pass = n_skip = n_fail = 0
+    t_all = time.time()
     only = sys.argv[1:]
-    for n, f in ALL:
-        if only and not any(o in n for o in only):
-            continue
+    todo = [(n, f) for n, f in ALL if not only or any(o in n for o in only)]
+    for n, f in todo:
         t0 = time.time()
         try:
             f()
+            n_pass += 1
             print(f'PASS {n} ({time.time() - t0:.1f}s)', flush=True)
         except unittest.SkipTest as e:
+            n_skip += 1
             print(f'SKIP {n}: {e}', flush=True)
         except Exception:                                                    # noqa: BLE001
             import traceback
-            bad += 1
+            n_fail += 1
             print(f'FAIL {n} ({time.time() - t0:.1f}s)', flush=True)
             traceback.print_exc()
-    print(f'{len(ALL) - bad} of {len(ALL)} ran without failure in {time.time() - t_all:.1f}s', flush=True)
-    return 1 if bad else 0
+    print(f'{n_pass} passed, {n_skip} skipped, {n_fail} failed, of {len(todo)} selected ({len(ALL)} tests in the file) in {time.time() - t_all:.1f}s', flush=True)
+    return 1 if n_fail else 0
 
 
 if __name__ == '__main__':

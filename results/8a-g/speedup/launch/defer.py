@@ -9,8 +9,9 @@ original's work
                                                                              answer_teacher's .cpu() and four blocking .to(dev), ok.tolist(), call.nonzero())
     every round t >= 0:   ans_pass on the rows that may answer            (ok.any(), ok.nonzero(), bool(ok.all()); a gradient checkpoint for t >= CKPT_FROM = 8)
 
-is done here as ONE thinker-only loop, then ONE batched call pass and ONE batched answer pass over all (round, row) pairs of the micro-batch, with every host-side list
-(who calls when, who has a target, who may answer) taken from the numpy schedule that B3G2.plan builds, never read back from the device.
+is done here as ONE thinker-only loop, then batched passes over all (round, row) pairs of the micro-batch (the call pass in TWO buckets, the pairs that write a call and the EOS-only pairs
+at width 1; the answer pass in TWO parts, rounds < CKPT_FROM plain and rounds >= CKPT_FROM gradient-checkpointed as the original does), with every host-side list (who calls when, who has
+a target, who may answer) taken from the numpy schedule that B3G2.plan builds, never read back from the device.
 
 Used only when: model.training, autograd on, teacher forcing (B3G2._loss always is), no rec / lesion (_loss never passes them), talk_rounds == 'last' and the writer has no copy path
 (copy False). Anything else (eval, no_grad, rec=True call_evals, talk_rounds 'all', the free run, talk) calls the ORIGINAL methods, which this variant does not touch (it replaces
@@ -18,21 +19,25 @@ only the instance attribute `_loss` and adds `_defer_*` helpers; teardown() puts
 
 THE MATHS IS THE SAME PER ROW, THE NUMBERS ARE NOT BIT-EQUAL: this arm is NUMERICS-CHANGING ('near'), not 'same maths bit for bit' like nosync. The thinker is bit-identical (same ops
 on the same inputs in the same order; test_defer.py compares every Z_t). The writer's per-row computation is the same, but (1) its GEMMs run on batches of other sizes, (2) the target
-width L of all pairs is the longest call in the micro-batch (every pair is padded to it, masked out of nll / right, so the values are the same up to rounding), (3) the writer's
+width L of all call pairs is the longest call in the micro-batch (every call pair is padded to it, masked out of nll / right, so the values are the same up to rounding; EOS-only pairs are
+width 1, as in the original's all-EOS rounds), (3) the writer's
 parameter gradients are reduced in ONE backward over all pairs instead of one per round, so the sums are added in another order. All three move floating-point results at the last
 bits (fp32: about 1e-7 relative, measured in test_defer.py T1; bf16 on a GPU: untested, expected larger). stats() says so.
 
 WHAT IS NOT CHANGED: the thinker, the tape, the stop head and its loss, w_stop, the aux keys and values, plan's draws (gap rng), train_golds' draws (drill rng), the K draw (torch.randint
 once per micro-batch, after plan). The call loss is summed in the original order (rounds ascending); the answer loss is accumulated in the original round order; right / share / zs
-are the original's. Checkpointing of the writer's answer pass for t >= 8 is DROPPED (the batched pass keeps its activations; the recompute is deterministic so the values are the same,
-only memory differs: the writer is tiny, but the peak on the GPU is untested).
+are the original's. The writer's answer pass keeps the original's gradient checkpoint for the pairs of rounds t >= CKPT_FROM (8) (torch.utils.checkpoint, non-reentrant, one
+checkpointed batch instead of one per round; the recompute is deterministic so the values are the same). The first version of this file dropped that checkpoint and padded every call pair to the
+longest call: a tiny-shape measurement (saved-for-backward bytes, 16 rows, K 32) found 1.59x the baseline's, so the checkpoint is back and the EOS-only pairs run at width 1 (the numbers
+are in DEFER-CPU-2026-10-16.md). GPU peak memory is still UNTESTED: the pairs of rounds < 8 and the call pairs are alive together, which the original never held at once.
 
-WHAT IS MEASURED HERE (CPU, fp32): values, host-sync call sites and ATen dispatches per micro-batch (test_defer.py). What is NOT measured: any CUDA time, launches, bf16, memory.
+WHAT IS MEASURED HERE (CPU, fp32): values, host-sync call sites and ATen dispatches per micro-batch, bytes saved for backward (test_defer.py). What is NOT measured: any CUDA time, launches, bf16, GPU memory.
 """
 import contextlib, hashlib, inspect, os, sys, types
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROFDIR = os.path.normpath(os.path.join(HERE, '..', 'prof'))
@@ -146,9 +151,9 @@ class Defer(prof.Variant):
            '(~10 host syncs a round) and the per-round answer pass (ok.any / nonzero / all, a checkpoint from round 8) are replaced by ONE thinker-only loop, then ONE batched call pass over all (round, row) '
            'call/EOS pairs and ONE batched answer pass over all (round, row) answer pairs of the micro-batch; every host-side list comes from the numpy schedule of plan(), the targets are built once with numpy '
            '(equal to ByteWriter.teacher\'s for the empty context), the host arrays go over in one pinned non-blocking copy, the call loss is summed in the original round order, the hit counters come from one '
-           '.tolist(). Used only in training with autograd on, talk_rounds last, copy False; everything else runs the original methods. NUMERICS-CHANGING (near): the same per-row maths, but batched GEMMs, a longer '
-           'padded call width and one-shot gradient reductions move floating-point rounding (thinker bit-identical; writer loss and gradient equal to about 1e-7 relative in fp32). The writer\'s answer-pass '
-           'checkpoint for t >= 8 is dropped. CPU fp32 rule for mark 6: bar only (bit-exact and equal-to-rounding are not claimed).')
+           '.tolist(). The call pass runs in two buckets (call pairs padded to the longest call, EOS-only pairs at width 1), the answer pass in two parts (rounds < 8 plain, rounds >= 8 checkpointed as the original). Used only in training with autograd on, talk_rounds last, copy False; everything else runs the original methods. NUMERICS-CHANGING (near): the same per-row maths, but batched GEMMs, a longer '
+           'padded call width and one-shot gradient reductions move floating-point rounding (thinker bit-identical; writer loss and gradient equal to about 1e-7 relative in fp32). '
+           'CPU fp32 rule for mark 6: equal to rounding (relative loss and gradient L2 difference <= 1e-6); bit-exact is not claimed.')
 
     def setup(self):
         m = self.tr.model
@@ -158,7 +163,7 @@ class Defer(prof.Variant):
             raise prof.Skip('defer: needs the B3G2 thinker / writer loss (arm B3G2)')
         self.undo, self.n_override = [], None
         self.n_deferred = self.n_fallback = 0
-        self.calls_pairs = self.answer_pair_count = self.call_width_sum = self.call_width_max = self.rounds_sum = 0
+        self.calls_pairs = self.eos_pairs = self.answer_pair_count = self.call_width_sum = self.call_width_max = self.rounds_sum = 0
         self.mb_rows = 0
         g = cls._loss.__globals__
         import custom_io.models.writer as W
@@ -170,7 +175,7 @@ class Defer(prof.Variant):
             if src_hash(fn) != h:
                 raise prof.Skip(f'defer: the source of {n} is not the custom_io the arm was written against ({COMMIT}): sha1 {src_hash(fn)} != {h}')
         self.G = g
-        self.orig_loss = cls._loss
+        self.orig_loss = m._loss                                                     # BOUND and instance-aware: an instance `_loss` set by a variant set up earlier is the fallback, not the class's
         # plan() with its numpy schedule kept and no device copy: the same function text, two exact edits (every draw, every stat, in the same order)
         plan_np = prof.patched_fn(cls.plan, [('sched = torch.from_numpy(sched).to(dev)', 'pass'), ('return sched, sched.max(1).values.clamp(min=0)', 'return sched, None')])
         me = self
@@ -185,7 +190,7 @@ class Defer(prof.Variant):
 
     def stats(self):
         d = self.n_deferred
-        return dict(numerics=NUMERICS, deferred_losses=d, fallback_losses=self.n_fallback, call_pairs_per_micro_batch=self.calls_pairs / d if d else None,
+        return dict(numerics=NUMERICS, deferred_losses=d, fallback_losses=self.n_fallback, call_pairs_per_micro_batch=self.calls_pairs / d if d else None, eos_only_pairs_per_micro_batch=self.eos_pairs / d if d else None,
                     answer_pairs_per_micro_batch=self.answer_pair_count / d if d else None, mean_call_width=self.call_width_sum / d if d else None, max_call_width=self.call_width_max,
                     mean_rounds=self.rounds_sum / d if d else None, mean_rows_per_micro_batch=self.mb_rows / d if d else None)
 
@@ -227,7 +232,7 @@ class Defer(prof.Variant):
     def loss(self, m, batch, golds):
         if not self.applicable(m):
             self.n_fallback += 1
-            return self.orig_loss(m, batch, golds)
+            return self.orig_loss(batch, golds)
         self.n_deferred += 1
         G, dev, B = self.G, batch['prompt_ids'].device, len(batch['rows'])
         KS, CKPT_FROM, settled, BOS, EOS, F_ = G['KS'], G['CKPT_FROM'], G['settled'], G['BOS'], G['EOS'], G['F']
@@ -238,7 +243,8 @@ class Defer(prof.Variant):
         has = np.array([bool(L) for L in Ls], dtype=bool)
         n = self.n_override or max(K, int(last_of(sched).max()) + 2)                 # +2: a call row's answer rounds start at last+1 (numpy: no device read); n_override: tests only
         last, per_round = schedule_lists(sched, ids, n)
-        # call pairs: rounds ascending, rows ascending within a round
+        # call pairs: rounds ascending, rows ascending within a round. They run as TWO buckets (memory): the pairs that write a call (padded to the longest call of the micro-batch) and the
+        # EOS-only pairs (t > the row's last call round: target [], width 1, as the original's all-EOS rounds), put back into pair order by a permutation before the loss is summed.
         c_rows, c_flat, targets, is_call, segs = [], [], [], [], []
         for t, rows, tg, ic in per_round:
             segs.append((t, len(targets), len(targets) + len(rows)))
@@ -247,37 +253,56 @@ class Defer(prof.Variant):
             targets += tg
             is_call += ic
         P = len(targets)
-        inp_c, tgt_c, over_c = teacher_np(targets, m.WCAP, BOS, EOS)
+        ic_np = np.array(is_call, dtype=bool)
+        cf_np = np.array(c_flat, np.int64)
+        i_call, i_eos = np.nonzero(ic_np)[0], np.nonzero(~ic_np)[0]
+        n_call = len(i_call)
+        c_inv = np.argsort(np.concatenate([i_call, i_eos]), kind='stable')            # bucket order -> pair order
+        inp_c, tgt_c, over_c = teacher_np([targets[j] for j in i_call], m.WCAP, BOS, EOS)
+        inp_e, tgt_e, over_e = teacher_np([targets[j] for j in i_eos], m.WCAP, BOS, EOS)
         a_t, a_i, ok = answer_pairs(last, has, n)
         Q = len(a_t)
+        n_a0 = int((a_t < CKPT_FROM).sum())                                          # answer pairs of rounds < CKPT_FROM come first (rounds ascending)
         inp_r, tgt_r, over_a = teacher_np([x['ans_ids'] for x in golds], m.WCAP, BOS, EOS)       # the answer teacher, built once as the original, rows indexed per pair below
         pk = Pack()
-        for name, a in (('sched', sched), ('c_flat', np.array(c_flat, np.int64)), ('c_rows', np.array(c_rows, np.int64)), ('inp_c', inp_c), ('tgt_c', tgt_c), ('a_flat', a_t * B + a_i), ('a_rows', a_i),
-                        ('inp_a', inp_r[a_i]), ('tgt_a', tgt_r[a_i]), ('has', has.astype(np.int64)), ('cnt', ok.sum(0))):
+        for name, a in (('sched', sched), ('cf_call', cf_np[i_call]), ('cf_eos', cf_np[i_eos]), ('c_inv', c_inv), ('c_rows', np.array(c_rows, np.int64)), ('inp_c', inp_c), ('tgt_c', tgt_c),
+                        ('inp_e', inp_e), ('tgt_e', tgt_e), ('a_flat', a_t * B + a_i), ('a_rows', a_i), ('inp_a', inp_r[a_i]), ('tgt_a', tgt_r[a_i]), ('has', has.astype(np.int64)),
+                        ('cnt', ok.sum(0))):
             pk.add(name, a)
         pk.send(dev)                                                                 # the ONE host-to-device copy of this micro-batch
         sched_dev = pk['sched']
         zs_list = self.thinker(m, batch, Ls, [x['tape'] for x in golds], sched_dev, n)
         nz, d = zs_list[0].shape[1], zs_list[0].shape[2]
         Zall = torch.stack(zs_list).reshape(n * B, nz, d)                            # [n*B, nz, d], row t*B + i = Z_t of row i
-        # ---- the batched call pass (mode 0)
+        # ---- the batched call pass (mode 0): call bucket, then EOS-only bucket
         lcall, hits = 0.0, dict(call_hit=0, call_n=0, eos_hit=0, eos_n=0)
         right_c = None
         if P:
-            Zc = Zall.index_select(0, pk['c_flat'])
-            logp, nll, right_c = m.call_pass(Zc, pk['inp_c'], pk['tgt_c'])
+            nlls, rights = [], []
+            for lo, hi, flat_name, inp_name, tgt_name in ((0, n_call, 'cf_call', 'inp_c', 'tgt_c'), (n_call, P, 'cf_eos', 'inp_e', 'tgt_e')):
+                if hi > lo:
+                    _, nll_b, right_b = m.call_pass(Zall.index_select(0, pk[flat_name]), pk[inp_name], pk[tgt_name])
+                    nlls.append(nll_b); rights.append(right_b)
+            nll = (torch.cat(nlls) if len(nlls) > 1 else nlls[0]).index_select(0, pk['c_inv'])     # back in pair order (rounds ascending, rows ascending)
+            right_c = torch.cat(rights) if len(rights) > 1 else rights[0]                         # bucket order: the call pairs, then the EOS-only pairs
             w_row = torch.where(pk['has'].bool(), 1.0, m.w_noop)                     # the original's w_row, built on the device from `has`
             prod = nll * w_row.index_select(0, pk['c_rows'])
             for t, s, e in segs:                                                     # rounds in the original order: lcall = lcall + (nll * w).sum() / B
                 lcall = lcall + prod[s:e].sum() / B
-        # ---- the batched answer pass (mode 1)
+        # ---- the batched answer pass (mode 1): rounds < CKPT_FROM as one pass, rounds >= CKPT_FROM as one gradient-checkpointed pass (the original checkpoints those rounds' answer pass)
         acc = torch.zeros(B, device=dev)
         right = torch.zeros(n, B, dtype=torch.bool, device=dev)
         share = None
         if Q:                                                                        # Q == 0 only if no round has an ok row (a forced short n; _loss itself always has n - 1 >= last + 1)
             Za = Zall.index_select(0, pk['a_flat'])
             Q_, La = pk['inp_a'].shape
-            nll_a, rt_a, sn, sd = m.ans_pass(Za, pk['inp_a'], pk['tgt_a'], Za.new_zeros(1, 1, 1).expand(Q_, La, 1))
+            fb_a = Za.new_zeros(1, 1, 1).expand(Q_, La, 1)
+            outs = []
+            for lo, hi, ck in ((0, n_a0, False), (n_a0, Q, True)):
+                if hi > lo:
+                    args = (Za[lo:hi], pk['inp_a'][lo:hi], pk['tgt_a'][lo:hi], fb_a[lo:hi])
+                    outs.append(checkpoint(m.ans_pass, *args, use_reentrant=False) if ck else m.ans_pass(*args))
+            nll_a, rt_a, sn, sd = (torch.cat([o[j] for o in outs]) if len(outs) > 1 else outs[0][j] for j in range(4))
             right.view(-1)[pk['a_flat']] = rt_a
             s0 = 0
             for t in range(n):                                                       # acc in the original round order; acc[i] + nll == acc[i] + (0 + nll)
@@ -295,20 +320,17 @@ class Defer(prof.Variant):
         logit = m.stop(zs).float()[..., 0]
         lstop = F_.binary_cross_entropy_with_logits(logit, y)
         w_stop = 1.0 if m.label == 'right' or n >= m.cap else 0.0
-        if P:                                                                        # the hit counters: ONE device read, at the end
+        if P:                                                                        # the hit counters: ONE device read, at the end (bucket order: call pairs first)
             rc = right_c.tolist()
-            for r, ic in zip(rc, is_call):
-                if ic:
-                    hits['call_n'] += 1; hits['call_hit'] += r
-                else:
-                    hits['eos_n'] += 1; hits['eos_hit'] += r
+            hits['call_n'], hits['call_hit'] = n_call, sum(rc[:n_call])
+            hits['eos_n'], hits['eos_hit'] = P - n_call, sum(rc[n_call:])
         total = lcall + lans + w_stop * lstop
         aux = dict(prog=lcall, call=lcall, ans=lans, stop=lstop, stop_y=y.mean(), stop_acc=((logit >= 0).float() == y).float().mean(), right_last=right[-1].float().mean(),
                    rounds=float(n), copy_share=share, stop_w=w_stop, call_acc=hits['call_hit'] / max(hits['call_n'], 1), eos_acc=hits['eos_hit'] / max(hits['eos_n'], 1))
         aux.update({f'plan_{k}': float(v) for k, v in m.plan_stats.items()})
         if m.ans_drill:
             aux['drill_share'] = sum(x['drill'] for x in golds) / B
-        self.calls_pairs += P; self.answer_pair_count += Q; self.call_width_sum += inp_c.shape[1]; self.call_width_max = max(self.call_width_max, inp_c.shape[1])
+        self.calls_pairs += P; self.eos_pairs += P - n_call; self.answer_pair_count += Q; self.call_width_sum += inp_c.shape[1]; self.call_width_max = max(self.call_width_max, inp_c.shape[1])
         self.rounds_sum += n; self.mb_rows += B
         return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
 

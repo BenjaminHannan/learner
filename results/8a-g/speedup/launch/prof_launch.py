@@ -17,10 +17,10 @@ How a registered arm is wired:
   AB_CPU_RULE[name] = the class's ab_cpu_rule; AB_ARM_ORDER: after 'unfused', before the accum rows, so `--ab-variants` and `--ab-accums` defaults now run the new arms too (the cheap wins first,
   the accum rows last; pass --ab-variants to choose).
 
-CPU rule of defer (mark 6, Amendment 1's CPU fp32 clause): 'bar_only'. Reason: the arm is numerics-changing by construction (batched GEMMs, another padded call width, one-shot gradient
-reductions), so 'bit_exact' is false and 'equal_to_rounding' (relative gradient and loss difference <= 1e-6) is a claim about rounding that only a CPU fp32 measurement can make; test_defer.py T1
-measures it (shown: loss rel diff and gradient relative L2 are reported there). The registered clause is therefore the bar alone (loss rel diff <= 1e-4 and gradient cosine >= 0.9999), read in
-bf16 on the box where it is run; the CPU fp32 numbers are shown for information beside it.
+CPU rule of defer (mark 6, Amendment 1's CPU fp32 clause): 'equal_to_rounding' (relative loss difference and relative gradient L2 difference both <= prof_train.AB_ROUND_REL = 1e-6), the same
+rule pad64 and pad64p have. Reason: the arm is numerics-changing by construction (batched GEMMs, another padded call width, one-shot gradient reductions), so 'bit_exact' is false, but on the
+CPU in fp32 it meets the rounding rule by more than 10x (test_defer.py: loss rel diff 0 to 1e-7, gradient rel L2 7e-8 to 1.1e-7), so the weaker 'bar_only' would only let a real semantics bug of up
+to 1e-4 loss / 0.9999 cosine through on the CPU. The clause is used only on a CPU fp32 run (ab_mark6 never applies it on a GPU run: there the bar alone decides, in bf16, and says so).
 """
 import importlib, os, sys, traceback
 
@@ -33,7 +33,7 @@ import prof_train as prof                                                    # n
 import defer                                                                  # noqa: E402
 
 CPU_RULES = ('bit_exact', 'equal_to_rounding', 'bar_only')
-EXPLICIT_RULE = dict(defer='bar_only')
+EXPLICIT_RULE = dict(defer='equal_to_rounding')
 
 
 def _insert_after(seq, name, anchor):
@@ -65,27 +65,28 @@ def register(classes, say=print):
     return done
 
 
-def load_exact_arms(say=print):
-    """`import exact_arms` from this folder -> its NEW_VARIANTS (a list of Variant classes), or [] when there is no such module. An import that fails for any other reason is printed, not fatal."""
+def load_exact_arms(say=print, module='exact_arms'):
+    """`import exact_arms` from this folder -> its NEW_VARIANTS (a list of Variant classes), or [] when there is no such module. An import that fails for any other reason is printed, not fatal.
+    `module` is the module name (default 'exact_arms'; the tests pass another name so that they never depend on what sits in this folder)."""
     try:
-        mod = importlib.import_module('exact_arms')
+        mod = importlib.import_module(module)
     except ModuleNotFoundError as e:
-        if e.name == 'exact_arms':
+        if e.name == module:
             return []
-        say(f'!!!!!! prof_launch: exact_arms.py exists but could not be imported ({e!r}); its arms are NOT registered')
+        say(f'!!!!!! prof_launch: {module}.py exists but could not be imported ({e!r}); its arms are NOT registered')
         return []
     except Exception as e:                                                   # noqa: BLE001
-        say(f'!!!!!! prof_launch: exact_arms.py raised on import ({e!r}); its arms are NOT registered\n' + traceback.format_exc())
+        say(f'!!!!!! prof_launch: {module}.py raised on import ({e!r}); its arms are NOT registered\n' + traceback.format_exc())
         return []
     arms = list(getattr(mod, 'NEW_VARIANTS', []))
     if not arms:
-        say('prof_launch: exact_arms imported but NEW_VARIANTS is empty or missing')
+        say(f'prof_launch: {module} imported but NEW_VARIANTS is empty or missing')
     return arms
 
 
-def register_all(say=print):
+def register_all(say=print, exact_module='exact_arms'):
     names = register(defer.NEW_VARIANTS, say)
-    names += register(load_exact_arms(say), say)
+    names += register(load_exact_arms(say, exact_module), say)
     return names
 
 

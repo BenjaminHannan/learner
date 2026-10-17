@@ -3,7 +3,8 @@
   kvcat      cache the per-block concatenation of the memory K/V and the prompt K/V that ledger.CBlock.forward redoes every round.
   fastteach  build ByteWriter.teacher's tensors for the G2f writer (no copy path) with numpy, with no device read and no zero tensor copied from the host.
 
-Both are meant to give the SAME numbers as train.py bit for bit (fp32 on the CPU: test_exact_arms.py shows it; CUDA and bf16 on CUDA: untested). Neither edits custom_io: a method is rebuilt from its own
+Both are meant to give the SAME numbers as train.py bit for bit (fp32 on the CPU at 1 thread: test_exact_arms.py shows it, comparing the int bit patterns so that -0.0 and +0.0 are told apart; at 2 or more CPU threads
+the UNMODIFIED code is itself not run-to-run bitwise (embedding gradient), so no arm can be bit-identical there; CUDA and bf16 on CUDA: untested). Neither edits custom_io: a method is rebuilt from its own
 source with one exact text edit (prof_train.patched_fn) or replaced on the model INSTANCE, and teardown() puts every attribute back (identity-checked by test_exact_arms.py).
 Registered for prof_launch.py through NEW_VARIANTS.
 
@@ -49,7 +50,14 @@ Exactness by construction: teacher_np follows teacher's rules line for line (ok 
 least 1; inp = BOS then the target then EOS fill; tgt = the target then EOS then -100; a not-ok row: inp BOS then EOS fill, tgt all -100), and fb is zero because cmask is all False; the test
 asserts torch.equal (and dtype, shape) of all four tensors against the real ByteWriter.teacher for thousands of random target lists.
 
-Composes with nosync (which also replaces answer_teacher: the later setup wins, and teardown restores in reverse), kvcat and defer.
+Composes with nosync (which also replaces answer_teacher: the later setup wins, and teardown restores in reverse) and kvcat (both shown equal together). With defer it is a no-op: defer's deferred _loss builds its own
+teacher_np and calls answer_teacher only on its fallback path (untested together).
+
+CUDA side effect (suggested, untested): fastteach also skips line_context's three device zeros (Xc, cmask, cids) and adds one device fill (fb): about 2 fewer fill launches, 1 fewer host-to-device copy (4 blocking -> 3
+non-blocking) and 2 fewer device-to-host copies per call. The ~10,000 ATen ops it removes on the CPU run are almost all ops on HOST tensors (the per-byte loop): on CUDA they are CPU time, not launches.
+
+HOST TIME OF fastteach on the CPU is a LOWER bound for the box: prof_train.to_device_async is a plain .to there, so the pinned staging, the 3 cudaMemcpyAsync calls and the one fill launch it adds per call on CUDA are not in
+the measured time (the saving is an upper bound).
 
 WHAT IS MEASURED HERE: CPU, fp32 (and a bf16-autocast kvcat check): values, ATen dispatches, host-sync call sites per micro-batch (test_exact_arms.py). WHAT IS NOT: any CUDA time, launches
 or memory, the GPU kernel selection for the cached cat, bf16 on CUDA.
@@ -103,9 +111,11 @@ class KvCat(prof.Variant):
     def setup(self):
         tr = self.tr
         m = tr.model
+        if type(m).__name__ != 'B3G2' or getattr(m, 'writer', None) is None:
+            raise prof.Skip(f'kvcat: tested on the B3G2 model only (this one is {type(m).__name__}); B3, Tool and ToolH1 arms have the same cat but nothing here shows the arm exact there')
         core = getattr(m, 'core', None)
         if core is None or not len(core) or not all(callable(getattr(b, 'kv_of', None)) for b in core) or not callable(getattr(m, 'think', None)):
-            raise prof.Skip('kvcat: needs a model with a core of CBlocks (ledger family; B3G2)')
+            raise prof.Skip('kvcat: needs a model with a core of CBlocks (B3G2)')
         cls = type(core[0])
         check_src('CBlock_forward', cls.forward)
         self.undo, self.cache = [], {}
@@ -158,7 +168,7 @@ class KvCat(prof.Variant):
 
     def stats(self):
         return dict(cat_cache_hits=self.hits, cat_cache_misses=self.misses, cat_cache_bypassed_in_backward=self.bypass, entries_cleared_at_call_end=self.clears,
-                    exact='intended bit-exact (fp32 CPU: shown by test_exact_arms.py); CUDA and bf16-on-CUDA untested')
+                    exact='intended bit-exact (fp32 CPU, 1 thread: shown by test_exact_arms.py); CUDA and bf16-on-CUDA untested')
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
