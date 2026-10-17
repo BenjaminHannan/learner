@@ -270,7 +270,11 @@ def mean(xs):
 
 # ---------------------------------------------------------------- the two registered checks (pure functions; thresholds come from plan.json)
 def trace_a(ev, rules, max_used_mib):
-    """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches."""
+    """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
+    Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
+      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it (r['resume']['early_max'] is recorded whenever there are 2 redone updates, rule or not);
+      resume_exact_fields (list): at the FIRST redone update every listed field present in both the earlier segment's train line and the resumed one must be equal (an entry ending in '_' is a prefix, e.g. 'plan_';
+        any other entry is a field name); r['resume'] gets exact_checked and exact_mismatch. resume_first_diff keeps its value (a bar, not changed here)."""
     up, n = rules['upto'], rules['first_n']
     m = ev.merged()
     r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib, soft_misses=[])
@@ -297,11 +301,13 @@ def trace_a(ev, rules, max_used_mib):
     # the resume: the earlier segment's updates after the checkpoint, redone by the resumed segment (the first resume that has any such updates)
     r['resume'] = None
     for seg2, rstep in ev.resumed:
-        s1 = {}
+        s1f = {}
         for e in ev.train:
             if e['seg'] < seg2 and e['step'] > rstep:          # the latest earlier line for each step (a segment that died before its first update has none)
-                s1[e['step']] = e['loss']
-        s2 = {e['step']: e['loss'] for e in ev.train if e['seg'] == seg2}
+                s1f[e['step']] = e
+        s1 = {s: e['loss'] for s, e in s1f.items()}
+        s2f = {e['step']: e for e in ev.train if e['seg'] == seg2}          # (the whole train lines are kept for the exact-field item; the losses are compared exactly as before)
+        s2 = {s: e['loss'] for s, e in s2f.items()}
         common = sorted(set(s1) & set(s2))
         if common:
             d = [abs(s1[s] - s2[s]) for s in common]
@@ -312,6 +318,25 @@ def trace_a(ev, rules, max_used_mib):
                 miss('resume_mean_abs', f'redone updates differ by {mean(d):.4f} on average (limit {rules["resume_mean_abs"]})')       # hard unless rules.soft lists 'resume_mean_abs' (installer: --soft-trace-a-mean; never a default)
             if max(d) > rules['resume_max_abs']:
                 miss('resume_max_abs', f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
+            # Amendment 1 (PREREG-trace-a2.md): the loss of the first redone update is a forward pass before the optimizer step, so lost optimizer state / an lr offset first show at the 2nd and 3rd redone updates
+            if len(d) >= 2:
+                early = list(zip(common[1:3], d[1:3]))
+                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when there are 2 redone updates)
+                lim = rules.get('resume_early_abs')
+                if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
+                    worst = max(early, key=lambda t: t[1])[0]
+                    r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd{" and 3rd" if len(early) > 1 else ""} after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
+            fields = rules.get('resume_exact_fields')
+            if fields is not None:                                                                # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal
+                l1, l2 = s1f[common[0]], s2f[common[0]]
+                names = sorted({k for k in set(l1) & set(l2) if k not in ('seg', 'loss', 'step', 'elapsed') and any(k.startswith(f) if f.endswith('_') else k == f for f in fields)})
+                same = lambda x, y: x == y or (isinstance(x, float) and isinstance(y, float) and x != x and y != y)
+                bad = [dict(field=k, earlier=l1[k], resumed=l2[k]) for k in names if not same(l1[k], l2[k])]
+                r['resume'].update(exact_checked=names, exact_mismatch=bad)
+                if bad:
+                    r['why_fail'].append(f'first redone update {common[0]}: field(s) that must be exactly equal differ between the earlier segment and the resumed one: ' + ', '.join(f'{b["field"]} {b["earlier"]!r} vs {b["resumed"]!r}' for b in bad))
+                elif not names:
+                    r['notes'].append(f'resume_exact_fields {list(fields)}: none of these fields is in both lines of the first redone update {common[0]}; nothing was compared')
             break
     if r['resume'] is None:
         r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
@@ -357,13 +382,18 @@ def lag1_autocorr(xs):
     return sum((a - m) * (b - m) for a, b in zip(xs, xs[1:])) / den
 
 
+EARLY_LIMIT = 0.005          # Amendment 1 A1.1: the early window (2nd and 3rd redone update) bar, both in trace A (installer --trace-a-early) and in the probe's P1b
+
+
 def resume_probe_verdict(C, R1, R2):
     """The registered resume-noise rule (TRACE-A-READING item 2): C = the run's continuous updates, R1 / R2 = two resumes of the same checkpoint (equal-length lists).
     n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise.
     `verdict`, n, d, limit and the mean_abs_* / diff_* keys are exactly the registered rule's. Added beside it (recorded, NOT the gate; the mean form is pre-registered in the re-reading
     of the probe, rejudge_probe.py): first_r1_c / first_r2_c / first_r1_r2 = the differences at the first probe update (exactly 0 when the restore is complete: the forward pass of the first update is deterministic),
     Dbar = mean(mean_abs_r1_c, mean_abs_r2_c), Nbar = mean_abs_r1_r2, ratio = Dbar / Nbar (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0),
-    mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance)."""
+    mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance).
+    Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|) (None with under 2 updates),
+    early_limit = 0.005, early_verdict = PASS if early_max <= early_limit (None with under 2 updates)."""
     assert len(C) == len(R1) == len(R2) and C, 'the three loss lists must have the same non-zero length'
     d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
     n, d = max(d12), max(d1 + d2)
@@ -375,6 +405,8 @@ def resume_probe_verdict(C, R1, R2):
     mlim = max(0.02, 2 * nbar)
     out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
                mean_form_verdict='PASS' if dbar <= mlim else 'FAIL', lag1_autocorr=lag1_autocorr([x - y for x, y in zip(R1, R2)]))
+    em = max(max(d1[i], d2[i]) for i in (1, 2) if i < len(C)) if len(C) >= 2 else None
+    out.update(early_max=em, early_limit=EARLY_LIMIT, early_verdict=None if em is None else 'PASS' if em <= EARLY_LIMIT else 'FAIL')
     return out
 
 
@@ -914,11 +946,13 @@ class Sup:
                 L.append(f'| {s} | {f(r["C"][i])} | {f(r["R1"][i])} | {f(r["R2"][i])} | {f(r["diff_r1_r2"][i])} | {f(r["diff_r1_c"][i])} | {f(r["diff_r2_c"][i])} |')
         if 'Dbar' in r:
             ac = r.get('lag1_autocorr')
+            ew = (' = ' + ' and '.join(str(x) for x in r['steps'][1:3])) if len(r.get('steps') or []) >= 2 else ''
             L += ['', '## recorded beside (pre-registered mean form, not the registered gate)', '',
                   f'The verdict above is the registered rule and is unchanged. These numbers are recorded next to it (re-read with rejudge_probe.py):',
                   f'- first probe update (expected exactly 0 when the restore is complete): |R1-C| = {r["first_r1_c"]:.6f}, |R2-C| = {r["first_r2_c"]:.6f}, |R1-R2| = {r["first_r1_r2"]:.6f}',
                   f'- Dbar = mean(mean|R1-C|, mean|R2-C|) = {r["Dbar"]:.4f}; Nbar = mean|R1-R2| = {r["Nbar"]:.4f}; ratio Dbar/Nbar = {r["ratio"]:.3f}',
                   f'- mean form: Dbar <= max(0.02, 2 Nbar) = {r["mean_form_limit"]:.4f}: {r["mean_form_verdict"]}',
+                  *([f'- early window (the 2nd and 3rd probe updates{ew}, P1b): max |R - C| = {r["early_max"]:.6f}; limit {r["early_limit"]}: {r["early_verdict"]}'] if r.get('early_max') is not None else []),
                   f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}']
         if r.get('resume_warnings'):
             L += ['', 'resume_warning lines of the probe runs: ' + json.dumps(r['resume_warnings'])]

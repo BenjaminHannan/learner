@@ -2,7 +2,7 @@
 """install_g2fa4.py: puts the G2f-a4 pack on BensPC. Run it with the PC's own python from the folder the Mac copied (C:\\Users\\benja\\custom-io\\in-g2fa4):
 
     C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py [--check] [--skip-tests] [--register]
-    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--soft-trace-a [--soft-trace-a-mean]] [--check]
+    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--soft-trace-a [--soft-trace-a-mean]] [--trace-a-early] [--check]
 
 It starts no training job and changes nothing that already exists (a folder or file it replaces is renamed .aside-<stamp>). Steps:
  1. refuses if a custom_io job is running (it would compete for the CPU and the GPU) and checks the pinned hashes of src-b3g2 (the code G2f ran: custom_io at 74d6e92c75);
@@ -21,7 +21,7 @@ plus the installed src-b3g2ck (the mark and pins of the g2fa4 install), then (a)
 pack's g2fa4_supervisor.py (the version that honors `skip` and a job without a baseline) into WORK\\g2fa4\\ BEFORE plan.json changes (the old one is kept as .aside-<stamp>), (c) rewrites plan.json:
 the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused unless g2fa4 is stopped: state.json says
 'stopped' AND a stop file names g2fa4; and a stopped g2fa4 is never left unskipped, its stop file would hold the loop). With --soft-trace-a the g2fa8 entry's trace A records, and does not gate, the
-whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). The three variants (strict, soft, soft + mean) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
+whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs = 0.005 (largest difference over the 2nd and 3rd redone updates) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
 g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
 import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
 from pathlib import Path
@@ -146,23 +146,24 @@ def armed_text():
 
 SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
 SOFT_TRACE_A_MEAN = SOFT_TRACE_A + ['resume_mean_abs']          # --soft-trace-a --soft-trace-a-mean: the mean absolute resume difference too (opt-in; never a default)
+TRACE_A_EARLY = dict(resume_early_abs=0.005, resume_exact_fields=['lr', 'rounds', 'plan_'])          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): early window 2nd-3rd redone update, exact data/RNG/schedule fields at the first
 
 
-def new_job_entry(spec_id, g4, soft=False, soft_mean=False):
+def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False):
     """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
     spec = ADD_JOBS[spec_id]
     return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
-                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {})), compare=copy.deepcopy(g4['compare']))
+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(copy.deepcopy(TRACE_A_EARLY) if early else {})), compare=copy.deepcopy(g4['compare']))
 
 
-def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False):
+def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False, early=False):
     """-> (new plan, [what changes], [problems]). `old` is not modified. Idempotent: a plan that already has the job (and the skip, if asked) comes back equal."""
     new, changes, problems = copy.deepcopy(old), [], []
     jobs = new.get('jobs', [])
     g4 = next((j for j in jobs if j.get('id') == 'g2fa4'), None)
     if g4 is None:
         return new, changes, ['plan.json has no job g2fa4 (nothing to build the new entry from)']
-    want = new_job_entry(spec_id, g4, soft, soft_mean)
+    want = new_job_entry(spec_id, g4, soft, soft_mean, early)
     have = next((j for j in jobs if j.get('id') == spec_id), None)
     if have is None:
         jobs.append(want)
@@ -189,7 +190,7 @@ def add_job(a):
     spec = ADD_JOBS[spec_id]
     qfile = spec['queue'] + '.txt'
     LINES.clear()
-    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --soft-trace-a" if a.soft_trace_a else ""}{" --soft-trace-a-mean" if a.soft_trace_a_mean else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
+    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --soft-trace-a" if a.soft_trace_a else ""}{" --soft-trace-a-mean" if a.soft_trace_a_mean else ""}{" --trace-a-early" if a.trace_a_early else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
     # 1. the checks of the install (pins of src-b3g2, caps, the pack's files, python, disk) + the installed copy and the plan
     step1_checks(('overlay/train.py', 'queue/' + qfile, 'g2fa4_supervisor.py') + tuple('queue/' + q for q in A4_QUEUES))
     mark = SRC / 'G2FA4-SETUP-OK.txt'
@@ -216,7 +217,7 @@ def add_job(a):
         g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
         g4stop = stop_file_of('g2fa4')
         say(f'      state.json: g2fa4 is {g4s or "not recorded"}; stop file naming g2fa4: {g4stop.name if g4stop else "none"}; ARMED.txt: {armed_text()}')
-        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a, a.soft_trace_a_mean)
+        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a, a.soft_trace_a_mean, a.trace_a_early)
         row(not problems, 'plan.json can take the new job', '; '.join(problems))
         say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
     if a.check or not ok_all:
@@ -296,10 +297,11 @@ def main(argv=None):
     ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
     ap.add_argument('--soft-trace-a', action='store_true', help='with --add-job g2fa8: trace A records (does not gate) the whole-card memory peak and the largest single resume difference')
     ap.add_argument('--soft-trace-a-mean', action='store_true', help='only with --soft-trace-a: the mean absolute resume difference is recorded, not gated, as well (opt-in)')
+    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items, the early window (2nd-3rd redone update <= 0.005) and equal lr / rounds / plan_* fields at the first redone update')
     ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
     a = ap.parse_args(argv)
-    if (a.skip_g2fa4 or a.soft_trace_a) and a.add_job != 'g2fa8':
-        ap.error('--skip-g2fa4 / --soft-trace-a only go with --add-job g2fa8')
+    if (a.skip_g2fa4 or a.soft_trace_a or a.trace_a_early) and a.add_job != 'g2fa8':
+        ap.error('--skip-g2fa4 / --soft-trace-a / --trace-a-early only go with --add-job g2fa8')
     if a.soft_trace_a_mean and not a.soft_trace_a:
         ap.error('--soft-trace-a-mean only goes together with --soft-trace-a (it adds an item to the soft list)')
     if a.add_job and (a.register or a.skip_tests):

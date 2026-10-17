@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""rejudge_probe.py: re-reads a resume-noise probe (PROBE-RESUME-<job>.json from `g2fa4_supervisor.py probe-resume`) with the PRE-REGISTERED reading below. Python 3, standard library only.
+"""rejudge_probe.py: re-reads a resume-noise probe (PROBE-RESUME-<job>.json from `g2fa4_supervisor.py probe-resume`) with the PRE-REGISTERED reading below, as AMENDED by Amendment 1. Python 3, standard library only.
 
-    python rejudge_probe.py PROBE-RESUME-g2fa8.json [--trace-a-mean 0.0282] [--trace-a-json TRACE-A-g2fa8.json | state.json]
+    python rejudge_probe.py PROBE-RESUME-g2fa8.json [--trace-a-mean 0.0282] [--trace-a-json TRACE-A-g2fa8.json|state.json] [--calibration PROBE2.json]
 
-It changes nothing of the probe: it reads C, R1, R2 (the run's logged losses for the probed updates and the two resumes), applies the reading, prints a plain-words paragraph and
-the numbers, and writes REJUDGE-<job>.json next to the input. The registered rule of the probe (PASS if d <= max(0.10, 3n)) is computed too, unchanged, and is part of the reading.
-Exit code: 0 INSIDE healthy noise, 1 UNRESOLVED, 2 OUTSIDE, 3 the input cannot be read (a probe that was refused to judge, no C / R1 / R2, ...).
+It changes nothing of the probe: it reads C, R1, R2 (the run's logged losses for the probed updates and the two resumes), applies the AMENDED reading (the original text and the amendment are both below), prints a plain-words
+paragraph and the numbers, and writes REJUDGE-<job>.json next to the input. The registered rule of the probe (PASS if d <= max(0.10, 3n)) is computed too, unchanged, and is part of the reading. The reading of the
+ORIGINAL text alone is recorded in the JSON as original_reading_verdict (for comparison only).
+--calibration PROBE2.json is a second probe JSON of the SAME job, step and window (its R1, R2 are R3, R4; its C must equal the first file's C, else it is refused): see A1.3 below.
+Exit code: 0 INSIDE healthy noise, 1 UNRESOLVED (either kind; the output says which: "UNRESOLVED (window)" or "UNRESOLVED_CALIBRATE"), 2 OUTSIDE, 3 the input cannot be read (a probe that was refused to judge, no C / R1 / R2, ...).
 
 The value v of trace A is, in this order: --trace-a-mean, else resume.mean_abs from --trace-a-json (a TRACE-A-<job>.json, or the state.json whose jobs.<job>.traceA holds it), else 0.0282.
 
@@ -16,6 +18,15 @@ PRE-REGISTERED READING (text copied verbatim into the output):
   - Print a plain-words paragraph plus the numbers; write a JSON next to the input (REJUDGE-<job>.json).
 Definitions: first_r1_c / first_r2_c = |R1 - C| / |R2 - C| at the first probe update; Dbar = mean(mean|R1-C|, mean|R2-C|); Nbar = mean|R1-R2|; ratio = Dbar/Nbar
 (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0); registered max rule: n = max|R1-R2|, d = max(|R1-C|, |R2-C|), PASS if d <= max(0.10, 3n).
+
+AMENDMENT 1 (PREREG-trace-a2.md, 2026-10-17 ~22:05 UTC, A1.1 and A1.3; the reading this tool applies; the text above stays as pre-registered):
+  - P1 restore check: first_r1_c == first_r2_c == 0 exactly (unchanged).
+  - P1b early window: early_max = max over the 2nd and 3rd probe updates (202-203) of max(|R1-C|, |R2-C|) <= 0.005.
+  - OUTSIDE only if P1 or P1b fails, or if after the 4-resume calibration Dbar4 > L.
+  - If P1, P1b and the registered max rule P2 pass, and P3 (Dbar <= max(0.02, 2*Nbar)) and ratio <= 2 hold: INSIDE healthy noise if v <= max(0.02, 2*Nbar), else UNRESOLVED (window).
+  - If P1 and P1b pass but P2 or P3 / ratio fails: UNRESOLVED_CALIBRATE: run 2 more resumes of step-200 and judge Dbar against L = max(0.02, 2 x largest pairwise mean among the 4 resumes).
+  - With --calibration PROBE2.json (R3, R4): L = max(0.02, 2 x the largest of the 6 pairwise mean |Ri-Rj| among R1..R4), Dbar4 = mean over the 4 resumes of mean|Ri-C|; OUTSIDE if Dbar4 > L, else INSIDE healthy noise if v <= L (v is the trace-A window value, L comes from the probe window 201-250), else UNRESOLVED (window).
+  - Added here, not in the amendment text: with --calibration, P1 and P1b are also required of R3 and R4 (a failure is OUTSIDE), and the second file must have the same job, step, upto and C.
 """
 import argparse, json, sys
 from pathlib import Path
@@ -25,9 +36,19 @@ PREREG = (
     '  - Exchangeability: ratio = Dbar/Nbar <= 2.0 and registered max rule PASS.\n'
     '  - Verdict on the trace-A value v (default 0.0282): INSIDE healthy noise if restore check and exchangeability hold AND v <= max(0.02, 2*Nbar); UNRESOLVED if restore check and exchangeability hold but v > max(0.02, 2*Nbar) (the probe window 201-250 is calmer than the trace-A window 101-150, so only a same-window measurement can settle it); OUTSIDE if the restore check or exchangeability fails.\n'
     '  - Print a plain-words paragraph plus the numbers; write a JSON next to the input (REJUDGE-<job>.json).\n')
+AMEND1 = (
+    '  - P1 restore check: first_r1_c == first_r2_c == 0 exactly (unchanged).\n'
+    '  - P1b early window: early_max = max over the 2nd and 3rd probe updates (202-203) of max(|R1-C|, |R2-C|) <= 0.005.\n'
+    '  - OUTSIDE only if P1 or P1b fails, or if after the 4-resume calibration Dbar4 > L.\n'
+    '  - If P1, P1b and the registered max rule P2 pass, and P3 (Dbar <= max(0.02, 2*Nbar)) and ratio <= 2 hold: INSIDE healthy noise if v <= max(0.02, 2*Nbar), else UNRESOLVED (window).\n'
+    '  - If P1 and P1b pass but P2 or P3 / ratio fails: UNRESOLVED_CALIBRATE: run 2 more resumes of step-200 and judge Dbar against L = max(0.02, 2 x largest pairwise mean among the 4 resumes).\n'
+    '  - With --calibration PROBE2.json (R3, R4): L = max(0.02, 2 x the largest of the 6 pairwise mean |Ri-Rj| among R1..R4), Dbar4 = mean over the 4 resumes of mean|Ri-C|; OUTSIDE if Dbar4 > L, else INSIDE healthy noise if v <= L (v is the trace-A window value, L comes from the probe window 201-250), else UNRESOLVED (window).\n'
+    '  - Added here, not in the amendment text: with --calibration, P1 and P1b are also required of R3 and R4 (a failure is OUTSIDE), and the second file must have the same job, step, upto and C.\n')
 RESTORE_MSG = 'restore differs at the first update: wrong checkpoint or incomplete restore; investigate, do not read'
+EARLY_LIMIT = 0.005
+FLOOR = 0.02
 DEFAULT_V = 0.0282
-EXIT = {'INSIDE healthy noise': 0, 'UNRESOLVED': 1, 'OUTSIDE': 2}
+EXIT = {'INSIDE healthy noise': 0, 'UNRESOLVED': 1, 'UNRESOLVED_CALIBRATE': 1, 'OUTSIDE': 2}
 
 
 def mean(xs):
@@ -35,25 +56,74 @@ def mean(xs):
     return sum(xs) / len(xs)
 
 
-def rejudge(C, R1, R2, v=DEFAULT_V):
-    """-> dict with every number of the reading and `verdict` in ('INSIDE healthy noise', 'UNRESOLVED', 'OUTSIDE'). Pure function."""
+def absdiff(a, b):
+    return [abs(x - y) for x, y in zip(a, b)]
+
+
+def early_of(ds):
+    """largest value over the 2nd and 3rd update of the given |R - C| lists"""
+    return max(d[i] for d in ds for i in (1, 2))
+
+
+def calibration(C, Rs, v):
+    """4 resumes Rs = [R1, R2, R3, R4] of one checkpoint over the window of C. -> dict (pure). OUTSIDE if P1 / P1b fails for any of them or Dbar4 > L; else INSIDE healthy noise if v <= L, else UNRESOLVED."""
+    ds = [absdiff(R, C) for R in Rs]
+    pairs = {f'R{i + 1}-R{j + 1}': mean(absdiff(Rs[i], Rs[j])) for i in range(4) for j in range(i + 1, 4)}
+    L = max(FLOOR, 2 * max(pairs.values()))
+    dbar4 = mean(mean(d) for d in ds)
+    p1 = all(d[0] == 0 for d in ds)
+    em = early_of(ds)
+    p1b = em <= EARLY_LIMIT
+    if not (p1 and p1b):
+        verdict = 'OUTSIDE'
+    elif dbar4 > L:
+        verdict = 'OUTSIDE'
+    else:
+        verdict = 'INSIDE healthy noise' if v <= L else 'UNRESOLVED'
+    return dict(verdict=verdict, pair_means=pairs, max_pair=max(pairs.values()), L=L, Dbar4=dbar4, mean_abs_ri_c=[mean(d) for d in ds], first_ri_c=[d[0] for d in ds], p1_all=p1,
+                early_max4=em, p1b_all=p1b, trace_a_value=v)
+
+
+def rejudge(C, R1, R2, v=DEFAULT_V, R34=None):
+    """-> dict with every number of the reading and `verdict` in ('INSIDE healthy noise', 'UNRESOLVED', 'UNRESOLVED_CALIBRATE', 'OUTSIDE') (the AMENDED reading). Pure function.
+    R34 = (R3, R4), optional: the calibration (A1.3), same length as C; then the verdict is the calibration's."""
     if not (len(C) == len(R1) == len(R2) and C):
         raise ValueError('C, R1, R2 must have the same non-zero length')
-    d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
+    if len(C) < 3:
+        raise ValueError('at least 3 probe updates are needed (the early window is the 2nd and 3rd)')
+    d12, d1, d2 = absdiff(R1, R2), absdiff(R1, C), absdiff(R2, C)
     n, d = max(d12), max(d1 + d2)
     reg_limit = max(0.10, 3 * n)
     reg = 'PASS' if d <= reg_limit else 'FAIL'
     dbar, nbar = mean([mean(d1), mean(d2)]), mean(d12)
     ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
-    restore_ok = d1[0] == 0 and d2[0] == 0
-    exch_ok = ratio <= 2.0 and reg == 'PASS'
-    limit = max(0.02, 2 * nbar)
-    if restore_ok and exch_ok:
+    restore_ok = d1[0] == 0 and d2[0] == 0                                               # P1
+    em = early_of([d1, d2])
+    early_ok = em <= EARLY_LIMIT                                                         # P1b
+    limit = max(FLOOR, 2 * nbar)
+    p3 = dbar <= limit
+    exch_ok = ratio <= 2.0 and reg == 'PASS'                                             # the original reading's exchangeability (P2 and ratio)
+    p23_ok = reg == 'PASS' and p3 and ratio <= 2.0
+    if restore_ok and exch_ok:                                                           # the ORIGINAL reading, kept for the record only
+        original = 'INSIDE healthy noise' if v <= limit else 'UNRESOLVED'
+    else:
+        original = 'OUTSIDE'
+    if not (restore_ok and early_ok):
+        verdict = 'OUTSIDE'
+    elif p23_ok:
         verdict = 'INSIDE healthy noise' if v <= limit else 'UNRESOLVED'
     else:
-        verdict = 'OUTSIDE'
-    return dict(verdict=verdict, restore_ok=restore_ok, exchangeability_ok=exch_ok, first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio,
-                n=n, d=d, registered_limit=reg_limit, registered_verdict=reg, trace_a_value=v, noise_limit=limit, n_updates=len(C))
+        verdict = 'UNRESOLVED_CALIBRATE'
+    out = dict(verdict=verdict, restore_ok=restore_ok, early_ok=early_ok, early_max=em, early_limit=EARLY_LIMIT, exchangeability_ok=exch_ok, p3_ok=p3, p23_ok=p23_ok,
+               first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio,
+               n=n, d=d, registered_limit=reg_limit, registered_verdict=reg, trace_a_value=v, noise_limit=limit, n_updates=len(C), original_reading_verdict=original, calibration=None)
+    if R34 is not None:
+        R3, R4 = R34
+        if not (len(R3) == len(R4) == len(C)):
+            raise ValueError('R3 and R4 must have the same length as C')
+        cal = calibration(C, [R1, R2, R3, R4], v)
+        out.update(calibration=cal, verdict=cal['verdict'])                              # (the calibration repeats P1 / P1b for all four resumes, so an OUTSIDE above stays OUTSIDE)
+    return out
 
 
 def words(r, job):
@@ -61,17 +131,43 @@ def words(r, job):
     v, lim = r['trace_a_value'], r['noise_limit']
     ex = (f'The two restarts differ from the real run by {f(r["Dbar"])} on average and from each other by {f(r["Nbar"])} on average (ratio {r["ratio"]:.2f}); '
           f'the registered rule (largest gap {f(r["d"])} against its limit {f(r["registered_limit"])}) says {r["registered_verdict"]}.')
+    cal = r.get('calibration')
     if not r['restore_ok']:
         return (f'OUTSIDE. At the very first redone update the restarted run already differs from the real run (|R1-C| = {r["first_r1_c"]:.6f}, |R2-C| = {r["first_r2_c"]:.6f}; it must be exactly 0). '
                 f'{RESTORE_MSG}. {ex}')
-    if not r['exchangeability_ok']:
-        why = 'the registered rule failed' if r['registered_verdict'] != 'PASS' else f'the ratio {r["ratio"]:.2f} is above 2.0'
-        return (f'OUTSIDE. The first redone update is exact (the restore looks complete), but a restart is not interchangeable with the run\'s own continuation: {why}. {ex} '
-                'The difference between a restart and the real run is larger than the difference between two restarts of each other, so it is not just the card\'s run-to-run noise.')
+    if not r['early_ok']:
+        return (f'OUTSIDE. The first redone update is exact, but at the 2nd or 3rd one the restarted run is already {r["early_max"]:.6f} away from the real run (limit {r["early_limit"]}). '
+                'That early, rounding noise is still tiny; a gap this size points at state that did not come back with the checkpoint (optimizer moments, the learning-rate step), not at card noise. '
+                f'{ex}')
+    if cal is not None:
+        pm = ', '.join(f'{k} {f(x)}' for k, x in cal['pair_means'].items())
+        base = (f'With four restarts of the same checkpoint, the six pairwise mean gaps are {pm}; the largest is {f(cal["max_pair"])}, so L = max(0.02, 2 x that) = {f(cal["L"])}. '
+                f'The four restarts differ from the real run by {f(cal["Dbar4"])} on average (Dbar4). ')
+        if not (cal['p1_all'] and cal['p1b_all']):
+            return ('OUTSIDE. One of the extra restarts (R3, R4) fails the first-update or early-window check (first-update gaps ' + ', '.join(f'{x:.6f}' for x in cal['first_ri_c']) +
+                    f'; early-window maximum {cal["early_max4"]:.6f}, limit {r["early_limit"]}): the restore is not reliably complete. {base}')
+        if r['verdict'] == 'OUTSIDE':
+            return f'OUTSIDE. Dbar4 {f(cal["Dbar4"])} is above L = {f(cal["L"])}: the restarts are farther from the real run than restarts are from each other, which is not just the card\'s noise. {base}'
+        if r['verdict'].startswith('INSIDE'):
+            return (f'INSIDE healthy noise. {base}Dbar4 is at most L, and the trace-A value {v:.4f} is at most L too. The trace-A resume difference is the size the card makes on its own. '
+                    '(L was measured in the probe window 201-250.)')
+        return (f'UNRESOLVED (window). {base}Dbar4 is at most L, so the restarts look like the real run, but the trace-A value {v:.4f} is above L = {f(cal["L"])}. '
+                'L was measured in the probe window (updates 201-250), which is calmer than the trace-A window (101-150): only a measurement in the same window can settle it.')
+    if r['verdict'] == 'UNRESOLVED_CALIBRATE':
+        parts = []
+        if r['registered_verdict'] != 'PASS':
+            parts.append('the registered max rule failed')
+        if not r['p3_ok']:
+            parts.append(f'Dbar {f(r["Dbar"])} is above max(0.02, 2 x Nbar) = {f(lim)}')
+        if r['ratio'] > 2.0:
+            parts.append(f'the ratio {r["ratio"]:.2f} is above 2.0')
+        return (f'UNRESOLVED_CALIBRATE. The first redone update is exact and the early window is within {r["early_limit"]} (largest {r["early_max"]:.6f}), so nothing says the restore is broken; but ' + '; '.join(parts) + '. '
+                f'{ex} Two noise draws can look unlike each other by chance (the heavy tail the simulations predict), so this is "measure more", not "broken": run 2 more resumes of step-200 '
+                'and judge Dbar against L = max(0.02, 2 x the largest pairwise mean among the 4 resumes) (rerun with --calibration PROBE2.json).')
     if r['verdict'].startswith('INSIDE'):
-        return (f'INSIDE healthy noise. The first redone update is exact, a restart behaves like another restart of the same checkpoint (ratio {r["ratio"]:.2f}, at most 2.0), and the trace-A value {v:.4f} '
-                f'is at most max(0.02, 2 x Nbar) = {f(lim)}. {ex} The trace-A resume difference is the size the card makes on its own.')
-    return (f'UNRESOLVED. The first redone update is exact and a restart behaves like another restart (ratio {r["ratio"]:.2f}), but the trace-A value {v:.4f} is above max(0.02, 2 x Nbar) = {f(lim)}. '
+        return (f'INSIDE healthy noise. The first redone update is exact, the early window is within {r["early_limit"]}, a restart behaves like another restart of the same checkpoint (ratio {r["ratio"]:.2f}, at most 2.0), '
+                f'and the trace-A value {v:.4f} is at most max(0.02, 2 x Nbar) = {f(lim)}. {ex} The trace-A resume difference is the size the card makes on its own.')
+    return (f'UNRESOLVED (window). The first redone update is exact, the early window is within {r["early_limit"]} and a restart behaves like another restart (ratio {r["ratio"]:.2f}), but the trace-A value {v:.4f} is above max(0.02, 2 x Nbar) = {f(lim)}. '
             f'{ex} The probe window (updates 201-250) is calmer than the trace-A window (101-150), so a small noise here does not settle a larger difference there: only a measurement in the same window can.')
 
 
@@ -89,34 +185,59 @@ def trace_a_value(args, job):
     return DEFAULT_V, 'default'
 
 
+def read_probe(path):
+    """-> the probe dict, or raises ValueError / OSError / KeyError"""
+    pr = json.loads(Path(path).read_text(encoding='utf-8'))
+    if pr.get('why_fail') or not all(k in pr for k in ('C', 'R1', 'R2')):
+        raise ValueError(f'the probe {path} did not judge ({pr.get("why_fail") or "no C / R1 / R2 in the file"})')
+    return pr
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='re-read a resume-noise probe with the pre-registered reading')
+    ap = argparse.ArgumentParser(description='re-read a resume-noise probe with the pre-registered reading, as amended (Amendment 1)')
     ap.add_argument('probe', help='PROBE-RESUME-<job>.json')
     ap.add_argument('--trace-a-mean', type=float, help=f'trace A mean absolute resume difference v (default {DEFAULT_V})')
     ap.add_argument('--trace-a-json', help='TRACE-A-<job>.json or state.json: v = resume.mean_abs from it (--trace-a-mean wins)')
+    ap.add_argument('--calibration', help='a second PROBE-RESUME-<job>.json of the same job / step / window (its resumes are R3, R4): judge Dbar4 against L = max(0.02, 2 x largest pairwise mean among R1..R4)')
     a = ap.parse_args(argv)
     p = Path(a.probe)
     try:
-        pr = json.loads(p.read_text(encoding='utf-8'))
+        pr = read_probe(p)
         job = pr['job']
-        if pr.get('why_fail') or not all(k in pr for k in ('C', 'R1', 'R2')):
-            print(f'cannot re-read {p}: the probe did not judge ({pr.get("why_fail") or "no C / R1 / R2 in the file"})')
-            return 3
         v, src = trace_a_value(a, job)
-        r = rejudge(pr['C'], pr['R1'], pr['R2'], v)
+        R34 = None
+        if a.calibration:
+            p2 = read_probe(a.calibration)
+            for k in ('job', 'step', 'upto'):
+                if p2.get(k) != pr.get(k):
+                    raise ValueError(f'--calibration {a.calibration}: {k} is {p2.get(k)!r}, the probe has {pr.get(k)!r} (the same job, step and window are needed)')
+            if p2['C'] != pr['C']:
+                raise ValueError(f'--calibration {a.calibration}: its C (the run\'s logged losses) is not the probe\'s C')
+            R34 = (p2['R1'], p2['R2'])
+        r = rejudge(pr['C'], pr['R1'], pr['R2'], v, R34)
     except (OSError, ValueError, KeyError, TypeError) as e:
-        print(f'cannot re-read {p}: {e!r}')
+        print(f'cannot re-read {p}: {e if isinstance(e, ValueError) else repr(e)}')
         return 3
-    r.update(job=job, source=str(p), trace_a_value_from=src, step=pr.get('step'), upto=pr.get('upto'), preregistered_reading=PREREG, plain_words=words(r, job))
+    r.update(job=job, source=str(p), calibration_source=a.calibration, trace_a_value_from=src, step=pr.get('step'), upto=pr.get('upto'), preregistered_reading=PREREG, amendment_1_reading=AMEND1, plain_words=words(r, job))
     out = p.with_name(f'REJUDGE-{job}.json')
     out.write_text(json.dumps(r, indent=1), encoding='utf-8')
-    print(f'REJUDGE {job}: {r["verdict"]}\n')
-    print('Pre-registered reading (verbatim):\n' + PREREG)
+    kind = {'UNRESOLVED': 'UNRESOLVED (window)'}.get(r['verdict'], r['verdict'])
+    print(f'REJUDGE {job}: {kind}\n')
+    print('Pre-registered reading (original, verbatim):\n' + PREREG)
+    print('Amendment 1 (the reading applied here, verbatim):\n' + AMEND1)
     print(r['plain_words'] + '\n')
     print(f'numbers ({r["n_updates"]} probe updates, {pr.get("step")}+1..{pr.get("upto")}):')
-    print(f'  first update: |R1-C| = {r["first_r1_c"]!r}, |R2-C| = {r["first_r2_c"]!r}, |R1-R2| = {r["first_r1_r2"]!r}  -> restore check {"holds" if r["restore_ok"] else "FAILS"}')
-    print(f'  Dbar = {r["Dbar"]:.6f}, Nbar = {r["Nbar"]:.6f}, ratio = {r["ratio"]:.4f}; registered rule: n = {r["n"]:.6f}, d = {r["d"]:.6f}, limit {r["registered_limit"]:.6f} -> {r["registered_verdict"]}  -> exchangeability {"holds" if r["exchangeability_ok"] else "FAILS"}')
-    print(f'  trace-A value v = {r["trace_a_value"]} (from {src}); max(0.02, 2*Nbar) = {r["noise_limit"]:.6f}')
+    print(f'  P1 first update: |R1-C| = {r["first_r1_c"]!r}, |R2-C| = {r["first_r2_c"]!r}, |R1-R2| = {r["first_r1_r2"]!r}  -> restore check {"holds" if r["restore_ok"] else "FAILS"}')
+    print(f'  P1b early window (2nd and 3rd update): max |R-C| = {r["early_max"]:.6f}, limit {r["early_limit"]}  -> {"holds" if r["early_ok"] else "FAILS"}')
+    print(f'  Dbar = {r["Dbar"]:.6f}, Nbar = {r["Nbar"]:.6f}, ratio = {r["ratio"]:.4f}; P2 registered rule: n = {r["n"]:.6f}, d = {r["d"]:.6f}, limit {r["registered_limit"]:.6f} -> {r["registered_verdict"]}; '
+          f'P3 Dbar <= max(0.02, 2*Nbar) = {r["noise_limit"]:.6f}: {"holds" if r["p3_ok"] else "FAILS"}  -> P2, P3 and ratio <= 2 {"hold" if r["p23_ok"] else "do not all hold"}')
+    print(f'  trace-A value v = {r["trace_a_value"]} (from {src})')
+    cal = r['calibration']
+    if cal:
+        print(f'  calibration ({a.calibration}): pairwise means ' + ', '.join(f'{k} {x:.6f}' for k, x in cal['pair_means'].items()))
+        print(f'    L = max(0.02, 2 x {cal["max_pair"]:.6f}) = {cal["L"]:.6f}; Dbar4 = {cal["Dbar4"]:.6f} (mean |Ri-C|: ' + ', '.join(f'{x:.6f}' for x in cal['mean_abs_ri_c']) +
+              f'); first-update gaps all exact: {cal["p1_all"]}; early-window max over 4 = {cal["early_max4"]:.6f}')
+    print(f'  (the ORIGINAL reading alone would say: {r["original_reading_verdict"]}; recorded for comparison only)')
     print(f'written: {out}')
     return EXIT[r['verdict']]
 

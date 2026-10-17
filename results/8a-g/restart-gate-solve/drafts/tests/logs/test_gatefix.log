@@ -7,10 +7,16 @@ ok an accum resume_warning in a probe's events -> FAIL, not judged; another warn
 ok verdict fields: first-update gaps, Dbar, Nbar, ratio, mean-form limit and verdict (a spike fails the registered rule, passes the mean form)
 ok Nbar = 0: ratio inf when Dbar > 0, 1.0 when both are 0; lag-1 undefined without variance
 ok lag-1 autocorrelation: alternating -5/6, trend ~ +1, white noise ~ 0, undefined for < 3 points / no variance
-ok `verdict` and every old key identical to the original pack function over 1000 random traces (824 PASS, 176 FAIL); only the 9 new keys are added
+ok `verdict` and every old key identical to the original pack function over 1000 random traces (824 PASS, 176 FAIL); only the 12 new keys are added (9 mean-form + 3 early-window)
 ok md_probe: the "recorded beside (pre-registered mean form, not the registered gate)" section after the table; old-format reports still render; inf ratio renders
 ok trace A: resume_mean_abs is hard unless listed in rules.soft (then recorded in soft_misses); first-update, NaN, loss-falls hard in every variant; no soft list or the existing soft list = the original behaviour
 ok installer --soft-trace-a-mean: only with --soft-trace-a; entry soft = [peak, resume_max_abs, resume_mean_abs]; check changes nothing; idempotent; the three variants are never mixed; defaults unchanged
-ok rejudge: INSIDE / UNRESOLVED / OUTSIDE (restore check, ratio, registered rule) and the boundaries v <= limit, exact zero at the first update; agrees with the supervisor's numbers
+ok rejudge: INSIDE / UNRESOLVED (window) / UNRESOLVED_CALIBRATE (ratio, P3, registered rule) / OUTSIDE (restore check) and the boundaries v <= limit, exact zero at the first update; agrees with the supervisor's numbers
 ok rejudge_probe.py: verbatim text in docstring and output, REJUDGE-<job>.json, exit codes 0/1/2/3, --trace-a-mean / --trace-a-json (TRACE-A and state.json), runs as a script
-GATEFIX TESTS OK (15 tests)
+ok trace A early window: resume_early_abs absent = the original result (+ early_max recorded); 2nd-3rd redone updates only; names the updates; just under/over 0.005; hard even if named in soft; 1-2 redone updates
+ok trace A exact fields: lr / rounds / plan_* equal at the first redone update or FAIL (hard, names the field and values); only the first update; prefix vs name; one-sided fields skipped; nothing compared -> note; losses untouched
+ok probe verdict early window: early_max over probe updates 2-3 of both resumes, limit 0.005, verdict; the registered verdict is unchanged; None below 2 updates
+ok installer --trace-a-early: opt-in, only with --add-job g2fa8, entry gets resume_early_abs 0.005 and resume_exact_fields [lr, rounds, plan_] (copied), check changes nothing, idempotent, installed rules act; all 6 variants (strict/soft/soft+mean x early) are mutually refused, never mixed; defaults unchanged
+ok rejudge amended reading: INSIDE / UNRESOLVED (window) / UNRESOLVED_CALIBRATE (P2, P3 or ratio fails) / OUTSIDE by P1 / OUTSIDE by P1b (2nd and 3rd update, both resumes, 0.005 boundary); original reading recorded beside
+ok rejudge --calibration: 6 pairwise means, L = max(0.02, 2 x largest), Dbar4; INSIDE / UNRESOLVED (window) / OUTSIDE (Dbar4 > L, boundary); R3/R4 P1 and P1b; file mismatches -> exit 3; docstring has the original text then the amendment
+GATEFIX TESTS OK (21 tests)
