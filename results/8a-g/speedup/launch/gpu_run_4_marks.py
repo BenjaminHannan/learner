@@ -234,7 +234,7 @@ def outcome(boxes, m2, m7):
     """Section 5 of the sheet: what the result allows."""
     d4 = [b['arms'].get('d4') or {} for b in boxes]
     counts = [b['box_counts'] for b in boxes]
-    wins = [bool(c and x.get('decided') and x.get('mark1')) for c, x in zip(counts, d4)]
+    wins = [bool(c and x.get('decided') and x.get('mark1') and x['speed'] >= P1_X) for c, x in zip(counts, d4)]     # a port-grade win: mark 1 AND >= 1.25x (section 5: 1.10-1.25x = no port)
     hosts = [(b['host'].get('hostname'), b.get('machine')) for b in boxes]
     same_env = len({(b['host'].get('torch'), b['host'].get('cuda'), b.get('image')) for b in boxes}) == 1
     distinct = len(boxes) == 2 and hosts[0] != hosts[1] and all(h[0] for h in hosts) and (hosts[0][0] != hosts[1][0]) and (not all(h[1] for h in hosts) or hosts[0][1] != hosts[1][1])
@@ -244,19 +244,27 @@ def outcome(boxes, m2, m7):
     kill = [bool(c and x.get('decided') and x['speed'] < KILL_X and m7.get('holds') and k_ms is not None and k_ms <= KERN_EXTRA) for c, x in zip(counts, d4)]
     inefficient = [bool(c and x.get('decided') and x['speed'] < KILL_X and k_ms is not None and k_ms > KERN_EXTRA) for c, x in zip(counts, d4)]
     p6 = boxes[0].get('P6') or {}
-    v.update(p1_kill_by_box=kill, defer_inefficient_by_box=inefficient, p6_R=p6.get('R'), p6_dead=p6.get('dead'))
+    two = len(boxes) == 2 and distinct and same_env
+    v.update(p1_kill_by_box=kill, defer_inefficient_by_box=inefficient, p6_R=p6.get('R'), p6_dead=p6.get('dead'), voided_boxes=[i + 1 for i, c in enumerate(counts) if not c])
+    # the kill, like the win, needs both hosts (amended 10-17 before sealing, from the dry-run tests): a verdict on one host only, or two hosts that disagree, buys one more replication box
     if v['mark2_defer'] is False:
         v['allows'] = 'mark 2 fails for defer: defer is not used however fast'
-    elif m7.get('holds') is False and any(x.get('decided') and x.get('speed', 0) >= 1.0 / WIN_DROP for x in d4):
+    elif m7.get('holds') is False:
         v['allows'] = 'mark 7 misses: the speed result is an artifact; debug offline, no more rentals for this'
-    elif p6.get('dead') or any(kill):
-        v['allows'] = 'framing kill holds: defer and CUDA graphs are closed as launch fixes'
-    elif any(inefficient):
-        v['allows'] = 'defer is inefficient on CUDA (D4 < 1.10x with defer adding GPU work): not a framing kill; no port'
-    elif all(wins) and len(boxes) == 2 and distinct and same_env and m7.get('holds') and v['mark2_defer']:
+    elif p6.get('dead'):
+        v['allows'] = 'framing kill holds (P6: the baseline was GPU-bound): defer and CUDA graphs are closed as launch fixes'
+    elif two and all(kill):
+        v['allows'] = 'framing kill holds (P1 on both hosts): defer and CUDA graphs are closed as launch fixes'
+    elif two and all(inefficient):
+        v['allows'] = 'defer is inefficient on CUDA (D4 < 1.10x with defer adding GPU work, both hosts): not a framing kill; no port'
+    elif two and all(wins) and m7.get('holds') and v['mark2_defer']:
         v['allows'] = 'D4 wins on both hosts: production port of defer may be written and reviewed, and a PC test bid; fresh runs from update 0 only; no change to 8aB3G2A4/A8'
-    elif sum(wins) == 1 or (all(wins) and not (distinct and same_env)):
+    elif any(wins) and (any(kill) or any(inefficient)):
+        v['allows'] = 'hosts disagree (a win on one host, a kill or an inefficiency verdict on the other): one more replication box under this sheet'
+    elif any(wins):
         v['allows'] = 'D4 wins on one host only: one more replication box under this sheet'
+    elif any(kill) or any(inefficient):
+        v['allows'] = 'a kill or inefficiency verdict on one host only: one more replication box under this sheet'
     elif not all(counts):
         v['allows'] = 'a box failed mark 5 (or its AA is undecided): nothing on that box counts; undecided'
     elif any(not x.get('decided') for x in d4):

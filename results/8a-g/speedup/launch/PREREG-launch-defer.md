@@ -83,12 +83,12 @@ A D4 speed result whose counts miss is reported as an **artifact**, not a win.
 
 ## 3. Predictions (each with what proves it wrong)
 
-- **P1:** D4 ≥ 1.25× on each box (speed = median A / median B). Proved wrong if < 1.25×. **Framing kill:** the launch-bound framing is dead only if all of these hold on a box:
+- **P1:** D4 ≥ 1.25× on each box (speed = median A / median B). Proved wrong if < 1.25×. **Framing kill:** the launch-bound framing is dead only if all of these hold on **both** boxes (each counting under mark 5), the same two-host standard as the win:
   - D4 < 1.10×;
   - mark 7 holds;
   - `defer`'s profiled kernel time per update ≤ 1.10 × the baseline's (box 1 profiler).
 
-  If `defer`'s kernel time is > 1.10 × the baseline's, the verdict is "**defer is inefficient on CUDA**", not "framing wrong".
+  If `defer`'s kernel time is > 1.10 × the baseline's, the verdict is "**defer is inefficient on CUDA**", not "framing wrong" (also needed on both boxes). A kill or inefficiency verdict on one box only, or one box winning while the other meets a kill condition, buys one more replication box (§5).
 - **P2:** D8's speed ≥ D4's. Proved wrong if D8 < D4.
 - **P3:** K4 between 1.00× and 1.10×. Proved wrong outside that band. (This replaces the solve report's "kvcat ≥ 1.03×".)
 - **P4:** on the PC (a separate session, same marks), D4's gain is smaller than on the 4090. Proved wrong if it is larger. Not tested in this run.
@@ -101,10 +101,11 @@ The solve report's §3.9 (cold stretch reported separately) and §3.10 (the ABBA
 
 ## 5. What each result allows (the only uses of this run)
 
-- **D4 meets mark 1 on both hosts** (with marks 2, 4, 5 and 7 holding): the production port of `defer` (solve report §4.1) may be written and reviewed, and a PC test may be bid for. The port is used **only in fresh runs started from update 0** under new run names. There is **no change to 8aB3G2A4/A8**.
-- **D4 wins on one host only:** one more replication box under this same sheet, and nothing else.
+- **D4 meets mark 1 and ≥ 1.25× (P1) on both hosts** (with marks 2, 4, 5 and 7 holding): the production port of `defer` (solve report §4.1) may be written and reviewed, and a PC test may be bid for. The port is used **only in fresh runs started from update 0** under new run names. There is **no change to 8aB3G2A4/A8**.
+- **D4 wins on one host only** (the other box below 1.25×, regime-confounded, or voided by mark 5), **or the hosts disagree** (a win on one, a kill or inefficiency condition on the other), **or a kill or inefficiency condition holds on one host only:** one more replication box under this same sheet, and nothing else.
 - **D4 between 1.10× and 1.25×, or mark 1 fails:** no port. The next step is a GPU profile by code region, under a new pre-registration.
-- **The framing kill (P1 or P6) holds:** `defer` and CUDA graphs are **closed as launch fixes**.
+- **The framing kill holds** (P6 on box 1, or P1's kill condition on both hosts): `defer` and CUDA graphs are **closed as launch fixes**.
+- **`defer` is inefficient on CUDA on both hosts:** not a framing kill; no port.
 - **Mark 7 misses:** the speed result is an artifact. Debug offline, and no more rentals for this.
 - **Mark 2 fails for `defer`:** `defer` is not used, however fast.
 - **K4 and D8:** information only. The readout reports K4's GPU peak memory.
@@ -134,6 +135,7 @@ The solve report's §3.9 (cold stretch reported separately) and §3.10 (the ABBA
 | 5 | §5 "what each result allows" added, as the ruling spells it. |
 | 6 | P3 replaces the report's "≥ 1.03×"; §4 excludes report §3.9 and §3.10; warm stretch defined; host CPU model recorded; same image and torch/CUDA required; cost ~$1.8 expected, $2.07 at most. |
 | 7 | §9 below. |
+| dry run (10-17) | Two ambiguities found by the readout's unit tests (`test_gpu_run_4_marks.py`) and fixed before sealing. (1) The P1 kill was written "on a box": one slow host could have killed the framing while the other host won by 1.6×. The kill, like the win, now needs both hosts, and a split buys one more box. (2) Mark 1's 5% bar against §5's "1.10–1.25×: no port": a port-grade win is now mark 1 **and** ≥ 1.25× on both hosts. |
 
 ## 9. CPU dry run (filled in before sealing)
 
