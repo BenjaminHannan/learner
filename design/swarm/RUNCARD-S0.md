@@ -18,8 +18,10 @@ the tag goes in the readout).
 | **D1** | `thinkers=1` (today's D, flag off) | the single thinker |
 | **S0** | `thinkers=4, swarm_board=False, swarm_rounds=4, board_cards=16` | **the decision** |
 
-* **Matched wall-clock (primary).** Every run trains for exactly T seconds: `train_d(max_seconds=T,
-  flop_budget=1e30)`, curriculum shares by seconds. **T = the seconds D1 needs for F = 2.6e16 FLOPs on this box, measured in §C0, rounded up to the next 300 s, and capped at 3,600 s.** S0 gets the
+* **Matched wall-clock (primary).** Every run trains for exactly T seconds: `train_d(seconds_budget=T,
+  flop_budget=1e30)`. `MiniTrainer(seconds_budget=…)` sets both the curriculum share and the stop from
+  training seconds, with eval pauses excluded (`TrainerPlumbingTest`). `max_seconds` alone would stop the run but
+  leave the curriculum frozen at its FLOP share, so it is not used. **T = the seconds D1 needs for F = 2.6e16 FLOPs on this box, measured in §C0, rounded up to the next 300 s, and capped at 3,600 s.** S0 gets the
   same T, whatever number of steps that buys.
 * **Matched parameters (reported, separately).** D1 2,102,228 (v2) vs S0 2,102,740 (+512 desk embeddings, +0.02%).
 * **Reported, not matched:** steps, tokens, think FLOPs per question, s/step, peak GPU memory.

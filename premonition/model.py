@@ -232,6 +232,9 @@ class Think(nn.Module):
         self.age = nn.Embedding(config.age_buckets, d) if config.store else None
         self.age_bias = nn.Parameter(torch.zeros(config.age_buckets)) if config.store else None
         self.binder = nn.Linear(2 * d, 2 * d) if config.store and config.pointers else None
+        # Swarm (premonition/swarm.py): created only with thinkers > 1, so the flag-off RNG stream is untouched.
+        self.desk = nn.Embedding(config.thinkers, d) if config.thinkers > 1 else None
+        self.board_type = nn.Embedding(2, d) if config.thinkers > 1 and config.swarm_board else None
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
         x = x + self.step.weight[step]
@@ -302,6 +305,7 @@ class Answers:
     first_top: torch.Tensor   # [Q, top_k] long: lines of the first ASK's top-k (-1 = NULL or none)
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool: cards fetched (NULL last); None without a store
     halt_prob: torch.Tensor   # [Q] float: HALT probability at the answering loop
+    swarm: Optional[dict[str, Any]] = None   # swarm per-desk readouts (see premonition/swarm.py); None for one thinker
 
     def ids(self) -> list[list[int]]:
         return [row[:length].tolist() for row, length in zip(self.tokens.cpu(), self.lengths.cpu())]
@@ -513,6 +517,9 @@ class PremonitionMini(nn.Module):
         `loops` overrides the loop count. Default weights come from the config, except
         that "gold" leaves out L_ask and L_halt (the 0-5% phase trains L_lm + L_ans only).
         """
+        if self.config.thinkers > 1:                       # design/swarm: M desks per question
+            from premonition.swarm import swarm_forward
+            return swarm_forward(self, batch, mode, p_own, loops, weights, generator)
         if mode not in MODES:
             raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
         config = self.config
@@ -670,15 +677,21 @@ class PremonitionMini(nn.Module):
     @torch.no_grad()
     def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
                window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
-               max_loops: Optional[int] = None) -> Answers:
+               max_loops: Optional[int] = None, lesion: Optional[str] = None) -> Answers:
         """Greedy answers with the model's own retrieval and halting (design/06 §2).
 
         Loops until HALT (p > 0.5) or `max_loops`; ASK (logit > 0) fetches the top-k
         eligible cards. ENT ids are restricted to entities already mentioned (in the
         window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
         "store" keeps the reader state but drops cards and names before it; "full" also
-        re-reads from the window start with a fresh reader.
+        re-reads from the window start with a fresh reader. `lesion` is for swarms only.
         """
+        if self.config.thinkers > 1:                       # design/swarm: M desks per question
+            from premonition.swarm import swarm_answer
+            return swarm_answer(self, batch, wipe=wipe, window_line=window_line, stop=stop,
+                                max_loops=max_loops, lesion=lesion)
+        if lesion is not None:
+            raise ValueError("lesion needs a swarm (thinkers > 1)")
         config = self.config
         low = None
         if wipe is not None:

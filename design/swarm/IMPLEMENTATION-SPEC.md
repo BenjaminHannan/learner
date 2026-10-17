@@ -192,3 +192,13 @@ fetched=union over desks [Q, L+1], halt_prob, swarm={...})` with
 
 Then run: `python -m unittest tests.test_premonition_swarm tests.test_premonition_model tests.test_premonition_train`
 and any other `tests/test_premonition_*.py` that imports model/config; all must pass.
+
+## 12. Added in review (Opus, 2026-10-17)
+
+* `MiniTrainer(seconds_budget=None)`: when set, `plan()` uses training seconds / budget (eval pauses
+  excluded) and `train()` stops at the budget; `train_d(seconds_budget=…)` passes it. Needed for the matched
+  wall-clock arms: with `flop_budget` out of reach, the FLOP share would leave the curriculum in "gold" forever.
+  `train_seconds` enters `state_dict` only when the budget is set (flag-off checkpoints unchanged).
+* Flag-off reports unchanged: `train_d` adds `swarm` / `seconds_budget` and `evaluate_d_checkpoint` adds
+  `lesion` only when given.
+* Eval `halt_prob` = sigmoid(mean desk HALT logit), the quantity HALT is trained on.
