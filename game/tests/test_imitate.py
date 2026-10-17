@@ -7,6 +7,7 @@ import os
 import random
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 import torch
@@ -116,6 +117,70 @@ class Pure(unittest.TestCase):
         self.assertEqual(imitate.day_of(8, 3, 4), 35)
 
 
+class DayOffset(unittest.TestCase):
+    """GW-LS (draft pending coordinator review): the 398 / 399 rule and the day offset reaching the worlds that are played. No parent checkpoint needed."""
+
+    def test_run_seeds_398_399_need_day_offset_4_outside_smoke(self):
+        with tempfile.TemporaryDirectory() as d:
+            for rs in (398, 399):
+                for off in (0, 1, 3):
+                    with self.assertRaises(AssertionError, msg=(rs, off)):
+                        imitate.run('/nonexistent/parent.pt', 200, rs, 1.0, d, iterations=1, day_offset=off)
+                # offset >= 4 passes both assertions and reaches the checkpoint load (stubbed here, so nothing heavy runs)
+                for off in (4, 5):
+                    with mock.patch.object(imitate.torch, 'load', side_effect=RuntimeError('reached load')):
+                        with self.assertRaisesRegex(RuntimeError, 'reached load'):
+                            imitate.run('/nonexistent/parent.pt', 200, rs, 1.0, d, iterations=1, day_offset=off)
+            with self.assertRaises(AssertionError):
+                imitate.run('/nonexistent/parent.pt', 200, 400, 1.0, d, iterations=1, day_offset=4)       # not a practice run seed at all
+
+    def test_smoke_skips_the_398_399_rule(self):
+        with tempfile.TemporaryDirectory() as d:
+            with mock.patch.object(imitate.torch, 'load', side_effect=RuntimeError('reached load')):
+                with self.assertRaisesRegex(RuntimeError, 'reached load'):
+                    imitate.run('/nonexistent/parent.pt', 200, 398, 1.0, d, iterations=1, smoke=True, day_offset=0)
+
+    def _played(self, k, run_seed, day_offset, chunks=4, per_chunk=3):
+        """Worlds and act seeds play_iteration hands to play_games, with the model and the playing stubbed out."""
+        calls = []
+
+        def fake_play_games(pol, seeds, acts, explore, cap):
+            calls.append((list(seeds), [list(a) for a in acts]))
+            return [dict(seed=s) for s in seeds]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(imitate.play, 'move_policy', return_value=None), \
+                mock.patch.object(imitate, 'play_games', fake_play_games):
+            games = imitate.play_iteration(None, k, run_seed, 1.0, d, chunks, per_chunk, 5, 0.1, day_offset=day_offset)
+            files = sorted(os.listdir(d))
+        return calls, games, files
+
+    def test_day_offset_reaches_the_worlds_played(self):
+        for k, off, days in ((1, 4, [4, 5, 6, 7]), (2, 4, [8, 9, 10, 11]), (8, 4, [32, 33, 34, 35]), (1, 0, [0, 1, 2, 3])):
+            calls, games, files = self._played(k, 398, off)
+            self.assertEqual(len(calls), 4)
+            self.assertEqual(len(files), 4)
+            for c, (seeds, acts) in enumerate(calls):
+                self.assertEqual(seeds, [play.practice_seed(398, days[c], i) for i in range(3)])
+                self.assertEqual(acts, [[imitate.ACT_TAG, 398, days[c], i] for i in range(3)])
+            self.assertEqual(len(games), 12)
+        calls, _, _ = self._played(1, 398, 4)
+        self.assertEqual(calls[0][0][0], 4_980_400)                      # the first world of GW-LS seed 200
+        calls, _, _ = self._played(1, 399, 4)
+        self.assertEqual(calls[0][0][0], 4_990_400)
+
+    def test_saved_chunks_are_reused_not_replayed(self):
+        calls = []
+
+        def fake_play_games(pol, seeds, acts, explore, cap):
+            calls.append(list(seeds))
+            return [dict(seed=s) for s in seeds]
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(imitate.play, 'move_policy', return_value=None), \
+                mock.patch.object(imitate, 'play_games', fake_play_games):
+            a = imitate.play_iteration(None, 1, 398, 1.0, d, 4, 2, 5, 0.1, day_offset=4)
+            b = imitate.play_iteration(None, 1, 398, 1.0, d, 4, 2, 5, 0.1, day_offset=4)
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(a, b)
+
+
 class Playing(unittest.TestCase):
     def test_play_games_matches_play_play(self):
         # a policy that always answers 'do' (sampling flag on so play.play hands it the uniform numbers too)
@@ -159,6 +224,17 @@ class Smoke(unittest.TestCase):
             self.assertEqual(st['games'], 3)
             with open(os.path.join(a, 'iter-2.json')) as f:
                 self.assertEqual(json.load(f)['temp'], 1.0)
+
+    def test_resume_with_a_different_day_offset_is_refused(self):
+        # DRAFT pending coordinator review (GW-LS): state.pt records the day offset; a restart with another one must not continue the run
+        with tempfile.TemporaryDirectory() as a:
+            imitate.run(PARENT, 200, 394, 19.69, a, iterations=1, smoke=True, day_offset=4)
+            with self.assertRaises(AssertionError):
+                imitate.run(PARENT, 200, 394, 19.69, a, iterations=2, smoke=True, day_offset=0)
+            with self.assertRaises(AssertionError):
+                imitate.run(PARENT, 200, 394, 19.69, a, iterations=2, smoke=True, day_offset=5)
+            imitate.run(PARENT, 200, 394, 19.69, a, iterations=2, smoke=True, day_offset=4)               # the same offset continues
+            self.assertTrue(os.path.exists(os.path.join(a, 'iter-2.json')))
 
     def test_lookahead_smoke_writes_labels_and_trains(self):
         with tempfile.TemporaryDirectory() as a:

@@ -164,7 +164,7 @@ Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent 
 - **Authorized:** Ben's Oct 17 instruction, relayed by the coordinator ("every blocker gets this goal treatment; GW-LS is AUTHORIZED to start under
   its already-sealed marks"). Started at about 14:49 UTC Oct 17 on this cloud container's free CPU ($0), both seeds in parallel, 2 threads each.
 - **Code (DRAFT pending coordinator code review):** `game/imitate.py` gains `--day-offset` (default 0, so every earlier run is unchanged) and allows
-  run seeds 398 / 399, but only with day offset >= 4. New files: `game/gwls.sh` (launcher), `game/gwls_report.py` (per-round report and the
+  run seeds 398 / 399, but only with day offset >= 4 (except under --smoke, which never plays real practice days). New files: `game/gwls.sh` (launcher), `game/gwls_report.py` (per-round report and the
   round-4 indicator) and `game/gwls_final.py` (the single sealed read at round 8 and the final marks). An independent audit found no blocking issue.
   `game/tests/test_imitate.py`: 15 tests pass, including the real smoke and resume tests.
 - **Reading of the round-4 sentence, fixed now.** The sentence is "on both seeds, ratio <= 0.5 or non-habit drop >= 0.5". It is read per seed:
@@ -172,3 +172,19 @@ Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent 
   the two per-round W_w / A_w values (A27 rule). The other reading ("ratio on both seeds" or "drop on both seeds") is also computed, and any
   disagreement is reported.
 - **Results are provisional until the coordinator reviews the code.** If the review changes the code in a way that matters, the affected rounds re-run.
+
+## Coordinator code review of 28f6fcc42 (Oct 17): fixes applied (read side only; training untouched; no mark changed)
+- Verdict received: FIXES NEEDED, no round re-runs. Rounds stand because `imitate.py` and `gwls.sh` were judged correct.
+- **Blocking 1:** `gwls_final.py` recomputes the round-4 indicator from the rounds 3 and 4 play files and refuses the sealed read on STOP.
+- **Blocking 2:** it checks that arm C is the file on record: sha256 of the committed `score-sample.json`, picker sample, T 1.0, the n64000
+  checkpoint, means 6.50 / 7.10, non-habit 5.46 / 5.85, stone 40 / 43.
+- **Blocking 3:** `gwls_report.py` counts non-habit per game from `g['first']`, exactly, and rounds only for display. The ratio is likewise
+  recomputed unrounded from the census rows; it agrees with census_ready's rounded value to 0.002.
+- **Blocking 4:** the census cache key is a sha256 of the play files.
+- **Advisories done:** offset tests; the round-8 completeness gate; repo root from `__file__`; copy of results to `game/results/gwls/`;
+  `gwls.sh` checks its PIDs; `gwls_persist.sh`; `gwls_checks.py` (V1 / V2).
+- An independent verifier confirmed all four blocking fixes, with no new problem.
+- **V1 PASS on both seeds** (round 1):
+  - s200: non-habit 5.8825 against 5.72; first seed 4,980,400; days {4..7}; played agreement 36.38% against 36.51%; total 7.082 against 6.915.
+  - s201: non-habit 5.8975 against 5.87; first seed 4,990,400; days {4..7}; played agreement 37.32% against 37.27%; total 7.160 against 7.125.
+- **V2 pending:** 28f6fcc42 was committed 14:56:17 UTC, and iter-3.json does not exist yet on either seed.

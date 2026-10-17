@@ -5,7 +5,8 @@ achievement counters and the model's own play (game.oracle is used only to repor
 
   python -m game.imitate run --parent CKPT --seed S --run-seed R --t0 T0 --out DIR [--iterations 24] [--threads 2] [--smoke]
 
-Practice worlds only (run seeds 394 and 395); never a sealed world. Resumable: games are saved per chunk of 100 worlds, the loop state after every
+Practice worlds only (run seeds 394 to 397; GW-LS: 398 / 399, which `run` accepts only with --day-offset >= 4, a rule --smoke skips along with the
+run-seed list); never a sealed world. Resumable: games are saved per chunk of 100 worlds, the loop state after every
 iteration; a restarted run continues from them.
 """
 import argparse
