@@ -13,7 +13,7 @@ This is the playbook's Item 0, sub-items (a)–(k) (`deep2-blocker-2-stall.md`, 
 | **2× wide** | **384** | **6** | **64** | **2** | **8** | ≈1,843 | **7,288,226** | **7,139,234 (2.22×)** | 2.0% |
 
 - Reader layers 2 at every size. Depth counts distinct blocks: **base depth 2** (ruling Q48). n_loops 8, so 16 effective passes, recorded as a note only.
-- **Open:** the coordinator's choice of d384 (2.22×, nearest at fixed d_head 64) or exact 2× at another head size. Exact 2× at d_head 64 is impossible.
+- **Ruled (Q53, coordinator, 10-17):** **d384 / 6 heads at fixed d_head 64**. The headline is the measured ratio, **2.22× non-embedding, 2.20× total**. Every SUCCESS / KILL / INTERMEDIATE wording uses the measured multiple, never "2×". Item 1 re-measures d384's seconds per step, and Bid A is re-priced on the measured numbers before anything books.
 
 ## (b) Embedding treatment (shown)
 

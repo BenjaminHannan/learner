@@ -18,7 +18,7 @@ Ruling adopted as written: **reading (a′)**. For each (width, seed-index), a f
 - **Data:** the box's seed-1 200k build, `skills_curriculum.build --train 200000 --dev-per-cell 40 --seed 1` from branch `claude/project-thread-y0sxwe`, hash-checked against `FULL-BUILD-MANIFEST-200k-seed1.json` (`custom_io/box/box.sh`).
 - **Width change, the only change per arm:** cfg gains `"d": D, "n_heads": H`.
   - **Base** (1×): d256 / 4 heads, 3,314,132 params.
-  - **Wide:** **d384 / 6 heads** gives 7,288,226 params, 2.22× non-embedding. Exact 2× is not reachable at the fixed d_head 64 (Item 0 interim §5). **Still open: the coordinator has not yet ruled d384 vs exact 2×.** It is priced here at d384.
+  - **Wide:** **d384 / 6 heads** gives 7,288,226 params, 2.22× non-embedding. Exact 2× is not reachable at the fixed d_head 64 (Item 0 interim §5). **Ruled Q53: d384 adopted.** It is quoted as 2.22× non-embedding / 2.20× total in every wording.
   - **0.5× arm** (gated follow-on): **d192 / 3 heads** gives 1,907,694 params, 0.57× non-embedding, the nearest at d_head 64.
   - The pinned `tool` / `Ledger` constructors take `d` and `n_heads` (shown at f6d724). Between the pin and the 94a956 head, `tool.py` differs only by a loss refactor, so the counts hold.
 - **Parent-stage logging:** the pin has no C8 flag. The parent stage runs **at the pin, unchanged**. C8 is read in the join stage, where the ruling requires it (`learn_probe.py`; draft on this branch, commit 5ce1889). Adding the custom_io C8 draft (bit-identical by test) to the parents would move the pin, so the coordinator must say so explicitly if wanted.
