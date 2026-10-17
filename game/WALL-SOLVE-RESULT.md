@@ -187,4 +187,4 @@ Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent 
 - **V1 PASS on both seeds** (round 1):
   - s200: non-habit 5.8825 against 5.72; first seed 4,980,400; days {4..7}; played agreement 36.38% against 36.51%; total 7.082 against 6.915.
   - s201: non-habit 5.8975 against 5.87; first seed 4,990,400; days {4..7}; played agreement 37.32% against 37.27%; total 7.160 against 7.125.
-- **V2 pending:** 28f6fcc42 was committed 14:56:17 UTC, and iter-3.json does not exist yet on either seed.
+- **V2 PASS:** 28f6fcc42 was committed 14:56:17 UTC. iter-3.json was written 18,476 s (s200) and 19,651 s (s201) later.
