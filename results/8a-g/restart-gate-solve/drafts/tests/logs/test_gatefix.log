@@ -1,0 +1,16 @@
+ok queue_accum: --accum B3G2=<n> of the g8a: line (the three real queue files give 4, 8, 32)
+ok keep_guard: matching passes; accum mismatch, wrong step, no accum, queue/plan conflict, other config hash are refused; no hash source is a note
+ok main_run_hashes: full hashes from the sidecars of the main run's ckpt folder, 12-character prefixes from its resumed events
+ok Events keeps the resume_warning lines
+ok probe-resume refuses (exit 2, no probe queue or folder made) a checkpoint of another accum, a wrong step, no accum / unreadable sidecar, a queue/plan accum conflict, another config hash; accepts the job's own
+ok an accum resume_warning in a probe's events -> FAIL, not judged; another warning is recorded only
+ok verdict fields: first-update gaps, Dbar, Nbar, ratio, mean-form limit and verdict (a spike fails the registered rule, passes the mean form)
+ok Nbar = 0: ratio inf when Dbar > 0, 1.0 when both are 0; lag-1 undefined without variance
+ok lag-1 autocorrelation: alternating -5/6, trend ~ +1, white noise ~ 0, undefined for < 3 points / no variance
+ok `verdict` and every old key identical to the original pack function over 1000 random traces (824 PASS, 176 FAIL); only the 9 new keys are added
+ok md_probe: the "recorded beside (pre-registered mean form, not the registered gate)" section after the table; old-format reports still render; inf ratio renders
+ok trace A: resume_mean_abs is hard unless listed in rules.soft (then recorded in soft_misses); first-update, NaN, loss-falls hard in every variant; no soft list or the existing soft list = the original behaviour
+ok installer --soft-trace-a-mean: only with --soft-trace-a; entry soft = [peak, resume_max_abs, resume_mean_abs]; check changes nothing; idempotent; the three variants are never mixed; defaults unchanged
+ok rejudge: INSIDE / UNRESOLVED / OUTSIDE (restore check, ratio, registered rule) and the boundaries v <= limit, exact zero at the first update; agrees with the supervisor's numbers
+ok rejudge_probe.py: verbatim text in docstring and output, REJUDGE-<job>.json, exit codes 0/1/2/3, --trace-a-mean / --trace-a-json (TRACE-A and state.json), runs as a script
+GATEFIX TESTS OK (15 tests)
