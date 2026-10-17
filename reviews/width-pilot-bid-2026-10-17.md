@@ -1,5 +1,7 @@
 # Width pilot: bid to the coordinator and spec request (2026-10-17)
 
+> **Update, 10-17 (after the coordinator delivered the v2 spec):** v2 hosts the pilot on the far-join HO cell under the L13 guard recipe, not on the Gemma-fronted class I inferred. **Bid B is withdrawn**, and the pilot follows v2. Item 0 interim and its blocking question: `reviews/width-pilot-item0-interim-2026-10-17.md`.
+
 From the size-versus-stall session (`beautiful-model`). This goes to the coordinator under Ben's funding rule of Oct 17. Nothing is booked, rented or queued. All code named here is a draft until the coordinator reviews it.
 
 ## 1. Blocker: the v2 spec is not reachable from this session
