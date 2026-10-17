@@ -115,16 +115,31 @@ class CardStore:
 
     def ask(self, query: torch.Tensor, q_visit: torch.Tensor, q_line: torch.Tensor,
             kappa: torch.Tensor, age_bias: torch.Tensor, fetched: Optional[torch.Tensor] = None,
-            questions: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1]."""
+            questions: Optional[torch.Tensor] = None, query_gain: Optional[torch.Tensor] = None,
+            key_gain: Optional[torch.Tensor] = None, parts: Optional[dict] = None) -> torch.Tensor:
+        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1].
+
+        Steal 6: `query_gain` / `key_gain` [dk] scale the unit query / keys per dimension before the dot
+        product (QK-norm gains). `parts`, when given, receives "match" (kappa q.k, before the bias) and
+        "eligible" (both detached) for QK-Clip.
+        """
         query = F.normalize(query.float(), dim=-1)
         keys = torch.cat([self.keys[q_visit],
                           self.null_key.expand(q_visit.shape[0], 1, -1)], dim=1)
+        if query_gain is not None:
+            query = query * query_gain.float()
+        if key_gain is not None:
+            keys = keys * key_gain.float()
         scores = kappa.float() * torch.einsum("nk,nlk->nl", query, keys)
+        if parts is not None:
+            parts["match"] = scores.detach()
         bias = age_bias.float()[self.ages(q_line, age_bias.shape[0])]
         bias[:, self.null] = 0.0
         scores = scores + bias
-        return scores.masked_fill(~self.eligible(q_visit, q_line, fetched, questions), NEG_INF)
+        eligible = self.eligible(q_visit, q_line, fetched, questions)
+        if parts is not None:
+            parts["eligible"] = eligible
+        return scores.masked_fill(~eligible, NEG_INF)
 
     def top(self, scores: torch.Tensor, k: int) -> torch.Tensor:
         """[n, k] best eligible card indices (NULL = `null`), -1 where fewer are eligible."""

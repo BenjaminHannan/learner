@@ -316,6 +316,7 @@ class MiniTrainer(Trainer):
         loss.backward()
         grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.grad_clip or math.inf)
         self.optimizer.step()
+        getattr(model, "after_optimizer_step", lambda: None)()    # steal 6: QK-Clip
         self.step += 1
         result: dict[str, Any] = {name: out[name].detach().float() for name in ("loss", "lm", "ask", "ans", "halt")}
         result["grad_norm"] = grad_norm

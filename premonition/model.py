@@ -100,11 +100,15 @@ class LocalAttention(nn.Module):
         self.heads, self.window, self.base = config.n_heads, config.window, config.rope_base
         self.qkv = nn.Linear(d, 3 * d)
         self.out = nn.Linear(d, d)
+        if config.qk_norm_all:                                   # steal 6: per-head-dim RMSNorm on q and k
+            self.q_norm, self.k_norm = nn.RMSNorm(d // config.n_heads), nn.RMSNorm(d // config.n_heads)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch, length, width = x.shape
         heads, w = self.heads, self.window
         q, k, v = self.qkv(x).view(batch, length, 3, heads, width // heads).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         positions = torch.arange(length, device=x.device)
         q, k = rope(q, positions, self.base), rope(k, positions, self.base)
         blocks = -(-length // w)
@@ -179,6 +183,8 @@ class CardWriter(nn.Module):
         self.value = nn.Linear(d, d)
         self.null_key = nn.Parameter(torch.empty(config.key_dim))
         self.null_value = nn.Parameter(torch.empty(d))
+        self.pos_dim = config.pos_key_dim if config.key_split else 0     # steal 6: position sub-key width
+        self.pos_base = config.key_pos_base
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> CardStore:
         visits, lines = batch.line_start.shape
@@ -198,7 +204,11 @@ class CardWriter(nn.Module):
 
     def _keys(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
         """[B, L, dk] card keys before CardStore.write normalises them."""
-        return self.key(pooled)
+        key = self.key(pooled)
+        if self.pos_dim:                       # key_split: RoPE on the last dims, position = the card's line
+            line = torch.arange(key.shape[1], device=key.device)
+            key = torch.cat([key[..., :-self.pos_dim], rope(key[..., -self.pos_dim:], line, self.pos_base)], -1)
+        return key
 
     def _values(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
         """[B, L, d] card values."""
@@ -217,10 +227,14 @@ class ThinkLayer(nn.Module):
         self.proj = nn.Linear(d, d)
         self.norm2 = nn.LayerNorm(d)
         self.mlp = Mlp(d, config.think_mlp)
+        if config.qk_norm_all:                                   # steal 6
+            self.q_norm, self.k_norm = nn.RMSNorm(d // config.n_heads), nn.RMSNorm(d // config.n_heads)
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         n, rows, width = x.shape
         q, k, v = self.qkv(self.norm1(x)).view(n, rows, 3, self.heads, -1).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.proj(attended.transpose(1, 2).reshape(n, rows, width))
         return x + self.mlp(self.norm2(x))
@@ -291,6 +305,9 @@ class Heads(nn.Module):
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
         if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, starts at -kappa_init
             self.ask_sink = nn.Parameter(torch.tensor(-config.kappa_init))
+        if config.store and config.qk_norm:                      # steal 6: per-dimension gains on the unit q and k
+            self.query_gain = nn.Parameter(torch.ones(config.key_dim))
+            self.key_gain = nn.Parameter(torch.ones(config.key_dim))
 
 
 class Decoder(nn.Module):
@@ -314,11 +331,17 @@ class Decoder(nn.Module):
             self.cross_gate = nn.Linear(d, config.n_heads)
         if config.fetch_sink:                      # steal 2: one sink logit per head (extra zero key and value)
             self.cross_sink = nn.Parameter(torch.full((config.n_heads,), config.sink_init))
+        if config.qk_norm_all:                                   # steal 6: self- and cross-attention q/k norms
+            dh = d // config.n_heads
+            self.q_norm, self.k_norm = nn.RMSNorm(dh), nn.RMSNorm(dh)
+            self.cross_q_norm, self.cross_k_norm = nn.RMSNorm(dh), nn.RMSNorm(dh)
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         positions = torch.arange(length, device=x.device)
         q, k = rope(q, positions, self.base), rope(k, positions, self.base)
         attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
@@ -326,6 +349,8 @@ class Decoder(nn.Module):
         normed = self.norm2(x)
         q = self.cross_q(normed).view(n, length, heads, -1).transpose(1, 2)
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "cross_q_norm"):
+            q, k = self.cross_q_norm(q).to(v.dtype), self.cross_k_norm(k).to(v.dtype)
         if hasattr(self, "cross_sink"):
             attended = self._sink_attention(q, k, v, valid)
         else:
@@ -394,6 +419,7 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
+        self._ask_logit_max: Optional[torch.Tensor] = None     # steal 6: QK-Clip, the last forward's largest ASK logit
         self.reset_parameters()
 
     # ------------------------------------------------------------------ setup
@@ -441,6 +467,12 @@ class PremonitionMini(nn.Module):
             nn.init.zeros_(self.think.loop_query)                      # uniform mix at init
         if config.row_halt:
             nn.init.constant_(self.heads.row_halt.bias, config.row_halt_bias)
+        for module in self.modules():                              # steal 6: gains start at one (identity)
+            if isinstance(module, nn.RMSNorm):
+                nn.init.ones_(module.weight)
+        if config.store and config.qk_norm:
+            nn.init.ones_(self.heads.query_gain)
+            nn.init.ones_(self.heads.key_gain)
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -620,10 +652,78 @@ class PremonitionMini(nn.Module):
 
     def _ask_scores(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
                     register: torch.Tensor) -> torch.Tensor:
-        """[n, L + 1] ASK scores of questions `index` from their normed register 0."""
-        return store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                         self.heads.log_kappa.exp(), self.think.age_bias,
-                         episode.fetched[index], questions=index)
+        """[n, L + 1] ASK scores of questions `index` from their normed register 0.
+
+        Steal 7 (`ask_reuse`): loops that need no refresh reuse `episode.ask_cache`, re-masked with the
+        current eligibility; the rows that refresh are rescored in full and written back to the cache.
+        """
+        config = self.config
+        query = self._positioned(self.heads.query(register), episode.q_line[index])
+        if not config.ask_reuse:
+            return self._match(episode, index, step, store, query)
+        unit = F.normalize(query.float(), dim=-1).detach()
+        if episode.ask_cache is None:                              # no cache yet: age -1
+            count, device = episode.fetched.shape[0], query.device
+            episode.ask_cache = torch.zeros(count, store.lines + 1, device=device)
+            episode.ask_query = torch.zeros(count, unit.shape[1], device=device)
+            episode.ask_age = torch.full((count,), -1, dtype=torch.long, device=device)
+        age = episode.ask_age[index]
+        moved = 1.0 - (unit * episode.ask_query[index]).sum(-1) >= config.ask_refresh_cos
+        refresh = (age < 0) | (step % config.ask_refresh_every == 0) | moved
+        rows = torch.nonzero(refresh).squeeze(1)
+        if rows.numel() == index.numel():
+            scores = fresh = self._match(episode, index, step, store, query)
+        else:
+            scores = episode.ask_cache[index].masked_fill(
+                ~store.eligible(episode.q_visit[index], episode.q_line[index], episode.fetched[index],
+                                questions=index), float("-inf"))
+            if rows.numel():
+                fresh = self._match(episode, index[rows], step, store, query[rows])
+                scores = scores.index_copy(0, rows, fresh)
+        if rows.numel():
+            episode.ask_cache = episode.ask_cache.index_copy(0, index[rows], fresh)
+            episode.ask_query = episode.ask_query.index_copy(0, index[rows], unit[rows])
+        episode.ask_age = episode.ask_age.index_copy(0, index, torch.where(refresh, 0, age + 1))
+        return scores
+
+    def _positioned(self, query: torch.Tensor, q_line: torch.Tensor) -> torch.Tensor:
+        """Steal 6 `key_split`: RoPE on the query's last `pos_key_dim` dims at the question's line."""
+        if not self.config.key_split:
+            return query
+        p = self.config.pos_key_dim
+        return torch.cat([query[:, :-p], rope(query[:, -p:], q_line, self.config.key_pos_base)], dim=-1)
+
+    def _ask_gains(self) -> dict[str, torch.Tensor]:
+        """Steal 6 `qk_norm`: the optional gain arguments of `CardStore.ask`."""
+        if not self.config.qk_norm:
+            return {}
+        return {"query_gain": self.heads.query_gain, "key_gain": self.heads.key_gain}
+
+    def _match(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
+               query: torch.Tensor) -> torch.Tensor:
+        """`CardStore.ask` for questions `index` from their (positioned) raw query. Under `qk_clip` a
+        training forward records the largest kappa * cos over eligible real cards (all loops, detached)."""
+        record = self.config.qk_clip > 0 and self.training and torch.is_grad_enabled()
+        parts: Optional[dict] = {} if record else None
+        scores = store.ask(query, episode.q_visit[index], episode.q_line[index], self.heads.log_kappa.exp(),
+                           self.think.age_bias, episode.fetched[index], questions=index, parts=parts,
+                           **self._ask_gains())
+        if record and index.numel():
+            match = parts["match"].masked_fill(~parts["eligible"], float("-inf"))[:, :store.null]
+            peak = match.amax()
+            last = self._ask_logit_max
+            self._ask_logit_max = peak if step == 0 or last is None else torch.maximum(last, peak)
+        return scores
+
+    @torch.no_grad()
+    def after_optimizer_step(self) -> None:
+        """QK-Clip (Kimi K2): if the last forward's largest ASK logit exceeded `qk_clip` = tau, scale kappa
+        by tau / max. ASK is already cosine-normalised, so kappa is its only logit scale."""
+        peak, self._ask_logit_max = self._ask_logit_max, None
+        if self.config.qk_clip <= 0 or peak is None or not self.config.store:
+            return
+        tau = self.config.qk_clip
+        self.heads.log_kappa.add_(torch.log(tau / peak.clamp_min(tau)))      # peak <= tau (or -inf): no-op
 
     def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
                 ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
@@ -816,8 +916,9 @@ class PremonitionMini(nn.Module):
         if not told.any():
             return torch.zeros(())
         register = _norm(rows[:, self._register_base])
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index)
+        scores = store.ask(self._positioned(self.heads.query(register), episode.q_line[index]),
+                           episode.q_visit[index], episode.q_line[index], self.heads.log_kappa.exp(),
+                           self.think.age_bias, questions=index, **self._ask_gains())
         top = store.top(scores, self.config.top_k)
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
