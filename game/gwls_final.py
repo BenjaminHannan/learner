@@ -86,6 +86,8 @@ def verdict(per_seed):
 
 
 def paths(root, arm_c, seed):
+    """Every path is absolute (the scorer child runs with cwd=REPO_ROOT, so a relative --root would point at other files there)."""
+    root, arm_c = os.path.abspath(root), os.path.abspath(arm_c)
     d = os.path.join(root, f's{seed}')
     return dict(dir=d, ckpt=os.path.join(d, 'checkpoint-iter8.pt'), out=os.path.join(d, 'score-sample.json'), lock=os.path.join(d, 'score-started.lock'),
                 iter8=os.path.join(d, 'iter-8.json'), state=os.path.join(d, 'state.pt'), base=os.path.join(arm_c, f's{seed}', 'n64000', 'score-sample.json'))
@@ -127,10 +129,13 @@ def load_arm_c(p, seed):
     """-> (parsed arm C file or None, [problems])."""
     if not os.path.exists(p['base']):
         return None, [f'arm C file missing: {p["base"]}']
-    with open(p['base'], 'rb') as f:
-        raw = f.read()
-    b = json.loads(raw)
-    return b, arm_c_problems(seed, raw, b)
+    try:
+        with open(p['base'], 'rb') as f:
+            raw = f.read()
+        b = json.loads(raw)
+        return b, arm_c_problems(seed, raw, b)
+    except (OSError, ValueError, AssertionError, KeyError, TypeError, AttributeError) as e:
+        return None, [f'arm C seed {seed}: {p["base"]} cannot be read: {type(e).__name__}: {e}']
 
 
 def read_state(path):
@@ -143,8 +148,15 @@ def round8_problems(seed, p):
     for name in ('iter8', 'ckpt', 'state'):
         if not os.path.exists(p[name]):
             bad.append(f'seed {seed}: round 8 is not complete, {p[name]} missing')
+    st = None
     if os.path.exists(p['state']):
-        st = read_state(p['state'])
+        try:
+            st = read_state(p['state'])
+            st.get('k')
+        except Exception as e:                                       # a torn / corrupt / non-dict state.pt is a refusal reason, not a crash
+            st = None
+            bad.append(f'seed {seed}: {p["state"]} cannot be read: {type(e).__name__}: {e}')
+    if st is not None:
         if st.get('k') != 8:
             bad.append(f'seed {seed}: state.pt says k = {st.get("k")}, not 8 (training has not finished; state.pt is written last)')
         if (st.get('run_seed'), st.get('day_offset')) != (RUN_SEED[seed], DAY_OFFSET):
@@ -156,8 +168,15 @@ def round8_problems(seed, p):
 
 def gate(root):
     """-> (problems, indicator). The round-4 leading indicator recomputed from rounds 3 and 4 of both seeds (no cache); STOP or unfinished refuses."""
-    rows = gwls_report.build_rows(root, SEEDS, rounds=(3, 4))
-    ind = gwls_report.indicator(rows, gwls_report.REF)
+    errors = []
+    rows = gwls_report.build_rows(root, SEEDS, rounds=(3, 4), errors=errors)        # unreadable / inconsistent rounds become strings, all of them listed
+    try:
+        ind = gwls_report.indicator(rows, gwls_report.REF)
+    except (AssertionError, ValueError, OSError, KeyError, TypeError, ZeroDivisionError) as e:
+        errors.append(f'round-4 leading indicator cannot be computed: {type(e).__name__}: {e}')
+        ind = None
+    if errors:
+        return [f'round-4 leading indicator: {x}' for x in errors], dict(branch=None, note='; '.join(errors))
     if ind['branch'] is None:
         return [f'round-4 leading indicator cannot be read: {ind["note"]}'], ind
     if ind['branch'] != 'CONTINUE':
@@ -241,10 +260,14 @@ def selftest():
     assert gwls_report.indicator(ok, gwls_report.REF)['branch'] == 'CONTINUE'
     stop = {200: [row(3, 2300, 0.4), row(4, 2300, 0.5)], 201: [row(3, 2300, 0.4), row(4, 2300, 0.4)]}
     assert gwls_report.indicator(stop, gwls_report.REF)['branch'] == gwls_report.STOP
+    # every path handed to the scorer child (cwd = REPO_ROOT) is absolute, whatever the cwd and a relative --root
+    pp = paths('some/rel/root', 'rel/armc', 200)
+    assert all(os.path.isabs(v) for v in pp.values()) and all(os.path.isabs(x) for x in (command(pp)[command(pp).index('--ckpt') + 1], command(pp)[command(pp).index('--out') + 1]))
     print('selftest ok')
 
 
-def main(argv=None):
+def parse_args(argv=None):
+    """The command line, with --root / --arm-c / --persist-dir made absolute here, once, so nothing later depends on the cwd."""
     ap = argparse.ArgumentParser(description='GW-LS: the one sealed read at round 8 and the sealed marks.')
     ap.add_argument('--root', default=os.path.join(SCRATCH, 'gwls'))
     ap.add_argument('--arm-c', default=os.path.join(SCRATCH, 'glprobe'))
@@ -253,6 +276,12 @@ def main(argv=None):
     ap.add_argument('--analyze-only', action='store_true')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args(argv)
+    a.root, a.arm_c, a.persist_dir = (os.path.abspath(x) for x in (a.root, a.arm_c, a.persist_dir))
+    return a
+
+
+def main(argv=None):
+    a = parse_args(argv)
     if a.selftest:
         return selftest()
     P = {s: paths(a.root, a.arm_c, s) for s in SEEDS}

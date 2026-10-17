@@ -18,7 +18,9 @@ the other reading (X on both seeds, or Y on both seeds) is also computed and fla
 
 Rounding: the indicator compares UNROUNDED values. The non-habit mean is an exact fraction (non-habit count over games, exact arithmetic against the
 threshold ref - 0.5); the ratio is W_w / A_w recomputed from the unrounded weighted sums (the census file rounds W_w, A_w and the ratio for display, and
-the two are checked to agree to display precision). Rounding happens only in the printed / displayed numbers.
+the two are compared to within the analytic bound of the census file's own display rounding: W_w and A_w to 2 dp, the ratio (computed from the
+rounded sums) to 3 dp, so |ratio_w_exact - ratio_w| <= (1 + ratio) * 0.005 / (A_w - 0.005) + 0.0005 + eps. The comparison is a NON-FATAL per-row field
+(ratio_gap, ratio_bound, ratio_ok; a flag in report.md), never an assert. Rounding happens only in the printed / displayed numbers.
 """
 import argparse
 import glob
@@ -26,6 +28,7 @@ import gzip
 import hashlib
 import json
 import os
+import time
 from collections import Counter
 from fractions import Fraction
 
@@ -36,6 +39,29 @@ HABIT = ('collect_sapling', 'place_plant', 'eat_plant', 'wake_up')
 REF = {200: 5.72, 201: 5.87}                    # round-1 practice non-habit unlocks from Z8
 RATIO_STOP, NONHABIT_DROP = 0.5, 0.5
 STOP = 'STOP: PROVED WRONG EARLY'
+RATIO_EPS = 1e-6                                # slack on top of the analytic rounding bound
+ITER_RETRY_SLEEP = 1.0                          # seconds before the one retry of a half-written iter-k.json (game.imitate writes it non-atomically)
+
+
+class RoundReadError(ValueError):
+    """A round's files cannot be read consistently (e.g. iter-k.json still unparseable after one retry)."""
+
+
+def ratio_consistency(ratio_w, ratio_w_exact, A_w):
+    """-> dict(ratio_gap, ratio_bound, ratio_ok) comparing the unrounded ratio with the census file's rounded one; never raises.
+
+    census_ready rounds W_w and A_w to 2 dp and then computes ratio_w = round(W_w / A_w, 3) from the ROUNDED sums. With true sums W, A (W ~ ratio * A) and
+    rounded sums off by at most 0.005 each: |W_r / A_r - W / A| <= (1 + ratio) * 0.005 / A_r_true, and A_r_true >= A_w - 0.005; the final 3 dp rounding adds
+    0.0005. ratio is taken as the larger of the two ratios plus 0.0005 so the bound errs on the safe side. ok is None when it cannot be computed.
+    """
+    if ratio_w is None or ratio_w_exact is None or A_w is None:
+        return dict(ratio_gap=None, ratio_bound=None, ratio_ok=None)
+    gap = abs(ratio_w_exact - ratio_w)
+    floor = A_w - 0.005
+    if floor <= 0:                                   # A_w rounds to (almost) 0: no finite bound from the rounding alone
+        return dict(ratio_gap=round(gap, 6), ratio_bound=None, ratio_ok=None)
+    bound = (1 + max(ratio_w_exact, ratio_w) + 0.0005) * 0.005 / floor + 0.0005 + RATIO_EPS
+    return dict(ratio_gap=round(gap, 6), ratio_bound=round(bound, 6), ratio_ok=gap <= bound)
 
 
 def play_files(d, k):
@@ -86,10 +112,23 @@ def ratio_w_exact(games):
     return W / A if A else None
 
 
+def read_iter(d, k):
+    """iter-k.json of round k; game.imitate writes it non-atomically, so a JSONDecodeError is retried once after a short sleep, then raised as a clear error."""
+    path = os.path.join(d, f'iter-{k}.json')
+    for attempt in (0, 1):
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            if attempt == 0:
+                time.sleep(ITER_RETRY_SLEEP)
+                continue
+            raise RoundReadError(f'{path} is not valid JSON after a retry (still being written, or corrupt): {e}') from e
+
+
 def round_row(d, k, cache=None):
     cache = {} if cache is None else cache
-    with open(os.path.join(d, f'iter-{k}.json')) as f:
-        it = json.load(f)
+    it = read_iter(d, k)
     games, digest = read_play(d, k)
     n = it['games']
     assert len(games) == n, f'{d} round {k}: iter-{k}.json says {n} games, the play files hold {len(games)} (a re-run into the same folder?)'
@@ -99,25 +138,37 @@ def round_row(d, k, cache=None):
         c = census_ready.one_round(games)
         a27 = c['A27']
         rx = ratio_w_exact(games)
-        if rx is not None and a27.get('ratio_w') is not None:
-            assert abs(rx - a27['ratio_w']) < 0.002, (rx, a27['ratio_w'])
         cache[key] = dict(W_n=a27.get('W_n'), A_n=a27.get('A_n'), W_w=a27.get('W_w'), A_w=a27.get('A_w'), ratio_w=a27.get('ratio_w'),
                           ratio_w_exact=rx, V=c['V'], E=c['E'])
     c = cache[key]
+    chk = ratio_consistency(c.get('ratio_w'), c.get('ratio_w_exact'), c.get('A_w'))                  # non-fatal; computed from the cached numbers
     nh = nonhabit_count(games)
     return dict(round=k, games=n, temp=it['temp'], mean_unlocks=it['mean_unlocks'], nonhabit=round(nh / n, 3), nonhabit_sum=nh, nonhabit_exact=nh / n,
-                stone_pct=round(100 * it['g_stone'] / n, 1), pickaxe_games=it['g_pick'], **c,
+                stone_pct=round(100 * it['g_stone'] / n, 1), pickaxe_games=it['g_pick'], **c, **chk,
                 share=round(c['E'] / c['V'], 4) if c['V'] else None,
                 agree_played=it['oracle_agreement_all_played']['agreement'], agree_kept=it['oracle_agreement_kept']['agreement'])
 
 
-def build_rows(root, seeds, rounds=None, cache=None):
-    """{seed: [round_row, ...]} for the rounds with an iter-k.json (restricted to `rounds` if given)."""
+def build_rows(root, seeds, rounds=None, cache=None, errors=None):
+    """{seed: [round_row, ...]} for the rounds with an iter-k.json (restricted to `rounds` if given).
+
+    errors=None: a round that cannot be read consistently raises. errors=[]: such a round is skipped and one string per failure is appended to the list
+    (so a caller can list every problem instead of stopping at the first)."""
     rows = {}
     for seed in seeds:
         d = os.path.join(root, f's{seed}')
         ks = sorted(int(os.path.basename(p)[5:-5]) for p in glob.glob(os.path.join(d, 'iter-*.json')))
-        rows[seed] = [round_row(d, k, cache) for k in ks if rounds is None or k in rounds]
+        rows[seed] = []
+        for k in ks:
+            if rounds is not None and k not in rounds:
+                continue
+            if errors is None:
+                rows[seed].append(round_row(d, k, cache))
+                continue
+            try:
+                rows[seed].append(round_row(d, k, cache))
+            except (AssertionError, ValueError, OSError, KeyError, TypeError) as e:
+                errors.append(f'seed {seed} round {k}: {type(e).__name__}: {e}')
     return rows
 
 
@@ -152,6 +203,8 @@ def markdown(rows, ind):
         lines += [f'## seed {seed}  (round-1 non-habit reference {REF.get(seed)})', '', '| ' + ' | '.join(h for _, h in cols) + ' |',
                   '|' + '---|' * len(cols)]
         lines += ['| ' + ' | '.join(str(r[c]) for c, _ in cols) + ' |' for r in rs]
+        lines += ['', 'ratio_w consistency (unrounded ratio vs the census file\'s rounded one; non-fatal): ' + '; '.join(
+            f'r{r["round"]} gap {r["ratio_gap"]} <= bound {r["ratio_bound"]}: ' + ('ok' if r['ratio_ok'] else 'n/a' if r['ratio_ok'] is None else 'FLAG') for r in rs)]
         lines.append('')
     lines += ['## Round-4 leading indicator', '']
     if ind['branch'] is None:

@@ -2,9 +2,13 @@
 
 No checkpoint and no game is played: synthetic round folders in a temp dir. Nothing here touches a sealed world (the final scorer's subprocess is mocked to fail if called).
 """
+import contextlib
 import gzip
+import io
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -122,6 +126,77 @@ class Report(unittest.TestCase):
                 gwls_report.round_row(d, 1)
 
 
+class ReportRobustness(unittest.TestCase):
+    def test_ratio_consistency_bound_covers_census_rounding(self):
+        # A_w ~ 12, ratio ~ 8: W_w and A_w rounded to 2 dp can move the ratio by ~(1 + 8) * 0.005 / 12 = 0.00375 (> the old 0.002 assert)
+        W, A = 96.0049, 12.0049
+        Wr, Ar = round(W, 2), round(A, 2)
+        shown = round(Wr / Ar, 3)
+        exact = W / A
+        chk = gwls_report.ratio_consistency(shown, exact, Ar)
+        self.assertTrue(chk['ratio_ok'])
+        self.assertLessEqual(chk['ratio_gap'], chk['ratio_bound'])
+        # worst case of the rounding: W up 0.005, A down 0.005 -> still inside the bound
+        worst = gwls_report.ratio_consistency(round((96.004 + 0.005) / (12.004 - 0.005), 3), 96.004 / 12.004, 12.0)
+        self.assertTrue(worst['ratio_ok'])
+        # a real mismatch is flagged, not raised
+        bad = gwls_report.ratio_consistency(8.5, 8.0, 12.0)
+        self.assertFalse(bad['ratio_ok'])
+        # undefined cases never raise
+        for args in ((None, 1.0, 2.0), (1.0, None, 2.0), (1.0, 1.0, None)):
+            self.assertIsNone(gwls_report.ratio_consistency(*args)['ratio_ok'])
+        self.assertIsNone(gwls_report.ratio_consistency(1.0, 1.0, 0.0)['ratio_ok'])
+
+    def test_round_row_does_not_raise_where_the_old_assert_did(self):
+        census = dict(A27=dict(W_n=40, A_n=5, W_w=96.0, A_w=12.0, ratio_w=8.003), V=100, E=30)           # gap 0.003 >= the old 0.002
+        with tempfile.TemporaryDirectory() as d:
+            write_round(d, 1, [nh_game(5)] * 8)
+            with mock.patch.object(gwls_report.census_ready, 'one_round', return_value=census), \
+                    mock.patch.object(gwls_report, 'ratio_w_exact', return_value=8.0):
+                r = gwls_report.round_row(d, 1)
+        self.assertEqual(r['ratio_w_exact'], 8.0)                                            # the indicator keeps the unrounded value
+        self.assertAlmostEqual(r['ratio_gap'], 0.003, places=9)
+        self.assertGreater(r['ratio_bound'], 0.003)
+        self.assertTrue(r['ratio_ok'])
+        md = gwls_report.markdown({200: [r]}, dict(branch=None, note='n'))
+        self.assertIn('gap 0.003', md)
+        self.assertIn('ok', md)
+        # and a flagged row still does not raise, and is visible in the markdown
+        census2 = dict(A27=dict(census['A27'], ratio_w=9.5), V=100, E=30)
+        with tempfile.TemporaryDirectory() as d:
+            write_round(d, 1, [nh_game(5)] * 8)
+            with mock.patch.object(gwls_report.census_ready, 'one_round', return_value=census2), \
+                    mock.patch.object(gwls_report, 'ratio_w_exact', return_value=8.0):
+                r2 = gwls_report.round_row(d, 1)
+        self.assertFalse(r2['ratio_ok'])
+        self.assertIn('FLAG', gwls_report.markdown({200: [r2]}, dict(branch=None, note='n')))
+
+    def test_iter_json_half_written_is_retried_once_then_a_clear_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            write_round(d, 1, [nh_game(5)] * 8)
+            path = os.path.join(d, 'iter-1.json')
+            with open(path) as f:
+                good = f.read()
+            with open(path, 'w') as f:
+                f.write(good[:20])                                                           # torn write
+            calls = []
+
+            def finish_write(_s):
+                calls.append(_s)
+                with open(path, 'w') as f:
+                    f.write(good)
+            with mock.patch.object(gwls_report.time, 'sleep', side_effect=finish_write):
+                self.assertEqual(gwls_report.read_iter(d, 1)['games'], 8)                    # the retry sees the finished file
+            self.assertEqual(len(calls), 1)
+            with open(path, 'w') as f:
+                f.write(good[:20])
+            with mock.patch.object(gwls_report.time, 'sleep') as sl:
+                with self.assertRaises(gwls_report.RoundReadError) as cm:
+                    gwls_report.read_iter(d, 1)
+            self.assertEqual(sl.call_count, 1)                                               # exactly one retry
+            self.assertIn('iter-1.json', str(cm.exception))
+
+
 def write_gate_root(root, nh200, nh201, rounds=(3, 4)):
     for seed, n in ((200, nh200), (201, nh201)):
         for k in rounds:
@@ -198,6 +273,103 @@ class Final(unittest.TestCase):
             self.assertIn('STOP', msg)
             self.assertIn('sha256', msg)                                                     # the synthetic arm C is not the committed file either
             self.assertFalse(any(os.path.exists(gwls_final.paths(root, armc, s)['lock']) for s in gwls_final.SEEDS))
+
+
+class FinalRobustness(unittest.TestCase):
+    def test_relative_root_gives_absolute_child_paths_from_any_cwd(self):
+        with tempfile.TemporaryDirectory() as base, tempfile.TemporaryDirectory() as elsewhere:
+            os.makedirs(os.path.join(base, 'run', 'gwls'))
+            old = os.getcwd()
+            try:
+                os.chdir(base)
+                a = gwls_final.parse_args(['--root', 'run/gwls', '--arm-c', 'run/armc', '--persist-dir', 'out'])
+                expect = {s: gwls_final.command(gwls_final.paths(os.path.join(os.path.realpath(base), 'run', 'gwls'), os.path.join(os.path.realpath(base), 'run', 'armc'), s))
+                          for s in gwls_final.SEEDS}
+                os.chdir(elsewhere)                                                          # the path building must not depend on the cwd afterwards
+                for s in gwls_final.SEEDS:
+                    argv = gwls_final.command(gwls_final.paths(a.root, a.arm_c, s))
+                    ckpt, out = argv[argv.index('--ckpt') + 1], argv[argv.index('--out') + 1]
+                    self.assertTrue(os.path.isabs(ckpt) and os.path.isabs(out), argv)
+                    self.assertEqual(argv, expect[s])                                        # the same files as seen from the cwd the user typed it in
+                    self.assertEqual(ckpt, os.path.join(os.path.realpath(base), 'run', 'gwls', f's{s}', 'checkpoint-iter8.pt'))
+                    self.assertTrue(all(os.path.isabs(v) for v in gwls_final.paths(a.root, a.arm_c, s).values()))
+                self.assertTrue(os.path.isabs(a.persist_dir))
+            finally:
+                os.chdir(old)
+
+    def test_gate_turns_inconsistencies_into_refusal_strings(self):
+        with tempfile.TemporaryDirectory() as root:
+            write_gate_root(root, 6, 6)
+            d = os.path.join(root, 's200')
+            write_round(d, 3, [nh_game(6)] * 8, extra=dict(games=9))                          # iter-3 says 9 games, the play files hold 8
+            with open(os.path.join(root, 's201', 'iter-4.json'), 'w') as f:
+                f.write('{"games": 8, "mean')                                                  # unparseable iter-4
+            with mock.patch.object(gwls_report.time, 'sleep'):
+                bad, ind = gwls_final.gate(root)
+            self.assertIsNone(ind['branch'])
+            self.assertEqual(len(bad), 2, bad)                                                 # both problems listed, none raised
+            self.assertTrue(any('seed 200 round 3' in x and 'iter-3.json says 9 games' in x for x in bad), bad)
+            self.assertTrue(any('seed 201 round 4' in x and 'iter-4.json' in x for x in bad), bad)
+            # a mismatch on the mean unlocks too
+            write_round(d, 3, [nh_game(6)] * 8, extra=dict(mean_unlocks=99.0))
+            with mock.patch.object(gwls_report.time, 'sleep'):
+                self.assertTrue(any('do not match' in x for x in gwls_final.gate(root)[0]))
+
+    def test_dry_run_exits_1_and_lists_every_problem_instead_of_crashing(self):
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as armc:
+            write_gate_root(root, 6, 6)
+            write_round(os.path.join(root, 's200'), 3, [nh_game(6)] * 8, extra=dict(games=9))
+            buf = io.StringIO()
+            with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), contextlib.redirect_stdout(buf):
+                with self.assertRaises(SystemExit) as cm:
+                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])
+            self.assertEqual(cm.exception.code, 1)
+            out = buf.getvalue()
+            self.assertIn('WOULD REFUSE', out)
+            self.assertIn('iter-3.json says 9 games', out)
+            self.assertIn('round 8 is not complete', out)
+            self.assertIn('arm C file missing', out)
+
+
+class Persist(unittest.TestCase):
+    SCRIPT = os.path.join(os.path.dirname(gwls_final.__file__), 'gwls_persist.sh')
+
+    def run_persist(self, src, dest):
+        return subprocess.run(['bash', self.SCRIPT, src, dest], capture_output=True, text=True, env=dict(os.environ, PY=sys.executable))
+
+    def test_persist_validates_copies_play_files_and_records_checks(self):
+        with tempfile.TemporaryDirectory() as src, tempfile.TemporaryDirectory() as dest:
+            for seed in (200, 201):
+                write_round(os.path.join(src, f's{seed}'), 1, [nh_game(5)] * 8)
+                write_round(os.path.join(src, f's{seed}'), 2, [nh_game(5)] * 8)
+            torn = os.path.join(src, 's201', 'iter-2.json')
+            with open(torn) as f:
+                good = f.read()
+            with open(torn, 'w') as f:
+                f.write(good[:15])
+            r = self.run_persist(src, dest)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn(torn, r.stderr)                                                    # the file is named
+            self.assertFalse(os.path.exists(os.path.join(dest, 's201', 'iter-2.json')))      # a torn file is never persisted
+            self.assertTrue(os.path.exists(os.path.join(dest, 's200', 'iter-2.json')))       # the rest still is
+            self.assertTrue(os.path.exists(os.path.join(dest, 's201', 'play-2-3.json.gz')))
+            self.assertEqual(sorted(x for x in os.listdir(os.path.join(dest, 's200')) if x.startswith('play-')),
+                             sorted(x for x in os.listdir(os.path.join(src, 's200')) if x.startswith('play-')))
+            self.assertFalse(any('.tmp.' in x for x in os.listdir(os.path.join(dest, 's201'))))
+            with open(os.path.join(dest, 'checks.txt')) as f:
+                self.assertIn('gwls_checks exit code:', f.read())
+            with open(torn, 'w') as f:                                                       # the write finishes: now it all persists, exit 0
+                f.write(good)
+            mt = os.path.getmtime(os.path.join(dest, 's200', 'play-1-0.json.gz'))
+            r = self.run_persist(src, dest)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertTrue(os.path.exists(os.path.join(dest, 's201', 'iter-2.json')))
+            self.assertEqual(os.path.getmtime(os.path.join(dest, 's200', 'play-1-0.json.gz')), mt)       # identical play file: not copied again
+            # a changed play file is copied
+            write_round(os.path.join(src, 's200'), 1, [nh_game(2)] * 8)
+            self.assertEqual(self.run_persist(src, dest).returncode, 0)
+            with open(os.path.join(src, 's200', 'play-1-0.json.gz'), 'rb') as a, open(os.path.join(dest, 's200', 'play-1-0.json.gz'), 'rb') as b:
+                self.assertEqual(a.read(), b.read())
 
 
 class Checks(unittest.TestCase):
