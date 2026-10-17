@@ -25,6 +25,54 @@ def jprint(**kw):
     print(json.dumps(kw), flush=True)
 
 
+def update_group(name):
+    """Parameter name -> its module path cut to the first two components: 'blocks.0.qkv.weight' -> 'blocks.0', 'tok.weight' -> 'tok'."""
+    return '.'.join(name.split('.')[:-1][:2]) or name
+
+
+def sig6(x):
+    return float(f'{x:.6g}')
+
+
+class GradStats:
+    """Pre-clip grad norms over one log interval -> mean, max and the fraction of steps that clipped. Stays on the device until pop()."""
+    def __init__(self, clip):
+        self.clip, self.n = clip, 0
+
+    @torch.no_grad()
+    def add(self, gn):
+        gn = gn.detach().float()
+        z = torch.zeros_like(gn)
+        if not self.n:
+            self.sum, self.max, self.fired = z, z, z.clone()
+        self.sum, self.max, self.fired = self.sum + gn, torch.maximum(self.max, gn), self.fired + (gn > self.clip).float()
+        self.n += 1
+
+    def pop(self):
+        s, m, f = torch.stack([self.sum, self.max, self.fired]).tolist()
+        n, self.n = self.n, 0
+        return dict(grad_norm_mean=sig6(s / n), grad_norm_max=sig6(m), clip_frac=sig6(f / n))
+
+
+@torch.no_grad()
+def snapshot_params(model):
+    return [(n, p, p.detach().clone()) for n, p in model.named_parameters() if p.requires_grad]
+
+
+@torch.no_grad()
+def update_rms(snap):
+    """After opt.step(): rms(delta) / rms(param before) over the whole model and per update_group; a group whose before-norm is 0 is skipped."""
+    ss = {}
+    for n, p, b in snap:
+        ss.setdefault(update_group(n), []).append(torch.stack([torch.linalg.vector_norm(p.detach() - b, dtype=torch.float64).square(),
+                                                               torch.linalg.vector_norm(b, dtype=torch.float64).square()]))
+    ss = {g: torch.stack(v).sum(0) for g, v in ss.items()}
+    vals = dict(zip(ss, torch.stack(list(ss.values())).tolist()))
+    ratio = lambda d, b: sig6(math.sqrt(d / b)) if b > 0 else None
+    tot = [sum(v[i] for v in vals.values()) for i in (0, 1)]
+    return ratio(*tot), {g: ratio(d, b) for g, (d, b) in vals.items() if b > 0}
+
+
 def lesion_names(model):
     """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n} (or the model's LOOP_SWEEP)."""
     names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
@@ -117,6 +165,7 @@ def main(argv=None):
     ap.add_argument('--device', default='auto')
     ap.add_argument('--bf16', action='store_true', help='autocast bf16 (cuda only)')
     ap.add_argument('--log-every', type=int, default=100)
+    ap.add_argument('--log-update-rms', action='store_true', help="log pre-clip grad norm stats and per-module update rms (rms(delta)/rms(param) of one step) on the train event; history in RESULT['update_rms_log']")
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
     ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
@@ -155,6 +204,7 @@ def main(argv=None):
 
     cap = args.minutes * 60 if args.minutes else None
     t0, eval_s, step, run_loss, run_n, last_loss, status = time.time(), 0.0, 0, 0.0, 0, None, 'ok'
+    gstats, update_log = GradStats(args.grad_clip), []
     model.train()
     while step < args.steps:
         elapsed = time.time() - t0
@@ -169,14 +219,23 @@ def main(argv=None):
             out = model.loss(batch)
         loss, aux = out if isinstance(out, tuple) else (out, {})
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+        gn = torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+        log_now = step + 1 == args.steps or (step + 1) % args.log_every == 0
+        if args.log_update_rms:
+            gstats.add(gn)
+            snap = snapshot_params(model) if log_now else None
         opt.step(); opt.zero_grad(set_to_none=True)
         step += 1
         run_loss += loss.detach(); run_n += 1
         if step % args.log_every == 0 or step == args.steps:
             last_loss = float(run_loss) / run_n
+            extra = {}
+            if args.log_update_rms:
+                extra = gstats.pop()
+                extra['upd_rms_all'], extra['upd_rms'] = update_rms(snap)
+                update_log.append(dict(step=step, **extra))
             jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0, 1),
-                   **{k: round(float(v), 5) for k, v in aux.items()})
+                   **{k: round(float(v), 5) for k, v in aux.items()}, **extra)
             run_loss, run_n = 0.0, 0
             if not math.isfinite(last_loss):
                 status = 'nonfinite_loss'
@@ -192,6 +251,8 @@ def main(argv=None):
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if args.log_update_rms:
+        result['update_rms_log'] = update_log
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib
