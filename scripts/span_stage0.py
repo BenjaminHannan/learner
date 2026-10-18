@@ -30,6 +30,7 @@ import copy
 import json
 import math
 import platform
+import random
 import sys
 import time
 import traceback
@@ -180,15 +181,14 @@ def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batche
         for name in ANSWER_FIELDS:
             x, y = getattr(a, name), getattr(b, name)
             differ |= torch.ones_like(differ) if x.shape != y.shape else (x != y).reshape(count, -1).any(1)
-        if not halt:
-            pass
-        elif a.halt_prob.shape != b.halt_prob.shape:
-            halt_diff = math.inf
-            differ |= True
-        else:
-            close, gap = halt_close(a.halt_prob, b.halt_prob)
-            halt_diff = max(halt_diff, gap)
-            differ |= ~close.reshape(count, -1).all(1)
+        if halt:
+            if a.halt_prob.shape != b.halt_prob.shape:
+                halt_diff = math.inf
+                differ |= True
+            else:
+                close, gap = halt_close(a.halt_prob, b.halt_prob)
+                halt_diff = max(halt_diff, gap)
+                differ |= ~close.reshape(count, -1).all(1)
         real = a.fetched[:, :-1]
         questions += count
         differing += int(differ.sum())
@@ -277,8 +277,11 @@ def branch_gate(line: PremonitionMini, span: span_cards.SpanCardMini, batches, d
     if device.type == "cpu":
         strict = branch_check(line, span, batches, cpu)
     else:
-        strict = branch_check(copy.deepcopy(line).to(cpu), copy.deepcopy(span).to(cpu), [b.to(cpu) for b in batches],
-                              cpu)
+        home = next(line.parameters()).device
+        line_cpu, span_cpu = copy.deepcopy(line.to(cpu)), copy.deepcopy(span.to(cpu))   # no GPU duplicate
+        line.to(home)
+        span.to(home)
+        strict = branch_check(line_cpu, span_cpu, [b.to(cpu) for b in batches], cpu)
     out = {"strict_cpu": strict}
     reasons = [f"cpu: {r}" for r in strict["reasons"]]
     aligned = strict["line_aligned_is_1"]
@@ -300,7 +303,7 @@ def mode_costs(trainer: MiniTrainer, batches) -> dict:
     return {mode: sum(trainer.batch_cost(b, plan)[0] for b in batches) / len(batches) for mode, plan in PLANS.items()}
 
 
-def main() -> None:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--work", default="/tmp/stage0")
     parser.add_argument("--train-visits", type=int, default=3000)
@@ -315,12 +318,22 @@ def main() -> None:
     parser.add_argument("--smoke-seconds", type=float, default=900.0,
                         help="floor of the smoke's time cap (raised to 3x the measured SPAN step time)")
     parser.add_argument("--smoke-max-seconds", type=float, default=1200.0,
-                        help="ceiling of the smoke's time cap (the final branch check has already run)")
+                        help="ceiling of the smoke's 3x margin (never below 1.5x the estimate; the branch check has "
+                             "already run, and the box watchdog bounds the money)")
     parser.add_argument("--branch-visits", type=int, default=64)
     parser.add_argument("--dph", type=float, default=0.0, help="the box's $/hour, for the projection")
-    args = parser.parse_args()
-    if args.timed < 1 or args.warm < 0 or args.smoke_steps < 1 or args.branch_visits < 1:
-        parser.error("--timed, --smoke-steps and --branch-visits must be at least 1, --warm at least 0")
+    args = parser.parse_args(argv)
+    counts = ("timed", "smoke_steps", "branch_visits", "train_visits", "valid_visits", "max_tokens", "max_visits",
+              "workers")
+    low = [f"--{name.replace('_', '-')}" for name in counts if getattr(args, name) < 1]
+    if low or args.warm < 0:
+        parser.error(f"{', '.join(low) or '--warm'} must be at least 1 (--warm at least 0)")
+    if args.smoke_max_seconds < args.smoke_seconds:
+        parser.error("--smoke-max-seconds must be at least --smoke-seconds")
+    return args
+
+
+def main(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     emit("env", torch=torch.__version__, cuda=torch.version.cuda, device=str(device),
          gpu=torch.cuda.get_device_name(0) if device.type == "cuda" else None, python=platform.python_version(),
@@ -351,7 +364,7 @@ def main() -> None:
     batches = [next(stream).to(device) for _ in range(args.warm + args.timed)]
     emit("batches", tokens=[int(b.tokens.numel()) for b in batches], questions=[int(b.q_visit.shape[0]) for b in batches])
     groups = pdata.length_batches(valid_cache.lengths.tolist(), args.max_tokens, max_visits=args.max_visits)
-    dev = [pdata.collate(valid_cache, g).to(device) for g in groups]
+    dev = [pdata.collate(valid_cache, g) for g in groups]            # on the CPU, as train_d's eval batches
     branch_visits = min(args.branch_visits, len(valid_cache))         # the first DEV visits
     branch_batches = [pdata.collate(valid_cache, g).to(device) for g in pdata.length_batches(
         valid_cache.lengths[:branch_visits].tolist(), args.max_tokens, max_visits=args.max_visits)]
@@ -397,18 +410,20 @@ def main() -> None:
     # train_d collates each batch on the CPU and copies it to the device inside its loop: time that per batch.
     # The endless stream re-runs the shuffle and length-bucketing at every epoch: that setup is amortised over the
     # batches of an epoch (both grow with the cache, so the per-batch share carries over to the Stage 1 cache).
+    per_epoch = len(pdata.length_batches(train_cache.lengths.tolist(), args.max_tokens, rng=random.Random(2),
+                                         max_visits=args.max_visits))   # shuffled pools, as the stream packs
     data_stream = pdata.batches(train_cache, args.max_tokens, seed=2, epochs=None, max_visits=args.max_visits)
     sync(device)
     started = time.perf_counter()
     next(data_stream).to(device)                                      # the epoch's setup plus one batch
     sync(device)
     first = time.perf_counter() - started
+    count = max(1, min(args.timed, per_epoch - 1))                    # stay inside the first epoch
     started = time.perf_counter()
-    for _ in range(args.timed):
+    for _ in range(count):
         next(data_stream).to(device)
     sync(device)
-    per_batch = (time.perf_counter() - started) / args.timed
-    per_epoch = len(pdata.length_batches(train_cache.lengths.tolist(), args.max_tokens, max_visits=args.max_visits))
+    per_batch = (time.perf_counter() - started) / count
     setup = max(0.0, first - per_batch)
     timing["data"] = {"per_batch_s": per_batch, "epoch_setup_s": setup, "batches_per_epoch": per_epoch}
     timing["data_s_per_batch"] = per_batch + setup / max(per_epoch, 1)
@@ -448,6 +463,8 @@ def main() -> None:
     emit("branch", visits=branch_visits, **check)
     line.cpu()                                                        # the smoke then has the GPU to itself
     span.cpu()
+    batches = [b.to(torch.device("cpu")) for b in batches]
+    del branch_batches
 
     # 4. smoke: a fresh SPAN model through the whole curriculum, with the GPU to itself (the timing trainers were
     # freed; LINE and SPAN are on the CPU). An exception here is recorded, not raised, and the run then ends failed.
@@ -455,8 +472,9 @@ def main() -> None:
         torch.cuda.reset_peak_memory_stats()
     smoke_step = max(timing["span"][m]["mean"] for m in PLANS) + max(0.0, timing["span"]["tracked_extra"]) / 10 \
         + timing["data_s_per_batch"]                                  # the smoke tracks every 10th step
-    max_seconds = min(args.smoke_max_seconds, max(args.smoke_seconds, 3.0 * args.smoke_steps * smoke_step))
-    smoke_result: dict = {"max_seconds": max_seconds}
+    estimate = args.smoke_steps * smoke_step
+    max_seconds = max(args.smoke_seconds, min(args.smoke_max_seconds, 3.0 * estimate), 1.5 * estimate)
+    smoke_result: dict = {"max_seconds": max_seconds, "estimate_s": estimate}
     trainer = smoke = None
     try:
         torch.manual_seed(1)
@@ -484,7 +502,7 @@ def main() -> None:
     except Exception as error:                            # noqa: BLE001 - recorded; the run ends failed below
         smoke_result.update(passed=False, error=repr(error), trace=traceback.format_exc()[-2000:])
     finally:
-        del trainer, smoke                                # free the smoke's model and state before the branch check
+        del trainer, smoke                                # free the smoke's model and state
         if device.type == "cuda":
             torch.cuda.empty_cache()
     emit("smoke", **smoke_result)
@@ -498,8 +516,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    arguments = parse_args()                              # usage errors exit 2 (argparse), outside the log protocol
     try:
-        main()
+        main(arguments)
     except BaseException as error:                       # noqa: BLE001 - the log is the only channel back
         emit("error", error=repr(error), trace=traceback.format_exc()[-4000:])
         print("STAGE0-DONE failed", flush=True)
