@@ -8,6 +8,7 @@ import contextlib
 import copy
 import itertools
 import json
+import os
 import tempfile
 import types
 import unittest
@@ -38,7 +39,7 @@ def parent_of(steps: int = 2):
         trainer._train_step(batch, GOLD, planned_loops(batch, "gold", model.config), False)
     parent = {"model": copy.deepcopy(model.state_dict()), "optimizer": copy.deepcopy(trainer.optimizer.state_dict()),
               "trainer": copy.deepcopy(trainer.state_dict()), "rng": ckpt.rng_state(),
-              "names": s1.optimizer_names(model), "consumed": steps}
+              "names": s1.optimizer_names(model, trainer.optimizer), "consumed": steps}
     return trainer, parent, batches
 
 
@@ -103,9 +104,9 @@ class BranchTest(unittest.TestCase):
         by `test_restored_moments_are_the_parents_by_name`.)"""
         trainer, parent, batches = parent_of()
         line, span = arm(parent, "LINE", trainer.flop_budget), arm(parent, "SPAN", trainer.flop_budget)
-        names = s1.optimizer_names(span.model)
+        names = s1.optimizer_names(span.model, span.optimizer)
         gate = {"writer.gate.weight", "writer.gate.bias", "writer.newline_weight"}
-        self.assertEqual(set(names) - set(s1.optimizer_names(line.model)), gate)
+        self.assertEqual(set(names) - set(s1.optimizer_names(line.model, line.optimizer)), gate)
         self.assertTrue(all(i not in span.optimizer.state_dict()["state"] for i, n in enumerate(names) if n in gate))
         batch = batches[2]
         loops = planned_loops(batch, "gold", line.model.config)
@@ -124,7 +125,8 @@ class BranchTest(unittest.TestCase):
     @staticmethod
     def moments_by_name(trainer) -> dict:
         state = trainer.optimizer.state_dict()["state"]
-        return {name: state[i] for i, name in enumerate(s1.optimizer_names(trainer.model)) if i in state}
+        return {name: state[i] for i, name in enumerate(s1.optimizer_names(trainer.model, trainer.optimizer))
+                if i in state}
 
     def test_restored_moments_are_the_parents_by_name(self) -> None:
         """The direct check of the mapping: every shared weight's Adam moments after restore are exactly P_s's for
@@ -225,10 +227,14 @@ class GoTest(unittest.TestCase):
                                         "max_visits": 48}))                 # off the ladder
             with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
                 s1.wait_for_go(self.args(path), expected, fit)
-            path.write_text(json.dumps({"go": False}))
+            path.write_text(json.dumps({"go": False, "seeds": [1], "script_sha256": "old"}))   # stale: waited on
+            with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as stop:
+                s1.wait_for_go(self.args(path), expected, fit)
+            self.assertIn("deadline", str(stop.exception))
+            path.write_text(json.dumps({"go": False, "seeds": [1], "script_sha256": "s"}))
             with self.assertRaises(SystemExit) as stop:
                 s1.wait_for_go(self.args(path), expected, fit)
-            self.assertIn("stop", str(stop.exception))
+            self.assertIn("says stop", str(stop.exception))
 
 
 class PreflightTest(unittest.TestCase):
@@ -313,6 +319,9 @@ class RobustnessTest(unittest.TestCase):
         lines = out.getvalue().splitlines()
         cut = [lines[0][:15], "S1 eval", "S1 eval 1/1", "S1 x a/b {}", "S1 bad 1/1 {not json"] + lines[1:]
         self.assertEqual([k for k, _ in s1.decode(cut)], ["b", "c"])
+        b_lines = [line for line in lines if line.startswith("S1 b ")]
+        mixed = [b_lines[0], "S1 b 2/2 " + b_lines[1].split(" ", 3)[3]]  # chunk 2 of a record with another total
+        self.assertEqual(s1.decode(mixed), [])                             # fifth review: no spliced record
 
     def test_a_malformed_go_file_is_refused_and_waited_on(self) -> None:
         """Second review, finding 5: a go file without the rung (or not a dict) was accepted and then crashed."""
@@ -377,6 +386,43 @@ class RobustnessTest(unittest.TestCase):
             self.assertIn("stuck in economy", record["stderr"])
         finally:
             s1.subprocess.run = original
+
+
+
+@unittest.skipUnless(os.environ.get("SPAN_STAGE1_SMOKE"), "set SPAN_STAGE1_SMOKE=1: builds tiny data (about 3 min)")
+class SmokeTest(unittest.TestCase):
+    def test_the_box_runs_end_to_end_on_tiny_data(self) -> None:
+        """Fifth review, finding 10: the whole box flow (data, slices, pre-flight, go, parent, branch, arms, DEV bits
+        aligned with the slice masks) on the tiny preset, in a subprocess, as a box runs it."""
+        import subprocess
+        import sys
+        script = str(Path(s1.__file__).resolve())
+        with tempfile.TemporaryDirectory() as tmp:
+            common = ["--seed", "0", "--visits", "tiny", "--size", "tiny", "--workers", "2"]
+            data = subprocess.run([sys.executable, script, "data", *common], capture_output=True, text=True)
+            record = dict(s1.decode(data.stdout.splitlines()))["data"]
+            go = {"go": True, "seeds": [0], "script_sha256": s1.script_sha256(), "code_sha256": s1.code_sha256(),
+                  "train_cache_sha256": record["train_cache"]["sha256"],
+                  "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
+                  "flop_budget": 3e12, "max_tokens": s1.LADDER[0][0], "max_visits": s1.LADDER[0][1]}
+            path = Path(tmp) / "go.json"
+            path.write_text(json.dumps(go))
+            run = subprocess.run([sys.executable, script, "box", *common, "--flop-budget", "3e12", "--go-file",
+                                  str(path), "--go-poll-seconds", "1"], capture_output=True, text=True)
+            self.assertIn("S1-DONE ok", run.stdout, run.stdout[-2000:] + run.stderr[-2000:])
+            records = s1.decode(run.stdout.splitlines())
+            kinds = [k for k, _ in records]
+            for kind in ("slices", "preflight", "go", "parent", "branch", "arm_ckpt", "arm_dev", "arm_economy"):
+                self.assertIn(kind, kinds)
+            got = dict(records)
+            masks = got["slices"]["masks"]
+            dev = got["arm_dev"]["dev"]
+            correct = s1.unbits(dev["correct_bits"], dev["questions"])
+            far = s1.unbits(masks["far"], got["slices"]["questions"])
+            self.assertEqual(dev["questions"], got["slices"]["questions"])
+            self.assertEqual(dev["ids_sha256"], got["slices"]["ids_sha256"])
+            hits = sum(c for c, f in zip(correct, far) if f)
+            self.assertAlmostEqual(dev["slices"]["far"]["accuracy"] or 0.0, hits / max(sum(far), 1), places=9)
 
 
 if __name__ == "__main__":

@@ -11,9 +11,12 @@ lines of at most 450 characters, because the box's log is the only channel back 
    steps (own tracked) on the heaviest batches of a Stage 1 epoch (by padded tokens, questions and lines), runs the
    validation hook and `card_economy`, and reports peak reserved GPU memory. A rung fits iff every child stays at
    or below the memory guard minus `MARGIN_GB`; the first fitting rung is proposed. No rung fits: the box stops.
-3. go: the box waits for `stage1-go.json` (the public repo, `--go-url`; or `--go-file`) and runs only if it names
-   this script's sha256, the caches' sha256, N and the rung, identical for every seed. The coordinator's seal
-   addendum is filed in the repo before the go file.
+3. go: the box waits for `stage1-go.json` (the public repo, `--go-url`; or `--go-file`) and runs only if it is a
+   JSON object with `"go": true`, `seeds` listing this seed, and exactly this box's `script_sha256`, `code_sha256`
+   (every module, `code_files`), `train_cache_sha256`, `validation_cache_sha256`, `N` and `flop_budget`, plus a
+   rung `max_tokens`/`max_visits` on the ladder and no larger than the one this box measured as fitting. Anything
+   else is logged as `go_refused` and waited on; `"go": false` with this script's hash and seed stops the box. The
+   seal addendum is filed in the repo before the go file.
 4. parent P_s: LINE from scratch, seed s, through the gold phase (the first 5% of F; F = 3.15e16), as `train_d`
    trains (calibration head of 4 batches, validation hook on 256 DEV visits every 1,000 steps).
 5. branch-point check (run card §3): `span_stage0.branch_gate` on 64 DEV visits (strict on CPU, structural on GPU,
@@ -107,14 +110,14 @@ def decode(lines: Iterator[str]) -> list[tuple[str, dict]]:
         except ValueError:
             continue
         if index == 1:
-            pending[kind] = []
-        if kind not in pending or len(pending[kind]) != index - 1:
-            pending.pop(kind, None)
+            pending[kind] = (total, [])
+        if kind not in pending or pending[kind][0] != total or len(pending[kind][1]) != index - 1:
+            pending.pop(kind, None)                       # a gap or another record's chunk: drop the record
             continue
-        pending[kind].append(chunk)
+        pending[kind][1].append(chunk)
         if index == total:
             try:
-                out.append((kind, json.loads("".join(pending.pop(kind)))))
+                out.append((kind, json.loads("".join(pending.pop(kind)[1]))))
             except ValueError:
                 continue                                  # a garbled record is skipped, not fatal
     return out
@@ -201,10 +204,10 @@ def model_config(tokenizer: Tokenizer, size: str) -> MiniConfig:
     return MiniConfig.preset("D", size, vocab_size=tokenizer.vocab_size)
 
 
-def optimizer_names(model: torch.nn.Module) -> list[str]:
-    """Parameter names in the order `learnlab.train.Trainer` puts them in AdamW's state (decay group first)."""
-    named = list(model.named_parameters())
-    return [n for n, p in named if p.dim() >= 2] + [n for n, p in named if p.dim() < 2]
+def optimizer_names(model: torch.nn.Module, optimizer: torch.optim.Optimizer) -> list[str]:
+    """Parameter names in the order of the optimizer's own param groups (its state_dict indexes them so)."""
+    names = {id(p): n for n, p in model.named_parameters()}
+    return [names[id(p)] for group in optimizer.param_groups for p in group["params"]]
 
 
 def branch_state(parent: dict, trainer: MiniTrainer) -> dict:
@@ -214,7 +217,7 @@ def branch_state(parent: dict, trainer: MiniTrainer) -> dict:
     old = parent["optimizer"]
     shapes = dict(trainer.model.named_parameters())
     mapped = {}
-    for index, name in enumerate(optimizer_names(trainer.model)):
+    for index, name in enumerate(optimizer_names(trainer.model, trainer.optimizer)):
         if name in by_name and by_name[name] in old["state"]:
             entry = copy.deepcopy(old["state"][by_name[name]])
             if entry["exp_avg"].shape != shapes[name].shape:
@@ -263,7 +266,8 @@ def gold_only(trainer: MiniTrainer, stream: Iterator) -> Iterator:
 @torch.no_grad()
 def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: Tokenizer, stop: list, args) -> dict:
     """Own-retrieval exact match on the whole validation split: accuracy overall and per slice, and the per-question
-    correctness in the cache's question order (packed bits) for the paired tests."""
+    correctness in the cache's question order (packed bits; the `slices` record holds the masks in the same order),
+    for the paired G2 tests."""
     model.eval()
     device = next(model.parameters()).device
     correct: dict[str, bool] = {}
@@ -282,6 +286,8 @@ def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: T
             entry[0] += int(torch.tensor(hit)[tag].sum())
             entry[1] += int(tag.sum())
     order = [qid for qid in cache.question_ids if qid in correct]
+    if order != list(cache.question_ids):             # the bits must align with the slice masks (cache order)
+        raise RuntimeError(f"dev_eval scored {len(order)} of {len(cache.question_ids)} validation questions")
     return {"questions": len(order), "accuracy": sum(correct[q] for q in order) / max(len(order), 1),
             "slices": {k: {"n": v[1], "accuracy": v[0] / v[1] if v[1] else None} for k, v in sorted(slices.items())},
             "ids_sha256": hashlib.sha256("\n".join(order).encode()).hexdigest(),
@@ -403,7 +409,8 @@ def measure_arm(args: argparse.Namespace) -> None:
     trainer = trainer_class(model, train_config(), device, flop_budget=F_BUDGET, seed=args.seed)
     groups = heaviest(cache, args.max_tokens, args.max_visits, args.seed)
     batches = [pdata.collate(cache, g) for g in groups]
-    trainer.calibrate(batches[:2])
+    # no FLOP calibration here: _train_step does not use the fit, and the real run calibrates (fp32) on ordinary
+    # head batches before it resets the peak, which Stage 0 ran at full size
     if device.type == "cuda":
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
@@ -503,8 +510,9 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict
             go = {"go": None, "malformed": True}
         if go is not None and go != reported:
             reported = go
-            if go.get("go") is False:
-                raise SystemExit("the go file says stop")
+            if go.get("go") is False and go.get("script_sha256") == expected.get("script_sha256") \
+                    and isinstance(go.get("seeds"), list) and args.seed in go["seeds"]:
+                raise SystemExit("the go file says stop")    # a stop for this script and seed (a stale one is not)
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
                 wrong.append("seeds")
@@ -548,10 +556,12 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
     consumed = trainer.step                            # batches trained, in stream order (a discarded one is not)
     emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed,
                     "fit": {"a": fit.a, "b": fit.b, "worst": fit.worst}})
-    parent = {"model": copy.deepcopy(parent_model.state_dict()),
-              "optimizer": copy.deepcopy(trainer.optimizer.state_dict()),
+    to_cpu = lambda tree: torch.utils._pytree.tree_map(                               # noqa: E731
+        lambda x: x.detach().cpu().clone() if torch.is_tensor(x) else copy.deepcopy(x), tree)
+    parent = {"model": to_cpu(parent_model.state_dict()),        # on the CPU: the arms' GPU holds only their own run
+              "optimizer": to_cpu(trainer.optimizer.state_dict()),
               "trainer": copy.deepcopy(trainer.state_dict()), "rng": ckpt.rng_state(),
-              "names": optimizer_names(parent_model), "consumed": consumed}
+              "names": optimizer_names(parent_model, trainer.optimizer), "consumed": consumed}
     emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {           # saved before any
         "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed}})})        # evaluation can fail
     emit("parent_dev", {"seed": args.seed, "dev": dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)})
@@ -571,10 +581,11 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
                     "gpu_key_diff": branch.get("gpu", {}).get("max_key_diff")})
     if not branch["passed"]:
         raise SystemExit(f"branch-point check failed ({branch['reasons']}): the pairing is broken (run card §3)")
-    del probe
+    del probe, branch_batches
 
     # the arms
     parent_model.load_state_dict(parent["model"], strict=True)
+    parent_model.cpu()                                    # only read by the SPAN load below
     for arm in ("LINE", "SPAN"):
         if device.type == "cuda":
             torch.cuda.empty_cache()                          # free the previous arm (the peak is reset below)
@@ -647,7 +658,10 @@ def box(args: argparse.Namespace) -> None:
         raise SystemExit(f"newline id {record['newline_ids']} is not 23: SpanConfig.newline_id would be wrong")
     tags = slice_tags(built, len(built["caches"]["validation"]))      # needed for G2: fail before paying more
     counts = {name: int(tag.sum()) for name, tag in (tags or {}).items()}
-    emit("slices", {"seed": args.seed, **counts})
+    valid = built["caches"]["validation"]
+    emit("slices", {"seed": args.seed, "counts": counts, "questions": len(valid.question_ids),
+                    "ids_sha256": hashlib.sha256("\n".join(valid.question_ids).encode()).hexdigest(),
+                    "masks": {name: bits(tag.tolist()) for name, tag in (tags or {}).items()}})
     absent = [name for name in REQUIRED_SLICES if not counts.get(name)]
     if absent:
         raise SystemExit(f"DEV slices {absent} are missing or empty: the readout (G2 needs far) would be incomplete")
