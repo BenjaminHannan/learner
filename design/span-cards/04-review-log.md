@@ -3,7 +3,8 @@
 Status: DRAFT, unsealed, nothing booked. The review is Claude Code's built-in `/code-review` on branch
 `span-cards-solve` (diff `main...HEAD`). Each round's verdict is my classification; the coordinator rules.
 Latest: the round-3 close-out (below). The final re-review of bd28adcd7 shows no blocking finding; the card is
-sealed (`05-seal.md`). Stage 0 waits for the coordinator's review of its script (Q129).
+sealed (`05-seal.md`). Stage 0 ran with the reviewed script (5b9033460) and passed its three gates;
+the readout is in `06-stage0-report.md`. Stage 1 is not booked.
 
 ## Round 1: review of 4b49ec92d (10 findings)
 Blocking: (1) per-call tensors left on the model made every `read_only` evaluation raise (reproduced);

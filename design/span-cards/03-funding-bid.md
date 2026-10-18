@@ -29,8 +29,10 @@ same box rate, and is included in the Stage 1/2 caps.
   label-free 52k-token batch (41 visits, 422 questions; `flops.measure_mini`, this session). Curriculum-weighted
   ≈ 1.2e12 per step, so a full run at F ≈ 3.15e16 (design/06 §4) is **≈ 26,000 steps / ≈ 1.35B tokens**.
 - Plan size: 0.15 (parents) + 5.7 (Cell A) + 5.7 (Cell B) = 11.55 full-run equivalents.
-- SPAN overhead vs LINE: **to be filled from the Stage 0 GPU measurement (Q22).** CPU pre-measure, for
-  context only and not used for costing: about +15% wall per own-mode step (27.7 s vs 24.2 s, one sample).
+- SPAN overhead vs LINE: **measured in Stage 0 (RTX 3090, `06-stage0-report.md`): +11% gold, +74% teacher,
+  +122% own wall time per step** (LINE 0.100 / 0.164 / 0.246 s, SPAN 0.112 / 0.286 / 0.546 s). Stage 1 projects
+  to 17.5-17.6 GPU-h: $3.9 at $0.222/h, $7.0 at $0.40/h. The CPU pre-measure (+15% per own-mode step, one
+  sample) understated it.
 - **Unknown: GPU seconds per step.** The think loop is Python-level (up to 8 loops × per-question gathers), so D
   is launch-bound, not FLOP-bound; nothing in the repo measures it on a GPU. CPU (4 threads) is 23 s/step.
   Assuming 0.3-1.0 s/step: 2.2-7.2 h per full run, Stage 1 ≈ 13-42 GPU-h, Stage 2 the same.
