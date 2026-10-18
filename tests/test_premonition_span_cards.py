@@ -668,7 +668,9 @@ class RoundThreeRegressionTest(unittest.TestCase):
         change the layout."""
         model, batch, lay = self.capped_layout()
         forced, decided = lay.forced, lay.cardable & ~lay.forced
-        self.assertGreater(int((forced & lay.after_wall).sum()), 0)                 # wall starts
+        wall = lay.cardable & lay.after_wall
+        self.assertTrue(torch.equal(forced & lay.after_wall, wall))                 # every wall start is forced,
+        self.assertGreater(int((wall & (lay.p > 0.5)).sum()), 0)                    # also where the gate fires
         self.assertGreater(int((forced & ~lay.after_wall).sum()), 5)                # cap starts
         span_cards.layout_rate(lay, 12.0).backward(retain_graph=True)
         grad = lay.logit.grad.clone()
@@ -755,6 +757,8 @@ class RoundThreeRegressionTest(unittest.TestCase):
         for model in (eager(span_model(0)).eval(), variable_model(0)):
             before, after = store_of(model, full), store_of(model, batch)
             self.assertFalse(bool(after.card_of[visit, cut_tokens].ge(0).any()))
+            for name in ("tags", "ents", "card_line", "first_line"):                # no ghost card fields
+                self.assertTrue(bool((getattr(after, name)[~after.valid] == -1).all()), name)
             self.assertFalse(bool((after.valid[visit] & (after.card_line[visit] == line)).any()))
             rows, ends = torch.nonzero(after.valid, as_tuple=True)
             self.assertTrue(bool(batch.card_end[rows].logical_and(

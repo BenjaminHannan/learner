@@ -14,7 +14,7 @@ What changes (reader, think loop, ASK, binder, decoder, losses and curriculum ar
   cross a boundary in proportion to 1 - p, with a_{e,t} ~ exp(s_t + sum_{t < u <= e} log(1 - p_u)) over the
   `max_span` tokens ending at e, in the same wall region, built from stop-gradient reader states and scores. The
   writer adds `soft - stopgrad(soft)`, so only the gate receives its gradient; the reader and pool gradients are the
-  hard pool's. Starts the gate did not choose (walls, the cap) are hard boundaries in the surrogate too
+  hard pool's. Starts the gate cannot change (walls, the cap) are hard boundaries in the surrogate too
   (`surrogate_stay`), so at saturated gates the surrogate equals the hard pool. `rate_loss` (H-Net's ratio loss) holds the
   tokens-per-card at `tokens_per_card`; set it to `tokens_per_line` of the training cache for an equal-count A/B.
   Forced starts count toward the rate but carry no rate gradient (`layout_rate`).
@@ -113,7 +113,7 @@ def log_stay(logit: torch.Tensor) -> torch.Tensor:
 
 def surrogate_stay(logit: torch.Tensor, forced: torch.Tensor) -> torch.Tensor:
     """`log_stay` for the soft surrogate, with every FORCED start (after a wall, or the `max_span` cap) a hard
-    boundary (the floor, no gate gradient): the gate did not choose those cuts, so the surrogate must not let
+    boundary (the floor, no gate gradient): the gate cannot change those cuts, so the surrogate must not let
     content leak across them, else it differs from the hard pool even with saturated gates."""
     return torch.where(forced, torch.full_like(logit, LOG_STAY_FLOOR), log_stay(logit))
 
@@ -128,7 +128,7 @@ class Layout:
     logit: torch.Tensor         # float: gate logit (gradient reaches only the gate parameters)
     p: torch.Tensor             # float: sigmoid(logit)
     start: torch.Tensor         # bool: a hard card starts here
-    forced: torch.Tensor        # bool: a start the gate did not choose (wall or cap)
+    forced: torch.Tensor        # bool: a start the gate cannot change (every wall start, the cap)
 
 
 def soft_pool(hidden: torch.Tensor, score: torch.Tensor, stay: torch.Tensor, cardable: torch.Tensor,
@@ -287,12 +287,14 @@ class SpanCardWriter(CardWriter):
             + self.newline_weight * after_newline.float()
         p = torch.sigmoid(logit)
         chosen = cardable & (p.detach() > 0.5)
-        start = chosen | (cardable & after_wall)
+        wall = cardable & after_wall
+        start = chosen | wall
         position = torch.arange(width, device=hidden.device).expand(visits, width)
         last = torch.cummax(torch.where(start, position, torch.full_like(position, -1)), dim=1).values
         run = position - last
         start = start | (cardable & (run > 0) & (run % span.max_span == 0))
-        return Layout(cardable, after_wall, after_newline, logit, p, start, start & ~chosen)
+        # A wall start is forced even where the gate also fires (after a question line's newline p is ~0.98).
+        return Layout(cardable, after_wall, after_newline, logit, p, start, wall | (start & ~chosen))
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> SpanCardStore:
         span = self.span
@@ -355,15 +357,18 @@ class SpanCardWriter(CardWriter):
         valid = torch.zeros(visits, width, dtype=torch.bool, device=device)
         valid[seg_row, seg_end] = written
         ents = torch.full((visits, width, MAX_LINE_ENTS), -1, dtype=torch.long, device=device)
-        ents[seg_row, seg_end] = ents_seg
+        ents[seg_row, seg_end] = torch.where(written.unsqueeze(1), ents_seg, torch.full_like(ents_seg, -1))
         card_of = torch.full((visits * width,), -1, dtype=torch.long, device=device)
         card_of[token_pos] = torch.where(written[seg], seg_end[seg], torch.full_like(seg, -1))
+        def card(rows: torch.Tensor) -> torch.Tensor:                           # -1 where no card is written
+            return place(torch.where(written, rows, torch.full_like(rows, -1)), -1)
+
         store = SpanCardStore(
             keys=F.normalize(keys.float(), dim=-1), values=values, valid=valid,
-            tags=place(tokens[seg_row, seg_start], -1), ents=ents,
+            tags=card(tokens[seg_row, seg_start]), ents=ents,
             line_start=place(seg_start, -1), line_len=place(seg_len, 0),
             null_key=F.normalize(self.null_key.float(), dim=-1), null_value=self.null_value,
-            card_line=place(line_of[seg_row, seg_end], -1), first_line=place(line_of[seg_row, seg_start], -1),
+            card_line=card(line_of[seg_row, seg_end]), first_line=card(line_of[seg_row, seg_start]),
             token_line=line_of, card_of=card_of.view(visits, width))
         store.rate, store.stats = rate, stats
         return store
