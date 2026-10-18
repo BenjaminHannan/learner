@@ -280,7 +280,11 @@ stop $18). Spend at 19:53Z was $0.817.
 - Parent P_2 (attempt 2): 3,484 gold steps, **peak reserved 6.15 GB**. Checkpoint state 094e96a1..., config
   aec7376b.... This differs from attempt 1's P_2 (76986173...), as expected for a re-trained parent. The attempt-1 P_2
   stays on box 56601524. DEV: aligned, overall 0.204.
-- Branch-point check: passed (same figures as seed 0). The LINE arm started at step 3,484 (t = 1,086.7 s); the arm
-  probe passes at global step 5,000.
+- Branch-point check: passed (same figures as seed 0). The LINE arm started at step 3,484 (t = 1,086.7 s).
+- **Arm probe (Q160 (3), from the trained P_2): LINE PASSED.** Progress at global step 5,000 (1,516 arm steps,
+  teacher phase, t = 1,393.5 s) with no guard error. In attempt 1 the same seed's LINE arm crossed at 21.10 GiB 94 s
+  after its start; this time the arm ran 307 s clean. The LINE arm continues.
 
-**Seed 1 (56611888):** slower CPU box (12 cores); the data build was still running at 20:34Z.
+**Seed 1 (56611888):** slower CPU box (12 cores). Boot 20:15:58Z; setting logged; commit 707bdce90. Data identical
+to the seal. Old pre-flight: rung 0 fits, worst 9.90 GB reserved / 9.73 GB allocated (attempt 1: 11.70 GB). Go
+accepted at t = 1,198.5 s (about 20:37Z); the parent probe is under way.
