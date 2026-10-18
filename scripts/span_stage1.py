@@ -46,6 +46,7 @@ import subprocess
 import sys
 import time
 import traceback
+import types
 from typing import Any, Iterator, Optional
 import urllib.request
 
@@ -73,11 +74,10 @@ STRESS_EVERY = 33                        # SPAN stress: an extra cut every 33 to
 HEAD = 4                                 # calibration batches (train_d)
 EVAL_VISITS, ECONOMY_VISITS, BRANCH_VISITS = 256, 200, 64
 CHUNK = 450
+CHILD_TIMEOUT = 1800                     # seconds for one pre-flight child (a hang is a fault, not a measurement)
 STARTED = time.perf_counter()
-CODE = ("scripts/span_stage1.py", "scripts/span_stage0.py", "premonition/span_cards.py", "premonition/model.py",
-        "premonition/store.py", "premonition/train.py", "premonition/data.py", "premonition/batch.py",
-        "premonition/config.py", "premonition/flops.py", "premonition/preprocess.py", "premonition/slices.py",
-        "premonition/exp1.py", "learnlab/train.py", "learnlab/step1.py", "learnlab/ckpt.py")
+CODE_PACKAGES = ("premonition", "learnlab", "memorylab")   # every .py file in these, plus the two scripts
+CODE_SCRIPTS = ("scripts/span_stage0.py", "scripts/span_stage1.py")
 RUN_ID = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
 
 
@@ -97,11 +97,14 @@ def decode(lines: Iterator[str]) -> list[tuple[str, dict]]:
     for line in lines:
         if not line.startswith("S1 "):
             continue
+        fields = line.rstrip("\n").split(" ", 3)
+        if len(fields) < 4:
+            continue                                      # a cut line: its record stays incomplete and is skipped
+        _, kind, position, chunk = fields
         try:
-            _, kind, position, chunk = line.rstrip("\n").split(" ", 3)
+            index, total = (int(x) for x in position.split("/"))
         except ValueError:
-            kind, position, chunk = line.split(" ")[1], line.split(" ")[2], ""
-        index, total = (int(x) for x in position.split("/"))
+            continue
         if index == 1:
             pending[kind] = []
         if kind not in pending or len(pending[kind]) != index - 1:
@@ -109,7 +112,10 @@ def decode(lines: Iterator[str]) -> list[tuple[str, dict]]:
             continue
         pending[kind].append(chunk)
         if index == total:
-            out.append((kind, json.loads("".join(pending.pop(kind)))))
+            try:
+                out.append((kind, json.loads("".join(pending.pop(kind)))))
+            except ValueError:
+                continue                                  # a garbled record is skipped, not fatal
     return out
 
 
@@ -243,13 +249,12 @@ def stream_from(cache, args, seed: int, skip: int) -> Iterator:
     return stream
 
 
-def gold_only(trainer: MiniTrainer, stream: Iterator, counter: list) -> Iterator:
-    """The stream while the trainer's plan is in the gold phase: the parent stops exactly at the branch point.
-    `counter` counts the batches handed out; the caller takes the trained count from `trainer.step` after."""
+def gold_only(trainer: MiniTrainer, stream: Iterator) -> Iterator:
+    """The stream while the trainer's plan is in the gold phase: the parent stops exactly at the branch point. The
+    parent trains the stream's batches in order, so the arms resume at batch `trainer.step` of a fresh stream."""
     for batch in stream:
         if trainer.plan().phase != "gold":
             return
-        counter[0] += 1
         yield batch
 
 
@@ -354,12 +359,22 @@ def heaviest(cache, max_tokens: int, max_visits: int, seed: int) -> list[list[in
     return chosen
 
 
+OOM_SIGNS = ("out of memory", "CUBLAS_STATUS_ALLOC_FAILED", "CUDNN_STATUS_ALLOC_FAILED")
+
+
+def is_oom(error: BaseException) -> bool:
+    """A GPU memory exhaustion, whether raised as OutOfMemoryError or as a library's RuntimeError."""
+    return isinstance(error, torch.cuda.OutOfMemoryError) or any(sign in str(error) for sign in OOM_SIGNS)
+
+
 def preflight_arm(args: argparse.Namespace) -> None:
     """Child process: peak reserved GPU memory of one arm at one rung (printed as one `PREFLIGHT {json}` line).
     Running out of GPU memory is a measurement (`oom`: true); any other failure is an error (non-zero exit)."""
     try:
         measure_arm(args)
-    except torch.cuda.OutOfMemoryError as error:
+    except RuntimeError as error:                         # OutOfMemoryError is a RuntimeError too
+        if not is_oom(error):
+            raise
         record = {"arm": args.arm, "max_tokens": args.max_tokens, "max_visits": args.max_visits, "oom": True,
                   "error": repr(error)[:300], "peak_reserved_gb": None}
         print("PREFLIGHT " + json.dumps(record), flush=True)
@@ -392,7 +407,8 @@ def measure_arm(args: argparse.Namespace) -> None:
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     steps = 0
-    modes = (("gold", Plan("gold", "gold", 0.0), False), ("teacher", Plan("teacher", "teacher", 0.0), False),
+    # every step tracked: the real run tracks every 50th step in every phase (hooks, InsertLog), the heavier case
+    modes = (("gold", Plan("gold", "gold", 0.0), True), ("teacher", Plan("teacher", "teacher", 0.0), True),
              ("own", Plan("own", "own", 0.75), True))
     for mode, plan, track in modes:
         for batch in batches:
@@ -426,7 +442,11 @@ def preflight(args: argparse.Namespace) -> dict:
             command = [sys.executable, str(Path(__file__).resolve()), "preflight-arm", "--arm", arm,
                        "--seed", str(args.seed), "--visits", args.visits, "--size", args.size,
                        "--workers", str(args.workers), "--max-tokens", str(max_tokens), "--max-visits", str(max_visits)]
-            run = subprocess.run(command, capture_output=True, text=True)
+            try:
+                run = subprocess.run(command, capture_output=True, text=True, timeout=CHILD_TIMEOUT)
+            except subprocess.TimeoutExpired as expired:
+                run = types.SimpleNamespace(returncode="timeout", stdout=expired.stdout or "",
+                                            stderr=f"no result after {CHILD_TIMEOUT} s")
             found = [l for l in run.stdout.splitlines() if l.startswith("PREFLIGHT ")]
             if run.returncode or not found:                   # not a memory measurement: a fault, so stop
                 emit("preflight_error", {"arm": arm, "max_tokens": max_tokens, "max_visits": max_visits,
@@ -469,13 +489,16 @@ def wait_for_go(args: argparse.Namespace, expected: dict) -> dict:
     reported = None
     while time.time() < deadline:
         go = read_go(args)
+        if go is not None and not isinstance(go, dict):
+            go = {"go": None, "malformed": True}
         if go is not None and go != reported:
             reported = go
             if go.get("go") is False:
                 raise SystemExit("the go file says stop")
             wrong = [k for k, v in expected.items() if go.get(k) != v]
-            if args.seed not in go.get("seeds", []):
+            if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
                 wrong.append("seeds")
+            wrong += [k for k in ("max_tokens", "max_visits") if not isinstance(go.get(k), int)]
             if go.get("go") is True and not wrong:
                 return go
             emit("go_refused", {"seed": args.seed, "mismatch": wrong, "go": go.get("go")})
@@ -504,12 +527,11 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     stream = pdata.batches(train_cache, args.max_tokens, seed=args.seed, epochs=None, max_visits=args.max_visits)
     head = [next(stream) for _ in range(HEAD)]
     fit = trainer.calibrate(head)
-    consumed = [0]
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats()
-    report = trainer.train(gold_only(trainer, itertools.chain(head, stream), consumed), evaluate=hook,
+    report = trainer.train(gold_only(trainer, itertools.chain(head, stream)), evaluate=hook,
                            on_log=progress("P", args.seed))
-    consumed[0] = trainer.step                         # batches trained, in stream order (a discarded one is not)
+    consumed = [trainer.step]                          # batches trained, in stream order (a discarded one is not)
     emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed[0],
                     "fit": {"a": fit.a, "b": fit.b, "worst": fit.worst}})
     parent = {"model": copy.deepcopy(parent_model.state_dict()),
@@ -584,9 +606,16 @@ def rung_allowed(rung: tuple, fitted: tuple) -> bool:
     return rung in LADDER and fitted in LADDER and LADDER.index(rung) >= LADDER.index(fitted)
 
 
+def code_files() -> list[str]:
+    """Every Python file of `CODE_PACKAGES` (recursively) plus `CODE_SCRIPTS`, sorted, relative to the root."""
+    files = {str(path.relative_to(ROOT)) for package in CODE_PACKAGES for path in (ROOT / package).rglob("*.py")
+             if "__pycache__" not in path.parts}
+    return sorted(files | set(CODE_SCRIPTS))
+
+
 def code_sha256() -> str:
-    """One digest over every module the run's data stream, training, charging and checks depend on (`CODE`)."""
-    return hashlib.sha256("".join(f"{name}:{sha256(ROOT / name)}\n" for name in CODE).encode()).hexdigest()
+    """One digest over every file of `code_files()`: the whole code the run imports, not a hand-kept list."""
+    return hashlib.sha256("".join(f"{name}:{sha256(ROOT / name)}\n" for name in code_files()).encode()).hexdigest()
 
 
 def box(args: argparse.Namespace) -> None:

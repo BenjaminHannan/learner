@@ -86,8 +86,9 @@ class BranchTest(unittest.TestCase):
         teacher = Plan("teacher", "teacher", 0.0)
         for batch in batches[2:4]:                                         # teacher steps draw from the generator
             loops = planned_loops(batch, "teacher", trainer.model.config)
+            rng = ckpt.rng_state()
             a = trainer._train_step(batch, teacher, loops, False)
-            ckpt.set_rng_state(ckpt.rng_state())
+            ckpt.set_rng_state(rng)                                        # both steps start from one global state
             b = line._train_step(batch, teacher, loops, False)
             self.assertEqual(float(a["loss"]), float(b["loss"]))
         for (name, p), q in zip(trainer.model.named_parameters(), line.model.parameters()):
@@ -161,17 +162,33 @@ class BranchTest(unittest.TestCase):
 
 
 class StreamTest(unittest.TestCase):
-    def test_the_parent_stops_at_the_branch_and_the_arms_take_the_next_batch(self) -> None:
-        trainer, _, _ = parent_of(0)
-        stream = iter([synthetic_batch(seed=s) for s in range(30)])
-        counter = [0]
-
-        def plan() -> Plan:
-            return Plan("gold", "gold", 0.0) if counter[0] < 7 else Plan("teacher", "teacher", 0.0)
-        trainer.plan = plan
-        taken = list(s1.gold_only(trainer, stream, counter))
-        self.assertEqual(counter[0], 7)
-        self.assertEqual(len(taken), 7)
+    def test_the_parent_trains_the_streams_first_batches_and_the_arms_resume_at_the_next(self) -> None:
+        """Through the real `MiniTrainer.train` (head chained in front, as run_seed does): the parent trains exactly
+        batches 0 .. step-1 of the stream, in order, then stops at the end of the gold phase; an arm's
+        `stream_from(skip=step)` starts at batch `step`, the first one the parent did not train."""
+        pool = [synthetic_batch(seed=s) for s in range(40)]
+        index = {id(batch): i for i, batch in enumerate(pool)}             # which stream batch this is
+        original = pdata.batches
+        pdata.batches = lambda *a, **k: iter(pool)
+        try:
+            torch.manual_seed(0)
+            model = PremonitionMini(tiny_config())
+            trainer = MiniTrainer(model, s1.train_config(), "cpu", flop_budget=1.0, seed=0)
+            stream = pdata.batches(None)
+            head = [next(stream) for _ in range(s1.HEAD)]
+            trainer.calibrate(head)
+            trainer.flop_budget = budget_for_steps(trainer, pool, 120)   # gold phase: about 6 steps
+            seen = []
+            step = trainer._train_step
+            trainer._train_step = lambda batch, *a: (seen.append(index[id(batch)]), step(batch, *a))[1]
+            trainer.train(s1.gold_only(trainer, itertools.chain(head, stream)))
+            self.assertGreater(trainer.step, s1.HEAD)
+            self.assertEqual(seen, list(range(trainer.step)))
+            self.assertEqual(trainer.plan().phase, "teacher")
+            args = types.SimpleNamespace(max_tokens=0, max_visits=0)
+            self.assertEqual(index[id(next(s1.stream_from(None, args, 0, trainer.step)))], trainer.step)
+        finally:
+            pdata.batches = original
 
     def test_stream_from_skips_exactly_the_consumed_batches(self) -> None:
         cache = types.SimpleNamespace()
@@ -193,7 +210,8 @@ class GoTest(unittest.TestCase):
         expected = {"script_sha256": "s", "train_cache_sha256": "t", "N": 11.1}
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "go.json"
-            path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000}))
+            path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000,
+                                        "max_visits": 48}))
             self.assertEqual(s1.wait_for_go(self.args(path), expected)["max_tokens"], 55000)
             for wrong in ({"N": 11.2}, {"seeds": [0]}, {"go": None}):
                 path.write_text(json.dumps({"go": True, "seeds": [1], **expected, **wrong}))
@@ -273,6 +291,48 @@ class RungTest(unittest.TestCase):
             self.run_preflight([self.child("LINE", 9.0), (1, "")])
         self.assertIn("other than memory", str(stop.exception))
         self.assertIsNone(self.run_preflight([self.child("LINE", 99.0)] * 4)["chosen"])   # nothing fits: no rung
+
+
+
+class RobustnessTest(unittest.TestCase):
+    def test_decode_skips_cut_and_garbled_lines(self) -> None:
+        """Second review, finding 4: a cut line crashed the whole readout."""
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            s1.emit("a", {"x": 1})
+            s1.emit("b", {"y": "z" * 1000})
+            s1.emit("c", {"w": 2})
+        lines = out.getvalue().splitlines()
+        cut = [lines[0][:15], "S1 eval", "S1 eval 1/1", "S1 x a/b {}", "S1 bad 1/1 {not json"] + lines[1:]
+        self.assertEqual([k for k, _ in s1.decode(cut)], ["b", "c"])
+
+    def test_a_malformed_go_file_is_refused_and_waited_on(self) -> None:
+        """Second review, finding 5: a go file without the rung (or not a dict) was accepted and then crashed."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "go.json"
+            args = types.SimpleNamespace(go_file=str(path), go_url=None, go_poll_seconds=0.01, go_wait_hours=0.0002,
+                                         seed=0)
+            for bad in ({"go": True, "seeds": [0], "N": 1}, ["go"], {"go": True, "seeds": 0, "N": 1,
+                                                                     "max_tokens": 1, "max_visits": 1}):
+                path.write_text(json.dumps(bad))
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as stop:
+                    s1.wait_for_go(args, {"N": 1})
+                self.assertIn("deadline", str(stop.exception))
+                self.assertIn("go_refused", out.getvalue())
+
+    def test_library_oom_errors_count_as_memory(self) -> None:
+        """Second review, finding 2: an out-of-memory raised as a plain RuntimeError stopped the box."""
+        self.assertTrue(s1.is_oom(RuntimeError("CUDA error: out of memory")))
+        self.assertTrue(s1.is_oom(RuntimeError("cuBLAS: CUBLAS_STATUS_ALLOC_FAILED when calling cublasCreate")))
+        self.assertFalse(s1.is_oom(RuntimeError("shape mismatch")))
+
+    def test_the_code_digest_covers_every_module(self) -> None:
+        """Second review, finding 1: a hand-kept list left out modules the run imports."""
+        files = s1.code_files()
+        for name in ("learnlab/core.py", "learnlab/policy.py", "premonition/pointer.py", "memorylab/storage.py",
+                     "learnlab/village/shards.py", "scripts/span_stage0.py", "scripts/span_stage1.py"):
+            self.assertIn(name, files)
 
 
 if __name__ == "__main__":
