@@ -227,6 +227,11 @@ class GoTest(unittest.TestCase):
                                         "max_visits": 48}))                 # off the ladder
             with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
                 s1.wait_for_go(self.args(path), expected, fit)
+            for odd in ({"go": False, "seeds": None}, {"go": False, "seeds": 1}):   # seventh review: no TypeError
+                path.write_text(json.dumps(odd))
+                with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as stop:
+                    s1.wait_for_go(self.args(path), expected, fit)
+                self.assertIn("deadline", str(stop.exception))
             path.write_text(json.dumps({"go": False, "seeds": [1], "script_sha256": "old"}))   # stale: waited on
             with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as stop:
                 s1.wait_for_go(self.args(path), expected, fit)
@@ -267,6 +272,52 @@ class PreflightTest(unittest.TestCase):
         group = s1.packed(list(range(20)), [100, 500, 100, 100, 100] + [100] * 15, 450, 10)
         self.assertNotIn(1, group)                                         # a visit that breaks max_tokens is left out
         self.assertLessEqual(len(group) * max([100, 500][v == 1] for v in group), 450)
+
+
+class HelperTest(unittest.TestCase):
+    def test_to_cpu_keeps_types_metadata_and_detaches(self) -> None:
+        """Seventh review, finding 7: a plain dict lost the state dict's `_metadata` (module versions)."""
+        import collections
+        model = PremonitionMini(tiny_config())
+        state = model.state_dict()
+        copied = s1.to_cpu(state)
+        self.assertIsInstance(copied, collections.OrderedDict)
+        self.assertEqual(copied._metadata, state._metadata)
+        self.assertEqual(list(copied), list(state))
+        key = next(iter(state))
+        self.assertIsNot(copied[key], state[key])
+        copied[key].add_(1.0)                                              # a copy, not an alias
+        self.assertFalse(torch.equal(copied[key], state[key]))
+        PremonitionMini(tiny_config()).load_state_dict(s1.to_cpu(state))
+        Pair = collections.namedtuple("Pair", "a b")
+        tree = {3: Pair(torch.ones(2), [torch.zeros(1), 1.5]), "lr": 1e-3}
+        out = s1.to_cpu(tree)
+        self.assertIsInstance(out[3], Pair)
+        self.assertEqual(out["lr"], 1e-3)
+        self.assertTrue(torch.equal(out[3].a, torch.ones(2)))
+
+    def test_dev_eval_flags_an_unscored_question(self) -> None:
+        """Seventh review, finding 1: an unscored question must make the record `aligned: false` (the run then ends
+        failed), and the bits keep the cache's order with the ids digest."""
+        model = PremonitionMini(tiny_config()).eval()
+        batch = synthetic_batch(visits=2, lines=16, seed=3)
+        ids = [f"q{i}" for i in range(batch.q_visit.shape[0])]
+        batch.question_ids = ids
+        args = types.SimpleNamespace(max_tokens=10_000, max_visits=8)
+        original = pdata.batches
+        pdata.batches = lambda *a, **k: iter([batch])
+        try:
+            full = s1.dev_eval(model, types.SimpleNamespace(question_ids=ids), None, None, [], args)
+            short = s1.dev_eval(model, types.SimpleNamespace(question_ids=ids + ["never-scored"]), None, None, [],
+                                args)
+        finally:
+            pdata.batches = original
+        self.assertTrue(full["aligned"])
+        self.assertEqual(full["scored"], len(ids))
+        self.assertFalse(short["aligned"])
+        self.assertEqual(short["questions"], len(ids) + 1)
+        self.assertFalse(s1.unbits(short["correct_bits"], short["questions"])[-1])
+        self.assertNotEqual(full["ids_sha256"], short["ids_sha256"])
 
 
 class RungTest(unittest.TestCase):
@@ -414,6 +465,10 @@ class SmokeTest(unittest.TestCase):
             run = subprocess.run([sys.executable, script, "box", *common, "--flop-budget", "3e12", "--go-file",
                                   str(path), "--go-poll-seconds", "1", "--go-wait-hours", "0.02"],
                                  capture_output=True, text=True, timeout=1500)
+            import shutil
+            for kind, record in s1.decode(run.stdout.splitlines()):         # whatever the outcome, remove the
+                if kind.endswith("_ckpt"):                                   # run's checkpoints
+                    self.addCleanup(shutil.rmtree, Path(s1.ROOT) / Path(record["path"]).parents[1], True)
             self.assertIn("S1-DONE ok", run.stdout, run.stdout[-2000:] + run.stderr[-2000:])
             records = s1.decode(run.stdout.splitlines())
             kinds = [k for k, _ in records]
@@ -426,12 +481,10 @@ class SmokeTest(unittest.TestCase):
             for dev in devs:
                 self.assertTrue(dev["aligned"])
                 self.assertEqual(dev["questions"], slices["questions"])
+                self.assertEqual(dev["ids_sha256"], slices["ids_sha256"])   # the bits use the masks' order
                 correct = s1.unbits(dev["correct_bits"], dev["questions"])
                 hits = sum(c for c, f in zip(correct, far) if f)
                 self.assertAlmostEqual(dev["slices"]["far"]["accuracy"] or 0.0, hits / max(sum(far), 1), places=9)
-            run_dir = Path(s1.ROOT) / dict(records)["parent_ckpt"]["path"]
-            import shutil
-            shutil.rmtree(run_dir.parents[1], ignore_errors=True)            # artifacts/span-stage1/<run id>
 
 
 if __name__ == "__main__":

@@ -62,6 +62,7 @@ sys.path.insert(0, str(ROOT))
 from learnlab import ckpt, step1                                              # noqa: E402
 from learnlab.step0 import jsonable                                           # noqa: E402
 from learnlab.tokenizer import Tokenizer                                      # noqa: E402
+from learnlab.train import reserved_bytes                                     # noqa: E402
 from memorylab.storage import Budget                                          # noqa: E402
 from premonition import data as pdata, preprocess, span_cards                 # noqa: E402
 from premonition.config import MiniConfig                                     # noqa: E402
@@ -233,13 +234,20 @@ def branch_state(parent: dict, trainer: MiniTrainer) -> dict:
 
 
 def to_cpu(tree: Any) -> Any:
-    """A deep copy of a state tree (dicts, lists, tuples) with every tensor on the CPU."""
+    """A deep copy of a state tree (dicts, lists, tuples) with every tensor on the CPU; dict types and a state
+    dict's `_metadata` are kept."""
     if torch.is_tensor(tree):
         return tree.detach().cpu().clone()
     if isinstance(tree, dict):
-        return {k: to_cpu(v) for k, v in tree.items()}
-    if isinstance(tree, (list, tuple)):
-        return type(tree)(to_cpu(v) for v in tree)
+        out = type(tree)((k, to_cpu(v)) for k, v in tree.items())        # an OrderedDict stays one
+        if hasattr(tree, "_metadata"):
+            out._metadata = copy.deepcopy(tree._metadata)                  # load_state_dict reads module versions
+        return out
+    if isinstance(tree, list):
+        return [to_cpu(v) for v in tree]
+    if isinstance(tree, tuple):
+        values = [to_cpu(v) for v in tree]
+        return type(tree)(*values) if hasattr(tree, "_fields") else tuple(values)   # namedtuples too
     return copy.deepcopy(tree)
 
 
@@ -299,7 +307,8 @@ def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: T
             entry[1] += int(tag.sum())
     order = list(cache.question_ids)                   # the slice masks' order; an unscored question reads False
     return {"questions": len(order), "scored": len(correct),
-            "aligned": len(correct) == len(order),     # every question scored: the bits align with the masks
+            "aligned": set(correct) == set(order) and len(set(order)) == len(order),   # every question, once
+            "ids_sha256": hashlib.sha256("\n".join(order).encode()).hexdigest(),
             "accuracy": sum(correct.get(q, False) for q in order) / max(len(order), 1),
             "slices": {k: {"n": v[1], "accuracy": v[0] / v[1] if v[1] else None} for k, v in sorted(slices.items())},
             "correct_bits": bits([correct.get(q, False) for q in order])}
@@ -423,9 +432,9 @@ def measure_arm(args: argparse.Namespace) -> None:
     # The run's FLOP calibration, as it runs (fp32, the stream's first HEAD batches at this rung): it must not run out
     # of GPU memory (an OOM here is an OOM of the run), but the run resets the guard's peak after it, so it is
     # reported apart from the guarded peak.
-    stream = pdata.batches(cache, args.max_tokens, seed=args.seed, epochs=None, max_visits=args.max_visits)
+    stream = stream_from(cache, args, args.seed, 0)                   # the run's stream, from its first batch
     trainer.calibrate([next(stream) for _ in range(HEAD)])
-    calibration_gb = torch.cuda.max_memory_reserved() / 1e9 if device.type == "cuda" else 0.0
+    calibration_gb = reserved_bytes(device) / 1e9
     if device.type == "cuda":
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
@@ -444,7 +453,7 @@ def measure_arm(args: argparse.Namespace) -> None:
     trainer.evaluate(validation_hook(dev, tokenizer=tokenizer, stop=stop))
     report = economy(model, dev_batches(built["caches"]["validation"], ECONOMY_VISITS, args.max_tokens,
                                         args.max_visits), device)
-    peak = torch.cuda.max_memory_reserved() / 1e9 if device.type == "cuda" else 0.0
+    peak = reserved_bytes(device) / 1e9
     print("PREFLIGHT " + json.dumps(jsonable({
         "arm": args.arm, "max_tokens": args.max_tokens, "max_visits": args.max_visits, "steps": steps,
         "batches": [{"visits": len(g), "padded": int(b.tokens.numel()), "questions": int(b.q_visit.shape[0])}
@@ -526,8 +535,9 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict
             go = {"go": None, "malformed": True}
         if go is not None and go != reported:
             reported = go
+            seeds = go.get("seeds", [args.seed])
             if go.get("go") is False and go.get("script_sha256", expected.get("script_sha256")) == \
-                    expected.get("script_sha256") and args.seed in go.get("seeds", [args.seed]):
+                    expected.get("script_sha256") and isinstance(seeds, list) and args.seed in seeds:
                 raise SystemExit("the go file says stop")    # a plain stop, or one naming this script and seed
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
@@ -578,7 +588,9 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
               "names": optimizer_names(parent_model, trainer.optimizer), "consumed": consumed}
     emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {           # saved before any
         "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed}})})        # evaluation can fail
-    emit("parent_dev", {"seed": args.seed, "dev": dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)})
+    parent_dev = dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)
+    emit("parent_dev", {"seed": args.seed, "dev": parent_dev})
+    unaligned = [] if parent_dev["aligned"] else ["P"]
     parent_economy = economy(parent_model, economy_batches, device)
     del trainer
 
@@ -633,8 +645,11 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
         emit("arm_ckpt", {"seed": args.seed, "arm": arm, **save(built, trainer, arm.lower(), args, extra)})   # first
         dev = dev_eval(model, valid_cache, all_tags, tokenizer, stop, args)
         emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev})
+        unaligned += [] if dev["aligned"] else [arm]
         emit("arm_economy", {"seed": args.seed, "arm": arm, "economy": economy(model, economy_batches, device)})
         del trainer, model
+    if unaligned:                                         # both arms ran and are saved; the readout is not complete
+        raise SystemExit(f"DEV scoring left questions unscored for {unaligned}: the G2 bits are not usable")
 
 
 # ----------------------------------------------------------------------------- entry points
