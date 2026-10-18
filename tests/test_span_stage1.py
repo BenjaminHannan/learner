@@ -50,8 +50,10 @@ def arm(parent: dict, kind: str, budget: float):
         trainer = MiniTrainer(model, s1.train_config(), "cpu", flop_budget=budget, seed=0)
     else:
         model = span_cards.build_model(tiny_config(), span_config())
-        model.load_state_dict(parent["model"], strict=False)
-        model.writer.init_gate()
+        source = PremonitionMini(tiny_config())
+        source.load_state_dict(parent["model"])
+        missing, unexpected = s1.span_stage0.load_from_line(model, source)          # the load run_seed uses
+        assert set(missing) == s1.span_stage0.GATE_KEYS and not unexpected
         trainer = span_cards.SpanTrainer(model, s1.train_config(), "cpu", flop_budget=budget, seed=0)
     s1.restore(trainer, parent)
     return trainer
@@ -110,13 +112,13 @@ class BranchTest(unittest.TestCase):
         line._train_step(batch, GOLD, loops, False)
         span._train_step(batch, GOLD, loops, False)
         shared = dict(line.model.named_parameters())
+        before = dict(arm(parent, "LINE", 1.0).model.named_parameters())
         moved = 0
         for name, p in span.model.named_parameters():
             if name in gate:
                 continue
             torch.testing.assert_close(p, shared[name], rtol=0, atol=1e-6, msg=name)
-            moved += int(not torch.equal(p, dict((n, q) for n, q in arm(parent, "LINE", 1.0).model.named_parameters())
-                                         [name]))
+            moved += int(not torch.equal(p, before[name]))
         self.assertGreater(moved, 10)                                      # the step really updated weights
 
     @staticmethod
@@ -213,8 +215,9 @@ class GoTest(unittest.TestCase):
             path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000,
                                         "max_visits": 48}))
             self.assertEqual(s1.wait_for_go(self.args(path), expected)["max_tokens"], 55000)
-            for wrong in ({"N": 11.2}, {"seeds": [0]}, {"go": None}):
-                path.write_text(json.dumps({"go": True, "seeds": [1], **expected, **wrong}))
+            for wrong in ({"N": 11.2}, {"seeds": [0]}, {"go": None}):          # each with a valid rung
+                path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000,
+                                            "max_visits": 48, **wrong}))
                 with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
                     s1.wait_for_go(self.args(path), expected)
             path.write_text(json.dumps({"go": False}))
@@ -333,6 +336,40 @@ class RobustnessTest(unittest.TestCase):
         for name in ("learnlab/core.py", "learnlab/policy.py", "premonition/pointer.py", "memorylab/storage.py",
                      "learnlab/village/shards.py", "scripts/span_stage0.py", "scripts/span_stage1.py"):
             self.assertIn(name, files)
+
+
+    def test_a_go_rung_larger_than_the_fit_is_refused_and_waited_on(self) -> None:
+        """Third review, finding 4: a larger rung killed the box instead of being refused like any mismatch."""
+        expected = {"N": 1}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "go.json"
+            args = types.SimpleNamespace(go_file=str(path), go_url=None, go_poll_seconds=0.01, go_wait_hours=0.0002,
+                                         seed=0)
+            base = {"go": True, "seeds": [0], "N": 1}
+            path.write_text(json.dumps({**base, "max_tokens": s1.LADDER[0][0], "max_visits": s1.LADDER[0][1]}))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as stop:
+                s1.wait_for_go(args, expected, s1.LADDER[1])
+            self.assertIn("deadline", str(stop.exception))
+            self.assertIn('"rung"', out.getvalue())
+            path.write_text(json.dumps({**base, "max_tokens": s1.LADDER[1][0], "max_visits": s1.LADDER[1][1]}))
+            self.assertEqual(s1.wait_for_go(args, expected, s1.LADDER[1])["max_tokens"], s1.LADDER[1][0])
+
+    def test_a_timed_out_child_with_bytes_output_is_a_clean_fault(self) -> None:
+        """Third review, finding 1: TimeoutExpired carries bytes even with text=True; it crashed the box."""
+        original = s1.subprocess.run
+
+        def hang(*a, **k):
+            raise s1.subprocess.TimeoutExpired("child", 1, output=b"PREFLIGHT {}", stderr=b"")
+        s1.subprocess.run = hang
+        try:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as stop:
+                s1.preflight(types.SimpleNamespace(seed=0, visits="tiny", size="tiny", workers=1))
+            self.assertIn("other than memory", str(stop.exception))
+            self.assertIn("preflight_error", out.getvalue())
+        finally:
+            s1.subprocess.run = original
 
 
 if __name__ == "__main__":

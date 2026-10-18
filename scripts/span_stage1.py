@@ -445,8 +445,9 @@ def preflight(args: argparse.Namespace) -> dict:
             try:
                 run = subprocess.run(command, capture_output=True, text=True, timeout=CHILD_TIMEOUT)
             except subprocess.TimeoutExpired as expired:
-                run = types.SimpleNamespace(returncode="timeout", stdout=expired.stdout or "",
-                                            stderr=f"no result after {CHILD_TIMEOUT} s")
+                out = expired.stdout or ""
+                run = types.SimpleNamespace(returncode="timeout", stderr=f"no result after {CHILD_TIMEOUT} s",
+                                            stdout=out.decode(errors="replace") if isinstance(out, bytes) else out)
             found = [l for l in run.stdout.splitlines() if l.startswith("PREFLIGHT ")]
             if run.returncode or not found:                   # not a memory measurement: a fault, so stop
                 emit("preflight_error", {"arm": arm, "max_tokens": max_tokens, "max_visits": max_visits,
@@ -483,8 +484,9 @@ def read_go(args: argparse.Namespace) -> Optional[dict]:
         return None
 
 
-def wait_for_go(args: argparse.Namespace, expected: dict) -> dict:
-    """The go record once it names exactly this box's script, caches, N and a rung; refusals are logged."""
+def wait_for_go(args: argparse.Namespace, expected: dict, fitted: Optional[tuple] = None) -> dict:
+    """The go record once it names exactly this box's script, caches, N and a rung no larger than `fitted` (the
+    rung this box's pre-flight measured as fitting); every mismatch is logged as a refusal and waited on."""
     deadline = time.time() + args.go_wait_hours * 3600
     reported = None
     while time.time() < deadline:
@@ -498,7 +500,10 @@ def wait_for_go(args: argparse.Namespace, expected: dict) -> dict:
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
                 wrong.append("seeds")
-            wrong += [k for k in ("max_tokens", "max_visits") if not isinstance(go.get(k), int)]
+            rung_given = [k for k in ("max_tokens", "max_visits") if not isinstance(go.get(k), int)]
+            wrong += rung_given
+            if not rung_given and fitted is not None and not rung_allowed((go["max_tokens"], go["max_visits"]), fitted):
+                wrong.append("rung")
             if go.get("go") is True and not wrong:
                 return go
             emit("go_refused", {"seed": args.seed, "mismatch": wrong, "go": go.get("go")})
@@ -514,7 +519,7 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     config = model_config(tokenizer, args.size)
     n_target = go["N"]
     stop = sorted(step1.stop_ids(tokenizer)[0])
-    all_tags = slice_tags(built, len(valid_cache))                    # masks over every question: any subset uses them
+    all_tags = built["tags"]                                          # masks over every question: any subset uses them
     hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, all_tags),
                            tokenizer=tokenizer, stop=stop)
     economy_batches = dev_batches(valid_cache, ECONOMY_VISITS, args.max_tokens, args.max_visits)
@@ -531,16 +536,16 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
         torch.cuda.reset_peak_memory_stats()
     report = trainer.train(gold_only(trainer, itertools.chain(head, stream)), evaluate=hook,
                            on_log=progress("P", args.seed))
-    consumed = [trainer.step]                          # batches trained, in stream order (a discarded one is not)
-    emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed[0],
+    consumed = trainer.step                            # batches trained, in stream order (a discarded one is not)
+    emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed,
                     "fit": {"a": fit.a, "b": fit.b, "worst": fit.worst}})
     parent = {"model": copy.deepcopy(parent_model.state_dict()),
               "optimizer": copy.deepcopy(trainer.optimizer.state_dict()),
               "trainer": copy.deepcopy(trainer.state_dict()), "rng": ckpt.rng_state(),
-              "names": optimizer_names(parent_model), "consumed": consumed[0]}
+              "names": optimizer_names(parent_model), "consumed": consumed}
+    emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {           # saved before any
+        "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed}})})        # evaluation can fail
     emit("parent_dev", {"seed": args.seed, "dev": dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)})
-    emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {
-        "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed[0]}})})
     parent_economy = economy(parent_model, economy_batches, device)
     del trainer
 
@@ -578,6 +583,9 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
             trainer = span_cards.SpanTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
         restore(trainer, parent)
         arm_fit = calibrate_keeping_rng(trainer, head)
+        if device.type == "cuda":                             # as for the parent: calibration (fp32) is not training
+            torch.cuda.empty_cache()
+            torch.cuda.reset_peak_memory_stats()
         at_branch = parent_economy if arm == "LINE" else economy(model, economy_batches, device)
         emit("arm_start", {"seed": args.seed, "arm": arm, "step": trainer.step, "share": trainer.flops / flop_budget,
                            "fit": {"a": arm_fit.a, "b": arm_fit.b, "worst": arm_fit.worst}, "economy": at_branch})
@@ -585,14 +593,14 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
         report = trainer.train(stream, evaluate=hook, on_log=progress(arm, args.seed))
         emit("arm_train", {"seed": args.seed, "arm": arm, "train": train_report(report),
                            "span_log_last": getattr(trainer, "span_log", [])[-3:]})
-        dev = dev_eval(model, valid_cache, all_tags, tokenizer, stop, args)
-        emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev})
-        emit("arm_economy", {"seed": args.seed, "arm": arm, "economy": economy(model, economy_batches, device)})
         extra = {"contender": "D" if arm == "LINE" else span_cards.VARIANT,
                  "stage1": {"role": arm, "parent_batches": parent["consumed"]}}
         if arm == "SPAN":
             extra["span"] = asdict(model.span)
-        emit("arm_ckpt", {"seed": args.seed, "arm": arm, **save(built, trainer, arm.lower(), args, extra)})
+        emit("arm_ckpt", {"seed": args.seed, "arm": arm, **save(built, trainer, arm.lower(), args, extra)})   # first
+        dev = dev_eval(model, valid_cache, all_tags, tokenizer, stop, args)
+        emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev})
+        emit("arm_economy", {"seed": args.seed, "arm": arm, "economy": economy(model, economy_batches, device)})
         del trainer, model
 
 
@@ -629,6 +637,8 @@ def box(args: argparse.Namespace) -> None:
     emit("data", {"seed": args.seed, **record})
     if record["newline_ids"] != [23]:
         raise SystemExit(f"newline id {record['newline_ids']} is not 23: SpanConfig.newline_id would be wrong")
+    built["tags"] = slice_tags(built, len(built["caches"]["validation"]))   # needed for G2: fail before paying more
+    emit("slices", {"seed": args.seed, **{name: int(tag.sum()) for name, tag in (built["tags"] or {}).items()}})
     memory = preflight(args)
     emit("preflight", {"seed": args.seed, **memory})
     if memory["chosen"] is None:
@@ -637,12 +647,8 @@ def box(args: argparse.Namespace) -> None:
                 "train_cache_sha256": record["train_cache"]["sha256"],
                 "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
                 "flop_budget": args.flop_budget}
-    go = wait_for_go(args, expected)
-    rung = (go["max_tokens"], go["max_visits"])
     fitted = (memory["chosen"]["max_tokens"], memory["chosen"]["max_visits"])
-    if not rung_allowed(rung, fitted):
-        raise SystemExit(f"the go file names {rung}, larger than the rung this box measured as fitting {fitted} "
-                         "(or outside the ladder)")
+    go = wait_for_go(args, expected, fitted)                      # refuses a rung larger than `fitted`
     emit("go", {"seed": args.seed, "max_tokens": go["max_tokens"], "max_visits": go["max_visits"]})
     run_seed(args, built, go)
 
