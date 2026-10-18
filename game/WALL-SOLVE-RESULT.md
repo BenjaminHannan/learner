@@ -197,3 +197,26 @@ Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent 
   - s200 stone games 49.8 -> 35.8%; played agreement 36.4 -> 27.7%; non-habit 5.88 -> 5.67.
   - s201 stone games 47.5 -> 43.5%; played agreement 37.3 -> 30.0%; non-habit 5.90 -> 5.99.
   - The final mark needs stone >= +10 points on the sealed screen on both seeds; practice stone is moving the other way on s200.
+
+## GW-LS erosion diagnosis (rounds 1-7, practice games and fixed held-out views only; no sealed map; written before the round-8 sealed read)
+Two independent implementations agreed to rounding. Full tables: `game/results/gwls/diag/erosion-diagnosis.json`.
+- **Explore noise ruled out (shown):** random explore moves are 3-6% of kept rows (<= 10% of weight), and the share falls each round.
+  The act-stream replay has 0 mismatches over about 1.1 M steps.
+- **Navigation erodes, acting does not (shown):**
+  - Kept rows on nav views agree with the labeller 43 -> 29% (s200) and 48 -> 28% (s201), rounds 1 -> 7. On act views they stay 87-95%.
+  - Played nav agreement 36 -> 18% on both seeds; played act agreement rises (53 -> 69%, 62 -> 82%).
+- **Fixed held-out states (shown):**
+  - S top-1 at r0 / r3 / r7: s200 62.4 / 56.1 / 50.1%; s201 64.8 / 62.1 / 55.0%.
+  - Entropy is about flat (s200 0.90 -> 0.89, s201 0.80 -> 0.79) while max-probability rises (0.65 -> 0.72, 0.69 -> 0.76).
+  - The argmax differs from r0 on 43% / 39% of S views by r7.
+  - The policy is being sharpened toward its own choices, not made noisier.
+- **Repeat-event loops dominate (shown):** 76-83% of kept rows (54-72% of weight) come from segments ending in a repeat event (more wood,
+  more drink). Their nav / act agreement falls 59-67% -> 47-50%.
+- **Reading (suggested; to be finalised with the sealed result):**
+  - **Coverage is binding, not start competence.** The copied labels are the student's own navigation on its own states, where it is
+    about 19 points worse than on held-out states (Z7).
+  - Copying them sharpens that weaker navigation and erodes held-out map reading too.
+  - Event-segment self-imitation cannot make own-state navigation better than the student already plays it.
+- **Proposed next single change (marks to be written after the sealed read; needs authorization):** on-policy labeller relabelling of
+  GW-L's own visited states, against a matched-update control with more off-policy labels. Primary mark: own-state nav accuracy within
+  5 points of held-out. A re-run of GW-LS from that student would follow with its own marks.
