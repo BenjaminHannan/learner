@@ -124,6 +124,16 @@ class BranchCheckTest(unittest.TestCase):
         self.assertEqual(same["differing"], 0)
         apart = span_stage0.compare_answers(Fixed(near), Fixed(near - 0.01), [None])
         self.assertFalse(apart["identical"])
+        self.assertEqual(apart["differing"], 3)                     # halt mismatches count per question
+
+    def test_a_halt_shift_near_saturation_is_caught(self) -> None:
+        """Sixth review, finding 5: an absolute probability tolerance missed a 20x odds change near p = 0."""
+        low = torch.tensor([6e-6, 0.5, 1 - 1e-6], dtype=torch.float32)
+        shifted = torch.tensor([1.2e-4, 0.5, 1 - 1e-6], dtype=torch.float32)
+        close, _ = span_stage0.halt_close(low, shifted)
+        self.assertEqual(close.tolist(), [False, True, True])
+        noise = torch.nextafter(low, torch.ones_like(low))          # one float32 ulp everywhere
+        self.assertTrue(bool(span_stage0.halt_close(low, noise)[0].all()))
 
 
 class GateTest(unittest.TestCase):
