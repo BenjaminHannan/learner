@@ -119,6 +119,8 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
 
 **Heuristics frozen before scoring** (`width-pilot-item0/frozen_heuristics.py`, sha256 `8b2965917bd480fe533b2fce5bdc36a16a661d3922dd14443fb4ada8e1c32b41`): H1 J-only, H2 plus-join, H3 shared-cells. "1-step" = the shallowest HO stratum (3 calls); HO has no literal 1-call items.
 
+**Freeze-order disclosure.** Before freezing, the analyst had seen the number of valid items for J-only (14), K+J (0) and a range-echo rule (51 of 130 applicable). No accuracy split by validity or depth had been seen. H3 was written after range-echo showed low capture of failures. The freeze is therefore clean on the outcome measures but not on item counts. This does not affect the NO answer, because no rule passes.
+
 | Model / heuristic | Validity (valid vs invalid) | Effect | Invalid by calls (3 / 4 / 5 / 6+) | Depth effect | Invalid 3-call | Failures captured |
 |---|---|---|---|---|---|---|
 | L13 H1 | 1/14 vs 58/406 | −7.1 | 35.8 / 1.5 / 9.8 / 0.0 | 35.8 | 35.8% | 17/361 |
