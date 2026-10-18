@@ -14,7 +14,13 @@
        [--seed N] [--first-call-weight W]        (R1, Oct 2026: --seed re-points the run seed (module SEED and the import-derived
         KL_REPLAY_SEED together; the eval fit seed, chosen before it applies, and the build-time streams stay as shipped);
         --first-call-weight (default 1.0 = shipped) weights the first call's losses (the call writer's token losses
-        and round 0's span_call term), renormalised per trace to the uniform-weight trace mean - see install_first_call_weight)
+        and round 0's span_call term; every call round is renormalised per trace so the call rounds' weights sum to the
+        uniform-weight total, NOOP rounds are untouched; every score record carries first_call_weight and the version tag
+        first_call_renorm = 'call-rounds-v3', also at W = 1.0) - see install_first_call_weight, run_record_extras.
+        U3 ('weight w scales the first call only; no other term changes'): with --guard, the K-FAC guard measures F on the
+        SHIPPED (unweighted) loss, at setup and on every refresh, and the frozen KL parent is the shipped model (it carries no
+        weighted call_loss / span_terms), so the guard mask and the KL target are the same at every W; only the training
+        loss carries the weighting. See FirstCallWeight.shipped, make_kl_parent.)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -24,9 +30,12 @@ train: parent checkpoint + the mode's make_row / make_opt / AddOn / loss, on tho
 Diagnosis only: the mode is not run and no panel row is trained.
 """
 import argparse
+import contextlib
 import hashlib
 import itertools
 import json
+import math
+import numbers
 import os
 import random
 import re
@@ -39,7 +48,8 @@ from domain import panel as P
 from domain.far import sheet_probe as SP
 from domain.tools import sheet as sheet_tool
 
-SEED = 93301
+SHIPPED_SEED = 93301   # the committed default run seed: train(seed=None) always applies this (apply_run_seed), whatever an earlier call in the process set
+SEED = SHIPPED_SEED
 LEARN = '/mnt/project-files/far-transfer/learn'
 TRAIN_ROWS = os.path.join(LEARN, 'train-rows.jsonl')
 PARENT = '/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/checkpoint.pt'
@@ -150,7 +160,7 @@ def build():
     if os.path.exists(TRAIN_ROWS):
         raise SystemExit(f'refusing to overwrite {TRAIN_ROWS}')
     exclude = read_prompts(EXCLUDE_FILES)
-    rows, stats = build_train_rows(random.Random(SEED), exclude)
+    rows, stats = build_train_rows(random.Random(SHIPPED_SEED), exclude)
     assert not {r['prompt'] for r in rows} & exclude
     assert len({r['prompt'] for r in rows}) == len(rows)
     tmp = TRAIN_ROWS + '.tmp'
@@ -1279,12 +1289,7 @@ def verify_guard_commit(src, commit=GUARD_COMMIT_SOFT, files=GUARD_SOFT_FILES):
     return 'verified'
 
 
-def file_sha256(path):
-    h = hashlib.sha256()
-    with open(path, 'rb') as f:
-        for blk in iter(lambda: f.read(1 << 20), b''):
-            h.update(blk)
-    return h.hexdigest()
+file_sha256 = sha256_file   # alias: domain/tests/test_learn_probe.py imports this name
 
 
 def compare_diary(diary, log_path, cmp):
@@ -1361,45 +1366,91 @@ def apply_run_seed(seed):
     KL_REPLAY_SEED = seed + 11
 
 
+# Trainer semantics of --first-call-weight, recorded with every run (see run_record_extras). v3 (was v2): the K-FAC guard now measures F
+# on the SHIPPED unweighted loss and the KL parent is the shipped model (v2 measured F from the W-weighted loss, so the guard mask moved
+# with W: a second change inside the arm, against U3). W = 1.0 runs are unchanged in value, but carry the new tag.
+FIRST_CALL_RENORM = 'call-rounds-v3'
+
+
+def check_first_call_weight(weight, exc=ValueError, label='first-call weight'):
+    """The one rule for the first-call weight: a finite number > 0 (bool and non-numbers refused too). main raises SystemExit, train and
+    install_first_call_weight ValueError. Explicit raise, not assert, so it holds under python -O."""
+    if isinstance(weight, bool) or not isinstance(weight, numbers.Real) or not (math.isfinite(weight) and weight > 0):
+        raise exc(f'{label} must be a finite number > 0, got {weight!r}')
+    return weight
+
+
+def run_record_extras(seed, first_call_weight):
+    """The R1 fields train() writes into every score record: the run seed, the first-call weight and FIRST_CALL_RENORM, the version tag
+    of the weighting semantics ('call-rounds-v3': per-trace renormalisation over the CALL rounds, round 0 renorm x W, NOOP rounds 1.0,
+    span_call weighted the same way; the guard measures and the KL parent is the shipped, unweighted model). Recorded at weight 1.0 too, so every run states its trainer semantics; a record without
+    first_call_renorm came from the earlier trainer (before the call-round renormalisation fix), whose W != 1 numbers are not comparable."""
+    return dict(seed=seed, first_call_weight=first_call_weight, first_call_renorm=FIRST_CALL_RENORM)
+
+
 def install_first_call_weight(m, weight):
     """R1 (pairing-map decisions U3): replace m.call_loss and m.span_terms with copies of Tool.call_loss and
     Tool.span_terms (custom_io/models/tool.py) in which the FIRST call's losses carry `weight`, renormalised per trace
     by the trace's inverse mean call weight, renorm = n_calls / (weight + n_calls - 1) (the pairing map: 'loss
-    renormalised per trace to the uniform-weight trace mean'; a trace whose calls all lost the same amount contributes
-    exactly its uniform-weight loss, and the effective learning rate is unchanged across arms). Weighted: round 0's op
-    CE and operand-string NLL in call_loss, and round 0's span_call contribution in span_terms — the whole of the first
-    call's loss. In call_loss every round carries renorm and round 0 carries renorm x weight; in span_terms ONLY round
-    0 changes (fac0 = renorm x weight there) — later span rounds, the stop term, span_share and the returned Mn (which
-    span_loss turns into span_ans) are the shipped computations, unweighted, and span_ans itself is never weighted. The
-    mode / word / gen terms are not call losses and are untouched. A row with no call is untouched: its round-0 op CE
-    predicts NOOP, which is not a first call, and all its span rounds are off. hits / tot are computed from the
-    unweighted quantities, exactly as shipped. At weight 1.0 every factor is exactly 1.0 and the arithmetic is the
-    shipped arithmetic in the shipped order, so the result is bit-identical to the unmodified trainer (train() still
-    installs this only for weight != 1.0)."""
+    renormalised per trace to the uniform-weight trace mean'). The renormalisation is over the trace's CALL rounds, so
+    it is applied to call rounds only: for a trace with n_calls calls, the call rounds' weights are (weight x renorm,
+    renorm, ..., renorm) and sum to n_calls up to float32 rounding, the uniform-weight sum, for every weight; the first
+    call's weight is `weight` times a later call's.
+    Exactly what is weighted (g['op'][:, s] > 0 = "call round"; round 0 of a trace with no call is not a first call):
+      * op CE (call_loss): call rounds carry renorm, round 0 of a call row carries renorm x weight; NOOP rounds
+        (gold op == 0: the stop / NOOP supervision after the program, and every round of a no-call row) carry 1.0, as
+        shipped. The shipped w_row (w_noop on rows without a call) is kept and multiplies as before.
+      * operand-string NLL (call_loss): call rounds only (the NLL is already zero-masked off call rounds); same
+        factors as the op CE call rounds.
+      * span_call (span_terms): every call round carries renorm, round 0 carries renorm x weight (same factors as the
+        operand NLL), so span_call's per-trace total over call rounds is also preserved and the first-call ratio is
+        weight.
+    Not weighted, shipped computations: the stop term, span_share, the returned Mn (which span_loss turns into
+    span_ans; span_ans itself is never weighted), the mode / word / gen terms, and hits / tot (computed from the
+    unweighted quantities). A row with no call is untouched. At weight 1.0 every factor is exactly 1.0 and the
+    arithmetic is the shipped arithmetic in the shipped order, so the result is bit-identical to the unmodified trainer
+    (train() still installs this only for weight != 1.0).
+
+    The weighting is the TRAINING loss's only (U3: 'weight w scales the first call only; no other term changes'). The two
+    other things in an --guard run that would otherwise see the instance-level closures are kept shipped:
+      * the K-FAC guard's Fisher is measured by mainbrain kf.kfac_stats, which calls m.loss(batch) and backpropagates it, and
+        Tool.loss dispatches to self.call_loss / self.span_terms, so it would be measured from the W-weighted loss and the guard
+        mask would differ between an R1 arm and its W = 1 control. Guarded wraps every kfac_stats call (setup and each refresh)
+        in the returned handle's shipped() context, which takes the closures off the instance for the duration and puts them
+        back (also if the measure raises). The guard therefore measures on the shipped loss at every W.
+      * the frozen KL parent (klreplay.frozen_copy deep-copies m, and a deep copy shares the closures, which stay bound to the
+        TRAINEE m) is the shipped model: make_kl_parent pops call_loss / span_terms from its __dict__.
+    -> a FirstCallWeight handle (.call_loss, .span_terms, .shipped())."""
+    check_first_call_weight(weight)
     import torch
     import torch.nn.functional as F
     from custom_io.models.ledger import COMM
     from custom_io.models.tool import CELLS
 
+    # DRIFT RISK: call_loss and span_terms below are copies of Tool.call_loss / Tool.span_terms; if tool.py changes them these
+    # go stale silently. The guard is test_learn_probe_r1_renorm.py::test_w1_bit_identical (W = 1.0 must equal the shipped methods bit for bit).
     def factors(g):
-        """Per trace: (renorm, first) — renorm = n_calls / (weight + n_calls - 1), the inverse mean call weight;
-        first = `weight` on rows whose round 0 is a real call, else 1."""
+        """Per trace: renorm = n_calls / (weight + n_calls - 1), the inverse mean call weight (1.0 on a row with no call)."""
         n_calls = (g['op'] > 0).sum(1)
-        renorm = torch.where(n_calls > 0, n_calls.float() / (weight + (n_calls - 1).float()),
-                             torch.ones_like(n_calls, dtype=torch.float32))   # per trace: 1 / mean call weight
-        first = torch.where(g['op'][:, 0] > 0, float(weight), 1.0)   # rows whose round 0 is a real call
-        return renorm, first
+        return torch.where(n_calls > 0, n_calls.float() / (weight + (n_calls - 1).float()),
+                           torch.ones_like(n_calls, dtype=torch.float32))   # per trace: 1 / mean call weight
+
+    def round_fac(g, s, renorm):
+        """[B] factor for round s: renorm (x weight on round 0) where the gold op is a call, exactly 1.0 on NOOP rounds
+        (so a row with no call, whose round 0 is NOOP, gets 1.0 there too)."""
+        base = renorm * float(weight) if s == 0 else renorm
+        return torch.where(g['op'][:, s] > 0, base, torch.ones_like(base))
 
     def call_loss(steps, g, B):
         dev = g['op'].device
         w_row = torch.where(g['has'], 1.0, m.w_noop)
         comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
-        renorm, first = factors(g)
+        renorm = factors(g)
         lop = lcall = 0.0
         hits = tot = 0
         sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
         for s, st in enumerate(steps):
-            fac = renorm * first if s == 0 else renorm
+            fac = round_fac(g, s, renorm)   # NOOP rounds 1.0; call rounds renorm (round 0: renorm x weight)
             lg, p = st[0].float(), st[1]
             lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row * fac).mean()
             lp = torch.log(p + 1e-6)
@@ -1413,26 +1464,25 @@ def install_first_call_weight(m, weight):
         return lop, lcall, hits, tot
 
     def span_terms(o, g, batch, B):
-        """A copy of Tool.span_terms (custom_io/models/tool.py) with one change: round 0's span_call contribution
-        carries fac0 = renorm x first, the same per-trace factor round 0's call terms carry in call_loss above.
-        Everything else — later rounds, the stop term, span_share, the returned Mn — is the shipped computation,
-        unweighted. Reached exactly where the shipped method is: Tool.loss calls span_loss, which calls
-        self.span_terms (and ToolH1's loss calls self.span_terms directly), so the instance attribute is picked up."""
+        """A copy of Tool.span_terms (custom_io/models/tool.py) with one change: each call round's span_call
+        contribution carries the same per-round factor the call terms carry in call_loss above (call rounds renorm,
+        round 0 renorm x weight; NOOP rounds are masked off by `on` anyway). Everything else — the stop term,
+        span_share, the returned Mn — is the shipped computation, unweighted. Reached exactly where the shipped
+        method is: Tool.loss calls span_loss, which calls self.span_terms (and ToolH1's loss calls self.span_terms directly), so the instance attribute is picked up."""
         dev, T = batch['prompt_ids'].device, batch['prompt_ids'].shape[1]
         Ma, Mb, Mn, (cs, ts, ys) = m.span_gold(batch['rows'], T, o['le'], o['K'], g.get('rowg'))
         Ma, Mb, Mn = (torch.from_numpy(x).to(dev) for x in (Ma, Mb, Mn))
         lse = lambda lg, M: torch.logsumexp(lg.masked_fill(~M, -1e9), -1) - torch.logsumexp(lg, -1)
         side = lambda lg, gl, M: torch.where(M.any(-1), F.logsigmoid(gl) + lse(lg, M), F.logsigmoid(-gl))
         comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
-        renorm, first = factors(g)
-        fac0 = renorm * first
+        renorm = factors(g)
         lsc, n_span, n_side = 0.0, 0, 0
         for s, st in enumerate(o['steps']):
             sp, ma, mb, on = st[2], Ma[:, s], Mb[:, s], g['op'][:, s] > 0
             lab = side(sp['la'], sp['ga'], ma) + side(sp['lb'], sp['gb'], mb)
             lba = side(sp['la'], sp['ga'], mb) + side(sp['lb'], sp['gb'], ma)
             nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
-            lsc = lsc + ((nll * on * fac0).sum() if s == 0 else (nll * on).sum()) / B
+            lsc = lsc + (nll * on * round_fac(g, s, renorm)).sum() / B
             n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
         if cs:
             lstop = F.binary_cross_entropy_with_logits(m.stop_logit(torch.tensor(cs, device=dev), torch.tensor(ts, device=dev)),
@@ -1443,7 +1493,36 @@ def install_first_call_weight(m, weight):
 
     m.call_loss = call_loss
     m.span_terms = span_terms
-    return call_loss
+    return FirstCallWeight(m, call_loss, span_terms)
+
+
+class FirstCallWeight:
+    """Handle on an installed first-call weighting (install_first_call_weight): the two closures now set on the instance, and
+    shipped(), a context manager under which the model is the shipped, unweighted one (see install_first_call_weight)."""
+    NAMES = ('call_loss', 'span_terms')
+
+    def __init__(self, m, call_loss, span_terms):
+        self.m, self.call_loss, self.span_terms = m, call_loss, span_terms
+
+    @contextlib.contextmanager
+    def shipped(self):
+        """Within the block m.call_loss / m.span_terms are the class methods (the instance attributes are removed); on exit,
+        also on an exception, whatever was on the instance is put back."""
+        saved = {k: self.m.__dict__.pop(k) for k in self.NAMES if k in self.m.__dict__}
+        try:
+            yield self.m
+        finally:
+            self.m.__dict__.update(saved)
+
+
+def make_kl_parent(klreplay, m):
+    """The frozen KL parent as the SHIPPED model: klreplay.frozen_copy(m) (which pops only 'loss', 'load_state_dict', '_guess_lsd'
+    from the copy) minus the instance-level call_loss / span_terms of install_first_call_weight; a deep copy shares those closures
+    with the trainee, bound to the trainee m (replay_kl does not call them today; this keeps it so)."""
+    p = klreplay.frozen_copy(m)
+    for k in FirstCallWeight.NAMES:
+        p.__dict__.pop(k, None)
+    return p
 
 
 def kl_replay_loss(m, parent, weight, kls, klreplay):
@@ -1480,10 +1559,13 @@ def kl_replay_loss(m, parent, weight, kls, klreplay):
 
 class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
-    wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
+    wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state).
+    shipped: a callable returning a context manager (FirstCallWeight.shipped) under which every kfac_stats call runs, so F is
+    measured on the shipped, unweighted loss at setup and on every refresh (U3; see install_first_call_weight). None = nothing to suspend."""
 
-    def __init__(self, kf, gp, m, diary, energy, make_base, soft=None):
+    def __init__(self, kf, gp, m, diary, energy, make_base, soft=None, shipped=None):
         self.kf, self.gp, self.m, self.diary, self.energy, self.soft = kf, gp, m, diary, energy, soft
+        self.shipped = shipped or contextlib.nullcontext
         self.measure_secs, self.measures = 0.0, 0
         F = self.measure()
         self.frozen = gp.freeze_unprojected(m)
@@ -1494,7 +1576,8 @@ class Guarded:
         t = time.time()
         for p in self.m.parameters():
             p.requires_grad_(True)
-        stats = self.kf.kfac_stats(self.m, self.diary, norm='example')
+        with self.shipped():
+            stats = self.kf.kfac_stats(self.m, self.diary, norm='example')
         F, info = self.kf.factors(stats, self.energy) if self.soft is None else self.kf.factors(stats, self.energy, soft=self.soft)
         self.gp.freeze_unprojected(self.m)   # kfac_stats switched to eval mode and set requires_grad
         self.m.train()
@@ -1514,14 +1597,16 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
           kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0):
+    # argument validation first, before any process-wide side effect (torch.set_num_threads)
+    check_first_call_weight(first_call_weight, label='first_call_weight')
+    if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
+        raise TypeError(f'seed must be an int or None, got {seed!r}')
+    assert arm in ('LA', 'LB')
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
     from domain.mode import AddOn, CONST_PATH, make_opt
     torch.set_num_threads(threads)
-    assert arm in ('LA', 'LB')
-    assert seed is None or isinstance(seed, int), seed
-    assert first_call_weight > 0, first_call_weight
     assert steps and max(steps) <= updates and min(steps) >= 0, (steps, updates)
     cons = json.load(open(CONST_PATH))
     rank, alpha = addon_size(arm, cons, addon_rank, addon_alpha)
@@ -1538,18 +1623,18 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     if os.path.exists(os.path.join(out, 'scores.jsonl')):
         raise SystemExit(f'refusing to reuse {out}: scores.jsonl exists')
     train_rows = load_jsonl(train_path)
-    fit_seed = L8_SEED if cells == 'l8' else L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SEED
-    if seed is not None:
-        apply_run_seed(seed)   # after fit_seed is chosen: the eval fit sample is a held stream, identical across run seeds (U2)
-    extra.update(seed=SEED, first_call_weight=first_call_weight)
+    fit_seed = L8_SEED if cells == 'l8' else L5_SEED if cells == 'l5' else L4_SEED if cells == 'l4' else L3_SEED if cells == 'l3' else MODE_SEED if os.path.abspath(train_path) == MODE_ROWS else SHIPPED_SEED
+    # always applied, so seed=None after a seeded call in this process is the shipped streams again (record seed = 93301); in a fresh
+    # process it is a no-op. After fit_seed is chosen: the eval fit sample is a held stream, identical across run seeds (U2).
+    apply_run_seed(SHIPPED_SEED if seed is None else seed)
+    extra.update(run_record_extras(SEED, first_call_weight))
     ev = {'l3_path': eval_rows or L3_EVAL_ROWS, 'l5_path': eval_rows or L5_EVAL_ROWS}
     sets = eval_sets(train_rows, cells, fit_seed, probe_path=probe, **ev)
     print(f'{arm}: rows {train_path}; scored cells {cells}: ' + ', '.join(f'{k} {len(v)}' for k, v in sets.items()), flush=True)
     ck = torch.load(parent, map_location='cpu', weights_only=True)
     torch.manual_seed(SEED)
     m = load_model(parent).eval()
-    if first_call_weight != 1.0:
-        install_first_call_weight(m, float(first_call_weight))
+    fcw = install_first_call_weight(m, float(first_call_weight)) if first_call_weight != 1.0 else None   # the TRAINING loss's weighting only
     rows, drops = make_rows(m, train_rows, cons)
     print(f'{arm}: {len(rows)} of {len(train_rows)} rows usable; dropped {dict(drops)}', flush=True)
     ds = Dataset(rows, m.vocab)
@@ -1573,11 +1658,12 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 import importlib
                 klreplay = importlib.import_module('mainbrain.klreplay')
                 assert os.path.abspath(klreplay.__file__).startswith(os.path.abspath(guard_src)), klreplay.__file__
-                kl_parent = klreplay.frozen_copy(m)
+                kl_parent = make_kl_parent(klreplay, m)   # the shipped model, not the weighted one (U3)
                 kl_ds = Dataset(diary, m.vocab)
                 kl_rng = np.random.RandomState(KL_REPLAY_SEED)
                 kls = []
-            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=soft_value if soft_guard else None)
+            guarded = Guarded(kf, gp, m, diary, guard_energy, lambda: make_opt(m, cons['lr']), soft=soft_value if soft_guard else None,
+                              shipped=fcw.shipped if fcw else None)   # F is measured on the shipped loss (U3)
             opt = guarded.opt
             if soft_guard:
                 m.loss = kl_replay_loss(m, kl_parent, float(kl_weight), kls, klreplay)   # not klreplay.wrap: weights 1 + kl_weight, see its docstring
@@ -1671,7 +1757,7 @@ def main(argv=None):
     a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a.add_argument('--seed', type=int, default=None, help='train only (R1): the run seed, driving the torch seedings, the data order and the KL replay stream; default None = the shipped module SEED (93301), every stream as shipped')
-    a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss, renormalised per trace to the uniform-weight trace mean; default 1.0 = uniform (shipped)")
+    a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss (op CE and operand NLL), renormalised over the trace's call rounds so their weights sum to the uniform total (NOOP rounds untouched); the span pointer's call term (span_call) is weighted the same way; default 1.0 = uniform (shipped)")
     a = a.parse_args(argv)
     if a.stage == 'build':
         build()
@@ -1703,8 +1789,7 @@ def main(argv=None):
         census_l12(a.parent, a.attempts, a.out)
     else:
         assert a.arm and a.out, 'train needs --arm and --out'
-        if a.first_call_weight <= 0:
-            raise SystemExit('--first-call-weight must be > 0')
+        check_first_call_weight(a.first_call_weight, SystemExit, '--first-call-weight')
         a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
         from domain.mode import CONST_PATH
