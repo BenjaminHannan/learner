@@ -29,6 +29,11 @@ passed, record complete, results and final.json persisted); a failed identity ch
 arm model, picker sample, T 1.0, 100 worlds with the sealed seeds 7,000,000-7,000,099 once each. The play path applies the same identity check to the
 fresh result before the marks. Any failure is a refusal string and final.json is not written. --dry-run prints the plan, arm C's numbers and every refusal
 reason, and plays nothing (exit status 1 if it would refuse).
+Q115 (P1-P6): the read record is also written, atomically, to the default PERSIST_DIR and to --persist-dir BEFORE any scorer starts (a crashed attempt leaves a lasting
+trace; a read-record.json in either dir refuses a new play, and the default PERSIST_DIR is ALWAYS checked); game/constants.json must say explore 0.10 and episode_cap 1000
+(both recorded in the record, and checked again on identity); every existence check on results, locks, records and final.json is fail-closed (exists_strict); the /proc
+probe refuses when /proc is mounted with hidepid / subset restrictions or its listing cannot be read; --analyze-only refuses to overwrite a persisted read-record.json /
+final.json / score-sample.json unless the persisted read-record.json is exactly this root's.
 Straight after the sealed read the score files, and after the analysis final.json, are copied to --persist-dir (default game/results/gwls/; no git
 operation: the session lead commits).
 
@@ -67,6 +72,7 @@ WRONG_NH, WRONG_STONE = -0.5, -15.0
 ARM_C_SHA256 = {200: '516f7329d74486d74075243217ee4e62559b92316efed9fad47a0c470ab631dc',
                 201: '4ec56fd9b260d04d38c3a9dd57c25c9c679e7b11167936caf9e6da7e6522f7f1'}
 ARM_C_CAP = 1000                                         # arm C's episode cap on record (its score-sample.json: cap 1000, gate None)
+ARM_C_EXPLORE = 0.10                                     # the explore rate arm C was scored under (A22/A23); game/constants.json must say exactly this
 ARM_C_RECORD = {200: dict(total=6.50, nonhabit=5.46, stone=40.0), 201: dict(total=7.10, nonhabit=5.85, stone=43.0)}
 
 
@@ -196,6 +202,49 @@ def references_folder(args, cwd, folder, real):
     return False
 
 
+def read_mount_table():
+    """-> (source name, text) of the first readable mount table: /proc/self/mountinfo, else /proc/mounts. Raises OSError when neither can be read."""
+    last = None
+    for path in ('/proc/self/mountinfo', '/proc/mounts'):
+        try:
+            with open(path) as f:
+                return path, f.read()
+        except OSError as e:
+            last = e
+    raise last
+
+
+def proc_mount_options(text):
+    """The options (mount options and super options, joined) of the topmost mount at /proc in a mountinfo or /proc/mounts table, or None if there is none."""
+    found = None
+    for line in text.splitlines():
+        f = line.split()
+        if ' - ' in line and len(f) >= 10:                                       # mountinfo: id parent maj:min root mountpoint opts [optional...] - fstype source superopts
+            i = f.index('-')
+            if f[4].replace('\\057', '/') == '/proc':
+                found = ','.join([f[5]] + f[i + 3:i + 4])
+        elif len(f) >= 4 and f[1] == '/proc':                                    # /proc/mounts: source mountpoint fstype opts dump pass
+            found = f[3]
+    return found
+
+
+def proc_visibility_problem():
+    """None only if /proc is demonstrably fully visible (mounted without hidepid / subset=pid restrictions); else a string saying why the process list cannot be trusted."""
+    try:
+        src, text = read_mount_table()
+    except OSError as e:
+        return f'the /proc mount options cannot be read ({type(e).__name__}: {e}); cannot evaluate whether /proc shows every process'
+    opts = proc_mount_options(text)
+    if opts is None:
+        return f'no /proc mount found in {src}; cannot evaluate whether /proc shows every process'
+    for m in re.finditer(r'(?:^|,)hidepid=([^,\s]*)', opts):
+        if m.group(1) not in ('0', 'off'):
+            return f'/proc is mounted with hidepid={m.group(1)} ({opts}); processes of other users are hidden, an empty listing proves nothing'
+    if re.search(r'(?:^|,)subset=', opts):
+        return f'/proc is mounted with a subset= restriction ({opts}); the process list cannot be trusted'
+    return None
+
+
 def training_processes(folder):
     """-> pids of live processes whose command line (joined) contains 'imitate' (game.imitate, game/imitate.py, 'from game import imitate', ...) and that
     refer to this seed folder (its absolute or real path anywhere in the argv, or a relative reference that resolves into it from that process's cwd);
@@ -205,8 +254,17 @@ def training_processes(folder):
     real = os.path.realpath(folder)
     me = os.getpid()
     if os.path.isdir('/proc/self'):
+        why = proc_visibility_problem()                                          # P5: an empty listing only counts as 'stopped' when /proc is fully visible
+        if why:
+            raise RuntimeError(why)
+        try:
+            listing = os.listdir('/proc')
+        except OSError as ex:
+            raise RuntimeError(f'the process list /proc cannot be read: {type(ex).__name__}: {ex}')
+        if str(me) not in listing:                                               # not even this process is listed: the listing is not the process table
+            raise RuntimeError('this process is not in the /proc listing; cannot evaluate the process list')
         hits = []
-        for e in os.listdir('/proc'):
+        for e in listing:
             if not e.isdigit() or int(e) == me:
                 continue
             try:
@@ -324,12 +382,22 @@ def exists_strict(path):
         return False
 
 
+def persist_dirs_of(persist_dir=None):
+    """The persist dirs every check looks at: the default PERSIST_DIR ALWAYS (P2), plus the --persist-dir given, if any and different."""
+    dirs = [os.path.abspath(PERSIST_DIR)]
+    if persist_dir is not None and os.path.abspath(persist_dir) not in dirs:
+        dirs.append(os.path.abspath(persist_dir))
+    return dirs
+
+
 def previous_read_problems(P, root, persist_dir):
-    """N1: a record of a previous sealed read (a score-sample.json or final.json in the persist dir, a final.json or read-record.json in the root; the
-    root's own score-sample.json is checked with the other results) refuses a new play. Unreadable locations are refusals too."""
+    """N1/P1/P2: a record of a previous sealed read refuses a new play: a final.json, a read-record.json (written BEFORE any scorer starts, so a crashed attempt is
+    a record too) or an s200/ s201/ score-sample.json in the default PERSIST_DIR AND in the --persist-dir given; a final.json or read-record.json in the root (the
+    root's own score-sample.json is checked with the other results). Unreadable locations are refusals too."""
     bad = []
     cands = [os.path.join(root, 'final.json'), P[SEEDS[0]]['record']]
-    cands += [os.path.join(persist_dir, 'final.json')] + [os.path.join(persist_dir, f's{s}', 'score-sample.json') for s in SEEDS]
+    for d in persist_dirs_of(persist_dir):
+        cands += [os.path.join(d, 'final.json'), os.path.join(d, 'read-record.json')] + [os.path.join(d, f's{s}', 'score-sample.json') for s in SEEDS]
     for c in cands:
         try:
             if exists_strict(c):
@@ -339,29 +407,50 @@ def previous_read_problems(P, root, persist_dir):
     return bad
 
 
-def cap_problems():
-    """N3: before playing, the episode cap the scorer will use (game/constants.json, via play.load_constants) must be arm C's."""
+def read_constants():
+    """-> (explore, episode_cap) as the scorer will see them (play.load_constants). Raises when they cannot be read."""
+    from game import play
+    c = play.load_constants()[0]
+    return c.get('explore'), c.get('episode_cap')
+
+
+def constants_problems():
+    """N3/P3: before playing, game/constants.json (via play.load_constants) must say exactly arm C's explore 0.10 and episode_cap 1000 (A22/A23)."""
     try:
-        from game import play
-        cap = play.load_constants()[0]['episode_cap']
+        explore, cap = read_constants()
     except Exception as e:
-        return [f'game/constants.json episode_cap cannot be read: {type(e).__name__}: {e}']
-    if cap != ARM_C_CAP or type(cap) is bool:
-        return [f'game/constants.json episode_cap is {cap!r}, arm C was played with {ARM_C_CAP}; the scorer would not make a like-for-like read']
-    return []
+        return [f'game/constants.json explore / episode_cap cannot be read: {type(e).__name__}: {e}']
+    bad = []
+    if type(cap) is not int or cap != ARM_C_CAP:
+        bad.append(f'game/constants.json episode_cap is {cap!r}, arm C was played with {ARM_C_CAP}; the scorer would not make a like-for-like read')
+    if type(explore) is not float or explore != ARM_C_EXPLORE:
+        bad.append(f'game/constants.json explore is {explore!r}, arm C was scored under {ARM_C_EXPLORE}; the scorer would not make a like-for-like read')
+    return bad
+
+
+cap_problems = constants_problems                                                    # the old name
+
+
+def presence(path, bad, what):
+    """P4: True if `path` exists, False if it is absent. Any other failure to look (exists_strict raises) appends a refusal to `bad` and returns False (fail closed)."""
+    try:
+        return exists_strict(path)
+    except OSError as e:
+        bad.append(f'{what} {path} cannot be examined: {type(e).__name__}: {e}')
+        return False
 
 
 def play_problems(P, root, arm_c_bad, check_locks=True, persist_dir=None):
     """check_locks=False only on the play path, which by then holds the locks itself (acquire_locks) and so has already refused on any earlier one.
-    persist_dir=None means the default PERSIST_DIR (never skipped)."""
+    The default PERSIST_DIR is always checked, whatever persist_dir is (P2)."""
     bad = list(arm_c_bad)
-    bad += previous_read_problems(P, root, PERSIST_DIR if persist_dir is None else persist_dir)
-    bad += cap_problems()
+    bad += previous_read_problems(P, root, persist_dir)
+    bad += constants_problems()
     for s, p in P.items():
         bad += round8_problems(s, p)
-        if os.path.exists(p['out']):
+        if presence(p['out'], bad, f'seed {s}: the sealed result'):
             bad.append(f'seed {s}: a sealed result already exists: {p["out"]}')
-        if check_locks and os.path.exists(p['lock']):
+        if check_locks and presence(p['lock'], bad, f'seed {s}: the lock'):
             bad.append(f'seed {s}: an earlier scoring attempt left {p["lock"]}')
     g, ind = gate(root)
     return bad + g, ind
@@ -459,13 +548,41 @@ def fs_now_ns(directory):
         os.remove(tmp)
 
 
-def write_start_record(P):
-    """N4: called with the locks held, before the scorers start: per seed the sha256 and mtime_ns of checkpoint-iter8.pt, and the start time. Atomic."""
+def record_copies(P, dirs):
+    """The read-record.json paths in the persist dirs `dirs`."""
+    return [os.path.join(d, os.path.basename(P[SEEDS[0]]['record'])) for d in dirs]
+
+
+def void_start_record(P, dirs):
+    """The start record (root and persist dirs) of an attempt in which no scorer started."""
+    for path in [P[SEEDS[0]]['record']] + record_copies(P, dirs):
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(path)
+
+
+def write_start_record(P, dirs=()):
+    """N4/P1/P3: called with the locks held, before ANY scorer starts: per seed the sha256 and mtime_ns of checkpoint-iter8.pt, the start time and the explore /
+    episode_cap the scorer will use (they must be arm C's, else this raises). Written atomically to the root AND to every persist dir in `dirs`, so a crashed
+    attempt leaves a lasting trace there (previous_read_problems refuses on it). If any write fails, the copies already written are removed again and it raises."""
     path = P[SEEDS[0]]['record']
-    rec = dict(version=1, start_ns=fs_now_ns(os.path.dirname(path)), started_wall_ns=time.time_ns(), pid=os.getpid(), seeds={})
+    bad = constants_problems()
+    if bad:
+        raise RuntimeError('; '.join(bad))
+    explore, cap = read_constants()
+    rec = dict(version=2, start_ns=fs_now_ns(os.path.dirname(path)), started_wall_ns=time.time_ns(), pid=os.getpid(), explore=explore, episode_cap=cap, seeds={})
     for s, p in P.items():
         rec['seeds'][str(s)] = dict(ckpt=os.path.realpath(p['ckpt']), ckpt_sha256=sha256_file(p['ckpt']), ckpt_mtime_ns=os.stat(p['ckpt']).st_mtime_ns)
-    write_json_atomic(path, rec)
+    written = []
+    try:
+        for target in [path] + record_copies(P, dirs):
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            write_json_atomic(target, rec)
+            written.append(target)
+    except BaseException:
+        for target in written:
+            with contextlib.suppress(OSError):
+                os.remove(target)
+        raise
     return rec
 
 
@@ -483,8 +600,9 @@ def complete_record(P):
 def record_problems(seed, p, result_sha, result_mtime_ns):
     """N4: the identity of the result beyond its own metadata. Needs a complete read-record.json that matches the checkpoint on disk now and the result."""
     path = p['record']
-    if not os.path.exists(path):
-        return [f'seed {seed}: no read-record.json ({path}); the result cannot be tied to a sealed read of this checkpoint']
+    bad = []
+    if not presence(path, bad, f'seed {seed}: the read record'):
+        return bad or [f'seed {seed}: no read-record.json ({path}); the result cannot be tied to a sealed read of this checkpoint']
     try:
         with open(path) as f:
             rec = json.load(f)
@@ -492,10 +610,13 @@ def record_problems(seed, p, result_sha, result_mtime_ns):
         return [f'seed {seed}: {path} cannot be read: {type(e).__name__}: {e}']
     isint = lambda x: type(x) is int
     e = rec.get('seeds', {}).get(str(seed)) if isinstance(rec, dict) and isinstance(rec.get('seeds'), dict) else None
-    if not (isinstance(e, dict) and isint(rec.get('start_ns')) and isint(e.get('ckpt_mtime_ns'))
+    if not (isinstance(e, dict) and isint(rec.get('start_ns')) and isint(e.get('ckpt_mtime_ns')) and 'explore' in rec and 'episode_cap' in rec
             and all(isinstance(e.get(k), str) and SHA_RX.match(e.get(k)) for k in ('ckpt_sha256', 'result_sha256'))):
-        return [f'seed {seed}: read-record.json is incomplete (needs start_ns and, for seed {seed}, ckpt_sha256, ckpt_mtime_ns, result_sha256)']
-    bad = []
+        return [f'seed {seed}: read-record.json is incomplete (needs start_ns, explore, episode_cap and, for seed {seed}, ckpt_sha256, ckpt_mtime_ns, result_sha256)']
+    if type(rec['episode_cap']) is not int or rec['episode_cap'] != ARM_C_CAP:
+        bad.append(f'seed {seed}: read-record.json records episode_cap {rec["episode_cap"]!r}, not arm C\'s {ARM_C_CAP}')
+    if type(rec['explore']) is not float or rec['explore'] != ARM_C_EXPLORE:
+        bad.append(f'seed {seed}: read-record.json records explore {rec["explore"]!r}, not arm C\'s {ARM_C_EXPLORE}')
     try:
         if sha256_file(p['ckpt']) != e['ckpt_sha256']:
             bad.append(f'seed {seed}: checkpoint-iter8.pt sha256 differs from the one recorded when the sealed read started')
@@ -512,8 +633,9 @@ def record_problems(seed, p, result_sha, result_mtime_ns):
 
 def load_result(seed, p):
     """-> (parsed result file or None, [problems]) incl. its identity (metadata and read record); every read failure is a string."""
-    if not os.path.exists(p['out']):
-        return None, [f'seed {seed}: no result file {p["out"]}']
+    bad = []
+    if not presence(p['out'], bad, f'seed {seed}: the result file'):
+        return None, bad or [f'seed {seed}: no result file {p["out"]}']
     try:
         with open(p['out'], 'rb') as f:
             raw = f.read()
@@ -525,17 +647,51 @@ def load_result(seed, p):
     return (None if bad else m), bad
 
 
-def analyze_problems(P, root, arm_c_bad):
-    """--analyze-only: the same gate, round-8 completeness (+ training-stopped proof), arm C checks and lock rule as playing, plus each result's identity.
+def overwrite_problems(P, dirs):
+    """P6: --analyze-only may only re-derive the SAME read. If a persist dir in `dirs` already holds a read-record.json, a final.json or a score-sample.json, its
+    read-record.json must exist and equal this root's read-record.json exactly (same checkpoint and result hashes, start, constants); else nothing may be overwritten."""
+    bad = []
+    root_rec, root_err = None, None
+    try:
+        with open(P[SEEDS[0]]['record']) as f:
+            root_rec = json.load(f)
+    except (OSError, ValueError) as e:
+        root_err = f'{type(e).__name__}: {e}'
+    for d in dirs:
+        names = ['read-record.json', 'final.json'] + [os.path.join(f's{s}', 'score-sample.json') for s in SEEDS]
+        present = [n for n in names if presence(os.path.join(d, n), bad, 'the persisted file')]
+        if not present:
+            continue
+        rec_path = os.path.join(d, 'read-record.json')
+        if 'read-record.json' not in present:
+            bad.append(f'{d} already holds {present} but no read-record.json to compare with this root\'s; analysis would overwrite a persisted read: refused')
+            continue
+        try:
+            with open(rec_path) as f:
+                persisted = json.load(f)
+        except (OSError, ValueError) as e:
+            bad.append(f'{rec_path} cannot be read ({type(e).__name__}: {e}); analysis would overwrite a persisted read: refused')
+            continue
+        if root_rec is None:
+            bad.append(f'this root\'s read-record.json cannot be read ({root_err}); it cannot be compared with {rec_path}: refused')
+        elif persisted != root_rec:
+            bad.append(f'{rec_path} is not this root\'s read-record.json (checkpoint / result hashes differ); analysis would overwrite the persisted read of another attempt: refused')
+    return bad
+
+
+def analyze_problems(P, root, arm_c_bad, persist_dir=None):
+    """--analyze-only: the same gate, round-8 completeness (+ training-stopped proof), arm C checks and lock rule as playing, plus each result's identity, and
+    (P6) it refuses to overwrite a persisted read (default PERSIST_DIR always, plus persist_dir) that is not this root's own.
     -> (problems, results {seed: parsed})."""
     bad = list(arm_c_bad)
     results = {}
     for s, p in P.items():
         bad += round8_problems(s, p)
-        if os.path.exists(p['lock']):
+        if presence(p['lock'], bad, f'seed {s}: the lock'):
             bad.append(f'seed {s}: {p["lock"]} exists (an unresolved scoring attempt); not analysed')
         results[s], b = load_result(s, p)
         bad += b
+    bad += overwrite_problems(P, persist_dirs_of(persist_dir))
     g, _ = gate(root)
     return bad + g, results
 
@@ -655,10 +811,11 @@ def main(argv=None):
         print('DRY RUN: all preconditions hold; it would play.')
         return
     if a.analyze_only:
-        bad, results = analyze_problems(P, a.root, arm_c_bad)
+        bad, results = analyze_problems(P, a.root, arm_c_bad, persist_dir=a.persist_dir)
         if bad:
             sys.exit('refusing to analyse, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
     else:
+        dirs = persist_dirs_of(a.persist_dir)                                              # the default PERSIST_DIR and --persist-dir
         held, bad = acquire_locks(P)                                                       # atomic, BEFORE any check of an existing result / lock
         if bad:
             sys.exit('refusing to play the sealed worlds, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
@@ -671,7 +828,7 @@ def main(argv=None):
             release_locks(held)                                                            # only the locks this invocation created; nothing was played
             sys.exit('refusing to play the sealed worlds, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
         try:
-            write_start_record(P)                                                          # N4: checkpoint sha256 / mtime_ns and the start time, before anything is played
+            write_start_record(P, dirs)                                                    # N4/P1: checkpoint sha256 / mtime_ns, start time, explore / cap: root AND persist dirs, before any scorer starts
         except BaseException as e:
             release_locks(held)                                                            # nothing played yet
             sys.exit(f'the read record cannot be written, nothing is played: {type(e).__name__}: {e}')
@@ -683,8 +840,7 @@ def main(argv=None):
         except BaseException as e:
             if not procs:
                 release_locks(held)                                                        # the first scorer never started: nothing was played
-                with contextlib.suppress(FileNotFoundError):
-                    os.remove(P[SEEDS[0]]['record'])                                       # ... so the start record is void too
+                void_start_record(P, dirs)                                                 # ... so the start record (root and persist dirs) is void too
             for pr in procs:
                 pr.wait()
             sys.exit(f'game.score could not be started: {type(e).__name__}: {e}' + (' (locks kept: a scorer is running)' if procs else ''))
@@ -693,6 +849,9 @@ def main(argv=None):
         try:
             complete_record(P)                                                             # N4: each result's sha256, atomically
             persist([p['out'] for p in P.values()] + [P[SEEDS[0]]['record']], a.root, a.persist_dir)      # straight after the sealed read
+            for d in dirs:
+                if d != a.persist_dir:
+                    persist([P[SEEDS[0]]['record']], a.root, d)                            # the completed record replaces the start record in the other persist dir too
         except (OSError, ValueError) as e:
             sys.exit(f'the sealed read was played, but its record cannot be completed / persisted ({type(e).__name__}: {e}); locks kept, unresolved')
         results, bad = {}, []
@@ -716,7 +875,7 @@ def main(argv=None):
     fpath = os.path.join(a.root, 'final.json')
     with open(fpath, 'w') as f:
         json.dump(dict(per_seed={str(k): x for k, x in per_seed.items()}, verdict=v), f, indent=1)
-    persist([fpath] + [p['out'] for p in P.values()], a.root, a.persist_dir)
+    persist([fpath] + [p['out'] for p in P.values()] + ([P[SEEDS[0]]['record']] if a.analyze_only else []), a.root, a.persist_dir)      # P6: its record is the persisted one, or identical to it
     if not a.analyze_only:
         release_locks(held)                                                                # N2: only now - identity passed, record complete, results and final.json persisted
 

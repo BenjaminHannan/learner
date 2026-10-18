@@ -20,6 +20,21 @@ import torch
 from game import census_ready, gwls_checks, gwls_final, gwls_report
 from game.tests.test_imitate import _view
 
+_MODULE_PERSIST = []
+
+
+def setUpModule():
+    """The default PERSIST_DIR (the repo's game/results/gwls) is a real place: no test may write to it, whatever it forgets to patch."""
+    d = tempfile.TemporaryDirectory()
+    _MODULE_PERSIST.append(d)
+    gwls_final.PERSIST_DIR = os.path.join(d.name, 'default-persist')
+    _MODULE_PERSIST.append(gwls_final.PERSIST_DIR)
+
+
+def tearDownModule():
+    _MODULE_PERSIST[0].cleanup()
+
+
 PLAIN = _view(table=(3, 0), items='none')                       # no table within one cell: never a ready state
 READY = _view(table=(1, 0), items='wood1')
 
@@ -588,6 +603,8 @@ class SealedFixture(unittest.TestCase):
         stack.enter_context(census_stub())
         self.probe = stack.enter_context(mock.patch.object(gwls_final, 'training_processes', return_value=[]))     # no live game.imitate
         self.persist_dir = os.path.join(self.root, 'persist')
+        self.default_persist = os.path.join(self.armc, 'default-persist')                  # the stand-in for the repo's game/results/gwls
+        stack.enter_context(mock.patch.object(gwls_final, 'PERSIST_DIR', self.default_persist))
 
     def set_times(self, s, state=1000, iter8=900, ckpt=900):
         P = self.P[s]
@@ -1002,9 +1019,9 @@ class RoundQ113(SealedFixture):
             open(path, 'w').close()
             self.assertTrue(any(path in x for x in gwls_final.play_problems(self.P, self.root, [])[0]))
 
-    def test_n1_analyze_only_is_not_blocked_by_the_persisted_copies(self):
+    def test_n1_analyze_only_is_not_blocked_by_the_persisted_copies_of_the_same_read(self):
         self.write_all_results()
-        gwls_final.persist([self.P[s]['out'] for s in gwls_final.SEEDS], self.root, self.persist_dir)
+        gwls_final.persist([self.P[s]['out'] for s in gwls_final.SEEDS] + [self.P[200]['record']], self.root, self.persist_dir)      # what the play path persisted
         self.assertIsNone(self.analyze()[1])
 
     # ---- N2
@@ -1312,3 +1329,361 @@ class Checks(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RoundQ115(SealedFixture):
+    """Q115 holes P1-P6 (one $0 fix round). Nothing is played: game.score is a mock, every persist dir is a temp dir."""
+
+    def fake_popen(self, calls, exit_code=0):
+        def popen(argv, **kw):
+            calls.append(argv)
+            s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
+            self.write_result(s, seal=False)
+            return mock.Mock(wait=mock.Mock(return_value=exit_code))
+        return popen
+
+    def play(self, calls, persist_dir=None, root=None, **kw):
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=self.fake_popen(calls, **kw)), contextlib.redirect_stdout(io.StringIO()):
+            gwls_final.main(['--root', root or self.root, '--arm-c', self.armc, '--persist-dir', persist_dir or self.persist_dir])
+
+    def refused_play(self, **kw):
+        calls = []
+        with self.assertRaises((SystemExit, AssertionError)) as cm:
+            self.play(calls, **kw)
+        return calls, str(cm.exception)
+
+    def snapshot(self, d):
+        out = {}
+        for dp, _, fns in os.walk(d):
+            for fn in fns:
+                with open(os.path.join(dp, fn), 'rb') as f:
+                    out[os.path.join(dp, fn)] = f.read()
+        return out
+
+    # ---- P1
+    def test_p1_a_crashed_scorer_leaves_a_record_in_the_persist_dir_and_a_fresh_root_refuses(self):
+        calls, msg = self.refused_play(exit_code=1)                                           # the scorers crash (exit 1) after the record was written
+        self.assertEqual(len(calls), 2)
+        self.assertIn('game.score failed', msg)
+        for d in (self.persist_dir, self.default_persist):                                     # a lasting trace outside the root, in both persist dirs
+            self.assertTrue(os.path.exists(os.path.join(d, 'read-record.json')), d)
+        # a fresh root (new temp dir, no lock, no record) with the same persist dir
+        fresh = SealedFixture('setUp')
+        fresh.setUp()
+        self.addCleanup(fresh.rootd.cleanup)
+        self.addCleanup(fresh.armcd.cleanup)
+        for name in ('s200', 's201'):
+            self.assertFalse(os.path.exists(os.path.join(fresh.root, name, 'score-started.lock')))
+        calls2 = []
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=self.fake_popen(calls2)), self.assertRaises(SystemExit) as cm:
+            with contextlib.redirect_stdout(io.StringIO()):
+                gwls_final.main(['--root', fresh.root, '--arm-c', fresh.armc, '--persist-dir', self.persist_dir])
+        self.assertEqual(calls2, [])                                                           # Popen not called again
+        self.assertIn('previous sealed read', str(cm.exception))
+        self.assertIn(os.path.join(self.persist_dir, 'read-record.json'), str(cm.exception))
+        self.assertFalse(any(os.path.exists(p['lock']) for p in fresh.P.values()))             # the fresh root's own locks were released: nothing played there
+
+    def test_p1_the_record_is_in_every_persist_dir_before_the_first_scorer_starts(self):
+        seen = []
+        def popen(argv, **kw):
+            seen.append({d: os.path.exists(os.path.join(d, 'read-record.json')) for d in (self.persist_dir, self.default_persist, self.root)})
+            raise OSError('cannot start')
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=popen), self.assertRaises(SystemExit):
+            with contextlib.redirect_stdout(io.StringIO()):
+                gwls_final.main(['--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+        self.assertEqual(seen, [{self.persist_dir: True, self.default_persist: True, self.root: True}])
+        # the first scorer never started: nothing was played, so the start record is void everywhere and the locks are released
+        for d in (self.persist_dir, self.default_persist, self.root):
+            self.assertFalse(os.path.exists(os.path.join(d, 'read-record.json')), d)
+        self.assertEqual([os.path.exists(p['lock']) for p in self.P.values()], [False, False])
+
+    def test_p1_a_persist_dir_that_cannot_take_the_record_fails_the_start_and_leaves_no_copy(self):
+        blocker = os.path.join(self.armc, 'blocker')
+        open(blocker, 'w').close()                                                              # a file where a persist dir should be
+        with self.assertRaises(OSError):
+            gwls_final.write_start_record(self.P, [self.default_persist, os.path.join(blocker, 'sub')])
+        self.assertFalse(os.path.exists(self.P[200]['record']))                                 # the copies already written are removed again
+        self.assertFalse(os.path.exists(os.path.join(self.default_persist, 'read-record.json')))
+
+    def test_p1_a_record_in_the_persist_dir_alone_refuses_and_dry_run_says_so(self):
+        os.makedirs(self.persist_dir)
+        path = os.path.join(self.persist_dir, 'read-record.json')
+        open(path, 'w').close()
+        calls, msg = self.refused_play()
+        self.assertEqual((calls, path in msg), ([], True))
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit):
+            gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+        self.assertIn('previous sealed read exists: ' + path, buf.getvalue())
+
+    def test_p1_a_clean_play_completes_the_record_in_both_persist_dirs(self):
+        calls = []
+        self.play(calls)
+        with open(self.P[200]['record']) as f:
+            rec = json.load(f)
+        for d in (self.persist_dir, self.default_persist):
+            with open(os.path.join(d, 'read-record.json')) as f:
+                self.assertEqual(json.load(f), rec, d)
+        self.assertIn('result_sha256', rec['seeds']['200'])
+
+    # ---- P2
+    def test_p2_a_read_persisted_in_the_default_dir_refuses_even_with_another_persist_dir(self):
+        for rel in (('final.json',), ('read-record.json',), ('s200', 'score-sample.json'), ('s201', 'score-sample.json')):
+            path = os.path.join(self.default_persist, *rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            open(path, 'w').close()
+            calls, msg = self.refused_play()                                                    # --persist-dir is a different, clean dir
+            self.assertEqual(calls, [], rel)
+            self.assertIn(path, msg)
+            bad, _ = gwls_final.play_problems(self.P, self.root, [], persist_dir=self.persist_dir)
+            self.assertTrue(any(path in x for x in bad), rel)
+            os.remove(path)
+        self.play([])                                                                           # clean again: plays
+
+    # ---- P3
+    def test_p3_the_explore_rate_must_be_arm_cs(self):
+        from game import play
+        for explore in (0.05, 0.1000001, 0, None, True, '0.10'):
+            with mock.patch.object(play, 'load_constants', return_value=({'explore': explore, 'episode_cap': 1000}, b'')):
+                self.assertTrue(any('explore' in x for x in gwls_final.constants_problems()), explore)
+                calls, msg = self.refused_play()
+                self.assertEqual(calls, [], explore)
+                self.assertIn('explore is', msg)
+                self.assertEqual([os.path.exists(p['lock']) for p in self.P.values()], [False, False])
+                self.assertFalse(os.path.exists(self.P[200]['record']))
+                self.assertFalse(os.path.exists(os.path.join(self.default_persist, 'read-record.json')))
+        with mock.patch.object(play, 'load_constants', return_value=({'explore': 0.10, 'episode_cap': 500}, b'')):
+            self.assertTrue(any('episode_cap is 500' in x for x in gwls_final.constants_problems()))     # a cap of 500 is still refused
+            self.assertIn('episode_cap is 500', self.refused_play()[1])
+        with mock.patch.object(play, 'load_constants', return_value=({'explore': 0.10, 'episode_cap': 1000.0}, b'')):
+            self.assertTrue(gwls_final.constants_problems())
+        self.assertEqual(gwls_final.constants_problems(), [])                                   # the real constants.json is 0.10 / 1000
+
+    def test_p3_dry_run_reports_it(self):
+        from game import play
+        buf = io.StringIO()
+        with mock.patch.object(play, 'load_constants', return_value=({'explore': 0.05, 'episode_cap': 1000}, b'')), contextlib.redirect_stdout(buf):
+            with self.assertRaises(SystemExit):
+                gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+        self.assertIn('explore is 0.05', buf.getvalue())
+
+    def test_p3_the_record_holds_both_values_and_the_identity_checks_them(self):
+        self.write_all_results()
+        with open(self.P[200]['record']) as f:
+            rec = json.load(f)
+        self.assertEqual((rec['explore'], rec['episode_cap']), (0.10, 1000))
+        self.assertIsNone(self.analyze()[1])
+        os.remove(os.path.join(self.root, 'final.json'))
+        os.remove(os.path.join(self.persist_dir, 'final.json'))
+        for key, val, word in (('explore', 0.05, 'explore'), ('episode_cap', 500, 'episode_cap'), ('explore', 1, 'explore'), ('episode_cap', 1000.0, 'episode_cap')):
+            self.edit_record(lambda r: r.update({key: val}))
+            out, msg = self.analyze()
+            self.assertTrue(msg and f'records {word}' in msg, (key, val, msg))
+            self.no_final()
+            self.edit_record(lambda r: r.update(explore=0.10, episode_cap=1000))
+        for key in ('explore', 'episode_cap'):                                                   # a record without them is incomplete
+            self.edit_record(lambda r: r.pop(key))
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'incomplete' in msg, (key, msg))
+            self.edit_record(lambda r: r.update(explore=0.10, episode_cap=1000))
+        self.assertIsNone(self.analyze()[1])
+
+    def test_p3_a_start_record_is_not_written_when_the_constants_differ(self):
+        from game import play
+        with mock.patch.object(play, 'load_constants', return_value=({'explore': 0.05, 'episode_cap': 1000}, b'')):
+            with self.assertRaises(RuntimeError):
+                gwls_final.write_start_record(self.P, [self.persist_dir])
+        self.assertFalse(os.path.exists(self.P[200]['record']))
+
+    # ---- P4
+    def raising_stat(self, target):
+        real = os.stat
+        def stat(path, *a, **k):
+            if os.fspath(path) == target:
+                raise PermissionError(13, 'denied', target)
+            return real(path, *a, **k)
+        return mock.patch.object(gwls_final.os, 'stat', side_effect=stat)
+
+    def test_p4_play_problems_fail_closed_on_an_unexaminable_result_lock_record_or_final(self):
+        self.assertEqual(gwls_final.play_problems(self.P, self.root, [], persist_dir=self.persist_dir)[0], [])
+        for target, word in ((self.P[200]['out'], 'sealed result'), (self.P[201]['lock'], 'the lock'), (self.P[200]['record'], 'previous sealed read'),
+                             (os.path.join(self.root, 'final.json'), 'previous sealed read'), (os.path.join(self.persist_dir, 'read-record.json'), 'previous sealed read')):
+            with self.raising_stat(target):
+                bad, _ = gwls_final.play_problems(self.P, self.root, [], persist_dir=self.persist_dir)
+            self.assertTrue(any(target in x and 'cannot be examined' in x and word in x for x in bad), (target, bad))
+        with self.raising_stat(self.P[200]['lock']):                                           # on the play path (locks held) the lock is not examined, the result is
+            bad, _ = gwls_final.play_problems(self.P, self.root, [], check_locks=False, persist_dir=self.persist_dir)
+        self.assertEqual(bad, [])
+
+    def test_p4_the_play_path_plays_nothing_when_the_result_path_cannot_be_examined(self):
+        with self.raising_stat(self.P[200]['out']):
+            calls, msg = self.refused_play()
+        self.assertEqual(calls, [])
+        self.assertIn('cannot be examined', msg)
+        self.assertEqual([os.path.exists(p['lock']) for p in self.P.values()], [False, False])
+
+    def test_p4_analyze_fails_closed_on_an_unexaminable_result_lock_record_or_final(self):
+        self.write_all_results()
+        persisted = [self.P[200]['out'], self.P[200]['record']]
+        gwls_final.persist(persisted, self.root, self.persist_dir)
+        for target in (self.P[200]['out'], self.P[201]['lock'], self.P[200]['record'], os.path.join(self.persist_dir, 'final.json'),
+                       os.path.join(self.persist_dir, 's200', 'score-sample.json')):
+            with self.raising_stat(target):
+                out, msg = self.analyze()
+            self.assertTrue(msg and target in msg and 'cannot be examined' in msg, (target, msg))
+            self.no_final()
+        self.assertIsNone(self.analyze()[1])
+
+    # ---- P5
+    def test_p5_hidepid_or_subset_pid_refuses_and_normal_options_with_no_process_is_stopped(self):
+        me = str(os.getpid())
+        info = lambda opts, sup: f'23 28 0:22 / /proc {opts} - proc proc {sup}\n'
+        real_listdir = os.listdir
+        listdir = lambda path='.': [me] if path == '/proc' else real_listdir(path)
+        with mock.patch.object(gwls_final.os, 'listdir', side_effect=listdir):
+            with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', info('rw,relatime', 'rw'))):
+                self.assertEqual(REAL_PROBE(self.P[200]['dir']), [])                           # fully visible, nobody there: stopped
+            for text in (info('rw,relatime', 'rw,hidepid=2'), info('rw,relatime,hidepid=invisible', 'rw'), info('rw', 'rw,hidepid=1'), info('rw', 'rw,hidepid=noaccess'),
+                         info('rw', 'rw,subset=pid'), info('rw', 'rw,hidepid=ptraceable'), info('rw', 'rw,gid=5,hidepid=2')):
+                with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', text)):
+                    with self.assertRaises(RuntimeError) as cm:
+                        REAL_PROBE(self.P[200]['dir'])
+                self.assertTrue('hidepid' in str(cm.exception) or 'subset' in str(cm.exception), str(cm.exception))
+            with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', info('rw', 'rw,hidepid=0'))):
+                self.assertEqual(REAL_PROBE(self.P[200]['dir']), [])                           # hidepid=0 is the default: fine
+            with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/mounts', 'proc /proc proc rw,nosuid,hidepid=2 0 0\n')):
+                with self.assertRaises(RuntimeError):
+                    REAL_PROBE(self.P[200]['dir'])                                             # the /proc/mounts form
+            with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/mounts', 'proc /proc proc rw,nosuid 0 0\n')):
+                self.assertEqual(REAL_PROBE(self.P[200]['dir']), [])
+            with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', '1 0 0:1 / / rw - ext4 /dev/x rw\n')):
+                with self.assertRaises(RuntimeError) as cm:
+                    REAL_PROBE(self.P[200]['dir'])                                             # no /proc mount to read the options from
+                self.assertIn('no /proc mount', str(cm.exception))
+            with mock.patch.object(gwls_final, 'read_mount_table', side_effect=PermissionError('no')):
+                with self.assertRaises(RuntimeError):
+                    REAL_PROBE(self.P[200]['dir'])
+
+    def test_p5_the_gate_refuses_through_the_stop_proof_with_hidepid(self):
+        me = str(os.getpid())
+        real_listdir = os.listdir
+        listdir = lambda path='.': [me] if path == '/proc' else real_listdir(path)
+        text = '23 28 0:22 / /proc rw,relatime - proc proc rw,hidepid=2\n'
+        with mock.patch.object(gwls_final, 'training_processes', REAL_PROBE), mock.patch.object(gwls_final.os, 'listdir', side_effect=listdir), \
+                mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', text)):
+            bad = gwls_final.round8_problems(200, self.P[200])
+        self.assertTrue(any('probe cannot be evaluated' in x and 'hidepid=2' in x for x in bad), bad)
+
+    def test_p5_an_unreadable_process_list_or_a_listing_without_this_process_refuses(self):
+        text = '23 28 0:22 / /proc rw,relatime - proc proc rw\n'
+        real_listdir = os.listdir
+        def denied(path='.'):
+            if path == '/proc':
+                raise PermissionError('no')
+            return real_listdir(path)
+        with mock.patch.object(gwls_final, 'read_mount_table', return_value=('/proc/self/mountinfo', text)):
+            with mock.patch.object(gwls_final.os, 'listdir', side_effect=denied):
+                with self.assertRaises(RuntimeError) as cm:
+                    REAL_PROBE(self.P[200]['dir'])
+            self.assertIn('cannot be read', str(cm.exception))
+            with mock.patch.object(gwls_final.os, 'listdir', side_effect=lambda path='.': [] if path == '/proc' else real_listdir(path)):
+                with self.assertRaises(RuntimeError) as cm:
+                    REAL_PROBE(self.P[200]['dir'])                                              # an empty listing is not 'stopped' unless it at least shows us
+            self.assertIn('not in the /proc listing', str(cm.exception))
+
+    @unittest.skipUnless(os.path.isdir('/proc/self'), 'needs /proc')
+    def test_p5_the_real_proc_here_is_visible(self):
+        self.assertIsNone(gwls_final.proc_visibility_problem())
+
+    # ---- P6
+    def other_read(self):
+        """-> the record of a different completed attempt (root 'A': another checkpoint) as a dict; this root is left a completed attempt 'B'."""
+        with open(self.P[200]['ckpt'], 'wb') as f:
+            f.write(b'root A checkpoint')
+        self.set_times(200)
+        self.write_all_results()
+        with open(self.P[200]['record']) as f:
+            rec_a = json.load(f)
+        with open(self.P[200]['ckpt'], 'wb'):
+            pass
+        self.set_times(200)
+        os.remove(self.P[200]['record'])
+        for s in gwls_final.SEEDS:
+            os.remove(self.P[s]['out'])
+        self.write_all_results()                                                                  # root B: a different, valid record
+        return rec_a
+
+    def persist_a(self, rec_a, d, sentinel=b'persisted by A'):
+        os.makedirs(os.path.join(d, 's200'), exist_ok=True)
+        os.makedirs(os.path.join(d, 's201'), exist_ok=True)
+        gwls_final.write_json_atomic(os.path.join(d, 'read-record.json'), rec_a)
+        for rel in ('final.json', os.path.join('s200', 'score-sample.json'), os.path.join('s201', 'score-sample.json')):
+            with open(os.path.join(d, rel), 'wb') as f:
+                f.write(sentinel)
+
+    def test_p6_analyze_on_another_root_refuses_and_leaves_the_persisted_files_alone(self):
+        rec_a = self.other_read()
+        with open(self.P[200]['record']) as f:
+            self.assertNotEqual(json.load(f), rec_a)
+        for d in (self.persist_dir, self.default_persist):                                        # the given dir, then the default dir
+            for other in (self.persist_dir, self.default_persist):
+                if os.path.isdir(other):
+                    import shutil
+                    shutil.rmtree(other)
+            self.persist_a(rec_a, d)
+            before = self.snapshot(d)
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'not this root' in msg and os.path.join(d, 'read-record.json') in msg, (d, msg))
+            self.no_final()
+            self.assertEqual(self.snapshot(d), before)                                             # persisted files unchanged
+
+    def test_p6_scores_or_final_json_without_any_persisted_record_refuse_too(self):
+        self.write_all_results()
+        for rel in ('final.json', os.path.join('s201', 'score-sample.json')):
+            path = os.path.join(self.persist_dir, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'wb') as f:
+                f.write(b'x')
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'no read-record.json to compare' in msg, (rel, msg))
+            self.no_final()
+            with open(path, 'rb') as f:
+                self.assertEqual(f.read(), b'x')
+            os.remove(path)
+        self.assertIsNone(self.analyze()[1])                                                       # nothing persisted yet: allowed
+
+    def test_p6_a_torn_persisted_record_refuses(self):
+        self.write_all_results()
+        os.makedirs(self.persist_dir)
+        with open(os.path.join(self.persist_dir, 'read-record.json'), 'w') as f:
+            f.write('{"vers')
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'cannot be read' in msg, msg)
+        self.no_final()
+
+    def test_p6_the_same_record_is_allowed_and_rederives_the_same_files(self):
+        rec_a = self.other_read()
+        with open(self.P[200]['record']) as f:
+            rec_b = json.load(f)
+        for d in (self.persist_dir, self.default_persist):
+            self.persist_a(rec_b, d, sentinel=b'old copy of the same read')
+        out, msg = self.analyze()
+        self.assertIsNone(msg, msg)
+        self.assertTrue(os.path.exists(os.path.join(self.root, 'final.json')))
+        with open(os.path.join(self.persist_dir, 'read-record.json')) as f:
+            self.assertEqual(json.load(f), rec_b)
+        with open(os.path.join(self.persist_dir, 's200', 'score-sample.json'), 'rb') as f:
+            self.assertEqual(f.read(), open(self.P[200]['out'], 'rb').read())                       # re-derived from this root's own result
+        self.assertIsNone(self.analyze()[1])                                                       # and again: idempotent
+
+    def test_p6_an_incomplete_persisted_record_of_a_crashed_attempt_is_not_the_same_read(self):
+        self.write_all_results()
+        with open(self.P[200]['record']) as f:
+            rec = json.load(f)
+        for s in ('200', '201'):
+            rec['seeds'][s].pop('result_sha256')
+        os.makedirs(self.persist_dir)
+        gwls_final.write_json_atomic(os.path.join(self.persist_dir, 'read-record.json'), rec)
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'not this root' in msg, msg)
+        self.no_final()
