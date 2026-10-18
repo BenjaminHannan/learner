@@ -1,7 +1,7 @@
 # Stage 1 report (SC-1; booked by the coordinator after Stage 0)
 
-**Status: WAITING FOR THE COORDINATOR.** Data built and sealed (`05-seal.md` part 2), pre-flight done on all three
-boxes. Rung 0 does not fit on the seed-2 box, so no go is filed and nothing trains until the coordinator names a rung.
+**Status: GO FILED (rung 2).** The coordinator named rung 2, (40,000, 35), for both arms and all seeds; the go
+file is filed. Training starts when the boxes accept it (confirmed below).
 
 ## Run record
 - Script: `scripts/span_stage1.py` at commit 707bdce90 (sha256 47577a35...d127), reviewed by the coordinator (the
@@ -89,6 +89,21 @@ My recommendation is (a). It is the only option the fixed rules allow today with
 $0.75/h together while they wait. Each box waits up to 4 h for the go (until about 23:00-23:15Z). If no go comes by
 then, the box exits and the watchdog stops it (stopped, not destroyed; the data stays on disk). The whole wait costs at
 most about $3 of the $18.
+
+## Rung ruling (coordinator, 2026-10-18)
+**Rung 2: max_tokens 40,000, max_visits 35, for both arms and all seeds.** The pre-flight peaks are accepted as
+filed: rung 0 and rung 1 fail the reserved-memory guard on seed 2, and rung 2 fits every box with room to spare. The
+rung changes the batch size only: same F, same marks, same pairing. This replaces the sealed card's (55,000, 48)
+batch for Stage 1; the change is identical for LINE and SPAN.
+
+The go file (`stage1-go.json`), filed with exactly the coordinator's content:
+`{"go": true, "seeds": [0, 1, 2], "script_sha256": "47577a35...d127", "code_sha256": "5c2b9237...ca95",
+"train_cache_sha256": "a53ab45b...6cd9", "validation_cache_sha256": "762082f1...3549", "N": 11.155539,
+"flop_budget": 3.15e16, "size": "full", "max_tokens": 40000, "max_visits": 35}` (full hashes in the file and in
+`05-seal.md` part 2; they match what every box reported).
+
+## Go accepted
+(filed when the boxes log the go and start the parent)
 
 ## Readout per seed
 (filed when each seed finishes)
