@@ -242,3 +242,27 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
 - **Proposed fix (needs a coordinator GO), about 3 lines:** in `ratio_problems`, refuse a round-3/4 row whenever the census has a
   `ratio_w` and `ratio_w_exact` is None (or the reverse), i.e. any mismatch in whether a ratio exists. Ideally also take the "uses" rule
   from the indicator's own output.
+
+## Built-in review of the complete read path (28f6fcc42..b4c3ec1c9, after the Q109 fix): verdict BLOCKING in principle; sealed read stays HELD
+- **The Q109 fix is in (b4c3ec1c9).** A round-3/4 row is refused when the census and the unrounded ratio disagree on whether a ratio
+  exists. Verified independently: 32 tests pass, and the live `--dry-run` says CONTINUE / all preconditions hold.
+- **The review was asked about the whole read path since 28f6fcc42 (Q109), so it found older issues too.** Blocking by the stated
+  definition ("could let the read run when it should be refused, or apply the marks wrongly"):
+  - **B1 (gwls_final.py:330):** the one-shot lock is check-then-act and not exclusive (no O_EXCL). Two invocations started together could
+    both play.
+  - **B2 (gwls_final.py:323, 347):** `--analyze-only` applies the sealed marks without checking the lock, the round-4 gate or round-8
+    completeness. Its identity check on the result file is weak: basename only, no `arm == 'model'`.
+  - **B3 (gwls_final.py:160):** `state.pt k == 8` does not prove training stopped. A run with the default `iterations=24` would pass while
+    still training.
+- **All three are inert for this read as it would be executed** (checked 07:xx UTC Oct 18):
+  - one operator and one invocation;
+  - the play path, not `--analyze-only`;
+  - launched with `--iterations 8`; no iter-9.json; 0 training processes;
+  - no `python -O`;
+  - no result file exists yet.
+- **Not blocking:**
+  - refusal and pairing guards written as bare `assert` (stripped by `-O`; never used);
+  - `gwls_checks` exits 0 on a FAIL;
+  - `gwls_persist.sh` resolves a relative `--root` differently for the checks;
+  - the ratio bound is loose only at A_w around 0.01-0.05 (live round-3/4 A_w is 15.7-40.3);
+  - duplicated A27 pipeline and HABIT / RUN_SEED constants.
