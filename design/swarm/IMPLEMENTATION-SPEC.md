@@ -97,20 +97,28 @@ Decode with `model._decode_logits(memory, valid, inputs)` in training; at eval, 
 
 ## 6. Posting cards to the board
 
-For the round's chosen `cards [Q*M, K]` (−1 = none): view as `[Q, M*K]`, walk the M*K columns in order;
-column c is new iff `c >= 0`, `c != store.null`, and not `posted[q, c]`. New cards: row =
-`values + model.think.age(bucket) + board_type.weight[1] + desk.weight[m_author]` (values/lines via
-`store.gather`, `bucket` as in `_insert`), written at `board_count % C`, `cards_ok = True`, `posted = True`,
-`board_count += 1`. Skip all of this when the board is off or the store is off.
+For the round's chosen `cards [Q*M, K]` (−1 = none), view as `[Q, M*K]` and walk the M*K columns in
+desk order, **exactly as a one-by-one FIFO would** (review round 2, 2026-10-18). Column c is new iff
+`c >= 0`, `c != store.null`, and c is **not on the board at that moment**: `slot_card`, the card each row
+holds, is the only state, and `posted` is derived from it. So a card evicted earlier in the same round is
+posted again, even if it was on the board when the round began, and a card still on the board is never
+posted twice. A new card's row = `values + model.think.age(bucket) + board_type.weight[1] +
+desk.weight[m_author]` (values/lines via `store.gather`, `bucket` as in `_insert`). It is written at
+`board_count % C`, evicting that row's card, with `cards_ok = True` and `board_count += 1`. Every step is a
+whole-tensor op: no boolean-mask indexing, no host `.any()`, no `F.one_hot`. So `post` forces no host
+sync (tested by `NoSyncTest`, which matters because C0 is a timing measurement). Skip all of this when the
+board is off or the store is off.
 
 ## 7. Training (`swarm_forward(model, batch, mode, p_own, loops, weights, generator)`)
 
 Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same `count == 0` early return):
 * Rounds: `loops` if given, else 2 for "gold", else `config.swarm_rounds`; every question runs all rounds
   (fixed rounds, no per-question schedule).
-* "gold" preload: gold cards of question q dealt round-robin across its desks in line order
-  (card i of the sorted gold list -> desk i % M; NULL for never-told goes to desk 0), inserted before
-  round 1 (and posted, if board). This teaches the combiner to join across desks from step 0.
+* "gold" preload (review fix 2, 2026-10-18): keep the question's `width = min(L + 1, MAX_GOLD + 1,
+  M * card_rows)` **latest** gold cards (as the single thinker's preload keeps its latest `card_rows`), then
+  deal them round-robin across its desks in line order (kept card i -> desk i % M, so no desk exceeds
+  `card_rows`; NULL for never-told goes to desk 0). They are inserted before round 1 (and posted, if board).
+  This teaches the combiner to join across desks from step 0.
 * L_ans per round from the combiner; `scale = 1` if the UNION of the question's desks' `fetched` covers
   gold else `config.early_ans`; `l_ans = sum(scale * per_question over rounds) / (Q * rounds)`.
 * HALT: `swarm_halt = halt.view(Q, M).mean(1)`; BCE vs combiner-correct, as in forward.
@@ -184,7 +192,9 @@ fetched=union over desks [Q, L+1], halt_prob, swarm={...})` with
    mask shows slot e for desk 2 and hides it for the other desks; an entity bound nowhere shows only desk 0's copy.
 8. **Assignment**: balanced split — with |need| = 5 and M = 2 every desk gets 2 or 3 cards, disjoint, union = need;
    with identical prefs it still splits; NULL-only need goes to exactly one desk.
-9. **Board posting**: same card fetched by two desks in one round is posted once; FIFO wraps at board_cards.
+9. **Board posting**: same card fetched by two desks in one round is posted once; FIFO wraps at board_cards;
+   `post` equals a one-by-one FIFO on random rounds, including every row's embedding and the re-post of a card
+   evicted earlier in the same round; `post` runs no host-syncing op (`NoSyncTest`).
 10. Causality holds for the swarm: reuse the "answers ignore everything after the question" construction from
     `tests/test_premonition_model.py` with thinkers = 3, board on.
 11. `diversity()`: identical desks -> collapsed True; disjoint fetches -> overlap 0.

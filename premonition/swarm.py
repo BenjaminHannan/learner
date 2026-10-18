@@ -48,9 +48,17 @@ class Board:
         self.cards = torch.zeros(count, self.size, d, device=device)
         self.cards_ok = torch.zeros(count, self.size, dtype=torch.bool, device=device)
         self.count = torch.zeros(count, dtype=torch.long, device=device)
-        self.posted = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
-                       if store is not None else None)
         self.slot_card = torch.full((count, self.size), -1, dtype=torch.long, device=device)   # card held per row
+
+    @property
+    def posted(self) -> Optional[torch.Tensor]:
+        """[Q, L + 1] bool: the cards on the board now (derived from `slot_card`, never stored apart)."""
+        if self.store is None:
+            return None
+        width = self.store.lines + 2                                                   # last column: empty rows
+        index = torch.where(self.slot_card >= 0, self.slot_card, torch.full_like(self.slot_card, width - 1))
+        return torch.zeros(self.count.shape[0], width, dtype=torch.bool, device=index.device).scatter_(
+            1, index, True)[:, :-1]
 
     def rows(self) -> tuple[torch.Tensor, torch.Tensor]:
         """(x [Q, M + C, d], ok [Q, M + C])."""
@@ -65,13 +73,13 @@ class Board:
         self.notes_ok = torch.ones_like(self.notes_ok)
 
     def post(self, cards: torch.Tensor) -> None:
-        """Post the round's fetched cards [Q*M, K] (-1 = none) once each, in desk order, with no host syncs.
+        """Post the round's fetched cards [Q*M, K] (-1 = none) exactly as a one-by-one FIFO would.
 
-        Desks post simultaneously: a card is new if it is real, not NULL, not on the board at the start of the
-        round, and its first occurrence this round.
-        The new cards take FIFO rows (count + rank) % C. If more than C are new in one round, only the
-        last C are written, as a one-by-one FIFO would leave them. A card whose row is overwritten leaves
-        the board, so a later fetch may post it again.
+        Walk the M*K columns in desk order. A card is new if it is real, not NULL and not on the board at
+        that moment: a card evicted earlier in the same round, even one that was there when the round
+        began, is posted again when a later desk fetched it. A new card takes row count % C, evicting
+        the card held there. Every step is a whole-tensor op (no boolean-mask indexing, no `.any()` read
+        on the host, no `F.one_hot` range check), so no step forces a host sync: test `NoSyncTest`.
         """
         store = self.store
         if store is None:
@@ -79,38 +87,31 @@ class Board:
         think, config = self.model.think, self.model.config
         count, per = self.cards.shape[0], cards.shape[1]
         flat = cards.reshape(count, self.desks * per)                                  # [Q, M*K]
-        width = flat.shape[1]
-        real = (flat >= 0) & (flat != store.null)
-        real &= ~self.posted.gather(1, flat.clamp_min(0))
-        earlier = torch.ones(width, width, dtype=torch.bool, device=flat.device).tril(-1)   # [j, i]: i < j
-        repeat = ((flat.unsqueeze(2) == flat.unsqueeze(1)) & real.unsqueeze(1) & earlier).any(2)
-        new = real & ~repeat
-        rank = new.long().cumsum(1) - 1
-        total = new.sum(1, keepdim=True)
-        keep = new & (rank >= total - self.size)                                       # the last C new ones
-        where = (self.count.unsqueeze(1) + rank) % self.size
         values, _, lines = store.gather(flat, self.q_visit)
         bucket = age_bucket(self.q_line.unsqueeze(1) - lines, config.age_buckets)
         bucket = torch.where(lines >= 0, bucket, torch.zeros_like(bucket))
-        author = torch.arange(width, device=flat.device) // per
+        author = torch.arange(flat.shape[1], device=flat.device) // per
         rows = (values.float() + think.age(bucket).float() + think.board_type.weight[1].float()
-                + think.desk.weight[author].float())
-        who = torch.arange(count, device=flat.device).unsqueeze(1).expand_as(flat)[keep]
-        slot = where[keep]
-        evicted = self.slot_card[who, slot]
-        gone = evicted >= 0
-        self.posted = self.posted.index_put((who[gone], evicted[gone]), torch.zeros_like(evicted[gone], dtype=torch.bool))
-        self.posted = self.posted.index_put((who, flat[keep]), torch.ones_like(who, dtype=torch.bool))
-        self.slot_card = self.slot_card.index_put((who, slot), flat[keep])
-        self.cards = self.cards.index_put((who, slot), rows[keep])
-        self.cards_ok = self.cards_ok.index_put((who, slot), torch.ones_like(who, dtype=torch.bool))
-        self.count = self.count + total.squeeze(1)
+                + think.desk.weight[author].float())                                   # [Q, M*K, d]
+        row_index = torch.arange(self.size, device=flat.device)
+        slot_card, board, ok, pointer = self.slot_card, self.cards, self.cards_ok, self.count
+        for column in range(flat.shape[1]):
+            card = flat[:, column]
+            new = (card >= 0) & (card != store.null) & ~(slot_card == card.unsqueeze(1)).any(1)
+            write = (row_index == (pointer % self.size).unsqueeze(1)) & new.unsqueeze(1)   # [Q, C]
+            slot_card = torch.where(write, card.unsqueeze(1), slot_card)
+            board = torch.where(write.unsqueeze(-1), rows[:, column].unsqueeze(1), board)
+            ok = ok | write
+            pointer = pointer + new.long()
+        self.slot_card, self.cards, self.cards_ok, self.count = slot_card, board, ok, pointer
 
 
 # ----------------------------------------------------------------------------- combiner
 def entity_table(store: CardStore, n_ent: int) -> torch.Tensor:
     """[B, L, n_ent] bool: line l of visit b names entity e (from the card ents; -1 padding ignored)."""
     ents = store.ents
+    if ents.numel() and int(ents.max()) >= n_ent:                       # one check per forward, as one_hot did
+        raise ValueError(f"entity id {int(ents.max())} is out of range for n_ent = {n_ent}")
     table = torch.zeros(*ents.shape[:2], n_ent + 1, dtype=torch.bool, device=ents.device)
     return table.scatter_(2, torch.where(ents >= 0, ents, torch.full_like(ents, n_ent)), True)[..., :n_ent]
 

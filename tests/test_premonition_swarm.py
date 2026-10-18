@@ -15,7 +15,7 @@ from premonition import swarm as sw
 from premonition.batch import MAX_LINE_ENTS, VisitBatch
 from premonition.config import PARAM_BAND, MiniConfig
 from premonition.model import PremonitionMini
-from premonition.store import CardStore
+from premonition.store import CardStore, age_bucket
 from premonition.train import _mean_diversity, planned_loops, validate
 from tests import _premonition_model_pre_swarm as frozen
 from tests.test_premonition_model import (N_ENT, VOCAB, eager, synthetic_batch, tiny_config, tiny_model)
@@ -367,6 +367,14 @@ class MergeTest(unittest.TestCase):
         self.assertTrue(torch.equal(out.view(M, -1), valid))
 
 
+    def test_out_of_range_entity_id_raises(self) -> None:
+        """Review round 2, item 5: an entity id >= n_ent raises (as the old one_hot did) instead of vanishing."""
+        model = s0()
+        store = _tiny_store(lines=6, ents={1: [5]})
+        store.ents[0, 2, 0] = model.config.n_ent                           # off by one: id == n_ent
+        with self.assertRaises(ValueError):
+            sw.entity_table(store, model.config.n_ent)
+
     def test_entity_table_matches_the_one_hot_and_the_cache(self) -> None:
         """Review item 7: the bool scatter table equals the old int64 one-hot, and the per-forward cache
         gives the same mask as building it inside merge_mask."""
@@ -486,30 +494,53 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(int(board.count[0]), 6)                                # by card 3, so it is posted again
         self.assertEqual(sorted(board.slot_card[0].tolist()), [0, 3, 4])
 
-    def test_vectorised_post_matches_a_one_by_one_fifo(self) -> None:
-        """Review items 3 and 8: the scatter `post` equals a plain FIFO. Desks post simultaneously each round: a
-        card is new if it is real, not NULL, not on the board at the round's start, and its first occurrence in
-        desk order. New cards are written one by one (a later one may overwrite an earlier one when more than C
-        are new), and a card whose row is overwritten leaves the board, so a later round may post it again."""
+    def expected_row(self, model, store, card: int, desk: int) -> torch.Tensor:
+        """The board row a posted card must hold: its value + age + card row type + author desk."""
+        values, _, lines = store.gather(torch.tensor([[card]]), torch.zeros(1, dtype=torch.long))
+        bucket = torch.where(lines >= 0, age_bucket(torch.tensor([[7]]) - lines, model.config.age_buckets),
+                             torch.zeros_like(lines))
+        think = model.think
+        return (values[0, 0].float() + think.age(bucket)[0, 0].float() + think.board_type.weight[1]
+                + think.desk.weight[desk])
+
+    def test_post_matches_a_one_by_one_fifo_including_row_contents(self) -> None:
+        """Review round 2, items 1 and 4: `post` equals a plain FIFO that posts card by card in desk order,
+        skips NULL and any card on the board AT THAT MOMENT (so a card evicted earlier in the same round is
+        posted again), and every board row holds exactly the expected embedding of its card and author."""
         generator = torch.Generator().manual_seed(0)
         for size in (2, 3, 5):
             model, store, board = self.make(size=size)
-            card_at, pointer = [-1] * size, 0
+            card_at, author_at, pointer = [-1] * size, [-1] * size, 0
             for _ in range(12):
                 cards = torch.randint(-1, store.lines + 1, (M, 3), generator=generator)
                 board.post(cards)
-                at_start, seen = set(card_at), set()
-                for card in cards.flatten().tolist():                         # desk-major, as the board walks
-                    if card < 0 or card == store.null or card in at_start or card in seen:
-                        continue
-                    seen.add(card)
-                    card_at[pointer % size] = card
-                    pointer += 1
+                for desk in range(M):
+                    for card in cards[desk].tolist():
+                        if card < 0 or card == store.null or card in card_at:
+                            continue
+                        card_at[pointer % size], author_at[pointer % size] = card, desk
+                        pointer += 1
                 self.assertEqual(int(board.count[0]), pointer, size)
                 self.assertEqual(board.slot_card[0].tolist(), card_at, size)
                 on_board = {c for c in card_at if c >= 0}
                 self.assertEqual(set(board.posted[0].nonzero().flatten().tolist()), on_board, size)
                 self.assertEqual(board.cards_ok[0].tolist(), [c >= 0 for c in card_at], size)
+                for slot, (card, desk) in enumerate(zip(card_at, author_at)):
+                    if card >= 0:
+                        torch.testing.assert_close(board.cards[0, slot], self.expected_row(model, store, card, desk),
+                                                   rtol=0, atol=0, msg=f"size {size} slot {slot}")
+
+    def test_card_evicted_within_a_round_and_refetched_is_on_the_board(self) -> None:
+        """The second review's counterexample: board [A, B], next row 0; this round fetches X, Y, A. A one-by-one
+        FIFO posts X (evicts A), Y (evicts B), then A again (it is off the board by then): final board [A, Y]."""
+        model, store, board = self.make(size=2)
+        A, B, X, Y = 1, 2, 3, 4
+        board.post(torch.tensor([[A], [B], [-1]]))
+        self.assertEqual(board.slot_card[0].tolist(), [A, B])
+        board.post(torch.tensor([[X], [Y], [A]]))
+        self.assertEqual(board.slot_card[0].tolist(), [A, Y])
+        self.assertEqual(int(board.count[0]), 5)
+        torch.testing.assert_close(board.cards[0, 0], self.expected_row(model, store, A, 2), rtol=0, atol=0)
 
     def test_notes_carry_type_and_desk(self) -> None:
         model, _, board = self.make()
@@ -521,6 +552,42 @@ class BoardTest(unittest.TestCase):
         rows, ok = board.rows()
         self.assertEqual(tuple(rows.shape), (1, M + 3, model.config.d_model))
         self.assertEqual(ok[0].tolist(), [True] * M + [False] * 3)
+
+
+class NoSyncTest(unittest.TestCase):
+    """Review round 2, item 2: `Board.post` forces no host sync. Every aten op it runs is recorded; ops that read a
+    device value on the host (nonzero / boolean-mask indexing, .item(), masked_select, is_nonzero) must not appear."""
+
+    SYNCING = ("nonzero", "_local_scalar_dense", "masked_select", "is_nonzero", "item")
+
+    def test_post_runs_no_syncing_op(self) -> None:
+        from torch.utils._python_dispatch import TorchDispatchMode
+
+        class Record(TorchDispatchMode):
+            def __init__(self) -> None:
+                super().__init__()
+                self.ops: list[str] = []
+
+            def __torch_dispatch__(self, func, types, args=(), kwargs=None):
+                name = func.__name__
+                if name.startswith(("index.", "index_put", "_index_put")):          # a bool index syncs (nonzero
+                    flat = [t for a in args for t in (a if isinstance(a, (list, tuple)) else [a])]   # inside the
+                    if any(isinstance(t, torch.Tensor) and t.dtype == torch.bool for t in flat[1:]):  # kernel)
+                        name = "nonzero via boolean index: " + name
+                self.ops.append(name)
+                return func(*args, **(kwargs or {}))
+
+        model = s1(board_cards=3)
+        store = _tiny_store(lines=8)
+        board = sw.Board(model, 2, store, torch.zeros(2, dtype=torch.long), torch.tensor([7, 7]), torch.device("cpu"))
+        cards = torch.tensor([[2, -1], [2, 4], [-1, store.null], [5, 6], [6, -1], [1, 3]])     # 2 questions x 3 desks
+        with torch.no_grad(), Record() as record:
+            board.post(cards)
+            board.post(cards.flip(1))
+        self.assertTrue(record.ops)
+        bad = sorted({op for op in record.ops if any(op.startswith(name) for name in self.SYNCING)})
+        self.assertEqual(bad, [], bad)
+        self.assertEqual(int(board.count[0]), 2)                              # and it still posted correctly
 
 
 class CausalityTest(unittest.TestCase):

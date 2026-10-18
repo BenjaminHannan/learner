@@ -13,7 +13,7 @@
 #   CAP      dollars (default 4.20, ruling Q28).
 #   PART     c0 | s0 | all (default all). c0 stops after C0 whatever it says. s0 starts at the trains and needs the
 #            data.json and c0.json of an earlier c0 part in OUT.
-#   DRYRUN   1 = the CPU dry run: tiny preset and visits, cpu, T = 30 s, the manifest is regenerated first
+#   DRYRUN   1 = the CPU dry run: tiny preset and visits, cpu, T = 120 s (coordinator, round 2: a CPU step is ~2% of 30 s), the manifest is regenerated first
 #            (an uncommitted tree has none), no money check, and the S1 tiny arm + lesions are run so that
 #            MARKS-S1 is proven computable too. Its numbers mean nothing.
 #   STOP_OVERRIDE  non-empty text (the coordinator's ruling) lets the trains start although c0.json says
@@ -39,7 +39,7 @@ RUN=claude-swarm-screen-20261018
 if [ "$DRYRUN" = 1 ]; then
   SIZE=tiny; DEVICE=cpu; VISITS=tiny; DPH=${DPH:-0.40}; DRY_MAXTOK=${DRY_MAXTOK:-3000}
   OUT=${OUT:-$ROOT/artifacts/$RUN/dryrun}; CKPT=artifacts/$RUN/ckpt-dryrun
-  C0_ARGS="--rounds 3 --warmup 2 --timed 4 --chunk 2 --t-override 30 --max-tokens $DRY_MAXTOK $C0_EXTRA"
+  C0_ARGS="--rounds 3 --warmup 2 --timed 4 --chunk 2 --t-override 120 --max-tokens $DRY_MAXTOK $C0_EXTRA"
   TRAIN_ARGS="--max-tokens $DRY_MAXTOK"
 else
   SIZE=full; DEVICE=cuda; VISITS=large
@@ -160,7 +160,7 @@ evalone() { step "eval-$1-s$2${3:+-$3}" $SCREEN eval --checkpoint "$CKPT/$1-s$2"
               --out "$OUT/eval-$1-s$2${3:+-$3}.json" $COMMON; }
 for seed in 0 1 2; do evalone D1 $seed; evalone S0 $seed; done
 # ---------------------------------------------------------------- 7. readout
-if [ "$DRYRUN" = 1 ]; then NOTE="DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing"; else NOTE=""; fi
+if [ "$DRYRUN" = 1 ]; then NOTE="DRY RUN: tiny preset, CPU, T=120 s; the numbers mean nothing"; else NOTE=""; fi
 step marks-S0 $MARKS --card S0 --dir "$OUT" --out "$OUT/MARKS-S0.json" --note "$NOTE"
 if [ "$DRYRUN" = 1 ]; then
   step marks-S0-minitems1 $MARKS --card S0 --dir "$OUT" --out "$OUT/MARKS-S0-minitems1.json" --min-items 1 --note "$NOTE (second pass: --min-items 1)"

@@ -104,7 +104,8 @@ primary is `far_deep` on the validation split, card-specific. DEV slip is `near`
   (`ConcurrencyTest`).
 * **Board** = the single communication channel. Turning it off (`swarm_board=False`) gives S0. While a
   round runs, board rows are read-only extra rows on every desk. Between rounds, each desk's register 1
-  is posted as a note, and every card any desk fetched is posted once.
+  is posted as a note, and every card any desk fetched is posted unless it is on the board already. The
+  card part is a FIFO of `board_cards` rows: a card pushed off it can be posted again by a later fetch.
 
 ## 3. The six questions, resolved
 
@@ -254,9 +255,9 @@ across desks, or the answer mixes up whose fact is whose.
    would dilute the bound one: three "B, nothing known" rows against one "B, lives by the mill". The
    mask shows a desk's slot e **only if that desk bound e** (it fetched a real card whose line mentions
    e). If no desk bound e, only desk 0's copy is shown, so the name stays visible. Test:
-   `MergeMaskTest`.
-3. **Training teaches the cross-desk join from the start.** In the gold phase, a question's gold cards
-   are dealt round-robin across desks. So from step 0 the combiner learns to answer from facts spread
+   `MergeTest`.
+3. **Training teaches the cross-desk join from the start.** In the gold phase, a question's latest gold
+   cards (up to M × card_rows, so none is dropped while the desks have room) are dealt round-robin across desks. So from step 0 the combiner learns to answer from facts spread
    over desks, not only from facts on one desk.
 4. **What is not solved (untested).** Two desks may bind *conflicting* values to the same name (one
    desk has an older card about B, another a newer one). Both copies are shown. The age embedding
