@@ -264,3 +264,23 @@ stop $18). Spend at 19:53Z was $0.817.
 - **Step 1,000 at t = 514.7 s, no `MemoryGuardError`** (20 guard checks clean, limit 14.00 GiB). Gold loss 1.109,
   train answer accuracy 0.693. `nvidia-smi` memory.used (whole card) during the parent: 4.1-6.1 GB. The run
   continues to the full run, as Q159 releases it.
+- Parent P_0 (attempt 2): 3,487 gold steps, share 0.0500, **peak reserved 6.02 GB** over the whole gold phase. In
+  attempt 1 the same seed failed at 16.43 GiB. Checkpoint `artifacts/span-stage1/20261018T201349Z/seed0/parent`
+  (state 01559606..., config ba04714e...). DEV: aligned, overall 0.110.
+- Branch-point check: passed (5,967 cards, key/value diff 0.0, 0 differing answers natural and eager, 0 GPU flips).
+- **Arm probe (Q160 (3)): LINE PASSED.** The arm started at step 3,487 (t = 727.7 s). Progress at global step 5,000
+  (1,513 arm steps, teacher phase, t = 950.6 s) with no guard error. Whole-card memory during the arm: about 7.0 GB.
+  The LINE arm continues; it was at step 7,000 (share 0.117) at t = 1,187 s.
+
+**Seed 2 (56611889): strengthened pre-flight PASSED.**
+- Boot 20:15:08Z; setting logged; commit 707bdce90. Data identical to the seal.
+- Old pre-flight: rung 0 fits, worst 9.91 GB reserved / 9.73 GB allocated. In attempt 1, the same seed's box
+  reserved 16.14 GB at rung 0.
+- Go accepted at t = 706.8 s. **Step 1,000 at t = 814.0 s with no guard error.**
+- Parent P_2 (attempt 2): 3,484 gold steps, **peak reserved 6.15 GB**. Checkpoint state 094e96a1..., config
+  aec7376b.... This differs from attempt 1's P_2 (76986173...), as expected for a re-trained parent. The attempt-1 P_2
+  stays on box 56601524. DEV: aligned, overall 0.204.
+- Branch-point check: passed (same figures as seed 0). The LINE arm started at step 3,484 (t = 1,086.7 s); the arm
+  probe passes at global step 5,000.
+
+**Seed 1 (56611888):** slower CPU box (12 cores); the data build was still running at 20:34Z.
