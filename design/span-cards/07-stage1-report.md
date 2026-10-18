@@ -1,7 +1,8 @@
 # Stage 1 report (SC-1; booked by the coordinator after Stage 0)
 
-**Status: GO FILED (rung 2).** The coordinator named rung 2, (40,000, 35), for both arms and all seeds; the go
-file is filed. Training starts when the boxes accept it (confirmed below).
+**Status: SEEDS 0 AND 1 FAILED THE MEMORY GUARD AT RUNG 2; SEED 2 TRAINING.** All three boxes accepted the rung-2
+go. Seeds 0 and 1 stopped on `MemoryGuardError` in the parent's gold phase within a minute; seed 2 is training. Seeds
+0 and 1 are not restarted until the coordinator rules (below).
 
 ## Run record
 - Script: `scripts/span_stage1.py` at commit 707bdce90 (sha256 47577a35...d127), reviewed by the coordinator (the
@@ -102,8 +103,36 @@ The go file (`stage1-go.json`), filed with exactly the coordinator's content:
 "flop_budget": 3.15e16, "size": "full", "max_tokens": 40000, "max_visits": 35}` (full hashes in the file and in
 `05-seal.md` part 2; they match what every box reported).
 
-## Go accepted
-(filed when the boxes log the go and start the parent)
+## Go accepted, and the first minute (2026-10-18)
+Every box logged the go record `{"max_tokens": 40000, "max_visits": 35}` and started P_s.
+
+| seed | go accepted (box clock) | outcome |
+|---|---|---|
+| 0 | t = 3164.5 s | **failed** at t = 3207.1 s (43 s later): `MemoryGuardError: peak reserved GPU memory 16.43 GiB exceeds the 14.00 GiB limit`, in `trainer.train` of the parent (gold phase), before step 1000. `S1-DONE failed`, box exit 19:44:17Z; the watchdog stopped the box at 19:47:33Z. |
+| 1 | t = 2696.9 s | **failed** at t = 2755.4 s (59 s later): the same error at **16.91 GiB**, same place. Box exit 19:45:13Z; stopped 19:47:42Z. |
+| 2 | t = 3200.7 s | **training**: step 1000 (share 0.0144, DEV-256 accuracy 0.088), step 2000 (share 0.0288, accuracy 0.202), about 8.7 steps/s in the gold phase. |
+
+Neither failed seed produced a parent checkpoint; nothing of theirs is usable. The guard is checked after the first
+step and every 50 steps, and `reset_guard` (empty cache, reset peak) runs between the fp32 calibration and training,
+so the 16.4-16.9 GiB peaks come from the training steps themselves.
+
+**What this shows (shown):** the pre-flight did not bound the real run's reserved memory. At rung 2 the pre-flight's
+worst child reserved 8.46 GB (seed 2); the real parent runs on seeds 0 and 1 reserved more than 17.6 GB (16.43 GiB)
+within about 400 steps. Allocated memory at rung 2 was at most 7.04 GB in the pre-flight, so reserved / allocated
+reached at least 2.5 in the real run, above the worst 2.04 the pre-flight saw.
+
+**Why (suggested, not tested):** the reserve grows with the CUDA caching allocator's fragmentation, which depends on
+the order of batch shapes. The pre-flight replays 12 batches for 36 steps; the real stream gives a new shape at every
+step. That matches the warning filed with the pre-flight ("36 steps cannot bound how badly the allocator fragments"),
+but the real growth came faster and larger than that estimate. Seed 2 has passed at least 40 guard checks so far; it
+can still fail later in the run for the same reason.
+
+**Not done (on purpose):** no lower rung, no allocator setting, no restart of seeds 0 and 1. The rung and any change
+to the run are the coordinator's call. The go file still reads as the coordinator filed it. The stopped boxes run
+nothing unless they are started, and a restart would reread that go and repeat the same configuration, so I will not
+start them without a ruling.
+
+**Money:** $0.78 spent at 19:47Z since the baseline. Seed 2 alone costs $0.29/h; the stopped boxes cost only disk.
 
 ## Readout per seed
 (filed when each seed finishes)
