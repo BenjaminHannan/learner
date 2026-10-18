@@ -287,3 +287,22 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
   - `gwls_checks` uses a bare `json.load` instead of `read_iter`;
   - `read_state` does a full `torch.load` just for four fields;
   - altitude: the gate infers "training stopped" from symptoms instead of a done-marker from the trainer (`imitate.py`, outside the read path).
+
+## Built-in review of the complete read path after Q113 (28f6fcc42..99f02cec7): verdict BLOCKING; sealed read stays HELD
+- **N1-N5 (Q113) are in:** 99f02cec7. Verified independently: 90 tests pass; real child processes for N5; the live dry-run is clean and
+  leaves nothing behind.
+- **New findings that are blocking by the stated definition** (none reachable in the planned execution):
+  - **P1 (gwls_final.py:674):** the start record and locks live only in the scratch root until both scorers exit 0. If an attempt
+    crashes and the scratch is then lost, a fresh root could replay. Fix: persist `read-record.json` to the persist dir before scoring.
+  - **P2 (:666):** a non-default `--persist-dir` skips the check of the default `game/results/gwls/`.
+  - **P3 (:342):** `explore` (and any other scorer constant) is not checked against arm C's setting. Only the cap is.
+  - **P4 (:362, :535):** the existing-result and lock checks use `os.path.exists`, which fails open on an OSError.
+  - **P5 (:207):** the /proc probe treats "no visible process" (hidepid, another namespace) as "stopped".
+  - **P6 (:719):** `--analyze-only` overwrites persisted results without a previous-read check.
+- **Not blocking:**
+  - bare asserts under `-O` (never used);
+  - `gwls_persist.sh` resolves a relative root differently for the checks;
+  - a duplicate `sha256_file`;
+  - `gwls_checks` reads round 1 twice.
+- **This is the fourth review round in a row to find new in-principle holes in the growing read path.** Rounds so far: 1f20e8e4,
+  639c21965, dec68ba1e, b4c3ec1c9 / 3d6b1e181, 99f02cec7.
