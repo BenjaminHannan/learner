@@ -149,7 +149,9 @@ unchanged.
 2. **Rate (budget) loss.** H-Net's ratio loss
    `L_rate = N/(N-1) * ((N-1) * F * G + (1-F) * (1-G))`,
    where `F` is the share of tokens that start a hard card, `G` is the mean `p`, and `N` is the target tokens
-   per card. Correction (found in code review of the draft): the loss is bilinear in (F, G), so
+   per card. (Revision after the third code review: in `G` a forced start, after a wall or at the cap, counts as
+   a constant 1 and only gate-decided positions contribute `p`. Forced starts still use up the budget in `F`, so
+   the target is unchanged, but the gate gets no rate gradient where its output cannot change the layout.) Correction (found in code review of the draft): the loss is bilinear in (F, G), so
    `F = G = 1/N` (value 1) is a saddle, not a minimum. It works because `F` is a hard count with no gradient.
    Only `G` is trained, and `dL/dG ∝ N·F - 1` pushes the gate down when there are too many cards and up when
    there are too few, and is zero at `F = 1/N`. This is H-Net's own usage. **`N` is set to the training cache's mean tokens per

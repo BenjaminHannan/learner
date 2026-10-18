@@ -17,6 +17,8 @@ What changes (reader, think loop, ASK, binder, decoder, losses and curriculum ar
   hard pool's. Starts the gate did not choose (walls, the cap) are hard boundaries in the surrogate too
   (`surrogate_stay`), so at saturated gates the surrogate equals the hard pool. `rate_loss` (H-Net's ratio loss) holds the
   tokens-per-card at `tokens_per_card`; set it to `tokens_per_line` of the training cache for an equal-count A/B.
+  Forced starts count toward the rate but carry no rate gradient (`layout_rate`).
+- A span card is written only if its last line ends inside the batch (`card_end`), as in `CardStore.write`.
 - `SpanCardStore` is indexed by token position (card id = position of its last token, width T, NULL = T). Eligibility
   uses the card's last line; after a wipe a card must also START at or after the floor. A card is gold iff it holds a
   token of a gold line; `missing` counts gold lines with no token inside an eligible card.
@@ -87,6 +89,21 @@ def rate_loss(start_rate: Any, gate_mean: Any, tokens_per_card: float) -> Any:
     proportional to N F - 1, which drives the hard card rate toward 1/N."""
     n = float(tokens_per_card)
     return n / (n - 1.0) * ((n - 1.0) * start_rate * gate_mean + (1.0 - start_rate) * (1.0 - gate_mean))
+
+
+def layout_rate(lay: "Layout", tokens_per_card: float) -> torch.Tensor:
+    """`rate_loss` of a hard layout over its cardable tokens. F counts every start: forced ones (walls, the cap) are
+    cards of the layout and use up the budget. G is the soft count of starts: a forced start enters as a constant 1,
+    the gate's p only where the gate decides (cardable, not forced). So the rate gradient never reaches a position
+    whose output cannot change the layout, G = F at saturated gates, and dL/dG is zero exactly when the gate
+    chooses cardable/N - forced starts (the rescaled target over decided positions, without its pole when the
+    forced starts alone use the budget, as in a per-line layout whose wall regions are single lines)."""
+    cardable = lay.cardable
+    if not bool(cardable.any()):
+        return lay.p.sum() * 0.0
+    start_rate = lay.start[cardable].float().mean().detach()
+    gate_mean = torch.where(lay.forced, torch.ones_like(lay.p), lay.p)[cardable].mean()
+    return rate_loss(start_rate, gate_mean, tokens_per_card)
 
 
 def log_stay(logit: torch.Tensor) -> torch.Tensor:
@@ -315,13 +332,7 @@ class SpanCardWriter(CardWriter):
             pooled = pooled + (soft - soft.detach())
 
         # Rate loss and statistics.
-        n_cardable = int(flat_cardable.sum())
-        if n_cardable:
-            start_rate = start[cardable].float().mean().detach()
-            gate_mean = p[cardable].mean()
-            rate = rate_loss(start_rate, gate_mean, span.tokens_per_card)
-        else:
-            rate = p.sum() * 0.0
+        rate = layout_rate(lay, span.tokens_per_card)
 
         ents_seg, ents_over = self._entities(tokens, token_pos, seg, n_seg)
         stats = self._stats(p, start, cardable, after_newline, n_seg, visits, ents_over)
@@ -335,12 +346,18 @@ class SpanCardWriter(CardWriter):
             return torch.full((visits, width), fill, dtype=torch.long, device=device).index_put(
                 (seg_row, seg_end), rows)
 
+        # `CardStore.write`'s rule: a card is written only if its last line ends inside the batch (`card_end`).
+        lines = batch.line_start.shape[1]
+        line_ended = torch.zeros(visits * lines, dtype=torch.bool, device=device)
+        ended = batch.card_end & (line_of >= 0)
+        line_ended[(line_of + lines * torch.arange(visits, device=device).unsqueeze(1))[ended]] = True
+        written = line_ended[seg_row * lines + line_of[seg_row, seg_end]]
         valid = torch.zeros(visits, width, dtype=torch.bool, device=device)
-        valid[seg_row, seg_end] = True
+        valid[seg_row, seg_end] = written
         ents = torch.full((visits, width, MAX_LINE_ENTS), -1, dtype=torch.long, device=device)
         ents[seg_row, seg_end] = ents_seg
         card_of = torch.full((visits * width,), -1, dtype=torch.long, device=device)
-        card_of[token_pos] = seg_end[seg]
+        card_of[token_pos] = torch.where(written[seg], seg_end[seg], torch.full_like(seg, -1))
         store = SpanCardStore(
             keys=F.normalize(keys.float(), dim=-1), values=values, valid=valid,
             tags=place(tokens[seg_row, seg_start], -1), ents=ents,
@@ -431,12 +448,17 @@ class SpanCardMini(PremonitionMini):
             capture["store"] = store
         return store
 
-    def forward(self, batch: VisitBatch, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
+                loops: Optional[int] = None, weights: Optional[dict[str, float]] = None,
+                generator: Optional[torch.Generator] = None) -> dict[str, Any]:
+        """`PremonitionMini.forward` plus `w_rate` x the rate loss; caller `weights` set it with "rate" (default
+        `w_rate`, also in gold mode: the rate loss trains only the gate)."""
         with self.scope() as capture:
-            out = super().forward(batch, *args, **kwargs)
+            out = super().forward(batch, mode, p_own, loops, weights, generator)
             store = capture.pop("store")
+        w_rate = self.span.w_rate if weights is None else weights.get("rate", self.span.w_rate)
         out["rate"] = store.rate
-        out["loss"] = out["loss"] + self.span.w_rate * store.rate
+        out["loss"] = out["loss"] + w_rate * store.rate
         metrics = out["metrics"]
         for name, value in store.stats.items():
             metrics[f"span_{name}"] = value
@@ -735,5 +757,5 @@ def identity(span: SpanConfig, config: MiniConfig) -> dict[str, Any]:
 
 
 __all__ = ["SpanCardMini", "SpanCardStore", "SpanCardWriter", "SpanConfig", "SpanTrainer", "VARIANT",
-           "build_model", "card_economy", "card_stats_from_sets", "identity", "layout_card_stats", "log_stay",
-           "matrix_gold_sets", "rate_loss", "soft_pool", "source_digest", "tokens_per_line"]
+           "build_model", "card_economy", "card_stats_from_sets", "identity", "layout_card_stats", "layout_rate",
+           "log_stay", "matrix_gold_sets", "rate_loss", "soft_pool", "source_digest", "tokens_per_line"]

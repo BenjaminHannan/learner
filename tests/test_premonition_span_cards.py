@@ -428,10 +428,12 @@ class RateLossTest(unittest.TestCase):
         batch = synthetic_batch(seed=1)
         model = span_model(0)
         model.train()
-        store = model.writer(model.read(batch), batch)
-        stats = store.stats
+        hidden = model.read(batch)
+        store = model.writer(hidden, batch)
+        lay = model.writer.layout(hidden, batch)
+        soft_starts = torch.where(lay.forced, torch.ones_like(lay.p), lay.p)[lay.cardable].mean()  # forced = 1
         self.assertAlmostEqual(float(store.rate.detach()),
-                               rate_loss(float(stats["start_rate"]), float(stats["gate_mean"]),
+                               rate_loss(float(store.stats["start_rate"]), float(soft_starts),
                                          model.span.tokens_per_card), places=5)
 
 
@@ -646,6 +648,122 @@ class ReviewRegressionTest(unittest.TestCase):
             torch.testing.assert_close(soft, hard, rtol=0, atol=1e-5)
             leaky = soft_pool(hidden, score, log_stay(lay.logit), lay.cardable, region, rows, ends, 3)
             self.assertGreater(float((leaky - hard).abs().max()), 1e-2)  # the old stay leaked across the cap
+
+
+class RoundThreeRegressionTest(unittest.TestCase):
+    """Round-3 review: finding 1 (the rate loss counted forced starts) and minor findings 3-4."""
+
+    @staticmethod
+    def capped_layout(seed: int = 0):
+        """A layout with wall starts and cap starts (max_span 3), and its gate logits kept for their gradient."""
+        batch = synthetic_batch(visits=2, lines=16, seed=4)
+        model = span_model(seed, max_span=3)
+        model.train()
+        lay = model.writer.layout(model.read(batch), batch)
+        lay.logit.retain_grad()
+        return model, batch, lay
+
+    def test_the_rate_gradient_skips_forced_starts(self) -> None:
+        """Finding 1: G held the gate's p at forced starts, so the gate got rate gradient where its output cannot
+        change the layout."""
+        model, batch, lay = self.capped_layout()
+        forced, decided = lay.forced, lay.cardable & ~lay.forced
+        self.assertGreater(int((forced & lay.after_wall).sum()), 0)                 # wall starts
+        self.assertGreater(int((forced & ~lay.after_wall).sum()), 5)                # cap starts
+        span_cards.layout_rate(lay, 12.0).backward(retain_graph=True)
+        grad = lay.logit.grad.clone()
+        self.assertEqual(float(grad[forced].abs().max()), 0.0)
+        self.assertGreater(float(grad[decided].abs().min()), 0.0)
+        lay.logit.grad = None
+        start_rate = lay.start[lay.cardable].float().mean()
+        rate_loss(start_rate, lay.p[lay.cardable].mean(), 12.0).backward()          # the old G
+        self.assertGreater(float(lay.logit.grad[forced].abs().max()), 0.0)
+
+    def test_the_target_is_unchanged_and_has_no_pole(self) -> None:
+        """Forced starts still use up the budget: dL/dG is zero exactly at cardable / N - forced chosen starts (the
+        proposal's rescaled N' = decided / (cardable / N - forced) has the same zero and sign), G = F at saturated
+        gates, and the loss stays finite when the forced starts alone exceed the budget (N' has a pole there)."""
+        batch = synthetic_batch(visits=2, lines=24, seed=2)
+        model = span_model(0)
+        with torch.no_grad():
+            model.writer.gate.bias.fill_(-50.0)
+            model.writer.newline_weight.fill_(100.0)
+        model.train()
+        lay = model.writer.layout(model.read(batch), batch)
+        cardable = float(lay.cardable.sum())
+        starts, forced = float(lay.start.sum()), float(lay.forced.sum())
+        decided, chosen = cardable - forced, starts - forced
+        self.assertGreater(chosen, 0.0)
+        gate = torch.where(lay.forced, torch.ones_like(lay.p), lay.p)[lay.cardable].mean().detach()
+        self.assertAlmostEqual(float(gate), starts / cardable, places=6)            # G = F when saturated
+        for n in (cardable / starts, 0.5 * cardable / starts, 2.0 * cardable / starts, 1e6):
+            g = torch.tensor(float(gate), requires_grad=True)
+            loss = rate_loss(starts / cardable, g, n)
+            self.assertTrue(torch.isfinite(loss))
+            loss.backward()
+            budget = cardable / n - forced                                          # chosen starts on target
+            if abs(n - cardable / starts) < 1e-9:
+                self.assertAlmostEqual(float(g.grad), 0.0, places=5)
+                self.assertAlmostEqual(budget, chosen, places=6)
+            elif budget > 0:
+                rescaled = decided / budget
+                self.assertEqual(float(g.grad) > 0, rescaled * chosen / decided - 1 > 0)
+            else:
+                self.assertGreater(float(g.grad), 0.0)                              # fewer starts, finitely
+        model.zero_grad(set_to_none=True)
+        span_cards.layout_rate(lay, cardable / starts).backward()
+        for name in ("bias", "weight"):
+            self.assertLess(float(getattr(model.writer.gate, name).grad.abs().max()), 1e-5, name)
+
+    def test_caller_weights_set_the_rate_weight(self) -> None:
+        """Minor 3: forward added w_rate x rate whatever `weights` the caller passed."""
+        model, batch = variable_model(1), synthetic_batch(seed=2)
+        model.train()
+        weights = {"lm": 1.0, "ans": 1.0, "ask": 0.0, "halt": 0.0}
+
+        def loss(**extra: float) -> tuple[float, float]:
+            out = model(batch, mode="gold", weights={**weights, **extra},
+                        generator=torch.Generator().manual_seed(0))
+            base = PremonitionMini.forward(model, batch, mode="gold", weights=dict(weights),
+                                           generator=torch.Generator().manual_seed(0))
+            return float((out["loss"] - base["loss"]).detach()), float(out["rate"].detach())
+
+        off, _ = loss(rate=0.0)
+        self.assertEqual(off, 0.0)
+        double, rate = loss(rate=2.0)
+        self.assertAlmostEqual(double, 2.0 * rate, places=4)
+        default, rate = loss()
+        self.assertAlmostEqual(default, model.span.w_rate * rate, places=4)
+
+    def test_a_line_cut_by_the_batch_gets_no_card(self) -> None:
+        """Minor 4: the span writer wrote a card for a line whose last token (`card_end`) is not in the batch."""
+        full = synthetic_batch(visits=3, lines=12, seed=0)
+        visit = next(v for v in range(3) if not bool(full.line_is_question[v, -1]))  # ends on a card line
+        size = int(full.lengths[visit])
+        cut, line = size - 2, full.line_is_question.shape[1] - 1                    # drop "... x \n" of the last line
+        fields = dict(full.__dict__)
+        for name, fill in (("tokens", 0), ("line_of", -1), ("card_end", False), ("lm_mask", False)):
+            fields[name] = full.__dict__[name].clone()
+            fields[name][visit, cut:size] = fill
+        fields["lengths"] = full.lengths.clone()
+        fields["lengths"][visit] = cut
+        batch = type(full)(**fields)
+        cut_tokens = (batch.line_of[visit] == line).nonzero().flatten()
+        self.assertGreater(cut_tokens.numel(), 0)
+        plain = store_of(eager(plain_model(3)), batch)
+        self.assertFalse(bool(plain.valid[visit, line]))                            # the parent's rule
+        for model in (eager(span_model(0)).eval(), variable_model(0)):
+            before, after = store_of(model, full), store_of(model, batch)
+            self.assertFalse(bool(after.card_of[visit, cut_tokens].ge(0).any()))
+            self.assertFalse(bool((after.valid[visit] & (after.card_line[visit] == line)).any()))
+            rows, ends = torch.nonzero(after.valid, as_tuple=True)
+            self.assertTrue(bool(batch.card_end[rows].logical_and(
+                batch.line_of[rows] == after.card_line[rows, ends].unsqueeze(1)).any(1).all()))
+            keep = before.valid.clone()
+            keep[visit] &= before.card_line[visit] < line
+            self.assertTrue(torch.equal(after.valid, keep))                         # every other card unchanged
+            torch.testing.assert_close(after.keys[keep], before.keys[keep], rtol=0, atol=1e-6)
+        self.assertTrue(torch.equal(store_of(eager(span_model(0)).eval(), batch).valid, batch.card_end))
 
 
 class RoundTripTest(unittest.TestCase):
