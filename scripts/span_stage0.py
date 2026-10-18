@@ -11,16 +11,18 @@ back, so partial results survive a stop):
    weights) in gold, teacher and own (p_own 0.75) mode on the same real batches (max_tokens 55,000, max_visits
    48), after warm-up, with the FLOP fit; and one validation pass. Then the Stage 1 projection: steps per mode
    from F = 3.15e16 and the curriculum shares, 3 parents (LINE, 5% of F) + Cell A (LINE and SPAN x 3 seeds x 95%).
-3. branch: SPAN loaded from the (briefly trained) LINE model must give identical `answer()` on 64 DEV visits,
-   write exactly the parent's cards (`valid == card_end`) and have `card_economy.line_aligned == 1` there. The
-   same check runs as a pre-flight on fresh weights right after the data step. A failed check stops the run
-   (run card §3: the pairing is broken), so nothing after it is paid for.
-4. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps; losses must be finite.
-`STAGE0-DONE` ends the log. Nothing is saved but the log; the box is destroyed after it is read.
+3. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps; losses must be finite.
+4. branch: `branch_check` (its docstring has the pass conditions, `line_aligned == 1` among them) on 64 DEV visits,
+   with SPAN loaded from the LINE model as trained by the timing steps. The same check runs as a pre-flight on
+   fresh weights right after the data step, before anything else is paid for. A failed check stops the run
+   (run card §3: the pairing is broken) with exit status 1.
+`STAGE0-DONE ok` (or `failed`, after an `error` line) ends the log. Nothing is saved but the log; the box is
+destroyed after it is read.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import platform
@@ -83,36 +85,98 @@ def time_steps(trainer: MiniTrainer, batches, plan: Plan, warm: int, timed: int)
             "n": len(seconds)}
 
 
-def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, valid_cache, args, device) -> dict:
-    """SPAN loaded from LINE (gate re-initialised) against LINE on the first `--branch-visits` DEV visits: identical
-    `answer()`, the parent's cards (`valid == card_end`, keys within float error), and `card_economy`'s layout
-    report with `line_aligned == 1` (every card exactly one whole non-question line). Both models end in eval."""
-    span.load_state_dict(line.state_dict(), strict=False)
+GATE_KEYS = frozenset({"writer.gate.weight", "writer.gate.bias", "writer.newline_weight"})
+TOLERANCE = 1e-4          # card keys and values, and halt probabilities: float error between the two pool codes
+ANSWER_FIELDS = ("tokens", "lengths", "loops", "first_top", "fetched")
+
+
+def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batches) -> dict:
+    """`answer()` of both models on every batch: questions compared, questions whose answer differs in any exact
+    field, the largest `halt_prob` difference (it reads the fetched card contents even when greedy tokens do not
+    move), and real (non-NULL) cards LINE fetched, so a pass that never fetched a card is visible."""
+    questions = differing = fetched = 0
+    halt_diff = 0.0
+    for batch in batches:
+        with torch.no_grad():
+            a, b = line.answer(batch), span.answer(batch)
+        differ = torch.zeros(a.tokens.shape[0], dtype=torch.bool, device=a.tokens.device)
+        for name in ANSWER_FIELDS:
+            x, y = getattr(a, name), getattr(b, name)
+            if x.shape != y.shape:
+                differ |= True
+            else:
+                differ |= (x != y).reshape(x.shape[0], -1).any(1)
+        if a.halt_prob.shape != b.halt_prob.shape:
+            halt_diff = math.inf
+        elif a.halt_prob.numel():
+            diff = float((a.halt_prob.float() - b.halt_prob.float()).abs().nan_to_num(math.inf).max())
+            halt_diff = max(halt_diff, diff)
+        questions += int(differ.numel())
+        differing += int(differ.sum())
+        fetched += int(a.fetched[:, :-1].sum())
+    return {"questions": questions, "differing": differing, "max_halt_diff": halt_diff,
+            "identical": differing == 0 and halt_diff <= TOLERANCE, "cards_fetched": fetched}
+
+
+def eager_copy(model: PremonitionMini) -> PremonitionMini:
+    """A copy that always ASKs, so `answer()` fetches cards. HALT is left as it is (unlike the unit tests' `eager`):
+    a saturated HALT would pin `halt_prob` near 0 in both models and hide what the fetched cards hold."""
+    model = copy.deepcopy(model)
+    with torch.no_grad():
+        model.heads.ask.bias.fill_(20.0)
+    return model
+
+
+def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, device) -> dict:
+    """SPAN loaded from LINE (gate re-initialised) against LINE on `batches` (DEV, already on `device`). Passes iff:
+    only the gate's three weights are missing from the load and nothing is unexpected; there are cards and SPAN
+    writes exactly the parent's (`valid == card_end`) with keys and values within `TOLERANCE` (finite); `answer()`
+    is identical (exact fields; `halt_prob` within `TOLERANCE`) with the natural weights AND with an eager copy of
+    both (always ASK), which must fetch cards (so the identity covers the card path); and
+    `card_economy.line_aligned == 1`. Runs with deterministic algorithms (warn only) so scatter/index_add order
+    cannot flip a near-tie. Both models end in eval mode."""
+    missing, unexpected = span.load_state_dict(line.state_dict(), strict=False)
     span.writer.init_gate()
     span.eval()
     line.eval()
-    same, compared, key_diff = True, 0, 0.0
-    chosen = list(range(min(args.branch_visits, len(valid_cache))))
-    groups = pdata.length_batches(valid_cache.lengths[chosen].tolist(), args.max_tokens, max_visits=args.max_visits)
-    batches = [pdata.collate(valid_cache, [chosen[i] for i in group]) for group in groups]
-    for batch in batches:
-        batch = batch.to(device)
-        with torch.no_grad():
-            a, b = line.answer(batch), span.answer(batch)
-            plain = line.build_store(line.read(batch), batch)
-            spans = span.build_store(span.read(batch), batch)
+    was_deterministic = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True, warn_only=True)
+    try:
+        cards, valid_ok, key_diff, value_diff = 0, True, 0.0, 0.0
+        for batch in batches:
+            with torch.no_grad():
+                plain = line.build_store(line.read(batch), batch)
+                spans = span.build_store(span.read(batch), batch)
             bi, ei = torch.nonzero(spans.valid, as_tuple=True)
-            key_diff = max(key_diff, float((spans.keys[bi, ei] - plain.keys[bi, batch.line_of[bi, ei]]).abs().max()))
-        for name in ("tokens", "lengths", "loops", "first_top", "fetched"):
-            same &= bool(torch.equal(getattr(a, name), getattr(b, name)))
-        same &= bool(torch.equal(spans.valid, batch.card_end))
-        compared += int(batch.q_visit.shape[0])
-    economy = span_cards.card_economy(span, batches, device=device)
+            cards += int(bi.numel())
+            valid_ok &= bool(torch.equal(spans.valid, batch.card_end))
+            if bi.numel():
+                line_of = batch.line_of[bi, ei]
+                for name, diff in (("keys", spans.keys[bi, ei] - plain.keys[bi, line_of]),
+                                   ("values", spans.values[bi, ei].float() - plain.values[bi, line_of].float())):
+                    worst = float(diff.abs().nan_to_num(math.inf).max())
+                    if name == "keys":
+                        key_diff = max(key_diff, worst)
+                    else:
+                        value_diff = max(value_diff, worst)
+        natural = compare_answers(line, span, batches)
+        eager = compare_answers(eager_copy(line), eager_copy(span), batches)
+        economy = span_cards.card_economy(span, batches, device=device)
+    finally:
+        torch.use_deterministic_algorithms(was_deterministic)
     layout = {name: economy[name] for name in ("layout", "cards", "line_aligned", "merged", "split_lines",
-                                               "newline_precision", "newline_recall")}
+                                               "newline_precision", "newline_recall", "asked_rate", "fetches_per_q")}
+    weights_ok = set(missing) == GATE_KEYS and not unexpected
+    key_ok = key_diff <= TOLERANCE and value_diff <= TOLERANCE
     aligned = economy["line_aligned"] == 1.0
-    return {"passed": same and aligned, "identical": same, "line_aligned_is_1": aligned, "questions": compared,
-            "visits": len(chosen), "max_key_diff": key_diff, "economy": layout}
+    reasons = [name for name, ok in (
+        ("weights", weights_ok), ("no cards", cards > 0), ("valid != card_end", valid_ok),
+        ("card keys or values", key_ok),
+        ("answers (natural)", natural["identical"]), ("answers (eager)", eager["identical"]),
+        ("eager fetched no card", eager["cards_fetched"] > 0), ("line_aligned != 1", aligned)) if not ok]
+    return {"passed": not reasons, "reasons": reasons, "line_aligned_is_1": aligned, "cards": cards,
+            "max_key_diff": key_diff, "max_value_diff": value_diff, "natural": natural, "eager": eager,
+            "missing": sorted(missing), "unexpected": list(unexpected), "economy": layout}
 
 
 def mode_costs(trainer: MiniTrainer, batches) -> dict:
@@ -168,20 +232,22 @@ def main() -> None:
     emit("batches", tokens=[int(b.tokens.numel()) for b in batches], questions=[int(b.q_visit.shape[0]) for b in batches])
     groups = pdata.length_batches(valid_cache.lengths.tolist(), args.max_tokens, max_visits=args.max_visits)
     dev = [pdata.collate(valid_cache, g).to(device) for g in groups]
+    chosen = list(range(min(args.branch_visits, len(valid_cache))))
+    branch_batches = [pdata.collate(valid_cache, [chosen[i] for i in g]).to(device) for g in pdata.length_batches(
+        valid_cache.lengths[chosen].tolist(), args.max_tokens, max_visits=args.max_visits)]
 
-    # pre-flight: the branch-point check on fresh weights, before any timing is paid for
+    # pre-flight: the branch-point check on fresh weights (the LINE model timed below), before any timing is paid for
     torch.manual_seed(0)
     config = MiniConfig.preset("D", args.size, vocab_size=tokenizer.vocab_size)
     span_config = span_cards.SpanConfig(enabled=True, tokens_per_card=n_target, newline_id=23)
-    check = branch_check(PremonitionMini(config).to(device), span_cards.build_model(config, span_config).to(device),
-                         valid_cache, args, device)
-    emit("preflight", **check)
+    line = PremonitionMini(config).to(device)
+    check = branch_check(line, span_cards.build_model(config, span_config).to(device), branch_batches, device)
+    emit("preflight", visits=len(chosen), **check)
     if not check["passed"]:
-        raise SystemExit("pre-flight branch-point check failed: the pairing is broken (run card §3)")
+        raise SystemExit(f"pre-flight branch-point check failed ({check['reasons']}): the pairing is broken (run card §3)")
+    line.train()
 
     # 2. timing
-    torch.manual_seed(0)
-    line = PremonitionMini(config)
     timing: dict = {"params": line.num_parameters()}
     huge = 1e30
     line_trainer = MiniTrainer(line, mini_train_config(lr=1e-3, warmup_steps=100), device, flop_budget=huge, seed=0)
@@ -199,7 +265,7 @@ def main() -> None:
     branch_state = {k: v.detach().clone() for k, v in line.state_dict().items()}
     torch.manual_seed(0)
     span = span_cards.build_model(config, span_config)
-    missing, unexpected = span.load_state_dict(branch_state, strict=False)
+    span.load_state_dict(branch_state, strict=False)                  # the branch check verifies this load
     span.writer.init_gate()
     span_trainer = span_cards.SpanTrainer(span, mini_train_config(lr=1e-3, warmup_steps=100), device,
                                           flop_budget=huge, seed=0, fit=fit)
@@ -234,13 +300,7 @@ def main() -> None:
                   "stage1_dollars": seconds / 3600 * args.dph if args.dph else None}
     emit("projection", **projection, timing=timing)
 
-    # 3. branch-point check (LINE as trained for the timing steps; SPAN loaded from it)
-    check = branch_check(line, span, valid_cache, args, device)
-    emit("branch", **check, gate_missing=sorted(missing), unexpected=unexpected)
-    if not check["passed"]:
-        raise SystemExit("branch-point check failed: the pairing is broken (run card §3)")
-
-    # 4. smoke: a fresh SPAN model through the whole curriculum
+    # 3. smoke: a fresh SPAN model through the whole curriculum
     torch.manual_seed(1)
     smoke = span_cards.build_model(config, span_config)
     trainer = span_cards.SpanTrainer(smoke, mini_train_config(lr=1e-3, warmup_steps=20, log_every=10), device,
@@ -260,10 +320,19 @@ def main() -> None:
          last=trainer.history[-1] if trainer.history else None, span_log_last=trainer.span_log[-1:] or None,
          keys=sorted(report))
 
+    # 4. branch-point check (LINE as trained by the timing steps; SPAN loaded from it). Last, so that a failure
+    # here costs no other measurement; a failure still stops the run with a failed status.
+    check = branch_check(line, span, branch_batches, device)
+    emit("branch", visits=len(chosen), **check)
+    if not check["passed"]:
+        raise SystemExit(f"branch-point check failed ({check['reasons']}): the pairing is broken (run card §3)")
+
 
 if __name__ == "__main__":
     try:
         main()
     except BaseException as error:                       # noqa: BLE001 - the log is the only channel back
         emit("error", error=repr(error), trace=traceback.format_exc()[-4000:])
-    print("STAGE0-DONE", flush=True)
+        print("STAGE0-DONE failed", flush=True)
+        sys.exit(1)
+    print("STAGE0-DONE ok", flush=True)
