@@ -9,8 +9,9 @@
 | 3 | 7.242 | 5.827 | 40.0 | 328 | 125 | 52 | 100.14 | 40.34 | 2.482 | 687 | 328 | 0.4774 | 0.2727 | 0.5105 |
 | 4 | 7.26 | 5.668 | 35.8 | 311 | 123 | 32 | 99.99 | 27.84 | 3.592 | 515 | 311 | 0.6039 | 0.277 | 0.4726 |
 | 5 | 7.338 | 5.735 | 40.0 | 306 | 115 | 62 | 99.19 | 43.21 | 2.296 | 856 | 312 | 0.3645 | 0.2742 | 0.4716 |
+| 6 | 7.445 | 5.59 | 37.8 | 316 | 109 | 33 | 106.16 | 19.96 | 5.319 | 520 | 324 | 0.6231 | 0.2461 | 0.5016 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok; r6 gap 9.7e-05 <= bound 0.002084: ok
 
 ## seed 201  (round-1 non-habit reference 5.87)
 
@@ -21,8 +22,9 @@ ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal
 | 3 | 8.082 | 6.308 | 48.2 | 360 | 124 | 20 | 125.11 | 15.72 | 7.959 | 594 | 360 | 0.6061 | 0.286 | 0.5451 |
 | 4 | 7.718 | 5.985 | 43.5 | 331 | 122 | 26 | 126.51 | 20.84 | 6.071 | 493 | 331 | 0.6714 | 0.3 | 0.5012 |
 | 5 | 7.765 | 6.183 | 44.0 | 333 | 127 | 20 | 123.92 | 13.49 | 9.186 | 554 | 333 | 0.6011 | 0.3129 | 0.5096 |
+| 6 | 7.593 | 5.803 | 37.5 | 308 | 103 | 83 | 96.48 | 63.49 | 1.52 | 795 | 308 | 0.3874 | 0.2769 | 0.4753 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok; r6 gap 0.000365 <= bound 0.0007: ok
 
 ## Round-4 leading indicator
 
