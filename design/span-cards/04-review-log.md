@@ -3,7 +3,7 @@
 Status: DRAFT, unsealed, nothing booked. The review is Claude Code's built-in `/code-review` on branch
 `span-cards-solve` (diff `main...HEAD`). Each round's verdict is my classification; the coordinator rules.
 Latest: the round-3 close-out (below). The final re-review of bd28adcd7 shows no blocking finding; the card is
-sealed (`05-seal.md`) and Stage 0 is booked under Q22.
+sealed (`05-seal.md`). Stage 0 waits for the coordinator's review of its script (Q129).
 
 ## Round 1: review of 4b49ec92d (10 findings)
 Blocking: (1) per-call tensors left on the model made every `read_only` evaluation raise (reproduced);
@@ -136,7 +136,7 @@ c502b2caa), which the ruling did not yet see; this section summarises it.
   open documentation item.
 - **Consequence.** The Q20 review gate is satisfied. Run card SC-1 is sealed at f317420f9 (`05-seal.md`; the
   data addendum follows before Stage 1's first arm). Stage 0 is booked under Q22 (on-demand box only, hard stop
-  $0.50). Its outcome is in `06-stage0-report.md`.
+  $0.50). Its outcome is in `06-stage0-report.md`. (Superseded by Q129: the Stage 0 script waits for review; see below.)
 
 ## Erratum E1 to the design after the seal (coordinator ruling Q129, 2026-10-18)
 §3.5 of `01-design.md` described a banded per-chunk surrogate, and §4 listed a `SpanConfig.chunk` field.
@@ -144,3 +144,30 @@ Neither exists in the code (re-review B (b), re-review C #6). Both passages are 
 that references the seal record (`05-seal.md`, seal commit f317420f9), with an Errata section at the end of the
 design. The design is outside the seal's scope (run card §9), so no sealed hash changes. The per-token FLOP
 estimate falls from about 33k to about 1.5k; the real cost is the about 150 MB gather, which Stage 0 measures.
+
+## Stage 0 script: filed for the coordinator's review (Q129, 2026-10-18)
+**Filed for review:** `scripts/span_stage0.py` at **b045f55c4**, sha256
+**1066b2c822e2c25f644b244d010bf62cec6674d26bfb9f3a71759d3a0230d3f9**. Status DRAFT: it does not run until the
+coordinator's review passes. The sealed code it imports (`span_cards.py`, `model.py`, `train.py`, `data.py`) is
+unchanged since the seal commit f317420f9.
+
+- **What it does** (in order; every result is a `STAGE0 {json}` line in the box log, which is the only channel
+  back): (1) builds label-free v2 caches from the step-1 simulator (seed 0; 3,000 train and 256 validation
+  visits; v2-fallback tokenizer; fitted name detector), checks that `"\n"` is id 23, and measures N at that size;
+  (2) **pre-flight branch-point check** on fresh weights; (3) seconds per step for LINE and SPAN in gold, teacher
+  and own (p_own 0.75) mode, on the same real batches (max_tokens 55,000, max_visits 48), 2 warm-up and 8 timed
+  steps each, with peak GPU memory, the FLOP fit and one validation pass, then the Stage 1 projection (F =
+  3.15e16, curriculum shares 5/25/70%, 3 parents plus Cell A: LINE and SPAN x 3 seeds x 95%, validation every
+  1,000 steps); (4) the **branch-point check** again, with SPAN loaded from the LINE model as trained by the
+  timing steps; (5) a 200-step `SpanTrainer` smoke from fresh weights through the whole curriculum, with
+  finiteness checked on every logged loss and gate statistic.
+- **The branch-point check (Q129 addition):** on the first 64 DEV visits, SPAN loaded from LINE (gate
+  re-initialised) must give identical `answer()` (tokens, lengths, loops, first_top, fetched), write exactly the
+  parent's cards (`valid == card_end`), **and have `card_economy.line_aligned == 1`** (also reported: merged,
+  split_lines, newline precision and recall, the largest key difference). Any failure stops the run (run card
+  §3: the pairing is broken), so nothing after it is paid for. Local check: it passes with `newline_id = 23` and
+  fails with a wrong id (`line_aligned` 0.0097).
+- **Local dry run** (CPU, tiny preset, 120/40 visits): every step completes; both checks pass; smoke finite.
+- **Box plan after a pass:** see `06-stage0-report.md`. On-demand only; the remaining budget is $0.411 after
+  attempt 1 ($0.089, unreviewed script, stopped on Q129, no readout, does not count); there is a watchdog
+  destroy, and I stop and come back if a rerun cannot fit.
