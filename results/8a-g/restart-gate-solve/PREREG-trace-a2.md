@@ -55,5 +55,8 @@ Everything above stays as written. These changes are made because the positive c
 - **OUTSIDE** only if P1 or P1b fails, or if after the 4-resume calibration D̄ > L(a, w).
 - If P1, P1b and P2 pass and P3 (or D̄/N̄ ≤ 2) fails, the verdict is **UNRESOLVED: run the calibration** (2 more resumes at step-200, judge D̄ against L).
 - INSIDE as before.
+- **Clarification (2026-10-18, after the code review; coordinator ruling):** the 4-resume calibration resolves **only** the borderline UNRESOLVED_CALIBRATE case. It is never applied to a two-resume verdict of INSIDE, OUTSIDE or UNRESOLVED (window). An UNRESOLVED (window) still needs the same-window measurement of §4, so adding resumes cannot turn it into INSIDE.
+
+**Status:** Amendment 1 remains a DRAFT recommendation. Adopting it is Ben's decision. The registered probe rule (P2) is unchanged.
 
 **What the positive controls say about where bugs are caught:** every fault class tried was caught by the start-of-redo checks: the exact first update (data, RNG, weights), the exact fields (lr, RNG), and the early window (optimizer, lr). Each was caught with ≥ 3x margin at bf16-like noise. The window mean caught nothing those miss. This supports moving the mean from the running gate to the record (shown on CPU; untested on GPU).
