@@ -223,6 +223,34 @@ the Stage 1 spend. Seed 2's attempt-1 disk holds the attempt-1 P_2 checkpoint. A
 spend since the $32.588 baseline covers both attempts and every box, and everything is destroyed if it passes $16 (hard
 stop $18). Spend at 19:53Z was $0.817.
 
+### Addendum Q160 (coordinator, 2026-10-18), and how it is applied (fixed before the arm results)
+1. **The 14 GiB guard binds as written** for Stage 1. It will not be re-examined or loosened mid-run. A guard
+   redesign (for example binding on allocated memory) can be proposed only as a separate pre-registered change for
+   future runs.
+2. **Rung-3 fallback, pre-approved.** If any attempt-2 box (setting on) crosses the guard, in the 1,000-step parent
+   probe, the arm probe or anywhere in the run, then **all seeds drop to rung 3 (32,000 tokens, 28 visits)**,
+   identical across arms and seeds, under the same probe standard, without waiting for a ruling. Mechanics:
+   - an amended go record: attempt 3, rung 3, the same allocator setting;
+   - every attempt-2 box stopped, healthy ones included, because the rung is common to all seeds;
+   - fresh boxes rented for all three seeds with the same launch script. A fresh box keeps the watchdog's log
+     handling clean; a restarted box replays its old log, including its `S1-DONE`.
+   The drop is recorded here.
+3. **Arm probe.** The probe standard extends to the arm phase, for every seed. The **LINE arm's first 1,000 steps
+   from the trained parent**, with reserved memory under 14.00 GiB, are the arm probe; the same applies to the SPAN
+   arm. Measurement: the guard checks every 50 global steps. Progress records come at global steps that are multiples
+   of 1,000, and an arm starts at the parent's last step (about 3,484). So **pass** = the first progress record at
+   least 1,000 steps after `arm_start`'s step (for example global step 5,000 when the arm starts at 3,484) with no
+   `MemoryGuardError` before it. **Fail** = a guard error in that window, which triggers (2). A crossing later in the
+   run also triggers (2).
+4. **P_2 (attempt 1).** It stays on the stopped attempt-1 seed-2 box (56601524) until Stage 1 completes:
+   `artifacts/span-stage1/20261018T184858Z/seed2/parent`, state 76986173...eb2, config bbed5131...e22e. **Attempt 2
+   does not rely on it.** The restarted seed-2 box trains its own parent, P_2 (attempt 2), from the same seed, data
+   and rung, now with the setting on, and its arms branch from that parent. The run script has no way to start the
+   arms from an outside parent checkpoint without a script change, which would be DRAFT until reviewed. Re-training
+   the parent costs about 7 minutes ($0.03). So the arm probe in (3) for seed 2 runs from the trained P_2 of attempt
+   2, and no copy is needed: Q160 (4) asks for a copy only "before relying on it". If the coordinator wants the
+   attempt-1 P_2 itself used, that needs the script change.
+
 ### Attempt 2 outcomes
 (filed per seed as the boxes report)
 
