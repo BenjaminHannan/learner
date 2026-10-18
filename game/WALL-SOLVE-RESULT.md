@@ -314,3 +314,27 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
   - A foreground launch would be killed after the start record is written. The read would be spent with no result.
   - The preconditions fixed the command but not the launch mode, so on the record as written this is reachable.
 - **INERT:** 9 findings, listed with evidence in `game/GWLS-POST-READ-HARDENING.md`.
+
+## GW-LS SEALED RESULT (the one read; fired 08:09:09Z, done 08:22:58Z Oct 18; Q118; marks unchanged): **PROVED WRONG**
+Read code 8680fb3, launched detached per `game/GWLS-READ-PRECONDITIONS.md` (0e4103b); every precondition was re-checked at fire time.
+100 sealed maps, sample T = 1, cap 1000, paired by world with GW-L 64k (arm C) using `game.analyze.boot_diff` (2000 draws).
+An independent recompute from the per-world files matches.
+
+| seed | total (GW-LS vs GW-L) | non-habit, 95% CI | stone maps |
+|---|---|---|---|
+| 200 | 6.68 vs 6.50: **+0.18** [-0.31, +0.70] | 4.48 vs 5.46: **-0.98** [-1.46, -0.50] | 17% vs 40%: **-23 points** |
+| 201 | 6.59 vs 7.10: **-0.51** [-1.15, +0.11] | 4.78 vs 5.85: **-1.07** [-1.59, -0.55] | 28% vs 43%: **-15 points** |
+
+- **Against the sealed marks (section 3):**
+  - Pass needed non-habit >= +0.3 (CI low > 0), total >= +0.5 and stone >= +10 on both seeds: **not met** on any count.
+  - Proved wrong is non-habit <= -0.5 on both seeds (-0.98, -1.07), **or** stone <= -15 on both (-23, -15). **Both conditions hold.**
+- **Plain reading:** self-imitation by event segments, started from a competent policy (GW-L), *erodes* it. It loses about 1 non-habit
+  unlock a game and 15-23 points of stone. Seed 200's small total gain is habit unlocks only. The own-play route as built here is
+  not just slow from a blind start; it destroys competence it is given.
+- **What it settles:**
+  - The sealed result confirms the practice-round diagnosis (erosion diagnosis section above): copying the student's own navigation on
+    its own states sharpens that weaker navigation and erodes map reading.
+  - Start competence was not the missing piece; coverage of good labels on the student's own states is.
+- **Next (already written; goal: "propose the next single change with fresh marks"):** GW-LD (`game/GWLD-MARKS-PROPOSAL.md`, frozen
+  under Q101), with its run card (`game/GWLD-RUN-CARD.md`). It waits for the Track 10 labeller audit (B3 bar). No GW-LS2 is authorized.
+- **Post-read hardening:** `game/GWLS-POST-READ-HARDENING.md` (9 inert findings plus earlier deferrals), now unblocked.
