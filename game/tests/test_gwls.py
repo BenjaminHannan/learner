@@ -401,18 +401,53 @@ class GateReadSide(unittest.TestCase):
                     self.assertRegex(bad[0], r'= 1\.5 > bound 0\.\d+')                         # the gap and the bound are in the message
 
     def test_1_ratio_ok_none_refuses_only_where_the_indicator_uses_the_ratio(self):
-        def r(k, exact, ok, a_w=None):
-            return dict(round=k, ratio_w_exact=exact, ratio_w=None, A_w=a_w, ratio_gap=None, ratio_bound=None, ratio_ok=ok)
-        ok = lambda k: r(k, 2.0, True, 12.0)
+        def r(k, exact, ok, a_w=None, census=None):
+            return dict(round=k, ratio_w_exact=exact, ratio_w=census, A_w=a_w, ratio_gap=None, ratio_bound=None, ratio_ok=ok)
+        ok = lambda k: r(k, 2.0, True, 12.0, 2.0)
         # both rounds have an unrounded ratio but round 3's cannot be cross-checked: refused
-        bad = gwls_report.ratio_problems({200: [r(3, 2.0, None), ok(4)], 201: [ok(3), ok(4)]})
+        bad = gwls_report.ratio_problems({200: [r(3, 2.0, None, None, 2.0), ok(4)], 201: [ok(3), ok(4)]})
         self.assertEqual(len(bad), 1)
         self.assertIn('seed 200 round 3', bad[0])
         self.assertIn('ratio_ok None', bad[0])
         # no unrounded ratio in one round: the indicator uses no ratio for that seed, so None there is not a refusal
-        self.assertEqual(gwls_report.ratio_problems({200: [r(3, None, None), r(4, 2.0, None)], 201: [ok(3), ok(4)]}), [])
+        self.assertEqual(gwls_report.ratio_problems({200: [r(3, None, None), r(4, 2.0, None, None, 2.0)], 201: [ok(3), ok(4)]}), [])
         # rounds outside 3-4 are not looked at
         self.assertEqual(gwls_report.ratio_problems({200: [r(1, 2.0, False)], 201: []}), [])
+
+    def test_3_ratio_existence_mismatch_is_refused(self):
+        def r(k, exact, census, a_w=3.1, ok=None):
+            return dict(round=k, ratio_w_exact=exact, ratio_w=census, A_w=a_w, ratio_gap=None, ratio_bound=None, ratio_ok=ok)
+        good = lambda k: r(k, 2.0, 2.0, 12.0, True)
+        # (1) unrounded None, census has a ratio: refused with the mismatch reason (naming seed, round and both values)
+        bad = gwls_report.ratio_problems({200: [r(3, None, 0.4), good(4)], 201: [good(3), good(4)]})
+        self.assertEqual(len(bad), 1, bad)
+        self.assertIn('seed 200 round 3', bad[0])
+        self.assertIn('existence mismatch', bad[0])
+        self.assertIn('ratio_w_exact None', bad[0])
+        self.assertIn('census ratio_w 0.4', bad[0])
+        # also on round 4 and on the other seed
+        bad = gwls_report.ratio_problems({200: [good(3), good(4)], 201: [good(3), r(4, None, 0.4)]})
+        self.assertEqual(len(bad), 1, bad)
+        self.assertIn('seed 201 round 4', bad[0])
+        self.assertIn('existence mismatch', bad[0])
+        # (2) the reverse: unrounded present, census ratio_w None: refused (mismatch reason among the refusals)
+        bad = gwls_report.ratio_problems({200: [r(3, 2.0, None), good(4)], 201: [good(3), good(4)]})
+        self.assertTrue(any('existence mismatch' in b and 'seed 200 round 3' in b and 'census ratio_w None' in b for b in bad), bad)
+        # (3) both None: not refused by this rule (the indicator uses no ratio there)
+        bad = gwls_report.ratio_problems({200: [r(3, None, None, None), r(4, None, None, None)], 201: [good(3), good(4)]})
+        self.assertEqual(bad, [])
+        # rounds outside 3-4 are not looked at
+        self.assertEqual(gwls_report.ratio_problems({200: [r(1, None, 0.4)], 201: []}), [])
+
+    def test_3_ratio_existence_mismatch_refuses_through_the_gate_and_happy_path_holds(self):
+        root = self.root()
+        with census_stub():
+            bad, ind = gwls_final.gate(root)
+        self.assertEqual((bad, ind['branch']), ([], 'CONTINUE'))                                  # (4) live-like happy path unchanged
+        real = gwls_report.ratio_w_exact
+        with census_stub(), mock.patch.object(gwls_report, 'ratio_w_exact', lambda games: None):
+            bad, ind = gwls_final.gate(root)
+        self.assertTrue(any('existence mismatch' in b for b in bad), bad)
 
     def test_2_truncated_play_file_is_a_listed_refusal(self):
         root = self.root()

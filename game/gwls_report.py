@@ -19,8 +19,9 @@ the other reading (X on both seeds, or Y on both seeds) is also computed and fla
 Read gate (gwls_final.gate uses ratio_problems below): a round-3 or round-4 row, on either seed, whose ratio_ok is False is a REFUSAL (the unrounded ratio the
 indicator uses disagrees with the census file's own number by more than the rounding bound, so the round is not read past). ratio_ok None (the cross-check
 cannot be computed: the census ratio_w or A_w is missing, or A_w rounds to ~0) is ALSO a refusal when the row's unrounded ratio_w_exact exists, because the
-indicator then uses a ratio it could not verify; it is NOT a refusal when ratio_w_exact is None (no A rows at all: the indicator uses no ratio there, the
-ratio cannot trip, and there is nothing to cross-check). Every read problem (READ_ERRORS) is a listed refusal, never a traceback.
+indicator then uses a ratio it could not verify; it is NOT a refusal when ratio_w_exact AND the census ratio_w are both None (no A rows at all: the indicator uses no
+ratio there, the ratio cannot trip, and there is nothing to cross-check). Exactly one of them None (the unrounded recomputation and the census file disagree on
+whether any A rows exist) is a REFUSAL on any round-3/4 row, whatever the other seed does. Every read problem (READ_ERRORS) is a listed refusal, never a traceback.
 
 Rounding: the indicator compares UNROUNDED values. The non-habit mean is an exact fraction (non-habit count over games, exact arithmetic against the
 threshold ref - 0.5); the ratio is W_w / A_w recomputed from the unrounded weighted sums (the census file rounds W_w, A_w and the ratio for display, and
@@ -78,8 +79,9 @@ def ratio_consistency(ratio_w, ratio_w_exact, A_w):
 
 
 def ratio_problems(rows, rounds=(3, 4)):
-    """-> refusal strings for the rows of `rounds` (either seed) whose ratio cross-check failed (ratio_ok False) or could not be made although the indicator uses the
-    ratio (ratio_ok None with a ratio_w_exact); [] when every such row is ok. See the module docstring for the None decision."""
+    """-> refusal strings for the rows of `rounds` (either seed) whose ratio cross-check failed (ratio_ok False), could not be made although the indicator uses the
+    ratio (ratio_ok None with a ratio_w_exact), or whose unrounded recomputation and census file disagree on whether any A rows exist (exactly one of
+    ratio_w_exact, ratio_w is None); [] when every such row is ok. See the module docstring for the None decision."""
     bad = []
     for seed, rs in rows.items():
         # the indicator takes the seed's mean ratio only when BOTH rounds 3 and 4 have an unrounded ratio; otherwise no ratio is used for that seed
@@ -88,6 +90,9 @@ def ratio_problems(rows, rounds=(3, 4)):
             if r['round'] not in rounds:
                 continue
             where = f'seed {seed} round {r["round"]}'
+            if (r['ratio_w_exact'] is None) != (r['ratio_w'] is None):
+                bad.append(f'{where}: ratio existence mismatch: unrounded ratio_w_exact {r["ratio_w_exact"]} vs census ratio_w {r["ratio_w"]} (exactly one is None, so the two '
+                           f'computations disagree on whether any A rows exist); this round is not read past')
             if r['ratio_ok'] is False:
                 bad.append(f'{where}: ratio_w cross-check failed (ratio_ok False): |unrounded {r["ratio_w_exact"]} - census {r["ratio_w"]}| = {r["ratio_gap"]} '
                            f'> bound {r["ratio_bound"]}; the indicator uses the unrounded ratio, so this round is not read past')
