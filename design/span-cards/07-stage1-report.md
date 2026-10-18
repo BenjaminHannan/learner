@@ -299,6 +299,17 @@ with the setting on. No rung-3 drop.** At 21:13Z: seed 0 LINE at global step 24,
 LINE at 17,000 (share 0.312, own phase), seed 1 LINE at 5,000. Spend $1.716. The guard stays on; the SPAN arm probe
 (its first 1,000 steps) is filed as each SPAN arm starts.
 
+### Timing and money (22:45Z)
+- Progress: seed 0 SPAN share 0.270; seed 2 LINE 0.960; seed 1 LINE 0.314.
+- Rates measured so far: seed 0's LINE arm took 1.57 h, and its SPAN arm is running about 1.65x slower than its LINE
+  arm (about 2.6 h projected). Seed 1's box is about 3.4x slower: LINE projected to end about 03:00Z, SPAN about
+  13:00Z on 2026-10-19 (a projection, not a measurement).
+- **Watchdog deadline extended from 16 h to 24 h** (to 20:12Z on 2026-10-19). Without it, the attempt-2 watchdog would
+  have destroyed seed 1's box at about 12:12Z, before its SPAN arm ends. The money rule is unchanged: everything is
+  destroyed if Stage 1 spend since the $32.588 baseline passes $16.
+- Spend $2.93 at 22:40Z. Projected Stage 1 total about $8-9: seed 1 about $3 more, seeds 0 and 2 about $0.5-0.7 each
+  more, the attempt-1 disks about $0.10/h. Inside the $18 hard stop.
+
 ## Readout per seed
 Attempt 2 (rung 2, `expandable_segments:True`). Each arm's DEV is the full validation split (8,675 questions,
 7,683 told). The paired G2 and the guards are computed once both arms of a seed are in. E1/E3 are the coordinator's.
