@@ -73,10 +73,11 @@ class MiniConfig:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
         if self.thinkers < 1:
             raise ValueError("thinkers must be >= 1")
-        if not 1 <= self.swarm_rounds <= self.max_loops:
-            raise ValueError("swarm_rounds must be in 1..max_loops")
-        if self.board_cards < 1:
-            raise ValueError("board_cards must be positive")
+        if self.thinkers > 1:          # swarm-only fields: never checked with the flag off (any max_loops builds)
+            if not 1 <= self.swarm_rounds <= self.max_loops:
+                raise ValueError("swarm_rounds must be in 1..max_loops")
+            if self.board_cards < 1:
+                raise ValueError("board_cards must be positive")
         if self.swarm_board and (self.thinkers < 2 or self.registers < 2):
             raise ValueError("swarm_board needs thinkers > 1 and registers >= 2 (register 1 is the post register)")
         if self.check_band and self.d_model == 128:

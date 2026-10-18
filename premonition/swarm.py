@@ -50,6 +50,7 @@ class Board:
         self.count = torch.zeros(count, dtype=torch.long, device=device)
         self.posted = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                        if store is not None else None)
+        self.slot_card = torch.full((count, self.size), -1, dtype=torch.long, device=device)   # card held per row
 
     def rows(self) -> tuple[torch.Tensor, torch.Tensor]:
         """(x [Q, M + C, d], ok [Q, M + C])."""
@@ -64,48 +65,71 @@ class Board:
         self.notes_ok = torch.ones_like(self.notes_ok)
 
     def post(self, cards: torch.Tensor) -> None:
-        """Post the round's fetched cards [Q*M, K] (-1 = none) once each, walking desks in order."""
+        """Post the round's fetched cards [Q*M, K] (-1 = none) once each, in desk order, with no host syncs.
+
+        Desks post simultaneously: a card is new if it is real, not NULL, not on the board at the start of the
+        round, and its first occurrence this round.
+        The new cards take FIFO rows (count + rank) % C. If more than C are new in one round, only the
+        last C are written, as a one-by-one FIFO would leave them. A card whose row is overwritten leaves
+        the board, so a later fetch may post it again.
+        """
         store = self.store
         if store is None:
             return
         think, config = self.model.think, self.model.config
         count, per = self.cards.shape[0], cards.shape[1]
-        flat = cards.reshape(count, self.desks * per)
-        rows = torch.arange(count, device=cards.device)
-        for column in range(flat.shape[1]):
-            card = flat[:, column]
-            new = (card >= 0) & (card != store.null) & ~self.posted[rows, card.clamp_min(0)]
-            if not new.any():
-                continue
-            values, _, lines = store.gather(card.unsqueeze(1), self.q_visit)
-            bucket = age_bucket(self.q_line.unsqueeze(1) - lines, config.age_buckets)
-            bucket = torch.where(lines >= 0, bucket, torch.zeros_like(bucket))
-            row = (values[:, 0].float() + think.age(bucket[:, 0]).float() + think.board_type.weight[1].float()
-                   + think.desk.weight[column // per].float())
-            who = rows[new]
-            where = self.count[new] % self.size
-            self.cards = self.cards.index_put((who, where), row[new])
-            self.cards_ok = self.cards_ok.index_put((who, where), torch.ones_like(who, dtype=torch.bool))
-            self.posted = self.posted.index_put((who, card[new]), torch.ones_like(who, dtype=torch.bool))
-            self.count = self.count.index_add(0, who, torch.ones_like(who))
+        flat = cards.reshape(count, self.desks * per)                                  # [Q, M*K]
+        width = flat.shape[1]
+        real = (flat >= 0) & (flat != store.null)
+        real &= ~self.posted.gather(1, flat.clamp_min(0))
+        earlier = torch.ones(width, width, dtype=torch.bool, device=flat.device).tril(-1)   # [j, i]: i < j
+        repeat = ((flat.unsqueeze(2) == flat.unsqueeze(1)) & real.unsqueeze(1) & earlier).any(2)
+        new = real & ~repeat
+        rank = new.long().cumsum(1) - 1
+        total = new.sum(1, keepdim=True)
+        keep = new & (rank >= total - self.size)                                       # the last C new ones
+        where = (self.count.unsqueeze(1) + rank) % self.size
+        values, _, lines = store.gather(flat, self.q_visit)
+        bucket = age_bucket(self.q_line.unsqueeze(1) - lines, config.age_buckets)
+        bucket = torch.where(lines >= 0, bucket, torch.zeros_like(bucket))
+        author = torch.arange(width, device=flat.device) // per
+        rows = (values.float() + think.age(bucket).float() + think.board_type.weight[1].float()
+                + think.desk.weight[author].float())
+        who = torch.arange(count, device=flat.device).unsqueeze(1).expand_as(flat)[keep]
+        slot = where[keep]
+        evicted = self.slot_card[who, slot]
+        gone = evicted >= 0
+        self.posted = self.posted.index_put((who[gone], evicted[gone]), torch.zeros_like(evicted[gone], dtype=torch.bool))
+        self.posted = self.posted.index_put((who, flat[keep]), torch.ones_like(who, dtype=torch.bool))
+        self.slot_card = self.slot_card.index_put((who, slot), flat[keep])
+        self.cards = self.cards.index_put((who, slot), rows[keep])
+        self.cards_ok = self.cards_ok.index_put((who, slot), torch.ones_like(who, dtype=torch.bool))
+        self.count = self.count + total.squeeze(1)
 
 
 # ----------------------------------------------------------------------------- combiner
+def entity_table(store: CardStore, n_ent: int) -> torch.Tensor:
+    """[B, L, n_ent] bool: line l of visit b names entity e (from the card ents; -1 padding ignored)."""
+    ents = store.ents
+    table = torch.zeros(*ents.shape[:2], n_ent + 1, dtype=torch.bool, device=ents.device)
+    return table.scatter_(2, torch.where(ents >= 0, ents, torch.full_like(ents, n_ent)), True)[..., :n_ent]
+
+
 def merge_mask(model: Any, valid: torch.Tensor, fetched: Optional[torch.Tensor], store: Optional[CardStore],
-               q_visit: torch.Tensor, desks: int) -> torch.Tensor:
+               q_visit: torch.Tensor, desks: int, named: Optional[torch.Tensor] = None) -> torch.Tensor:
     """[Q, M * R] bool decoder visibility of every desk's rows (valid [Q*M, R]), with the bound-slot merge.
 
     Slot (q, m, e) is shown iff it is a mention AND (desk m fetched a real card naming e, or nobody did
-    and m == 0). Without a binder every valid row is shown.
+    and m == 0). Without a binder every valid row is shown. `named` [Q*M, L, n_ent] is
+    `entity_table(store)[q_visit]`, built once per forward by `_Swarm` (it depends only on the visit).
     """
     count, rows = valid.shape[0] // desks, valid.shape[1]
     if model.think.binder is None:
         return valid.reshape(count, desks * rows)
     config = model.config
     first = config.question_rows
-    ents = store.ents[q_visit]                                              # [Q*M, L, E]
-    onehot = F.one_hot(ents.clamp_min(0), config.n_ent).bool() & (ents >= 0).unsqueeze(-1)
-    named = onehot.any(2)                                                   # [Q*M, L, n_ent]
+    if named is None:
+        named = entity_table(store, config.n_ent)[q_visit]                  # [Q*M, L, n_ent]
     bound = (fetched[:, :store.lines].unsqueeze(-1) & named).any(1).view(count, desks, config.n_ent)
     lead = torch.arange(desks, device=valid.device).view(1, desks, 1) == 0
     show = bound | (~bound.any(1, keepdim=True) & lead)                     # [Q, M, n_ent]
@@ -115,11 +139,11 @@ def merge_mask(model: Any, valid: torch.Tensor, fetched: Optional[torch.Tensor],
 
 
 def combiner_memory(model: Any, episode: Any, store: Optional[CardStore], desk_rows: int, desks: int,
-                    board: Optional[Board]) -> tuple[torch.Tensor, torch.Tensor]:
+                    board: Optional[Board], named: Optional[torch.Tensor] = None) -> tuple[torch.Tensor, torch.Tensor]:
     """(memory [Q, M * R + B, d], valid): all desks' rows (without board copies) plus one board copy."""
     count, width = episode.x.shape[0] // desks, episode.x.shape[-1]
     memory = episode.x[:, :desk_rows].reshape(count, desks * desk_rows, width)
-    valid = merge_mask(model, episode.valid[:, :desk_rows], episode.fetched, store, episode.q_visit, desks)
+    valid = merge_mask(model, episode.valid[:, :desk_rows], episode.fetched, store, episode.q_visit, desks, named)
     if board is not None:
         rows, ok = board.rows()
         memory = torch.cat([memory, rows.to(memory.dtype)], 1)
@@ -180,6 +204,8 @@ class _Swarm:
         self.desk_rows = self.episode.x.shape[1]
         self.board = (Board(model, Q, store, batch.q_visit, batch.q_line, device)
                       if config.swarm_board and board else None)
+        self.named = (entity_table(store, config.n_ent)[self.batch.q_visit]
+                      if store is not None and model.think.binder is not None else None)   # once per forward
 
     def write_board(self) -> None:
         """Append (first round) or overwrite the board region at the end of every desk's rows."""
@@ -196,7 +222,8 @@ class _Swarm:
         return self.model._step(self.episode, self.all, step, self.store)
 
     def memory(self) -> tuple[torch.Tensor, torch.Tensor]:
-        return combiner_memory(self.model, self.episode, self.store, self.desk_rows, self.desks, self.board)
+        return combiner_memory(self.model, self.episode, self.store, self.desk_rows, self.desks, self.board,
+                               self.named)
 
     def insert(self, cards: torch.Tensor) -> None:
         """Cards [Q*M, K] into the fetching desks, then posted to the question's board."""
@@ -253,11 +280,13 @@ def diversity(swarm: dict[str, Any]) -> dict[str, Any]:
 
 # ----------------------------------------------------------------------------- training
 def _gold_cards(gold: torch.Tensor, desks: int, width: int) -> torch.Tensor:
-    """[Q*M, ceil(width / M)] gold cards dealt round-robin over a question's desks in line order
-    (sorted gold card i -> desk i % M; NULL, the last index, goes to desk 0 when it is the only card)."""
+    """[Q*M, ceil(width / M)] the question's `width` LATEST gold cards (as the single thinker's preload keeps),
+    dealt round-robin over its desks in line order: kept card i -> desk i % M. NULL, the last index, is a
+    never-told question's only card and goes to desk 0. -1 pads."""
     count, size = gold.shape
     line = torch.arange(size, device=gold.device).expand(count, size)
-    ordered = torch.where(gold, line, torch.full_like(line, size)).sort(1).values[:, :width]
+    latest = torch.where(gold, line, torch.full_like(line, -1)).topk(width, 1).values
+    ordered = latest.masked_fill(latest < 0, size).sort(1).values
     ordered = ordered.masked_fill(ordered == size, -1)
     ordered = F.pad(ordered, (0, -ordered.shape[1] % desks), value=-1)
     return ordered.view(count, -1, desks).permute(0, 2, 1).reshape(count * desks, -1)
@@ -301,7 +330,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
         gold, told, missing = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
         metrics["gold_missing"] = missing.sum()
         if mode == "gold":
-            width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, config.card_rows)
+            width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, M * config.card_rows)   # each desk <= card_rows
             swarm.insert(_gold_cards(gold, M, width))
 
     answer = batch.answer
@@ -476,5 +505,5 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
                    first_top, union, halt_prob, detail)
 
 
-__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "fetch_overlap", "is_collapsed",
+__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "entity_table", "fetch_overlap", "is_collapsed",
            "merge_mask", "register_cos", "swarm_answer", "swarm_forward"]

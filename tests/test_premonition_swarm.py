@@ -83,6 +83,33 @@ class FlagOffIdentityTest(unittest.TestCase):
                     if use_eager:
                         self.assertTrue(new.fetched[:, :-1].any())
 
+    def test_short_loop_configs_still_build_and_match_with_the_flag_off(self) -> None:
+        """Review item 1: swarm-only checks never fire with thinkers == 1, so max_loops < swarm_rounds (4) builds,
+        and the model is still bit-identical to the frozen copy there; old saved configs (no swarm keys) load."""
+        from premonition.train import mini_config_from
+        batch = synthetic_batch(seed=5)
+        for variant in VARIANTS:
+            for loops in (1, 2, 3):
+                config = tiny_config(variant, max_loops=loops)
+                self.assertEqual((config.thinkers, config.swarm_rounds), (1, 4))
+                torch.manual_seed(11)
+                live = PremonitionMini(config)
+                torch.manual_seed(11)
+                old = frozen.PremonitionMini(config)
+                for mode in ("gold", "teacher", "own"):
+                    a = live(batch, mode=mode, p_own=0.5, generator=torch.Generator().manual_seed(1))
+                    b = old(batch, mode=mode, p_own=0.5, generator=torch.Generator().manual_seed(1))
+                    for name in ("lm", "ask", "ans", "halt", "loss"):
+                        self.assertTrue(torch.equal(a[name], b[name]), (variant, loops, mode, name))
+                new, ref = live.answer(batch), old.answer(batch)
+                for name in ("tokens", "lengths", "loops", "first_top", "halt_prob"):
+                    self.assertTrue(torch.equal(getattr(new, name), getattr(ref, name)), (variant, loops, name))
+        saved = {key: value for key, value in asdict(tiny_config(max_loops=3)).items()
+                 if key not in ("thinkers", "swarm_board", "swarm_rounds", "board_cards")}
+        self.assertEqual(mini_config_from(saved).max_loops, 3)                   # a pre-swarm checkpoint config
+        with self.assertRaises(ValueError):                                      # the swarm itself still checks
+            tiny_config(max_loops=2, thinkers=2)
+
     def test_full_size_count_unchanged_and_lesion_needs_a_swarm(self) -> None:
         config = MiniConfig.preset("D")
         self.assertEqual(config.num_parameters(), 2_013_140)
@@ -340,6 +367,58 @@ class MergeTest(unittest.TestCase):
         self.assertTrue(torch.equal(out.view(M, -1), valid))
 
 
+    def test_entity_table_matches_the_one_hot_and_the_cache(self) -> None:
+        """Review item 7: the bool scatter table equals the old int64 one-hot, and the per-forward cache
+        gives the same mask as building it inside merge_mask."""
+        model = s0()
+        config = model.config
+        store = _tiny_store(lines=6, ents={1: [5, 2], 3: [7], 4: [5]})
+        ents = store.ents
+        onehot = (F.one_hot(ents.clamp_min(0), config.n_ent).bool() & (ents >= 0).unsqueeze(-1)).any(2)
+        self.assertTrue(torch.equal(sw.entity_table(store, config.n_ent), onehot))
+        valid = torch.rand(M, config.rows, generator=torch.Generator().manual_seed(0)) > 0.2
+        fetched = torch.zeros(M, store.lines + 1, dtype=torch.bool)
+        fetched[0, 3] = fetched[1, 1] = fetched[2, 4] = True
+        visit = torch.zeros(M, dtype=torch.long)
+        cached = sw.entity_table(store, config.n_ent)[visit]
+        self.assertTrue(torch.equal(sw.merge_mask(model, valid, fetched, store, visit, M),
+                                    sw.merge_mask(model, valid, fetched, store, visit, M, cached)))
+
+
+class GoldPreloadTest(unittest.TestCase):
+    """Review item 2: the gold phase keeps the LATEST gold lines (as the single thinker's topk) and may fill
+    M * card_rows rows, so no gold card is dropped while the desks have room."""
+
+    def test_latest_cards_dealt_round_robin(self) -> None:
+        gold = torch.zeros(1, 14, dtype=torch.bool)
+        gold[0, [1, 4, 7, 9, 12]] = True
+        dealt = sw._gold_cards(gold, 2, 4)                                   # keep the 4 latest: 4, 7, 9, 12
+        self.assertEqual(dealt.tolist(), [[4, 9], [7, 12]])
+        dealt = sw._gold_cards(gold, 3, 6)                                   # room for all five, -1 pads
+        self.assertEqual(sorted(c for c in dealt.flatten().tolist() if c >= 0), [1, 4, 7, 9, 12])
+        self.assertEqual(dealt.tolist(), [[1, 9], [4, 12], [7, -1]])
+        never = torch.zeros(1, 14, dtype=torch.bool)
+        never[0, 13] = True                                                  # NULL only: desk 0
+        self.assertEqual(sw._gold_cards(never, 3, 3).tolist(), [[13], [-1], [-1]])
+
+    def test_gold_mode_loads_every_gold_card_beyond_card_rows(self) -> None:
+        batch = synthetic_batch(seed=0, lines=20)                           # has questions with 2-3 gold cards
+        model = s0(card_rows=1)                                              # 3 desks x 1 row = 3 >= |G| (<= 3 here)
+        seen = []
+        original = model._insert
+        model._insert = lambda episode, store, index, cards: (seen.append(cards.clone()), original(episode, store, index, cards))[1]
+        model(batch, mode="gold")
+        del model._insert
+        loaded = seen[0].view(-1, M * seen[0].shape[1])
+        store_lines = batch.line_start.shape[1]
+        sizes = [int(((batch.gold_lines[q] >= 0) & (batch.gold_lines[q] < batch.q_line[q])).sum())
+                 for q in range(batch.size[2])]
+        self.assertGreater(max(sizes), model.config.card_rows)              # the case the old cap dropped
+        for q in range(batch.size[2]):
+            gold = {int(l) for l in batch.gold_lines[q] if l >= 0 and l < batch.q_line[q]} or {store_lines}
+            self.assertEqual({int(c) for c in loaded[q] if c >= 0}, gold, q)
+
+
 class AssignmentTest(unittest.TestCase):
     """8. Training-time balanced split of the cards no desk has fetched."""
 
@@ -401,8 +480,36 @@ class BoardTest(unittest.TestCase):
         _, _, fresh = self.make(size=3)
         fresh.post(torch.tensor([[3], [-1], [-1]]))                             
         self.assertTrue(torch.allclose(board.cards[0, 0], fresh.cards[0, 0]))   # card 3 (post number 3) wrapped onto row 0
-        board.post(torch.tensor([[0], [-1], [-1]]))                             # already posted once: not again
+        board.post(torch.tensor([[4], [-1], [-1]]))                             # still on the board: not again
         self.assertEqual(int(board.count[0]), 5)
+        board.post(torch.tensor([[0], [-1], [-1]]))                             # review item 3: card 0 was evicted
+        self.assertEqual(int(board.count[0]), 6)                                # by card 3, so it is posted again
+        self.assertEqual(sorted(board.slot_card[0].tolist()), [0, 3, 4])
+
+    def test_vectorised_post_matches_a_one_by_one_fifo(self) -> None:
+        """Review items 3 and 8: the scatter `post` equals a plain FIFO. Desks post simultaneously each round: a
+        card is new if it is real, not NULL, not on the board at the round's start, and its first occurrence in
+        desk order. New cards are written one by one (a later one may overwrite an earlier one when more than C
+        are new), and a card whose row is overwritten leaves the board, so a later round may post it again."""
+        generator = torch.Generator().manual_seed(0)
+        for size in (2, 3, 5):
+            model, store, board = self.make(size=size)
+            card_at, pointer = [-1] * size, 0
+            for _ in range(12):
+                cards = torch.randint(-1, store.lines + 1, (M, 3), generator=generator)
+                board.post(cards)
+                at_start, seen = set(card_at), set()
+                for card in cards.flatten().tolist():                         # desk-major, as the board walks
+                    if card < 0 or card == store.null or card in at_start or card in seen:
+                        continue
+                    seen.add(card)
+                    card_at[pointer % size] = card
+                    pointer += 1
+                self.assertEqual(int(board.count[0]), pointer, size)
+                self.assertEqual(board.slot_card[0].tolist(), card_at, size)
+                on_board = {c for c in card_at if c >= 0}
+                self.assertEqual(set(board.posted[0].nonzero().flatten().tolist()), on_board, size)
+                self.assertEqual(board.cards_ok[0].tolist(), [c >= 0 for c in card_at], size)
 
     def test_notes_carry_type_and_desk(self) -> None:
         model, _, board = self.make()
