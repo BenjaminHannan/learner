@@ -163,9 +163,12 @@ class SpanCardStore(CardStore):
         return ok
 
     def ages(self, q_line: torch.Tensor, buckets: int, q_visit: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """[n, T + 1] age buckets of every card's last line relative to the question; NULL gets 0."""
+        """[n, T + 1] age buckets of every card's last line relative to the question; NULL gets 0. Without `q_visit`
+        (the base `CardStore.ages` signature) a single-visit store is unambiguous; a multi-visit store raises."""
         if q_visit is None:
-            raise ValueError("span cards need q_visit to find each card's line")
+            if self.valid.shape[0] != 1:
+                raise ValueError("span cards need q_visit to find each card's line when the store holds several visits")
+            q_visit = torch.zeros_like(q_line)
         bucket = age_bucket(q_line.unsqueeze(1) - self.card_line[q_visit], buckets)
         return torch.cat([bucket, torch.zeros_like(bucket[:, :1])], dim=1)
 

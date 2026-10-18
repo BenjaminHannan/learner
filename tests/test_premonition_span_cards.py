@@ -331,6 +331,14 @@ class GoldAndWipeTest(unittest.TestCase):
         self.assertFalse(bool(again[0, 7]))
         self.assertTrue(bool(again[0, null]))                # NULL can always be fetched again
 
+    def test_ages_keep_the_base_signature_for_one_visit(self) -> None:
+        store = manual_store(TOKEN_LINE, CARDS)
+        q_line = torch.tensor([3, 2])
+        torch.testing.assert_close(store.ages(q_line, 16), store.ages(q_line, 16, torch.zeros(2, dtype=torch.long)))
+        two = store_of(span_model(0), synthetic_batch(visits=2, seed=1))
+        with self.assertRaises(ValueError):
+            two.ages(q_line, 16)
+
     def test_one_gold_card_per_gold_line(self) -> None:
         """Re-review blocker: span gold must never outnumber the gold lines the teacher schedule counts."""
         q_visit, q_line = torch.zeros(2, dtype=torch.long), torch.tensor([3, 3])
