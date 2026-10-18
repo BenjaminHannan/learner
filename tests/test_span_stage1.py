@@ -105,7 +105,7 @@ class BranchTest(unittest.TestCase):
         trainer, parent, batches = parent_of()
         line, span = arm(parent, "LINE", trainer.flop_budget), arm(parent, "SPAN", trainer.flop_budget)
         names = s1.optimizer_names(span.model, span.optimizer)
-        gate = {"writer.gate.weight", "writer.gate.bias", "writer.newline_weight"}
+        gate = set(s1.span_stage0.GATE_KEYS)
         self.assertEqual(set(names) - set(s1.optimizer_names(line.model, line.optimizer)), gate)
         self.assertTrue(all(i not in span.optimizer.state_dict()["state"] for i, n in enumerate(names) if n in gate))
         batch = batches[2]
@@ -371,9 +371,14 @@ class RobustnessTest(unittest.TestCase):
         lines = out.getvalue().splitlines()
         cut = [lines[0][:15], "S1 eval", "S1 eval 1/1", "S1 x a/b {}", "S1 bad 1/1 {not json"] + lines[1:]
         self.assertEqual([k for k, _ in s1.decode(cut)], ["b", "c"])
-        b_lines = [line for line in lines if line.startswith("S1 b ")]
-        mixed = [b_lines[0], "S1 b 2/2 " + b_lines[1].split(" ", 3)[3]]  # chunk 2 of a record with another total
+        b_lines = [line for line in lines if line.startswith("S1 b#")]
+        mixed = [b_lines[0], "S1 b#2 2/2 " + b_lines[1].split(" ", 3)[3]]   # chunk 2 of a record with another total
         self.assertEqual(s1.decode(mixed), [])                             # fifth review: no spliced record
+        with contextlib.redirect_stdout(io.StringIO()) as again:
+            s1.emit("b", {"y": "q" * 1000})                                # another b record, same chunk count
+        other = again.getvalue().splitlines()
+        spliced = [b_lines[0]] + other[1:]                                 # eighth review: same kind and total
+        self.assertEqual(s1.decode(spliced), [])                           # but another record: not joined
 
     def test_a_malformed_go_file_is_refused_and_waited_on(self) -> None:
         """Second review, finding 5: a go file without the rung (or not a dict) was accepted and then crashed."""
@@ -457,14 +462,18 @@ class SmokeTest(unittest.TestCase):
             self.assertIn("data", found, f"exit {data.returncode}: {data.stderr[-2000:]}")
             record = found["data"]
             go = {"go": True, "seeds": [0], "script_sha256": s1.script_sha256(), "code_sha256": s1.code_sha256(),
+                  "size": "tiny",
                   "train_cache_sha256": record["train_cache"]["sha256"],
                   "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
                   "flop_budget": 3e12, "max_tokens": s1.LADDER[0][0], "max_visits": s1.LADDER[0][1]}
             path = Path(tmp) / "go.json"
             path.write_text(json.dumps(go))
-            run = subprocess.run([sys.executable, script, "box", *common, "--flop-budget", "3e12", "--go-file",
-                                  str(path), "--go-poll-seconds", "1", "--go-wait-hours", "0.02"],
-                                 capture_output=True, text=True, timeout=1500)
+            try:
+                run = subprocess.run([sys.executable, script, "box", *common, "--flop-budget", "3e12", "--go-file",
+                                      str(path), "--go-poll-seconds", "1", "--go-wait-hours", "0.02"],
+                                     capture_output=True, text=True, timeout=1500)
+            except subprocess.TimeoutExpired as expired:                   # keep the records for the cleanup
+                run = types.SimpleNamespace(stdout=s1.as_text(expired.stdout), stderr=s1.as_text(expired.stderr))
             import shutil
             for kind, record in s1.decode(run.stdout.splitlines()):         # whatever the outcome, remove the
                 if kind.endswith("_ckpt"):                                   # run's checkpoints
@@ -485,6 +494,17 @@ class SmokeTest(unittest.TestCase):
                 correct = s1.unbits(dev["correct_bits"], dev["questions"])
                 hits = sum(c for c, f in zip(correct, far) if f)
                 self.assertAlmostEqual(dev["slices"]["far"]["accuracy"] or 0.0, hits / max(sum(far), 1), places=9)
+
+
+
+class ExactNTest(unittest.TestCase):
+    def test_n_is_exact_and_matches_the_sealed_definition(self) -> None:
+        """Eighth review, finding 1: a float32 mean can differ in the last bit between boxes; N is exact instead."""
+        offsets = torch.tensor([0, 10, 21, 30, 41, 55], dtype=torch.int32)
+        cache = types.SimpleNamespace(line_offsets=offsets, line_is_question=torch.tensor([False, False, True,
+                                                                                           False, False]))
+        self.assertEqual(s1.exact_n(cache), round((10 + 11 + 11 + 14) / 4, 6))
+        self.assertAlmostEqual(s1.exact_n(cache), span_cards.tokens_per_line(cache), places=5)
 
 
 if __name__ == "__main__":

@@ -5,18 +5,21 @@ lines of at most 450 characters, because the box's log is the only channel back 
 
 1. data: the standard step-1 village build (`learnlab.step1.build_data`, preset `--visits`, data seed 0), the name
    detector and the label-free v2 caches with the sealed tokenizer `premonition-tok-v2-fallback` (train,
-   validation); their sha256 and N = `span_cards.tokens_per_line(train cache)` (the sealed addendum takes them).
+   validation); their sha256 and N = `span_cards.tokens_per_line(train cache)`, computed exactly (`exact_n`), and
+   the DEV slice masks (the sealed addendum takes the hashes and N).
 2. memory pre-flight (the coordinator's Stage 1 condition): for each rung of `LADDER` (max_tokens, max_visits), a
-   clean child process per arm (LINE, SPAN, and SPAN with 33% more cards than lines) trains gold, teacher and own
-   steps (own tracked) on the heaviest batches of a Stage 1 epoch (by padded tokens, questions and lines), runs the
-   validation hook and `card_economy`, and reports peak reserved GPU memory. A rung fits iff every child stays at
+   clean child process per arm (LINE, SPAN, and SPAN with about 33% more cards than lines) runs the run's FLOP
+   calibration, then trains tracked gold, teacher and own steps on the heaviest batches of a Stage 1 epoch (by
+   padded tokens, questions and lines, plus adversarial packings), runs the validation hook and `card_economy`,
+   and reports peak reserved GPU memory. A rung fits iff every child stays at
    or below the memory guard minus `MARGIN_GB`; the first fitting rung is proposed. No rung fits: the box stops.
 3. go: the box waits for `stage1-go.json` (the public repo, `--go-url`; or `--go-file`) and runs only if it is a
    JSON object with `"go": true`, `seeds` listing this seed, and exactly this box's `script_sha256`, `code_sha256`
-   (every module, `code_files`), `train_cache_sha256`, `validation_cache_sha256`, `N` and `flop_budget`, plus a
+   (every module, `code_files`), `train_cache_sha256`, `validation_cache_sha256`, `N` (float64, 6 decimals),
+   `flop_budget` and `size`, plus a
    rung `max_tokens`/`max_visits` on the ladder and no larger than the one this box measured as fitting. Anything
    else is logged as `go_refused` and waited on. `"go": false` stops the box unless it names another script hash
-   or other seeds (a stale stop from an earlier attempt, waited on). The
+   or code, or other seeds (a stale stop from an earlier attempt, waited on). The
    seal addendum is filed in the repo before the go file.
 4. parent P_s: LINE from scratch, seed s, through the gold phase (the first 5% of F; F = 3.15e16), as `train_d`
    trains (calibration head of 4 batches, validation hook on 256 DEV visits every 1,000 steps).
@@ -36,6 +39,7 @@ from __future__ import annotations
 import argparse
 import base64
 import copy
+import gc
 from dataclasses import asdict
 import hashlib
 import io
@@ -72,10 +76,10 @@ from premonition.train import (MiniTrainer, Plan, _slice_tags_for, checkpoint_co
 from scripts import span_stage0                                               # noqa: E402
 
 TOKENIZER = "data/tokenizer/premonition-tok-v2-fallback.json"   # the sealed tokenizer (run card §3)
-F_BUDGET = 3.15e16                       # design/06 §4, the bid's F
+F_BUDGET = span_stage0.F_BUDGET          # design/06 §4, the bid's F (the Stage 0 projection's)
 LADDER = ((55_000, 48), (48_000, 42), (40_000, 35), (32_000, 28))   # rung 0 is the sealed recipe
 MARGIN_GB = 1.0                          # a rung fits iff every peak reserved <= guard - MARGIN_GB
-STRESS_EVERY = 33                        # SPAN stress: an extra cut every 33 tokens (about 1.33x the cards)
+STRESS_LINES = 3                         # SPAN stress: an extra cut every 3 lines' worth of tokens (1.33x cards)
 HEAD = 4                                 # calibration batches (train_d)
 EVAL_VISITS, ECONOMY_VISITS, BRANCH_VISITS = 256, 200, 64
 REQUIRED_SLICES = ("overall", "near", "far", "multi_hop")   # run card §5 (E2 DEV); each must hold questions
@@ -88,17 +92,23 @@ RUN_ID = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
 
 
 # ----------------------------------------------------------------------------- the log protocol
+SEQUENCE = itertools.count(1)
+
+
 def emit(kind: str, record: Any) -> None:
-    """One record as `S1 <kind> <i>/<n> <chunk>` lines, every line at most CHUNK + a short prefix."""
+    """One record as `S1 <kind>#<seq> <i>/<n> <chunk>` lines (seq numbers this process's records), every line at most
+    CHUNK + a short prefix."""
     text = json.dumps(jsonable({"t": round(time.perf_counter() - STARTED, 1), **record}), allow_nan=False,
                       separators=(",", ":"))
     parts = [text[i:i + CHUNK] for i in range(0, len(text), CHUNK)] or [""]
+    seq = next(SEQUENCE)
     for i, part in enumerate(parts):
-        print(f"S1 {kind} {i + 1}/{len(parts)} {part}", flush=True)
+        print(f"S1 {kind}#{seq} {i + 1}/{len(parts)} {part}", flush=True)
 
 
 def decode(lines: Iterator[str]) -> list[tuple[str, dict]]:
-    """The records of a box log, in order: (kind, record). Incomplete records are skipped."""
+    """The records of a box log, in order: (kind, record). Chunks are joined only within one record (kind and
+    sequence number); incomplete or garbled records are skipped."""
     out, pending = [], {}
     for line in lines:
         if not line.startswith("S1 "):
@@ -106,20 +116,21 @@ def decode(lines: Iterator[str]) -> list[tuple[str, dict]]:
         fields = line.rstrip("\n").split(" ", 3)
         if len(fields) < 4:
             continue                                      # a cut line: its record stays incomplete and is skipped
-        _, kind, position, chunk = fields
+        _, tag, position, chunk = fields
+        kind = tag.split("#", 1)[0]
         try:
             index, total = (int(x) for x in position.split("/"))
         except ValueError:
             continue
         if index == 1:
-            pending[kind] = (total, [])
-        if kind not in pending or pending[kind][0] != total or len(pending[kind][1]) != index - 1:
-            pending.pop(kind, None)                       # a gap or another record's chunk: drop the record
+            pending[tag] = (total, [])
+        if tag not in pending or pending[tag][0] != total or len(pending[tag][1]) != index - 1:
+            pending.pop(tag, None)                        # a gap: drop the record
             continue
-        pending[kind][1].append(chunk)
+        pending[tag][1].append(chunk)
         if index == total:
             try:
-                out.append((kind, json.loads("".join(pending.pop(kind)[1]))))
+                out.append((kind, json.loads("".join(pending.pop(tag)[1]))))
             except ValueError:
                 continue                                  # a garbled record is skipped, not fatal
     return out
@@ -165,6 +176,13 @@ def build(args: argparse.Namespace) -> dict:
             "caches": caches, "files": files, "seconds": time.perf_counter() - started}
 
 
+def exact_n(cache) -> float:
+    """N = mean tokens per non-question line (`span_cards.tokens_per_line`), from integer counts in float64 and
+    rounded to 6 decimals: identical on every box whatever its thread count (a float32 mean is not)."""
+    lengths = cache.line_offsets.long().diff()[~cache.line_is_question]
+    return round(int(lengths.sum()) / int(lengths.numel()), 6)
+
+
 def data_record(built: dict) -> dict:
     train = built["caches"]["train"]
     return {"data_rel": built["data_rel"], "tag": built["tag"], "seconds": round(built["seconds"], 1),
@@ -176,7 +194,7 @@ def data_record(built: dict) -> dict:
             "visits": {s: len(c) for s, c in built["caches"].items()},
             "questions": {s: c.info["questions"] for s, c in built["caches"].items()},
             "tokens": {s: c.info["tokens"] for s, c in built["caches"].items()},
-            "N": span_cards.tokens_per_line(train), "newline_ids": built["tokenizer"].encode("\n")}
+            "N": exact_n(train), "newline_ids": built["tokenizer"].encode("\n")}
 
 
 def dev_batches(cache: pdata.VisitCache, visits: int, max_tokens: int, max_visits: int, tags=None) -> list:
@@ -231,6 +249,14 @@ def branch_state(parent: dict, trainer: MiniTrainer) -> dict:
             if key != "params":
                 group[key] = value
     return {"state": mapped, "param_groups": state["param_groups"]}
+
+
+def reset_guard(device) -> None:
+    """Free what earlier phases left (cycles too) and start the memory guard's peak from here."""
+    gc.collect()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
 
 
 def to_cpu(tree: Any) -> Any:
@@ -418,13 +444,16 @@ def measure_arm(args: argparse.Namespace) -> None:
     if args.arm == "LINE":
         model, trainer_class = line, MiniTrainer
     else:
-        model = span_cards.build_model(config, span_config(span_cards.tokens_per_line(cache)))
+        n_target = exact_n(cache)
+        model = span_cards.build_model(config, span_config(n_target))
         span_stage0.load_from_line(model, line)
         trainer_class = span_cards.SpanTrainer
         if args.arm == "SPAN-stress":
+            every = max(2, round(STRESS_LINES * n_target))              # about one extra card per 3 lines
+
             def cut(_module, _inputs, out):
                 positions = torch.arange(out.shape[1], device=out.device).view(1, -1, 1)
-                return out + 20.0 * (positions % STRESS_EVERY == STRESS_EVERY - 1).to(out.dtype)
+                return out + 20.0 * (positions % every == every - 1).to(out.dtype)
             model.writer.gate.register_forward_hook(cut)
     trainer = trainer_class(model, train_config(), device, flop_budget=F_BUDGET, seed=args.seed)
     groups = heaviest(cache, args.max_tokens, args.max_visits, args.seed)
@@ -435,9 +464,7 @@ def measure_arm(args: argparse.Namespace) -> None:
     stream = stream_from(cache, args, args.seed, 0)                   # the run's stream, from its first batch
     trainer.calibrate([next(stream) for _ in range(HEAD)])
     calibration_gb = reserved_bytes(device) / 1e9
-    if device.type == "cuda":
-        torch.cuda.empty_cache()
-        torch.cuda.reset_peak_memory_stats()
+    reset_guard(device)
     steps = 0
     # every step tracked: the real run tracks every 50th step in every phase (hooks, InsertLog), the heavier case
     modes = (("gold", Plan("gold", "gold", 0.0), True), ("teacher", Plan("teacher", "teacher", 0.0), True),
@@ -513,15 +540,23 @@ def preflight(args: argparse.Namespace) -> dict:
 
 
 # ----------------------------------------------------------------------------- the go file
-def read_go(args: argparse.Namespace) -> Optional[dict]:
+def read_go(args: argparse.Namespace) -> Optional[Any]:
+    """The go file's JSON; None while it is not there (or not reachable); a file that is there but does not parse
+    is returned as {"unparseable": ...}, which the gate logs as a refusal."""
     try:
         if args.go_file:
-            return json.loads(Path(args.go_file).read_text())
-        request = urllib.request.Request(f"{args.go_url}?t={int(time.time())}", headers={"Cache-Control": "no-cache"})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            return json.loads(response.read())
-    except Exception:                                   # noqa: BLE001 - not there yet, or unreadable: wait
+            raw = Path(args.go_file).read_text()
+        else:
+            request = urllib.request.Request(f"{args.go_url}?t={int(time.time())}",
+                                             headers={"Cache-Control": "no-cache"})
+            with urllib.request.urlopen(request, timeout=30) as response:
+                raw = response.read().decode(errors="replace")
+    except Exception:                                   # noqa: BLE001 - not there yet, or unreachable: wait
         return None
+    try:
+        return json.loads(raw)
+    except ValueError as error:
+        return {"go": None, "unparseable": str(error)[:200]}
 
 
 def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict:
@@ -536,8 +571,8 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict
         if go is not None and go != reported:
             reported = go
             seeds = go.get("seeds", [args.seed])
-            if go.get("go") is False and go.get("script_sha256", expected.get("script_sha256")) == \
-                    expected.get("script_sha256") and isinstance(seeds, list) and args.seed in seeds:
+            ours = all(go.get(k, expected.get(k)) == expected.get(k) for k in ("script_sha256", "code_sha256"))
+            if go.get("go") is False and ours and isinstance(seeds, list) and args.seed in seeds:
                 raise SystemExit("the go file says stop")    # a plain stop, or one naming this script and seed
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
@@ -548,7 +583,8 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict
                 wrong.append("rung")                          # off the ladder, or larger than this box's fit
             if go.get("go") is True and not wrong:
                 return go
-            emit("go_refused", {"seed": args.seed, "mismatch": wrong, "go": go.get("go")})
+            emit("go_refused", {"seed": args.seed, "mismatch": wrong, "go": go.get("go"),
+                                "unparseable": go.get("unparseable")})
         time.sleep(args.go_poll_seconds)
     raise SystemExit("no valid go file before the deadline")
 
@@ -561,22 +597,18 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
     config = model_config(tokenizer, args.size)
     n_target = go["N"]
     stop = sorted(step1.stop_ids(tokenizer)[0])
-    all_tags = tags                                                   # masks over every question: any subset uses them
-    hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, all_tags),
+    hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, tags),
                            tokenizer=tokenizer, stop=stop)
     economy_batches = dev_batches(valid_cache, ECONOMY_VISITS, args.max_tokens, args.max_visits)
-    flop_budget = args.flop_budget
 
     # parent P_s: train_d's start, stopped at the end of the gold phase
     torch.manual_seed(args.seed)
     parent_model = PremonitionMini(config)
-    trainer = MiniTrainer(parent_model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
+    trainer = MiniTrainer(parent_model, train_config(), device, flop_budget=args.flop_budget, seed=args.seed)
     stream = pdata.batches(train_cache, args.max_tokens, seed=args.seed, epochs=None, max_visits=args.max_visits)
     head = [next(stream) for _ in range(HEAD)]
     fit = trainer.calibrate(head)
-    if device.type == "cuda":                             # calibration (fp32) is not training: the guard starts here
-        torch.cuda.empty_cache()
-        torch.cuda.reset_peak_memory_stats()
+    reset_guard(device)                                   # calibration (fp32) is not training: the guard starts here
     report = trainer.train(gold_only(trainer, itertools.chain(head, stream)), evaluate=hook,
                            on_log=progress("P", args.seed))
     consumed = trainer.step                            # batches trained, in stream order (a discarded one is not)
@@ -588,7 +620,7 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
               "names": optimizer_names(parent_model, trainer.optimizer), "consumed": consumed}
     emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {           # saved before any
         "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed}})})        # evaluation can fail
-    parent_dev = dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)
+    parent_dev = dev_eval(parent_model, valid_cache, tags, tokenizer, stop, args)
     emit("parent_dev", {"seed": args.seed, "dev": parent_dev})
     unaligned = [] if parent_dev["aligned"] else ["P"]
     parent_economy = economy(parent_model, economy_batches, device)
@@ -613,26 +645,25 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
     parent_model.cpu()                                    # only read by the SPAN load below
     parent_model.load_state_dict(parent["model"], strict=True)
     for arm in ("LINE", "SPAN"):
-        if device.type == "cuda":
-            torch.cuda.empty_cache()                          # free the previous arm (the peak is reset below)
+        reset_guard(device)                                   # free the previous arm (the peak is reset again below)
         torch.manual_seed(args.seed)
         if arm == "LINE":
             model = PremonitionMini(config)
             model.load_state_dict(parent["model"], strict=True)
-            trainer = MiniTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
+            trainer = MiniTrainer(model, train_config(), device, flop_budget=args.flop_budget, seed=args.seed)
         else:
             model = span_cards.build_model(config, span_config(n_target))
             missing, unexpected = span_stage0.load_from_line(model, parent_model)
             if set(missing) != span_stage0.GATE_KEYS or unexpected:
                 raise SystemExit(f"SPAN did not load P_s (missing {missing}, unexpected {unexpected})")
-            trainer = span_cards.SpanTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
+            trainer = span_cards.SpanTrainer(model, train_config(), device, flop_budget=args.flop_budget,
+                                             seed=args.seed)
         restore(trainer, parent)
         arm_fit = calibrate_keeping_rng(trainer, head)
-        if device.type == "cuda":                             # as for the parent: calibration (fp32) is not training,
-            torch.cuda.empty_cache()
-            torch.cuda.reset_peak_memory_stats()
+        reset_guard(device)                                   # as for the parent: calibration (fp32) is not training
         at_branch = parent_economy if arm == "LINE" else economy(model, economy_batches, device)
-        emit("arm_start", {"seed": args.seed, "arm": arm, "step": trainer.step, "share": trainer.flops / flop_budget,
+        emit("arm_start", {"seed": args.seed, "arm": arm, "step": trainer.step,
+                           "share": trainer.flops / args.flop_budget,
                            "fit": {"a": arm_fit.a, "b": arm_fit.b, "worst": arm_fit.worst}, "economy": at_branch})
         stream = stream_from(train_cache, args, args.seed, parent["consumed"])
         report = trainer.train(stream, evaluate=hook, on_log=progress(arm, args.seed))
@@ -643,7 +674,7 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
         if arm == "SPAN":
             extra["span"] = asdict(model.span)
         emit("arm_ckpt", {"seed": args.seed, "arm": arm, **save(built, trainer, arm.lower(), args, extra)})   # first
-        dev = dev_eval(model, valid_cache, all_tags, tokenizer, stop, args)
+        dev = dev_eval(model, valid_cache, tags, tokenizer, stop, args)
         emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev})
         unaligned += [] if dev["aligned"] else [arm]
         emit("arm_economy", {"seed": args.seed, "arm": arm, "economy": economy(model, economy_batches, device)})
@@ -701,7 +732,7 @@ def box(args: argparse.Namespace) -> None:
     expected = {"script_sha256": script_sha256(), "code_sha256": code_sha256(),
                 "train_cache_sha256": record["train_cache"]["sha256"],
                 "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
-                "flop_budget": args.flop_budget}
+                "flop_budget": args.flop_budget, "size": args.size}
     fitted = (memory["chosen"]["max_tokens"], memory["chosen"]["max_visits"])
     go = wait_for_go(args, expected, fitted)                      # refuses a rung larger than `fitted`
     emit("go", {"seed": args.seed, "max_tokens": go["max_tokens"], "max_visits": go["max_visits"]})
