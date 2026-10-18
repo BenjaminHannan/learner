@@ -200,9 +200,12 @@ called "approximate" an understatement). No bar or guard reads them; they are su
 ### 3.5 Cost
 - Parameters: `+2d + 2` for the gate (a `2d + 1` linear plus the newline weight; 258 at d = 128, +0.01%).
   Nothing else is added.
-- Training FLOPs: the surrogate is a banded `[K, K + W]` product per 64-token chunk, about `2 * (K + W) * d`
-  multiply-adds per token (about 33k), against D's about 18 MFLOP per token by hand (+0.2%). It is charged by
-  the same `FlopCounterMode` fit as every contender.
+- Training FLOPs (corrected, erratum E1 below): `soft_pool` gathers, for every card, the `W = max_span` = 64
+  token window ending at the card's last token into a `[cards, W, d]` fp32 tensor and takes a softmax-weighted
+  sum over it: about `2 * W * d` multiply-adds per card (16k at d = 128), so about `2 * W * d / N` per token
+  (about 1.5k at N = 11.2), against D's about 18 MFLOP per token by hand (under +0.01%). It is charged by the
+  same `FlopCounterMode` fit as every contender. Memory, not FLOPs, is the cost: the gathered window (and its
+  weighted product) is about 150 MB per training step at about 4.6k cards, d = 128. There is no chunking.
 - Inference: the hard pool only (an index_add, the same as today).
 
 ## 4. Exact code changes
@@ -210,8 +213,8 @@ called "approximate" an understatement). No bar or guard reads them; they are su
 No existing file is edited (the standing "never edit `premonition/`" rule, HANDOFF.md; card_pools.py is the
 precedent for adding a new file).
 - `premonition/span_cards.py` (new):
-  - `SpanConfig(enabled=False, max_span=64, chunk=64, tokens_per_card=..., w_rate=0.03, newline_prior=8.0,
-    base_logit=-4.0, newline_id=...)`. **`enabled=False` is the default.**
+  - `SpanConfig(enabled=False, max_span=64, tokens_per_card=..., w_rate=0.03, newline_prior=8.0,
+    base_logit=-4.0, newline_id=...)` (no `chunk` field; erratum E1). **`enabled=False` is the default.**
   - `build_model(config, span)` returns a plain `PremonitionMini` when off (the same class, construction and
     random stream), and a `SpanCardMini` when on.
   - `SpanCardWriter`, `SpanCardStore(CardStore)`, `SpanCardMini(PremonitionMini)`,
@@ -263,3 +266,11 @@ precedent for adding a new file).
 - "Far held-out join score", "house-form bars", "DEV slip" and "the house family rule" are not defined
   anywhere in this repo (searched; newest repo content is 2026-09-30). The run card maps them to the closest
   documented conventions and asks the coordinator to confirm.
+
+## Errata (after the seal of 2026-10-18; seal record `05-seal.md`, seal commit f317420f9)
+- **E1 (2026-10-18, coordinator ruling Q129).** §3.5 described the surrogate as "a banded `[K, K + W]` product per
+  64-token chunk" and §4 listed a `SpanConfig.chunk` field. The code has neither: `soft_pool` gathers a
+  `[cards, max_span, d]` window per card, and `SpanConfig` has no `chunk`. Both places now describe the code. The
+  FLOP estimate falls from about 33k to about 1.5k per token (either is negligible next to D's about 18 MFLOP);
+  the real cost is the about 150 MB gather, which Stage 0 measures as peak memory. This file is outside the
+  seal's scope (run card §9), so no sealed hash changes. Found by the round-4 re-review B (b) and re-review C #6.

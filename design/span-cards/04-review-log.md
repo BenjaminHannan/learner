@@ -137,3 +137,10 @@ c502b2caa), which the ruling did not yet see; this section summarises it.
 - **Consequence.** The Q20 review gate is satisfied. Run card SC-1 is sealed at f317420f9 (`05-seal.md`; the
   data addendum follows before Stage 1's first arm). Stage 0 is booked under Q22 (on-demand box only, hard stop
   $0.50). Its outcome is in `06-stage0-report.md`.
+
+## Erratum E1 to the design after the seal (coordinator ruling Q129, 2026-10-18)
+§3.5 of `01-design.md` described a banded per-chunk surrogate, and §4 listed a `SpanConfig.chunk` field.
+Neither exists in the code (re-review B (b), re-review C #6). Both passages are corrected in an erratum commit
+that references the seal record (`05-seal.md`, seal commit f317420f9), with an Errata section at the end of the
+design. The design is outside the seal's scope (run card §9), so no sealed hash changes. The per-token FLOP
+estimate falls from about 33k to about 1.5k; the real cost is the about 150 MB gather, which Stage 0 measures.
