@@ -26,3 +26,14 @@ Everything below is checked and printed again immediately before the read fires,
   no final.json.
 - **The gate:** `--dry-run` reads "all preconditions hold", round-4 branch CONTINUE. Sealed marks are unchanged
   (`game/WALL-SOLVE-RESULT.md`, section 3).
+
+## Amendment (Q118): launch mode, written before firing
+The one command is launched **detached**, never in the foreground, so no tool time limit can kill it after the start record is
+written (the read takes about 13-14 min):
+`cd <repo> && env -u PYTHONOPTIMIZE PYTHONPATH=. setsid nohup SCRATCH/venv/bin/python -m game.gwls_final --root SCRATCH/gwls > SCRATCH/gwls/final-run.log 2>&1 < /dev/null &`
+- **Monitoring:** a background waiter, with no foreground wait on the scorers.
+- **Re-checked at fire time and printed into the log of this session before launch:**
+  - every item above (sha256 of the inputs, constants, no prior read artifacts, no `imitate` process, /proc visibility, `PYTHONOPTIMIZE`
+    unset);
+  - `--dry-run` reading "all preconditions hold".
+- **Abort:** the launch is aborted if any item differs.
