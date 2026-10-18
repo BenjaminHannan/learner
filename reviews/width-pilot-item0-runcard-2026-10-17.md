@@ -62,7 +62,7 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
   - In context: K rounds fully right 34.5%, J 32.9%, both 15.2%; **join call right given both pieces right: 52/64 = 81.2%**; whole answer 14.0% (59/420). L14: K 31.2%, J 28.6%, both 11.2%, join given both 32/47 = 68.1%; whole 41/420.
   - Pieces asked alone on the same grid (join-gap audit): L13 HO K 62.4%, J 64.3%, both (P) 38.8%; HPO P 46.2%. **Pooled HO + HPO P = 42.5% (L13), 37.5% (L14).**
   - By pair type on L13 HO: range+range 40/130, range+cell 19/271, cell+cell 0/19.
-  - **The playbook's "40–42% / 65–67%" bands could not be reproduced without their definition.** The nearest measured quantities are pooled P (42.5%) and single-piece accuracy (62–65%). The coordinator is asked for the bands' definition before they are used as a check.
+  - **Bands (defined by ruling Q77):** 40–42% per piece and 65–67% combine-given-both are the playbook's in-context pooled fleet numbers, an Item 0 check only, not a booking gate and not a bar. Beside them, this card's single-run in-context values: per piece L13 HO K 34.5% / J 32.9% (L14 31.2 / 28.6; across L13 cells 19–42%); combine-given-both L13 HO 81.2% (L14 68.1%; HPO 65.2 / 66.7%). The fleet pooling is not reproduced here, so no pass/fail is read from the comparison.
   - Reading: the HO deficit sits mostly **in reading the pieces in the new layout** (in-context piece accuracy ~33–35% against ~63% alone), not in the join call (81% when both pieces are right).
 
 ## (e) Masking and target format per family (shown, `learn_probe.make_rows` → `mode.make_row`; `m.loss`)
@@ -158,7 +158,9 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
 
 ## Status
 
-All of (a)–(k) are recorded against the pass condition: (c) formally excluded, (d) run, (f) answered, (j) answered NO. **Item 0 is ready for the coordinator's freeze.** Two questions ride with it: the definition of the playbook's 40–42% / 65–67% bands, and the axis gate 2(b) decision (base depth 2).
+All of (a)–(k) are recorded against the pass condition: (c) formally excluded, (d) run, (f) answered, (j) answered NO.
+
+**FROZEN (ruling Q73, coordinator).** Item 0 closes as the $0 facts audit. The (j) freeze-order disclosure does not reopen (j); its NO and consequences stand (factor (2) UNMEASURED, Item 8 Phase A only, C4 OUT). The freeze books nothing: Item 1 still waits on the axis-gate 2(b) decision (Q74, Ben's) and the code reviews (Q75).
 
 ## Correction to the playbook's cost basis (shown; for Item 1)
 

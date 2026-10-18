@@ -124,10 +124,12 @@ How the totals are built:
 
 | # | Condition | Status |
 |---|---|---|
-| 1 | Parent stage priced by measurement | Extended Item 1 is bid in §D; §7 is re-issued with an estimated parent line, to be replaced by the measurement |
+| 1 | Parent stage priced by measurement | Extended Item 1 bid in §D: **YES in principle (Q60 stands, Q76; hard stop $3, on-demand Vast 4090)**; books only after the 2(b) decision (Ben, Q74) and the Q75 code reviews. §7 is re-issued from the measurement before any Tranche A booking |
 | 2 | Parent recipe frozen by repo citation | §A |
 | 3 | Two-stage seed scheme filed | §B |
 | 4 | Spec §2/5/6/7 amended | §C |
-| 5 | C8 confirmed in `learn_probe.py` | Draft on this branch (5ce1889); off and on bit-identical, including the kfsoft guard path, on a stand-in parent. **Awaits code review.** |
+| 5 | C8 confirmed in `learn_probe.py` | Draft on this branch (5ce1889); off and on bit-identical, including the kfsoft guard path, on a stand-in parent; `/code-review` fixes in 99cba1a47. **Awaits code review (Q75).** |
+
+Item 0 is **frozen** (Q73, 10-17).
 
 Also done under Q50: **HO2 is frozen** (seed 93703, 420 rows, sha256 eed9703a…), and HO1's hash was re-confirmed (3aba6de1…). See `reviews/width-pilot-item0/HO2-PRENAME.md`.
