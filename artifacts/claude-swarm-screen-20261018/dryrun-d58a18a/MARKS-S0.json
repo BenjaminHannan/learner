@@ -1,0 +1,1015 @@
+{
+ "card": "S0",
+ "directory": "/home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-d58a18a",
+ "note": "DRY RUN: tiny preset, CPU, T=120 s; the numbers mean nothing",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "min_items": 100,
+ "seconds_tol": 0.02,
+ "T": 120,
+ "verdict": "INSUFFICIENT",
+ "verdict_line": "VERDICT: INSUFFICIENT: far_deep below 100 items in 6 of 6 eval files (smallest 62, largest 62)",
+ "void_reasons": [],
+ "insufficient_reasons": [
+  "far_deep below 100 items in 6 of 6 eval files (smallest 62, largest 62)"
+ ],
+ "marks": [
+  {
+   "mark": "M1",
+   "title": "join (promote): far_deep, S0 - D1",
+   "status": "fail",
+   "computed": true,
+   "bar": "S0 - D1 >= +3.0 pts pooled, p < 0.01, positive on >= 2 of 3 seeds",
+   "value": "+3.23 pts pooled (n 186), p 0.03516, per seed +1.61, +8.06, +0.00",
+   "detail": {
+    "cell": "far_deep",
+    "complete": true,
+    "n_pooled": 186,
+    "delta_points": 3.225806451612903,
+    "p": 0.03515625,
+    "seeds_positive": 2,
+    "seeds_negative": 0,
+    "per_seed": [
+     {
+      "seed": 0,
+      "n": 62,
+      "x_hits": 2,
+      "y_hits": 1,
+      "x_acc": 0.03225806451612903,
+      "y_acc": 0.016129032258064516,
+      "delta": 0.016129032258064516,
+      "delta_points": 1.6129032258064515
+     },
+     {
+      "seed": 1,
+      "n": 62,
+      "x_hits": 5,
+      "y_hits": 0,
+      "x_acc": 0.08064516129032258,
+      "y_acc": 0.0,
+      "delta": 0.08064516129032258,
+      "delta_points": 8.064516129032258
+     },
+     {
+      "seed": 2,
+      "n": 62,
+      "x_hits": 0,
+      "y_hits": 0,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta": 0.0,
+      "delta_points": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M2",
+   "title": "DEV slip (guard): near / overall, S0 vs D1",
+   "status": "pass",
+   "computed": true,
+   "bar": "S0 vs D1: near slips on < 2 seeds AND overall slips on < 2 seeds (slip = below by more than 3.0 pts)",
+   "value": "near slips on 0/3 seeds, overall slips on 0/3 seeds",
+   "detail": {
+    "near": [
+     {
+      "seed": 0,
+      "n": 105,
+      "x_acc": 0.0380952380952381,
+      "y_acc": 0.009523809523809525,
+      "delta_points": 2.857142857142857,
+      "slip": false
+     },
+     {
+      "seed": 1,
+      "n": 105,
+      "x_acc": 0.11428571428571428,
+      "y_acc": 0.0,
+      "delta_points": 11.428571428571429,
+      "slip": false
+     },
+     {
+      "seed": 2,
+      "n": 105,
+      "x_acc": 0.0,
+      "y_acc": 0.009523809523809525,
+      "delta_points": -0.9523809523809524,
+      "slip": false
+     }
+    ],
+    "overall": [
+     {
+      "seed": 0,
+      "n": 188,
+      "x_acc": 0.031914893617021274,
+      "y_acc": 0.010638297872340425,
+      "delta_points": 2.1276595744680846,
+      "slip": false
+     },
+     {
+      "seed": 1,
+      "n": 188,
+      "x_acc": 0.10106382978723404,
+      "y_acc": 0.0,
+      "delta_points": 10.106382978723403,
+      "slip": false
+     },
+     {
+      "seed": 2,
+      "n": 188,
+      "x_acc": 0.0,
+      "y_acc": 0.005319148936170213,
+      "delta_points": -0.5319148936170213,
+      "slip": false
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M3",
+   "title": "desk usage (guard), S0",
+   "status": "fail",
+   "computed": true,
+   "bar": "every desk ask_rate >= 0.05 and min fetch_count >= 0.1 x max, on >= 2 of 3 seeds",
+   "value": "ok on 0/3 seeds",
+   "detail": {
+    "seeds": [
+     {
+      "seed": 0,
+      "ask_rate": [
+       0.7429577338863427,
+       0.0,
+       0.23474178256843012,
+       0.2992957742281363
+      ],
+      "fetch_count": [
+       11.774647838073157,
+       0.0,
+       3.755868521094882,
+       4.788732387650181
+      ],
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "ask_rate": [
+       0.0,
+       0.25,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       4.0,
+       0.0,
+       0.0
+      ],
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "ask_rate": [
+       0.25,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       4.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M4",
+   "title": "diversity (guard), S0",
+   "status": "pass",
+   "computed": true,
+   "bar": "info; collapsed (register_cos > 0.95 and fetch_overlap > 0.8) on >= 2 of 3 seeds -> 'COLLAPSED: the desks are copies'",
+   "value": "collapsed on 0/3 seeds; s0: overlap 0.246 cos 0.534 ask [0.74, 0.0, 0.23, 0.3] fetch [11.77, 0.0, 3.76, 4.79] silent 1 | s1: overlap 0.000 cos 0.899 ask [0.0, 0.25, 0.0, 0.0] fetch [0.0, 4.0, 0.0, 0.0] silent 3 | s2: overlap 0.000 cos 0.984 ask [0.25, 0.0, 0.0, 0.0] fetch [4.0, 0.0, 0.0, 0.0] silent 3",
+   "detail": {
+    "seeds": [
+     {
+      "seed": 0,
+      "fetch_overlap": 0.24597490162636754,
+      "register_cos": 0.5342588917190481,
+      "ask_rate": [
+       0.7429577338863427,
+       0.0,
+       0.23474178256843012,
+       0.2992957742281363
+      ],
+      "fetch_count": [
+       11.774647838073157,
+       0.0,
+       3.755868521094882,
+       4.788732387650181
+      ],
+      "silent_desks": 1,
+      "collapsed": false
+     },
+     {
+      "seed": 1,
+      "fetch_overlap": 0.0,
+      "register_cos": 0.8993275532140418,
+      "ask_rate": [
+       0.0,
+       0.25,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       4.0,
+       0.0,
+       0.0
+      ],
+      "silent_desks": 3,
+      "collapsed": false
+     },
+     {
+      "seed": 2,
+      "fetch_overlap": 0.0,
+      "register_cos": 0.9836461177454309,
+      "ask_rate": [
+       0.25,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       4.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "silent_desks": 3,
+      "collapsed": false
+     }
+    ],
+    "collapsed": false
+   }
+  },
+  {
+   "mark": "M5",
+   "title": "matching (validity)",
+   "status": "pass",
+   "computed": true,
+   "bar": "every train completed, train_seconds within T +- 2% (T from c0.json), loop_mismatches = 0, final loss finite, one data tag and one tokenizer sha256",
+   "value": "valid",
+   "detail": {
+    "runs": [
+     {
+      "run": "train-D1-s0",
+      "status": "completed",
+      "train_seconds": 120.008142239,
+      "steps": 414,
+      "final_loss": 5.75331449508667,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-D1-s1",
+      "status": "completed",
+      "train_seconds": 120.15854503500009,
+      "steps": 424,
+      "final_loss": 5.846019744873047,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-D1-s2",
+      "status": "completed",
+      "train_seconds": 120.25163608800017,
+      "steps": 402,
+      "final_loss": 5.984586715698242,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s0",
+      "status": "completed",
+      "train_seconds": 120.08116557199992,
+      "steps": 386,
+      "final_loss": 5.624794006347656,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s1",
+      "status": "completed",
+      "train_seconds": 120.12306694899985,
+      "steps": 371,
+      "final_loss": 5.445582389831543,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s2",
+      "status": "completed",
+      "train_seconds": 120.06903289000002,
+      "steps": 369,
+      "final_loss": 5.722360134124756,
+      "loop_mismatches": 0,
+      "seconds_budget": 120.0,
+      "stop": "seconds budget"
+     }
+    ],
+    "T": 120.0,
+    "tags": [
+     "tiny-seed0-53292765806d"
+    ],
+    "tokenizer_sha256": [
+     "2c9d06aed330932b"
+    ],
+    "note": "card M5 (10-18): loop_mismatches = 0 replaces gold_missing, which train_d does not log"
+   }
+  },
+  {
+   "mark": "M6",
+   "title": "cells",
+   "status": "fail",
+   "computed": true,
+   "bar": "far_deep has >= 100 items in every eval file (else INSUFFICIENT)",
+   "value": "far_deep n: min 62, max 62 over 6 files",
+   "detail": {
+    "far_deep_items": {
+     "eval-D1-s0.json": 62,
+     "eval-D1-s1.json": 62,
+     "eval-D1-s2.json": 62,
+     "eval-S0-s0.json": 62,
+     "eval-S0-s1.json": 62,
+     "eval-S0-s2.json": 62
+    }
+   }
+  },
+  {
+   "mark": "KILL",
+   "title": "kill condition: pooled <= 0 or S0 < D1 on >= 2 of 3 seeds",
+   "status": "pass",
+   "computed": true,
+   "bar": "pooled S0 - D1 <= 0 OR negative on >= 2 of 3 seeds (a KILL is shown as fail)",
+   "value": "pooled +3.23 pts, negative on 0/3 seeds",
+   "detail": {
+    "kill": false
+   }
+  }
+ ],
+ "marks_computed": {
+  "M1": true,
+  "M2": true,
+  "M3": true,
+  "M4": true,
+  "M5": true,
+  "M6": true,
+  "KILL": true
+ },
+ "information": {
+  "steps": {
+   "D1": {
+    "steps": [
+     414,
+     424,
+     402
+    ],
+    "parameters": [
+     304388
+    ],
+    "mean_steps": 413.3333333333333,
+    "steps_over_D1": 1.0
+   },
+   "S0": {
+    "steps": [
+     386,
+     371,
+     369
+    ],
+    "parameters": [
+     304516
+    ],
+    "mean_steps": 375.3333333333333,
+    "steps_over_D1": 0.9080645161290323
+   }
+  },
+  "cells": {
+   "D1": {
+    "overall": {
+     "hits": 3,
+     "n": 564,
+     "acc": 0.005319148936170213,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 188,
+       "acc": 0.010638297872340425
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 1,
+       "n": 188,
+       "acc": 0.005319148936170213
+      }
+     ]
+    },
+    "near": {
+     "hits": 2,
+     "n": 315,
+     "acc": 0.006349206349206349,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 1,
+       "n": 105,
+       "acc": 0.009523809523809525
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 1,
+       "n": 105,
+       "acc": 0.009523809523809525
+      }
+     ]
+    },
+    "far": {
+     "hits": 1,
+     "n": 219,
+     "acc": 0.0045662100456621,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 1,
+       "n": 73,
+       "acc": 0.0136986301369863
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far_deep": {
+     "hits": 1,
+     "n": 186,
+     "acc": 0.005376344086021506,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 1,
+       "n": 62,
+       "acc": 0.016129032258064516
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      }
+     ]
+    },
+    "multi_hop": {
+     "hits": 3,
+     "n": 366,
+     "acc": 0.00819672131147541,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 122,
+       "acc": 0.01639344262295082
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 1,
+       "n": 122,
+       "acc": 0.00819672131147541
+      }
+     ]
+    },
+    "depth_1": {
+     "hits": 0,
+     "n": 168,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_2": {
+     "hits": 2,
+     "n": 159,
+     "acc": 0.012578616352201259,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 53,
+       "acc": 0.03773584905660377
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_3": {
+     "hits": 0,
+     "n": 126,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_4": {
+     "hits": 1,
+     "n": 69,
+     "acc": 0.014492753623188406,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 1,
+       "n": 23,
+       "acc": 0.043478260869565216
+      }
+     ]
+    },
+    "depth_5": {
+     "hits": 0,
+     "n": 12,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_6": {
+     "hits": 0,
+     "n": 0,
+     "acc": null,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      }
+     ]
+    },
+    "changed": {
+     "hits": 3,
+     "n": 204,
+     "acc": 0.014705882352941176,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 68,
+       "acc": 0.029411764705882353
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 1,
+       "n": 68,
+       "acc": 0.014705882352941176
+      }
+     ]
+    }
+   },
+   "S0": {
+    "overall": {
+     "hits": 25,
+     "n": 564,
+     "acc": 0.044326241134751775,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 6,
+       "n": 188,
+       "acc": 0.031914893617021274
+      },
+      {
+       "seed": 1,
+       "hits": 19,
+       "n": 188,
+       "acc": 0.10106382978723404
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      }
+     ]
+    },
+    "near": {
+     "hits": 16,
+     "n": 315,
+     "acc": 0.050793650793650794,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 4,
+       "n": 105,
+       "acc": 0.0380952380952381
+      },
+      {
+       "seed": 1,
+       "hits": 12,
+       "n": 105,
+       "acc": 0.11428571428571428
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far": {
+     "hits": 9,
+     "n": 219,
+     "acc": 0.0410958904109589,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 73,
+       "acc": 0.0273972602739726
+      },
+      {
+       "seed": 1,
+       "hits": 7,
+       "n": 73,
+       "acc": 0.0958904109589041
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far_deep": {
+     "hits": 7,
+     "n": 186,
+     "acc": 0.03763440860215054,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 62,
+       "acc": 0.03225806451612903
+      },
+      {
+       "seed": 1,
+       "hits": 5,
+       "n": 62,
+       "acc": 0.08064516129032258
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      }
+     ]
+    },
+    "multi_hop": {
+     "hits": 13,
+     "n": 366,
+     "acc": 0.03551912568306011,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 4,
+       "n": 122,
+       "acc": 0.03278688524590164
+      },
+      {
+       "seed": 1,
+       "hits": 9,
+       "n": 122,
+       "acc": 0.07377049180327869
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_1": {
+     "hits": 12,
+     "n": 168,
+     "acc": 0.07142857142857142,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 56,
+       "acc": 0.03571428571428571
+      },
+      {
+       "seed": 1,
+       "hits": 10,
+       "n": 56,
+       "acc": 0.17857142857142858
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_2": {
+     "hits": 9,
+     "n": 159,
+     "acc": 0.05660377358490566,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 1,
+       "n": 53,
+       "acc": 0.018867924528301886
+      },
+      {
+       "seed": 1,
+       "hits": 8,
+       "n": 53,
+       "acc": 0.1509433962264151
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_3": {
+     "hits": 4,
+     "n": 126,
+     "acc": 0.031746031746031744,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 3,
+       "n": 42,
+       "acc": 0.07142857142857142
+      },
+      {
+       "seed": 1,
+       "hits": 1,
+       "n": 42,
+       "acc": 0.023809523809523808
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_4": {
+     "hits": 0,
+     "n": 69,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_5": {
+     "hits": 0,
+     "n": 12,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_6": {
+     "hits": 0,
+     "n": 0,
+     "acc": null,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      }
+     ]
+    },
+    "changed": {
+     "hits": 13,
+     "n": 204,
+     "acc": 0.06372549019607843,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 2,
+       "n": 68,
+       "acc": 0.029411764705882353
+      },
+      {
+       "seed": 1,
+       "hits": 11,
+       "n": 68,
+       "acc": 0.16176470588235295
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      }
+     ]
+    }
+   }
+  },
+  "kill_condition": false
+ }
+}
