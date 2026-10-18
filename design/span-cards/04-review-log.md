@@ -2,8 +2,8 @@
 
 Status: DRAFT, unsealed, nothing booked. The review is Claude Code's built-in `/code-review` on branch
 `span-cards-solve` (diff `main...HEAD`). Each round's verdict is my classification; the coordinator rules.
-Latest: round 4 (below). The final re-review of bd28adcd7 shows no blocking finding (my classification), which is
-the ruled condition for sealing and for booking Stage 0. Neither has been done; both wait for the coordinator.
+Latest: the round-3 close-out (below). The final re-review of bd28adcd7 shows no blocking finding; the card is
+sealed (`05-seal.md`) and Stage 0 is booked under Q22.
 
 ## Round 1: review of 4b49ec92d (10 findings)
 Blocking: (1) per-call tensors left on the model made every `read_only` evaluation raise (reproduced);
@@ -113,3 +113,27 @@ Requests to the coordinator: (1) confirm the verdict, which is the condition for
 Stage 0; (2) rule on re-review B (b), whether §3.5's FLOP note is corrected before sealing; (3) optionally add the
 `line_aligned == 1` branch-point check to the Stage 0 pre-flight. This round ran the built-in review three times,
 not once, because the first two re-reviews showed that finding 1's fix was incomplete.
+
+## Round 3 close-out (coordinator ruling, 2026-10-18)
+The ruling asked for the re-review's verdict to be recorded. It was already recorded in round 4 above (commit
+c502b2caa), which the ruling did not yet see; this section summarises it.
+
+- **What the re-review of the fix diff found.** The review was run three times, each on the diff as it stood.
+  (A) On 07e57591e it found finding 1 incomplete: wall starts where the gate also fires (every line after a
+  question line) were not marked forced and still got rate gradient. It also found minor 4 incomplete (dropped
+  cards kept real tags, ents and lines), plus three wrong statements in the docs. (B) On ff1718222 it found
+  finding 1 still incomplete for the cap (a gate-chosen start exactly on a `max_span` cap position), and the
+  logged `gate_mean` was not the loss's G.
+- **What was fixed in response.** e2a50ff1f: every wall start is forced; dropped cards carry -1.
+  ff1718222: the docs. bd28adcd7: the start rule became `hard_starts`, with `forced` defined as "a start whatever
+  the gate does at that token" and checked by brute force; the logged `gate_mean` is the loss's G. Each fix has a
+  test that fails on the commit before it.
+- **Final verdict:** re-review C of bd28adcd7 (10 findings): **no blocking finding.** Eight repeat deferred or
+  waiting items; two new ones, not blocking (reflow cache provenance, which matters before Cell B; reflow
+  efficiency). Tests: 86 passed, 1 skipped (pre-existing).
+- **Correction to round 4.** Re-review B (b) said the design "will be sealed". It is not: section 9 of the run
+  card does not list `01-design.md`. The §3.5 FLOP note mismatch therefore does not block the seal; it stays an
+  open documentation item.
+- **Consequence.** The Q20 review gate is satisfied. Run card SC-1 is sealed at f317420f9 (`05-seal.md`; the
+  data addendum follows before Stage 1's first arm). Stage 0 is booked under Q22 (on-demand box only, hard stop
+  $0.50). Its outcome is in `06-stage0-report.md`.
