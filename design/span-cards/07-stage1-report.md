@@ -1,8 +1,9 @@
 # Stage 1 report (SC-1; booked by the coordinator after Stage 0)
 
-**Status: STOPPED. ALL THREE SEEDS FAILED THE MEMORY GUARD AT RUNG 2.** Seeds 0 and 1 failed in the parent's gold
-phase. Seed 2 finished its parent (checkpoint saved, branch check passed) and failed 94 s into the LINE arm. No arm
-trained to F. Every box is stopped (not destroyed). Nothing restarts until the coordinator rules.
+**Status: ATTEMPT 2 STARTING (ruling Q159).** In attempt 1 all three seeds failed the memory guard at rung 2. Seeds 0
+and 1 failed in the parent's gold phase; seed 2 failed 94 s into its LINE arm, after the ruling's snapshot. Attempt 2
+restarts all three seeds at rung 2, unchanged, with one change: the allocator setting
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Seed 2's restart falls under Q159 (5).
 
 ## Run record
 - Script: `scripts/span_stage1.py` at commit 707bdce90 (sha256 47577a35...d127), reviewed by the coordinator (the
@@ -173,3 +174,54 @@ rules. A stopped box costs only its disk, so a restart, a destroy, or keeping P_
 
 ## Readout per seed
 (filed when each seed finishes)
+
+## Attempt 2 (ruling Q159, 2026-10-18)
+**Ruling:** seeds 0 and 1 restart at rung 2 unchanged (40,000 tokens, 35 visits, same F, same marks, same pairing),
+with one change: `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. The setting changes memory management only, not
+the math. Under Q159 (5), the same ruling covers seed 2's restart, because seed 2 failed the same guard (its LINE arm,
+19:50Z). Before a restarted box commits to the full run, it must pass a strengthened pre-flight on the real training
+stream: at least the first 1,000 steps with peak reserved memory under the 14.00 GiB limit. A crossing stops that
+box, and I report instead of proceeding.
+
+**How the setting is passed: launch environment only, no script change.** The box launch script exports
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` before anything runs, and logs it as `S1BOX-ALLOC ...`. The
+pre-flight child processes inherit the environment (`subprocess.run` without `env=`). `scripts/span_stage1.py` is
+unchanged: commit 707bdce90, sha256 47577a35...d127, and every box refuses any other hash. The launch script also
+logs `nvidia-smi` memory.used every 30 s (`S1BOX-MEM`). That reading is the whole card, CUDA context included, so it
+is an upper bound on reserved memory, sampled. The guard's own peak is exact.
+
+**Amended go record** (`stage1-go.json`, commit 9d15e6626): the coordinator's rung-2 record unchanged, plus
+`"attempt": 2`, `"env": {"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"}`, `"ruling": "Q159"` and a note.
+The boxes ignore keys they do not check, so the record documents the run without changing what the script accepts.
+
+**Strengthened pre-flight: the first 1,000 steps of the real run, guard on (fixed before any result).** No separate
+script is needed. The parent's training *is* the real stream in the real batch-shape order. The trainer's guard
+compares peak reserved memory (since the reset after calibration) with 14.00 GiB after step 1 and every 50 steps, and
+stops the run at the first crossing. So:
+- **pass** = the box logs `progress ... step 1000` with no `MemoryGuardError` before it (20 guard checks clean). The
+  run then continues to the full run, as released.
+- **fail** = `MemoryGuardError` at or before step 1,000. The run stops, `S1-DONE failed`, the watchdog stops the box,
+  and I report.
+- The exact peak over the whole gold phase (3,484 steps) is in the parent record (`peak_gpu_reserved_bytes`).
+  `S1BOX-MEM` gives the trace between.
+- The old 12-batch pre-flight still runs before the go gate (the script does it). It is recorded but no longer the
+  release test.
+- What this does not cover: attempt 1's seed 2 failed at the LINE arm's start, after 3,484 clean gold steps. A pass
+  at step 1,000 does not bound the arms. The guard stays on for the whole run, so a later crossing stops that seed
+  and I report it.
+
+**Boxes (attempt 2):** new RTX 3090 on-demand rentals, rented 20:12Z, running the same commit and script.
+
+| seed | instance | label | $/h |
+|---|---|---|---|
+| 0 | 56611901 | claude-spancards-s1b-seed0 | 0.242 |
+| 1 | 56611888 | claude-spancards-s1b-seed1 | 0.216 |
+| 2 | 56611889 | claude-spancards-s1b-seed2 | 0.240 |
+
+The attempt-1 boxes (56601518, 56601519, 56601524) stay stopped, not destroyed. Their disks (about $0.10/h) count in
+the Stage 1 spend. Seed 2's attempt-1 disk holds the attempt-1 P_2 checkpoint. A new watchdog has the same money rule:
+spend since the $32.588 baseline covers both attempts and every box, and everything is destroyed if it passes $16 (hard
+stop $18). Spend at 19:53Z was $0.817.
+
+### Attempt 2 outcomes
+(filed per seed as the boxes report: pre-flight pass or fail at step 1,000, then the readout)
