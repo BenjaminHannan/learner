@@ -93,6 +93,7 @@ def test_group_names():
     assert update_group('blocks.0.qkv.weight') == 'blocks.0' and update_group('blocks.1.ln2.bias') == 'blocks.1'
     assert update_group('tok.weight') == 'tok' and update_group('ln_f.bias') == 'ln_f' and update_group('scale') == 'scale'
     assert update_group('core.3.attn.q.weight') == 'core.3'
+    assert update_group('reader.blocks.1.conv.weight') == 'reader.blocks.1' and update_group('reader.tok.weight') == 'reader.tok'
 
 
 def test_gradstats():

@@ -126,7 +126,9 @@ def test_update_group_and_update_rms_on_toy():
     assert LP.update_group('blocks.0.qkv.weight') == 'blocks.0'
     assert LP.update_group('tok.weight') == 'tok'
     assert LP.update_group('bias') == 'bias'
-    assert LP.update_group('reader.layers.1.attn.q.weight') == 'reader.layers'
+    assert LP.update_group('reader.layers.1.attn.q.weight') == 'reader.layers.1'   # cut after the layer index: one group per reader layer
+    assert LP.update_group('reader.blocks.0.conv.weight') != LP.update_group('reader.blocks.1.conv.weight')
+    assert LP.update_group('core.0.attn.qkv.A') == 'core.0'   # arm LA's add-on names land in the model's own layer groups
     a, b, z = (torch.nn.Parameter(torch.tensor(v)) for v in ([3., 4.], [6., 8.], [0., 0.]))
     named = [('g1.weight', a), ('g1.bias', b), ('g2.w', z)]   # g1 = {a, b}, g2 = {z, before-norm 0}
     for _, p in named:
@@ -186,7 +188,7 @@ def test_lb_off_vs_on_bit_identical_and_logged(world):
     check_log(log)
     rec_on = json.loads(open(os.path.join(on['out'], 'scores.jsonl')).readline())
     assert rec_on['update_rms_log'] == log, 'scores.jsonl carries the same history'
-    assert {k: v for k, v in rec_on.items() if k not in ('update_rms_log', 'secs', 'train_secs')} == \
+    assert {k: v for k, v in rec_on.items() if k not in ('update_rms_log', 'update_rms_secs', 'secs', 'train_secs')} == \
            {k: v for k, v in rec_off.items() if k not in ('secs', 'train_secs')}, 'the rest of the score record is unchanged'
     # the grad stats are the PRE-clip norms: compare with the test's own sqrt(sum g^2) taken before the clip (OFF2, same trajectory)
     assert len(norms) == UPDATES
@@ -207,7 +209,9 @@ def test_update_rms_matches_a_by_hand_recompute_after_one_update(world):
     ss = {}
     for n in names:
         d, b = (after[n].double() - before[n].double()), before[n].double()
-        g = ss.setdefault('.'.join(n.split('.')[:-1][:2]) or n, [0.0, 0.0])
+        path = n.split('.')[:-1]   # by hand: cut after the first layer index, else two components
+        cut = next((k + 1 for k, c in enumerate(path) if c.isdigit()), 2)
+        g = ss.setdefault('.'.join(path[:cut]) or n, [0.0, 0.0])
         g[0] += float(d.pow(2).sum()); g[1] += float(b.pow(2).sum())
     want = {g: math.sqrt(a / b) for g, (a, b) in ss.items() if b > 0}
     assert want.keys() == rec['upd_rms'].keys()

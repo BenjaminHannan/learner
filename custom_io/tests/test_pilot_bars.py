@@ -21,11 +21,13 @@ def units(ds, prefix="u"):
     return [{"unit": "%s%d" % (prefix, i), "a": [0], "b": [d]} for i, d in enumerate(ds)]
 
 
-def spec(rules=None, floor_sd=0.0, gate=None, default="UNRESOLVED"):
+def spec(rules=None, floor_sd=0.0, gate=None, default="UNRESOLVED", extras=None):
     s = {"floor_sd": floor_sd, "alpha_two_sided": 0.05, "anchors": {}, "rules": rules or [
         {"name": "ALWAYS", "conditions": [{"var": "n", "op": ">=", "value": 2}]}], "default": default}
     if gate:
         s["gate"] = gate
+    if extras is not None:
+        s["extras"] = extras
     return s
 
 
@@ -176,13 +178,37 @@ def test_all_ops():
 
 def test_extra_variables_and_missing_flagged():
     rules = [{"name": "RATE", "conditions": [{"var": "pass_count", "op": ">=", "value": 4}]}]
-    rep = pb.evaluate({"pairs": units([1.0, 2.0, 3.0]), "extra": {"pass_count": 5}}, spec(rules))
+    rep = pb.evaluate({"pairs": units([1.0, 2.0, 3.0]), "extra": {"pass_count": 5}}, spec(rules, extras=["pass_count"]))
     assert rep["verdict"] == "RATE" and rep["extra"] == {"pass_count": 5}
-    rep = pb.evaluate({"pairs": units([1.0, 2.0, 3.0])}, spec(rules))   # extra not supplied
+    rep = pb.evaluate({"pairs": units([1.0, 2.0, 3.0])}, spec(rules, extras=["pass_count"]))   # extra not supplied
     assert rep["verdict"] == "UNRESOLVED" and rep["missing_vars"] == ["pass_count"]
     assert rep["rules"][0]["conditions"][0]["status"] == "missing" and "WARNING" in rep["summary"]
     with pytest.raises(ValueError):
-        pb.evaluate({"pairs": units([1.0, 2.0]), "extra": {"mean": 1}}, spec(rules))
+        pb.evaluate({"pairs": units([1.0, 2.0]), "extra": {"mean": 1}}, spec(rules, extras=["pass_count"]))
+
+
+def test_undeclared_variable_is_a_spec_error():
+    with pytest.raises(ValueError, match="unknown variable 'sd'"):   # typo for sd_obs in a gate
+        pb.validate_spec(spec(gate={"var": "sd", "op": ">", "value": 8, "verdict": "GATE"}))
+    with pytest.raises(ValueError, match="unknown variable"):
+        pb.validate_spec(spec([{"name": "R", "conditions": [{"var": "pass_count", "op": ">=", "value": 4}]}]))
+    with pytest.raises(ValueError, match="collide"):
+        pb.validate_spec(spec(extras=["mean"]))
+
+
+def test_value_on_the_bar_holds_despite_float_error():
+    pairs = [{"unit": "u0", "a": [0.03], "b": [8.03]}, {"unit": "u1", "a": [0.03], "b": [8.03]}]
+    assert 8.03 - 0.03 < 8                                               # the float error this guards against
+    rep = pb.evaluate({"pairs": pairs}, spec([{"name": "WIN", "conditions": [{"var": "mean", "op": ">=", "value": 8}]}]))
+    assert rep["verdict"] == "WIN" and rep["rules"][0]["conditions"][0]["held"]
+
+
+def test_cli_exits_2_when_a_missing_variable_could_change_the_verdict(tmp_path):
+    data, sp = tmp_path / "in.json", tmp_path / "spec.json"
+    data.write_text(json.dumps({"pairs": units([1.0, 2.0, 3.0])}))
+    sp.write_text(json.dumps(spec([{"name": "RATE", "conditions": [{"var": "pass_count", "op": ">=", "value": 4}]}], extras=["pass_count"])))
+    r = subprocess.run([sys.executable, SRC, str(data), str(sp), "--summary-only"], capture_output=True, text=True)
+    assert r.returncode == 2 and "WARNING: missing vars pass_count" in r.stdout
 
 
 # (f) --------------------------------------------------------------- no eval

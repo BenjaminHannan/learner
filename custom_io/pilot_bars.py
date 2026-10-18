@@ -16,14 +16,17 @@ RESULTS.json  {"contrast": name, "unit": "parent"|"seed", "pairs": [{"unit": "s2
 SPEC.json     {"floor_sd": 3.0, "alpha_two_sided": 0.05, "anchors": {...},
                "gate": {"var": "sd_obs", "op": ">", "value": 8.0, "verdict": "GATE_FAIL_EXTEND"},   # optional (dict or list)
                "rules": [{"name": "SIZE_WINS", "conditions": [{"var": "mean", "op": ">=", "value": 8}, ...]}, ...],
+               "extras": ["pass_count"],                        # optional: names of extra scalars rules may use
                "default": "UNRESOLVED"}
   Variables: mean, sd_obs (sample sd of d_u, ddof 1), s = max(sd_obs, floor_sd), n, half = t(1-alpha/2, n-1) * s / sqrt(n),
   lo = mean - half, hi = mean + half, plus the input's "extra" scalars.  Ops: >=, >, <=, <, ==.  Conditions are data
   (var/op/value), evaluated with a fixed operator table; there is no string evaluation anywhere.
+  Every condition variable must be a built-in or be declared in spec "extras"; an unknown name (a typo) is a spec error.
+  Comparisons are made at the report's 9-digit rounding, so a value sitting on a bar is not lost to float error.
   Order: gate first; then rules in order, first rule whose conditions ALL hold wins; else the spec's "default".
   A condition on a variable that is not available (e.g. an extra that was not passed) does NOT hold; it is flagged
   "missing" in the report; the summary warns when a missing variable sits in the gate or in a rule at or ahead of the
-  deciding one (i.e. could have changed the verdict).  "missing_vars_any_rule" lists all of them.
+  deciding one (i.e. could have changed the verdict), and the CLI then exits 2.  "missing_vars_any_rule" lists all of them.
 """
 import argparse
 import json
@@ -191,6 +194,16 @@ def validate_spec(spec):
         _check_cond(g, "gate")
         if not isinstance(g.get("verdict"), str) or not g["verdict"]:
             raise ValueError("gate needs a 'verdict' string")
+    extras = spec.get("extras", [])
+    if not isinstance(extras, list) or not all(isinstance(x, str) and x for x in extras):
+        raise ValueError("spec.extras must be a list of variable names")
+    clash = sorted(set(extras) & set(BUILTIN_VARS))
+    if clash:
+        raise ValueError("spec.extras names collide with built-in variables: %s" % ",".join(clash))
+    known = set(BUILTIN_VARS) | set(extras)
+    for c in _gates(spec) + [c for r in rules for c in r["conditions"]]:
+        if c["var"] not in known:
+            raise ValueError("unknown variable %r: not a built-in %s and not declared in spec.extras" % (c["var"], BUILTIN_VARS))
     return floor_sd, alpha
 
 
@@ -215,7 +228,7 @@ def eval_cond(c, env):
     if var not in env:
         return {"var": var, "op": op, "value": value, "actual": None, "held": False, "status": "missing"}
     actual = env[var]
-    held = bool(OPS[op](actual, value))
+    held = bool(OPS[op](round(actual, 9), round(value, 9)))   # same rounding as the report, so a value on the bar holds
     return {"var": var, "op": op, "value": value, "actual": actual, "held": held, "status": "held" if held else "failed"}
 
 
@@ -358,7 +371,7 @@ def main(argv=None):
         print(text)
     if not args.json_only:
         print(rep["summary"])
-    return 0
+    return 2 if rep["missing_vars"] else 0
 
 
 if __name__ == "__main__":

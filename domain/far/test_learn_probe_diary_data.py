@@ -21,6 +21,8 @@ from domain.far.test_learn_probe_c8 import world, guard_world, run   # noqa: F40
 def clean_guard_imports():
     """load_guard / train import `mainbrain.*` from the guard source folder and cache it; drop what this test added, or a later
     test with its own guard source (test_learn_probe_c8) trips the 'klreplay comes from guard_src' check."""
+    for k in [k for k in sys.modules if k == 'mainbrain' or k.startswith('mainbrain.')]:   # and what an earlier test left (c8's guard run)
+        del sys.modules[k]
     mods, path = set(sys.modules), list(sys.path)
     yield
     for k in set(sys.modules) - mods:
@@ -34,17 +36,20 @@ def argv(world, out, *extra):
             '--parent', world['parent'], '--rows', world['train'], '--probe', world['probe'], '--diary-compare', 'none', *extra]
 
 
-def test_default_is_the_original_path_in_flag_and_in_train():
+def test_default_is_the_original_path_in_flag_and_in_train(tmp_path):
     seen = []
     real = LP.train
     LP.train = lambda *a, **kw: seen.append(kw)
+    pool = tmp_path / 'pool'
+    pool.mkdir()
+    (pool / 'train.jsonl').write_text('')
     try:
         LP.main(['train', '--arm', 'LB', '--out', 'x', '--updates', '5'])
-        LP.main(['train', '--arm', 'LB', '--out', 'x', '--updates', '5', '--diary-data', '/somewhere/else'])
+        LP.main(['train', '--arm', 'LB', '--out', 'x', '--updates', '5', '--guard', 'kf', '--guard-src', str(tmp_path), '--diary-data', str(pool)])
     finally:
         LP.train = real
     assert seen[0]['diary_data'] == LP.DIARY_DATA, 'default flag value = DIARY_DATA (byte-identical default behaviour)'
-    assert seen[1]['diary_data'] == '/somewhere/else'
+    assert seen[1]['diary_data'] == str(pool)
     assert inspect.signature(LP.train).parameters['diary_data'].default == LP.DIARY_DATA
     assert inspect.signature(LP.build_parent_diary).parameters['data'].default == LP.DIARY_DATA
 
@@ -81,11 +86,22 @@ def test_diary_data_flag_makes_build_parent_diary_read_that_folder(world, guard_
     assert os.path.exists(os.path.join(out, 'diary-compare.json')), 'build_parent_diary got as far as writing its comparison'
 
 
-def test_recorded_config_carries_the_diary_folder(world, guard_world, clean_guard_imports):   # noqa: F811
-    # Here the run must get through, so the stand-in diary cache is used (as in the C8 guard test); the cache short-circuits the
-    # read, but the recorded folder is still the one given. Default run: the recorded folder is DIARY_DATA.
+def test_diary_data_refused_before_any_work(tmp_path):
+    with pytest.raises(SystemExit, match='--guard only'):
+        LP.check_diary_data(None, '/somewhere/else', None)
+    LP.check_diary_data(None, LP.DIARY_DATA, None)   # the default without --guard is fine (never read)
+    with pytest.raises(SystemExit, match='no train.jsonl'):
+        LP.check_diary_data('kfsoft', str(tmp_path), None)
+    cache = tmp_path / 'diary.jsonl'
+    cache.write_text('')
+    LP.check_diary_data('kfsoft', str(tmp_path / 'missing'), str(cache))   # an existing cache means the folder is never read
+
+
+def test_recorded_config_does_not_claim_a_folder_for_a_cached_diary(world, guard_world, clean_guard_imports):   # noqa: F811
+    # Here the run must get through, so the stand-in diary cache is used (as in the C8 guard test). The cache short-circuits the
+    # read, so no folder was read: guard_diary_data is None, and guard_diary_cache / guard_diary_sha256 say where the diary came from.
     kw = dict(guard='kfsoft', guard_src=guard_world['src'], guard_every=8, kl_replay_rows=4, kl_weight=10, guard_soft=10,
               diary_cache=guard_world['cache'], diary_compare='none')
     rec = lambda out: json.loads(open(os.path.join(out, 'scores.jsonl')).readline())
-    assert rec(run(world, 'dd_default', False, updates=5, every=5, **kw)['out'])['guard_diary_data'] == LP.DIARY_DATA
-    assert rec(run(world, 'dd_given', False, updates=5, every=5, diary_data='/given/folder', **kw)['out'])['guard_diary_data'] == '/given/folder'
+    r = rec(run(world, 'dd_given', False, updates=5, every=5, diary_data='/given/folder', **kw)['out'])
+    assert r['guard_diary_data'] is None and r['guard_diary_cache'] == guard_world['cache'] and r['guard_diary_sha256']
