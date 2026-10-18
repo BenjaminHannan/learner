@@ -156,11 +156,17 @@ unchanged.
    non-question line**, so the span arm stores the same number of cards as the per-line arm on average.
    Any gain must come from placement, not from storing more. Weight `w_rate = 0.03` (H-Net's value; an
    assumption, not tuned).
-3. **Retrieval labels.** The oracle's evidence lines label *which tokens hold evidence*, not the layout. A
-   card is gold for a question iff it contains a token of a gold line. A merged card that holds a gold line
-   is gold. A gold line split over two cards makes both gold. `L_ask` and the teacher then run unchanged
-   over cards. Teacher loop counts keep using the evidence count `|G_lines|`, so the planned FLOP charge
-   is unchanged and knowable before the step.
+3. **Retrieval labels.** The oracle's evidence lines label *which tokens hold evidence*, not the layout. The
+   rule is **one gold card per evidence line**: the eligible card holding most of that line's tokens (a tie
+   goes to the later card). A merged card holding two gold lines is gold once. Of a gold line split over two
+   cards, only the larger piece is gold. So `|G_cards| <= |G_lines|` always. The parent's teacher loop count
+   (`ceil(|G_lines| / top_k) + 3`) and gold-mode preload width (`<= MAX_GOLD + 1`) therefore always cover
+   every gold card. The planned loops, and hence the FLOP charge, stay identical to the per-line arm and are
+   known before the step. (Revision after the second code review: the earlier "every overlapping card is
+   gold" rule let a split layout outnumber the line-counted schedule, e.g. 13 gold lines split in two gave 26
+   gold cards against 24 teacher fetches, an ASK target the line arm never faces.) The cost: a split
+   evidence line's smaller piece is never a teacher target, which mildly discourages the gate from splitting
+   facts. `L_ask` and the teacher then run unchanged over cards.
 4. **No layout supervision.** Nothing ever says "cut at the newline". The newline feature only sets the
    starting point (3.3).
 
@@ -181,7 +187,7 @@ marks written cards. Width is `T + 1` with NULL last, so every consumer of
 - age bucket: `q_line - card_line`.
 - `ents`: the distinct entities in the card's tokens, first 4. Overflow is counted in the report.
 - `tags` and diary pointer: the card's first token, start and length.
-- `gold`: the token-overlap rule above, with the same `(G, told, missing)` signature.
+- `gold`: one card per evidence line (the rule above), with the same `(G, told, missing)` signature.
 
 `answer()` maps `first_top` and `fetched` back to line indices (a card's last line), so `train.validate`'s
 accuracy, slices and asked-rate stay valid. Its line-based recall@4 and `cards` block are only approximate
@@ -248,7 +254,7 @@ precedent for adding a new file).
 - The gate cannot learn a layout the data never rewards. Trained on today's line-aligned data, staying near
   per-line is the *correct* outcome, not a failure of the mechanism. The run card's cell B (reflow) is where
   the mechanism should show its value.
-- The token-overlap gold rule over-labels: a card holding a gold line and a filler line is "gold". It does
+- The gold rule over-labels: a card holding a gold line and a filler line is "gold". It does
   not tell the model which half mattered. No sub-line evidence exists in the data to do better.
 - "Far held-out join score", "house-form bars", "DEV slip" and "the house family rule" are not defined
   anywhere in this repo (searched; newest repo content is 2026-09-30). The run card maps them to the closest

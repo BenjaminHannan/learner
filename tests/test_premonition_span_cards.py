@@ -315,7 +315,7 @@ class GoldAndWipeTest(unittest.TestCase):
         self.assertIs(store.last_gold, gold)
         columns = [set(torch.nonzero(row).flatten().tolist()) for row in gold]
         self.assertEqual(columns[0], {7})                    # merge: the card holding lines 0-1 is gold for line 1
-        self.assertEqual(columns[1], {9, 11})                # split: both pieces of line 2 are gold
+        self.assertEqual(columns[1], {11})                   # split 2 + 2: one gold card per line, tie -> later
         self.assertEqual(columns[2], {null})                 # never told: only NULL
         self.assertEqual(columns[3], {7})
         self.assertEqual(columns[4], {7})
@@ -330,6 +330,44 @@ class GoldAndWipeTest(unittest.TestCase):
         again = store.eligible(q_visit, q_line, fetched)
         self.assertFalse(bool(again[0, 7]))
         self.assertTrue(bool(again[0, null]))                # NULL can always be fetched again
+
+    def test_one_gold_card_per_gold_line(self) -> None:
+        """Re-review blocker: span gold must never outnumber the gold lines the teacher schedule counts."""
+        q_visit, q_line = torch.zeros(2, dtype=torch.long), torch.tensor([3, 3])
+        for cards, expected in (([(0, 7), (8, 8), (9, 11)], 11), ([(0, 7), (8, 10), (11, 11)], 10)):
+            store = manual_store(TOKEN_LINE, cards)
+            gold, _, missing = store.gold(gold_rows([[2], [0, 1, 2]]), q_visit, q_line)
+            columns = [set(torch.nonzero(row).flatten().tolist()) for row in gold]
+            self.assertEqual(columns[0], {expected})          # the piece holding most of line 2
+            self.assertEqual(columns[1], {7, expected})       # lines 0 and 1 share the merged card: gold once
+            self.assertEqual(missing.tolist(), [0, 0])
+
+    def test_teacher_schedule_reaches_every_gold_card_on_split_layouts(self) -> None:
+        """With the gate splitting lines, the line-counted teacher loops and gold preload still cover every gold
+        card, so the span arm never trains against an unreachable ASK target."""
+        model = span_model(4, max_span=3)                     # the cap splits most lines into 2-3 cards
+        model.train()
+        for seed in range(3):
+            batch = synthetic_batch(visits=3, lines=24, seed=20 + seed)
+            store = store_of(model, batch)
+            self.assertGreater(int(store.valid.sum()), int((~batch.line_is_question & (batch.line_start >= 0)).sum()))
+            gold, told, missing = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+            cards = gold[:, :store.null].sum(1)
+            lines = (batch.gold_lines >= 0).sum(1)
+            self.assertTrue(bool((cards <= lines).all()))
+            self.assertTrue(bool((cards[told] >= 1).all()))
+            self.assertEqual(int(missing.sum()), 0)
+            for mode in ("gold", "teacher"):
+                with model.scope() as capture:
+                    capture["trace"] = []
+                    model(batch, mode=mode, generator=torch.Generator().manual_seed(seed))
+                fetched = torch.zeros_like(gold)
+                for index, picked in capture["trace"]:
+                    real = picked >= 0
+                    fetched[index.unsqueeze(1).expand_as(picked)[real], picked[real]] = True
+                self.assertTrue(bool((capture["gold_matrix"] == gold).all()), mode)
+                unreached = (gold & ~fetched)[told]
+                self.assertFalse(bool(unreached.any()), (mode, seed))
 
     def test_synthetic_batches_have_no_missing_gold(self) -> None:
         for model in (span_model(0), variable_model(0)):

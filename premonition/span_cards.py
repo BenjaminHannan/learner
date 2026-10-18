@@ -201,22 +201,34 @@ class SpanCardStore(CardStore):
              q_line: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """(G [Q, T + 1] bool, told [Q] bool, missing [Q] long).
 
-        G holds the eligible cards that contain a token of one of the question's evidence lines (a merged card
-        holding a gold line is gold; a gold line split over two cards makes both gold), or only NULL when the
-        question was never told. `missing` counts evidence lines with no token inside any eligible card.
+        ONE gold card per evidence line: the eligible card holding most of that line's tokens (a tie goes to the
+        later card). A merged card holding two gold lines is gold once; of a gold line split over two cards only
+        the larger piece is gold. So |G| <= the number of gold lines, and the parent's line-counted teacher
+        schedule (ceil(|G_lines| / top_k) + 3 loops) and gold-mode preload width (<= MAX_GOLD + 1 rows) always
+        cover every gold card, with the same planned loops (and FLOP charge) as the per-line arm. Only NULL
+        when never told. `missing` counts evidence lines with no token inside any eligible card.
         """
         told = (gold_lines >= 0).any(1)
         present = gold_lines >= 0
+        count, width = gold_lines.shape[0], self.lines + 1
         eligible = self.eligible(q_visit, q_line)[:, :self.null]                    # [Q, T]
         card = self.card_of[q_visit]
         inside = (card >= 0) & eligible.gather(1, card.clamp_min(0))               # token is in an eligible card
-        match = (self.token_line[q_visit].unsqueeze(2) == gold_lines.unsqueeze(1)) & present.unsqueeze(1)
-        hit = torch.zeros(gold_lines.shape[0], self.lines + 1, dtype=torch.long, device=gold_lines.device)
-        hit.scatter_add_(1, torch.where(inside, card, torch.full_like(card, self.null)),
-                         (match.any(2) & inside).long())
-        target = hit > 0
+        column = torch.where(inside, card, torch.full_like(card, self.null))
+        line = self.token_line[q_visit]
+        target = torch.zeros(count, width, dtype=torch.bool, device=gold_lines.device)
+        covered = torch.zeros_like(present)
+        rows = torch.arange(count, device=gold_lines.device)
+        for g in range(gold_lines.shape[1]):
+            match = inside & (line == gold_lines[:, g:g + 1]) & present[:, g:g + 1]     # [Q, T]
+            tokens = torch.zeros(count, width, dtype=torch.long, device=gold_lines.device)
+            tokens.scatter_add_(1, column, match.long())
+            tokens[:, self.null] = 0
+            best = width - 1 - tokens.flip(1).argmax(1)                              # most tokens, later on ties
+            hit = tokens[rows, best] > 0
+            covered[:, g] = hit
+            target[rows[hit], best[hit]] = True
         target[:, self.null] = ~told
-        covered = (match & inside.unsqueeze(2)).any(1)                              # [Q, MAX_GOLD]
         self.last_gold = target
         return target, told, (present & ~covered).sum(1)
 
