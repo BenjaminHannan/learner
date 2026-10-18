@@ -114,8 +114,34 @@ class GateTest(unittest.TestCase):
         self.assertTrue(gate["line_aligned_is_1"])
         self.assertNotIn("gpu", gate)
         self.assertFalse(line.training or span.training)
+        self.assertEqual(gate["reasons"], [])
+
+    def test_a_failed_gate_names_its_reasons(self) -> None:
+        """Third review, finding 1: branch_gate had no `reasons`, so the stop message raised KeyError."""
         bad_line, bad_span = pair(max_span=3)
-        self.assertFalse(span_stage0.branch_gate(bad_line, bad_span, batches(), DEVICE)["passed"])
+        gate = span_stage0.branch_gate(bad_line, bad_span, batches(), DEVICE)
+        self.assertFalse(gate["passed"])
+        self.assertIn("cpu: line_aligned != 1", gate["reasons"])
+        self.assertIn("line_aligned != 1", f"failed ({gate['reasons']})")
+
+    def test_gpu_answer_flips_are_bounded(self) -> None:
+        """Third review, finding 3: GPU answer differences were reported but unbounded. The GPU half is simulated
+        (no CUDA here): the second branch_check call returns the CPU result with `flips` differing answers."""
+        real = span_stage0.branch_check
+        for flips, ok in ((0, True), (1, True), (12, False)):
+            def fake(line, span, bs, device, flips=flips):
+                result = real(line, span, bs, torch.device("cpu"))
+                if device.type == "cuda":
+                    result["natural"] = {**result["natural"], "differing": flips}
+                return result
+            span_stage0.branch_check = fake
+            try:
+                line, span = pair()
+                gate = span_stage0.branch_gate(line, span, batches(), torch.device("cuda"))
+            finally:
+                span_stage0.branch_check = real
+            self.assertEqual(gate["passed"], ok, (flips, gate["reasons"]))
+            self.assertEqual(gate["gpu_answer_differences"]["natural"], flips)
 
     def test_log_lines_are_strict_json(self) -> None:
         """Second review, finding 7: math.inf was written as the non-JSON token Infinity."""
