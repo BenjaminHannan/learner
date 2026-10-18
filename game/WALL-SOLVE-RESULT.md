@@ -1,0 +1,340 @@
+# The game-world wall: result of the solve session (Oct 16 2026)
+
+For Muse's packet (Ben's direction, Oct 16). Pre-registration: `game/WALL-SOLVE-PREREG.md`. It was sealed at commit 27dd259 (20:19 UTC)
+before any test ran; addenda 75ebd68 and 9086d19 were added before Z7 / Z8 reported. Labels: **shown** = measured here or read in code;
+**suggested** = reasoned; **untested**. GW-O was not touched: no GW-O number existed on any branch while this was written, and nothing ran on the Mac.
+Cost: $0 for runs (free container CPU, about 2 h). Two independent implementations agreed on every Z1 to Z5 number. An independent audit checked
+the Z7 / Z8 code, and it reproduced A23's held-out accuracy exactly (62.44% / 64.79%).
+
+## Plain summary for Ben
+There is no single wall at 4 to 7 unlocks. There are two separate problems, and neither is a wall.
+1. **Learning from its own play fails because it was started from a model that cannot read the map.** Self-imitation copies the model's
+   own moves. When those moves are mostly blind habit (the model agrees with the labeller on only 7 to 10% of map moves), the copies teach
+   the habit. The model improves very slowly (about +0.02 to +0.05 unlocks a round), so 16 or 24 rounds could never reach 5.2. The same
+   copying rule run on the labeller-trained model's own play (which agrees about 37% of the time) gives clean rows. In the states where the
+   pickaxe should be made, the rows say "make the pickaxe" 3 to 10 times more often than anything else. The "label conflict" belonged to
+   the blind model, not to the rule.
+2. **The labeller-trained model is below the labeller partly because it was trained on states it doesn't itself visit.** On its own
+   states it agrees with the labeller 19 points less than on the held-out set it was graded on.
+3. **Seed 201's rise in GW-F2 was not caused by GW-F2.** Seed 201 had been climbing at the same pace since round 1. GW-F2's rounds sit
+   slightly *below* that trend line, and the +0.62 is inside what trend plus round-to-round noise produces.
+So the own-play route has never been tested from a starting point where it could work. The one run worth doing is self-imitation started
+from the labeller-trained model (section 3). Its marks are written below; it is not started.
+
+## 0. Packet claims that the record contradicts (evidence)
+| Packet claim | Record | Status |
+|---|---|---|
+| "every attempt to push past the labeller-trained level by learning from its own play has failed" | GW-F, GW-F2 and GW-O all start from a fresh add-on on the **untrained parent** (A26 l.13-15, A27 l.9, A29 l.7). None starts from GW-L (6.50 / 7.10). | **wrong**: never attempted |
+| "a wall somewhere around 4 to 7 unlocks" | self-play sits at 3.9 to 4.6; GW-L at 6.5 / 7.1 is still rising with labels and its training accuracy was still rising (A23: "these are floors"). The phrase "4-7" is not in the record ("about 4.2", A22 l.13). | **wrong framing**: two different numbers from two processes |
+| "student's ceiling under partial sight" may be near GW-L | the labeller is a memoryless function of the same 9x7 view, stats and items (`game/oracle.py` l.1-21) and scores 8.23 | **closed**: the view-only ceiling is >= 8.23 |
+| "GW-F (A28)" | GW-F's marks are A26; A28 is the census | label slip |
+| seed 201 "ready-state share stayed low (7.7% at r24)" | 12.9 / 10.6 / 10.2 / 11.0% in r20 to r23 (A27-RESULT.json) | partial |
+| "ceiling 22", score = unlocks | cheap habit achievements count the same as chain achievements. The labeller collects no saplings (4% of maps); a student could pass 8.23 on habits alone | "past the labeller" must be read on non-habit and depth achievements |
+| Track 10 / Environment v2 / Section 5.7 / B3 | no such document on any of 109 branches or in Drive | verdicts below rest on the packet's own description |
+
+## 1. The theory, and the candidates it beat
+
+**Lead theory: self-imitation is a weak improvement operator, and how strong it is depends on whether the base policy already reads the map.**
+Event-segment self-imitation keeps the policy's own moves in the 12 moves before each achievement event. Its rows are only as good as
+the policy that played them:
+- From a map-blind policy, the rows are mostly habit and stumbling. Played moves agree with the labeller on nav / act views 7.0 to 9.9%,
+  kept rows 20 to 24% (A27 rounds 17-24, shown). The policy drifts up slowly (+0.023 / +0.047 unlocks a round, Z2, shown), and changing
+  which rare rows are kept does nothing detectable (Z2 step at round 17: -0.11 / -0.12, about 0.8 SE, shown).
+- From a map-reading policy (GW-L 64k), the same rule's rows are clean. Played agreement is 36 / 37% and kept 62 / 64%. The ready-state
+  wpick : other ratio is **3.0 / 10.6** against 0.145 / 0.335 on the self-play loops (Z8, shown).
+
+How it covers the four settled facts:
+- **F1 GW-F proved wrong:** from a map-blind start, a drift of 0.02 to 0.05 a round needs about 15 to 60 rounds to gain the 1.3 the bar asked for.
+- **F2 GW-F2 proved wrong:** the rare-keep rule changes which of the blind policy's rows are kept, not what kind of rows they are. Z2 finds
+  no step above trend.
+- **F3 census conflict:** the blind policy stands next to the table doing its habit `do`. A map-reading policy does not (Z8).
+- **F4 seed 201's rise:** seed 201 is the faster-drifting seed (slope t of about 4). Its +0.62 is inside the trend-plus-noise band
+  [-0.30, +1.05] (Z2, shown), and the gain sits mostly at chain entry (wood 52 -> 70, table 30 -> 51 maps; 60% of the non-habit gain, Z1).
+  The ready-state share does not measure that.
+
+**The candidates, with their discriminating prediction and what the tests did to them:**
+| Theory | Discriminating prediction (unlike the others) | Result |
+|---|---|---|
+| T1 ready-state label conflict, as a property of the event label rule | the same rule on any policy's play gives ready-state wpick : other <= 0.5 | **killed as a label-rule theory** by Z8 (3.0 / 10.6). Survives only as a description of the blind loops |
+| T2 rare-row dose | more consistent wpick rows produce a step up in share and P(pickaxe given table) | **weakened**: A27 tripled pickaxe-type rows (9-24 -> 37-273 a round) with no step above trend (Z2). Not tested for clean rows (GW-O) |
+| T3 state coverage (Track 10's premise) | on-policy labels beat off-policy ones because the student's own states are unlike the training states | **not the self-play wall** (those loops are on-policy and reached ready states 420 / 684 times in round 16, 527 in a typical A27 round), but **real for GW-L's gap to the labeller**: -19.5 / -19.3 points on own states (Z7, shown) |
+| T4 the trainer does not fit the rows | consistent rows on own states still leave the share under 15% | **untested** here (GW-O round 3 tests it). The logged losses are single minibatches and do not show fit either way (Z5) |
+| T5 partial-sight ceiling | best view-only play is near GW-L | **killed** (the labeller's 8.23) |
+| T6 strong form, "the wall is chain entry" | >= 40% of the self-play-to-GW-L non-habit gap sits at wood / table | **not supported** (21 to 30%; ready decision 37 to 38%, depth 15 to 21%, survival 17 to 20%; Z1 no verdict). The gap is spread over every link that needs the view read, which the lead theory expects |
+| T7 checkpoint noise behind F4 | seed 201's r16 -> r24 change is inside trend + noise | **confirmed** by its pre-registered rule (Z2) |
+
+## 2. The $0 tests that ran, and what they decided (all pre-registered; numbers shown)
+| Test | Measured on | Result | Reading by the sealed rule |
+|---|---|---|---|
+| Z1 chain links | A27 sealed per-world files; GW-L and labeller per-world files (branch `claude/project-thread-yha868`) | P(wood) / P(table given wood) / P(pickaxe given table): self-play 0.52-0.70 / 0.56-0.73 / 0.09-0.37; GW-L 0.97-1.00 / 0.99 / 0.86-0.92; labeller 1.00 / 1.00 / 0.98. Non-habit gap: entry 21-30%, ready decision 37-38%, depth 15-21%, survival 17-20% | rule 1 no verdict; rule 2 (seed 201 gain >= 60% at entry) fires exactly at 60.0%, a knife-edge (exploratory) |
+| Z2 trend and noise | A26 tables r1-16, A27 r17-24, sealed r8/16/24 | slopes +0.023 (SE 0.010) / +0.047 (SE 0.012) a round; r17-24 sit -0.05 / -0.11 below the extrapolated line; step at r17 -0.11 / -0.12 (SE 0.14 / 0.15); seed 201's +0.62 is inside [-0.30, +1.05] | **inside the band**: F4 needs no mechanism; "A27 helped seed 201" is not on record |
+| Z3 ratio vs dose vs competence | A28-census.json, 30 round pairs | every pooled abs(rho) is under 0.45; all are negative (mean reversion) | no reading |
+| Z4 nav agreement | A27 rounds | seed 201 played agreement is higher (9.1% vs 7.8%); seed 200's wood / table rose while agreement stayed flat | no clean branch |
+| Z5 training mass | A27 rounds | the pickaxe type gets 4-8% of the weight; one-move rows 11-26% | descriptive |
+| Z6 map reading of GW-F checkpoints | — | **could not run**: no GW-F / GW-F2 checkpoint exists on any branch | — |
+| **Z7** GW-L on its own states | 200 / 400 practice games, run seeds 398 / 399 | top-1 on own-visited nav / act views 43.0% / 45.5% vs held-out S 62.4% / 64.8%: **-19.5 / -19.3** points (unique views -15.1 / -15.6) | **coverage is real** for GW-L's gap (>= 15 points lower on both) |
+| **Z8** census on GW-L's play | the same 400 games per seed, A27 rule | ready-state W_w / A_w **3.0 / 10.6** (A26 rule the same); W / A rows 115 / 82 and 122 / 16; the other rows are mostly walks to trees and `do`, not habit; practice 6.92 / 7.13 | **>= 1 on both**: the conflict came from the map-blind policy; self-imitation from GW-L is not predicted to erode it; GW-LS is the decisive run |
+
+## 3. The one run still needed: GW-LS, self-imitation started from GW-L (marks fixed here; NOT started)
+Needs Muse's packet and Ben's go (Ben's 10-15 handover: no new runs without a Muse packet). It does not touch GW-O and does not run on the Mac.
+- **Question.** Can the model's own play lift a competent policy, so that the own-play route is not capped by the labeller?
+- **Arms (one change).** Arm C = GW-L 64k checkpoint, seeds 200 / 201, no further training. Its sealed per-world files (6.50 / 7.10) are the
+  paired baseline, already on record, with no new read. Arm S = the same checkpoint as the parent, a fresh rank-8 add-on, and 8 rounds of
+  the A27 loop exactly as in `game/imitate.py` (`rare_below` 100, n^(-1/2) weights with a 20:1 floor, 20,000-row buffer from empty, 3 epochs,
+  Adam 1e-3, minibatch 256, 400 practice games a round, explore 0.10). Every round samples at T = 1, because GW-L is played at T = 1.
+  Practice run seeds 398 / 399, days 4 to 35 (days 0-3 were Z8's games; run seeds must be under 400 in `play.practice_seed`).
+- **Seeds and pairing.** 200 and 201 (a screen). The final screen is paired by world and act seed with arm C on the 100 sealed maps:
+  one read, round 8, `game.score --arm model --picker sample --temp 1.0`.
+- **Non-habit unlocks** = unlocks excluding collect_sapling, place_plant, eat_plant and wake_up. GW-L sealed non-habit is 5.46 / 5.85;
+  stone is 40 / 43% of maps. The labeller is 7.80 non-habit, stone 83%.
+- **Leading indicator, round 4 (practice games, means of rounds 3 and 4).** Stop as proved wrong early if, on both seeds, the ready-state
+  W_w / A_w is <= 0.5 **or** practice non-habit unlocks fall 0.5 or more below round 1's (5.72 / 5.87, Z8). Otherwise continue.
+- **Final (round 8, sealed).**
+  - **Pass (screen):** on both seeds all three of: non-habit unlocks >= arm C + 0.3, with the paired 95% bootstrap low end > 0;
+    total >= arm C + 0.5; stone maps >= arm C + 10 points.
+  - **Proved wrong:** on both seeds non-habit unlocks <= arm C - 0.5, **or** stone maps <= arm C - 15 points on both. This means
+    self-imitation erodes a competent policy.
+  - Anything else: no verdict, with no extension without new marks.
+  - A pass is a screen: confirmation needs 6 or more paired seeds and the view-blind habit control (A26).
+- **Venue and cost.** This kind of free cloud container (4 cores, $0). Measured here: about 7.5 s a game, so about 50 min of play a round
+  per seed at 2 threads. Training was 1 to 1.7 h a round in A27. So about 2 to 3 h a round with both seeds in parallel, about 16 to 24 h for
+  8 rounds; it is resumable. Fallback: a Vast CPU box (8 to 16 cores, about $0.20 to $0.40 an hour, about $5 to $10 total), inside the
+  $50 / week cap. Not the Mac (GW-O). Not the PC GPU (not needed).
+- **What each outcome means.** Pass: the own-play route works from a competent start and is not capped by the labeller (on depth, not
+  habits). The bottleneck was the cold start, which points to "distil first, then self-improve". No verdict: the operator neither erodes
+  nor lifts. Self-imitation is then a stable but useless operator at 3M, and long-horizon credit (a progress signal) is needed.
+  Proved wrong: the operator erodes competence. The habit attractor is a property of the operator itself, and the own-play route needs a
+  different label source.
+
+## 4. GW-O: the reading written before its numbers (sealed in the pre-registration, section 4; restated, nothing changed)
+The pre-registration's T6 row is the lead theory's prediction. GW-O starts map-blind and labels only the last move of each link, so it
+teaches no walks.
+- **Round 3, share of `wpick` in ready states.**
+  - **>= 30% on both:** kills T4 (the trainer) for the ready rule and weakens T2 (pure dose). It does not confirm the lead theory, which
+    makes no strong round-3 prediction.
+  - **< 15% on both:** supports T4 / learnability (A29's own reading). It does not touch the lead theory.
+  - **15 to 30%:** open.
+- **Round 7 sealed screen.** The lead theory predicts **no pass**: wood on 80% or fewer of maps and table on 65% or fewer, on both seeds;
+  pickaxe maps no more than table maps; total under 5.2.
+  - **A pass with wood on 80% or fewer kills the lead theory.**
+  - A pass with wood on 90% or more badly weakens it.
+  - Share >= 30% with a final under 4.6 is both A29's own "walk between links" reading and the lead theory's prediction.
+  - T1 already lost its label-rule form to Z8. If GW-O passes, T1 survives only as "consistent last-move labels are enough".
+- **Noise (T7).** A spread up to about 0.6 between seeds, and up to about 0.4 between the round-3 and round-7 sealed scores, is not evidence.
+
+## 5. Kill list and open list
+**Made unnecessary (shown or decided by the tests above):**
+1. Any further keep / weight / balance / label-rule variant of event-segment self-imitation started from the untrained parent (a GW-F3).
+   A27's change had no effect detectable above trend (Z2), and the conflict belongs to the blind base policy (Z8).
+2. The label-rule swap: it stays dropped (A28's counterfactual, now also Z8).
+3. A 6-seed confirmation of GW-F2's seed-201 rise: there is nothing to confirm (Z2).
+4. Any experiment on the partial-sight ceiling: closed by the labeller (8.23 from the same view).
+5. Z6 (map-reading probe of the GW-F checkpoints): the checkpoints are gone, and played agreement (7-10%) plus Z8 already settle its premise.
+6. Waiting for the 10M learned drive before testing the own-play route: GW-LS tests it at 3M first.
+
+**Track 10 arms (judged on the packet's description; the spec is not in the repo or Drive):**
+- **On-policy labeller distillation: keep, re-aimed.** Z7 shows coverage is real for GW-L's gap to the labeller. But that gap is
+  labeller-capped and is not the self-play wall. Its marks must compare against more off-policy labels at matched updates (A23's L-3
+  confounds labels with updates). The frozen student-state bank is useful here, and only here.
+- **Privileged (full-information) teacher: not needed for this problem; change its aim.** A view-only teacher already reaches 8.23, so
+  partial sight does not bind at this level. Keep it only for depth beyond the labeller (stone -> furnace -> iron), with an audit that a
+  view-only student can imitate its labels.
+- **Verifier-guided labels: hold until GW-O reads.** GW-O is its one-step instance, and the lead theory predicts one-step verified labels
+  do not teach the walks. A multi-step verifier is close to search labelling, which stays closed absent the Section 5.7 burden and Ben's decision.
+
+**Left open on purpose:**
+- Whether own play lifts a competent policy (GW-LS).
+- Whether the GW-L-to-labeller gap is coverage (Z7: real) or undertraining (A23: still rising), and in what proportion. Z7 cannot rule out
+  that own states are simply harder views rather than unseen ones.
+- Whether the add-on learns the ready rule from about 100 consistent rows (GW-O round 3).
+- Whether a map-blind start would ever reach 5.2 by drift (not worth testing).
+- Anything past stone, transfer to other games, the 10M model.
+
+## Single next action, and the first result that would prove this framing wrong
+- **Next action:** with Muse's packet and Ben's go, start GW-LS (section 3) on the free cloud CPU. Its marks are fixed above, and the code
+  path is `game/imitate.py` with the GW-L checkpoint as the parent.
+- **First result that would prove the framing wrong:** GW-LS's round-4 leading indicator. If self-imitation started from GW-L drives the
+  ready-state ratio back to 0.5 or below, or loses 0.5 or more practice non-habit unlocks on both seeds, then the habit attractor belongs
+  to the operator, not to the cold start, and the own-play route is blocked for a reason this theory does not cover. (On GW-O's side, a
+  round-7 pass with wood on 80% of maps or fewer would also kill the lead theory.)
+
+Artifacts: `game/results/wall-solve/`: the Z1 to Z5 outputs of both independent implementations, the Z7 / Z8 result and reproduction JSONs, and the Z7 / Z8 code as it ran (its paths point at the session scratchpad). The 400-game play files are not committed (3 MB a seed); they can be rebuilt from run seeds 398 / 399.
+
+## GW-LS start record (Oct 17; written before any round-3 or round-4 number exists; no mark changed)
+- **Authorized:** Ben's Oct 17 instruction, relayed by the coordinator ("every blocker gets this goal treatment; GW-LS is AUTHORIZED to start under
+  its already-sealed marks"). Started at about 14:49 UTC Oct 17 on this cloud container's free CPU ($0), both seeds in parallel, 2 threads each.
+- **Code (DRAFT pending coordinator code review):** `game/imitate.py` gains `--day-offset` (default 0, so every earlier run is unchanged) and allows
+  run seeds 398 / 399, but only with day offset >= 4 (except under --smoke, which never plays real practice days). New files: `game/gwls.sh` (launcher), `game/gwls_report.py` (per-round report and the
+  round-4 indicator) and `game/gwls_final.py` (the single sealed read at round 8 and the final marks). An independent audit found no blocking issue.
+  `game/tests/test_imitate.py`: 15 tests pass, including the real smoke and resume tests.
+- **Reading of the round-4 sentence, fixed now.** The sentence is "on both seeds, ratio <= 0.5 or non-habit drop >= 0.5". It is read per seed:
+  a seed trips if either condition holds, and the stop fires only if both seeds trip. "Means of rounds 3 and 4" for the ratio = the mean of
+  the two per-round W_w / A_w values (A27 rule). The other reading ("ratio on both seeds" or "drop on both seeds") is also computed, and any
+  disagreement is reported.
+- **Results are provisional until the coordinator reviews the code.** If the review changes the code in a way that matters, the affected rounds re-run.
+
+## Coordinator code review of 28f6fcc42 (Oct 17): fixes applied (read side only; training untouched; no mark changed)
+- Verdict received: FIXES NEEDED, no round re-runs. Rounds stand because `imitate.py` and `gwls.sh` were judged correct.
+- **Blocking 1:** `gwls_final.py` recomputes the round-4 indicator from the rounds 3 and 4 play files and refuses the sealed read on STOP.
+- **Blocking 2:** it checks that arm C is the file on record: sha256 of the committed `score-sample.json`, picker sample, T 1.0, the n64000
+  checkpoint, means 6.50 / 7.10, non-habit 5.46 / 5.85, stone 40 / 43.
+- **Blocking 3:** `gwls_report.py` counts non-habit per game from `g['first']`, exactly, and rounds only for display. The ratio is likewise
+  recomputed unrounded from the census rows; it agrees with census_ready's rounded value to 0.002.
+- **Blocking 4:** the census cache key is a sha256 of the play files.
+- **Advisories done:** offset tests; the round-8 completeness gate; repo root from `__file__`; copy of results to `game/results/gwls/`;
+  `gwls.sh` checks its PIDs; `gwls_persist.sh`; `gwls_checks.py` (V1 / V2).
+- An independent verifier confirmed all four blocking fixes, with no new problem.
+- **V1 PASS on both seeds** (round 1):
+  - s200: non-habit 5.8825 against 5.72; first seed 4,980,400; days {4..7}; played agreement 36.38% against 36.51%; total 7.082 against 6.915.
+  - s201: non-habit 5.8975 against 5.87; first seed 4,990,400; days {4..7}; played agreement 37.32% against 37.27%; total 7.160 against 7.125.
+- **V2 PASS:** 28f6fcc42 was committed 14:56:17 UTC. iter-3.json was written 18,476 s (s200) and 19,651 s (s201) later.
+
+## GW-LS round-4 leading indicator (read 22:12 UTC Oct 17, by the sealed rule; practice games only)
+- s200: mean of rounds 3-4: ratio W_w / A_w 3.04 (stop line 0.5); non-habit 5.7475 (stop line 5.22, i.e. 5.72 - 0.5).
+- s201: ratio 7.02 (stop line 0.5); non-habit 6.1463 (stop line 5.37).
+- **Branch: CONTINUE** (no seed trips; the alternative reading gives the same branch). Rounds 5 to 8 run.
+- Reported, not marked (practice, rounds 1 -> 4):
+  - s200 stone games 49.8 -> 35.8%; played agreement 36.4 -> 27.7%; non-habit 5.88 -> 5.67.
+  - s201 stone games 47.5 -> 43.5%; played agreement 37.3 -> 30.0%; non-habit 5.90 -> 5.99.
+  - The final mark needs stone >= +10 points on the sealed screen on both seeds; practice stone is moving the other way on s200.
+
+## GW-LS erosion diagnosis (rounds 1-7, practice games and fixed held-out views only; no sealed map; written before the round-8 sealed read)
+Two independent implementations agreed to rounding. Full tables: `game/results/gwls/diag/erosion-diagnosis.json`.
+- **Explore noise ruled out (shown):** random explore moves are 3-6% of kept rows (<= 10% of weight), and the share falls each round.
+  The act-stream replay has 0 mismatches over about 1.1 M steps.
+- **Navigation erodes, acting does not (shown):**
+  - Kept rows on nav views agree with the labeller 43 -> 29% (s200) and 48 -> 28% (s201), rounds 1 -> 7. On act views they stay 87-95%.
+  - Played nav agreement 36 -> 18% on both seeds; played act agreement rises (53 -> 69%, 62 -> 82%).
+- **Fixed held-out states (shown):**
+  - S top-1 at r0 / r3 / r7: s200 62.4 / 56.1 / 50.1%; s201 64.8 / 62.1 / 55.0%.
+  - Entropy is about flat (s200 0.90 -> 0.89, s201 0.80 -> 0.79) while max-probability rises (0.65 -> 0.72, 0.69 -> 0.76).
+  - The argmax differs from r0 on 43% / 39% of S views by r7.
+  - The policy is being sharpened toward its own choices, not made noisier.
+- **Repeat-event loops dominate (shown):** 76-83% of kept rows (54-72% of weight) come from segments ending in a repeat event (more wood,
+  more drink). Their nav / act agreement falls 59-67% -> 47-50%.
+- **Reading (suggested; to be finalised with the sealed result):**
+  - **Coverage is binding, not start competence.** The copied labels are the student's own navigation on its own states, where it is
+    about 19 points worse than on held-out states (Z7).
+  - Copying them sharpens that weaker navigation and erodes held-out map reading too.
+  - Event-segment self-imitation cannot make own-state navigation better than the student already plays it.
+- **Proposed next single change (marks to be written after the sealed read; needs authorization):** on-policy labeller relabelling of
+  GW-L's own visited states, against a matched-update control with more off-policy labels. Primary mark: own-state nav accuracy within
+  5 points of held-out. A re-run of GW-LS from that student would follow with its own marks.
+
+## Built-in code review of gate fixes round 2 (commit dec68ba1e): verdict BLOCKING; the sealed read stays HELD (coordinator ruling, round 2)
+- **Fixes (a) and (b) are in and independently verified:** 30 tests pass, plus 2 mutation checks. The live `--dry-run` says "all preconditions
+  hold; round-4 branch CONTINUE".
+- **The re-review found one blocking issue (verified in code):** `gwls_report.ratio_problems` does not refuse a round-3/4 row whose
+  unrounded `ratio_w_exact` is None while the census has a `ratio_w`. The indicator then drops that seed's ratio test, which pushes toward
+  CONTINUE. Same class as fix (a).
+  - **Inert for the live data:** all four live round-3/4 rows have an unrounded ratio, with `ratio_ok` True.
+  - **But a gate hole on the one-shot read**, so by the ruling the read is held.
+- **Not blocking:**
+  - `gate()` returns early on ratio refusals, so other refusals (STOP, rounds incomplete) are not also listed. It still refuses.
+  - Refusal conditions written as bare `assert` in `round_row` would be stripped under `python -O`. The read is never run with `-O`.
+  - The result-shape checks after scoring can still raise a traceback. The result file is already on disk; `--analyze-only` recovers.
+  - iter-file name parsing is loose (backups, `iter-03.json`).
+- **Cleanups:**
+  - Dry-run arm C printout duplicates `arm_c_problems`.
+  - `ratio_problems` re-derives the indicator's "uses" rule.
+  - `READ_ERRORS` includes programming-error types.
+  - Dead try/except; `BadGzipFile` is redundant with `OSError`.
+- **Proposed fix (needs a coordinator GO), about 3 lines:** in `ratio_problems`, refuse a round-3/4 row whenever the census has a
+  `ratio_w` and `ratio_w_exact` is None (or the reverse), i.e. any mismatch in whether a ratio exists. Ideally also take the "uses" rule
+  from the indicator's own output.
+
+## Built-in review of the complete read path (28f6fcc42..b4c3ec1c9, after the Q109 fix): verdict BLOCKING in principle; sealed read stays HELD
+- **The Q109 fix is in (b4c3ec1c9).** A round-3/4 row is refused when the census and the unrounded ratio disagree on whether a ratio
+  exists. Verified independently: 32 tests pass, and the live `--dry-run` says CONTINUE / all preconditions hold.
+- **The review was asked about the whole read path since 28f6fcc42 (Q109), so it found older issues too.** Blocking by the stated
+  definition ("could let the read run when it should be refused, or apply the marks wrongly"):
+  - **B1 (gwls_final.py:330):** the one-shot lock is check-then-act and not exclusive (no O_EXCL). Two invocations started together could
+    both play.
+  - **B2 (gwls_final.py:323, 347):** `--analyze-only` applies the sealed marks without checking the lock, the round-4 gate or round-8
+    completeness. Its identity check on the result file is weak: basename only, no `arm == 'model'`.
+  - **B3 (gwls_final.py:160):** `state.pt k == 8` does not prove training stopped. A run with the default `iterations=24` would pass while
+    still training.
+- **All three are inert for this read as it would be executed** (checked 07:xx UTC Oct 18):
+  - one operator and one invocation;
+  - the play path, not `--analyze-only`;
+  - launched with `--iterations 8`; no iter-9.json; 0 training processes;
+  - no `python -O`;
+  - no result file exists yet.
+- **Not blocking:**
+  - refusal and pairing guards written as bare `assert` (stripped by `-O`; never used);
+  - `gwls_checks` exits 0 on a FAIL;
+  - `gwls_persist.sh` resolves a relative `--root` differently for the checks;
+  - the ratio bound is loose only at A_w around 0.01-0.05 (live round-3/4 A_w is 15.7-40.3);
+  - duplicated A27 pipeline and HABIT / RUN_SEED constants.
+
+## Built-in review of the complete read path after Q111 (28f6fcc42..3d6b1e181): verdict BLOCKING; sealed read stays HELD
+- **B1-B3 (Q111) are in:** 3d6b1e181. Verified independently: 65 tests pass; 4 real concurrent processes give exactly one lock holder; the
+  live dry-run is clean and leaves no lock.
+- **New findings that are blocking by the stated definition.** None is reachable in the planned execution; Q111 did not waive inert holes.
+  - **N1 (gwls_final.py:290):** the one-shot guard checks only `<root>/s<seed>/score-sample.json`, not the persisted record in
+    `game/results/gwls/`. A rebuilt root would allow a second sealed read that overwrites the first. Inert now: no read has happened.
+  - **N2 (:528):** the play path removes the locks before the identity check on the fresh result. If identity then fails and someone
+    deletes the bad file, a replay is possible.
+  - **N3 (:343):** the result's episode cap (and gate) is not compared with arm C's (cap 1000). A changed `constants.json` would pair
+    episodes of different lengths and mis-score. Inert now: `episode_cap` is 1000.
+  - **N4 (:338):** the identity check is metadata only (no checkpoint hash or mtime order), so `--analyze-only` could mark a stale or
+    edited result.
+  - **N5 (:183):** the training probe matches only the literal `game.imitate`. A launch as `python game/imitate.py` would not be seen.
+    Inert now: no training process exists.
+- **Not blocking:**
+  - bare asserts under `-O` (never used);
+  - `gwls_persist.sh` resolves a relative root differently for the checks;
+  - `gwls_checks` uses a bare `json.load` instead of `read_iter`;
+  - `read_state` does a full `torch.load` just for four fields;
+  - altitude: the gate infers "training stopped" from symptoms instead of a done-marker from the trainer (`imitate.py`, outside the read path).
+
+## Built-in review of the complete read path after Q113 (28f6fcc42..99f02cec7): verdict BLOCKING; sealed read stays HELD
+- **N1-N5 (Q113) are in:** 99f02cec7. Verified independently: 90 tests pass; real child processes for N5; the live dry-run is clean and
+  leaves nothing behind.
+- **New findings that are blocking by the stated definition** (none reachable in the planned execution):
+  - **P1 (gwls_final.py:674):** the start record and locks live only in the scratch root until both scorers exit 0. If an attempt
+    crashes and the scratch is then lost, a fresh root could replay. Fix: persist `read-record.json` to the persist dir before scoring.
+  - **P2 (:666):** a non-default `--persist-dir` skips the check of the default `game/results/gwls/`.
+  - **P3 (:342):** `explore` (and any other scorer constant) is not checked against arm C's setting. Only the cap is.
+  - **P4 (:362, :535):** the existing-result and lock checks use `os.path.exists`, which fails open on an OSError.
+  - **P5 (:207):** the /proc probe treats "no visible process" (hidepid, another namespace) as "stopped".
+  - **P6 (:719):** `--analyze-only` overwrites persisted results without a previous-read check.
+- **Not blocking:**
+  - bare asserts under `-O` (never used);
+  - `gwls_persist.sh` resolves a relative root differently for the checks;
+  - a duplicate `sha256_file`;
+  - `gwls_checks` reads round 1 twice.
+- **This is the fourth review round in a row to find new in-principle holes in the growing read path.** Rounds so far: 1f20e8e4,
+  639c21965, dec68ba1e, b4c3ec1c9 / 3d6b1e181, 99f02cec7.
+
+## Q115 re-review of the complete read path (28f6fcc42..8680fb335): 1 LIVE, 9 INERT; sealed read stays HELD
+- **P1-P6 are in:** 8680fb335. Verified independently: 112 tests pass. Preconditions recorded before the review: `game/GWLS-READ-PRECONDITIONS.md`, d94e00eee.
+- **LIVE (gwls_final.py:839):** the read takes about 13-14 min (arm C's own scoring took 806 s / 768 s; here two scorers run in parallel
+  on 4 cores). That is longer than the 10-min foreground command limit of this session.
+  - A foreground launch would be killed after the start record is written. The read would be spent with no result.
+  - The preconditions fixed the command but not the launch mode, so on the record as written this is reachable.
+- **INERT:** 9 findings, listed with evidence in `game/GWLS-POST-READ-HARDENING.md`.
+
+## GW-LS SEALED RESULT (the one read; fired 08:09:09Z, done 08:22:58Z Oct 18; Q118; marks unchanged): **PROVED WRONG**
+Read code 8680fb3, launched detached per `game/GWLS-READ-PRECONDITIONS.md` (0e4103b); every precondition was re-checked at fire time.
+100 sealed maps, sample T = 1, cap 1000, paired by world with GW-L 64k (arm C) using `game.analyze.boot_diff` (2000 draws).
+An independent recompute from the per-world files matches.
+
+| seed | total (GW-LS vs GW-L) | non-habit, 95% CI | stone maps |
+|---|---|---|---|
+| 200 | 6.68 vs 6.50: **+0.18** [-0.31, +0.70] | 4.48 vs 5.46: **-0.98** [-1.46, -0.50] | 17% vs 40%: **-23 points** |
+| 201 | 6.59 vs 7.10: **-0.51** [-1.15, +0.11] | 4.78 vs 5.85: **-1.07** [-1.59, -0.55] | 28% vs 43%: **-15 points** |
+
+- **Against the sealed marks (section 3):**
+  - Pass needed non-habit >= +0.3 (CI low > 0), total >= +0.5 and stone >= +10 on both seeds: **not met** on any count.
+  - Proved wrong is non-habit <= -0.5 on both seeds (-0.98, -1.07), **or** stone <= -15 on both (-23, -15). **Both conditions hold.**
+- **Plain reading:** self-imitation by event segments, started from a competent policy (GW-L), *erodes* it. It loses about 1 non-habit
+  unlock a game and 15-23 points of stone. Seed 200's small total gain is habit unlocks only. The own-play route as built here is
+  not just slow from a blind start; it destroys competence it is given.
+- **What it settles:**
+  - The sealed result confirms the practice-round diagnosis (erosion diagnosis section above): copying the student's own navigation on
+    its own states sharpens that weaker navigation and erodes map reading.
+  - Start competence was not the missing piece; coverage of good labels on the student's own states is.
+- **Next (already written; goal: "propose the next single change with fresh marks"):** GW-LD (`game/GWLD-MARKS-PROPOSAL.md`, frozen
+  under Q101), with its run card (`game/GWLD-RUN-CARD.md`). It waits for the Track 10 labeller audit (B3 bar). No GW-LS2 is authorized.
+- **Post-read hardening:** `game/GWLS-POST-READ-HARDENING.md` (9 inert findings plus earlier deferrals), now unblocked.

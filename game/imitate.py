@@ -5,7 +5,8 @@ achievement counters and the model's own play (game.oracle is used only to repor
 
   python -m game.imitate run --parent CKPT --seed S --run-seed R --t0 T0 --out DIR [--iterations 24] [--threads 2] [--smoke]
 
-Practice worlds only (run seeds 394 and 395); never a sealed world. Resumable: games are saved per chunk of 100 worlds, the loop state after every
+Practice worlds only (run seeds 394 to 397; GW-LS: 398 / 399, which `run` accepts only with --day-offset >= 4, a rule --smoke skips along with the
+run-seed list); never a sealed world. Resumable: games are saved per chunk of 100 worlds, the loop state after every
 iteration; a restarted run continues from them.
 """
 import argparse
@@ -32,9 +33,11 @@ SNAPSHOTS = (3, 8, 16, 20, 24)                 # iterations whose merged checkpo
 ACT_TAG = 9
 
 
-def day_of(k, c):
-    """Practice day of chunk c (0..3) of iteration k (1-based): 4(k-1) + c, always < 100 for k <= 24."""
-    return CHUNKS * (k - 1) + c
+# DRAFT pending coordinator review (GW-LS): day_offset, run seeds 398 / 399 and --day-offset are the only changes for GW-LS.
+def day_of(k, c, day_offset=0):
+    """Practice day of chunk c (0..3) of iteration k (1-based): 4(k-1) + c + day_offset, always < 100 for k <= 24 (offset 0).
+    GW-LS (day_offset 4) plays days 4..35; days 0-3 of run seeds 398 / 399 were the Z8 games."""
+    return CHUNKS * (k - 1) + c + day_offset
 
 
 # ---------- pure parts (tested) ----------
@@ -177,7 +180,7 @@ def _games_path(out, k, c):
     return os.path.join(out, f'play-{k}-{c}.json.gz')
 
 
-def play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs=64):
+def play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs=64, day_offset=0):
     """The iteration's games, chunk by chunk (each chunk saved when played, so a restart loses at most one chunk). -> list of games."""
     games = []
     pol = play.move_policy(m, 'sample', bs=bs, temp=temp)
@@ -187,7 +190,7 @@ def play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, b
             with gzip.open(path, 'rt') as f:
                 games += json.load(f)
             continue
-        day = day_of(k, c)
+        day = day_of(k, c, day_offset)
         seeds = [play.practice_seed(run_seed, day, i) for i in range(per_chunk)]
         acts = [[ACT_TAG, run_seed, day, i] for i in range(per_chunk)]
         chunk = play_games(pol, seeds, acts, explore, cap)
@@ -271,10 +274,12 @@ def iteration_stats(k, temp, games, segs, kept, thr, rows_new, n_train, n_buffer
                 ready=ready_stats(games), seconds_play=round(secs_play, 1), seconds_train=round(secs_train, 1))
 
 
-def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare_below=0, label_rule='segments', epochs=EPOCHS, workers=2):
+def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare_below=0, label_rule='segments', epochs=EPOCHS, workers=2,
+        day_offset=0):
     from custom_io.models import load_model
     from domain import mode as dm
-    assert run_seed in (394, 395, 396, 397) or smoke, run_seed
+    assert run_seed in (394, 395, 396, 397, 398, 399) or smoke, run_seed       # 398 / 399: GW-LS only (WALL-SOLVE-RESULT section 3)
+    assert run_seed not in (398, 399) or smoke or day_offset >= 4, 'run seeds 398 / 399: days 0-3 were the Z8 games'
     assert label_rule in ('segments', 'lookahead'), label_rule
     chunks, per_chunk, cap = (1, 3, 40) if smoke else (CHUNKS, GAMES_PER_CHUNK, play.load_constants()[0]['episode_cap'])
     explore = play.load_constants()[0]['explore']
@@ -293,7 +298,7 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare
     spath = os.path.join(out, 'state.pt')
     if os.path.exists(spath):
         st = torch.load(spath, map_location='cpu', weights_only=False)
-        assert (st['parent'], st['seed'], st['run_seed'], st['t0']) == (parent, seed, run_seed, t0), 'state.pt is from another run'
+        assert (st['parent'], st['seed'], st['run_seed'], st['t0'], st.get('day_offset', 0)) == (parent, seed, run_seed, t0, day_offset), 'state.pt is from another run'
         addon.restore(st['addon'])
         opt.load_state_dict(st['opt'])
         gen.set_state(st['gen'])
@@ -302,7 +307,7 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare
     for k in range(done_k + 1, iterations + 1):
         temp = t0 if k == 1 else 1.0
         t1 = time.time()
-        games = play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs)
+        games = play_iteration(m, k, run_seed, temp, out, chunks, per_chunk, cap, explore, bs, day_offset)
         t2 = time.time()
         la_stats = None
         if label_rule == 'lookahead':
@@ -334,7 +339,7 @@ def run(parent, seed, run_seed, t0, out, iterations=24, smoke=False, bs=64, rare
             m.eval()
             dm.save_ckpt(ck, m, os.path.join(out, f'checkpoint-iter{k}.pt'), addon)
         tmp = spath + '.tmp'
-        torch.save(dict(parent=parent, seed=seed, run_seed=run_seed, t0=t0, k=k, addon=addon.snapshot(), opt=opt.state_dict(), gen=gen.get_state(),
+        torch.save(dict(parent=parent, seed=seed, run_seed=run_seed, t0=t0, day_offset=day_offset, k=k, addon=addon.snapshot(), opt=opt.state_dict(), gen=gen.get_state(),
                         rng=rng.getstate(), buffer=buffer, history=history), tmp)
         os.replace(tmp, spath)
     return history
@@ -356,9 +361,11 @@ def main(argv=None):
     r.add_argument('--epochs', type=int, default=EPOCHS)
     r.add_argument('--workers', type=int, default=2, help='processes for the lookahead replay-and-fork')
     r.add_argument('--keep-rare-below', type=int, default=0, help='A27: types with fewer segments than this keep every segment of at most 12 moves (0 = the A26 rule)')
+    r.add_argument('--day-offset', type=int, default=0, help='GW-LS: chunk c of iteration k plays practice day 4(k-1)+c+offset (0 = every earlier run)')
     a = ap.parse_args(argv)
     torch.set_num_threads(a.threads)
-    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke, rare_below=a.keep_rare_below, label_rule=a.label_rule, epochs=a.epochs, workers=a.workers)
+    run(a.parent, a.seed, a.run_seed, a.t0, a.out, a.iterations, a.smoke, rare_below=a.keep_rare_below, label_rule=a.label_rule, epochs=a.epochs, workers=a.workers,
+        day_offset=a.day_offset)
 
 
 if __name__ == '__main__':
