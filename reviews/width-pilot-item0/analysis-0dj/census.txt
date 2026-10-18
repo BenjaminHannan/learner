@@ -1,0 +1,92 @@
+CHAIN-LENGTH HISTOGRAM (number of calculator calls in the tool working), counts and % per cell
+cell                            n     1     2     3     4     5     6     7   mean
+TRAIN F4-two (joined)        6000   0.0   0.0  29.2  27.4  34.0   6.9   2.5   4.26
+TRAIN F0-near (single)       6000  33.7  33.3  33.1   0.0   0.0   0.0   0.0   1.99
+EVAL HO                       420   0.0   0.0  30.7  33.1  30.5   4.0   1.7   4.13
+EVAL HPO                      420   0.0   0.0  41.2  25.5  14.0  19.3   0.0   4.11
+EVAL HP                       420   0.0   0.0  42.4  25.5  11.2  21.0   0.0   4.11
+EVAL S                        420   0.0   0.0  26.0  35.0  30.0   7.1   1.9   4.24
+EVAL S5                       420   0.0   0.0  28.8  29.3  31.9   7.6   2.4   4.25
+PROBE F4-two (eval)           420   0.0   0.0  29.3  35.5  26.0   8.6   0.7   4.16
+PROBE F0-near (eval)          420  32.9  33.8  33.3   0.0   0.0   0.0   0.0   2.00
+
+(counts)
+TRAIN F4-two (joined)      3:1753 4:1645 5:2037 6:412 7:153
+TRAIN F0-near (single)     1:2020 2:1996 3:1984
+EVAL HO                    3:129 4:139 5:128 6:17 7:7
+EVAL HPO                   3:173 4:107 5:59 6:81
+EVAL HP                    3:178 4:107 5:47 6:88
+EVAL S                     3:109 4:147 5:126 6:30 7:8
+EVAL S5                    3:121 4:123 5:134 6:32 7:10
+PROBE F4-two (eval)        3:123 4:149 5:109 6:36 7:3
+PROBE F0-near (eval)       1:138 2:142 3:140
+
+LAYOUT (template) MIX, from the row's layout field where present, else parsed
+TRAIN F4-two (joined)      K+J 1200 (20.0%), K-J 1200 (20.0%), K*J 1200 (20.0%), (K)+(J) 1200 (20.0%), (K)-(J) 1200 (20.0%)
+TRAIN F0-near (single)     single 6000 (100.0%)
+EVAL HO                    (K)*(J) 420 (100.0%)
+EVAL HPO                   (K)*(J) 420 (100.0%)
+EVAL HP                    K+J 420 (100.0%)
+EVAL S                     K+J 420 (100.0%)
+EVAL S5                    K+J 84 (20.0%), K-J 84 (20.0%), K*J 84 (20.0%), (K)+(J) 84 (20.0%), (K)-(J) 84 (20.0%)
+PROBE F4-two (eval)        parsed:join 420 (100.0%)
+PROBE F0-near (eval)       single 420 (100.0%)
+
+FIRST-OPERATION MIX by step count (op of the first calculator call; % within step count)
+-- TRAIN F4-two (joined)
+   3 calls (n=1753): div 40%, add 19%, mul 18%, max 13%, min 10%
+   4 calls (n=1645): mul 63%, max 10%, add 10%, div 9%, min 8%
+   5 calls (n=2037): max 57%, min 18%, add 13%, mul 12%
+   6 calls (n=412): min 32%, max 29%, mul 20%, add 19%
+   7 calls (n=153): min 32%, max 30%, mul 22%, add 16%
+-- TRAIN F0-near (single)
+   1 calls (n=2020): div 42%, add 15%, min 15%, max 14%, mul 13%
+   2 calls (n=1996): mul 58%, max 15%, add 13%, min 13%
+   3 calls (n=1984): max 57%, min 15%, mul 14%, add 14%
+-- EVAL HO
+   3 calls (n=129): div 33%, add 22%, mul 21%, max 14%, min 11%
+   4 calls (n=139): mul 57%, min 14%, div 13%, max 10%, add 6%
+   5 calls (n=128): max 65%, add 13%, min 12%, mul 9%
+   6 calls (n=17): min 35%, add 29%, max 29%, mul 6%
+   7 calls (n=7): min 57%, add 29%, mul 14%
+-- EVAL HPO
+   3 calls (n=173): mul 25%, min 24%, div 22%, max 21%, add 9%
+   4 calls (n=107): mul 47%, add 27%, max 15%, min 11%
+   5 calls (n=59): div 37%, add 24%, max 22%, min 12%, mul 5%
+   6 calls (n=81): max 68%, mul 30%, add 2%
+-- EVAL HP
+   3 calls (n=178): mul 28%, max 22%, div 21%, min 20%, add 10%
+   4 calls (n=107): mul 38%, add 31%, min 16%, max 15%
+   5 calls (n=47): div 47%, add 17%, min 17%, max 13%, mul 6%
+   6 calls (n=88): max 67%, mul 31%, add 2%
+-- EVAL S
+   3 calls (n=109): div 33%, add 21%, min 17%, max 16%, mul 14%
+   4 calls (n=147): mul 53%, div 16%, max 16%, add 7%, min 7%
+   5 calls (n=126): max 59%, min 16%, mul 13%, add 12%
+   6 calls (n=30): min 30%, mul 30%, add 27%, max 13%
+   7 calls (n=8): add 38%, max 25%, min 25%, mul 12%
+-- EVAL S5
+   3 calls (n=121): div 40%, add 20%, mul 18%, max 11%, min 11%
+   4 calls (n=123): mul 63%, add 11%, max 9%, min 9%, div 9%
+   5 calls (n=134): max 60%, min 19%, add 12%, mul 10%
+   6 calls (n=32): max 34%, min 25%, mul 22%, add 19%
+   7 calls (n=10): max 50%, min 30%, mul 10%, add 10%
+-- PROBE F4-two (eval)
+   3 calls (n=123): div 33%, mul 21%, max 16%, min 16%, add 14%
+   4 calls (n=149): mul 48%, add 18%, min 15%, max 11%, div 8%
+   5 calls (n=109): max 61%, add 11%, min 10%, mul 10%, div 7%
+   6 calls (n=36): max 47%, mul 31%, add 11%, min 11%
+   7 calls (n=3): min 100%
+-- PROBE F0-near (eval)
+   1 calls (n=138): div 43%, add 17%, max 17%, mul 13%, min 10%
+   2 calls (n=142): mul 61%, min 16%, max 12%, add 11%
+   3 calls (n=140): max 57%, min 16%, add 15%, mul 11%
+
+LAYOUT x STEP COUNT (counts), joined cells
+-- TRAIN F4-two (joined) {('(K)+(J)', 3): 338, ('(K)+(J)', 4): 407, ('(K)+(J)', 5): 384, ('(K)+(J)', 6): 55, ('(K)+(J)', 7): 16, ('(K)-(J)', 3): 290, ('(K)-(J)', 4): 300, ('(K)-(J)', 5): 456, ('(K)-(J)', 6): 116, ('(K)-(J)', 7): 38, ('K*J', 3): 432, ('K*J', 4): 317, ('K*J', 5): 362, ('K*J', 6): 66, ('K*J', 7): 23, ('K+J', 3): 351, ('K+J', 4): 387, ('K+J', 5): 370, ('K+J', 6): 62, ('K+J', 7): 30, ('K-J', 3): 342, ('K-J', 4): 234, ('K-J', 5): 465, ('K-J', 6): 113, ('K-J', 7): 46}
+-- EVAL HO {('(K)*(J)', 3): 129, ('(K)*(J)', 4): 139, ('(K)*(J)', 5): 128, ('(K)*(J)', 6): 17, ('(K)*(J)', 7): 7}
+-- EVAL S5 {('(K)+(J)', 3): 26, ('(K)+(J)', 4): 25, ('(K)+(J)', 5): 25, ('(K)+(J)', 6): 8, ('(K)-(J)', 3): 23, ('(K)-(J)', 4): 24, ('(K)-(J)', 5): 26, ('(K)-(J)', 6): 8, ('(K)-(J)', 7): 3, ('K*J', 3): 32, ('K*J', 4): 25, ('K*J', 5): 20, ('K*J', 6): 5, ('K*J', 7): 2, ('K+J', 3): 20, ('K+J', 4): 32, ('K+J', 5): 27, ('K+J', 6): 4, ('K+J', 7): 1, ('K-J', 3): 20, ('K-J', 4): 17, ('K-J', 5): 36, ('K-J', 6): 7, ('K-J', 7): 4}
+-- EVAL S {('K+J', 3): 109, ('K+J', 4): 147, ('K+J', 5): 126, ('K+J', 6): 30, ('K+J', 7): 8}
+-- EVAL HP {('K+J', 3): 178, ('K+J', 4): 107, ('K+J', 5): 47, ('K+J', 6): 88}
+-- EVAL HPO {('(K)*(J)', 3): 173, ('(K)*(J)', 4): 107, ('(K)*(J)', 5): 59, ('(K)*(J)', 6): 81}
+-- PROBE F4-two (eval) {('-', 3): 123, ('-', 4): 149, ('-', 5): 109, ('-', 6): 36, ('-', 7): 3}

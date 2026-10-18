@@ -41,7 +41,29 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
   - 131 skeletons; 131 of 140 ordered (kind, partner) × layout combinations; about 21.3 passes per joined prompt at 4,000 × 64.
 - **Parent stage (shown):** the manifest is the seed-1 200k skills build, hash-checked against `FULL-BUILD-MANIFEST-200k-seed1.json`. That is the T1SDR recipe's own data, identical at every size.
 - **Under reading (a′) the far items are 100% of the join stage, not ~5% of one mixed run.** The playbook's "historical share" field is therefore recorded as **not applicable**: the parent stage contains no far rows, and the join stage contains only far rows.
-- **Step-count census** (chain-length histogram, template mix and first-operation mix by step count, training vs eval): **open**, being computed on CPU now.
+- **Step-count census (shown, measured on CPU; chain length = number of calculator calls in the tool's working; script `width-pilot-item0/census.py`):**
+
+| Cell | n | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Mean |
+|---|---|---|---|---|---|---|---|---|---|
+| Train F4-two (joined) | 6000 | 0 | 0 | 29.2% | 27.4% | 34.0% | 6.9% | 2.5% | 4.26 |
+| Train F0-near (single) | 6000 | 33.7% | 33.3% | 33.1% | 0 | 0 | 0 | 0 | 1.99 |
+| **Eval HO** | 420 | 0 | 0 | 30.7% | 33.1% | 30.5% | 4.0% | 1.7% | 4.13 |
+| Eval HPO | 420 | 0 | 0 | 41.2% | 25.5% | 14.0% | 19.3% | 0 | 4.11 |
+| Eval HP | 420 | 0 | 0 | 42.4% | 25.5% | 11.2% | 21.0% | 0 | 4.11 |
+| Eval S | 420 | 0 | 0 | 26.0% | 35.0% | 30.0% | 7.1% | 1.9% | 4.24 |
+| Eval S5 | 420 | 0 | 0 | 28.8% | 29.3% | 31.9% | 7.6% | 2.4% | 4.25 |
+
+  - **HO's depth mix matches the training joins** (HO counts 3:129, 4:139, 5:128, 6:17, 7:7). HP and HPO lean toward 6 calls (19–21%).
+  - **Template mix:** training F4-two is 20% of each of its five layouts; **HO and HPO are 100% `(K)*(J)`**, a layout absent from training (the intended far-join novelty). HP and S are 100% `K+J`; S5 matches training.
+  - **First operation by step count** is set almost wholly by chain length, and HO mirrors training (3 calls: div 40% train / 33% HO; 4 calls: mul 63% / 57%; 5 calls: max 57% / 65%; 6 calls mixed). Full tables in the scratch `census.txt`, reproducible from the script.
+  - So HO's novelty is the **layout**, not chain length or first-op mix. No step-count reweighting is needed.
+
+- **Per-piece and join accuracy on L13 HO (shown):**
+  - In context: K rounds fully right 34.5%, J 32.9%, both 15.2%; **join call right given both pieces right: 52/64 = 81.2%**; whole answer 14.0% (59/420). L14: K 31.2%, J 28.6%, both 11.2%, join given both 32/47 = 68.1%; whole 41/420.
+  - Pieces asked alone on the same grid (join-gap audit): L13 HO K 62.4%, J 64.3%, both (P) 38.8%; HPO P 46.2%. **Pooled HO + HPO P = 42.5% (L13), 37.5% (L14).**
+  - By pair type on L13 HO: range+range 40/130, range+cell 19/271, cell+cell 0/19.
+  - **The playbook's "40–42% / 65–67%" bands could not be reproduced without their definition.** The nearest measured quantities are pooled P (42.5%) and single-piece accuracy (62–65%). The coordinator is asked for the bands' definition before they are used as a check.
+  - Reading: the HO deficit sits mostly **in reading the pieces in the new layout** (in-context piece accuracy ~33–35% against ~63% alone), not in the join call (81% when both pieces are right).
 
 ## (e) Masking and target format per family (shown, `learn_probe.make_rows` → `mode.make_row`; `m.loss`)
 
@@ -91,7 +113,31 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
 
 ## (j) Shortcut identification
 
-**Open**, being analysed now on L13 and L14 per-item outputs, from the repo checkpoints. YES requires one frozen heuristic meeting every TEST-11 condition (validity effect ≥ 25 points; depth effect < 10 points within the invalid row; invalid 1-step at about chance); otherwise NO.
+**Answer: NO (shown).** YES required one frozen heuristic meeting every TEST-11 condition (validity effect ≥ 25 points; depth effect < 10 points within the invalid row; invalid shallowest stratum at about chance, ≤ 5%). None does.
+
+**Verification first.** The per-item outputs were regenerated on CPU from the repo checkpoints (L13 sha b10f7917…, L14 318ac36c…). L13 HO 59/420 and L14 41/420 match `scores.jsonl` cell by cell, and the L13 per-item file (sha e62bfd41…) is byte-identical to the record's.
+
+**Heuristics frozen before scoring** (`width-pilot-item0/frozen_heuristics.py`, sha256 `8b2965917bd480fe533b2fce5bdc36a16a661d3922dd14443fb4ada8e1c32b41`): H1 J-only, H2 plus-join, H3 shared-cells. "1-step" = the shallowest HO stratum (3 calls); HO has no literal 1-call items.
+
+| Model / heuristic | Validity (valid vs invalid) | Effect | Invalid by calls (3 / 4 / 5 / 6+) | Depth effect | Invalid 3-call | Failures captured |
+|---|---|---|---|---|---|---|
+| L13 H1 | 1/14 vs 58/406 | −7.1 | 35.8 / 1.5 / 9.8 / 0.0 | 35.8 | 35.8% | 17/361 |
+| L13 H2 | valid n = 0 | n/a | 34.9 / 1.4 / 9.4 / 0.0 | 34.9 | 34.9% | 8/361 |
+| **L13 H3** | 28/70 vs 31/350 | **+31.1** | 22.0 / 1.6 / 9.0 / 0.0 | **22.0** | **22.0%** (CI 14.4–32.1) | 11/361 |
+| L14 H1 | 1/14 vs 40/406 | −2.7 | 24.4 / 0.0 / 8.1 / 0.0 | 24.4 | 24.4% | 21/379 |
+| L14 H2 | valid n = 0 | n/a | 24.0 / 0.0 / 7.8 / 0.0 | 24.0 | 24.0% | 8/379 |
+| L14 H3 | 20/70 vs 21/350 | +22.6 | 14.6 / 0.0 / 7.4 / 0.0 | 14.6 | 14.6% | 6/379 |
+
+- Only L13 H3 passes validity, and it fails depth (22.0 > 10) and the shallow-invalid condition (22% > 5%). L14 H3 fails all three.
+- **H3's validity effect is item easiness, not a shortcut.** It sits entirely in the 3-call stratum (valid 27/47 vs invalid 18/82 on L13), and only 3% of failures equal H3's answer.
+- About ten further candidate rules were screened (exploration scripts, not frozen); none captures more than 5.8% of failures.
+- **What the failures are:** mostly first-piece operand reading. On L13, 271/361 failures go wrong first in K; 294/361 have the right op with wrong operands, and row ±1 is the commonest error. Cell-arithmetic pieces score 0/60 (L13) and 0/66 (L14).
+- **TEST-11 as worded cannot be satisfied on HO**, because depth is confounded with piece type: L13 accuracy by (nK, nJ) is (1,1) 34.9%, (2,1) 2.2%, (1,2) 0%, (1,3) 21.4%. A depth effect under 10 points would need depth-matched, purpose-built items (suggested). The literal 1-step stratum exists only in F0-near, where the model scores 67.4% (L13) / 60.9% (L14), not chance.
+
+**Consequences (per the playbook's NO branch):**
+- factor (2), the shortcut share, is recorded **UNMEASURED**, not zero;
+- Item 8 is reduced to **Phase A only**;
+- confound **C4 stays OUT** of the pilot's readout.
 
 ## (k) Trainer lock and batching feasibility at 2× (shown in principle; Item 1 measures)
 
@@ -104,9 +150,13 @@ It is a different model, task, guard regime and data pool, and its pool hash dif
   - So "fits the 4090 line" holds trivially for memory. **But the join stage's cost is set by the rented box's CPU, not its GPU.** The box's core count goes on every run card.
 - **If Item 1 shows the parent stage won't fit at accum 1, the sweep stops** for a hardware decision (playbook (k)). It does not unfreeze batching.
 
-## Code change still needed (small, a draft for review)
+## Code change (small; drafted, awaiting coordinator review)
 
-`DIARY_DATA` in `learn_probe.py` is hard-coded to another session's `/tmp` scratch path (`…/sk200k`). The fix is a `--diary-data` flag (default unchanged) pointing at the seed-1 200k build. With that flag, `--parent <run's parent>` and `--diary-compare none`, the join stage is parent-agnostic.
+`DIARY_DATA` in `learn_probe.py` is hard-coded to another session's `/tmp` scratch path (`…/sk200k`). The fix is a `--diary-data` flag (default unchanged) pointing at the seed-1 200k build, drafted in commit 6d8c8d3 with 3 tests (recorded in the run's output as `guard_diary_data`). With that flag, `--parent <run's parent>` and `--diary-compare none`, the join stage is parent-agnostic.
+
+## Status
+
+All of (a)–(k) are recorded against the pass condition: (c) formally excluded, (d) run, (f) answered, (j) answered NO. **Item 0 is ready for the coordinator's freeze.** Two questions ride with it: the definition of the playbook's 40–42% / 65–67% bands, and the axis gate 2(b) decision (base depth 2).
 
 ## Correction to the playbook's cost basis (shown; for Item 1)
 
