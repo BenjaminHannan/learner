@@ -15,7 +15,8 @@ lines of at most 450 characters, because the box's log is the only channel back 
    JSON object with `"go": true`, `seeds` listing this seed, and exactly this box's `script_sha256`, `code_sha256`
    (every module, `code_files`), `train_cache_sha256`, `validation_cache_sha256`, `N` and `flop_budget`, plus a
    rung `max_tokens`/`max_visits` on the ladder and no larger than the one this box measured as fitting. Anything
-   else is logged as `go_refused` and waited on; `"go": false` with this script's hash and seed stops the box. The
+   else is logged as `go_refused` and waited on. `"go": false` stops the box unless it names another script hash
+   or other seeds (a stale stop from an earlier attempt, waited on). The
    seal addendum is filed in the repo before the go file.
 4. parent P_s: LINE from scratch, seed s, through the gold phase (the first 5% of F; F = 3.15e16), as `train_d`
    trains (calibration head of 4 batches, validation hook on 256 DEV visits every 1,000 steps).
@@ -231,6 +232,17 @@ def branch_state(parent: dict, trainer: MiniTrainer) -> dict:
     return {"state": mapped, "param_groups": state["param_groups"]}
 
 
+def to_cpu(tree: Any) -> Any:
+    """A deep copy of a state tree (dicts, lists, tuples) with every tensor on the CPU."""
+    if torch.is_tensor(tree):
+        return tree.detach().cpu().clone()
+    if isinstance(tree, dict):
+        return {k: to_cpu(v) for k, v in tree.items()}
+    if isinstance(tree, (list, tuple)):
+        return type(tree)(to_cpu(v) for v in tree)
+    return copy.deepcopy(tree)
+
+
 def restore(trainer: MiniTrainer, parent: dict) -> None:
     trainer.optimizer.load_state_dict(branch_state(parent, trainer))
     trainer.load_state_dict(copy.deepcopy(parent["trainer"]))
@@ -285,13 +297,12 @@ def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: T
             tag = tag.cpu()
             entry[0] += int(torch.tensor(hit)[tag].sum())
             entry[1] += int(tag.sum())
-    order = [qid for qid in cache.question_ids if qid in correct]
-    if order != list(cache.question_ids):             # the bits must align with the slice masks (cache order)
-        raise RuntimeError(f"dev_eval scored {len(order)} of {len(cache.question_ids)} validation questions")
-    return {"questions": len(order), "accuracy": sum(correct[q] for q in order) / max(len(order), 1),
+    order = list(cache.question_ids)                   # the slice masks' order; an unscored question reads False
+    return {"questions": len(order), "scored": len(correct),
+            "aligned": len(correct) == len(order),     # every question scored: the bits align with the masks
+            "accuracy": sum(correct.get(q, False) for q in order) / max(len(order), 1),
             "slices": {k: {"n": v[1], "accuracy": v[0] / v[1] if v[1] else None} for k, v in sorted(slices.items())},
-            "ids_sha256": hashlib.sha256("\n".join(order).encode()).hexdigest(),
-            "correct_bits": bits([correct[q] for q in order])}
+            "correct_bits": bits([correct.get(q, False) for q in order])}
 
 
 def economy(model: PremonitionMini, batches: list, device) -> dict:
@@ -409,8 +420,12 @@ def measure_arm(args: argparse.Namespace) -> None:
     trainer = trainer_class(model, train_config(), device, flop_budget=F_BUDGET, seed=args.seed)
     groups = heaviest(cache, args.max_tokens, args.max_visits, args.seed)
     batches = [pdata.collate(cache, g) for g in groups]
-    # no FLOP calibration here: _train_step does not use the fit, and the real run calibrates (fp32) on ordinary
-    # head batches before it resets the peak, which Stage 0 ran at full size
+    # The run's FLOP calibration, as it runs (fp32, the stream's first HEAD batches at this rung): it must not run out
+    # of GPU memory (an OOM here is an OOM of the run), but the run resets the guard's peak after it, so it is
+    # reported apart from the guarded peak.
+    stream = pdata.batches(cache, args.max_tokens, seed=args.seed, epochs=None, max_visits=args.max_visits)
+    trainer.calibrate([next(stream) for _ in range(HEAD)])
+    calibration_gb = torch.cuda.max_memory_reserved() / 1e9 if device.type == "cuda" else 0.0
     if device.type == "cuda":
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
@@ -434,7 +449,8 @@ def measure_arm(args: argparse.Namespace) -> None:
         "arm": args.arm, "max_tokens": args.max_tokens, "max_visits": args.max_visits, "steps": steps,
         "batches": [{"visits": len(g), "padded": int(b.tokens.numel()), "questions": int(b.q_visit.shape[0])}
                     for g, b in zip(groups, batches)],
-        "oom": False, "peak_reserved_gb": peak, "peak_allocated_gb": torch.cuda.max_memory_allocated() / 1e9
+        "oom": False, "calibration_reserved_gb": calibration_gb, "peak_reserved_gb": peak,
+        "peak_allocated_gb": torch.cuda.max_memory_allocated() / 1e9
         if device.type == "cuda" else 0.0, "tokens_per_card": report["tokens_per_card"]["mean"],
         "line_aligned": report["line_aligned"]}), allow_nan=False), flush=True)
 
@@ -510,9 +526,9 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict
             go = {"go": None, "malformed": True}
         if go is not None and go != reported:
             reported = go
-            if go.get("go") is False and go.get("script_sha256") == expected.get("script_sha256") \
-                    and isinstance(go.get("seeds"), list) and args.seed in go["seeds"]:
-                raise SystemExit("the go file says stop")    # a stop for this script and seed (a stale one is not)
+            if go.get("go") is False and go.get("script_sha256", expected.get("script_sha256")) == \
+                    expected.get("script_sha256") and args.seed in go.get("seeds", [args.seed]):
+                raise SystemExit("the go file says stop")    # a plain stop, or one naming this script and seed
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
                 wrong.append("seeds")
@@ -556,8 +572,6 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
     consumed = trainer.step                            # batches trained, in stream order (a discarded one is not)
     emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed,
                     "fit": {"a": fit.a, "b": fit.b, "worst": fit.worst}})
-    to_cpu = lambda tree: torch.utils._pytree.tree_map(                               # noqa: E731
-        lambda x: x.detach().cpu().clone() if torch.is_tensor(x) else copy.deepcopy(x), tree)
     parent = {"model": to_cpu(parent_model.state_dict()),        # on the CPU: the arms' GPU holds only their own run
               "optimizer": to_cpu(trainer.optimizer.state_dict()),
               "trainer": copy.deepcopy(trainer.state_dict()), "rng": ckpt.rng_state(),
@@ -584,8 +598,8 @@ def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> Non
     del probe, branch_batches
 
     # the arms
-    parent_model.load_state_dict(parent["model"], strict=True)
     parent_model.cpu()                                    # only read by the SPAN load below
+    parent_model.load_state_dict(parent["model"], strict=True)
     for arm in ("LINE", "SPAN"):
         if device.type == "cuda":
             torch.cuda.empty_cache()                          # free the previous arm (the peak is reset below)

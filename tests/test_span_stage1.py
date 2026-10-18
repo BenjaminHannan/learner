@@ -231,10 +231,11 @@ class GoTest(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as stop:
                 s1.wait_for_go(self.args(path), expected, fit)
             self.assertIn("deadline", str(stop.exception))
-            path.write_text(json.dumps({"go": False, "seeds": [1], "script_sha256": "s"}))
-            with self.assertRaises(SystemExit) as stop:
-                s1.wait_for_go(self.args(path), expected, fit)
-            self.assertIn("says stop", str(stop.exception))
+            for stop_file in ({"go": False, "seeds": [1], "script_sha256": "s"}, {"go": False}):   # plain stop too
+                path.write_text(json.dumps(stop_file))
+                with self.assertRaises(SystemExit) as stop:
+                    s1.wait_for_go(self.args(path), expected, fit)
+                self.assertIn("says stop", str(stop.exception))
 
 
 class PreflightTest(unittest.TestCase):
@@ -399,8 +400,11 @@ class SmokeTest(unittest.TestCase):
         script = str(Path(s1.__file__).resolve())
         with tempfile.TemporaryDirectory() as tmp:
             common = ["--seed", "0", "--visits", "tiny", "--size", "tiny", "--workers", "2"]
-            data = subprocess.run([sys.executable, script, "data", *common], capture_output=True, text=True)
-            record = dict(s1.decode(data.stdout.splitlines()))["data"]
+            data = subprocess.run([sys.executable, script, "data", *common], capture_output=True, text=True,
+                                  timeout=900)
+            found = dict(s1.decode(data.stdout.splitlines()))
+            self.assertIn("data", found, f"exit {data.returncode}: {data.stderr[-2000:]}")
+            record = found["data"]
             go = {"go": True, "seeds": [0], "script_sha256": s1.script_sha256(), "code_sha256": s1.code_sha256(),
                   "train_cache_sha256": record["train_cache"]["sha256"],
                   "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
@@ -408,21 +412,26 @@ class SmokeTest(unittest.TestCase):
             path = Path(tmp) / "go.json"
             path.write_text(json.dumps(go))
             run = subprocess.run([sys.executable, script, "box", *common, "--flop-budget", "3e12", "--go-file",
-                                  str(path), "--go-poll-seconds", "1"], capture_output=True, text=True)
+                                  str(path), "--go-poll-seconds", "1", "--go-wait-hours", "0.02"],
+                                 capture_output=True, text=True, timeout=1500)
             self.assertIn("S1-DONE ok", run.stdout, run.stdout[-2000:] + run.stderr[-2000:])
             records = s1.decode(run.stdout.splitlines())
             kinds = [k for k, _ in records]
             for kind in ("slices", "preflight", "go", "parent", "branch", "arm_ckpt", "arm_dev", "arm_economy"):
                 self.assertIn(kind, kinds)
-            got = dict(records)
-            masks = got["slices"]["masks"]
-            dev = got["arm_dev"]["dev"]
-            correct = s1.unbits(dev["correct_bits"], dev["questions"])
-            far = s1.unbits(masks["far"], got["slices"]["questions"])
-            self.assertEqual(dev["questions"], got["slices"]["questions"])
-            self.assertEqual(dev["ids_sha256"], got["slices"]["ids_sha256"])
-            hits = sum(c for c, f in zip(correct, far) if f)
-            self.assertAlmostEqual(dev["slices"]["far"]["accuracy"] or 0.0, hits / max(sum(far), 1), places=9)
+            slices = dict(records)["slices"]
+            far = s1.unbits(slices["masks"]["far"], slices["questions"])
+            devs = [r["dev"] for k, r in records if k in ("parent_dev", "arm_dev")]
+            self.assertEqual(len(devs), 3)                                 # P_s, LINE and SPAN
+            for dev in devs:
+                self.assertTrue(dev["aligned"])
+                self.assertEqual(dev["questions"], slices["questions"])
+                correct = s1.unbits(dev["correct_bits"], dev["questions"])
+                hits = sum(c for c, f in zip(correct, far) if f)
+                self.assertAlmostEqual(dev["slices"]["far"]["accuracy"] or 0.0, hits / max(sum(far), 1), places=9)
+            run_dir = Path(s1.ROOT) / dict(records)["parent_ckpt"]["path"]
+            import shutil
+            shutil.rmtree(run_dir.parents[1], ignore_errors=True)            # artifacts/span-stage1/<run id>
 
 
 if __name__ == "__main__":
