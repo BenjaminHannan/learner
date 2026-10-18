@@ -103,3 +103,11 @@ the tag goes in the readout).
 * Seeds 0-2 only. The family rule (≥ 2 of 3) is the house's; it is weak against seed luck, which is why
   M1 also needs the pooled paired test.
 * Changed facts (conflicting bindings across desks) are reported, not gated.
+* (10-18) **What "matched wall-clock" includes.** `train_seconds` counts everything in the training loop:
+  host-side batch collation as well as GPU steps. A faster-stepping arm (D1) therefore spends a larger
+  share of T on collation. That is what equal wall-clock means here, and steps are reported beside it.
+* (10-18) **Tokenizer.** Both arms use the v2 contender tokenizer `premonition-tok-v2-fallback.json`
+  (7,068 ids, digest 2c9d06aed330), the only one `premonition.identity` admits for primary scoring.
+  It was fitted on the fallback pattern text, while the village now renders the real pattern bank, so
+  `build_tokenizer` logs a warning. Both arms see the same tokens, so the comparison is fair. Absolute
+  accuracy may sit below what a matched tokenizer would give.

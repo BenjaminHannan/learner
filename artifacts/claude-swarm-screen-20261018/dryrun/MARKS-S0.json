@@ -1,0 +1,1015 @@
+{
+ "card": "S0",
+ "directory": "/home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun",
+ "note": "DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "min_items": 100,
+ "seconds_tol": 0.02,
+ "T": 30,
+ "verdict": "INSUFFICIENT",
+ "verdict_line": "VERDICT: INSUFFICIENT: far_deep below 100 items in 6 of 6 eval files (smallest 62, largest 62)",
+ "void_reasons": [],
+ "insufficient_reasons": [
+  "far_deep below 100 items in 6 of 6 eval files (smallest 62, largest 62)"
+ ],
+ "marks": [
+  {
+   "mark": "M1",
+   "title": "join (promote): far_deep, S0 - D1",
+   "status": "fail",
+   "computed": true,
+   "bar": "S0 - D1 >= +3.0 pts pooled, p < 0.01, positive on >= 2 of 3 seeds",
+   "value": "+0.00 pts pooled (n 186), p 1, per seed +0.00, +0.00, +0.00",
+   "detail": {
+    "cell": "far_deep",
+    "complete": true,
+    "n_pooled": 186,
+    "delta_points": 0.0,
+    "p": 1.0,
+    "seeds_positive": 0,
+    "seeds_negative": 0,
+    "per_seed": [
+     {
+      "seed": 0,
+      "n": 62,
+      "x_hits": 0,
+      "y_hits": 0,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta": 0.0,
+      "delta_points": 0.0
+     },
+     {
+      "seed": 1,
+      "n": 62,
+      "x_hits": 0,
+      "y_hits": 0,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta": 0.0,
+      "delta_points": 0.0
+     },
+     {
+      "seed": 2,
+      "n": 62,
+      "x_hits": 0,
+      "y_hits": 0,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta": 0.0,
+      "delta_points": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M2",
+   "title": "DEV slip (guard): near / overall, S0 vs D1",
+   "status": "pass",
+   "computed": true,
+   "bar": "S0 vs D1: near slips on < 2 seeds AND overall slips on < 2 seeds (slip = below by more than 3.0 pts)",
+   "value": "near slips on 0/3 seeds, overall slips on 0/3 seeds",
+   "detail": {
+    "near": [
+     {
+      "seed": 0,
+      "n": 105,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     },
+     {
+      "seed": 1,
+      "n": 105,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     },
+     {
+      "seed": 2,
+      "n": 105,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     }
+    ],
+    "overall": [
+     {
+      "seed": 0,
+      "n": 188,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     },
+     {
+      "seed": 1,
+      "n": 188,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     },
+     {
+      "seed": 2,
+      "n": 188,
+      "x_acc": 0.0,
+      "y_acc": 0.0,
+      "delta_points": 0.0,
+      "slip": false
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M3",
+   "title": "desk usage (guard), S0",
+   "status": "fail",
+   "computed": true,
+   "bar": "every desk ask_rate >= 0.05 and min fetch_count >= 0.1 x max, on >= 2 of 3 seeds",
+   "value": "ok on 0/3 seeds",
+   "detail": {
+    "seeds": [
+     {
+      "seed": 0,
+      "ask_rate": [
+       1.0,
+       0.0,
+       0.0,
+       0.011737089411753445
+      ],
+      "fetch_count": [
+       12.0,
+       0.0,
+       0.0,
+       0.18779343058805512
+      ],
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "ask_rate": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "ask_rate": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "mark": "M4",
+   "title": "diversity (guard), S0",
+   "status": "pass",
+   "computed": true,
+   "bar": "info; collapsed (register_cos > 0.95 and fetch_overlap > 0.8) on >= 2 of 3 seeds -> 'COLLAPSED: the desks are copies'",
+   "value": "collapsed on 0/3 seeds; s0: overlap 0.005 cos 0.380 ask [1.0, 0.0, 0.0, 0.01] fetch [12.0, 0.0, 0.0, 0.19] silent 3 | s1: overlap nan cos 0.984 ask [0.0, 0.0, 0.0, 0.0] fetch [0.0, 0.0, 0.0, 0.0] silent 4 | s2: overlap nan cos 0.988 ask [0.0, 0.0, 0.0, 0.0] fetch [0.0, 0.0, 0.0, 0.0] silent 4",
+   "detail": {
+    "seeds": [
+     {
+      "seed": 0,
+      "fetch_overlap": 0.00490223787759951,
+      "register_cos": 0.37953392972408884,
+      "ask_rate": [
+       1.0,
+       0.0,
+       0.0,
+       0.011737089411753445
+      ],
+      "fetch_count": [
+       12.0,
+       0.0,
+       0.0,
+       0.18779343058805512
+      ],
+      "silent_desks": 3,
+      "collapsed": false
+     },
+     {
+      "seed": 1,
+      "fetch_overlap": NaN,
+      "register_cos": 0.9837722820295415,
+      "ask_rate": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "silent_desks": 4,
+      "collapsed": false
+     },
+     {
+      "seed": 2,
+      "fetch_overlap": NaN,
+      "register_cos": 0.9875054040425261,
+      "ask_rate": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "fetch_count": [
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "silent_desks": 4,
+      "collapsed": false
+     }
+    ],
+    "collapsed": false
+   }
+  },
+  {
+   "mark": "M5",
+   "title": "matching (validity)",
+   "status": "pass",
+   "computed": true,
+   "bar": "every train completed, train_seconds within T +- 2% (T from c0.json), loop_mismatches = 0, final loss finite, one data tag and one tokenizer sha256",
+   "value": "valid",
+   "detail": {
+    "runs": [
+     {
+      "run": "train-D1-s0",
+      "status": "completed",
+      "train_seconds": 30.201841423000133,
+      "steps": 103,
+      "final_loss": 11.03853988647461,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-D1-s1",
+      "status": "completed",
+      "train_seconds": 30.131357535000006,
+      "steps": 107,
+      "final_loss": 10.914260864257812,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-D1-s2",
+      "status": "completed",
+      "train_seconds": 30.288864861000093,
+      "steps": 109,
+      "final_loss": 10.598808288574219,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s0",
+      "status": "completed",
+      "train_seconds": 30.190426994000063,
+      "steps": 92,
+      "final_loss": 11.802663803100586,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s1",
+      "status": "completed",
+      "train_seconds": 30.31685081600017,
+      "steps": 98,
+      "final_loss": 12.08975601196289,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     },
+     {
+      "run": "train-S0-s2",
+      "status": "completed",
+      "train_seconds": 30.249232933999792,
+      "steps": 91,
+      "final_loss": 11.425862312316895,
+      "loop_mismatches": 0,
+      "seconds_budget": 30.0,
+      "stop": "seconds budget"
+     }
+    ],
+    "T": 30.0,
+    "tags": [
+     "tiny-seed0-53292765806d"
+    ],
+    "tokenizer_sha256": [
+     "2c9d06aed330932b"
+    ],
+    "note": "card M5 (10-18): loop_mismatches = 0 replaces gold_missing, which train_d does not log"
+   }
+  },
+  {
+   "mark": "M6",
+   "title": "cells",
+   "status": "fail",
+   "computed": true,
+   "bar": "far_deep has >= 100 items in every eval file (else INSUFFICIENT)",
+   "value": "far_deep n: min 62, max 62 over 6 files",
+   "detail": {
+    "far_deep_items": {
+     "eval-D1-s0.json": 62,
+     "eval-D1-s1.json": 62,
+     "eval-D1-s2.json": 62,
+     "eval-S0-s0.json": 62,
+     "eval-S0-s1.json": 62,
+     "eval-S0-s2.json": 62
+    }
+   }
+  },
+  {
+   "mark": "KILL",
+   "title": "kill condition: pooled <= 0 or S0 < D1 on >= 2 of 3 seeds",
+   "status": "fail",
+   "computed": true,
+   "bar": "pooled S0 - D1 <= 0 OR negative on >= 2 of 3 seeds (a KILL is shown as fail)",
+   "value": "pooled +0.00 pts, negative on 0/3 seeds",
+   "detail": {
+    "kill": true
+   }
+  }
+ ],
+ "marks_computed": {
+  "M1": true,
+  "M2": true,
+  "M3": true,
+  "M4": true,
+  "M5": true,
+  "M6": true,
+  "KILL": true
+ },
+ "information": {
+  "steps": {
+   "D1": {
+    "steps": [
+     103,
+     107,
+     109
+    ],
+    "parameters": [
+     304388
+    ],
+    "mean_steps": 106.33333333333333,
+    "steps_over_D1": 1.0
+   },
+   "S0": {
+    "steps": [
+     92,
+     98,
+     91
+    ],
+    "parameters": [
+     304516
+    ],
+    "mean_steps": 93.66666666666667,
+    "steps_over_D1": 0.8808777429467085
+   }
+  },
+  "cells": {
+   "D1": {
+    "overall": {
+     "hits": 0,
+     "n": 564,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      }
+     ]
+    },
+    "near": {
+     "hits": 0,
+     "n": 315,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far": {
+     "hits": 0,
+     "n": 219,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far_deep": {
+     "hits": 0,
+     "n": 186,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      }
+     ]
+    },
+    "multi_hop": {
+     "hits": 0,
+     "n": 366,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_1": {
+     "hits": 0,
+     "n": 168,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_2": {
+     "hits": 0,
+     "n": 159,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_3": {
+     "hits": 0,
+     "n": 126,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_4": {
+     "hits": 0,
+     "n": 69,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_5": {
+     "hits": 0,
+     "n": 12,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_6": {
+     "hits": 0,
+     "n": 0,
+     "acc": null,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      }
+     ]
+    },
+    "changed": {
+     "hits": 0,
+     "n": 204,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      }
+     ]
+    }
+   },
+   "S0": {
+    "overall": {
+     "hits": 0,
+     "n": 564,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 188,
+       "acc": 0.0
+      }
+     ]
+    },
+    "near": {
+     "hits": 0,
+     "n": 315,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 105,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far": {
+     "hits": 0,
+     "n": 219,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 73,
+       "acc": 0.0
+      }
+     ]
+    },
+    "far_deep": {
+     "hits": 0,
+     "n": 186,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 62,
+       "acc": 0.0
+      }
+     ]
+    },
+    "multi_hop": {
+     "hits": 0,
+     "n": 366,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 122,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_1": {
+     "hits": 0,
+     "n": 168,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 56,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_2": {
+     "hits": 0,
+     "n": 159,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 53,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_3": {
+     "hits": 0,
+     "n": 126,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 42,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_4": {
+     "hits": 0,
+     "n": 69,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 23,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_5": {
+     "hits": 0,
+     "n": 12,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 4,
+       "acc": 0.0
+      }
+     ]
+    },
+    "depth_6": {
+     "hits": 0,
+     "n": 0,
+     "acc": null,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 0,
+       "acc": null
+      }
+     ]
+    },
+    "changed": {
+     "hits": 0,
+     "n": 204,
+     "acc": 0.0,
+     "per_seed": [
+      {
+       "seed": 0,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      },
+      {
+       "seed": 1,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      },
+      {
+       "seed": 2,
+       "hits": 0,
+       "n": 68,
+       "acc": 0.0
+      }
+     ]
+    }
+   }
+  },
+  "kill_condition": true
+ }
+}
