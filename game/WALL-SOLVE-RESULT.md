@@ -306,3 +306,11 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
   - `gwls_checks` reads round 1 twice.
 - **This is the fourth review round in a row to find new in-principle holes in the growing read path.** Rounds so far: 1f20e8e4,
   639c21965, dec68ba1e, b4c3ec1c9 / 3d6b1e181, 99f02cec7.
+
+## Q115 re-review of the complete read path (28f6fcc42..8680fb335): 1 LIVE, 9 INERT; sealed read stays HELD
+- **P1-P6 are in:** 8680fb335. Verified independently: 112 tests pass. Preconditions recorded before the review: `game/GWLS-READ-PRECONDITIONS.md`, d94e00eee.
+- **LIVE (gwls_final.py:839):** the read takes about 13-14 min (arm C's own scoring took 806 s / 768 s; here two scorers run in parallel
+  on 4 cores). That is longer than the 10-min foreground command limit of this session.
+  - A foreground launch would be killed after the start record is written. The read would be spent with no result.
+  - The preconditions fixed the command but not the launch mode, so on the record as written this is reachable.
+- **INERT:** 9 findings, listed with evidence in `game/GWLS-POST-READ-HARDENING.md`.
