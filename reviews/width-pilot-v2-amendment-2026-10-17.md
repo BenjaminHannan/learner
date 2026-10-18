@@ -118,7 +118,7 @@ How the totals are built:
 | **Cost** | Parents about $0.65–1.34 (estimate), plus the original Item 1 1.72 GPU-h, $0.74. **Total about $1.4–2.1**, with a hard stop at $3.00. |
 | **Buys** | Measured parent seconds per update at both widths (replacing every parent estimate above); measured join seconds per update and eval-pass cost (replacing the spec's ESTIMATE factors, including the ladder-thinning trigger at 0.15 GPU-h); C2/C8 delivery verified. A re-issued §7 with measured numbers follows before any Tranche A booking. |
 | **Displaces** | About 3–4% of one week's $50 Vast cap. No other track loses a slot. |
-| **Prerequisites before it books** | Code review of the two C8 drafts. Two code changes to `learn_probe.py`: a parent list and sha map in place of the hard-coded s200/s201/s204 assumptions, and the diary built from the run's own parent. Also the d384 vs exact-2× shape ruling. |
+| **Prerequisites before it books** | (Updated 10-18.) Code review of the two C8 drafts (custom_io, `learn_probe.py` 5ce1889) and of the `--diary-data` flag (6d8c8d3). That flag is the only `learn_probe.py` change needed: the diary is already built from the run's own parent, and `--parent` / `--diary-compare none` already make the join stage parent-agnostic (run card (k)). The shape ruling is done (Q53, d384 / 6 heads). Item 0 freeze and the axis-gate 2(b) decision are the remaining gates. |
 
 ## E. Status of the ruling's five conditions
 
