@@ -7,6 +7,7 @@ import gzip
 import io
 import json
 import os
+import pathlib
 import subprocess
 import sys
 import tempfile
@@ -553,6 +554,367 @@ class GateReadSide(unittest.TestCase):
                 gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])              # returns (no SystemExit) when nothing refuses
             self.assertIn('all preconditions hold', buf.getvalue())
             self.assertIn('round-4 branch: CONTINUE', buf.getvalue())
+
+
+REAL_PROBE = gwls_final.training_processes                  # the fixture below patches the module attribute
+
+
+class SealedFixture(unittest.TestCase):
+    """A synthetic, complete round-8 root + arm C (all in temp dirs; the sealed worlds are never played, game.score is a mock)."""
+
+    def setUp(self):
+        import hashlib
+        self.rootd, self.armcd = tempfile.TemporaryDirectory(), tempfile.TemporaryDirectory()
+        self.addCleanup(self.rootd.cleanup)
+        self.addCleanup(self.armcd.cleanup)
+        self.root, self.armc = self.rootd.name, self.armcd.name
+        write_gate_root(self.root, 6, 6)
+        sha = {}
+        self.P = {s: gwls_final.paths(self.root, self.armc, s) for s in gwls_final.SEEDS}
+        for s, P in self.P.items():
+            for name in ('iter8', 'ckpt'):
+                open(P[name], 'w').close()
+            torch.save(dict(k=8, run_seed=gwls_final.RUN_SEED[s], day_offset=4, parent=f'/x/glprobe/s{s}/n64000/checkpoint.pt'), P['state'])
+            self.set_times(s)
+            os.makedirs(os.path.dirname(P['base']))
+            raw = json.dumps(gwls_final.synthetic_arm_c(s)).encode()
+            with open(P['base'], 'wb') as f:
+                f.write(raw)
+            sha[s] = hashlib.sha256(raw).hexdigest()
+        stack = contextlib.ExitStack()
+        self.addCleanup(stack.close)
+        stack.enter_context(mock.patch.dict(gwls_final.ARM_C_SHA256, sha))
+        stack.enter_context(census_stub())
+        self.probe = stack.enter_context(mock.patch.object(gwls_final, 'training_processes', return_value=[]))     # no live game.imitate
+        self.persist_dir = os.path.join(self.root, 'persist')
+
+    def set_times(self, s, state=1000, iter8=900, ckpt=900):
+        P = self.P[s]
+        for name, t in (('state', state), ('iter8', iter8), ('ckpt', ckpt)):
+            os.utime(P[name], (t, t))
+
+    def result(self, s, **over):
+        return {**gwls_final.synthetic_arm_c(s), 'ckpt': self.P[s]['ckpt'], **over}
+
+    def write_result(self, s, m=None):
+        with open(self.P[s]['out'], 'w') as f:
+            json.dump(m if m is not None else self.result(s), f)
+
+    def write_all_results(self):
+        for s in gwls_final.SEEDS:
+            self.write_result(s)
+
+    def analyze(self):
+        """-> (stdout, SystemExit message or None)"""
+        buf = io.StringIO()
+        msg = None
+        with contextlib.redirect_stdout(buf), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')):
+            try:
+                gwls_final.main(['--analyze-only', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+            except SystemExit as e:
+                msg = str(e)
+        return buf.getvalue(), msg
+
+    def no_final(self):
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'final.json')))
+
+
+class TrainingStopped(SealedFixture):
+    """B3: state.pt k == 8 is not proof that training stopped."""
+
+    def problems(self, s=200):
+        return gwls_final.round8_problems(s, self.P[s])
+
+    def test_clean_case_passes(self):
+        self.assertEqual(self.problems(), [])
+
+    def test_iter_9_json_refuses(self):
+        open(os.path.join(self.P[200]['dir'], 'iter-9.json'), 'w').close()
+        bad = self.problems()
+        self.assertTrue(any('iter-9.json' in x and 'has not stopped' in x for x in bad), bad)
+
+    def test_play_9_file_refuses(self):
+        open(os.path.join(self.P[200]['dir'], 'play-9-0.json.gz'), 'w').close()
+        self.assertTrue(any('play-9-0.json.gz' in x for x in self.problems()))
+
+    def test_checkpoint_of_a_later_round_refuses(self):
+        open(os.path.join(self.P[201]['dir'], 'checkpoint-iter12.pt'), 'w').close()
+        self.assertTrue(any('checkpoint-iter12.pt' in x for x in self.problems(201)))
+        self.assertEqual(self.problems(200), [])                                             # per seed folder
+
+    def test_earlier_round_files_are_fine(self):
+        for n in ('iter-7.json', 'play-8-3.json.gz', 'checkpoint-iter3.pt'):
+            open(os.path.join(self.P[200]['dir'], n), 'w').close()
+        self.assertEqual(self.problems(), [])
+
+    def test_live_process_refuses(self):
+        self.probe.return_value = [4242]
+        bad = self.problems()
+        self.assertTrue(any('live game.imitate process' in x and '4242' in x for x in bad), bad)
+
+    def test_probe_unavailable_refuses(self):
+        self.probe.side_effect = RuntimeError('neither /proc nor pgrep')
+        bad = self.problems()
+        self.assertTrue(any('probe cannot be evaluated' in x for x in bad), bad)
+
+    def test_state_older_than_iter8_or_checkpoint_refuses(self):
+        self.set_times(200, state=800, iter8=900, ckpt=700)
+        self.assertTrue(any('older than' in x for x in self.problems()))
+        self.set_times(200, state=800, iter8=700, ckpt=900)
+        self.assertTrue(any('older than' in x for x in self.problems()))
+        self.set_times(200, state=900, iter8=900, ckpt=900)                                  # equal is fine (state.pt is written last)
+        self.assertEqual(self.problems(), [])
+
+    def test_unlistable_folder_refuses(self):
+        with mock.patch.object(gwls_final.os, 'listdir', side_effect=PermissionError('no')):
+            self.assertTrue(any('cannot be evaluated' in x for x in self.problems()))
+
+    def test_real_probe_finds_a_game_imitate_process_for_this_folder_only(self):
+        d = self.P[200]['dir']
+        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)', 'game.imitate', 'train', '--out', d])
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        import time
+        for _ in range(100):                                                                 # until the child has exec'd
+            if child.pid in REAL_PROBE(d):
+                break
+            time.sleep(0.05)
+        self.assertIn(child.pid, REAL_PROBE(d))
+        self.assertNotIn(child.pid, REAL_PROBE(self.P[201]['dir']))
+        self.assertNotIn(os.getpid(), REAL_PROBE(d))
+
+    def test_probe_without_proc_or_pgrep_raises(self):
+        with mock.patch.object(gwls_final.os.path, 'isdir', return_value=False), mock.patch.object(gwls_final.shutil, 'which', return_value=None):
+            with self.assertRaises(RuntimeError):
+                REAL_PROBE('/x')
+
+    def test_play_and_analyze_both_refuse_through_the_stop_proof(self):
+        open(os.path.join(self.P[200]['dir'], 'iter-9.json'), 'w').close()
+        self.write_all_results()
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'iter-9.json' in msg, msg)
+        self.no_final()
+        bad, _ = gwls_final.play_problems(self.P, self.root, [])
+        self.assertTrue(any('iter-9.json' in x for x in bad))
+
+
+class OneShotLock(SealedFixture):
+    """B1: the lock is taken atomically before any precondition check, and a second invocation never plays."""
+
+    def fake_popen(self, calls):
+        def popen(argv, **kw):
+            calls.append(argv)
+            s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
+            self.write_result(s)                                                              # the (mocked) scorer's output
+            return mock.Mock(wait=mock.Mock(return_value=0))
+        return popen
+
+    def run_main(self, calls):
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=self.fake_popen(calls)), contextlib.redirect_stdout(io.StringIO()):
+            gwls_final.main(['--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+
+    def test_acquire_twice_second_refuses_and_keeps_the_first_locks(self):
+        held, bad = gwls_final.acquire_locks(self.P)
+        self.assertEqual((len(held), bad), (2, []))
+        held2, bad2 = gwls_final.acquire_locks(self.P)
+        self.assertEqual(held2, [])
+        self.assertEqual(len(bad2), 2)
+        self.assertTrue(all(os.path.exists(p['lock']) for p in self.P.values()))             # the first holder's locks survive the second's refusal
+
+    def test_acquire_is_exclusive_even_when_the_lock_appears_between_check_and_act(self):
+        real_open = os.open
+        def racing_open(path, flags, mode=0o777):
+            if path == self.P[201]['lock']:
+                real_open(path, os.O_CREAT | os.O_WRONLY, 0o644)                              # the other invocation wins the race on s201
+            return real_open(path, flags, mode)
+        with mock.patch.object(gwls_final.os, 'open', side_effect=racing_open):
+            held, bad = gwls_final.acquire_locks(self.P)
+        self.assertEqual(held, [])
+        self.assertEqual(len(bad), 1)
+        self.assertFalse(os.path.exists(self.P[200]['lock']))                                 # only OUR lock was released
+        self.assertTrue(os.path.exists(self.P[201]['lock']))                                  # the winner's lock is untouched
+
+    def test_main_refuses_on_a_foreign_lock_plays_nothing_and_keeps_it(self):
+        pathlib.Path(self.P[201]['lock']).write_text('other invocation\n')
+        calls = []
+        with self.assertRaises(SystemExit) as cm:
+            self.run_main(calls)
+        self.assertIn('already exists', str(cm.exception))
+        self.assertEqual(calls, [])
+        self.assertFalse(os.path.exists(self.P[200]['lock']))
+        self.assertEqual(pathlib.Path(self.P[201]['lock']).read_text(), 'other invocation\n')
+
+    def test_a_failed_precondition_releases_only_our_locks(self):
+        open(os.path.join(self.P[200]['dir'], 'iter-9.json'), 'w').close()                    # B3 refusal after the locks were taken
+        calls = []
+        with self.assertRaises(SystemExit) as cm:
+            self.run_main(calls)
+        self.assertIn('iter-9.json', str(cm.exception))
+        self.assertEqual(calls, [])
+        self.assertFalse(any(os.path.exists(p['lock']) for p in self.P.values()))
+
+    def test_clean_run_plays_each_seed_once_and_leaves_no_lock(self):
+        calls = []
+        self.run_main(calls)
+        self.assertEqual(len(calls), 2)
+        self.assertFalse(any(os.path.exists(p['lock']) for p in self.P.values()))
+        self.assertTrue(os.path.exists(os.path.join(self.root, 'final.json')))
+
+    def test_two_concurrent_invocations_play_at_most_once_per_seed(self):
+        import threading
+        calls, outcomes, barrier = [], [], threading.Barrier(2)
+        def popen(argv, **kw):
+            calls.append(argv)
+            return self.fake_popen([])(argv, **kw)
+        def invocation():
+            barrier.wait()
+            try:
+                gwls_final.main(['--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+                outcomes.append('played')
+            except SystemExit as e:
+                outcomes.append('refused' if 'refusing to play' in str(e) else str(e))
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=popen), contextlib.redirect_stdout(io.StringIO()):
+            ts = [threading.Thread(target=invocation) for _ in range(2)]
+            for t in ts:
+                t.start()
+            for t in ts:
+                t.join()
+        # interleaved acquisition may make BOTH refuse (each holds one seed's lock, each releases its own): safe. What must never happen is two plays.
+        self.assertLessEqual(outcomes.count('played'), 1, outcomes)
+        self.assertEqual(len(calls), 2 * outcomes.count('played'), (outcomes, len(calls)))     # at most one scorer per seed, in total
+        self.assertEqual(len({c[c.index('--ckpt') + 1] for c in calls}), len(calls))
+        self.assertTrue(all(o in ('played', 'refused') for o in outcomes), outcomes)
+
+    def test_a_left_lock_still_blocks_replay(self):
+        calls = []
+        open(self.P[200]['lock'], 'w').close()
+        open(self.P[201]['lock'], 'w').close()
+        with self.assertRaises(SystemExit):
+            self.run_main(calls)
+        self.assertEqual(calls, [])
+        self.assertTrue(all(os.path.exists(p['lock']) for p in self.P.values()))
+
+    def test_dry_run_takes_no_lock(self):
+        with contextlib.redirect_stdout(io.StringIO()), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')):
+            gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc])
+        self.assertFalse(any(os.path.exists(p['lock']) for p in self.P.values()))
+
+    def test_play_path_applies_the_identity_check_to_the_fresh_result(self):
+        def popen(argv, **kw):
+            s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
+            self.write_result(s, self.result(s, ckpt='/elsewhere/checkpoint-iter8.pt'))
+            return mock.Mock(wait=mock.Mock(return_value=0))
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=popen), contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit) as cm:
+                gwls_final.main(['--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+        self.assertIn('identity check', str(cm.exception))
+        self.no_final()
+
+
+class AnalyzeOnly(SealedFixture):
+    """B2: --analyze-only goes through the same gate / completeness / lock rule and checks the result's identity."""
+
+    def test_passes_on_a_clean_completed_attempt(self):
+        self.write_all_results()
+        out, msg = self.analyze()
+        self.assertIsNone(msg)
+        self.assertIn('VERDICT:', out)
+        self.assertTrue(os.path.exists(os.path.join(self.root, 'final.json')))
+
+    def test_refuses_on_stop(self):
+        write_gate_root(self.root, 1, 1)
+        self.write_all_results()
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'STOP' in msg, msg)
+        self.no_final()
+
+    def test_refuses_on_a_leftover_lock(self):
+        self.write_all_results()
+        open(self.P[201]['lock'], 'w').close()
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'unresolved scoring attempt' in msg, msg)
+        self.no_final()
+
+    def test_refuses_when_the_ckpt_points_elsewhere(self):
+        self.write_all_results()
+        for bad_ckpt in ('/elsewhere/s200/checkpoint-iter8.pt', self.P[201]['ckpt'], self.P[200]['ckpt'] + '.bak', None, 5):
+            self.write_result(200, self.result(200, ckpt=bad_ckpt))
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'result ckpt' in msg, (bad_ckpt, msg))
+            self.no_final()
+
+    def test_a_symlinked_ckpt_that_resolves_to_this_checkpoint_is_the_same_file(self):
+        self.write_all_results()
+        link = os.path.join(self.root, 'link.pt')
+        os.symlink(self.P[200]['ckpt'], link)
+        self.write_result(200, self.result(200, ckpt=link))
+        self.assertIsNone(self.analyze()[1])
+
+    def test_refuses_when_arm_is_not_model(self):
+        self.write_all_results()
+        self.write_result(201, self.result(201, arm='random'))
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'result arm' in msg, msg)
+        self.no_final()
+
+    def test_refuses_on_picker_temp_worlds_and_seeds(self):
+        self.write_all_results()
+        pw = self.result(200)['per_world']
+        cases = [dict(picker='top'), dict(temp=0.5), dict(worlds=99), dict(per_world=pw[:99]),
+                 dict(per_world=[dict(pw[0], seed=7000001)] + pw[1:]),                       # a seed twice, one missing
+                 dict(per_world=[dict(pw[0], seed=6999999)] + pw[1:]),                       # a non-sealed seed
+                 dict(per_world=[dict(w, seed=float(w['seed'])) for w in pw]),
+                 dict(per_world=['x'] * 100), dict(per_world=None)]
+        for over in cases:
+            self.write_result(200, self.result(200, **over))
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'seed 200' in msg, (list(over), msg))
+            self.assertNotIn('Traceback', msg)
+            self.no_final()
+
+    def test_refuses_on_a_missing_or_torn_result_without_a_traceback(self):
+        self.write_result(200)
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'no result file' in msg, msg)
+        with open(self.P[201]['out'], 'w') as f:
+            f.write('{"arm": "mod')
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'cannot be read' in msg, msg)
+        self.no_final()
+
+    def test_refuses_on_incomplete_round_8(self):
+        self.write_all_results()
+        torch.save(dict(k=7, run_seed=398, day_offset=4, parent='/x/glprobe/s200/n64000/checkpoint.pt'), self.P[200]['state'])
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'not 8' in msg, msg)
+        self.no_final()
+        torch.save(dict(k=8, run_seed=398, day_offset=4, parent='/x/glprobe/s200/n64000/checkpoint.pt'), self.P[200]['state'])
+        os.remove(self.P[201]['iter8'])
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'round 8 is not complete' in msg, msg)
+        self.no_final()
+
+    def test_refuses_when_training_is_not_proved_stopped(self):
+        self.write_all_results()
+        self.probe.return_value = [1]
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'live game.imitate process' in msg, msg)
+        self.no_final()
+
+    def test_refuses_on_a_wrong_arm_c(self):
+        self.write_all_results()
+        with mock.patch.dict(gwls_final.ARM_C_SHA256, {200: '0' * 64}):
+            out, msg = self.analyze()
+        self.assertTrue(msg and 'sha256' in msg, msg)
+        self.no_final()
+
+    def test_lists_every_problem_at_once(self):
+        write_gate_root(self.root, 1, 1)
+        open(self.P[200]['lock'], 'w').close()
+        self.write_result(200, self.result(200, arm='random'))
+        out, msg = self.analyze()
+        for needle in ('STOP', 'unresolved scoring attempt', 'result arm', 'no result file'):
+            self.assertIn(needle, msg)
 
 
 class Persist(unittest.TestCase):
