@@ -1572,7 +1572,8 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, log_update_rms=False):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, log_update_rms=False,
+          diary_data=DIARY_DATA):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1626,7 +1627,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         assert all(p.requires_grad for p in params)
         if guard:
             kf, gp = load_guard(guard_src)
-            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache)
+            diary, dcmp = build_parent_diary(m, ck, guard_src, out, data=diary_data, log_path=diary_compare, cache=diary_cache)
             m.eval()
             if soft_guard:   # frozen parent for the KL replay, taken before any update; Main brain's own klreplay (c823e4b9a)
                 import importlib
@@ -1642,7 +1643,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 m.loss = kl_replay_loss(m, kl_parent, float(kl_weight), kls, klreplay)   # not klreplay.wrap: weights 1 + kl_weight, see its docstring
             params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
             extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=guard_commit,
-                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
+                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache, guard_diary_data=diary_data,
                          guard_frozen=len(guarded.frozen))
             if soft_guard:
                 extra.update(guard_soft=soft_value, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
@@ -1753,6 +1754,7 @@ def main(argv=None):
     a.add_argument('--eval-rows', default=None, help='eval file for --cells l3/l4 (default eval-rows-l3) or l5 (default eval-rows-l5)')
     a.add_argument('--diary-compare', default=DIARY_LOG, help="main-brain log to compare the diary with; 'none' skips (recorded as skipped)")
     a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
+    a.add_argument('--diary-data', default=DIARY_DATA, help='folder whose train.jsonl is the diary prompt pool (the seed-1 200k skills build); default the original path')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a.add_argument('--seed', type=int, default=None, help='train only (R1): the run seed, driving the torch seedings, the data order and the KL replay stream; default None = the shipped module SEED (93301), every stream as shipped')
     a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss, renormalised per trace to the uniform-weight trace mean; default 1.0 = uniform (shipped)")
@@ -1799,7 +1801,7 @@ def main(argv=None):
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
               kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
-              seed=a.seed, first_call_weight=a.first_call_weight, log_update_rms=a.log_update_rms)
+              seed=a.seed, first_call_weight=a.first_call_weight, log_update_rms=a.log_update_rms, diary_data=a.diary_data)
 
 
 if __name__ == '__main__':
