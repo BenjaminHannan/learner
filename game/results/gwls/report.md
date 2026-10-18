@@ -10,8 +10,9 @@
 | 4 | 7.26 | 5.668 | 35.8 | 311 | 123 | 32 | 99.99 | 27.84 | 3.592 | 515 | 311 | 0.6039 | 0.277 | 0.4726 |
 | 5 | 7.338 | 5.735 | 40.0 | 306 | 115 | 62 | 99.19 | 43.21 | 2.296 | 856 | 312 | 0.3645 | 0.2742 | 0.4716 |
 | 6 | 7.445 | 5.59 | 37.8 | 316 | 109 | 33 | 106.16 | 19.96 | 5.319 | 520 | 324 | 0.6231 | 0.2461 | 0.5016 |
+| 7 | 7.327 | 5.25 | 28.5 | 284 | 98 | 76 | 83.3 | 64.6 | 1.289 | 823 | 285 | 0.3463 | 0.2456 | 0.4767 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok; r6 gap 9.7e-05 <= bound 0.002084: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok; r6 gap 9.7e-05 <= bound 0.002084: ok; r7 gap 0.000474 <= bound 0.000678: ok
 
 ## seed 201  (round-1 non-habit reference 5.87)
 
@@ -23,8 +24,9 @@ ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal
 | 4 | 7.718 | 5.985 | 43.5 | 331 | 122 | 26 | 126.51 | 20.84 | 6.071 | 493 | 331 | 0.6714 | 0.3 | 0.5012 |
 | 5 | 7.765 | 6.183 | 44.0 | 333 | 127 | 20 | 123.92 | 13.49 | 9.186 | 554 | 333 | 0.6011 | 0.3129 | 0.5096 |
 | 6 | 7.593 | 5.803 | 37.5 | 308 | 103 | 83 | 96.48 | 63.49 | 1.52 | 795 | 308 | 0.3874 | 0.2769 | 0.4753 |
+| 7 | 7.32 | 5.325 | 31.0 | 289 | 96 | 43 | 81.16 | 39.83 | 2.038 | 423 | 289 | 0.6832 | 0.256 | 0.4489 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok; r6 gap 0.000365 <= bound 0.0007: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok; r6 gap 0.000365 <= bound 0.0007: ok; r7 gap 0.000119 <= bound 0.000882: ok
 
 ## Round-4 leading indicator
 
