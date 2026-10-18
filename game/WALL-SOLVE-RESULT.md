@@ -220,3 +220,25 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
 - **Proposed next single change (marks to be written after the sealed read; needs authorization):** on-policy labeller relabelling of
   GW-L's own visited states, against a matched-update control with more off-policy labels. Primary mark: own-state nav accuracy within
   5 points of held-out. A re-run of GW-LS from that student would follow with its own marks.
+
+## Built-in code review of gate fixes round 2 (commit dec68ba1e): verdict BLOCKING; the sealed read stays HELD (coordinator ruling, round 2)
+- **Fixes (a) and (b) are in and independently verified:** 30 tests pass, plus 2 mutation checks. The live `--dry-run` says "all preconditions
+  hold; round-4 branch CONTINUE".
+- **The re-review found one blocking issue (verified in code):** `gwls_report.ratio_problems` does not refuse a round-3/4 row whose
+  unrounded `ratio_w_exact` is None while the census has a `ratio_w`. The indicator then drops that seed's ratio test, which pushes toward
+  CONTINUE. Same class as fix (a).
+  - **Inert for the live data:** all four live round-3/4 rows have an unrounded ratio, with `ratio_ok` True.
+  - **But a gate hole on the one-shot read**, so by the ruling the read is held.
+- **Not blocking:**
+  - `gate()` returns early on ratio refusals, so other refusals (STOP, rounds incomplete) are not also listed. It still refuses.
+  - Refusal conditions written as bare `assert` in `round_row` would be stripped under `python -O`. The read is never run with `-O`.
+  - The result-shape checks after scoring can still raise a traceback. The result file is already on disk; `--analyze-only` recovers.
+  - iter-file name parsing is loose (backups, `iter-03.json`).
+- **Cleanups:**
+  - Dry-run arm C printout duplicates `arm_c_problems`.
+  - `ratio_problems` re-derives the indicator's "uses" rule.
+  - `READ_ERRORS` includes programming-error types.
+  - Dead try/except; `BadGzipFile` is redundant with `OSError`.
+- **Proposed fix (needs a coordinator GO), about 3 lines:** in `ratio_problems`, refuse a round-3/4 row whenever the census has a
+  `ratio_w` and `ratio_w_exact` is None (or the reverse), i.e. any mismatch in whether a ratio exists. Ideally also take the "uses" rule
+  from the indicator's own output.
