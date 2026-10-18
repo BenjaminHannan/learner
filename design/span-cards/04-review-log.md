@@ -218,3 +218,38 @@ in an always-ASK, never-HALT pass that fetches cards for every question; and `ca
 of this is strict on CPU. On GPU the structure must also hold, and answer differences may touch at most 1% of
 questions. The check runs as a pre-flight on fresh weights (a failure stops the run before any timing) and again
 after the timing steps, before the smoke.
+
+## Stage 1 script: built-in review (coordinator ruling after reading 5e3dfa7c, 2026-10-18)
+The coordinator read the draft `scripts/span_stage1.py` at 6a5c8dffc (sha256 5e3dfa7c...) and passed it. The gate
+before the release was the built-in `/code-review` on the script and its tests, with blocking findings fixed and
+regression-tested. The review ran nine times; each round's blocking findings were fixed before the next. Round 1
+ran on 6a5c8dffc, the version the coordinator read; the later rounds ran on the fixed versions.
+
+| Round | Reviewed | Blocking (my classification) | Fixed in |
+|---|---|---|---|
+| 1 | 6a5c8dffc | the go rung was not checked against the box's own fitted rung; any pre-flight child fault counted as "does not fit" (a bug would shrink the batch); only the script was pinned, not the code it imports; the pre-flight saw first-epoch batches only | 12fcfe633 |
+| 2 | 12fcfe633 | the code digest missed modules (core, policy, pointer); gold and teacher pre-flight steps were untracked; library OOMs stopped the box; `decode` crashed on a cut line; a go file without the rung was accepted | a6c76078f |
+| 3 | a6c76078f | the arms reset the memory peak before their fp32 calibration; checkpoints were saved after evaluation; a larger go rung killed the box; slice tags were first built after the go wait | 80554323f |
+| 4 | 80554323f | the parent reset its peak without emptying the cache; missing DEV slices did not stop the box | afe30bdf5 |
+| 5 | afe30bdf5 | no slice masks left the box (G2 not computable from the log); the pre-flight's fp32 calibration on the heaviest batches could reject the sealed rung; a stale stop killed fresh boxes | 030afa48c |
+| 6 | 030afa48c | (partly a regression of round 5) the run's calibration was not measured; an alignment check could cost the SPAN arm; a plain stop no longer stopped | 23bb21065 |
+| 7 | 23bb21065 | an unaligned DEV readout could pass as good; a non-list `seeds` crashed; `to_cpu` dropped the state dict's `_metadata` | 8288396c4 |
+| 8 | 8288396c4 | N was a float32 mean, which can differ in the last bit between boxes and stall the exact go gate | 707bdce90 |
+| **9** | **707bdce90** | **none** | not changed: frozen at the reviewed hash |
+
+**Verdict: NO BLOCKING FINDING** on 707bdce90 (my classification). The script is frozen there: sha256
+**47577a35969c83f70f900e4d3845bf1ff8973644b664a67091d4ca92cdd6d127**. Round-9 items, deferred:
+- `exact_n` computes N exactly (float64 from integer counts, 6 decimals). The sealed definition is
+  `span_cards.tokens_per_line`, a float32 mean of the same quantity, which differs only around the 6th decimal;
+  `span_cards.py` is sealed, so the addendum states the computation.
+- A stop file carrying a different code digest is treated as stale. My go files carry the boxes' own digest, and
+  a plain `{"go": false}` still stops every box.
+- Log and gate robustness for situations this run does not produce: an undecodable local go file; two
+  placeholder records for bad go files; sequence numbers unique per process only (each box runs one process per
+  log); digests computed twice per process; a zero division in `exact_n` for a cache with no non-question lines.
+- Test-only: the splice test depends on test order; there are no tests for an unparseable go file, a stale stop
+  recognised by its code digest, or the size pin; the smoke test can leave grandchild processes after a timeout.
+
+Tests at 707bdce90: 23 unit tests pass (`tests/test_span_stage1.py`), and the opt-in end-to-end smoke test
+(`SPAN_STAGE1_SMOKE=1`, the whole box flow on tiny data in a subprocess) passes in 9 min. The Stage 1 release
+condition is met: the boxes fetch commit 707bdce90 and refuse to run if the script's sha256 differs.
