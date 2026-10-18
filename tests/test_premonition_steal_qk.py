@@ -126,7 +126,7 @@ class QkClipTest(unittest.TestCase):
 
     def recorded(self, model: PremonitionMini) -> torch.Tensor:
         model(self.batch, mode="teacher", generator=torch.Generator().manual_seed(0))
-        return model._ask_logit_max
+        return model.ask_logit_peak.clone() if hasattr(model, "ask_logit_peak") else None
 
     def test_records_the_largest_eligible_real_card_logit(self) -> None:
         model = tiny_model(seed=0, qk_clip=1e6)
@@ -159,7 +159,7 @@ class QkClipTest(unittest.TestCase):
         self.assertEqual(float(loose.heads.log_kappa), before_loose)
         self.assertAlmostEqual(float(tight.heads.log_kappa), before_tight + math.log(0.5 / peak), places=5)
         self.assertLess(float(tight.heads.log_kappa), before_tight)
-        self.assertIsNone(tight._ask_logit_max)
+        self.assertEqual(float(tight.ask_logit_peak), float("-inf"))     # cleared after the step
         tight.after_optimizer_step()                           # nothing recorded: a no-op
         self.assertAlmostEqual(float(tight.heads.log_kappa), before_tight + math.log(0.5 / peak), places=5)
 
@@ -180,11 +180,11 @@ class QkClipTest(unittest.TestCase):
         model = tiny_model(seed=0, qk_clip=5.0)
         model.eval()
         model.answer(self.batch)
-        self.assertIsNone(model._ask_logit_max)
+        self.assertEqual(float(model.ask_logit_peak), float("-inf"))
         model.train()
         with torch.no_grad():
             model(self.batch, mode="teacher", generator=torch.Generator().manual_seed(0))
-        self.assertIsNone(model._ask_logit_max)
+        self.assertEqual(float(model.ask_logit_peak), float("-inf"))
         kappa = float(model.heads.log_kappa)
         model.after_optimizer_step()
         self.assertEqual(float(model.heads.log_kappa), kappa)
@@ -200,7 +200,30 @@ class QkClipTest(unittest.TestCase):
         kappa = float(model.heads.log_kappa)
         trainer._train_step(self.batch, plan, ptrain.planned_loops(self.batch, plan.mode, model.config), track=False)
         self.assertLess(float(model.heads.log_kappa), kappa - 0.05)
-        self.assertIsNone(model._ask_logit_max)
+        self.assertEqual(float(model.ask_logit_peak), float("-inf"))
+
+    def test_the_peak_is_not_model_state_and_evaluation_stays_read_only(self) -> None:
+        """A training forward with no optimizer step after it must not break `read_only` evaluation."""
+        from learnlab.readonly import read_only
+        model = tiny_model(seed=0, qk_clip=5.0)
+        self.assertNotIn("ask_logit_peak", model.state_dict())
+        self.recorded(model)
+        model.eval()
+        with read_only(model):
+            model.answer(self.batch)
+
+    def test_a_forward_without_asks_leaves_no_stale_peak(self) -> None:
+        model = tiny_model(seed=0, qk_clip=0.5)
+        with torch.no_grad():
+            model.heads.query.weight.normal_(std=0.5)
+            model.writer.key.weight.normal_(std=0.5)
+        self.assertGreater(float(self.recorded(model)), 0.5)        # e.g. a calibration forward
+        empty = synthetic_batch(visits=2, lines=24, seed=6, question_rate=0.0)
+        self.assertEqual(empty.q_visit.numel(), 0)
+        model(empty, mode="teacher")                                # the next training forward has no questions
+        kappa = float(model.heads.log_kappa)
+        model.after_optimizer_step()
+        self.assertEqual(float(model.heads.log_kappa), kappa)
 
     def test_other_model_classes_without_the_hook_still_train(self) -> None:
         model = tiny_model(seed=0)

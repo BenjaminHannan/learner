@@ -2,6 +2,7 @@
 (design/steals-2026-10-17/SPEC.md section 5)."""
 from __future__ import annotations
 
+import math
 import unittest
 
 import torch
@@ -148,18 +149,45 @@ class RowHaltTest(unittest.TestCase):
         rows, halt, ask, scores = model._step(episode, index, 0, store)
         stop = torch.zeros(self.count, dtype=torch.bool)
         self.assertTrue((model._choose(episode, index, store, scores, ask, stop) >= 0).any())
-        episode.keep[:, 0] = 0.0
+        episode.halted[:, 0] = True
         self.assertTrue((model._choose(episode, index, store, scores, ask, stop) == -1).all())
-        episode.keep[:, 0] = 0.49                                                  # below one half counts as halted
-        self.assertTrue((model._choose(episode, index, store, scores, ask, stop) == -1).all())
-        episode.keep[:, 0] = 0.51
+        episode.halted[:, 0] = False
+        episode.halted[:, 1:] = True                                               # other registers do not matter
+        episode.keep[:, 0] = 0.01                                                  # nor does the soft keep itself
         self.assertTrue((model._choose(episode, index, store, scores, ask, stop) >= 0).any())
-        episode.keep[:, 1:] = 0.0                                                  # other registers do not matter
-        self.assertTrue((model._choose(episode, index, store, scores, ask, stop) >= 0).any())
-        episode.keep[:, 0] = 0.0
-        episode.keep[0, 0] = 1.0                                                   # only question 0 may still ask
+        episode.halted[:, 0] = True
+        episode.halted[0, 0] = False                                               # only question 0 may still ask
         picks = model._choose(episode, index, store, scores, ask, stop)
         self.assertTrue((picks[1:] == -1).all())
+
+    def test_training_and_answering_stop_asking_under_the_same_rule(self) -> None:
+        """Review item 3: a router at p = 0.4 never halts register 0 in either path (the soft keep 0.6^t falls below
+        one half, but fetching follows the sticky p > 0.5 rule); at p = 0.6 both paths stop after loop 0."""
+        for p, halts in ((0.4, False), (0.6, True)):
+            model = eager(tiny_model(row_halt=True))               # always ASK, never the question-level HALT
+            with torch.no_grad():
+                model.heads.row_halt.weight.zero_()
+                model.heads.row_halt.bias.fill_(math.log(p / (1 - p)))
+            calls = []
+            original = model._insert
+
+            def record(episode, store, index, cards):
+                calls.append(cards.clone())
+                return original(episode, store, index, cards)
+
+            model._insert = record
+            model(self.batch, mode="own", p_own=1.0, generator=torch.Generator().manual_seed(0))
+            own_later = [bool((c >= 0).any()) for c in calls[1:]]
+            del model._insert
+            answered = model.answer(self.batch).fetched.sum(1)
+            with self.subTest(p=p):
+                self.assertTrue(own_later)
+                if halts:
+                    self.assertFalse(any(own_later))
+                    self.assertTrue((answered <= model.config.top_k).all())
+                else:
+                    self.assertTrue(all(own_later))
+                    self.assertGreater(int(answered.max()), model.config.top_k)
 
     def test_answer_stops_fetching_once_register_zero_halts(self) -> None:
         def fetched(**flags) -> torch.Tensor:

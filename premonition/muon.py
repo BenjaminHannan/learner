@@ -80,9 +80,14 @@ class MuonAdamW:
     def __init__(self, params: Iterable[dict[str, Any]], lr: float = 1e-3, betas: tuple[float, float] = (0.9, 0.99),
                  eps: float = 1e-8, weight_decay: float = 0.0, momentum: float = 0.95, ns_steps: int = 5,
                  fused: Optional[bool] = None) -> None:
-        groups = [dict(group) for group in params]
-        if not groups or not all(isinstance(group, dict) for group in groups):
-            raise ValueError("MuonAdamW takes a non-empty list of param-group dicts")
+        items = list(params)
+        if not items:
+            raise ValueError("MuonAdamW got an empty parameter list")
+        if all(isinstance(item, torch.Tensor) for item in items):      # a plain parameter list: one AdamW group
+            items = [dict(params=items)]
+        if not all(isinstance(item, dict) for item in items):
+            raise ValueError("MuonAdamW takes parameters or param-group dicts, not a mix")
+        groups = [dict(group) for group in items]
         muon = [group for group in groups if group.get("muon", False)]
         adamw = [dict(group, muon=False) for group in groups if not group.get("muon", False)]
         self.parts: list[torch.optim.Optimizer] = []
@@ -117,6 +122,9 @@ class MuonAdamW:
         return {"kinds": [type(part).__name__ for part in self.parts], "parts": [part.state_dict() for part in self.parts]}
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
+        if "kinds" not in state:
+            raise ValueError("this optimizer state was not saved by MuonAdamW's two-part format (draft Muon states "
+                             "from before the Q39 review fixes cannot be resumed; restart the run)")
         if state["kinds"] != [type(part).__name__ for part in self.parts]:
             raise ValueError(f"optimizer state holds {state['kinds']}, this optimizer has "
                              f"{[type(part).__name__ for part in self.parts]}")

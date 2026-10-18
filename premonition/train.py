@@ -719,11 +719,13 @@ def validation_hook(batches: Sequence[VisitBatch], **options: Any) -> Callable[[
 
 # ----------------------------------------------------------------------------- checkpoints
 def mini_config_dict(config: MiniConfig) -> dict[str, Any]:
-    """`asdict(config)` without steal fields left at their defaults, so a flags-off checkpoint's config.json is
-    byte-identical to 73b8e0224's and older code can still read it."""
-    default = MiniConfig.__dataclass_fields__
-    return {name: value for name, value in asdict(config).items()
-            if name not in STEAL_FIELDS or value != default[name].default}
+    """`asdict(config)`. With every steal off the steal fields are left out, so a flags-off checkpoint's config.json
+    is byte-identical to 73b8e0224's and older code still reads it; with any steal on, every field is written, so a
+    checkpoint never depends on later defaults."""
+    values = asdict(config)
+    if config.steals:
+        return values
+    return {name: value for name, value in values.items() if name not in STEAL_FIELDS}
 
 
 def mini_config_from(values: Mapping[str, Any]) -> MiniConfig:
@@ -1022,15 +1024,12 @@ def format_record(record: Mapping[str, Any]) -> str:
             f"{record['tokens_per_s']:,.0f} tok/s")
 
 
-def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
+def toy_setup(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
               eval_batches: int = 4, lr: float = 3e-3, warmup_steps: int = 20, log_every: int = 25,
-              eval_every: int = 0, max_seconds: Optional[float] = None, config_overrides: Optional[dict] = None,
-              on_log: Optional[Callable[[dict[str, Any]], None]] = None, optimizer: str = "adamw") -> dict[str, Any]:
-    """Build step 4: train D (or a control) at the tiny preset on the far-fact toy under the curriculum.
-
-    The FLOP budget is `steps` batches' worth (`budget_for_steps`); the report holds the training report,
-    the validation of a fixed held-out toy set and chance.
-    """
+              eval_every: int = 0, config_overrides: Optional[dict] = None, optimizer: str = "adamw"
+              ) -> tuple[MiniTrainer, list[VisitBatch], Iterator[VisitBatch], list[VisitBatch], Any]:
+    """`train_toy`'s setup, untrained: (trainer calibrated and budgeted, the two calibration batches, the rest of
+    the stream, the held-out set, spec). Run cards that train the toy in steps (R1) start here."""
     from premonition.toy import ToySpec, toy_set, toy_stream
     spec = spec or ToySpec()
     torch.manual_seed(seed)
@@ -1045,6 +1044,23 @@ def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits:
     trainer.calibrate(head)
     trainer.flop_budget = budget_for_steps(trainer, head, steps)
     held_out = [label_free(b) for b in toy_set(spec, eval_batches, visits, seed + 1000)]
+    return trainer, head, stream, held_out, spec
+
+
+def train_toy(variant: str = "D", *, spec: Any = None, steps: int = 200, visits: int = 16, seed: int = 0,
+              eval_batches: int = 4, lr: float = 3e-3, warmup_steps: int = 20, log_every: int = 25,
+              eval_every: int = 0, max_seconds: Optional[float] = None, config_overrides: Optional[dict] = None,
+              on_log: Optional[Callable[[dict[str, Any]], None]] = None, optimizer: str = "adamw") -> dict[str, Any]:
+    """Build step 4: train D (or a control) at the tiny preset on the far-fact toy under the curriculum.
+
+    The FLOP budget is `steps` batches' worth (`budget_for_steps`); the report holds the training report,
+    the validation of a fixed held-out toy set and chance.
+    """
+    trainer, head, stream, held_out, spec = toy_setup(
+        variant, spec=spec, steps=steps, visits=visits, seed=seed, eval_batches=eval_batches, lr=lr,
+        warmup_steps=warmup_steps, log_every=log_every, eval_every=eval_every, config_overrides=config_overrides,
+        optimizer=optimizer)
+    model = trainer.model
     report = trainer.train(itertools.chain(head, stream), max_seconds=max_seconds, on_log=on_log,
                            evaluate=validation_hook(held_out) if eval_every else None)
     result = trainer.evaluate(validation_hook(held_out))
@@ -1230,5 +1246,5 @@ __all__ = [
     "label_free",
     "load_mini",
     "mini_config_from", "mini_train_config", "planned_loops", "resume_trainer", "save_mini_checkpoint", "smoke",
-    "summarize_cards", "train_d", "train_toy", "validate", "validation_hook",
+    "summarize_cards", "toy_setup", "train_d", "train_toy", "validate", "validation_hook",
 ]

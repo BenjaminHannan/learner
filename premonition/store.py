@@ -40,9 +40,8 @@ def set_cross_entropy_with_sink(scores: torch.Tensor, target: torch.Tensor, sink
 
     Rows with an empty `target` (nothing left to fetch) take the sink as their target.
     """
-    logits = torch.cat([scores, sink.float().expand(scores.shape[0], 1)], dim=1)
-    target = torch.cat([target, ~target.any(1, keepdim=True)], dim=1)
-    return torch.logsumexp(logits, 1) - torch.logsumexp(logits.masked_fill(~target, NEG_INF), 1)
+    return set_cross_entropy(torch.cat([scores, sink.float().expand(scores.shape[0], 1)], dim=1),
+                             torch.cat([target, ~target.any(1, keepdim=True)], dim=1))
 
 
 @dataclass
@@ -150,10 +149,8 @@ class CardStore:
     def gather(self, index: torch.Tensor, q_visit: torch.Tensor
                ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """(values [n, K, d], ents [n, K, E], lines [n, K]) of card indices; -1 / NULL handled."""
+        real, line, visit = self._slots(index, q_visit)
         n, count = index.shape
-        real = (index >= 0) & (index < self.lines)
-        line = index.clamp(0, self.lines - 1)
-        visit = q_visit.unsqueeze(1).expand(n, count)
         values = torch.where(real.unsqueeze(-1), self.values[visit, line],
                              self.null_value.to(self.values.dtype).expand(n, count, -1))
         ents = torch.where(real.unsqueeze(-1), self.ents[visit, line],
@@ -162,11 +159,16 @@ class CardStore:
 
     def gather_keys(self, index: torch.Tensor, q_visit: torch.Tensor) -> torch.Tensor:
         """[n, K, dk] unit keys of card indices; the NULL key for NULL, -1 and padding."""
+        real, line, visit = self._slots(index, q_visit)
+        n, count = index.shape
+        return torch.where(real.unsqueeze(-1), self.keys[visit, line], self.null_key.expand(n, count, -1))
+
+    def _slots(self, index: torch.Tensor, q_visit: torch.Tensor
+               ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """(real [n, K], line [n, K], visit [n, K]) for card indices: real lines (not -1 or NULL), clamped."""
         n, count = index.shape
         real = (index >= 0) & (index < self.lines)
-        line = index.clamp(0, self.lines - 1)
-        visit = q_visit.unsqueeze(1).expand(n, count)
-        return torch.where(real.unsqueeze(-1), self.keys[visit, line], self.null_key.expand(n, count, -1))
+        return real, index.clamp(0, self.lines - 1), q_visit.unsqueeze(1).expand(n, count)
 
     def gold(self, gold_lines: torch.Tensor, q_visit: torch.Tensor,
              q_line: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:

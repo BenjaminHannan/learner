@@ -407,3 +407,53 @@ per run, each against an all-off control with paired seeds (§1 paired init).
 | Q41 | No merges yet. Land in review-pass order, one at a time; later branches rebase and re-run their identity harness against the new base. | F7 |
 | Q42 | R1 blanks filled. Stage 0 is yes after Q39. | R1 |
 | Q43 | R2 blanks filled. Stage 0 is yes in principle, second, after Q39. | R2 |
+
+## 7. Code review (Q39, 10-18)
+
+**Method.** This follows the owner's rule:
+- The Claude Code built-in `/code-review` (high) was run on PR 84.
+- An **independent read** ran alongside it: a separate read-only agent that re-derived the bit-identity claim itself
+  rather than trusting this report.
+- After the fixes, the built-in review was run again on the **whole fixed package** (branch
+  `claude/steals-8-fixes` against `main`).
+- The independent probe was re-run on the final tree.
+
+**Independent read, verdict PASS WITH FIXES (nothing blocking).**
+- It found no off-path difference in the model, card store or trainer.
+- Its separate probe matched on every path it tried (§1).
+- It confirmed two config-level should-fix items, rows 2 and 3 below.
+
+**Findings and what was done.** Nos. 1–10 are from round 1 of the built-in review, i1–i9 from the independent read,
+and r1–r10 from round 2. "Fixed" means fixed with a regression test unless the row says otherwise.
+
+| # | Finding | Severity | Disposition |
+|---|---|---|---|
+| 1 | Side-stream init called `torch.manual_seed` inside a CPU-only `fork_rng`, so it would reseed the global CUDA RNG | real (GPU paired A/Bs) | **Fixed.** Steal modules are initialised by an explicit `torch.Generator`. Construction forks only the current CUDA device, and only when the default device is CUDA (r2). |
+| 2 / i1 | Steal-only config checks ran with flags off and rejected valid configs (d = 36, d = 20); `delta_bind_rows=0` gave a ZeroDivisionError | should-fix, confirmed | **Fixed.** Every check is gated on its flag. A harness test accepts those configs and counts the same parameters as base. |
+| i2 | A flags-off checkpoint's `config.json` gained 24 keys, so the base code could not resume it | should-fix, confirmed | **Fixed.** Steal fields are written only when a steal is on, and then all of them (r6). Flags-off `config.json` equals base (tested). |
+| 3 / i5 | `budget_for_steps` ignored `random_depth`, so `train_toy(steps=N)` ran about a third more steps | real | **Fixed.** The budget is the mean over caps. A test checks that 40 requested steps run 28–52. |
+| 4 / i3 | `ask_refresh_cos = 0` did not guarantee a refresh (fp32 `1 − û·û < 0`) | note, confirmed | **Fixed.** 0 means "every loop" by definition, and the SPEC text is aligned. A regression test fails under the old rule. |
+| 6 / i4 | `random_depth` sampled in any grad-enabled forward, and the cost figure came from one draw | real | **Fixed.** It samples only in training mode. The cost script averages over all caps (§1). |
+| 8 | Muon's AdamW half was a per-parameter Python loop, which billed extra time to Muon | real (R1 fairness) | **Fixed.** That half is now `torch.optim.AdamW` (fused on CUDA). The Muon bench was re-run (§4). |
+| i9 | ASK sink at −κ_init was only roughly a no-op | note | **Fixed.** It starts at −2κ_init, below every score at init. |
+| r1 | The R1 runner reused saved arms without checking their settings | real | **Fixed.** Settings are stored with each run, and reuse with other settings is refused. |
+| r3, r4 | Report numbers for `random_depth` and the Muon overhead were stale after the fixes | real | **Fixed.** Re-measured on an idle machine (§1, §4). |
+| r5 | A pre-fix Muon state gave a bare `KeyError` | minor | **Fixed** with a clear error. No such checkpoint exists outside tests. |
+| r7 | `MuonAdamW`'s input check never fired | minor | **Fixed.** Plain parameter lists are accepted again. |
+| r8 | The R1 scorer hard-coded 3 seeds | real | **Fixed.** It refuses to score anything but the card's seeds (0, 1, 2). |
+| r9 | The R1 runner did not interleave arms within a seed, as the card says | real | **Fixed.** Arms run in round-robin chunks of 50 steps. |
+| r10 | The R1 runner copied `train_toy`'s setup | should-fix | **Fixed.** A new `train.toy_setup`, which `train_toy` itself now calls, is shared (same op order; the probe re-verified it). |
+| 5 | Query RoPE and QK gains are wrappers that each `store.ask` caller must remember | design note | **Not changed.** Every model path uses them. Probes and scripts that call `store.ask` directly score the old way under `key_split` or `qk_norm`, which this note records. |
+| 7 | Engram rebuilds hash indices on the host every forward | performance note | **Not changed.** Engram is on HOLD (Q40). Precomputing indices at batch build goes into any Engram stage-1 bid. |
+| 9 | Use the upstream `torch.optim.Muon` | design note | **Not changed.** The local Mac and BensPC torch versions are not pinned to one that has it. The hand version is tested against the recipe. |
+| 10 | `hasattr` and `None` conventions are mixed for optional modules | style | **Not changed.** |
+| i6 | Fused `qkv` and `cross_kv` are orthogonalised as single matrices | note | **Documented** (§2). |
+| i7 | QK-Clip runs only through `MiniTrainer._train_step` | note | **Documented** (§2). |
+| i8 | `row_halt` and `loop_attnres` assume the registers are the last rows | note | **Documented.** The subclasses that append rows refuse the think path today. |
+
+**Scope (both reviewers).**
+- Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
+  `learnlab/`, `memorylab/` and `archive/` are untouched.
+- Every off-path change is a neutral seam or sits behind a flag, and running them showed they are identical.
+
+**Re-verification after the fixes:** PLACEHOLDER_REVERIFY

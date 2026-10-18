@@ -35,10 +35,21 @@ ROW_QUESTION, ROW_SLOT, ROW_CARD, ROW_REGISTER = range(4)
 STEAL_SEED = 7100                     # offset of the side stream that initialises steal modules
 
 
+class _Draws(nn.Module):
+    """Stands where a steal removed a Linear: `reset_parameters` still draws that Linear's init numbers (and its
+    construction drew them too), so the global RNG stream and every later weight match the flag-off model."""
+
+    def __init__(self, fan_in: int, fan_out: int) -> None:
+        super().__init__()
+        nn.Linear(fan_in, fan_out)                 # the construction-time draws, discarded
+        self.shape = (fan_out, fan_in)
+
+
 def _aside(build):
     """Build a steal module off the global RNG stream and mark it, so `reset_parameters` initialises it on a side
     stream: at a given seed every shared weight is then the same with the steal on or off (paired A/Bs)."""
-    with torch.random.fork_rng():                  # the CPU stream and every CUDA device's
+    cuda = torch.get_default_device().type == "cuda"   # built on a CUDA default device: fork that stream too
+    with torch.random.fork_rng(devices=[torch.cuda.current_device()] if cuda else []):
         module = build()
     for part in module.modules():
         part._steal = True
@@ -315,6 +326,8 @@ class Think(nn.Module):
         bind = config.store and config.pointers
         self.binder = nn.Linear(2 * d, 2 * d) if bind and not config.delta_bind else None
         if config.delta_bind:                  # steal 1: key-addressed delta rule replaces the binder
+            if bind:
+                self.binder_draws = _Draws(2 * d, 2 * d)
             rows = config.delta_bind_rows
             self.delta_address = _aside(lambda: nn.Linear(config.key_dim, rows)) if bind else None
             self.delta_write = _aside(lambda: nn.Linear(2 * d, d // rows + 1)) if bind else None
@@ -461,6 +474,7 @@ class _Episode:
     history: Optional[list] = None              # steal 3: register states [Q, registers, d] entering each loop
     keep: Optional[torch.Tensor] = None         # steal 5: [Q, registers] share of each register still updating
     ponder: Optional[list] = None               # steal 5: per-loop keep terms for the ponder cost
+    halted: Optional[torch.Tensor] = None       # steal 5: [Q, registers] bool, sticky p > 0.5 (train and answer)
     ask_cache: Optional[torch.Tensor] = None    # steal 7: [Q, L + 1] ASK scores at the last refresh
     ask_query: Optional[torch.Tensor] = None    # steal 7: [Q, dk] unit query at the last refresh
     ask_age: Optional[torch.Tensor] = None      # steal 7: [Q] loops since the last refresh
@@ -478,7 +492,8 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
-        self._ask_logit_max: Optional[torch.Tensor] = None     # steal 6: QK-Clip, the last forward's largest ASK logit
+        if config.qk_clip > 0:                 # steal 6: QK-Clip, the largest ASK logit of the last training forward
+            self.register_buffer("ask_logit_peak", torch.tensor(float("-inf")), persistent=False)
         self.reset_parameters()
 
     # ------------------------------------------------------------------ setup
@@ -494,6 +509,8 @@ class PremonitionMini(nn.Module):
                     nn.init.zeros_(module.bias)
                 elif isinstance(module, nn.Embedding) and module is not self.embed:
                     nn.init.normal_(module.weight, std=0.02, generator=generator)
+                elif isinstance(module, _Draws):
+                    nn.init.normal_(torch.empty(module.shape, device=self.embed.weight.device), std=0.02)
 
         generic(m for m in self.modules() if not getattr(m, "_steal", False))
         steal = [m for m in self.modules() if getattr(m, "_steal", False)]
@@ -614,6 +631,7 @@ class PremonitionMini(nn.Module):
             episode.history = [episode.x[:, config.rows - config.registers:]]     # v_0: the initial registers
         if config.row_halt:
             episode.keep = torch.ones(count, config.registers, device=device)
+            episode.halted = torch.zeros(count, config.registers, dtype=torch.bool, device=device)
             episode.ponder = []
         return episode
 
@@ -709,6 +727,7 @@ class PremonitionMini(nn.Module):
             keep = episode.keep[index]
             keep = keep * (p <= 0.5).float() if episode.hard else keep * (1.0 - p)
             episode.keep = episode.keep.index_copy(0, index, keep)
+            episode.halted = episode.halted.index_copy(0, index, episode.halted[index] | (p > 0.5))
             episode.ponder.append(keep.flatten())
             moved = before + keep.unsqueeze(-1).to(before.dtype) * (rows[:, base:] - before)
             rows = torch.cat([rows[:, :base], moved.to(rows.dtype)], dim=1)
@@ -780,28 +799,26 @@ class PremonitionMini(nn.Module):
                            **self._ask_gains())
         if record and index.numel():
             match = parts["match"].masked_fill(~parts["eligible"], float("-inf"))[:, :store.null]
-            peak = match.amax()
-            last = self._ask_logit_max
-            self._ask_logit_max = peak if step == 0 or last is None else torch.maximum(last, peak)
+            self.ask_logit_peak.copy_(torch.maximum(self.ask_logit_peak, match.amax()))
         return scores
 
     @torch.no_grad()
     def after_optimizer_step(self) -> None:
         """QK-Clip (Kimi K2): if the last forward's largest ASK logit exceeded `qk_clip` = tau, scale kappa
         by tau / max. ASK is already cosine-normalised, so kappa is its only logit scale."""
-        peak, self._ask_logit_max = self._ask_logit_max, None
-        if self.config.qk_clip <= 0 or peak is None or not self.config.store:
+        if self.config.qk_clip <= 0 or not self.config.store:
             return
         tau = self.config.qk_clip
-        self.heads.log_kappa.add_(torch.log(tau / peak.clamp_min(tau)))      # peak <= tau (or -inf): no-op
+        self.heads.log_kappa.add_(torch.log(tau / self.ask_logit_peak.clamp_min(tau)))   # peak <= tau (or -inf): no-op
+        self.ask_logit_peak.fill_(float("-inf"))
 
     def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
                 ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
         """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`
         (or register 0 has halted, under row_halt; or the card scores at or below the ASK sink, under fetch_sink)."""
         cut = (ask <= 0) | stop
-        if episode is not None and episode.keep is not None:
-            cut = cut | (episode.keep[index, 0] < 0.5)
+        if episode is not None and episode.halted is not None:   # the same rule in training and answering
+            cut = cut | episode.halted[index, 0]
         top = store.top(scores, self.config.top_k).masked_fill(cut.unsqueeze(1), -1)
         if hasattr(self.heads, "ask_sink"):        # steal 2: cards scoring at or below the sink are not fetched
             below = scores.gather(1, top.clamp_min(0)) <= self.heads.ask_sink.float()
@@ -831,6 +848,8 @@ class PremonitionMini(nn.Module):
         if mode not in MODES:
             raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
         config = self.config
+        if config.qk_clip > 0 and self.training and torch.is_grad_enabled():
+            self.ask_logit_peak.fill_(float("-inf"))      # QK-Clip reads only this forward's logits
         hidden = self.read(batch)
         l_lm = self.lm_loss(hidden, batch)
         store = self.build_store(hidden, batch)

@@ -218,7 +218,7 @@ class AllOffIsBitIdenticalTest(unittest.TestCase):
 
 class PairedInitTest(unittest.TestCase):
     """At a given seed a steal leaves every shared weight and the RNG stream as the flag-off model has them, so a
-    paired A/B differs only in the steal. delta_bind is the exception: it removes the binder, whose draws go."""
+    paired A/B differs only in the steal (delta_bind too: the binder it removes still has its draws taken)."""
 
     def test_shared_weights_match_the_flag_off_model(self) -> None:
         for variant in VARIANTS:
@@ -226,8 +226,6 @@ class PairedInitTest(unittest.TestCase):
                 off, off_rng = build(PremonitionMini, tiny(variant), seed)
                 reference = off.state_dict()
                 for label, flags in SINGLE.items():
-                    if label == "delta_bind":
-                        continue
                     with self.subTest(variant=variant, seed=seed, flag=label):
                         on, on_rng = build(PremonitionMini, tiny(variant, **flags), seed)
                         self.assertTrue(torch.equal(on_rng, off_rng))
