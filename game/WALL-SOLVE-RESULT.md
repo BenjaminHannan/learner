@@ -266,3 +266,24 @@ Two independent implementations agreed to rounding. Full tables: `game/results/g
   - `gwls_persist.sh` resolves a relative `--root` differently for the checks;
   - the ratio bound is loose only at A_w around 0.01-0.05 (live round-3/4 A_w is 15.7-40.3);
   - duplicated A27 pipeline and HABIT / RUN_SEED constants.
+
+## Built-in review of the complete read path after Q111 (28f6fcc42..3d6b1e181): verdict BLOCKING; sealed read stays HELD
+- **B1-B3 (Q111) are in:** 3d6b1e181. Verified independently: 65 tests pass; 4 real concurrent processes give exactly one lock holder; the
+  live dry-run is clean and leaves no lock.
+- **New findings that are blocking by the stated definition.** None is reachable in the planned execution; Q111 did not waive inert holes.
+  - **N1 (gwls_final.py:290):** the one-shot guard checks only `<root>/s<seed>/score-sample.json`, not the persisted record in
+    `game/results/gwls/`. A rebuilt root would allow a second sealed read that overwrites the first. Inert now: no read has happened.
+  - **N2 (:528):** the play path removes the locks before the identity check on the fresh result. If identity then fails and someone
+    deletes the bad file, a replay is possible.
+  - **N3 (:343):** the result's episode cap (and gate) is not compared with arm C's (cap 1000). A changed `constants.json` would pair
+    episodes of different lengths and mis-score. Inert now: `episode_cap` is 1000.
+  - **N4 (:338):** the identity check is metadata only (no checkpoint hash or mtime order), so `--analyze-only` could mark a stale or
+    edited result.
+  - **N5 (:183):** the training probe matches only the literal `game.imitate`. A launch as `python game/imitate.py` would not be seen.
+    Inert now: no training process exists.
+- **Not blocking:**
+  - bare asserts under `-O` (never used);
+  - `gwls_persist.sh` resolves a relative root differently for the checks;
+  - `gwls_checks` uses a bare `json.load` instead of `read_iter`;
+  - `read_state` does a full `torch.load` just for four fields;
+  - altitude: the gate infers "training stopped" from symptoms instead of a done-marker from the trainer (`imitate.py`, outside the read path).
