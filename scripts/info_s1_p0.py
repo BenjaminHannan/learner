@@ -12,6 +12,7 @@ Conditions (greedy decode, exact match, as `train.validate`):
   gold_L4    the same with max_loops = 4 (no eviction possible)
   gold_noask_L{1,2,4,8}  gold preloaded, then NO further fetch, for 1/2/4/8 think loops (no eviction; the L8 row
              also separates eviction from 8 loops of Think on the card rows)
+  nocards_L1 no card at all, one think loop: the card-removal control (added after the first run, see REPORT)
 Every condition records its insertions (`train.InsertLog`) and `train.card_stats` (overflowed questions, questions
 whose gold card was overwritten before decoding).
 
@@ -42,7 +43,7 @@ OUT_DIR = Path("artifacts/claude-infoconstraints-20261018")
 
 
 @torch.no_grad()
-def gold_no_ask(model: PremonitionMini, batch, loops: int) -> Answers:
+def gold_no_ask(model: PremonitionMini, batch, loops: int, preload_gold: bool = True) -> Answers:
     """`train.answer_with_gold` with every post-preload fetch suppressed and a fixed loop count (HALT ignored)."""
     config = model.config
     hidden = model.read(batch)
@@ -55,7 +56,8 @@ def gold_no_ask(model: PremonitionMini, batch, loops: int) -> Answers:
     width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, config.card_rows)
     preload = torch.where(gold, torch.arange(gold.shape[1]),
                           torch.full_like(gold, -1, dtype=torch.long)).topk(width, 1).values
-    model._insert(episode, store, everyone, preload)
+    if preload_gold:
+        model._insert(episode, store, everyone, preload)
     halt_prob = torch.zeros(count)
     for step in range(loops):
         _, halt, _, _ = model._step(episode, everyone, step, store)
@@ -68,12 +70,16 @@ def gold_no_ask(model: PremonitionMini, batch, loops: int) -> Answers:
 def evaluate(model: PremonitionMini, batches: list, name: str, run, offset: int) -> dict[str, Any]:
     """Accuracy, loops, halts and summed `card_stats` of one condition over the held-out batches."""
     config = model.config
-    correct = questions = loops = halted = 0
+    correct = questions = loops = halted = inserted = 0
     cards: dict[str, Any] = {}
+    predictions: dict[str, int] = {}
     for batch in batches:
         with ptrain.InsertLog(model) as log:
             answers = run(batch)
-        hit, _ = ptrain.judge(answers, batch, eos=config.eos_id)
+        hit, texts = ptrain.judge(answers, batch, eos=config.eos_id)
+        for text in texts:
+            predictions[text] = predictions.get(text, 0) + 1
+        inserted += sum(int((picked >= 0).sum()) for _, picked in log.calls)
         correct += sum(hit)
         questions += len(hit)
         loops += int(answers.loops.sum())
@@ -81,6 +87,8 @@ def evaluate(model: PremonitionMini, batches: list, name: str, run, offset: int)
         ptrain._add(cards, ptrain.card_stats(log.calls, batch, answers.loops, config.card_rows, offset=offset))
     return {"condition": name, "questions": questions, "accuracy": correct / max(questions, 1),
             "loops_mean": loops / max(questions, 1), "halt_rate": halted / max(questions, 1),
+            "inserts_per_question": inserted / max(questions, 1), "distinct_predictions": len(predictions),
+            "top_prediction_share": max(predictions.values(), default=0) / max(questions, 1),
             "cards": ptrain.summarize_cards(cards), "raw": cards}
 
 
@@ -107,7 +115,8 @@ def main(argv: Optional[list[str]] = None) -> None:
         ("own_L4", lambda b: model.answer(b, max_loops=4), 1),
         ("gold", lambda b: ptrain.answer_with_gold(model, b), 0),
         ("gold_L4", lambda b: ptrain.answer_with_gold(model, b, max_loops=4), 0),
-    ] + [(f"gold_noask_L{n}", (lambda n: lambda b: gold_no_ask(model, b, n))(n), 0) for n in (1, 2, 4, 8)]
+    ] + [(f"gold_noask_L{n}", (lambda n: lambda b: gold_no_ask(model, b, n))(n), 0) for n in (1, 2, 4, 8)] + [
+        ("nocards_L1", lambda b: gold_no_ask(model, b, 1, preload_gold=False), 0)]
     rows = [evaluate(model, held_out, name, run, offset) for name, run, offset in conditions]
     validation = trained["validation"]
     result = {
@@ -120,7 +129,8 @@ def main(argv: Optional[list[str]] = None) -> None:
     for row in rows:
         c = row["cards"]
         print(f"seed {args.seed} {row['condition']:<15} acc {row['accuracy']:.4f} loops {row['loops_mean']:.2f} "
-              f"halt {row['halt_rate']:.2f} overflow_q {c['fifo_overflow_questions']} "
+              f"halt {row['halt_rate']:.2f} inserts/q {row['inserts_per_question']:.2f} "
+              f"distinct {row['distinct_predictions']} top {row['top_prediction_share']:.2f} overflow_q {c['fifo_overflow_questions']} "
               f"gold_evicted_q {c['fifo_gold_evicted_questions']} / {row['questions']}", flush=True)
     out = args.out or OUT_DIR / f"s1-p0-seed{args.seed}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

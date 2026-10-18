@@ -2,8 +2,14 @@
 
 **Status: DRAFT.** Written 2026-10-18 (UTC) on branch `claude/info-constraint-solutions`, based on `main` at
 73b8e0224 (the base that `claude/steals-8`, `claude/decoder-reader-kv` and `span-cards-solve` also build on).
-No training, no tests run, no GPU, no spend. Nothing here merges. Every bid below is addressed to the
-coordinator and is not booked.
+No GPU, no spend. Nothing here merges. Every bid below is addressed to the coordinator and is not booked.
+
+**Revised 2026-10-18 after S1-P0** (ruled E3: CPU toy runs in this session's container count as $0 probes).
+S1-P0 came back **negative on eviction**. The ring never overflows, and the tiny-D toy model gives one
+constant answer to every question, with or without cards. R2, item 8, N1, S1, S2's Stage 0 setting and the
+ranking (d) are corrected below. The original claims are kept, struck through or marked "retracted", so
+the change is visible. Result: §S1-P0 result, raw files under
+`artifacts/claude-infoconstraints-20261018/`.
 
 Labels: **shown** = read in the code or in a recorded artifact in this session; **suggested** = my reading
 of what was shown; **untested** = not measured by anyone.
@@ -23,20 +29,21 @@ The model reads a long story, writes one index card per line, and later fetches 
 16-card tray to answer a question. The coordinator listed where information gets squeezed. I checked each
 one against the code and looked for more.
 
-1. **The biggest new problem is the tray, not the cards.** The tray holds 16 cards, and the model fetches 4
-   every loop for 8 loops and never stops early. So by loop 5 the first cards fetched (the best ones, found
-   90% of the time) have been pushed out. They are also marked "already fetched", so they can never come
-   back. The famous measurement "answers are at chance even when we hand the model the right card" was
-   taken in exactly this setting. The handed-in card was pushed out of the tray at loop 4. That measurement
-   probably says more about the tray than about the cards.
+1. **I guessed the tray was the problem, and the free test says no.** I thought the model fetched 4 cards
+   every loop and pushed its best cards out of the 16-card tray. When I re-ran the toy, it asked for cards
+   on only one or two loops, so the tray never filled up. The test showed something else instead: the
+   little toy model says **the same answer to every question**, even with no cards at all. So the famous
+   "answers are at chance even when we hand it the right card" number is the score of a model that hasn't
+   learned to answer yet. It tells us nothing about cards, the tray or the thinking block.
 2. **Earlier experiments already showed two more real problems.** The thinking block smears every row with
    the same big update, which wipes card contents (a bypass fixed copying from 11% to 100%). And the answer
    writer picks a card by what answer word it holds, not by whose fact it is (giving it a "who and what"
    address raised choosing from 32% to 98%, but only when the address was handed in).
 3. **Two coordinator items are about a different model.** The forgetting guard (G1, the 6,800-row test) is in
    the custom_io "parent" model, not this one. B2 does no search.
-4. **Fixes, cheapest first:** (S1) let a card that was pushed out be fetched again, and stop empty "NULL"
-   cards from taking tray slots; (S2) give the answer writer an unwashed copy of each fetched card;
+4. **Fixes, in the order to run them now:** (S2) give the answer writer an unwashed copy of each fetched
+   card; (S1, kept for later) let a card that was pushed out be fetched again, and stop empty "NULL" cards
+   from taking tray slots;
    (S3) give each card a learned "who and what" address that the answer writer uses to choose; (S4) let the
    card's key carry which people the line names, so fetching can tell facts about different people apart.
    Each starts with a free check on a laptop-sized toy before any money is asked for.
@@ -48,7 +55,7 @@ one against the code and looked for more.
 | # | The audit assumes | What the repo shows | Consequence |
 |---|---|---|---|
 | R1 | Measured numbers describe the main model | **No PremonitionMini checkpoint exists** (steals REPORT F1, `claude/steals-8:design/steals-2026-10-17/REPORT.md:16`). 7.4% / 24.2% / recall 0.90 come from tiny D (d = 32) trained 425 steps (130 s CPU) on the far-fact toy (`artifacts/claude-steals-20261017/qk-diagnostic.json` on that branch). The pool-mass, direct-reader, address-key and bypass numbers are from the ladder toy, 2,000 steps. | Every "measured" row below is early tiny-D toy behaviour (shown). None is village behaviour. |
-| R2 | "7.4% even with gold cards" isolates the answer path | The same artifact records `asked_rate 1.0`, `loops_mean 8.0`, `halt_rate 0.0`, and `accuracy_gold_cards = accuracy = 0.07421875` (shown). `train.answer_with_gold` (`premonition/train.py:477-517`) preloads the gold card and then lets the model ASK 4 cards on every later loop. 1 + 4 x 4 = 17 > 16, so the gold card is overwritten at loop 4's insert (`model.py:461`) and is never re-fetchable (`model.py:467-468`, `store.py:96`). | The gold-card reading is confounded by ring eviction (suggested, strongly). A $0 probe (S1-P0) separates it. |
+| R2 | "7.4% even with gold cards" isolates the answer path | **Revised after S1-P0 (shown, 3 seeds).** The tiny D of that diagnostic outputs **one constant answer** for all 256 held-out questions, in every condition: own retrieval, gold preloaded, gold preloaded with ASK off for 1-8 loops, and **no cards at all**. Accuracy (7.42 / 8.20 / 7.81%) is just the share of questions whose answer is that one value. It asks on 1-2 loops only (4-8 inserts per question), so the ring never overflows (0/256 on every seed). My first reading here was eviction (`asked_rate 1.0` read as "asks every loop"). That was **wrong**: `asked_rate` (`train.py:659`) counts questions that fetched at least once. | "Chance even with gold cards" is not evidence about the squeeze, Think, the decoder or the ring. It is an untrained (collapsed) answer path at 425 steps. S2 goes first (ruling E3). |
 | R3 | The squeeze causes chance answers with gold cards | With the **same** one-vector cards, D-card-bypass and D-think-gated copy from a supplied card 1024/1024 vs D's 112/1024 on two seeds (`reviews/opus-milestone-02-m02-20260918-232457.md:149-156`, shown). The direct reader (one decoder row per token instead of one pooled row) did not improve choosing (170 vs 164, 162 vs 161; `reviews/opus-milestone-03-continuation-direct-reader.md:26-30`, shown). | For the shown failures, Think's row-shared update (norm 8.7, row spread 0.3; m02 review `:120-121`) and decoder selection-by-value matter more than pooling. The squeeze is real but is not the shown cause. |
 | R4 | Direction-only matching loses gold rank | The raw key norm does not separate gold from the wrong cards that outrank it (+0.006 median gap); those wrong cards tie gold in direction (cos 0.992 vs 0.992). κ ≈ 13 (steals REPORT §3, shown). | The binding problem is **key collapse** (every fact card points the same way), not lost magnitude. The fix has to put new information into the key (S4; also steals `key_split`). |
 | R5 | The forgetting guard is a PremonitionMini training constraint | There is no guard of any kind in `premonition/train.py` or `learnlab/` (grep: ewc, fisher, distill, kl, anchor, freeze, guard; reader, re-checked by grep). G1 (KL weight 30), G3, the 6,800-row test (parent 90.62%) and DEV parent 90.22 belong to the custom_io/domain parent model (`claude/forgetting-guard-review-prompt:reviews/gpt-forgetting-guard-choice-2026-10-18.md`; `claude/lt2-r2a-replica:domain/far/MARKS-L11-NKsoft-2026-10-12.md:8`). | Moved out of the PremonitionMini table. Noted under (e). |
@@ -63,7 +70,7 @@ All line numbers are `main` @ 73b8e0224 and were re-read by me unless marked (re
 | # | Audit item | Verdict | Code evidence | Note |
 |---|---|---|---|---|
 | 1 | CardWriter pools each line into ONE value (d = 128) + ONE key (64) | **CONFIRMED** | `model.py:177-179` (`pool = Linear(d,1)`, `key = Linear(d,key_dim)`, `value = Linear(d,d)`); `:188-196` masked per-line softmax, then `self.key(pooled), self.value(pooled)`; key normalised at `store.py:65` | The pool is a fixed, question-blind direction (`pool` has no query). One pooled vector feeds the ASK key, the decoder's cross-attention key and the decoder's value. |
-| 1m | "Two facts on one line share one vector; answers at chance even with gold cards" | **CORRECTED** | Village lines are mostly one fact: 11.9 tokens/line, ~0.6% visibly multi-update (`span-cards-solve:design/span-cards/01-design.md` §1, measured on 1,830 lines). The chance reading is confounded (R2) and the copy failure is shown to be Think's update (R3). | What the pool does lose is shown: trained pools put 70-98% of mass on 1-2 tokens. Answer-only training kept the value (0.979) and lost the person (probe 116/2048). Retrieval training kept the relation (0.71) and lost the value (125/2048). Reader states keep both (2304/2304) (`reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md:292-306`). So the squeeze is **within one fact**: person vs value. Two-fact blending is rare in this data. |
+| 1m | "Two facts on one line share one vector; answers at chance even with gold cards" | **CORRECTED** | Village lines are mostly one fact: 11.9 tokens/line, ~0.6% visibly multi-update (`span-cards-solve:design/span-cards/01-design.md` §1, measured on 1,830 lines). The chance reading is a constant-output artifact (R2, S1-P0) and the copy failure is shown to be Think's update (R3). | What the pool does lose is shown: trained pools put 70-98% of mass on 1-2 tokens. Answer-only training kept the value (0.979) and lost the person (probe 116/2048). Retrieval training kept the relation (0.71) and lost the value (125/2048). Reader states keep both (2304/2304) (`reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md:292-306`). So the squeeze is **within one fact**: person vs value. Two-fact blending is rare in this data. |
 | 2 | Decoder cross-attends ONLY to the 76 think rows; an unfetched card is unreachable | **CONFIRMED, with nuance** | Training `model.py:571` (`_decode_logits(rows, ...)`), eval `:746` (`episode.x`); `Decoder.forward` `:286-288` attends `memory` only | The 40 question rows are reader states (`:419`), so the GRU summary of the visit reaches the decoder through them. An unfetched card's *content* is reachable only through that compressed state. The decoder also gets no card key, tag or line pointer. |
 | 3 | Keys and query L2-normalised; score = κ·cos + age bias; magnitude discarded | **CONFIRMED (mechanism), CORRECTED (diagnosis)** | `store.py:110` (query), `:65` (keys), `:113-116` (κ·q·k, then bias, which κ does not scale); κ = `exp(log_kappa)`, unbounded (`model.py:257`, `:494`) | Values keep their norm. The magnitude loss is real but not what fails (R4). |
 | 3m | Gold first 24.2%; recall@4 ≈ 0.90 | **CONFIRMED as recorded** | `qk-diagnostic.json`: `gold_ranked_first 0.2421875`, `recall_at_k 0.90234375` (steals-8) | Tiny D, far-fact toy, 425 steps (R1). Each toy question has exactly one gold card, so 3 of 4 fetches are wrong by construction. |
@@ -71,7 +78,7 @@ All line numbers are `main` @ 73b8e0224 and were re-read by me unless marked (re
 | 5 | Thinker sees only the last 40 question tokens | **CONFIRMED, cap non-binding** | `config.py:35`; `model.py:415-419` (`position = end - 40 + arange`, `question_ok = position >= start`) | `q_span` starts at the question **line** (`data.py:17`, `:359`), so rows before the question line are masked, not filled with context. The recorded `question_max` is 32 (`reviews/astra-design-2026-09-19/evidence.json:377`), so at least 8 of the 40 rows are always padding. On the toy, at most 5 tokens (`ovn_qread.py:22`). The real limit is "the question line only", not "40". |
 | 6 | 16 entity slots (N_ENT = 16); pointer AUC ≈ 0.51 | **CONFIRMED (16); AUC NOT FOUND** | `batch.py:19`; slots `model.py:423-426` (valid only if mentioned, `:395-407`) | More than 16 names raises `NameOverflow` (`pointer.py:159-161`), which `data.py:406-409` does not catch, so the cache build aborts (reader). Recorded `names_max` 12 (`evidence.json:376`). I could not find the AUC 0.51 / "replicas" measurement for PremonitionMini. The only hit, `artifacts/claude-mu403-20260926/AUC.md:13`, is unrelated. The ladder toy's binding failure is shown elsewhere (changed-fact pairs 0/256, R3). |
 | 7 | top_k 4 per ASK, max_loops 8, ONE ASK query from register 0 | **CONFIRMED** | `config.py:38-39`; `model.py:488-495` (`register = _norm(rows[:, _register_base])` feeds `halt`, `ask` and `query`) | Registers 1-3 feed no head. HALT reads the same row. |
-| 8 | 16-row ring, position = count % 16; eviction rate unmeasured | **CONFIRMED, and worse than stated** | `model.py:461`; `count` includes NULL inserts (`:452`, `:466`); `fetched` is never cleared on overwrite (`:467-468`) and fetched cards are ineligible (`store.py:95-97`) | An evicted card is gone for the rest of that question. At the recorded toy behaviour (asked_rate 1, halt_rate 0) there are 1 + 7 x 4 = 29 inserts into 16 rows (R2). The counters already exist (`train.py:167-216`, `fifo_overflow_questions`, `fifo_gold_evicted_questions`). They read 0 in m02 only because m02 ran max_loops 4, top_k 1 (`design/research/broad-sweep-2026-09-19/README.md:187-189`). |
+| 8 | 16-row ring, position = count % 16; eviction rate unmeasured | **CONFIRMED (code); eviction NOT observed (S1-P0)** | `model.py:461`; `count` includes NULL inserts (`:452`, `:466`); `fetched` is never cleared on overwrite (`:467-468`) and fetched cards are ineligible (`store.py:95-97`) | An evicted card is gone for the rest of that question. ~~At the recorded toy behaviour there are 29 inserts into 16 rows~~ (retracted): measured 4-8 inserts per question, 0/256 overflow on 3 seeds. Latent: it bites only if ASK fires on ≥ 4 loops (16 / top_k). The counters already exist (`train.py:167-216`, `fifo_overflow_questions`, `fifo_gold_evicted_questions`). They read 0 in m02 only because m02 ran max_loops 4, top_k 1 (`design/research/broad-sweep-2026-09-19/README.md:187-189`). |
 | 9 | Card time = one of 16 log2 age buckets | **CONFIRMED** | `config.py:40`; `store.py:28-30`, `:103`; row embedding `model.py:456-458` | Age is **line-index** distance, so question lines count. Ages 0 and 1 share bucket 0, as do 4-7 and 8-15. Bucket 15 needs ≥ 32,768 lines (never reached). Age enters twice: as a score bias and as a row embedding. |
 | 10 | Memory is one visit; only lines before the question | **CONFIRMED** | `store.py:90` (`valid[q_visit] & line < q_line`), `:111` | Question lines never become cards (`store.py:63`). Episodes are per question: slots, ring and fetched set restart for every question of a visit (`model.py:410-436`). |
 | 11 | Working memory 76 rows; 2 shared layers; 4 heads of 32 | **CONFIRMED, wording fixed** | `config.py:89-91`; `model.py:228` (two distinct layers), reused every loop `:486` | "Shared" means shared across loops, not between the two layers. The think rows have no positional code (`:213-218`), so ring order and question-token order are invisible apart from row-type embeddings. The step embedding is added and stored back every loop (`:237`, `:487`), so it accumulates in the rows. |
@@ -91,13 +98,14 @@ eval-only, or a CPU toy run).
 
 ### Fetch and ring (the biggest new group)
 
-**N1 (BIG). Ring eviction is guaranteed at default settings, and it hits the best cards first.**
+**N1 (latent; downgraded after S1-P0). Ring eviction once ASK fires on ≥ 4 loops; it hits the best cards first.**
 - Where: `model.py:461` (FIFO position), `:707` (8 loops), `:725` (insert whenever ASK > 0), `config.py:36-39`.
-- Loses: with ASK on every loop and no halt (recorded: asked_rate 1.0, halt_rate 0.0, loops 8), the first
-  ASK's top-4 (recall@4 0.90) are overwritten at loop 5. The answer is decoded from loops 4-7's fetches,
-  which are ranks 13-28 of the eligible list.
-- Why it matters: it can by itself explain answers at chance with good retrieval, and the "gold handed in"
-  reading (R2).
+- Loses: if ASK fired on every loop with no halt, the first ASK's top-4 would be overwritten at loop 5, and
+  the answer would be decoded from ranks 13-28.
+- Measured (S1-P0, tiny D, far-fact toy, 3 seeds): 4-8 inserts per question, 0/256 overflow. Not active in
+  that model. ~~It can by itself explain answers at chance~~ (retracted).
+- Why it still matters: a model that learns to keep asking (own-mode training rewards asking while gold is
+  missing, `model.py:597-599`) would reach it. Measure it on DEV (S1-P1) before building S1.
 - Measure ($0): existing `InsertLog` + `card_stats` (`train.py:130-216`) around `answer()` and
   `answer_with_gold()`. Count overflowed questions, gold evicted before decode, NULL inserts, and the loop at
   which the last gold card left the ring.
@@ -305,7 +313,48 @@ if config.ring_resident:
 - **S1-P1 (eviction rate on DEV, the named probe).** The same counters on the first funded village
   checkpoint (any line's), eval-only, CPU or the box already running. $0.
 
-**Paired A/B (Stage 0, CPU, $0).** Far-fact toy, D vs D + `ring_resident`, paired init (S1 adds no
+#### S1-P0 result (run 2026-10-18 in this session's container, CPU, $0; ruled E3)
+
+Script: `scripts/info_s1_p0.py` (additive; `premonition/` untouched). It trains the same tiny D as the
+steals QK diagnostic (`train_toy`, `ToySpec()`, 380 requested steps, 16 visits, 425 steps run), torch
+2.14.1+cpu, seeds 0-2, 89-149 s of training each. The decision line was fixed in the script's docstring
+before the run. Raw: `artifacts/claude-infoconstraints-20261018/s1-p0b-seed{0,1,2}.{json,log}` (the
+first pass `s1-p0-seed*` gave identical accuracies and lacked the two columns added below). 256 held-out
+questions per seed; chance 6.25%.
+
+| condition | seed 0 acc | seed 1 acc | seed 2 acc | inserts / question (s0/s1/s2) | ring overflow (questions) | distinct answers |
+|---|---|---|---|---|---|---|
+| own (as shipped, ≤ 8 loops) | 7.42% | 8.20% | 7.81% | 4.00 / 8.00 / 3.75 | 0 / 0 / 0 | 1 / 1 / 1 |
+| own, max_loops 4 | 7.42% | 8.20% | 7.81% | 4.00 / 8.00 / 3.75 | 0 / 0 / 0 | 1 / 1 / 1 |
+| gold (as recorded) | 7.42% | 8.20% | 7.81% | 5.00 / 5.38 / 3.81 | 0 / 0 / 0 | 1 / 1 / 1 |
+| **gold, max_loops 4** | **7.42%** | **8.20%** | **7.81%** | 5.00 / 5.38 / 3.81 | 0 / 0 / 0 | 1 / 1 / 1 |
+| gold, ASK off, 1 loop | 7.42% | 8.20% | 7.81% | 1 | 0 | 1 / 1 / 1 |
+| gold, ASK off, 2 loops | 7.42% | 8.20% | 7.81% | 1 | 0 | 1 / 1 / 1 |
+| gold, ASK off, 4 loops | 7.42% | 8.20% | 7.81% | 1 | 0 | 1 / 1 / 1 |
+| **gold, ASK off, 8 loops** | **7.42%** | **8.20%** | **7.81%** | 1 | 0 | 1 / 1 / 1 |
+| no cards, 1 loop (removal control) | 7.42% | 8.20% | 7.81% | 0 | 0 | 1 / 1 / 1 |
+
+Seed 0's `own` reproduces the recorded 0.07421875 exactly.
+
+**Verdict against the pre-set line (shown):** gold-card accuracy with `max_loops = 4` and with ASK off after
+the preload stays at chance on every seed, far below 25%. The ring never overflows. **Eviction is not the
+cause.** Per ruling E3, **S2 goes first**.
+
+**What it does show (shown, and new):** every condition produces the *same single answer* for all 256
+questions. The answer does not change with the card present, absent, fresh (1 loop) or after 8 loops. At
+this budget the answer path has collapsed to the most frequent value. That is upstream of every fix
+here: no card mechanism can be read through a decoder that ignores its memory.
+
+**Consequences:**
+1. The "7.4% even with gold cards" headline should be re-labelled "answer path collapsed to a constant at
+   425 toy steps". This touches the steals REPORT F2 ranking argument too.
+2. Any Stage 0 on the far-fact toy needs a budget where the control is *not* constant. I added a guard to
+   every Stage 0 below: **the control must give > 1 distinct answer, else the cell is void, not a fail.**
+3. S2's Stage 0 moves to the m02 ladder-toy protocol, where D reached 112/1024 (not constant) and bypass
+   reached 1024/1024. See S2.
+4. S1 stays designed but is **not built** until S1-P1 shows eviction on a trained model.
+
+**Paired A/B (Stage 0, CPU, $0; only if S1-P1 shows eviction).** Far-fact toy, D vs D + `ring_resident`, paired init (S1 adds no
 parameters, so both arms draw the same stream), 3 seeds, 425 steps.
 - Primary: own-retrieval answer accuracy at eval, no `max_loops` override.
 - Bar: d_s > 0 on 3/3 seeds and mean ≥ +5 points.
@@ -353,11 +402,16 @@ concatenates only when it is present.
   access to the raw rows, then to the post-Think card rows, and report the accuracy drop. This shows which
   path the answer actually uses. Run it on DEV once a village pair exists.
 
-**Paired A/B (Stage 0, CPU, $0).**
-- Far-fact toy, 3 seeds, 425 steps. Control = D + S1 if S1 passed, else D, so each A/B is one change.
-- Primary: `answer_with_gold` accuracy, with eviction removed by S1 or by `max_loops = 4`.
-- Bar: ≥ 50% on 3/3 seeds (control 7.4%). This is a large effect, because bypass reached 100% on the
-  ladder toy.
+**Paired A/B (Stage 0, CPU, $0). Revised after S1-P0: the far-fact toy at 425 steps collapses to a constant answer, so it cannot read S2.**
+- Ladder toy, the m02 protocol (`reviews/opus-milestone-02-m02-20260918-232457.md`: 256 visits x 4
+  questions, fresh bindings, writer-produced gold cards, untouched test run once per checkpoint), 3 seeds.
+  Control = plain D (S1 did not pass). Per E4, this is also the plain-D pair.
+- Validity guard first: the control must give > 1 distinct answer and must reproduce D's ≈ 11%
+  (112/1024 in m02) within its Wilson interval. Otherwise the cell is void.
+- Primary: supplied-gold-card accuracy on the test split.
+- Bar: ≥ 50% on 3/3 seeds. This is a large effect: bypass reached 100% here.
+- Second reading: the same pair on the far-fact toy at the budget where the control first gives > 1
+  distinct answer (found by a $0 step sweep of the control alone: 425, 1,000, 2,000 steps).
 - Guards (the reader-kv guard, so a gain counts only if cards are used):
   - removing the cards drops treated accuracy to within 3 points of chance;
   - fetched cards per question ≥ 80% of control;
@@ -500,19 +554,20 @@ which `π` reads in learned mode, so do not run S4 on top of `delta_bind` until 
 
 | Rank | Fix | Expected gain | Cost | Risk | Why here |
 |---|---|---|---|---|---|
-| 1 | **S1 ring_resident** | Possibly large: it may be what keeps answers at chance with recall@4 0.90 (R2, N1) | 0 params; P0 is about 7 min CPU; the code change is about 20 lines | Low: if P0 shows no eviction effect, it is dropped for $0 | It decides how to read every other answer-path number |
-| 2 | **S2 decoder_raw_cards** | Large on copying (bypass precedent: 11% → 100%) | 0 params, +16 decoder rows | Low-medium: the decoder could ignore Think (guarded by fetch-use and card-removal) | The only shown fix of the copy failure, made additive |
-| 3 | **S3 card_address** | Large on choosing if learned (oracle +0.66) | +16.6k params (0.8%) | Medium: the address may learn the value (guarded by pool mass) | It needs S1/S2 first, or washed or evicted cards make it unreadable |
-| 4 | **S4 ent_key** | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90, so the answer path comes first (agrees with steals §5) |
+**Revised after S1-P0.**
 
-**The single one I would run first: S1-P0.** It is a $0 eval-only probe on the exact setting the coordinator's
-headline came from: re-run the steals QK diagnostic script, then evaluate with `max_loops = 4` and with ASK
-off after the preload. The recorded artifact already shows the ingredients: asked_rate 1.0, halt_rate 0.0,
-and gold-card accuracy *identical* to own-retrieval accuracy. If the handed-in gold card was evicted at
-loop 4, then "answers at chance even with gold cards" is not evidence about the squeeze, the decoder or
-Think. Every A/B on the answer path, including the in-flight `fetch_gate` (R2) and `decoder_reader_kv`
-lines, would be read through a broken tray. It costs about 7 CPU-minutes and changes the order of everything
-else. If it comes back negative, S2 goes first and nothing is lost.
+| Rank | Fix | Expected gain | Cost | Risk | Why here |
+|---|---|---|---|---|---|
+| 1 | **S2 decoder_raw_cards** | Large on copying (bypass precedent: 11% → 100%) | 0 params, +16 decoder rows | Low-medium: the decoder could ignore Think (guarded by fetch-use and card-removal) | The only shown fix of the copy failure, made additive; S1-P0 rules eviction out |
+| 2 | **S3 card_address** | Large on choosing if learned (oracle +0.66) | +16.6k params (0.8%) | Medium: the address may learn the value (guarded by pool mass) | Needs a decoder that reads cards (S2) first |
+| 3 | **S4 ent_key** | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
+| 4 | **S1 ring_resident** | Unknown; not active in the toy model (0 overflow) | 0 params, about 20 lines | Low | Latent; build only if S1-P1 shows eviction on a trained village model |
+
+~~The single one I would run first: S1-P0~~ (done; negative). **Next: S2 Stage 0 on the m02 ladder-toy
+protocol**, with the new validity guard (the control must not be a constant answer). Before it, there is
+one $0 step that every answer-path line needs: a step sweep of plain D on the far-fact toy (425 / 1,000 /
+2,000 steps, distinct-answer count and gold-card accuracy). It tells us the smallest budget at which this
+toy's answer path is alive. Without it, no far-fact Stage 0, mine or the steals', can be read.
 
 ---
 
