@@ -7,8 +7,8 @@ Scores DIR/s<seed>/checkpoint-iter8.pt on the 100 sealed maps ONCE per seed, bot
 (the output is a per-world file in the format of arm C's score-sample.json). Before it plays anything it REFUSES (all problems are listed) unless:
   * round 8 is complete on both seeds: iter-8.json and checkpoint-iter8.pt exist AND state.pt (written last, atomically, by game.imitate) says k == 8,
     run seed 398 / 399 and day offset 4 (a run that is still training is not read); and training has STOPPED (k == 8 alone is not proof): no
-    iter-k.json / play-k-*.json.gz / checkpoint-iterk.pt for any k > 8 in the seed folder, no live process whose command line has 'game.imitate' and
-    the seed folder, state.pt not older than iter-8.json and checkpoint-iter8.pt. A check that cannot be evaluated (no /proc and no pgrep, an
+    iter-k.json / play-k-*.json.gz / checkpoint-iterk.pt for any k > 8 in the seed folder, no live process whose command line contains 'imitate' (any launch form) and refers to
+    the seed folder (absolute / real path, a relative path resolved from the process's cwd; an unresolvable cwd counts as a match), state.pt not older than iter-8.json and checkpoint-iter8.pt. A check that cannot be evaluated (no /proc and no pgrep, an
     unreadable folder) is a refusal;
   * the round-4 leading indicator is not STOP: gwls_report.indicator is recomputed from the iter-*.json and play files of rounds 3 and 4 under the
     reading fixed in the start record (a seed trips if ratio_w <= 0.5 or non-habit <= ref - 0.5, over rounds 3-4; STOP only if both seeds trip). A STOP
@@ -18,6 +18,12 @@ Scores DIR/s<seed>/checkpoint-iter8.pt on the 100 sealed maps ONCE per seed, bot
   * no result file for either checkpoint exists, and no score-started.lock of an earlier attempt is there (a crashed attempt is not silently
     re-played; delete the lock by hand only on a decision). The lock is taken ATOMICALLY (O_CREAT|O_EXCL) for both seeds BEFORE these checks, so two
     concurrent invocations cannot both pass; a failed acquisition refuses, and a refusal releases only the locks this invocation created.
+Also refused: a record of a previous sealed read (an s200/ or s201/ score-sample.json or a final.json in --persist-dir, a final.json or read-record.json in --root);
+game/constants.json episode_cap (play.load_constants) different from arm C's 1000. Identity of a result (play and --analyze-only) goes beyond its metadata: cap 1000 and
+gate None as arm C's, and <root>/read-record.json (written atomically after the locks and before the scorers start: per seed sha256 + mtime_ns of
+checkpoint-iter8.pt and the start time; completed with each result's sha256 after the scorers exit 0 and persisted with the results) must be complete and match:
+checkpoint sha256 and mtime_ns as recorded, result sha256 as recorded, result mtime not before the recorded start. The locks are removed only at the very end (identity
+passed, record complete, results and final.json persisted); a failed identity check leaves them, the attempt stays unresolved.
 --analyze-only never plays, but goes through the SAME gate, round-8 completeness (with the training-stopped proof), arm C checks and lock rule
 (any score-started.lock = an unresolved attempt = refuse), and checks each result's identity: ckpt is (realpath) this root's s<seed>/checkpoint-iter8.pt,
 arm model, picker sample, T 1.0, 100 worlds with the sealed seeds 7,000,000-7,000,099 once each. The play path applies the same identity check to the
@@ -34,6 +40,7 @@ stone maps (collect_stone share) diff in points. Sealed marks, applied verbatim:
   else NO VERDICT (no extension without new marks).
 """
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -41,6 +48,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import time
 
 from game import analyze, gwls_report
 
@@ -57,6 +66,7 @@ WRONG_NH, WRONG_STONE = -0.5, -15.0
 # Arm C as on record: the committed files origin/claude/project-thread-yha868:results/game-world/glprobe-run/s20X/n64000/score-sample.json
 ARM_C_SHA256 = {200: '516f7329d74486d74075243217ee4e62559b92316efed9fad47a0c470ab631dc',
                 201: '4ec56fd9b260d04d38c3a9dd57c25c9c679e7b11167936caf9e6da7e6522f7f1'}
+ARM_C_CAP = 1000                                         # arm C's episode cap on record (its score-sample.json: cap 1000, gate None)
 ARM_C_RECORD = {200: dict(total=6.50, nonhabit=5.46, stone=40.0), 201: dict(total=7.10, nonhabit=5.85, stone=43.0)}
 
 
@@ -98,7 +108,7 @@ def paths(root, arm_c, seed):
     """Every path is absolute (the scorer child runs with cwd=REPO_ROOT, so a relative --root would point at other files there)."""
     root, arm_c = os.path.abspath(root), os.path.abspath(arm_c)
     d = os.path.join(root, f's{seed}')
-    return dict(dir=d, ckpt=os.path.join(d, 'checkpoint-iter8.pt'), out=os.path.join(d, 'score-sample.json'), lock=os.path.join(d, 'score-started.lock'),
+    return dict(dir=d, ckpt=os.path.join(d, 'checkpoint-iter8.pt'), out=os.path.join(d, 'score-sample.json'), lock=os.path.join(d, 'score-started.lock'), record=os.path.join(root, 'read-record.json'),
                 iter8=os.path.join(d, 'iter-8.json'), state=os.path.join(d, 'state.pt'), base=os.path.join(arm_c, f's{seed}', 'n64000', 'score-sample.json'))
 
 
@@ -123,6 +133,10 @@ def arm_c_problems(seed, raw, b, check_hash=True):
     pw = b.get('per_world') or []
     if not (b.get('worlds') == len(pw) == 100):
         bad.append(f'arm C seed {seed}: worlds {b.get("worlds")} / per_world {len(pw)}, not 100')
+    if b.get('cap') != ARM_C_CAP or type(b.get('cap')) is bool:
+        bad.append(f'arm C seed {seed}: cap is {b.get("cap")!r}, not {ARM_C_CAP}')
+    if b.get('gate') is not None:
+        bad.append(f'arm C seed {seed}: gate is {b.get("gate")!r}, not None')
     tail = ['s%d' % seed, 'n64000', 'checkpoint.pt']
     if os.path.normpath(str(b.get('ckpt'))).split(os.sep)[-3:] != tail:
         bad.append(f'arm C seed {seed}: ckpt {b.get("ckpt")!r} does not end with {"/".join(tail)} (the GW-L 64k checkpoint)')
@@ -164,9 +178,29 @@ def inside(cwd, arg, real):
     return full == real or full.startswith(real + os.sep)
 
 
+def references_folder(args, cwd, folder, real):
+    """N5: does a process with this argv (list) and cwd (None = unreadable) refer to the seed folder, in any launch form? Fails closed: an unresolvable cwd is a match."""
+    if any(n in a for a in args for n in (folder, real)):                       # the absolute / real path anywhere in any argument (also inside a -c program)
+        return True
+    if cwd is None:                                                              # cannot resolve a relative reference: cannot rule it out
+        return True
+    if inside(cwd, '.', real):                                                   # the process works from inside the folder
+        return True
+    for a in args:                                                               # relative references: the argument, its --opt=value part, and the words of a -c program
+        for t in [a, a.split('=', 1)[-1]] + [x for x in re.split(r'[\s\'"(),;=\[\]{}]+', a) if x]:
+            try:
+                if inside(cwd, t, real):
+                    return True
+            except (OSError, ValueError):                                        # a word that cannot even be resolved as a path: cannot rule it out
+                return True
+    return False
+
+
 def training_processes(folder):
-    """-> pids of live processes whose command line contains 'game.imitate' and this seed folder (its absolute or real path, or a relative argument
-    that resolves into it from that process's cwd). Raises when it cannot be evaluated (no /proc and no pgrep): the caller treats that as a refusal."""
+    """-> pids of live processes whose command line (joined) contains 'imitate' (game.imitate, game/imitate.py, 'from game import imitate', ...) and that
+    refer to this seed folder (its absolute or real path anywhere in the argv, or a relative reference that resolves into it from that process's cwd);
+    an 'imitate' process whose cwd cannot be read counts as a match (fail closed). Without /proc: every other process matching pgrep -f 'imitate' counts.
+    Raises when it cannot be evaluated (no /proc and no pgrep): the caller treats that as a refusal."""
     folder = os.path.abspath(folder)
     real = os.path.realpath(folder)
     me = os.getpid()
@@ -180,28 +214,27 @@ def training_processes(folder):
                     args = [a.decode('utf-8', 'replace') for a in f.read().split(b'\0') if a]
             except (FileNotFoundError, ProcessLookupError):                       # the process ended while we looked: not running
                 continue
-            if not any('game.imitate' in a for a in args):
-                continue
-            if any(n in a for a in args for n in (folder, real)):
-                hits.append(int(e))
+            except OSError as ex:                                                 # a process whose argv cannot be read cannot be ruled out: the probe fails
+                raise RuntimeError(f'/proc/{e}/cmdline cannot be read: {type(ex).__name__}: {ex}')
+            if 'imitate' not in ' '.join(args):
                 continue
             try:
                 cwd = os.readlink(f'/proc/{e}/cwd')
-            except OSError:                                                      # a game.imitate whose cwd cannot be read: cannot rule it out
-                hits.append(int(e))
-                continue
-            if any(inside(cwd, a.split('=', 1)[-1], real) for a in args):
+            except (FileNotFoundError, ProcessLookupError):
+                if not os.path.exists(f'/proc/{e}'):                              # ended meanwhile
+                    continue
+                cwd = None
+            except OSError:
+                cwd = None
+            if references_folder(args, cwd, folder, real):
                 hits.append(int(e))
         return hits
     if shutil.which('pgrep'):
-        out = []
-        for n in {folder, real}:
-            r = subprocess.run(['pgrep', '-f', 'game.imitate.*' + re.escape(n)], capture_output=True, text=True)
-            if r.returncode not in (0, 1):
-                raise RuntimeError(f'pgrep failed with status {r.returncode}: {r.stderr.strip()}')
-            out += [int(x) for x in r.stdout.split() if int(x) != me]
-        return sorted(set(out))
-    raise RuntimeError('neither /proc nor pgrep is available to look for a live game.imitate process')
+        r = subprocess.run(['pgrep', '-f', 'imitate'], capture_output=True, text=True)
+        if r.returncode not in (0, 1):
+            raise RuntimeError(f'pgrep failed with status {r.returncode}: {r.stderr.strip()}')
+        return sorted({int(x) for x in r.stdout.split()} - {me})
+    raise RuntimeError('neither /proc nor pgrep is available to look for a live imitate process')
 
 
 def training_stopped_problems(seed, p):
@@ -282,9 +315,48 @@ def gate(root):
     return [], ind
 
 
-def play_problems(P, root, arm_c_bad, check_locks=True):
-    """check_locks=False only on the play path, which by then holds the locks itself (acquire_locks) and so has already refused on any earlier one."""
+def exists_strict(path):
+    """True/False for present/absent; any other failure to look (permissions, I/O) raises, so the caller refuses (fail closed)."""
+    try:
+        os.stat(path)
+        return True
+    except FileNotFoundError:
+        return False
+
+
+def previous_read_problems(P, root, persist_dir):
+    """N1: a record of a previous sealed read (a score-sample.json or final.json in the persist dir, a final.json or read-record.json in the root; the
+    root's own score-sample.json is checked with the other results) refuses a new play. Unreadable locations are refusals too."""
+    bad = []
+    cands = [os.path.join(root, 'final.json'), P[SEEDS[0]]['record']]
+    cands += [os.path.join(persist_dir, 'final.json')] + [os.path.join(persist_dir, f's{s}', 'score-sample.json') for s in SEEDS]
+    for c in cands:
+        try:
+            if exists_strict(c):
+                bad.append(f'a record of a previous sealed read exists: {c}; no second read')
+        except OSError as e:
+            bad.append(f'{c} cannot be examined for a previous sealed read: {type(e).__name__}: {e}')
+    return bad
+
+
+def cap_problems():
+    """N3: before playing, the episode cap the scorer will use (game/constants.json, via play.load_constants) must be arm C's."""
+    try:
+        from game import play
+        cap = play.load_constants()[0]['episode_cap']
+    except Exception as e:
+        return [f'game/constants.json episode_cap cannot be read: {type(e).__name__}: {e}']
+    if cap != ARM_C_CAP or type(cap) is bool:
+        return [f'game/constants.json episode_cap is {cap!r}, arm C was played with {ARM_C_CAP}; the scorer would not make a like-for-like read']
+    return []
+
+
+def play_problems(P, root, arm_c_bad, check_locks=True, persist_dir=None):
+    """check_locks=False only on the play path, which by then holds the locks itself (acquire_locks) and so has already refused on any earlier one.
+    persist_dir=None means the default PERSIST_DIR (never skipped)."""
     bad = list(arm_c_bad)
+    bad += previous_read_problems(P, root, PERSIST_DIR if persist_dir is None else persist_dir)
+    bad += cap_problems()
     for s, p in P.items():
         bad += round8_problems(s, p)
         if os.path.exists(p['out']):
@@ -343,6 +415,10 @@ def result_identity_problems(seed, p, m):
     for key, want in (('arm', 'model'), ('picker', 'sample'), ('temp', 1.0), ('worlds', 100)):
         if m.get(key) != want or type(m.get(key)) is bool:
             bad.append(f'seed {seed}: result {key} is {m.get(key)!r}, not {want!r}')
+    if m.get('cap') != ARM_C_CAP or type(m.get('cap')) is bool:
+        bad.append(f'seed {seed}: result cap is {m.get("cap")!r}, not arm C\'s {ARM_C_CAP}')
+    if m.get('gate') is not None:
+        bad.append(f'seed {seed}: result gate is {m.get("gate")!r}, not arm C\'s None')
     pw = m.get('per_world')
     if not isinstance(pw, list) or len(pw) != 100:
         bad.append(f'seed {seed}: result has {len(pw) if isinstance(pw, list) else pw!r} per_world entries, not 100')
@@ -353,16 +429,99 @@ def result_identity_problems(seed, p, m):
     return bad
 
 
+SHA_RX = re.compile(r'^[0-9a-f]{64}$')
+
+
+def sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def write_json_atomic(path, obj):
+    tmp = f'{path}.{os.getpid()}.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(obj, f, indent=1)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
+def fs_now_ns(directory):
+    """The file system's own clock now (the mtime of a file made now): result mtimes are compared with it, so a coarse kernel timestamp cannot read as 'earlier'."""
+    fd, tmp = tempfile.mkstemp(dir=directory, prefix='.clock-')
+    try:
+        return os.fstat(fd).st_mtime_ns
+    finally:
+        os.close(fd)
+        os.remove(tmp)
+
+
+def write_start_record(P):
+    """N4: called with the locks held, before the scorers start: per seed the sha256 and mtime_ns of checkpoint-iter8.pt, and the start time. Atomic."""
+    path = P[SEEDS[0]]['record']
+    rec = dict(version=1, start_ns=fs_now_ns(os.path.dirname(path)), started_wall_ns=time.time_ns(), pid=os.getpid(), seeds={})
+    for s, p in P.items():
+        rec['seeds'][str(s)] = dict(ckpt=os.path.realpath(p['ckpt']), ckpt_sha256=sha256_file(p['ckpt']), ckpt_mtime_ns=os.stat(p['ckpt']).st_mtime_ns)
+    write_json_atomic(path, rec)
+    return rec
+
+
+def complete_record(P):
+    """N4: after the scorers exited 0: add each result file's sha256 to the record (atomic). Raises OSError / ValueError when it cannot be done."""
+    path = P[SEEDS[0]]['record']
+    with open(path) as f:
+        rec = json.load(f)
+    for s, p in P.items():
+        rec['seeds'][str(s)]['result_sha256'] = sha256_file(p['out'])
+    write_json_atomic(path, rec)
+    return rec
+
+
+def record_problems(seed, p, result_sha, result_mtime_ns):
+    """N4: the identity of the result beyond its own metadata. Needs a complete read-record.json that matches the checkpoint on disk now and the result."""
+    path = p['record']
+    if not os.path.exists(path):
+        return [f'seed {seed}: no read-record.json ({path}); the result cannot be tied to a sealed read of this checkpoint']
+    try:
+        with open(path) as f:
+            rec = json.load(f)
+    except gwls_report.READ_ERRORS as e:
+        return [f'seed {seed}: {path} cannot be read: {type(e).__name__}: {e}']
+    isint = lambda x: type(x) is int
+    e = rec.get('seeds', {}).get(str(seed)) if isinstance(rec, dict) and isinstance(rec.get('seeds'), dict) else None
+    if not (isinstance(e, dict) and isint(rec.get('start_ns')) and isint(e.get('ckpt_mtime_ns'))
+            and all(isinstance(e.get(k), str) and SHA_RX.match(e.get(k)) for k in ('ckpt_sha256', 'result_sha256'))):
+        return [f'seed {seed}: read-record.json is incomplete (needs start_ns and, for seed {seed}, ckpt_sha256, ckpt_mtime_ns, result_sha256)']
+    bad = []
+    try:
+        if sha256_file(p['ckpt']) != e['ckpt_sha256']:
+            bad.append(f'seed {seed}: checkpoint-iter8.pt sha256 differs from the one recorded when the sealed read started')
+        if os.stat(p['ckpt']).st_mtime_ns != e['ckpt_mtime_ns']:
+            bad.append(f'seed {seed}: checkpoint-iter8.pt mtime differs from the one recorded when the sealed read started')
+    except OSError as ex:
+        bad.append(f'seed {seed}: checkpoint cannot be checked against the read record: {type(ex).__name__}: {ex}')
+    if result_sha != e['result_sha256']:
+        bad.append(f'seed {seed}: the result file sha256 differs from the one recorded when the scorer exited (the file was changed)')
+    if result_mtime_ns < rec['start_ns']:
+        bad.append(f'seed {seed}: the result file is older than the start of the sealed read (not written by it)')
+    return bad
+
+
 def load_result(seed, p):
-    """-> (parsed result file or None, [problems]) incl. its identity; every read failure is a string."""
+    """-> (parsed result file or None, [problems]) incl. its identity (metadata and read record); every read failure is a string."""
     if not os.path.exists(p['out']):
         return None, [f'seed {seed}: no result file {p["out"]}']
     try:
-        with open(p['out']) as f:
-            m = json.load(f)
+        with open(p['out'], 'rb') as f:
+            raw = f.read()
+        mt = os.stat(p['out']).st_mtime_ns
+        m = json.loads(raw)
     except gwls_report.READ_ERRORS as e:
         return None, [f'seed {seed}: the result file {p["out"]} cannot be read: {type(e).__name__}: {e}']
-    bad = result_identity_problems(seed, p, m)
+    bad = result_identity_problems(seed, p, m) + record_problems(seed, p, hashlib.sha256(raw).hexdigest(), mt)
     return (None if bad else m), bad
 
 
@@ -486,7 +645,7 @@ def main(argv=None):
                           'stone %', round(sum(map(stone, b['per_world'])) / b['worlds'], 1))
                 except gwls_report.READ_ERRORS as e:                              # a malformed arm C file is a listed problem, not a traceback
                     arm_c_bad.append(f'arm C seed {s}: {p["base"]} numbers cannot be printed: {type(e).__name__}: {e}')
-        bad, ind = play_problems(P, a.root, arm_c_bad)
+        bad, ind = play_problems(P, a.root, arm_c_bad, persist_dir=a.persist_dir)
         print('round-4 branch:', ind['branch'] if ind['branch'] else f'unavailable ({ind["note"]})')
         if bad:
             print('DRY RUN: WOULD REFUSE to play, %d problem(s):' % len(bad))
@@ -504,13 +663,18 @@ def main(argv=None):
         if bad:
             sys.exit('refusing to play the sealed worlds, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
         try:
-            bad, _ = play_problems(P, a.root, arm_c_bad, check_locks=False)
+            bad, _ = play_problems(P, a.root, arm_c_bad, check_locks=False, persist_dir=a.persist_dir)
         except BaseException:
             release_locks(held)                                                            # nothing played yet
             raise
         if bad:
             release_locks(held)                                                            # only the locks this invocation created; nothing was played
             sys.exit('refusing to play the sealed worlds, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
+        try:
+            write_start_record(P)                                                          # N4: checkpoint sha256 / mtime_ns and the start time, before anything is played
+        except BaseException as e:
+            release_locks(held)                                                            # nothing played yet
+            sys.exit(f'the read record cannot be written, nothing is played: {type(e).__name__}: {e}')
         env = dict(os.environ, PYTHONPATH=REPO_ROOT)
         procs = []
         try:
@@ -519,19 +683,24 @@ def main(argv=None):
         except BaseException as e:
             if not procs:
                 release_locks(held)                                                        # the first scorer never started: nothing was played
+                with contextlib.suppress(FileNotFoundError):
+                    os.remove(P[SEEDS[0]]['record'])                                       # ... so the start record is void too
             for pr in procs:
                 pr.wait()
             sys.exit(f'game.score could not be started: {type(e).__name__}: {e}' + (' (locks kept: a scorer is running)' if procs else ''))
         codes = [pr.wait() for pr in procs]
         assert codes == [0, 0], f'game.score failed: {codes} (locks kept: no re-play without a decision)'
-        persist([p['out'] for p in P.values()], a.root, a.persist_dir)                    # straight after the sealed read
-        release_locks(held)
+        try:
+            complete_record(P)                                                             # N4: each result's sha256, atomically
+            persist([p['out'] for p in P.values()] + [P[SEEDS[0]]['record']], a.root, a.persist_dir)      # straight after the sealed read
+        except (OSError, ValueError) as e:
+            sys.exit(f'the sealed read was played, but its record cannot be completed / persisted ({type(e).__name__}: {e}); locks kept, unresolved')
         results, bad = {}, []
         for s, p in P.items():
             results[s], b = load_result(s, p)                                              # the same identity check on the fresh result
             bad += b
-        if bad:
-            sys.exit('the sealed read was played, but its result fails the identity check, no marks computed, %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
+        if bad:                                                                            # N2: the locks stay, the attempt is unresolved
+            sys.exit('the sealed read was played, but its result fails the identity check, no marks computed, locks kept (unresolved), %d problem(s):\n  - ' % len(bad) + '\n  - '.join(bad))
     per_seed = {}
     for s, p in P.items():
         try:
@@ -548,6 +717,8 @@ def main(argv=None):
     with open(fpath, 'w') as f:
         json.dump(dict(per_seed={str(k): x for k, x in per_seed.items()}, verdict=v), f, indent=1)
     persist([fpath] + [p['out'] for p in P.values()], a.root, a.persist_dir)
+    if not a.analyze_only:
+        release_locks(held)                                                                # N2: only now - identity passed, record complete, results and final.json persisted
 
 
 if __name__ == '__main__':

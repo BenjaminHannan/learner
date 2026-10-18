@@ -4,6 +4,7 @@ No checkpoint and no game is played: synthetic round folders in a temp dir. Noth
 """
 import contextlib
 import gzip
+import hashlib
 import io
 import json
 import os
@@ -323,7 +324,7 @@ class FinalRobustness(unittest.TestCase):
             buf = io.StringIO()
             with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), contextlib.redirect_stdout(buf):
                 with self.assertRaises(SystemExit) as cm:
-                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])
+                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc, '--persist-dir', os.path.join(root, 'persist')])
             self.assertEqual(cm.exception.code, 1)
             out = buf.getvalue()
             self.assertIn('WOULD REFUSE', out)
@@ -524,7 +525,7 @@ class GateReadSide(unittest.TestCase):
             buf = io.StringIO()
             with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), contextlib.redirect_stdout(buf), census_stub():
                 with self.assertRaises(SystemExit) as cm:
-                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])
+                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc, '--persist-dir', os.path.join(root, 'persist')])
             self.assertEqual(cm.exception.code, 1)
             out = buf.getvalue()
             self.assertNotIn('Traceback', out)
@@ -551,7 +552,7 @@ class GateReadSide(unittest.TestCase):
             buf = io.StringIO()
             with mock.patch.dict(gwls_final.ARM_C_SHA256, sha), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), \
                     contextlib.redirect_stdout(buf), census_stub():
-                gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])              # returns (no SystemExit) when nothing refuses
+                gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc, '--persist-dir', os.path.join(root, 'persist')])              # returns (no SystemExit) when nothing refuses
             self.assertIn('all preconditions hold', buf.getvalue())
             self.assertIn('round-4 branch: CONTINUE', buf.getvalue())
 
@@ -596,13 +597,28 @@ class SealedFixture(unittest.TestCase):
     def result(self, s, **over):
         return {**gwls_final.synthetic_arm_c(s), 'ckpt': self.P[s]['ckpt'], **over}
 
-    def write_result(self, s, m=None):
+    def write_result(self, s, m=None, seal=True):
+        """seal=True: if a read record exists, the written file becomes the recorded one (so a test of a metadata check is not also a hash mismatch)."""
         with open(self.P[s]['out'], 'w') as f:
             json.dump(m if m is not None else self.result(s), f)
+        if seal and os.path.exists(self.P[s]['record']):
+            with open(self.P[s]['record']) as f:
+                rec = json.load(f)
+            rec['seeds'][str(s)]['result_sha256'] = gwls_final.sha256_file(self.P[s]['out'])
+            gwls_final.write_json_atomic(self.P[s]['record'], rec)
 
     def write_all_results(self):
+        """A clean, completed attempt: start record, the scorers' results, the completed record."""
+        gwls_final.write_start_record(self.P)
         for s in gwls_final.SEEDS:
-            self.write_result(s)
+            self.write_result(s, seal=False)
+        gwls_final.complete_record(self.P)
+
+    def edit_record(self, fn):
+        with open(self.P[200]['record']) as f:
+            rec = json.load(f)
+        fn(rec)
+        gwls_final.write_json_atomic(self.P[200]['record'], rec)
 
     def analyze(self):
         """-> (stdout, SystemExit message or None)"""
@@ -694,7 +710,7 @@ class TrainingStopped(SealedFixture):
         out, msg = self.analyze()
         self.assertTrue(msg and 'iter-9.json' in msg, msg)
         self.no_final()
-        bad, _ = gwls_final.play_problems(self.P, self.root, [])
+        bad, _ = gwls_final.play_problems(self.P, self.root, [], persist_dir=self.persist_dir)
         self.assertTrue(any('iter-9.json' in x for x in bad))
 
 
@@ -705,7 +721,7 @@ class OneShotLock(SealedFixture):
         def popen(argv, **kw):
             calls.append(argv)
             s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
-            self.write_result(s)                                                              # the (mocked) scorer's output
+            self.write_result(s, seal=False)                                                  # the (mocked) scorer's output
             return mock.Mock(wait=mock.Mock(return_value=0))
         return popen
 
@@ -796,13 +812,13 @@ class OneShotLock(SealedFixture):
 
     def test_dry_run_takes_no_lock(self):
         with contextlib.redirect_stdout(io.StringIO()), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')):
-            gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc])
+            gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
         self.assertFalse(any(os.path.exists(p['lock']) for p in self.P.values()))
 
     def test_play_path_applies_the_identity_check_to_the_fresh_result(self):
         def popen(argv, **kw):
             s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
-            self.write_result(s, self.result(s, ckpt='/elsewhere/checkpoint-iter8.pt'))
+            self.write_result(s, self.result(s, ckpt='/elsewhere/checkpoint-iter8.pt'), seal=False)
             return mock.Mock(wait=mock.Mock(return_value=0))
         with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=popen), contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaises(SystemExit) as cm:
@@ -915,6 +931,333 @@ class AnalyzeOnly(SealedFixture):
         out, msg = self.analyze()
         for needle in ('STOP', 'unresolved scoring attempt', 'result arm', 'no result file'):
             self.assertIn(needle, msg)
+
+
+class RoundQ113(SealedFixture):
+    """Q113 holes N1-N5: a previous persisted read, locks released too early, the cap/gate of the read, identity beyond metadata, the training probe."""
+
+    def fake_popen(self, calls, over=None, at_launch=None):
+        def popen(argv, **kw):
+            calls.append(argv)
+            if at_launch:
+                at_launch()
+            s = 200 if f's200{os.sep}' in argv[argv.index('--ckpt') + 1] else 201
+            self.write_result(s, self.result(s, **(over or {})), seal=False)                 # the (mocked) scorer's output
+            return mock.Mock(wait=mock.Mock(return_value=0))
+        return popen
+
+    def play(self, calls, **kw):
+        with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=self.fake_popen(calls, **kw)), contextlib.redirect_stdout(io.StringIO()):
+            gwls_final.main(['--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+
+    def refused_play(self, **kw):
+        calls = []
+        with self.assertRaises(SystemExit) as cm:
+            self.play(calls, **kw)
+        return calls, str(cm.exception)
+
+    def locks(self):
+        return [os.path.exists(p['lock']) for p in self.P.values()]
+
+    # ---- N1
+    def test_n1_a_persisted_score_file_refuses_the_play_and_popen_is_never_called(self):
+        for rel in (('s200', 'score-sample.json'), ('s201', 'score-sample.json'), ('final.json',)):
+            path = os.path.join(self.persist_dir, *rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            open(path, 'w').close()
+            calls, msg = self.refused_play()
+            self.assertEqual(calls, [], rel)
+            self.assertIn('previous sealed read', msg)
+            self.assertIn(path, msg)
+            self.assertEqual(self.locks(), [False, False])                                    # nothing was played: our locks are released
+            self.assertFalse(os.path.exists(self.P[200]['record']))
+            os.remove(path)
+        calls = []
+        self.play(calls)                                                                      # the persist dir is clean again: it plays
+        self.assertEqual(len(calls), 2)
+
+    def test_n1_final_json_or_a_record_in_the_root_refuses_too(self):
+        for name in ('final.json', 'read-record.json'):
+            path = os.path.join(self.root, name)
+            open(path, 'w').close()
+            calls, msg = self.refused_play()
+            self.assertEqual((calls, path in msg), ([], True))
+            os.remove(path)
+
+    def test_n1_dry_run_reports_it(self):
+        path = os.path.join(self.persist_dir, 's201', 'score-sample.json')
+        os.makedirs(os.path.dirname(path))
+        open(path, 'w').close()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')):
+            with self.assertRaises(SystemExit) as cm:
+                gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+        self.assertEqual(cm.exception.code, 1)
+        self.assertIn('previous sealed read exists: ' + path, buf.getvalue())
+
+    def test_n1_the_default_persist_dir_is_checked_when_none_is_given(self):
+        with mock.patch.object(gwls_final, 'PERSIST_DIR', self.persist_dir):
+            path = os.path.join(self.persist_dir, 'final.json')
+            os.makedirs(self.persist_dir)
+            open(path, 'w').close()
+            self.assertTrue(any(path in x for x in gwls_final.play_problems(self.P, self.root, [])[0]))
+
+    def test_n1_analyze_only_is_not_blocked_by_the_persisted_copies(self):
+        self.write_all_results()
+        gwls_final.persist([self.P[s]['out'] for s in gwls_final.SEEDS], self.root, self.persist_dir)
+        self.assertIsNone(self.analyze()[1])
+
+    # ---- N2
+    def test_n2_a_failed_identity_keeps_the_locks_and_a_second_invocation_refuses(self):
+        calls, msg = self.refused_play(over=dict(ckpt='/elsewhere/checkpoint-iter8.pt'))
+        self.assertEqual(len(calls), 2)
+        self.assertIn('identity check', msg)
+        self.assertEqual(self.locks(), [True, True])
+        self.no_final()
+        calls2, msg2 = self.refused_play()
+        self.assertEqual(calls2, [])                                                          # Popen never called again
+        self.assertIn('already exists', msg2)
+        self.assertEqual(self.locks(), [True, True])
+
+    def test_n2_the_locks_are_still_there_while_identity_is_checked_and_while_final_json_is_persisted(self):
+        seen = []
+        real_load, real_persist = gwls_final.load_result, gwls_final.persist
+        def load(seed, p):
+            seen.append(('identity', self.locks()))
+            return real_load(seed, p)
+        def persist(files, root, pd):
+            seen.append(('persist', self.locks()))
+            return real_persist(files, root, pd)
+        with mock.patch.object(gwls_final, 'load_result', side_effect=load), mock.patch.object(gwls_final, 'persist', side_effect=persist):
+            self.play([])
+        self.assertEqual({k for k, _ in seen}, {'identity', 'persist'})
+        self.assertTrue(all(l == [True, True] for _, l in seen), seen)
+        self.assertEqual(self.locks(), [False, False])                                        # removed only at the very end
+        self.assertTrue(os.path.exists(os.path.join(self.persist_dir, 'final.json')))
+
+    def test_n2_a_failure_before_final_json_also_keeps_the_locks(self):
+        with mock.patch.object(gwls_final, 'compare', side_effect=ValueError('boom')):
+            calls, msg = self.refused_play()
+        self.assertIn('cannot be compared', msg)
+        self.assertEqual(self.locks(), [True, True])
+
+    # ---- N3
+    def test_n3_a_different_constants_cap_refuses_before_playing(self):
+        from game import play
+        with mock.patch.object(play, 'load_constants', return_value=({'episode_cap': 500}, b'')):
+            calls, msg = self.refused_play()
+            self.assertEqual(calls, [])
+            self.assertIn('episode_cap is 500', msg)
+            self.assertEqual(self.locks(), [False, False])
+            self.assertFalse(os.path.exists(self.P[200]['record']))
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit):
+                gwls_final.main(['--dry-run', '--root', self.root, '--arm-c', self.armc, '--persist-dir', self.persist_dir])
+            self.assertIn('episode_cap is 500', buf.getvalue())
+        with mock.patch.object(play, 'load_constants', side_effect=OSError('gone')):
+            self.assertIn('cannot be read', self.refused_play()[1])
+        self.assertEqual(gwls_final.cap_problems(), [])                                       # the real constants.json is 1000
+
+    def test_n3_a_result_with_another_cap_or_gate_fails_identity(self):
+        for over, word in ((dict(cap=2000), 'result cap'), (dict(cap=True), 'result cap'), (dict(cap=None), 'result cap'),
+                           (dict(gate='x'), 'result gate'), (dict(gate=0), 'result gate')):
+            self.write_all_results()
+            self.write_result(200, self.result(200, **over))
+            out, msg = self.analyze()
+            self.assertTrue(msg and word in msg, (over, msg))
+            self.no_final()
+
+    def test_n3_the_play_path_applies_it_to_the_fresh_result(self):
+        calls, msg = self.refused_play(over=dict(cap=2000))
+        self.assertEqual(len(calls), 2)
+        self.assertIn('identity check', msg)
+        self.assertIn('result cap is 2000', msg)
+
+    def test_n3_arm_c_must_itself_be_cap_1000_gate_none(self):
+        b = gwls_final.synthetic_arm_c(200)
+        for over in (dict(cap=500), dict(gate='g')):
+            self.assertTrue(gwls_final.arm_c_problems(200, b'', dict(b, **over), check_hash=False), over)
+
+    # ---- N4
+    def test_n4_the_record_is_written_before_the_scorers_start_and_completed_and_persisted_after(self):
+        at_launch = []
+        def check():
+            with open(self.P[200]['record']) as f:
+                rec = json.load(f)
+            at_launch.append(rec)
+        self.play([], at_launch=check)
+        pre = at_launch[0]
+        for s in gwls_final.SEEDS:
+            e = pre['seeds'][str(s)]
+            self.assertEqual(e['ckpt_sha256'], hashlib.sha256(b'').hexdigest())
+            self.assertEqual(e['ckpt_mtime_ns'], os.stat(self.P[s]['ckpt']).st_mtime_ns)
+            self.assertNotIn('result_sha256', e)                                              # the result does not exist yet
+        self.assertIsInstance(pre['start_ns'], int)
+        with open(self.P[200]['record']) as f:
+            rec = json.load(f)
+        with open(os.path.join(self.persist_dir, 'read-record.json')) as f:
+            self.assertEqual(json.load(f), rec)
+        for s in gwls_final.SEEDS:
+            self.assertEqual(rec['seeds'][str(s)]['result_sha256'], gwls_final.sha256_file(self.P[s]['out']))
+
+    def test_n4_checkpoint_rewritten_after_the_read_refuses(self):
+        self.write_all_results()
+        self.assertIsNone(self.analyze()[1])
+        os.remove(os.path.join(self.root, 'final.json'))
+        with open(self.P[201]['ckpt'], 'wb') as f:
+            f.write(b'a different checkpoint')
+        self.set_times(201)
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'checkpoint-iter8.pt sha256 differs' in msg, msg)
+        self.no_final()
+
+    def test_n4_checkpoint_touched_with_the_same_bytes_refuses_on_mtime(self):
+        self.write_all_results()
+        os.utime(self.P[200]['ckpt'], ns=(5 * 10**18, 5 * 10**18))
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'checkpoint-iter8.pt mtime differs' in msg and 'sha256 differs' not in msg, msg)
+
+    def test_n4_result_edited_refuses(self):
+        self.write_all_results()
+        with open(self.P[200]['out']) as f:
+            m = json.load(f)
+        m['per_world'][0]['unlocks'].append([99, 'collect_diamond'])                         # still a valid, identity-passing file
+        with open(self.P[200]['out'], 'w') as f:
+            json.dump(m, f)
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'result file sha256 differs' in msg, msg)
+        self.no_final()
+
+    def test_n4_result_older_than_the_recorded_start_refuses(self):
+        self.write_all_results()
+        os.utime(self.P[201]['out'], (1000, 1000))
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'older than the start' in msg, msg)
+
+    def test_n4_missing_or_incomplete_record_refuses(self):
+        self.write_all_results()
+        rec_path = self.P[200]['record']
+        with open(rec_path) as f:
+            good = f.read()
+        os.remove(rec_path)
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'no read-record.json' in msg, msg)
+        for mutate in (lambda r: r['seeds']['201'].pop('result_sha256'), lambda r: r['seeds'].pop('200'), lambda r: r.pop('start_ns'),
+                       lambda r: r['seeds']['200'].pop('ckpt_sha256'), lambda r: r['seeds']['200'].pop('ckpt_mtime_ns'),
+                       lambda r: r['seeds']['200'].update(result_sha256='zz')):
+            with open(rec_path, 'w') as f:
+                f.write(good)
+            self.edit_record(mutate)
+            out, msg = self.analyze()
+            self.assertTrue(msg and 'incomplete' in msg, msg)
+        with open(rec_path, 'w') as f:
+            f.write(good[:20])
+        out, msg = self.analyze()
+        self.assertTrue(msg and 'read-record.json' in msg and 'cannot be read' in msg, msg)
+        self.no_final()
+        with open(rec_path, 'w') as f:
+            f.write(good)
+        self.assertIsNone(self.analyze()[1])                                                  # the clean synthetic attempt passes
+        self.assertTrue(os.path.exists(os.path.join(self.root, 'final.json')))
+
+    def test_n4_the_play_path_runs_the_record_identity_too(self):
+        def tamper():                                                                          # the checkpoint changes while the scorers run
+            with open(self.P[200]['ckpt'], 'wb') as f:
+                f.write(b'x')
+        calls, msg = self.refused_play(at_launch=tamper)
+        self.assertIn('identity check', msg)
+        self.assertIn('sha256 differs', msg)
+        self.assertEqual(self.locks(), [True, True])
+
+    # ---- N5
+    def spawn(self, argv, cwd=None):
+        child = subprocess.Popen(argv, cwd=cwd)
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        import time
+        for _ in range(100):                                                                   # until the child has exec'd
+            try:
+                with open(f'/proc/{child.pid}/cmdline') as f:
+                    if argv[-1] in f.read().split('\0'):                                          # before the exec the child still has our own argv
+                        break
+            except OSError:
+                pass
+            time.sleep(0.02)
+        return child
+
+    def found(self, s=200):
+        return REAL_PROBE(self.P[s]['dir'])
+
+    @unittest.skipUnless(os.path.isdir('/proc/self'), 'needs /proc')
+    def test_n5_script_launch_with_the_seed_dir_in_argv(self):
+        stub = tempfile.TemporaryDirectory()
+        self.addCleanup(stub.cleanup)
+        os.makedirs(os.path.join(stub.name, 'game'))
+        with open(os.path.join(stub.name, 'game', 'imitate.py'), 'w') as f:
+            f.write('import time; time.sleep(60)\n')
+        child = self.spawn([sys.executable, 'game/imitate.py', 'run', '--out', self.P[200]['dir']], cwd=stub.name)
+        self.assertIn(child.pid, self.found(200))
+        self.assertNotIn(child.pid, self.found(201))                                          # cwd is outside both folders and the argv names only s200
+
+    @unittest.skipUnless(os.path.isdir('/proc/self'), 'needs /proc')
+    def test_n5_dash_c_import_form(self):
+        code = 'try:\n    from game import imitate\nexcept Exception:\n    pass\nimport time; time.sleep(60)'
+        stub = tempfile.TemporaryDirectory()
+        self.addCleanup(stub.cleanup)
+        child = self.spawn([sys.executable, '-c', code, self.P[200]['dir']], cwd=stub.name)
+        self.assertIn(child.pid, self.found(200))
+        self.assertNotIn(child.pid, self.found(201))
+
+    @unittest.skipUnless(os.path.isdir('/proc/self'), 'needs /proc')
+    def test_n5_relative_path_resolved_from_the_process_cwd(self):
+        child = self.spawn([sys.executable, '-c', 'import time; time.sleep(60)', 'imitate', 'run', '--out', 's201'], cwd=self.root)
+        self.assertIn(child.pid, self.found(201))
+        self.assertNotIn(child.pid, self.found(200))
+        child2 = self.spawn([sys.executable, '-c', 'import time; time.sleep(60)', 'imitate', '--out=s200'], cwd=self.root)
+        self.assertIn(child2.pid, self.found(200))
+        child3 = self.spawn([sys.executable, '-c', 'import time; time.sleep(60)', 'game.imitate'], cwd=self.P[201]['dir'])       # works from inside the folder
+        self.assertIn(child3.pid, self.found(201))
+
+    @unittest.skipUnless(os.path.isdir('/proc/self'), 'needs /proc')
+    def test_n5_an_unrelated_process_is_not_found_and_an_unresolvable_cwd_fails_closed(self):
+        other = self.spawn([sys.executable, '-c', 'import time; time.sleep(60)', self.P[200]['dir']])       # names the folder but is not imitate
+        stub = tempfile.TemporaryDirectory()
+        self.addCleanup(stub.cleanup)
+        elsewhere = self.spawn([sys.executable, '-c', 'import time; time.sleep(60)', 'game.imitate', 'run'], cwd=stub.name)
+        self.assertNotIn(other.pid, self.found(200))
+        self.assertNotIn(elsewhere.pid, self.found(200))
+        real_readlink = os.readlink
+        def readlink(path, *a, **k):
+            if path == f'/proc/{elsewhere.pid}/cwd':
+                raise PermissionError('no')
+            return real_readlink(path, *a, **k)
+        with mock.patch.object(gwls_final.os, 'readlink', side_effect=readlink):
+            self.assertIn(elsewhere.pid, self.found(200))                                     # an imitate process whose cwd cannot be resolved counts
+            self.assertNotIn(other.pid, self.found(200))
+
+    def test_n5_pgrep_fallback_counts_any_imitate_process_and_failures_raise(self):
+        run = mock.Mock(return_value=mock.Mock(returncode=0, stdout=f'{os.getpid()}\n4242\n', stderr=''))
+        with mock.patch.object(gwls_final.os.path, 'isdir', return_value=False), mock.patch.object(gwls_final.shutil, 'which', return_value='/usr/bin/pgrep'), \
+                mock.patch.object(gwls_final.subprocess, 'run', run):
+            self.assertEqual(REAL_PROBE('/x'), [4242])                                         # not ourselves, everything else fails closed
+            self.assertEqual(run.call_args[0][0], ['pgrep', '-f', 'imitate'])
+            run.return_value = mock.Mock(returncode=1, stdout='', stderr='')
+            self.assertEqual(REAL_PROBE('/x'), [])
+            run.return_value = mock.Mock(returncode=2, stdout='', stderr='bad')
+            with self.assertRaises(RuntimeError):
+                REAL_PROBE('/x')
+
+    def test_n5_an_unreadable_cmdline_raises_so_the_gate_refuses(self):
+        real_open = open
+        def fake_open(path, *a, **k):
+            if isinstance(path, str) and path.endswith('/cmdline') and path.startswith('/proc/') and path != '/proc/self/cmdline':
+                raise PermissionError('hidepid')
+            return real_open(path, *a, **k)
+        if not os.path.isdir('/proc/self'):
+            self.skipTest('needs /proc')
+        with mock.patch('builtins.open', side_effect=fake_open):
+            with self.assertRaises(RuntimeError):
+                REAL_PROBE(self.P[200]['dir'])
 
 
 class Persist(unittest.TestCase):
