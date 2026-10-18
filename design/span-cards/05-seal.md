@@ -23,12 +23,29 @@ means a new card.
 Q21 fills in the sealed card: the term mappings of section 2 as confirmed (primary ruler `far`; `far_deep`
 secondary only); P_s built fresh inside Stage 1; `newline_id = 23` (v2-fallback tokenizer).
 
-## Part 2: the data addendum, sealed before the first arm runs (not yet sealed)
-Section 9 also lists the run script, the train and validation cache files, and the value of N. None of them
-exists yet: the caches and the run script belong to Stage 1, which is not booked. As the card says (§3), they
-are hashed into this file before any arm runs, and N = `span_cards.tokens_per_line(train cache)` is computed
-once from the sealed train cache. The pilot value is 11.17 (256 visits); Stage 0 measures it again on its own
-caches, but that measurement is a check, not the sealed value.
+## Part 2: the data addendum (sealed 2026-10-18, before any arm runs)
+Built independently on the three Stage 1 boxes (seeds 0, 1, 2) by `scripts/span_stage1.py` at commit 707bdce90;
+every box reported the same hashes and counts.
+
+| item | value |
+|---|---|
+| run script | `scripts/span_stage1.py`, sha256 47577a35969c83f70f900e4d3845bf1ff8973644b664a67091d4ca92cdd6d127 (commit 707bdce90) |
+| code digest (premonition, learnlab, memorylab, span_stage0, span_stage1) | 5c2b92374a40d16ea984926d769b3cf491275aa1e7c48f1fe0817ee0d809ca95 |
+| `premonition/span_cards.py` | sha256 57dc98def4e1c0e28d12bd5d444f1845edacbb9e3161553875526d7cd78ddb3a |
+| data tag | large-seed0-53292765806d |
+| tokenizer | 2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a |
+| name detector | ef6b1d4dc52dd6f03b4f2c3ee036cc56ef7fa9668fb84d3aa15b698eaad17f22 |
+| train cache | `data/village/stream/cache/large-seed0-53292765806d/premonition-v2-2c9d06aed330-ef6b1d4dc52d-9add8e2fded1/train.pt`, sha256 a53ab45bba46f71190a40e91eb386d3dab9363dba87fd874c0312d8d62bc6cd9 |
+| validation cache | same folder, `validation.pt`, sha256 762082f1d2fb28c7a49d35301368fc2e2166d5eda027f63732bab0413d333549 |
+| visits / questions | train 100,000 / 855,962; validation 1,000 / 8,675 |
+| tokens | train 112,736,485; validation 1,165,078 |
+| newline id | [23] (as filled in the card) |
+| **N** | **11.155539** |
+
+N is the card's quantity, `span_cards.tokens_per_line(train cache)` (mean tokens per non-question line). The script
+computes it from the integer counts in float64 and rounds it to 6 decimals (`exact_n`), so every box gets the same
+digits. The float32 mean in `tokens_per_line` can differ only below the 6th significant figure. The pilot value was
+11.17 (256 visits). The go file repeats N and both cache hashes, and each box refuses a go that does not match its own.
 
 ## Not sealed (on purpose)
 `scripts/span_stage0.py` (sha256 c4a9a5082cfe13208511ca097f1366850323758df181c53aa3d93f60f8bf0191 at the same
