@@ -477,6 +477,7 @@ class MiniTrainer(Trainer):
                 None if self.fit is None else {"a": self.fit.a, "b": self.fit.b, "worst_residual": self.fit.worst}),
             "loop_mismatches": mismatched, "phases": phases, "final": final,
             "peak_gpu_reserved_bytes": torch.cuda.max_memory_reserved(self.device) if cuda else None,
+            **({"train_seconds": self.train_seconds} if self.seconds_budget is not None else {}),
         }
 
 
