@@ -26,8 +26,9 @@ ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal
 | 5 | 7.765 | 6.183 | 44.0 | 333 | 127 | 20 | 123.92 | 13.49 | 9.186 | 554 | 333 | 0.6011 | 0.3129 | 0.5096 |
 | 6 | 7.593 | 5.803 | 37.5 | 308 | 103 | 83 | 96.48 | 63.49 | 1.52 | 795 | 308 | 0.3874 | 0.2769 | 0.4753 |
 | 7 | 7.32 | 5.325 | 31.0 | 289 | 96 | 43 | 81.16 | 39.83 | 2.038 | 423 | 289 | 0.6832 | 0.256 | 0.4489 |
+| 8 | 6.978 | 5.065 | 31.0 | 265 | 82 | 66 | 81.8 | 53.06 | 1.542 | 708 | 266 | 0.3757 | 0.2238 | 0.4257 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok; r6 gap 0.000365 <= bound 0.0007: ok; r7 gap 0.000119 <= bound 0.000882: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.001366 <= bound 0.002838: ok; r2 gap 6.4e-05 <= bound 0.001221: ok; r3 gap 0.001039 <= bound 0.003352: ok; r4 gap 0.001006 <= bound 0.002198: ok; r5 gap 0.002809 <= bound 0.004278: ok; r6 gap 0.000365 <= bound 0.0007: ok; r7 gap 0.000119 <= bound 0.000882: ok; r8 gap 0.0003 <= bound 0.000741: ok
 
 ## Round-4 leading indicator
 
