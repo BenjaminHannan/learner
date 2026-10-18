@@ -227,5 +227,53 @@ class PreflightTest(unittest.TestCase):
         self.assertTrue(any(2 in g for g in groups))                       # the many-lines visit
 
 
+    def test_adversarial_groups_respect_the_caps_and_gather_the_heaviest_visits(self) -> None:
+        lengths = [100] * 20
+        group = s1.packed(sorted(range(20), key=lambda v: -v), lengths, 450, 3)
+        self.assertEqual(group, [19, 18, 17])                              # max_visits binds
+        group = s1.packed(list(range(20)), [100, 500, 100, 100, 100] + [100] * 15, 450, 10)
+        self.assertNotIn(1, group)                                         # a visit that breaks max_tokens is left out
+        self.assertLessEqual(len(group) * max([100, 500][v == 1] for v in group), 450)
+
+
+class RungTest(unittest.TestCase):
+    def test_a_go_rung_may_never_be_larger_than_the_fitted_one(self) -> None:
+        self.assertTrue(s1.rung_allowed(s1.LADDER[1], s1.LADDER[1]))
+        self.assertTrue(s1.rung_allowed(s1.LADDER[2], s1.LADDER[1]))      # smaller: fine
+        self.assertFalse(s1.rung_allowed(s1.LADDER[0], s1.LADDER[1]))     # larger than measured: refused
+        self.assertFalse(s1.rung_allowed((55_000, 47), s1.LADDER[0]))      # outside the ladder
+
+    def run_preflight(self, outputs):
+        """`preflight` with the child processes replaced by `outputs` (one (returncode, stdout) per call)."""
+        calls = iter(outputs)
+        original = s1.subprocess.run
+        s1.subprocess.run = lambda *a, **k: types.SimpleNamespace(returncode=(o := next(calls))[0], stdout=o[1],
+                                                                  stderr="trace")
+        args = types.SimpleNamespace(seed=0, visits="tiny", size="tiny", workers=1)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                return s1.preflight(args)
+        finally:
+            s1.subprocess.run = original
+
+    @staticmethod
+    def child(arm, peak, oom=False):
+        return 0, "PREFLIGHT " + json.dumps({"arm": arm, "oom": oom, "peak_reserved_gb": None if oom else peak})
+
+    def test_an_oom_or_over_limit_arm_moves_down_the_ladder(self) -> None:
+        out = self.run_preflight([self.child("LINE", 9.0), self.child("SPAN", 9.0, oom=True),
+                                  self.child("LINE", 9.0), self.child("SPAN", 13.5), self.child("SPAN-stress", 14.5),
+                                  self.child("LINE", 8.0), self.child("SPAN", 9.0), self.child("SPAN-stress", 9.5)])
+        self.assertEqual(out["chosen"], {"max_tokens": s1.LADDER[2][0], "max_visits": s1.LADDER[2][1]})
+        self.assertEqual([r["fits"] for r in out["rungs"]], [False, False, True])
+
+    def test_a_child_fault_stops_instead_of_shrinking_the_batch(self) -> None:
+        """Review finding 2: any child failure counted as 'does not fit', so a bug would quietly shrink the batch."""
+        with self.assertRaises(SystemExit) as stop:
+            self.run_preflight([self.child("LINE", 9.0), (1, "")])
+        self.assertIn("other than memory", str(stop.exception))
+        self.assertIsNone(self.run_preflight([self.child("LINE", 99.0)] * 4)["chosen"])   # nothing fits: no rung
+
+
 if __name__ == "__main__":
     unittest.main()

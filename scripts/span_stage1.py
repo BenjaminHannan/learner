@@ -74,6 +74,11 @@ HEAD = 4                                 # calibration batches (train_d)
 EVAL_VISITS, ECONOMY_VISITS, BRANCH_VISITS = 256, 200, 64
 CHUNK = 450
 STARTED = time.perf_counter()
+CODE = ("scripts/span_stage1.py", "scripts/span_stage0.py", "premonition/span_cards.py", "premonition/model.py",
+        "premonition/store.py", "premonition/train.py", "premonition/data.py", "premonition/batch.py",
+        "premonition/config.py", "premonition/flops.py", "premonition/preprocess.py", "premonition/slices.py",
+        "premonition/exp1.py", "learnlab/train.py", "learnlab/step1.py", "learnlab/ckpt.py")
+RUN_ID = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
 
 
 # ----------------------------------------------------------------------------- the log protocol
@@ -239,7 +244,8 @@ def stream_from(cache, args, seed: int, skip: int) -> Iterator:
 
 
 def gold_only(trainer: MiniTrainer, stream: Iterator, counter: list) -> Iterator:
-    """The stream while the trainer's plan is in the gold phase: the parent stops exactly at the branch point."""
+    """The stream while the trainer's plan is in the gold phase: the parent stops exactly at the branch point.
+    `counter` counts the batches handed out; the caller takes the trained count from `trainer.step` after."""
     for batch in stream:
         if trainer.plan().phase != "gold":
             return
@@ -249,11 +255,10 @@ def gold_only(trainer: MiniTrainer, stream: Iterator, counter: list) -> Iterator
 
 # ----------------------------------------------------------------------------- evaluation
 @torch.no_grad()
-def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: Tokenizer, args) -> dict:
+def dev_eval(model: PremonitionMini, cache: pdata.VisitCache, tags, tokenizer: Tokenizer, stop: list, args) -> dict:
     """Own-retrieval exact match on the whole validation split: accuracy overall and per slice, and the per-question
     correctness in the cache's question order (packed bits) for the paired tests."""
     model.eval()
-    stop = sorted(step1.stop_ids(tokenizer)[0])
     device = next(model.parameters()).device
     correct: dict[str, bool] = {}
     slices: dict[str, list[int]] = {}
@@ -287,7 +292,7 @@ def economy(model: PremonitionMini, batches: list, device) -> dict:
 
 
 def save(built: dict, trainer: MiniTrainer, name: str, args, extra: dict) -> dict:
-    relative = f"artifacts/span-stage1/seed{args.seed}/{name}"
+    relative = f"artifacts/span-stage1/{RUN_ID}/seed{args.seed}/{name}"
     config = checkpoint_config(trainer, contender=extra.pop("contender"),
                                tokenizer={"path": TOKENIZER, "sha256": built["tokenizer"].digest},
                                detector=built["detector"].digest, data={"dir": built["data_rel"], "tag": built["tag"]},
@@ -317,8 +322,20 @@ def progress(arm: str, seed: int):
 
 
 # ----------------------------------------------------------------------------- memory pre-flight
+def packed(order: list[int], lengths: list[int], max_tokens: int, max_visits: int) -> list[int]:
+    """The visits of `order`, taken greedily while the batch stays within max_tokens padded and max_visits."""
+    group: list[int] = []
+    for v in order:
+        trial = group + [v]
+        if len(trial) <= max_visits and len(trial) * max(lengths[u] for u in trial) <= max_tokens:
+            group = trial
+    return group
+
+
 def heaviest(cache, max_tokens: int, max_visits: int, seed: int) -> list[list[int]]:
-    """Visit groups of one Stage 1 epoch that are heaviest by padded tokens, by questions and by lines (3 each)."""
+    """Batches that bound every epoch's: the 3 heaviest of the first epoch's grouping by padded tokens, questions
+    and lines, plus adversarial groups packed (within max_tokens and max_visits) from the visits with the most
+    questions, the most lines, and the most questions per token, which no later regrouping can exceed by much."""
     groups = pdata.length_batches(cache.lengths.tolist(), max_tokens, rng=random.Random(seed), max_visits=max_visits)
     lengths, lines = cache.lengths.tolist(), cache.line_counts.tolist()
     questions = [len(cache.questions_of(v)) for v in range(len(cache))]
@@ -329,11 +346,26 @@ def heaviest(cache, max_tokens: int, max_visits: int, seed: int) -> list[list[in
         for group in sorted(groups, key=key, reverse=True)[:3]:
             if group not in chosen:
                 chosen.append(group)
+    visits = range(len(cache))
+    for score in (lambda v: questions[v], lambda v: lines[v], lambda v: questions[v] / max(lengths[v], 1)):
+        group = packed(sorted(visits, key=score, reverse=True), lengths, max_tokens, max_visits)
+        if group and group not in chosen:
+            chosen.append(group)
     return chosen
 
 
 def preflight_arm(args: argparse.Namespace) -> None:
-    """Child process: peak reserved GPU memory of one arm at one rung (printed as one `PREFLIGHT {json}` line)."""
+    """Child process: peak reserved GPU memory of one arm at one rung (printed as one `PREFLIGHT {json}` line).
+    Running out of GPU memory is a measurement (`oom`: true); any other failure is an error (non-zero exit)."""
+    try:
+        measure_arm(args)
+    except torch.cuda.OutOfMemoryError as error:
+        record = {"arm": args.arm, "max_tokens": args.max_tokens, "max_visits": args.max_visits, "oom": True,
+                  "error": repr(error)[:300], "peak_reserved_gb": None}
+        print("PREFLIGHT " + json.dumps(record), flush=True)
+
+
+def measure_arm(args: argparse.Namespace) -> None:
     built = build(args)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cache = built["caches"]["train"]
@@ -360,8 +392,9 @@ def preflight_arm(args: argparse.Namespace) -> None:
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     steps = 0
-    for mode, plan, track in (("gold", Plan("gold", "gold", 0.0), False), ("teacher", Plan("teacher", "teacher", 0.0),
-                                                                         False), ("own", Plan("own", "own", 0.75), True)):
+    modes = (("gold", Plan("gold", "gold", 0.0), False), ("teacher", Plan("teacher", "teacher", 0.0), False),
+             ("own", Plan("own", "own", 0.75), True))
+    for mode, plan, track in modes:
         for batch in batches:
             out = trainer._train_step(batch, plan, planned_loops(batch, plan.mode, config), track)
             if not math.isfinite(float(out["loss"])):
@@ -377,7 +410,7 @@ def preflight_arm(args: argparse.Namespace) -> None:
         "arm": args.arm, "max_tokens": args.max_tokens, "max_visits": args.max_visits, "steps": steps,
         "batches": [{"visits": len(g), "padded": int(b.tokens.numel()), "questions": int(b.q_visit.shape[0])}
                     for g, b in zip(groups, batches)],
-        "peak_reserved_gb": peak, "peak_allocated_gb": torch.cuda.max_memory_allocated() / 1e9
+        "oom": False, "peak_reserved_gb": peak, "peak_allocated_gb": torch.cuda.max_memory_allocated() / 1e9
         if device.type == "cuda" else 0.0, "tokens_per_card": report["tokens_per_card"]["mean"],
         "line_aligned": report["line_aligned"]}), allow_nan=False), flush=True)
 
@@ -395,13 +428,18 @@ def preflight(args: argparse.Namespace) -> dict:
                        "--workers", str(args.workers), "--max-tokens", str(max_tokens), "--max-visits", str(max_visits)]
             run = subprocess.run(command, capture_output=True, text=True)
             found = [l for l in run.stdout.splitlines() if l.startswith("PREFLIGHT ")]
-            if run.returncode or not found:
-                children.append({"arm": arm, "error": (run.stderr or run.stdout)[-1500:], "peak_reserved_gb": math.inf})
-            else:
-                children.append(json.loads(found[-1][len("PREFLIGHT "):]))
-        peak = max(c["peak_reserved_gb"] for c in children)
+            if run.returncode or not found:                   # not a memory measurement: a fault, so stop
+                emit("preflight_error", {"arm": arm, "max_tokens": max_tokens, "max_visits": max_visits,
+                                         "returncode": run.returncode, "stderr": (run.stderr or run.stdout)[-2500:]})
+                raise SystemExit(f"memory pre-flight child {arm} failed for a reason other than memory")
+            child = json.loads(found[-1][len("PREFLIGHT "):])
+            children.append(child)
+            if child["oom"] or child["peak_reserved_gb"] > limit:
+                break                                         # this rung does not fit: the next arms need not run
+        peaks = [math.inf if c["oom"] else c["peak_reserved_gb"] for c in children]
+        peak = max(peaks)
         rung = {"max_tokens": max_tokens, "max_visits": max_visits, "peak_reserved_gb": peak,
-                "fits": peak <= limit, "children": children}
+                "fits": len(children) == 3 and peak <= limit, "children": children}
         rungs.append(rung)
         emit("preflight_rung", rung)
         if rung["fits"]:
@@ -453,10 +491,9 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     config = model_config(tokenizer, args.size)
     n_target = go["N"]
     stop = sorted(step1.stop_ids(tokenizer)[0])
-    tags = slice_tags(built, EVAL_VISITS)
-    hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, tags),
+    all_tags = slice_tags(built, len(valid_cache))                    # masks over every question: any subset uses them
+    hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, all_tags),
                            tokenizer=tokenizer, stop=stop)
-    all_tags = slice_tags(built, len(valid_cache))
     economy_batches = dev_batches(valid_cache, ECONOMY_VISITS, args.max_tokens, args.max_visits)
     flop_budget = args.flop_budget
 
@@ -472,12 +509,14 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
         torch.cuda.reset_peak_memory_stats()
     report = trainer.train(gold_only(trainer, itertools.chain(head, stream), consumed), evaluate=hook,
                            on_log=progress("P", args.seed))
+    consumed[0] = trainer.step                         # batches trained, in stream order (a discarded one is not)
     emit("parent", {"seed": args.seed, "train": train_report(report), "batches_consumed": consumed[0],
                     "fit": {"a": fit.a, "b": fit.b, "worst": fit.worst}})
-    parent = {"model": copy.deepcopy(parent_model.state_dict()), "optimizer": copy.deepcopy(trainer.optimizer.state_dict()),
+    parent = {"model": copy.deepcopy(parent_model.state_dict()),
+              "optimizer": copy.deepcopy(trainer.optimizer.state_dict()),
               "trainer": copy.deepcopy(trainer.state_dict()), "rng": ckpt.rng_state(),
               "names": optimizer_names(parent_model), "consumed": consumed[0]}
-    emit("parent_dev", {"seed": args.seed, "dev": dev_eval(parent_model, valid_cache, all_tags, tokenizer, args)})
+    emit("parent_dev", {"seed": args.seed, "dev": dev_eval(parent_model, valid_cache, all_tags, tokenizer, stop, args)})
     emit("parent_ckpt", {"seed": args.seed, **save(built, trainer, "parent", args, {
         "contender": "D", "stage1": {"role": "parent", "batches_consumed": consumed[0]}})})
     parent_economy = economy(parent_model, economy_batches, device)
@@ -499,6 +538,7 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     del probe
 
     # the arms
+    parent_model.load_state_dict(parent["model"], strict=True)
     for arm in ("LINE", "SPAN"):
         if device.type == "cuda":
             torch.cuda.empty_cache()
@@ -510,9 +550,8 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
             trainer = MiniTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
         else:
             model = span_cards.build_model(config, span_config(n_target))
-            missing, unexpected = model.load_state_dict(parent["model"], strict=False)
-            model.writer.init_gate()
-            if set(missing) != {f"writer.{k}" for k in ("gate.weight", "gate.bias", "newline_weight")} or unexpected:
+            missing, unexpected = span_stage0.load_from_line(model, parent_model)
+            if set(missing) != span_stage0.GATE_KEYS or unexpected:
                 raise SystemExit(f"SPAN did not load P_s (missing {missing}, unexpected {unexpected})")
             trainer = span_cards.SpanTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
         restore(trainer, parent)
@@ -524,7 +563,8 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
         report = trainer.train(stream, evaluate=hook, on_log=progress(arm, args.seed))
         emit("arm_train", {"seed": args.seed, "arm": arm, "train": train_report(report),
                            "span_log_last": getattr(trainer, "span_log", [])[-3:]})
-        emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev_eval(model, valid_cache, all_tags, tokenizer, args)})
+        dev = dev_eval(model, valid_cache, all_tags, tokenizer, stop, args)
+        emit("arm_dev", {"seed": args.seed, "arm": arm, "dev": dev})
         emit("arm_economy", {"seed": args.seed, "arm": arm, "economy": economy(model, economy_batches, device)})
         extra = {"contender": "D" if arm == "LINE" else span_cards.VARIANT,
                  "stage1": {"role": arm, "parent_batches": parent["consumed"]}}
@@ -539,11 +579,21 @@ def script_sha256() -> str:
     return sha256(Path(__file__).resolve())
 
 
+def rung_allowed(rung: tuple, fitted: tuple) -> bool:
+    """A go file may name the rung this box measured as fitting or a smaller one of the ladder, never a larger."""
+    return rung in LADDER and fitted in LADDER and LADDER.index(rung) >= LADDER.index(fitted)
+
+
+def code_sha256() -> str:
+    """One digest over every module the run's data stream, training, charging and checks depend on (`CODE`)."""
+    return hashlib.sha256("".join(f"{name}:{sha256(ROOT / name)}\n" for name in CODE).encode()).hexdigest()
+
+
 def box(args: argparse.Namespace) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     emit("env", {"seed": args.seed, "torch": torch.__version__, "cuda": torch.version.cuda, "device": device,
                  "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
-                 "python": platform.python_version(), "script_sha256": script_sha256(),
+                 "python": platform.python_version(), "script_sha256": script_sha256(), "code_sha256": code_sha256(),
                  "span_cards_sha256": span_cards.source_digest(), "args": vars(args)})
     built = build(args)
     record = data_record(built)
@@ -554,12 +604,16 @@ def box(args: argparse.Namespace) -> None:
     emit("preflight", {"seed": args.seed, **memory})
     if memory["chosen"] is None:
         raise SystemExit("no batch configuration fits both arms inside the memory guard: stop and report")
-    expected = {"script_sha256": script_sha256(), "train_cache_sha256": record["train_cache"]["sha256"],
+    expected = {"script_sha256": script_sha256(), "code_sha256": code_sha256(),
+                "train_cache_sha256": record["train_cache"]["sha256"],
                 "validation_cache_sha256": record["validation_cache"]["sha256"], "N": record["N"],
                 "flop_budget": args.flop_budget}
     go = wait_for_go(args, expected)
-    if (go["max_tokens"], go["max_visits"]) not in LADDER:
-        raise SystemExit(f"the go file names a configuration outside the ladder: {go['max_tokens']}, {go['max_visits']}")
+    rung = (go["max_tokens"], go["max_visits"])
+    fitted = (memory["chosen"]["max_tokens"], memory["chosen"]["max_visits"])
+    if not rung_allowed(rung, fitted):
+        raise SystemExit(f"the go file names {rung}, larger than the rung this box measured as fitting {fitted} "
+                         "(or outside the ladder)")
     emit("go", {"seed": args.seed, "max_tokens": go["max_tokens"], "max_visits": go["max_visits"]})
     run_seed(args, built, go)
 
