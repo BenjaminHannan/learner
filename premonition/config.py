@@ -16,6 +16,10 @@ VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; ent
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
 VARIANTS = ("D", "D-noask", "D-noptr")
+STEAL_FIELDS = ("delta_bind", "delta_bind_rows", "fetch_gate", "fetch_gate_bias", "fetch_sink", "sink_init",
+                "loop_attnres", "engram", "engram_heads", "engram_rows", "row_halt", "row_halt_cost", "row_halt_bias",
+                "random_depth", "random_depth_min", "qk_norm", "qk_norm_all", "qk_clip", "key_split", "key_pos_dim",
+                "key_pos_base", "ask_reuse", "ask_refresh_every", "ask_refresh_cos")   # every field the steals added
 STEAL_FLAGS = ("delta_bind", "fetch_gate", "fetch_sink", "loop_attnres", "engram", "row_halt", "random_depth",
                "qk_norm", "qk_norm_all", "key_split", "ask_reuse")   # bool flags; qk_clip is a float (0 = off)
 
@@ -62,7 +66,7 @@ class MiniConfig:
     fetch_gate: bool = False            # 2: per-head sigmoid gates on fetched card values and decoder cross-attention
     fetch_gate_bias: float = 3.0        #    gate bias at init: sigmoid(3) = 0.95, open
     fetch_sink: bool = False            # 2: learned sink logits: one per head in decoder cross-attention, one in ASK
-    sink_init: float = 0.0              #    decoder sink logit at init (the ASK sink starts at -kappa_init)
+    sink_init: float = 0.0              #    decoder sink logit at init (the ASK sink starts at -2 kappa_init)
     loop_attnres: bool = False          # 3: each loop's registers are a softmax mix of every earlier loop's (AttnRes)
     engram: bool = False                # 4: a hashed lookup on a line's names, gated and added to its card value
     engram_heads: int = 4
@@ -81,6 +85,7 @@ class MiniConfig:
     ask_reuse: bool = False             # 7: reuse the ASK ranking between refresh loops (cache with invalidation)
     ask_refresh_every: int = 2          #    loops 0, n, 2n, ... always rescore
     ask_refresh_cos: float = 0.1        #    rescore early once the query's cosine distance from the cached one passes this
+                                        #    (0 = rescore every loop)
 
     def __post_init__(self) -> None:
         for name in ("vocab_size", "n_ent", "d_model", "n_heads", "reader_mlp", "window", "scan_chunk",
@@ -95,17 +100,18 @@ class MiniConfig:
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
-        if self.d_model % self.delta_bind_rows:
-            raise ValueError("delta_bind_rows must divide d_model")
-        if self.engram_heads <= 0 or self.d_model % self.engram_heads or self.engram_rows <= 0:
+        # Steal settings are checked only when their flag is on, so every config valid at 73b8e0224 stays valid.
+        if self.delta_bind and (self.delta_bind_rows <= 0 or self.d_model % self.delta_bind_rows):
+            raise ValueError("delta_bind_rows must be positive and divide d_model")
+        if self.engram and (self.engram_heads <= 0 or self.d_model % self.engram_heads or self.engram_rows <= 0):
             raise ValueError("engram_heads must divide d_model and engram_rows must be positive")
-        if not 1 <= self.random_depth_min <= self.max_loops:
+        if self.random_depth and not 1 <= self.random_depth_min <= self.max_loops:
             raise ValueError("random_depth_min must be in 1..max_loops")
         if self.qk_clip < 0 or self.row_halt_cost < 0:
             raise ValueError("qk_clip and row_halt_cost must be nonnegative")
         if self.key_split and not (2 <= self.pos_key_dim < self.key_dim and self.pos_key_dim % 2 == 0):
             raise ValueError("key_split needs an even key_pos_dim in 2..key_dim - 1")
-        if self.ask_refresh_every <= 0 or not 0.0 <= self.ask_refresh_cos <= 2.0:
+        if self.ask_reuse and (self.ask_refresh_every <= 0 or not 0.0 <= self.ask_refresh_cos <= 2.0):
             raise ValueError("ask_refresh_every must be positive and ask_refresh_cos in [0, 2]")
         if self.check_band and self.d_model == 128:
             count = self.base().num_parameters()     # the band holds D itself; steal parameters are reported apart
@@ -229,4 +235,4 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     }
 
 
-__all__ = ["MiniConfig", "PARAM_BAND", "STEAL_FLAGS", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]
+__all__ = ["MiniConfig", "PARAM_BAND", "STEAL_FIELDS", "STEAL_FLAGS", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]

@@ -44,18 +44,27 @@ def measure(flags: dict, batch, repeats: int) -> dict:
     torch.manual_seed(0)
     model = PremonitionMini(MiniConfig.preset("D", vocab_size=VOCAB_V1, **flags))
     out = {"parameters": model.num_parameters(), "breakdown": model.parameter_breakdown(), "modes": {}}
+    # random_depth: the expected cost, the mean over every equally likely loop cap (not one sampled draw).
+    config = model.config
+    caps = list(range(config.random_depth_min, config.max_loops + 1)) if config.random_depth else [None]
     for mode, p_own in MODES:
-        sample = measure_mini(model, batch, mode=mode, p_own=p_own,
-                              generator=torch.Generator().manual_seed(0))
-        times = []
-        for _ in range(repeats):
-            model.zero_grad(set_to_none=True)
-            started = time.perf_counter()
-            result = model(batch, mode=mode, p_own=p_own, generator=torch.Generator().manual_seed(0))
-            result["loss"].backward()
-            times.append(time.perf_counter() - started)
-        out["modes"][mode] = {"flops": sample.flops, "question_loops": sample.question_loops,
-                              "seconds_median": statistics.median(times)}
+        flops, loops, seconds = [], [], []
+        for cap in caps:
+            extra = {} if cap is None else {"depth_cap": cap}
+            sample = measure_mini(model, batch, mode=mode, p_own=p_own,
+                                  generator=torch.Generator().manual_seed(0), **extra)
+            times = []
+            for _ in range(repeats if cap is None else max(2, repeats // 2)):
+                model.zero_grad(set_to_none=True)
+                started = time.perf_counter()
+                result = model(batch, mode=mode, p_own=p_own, generator=torch.Generator().manual_seed(0), **extra)
+                result["loss"].backward()
+                times.append(time.perf_counter() - started)
+            flops.append(sample.flops)
+            loops.append(sample.question_loops)
+            seconds.append(statistics.median(times))
+        out["modes"][mode] = {"flops": statistics.fmean(flops), "question_loops": statistics.fmean(loops),
+                              "seconds_median": statistics.fmean(seconds)}
     return out
 
 

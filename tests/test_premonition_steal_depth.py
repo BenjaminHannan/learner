@@ -310,6 +310,20 @@ class RandomDepthTest(unittest.TestCase):
         model(self.batch, mode="gold", generator=generator)
         self.assertFalse(torch.equal(generator.get_state(), state))
 
+    def test_eval_mode_forward_draws_no_cap(self) -> None:
+        model = tiny_model(random_depth=True)
+        model.eval()
+        out = model(self.batch, mode="own", generator=torch.Generator().manual_seed(0))
+        self.assertEqual(int(out["metrics"]["question_loops"]), model.config.max_loops * self.batch.q_visit.shape[0])
+
+    def test_budget_for_steps_prices_the_mean_cap(self) -> None:
+        """train_toy(steps=N) with random_depth runs about N steps (the budget averages over the caps)."""
+        from premonition.train import train_toy
+        steps = [train_toy("D", steps=40, log_every=20, warmup_steps=2, seed=seed,
+                           config_overrides={"random_depth": True})["train"]["steps"] for seed in (0, 1)]
+        for count in steps:
+            self.assertTrue(28 <= count <= 52, steps)
+
     def test_answer_is_unaffected(self) -> None:
         a, b = tiny_model(), tiny_model(random_depth=True)
         self.assertTrue(torch.equal(a.answer(self.batch).tokens, b.answer(self.batch).tokens))

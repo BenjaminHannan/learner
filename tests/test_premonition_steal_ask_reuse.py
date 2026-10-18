@@ -64,6 +64,16 @@ class AskReuseTest(unittest.TestCase):
         for field in ("tokens", "lengths", "loops", "first_top", "fetched", "halt_prob"):
             self.assertTrue(torch.equal(getattr(a, field), getattr(b, field)), field)
 
+    def test_threshold_zero_refreshes_even_a_frozen_query(self) -> None:
+        """In fp32, 1 - u.u of an unchanged unit query can come out slightly negative: 0 must still mean always."""
+        model = tiny_model(seed=0, ask_reuse=True, ask_refresh_every=100, ask_refresh_cos=0.0)
+        episode, store, index = start(model, self.batch)
+        register = torch.randn(index.numel(), model.config.d_model, generator=torch.Generator().manual_seed(5))
+        with torch.no_grad():
+            model._ask_scores(episode, index, 0, store, register)
+            model._ask_scores(episode, index, 1, store, register)               # the same query again
+        self.assertTrue((episode.ask_age == 0).all())
+
     def test_every_n_loops_refresh_regardless_of_the_query(self) -> None:
         model = tiny_model(seed=0, ask_reuse=True, ask_refresh_every=2, ask_refresh_cos=2.0)
         episode, store, index = start(model, self.batch)

@@ -38,7 +38,7 @@ STEAL_SEED = 7100                     # offset of the side stream that initialis
 def _aside(build):
     """Build a steal module off the global RNG stream and mark it, so `reset_parameters` initialises it on a side
     stream: at a given seed every shared weight is then the same with the steal on or off (paired A/Bs)."""
-    with torch.random.fork_rng(devices=[]):
+    with torch.random.fork_rng():                  # the CPU stream and every CUDA device's
         module = build()
     for part in module.modules():
         part._steal = True
@@ -362,8 +362,8 @@ class Heads(nn.Module):
         self.halt = nn.Linear(d, 1)
         self.row_halt = _aside(lambda: nn.Linear(d, 1)) if config.row_halt else None
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
-        if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, starts at -kappa_init
-            self.ask_sink = nn.Parameter(torch.tensor(-config.kappa_init))
+        if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, below every score at init
+            self.ask_sink = nn.Parameter(torch.tensor(-2 * config.kappa_init))
         if config.store and config.qk_norm:                      # steal 6: per-dimension gains on the unit q and k
             self.query_gain = nn.Parameter(torch.ones(config.key_dim))
             self.key_gain = nn.Parameter(torch.ones(config.key_dim))
@@ -487,21 +487,21 @@ class PremonitionMini(nn.Module):
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        def generic(modules: Iterable[nn.Module]) -> None:
+        def generic(modules: Iterable[nn.Module], generator: Optional[torch.Generator] = None) -> None:
             for module in modules:
                 if isinstance(module, nn.Linear):
-                    nn.init.normal_(module.weight, std=0.02)
+                    nn.init.normal_(module.weight, std=0.02, generator=generator)
                     nn.init.zeros_(module.bias)
                 elif isinstance(module, nn.Embedding) and module is not self.embed:
-                    nn.init.normal_(module.weight, std=0.02)
+                    nn.init.normal_(module.weight, std=0.02, generator=generator)
 
         generic(m for m in self.modules() if not getattr(m, "_steal", False))
         steal = [m for m in self.modules() if getattr(m, "_steal", False)]
         if steal:                                  # steal modules: same inits, on their own stream (see _aside)
-            seed = (STEAL_SEED + torch.initial_seed()) % 2 ** 63
-            with torch.random.fork_rng(devices=[]):
-                torch.manual_seed(seed)
-                generic(steal)
+            device = next(steal[0].parameters()).device
+            if device.type != "meta":              # an explicit generator: no global stream (CPU or CUDA) is touched
+                seed = (STEAL_SEED + torch.initial_seed()) % 2 ** 63
+                generic(steal, torch.Generator(device=device).manual_seed(seed))
         for module in self.modules():
             outs = []
             if id(module) in residual:
@@ -530,7 +530,7 @@ class PremonitionMini(nn.Module):
             if config.fetch_sink:                  # steal 2: decoder sinks at sink_init, ASK sink a no-op
                 self.decoder.cross_sink.fill_(config.sink_init)
                 if hasattr(self.heads, "ask_sink"):
-                    self.heads.ask_sink.fill_(-config.kappa_init)
+                    self.heads.ask_sink.fill_(-2 * config.kappa_init)     # scores are >= -kappa at init
         if config.loop_attnres:
             nn.init.zeros_(self.think.loop_query)                      # uniform mix at init
         if config.row_halt:
@@ -736,7 +736,9 @@ class PremonitionMini(nn.Module):
             episode.ask_query = torch.zeros(count, unit.shape[1], device=device)
             episode.ask_age = torch.full((count,), -1, dtype=torch.long, device=device)
         age = episode.ask_age[index]
-        moved = 1.0 - (unit * episode.ask_query[index]).sum(-1) >= config.ask_refresh_cos
+        # Threshold 0 means "always refresh" (in fp32, 1 - u.u of an unchanged unit query can be slightly negative).
+        distance = 1.0 - (unit * episode.ask_query[index]).sum(-1)
+        moved = distance > config.ask_refresh_cos if config.ask_refresh_cos > 0 else torch.ones_like(distance, dtype=torch.bool)
         refresh = (age < 0) | (step % config.ask_refresh_every == 0) | moved
         rows = torch.nonzero(refresh).squeeze(1)
         if rows.numel() == index.numel():
@@ -845,7 +847,7 @@ class PremonitionMini(nn.Module):
             return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
         device = hidden.device
-        if config.random_depth and depth_cap is None and torch.is_grad_enabled():
+        if config.random_depth and depth_cap is None and self.training and torch.is_grad_enabled():
             depth_cap = int(torch.randint(config.random_depth_min, config.max_loops + 1, (1,), generator=generator,
                                           device=None if generator is None else generator.device).item())
         if depth_cap is not None and depth_cap < 1:

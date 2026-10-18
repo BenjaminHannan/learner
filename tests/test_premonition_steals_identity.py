@@ -47,21 +47,28 @@ def _load(name: str, source: str) -> types.ModuleType:
     return module
 
 
-def base_modules() -> tuple[types.ModuleType, types.ModuleType, types.ModuleType]:
-    """(store, model, train) exactly as at the base commit, wired to each other."""
+def base_modules() -> tuple[types.ModuleType, types.ModuleType, types.ModuleType, types.ModuleType]:
+    """(config, store, model, train) exactly as at the base commit, wired to each other."""
     if "premonition_base_train" in sys.modules:
-        return (sys.modules["premonition_base_store"], sys.modules["premonition_base_model"],
-                sys.modules["premonition_base_train"])
+        return tuple(sys.modules[f"premonition_base_{name}"] for name in ("config", "store", "model", "train"))
+    config = _load("premonition_base_config", _git_source("premonition/config.py"))
     store = _load("premonition_base_store", _git_source("premonition/store.py"))
     model = _load("premonition_base_model", _git_source("premonition/model.py").replace(
-        "from premonition.store import", "from premonition_base_store import"))
+        "from premonition.store import", "from premonition_base_store import").replace(
+        "from premonition.config import", "from premonition_base_config import"))
     train = _load("premonition_base_train", _git_source("premonition/train.py").replace(
-        "from premonition.model import", "from premonition_base_model import"))
-    return store, model, train
+        "from premonition.model import", "from premonition_base_model import").replace(
+        "from premonition.config import", "from premonition_base_config import"))
+    return config, store, model, train
 
 
 def tiny(variant: str = "D", **flags) -> MiniConfig:
     return MiniConfig.preset(variant, "tiny", vocab_size=VOCAB, window=16, max_loops=6, **flags)
+
+
+def base_tiny(variant: str = "D"):
+    """The same config built by the base commit's own config.py."""
+    return base_modules()[0].MiniConfig.preset(variant, "tiny", vocab_size=VOCAB, window=16, max_loops=6)
 
 
 def build(cls, config: MiniConfig, seed: int) -> tuple[torch.nn.Module, torch.Tensor]:
@@ -144,7 +151,7 @@ def differences(left: list, right: list) -> list[str]:
 class AllOffIsBitIdenticalTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.base_store, cls.base_model, cls.base_train = base_modules()
+        cls.base_config, cls.base_store, cls.base_model, cls.base_train = base_modules()
 
     def test_config_defaults_are_off(self) -> None:
         config = MiniConfig.preset("D")
@@ -157,9 +164,8 @@ class AllOffIsBitIdenticalTest(unittest.TestCase):
         for variant in VARIANTS:
             for seed in SEEDS:
                 with self.subTest(variant=variant, seed=seed):
-                    config = tiny(variant)
-                    new, new_rng = build(PremonitionMini, config, seed)
-                    old, old_rng = build(self.base_model.PremonitionMini, config, seed)
+                    new, new_rng = build(PremonitionMini, tiny(variant), seed)
+                    old, old_rng = build(self.base_model.PremonitionMini, base_tiny(variant), seed)
                     self.assertTrue(torch.equal(new_rng, old_rng), "construction drew a different RNG stream")
                     new_state, old_state = new.state_dict(), old.state_dict()
                     self.assertEqual(list(new_state), list(old_state))
@@ -170,26 +176,41 @@ class AllOffIsBitIdenticalTest(unittest.TestCase):
                                                  run_answers(old, batch, self.base_train)), [])
 
     def test_full_size_init_matches(self) -> None:
-        config = MiniConfig.preset("D")
-        new, new_rng = build(PremonitionMini, config, 0)
-        old, old_rng = build(self.base_model.PremonitionMini, config, 0)
+        new, new_rng = build(PremonitionMini, MiniConfig.preset("D"), 0)
+        old, old_rng = build(self.base_model.PremonitionMini, self.base_config.MiniConfig.preset("D"), 0)
         self.assertTrue(torch.equal(new_rng, old_rng))
+        self.assertEqual(list(new.state_dict()), list(old.state_dict()))
         for (name, a), (_, b) in zip(new.state_dict().items(), old.state_dict().items()):
             self.assertTrue(torch.equal(a, b), name)
+
+    def test_configs_and_checkpoint_configs_match(self) -> None:
+        """Every config the base accepts is accepted, counts the same parameters, and serialises to the same
+        checkpoint config (so older code still reads a flags-off checkpoint)."""
+        settings = [dict(), dict(d_model=36, n_heads=2), dict(d_model=20, n_heads=2), dict(max_loops=1)]
+        for variant in VARIANTS:
+            for extra in settings:
+                with self.subTest(variant=variant, extra=extra):
+                    new = MiniConfig.preset(variant, "tiny", vocab_size=VOCAB, **extra)
+                    old = self.base_config.MiniConfig.preset(variant, "tiny", vocab_size=VOCAB, **extra)
+                    self.assertEqual(new.parameter_breakdown(), old.parameter_breakdown())
+                    self.assertEqual(ptrain.mini_config_dict(new), self.base_train.mini_config_dict(old))
+        for variant in VARIANTS:
+            self.assertEqual(MiniConfig.preset(variant).num_parameters(),
+                             self.base_config.MiniConfig.preset(variant).num_parameters())
 
     def test_trainer_steps_match_the_base_commit(self) -> None:
         batches = [synthetic_batch(visits=2, lines=20, seed=s) for s in (11, 12, 13)]
         for variant in VARIANTS:
             with self.subTest(variant=variant):
                 new, _ = build(PremonitionMini, tiny(variant), 0)
-                old, _ = build(self.base_model.PremonitionMini, tiny(variant), 0)
+                old, _ = build(self.base_model.PremonitionMini, base_tiny(variant), 0)
                 self.assertEqual(differences(run_trainer(ptrain, new, batches, 0),
                                              run_trainer(self.base_train, old, batches, 0)), [])
 
     def test_the_comparison_catches_a_tiny_perturbation(self) -> None:
         batch = synthetic_batch(visits=2, lines=24, seed=3)
         new, _ = build(PremonitionMini, tiny(), 0)
-        old, _ = build(self.base_model.PremonitionMini, tiny(), 0)
+        old, _ = build(self.base_model.PremonitionMini, base_tiny(), 0)
         with torch.no_grad():
             next(new.think.parameters()).view(-1)[0] += 1e-7
         self.assertNotEqual(differences(run_modes(new, batch, 0), run_modes(old, batch, 0)), [])

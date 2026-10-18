@@ -76,7 +76,7 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
   with logit b_h and value 0 in the cross-attention softmax, so a head can attend to nothing. Implement it with
   SDPA by appending a zero key and value and passing a float mask of shape [n, H, len, rows + 1] that is -inf
   where invalid and b_h on the sink column (the q.0 term is 0).
-- **`fetch_sink`, ASK:** `heads.ask_sink = Parameter(scalar)`, init `-kappa_init`, so it starts as a no-op. It is
+- **`fetch_sink`, ASK:** `heads.ask_sink = Parameter(scalar)`, init `-2 kappa_init` (every score is at least -kappa_init at init), so it starts as a no-op. It is
   appended to the ASK score vector in the set cross-entropy denominator.
   - Questions with nothing left to fetch (the `asks == False` rows) get the sink as their set-CE target, so the
     sink learns "nothing worth fetching". Without that target the loss only pushes the sink down.
@@ -196,7 +196,7 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
 
 ## 7. `ask_reuse`: ASK selection reuse across loops (IndexCache)
 - Refresh loops are steps where step % `ask_refresh_every` == 0. They also include any loop where the question's
-  current unit query has cosine distance > `ask_refresh_cos` from `episode.ask_query`, and any question with no
+  current unit query has cosine distance > `ask_refresh_cos` from `episode.ask_query` (a threshold of 0 means every loop), and any question with no
   cache yet. Refresh loops score with full matching and store `ask_cache`, `ask_query` and `ask_age = 0`.
 - Other loops reuse `ask_cache`, re-masked with the current eligibility: fetched cards become -inf, NULL stays.
   The reused scores keep their graph, and the L_ask terms on reuse loops use them.

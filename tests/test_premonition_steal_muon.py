@@ -182,8 +182,9 @@ class TrainerTest(unittest.TestCase):
     def test_muon_trainer_optimizer(self) -> None:
         t = trainer(tiny_model(), "muon", lr=3e-3)
         self.assertIsInstance(t.optimizer, MuonAdamW)
-        self.assertEqual(t.optimizer.defaults["betas"], (0.9, 0.99))
-        self.assertEqual(t.optimizer.defaults["eps"], 1e-8)
+        adamw = [g for g in t.optimizer.param_groups if not g["muon"]]
+        self.assertTrue(adamw and all(g["betas"] == (0.9, 0.99) and g["eps"] == 1e-8 for g in adamw))
+        self.assertIsInstance(t.optimizer.parts[-1], torch.optim.AdamW)       # the AdamW half is torch's own
         self.assertEqual({g["lr"] for g in t.optimizer.param_groups}, {3e-3})
 
     def test_the_lr_schedule_drives_every_group(self) -> None:

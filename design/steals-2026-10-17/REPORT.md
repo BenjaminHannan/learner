@@ -1,7 +1,8 @@
 # Eight frontier steals in Premonition-mini: implementation report
 
-Written 2026-10-17 (UTC). **Status: DRAFT for the coordinator's code review.** No training beyond tiny CPU smoke
-runs, no GPU, nothing booked.
+Written 2026-10-17 (UTC); revised 2026-10-18 after the Q39 code review and the coordinator's rulings Q39–Q43.
+**Status: DRAFT.** The code review (§7) came back PASS WITH FIXES. The fixes are applied and re-verified here; the
+coordinator decides whether that clears Q39. No training beyond tiny CPU smoke runs, no GPU, nothing booked.
 - Branch: `claude/steals-8`, based on `main` at 73b8e0224.
 - Build contract: [`SPEC.md`](SPEC.md).
 - Raw numbers: `artifacts/claude-steals-20261017/` (`costs.json`, `qk-diagnostic.json`, `muon-bench.json`).
@@ -16,9 +17,9 @@ Labels: **shown** means measured here; **suggested** means my reading of a measu
 | F2 | D is a working model to improve | The toy result **reproduces here** (shown): gold recall@4 is 0.90, but answer accuracy is 7.4% against 6.25% chance, **and 7.4% with the gold cards handed in**. The 09-18 trainer handoff says the same. | Retrieval works and the answer path does not. Steals that act on the answer path come first in the A/B order (§5). |
 | F3 | three steals add something new | **Parts of three already exist** (shown by reading the code):<br>• The binder `s + σ(g)(tanh c − s)` is already a gated delta rule whose readback is the identity.<br>• ASK already matches by direction: the query and the keys are unit vectors, scaled by a learned κ.<br>• The NULL card plus the ASK-logit BCE is already a way to "attend to nothing". | Each of these steals was built as the part that is actually new: key-addressed readback, learned per-dimension gains, and a sink logit with its own target. §2 has the details. |
 | F4 | ASK reuse saves compute | ASK scoring is 2·dk·(L+1) ≈ 13k multiply-adds per (question, loop). The think block is ≈ 60M. | Steal 7 can only change behaviour, never cost, at this size (shown in §1: counted FLOPs −0.01%). |
-| F5 | Engram is a neutral capacity add | Hashing **name spellings** gives D a parametric memory of specific names. The project's design keeps facts in the notebook and starts it empty, and village names repeat across worlds. | **Coordinator ruling needed** before any Engram A/B. If it is run, the held-out split must have names disjoint from training, or a gain could be name memorisation. |
-| F6 | editing `premonition/` is fine | `handoff/HANDOFF.md:33` forbids edits under `premonition/`. | Edited under Ben's Oct 17 commission (as PR 79 was). The coordinator should confirm the override. |
-| F7 | this lands alone | PR 79 (`decoder_reader_kv`) and PR 82 (span cards) edit `model.py` and `config.py` from the same base. | The merge order needs a decision. Expect conflicts in `Decoder.forward` and the `MiniConfig` field block. |
+| F5 | Engram is a neutral capacity add | Hashing **name spellings** gives D a parametric memory of specific names. The project's design keeps facts in the notebook and starts it empty, and village names repeat across worlds. | **Ruled (Q40): HOLD.** No Engram A/B on any split whose train and held-out names overlap. The only permitted form is a name-disjoint held-out split plus a size-matched reading of its +164,096 parameters, under the §5 bars. It stays last. |
+| F6 | editing `premonition/` is fine | `handoff/HANDOFF.md:33` forbids edits under `premonition/`. | **Override confirmed (Q39):** this was Ben's own commission. The review checked the diff stays inside the steals' scope (§7). |
+| F7 | this lands alone | PR 79 (`decoder_reader_kv`) and PR 82 (span cards) edit `model.py` and `config.py` from the same base. | **Ruled (Q41):** nothing merges yet. Branches land one at a time, in the order their reviews pass. A later branch rebases onto the new `main`, re-runs its identity harness against that new base, and resolves the conflicts itself. |
 
 ## 1. Summary per mechanism
 
@@ -62,15 +63,28 @@ backward).
   - trainer steps in the gold, teacher and own phases: losses, grad norms, card stats, final weights and AdamW
     state
 - Coverage: D, D-noask and D-noptr, seeds 0 and 1, plus full-size init.
+- Since the review, the base side is built by the base commit's own `config.py` as well.
 - The test fails on a 1e-7 weight perturbation, so it is not vacuous.
+- The independent reviewer ran a separate check. It built the base and branch trees with `git archive`, ran them in
+  separate processes and compared about 1,800 tensors. That check covered paths the harness does not: CPU bf16
+  autocast, `train_toy`'s calibrate, budget and train loop through every phase, `validate`, a full-size
+  forward and backward, and checkpoint save, resume and step. **Everything matched**, apart from the two
+  config-level items now fixed (§7).
+
+**Configs and checkpoints, shown.**
+- Every config the base accepts is still accepted, including odd-but-valid widths such as d = 36 or 20, which the
+  first draft wrongly rejected.
+- Each such config counts the same parameters as before.
+- Each serialises to the **same checkpoint `config.json` as the base**: steal fields left at their defaults are
+  not written. So older code still reads a flags-off checkpoint, and new code reads old ones.
 
 **Composability, shown.** Each flag alone, and all flags together, builds, trains every mode with finite losses and
 gradients, answers, and takes trainer steps. The hand parameter count equals the modules' count. The two controls
 (D-noask, D-noptr) take every flag.
 
-**Paired init, shown.** Steal modules are built and initialised off the global RNG stream (`model._aside`). So at a
-given seed, every shared weight and the RNG state equal the flag-off model's, and a paired A/B differs only in the
-steal. The exception is `delta_bind`: it removes the binder, so the binder's draws, and every weight after them,
+**Paired init, shown.** Steal modules are built off the global RNG stream (`model._aside`), and they are initialised
+by an explicit generator, so no global stream, CPU or CUDA, is touched. So at a given seed, every shared weight and
+the RNG state equal the flag-off model's, and a paired A/B differs only in the steal. The exception is `delta_bind`: it removes the binder, so the binder's draws, and every weight after them,
 move.
 
 **Suite, shown.** All 103 test files were run one by one on this branch and on an untouched `main` checkout.
@@ -110,7 +124,9 @@ earlier cards. That is the new part: today's binder overwrites a gated share of 
   - ASK gets one sink logit, because ASK has one head. "Per head" therefore reduces to one scalar there.
   - The ASK sink sits in every set-CE denominator. Questions with nothing left to fetch take it as their target
     (otherwise the loss can only push it down).
-  - `_choose` drops cards that score at or below it. It starts at −κ_init, a no-op.
+  - `_choose` drops cards that score at or below it. It starts at −2κ_init. Every score is at least −κ_init at
+    init, so it starts as an exact no-op. (The first draft started it at −κ_init, which could drop a card with
+    cos ≈ −1.)
   - The NULL card stays.
 - With the ASK sink on, L_ask's set term averages over all rows, not only the rows that still need cards, so its
   magnitude changes.
@@ -171,8 +187,11 @@ earlier cards. That is the new part: today's binder overwrites a gated share of 
 moved by cosine distance ≥ 0.1 or that has no cache yet. Other loops reuse the cached scores, with the current
 eligibility re-applied: fetched cards become −∞ and NULL stays.
 - Inserts, gates and binds are recomputed every loop.
-- It is a cache with invalidation, not a frozen fetch: a threshold of 0 refreshes every loop, and the result equals
-  the flag-off model (tested).
+- It is a cache with invalidation, not a frozen fetch. A threshold of 0 is defined as "refresh every loop", and the
+  result then equals the flag-off model (tested).
+  - The first draft tested `1 − cos ≥ 0`. In fp32 that can be false for an unchanged unit query (the reviewer
+    measured 22%), so a frozen query could reuse the cache.
+  - A regression test now fails under the old rule.
 - No compute saving at this size (F4).
 
 **8 · Muon (Moonshot recipe).** `premonition/muon.py`, class `MuonAdamW`, one optimizer whose param groups carry a
@@ -184,11 +203,17 @@ eligibility re-applied: fetched cards become −∞ and NULL stays.
   - The update is scaled by 0.2·√max(A, B) so its RMS matches AdamW, with decoupled weight decay.
 - **AdamW side:** everything else: the embeddings and tied head, norms, biases, gates, sinks, gains,
   pseudo-queries, Engram tables, `heads.*` and the binder.
+  - This half is **torch's own `torch.optim.AdamW`** (fused on CUDA, like the base trainer). R1's wall-clock
+    comparison therefore charges Muon only for Muon.
+  - The first draft hand-wrote AdamW as a per-parameter Python loop. `MuonAdamW` now presents one interface over
+    the two parts.
 - `MiniTrainer(optimizer="muon")`, `train_toy(optimizer=)`.
 - A Muon checkpoint records its optimizer and resumes as Muon (tested). The default `"adamw"` path is
   bit-identical.
-- The fused GRU input matrix (z, h̃ and gate in one 128×384) is orthogonalised as one matrix. A split variant is
-  untested.
+- Fused matrices are orthogonalised as one matrix each: the GRU input (z, h̃ and gate), attention `qkv`, and the
+  decoder's `cross_kv`. A split variant is untested.
+- QK-Clip runs only through `MiniTrainer._train_step`. A script with its own training loop must call
+  `model.after_optimizer_step()` itself.
 
 ## 3. QK-norm diagnostic, run before QK-norm was enabled in any test
 
@@ -283,8 +308,10 @@ per run, each against an all-off control with paired seeds (§1 paired init).
 
 ## RUN CARD R1: Muon against AdamW (training procedure only)
 
-**Status: DRAFT, UNSEALED, UNFUNDED.** Seal it (`shasum -a 256`) only after the coordinator fills the
-**[COORDINATOR]** blanks.
+**Status: blanks filled by the coordinator (Q42).**
+- **Stage 0 is approved:** $0, CPU, seeds 0–2, but only after the Q39 review passes.
+- **Stage 1 is not approved.** It gets its own bid, and only if stage 0 passes.
+- Spend as of the ruling: $5.58 spent and $29.86 committed of the $50/week cap.
 
 1. **Question.** On the same model, does the Muon option reach a lower held-out loss **per second of training** than
    AdamW, without losing held-out accuracy?
@@ -293,8 +320,7 @@ per run, each against an all-off control with paired seeds (§1 paired init).
    - A1: Muon at the recipe lr, 3e-3.
    - A2: Muon at lr 2e-2.
 
-   **[COORDINATOR] Confirm that both Muon arms are registered.** The smoke run (§4) says the lr decides the sign,
-   so registering only one would be a guess. Each arm is read against A0 on its own bar.
+   **Both Muon arms are registered (Q42).** Each is read against A0 on its own bar.
 3. **Setup.**
    - `train_toy("D", steps=1500, seed=s, optimizer=...)`, tiny preset, the same batches, seeds s ∈ {0, 1, 2}.
    - The model is bit-identical across arms at each seed. The optimizer is the only change.
@@ -308,7 +334,7 @@ per run, each against an all-off control with paired seeds (§1 paired init).
    - The held-out evaluation hook is a small addition to the bench script, written at $0 after gating.
 5. **Bar.**
    - mean(d) − 2·SD(d)/√3 > 0, **and** d_s > 0 in at least 2 of 3 seeds, **and** mean(d) ≥ 3% of A0's loss.
-   - **[COORDINATOR]** `MIN_EFFECT` is 3 accuracy points. I propose 3% relative for a loss readout.
+   - `MIN_EFFECT` for this loss readout is **3% relative (confirmed, Q42)**.
 6. **Guard.** Ak's held-out toy accuracy (`validate`, own retrieval) must not be more than 3 points below A0's in 2
    of 3 seeds. A loss gain that costs accuracy does not count.
 7. **Verdicts.**
@@ -326,11 +352,14 @@ per run, each against an all-off control with paired seeds (§1 paired init).
       (cap $0.30).
     - Stage 1b: 3 seed pairs at equal wall-clock (cap $2.50).
     - The prices and estimates are PR 79's: D's s/FLOP has never been measured on a GPU.
-    - **[COORDINATOR]** the parent or fresh start, the primary village score, and this week's spend so far.
+    - The parent (or fresh start) and the primary village score go in the stage-1 bid. Q42 leaves them unfilled.
 
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
-**Status: DRAFT, UNSEALED, UNFUNDED.** Seal it after the **[COORDINATOR]** blanks are filled.
+**Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
+- **Stage 0 is approved in principle:** $0, CPU, run **second**, after R1's stage 0, and only after the Q39 review
+  passes.
+- Stage 1 gets its own bid, and only if stage 0 passes.
 
 1. **Question.** Does a per-head sigmoid gate on fetched card values and on the decoder's cross-attention move D's
    toy answers off chance, through the cards?
@@ -367,11 +396,14 @@ per run, each against an all-off control with paired seeds (§1 paired init).
 10. **Prediction (a guess):** NOT SHOWN, with both arms near chance. I rank it second because it is nearly free and
     aimed at the right place, not because I expect it to pass. P(PASS) ≈ 0.25.
 11. **Stage 1.** Only if stage 0 passes: the PR 79 bid structure (a timing smoke with cap $0.30, then 3 pairs at
-    budget F with cap $2.50). **[COORDINATOR]** the parent, the village score and the DEV-slip rule (as in PR 79).
+    budget F with cap $2.50). The parent, the village score and the DEV-slip rule go in that bid.
 
-## 6. What I need from the coordinator
+## 6. Rulings received (Q39–Q43, 10-18)
 
-1. A code review of `premonition/model.py`, `store.py`, `config.py`, `train.py` and the new `muon.py`. That includes
-   the `premonition/` override (F6) and the merge order against PRs 79 and 82 (F7).
-2. A ruling on Engram's name-keyed memory (F5).
-3. The [COORDINATOR] blanks in R1 and R2, then a yes or no on their stage 0 ($0 CPU).
+| Ruling | What it says | Where it now stands |
+|---|---|---|
+| Q39 | Code review on the whole package, with the built-in review plus an independent read. Code stays DRAFT until it passes. The `premonition/` override is confirmed. | §7 |
+| Q40 | Engram: HOLD as designed. Only a name-disjoint split with a size-matched reading. | F5, §5 row 10 |
+| Q41 | No merges yet. Land in review-pass order, one at a time; later branches rebase and re-run their identity harness against the new base. | F7 |
+| Q42 | R1 blanks filled. Stage 0 is yes after Q39. | R1 |
+| Q43 | R2 blanks filled. Stage 0 is yes in principle, second, after Q39. | R2 |

@@ -60,7 +60,7 @@ from learnlab.train import MemoryGuardError, TrainConfig, Trainer
 from premonition import data as pdata
 from premonition import identity, preprocess
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
-from premonition.config import MiniConfig
+from premonition.config import STEAL_FIELDS, MiniConfig
 from premonition.flops import FlopFit, fit_flops, measure_mini
 from premonition.model import Answers, PremonitionMini
 from premonition.muon import MuonAdamW, muon_param_groups
@@ -241,7 +241,8 @@ class MiniTrainer(Trainer):
         self.optimizer_name = optimizer
         if optimizer == "muon":           # Muon on the hidden matrices, AdamW elsewhere (SPEC section 8)
             self.optimizer = MuonAdamW(muon_param_groups(self.model, config.weight_decay), lr=config.lr,
-                                       betas=(config.beta1, config.beta2), eps=config.eps)
+                                       betas=(config.beta1, config.beta2), eps=config.eps,
+                                       fused=True if self.device.type == "cuda" else None)
         self.flop_budget = float(flop_budget)
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
@@ -479,10 +480,13 @@ def budget_for_steps(trainer: MiniTrainer, batches: Sequence[VisitBatch], steps:
     """A FLOP budget of about `steps` batches like `batches` under the curriculum (for toys and smoke runs)."""
     curriculum = curriculum or trainer.curriculum
     config = trainer.model.config
+    # random_depth: a batch's cost is the mean over the equally likely loop caps, so `steps` stays the step count.
+    caps = range(config.random_depth_min, config.max_loops + 1) if config.random_depth else (None,)
     mean = 0.0
     for share in (0.02, 0.2, 0.7):
         plan = curriculum.plan(share)
-        costs = [trainer.fit(b.tokens.numel(), int(planned_loops(b, plan.mode, config).sum())) for b in batches]
+        costs = [sum(trainer.fit(b.tokens.numel(), int(planned_loops(b, plan.mode, config, cap).sum())) for cap in caps)
+                 / len(caps) for b in batches]
         weight = {0.02: curriculum.gold_until, 0.2: curriculum.teacher_until - curriculum.gold_until,
                   0.7: 1.0 - curriculum.teacher_until}[share]
         mean += weight * sum(costs) / len(costs)
@@ -715,7 +719,11 @@ def validation_hook(batches: Sequence[VisitBatch], **options: Any) -> Callable[[
 
 # ----------------------------------------------------------------------------- checkpoints
 def mini_config_dict(config: MiniConfig) -> dict[str, Any]:
-    return asdict(config)
+    """`asdict(config)` without steal fields left at their defaults, so a flags-off checkpoint's config.json is
+    byte-identical to 73b8e0224's and older code can still read it."""
+    default = MiniConfig.__dataclass_fields__
+    return {name: value for name, value in asdict(config).items()
+            if name not in STEAL_FIELDS or value != default[name].default}
 
 
 def mini_config_from(values: Mapping[str, Any]) -> MiniConfig:

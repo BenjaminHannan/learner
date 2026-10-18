@@ -64,7 +64,7 @@ class BuildTest(unittest.TestCase):
         self.assertTrue(torch.all(model.think.fetch_gate.bias == 2.5))
         self.assertTrue(torch.all(model.decoder.cross_gate.bias == 2.5))
         self.assertTrue(torch.all(model.decoder.cross_sink == -1.5))
-        self.assertEqual(model.heads.ask_sink.item(), -model.config.kappa_init)
+        self.assertEqual(model.heads.ask_sink.item(), -2 * model.config.kappa_init)
         self.assertEqual(model.heads.ask_sink.dim(), 0)
 
 

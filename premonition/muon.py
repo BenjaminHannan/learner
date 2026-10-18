@@ -1,14 +1,14 @@
 """Muon for the hidden matrices, AdamW for everything else (SPEC section 8; Moonshot's Muon report).
 
-`MuonAdamW` is one optimizer whose param groups carry a `muon` flag, so the trainer's per-group lr schedule and
-`state_dict` checkpoints work unchanged. A Muon step is Nesterov momentum (0.95), then the momentum-corrected gradient
+`MuonAdamW` is one optimizer interface over `Muon` and torch's `AdamW`; its param groups carry a `muon` flag, so the
+trainer's per-group lr schedule and `state_dict` checkpoints work unchanged. A Muon step is Nesterov momentum (0.95), then the momentum-corrected gradient
 is orthogonalised by five Newton-Schulz iterations and applied scaled by 0.2 sqrt(max(rows, cols)), which matches the
 update RMS of AdamW so both kinds of group share one lr. Weight decay is decoupled (W <- W (1 - lr wd)).
 """
 from __future__ import annotations
 
 import math
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import torch
 from torch import nn
@@ -39,17 +39,16 @@ def newton_schulz(G: torch.Tensor, steps: int = 5) -> torch.Tensor:
     return (X.T if tall else X).to(G.dtype)
 
 
-class MuonAdamW(torch.optim.Optimizer):
-    """Param groups with `muon=True` take Muon steps; the rest take AdamW steps (decoupled decay, bias-corrected)."""
+class Muon(torch.optim.Optimizer):
+    """Muon steps for 2-D matrices: Nesterov momentum, Newton-Schulz orthogonalisation, RMS-matched scale, decoupled
+    weight decay."""
 
-    def __init__(self, params: Iterable[Any], lr: float = 1e-3, betas: tuple[float, float] = (0.9, 0.99),
-                 eps: float = 1e-8, weight_decay: float = 0.0, momentum: float = 0.95, ns_steps: int = 5) -> None:
-        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, momentum=momentum,
-                        ns_steps=ns_steps, muon=False)
-        super().__init__(params, defaults)
-        for group in self.param_groups:
-            if group["muon"] and any(p.dim() != 2 for p in group["params"]):
-                raise ValueError("Muon groups take 2-D matrices only")
+    def __init__(self, params: Iterable[Any], lr: float = 1e-3, weight_decay: float = 0.0, momentum: float = 0.95,
+                 ns_steps: int = 5) -> None:
+        super().__init__(params, dict(lr=lr, weight_decay=weight_decay, momentum=momentum, ns_steps=ns_steps,
+                                      muon=True))
+        if any(p.dim() != 2 for group in self.param_groups for p in group["params"]):
+            raise ValueError("Muon groups take 2-D matrices only")
 
     @torch.no_grad()
     def step(self, closure: Any = None) -> Any:
@@ -58,41 +57,71 @@ class MuonAdamW(torch.optim.Optimizer):
             with torch.enable_grad():
                 loss = closure()
         for group in self.param_groups:
+            lr, mu = group["lr"], group["momentum"]
             for p in group["params"]:
                 if p.grad is None:
                     continue
                 state = self.state[p]
-                if group["muon"]:
-                    self._muon(p, p.grad, state, group)
-                else:
-                    self._adamw(p, p.grad, state, group)
+                if not state:
+                    state["momentum_buffer"] = torch.zeros_like(p)
+                buf = state["momentum_buffer"]
+                buf.mul_(mu).add_(p.grad)
+                update = newton_schulz(p.grad.add(buf, alpha=mu), group["ns_steps"])      # Nesterov
+                p.mul_(1 - lr * group["weight_decay"])
+                p.add_(update, alpha=-lr * 0.2 * math.sqrt(max(p.shape)))
         return loss
 
-    @staticmethod
-    def _muon(p: torch.Tensor, grad: torch.Tensor, state: dict[str, Any], group: dict[str, Any]) -> None:
-        lr, mu = group["lr"], group["momentum"]
-        if not state:
-            state["momentum_buffer"] = torch.zeros_like(p)
-        buf = state["momentum_buffer"]
-        buf.mul_(mu).add_(grad)
-        update = newton_schulz(grad.add(buf, alpha=mu), group["ns_steps"])      # Nesterov
-        p.mul_(1 - lr * group["weight_decay"])
-        p.add_(update, alpha=-lr * 0.2 * math.sqrt(max(p.shape)))
 
-    @staticmethod
-    def _adamw(p: torch.Tensor, grad: torch.Tensor, state: dict[str, Any], group: dict[str, Any]) -> None:
-        lr, (beta1, beta2) = group["lr"], group["betas"]
-        if not state:
-            state["step"] = 0
-            state["exp_avg"] = torch.zeros_like(p)
-            state["exp_avg_sq"] = torch.zeros_like(p)
-        state["step"] += 1
-        step = state["step"]
-        state["exp_avg"].mul_(beta1).add_(grad, alpha=1 - beta1)
-        state["exp_avg_sq"].mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
-        denom = (state["exp_avg_sq"].sqrt() / math.sqrt(1 - beta2 ** step)).add_(group["eps"])
-        p.mul_(1 - lr * group["weight_decay"])
-        p.addcdiv_(state["exp_avg"], denom, value=-lr / (1 - beta1 ** step))
+class MuonAdamW:
+    """One optimizer interface over `Muon` (groups with `muon=True`) and torch's own `AdamW` (the rest, fused on
+    CUDA like the base trainer's), so the AdamW half costs what it costs today. `param_groups` lists both parts'
+    groups (Muon first), so the trainer's per-group lr schedule drives them; `state_dict` holds both parts."""
+
+    def __init__(self, params: Iterable[dict[str, Any]], lr: float = 1e-3, betas: tuple[float, float] = (0.9, 0.99),
+                 eps: float = 1e-8, weight_decay: float = 0.0, momentum: float = 0.95, ns_steps: int = 5,
+                 fused: Optional[bool] = None) -> None:
+        groups = [dict(group) for group in params]
+        if not groups or not all(isinstance(group, dict) for group in groups):
+            raise ValueError("MuonAdamW takes a non-empty list of param-group dicts")
+        muon = [group for group in groups if group.get("muon", False)]
+        adamw = [dict(group, muon=False) for group in groups if not group.get("muon", False)]
+        self.parts: list[torch.optim.Optimizer] = []
+        if muon:
+            self.parts.append(Muon(muon, lr=lr, weight_decay=weight_decay, momentum=momentum, ns_steps=ns_steps))
+        if adamw:
+            self.parts.append(torch.optim.AdamW(adamw, lr=lr, betas=betas, eps=eps, weight_decay=weight_decay,
+                                                fused=fused))
+
+    @property
+    def param_groups(self) -> list[dict[str, Any]]:
+        return [group for part in self.parts for group in part.param_groups]
+
+    @property
+    def state(self) -> dict[Any, Any]:
+        return {p: s for part in self.parts for p, s in part.state.items()}
+
+    def zero_grad(self, set_to_none: bool = True) -> None:
+        for part in self.parts:
+            part.zero_grad(set_to_none=set_to_none)
+
+    def step(self, closure: Any = None) -> Any:
+        loss = None
+        if closure is not None:
+            with torch.enable_grad():
+                loss = closure()
+        for part in self.parts:
+            part.step()
+        return loss
+
+    def state_dict(self) -> dict[str, Any]:
+        return {"kinds": [type(part).__name__ for part in self.parts], "parts": [part.state_dict() for part in self.parts]}
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        if state["kinds"] != [type(part).__name__ for part in self.parts]:
+            raise ValueError(f"optimizer state holds {state['kinds']}, this optimizer has "
+                             f"{[type(part).__name__ for part in self.parts]}")
+        for part, saved in zip(self.parts, state["parts"]):
+            part.load_state_dict(saved)
 
 
 def is_muon_weight(name: str, module: nn.Module) -> bool:
@@ -118,4 +147,4 @@ def muon_param_groups(model: nn.Module, weight_decay: float) -> list[dict[str, A
     return [g for g in groups if g["params"]]
 
 
-__all__ = ["MuonAdamW", "muon_param_groups", "newton_schulz"]
+__all__ = ["Muon", "MuonAdamW", "muon_param_groups", "newton_schulz"]
