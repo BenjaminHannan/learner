@@ -35,6 +35,10 @@ Everything the cache stores about lines and positions is remapped to the new lay
 `merge == split == 0` returns a cache equal to the input in every field except the added `info["reflow"]`.
 Every line of the input (questions too) must end with `newline_id`, else ValueError. A merged line can exceed
 `MAX_LINE_ENTS` entities and a batch then sees only the first ones; `stats["ents_over_max"]` counts those lines.
+A split can push a question past `MAX_GOLD` evidence lines, and a batch then keeps only the newest `MAX_GOLD`:
+`stats["gold_over_max"]` counts those questions (`gold_over_max_before` the input's). When any line changed, the
+build-time `info["stats"]` counts `gold_over_max`, `gold_max` and `line_ents_over_max` are replaced by the new
+layout's, so a reflowed cache never reports its old counts.
 """
 from __future__ import annotations
 
@@ -44,7 +48,7 @@ from typing import Any, Optional, Sequence
 
 import torch
 
-from .batch import MAX_LINE_ENTS
+from .batch import MAX_GOLD, MAX_LINE_ENTS
 from .data import VisitCache
 
 
@@ -123,7 +127,7 @@ def reflow_cache(cache: VisitCache, *, merge: float = 0.0, split: float = 0.0, s
     tokens, offsets, is_question = cache.tokens, cache.line_offsets.long(), cache.line_is_question
     newline = torch.tensor([newline_id], dtype=tokens.dtype)
     stats = {"lines_before": int(is_question.numel()), "lines_after": 0, "merged_lines": 0, "split_lines": 0,
-             "ents_over_max": 0}
+             "ents_over_max": 0, "gold_over_max": 0, "gold_over_max_before": 0}
     parts: list[torch.Tensor] = []          # new token pieces, in order
     run: list[int] = []                     # [start, end) of a pending run of unchanged original tokens
     lengths: list[int] = []                 # new line lengths
@@ -213,6 +217,8 @@ def reflow_cache(cache: VisitCache, *, merge: float = 0.0, split: float = 0.0, s
             q_shift[q] = starts[new] - (int(offsets[first + old]) - base_offset)
             lines_of = sorted({n for g in cache.gold_lines(q) for n in _gold_lines(mapping, g, cache.question_ids[q])})
             gold_rows.append(lines_of)
+            stats["gold_over_max"] += len(lines_of) > MAX_GOLD
+            stats["gold_over_max_before"] += len(cache.gold_lines(q)) > MAX_GOLD
     flush()
 
     new_tokens = torch.cat(parts) if parts else tokens[:0].clone()
@@ -236,6 +242,13 @@ def reflow_cache(cache: VisitCache, *, merge: float = 0.0, split: float = 0.0, s
     info = copy.deepcopy(cache.info)
     if "tokens" in info:
         info["tokens"] = int(new_tokens.numel())
+    if isinstance(info.get("stats"), dict) and (stats["merged_lines"] or stats["split_lines"]):
+        # The build-time counts describe the old layout; a split can push a question past MAX_GOLD gold lines
+        # (a batch then keeps only the newest MAX_GOLD) and a merge a line past MAX_LINE_ENTS entities.
+        info["stats"]["gold_over_max"] = stats["gold_over_max"]
+        info["stats"]["line_ents_over_max"] = stats["ents_over_max"]
+        if "gold_max" in info["stats"]:
+            info["stats"]["gold_max"] = max((len(row) for row in gold_rows), default=0)
     info["reflow"] = {"merge": merge, "split": split, "seed": seed, "max_merge": max_merge, "stats": stats}
     out = VisitCache(
         split=cache.split, vocab_size=cache.vocab_size, tokens=new_tokens,

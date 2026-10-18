@@ -123,7 +123,7 @@ decoder, losses and curriculum are unchanged.
 ### 3.1 Forward (the same at training and test time)
 For each token `t` the writer computes a boundary probability
 `p_t = sigmoid(c_0 + c_nl * [token_{t-1} is a newline] + w . [h_{t-1}; h_t])`.
-Here `h` are the reader states. `c_0`, `c_nl` and `w` are learned. The newline indicator is an input feature
+Here `h` are the reader states, **detached** (review fix: otherwise the surrogate and the rate loss also train the reader, which would confound the A/B). `c_0`, `c_nl` and `w` are learned. The newline indicator is an input feature
 the gate may use or unlearn. It is not a rule. A hard boundary starts before token `t` iff `p_t > 0.5`, or
 `t` follows a **wall**. Walls are a question line, padding, or the visit start; cards never pool question
 tokens, so a question line is a hard wall in both directions. A card is also forced closed after `max_span`
@@ -140,7 +140,7 @@ unchanged.
    proportion to `1 - p`:
    `soft_e = sum_{t <= e, same wall region, e - t < max_span} a_{e,t} h_t`, with
    `a_{e,t} proportional to exp(s_t + sum_{t < u <= e} log(1 - p_u))`.
-   With `p` exactly 0 or 1 this is exactly the hard pool. The writer outputs
+   Starts the gate did not choose (walls, the `max_span` cap) enter as hard boundaries (log 0, floored). With `p` exactly 0 or 1 this is exactly the hard pool. The writer outputs
    `pooled = hard + (soft - stopgrad(soft))`, with `soft` computed from `stopgrad(h)` and `stopgrad(s)`.
    The forward value is exactly the hard pool. Reader and pool gradients are exactly today's. Only the gate
    receives the surrogate gradient. `dL/dp_u` then answers: "would the card after `u` be better if it also

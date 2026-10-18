@@ -15,8 +15,10 @@ from premonition.batch import MAX_GOLD, MAX_LINE_ENTS
 from premonition.model import PremonitionMini
 from premonition.span_cards import (SpanCardMini, SpanCardStore, SpanConfig, SpanTrainer, build_model,
                                     card_economy, layout_card_stats, log_stay, rate_loss, soft_pool,
-                                    tokens_per_line)
-from premonition.train import InsertLog, budget_for_steps, card_stats, mini_train_config, summarize_cards
+                                    surrogate_stay, tokens_per_line)
+from learnlab.readonly import read_only
+from premonition.train import (InsertLog, answer_with_gold, budget_for_steps, card_stats, mini_train_config,
+                               summarize_cards, validate, validation_hook)
 from tests.test_premonition_model import NEWLINE, VOCAB, eager, synthetic_batch, tiny_config
 
 GATE = {"gate.weight", "gate.bias", "newline_weight"}
@@ -380,10 +382,11 @@ class RateLossTest(unittest.TestCase):
         batch = synthetic_batch(seed=1)
         model = span_model(0)
         model.train()
-        model.writer(model.read(batch), batch)
-        stats = model.writer.last_stats
-        self.assertAlmostEqual(float(model.writer.last_rate.detach()),
-                               rate_loss(stats["start_rate"], stats["gate_mean"], model.span.tokens_per_card), places=5)
+        store = model.writer(model.read(batch), batch)
+        stats = store.stats
+        self.assertAlmostEqual(float(store.rate.detach()),
+                               rate_loss(float(stats["start_rate"]), float(stats["gate_mean"]),
+                                         model.span.tokens_per_card), places=5)
 
 
 class ModelTest(unittest.TestCase):
@@ -393,7 +396,9 @@ class ModelTest(unittest.TestCase):
         generator = torch.Generator().manual_seed(0)
         for mode, p_own in (("gold", 0.0), ("teacher", 0.0), ("own", 0.5)):
             model.zero_grad(set_to_none=True)
-            out = model(batch, mode=mode, p_own=p_own, generator=generator)
+            with model.scope() as capture:
+                out = model(batch, mode=mode, p_own=p_own, generator=generator)
+            self.assertNotIn(SpanCardMini.CAPTURE, vars(model))
             for name in ("lm", "ask", "ans", "halt", "loss", "rate"):
                 self.assertTrue(torch.isfinite(out[name]), (mode, name))
             for name in ("start_rate", "gate_mean", "tokens_per_card", "cards_per_visit", "newline_precision",
@@ -402,8 +407,8 @@ class ModelTest(unittest.TestCase):
             self.assertEqual(int(out["metrics"]["gold_missing"]), 0)
             out["loss"].backward()
             self.assertTrue(all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None))
-            self.assertEqual(model.last_gold_matrix.shape, (batch.size[2], batch.tokens.shape[1] + 1))
-            self.assertIsNone(model._last_store)
+            self.assertEqual(capture["gold_matrix"].shape, (batch.size[2], batch.tokens.shape[1] + 1))
+            self.assertNotIn("store", capture)
         loss = model(batch, mode="teacher", generator=torch.Generator().manual_seed(0))
         base = PremonitionMini.forward(model, batch, mode="teacher", generator=torch.Generator().manual_seed(0))
         self.assertAlmostEqual(float(loss["loss"] - base["loss"]), model.span.w_rate * float(loss["rate"]), places=4)
@@ -415,11 +420,12 @@ class ModelTest(unittest.TestCase):
             model.eval()
             window = (batch.q_line - 6).clamp_min(1)
             for wipe in (None, "store", "full"):
-                answers = model.answer(batch, wipe=wipe, window_line=None if wipe is None else window)
+                with model.scope() as capture:
+                    answers = model.answer(batch, wipe=wipe, window_line=None if wipe is None else window)
                 self.assertEqual(answers.fetched.shape, (batch.size[2], lines + 1))
                 self.assertTrue(((answers.first_top >= -1) & (answers.first_top < lines)).all(), wipe)
                 self.assertTrue(bool((answers.first_top >= 0).any()), wipe)
-                raw_top, raw_fetched = model.last_answer_cards
+                raw_top, raw_fetched = capture["raw_answer"]
                 self.assertEqual(raw_fetched.shape[0], batch.size[2])
                 self.assertEqual(int((raw_top >= 0).sum()), int((answers.first_top >= 0).sum()))
                 fetched = answers.fetched[:, :-1]
@@ -427,7 +433,7 @@ class ModelTest(unittest.TestCase):
                 self.assertFalse(bool((fetched & (torch.arange(lines) >= batch.q_line.unsqueeze(1))).any()))
                 if wipe:
                     self.assertFalse(bool((fetched & (torch.arange(lines) < window.unsqueeze(1))).any()), wipe)
-            self.assertIsNone(model._last_store)
+            self.assertNotIn(SpanCardMini.CAPTURE, vars(model))
 
 
 class EconomyTest(unittest.TestCase):
@@ -501,7 +507,7 @@ class TrainerTest(unittest.TestCase):
         report = trainer.train(batches * 3, max_steps=4)
         self.assertEqual(report["steps"], 4)
         self.assertEqual(report["loop_mismatches"], 0)
-        self.assertIsNone(model.trace)
+        self.assertNotIn(SpanCardMini.CAPTURE, vars(model))
         self.assertTrue(trainer.span_log)
         self.assertEqual([r["step"] for r in trainer.span_log], [2, 4])
         for entry in trainer.span_log:
@@ -514,6 +520,86 @@ class TrainerTest(unittest.TestCase):
         for record in logged:
             self.assertEqual(set(record["cards"]), expected)
         self.assertTrue(all(torch.isfinite(p).all() for p in model.parameters()))
+
+
+class ReviewRegressionTest(unittest.TestCase):
+    """The code review's blocking and correctness findings 1-3 (design/span-cards; review of 2026-10-18)."""
+
+    def test_no_state_survives_a_call_so_read_only_evaluation_works(self) -> None:
+        """Finding 1: tensors left on the model made every read_only evaluation raise."""
+        batches = [synthetic_batch(visits=2, lines=14, seed=s) for s in range(4)]
+        model = variable_model(0)
+        model.train()
+        model(batches[0], mode="teacher", generator=torch.Generator().manual_seed(0))["loss"].backward()
+        before = dict(vars(model))
+        with read_only(model):                                           # raised ReadOnlyViolation before
+            model.answer(batches[1])
+            answer_with_gold(model, batches[1])
+            validate(model, batches[2:3])
+            card_economy(model, batches[2:3])
+        self.assertEqual(set(vars(model)), set(before))
+        self.assertNotIn(SpanCardMini.CAPTURE, vars(model))
+        for module in model.modules():
+            self.assertFalse([name for name, value in vars(module).items() if torch.is_tensor(value)],
+                             type(module).__name__)
+        trainer = SpanTrainer(span_model(1), mini_train_config(lr=1e-3, warmup_steps=2, log_every=2, eval_every=2),
+                              "cpu", flop_budget=1.0, seed=0)
+        trainer.calibrate(batches[:2])
+        trainer.flop_budget = budget_for_steps(trainer, batches[:2], 6)
+        report = trainer.train(batches * 2, max_steps=4, evaluate=validation_hook(batches[:1]))
+        self.assertEqual(report["steps"], 4)
+        self.assertEqual(len([r for r in trainer.history if "eval" in r]), 2)
+
+    def test_the_reader_gets_exactly_the_hard_pools_gradient(self) -> None:
+        """Finding 2: the gate read undetached reader states, so the surrogate and the rate loss trained the reader."""
+        batch = synthetic_batch(visits=2, lines=16, seed=8)
+        model = variable_model(3)
+        writer = model.writer
+        hidden = model.read(batch).detach().requires_grad_()
+        writer.train()
+        trained = writer(hidden, batch)
+        loss = trained.keys.sum() + 0.5 * trained.values.sum() + 10.0 * trained.rate
+        reader_grad, gate_grad = torch.autograd.grad(loss, (hidden, writer.gate.weight))
+        writer.eval()
+        with torch.enable_grad():
+            hard = writer(hidden, batch)                                # no surrogate in eval; rate left out
+            hard_grad, = torch.autograd.grad(hard.keys.sum() + 0.5 * hard.values.sum(), hidden)
+        self.assertTrue(torch.equal(trained.valid, hard.valid))
+        torch.testing.assert_close(reader_grad, hard_grad, rtol=0, atol=1e-6)
+        self.assertGreater(float(gate_grad.abs().max()), 0.0)          # the gate still learns
+        rate_grad, = torch.autograd.grad(writer(hidden, batch).rate, hidden, allow_unused=True)
+        self.assertTrue(rate_grad is None or float(rate_grad.abs().max()) == 0.0)
+
+    def test_cap_starts_are_hard_boundaries_in_the_surrogate(self) -> None:
+        """Finding 3: a start forced by the max_span cap had no gate probability, so the surrogate leaked the
+        previous card into the next one even with saturated gates."""
+        batch = synthetic_batch(visits=2, lines=16, seed=3)
+        model = span_model(1, max_span=3).eval()
+        writer = model.writer
+        with torch.no_grad():
+            writer.gate.weight.zero_()
+            writer.gate.bias.fill_(-50.0)
+            writer.newline_weight.fill_(100.0)
+            hidden = model.read(batch)
+            lay = writer.layout(hidden, batch)
+            store = writer(hidden, batch)
+            capped = lay.forced & ~lay.after_wall
+            self.assertGreater(int(capped.sum()), 5)                     # the cap really cuts lines here
+            region = (lay.cardable & lay.after_wall).long().cumsum(1)
+            score = writer.pool(hidden).squeeze(-1)
+            rows, ends = torch.nonzero(store.valid, as_tuple=True)
+            hard = []
+            for b, e in zip(rows.tolist(), ends.tolist()):
+                first = int(store.line_start[b, e])
+                self.assertLessEqual(e - first + 1, 3)
+                weight = torch.softmax(score[b, first:e + 1], 0)
+                hard.append((weight.unsqueeze(1) * hidden[b, first:e + 1]).sum(0))
+            hard = torch.stack(hard)
+            soft = soft_pool(hidden, score, surrogate_stay(lay.logit, lay.forced), lay.cardable, region, rows,
+                             ends, 3)
+            torch.testing.assert_close(soft, hard, rtol=0, atol=1e-5)
+            leaky = soft_pool(hidden, score, log_stay(lay.logit), lay.cardable, region, rows, ends, 3)
+            self.assertGreater(float((leaky - hard).abs().max()), 1e-2)  # the old stay leaked across the cap
 
 
 class RoundTripTest(unittest.TestCase):

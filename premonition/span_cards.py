@@ -5,7 +5,8 @@ by default and `build_model` then returns today's `PremonitionMini` (same class,
 
 What changes (reader, think loop, ASK, binder, decoder, losses and curriculum are the parent's):
 - `SpanCardWriter` replaces `CardWriter`. A gate gives every token a boundary probability
-  p_t = sigmoid(base + c_nl [token_{t-1} is a newline] + w . [h_{t-1}; h_t]). A hard card starts at t iff t follows a
+  p_t = sigmoid(base + c_nl [token_{t-1} is a newline] + w . [h_{t-1}; h_t]), on DETACHED reader states (so
+  neither the surrogate nor the rate loss trains the reader). A hard card starts at t iff t follows a
   wall (question line, padding, visit start) or p_t > 1/2, and is forced to start every `max_span` tokens. A card is
   today's softmax pool over exactly its tokens, written at its LAST token. `pool`, `key`, `value`, `null_key` and
   `null_value` are the parent's modules, so a per-line parent's state loads with only the gate parameters missing.
@@ -13,7 +14,8 @@ What changes (reader, think loop, ASK, binder, decoder, losses and curriculum ar
   cross a boundary in proportion to 1 - p, with a_{e,t} ~ exp(s_t + sum_{t < u <= e} log(1 - p_u)) over the
   `max_span` tokens ending at e, in the same wall region, built from stop-gradient reader states and scores. The
   writer adds `soft - stopgrad(soft)`, so only the gate receives its gradient; the reader and pool gradients are the
-  hard pool's. At p in {0, 1} the surrogate equals the hard pool. `rate_loss` (H-Net's ratio loss) holds the
+  hard pool's. Starts the gate did not choose (walls, the cap) are hard boundaries in the surrogate too
+  (`surrogate_stay`), so at saturated gates the surrogate equals the hard pool. `rate_loss` (H-Net's ratio loss) holds the
   tokens-per-card at `tokens_per_card`; set it to `tokens_per_line` of the training cache for an equal-count A/B.
 - `SpanCardStore` is indexed by token position (card id = position of its last token, width T, NULL = T). Eligibility
   uses the card's last line; after a wipe a card must also START at or after the floor. A card is gold iff it holds a
@@ -29,11 +31,12 @@ loaded from the base writer, so the global random stream after construction equa
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 import hashlib
 import math
 from pathlib import Path
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any, Iterable, Iterator, Optional, Sequence
 
 import torch
 import torch.nn as nn
@@ -91,6 +94,26 @@ def log_stay(logit: torch.Tensor) -> torch.Tensor:
     return (-F.softplus(logit)).clamp_min(LOG_STAY_FLOOR)
 
 
+def surrogate_stay(logit: torch.Tensor, forced: torch.Tensor) -> torch.Tensor:
+    """`log_stay` for the soft surrogate, with every FORCED start (after a wall, or the `max_span` cap) a hard
+    boundary (the floor, no gate gradient): the gate did not choose those cuts, so the surrogate must not let
+    content leak across them, else it differs from the hard pool even with saturated gates."""
+    return torch.where(forced, torch.full_like(logit, LOG_STAY_FLOOR), log_stay(logit))
+
+
+@dataclass
+class Layout:
+    """One writer forward's hard layout: [B, T] tensors."""
+
+    cardable: torch.Tensor      # bool: tokens that may enter a card (not question lines, not padding)
+    after_wall: torch.Tensor    # bool: t = 0 or the previous token is not cardable
+    after_newline: torch.Tensor  # bool: the previous token is the newline id
+    logit: torch.Tensor         # float: gate logit (gradient reaches only the gate parameters)
+    p: torch.Tensor             # float: sigmoid(logit)
+    start: torch.Tensor         # bool: a hard card starts here
+    forced: torch.Tensor        # bool: a start the gate did not choose (wall or cap)
+
+
 def soft_pool(hidden: torch.Tensor, score: torch.Tensor, stay: torch.Tensor, cardable: torch.Tensor,
               region: torch.Tensor, ends_b: torch.Tensor, ends_e: torch.Tensor, max_span: int) -> torch.Tensor:
     """[n, d] soft surrogate pools of the cards ending at (ends_b, ends_e).
@@ -121,6 +144,8 @@ class SpanCardStore(CardStore):
     token_line: Optional[torch.Tensor] = None   # [B, T] long: line of every token (the batch's line_of)
     card_of: Optional[torch.Tensor] = None      # [B, T] long: card (end position) holding the token; -1 outside cards
     last_gold = None                            # set by `gold`: the [Q, T + 1] matrix, for the trainer's statistics
+    rate = None                                 # set by the writer: the rate loss of this layout (with gradient)
+    stats = None                                # set by the writer: detached 0-d layout statistics (no host sync)
 
     def eligible(self, q_visit: torch.Tensor, q_line: torch.Tensor,
                  fetched: Optional[torch.Tensor] = None,
@@ -207,8 +232,6 @@ class SpanCardWriter(CardWriter):
         self.gate = nn.Linear(2 * config.d_model, 1)
         self.newline_weight = nn.Parameter(torch.tensor(float(span.newline_prior)))
         self.init_gate()
-        self.last_rate: Optional[torch.Tensor] = None
-        self.last_stats: dict[str, float] = {}
 
     def init_gate(self) -> None:
         """Gate weight 0, bias `base_logit`, newline weight `newline_prior`: the per-line layout."""
@@ -217,25 +240,36 @@ class SpanCardWriter(CardWriter):
             self.gate.bias.fill_(self.span.base_logit)
             self.newline_weight.fill_(self.span.newline_prior)
 
-    def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> SpanCardStore:
-        span, config = self.span, self.config
-        visits, width, d = hidden.shape
-        device = hidden.device
+    def layout(self, hidden: torch.Tensor, batch: VisitBatch) -> Layout:
+        """The hard layout. The gate reads DETACHED reader states, so neither the surrogate nor the rate loss
+        trains the reader: reader and pool gradients stay exactly the hard pool's (design §3.2)."""
+        span = self.span
+        visits, width, _ = hidden.shape
         tokens, line_of = batch.tokens, batch.line_of
         cardable = (line_of >= 0) & ~batch.line_is_question.gather(1, line_of.clamp_min(0))
         after_wall = F.pad(~cardable[:, :-1], (1, 0), value=True)                   # t = 0 counts as after a wall
         after_newline = F.pad(tokens[:, :-1] == span.newline_id, (1, 0), value=False)
-        previous = F.pad(hidden[:, :-1], (0, 0, 1, 0))
-        logit = self.gate(torch.cat([previous, hidden], dim=-1)).squeeze(-1).float() \
+        state = hidden.detach()
+        previous = F.pad(state[:, :-1], (0, 0, 1, 0))
+        logit = self.gate(torch.cat([previous, state], dim=-1)).squeeze(-1).float() \
             + self.newline_weight * after_newline.float()
         p = torch.sigmoid(logit)
-
-        # Hard layout: starts at walls and where p > 1/2, then the max_span cap.
-        start = cardable & (after_wall | (p.detach() > 0.5))
-        position = torch.arange(width, device=device).expand(visits, width)
+        chosen = cardable & (p.detach() > 0.5)
+        start = chosen | (cardable & after_wall)
+        position = torch.arange(width, device=hidden.device).expand(visits, width)
         last = torch.cummax(torch.where(start, position, torch.full_like(position, -1)), dim=1).values
         run = position - last
         start = start | (cardable & (run > 0) & (run % span.max_span == 0))
+        return Layout(cardable, after_wall, after_newline, logit, p, start, start & ~chosen)
+
+    def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> SpanCardStore:
+        span = self.span
+        visits, width, d = hidden.shape
+        device = hidden.device
+        tokens, line_of = batch.tokens, batch.line_of
+        lay = self.layout(hidden, batch)
+        cardable, after_wall, after_newline, logit, p, start = (
+            lay.cardable, lay.after_wall, lay.after_newline, lay.logit, lay.p, lay.start)
 
         # Segments over the cardable tokens (row-major; every row's first cardable token is a start).
         flat_start, flat_cardable = start.flatten(), cardable.flatten()
@@ -262,7 +296,7 @@ class SpanCardWriter(CardWriter):
         # Soft surrogate: the forward value stays the hard pool; only the gate receives its gradient.
         if torch.is_grad_enabled() and self.training and n_seg:
             region = (cardable & after_wall).long().cumsum(1)
-            soft = soft_pool(hidden, score, log_stay(logit), cardable, region, seg_row, seg_end, span.max_span)
+            soft = soft_pool(hidden, score, surrogate_stay(logit, lay.forced), cardable, region, seg_row, seg_end, span.max_span)
             pooled = pooled + (soft - soft.detach())
 
         # Rate loss and statistics.
@@ -270,12 +304,12 @@ class SpanCardWriter(CardWriter):
         if n_cardable:
             start_rate = start[cardable].float().mean().detach()
             gate_mean = p[cardable].mean()
-            self.last_rate = rate_loss(start_rate, gate_mean, span.tokens_per_card)
+            rate = rate_loss(start_rate, gate_mean, span.tokens_per_card)
         else:
-            self.last_rate = p.sum() * 0.0
+            rate = p.sum() * 0.0
 
         ents_seg, ents_over = self._entities(tokens, token_pos, seg, n_seg)
-        self.last_stats = self._stats(p, start, cardable, after_newline, n_seg, visits, ents_over)
+        stats = self._stats(p, start, cardable, after_newline, n_seg, visits, ents_over)
 
         # Store tensors: a card lives at its end position.
         key_rows, value_rows = self.key(pooled), self.value(pooled)
@@ -292,16 +326,18 @@ class SpanCardWriter(CardWriter):
         ents[seg_row, seg_end] = ents_seg
         card_of = torch.full((visits * width,), -1, dtype=torch.long, device=device)
         card_of[token_pos] = seg_end[seg]
-        return SpanCardStore(
+        store = SpanCardStore(
             keys=F.normalize(keys.float(), dim=-1), values=values, valid=valid,
             tags=place(tokens[seg_row, seg_start], -1), ents=ents,
             line_start=place(seg_start, -1), line_len=place(seg_len, 0),
             null_key=F.normalize(self.null_key.float(), dim=-1), null_value=self.null_value,
             card_line=place(line_of[seg_row, seg_end], -1), first_line=place(line_of[seg_row, seg_start], -1),
             token_line=line_of, card_of=card_of.view(visits, width))
+        store.rate, store.stats = rate, stats
+        return store
 
     def _entities(self, tokens: torch.Tensor, token_pos: torch.Tensor, seg: torch.Tensor, n_seg: int
-                  ) -> tuple[torch.Tensor, int]:
+                  ) -> tuple[torch.Tensor, torch.Tensor]:
         """([n_seg, MAX_LINE_ENTS] distinct entity ids per card in order of first appearance, -1 padding;
         number of cards with more than MAX_LINE_ENTS distinct entities)."""
         config, device = self.config, tokens.device
@@ -315,12 +351,12 @@ class SpanCardWriter(CardWriter):
         keep = min(MAX_LINE_ENTS, config.n_ent)
         ents = torch.where(rank[:, :keep] < never, order[:, :keep], torch.full_like(order[:, :keep], -1))
         ents = F.pad(ents, (0, MAX_LINE_ENTS - keep), value=-1)
-        return ents, int(((first < never).sum(1) > MAX_LINE_ENTS).sum())
+        return ents, ((first < never).sum(1) > MAX_LINE_ENTS).sum()
 
     @torch.no_grad()
     def _stats(self, p: torch.Tensor, start: torch.Tensor, cardable: torch.Tensor, after_newline: torch.Tensor,
-               n_seg: int, visits: int, ents_over: int) -> dict[str, float]:
-        """Detached layout statistics of the last forward (see the module docstring)."""
+               n_seg: int, visits: int, ents_over: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Detached 0-d layout statistics of this forward, kept on the device (read on logged steps only)."""
         n = cardable.sum().clamp_min(1).float()
         starts = start.sum().clamp_min(1).float()
         newline_tokens = (after_newline & cardable).sum().clamp_min(1).float()
@@ -328,26 +364,29 @@ class SpanCardWriter(CardWriter):
         values = torch.stack([
             start.sum() / n, (p * cardable).sum() / n, cardable.sum() / max(n_seg, 1),
             (start & after_newline).sum() / starts, (start & after_newline & cardable).sum() / newline_tokens,
-            mid.sum() / n]).tolist()
-        names = ("start_rate", "gate_mean", "tokens_per_card", "newline_precision", "newline_recall", "gate_mid")
-        return {**dict(zip(names, values)), "cards_per_visit": n_seg / max(visits, 1),
-                "ents_overflow": float(ents_over)}
+            mid.sum() / n, torch.tensor(n_seg / max(visits, 1), device=p.device), ents_over.float()])
+        names = ("start_rate", "gate_mean", "tokens_per_card", "newline_precision", "newline_recall", "gate_mid",
+                 "cards_per_visit", "ents_overflow")
+        return dict(zip(names, values.float().unbind()))
 
 
 # ----------------------------------------------------------------------------- the model
 class SpanCardMini(PremonitionMini):
-    """PremonitionMini whose writer is a `SpanCardWriter`; the loss gains `w_rate` x the rate loss."""
+    """PremonitionMini whose writer is a `SpanCardWriter`; the loss gains `w_rate` x the rate loss.
+
+    No per-call state survives a call (so `learnlab.readonly.read_only` evaluation works): the store a call builds,
+    its gold matrix and the insertion trace live in a capture dict that exists only inside `scope()`. `forward` and
+    `answer` open one when none is open; `SpanTrainer` opens one around a step and reads it before it closes.
+    """
 
     variant_name = VARIANT
+    CAPTURE = "_span_capture"
 
     def __init__(self, config: MiniConfig, span: SpanConfig) -> None:
         super().__init__(config)
         if self.writer is None:
             raise ValueError("span cards need a card store (not D-noask)")
         self.span = span
-        self.trace: Optional[list[tuple[torch.Tensor, torch.Tensor]]] = None
-        self._last_store: Optional[CardStore] = None
-        self.last_gold_matrix: Optional[torch.Tensor] = None
         with torch.random.fork_rng(devices=[]):
             writer = SpanCardWriter(config, span)
         missing, unexpected = writer.load_state_dict(self.writer.state_dict(), strict=False)
@@ -356,40 +395,59 @@ class SpanCardMini(PremonitionMini):
         writer.init_gate()
         self.writer = writer
 
+    @contextmanager
+    def scope(self) -> Iterator[dict[str, Any]]:
+        """The open capture dict, or a fresh one removed again on exit (never left on the model)."""
+        open_ = self.__dict__.get(self.CAPTURE)
+        if open_ is not None:
+            yield open_
+            return
+        capture: dict[str, Any] = {}
+        self.__dict__[self.CAPTURE] = capture
+        try:
+            yield capture
+        finally:
+            self.__dict__.pop(self.CAPTURE, None)
+
     def build_store(self, hidden: torch.Tensor, batch: VisitBatch) -> Optional[CardStore]:
-        self._last_store = super().build_store(hidden, batch)
-        return self._last_store
+        store = super().build_store(hidden, batch)
+        capture = self.__dict__.get(self.CAPTURE)
+        if capture is not None:
+            capture["store"] = store
+        return store
 
     def forward(self, batch: VisitBatch, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        out = super().forward(batch, *args, **kwargs)
-        rate = self.writer.last_rate
-        out["rate"] = rate
-        out["loss"] = out["loss"] + self.span.w_rate * rate
+        with self.scope() as capture:
+            out = super().forward(batch, *args, **kwargs)
+            store = capture.pop("store")
+        out["rate"] = store.rate
+        out["loss"] = out["loss"] + self.span.w_rate * store.rate
         metrics = out["metrics"]
-        for name, value in self.writer.last_stats.items():
-            metrics[f"span_{name}"] = torch.tensor(float(value))
-        metrics["span_rate"] = rate.detach().float()
-        gold = getattr(self._last_store, "last_gold", None)
-        self.last_gold_matrix = None if gold is None else gold.detach()
-        self._last_store = None
+        for name, value in store.stats.items():
+            metrics[f"span_{name}"] = value
+        metrics["span_rate"] = store.rate.detach().float()
+        if store.last_gold is not None:
+            capture["gold_matrix"] = store.last_gold.detach()
         return out
 
     def _insert(self, episode: Any, store: CardStore, index: torch.Tensor, cards: torch.Tensor) -> None:
-        if self.trace is not None:
-            self.trace.append((index.detach().cpu(), cards.detach().cpu()))
+        capture = self.__dict__.get(self.CAPTURE)
+        if capture is not None and "trace" in capture:
+            capture["trace"].append((index.detach().cpu(), cards.detach().cpu()))
         super()._insert(episode, store, index, cards)
 
     @torch.no_grad()
     def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None, window_line: Optional[torch.Tensor] = None,
                stop: Optional[Iterable[int]] = None, max_loops: Optional[int] = None) -> Answers:
-        """`PremonitionMini.answer` with `first_top` and `fetched` in line indices (a card's last line);
-        the raw card-indexed versions are kept in `last_answer_cards`."""
-        out = super().answer(batch, wipe=wipe, window_line=window_line, stop=stop, max_loops=max_loops)
-        store, self._last_store = self._last_store, None
+        """`PremonitionMini.answer` with `first_top` and `fetched` in line indices (a card's last line); the raw
+        card-indexed pair is left in an OPEN capture as "raw_answer" (callers that want it open `scope()`)."""
+        with self.scope() as capture:
+            out = super().answer(batch, wipe=wipe, window_line=window_line, stop=stop, max_loops=max_loops)
+            store = capture.pop("store", None)
+            capture["raw_answer"] = (out.first_top, out.fetched)
         lines = batch.line_start.shape[1]
         count = out.tokens.shape[0]
         device = out.tokens.device
-        self.last_answer_cards = (out.first_top, out.fetched)
         if store is None or out.fetched is None:
             return out
         rows = torch.arange(count, device=device) if wipe == "full" else batch.q_visit
@@ -478,21 +536,20 @@ class SpanTrainer(MiniTrainer):
 
     def _train_step(self, batch: VisitBatch, plan: Any, loops: torch.Tensor, track: bool) -> dict[str, Any]:
         model = self.model
-        span = isinstance(model, SpanCardMini)
-        if span:
-            model.trace = [] if track else None
-        try:
+        if not isinstance(model, SpanCardMini):
+            return super()._train_step(batch, plan, loops, track)
+        with model.scope() as capture:
+            if track:
+                capture["trace"] = []
             result = super()._train_step(batch, plan, loops, track)
-            if span and track:
-                if model.last_gold_matrix is not None:
-                    result["cards"] = layout_card_stats(
-                        model.trace, model.last_gold_matrix, batch, loops, model.config.card_rows,
-                        offset=0 if plan.mode == "gold" else 1)
-                logged = {name: float(value) for name, value in result["metrics"].items() if name.startswith("span_")}
+            if track:
+                gold = capture.get("gold_matrix")
+                if gold is not None:
+                    result["cards"] = layout_card_stats(capture["trace"], gold, batch, loops, model.config.card_rows,
+                                                        offset=0 if plan.mode == "gold" else 1)
+                logged = {name: float(value) for name, value in result["metrics"].items()
+                          if name.startswith("span_")}
                 self.span_log.append({"step": self.step, **logged, "rate": logged.get("span_rate")})
-        finally:
-            if span:
-                model.trace = None
         return result
 
 
@@ -624,8 +681,6 @@ def card_economy(model: PremonitionMini, batches: Iterable[VisitBatch], *,
     finally:
         for module, was in modes:
             module.training = was
-        if hasattr(model, "_last_store"):
-            model._last_store = None
 
     def share(top: str, bottom: str) -> Optional[float]:
         return sums.get(top, 0.0) / sums[bottom] if sums.get(bottom) else None

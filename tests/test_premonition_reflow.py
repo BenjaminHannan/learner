@@ -7,7 +7,7 @@ import unittest
 
 import torch
 
-from premonition.batch import MAX_LINE_ENTS
+from premonition.batch import MAX_GOLD, MAX_LINE_ENTS
 from premonition.data import VisitCache, collate
 from premonition.reflow import reflow_cache
 
@@ -138,7 +138,8 @@ class ReflowTest(unittest.TestCase):
         self.assertTrue(same_cache(self.cache, out))
         self.assertEqual({k: v for k, v in out.info.items() if k != "reflow"}, self.cache.info)
         self.assertEqual(out.info["reflow"]["stats"], {"lines_before": 13, "lines_after": 13, "merged_lines": 0,
-                                                       "split_lines": 0, "ents_over_max": 0})
+                                                       "split_lines": 0, "ents_over_max": 0, "gold_over_max": 0,
+                                                       "gold_over_max_before": 0})
         self.assertNotIn("reflow", self.cache.info)
         out, maps = reflow_cache(self.cache, newline_id=NL, return_map=True)
         self.assertEqual(maps[0], [[k] for k in range(7)])
@@ -205,6 +206,25 @@ class ReflowTest(unittest.TestCase):
         self.assertEqual(out.gold_lines(0), sorted({*maps[0][1], *maps[0][2]}))
         self.assertEqual(len(out.gold_lines(0)), 4)
         self.assertEqual(out.line_counts.tolist(), [7 + 5, 4 + 3, 2 + 2])
+
+    def test_splits_past_max_gold_are_counted(self) -> None:
+        """Code review item 4: splitting can push a question past MAX_GOLD evidence lines (a batch then keeps
+        only the newest MAX_GOLD); the reflow stats and the cache's build stats must say so."""
+        lines = [[WORLD, 10 + k % 30, 11, NL] for k in range(10)] + [[QUESTION, 20, ANSWER, 51, NL]]
+        visits = [{"id": "g", "lines": lines, "questions": [(10, list(range(10)))]}]
+        cache = make_cache(visits)
+        cache.info["stats"] = {"gold_over_max": 0, "gold_max": 10, "line_ents_over_max": 0}
+        out = reflow_cache(cache, split=1.0, newline_id=NL, seed=0)
+        self.assertEqual(len(out.gold_lines(0)), 20)
+        self.assertGreater(len(out.gold_lines(0)), MAX_GOLD)
+        stats = out.info["reflow"]["stats"]
+        self.assertEqual((stats["gold_over_max"], stats["gold_over_max_before"]), (1, 0))
+        self.assertEqual(out.info["stats"]["gold_over_max"], 1)
+        self.assertEqual(out.info["stats"]["gold_max"], 20)
+        self.assertEqual(cache.info["stats"]["gold_over_max"], 0)          # the input is not modified
+        same = reflow_cache(cache, newline_id=NL)                          # nothing changed: build stats kept
+        self.assertEqual(same.info["stats"], cache.info["stats"])
+        self.assertEqual(same.info["reflow"]["stats"]["gold_over_max"], 0)
 
     def test_split_only_at_word_starts(self) -> None:
         cache = self.cache
