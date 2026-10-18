@@ -16,6 +16,12 @@ practice non-habit unlocks are 0.5 or more below round 1's reference (5.72 for s
 rounds 3 and 4 exist for both seeds. The sealed wording "on both seeds, X or Y" is read per seed (a seed trips if X or Y) and both seeds must trip;
 the other reading (X on both seeds, or Y on both seeds) is also computed and flagged if it would give a different branch.
 
+Read gate (gwls_final.gate uses ratio_problems below): a round-3 or round-4 row, on either seed, whose ratio_ok is False is a REFUSAL (the unrounded ratio the
+indicator uses disagrees with the census file's own number by more than the rounding bound, so the round is not read past). ratio_ok None (the cross-check
+cannot be computed: the census ratio_w or A_w is missing, or A_w rounds to ~0) is ALSO a refusal when the row's unrounded ratio_w_exact exists, because the
+indicator then uses a ratio it could not verify; it is NOT a refusal when ratio_w_exact is None (no A rows at all: the indicator uses no ratio there, the
+ratio cannot trip, and there is nothing to cross-check). Every read problem (READ_ERRORS) is a listed refusal, never a traceback.
+
 Rounding: the indicator compares UNROUNDED values. The non-habit mean is an exact fraction (non-habit count over games, exact arithmetic against the
 threshold ref - 0.5); the ratio is W_w / A_w recomputed from the unrounded weighted sums (the census file rounds W_w, A_w and the ratio for display, and
 the two are compared to within the analytic bound of the census file's own display rounding: W_w and A_w to 2 dp, the ratio (computed from the
@@ -29,6 +35,7 @@ import hashlib
 import json
 import os
 import time
+import zlib
 from collections import Counter
 from fractions import Fraction
 
@@ -44,7 +51,13 @@ ITER_RETRY_SLEEP = 1.0                          # seconds before the one retry o
 
 
 class RoundReadError(ValueError):
-    """A round's files cannot be read consistently (e.g. iter-k.json still unparseable after one retry)."""
+    """A round's files cannot be read consistently (e.g. iter-k.json still unparseable after one retry, or games = 0)."""
+
+
+# Everything reading a round's files (or arm C's file) can raise, in one place: a failure is a listed refusal string, never a crash. ValueError covers
+# json.JSONDecodeError, UnicodeDecodeError and RoundReadError; EOFError is a truncated gzip; zlib.error a corrupt deflate stream; gzip.BadGzipFile a bad header
+# (an OSError subclass, listed anyway); ZeroDivisionError / IndexError an empty round; AttributeError a JSON file that is not the expected object.
+READ_ERRORS = (AssertionError, ValueError, OSError, KeyError, TypeError, EOFError, zlib.error, gzip.BadGzipFile, ZeroDivisionError, IndexError, AttributeError)
 
 
 def ratio_consistency(ratio_w, ratio_w_exact, A_w):
@@ -62,6 +75,26 @@ def ratio_consistency(ratio_w, ratio_w_exact, A_w):
         return dict(ratio_gap=round(gap, 6), ratio_bound=None, ratio_ok=None)
     bound = (1 + max(ratio_w_exact, ratio_w) + 0.0005) * 0.005 / floor + 0.0005 + RATIO_EPS
     return dict(ratio_gap=round(gap, 6), ratio_bound=round(bound, 6), ratio_ok=gap <= bound)
+
+
+def ratio_problems(rows, rounds=(3, 4)):
+    """-> refusal strings for the rows of `rounds` (either seed) whose ratio cross-check failed (ratio_ok False) or could not be made although the indicator uses the
+    ratio (ratio_ok None with a ratio_w_exact); [] when every such row is ok. See the module docstring for the None decision."""
+    bad = []
+    for seed, rs in rows.items():
+        # the indicator takes the seed's mean ratio only when BOTH rounds 3 and 4 have an unrounded ratio; otherwise no ratio is used for that seed
+        uses = all(r['ratio_w_exact'] is not None for r in rs if r['round'] in (3, 4)) and {3, 4} <= {r['round'] for r in rs}
+        for r in rs:
+            if r['round'] not in rounds:
+                continue
+            where = f'seed {seed} round {r["round"]}'
+            if r['ratio_ok'] is False:
+                bad.append(f'{where}: ratio_w cross-check failed (ratio_ok False): |unrounded {r["ratio_w_exact"]} - census {r["ratio_w"]}| = {r["ratio_gap"]} '
+                           f'> bound {r["ratio_bound"]}; the indicator uses the unrounded ratio, so this round is not read past')
+            elif r['ratio_ok'] is None and uses:
+                bad.append(f'{where}: ratio_w cross-check could not be made (ratio_ok None: census ratio_w {r["ratio_w"]}, A_w {r["A_w"]}) although the indicator uses '
+                           f'the unrounded ratios of rounds 3 and 4 (this one {r["ratio_w_exact"]}); this round is not read past')
+    return bad
 
 
 def play_files(d, k):
@@ -129,8 +162,10 @@ def read_iter(d, k):
 def round_row(d, k, cache=None):
     cache = {} if cache is None else cache
     it = read_iter(d, k)
-    games, digest = read_play(d, k)
     n = it['games']
+    if not isinstance(n, int) or isinstance(n, bool) or n <= 0:                  # checked before any division by n
+        raise RoundReadError(f'{d} round {k}: iter-{k}.json says games = {n!r}, a round needs at least one game')
+    games, digest = read_play(d, k)
     assert len(games) == n, f'{d} round {k}: iter-{k}.json says {n} games, the play files hold {len(games)} (a re-run into the same folder?)'
     assert abs(sum(len(g['first']) for g in games) / n - it['mean_unlocks']) < 6e-4, f'{d} round {k}: play files do not match iter-{k}.json'
     key = f'{os.path.abspath(d)}|{k}|{n}|{digest}'
@@ -157,7 +192,15 @@ def build_rows(root, seeds, rounds=None, cache=None, errors=None):
     rows = {}
     for seed in seeds:
         d = os.path.join(root, f's{seed}')
-        ks = sorted(int(os.path.basename(p)[5:-5]) for p in glob.glob(os.path.join(d, 'iter-*.json')))
+        ks = []
+        for p in glob.glob(os.path.join(d, 'iter-*.json')):
+            try:
+                ks.append(int(os.path.basename(p)[5:-5]))
+            except ValueError as e:                                              # e.g. iter-x.json: listed, not a crash (raised when errors is None)
+                if errors is None:
+                    raise
+                errors.append(f'seed {seed}: {p}: file name is not iter-<k>.json: {e}')
+        ks.sort()
         rows[seed] = []
         for k in ks:
             if rounds is not None and k not in rounds:
@@ -167,7 +210,7 @@ def build_rows(root, seeds, rounds=None, cache=None, errors=None):
                 continue
             try:
                 rows[seed].append(round_row(d, k, cache))
-            except (AssertionError, ValueError, OSError, KeyError, TypeError) as e:
+            except READ_ERRORS as e:
                 errors.append(f'seed {seed} round {k}: {type(e).__name__}: {e}')
     return rows
 
@@ -213,6 +256,9 @@ def markdown(rows, ind):
         for seed, p in ind['per_seed'].items():
             lines.append(f'- seed {seed}: mean(r3, r4) ratio_w {p["ratio_w_mean"]} (trips if <= {RATIO_STOP}: {p["ratio_trips"]}); '
                          f'non-habit {p["nonhabit_mean"]} vs ref {p["nonhabit_ref"]} ({p["nonhabit_vs_ref"]:+}; trips if <= {p["nonhabit_threshold"]:.2f}: {p["nonhabit_trips"]})')
+        gate_bad = ratio_problems(rows)
+        if gate_bad:
+            lines += ['', 'GATE: gwls_final would REFUSE the sealed read, ratio cross-check on rounds 3-4:'] + [f'- {x}' for x in gate_bad]
         lines += ['', f'**Branch: {ind["branch"]}**' + ('' if ind['readings_agree'] else f'  (the other reading of the sealed sentence gives: {ind["alt_reading_branch"]})')]
     return '\n'.join(lines) + '\n'
 

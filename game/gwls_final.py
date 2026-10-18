@@ -134,7 +134,7 @@ def load_arm_c(p, seed):
             raw = f.read()
         b = json.loads(raw)
         return b, arm_c_problems(seed, raw, b)
-    except (OSError, ValueError, AssertionError, KeyError, TypeError, AttributeError) as e:
+    except gwls_report.READ_ERRORS as e:
         return None, [f'arm C seed {seed}: {p["base"]} cannot be read: {type(e).__name__}: {e}']
 
 
@@ -167,16 +167,26 @@ def round8_problems(seed, p):
 
 
 def gate(root):
-    """-> (problems, indicator). The round-4 leading indicator recomputed from rounds 3 and 4 of both seeds (no cache); STOP or unfinished refuses."""
+    """-> (problems, indicator). The round-4 leading indicator recomputed from rounds 3 and 4 of both seeds (no cache); STOP or unfinished refuses.
+
+    Every read failure (gwls_report.READ_ERRORS) and every round-3/4 row whose ratio_ok is False (or None where the indicator uses the ratio, see
+    gwls_report.ratio_problems) is a listed refusal string, never a crash and never read past."""
     errors = []
     rows = gwls_report.build_rows(root, SEEDS, rounds=(3, 4), errors=errors)        # unreadable / inconsistent rounds become strings, all of them listed
     try:
+        ratio_bad = gwls_report.ratio_problems(rows)
+    except gwls_report.READ_ERRORS as e:
+        ratio_bad = [f'ratio_w cross-check cannot be evaluated: {type(e).__name__}: {e}']
+    try:
         ind = gwls_report.indicator(rows, gwls_report.REF)
-    except (AssertionError, ValueError, OSError, KeyError, TypeError, ZeroDivisionError) as e:
+    except gwls_report.READ_ERRORS as e:
         errors.append(f'round-4 leading indicator cannot be computed: {type(e).__name__}: {e}')
         ind = None
     if errors:
-        return [f'round-4 leading indicator: {x}' for x in errors], dict(branch=None, note='; '.join(errors))
+        allbad = errors + ratio_bad
+        return [f'round-4 leading indicator: {x}' for x in allbad], dict(branch=None, note='; '.join(allbad))
+    if ratio_bad:                                                                    # readable, but a row's ratio cannot be trusted: refuse, keep the branch for display
+        return [f'round-4 leading indicator: {x}' for x in ratio_bad], ind
     if ind['branch'] is None:
         return [f'round-4 leading indicator cannot be read: {ind["note"]}'], ind
     if ind['branch'] != 'CONTINUE':
@@ -296,8 +306,11 @@ def main(argv=None):
             print('  would run:', ' '.join(command(p)))
             b = arm_c[s]
             if b is not None:
-                print('  arm C: total', round(b['mean_unlocks'], 3), 'non-habit', round(sum(map(nonhabit, b['per_world'])) / b['worlds'], 3),
-                      'stone %', round(sum(map(stone, b['per_world'])) / b['worlds'], 1))
+                try:
+                    print('  arm C: total', round(b['mean_unlocks'], 3), 'non-habit', round(sum(map(nonhabit, b['per_world'])) / b['worlds'], 3),
+                          'stone %', round(sum(map(stone, b['per_world'])) / b['worlds'], 1))
+                except gwls_report.READ_ERRORS as e:                              # a malformed arm C file is a listed problem, not a traceback
+                    arm_c_bad.append(f'arm C seed {s}: {p["base"]} numbers cannot be printed: {type(e).__name__}: {e}')
         bad, ind = play_problems(P, a.root, arm_c_bad)
         print('round-4 branch:', ind['branch'] if ind['branch'] else f'unavailable ({ind["note"]})')
         if bad:
@@ -324,8 +337,11 @@ def main(argv=None):
             os.remove(p['lock'])
     per_seed = {}
     for s, p in P.items():
-        with open(p['out']) as f:
-            m = json.load(f)
+        try:
+            with open(p['out']) as f:
+                m = json.load(f)
+        except gwls_report.READ_ERRORS as e:                                                 # a missing / torn result file: a clear exit, not a traceback
+            sys.exit(f'seed {s}: the result file {p["out"]} cannot be read: {type(e).__name__}: {e}')
         b = arm_c[s]
         assert m['picker'] == 'sample' and m['temp'] == 1.0 and m['worlds'] == b['worlds'] == 100, 'not the sealed configuration'
         assert os.path.basename(m['ckpt']) == 'checkpoint-iter8.pt' and os.path.basename(os.path.dirname(os.path.abspath(m['ckpt']))) == f's{s}', m['ckpt']

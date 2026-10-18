@@ -331,6 +331,195 @@ class FinalRobustness(unittest.TestCase):
             self.assertIn('arm C file missing', out)
 
 
+BAD_MARK = 8                                    # a game with this many first-unlocks (7 non-habit + wake_up) marks the round whose census ratio is made inconsistent
+
+
+@contextlib.contextmanager
+def census_stub():
+    """one_round / ratio_w_exact stubbed: every round is consistent (ratio 8.0, gap 0) except rounds whose games have BAD_MARK first-unlocks (census says 9.5)."""
+    def one_round(games):
+        ratio = 9.5 if len(games[0]['first']) == BAD_MARK else 8.0
+        return dict(A27=dict(W_n=40, A_n=5, W_w=96.0, A_w=12.0, ratio_w=ratio), V=100, E=30)
+    with mock.patch.object(gwls_report.census_ready, 'one_round', side_effect=one_round), mock.patch.object(gwls_report, 'ratio_w_exact', return_value=8.0):
+        yield
+
+
+def corrupt_gzip_header(path):
+    with open(path, 'wb') as f:
+        f.write(b'this is not gzip data at all')
+
+
+def corrupt_gzip_body(path):
+    with open(path, 'rb') as f:
+        raw = bytearray(f.read())
+    for i in range(12, len(raw) - 8):                                                          # valid header and trailer, damaged deflate stream
+        raw[i] ^= 0xFF
+    with open(path, 'wb') as f:
+        f.write(bytes(raw))
+
+
+def truncate(path):
+    with open(path, 'rb') as f:
+        raw = f.read()
+    with open(path, 'wb') as f:
+        f.write(raw[:len(raw) // 2])
+
+
+class GateReadSide(unittest.TestCase):
+    """Round-2 read-side fixes: ratio_ok is honoured, and no read failure is a crash."""
+
+    def root(self, nh=6):
+        r = tempfile.TemporaryDirectory()
+        self.addCleanup(r.cleanup)
+        write_gate_root(r.name, nh, nh)
+        return r.name
+
+    def test_read_errors_tuple_is_complete(self):
+        import zlib
+        for e in (AssertionError, ValueError, json.JSONDecodeError, gwls_report.RoundReadError, OSError, KeyError, TypeError, EOFError, zlib.error,
+                  gzip.BadGzipFile, ZeroDivisionError, IndexError):
+            self.assertTrue(issubclass(e, gwls_report.READ_ERRORS), e)
+
+    def test_happy_path_with_consistent_ratios_continues(self):
+        root = self.root()
+        with census_stub():
+            bad, ind = gwls_final.gate(root)
+        self.assertEqual((bad, ind['branch']), ([], 'CONTINUE'))
+
+    def test_1_a_round_with_ratio_ok_false_is_refused_for_every_seed_and_round(self):
+        for seed in gwls_final.SEEDS:
+            for k in (3, 4):
+                with self.subTest(seed=seed, round=k):
+                    root = self.root()
+                    write_round(os.path.join(root, f's{seed}'), k, [nh_game(BAD_MARK - 1)] * 8)
+                    with census_stub():
+                        bad, ind = gwls_final.gate(root)
+                    self.assertEqual(ind['branch'], 'CONTINUE')                              # the indicator itself is fine; the gate still refuses
+                    self.assertEqual(len(bad), 1, bad)
+                    self.assertIn(f'seed {seed} round {k}', bad[0])
+                    self.assertIn('ratio_ok False', bad[0])
+                    self.assertRegex(bad[0], r'= 1\.5 > bound 0\.\d+')                         # the gap and the bound are in the message
+
+    def test_1_ratio_ok_none_refuses_only_where_the_indicator_uses_the_ratio(self):
+        def r(k, exact, ok, a_w=None):
+            return dict(round=k, ratio_w_exact=exact, ratio_w=None, A_w=a_w, ratio_gap=None, ratio_bound=None, ratio_ok=ok)
+        ok = lambda k: r(k, 2.0, True, 12.0)
+        # both rounds have an unrounded ratio but round 3's cannot be cross-checked: refused
+        bad = gwls_report.ratio_problems({200: [r(3, 2.0, None), ok(4)], 201: [ok(3), ok(4)]})
+        self.assertEqual(len(bad), 1)
+        self.assertIn('seed 200 round 3', bad[0])
+        self.assertIn('ratio_ok None', bad[0])
+        # no unrounded ratio in one round: the indicator uses no ratio for that seed, so None there is not a refusal
+        self.assertEqual(gwls_report.ratio_problems({200: [r(3, None, None), r(4, 2.0, None)], 201: [ok(3), ok(4)]}), [])
+        # rounds outside 3-4 are not looked at
+        self.assertEqual(gwls_report.ratio_problems({200: [r(1, 2.0, False)], 201: []}), [])
+
+    def test_2_truncated_play_file_is_a_listed_refusal(self):
+        root = self.root()
+        truncate(os.path.join(root, 's200', 'play-3-1.json.gz'))
+        with census_stub():
+            bad, ind = gwls_final.gate(root)
+        self.assertIsNone(ind['branch'])
+        self.assertEqual(len(bad), 1, bad)
+        self.assertIn('seed 200 round 3', bad[0])
+        self.assertIn('EOFError', bad[0])
+
+    def test_3_corrupt_gzip_bytes_are_a_listed_refusal(self):
+        for damage, name in ((corrupt_gzip_header, 'BadGzipFile'), (corrupt_gzip_body, 'error')):
+            with self.subTest(name=name):
+                root = self.root()
+                damage(os.path.join(root, 's201', 'play-3-0.json.gz'))
+                with census_stub():
+                    bad, ind = gwls_final.gate(root)
+                self.assertEqual(len(bad), 1, bad)
+                self.assertIn('seed 201 round 3', bad[0])
+                self.assertIn(name, bad[0])
+
+    def test_4_zero_games_in_iter_json_is_a_clear_refusal(self):
+        root = self.root()
+        path = os.path.join(root, 's201', 'iter-4.json')
+        with open(path) as f:
+            it = json.load(f)
+        with open(path, 'w') as f:
+            json.dump(dict(it, games=0), f)
+        with census_stub():
+            bad, ind = gwls_final.gate(root)
+        self.assertIsNone(ind['branch'])
+        self.assertEqual(len(bad), 1, bad)
+        self.assertIn('seed 201 round 4', bad[0])
+        self.assertIn('games = 0', bad[0])
+        self.assertNotIn('ZeroDivisionError', bad[0])                                            # checked before dividing
+        # and with no play files at all as well (len(games) == 0 == games would otherwise reach the division)
+        for fn in os.listdir(os.path.join(root, 's201')):
+            if fn.startswith('play-4-'):
+                os.remove(os.path.join(root, 's201', fn))
+        with census_stub():
+            self.assertTrue(any('games = 0' in x for x in gwls_final.gate(root)[0]))
+
+    def test_other_unreadable_things_are_refusals_too(self):
+        root = self.root()
+        os.makedirs(os.path.join(root, 's200'), exist_ok=True)
+        with open(os.path.join(root, 's200', 'iter-x.json'), 'w') as f:                          # a stray name that is not iter-<k>.json
+            f.write('{}')
+        with open(os.path.join(root, 's200', 'iter-4.json'), 'w') as f:
+            f.write('[1, 2]')                                                                    # valid JSON, not the expected object
+        with mock.patch.object(gwls_report.time, 'sleep'), census_stub():
+            bad, _ = gwls_final.gate(root)
+        self.assertTrue(any('iter-x.json' in x for x in bad), bad)
+        self.assertTrue(any('seed 200 round 4' in x for x in bad), bad)
+
+    def test_5_dry_run_with_everything_wrong_exits_1_and_lists_every_problem(self):
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as armc:
+            write_gate_root(root, 6, 6)
+            write_round(os.path.join(root, 's200'), 3, [nh_game(BAD_MARK - 1)] * 8)                 # s200 r3: ratio_ok False
+            truncate(os.path.join(root, 's200', 'play-4-2.json.gz'))                               # s200 r4: EOFError
+            corrupt_gzip_header(os.path.join(root, 's201', 'play-3-0.json.gz'))                    # s201 r3: BadGzipFile
+            p = os.path.join(root, 's201', 'iter-4.json')                                          # s201 r4: games 0
+            with open(p) as f:
+                it = json.load(f)
+            with open(p, 'w') as f:
+                json.dump(dict(it, games=0), f)
+            for s in gwls_final.SEEDS:                                                             # a malformed arm C too: mean_unlocks missing
+                b = gwls_final.synthetic_arm_c(s)
+                del b['mean_unlocks']
+                os.makedirs(os.path.dirname(gwls_final.paths(root, armc, s)['base']))
+                with open(gwls_final.paths(root, armc, s)['base'], 'w') as f:
+                    json.dump(b, f)
+            buf = io.StringIO()
+            with mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), contextlib.redirect_stdout(buf), census_stub():
+                with self.assertRaises(SystemExit) as cm:
+                    gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])
+            self.assertEqual(cm.exception.code, 1)
+            out = buf.getvalue()
+            self.assertNotIn('Traceback', out)
+            self.assertIn('WOULD REFUSE', out)
+            for needle in ('seed 200 round 3', 'ratio_ok False', 'seed 200 round 4', 'EOFError', 'seed 201 round 3', 'BadGzipFile', 'seed 201 round 4', 'games = 0',
+                           'round 8 is not complete', 'arm C seed 200', 'arm C seed 201'):
+                self.assertIn(needle, out)
+
+    def test_6_live_like_happy_path_dry_run_says_all_preconditions_hold(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as armc:
+            write_gate_root(root, 6, 6)
+            sha = {}
+            for s in gwls_final.SEEDS:
+                P = gwls_final.paths(root, armc, s)
+                for name in ('iter8', 'ckpt'):
+                    open(P[name], 'w').close()
+                torch.save(dict(k=8, run_seed=gwls_final.RUN_SEED[s], day_offset=4, parent=f'/x/glprobe/s{s}/n64000/checkpoint.pt'), P['state'])
+                os.makedirs(os.path.dirname(P['base']))
+                raw = json.dumps(gwls_final.synthetic_arm_c(s)).encode()
+                with open(P['base'], 'wb') as f:
+                    f.write(raw)
+                sha[s] = hashlib.sha256(raw).hexdigest()
+            buf = io.StringIO()
+            with mock.patch.dict(gwls_final.ARM_C_SHA256, sha), mock.patch.object(gwls_final.subprocess, 'Popen', side_effect=AssertionError('played')), \
+                    contextlib.redirect_stdout(buf), census_stub():
+                gwls_final.main(['--dry-run', '--root', root, '--arm-c', armc])              # returns (no SystemExit) when nothing refuses
+            self.assertIn('all preconditions hold', buf.getvalue())
+            self.assertIn('round-4 branch: CONTINUE', buf.getvalue())
+
+
 class Persist(unittest.TestCase):
     SCRIPT = os.path.join(os.path.dirname(gwls_final.__file__), 'gwls_persist.sh')
 
