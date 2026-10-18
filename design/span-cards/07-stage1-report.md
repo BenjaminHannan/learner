@@ -360,4 +360,4 @@ Economy after the arm: line_aligned 1, asked rate 0.796, 4.23 fetches per questi
 recall 0.427, full gold fetched 0.385.
 
 **SPAN arm:** started at t = 8,741.0 s from P_2 (attempt 2) at step 3,484 (11.16 tokens per card, line_aligned 1).
-The arm probe is due at global step 5,000.
+**Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,516 arm steps, t = 9,149.1 s) with no guard error.
