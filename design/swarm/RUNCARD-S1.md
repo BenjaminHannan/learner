@@ -2,6 +2,10 @@
 
 **Status: DRAFT, NOT SEALED. Written 2026-10-17, before any swarm run.** Sealable only after S0's verdict
 is PROMOTE (or the coordinator overrides a HOLD/KILL in writing). Same sealing rules as `RUNCARD-S0.md`.
+**2026-10-18:** the coordinator ruled S1 NOT booked. It is a separate later ask, made only after S0 returns
+PROMOTE (Q28). The rulers are confirmed (Q27). The pre-seal clarifications of S0 (10-18) apply here too:
+DEV slip per seed and never averaged, `loop_mismatches` instead of `gold_missing`, and precedence
+VOID > INSUFFICIENT > KILL-COMM > FAIL > PASS > HOLD.
 
 Code and data: identical to S0 (same commit, data tag, tokenizer, box type, T). The S0 and D1
 checkpoints from the S0 screen are reused as controls, so S1 trains only the new arm.

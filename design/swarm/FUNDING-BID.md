@@ -4,6 +4,13 @@
 gates this bid, and the run cards are sealed first (`RUNCARD-S0.md` §0). All code is a draft until the
 coordinator code-reviews it.
 
+**Coordinator ruling Q28 (2026-10-18):** C0 + S0 is YES in principle, hard cap **$4.20 total**, inside the
+week's unallocated room (about $20.14). It books ONLY after all of these: (1) the Q26 code review passes;
+(2) the Q27 fills are in and the card is sealed; (3) the box-script dry run is done; (4) C0 clears the
+stop-and-ask rule (above 2.5×: stop and ask, do not book S0). **S1 ($2.40) is NOT booked.** It is a separate
+later ask, only after an S0 PROMOTE. The PC route is not taken. Main-line adoption of the swarm is Ben's call
+and is neither asked nor granted here.
+
 ## What the money buys
 
 One answer, in two steps, at a small fixed cost: **does running four thinkers at once inside D beat one
@@ -39,12 +46,13 @@ finding out: ≤ $0.70.
 
 ## $0 work still to do before booking (pre-approved, not yet done)
 
-1. Coordinator code review of `premonition/swarm.py` and the train.py plumbing.
+1. Coordinator code review of `premonition/swarm.py` and the train.py plumbing (slot granted, Q26; the code is
+   commit `124e6c6fe` on `claude/swarm-thinkers`, the commit after `d046698cf`).
 2. A box script (`scripts/premonition_swarm_box.sh` + a marks readout `scripts/premonition_swarm_marks.py`)
    that pins the commit and file hashes. It has to pass a CPU dry run at the tiny preset that shows every
    mark is computable from its outputs (the house sealing rule, as in GR4 §9).
-3. The coordinator rules on the PROVISIONAL rulers (design §0): `far_deep` as the held-out join, and
-   `near`/`overall` ≥ 2-of-3 as the DEV slip family rule.
+3. ~~The coordinator rules on the PROVISIONAL rulers (design §0).~~ **Done 2026-10-18 (Q27): all three
+   confirmed as written.**
 4. Seal S0 with T filled in from C0. The C0 bench is pure measurement with no accuracy readout, so it
    cannot contaminate the pre-registration.
 

@@ -6,6 +6,12 @@ ruler mapping in §2 (design §0 items 2-3), and (2) §C0 of `FUNDING-BID.md` re
 which fix T in §1. After sealing, amendments follow the house rule: dated, written before the result
 files they concern are read, original text kept.
 
+**2026-10-18 (pre-seal, no swarm result exists):** (1) is done: the coordinator confirmed all three §0
+resolutions as written (ruling Q27). Sealing still waits on: the coordinator code review (Q26); a CPU dry run
+of the box kit (`design/swarm/BOX-SPEC.md`) showing every mark computable; and C0's T. Three pre-seal
+clarifications are made below and marked "(10-18)": DEV slip is per seed and never averaged, M5 drops
+`gold_missing` because `train_d` does not log it, and the verdict precedence is fixed.
+
 Code: branch `claude/swarm-thinkers` (commit pinned at sealing). `premonition/swarm.py`, flag `thinkers`.
 Base: D, v2 tokenizer (`VOCAB_V2`), full preset (d = 128), label-free regime, `premonition.train.train_d`.
 Data: a village build `large-seed0-<tag>` made on the box by `step1.build_data` (same tag for every arm;
@@ -28,13 +34,14 @@ the tag goes in the readout).
 * Eval: `evaluate_d_checkpoint(split="validation")` (label-free), max_loops default. S0 is fixed at 4
   rounds and does not halt; D1 halts by HALT, at most 8 loops.
 
-## 2. Rulers (PROVISIONAL mapping, see design §0)
+## 2. Rulers (CONFIRMED by the coordinator, ruling Q27, 2026-10-18; see design §0)
 
 * **Primary: held-out join** = the `far_deep` decision cell (knowable ∧ ¬evidence_kept ∧ depth ≥ 2,
   exclusions applied, `premonition/slices.py`) on the **validation** split (held-out villages). The test
   split is **not** touched by S0 or S1.
 * **Forgetting guard: DEV slip** = the `near` and `overall` cells on validation. Family rule: **≥ 2 of 3
-  seeds**.
+  seeds**. (10-18, Q27) Judged **per seed, never averaged**. A slip that shows only in the 3-seed mean
+  does not count.
 * Statistics: paired by item (and seed, when pooled), `learnlab.metrics.paired_greater_pvalue`,
   α = `policy.ALPHA` = 0.01, margin `policy.MIN_EFFECT` = 0.03, cells need ≥ `MIN_ITEMS` = 100 items
   per seed.
@@ -44,10 +51,10 @@ the tag goes in the readout).
 | mark | bar |
 |---|---|
 | **M1 join (promote)** | pooled over 3 seeds, S0 `far_deep` ≥ D1 + 3.0 points, and p(S0 > D1) < 0.01 paired; **and** S0 > D1 on ≥ 2 of 3 seeds |
-| **M2 DEV slip (guard)** | on ≥ 2 of 3 seeds, S0 `near` < D1 `near` − 3.0 points → **FAIL**; same rule for `overall` |
+| **M2 DEV slip (guard)** | on ≥ 2 of 3 seeds, S0 `near` < D1 `near` − 3.0 points → **FAIL**; same rule for `overall`, judged separately. Per seed, never averaged (10-18) |
 | **M3 desk usage (guard)** | on every one of ≥ 2 of 3 seeds: every desk's eval `ask_rate` ≥ 0.05, and every desk's `fetch_count` ≥ 0.10 × the busiest desk's. Otherwise the breadth was not used → **FAIL (USAGE-COLLAPSE)** |
 | **M4 diversity (guard)** | the readout prints `fetch_overlap`, `register_cos`, `ask_rate[4]`, `fetch_count[4]`, `silent_desks` per seed. If `collapsed` (register_cos > 0.95 **and** fetch_overlap > 0.8) on ≥ 2 of 3 seeds, the verdict line reads **"COLLAPSED: the desks are copies"** and the verdict cannot be PROMOTE |
-| **M5 matching (validity)** | every run's train seconds within T ± 2%; same data tag, tokenizer digest, eval items for every arm; `gold_missing` = 0; no NaN loss. Otherwise the run is **VOID** and reruns once under this same card |
+| **M5 matching (validity)** | every run's train seconds within T ± 2%; same data tag, tokenizer digest, eval items for every arm; `loop_mismatches` = 0 in every train report; no NaN loss. (10-18: `gold_missing` dropped. `train_d` does not log it. The gold-to-card mapping is covered by `test_premonition_model` / `test_premonition_swarm`.) Otherwise the run is **VOID** and reruns once under this same card |
 | **M6 cells** | `far_deep` has ≥ 100 items per seed; otherwise **INSUFFICIENT** (no verdict) |
 
 **Verdict:**
@@ -58,6 +65,11 @@ the tag goes in the readout).
 * **HOLD** otherwise (a gain between 0 and 3 points, or not significant). No S1 without a coordinator
   ruling.
 * Readout VOID if any mark cannot be computed from the files (schema mismatch).
+* **Precedence (10-18), when more than one applies:** VOID > INSUFFICIENT > KILL > FAIL > PROMOTE > HOLD.
+  KILL outranks a guard FAIL, because a worse swarm stops the line whatever else broke. A COLLAPSED result
+  that meets M1 is HOLD, and its verdict line carries the COLLAPSED text.
+* The readout program is `scripts/premonition_swarm_marks.py --card S0` (box kit, `BOX-SPEC.md`). It is the
+  program the CPU dry run exercised.
 
 ## 4. Predictions (each with what proves it wrong)
 

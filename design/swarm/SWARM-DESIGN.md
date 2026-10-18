@@ -16,6 +16,10 @@ I checked the brief's premises against the code. Three do not hold as written. I
 them; I resolved each one as below, and the run cards cannot be sealed until the coordinator accepts
 or changes these resolutions.
 
+**2026-10-18: the coordinator confirmed all three as written (ruling Q27).** The host is Premonition D. The
+primary is `far_deep` on the validation split, card-specific. DEV slip is `near`/`overall` under the
+≥ 2-of-3-seeds family rule, per seed, never averaged.
+
 1. **Which model is "the main model".** The brief names `premonition/model.py` and describes it exactly:
    a Think stack, registers, ASK into a card store, a gated binder, HALT (**shown**,
    `premonition/model.py:200-257, 446-496`). But the resource figures (about 3M parameters, launch-bound,
