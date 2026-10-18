@@ -338,3 +338,26 @@ Economy after the arm: line layout, line_aligned 1, asked rate 0.827, 4.05 fetch
 **SPAN arm:** started at t = 6,422.9 s from P_0 (step 3,487, share 0.0500; at the branch 11.16 tokens per card,
 line_aligned 1). **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,513 arm steps, t = 6,755.7 s) with no
 guard error. The arm continues.
+
+### Seed 2
+**LINE arm: done.**
+- 37,936 steps (teacher 13,086, own 24,850), 1.357B tokens, 7,569 s. Stopped on the FLOP budget, share 1.000002,
+  budget_ok, 0 loop mismatches.
+- **Peak reserved 7.90 GB** (attempt 1's LINE arm crossed at 21.10 GiB).
+- Final train: loss 1.337, answer acc 0.884, first-ask acc 0.258, recall@k 0.725.
+- Checkpoint `artifacts/span-stage1/20261018T201637Z/seed2/line` (state e1b5a961..., config 1fb3dbc3...).
+
+| DEV (LINE, seed 2) | n | accuracy |
+|---|---|---|
+| overall (told) | 7,683 | 0.3749 |
+| near | 4,290 | 0.3417 |
+| far | 2,924 | 0.4248 |
+| far_deep | 2,427 | 0.4508 |
+| multi_hop | 5,155 | 0.4194 |
+| not told | 469 | 0.3667 |
+
+Economy after the arm: line_aligned 1, asked rate 0.796, 4.23 fetches per question, null share 0.136, first-ask
+recall 0.427, full gold fetched 0.385.
+
+**SPAN arm:** started at t = 8,741.0 s from P_2 (attempt 2) at step 3,484 (11.16 tokens per card, line_aligned 1).
+The arm probe is due at global step 5,000.
