@@ -20,11 +20,13 @@ What changes (reader, think loop, ASK, binder, decoder, losses and curriculum ar
   Forced starts count toward the rate but carry no rate gradient (`layout_rate`).
 - A span card is written only if its last line ends inside the batch (`card_end`), as in `CardStore.write`.
 - `SpanCardStore` is indexed by token position (card id = position of its last token, width T, NULL = T). Eligibility
-  uses the card's last line; after a wipe a card must also START at or after the floor. A card is gold iff it holds a
-  token of a gold line; `missing` counts gold lines with no token inside an eligible card.
+  uses the card's last line; after a wipe a card must also START at or after the floor. ONE gold card per evidence
+  line: the eligible card holding most of its tokens (ties to the later card); `missing` counts gold lines with no
+  token inside an eligible card.
 - `SpanCardMini.answer` maps `first_top` and `fetched` back to line indices (a card's last line), so
-  `train.validate`'s accuracy, slices and asked rate stay valid; its line-based recall and `cards` block are only
-  approximate for span cards. `SpanTrainer` replaces the `cards` block by `layout_card_stats` (gold sets are card
+  `train.validate`'s accuracy, slices and asked rate stay valid. Its recall@4 and `cards` block are NOT valid for span
+  cards (its insert log holds card columns, compared with line ids; a merged card maps to its last line only): read
+  `card_economy` instead. `SpanTrainer` replaces the `cards` block by `layout_card_stats` (gold sets are card
   columns) and logs the gate statistics. `card_economy` is layout-aware and runs on a plain `PremonitionMini` too.
 
 Initial state: gate weight 0, bias `base_logit` = -4, newline weight 8, so p = 0.982 after a newline and 0.018 elsewhere:

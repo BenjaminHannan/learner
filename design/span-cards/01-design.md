@@ -192,8 +192,10 @@ marks written cards. Width is `T + 1` with NULL last, so every consumer of
 - `gold`: one card per evidence line (the rule above), with the same `(G, told, missing)` signature.
 
 `answer()` maps `first_top` and `fetched` back to line indices (a card's last line), so `train.validate`'s
-accuracy, slices and asked-rate stay valid. Its line-based recall@4 and `cards` block are only approximate
-for span cards and are superseded by `card_economy` (below), which is layout-aware and runs on both arms.
+accuracy, slices and asked-rate stay valid. Its line-based recall@4 and `cards` block are NOT valid for span
+cards (the insert log holds card columns, compared with line ids; correction after the round-3 re-review, which
+called "approximate" an understatement). No bar or guard reads them; they are superseded by `card_economy`
+(below), which is layout-aware and runs on both arms.
 
 ### 3.5 Cost
 - Parameters: `+2d + 2` for the gate (a `2d + 1` linear plus the newline weight; 258 at d = 128, +0.01%).
@@ -227,7 +229,7 @@ precedent for adding a new file).
 |---|---|---|---|
 | F1 | Gate never leaves the newline layout (relearns lines) | line-aligned card share stays above 0.98 | `card_economy.line_aligned`, boundary/newline precision and recall |
 | F2 | Rate collapse (all tokens or giant cards) | tokens per card far from `N` | `F`, `G`, `L_rate`, tokens-per-card histogram |
-| F3 | Gold inflation: big cards make "gold" trivial, recall looks fine, answers drop | gold cards per question falls, gold card size rises, own-retrieval accuracy drops while recall@4 rises | `card_economy.gold_*`, `accuracy` vs `gold_recall_at_4_span` |
+| F3 | Gold inflation: big cards make "gold" trivial, recall looks fine, answers drop | gold cards per question falls, gold card size rises, own-retrieval accuracy drops while recall@4 rises | `card_economy.gold_*`, `accuracy` vs `card_economy.first_ask_recall` |
 | F4 | ASK or fetch collapse (the model stops asking, or always takes NULL) | asked rate and fetches per question fall, NULL share rises | `card_economy.asked_rate`, `fetch_per_q`, `null_share` (guard in the run card) |
 | F5 | Entity overflow: merged cards hold more than 4 entities, so the binder loses some | overflow share above 2% | `card_economy.ents_overflow` |
 | F6 | Wipe leak: a card straddling the window start | handled by the first-line rule; checked by a unit test | test |
