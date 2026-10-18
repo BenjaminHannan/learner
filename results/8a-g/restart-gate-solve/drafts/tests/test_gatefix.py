@@ -8,6 +8,8 @@ Tests of the four gate-fix changes, plain asserts like the pack's own tests:
   D  rejudge_probe.py: INSIDE / UNRESOLVED / OUTSIDE synthetic cases, the verbatim pre-registered text, REJUDGE-<job>.json, --trace-a-json
   E  Amendment 1 (PREREG-trace-a2.md): trace A opt-in rule keys resume_early_abs / resume_exact_fields (absent = the same result as the original, plus the recorded early_max), probe early_max / early_limit /
      early_verdict, installer --trace-a-early (+ idempotency, variants never mixed), rejudge_probe.py amended reading (INSIDE / UNRESOLVED / UNRESOLVED_CALIBRATE / OUTSIDE by P1 / by P1b) and --calibration
+  H  item 7 (ruling Q95): the early window (updates step+2 and step+3) is refused when it cannot be computed (< 3 updates): probe-resume --upto < step+3 exits 3 and touches nothing, resume_probe_verdict / md_probe /
+     trace_a emit no early field below 3 updates, and the supervisor agrees with rejudge_probe.py (same 2-update data: both exit 3; from 3 updates: the same early_max)
 The ORIGINAL pack's supervisor is loaded from G2FA4_ORIG_PACK (default: results/8a-g/pc-job-cards/g2fa4 next to the drafts) only to compare."""
 import contextlib, importlib.util, io, json, os, random, subprocess, sys, tempfile
 from pathlib import Path
@@ -296,7 +298,8 @@ def t_verdict_identical_to_original():
         old, new = O.resume_probe_verdict(C, R1, R2), S.resume_probe_verdict(C, R1, R2)
         assert json.dumps(old, sort_keys=True) == json.dumps({k: new[k] for k in old}, sort_keys=True), (i, old, new)
         assert old['verdict'] == new['verdict'] and repr(old['limit']) == repr(new['limit']) and repr(old['n']) == repr(new['n']) and repr(old['d']) == repr(new['d'])
-        assert set(new) - set(old) == {'first_r1_c', 'first_r2_c', 'first_r1_r2', 'Dbar', 'Nbar', 'ratio', 'mean_form_limit', 'mean_form_verdict', 'lag1_autocorr', 'early_max', 'early_limit', 'early_verdict'}
+        added = {'first_r1_c', 'first_r2_c', 'first_r1_r2', 'Dbar', 'Nbar', 'ratio', 'mean_form_limit', 'mean_form_verdict', 'lag1_autocorr'}
+        assert set(new) - set(old) == added | ({'early_max', 'early_limit', 'early_verdict'} if L >= 3 else set()), (L, set(new) - set(old))          # (Q95: the early keys only with >= 3 updates)
         n_pass += old['verdict'] == 'PASS'
         n_fail += old['verdict'] == 'FAIL'
     assert n_pass > 100 and n_fail > 100, (n_pass, n_fail)                           # both branches were exercised
@@ -312,7 +315,7 @@ def t_verdict_identical_to_original():
                 pass
             else:
                 raise AssertionError('unequal / empty lists must still be refused')
-    print(f'ok `verdict` and every old key identical to the original pack function over 1000 random traces ({n_pass} PASS, {n_fail} FAIL); only the 12 new keys are added (9 mean-form + 3 early-window)')
+    print(f'ok `verdict` and every old key identical to the original pack function over 1000 random traces ({n_pass} PASS, {n_fail} FAIL); only the new keys are added (9 mean-form, + 3 early-window when there are >= 3 updates)')
 
 
 def t_md_probe():
@@ -645,17 +648,17 @@ def t_trace_a_early_optin():
     # hard in every soft variant, even when the key is named in soft
     for soft in (['peak', 'resume_max_abs'], SOFT3, SOFT3 + ['resume_early_abs']):
         assert S.trace_a(AJ.FakeEv(0.0, 0.006), dict(EARLY_ONLY, soft=soft), 9000)['verdict'] == 'FAIL', soft
-    # a trace with exactly two redone updates: the 2nd alone is still measured and recorded, but with the rule set the early window cannot be checked (the 2nd AND 3rd are needed): hard failure
+    # a trace with exactly two redone updates: the early window (2nd AND 3rd) is not computable, so nothing about it is recorded (Q95); with the rule set it is a hard failure
     ev = AJ.FakeEv(0.0, 0.0)
     ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 102)]
     r = S.trace_a(ev, EARLY_ONLY, 9000)
-    assert r['resume']['n_redone'] == 2 and 'early_max' in r['resume'], r
+    assert r['resume']['n_redone'] == 2 and 'early_max' not in r['resume'], r
     assert r['verdict'] == 'FAIL' and r['why_fail'] == ['early window cannot be checked: only 2 redone updates (the 2nd and 3rd after the restore are needed)'], r
     assert S.trace_a(ev, RULES, 9000)['verdict'] == 'PASS' and S.trace_a(ev, RULES, 9000)['resume']['n_redone'] == 2          # without the rule: as before, no failure
     assert S.trace_a(ev, dict(EARLY_ONLY, soft=SOFT3 + ['resume_early_abs']), 9000)['verdict'] == 'FAIL'                         # hard, even named in soft
-    ev = bump(ev, 2, 102, loss=0.01)                                                     # two updates and the 2nd is also over the bar: both messages
+    ev = bump(ev, 2, 102, loss=0.01)                                                     # two updates and the 2nd is over the bar: the window is still not computed (Q95), only the cannot-be-checked message
     r = S.trace_a(ev, EARLY_ONLY, 9000)
-    assert r['verdict'] == 'FAIL' and any('early redone updates 102 ' in w and '3rd' not in w for w in r['why_fail']) and any('cannot be checked: only 2' in w for w in r['why_fail']), r
+    assert r['verdict'] == 'FAIL' and 'early_max' not in r['resume'] and len(r['why_fail']) == 1 and 'cannot be checked: only 2' in r['why_fail'][0], r
     # exactly three: checkable
     ev = AJ.FakeEv(0.0, 0.0)
     ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 103)]
@@ -770,12 +773,13 @@ def t_verdict_early():
     R1 = list(C); R1[0] += 0.5; R1[3] += 0.004                                              # the first and 4th update are not the early window
     r = S.resume_probe_verdict(C, R1, list(C))
     assert r['early_max'] == 0 and r['early_verdict'] == 'PASS' and r['first_r1_c'] == 0.5
-    r = S.resume_probe_verdict([1.0, 2.0], [1.0, 2.01], [1.0, 2.0])                           # two updates: only the 2nd
+    r = S.resume_probe_verdict([1.0, 2.0, 3.0], [1.0, 2.0, 3.01], [1.0, 2.0, 3.0])           # three updates: the smallest computable window
     assert abs(r['early_max'] - 0.01) < 1e-12 and r['early_verdict'] == 'FAIL'
-    r = S.resume_probe_verdict([1.0], [1.0], [1.0])                                          # one update: none
-    assert r['early_max'] is None and r['early_verdict'] is None and r['early_limit'] == 0.005
-    json.dumps(r)
-    print('ok probe verdict early window: early_max over probe updates 2-3 of both resumes, limit 0.005, verdict; the registered verdict is unchanged; None below 2 updates')
+    for C2, R1_ in (([1.0, 2.0], [1.0, 2.01]), ([1.0], [1.0])):                              # under three updates: no early keys at all (Q95; see t_early_not_computable)
+        r = S.resume_probe_verdict(C2, R1_, list(C2))
+        assert not {'early_max', 'early_limit', 'early_verdict'} & set(r), r
+        json.dumps(r)
+    print('ok probe verdict early window: early_max over probe updates 2-3 of both resumes, limit 0.005, verdict; the registered verdict is unchanged; absent below 3 updates')
 
 
 def t_installer_trace_a_early():
@@ -1175,8 +1179,8 @@ def t_trace_a_early_needs_three():
         assert r['verdict'] == 'FAIL' and r['resume']['n_redone'] == n and any(f'early window cannot be checked: only {n} redone update' in w for w in r['why_fail']), r
         assert S.trace_a(ev, dict(EARLY_ONLY, soft=SOFT3 + ['resume_early_abs', 'resume_exact_fields']), 9000)['verdict'] == 'FAIL'
         assert S.trace_a(ev, RULES, 9000)['verdict'] == 'PASS'                                # no rule: as before
-    assert 'early_max' in S.trace_a(_two_updates(), RULES, 9000)['resume']                  # early_max still recorded with 2 redone updates
-    print('ok trace A: resume_early_abs with under 3 redone updates is a hard failure naming the count; early_max still recorded from 2')
+    assert 'early_max' not in S.trace_a(_two_updates(), RULES, 9000)['resume']             # Q95: not recorded with 2 redone updates
+    print('ok trace A: resume_early_abs with under 3 redone updates is a hard failure naming the count; early_max is not recorded below 3')
 
 
 def _two_updates():
@@ -1407,13 +1411,152 @@ def t_rejudge_p23_unchanged():
     print('ok rejudge: p23_ok = exch_ok and p3 gives the same p23_ok and the same verdict as the old formula over 3000 random traces ' + str(dict(sorted(seen.items()))))
 
 
+# ================================================================ H: item 7 (ruling Q95): the early window is refused when it cannot be computed; supervisor aligned to rejudge_probe.py
+def tree_state(root):
+    """every file and folder under root with its sha256 (a refused probe must change none of it, add none, rename none)"""
+    import hashlib
+    out = {}
+    for f in sorted(Path(root).rglob('*')):
+        out[str(f)] = hashlib.sha256(f.read_bytes()).hexdigest() if f.is_file() else 'dir'
+    return out
+
+
+def t_early_not_computable_probe():
+    """(a) probe-resume with --upto < step+3: exit 3 with the message, before anything is run, written, renamed aside or logged."""
+    import hashlib
+    calls = []
+    real_run, real_spawn = S.Sup.probe_run, S.spawn_detached
+    S.Sup.probe_run = lambda *a, **k: calls.append('probe_run') or real_run(*a, **k)
+    S.spawn_detached = lambda *a, **k: calls.append('spawn') or real_spawn(*a, **k)
+    try:
+        for upto in (202, 201, 200, 150):
+            with tempfile.TemporaryDirectory() as tmp:
+                p, keep = P.setup(tmp)
+                before = tree_state(tmp)
+                rc, out = AJ.quiet(P.probe, p, keep, upto=upto)
+                assert rc == 3 and 'early window' in out and '202 and 203' in out and f'--upto {upto}' in out and 'step+3' in out, (upto, rc, out)
+                assert tree_state(tmp) == before, f'--upto {upto}: the refusal changed files'
+                assert calls == [] and no_probe_files(tmp)
+        # an earlier report is not moved aside by the refusal (a good probe first, then the refused one)
+        with tempfile.TemporaryDirectory() as tmp:
+            p, keep = P.setup(tmp)
+            assert probe_out(p, keep)[0] == 0
+            calls.clear()
+            before = tree_state(tmp)
+            rc, out = AJ.quiet(P.probe, p, keep, upto=202)
+            sd = Path(json.loads(p.read_text())['state_dir'])
+            assert rc == 3 and tree_state(tmp) == before and not list(sd.glob('PROBE-RESUME-*.aside-*')) and calls == [], (rc, sorted(sd.glob('PROBE-RESUME-*.aside-*')))
+            # the refusal comes first: even where an exit-2 reason also holds (the run armed and not finished), the answer is 3 and nothing is touched
+        with tempfile.TemporaryDirectory() as tmp:
+            p, keep = P.setup(tmp, armed=True)
+            before = tree_state(tmp)
+            assert AJ.quiet(P.probe, p, keep, upto=202)[0] == 3 and AJ.quiet(P.probe, p, keep)[0] == 2 and tree_state(tmp) == before
+        # the smallest computable window: --upto step+3 runs
+        with tempfile.TemporaryDirectory() as tmp:
+            p, keep = P.setup(tmp)
+            rc, out = AJ.quiet(P.probe, p, keep, upto=203)
+            rep = P.report(p)
+            assert rc == 0 and rep['steps'] == [201, 202, 203] and 'early_max' in rep and rep['early_limit'] == S.EARLY_LIMIT and calls, (rc, out)
+    finally:
+        S.Sup.probe_run, S.spawn_detached = real_run, real_spawn
+    assert 'exit 3' in S.__doc__.split('"""')[0] or 'early window' in S.__doc__
+    assert 'Exit 0 PASS, 1 FAIL, 2 refused' in S.probe_resume.__doc__ and '3 refused' in S.probe_resume.__doc__
+    print('ok probe-resume --upto < step+3: exit 3, message names updates 202 and 203, no file written / renamed / logged, no probe started (also before the exit-2 reasons); --upto step+3 runs')
+
+
+def t_early_not_computable_verdict():
+    """(b) resume_probe_verdict on lists of under 3 updates emits no early keys; md_probe prints no early line; verdict and every old key are the original's."""
+    rng = random.Random(7)
+    for L in (1, 2):
+        for _ in range(50):
+            C = [rng.uniform(1, 5) for _ in range(L)]
+            R1 = [c + rng.uniform(-0.3, 0.3) for c in C]
+            R2 = [c + rng.uniform(-0.3, 0.3) for c in C]
+            old, new = O.resume_probe_verdict(C, R1, R2), S.resume_probe_verdict(C, R1, R2)
+            assert not {'early_max', 'early_limit', 'early_verdict'} & set(new), new
+            assert json.dumps(old, sort_keys=True) == json.dumps({k: new[k] for k in old}, sort_keys=True) and old['verdict'] == new['verdict']
+            r = dict(job='g2fa4', step=200, upto=200 + L, keep='k', why_fail=[], resume_warnings={}, steps=list(range(201, 201 + L)), C=C, R1=R1, R2=R2, **new)
+            md = S.Sup.md_probe(r)
+            assert 'early' not in md.lower() and 'P1b' not in md and 'recorded beside' in md, md
+            json.dumps(r)
+    # a None early_max (a hand-made or older report) prints no line either
+    assert 'early window' not in S.Sup.md_probe(dict(r, early_max=None, early_limit=0.005, early_verdict=None))
+    # three updates: computed and printed
+    C = [1.0, 2.0, 3.0]
+    new = S.resume_probe_verdict(C, [1.0, 2.001, 3.0], list(C))
+    md = S.Sup.md_probe(dict(job='g2fa4', step=200, upto=203, keep='k', why_fail=[], resume_warnings={}, steps=[201, 202, 203], C=C, R1=[1.0, 2.001, 3.0], R2=list(C), **new))
+    assert abs(new['early_max'] - 0.001) < 1e-12 and 'early window (the 2nd and 3rd probe updates = 202 and 203, P1b): max |R - C| = 0.001000' in md, md
+    print('ok resume_probe_verdict under 3 updates: no early keys, md_probe prints no early line, verdict and all old keys equal the original\'s (100 random 1- and 2-update lists); 3 updates: computed and printed')
+
+
+def t_early_not_computable_trace_a():
+    """(c) trace A with exactly 2 redone updates records and prints nothing about the early window; with 3 it records early_max; resume_early_abs keeps its hard failure below 3."""
+    for n_redone, keep_to in ((1, 101), (2, 102)):
+        ev = AJ.FakeEv(0.0, 0.003)
+        ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > keep_to)]
+        for rules in (RULES, dict(RULES, soft=['peak', 'resume_max_abs'])):
+            r = S.trace_a(ev, rules, 9000)
+            assert r['resume']['n_redone'] == n_redone and 'early_max' not in r['resume'], r
+            assert json.dumps(r, sort_keys=True) == json.dumps(O.trace_a(ev, rules, 9000), sort_keys=True), 'with no opt-in key the result is exactly the original\'s'
+            assert 'early' not in json.dumps(r).lower(), r
+        r = S.trace_a(ev, EARLY_ONLY, 9000)                                                 # opt-in: unchanged hard failure, and still no early_max
+        assert r['verdict'] == 'FAIL' and 'early_max' not in r['resume'] and r['why_fail'] == [f'early window cannot be checked: only {n_redone} redone update{"" if n_redone == 1 else "s"} (the 2nd and 3rd after the restore are needed)'], r
+    ev = AJ.FakeEv(0.0, 0.003)
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 103)]
+    r = S.trace_a(ev, RULES, 9000)
+    assert r['resume']['n_redone'] == 3 and abs(r['resume']['early_max'] - 0.003) < 1e-9 and r['verdict'] == 'PASS', r
+    assert S.trace_a(ev, EARLY_ONLY, 9000)['verdict'] == 'PASS'
+    print('ok trace A: 1-2 redone updates record no early_max and mention no early window (the result equals the original\'s; resume_early_abs still a hard failure); 3 redone updates record it')
+
+
+def t_early_agreement():
+    """(d) supervisor and rejudge_probe.py agree: the same 2-update probe data is refused by both with exit 3; with 3+ updates both compute the same early_max."""
+    with tempfile.TemporaryDirectory() as tmp:
+        p, keep = P.setup(tmp, main_extra=['--jitter', '0.01'])
+        rc, out = AJ.quiet(P.probe, p, keep)                                               # a real 50-update probe: the data
+        full = P.report(p)
+        assert rc in (0, 1) and len(full['C']) == 50 and full['early_max'] > 0, (rc, full.get('early_max'))
+        sd = Path(json.loads(p.read_text())['state_dir'])
+        # 2 updates of that very data
+        two = Path(tmp) / 'two'; two.mkdir()
+        f2 = write_probe(two, 'g2fa4', full['C'][:2], full['R1'][:2], full['R2'][:2], steps=full['steps'][:2], upto=202, early_limit=0.005)
+        rc_r, out_r = AJ.quiet(R.main, [str(f2)])
+        assert rc_r == 3 and 'at least 3 probe updates' in out_r and not list(two.glob('REJUDGE*')), (rc_r, out_r)
+        with tempfile.TemporaryDirectory() as tmp2:
+            p2, keep2 = P.setup(tmp2, main_extra=['--jitter', '0.01'])
+            before = tree_state(tmp2)
+            rc_s, out_s = AJ.quiet(P.probe, p2, keep2, upto=202)                           # the supervisor path for a probe of those 2 updates
+            assert rc_s == 3 and tree_state(tmp2) == before, (rc_s, out_s)
+        assert rc_s == rc_r == 3
+        # 1 update: both refuse as well
+        f1 = write_probe(two, 'one', full['C'][:1], full['R1'][:1], full['R2'][:1], upto=201)
+        assert AJ.quiet(R.main, [str(f1)])[0] == 3
+        # 3 and more updates: the same early_max from the two paths
+        for k in (3, 4, 10, 50):
+            sv = S.resume_probe_verdict(full['C'][:k], full['R1'][:k], full['R2'][:k])
+            fk = write_probe(Path(tmp), f'k{k}', full['C'][:k], full['R1'][:k], full['R2'][:k], steps=full['steps'][:k], upto=200 + k)
+            rc_k, _ = AJ.quiet(R.main, [str(fk)])
+            j = json.loads((Path(tmp) / f'REJUDGE-k{k}.json').read_text())
+            assert rc_k in (0, 1, 2) and j['early_max'] == sv['early_max'] and j['early_ok'] == (sv['early_verdict'] == 'PASS') and j['early_limit'] == sv['early_limit'], (k, j['early_max'], sv['early_max'])
+        # and the real supervisor probe at the smallest window (--upto step+3) reproduces what rejudge computes from its own report
+        with tempfile.TemporaryDirectory() as tmp3:
+            p3, keep3 = P.setup(tmp3, main_extra=['--jitter', '0.01'])
+            rc3, _ = AJ.quiet(P.probe, p3, keep3, upto=203)
+            rep = P.report(p3)
+            pj = Path(json.loads(p3.read_text())['state_dir']) / 'PROBE-RESUME-g2fa4.json'
+            rc_j, _ = AJ.quiet(R.main, [str(pj)])
+            j = json.loads((pj.parent / 'REJUDGE-g2fa4.json').read_text())
+            assert len(rep['C']) == 3 and rc_j in (0, 1, 2) and j['early_max'] == rep['early_max'] > 0 and j['early_ok'] == (rep['early_verdict'] == 'PASS'), (rep['early_max'], j['early_max'])
+    print('ok agreement: the same 1- and 2-update data is refused by probe-resume (exit 3, nothing touched) and by rejudge_probe.py (exit 3, nothing written); from 3 updates both give the same early_max (3, 4, 10, 50 updates, and a real --upto step+3 probe)')
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
             t_trace_a_mean_routing, t_installer_soft_mean, t_rejudge_cases, t_rejudge_cli,
             t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
             t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
-            t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged]
+            t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged, t_early_not_computable_probe, t_early_not_computable_verdict, t_early_not_computable_trace_a, t_early_agreement]
     only = sys.argv[1:]
     try:
         for t in todo:

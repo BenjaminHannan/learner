@@ -12,7 +12,8 @@
   python g2fa4_supervisor.py disarm      renames ARMED.txt: the loop leaves; a running job goes on
   python g2fa4_supervisor.py halt        disarm + stop the plan's runners (their checkpoints stay): only on Ben's word
   python g2fa4_supervisor.py probe-resume --keep DIR --step 200 --upto 250   after the run: resume the kept checkpoint twice on the idle card, compare with the run's own updates
-                                         (refuses a checkpoint whose sidecar accum / step is not the job's)
+                                         (exit 0 PASS, 1 FAIL, 2 refused: e.g. a checkpoint whose sidecar accum / step is not the job's, 3 refused: --upto < step+3, the early window
+                                         (updates step+2 and step+3) cannot be computed; nothing is run or written)
   python g2fa4_supervisor.py selftest    CUDA check in this very context (the boot task runs as SYSTEM): writes selftest.txt
 
 It starts nothing by itself: `run` does nothing until ARMED.txt exists, which the Mac helper writes (`arm`) on Ben's go line; after that the boot task
@@ -276,7 +277,8 @@ def mean(xs):
 def trace_a(ev, rules, max_used_mib):
     """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
     Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
-      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it (r['resume']['early_max'] is recorded whenever there are 2 redone updates, rule or not);
+      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it (r['resume']['early_max'] is recorded whenever there are at least 3 redone updates, rule or not; with fewer the early window
+        is not computed and nothing about it is recorded: ruling Q95, a gate never reports a check it did not compute);
       resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
         which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
       With resume_early_abs set, fewer than 3 redone updates is a hard failure too (the 2nd and 3rd cannot both be checked). resume_first_diff keeps its value (a bar, not changed here)."""
@@ -324,13 +326,13 @@ def trace_a(ev, rules, max_used_mib):
             if max(d) > rules['resume_max_abs']:
                 miss('resume_max_abs', f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
             # Amendment 1 (PREREG-trace-a2.md): the loss of the first redone update is a forward pass before the optimizer step, so lost optimizer state / an lr offset first show at the 2nd and 3rd redone updates
-            if len(d) >= 2:
+            if len(d) >= 3:                                                                       # the early window = the 2nd AND 3rd redone update; with fewer it is not computed, not recorded (ruling Q95)
                 early = list(zip(common[1:3], d[1:3]))
-                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when there are 2 redone updates)
+                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when there are 3 redone updates)
                 lim = rules.get('resume_early_abs')
                 if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
                     worst = max(early, key=lambda t: t[1])[0]
-                    r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd{" and 3rd" if len(early) > 1 else ""} after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
+                    r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd and 3rd after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
             if rules.get('resume_early_abs') is not None and len(d) < 3:                          # opt-in, hard: with fewer than 3 redone updates the 2nd and 3rd cannot both be checked
                 r['why_fail'].append(f'early window cannot be checked: only {len(d)} redone update{"" if len(d) == 1 else "s"} (the 2nd and 3rd after the restore are needed)')
             fields = rules.get('resume_exact_fields')
@@ -415,8 +417,9 @@ def resume_probe_verdict(C, R1, R2):
     of the probe, rejudge_probe.py): first_r1_c / first_r2_c / first_r1_r2 = the differences at the first probe update (exactly 0 when the restore is complete: the forward pass of the first update is deterministic),
     Dbar = mean(mean_abs_r1_c, mean_abs_r2_c), Nbar = mean_abs_r1_r2, ratio = Dbar / Nbar (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0),
     mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance).
-    Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|) (None with under 2 updates),
-    early_limit = 0.005, early_verdict = PASS if early_max <= early_limit (None with under 2 updates)."""
+    Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|),
+    early_limit = 0.005, early_verdict = PASS if early_max <= early_limit. The window needs at least 3 updates (ruling Q95, as in rejudge_probe.py): with fewer the three keys are ABSENT from the result
+    (not None, not computed), and md_probe prints no early-window line for it."""
     assert len(C) == len(R1) == len(R2) and C, 'the three loss lists must have the same non-zero length'
     d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
     n, d = max(d12), max(d1 + d2)
@@ -428,8 +431,9 @@ def resume_probe_verdict(C, R1, R2):
     mlim = max(0.02, 2 * nbar)
     out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
                mean_form_verdict='PASS' if dbar <= mlim else 'FAIL', lag1_autocorr=lag1_autocorr([x - y for x, y in zip(R1, R2)]))
-    em = max(max(d1[i], d2[i]) for i in (1, 2) if i < len(C)) if len(C) >= 2 else None
-    out.update(early_max=em, early_limit=EARLY_LIMIT, early_verdict=None if em is None else 'PASS' if em <= EARLY_LIMIT else 'FAIL')
+    if len(C) >= 3:
+        em = max(d1[1], d2[1], d1[2], d2[2])
+        out.update(early_max=em, early_limit=EARLY_LIMIT, early_verdict='PASS' if em <= EARLY_LIMIT else 'FAIL')
     return out
 
 
@@ -1199,7 +1203,12 @@ def keep_guard(job, step, side, queue_text, main_hashes):
 
 
 def probe_resume(a):
-    """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused."""
+    """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused (the existing reasons),
+    3 refused because the early window (updates step+2 and step+3) cannot be computed: --upto < step+3 (ruling Q95; rejudge_probe.py refuses a probe with under 3 updates the same way).
+    The exit-3 check is the first thing done: nothing is started, written, renamed aside or logged."""
+    if a.upto - a.step < 3:
+        print(f'refused (exit 3): the early window (updates {a.step + 2} and {a.step + 3}) cannot be computed with --upto {a.upto} < step+3 = {a.step + 3}; use --upto {a.step + 3} or more. Nothing was run or written.')
+        return 3
     sup = Sup(a.plan)
     job = next((j for j in sup.plan['jobs'] if a.job == j['id'] or (a.job is None and not j.get('skip'))), None)          # without --job: the first job that is not skipped
     if job is None:

@@ -7,7 +7,7 @@ ok an accum resume_warning in a probe's events -> FAIL, not judged; another warn
 ok verdict fields: first-update gaps, Dbar, Nbar, ratio, mean-form limit and verdict (a spike fails the registered rule, passes the mean form)
 ok Nbar = 0: ratio inf when Dbar > 0, 1.0 when both are 0; lag-1 undefined without variance
 ok lag-1 autocorrelation: alternating -5/6, trend ~ +1, white noise ~ 0, undefined for < 3 points / no variance
-ok `verdict` and every old key identical to the original pack function over 1000 random traces (824 PASS, 176 FAIL); only the 12 new keys are added (9 mean-form + 3 early-window)
+ok `verdict` and every old key identical to the original pack function over 1000 random traces (824 PASS, 176 FAIL); only the new keys are added (9 mean-form, + 3 early-window when there are >= 3 updates)
 ok md_probe: the "recorded beside (pre-registered mean form, not the registered gate)" section after the table; old-format reports still render; inf ratio renders
 ok trace A: resume_mean_abs is hard unless listed in rules.soft (then recorded in soft_misses); first-update, NaN, loss-falls hard in every variant; no soft list or the existing soft list = the original behaviour
 ok installer --soft-trace-a-mean: only with --soft-trace-a; entry soft = [peak, resume_max_abs, resume_mean_abs]; check changes nothing; idempotent; the three variants are never mixed; defaults unchanged
@@ -16,7 +16,7 @@ ok rejudge_probe.py: verbatim text in docstring and output, REJUDGE-<job>.json, 
 ok trace A early window: resume_early_abs absent = the original result (+ early_max recorded); 2nd-3rd redone updates only; names the updates; just under/over 0.005; hard even if named in soft; 1-2 redone updates
 ok trace A exact fields: lr / rounds / plan_* equal at the first redone update or FAIL (hard, names the field and values); only the first update; prefix vs name; losses untouched
 ok trace A exact fields, missing = hard failure: a listed name absent from either/both lines, a prefix matching no key or different keys; recorded in exact_missing, hard even if named in soft; no rule / empty list: nothing required
-ok probe verdict early window: early_max over probe updates 2-3 of both resumes, limit 0.005, verdict; the registered verdict is unchanged; None below 2 updates
+ok probe verdict early window: early_max over probe updates 2-3 of both resumes, limit 0.005, verdict; the registered verdict is unchanged; absent below 3 updates
 ok installer --trace-a-early: opt-in, only with --add-job g2fa8, entry gets resume_early_abs 0.005 and resume_exact_fields [lr, rounds, plan_] (copied), check changes nothing, idempotent, installed rules act; all 6 variants (strict/soft/soft+mean x early) are mutually refused, never mixed; defaults unchanged
 ok rejudge amended reading: INSIDE / UNRESOLVED (window) / UNRESOLVED_CALIBRATE (P2, P3 or ratio fails) / OUTSIDE by P1 / OUTSIDE by P1b (2nd and 3rd update, both resumes, 0.005 boundary); original reading recorded beside
 ok rejudge --calibration: 6 pairwise means, L = max(0.02, 2 x largest), Dbar4; INSIDE / UNRESOLVED (window) / OUTSIDE (Dbar4 > L, boundary); R3/R4 P1 and P1b; file mismatches -> exit 3; docstring has the original text then the amendment
@@ -24,8 +24,12 @@ ok probe-resume: an earlier PROBE-RESUME-<job>.json and .md are moved aside (.as
 ok rejudge --calibration is applied only to UNRESOLVED_CALIBRATE; INSIDE / UNRESOLVED (window) / OUTSIDE (P1, P1b) keep the two-resume verdict, calibration None, calibration_not_applied + printed note; clarification verbatim
 ok rejudge --calibration refuses (exit 3, names the calibration file, writes nothing): same path (also symlink / ..), same content (copy, reformatted), R1/R2 equal in either order; one repeated resume is accepted
 ok rejudge: an existing REJUDGE-<job>.json is moved to .aside-<stamp> before the new reading (first reading kept, also within one second); a refused reading leaves it alone
-ok trace A: resume_early_abs with under 3 redone updates is a hard failure naming the count; early_max still recorded from 2
+ok trace A: resume_early_abs with under 3 redone updates is a hard failure naming the count; early_max is not recorded below 3
 ok EARLY_LIMIT has one definition: installer reads it from the supervisor file (parse cases, another number in a copied pair), rejudge default == supervisor, early computation agrees on 500 random inputs, rejudge uses the probe JSON's early_limit (default only for old format; bad value / differing calibration limit -> exit 3)
 ok rejudge: errors from the --calibration file (unreadable, not JSON, wrong types / lengths, KeyError, TypeError, AttributeError, mismatches) are reported as "cannot use --calibration <that file>: ..." with exit 3; the first probe's errors still name the probe
 ok rejudge: p23_ok = exch_ok and p3 gives the same p23_ok and the same verdict as the old formula over 3000 random traces {'INSIDE healthy noise': 867, 'OUTSIDE': 1179, 'UNRESOLVED': 785, 'UNRESOLVED_CALIBRATE': 169}
-GATEFIX TESTS OK (30 tests)
+ok probe-resume --upto < step+3: exit 3, message names updates 202 and 203, no file written / renamed / logged, no probe started (also before the exit-2 reasons); --upto step+3 runs
+ok resume_probe_verdict under 3 updates: no early keys, md_probe prints no early line, verdict and all old keys equal the original's (100 random 1- and 2-update lists); 3 updates: computed and printed
+ok trace A: 1-2 redone updates record no early_max and mention no early window (the result equals the original's; resume_early_abs still a hard failure); 3 redone updates record it
+ok agreement: the same 1- and 2-update data is refused by probe-resume (exit 3, nothing touched) and by rejudge_probe.py (exit 3, nothing written); from 3 updates both give the same early_max (3, 4, 10, 50 updates, and a real --upto step+3 probe)
+GATEFIX TESTS OK (34 tests)
