@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 
 from scripts import span_stage0
+from premonition import span_cards
 from tests.test_premonition_model import synthetic_batch
 from tests.test_premonition_span_cards import plain_model, span_model
 
@@ -53,8 +54,8 @@ class BranchCheckTest(unittest.TestCase):
 
     def test_wrong_card_values_fail_when_the_natural_pass_never_fetches(self) -> None:
         """Review finding 2: with weights that never ASK, identical answers did not exercise the cards. Here the
-        natural pass fetches nothing and matches exactly (the old check passed this pair); the value check and the
-        eager pass (which fetches on every loop, and whose halt logits read the card values) both fail it."""
+        natural pass fetches nothing and matches exactly (the old check passed this pair); the direct value check
+        fails it, and the eager pass does fetch."""
         line, span = pair()
         with torch.no_grad():
             line.heads.ask.bias.fill_(-20.0)                        # the natural pass never fetches a card
@@ -64,10 +65,7 @@ class BranchCheckTest(unittest.TestCase):
         self.assertEqual(check["natural"]["differing"], 0)
         self.assertFalse(check["passed"])
         self.assertIn("card keys or values", check["reasons"])
-        self.assertIn("answers (eager)", check["reasons"])
         self.assertGreater(check["eager"]["cards_fetched"], 0)
-        self.assertGreater(check["eager"]["max_halt_logit_diff"], span_stage0.TOLERANCE)
-        self.assertGreater(check["eager"]["differing"], 0)          # halt-logit gaps count as differing answers
         self.assertGreaterEqual(check["value_scale"], 1.0)
 
     def test_a_wrong_layout_fails_on_line_alignment(self) -> None:
@@ -105,6 +103,27 @@ class BranchCheckTest(unittest.TestCase):
         check = span_stage0.branch_check(line, span, batches(), DEVICE)
         self.assertTrue(check["passed"], check["reasons"])
         self.assertEqual(check["eager"]["questions_fetching"], check["eager"]["questions"])
+
+
+    def test_halt_probabilities_are_compared_in_probability_space(self) -> None:
+        """Fifth review, finding 1: float32 halt probabilities near 1 turned one ulp into a large logit gap. A one-ulp
+        difference at p = 1 - 1e-6 must not count as a differing answer."""
+        class Fixed:
+            def __init__(self, prob):
+                self.prob = prob
+
+            def answer(self, batch):
+                count = 3
+                return span_cards.Answers(torch.zeros(count, 4, dtype=torch.long), torch.ones(count, dtype=torch.long),
+                                          torch.ones(count, dtype=torch.long), torch.zeros(count, 2, dtype=torch.long),
+                                          torch.zeros(count, 5, dtype=torch.bool), self.prob)
+        near = torch.full((3,), 1 - 1e-6, dtype=torch.float32)
+        ulp = torch.nextafter(near, torch.ones_like(near))
+        same = span_stage0.compare_answers(Fixed(near), Fixed(ulp), [None])
+        self.assertTrue(same["identical"])
+        self.assertEqual(same["differing"], 0)
+        apart = span_stage0.compare_answers(Fixed(near), Fixed(near - 0.01), [None])
+        self.assertFalse(apart["identical"])
 
 
 class GateTest(unittest.TestCase):
