@@ -171,3 +171,49 @@ unchanged since the seal commit f317420f9.
 - **Box plan after a pass:** see `06-stage0-report.md`. On-demand only; the remaining budget is $0.411 after
   attempt 1 ($0.089, unreviewed script, stopped on Q129, no readout, does not count); there is a watchdog
   destroy, and I stop and come back if a rerun cannot fit.
+
+## Stage 0 script: built-in review (coordinator ruling after the Q129 read, 2026-10-18)
+The coordinator read draft b045f55c4 (sha256 1066b2c8...) and found the Q129 conditions met. The last gate before
+the rerun was the built-in `/code-review` on `scripts/span_stage0.py`, with blocking findings fixed and
+regression-tested. The rerun releases when the review shows no blocking finding and the filed hash matches the
+reviewed version. The review ran nine times; each round's blocking findings were fixed before the next. Several
+blocking findings in later rounds were regressions introduced by my own earlier fixes, and the table says so.
+
+| Round | Reviewed | Blocking (my classification) | Fixed in |
+|---|---|---|---|
+| 1 | b045f55c4 | the `strict=False` load was never checked; identical `answer()` could pass without one card fetched; key differences were only logged | 2dd23bd82 (load check; an always-ASK pass that must fetch; key and value tolerance in `passed`) |
+| 2 | 2dd23bd82 | with HALT left natural, the always-ASK pass could fetch nothing after training; GPU float near-ties could stop a correct run | 848b5fc6b (HALT saturated in the eager pass; the strict check runs on CPU, where the two pool codes are bit-identical; GPU answer differences reported) |
+| 3 | 848b5fc6b | `branch_gate` had no `reasons`, so a failed gate raised KeyError and never named the failed condition | 527dc1d0e (also: GPU flips bounded at 1% of questions; smoke finiteness enforced) |
+| 4 | 527dc1d0e | the smoke could pass without reaching the own phase; GPU halt gaps escaped the flip bound; an absolute value tolerance could fail trained cards | 4b88a6ffa |
+| 5 | 4b88a6ffa | (regressions of round 4) float32 halt compared in logit space would count one-ulp noise as flips; the smoke's stop test was too strict | f8fc53e30 |
+| 6 | f8fc53e30 | (a regression of round 5) GPU halt differences went unchecked | 95cce469f (an ulp-aware relative halt rule) |
+| 7 | 95cce469f | (regressions of round 6) an uncapped smoke could outlast the box watchdog and lose the branch readout; the saturated eager HALT was counted as flips | ab17419f5 (the final branch check now runs before the smoke) |
+| 8 | ab17419f5 | none | 5b9033460 (all 10 non-blocking items fixed anyway) |
+| **9** | **5b9033460** | **none** | not changed: the script is frozen at the reviewed hash |
+
+**Verdict: NO BLOCKING FINDING** on 5b9033460 (my classification). The round-9 items, all deferred to the Stage 1
+run script:
+- the smoke's reserved-memory baseline keeps cached blocks from the branch check. That over-states the smoke's
+  reserved memory; it could only trip the 14 GiB guard if those blocks alone exceeded it, and a no-gradient
+  `answer()` pass caches less than the training steps did;
+- the docstring and `--smoke-seconds` help are stale about the smoke cap (1.5x the estimate can exceed
+  `--smoke-max-seconds`) and about usage errors, which now exit 2 before the log protocol starts;
+- the combined argument-error message mis-names `--warm`;
+- `branch_gate` moves the caller's models to the CPU and back in place, not through state-dict copies;
+- the data timing's "inside one epoch" guard fails when an epoch has fewer than 3 batches (the defaults give about
+  70);
+- the epoch batch count copies `pdata.batches`' RNG protocol; the dev batches copy `pdata.batches(seed=None)`.
+
+**Filed for the rerun:** `scripts/span_stage0.py` at **5b903346086906a05c225cb7f462afec905708c5**, sha256
+**011336f99d6df2c086cf76c1690d4285219fe233471a3438046b99a3ef838d13** (the version reviewed in round 9). The
+box fetches that exact commit and refuses to run if the script's hash differs. The sealed code it imports is
+unchanged since the seal commit f317420f9. Tests: `tests/test_span_stage0.py`, 15 tests. Each blocking fix has
+a test, and the round-1 tests were shown to fail under b045f55c4's rule.
+
+What the script now checks at the branch point: SPAN is loaded from LINE with only the three gate weights
+missing; there are cards, and `valid == card_end`; keys within 1e-4 and values within 1e-4 of their scale;
+`answer()` is identical in a natural pass (exact fields, plus halt probability by an ulp-aware relative rule) and
+in an always-ASK, never-HALT pass that fetches cards for every question; and `card_economy.line_aligned == 1`. All
+of this is strict on CPU. On GPU the structure must also hold, and answer differences may touch at most 1% of
+questions. The check runs as a pre-flight on fresh weights (a failure stops the run before any timing) and again
+after the timing steps, before the smoke.
