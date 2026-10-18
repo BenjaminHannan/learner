@@ -93,6 +93,28 @@ def rate_loss(start_rate: Any, gate_mean: Any, tokens_per_card: float) -> Any:
     return n / (n - 1.0) * ((n - 1.0) * start_rate * gate_mean + (1.0 - start_rate) * (1.0 - gate_mean))
 
 
+def hard_starts(cardable: torch.Tensor, after_wall: torch.Tensor, chosen: torch.Tensor, max_span: int
+                ) -> tuple[torch.Tensor, torch.Tensor]:
+    """(start, forced) [B, T] bool. A hard card starts at every wall start (cardable after a wall), every token the
+    gate chose, and `max_span` tokens after the last of those (the cap). `forced`: the starts that do not depend on
+    the gate's choice at that token, i.e. every wall start (also where the gate fires: after a question line's
+    newline p is ~0.98) and every cap position, also one the gate chose (it would start there anyway)."""
+    wall = cardable & after_wall
+    first = chosen | wall
+    position = torch.arange(first.shape[1], device=first.device).expand_as(first)
+    last = torch.cummax(torch.where(first, position, torch.full_like(position, -1)), dim=1).values
+    run = position - last
+    cap = cardable & (run > 0) & (run % max_span == 0)
+    before = F.pad(last[:, :-1], (1, 0), value=-1)                                 # last such start before t
+    on_cap = chosen & (before >= 0) & ((position - before) % max_span == 0)
+    return first | cap, wall | cap | on_cap
+
+
+def soft_starts(lay: "Layout") -> torch.Tensor:
+    """[B, T] the soft start indicator of the rate loss: 1 at forced starts, the gate's p elsewhere."""
+    return torch.where(lay.forced, torch.ones_like(lay.p), lay.p)
+
+
 def layout_rate(lay: "Layout", tokens_per_card: float) -> torch.Tensor:
     """`rate_loss` of a hard layout over its cardable tokens. F counts every start: forced ones (walls, the cap) are
     cards of the layout and use up the budget. G is the soft count of starts: a forced start enters as a constant 1,
@@ -104,7 +126,7 @@ def layout_rate(lay: "Layout", tokens_per_card: float) -> torch.Tensor:
     if not bool(cardable.any()):
         return lay.p.sum() * 0.0
     start_rate = lay.start[cardable].float().mean().detach()
-    gate_mean = torch.where(lay.forced, torch.ones_like(lay.p), lay.p)[cardable].mean()
+    gate_mean = soft_starts(lay)[cardable].mean()
     return rate_loss(start_rate, gate_mean, tokens_per_card)
 
 
@@ -130,7 +152,7 @@ class Layout:
     logit: torch.Tensor         # float: gate logit (gradient reaches only the gate parameters)
     p: torch.Tensor             # float: sigmoid(logit)
     start: torch.Tensor         # bool: a hard card starts here
-    forced: torch.Tensor        # bool: a start the gate cannot change (every wall start, the cap)
+    forced: torch.Tensor        # bool: a start the gate cannot change (`hard_starts`: every wall start, the cap)
 
 
 def soft_pool(hidden: torch.Tensor, score: torch.Tensor, stay: torch.Tensor, cardable: torch.Tensor,
@@ -288,15 +310,8 @@ class SpanCardWriter(CardWriter):
         logit = self.gate(torch.cat([previous, state], dim=-1)).squeeze(-1).float() \
             + self.newline_weight * after_newline.float()
         p = torch.sigmoid(logit)
-        chosen = cardable & (p.detach() > 0.5)
-        wall = cardable & after_wall
-        start = chosen | wall
-        position = torch.arange(width, device=hidden.device).expand(visits, width)
-        last = torch.cummax(torch.where(start, position, torch.full_like(position, -1)), dim=1).values
-        run = position - last
-        start = start | (cardable & (run > 0) & (run % span.max_span == 0))
-        # A wall start is forced even where the gate also fires (after a question line's newline p is ~0.98).
-        return Layout(cardable, after_wall, after_newline, logit, p, start, wall | (start & ~chosen))
+        start, forced = hard_starts(cardable, after_wall, cardable & (p.detach() > 0.5), span.max_span)
+        return Layout(cardable, after_wall, after_newline, logit, p, start, forced)
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> SpanCardStore:
         span = self.span
@@ -339,7 +354,7 @@ class SpanCardWriter(CardWriter):
         rate = layout_rate(lay, span.tokens_per_card)
 
         ents_seg, ents_over = self._entities(tokens, token_pos, seg, n_seg)
-        stats = self._stats(p, start, cardable, after_newline, n_seg, visits, ents_over)
+        stats = self._stats(p, soft_starts(lay), start, cardable, after_newline, n_seg, visits, ents_over)
 
         # Store tensors: a card lives at its end position.
         key_rows, value_rows = self.key(pooled), self.value(pooled)
@@ -393,15 +408,16 @@ class SpanCardWriter(CardWriter):
         return ents, ((first < never).sum(1) > MAX_LINE_ENTS).sum()
 
     @torch.no_grad()
-    def _stats(self, p: torch.Tensor, start: torch.Tensor, cardable: torch.Tensor, after_newline: torch.Tensor,
-               n_seg: int, visits: int, ents_over: torch.Tensor) -> dict[str, torch.Tensor]:
-        """Detached 0-d layout statistics of this forward, kept on the device (read on logged steps only)."""
+    def _stats(self, p: torch.Tensor, soft: torch.Tensor, start: torch.Tensor, cardable: torch.Tensor,
+               after_newline: torch.Tensor, n_seg: int, visits: int, ents_over: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Detached 0-d layout statistics of this forward, kept on the device (read on logged steps only).
+        `gate_mean` is the rate loss's G (`soft`: 1 at forced starts); `gate_mid` reads the gate's p itself."""
         n = cardable.sum().clamp_min(1).float()
         starts = start.sum().clamp_min(1).float()
         newline_tokens = (after_newline & cardable).sum().clamp_min(1).float()
         mid = (p > 0.4) & (p < 0.6) & cardable
         values = torch.stack([
-            start.sum() / n, (p * cardable).sum() / n, cardable.sum() / max(n_seg, 1),
+            start.sum() / n, (soft * cardable).sum() / n, cardable.sum() / max(n_seg, 1),
             (start & after_newline).sum() / starts, (start & after_newline & cardable).sum() / newline_tokens,
             mid.sum() / n, torch.tensor(n_seg / max(visits, 1), device=p.device), ents_over.float()])
         names = ("start_rate", "gate_mean", "tokens_per_card", "newline_precision", "newline_recall", "gate_mid",
@@ -764,5 +780,6 @@ def identity(span: SpanConfig, config: MiniConfig) -> dict[str, Any]:
 
 
 __all__ = ["SpanCardMini", "SpanCardStore", "SpanCardWriter", "SpanConfig", "SpanTrainer", "VARIANT",
-           "build_model", "card_economy", "card_stats_from_sets", "identity", "layout_card_stats", "layout_rate",
-           "log_stay", "matrix_gold_sets", "rate_loss", "soft_pool", "source_digest", "tokens_per_line"]
+           "build_model", "card_economy", "card_stats_from_sets", "hard_starts", "identity", "layout_card_stats",
+           "layout_rate", "log_stay", "matrix_gold_sets", "rate_loss", "soft_pool", "soft_starts", "source_digest",
+           "tokens_per_line"]

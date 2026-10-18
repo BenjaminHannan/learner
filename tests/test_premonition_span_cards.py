@@ -428,12 +428,10 @@ class RateLossTest(unittest.TestCase):
         batch = synthetic_batch(seed=1)
         model = span_model(0)
         model.train()
-        hidden = model.read(batch)
-        store = model.writer(hidden, batch)
-        lay = model.writer.layout(hidden, batch)
-        soft_starts = torch.where(lay.forced, torch.ones_like(lay.p), lay.p)[lay.cardable].mean()  # forced = 1
+        store = model.writer(model.read(batch), batch)
+        stats = store.stats
         self.assertAlmostEqual(float(store.rate.detach()),
-                               rate_loss(float(store.stats["start_rate"]), float(soft_starts),
+                               rate_loss(float(stats["start_rate"]), float(stats["gate_mean"]),
                                          model.span.tokens_per_card), places=5)
 
 
@@ -680,6 +678,36 @@ class RoundThreeRegressionTest(unittest.TestCase):
         start_rate = lay.start[lay.cardable].float().mean()
         rate_loss(start_rate, lay.p[lay.cardable].mean(), 12.0).backward()          # the old G
         self.assertGreater(float(lay.logit.grad[forced].abs().max()), 0.0)
+
+    def test_forced_means_the_start_does_not_depend_on_the_gate_there(self) -> None:
+        """Finding 1 (re-review): `forced` must hold exactly the starts that survive switching the gate off at that
+        token: every wall start, and a cap position even where the gate fired (the old rule missed both)."""
+        generator = torch.Generator().manual_seed(0)
+        old_misses = 0
+        for trial in range(40):
+            cardable = torch.rand(3, 30, generator=generator) > 0.15
+            after_wall = F.pad(~cardable[:, :-1], (1, 0), value=True)
+            chosen = cardable & (torch.rand(3, 30, generator=generator) < 0.3)
+            start, forced = span_cards.hard_starts(cardable, after_wall, chosen, 3)
+            self.assertFalse(bool((forced & ~start).any()))
+            for b, t in torch.nonzero(cardable).tolist():
+                off = chosen.clone()
+                off[b, t] = False
+                start_off, _ = span_cards.hard_starts(cardable, after_wall, off, 3)
+                self.assertTrue(torch.equal(start_off[b, :t], start[b, :t]))           # causal
+                self.assertEqual(bool(forced[b, t]), bool(start_off[b, t]), (trial, b, t))
+            old = (cardable & after_wall) | (start & ~chosen)                           # the 07e57591e/e2a50ff1f rule
+            old_misses += int((forced & ~old).sum())
+        self.assertGreater(old_misses, 0)                                               # chosen starts on the cap
+
+    def test_the_logged_gate_mean_is_the_rate_losss_g(self) -> None:
+        """Re-review: the logged `gate_mean` was the raw mean p, not the G of the rate loss."""
+        model, batch, lay = self.capped_layout()
+        store = model.writer(model.read(batch), batch)
+        g = span_cards.soft_starts(lay)[lay.cardable].mean()
+        self.assertAlmostEqual(float(store.stats["gate_mean"]), float(g), places=6)
+        self.assertAlmostEqual(float(store.rate), float(rate_loss(store.stats["start_rate"], g, 12.0)), places=5)
+        self.assertNotAlmostEqual(float(store.stats["gate_mean"]), float(lay.p[lay.cardable].mean()), places=3)
 
     def test_the_target_is_unchanged_and_has_no_pole(self) -> None:
         """Forced starts still use up the budget: dL/dG is zero exactly at cardable / N - forced chosen starts (the
