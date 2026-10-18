@@ -224,4 +224,15 @@ spend since the $32.588 baseline covers both attempts and every box, and everyth
 stop $18). Spend at 19:53Z was $0.817.
 
 ### Attempt 2 outcomes
-(filed per seed as the boxes report: pre-flight pass or fail at step 1,000, then the readout)
+(filed per seed as the boxes report)
+
+**Seed 0 (56611901): strengthened pre-flight PASSED.**
+- Boot 20:12:54Z; `S1BOX-ALLOC PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`; commit 707bdce90; script hash checked.
+- Data: train a53ab45b..., validation 762082f1..., N 11.155539, identical to the seal.
+- Old 12-batch pre-flight, now with the setting: rung 0 fits. Peak reserved / allocated: LINE 9.44 / 8.33,
+  SPAN 9.90 / 9.70, stress 9.90 / 9.73 GB. In attempt 1 the same box class reserved up to 1.94x allocated; here the
+  reserve is within 0.2 GB of allocated.
+- Go accepted at t = 435.5 s: rung 2 (40,000, 35).
+- **Step 1,000 at t = 514.7 s, no `MemoryGuardError`** (20 guard checks clean, limit 14.00 GiB). Gold loss 1.109,
+  train answer accuracy 0.693. `nvidia-smi` memory.used (whole card) during the parent: 4.1-6.1 GB. The run
+  continues to the full run, as Q159 releases it.
