@@ -325,4 +325,5 @@ Economy after the arm: line layout, line_aligned 1, asked rate 0.827, 4.05 fetch
 0.513, full gold fetched 0.527.
 
 **SPAN arm:** started at t = 6,422.9 s from P_0 (step 3,487, share 0.0500; at the branch 11.16 tokens per card,
-line_aligned 1). The arm probe is due at global step 5,000.
+line_aligned 1). **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,513 arm steps, t = 6,755.7 s) with no
+guard error. The arm continues.
