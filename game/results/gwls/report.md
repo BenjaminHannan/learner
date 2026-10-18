@@ -11,8 +11,9 @@
 | 5 | 7.338 | 5.735 | 40.0 | 306 | 115 | 62 | 99.19 | 43.21 | 2.296 | 856 | 312 | 0.3645 | 0.2742 | 0.4716 |
 | 6 | 7.445 | 5.59 | 37.8 | 316 | 109 | 33 | 106.16 | 19.96 | 5.319 | 520 | 324 | 0.6231 | 0.2461 | 0.5016 |
 | 7 | 7.327 | 5.25 | 28.5 | 284 | 98 | 76 | 83.3 | 64.6 | 1.289 | 823 | 285 | 0.3463 | 0.2456 | 0.4767 |
+| 8 | 7.003 | 4.782 | 23.0 | 261 | 90 | 55 | 76.12 | 47.91 | 1.589 | 497 | 262 | 0.5272 | 0.2134 | 0.4656 |
 
-ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok; r6 gap 9.7e-05 <= bound 0.002084: ok; r7 gap 0.000474 <= bound 0.000678: ok
+ratio_w consistency (unrounded ratio vs the census file's rounded one; non-fatal): r1 gap 0.000337 <= bound 0.000825: ok; r2 gap 0.000274 <= bound 0.0007: ok; r3 gap 0.000576 <= bound 0.000933: ok; r4 gap 6.8e-05 <= bound 0.001326: ok; r5 gap 0.000465 <= bound 0.000882: ok; r6 gap 9.7e-05 <= bound 0.002084: ok; r7 gap 0.000474 <= bound 0.000678: ok; r8 gap 0.000236 <= bound 0.000771: ok
 
 ## seed 201  (round-1 non-habit reference 5.87)
 
