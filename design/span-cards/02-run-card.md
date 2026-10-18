@@ -1,8 +1,10 @@
 # Run card SC-1: span cards vs per-line cards (pre-registered)
 
-Status: DRAFT. Terms confirmed by the coordinator (Q21, 2026-10-17). It may be sealed once the Q20 code
-review passes on the whole draft (including `premonition/span_cards.py`). **No run is booked or started.** Training needs the coordinator's gate
-(see `03-funding-bid.md`). Bars, predictions and guards below are fixed now, before any run. After the
+Status: **SEALED 2026-10-18** (`05-seal.md` holds the hashes). Terms confirmed by the coordinator (Q21,
+2026-10-17); the Q20 code review passed (review log, round 4: no blocking finding on bd28adcd7). The
+data-dependent items of section 9 (N, the cache files, the Stage 1 run script) are sealed in an addendum
+before any arm runs. **No registered run has started.** Training needs the coordinator's gate
+(see `03-funding-bid.md`); only Stage 0 (a measurement, not a registered run) is booked. Bars, predictions and guards below are fixed now, before any run. After the
 coordinator approves this card, it is sealed (`shasum -a 256` of this file plus every code file in section 9)
 before the first registered run. Nothing in it may change after sealing; a FAIL gets exactly one
 diagnosis-driven follow-up (house rule).
@@ -41,11 +43,13 @@ as written, with the primary ruler fixed as `far`.
   - LINE: P_s continued unchanged.
   - SPAN: `SpanCardMini` loaded from P_s (the gate is new; every other weight is P_s's).
     `SpanConfig(enabled=True, max_span=64, newline_prior=8.0, base_logit=-4.0, w_rate=0.03,
-    newline_id=<"\n" id of the v2 tokenizer>, tokens_per_card=N)`, where
+    newline_id=23, tokens_per_card=N)`, where
     **N = `span_cards.tokens_per_line(train cache)`**. N is computed once and written into this card's sealed
     addendum before any arm runs. Pilot measurement (2026-10-17, this session): **11.17** on a label-free v2
     cache of 256 freshly generated train visits (seed 0, one shard, 23,075 non-question lines, visits about
     1,149 tokens and about 99 lines). This keeps SPAN's average card count equal to LINE's.
+  `newline_id = 23` is `"\n"` in `premonition-tok-v2-fallback` (`tokenizer.encode("\n") == [23]`, checked
+  2026-10-18; Stage 0 checks it again on the box and stops if it differs).
 - **Pairing:** the same P_s, the same batch order (data seed s), the same trainer generator seed s, and the
   same budget F. Each arm is charged by its own `calibrate()` FLOP fit (the house convention: every contender
   is charged in FLOPs).
