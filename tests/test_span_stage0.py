@@ -67,6 +67,8 @@ class BranchCheckTest(unittest.TestCase):
         self.assertIn("answers (eager)", check["reasons"])
         self.assertGreater(check["eager"]["cards_fetched"], 0)
         self.assertGreater(check["eager"]["max_halt_logit_diff"], span_stage0.TOLERANCE)
+        self.assertGreater(check["eager"]["differing"], 0)          # halt-logit gaps count as differing answers
+        self.assertGreaterEqual(check["value_scale"], 1.0)
 
     def test_a_wrong_layout_fails_on_line_alignment(self) -> None:
         line, span = pair(max_span=3)                               # the cap splits every line

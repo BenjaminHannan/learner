@@ -9,10 +9,12 @@ back, so partial results survive a stop):
    N = `span_cards.tokens_per_line(train cache)` at this size.
 2. timing: seconds per training step for LINE (`MiniTrainer`) and SPAN (`SpanTrainer`, loaded from LINE's
    weights) in gold, teacher and own (p_own 0.75) mode on the same real batches (max_tokens 55,000, max_visits
-   48), after warm-up, with the FLOP fit; and one validation pass. Then the Stage 1 projection: steps per mode
-   from F = 3.15e16 and the curriculum shares, 3 parents (LINE, 5% of F) + Cell A (LINE and SPAN x 3 seeds x 95%).
-3. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps; losses must be finite
-   (checked at the end, after the final branch check, so a failure there still gets its branch readout).
+   48), after warm-up, plus tracked own-mode steps, with the FLOP fit; and train_d's validation hook per arm.
+   Then the Stage 1 projection: steps per mode from F = 3.15e16 and the curriculum shares, 3 parents (LINE, 5%
+   of F) + Cell A (LINE and SPAN x 3 seeds x 95%), each with its tracked steps and validations.
+3. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps; losses must be finite,
+   the own phase reached and the stop the FLOP budget (checked at the end, after the final branch check, so a
+   failure there still gets its branch readout).
 4. branch: `branch_gate` / `branch_check` (their docstrings have the pass conditions, `line_aligned == 1` among
    them; the strict check runs on CPU) on 64 DEV visits,
    with SPAN loaded from the LINE model as trained by the timing steps. The same check runs as a pre-flight on
@@ -46,7 +48,7 @@ from premonition import data as pdata, preprocess, span_cards                # n
 from premonition.config import MiniConfig                                     # noqa: E402
 from premonition.model import PremonitionMini                                 # noqa: E402
 from premonition.train import (MiniTrainer, Plan, budget_for_steps, mini_train_config, planned_loops,  # noqa: E402
-                               validate)
+                               validation_hook)
 
 F_BUDGET = 3.15e16                       # design/06 §4 (A's v2 budget run), the bid's F
 SHARES = {"gold": 0.05, "teacher": 0.25, "own": 0.70}   # Curriculum(): gold to 5%, teacher to 30%, own after
@@ -69,7 +71,7 @@ def build(work: Path, split: str, visits: int, workers: int) -> None:
     write_shards(split, visits, work, workers, seed=0, verbose=False)
 
 
-def time_steps(trainer: MiniTrainer, batches, plan: Plan, warm: int, timed: int) -> dict:
+def time_steps(trainer: MiniTrainer, batches, plan: Plan, warm: int, timed: int, track: bool = False) -> dict:
     device = trainer.device
     config = trainer.model.config
     seconds = []
@@ -77,7 +79,7 @@ def time_steps(trainer: MiniTrainer, batches, plan: Plan, warm: int, timed: int)
         loops = planned_loops(batch, plan.mode, config)
         sync(device)
         start = time.perf_counter()
-        out = trainer._train_step(batch, plan, loops, track=False)
+        out = trainer._train_step(batch, plan, loops, track=track)
         loss = float(out["loss"])
         sync(device)
         if not math.isfinite(loss):
@@ -85,21 +87,50 @@ def time_steps(trainer: MiniTrainer, batches, plan: Plan, warm: int, timed: int)
         if i >= warm:
             seconds.append(time.perf_counter() - start)
     seconds.sort()
-    return {"mean": sum(seconds) / len(seconds), "median": seconds[len(seconds) // 2], "max": seconds[-1],
-            "n": len(seconds)}
+    return {"tracked": track, "mean": sum(seconds) / len(seconds), "median": seconds[len(seconds) // 2],
+            "max": seconds[-1], "n": len(seconds)}
+
+
+def time_arm(arm: str, trainer: MiniTrainer, batches, args, device) -> dict:
+    """Seconds per untracked step in every mode, plus tracked own-mode steps (train_d tracks every 50th step: hooks,
+    InsertLog, card statistics), with peak GPU memory; each result is emitted as it comes."""
+    out = {}
+    runs = [(mode, plan, args.warm, args.timed, False) for mode, plan in PLANS.items()]
+    runs.append(("own_tracked", PLANS["own"], 0, 2, True))
+    for name, plan, warm, timed, track in runs:
+        if device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats()
+        out[name] = time_steps(trainer, batches, plan, warm, timed, track)
+        if device.type == "cuda":
+            out[name]["peak_gb"] = torch.cuda.max_memory_allocated() / 1e9
+        emit("timing", arm=arm, mode=name, **out[name])
+    return out
+
+
+def time_validation(trainer: MiniTrainer, dev, tokenizer, device) -> float:
+    """Seconds of train_d's validation hook (stop ids, under `Trainer.evaluate`'s read_only guard) over `dev`,
+    after a one-batch warm-up."""
+    stop = sorted(stop_ids(tokenizer)[0])
+    trainer.evaluate(validation_hook(dev[:1], tokenizer=tokenizer, stop=stop))
+    sync(device)
+    started = time.perf_counter()
+    trainer.evaluate(validation_hook(dev, tokenizer=tokenizer, stop=stop))
+    sync(device)
+    return time.perf_counter() - started
 
 
 GATE_KEYS = frozenset({"writer.gate.weight", "writer.gate.bias", "writer.newline_weight"})
-TOLERANCE = 1e-4          # card keys and values, and halt logits: float error between the two pool codes
+TOLERANCE = 1e-4          # float error between the two pool codes: card keys (unit length), card values (relative
+                          # to their largest magnitude, at least 1), halt logits
 ANSWER_FIELDS = ("tokens", "lengths", "loops", "first_top", "fetched")
 ANSWER_REASONS = ("answers (natural)", "answers (eager)")
 
 
 def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batches) -> dict:
-    """`answer()` of both models on every batch: questions compared, questions whose answer differs in any exact
-    field, the largest halt-logit difference (float64; it reads the fetched card contents even when greedy tokens
-    do not move, and resolves a saturated HALT), real (non-NULL) cards LINE fetched, and the questions that
-    fetched at least one real card."""
+    """`answer()` of both models on every batch: questions compared, questions whose answer differs (any exact field, or
+    a halt logit beyond `TOLERANCE`), the largest halt-logit difference (float64; it reads the fetched card contents
+    even when greedy tokens do not move, and resolves a saturated HALT), real (non-NULL) cards LINE fetched, and the
+    questions that fetched at least one real card."""
     questions = differing = fetched = covered = 0
     halt_diff = 0.0
     for batch in batches:
@@ -114,18 +145,20 @@ def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batche
             differ |= torch.ones_like(differ) if x.shape != y.shape else (x != y).reshape(count, -1).any(1)
         if a.halt_prob.shape != b.halt_prob.shape:
             halt_diff = math.inf
+            differ |= True
         else:
             gap = torch.logit(a.halt_prob.double()) - torch.logit(b.halt_prob.double())
             gap = gap.abs().nan_to_num(math.inf)
             gap = torch.where(a.halt_prob == b.halt_prob, torch.zeros_like(gap), gap)     # p = 1 in both: equal
             halt_diff = max(halt_diff, float(gap.max()))
+            differ |= gap.reshape(count, -1).amax(1) > TOLERANCE                         # a halt-logit gap differs
         real = a.fetched[:, :-1]
         questions += count
         differing += int(differ.sum())
         fetched += int(real.sum())
         covered += int(real.any(1).sum())
     return {"questions": questions, "differing": differing, "max_halt_logit_diff": halt_diff,
-            "identical": differing == 0 and halt_diff <= TOLERANCE, "cards_fetched": fetched,
+            "identical": differing == 0, "cards_fetched": fetched,
             "questions_fetching": covered}
 
 
@@ -149,14 +182,15 @@ def load_from_line(span: span_cards.SpanCardMini, line: PremonitionMini) -> tupl
 def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, device) -> dict:
     """SPAN loaded from LINE (gate re-initialised) against LINE on `batches` (DEV, already on `device`). Passes iff:
     only the gate's three weights are missing from the load and nothing is unexpected; there are cards and SPAN
-    writes exactly the parent's (`valid == card_end`) with keys and values within `TOLERANCE` (finite); `answer()`
-    is identical (exact fields; halt logits within `TOLERANCE`) with the natural weights AND with an eager copy of
-    both (always ASK, never HALT), which must fetch cards (so the identity covers the card path); and
-    `card_economy.line_aligned == 1`. Both models end in eval mode. `reasons` names every failed condition."""
+    writes exactly the parent's (`valid == card_end`) with keys and values within `TOLERANCE` (finite; values
+    relative to their scale); `answer()` is identical (exact fields; halt logits within `TOLERANCE`) with the
+    natural weights AND with an eager copy of both (always ASK, never HALT), which must fetch cards (so the identity
+    covers the card path); and `card_economy.line_aligned == 1`. Both models end in eval mode. `reasons` names every
+    failed condition."""
     missing, unexpected = load_from_line(span, line)
     span.eval()
     line.eval()
-    cards, valid_ok, key_diff, value_diff = 0, True, 0.0, 0.0
+    cards, valid_ok, key_diff, value_diff, value_scale = 0, True, 0.0, 0.0, 1.0
     for batch in batches:
         with torch.no_grad():
             plain = line.build_store(line.read(batch), batch)
@@ -169,6 +203,7 @@ def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, 
             key_diff = max(key_diff, float((spans.keys[bi, ei] - plain.keys[bi, li]).abs().nan_to_num(math.inf).max()))
             value_diff = max(value_diff, float((spans.values[bi, ei].float() - plain.values[bi, li].float())
                                                .abs().nan_to_num(math.inf).max()))
+            value_scale = max(value_scale, float(plain.values[bi, li].float().abs().max()))
     natural = compare_answers(line, span, batches)
     eager = compare_answers(eager_copy(line), eager_copy(span), batches)
     economy = span_cards.card_economy(span, batches, device=device)
@@ -178,11 +213,12 @@ def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, 
     aligned = economy["line_aligned"] == 1.0
     reasons = [name for name, ok in (
         ("weights", weights_ok), ("no cards", cards > 0), ("valid != card_end", valid_ok),
-        ("card keys or values", key_diff <= TOLERANCE and value_diff <= TOLERANCE),
+        ("card keys or values", key_diff <= TOLERANCE and value_diff <= TOLERANCE * value_scale),
         ("answers (natural)", natural["identical"]), ("answers (eager)", eager["identical"]),
         ("eager fetched no card", eager["cards_fetched"] > 0), ("line_aligned != 1", aligned)) if not ok]
     return {"passed": not reasons, "reasons": reasons, "device": str(device), "line_aligned_is_1": aligned,
-            "cards": cards, "max_key_diff": key_diff, "max_value_diff": value_diff, "natural": natural,
+            "cards": cards, "max_key_diff": key_diff, "max_value_diff": value_diff,
+            "value_scale": value_scale, "natural": natural,
             "eager": eager, "missing": missing, "unexpected": unexpected, "economy": layout}
 
 
@@ -198,6 +234,8 @@ def branch_gate(line: PremonitionMini, span: span_cards.SpanCardMini, batches, d
     touch at most `GPU_FLIP_SHARE` of the questions (at least one) in each pass. Both models end in eval mode on
     `device`, SPAN loaded from LINE."""
     cpu = torch.device("cpu")
+    line.zero_grad(set_to_none=True)                                  # the copies need no gradients
+    span.zero_grad(set_to_none=True)
     if device.type == "cpu":
         strict = branch_check(line, span, batches, cpu)
     else:
@@ -220,9 +258,8 @@ def branch_gate(line: PremonitionMini, span: span_cards.SpanCardMini, batches, d
 
 
 def mode_costs(trainer: MiniTrainer, batches) -> dict:
-    config = trainer.model.config
-    return {mode: sum(trainer.fit(b.tokens.numel(), int(planned_loops(b, plan.mode, config).sum()))
-                      for b in batches) / len(batches) for mode, plan in PLANS.items()}
+    """Fitted FLOPs per batch in each mode, as the trainer charges them against F."""
+    return {mode: sum(trainer.batch_cost(b, plan)[0] for b in batches) / len(batches) for mode, plan in PLANS.items()}
 
 
 def main() -> None:
@@ -241,8 +278,8 @@ def main() -> None:
     parser.add_argument("--branch-visits", type=int, default=64)
     parser.add_argument("--dph", type=float, default=0.0, help="the box's $/hour, for the projection")
     args = parser.parse_args()
-    if args.timed < 1 or args.warm < 0 or args.smoke_steps < 1:
-        parser.error("--timed and --smoke-steps must be at least 1, --warm at least 0")
+    if args.timed < 1 or args.warm < 0 or args.smoke_steps < 1 or args.branch_visits < 1:
+        parser.error("--timed, --smoke-steps and --branch-visits must be at least 1, --warm at least 0")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     emit("env", torch=torch.__version__, cuda=torch.version.cuda, device=str(device),
          gpu=torch.cuda.get_device_name(0) if device.type == "cuda" else None, python=platform.python_version(),
@@ -297,13 +334,7 @@ def main() -> None:
     timing["fit"] = {"a": fit.a, "b": fit.b, "worst": fit.worst}
     costs = mode_costs(line_trainer, batches)
     timing["flops_per_step"] = costs
-    for mode, plan in PLANS.items():
-        if device.type == "cuda":
-            torch.cuda.reset_peak_memory_stats()
-        timing[f"line_{mode}"] = time_steps(line_trainer, batches, plan, args.warm, args.timed)
-        if device.type == "cuda":
-            timing[f"line_{mode}"]["peak_gb"] = torch.cuda.max_memory_allocated() / 1e9
-        emit("timing", arm="LINE", mode=mode, **timing[f"line_{mode}"])
+    timing["line"] = time_arm("LINE", line_trainer, batches, args, device)
     torch.manual_seed(0)
     span = span_cards.build_model(config, span_config)
     missing, unexpected = load_from_line(span, line)                  # LINE as timed: the branch state
@@ -312,40 +343,31 @@ def main() -> None:
         raise SystemExit("SPAN did not load LINE's weights (only the gate may be missing): timing would be invalid")
     span_trainer = span_cards.SpanTrainer(span, mini_train_config(lr=1e-3, warmup_steps=100), device,
                                           flop_budget=huge, seed=0, fit=fit)
-    for mode, plan in PLANS.items():
-        if device.type == "cuda":
-            torch.cuda.reset_peak_memory_stats()
-        timing[f"span_{mode}"] = time_steps(span_trainer, batches, plan, args.warm, args.timed)
-        if device.type == "cuda":
-            timing[f"span_{mode}"]["peak_gb"] = torch.cuda.max_memory_allocated() / 1e9
-        emit("timing", arm="SPAN", mode=mode, **timing[f"span_{mode}"])
-    line.eval()
-    sync(device)
-    started = time.perf_counter()
-    validate(line, dev, tokenizer=tokenizer, stop=sorted(stop_ids(tokenizer)[0]))   # train_d's validation hook
-    sync(device)
-    timing["validate_s"] = time.perf_counter() - started
+    timing["span"] = time_arm("SPAN", span_trainer, batches, args, device)
+    for arm, trainer in (("line", line_trainer), ("span", span_trainer)):
+        timing[f"validate_s_{arm}"] = time_validation(trainer, dev, tokenizer, device)
     timing["validate_visits"] = len(valid_cache)
-    line.train()
 
     # Stage 1 projection: steps per mode = share x F / FLOPs per step (the trainer stops on the FLOP budget).
+    # train_d tracks every `log_every` = 50th step and validates `eval_visits` = 256 DEV visits every 1,000 steps.
     steps = {mode: SHARES[mode] * F_BUDGET / costs[mode] for mode in SHARES}
-    sec = lambda arm, modes: sum(steps[m] * timing[f"{arm}_{m}"]["mean"] for m in modes)
-    parent = sec("line", ["gold"])
-    line_rest = sec("line", ["teacher", "own"])
-    span_rest = sec("span", ["teacher", "own"])
-    # train_d validates `eval_visits` = 256 DEV visits every 1,000 steps; scale the measured pass to 256 visits.
-    per_eval = timing["validate_s"] * 256 / max(len(valid_cache), 1)
-    parent_evals = steps["gold"] / 1000 * per_eval                       # each of 3 parents: the first 5% of F
-    child_evals = (steps["teacher"] + steps["own"]) / 1000 * per_eval    # each of 6 arms: the other 95%
-    seconds = 3 * (parent + parent_evals) + 3 * (line_rest + span_rest) + 6 * child_evals
-    overhead = {m: timing[f"span_{m}"]["mean"] / timing[f"line_{m}"]["mean"] - 1 for m in PLANS}
-    projection = {"steps": steps, "steps_total": sum(steps.values()), "hours_parent": parent / 3600,
-                  "hours_line_95": line_rest / 3600, "hours_span_95": span_rest / 3600,
-                  "hours_evals_parent": parent_evals / 3600, "hours_evals_arm": child_evals / 3600,
-                  "stage1_gpu_hours": seconds / 3600,
+
+    def hours(arm: str, modes: list) -> dict:
+        t = timing[arm]
+        train = sum(steps[m] * t[m]["mean"] for m in modes)
+        tracked = sum(steps[m] for m in modes) / 50 * max(0.0, t["own_tracked"]["mean"] - t["own"]["mean"])
+        evals = sum(steps[m] for m in modes) / 1000 * timing[f"validate_s_{arm}"] * 256 / max(len(valid_cache), 1)
+        return {"train": train / 3600, "tracked_extra": tracked / 3600, "evals": evals / 3600,
+                "total": (train + tracked + evals) / 3600}
+
+    parent, line_arm, span_arm = hours("line", ["gold"]), hours("line", ["teacher", "own"]), \
+        hours("span", ["teacher", "own"])
+    gpu_hours = 3 * parent["total"] + 3 * (line_arm["total"] + span_arm["total"])
+    overhead = {m: timing["span"][m]["mean"] / timing["line"][m]["mean"] - 1 for m in PLANS}
+    projection = {"steps": steps, "steps_total": sum(steps.values()), "hours_parent": parent,
+                  "hours_line_arm_95": line_arm, "hours_span_arm_95": span_arm, "stage1_gpu_hours": gpu_hours,
                   "span_overhead": overhead, "dph": args.dph,
-                  "stage1_dollars": seconds / 3600 * args.dph if args.dph else None}
+                  "stage1_dollars": gpu_hours * args.dph if args.dph else None}
     emit("projection", **projection, timing=timing)
 
     # 3. smoke: a fresh SPAN model through the whole curriculum
@@ -363,7 +385,7 @@ def main() -> None:
     finite &= all(math.isfinite(v) for r in trainer.span_log for k, v in r.items()
                   if k != "step" and isinstance(v, float))
     phases = sorted({r.get("phase") for r in trainer.history if r.get("phase")})
-    smoke_ok = finite and trainer.step > 0
+    smoke_ok = finite and trainer.step > 0 and "own" in phases and report.get("stop") == "flop budget"
     emit("smoke", passed=smoke_ok, steps=trainer.step, seconds=round(took, 1), sec_per_step=took / max(trainer.step, 1),
          finite=finite, stop=report.get("stop"), flops_share=trainer.flops / trainer.flop_budget, logged_phases=phases,
          last=trainer.history[-1] if trainer.history else None, span_log_last=trainer.span_log[-1:] or None)
@@ -375,7 +397,8 @@ def main() -> None:
     if not check["passed"]:
         raise SystemExit(f"branch-point check failed ({check['reasons']}): the pairing is broken (run card §3)")
     if not smoke_ok:
-        raise SystemExit("smoke failed: a non-finite loss or gate statistic, or no step ran")
+        raise SystemExit("smoke failed: a non-finite loss or gate statistic, no step, the own phase never reached, "
+                         "or a stop other than the FLOP budget")
 
 
 if __name__ == "__main__":
