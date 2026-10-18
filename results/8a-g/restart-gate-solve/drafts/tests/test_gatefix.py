@@ -591,6 +591,7 @@ def t_rejudge_cli():
 
 # ================================================================ E: Amendment 1 (early window, exact fields, calibration)
 EARLY_RULES = dict(RULES, resume_early_abs=0.005, resume_exact_fields=['lr', 'rounds', 'plan_'])
+EARLY_ONLY = dict(RULES, resume_early_abs=0.005)                       # the early-window item alone (no listed exact fields)
 
 
 def with_fields(ev, **extra):
@@ -624,39 +625,52 @@ def t_trace_a_early_optin():
     ev = bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.003)
     assert abs(S.trace_a(ev, RULES, 9000)['resume']['early_max'] - 0.003) < 1e-9
     # the rule keys do not change the loss statistics
-    a, b = S.trace_a(AJ.FakeEv(0.05, 0.003), RULES, 9000), S.trace_a(AJ.FakeEv(0.05, 0.003), EARLY_RULES, 9000)
+    a, b = S.trace_a(AJ.FakeEv(0.05, 0.003), RULES, 9000), S.trace_a(with_fields(AJ.FakeEv(0.05, 0.003)), EARLY_RULES, 9000)
     assert all(a['resume'][k] == b['resume'][k] for k in ('resumed_step', 'n_redone', 'first_diff', 'mean_abs', 'max_abs', 'early_max')) and a['verdict'] == b['verdict'] == 'PASS'
     # the early item: pass below, fail above; hard
-    r = S.trace_a(AJ.FakeEv(0.0, 0.004), EARLY_RULES, 9000)                              # 0.004 at every redone update 102..150: mean 0.004 < 0.02
+    r = S.trace_a(AJ.FakeEv(0.0, 0.004), EARLY_ONLY, 9000)                              # 0.004 at every redone update 102..150: mean 0.004 < 0.02
     assert r['verdict'] == 'PASS' and r['why_fail'] == [] and abs(r['resume']['early_max'] - 0.004) < 1e-9, r
-    r = S.trace_a(AJ.FakeEv(0.0, 0.006), EARLY_RULES, 9000)                              # mean 0.006 < 0.02 would pass the old rules
+    r = S.trace_a(AJ.FakeEv(0.0, 0.006), EARLY_ONLY, 9000)                              # mean 0.006 < 0.02 would pass the old rules
     assert S.trace_a(AJ.FakeEv(0.0, 0.006), RULES, 9000)['verdict'] == 'PASS'
     assert r['verdict'] == 'FAIL' and len(r['why_fail']) == 1 and 'early redone updates 102 and 103' in r['why_fail'][0] and '(limit 0.005)' in r['why_fail'][0], r
     ev = bump(AJ.FakeEv(0.0, 0.0), 2, 103, loss=0.007)                                   # only the 3rd redone update: named
-    r = S.trace_a(ev, EARLY_RULES, 9000)
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
     assert r['verdict'] == 'FAIL' and 'at update 103' in r['why_fail'][0] and '102 and 103' in r['why_fail'][0], r
     ev = bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.007)                                   # only the 2nd
-    assert 'at update 102' in S.trace_a(ev, EARLY_RULES, 9000)['why_fail'][0]
+    assert 'at update 102' in S.trace_a(ev, EARLY_ONLY, 9000)['why_fail'][0]
     for step, ok in ((101, True), (104, True), (150, True)):                              # outside the window: not this item (the first update has its own bar 0.01)
-        assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, step, loss=0.0099), EARLY_RULES, 9000)['verdict'] == 'PASS', step
-    assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.0049), EARLY_RULES, 9000)['verdict'] == 'PASS'      # just under
-    assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.0051), EARLY_RULES, 9000)['verdict'] == 'FAIL'      # just over
+        assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, step, loss=0.0099), EARLY_ONLY, 9000)['verdict'] == 'PASS', step
+    assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.0049), EARLY_ONLY, 9000)['verdict'] == 'PASS'      # just under
+    assert S.trace_a(bump(AJ.FakeEv(0.0, 0.0), 2, 102, loss=0.0051), EARLY_ONLY, 9000)['verdict'] == 'FAIL'      # just over
     # hard in every soft variant, even when the key is named in soft
     for soft in (['peak', 'resume_max_abs'], SOFT3, SOFT3 + ['resume_early_abs']):
-        assert S.trace_a(AJ.FakeEv(0.0, 0.006), dict(EARLY_RULES, soft=soft), 9000)['verdict'] == 'FAIL', soft
-    # a trace with exactly two redone updates: the 2nd alone; with one: no early_max, no failure
+        assert S.trace_a(AJ.FakeEv(0.0, 0.006), dict(EARLY_ONLY, soft=soft), 9000)['verdict'] == 'FAIL', soft
+    # a trace with exactly two redone updates: the 2nd alone is still measured and recorded, but with the rule set the early window cannot be checked (the 2nd AND 3rd are needed): hard failure
     ev = AJ.FakeEv(0.0, 0.0)
     ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 102)]
-    assert S.trace_a(ev, EARLY_RULES, 9000)['resume']['n_redone'] == 2 and 'early_max' in S.trace_a(ev, EARLY_RULES, 9000)['resume']
-    ev = bump(ev, 2, 102, loss=0.01)
-    r = S.trace_a(ev, EARLY_RULES, 9000)
-    assert r['verdict'] == 'FAIL' and 'early redone updates 102 ' in r['why_fail'][0] and '3rd' not in r['why_fail'][0], r
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
+    assert r['resume']['n_redone'] == 2 and 'early_max' in r['resume'], r
+    assert r['verdict'] == 'FAIL' and r['why_fail'] == ['early window cannot be checked: only 2 redone updates (the 2nd and 3rd after the restore are needed)'], r
+    assert S.trace_a(ev, RULES, 9000)['verdict'] == 'PASS' and S.trace_a(ev, RULES, 9000)['resume']['n_redone'] == 2          # without the rule: as before, no failure
+    assert S.trace_a(ev, dict(EARLY_ONLY, soft=SOFT3 + ['resume_early_abs']), 9000)['verdict'] == 'FAIL'                         # hard, even named in soft
+    ev = bump(ev, 2, 102, loss=0.01)                                                     # two updates and the 2nd is also over the bar: both messages
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
+    assert r['verdict'] == 'FAIL' and any('early redone updates 102 ' in w and '3rd' not in w for w in r['why_fail']) and any('cannot be checked: only 2' in w for w in r['why_fail']), r
+    # exactly three: checkable
+    ev = AJ.FakeEv(0.0, 0.0)
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 103)]
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
+    assert r['resume']['n_redone'] == 3 and r['verdict'] == 'PASS', r
+    assert S.trace_a(bump(ev, 2, 103, loss=0.007), EARLY_ONLY, 9000)['verdict'] == 'FAIL'
+    # one redone update: no early_max; with the rule: cannot be checked (singular message); without it: PASS as before
     ev = AJ.FakeEv(0.0, 0.0)
     ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 101)]
-    r = S.trace_a(ev, EARLY_RULES, 9000)
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
+    assert r['resume']['n_redone'] == 1 and 'early_max' not in r['resume'] and r['verdict'] == 'FAIL' and 'only 1 redone update (' in r['why_fail'][0], r
+    r = S.trace_a(ev, RULES, 9000)
     assert r['resume']['n_redone'] == 1 and 'early_max' not in r['resume'] and r['verdict'] == 'PASS', r
     # first_diff stays a bar of its own (0.01) and keeps its default
-    assert S.trace_a(bump(AJ.FakeEv(0.0), 2, 101, loss=0.02), EARLY_RULES, 9000)['why_fail'][0].startswith('first redone update differs by 0.0200')
+    assert S.trace_a(bump(AJ.FakeEv(0.0), 2, 101, loss=0.02), EARLY_ONLY, 9000)['why_fail'][0].startswith('first redone update differs by 0.0200')
     print('ok trace A early window: resume_early_abs absent = the original result (+ early_max recorded); 2nd-3rd redone updates only; names the updates; just under/over 0.005; hard even if named in soft; 1-2 redone updates')
 
 
@@ -684,16 +698,9 @@ def t_trace_a_exact_fields():
     assert S.trace_a(ev, dict(RULES, resume_exact_fields=['rounds']), 9000)['resume']['exact_checked'] == ['rounds']        # 'rounds' does not match 'rounds_total'
     assert S.trace_a(ev, dict(RULES, resume_exact_fields=['rounds_']), 9000)['verdict'] == 'FAIL'
     ev = bump(with_fields(AJ.FakeEv(0.0)), 2, 101, plan_rows=6.0)
-    assert S.trace_a(ev, dict(RULES, resume_exact_fields=['plan']), 9000)['resume']['exact_checked'] == []                 # 'plan' (no underscore) is a field name, not a prefix
-    # a field in only one of the two lines is not compared; nothing compared -> a note, no failure
-    ev = with_fields(AJ.FakeEv(0.0))
-    for e in ev.train:
-        if e['seg'] == 1:
-            e.pop('plan_rows'); e.pop('rounds')
-    r = S.trace_a(bump(ev, 2, 101, plan_rows=6.0), EARLY_RULES, 9000)
-    assert r['verdict'] == 'PASS' and r['resume']['exact_checked'] == ['lr', 'plan_gapped'], r
-    r = S.trace_a(AJ.FakeEv(0.0), EARLY_RULES, 9000)                                     # the lines carry no such fields at all (fake runner: lr only; FakeEv: none)
-    assert r['verdict'] == 'PASS' and r['resume']['exact_checked'] == [] and any('nothing was compared' in n for n in r['notes']), r
+    r = S.trace_a(ev, dict(RULES, resume_exact_fields=['plan']), 9000)                                                      # 'plan' (no underscore) is a field name, not a prefix: no such field -> missing (hard)
+    assert r['resume']['exact_checked'] == [] and [m['field'] for m in r['resume']['exact_missing']] == ['plan'] and r['verdict'] == 'FAIL', r
+    # a listed field in only one of the two lines cannot be compared: a hard failure (item 4), see t_trace_a_exact_missing
     # NaN equals NaN, a float that differs by 1e-12 does not
     ev = with_fields(AJ.FakeEv(0.0), stop_w=float('nan'))
     assert S.trace_a(ev, dict(RULES, resume_exact_fields=['stop_w']), 9000)['verdict'] == 'PASS'
@@ -706,7 +713,45 @@ def t_trace_a_exact_fields():
     dup = dict(next(e for e in ev.train if e['seg'] == 1 and e['step'] == 101), plan_rows=99.0)
     ev.train.insert(0, dict(dup, seg=0))                                                  # an older line (seg 0), then the real seg-1 line which equals seg 2
     assert S.trace_a(ev, EARLY_RULES, 9000)['verdict'] == 'PASS'
-    print('ok trace A exact fields: lr / rounds / plan_* equal at the first redone update or FAIL (hard, names the field and values); only the first update; prefix vs name; one-sided fields skipped; nothing compared -> note; losses untouched')
+    print('ok trace A exact fields: lr / rounds / plan_* equal at the first redone update or FAIL (hard, names the field and values); only the first update; prefix vs name; losses untouched')
+
+
+def t_trace_a_exact_missing():
+    """item 4: a listed exact field that is missing from either line, or a listed prefix that matches no key / different keys in the two lines, is a HARD failure (never a skip or a note); the missing ones are recorded."""
+    def drop(ev, seg, *keys):
+        for e in ev.train:
+            if e['seg'] == seg:
+                for k in keys:
+                    e.pop(k, None)
+        return ev
+    # all present: no missing
+    r = S.trace_a(with_fields(AJ.FakeEv(0.0)), EARLY_RULES, 9000)
+    assert r['verdict'] == 'PASS' and r['resume']['exact_missing'] == [], r
+    # a name missing from the EARLIER line / from the RESUMED line / from both
+    for seg, where in ((1, 'the earlier line'), (2, 'the resumed line')):
+        r = S.trace_a(drop(with_fields(AJ.FakeEv(0.0)), seg, 'rounds'), EARLY_RULES, 9000)
+        assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['rounds'] and where in r['resume']['exact_missing'][0]['reason'], r
+        assert any('cannot be compared' in w and 'rounds' in w for w in r['why_fail']) and 'rounds' not in r['resume']['exact_checked'] and not r['notes'], r
+        assert S.trace_a(drop(with_fields(AJ.FakeEv(0.0)), seg, 'rounds'), dict(EARLY_RULES, soft=SOFT3 + ['resume_exact_fields']), 9000)['verdict'] == 'FAIL'     # hard
+    r = S.trace_a(drop(drop(with_fields(AJ.FakeEv(0.0)), 1, 'lr'), 2, 'lr'), EARLY_RULES, 9000)
+    assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['lr'] and 'both lines' in r['resume']['exact_missing'][0]['reason'], r
+    # a prefix matching nothing in either line
+    r = S.trace_a(drop(drop(with_fields(AJ.FakeEv(0.0)), 1, 'plan_rows', 'plan_gapped'), 2, 'plan_rows', 'plan_gapped'), EARLY_RULES, 9000)
+    assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['plan_'] and 'no key in either line' in r['resume']['exact_missing'][0]['reason'], r
+    # a prefix matching in only one line, or different key sets (one key each side)
+    r = S.trace_a(drop(with_fields(AJ.FakeEv(0.0)), 1, 'plan_rows', 'plan_gapped'), EARLY_RULES, 9000)
+    assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['plan_'] and 'different keys' in r['resume']['exact_missing'][0]['reason'], r
+    r = S.trace_a(drop(with_fields(AJ.FakeEv(0.0)), 1, 'plan_rows'), EARLY_RULES, 9000)                                   # earlier has plan_gapped only, resumed has both
+    assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['plan_'] and r['resume']['exact_checked'] == ['lr', 'plan_gapped', 'rounds'], r
+    # the fake runner / FakeEv lines carry no such fields at all: all three listed entries are missing -> FAIL (it used to be a note and PASS)
+    r = S.trace_a(AJ.FakeEv(0.0), EARLY_RULES, 9000)
+    assert r['verdict'] == 'FAIL' and [m['field'] for m in r['resume']['exact_missing']] == ['lr', 'rounds', 'plan_'] and r['resume']['exact_checked'] == [] and not r['notes'], r
+    # a mismatch AND a missing field: both reported
+    r = S.trace_a(bump(drop(with_fields(AJ.FakeEv(0.0)), 2, 'rounds'), 2, 101, lr=2e-3), EARLY_RULES, 9000)
+    assert len(r['why_fail']) == 2 and r['resume']['exact_mismatch'] and r['resume']['exact_missing'], r
+    # the rule absent / the list empty: nothing is required
+    assert S.trace_a(AJ.FakeEv(0.0), RULES, 9000)['verdict'] == 'PASS' and S.trace_a(AJ.FakeEv(0.0), dict(RULES, resume_exact_fields=[]), 9000)['verdict'] == 'PASS'
+    print('ok trace A exact fields, missing = hard failure: a listed name absent from either/both lines, a prefix matching no key or different keys; recorded in exact_missing, hard even if named in soft; no rule / empty list: nothing required')
 
 
 def t_verdict_early():
@@ -773,7 +818,7 @@ def t_installer_trace_a_early():
         assert new['jobs'][1] == want(I) and new['jobs'][0].get('skip') is True, new['jobs'][1]
         sup = S.Sup(I.STATE / 'plan.json')
         rules = sup.plan['jobs'][1]['trace_a']
-        assert 'soft' not in rules and S.trace_a(AJ.FakeEv(0.0, 0.006), rules, 9000)['verdict'] == 'FAIL' and S.trace_a(AJ.FakeEv(0.0, 0.004), rules, 9000)['verdict'] == 'PASS'      # the installed rules act
+        assert 'soft' not in rules and S.trace_a(AJ.FakeEv(0.0, 0.006), rules, 9000)['verdict'] == 'FAIL' and S.trace_a(with_fields(AJ.FakeEv(0.0, 0.004)), rules, 9000)['verdict'] == 'PASS'      # the installed rules act
         before2 = AJ.pc_files(I)
         I.STAMP = 'E2'
         rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early'])
@@ -940,7 +985,10 @@ def t_rejudge_calibration():
         f3 = write_probe(sub, 'g2fa8', C, off, list(off))
         rc, out = AJ.quiet(R.main, [str(f3), '--calibration', str(write_probe(Path(tmp), 'g2fa8x', C, off, list(off)))])        # job differs between the files -> unreadable
         assert rc == 3 and "job is 'g2fa8x'" in out, out
-        rc, out = AJ.quiet(R.main, [str(f3), '--calibration', str(f3)])                                                         # four identical, all off the run -> OUTSIDE
+        off2 = [x + 1e-6 for x in off]                                                                                           # (a file of its own resumes: not a copy of f3)
+        (Path(tmp) / 'p3').mkdir()
+        f3b = write_probe(Path(tmp) / 'p3', 'g2fa8', C, off2, [x + 2e-6 for x in off])
+        rc, out = AJ.quiet(R.main, [str(f3), '--calibration', str(f3b)])                                                        # four almost identical, all off the run -> OUTSIDE
         assert rc == 2 and 'OUTSIDE' in out and 'Dbar4' in out, (rc, out)
         f4 = write_probe(sub, 'g2fa8', [x + 1 for x in C], R3, R4)                                                              # another C
         rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(f4)])
@@ -967,11 +1015,283 @@ def t_rejudge_calibration():
 
 
 
+# ================================================================ F: the code-review fix round (2026-10-18), items 1-6 and 9
+def t_probe_report_aside():
+    """item 1: PROBE-RESUME-<job>.json and .md are renamed aside (.aside-<stamp>) before a new report is written: nothing is overwritten, also within one second."""
+    with tempfile.TemporaryDirectory() as tmp:
+        p, keep = P.setup(tmp)
+        sd = Path(json.loads(p.read_text())['state_dir'])
+        js, md = sd / 'PROBE-RESUME-g2fa4.json', sd / 'PROBE-RESUME-g2fa4.md'
+        assert probe_out(p, keep)[0] == 0
+        assert not list(sd.glob('PROBE-RESUME-*.aside-*')), 'the first report has nothing to move aside'
+        first = (js.read_bytes(), md.read_bytes())
+        assert probe_out(p, keep)[0] == 0
+        a1, a2 = sorted(sd.glob('PROBE-RESUME-g2fa4.json.aside-*')), sorted(sd.glob('PROBE-RESUME-g2fa4.md.aside-*'))
+        assert len(a1) == 1 and len(a2) == 1 and a1[0].read_bytes() == first[0] and a2[0].read_bytes() == first[1], (a1, a2)
+        assert js.exists() and md.exists() and 'moved aside' in (sd / 'supervisor.log').read_text()
+        second = (js.read_bytes(), md.read_bytes())
+        assert probe_out(p, keep)[0] == 0                                                   # a third run, probably within the same second as the second: still nothing lost
+        a1 = sorted(sd.glob('PROBE-RESUME-g2fa4.json.aside-*'))
+        assert len(a1) == 2 and len(sorted(sd.glob('PROBE-RESUME-g2fa4.md.aside-*'))) == 2 and sorted(x.read_bytes() for x in a1) == sorted([first[0], second[0]]), a1
+        # a refused probe writes nothing and moves nothing
+        n = len(list(sd.glob('PROBE-RESUME-*')))
+        set_sidecar(keep, step=100)
+        assert probe_out(p, keep)[0] == 2 and len(list(sd.glob('PROBE-RESUME-*'))) == n
+    # the helper itself: two asides of one name within one second never replace each other
+    with tempfile.TemporaryDirectory() as tmp:
+        f = Path(tmp) / 'x.json'
+        names = []
+        for i in range(3):
+            f.write_text(f'v{i}')
+            names.append(S.aside(f))
+        assert len(set(names)) == 3 and sorted(q.read_text() for q in names) == ['v0', 'v1', 'v2'] and not f.exists() and S.aside(f) is None
+    print('ok probe-resume: an earlier PROBE-RESUME-<job>.json and .md are moved aside (.aside-<stamp>) before the new report; nothing overwritten, even within one second; a refused probe touches nothing')
+
+
+def t_rejudge_calibration_gated():
+    """item 3: the calibration is applied ONLY to UNRESOLVED_CALIBRATE; otherwise the two-resume verdict stands, calibration None, calibration_not_applied says why."""
+    C = CL
+    R3 = [c - (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    R4 = [c - (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    cases = {}
+    cases['INSIDE healthy noise'] = alt(0.015)
+    cases['UNRESOLVED'] = alt(0.003)
+    cases['OUTSIDE'] = alt(0.015, first_exact=False)                                                          # P1 fails
+    e1, e2 = alt(0.015); e1[2] += 0.02
+    cases['OUTSIDE '] = (e1, e2)                                                                              # P1b fails
+    for name, (r1, r2) in cases.items():
+        name = name.strip()
+        base = R.rejudge(C, r1, r2)
+        assert base['verdict'] == name and base['calibration'] is None and base['calibration_not_applied'] is None, (name, base['verdict'])
+        r = R.rejudge(C, r1, r2, 0.0282, (R3, R4))
+        assert r['verdict'] == name and r['calibration'] is None, (name, r['verdict'])
+        kind = 'UNRESOLVED (window)' if name == 'UNRESOLVED' else name
+        assert r['calibration_not_applied'] == f'two-resume verdict is {kind}; the calibration resolves only UNRESOLVED_CALIBRATE (PREREG Amendment 1 clarification)', r['calibration_not_applied']
+        assert {k: v for k, v in r.items() if k != 'calibration_not_applied'} == {k: v for k, v in base.items() if k != 'calibration_not_applied'}      # nothing else changes
+    # the borderline case: applied, nothing "not applied"
+    r1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    r2 = [c + (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    r = R.rejudge(C, r1, r2, 0.0282, (R3, R4))
+    assert r['calibration'] is not None and r['calibration_not_applied'] is None and r['verdict'] == 'INSIDE healthy noise', r
+    # through the CLI: the exit code and the verdict are the two-resume ones, the note is printed and recorded; both calibrations are real, different files
+    with tempfile.TemporaryDirectory() as tmp:
+        sub = Path(tmp) / 'p2'; sub.mkdir()
+        f2 = write_probe(sub, 'g2fa8', C, R3, R4)
+        for name, (r1_, r2_), code in (('INSIDE healthy noise', cases['INSIDE healthy noise'], 0), ('UNRESOLVED', cases['UNRESOLVED'], 1), ('OUTSIDE', cases['OUTSIDE'], 2)):
+            f1 = write_probe(tmp, 'g2fa8', C, r1_, r2_)
+            rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(f2)])
+            j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+            assert rc == code and j['verdict'] == name and j['calibration'] is None and 'resolves only UNRESOLVED_CALIBRATE' in j['calibration_not_applied'], (name, rc, out)
+            assert 'NOTE: --calibration' in out and 'was NOT applied' in out and str(f2) in out and 'calibration (' not in out, out
+            assert j['plain_words'].endswith('.)') and 'not applied' in j['plain_words']
+    # the clarification sentence is in the docstring and the printed amendment text, verbatim from the PREREG
+    clar = ('Clarification (2026-10-18, after the code review; coordinator ruling): the 4-resume calibration resolves only the borderline UNRESOLVED_CALIBRATE case. It is never applied to a two-resume verdict of INSIDE, OUTSIDE or UNRESOLVED (window). '
+            'An UNRESOLVED (window) still needs the same-window measurement of §4, so adding resumes cannot turn it into INSIDE.')
+    assert clar in R.AMEND1 and clar in R.__doc__
+    prereg = ORIG_PACK.parent.parent / 'restart-gate-solve' / 'PREREG-trace-a2.md'
+    if prereg.exists():
+        line = next(x for x in prereg.read_text(encoding='utf-8').splitlines() if x.startswith('- **Clarification (2026-10-18'))
+        assert line[2:].replace('**', '') == clar, line
+    print('ok rejudge --calibration is applied only to UNRESOLVED_CALIBRATE; INSIDE / UNRESOLVED (window) / OUTSIDE (P1, P1b) keep the two-resume verdict, calibration None, calibration_not_applied + printed note; clarification verbatim' + ('' if prereg.exists() else ' (PREREG file not found: text checked against the copy in the test only)'))
+
+
+def t_rejudge_calibration_refused():
+    """item 2: --calibration refused (exit 3, message names the calibration file) if it is the same file or content as the probe, or its R1/R2 equal the probe's (either order)."""
+    C = CL
+    R1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    R2 = [c + (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    R3 = [c - (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    R4 = [c - (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    with tempfile.TemporaryDirectory() as tmp:
+        sub = Path(tmp) / 'calib'; sub.mkdir()
+        f1 = write_probe(tmp, 'g2fa8', C, R1, R2)
+        good = write_probe(sub, 'g2fa8', C, R3, R4)
+        rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(good)])
+        assert rc == 0 and 'INSIDE healthy noise' in out, (rc, out)
+        (Path(tmp) / 'REJUDGE-g2fa8.json').unlink()
+        bad = {}
+        bad['same path'] = f1
+        link = sub / 'alias.json'; link.symlink_to(f1)
+        bad['same path via a symlink'] = link
+        bad['same path spelled differently'] = Path(tmp) / 'calib' / '..' / f1.name
+        copy = sub / 'copy-of-probe.json'; copy.write_bytes(f1.read_bytes())
+        bad['same content, another file'] = copy
+        reform = sub / 'reformatted.json'; reform.write_text(json.dumps(json.loads(f1.read_text()), indent=2))
+        bad['same content, reformatted'] = reform
+        so = sub / 'sameorder'; so.mkdir()
+        bad['R1/R2 equal (same order)'] = write_probe(so, 'g2fa8', C, list(R1), list(R2), verdict='FAIL')
+        sw = sub / 'swapped'; sw.mkdir()
+        bad['R1/R2 equal (swapped)'] = write_probe(sw, 'g2fa8', C, list(R2), list(R1))
+        for what, cf in bad.items():
+            rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(cf)])
+            assert rc == 3 and str(cf) in out and '--calibration' in out and not (Path(tmp) / 'REJUDGE-g2fa8.json').exists(), (what, rc, out)
+        # only ONE of the two equal (a deterministic card can repeat a resume) is not the same pair: accepted
+        (sub / 'one').mkdir()
+        one = write_probe(sub / 'one', 'g2fa8', C, list(R1), list(R4))
+        rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(one)])
+        assert rc == 0, (rc, out)
+        # the message says what is wrong
+        rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(copy)])
+        assert 'same file (or the same content)' in out and str(copy) in out
+        rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(bad['R1/R2 equal (swapped)'])])
+        assert 'equal the probe' in out and str(bad['R1/R2 equal (swapped)']) in out
+    print('ok rejudge --calibration refuses (exit 3, names the calibration file, writes nothing): same path (also symlink / ..), same content (copy, reformatted), R1/R2 equal in either order; one repeated resume is accepted')
+
+
+def t_rejudge_aside():
+    """item 6: an existing REJUDGE-<job>.json is renamed .aside-<stamp> before the new one is written: the first reading is never lost."""
+    C = CL
+    with tempfile.TemporaryDirectory() as tmp:
+        out_f = Path(tmp) / 'REJUDGE-g2fa8.json'
+        r1, r2 = alt(0.015)
+        f = write_probe(tmp, 'g2fa8', C, r1, r2)
+        rc, out = AJ.quiet(R.main, [str(f)])
+        assert rc == 0 and not list(Path(tmp).glob('REJUDGE-*.aside-*')) and 'moved aside' not in out
+        first = out_f.read_bytes()
+        rc, out = AJ.quiet(R.main, [str(f), '--trace-a-mean', '0.5'])                       # a second reading of the same probe: a different verdict
+        asides = sorted(Path(tmp).glob('REJUDGE-g2fa8.json.aside-*'))
+        assert rc == 1 and len(asides) == 1 and asides[0].read_bytes() == first and out_f.read_bytes() != first and str(asides[0]) in out, (rc, out)
+        assert json.loads(asides[0].read_text())['verdict'] == 'INSIDE healthy noise' and json.loads(out_f.read_text())['verdict'] == 'UNRESOLVED'
+        second = out_f.read_bytes()
+        AJ.quiet(R.main, [str(f)])                                                          # a third reading, almost certainly within the same second as the second: nothing replaced
+        asides = sorted(Path(tmp).glob('REJUDGE-g2fa8.json.aside-*'))
+        assert len(asides) == 2 and {a.read_bytes() for a in asides} == {first, second}, asides
+        # a refused reading (exit 3) leaves the existing file alone
+        before = out_f.read_bytes()
+        AJ.quiet(R.main, [str(Path(tmp) / 'nope.json')])
+        assert out_f.read_bytes() == before and len(list(Path(tmp).glob('REJUDGE-g2fa8.json.aside-*'))) == 2
+        # the helper uses the pack's naming (name.aside-YYYYmmdd-HHMMSS)
+        import re
+        assert all(re.fullmatch(r'REJUDGE-g2fa8\.json\.aside-\d{8}-\d{6}(-\d+)?', a.name) for a in asides), [a.name for a in asides]
+    print('ok rejudge: an existing REJUDGE-<job>.json is moved to .aside-<stamp> before the new reading (first reading kept, also within one second); a refused reading leaves it alone')
+
+
+def t_trace_a_early_needs_three():
+    """item 5 (also covered in t_trace_a_early_optin): the early window with fewer than 3 redone updates is a hard failure, with the count in the message."""
+    for keep_to, n in ((101, 1), (102, 2)):
+        ev = AJ.FakeEv(0.0, 0.0)
+        ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > keep_to)]
+        r = S.trace_a(ev, EARLY_ONLY, 9000)
+        assert r['verdict'] == 'FAIL' and r['resume']['n_redone'] == n and any(f'early window cannot be checked: only {n} redone update' in w for w in r['why_fail']), r
+        assert S.trace_a(ev, dict(EARLY_ONLY, soft=SOFT3 + ['resume_early_abs', 'resume_exact_fields']), 9000)['verdict'] == 'FAIL'
+        assert S.trace_a(ev, RULES, 9000)['verdict'] == 'PASS'                                # no rule: as before
+    assert 'early_max' in S.trace_a(_two_updates(), RULES, 9000)['resume']                  # early_max still recorded with 2 redone updates
+    print('ok trace A: resume_early_abs with under 3 redone updates is a hard failure naming the count; early_max still recorded from 2')
+
+
+def _two_updates():
+    ev = AJ.FakeEv(0.0, 0.0)
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 102)]
+    return ev
+
+
+def t_early_limit_single_source():
+    """item 9: EARLY_LIMIT is defined once (supervisor); the installer takes TRACE_A_EARLY from that file's text; rejudge uses the probe JSON's early_limit, and its default and its early computation agree with the supervisor's."""
+    # installer
+    with tempfile.TemporaryDirectory() as tmp:
+        I = AJ.load_installer(tmp)
+        assert I.TRACE_A_EARLY['resume_early_abs'] == S.EARLY_LIMIT == I.supervisor_early_limit(), (I.TRACE_A_EARLY, S.EARLY_LIMIT)
+        assert I.new_job_entry('g2fa8', json.loads(json.dumps(dict(src='x', trace_a={}, compare={}))), early=True)['trace_a']['resume_early_abs'] == S.EARLY_LIMIT
+        d = Path(tmp) / 'sup'; d.mkdir()
+        for text, want in (('EARLY_LIMIT = 0.007\n', 0.007), ('x = 1\nEARLY_LIMIT = 0.007          # a comment 0.1\ny = 2\n', 0.007), ('EARLY_LIMIT=1e-3\n', 0.001)):
+            (d / 'g.py').write_text(text)
+            assert I.supervisor_early_limit(d / 'g.py') == want, text
+        for text in ('# EARLY_LIMIT = 0.007\n', '    EARLY_LIMIT = 0.007\n', 'EARLY_LIMIT = limit()\n', 'x = 1\n'):
+            (d / 'g.py').write_text(text)
+            try:
+                I.supervisor_early_limit(d / 'g.py')
+            except SystemExit as e:
+                assert 'EARLY_LIMIT' in str(e.code), e
+            else:
+                raise AssertionError(text)
+        try:
+            I.supervisor_early_limit(d / 'missing.py')
+        except SystemExit as e:
+            assert 'cannot read' in str(e.code)
+        else:
+            raise AssertionError
+        # the installer reads the supervisor in ITS OWN folder: a scratch copy of the pair with another number gives another bar
+        pair = Path(tmp) / 'pair'; pair.mkdir()
+        (pair / 'g2fa4_supervisor.py').write_text((HERE.parent / 'g2fa4_supervisor.py').read_text(encoding='utf-8').replace('EARLY_LIMIT = 0.005 ', 'EARLY_LIMIT = 0.0123 ', 1))
+        (pair / 'install_g2fa4.py').write_text((HERE.parent / 'install_g2fa4.py').read_text(encoding='utf-8'))
+        spec = importlib.util.spec_from_file_location('install_pair', pair / 'install_g2fa4.py')
+        I2 = importlib.util.module_from_spec(spec)
+        os.environ['G2FA4_CIO'] = str(Path(tmp) / 'cio2')
+        try:
+            spec.loader.exec_module(I2)
+        finally:
+            os.environ.pop('G2FA4_CIO', None)
+        assert I2.TRACE_A_EARLY['resume_early_abs'] == 0.0123, I2.TRACE_A_EARLY
+    assert S.EARLY_LIMIT == 0.005 and S.resume_probe_verdict([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0])['early_limit'] == S.EARLY_LIMIT
+    # rejudge: its default equals the supervisor's; the early computation agrees with the supervisor's on random inputs
+    assert R.EARLY_LIMIT == S.EARLY_LIMIT
+    rnd = random.Random(9)
+    for _ in range(500):
+        n = rnd.randint(3, 40)
+        C = [3 - 0.01 * i + rnd.gauss(0, 0.01) for i in range(n)]
+        sc = rnd.choice([1e-4, 1e-3, 4e-3, 1e-2])
+        R1 = [c + rnd.gauss(0, sc) for c in C]; R2 = [c + rnd.gauss(0, sc) for c in C]
+        sv = S.resume_probe_verdict(C, R1, R2)
+        d1, d2 = R.absdiff(R1, C), R.absdiff(R2, C)
+        assert R.early_of([d1, d2]) == sv['early_max'], (R.early_of([d1, d2]), sv['early_max'])
+        assert (R.early_of([d1, d2]) <= R.EARLY_LIMIT) == (sv['early_verdict'] == 'PASS')
+        rj = R.rejudge(C, R1, R2, early_limit=sv['early_limit'])
+        assert rj['early_max'] == sv['early_max'] and rj['early_ok'] == (sv['early_verdict'] == 'PASS') and rj['early_limit'] == sv['early_limit']
+    # rejudge uses the early_limit recorded in the probe JSON; the default only for an old-format probe
+    C = CL
+    r1, r2 = alt(0.015, early=0.007)                                                        # early gap ~ 0.007: over 0.005, under 0.01
+    with tempfile.TemporaryDirectory() as tmp:
+        old = write_probe(tmp, 'oldfmt', C, r1, r2)                                        # no early_limit in the file: this tool's default (0.005)
+        rc, out = AJ.quiet(R.main, [str(old)])
+        j = json.loads((Path(tmp) / 'REJUDGE-oldfmt.json').read_text())
+        assert rc == 2 and j['early_limit'] == R.EARLY_LIMIT and 'old format' in j['early_limit_from'], (rc, j['early_limit'])
+        wide = write_probe(tmp, 'wide', C, r1, r2, early_limit=0.01)
+        rc, out = AJ.quiet(R.main, [str(wide)])
+        j = json.loads((Path(tmp) / 'REJUDGE-wide.json').read_text())
+        assert rc == 0 and j['early_limit'] == 0.01 and j['early_ok'] and j['early_limit_from'] == 'the probe json', (rc, out)
+        a, b = alt(0.015, early=0.003)
+        tight = write_probe(tmp, 'tight', C, a, b, early_limit=0.002)
+        rc, out = AJ.quiet(R.main, [str(tight)])
+        assert rc == 2 and json.loads((Path(tmp) / 'REJUDGE-tight.json').read_text())['early_limit'] == 0.002
+        for bad in ('0.005', None, True, -1, float('nan')):
+            f = write_probe(tmp, 'badlim', C, r1, r2, early_limit=bad)
+            rc, out = AJ.quiet(R.main, [str(f)])
+            assert rc == 3 and 'early_limit' in out, (bad, rc, out)
+        # a calibration file: same limit is used for R3 / R4; a different recorded limit is refused (names the calibration file)
+        R1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+        R2 = [c + (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+        R3 = [c - (0 if i in (0, 1) else 0.007 if i == 2 else 0.03) for i, c in enumerate(C)]
+        R4 = [c - (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+        sub = Path(tmp) / 'c'; sub.mkdir()
+        p1 = write_probe(tmp, 'cal', C, R1, R2, early_limit=0.01)
+        c1 = write_probe(sub, 'cal', C, R3, R4, early_limit=0.01)
+        rc, out = AJ.quiet(R.main, [str(p1), '--calibration', str(c1)])
+        assert rc == 0, (rc, out)                                                          # R3's 0.007 early gap is inside the probe's 0.01
+        c2 = write_probe(sub, 'cal', C, R3, R4, early_limit=0.005)
+        rc, out = AJ.quiet(R.main, [str(p1), '--calibration', str(c2)])
+        assert rc == 3 and str(c2) in out and 'early_limit' in out, (rc, out)
+        p0 = write_probe(tmp, 'cal0', C, R1, R2)                                           # old-format probe + calibration with the default limit: R3's 0.007 is over it -> OUTSIDE
+        c0 = write_probe(sub, 'cal0', C, R3, R4)
+        rc, out = AJ.quiet(R.main, [str(p0), '--calibration', str(c0)])
+        assert rc == 2, (rc, out)
+    # a REAL probe report records the supervisor's limit, and rejudge reads it
+    with tempfile.TemporaryDirectory() as tmp:
+        p, keep = P.setup(tmp, main_extra=['--jitter', '0.01'])
+        assert probe_out(p, keep)[0] == 0
+        rep = P.report(p)
+        assert rep['early_limit'] == S.EARLY_LIMIT
+        pj = Path(json.loads(p.read_text())['state_dir']) / 'PROBE-RESUME-g2fa4.json'
+        rc, out = AJ.quiet(R.main, [str(pj)])
+        assert json.loads((pj.parent / 'REJUDGE-g2fa4.json').read_text())['early_limit'] == S.EARLY_LIMIT and json.loads((pj.parent / 'REJUDGE-g2fa4.json').read_text())['early_limit_from'] == 'the probe json'
+    print('ok EARLY_LIMIT has one definition: installer reads it from the supervisor file (parse cases, another number in a copied pair), rejudge default == supervisor, early computation agrees on 500 random inputs, rejudge uses the probe JSON\'s early_limit (default only for old format; bad value / differing calibration limit -> exit 3)')
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
             t_trace_a_mean_routing, t_installer_soft_mean, t_rejudge_cases, t_rejudge_cli,
-            t_trace_a_early_optin, t_trace_a_exact_fields, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration]
+            t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
+            t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source]
     only = sys.argv[1:]
     try:
         for t in todo:

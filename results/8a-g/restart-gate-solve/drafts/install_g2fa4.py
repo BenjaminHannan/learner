@@ -146,7 +146,21 @@ def armed_text():
 
 SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
 SOFT_TRACE_A_MEAN = SOFT_TRACE_A + ['resume_mean_abs']          # --soft-trace-a --soft-trace-a-mean: the mean absolute resume difference too (opt-in; never a default)
-TRACE_A_EARLY = dict(resume_early_abs=0.005, resume_exact_fields=['lr', 'rounds', 'plan_'])          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): early window 2nd-3rd redone update, exact data/RNG/schedule fields at the first
+def supervisor_early_limit(src=None):
+    """The early-window bar (Amendment 1) has ONE definition: `EARLY_LIMIT = <number>` in the pack's g2fa4_supervisor.py, the file this installer installs. It is read from that file's text (not imported: importing would run
+    the supervisor's module code, and on the PC the installer never imports it); a missing file or line stops the installer rather than guess a number."""
+    src = Path(src) if src else IN / 'g2fa4_supervisor.py'
+    try:
+        text = src.read_text(encoding='utf-8')
+    except OSError as e:
+        raise SystemExit(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
+    m = re.search(r'^EARLY_LIMIT\s*=\s*([0-9][0-9.eE+-]*)\s*(?:#.*)?$', text, re.M)
+    if not m:
+        raise SystemExit(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
+    return float(m.group(1))
+
+
+TRACE_A_EARLY = dict(resume_early_abs=supervisor_early_limit(), resume_exact_fields=['lr', 'rounds', 'plan_'])          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): early window 2nd-3rd redone update, exact data/RNG/schedule fields at the first
 
 
 def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False):

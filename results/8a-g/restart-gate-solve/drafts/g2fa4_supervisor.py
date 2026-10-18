@@ -179,10 +179,14 @@ def replace_retry(src, dst):
 
 
 def aside(p):
-    """rename a file out of the way (never delete)."""
+    """rename a file out of the way (never delete). Two asides of the same name within one second get a -2, -3, ... suffix: an earlier aside is never replaced."""
     p = Path(p)
     if p.exists():
         q = p.with_name(p.name + '.aside-' + stamp())
+        n = 1
+        while q.exists():
+            n += 1
+            q = p.with_name(f'{p.name}.aside-{stamp()}-{n}')
         os.replace(p, q)
         return q
 
@@ -273,8 +277,9 @@ def trace_a(ev, rules, max_used_mib):
     """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
     Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
       resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it (r['resume']['early_max'] is recorded whenever there are 2 redone updates, rule or not);
-      resume_exact_fields (list): at the FIRST redone update every listed field present in both the earlier segment's train line and the resumed one must be equal (an entry ending in '_' is a prefix, e.g. 'plan_';
-        any other entry is a field name); r['resume'] gets exact_checked and exact_mismatch. resume_first_diff keeps its value (a bar, not changed here)."""
+      resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
+        which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
+      With resume_early_abs set, fewer than 3 redone updates is a hard failure too (the 2nd and 3rd cannot both be checked). resume_first_diff keeps its value (a bar, not changed here)."""
     up, n = rules['upto'], rules['first_n']
     m = ev.merged()
     r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib, soft_misses=[])
@@ -326,17 +331,35 @@ def trace_a(ev, rules, max_used_mib):
                 if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
                     worst = max(early, key=lambda t: t[1])[0]
                     r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd{" and 3rd" if len(early) > 1 else ""} after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
+            if rules.get('resume_early_abs') is not None and len(d) < 3:                          # opt-in, hard: with fewer than 3 redone updates the 2nd and 3rd cannot both be checked
+                r['why_fail'].append(f'early window cannot be checked: only {len(d)} redone update{"" if len(d) == 1 else "s"} (the 2nd and 3rd after the restore are needed)')
             fields = rules.get('resume_exact_fields')
             if fields is not None:                                                                # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal
                 l1, l2 = s1f[common[0]], s2f[common[0]]
-                names = sorted({k for k in set(l1) & set(l2) if k not in ('seg', 'loss', 'step', 'elapsed') and any(k.startswith(f) if f.endswith('_') else k == f for f in fields)})
+                skip = ('seg', 'loss', 'step', 'elapsed')                                         # never compared this way
+                names, missing = set(), []
+                for f in fields:
+                    if f in skip:
+                        continue
+                    if f.endswith('_'):                                                           # a prefix: it must match some key, and the same keys in both lines
+                        k1, k2 = ({k for k in l if k not in skip and k.startswith(f)} for l in (l1, l2))
+                        if not k1 and not k2:
+                            missing.append(dict(field=f, reason='prefix matches no key in either line'))
+                        elif k1 != k2:
+                            missing.append(dict(field=f, reason=f'prefix matches different keys: earlier {sorted(k1)}, resumed {sorted(k2)}'))
+                        names |= k1 & k2
+                    elif f in l1 and f in l2:
+                        names.add(f)
+                    else:
+                        missing.append(dict(field=f, reason='absent from ' + ('both lines' if f not in l1 and f not in l2 else 'the earlier line' if f not in l1 else 'the resumed line')))
+                names = sorted(names)
                 same = lambda x, y: x == y or (isinstance(x, float) and isinstance(y, float) and x != x and y != y)
                 bad = [dict(field=k, earlier=l1[k], resumed=l2[k]) for k in names if not same(l1[k], l2[k])]
-                r['resume'].update(exact_checked=names, exact_mismatch=bad)
+                r['resume'].update(exact_checked=names, exact_mismatch=bad, exact_missing=missing)
+                if missing:                                                                       # hard: an exact-field item that cannot compare a listed field is not a pass
+                    r['why_fail'].append(f'first redone update {common[0]}: listed exact field(s) cannot be compared: ' + '; '.join(f'{m["field"]} ({m["reason"]})' for m in missing))
                 if bad:
                     r['why_fail'].append(f'first redone update {common[0]}: field(s) that must be exactly equal differ between the earlier segment and the resumed one: ' + ', '.join(f'{b["field"]} {b["earlier"]!r} vs {b["resumed"]!r}' for b in bad))
-                elif not names:
-                    r['notes'].append(f'resume_exact_fields {list(fields)}: none of these fields is in both lines of the first redone update {common[0]}; nothing was compared')
             break
     if r['resume'] is None:
         r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
@@ -382,7 +405,7 @@ def lag1_autocorr(xs):
     return sum((a - m) * (b - m) for a, b in zip(xs, xs[1:])) / den
 
 
-EARLY_LIMIT = 0.005          # Amendment 1 A1.1: the early window (2nd and 3rd redone update) bar, both in trace A (installer --trace-a-early) and in the probe's P1b
+EARLY_LIMIT = 0.005          # Amendment 1 A1.1: the early window (2nd and 3rd redone update) bar, the ONE definition: the probe's P1b uses it (and records it as early_limit in the probe JSON, which rejudge_probe.py reads); install_g2fa4.py reads this line's text for --trace-a-early (keep it `EARLY_LIMIT = <number>`)
 
 
 def resume_probe_verdict(C, R1, R2):
@@ -1242,6 +1265,10 @@ def probe_resume(a):
     if not why:
         r.update(resume_probe_verdict([C[s] for s in steps], [R['n1'][s] for s in steps], [R['n2'][s] for s in steps]))
         r.update(steps=steps, C=[C[s] for s in steps], R1=[R['n1'][s] for s in steps], R2=[R['n2'][s] for s in steps])
+    for ext in ('json', 'md'):                                                                  # an earlier report is never overwritten: it is renamed .aside-<stamp> first
+        kept = aside(sup.sd / f'PROBE-RESUME-{job["id"]}.{ext}')
+        if kept:
+            sup.log(f'PROBE: the earlier report moved aside: {kept}')
     jdump(sup.sd / f'PROBE-RESUME-{job["id"]}.json', r)
     (sup.sd / f'PROBE-RESUME-{job["id"]}.md').write_text(Sup.md_probe(r), encoding='utf-8')
     sup.log(f'PROBE RESUME: {r["verdict"]} n={r.get("n")} d={r.get("d")} limit={r.get("limit")} {why or ""}')
