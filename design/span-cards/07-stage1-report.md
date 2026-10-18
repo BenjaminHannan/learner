@@ -172,9 +172,6 @@ the P_2 checkpoint and the built data; seeds 0 and 1 hold the data only. The wat
 destroys it. It exits once no box is active, so nothing destroys the stopped boxes or P_2 until the coordinator
 rules. A stopped box costs only its disk, so a restart, a destroy, or keeping P_2 is a ruling.
 
-## Readout per seed
-(filed when each seed finishes)
-
 ## Attempt 2 (ruling Q159, 2026-10-18)
 **Ruling:** seeds 0 and 1 restart at rung 2 unchanged (40,000 tokens, 35 visits, same F, same marks, same pairing),
 with one change: `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. The setting changes memory management only, not
@@ -301,3 +298,31 @@ accepted at t = 1,198.5 s (about 20:37Z).
 with the setting on. No rung-3 drop.** At 21:13Z: seed 0 LINE at global step 24,000 (share 0.509, own phase), seed 2
 LINE at 17,000 (share 0.312, own phase), seed 1 LINE at 5,000. Spend $1.716. The guard stays on; the SPAN arm probe
 (its first 1,000 steps) is filed as each SPAN arm starts.
+
+## Readout per seed
+Attempt 2 (rung 2, `expandable_segments:True`). Each arm's DEV is the full validation split (8,675 questions,
+7,683 told). The paired G2 and the guards are computed once both arms of a seed are in. E1/E3 are the coordinator's.
+
+### Seed 0
+**LINE arm: done.**
+- 37,993 steps (teacher 13,080, own 24,913), 1.359B tokens, 5,637 s. Stopped on the FLOP budget, share 1.000004,
+  budget_ok, 0 loop mismatches.
+- **Peak reserved 7.52 GB** over the whole arm, under the guard.
+- Final train: loss 1.040, answer acc 0.902, first-ask acc 0.263, recall@k 0.777.
+- Checkpoint `artifacts/span-stage1/20261018T201349Z/seed0/line` on the box disk (state 788ed448...a6e, config
+  69b06931...5f3).
+
+| DEV (LINE, seed 0) | n | accuracy |
+|---|---|---|
+| overall (told) | 7,683 | 0.3884 |
+| near | 4,290 | 0.3569 |
+| far | 2,924 | 0.4593 |
+| far_deep | 2,427 | 0.4351 |
+| multi_hop | 5,155 | 0.3717 |
+| not told | 469 | 0.2345 |
+
+Economy after the arm: line layout, line_aligned 1, asked rate 0.827, 4.05 fetches per question, first-ask recall
+0.513, full gold fetched 0.527.
+
+**SPAN arm:** started at t = 6,422.9 s from P_0 (step 3,487, share 0.0500; at the branch 11.16 tokens per card,
+line_aligned 1). The arm probe is due at global step 5,000.
