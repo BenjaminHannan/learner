@@ -287,4 +287,17 @@ stop $18). Spend at 19:53Z was $0.817.
 
 **Seed 1 (56611888):** slower CPU box (12 cores). Boot 20:15:58Z; setting logged; commit 707bdce90. Data identical
 to the seal. Old pre-flight: rung 0 fits, worst 9.90 GB reserved / 9.73 GB allocated (attempt 1: 11.70 GB). Go
-accepted at t = 1,198.5 s (about 20:37Z); the parent probe is under way.
+accepted at t = 1,198.5 s (about 20:37Z).
+- **Step 1,000 at t = 1,487.6 s with no guard error: strengthened pre-flight PASSED.**
+- Parent P_1 (attempt 2): 3,470 gold steps, **peak reserved 6.07 GB**; in attempt 1 this seed failed at 16.91 GiB.
+  Checkpoint state 94a26d1d..., config 31b2c806.... DEV: aligned, overall 0.202.
+- Branch-point check: passed (5,967 cards, key/value diff 0.0, 0 differing answers, 0 GPU flips).
+- **Arm probe: LINE PASSED.** The arm started at step 3,470 (t = 2,219.1 s). Progress at global step 5,000 (1,530
+  arm steps, t = 3,152.3 s) with no guard error.
+- This box trains about 3.4x slower than seed 0's (about 390 s per 1,000 LINE steps against about 116 s), probably
+  CPU-bound. This changes wall time and cost, not the run.
+
+**All three seeds passed both probes (parent 1,000 steps, LINE arm 1,000+ steps from the trained parent) at rung 2
+with the setting on. No rung-3 drop.** At 21:13Z: seed 0 LINE at global step 24,000 (share 0.509, own phase), seed 2
+LINE at 17,000 (share 0.312, own phase), seed 1 LINE at 5,000. Spend $1.716. The guard stays on; the SPAN arm probe
+(its first 1,000 steps) is filed as each SPAN arm starts.
