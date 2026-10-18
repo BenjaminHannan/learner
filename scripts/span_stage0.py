@@ -12,14 +12,14 @@ back, so partial results survive a stop):
    48), after warm-up, plus tracked own-mode steps, with the FLOP fit; and train_d's validation hook per arm.
    Then the Stage 1 projection: steps per mode from F = 3.15e16 and the curriculum shares, 3 parents (LINE, 5%
    of F) + Cell A (LINE and SPAN x 3 seeds x 95%), each with its tracked steps and validations.
-3. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps; losses must be finite,
-   the own phase reached and the stop the FLOP budget (checked at the end, after the final branch check, so a
-   failure there still gets its branch readout).
-4. branch: `branch_gate` / `branch_check` (their docstrings have the pass conditions, `line_aligned == 1` among
-   them; the strict check runs on CPU) on 64 DEV visits,
-   with SPAN loaded from the LINE model as trained by the timing steps. The same check runs as a pre-flight on
-   fresh weights right after the data step, before anything else is paid for. A failed check stops the run
-   (run card §3: the pairing is broken) with exit status 1.
+3. branch: `branch_gate` / `branch_check` (their docstrings have the pass conditions, `line_aligned == 1` among
+   them; the strict check runs on CPU) on 64 DEV visits, with SPAN loaded from the LINE model as trained by the
+   timing steps. The same check runs as a pre-flight on fresh weights right after the data step, before anything
+   else is paid for, and a pre-flight failure stops the run there. This one is logged before the smoke and acted
+   on after it (run card §3: a failure means the pairing is broken), with exit status 1.
+4. smoke: a fresh SPAN model through the whole curriculum in about 200 SpanTrainer steps (time cap 3x the
+   measured step time, within --smoke-seconds and --smoke-max-seconds); losses must be finite, the own phase
+   reached and the stop the FLOP budget, else the run ends failed.
 `STAGE0-DONE ok` (or `failed`, after an `error` line) ends the log. Nothing is saved but the log; the box is
 destroyed after it is read.
 """
@@ -96,9 +96,14 @@ def time_arm(arm: str, trainer: MiniTrainer, batches, args, device) -> dict:
     """Seconds per untracked step in every mode, plus tracked own-mode steps on the same batch indices as the timed own
     steps (train_d tracks every 50th step: hooks, InsertLog, card statistics); `tracked_extra` is the mean per-batch
     difference (raw, possibly negative from timing noise; the projection charges max(0, it)). Peak allocated and
-    reserved GPU memory (train_d's guard checks reserved against `memory_limit_bytes`). Each result is emitted as it
+    reserved GPU memory from a clean baseline (gradients dropped, cache emptied; train_d's guard checks reserved
+    against `memory_limit_bytes`). Each result is emitted as it
     comes."""
     out = {}
+    trainer.model.zero_grad(set_to_none=True)                         # a clean baseline: this arm's model only
+    sync(device)
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
     runs = [(mode, plan, args.warm, args.timed, False) for mode, plan in PLANS.items()]
     runs.append(("own_tracked", PLANS["own"], args.warm, args.timed, True))
     for name, plan, warm, timed, track in runs:
@@ -158,11 +163,11 @@ def halt_close(a: torch.Tensor, b: torch.Tensor) -> tuple[torch.Tensor, float]:
     return close, float(rel.max()) if rel.numel() else 0.0
 
 
-def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batches) -> dict:
+def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batches, halt: bool = True) -> dict:
     """`answer()` of both models on every batch: questions compared, questions whose answer differs (an exact field:
-    tokens, lengths, loops, first_top, fetched; or `halt_prob` outside `halt_close`), the largest halt gap in units
-    of its allowance (0 when all close), real (non-NULL) cards LINE fetched, and the questions that fetched at least
-    one real card."""
+    tokens, lengths, loops, first_top, fetched; or, with `halt`, `halt_prob` outside `halt_close`), the largest halt
+    gap in units of its allowance (0 when all close), real (non-NULL) cards LINE fetched, and the questions that
+    fetched at least one real card."""
     questions = differing = fetched = covered = 0
     halt_diff = 0.0
     for batch in batches:
@@ -175,7 +180,9 @@ def compare_answers(line: PremonitionMini, span: span_cards.SpanCardMini, batche
         for name in ANSWER_FIELDS:
             x, y = getattr(a, name), getattr(b, name)
             differ |= torch.ones_like(differ) if x.shape != y.shape else (x != y).reshape(count, -1).any(1)
-        if a.halt_prob.shape != b.halt_prob.shape:
+        if not halt:
+            pass
+        elif a.halt_prob.shape != b.halt_prob.shape:
             halt_diff = math.inf
             differ |= True
         else:
@@ -214,10 +221,10 @@ def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, 
     """SPAN loaded from LINE (gate re-initialised) against LINE on `batches` (DEV, already on `device`). Passes iff:
     only the gate's three weights are missing from the load and nothing is unexpected; there are cards and SPAN
     writes exactly the parent's (`valid == card_end`) with keys and values within `TOLERANCE` (finite; values
-    relative to their scale); `answer()` is identical (exact fields; halt probabilities by `halt_close`) with the
-    natural weights AND with an eager copy of both (always ASK, never HALT), which must fetch cards (so the identity
-    covers the card path); and `card_economy.line_aligned == 1`. Both models end in eval mode. `reasons` names every
-    failed condition."""
+    relative to their scale); `answer()` is identical (exact fields; halt probabilities by `halt_close`, natural
+    pass only) with the natural weights AND with an eager copy of both (always ASK, never HALT), which must fetch
+    cards (so the identity covers the card path); and `card_economy.line_aligned == 1`. Both models end in eval
+    mode. `reasons` names every failed condition."""
     missing, unexpected = load_from_line(span, line)
     span.eval()
     line.eval()
@@ -236,7 +243,7 @@ def branch_check(line: PremonitionMini, span: span_cards.SpanCardMini, batches, 
                                                .abs().nan_to_num(math.inf).max()))
             value_scale = max(value_scale, float(plain.values[bi, li].float().abs().max()))
     natural = compare_answers(line, span, batches)
-    eager = compare_answers(eager_copy(line), eager_copy(span), batches)
+    eager = compare_answers(eager_copy(line), eager_copy(span), batches, halt=False)   # HALT saturated
     economy = span_cards.card_economy(span, batches, device=device)
     layout = {name: economy[name] for name in ("layout", "cards", "line_aligned", "merged", "split_lines",
                                                "newline_precision", "newline_recall", "asked_rate", "fetches_per_q")}
@@ -307,6 +314,8 @@ def main() -> None:
     parser.add_argument("--smoke-steps", type=int, default=200)
     parser.add_argument("--smoke-seconds", type=float, default=900.0,
                         help="floor of the smoke's time cap (raised to 3x the measured SPAN step time)")
+    parser.add_argument("--smoke-max-seconds", type=float, default=1200.0,
+                        help="ceiling of the smoke's time cap (the final branch check has already run)")
     parser.add_argument("--branch-visits", type=int, default=64)
     parser.add_argument("--dph", type=float, default=0.0, help="the box's $/hour, for the projection")
     args = parser.parse_args()
@@ -368,8 +377,9 @@ def main() -> None:
     timing["flops_per_step"] = costs
     timing["line"] = time_arm("LINE", line_trainer, batches, args, device)
     timing["validate_s_line"] = time_validation(line_trainer, dev, tokenizer, device)
-    release(line_trainer, device)                                     # SPAN's memory is then measured alone
+    release(line_trainer, device)
     del line_trainer
+    line.to("cpu")                                                    # SPAN's memory is then measured alone
     torch.manual_seed(0)
     span = span_cards.build_model(config, span_config)
     missing, unexpected = load_from_line(span, line)                  # LINE as timed: the branch state
@@ -382,16 +392,26 @@ def main() -> None:
     timing["validate_s_span"] = time_validation(span_trainer, dev, tokenizer, device)
     release(span_trainer, device)
     del span_trainer
+    line.to(device)
     timing["validate_visits"] = len(valid_cache)
     # train_d collates each batch on the CPU and copies it to the device inside its loop: time that per batch.
+    # The endless stream re-runs the shuffle and length-bucketing at every epoch: that setup is amortised over the
+    # batches of an epoch (both grow with the cache, so the per-batch share carries over to the Stage 1 cache).
     data_stream = pdata.batches(train_cache, args.max_tokens, seed=2, epochs=None, max_visits=args.max_visits)
-    next(data_stream).to(device)                                      # untimed: the per-epoch shuffle and bucketing
     sync(device)
+    started = time.perf_counter()
+    next(data_stream).to(device)                                      # the epoch's setup plus one batch
+    sync(device)
+    first = time.perf_counter() - started
     started = time.perf_counter()
     for _ in range(args.timed):
         next(data_stream).to(device)
     sync(device)
-    timing["data_s_per_batch"] = (time.perf_counter() - started) / args.timed
+    per_batch = (time.perf_counter() - started) / args.timed
+    per_epoch = len(pdata.length_batches(train_cache.lengths.tolist(), args.max_tokens, max_visits=args.max_visits))
+    setup = max(0.0, first - per_batch)
+    timing["data"] = {"per_batch_s": per_batch, "epoch_setup_s": setup, "batches_per_epoch": per_epoch}
+    timing["data_s_per_batch"] = per_batch + setup / max(per_epoch, 1)
     limit = mini_train_config().memory_limit_bytes / 1e9
     reserved = max((r.get("reserved_gb", 0.0) for arm in ("line", "span") for r in timing[arm].values()
                     if isinstance(r, dict)), default=0.0)
@@ -422,14 +442,20 @@ def main() -> None:
                   "stage1_dollars": gpu_hours * args.dph if args.dph else None}
     emit("projection", **projection, timing=timing)
 
-    # 3. smoke: a fresh SPAN model through the whole curriculum. The timing trainers were freed (optimizer state and
-    # gradients); LINE and SPAN stay, parameters only, for the final branch check. An exception here is recorded, not
-    # raised, so the branch readout still comes; the run then ends failed.
+    # 3. branch-point check (LINE as trained by the timing steps; SPAN loaded from it). Its verdict is logged now,
+    # before the smoke, so no smoke length can cost it; a failure is acted on after the smoke, which still runs.
+    check = branch_gate(line, span, branch_batches, device)
+    emit("branch", visits=branch_visits, **check)
+    line.cpu()                                                        # the smoke then has the GPU to itself
+    span.cpu()
+
+    # 4. smoke: a fresh SPAN model through the whole curriculum, with the GPU to itself (the timing trainers were
+    # freed; LINE and SPAN are on the CPU). An exception here is recorded, not raised, and the run then ends failed.
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats()
-    smoke_step = max(timing["span"][m]["mean"] for m in PLANS) + max(0.0, timing["span"]["tracked_extra"]) \
-        + timing["data_s_per_batch"]
-    max_seconds = max(args.smoke_seconds, 3.0 * args.smoke_steps * smoke_step)   # the box watchdog bounds the money
+    smoke_step = max(timing["span"][m]["mean"] for m in PLANS) + max(0.0, timing["span"]["tracked_extra"]) / 10 \
+        + timing["data_s_per_batch"]                                  # the smoke tracks every 10th step
+    max_seconds = min(args.smoke_max_seconds, max(args.smoke_seconds, 3.0 * args.smoke_steps * smoke_step))
     smoke_result: dict = {"max_seconds": max_seconds}
     trainer = smoke = None
     try:
@@ -452,7 +478,8 @@ def main() -> None:
             passed=finite and trainer.step > 0 and "own" in phases and stop.startswith("flop budget"),
             steps=trainer.step, seconds=round(took, 1), sec_per_step=took / max(trainer.step, 1), finite=finite,
             stop=stop, flops_share=trainer.flops / trainer.flop_budget, logged_phases=phases,
-            reserved_gb=(report.get("peak_gpu_reserved_bytes") or 0) / 1e9,
+            reserved_gb=None if report.get("peak_gpu_reserved_bytes") is None
+            else report["peak_gpu_reserved_bytes"] / 1e9,
             last=trainer.history[-1] if trainer.history else None, span_log_last=trainer.span_log[-1:] or None)
     except Exception as error:                            # noqa: BLE001 - recorded; the run ends failed below
         smoke_result.update(passed=False, error=repr(error), trace=traceback.format_exc()[-2000:])
@@ -462,10 +489,7 @@ def main() -> None:
             torch.cuda.empty_cache()
     emit("smoke", **smoke_result)
 
-    # 4. branch-point check (LINE as trained by the timing steps; SPAN loaded from it). Last, so that a failure
-    # here costs no other measurement; a failure still stops the run with a failed status.
-    check = branch_gate(line, span, branch_batches, device)
-    emit("branch", visits=branch_visits, **check)
+    # Both verdicts are in the log by now; either failure ends the run failed.
     if not check["passed"]:
         raise SystemExit(f"branch-point check failed ({check['reasons']}): the pairing is broken (run card §3)")
     if not smoke_result["passed"]:

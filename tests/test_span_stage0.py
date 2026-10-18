@@ -68,6 +68,13 @@ class BranchCheckTest(unittest.TestCase):
         self.assertGreater(check["eager"]["cards_fetched"], 0)
         self.assertGreaterEqual(check["value_scale"], 1.0)
 
+    def test_the_eager_pass_ignores_its_saturated_halt(self) -> None:
+        """Seventh review, finding 5: the eager pass saturates HALT on purpose, so its halt gaps are not flips."""
+        line, span = pair()
+        check = span_stage0.branch_check(line, span, batches(), DEVICE)
+        self.assertEqual(check["eager"]["max_halt_rel_diff"], 0.0)  # not compared
+        self.assertTrue(check["eager"]["identical"])
+
     def test_a_wrong_layout_fails_on_line_alignment(self) -> None:
         line, span = pair(max_span=3)                               # the cap splits every line
         check = span_stage0.branch_check(line, span, batches(), DEVICE)
