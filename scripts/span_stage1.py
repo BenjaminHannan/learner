@@ -73,6 +73,7 @@ MARGIN_GB = 1.0                          # a rung fits iff every peak reserved <
 STRESS_EVERY = 33                        # SPAN stress: an extra cut every 33 tokens (about 1.33x the cards)
 HEAD = 4                                 # calibration batches (train_d)
 EVAL_VISITS, ECONOMY_VISITS, BRANCH_VISITS = 256, 200, 64
+REQUIRED_SLICES = ("overall", "near", "far", "multi_hop")   # run card §5 (E2 DEV); each must hold questions
 CHUNK = 450
 CHILD_TIMEOUT = 1800                     # seconds for one pre-flight child (a hang is a fault, not a measurement)
 STARTED = time.perf_counter()
@@ -431,6 +432,11 @@ def measure_arm(args: argparse.Namespace) -> None:
         "line_aligned": report["line_aligned"]}), allow_nan=False), flush=True)
 
 
+def as_text(value) -> str:
+    """A subprocess output as text: TimeoutExpired carries bytes even when the run asked for text."""
+    return (value.decode(errors="replace") if isinstance(value, bytes) else value) or ""
+
+
 def preflight(args: argparse.Namespace) -> dict:
     """Every rung in order, a clean child per arm, until one rung fits every arm; the record of all measured."""
     guard = train_config().memory_limit_bytes / 1e9
@@ -445,13 +451,15 @@ def preflight(args: argparse.Namespace) -> dict:
             try:
                 run = subprocess.run(command, capture_output=True, text=True, timeout=CHILD_TIMEOUT)
             except subprocess.TimeoutExpired as expired:
-                out = expired.stdout or ""
-                run = types.SimpleNamespace(returncode="timeout", stderr=f"no result after {CHILD_TIMEOUT} s",
-                                            stdout=out.decode(errors="replace") if isinstance(out, bytes) else out)
+                out, err = as_text(expired.stdout), as_text(expired.stderr)
+                run = types.SimpleNamespace(returncode="timeout", stdout=out,
+                                            stderr=f"no result after {CHILD_TIMEOUT} s; stderr: {err[-1200:]}; "
+                                                   f"stdout: {out[-800:]}")
             found = [l for l in run.stdout.splitlines() if l.startswith("PREFLIGHT ")]
             if run.returncode or not found:                   # not a memory measurement: a fault, so stop
                 emit("preflight_error", {"arm": arm, "max_tokens": max_tokens, "max_visits": max_visits,
                                          "returncode": run.returncode, "stderr": (run.stderr or run.stdout)[-2500:]})
+                # (a timeout's message carries the child's own stderr and stdout tails)
                 raise SystemExit(f"memory pre-flight child {arm} failed for a reason other than memory")
             child = json.loads(found[-1][len("PREFLIGHT "):])
             children.append(child)
@@ -484,7 +492,7 @@ def read_go(args: argparse.Namespace) -> Optional[dict]:
         return None
 
 
-def wait_for_go(args: argparse.Namespace, expected: dict, fitted: Optional[tuple] = None) -> dict:
+def wait_for_go(args: argparse.Namespace, expected: dict, fitted: tuple) -> dict:
     """The go record once it names exactly this box's script, caches, N and a rung no larger than `fitted` (the
     rung this box's pre-flight measured as fitting); every mismatch is logged as a refusal and waited on."""
     deadline = time.time() + args.go_wait_hours * 3600
@@ -500,10 +508,10 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: Optional[tuple
             wrong = [k for k, v in expected.items() if go.get(k) != v]
             if not isinstance(go.get("seeds"), list) or args.seed not in go["seeds"]:
                 wrong.append("seeds")
-            rung_given = [k for k in ("max_tokens", "max_visits") if not isinstance(go.get(k), int)]
-            wrong += rung_given
-            if not rung_given and fitted is not None and not rung_allowed((go["max_tokens"], go["max_visits"]), fitted):
-                wrong.append("rung")
+            bad_rung = [k for k in ("max_tokens", "max_visits") if not isinstance(go.get(k), int)]
+            wrong += bad_rung
+            if not bad_rung and not rung_allowed((go["max_tokens"], go["max_visits"]), fitted):
+                wrong.append("rung")                          # off the ladder, or larger than this box's fit
             if go.get("go") is True and not wrong:
                 return go
             emit("go_refused", {"seed": args.seed, "mismatch": wrong, "go": go.get("go")})
@@ -512,14 +520,14 @@ def wait_for_go(args: argparse.Namespace, expected: dict, fitted: Optional[tuple
 
 
 # ----------------------------------------------------------------------------- one seed
-def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
+def run_seed(args: argparse.Namespace, built: dict, tags: dict, go: dict) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args.max_tokens, args.max_visits = go["max_tokens"], go["max_visits"]
     tokenizer, train_cache, valid_cache = built["tokenizer"], built["caches"]["train"], built["caches"]["validation"]
     config = model_config(tokenizer, args.size)
     n_target = go["N"]
     stop = sorted(step1.stop_ids(tokenizer)[0])
-    all_tags = built["tags"]                                          # masks over every question: any subset uses them
+    all_tags = tags                                                   # masks over every question: any subset uses them
     hook = validation_hook(dev_batches(valid_cache, EVAL_VISITS, args.max_tokens, args.max_visits, all_tags),
                            tokenizer=tokenizer, stop=stop)
     economy_batches = dev_batches(valid_cache, ECONOMY_VISITS, args.max_tokens, args.max_visits)
@@ -532,7 +540,8 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     stream = pdata.batches(train_cache, args.max_tokens, seed=args.seed, epochs=None, max_visits=args.max_visits)
     head = [next(stream) for _ in range(HEAD)]
     fit = trainer.calibrate(head)
-    if device.type == "cuda":
+    if device.type == "cuda":                             # calibration (fp32) is not training: the guard starts here
+        torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     report = trainer.train(gold_only(trainer, itertools.chain(head, stream)), evaluate=hook,
                            on_log=progress("P", args.seed))
@@ -568,8 +577,7 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
     parent_model.load_state_dict(parent["model"], strict=True)
     for arm in ("LINE", "SPAN"):
         if device.type == "cuda":
-            torch.cuda.empty_cache()
-            torch.cuda.reset_peak_memory_stats()
+            torch.cuda.empty_cache()                          # free the previous arm (the peak is reset below)
         torch.manual_seed(args.seed)
         if arm == "LINE":
             model = PremonitionMini(config)
@@ -583,7 +591,7 @@ def run_seed(args: argparse.Namespace, built: dict, go: dict) -> None:
             trainer = span_cards.SpanTrainer(model, train_config(), device, flop_budget=flop_budget, seed=args.seed)
         restore(trainer, parent)
         arm_fit = calibrate_keeping_rng(trainer, head)
-        if device.type == "cuda":                             # as for the parent: calibration (fp32) is not training
+        if device.type == "cuda":                             # as for the parent: calibration (fp32) is not training,
             torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
         at_branch = parent_economy if arm == "LINE" else economy(model, economy_batches, device)
@@ -637,8 +645,12 @@ def box(args: argparse.Namespace) -> None:
     emit("data", {"seed": args.seed, **record})
     if record["newline_ids"] != [23]:
         raise SystemExit(f"newline id {record['newline_ids']} is not 23: SpanConfig.newline_id would be wrong")
-    built["tags"] = slice_tags(built, len(built["caches"]["validation"]))   # needed for G2: fail before paying more
-    emit("slices", {"seed": args.seed, **{name: int(tag.sum()) for name, tag in (built["tags"] or {}).items()}})
+    tags = slice_tags(built, len(built["caches"]["validation"]))      # needed for G2: fail before paying more
+    counts = {name: int(tag.sum()) for name, tag in (tags or {}).items()}
+    emit("slices", {"seed": args.seed, **counts})
+    absent = [name for name in REQUIRED_SLICES if not counts.get(name)]
+    if absent:
+        raise SystemExit(f"DEV slices {absent} are missing or empty: the readout (G2 needs far) would be incomplete")
     memory = preflight(args)
     emit("preflight", {"seed": args.seed, **memory})
     if memory["chosen"] is None:
@@ -650,7 +662,7 @@ def box(args: argparse.Namespace) -> None:
     fitted = (memory["chosen"]["max_tokens"], memory["chosen"]["max_visits"])
     go = wait_for_go(args, expected, fitted)                      # refuses a rung larger than `fitted`
     emit("go", {"seed": args.seed, "max_tokens": go["max_tokens"], "max_visits": go["max_visits"]})
-    run_seed(args, built, go)
+    run_seed(args, built, tags, go)
 
 
 def parse_args(argv=None) -> argparse.Namespace:

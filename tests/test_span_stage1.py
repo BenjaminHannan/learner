@@ -210,19 +210,24 @@ class GoTest(unittest.TestCase):
 
     def test_only_a_matching_go_file_releases(self) -> None:
         expected = {"script_sha256": "s", "train_cache_sha256": "t", "N": 11.1}
+        fit = s1.LADDER[0]
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "go.json"
             path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000,
                                         "max_visits": 48}))
-            self.assertEqual(s1.wait_for_go(self.args(path), expected)["max_tokens"], 55000)
+            self.assertEqual(s1.wait_for_go(self.args(path), expected, fit)["max_tokens"], 55000)
             for wrong in ({"N": 11.2}, {"seeds": [0]}, {"go": None}):          # each with a valid rung
                 path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 55000,
                                             "max_visits": 48, **wrong}))
                 with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
-                    s1.wait_for_go(self.args(path), expected)
+                    s1.wait_for_go(self.args(path), expected, fit)
+            path.write_text(json.dumps({"go": True, "seeds": [1], **expected, "max_tokens": 10 ** 9,
+                                        "max_visits": 48}))                 # off the ladder
+            with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+                s1.wait_for_go(self.args(path), expected, fit)
             path.write_text(json.dumps({"go": False}))
             with self.assertRaises(SystemExit) as stop:
-                s1.wait_for_go(self.args(path), expected)
+                s1.wait_for_go(self.args(path), expected, fit)
             self.assertIn("stop", str(stop.exception))
 
 
@@ -320,7 +325,7 @@ class RobustnessTest(unittest.TestCase):
                 path.write_text(json.dumps(bad))
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as stop:
-                    s1.wait_for_go(args, {"N": 1})
+                    s1.wait_for_go(args, {"N": 1}, s1.LADDER[0])
                 self.assertIn("deadline", str(stop.exception))
                 self.assertIn("go_refused", out.getvalue())
 
@@ -360,14 +365,16 @@ class RobustnessTest(unittest.TestCase):
         original = s1.subprocess.run
 
         def hang(*a, **k):
-            raise s1.subprocess.TimeoutExpired("child", 1, output=b"PREFLIGHT {}", stderr=b"")
+            raise s1.subprocess.TimeoutExpired("child", 1, output=b"stuck in economy", stderr=b"loading caches")
         s1.subprocess.run = hang
         try:
             out = io.StringIO()
             with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as stop:
                 s1.preflight(types.SimpleNamespace(seed=0, visits="tiny", size="tiny", workers=1))
             self.assertIn("other than memory", str(stop.exception))
-            self.assertIn("preflight_error", out.getvalue())
+            record = dict(s1.decode(out.getvalue().splitlines()))["preflight_error"]
+            self.assertIn("loading caches", record["stderr"])                # the child's own tails are reported
+            self.assertIn("stuck in economy", record["stderr"])
         finally:
             s1.subprocess.run = original
 
