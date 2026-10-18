@@ -1286,12 +1286,134 @@ def t_early_limit_single_source():
     print('ok EARLY_LIMIT has one definition: installer reads it from the supervisor file (parse cases, another number in a copied pair), rejudge default == supervisor, early computation agrees on 500 random inputs, rejudge uses the probe JSON\'s early_limit (default only for old format; bad value / differing calibration limit -> exit 3)')
 
 
+# ================================================================ G: zero-risk cleanups (items 8 and 10)
+def t_rejudge_calibration_errors_named():
+    """item 8: every error that comes from the --calibration file names THAT file (not the first probe); errors of the first probe still name the probe."""
+    C = CL
+    R1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    R2 = [c + (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    R3 = [c - (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(C)]
+    R4 = [c - (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(C)]
+    with tempfile.TemporaryDirectory() as tmp:
+        sub = Path(tmp) / 'c'; sub.mkdir()
+        f1 = write_probe(tmp, 'g2fa8', C, R1, R2)
+        cal = sub / 'PROBE-RESUME-g2fa8.json'
+        def run(text, **kw):
+            if isinstance(text, dict):
+                text = json.dumps(dict(dict(job='g2fa8', step=200, upto=250, why_fail=[], verdict='PASS', C=C, R1=R3, R2=R4), **text))
+            cal.write_text(text)
+            return AJ.quiet(R.main, [str(f1), '--calibration', str(cal)])
+        cases = {
+            'not json': 'not json {',
+            'a json list': '[1, 2, 3]',
+            'a json number': '5',
+            'R1 null': dict(R1=None),
+            'R1 a number': dict(R1=5),
+            'R2 a string': dict(R2='abc'),
+            'R1 strings': dict(R1=['a'] * 50),
+            'R1 booleans': dict(R1=[True] * 50),
+            'R1 too short': dict(R1=R3[:-1]),
+            'R2 too long': dict(R2=R4 + [1.0]),
+            'R1 nested lists': dict(R1=[[1.0]] * 50),
+            'C not a list': dict(C=3),
+            'no R2': dict(R2=None),
+        }
+        for what, text in cases.items():
+            if what == 'no R2':
+                cal.write_text(json.dumps(dict(job='g2fa8', step=200, upto=250, C=C, R1=R3)))
+                rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(cal)])
+            else:
+                rc, out = run(text)
+            assert rc == 3 and str(cal) in out and f'cannot re-read {f1}' not in out and 'Traceback' not in out and not (Path(tmp) / 'REJUDGE-g2fa8.json').exists(), (what, rc, out)
+        rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(sub / 'missing.json')])
+        assert rc == 3 and str(sub / 'missing.json') in out and f'cannot re-read {f1}' not in out, out
+        # the messages that name the calibration file use the one wording
+        rc, out = run(dict(upto=300))
+        assert out.startswith(f'cannot use --calibration {cal}: ') and 'upto' in out, out
+        # a KeyError / TypeError raised from inside the calibration file's handling is named too (simulated: read_probe hands back a broken dict / object)
+        real = R.read_probe
+        class Odd(dict):
+            def get(self, k, d=None):
+                raise TypeError('odd')
+        for odd, word in ((dict(job='g2fa8', step=200, upto=250, R1=R3, R2=R4), 'KeyError'), (Odd(C=C, R1=R3, R2=R4), 'TypeError')):
+            R.read_probe = lambda path, odd=odd, real=real: odd if str(path) == str(cal) else real(path)
+            try:
+                rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(cal)])
+            finally:
+                R.read_probe = real
+            assert rc == 3 and out.startswith(f'cannot use --calibration {cal}: ') and word in out, (word, rc, out)
+        # errors of the FIRST probe still name the probe
+        bad = Path(tmp) / 'bad.json'; bad.write_text('nope')
+        rc, out = AJ.quiet(R.main, [str(bad), '--calibration', str(cal)])
+        assert rc == 3 and out.startswith(f'cannot re-read {bad}') and 'cannot use --calibration' not in out, out
+        bad.write_text('[1]')
+        rc, out = AJ.quiet(R.main, [str(bad)])
+        assert rc == 3 and out.startswith(f'cannot re-read {bad}'), out
+        # a good calibration still works
+        cal.write_text(json.dumps(dict(job='g2fa8', step=200, upto=250, why_fail=[], verdict='PASS', C=C, R1=R3, R2=R4)))
+        assert AJ.quiet(R.main, [str(f1), '--calibration', str(cal)])[0] == 0
+    print('ok rejudge: errors from the --calibration file (unreadable, not JSON, wrong types / lengths, KeyError, TypeError, AttributeError, mismatches) are reported as "cannot use --calibration <that file>: ..." with exit 3; the first probe\'s errors still name the probe')
+
+
+def t_rejudge_p23_unchanged():
+    """item 10: p23_ok = exch_ok and p3 is the old `reg == PASS and p3 and ratio <= 2.0`: same p23_ok and the same verdicts (with and without --calibration) over random traces of every class."""
+    rnd = random.Random(2026)
+    seen = {}
+    for _ in range(3000):
+        n = rnd.randint(3, 30)
+        C = [3 - 0.01 * i + rnd.gauss(0, 0.02) for i in range(n)]
+        a, b = rnd.choice([0, 1e-4, 0.003, 0.015, 0.03, 0.08]), rnd.choice([0, 1e-4, 0.003, 0.015, 0.03])
+        off = rnd.choice([0, 0, 0.02, 0.05])
+        def resume(scale, shift):
+            R_ = [c + rnd.gauss(0, scale) + shift for c in C]
+            if rnd.random() < 0.9:
+                R_[0] = C[0]
+            for i in (1, 2):
+                if i < n and rnd.random() < 0.9:
+                    R_[i] = C[i] + rnd.gauss(0, 1e-3)
+            if rnd.random() < 0.15:
+                R_[rnd.randrange(n)] += rnd.choice([0.5, -0.5, 0.2])
+            return R_
+        R1_, R2_ = resume(a, off), resume(b, off * rnd.choice([0, 1]))
+        v = rnd.choice([0.01, 0.0282, 0.05, 0.2])
+        # the old reading, written out from the definitions
+        d12, d1, d2 = ([abs(x - y) for x, y in zip(u, w)] for u, w in ((R1_, R2_), (R1_, C), (R2_, C)))
+        m = lambda xs: sum(xs) / len(xs)
+        nn, dd = max(d12), max(d1 + d2)
+        reg = 'PASS' if dd <= max(0.10, 3 * nn) else 'FAIL'
+        dbar, nbar = m([m(d1), m(d2)]), m(d12)
+        ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
+        limit = max(0.02, 2 * nbar)
+        old_p23 = reg == 'PASS' and dbar <= limit and ratio <= 2.0
+        em = max(d1[1], d1[2], d2[1], d2[2])
+        if not (d1[0] == 0 and d2[0] == 0 and em <= 0.005):
+            old_v = 'OUTSIDE'
+        elif old_p23:
+            old_v = 'INSIDE healthy noise' if v <= limit else 'UNRESOLVED'
+        else:
+            old_v = 'UNRESOLVED_CALIBRATE'
+        r = R.rejudge(C, R1_, R2_, v)
+        assert r['p23_ok'] is old_p23 and r['verdict'] == old_v, (r['p23_ok'], old_p23, r['verdict'], old_v)
+        assert r['p23_ok'] == (r['exchangeability_ok'] and r['p3_ok'])
+        seen[old_v] = seen.get(old_v, 0) + 1
+        # with a calibration the gated verdict is the two-resume one unless it is UNRESOLVED_CALIBRATE (then the calibration's, whose own logic is untouched)
+        R3_, R4_ = resume(a, off), resume(b, off)
+        rc_ = R.rejudge(C, R1_, R2_, v, (R3_, R4_))
+        if old_v == 'UNRESOLVED_CALIBRATE':
+            assert rc_['calibration'] is not None and rc_['verdict'] == R.calibration(C, [R1_, R2_, R3_, R4_], v)['verdict']
+        else:
+            assert rc_['verdict'] == old_v and rc_['calibration'] is None and rc_['calibration_not_applied']
+    assert set(seen) == {'INSIDE healthy noise', 'UNRESOLVED', 'UNRESOLVED_CALIBRATE', 'OUTSIDE'} and min(seen.values()) >= 20, seen
+    print('ok rejudge: p23_ok = exch_ok and p3 gives the same p23_ok and the same verdict as the old formula over 3000 random traces ' + str(dict(sorted(seen.items()))))
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
             t_trace_a_mean_routing, t_installer_soft_mean, t_rejudge_cases, t_rejudge_cli,
             t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
-            t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source]
+            t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
+            t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged]
     only = sys.argv[1:]
     try:
         for t in todo:

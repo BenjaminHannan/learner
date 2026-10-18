@@ -107,7 +107,7 @@ def rejudge(C, R1, R2, v=DEFAULT_V, R34=None, early_limit=EARLY_LIMIT):
     limit = max(FLOOR, 2 * nbar)
     p3 = dbar <= limit
     exch_ok = ratio <= 2.0 and reg == 'PASS'                                             # the original reading's exchangeability (P2 and ratio)
-    p23_ok = reg == 'PASS' and p3 and ratio <= 2.0
+    p23_ok = exch_ok and p3                                                              # P2 and ratio <= 2 (exch_ok) and P3
     if restore_ok and exch_ok:                                                           # the ORIGINAL reading, kept for the record only
         original = 'INSIDE healthy noise' if v <= limit else 'UNRESOLVED'
     else:
@@ -212,23 +212,44 @@ def probe_early_limit(pr, path):
 
 
 def check_calibration(p, pr, cpath, p2, early_limit):
-    """the --calibration file must be a DIFFERENT pair of resumes of the same checkpoint: refuse (ValueError, which main turns into exit 3) the same file, the same content, a repeat of the probe's R1 / R2 (either order),
-    another job / step / upto / C / early_limit. Every message names the calibration file."""
+    """the --calibration file must be a DIFFERENT pair of resumes of the same checkpoint: refuse (ValueError) the same file, the same content, a repeat of the probe's R1 / R2 (either order),
+    another job / step / upto / C / early_limit. (load_calibration adds the calibration file's name to every message.)"""
     for k in ('job', 'step', 'upto'):
         if p2.get(k) != pr.get(k):
-            raise ValueError(f'--calibration {cpath}: {k} is {p2.get(k)!r}, the probe has {pr.get(k)!r} (the same job, step and window are needed)')
+            raise ValueError(f'{k} is {p2.get(k)!r}, the probe has {pr.get(k)!r} (the same job, step and window are needed)')
     if p2['C'] != pr['C']:
-        raise ValueError(f'--calibration {cpath}: its C (the run\'s logged losses) is not the probe\'s C')
+        raise ValueError('its C (the run\'s logged losses) is not the probe\'s C')
     try:
         same_path = Path(cpath).resolve() == p.resolve() or Path(cpath).samefile(p)
     except OSError:
         same_path = False
     if same_path or Path(cpath).read_bytes() == p.read_bytes() or p2 == pr:
-        raise ValueError(f'--calibration {cpath}: it is the same file (or the same content) as the probe {p}: a copy of the first probe would only echo it; run 2 NEW resumes (a new probe-resume) and use that file')
+        raise ValueError(f'it is the same file (or the same content) as the probe {p}: a copy of the first probe would only echo it; run 2 NEW resumes (a new probe-resume) and use that file')
     if (p2['R1'], p2['R2']) in ((pr['R1'], pr['R2']), (pr['R2'], pr['R1'])):
-        raise ValueError(f'--calibration {cpath}: its R1 and R2 equal the probe\'s R1 and R2 (same values, in the order given or swapped): these are not 2 new resumes')
+        raise ValueError('its R1 and R2 equal the probe\'s R1 and R2 (same values, in the order given or swapped): these are not 2 new resumes')
     if 'early_limit' in p2 and probe_early_limit(p2, cpath)[0] != early_limit:
-        raise ValueError(f'--calibration {cpath}: its early_limit {p2["early_limit"]!r} differs from the probe\'s {early_limit!r}')
+        raise ValueError(f'its early_limit {p2["early_limit"]!r} differs from the probe\'s {early_limit!r}')
+
+
+class CalibrationError(Exception):
+    """anything wrong with the --calibration file; main prints it with that file's name (not the first probe's) and exits 3."""
+
+
+def number_list(x, n, what):
+    if not isinstance(x, list) or len(x) != n or any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in x):
+        raise ValueError(f'{what} is not a list of {n} numbers (the length of the probe\'s C)')
+    return x
+
+
+def load_calibration(cpath, p, pr, early_limit):
+    """-> (R3, R4) from the --calibration file. Every problem with that file (unreadable, not JSON, missing or mistyped fields, KeyError / TypeError included, not a different pair of resumes) is a CalibrationError."""
+    try:
+        p2 = read_probe(cpath)
+        check_calibration(p, pr, cpath, p2, early_limit)
+        n = len(pr['C'])
+        return number_list(p2['R1'], n, 'its R1'), number_list(p2['R2'], n, 'its R2')
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+        raise CalibrationError(e if isinstance(e, ValueError) else repr(e)) from e
 
 
 def aside(p):
@@ -259,11 +280,12 @@ def main(argv=None):
         v, src = trace_a_value(a, job)
         R34 = None
         if a.calibration:
-            p2 = read_probe(a.calibration)
-            check_calibration(p, pr, a.calibration, p2, early_limit)
-            R34 = (p2['R1'], p2['R2'])
+            R34 = load_calibration(a.calibration, p, pr, early_limit)
         r = rejudge(pr['C'], pr['R1'], pr['R2'], v, R34, early_limit)
-    except (OSError, ValueError, KeyError, TypeError) as e:
+    except CalibrationError as e:
+        print(f'cannot use --calibration {a.calibration}: {e}')
+        return 3
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f'cannot re-read {p}: {e if isinstance(e, ValueError) else repr(e)}')
         return 3
     r.update(job=job, source=str(p), calibration_source=a.calibration, early_limit_from=el_from, trace_a_value_from=src, step=pr.get('step'), upto=pr.get('upto'), preregistered_reading=PREREG, amendment_1_reading=AMEND1, plain_words=words(r, job))
