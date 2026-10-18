@@ -28,29 +28,38 @@ D = 2,013,140 parameters at d = 128 with the v1 vocabulary. The cost columns com
 backward).
 - "FLOPs" is the FlopCounterMode count (matmuls and attention only). Gates, norms and hashing are elementwise, so
   they are not counted.
-- **The time noise floor is about ±4–10%.** The same all-off model, timed a second time, gives −3.5%, −3.7% and
-  +3.6%. Read any step-time change inside ±10% as noise.
+- These numbers were re-measured on 10-18 on an otherwise idle machine. The first run, on 10-17, overlapped other
+  jobs.
+- **The time noise floor is about ±4%.** The same all-off model, timed a second time, gives −0.4%, +0.2% and −3.7%.
+  Read any step-time change inside ±5% as noise.
+- `random_depth` is averaged over every equally likely loop cap (1..8). It is the expected cost, not one sampled
+  draw.
 
 | # | Steal | Flag(s) | Params Δ | FLOPs Δ (gold/teacher/own) | CPU step time Δ (gold/teacher/own) | Tests |
 |---|---|---|---|---|---|---|
-| 1 | Delta-rule erase-then-write bind | `delta_bind` | **−60,903** (the binder is replaced) | −0.04 / −0.06 / −0.03% | −7.6 / +2.5 / +4.5% (noise) | 13/13 |
-| 2 | Gated fetch | `fetch_gate` | +1,544 | +0.02 / +0.01 / +0.09% | −5.6 / +0.5 / +10.3% | 22/22 (with sinks) |
-| 2 | Per-head sink | `fetch_sink` | +5 | ≈ 0 | −9.7 / −0.9 / +3.6% (noise) | (same file) |
-| 3 | Attention residuals across loops | `loop_attnres` | +1,024 | 0 | −7.0 / −0.4 / +4.7% (noise) | 11/11 |
-| 4 | Engram hashed name lookup | `engram` | **+164,096 (+8.15%)** | +0.09 / +0.05 / +0.03% | +1.6 / −1.2 / −0.2% (noise) | 16/16 |
-| 5 | Per-register halting | `row_halt` | +129 | ≈ 0 | −4.9 / −4.2 / +6.7% (noise) | 23/23 (with depth) |
-| 5 | Random-depth training | `random_depth` | 0 | own **−34%** (fewer loops) | own **−35%** | (same file) |
-| 6 | QK-norm on ASK (gains) | `qk_norm` | +128 | 0 | −6.9 / −4.9 / +5.4% (noise) | 19/19 (QK family) |
-| 6 | QK-norm on all attention | `qk_norm_all` | +320 | 0 | +3.5 / **+24.2 / +23.4%** | (same file) |
-| 6 | QK-Clip on ASK | `qk_clip` (τ, 0 = off) | 0 | 0 | noise | (same file) |
-| 6 | Content + line-position sub-keys | `key_split` | 0 | 0 | noise | (same file) |
-| 7 | ASK-selection reuse | `ask_reuse` | 0 | −0.01% | noise | 8/8 |
-| 8 | Muon optimiser | `MiniTrainer(optimizer="muon")` | 0 | 0 | optimizer step 6.5× AdamW's: +39 ms on a ≈ 0.49 s step (**+8%**, CPU d = 128) | 21/21 |
+| 1 | Delta-rule erase-then-write bind | `delta_bind` | **−60,903** (the binder is replaced) | −0.04 / −0.06 / −0.03% | −11.8 / +0.9 / −4.0% | 13/13 |
+| 2 | Gated fetch | `fetch_gate` | +1,544 | +0.02 / +0.01 / +0.02% | −2.7 / +0.4 / +6.6% | 22/22 (with sinks) |
+| 2 | Per-head sink | `fetch_sink` | +5 | ≈ 0 | −2.0 / +4.0 / +4.5% (noise) | (same file) |
+| 3 | Attention residuals across loops | `loop_attnres` | +1,024 | 0 | +4.9 / +9.0 / +7.9% | 11/11 |
+| 4 | Engram hashed name lookup | `engram` | **+164,096 (+8.15%)** | +0.09 / +0.05 / +0.03% | −6.1 / −3.5 / −1.2% (noise) | 16/16 |
+| 5 | Per-register halting | `row_halt` | +129 | ≈ 0 | −5.9 / −1.8 / +0.7% (noise) | 26/26 (with depth) |
+| 5 | Random-depth training | `random_depth` | 0 | −4.4 / −15.5 / **−39.6%** | −7.6 / −17.2 / **−38.7%** | (same file) |
+| 6 | QK-norm on ASK (gains) | `qk_norm` | +128 | 0 | −3.5 / −3.3 / −7.5% | 21/21 (QK family) |
+| 6 | QK-norm on all attention | `qk_norm_all` | +320 | 0 | +5.6 / **+13.6 / +19.8%** | (same file) |
+| 6 | QK-Clip on ASK | `qk_clip` (τ, 0 = off) | 0 | 0 | −4.3 / −0.9 / +3.9% (noise) | (same file) |
+| 6 | Content + line-position sub-keys | `key_split` | 0 | 0 | −0.6 / +0.4 / +0.9% (noise) | (same file) |
+| 7 | ASK-selection reuse | `ask_reuse` | 0 | −0.01% | −8.1 / +2.1 / +5.4% | 9/9 |
+| 8 | Muon optimiser | `MiniTrainer(optimizer="muon")` | 0 | 0 | optimizer step 48.8 ms against AdamW's 7.5 ms (6.5×): about +41 ms on a ≈ 0.47–0.51 s step (**+8–9%**, CPU d = 128) | 21/21 |
 
-- `random_depth`'s −34% is the sampled cap at seed 0 cutting own-mode loops. It is a training-cost change, not a
-  per-loop cost.
-- `qk_norm_all` is the only flag whose per-step cost is clearly above noise. On CPU, `RMSNorm` runs unfused under
-  autocast.
+- **Real costs above the floor:**
+  - `random_depth`: −40% expected own-mode cost. The cap clamps own mode's 8 loops to E[cap] = 4.5. Teacher mode
+    mostly runs fewer loops than the cap anyway.
+  - `qk_norm_all`: +14–20%. On CPU, `RMSNorm` runs unfused.
+  - `loop_attnres`: +5–9%, from the per-loop softmax mix.
+- **Single outliers:** `delta_bind` at −12% in gold mode and `ask_reuse` at −8% in gold mode sit outside the floor
+  in one mode only. I did not investigate them, and they are not claimed.
+- **Muon:** the overhead is Newton–Schulz itself. Swapping the AdamW half for torch's own AdamW did not change it on
+  CPU (§7).
 
 **Swap condition, shown.** With all flags off, the model is bit-identical to 73b8e0224
 (`tests/test_premonition_steals_identity.py`).
@@ -84,12 +93,13 @@ gradients, answers, and takes trainer steps. The hand parameter count equals the
 
 **Paired init, shown.** Steal modules are built off the global RNG stream (`model._aside`), and they are initialised
 by an explicit generator, so no global stream, CPU or CUDA, is touched. So at a given seed, every shared weight and
-the RNG state equal the flag-off model's, and a paired A/B differs only in the steal. The exception is `delta_bind`: it removes the binder, so the binder's draws, and every weight after them,
-move.
+the RNG state equal the flag-off model's, and a paired A/B differs only in the steal. This includes `delta_bind`:
+the binder it removes still has its init draws taken (`model._Draws`), so every later weight matches. That is tested
+for every flag, variant and seed.
 
 **Suite, shown.** All 103 test files were run one by one on this branch and on an untouched `main` checkout.
 - Every pre-existing file has the same outcome on both.
-- The 9 new files (143 tests) all pass.
+- The 9 new files (150 tests) all pass.
 - Pre-existing non-passes are environmental and identical on both:
   - 10 fable files assert a hard-coded Mac path;
   - `test_remote_runner` has 1 error;
@@ -266,8 +276,10 @@ batches. Losses are 5-step window means. "Equal clock" is interpolated at fracti
 | 1 | Muon 3e-3 | 5.397 | 35.6 | 8.9 | 6.98 | 5.88 |
 | 1 | Muon 2e-2 | 4.691 | 29.7 | 7.5 | 5.00 | 4.69 |
 
-At d = 128 (2.10M parameters, CPU), the Muon optimizer step takes 46 ms against 7 ms for AdamW, which is about 8% of
-a 0.49 s training step.
+At d = 128 (2.10M parameters, CPU), the Muon optimizer step takes 48.8 ms against 7.5 ms for AdamW, which is about
+8–9% of a 0.47–0.51 s training step. This was re-measured on 10-18 with the AdamW half now torch's own AdamW, and it
+is unchanged from the first run (46 ms). The equal-clock table above is the 10-17 run; the 10-18 re-run gives the
+same signs in both seeds (`muon-bench.json`).
 
 **Reading, suggested:**
 - At the recipe lr, Muon is behind AdamW at equal clock in both seeds (+5% to +13% loss).
@@ -297,7 +309,7 @@ per run, each against an all-off control with paired seeds (§1 paired init).
 | 3 | `fetch_sink` | +5 parameters. With 3 of 4 fetched cards wrong, decoder heads need a way to attend to nothing. | $0 |
 | 4 | `delta_bind` | **Removes** 60,903 parameters. It changes what entity slots carry from cards (the copy path for answers). Being cheaper makes a tie a win. | $0 |
 | 5 | `loop_attnres` | +1,024 parameters. Aimed at "Think is the bottleneck" (09-18 handoff, row 11). | $0 |
-| 6 | `random_depth`, then `row_halt` | random_depth cuts own-mode training cost by about a third. Read it as non-inferiority plus cost (it is a win if not worse). row_halt only after loop counts mean something (today halt_rate is 0). | $0 |
+| 6 | `random_depth`, then `row_halt` | random_depth cuts expected own-mode training cost by about 40%. Read it as non-inferiority plus cost (it is a win if not worse). row_halt only after loop counts mean something (today halt_rate is 0). | $0 |
 | 7 | `key_split` | The first retrieval-side run, and only once an answer-path arm leaves chance. §3 says the fix has to be new key information, and position is exactly that. | $0 |
 | 8 | `qk_norm`, `qk_clip` | Cheap, but §3 found no magnitude problem for them to fix. Expected null. | $0 |
 | 9 | `qk_norm_all` | +23% CPU step time, and no evidence of a problem it fixes. | $0 |
@@ -451,9 +463,35 @@ and r1–r10 from round 2. "Fixed" means fixed with a regression test unless the
 | i7 | QK-Clip runs only through `MiniTrainer._train_step` | note | **Documented** (§2). |
 | i8 | `row_halt` and `loop_attnres` assume the registers are the last rows | note | **Documented.** The subclasses that append rows refuse the think path today. |
 
+**Round 3 (built-in review of `claude/steals-8`, requested by the coordinator; fixes under the coordinator's GO).**
+Nos. 1–3 were confirmed by running code before any fix. Items 6 and 10 were already fixed on the fixes branch
+(round 1, nos. 6 and 8).
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1 | The QK-Clip peak was an untracked tensor attribute, so `read_only` evaluation failed after a training forward that no optimizer step followed (confirmed) | **Fixed.** It is a non-persistent buffer, registered only when `qk_clip > 0` and not in `state_dict`. A test runs a `read_only` answer after a training forward. |
+| 2 | A forward that never reached ASK left a stale peak, and κ was clipped by it (confirmed) | **Fixed.** Every training forward resets the peak first. A test checks that an empty batch after a high-peak forward leaves κ alone. |
+| 3 | `row_halt`: training stopped asking on soft keep < 0.5 while answering used sticky p ≤ 0.5, so the two disagreed (confirmed; p = 0.4 gives 0.36 against 1) | **Fixed.** Both paths stop asking on one sticky indicator, p > 0.5 at some loop (`episode.halted`). The soft keep still blends updates in training. A test at p = 0.4 and p = 0.6 checks both paths and fails under the old rule. |
+| 4 | `delta_bind` dropped the binder's RNG draws, so every later weight moved | **Fixed.** `_Draws` takes the removed binder's construction and init draws in its place. The paired-init test now covers every flag with no exception. |
+| 5 | Callers outside the model must set `hard` by hand and use the ASK wrappers | Not changed (design note, as round 1 no. 5). |
+| 6 | `random_depth` sampled in any grad-enabled forward | Already fixed (round 1, no. 6). |
+| 7 | Engram's per-forward host loop and its unbounded cache | Not changed (Engram is on HOLD, as round 1 no. 7). |
+| 8 | The sink set-CE copied `set_cross_entropy` | **Fixed.** It now calls it. |
+| 9 | `gather_keys` copied `gather`'s indexing | **Fixed.** Both share `CardStore._slots` (`gather` is on the off path, and the probe re-verified it). |
+| 10 | Muon's AdamW half was a Python loop | Already fixed (round 1, no. 8). |
+
 **Scope (both reviewers).**
 - Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
   `learnlab/`, `memorylab/` and `archive/` are untouched.
 - Every off-path change is a neutral seam or sits behind a flag, and running them showed they are identical.
 
-**Re-verification after the fixes:** PLACEHOLDER_REVERIFY
+**Re-verification after the round 3 fixes (commit 527f2a740).**
+- **Identity harness.** `tests/test_premonition_steals_identity.py`, 11 tests, passes. The base side is now built
+  by the base commit's own `config.py`. The paired-init test covers every flag.
+- **Independent probe.** The reviewer's own probe (`git archive` trees, separate processes) was re-run on the new
+  commit. Of 1,853 recorded entries (1,816 tensors), **6 differ from the base, and all 6 are timing fields**
+  (seconds, tokens per second). The two config-level differences from round 1 are gone.
+- **Full suite.** All 103 test files were run one by one. **Every pre-existing file has the same outcome as on
+  untouched `main`**, and the 9 steal files (150 tests) all pass.
+- **Built-in review.** It was then run again on the pushed `claude/steals-8`. Its verdict is reported to the
+  coordinator in the session, not here, so the report does not pre-judge it.
