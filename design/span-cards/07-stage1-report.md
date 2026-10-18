@@ -1,8 +1,8 @@
 # Stage 1 report (SC-1; booked by the coordinator after Stage 0)
 
-**Status: SEEDS 0 AND 1 FAILED THE MEMORY GUARD AT RUNG 2; SEED 2 TRAINING.** All three boxes accepted the rung-2
-go. Seeds 0 and 1 stopped on `MemoryGuardError` in the parent's gold phase within a minute; seed 2 is training. Seeds
-0 and 1 are not restarted until the coordinator rules (below).
+**Status: STOPPED. ALL THREE SEEDS FAILED THE MEMORY GUARD AT RUNG 2.** Seeds 0 and 1 failed in the parent's gold
+phase. Seed 2 finished its parent (checkpoint saved, branch check passed) and failed 94 s into the LINE arm. No arm
+trained to F. Every box is stopped (not destroyed). Nothing restarts until the coordinator rules.
 
 ## Run record
 - Script: `scripts/span_stage1.py` at commit 707bdce90 (sha256 47577a35...d127), reviewed by the coordinator (the
@@ -133,6 +133,42 @@ nothing unless they are started, and a restart would reread that go and repeat t
 start them without a ruling.
 
 **Money:** $0.78 spent at 19:47Z since the baseline. Seed 2 alone costs $0.29/h; the stopped boxes cost only disk.
+
+## Seed 2: parent done, LINE arm failed (2026-10-18)
+- **Parent P_2:** 3,484 gold steps, 124.5M tokens, 387 s, share 0.0500 of F. Peak reserved **10.70 GB** (the
+  trainer's own report): inside the guard. Final train loss 0.905, train answer accuracy 0.825.
+  Checkpoint `artifacts/span-stage1/20261018T184858Z/seed2/parent` on the box disk (state sha256 76986173...eb2,
+  config sha256 bbed5131...e22e).
+- **Parent DEV:** 8,675 / 8,675 questions scored, aligned; overall 0.2116 (n = 7,683 told), near 0.207, far 0.252,
+  multi_hop 0.236, not told 0.000 (n = 469).
+- **Branch-point check: passed.** 5,967 cards; CPU key and value differences 0.0; natural and eager passes identical on
+  576 / 576 questions (eager fetched 16,128 cards over all 576); line_aligned = 1.
+- **LINE arm:** started at step 3,484 (the parent's line economy at the branch: 93 cards per visit, 11.16 tokens per
+  card, line_aligned 1). It failed at t = 3716.8 s, 94 s after its start: `MemoryGuardError: peak reserved GPU memory
+  21.10 GiB` (22.66 GB on the 24 GB card), in `trainer.train` of the arm. Box exit 19:50:56Z; the watchdog stopped
+  the box at 19:53:00Z. No LINE or SPAN checkpoint.
+
+**What the three failures show together (shown):** on the same rung and the same code, the reserved peak was
+10.70 GB for one full gold phase (seed 2) and 17.6-18.2 GB within about 400 gold steps for two others (seeds 0 and 1).
+The first post-gold minutes of seed 2's LINE arm reached 22.66 GB. Before each training run the script frees the
+cache and resets the peak; the parent, probe and branch batches are off the GPU or deleted before the arms.
+
+**Possible causes (suggested, none tested):**
+1. Allocator fragmentation from the changing batch shapes, as already filed. This fits the spread across seeds.
+2. Memory that depends on the *trained* model's behaviour after the gold phase: the number of ASK/HALT loops per
+   question, and the cards fetched. The pre-flight measured teacher and own steps with fresh weights, so it could not
+   see this. This fits the jump at the arm's start, after a full gold phase that stayed at 10.7 GB.
+3. Growth over time inside the training loop (something held from step to step). Nothing in the logs shows this
+   directly.
+
+A Linux card does not spill to system RAM. The guard (from train_d's `MiniTrainer`, written for Windows) stops the run
+at 14 GiB reserved, and the 24 GB card itself did not run out. Whether the guard should bind on these boxes is a
+ruling, not something I change.
+
+**Boxes and money:** spend $0.817 at 19:53Z since the baseline (of the $18 hard stop). All three boxes are stopped.
+Their disks cost about $0.10/h together (seed 0 $0.014/h, seed 1 $0.060/h, seed 2 $0.031/h). Seed 2's disk holds
+the P_2 checkpoint and the built data; seeds 0 and 1 hold the data only. The watchdog destroys every Stage 1 box at
+its 16 h deadline (about 10:48Z on 2026-10-19), and P_2 goes with it unless the coordinator rules otherwise.
 
 ## Readout per seed
 (filed when each seed finishes)
