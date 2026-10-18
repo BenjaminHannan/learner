@@ -2,6 +2,7 @@
 each way the built-in review (2026-10-18) showed the earlier check could pass with a broken pairing. CPU, tiny."""
 from __future__ import annotations
 
+import math
 import unittest
 
 import torch
@@ -29,6 +30,7 @@ class BranchCheckTest(unittest.TestCase):
         self.assertTrue(check["passed"], check["reasons"])
         self.assertEqual(check["economy"]["line_aligned"], 1.0)
         self.assertGreater(check["eager"]["cards_fetched"], 0)
+        self.assertEqual(check["eager"]["questions_fetching"], check["eager"]["questions"])   # every question
         self.assertEqual(check["missing"], sorted(span_stage0.GATE_KEYS))
         self.assertFalse(line.training or span.training)
 
@@ -52,7 +54,7 @@ class BranchCheckTest(unittest.TestCase):
     def test_wrong_card_values_fail_when_the_natural_pass_never_fetches(self) -> None:
         """Review finding 2: with weights that never ASK, identical answers did not exercise the cards. Here the
         natural pass fetches nothing and matches exactly (the old check passed this pair); the value check and the
-        eager pass (which fetches, and whose halt probabilities read the card values) both fail it."""
+        eager pass (which fetches on every loop, and whose halt logits read the card values) both fail it."""
         line, span = pair()
         with torch.no_grad():
             line.heads.ask.bias.fill_(-20.0)                        # the natural pass never fetches a card
@@ -64,7 +66,7 @@ class BranchCheckTest(unittest.TestCase):
         self.assertIn("card keys or values", check["reasons"])
         self.assertIn("answers (eager)", check["reasons"])
         self.assertGreater(check["eager"]["cards_fetched"], 0)
-        self.assertGreater(check["eager"]["max_halt_diff"], span_stage0.TOLERANCE)
+        self.assertGreater(check["eager"]["max_halt_logit_diff"], span_stage0.TOLERANCE)
 
     def test_a_wrong_layout_fails_on_line_alignment(self) -> None:
         line, span = pair(max_span=3)                               # the cap splits every line
@@ -83,6 +85,51 @@ class BranchCheckTest(unittest.TestCase):
         check = span_stage0.branch_check(line, span, cut, DEVICE)
         self.assertFalse(check["passed"])
         self.assertIn("no cards", check["reasons"])
+
+
+    def test_a_batch_without_questions_is_skipped_not_a_crash(self) -> None:
+        """Second review, finding 1: reshape(0, -1) raised on a batch with no questions."""
+        empty = synthetic_batch(visits=2, lines=16, seed=3, question_rate=0.0)
+        self.assertEqual(int(empty.q_visit.shape[0]), 0)
+        line, span = pair()
+        check = span_stage0.branch_check(line, span, [empty] + batches(), DEVICE)
+        self.assertTrue(check["passed"], check["reasons"])
+
+    def test_a_trained_halt_head_still_covers_every_question(self) -> None:
+        """Second review, finding 2: with HALT left natural, questions that halt on loop 1 fetched nothing."""
+        line, span = pair()
+        with torch.no_grad():
+            line.heads.halt.bias.fill_(20.0)                        # LINE halts at once (as after training)
+        check = span_stage0.branch_check(line, span, batches(), DEVICE)
+        self.assertTrue(check["passed"], check["reasons"])
+        self.assertEqual(check["eager"]["questions_fetching"], check["eager"]["questions"])
+
+
+class GateTest(unittest.TestCase):
+    def test_the_strict_check_runs_on_cpu_copies(self) -> None:
+        line, span = pair()
+        gate = span_stage0.branch_gate(line, span, batches(), DEVICE)
+        self.assertTrue(gate["passed"])
+        self.assertEqual(gate["strict_cpu"]["device"], "cpu")
+        self.assertTrue(gate["line_aligned_is_1"])
+        self.assertNotIn("gpu", gate)
+        self.assertFalse(line.training or span.training)
+        bad_line, bad_span = pair(max_span=3)
+        self.assertFalse(span_stage0.branch_gate(bad_line, bad_span, batches(), DEVICE)["passed"])
+
+    def test_log_lines_are_strict_json(self) -> None:
+        """Second review, finding 7: math.inf was written as the non-JSON token Infinity."""
+        import contextlib
+        import io
+        import json
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            span_stage0.emit("x", diff=math.inf, nested={"v": [float("nan"), 1.0]})
+        line = out.getvalue()
+        self.assertNotIn("Infinity", line.replace('"inf"', ""))
+        record = json.loads(line[len("STAGE0 "):], parse_constant=lambda c: self.fail(c))
+        self.assertEqual(record["diff"], "inf")
+        self.assertEqual(record["nested"]["v"], ["nan", 1.0])
 
 
 if __name__ == "__main__":
