@@ -167,8 +167,9 @@ ruling, not something I change.
 
 **Boxes and money:** spend $0.817 at 19:53Z since the baseline (of the $18 hard stop). All three boxes are stopped.
 Their disks cost about $0.10/h together (seed 0 $0.014/h, seed 1 $0.060/h, seed 2 $0.031/h). Seed 2's disk holds
-the P_2 checkpoint and the built data; seeds 0 and 1 hold the data only. The watchdog destroys every Stage 1 box at
-its 16 h deadline (about 10:48Z on 2026-10-19), and P_2 goes with it unless the coordinator rules otherwise.
+the P_2 checkpoint and the built data; seeds 0 and 1 hold the data only. The watchdog stops a finished box and never
+destroys it. It exits once no box is active, so nothing destroys the stopped boxes or P_2 until the coordinator
+rules. A stopped box costs only its disk, so a restart, a destroy, or keeping P_2 is a ruling.
 
 ## Readout per seed
 (filed when each seed finishes)
