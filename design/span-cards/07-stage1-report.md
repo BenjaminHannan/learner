@@ -638,7 +638,7 @@ models have about 2M parameters, so each `state.pt` (weights, Adam moments, trai
   copy has nowhere to send files.
 - Vast's remote command on an instance allows only `ls`, `rm` and `du`.
 - A stopped box can only restart with its original launch command. That reruns the pinned script: data, then the
-  old pre-flight, then the go gate. **The go file still says `"go": true` (attempt 2)**, so a restarted box would
+  old pre-flight, then the go gate. The go file then said `"go": true` (attempt 2; now superseded, see below), so a restarted box would
   start training again. Before any box restarts, `stage1-go.json` must become a plain stop (`{"go": false}`). The
   script then exits at the gate without training, and the box idles.
 - Weights are not pushed to the repo (house rule), and I will not put them on a public file host.
@@ -656,3 +656,11 @@ models have about 2M parameters, so each `state.pt` (weights, Adam moments, trai
    untested at that size, and it means writing and reviewing a new script.
 
 The boxes are held, stopped, as ruled (about $0.16/h of disk).
+
+### Go file set to a plain stop (coordinator safety ruling, Q195 follow-up)
+`design/span-cards/stage1-go.json` is now `{"go": false, ...}`, a plain stop with only a note (commit 8d7e675a5,
+served on the branch's raw URL). A restarted box still reruns the pinned script's data step and old pre-flight. At the
+go gate, `wait_for_go` sees `go: false` with no script/code hash and no seed list, which the script reads as "a plain
+stop": it raises `SystemExit("the go file says stop")` before any training. Checked locally against the pinned
+script (sha256 47577a35...d127): `wait_for_go` on this file raised exactly that `SystemExit`. The boxes stay
+stopped; the retrieval route is Ben's decision.
