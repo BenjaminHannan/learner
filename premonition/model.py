@@ -317,6 +317,7 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    raw: Optional[torch.Tensor] = None    # [Q, card_rows, d] card rows as inserted (`decoder_raw_cards` only)
 
 
 class PremonitionMini(nn.Module):
@@ -431,9 +432,12 @@ class PremonitionMini(nn.Module):
         valid.append(torch.ones(count, config.registers, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line)
+        if config.decoder_raw_cards and config.cards:
+            episode.raw = torch.zeros(count, config.cards, d, device=device)
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -463,6 +467,8 @@ class PremonitionMini(nn.Module):
         episode.x = episode.x.index_put((who[real], position[real]), rows[real])
         episode.valid = episode.valid.index_put(
             (who[real], position[real]), torch.ones_like(position[real], dtype=torch.bool))
+        if episode.raw is not None:
+            episode.raw = episode.raw.index_put((who[real], position[real] - self._card_base), rows[real])
         episode.count = episode.count.index_add(0, index, real.long().sum(1))
         episode.fetched = episode.fetched.index_put(
             (who[real], cards[real]), torch.ones_like(cards[real], dtype=torch.bool))
@@ -498,6 +504,16 @@ class PremonitionMini(nn.Module):
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
         return self.decoder(self.embed(inputs), rows, valid)
+
+    def _memory(self, episode: _Episode, rows: torch.Tensor, valid: torch.Tensor,
+                index: Optional[torch.Tensor] = None) -> tuple[torch.Tensor, torch.Tensor]:
+        """Decoder memory: the think rows, plus (`decoder_raw_cards`) the card rows as inserted, which share
+        the card rows' mask."""
+        if episode.raw is None:
+            return rows, valid
+        raw = episode.raw if index is None else episode.raw[index]
+        cards = valid[:, self._card_base:self._card_base + self.config.cards]
+        return torch.cat([rows, raw.to(rows.dtype)], dim=1), torch.cat([valid, cards], dim=1)
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
@@ -568,7 +584,8 @@ class PremonitionMini(nn.Module):
             pairs += index.numel()
             rows, halt, ask, scores = self._step(episode, index, step, store)
             # L_ans (deep supervision) and the HALT target.
-            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index])
+            hidden_ans = self._decode_logits(*self._memory(episode, rows, episode.valid[index], index),
+                                             inputs[index])
             target = targets[index]
             keep = target != IGNORE_INDEX
             logits = F.linear(hidden_ans[keep], self.embed.weight).float()
@@ -743,7 +760,7 @@ class PremonitionMini(nn.Module):
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence)[:, -1]
+            hidden = self._decode_logits(*self._memory(episode, episode.x, episode.valid), sequence)[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)
