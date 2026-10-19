@@ -501,3 +501,8 @@ The run card's family rule needs 2 of 3 seeds. With two seeds in:
 Seed 1's LINE arm is near its end; its SPAN arm (about 10 h, about $2-3 projected) has not started. It is not stopped.
 The registered plan runs three seeds, and G3/P3/G1 are measured outcomes, not stop rules. Whether to finish it is
 the coordinator's call.
+
+**Ruling Q187 (coordinator):** finish seed 1's SPAN arm as registered: sealed SC-1 marks, same rung (40,000, 35) and
+the same allocator setting as the other seeds, inside the $18 hard stop. The family verdict on G3, P3 and G1 is
+already settled by seeds 0 and 2; seed 1 completes the three-seed design and settles G2. When it lands, the final
+Stage 1 report gives all three seeds' readouts and the total actual Stage 1 spend. Nothing else changes.
