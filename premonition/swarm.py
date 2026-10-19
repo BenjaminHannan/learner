@@ -110,8 +110,8 @@ class Board:
 def entity_table(store: CardStore, n_ent: int) -> torch.Tensor:
     """[B, L, n_ent] bool: line l of visit b names entity e (from the card ents; -1 padding ignored)."""
     ents = store.ents
-    if ents.numel() and int(ents.max()) >= n_ent:                       # one check per forward, as one_hot did
-        raise ValueError(f"entity id {int(ents.max())} is out of range for n_ent = {n_ent}")
+    if ents.numel():          # range check with no host sync: a device-side assert on CUDA, raises at once on CPU
+        torch._assert_async(ents.max() < n_ent, "swarm entity_table: an entity id is >= n_ent")
     table = torch.zeros(*ents.shape[:2], n_ent + 1, dtype=torch.bool, device=ents.device)
     return table.scatter_(2, torch.where(ents >= 0, ents, torch.full_like(ents, n_ent)), True)[..., :n_ent]
 

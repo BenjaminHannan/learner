@@ -48,7 +48,7 @@ Common options: `--root` (project root; default the repo), `--device cpu|cuda`, 
    * Curriculum-weighted s/update per arm: 0.05 gold + 0.25 teacher + 0.70 own.
    * D1's FLOP fit: `trainer.calibrate(4 head batches)`; curriculum-weighted FLOPs/update from the fit and
      `planned_loops`; D1 FLOP/s = that / D1 weighted s/update. `T_raw = 2.6e16 / D1_flops_per_s`;
-     `T = min(3600, 300 * ceil(T_raw / 300))` (RUNCARD-S0 §1). With `--size tiny` use `--t-override` (dry run: 30).
+     `T = min(3600, 300 * ceil(T_raw / 300))` (RUNCARD-S0 §1). With `--size tiny` use `--t-override` (dry run: 120, as the box script passes).
    * GPU-busy fraction (CUDA only, else null): `torch.profiler` over 10 own-mode updates for D1 and S0m4:
      sum of CUDA kernel self time / wall time.
    * **Stop-and-ask (FUNDING-BID C0 rule):** `ratio = S0m4 weighted s/update / D1 weighted s/update`;
@@ -110,7 +110,7 @@ default `all`), `DRYRUN` (1 = CPU tiny dry run). Steps, each logged with UTC tim
 4. `c0` -> `c0.json`. If `stop_and_ask` or `money_stop`: write `STOP-AND-ASK.txt` with the numbers and EXIT 3 before
    any training. (PART=c0 stops here regardless.)
 5. Trains, interleaved, one at a time: D1 s0, S0 s0, D1 s1, S0 s1, D1 s2, S0 s2 (`--seconds T` from c0.json;
-   DRYRUN T = 30, size tiny, device cpu).
+   DRYRUN T = 120, size tiny, device cpu).
 6. Evals of all six checkpoints.
 7. `premonition_swarm_marks.py --card S0` -> MARKS-S0.{json,md}.
 8. Tar every JSON/log/MARKS file (not checkpoints) to `swarm-screen-out.tgz` for copy-back; print its sha256.
@@ -135,3 +135,12 @@ KILL, FAIL-M2 per-seed-not-averaged case where the 3-seed mean slips but only 1 
 PROMOTE, HOLD, COLLAPSED-blocks-PROMOTE), the S1 BOARD-UNUSED branch, the T formula (rounding, 3600 cap), and the
 stop-and-ask / money_stop flags. Then run `python -m unittest tests.test_premonition_swarm_screen
 tests.test_premonition_swarm tests.test_premonition_model tests.test_premonition_train` and report counts.
+
+## Dry-run T (amended 2026-10-19, coordinator rounds 2-3): 120 s, matching the kit
+
+The box script runs the CPU dry run with `--t-override 120` (`scripts/premonition_swarm_box.sh`, DRYRUN branch).
+This spec now says the same. Reason: on the 4-core CPU, one tiny training step at the dry run's 3,000-token batch
+takes about 0.3-0.6 s. That is about 2% of a 30 s budget, the whole width of RUNCARD-S0 M5's ±2% band, so a single
+step of overshoot voids a 30 s dry run (it did at 9a3579a: +2.01%). At 120 s the same step is about 0.5%, and the
+dry run at d58a18a stayed within +0.25%. This setting is procedural only. It changes no success, kill or validity
+bar, and the box's own T still comes from C0 (≥ 300 s).

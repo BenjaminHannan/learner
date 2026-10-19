@@ -368,12 +368,60 @@ class MergeTest(unittest.TestCase):
 
 
     def test_out_of_range_entity_id_raises(self) -> None:
-        """Review round 2, item 5: an entity id >= n_ent raises (as the old one_hot did) instead of vanishing."""
+        """Review round 2, item 5: an entity id >= n_ent raises instead of vanishing (torch._assert_async: it
+        raises at once on CPU and is a device-side assert on CUDA)."""
         model = s0()
         store = _tiny_store(lines=6, ents={1: [5]})
+        sw.entity_table(store, model.config.n_ent)                          # in range: fine
         store.ents[0, 2, 0] = model.config.n_ent                           # off by one: id == n_ent
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             sw.entity_table(store, model.config.n_ent)
+
+    def test_entity_table_range_check_reads_nothing_on_the_host(self) -> None:
+        """Review round 3, item 1: the range check is torch._assert_async, not int(ents.max()), so building the
+        table forces no host sync (no _local_scalar_dense / nonzero / boolean index)."""
+        model = s0()
+        store = _tiny_store(lines=6, ents={1: [5, 2], 3: [7]})
+        with torch.no_grad(), _Record() as record:
+            sw.entity_table(store, model.config.n_ent)
+        self.assertIn("_assert_async.msg", record.ops)
+        bad = sorted({op for op in record.ops if any(op.startswith(name) for name in NoSyncTest.SYNCING)})
+        self.assertEqual(bad, [], bad)
+
+    def test_flag_off_never_builds_the_entity_table(self) -> None:
+        """Review round 3, item 1: with thinkers == 1 the swarm's entity table is never built, and the model stays
+        bit-identical to the frozen pre-swarm copy (losses, gradients, answers; all variants)."""
+        batch = synthetic_batch(seed=9)
+        original = sw.entity_table
+
+        def refuse(*_args, **_kwargs):
+            raise AssertionError("entity_table was called with the flag off")
+
+        sw.entity_table = refuse
+        try:
+            for variant in VARIANTS:
+                config = tiny_config(variant)
+                torch.manual_seed(13)
+                live = PremonitionMini(config)
+                torch.manual_seed(13)
+                old = frozen.PremonitionMini(config)
+                for mode in ("gold", "teacher", "own"):
+                    outs = []
+                    for model in (live, old):
+                        model.zero_grad(set_to_none=True)
+                        out = model(batch, mode=mode, p_own=0.5, generator=torch.Generator().manual_seed(2))
+                        out["loss"].backward()
+                        outs.append(out)
+                    for name in ("lm", "ask", "ans", "halt", "loss"):
+                        self.assertTrue(torch.equal(outs[0][name], outs[1][name]), (variant, mode, name))
+                    for (name, p), (_, q) in zip(live.named_parameters(), old.named_parameters()):
+                        self.assertTrue(p.grad is None and q.grad is None or torch.equal(p.grad, q.grad),
+                                        (variant, mode, name))
+                new, ref = live.answer(batch), old.answer(batch)
+                for name in ("tokens", "lengths", "loops", "first_top", "halt_prob"):
+                    self.assertTrue(torch.equal(getattr(new, name), getattr(ref, name)), (variant, name))
+        finally:
+            sw.entity_table = original
 
     def test_entity_table_matches_the_one_hot_and_the_cache(self) -> None:
         """Review item 7: the bool scatter table equals the old int64 one-hot, and the per-forward cache
@@ -554,6 +602,32 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(ok[0].tolist(), [True] * M + [False] * 3)
 
 
+def _record_class():
+    from torch.utils._python_dispatch import TorchDispatchMode
+
+    class Record(TorchDispatchMode):
+        """Records every aten op name; a boolean INDEX to index/index_put is renamed, since it syncs (nonzero
+        inside the kernel). Only the index tuple is inspected, not index_put's values."""
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.ops: list[str] = []
+
+        def __torch_dispatch__(self, func, types, args=(), kwargs=None):
+            name = func.__name__
+            if name.startswith(("index.", "index_put", "_index_put")) and len(args) > 1:
+                indices = args[1] if isinstance(args[1], (list, tuple)) else [args[1]]
+                if any(isinstance(t, torch.Tensor) and t.dtype == torch.bool for t in indices):
+                    name = "nonzero via boolean index: " + name
+            self.ops.append(name)
+            return func(*args, **(kwargs or {}))
+
+    return Record
+
+
+_Record = _record_class()
+
+
 class NoSyncTest(unittest.TestCase):
     """Review round 2, item 2: `Board.post` forces no host sync. Every aten op it runs is recorded; ops that read a
     device value on the host (nonzero / boolean-mask indexing, .item(), masked_select, is_nonzero) must not appear."""
@@ -561,27 +635,11 @@ class NoSyncTest(unittest.TestCase):
     SYNCING = ("nonzero", "_local_scalar_dense", "masked_select", "is_nonzero", "item")
 
     def test_post_runs_no_syncing_op(self) -> None:
-        from torch.utils._python_dispatch import TorchDispatchMode
-
-        class Record(TorchDispatchMode):
-            def __init__(self) -> None:
-                super().__init__()
-                self.ops: list[str] = []
-
-            def __torch_dispatch__(self, func, types, args=(), kwargs=None):
-                name = func.__name__
-                if name.startswith(("index.", "index_put", "_index_put")):          # a bool index syncs (nonzero
-                    flat = [t for a in args for t in (a if isinstance(a, (list, tuple)) else [a])]   # inside the
-                    if any(isinstance(t, torch.Tensor) and t.dtype == torch.bool for t in flat[1:]):  # kernel)
-                        name = "nonzero via boolean index: " + name
-                self.ops.append(name)
-                return func(*args, **(kwargs or {}))
-
         model = s1(board_cards=3)
         store = _tiny_store(lines=8)
         board = sw.Board(model, 2, store, torch.zeros(2, dtype=torch.long), torch.tensor([7, 7]), torch.device("cpu"))
         cards = torch.tensor([[2, -1], [2, 4], [-1, store.null], [5, 6], [6, -1], [1, 3]])     # 2 questions x 3 desks
-        with torch.no_grad(), Record() as record:
+        with torch.no_grad(), _Record() as record:
             board.post(cards)
             board.post(cards.flip(1))
         self.assertTrue(record.ops)
