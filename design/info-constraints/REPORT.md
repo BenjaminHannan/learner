@@ -354,6 +354,37 @@ here: no card mechanism can be read through a decoder that ignores its memory.
    reached 1024/1024. See S2.
 4. S1 stays designed but is **not built** until S1-P1 shows eviction on a trained model.
 
+#### Plain-D step sweep (run 2026-10-19, CPU, $0; coordinator GO 10-19, step 1)
+
+Same script and protocol as S1-P0 (`train_toy`: the full curriculum gold → teacher → own, all four losses,
+far-fact toy, 256 held-out questions per seed). Only the budget changes. Raw:
+`artifacts/claude-infoconstraints-20261018/sweep/plainD-steps{1000,2000}-seed{0,1,2}.{json,log}`. The 380 rows
+are S1-P0's `s1-p0b` files. Chance 6.25%.
+
+| requested / run steps | seed | own acc | gold acc | gold, ASK off, 8 loops | no cards | distinct answers (own / gold / no cards) | gold: ring overflow (questions /256) |
+|---|---|---|---|---|---|---|---|
+| 380 / 425 | 0 | 7.42% | 7.42% | 7.42% | 7.42% | 1 / 1 / 1 | 0 |
+| 380 / 424 | 1 | 8.20% | 8.20% | 8.20% | 8.20% | 1 / 1 / 1 | 0 |
+| 380 / 424 | 2 | 7.81% | 7.81% | 7.81% | 7.81% | 1 / 1 / 1 | 0 |
+| 1000 / 1115 | 0 | 3.91% | 3.91% | 3.91% | 3.91% | 1 / 1 / 1 | 0 |
+| 1000 / 1115 | 1 | 6.64% | 6.64% | 6.64% | 6.64% | 1 / 1 / 1 | 0 |
+| 1000 / 1115 | 2 | 7.42% | 7.42% | 7.42% | 7.42% | 1 / 1 / 1 | 0 |
+| 2000 / 2230 | 0 | 5.47% | 5.47% | 5.47% | 5.47% | 1 / 1 / 1 | 65 |
+| 2000 / 2229 | 1 | 7.42% | 7.42% | 7.42% | 7.42% | 1 / 1 / 1 | 0 |
+| 2000 / 2228 | 2 | 5.08% | 5.08% | 5.08% | 5.08% | 1 / 1 / 1 | 0 |
+
+**Reading (shown):**
+- **At every budget and seed, every arm gives exactly one answer to all 256 questions.** That is 9 of 9
+  cells, with no card, a fresh gold card, or 8 loops on it. Accuracy (3.9-8.2%) is just how often that one
+  value is right.
+- Under D's own curriculum, the far-fact toy's answer path does not come alive by about 2,230 steps.
+- The ring does overflow once the model learns to ask more: 65/256 gold-card questions at 2,230 steps on
+  seed 0, all of them losing the gold card. This is the first observed instance of N1. It changes nothing
+  while the output is constant.
+- **Consequence:** the far-fact toy under the full curriculum cannot read any answer-path fix at ≤ 2,230
+  steps. Every such cell would be VOID under the 10-19 rule. S2 Stage 0 uses the m02 protocol instead (gold
+  mode, answer loss only, where m02 recorded D at 112/1024 and bypass at 1024/1024), with the same VOID rule.
+
 **Paired A/B (Stage 0, CPU, $0; only if S1-P1 shows eviction).** Far-fact toy, D vs D + `ring_resident`, paired init (S1 adds no
 parameters, so both arms draw the same stream), 3 seeds, 425 steps.
 - Primary: own-retrieval answer accuracy at eval, no `max_loops` override.
