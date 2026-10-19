@@ -56,3 +56,9 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | When (UTC) | Session | Ruling | $ |
 |---|---|---|---|
 | 2026-10-19 23:3x | Info constraints (session_016AV7Th…) | GO: plain-D CPU sweep (425/1,000/2,000 steps), then S2 Stage 0 under E3. Void guard: a control with one distinct answer voids the cell. Marks committed before the run. | 0 |
+| 2026-10-19 ~23:50 | Swarm (session_015V6Z9z…) | GO on the two blocking review-round-2 items (torch._assert_async; spec T matches the kit's 120), then the built-in review. C0+S0 ($4.20) still gated. | 0 |
+| 2026-10-19 ~23:55 | Brain (session_01R6PEw…) | G3-over-G1 NOT signed off (a bar change; Ben's call). GO to commit round-G work to a new branch and run the built-in review. Stop the loop. | 0 |
+| 2026-10-20 ~00:00 | Steals (session_01DPxyxb…) | Resume the fix round on findings 1, 2, 4, 10 after Ben confirmed the restart. R1/R2 Stage 0 held until review is clean. | 0 |
+| 2026-10-20 ~00:00 | Decoder (session_0183EgSA…) | premonition/ override confirmed for flag-gated edits only. Stage 0 GO after Ben confirmed the restart; marks committed before the run. Stages 1+2 ($2.80) gated. | 0 |
+| 2026-10-20 ~00:10 | Restart gate (session_01GR2gp7…) | B2 = option (a), via the Opus xhigh gate. Pass marks and the proves-wrong result fixed in the ruling. B3 as a separate commit. B1 still with Ben. | 0 |
+| 2026-10-19 | GPU-RUN-4 | Ben said yes ($2.07 hard stop). Booking needs Ben's click in the speed session: the auto-mode check blocks standing rental permission. | 0 so far |
