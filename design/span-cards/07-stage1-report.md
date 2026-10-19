@@ -608,3 +608,51 @@ all**, until they are destroyed:
 
 Weights were not pushed (house rule). Keeping or destroying these boxes, and retrieving any checkpoint, is a
 coordinator ruling (Q160 (4) keeps P_2 until Stage 1 completes, which is now).
+
+### Rulings on the final report (coordinator)
+- **Q192 (Cell B):** no override. Cell B stays not funded, per sealed SC-1 section 4. Any redesign starts as a new
+  pre-registered card.
+- **Q193 (stopped boxes):** first retrieve the attempt-2 checkpoints needed for the sealed P1/P2 scoring, file them
+  where the scoring can reach them, verify their hashes and report what was retrieved. Do **not** destroy the boxes:
+  that is Ben's call; the coordinator recommends destroying them once retrieval is verified. Stage 1 actuals are
+  recorded in the funding ledger at $7.98 of the $18 stop.
+
+### Q193 retrieval: status (2026-10-19, nothing retrieved yet)
+**Needed for P1/P2 (Cell A on E1):** the six attempt-2 arm checkpoints (each a `state.pt` plus `config.json`):
+
+| seed | arm | box | path | state sha256 | config sha256 |
+|---|---|---|---|---|---|
+| 0 | LINE | 56611901 | artifacts/span-stage1/20261018T201349Z/seed0/line | 788ed4485cd3d4e3766cbc78578f660a62a894b31292675da902394d6ca1ca6e | 69b069311675ef35c69a080db7fcdfc73f0e71a6ed3a781ebd9783dc298df5f3 |
+| 0 | SPAN | 56611901 | artifacts/span-stage1/20261018T201349Z/seed0/span | c36224318ef9aade7ca83d515aa9eabb8733d76c7c8d66300daba3eeaea8c0fa | 68391c1ade57275b9e2ab48eb832b88ca7af55180fadaf548b9a065c32a29633 |
+| 1 | LINE | 56611888 | artifacts/span-stage1/20261018T201824Z/seed1/line | edfbf50c5b7bca6d46d0ee02dcccdb133c6a964ea16bc4859bd8e8aad8a1fc35 | d0592b417bcf0aee8eb80412d2e513d3cfb9643c7ff72e5dff9a7f7504f08627 |
+| 1 | SPAN | 56611888 | artifacts/span-stage1/20261018T201824Z/seed1/span | b115f29af975ad76968b4caf47cea0c0b06321d6fa8c9b1fb5a4e97a5744ddf9 | 31f1de88736bbd2b70fee7dc42f8f8aaed3928d0cfb4b7450cb52d71ee54dec5 |
+| 2 | LINE | 56611889 | artifacts/span-stage1/20261018T201637Z/seed2/line | e1b5a961fe669b561fd431f3d1981c25281339ac2377387070c02a887ddf2673 | 1fb3dbc33f7cefce7e4427fe9b1852d17092c58f7d4d3aba61e07d26b0cdcdd9 |
+| 2 | SPAN | 56611889 | artifacts/span-stage1/20261018T201637Z/seed2/span | a7b601bab9170e1cf8f3f873daadbdafac45e32b08a2d0ad1301c776a4f0e0ff | a36256e2b542993d31924f08ae6b9f3da401274cb943d8c15de94e1aedc5877f |
+
+The hashes are the ones the boxes logged (`arm_ckpt` records). The paths are relative to `/root/tree` on each box. The
+models have about 2M parameters, so each `state.pt` (weights, Adam moments, trainer state) is on the order of 25 MB.
+
+**Why nothing is retrieved yet (shown):**
+- This session cannot open a connection to the boxes: no SSH, and outbound connections to non-standard ports fail.
+- The Vast account has no cloud-storage connection (`/users/cloud_integrations/` is empty), so Vast's own cloud
+  copy has nowhere to send files.
+- Vast's remote command on an instance allows only `ls`, `rm` and `du`.
+- A stopped box can only restart with its original launch command. That reruns the pinned script: data, then the
+  old pre-flight, then the go gate. **The go file still says `"go": true` (attempt 2)**, so a restarted box would
+  start training again. Before any box restarts, `stage1-go.json` must become a plain stop (`{"go": false}`). The
+  script then exits at the gate without training, and the box idles.
+- Weights are not pushed to the repo (house rule), and I will not put them on a public file host.
+
+**Routes that would work (a decision for Ben or the coordinator):**
+1. **A private cloud-storage connection in the Vast account** (Ben adds one under Vast "Cloud Connections", e.g. his
+   Google Drive, S3 or Backblaze). Then Vast's cloud copy moves each checkpoint directory from its box into that
+   storage, and the scoring reads it from there. Hashes are checked on arrival. The weights stay private, and no
+   script change is needed. This is the recommended route.
+2. **Score where the checkpoints are.** Run the sealed E1 scoring on a box. Vast can copy instance to instance, so the
+   six checkpoints could be gathered on one attempt-2 box (plain-stop go first). This needs the sealed E1 set and a
+   reviewed scoring script on that box, and the box stays rented until scoring is done.
+3. **Through the box log** (the channel the readout used). This needs a new box script that prints each file in
+   chunks, run on a new rental after an instance-to-instance copy. About 150 MB of base64 over the log API is slow and
+   untested at that size, and it means writing and reviewing a new script.
+
+The boxes are held, stopped, as ruled (about $0.16/h of disk).
