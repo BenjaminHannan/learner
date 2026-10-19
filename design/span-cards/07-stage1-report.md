@@ -390,7 +390,8 @@ start rate 0.32-0.37 of tokens (1/N = 0.090), span tokens per card 2.7-3.1, rate
   on multi_hop. Under G3 these are a different comparison: about 5.7x more, much smaller cards at the same compute.
 
 **Why (suggested, not tested):** the rate loss (w_rate 0.03) did not hold the gate's start rate near 1/N against the
-answer loss's pull toward fine cards. Its value at the end, 1.94, suggests the term was active but outweighed. The
+answer loss's pull toward fine cards. The rate loss is 1.0 at the target (start rate = gate mean = 1/N); at the end it was 1.94, so after the 0.03 weight it
+added about 0.06 to a total train loss of 1.88. That suggests the term was active but outweighed. The
 branch check showed SPAN started at 11.16 tokens per card and line_aligned 1, so the drift happened during training.
 No other seed has a SPAN result yet. Seed 2's SPAN arm is about half done and seed 1's has not started. Nothing is
 stopped or changed; G3 is a measured outcome, not a stop rule.
