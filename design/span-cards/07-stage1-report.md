@@ -337,7 +337,63 @@ Economy after the arm: line layout, line_aligned 1, asked rate 0.827, 4.05 fetch
 
 **SPAN arm:** started at t = 6,422.9 s from P_0 (step 3,487, share 0.0500; at the branch 11.16 tokens per card,
 line_aligned 1). **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,513 arm steps, t = 6,755.7 s) with no
-guard error. The arm continues.
+guard error.
+
+**SPAN arm: done.**
+- 37,963 steps (teacher 13,073, own 24,890), 1.358B tokens, 9,961 s. Stopped on the FLOP budget, share 1.000024,
+  budget_ok, 0 loop mismatches.
+- **Peak reserved 8.03 GB.**
+- Final train: loss 1.877, answer acc 0.774, first-ask acc 0.262, recall@k 0.675.
+- Checkpoint `artifacts/span-stage1/20261018T201349Z/seed0/span` (state c3622431...c0fa, config 68391c1a...9633).
+- `S1-DONE ok`, box exit 00:47:49Z. The watchdog stopped box 56611901 at 00:48:31Z; the parent, LINE and SPAN
+  checkpoints are on its disk.
+
+**Seed 0 readout (DEV = E2; per-seed values; the family rule needs 2 of 3 seeds).** Paired by question with
+`exp1.paired` (alpha 0.01) on the per-question correctness bits of each arm. The slices use the box's own masks
+(ids_sha256 0c91568c... on parent, LINE and SPAN). BETTER/WORSE need significance and a difference of at least 3.0
+points; non-inferior means `paired(SPAN, LINE, margin=-0.03)` is significant.
+
+| DEV slice | n | P_0 | LINE | SPAN | SPAN - LINE | p (SPAN > LINE) | p (LINE > SPAN) | p (non-inf.) | per-seed call |
+|---|---|---|---|---|---|---|---|---|---|
+| overall | 7,683 | 0.1104 | 0.3884 | 0.3989 | +1.05 | 0.030 | 0.973 | 0.0001 | non-inferior; not BETTER, not WORSE |
+| near | 4,290 | 0.1175 | 0.3569 | 0.3795 | +2.26 | 0.0013 | 0.999 | 0.0001 | significant but under +3.0; non-inferior |
+| far | 2,924 | 0.1149 | 0.4593 | 0.4497 | -0.96 | 0.867 | 0.151 | 0.011 | inconclusive (not WORSE; non-inferiority p 0.011 > 0.01) |
+| multi_hop | 5,155 | 0.0941 | 0.3717 | 0.4204 | +4.87 | <0.0001 | 1.0 | 0.0001 | BETTER in this seed |
+| far_deep | 2,427 | 0.0968 | 0.4351 | 0.4400 | +0.49 | 0.320 | 0.709 | 0.0002 | non-inferior |
+
+Each arm minus its parent on DEV overall: LINE +27.8 points, SPAN +28.9 points.
+
+**Guards and P3 (seed 0):**
+
+| check | rule | SPAN | LINE | result |
+|---|---|---|---|---|
+| G1 asked_rate | >= LINE - 0.05 | 0.850 | 0.827 | pass |
+| G1 fetches_per_q | >= 0.8 x LINE | 4.82 | 4.05 | pass |
+| G1 null_share | <= LINE + 0.05 | 0.082 | 0.148 | pass |
+| G1 first_ask_recall | >= LINE - 0.05 | **0.379** | 0.513 | **FAIL** |
+| G2 DEV slip | SPAN not WORSE on overall and far | +1.05 / -0.96 | | pass |
+| G3 budget held | SPAN tokens_per_card within +/-25% of N = 11.155539 | **1.97** (ratio 0.18) | 11.16 | **FAIL** |
+| G4 compute matched | both budget_ok | 1.000024 | 1.000004 | pass (0 / 0 loop mismatches) |
+| G5 entity overflow | < 0.02 | 0.000 | | no flag |
+| P3 adaptation small | SPAN line_aligned >= 0.85 | **0.019** | 1.0 | **falsified (this seed)** |
+
+**SPAN card economy at the end (200 DEV visits):** 105,278 cards, 526 per visit (p10 377, p50 511, p90 697). LINE has
+93 per visit. 58.5% of SPAN's cards are 1 token long, 22.4% are 2 tokens, 11.8% are 3-4. split_lines 0.893, merged
+0.0001, newline precision 0.177, newline recall 0.9996. The last training-log entries (steps 41,350-41,400): gate
+start rate 0.32-0.37 of tokens (1/N = 0.090), span tokens per card 2.7-3.1, rate term 1.94.
+
+**What this shows (shown, seed 0 only):**
+- SPAN did not keep the card budget. It cut almost every line into many 1-2 token cards: 5.7x LINE's card count.
+- By the run card's own rule (G3), this seed's SPAN-vs-LINE comparison is not "placement at equal storage" and must
+  not be reported as a placement result. G1 also fails (first-ask recall), and P3 is falsified in this seed.
+- The DEV numbers are reported as measured, for the record only: SPAN was not worse overall or on far, and was better
+  on multi_hop. Under G3 these are a different comparison: about 5.7x more, much smaller cards at the same compute.
+
+**Why (suggested, not tested):** the rate loss (w_rate 0.03) did not hold the gate's start rate near 1/N against the
+answer loss's pull toward fine cards. Its value at the end, 1.94, suggests the term was active but outweighed. The
+branch check showed SPAN started at 11.16 tokens per card and line_aligned 1, so the drift happened during training.
+No other seed has a SPAN result yet. Seed 2's SPAN arm is about half done and seed 1's has not started. Nothing is
+stopped or changed; G3 is a measured outcome, not a stop rule.
 
 ### Seed 2
 **LINE arm: done.**
