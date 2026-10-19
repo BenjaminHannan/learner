@@ -445,7 +445,7 @@ points, SPAN +7.1 points.
 | check | rule | SPAN | LINE | result |
 |---|---|---|---|---|
 | G1 asked_rate | >= LINE - 0.05 | **0.627** | 0.796 | **FAIL** |
-| G1 fetches_per_q | >= 0.8 x LINE | 3.39 | 4.23 | pass (3.39 >= 3.39) |
+| G1 fetches_per_q | >= 0.8 x LINE | 3.393 | 4.232 | pass, narrowly (3.393 >= 3.385) |
 | G1 null_share | <= LINE + 0.05 | 0.103 | 0.136 | pass |
 | G1 first_ask_recall | >= LINE - 0.05 | **0.308** | 0.427 | **FAIL** |
 | G2 DEV slip | SPAN not WORSE on overall and far | -10.04 / -9.82 | | **FAIL** |
