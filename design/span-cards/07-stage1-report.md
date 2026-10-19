@@ -418,3 +418,61 @@ recall 0.427, full gold fetched 0.385.
 
 **SPAN arm:** started at t = 8,741.0 s from P_2 (attempt 2) at step 3,484 (11.16 tokens per card, line_aligned 1).
 **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,516 arm steps, t = 9,149.1 s) with no guard error.
+
+**SPAN arm: done.**
+- 37,907 steps (teacher 13,078, own 24,829), 1.356B tokens, 11,760 s. Stopped on the FLOP budget, share 1.000019,
+  budget_ok, 0 loop mismatches.
+- **Peak reserved 8.18 GB.**
+- Final train: loss 1.882, answer acc 0.638, first-ask acc 0.273, recall@k 0.720.
+- Checkpoint `artifacts/span-stage1/20261018T201637Z/seed2/span` (state a7b601ba...e0ff, config a36256e2...877f).
+- `S1-DONE ok`, box exit 01:59:36Z. The watchdog stopped box 56611889 at 02:03:01Z; the checkpoints are on its disk.
+
+**Seed 2 readout (DEV = E2, paired as for seed 0; ids_sha256 0c91568c... on all three DEV records):**
+
+| DEV slice | n | P_2 | LINE | SPAN | SPAN - LINE | p (LINE > SPAN) | per-seed call |
+|---|---|---|---|---|---|---|---|
+| overall | 7,683 | 0.2037 | 0.3749 | 0.2745 | **-10.04** | <0.0001 | **SPAN WORSE** |
+| near | 4,290 | 0.1986 | 0.3417 | 0.2382 | -10.35 | <0.0001 | SPAN WORSE |
+| far | 2,924 | 0.2438 | 0.4248 | 0.3266 | **-9.82** | <0.0001 | **SPAN WORSE** |
+| multi_hop | 5,155 | 0.2281 | 0.4194 | 0.2982 | -12.12 | <0.0001 | SPAN WORSE |
+| far_deep | 2,427 | 0.2550 | 0.4508 | 0.3317 | -11.91 | <0.0001 | SPAN WORSE |
+
+Discordant pairs overall: LINE-only 1,308 and SPAN-only 537. Each arm minus its parent on DEV overall: LINE +17.1
+points, SPAN +7.1 points.
+
+**Guards and P3 (seed 2):**
+
+| check | rule | SPAN | LINE | result |
+|---|---|---|---|---|
+| G1 asked_rate | >= LINE - 0.05 | **0.627** | 0.796 | **FAIL** |
+| G1 fetches_per_q | >= 0.8 x LINE | 3.39 | 4.23 | pass (3.39 >= 3.39) |
+| G1 null_share | <= LINE + 0.05 | 0.103 | 0.136 | pass |
+| G1 first_ask_recall | >= LINE - 0.05 | **0.308** | 0.427 | **FAIL** |
+| G2 DEV slip | SPAN not WORSE on overall and far | -10.04 / -9.82 | | **FAIL** |
+| G3 budget held | tokens_per_card within +/-25% of N | **3.29** (ratio 0.29) | 11.16 | **FAIL** |
+| G4 compute matched | both budget_ok | 1.000019 | 1.000002 | pass (0 / 0) |
+| G5 entity overflow | < 0.02 | 0.00003 | | no flag |
+| P3 adaptation small | line_aligned >= 0.85 | **0.000** | 1.0 | **falsified (this seed)** |
+
+**SPAN card economy at the end:** 63,184 cards, 316 per visit (p10 222, p50 307, p90 430); 3.29 tokens per card
+(1 token 34.0%, 2 tokens 24.1%, 3-4 19.3%, 5-8 16.3%, 9-16 5.4%). split_lines 0.895, **merged 0.258**, **newline
+precision 0.014, newline recall 0.047**, so cards no longer start at line starts at all. Last training-log entries
+(steps 41,250-41,350): gate start rate 0.33-0.36, tokens per card 2.8-3.0, rate term 1.70-1.89.
+
+**Seed 0 and seed 2 compared (shown):** both SPAN arms abandoned the card budget (G3) and line alignment (P3). They
+took different shapes. Seed 0 kept every line start (newline recall 1.00) and cut lines into 1-2 token pieces, and was
+not worse on DEV. Seed 2 dropped line starts (recall 0.05), merged across lines, and lost 10 points on DEV.
+
+### Family status after two of three seeds (02:05Z)
+The run card's family rule needs 2 of 3 seeds. With two seeds in:
+- **G3 (budget held): FAIL in seeds 0 and 2.** That is 2 of 3 whatever seed 1 shows. Under the card, Stage 1's
+  SPAN-vs-LINE comparison is not "placement at equal storage" and is not reported as a placement result.
+- **P3: falsified in seeds 0 and 2** (line_aligned 0.019 and 0.000): 2 of 3 whatever seed 1 shows.
+- **G1: FAIL in seeds 0 and 2** (first-ask recall in both; asked rate in seed 2): 2 of 3.
+- **G2 (DEV slip):** pass in seed 0, FAIL in seed 2. Seed 1 decides the family call.
+- **G4:** pass in both. **G5:** no flag in either.
+- P1, P2, P4-P6 are on the sealed E1/E3 sets and are the coordinator's to score.
+
+Seed 1's LINE arm is near its end; its SPAN arm (about 10 h, about $2-3 projected) has not started. It is not stopped.
+The registered plan runs three seeds, and G3/P3/G1 are measured outcomes, not stop rules. Whether to finish it is
+the coordinator's call.
