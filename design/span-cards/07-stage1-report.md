@@ -484,7 +484,8 @@ Economy after the arm: line_aligned 1, asked rate 0.813, 3.97 fetches per questi
 recall 0.463, full gold fetched 0.433.
 
 **SPAN arm:** started at t = 21,678.1 s (about 02:19Z) from P_1 at step 3,470 (11.16 tokens per card, line_aligned
-1). At this box's rate it is projected to end about 11:00-11:30Z, inside the 24 h watchdog deadline (20:12Z).
+1). **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,530 arm steps, t = 22,765.0 s) with no guard
+error. At this box's rate the arm is projected to end about 11:00-11:30Z, inside the 24 h watchdog deadline (20:12Z).
 Projected Stage 1 total about $9 (spend $5.63 at 02:23Z).
 
 ### Family status after two of three seeds (02:05Z)
