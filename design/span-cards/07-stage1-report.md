@@ -463,6 +463,30 @@ precision 0.014, newline recall 0.047**, so cards no longer start at line starts
 took different shapes. Seed 0 kept every line start (newline recall 1.00) and cut lines into 1-2 token pieces, and was
 not worse on DEV. Seed 2 dropped line starts (recall 0.05), merged across lines, and lost 10 points on DEV.
 
+### Seed 1
+**LINE arm: done.**
+- 37,782 steps (teacher 13,031, own 24,751), 1.351B tokens, 19,102 s on the slow box. Stopped on the FLOP budget,
+  share 1.000014, budget_ok, 0 loop mismatches.
+- **Peak reserved 7.65 GB.**
+- Final train: loss 1.073, answer acc 0.889, first-ask acc 0.253, recall@k 0.759.
+- Checkpoint `artifacts/span-stage1/20261018T201824Z/seed1/line` (state edfbf50c...fc35, config d0592b41...8627).
+
+| DEV (LINE, seed 1) | n | accuracy |
+|---|---|---|
+| overall (told) | 7,683 | 0.4544 |
+| near | 4,290 | 0.4317 |
+| far | 2,924 | 0.5205 |
+| far_deep | 2,427 | 0.5200 |
+| multi_hop | 5,155 | 0.4916 |
+| not told | 469 | 0.2495 |
+
+Economy after the arm: line_aligned 1, asked rate 0.813, 3.97 fetches per question, null share 0.146, first-ask
+recall 0.463, full gold fetched 0.433.
+
+**SPAN arm:** started at t = 21,678.1 s (about 02:19Z) from P_1 at step 3,470 (11.16 tokens per card, line_aligned
+1). At this box's rate it is projected to end about 11:00-11:30Z, inside the 24 h watchdog deadline (20:12Z).
+Projected Stage 1 total about $9 (spend $5.63 at 02:23Z).
+
 ### Family status after two of three seeds (02:05Z)
 The run card's family rule needs 2 of 3 seeds. With two seeds in:
 - **G3 (budget held): FAIL in seeds 0 and 2.** That is 2 of 3 whatever seed 1 shows. Under the card, Stage 1's
