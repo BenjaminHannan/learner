@@ -1,9 +1,18 @@
 # Stage 1 report (SC-1; booked by the coordinator after Stage 0)
 
-**Status: ATTEMPT 2 STARTING (ruling Q159).** In attempt 1 all three seeds failed the memory guard at rung 2. Seeds 0
-and 1 failed in the parent's gold phase; seed 2 failed 94 s into its LINE arm, after the ruling's snapshot. Attempt 2
-restarts all three seeds at rung 2, unchanged, with one change: the allocator setting
-`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Seed 2's restart falls under Q159 (5).
+**Status: COMPLETE (2026-10-19).** All three seeds trained both arms to F at rung 2 (40,000, 35) with
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` (attempt 2, rulings Q159/Q160/Q187). Every parent, LINE and SPAN
+run stayed under the memory guard. DEV readout per seed and family calls are under "Final family verdict" at the end.
+
+**Stage 1 result in one paragraph:** SPAN did not keep its card budget in any seed. Its DEV tokens per card ended at
+1.97, 2.94 and 3.29 against N = 11.16 (G3 FAIL, 3/3), and line alignment collapsed (P3 falsified, 3/3).
+First-ask recall fell in every seed (G1 FAIL, 3/3). On DEV, SPAN was WORSE than LINE on `far` in seeds 1 and 2 and
+on overall in seed 2 (G2 FAIL, 2/3); in seed 0 it was non-inferior overall. Under the card, G3's failure means
+Stage 1 is **not a placement-at-equal-storage result**. Compute was matched in every seed (G4 pass, 3/3) and entity
+overflow never flagged (G5). P1, P2 and P4-P6 are on the sealed E1/E3 sets and are scored by the coordinator.
+**Total actual Stage 1 spend: $7.98** (to 08:45Z on 2026-10-19, both attempts, all boxes), inside the $18 hard stop.
+
+Attempt 1 (rung 2 without the allocator setting) failed the memory guard on all three seeds; its record is kept below.
 
 ## Run record
 - Script: `scripts/span_stage1.py` at commit 707bdce90 (sha256 47577a35...d127), reviewed by the coordinator (the
@@ -485,8 +494,47 @@ recall 0.463, full gold fetched 0.433.
 
 **SPAN arm:** started at t = 21,678.1 s (about 02:19Z) from P_1 at step 3,470 (11.16 tokens per card, line_aligned
 1). **Arm probe: SPAN PASSED.** Progress at global step 5,000 (1,530 arm steps, t = 22,765.0 s) with no guard
-error. At this box's rate the arm is projected to end about 11:00-11:30Z, inside the 24 h watchdog deadline (20:12Z).
-Projected Stage 1 total about $9 (spend $5.63 at 02:23Z).
+error.
+
+**SPAN arm: done.**
+- 37,751 steps (teacher 13,023, own 24,728), 1.350B tokens, 22,721 s. Stopped on the FLOP budget, share 1.000016,
+  budget_ok, 0 loop mismatches.
+- **Peak reserved 8.09 GB.**
+- Final train: loss 1.602, answer acc 0.836, first-ask acc 0.258, recall@k 0.725.
+- Checkpoint `artifacts/span-stage1/20261018T201824Z/seed1/span` (state b115f29a...ddf9, config 31f1de88...dec5).
+- `S1-DONE ok`, box exit 08:44:10Z. The watchdog stopped box 56611888 at 08:45:12Z; the checkpoints are on its disk.
+
+**Seed 1 readout (DEV = E2, paired as for seeds 0 and 2):**
+
+| DEV slice | n | P_1 | LINE | SPAN | SPAN - LINE | p (LINE > SPAN) | p (non-inf.) | per-seed call |
+|---|---|---|---|---|---|---|---|---|
+| overall | 7,683 | 0.2021 | 0.4544 | 0.4257 | -2.86 | <0.0001 | 0.385 | significant but under 3.0: not WORSE; not non-inferior |
+| near | 4,290 | 0.1944 | 0.4317 | 0.4100 | -2.17 | 0.0004 | 0.098 | not WORSE (under 3.0); not non-inferior |
+| far | 2,924 | 0.2350 | 0.5205 | 0.4685 | **-5.20** | <0.0001 | 0.997 | **SPAN WORSE** |
+| multi_hop | 5,155 | 0.2223 | 0.4916 | 0.4310 | -6.05 | <0.0001 | 1.0 | SPAN WORSE |
+| far_deep | 2,427 | 0.2447 | 0.5200 | 0.4479 | -7.21 | <0.0001 | 1.0 | SPAN WORSE |
+
+Discordant pairs overall: LINE-only 821 and SPAN-only 601. Each arm minus its parent on DEV overall: LINE +25.2
+points, SPAN +22.4 points.
+
+**Guards and P3 (seed 1):**
+
+| check | rule | SPAN | LINE | result |
+|---|---|---|---|---|
+| G1 asked_rate | >= LINE - 0.05 | 0.868 | 0.813 | pass |
+| G1 fetches_per_q | >= 0.8 x LINE | 4.31 | 3.97 | pass |
+| G1 null_share | <= LINE + 0.05 | 0.102 | 0.146 | pass |
+| G1 first_ask_recall | >= LINE - 0.05 | **0.402** | 0.463 | **FAIL** |
+| G2 DEV slip | SPAN not WORSE on overall and far | -2.86 / **-5.20 (WORSE)** | | **FAIL** |
+| G3 budget held | tokens_per_card within +/-25% of N | **2.94** (ratio 0.26) | 11.16 | **FAIL** |
+| G4 compute matched | both budget_ok | 1.000016 | 1.000014 | pass (0 / 0) |
+| G5 entity overflow | < 0.02 | 0.000 | | no flag |
+| P3 adaptation small | line_aligned >= 0.85 | **0.000** | 1.0 | **falsified (this seed)** |
+
+**SPAN card economy at the end:** 70,547 cards, 353 per visit (p10 260, p50 350, p90 448); 2.94 tokens per card
+(1 token 34.6%, 2 tokens 26.6%, 3-4 22.1%, 5-8 10.8%, 9-16 5.5%). split_lines 0.932, merged 0.240, newline precision
+0.014, newline recall 0.053, the same shape as seed 2. Last training-log entries (steps 41,100-41,200): gate start
+rate 0.33-0.36, tokens per card 2.8-3.1, rate term 1.68-1.90.
 
 ### Family status after two of three seeds (02:05Z)
 The run card's family rule needs 2 of 3 seeds. With two seeds in:
@@ -506,3 +554,57 @@ the coordinator's call.
 the same allocator setting as the other seeds, inside the $18 hard stop. The family verdict on G3, P3 and G1 is
 already settled by seeds 0 and 2; seed 1 completes the three-seed design and settles G2. When it lands, the final
 Stage 1 report gives all three seeds' readouts and the total actual Stage 1 spend. Nothing else changes.
+
+### Final family verdict (three seeds; family rule >= 2 of 3, never averaged or pooled)
+| item | seed 0 | seed 1 | seed 2 | family |
+|---|---|---|---|---|
+| G1 ASK/fetch not collapsed | FAIL (first-ask recall) | FAIL (first-ask recall) | FAIL (asked rate, first-ask recall) | **FAIL (3/3)** |
+| G2 DEV slip (overall, far) | pass (+1.05 / -0.96) | FAIL (far -5.20 WORSE) | FAIL (overall -10.04, far -9.82 WORSE) | **FAIL (2/3)** |
+| G3 budget held (tokens per card vs N = 11.16) | FAIL (1.97) | FAIL (2.94) | FAIL (3.29) | **FAIL (3/3)** |
+| G4 compute matched | pass | pass | pass | **pass (3/3)**; loop mismatches 0 in all six arms |
+| G5 entity overflow | no flag | no flag | no flag | **no flag** |
+| P3 line_aligned >= 0.85 | 0.019 | 0.000 | 0.000 | **falsified (3/3)** |
+
+DEV overall per seed (LINE / SPAN): 0.388 / 0.399, 0.454 / 0.426, 0.375 / 0.275. DEV far: 0.459 / 0.450,
+0.521 / 0.469, 0.425 / 0.327.
+
+**What this shows (shown):**
+- At w_rate 0.03, the SPAN gate does not hold a card rate near 1/N on this data. Every seed ended with a gate start
+  rate of 0.32-0.37 of tokens against a target of 0.090. The cards were 3.4-5.7x more numerous than LINE's and 1-3
+  tokens long.
+- Two of the three SPAN arms (seeds 1, 2) also stopped starting cards at line starts at all (newline recall about
+  0.05).
+- Because G3 fails, the card says Stage 1's SPAN-vs-LINE differences are **not** a placement result. They compare
+  LINE with a model that stores many more, much smaller cards at the same compute.
+- On that different comparison, SPAN was worse on DEV `far` in two of three seeds and never better on overall.
+
+**Suggested, not tested:** the rate loss's weight (0.03, H-Net's value, recorded in the card as an assumption) is too
+small against the answer loss here. A redesign of the budget mechanism would be a new pre-registered card, not a
+change to SC-1.
+
+**Not decided here:** P1, P2 and P4-P6 (sealed E1/E3, the coordinator's). Cell B is conditional on Cell A passing
+G1-G4 for SPAN (run card section 4). G1, G2 and G3 failed. The card's registered outcome for that case is "the
+mechanism breaks retrieval on today's data", and B is not funded, unless the coordinator rules otherwise.
+
+### Money (final)
+| item | amount |
+|---|---|
+| Stage 1 baseline credit (before any Stage 1 rental) | $32.588 |
+| credit at 08:45Z on 2026-10-19 (all six boxes stopped) | $24.611 |
+| **total actual Stage 1 spend, both attempts** | **$7.98** (hard stop $18) |
+
+Attempt 1 cost about $0.82 (data, pre-flight, go wait, the failed runs). Attempt 2 cost about $7.16 (three boxes,
+about 4.6 h, 5.8 h and 12.5 h, plus the stopped disks). The six stopped boxes still cost disk, **about $0.16/h in
+all**, until they are destroyed:
+
+| instance | label | holds | disk $/h |
+|---|---|---|---|
+| 56611901 | claude-spancards-s1b-seed0 | P_0, LINE, SPAN (seed 0) + data | 0.014 |
+| 56611888 | claude-spancards-s1b-seed1 | P_1, LINE, SPAN (seed 1) + data | 0.019 |
+| 56611889 | claude-spancards-s1b-seed2 | P_2 (attempt 2), LINE, SPAN (seed 2) + data | 0.019 |
+| 56601518 | claude-spancards-s1-seed0 | data only (attempt 1) | 0.014 |
+| 56601519 | claude-spancards-s1-seed1 | data only (attempt 1) | 0.060 |
+| 56601524 | claude-spancards-s1-seed2 | P_2 (attempt 1) + data | 0.031 |
+
+Weights were not pushed (house rule). Keeping or destroying these boxes, and retrieving any checkpoint, is a
+coordinator ruling (Q160 (4) keeps P_2 until Stage 1 completes, which is now).
