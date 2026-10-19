@@ -82,3 +82,31 @@ fails (treated answers as well without the card), meaning the gain does not come
 `artifacts/claude-infoconstraints-20261018/s2-stage0/{control,treated}-seed{0,1,2}.json` and `.log`;
 summary `artifacts/claude-infoconstraints-20261018/s2-stage0/summary.json`.
 Runner: `scripts/info_s2_stage0.py`.
+
+---
+
+## 9. Result (appended after the run; sections 0-8 above are unchanged since commit 7f4f10a9a)
+
+Run 2026-10-19 in this container, CPU, torch 2.14.1+cpu, 1 thread per run, 800 steps per arm, $0. Raw:
+`artifacts/claude-infoconstraints-20261018/s2-stage0/`; `summary.json` is the runner's verbatim application of
+§4-§6.
+
+| seed | control acc (/1024) | treated acc (/1024) | d | control distinct (256 / 1024) | treated distinct (256 / 1024) | no card: control / treated | train s (control / treated) |
+|---|---|---|---|---|---|---|---|
+| 0 | 10.94% (112) | **100.00% (1024)** | +0.891 | 2 / 2 | 16 / 16 | 5.66% / 7.03% | 178 / 180 |
+| 1 | 12.60% (129) | **100.00% (1024)** | +0.874 | 2 / 2 | 16 / 16 | 6.93% / 6.64% | 184 / 181 |
+| 2 | 10.94% (112) | **100.00% (1024)** | +0.891 | 2 / 2 | 16 / 16 | 5.27% / 0.00% | 182 / 180 |
+
+- **Validity:** no cell is VOID. The control gives 2 distinct answers on every seed. That is valid under §4, but
+  only just: plain D barely uses the card here.
+- **Pass marks (§5):**
+  1. treated ≥ 50% on every valid seed: yes, 100% each;
+  2. d > 0 on every seed, and mean(d) − 2·SD(d)/√3 = +0.874 > 0 (mean +0.885): yes;
+  3. card-use guard, treated with no card ≤ 9.25%: yes (7.03%, 6.64%, 0.00%);
+  4. treated distinct > 1: yes (16, all values);
+  5. all runs finished 800 steps with finite gradients: yes.
+- **Verdict: PASS.** The fail rule and the proves-wrong rule (§6) did not fire.
+- **Reported check (not a void rule, §0):** control seed 0 reproduces m02's 112/1024 exactly, on `main` + flag
+  with the flag off.
+- **Scope (§7):** this buys reading one supplied card from the main code path. It does not buy choosing,
+  own retrieval or the village ruler.

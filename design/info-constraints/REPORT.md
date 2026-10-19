@@ -459,6 +459,24 @@ concatenates only when it is present.
   too. Test separately first.
 - S3 below uses the raw rows' aligned positions.
 
+#### S2 Stage 0 result (run 2026-10-19, CPU, $0; card `S2-STAGE0-CARD.md`, sealed at 7f4f10a9a before the run)
+
+Protocol: m02 far-fact toy, gold mode, answer loss only, 2 loops, 800 steps, 1,024 test questions. One change:
+`decoder_raw_cards`.
+
+| seed | control acc (/1024) | treated acc (/1024) | d | control distinct (256 / 1024) | treated distinct (256 / 1024) | no card: control / treated | train s (control / treated) |
+|---|---|---|---|---|---|---|---|
+| 0 | 10.94% (112) | **100.00% (1024)** | +0.891 | 2 / 2 | 16 / 16 | 5.66% / 7.03% | 178 / 180 |
+| 1 | 12.60% (129) | **100.00% (1024)** | +0.874 | 2 / 2 | 16 / 16 | 6.93% / 6.64% | 184 / 181 |
+| 2 | 10.94% (112) | **100.00% (1024)** | +0.891 | 2 / 2 | 16 / 16 | 5.27% / 0.00% | 182 / 180 |
+
+**PASS on every sealed mark** (valid seeds 3/3; mean d +0.885, mean − 2·SE +0.874; card-use guard held). The
+unwashed copy turns plain D's 11-13% into 100% on supplied cards, and the gain comes from reading the card
+(no card: chance). It matches the D-card-bypass precedent while keeping Think's own card rows in the decoder's
+memory. **Not yet bought:** choosing among cards, own retrieval, village. Next, per card §7: the distractor
+reading (gold + 2 fact cards), then a Stage-1 bid priced by measured seconds per update (E5). With S2 passed,
+the E4 cumulative base for S3 is D + S2.
+
 ### S3. `card_address`: a learned "who and what" address for choosing (the squeeze)
 
 **Targets:** audit item 1 as it is shown to bite: one pooled vector serves as ASK key, decoder selection key
@@ -589,7 +607,7 @@ which `π` reads in learned mode, so do not run S4 on top of `delta_bind` until 
 
 | Rank | Fix | Expected gain | Cost | Risk | Why here |
 |---|---|---|---|---|---|
-| 1 | **S2 decoder_raw_cards** | Large on copying (bypass precedent: 11% → 100%) | 0 params, +16 decoder rows | Low-medium: the decoder could ignore Think (guarded by fetch-use and card-removal) | The only shown fix of the copy failure, made additive; S1-P0 rules eviction out |
+| 1 | **S2 decoder_raw_cards** — **Stage 0 PASSED 10-19** (11-13% → 100%, 3/3 seeds) | Large on copying (bypass precedent: 11% → 100%) | 0 params, +16 decoder rows | Low-medium: the decoder could ignore Think (guarded by fetch-use and card-removal) | The only shown fix of the copy failure, made additive; S1-P0 rules eviction out |
 | 2 | **S3 card_address** | Large on choosing if learned (oracle +0.66) | +16.6k params (0.8%) | Medium: the address may learn the value (guarded by pool mass) | Needs a decoder that reads cards (S2) first |
 | 3 | **S4 ent_key** | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
 | 4 | **S1 ring_resident** | Unknown; not active in the toy model (0 overflow) | 0 params, about 20 lines | Low | Latent; build only if S1-P1 shows eviction on a trained village model |
