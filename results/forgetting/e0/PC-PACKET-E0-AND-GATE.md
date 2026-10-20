@@ -3,7 +3,7 @@
 Why this is on the PC: E0 and the ship gate need Main brain's run folders and checkpoints under `/mnt/project-files`. They are on no
 remote branch (all 123 remote branches searched on Oct 18, 23:50Z), so no cloud session can run them.
 
-## Part 1. E0, measurement only (~1-2 CPU-h; trains nothing)
+## Part 1. E0, measurement only (~1-2 CPU-h; trains nothing). Run every command below in WSL or Linux (bash), not PowerShell.
 Ship instrument is already fixed: the 6,800-row DEV under the house rule (coordinator ruling, Oct 16).
 
 1. Build the 6,800-row DEV once (about 2 min), from a learner checkout of branch `claude/project-thread-y0sxwe`:
