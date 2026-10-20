@@ -63,8 +63,11 @@ CARD_SETTINGS = {"variant": "D", "size": "full", "device": "cuda", "lr": 1e-3, "
 BUILD = {"visits": "large", "seed": 0}
 # Stage 1b's F (card section 2): the largest F whose projected cost, at stage 1a's measured step and evaluation times
 # and the booked box's $/h, stays within SAFETY x the hard stop; never above F_MAX. Fixed before any GPU run.
-PRICE = {"hard_stop": 2.50, "safety": 0.8, "f_max": 3.15e16, "f_min": 3.15e15, "copy_off_seconds": 900.0,
-         "seeds": 3, "max_muon_step_ratio": 1.25}
+# Stage 1a and 1b run as one job on one box under one cap (coordinator ruling 10-20). F_MAX is spec 9.7's ~3-epoch
+# limit on this build (7.5e15 / 1.14e12 FLOPs per step x 48.9k tokens ~ 3.0 passes over 106.6M tokens).
+PRICE = {"cap_total": 2.80, "hard_stop_1b": 2.50, "safety": 0.8, "f_max": 7.5e15, "f_min": 3.15e15,
+         "copy_off_seconds": 900.0, "seeds": 3, "max_muon_step_ratio": 1.25}
+F_1A = 3.4e14                         # stage 1a: 300 steps x 1.14e12 FLOPs per step (measured on the build, CPU fit)
 PACKAGE = "premonition/*.py + learnlab/**/*.py + memorylab/**/*.py"   # the seal's name for the package hash
 
 
@@ -249,13 +252,13 @@ def card_settings(settings: dict) -> bool:
 
 
 # ----------------------------------------------------------------------------- stage 1b's F
-def projected_seconds(f: float, arms: list[dict], build_seconds: float, eval_every: int) -> float:
-    """Stage 1b's box seconds at F from stage 1a's runs: per run, steps x s/step + evaluations x their seconds +
-    the start-up with the caches built (the faster arm's); times the card's seeds; plus, once, the caches and the
-    detector (the first run's extra start-up), the village build and the copy-off."""
+def projected_seconds(f: float, arms: list[dict], eval_every: int) -> float:
+    """Stage 1b's box seconds at F from stage 1a's runs on the same box (the build and the caches are already paid):
+    per run, steps x s/step + evaluations x their seconds + the start-up with the caches built (the faster arm's);
+    times the card's seeds; plus the copy-off."""
     startups = [max(arm["wall_seconds"] - arm["train_seconds"] - sum(e["seconds"] for e in arm["evals"])
                     - arm["final_eval_seconds"], 0.0) for arm in arms]
-    total = build_seconds + PRICE["copy_off_seconds"] + max(startups) - min(startups)
+    total = PRICE["copy_off_seconds"]
     for arm in arms:
         steps = f / (arm["flops"] / arm["steps"])
         evals = math.floor(steps / eval_every) + 1
@@ -264,33 +267,51 @@ def projected_seconds(f: float, arms: list[dict], build_seconds: float, eval_eve
     return total
 
 
-def price(arms: list[dict], *, dph: float, build_seconds: float) -> dict:
-    """The card's F rule, applied to stage 1a's two runs (one per arm) at the booked $/h."""
+def timing_settings() -> dict:
+    """Stage 1a: the card's settings at F_1a (300 steps' worth), seed 0, unsealed, on the box that then runs 1b."""
+    return dict(CARD_SETTINGS, flop_budget=F_1A)
+
+
+def price(arms: list[dict], *, dph: float, spent_seconds: float, ident: dict | None = None) -> dict:
+    """The card's F rule on stage 1a's two runs (one per arm), at the box's $/h, after `spent_seconds` of box time.
+    F is the largest value in [F_min, F_max] (two significant figures, rounded down, never below F_min) whose
+    projected stage-1b cost stays within both SAFETY x the 1b stop and the total cap less what is spent. "go" is
+    False, with the reason, when 1a's gate fails or even F_min does not fit."""
     if sorted(a["arm"] for a in arms) != sorted(ARMS) or any(a["status"] != "completed" or not a["finite"]
                                                                for a in arms):
         raise SystemExit("price needs one completed, finite stage-1a run of each arm")
-    eval_every = CARD_SETTINGS["eval_every"]
-    allowed = PRICE["safety"] * PRICE["hard_stop"] / dph * 3600.0
-    cost = lambda f: projected_seconds(f, arms, build_seconds, eval_every)          # noqa: E731
-    if cost(PRICE["f_min"]) > allowed:
-        raise SystemExit(f"even F_min = {PRICE['f_min']:.3g} projects past ${PRICE['safety'] * PRICE['hard_stop']:.2f} "
-                         f"at ${dph}/h; stage 1b does not fit the stop")
-    if cost(PRICE["f_max"]) <= allowed:
+    if any(a["settings"] != timing_settings() or a["seed"] != 0 for a in arms):
+        raise SystemExit("price needs stage-1a runs made with `run --timing` (the card's settings at F_1a, seed 0)")
+    if ident is not None and any(a["bound"].get("code") != ident for a in arms):
+        raise SystemExit("the stage-1a runs were made by other code than this runner, card and package")
+    spent = spent_seconds / 3600.0 * dph
+    budget = min(PRICE["safety"] * PRICE["hard_stop_1b"], PRICE["cap_total"] - spent)
+    allowed = budget / dph * 3600.0
+    cost = lambda f: projected_seconds(f, arms, CARD_SETTINGS["eval_every"])         # noqa: E731
+    by = {a["arm"]: a for a in arms}
+    ratio = by["A1"]["s_per_step"] / by["A0"]["s_per_step"]
+    gate = ratio <= PRICE["max_muon_step_ratio"]
+    fits = cost(PRICE["f_min"]) <= allowed
+    f = None
+    if fits and cost(PRICE["f_max"]) <= allowed:
         f = PRICE["f_max"]
-    else:
-        low, high = 0.0, PRICE["f_max"]
+    elif fits:
+        low, high = PRICE["f_min"], PRICE["f_max"]
         for _ in range(60):
             mid = (low + high) / 2
             low, high = (mid, high) if cost(mid) <= allowed else (low, mid)
-        unit = 10.0 ** (math.floor(math.log10(low)) - 1) if low > 0 else 1.0
-        f = math.floor(low / unit) * unit                               # two significant figures, rounded down
-    by = {a["arm"]: a for a in arms}
-    ratio = by["A1"]["s_per_step"] / by["A0"]["s_per_step"]
-    return {"flop_budget": f, "dph": dph, "build_seconds": build_seconds, "rule": PRICE,
-            "projected_hours": cost(f) / 3600.0, "projected_dollars": cost(f) / 3600.0 * dph,
-            "steps_at_f": {a["arm"]: f / (a["flops"] / a["steps"]) for a in arms},
+        unit = 10.0 ** (math.floor(math.log10(low)) - 1)
+        f = max(PRICE["f_min"], math.floor(low / unit) * unit)      # two significant figures, down, not below F_min
+    reason = None if gate and fits else ("1a gate: Muon's s/step over 1.25 x AdamW's" if not gate else
+                                         f"even F_min does not fit ${budget:.2f} at ${dph}/h")
+    projected = None if f is None else cost(f) / 3600.0 * dph
+    return {"go": gate and fits, "reason": reason, "flop_budget": f, "dph": dph, "rule": PRICE,
+            "spent_seconds": spent_seconds, "spent_dollars": spent, "budget_dollars": budget,
+            "projected_hours": None if f is None else cost(f) / 3600.0, "projected_dollars": projected,
+            "projected_total_dollars": None if f is None else spent + projected,
+            "steps_at_f": None if f is None else {a["arm"]: f / (a["flops"] / a["steps"]) for a in arms},
             "s_per_step": {a["arm"]: a["s_per_step"] for a in arms}, "muon_step_ratio": ratio,
-            "gate_1a": {"muon_step_ratio_ok": ratio <= PRICE["max_muon_step_ratio"]},
+            "gate_1a": {"muon_step_ratio_ok": gate},
             "s_per_flop": {a["arm"]: a["s_per_step"] / (a["flops"] / a["steps"]) for a in arms}}
 
 
@@ -301,17 +322,22 @@ def arm_order(seed: int) -> list[str]:
 
 
 def check_price(price: dict) -> None:
-    """A PRICE.json the sealed rule could have written: this runner's rule, F within [F_min, F_max], 1a's gate met,
-    and the projection within the stop."""
+    """A PRICE.json the sealed rule could have written, saying go: this runner's rule, F within [F_min, F_max], 1a's
+    gate met, the projection within SAFETY x the 1b stop, and spent + projected within the total cap."""
     if price.get("rule") != PRICE:
         raise SystemExit("PRICE.json was made under another rule")
+    if price.get("go") is not True:
+        raise SystemExit(f"PRICE.json says no go: {price.get('reason')}")
     f = price.get("flop_budget")
     if not (finite(f) and PRICE["f_min"] <= f <= PRICE["f_max"]):
         raise SystemExit(f"PRICE.json's F {f} is outside [{PRICE['f_min']:.3g}, {PRICE['f_max']:.3g}]")
     if not price.get("gate_1a", {}).get("muon_step_ratio_ok"):
         raise SystemExit("PRICE.json records a failed stage-1a gate (Muon's s/step over 1.25 x AdamW's)")
-    if not price.get("projected_dollars", math.inf) <= PRICE["safety"] * PRICE["hard_stop"]:
-        raise SystemExit("PRICE.json projects past the stop")
+    projected = price.get("projected_dollars")
+    if not (finite(projected) and projected <= PRICE["safety"] * PRICE["hard_stop_1b"]):
+        raise SystemExit("PRICE.json projects past the 1b stop")
+    if not (finite(price.get("spent_dollars")) and price["spent_dollars"] + projected <= PRICE["cap_total"]):
+        raise SystemExit("PRICE.json's spent + projected is over the total cap")
 
 
 def score(runs: list[dict], *, sealed: bool, ident: dict | None = None) -> dict:
@@ -495,13 +521,16 @@ def cmd_build(args) -> None:
 
 def cmd_run(args) -> None:
     """The card (F from `--price`, sealed directory) or a plumbing run (`--flop-budget`, `--unsealed`)."""
-    if (args.price is None) == (args.flop_budget is None):
-        raise SystemExit("pass exactly one of --price (the card's F) and --flop-budget (plumbing, --unsealed)")
+    if sum(x is not None and x is not False for x in (args.price, args.flop_budget, args.timing)) != 1:
+        raise SystemExit("pass exactly one of --price (the card's F), --timing (stage 1a) and --flop-budget (plumbing)")
     if args.flop_budget is not None and not args.unsealed:
         raise SystemExit("--flop-budget is for plumbing runs only; add --unsealed")
     settings = dict(CARD_SETTINGS)
     extra = {}
-    if args.price is not None:
+    if args.timing:                                  # stage 1a: unsealed, F_1a, seed 0
+        settings = timing_settings()
+        args.unsealed, args.seeds = True, [0]
+    elif args.price is not None:
         price_file = json.loads(args.price.read_text())
         check_price(price_file)
         settings["flop_budget"] = price_file["flop_budget"]
@@ -517,12 +546,16 @@ def cmd_run(args) -> None:
 
 
 def cmd_price(args) -> None:
-    """Stage 1b's F from stage 1a's run JSONs (--from) and the booked box's $/h; writes PRICE.json."""
+    """Stage 1b's F from stage 1a's run JSONs (--from), the box's $/h and the box seconds spent so far; writes
+    PRICE.json. Exit 0: go; 3: 1a's gate failed; 4: even F_min does not fit (PRICE.json is written either way)."""
     arms = [json.loads((args.source / f"{arm}-s0.json").read_text()) for arm in ARMS]
-    result = price(arms, dph=args.dph, build_seconds=args.build_seconds)
+    result = price(arms, dph=args.dph, spent_seconds=args.spent_seconds, ident=identity())
     result["from"] = {f"{arm}-s0.json": sha256(args.source / f"{arm}-s0.json") for arm in ARMS}
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     write_json(args.out, result)
     print(json.dumps(result, indent=1))
+    if not result["go"]:
+        raise SystemExit(3 if not result["gate_1a"]["muon_step_ratio_ok"] else 4)
 
 
 def cmd_dry(args) -> None:
@@ -573,13 +606,15 @@ def main() -> None:
     go.add_argument("--seeds", type=int, nargs="+", default=list(CARD_SEEDS))
     go.add_argument("--price", type=Path, default=None, help="PRICE.json from `price`: the card's F")
     go.add_argument("--flop-budget", type=float, default=None, help="plumbing runs only (--unsealed)")
+    go.add_argument("--timing", action="store_true", help="stage 1a: the card's settings at F_1a, seed 0, unsealed")
     go.add_argument("--hard-gb", type=float, default=50)
     go.add_argument("--unsealed", action="store_true")
     go.set_defaults(fn=cmd_run)
     cost = sub.add_parser("price")
     cost.add_argument("--from", dest="source", type=Path, required=True, help="stage 1a's run directory")
     cost.add_argument("--dph", type=float, required=True, help="the booked box's $/h")
-    cost.add_argument("--build-seconds", type=float, required=True, help="the village build's seconds on the box")
+    cost.add_argument("--spent-seconds", type=float, required=True,
+                      help="box seconds billed so far (the job's elapsed time plus its pre-job allowance)")
     cost.add_argument("--out", type=Path, required=True)
     cost.set_defaults(fn=cmd_price)
     dry = sub.add_parser("dry")

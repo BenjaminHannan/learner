@@ -2,10 +2,13 @@
 
 Drafted 2026-10-20 from `R1-STAGE1-BID.md` and the coordinator's 10-20 rulings:
 - lr option (i), both arms at 1e-3;
-- F = 3.15e16 if it fits the $2.50 stop at the re-quote, otherwise the largest F that fits, fixed before sealing;
+- F is set by the sealed rule below, not a number. F_MAX = 7.5e15 (spec §9.7's ~3-epoch limit), F_min = 3.15e15;
+- **one job, one box, one cap of $2.80 in total.** The box builds once and runs the 1a timing, then the sealed
+  `price`. 1b starts on its own, only if the gate passes and F ≥ F_min. Otherwise the job exports and stops, and the
+  box is destroyed after the pull;
 - $0 GO on P1–P3;
-- booking at most $2.80, only after P1–P3 pass review, this card is sealed, and a re-quote is done;
-- the seal hash and the quote go to the coordinator before booking;
+- booking only after P1–P3 pass review, this card is sealed, and a re-quote is done;
+- the seal hash and the quote go to the coordinator before booking, and `PRICE.json` (with its sha256) as 1b starts;
 - the rental needs Ben's click.
 
 **Nothing here has run on a GPU.** `artifacts/claude-steals-20261017/r1-stage1/SEAL.sha256.txt` will hold three
@@ -47,33 +50,40 @@ P1 test. Scoring checks it again: if the arms of a seed differ in steps or FLOPs
 - **Parent:** a paired fresh start.
 - **Seeds:** 0, 1, 2. The arm order alternates (A0 then A1 at seeds 0 and 2, A1 then A0 at seed 1). The arms of a seed
   run back to back on the same box.
-- **F, stage 1b's FLOP budget, set by a rule fixed now and applied by the sealed runner (`price`):**
-  - F is the largest value whose projected stage-1b box time, at the booked box's $/h, costs at most 0.8 × $2.50 =
-    $2.00. It is never above 3.15e16, and it is rounded down to two significant figures.
-  - The projected box time is built from stage 1a's measurements. Per run, it is:
+- **F, stage 1b's FLOP budget, set by a rule fixed now (accepted by the coordinator) and applied on the box by the
+  sealed runner's `price`:**
+  - **The budget for 1b** is the smaller of two amounts: 0.8 × the 1b stop of $2.50 ($2.00), and the $2.80 cap less
+    the dollars already spent.
+    - Spent = the box seconds so far × the box's $/h.
+    - The box seconds are the job's elapsed time plus a 900 s pre-job allowance for the image pull and the start.
+  - **F** is the largest value in [F_min = 3.15e15, F_MAX = 7.5e15] whose projected 1b cost fits that budget.
+    - It is rounded down to two significant figures, and never below F_min.
+    - F_MAX is about 3 passes over the train cache (7.5e15 / 1.14e12 FLOPs per step × 48.9k tokens ≈ 322M tokens,
+      ≈ 3.0 × 106.6M).
+  - **The projected 1b box time** is built from stage 1a's measurements on the same box. Per run it is:
     - steps at F × that arm's measured s/step;
     - plus (⌊steps/500⌋ + 1) evaluations × the measured seconds per evaluation;
-    - plus the start-up with the caches already built (the faster arm's start-up).
-  - That per-run figure is multiplied over 3 seeds × 2 arms. Added once on top:
-    - the first run's extra start-up, which covers building the caches and the name detector;
-    - the measured village build time;
-    - 900 s for copy-off.
-  - `price` writes `PRICE.json`. It refuses if even F_min = 3.15e15 does not fit.
-  - The sealed run reads F only from `PRICE.json`, and every run is bound to its sha256.
-  - Before running, the sealed run checks the file. It must have:
+    - plus the start-up with the caches already built (the faster arm's).
+
+    The per-run figure is summed over 3 seeds × 2 arms, and 900 s of copy-off is added. The build and the caches are
+    already paid in 1a, so they are not counted again.
+  - **`price` writes `PRICE.json`** every time, with "go" and the reason. It exits 0 for go, 3 when 1a's gate fails,
+    and 4 when even F_min does not fit.
+  - **The sealed 1b run reads F only from `PRICE.json`**, and every run is bound to its sha256. Before running, it
+    checks the file. It must have:
     - this runner's rule;
-    - F in [3.15e15, 3.15e16];
+    - go;
+    - F in [F_min, F_MAX];
     - 1a's gate met;
-    - a projection within $2.00.
-  - The 1b pack refuses a box dearer than the $/h F was priced at.
-  - Why a rule and not a number: D's GPU seconds per step have never been measured, so no honest F can be priced
-    before stage 1a. **[COORDINATOR]** accept the rule, or name F.
+    - a projection within $2.00;
+    - spent + projected within $2.80.
+  - **`price` takes only 1a runs** made by `run --timing` with this runner, card and package.
+  - **Why a rule and not a number:** D's GPU seconds per step have never been measured, so no honest F can be priced
+    before stage 1a.
   - **Measured here (CPU FLOP fit, 200 batches of the build):**
     - FLOPs per step: 0.64e12 gold, 0.86e12 teacher, 1.28e12 own; 1.14e12 over the curriculum.
     - Batches carry about 48.9k tokens.
-    - So F = 3.15e16 is about 27,560 steps per run, about 1.35B tokens, or **12.6 epochs** of the train cache.
-    - Spec §9.7 asks for at most about 3 epochs for the contenders. **[COORDINATOR]** note: at F_max this run repeats
-      the data about 4× more than that guidance.
+    - So F_MAX is about 6,560 steps per run, and F_min about 2,760.
 - **Machine:** one Vast RTX 5090, on-demand, never interruptible, reliability ≥ 0.98.
 - **Runner:** `scripts/premonition_steals_r1_stage1.py`, run unchanged from the sealed version.
   - It refuses a sealed directory whose seal does not match its own hash or the card's.
@@ -82,29 +92,31 @@ P1 test. Scoring checks it again: if the arms of a seed differ in steps or FLOPs
   - Each run is bound by content hash to the runner, the card, and premonition/, learnlab/ and memorylab/. The commit is
     recorded, not binding.
 
-## Stages, each gated on the one before
-- **1a, a timing smoke, hard stop $0.30.** Unsealed, in its own directory:
-  - It runs `run --unsealed --flop-budget F_1a --seeds 0` (both arms).
-  - F_1a = 300 × the full preset's mean FLOPs per step on this build: 300 × 1.14e12 ≈ **3.4e14**.
-  - It gives each arm's s/step, s per evaluation and start-up on the GPU, and the build time. These are the inputs
-    of `price`.
-  - **Gate to 1b:** Muon's s/step ≤ 1.25 × AdamW's, so that wall-clock does not swallow the comparison. D's s/FLOP
-    is reported.
-  - The coordinator gets `PRICE.json` (F, projected $) before 1b starts.
-- **1b, the card, hard stop $2.50.** Six runs at F in the sealed directory, then evaluation, the manifest and
-  copy-off.
-- **Both stages (`scripts/claude_r1s1_rent.py`):**
-  - The job's run step has its own deadline: 0.8 × the hours the stop buys at the booked $/h, minus 15 minutes. The
-    outputs are therefore exported before the stop.
-  - The controller stops the box at DONE or FAIL. It reads the export, checkpoints included, from the stopped box
-    (vread2's route).
-  - It destroys the box only after every file passes its sha256 check.
-  - `create` sends only with `--yes`, which is Ben's click. It refuses an offer dearer than the pack's $/h, and it
-    refuses when it cannot read the instance list for the duplicate check.
-- **[COORDINATOR]** choose:
-  - 1b on the 1a box after your F reply, which saves the build (about 21 minutes) and idles at about $0.45/h
-    meanwhile;
-  - or 1b on a fresh box.
+## The job: one box, one cap of $2.80 (`scripts/claude_r1s1_rent.py`, stage `1ab`)
+1. **Build** the village once (`build`).
+2. **1a, the timing** (`run --timing`):
+   - unsealed, in `out/1a`, seed 0, both arms;
+   - the card's settings at F_1a = 300 × 1.14e12 ≈ **3.4e14** (about 300 steps per arm);
+   - it gives each arm's s/step, s per evaluation and start-up on this GPU.
+3. **`price`** (the sealed rule above) writes `out/1b/PRICE.json` and prints its sha256 in the log, which goes to
+   the coordinator as 1b starts.
+   - **Gate:** Muon's s/step ≤ 1.25 × AdamW's, so that wall-clock does not swallow the comparison. D's s/FLOP is
+     reported.
+   - If the gate fails or even F_min does not fit, the job exports and stops ("GATE"). The box is then destroyed
+     after the pull, and that is reported.
+4. **1b, the card:** six runs at F in the sealed directory `out/1b` (`run --price`), then the manifests and the
+   export.
+5. **The controller:**
+   - **The run's deadline** counts from the instance's billing start: 0.9 × the hours the $2.80 cap buys at the
+     box's $/h, minus 15 minutes for the export and a 900 s pre-job allowance. Outputs are therefore exported before
+     the stop. `pack` refuses a box where that deadline cannot cover the build, 1a and an hour of 1b.
+   - **Stops:** it stops the box only on the closing DONE, FAIL or GATE mark, which is printed after the export. It
+     also stops it at the $2.80 hard stop, and when `waitlog` times out; that limit is never shorter than the box's
+     deadline.
+   - **Pull:** it reads the export, checkpoints included, from the stopped box (vread2's route).
+   - **Destroy:** only after every file passes its sha256 check.
+   - **`create`** sends only with `--yes`, which is Ben's click. It refuses an offer dearer than the pack's $/h, and
+     when it cannot read the instance list for the duplicate check.
 
 ## Primary readout
 - **Held-out village loss:**

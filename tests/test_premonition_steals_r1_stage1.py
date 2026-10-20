@@ -195,53 +195,83 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual([r1s1.arm_order(s) for s in r1s1.CARD_SEEDS], [["A0", "A1"], ["A1", "A0"], ["A0", "A1"]])
 
 
-def stage_1a(arm: str, s_per_step: float, startup: float = 60.0) -> dict:
-    """A 1a run: 300 steps at 1e12 FLOPs each, one evaluation of 20 s at the end, `startup` s before training."""
-    return {"arm": arm, "status": "completed", "finite": True, "flops": 3e14, "steps": 300, "s_per_step": s_per_step,
+def stage_1a(arm: str, s_per_step: float, startup: float = 60.0, ident=None) -> dict:
+    """A 1a run (`run --timing`): 300 steps at 1e12 FLOPs each, one evaluation of 20 s at the end, `startup` s
+    before training."""
+    return {"arm": arm, "seed": 0, "settings": r1s1.timing_settings(), "bound": {"code": ident or {"x": 1}},
+            "status": "completed", "finite": True, "flops": 3e14, "steps": 300, "s_per_step": s_per_step,
             "train_seconds": 300 * s_per_step, "wall_seconds": 300 * s_per_step + 20.0 + startup, "evals": [],
             "final_eval_seconds": 20.0}
 
 
 class PriceTest(unittest.TestCase):
-    def test_largest_f_within_the_stop(self) -> None:
-        arms = [stage_1a("A0", 0.10, startup=660.0), stage_1a("A1", 0.11)]       # A0 ran first: +600 s of caches
-        out = r1s1.price(arms, dph=0.45, build_seconds=1200.0)
-        allowed = 0.8 * 2.50 / 0.45 * 3600
-        self.assertLess(out["flop_budget"], r1s1.PRICE["f_max"])
-        self.assertLessEqual(r1s1.projected_seconds(out["flop_budget"], arms, 1200.0, 500), allowed)
-        self.assertGreater(r1s1.projected_seconds(out["flop_budget"] * 1.1, arms, 1200.0, 500), allowed)
-        self.assertEqual(float(f"{out['flop_budget']:.2g}"), out["flop_budget"])     # two significant figures
-        self.assertLessEqual(out["projected_dollars"], 2.0)
+    def hand(self, f: float, s_per_step: tuple, startup: float = 60.0) -> float:
+        """3 seeds x (steps x s/step + evaluations x 20 s + start-up) per arm, plus 900 s of copy-off."""
+        steps = f / 1e12
+        return 900.0 + sum(3 * (steps * s + (math.floor(steps / 500) + 1) * 20.0 + startup) for s in s_per_step)
+
+    def test_largest_f_within_the_1b_stop(self) -> None:
+        arms = [stage_1a("A0", 0.50, startup=660.0), stage_1a("A1", 0.55)]       # A0 ran first: +600 s of caches
+        out = r1s1.price(arms, dph=0.45, spent_seconds=3600.0)                   # $0.45 spent: the 1b stop binds
+        self.assertTrue(out["go"])
+        self.assertEqual(out["budget_dollars"], 2.0)
+        f = out["flop_budget"]
+        self.assertTrue(r1s1.PRICE["f_min"] <= f < r1s1.PRICE["f_max"])
+        self.assertAlmostEqual(r1s1.projected_seconds(f, arms, 500), self.hand(f, (0.50, 0.55)))   # caches paid
+        allowed = 2.0 / 0.45 * 3600
+        self.assertLessEqual(r1s1.projected_seconds(f, arms, 500), allowed)
+        self.assertGreater(r1s1.projected_seconds(f * 1.1, arms, 500), allowed)
+        self.assertEqual(float(f"{f:.2g}"), f)                                    # two significant figures
+        self.assertLessEqual(out["projected_total_dollars"], 2.80)
         self.assertAlmostEqual(out["muon_step_ratio"], 1.1)
-        self.assertTrue(out["gate_1a"]["muon_step_ratio_ok"])
-        # by hand: 3 seeds x (steps x 0.21 s + evals x 20 s + 60 s x 2) + 1200 + 900 at F / 1e12 steps
-        steps = out["flop_budget"] / 1e12
-        hand = 3 * (steps * 0.21 + 2 * (math.floor(steps / 500) + 1) * 20.0 + 120.0) + 2100.0 + 600.0
-        self.assertAlmostEqual(r1s1.projected_seconds(out["flop_budget"], arms, 1200.0, 500), hand)
 
-    def test_capped_at_f_max_and_gate(self) -> None:
-        arms = [stage_1a("A0", 1e-6), stage_1a("A1", 2e-6)]
-        out = r1s1.price(arms, dph=0.45, build_seconds=0.0)
-        self.assertEqual(out["flop_budget"], r1s1.PRICE["f_max"])
-        self.assertFalse(out["gate_1a"]["muon_step_ratio_ok"])
+    def test_the_total_cap_binds_after_a_long_1a(self) -> None:
+        arms = [stage_1a("A0", 0.20), stage_1a("A1", 0.21)]
+        out = r1s1.price(arms, dph=0.45, spent_seconds=4 * 3600.0)               # $1.80 spent: $1.00 left
+        self.assertAlmostEqual(out["budget_dollars"], 1.0)
+        self.assertLessEqual(out["projected_total_dollars"], 2.80)
+        self.assertLessEqual(out["projected_dollars"], 1.0 + 1e-9)
 
-    def test_refuses_when_even_f_min_does_not_fit(self) -> None:
-        arms = [stage_1a("A0", 2.0), stage_1a("A1", 2.0)]                       # 2 s/step: F_min alone is ~3.6 h
-        with self.assertRaises(SystemExit):
-            r1s1.price(arms, dph=0.45, build_seconds=1200.0)
+    def test_capped_at_f_max_7_5e15(self) -> None:
+        self.assertEqual(r1s1.PRICE["f_max"], 7.5e15)
+        out = r1s1.price([stage_1a("A0", 1e-3), stage_1a("A1", 1e-3)], dph=0.45, spent_seconds=0.0)
+        self.assertEqual((out["go"], out["flop_budget"]), (True, 7.5e15))
+
+    def test_rounding_never_goes_below_f_min(self) -> None:
+        arms = [stage_1a("A0", 0.5), stage_1a("A1", 0.5)]
+        target = r1s1.projected_seconds(3.17e15, arms, 500) / 3600 * 0.45      # a budget whose boundary is 3.17e15
+        spent = (2.80 - target) / 0.45 * 3600
+        out = r1s1.price(arms, dph=0.45, spent_seconds=spent)
+        self.assertTrue(out["go"])
+        self.assertEqual(out["flop_budget"], r1s1.PRICE["f_min"])              # not 3.1e15
+
+    def test_gate_and_fit_failures_say_no_go(self) -> None:
+        gated = r1s1.price([stage_1a("A0", 0.1), stage_1a("A1", 0.13)], dph=0.45, spent_seconds=0.0)
+        self.assertEqual((gated["go"], gated["gate_1a"]["muon_step_ratio_ok"]), (False, False))
+        slow = r1s1.price([stage_1a("A0", 3.0), stage_1a("A1", 3.0)], dph=0.45, spent_seconds=0.0)
+        self.assertEqual((slow["go"], slow["flop_budget"]), (False, None))
+        self.assertIn("F_min does not fit", slow["reason"])
+        for bad in (gated, slow):
+            with self.assertRaises(SystemExit):
+                r1s1.check_price(json.loads(json.dumps(bad)))
 
     def test_check_price(self) -> None:
-        good = r1s1.price([stage_1a("A0", 0.10), stage_1a("A1", 0.11)], dph=0.45, build_seconds=1200.0)
+        good = r1s1.price([stage_1a("A0", 0.50), stage_1a("A1", 0.55)], dph=0.45, spent_seconds=3600.0)
         r1s1.check_price(json.loads(json.dumps(good)))                           # survives the JSON round trip
-        for change in ({"flop_budget": 5e16}, {"flop_budget": 1e14}, {"gate_1a": {"muon_step_ratio_ok": False}},
-                       {"projected_dollars": 2.2}, {"rule": dict(r1s1.PRICE, safety=0.95)}):
+        for change in ({"flop_budget": 3.15e16}, {"flop_budget": 1e14}, {"gate_1a": {"muon_step_ratio_ok": False}},
+                       {"projected_dollars": 2.2}, {"spent_dollars": 1.0}, {"go": False},
+                       {"rule": dict(r1s1.PRICE, safety=0.95)}):
             with self.assertRaises(SystemExit, msg=str(change)):
                 r1s1.check_price({**good, **change})
 
-    def test_refuses_an_unfinished_1a(self) -> None:
-        arms = [stage_1a("A0", 0.1), dict(stage_1a("A1", 0.1), status="aborted")]
+    def test_refuses_runs_that_are_not_this_codes_timing_runs(self) -> None:
         with self.assertRaises(SystemExit):
-            r1s1.price(arms, dph=0.45, build_seconds=0.0)
+            r1s1.price([stage_1a("A0", 0.1), dict(stage_1a("A1", 0.1), status="aborted")], dph=0.45, spent_seconds=0)
+        off = dict(stage_1a("A1", 0.1), settings=dict(r1s1.CARD_SETTINGS, flop_budget=1e15))
+        with self.assertRaises(SystemExit):
+            r1s1.price([stage_1a("A0", 0.1), off], dph=0.45, spent_seconds=0)
+        with self.assertRaises(SystemExit):
+            r1s1.price([stage_1a("A0", 0.1), stage_1a("A1", 0.1)], dph=0.45, spent_seconds=0, ident={"x": 2})
 
 
 class SealAndManifestTest(unittest.TestCase):
