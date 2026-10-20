@@ -329,6 +329,20 @@ questions (all told).
   3. Secondary readings move together in both arms: gold + 2 fact cards 382-424 of 1024, and own-retrieval
      answers 14.0-14.8%.
 
+#### S5 build and review (2026-10-20; card `S5-STAGE0-CARD.md`, sealed bfe98381a, amendments 1-2)
+
+- **Built:** 6a2651752 + 7c0456589. Pre-run tests 5/5 in `tests/test_premonition_dec_ent_match.py`. Smoke check:
+  stage-1 digests equal across arms, and ∂L/∂κ_d ≠ 0 at the first stage-2 step.
+- **Review, focused round 1 (main...6a2651752).**
+  - **Blocking, fixed (7c0456589):** the base decode calls passed `bias=` even with the flag off, which broke
+    `CardBypassMini` and its subclasses. My own full-suite run had shown 10 errors instead of the usual 4, and I
+    missed it before the review.
+  - **Also fixed:** clipping applies to the shared weights only (amendment 2).
+- **Confirmation round (main...7c0456589, medium):** **no correctness bug.** The reviewer checked κ_d's gradient
+  through the float mask against a hand softmax. Logged: S4's per-loop entity multi-hot, the duplicated line pool,
+  S5's second `_mentions` pass, S3's key-splice waste.
+- **No code changed after the confirmation round.** The S5 run uses 7c0456589's code.
+
 ### S1. `ring_resident`: "fetched" means "in the tray"
 
 **Targets:** N1-N4 (new). Prerequisite reading for every answer-path number, including the coordinator's
