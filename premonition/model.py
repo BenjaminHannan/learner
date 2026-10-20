@@ -330,7 +330,8 @@ class Decoder(nn.Module):
 # ----------------------------------------------------------------------------- the model
 def _live_cuda_devices() -> list[int]:
     """CUDA devices whose RNG streams exist already (fork them; never start a CUDA context just to fork)."""
-    return list(range(torch.cuda.device_count())) if torch.cuda.is_initialized() else []
+    live = torch.cuda.is_initialized() or torch.get_default_device().type == "cuda"   # CUDA default: it will start
+    return list(range(torch.cuda.device_count())) if live else []
 
 
 @dataclass
@@ -390,7 +391,7 @@ class PremonitionMini(nn.Module):
             # D + S2's at the same seed (S3 card §1, amendment 2).
             with torch.random.fork_rng(devices=_live_cuda_devices()):
                 self.address = CardAddress(config)
-                draw = int(torch.randint(2 ** 62, (1,)).item())
+                draw = int(torch.randint(2 ** 62, (1,), device="cpu").item())
             self._address_seed = (draw * 6364136223846793005 + 1442695040888963407) % 2 ** 63   # not the next draw
             self._init_address()
             base, cards = config.question_rows + config.slots, config.cards
@@ -404,7 +405,8 @@ class PremonitionMini(nn.Module):
         generator = torch.Generator().manual_seed(self._address_seed)
         with torch.no_grad():
             self.address.pool.load_state_dict(self.writer.pool.state_dict())
-            self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator) * 0.02)
+            self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator,
+                                                       device="cpu") * 0.02)
             self.address.proj.bias.zero_()
 
     def reset_parameters(self) -> None:
@@ -412,7 +414,7 @@ class PremonitionMini(nn.Module):
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        own = {id(m) for m in getattr(self, "address", nn.Identity()).modules()} - {id(self)}   # S3 inits apart
+        own = {id(m) for m in self.address.modules()} if hasattr(self, "address") else set()   # S3 inits apart
         shared = [m for m in self.modules() if id(m) not in own]
         for module in shared:
             if isinstance(module, nn.Linear):

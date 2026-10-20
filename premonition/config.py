@@ -15,6 +15,8 @@ PARAM_BAND = (1_900_000, 2_150_000)   # design/06 §6, asserted at d = 128; the 
 VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; entity ids follow
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
+DRAFT_FLAGS = ("decoder_raw_cards", "card_address")   # design/info-constraints S2, S3: default off, left out of
+                                                      # config dicts when off, so plain-D digests are unchanged
 VARIANTS = ("D", "D-noask", "D-noptr")
 
 
@@ -166,4 +168,4 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     return parts
 
 
-__all__ = ["MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]
+__all__ = ["DRAFT_FLAGS", "MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]

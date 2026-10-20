@@ -60,7 +60,7 @@ from learnlab.train import MemoryGuardError, TrainConfig, Trainer
 from premonition import data as pdata
 from premonition import identity, preprocess
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
-from premonition.config import MiniConfig
+from premonition.config import DRAFT_FLAGS, MiniConfig
 from premonition.flops import FlopFit, fit_flops, measure_mini
 from premonition.model import Answers, PremonitionMini
 from premonition.pointer import answer_text
@@ -697,7 +697,11 @@ def validation_hook(batches: Sequence[VisitBatch], **options: Any) -> Callable[[
 
 # ----------------------------------------------------------------------------- checkpoints
 def mini_config_dict(config: MiniConfig) -> dict[str, Any]:
-    return asdict(config)
+    values = asdict(config)
+    for name in DRAFT_FLAGS:                       # an off draft flag is left out: plain-D dicts and digests as before
+        if not values[name]:
+            del values[name]
+    return values
 
 
 def mini_config_from(values: Mapping[str, Any]) -> MiniConfig:

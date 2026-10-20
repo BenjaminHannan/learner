@@ -216,6 +216,21 @@ class CardAddressTest(unittest.TestCase):
             with self.subTest(cls=cls.__name__), self.assertRaises(ValueError):
                 cls(tiny("D", decoder_raw_cards=True, card_address=True))
 
+    def test_plain_config_dict_and_digest_match_the_base_commit(self) -> None:
+        from premonition.identity import config_digest
+        from tests.test_premonition_decoder_raw_cards import base_modules
+        base_config, _, _, base_train = base_modules()
+        for variant in ("D", "D-noask", "D-noptr"):
+            mine = ptrain.mini_config_dict(MiniConfig.preset(variant, "full"))
+            theirs = base_train.mini_config_dict(base_config.MiniConfig.preset(variant, "full"))
+            self.assertEqual(mine, theirs)
+            self.assertEqual(config_digest(mine), config_digest(theirs))
+        flagged = MiniConfig.preset("D", "tiny", decoder_raw_cards=True, card_address=True)
+        values = ptrain.mini_config_dict(flagged)
+        self.assertTrue(values["decoder_raw_cards"] and values["card_address"])
+        self.assertEqual(ptrain.mini_config_from(values), flagged)             # round trip keeps the flags
+        self.assertEqual(ptrain.mini_config_from(theirs), MiniConfig.preset("D-noptr", "full"))   # old dicts load
+
     def test_band_excludes_s3(self) -> None:
         plain = MiniConfig.preset("D", "full", decoder_raw_cards=True)
         flagged = plain.with_(card_address=True)
