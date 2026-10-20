@@ -39,7 +39,7 @@ from pathlib import Path
 API = "https://console.vast.ai/api/v0"
 IMAGE = "pytorch/pytorch:2.14.1-cuda12.6-cudnn9-runtime"   # the dry run's torch 2.14.1; the code parses on 3.11+
 REPO_URL = "https://github.com/BenjaminHannan/learner"
-PIN = "34d8d0635529f6c712c5f8e7630976054bfd84d4"            # RUNCARD-S0 seal (code identical to 0d7a2e633)
+PIN = "5917746e5bd4528b5741a92590586b714c728da4"            # RUNCARD-S0 re-seal for run 3 (run files = 34a82da7a)
 MAX_DPH = 0.494                                              # 8.5 h x DPH <= $4.20 (the box refuses above)
 DISK_GB = 80
 ROUND_MARGIN = 0.002                                         # $/h on top of dph_total (which includes the 80 GB disk:
