@@ -78,7 +78,7 @@ class MiniConfig:
         if self.card_address and not self.decoder_raw_cards:
             raise ValueError("card_address is built on decoder_raw_cards (S3 card: base D + S2)")
         if self.check_band and self.d_model == 128:
-            count = self.num_parameters()
+            count = self.num_parameters() - self.parameter_breakdown().get("card_address", 0)   # S3 apart (card §2)
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -153,11 +153,7 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
         heads += _linear(d, dk) + _linear(d, 1) + 1                  # query, ASK, kappa
     decoder = 4 * norm + _linear(d, 3 * d) + _linear(d, d) + _linear(d, d) + _linear(d, 2 * d) \
         + _linear(d, d) + _linear(d, config.decoder_mlp * d) + _linear(config.decoder_mlp * d, d)
-    if config.card_address:                                          # S3: address pool + projection
-        return {"embedding": config.total_vocab * d, "reader": reader, "card_writer": writer,
-                "think": config.think_layers * layer + embeddings + binder, "heads": heads, "decoder": decoder,
-                "card_address": _linear(d, 1) + _linear(d, d)}
-    return {
+    parts = {
         "embedding": config.total_vocab * d,
         "reader": reader,
         "card_writer": writer,
@@ -165,6 +161,9 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
         "heads": heads,
         "decoder": decoder,
     }
+    if config.card_address:                                          # S3: address pool + projection
+        parts["card_address"] = _linear(d, 1) + _linear(d, d)
+    return parts
 
 
 __all__ = ["MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]

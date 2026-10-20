@@ -303,7 +303,8 @@ class Decoder(nn.Module):
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
                 keys: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """`keys` (S3): rows the cross-attention keys come from, in place of `memory` (values stay `memory`)."""
+        """`keys` (S3): (slots [P] long, rows [n, P, d]); the cross-attention keys at memory positions `slots`
+        come from `rows` through the K half of `cross_kv`. Every value and every other key is the base one."""
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
@@ -312,11 +313,13 @@ class Decoder(nn.Module):
         attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         x = x + self.proj(attended.transpose(1, 2).reshape(n, length, width))
         q = self.cross_q(self.norm2(x)).view(n, length, heads, -1).transpose(1, 2)
-        if keys is None:
-            k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
-        else:
-            _, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
-            k, _ = self.cross_kv(_norm(keys)).view(n, keys.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+        k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+        if keys is not None:
+            slots, rows = keys
+            width = self.cross_q.out_features
+            spliced = F.linear(_norm(rows), self.cross_kv.weight[:width], self.cross_kv.bias[:width])
+            k = k.clone()
+            k[:, :, slots] = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
@@ -375,13 +378,17 @@ class PremonitionMini(nn.Module):
         if config.card_address:
             # Built after `reset_parameters` and inside fork_rng, so every shared weight and the global stream
             # equal D + S2's at the same seed (S3 card §1). Pool starts as the writer's pool; proj N(0, 0.02).
+            # Construction draws only from the CPU stream, which fork_rng restores; the init uses its own generator.
             with torch.random.fork_rng(devices=[]):
-                torch.manual_seed(torch.initial_seed() + 0x53)     # seed-dependent, consumes nothing
                 self.address = CardAddress(config)
-                with torch.no_grad():
-                    self.address.pool.load_state_dict(self.writer.pool.state_dict())
-                    nn.init.normal_(self.address.proj.weight, std=0.02)
-                    nn.init.zeros_(self.address.proj.bias)
+            generator = torch.Generator().manual_seed(torch.initial_seed() + 0x53)   # seed-dependent
+            with torch.no_grad():
+                self.address.pool.load_state_dict(self.writer.pool.state_dict())
+                self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator)
+                                               * 0.02)
+                self.address.proj.bias.zero_()
+            if type(self).build_store is not PremonitionMini.build_store:
+                raise ValueError(f"card_address: {type(self).__name__} overrides build_store")
 
     # ------------------------------------------------------------------ setup
     def reset_parameters(self) -> None:
@@ -532,11 +539,9 @@ class PremonitionMini(nn.Module):
             episode.x = episode.x.index_put((who[real], raw), rows[real])
             episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
         if config.card_address:
-            real_card = (cards >= 0) & (cards < store.lines)
-            line = cards.clamp(0, store.lines - 1)
             visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
-            address = torch.where(real_card.unsqueeze(-1), store.addresses[visit, line].float(),
-                                  torch.zeros_like(store.addresses[visit, line].float()))   # NULL: zero address
+            found = (lines >= 0).unsqueeze(-1)                         # `gather` gives line -1 for NULL / none
+            address = store.addresses[visit, lines.clamp_min(0)].float() * found          # NULL: zero address
             address = address + self.think.age(bucket).float() + self.think.row_type.weight[ROW_CARD].float()
             slot = position[real] + (config.rows + config.cards - self._card_base)
             episode.x = episode.x.index_put((who[real], slot), address[real])
@@ -590,7 +595,8 @@ class PremonitionMini(nn.Module):
         if rows.shape[1] != think + 2 * cards:
             raise ValueError(f"card_address expects {think + 2 * cards} episode rows, got {rows.shape[1]}")
         memory, address = rows[:, :think + cards], rows[:, think + cards:]
-        keys = torch.cat([memory[:, :base], address, memory[:, base + cards:think], address], dim=1)
+        slots = torch.cat([torch.arange(base, base + cards), torch.arange(think, think + cards)]).to(rows.device)
+        keys = (slots, torch.cat([address, address], dim=1))
         return self.decoder(self.embed(inputs), memory, valid[:, :think + cards], keys=keys)
 
     # ------------------------------------------------------------------ training

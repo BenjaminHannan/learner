@@ -46,25 +46,12 @@ def config_for(arm: str, vocab: int) -> MiniConfig:
                              card_address=arm == "treated")
 
 
-def preload_distractors(model, store, batch, episode, n: int, generator: torch.Generator):
-    """m02 `distractor_preload`: the gold card + n other eligible non-gold, non-NULL fact cards, shuffled."""
-    gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
-    pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
-    pool[:, store.null] = False
-    noise = torch.rand(pool.shape, generator=generator).masked_fill(~pool, -1.0)
-    best, extra = noise.topk(n, 1)
-    extra = extra.masked_fill(best < 0, -1)
-    cards = torch.cat([batch.gold_lines[:, :1], extra], dim=1)
-    cards = cards.gather(1, torch.rand(cards.shape, generator=generator).argsort(1))
-    model._insert(episode, store, torch.arange(batch.q_visit.shape[0], device=cards.device), cards)
-
-
 def distractor_loss(model: PremonitionMini, batch, generator: torch.Generator) -> torch.Tensor:
     """Cell B (m02 `arm_loss` "+distractors"): answer CE after each of LOOPS loops, averaged over loops."""
     hidden = model.read(batch)
     store = model.build_store(hidden, batch)
     episode = model._start(batch, hidden, store, model._mentions(batch))
-    preload_distractors(model, store, batch, episode, 2, generator)
+    S2.preload_distractors(model, store, batch, episode, 2, generator)        # the S2 reading's own preload
     answer = batch.answer
     length = int((answer != IGNORE_INDEX).sum(1).max().item())
     targets = answer[:, :max(length, 1)]
@@ -173,6 +160,8 @@ def cmd_summarize(args) -> None:
                     missing.append(path.name)
     if missing:
         summary = {"verdict": "INCOMPLETE", "missing": missing}
+        OUT.mkdir(parents=True, exist_ok=True)
+        (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
         print(json.dumps(summary, indent=1))
         return
     cells = {"A": [], "B": []}

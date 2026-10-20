@@ -181,31 +181,52 @@ class CardAddressTest(unittest.TestCase):
             self.assertTrue(torch.equal(episode.x[:, think:], before))      # Think skips raw + address rows
 
     def test_keys_from_address_values_from_rows(self) -> None:
+        """`_decode_logits` equals an independent reference: cross-attention K from `_norm(address)` at the card and
+        raw slots and from `_norm(row)` elsewhere, V from `_norm(row)` everywhere; and the splice matters."""
+        import torch.nn.functional as F
+        from premonition.model import rope
         model, _ = build(tiny("D", decoder_raw_cards=True, card_address=True), 0)
         model.eval()
-        config = model.config
+        config, dec = model.config, model.decoder
         think, cards, base = config.rows, config.cards, model._card_base
         batch = synthetic_batch(seed=5)
-        seen = []
-        handle = model.decoder.cross_kv.register_forward_hook(lambda _m, args, _out: seen.append(args[0].detach()))
-        try:
-            with torch.no_grad():
-                store, episode, everyone = preloaded(model, batch)
-                model._step(episode, everyone, 0, store)
-                inputs = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1].unsqueeze(1)
-                model._decode_logits(episode.x, episode.valid, inputs)
-        finally:
-            handle.remove()
-        self.assertEqual(len(seen), 2)                                       # values pass, then keys pass
-        values_in, keys_in = seen
-        x = episode.x
-        address = x[:, think + cards:]
-        self.assertEqual(values_in.shape[1], think + cards)
-        self.assertTrue(torch.equal(values_in, _norm(x[:, :think + cards])))           # V from every row
-        self.assertTrue(torch.equal(keys_in[:, base:base + cards], _norm(address)))     # K of card rows
-        self.assertTrue(torch.equal(keys_in[:, think:], _norm(address)))                # K of raw rows
-        self.assertTrue(torch.equal(keys_in[:, :base], _norm(x[:, :base])))             # other K unchanged
-        self.assertTrue(torch.equal(keys_in[:, base + cards:think], _norm(x[:, base + cards:think])))
+        with torch.no_grad():
+            store, episode, everyone = preloaded(model, batch)
+            model._step(episode, everyone, 0, store)
+            x_rows, valid = episode.x, episode.valid
+            inputs = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1].unsqueeze(1)
+            got = model._decode_logits(x_rows, valid, inputs)
+
+            memory, address = x_rows[:, :think + cards], x_rows[:, think + cards:]
+            key_rows = torch.cat([memory[:, :base], address, memory[:, base + cards:think], address], dim=1)
+            mask = valid[:, :think + cards]
+            x = model.embed(inputs)
+            n, length, width = x.shape
+            h = dec.heads
+            q, k, v = dec.qkv(dec.norm1(x)).view(n, length, 3, h, -1).permute(2, 0, 3, 1, 4)
+            pos = torch.arange(length)
+            q, k = rope(q, pos, dec.base), rope(k, pos, dec.base)
+            x = x + dec.proj(F.scaled_dot_product_attention(q, k, v, is_causal=True).transpose(1, 2)
+                             .reshape(n, length, width))
+            q = dec.cross_q(dec.norm2(x)).view(n, length, h, -1).transpose(1, 2)
+            kk, _ = dec.cross_kv(_norm(key_rows)).view(n, key_rows.shape[1], 2, h, -1).permute(2, 0, 3, 1, 4)
+            _, vv = dec.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, h, -1).permute(2, 0, 3, 1, 4)
+            att = F.scaled_dot_product_attention(q, kk, vv, attn_mask=mask[:, None, None, :])
+            x = x + dec.cross_proj(att.transpose(1, 2).reshape(n, length, width))
+            want = dec.norm(x + dec.mlp(dec.norm3(x)))
+            plain = dec(model.embed(inputs), memory, mask)                       # keys from the rows themselves
+        self.assertTrue(torch.allclose(got, want, atol=1e-6), (got - want).abs().max())
+        self.assertFalse(torch.allclose(got, plain, atol=1e-6))                 # the address keys are used
+
+    def test_building_s3_does_not_reseed_anything(self) -> None:
+        build(tiny("D", decoder_raw_cards=True, card_address=True), 11)
+        self.assertEqual(torch.initial_seed(), 11)                              # no manual_seed inside
+
+    def test_band_excludes_s3(self) -> None:
+        plain = MiniConfig.preset("D", "full", decoder_raw_cards=True)
+        flagged = plain.with_(card_address=True)
+        self.assertEqual(flagged.num_parameters() - plain.num_parameters(),
+                         flagged.parameter_breakdown()["card_address"])
 
     def test_flop_hand_count_follows_the_measured_increment(self) -> None:
         from premonition.flops import measure_mini, mini_hand_count

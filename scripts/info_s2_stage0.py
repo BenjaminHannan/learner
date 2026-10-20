@@ -138,6 +138,22 @@ def cmd_run(args) -> None:
           f"distinct_256 {r['distinct_256']} | {seconds:.0f} s, finite {finite}")
 
 
+def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
+                        generator: torch.Generator) -> torch.Tensor:
+    """m02 `distractor_preload`: the gold card + n other eligible non-gold, non-NULL fact cards, shuffled;
+    inserts them and returns [Q, 1 + n] (-1 = none)."""
+    gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+    pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
+    pool[:, store.null] = False
+    noise = torch.rand(pool.shape, generator=generator).masked_fill(~pool, -1.0)
+    best, extra = noise.topk(n, 1)
+    extra = extra.masked_fill(best < 0, -1)
+    cards = torch.cat([batch.gold_lines[:, :1], extra], dim=1)
+    cards = cards.gather(1, torch.rand(cards.shape, generator=generator).argsort(1))
+    model._insert(episode, store, torch.arange(batch.q_visit.shape[0], device=cards.device), cards)
+    return cards
+
+
 @torch.no_grad()
 def distract(model: PremonitionMini, batches: list, n: int) -> dict:
     """Card §10: gold card + n shuffled other fact cards of the visit (m02 `distractor_preload`, generator seed
@@ -151,17 +167,9 @@ def distract(model: PremonitionMini, batches: list, n: int) -> dict:
         store = model.build_store(hidden, batch)
         mentions = model._mentions(batch)
         episode = model._start(batch, hidden, store, mentions)
-        gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
-        pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
-        pool[:, store.null] = False
-        noise = torch.rand(pool.shape, generator=generator).masked_fill(~pool, -1.0)
-        best, extra = noise.topk(n, 1)
-        extra = extra.masked_fill(best < 0, -1)
-        cards = torch.cat([batch.gold_lines[:, :1], extra], dim=1)
-        cards = cards.gather(1, torch.rand(cards.shape, generator=generator).argsort(1))
+        cards = preload_distractors(model, store, batch, episode, n, generator)
         count = batch.q_visit.shape[0]
         everyone = torch.arange(count, device=hidden.device)
-        model._insert(episode, store, everyone, cards)
         for step in range(LOOPS):
             model._step(episode, everyone, step, store)
         tokens, lengths = model._greedy(batch, episode, mentions, None)
