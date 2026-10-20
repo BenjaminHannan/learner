@@ -17,7 +17,8 @@
 #            +-2% seconds band of M5, so 30 s voids on one step; see BOX-SPEC), no money check, and the S1 tiny arm +
 #            lesions are run so that MARKS-S1 is proven computable too. Like the real run it needs a clean tree and
 #            the COMMITTED manifest. Its numbers mean nothing.
-#   CHECK_ONLY  1 = run every refusal check (PIN, clean tree, OUT holds no tracked file, manifest, money, CUDA), then exit
+#   CKPT     checkpoint folder, relative to the repo (default <OUT>/ckpt); must be git-ignored and empty at the start.
+#   CHECK_ONLY  1 = run every refusal check (PIN, clean tree, OUT/CKPT placement, empty CKPT, manifest, money, CUDA), then exit
 #            0 before any step: a pre-flight on the box, and what the tests run.
 #   STOP_OVERRIDE  non-empty text (the coordinator's ruling) lets the trains start although c0.json says
 #            stop_and_ask / money_stop. Logged.
@@ -42,12 +43,11 @@ RUN=claude-swarm-screen-20261018
 if [ "$DRYRUN" = 1 ]; then
   SIZE=tiny; DEVICE=cpu; VISITS=tiny; DPH=${DPH:-0.40}; DRY_MAXTOK=${DRY_MAXTOK:-3000}
   OUT=${OUT:-$ROOT/artifacts/$RUN/dryrun-$(git -C "$ROOT" rev-parse --short=9 HEAD)}   # fresh per commit
-  CKPT=artifacts/$RUN/ckpt-dryrun
   C0_ARGS="--rounds 3 --warmup 2 --timed 4 --chunk 2 --t-override 120 --max-tokens $DRY_MAXTOK $C0_EXTRA"
   TRAIN_ARGS="--max-tokens $DRY_MAXTOK"
 else
   SIZE=full; DEVICE=cuda; VISITS=large
-  OUT=${OUT:-$ROOT/artifacts/$RUN/out}; CKPT=artifacts/$RUN/ckpt   # git-ignored: outputs never dirty the tree
+  OUT=${OUT:-$ROOT/artifacts/$RUN/out}                            # git-ignored: outputs never dirty the tree
   C0_ARGS="--rounds 3 --warmup 10 --timed 40 --chunk 5 $C0_EXTRA"
   TRAIN_ARGS=""
 fi
@@ -55,8 +55,27 @@ WORKERS=${WORKERS:-0}
 SCREEN="$PY -B scripts/premonition_swarm_screen.py"
 MARKS="$PY -B scripts/premonition_swarm_marks.py"
 COMMON="--device $DEVICE --size $SIZE --workers $WORKERS"
-# OUT must hold no git-tracked file (review round 3, third pass, item 1). Writing box.log into a tracked folder dirties
-# the tree and trips the clean-tree check below. This runs before anything is written.
+# OUT must be inside the repo and git-ignored (fourth pass, item 3: an outside path used to crash with git's exit
+# 128), and it must hold no git-tracked file (third pass, item 1: writing box.log into a tracked folder dirties the
+# tree). CKPT (the checkpoints) defaults to <OUT>/ckpt, relative to the repo, and may be overridden but must be
+# relative and git-ignored too (fourth pass, item 2). All of this runs before anything is written.
+OUT=$(realpath -m "$OUT")
+case "$OUT/" in
+  "$ROOT"/*) ;;
+  *) printf 'REFUSED: OUT %s is outside the repository %s; use a folder under artifacts/. Nothing was written.\n' \
+       "$OUT" "$ROOT"; exit 2;;
+esac
+if ! git -C "$ROOT" check-ignore -q --no-index "$OUT/box.log"; then
+  printf 'REFUSED: OUT %s is not git-ignored (writing there would dirty the tree); use a folder under artifacts/.\n' "$OUT"
+  exit 2
+fi
+CKPT=${CKPT:-${OUT#"$ROOT"/}/ckpt}
+case "$CKPT" in
+  /*|../*|*/../*) printf 'REFUSED: CKPT %s must be a path relative to the repository, inside it.\n' "$CKPT"; exit 2;;
+esac
+if ! git -C "$ROOT" check-ignore -q --no-index "$ROOT/$CKPT/x"; then
+  printf 'REFUSED: CKPT %s is not git-ignored; use a folder under artifacts/.\n' "$CKPT"; exit 2
+fi
 TRACKED=$(git -C "$ROOT" ls-files -- "$OUT" | head -5)
 if [ -n "$TRACKED" ]; then
   printf 'REFUSED: OUT %s holds git-tracked files (for example %s). Use a fresh OUT; nothing was written.\n' \
@@ -129,6 +148,13 @@ if [ "$DRYRUN" != 1 ]; then
     say "REFUSED: no CUDA device on this host (the full run is for the GPU box; use DRYRUN=1 on a CPU host)"; exit 2
   fi
 fi
+# A rerun must refuse BEFORE any paid work (fourth pass, item 2): save_checkpoint never overwrites, so an existing
+# checkpoint folder would let the data build and C0 run, then fail at the first train step.
+if [ -d "$ROOT/$CKPT" ] && [ -n "$(ls -A "$ROOT/$CKPT" 2>/dev/null)" ]; then
+  say "REFUSED: the checkpoint folder $CKPT already holds checkpoints (a rerun?). Use a fresh OUT (or CKPT); nothing ran."
+  exit 2
+fi
+say "pre-flight OK: OUT $OUT and CKPT $CKPT are git-ignored, OUT holds no tracked file, CKPT is empty"
 if [ "${CHECK_ONLY:-0}" = 1 ]; then say "CHECK_ONLY: every refusal check passed; stopping before any step"; exit 0; fi
 
 # ---------------------------------------------------------------- 2. host record

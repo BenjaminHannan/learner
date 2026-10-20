@@ -1021,5 +1021,47 @@ class ThirdPassTest(unittest.TestCase):
         self.assertEqual(sw.diversity(out.swarm)["ask_rate"], [1.0] * M)
 
 
+class RecallSliceTest(unittest.TestCase):
+    """Review round 3, fourth pass, item 4: the swarm's training recall scores ONLY desk 0's Q rows (not Q * M) and
+    gives the same value as scoring every desk and keeping desk 0."""
+
+    def test_recall_scores_desk_zero_only(self) -> None:
+        batch = synthetic_batch(seed=3)
+        model = s0()
+        Q = batch.size[2]
+        sizes = []
+        original = CardStore.ask
+
+        def recording(store, query, *args, **kwargs):
+            sizes.append(int(query.shape[0]))
+            return original(store, query, *args, **kwargs)
+
+        CardStore.ask = recording
+        try:
+            out = model(batch, mode="teacher", generator=torch.Generator().manual_seed(0))
+        finally:
+            CardStore.ask = original
+        rounds = model.config.swarm_rounds
+        self.assertEqual(sizes.count(Q * M), rounds)                         # the rounds' own ASKs
+        self.assertEqual(sizes.count(Q), 1)                                  # recall: desk 0 only
+        self.assertIn("recall_at_k", out["metrics"])
+        # same value as the old way (score all desks, keep desk 0)
+        from premonition.model import _norm
+        hidden = model.read(batch)
+        store = model.build_store(hidden, batch)
+        swarm = sw._Swarm(model, batch, hidden, store, model._mentions(batch))
+        rows, _, _, _ = swarm.round(0)
+        gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+        new = sw._recall(model, swarm, rows, gold)
+        register = _norm(rows[:, model._register_base])
+        scores = swarm.store.ask(model.heads.query(register), swarm.episode.q_visit, swarm.episode.q_line,
+                                 model.heads.log_kappa.exp(), model.think.age_bias, questions=swarm.all)
+        top = swarm.store.top(scores, model.config.top_k).view(Q, M, -1)[:, 0]
+        found = torch.zeros(gold.shape, dtype=torch.long).scatter_add(1, top.clamp_min(0), (top >= 0).long()) > 0
+        told = gold[:, :store.null].any(1)
+        old = ((gold & found).sum(1).float() / gold.sum(1).clamp_min(1))[told].mean()
+        torch.testing.assert_close(new, old)
+
+
 if __name__ == "__main__":
     unittest.main()

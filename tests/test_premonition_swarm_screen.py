@@ -678,5 +678,91 @@ class BoxGuardTest(unittest.TestCase):
             self.assertFalse((Path(out) / "data.json").exists())             # refused before any step ran
 
 
+class FourthPassTest(unittest.TestCase):
+    """Review round 3, fourth pass (ruled Oct 20): C0 benches exactly the run's trainer (1); the box refuses before
+    any paid work (2) and refuses an OUT outside the repo cleanly (3)."""
+
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def test_bench_trainer_equals_the_run_trainer_field_by_field(self) -> None:
+        from dataclasses import asdict
+        import argparse
+        import premonition.train as ptrain
+        captured = {}
+        original = ptrain.train_d
+        ptrain.train_d = lambda *a, **k: captured.update(k) or {"status": "completed"}
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                args = argparse.Namespace(root=folder, device="cpu", ckpt_dir="ck", arm="S0", seed=0, data_rel="d",
+                                          tokenizer="t", seconds=600.0, size="tiny", max_tokens=3000, workers=1,
+                                          out=str(Path(folder) / "train.json"))
+                screen.cmd_train(args)
+        finally:
+            ptrain.train_d = original
+        settings = {k: captured[k] for k in ("flop_budget", "lr", "warmup_steps", "log_every", "eval_every")}
+        self.assertEqual(settings, screen.RUN_SETTINGS)                      # what the run passes to train_d
+        vocab = 64
+        bench = screen.fresh_trainer(screen.ARMS["S0"], "tiny", vocab, "cpu")
+        from premonition.config import MiniConfig
+        from premonition.model import PremonitionMini
+        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=vocab, **screen.ARMS["S0"]))
+        run = ptrain.d_trainer(model, "cpu", seed=captured["seed"], seconds_budget=captured["seconds_budget"],
+                               **settings)                                    # what train_d builds from them
+        self.assertEqual(asdict(bench.config), asdict(run.config))
+        self.assertEqual(asdict(bench.curriculum), asdict(run.curriculum))
+        for field in ("flop_budget", "tolerance", "seed", "device"):
+            self.assertEqual(getattr(bench, field), getattr(run, field), field)
+        self.assertIsNotNone(bench.seconds_budget)                            # a budget is set in both ...
+        self.assertIsNotNone(run.seconds_budget)
+        self.assertFalse(bench.model.train_diagnostics)                       # ... so diagnostics are off in both
+        self.assertFalse(run.model.train_diagnostics)
+        self.assertEqual(bench.model.config, run.model.config)
+
+    def _box(self, **env) -> "subprocess.CompletedProcess":
+        import os
+        import subprocess
+        pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
+        base = {k: v for k, v in os.environ.items() if k not in ("OUT", "CKPT")}
+        return subprocess.run(["bash", str(self.ROOT / "scripts/premonition_swarm_box.sh")], cwd=self.ROOT,
+                              env={**base, "DRYRUN": "1", "PIN": pin, **env}, capture_output=True, text=True,
+                              timeout=180)
+
+    def test_out_outside_the_repo_is_refused_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory(dir="/tmp") as outside:              # TMPDIR may sit inside the repo
+            self.assertFalse(Path(outside).resolve().is_relative_to(self.ROOT))
+            run = self._box(OUT=outside, CHECK_ONLY="1")
+            self.assertEqual(run.returncode, 2, run.stdout + run.stderr)      # not git's exit 128
+            self.assertIn("is outside the repository", run.stdout)
+            self.assertEqual(list(Path(outside).iterdir()), [])               # nothing was written
+
+    def test_out_and_ckpt_must_be_git_ignored_and_relative(self) -> None:
+        run = self._box(OUT=str(self.ROOT / "premonition" / "not-ignored-out"), CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("is not git-ignored", run.stdout)
+        self.assertFalse((self.ROOT / "premonition" / "not-ignored-out").exists())
+        with tempfile.TemporaryDirectory() as outside:
+            run = self._box(CKPT=outside, CHECK_ONLY="1")
+            self.assertEqual(run.returncode, 2, run.stdout)
+            self.assertIn("must be a path relative to the repository", run.stdout)
+
+    def test_existing_checkpoints_refuse_before_any_step(self) -> None:
+        import subprocess
+        status = subprocess.run(["git", "status", "--porcelain"], cwd=self.ROOT, capture_output=True, text=True).stdout
+        if status.strip():
+            self.skipTest("the working tree is dirty (development); the clean-tree refusal would fire first")
+        out = self.ROOT / "artifacts" / f"swarm-rerun-test-{os.getpid() if (os := __import__('os')) else 0}"
+        try:
+            (out / "ckpt" / "D1-s0").mkdir(parents=True)
+            (out / "ckpt" / "D1-s0" / "model.pt").write_text("x", encoding="utf-8")
+            run = self._box(OUT=str(out))                                     # a real (dry) run, no CHECK_ONLY
+            self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+            self.assertIn("already holds checkpoints", run.stdout)
+            self.assertFalse((out / "data.json").exists())                    # refused before the data build
+            self.assertFalse((out / "c0.json").exists())
+        finally:
+            import shutil
+            shutil.rmtree(out, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main()

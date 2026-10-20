@@ -1115,6 +1115,16 @@ def _slice_tags_for(data: Any, directory: str, cache: pdata.VisitCache, visits: 
     return cache.tags(sets)
 
 
+def d_trainer(model: PremonitionMini, device: Union[str, torch.device], *, flop_budget: float, seed: int,
+              seconds_budget: Optional[float] = None, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
+              eval_every: int = 1000) -> MiniTrainer:
+    """The MiniTrainer `train_d` trains with: one constructor, so a benchmark (the swarm screen's C0) can build
+    exactly the trainer a run uses."""
+    return MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
+                                                eval_every=eval_every), device, flop_budget=flop_budget, seed=seed,
+                       seconds_budget=seconds_budget)
+
+
 def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: float, variant: str = "D",
             size: str = "full", device: str = "cpu", seed: int = 0, max_tokens: int = 55_000,
             max_visits: Optional[int] = 48, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
@@ -1143,9 +1153,8 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     torch.manual_seed(seed)
     config = MiniConfig.preset(variant, size, vocab_size=tokenizer.vocab_size, **(swarm or {}))
     model = PremonitionMini(config)
-    trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
-                                                   eval_every=eval_every), device, flop_budget=flop_budget,
-                          seed=seed, seconds_budget=seconds_budget)
+    trainer = d_trainer(model, device, flop_budget=flop_budget, seed=seed, seconds_budget=seconds_budget, lr=lr,
+                        warmup_steps=warmup_steps, log_every=log_every, eval_every=eval_every)
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
     fit = trainer.calibrate(head)

@@ -412,18 +412,20 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
 
 
 def _recall(model: Any, swarm: _Swarm, rows: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
-    """Gold recall@top_k of desk 0's first ASK over eligible cards (told questions). Desk 0 only, so that it is
-    comparable with D1's training recall and with validation's `first_top` (also desk 0)."""
+    """Gold recall@top_k of desk 0's first ASK over eligible cards (told questions). It scores ONLY desk 0's rows
+    (review round 3, fourth pass, item 4), so it is comparable with D1's training recall and with validation's
+    `first_top` (also desk 0), and costs what D1's does, not M times that."""
     from premonition.model import _norm
     store, episode, config = swarm.store, swarm.episode, model.config
     told = gold[:, :store.null].any(1)
     if not told.any():
         return torch.zeros(())
     with torch.no_grad():
-        register = _norm(rows[:, model._register_base])
-        scores = store.ask(model.heads.query(register), episode.q_visit, episode.q_line,
-                           model.heads.log_kappa.exp(), model.think.age_bias, questions=swarm.all)
-        top = store.top(scores, config.top_k).view(swarm.count, swarm.desks, -1)[:, 0]
+        lead = swarm.all[::swarm.desks]                                   # desk 0 of every question (qm = q * M)
+        register = _norm(rows[lead, model._register_base])
+        scores = store.ask(model.heads.query(register), episode.q_visit[lead], episode.q_line[lead],
+                           model.heads.log_kappa.exp(), model.think.age_bias, questions=lead)
+        top = store.top(scores, config.top_k)                              # [Q, top_k]
         found = torch.zeros(gold.shape, dtype=torch.long, device=gold.device).scatter_add(
             1, top.clamp_min(0), (top >= 0).long()) > 0
         hit = (gold & found).sum(1).float()

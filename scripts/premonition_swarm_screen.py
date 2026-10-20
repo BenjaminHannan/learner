@@ -145,6 +145,10 @@ def import_closure(root: Path) -> list[str]:
 
 
 MANIFEST_PATH = "scripts/premonition_swarm_manifest.txt"
+# The one source of the screen's trainer settings: `cmd_train` passes them to train_d, and C0 builds its bench
+# trainers from them (`fresh_trainer`), so the bench times exactly the workload the runs train.
+RUN_SETTINGS = dict(flop_budget=1e30, lr=1e-3, warmup_steps=100, log_every=50, eval_every=0)
+BENCH_SECONDS = float(T_CAP)                         # any set budget turns the diagnostics off
 
 Log = Callable[[str], None]
 log: Log = functools.partial(print, flush=True)
@@ -303,13 +307,22 @@ def open_caches(budget: Any, data_rel: str, tokenizer_path: str, workers: int):
     return tokenizer, detector, train
 
 
+def run_trainer(model: Any, device: str, seconds: float):
+    """The trainer a screen `train` step uses (`train_d` builds it through `d_trainer` with RUN_SETTINGS)."""
+    from premonition.train import d_trainer
+    return d_trainer(model, device, seed=0, seconds_budget=seconds, **RUN_SETTINGS)
+
+
 def fresh_trainer(arm_config: Mapping[str, Any], size: str, vocab: int, device: str):
+    """C0's bench trainer: EXACTLY the run's trainer (review round 3, fourth pass, item 1). It uses the same
+    RUN_SETTINGS and has a seconds budget, so training diagnostics are off just as in the matched-T runs. The
+    budget's value (BENCH_SECONDS) only sets the curriculum share and the stop, and the bench uses neither: it calls
+    `_train_step` with fixed plans."""
     from premonition.config import MiniConfig
     from premonition.model import PremonitionMini
-    from premonition.train import MiniTrainer, mini_train_config
     torch.manual_seed(0)
     model = PremonitionMini(MiniConfig.preset("D", size, vocab_size=vocab, **arm_config))
-    return MiniTrainer(model, mini_train_config(), device, flop_budget=1e30, seed=0)
+    return run_trainer(model, device, BENCH_SECONDS)
 
 
 def _sync(device: str) -> None:
@@ -432,9 +445,9 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
     relative = f"{ckpt_dir}/c0-trainprobe-{time.time_ns()}"
     began = time.perf_counter()
     try:
-        report = train_d(budget, data_rel=data_rel, tokenizer_path=tokenizer_path, flop_budget=1e30,
-                         seconds_budget=seconds, swarm=ARMS["S0"], seed=0, device=device, size=size, eval_every=0,
-                         max_tokens=max_tokens, workers=workers, checkpoint=relative, log=lambda message: None)
+        report = train_d(budget, data_rel=data_rel, tokenizer_path=tokenizer_path, seconds_budget=seconds,
+                         swarm=ARMS["S0"], seed=0, device=device, size=size, max_tokens=max_tokens, workers=workers,
+                         checkpoint=relative, log=lambda message: None, **RUN_SETTINGS)
         _sync(device)
         wall = time.perf_counter() - began
     finally:
@@ -554,10 +567,10 @@ def cmd_train(args: argparse.Namespace) -> int:
     checkpoint_free(Path(args.root), checkpoint)
     budget = make_budget(Path(args.root))
     began = time.perf_counter()
-    report = train_d(budget, data_rel=args.data_rel, tokenizer_path=args.tokenizer, flop_budget=1e30,
-                     seconds_budget=args.seconds, swarm=ARMS[args.arm] or None, seed=args.seed, device=args.device,
-                     size=args.size, eval_every=0, max_tokens=args.max_tokens, workers=max(1, args.workers),
-                     checkpoint=checkpoint, log=log)
+    report = train_d(budget, data_rel=args.data_rel, tokenizer_path=args.tokenizer, seconds_budget=args.seconds,
+                     swarm=ARMS[args.arm] or None, seed=args.seed, device=args.device, size=args.size,
+                     max_tokens=args.max_tokens, workers=max(1, args.workers), checkpoint=checkpoint, log=log,
+                     **RUN_SETTINGS)
     report = trim_history(report)
     report.update(arm=args.arm, seed=args.seed, seconds_requested=args.seconds,
                   wall_seconds=time.perf_counter() - began, size=args.size, environment=environment(args.device))
