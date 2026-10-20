@@ -1087,8 +1087,9 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
             max_visits: Optional[int] = 48, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
             eval_every: int = 1000, eval_visits: int = 256, calibration_batches: int = 4,
             max_seconds: Optional[float] = None, checkpoint: Optional[str] = None, workers: int = 1,
-            log: Log = print) -> dict[str, Any]:
+            log: Log = print, optimizer: str = "adamw") -> dict[str, Any]:
     """Train D (or D-noask / D-noptr) on a step-1 village build for `flop_budget` FLOPs (design/06 §3-4).
+    `optimizer` "muon" trains with `muon.MuonAdamW` (steal 8); the default "adamw" run is unchanged.
 
     `data_rel` is the data build (e.g. data/village/large-seed0-...), `tokenizer_path` the v2 tokenizer
     (relative to the budget root). Caches and the name detector are built once through the budget. The
@@ -1109,7 +1110,7 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     model = PremonitionMini(config)
     trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
                                                    eval_every=eval_every), device, flop_budget=flop_budget,
-                          seed=seed)
+                          seed=seed, optimizer=optimizer)
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
     fit = trainer.calibrate(head)
@@ -1131,6 +1132,8 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
                               "detector": None if detector is None else detector.digest,
                               "preprocess": preprocess.identity(preprocess.LABEL_FREE)}
+    if optimizer != "adamw":                         # steal 8; the default report keeps its base-commit keys
+        report["optimizer"] = optimizer
     try:
         report.update(status="completed", **trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))
