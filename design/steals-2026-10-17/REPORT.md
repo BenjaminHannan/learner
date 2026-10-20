@@ -413,6 +413,36 @@ higher lr.
 - It is a 3-seed toy result at d = 32. It says nothing yet about d = 128 or the village. Stage 1 needs its own
   bid (Q42).
 
+## R2 stage 0: focused review of the runner and sealed card (10-20). NOT CLEAN, so not run
+
+The runner (`scripts/premonition_steals_r2_stage0.py`) and the card (`R2-STAGE0-CARD.md`) were sealed at commit
+3b31d19a5 (`artifacts/claude-steals-20261017/r2-stage0/SEAL.sha256.txt`). The coordinator's ruling was "run only if
+the focused review is clean". It was not, so **R2 has not run**.
+
+| # | Finding | Severity |
+|---|---|---|
+| 1, 2 | The extension rule is not enforced: seeds 3–4 are scored even when the extension was not due, and a final verdict is written even when it is due. | Blocking (scoring diverges from the card) |
+| 3 | "Both arms at chance" tests only \|d_s\| < 1 point, never either arm's accuracy against chance, so two arms that both learn would be labelled "at chance". | Blocking (a flaw in the **card's** definition; needs a re-seal) |
+| 6 | G3 reads the gate on preloaded gold rows, where every question has the same initial register, so it does not test the path behind the own-retrieval gain. | Blocking (G3 measures the wrong path; card change) |
+| 4, 5 | Resume and scoring check neither the code's identity (commit, runner and package hashes, the seal) nor that the settings are the card's. | Should-fix (needed before any separate-process run) |
+| 7–10 | Non-atomic result writes; the cross-attention gate is averaged over greedy prefix positions; recall@4 = None would crash scoring (not on the default toy); the held-out set is rebuilt. | Minor or reporting |
+
+**Proposed fix (awaiting the coordinator).**
+- *Card:*
+  - "At chance" means both arms' accuracy is ≤ chance + 2 points in every seed, **and** \|d_s\| < 1 point.
+  - G3 is read on gold rows the model fetches itself in `answer()`. Fewer than 30 such rows, pooled, counts as a
+    trip.
+  - Then re-seal.
+- *Runner:*
+  - When the extension is due, the verdict is "EXTENSION DUE"; seeds 0–4 are scored only if the 3-seed score said
+    the extension was due.
+  - Runs record the commit and the sha256 of the runner and the package, and scoring requires them to match the
+    seal and the card's settings.
+  - Results are written atomically.
+  - The cross-attention gate comes from one teacher-mode pass.
+  - A recall of None is handled.
+- Then one more focused review, and run only if it is clean.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
