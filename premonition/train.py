@@ -1098,6 +1098,8 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     """
     from learnlab.tokenizer import Tokenizer
     from premonition import exp1
+    if optimizer not in OPTIMIZERS:                  # before the (slow) detector and cache builds
+        raise ValueError(f"unknown optimizer {optimizer!r}; choose from {OPTIMIZERS}")
     root = Path(budget.root)
     tokenizer = Tokenizer.load(root / tokenizer_path)
     detector = None if variant == "D-noptr" else pdata.name_detector(budget, data_rel, workers=workers, log=log)
@@ -1132,8 +1134,8 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
                               "detector": None if detector is None else detector.digest,
                               "preprocess": preprocess.identity(preprocess.LABEL_FREE)}
-    if optimizer != "adamw":                         # steal 8; the default report keeps its base-commit keys
-        report["optimizer"] = optimizer
+    if trainer.optimizer_name != "adamw":            # steal 8; the default report keeps its base-commit keys
+        report["optimizer"] = trainer.optimizer_name
     try:
         report.update(status="completed", **trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))

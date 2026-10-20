@@ -6,6 +6,7 @@ says so in the report and the checkpoint, and resumes as Muon.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -16,13 +17,13 @@ from premonition import train as ptrain
 from premonition.muon import MuonAdamW
 from tests.test_premonition_steals_identity import base_modules
 
-TIMING = ("seconds", "per_s", "started")
+TIMING = {"seconds", "tokens_per_s", "padded_tokens_per_s", "build_seconds"}     # wall-clock keys, by exact name
 
 
 def strip(value):
     """The report without wall-clock fields (and without the checkpoint's absolute path)."""
     if isinstance(value, dict):
-        return {k: strip(v) for k, v in value.items() if not any(t in k for t in TIMING) and k != "checkpoint"}
+        return {k: strip(v) for k, v in value.items() if k not in TIMING and k != "checkpoint"}
     if isinstance(value, list):
         return [strip(v) for v in value]
     return value
@@ -62,17 +63,47 @@ class TrainDOptimizerTest(unittest.TestCase):
         self.assertEqual(strip(new), strip(old))
         a = torch.load(self.root / "ckpt" / "new" / "state.pt", map_location="cpu", weights_only=False)
         b = torch.load(self.root / "ckpt" / "old" / "state.pt", map_location="cpu", weights_only=False)
+        self.assertEqual(sorted(a), sorted(b))
+        self.assertEqual(list(a["model"]), list(b["model"]))
         for name, tensor in a["model"].items():
             self.assertTrue(torch.equal(tensor, b["model"][name]), name)
+        self.assertEqual(repr(a["optimizer"]), repr(b["optimizer"]))                    # AdamW moments, steps
+        self.assertEqual(repr(a.get("trainer")), repr(b.get("trainer")))                # step, flops, generator
+        self.assertEqual(json.loads((self.root / "ckpt" / "new" / "config.json").read_text()),
+                         json.loads((self.root / "ckpt" / "old" / "config.json").read_text()))
 
     def test_muon_trains_reports_and_resumes(self) -> None:
-        report = self.train(ptrain, "muon", optimizer="muon")
+        built = []
+        original = ptrain.MiniTrainer.__init__
+
+        def spy(trainer, *args, **kwargs):
+            original(trainer, *args, **kwargs)
+            built.append(trainer)
+
+        ptrain.MiniTrainer.__init__ = spy
+        try:
+            report = self.train(ptrain, "muon", optimizer="muon")
+            default = self.train(ptrain, "adamw-again")
+        finally:
+            ptrain.MiniTrainer.__init__ = original
+        self.assertIsInstance(built[0].optimizer, MuonAdamW)                     # the live run used Muon
+        self.assertTrue(any(g["muon"] for g in built[0].optimizer.param_groups))
         self.assertEqual(report["optimizer"], "muon")
         self.assertEqual(report["status"], "completed")
+        self.assertNotEqual(strip(report)["history"], strip(default)["history"])    # and trained differently
         again = ptrain.resume_trainer(self.root / "ckpt" / "muon")
         self.assertIsInstance(again.optimizer, MuonAdamW)
+        state = again.optimizer.state_dict()
+        self.assertTrue(any(s for part in state["parts"] for s in part["state"].values()))   # momentum restored
+        weights = [p for p in again.model.parameters() if p.requires_grad]
+        before = [p.detach().clone() for p in weights]
+        for p in weights:
+            p.grad = torch.ones_like(p)
+        again.optimizer.step()                                                   # the restored state takes a step
+        self.assertTrue(all(torch.isfinite(p).all() for p in weights))
+        self.assertTrue(any(not torch.equal(p, b) for p, b in zip(weights, before)))
         with self.assertRaises(ValueError):
-            self.train(ptrain, "bad", optimizer="sgd")
+            self.train(ptrain, "bad", optimizer="Muon")
 
 
 if __name__ == "__main__":
