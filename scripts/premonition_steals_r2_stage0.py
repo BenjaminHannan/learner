@@ -10,8 +10,9 @@ G3 mean card gate >= 0.2 on gold rows the model fetched itself in `answer()` (po
 The gates on preloaded gold cards (`answer_with_gold`) and the decoder cross-attention gate (one teacher-mode pass)
 are reported. Exactly seeds 0-2, no extension (coordinator ruling 10-20). Every run is bound by content hash to the
 runner, the card and the package (premonition/ and learnlab/; the commit is recorded, not binding); the seal holds all
-three. A run made without the matching seal (--unsealed) is labelled UNSEALED and never scored as the card.
-Training never writes result.json; `--score` (no training) is its only writer.
+three (the package as PACKAGE.sha256, a sha256sum-checkable file list beside the seal). A run made without the
+matching seal (--unsealed) is labelled UNSEALED and never scored as the card; --score also refuses runs whose hashes or
+seal differ from the current ones. Training never writes result.json; `--score` (no training) is its only writer.
 
     OMP_NUM_THREADS=1 python3 -B scripts/premonition_steals_r2_stage0.py --out artifacts/claude-steals-20261017/r2-stage0
     OMP_NUM_THREADS=1 python3 -B scripts/premonition_steals_r2_stage0.py --out artifacts/claude-steals-20261017/r2-stage0 --score
@@ -54,20 +55,20 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-PACKAGE = "premonition/*.py + learnlab/**/*.py"   # the seal's name for the package hash
+PACKAGE = "PACKAGE.sha256"                        # beside the seal: one sha256sum line per package file
+SEAL = "SEAL.sha256.txt"
 
 
-def package_hash() -> str:
-    """One hash over the code a run executes: premonition/*.py and learnlab/**/*.py, by relative path and content."""
-    digest = hashlib.sha256()
-    for path in sorted([*(ROOT / "premonition").glob("*.py"), *(ROOT / "learnlab").rglob("*.py")]):
-        digest.update(path.relative_to(ROOT).as_posix().encode() + b"\0" + path.read_bytes())
-    return digest.hexdigest()
+def package_listing() -> str:
+    """The code a run executes, premonition/*.py and learnlab/**/*.py, as `sha256sum` lines (repo-relative paths)."""
+    paths = sorted([*(ROOT / "premonition").glob("*.py"), *(ROOT / "learnlab").rglob("*.py")])
+    return "".join(f"{sha256(path)}  {path.relative_to(ROOT).as_posix()}\n" for path in paths)
 
 
 def identity() -> dict:
-    """What a run is bound to, by content: the runner, the card and the package."""
-    return {"runner": sha256(Path(__file__).resolve()), "card": sha256(CARD), "package": package_hash()}
+    """What a run is bound to, by content: the runner, the card and the package (the sha256 of its listing)."""
+    return {"runner": sha256(Path(__file__).resolve()), "card": sha256(CARD),
+            "package": hashlib.sha256(package_listing().encode()).hexdigest()}
 
 
 def provenance() -> dict:
@@ -79,20 +80,30 @@ def provenance() -> dict:
 def check_seal(out: Path, ident: dict, unsealed: bool) -> bool:
     """True when `out` holds SEAL.sha256.txt matching this runner, card and package. Without a seal only --unsealed
     runs (labelled UNSEALED); a sealed directory never takes --unsealed, and a mismatch refuses to run."""
-    seal = out / "SEAL.sha256.txt"
+    seal = out / SEAL
     if not seal.exists():
         if not unsealed:
             raise SystemExit(f"{seal} is missing; pass --unsealed for a plumbing run (labelled UNSEALED)")
         return False
     if unsealed:
         raise SystemExit(f"{seal} exists: a sealed directory runs only the card, never --unsealed")
-    sealed = {line.split(maxsplit=1)[1]: line.split()[0] for line in seal.read_text().splitlines() if line.strip()}
+    sealed = {Path(line.split(maxsplit=1)[1]).name if line.split(maxsplit=1)[1].endswith(PACKAGE)
+              else line.split(maxsplit=1)[1]: line.split()[0] for line in seal.read_text().splitlines()
+              if len(line.split()) >= 2}
     want = {"design/steals-2026-10-17/R2-STAGE0-CARD.md": ident["card"],
             "scripts/premonition_steals_r2_stage0.py": ident["runner"], PACKAGE: ident["package"]}
     for name, digest in want.items():
         if sealed.get(name) != digest:
             raise SystemExit(f"{name} does not match the seal in {seal}; refusing to run")
+    listing = out / PACKAGE
+    if not listing.exists() or sha256(listing) != ident["package"]:
+        raise SystemExit(f"{listing} is missing or is not the sealed package listing; refusing to run")
     return True
+
+
+def seal_hash(out: Path):
+    seal = out / SEAL
+    return sha256(seal) if seal.exists() else None
 
 
 def write_json(path: Path, value) -> None:
@@ -174,29 +185,34 @@ def fmt(value, spec: str = ".4f") -> str:
     return "n/a" if value is None else format(value, spec)
 
 
-def run(arm: str, seed: int, settings: dict, ident: dict, sealed: bool) -> dict:
+def run(arm: str, seed: int, settings: dict, ident: dict, sealed: bool, seal) -> tuple:
+    """(the run's record, its model). The gate readouts are added by `gates` after the record is saved."""
     started = time.perf_counter()
     trained = ptrain.train_toy("D", steps=settings["steps"], visits=settings["visits"], seed=seed,
                                config_overrides=ARMS[arm] or None)
     seconds = time.perf_counter() - started
     model, validation = trained["trainer"].model, trained["validation"]
-    last = [r for r in trained["history"] if "eval" not in r][-1]
-    result = {"arm": arm, "seed": seed, "settings": settings, "identity": ident, "sealed": sealed,
+    logged = [r for r in trained["history"] if "eval" not in r]
+    last = logged[-1] if logged else {}             # no training record at all: every loss None, so not finite
+    result = {"arm": arm, "seed": seed, "settings": settings, "identity": ident, "sealed": sealed, "seal": seal,
               "provenance": provenance(), "steps": trained["trainer"].step, "seconds": seconds,
               "parameters": trained["parameters"], "chance": trained["chance"],
               "final_losses": {k: last.get(k) for k in ("loss", "lm", "ask", "ans", "halt")},
               "validation": {k: validation.get(k) for k in (
                   "accuracy", "accuracy_gold_cards", "gold_recall_at_4", "random_recall_at_4", "asked_rate",
                   "loops_mean", "halt_rate", "questions")}}
-    result["finite"] = all(isinstance(v, float) and math.isfinite(v) for v in result["final_losses"].values()
-                           if v is not None)
-    if arm == "A1":
-        spec = ToySpec()
-        held_out = [ptrain.label_free(b) for b in toy_set(spec, 4, settings["visits"], seed + 1000)]
-        result["gates_own"] = gate_means(model, held_out, model.answer)                             # G3
-        result["gates_preload"] = gate_means(model, held_out, lambda b: ptrain.answer_with_gold(model, b))  # reported
-        result["gates_cross"] = cross_gate_means(model, held_out)                                     # reported
-    return result
+    losses = [v for v in result["final_losses"].values() if v is not None]
+    result["finite"] = bool(losses) and all(isinstance(v, float) and math.isfinite(v) for v in losses)
+    return result, model
+
+
+def gates(result: dict, model) -> dict:
+    """A1's gate readouts on the held-out batches; G3 reads `gates_own`."""
+    spec = ToySpec()
+    held_out = [ptrain.label_free(b) for b in toy_set(spec, 4, result["settings"]["visits"], result["seed"] + 1000)]
+    return {"gates_own": gate_means(model, held_out, model.answer),                                    # G3
+            "gates_preload": gate_means(model, held_out, lambda b: ptrain.answer_with_gold(model, b)),  # reported
+            "gates_cross": cross_gate_means(model, held_out)}                                           # reported
 
 
 def describe(result: dict) -> str:
@@ -257,23 +273,42 @@ def judge(a0: list[dict], a1: list[dict]) -> dict:
             "both_at_chance": at_chance, "verdict": verdict}
 
 
-def score(runs: list[dict], *, sealed: bool) -> dict:
-    """Exactly one run of each arm at each of seeds 0-2. DID NOT TRAIN wins; a smoke (any run off the card's settings)
-    or an UNSEALED directory or run labels the verdict, which is then never the card's."""
+def score(runs: list[dict], *, sealed: bool, ident: dict | None = None, seal=None) -> dict:
+    """Exactly one run of each arm at each of seeds 0-2, every run made by this sealed runner, card and package (and,
+    sealed, under this seal), one torch version, and A1's gate readouts present; otherwise NOT SCORED. DID NOT TRAIN
+    wins over every other outcome. A smoke (any run off the card's settings) or an unsealed directory or run labels
+    whatever verdict comes out, DID NOT TRAIN included, and a labelled verdict is never the card's."""
     by = {(r["arm"], r["seed"]): r for r in runs}
+    blockers = []
     if len(by) != len(runs) or sorted(by) != sorted((arm, s) for arm in ARMS for s in CARD_SEEDS):
-        return {"verdict": f"NOT SCORED: the card needs exactly one run of each arm at seeds {CARD_SEEDS}, these are "
-                           f"{sorted(by)}"}
+        blockers.append(f"the card needs exactly one run of each arm at seeds {CARD_SEEDS}, these are {sorted(by)}")
     if len({json.dumps(r.get("identity"), sort_keys=True) for r in runs}) != 1:
-        return {"verdict": "NOT SCORED: the runs come from different code (runner, card or package hash)"}
+        blockers.append("the runs come from different code (runner, card or package hash)")
+    elif ident is not None and runs and runs[0].get("identity") != ident:
+        blockers.append("the runs were made by other code than the current runner, card and package")
+    if sealed and any(r.get("seal") != seal for r in runs):
+        blockers.append("runs made under another seal or in another directory")
+    if len({r["settings"].get("torch") for r in runs}) > 1:
+        blockers.append("runs made under different torch versions")
+    missing = [f"A1-s{r['seed']}" for r in runs if r["arm"] == "A1" and "gates_own" not in r]
+    if missing:
+        blockers.append(f"gate readouts missing for {missing}")
+    labels = []
+    if not sealed or not all(r.get("sealed") for r in runs):
+        labels.append("UNSEALED")
+    if any({k: r["settings"].get(k) for k in CARD_SETTINGS} != CARD_SETTINGS for r in runs):
+        labels.append("SMOKE, not the card's settings")
+    prefix = "".join(f"{label}: " for label in labels)
+    if not all(r["finite"] for r in runs):            # first, whatever else is wrong; still labelled
+        verdict = prefix + "DID NOT TRAIN"
+        if blockers:
+            verdict += " (and NOT SCORED: " + "; ".join(blockers) + ")"
+        return {"verdict": verdict, "non_finite": sorted(f"{r['arm']}-s{r['seed']}" for r in runs if not r["finite"])}
+    if blockers:
+        return {"verdict": prefix + "NOT SCORED: " + "; ".join(blockers)}
     result = judge([by[("A0", s)] for s in CARD_SEEDS], [by[("A1", s)] for s in CARD_SEEDS])
     result["seeds"] = list(CARD_SEEDS)
-    if result["verdict"] == "DID NOT TRAIN":
-        return result
-    if any({k: r["settings"].get(k) for k in CARD_SETTINGS} != CARD_SETTINGS for r in runs):
-        result["verdict"] = "SMOKE, not the card's settings: " + result["verdict"]
-    if not sealed or not all(r.get("sealed") for r in runs):
-        result["verdict"] = "UNSEALED: " + result["verdict"]
+    result["verdict"] = prefix + result["verdict"]
     return result
 
 
@@ -292,6 +327,9 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     ident = identity()
     sealed = check_seal(args.out, ident, args.unsealed)
+    seal = seal_hash(args.out)
+    if sealed and not args.score and {k: settings[k] for k in CARD_SETTINGS} != CARD_SETTINGS:
+        raise SystemExit(f"{args.out} is sealed: it takes only the card's settings {CARD_SETTINGS}")
     log_file = (args.out / "log.txt").open("a")
 
     def log(line: str) -> None:
@@ -301,7 +339,7 @@ def main() -> None:
 
     if args.score:                                   # the only writer of result.json
         runs = [json.loads(p.read_text()) for p in sorted(args.out.glob("A*-s*.json"))]
-        result = score(runs, sealed=sealed)
+        result = score(runs, sealed=sealed, ident=ident, seal=seal)
         write_json(args.out / "result.json", {"identity": ident, "sealed": sealed, "score": result, "runs": runs})
         if "mean_d" in result:
             log(f"A1 vs A0: d {[round(x, 4) for x in result['d']]} mean {result['mean_d']:+.4f} "
@@ -318,13 +356,21 @@ def main() -> None:
             path = args.out / f"{arm}-s{seed}.json"
             if path.exists():
                 saved = json.loads(path.read_text())
-                if saved.get("settings") != settings or saved.get("identity") != ident or saved.get("sealed") != sealed:
-                    raise SystemExit(f"{path} was made with other settings or code; use a new --out")
+                if saved.get("settings") != settings or saved.get("identity") != ident or \
+                        saved.get("sealed") != sealed or saved.get("seal") != seal:
+                    raise SystemExit(f"{path} was made with other settings, code or seal; use a new --out")
                 log(f"{arm} s{seed}: reusing {path.name}")
                 continue
-            result = run(arm, seed, settings, ident, sealed)
+            result, model = run(arm, seed, settings, ident, sealed, seal)
             write_json(path, result)                 # saved before anything can fail on its values
             log(describe(result))
+            if arm == "A1":
+                try:
+                    result.update(gates(result, model))
+                except Exception as error:           # the trained run stays saved; scoring reports the gap
+                    result["gates_error"] = f"{type(error).__name__}: {error}"
+                    log(f"{arm} s{seed}: gate readout failed: {result['gates_error']}")
+                write_json(path, result)
     log(f"R2 stage 0 end {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}; score with --score")
 
 

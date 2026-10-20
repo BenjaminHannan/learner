@@ -1,5 +1,14 @@
 # RUN CARD R2, stage 0: `fetch_gate` on the far-fact toy (SEALED before the run; amended and re-sealed 10-20, twice)
 
+**Third amendment, 10-20, under the coordinator's GO for the fix round, before any run on real settings.**
+- Scoring now refuses runs that were not made under this seal by this runner, card and package. It also refuses runs
+  made under different torch versions, and A1 runs whose gate readouts are missing.
+- DID NOT TRAIN keeps its SMOKE / UNSEALED labels.
+- A run is saved before its gate readouts are taken.
+- A run with no real loss counts as DID NOT TRAIN.
+- A sealed directory refuses off-card settings.
+- The package hash is the sha256 of `PACKAGE.sha256`, a `sha256sum`-checkable file list kept beside the seal.
+
 **Second amendment, 10-20, under the coordinator's ruling "SIMPLIFY", before any run on real settings.** The extension
 is removed: exactly seeds 0–2, verdict on 3 seeds. Runs are bound by content hash (runner, card, package), not the
 commit; the package hash is in the seal; unsealed runs are labelled UNSEALED. A log line can no longer fail before its
@@ -15,8 +24,8 @@ amendment were 8-step plumbing smokes, outside the sealed directory.
 Written 2026-10-20, before any R2 training. It carries the card in `REPORT.md` ("RUN CARD R2", with its blanks
 filled by Q43) and fixes the remaining operational details. It is approved under the coordinator's 10-20 ruling:
 $0, CPU in this cloud container, run after R1 stage 0, after one focused built-in review of the runner and this card.
-`SEAL.sha256.txt` in `artifacts/claude-steals-20261017/r2-stage0/` holds the sha256 of this file and of the runner,
-taken before the run.
+`SEAL.sha256.txt` in `artifacts/claude-steals-20261017/r2-stage0/` holds three sha256s, taken before the run: this
+file's, the runner's, and that of `PACKAGE.sha256` (the package file list beside it).
 
 ## Question
 Does a per-head sigmoid gate on fetched card values and on the decoder's cross-attention move D's toy answers off
@@ -37,15 +46,21 @@ At each seed, every shared weight and the RNG stream are identical between the a
 - **Seeds:** exactly 0, 1, 2. There is no extension: the verdict is on 3 seeds, and any other set of runs is NOT
   SCORED.
 - **Runner:** `scripts/premonition_steals_r2_stage0.py`, run unchanged from the sealed version.
-  - The seal holds three hashes: this card's, the runner's, and one package hash over `premonition/*.py` and
-    `learnlab/**/*.py`. The runner refuses to run if any of the three differs.
+  - The seal holds three hashes: this card's, the runner's, and the package's. The package hash is the sha256 of
+    `PACKAGE.sha256`, which lists every `premonition/*.py` and `learnlab/**/*.py` file with its sha256 and can be
+    checked with `sha256sum -c`. The runner refuses to run if any of the three differs from the current files.
+  - A sealed directory takes only the card's settings.
   - Without a seal it runs only with `--unsealed`, and the verdict is labelled UNSEALED. A sealed directory never
     takes `--unsealed`.
   - **Binding:** every run is bound to those three content hashes. The commit is recorded, not binding.
   - **Scoring** (`--score`, which trains nothing, is the only writer of `result.json`) needs:
-    - every run to share the same hashes;
+    - every run to carry the current runner, card and package hashes, and the current seal;
     - each run to be made in the sealed directory;
+    - one torch version across all runs;
+    - A1's gate readouts present in every A1 run;
     - every run to have the card's settings (1,500 steps, 16 visits).
+
+    If any of the first four fails, the result is NOT SCORED.
 
     If the settings are off, the verdict is labelled a smoke; if a run was made outside the sealed directory, it is
     labelled UNSEALED.
@@ -77,7 +92,8 @@ d_s = acc(A1, s) − acc(A0, s).
   - G2 is unreadable if recall@4 is missing in every run of an arm, and unreadable counts as a trip.
 
 ## Verdicts (checked in this order)
-1. **DID NOT TRAIN:** any non-finite final training loss. This wins over every label below.
+1. **DID NOT TRAIN:** any non-finite final training loss, or a run with no training loss at all. This wins over
+   every other outcome, but it keeps the SMOKE / UNSEALED labels, and it names any NOT SCORED reasons as well.
 2. **GAIN NOT COUNTED (bypassed the cards):** the bar holds and G1 or G3 trips.
 3. **NOT COUNTED (retrieval guard G2):** the bar holds, G1 and G3 hold, and G2 trips.
 4. **PASS:** the bar, G1, G2 and G3 all hold.

@@ -77,10 +77,47 @@ class ScoreTest(unittest.TestCase):
         stray[2]["sealed"] = False                                        # made outside the sealed directory
         self.assertEqual(self.verdict(stray), "UNSEALED: PASS")
 
-    def test_did_not_train_wins(self) -> None:
-        runs = [dict(r, settings={"steps": 8, "visits": 16}) for r in pairs([0.10, 0.12, 0.11])]
+    def test_did_not_train_wins_and_keeps_its_labels(self) -> None:
+        runs = pairs([0.10, 0.12, 0.11])
         runs[1]["finite"] = False
-        self.assertEqual(self.verdict(runs, sealed=False), "DID NOT TRAIN")
+        self.assertEqual(self.verdict(runs), "DID NOT TRAIN")
+        smoke = [dict(r, settings={"steps": 8, "visits": 16}) for r in runs]
+        self.assertEqual(self.verdict(smoke, sealed=False), "UNSEALED: SMOKE, not the card's settings: DID NOT TRAIN")
+        partial = runs[:-1]                                                # and an arm missing
+        out = self.verdict(partial)
+        self.assertTrue(out.startswith("DID NOT TRAIN (and NOT SCORED: the card needs"), out)
+
+    def test_runs_must_be_this_seals_runs(self) -> None:
+        ident = {"runner": "r", "card": "c", "package": "p"}
+        runs = [dict(r, identity=ident, seal="s1") for r in pairs([0.10, 0.12, 0.11])]
+        self.assertEqual(self.r2.score(runs, sealed=True, ident=ident, seal="s1")["verdict"], "PASS")
+        other = self.r2.score(runs, sealed=True, ident={**ident, "card": "c2"}, seal="s1")["verdict"]
+        self.assertIn("other code than the current runner", other)
+        moved = self.r2.score(runs, sealed=True, ident=ident, seal="s2")["verdict"]   # an older seal, or copied in
+        self.assertIn("another seal", moved)
+
+    def test_one_torch_and_gates_present(self) -> None:
+        runs = [dict(r, settings={"steps": 1500, "visits": 16, "torch": "2.11"}) for r in pairs([0.10, 0.12, 0.11])]
+        self.assertEqual(self.verdict(runs), "PASS")
+        runs[0] = dict(runs[0], settings={"steps": 1500, "visits": 16, "torch": "2.8"})
+        self.assertIn("different torch versions", self.verdict(runs))
+        gapped = pairs([0.10, 0.12, 0.11])
+        del gapped[1]["gates_own"]
+        self.assertIn("gate readouts missing for ['A1-s0']", self.verdict(gapped))
+
+    def test_unreadable_recall_trips_g2(self) -> None:
+        runs = pairs([0.10, 0.12, 0.11])
+        for r in runs:
+            if r["arm"] == "A1":
+                r["validation"]["gold_recall_at_4"] = None
+        out = self.r2.score(runs, sealed=True)
+        self.assertFalse(out["G2"]["ok"])
+        self.assertEqual(out["verdict"], "NOT COUNTED (retrieval guard G2)")
+
+    def test_proved_wrong_by_the_band(self) -> None:
+        out = self.r2.score(pairs([-0.10, -0.12, -0.11], base=0.40), sealed=True)
+        self.assertLess(out["upper"], 0)
+        self.assertEqual(out["verdict"], "PROVED WRONG")
 
     def test_log_line_survives_missing_values(self) -> None:
         line = self.r2.describe({"arm": "A0", "seed": 0, "steps": 3, "seconds": 1.0,
@@ -89,25 +126,98 @@ class ScoreTest(unittest.TestCase):
 
 
 class SealTest(unittest.TestCase):
-    def test_seal_binds_runner_card_and_package(self) -> None:
+    def test_seal_binds_runner_card_and_package_listing(self) -> None:
+        import hashlib
+        import subprocess
         import tempfile
         r2 = runner()
-        ident = {"card": "c" * 64, "runner": "r" * 64, "package": "p" * 64}
+        listing = r2.package_listing()
+        ident = {"card": "c" * 64, "runner": "r" * 64, "package": hashlib.sha256(listing.encode()).hexdigest()}
+        self.assertEqual(r2.identity()["package"], ident["package"])
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             with self.assertRaises(SystemExit):
                 r2.check_seal(out, ident, unsealed=False)
             self.assertFalse(r2.check_seal(out, ident, unsealed=True))
-            (out / "SEAL.sha256.txt").write_text(f"{'c' * 64}  design/steals-2026-10-17/R2-STAGE0-CARD.md\n"
-                                                 f"{'r' * 64}  scripts/premonition_steals_r2_stage0.py\n"
-                                                 f"{'p' * 64}  {r2.PACKAGE}\n")
+            (out / r2.PACKAGE).write_text(listing)
+            (out / r2.SEAL).write_text(f"{'c' * 64}  design/steals-2026-10-17/R2-STAGE0-CARD.md\n"
+                                       f"{'r' * 64}  scripts/premonition_steals_r2_stage0.py\n"
+                                       f"{ident['package']}  artifacts/x/r2-stage0/{r2.PACKAGE}\n")
             self.assertTrue(r2.check_seal(out, ident, unsealed=False))
             with self.assertRaises(SystemExit):
                 r2.check_seal(out, ident, unsealed=True)
             with self.assertRaises(SystemExit):
                 r2.check_seal(out, {**ident, "package": "q" * 64}, unsealed=False)
+            (out / r2.PACKAGE).write_text(listing + "0" * 64 + "  premonition/extra.py\n")   # listing edited
+            with self.assertRaises(SystemExit):
+                r2.check_seal(out, ident, unsealed=False)
+            (out / r2.PACKAGE).write_text(listing)
+            checked = subprocess.run(["sha256sum", "--quiet", "-c", str(out / r2.PACKAGE)], cwd=r2.ROOT,
+                                     capture_output=True, text=True)
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)   # independently checkable
         self.assertNotIn("commit", r2.identity())
         self.assertEqual(set(r2.identity()), {"runner", "card", "package"})
+
+
+class MainTest(unittest.TestCase):
+    """main() with training replaced by a stub: the save-then-gates order, reuse, the sealed-settings rule and the
+    single writer of result.json."""
+
+    def setUp(self) -> None:
+        import tempfile
+        from unittest import mock
+        self.mock = mock
+        self.r2 = runner()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.out = Path(self.tmp.name)
+        self.trained = []
+
+    def stub_run(self, arm, seed, settings, ident, sealed, seal):
+        self.trained.append((arm, seed))
+        result = {"arm": arm, "seed": seed, "settings": settings, "identity": ident, "sealed": sealed, "seal": seal,
+                  "steps": 3, "seconds": 0.0, "chance": 0.0625, "finite": True,
+                  "validation": {"accuracy": 0.3, "accuracy_gold_cards": 0.3, "gold_recall_at_4": 0.5}}
+        return result, None
+
+    def main(self, *argv, gates=None):
+        gates = gates or (lambda result, model: {"gates_own": {"gold": {"rows": 40, "mean": 0.9}}})
+        with self.mock.patch.object(self.r2, "run", self.stub_run), self.mock.patch.object(self.r2, "gates", gates), \
+                self.mock.patch("sys.argv", ["r2", "--out", str(self.out), *argv]), \
+                self.mock.patch("builtins.print"):
+            self.r2.main()
+
+    def test_training_never_writes_result_and_score_does(self) -> None:
+        self.main("--unsealed", "--steps", "8")
+        self.assertEqual(len(self.trained), 6)
+        self.assertFalse((self.out / "result.json").exists())
+        self.main("--unsealed", "--steps", "8")                           # reuse: nothing trains again
+        self.assertEqual(len(self.trained), 6)
+        self.main("--unsealed", "--score")
+        import json
+        verdict = json.loads((self.out / "result.json").read_text())["score"]["verdict"]
+        self.assertTrue(verdict.startswith("UNSEALED: SMOKE"), verdict)
+
+    def test_a_gate_failure_keeps_the_saved_run(self) -> None:
+        def broken(result, model):
+            raise RuntimeError("boom")
+        self.main("--unsealed", "--steps", "8", "--seeds", "0", gates=broken)
+        import json
+        saved = json.loads((self.out / "A1-s0.json").read_text())
+        self.assertEqual(saved["gates_error"], "RuntimeError: boom")
+        self.assertEqual(saved["steps"], 3)
+
+    def test_a_sealed_directory_takes_only_the_card_settings(self) -> None:
+        listing = self.r2.package_listing()
+        ident = self.r2.identity()
+        (self.out / self.r2.PACKAGE).write_text(listing)
+        (self.out / self.r2.SEAL).write_text(f"{ident['card']}  design/steals-2026-10-17/R2-STAGE0-CARD.md\n"
+                                             f"{ident['runner']}  scripts/premonition_steals_r2_stage0.py\n"
+                                             f"{ident['package']}  {self.r2.PACKAGE}\n")
+        with self.assertRaises(SystemExit) as cm:
+            self.main("--steps", "8")
+        self.assertIn("takes only the card's settings", str(cm.exception))
+        self.assertEqual(self.trained, [])
 
 
 class GateTest(unittest.TestCase):
