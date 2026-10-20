@@ -34,3 +34,22 @@ Ruling Q81 points the Q75 review at 99cba1a47 and names three checks. This note 
   - `guard_diary_data` is `None` for a cached diary. This is intended, because the cache, not a folder, was the source. The field is new in the draft; the locked trainer never recorded it.
   - **On GPU, the flag's CUDA syncs at log steps** cost some pipeline overlap, and that cost still lands in `train_s`. It is documented in the help text. **Item 1 should take its seconds per update from flag-off runs**, or report both.
 - **Tests:** 50 pass, in both file orders. **Head for the review: a2a83f9f0.**
+
+### Round-2 findings labelled (10-20, at the coordinator's request)
+
+**Blocking** = could change a verdict, a training step, or a recorded number that a decision uses. **Non-blocking** = everything else. Labels are for the finding as found at 99cba1a47.
+
+| # | Finding (round 2, on 99cba1a47) | Label | Status at a2a83f9f0 |
+|---|---|---|---|
+| 1 | `guard_diary_data` is None for a cached diary | Non-blocking (a new record field; the locked trainer never had it) | Declined, reason given |
+| 2 | pilot_bars rounded the written bar too, moving bars below 1e-9 | **Blocking** (verdict) | Fixed: only the statistic is rounded; test added |
+| 3 | The time-cap partial record mixes log shapes | Non-blocking (only with `--minutes`, which the recipe doesn't use) | Fixed |
+| 4 | `check_diary_data` was not called inside `train()` | Non-blocking (the pilot runs through the CLI, which checked) | Fixed |
+| 5 | Exit code 2 collides with argparse | Non-blocking (the report is written either way) | Fixed (exit 3) |
+| 6 | Logged elapsed ≠ the schedule's elapsed | Non-blocking (log only; only with `--minutes`) | Fixed |
+| 7 | Three `time.time()` calls per snapshot | Non-blocking (timing report, microseconds) | Fixed |
+| 8 | GPU sync at log steps lands in `train_s` | Non-blocking for correctness; **matters for Item 1 timing** | Documented: Item 1 times with the flag off |
+| 9 | custom_io help text stale | Non-blocking | Fixed |
+| 10 | The fixture removed modules without restoring them | Non-blocking (tests only) | Fixed |
+
+**Blocking findings open at a2a83f9f0: 0 known.** One blocking finding (#2) was fixed. **a2a83f9f0 itself has not been re-reviewed** (round cap reached), so its fixes are unreviewed.
