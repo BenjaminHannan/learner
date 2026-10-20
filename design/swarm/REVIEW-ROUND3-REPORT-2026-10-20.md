@@ -162,3 +162,45 @@ still describes the removed per-step metrics and the union recall.
 ## Status against Q28
 
 Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
+
+---
+
+# Round 3, fourth pass: the dry-run blocker, the structural diagnostics change, items 5, 6, 10 (2026-10-20)
+
+## Fixes (commit 060fc1cb3). Every new test fails on edd38e12b and passes now.
+
+| item | fix | test |
+|---|---|---|
+| 1 | the dry run's default OUT is a fresh `dryrun-<sha>`; the box refuses before writing if OUT holds a git-tracked file; `CHECK_ONLY=1` runs every refusal check and stops | the documented dry run (DRYRUN=1 PIN=HEAD, default OUT) passes every check on the committed tree and leaves it clean; a tracked OUT is refused untouched |
+| 2 (ruled) | with `seconds_budget`, no arm runs any training diagnostic (no hooks, no InsertLog, no recall@k); losses only; the GPU is synced when the loop ends (and before an eval pause). This replaces the `diagnostic_seconds` timer. **Confirmed in RUNCARD-S0 before adopting: no mark reads a removed diagnostic** (train reports are read only for status, train_seconds, steps, final/logged loss, loop_mismatches, seconds_budget, stop) | no hooks/InsertLog/recall under a seconds budget, for both D1 and swarm; flag-off training unchanged; one sync at loop end |
+| 5 | gold mode skips the swarm's split and ASK terms when the ASK weight is 0 | split never called in gold |
+| 6 | `desk_asks` counts only rounds that can fetch | max desk_asks = rounds - 1 |
+| 10 | test-only `Board.posted` removed; IMPLEMENTATION-SPEC §6-9 match the code | n/a |
+
+Tests: 124 OK (one pre-existing skip; the documented-dry-run test runs on the committed tree and passes). Discover:
+284, with the same 4 import-time errors as main.
+
+## Full-branch review at 060fc1cb3: 10 findings. **VERDICT: NOT CLEAN. Stopped: no dry run at a sealed commit, no seal, no bid.**
+
+Blocking:
+1. **C0 benchmarks a different workload than the training it calibrates** (`premonition_swarm_screen.py`, `fresh_trainer`).
+   Its MiniTrainer has no seconds budget, so `train_diagnostics` stays on and every timed C0 update computes recall@k
+   (4x wider for S0). T (from D1's FLOP/s) and the 2.5x stop ratio both come from that bench. Fix: C0's trainers run
+   exactly as the screen trains (diagnostics off), plus a test that `fresh_trainer`'s model has `train_diagnostics`
+   False and that `_train_step` registers no hooks there.
+2. **A rerun dies late, after paid work** (`premonition_swarm_box.sh:50`). The existing-checkpoint refusal fires only at
+   the first `train` step, after the data build and C0, and a failed dry run leaves `ckpt-dryrun` behind. Fix: put
+   CKPT under the per-run OUT (fresh per commit), make it overridable, and check it in the pre-flight (CHECK_ONLY too).
+3. **An OUT outside the repo crashes the script** (exit 128 from `git ls-files` under `pipefail`) instead of refusing.
+   Fix: refuse an OUT outside the repo explicitly (exit 2), or treat outside as untracked.
+
+Lower severity (open): 4 the round rule is written in three places; 5 round-invariant masks are recomputed every
+round (D1's forward does the same once per loop, so it is no bias); 6 `swarm_answer` repeats the answer preamble;
+7 `merge_mask` memory (M duplicate tables); 8 `_recall` computes all desks and keeps desk 0 (training with
+diagnostics on only; it also inflated C0 under finding 1); 9 the diagnostics switch mutates the model; 10 gold-phase
+recall is absent for the swarm in FLOP-budget runs.
+
+## Status against Q28
+
+Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
+Recommendation: one round for 1-3, and 8 with it, since it is the root of C0's extra recall cost.
