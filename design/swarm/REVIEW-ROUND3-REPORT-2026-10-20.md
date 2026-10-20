@@ -474,3 +474,53 @@ prelude also keeps the old op order, so flag-off gradients stay bit-identical. S
 and gradients are bit-identical to b0088f166 (checked).
 
 Suites: the eight premonition suites, 257 tests OK (4 skipped).
+
+## Eighth pass: the highest-effort full sweep (73b8e0224..4e4ff4ff2)
+
+**Verdict: not clean (2 blocking). Stopped, per the rule. Nothing was patched after the sweep.** The single-context
+review found no errors in the flag-off path, the split, the board FIFO, the merge mask, the verdict order or the
+money ledger. The 149 swarm tests pass, and the manifest check passes. I re-checked both blocking items and the
+BOX_START item against the code: they hold.
+
+**Blocking**
+
+1. **C0_EXTRA can still override registered C0 settings.** It is appended last, and argparse keeps the last value,
+   so off DRYRUN `C0_EXTRA='--dph 0'` silences money_stop, and `--size tiny`, `--device cpu` or
+   `--rounds 1 --timed 5` bench a different model or protocol. c0.json still says t_override None and T ==
+   T_formula, so the box gate and the readout accept it. `--t-o 300` (an argparse abbreviation) also gets past the
+   substring check, which is caught by the runner only after the paid data step. Recommended fix: refuse any
+   non-empty C0_EXTRA off DRYRUN, and have the C0 gate and the readout's validity mark require size full, device
+   cuda, the registered bench settings and flags.dph == DPH.
+2. **The C0 stop ratio uses update-share weighting (needs a ruling).** The ratio is Σ w_m s_m(S0m4) / Σ w_m s_m(D1).
+   Seconds-budget runs split phases by time (the reasoning of the item-4 ruling), so the slowdown in steps in T is
+   Σ w_m / s_m(D1) ÷ Σ w_m / s_m(S0). In the reviewer's worked example the registered ratio is 2.29 (go) while S0
+   actually gets 2.56× fewer steps in T, which is the "not near-free" case the gate exists for. **Recommendation:
+   the steps-in-T ratio**, consistent with the T ruling. It is a change to the registered C0 stop rule
+   (FUNDING-BID), so it needs your ruling.
+
+**Non-blocking (10)**
+
+3. PART=s0 / FROM checks the GPU but not the commit, so an earlier commit's C0 can supply T for new code. Fix:
+   require host-c0.txt's commit == PIN.
+4. The peak-memory counter is not reset before the train-overhead probe, so a failed optional arm's peak can make
+   the probe "abort" and falsely stop C0 (recorded in the ledger). Fix: reset before the probes and after a
+   failure.
+5. The money projection is optimistic (no per-process start-up, D1's evals charged at S0's rate). Fix: a
+   per-process margin, or probe with fresh processes.
+6. An unset BOX_START trips `set -u` (exit 1, no message), while the tests only tried an empty one. Fix:
+   `BOX_START=${BOX_START:-}` and a truly-unset test.
+7. T_raw mixes a median s_m with a mean f_m. Fix: total timed seconds over timed updates.
+8. (needs a ruling) RUNCARD-S0 §2 says cells need ≥ 100 items per seed, but only far_deep is gated. Either gate
+   near/overall too, or amend §2 to "far_deep only".
+9. FUNDING-BID's separate C0 cap ($0.70) is not enforced. The total ruling may supersede it; say so, or enforce it.
+10. Stale doc lines: IMPLEMENTATION-SPEC §7 (static picks, "no host sync"), BOX-SPEC step 1 (a MAXH default of 8 and
+    a MAXH × DPH check), host.txt, checkpoints/swarm-screen, and §8's halt_prob wording.
+11. Cleanups: `swarm._recall` duplicates `model._recall`, `fetch_overlap` is now unused, and `_Swarm.device` is
+    never read.
+12. The card_stats "one row per question" limit is guarded at three call sites, not once in InsertLog.
+
+## Status against Q28 (eighth pass)
+
+Review clean: **no** (2 blocking). Card sealed: no. Dry run: not run. **No booking and no bid.** Spend: $0.
+Recommendation: one more round. Item 1 is a straightforward fix. Item 2 and item 8 need rulings. Items 3-7 and
+9-12 are small. Then the sweep again.
