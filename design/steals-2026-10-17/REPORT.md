@@ -469,6 +469,61 @@ teacher-forced cards into the "own-fetch" record. The new findings are below.
 - Make the log line None-safe; check settings on every run; compute the cross gate once, on real answer positions;
   only the process that completes the set writes `result.json`.
 
+### R2 third round: SIMPLIFY (coordinator ruling 10-20), re-sealed 0bef3c2f2. Focused review NOT CLEAN, still not run
+- **Built** under the ruling:
+  - the extension is removed (exactly seeds 0–2);
+  - runs are bound by content hash to the runner, card and package (`premonition/*.py`, `learnlab/**/*.py`); the
+    commit is recorded, not binding;
+  - the seal holds all three hashes, and unsealed runs need `--unsealed` and are labelled UNSEALED;
+  - the log line is None-safe and comes after the save;
+  - every run's settings are checked;
+  - the decoder gate is read once per run, on real answer positions;
+  - only `--score` writes `result.json`.
+- **Seal:** card `2eaeaa68c143…`, runner `29d7f4fce6dd…`, package `5521846e69bf…`.
+- **The focused review found two blocking gaps**, both checked against the code:
+  - **B1:** `score()` never compares the runs' hashes with the current seal, so runs made under an older seal, or
+    copied from elsewhere, would score as the card's verdict;
+  - **B2:** DID NOT TRAIN is returned without its SMOKE or UNSEALED label.
+- **Non-blocking:** a gate error after training loses the run; `finite` is vacuous when every loss is None; the torch
+  version is not compared; a sealed directory takes off-card settings; the package seal line cannot be checked with
+  `sha256sum -c`; one stale card line; a duplicated insert hook; test gaps.
+- Reported to the coordinator with a proposed fix round. **No R2 run.**
+
+## R1 stage 1: prerequisites P1–P3 ($0, GO'd 10-20). DRAFT, the P2 re-review is NOT CLEAN, nothing booked
+- **P1** (`train_d(optimizer=)`, 677eb1d13, hardened in 505c4308d):
+  - the default run matches the base commit's `train_d`: report (timing aside), weights, optimizer and trainer state,
+    and checkpoint config;
+  - Muon trains, reports and resumes, and a resumed Muon state takes a real step.
+- **P2:**
+  - **runner:** `scripts/premonition_steals_r1_stage1.py`. It needed one `premonition/` change behind a default
+    (`train_d(eval_extra=None)`), and the P1 test still passes with it;
+  - **controller:** `scripts/claude_r1s1_rent.py` (it never books without `--yes`);
+  - **card draft:** `R1-STAGE1-CARD.md`.
+- **P3:** `premonition_steals_r1_stage1.py dry`, a tiny generated village on CPU.
+  - All six runs complete, with equal steps within each seed, and the manifest is verified.
+  - It was run three times across the fixes, and every loss repeated exactly.
+- **Measured here** (CPU, $0) on the `large` build:
+  - the build: 1,239 s, 1.4 GB, tag `large-seed0-e00cd820504d`;
+  - D full has 2,130,516 parameters;
+  - 1.14e12 FLOPs per step over the curriculum, with about 48.9k tokens per batch;
+  - so F = 3.15e16 is about 27,560 steps per run, or **12.6 epochs** of the 106.6M-token train cache;
+  - F_1a ≈ 3.4e14.
+- **Built-in review, round 1: 5 blocking findings, all fixed** in a0d8335a3:
+  - the run deadline ignored the dollar stop;
+  - nothing stopped the box after DONE;
+  - the default pull skipped the checkpoints but allowed destroy;
+  - equal steps per seed were unchecked;
+  - `PRICE.json` and the package were unbound.
+
+  The two R2 blocking lessons were applied to R1 as well.
+- **Re-review: new blocking findings:**
+  - **N1 (fix bug):** stopping at the early FAIL line can strand a failed run's export;
+  - **N2 (design):** at $0.30, stage 1a's stop cannot cover the box's village build plus setup;
+  - **N3:** the job's deadline clock starts after billing does;
+  - **N4:** `waitlog`'s time limit ends without stopping the box.
+- Reported to the coordinator. **Proposed:** merge 1a and 1b into one job under one $2.80 cap, with the sealed F rule
+  applied on the box, or raise 1a's stop. Then one more $0 fix round and a re-review. **Nothing is booked.**
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
