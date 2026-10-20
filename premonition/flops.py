@@ -161,8 +161,9 @@ def mini_hand_count(config, batch: VisitBatch, question_loops: int, training: bo
     per_loop_attention = config.think_layers * 4 * rows * rows * d
     if config.store:
         per_loop += 2 * d * dk + 2 * d + 2 * dk * (lines + 1)
-    per_loop += answer_len * (8 + 2 + 2 + 4 * config.decoder_mlp) * d * d + 4 * rows * d * d
-    per_loop_attention += 4 * answer_len * answer_len * d + 4 * answer_len * rows * d
+    memory = rows + (config.cards if getattr(config, "decoder_raw_cards", False) else 0)   # S2 raw card rows
+    per_loop += answer_len * (8 + 2 + 2 + 4 * config.decoder_mlp) * d * d + 4 * memory * d * d
+    per_loop_attention += 4 * answer_len * answer_len * d + 4 * answer_len * memory * d
     questions = max(batch.q_visit.shape[0], 1)
     dense += question_loops * per_loop + question_loops / questions * answer_tokens * 2 * v * d
     attention += question_loops * per_loop_attention

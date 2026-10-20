@@ -7,7 +7,8 @@
    A 1e-7 perturbation is caught, so the comparison is not vacuous. (Harness pattern from
    `claude/steals-8:tests/test_premonition_steals_identity.py`.)
 2. Flag on: same parameters and same init stream as flag off (a paired start), every mode trains with finite
-   losses and gradients, and the decoder memory gains exactly the card rows as inserted, under the card mask.
+   losses and gradients, the episode gains 16 rows after the think rows that hold exactly the card rows as
+   inserted (same mask, same ring slot), Think never reads or changes them, and the decoder reads them.
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ import torch
 
 from premonition import train as ptrain
 from premonition.config import MiniConfig
-from premonition.model import PremonitionMini
+from premonition.model import PremonitionMini, _Episode
 from tests.test_premonition_model import VOCAB, synthetic_batch
 
 BASE_COMMIT = "73b8e022421d9161d00703e7dc483cdb05d7374a"
@@ -31,8 +32,11 @@ SEEDS = (0, 1)
 
 
 def _git_source(path: str) -> str:
-    return subprocess.run(["git", "show", f"{BASE_COMMIT}:{path}"], cwd=ROOT, check=True,
-                          capture_output=True, text=True).stdout
+    try:
+        return subprocess.run(["git", "show", f"{BASE_COMMIT}:{path}"], cwd=ROOT, check=True,
+                              capture_output=True, text=True).stdout
+    except (OSError, subprocess.CalledProcessError) as error:            # e.g. a shallow clone without the base
+        raise unittest.SkipTest(f"base commit {BASE_COMMIT[:9]} not available: {error}") from None
 
 
 def _load(name: str, source: str) -> types.ModuleType:
@@ -178,13 +182,9 @@ class FlagOffIsBitIdenticalTest(unittest.TestCase):
 
 
 class FlagOnTest(unittest.TestCase):
-    def test_refused_without_a_store_or_on_a_decode_override(self) -> None:
-        from premonition.answer_path import CardBypassMini, ThinkGatedMini
+    def test_refused_without_a_store(self) -> None:
         with self.assertRaises(ValueError):
             tiny("D-noask", decoder_raw_cards=True)
-        with self.assertRaises(ValueError):
-            CardBypassMini(tiny("D", decoder_raw_cards=True))       # overrides _decode_logits
-        ThinkGatedMini(tiny("D", decoder_raw_cards=True))           # keeps the base decode path: allowed
 
     def test_flag_off_greedy_accepts_a_bare_episode(self) -> None:
         from types import SimpleNamespace
@@ -226,28 +226,50 @@ class FlagOnTest(unittest.TestCase):
                 self.assertEqual(answers.tokens.shape[0], batch.q_visit.shape[0])
                 ptrain.answer_with_gold(model, batch)
 
-    def test_memory_holds_the_cards_as_inserted(self) -> None:
+    def test_raw_rows_hold_the_cards_as_inserted_and_think_skips_them(self) -> None:
         model, _ = build(PremonitionMini, tiny("D", decoder_raw_cards=True), 0)
         model.eval()
         batch = synthetic_batch(seed=5)
+        config = model.config
         with torch.no_grad():
             hidden = model.read(batch)
             store = model.build_store(hidden, batch)
             episode = model._start(batch, hidden, store, model._mentions(batch))
+            self.assertEqual(episode.x.shape[1], config.rows + config.cards)
+            self.assertFalse(episode.valid[:, config.rows:].any())              # empty until a card arrives
             count = batch.q_visit.shape[0]
             everyone = torch.arange(count)
             gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
             preload = torch.where(gold, torch.arange(gold.shape[1]),
                                   torch.full_like(gold, -1, dtype=torch.long)).topk(1, 1).values
             model._insert(episode, store, everyone, preload)
-            base, rows_n = model._card_base, model.config.cards
-            inserted = episode.x[:, base:base + rows_n].clone()
-            self.assertTrue(torch.equal(episode.raw, inserted))       # before any Think pass: identical
-            model._step(episode, everyone, 0, store)
-            memory, valid = model._memory(episode, episode.x, episode.valid)
-            self.assertEqual(memory.shape[1], model.config.rows + rows_n)
-            self.assertTrue(torch.equal(memory[:, -rows_n:], inserted))  # the raw rows are untouched by Think
-            self.assertTrue(torch.equal(valid[:, -rows_n:], episode.valid[:, base:base + rows_n]))
+            base, raw = model._card_base, slice(config.rows, config.rows + config.cards)
+            inserted = episode.x[:, base:base + config.cards].clone()
+            self.assertTrue(torch.equal(episode.x[:, raw], inserted))
+            self.assertTrue(torch.equal(episode.valid[:, raw], episode.valid[:, base:base + config.cards]))
+            nudged = _Episode(episode.x.clone(), episode.valid.clone(), episode.count.clone(),
+                              episode.fetched.clone(), episode.q_visit, episode.q_line)
+            nudged.x[:, raw] += 1.0                                            # Think must not see this
+            rows, _, _, _ = model._step(episode, everyone, 0, store)
+            rows_nudged, _, _, _ = model._step(nudged, everyone, 0, store)
+            self.assertTrue(torch.equal(rows[:, :config.rows], rows_nudged[:, :config.rows]))
+            self.assertTrue(torch.equal(episode.x[:, raw], inserted))          # untouched by the Think pass
+            self.assertFalse(torch.equal(episode.x[:, base:base + config.cards], inserted))
+            inputs = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1].unsqueeze(1)
+            a = model._decode_logits(episode.x, episode.valid, inputs)
+            b = model._decode_logits(nudged.x, nudged.valid, inputs)
+            self.assertFalse(torch.equal(a, b))                                # and the decoder reads them
+
+    def test_flop_hand_count_covers_the_raw_rows(self) -> None:
+        from premonition.flops import measure_mini, mini_hand_count
+        model, _ = build(PremonitionMini, tiny("D", decoder_raw_cards=True), 0)
+        plain = mini_hand_count(tiny("D"), synthetic_batch(seed=1), 10)
+        for visits, lines, seed in ((1, 12, 0), (2, 16, 1), (2, 30, 3)):
+            batch = synthetic_batch(visits=visits, lines=lines, seed=seed)
+            sample = measure_mini(model, batch, mode="teacher", generator=torch.Generator().manual_seed(seed))
+            hand = mini_hand_count(model.config, batch, sample.question_loops)
+            self.assertLess(abs(sample.flops - hand) / hand, 0.15, (sample, hand))
+        self.assertGreater(mini_hand_count(model.config, synthetic_batch(seed=1), 10), plain)
 
     def test_ring_overwrite_keeps_raw_rows_aligned(self) -> None:
         model, _ = build(PremonitionMini, tiny("D", decoder_raw_cards=True, card_rows=2, top_k=1), 0)
@@ -258,12 +280,12 @@ class FlagOnTest(unittest.TestCase):
             store = model.build_store(hidden, batch)
             episode = model._start(batch, hidden, store, model._mentions(batch))
             everyone = torch.arange(batch.q_visit.shape[0])
-            base = model._card_base
+            base, raw = model._card_base, slice(model.config.rows, model.config.rows + 2)
             seen = []
             for line in range(3):                                      # three distinct cards into two rows
                 model._insert(episode, store, everyone, torch.full((everyone.numel(), 1), line))
-                self.assertTrue(torch.equal(episode.raw, episode.x[:, base:base + 2]))
-                seen.append(episode.raw.clone())
+                self.assertTrue(torch.equal(episode.x[:, raw], episode.x[:, base:base + 2]))
+                seen.append(episode.x[:, raw].clone())
             self.assertFalse(torch.equal(seen[2][:, 0], seen[0][:, 0]))  # the third card really overwrote row 0
             self.assertTrue(torch.equal(seen[2][:, 1], seen[1][:, 1]))   # and left row 1 alone
 

@@ -479,7 +479,24 @@ the E4 cumulative base for S3 is D + S2.
 
 #### S2 code review (E6; Claude Code built-in `/code-review`, high, on `main...branch`)
 
-Two rounds.
+**Round 3 (final design).** The review's root finding was that raw rows held outside `episode.x` had to be
+re-added at every decode call site. They now live **inside the episode**: 16 rows after the 76 think rows.
+- `_step` runs Think on the first 76 rows only.
+- `_insert` writes each card into the same ring slot of both blocks, with its own mask bit.
+- So every decode path that reads `episode.x`/`episode.valid` (base, subclasses, scripts) sees them with no
+  extra call. The `_memory` helper and the subclass guard are gone, and `forward`/`_greedy` are back to the
+  base text.
+- Also fixed:
+  - the FLOP hand count includes the raw rows (tested against the measured count);
+  - the identity tests skip, not error, without the base commit;
+  - the runner records the steps actually run and gives no verdict unless all six runs are present;
+  - output paths are repo-relative.
+- **Equivalence (shown):** re-running Stage 0 treated seed 0 with the final code at 1 thread (as filed)
+  reproduces the filed run exactly: all 9 logged losses, 1024/1024, no-card 72/1024, distinct 16/1.
+  The same run at 4 threads drifts in the 4th decimal from step 200 (summation order) and gives the same
+  scores. So the filed Stage 0 result stands for the final code.
+
+Earlier rounds (1-2), superseded where they conflict with round 3:
 - **Fixed** in e35f43df3 and the next commit:
   - the flag is refused on any subclass that overrides `_greedy` or `_decode_logits`, and without a store;
   - `_memory` tolerates bare `x`/`valid` episodes (a flag-off regression for

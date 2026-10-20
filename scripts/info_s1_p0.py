@@ -39,7 +39,7 @@ from premonition import train as ptrain                                    # noq
 from premonition.model import Answers, PremonitionMini                      # noqa: E402
 from premonition.toy import ToySpec, toy_set                                 # noqa: E402
 
-OUT_DIR = Path("artifacts/claude-infoconstraints-20261018")
+OUT_DIR = Path(__file__).resolve().parents[1] / "artifacts/claude-infoconstraints-20261018"
 
 
 @torch.no_grad()

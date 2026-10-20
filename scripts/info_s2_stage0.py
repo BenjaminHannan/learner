@@ -28,7 +28,8 @@ from premonition.model import PremonitionMini                               # no
 from premonition.toy import ToySpec, toy_set, toy_stream                     # noqa: E402
 from premonition.train import label_free                                    # noqa: E402
 
-OUT = Path("artifacts/claude-infoconstraints-20261018/s2-stage0")
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "artifacts/claude-infoconstraints-20261018/s2-stage0"
 TRAIN_SEED, TEST_SEED, VISITS, TEST_BATCHES = 101, 303, 16, 16
 STEPS, LOOPS, LR, WARMUP = 800, 2, 1e-3, 100
 CHANCE = 1 / 16
@@ -101,7 +102,7 @@ def cmd_run(args) -> None:
          {"params": [p for p in params if p.dim() < 2], "weight_decay": 0.0}],
         lr=LR, betas=(0.9, 0.99), eps=1e-8)
     stream = (label_free(b) for b in toy_stream(spec, VISITS, TRAIN_SEED))
-    history, finite, started = [], True, time.perf_counter()
+    history, finite, started, steps_done = [], True, time.perf_counter(), 0
     for step in range(STEPS):
         for group in optimizer.param_groups:
             group["lr"] = LR * min(1.0, (step + 1) / WARMUP)
@@ -112,13 +113,14 @@ def cmd_run(args) -> None:
         finite &= all(p.grad is None or bool(torch.isfinite(p.grad).all()) for p in params)
         torch.nn.utils.clip_grad_norm_(params, 1.0)
         optimizer.step()
+        steps_done = step + 1
         if (step + 1) % 100 == 0 or step == 0:
             history.append({"step": step + 1, "loss": round(float(loss.detach()), 4),
                             "seconds": round(time.perf_counter() - started, 1)})
             print(json.dumps(history[-1]), flush=True)
     seconds = time.perf_counter() - started
     test = [label_free(b) for b in toy_set(spec, TEST_BATCHES, VISITS, TEST_SEED)]
-    result = {"arm": args.arm, "seed": args.seed, "steps_run": STEPS, "finite": finite, "seconds": seconds,
+    result = {"arm": args.arm, "seed": args.seed, "steps_run": steps_done, "finite": finite, "seconds": seconds,
               "torch": torch.__version__, "parameters": model.num_parameters(), "config": config.variant,
               "decoder_raw_cards": config.decoder_raw_cards, "history": history,
               "with_card": score(model, test, card=True), "no_card": score(model, test, card=False)}
@@ -141,6 +143,8 @@ def cmd_summarize(args) -> None:
                 pair[arm] = json.loads(path.read_text())
         if len(pair) == 2:
             rows[seed] = pair
+    missing = [f"{arm}-seed{seed}" for seed in (0, 1, 2) for arm in ("control", "treated")
+               if not (OUT / f"{arm}-seed{seed}.json").exists()]
     cells = []
     for seed, pair in sorted(rows.items()):
         c, t = pair["control"], pair["treated"]
@@ -154,7 +158,9 @@ def cmd_summarize(args) -> None:
     valid = [x for x in cells if not x["void"]]
     n = len(valid)
     verdict, why = "INCONCLUSIVE", []
-    if len(cells) == 3 and n == 0:
+    if missing:                                    # mark 5 needs every run of the card: no verdict without them
+        verdict, why = "INCOMPLETE", [f"missing runs: {missing}"]
+    elif len(cells) == 3 and n == 0:
         verdict, why = "VOID", ["every control cell gave one distinct answer over 256 questions"]
     elif n >= 2:
         d = [x["d"] for x in valid]
