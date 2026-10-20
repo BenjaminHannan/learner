@@ -1,5 +1,24 @@
 # RUN CARD S0: parallel independent desks + combiner, NO communication (the kill screen)
 
+**Status: SEALED 2026-10-20** (see "Seal" below). Written 2026-10-17 as "DRAFT, NOT SEALED", before any swarm run
+of any size, on any data, CPU or GPU.
+
+**Seal (2026-10-20).** Every sealing condition holds:
+- the coordinator confirmed the rulers (Q27);
+- the review is clean under the coordinator's rule (round 3, ninth-pass sweep: no blocking finding;
+  `REVIEW-ROUND3-REPORT-2026-10-20.md`);
+- the box-kit dry run passed at the reviewed commit (`DRYRUN-0d7a2e633.md`).
+
+The code is pinned at **0d7a2e63371e54eb95d5c4dfe177c1753600c3e9**, the reviewed and dry-run commit. The box's PIN is
+the commit that adds this seal. Its code is byte-identical to 0d7a2e633 (it changes only `design/swarm/*.md`), and
+the box verifies it through `scripts/premonition_swarm_manifest.txt`. **T** is not a free choice. It is the registered
+formula's output on the box (§1, ninth-pass bullet), read from c0.json, and the C0 gate (the steps-in-T stop ratio
+> 2.5, the $3.50 S0 money check, the money left) decides whether S0 starts. No other field of this card changes after
+the seal except by a dated amendment written before the result files it concerns are read. No swarm result of any
+kind exists at sealing: every number so far comes from tiny CPU dry runs, which are meaningless by design.
+RUNCARD-S1 stays a draft, not sealed and not booked (Q28).
+
+Original status text, kept:
 **Status: DRAFT, NOT SEALED. Written 2026-10-17, before any swarm run of any size, on any data, CPU or
 GPU.** Two things must happen before sealing: (1) the coordinator accepts or replaces the PROVISIONAL
 ruler mapping in §2 (design §0 items 2-3), and (2) §C0 of `FUNDING-BID.md` reports D's speed numbers,
