@@ -73,3 +73,5 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 ~00:35 | Steal 9 | Ben delegated. NOT NOW: the 8 steals still lack a clean review, and no Steal 9 spec exists in the repo. | 0 |
 | 2026-10-20 ~00:35 | Span boxes | HOLD; not destroyed (that can't be undone, and these are the only copies). Disk rent about $3.74/day. If Ben hasn't connected storage by Thu Oct 22, the coordinator asks him once more, then recommends destroying. | ~3.74/day |
 | 2026-10-20 ~00:35 | ShinkaEvolve | Stays on the API key, $5 hard stop, unless Ben says "subscription only". | — |
+| 2026-10-20 00:15 | GPU-RUN-4 (speed) | BOOKED after Ben's click. Vast 56810922 gr4full (4090, $0.47/h, hard stop 03:15Z) and 56810924 gr4rep (4090, $0.513/h, destroyed by 01:32Z). Expected about $1.55; hard stop $2.07. Credit $22.02 at 00:25Z. | ≤2.07 |
+| 2026-10-20 00:25 | Decoder | Ben chose Muse's Oct 17 rulings over the new coordinator's. The coordinator runs the PR #79 code review; Stage 0 waits until it passes. | 0 |
