@@ -1,0 +1,76 @@
+control s0: steps 1672 acc 0.055 gold 0.0546875 cards/q 3.99 asks/q 1.00 (509s)
+treated s0: steps 1672 acc 0.074 gold 0.07421875 cards/q 3.93 asks/q 1.00 (589s)
+control s1: steps 1672 acc 0.043 gold 0.04296875 cards/q 3.94 asks/q 1.00 (516s)
+treated s1: steps 1672 acc 0.160 gold 0.13671875 cards/q 7.91 asks/q 1.98 (622s)
+control s2: steps 1671 acc 0.066 gold 0.06640625 cards/q 3.96 asks/q 1.00 (516s)
+treated s2: steps 1671 acc 0.066 gold 0.06640625 cards/q 3.93 asks/q 1.00 (607s)
+{
+ "reading": "FAIL: no GPU spend; the village A/B could not produce a gain that counts",
+ "marks": {
+  "G1_control_fetches": true,
+  "G2_an_arm_above_chance": false,
+  "V1_steps_matched": true
+ },
+ "chance": 0.0625,
+ "above_chance_threshold": 0.1125,
+ "seeds_above_chance": {
+  "control": 0,
+  "treated": 1
+ },
+ "seeds_needed": 2,
+ "control_cards_per_question": 3.9635416666666665,
+ "steps": [
+  {
+   "seed": 0,
+   "control": 1672,
+   "treated": 1672,
+   "matched": true
+  },
+  {
+   "seed": 1,
+   "control": 1672,
+   "treated": 1672,
+   "matched": true
+  },
+  {
+   "seed": 2,
+   "control": 1671,
+   "treated": 1671,
+   "matched": true
+  }
+ ],
+ "paired_accuracy_difference": [
+  0.01953125,
+  0.1171875,
+  0.0
+ ],
+ "guard_on_toy_report_only": {
+  "per_seed": [
+   {
+    "control_cards": 3.98828125,
+    "treated_cards": 3.92578125,
+    "control_asks": 1.0,
+    "treated_asks": 1.0,
+    "relative_drop": 0.015670910871694366
+   },
+   {
+    "control_cards": 3.94140625,
+    "treated_cards": 7.90625,
+    "control_asks": 1.0,
+    "treated_asks": 1.9765625,
+    "relative_drop": -1.0059464816650148
+   },
+   {
+    "control_cards": 3.9609375,
+    "treated_cards": 3.92578125,
+    "control_asks": 1.0,
+    "treated_asks": 1.0,
+    "relative_drop": 0.00887573964497046
+   }
+  ],
+  "pooled_drop": -0.32522996057818676,
+  "holds": true,
+  "reading": "guard holds"
+ }
+}
+stage0 exit 0
