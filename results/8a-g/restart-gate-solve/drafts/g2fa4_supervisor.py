@@ -274,14 +274,25 @@ def mean(xs):
 
 
 # ---------------------------------------------------------------- the two registered checks (pure functions; thresholds come from plan.json)
+EARLY_DEFERRED = "early window not checked by the running gate; do not read this result until the probe's P1b passes."          # printed verbatim (TRACE-A md, status.md, finish message) when trace A could not compute the early window (coordinator ruling B2)
+
+
+def early_deferred(resume):
+    """the r['resume']['early_window'] record of a window trace A did not compute (or None)"""
+    ew = (resume or {}).get('early_window')
+    return ew if isinstance(ew, dict) and ew.get('computed') is False else None
+
+
 def trace_a(ev, rules, max_used_mib):
     """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
     Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
-      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it (r['resume']['early_max'] is recorded whenever there are at least 3 redone updates, rule or not; with fewer the early window
-        is not computed and nothing about it is recorded: ruling Q95, a gate never reports a check it did not compute);
+      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it. The window is computed only with at least 3 redone updates; then r['resume']['early_max'] is recorded (rule or not) and, with the
+        rule set, r['resume']['early_window'] = {computed: True, steps: [..]}. With fewer nothing about its value is recorded (ruling Q95: a gate never reports a check it did not compute); with the rule set that is NOT
+        a failure and NOT a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'}, and the reports print EARLY_DEFERRED (coordinator ruling B2: the window is left
+        to the probe's P1b, which is the reading gate);
       resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
         which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
-      With resume_early_abs set, fewer than 3 redone updates is a hard failure too (the 2nd and 3rd cannot both be checked). resume_first_diff keeps its value (a bar, not changed here)."""
+      resume_first_diff keeps its value (a bar, not changed here)."""
     up, n = rules['upto'], rules['first_n']
     m = ev.merged()
     r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib, soft_misses=[])
@@ -330,11 +341,13 @@ def trace_a(ev, rules, max_used_mib):
                 early = list(zip(common[1:3], d[1:3]))
                 r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when there are 3 redone updates)
                 lim = rules.get('resume_early_abs')
+                if lim is not None:
+                    r['resume']['early_window'] = dict(computed=True, steps=[s for s, _ in early])
                 if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
                     worst = max(early, key=lambda t: t[1])[0]
                     r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd and 3rd after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
-            if rules.get('resume_early_abs') is not None and len(d) < 3:                          # opt-in, hard: with fewer than 3 redone updates the 2nd and 3rd cannot both be checked
-                r['why_fail'].append(f'early window cannot be checked: only {len(d)} redone update{"" if len(d) == 1 else "s"} (the 2nd and 3rd after the restore are needed)')
+            elif rules.get('resume_early_abs') is not None:                                       # opt-in: fewer than 3 redone updates -> NOT a failure, deferred to the probe's P1b (coordinator ruling B2); no value, no pass
+                r['resume']['early_window'] = dict(computed=False, redone=len(d), deferred_to='probe P1b')
             fields = rules.get('resume_exact_fields')
             if fields is not None:                                                                # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal
                 l1, l2 = s1f[common[0]], s2f[common[0]]
@@ -680,6 +693,8 @@ class Sup:
         L.append(f'max GPU memory in use seen: {js["max_used_mib"]} MiB; planned kill-and-resume: {js["kill_done"]}')
         if js.get('traceA'):
             L.append(f'trace A: **{js["traceA"]["verdict"]}** {js["traceA"]["why_fail"] or ""} (TRACE-A-{job["id"]}.md)')
+            if js['traceA'].get('early_window'):                                  # the early window was not computed here (coordinator ruling B2)
+                L.append(EARLY_DEFERRED)
         if job.get('baseline'):
             L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
         else:
@@ -783,6 +798,8 @@ class Sup:
             r = trace_a(ev, job['trace_a'], js['max_used_mib'])
             r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
             js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'], soft_misses=r['soft_misses'])
+            if early_deferred(r['resume']):
+                js['traceA']['early_window'] = r['resume']['early_window']          # (only when deferred: status.md and the finish message read it)
             jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
             (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
             self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}' + (f' (recorded, not gated: {r["soft_misses"]})' if r['soft_misses'] else ''))
@@ -798,8 +815,9 @@ class Sup:
         js['result'] = {k: res.get(k) for k in ('steps', 'steps_per_s', 'train_s', 'peak_mem_mib', 'peak_reserved_mib', 'n_params', 'resumed_from')}
         tail = (f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n' if job.get('baseline')
                 else 'no baseline in this job (no compare was made here).\n')
-        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + tail, encoding='utf-8')
-        self.log(f'DONE {job["id"]}: {js["result"]}')
+        deferred = EARLY_DEFERRED + '\n' if (js.get('traceA') or {}).get('early_window') else ''          # the early window was not computed by trace A (coordinator ruling B2)
+        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + deferred + tail, encoding='utf-8')
+        self.log(f'DONE {job["id"]}: {js["result"]}' + (f' | {EARLY_DEFERRED}' if deferred else ''))
         if js['base']['status'] == 'waiting':          # trace A never passed (or no room): there is nothing to compare any more
             js['base']['status'] = 'abandoned'
 
@@ -943,7 +961,7 @@ class Sup:
         L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
              f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
              f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
-             f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
+             f'- resume: {json.dumps(r.get("resume"))}', *([f'- {EARLY_DEFERRED}'] if early_deferred(r.get('resume')) else []), f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
              f'- notes: {r["notes"] or "none"}']
         return '\n'.join(L) + '\n'
 
