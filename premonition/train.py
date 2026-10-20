@@ -1087,9 +1087,11 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
             max_visits: Optional[int] = 48, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
             eval_every: int = 1000, eval_visits: int = 256, calibration_batches: int = 4,
             max_seconds: Optional[float] = None, checkpoint: Optional[str] = None, workers: int = 1,
-            log: Log = print, optimizer: str = "adamw") -> dict[str, Any]:
+            log: Log = print, optimizer: str = "adamw",
+            eval_extra: Optional[Callable[[nn.Module, Sequence[VisitBatch]], dict[str, Any]]] = None) -> dict[str, Any]:
     """Train D (or D-noask / D-noptr) on a step-1 village build for `flop_budget` FLOPs (design/06 §3-4).
     `optimizer` "muon" trains with `muon.MuonAdamW` (steal 8); the default "adamw" run is unchanged.
+    `eval_extra(model, eval_batches)` adds its keys to every validation record (R1 stage 1's held-out loss).
 
     `data_rel` is the data build (e.g. data/village/large-seed0-...), `tokenizer_path` the v2 tokenizer
     (relative to the budget root). Caches and the name detector are built once through the budget. The
@@ -1129,6 +1131,11 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     eval_batches = [pdata.collate(valid_cache, [chosen[i] for i in g], slices=tags) for g in groups]
     stops = sorted(step1.stop_ids(tokenizer)[0])
     hook = validation_hook(eval_batches, tokenizer=tokenizer, stop=stops)
+    if eval_extra is not None:
+        validation = hook
+
+        def hook(model: nn.Module) -> dict[str, Any]:
+            return {**validation(model), **eval_extra(model, eval_batches)}
     report: dict[str, Any] = {"command": "premonition train", "contender": variant, "parameters": model.num_parameters(),
                               "device": device, "seed": seed, "data": {"dir": data_rel, "tag": Path(data_rel).name},
                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
