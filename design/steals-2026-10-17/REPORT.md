@@ -443,6 +443,32 @@ the focused review is clean". It was not, so **R2 has not run**.
   - A recall of None is handled.
 - Then one more focused review, and run only if it is clean.
 
+### R2 second focused review (re-sealed runner and card, e6afb68df, 10-20): NOT CLEAN, still not run
+
+The fixed gate measurement checks out: it is isolated to `answer()`'s own inserts, and NULL is excluded. In
+building it I found and fixed a contamination of my own: the teacher-mode decoder-gate pass had leaked
+teacher-forced cards into the "own-fetch" record. The new findings are below.
+
+| # | Finding | Severity |
+|---|---|---|
+| 1 | EXTENSION DUE overwrites DID NOT TRAIN, so a non-finite run would be extended instead of failed (reproduced). | Blocking |
+| 2 | The identity binds runs to the git commit, so any later commit invalidates earlier runs. The extension (seeds 3–4 after a committed 3-seed result) could never be scored. | Blocking (extension workflow) |
+| 3 | **Card:** extension clause 1 (−SE < mean − 2SE ≤ 0) ignores the 3-point criterion. A near-zero at-chance result is extended instead of PROVED WRONG (reproduced). | Blocking (needs a card fix and re-seal) |
+| 4, 5 | No seal file means no check and no "unsealed" label. The seal covers only the runner and the card, not `premonition/`. | Should-fix |
+| 6 | Running seeds 0–4 in one go leaves a decided 3-seed verdict as NOT SCORED. | Should-fix |
+| 7 | The log line crashes on recall = None before the run is saved, so "unreadable → trip" is unreachable. | Should-fix |
+| 8–10 | The smoke check reads only runs[0]'s settings; the cross gate is computed twice and averages padding; concurrent processes race on `result.json`. | Minor |
+
+**Proposed next fix (awaiting the coordinator).**
+- Never let EXTENSION DUE override DID NOT TRAIN.
+- Bind runs to content hashes (runner, card, `premonition/*.py`) rather than the commit; record the commit but do
+  not compare it.
+- Put the package hash in the seal, and label any run outside a sealed directory **UNSEALED**.
+- Extension: due only if the bar fails on **one** criterion by less than 1 SE while the other two hold.
+- Refuse to start seeds 3–4 before a 3-seed score that called for them.
+- Make the log line None-safe; check settings on every run; compute the cross gate once, on real answer positions;
+  only the process that completes the set writes `result.json`.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
