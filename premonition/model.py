@@ -239,7 +239,14 @@ class CardWriter(nn.Module):
         pooled = torch.zeros(visits * lines, hidden.shape[-1], device=hidden.device).index_add(
             0, slot, weight.unsqueeze(-1) * hidden[real].float()).view(visits, lines, -1)
         return CardStore.write(self._keys(pooled, batch), self._values(pooled, batch), batch,
-                               self.null_key, self.null_value)
+                               self._null_key(), self.null_value)
+
+    def _null_key(self) -> torch.Tensor:
+        """The NULL key. Under key_split its position sub-key is zero: NULL has no line, so its score must not
+        depend on the question's line (the query's position part is rotated by it)."""
+        if not self.pos_dim:
+            return self.null_key
+        return torch.cat([self.null_key[:-self.pos_dim], self.null_key.new_zeros(self.pos_dim)])
 
     def _keys(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
         """[B, L, dk] card keys before CardStore.write normalises them."""
@@ -256,26 +263,28 @@ class CardWriter(nn.Module):
 
     def _engram(self, pooled: torch.Tensor, value: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
         """value + alpha W_V e on lines with a name; e = mean over the line's names of the concatenated head rows,
-        alpha = sigmoid(<norm(p), norm(W_K e)> / sqrt(d)). Lines with no name are returned unchanged."""
+        alpha = sigmoid(<norm(p), norm(W_K e)> / sqrt(d)). Lines with no name are returned unchanged. An entity
+        without a spelling (no NameTable for its visit, or none for the id) counts as no name: an ENT id is a
+        per-visit variable, so it must never fall back to a shared row."""
         ents = batch.line_ents.cpu()                                         # [B, L, M]; -1 padding
         rows = max(int(ents.max()) + 1, 1)
         table = torch.zeros(ents.shape[0], rows + 1, self.engram_heads, dtype=torch.long)   # last row: padding
+        spelled = torch.zeros(ents.shape[0], rows + 1, dtype=torch.bool)                  # (visit, ent) has a name
         where, hashed = [], []
         for visit, names in enumerate(batch.names[:ents.shape[0]]):
             for ent in ents[visit].unique().tolist():
-                if ent >= 0:
-                    try:
-                        spelling = names.spelling(ent)
-                    except KeyError:
-                        spelling = f"<ent {ent}>"
+                if ent >= 0 and ent in names.spellings:
                     where.append((visit, ent))
-                    hashed.append(engram_indices(spelling, self.engram_heads, self.engram_rows))
+                    hashed.append(engram_indices(names.spelling(ent), self.engram_heads, self.engram_rows))
         if where:
             visits, found = torch.tensor(where).unbind(1)
             table[visits, found] = torch.tensor(hashed)
+            spelled[visits, found] = True
         mapped = torch.where(ents >= 0, ents, torch.full_like(ents, rows))
-        index = table[torch.arange(ents.shape[0]).view(-1, 1, 1), mapped]    # [B, L, M, H]
-        index, named = index.to(value.device), (ents >= 0).to(value.device)  # named: [B, L, M]
+        visit_of = torch.arange(ents.shape[0]).view(-1, 1, 1)
+        index = table[visit_of, mapped]                                       # [B, L, M, H]
+        named = (ents >= 0) & spelled[visit_of, mapped]                       # [B, L, M]
+        index, named = index.to(value.device), named.to(value.device)
         looked = torch.cat([t(index[..., h]) for h, t in enumerate(self.engram_tables)], dim=-1)   # [B, L, M, d]
         count = named.sum(-1, keepdim=True)
         e = (looked * named.unsqueeze(-1)).sum(2) / count.clamp_min(1)       # [B, L, d]
@@ -470,7 +479,6 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
-    hard: bool = False                          # answer paths: discrete decisions (row halting)
     history: Optional[list] = None              # steal 3: register states [Q, registers, d] entering each loop
     keep: Optional[torch.Tensor] = None         # steal 5: [Q, registers] share of each register still updating
     ponder: Optional[list] = None               # steal 5: per-loop keep terms for the ponder cost
@@ -720,12 +728,13 @@ class PremonitionMini(nn.Module):
         """[n, R, d] rows a loop leaves behind, from the think block's output `rows`."""
         config, base = self.config, self._register_base
         if config.row_halt and step >= 1:
-            # Each register row halts with p = sigmoid(router(register entering the loop)); keep is the share
-            # still updating: soft in training, sticky and discrete on the answer paths.
+            # Each register row halts with p = sigmoid(router(register entering the loop)), sticky once p > 0.5.
+            # keep is a straight-through product: its value is the hard 0/1 keep, the same in training and on the
+            # answer paths; its gradient is that of the soft keep prod(1 - p), so the router and ponder cost learn.
             before = episode.x[index][:, base:]
             p = torch.sigmoid(self.heads.row_halt(_norm(before)).squeeze(-1).float())        # [n, R]
-            keep = episode.keep[index]
-            keep = keep * (p <= 0.5).float() if episode.hard else keep * (1.0 - p)
+            soft = 1.0 - p
+            keep = episode.keep[index] * ((p <= 0.5).float() + (soft - soft.detach()))   # value exactly 0 or 1
             episode.keep = episode.keep.index_copy(0, index, keep)
             episode.halted = episode.halted.index_copy(0, index, episode.halted[index] | (p > 0.5))
             episode.ponder.append(keep.flatten())
@@ -799,7 +808,8 @@ class PremonitionMini(nn.Module):
                            **self._ask_gains())
         if record and index.numel():
             match = parts["match"].masked_fill(~parts["eligible"], float("-inf"))[:, :store.null]
-            self.ask_logit_peak.copy_(torch.maximum(self.ask_logit_peak, match.amax()))
+            if match.numel():                      # a store with no real card lines has nothing to clip
+                self.ask_logit_peak.copy_(torch.maximum(self.ask_logit_peak, match.amax()))
         return scores
 
     @torch.no_grad()
@@ -1050,7 +1060,6 @@ class PremonitionMini(nn.Module):
                            torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
-        episode.hard = True
         limit = min(max_loops or config.max_loops, config.max_loops)
         running = torch.ones(count, dtype=torch.bool, device=device)
         used = torch.zeros(count, dtype=torch.long, device=device)

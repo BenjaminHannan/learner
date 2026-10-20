@@ -506,7 +506,6 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
     device = hidden.device
     mentions = model._mentions(batch)
     episode = model._start(batch, hidden, store, mentions)
-    episode.hard = True
     everyone = torch.arange(count, device=device)
     if store is not None and count:
         gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)

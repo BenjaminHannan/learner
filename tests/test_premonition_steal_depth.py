@@ -61,10 +61,12 @@ class RowHaltTest(unittest.TestCase):
         self.assertTrue(torch.equal(episode.keep, torch.ones_like(episode.keep)))
         self.assertEqual(episode.ponder, [])
 
-    def test_soft_update_blends_register_rows_by_keep(self) -> None:
+    def test_keep_is_hard_forward_and_soft_backward(self) -> None:
+        """Review round 4, item 2: training and answering share one forward rule (keep is the sticky 0/1 keep); the
+        gradient is the soft keep's, so the router still learns."""
         model = tiny_model(row_halt=True)
         with torch.no_grad():
-            model.heads.row_halt.bias.fill_(-0.5)
+            model.heads.row_halt.bias.fill_(-0.5)                                   # p ~ 0.38: below one half
         episode, _ = start(model, self.batch)
         base = model._register_base
         episode.x = episode.x + torch.randn_like(episode.x) * 0.1
@@ -72,20 +74,36 @@ class RowHaltTest(unittest.TestCase):
         proposed = torch.randn_like(episode.x)
         before = episode.x[:, base:]
         p = torch.sigmoid(model.heads.row_halt(_norm(before)).squeeze(-1))
+        self.assertTrue((p < 0.5).all())
         out = model._loop_output(episode, index, 1, proposed)
-        torch.testing.assert_close(episode.keep, 1 - p)                             # keep_1 = 1 * (1 - p)
-        torch.testing.assert_close(out[:, base:], before + (1 - p).unsqueeze(-1) * (proposed[:, base:] - before))
+        self.assertTrue(torch.equal(episode.keep.detach(), torch.ones_like(episode.keep)))   # full update, no damping
+        torch.testing.assert_close(out[:, base:], proposed[:, base:])
         self.assertTrue(torch.equal(out[:, :base], proposed[:, :base]))             # other rows are the block's
-        first = episode.keep.clone()
-        model._loop_output(episode, index, 2, proposed)
-        self.assertTrue((episode.keep <= first).all())                              # the share only shrinks
-        self.assertEqual(len(episode.ponder), 2)
+        episode.keep.sum().backward()                                                # d keep / d p = -1 per register
+        expected = -(p * (1 - p)).sum()
+        torch.testing.assert_close(model.heads.row_halt.bias.grad[0], expected.detach())
+        self.assertEqual(len(episode.ponder), 1)
         self.assertEqual(tuple(episode.ponder[0].shape), (self.count * model.config.registers,))
+
+    def test_training_and_no_grad_paths_give_the_same_keep_and_rows(self) -> None:
+        model = tiny_model(row_halt=True)
+        with torch.no_grad():
+            model.heads.row_halt.bias.fill_(0.0)
+            model.heads.row_halt.weight.normal_(std=2.0)                            # a mix of halting rows
+        proposed = torch.randn(self.count, model.config.rows, model.config.d_model)
+        results = []
+        for grad in (True, False):
+            episode, _ = start(model, self.batch)
+            with torch.set_grad_enabled(grad):
+                rows = model._loop_output(episode, torch.arange(self.count), 1, proposed)
+            results.append((episode.keep.detach(), rows.detach()))
+        self.assertTrue(torch.equal(results[0][0], results[1][0]))
+        self.assertTrue(torch.equal(results[0][1], results[1][1]))
+        self.assertTrue((results[0][0] == 0).any() and (results[0][0] == 1).any())
 
     def test_hard_keep_is_sticky_and_discrete(self) -> None:
         model = tiny_model(row_halt=True)
         episode, _ = start(model, self.batch)
-        episode.hard = True
         index = torch.arange(self.count)
         proposed = torch.randn_like(episode.x)
         with torch.no_grad():
@@ -104,7 +122,6 @@ class RowHaltTest(unittest.TestCase):
     def test_a_forced_halted_register_is_frozen_while_the_other_rows_change(self) -> None:
         model = tiny_model(row_halt=True)
         episode, store = start(model, self.batch)
-        episode.hard = True
         index = torch.arange(self.count)
         base = model._register_base
         model._step(episode, index, 0, store)
@@ -124,7 +141,6 @@ class RowHaltTest(unittest.TestCase):
     def test_only_the_halted_registers_freeze(self) -> None:
         model = tiny_model(row_halt=True)
         episode, store = start(model, self.batch)
-        episode.hard = True
         index = torch.arange(self.count)
         base = model._register_base
         model._step(episode, index, 0, store)
@@ -236,7 +252,7 @@ class RowHaltTest(unittest.TestCase):
         registers = tiny_config().registers
         later = int(priced["metrics"]["question_loops"]) - self.count          # (question, loop) pairs with loop >= 1
         self.assertEqual(terms.numel(), registers * later)
-        self.assertTrue(0.0 < float(terms.detach().mean()) < 1.0)
+        self.assertTrue(0.0 < float(terms.detach().mean()) <= 1.0)          # the share of registers still updating
         torch.testing.assert_close(priced["halt"] - plain["halt"], 0.5 * terms.mean(), rtol=1e-4, atol=1e-6)
         torch.testing.assert_close(priced["ans"], plain["ans"])                  # only L_halt carries the cost
         self.assertGreater(float(priced["loss"].detach()), float(plain["loss"].detach()))

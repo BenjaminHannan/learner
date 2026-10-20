@@ -27,7 +27,7 @@ main model, `premonition/model.py` (D). Everything is a draft until the coordina
   - `_loop_input`, `_loop_output`, `_ask_scores`, `_choose` (the model's own fetch, used by `answer()`, own-mode
     training and `train.answer_with_gold`)
   - `CardWriter._keys`, `CardWriter._values`
-  - `_Episode` fields: `hard` (True on the answer paths), `history`, `keep`, `ponder`, `ask_cache`, `ask_query`,
+  - `_Episode` fields: `history`, `keep`, `ponder`, `halted`, `ask_cache`, `ask_query`,
     `ask_age`
 - Keep fp32 where the code is already fp32 (scores and gates go through `.float()`), so bf16 autocast still works.
 - **No training** beyond tiny CPU smoke tests (a few minutes, tiny preset). No GPU.
@@ -110,7 +110,7 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
 - **Tables:** `writer.engram_tables = ModuleList(H_e x Embedding(engram_rows, d / H_e))`, with
   H_e = `engram_heads`. Also `writer.engram_key = Linear(d, d)` and `writer.engram_value = Linear(d, d)`.
 - **Key:** a line's **names**: for each entity id in `batch.line_ents`, its spelling `batch.names[visit].spelling(e)`
-  (fallback "<ent e>"). ENT ids are per-visit variables, so hashing the id would be the same for every person.
+  (an entity without a spelling counts as no name: no fallback key). ENT ids are per-visit variables, so hashing the id would be the same for every person.
   The spelling is the stable identity.
 - **Hash:** head h maps a spelling to `int.from_bytes(blake2b(f"{h}:{spelling}", digest_size=8)) % engram_rows`.
   It is deterministic and must never use Python's `hash()`. Cache the indices per spelling.
@@ -129,11 +129,12 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
 ## 5. `row_halt` and `random_depth`: per-register dynamic depth (Mixture-of-Recursions, Geiping recurrent depth)
 - **`row_halt`:** `heads.row_halt = Linear(d, 1)`, bias init `row_halt_bias`.
   - In `_loop_output`, for loops t >= 1, p = sigmoid(row_halt(norm(register_in))) per register row.
-  - keep_t = keep_{t-1} * (1 - p) when training. When `episode.hard` it is keep_{t-1} * [p <= 0.5], which is
-    sticky.
+  - keep_t = keep_{t-1} * [p <= 0.5] in the forward pass, which is sticky, the same in training and on the
+    answer paths. Training passes the gradient straight through the soft factor (1 - p) (review round 4: a soft
+    forward keep damped training updates that answering never damps).
   - A halted register stops updating: out = in + keep * (think_out - in) on register rows only. It stays a valid
     row, so the other rows still read it.
-  - When register 0 is halted (keep < 0.5), the question stops asking: `_choose` returns -1, and own-mode cards
+  - When register 0 is halted (p > 0.5 at some loop, sticky; `episode.halted`), the question stops asking: `_choose` returns -1, and own-mode cards
     are masked.
   - The ponder cost is `row_halt_cost * mean(keep)` over (question, loop, register). It is appended through
     `episode.ponder` and added to L_halt.
@@ -182,11 +183,12 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
     ASK. Clip for other attentions is out of scope (with `qk_norm_all` their logits are bounded anyway).
 - **`key_split`:** the last p = `pos_key_dim` dims of every card key and query become a position sub-key. No new
   parameters.
-  - The key's last p dims are RoPE-rotated with position = the card's line index (in `CardWriter._keys`).
+  - The key's last p dims are RoPE-rotated with position = the card's line index (in `CardWriter._keys`). The NULL
+    key's last p dims are zero (it has no line), so NULL's score does not depend on the question's line.
   - The query's last p dims are rotated with position = the question's line `q_line` (in `_ask_scores`).
   - Base `key_pos_base`. The first dk - p dims are the content sub-key.
   - After unit normalisation, the dot product's position part depends only on line distance (MLA's decoupled-RoPE
-    key, without the rest of MLA). The NULL key is not rotated.
+    key, without the rest of MLA). The NULL key's position sub-key is zero.
 - **Tests:**
   - With gains of 1, scores equal the base.
   - RMSNorm is applied (q and k rows have RMS 1 times the weight).

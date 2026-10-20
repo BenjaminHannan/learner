@@ -212,6 +212,30 @@ class QkClipTest(unittest.TestCase):
         with read_only(model):
             model.answer(self.batch)
 
+    def test_a_store_without_real_cards_fails_the_same_with_and_without_qk_clip(self) -> None:
+        """Review round 4, item 10: a store with zero card lines cannot be scored even by the base model
+        (`CardStore.ask` indexes the NULL column of an empty age-bias row, code unchanged since 73b8e0224), so the
+        QK-Clip `amax` on an empty match is unreachable. The guard stays; this pins that QK-Clip adds no new
+        failure on that input."""
+        from premonition.model import _Episode
+        errors = []
+        for flags in ({}, {"qk_clip": 5.0}):
+            model = tiny_model(seed=0, **flags)
+            model.train()
+            d, dk, n = model.config.d_model, model.config.key_dim, 3
+            store = CardStore(keys=torch.zeros(1, 0, dk), values=torch.zeros(1, 0, d),
+                              valid=torch.zeros(1, 0, dtype=torch.bool), tags=torch.zeros(1, 0, dtype=torch.long),
+                              ents=torch.zeros(1, 0, 4, dtype=torch.long),
+                              line_start=torch.zeros(1, 0, dtype=torch.long), line_len=torch.zeros(1, 0, dtype=torch.long),
+                              null_key=torch.nn.functional.normalize(torch.randn(dk), dim=-1), null_value=torch.zeros(d))
+            episode = _Episode(torch.zeros(n, model.config.rows, d), torch.ones(n, model.config.rows, dtype=torch.bool),
+                               torch.zeros(n, dtype=torch.long), torch.zeros(n, 1, dtype=torch.bool),
+                               torch.zeros(n, dtype=torch.long), torch.full((n,), 5))
+            with self.assertRaises(IndexError) as caught:
+                model._ask_scores(episode, torch.arange(n), 0, store, torch.randn(n, d))
+            errors.append(str(caught.exception))
+        self.assertEqual(errors[0], errors[1])
+
     def test_a_forward_without_asks_leaves_no_stale_peak(self) -> None:
         model = tiny_model(seed=0, qk_clip=0.5)
         with torch.no_grad():
@@ -264,11 +288,20 @@ class KeySplitTest(unittest.TestCase):
         off = tiny_model(seed=0)
         self.assertTrue(torch.equal(off.writer._keys(pooled, None), off.writer.key(pooled)))
 
-    def test_null_key_is_not_rotated(self) -> None:
+    def test_the_null_key_has_no_position_part_so_its_score_ignores_the_question_line(self) -> None:
+        """Review round 4, item 1: NULL has no line. Its position sub-key is zero, so the rotated query's position
+        part never reaches NULL's score."""
         batch = synthetic_batch(visits=2, lines=16, seed=2)
         store = self.model.build_store(self.model.read(batch), batch)
-        expected = torch.nn.functional.normalize(self.model.writer.null_key.float(), dim=-1)
+        null = self.model.writer.null_key.float()
+        expected = torch.nn.functional.normalize(torch.cat([null[:-self.p], torch.zeros(self.p)]), dim=-1)
         self.assertTrue(torch.equal(store.null_key, expected))
+        query = torch.randn(1, self.config.key_dim, generator=torch.Generator().manual_seed(3))
+        scores = [float(torch.nn.functional.normalize(self.model._positioned(query, torch.tensor([line])), dim=-1)[0]
+                        @ store.null_key) for line in (3, 17, 40)]
+        self.assertAlmostEqual(scores[0], scores[1], places=6)
+        self.assertAlmostEqual(scores[0], scores[2], places=6)
+        self.assertTrue(self.model.writer.null_key.requires_grad)              # the content part still learns
 
     def test_shifting_every_line_by_the_same_offset_keeps_the_position_part(self) -> None:
         writer, shift = self.model.writer, 7

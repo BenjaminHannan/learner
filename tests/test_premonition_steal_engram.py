@@ -139,15 +139,31 @@ class ValueTest(unittest.TestCase):
             out = self.values(batch, pooled)
         self.assertFalse(torch.equal(out[0, line], out[1, line]))
 
-    def test_a_missing_spelling_falls_back_to_the_entity_id(self) -> None:
-        batch = synthetic_batch(visits=1, lines=20, seed=4)
-        batch.names = [NameTable({})]
+    def test_an_entity_without_a_spelling_counts_as_no_name(self) -> None:
+        """Review round 4, item 4: no spelling (empty NameTable, or no NameTable for the visit) means no Engram
+        addition. ENT ids are per-visit variables, so they must never share a fallback row."""
+        batch = synthetic_batch(visits=2, lines=20, seed=4)
+        pooled = torch.randn(2, batch.line_start.shape[1], self.model.config.d_model,
+                             generator=torch.Generator().manual_seed(1))
         with torch.no_grad():
-            fallback = self.values(batch, self.pooled[:1])
-            batch.names = [NameTable({e: f"<ent {e}>" for e in range(16)})]
-            self.assertTrue(torch.equal(fallback, self.values(batch, self.pooled[:1])))
-            batch.names = [NameTable({e: f"Name{e}" for e in range(16)})]
-            self.assertFalse(torch.equal(fallback, self.values(batch, self.pooled[:1])))
+            plain = self.model.writer.value(pooled)
+            batch.names = [NameTable({}), NameTable({})]                         # no spellings at all
+            self.assertTrue(torch.equal(self.values(batch, pooled), plain))
+            batch.names = [NameTable({e: f"Name{e}" for e in range(16)})]        # visit 1 has no NameTable
+            out = self.values(batch, pooled)
+            self.assertTrue(torch.equal(out[1], plain[1]))
+            named = (batch.line_ents[0] >= 0).any(-1)
+            self.assertTrue(named.any())
+            self.assertFalse(torch.equal(out[0][named], plain[0][named]))
+            batch.names = [NameTable({}), NameTable({e: f"Name{e}" for e in range(16)})]
+            out = self.values(batch, pooled)
+            self.assertTrue(torch.equal(out[0], plain[0]))                       # visit 0's ids get no row
+            ent = int(batch.line_ents[0][batch.line_ents[0] >= 0][0])
+            batch.names = [NameTable({e: f"Name{e}" for e in range(16) if e != ent})] * 2
+            out = self.values(batch, pooled)                                     # only `ent` lacks a spelling
+            alone = (batch.line_ents[0] == ent).any(-1) & ((batch.line_ents[0] >= 0).sum(-1) == 1)
+            if alone.any():
+                self.assertTrue(torch.equal(out[0][alone], plain[0][alone]))
 
     def test_several_names_pool_by_mean(self) -> None:
         batch = synthetic_batch(visits=1, lines=20, seed=4)

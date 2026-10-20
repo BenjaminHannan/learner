@@ -71,7 +71,8 @@ class MiniConfig:
     engram: bool = False                # 4: a hashed lookup on a line's names, gated and added to its card value
     engram_heads: int = 4
     engram_rows: int = 1024             #    rows per head; the tables cost engram_rows x d parameters
-    row_halt: bool = False              # 5: per-register halting: a halted register stops updating (and asking)
+    row_halt: bool = False              # 5: per-register halting: a halted register stops updating (and asking);
+                                        #    hard in the forward pass, trained straight-through
     row_halt_cost: float = 0.01         #    ponder cost on the mean share of registers still updating
     row_halt_bias: float = -3.0         #    router bias at init: sigmoid(-3) = 0.05, keep updating
     random_depth: bool = False          # 5: training samples a max loop count per batch
