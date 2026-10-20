@@ -66,3 +66,4 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 00:13 | Brain (session_01R6PEw…) | Ben: "Opus review first" on G1 vs G3. Opus xhigh review running. | 0 |
 | 2026-10-20 00:12 | Swarm | GO on round-3 blocking items a–c, then the full-diff review, the dry run, the seal and the bid. | 0 |
 | 2026-10-20 00:11 | Brain | GO on a fix round for the 9 code-review findings (E0 identity check first). | 0 |
+| 2026-10-20 ~00:30 | Brain | BEN: keep G1 (pre-set rule), after the Opus xhigh review. G3 not adopted; its "proved wrong" condition was triggered. Verdict file to be corrected. G1 still needs the Main brain gate (DM1/DM3) and E0 before shipping. | 0 |
