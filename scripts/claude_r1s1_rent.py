@@ -148,7 +148,9 @@ echo "pack files ok: $(wc -l < "$J/checks/pack_files.txt")"
 TORCH_CHECK='import torch,sys;ok=torch.cuda.is_available();print("torch",torch.__version__,"cuda",torch.version.cuda,ok,torch.cuda.get_device_name(0) if ok else "-");sys.exit(0 if ok else 1)'
 $PY -c "$TORCH_CHECK" 2>&1 | tee "$J/checks/torch_image.txt"
 if [ "$TORCH_PIN" != none ]; then
-  PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "torch==$TORCH_PIN" > "$J/checks/pip.log" 2>&1 \
+  # the CUDA 12.8 build: PyPI's default 2.11 wheel is cu130, which a 12.8 driver cannot run (box 56942633, 10-20)
+  PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "torch==$TORCH_PIN" \
+    --index-url https://download.pytorch.org/whl/cu128 > "$J/checks/pip.log" 2>&1 \
     || { tail -5 "$J/checks/pip.log"; fail "pip torch"; }
   pip uninstall -y torchvision torchaudio >> "$J/checks/pip.log" 2>&1
 fi

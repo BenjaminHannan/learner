@@ -151,6 +151,9 @@ class ScoreTest(unittest.TestCase):
         runs = card()
         runs[5]["flops"] = 1.01e15
         self.assertIn("unpaired", self.verdict(runs))
+        runs = card()
+        runs[5]["flops"] = 1e15 * (1 + 1e-15)                                    # float rounding, as under torch 2.8
+        self.assertEqual(self.verdict(runs), "PASS")
 
     def test_runs_must_match_the_sealed_code_and_one_torch(self) -> None:
         out = r1s1.score(card(), sealed=True, ident={"x": 2})

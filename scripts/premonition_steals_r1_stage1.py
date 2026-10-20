@@ -392,9 +392,9 @@ def score(runs: list[dict], *, sealed: bool, ident: dict | None = None) -> dict:
     incomplete = [f"{r['arm']}-s{r['seed']}" for r in runs if r["status"] != "completed" or not r["budget_ok"]]
     if incomplete:
         problems.append(f"incomplete runs {incomplete}")
-    unpaired = [s for s in seeds if (by[("A0", s)]["steps"], by[("A0", s)]["flops"]) !=
-                (by[("A1", s)]["steps"], by[("A1", s)]["flops"])]
-    if unpaired:                                       # the arms of a seed must train the same steps and FLOPs
+    unpaired = [s for s in seeds if by[("A0", s)]["steps"] != by[("A1", s)]["steps"]
+                or not math.isclose(by[("A0", s)]["flops"], by[("A1", s)]["flops"], rel_tol=1e-9)]
+    if unpaired:            # the same steps, and FLOPs equal up to float rounding (torch 2.8 differs in the last digit)
         problems.append(f"unpaired steps or FLOPs at seeds {unpaired}")
     rows, ds, base, acc_hits, rec_hits, rec0, rec1, unreadable = [], [], [], 0, 0, [], [], False
     for seed in seeds:
