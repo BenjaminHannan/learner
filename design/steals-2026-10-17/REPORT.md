@@ -589,6 +589,25 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
     - the wall assumes exactly 900 s of billing before the job starts.
   - Stopped per the ruling. The coordinator decides whether to park R1 stage 1.
 
+- **Last round (9c46da7d6, ruling 10-20, 5th):** the swarm box's money pattern was adopted:
+  - BOX_START is set by `create`, and the box ledger sits above the job directory;
+  - a restarted container self-stops instead of rerunning;
+  - the self-stop is checked for acceptance;
+  - a stopped box is never called NOT-RUNNING.
+
+  **The final review is CLEAN** (0 blocking findings, 10 non-blocking).
+- **SEALED** at f86f9450b. The sha256 of `artifacts/claude-steals-20261017/r1-stage1/SEAL.sha256.txt` is
+  `c9f11ac2f0ec…`. It holds:
+  - card `279c72ea4ca4…`;
+  - runner `63609e5b5a49…`;
+  - package `f99cf982ebea…`.
+- **Read-only re-quote, 10-20 ~07:30Z.** Nothing booked. The cheapest on-demand RTX 5090s at reliability ≥ 0.98:
+  - $0.602/h in Belgium (reliability 0.997) and Ontario (0.990);
+  - then $0.642/h and $0.670/h.
+
+  That is about 30% above the bid's $0.40–0.46/h. At $0.61/h the box's wall ends it at about $2.66, and the hard
+  stop is 4.59 h. The pack builds against the seal. **Booking needs Ben's click.**
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
