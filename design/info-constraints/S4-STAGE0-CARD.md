@@ -108,3 +108,39 @@ d_s = treated `rank1` − control `rank1`. "Every" means every valid seed.
 ## 9. Raw outputs
 `artifacts/claude-infoconstraints-20261018/s4-stage0/{control,treated}-seed{0,1,2}.json` and `.log`, plus
 `summary.json` applying §5-§7. Runner: `scripts/info_s4_stage0.py`.
+
+---
+
+## 9a. Result (appended after the run; §1-§8 unchanged since 0b3269766)
+
+Run 2026-10-20, CPU, 1 thread per run; 800 stage-1 + 400 stage-2 steps; code = 7a2f5a32a (reviewed). Raw:
+`artifacts/claude-infoconstraints-20261018/s4-stage0/`; `summary.json` is the verbatim §5-§7. Test split, 1,024
+questions (all told).
+
+| seed | control rank1 / recall4 / gold / no card | treated rank1 / recall4 / gold / no card | d (rank1, points) | treated κ_e | π on the question's entity |
+|---|---|---|---|---|---|
+| 0 | 6.84% / 0.332 / 100% / 6.05% | 7.13% / 0.319 / 100% / 6.84% | +0.29 | 0.030 | 0.173 |
+| 1 | 7.03% / 0.318 / 100% / 6.74% | 6.35% / 0.317 / 95.5% / 6.35% | −0.68 | 0.006 | 0.173 |
+| 2 | 8.11% / 0.326 / 100% / 6.64% | 8.11% / 0.327 / 100% / 6.64% | 0.00 | −0.015 | 0.173 |
+
+- **Validity:** no seed is VOID. Every control reads a lone gold card at 100% (16 distinct answers), and the
+  stage-1 shared-weight digests are equal across arms on every seed. All runs complete and finite.
+- **Marks (§6):**
+  1. d ≥ +15 every seed, and mean − 2SE > 0: **no** (mean d −0.13 points; mean − 2SE −0.71).
+  2. recall@4 kept: yes.
+  3. Reading kept (treated gold ≥ control − 3): **no**. Seed 1 is at 95.5% against 100%.
+  4. No-card guard: yes.
+  5. Distinct and complete: yes.
+- **FAIL rule:** fired (mean d ≤ +3 points). **Proves-wrong (§7):** fired (|d| ≤ 3 points on all 3 seeds).
+- **Verdict: FAIL; S4 is proved wrong on this protocol.** Note (§7): **the mechanism was not engaged**; κ_e
+  ended at 0.03 / 0.006 / −0.015, far below 0.5.
+- **Reported, not marked (suggested readings, not results):**
+  1. π stayed uniform over the visit's ~6 mentioned entities (mass on the question's entity 0.173, about 1/6).
+     With κ_e = 0 at init, W_e gets no gradient. With π uniform, the entity term gives every entity-bearing card
+     the same value, so it cannot single out gold, and κ_e gets almost no signal. The init that kept the arms
+     paired also starved the mechanism of a learning signal. This is a design flaw a future card could fix,
+     for example with a non-zero κ_e or a π trained on the question's own entity. It does not reopen this card.
+  2. Retrieval itself barely trained in 400 teacher steps: the control's rank-1 is 7-8% and recall@4 is 0.32.
+     So this protocol tested a weak ranker.
+  3. Secondary readings move together in both arms: gold + 2 fact cards 382-424 of 1024, and own-retrieval
+     answers 14.0-14.8%.

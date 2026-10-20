@@ -286,6 +286,40 @@ fetch → S4**. **S1** is the biggest new constraint (N1-N4).
   - Kept: the design and efficiency items as before.
 - **No code changed after this review.** The S4 run uses 7a2f5a32a's code.
 
+#### S4 Stage 0 result (2026-10-20): FAIL; proves-wrong fired; mechanism not engaged
+
+Run 2026-10-20, CPU, 1 thread per run; 800 stage-1 + 400 stage-2 steps; code = 7a2f5a32a (reviewed). Raw:
+`artifacts/claude-infoconstraints-20261018/s4-stage0/`; `summary.json` is the verbatim §5-§7. Test split, 1,024
+questions (all told).
+
+| seed | control rank1 / recall4 / gold / no card | treated rank1 / recall4 / gold / no card | d (rank1, points) | treated κ_e | π on the question's entity |
+|---|---|---|---|---|---|
+| 0 | 6.84% / 0.332 / 100% / 6.05% | 7.13% / 0.319 / 100% / 6.84% | +0.29 | 0.030 | 0.173 |
+| 1 | 7.03% / 0.318 / 100% / 6.74% | 6.35% / 0.317 / 95.5% / 6.35% | −0.68 | 0.006 | 0.173 |
+| 2 | 8.11% / 0.326 / 100% / 6.64% | 8.11% / 0.327 / 100% / 6.64% | 0.00 | −0.015 | 0.173 |
+
+- **Validity:** no seed is VOID. Every control reads a lone gold card at 100% (16 distinct answers), and the
+  stage-1 shared-weight digests are equal across arms on every seed. All runs complete and finite.
+- **Marks (§6):**
+  1. d ≥ +15 every seed, and mean − 2SE > 0: **no** (mean d −0.13 points; mean − 2SE −0.71).
+  2. recall@4 kept: yes.
+  3. Reading kept (treated gold ≥ control − 3): **no**. Seed 1 is at 95.5% against 100%.
+  4. No-card guard: yes.
+  5. Distinct and complete: yes.
+- **FAIL rule:** fired (mean d ≤ +3 points). **Proves-wrong (§7):** fired (|d| ≤ 3 points on all 3 seeds).
+- **Verdict: FAIL; S4 is proved wrong on this protocol.** Note (§7): **the mechanism was not engaged**; κ_e
+  ended at 0.03 / 0.006 / −0.015, far below 0.5.
+- **Reported, not marked (suggested readings, not results):**
+  1. π stayed uniform over the visit's ~6 mentioned entities (mass on the question's entity 0.173, about 1/6).
+     With κ_e = 0 at init, W_e gets no gradient. With π uniform, the entity term gives every entity-bearing card
+     the same value, so it cannot single out gold, and κ_e gets almost no signal. The init that kept the arms
+     paired also starved the mechanism of a learning signal. This is a design flaw a future card could fix,
+     for example with a non-zero κ_e or a π trained on the question's own entity. It does not reopen this card.
+  2. Retrieval itself barely trained in 400 teacher steps: the control's rank-1 is 7-8% and recall@4 is 0.32.
+     So this protocol tested a weak ranker.
+  3. Secondary readings move together in both arms: gold + 2 fact cards 382-424 of 1024, and own-retrieval
+     answers 14.0-14.8%.
+
 ### S1. `ring_resident`: "fetched" means "in the tray"
 
 **Targets:** N1-N4 (new). Prerequisite reading for every answer-path number, including the coordinator's
@@ -819,7 +853,7 @@ which `π` reads in learned mode, so do not run S4 on top of `delta_bind` until 
 |---|---|---|---|---|---|
 | 1 | **S2 decoder_raw_cards** — **Stage 0 PASSED 10-19** (11-13% → 100%, 3/3 seeds) | Large on copying (bypass precedent: 11% → 100%) | 0 params, +16 decoder rows | Low-medium: the decoder could ignore Think (guarded by fetch-use and card-removal) | The only shown fix of the copy failure, made additive; S1-P0 rules eviction out |
 | 2 | **S3 card_address** — **Stage 0 FAILED 10-20** (proves-wrong fired; address did not learn ENT/REL) | Large on choosing if learned (oracle +0.66) | +16.6k params (0.8%) | Medium: the address may learn the value (guarded by pool mass) | Needs a decoder that reads cards (S2) first |
-| 3 | **S4 ent_key** | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
+| 3 | **S4 ent_key** — **Stage 0 FAILED 10-20** (κ_e never engaged; π stayed uniform) | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
 | 4 | **S1 ring_resident** | Unknown; not active in the toy model (0 overflow) | 0 params, about 20 lines | Low | Latent; build only if S1-P1 shows eviction on a trained village model |
 
 ~~The single one I would run first: S1-P0~~ (done; negative). **Next: S2 Stage 0 on the m02 protocol
