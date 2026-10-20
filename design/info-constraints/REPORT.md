@@ -271,6 +271,15 @@ One clarification first: my S-numbers are ordered by the order I would run them,
 The audit's big three map as follows: **squeeze → S3**, **writer's blind spot → S2**, **direction-only
 fetch → S4**. **S1** is the biggest new constraint (N1-N4).
 
+#### Corrections (coordinator, 10-20, after the Opus design review; checked against the filed data)
+
+1. **Model size.** Every Stage-0 run in this report (S1-P0, the sweep, S2, S3, S4) used the **tiny preset**:
+   d = 32, about 80k parameters (79,844 for D + S2 on the far-fact toy). None used the d = 128 / 2.1M model.
+   The "+16,641 parameters (0.8%)" style costs elsewhere here are the d = 128 figures, given for the real model.
+2. **S3 address pool.** My S3 result said the address "kept mostly the value token". That holds for **cell A
+   only** (VAL mass 0.67-0.75). In cell B it moved off the value and onto **filler**: "other" mass 0.34 / 0.50 /
+   0.41, VAL 0.43 / 0.16 / 0.30, ENT + REL 0.23-0.34. It did not move onto the person or relation tokens.
+
 #### S4 build and review (2026-10-20; card `S4-STAGE0-CARD.md`, sealed 0b3269766)
 
 - **Built:** 7a2f5a32a. Pre-run tests 7/7 in `tests/test_premonition_ent_key.py`. Smoke check: the stage-1
@@ -764,8 +773,8 @@ Run 2026-10-20 in this container, CPU, 1 thread per run, 800 steps per run, `--p
 - **Proves-wrong rule (§7):** fired (|d| ≤ 3 points on 2 cell B seeds: +2.34, +1.27).
 - **Verdict: FAIL; S3 is proved wrong on this protocol.** The "address exists but the decoder doesn't use it" note
   did **not** apply: the address pool's ENT+REL mass is 0.23-0.34 in cell B and 0.10-0.14 in cell A, below 0.5.
-  The learned address never became a person/relation address. It kept mostly the value token, as the writer pool
-  it was copied from does (cell A VAL mass 0.67-0.75).
+  The learned address never became a person/relation address. In cell A it kept mostly the value token, like the
+  writer pool it was copied from (VAL mass 0.67-0.75); in cell B it moved onto filler (0.34-0.50; see Corrections).
 - **Reported, not marked (suggested readings, not results):**
   - Cell B is weak training. In 800 steps with distractors, even the control reads a lone gold card at only
     6-69%. So cell B tested choosing in models that had not yet learned to read.

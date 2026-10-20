@@ -244,3 +244,7 @@ Run 2026-10-20 in this container, CPU, 1 thread per run, 800 steps per run, `--p
   - The secondary mixed-pool reading is noisy: cell A treated seed 2 reads 672/1024 on the mixed pool against its
     control's 408, while the other seeds do not move. No mark reads it.
   - These suggest what a next card could test. They do not reopen this one.
+
+**Correction (coordinator, 10-20):** §9a's reading "It kept mostly the value token" holds for cell A only. In cell B
+the address pool moved onto filler ("other" 0.34-0.50), not onto ENT/REL. All runs used the tiny preset
+(d = 32).
