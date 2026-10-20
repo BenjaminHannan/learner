@@ -21,3 +21,16 @@ Ruling Q81 points the Q75 review at 99cba1a47 and names three checks. This note 
 - **Flag on, join stage (`learn_probe.py`):** the lr is constant (1e-4), the update count is fixed (4,000), and nothing reads the clock to pick a step. The timing change moves only `train_secs`, the s/update print and the new `update_rms_secs` field.
 - **Flag on, parent stage (`custom_io/train.py`):** the clock affects training only through `elapsed` when `--minutes` is set. That covers the lr progress and the time-cap stop. The frozen parent recipe (amendment §A: `--steps 24000 … --log-every 500`) sets no `--minutes`, so the lr follows step count and steps are unchanged. With `--minutes` set, excluding C8 time makes a flag-on run's schedule closer to flag-off, not further.
 - Item 1 should still time with the flag in its recorded state and report `update_rms_s` beside `train_s`.
+
+## Round 2 (10-20): `/code-review` on 99cba1a47, fixes in a2a83f9f0 (round cap 2 reached; parked for the coordinator)
+
+- **Fixed:**
+  - pilot_bars now rounds only the statistic; a written bar is used exactly as written, so no bar value moves at any scale (test `test_tiny_written_bar_is_not_moved`).
+  - A verdict-relevant missing variable now exits **3**; 2 is argparse's usage error.
+  - In custom_io, the time-cap partial interval moved to `RESULT['update_rms_partial']`, so every log record has the same shape. The logged `elapsed` now matches the one the schedule uses, and the help text is updated.
+  - In learn_probe, one `dt` per snapshot, and `check_diary_data` also runs inside `train()`.
+  - The test fixture now restores the modules it removes.
+- **Not changed, with reasons:**
+  - `guard_diary_data` is `None` for a cached diary. This is intended, because the cache, not a folder, was the source. The field is new in the draft; the locked trainer never recorded it.
+  - **On GPU, the flag's CUDA syncs at log steps** cost some pipeline overlap, and that cost still lands in `train_s`. It is documented in the help text. **Item 1 should take its seconds per update from flag-off runs**, or report both.
+- **Tests:** 50 pass, in both file orders. **Head for the review: a2a83f9f0.**
