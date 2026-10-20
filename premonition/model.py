@@ -332,6 +332,10 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
+        if config.decoder_raw_cards and type(self) is not PremonitionMini:
+            # Subclasses (answer_path, ovn_qread, direct_reader, address_reader) decode through their own
+            # `_greedy` / `_decode_logits` and would skip `_memory`: the flag would be half-applied.
+            raise ValueError(f"decoder_raw_cards is defined for PremonitionMini only, not {type(self).__name__}")
         self.reset_parameters()
 
     # ------------------------------------------------------------------ setup
@@ -759,8 +763,9 @@ class PremonitionMini(nn.Module):
         out = torch.full((count, config.max_answer), config.pad_id, dtype=torch.long, device=device)
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
+        memory, valid = self._memory(episode, episode.x, episode.valid)       # fixed while decoding
         for position in range(config.max_answer):
-            hidden = self._decode_logits(*self._memory(episode, episode.x, episode.valid), sequence)[:, -1]
+            hidden = self._decode_logits(memory, valid, sequence)[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)

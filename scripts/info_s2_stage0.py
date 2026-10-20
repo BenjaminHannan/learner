@@ -35,6 +35,8 @@ CHANCE = 1 / 16
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> list[float]:
+    if n == 0:
+        return [0.0, 1.0]
     p = k / n
     centre = (p + z * z / (2 * n)) / (1 + z * z / n)
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
@@ -49,13 +51,14 @@ def greedy(model: PremonitionMini, batch, *, card: bool) -> tuple[list[bool], li
     mentions = model._mentions(batch)
     episode = model._start(batch, hidden, store, mentions)
     count = batch.q_visit.shape[0]
-    everyone = torch.arange(count)
+    device = hidden.device
+    everyone = torch.arange(count, device=device)
     if card:
         gold, _, missing = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
         if int(missing.sum()):
             raise RuntimeError("gold card missing")
         width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, model.config.card_rows)
-        preload = torch.where(gold, torch.arange(gold.shape[1]),
+        preload = torch.where(gold, torch.arange(gold.shape[1], device=device),
                               torch.full_like(gold, -1, dtype=torch.long)).topk(width, 1).values
         model._insert(episode, store, everyone, preload)
     for step in range(LOOPS):

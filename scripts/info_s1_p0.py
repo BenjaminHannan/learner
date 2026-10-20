@@ -49,22 +49,24 @@ def gold_no_ask(model: PremonitionMini, batch, loops: int, preload_gold: bool = 
     hidden = model.read(batch)
     store = model.build_store(hidden, batch)
     count = batch.q_visit.shape[0]
-    everyone = torch.arange(count)
+    device = hidden.device
+    everyone = torch.arange(count, device=device)
     mentions = model._mentions(batch)
     episode = model._start(batch, hidden, store, mentions)
     gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
     width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, config.card_rows)
-    preload = torch.where(gold, torch.arange(gold.shape[1]),
+    preload = torch.where(gold, torch.arange(gold.shape[1], device=device),
                           torch.full_like(gold, -1, dtype=torch.long)).topk(width, 1).values
     if preload_gold:
         model._insert(episode, store, everyone, preload)
-    halt_prob = torch.zeros(count)
+    halt_prob = torch.zeros(count, device=device)
     for step in range(loops):
         _, halt, _, _ = model._step(episode, everyone, step, store)
         halt_prob = torch.sigmoid(halt)
     tokens, lengths = model._greedy(batch, episode, mentions, None)
-    return Answers(tokens, lengths, torch.full((count,), loops, dtype=torch.long),
-                   torch.full((count, config.top_k), -1, dtype=torch.long), episode.fetched, halt_prob)
+    return Answers(tokens, lengths, torch.full((count,), loops, dtype=torch.long, device=device),
+                   torch.full((count, config.top_k), -1, dtype=torch.long, device=device), episode.fetched,
+                   halt_prob)
 
 
 def evaluate(model: PremonitionMini, batches: list, name: str, run, offset: int) -> dict[str, Any]:

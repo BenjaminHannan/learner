@@ -178,6 +178,13 @@ class FlagOffIsBitIdenticalTest(unittest.TestCase):
 
 
 class FlagOnTest(unittest.TestCase):
+    def test_refused_without_a_store_or_on_a_subclass(self) -> None:
+        from premonition.answer_path import CardBypassMini
+        with self.assertRaises(ValueError):
+            tiny("D-noask", decoder_raw_cards=True)
+        with self.assertRaises(ValueError):
+            CardBypassMini(tiny("D", decoder_raw_cards=True))
+
     def test_paired_start_same_parameters_and_stream(self) -> None:
         off, rng_off = build(PremonitionMini, tiny("D"), 0)
         on, rng_on = build(PremonitionMini, tiny("D", decoder_raw_cards=True), 0)
@@ -188,7 +195,7 @@ class FlagOnTest(unittest.TestCase):
             self.assertTrue(torch.equal(a, b), n)
 
     def test_every_mode_trains_and_answers(self) -> None:
-        for variant in VARIANTS:
+        for variant in ("D", "D-noptr"):                               # D-noask is refused (no store)
             with self.subTest(variant=variant):
                 model, _ = build(PremonitionMini, tiny(variant, decoder_raw_cards=True), 0)
                 batch = synthetic_batch(seed=3)
@@ -238,9 +245,13 @@ class FlagOnTest(unittest.TestCase):
             episode = model._start(batch, hidden, store, model._mentions(batch))
             everyone = torch.arange(batch.q_visit.shape[0])
             base = model._card_base
-            for _ in range(3):                                         # three single inserts into two rows
-                model._insert(episode, store, everyone, torch.full((everyone.numel(), 1), store.null))
+            seen = []
+            for line in range(3):                                      # three distinct cards into two rows
+                model._insert(episode, store, everyone, torch.full((everyone.numel(), 1), line))
                 self.assertTrue(torch.equal(episode.raw, episode.x[:, base:base + 2]))
+                seen.append(episode.raw.clone())
+            self.assertFalse(torch.equal(seen[2][:, 0], seen[0][:, 0]))  # the third card really overwrote row 0
+            self.assertTrue(torch.equal(seen[2][:, 1], seen[1][:, 1]))   # and left row 1 alone
 
 
 if __name__ == "__main__":

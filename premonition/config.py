@@ -69,6 +69,8 @@ class MiniConfig:
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
+        if self.decoder_raw_cards and not self.store:
+            raise ValueError("decoder_raw_cards needs the card store (it is a no-op for D-noask)")
         if self.check_band and self.d_model == 128:
             count = self.num_parameters()
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
