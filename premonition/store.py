@@ -47,6 +47,7 @@ class CardStore:
     null_key: torch.Tensor      # [dk] unit length
     null_value: torch.Tensor    # [d]
     floor: Optional[torch.Tensor] = None   # [Q] long: after a wipe, cards on lines < floor are gone
+    addresses: Optional[torch.Tensor] = None   # [B, L, d] S3 `card_address` only: each card's address
 
     # ---------------------------------------------------------------- writing
     @classmethod
@@ -168,6 +169,8 @@ class CardStore:
         digest = hashlib.sha256()
         for item in fields(self):
             value = getattr(self, item.name)
+            if item.name == "addresses" and value is None:
+                continue                                  # keeps the digest of every store without S3
             digest.update(item.name.encode())
             digest.update(tensor_digest(value.detach()).encode() if value is not None else b"none")
         return digest.hexdigest()

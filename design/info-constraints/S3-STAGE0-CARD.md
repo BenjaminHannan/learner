@@ -119,3 +119,29 @@ d_s = treated − control on the named reading. "Every" means every valid seed.
 `artifacts/claude-infoconstraints-20261018/s3-stage0/cell{A,B}-{control,treated}-seed{0,1,2}.json` and `.log`,
 plus `summary.json` applying §5-§7 verbatim. Runner: `scripts/info_s3_stage0.py`, written with the S3 code
 after the S2 review verdict.
+
+---
+
+## Amendment 1 (2026-10-20, before any S3 run; §1-§7 marks unchanged)
+
+Recorded under the card's own rule ("any deviation is recorded ... before the first run").
+1. **Arithmetic correction in §2.** At the tiny d = 32 the S3 modules are 33 + 1,056 = **1,089** parameters, not
+   2,209. At d = 128 it is 16,641, as stated. Checked against the modules: `config.parameter_breakdown()` equals
+   `model.parameter_breakdown()`.
+2. **Implementation choices inside §2 (not deviations):**
+   - The address block is 16 episode rows after S2's 16 raw rows (rows 92-107 at the default sizes). Think skips
+     it, as it skips the raw rows. It is never valid memory itself. `_decode_logits` drops it from memory and uses
+     it only as the key source of the card and raw rows.
+   - The S3 modules are built after `reset_parameters`, inside `torch.random.fork_rng`, seeded from
+     `torch.initial_seed() + 0x53`. So the init is seed-dependent and consumes nothing from the global stream.
+   - `addr_pool` is a copy of `writer.pool`; `addr` (`address.proj`) is N(0, 0.02) with zero bias.
+   - NULL's address is zero, plus age and row type, like every card's.
+3. **Pre-run tests (§2): pass.** `tests/test_premonition_card_address.py` covers:
+   - flag-off identity to the reviewed D + S2 at 90077ef2b;
+   - paired start at tiny and full size;
+   - ring alignment through overwrite, with Think skipping the block;
+   - K from the address and V from the row (hooked inputs);
+   - finite training in every mode, with answers and wipes;
+   - refusals;
+   - the FLOP increment.
+   Flag-off identity to 73b8e0224 is `tests/test_premonition_decoder_raw_cards.py`.

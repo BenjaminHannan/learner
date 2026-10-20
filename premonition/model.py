@@ -15,7 +15,7 @@ the model trains under bf16 autocast. The controls are config flags: `store=Fals
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 from typing import Any, Iterable, Optional
 
@@ -197,6 +197,32 @@ class CardWriter(nn.Module):
                                self.null_key, self.null_value)
 
 
+class CardAddress(nn.Module):
+    """S3: a = W_a (softmax-pool of a line's reader states with its own score), the selection address of a card."""
+
+    def __init__(self, config: MiniConfig) -> None:
+        super().__init__()
+        d = config.d_model
+        self.pool = nn.Linear(d, 1)
+        self.proj = nn.Linear(d, d)
+
+    def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[visits, lines, d]; the same masked per-line softmax pool as `CardWriter`."""
+        visits, lines = batch.line_start.shape
+        real = batch.line_of >= 0
+        slot = (batch.line_of.clamp_min(0)
+                + lines * torch.arange(visits, device=hidden.device).unsqueeze(1))[real]
+        score = self.pool(hidden).squeeze(-1).float()[real]
+        peak = torch.full((visits * lines,), -math.inf, device=hidden.device)
+        peak = peak.scatter_reduce(0, slot, score.detach(), "amax").clamp_min(-1e30)
+        weight = torch.exp(score - peak[slot])
+        total = torch.zeros(visits * lines, device=hidden.device).index_add(0, slot, weight)
+        weight = weight / total[slot]
+        pooled = torch.zeros(visits * lines, hidden.shape[-1], device=hidden.device).index_add(
+            0, slot, weight.unsqueeze(-1) * hidden[real].float()).view(visits, lines, -1)
+        return self.proj(pooled)
+
+
 class ThinkLayer(nn.Module):
     """Pre-norm bidirectional self-attention over the think rows (padding rows masked) + MLP."""
 
@@ -275,7 +301,9 @@ class Decoder(nn.Module):
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
 
-    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
+                keys: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """`keys` (S3): rows the cross-attention keys come from, in place of `memory` (values stay `memory`)."""
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
@@ -284,7 +312,11 @@ class Decoder(nn.Module):
         attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         x = x + self.proj(attended.transpose(1, 2).reshape(n, length, width))
         q = self.cross_q(self.norm2(x)).view(n, length, heads, -1).transpose(1, 2)
-        k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+        if keys is None:
+            k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+        else:
+            _, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
+            k, _ = self.cross_kv(_norm(keys)).view(n, keys.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
@@ -340,6 +372,16 @@ class PremonitionMini(nn.Module):
             if own:
                 raise ValueError(f"decoder_raw_cards: {type(self).__name__} overrides {', '.join(own)}")
         self.reset_parameters()
+        if config.card_address:
+            # Built after `reset_parameters` and inside fork_rng, so every shared weight and the global stream
+            # equal D + S2's at the same seed (S3 card §1). Pool starts as the writer's pool; proj N(0, 0.02).
+            with torch.random.fork_rng(devices=[]):
+                torch.manual_seed(torch.initial_seed() + 0x53)     # seed-dependent, consumes nothing
+                self.address = CardAddress(config)
+                with torch.no_grad():
+                    self.address.pool.load_state_dict(self.writer.pool.state_dict())
+                    nn.init.normal_(self.address.proj.weight, std=0.02)
+                    nn.init.zeros_(self.address.proj.bias)
 
     # ------------------------------------------------------------------ setup
     def reset_parameters(self) -> None:
@@ -381,6 +423,8 @@ class PremonitionMini(nn.Module):
         """Trained parameters per module, named as in `MiniConfig.parameter_breakdown`."""
         parts = {"embedding": self.embed, "reader": self.reader, "card_writer": self.writer,
                  "think": self.think, "heads": self.heads, "decoder": self.decoder}
+        if self.config.card_address:
+            parts["card_address"] = self.address
         return {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
                 for name, module in parts.items()}
 
@@ -398,6 +442,8 @@ class PremonitionMini(nn.Module):
         return F.cross_entropy(logits.float(), batch.tokens[:, 1:][keep])
 
     def build_store(self, hidden: torch.Tensor, batch: VisitBatch) -> Optional[CardStore]:
+        if self.config.card_address:
+            return replace(self.writer(hidden, batch), addresses=self.address(hidden, batch))
         return self.writer(hidden, batch) if self.writer is not None else None
 
     def _mentions(self, batch: VisitBatch, low: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -442,6 +488,11 @@ class PremonitionMini(nn.Module):
             # the decoder reads them with every other row of the episode.
             parts.append(torch.zeros(count, config.cards, d, device=device))
             valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
+        if config.card_address:
+            # S3: each ring slot's address row, after the raw rows. Never valid memory itself: the decoder takes
+            # the keys of the card and raw rows from it (`_decode_logits`); Think skips it like the raw rows.
+            parts.append(torch.zeros(count, config.cards, d, device=device))
+            valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
         return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
@@ -480,6 +531,15 @@ class PremonitionMini(nn.Module):
             raw = position[real] + (config.rows - self._card_base)    # the same ring slot among the raw rows
             episode.x = episode.x.index_put((who[real], raw), rows[real])
             episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
+        if config.card_address:
+            real_card = (cards >= 0) & (cards < store.lines)
+            line = cards.clamp(0, store.lines - 1)
+            visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
+            address = torch.where(real_card.unsqueeze(-1), store.addresses[visit, line].float(),
+                                  torch.zeros_like(store.addresses[visit, line].float()))   # NULL: zero address
+            address = address + self.think.age(bucket).float() + self.think.row_type.weight[ROW_CARD].float()
+            slot = position[real] + (config.rows + config.cards - self._card_base)
+            episode.x = episode.x.index_put((who[real], slot), address[real])
         episode.count = episode.count.index_add(0, index, real.long().sum(1))
         episode.fetched = episode.fetched.index_put(
             (who[real], cards[real]), torch.ones_like(cards[real], dtype=torch.bool))
@@ -519,7 +579,19 @@ class PremonitionMini(nn.Module):
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
+        if self.config.card_address:
+            return self._decode_addressed(rows, valid, inputs)
         return self.decoder(self.embed(inputs), rows, valid)
+
+    def _decode_addressed(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor) -> torch.Tensor:
+        """S3: memory = think rows + raw rows; the keys of the 16 card rows and the 16 raw rows come from their
+        ring slot's address row, every other key and every value from the row itself."""
+        think, cards, base = self.config.rows, self.config.cards, self._card_base
+        if rows.shape[1] != think + 2 * cards:
+            raise ValueError(f"card_address expects {think + 2 * cards} episode rows, got {rows.shape[1]}")
+        memory, address = rows[:, :think + cards], rows[:, think + cards:]
+        keys = torch.cat([memory[:, :base], address, memory[:, base + cards:think], address], dim=1)
+        return self.decoder(self.embed(inputs), memory, valid[:, :think + cards], keys=keys)
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,

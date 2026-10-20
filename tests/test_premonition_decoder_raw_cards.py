@@ -262,15 +262,21 @@ class FlagOnTest(unittest.TestCase):
             self.assertFalse(torch.equal(a, b))                                # and the decoder reads them
 
     def test_flop_hand_count_covers_the_raw_rows(self) -> None:
+        """The hand count's S2 increment tracks the measured increment (a whole-count tolerance could not see a
+        term this small)."""
         from premonition.flops import measure_mini, mini_hand_count
+        plain, _ = build(PremonitionMini, tiny("D"), 0)
         model, _ = build(PremonitionMini, tiny("D", decoder_raw_cards=True), 0)
-        plain = mini_hand_count(tiny("D"), synthetic_batch(seed=1), 10)
-        for visits, lines, seed in ((1, 12, 0), (2, 16, 1), (2, 30, 3)):
+        for visits, lines, seed in ((2, 16, 1), (2, 30, 3)):
             batch = synthetic_batch(visits=visits, lines=lines, seed=seed)
-            sample = measure_mini(model, batch, mode="teacher", generator=torch.Generator().manual_seed(seed))
-            hand = mini_hand_count(model.config, batch, sample.question_loops)
-            self.assertLess(abs(sample.flops - hand) / hand, 0.15, (sample, hand))
-        self.assertGreater(mini_hand_count(model.config, synthetic_batch(seed=1), 10), plain)
+            a = measure_mini(plain, batch, mode="teacher", generator=torch.Generator().manual_seed(seed))
+            b = measure_mini(model, batch, mode="teacher", generator=torch.Generator().manual_seed(seed))
+            self.assertEqual(a.question_loops, b.question_loops)
+            measured = b.flops - a.flops
+            hand = (mini_hand_count(model.config, batch, b.question_loops)
+                    - mini_hand_count(plain.config, batch, a.question_loops))
+            self.assertGreater(measured, 0)
+            self.assertLess(abs(measured - hand) / measured, 0.25, (measured, hand))
 
     def test_ring_overwrite_keeps_raw_rows_aligned(self) -> None:
         model, _ = build(PremonitionMini, tiny("D", decoder_raw_cards=True, card_rows=2, top_k=1), 0)

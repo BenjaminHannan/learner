@@ -48,6 +48,9 @@ class MiniConfig:
     decoder_raw_cards: bool = False     # S2 (design/info-constraints): every card row as inserted also goes into
                                         # `cards` rows after the think rows, which Think skips, decoder reads;
                                         # 0 parameters. DRAFT
+    card_address: bool = False          # S3 (design/info-constraints/S3-STAGE0-CARD.md): a second per-line pool
+                                        # builds an address per card; the decoder's cross-attention keys for the
+                                        # card and raw rows come from it, values from the rows. Needs S2. DRAFT
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
     w_ask: float = 0.5
@@ -72,6 +75,8 @@ class MiniConfig:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
         if self.decoder_raw_cards and not self.store:
             raise ValueError("decoder_raw_cards needs the card store (it is a no-op for D-noask)")
+        if self.card_address and not self.decoder_raw_cards:
+            raise ValueError("card_address is built on decoder_raw_cards (S3 card: base D + S2)")
         if self.check_band and self.d_model == 128:
             count = self.num_parameters()
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
@@ -148,6 +153,10 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
         heads += _linear(d, dk) + _linear(d, 1) + 1                  # query, ASK, kappa
     decoder = 4 * norm + _linear(d, 3 * d) + _linear(d, d) + _linear(d, d) + _linear(d, 2 * d) \
         + _linear(d, d) + _linear(d, config.decoder_mlp * d) + _linear(config.decoder_mlp * d, d)
+    if config.card_address:                                          # S3: address pool + projection
+        return {"embedding": config.total_vocab * d, "reader": reader, "card_writer": writer,
+                "think": config.think_layers * layer + embeddings + binder, "heads": heads, "decoder": decoder,
+                "card_address": _linear(d, 1) + _linear(d, d)}
     return {
         "embedding": config.total_vocab * d,
         "reader": reader,
