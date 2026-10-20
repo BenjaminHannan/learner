@@ -7,9 +7,11 @@ on the same held-out set `train_toy` validates on (`toy_set(spec, 4, visits, see
 
 Conditions (greedy decode, exact match, as `train.validate`):
   own        `model.answer` as shipped (up to 8 loops, ASK when the logit > 0, HALT at p > 0.5)
-  own_L4     the same with max_loops = 4 (1 + 3 x 4 = 13 <= 16 card rows: nothing can be evicted)
+  own_L4     the same with max_loops = 4 (3 inserts x 4 = 12 <= 16 card rows: nothing can be evicted)
   gold       `train.answer_with_gold` as shipped: the recorded condition (gold preloaded, then the model's own ASKs)
-  gold_L4    the same with max_loops = 4 (no eviction possible)
+  gold_L4    the same with max_loops = 4: 1 + 3 x 4 = 13 <= 16 rows, so nothing can be evicted, because every
+             far-fact toy question has exactly one gold card (premonition/toy.py: "The gold card of a
+             question is its fact line"); the logged fifo counters check it
   gold_noask_L{1,2,4,8}  gold preloaded, then NO further fetch, for 1/2/4/8 think loops (no eviction; the L8 row
              also separates eviction from 8 loops of Think on the card rows)
   nocards_L1 no card at all, one think loop: the card-removal control (added after the first run, see REPORT)

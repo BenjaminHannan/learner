@@ -410,10 +410,12 @@ evicted card can re-enter from the cache. Test that combination before merging b
 **Targets:** audit item 2 (the decoder sees only post-Think rows) and N14 (Think wash). It does not try to
 make unfetched cards reachable. That is `decoder_reader_kv`'s job, and I do not duplicate it.
 
-**Mechanism.** Keep a decoder-only copy of each card row exactly as inserted (value + age + row type), in 16
-rows aligned with the think ring (same position, overwritten together). Decoder memory becomes
-76 think rows + 16 raw rows = 92, with the raw rows' valid mask equal to the card rows' mask. Think is
-unchanged: it still sees and updates its own card rows.
+**Mechanism (as built, review round 3).** Each card row is also kept exactly as inserted (value + age +
+row type), in 16 extra episode rows after the 76 think rows (`episode.x[:, 76:92]`).
+- They are aligned with the think ring: same slot, overwritten together, own mask bit set by `_insert`.
+- `_step` runs Think on rows 0-75 only, so the raw rows are never read or changed by Think.
+- The decoder reads all 92 rows through the unchanged `_decode_logits`.
+- Think is unchanged: it still sees and updates its own card rows.
 
 This differs from D-card-bypass (`premonition/answer_path.py`), which *replaced* the post-Think card rows
 and so removed Think's card work from the decoder. Here they are **added**.
@@ -421,8 +423,10 @@ and so removed Think's card work from the decoder. Here they are **added**.
 **Flag:** `decoder_raw_cards: bool = False`. 0 parameters (raw rows reuse `row_type[ROW_CARD]`). Cost: +16
 memory rows in one cross-attention, about +0.3% training FLOPs (estimate, untested).
 
-**Bit-identical when off:** the episode gets an optional `raw` tensor that is `None` when off. `_decode_logits`
-concatenates only when it is present.
+**Bit-identical when off:** with the flag off, `_start` appends no rows and the `_insert`/`_step` branches are
+skipped, so the episode is the base layout and `forward`/`_greedy`/`_decode_logits` are the base text. This is
+proved by `tests/test_premonition_decoder_raw_cards.py` against 73b8e0224. Subclasses that own the episode
+layout or decode path are refused with the flag on.
 
 **Evidence it can work (shown, far-fact toy, m02 protocol; corrected 10-19 from "ladder toy"):** bypass and gated copy 1024/1024 vs 112/1024 on 2 seeds (m02).
 
@@ -434,7 +438,7 @@ concatenates only when it is present.
   path the answer actually uses. Run it on DEV once a village pair exists.
 
 **Paired A/B (Stage 0, CPU, $0). Revised after S1-P0: the far-fact toy at 425 steps collapses to a constant answer, so it cannot read S2.**
-- Ladder toy, the m02 protocol (`reviews/opus-milestone-02-m02-20260918-232457.md`: 256 visits x 4
+- Far-fact toy (corrected 10-19 from "ladder toy"), the m02 protocol (`reviews/opus-milestone-02-m02-20260918-232457.md`: 256 visits x 4
   questions, fresh bindings, writer-produced gold cards, untouched test run once per checkpoint), 3 seeds.
   Control = plain D (S1 did not pass). Per E4, this is also the plain-D pair.
 - Validity guard first: the control must give > 1 distinct answer and must reproduce D's ≈ 11%
@@ -506,7 +510,17 @@ re-added at every decode call site. They now live **inside the episode**: 16 row
   material at this size), and the `variant` label (see round 2).
 - The final summarizer re-applied to the filed Stage 0 files gives the same PASS (`summary.json` unchanged).
 
-Earlier rounds (1-2), superseded where they conflict with rounds 3-4:
+**Round 5.**
+- **Fixed:** the runner never reports PASS while the card's FAIL rule or the proves-wrong rule fires (the card
+  ranks neither, so either blocks a PASS; the filed verdict is unchanged).
+- **Fixed:** the subclass guard also covers `forward`, `answer`, `_card_base` and `_register_base`.
+- **Fixed:** the S2 mechanism text here now matches the built code.
+- **Fixed:** the S1-P0 docstring states the one-gold-card premise behind `gold_L4`.
+- **Kept:** pinned base commit; flag branch in `_step` rather than a general "Think on [:rows]" rule (that would
+  change the flag-off code path for every line); copies; duplicated preload / Wilson helpers in additive
+  scripts.
+
+Earlier rounds (1-2), superseded where they conflict with rounds 3-5:
 - **Fixed** in e35f43df3 and the next commit:
   - the flag is refused on any subclass that overrides `_greedy` or `_decode_logits`, and without a store;
   - `_memory` tolerates bare `x`/`valid` episodes (a flag-off regression for

@@ -334,7 +334,8 @@ class PremonitionMini(nn.Module):
         if config.decoder_raw_cards:
             # The raw rows live in the base episode layout (`_start`, `_insert`, `_step`); a subclass that
             # replaces any of these or its own decode path would leave them empty, stale or colliding.
-            own = [name for name in ("_start", "_insert", "_step", "_greedy", "_decode_logits")
+            own = [name for name in ("_start", "_insert", "_step", "_greedy", "_decode_logits", "forward",
+                                     "answer", "_card_base", "_register_base")
                    if getattr(type(self), name) is not getattr(PremonitionMini, name)]
             if own:
                 raise ValueError(f"decoder_raw_cards: {type(self).__name__} overrides {', '.join(own)}")
