@@ -482,6 +482,31 @@ memory. **Not yet bought:** choosing among cards, own retrieval, village. Next, 
 reading (gold + 2 fact cards), then a Stage-1 bid priced by measured seconds per update (E5). With S2 passed,
 the E4 cumulative base for S3 is D + S2.
 
+#### S2 distractor reading (card §10, run 2026-10-20, $0; reported, no verdict)
+
+Gold card + 2 shuffled same-visit fact cards, the same six arms (retrained, reproduced exactly), 1,024 test
+questions.
+
+| seed | control acc_d2 (/1024) | treated acc_d2 (/1024) | treated Wilson 95% | treated predicts a distractor value | treated neither | distinct 256 / 1024 (control; treated) |
+|---|---|---|---|---|---|---|
+| 0 | 9.08% (93) | **37.79% (387)** | [34.9, 40.8] | 212 | 425 | 2 / 2; 12 / 13 |
+| 1 | 5.66% (58) | **27.73% (284)** | [25.1, 30.6] | 196 | 544 | 2 / 2; 11 / 13 |
+| 2 | 9.77% (100) | **39.84% (408)** | [36.9, 42.9] | 215 | 401 | 3 / 3; 11 / 12 |
+
+- **Reproduction:** all six retrained arms reproduced their filed §9 scores exactly (control 112 / 129 / 112,
+  treated 1024 ×3; same distinct counts), so every arm was read.
+- **VOID:** none. The control has 2, 2 and 3 distinct answers over the first 256 questions.
+- **Reading (no verdict, per §7):**
+  - With the gold card plus 2 other fact cards, the treated model scores 27.7-39.8%. That is around the 33.3%
+    of copying a random card, against 100% with the gold card alone.
+  - It picks a distractor's value on about 20% of questions and gives some other answer on 39-53%.
+  - So S2 lets the decoder **read** a card. It does **not** let it **choose** the right card among three.
+  - This is the choosing failure m02 found for bypass (545/1024 there, on validation with first-token match;
+    not directly comparable) and the failure S3 (`card_address`) targets.
+- **Control:** stays near chance (5.7-9.8%).
+- **Consequence for the plan:** this supports the ranking. S3 (`card_address`, choosing by a learned address)
+  is next on the cumulative base D + S2. Its Stage 0 is gated on the coordinator's review verdict.
+
 #### S2 code review (E6; Claude Code built-in `/code-review`, high, on `main...branch`)
 
 **Round 3 (final design).** The review's root finding was that raw rows held outside `episode.x` had to be
