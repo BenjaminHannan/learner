@@ -204,3 +204,50 @@ recall is absent for the swarm in FLOP-budget runs.
 
 Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
 Recommendation: one round for 1-3, and 8 with it, since it is the root of C0's extra recall cost.
+
+---
+
+# Round 3, fifth pass: C0 = run trainer, refusals before paid work, OUT placement, desk-0 recall (2026-10-20)
+
+## Fixes (commit 682dfdbd4). Each new test fails on 832480799; on the committed tree all 8 box tests run and pass.
+
+| item | fix | test |
+|---|---|---|
+| 1 | C0's bench trainers are built from the run's single `RUN_SETTINGS` (passed by `cmd_train` to `train_d`) and the same `d_trainer` constructor `train_d` uses; they have a seconds budget, so training diagnostics are off as in the runs | bench vs run trainer field by field (config, curriculum, flop budget, tolerance, seed, device, budget set, diagnostics off, model config) through the real cmd_train → train_d kwargs |
+| 2 | checkpoints at `<OUT>/ckpt` (CKPT overridable, relative, git-ignored); a non-empty checkpoint folder is refused in the pre-flight, before data and C0 | a real dry run on an OUT holding a checkpoint exits 2 with no data.json or c0.json |
+| 3 | an OUT outside the repo, or not git-ignored, is refused with exit 2 before anything is written | outside OUT → exit 2 (not 128), nothing written; non-ignored OUT and absolute CKPT refused |
+| 4 | `_recall` scores desk 0's Q rows only | store.ask sees Q rows once (not Q·M); same value as before |
+
+Tests: 129 OK (3 skips: one pre-existing, two that need a committed tree and pass on it). Discover 289, with the same 4 errors.
+
+## Full-branch review at 682dfdbd4: 10 findings. **VERDICT: NOT CLEAN. Stopped: no dry run at a sealed commit, no seal, no bid.**
+
+Blocking (all confirmed in code):
+1. **The S1 readout can PASS a collapsed S1** (`premonition_swarm_marks.py:614`). The PASS branch checks only "the board
+   collapsed the desks" (S1 collapsed and S0 not). If both are collapsed, S1 PASSes with the COLLAPSED text, but RUNCARD-S1
+   M5 says "as S0 M4", which forbids the positive verdict for a collapsed swarm. Fix: S1 collapsed → HOLD.
+2. **Symlinked paths make the box refuse its own default OUT** (`box.sh:31/62`). `realpath -m` resolves OUT's symlinks,
+   but ROOT comes from `pwd`. On a box where `/workspace` or `artifacts/` is a symlink, the default OUT looks
+   "outside the repository" (exit 2), so the paid run cannot start. Fix: `ROOT=$(realpath ...)` too, plus a symlink test.
+3. **The EXIT trap re-packs the copy-back tarball on every exit, refusals and CHECK_ONLY included** (`box.sh:103`).
+   A pre-flight re-run on a finished OUT deletes and rebuilds `swarm-screen-out.tgz`, so its sha256 no longer matches the
+   one logged at DONE. Fix: arm the trap only once the first step starts, and never touch an existing tarball.
+4. **The M5 "no non-finite loss" check sees only the last 5 logged windows**, because `trim_history` runs before the
+   train JSON is written. Fix: count non-finite logged losses over the full history before trimming, and gate M5 on the count.
+5. **M3's fetch-count test passes when every desk fetched nothing** (`marks.py:356`): 0 ≥ 0.1 × 0. Fix: also require the
+   busiest desk's fetch_count > 0.
+6. **C0's probe checkpoints sit in CKPT.** If C0 is killed (the MAXH timeout), they are left there, and PART=s0 on that OUT
+   then refuses with advice that cannot work (a fresh OUT has no data.json or c0.json). Fix: probes go to a separate
+   `<OUT>/c0-probe` scratch folder, removed at C0 start.
+
+Lower severity (open):
+
+7. `swarm_answer` treats `max_loops` as a fixed round count, not a cap (the screen uses the default).
+8. The split and post loops cost kernel launches. That is the swarm's own implementation cost, and C0 measures it honestly.
+9. `merge_mask` memory.
+10. Duplicated helpers: `_sync`, MODES, the round rule.
+
+## Status against Q28
+
+Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
+Recommendation: one round for 1-6 (each small and testable), with 7 alongside since it is one line.
