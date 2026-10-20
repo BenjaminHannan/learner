@@ -2,6 +2,28 @@
 
 **DRAFT. All code in this folder is a draft until the coordinator has code-reviewed it. Not for use before that.**
 
+> **PARKED 2026-10-20 (2-round review cap, coordinator rule).**
+> - Round 1 (10 findings) was fixed in 089b8c7bd.
+> - Round 2 (10 findings) is **not clean**, so the pack is parked and nothing more is changed without a ruling.
+> - No round-2 finding is a numeric bug. Fixing them would not change the numbers: the port stays bit-equal to the GPU-tested `launch/defer.py`.
+>
+> The parent session's triage of round 2:
+> - **Real (guard holes):**
+>   - `B3G2.plan` is not in the source guard. The harness guarded it, and `_loss` still calls it.
+>   - `think` and `tape_of` are hashed on `ToolH1` / `Tool`, not resolved on `type(m)`.
+>   - The tests' g2fa4 reference `train.py` is not checked against its pin (e75e45fa…). A mistyped `G2FA4_TRAIN` silently falls back to the repo copy.
+>   - The forbidden-folder check is case-sensitive, but the PC's NTFS is not.
+> - **Real (reporting):**
+>   - `defer_stats` in RESULT.json resets on every `--resume`. It could be kept in the flag-on sidecar without touching the flag-off checkpoint format.
+>   - The harness's per-micro-batch pair and width statistics were dropped, though they describe the GPU memory caveat.
+> - **Wording:**
+>   - The comment "trace_loss / ST1 never come here" is wrong for ST1's ordinary half-batches, which call `model.loss`.
+>   - "before anything is drawn" is wrong: `train_golds` draws first.
+> - **Cleanup:**
+>   - The applies-check is written twice (`train.py` and `B3G2.loss`).
+>   - The pins and runner are copied into three files.
+> - **Test gap:** the existing custom_io suite had not been run on the port tree. The parent ran it on 10-20; see "Existing custom_io tests on the port tree" below.
+
 ## What it is
 An overlay pack that ports the speed change "defer" (`launch/defer.py`, the GPU-RUN-4 / GPU-RUN-5 variant) into the production trainer of the B3G2 arm as an opt-in flag. With
 `--speed-arms defer`, `B3G2.loss` (the training entry point train.py and the harness Trainer call; teacher forcing, training, autograd on, `talk_rounds == 'last'`, no copy writer) runs `models/b3g2_defer.py`: one thinker-only loop, then one batched call pass
