@@ -598,3 +598,33 @@ It also estimates the large validation split at about 41 times tiny's, so the 10
     bash-specific.
 
 Next, per the rule: the CPU dry run at the reviewed commit, sealing, and the bid.
+
+## Run 3 prep: one focused review round (Sonnet, built-in code review) of 34d8d0635..34a82da7a
+
+**No code defect.** Checked against the code:
+- with instrumentation off, behaviour is unchanged (`memory_phase` is a no-op and the floor is 0, so the guard reads as
+  before);
+- the floor/reset ordering makes the guard decide on exactly the un-reset peak, including the check at step start+1
+  before `memory_phase("step1")`, the abort path, and the unguarded validation and save;
+- the subprocess probe calls `train_d` with the real `train` subcommand's arguments plus `memory_phases=True`, inherits
+  the environment (`PYTORCH_CUDA_ALLOC_CONF`), removes its checkpoint, and turns every failure into a C0 stop that
+  names the phases.
+
+The one item marked blocking was procedural: the PIN must move, with a dated card amendment. That is done by the
+re-seal (RUNCARD-S0).
+
+Non-blocking items:
+- **Start-up time is counted twice:** once in `overhead_seconds` and again in the 60 s per-process margin. Accepted: it
+  errs conservative, so it cannot bypass the money cap.
+- **The train report's `peak_gpu_reserved_bytes` covers only the stretch after the last reset** in an instrumented
+  run. Accepted: nothing reads it, and the probe forwards its phases instead.
+- **The tests did not exercise the floor/reset invariant.** **Fixed (tests only):** a fake-CUDA counter test, shown
+  to fail when the floor update is removed, plus a test that the probe's `train_d` arguments equal the real `train`
+  subcommand's.
+- **A killed child leaves its probe checkpoint behind**, and a child CUDA OOM loses its phase table. Accepted: the box
+  stops either way.
+- **A local name in `cmd_c0` shadows the new `train_probe` function.** Accepted: cosmetic, and it would change run
+  files.
+
+The code changes stop at 34a82da7a. The test-only commit 942f6c445 changes no run file (manifest check OK), so the
+dry run at 34a82da7a stands for the sealed code. Suites: 289 tests OK (4 skipped), plus the new tests.

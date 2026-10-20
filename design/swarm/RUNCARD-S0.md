@@ -28,6 +28,30 @@ mark and every bar are unchanged. Registered before the retry: **pass** if D1 an
 reserved under 14 GiB; **proved wrong** if D1 trips again, in which case the box exits 3, it stops, and there is no
 retry without a new ruling. If C0 stops, the job also records D1's and S0m4's peak allocated and reserved memory.
 
+**Re-seal 2026-10-20 (after run 2, before any S0 result exists; coordinator ruling on RUN2-C0-STOP, option ii).** Run
+2 stopped at C0's train-overhead probe (`RUN2-C0-STOP-2026-10-20.md`). One change, plus instrumentation: the probe now
+runs as a fresh subprocess (`train-probe`), as every real train does, after `gc.collect()` and `empty_cache()` in the
+parent. With the probe's `train_d(memory_phases=True)` it logs peak allocated and reserved memory per phase (start,
+calibration, step1, train, open-at-abort, validation and save), and a `reserved_floor` keeps the 14 GiB guard deciding
+on the un-reset peak. Off everywhere else; the guard is unchanged.
+
+This supersedes the run-2 amendment's line "No sealed file changes; the PIN stays 34d8d0635": run 3's code changes
+three pinned files (`learnlab/train.py`, `premonition/train.py`, `scripts/premonition_swarm_screen.py`).
+- **Code pinned at 34a82da7a8b85f3af7d448140c7d165b68e20dd7.**
+- Dry run passed at that commit (`DRYRUN-34a82da7a.md`).
+- One focused review round (Sonnet, built-in review): no code defect. The non-blocking items are accepted, and one
+  was fixed by tests only (`REVIEW-ROUND3-REPORT-2026-10-20.md`, "Run 3 prep").
+- The box PIN is the commit that adds this re-seal. Its run files are byte-identical to 34a82da7a's, and the
+  committed manifest covers them.
+
+Unchanged: every mark, every bar, T's formula, the allocator setting (all arms) and the 14 GiB guard. Registered
+marks for run 3, as ruled:
+- **pass:** the fresh-process S0 probe completes under 14 GiB, C0 finishes with D1 and S0m4 under 14 GiB, and
+  c0.json is written;
+- **proved wrong:** the fresh-process probe trips again, in which case S0's real training step or calibration needs the
+  memory, the box exits 3, it stops, and the line goes to the coordinator for a design review;
+- any other stop is also exit 3, stop and report.
+
 Original status text, kept:
 **Status: DRAFT, NOT SEALED. Written 2026-10-17, before any swarm run of any size, on any data, CPU or
 GPU.** Two things must happen before sealing: (1) the coordinator accepts or replaces the PROVISIONAL
