@@ -27,7 +27,7 @@ for the whole box). The job: setup, village build, 1a timing run (`run --timing`
   waitlog --id ID [--stage S] [--max-min M]
               stops the instance only on the closing marks the job prints after its export (`=== R1S1 DONE|FAIL|GATE`).
               exit 0 DONE, 2 job FAIL, 8 GATE (1a gate or F_min: no 1b), 3 HARD STOP, 4 not running after 6 min,
-              5 no new log line for 10 min, 6 timeout or instance gone, 7 price unreadable. EVERY exit first stops
+              5 no new log line for 10 min, 6 timeout or instance gone, 7 three failed polls in a row (BLIND). EVERY exit first stops
               the instance and waits until Vast confirms it (stop requests and status reads are retried through any
               network error). The hard stop fires one poll plus 2 min before the cap. Time limit: HARD_STOP / dph x 60
               + 30 min; --max-min may not be lower than that
@@ -66,6 +66,7 @@ HARD_STOP = {"1ab": 2.80}                  # dollars for the whole box (coordina
 SAFETY = 0.9                               # the deadline: SAFETY x the hard stop's hours ...
 EXPORT_SECONDS = 900                       # ... minus this, left for packing the export ...
 PREJOB_S = 900                             # ... minus this: image pull and container start, billed before the job runs
+WALL_SAFETY = 0.95                         # the on-box wall: 0.95 x the cap's hours at the box's $/h, less PREJOB_S
 BUILD_EST_S, TIMING_MAX_S, RUN_1B_MIN_S = 1800, 2400, 3600     # feasibility floor: build + 1a (its cap) + 1 h of 1b
 RUNNER = "scripts/premonition_steals_r1_stage1.py"
 CARD = "design/steals-2026-10-17/R1-STAGE1-CARD.md"
@@ -84,7 +85,7 @@ WATCHDOG_MIN = 10                          # rent kit: no new log line for 10 mi
 CLOSING = re.compile(r"(?:^|\s)=== R1S1 (DONE|FAIL|GATE)(?=\s|$)")
 PULL_OK = "PULL_OK.json"
 
-JOB = r'''# R1 stage 1ab rental job (steals-8 thread, 2026-10-20), from scripts/claude_r1s1_rent.py.
+JOB_BODY = r'''# R1 stage 1ab rental job (steals-8 thread, 2026-10-20), from scripts/claude_r1s1_rent.py.
 # Setup, build, 1a timing run, price, 1b (the sealed card), verify, export. One box, one cap.
 set -u
 PACK_SHA=__PACK_SHA__
@@ -103,14 +104,15 @@ PY=${PY:-python3}
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 mkdir -p "$J/checks" "$J/export" "$ROOT" && cd "$J" || exit 1
 finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box on is printed last
-  kill $TICK 2>/dev/null
   cd "$J"
+  say "EXPORT start"           # the TICK heartbeat keeps running (the export grows $J), so the watchdog sees progress
   rm -rf export/* b64
   stages=$(cd "$ROOT/out" 2>/dev/null && ls -d */ 2>/dev/null | tr -d /)
   ckpts=$(cd "$ROOT/out" 2>/dev/null && ls -d */ckpt 2>/dev/null)
   [ -n "$stages" ] && tar -czf export/out.tar.gz --exclude=ckpt -C "$ROOT/out" $stages -C "$J" checks 2>/dev/null
   [ -n "$ckpts" ] && tar -czf export/ckpt.tar.gz -C "$ROOT/out" $ckpts 2>/dev/null
   [ -f export/out.tar.gz ] || tar -czf export/out.tar.gz -C "$J" checks 2>/dev/null
+  say "EXPORT tarred"
   (cd export && sha256sum out.tar.gz ckpt.tar.gz 2>/dev/null > MANIFEST.sha256)
   mkdir -p b64/big b64/small
   for f in export/out.tar.gz export/ckpt.tar.gz; do
@@ -122,6 +124,7 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
   done
   (cd b64 && wc -c big/* small/*) > export/PARTS.txt
   echo "$1 rc=${RC:-na}${DRYRUN:+ dryrun=$DRYRUN}" > export/STATUS.txt   # last: a STATUS means the export is whole
+  kill $TICK 2>/dev/null
   say "MANIFEST"; cat export/MANIFEST.sha256
   say "PARTS $(ls b64/big | wc -l) big, $(ls b64/small | wc -l) small"
   say "R1S1 $1"
@@ -129,7 +132,7 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
   exit 0
 }
 fail() { say "R1S1-FAIL $*"; finish FAIL; }
-(while true; do sleep "${TICK_S:-120}"; echo "=== TICK $(date -u +%H:%M:%S) | $(tail -qn1 "$J/checks/run.out" 2>/dev/null | cut -c1-120) | kb=$(du -sk "$J" 2>/dev/null | cut -f1)"; done) &
+(while true; do sleep "${TICK_S:-120}"; echo "=== TICK $(date -u +%H:%M:%S) | $(tail -qn1 "$J/checks/run.out" 2>/dev/null | cut -c1-120) | kb=$(du -sk "$J" 2>/dev/null | cut -f1) cache=$(du -sk "$HOME/.cache" 2>/dev/null | cut -f1)"; done) &
 TICK=$!
 say "R1S1 START stage $STAGE"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1 | tee checks/gpu.txt
@@ -169,7 +172,7 @@ LEFT=$((START + DEADLINE_S - $(date +%s)))
 [ "$LEFT" -gt "$TIMING_MAX_S" ] && LEFT=$TIMING_MAX_S
 mkdir -p "$ROOT/out/1a" "$ROOT/out/1b"
 say "RUN 1a timing, at most $LEFT s"
-timeout "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1a" --timing 2>&1 | tee -a "$J/checks/run.out"
+timeout --foreground "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1a" --timing 2>&1 | tee -a "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "1a run rc=$RC"
 # --- 3. price: F for 1b from 1a's measurements, the box's $/h, and the seconds already spent (incl. the pre-job allowance)
@@ -194,7 +197,7 @@ cp "$ROOT/$SEAL_REL" "$ROOT/out/1b/SEAL.sha256.txt" || fail "seal copy"
 LEFT=$((START + DEADLINE_S - $(date +%s)))
 [ "$LEFT" -gt 60 ] || fail "no time left before the deadline after price ($DEADLINE_S s at \$$DPH/h)"
 say "RUN 1b, deadline in $LEFT s"
-timeout "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1b" --price "$ROOT/out/1b/PRICE.json" --timing-from "$ROOT/out/1a" 2>&1 | tee -a "$J/checks/run.out"
+timeout --foreground "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1b" --price "$ROOT/out/1b/PRICE.json" --timing-from "$ROOT/out/1a" 2>&1 | tee -a "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "1b run rc=$RC"
 # --- 5. verify both run directories
@@ -205,6 +208,38 @@ $PY -B $RUNNER verify --out "$ROOT/out/1b" || fail "manifest verify on the box (
 grep -m1 Verdict "$ROOT/out/1b/RUN-NOTE.md"
 finish DONE
 '''
+
+# The job as sent: an outer wrapper that runs the body under a hard wall-clock limit and then, however the body ended,
+# asks Vast to stop this instance from inside it (CONTAINER_ID / CONTAINER_API_KEY, which Vast sets in its containers;
+# untested on Vast here) and exits, which ends the container. So the box ends by the wall even if waitlog and the
+# controlling session are gone. WALL_S_TEST (tests only) may shorten the wall, never lengthen it.
+JOB = r'''# R1 stage 1ab rental job, outer wrapper (steals-8 thread), from scripts/claude_r1s1_rent.py.
+set -u
+J=${JOBDIR:-/job}
+mkdir -p "$J"
+WALL_S=__WALL_S__
+if [ -n "${WALL_S_TEST:-}" ] && [ "$WALL_S_TEST" -lt "$WALL_S" ]; then WALL_S=$WALL_S_TEST; fi
+cat > "$J/job.sh" <<'R1S1_JOB_EOF'
+__BODY__
+R1S1_JOB_EOF
+echo "=== R1S1 WALL $WALL_S s from job start $(date -u +%FT%TZ)"
+timeout -k 30 "${WALL_S}s" bash "$J/job.sh" "$@"
+RC=$?
+if [ "$RC" = 124 ] || [ "$RC" = 137 ]; then echo "=== R1S1 SELF-STOP wall deadline rc=$RC $(date -u +%FT%TZ)"; fi
+if [ -n "${CONTAINER_ID:-}" ] && [ -n "${CONTAINER_API_KEY:-}" ]; then
+  for try in 1 2 3 4 5; do
+    if curl -sS -m 30 -X PUT -H "Authorization: Bearer $CONTAINER_API_KEY" -H "Content-Type: application/json" \
+        -d '{"state": "stopped"}' "https://console.vast.ai/api/v0/instances/$CONTAINER_ID/"; then
+      echo "=== R1S1 SELF-STOP requested (try $try) $(date -u +%FT%TZ)"; break
+    fi
+    sleep 10
+  done
+else
+  echo "=== R1S1 SELF-STOP no container key: exiting ends the container $(date -u +%FT%TZ)"
+fi
+exit 0
+'''
+
 
 
 # ----------------------------------------------------------------------------- HTTP
@@ -328,8 +363,16 @@ def run_deadline(dph):
     return d
 
 
+def wall_seconds(dph):
+    """The on-box wall: WALL_SAFETY x the hours the cap buys at `dph`, less the pre-job allowance (from job start)."""
+    return int(WALL_SAFETY * HARD_STOP[STAGE] / dph * 3600) - PREJOB_S
+
+
 def make_job(pack_sha, seal_rel, torch_pin, dph):
-    text = JOB
+    wall = wall_seconds(dph)
+    if wall < run_deadline(dph) + EXPORT_SECONDS:      # the closing sleep may be cut short: the export is done by then
+        raise SystemExit(f"the wall ({wall} s) leaves no room for the export after the run deadline")
+    text = JOB.replace("__BODY__", JOB_BODY).replace("__WALL_S__", str(wall))
     for key, val in (("__PACK_SHA__", pack_sha), ("__STAGE__", STAGE), ("__TORCH_PIN__", torch_pin),
                      ("__SEAL_REL__", seal_rel), ("__DPH__", repr(float(dph))),
                      ("__DEADLINE_S__", str(run_deadline(dph))), ("__PREJOB_S__", str(PREJOB_S)),
@@ -444,6 +487,8 @@ def create(a):
 def inst(i):
     """The instance's record; {} when Vast lists no such instance; None when the request failed (state unknown)."""
     r = call("GET", f"/instances/{i}/")
+    if r.get("http") == 404:
+        return {}
     if "instances" not in r:
         return None
     x = r.get("instances") or {}
@@ -454,17 +499,23 @@ STOPPED = ("stopped", "exited", "offline")
 
 
 def stop_confirmed(i, poll=10, recheck=6):
-    """Stop the instance and return only once Vast reports it not running (or no longer lists it). Network errors and
+    """Stop the instance and return only once Vast confirms it: no longer listed, or intended_status "stopped" and not
+    running (without an intended_status field: a stop request accepted and a stopped state). Network errors and
     refused requests are retried, the stop request again after every `recheck` polls; it never returns unconfirmed."""
-    tries = 0
+    tries, accepted = 0, False
     while True:
         tries += 1
         r = stop_instance(i)
+        accepted = accepted or r.get("success") is True
         for _ in range(recheck):
             time.sleep(poll)
             x = inst(i)
-            if x is not None and (not x or x.get("actual_status") in STOPPED):
-                return {"confirmed": True, "tries": tries, "status": (x or {}).get("actual_status", "gone")}
+            if x is None:
+                continue
+            state, intended = x.get("actual_status"), x.get("intended_status")
+            if not x or (intended == "stopped" and state != "running") or \
+                    (intended is None and accepted and state in STOPPED):
+                return {"confirmed": True, "tries": tries, "status": state or "gone", "intended": intended}
         print(json.dumps({"stop_unconfirmed": i, "tries": tries, "last_request": r.get("success"),
                           "error": r.get("error")}), file=sys.stderr, flush=True)
 
@@ -512,22 +563,25 @@ def cost(a):
         raise SystemExit(3)
 
 
-def log_text(i, tail=400):
-    r = call("PUT", f"/instances/request_logs/{i}/", {"tail": str(tail)})
+def log_text(i, tail=400, tries=6):
+    """The container log's tail, or None when it could not be fetched (never confused with an empty log)."""
+    r = call("PUT", f"/instances/request_logs/{i}/", {"tail": str(tail)}, timeout=30)
     url = r.get("result_url")
     if not url:
-        return ""
-    for _ in range(12):
+        return None
+    for _ in range(tries):
         time.sleep(5)
         try:
-            return get(url, 60).decode("utf-8", "replace")
+            return get(url, 30).decode("utf-8", "replace")
         except Exception:
             continue
-    return ""
+    return None
 
 
 def logs(a):
     text = log_text(a.id, a.tail)
+    if text is None:
+        raise SystemExit("could not fetch the log; try again")
     Path(a.out).write_text(text)
     short = [ln for ln in text.splitlines() if len(ln) < 400]
     print("\n".join(short[-a.show:]))
@@ -544,13 +598,9 @@ def stop_instance(i):
     return call("PUT", f"/instances/{i}/", {"state": "stopped"})
 
 
-def time_limit_min(dph, max_min=None):
-    """waitlog's limit in minutes: the hard stop's hours at `dph` plus 30 min. --max-min may not be lower."""
-    derived = HARD_STOP[STAGE] / float(dph) * 60 + 30
-    if max_min is not None and max_min < derived:
-        raise SystemExit(f"--max-min {max_min} is under the limit this box needs ({derived:.0f} min = hard stop / "
-                         f"${dph}/h + 30); omit it or raise it")
-    return derived if max_min is None else max_min
+def time_limit_min(dph):
+    """waitlog's limit in minutes: the hard stop's hours at `dph` plus 30 min (a larger --max-min may extend it)."""
+    return HARD_STOP[STAGE] / float(dph) * 60 + 30
 
 
 def closing_marks(lines):
@@ -564,58 +614,59 @@ def closing_marks(lines):
 
 
 def waitlog(a):
-    """Poll every --poll seconds until the job prints a closing mark. Stops (not destroys) the instance and exits 3 when
-    the running dollars reach the hard stop. Other exits: see the module docstring."""
+    """The cap guard. Each poll: the status read, then the cost check at that moment, before anything else; then the
+    closing marks, the time limit, the watchdog and the start check. Three failed polls in a row (a failed read, an
+    unreadable cost, any exception) stop the box. Every exit stops the box first and waits until Vast confirms it."""
     t0 = time.time()
-    first = inst(a.id) or {}
-    stage = stage_of(first.get("label"), a.stage)
-    key, changed, ever_running, blind, errors = None, t0, False, 0, 0
+    stage = a.stage or STAGE
+    key, changed, ever_running, failures = None, t0, False, 0
     while True:
-        now = time.time()
         try:
             x = inst(a.id)
-            if x is None:                      # the status request failed: unknown, not "stopped"; count and re-poll
-                blind += 1
-                if blind >= 3:
-                    _exit(a.id, 7, "COST-UNKNOWN", stage, t0, now, None, None)
-                time.sleep(a.poll)
-                continue
-            state = x.get("actual_status")
-            ever_running = ever_running or state == "running"
+            now = time.time()
+            if x is None:
+                raise RuntimeError("status read failed")
             c = running_cost(x, now)
-            blind = blind + 1 if c["usd"] is None else 0
-            limit = time_limit_min(c["dph"], a.max_min) if c["dph"] else None
-            text = log_text(a.id) if state == "running" else ""
-            marks = closing_marks(text.splitlines())
+            if c["usd"] is None:
+                raise RuntimeError("cost unreadable")
+            state = x.get("actual_status")
 
             def out(code, tag, **extra):
                 _exit(a.id, code, tag, stage, t0, now, c["usd"], state, **extra)
-            margin = 0.0 if c["dph"] is None else float(c["dph"]) * (a.poll + STOP_MARGIN_S) / 3600
-            if c["usd"] is not None and over_stop(c["usd"] + margin, stage):
-                out(3, "HARD-STOP", job_done=bool(marks["DONE"]))
-            if blind >= 3:
-                out(7, "COST-UNKNOWN")
-            for tag, code, name in (("DONE", 0, "DONE"), ("FAIL", 2, "JOB-FAIL"), ("GATE", 8, "GATE")):
-                if marks[tag]:         # the export is written: stop now, so only storage bills during the pull
-                    out(code, name, found=marks[tag][-1:])
+            margin = float(c["dph"]) * (a.poll + STOP_MARGIN_S) / 3600
+            if over_stop(c["usd"] + margin, stage):
+                out(3, "HARD-STOP")
+            failures = 0
+            ever_running = ever_running or state == "running"
             if state in STOPPED and ever_running:
                 out(6, "INSTANCE-ENDED")
-            if state != "running" and not ever_running and now - t0 > START_MIN * 60:
+            start = x.get("start_date")
+            age = now - float(start) if start is not None else now - t0
+            if state != "running" and not ever_running and age > START_MIN * 60:
                 out(4, "NOT-RUNNING", note="destroy by exact id and try another host")
-            if state == "running":
-                k = progress_key(text)
-                if k != key:
-                    key, changed = k, now
-                elif now - changed > WATCHDOG_MIN * 60:
-                    out(5, "WATCHDOG", note="no new log line for 10 min")
-            if limit is not None and now - t0 > limit * 60:
+            limit = max(time_limit_min(c["dph"]), a.max_min or 0)
+            if now - t0 > limit * 60:
                 out(6, "TIMEOUT", limit_min=round(limit, 1))
+            if state == "running":
+                text = log_text(a.id)
+                if text is not None:            # a failed fetch neither shows a mark nor moves the watchdog
+                    marks = closing_marks(text.splitlines())
+                    for tag, code, name in (("DONE", 0, "DONE"), ("FAIL", 2, "JOB-FAIL"), ("GATE", 8, "GATE")):
+                        if marks[tag]:          # the export is written: stop now, so only storage bills during the pull
+                            out(code, name, found=marks[tag][-1:])
+                    k = progress_key(text)
+                    if k != key:
+                        key, changed = k, now
+                    elif now - changed > WATCHDOG_MIN * 60:
+                        out(5, "WATCHDOG", note="no new log line for 10 min")
         except SystemExit:
             raise
-        except Exception as error:             # anything unexpected: report, re-poll; the stop rules still apply
-            errors += 1
-            print(json.dumps({"poll_error": type(error).__name__, "msg": str(error)[:200], "errors": errors}),
+        except Exception as error:              # a failed read, an unreadable cost, anything else: three in a row stop it
+            failures += 1
+            print(json.dumps({"poll_failure": type(error).__name__, "msg": str(error)[:200], "in_a_row": failures}),
                   file=sys.stderr, flush=True)
+            if failures >= 3:
+                _exit(a.id, 7, "BLIND", stage, t0, time.time(), None, None, note="three failed polls in a row")
         time.sleep(a.poll)
 
 
@@ -679,7 +730,10 @@ def pull(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / PULL_OK).unlink(missing_ok=True)
-    job_status = (exec_cat(a.id, "/job/export/STATUS.txt") or b"").decode().strip()
+    raw = exec_cat(a.id, "/job/export/STATUS.txt")
+    if raw is None:
+        raise SystemExit(f"could not read /job/export/STATUS.txt of {a.id} (network); run pull again")
+    job_status = raw.decode().strip()
     if not job_status:
         raise SystemExit(f"/job/export/STATUS.txt of {a.id} is empty: the job has not finished its export. Wait for "
                          "waitlog's closing mark (a stuck job is recovered by hand, never by a partial pull)")

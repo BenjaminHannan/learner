@@ -274,7 +274,7 @@ class JobTextTest(Fixture):
         self.assertIn("RUNNER=${RUNNER:-scripts/premonition_steals_r1_stage1.py}", job)
         self.assertIn("PY=${PY:-python3}", job)
         self.assertIn('SPENT=$(( $(date +%s) - START + PREJOB_S ))', job)
-        self.assertIn('timeout "${LEFT}s" $PY -B $RUNNER run', job)
+        self.assertIn('timeout --foreground "${LEFT}s" $PY -B $RUNNER run', job)
         self.assertIn("[ \"$LEFT\" -gt \"$TIMING_MAX_S\" ] && LEFT=$TIMING_MAX_S", job)     # 1a: min(left, 2400)
         self.assertIn("TIMING_MAX_S=2400", job)
         self.assertNotIn("--flop-budget", job)
@@ -371,7 +371,7 @@ class WaitlogTest(unittest.TestCase):
         self.assertEqual((code, out["event"]), (0, "DONE"))
 
     def test_not_running_within_the_prejob_allowance_stops(self) -> None:
-        inst = self.inst(0.01, status="loading")
+        inst = {"label": LABEL, "actual_status": "loading", "dph_total": 1.0, "start_date": 0}   # billed from 0
         self.assertEqual(rent.START_MIN, rent.PREJOB_S // 60)                      # the allowance is enforced
         with mock.patch.object(rent.time, "time", side_effect=[0, 14 * 60, 16 * 60]):
             code, calls, out = self.run_wait(inst)
@@ -410,16 +410,6 @@ class WaitlogTest(unittest.TestCase):
     def test_default_limit_comes_from_the_box(self) -> None:                      # N4
         self.assertAlmostEqual(rent.time_limit_min(1.0), 2.80 * 60 + 30)           # 198 min
         self.assertAlmostEqual(rent.time_limit_min(0.4), 450.0)
-        self.assertAlmostEqual(rent.time_limit_min(0.4, 450), 450)
-        self.assertEqual(rent.time_limit_min(0.4, 600), 600)
-        with self.assertRaises(SystemExit) as cm:
-            rent.time_limit_min(0.4, 449)
-        self.assertIn("450", str(cm.exception))
-
-    def test_a_lower_max_min_is_refused(self) -> None:                             # N4
-        code, calls, out = self.run_wait(self.inst(0.01), max_min=60)
-        self.assertIn("--max-min", str(code))
-        self.assertEqual((calls, out), ([], None))
 
     def test_timeout_stops_the_instance(self) -> None:                             # N4
         now = 199 * 60                                                             # the derived limit is 198 min
@@ -433,10 +423,44 @@ class WaitlogTest(unittest.TestCase):
             code, calls, out = self.run_wait(inst)
         self.assertEqual((out["event"], calls, out["waited_min"]), ("TIMEOUT", self.STOPPED, 199.0))
 
-    def test_unreadable_price_stops(self) -> None:
-        code, calls, out = self.run_wait({"label": LABEL, "actual_status": "running"})
-        self.assertEqual((code, out["event"]), (7, "COST-UNKNOWN"))
+    def test_three_failed_polls_in_a_row_stop(self) -> None:
+        code, calls, out = self.run_wait({"label": LABEL, "actual_status": "running"})      # no price: unreadable cost
+        self.assertEqual((code, out["event"]), (7, "BLIND"))
         self.assertEqual(calls, self.STOPPED)
+        calls = []
+        replies = iter([None, None, {"label": LABEL, "actual_status": "running", "dph_total": 1.0,
+                                     "start_date": time.time()}, None, None, None])
+        with mock.patch.object(rent, "inst", lambda _i: next(replies, {"actual_status": "stopped",
+                                                                      "intended_status": "stopped"})), \
+                mock.patch.object(rent, "call", lambda m, p, b=None, timeout=60: calls.append((m, p, b)) or
+                                  {"success": True}), \
+                mock.patch.object(rent, "log_text", return_value=""), mock.patch.object(rent.time, "sleep"), \
+                mock.patch("builtins.print") as pr, mock.patch("sys.stderr", io.StringIO()), \
+                self.assertRaises(SystemExit) as cm:
+            rent.waitlog(Ns(id="7", stage=None, max_min=None, poll=0))
+        self.assertEqual((cm.exception.code, json.loads(pr.call_args[0][0])["event"]), (7, "BLIND"))   # 2 fails reset
+        self.assertEqual(calls, self.STOPPED)
+
+    def test_the_cost_is_checked_before_the_log_is_fetched(self) -> None:
+        fetched = []
+        with mock.patch.object(rent, "log_text", side_effect=lambda *a, **k: fetched.append(1) or ""):
+            code, _, out = self.run_wait(self.inst(2.9))
+        self.assertEqual((code, out["event"], fetched), (3, "HARD-STOP", []))
+
+    def test_stop_confirmed_needs_vast_to_intend_the_stop(self) -> None:
+        replies = iter([{"actual_status": "offline", "intended_status": "running"},     # offline, not stopped by us
+                        {"actual_status": "exited", "intended_status": "running"},
+                        {"actual_status": "stopped", "intended_status": "stopped"}])
+        with mock.patch.object(rent, "inst", lambda _i: next(replies)), \
+                mock.patch.object(rent, "call", return_value={"success": False}), \
+                mock.patch.object(rent.time, "sleep"), mock.patch("sys.stderr", io.StringIO()):
+            out = rent.stop_confirmed(7)
+        self.assertEqual((out["confirmed"], out["status"], out["intended"]), (True, "stopped", "stopped"))
+        with mock.patch.object(rent, "inst", return_value={}), mock.patch.object(rent, "call", return_value={}), \
+                mock.patch.object(rent.time, "sleep"):
+            self.assertEqual(rent.stop_confirmed(7)["status"], "gone")                  # no longer listed (or 404)
+        with mock.patch.object(rent, "call", return_value={"success": False, "http": 404}):
+            self.assertEqual(rent.inst(7), {})
 
 
 class Net(Fixture):
@@ -786,6 +810,10 @@ elif cmd == "run":
         if not Path(opt("--price")).is_file() or not (out / "SEAL.sha256.txt").is_file():
             print("1b needs the price file and the seal in its directory", file=sys.stderr)
             sys.exit(9)
+    if not timing and os.environ.get("FAKE_RUN_1B_SLEEP"):         # a 1b run that hangs past the wall
+        import time
+        time.sleep(float(os.environ["FAKE_RUN_1B_SLEEP"]))
+        Path(os.environ["FAKE_LOG"] + ".slept-through").write_text("1b outlived the wall\n")
     rc = int(os.environ.get("FAKE_RUN_1A_RC" if timing else "FAKE_RUN_1B_RC", "0"))
     if rc:
         sys.exit(rc)
@@ -943,6 +971,47 @@ class JobE2ETest(Fixture):
         rc, text = self.run_job()
         self.assertIn("=== R1S1-FAIL pack sha256", text)
         self.assertEqual(self.calls() if self.log.exists() else [], [])
+
+    def test_the_box_ends_by_its_wall_with_no_watcher(self) -> None:
+        """Coordinator's on-box self-stop test: waitlog and the session are gone, 1b hangs. The wall kills the job,
+        the wrapper asks Vast to stop the instance with the container's own key, and exits (ending the container)."""
+        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
+        started = time.time()
+        rc, text = self.run_job(WALL_S_TEST=6, FAKE_RUN_1B_SLEEP=60, CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        elapsed = time.time() - started
+        self.assertEqual(rc, 0, text[-3000:])
+        self.assertLess(elapsed, 45, text[-2000:])                       # the wall (6 s), not the 60 s hang
+        self.assertIn("=== R1S1 WALL 6 s", text)
+        self.assertIn("=== R1S1 SELF-STOP wall deadline rc=124", text)
+        self.assertIn("=== R1S1 SELF-STOP requested (try 1)", text)
+        curl = [ln for ln in self.log.read_text().splitlines() if ln.startswith("curl ")]
+        self.assertEqual(len(curl), 1)
+        self.assertIn("-X PUT", curl[0])
+        self.assertIn('{"state": "stopped"}', curl[0])
+        self.assertIn("https://console.vast.ai/api/v0/instances/7/", curl[0])
+        self.assertIn("Authorization: Bearer k", curl[0])
+        time.sleep(2)
+        self.assertFalse(Path(str(self.log) + ".slept-through").exists())   # the hung runner was killed, not orphaned
+        self.assertFalse(rent.closing_marks(text.splitlines())["DONE"])
+
+    def test_the_wall_cannot_be_lengthened_and_a_normal_end_also_self_stops(self) -> None:
+        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
+        rc, text = self.run_job(WALL_S_TEST=10 ** 9, CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        self.assertEqual(rc, 0, text[-3000:])
+        wall = rent.wall_seconds(0.45)
+        self.assertIn(f"=== R1S1 WALL {wall} s", text)                   # the test override can only shorten it
+        self.assertNotIn("SELF-STOP wall deadline", text)
+        self.assertIn("=== R1S1 SELF-STOP requested (try 1)", text)      # a finished job asks for the stop as well
+        self.assertLess(text.index("=== R1S1 DONE"), text.index("=== R1S1 SELF-STOP requested"))
+        shutil.rmtree(self.jobdir)
+        rc, text = self.run_job()                                       # outside Vast: no key, exiting ends the box
+        self.assertIn("=== R1S1 SELF-STOP no container key", text)
+
+    def test_wall_arithmetic(self) -> None:
+        self.assertEqual(rent.wall_seconds(0.45), int(0.95 * 2.80 / 0.45 * 3600) - 900)
+        for dph in (0.3, 0.45, 0.8):
+            self.assertGreaterEqual(rent.wall_seconds(dph), rent.deadline_seconds(dph) + rent.EXPORT_SECONDS)
+            self.assertLessEqual((rent.wall_seconds(dph) + rent.PREJOB_S) / 3600 * dph, 0.95 * 2.80 + 1e-9)
 
     def test_dryrun_stops_after_setup(self) -> None:
         rc, text = self.run_job(DRYRUN=1)

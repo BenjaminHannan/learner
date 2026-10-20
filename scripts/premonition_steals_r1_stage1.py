@@ -66,7 +66,7 @@ BUILD = {"visits": "large", "seed": 0}
 # Stage 1a and 1b run as one job on one box under one cap (coordinator ruling 10-20). F_MAX is spec 9.7's ~3-epoch
 # limit on this build (7.5e15 / 1.14e12 FLOPs per step x 48.9k tokens ~ 3.0 passes over 106.6M tokens).
 PRICE = {"cap_total": 2.80, "hard_stop_1b": 2.50, "safety": 0.8, "f_max": 7.5e15, "f_min": 3.15e15,
-         "copy_off_seconds": 900.0, "seeds": 3, "max_muon_step_ratio": 1.25}
+         "copy_off_seconds": 900.0, "seeds": 3, "max_muon_step_ratio": 1.25, "time_safety": 0.9}
 F_1A = 3.4e14                         # stage 1a: 300 steps x 1.14e12 FLOPs per step (measured on the build, CPU fit)
 PACKAGE = "premonition/*.py + learnlab/**/*.py + memorylab/**/*.py"   # the seal's name for the package hash
 
@@ -277,8 +277,8 @@ def price(arms: list[dict], *, dph: float, spent_seconds: float, seconds_left: f
     """The card's F rule on stage 1a's two runs (one per arm), at the box's $/h, after `spent_seconds` of box time,
     with `seconds_left` before the job's own run deadline. F is the largest value in [F_min, F_max] (two significant
     figures, rounded down, never below F_min) whose projected stage-1b time fits all three: SAFETY x the 1b stop, the
-    total cap less what is spent (both in dollars at `dph`), and the seconds left. "go" is False, with the reason,
-    when 1a's gate fails or even F_min does not fit."""
+    total cap less what is spent (both in dollars at `dph`), and time_safety x the seconds left. "go" is False, with
+    the reason, when 1a's gate fails or even F_min does not fit."""
     if sorted(a["arm"] for a in arms) != sorted(ARMS) or any(a["status"] != "completed" or not a["finite"]
                                                                for a in arms):
         raise SystemExit("price needs one completed, finite stage-1a run of each arm")
@@ -288,7 +288,7 @@ def price(arms: list[dict], *, dph: float, spent_seconds: float, seconds_left: f
         raise SystemExit("the stage-1a runs were made by other code than this runner, card and package")
     spent = spent_seconds / 3600.0 * dph
     budget = min(PRICE["safety"] * PRICE["hard_stop_1b"], PRICE["cap_total"] - spent)
-    allowed = min(budget / dph * 3600.0, seconds_left)
+    allowed = min(budget / dph * 3600.0, PRICE["time_safety"] * seconds_left)
     cost = lambda f: projected_seconds(f, arms, CARD_SETTINGS["eval_every"])         # noqa: E731
     by = {a["arm"]: a for a in arms}
     ratio = by["A1"]["s_per_step"] / by["A0"]["s_per_step"]
@@ -343,7 +343,7 @@ def check_price(price: dict) -> None:
     if not (finite(price.get("spent_dollars")) and price["spent_dollars"] + projected <= PRICE["cap_total"]):
         raise SystemExit("PRICE.json's spent + projected is over the total cap")
     if not (finite(price.get("projected_hours")) and finite(price.get("seconds_left"))
-            and price["projected_hours"] * 3600.0 <= price["seconds_left"]):
+            and price["projected_hours"] * 3600.0 <= PRICE["time_safety"] * price["seconds_left"]):
         raise SystemExit("PRICE.json projects past the job's run deadline")
 
 

@@ -269,7 +269,7 @@ class PriceTest(unittest.TestCase):
         free = r1s1.price(arms, dph=0.45, seconds_left=1e9, spent_seconds=0.0)
         tight = r1s1.price(arms, dph=0.45, seconds_left=8000.0, spent_seconds=0.0)
         self.assertLess(tight["flop_budget"], free["flop_budget"])
-        self.assertLessEqual(tight["projected_hours"] * 3600, 8000.0)
+        self.assertLessEqual(tight["projected_hours"] * 3600, 0.9 * 8000.0)
         r1s1.check_price(json.loads(json.dumps(tight)))
         with self.assertRaises(SystemExit):
             r1s1.check_price({**tight, "seconds_left": 100.0})
