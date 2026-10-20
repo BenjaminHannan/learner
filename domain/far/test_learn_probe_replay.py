@@ -880,16 +880,17 @@ def test_replay_priority_probs():
     has all the KL at frac 0.5, orders families by their KL, and replay_priority_shares adds the rows up per family."""
     fam = ['a'] * 6 + ['b'] * 3 + ['c'] * 1
     N = len(fam)
-    p0 = LP.replay_priority_probs(fam, {'a': 0.0, 'b': 0.0, 'c': 0.0}, 0.5)
+    P = lambda fam, kl, frac: LP.replay_priority_probs(fam, kl, frac, min_rows=1)   # these families are 1-6 rows: below the default floor
+    p0 = P(fam, {'a': 0.0, 'b': 0.0, 'c': 0.0}, 0.5)
     assert p0.dtype == np.float64 and np.allclose(p0, 1.0 / N) and abs(p0.sum() - 1) < 1e-15, p0
-    assert np.allclose(LP.replay_priority_probs(fam, {}, 0.9), 1.0 / N), 'no KL given: uniform'
-    assert np.allclose(LP.replay_priority_probs(fam, {'a': 1.0, 'b': 2.0, 'c': 3.0}, 0.0), 1.0 / N), 'frac 0: uniform'
-    p = LP.replay_priority_probs(fam, {'a': 0.0, 'b': 1.5, 'c': 0.0}, 0.5)
+    assert np.allclose(P(fam, {}, 0.9), 1.0 / N), 'no KL given: uniform'
+    assert np.allclose(P(fam, {'a': 1.0, 'b': 2.0, 'c': 3.0}, 0.0), 1.0 / N), 'frac 0: uniform'
+    p = P(fam, {'a': 0.0, 'b': 1.5, 'c': 0.0}, 0.5)
     assert abs(p.sum() - 1) < 1e-12 and (p > 0).all()
     sh = LP.replay_priority_shares(fam, p)
     assert abs(sh['b'] - (0.5 + 0.5 * 3 / N)) < 1e-4 and abs(sh['a'] - 0.5 * 6 / N) < 1e-4 and abs(sh['c'] - 0.5 * 1 / N) < 1e-4, sh
     assert list(sh)[0] == 'b' and abs(sum(sh.values()) - 1) < 1e-3
-    q = LP.replay_priority_probs(fam, {'a': 1.0, 'b': 2.0, 'c': 4.0}, 0.8)   # per-row mass follows (kl_f / S) / n_f
+    q = P(fam, {'a': 1.0, 'b': 2.0, 'c': 4.0}, 0.8)   # per-row mass follows (kl_f / S) / n_f
     S = 7.0
     for f, kl in (('a', 1.0), ('b', 2.0), ('c', 4.0)):
         row = [i for i, x in enumerate(fam) if x == f][0]
@@ -897,9 +898,20 @@ def test_replay_priority_probs():
     sq = LP.replay_priority_shares(fam, q)
     assert abs(sq['a'] - (0.2 * 6 / N + 0.8 * 1 / 7)) < 1e-4 and abs(sq['c'] - (0.2 / N + 0.8 * 4 / 7)) < 1e-4
     assert sq['c'] > sq['b'] > sq['a'], sq   # shares follow the KL here (the 6-row family has the least KL)
-    r = LP.replay_priority_probs(['x', 'y'], {'x': 1.0, 'y': 2.0}, 0.6)   # equal row counts: the order of the probabilities is the order of the KLs
+    r = P(['x', 'y'], {'x': 1.0, 'y': 2.0}, 0.6)   # equal row counts: the order of the probabilities is the order of the KLs
     assert r[1] > r[0] and abs(r.sum() - 1) < 1e-15
-    return 'sums to 1; uniform for KL 0 / empty / frac 0; one family with all the KL at frac 0.5 gets 0.5 + 0.5 n_f/N; per-row mass = (1-f)/N + f (kl_f/S)/n_f; order follows the KL'
+    # a NaN / inf / negative KL counts 0 (finite, sums to 1); all bad -> uniform; never a NaN probability
+    for bad in (float('nan'), float('inf'), -1.0):
+        z = P(fam, {'a': bad, 'b': 1.5, 'c': 0.0}, 0.5)
+        assert np.isfinite(z).all() and abs(z.sum() - 1) < 1e-12 and np.allclose(z, p), (bad, z)
+        assert np.allclose(P(fam, {'a': bad, 'b': bad, 'c': bad}, 0.5), 1.0 / N), bad
+    rs = np.random.RandomState(0).choice(N, size=5, p=P(fam, {'a': float('nan'), 'b': float('nan'), 'c': float('nan')}, 0.5))   # what crashed before
+    assert len(rs) == 5
+    # the default floor: a family under REPLAY_PRIORITY_MIN_ROWS rows gets no priority mass, however large its KL
+    big = ['a'] * 20 + ['tiny'] * 2
+    d = LP.replay_priority_probs(big, {'a': 1.0, 'tiny': 100.0}, 0.5)
+    assert LP.REPLAY_PRIORITY_MIN_ROWS == 8 and abs(d[-1] - 0.5 / 22) < 1e-12 and abs(d[0] - (0.5 / 22 + 0.5 / 20)) < 1e-12, d
+    return 'sums to 1; uniform for KL 0 / empty / frac 0; one family with all the KL at frac 0.5 gets 0.5 + 0.5 n_f/N; per-row mass = (1-f)/N + f (kl_f/S)/n_f; order follows the KL; NaN/inf/negative KL counts 0 (no NaN p, choice works); families under 8 rows get no priority mass'
 
 
 def test_replay_priority_check_guard_args():
@@ -960,7 +972,28 @@ def test_replay_priority_measure_isolated():
     KR.replay_kl = staticmethod(lambda mm, parent, b: (calls.append(len(b['rows'])), (torch.tensor(1.0), {}))[1])
     out = LP.measure_family_kl(m, None, KR, big, fam, cap=70, bs=64)
     assert calls == [64, 6, 50] and out == {'a': 1.0, 'b': 1.0}, (calls, out)
-    return 'mocked replay_kl drew from torch / random / numpy / the model drill stream: all restored; batches 64+64 (cap 128) and 50, size-weighted mean'
+    calls.clear()   # a family under min_rows is not measured (no tiny batches); a NaN KL comes back as measured
+    KR.replay_kl = staticmethod(lambda mm, parent, b: (calls.append(len(b['rows'])), (torch.tensor(float('nan')), {}))[1])
+    out = LP.measure_family_kl(m, None, KR, big[:257], fam[:250] + ['c'] * 7)
+    assert calls == [64, 64] and list(out) == ['a'] and np.isnan(out['a']), (calls, out)
+    return 'mocked replay_kl drew from torch / random / numpy / the model drill stream: all restored; batches 64+64 (cap 128) and 50, size-weighted mean; families under 8 rows skipped; NaN returned as measured'
+
+
+def test_diary_families_real_lookup():
+    """diary_families without a stub: labels by prompt from <data>/train.jsonl, the first row of a repeated prompt wins, the sha256 of
+    that train.jsonl comes back; a diary row whose prompt is not there stops (SystemExit with the count); a missing train.jsonl stops."""
+    with tempfile.TemporaryDirectory() as td:
+        tr = [dict(prompt='p1', family='fa'), dict(prompt='p2', family='fb'), dict(prompt='p1', family='LATER'), dict(prompt='p3', family='fc')]
+        with open(os.path.join(td, 'train.jsonl'), 'w') as f:
+            f.write(''.join(json.dumps(r) + '\n' for r in tr))
+        want_sha = hashlib.sha256(open(os.path.join(td, 'train.jsonl'), 'rb').read()).hexdigest()
+        fam, sha = LP.diary_families([dict(prompt='p2'), dict(prompt='p1'), dict(prompt='p1')], data=td)
+        assert fam == ['fb', 'fa', 'fa'] and sha == want_sha, (fam, sha)
+        raises(lambda: LP.diary_families([dict(prompt='p1'), dict(prompt='zz'), dict(prompt='yy')], data=td), '2 of 3 diary rows have no family')
+        empty = os.path.join(td, 'nothing')
+        os.mkdir(empty)
+        raises(lambda: LP.diary_families([dict(prompt='p1')], data=empty), 'does not exist')
+    return 'labels by prompt (first row wins), sha256 of train.jsonl returned; unlabelled diary rows and a missing train.jsonl stop'
 
 
 def test_replay_priority_train_end_to_end():
@@ -1000,7 +1033,7 @@ def test_replay_priority_train_end_to_end():
                 h.update(k.encode())
                 h.update(v.detach().numpy().tobytes())
             seen['hash'][step], seen['extra'][step] = h.hexdigest(), dict(extra)
-        LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: [f'f{i % 3}' for i in range(len(diary))]), RecRS
+        LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: ([f'f{i % 3}' for i in range(len(diary))], 'stub-sha')), RecRS
         buf = io.StringIO()
         try:
             with contextlib.redirect_stdout(buf):
@@ -1033,10 +1066,12 @@ def test_replay_priority_train_end_to_end():
             assert e['replay_priority'] == 0.5 and e['replay_priority_every'] == 1 and set(e['replay_priority_shares']) == {'f0', 'f1', 'f2'}, e
             assert abs(sum(e['replay_priority_shares'].values()) - 1) < 2e-4 and e['replay_priority_secs'] >= 0, e
             assert on['extra'][0]['replay_priority_shares'] == {'f0': 0.3333, 'f1': 0.3333, 'f2': 0.3333}, on['extra'][0]['replay_priority_shares']   # uniform before update 1
-            assert [d[0] for d in on['draws']] == ['choice'] * 3 and 'replay priority @1:' in on['out'] and 'replay priority @2:' in on['out'] and 'replay priority @3' not in on['out'], on['out']
+            assert [d[0] for d in on['draws']] == ['randint', 'choice', 'choice'] and 'replay priority @1:' in on['out'] and 'replay priority @2:' in on['out'] and 'replay priority @3' not in on['out'], on['out']
+            assert on['draws'][0][3] == want[0], 'before the first measurement ON draws exactly what the control draws'
+            assert on['extra'][0]['replay_priority_measures'] == 0 and e['replay_priority_measures'] == 2 and e['replay_priority_labels_sha256'] == 'stub-sha', e
             assert 'diary families 3' in on['out']
             # (3) isolation, end to end
-            LP.replay_priority_probs = lambda fam, kl, frac: np.full(len(fam), 1.0 / len(fam))
+            LP.replay_priority_probs = lambda fam, kl, frac, **k: np.full(len(fam), 1.0 / len(fam))
             try:
                 a = run(td, 'iso-real', replay_priority=0.5, replay_priority_every=1, **guard_kw)
                 LP.measure_family_kl = lambda m, parent, klreplay, kl_ds, fam, **k: {f: 0.0 for f in dict.fromkeys(fam)}
@@ -1054,7 +1089,7 @@ TESTS = [test_check_guard_args_matrix, test_ce_replay_loss, test_kl_replay_loss_
          test_train_harm_leaves_training_untouched, test_replay_freeze_setup, test_replay_freeze_real_parent_count,
          test_stop_if_drop_parse_and_decision, test_score_step_futility_record, test_train_a1f_stop_and_commit_check,
          test_a1f_is_one_change_vs_l11, test_replay_priority_probs, test_replay_priority_check_guard_args, test_replay_priority_measure_isolated,
-         test_replay_priority_train_end_to_end]
+         test_diary_families_real_lookup, test_replay_priority_train_end_to_end]
 
 if __name__ == '__main__':
     passed = skipped = 0

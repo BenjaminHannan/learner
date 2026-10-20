@@ -54,6 +54,7 @@ import contextlib
 import hashlib
 import itertools
 import json
+import math
 import os
 import random
 import re
@@ -1646,34 +1647,52 @@ def install_first_call_weight(m, weight):
 
 
 def diary_families(diary, data=None):
-    """--replay-priority: the original skill family of each diary row (list, diary order), looked up by prompt in the data folder's
-    train.jsonl (build_parent_diary's pool file; the first row with that prompt); '?' if the prompt is not there. In memory only: the
-    diary rows (and so diary.jsonl and its sha256) are not touched."""
+    """--replay-priority: the original skill family of each diary row, looked up by prompt in the data folder's train.jsonl
+    (build_parent_diary's pool file; the first row with that prompt). -> (families in diary order, sha256 of that train.jsonl).
+    Every diary row must be found: a prompt missing from train.jsonl means the labels come from another build than the diary
+    (e.g. a --diary-cache from one build with CUSTOM_IO_DATA at another), so it stops (SystemExit with the count) rather than
+    sampling on wrong labels. In memory only: the diary rows (and so diary.jsonl and its sha256) are not touched."""
     from domain import mode
     tpath = mode.guard(os.path.join(DIARY_DATA if data is None else data, 'train.jsonl'))
     if not os.path.exists(tpath):
         raise SystemExit(f'--replay-priority: family labels come from {tpath}, which does not exist (set CUSTOM_IO_DATA)')
     want = {r['prompt'] for r in diary}
     fam_of = {}
-    with open(tpath) as f:
+    h = hashlib.sha256()
+    with open(tpath, 'rb') as f:
         for line in f:
+            h.update(line)
             r = json.loads(line)
             if r['prompt'] in want and r['prompt'] not in fam_of:
                 fam_of[r['prompt']] = r['family']
-    return [fam_of.get(r['prompt'], '?') for r in diary]
+    miss = sum(r['prompt'] not in fam_of for r in diary)
+    if miss:
+        raise SystemExit(f'--replay-priority: {miss} of {len(diary)} diary rows have no family in {tpath} (sha256 {h.hexdigest()[:12]}): '
+                         'the labels must come from the build the diary was made from')
+    return [fam_of[r['prompt']] for r in diary], h.hexdigest()
 
 
-def replay_priority_probs(diary_fam, kl_by_fam, frac):
+REPLAY_PRIORITY_MIN_ROWS = 8   # --replay-priority: a family needs this many diary rows to get priority mass (fewer: its KL is too noisy)
+
+
+def replay_priority_probs(diary_fam, kl_by_fam, frac, min_rows=REPLAY_PRIORITY_MIN_ROWS):
     """--replay-priority: per-diary-row sampling probability (np.float64, sums to 1). p_i = (1 - frac) / N + frac * (kl_f / S) / n_f for
-    row i of family f (n_f rows, S = sum of the kl values over the families, a missing family counts 0); uniform 1/N when S <= 0."""
+    row i of family f (n_f rows, S = sum of the kl values over the families). A family counts kl 0 when it is missing from kl_by_fam,
+    its kl is not finite (NaN / inf: never let a bad measurement into the draw) or negative, or it has fewer than min_rows rows (a 1-2 row
+    family's KL is measured on those same rows and would put its whole share on them); uniform 1/N when S <= 0."""
     n = len(diary_fam)
     cnt = {}
     for f in diary_fam:
         cnt[f] = cnt.get(f, 0) + 1
-    S = float(sum(max(float(kl_by_fam.get(f, 0.0)), 0.0) for f in cnt))
-    if S <= 0:
+
+    def kl(f):
+        v = float(kl_by_fam.get(f, 0.0))
+        return v if math.isfinite(v) and v > 0 and cnt[f] >= min_rows else 0.0
+    w = {f: kl(f) for f in cnt}
+    S = float(sum(w.values()))
+    if not S > 0:
         return np.full(n, 1.0 / n, dtype=np.float64)
-    p = np.array([(1.0 - frac) / n + frac * (max(float(kl_by_fam.get(f, 0.0)), 0.0) / S) / cnt[f] for f in diary_fam], dtype=np.float64)
+    p = np.array([(1.0 - frac) / n + frac * (w[f] / S) / cnt[f] for f in diary_fam], dtype=np.float64)
     return p / p.sum()
 
 
@@ -1685,11 +1704,13 @@ def replay_priority_shares(diary_fam, p):
     return {f: round(v, 4) for f, v in sorted(sh.items(), key=lambda kv: -kv[1])}
 
 
-def measure_family_kl(m, parent, klreplay, kl_ds, diary_fam, cap=128, bs=64):
+def measure_family_kl(m, parent, klreplay, kl_ds, diary_fam, cap=128, bs=64, min_rows=REPLAY_PRIORITY_MIN_ROWS):
     """--replay-priority: per-family KL of m to the frozen parent. For each family its first min(cap, n_f) diary rows (diary order), in
     batches of at most bs, the mean of klreplay.replay_kl(m, parent, b)[0] weighted by batch size; m in whatever mode it is in (the loop's
-    train mode). Moves no training stream: torch / python / numpy global RNG via rng_isolated, and the model's own ans_drill stream
-    (m._drill_rng, m.drill_stats: train_golds draws from it in train mode) saved and restored; no grad. -> {family: kl >= 0}, first-seen order."""
+    train mode). Families with fewer than min_rows rows are skipped (replay_priority_probs gives them no priority mass, so their many tiny
+    batches would be wasted forwards). Moves no training stream: torch / python / numpy global RNG via rng_isolated, and the model's own
+    ans_drill stream (m._drill_rng, m.drill_stats: train_golds draws from it in train mode) saved and restored; no grad.
+    -> {family: kl as measured, NaN included}, first-seen order; replay_priority_probs decides what a bad value counts as."""
     import torch
     from custom_io.data import collate, to_device
     idx = {}
@@ -1700,12 +1721,14 @@ def measure_family_kl(m, parent, klreplay, kl_ds, diary_fam, cap=128, bs=64):
     try:
         with rng_isolated(), torch.no_grad():
             for f, ix in idx.items():
+                if len(ix) < min_rows:
+                    continue
                 ix, tot, n = ix[:cap], 0.0, 0
                 for k in range(0, len(ix), bs):
                     c = ix[k:k + bs]
                     kl, _ = klreplay.replay_kl(m, parent, to_device(collate([kl_ds[i] for i in c]), 'cpu'))
                     tot, n = tot + float(kl) * len(c), n + len(c)
-                out[f] = max(tot / n, 0.0)
+                out[f] = tot / n
     finally:
         if drill:
             m._drill_rng.setstate(drill[0])
@@ -1969,11 +1992,10 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
     prio = dict(p=None, shares={}, secs=0.0, n=0)   # --replay-priority: the live sampling probabilities (None = uniform), the latest per-family shares, measuring time
     if prio_on:
-        diary_fam = diary_families(diary)   # in memory only: the diary object and diary.jsonl stay as built / loaded
+        diary_fam, labels_sha = diary_families(diary)   # in memory only: the diary object and diary.jsonl stay as built / loaded
         fam_n = Counter(diary_fam)
-        prio['p'] = np.full(len(diary), 1.0 / len(diary), dtype=np.float64)
-        prio['shares'] = replay_priority_shares(diary_fam, prio['p'])
-        extra.update(replay_priority=replay_priority, replay_priority_every=replay_priority_every)
+        prio['shares'] = replay_priority_shares(diary_fam, np.full(len(diary), 1.0 / len(diary)))   # p stays None: the control's randint draw until the first measurement
+        extra.update(replay_priority=replay_priority, replay_priority_every=replay_priority_every, replay_priority_labels_sha256=labels_sha)
         print(f'replay priority {replay_priority} every {replay_priority_every} updates: diary families {len(fam_n)}, top 5 by rows: '
               + ', '.join(f'{f}={n}' for f, n in fam_n.most_common(5)), flush=True)
     torch.manual_seed(SEED)   # ans_drill draws from the model's own RNG in train mode
@@ -1986,7 +2008,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         dict(extra, **{rkey: round(float(np.mean(rlog)), 6)}) if replay_arm and rlog else extra)   # replay arm: the running mean so far rides on each step's record
     if prio_on:
         ex0 = ex
-        ex = lambda: dict(ex0(), replay_priority_shares=dict(prio['shares']), replay_priority_secs=round(prio['secs'], 1))
+        ex = lambda: dict(ex0(), replay_priority_shares=dict(prio['shares']), replay_priority_secs=round(prio['secs'], 1), replay_priority_measures=prio['n'])
     hf = lambda u: harm_fn if u in harm_steps else None
     sk = {'stop_limits': stop_limits, 'keep_final': keep_final} if stop_limits else {}   # passed only when a futility stop is set: score_step's other callers see the shipped call; keep_final lets a stopped run keep the checkpoint it stopped at
     stopped = None
@@ -1999,7 +2021,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         m.train()
         items = [ds[i] for i in ni]
         if use_replay:   # + diary rows (source 'diary'), told apart by kl_replay_loss / ce_replay_loss
-            draw = kl_rng.choice(len(diary), size=kl_replay_rows, replace=True, p=prio['p']) if prio_on else kl_rng.randint(0, len(diary), size=kl_replay_rows)
+            draw = kl_rng.choice(len(diary), size=kl_replay_rows, replace=True, p=prio['p']) if prio['p'] is not None else kl_rng.randint(0, len(diary), size=kl_replay_rows)
             items += [kl_ds[int(j)] for j in draw]
         b = to_device(collate(items), 'cpu')
         o = m.loss(b)
@@ -2022,12 +2044,16 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         if prio_on and u % replay_priority_every == 0 and u < updates:   # re-measure the per-family KL to the parent on the current weights; moves no training stream
             t1 = time.time()
             kl_f = measure_family_kl(m, kl_parent, klreplay, kl_ds, diary_fam)
+            bad = [f for f, v in kl_f.items() if not math.isfinite(v)]
+            if bad:
+                print(f'replay priority @{u}: non-finite KL for {bad}: counted 0 (the draw falls back toward uniform)', flush=True)
             prio['p'] = replay_priority_probs(diary_fam, kl_f, replay_priority)
             prio['shares'] = replay_priority_shares(diary_fam, prio['p'])
             prio['secs'] += time.time() - t1
             prio['n'] += 1
-            S = sum(kl_f.values())
-            top = sorted(kl_f.items(), key=lambda kv: -kv[1])[:5]
+            kl_ok = {f: v for f, v in kl_f.items() if math.isfinite(v)}
+            S = sum(kl_ok.values())
+            top = sorted(kl_ok.items(), key=lambda kv: -kv[1])[:5]
             print(f'replay priority @{u}: top families by KL: ' + (' '.join(f'{f}={v:.3g}({100 * v / S:.1f}%)' for f, v in top) if S > 0 else 'none (KL 0: uniform)')
                   + f' [{time.time() - t1:.1f}s]', flush=True)
         if u in steps:
@@ -2037,8 +2063,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 done = u
                 break
     m.eval()
-    if prio_on:
-        extra.update(replay_priority_shares=dict(prio['shares']), replay_priority_secs=round(prio['secs'], 1), replay_priority_measures=prio['n'])
+    if prio_on:   # shares / secs / measures ride on every record via ex()
         print(f'replay priority: {prio["n"]} measures, {prio["secs"]:.1f}s', flush=True)
     if use_replay and rlog:
         extra[rkey] = round(float(np.mean(rlog)), 6)

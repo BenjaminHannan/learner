@@ -18,11 +18,11 @@ Ship instrument is already fixed: the 6,800-row DEV under the house rule (coordi
    Expected from the far data (suggested, not shown): NK-soft10 = L13-like, likely fires fewshot_number_rule on 6,800.
 
 ## Part 2. Ship-gate runs (Main brain domain mode, DM1/DM3 marks, s200 and s201, lr 1e-4, scored on BOTH DEVs)
-Each is one change vs the far baseline L11 (soft 1, KL 10, energy 0.99), i.e. exactly the config the far work confirmed; note that
-vs the shipped NK-soft10 guard each also moves soft 10 -> 1. Write each run's DM1/DM3 pass marks into its folder before launch.
+One change vs the far baseline L11 (soft 1, KL 10, energy 0.99): KL 10 -> 30, exactly the config the far work confirmed; note that vs
+the shipped NK-soft10 guard it also moves soft 10 -> 1. Write each run's DM1/DM3 pass marks into its folder before launch.
 | run | guard config (CONST.json / flags) | why |
 |---|---|---|
-| GATE-G3 | soft 1, KL 10, `protect_energy` 0.999 | far winner on durability: holds every family at every reading 6k-16k, 4 seeds |
-| GATE-G1 | soft 1, KL 30, `protect_energy` 0.99 | far winner under the pre-set earliest-step rule; leaks after its 8k stop step |
+| GATE-G1 | soft 1, KL 30, `protect_energy` 0.99; train to the update count that matches the far 8k stop step, then stop | round-G ship candidate (Ben's decision, Oct 20); the stop step is part of the recipe: past it the far runs leak |
+G3 (energy 0.999) is not adopted (its pre-set "proved wrong" condition fired), so it has no gate run.
 Read each on both axes, as in the far work: 6,800 drop + worst family at every night, and the new-skill curve long enough to tell
 delay from cap. A guard ships only if it passes DM1/DM3 and the house rule on the 6,800 DEV on both seeds.
