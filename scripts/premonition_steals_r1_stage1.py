@@ -92,7 +92,12 @@ def identity() -> dict:
 
 
 def provenance() -> dict:
-    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    """Recorded beside each run, never compared. The rental image has no git (and the packed tree no .git): the
+    commit is then None, never an error (box 56946584 failed on exactly that, 10-20)."""
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        commit = None
     cuda = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
     return {"commit": commit or None, "torch": torch.__version__, "python": platform.python_version(),
             "machine": platform.machine(), "gpu": cuda}

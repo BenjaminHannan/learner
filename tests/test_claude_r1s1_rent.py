@@ -997,31 +997,49 @@ class JobE2ETest(Fixture):
         self.assertIn("=== R1S1-FAIL pack sha256", text)
         self.assertEqual(self.calls() if self.log.exists() else [], [])
 
+    def fake_vast(self, success=True) -> dict:
+        """A local stand-in for Vast's instance API: records each self-stop request and answers `success`."""
+        import http.server
+        import threading
+        calls = self.vast_calls = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_PUT(h):
+                body = h.rfile.read(int(h.headers.get("Content-Length", 0))).decode()
+                calls.append(("PUT", h.path, h.headers.get("Authorization"), body))
+                out = json.dumps({"success": success, "error": None if success else "auth"}).encode()
+                h.send_response(200)
+                h.send_header("Content-Type", "application/json")
+                h.end_headers()
+                h.wfile.write(out)
+
+            def log_message(h, *args):
+                pass
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.shutdown)
+        return {"VAST_API": f"http://127.0.0.1:{server.server_port}/api/v0", "NO_PROXY": "127.0.0.1,localhost",
+                "no_proxy": "127.0.0.1,localhost", "CONTAINER_ID": 7, "CONTAINER_API_KEY": "k"}
+
     def test_the_box_ends_by_its_wall_with_no_watcher(self) -> None:
         """Coordinator's on-box self-stop test: waitlog and the session are gone, 1b hangs. The wall kills the job,
         the wrapper asks Vast to stop the instance with the container's own key, and exits (ending the container)."""
-        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
+        vast = self.fake_vast()
         started = time.time()
-        rc, text = self.run_job(WALL_S_TEST=6, FAKE_RUN_1B_SLEEP=60, CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        rc, text = self.run_job(WALL_S_TEST=6, FAKE_RUN_1B_SLEEP=60, **vast)
         elapsed = time.time() - started
         self.assertEqual(rc, 0, text[-3000:])
         self.assertLess(elapsed, 45, text[-2000:])                       # the wall (6 s), not the 60 s hang
         self.assertIn("=== R1S1 WALL 6 s", text)
         self.assertIn("=== R1S1 SELF-STOP wall deadline rc=124", text)
         self.assertIn("=== R1S1 SELF-STOP accepted (try 1)", text)
-        curl = [ln for ln in self.log.read_text().splitlines() if ln.startswith("curl ")]
-        self.assertEqual(len(curl), 1)
-        self.assertIn("-X PUT", curl[0])
-        self.assertIn('{"state": "stopped"}', curl[0])
-        self.assertIn("https://console.vast.ai/api/v0/instances/7/", curl[0])
-        self.assertIn("Authorization: Bearer k", curl[0])
+        self.assertEqual(self.vast_calls, [("PUT", "/api/v0/instances/7/", "Bearer k", '{"state": "stopped"}')])
         time.sleep(2)
         self.assertFalse(Path(str(self.log) + ".slept-through").exists())   # the hung runner was killed, not orphaned
         self.assertFalse(rent.closing_marks(text.splitlines())["DONE"])
 
     def test_the_wall_cannot_be_lengthened_and_a_normal_end_also_self_stops(self) -> None:
-        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
-        rc, text = self.run_job(WALL_S_TEST=10 ** 9, CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        rc, text = self.run_job(WALL_S_TEST=10 ** 9, **self.fake_vast())
         self.assertEqual(rc, 0, text[-3000:])
         wall = rent.wall_seconds(0.45)
         shown = int(re.search(r"=== R1S1 WALL (\d+) s", text).group(1))
@@ -1034,18 +1052,18 @@ class JobE2ETest(Fixture):
         self.assertIn("=== R1S1 SELF-STOP no container key", text)
 
     def test_a_restart_never_reruns_the_job(self) -> None:
-        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
-        rc, text = self.run_job(CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        vast = self.fake_vast()
+        rc, text = self.run_job(**vast)
         self.assertIn("=== R1S1 DONE", text)
         ledger = json.loads((self.jobdir.parent / "r1s1-box-ledger.json").read_text())
         self.assertEqual(set(ledger), {"box_start", "dph", "cap", "job_start", "wall_end"})
         before = self.log.read_text()
-        rc, text = self.run_job(keep_ledger=True, CONTAINER_ID=7, CONTAINER_API_KEY="k")   # the container restarts
+        rc, text = self.run_job(keep_ledger=True, **vast)                 # the container restarts
         self.assertIn("=== R1S1 RESTART-REFUSED", text)
         self.assertIn("=== R1S1 SELF-STOP accepted", text)
         new = self.log.read_text()[len(before):]
         self.assertNotIn("build", new)                                   # nothing reran
-        self.assertEqual([ln for ln in new.splitlines() if ln.startswith("curl ")][0].count("-X PUT"), 1)
+        self.assertEqual(len(self.vast_calls), 2)                        # one stop at the end of each start
 
     def test_the_wall_counts_from_box_start(self) -> None:
         wall = rent.wall_seconds(0.45)
@@ -1056,10 +1074,10 @@ class JobE2ETest(Fixture):
         self.assertIn("=== R1S1 REFUSED: BOX_START", text)
 
     def test_a_refused_self_stop_is_retried_and_reported(self) -> None:
-        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": false, "error": "auth"}\'')
-        rc, text = self.run_job(CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        rc, text = self.run_job(**self.fake_vast(success=False))
         self.assertEqual(text.count("=== R1S1 SELF-STOP refused or failed"), 5)
         self.assertNotIn("SELF-STOP accepted", text)
+        self.assertEqual(len(self.vast_calls), 5)
 
     def test_wall_arithmetic(self) -> None:
         self.assertEqual(rent.wall_seconds(0.45), int(0.95 * 2.80 / 0.45 * 3600))             # from BOX_START
@@ -1168,6 +1186,50 @@ class NetworkFailureTest(unittest.TestCase):
             self.assertEqual((r["success"], r["error"]), (False, type(error).__name__))
         with mock.patch("urllib.request.urlopen", side_effect=socket.timeout("t")):
             self.assertIsNone(rent.inst(7))                                   # unknown, not "gone"
+
+
+class RealRunnerStartTest(unittest.TestCase):
+    """The coordinator's real-runner smoke (box 56946584 died on the runner's first line): the REAL runner's
+    `run --timing` start path, on a PATH without git and with no GPU, gets past its start-up into train_d."""
+
+    def test_run_timing_starts_without_git(self) -> None:
+        runner = SCRIPT.parent / "premonition_steals_r1_stage1.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            (root / "data" / "tokenizer").mkdir(parents=True)
+            shutil.copy(SCRIPT.parents[1] / "data" / "tokenizer" / "premonition-tok-v2.json",
+                        root / "data" / "tokenizer" / "premonition-tok-v2.json")
+            bare = Path(tmp) / "bin"                                         # no git anywhere on this PATH
+            bare.mkdir()
+            env = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH",)}
+            env.update(PATH=str(bare), CUDA_VISIBLE_DEVICES="", PYTHONDONTWRITEBYTECODE="1")
+            r = subprocess.run([sys.executable, "-B", str(runner), "run", "--root", str(root), "--data-rel", "data/v",
+                                "--out", str(root / "out" / "1a"), "--timing", "--hard-gb", "2"],
+                               env=env, capture_output=True, text=True, timeout=300, cwd=str(root))
+            log = (root / "out" / "1a" / "log.txt").read_text()
+        self.assertIn("R1 stage 1 start", log)                               # provenance() survived the missing git
+        self.assertIn("'commit': None", log)
+        self.assertIn("A0 s0: adamw start", log)                             # and the first run began
+        self.assertNotIn("No such file or directory: 'git'", r.stderr)
+        self.assertNotEqual(r.returncode, 0)                                 # it stops inside train_d, at the data
+        self.assertIn("in name_detector", r.stderr)                          # (no village here), past every start step
+
+
+class CapTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        rent.set_cap(None)
+
+    def test_a_later_box_gets_what_is_left(self) -> None:
+        rent.set_cap(2.33)                                                   # 2.80 - 0.47 spent on earlier boxes
+        self.assertEqual(rent.HARD_STOP["1ab"], 2.33)
+        self.assertEqual(rent.wall_seconds(0.68), int(0.95 * 2.33 / 0.68 * 3600))
+        self.assertLessEqual(rent.wall_seconds(0.68) / 3600 * 0.68 + 0.47, 2.80)
+        self.assertTrue(rent.over_stop(2.33, "1ab"))
+        for bad in (0, -1, 2.81):
+            with self.assertRaises(SystemExit):
+                rent.set_cap(bad)
+        rent.set_cap(None)
+        self.assertEqual(rent.HARD_STOP["1ab"], 2.80)
 
 
 if __name__ == "__main__":

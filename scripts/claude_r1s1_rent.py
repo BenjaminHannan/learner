@@ -233,14 +233,22 @@ DPH=__DPH__
 CAP=__CAP__
 WALL_FROM_BOX_S=__WALL_FROM_BOX_S__
 LEDGER=$(dirname "$J")/r1s1-box-ledger.json
-self_stop() {   # ask Vast to stop this instance with the container's own key; success is checked, not assumed
+SELF_STOP_PY='import json, os, sys, urllib.request
+req = urllib.request.Request(os.environ.get("VAST_API", "https://console.vast.ai/api/v0") + "/instances/" + os.environ["CONTAINER_ID"] + "/",
+    data=b"{\"state\": \"stopped\"}", method="PUT",
+    headers={"Authorization": "Bearer " + os.environ["CONTAINER_API_KEY"], "Content-Type": "application/json"})
+try:
+    body = urllib.request.urlopen(req, timeout=30).read().decode()
+except Exception as error:
+    print(type(error).__name__, error); sys.exit(1)
+print(body[:200]); sys.exit(0 if json.loads(body or "{}").get("success") is True else 1)'
+self_stop() {   # ask Vast to stop this instance with the container's own key (python: the image need not have curl)
   if [ -z "${CONTAINER_ID:-}" ] || [ -z "${CONTAINER_API_KEY:-}" ]; then
     echo "=== R1S1 SELF-STOP no container key: exiting ends the container $(date -u +%FT%TZ)"; return
   fi
   for try in 1 2 3 4 5; do
-    reply=$(curl -fsS -m 30 -X PUT -H "Authorization: Bearer $CONTAINER_API_KEY" -H "Content-Type: application/json" \
-      -d '{"state": "stopped"}' "https://console.vast.ai/api/v0/instances/$CONTAINER_ID/" 2>&1)
-    if [ $? = 0 ] && printf '%s' "$reply" | grep -Eq '"success": *true'; then
+    reply=$(${PY:-python3} -c "$SELF_STOP_PY" 2>&1)
+    if [ $? = 0 ]; then
       echo "=== R1S1 SELF-STOP accepted (try $try) $(date -u +%FT%TZ)"; return
     fi
     echo "=== R1S1 SELF-STOP refused or failed (try $try): $(printf '%s' "$reply" | head -c 200)"
@@ -888,6 +896,7 @@ def main(argv=None):
         return p
     p = add("pack", pack)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
+    p.add_argument("--cap", type=float, default=None, help="this box's dollars (default and maximum: the stage cap)")
     p.add_argument("--seal", default=SEAL_DEFAULT)
     p.add_argument("--torch", default=TORCH_PIN, help="torch version to pip install on the box, or `none`")
     p.add_argument("--out", required=True)
@@ -907,6 +916,7 @@ def main(argv=None):
         p.add_argument("--id", required=True)
         if name in ("cost", "waitlog"):
             p.add_argument("--stage", choices=STAGES, default=None)
+            p.add_argument("--cap", type=float, default=None, help="this box's dollars, as packed")
         if name == "logs":
             p.add_argument("--out", required=True)
             p.add_argument("--tail", type=int, default=2000)
@@ -921,7 +931,21 @@ def main(argv=None):
             p.add_argument("--pulled", default=None, help="RUNDIR of a passed `pull`")
             p.add_argument("--abandon", action="store_true", help="nothing to pull (never started / failed to start)")
     a = ap.parse_args(argv)
+    set_cap(getattr(a, "cap", None))
     a.fn(a)
+
+
+STAGE_CAP = 2.80                           # the whole R1 stage-1 total; a later box gets what is left (--cap)
+
+
+def set_cap(cap):
+    """This box's hard stop: the stage cap, or a smaller --cap (the stage total less what earlier boxes spent)."""
+    if cap is None:
+        HARD_STOP[STAGE] = STAGE_CAP
+        return
+    if not 0 < cap <= STAGE_CAP:
+        raise SystemExit(f"--cap must be in (0, {STAGE_CAP}] dollars, got {cap}")
+    HARD_STOP[STAGE] = float(cap)
 
 
 if __name__ == "__main__":
