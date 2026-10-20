@@ -1,0 +1,12 @@
+- single softmax attention pool (the seed); two separate pools for key and value; mean/max/sum pooling; GeM
+- multi-head / multi-query attention pooling (PMA, Set Transformer); Perceiver latents; CLS token; self-attention layers then pool
+- Deep Sets; relation networks (pairwise then sum); bilinear / covariance pooling; NetVLAD
+- sparsemax / entmax / top-k / Gumbel hard token selection; temperature or entropy tricks on pool weights
+- Key-Value Memory Networks; NTM/DNC write heads; product keys; VQ codebook keys; contrastive key losses; Hopfield nets; LSH keys
+- tensor product (role x filler) binding; holographic circular convolution; VSA multiply/permute binding
+- fast weights / outer-product memory; linear-attention memory; DeltaNet delta rule
+- recurrent entity networks (per-entity gated slots); slot attention; capsule routing
+- GLU / FiLM / hypernetwork gating; MoE routing over tokens; GRU/LSTM/conv line encoders
+- role-specific projections ("type-aware pooling"); key from person+relation and value from value token (address keys)
+- identity tags, barcode keys, sparse keys from entity pointers, dual-state identity vectors
+- write gates (surprise, confidence, predict-before-store); LayerNorm/whitening of keys

@@ -1,0 +1,25 @@
+diff --git a/shinka/llm/kwargs.py b/shinka/llm/kwargs.py
+index 56838a7..aef0899 100644
+--- a/shinka/llm/kwargs.py
++++ b/shinka/llm/kwargs.py
+@@ -24,6 +24,9 @@ THINKING_TOKENS = {
+ 
+ NO_TEMPERATURE_MODELS = {
+     "claude-opus-4-8",
++    "claude-haiku-5-5",
++    "claude-sonnet-5-5",
++    "claude-opus-5-5",
+     "deepseek-v4-flash",
+     "deepseek-v4-pro",
+     *GEMINI_THINKING_LEVEL_MODELS,
+diff --git a/shinka/llm/providers/pricing.csv b/shinka/llm/providers/pricing.csv
+index a453199..fe547ee 100644
+--- a/shinka/llm/providers/pricing.csv
++++ b/shinka/llm/providers/pricing.csv
+@@ -74,3 +74,6 @@ openai/gpt-oss-120b,openrouter,0.036,0.18,,,,True,1,1
+ z-ai/glm-4.6,openrouter,0.43,1.75,,,,True,1,0
+ moonshotai/kimi-k2-0905,openrouter,0.6,2.5,,,,False,0,0
+ moonshotai/kimi-k2-thinking,openrouter,0.6,2.5,,,,True,1,1
++claude-haiku-5-5,anthropic,0.1,0.5,0.5,2.5,100000,False,0,0
++claude-sonnet-5-5,anthropic,2.0,10.0,,,,False,0,0
++claude-opus-5-5,anthropic,4.0,20.0,,,,False,0,0
