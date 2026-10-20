@@ -42,12 +42,13 @@ REPO_URL = "https://github.com/BenjaminHannan/learner"
 PIN = "34d8d0635529f6c712c5f8e7630976054bfd84d4"            # RUNCARD-S0 seal (code identical to 0d7a2e633)
 MAX_DPH = 0.494                                              # 8.5 h x DPH <= $4.20 (the box refuses above)
 DISK_GB = 80
-STORAGE_MARGIN = 0.02                                        # $/h added for the 80 GB disk, if dph_total leaves it out
+ROUND_MARGIN = 0.002                                         # $/h on top of dph_total (which includes the 80 GB disk:
+                                                             # the search asks with allocated_storage = DISK_GB)
 
 JOB = r'''# swarm screen C0 + S0 rental job, from scripts/claude_swarm_rent.py (coordinator approval 2026-10-20)
 set -u
 export PIN=__PIN__
-export DPH=__DPH__ BOX_START=__BOX_START__
+export DPH=__DPH__ BOX_START=__BOX_START__ CAP=__CAP__
 J=${JOBDIR:-/job}
 REPO=$J/repo
 OUT=$REPO/artifacts/claude-swarm-screen-20261018/out
@@ -130,7 +131,8 @@ def offers(max_dph):
     q = {"verified": {"eq": True}, "rentable": {"eq": True}, "rented": {"eq": False}, "type": "on-demand",
          "num_gpus": {"eq": 1}, "gpu_ram": {"gte": 23000}, "reliability": {"gte": 0.98},
          "cuda_max_good": {"gte": 12.6}, "disk_space": {"gte": DISK_GB}, "inet_down": {"gte": 300},
-         "cpu_cores_effective": {"gte": 8}, "order": [["dph_total", "asc"]], "limit": 200}
+         "cpu_cores_effective": {"gte": 8}, "allocated_storage": DISK_GB, "order": [["dph_total", "asc"]],
+         "limit": 200}
     found = call("POST", "/bundles/", q).get("offers") or []
     return [o for o in found if o.get("gpu_name") == "RTX 4090" and o.get("dph_total", 99) <= max_dph]
 
@@ -142,8 +144,8 @@ def search(a):
                                                  "geolocation", "machine_id")}))
 
 
-def job_for(dph: str, box_start: int) -> str:
-    return JOB.replace("__DPH__", dph).replace("__BOX_START__", str(box_start))
+def job_for(dph: str, box_start: int, cap: str = "4.20") -> str:
+    return JOB.replace("__DPH__", dph).replace("__BOX_START__", str(box_start)).replace("__CAP__", cap)
 
 
 def create(a):
@@ -151,21 +153,34 @@ def create(a):
     if offer is None:
         print(json.dumps({"refused": f"offer {a.offer} is not an RTX 4090 offer at <= ${a.max_dph}/h right now"}))
         return
-    dph = f"{math.ceil((offer['dph_total'] + STORAGE_MARGIN) * 10000) / 10000:.4f}"   # rounded up: never undercounts
+    dph = f"{math.ceil((offer['dph_total'] + ROUND_MARGIN) * 10000) / 10000:.4f}"     # rounded up: never undercounts
     if float(dph) > a.max_dph:
         print(json.dumps({"refused": f"DPH {dph} with the storage margin is above ${a.max_dph}/h"}))
         return
     box_start = int(time.time())                                         # before the request: billing is covered
     body = {"client_id": "me", "image": IMAGE, "disk": DISK_GB, "label": a.label, "runtype": "args",
-            "args": ["bash", "-c", job_for(dph, box_start), "swarm"], "target_state": "running"}
+            "args": ["bash", "-c", job_for(dph, box_start, a.cap), "swarm"], "target_state": "running"}
     if a.dryrun:
         print(json.dumps({"dryrun": True, "offer": offer.get("id"), "dph": dph, "box_start": box_start,
                           "job_bytes": len(body["args"][2])}))
         return
     r = call("PUT", f"/asks/{a.offer}/", body, timeout=120)
     print(json.dumps({"success": r.get("success"), "new_contract": r.get("new_contract"), "error": r.get("error"),
-                      "msg": r.get("msg"), "dph": dph, "box_start": box_start,
-                      "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(box_start))}))
+                      "msg": r.get("msg"), "dph": dph, "cap": a.cap, "box_start": box_start,
+                      "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(box_start))}), flush=True)
+    new = r.get("new_contract")
+    if not new:
+        return
+    for _ in range(6):                       # the billed rate must not exceed the DPH the box counts with
+        time.sleep(5)
+        billed = inst(new).get("dph_total")
+        if billed is not None:
+            break
+    if billed is None or billed > float(dph):
+        call("DELETE", f"/instances/{new}/")
+        print(json.dumps({"destroyed": new, "reason": f"billed {billed} $/h > the box's DPH {dph} (or unknown)"}))
+    else:
+        print(json.dumps({"billed_dph": billed, "box_dph": dph, "ok": True}))
 
 
 def inst(i):
@@ -294,6 +309,7 @@ def main():
     ap.add_argument("--label", default="claude-swarm-screen-s0")
     ap.add_argument("--dryrun", action="store_true", help="create: print what would be sent, rent nothing")
     ap.add_argument("--max-dph", type=float, default=MAX_DPH)
+    ap.add_argument("--cap", default="4.20", help="create: the box's CAP (the $4.20 total minus anything already spent)")
     ap.add_argument("--id")
     ap.add_argument("--max-min", type=float, default=600)
     ap.add_argument("--n", type=int, default=8)
@@ -302,7 +318,7 @@ def main():
     ap.add_argument("--dph", default=None, help="job: the DPH to fill in (rehearsal); status: the DPH the box uses")
     a = ap.parse_args()
     if a.cmd == "job":                                    # print the job script (rehearsal / review), rent nothing
-        print(job_for(a.dph or "0.4600", int(time.time())))
+        print(job_for(a.dph or "0.4600", int(time.time()), a.cap))
         return
     {"search": search, "create": create, "status": status, "logs": logs, "waitlog": waitlog, "pull": pull,
      "stop": stop, "destroy": destroy}[a.cmd](a)
