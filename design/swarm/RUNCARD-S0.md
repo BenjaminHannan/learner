@@ -44,7 +44,7 @@ the tag goes in the readout).
   reads only `status`, `train_seconds`, `steps`, `final.loss`, the logged losses in `history`, `loop_mismatches`,
   `seconds_budget` and `stop` (`premonition_swarm_marks.py`, validity block). M1-M4 and M6 read the eval files, and
   the diversity report comes from evaluation.
-* **(10-20, pre-seal, sixth pass) The T formula, exactly.** C0 times D1 over its timed batches and counts the
+* **(10-20, pre-seal, sixth pass; its formula is superseded by the next bullet) The T formula, exactly.** C0 times D1 over its timed batches and counts the
   FLOPs of those same batches per curriculum mode. T_raw = F / (D1's FLOP/s), where D1's FLOP/s is weighted by the
   curriculum's FLOP shares: T_raw = F · Σ_m w_m · s_m / f_m (w_m the mode's FLOP share, s_m its measured seconds per
   update, f_m its FLOPs per update, over the same timed batches). T = min(3600, 300 · ceil(T_raw / 300)). This is
@@ -52,6 +52,15 @@ the tag goes in the readout).
   more batches than were timed (sweep item 17). **An unregistered T is refused, not only detected:** the box
   refuses `--t-override` off the dry run and refuses to train when c0.json's T differs from its formula T, and the
   readout VOIDs such a folder (item 4).
+* **(10-20, pre-seal, eighth pass) The T formula is the time-share one.** A seconds-budget run splits its
+  phases by TIME (`MiniTrainer.plan` reads train_seconds / seconds_budget). So in T it spends w_m · T seconds in
+  mode m at D1's FLOP/s f_m / s_m there. D1 then spends F FLOPs in **T_raw = F / Σ_m w_m · (f_m / s_m)**, with
+  w_m = 0.05 / 0.25 / 0.70 (gold / teacher / own), s_m D1's measured seconds per update and f_m its FLOPs per
+  update over the same timed batches. T = min(3600, 300 · ceil(T_raw / 300)) as before. The sixth pass's
+  F · Σ w_m s_m / f_m treated the shares as FLOP shares, so D1 trained for T would not spend F (sweep, seventh
+  pass, item 4). Adopted by the coordinator session (session_014a7yFK9adwx14ocaqRQ6eZ, ruling of 2026-10-20) as a
+  correction, not a moved bar: the card is unsealed and no C0 or S0 data exists. Both arms get the same T either
+  way.
 * **(10-20, pre-seal, sixth pass) Gold mode keeps the ASK terms in both arms.** D1's gold forward keeps a
   zero-weight ASK term (its ASK head gets a zero gradient and AdamW decays it). The swarm now does the same; the
   earlier skip left S0's ASK head out of the graph and undecayed (sweep item 15, ADOPTED by the coordinator,

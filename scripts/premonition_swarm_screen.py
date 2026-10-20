@@ -93,6 +93,28 @@ BOX_OVERHEAD = 1.15
 S0_RUNS = 6                                          # D1 and S0 x seeds 0-2: trains and validation evals
 VOCAB_V2 = 7068
 CKPT_DIR = "artifacts/claude-swarm-screen-20261018/ckpt-manual"   # git-ignored (round 3, sixth pass, item 12)
+REFUSED, C0_STOP = 2, 3                              # the box's exit codes (premonition_swarm_box.sh header)
+
+
+class Stop(SystemExit):
+    """A refusal before any work (exit REFUSED) or a C0 stop: the bench cannot set T (exit C0_STOP). `main` prints
+    the message to stderr and exits with the code, so the box tells a refusal or a stop from a crash (round 3, eighth
+    pass, item 9)."""
+
+    def __init__(self, code: int, message: str) -> None:
+        super().__init__(code)
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message
+
+
+def refused(message: str) -> Stop:
+    return Stop(REFUSED, message)
+
+
+def c0_stop(message: str) -> Stop:
+    return Stop(C0_STOP, message)
 # Every repo module the run imports (review round 3, item 2): the closure of CLOSURE_SEEDS below, kept as an
 # explicit list so the manifest reads plainly. `ManifestCoverageTest` recomputes the closure and fails if an
 # imported repo module is missing, so a new import cannot go unpinned. Plus the box script.
@@ -167,16 +189,18 @@ def compute_T(d1_flops_per_s: float, *, target: float = F_TARGET, step: int = T_
 
 def t_raw_from_modes(seconds: Mapping[str, float], flops: Mapping[str, float], *, target: float = F_TARGET,
                      weights: Mapping[str, float] = None) -> float:
-    """The seconds D1 needs for `target` FLOPs under the curriculum (RUNCARD-S0 section 1; sixth pass, item 17).
+    """The seconds D1 needs for `target` FLOPs under the curriculum (RUNCARD-S0 section 1).
 
-    The curriculum spends FLOP SHARES by phase (`weights`: 0.05 gold, 0.25 teacher, 0.70 own), so each phase's share
-    is spent at that phase's own FLOP/s: T_raw = target x sum_m w_m x s_m / f_m, with s_m D1's seconds per update and
-    f_m D1's FLOPs per update in mode m, both over the same timed batches."""
+    A seconds-budget run splits its phases by TIME (`MiniTrainer.plan` reads train_seconds / seconds_budget):
+    shares `weights` (0.05 gold, 0.25 teacher, 0.70 own) of T are spent in each mode at that mode's FLOP/s
+    f_m / s_m. So D1 spends `target` FLOPs in T_raw = target / sum_m w_m x f_m / s_m, with s_m D1's seconds per
+    update and f_m D1's FLOPs per update in mode m over the same timed batches. (Coordinator ruling Oct 20, round 3
+    eighth pass, item 4: the time-share formula replaces the sixth pass's FLOP-share one.)"""
     weights = CURRICULUM_WEIGHTS if weights is None else weights
     for mode in MODES:
         if not (seconds[mode] > 0 and flops[mode] > 0 and math.isfinite(seconds[mode]) and math.isfinite(flops[mode])):
             raise ValueError(f"mode {mode}: seconds and FLOPs per update must be positive and finite")
-    return target * sum(weights[mode] * seconds[mode] / flops[mode] for mode in MODES)
+    return target / sum(weights[mode] * flops[mode] / seconds[mode] for mode in MODES)
 
 
 def projected_box_hours(T: float, eval_seconds: float, *, train_overhead: float, runs: int = S0_RUNS,
@@ -268,7 +292,7 @@ def environment(device: str) -> dict[str, Any]:
 
 def require_device(device: str) -> None:
     if device == "cuda" and not torch.cuda.is_available():
-        raise SystemExit("--device cuda: CUDA is not available here. Nothing was run.")
+        raise refused("--device cuda: CUDA is not available here. Nothing was run.")
 
 
 def write_json(path: str, payload: Mapping[str, Any]) -> None:
@@ -298,11 +322,11 @@ def cmd_data(args: argparse.Namespace) -> int:
     log(f"swarm-screen data: {data.rel} ({data.tag}); tokenizer {data.tokenizer_info['path']} "
         f"{data.tokenizer.digest[:12]} ({data.tokenizer.vocab_size} ids, status {status})")
     if args.size == "full" and data.tokenizer.vocab_size != VOCAB_V2:
-        raise SystemExit(f"tokenizer has {data.tokenizer.vocab_size} ids, the registered v2 tokenizer has {VOCAB_V2}")
+        raise refused(f"tokenizer has {data.tokenizer.vocab_size} ids, the registered v2 tokenizer has {VOCAB_V2}")
     if data.tokenizer_info["path"] != path:
-        raise SystemExit(f"build_data used {data.tokenizer_info['path']}, not the registered {path}")
+        raise refused(f"build_data used {data.tokenizer_info['path']}, not the registered {path}")
     if status != "v2":
-        raise SystemExit(f"tokenizer status is {status!r}, not the v2 contender tokenizer")
+        raise refused(f"tokenizer status is {status!r}, not the v2 contender tokenizer")
     write_json(args.out, {
         "command": "data", "data_rel": data.rel, "tag": data.tag, "tokenizer_path": path,
         "tokenizer_sha256": data.tokenizer.digest, "vocab_size": data.tokenizer.vocab_size,
@@ -478,18 +502,56 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
     finally:
         shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
     if report.get("status") != "completed":                 # sixth pass, item 1: an aborted probe stops C0
-        raise SystemExit(f"c0: the train-overhead probe did not complete (status {report.get('status')!r}: "
+        raise c0_stop(f"c0: the train-overhead probe did not complete (status {report.get('status')!r}: "
                          f"{str(report.get('error'))[:200]}); S0 would abort the same way")
     trained = float(report["train_seconds"])
     return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
             "overhead_seconds": max(0.0, wall - trained)}
 
 
+REQUIRED_ARMS = ("D1", "S0m4")                       # without these two the bench cannot set T
+
+
+def bench(run_one: Callable[[Mapping[str, Any], str], dict[str, Any]], *, rounds: int, device: str,
+          log: Callable[[str], None]) -> tuple[dict[str, dict[str, list[dict[str, Any]]]], dict[str, str]]:
+    """C0's interleaved rounds over C0_ARMS x MODES: (runs, failed). An arm that trips the run trainer's memory
+    guard or runs out of CUDA memory is reported as failed and skipped from then on. A failed REQUIRED arm stops
+    C0 at once (round 3, eighth pass, item 7: no more billed benching). The cache is emptied AFTER the except
+    block, once the traceback (and the arm's tensors it holds) is released (item 6)."""
+    from learnlab.train import MemoryGuardError
+    runs: dict[str, dict[str, list[dict[str, Any]]]] = {arm: {mode: [] for mode in MODES} for arm in C0_ARMS}
+    failed: dict[str, str] = {}
+    for round_index in range(1, rounds + 1):
+        for arm, config in C0_ARMS.items():
+            if arm in failed:
+                continue
+            for mode in MODES:
+                problem = None
+                try:
+                    result = run_one(config, mode)
+                except MemoryGuardError as error:                    # the run trainer's guard: the arm cannot train
+                    problem = f"memory guard in {mode}: {str(error)[:200]}"
+                except torch.cuda.OutOfMemoryError as error:         # the arm is reported as not runnable
+                    problem = f"CUDA out of memory in {mode}: {str(error)[:200]}"
+                if problem is not None:                              # outside the handler: its frames are gone
+                    failed[arm] = problem
+                    log(f"c0: {arm} {problem}")
+                    gc.collect()
+                    if device == "cuda":
+                        torch.cuda.empty_cache()
+                    if arm in REQUIRED_ARMS:
+                        raise c0_stop(f"c0: {arm} could not run ({problem}); the bench cannot set T")
+                    break
+                runs[arm][mode].append(result)
+                log(f"c0 round {round_index} {arm:>5} {mode:>7}: {result['round_value']:.4f} s/update "
+                    f"(chunks {', '.join(f'{c:.3f}' for c in result['chunks'])})")
+    return runs, failed
+
+
 def cmd_c0(args: argparse.Namespace) -> int:
     from premonition.train import mini_train_config  # noqa: F401  (import check before the long bench)
-    from learnlab.train import MemoryGuardError
     if args.t_override is not None and args.size != "tiny":
-        raise SystemExit("c0: --t-override is for the tiny CPU dry run only; the real T is the registered formula")
+        raise refused("c0: --t-override is for the tiny CPU dry run only; the real T is the registered formula")
     from premonition import data as pdata
     require_device(args.device)
     root = Path(args.root)
@@ -498,44 +560,19 @@ def cmd_c0(args: argparse.Namespace) -> int:
     tokenizer, detector, train_cache = open_caches(budget, args.data_rel, args.tokenizer, max(1, args.workers))
     vocab = tokenizer.vocab_size
     if args.size == "full" and vocab != VOCAB_V2:
-        raise SystemExit(f"tokenizer has {vocab} ids, the registered v2 tokenizer has {VOCAB_V2}")
+        raise refused(f"tokenizer has {vocab} ids, the registered v2 tokenizer has {VOCAB_V2}")
     need = args.warmup + args.timed
     stream = pdata.batches(train_cache, args.max_tokens, seed=0, epochs=None, max_visits=48)
     fixed = list(itertools.islice(stream, need))                      # drawn once, label-free, shared by all runs
     if len(fixed) < need:
-        raise SystemExit(f"only {len(fixed)} batches could be drawn, need {need}")
+        raise c0_stop(f"only {len(fixed)} batches could be drawn, need {need}")
     log(f"c0: {need} fixed batches ({sum(b.tokens.numel() for b in fixed):,} padded tokens), "
         f"{args.rounds} rounds x {len(C0_ARMS)} arms x {len(MODES)} modes, warmup {args.warmup} "
         f"timed {args.timed} chunk {args.chunk}, size {args.size} on {args.device}")
-    runs: dict[str, dict[str, list[dict[str, Any]]]] = {arm: {mode: [] for mode in MODES} for arm in C0_ARMS}
-    failed: dict[str, str] = {}
-    for round_index in range(1, args.rounds + 1):
-        for arm, config in C0_ARMS.items():
-            if arm in failed:
-                continue
-            for mode in MODES:
-                try:
-                    result = time_run(config, mode, fixed, size=args.size, vocab=vocab, device=args.device,
-                                      warmup=args.warmup, timed=args.timed, chunk=args.chunk)
-                except MemoryGuardError as error:                    # the run trainer's guard: the arm cannot train
-                    failed[arm] = f"memory guard in {mode}: {str(error)[:200]}"
-                    log(f"c0: {arm} {failed[arm]}")
-                    gc.collect()
-                    if args.device == "cuda":
-                        torch.cuda.empty_cache()
-                    break
-                except torch.cuda.OutOfMemoryError as error:         # the arm is reported as not runnable
-                    failed[arm] = f"CUDA out of memory in {mode}: {str(error)[:200]}"
-                    log(f"c0: {arm} {failed[arm]}")
-                    gc.collect()
-                    torch.cuda.empty_cache()
-                    break
-                runs[arm][mode].append(result)
-                log(f"c0 round {round_index} {arm:>5} {mode:>7}: {result['round_value']:.4f} s/update "
-                    f"(chunks {', '.join(f'{c:.3f}' for c in result['chunks'])})")
-    for required in ("D1", "S0m4"):
-        if required in failed:
-            raise SystemExit(f"c0: {required} could not run ({failed[required]}); the bench cannot set T")
+    runs, failed = bench(lambda config, mode: time_run(config, mode, fixed, size=args.size, vocab=vocab,
+                                                       device=args.device, warmup=args.warmup, timed=args.timed,
+                                                       chunk=args.chunk),
+                         rounds=args.rounds, device=args.device, log=log)
     per_arm: dict[str, Any] = {}
     for arm in C0_ARMS:
         if arm in failed:
@@ -553,7 +590,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
     timed_rows = fixed[args.warmup:args.warmup + args.timed]                  # the batches the seconds were timed on
     flops = curriculum_flops(fit, timed_rows, d1.model.config)
     t_raw_modes = t_raw_from_modes(per_arm["D1"]["s_per_update"], flops)
-    d1_flops_per_s = F_TARGET / t_raw_modes                                  # the effective curriculum FLOP/s
+    d1_flops_per_s = F_TARGET / t_raw_modes                    # time-share-weighted curriculum FLOP/s
     t_raw, t_formula = compute_T(d1_flops_per_s)
     T = int(args.t_override) if args.t_override is not None else t_formula
     log(f"c0: D1 {per_arm['D1']['weighted_s_per_update']:.4f} s/update weighted, {flops['weighted']:.4e} FLOPs/update "
@@ -596,7 +633,7 @@ def checkpoint_free(root: Path, relative: str) -> None:
     overwrites, so a rerun would spend its whole T and then fail at the save, leaving no train JSON."""
     target = Path(root) / relative
     if target.exists():
-        raise SystemExit(f"REFUSED before training: checkpoint {target} already exists (a rerun after a VOID or a "
+        raise refused(f"REFUSED before training: checkpoint {target} already exists (a rerun after a VOID or a "
                          f"partial PART=s0 run). Move it aside or pass a fresh --ckpt-dir; nothing was trained.")
 
 
@@ -703,8 +740,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     if getattr(args, "workers", 1) == 0:
         args.workers = max(1, min(12, (os.cpu_count() or 2) - 1))
-    return {"data": cmd_data, "c0": cmd_c0, "train": cmd_train, "eval": cmd_eval,
-            "manifest": cmd_manifest}[args.command](args)
+    try:
+        return {"data": cmd_data, "c0": cmd_c0, "train": cmd_train, "eval": cmd_eval,
+                "manifest": cmd_manifest}[args.command](args)
+    except Stop as stop:
+        print(("REFUSED: " if stop.code == REFUSED else "C0 STOP: ") + stop.message, file=sys.stderr, flush=True)
+        return stop.code
 
 
 if __name__ == "__main__":

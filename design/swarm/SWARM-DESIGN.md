@@ -187,7 +187,8 @@ not force a particular split. The diversity report (§4) says what happened.
   give three exchanges. Concurrency replaces depth only partly: 4 rounds × 4 desks instead of up to 8
   loops × 1.
 * **Matched wall-clock (primary for the screen).** Both arms train for the same seconds on the same box
-  (`MiniTrainer.train(max_seconds=…)`, with the FLOP budget set out of reach). Both are evaluated with
+  (`MiniTrainer(seconds_budget=T)`, with the FLOP budget set out of reach; amended 2026-10-20: `max_seconds`
+  alone would freeze the curriculum at its FLOP share, so it is not used, RUNCARD-S0 §1). Both are evaluated with
   the same eval code. The swarm's FLOPs are reported, not matched: it spends about M × 4 / (mean loops)
   times the think FLOPs. Whether that is "close to free" depends on D being launch-bound, which is
   measured in §C0 before any screen run.
@@ -273,7 +274,8 @@ across desks, or the answer mixes up whose fact is whose.
 the model is **bit-identical** to `73b8e0224`. This is tested against a frozen copy of the old
 `model.py`: same initial weights, losses, gradients and greedy answers, in all three modes and all
 three variants (`FlagOffBitIdentityTest`). The swarm path reuses `_start/_step/_insert/_teacher_cards/
-_greedy` unchanged, so `address_reader` and `direct_reader` compose with it (not exercised at size).
+_greedy` unchanged. (Amended 2026-10-20: `address_reader` and `direct_reader` do NOT compose with it.
+`PremonitionMini.__init__` refuses a subclass with thinkers > 1 unless it declares `SWARM_COMPATIBLE` itself.)
 See `IMPLEMENTATION-SPEC.md` §11 for the full test list.
 
 ## 7. Known limits (declared before any run)

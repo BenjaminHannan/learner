@@ -617,8 +617,7 @@ def s1_card(ctx: Context) -> tuple[list[dict[str, Any]], dict[str, Any], dict[st
     m5["detail"]["S0_reference_collapsed"] = s0_collapsed
     m5["detail"]["S1_minus_S0"] = shift
     board_collapsed = bool(s1_collapsed) and s0_collapsed is False
-    if m5["computed"]:
-        m5["status"] = "fail" if s1_collapsed else "pass"          # "as S0 M4": a collapsed S1 never passes
+    # M5's status is diversity_mark's ("as S0 M4": a collapsed S1 never passes); it is set in one place only.
     if shift:
         m5["value"] += " || S1 - S0 register_cos per seed " + ", ".join(f"{v:+.3f}" for v in shift["register_cos_S1_minus_S0"])
     m6 = validity_mark(ctx, "M6", "validity", CARD_ARMS["S1"])

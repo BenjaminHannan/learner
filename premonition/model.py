@@ -527,23 +527,12 @@ class PremonitionMini(nn.Module):
         if self.config.thinkers > 1:                       # design/swarm: M desks per question
             from premonition.swarm import swarm_forward
             return swarm_forward(self, batch, mode, p_own, loops, weights, generator)
-        if mode not in MODES:
-            raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+        hidden, l_lm, store, zero, weights, empty = self._train_prelude(batch, mode, weights)
+        if empty is not None:
+            return empty
         config = self.config
-        hidden = self.read(batch)
-        l_lm = self.lm_loss(hidden, batch)
-        store = self.build_store(hidden, batch)
         count = batch.q_visit.shape[0]
-        zero = hidden.sum() * 0.0
         metrics: dict[str, torch.Tensor] = {}
-        if weights is None:
-            weights = {"lm": config.w_lm, "ask": config.w_ask, "ans": config.w_ans, "halt": config.w_halt}
-            if mode == "gold":
-                weights.update(ask=0.0, halt=0.0)
-        if count == 0:
-            losses = {"lm": l_lm, "ask": zero, "ans": zero, "halt": zero}
-            metrics["question_loops"] = torch.zeros((), dtype=torch.long)
-            return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
         device = hidden.device
         episode = self._start(batch, hidden, store, self._mentions(batch))
@@ -568,12 +557,7 @@ class PremonitionMini(nn.Module):
                                       torch.full_like(gold, -1, dtype=torch.long)).topk(width, 1).values
                 self._insert(episode, store, torch.arange(count, device=device), preload)
 
-        answer = batch.answer
-        length = int((answer != IGNORE_INDEX).sum(1).max().item())
-        targets = answer[:, :max(length, 1)]
-        start_token = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1]
-        inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
-        inputs = inputs.masked_fill(inputs == IGNORE_INDEX, config.pad_id)
+        targets, inputs = self._answer_targets(batch)
 
         ans_terms, halt_terms, set_terms, bce_terms = [], [], [], []
         pairs = 0
@@ -680,7 +664,71 @@ class PremonitionMini(nn.Module):
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
 
+    # Shared by the single thinker and the swarm (premonition/swarm.py), so a fix reaches both arms (round 3,
+    # eighth pass, item 11).
+    def _train_prelude(self, batch: VisitBatch, mode: str, weights: Optional[dict[str, float]]
+                       ) -> tuple[torch.Tensor, torch.Tensor, Optional[CardStore], torch.Tensor, dict[str, float],
+                                  Optional[dict]]:
+        """forward's start: (hidden, L_lm, store, zero, weights, the count == 0 result or None). The ops run in
+        the original order, so the flag-off graph (and its gradient sums) is bit-identical."""
+        if mode not in MODES:
+            raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+        config = self.config
+        hidden = self.read(batch)
+        l_lm = self.lm_loss(hidden, batch)
+        store = self.build_store(hidden, batch)
+        zero = hidden.sum() * 0.0
+        if weights is None:
+            weights = {"lm": config.w_lm, "ask": config.w_ask, "ans": config.w_ans, "halt": config.w_halt}
+            if mode == "gold":
+                weights.update(ask=0.0, halt=0.0)
+        empty = None
+        if batch.q_visit.shape[0] == 0:
+            losses = {"lm": l_lm, "ask": zero, "ans": zero, "halt": zero}
+            metrics = {"question_loops": torch.zeros((), dtype=torch.long)}
+            empty = {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
+        return hidden, l_lm, store, zero, weights, empty
+
+    def _answer_targets(self, batch: VisitBatch) -> tuple[torch.Tensor, torch.Tensor]:
+        """(targets [Q, A], teacher-forced decoder inputs [Q, A]) for L_ans."""
+        answer = batch.answer
+        length = int((answer != IGNORE_INDEX).sum(1).max().item())
+        targets = answer[:, :max(length, 1)]
+        start_token = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1]
+        inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
+        return targets, inputs.masked_fill(inputs == IGNORE_INDEX, self.config.pad_id)
+
     # ------------------------------------------------------------------ evaluation
+    def _answer_prelude(self, batch: VisitBatch, wipe: Optional[str], window_line: Optional[torch.Tensor]
+                        ) -> tuple[VisitBatch, torch.Tensor, Optional[CardStore], Optional[torch.Tensor],
+                                   Optional[Answers]]:
+        """answer's start: wipe checks and crop, read, store (wiped). (batch, hidden, store, low, the empty-batch
+        Answers or None)."""
+        config = self.config
+        low = None
+        if wipe is not None:
+            if wipe not in ("store", "full") or window_line is None:
+                raise ValueError('wipe must be "store" or "full", with window_line')
+            window_line = window_line.to(batch.q_line.device)
+            if wipe == "full":
+                batch = crop_to_windows(batch, window_line)
+            else:
+                low = batch.line_start[batch.q_visit, window_line]
+        hidden = self.read(batch)
+        store = self.build_store(hidden, batch)
+        if store is not None and wipe is not None:
+            store = store.wipe(window_line)
+        empty = None
+        if batch.q_visit.shape[0] == 0:
+            device = hidden.device
+            none = torch.zeros(0, dtype=torch.long, device=device)
+            empty = Answers(torch.zeros(0, config.max_answer, dtype=torch.long, device=device), none,
+                            none, torch.zeros(0, config.top_k, dtype=torch.long, device=device),
+                            None if store is None else torch.zeros(0, store.lines + 1, dtype=torch.bool,
+                                                                   device=device),
+                            torch.zeros(0, device=device))
+        return batch, hidden, store, low, empty
+
     @torch.no_grad()
     def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
                window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
@@ -700,28 +748,11 @@ class PremonitionMini(nn.Module):
         if lesion is not None:
             raise ValueError("lesion needs a swarm (thinkers > 1)")
         config = self.config
-        low = None
-        if wipe is not None:
-            if wipe not in ("store", "full") or window_line is None:
-                raise ValueError('wipe must be "store" or "full", with window_line')
-            window_line = window_line.to(batch.q_line.device)
-            if wipe == "full":
-                batch = crop_to_windows(batch, window_line)
-            else:
-                low = batch.line_start[batch.q_visit, window_line]
-        hidden = self.read(batch)
-        store = self.build_store(hidden, batch)
-        if store is not None and wipe is not None:
-            store = store.wipe(window_line)
+        batch, hidden, store, low, empty = self._answer_prelude(batch, wipe, window_line)
+        if empty is not None:
+            return empty
         count = batch.q_visit.shape[0]
         device = hidden.device
-        if count == 0:
-            empty = torch.zeros(0, dtype=torch.long, device=device)
-            return Answers(torch.zeros(0, config.max_answer, dtype=torch.long, device=device), empty,
-                           empty, torch.zeros(0, config.top_k, dtype=torch.long, device=device),
-                           None if store is None else torch.zeros(0, store.lines + 1, dtype=torch.bool,
-                                                                  device=device),
-                           torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
         limit = min(max_loops or config.max_loops, config.max_loops)

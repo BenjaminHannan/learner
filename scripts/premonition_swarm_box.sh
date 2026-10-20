@@ -11,13 +11,16 @@
 #   DPH      the billed dollars per hour (required off DRYRUN; a positive decimal such as 0.46).
 #   CAP      dollars, the TOTAL approved for this box across every invocation (default 4.20, rulings Q28 and Oct 20).
 #   MAXH     optional extra hour limit for this invocation (a positive decimal). The money deadline always applies.
-#   BOX_START  epoch seconds when the box's billing began (default: the first invocation's start). The running total
-#            is (now - BOX_START) x DPH, idle time between invocations included. It is persisted in the box ledger
-#            artifacts/<run>/money-ledger.json, shared by every OUT, so a fresh OUT never resets the money.
+#   BOX_START  epoch seconds when the box's billing began (setup and CHECK_ONLY passes included). REQUIRED off DRYRUN
+#            until the ledger exists (round 3, eighth pass, item 3: no default, so billed time before the first run
+#            is never left out). The running total is (now - BOX_START) x DPH, idle time between invocations
+#            included. It is persisted in the box ledger artifacts/<run>/money-ledger.json (one level above OUT, one
+#            per box, coordinator ruling Oct 20), written by the first invocation that passes the money checks, so a
+#            fresh OUT never resets the money. The ledger also records every C0 stop.
 #   PART     c0 | s0 | all (default all). c0 stops after C0. s0 starts at the trains and needs data.json, c0.json
 #            and host-c0.txt in OUT (from an earlier c0 part in this OUT, or copied from FROM).
-#   FROM     with PART=s0 on a fresh OUT: an earlier OUT whose data.json, c0.json and host-c0.txt are copied (read-only
-#            sources; their sha256 is logged). This is the rerun route after a VOID: a fresh OUT, the same T.
+#   FROM     with PART=s0 only, on a fresh OUT: an earlier OUT whose data.json, c0.json and host-c0.txt are copied
+#            (read-only sources; their sha256 is logged). This is the rerun route after a VOID: a fresh OUT, the same T.
 #   DRYRUN   1 = the CPU dry run: tiny preset and visits, cpu, T = 120 s (one CPU step is ~2% of 30 s, the whole
 #            +-2% seconds band of M5, so 30 s voids on one step; see BOX-SPEC), no money ledger, and the S1 tiny arm +
 #            lesions are run so that MARKS-S1 is proven computable too. Like the real run it needs a clean tree and
@@ -26,11 +29,15 @@
 #   CHECK_ONLY  1 = run every refusal check, then exit 0 before any step: PIN, clean tree, OUT/CKPT placement, fresh
 #            OUT, empty CKPT, manifest, money, CUDA, and for PART=s0 the c0 prerequisites, host tie and C0 gate.
 #   STOP_OVERRIDE  non-empty text (the coordinator's ruling) lets the trains start although C0 says stop_and_ask or
-#            money_stop. Logged. It never overrides the box's money deadline or the total cap.
+#            money_stop. Logged. It never overrides the box's money deadline or the total cap. Once any C0 on this box
+#            has stopped (recorded in the ledger), every later invocation needs it: re-measuring C0 in the same or a
+#            fresh OUT until it passes is refused (round 3, eighth pass, item 1).
 #   OUT, PY, WORKERS, C0_EXTRA, DRY_MAXTOK  output folder, python, data workers, extra c0 args (never --t-override off
 #            DRYRUN: an unregistered T is refused), the dry run's per-batch token cap.
-# Exit codes: 2 refused (nothing paid ran in this invocation), 3 stop-and-ask, 4 the money deadline or MAXH was reached,
-#             5 a step failed after it started. On 3/4/5, copy OUT's JSON and logs back directly (no archive is packed).
+# Exit codes: 2 refused (nothing paid ran in this invocation), 3 stop-and-ask (C0's flags, or the runner's C0 stop:
+#             D1 or S0m4 cannot run), 4 the money deadline or MAXH was reached, 5 a step failed after it started (a
+#             runner refusal mid-run included) or the archive could not be packed. On 3/4/5, copy OUT's JSON and logs
+#             back directly (no archive is packed).
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -64,6 +71,7 @@ else
   TRAIN_ARGS=""
 fi
 case "$PART" in c0|s0|all) ;; *) refuse "PART must be c0, s0 or all (got $PART)";; esac
+[ -z "$FROM" ] || [ "$PART" = s0 ] || refuse "FROM is only for PART=s0 (data and C0 would overwrite its files); got PART=$PART"
 is_decimal "$CAP" || refuse "CAP must be a positive decimal number of dollars (got '$CAP')"
 [ -z "$MAXH" ] || is_decimal "$MAXH" || refuse "MAXH must be a positive decimal number of hours (got '$MAXH')"
 WORKERS=${WORKERS:-0}
@@ -87,8 +95,11 @@ TRACKED=$(git -C "$ROOT" ls-files -- "$OUT")                     # no pipe: a lo
 # One run per OUT (round 3, sixth pass, item 8): an OUT that already holds results is never written again.
 shopt -s nullglob
 DONE_FILES=("$OUT"/train-*.json "$OUT"/eval-*.json "$OUT"/MARKS-* "$OUT"/swarm-screen-out.tg[z])   # [z]: a plain name is not a glob
+# A part that runs data and C0 also needs an OUT without an earlier C0 (eighth pass, item 1): a stopping c0.json
+# is never overwritten by a new measurement. PART=s0 reads them (and re-applies the C0 gate).
+if [ "$PART" != s0 ]; then DONE_FILES+=("$OUT"/data.jso[n] "$OUT"/c0.jso[n] "$OUT"/STOP-AND-ASK.tx[t] "$OUT"/host-c0.tx[t]); fi
 shopt -u nullglob
-[ "${#DONE_FILES[@]}" = 0 ] || refuse "OUT $OUT already holds results (for example $(basename "${DONE_FILES[0]}")); a rerun uses a fresh OUT (PART=s0 FROM=<old OUT> keeps the same T)."
+[ "${#DONE_FILES[@]}" = 0 ] || refuse "OUT $OUT already holds results (for example $(basename "${DONE_FILES[0]}")); a rerun uses a fresh OUT (PART=s0 FROM=<old OUT> keeps the same T, and its C0 gate)."
 mkdir -p "$OUT"
 BOXLOG="$OUT/box.log"
 START=$(date +%s)
@@ -150,8 +161,8 @@ else
     [ "$(jget "$LEDGER" dph)" = "$DPH" ] && [ "$(jget "$LEDGER" cap)" = "$CAP" ] \
       || { say "REFUSED: DPH/CAP differ from the box ledger $LEDGER (dph $(jget "$LEDGER" dph), cap $(jget "$LEDGER" cap))"; exit 2; }
   else
-    BOX_START=${BOX_START:-$START}
-    [[ "$BOX_START" =~ ^[0-9]+$ ]] || { say "REFUSED: BOX_START must be epoch seconds (got '$BOX_START')"; exit 2; }
+    [[ "$BOX_START" =~ ^[0-9]+$ ]] || { say "REFUSED: BOX_START (epoch seconds when this box's billing began, setup included) is required before the first run (got '${BOX_START:-}')"; exit 2; }
+    [ "$BOX_START" -le $(( NOW + 60 )) ] || { say "REFUSED: BOX_START $BOX_START is in the future"; exit 2; }
   fi
   SPENT=$(awk -v n="$NOW" -v s="$BOX_START" -v d="$DPH" 'BEGIN{printf "%.4f", (n-s)/3600*d}')
   DEADLINE=$(awk -v s="$BOX_START" -v c="$CAP" -v d="$DPH" 'BEGIN{printf "%d", s + c/d*3600}')
@@ -161,10 +172,29 @@ else
   fi
   if [ "$DEADLINE" -le "$NOW" ]; then say "REFUSED: the box has spent $SPENT USD of the $CAP USD total; no money is left"; exit 2; fi
   say "money: box billing since $(date -u -d "@$BOX_START" +%FT%TZ), spent $SPENT USD of $CAP USD; hard stop at $(date -u -d "@$DEADLINE" +%FT%TZ)"
+  if [ ! -f "$LEDGER" ]; then                # from here on the box's billing start is fixed, for every OUT
+    mkdir -p "$(dirname "$LEDGER")"
+    printf '{"box_start": %s, "dph": "%s", "cap": "%s", "first_out": "%s", "c0_stops": []}\n' "$BOX_START" "$DPH" "$CAP" "$OUT" > "$LEDGER"
+    say "money ledger started: $LEDGER (box_start $BOX_START)"
+  fi
+  STOPS=$("$PY" -B -c 'import json,sys; s=json.load(open(sys.argv[1])).get("c0_stops") or []
+print("; ".join(str(x.get("reason")) + " in " + str(x.get("out")) for x in s))' "$LEDGER")
+  if [ -n "$STOPS" ]; then
+    [ -n "$STOP_OVERRIDE" ] || { say "REFUSED: an earlier C0 on this box stopped ($STOPS). Every further run needs the coordinator's STOP_OVERRIDE; a new C0 measurement is not a way around it."; exit 2; }
+    say "earlier C0 stops on this box: $STOPS; STOP_OVERRIDE given: $STOP_OVERRIDE"
+  fi
   if ! $PY -B -c 'import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)' 2>/dev/null; then
     say "REFUSED: no CUDA device on this host (the full run is for the GPU box; use DRYRUN=1 on a CPU host)"; exit 2
   fi
 fi
+# ledger_stop REASON: record a C0 stop in the box ledger (off DRYRUN), so no later invocation can re-measure past it.
+ledger_stop() {
+  [ "$DRYRUN" != 1 ] || return 0
+  "$PY" -B -c 'import json,sys,time; p=sys.argv[1]; d=json.load(open(p))
+d.setdefault("c0_stops", []).append({"reason": sys.argv[2], "out": sys.argv[3], "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+json.dump(d, open(p, "w"))' "$LEDGER" "$1" "$OUT"
+  say "C0 stop recorded in the box ledger: $1"
+}
 # A rerun must refuse BEFORE any paid work: save_checkpoint never overwrites.
 if [ -d "$ROOT/$CKPT" ] && [ -n "$(ls -A "$ROOT/$CKPT" 2>/dev/null)" ]; then
   say "REFUSED: the checkpoint folder $CKPT already holds checkpoints (a rerun?). Use a fresh OUT (or CKPT); nothing ran."
@@ -211,18 +241,16 @@ c0_gate() {
 for k in ("ratio","stop_ratio","T","eval_seconds_estimate","train_overhead_seconds","projected_s0_box_hours","dph","projected_s0_cost_usd","money_cap_usd"): print(f"{k}: {f[k]}")' "$c0"
     } > "$OUT/STOP-AND-ASK.txt"
     cat "$OUT/STOP-AND-ASK.txt" | tee -a "$BOXLOG"
-    if [ "$PART" = c0 ] || [ -z "$STOP_OVERRIDE" ] || [ "${LEFT_SHORT:-0}" = 1 ]; then say "STOP-AND-ASK: exiting 3 before any training"; exit 3; fi
+    if [ "$PART" = c0 ] || [ -z "$STOP_OVERRIDE" ] || [ "${LEFT_SHORT:-0}" = 1 ]; then
+      ledger_stop "stop_and_ask=$STOP money_stop=$MONEY"
+      say "STOP-AND-ASK: exiting 3 before any training"; exit 3
+    fi
     say "STOP_OVERRIDE given, continuing: $STOP_OVERRIDE"
   fi
 }
 if [ "$PART" = s0 ] && [ "${CHECK_ONLY:-0}" = 1 ]; then c0_gate "$C0_SRC/c0.json"; fi
 say "pre-flight OK: OUT $OUT and CKPT $CKPT are git-ignored, OUT is fresh and holds no tracked file, CKPT is empty"
 if [ "${CHECK_ONLY:-0}" = 1 ]; then say "CHECK_ONLY: every refusal check passed; stopping before any step"; exit 0; fi
-if [ "$DRYRUN" != 1 ] && [ ! -f "$LEDGER" ]; then
-  mkdir -p "$(dirname "$LEDGER")"
-  printf '{"box_start": %s, "dph": "%s", "cap": "%s", "first_out": "%s"}\n' "$BOX_START" "$DPH" "$CAP" "$OUT" > "$LEDGER"
-  say "money ledger started: $LEDGER (box_start $BOX_START)"
-fi
 if [ -n "$FROM" ]; then
   for f in data.json c0.json host-c0.txt; do
     cp "$FROM/$f" "$OUT/$f"; say "FROM: copied $f ($(sha256sum "$OUT/$f" | cut -d' ' -f1)) from $FROM"
@@ -246,6 +274,12 @@ step() {
   printf '%s\t%s\t%s\n' "$name" "$took" "$rc" >> "$OUT/steps.tsv"
   say "STEP $name end rc=$rc seconds=$took"
   if [ "$rc" = 124 ]; then say "STEP $name cut by the money deadline or MAXH"; exit 4; fi
+  if [ "$name" = c0 ] && [ "$rc" = 3 ]; then         # the runner's C0 stop: D1 or S0m4 cannot run, so no T (item 9)
+    { echo "STOP-AND-ASK: C0 could not set T (the runner's C0 stop; see c0.log)."; tail -5 "$OUT/c0.log"; } > "$OUT/STOP-AND-ASK.txt"
+    cat "$OUT/STOP-AND-ASK.txt" | tee -a "$BOXLOG"
+    ledger_stop "c0 could not set T"
+    say "STOP-AND-ASK: exiting 3 before any training"; exit 3
+  fi
   if [ "$rc" != 0 ]; then say "STEP $name FAILED (rc $rc): exiting 5"; exit 5; fi
 }
 host_record() {

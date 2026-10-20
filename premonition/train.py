@@ -927,8 +927,9 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
 
 
 def _mean_diversity(parts: Sequence[tuple[int, dict[str, Any]]]) -> dict[str, Any]:
-    """Question-weighted mean of per-batch `swarm.diversity` dicts (scalars; per-desk lists elementwise);
-    NaN batches are skipped; `collapsed` is recomputed from the averaged register_cos and fetch_overlap."""
+    """Question-weighted mean of per-batch `swarm.diversity` dicts (register_cos; per-desk lists elementwise),
+    except fetch_overlap, which pools its Jaccard sums over the kept (question, desk pair) entries, as
+    IMPLEMENTATION-SPEC §9 defines it (eighth pass, item 5). `collapsed` is recomputed from the pooled values."""
     def mean(name: str) -> Any:
         rows = [(n, d[name]) for n, d in parts]
         if isinstance(rows[0][1], list):
@@ -936,7 +937,9 @@ def _mean_diversity(parts: Sequence[tuple[int, dict[str, Any]]]) -> dict[str, An
         rows = [(n, v) for n, v in rows if not math.isnan(v)]
         return sum(n * v for n, v in rows) / sum(n for n, _ in rows) if rows else float("nan")
 
-    out = {name: mean(name) for name in ("fetch_overlap", "register_cos", "ask_rate", "fetch_count")}
+    out = {name: mean(name) for name in ("register_cos", "ask_rate", "fetch_count")}
+    pairs = sum(d["fetch_overlap_pairs"] for _, d in parts)
+    out["fetch_overlap"] = sum(d["fetch_overlap_sum"] for _, d in parts) / pairs if pairs else float("nan")
     out["silent_desks"] = sum(rate < 0.05 for rate in out["ask_rate"])
     out["collapsed"] = swarm_module.is_collapsed(out["register_cos"], out["fetch_overlap"])
     return out

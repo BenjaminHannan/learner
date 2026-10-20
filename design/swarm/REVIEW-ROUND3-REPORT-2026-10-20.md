@@ -444,3 +444,33 @@ and the manifest matches the tree. The 135 tests in the two swarm test files pas
 Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is
 sent.** Spend: $0 (CPU only). Recommendation: one more round closing 1-3 and 5-13, plus 4 as ruled, each with a
 test that fails on b0088f166. Then the sweep again.
+
+## Eighth pass: the seventh-pass sweep closed (coordinator ruling Oct 20)
+
+Rulings: the ledger location is CONFIRMED (one per box, one level above OUT; BOX-SPEC text updated). Item 4:
+ADOPT the time-share formula T_raw = F / Σ w_m·(f_m/s_m), recorded pre-seal in RUNCARD-S0 §1, citing the ruling.
+GO on 1-3 and 5-13.
+
+| # | fix | test (fails on b0088f166) |
+|---|---|---|
+| 1 | PART c0/all refuse an OUT holding data.json, c0.json, STOP-AND-ASK.txt or host-c0.txt. Every C0 stop is recorded in the ledger's `c0_stops`, and every later invocation then needs STOP_OVERRIDE, in any OUT | `test_a_c0_stop_cannot_be_rerun_away` |
+| 2 | training calls `balanced_assignment` without a static bound, so the picks are the real need (one sync per round, beside `asks.any()`); the split is unchanged | `test_the_split_runs_only_the_picks_some_question_needs` |
+| 3 | BOX_START is required off DRYRUN until the ledger exists (a future value is refused). The ledger is written once the money checks pass, CHECK_ONLY included | `test_the_billing_start_is_required_and_fixed_from_the_first_check` |
+| 4 | the time-share T formula (ruled) | `test_t_raw_is_the_time_share_formula` (D1 trained for T_raw spends exactly F) |
+| 5 | `diversity` returns Jaccard sums and kept-pair counts; `_mean_diversity` pools them (the spec's mean) | `test_fetch_overlap_pools_over_desk_pairs` (the reviewer's example: 1/35, not 0.1) |
+| 6, 7 | C0's bench loop is `bench()`: the cache is emptied after the handler, and a failed D1 or S0m4 stops C0 at once | `test_an_optional_arm_fails_alone_and_the_cache_is_freed_after_the_handler`, `test_a_failed_required_arm_stops_c0_at_once` |
+| 8 | FROM is refused unless PART=s0 | `test_from_is_only_for_part_s0` |
+| 9 | runner: `Stop` exceptions, so a refusal exits 2 and a C0 stop exits 3; box: the c0 step's exit 3 becomes STOP-AND-ASK (exit 3, recorded in the ledger) | `test_runner_refusals_exit_2`, `test_the_runners_c0_stop_is_a_stop_not_a_crash`, `test_c0_refuses_a_t_override_…`, `test_an_aborted_overhead_probe_stops_c0` |
+| 10 | `named` is per question [Q, L, n_ent]; the bound mask is one `bmm` | `test_merge_mask_takes_one_entity_table_row_per_question` (equal to the per-desk definition) |
+| 11 | `PremonitionMini._train_prelude / _answer_targets / _answer_prelude` are shared by D1 and the swarm | `test_d1_and_the_swarm_share_one_prelude` |
+| 12 | the dead `m5["status"]` re-assignment is removed | `test_s1_m5_status_is_set_in_one_place` (a source check plus behaviour) |
+| 13 | SWARM-DESIGN §Q4 and §6 and IMPLEMENTATION-SPEC are corrected (subclasses do not compose; `seconds_budget`, not `max_seconds`) | `test_the_design_docs_match_the_code` |
+
+**Caught while fixing (not in any release):** inserting the item-11 helpers above `answer` moved its
+`@torch.no_grad()` onto `_train_prelude`, so training ran without gradients to the reader. FlagOffIdentityTest
+caught it on D1. It was fixed, and a new guard checks that every parameter D1 trains also gets a gradient in the
+swarm (`test_every_parameter_d1_trains_also_trains_in_the_swarm`). That guard passes on b0088f166 by design. The
+prelude also keeps the old op order, so flag-off gradients stay bit-identical. S0/S1 teacher- and own-mode losses
+and gradients are bit-identical to b0088f166 (checked).
+
+Suites: the eight premonition suites, 257 tests OK (4 skipped).

@@ -437,7 +437,7 @@ class MergeTest(unittest.TestCase):
         fetched = torch.zeros(M, store.lines + 1, dtype=torch.bool)
         fetched[0, 3] = fetched[1, 1] = fetched[2, 4] = True
         visit = torch.zeros(M, dtype=torch.long)
-        cached = sw.entity_table(store, config.n_ent)[visit]
+        cached = sw.entity_table(store, config.n_ent)[visit[::M]]          # per question (eighth pass, item 10)
         self.assertTrue(torch.equal(sw.merge_mask(model, valid, fetched, store, visit, M),
                                     sw.merge_mask(model, valid, fetched, store, visit, M, cached)))
 
@@ -1145,6 +1145,106 @@ class SixthPassTest(unittest.TestCase):
         finally:
             sw.rounds_for = original
         self.assertEqual(calls, ["teacher", "eval", "own"])
+
+
+class EighthPassTest(unittest.TestCase):
+    """Review round 3, eighth pass (the seventh pass's sweep, ruled Oct 20): items 2, 5, 10 and 11."""
+
+    def test_the_split_runs_only_the_picks_some_question_needs(self) -> None:
+        # Item 2: training passes no static bound (the padded gold width + 1 = 17), so balanced_assignment reads the
+        # real need, and the split itself is unchanged.
+        batch = synthetic_batch(seed=2)
+        seen = []
+        original = sw.balanced_assignment
+
+        def record(prefs, need, picks=None):
+            seen.append((picks, int(need.sum(1).max())))
+            return original(prefs, need, picks)
+        sw.balanced_assignment = record
+        try:
+            s0()(batch, mode="teacher", generator=torch.Generator().manual_seed(0))
+        finally:
+            sw.balanced_assignment = original
+        self.assertTrue(seen)
+        self.assertEqual({picks for picks, _ in seen}, {None}, seen)
+        generator = torch.Generator().manual_seed(5)
+        for _ in range(20):
+            prefs = torch.randn(6, M, 17, generator=generator)
+            need = torch.rand(6, 17, generator=generator) < 0.2
+            self.assertTrue(torch.equal(sw.balanced_assignment(prefs, need), sw.balanced_assignment(prefs, need, 17)))
+
+    def test_merge_mask_takes_one_entity_table_row_per_question(self) -> None:
+        # Item 10: `named` is [Q, L, n_ent] (not copied per desk) and the bound mask is one batched matmul; the
+        # mask equals the per-desk definition on random multi-question input.
+        model = s0()
+        config = model.config
+        store = _tiny_store(lines=6, visits=2, ents={1: [5, 2], 3: [7], 4: [5], 0: [1]})
+        generator = torch.Generator().manual_seed(1)
+        Q = 3
+        q_visit = torch.tensor([0, 1, 1]).repeat_interleave(M)
+        valid = torch.rand(Q * M, config.rows, generator=generator) > 0.2
+        fetched = torch.rand(Q * M, store.lines + 1, generator=generator) < 0.3
+        table = sw.entity_table(store, config.n_ent)
+        got = sw.merge_mask(model, valid, fetched, store, q_visit, M, table[q_visit[::M]])
+        self.assertTrue(torch.equal(got, sw.merge_mask(model, valid, fetched, store, q_visit, M)))
+        bound = (fetched[:, :store.lines].unsqueeze(-1) & table[q_visit]).any(1).view(Q, M, config.n_ent)
+        show = bound | (~bound.any(1, keepdim=True) & (torch.arange(M).view(1, M, 1) == 0))
+        want = valid.clone()
+        first = config.question_rows
+        want[:, first:first + config.slots] &= show.reshape(Q * M, config.n_ent)
+        self.assertTrue(torch.equal(got, want.reshape(Q, M * config.rows)))
+
+    def test_fetch_overlap_pools_over_desk_pairs(self) -> None:
+        # Item 5: the reviewer's example. Batch A: 10 questions, 5 kept (question, desk pair) entries, one of them
+        # two desks sharing a card (overlap 1/5); batch B: 10 questions, every desk fetching its own card (0 over 30
+        # pairs). The spec's mean over kept pairs is 1/35; the old question-weighted mean said 0.1.
+        L = 8
+        a = torch.zeros(10, M, L + 1, dtype=torch.bool)
+        a[0, 0, 1] = a[0, 1, 1] = True                    # one shared card: pair (0, 1) Jaccard 1
+        a[0, 2, 2] = True                                 # pairs (0, 2), (1, 2): Jaccard 0
+        a[1, 0, 3] = True                                 # pairs (0, 1), (0, 2): Jaccard 0
+        b = torch.zeros(10, M, L + 1, dtype=torch.bool)
+        for q in range(10):
+            for m in range(M):
+                b[q, m, (q + m) % L] = True               # every desk a different card: Jaccard 0
+        parts = []
+        for fetched in (a, b):
+            swarm = {"desk_fetched": fetched, "desk_asks": torch.ones(10, M, dtype=torch.long), "rounds": 1,
+                     "registers": torch.randn(10, M, 2, 4, generator=torch.Generator().manual_seed(0))}
+            parts.append((10, sw.diversity(swarm)))
+        pairs_a, pairs_b = 5, 10 * 3
+        self.assertAlmostEqual(parts[0][1]["fetch_overlap"], 1 / pairs_a)
+        self.assertAlmostEqual(_mean_diversity(parts)["fetch_overlap"], 1 / (pairs_a + pairs_b))
+        self.assertNotAlmostEqual(_mean_diversity(parts)["fetch_overlap"], (1 / pairs_a + 0) / 2)
+
+    def test_d1_and_the_swarm_share_one_prelude(self) -> None:
+        # Item 11: forward / answer and swarm_forward / swarm_answer start through the same three model helpers, so
+        # a later fix to the single thinker's preamble reaches both arms.
+        batch = synthetic_batch(seed=1)
+        names = ("_train_prelude", "_answer_targets", "_answer_prelude")
+        for model in (build(), s0()):
+            calls = []
+            originals = {n: getattr(PremonitionMini, n) for n in names}
+            for n in names:
+                setattr(PremonitionMini, n,
+                        (lambda f, n: lambda self, *a, **k: calls.append(n) or f(self, *a, **k))(originals[n], n))
+            try:
+                model(batch, mode="teacher")
+                model.answer(batch)
+            finally:
+                for n in names:
+                    setattr(PremonitionMini, n, originals[n])
+            self.assertEqual(calls, list(names), model.config.thinkers)
+
+    def test_every_parameter_d1_trains_also_trains_in_the_swarm(self) -> None:
+        # A guard added while fixing item 11: the swarm's reader, writer and heads stay in the training graph.
+        batch = synthetic_batch(seed=2)
+        trained = {}
+        for name, model in (("D1", build()), ("S0", s0())):
+            model(batch, mode="teacher", generator=torch.Generator().manual_seed(0))["loss"].backward()
+            trained[name] = {n for n, p in model.named_parameters() if p.grad is not None and p.grad.abs().sum() > 0}
+        self.assertTrue({n for n in trained["D1"] if n.startswith("reader.")})
+        self.assertEqual(trained["D1"] - trained["S0"], set())
 
 if __name__ == "__main__":
     unittest.main()

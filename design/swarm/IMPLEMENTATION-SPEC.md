@@ -17,9 +17,11 @@ The design reasons are in `design/swarm/SWARM-DESIGN.md`; this file is only the 
     `if self.config.thinkers > 1: return swarm_forward(self, ...)` (same arguments).
   - `Answers` gets ONE new optional trailing field `swarm: Optional[dict[str, Any]] = None`.
 * The swarm code lives in a new file `premonition/swarm.py` (functions taking the model as first arg),
-  built on top of `model._start / _step / _insert / _teacher_cards / _greedy` so subclasses
-  (`address_reader.py`, `direct_reader.py`) compose. Import it lazily inside `forward`/`answer`
-  to avoid an import cycle.
+  built on top of `model._start / _step / _insert / _teacher_cards / _greedy` and the shared preludes
+  `_train_prelude / _answer_targets / _answer_prelude` (round 3, eighth pass, item 11). Subclasses
+  (`address_reader.py`, `direct_reader.py`) do NOT compose: since round 3, third pass, `PremonitionMini.__init__`
+  refuses a subclass with thinkers > 1 unless it declares `SWARM_COMPATIBLE` itself. Import it lazily inside
+  `forward`/`answer` to avoid an import cycle.
 * Match the house style: dense, terse docstrings, shapes in comments, no new dependencies.
 
 ## 1. Config (`premonition/config.py`)

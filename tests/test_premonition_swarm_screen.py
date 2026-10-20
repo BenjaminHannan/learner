@@ -929,13 +929,18 @@ class SixthPassReadoutTest(MarksTestCase):
 class SixthPassRunnerTest(unittest.TestCase):
     """Review round 3, sixth pass, runner items 1, 4, 12, 17 and 19."""
 
-    def test_t_raw_weights_flop_shares_by_each_modes_own_speed(self) -> None:
-        # Item 17: T_raw = F x sum_m w_m s_m / f_m (FLOP shares, each mode at its own FLOP/s), not F / (update-share
-        # weighted FLOPs per update / update-share weighted seconds).
+    def test_t_raw_is_the_time_share_formula(self) -> None:
+        # Item 17, as corrected by the eighth pass (item 4, coordinator ruling Oct 20): a seconds-budget run splits
+        # its phases by TIME, so T_raw = F / sum_m w_m (f_m / s_m), and D1 trained for T_raw spends exactly F.
         seconds = {"gold": 1.0, "teacher": 2.0, "own": 4.0}
         flops = {"gold": 1e12, "teacher": 1e12, "own": 4e12}
-        want = screen.F_TARGET * (0.05 * 1.0 / 1e12 + 0.25 * 2.0 / 1e12 + 0.70 * 4.0 / 4e12)
-        self.assertAlmostEqual(screen.t_raw_from_modes(seconds, flops), want, delta=want * 1e-12)
+        want = screen.F_TARGET / (0.05 * 1e12 / 1.0 + 0.25 * 1e12 / 2.0 + 0.70 * 4e12 / 4.0)
+        got = screen.t_raw_from_modes(seconds, flops)
+        self.assertAlmostEqual(got, want, delta=want * 1e-12)
+        spent = sum(screen.CURRICULUM_WEIGHTS[m] * got * flops[m] / seconds[m] for m in screen.MODES)
+        self.assertAlmostEqual(spent, screen.F_TARGET, delta=screen.F_TARGET * 1e-12)   # T means "F FLOPs"
+        flop_share = screen.F_TARGET * sum(screen.CURRICULUM_WEIGHTS[m] * seconds[m] / flops[m] for m in screen.MODES)
+        self.assertGreater(abs(flop_share - want) / want, 0.05)                       # the sixth pass's rule differs
         old = screen.F_TARGET / (screen.weighted(flops) / screen.weighted(seconds))     # the old update-share rule
         self.assertGreater(abs(old - want) / want, 0.05)                              # they really differ here
         with self.assertRaises(ValueError):
@@ -943,10 +948,14 @@ class SixthPassRunnerTest(unittest.TestCase):
 
     def test_c0_refuses_a_t_override_off_the_tiny_preset(self) -> None:
         # Item 4: an unregistered T is refused before any work, not only detected later.
-        with self.assertRaises(SystemExit) as caught:
-            screen.main(["c0", "--data-rel", "nowhere", "--tokenizer", "nowhere", "--out", "unused.json",
-                         "--size", "full", "--device", "cpu", "--t-override", "300"])
-        self.assertIn("--t-override is for the tiny CPU dry run only", str(caught.exception))
+        import contextlib
+        import io
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            rc = screen.main(["c0", "--data-rel", "nowhere", "--tokenizer", "nowhere", "--out", "unused.json",
+                              "--size", "full", "--device", "cpu", "--t-override", "300"])
+        self.assertEqual(rc, 2)                                                    # eighth pass, item 9: "refused"
+        self.assertIn("REFUSED: c0: --t-override is for the tiny CPU dry run only", err.getvalue())
 
     def test_the_c0_bench_trips_the_run_trainers_memory_guard(self) -> None:
         # Item 1: time_run checks the run trainer's memory guard after each timed chunk, so an arm that S0 would
@@ -984,6 +993,7 @@ class SixthPassRunnerTest(unittest.TestCase):
         finally:
             ptrain.train_d = original
         self.assertIn("did not complete", str(caught.exception))
+        self.assertEqual(caught.exception.code, screen.C0_STOP)                    # a C0 stop, exit 3 (item 9)
 
     def test_the_runners_default_checkpoint_folder_is_git_ignored(self) -> None:
         # Item 12: a manual `train` run with the default --ckpt-dir must not dirty the tree.
@@ -1013,7 +1023,7 @@ argv = sys.argv[1:]
 cmd = argv[0]
 opts = {argv[i][2:]: argv[i + 1] for i in range(1, len(argv) - 1) if argv[i].startswith("--")}
 if cmd == os.environ.get("FAKE_FAIL"):
-    print(f"fake {cmd} failed"); sys.exit(1)
+    print(f"fake {cmd} failed"); sys.exit(int(os.environ.get("FAKE_RC") or 1))
 if cmd == "manifest":
     print("manifest OK"); sys.exit(0)
 out = Path(opts["out"])
@@ -1054,8 +1064,8 @@ exec "%s" "$@"
 """
 
 
-class SixthPassBoxTest(unittest.TestCase):
-    """Review round 3, sixth pass, box items 2-11, on the real box script in a throwaway clean repo."""
+class BoxRepoCase(unittest.TestCase):
+    """The harness: the real box script in a throwaway clean git repo with the stand-in runner and readout."""
 
     ROOT = Path(__file__).resolve().parents[1]
 
@@ -1094,6 +1104,9 @@ class SixthPassBoxTest(unittest.TestCase):
         base = {k: v for k, v in os.environ.items()
                 if k not in ("OUT", "CKPT", "DRYRUN", "DPH", "CAP", "MAXH", "PART", "FROM", "CHECK_ONLY",
                              "STOP_OVERRIDE", "BOX_START", "C0_EXTRA")}
+        if env.get("DRYRUN") != "1" and "BOX_START" not in env:
+            import time
+            env["BOX_START"] = int(time.time()) - 60                 # the billing start is required (eighth pass, 3)
         env = {**base, "PIN": self.pin, "PY": str(self.py), **{k: str(v) for k, v in env.items()}}
         return subprocess.run(["bash", str(self.repo / "scripts/premonition_swarm_box.sh")], cwd=self.repo, env=env,
                               capture_output=True, text=True, timeout=300)
@@ -1118,6 +1131,11 @@ class SixthPassBoxTest(unittest.TestCase):
         (folder / "c0.json").write_text(json.dumps(base))
         (folder / "host-c0.txt").write_text(f"gpu: {gpu}\n")
         return folder
+
+
+
+class SixthPassBoxTest(BoxRepoCase):
+    """Review round 3, sixth pass, box items 2-11, on the real box script in a throwaway clean repo."""
 
     # ------------------------------------------------------------------ the whole flow, and the archive (10, 11)
     def test_a_full_run_packs_without_the_actual_ckpt_and_keeps_both_host_records(self) -> None:
@@ -1255,6 +1273,160 @@ class SixthPassBoxTest(unittest.TestCase):
         run = self.box(DPH="0.46", OUT=self.out("rerun-2"), PART="s0", FROM=missing)
         self.assertEqual(run.returncode, 2, run.stdout)
         self.assertIn("has no data.json", run.stdout)
+
+
+
+class EighthPassBoxTest(BoxRepoCase):
+    """Review round 3, eighth pass, box items 1, 3, 8 and 9 (same throwaway-repo harness)."""
+
+    def ledger_stops(self) -> list:
+        return json.loads(self.ledger.read_text()).get("c0_stops") or []
+
+    def test_a_c0_stop_cannot_be_rerun_away(self) -> None:
+        # Item 1: run 1 stops at C0. Rerunning the same OUT is refused (it holds the stopping c0.json); a fresh OUT
+        # is refused too (the ledger holds the stop) unless the coordinator's STOP_OVERRIDE is given.
+        stop = json.dumps({"stop_and_ask": True})
+        first = self.box(DPH="0.46", OUT=self.out("o"), FAKE_C0=stop)
+        self.assertEqual(first.returncode, 3, first.stdout)
+        self.assertEqual(len(self.ledger_stops()), 1)
+        stopping = self.out("o").joinpath("c0.json").read_text()
+        again = self.box(DPH="0.46", OUT=self.out("o"))
+        self.assertEqual(again.returncode, 2, again.stdout)
+        self.assertIn("already holds results (for example data.json)", again.stdout)
+        self.assertEqual(self.out("o").joinpath("c0.json").read_text(), stopping)       # never overwritten
+        fresh = self.box(DPH="0.46", OUT=self.out("fresh"))
+        self.assertEqual(fresh.returncode, 2, fresh.stdout)
+        self.assertIn("an earlier C0 on this box stopped", fresh.stdout)
+        self.assertFalse(self.out("fresh").joinpath("c0.json").exists())
+        ruled = self.box(DPH="0.46", OUT=self.out("ruled"), STOP_OVERRIDE="coordinator: re-measure once")
+        self.assertEqual(ruled.returncode, 0, ruled.stdout + ruled.stderr)
+        self.assertIn("STOP_OVERRIDE given", ruled.stdout)
+
+    def test_the_runners_c0_stop_is_a_stop_not_a_crash(self) -> None:
+        # Item 9: C0 exits 3 (D1 or S0m4 cannot run); the box exits 3 with STOP-AND-ASK.txt and a ledger record.
+        run = self.box(DPH="0.46", OUT=self.out("o"), FAKE_FAIL="c0", FAKE_RC="3")
+        self.assertEqual(run.returncode, 3, run.stdout)
+        self.assertTrue(self.out("o").joinpath("STOP-AND-ASK.txt").exists())
+        self.assertEqual([s["reason"] for s in self.ledger_stops()], ["c0 could not set T"])
+        self.assertFalse(list(self.out("o").glob("train-*.json")))
+
+    def test_the_billing_start_is_required_and_fixed_from_the_first_check(self) -> None:
+        # Item 3: no default BOX_START (setup time would be left out); a future one is refused; CHECK_ONLY already
+        # fixes it in the ledger, so a later run counts the setup and the checks.
+        import time
+        run = self.box(DPH="0.46", OUT=self.out("o"), BOX_START="")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("BOX_START", run.stdout.split("REFUSED")[-1])
+        self.assertFalse(self.ledger.exists())
+        run = self.box(DPH="0.46", OUT=self.out("o"), BOX_START=int(time.time()) + 3600)
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("in the future", run.stdout)
+        start = int(time.time()) - 2700                                     # 45 minutes of setup
+        run = self.box(DPH="0.46", OUT=self.out("o"), BOX_START=start, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertEqual(json.loads(self.ledger.read_text())["box_start"], start)
+        later = self.box(DPH="0.46", OUT=self.out("p"), PART="c0", BOX_START=int(time.time()))
+        self.assertEqual(later.returncode, 0, later.stdout + later.stderr)
+        self.assertIn(f"box billing since {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(start))}", later.stdout)
+
+    def test_from_is_only_for_part_s0(self) -> None:
+        # Item 8: with PART=all or c0, data and C0 would overwrite FROM's files while the log claimed a reuse.
+        good = self.c0_folder("first")
+        for part in ("all", "c0"):
+            run = self.box(DPH="0.46", OUT=self.out(f"o-{part}"), PART=part, FROM=good)
+            self.assertEqual(run.returncode, 2, run.stdout)
+            self.assertIn("FROM is only for PART=s0", run.stdout)
+
+
+class EighthPassRunnerTest(unittest.TestCase):
+    """Review round 3, eighth pass, runner / readout / docs items 6, 7, 9, 12 and 13."""
+
+    @staticmethod
+    def _result() -> dict:
+        return {"round_value": 1.0, "chunks": [1.0], "peak_allocated_bytes": None}
+
+    def test_a_failed_required_arm_stops_c0_at_once(self) -> None:
+        # Item 7: S0m4 trips the memory guard in round 1: C0 stops there (exit 3), no further billed benching.
+        from learnlab.train import MemoryGuardError
+        calls = []
+
+        def run_one(config, mode):
+            arm = next(name for name, c in screen.C0_ARMS.items() if c is config)
+            calls.append((arm, mode))
+            if arm == "S0m4":
+                raise MemoryGuardError("over", 15, 14)
+            return self._result()
+        with self.assertRaises(screen.Stop) as caught:
+            screen.bench(run_one, rounds=3, device="cpu", log=lambda m: None)
+        self.assertEqual(caught.exception.code, screen.C0_STOP)
+        self.assertIn("S0m4 could not run", str(caught.exception))
+        self.assertEqual(calls[-1], ("S0m4", "gold"))
+        self.assertNotIn("S0m8", {arm for arm, _ in calls})
+
+    def test_an_optional_arm_fails_alone_and_the_cache_is_freed_after_the_handler(self) -> None:
+        # Items 6 and 7: S0m8 fails and is skipped from then on; the others finish all rounds. The arm's tensors
+        # (held by the traceback inside the except block) are already gone when the cache is emptied.
+        import weakref
+        from learnlab.train import MemoryGuardError
+
+        class Activations:
+            pass
+        refs, alive_at_collect = [], []
+
+        def run_one(config, mode):
+            if config is screen.C0_ARMS["S0m8"]:
+                held = Activations()
+                refs.append(weakref.ref(held))
+                raise MemoryGuardError("over", 15, 14)
+            return self._result()
+        original = screen.gc.collect
+        screen.gc.collect = lambda *a: alive_at_collect.append(any(r() is not None for r in refs)) or original(*a)
+        try:
+            runs, failed = screen.bench(run_one, rounds=2, device="cpu", log=lambda m: None)
+        finally:
+            screen.gc.collect = original
+        self.assertEqual(list(failed), ["S0m8"])
+        self.assertEqual(alive_at_collect, [False])
+        self.assertEqual(len(runs["D1"]["own"]), 2)
+        self.assertEqual(runs["S0m8"]["gold"], [])
+
+    def test_runner_refusals_exit_2(self) -> None:
+        # Item 9: a refusal exits 2 ("refused"), not Python's 1 for SystemExit(str).
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / "ck" / "D1-s0").mkdir(parents=True)
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = screen.main(["train", "--arm", "D1", "--seed", "0", "--seconds", "30", "--data-rel", "d",
+                                  "--tokenizer", "t", "--out", str(Path(folder) / "t.json"), "--root", folder,
+                                  "--ckpt-dir", "ck", "--device", "cpu", "--size", "tiny"])
+        self.assertEqual(rc, screen.REFUSED)
+        self.assertIn("REFUSED before training", err.getvalue())
+
+    def test_s1_m5_status_is_set_in_one_place(self) -> None:
+        # Item 12 (no behaviour change): the dead re-assignment is gone; a collapsed S1 still never passes.
+        import inspect
+        self.assertNotIn('m5["status"] =', inspect.getsource(marks.s1_card))
+        scenario = Scenario()
+        collapsed = dict(HEALTHY, register_cos=0.99, fetch_overlap=0.9, collapsed=True)
+        scenario.swarm["S1"] = [dict(collapsed) for _ in SEEDS]
+        result = MarksTestCase.run_card(self, scenario, card="S1")
+        m5 = next(m for m in result["marks"] if m["mark"] == "M5")
+        self.assertEqual(m5["status"], "fail")
+        self.assertNotEqual(result["verdict"], "PASS")
+
+    def test_the_design_docs_match_the_code(self) -> None:
+        # Item 13: the docs no longer say the subclasses compose with the swarm, or that matched wall-clock uses
+        # max_seconds; the ledger is described where it lives.
+        design = (ROOT / "design/swarm/SWARM-DESIGN.md").read_text(encoding="utf-8")
+        spec = (ROOT / "design/swarm/IMPLEMENTATION-SPEC.md").read_text(encoding="utf-8")
+        box = (ROOT / "design/swarm/BOX-SPEC.md").read_text(encoding="utf-8")
+        self.assertNotIn("compose with it (not exercised at size)", design)
+        self.assertNotIn("`MiniTrainer.train(max_seconds=…)`, with", design)
+        self.assertNotIn("`direct_reader.py`) compose.", spec)
+        self.assertIn("one level\n  above OUT", box)
+        self.assertNotIn('The ruling said "persisted under OUT"', box)
 
 if __name__ == "__main__":
     unittest.main()

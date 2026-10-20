@@ -130,8 +130,9 @@ def merge_mask(model: Any, valid: torch.Tensor, fetched: Optional[torch.Tensor],
     """[Q, M * R] bool decoder visibility of every desk's rows (valid [Q*M, R]), with the bound-slot merge.
 
     Slot (q, m, e) is shown iff it is a mention AND (desk m fetched a real card naming e, or nobody did
-    and m == 0). Without a binder every valid row is shown. `named` [Q*M, L, n_ent] is
-    `entity_table(store)[q_visit]`, built once per forward by `_Swarm` (it depends only on the visit).
+    and m == 0). Without a binder every valid row is shown. `named` [Q, L, n_ent] is the question's
+    `entity_table(store)` row, built once per forward by `_Swarm` (it depends only on the visit, so it is not
+    copied per desk). `q_visit` is per desk row [Q*M], question-major.
     """
     count, rows = valid.shape[0] // desks, valid.shape[1]
     if model.think.binder is None:
@@ -139,8 +140,10 @@ def merge_mask(model: Any, valid: torch.Tensor, fetched: Optional[torch.Tensor],
     config = model.config
     first = config.question_rows
     if named is None:
-        named = entity_table(store, config.n_ent)[q_visit]                  # [Q*M, L, n_ent]
-    bound = (fetched[:, :store.lines].unsqueeze(-1) & named).any(1).view(count, desks, config.n_ent)
+        named = entity_table(store, config.n_ent)[q_visit[::desks]]         # [Q, L, n_ent]
+    # One batched matmul [Q, M, L] x [Q, L, n_ent] (eighth pass, item 10): no [Q*M, L, n_ent] temporary.
+    hits = torch.bmm(fetched[:, :store.lines].view(count, desks, -1).float(), named.float())
+    bound = hits > 0
     lead = torch.arange(desks, device=valid.device).view(1, desks, 1) == 0
     show = bound | (~bound.any(1, keepdim=True) & lead)                     # [Q, M, n_ent]
     out = valid.clone()
@@ -169,8 +172,9 @@ def balanced_assignment(prefs: torch.Tensor, need: torch.Tensor, picks: Optional
     ceil(n / M) cards. Greedy: while some desk is below floor(n / M), only those desks may take a card;
     after that, desks below ceil(n / M). Each pick takes, per question, the best (eligible desk, unassigned
     card) pair by preference. The result is disjoint and covers `need`.
-    `picks` bounds the loop. Pass a static bound (training passes the batch's gold width + 1) to keep it
-    free of host syncs. None reads max |need| once, a sync, which is fine for tests.
+    `picks` bounds the loop. None (what training passes) reads max |need| once, one host sync per round, so
+    the loop runs only the picks some question needs (round 3, eighth pass, item 2: a static bound of the padded
+    gold width + 1 = 17 charged S0 for padding). A static bound keeps it sync-free, at that cost.
     """
     count, desks, width = prefs.shape
     prefs = prefs.clamp_min(-1e9)
@@ -221,7 +225,7 @@ class _Swarm:
         self.desk_rows = self.episode.x.shape[1]
         self.board = (Board(model, Q, store, batch.q_visit, batch.q_line, device)
                       if config.swarm_board and board else None)
-        self.named = (entity_table(store, config.n_ent)[self.batch.q_visit]
+        self.named = (entity_table(store, config.n_ent)[batch.q_visit]                     # [Q, L, n_ent]
                       if store is not None and model.think.binder is not None else None)   # once per forward
 
     def write_board(self) -> None:
@@ -263,14 +267,21 @@ def _pairs(desks: int) -> tuple[torch.Tensor, torch.Tensor]:
     return torch.triu_indices(desks, desks, 1)
 
 
-def fetch_overlap(desk_fetched: torch.Tensor) -> float:
-    """Mean Jaccard of two desks' fetched real cards over questions and desk pairs; NaN with no non-empty pair."""
+def overlap_terms(desk_fetched: torch.Tensor) -> tuple[float, int]:
+    """(sum of Jaccard, count) over the (question, desk pair) entries whose union of fetched real cards is
+    non-empty. Pooling these sums over batches gives the spec's mean (eighth pass, item 5)."""
     real = desk_fetched[..., :-1]
     i, j = _pairs(real.shape[1])
     inter = (real[:, i] & real[:, j]).sum(-1).float()
     union = (real[:, i] | real[:, j]).sum(-1).float()
     keep = union > 0
-    return float((inter[keep] / union[keep]).mean()) if keep.any() else float("nan")
+    return float((inter[keep] / union[keep]).sum()), int(keep.sum())
+
+
+def fetch_overlap(desk_fetched: torch.Tensor) -> float:
+    """Mean Jaccard of two desks' fetched real cards over questions and desk pairs; NaN with no non-empty pair."""
+    total, pairs = overlap_terms(desk_fetched)
+    return total / pairs if pairs else float("nan")
 
 
 def register_cos(registers: torch.Tensor) -> float:
@@ -288,9 +299,11 @@ def diversity(swarm: dict[str, Any]) -> dict[str, Any]:
     """Collapse report of `Answers.swarm`: fetch overlap, register cosine, per-desk ask rate and fetch count."""
     fetched, asks = swarm["desk_fetched"], swarm["desk_asks"]
     rounds = swarm.get("rounds") or max(1, int(asks.max()))
-    cos, overlap = register_cos(swarm["registers"]), fetch_overlap(fetched)
+    total, pairs = overlap_terms(fetched)
+    cos, overlap = register_cos(swarm["registers"]), (total / pairs if pairs else float("nan"))
     ask_rate = (asks.float() / rounds).mean(0)
-    return {"fetch_overlap": overlap, "register_cos": cos, "ask_rate": ask_rate.tolist(),
+    return {"fetch_overlap": overlap, "fetch_overlap_sum": total, "fetch_overlap_pairs": pairs,
+            "register_cos": cos, "ask_rate": ask_rate.tolist(),
             "fetch_count": fetched[..., :-1].sum(-1).float().mean(0).tolist(),
             "collapsed": is_collapsed(cos, overlap), "silent_desks": int((ask_rate < 0.05).sum())}
 
@@ -318,24 +331,13 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
     combiner each round; HALT is the mean desk logit; ASK is trained with `balanced_assignment`;
     `metrics["question_loops"]` counts desk-rounds (Q * rounds * M).
     """
-    if mode not in MODES:
-        raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+    hidden, l_lm, store, zero, weights, empty = model._train_prelude(batch, mode, weights)   # shared with D1
+    if empty is not None:
+        return empty
     config = model.config
     M = config.thinkers
-    hidden = model.read(batch)
-    l_lm = model.lm_loss(hidden, batch)
-    store = model.build_store(hidden, batch)
     count = batch.q_visit.shape[0]
-    zero = hidden.sum() * 0.0
     metrics: dict[str, torch.Tensor] = {}
-    if weights is None:
-        weights = {"lm": config.w_lm, "ask": config.w_ask, "ans": config.w_ans, "halt": config.w_halt}
-        if mode == "gold":
-            weights.update(ask=0.0, halt=0.0)
-    if count == 0:
-        losses = {"lm": l_lm, "ask": zero, "ans": zero, "halt": zero}
-        metrics["question_loops"] = torch.zeros((), dtype=torch.long)
-        return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
     device = hidden.device
     rounds = rounds_for(config, mode, loops)
@@ -349,12 +351,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
             width = min(gold.shape[1], batch.gold_lines.shape[1] + 1, M * config.card_rows)   # each desk <= card_rows
             swarm.insert(_gold_cards(gold, M, width))
 
-    answer = batch.answer
-    length = int((answer != IGNORE_INDEX).sum(1).max().item())
-    targets = answer[:, :max(length, 1)]
-    start_token = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1]
-    inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
-    inputs = inputs.masked_fill(inputs == IGNORE_INDEX, config.pad_id)
+    targets, inputs = model._answer_targets(batch)                                    # shared with D1
     keep = targets != IGNORE_INDEX
     # Round-invariant (round 3, sixth pass, item 18): computed once, so the round loop adds no host syncs.
     flat = torch.nonzero(keep.reshape(-1)).squeeze(1)
@@ -393,7 +390,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
         # L_ask: balanced assignment of the cards no desk has fetched yet.
         need_union = gold & ~union
         prefs = scores.detach().view(count, M, -1)
-        target = balanced_assignment(prefs, need_union, picks=batch.gold_lines.shape[1] + 1).view(count * M, -1)
+        target = balanced_assignment(prefs, need_union).view(count * M, -1)       # picks = the real need
         asks = target.any(1)
         bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
         if asks.any():
@@ -456,35 +453,18 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
     logit > 0, the combiner decodes after the last round. `lesion` (eval-only, S1 models): "board" = the
     board is never written (an S1 run as S0), "notes" = cards posted but notes never written, "cards" =
     notes written but no cards posted. `Answers.swarm` carries the per-desk readouts for `diversity`."""
-    from premonition.model import Answers, _Episode, crop_to_windows
+    from premonition.model import Answers, _Episode
     if lesion not in LESIONS:
         raise ValueError(f"unknown lesion {lesion!r}; choose from {LESIONS}")
     config = model.config
     if lesion is not None and not config.swarm_board:
         raise ValueError("lesion needs a swarm with a board (swarm_board)")
     M = config.thinkers
-    low = None
-    if wipe is not None:
-        if wipe not in ("store", "full") or window_line is None:
-            raise ValueError('wipe must be "store" or "full", with window_line')
-        window_line = window_line.to(batch.q_line.device)
-        if wipe == "full":
-            batch = crop_to_windows(batch, window_line)
-        else:
-            low = batch.line_start[batch.q_visit, window_line]
-    hidden = model.read(batch)
-    store = model.build_store(hidden, batch)
-    if store is not None and wipe is not None:
-        store = store.wipe(window_line)
+    batch, hidden, store, low, empty = model._answer_prelude(batch, wipe, window_line)  # shared with D1
+    if empty is not None:
+        return empty
     count = batch.q_visit.shape[0]
     device = hidden.device
-    if count == 0:
-        empty = torch.zeros(0, dtype=torch.long, device=device)
-        return Answers(torch.zeros(0, config.max_answer, dtype=torch.long, device=device), empty,
-                       empty, torch.zeros(0, config.top_k, dtype=torch.long, device=device),
-                       None if store is None else torch.zeros(0, store.lines + 1, dtype=torch.bool,
-                                                              device=device),
-                       torch.zeros(0, device=device))
     mentions = model._mentions(batch, low)
     swarm = _Swarm(model, batch, hidden, store, mentions, board=lesion != "board")
     board = swarm.board
@@ -525,5 +505,6 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
                    first_top, union, halt_prob, detail)
 
 
-__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "entity_table", "fetch_overlap", "is_collapsed",
+__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "entity_table", "fetch_overlap", "is_collapsed", "overlap_terms",
+           "rounds_for",
            "merge_mask", "register_cos", "swarm_answer", "swarm_forward"]
