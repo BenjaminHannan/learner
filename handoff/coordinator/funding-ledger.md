@@ -89,3 +89,5 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 01:12 | Swarm | Fourth-pass fixes 1-3 plus the _recall desk-0 slice GO. | 0 |
 | 2026-10-20 ~01:55 | Decoder | Step-matching fix (Addendum A, runner only) reviewed CLEAN at 7de83cf5f. Stage 0 runs from there count; the two superseded runs (both at chance) are disclosed and uncounted. G1 passes trivially and counts as no evidence. | 0 |
 | 2026-10-20 ~01:35 | Swarm | Fifth-pass items 1-7 GO; next review is one highest-effort full sweep of kit and readout. | 0 |
+| 2026-10-20 02:05 | GPU-RUN-4 | DONE. Session reports $1.16 of the $2.07 grant spent. Vast check at 02:07Z: no GPU-RUN-4 instances remain, credit $20.69. Verdict: mark 2 FAILED (E4 loss diff 0.048 vs 0.02), so defer does NOT ship. Speed was 1.36x / 1.51x. | 1.16 |
+| 2026-10-20 02:07 | GPU-RUN-5 bid ($1 cap) | Sent to the Opus xhigh gate as a possible bar-move after seeing a score. The session waits on an AskUserQuestion that Ben has to answer. | pending |
