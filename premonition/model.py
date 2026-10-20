@@ -359,6 +359,7 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    mentions: Optional[torch.Tensor] = None   # [Q, n_ent] bool, S4 `ent_key` only: entities a question may mean
 
 
 class PremonitionMini(nn.Module):
@@ -398,6 +399,17 @@ class PremonitionMini(nn.Module):
             self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
                                                                torch.arange(config.rows, config.rows + cards)]),
                                  persistent=False)            # card rows, raw rows: keys from the address block
+        if config.ent_key:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"ent_key is defined for PremonitionMini only, not {type(self).__name__}")
+            # S4 card §1-§2: built after `reset_parameters` inside fork_rng (shared weights and global streams as
+            # D + S2's); W_e N(0, 0.02) from its own generator; kappa_e = 0, so the ASK scores start unchanged.
+            with torch.random.fork_rng(devices=_live_cuda_devices()):
+                self.ent_query = nn.Linear(config.d_model, config.n_ent)
+                draw = int(torch.randint(2 ** 62, (1,), device="cpu").item())
+            self._ent_seed = (draw * 2862933555777941757 + 3037000493) % 2 ** 63     # distinct from S3's seed
+            self.kappa_e = nn.Parameter(torch.zeros(()))
+            self._init_ent_key()
 
     # ------------------------------------------------------------------ setup
     def _init_address(self) -> None:
@@ -409,12 +421,22 @@ class PremonitionMini(nn.Module):
                                                        device="cpu") * 0.02)
             self.address.proj.bias.zero_()
 
+    def _init_ent_key(self) -> None:
+        """S4 init: W_e N(0, 0.02) from its own generator, bias 0, kappa_e 0."""
+        generator = torch.Generator().manual_seed(self._ent_seed)
+        with torch.no_grad():
+            self.ent_query.weight.copy_(torch.randn(self.ent_query.weight.shape, generator=generator,
+                                                    device="cpu") * 0.02)
+            self.ent_query.bias.zero_()
+            self.kappa_e.zero_()
+
     def reset_parameters(self) -> None:
         config, d = self.config, self.config.d_model
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
         own = {id(m) for m in self.address.modules()} if hasattr(self, "address") else set()   # S3 inits apart
+        own |= {id(self.ent_query)} if hasattr(self, "ent_query") else set()                  # S4 inits apart
         shared = [m for m in self.modules() if id(m) not in own]
         for module in shared:
             if isinstance(module, nn.Linear):
@@ -444,6 +466,8 @@ class PremonitionMini(nn.Module):
             nn.init.normal_(self.writer.null_value, std=0.02)
         if getattr(self, "address", None) is not None:          # S3: a re-init restores the S3 init rules
             self._init_address()
+        if getattr(self, "ent_query", None) is not None:        # S4: likewise
+            self._init_ent_key()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -454,8 +478,11 @@ class PremonitionMini(nn.Module):
                  "think": self.think, "heads": self.heads, "decoder": self.decoder}
         if self.config.card_address:
             parts["card_address"] = self.address
-        return {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
-                for name, module in parts.items()}
+        counts = {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
+                  for name, module in parts.items()}
+        if self.config.ent_key:
+            counts["ent_key"] = sum(p.numel() for p in self.ent_query.parameters()) + self.kappa_e.numel()
+        return counts
 
     # ------------------------------------------------------------------ reading
     def read(self, batch: VisitBatch) -> torch.Tensor:
@@ -526,7 +553,7 @@ class PremonitionMini(nn.Module):
                    if store is not None else None)
         return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
                         torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+                        batch.q_visit, batch.q_line, mentions if config.ent_key else None)
 
     @property
     def _card_base(self) -> int:
@@ -603,8 +630,24 @@ class PremonitionMini(nn.Module):
         ask = self.heads.ask(register).squeeze(-1).float()
         scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
                            self.heads.log_kappa.exp(), self.think.age_bias,
-                           episode.fetched[index], questions=index)
+                           episode.fetched[index], questions=index,
+                           extra=self._entity_scores(register, store, episode, index))
         return rows, halt, ask, scores
+
+    def _entity_scores(self, register: torch.Tensor, store: CardStore, episode: _Episode,
+                       index: torch.Tensor) -> Optional[torch.Tensor]:
+        """S4: [n, L + 1] kappa_e * (pi . e_l); pi = softmax of W_e r0 over the mentioned entities, e_l the card's
+        entity multi-hot / its count (0 for NULL and entity-free cards). None without `ent_key`."""
+        if not self.config.ent_key:
+            return None
+        logits = self.ent_query(register).float().masked_fill(~episode.mentions[index], -math.inf)
+        pi = torch.softmax(logits, -1).nan_to_num(0.0)            # a question with no mention: pi = 0
+        ents = store.ents[episode.q_visit[index]]                  # [n, L, E]
+        present = (ents >= 0).float()
+        multi = (F.one_hot(ents.clamp_min(0), self.config.n_ent).float() * present.unsqueeze(-1)).sum(2)
+        multi = multi / present.sum(2, keepdim=True).clamp_min(1.0)
+        match = torch.einsum("ne,nle->nl", pi, multi)
+        return self.kappa_e * F.pad(match, (0, 1))                 # NULL last: 0
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
@@ -783,7 +826,8 @@ class PremonitionMini(nn.Module):
             return torch.zeros(())
         register = _norm(rows[:, self._register_base])
         scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index)
+                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index,
+                           extra=self._entity_scores(register, store, episode, index))
         top = store.top(scores, self.config.top_k)
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()

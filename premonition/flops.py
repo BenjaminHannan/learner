@@ -166,6 +166,8 @@ def mini_hand_count(config, batch: VisitBatch, question_loops: int, training: bo
     # S2 raw card rows; getattr because the identity harness passes configs from the base commit (no field).
     memory = rows + (config.cards if getattr(config, "decoder_raw_cards", False) else 0)
     per_loop += answer_len * (8 + 2 + 2 + 4 * config.decoder_mlp) * d * d + 4 * memory * d * d
+    if getattr(config, "ent_key", False):                         # S4: entity query per ASK (the match is an
+        per_loop += 2 * d * config.n_ent                          #     einsum the counter does not count)
     if getattr(config, "card_address", False):                    # S3: K half of cross_kv over the address
         per_loop += 2 * config.cards * d * d                      #     rows, once, spliced into card + raw keys
     per_loop_attention += 4 * answer_len * answer_len * d + 4 * answer_len * memory * d

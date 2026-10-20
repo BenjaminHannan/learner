@@ -15,7 +15,7 @@ PARAM_BAND = (1_900_000, 2_150_000)   # design/06 §6, asserted at d = 128; the 
 VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; entity ids follow
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
-DRAFT_FLAGS = ("decoder_raw_cards", "card_address")   # design/info-constraints S2, S3: default off, left out of
+DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key")   # design/info-constraints S2, S3: default off, left out of
                                                       # config dicts when off, so plain-D digests are unchanged
 VARIANTS = ("D", "D-noask", "D-noptr")
 
@@ -53,6 +53,9 @@ class MiniConfig:
     card_address: bool = False          # S3 (design/info-constraints/S3-STAGE0-CARD.md): a second per-line pool
                                         # builds an address per card; the decoder's cross-attention keys for the
                                         # card and raw rows come from it, values from the rows. Needs S2. DRAFT
+    ent_key: bool = False               # S4 (design/info-constraints/S4-STAGE0-CARD.md): ASK adds
+                                        # kappa_e * (pi . e_l), the card's entities against a softmax over the
+                                        # mentioned entities from register 0; kappa_e starts at 0. DRAFT
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
     w_ask: float = 0.5
@@ -77,11 +80,13 @@ class MiniConfig:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
         if self.decoder_raw_cards and not self.store:
             raise ValueError("decoder_raw_cards needs the card store (it is a no-op for D-noask)")
+        if self.ent_key and not self.store:
+            raise ValueError("ent_key scores cards: it needs the card store")
         if self.card_address and not self.decoder_raw_cards:
             raise ValueError("card_address is built on decoder_raw_cards (S3 card: base D + S2)")
         if self.check_band and self.d_model == 128:
             parts = self.parameter_breakdown()
-            count = sum(parts.values()) - parts.get("card_address", 0)          # S3 apart (S3 card §2)
+            count = sum(parts.values()) - parts.get("card_address", 0) - parts.get("ent_key", 0)   # S3, S4 apart
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -166,6 +171,8 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     }
     if config.card_address:                                          # S3: address pool + projection
         parts["card_address"] = _linear(d, 1) + _linear(d, d)
+    if config.ent_key:                                               # S4: entity query + kappa_e
+        parts["ent_key"] = _linear(d, config.n_ent) + 1
     return parts
 
 
