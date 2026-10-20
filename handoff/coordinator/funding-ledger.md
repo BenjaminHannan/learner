@@ -133,3 +133,7 @@ Overnight Claude usage was about $400 at list price, about 16% of Ben's weekly q
 ## Standing rental permission (Ben, Oct 20 ~19:40Z, typed in coordinator session_014a7yFK9adwx14ocaqRQ6eZ)
 "Standing permission from Ben: you may rent Vast GPUs for coordinator-approved, sealed runs without asking me, as long as total Vast spend stays within $50 per week (Mon–Sun). Log every rental in the funding ledger. Anything over $50, any 10M-param 5090 run, or Modal spend still needs me. Start with the three approved runs: Muon (steals), swarm and GPU-RUN-5."
 Week of Mon Oct 19: at most $14.72 spent so far (credit drop since Oct 17; includes part of last week). Committing $8.00 (R1 S1 $2.80, swarm $4.20, GPU-RUN-5 $1.00), so the worst case is ≤ $22.72.
+| 2026-10-20 19:33 | GPU-RUN-5 (speed) | BOOKED after Ben's click. Vast 56940993 gr5 (RTX 4090, $0.483/h), destroy by 21:36Z, cap $1.00. Verified running on Vast 19:35Z. | ≤1.00 |
+| 2026-10-20 19:33 | Swarm C0+S0 | BOOKED after Ben's click. Vast 56941045 (RTX 4090, $0.4622/h), BOX_START 19:33:15Z, hard stop ~04:35Z, cap $4.20. A first box 56940815 ran 28 s (~$0.005) and was destroyed. Verified running on Vast 19:35Z; 56940815 absent. | ≤4.20 |
+| 2026-10-20 19:35 | Steals R1 S1 | Not booked (offers vanished). Old coordinator raised the price limit to $0.68/h; cap $2.80 and seal unchanged. Relayed; to verify when booked. | ≤2.80 |
+| 2026-10-20 19:35 | Vast check | Credit $17.96. Running: 56940993, 56941045. Six stopped span boxes still present. | — |
