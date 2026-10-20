@@ -7,6 +7,9 @@ bypass the thinker. Per question, on the model's own greedy answers (`Premonitio
             exactly the condition under which `answer` inserts cards
   cards[q]  distinct real cards fetched (the NULL card is counted apart, in nulls[q])
 
+`summarize` adds loops_mean and halt_rate as `train.validate` defines them, and fetched_any_rate:
+the share of questions that fetched at least one real card (what `train.validate` calls asked_rate).
+
 `guard_verdict` applies the run card's rule: the gain is not counted when the flag-on arm's
 mean cards fetched per question falls more than 20% below control's (pooled over the paired
 seeds), or when control fetches nothing (the guard cannot be read).
@@ -45,11 +48,13 @@ def guard_counts(model, batch, *, max_loops: Optional[int] = None, **answer_kwar
     return answers, asks, answers.fetched[:, :-1].sum(1), answers.fetched[:, -1].long()
 
 
-def summarize(asks: torch.Tensor, cards: torch.Tensor, nulls: torch.Tensor) -> dict[str, float]:
+def summarize(answers, asks: torch.Tensor, cards: torch.Tensor, nulls: torch.Tensor) -> dict[str, float]:
+    """Per-question means for one arm and seed; the arguments are `guard_counts`' four results."""
     n = max(int(asks.numel()), 1)
     return {"questions": int(asks.numel()), "asks_per_question": float(asks.sum()) / n,
             "cards_per_question": float(cards.sum()) / n, "null_per_question": float(nulls.sum()) / n,
-            "asked_rate": float((cards > 0).sum()) / n}
+            "fetched_any_rate": float((cards > 0).sum()) / n,
+            "loops_mean": float(answers.loops.sum()) / n, "halt_rate": float((answers.halt_prob > 0.5).sum()) / n}
 
 
 def guard_verdict(control: Sequence[dict], treated: Sequence[dict],

@@ -6,14 +6,18 @@ flag on must be causal, finite and train the reader through the new path.
 from __future__ import annotations
 
 import os
+import inspect
+import math
 import subprocess
 import sys
 import types
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 import torch
 
+from premonition import train
 from premonition.config import PARAM_BAND, VOCAB_V2, MiniConfig, reader_kv_parameters
 from premonition.flops import measure_mini, mini_hand_count
 from premonition.model import PremonitionMini
@@ -69,6 +73,18 @@ def run_answers(model: PremonitionMini, batch) -> list:
             model.answer(batch, wipe="full", window_line=window)]
 
 
+def bare_greedy(model: PremonitionMini, batch):
+    """The probe path (scripts/premonition_binding_probe.py): `_greedy` on a bare (x, valid) episode."""
+    hidden = model.read(batch)
+    mentions = model._mentions(batch)
+    episode = model._start(batch, hidden, model.build_store(hidden, batch), mentions)
+    return model._greedy(batch, SimpleNamespace(x=episode.x, valid=episode.valid), mentions, None)
+
+
+def drop_timing(report: dict) -> dict:
+    return {k: v for k, v in report.items() if "second" not in k and k != "elapsed"}
+
+
 class FlagOffIsBitIdenticalTest(unittest.TestCase):
     """The swap condition: with the flag off nothing changes, on a fixed batch and seed."""
 
@@ -105,6 +121,12 @@ class FlagOffIsBitIdenticalTest(unittest.TestCase):
                 self.assert_same(ours, theirs, f"{variant}/s{seed} train")
                 eager(old), eager(new)
                 self.assert_same(run_answers(new, batch), run_answers(old, batch), f"{variant}/s{seed} answer")
+                with torch.no_grad():
+                    self.assert_same(train.answer_with_gold(new, batch), train.answer_with_gold(old, batch),
+                                     f"{variant}/s{seed} answer_with_gold")
+                    self.assert_same(bare_greedy(new, batch), bare_greedy(old, batch), f"{variant}/s{seed} bare")
+                self.assert_same(drop_timing(train.validate(new, [batch])), drop_timing(train.validate(old, [batch])),
+                                 f"{variant}/s{seed} validate")
                 self.assertEqual(new.num_parameters(), old.num_parameters())
 
     def test_construction_leaves_the_global_stream_alone(self) -> None:
@@ -159,7 +181,7 @@ class FlagOnTest(unittest.TestCase):
             hidden = model.read(batch)
             kv, keep = model._reader_kv(batch, hidden)
             width = int(batch.q_span[:, 1].max())
-            self.assertEqual(kv.shape, (3, width, 2 * config.d_model))
+            self.assertEqual(kv.shape, (batch.q_visit.shape[0], width, 2 * config.d_model))
             self.assertEqual(keep.shape, (batch.q_visit.shape[0], width))
             for mode, p_own in (("gold", 0.0), ("teacher", 0.0), ("own", 0.5)):
                 out = model(batch, mode=mode, p_own=p_own, generator=torch.Generator().manual_seed(0))
@@ -244,6 +266,27 @@ class FlagOnTest(unittest.TestCase):
             hand = mini_hand_count(model.config, batch, sample.question_loops)
             self.assertLess(abs(sample.flops - hand) / hand, 0.15, (sample, hand))
 
+    def test_validate_and_gold_cards_run_with_the_flag(self) -> None:
+        """Regression (review of 5ad2f788e): the eval / DEV path built episodes without reader memory."""
+        for variant in VARIANTS:
+            model = eager(build(PremonitionMini, tiny_config(variant, decoder_reader_kv=True)))
+            batch = synthetic_batch(visits=3, lines=18, seed=13)
+            gold = train.answer_with_gold(model, batch)
+            self.assertEqual(gold.tokens.shape, (batch.q_visit.shape[0], model.config.max_answer))
+            report = train.validate(model, [batch, synthetic_batch(visits=2, lines=14, seed=14)])
+            self.assertTrue(math.isfinite(report["accuracy"]), variant)
+            self.assertEqual(report["questions"], batch.q_visit.shape[0]
+                             + synthetic_batch(visits=2, lines=14, seed=14).q_visit.shape[0])
+
+    def test_bare_episodes_are_refused_with_the_flag(self) -> None:
+        """A bare (x, valid) episode carries no reader memory: flag on must fail loudly, never decode without it."""
+        model = build(PremonitionMini, tiny_config(decoder_reader_kv=True))
+        with self.assertRaises(ValueError):
+            bare_greedy(model, synthetic_batch(seed=15))
+
+    def test_train_d_passes_the_flag_through(self) -> None:
+        self.assertIsNone(inspect.signature(train.train_d).parameters["config_overrides"].default)
+
     def test_unwired_subclasses_refuse_the_flag(self) -> None:
         with self.assertRaises(NotImplementedError):
             QReadMini(tiny_config(decoder_reader_kv=True))
@@ -263,7 +306,11 @@ class GuardMetricTest(unittest.TestCase):
             # Always ASK, never HALT: every loop but the last fetches.
             self.assertTrue(torch.equal(asks, answers.loops - 1))
             self.assertTrue(torch.equal(cards + nulls, answers.fetched.sum(1)))
-            self.assertGreater(guard.summarize(asks, cards, nulls)["cards_per_question"], 0)
+            summary = guard.summarize(answers, asks, cards, nulls)
+            self.assertGreater(summary["cards_per_question"], 0)
+            self.assertEqual(summary["loops_mean"], float(answers.loops.float().mean()))
+            self.assertEqual(summary["halt_rate"], 0.0)                    # never HALTs
+            self.assertEqual(summary["fetched_any_rate"], float((cards > 0).float().mean()))
         model = build(PremonitionMini, tiny_config("D-noask"))
         _, asks, cards, _ = guard.guard_counts(model, synthetic_batch(seed=12))
         self.assertEqual(int(asks.sum() + cards.sum()), 0)

@@ -351,7 +351,7 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
-    reader: Optional[tuple[torch.Tensor, torch.Tensor]] = None   # decoder_reader_kv: KV [B, S, 2d], keep [Q, S]
+    reader: Optional[tuple[torch.Tensor, torch.Tensor]] = None   # decoder_reader_kv: KV [Q, S, 2d], keep [Q, S]
 
 
 class PremonitionMini(nn.Module):
@@ -492,9 +492,12 @@ class PremonitionMini(nn.Module):
         valid.append(torch.ones(count, config.registers, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line)
+        if config.decoder_reader_kv:
+            episode.reader = self._reader_kv(batch, hidden)
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -562,25 +565,25 @@ class PremonitionMini(nn.Module):
 
     def _reader_kv(self, batch: VisitBatch, hidden: torch.Tensor, low: Optional[torch.Tensor] = None
                    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """The decoder's reader memory: KV of the reader states [B, S, 2d] and, per question, the
-        real tokens up to and incl. its "[answer]" (from `low` on, after a store wipe) [Q, S]."""
+        """The decoder's reader memory per question: KV of its visit's reader states [Q, S, 2d] (projected
+        once per visit) and the real tokens up to and incl. its "[answer]" [Q, S]. After a store wipe only
+        states from `low` on are kept; they still carry earlier tokens through the causal reader."""
         end = batch.q_span[:, 1]
         width = int(end.max().item())
         position = torch.arange(width, device=hidden.device)
         keep = (batch.line_of[batch.q_visit, :width] >= 0) & (position < end.unsqueeze(1))
         if low is not None:
             keep &= position >= low.unsqueeze(1)
-        return self.decoder.reader_attn.kv(hidden[:, :width]), keep
+        return self.decoder.reader_attn.kv(hidden[:, :width])[batch.q_visit], keep
 
     @staticmethod
-    def _reader_memory(episode: _Episode, index: Optional[torch.Tensor] = None) -> dict[str, Any]:
-        """Decoder kwargs: {} without decoder_reader_kv (the call is then exactly the old one)."""
-        if episode.reader is None:
+    def _reader_memory(episode: Any, index: Optional[torch.Tensor] = None) -> dict[str, Any]:
+        """Decoder kwargs: {} without decoder_reader_kv (the call is then exactly the old one, so
+        subclasses with three-argument `_decode_logits` and bare (x, valid) episodes keep working)."""
+        reader = getattr(episode, "reader", None)
+        if reader is None:
             return {}
-        kv, keep = episode.reader
-        if index is None:
-            return {"reader": (kv[episode.q_visit], keep)}
-        return {"reader": (kv[episode.q_visit[index]], keep[index])}
+        return {"reader": reader if index is None else (reader[0][index], reader[1][index])}
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
@@ -616,8 +619,6 @@ class PremonitionMini(nn.Module):
 
         device = hidden.device
         episode = self._start(batch, hidden, store, self._mentions(batch))
-        if config.decoder_reader_kv:
-            episode.reader = self._reader_kv(batch, hidden)
         told_lines = (batch.gold_lines >= 0).sum(1).clamp_min(1)
         if loops is not None:
             n_loops = torch.full((count,), loops, dtype=torch.long, device=device)
@@ -790,7 +791,7 @@ class PremonitionMini(nn.Module):
                            torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
-        if config.decoder_reader_kv:
+        if config.decoder_reader_kv and low is not None:
             episode.reader = self._reader_kv(batch, hidden, low)
         limit = min(max_loops or config.max_loops, config.max_loops)
         running = torch.ones(count, dtype=torch.bool, device=device)
@@ -830,9 +831,9 @@ class PremonitionMini(nn.Module):
         out = torch.full((count, config.max_answer), config.pad_id, dtype=torch.long, device=device)
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
+        memory = self._reader_memory(episode)
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence,
-                                         **self._reader_memory(episode))[:, -1]
+            hidden = self._decode_logits(episode.x, episode.valid, sequence, **memory)[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)
