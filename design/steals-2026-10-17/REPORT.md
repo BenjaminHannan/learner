@@ -502,6 +502,27 @@ weights depend on which others are on.
 - **Full suite**, all 103 files one by one: **every pre-existing file has the same outcome as on untouched
   `main`**, and the 9 steal files (152 tests) all pass.
 
+**Round 5: built-in review of the pushed `claude/steals-8` at 8986eeb2c, 10-20. Verdict: NOT CLEAN. Stopped and
+reported; nothing patched, per the standing rule.**
+- The reviewer ran every steal flag on for D, D-noptr and D-noask, through all three training modes, `answer` and
+  `answer_with_gold`. Nothing crashed, and the parameter breakdowns match.
+- No CLAUDE.md rule is broken.
+- The flags-off path, Muon (R1) and `fetch_gate` (R2) are not implicated by any finding. Two findings still block:
+  one inside `row_halt`, and one in the R1 runner.
+
+| # | Finding | Classification |
+|---|---|---|
+| 1 | Under `row_halt`, a halted register 0 is frozen, so the question-level HALT logit read from it is frozen too. A question whose register 0 halts while HALT ≤ 0.5 can never halt: it runs to `max_loops` with fetching cut, and in training L_halt pushes a frozen input. | **Blocking** (a `row_halt` behaviour bug). |
+| 8 | `scripts/premonition_steals_r1_stage0.py` rotates the arm order by a seed's position in `--seeds`, not by the seed. Running seeds in separate calls, then a reusing full run, loses the drift control from the scored result. | **Blocking for R1 stage 0**, which uses this runner. |
+| 3 | Flags that do nothing on a variant are accepted and still reported as on (e.g. `delta_bind` on D-noptr; `engram`, `qk_norm`, `key_split`, `qk_clip`, `ask_reuse` and the ASK sink on D-noask). An arm could be mislabelled. | Should-fix (config validation). |
+| 6 | `random_depth` draws its cap before the FLOP-ceiling stop, so a run stopped there and resumed diverges from one uninterrupted run. | Should-fix (minor). |
+| 7 | The `row_halt` comment and SPEC say the straight-through gradient is the soft product's. It is weighted by the hard keeps instead (e.g. −1.0, not −0.6, at p₁ = 0.4). | Should-fix (documentation accuracy). |
+| 2 | `qk_norm` gains applied after `key_split`'s rotation break the relative-position property when both flags are on (measured −0.31 vs −1.55 for the same distance). | Note: a two-flag interaction, already documented in §2. |
+| 4, 5, 9, 10 | Engram's host-side hashing loop; QK-Clip runs only inside `MiniTrainer`; the discarded AdamW under Muon; duplicated interpolation and cap-sampling helpers. | Efficiency and cleanup notes. |
+
+**Status:** Q39 is not passed, and R1 and R2 stage 0 stay on hold. The next step is the coordinator's ruling on a
+round-5 fix of nos. 1 and 8 (and, if wanted, the should-fix nos. 3, 6 and 7).
+
 **Scope (both reviewers).**
 - Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
   `learnlab/`, `memorylab/` and `archive/` are untouched.
