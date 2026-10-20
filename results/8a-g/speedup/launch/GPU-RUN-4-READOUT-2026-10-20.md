@@ -85,6 +85,8 @@ I am not re-reading the sealed sheet. Mark 2 failed as written, and `defer` stay
 
 ## 7. What would move this forward: GPU-RUN-5 (rewritten 10-20 per the coordinator's ruling: APPROVE WITH CHANGES)
 
+> **Outcome 2026-10-20:** GPU-RUN-5 ran and **PASSED** its sealed bars (GPU-RUN-5-READOUT-2026-10-20.md). This section is left as it was filed.
+
 **GPU-RUN-4 stands as a FAIL for `defer` as tested.** Nothing in GPU-RUN-5 re-judges it, and GPU-RUN-4's E4 trace does not enter GPU-RUN-5's readout.
 
 The first version of this bid had two clauses: E4's limits "recorded as unreadable", and a max(0.02, 1.5 × A–A) rule. The ruling **struck** both as a back door, and they are withdrawn.

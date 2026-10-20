@@ -14,7 +14,7 @@ Companion files, all in `launch/`:
 | `prof_launch.py` | runner: registers the new arms into prof_train's `abequiv` / `abbench` / `profiler` / `syncs` sections for a box | shown (CPU smoke) |
 | `PREREG-launch-defer.md` | the protocol of §3 as a sheet to seal | DRAFT, not sealed |
 
-> **Correction 2026-10-20.** The 61% op cut quoted below is the first prototype's. After the Opus review's memory fix (answer rounds ≥ 8 checkpointed again, an EOS-only bucket), `defer` cuts device ops per micro-batch by **56%** at the real shape (8,502 → 3,705; DEFER-CPU-2026-10-16.md). On the CPU its gradients differed from the baseline's at about 1e-7 relative from the start (numerics-changing). GPU-RUN-4 (GPU-RUN-4-READOUT-2026-10-20.md) then measured 1.36× / 1.51× and found mark 2 failing on E4; `defer` is not used.
+> **Correction 2026-10-20.** The 61% op cut quoted below is the first prototype's. After the Opus review's memory fix (answer rounds ≥ 8 checkpointed again, an EOS-only bucket), `defer` cuts device ops per micro-batch by **56%** at the real shape (8,502 → 3,705; DEFER-CPU-2026-10-16.md). On the CPU its gradients differed from the baseline's at about 1e-7 relative from the start (numerics-changing). GPU-RUN-4 (GPU-RUN-4-READOUT-2026-10-20.md) then measured 1.36× / 1.51× and found mark 2 failing on E4; `defer` is not used. GPU-RUN-5 (GPU-RUN-5-READOUT-2026-10-20.md) then measured the 4090 baseline's own 300-update drift (B–B 0.048–0.059) and found `defer` inside it (median B–D 0.050; D means inside the B range): **PASS**, so the port goes to code review, for fresh runs from update 0 only, with no change to 8aB3G2A4/A8. GPU-RUN-4's FAIL stands as filed.
 
 ## Plain version (for Ben)
 

@@ -1,0 +1,94 @@
+{
+ "status": "ok",
+ "job": {
+  "rung": "3M",
+  "seed": 400,
+  "steps": 50,
+  "cfgs": {
+   "B2": {
+    "d": 256,
+    "n_heads": 4,
+    "reader_layers": 2,
+    "blocks": 2,
+    "n_loops": 12,
+    "mlp": 4.8,
+    "copy": true,
+    "eg_embed": true
+   },
+   "PT": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4,
+    "hidden": 1066
+   },
+   "PTC": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4,
+    "hidden": 1066,
+    "all_steps": true,
+    "calc_train": true
+   }
+  },
+  "trained_params": {
+   "B2": 4023377,
+   "PT": 4023976,
+   "PTC": 4023976
+  },
+  "lr": 0.001,
+  "lr_scale": 1.0,
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 115,
+   "rows": 4156181,
+   "own_rows": 2561232,
+   "source": "largest pool: own72 (rung <= 30) + rung30 web slice (long-chunk cloze rows, data_pool/cloze_long.py, seed 400) + dev; computed 10-09 on cloud CPU (own72 manifest e8f32daf, Oct-7 rung30 slice); matches the data thread's cap check (2000 / 240 / 727); PTS (all-steps plain target) re-measured 10-09 on own72 only (2,561,232 rows, Mac): plain_target 115 vs 109 for the group-1 target on the same rows; web cloze rows carry no steps (unchanged); dev rows not re-measured here, so the job caps report must refuse any row over 115"
+  },
+  "maxh": 0,
+  "dph": 0,
+  "accum": {
+   "PTC": 16
+  },
+  "arms": {
+   "PTC": {
+    "rc": 0,
+    "status": "ok",
+    "wall_s": 140.8,
+    "steps": 50,
+    "steps_per_s": 0.9342032271731603,
+    "n_params": 4023976,
+    "cmd": "/usr/bin/python -m custom_io.train --model plain_tf_steps_g --cfg {\"all_steps\": true, \"calc_train\": true, \"d_model\": 256, \"eg_embed\": true, \"hidden\": 1066, \"n_heads\": 4, \"n_layers\": 4} --data /job/work/g8a/pools/p10-rung30-s400-a64-L --steps 50 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps /job/work/g8a/pools/p10-rung30-s400-a64-L.caps-PTS/caps.json --bf16 --big-data /job/work/data_big --out /job/work/results/8aPTC3S-pc/profjob/PTC --accum 16 --log-every 10",
+    "accum": 16,
+    "peak_mem_mib": 2139.4
+   }
+  },
+  "started_unix": 1792526261.2345772,
+  "pool_build_s": 143.4,
+  "pool_train_sha256": "27234f3e9861ce5f8c6db18371f27c5f52826712398b90a4e946e952ff8791fe",
+  "pool_schedule": {
+   "seen_pieces_target": 66000000.0,
+   "steps_by_seen": 5772,
+   "update_floor": 24000,
+   "steps": 24000,
+   "floor_rules": true,
+   "row_draws": 6144000,
+   "passes": 4.574,
+   "max_row_draws": 5,
+   "ok_reuse": true,
+   "seen_pieces_actual": 274471932
+  },
+  "b2_extra": {
+   "eg_embed": true,
+   "n_loops": 12
+  },
+  "wall_s": 284.2,
+  "cost_usd": 0.0
+ }
+}
