@@ -532,6 +532,24 @@ reported; nothing patched, per the standing rule.**
 **Re-verification:** the probe again shows 6 of 1,853 entries differing, all timing fields. The full suite matches
 `main` on every pre-existing file, and the 9 steal files (154 tests) all pass.
 
+**Round 6: built-in review of the pushed `claude/steals-8` at 9ce46e251, 10-20. Verdict: no blocking findings (my
+classification, open to the coordinator's overrule).**
+- Nothing in it is a defect against SPEC.md, and nothing touches the flags-off path, Muon (R1) or `fetch_gate` (R2).
+- Four items are design or semantics questions, recorded here for rulings.
+- The rest are efficiency and cleanup, which wait as ruled.
+
+| # | Finding | Classification |
+|---|---|---|
+| 1 | `qk_norm` gains after `key_split`'s rotation break relative position | Two-flag interaction; documented in §2 (raised in rounds 3, 5 and 6). |
+| 2 | `row_halt`: teacher mode still inserts gold cards for a question whose register 0 has halted, while own mode and answering do not | **By design.** Teacher forcing ignores the model's own fetch decisions (it ignores ASK ≤ 0 in base D too). Own-mode training and answering share the rule (round 3). The `_choose` comment should say "own-mode training and answering". |
+| 3 | `ask_reuse`: reused scores keep their graph, so reuse-loop L_ask terms train the earlier query and give the current register no ranking signal | **Design question** (SPEC §7 chose to keep the graph). It would confound an `ask_reuse` A/B, which §5 already recommends dropping. Ruling wanted only if `ask_reuse` is ever run. |
+| 4 | On the toy every entity is spelled `Ent{e}`, so Engram there is an extra id embedding | **A/B-design fact:** no Engram A/B can run on the toy. That is consistent with Q40, which allows Engram only on a name-disjoint village split. |
+| 5 | `random_depth` also clamps an explicit `loops=` in a training-mode, grad-enabled forward | Specified (the `forward` docstring). A surprise for direct callers, so it is a note. |
+| 6–10 | Engram's host loop and unbounded cache; the redundant query/key gain pair; depth-cap sampling written twice; `ask_reuse` bookkeeping cost; the size of the sink mask | Efficiency and cleanup; they wait. |
+
+**Status:** by this classification the full-package review has no blocking findings. The R1 stage-0 bid
+(`R1-STAGE0-BID.md`) is filed with the coordinator. R1 and R2 stage 0 still start only on the coordinator's word.
+
 **Scope (both reviewers).**
 - Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
   `learnlab/`, `memorylab/` and `archive/` are untouched.
