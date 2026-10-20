@@ -110,3 +110,30 @@ Run 2026-10-19 in this container, CPU, torch 2.14.1+cpu, 1 thread per run, 800 s
   with the flag off.
 - **Scope (§7):** this buys reading one supplied card from the main code path. It does not buy choosing,
   own retrieval or the village ruler.
+
+---
+
+## 10. Distractor reading (card §7's "reported second readout"); spec sealed before running, 2026-10-20
+
+Coordinator GO 10-20: "exactly as card section 7 sets it out, with no changes to its marks". §7 defines this as a
+**reported second readout with no pass marks**, so it gets **no verdict**. It is read, not judged. Fixed here
+before any number:
+- **Models:** the six Stage 0 arms (control / treated × seeds 0-2). Their weights were not saved, so each is
+  retrained with the identical §2 setup at 1 thread (deterministic: shown for treated seed 0 in REPORT, review
+  round 3). The runner **asserts** that each retrained arm reproduces its filed §9 gold-card score
+  (correct/1024 and distinct counts) before reading it. If any assert fails, that arm is reported as "not
+  reproduced" and is not read.
+- **Reading:** the m02 `cmd_multi` condition at n = 2.
+  - The gold card plus 2 other eligible fact cards of the same visit (non-gold, non-NULL), inserted in a random
+    order (m02 `distractor_preload`, generator seed 7000 + 2 = 7002), then 2 think passes and greedy decoding.
+  - Split: the §2 test split (seed 303, 1,024 questions), scored by §2's exact match (value + `<eos>`).
+- **Readouts per arm and seed:**
+  - `acc_d2` with its Wilson 95% interval;
+  - `predicts_distractor_value` (the first answer token equals a distractor card's value and not the gold
+    value, as m02);
+  - `distinct_256` and `distinct_1024` over the predictions.
+- **References** (context, not marks): copying a random card scores 33.3%. m02 bypass was 545/1024 at n = 2,
+  but on the validation split with first-token match, so it is not directly comparable.
+- **VOID rule (coordinator 10-19):** a seed's pair is VOID if the control's predictions under this reading have
+  one distinct answer over the first 256 questions.
+- **Raw:** `artifacts/claude-infoconstraints-20261018/s2-distract/`.

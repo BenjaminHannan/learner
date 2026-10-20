@@ -89,7 +89,8 @@ def score(model: PremonitionMini, batches: list, *, card: bool) -> dict:
             "distinct_256": len(set(said[:first])), "distinct_1024": len(set(said)), "first_n": first}
 
 
-def cmd_run(args) -> None:
+def train_arm(args):
+    """§2 training of one arm; returns (model, config, history, finite, seconds, steps_done)."""
     torch.set_num_threads(args.threads)
     spec = ToySpec()
     torch.manual_seed(args.seed)
@@ -118,7 +119,12 @@ def cmd_run(args) -> None:
             history.append({"step": step + 1, "loss": round(float(loss.detach()), 4),
                             "seconds": round(time.perf_counter() - started, 1)})
             print(json.dumps(history[-1]), flush=True)
-    seconds = time.perf_counter() - started
+    return model, config, history, finite, time.perf_counter() - started, steps_done
+
+
+def cmd_run(args) -> None:
+    model, config, history, finite, seconds, steps_done = train_arm(args)
+    spec = ToySpec()
     test = [label_free(b) for b in toy_set(spec, TEST_BATCHES, VISITS, TEST_SEED)]
     result = {"arm": args.arm, "seed": args.seed, "steps_run": steps_done, "finite": finite, "seconds": seconds,
               "torch": torch.__version__, "parameters": model.num_parameters(), "config": config.variant,
@@ -130,6 +136,72 @@ def cmd_run(args) -> None:
     print(f"{args.arm} seed {args.seed}: acc {w['acc']:.4f} ({w['correct']}/{w['n']}) distinct_256 "
           f"{w['distinct_256']} distinct_1024 {w['distinct_1024']} | no card {r['acc']:.4f} "
           f"distinct_256 {r['distinct_256']} | {seconds:.0f} s, finite {finite}")
+
+
+@torch.no_grad()
+def distract(model: PremonitionMini, batches: list, n: int) -> dict:
+    """Card §10: gold card + n shuffled other fact cards of the visit (m02 `distractor_preload`, generator seed
+    7000 + n), LOOPS think passes, greedy, exact match; plus m02's distractor-value count."""
+    was = model.training
+    model.eval()
+    generator = torch.Generator().manual_seed(7000 + n)
+    ok, said, other = [], [], 0
+    for batch in batches:
+        hidden = model.read(batch)
+        store = model.build_store(hidden, batch)
+        mentions = model._mentions(batch)
+        episode = model._start(batch, hidden, store, mentions)
+        gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+        pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
+        pool[:, store.null] = False
+        noise = torch.rand(pool.shape, generator=generator).masked_fill(~pool, -1.0)
+        best, extra = noise.topk(n, 1)
+        extra = extra.masked_fill(best < 0, -1)
+        cards = torch.cat([batch.gold_lines[:, :1], extra], dim=1)
+        cards = cards.gather(1, torch.rand(cards.shape, generator=generator).argsort(1))
+        count = batch.q_visit.shape[0]
+        everyone = torch.arange(count, device=hidden.device)
+        model._insert(episode, store, everyone, cards)
+        for step in range(LOOPS):
+            model._step(episode, everyone, step, store)
+        tokens, lengths = model._greedy(batch, episode, mentions, None)
+        for q in range(count):
+            target = batch.answer[q][batch.answer[q] != IGNORE_INDEX].tolist()
+            mine = tokens[q, :int(lengths[q])].tolist()
+            ok.append(mine == target)
+            said.append(tuple(mine))
+            v = int(batch.q_visit[q])
+            values = {int(batch.tokens[v, int(batch.line_start[v, int(c)]) + 3]) for c in cards[q]
+                      if int(c) >= 0 and int(c) != int(batch.gold_lines[q, 0])}
+            first = int(tokens[q, 0])
+            other += first in values and first != int(batch.answer[q, 0])
+    model.train(was)
+    k, total = sum(ok), len(ok)
+    head = sum(b.q_visit.shape[0] for b in batches[:4])
+    return {"n_distractors": n, "correct": k, "n": total, "acc": k / total, "wilson95": wilson(k, total),
+            "predicts_distractor_value": other, "distinct_256": len(set(said[:head])),
+            "distinct_1024": len(set(said)), "copy_a_random_card_rate": 1 / (1 + n)}
+
+
+def cmd_distract(args) -> None:
+    """Card §10: retrain one arm (§2, 1 thread), assert it reproduces its filed §9 score, then read n = 2."""
+    filed = json.loads((OUT / f"{args.arm}-seed{args.seed}.json").read_text())["with_card"]
+    model, config, history, finite, seconds, steps_done = train_arm(args)
+    test = [label_free(b) for b in toy_set(ToySpec(), TEST_BATCHES, VISITS, TEST_SEED)]
+    again = score(model, test, card=True)
+    reproduced = all(again[f] == filed[f] for f in ("correct", "distinct_256", "distinct_1024"))
+    result = {"arm": args.arm, "seed": args.seed, "threads": args.threads, "steps_run": steps_done,
+              "finite": finite, "seconds": seconds, "reproduced_stage0": reproduced,
+              "stage0_filed": {f: filed[f] for f in ("correct", "distinct_256", "distinct_1024")},
+              "stage0_again": {f: again[f] for f in ("correct", "distinct_256", "distinct_1024")},
+              "d2": distract(model, test, 2) if reproduced else None}
+    out = OUT.parent / "s2-distract"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"{args.arm}-seed{args.seed}.json").write_text(json.dumps(result, indent=1))
+    d2 = result["d2"]
+    print(f"{args.arm} seed {args.seed}: reproduced {reproduced}"
+          + (f" | d2 acc {d2['acc']:.4f} ({d2['correct']}/{d2['n']}) distractor-value {d2['predicts_distractor_value']} "
+             f"distinct_256 {d2['distinct_256']} distinct_1024 {d2['distinct_1024']}" if d2 else ""))
 
 
 def cmd_summarize(args) -> None:
@@ -195,8 +267,12 @@ def main() -> None:
     run.add_argument("--seed", type=int, required=True)
     run.add_argument("--threads", type=int, default=1)
     sub.add_parser("summarize")
+    dis = sub.add_parser("distract")
+    dis.add_argument("--arm", choices=("control", "treated"), required=True)
+    dis.add_argument("--seed", type=int, required=True)
+    dis.add_argument("--threads", type=int, default=1)
     args = parser.parse_args()
-    {"run": cmd_run, "summarize": cmd_summarize}[args.cmd](args)
+    {"run": cmd_run, "summarize": cmd_summarize, "distract": cmd_distract}[args.cmd](args)
 
 
 if __name__ == "__main__":
