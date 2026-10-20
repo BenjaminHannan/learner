@@ -23,6 +23,7 @@ def main():
     ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0); ap.add_argument('--jitter', type=float, default=0.0); ap.add_argument('--force-resume-step', type=int, default=0)
     ap.add_argument('--child', action='store_true'); ap.add_argument('--busy', default='')
     ap.add_argument('--device', default='cuda'); ap.add_argument('--hang-at', type=int, default=0); ap.add_argument('--die-after-resume-once', action='store_true')
+    ap.add_argument('--skip-log-seg2-at', type=int, default=0)          # drafts only (tests/test_gatefix.py): a resumed segment does not log update K (the update still runs, the checkpoints are still written): a hole in its train lines
     ap.add_argument('--seg2-lr', type=float, default=0.0)          # drafts only (tests/test_gatefix.py): the logged lr of a resumed segment, to make an exact-field mismatch
     a = ap.parse_args()
     q = Path(a.queue).stem
@@ -76,7 +77,8 @@ def main():
             (arm / 'crashed.flag').write_text('x')
             sys.exit(1)
         loss = float('nan') if (a.nan_at and step == a.nan_at) else loss_at(step, a.offset, a.seg2_offset, seg, a.jitter, a.job)
-        jp(event='train', step=step, loss=round(loss, 5), lr=(a.seg2_lr if a.seg2_lr and seg >= 2 else 1e-3), elapsed=round(el, 3))
+        if not (a.skip_log_seg2_at and seg >= 2 and step == a.skip_log_seg2_at):
+            jp(event='train', step=step, loss=round(loss, 5), lr=(a.seg2_lr if a.seg2_lr and seg >= 2 else 1e-3), elapsed=round(el, 3))
         if not math.isfinite(loss):
             json.dump(dict(status='nonfinite_loss', steps=step), open(arm / 'RESULT.json', 'w'))
             return

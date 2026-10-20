@@ -286,12 +286,15 @@ def early_deferred(resume):
 def trace_a(ev, rules, max_used_mib):
     """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
     Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
-      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it. The window is computed only with at least 3 redone updates; then r['resume']['early_max'] is recorded (rule or not) and, with the
-        rule set, r['resume']['early_window'] = {computed: True, steps: [..]}. With fewer nothing about its value is recorded (ruling Q95: a gate never reports a check it did not compute); with the rule set that is NOT
-        a failure and NOT a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'}, and the reports print EARLY_DEFERRED (coordinator ruling B2: the window is left
-        to the probe's P1b, which is the reading gate);
+      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it. The window is computed only when the redone updates start with the three contiguous updates rstep+1, rstep+2, rstep+3 (rstep = the
+        resumed step); then r['resume']['early_max'] is recorded (rule or not) and, with the rule set, r['resume']['early_window'] = {computed: True, steps: [rstep+2, rstep+3]}. When it cannot be computed (under 3 redone
+        updates, or the redone updates are not contiguous from rstep+1) nothing about its value is recorded (ruling Q95: a gate never reports a check it did not compute); with the rule set that is NOT a failure and NOT
+        a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'} (plus 'reason' naming the steps when 3 or more updates were redone), and the reports print EARLY_DEFERRED
+        (coordinator ruling B2 / B3: the window is left to the probe's P1b, which is the reading gate);
       resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
         which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
+      With either opt-in key set, the first redone update must be update rstep+1: if it is missing from the earlier or the resumed segment the first-update item (resume_first_diff and the exact fields) cannot be computed as defined,
+      which is a hard failure that names the steps (fail closed; r['resume']['first_diff'] is then None). Without the opt-in keys none of this applies and the result is the original pack function's (plus early_max where recorded).
       resume_first_diff keeps its value (a bar, not changed here)."""
     up, n = rules['upto'], rules['first_n']
     m = ev.merged()
@@ -330,26 +333,34 @@ def trace_a(ev, rules, max_used_mib):
         if common:
             d = [abs(s1[s] - s2[s]) for s in common]
             r['resume'] = dict(resumed_step=rstep, n_redone=len(common), first_diff=d[0], mean_abs=mean(d), max_abs=max(d))
-            if d[0] > rules['resume_first_diff']:
+            early_on = rules.get('resume_early_abs') is not None
+            fields = rules.get('resume_exact_fields')
+            first_ok = common[0] == rstep + 1                                                     # the first redone update is the update right after the restore
+            if not first_ok and (early_on or fields is not None):                                  # opt-in, hard, fail closed: the first-update item would otherwise be computed on another update
+                r['resume']['first_diff'] = None
+                gone = ' and '.join(w for w, ss in (('the earlier segment', s1), ('the resumed segment', s2)) if rstep + 1 not in ss)
+                r['why_fail'].append(f'the first redone update {rstep + 1} (the first update after the restore at {rstep}) is missing from {gone}; the first redone update present is {common[0]}: the first-update check cannot be computed as defined')
+            elif d[0] > rules['resume_first_diff']:
                 r['why_fail'].append(f'first redone update differs by {d[0]:.4f} (limit {rules["resume_first_diff"]})')
             if mean(d) > rules['resume_mean_abs']:
                 miss('resume_mean_abs', f'redone updates differ by {mean(d):.4f} on average (limit {rules["resume_mean_abs"]})')       # hard unless rules.soft lists 'resume_mean_abs' (installer: --soft-trace-a-mean; never a default)
             if max(d) > rules['resume_max_abs']:
                 miss('resume_max_abs', f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
             # Amendment 1 (PREREG-trace-a2.md): the loss of the first redone update is a forward pass before the optimizer step, so lost optimizer state / an lr offset first show at the 2nd and 3rd redone updates
-            if len(d) >= 3:                                                                       # the early window = the 2nd AND 3rd redone update; with fewer it is not computed, not recorded (ruling Q95)
+            if common[:3] == [rstep + 1, rstep + 2, rstep + 3]:                                   # the early window = the 2nd AND 3rd redone update, computed only from three contiguous redone updates (else nothing is recorded: Q95)
                 early = list(zip(common[1:3], d[1:3]))
-                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when there are 3 redone updates)
+                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when the window is computed)
                 lim = rules.get('resume_early_abs')
-                if lim is not None:
+                if early_on:
                     r['resume']['early_window'] = dict(computed=True, steps=[s for s, _ in early])
                 if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
                     worst = max(early, key=lambda t: t[1])[0]
                     r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd and 3rd after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
-            elif rules.get('resume_early_abs') is not None:                                       # opt-in: fewer than 3 redone updates -> NOT a failure, deferred to the probe's P1b (coordinator ruling B2); no value, no pass
-                r['resume']['early_window'] = dict(computed=False, redone=len(d), deferred_to='probe P1b')
-            fields = rules.get('resume_exact_fields')
-            if fields is not None:                                                                # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal
+            elif early_on:                                                                        # opt-in: not computable here -> NOT a failure, deferred to the probe's P1b (coordinator ruling B2 / B3); no value, no pass
+                r['resume']['early_window'] = ew = dict(computed=False, redone=len(common), deferred_to='probe P1b')
+                if len(common) >= 3 or not first_ok:
+                    ew['reason'] = f'the 2nd and 3rd redone updates after the restore at {rstep} must be updates {rstep + 2} and {rstep + 3}, contiguous after update {rstep + 1}; the redone updates start {common[:4]}'
+            if fields is not None and first_ok:                                                   # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal (not when the first redone update is missing: failed above)
                 l1, l2 = s1f[common[0]], s2f[common[0]]
                 skip = ('seg', 'loss', 'step', 'elapsed')                                         # never compared this way
                 names, missing = set(), []

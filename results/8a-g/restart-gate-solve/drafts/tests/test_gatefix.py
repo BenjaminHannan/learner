@@ -12,6 +12,8 @@ Tests of the four gate-fix changes, plain asserts like the pack's own tests:
      trace_a emit no early field below 3 updates, and the supervisor agrees with rejudge_probe.py (same 2-update data: both exit 3; from 3 updates: the same early_max)
   I  ruling B2: an early window trace A cannot compute (under 3 redone updates, with resume_early_abs set) is deferred to probe P1b (early_window computed False, no early_max, a verbatim line in the TRACE-A md,
      status.md and the finish message), not a stop; first-update gaps / exact-field mismatches / early_max > 0.005 (>= 3 redone updates) still FAIL; end to end against the fake runner
+  J  ruling B3: a window whose 2nd / 3rd redone update is not rstep+2 / rstep+3 is not computable (same deferral, no early_max); with an opt-in key set, a missing first redone update rstep+1 fails closed
+     (the first-update item would be computed on another update); without the opt-in keys trace_a is the original's
 The ORIGINAL pack's supervisor is loaded from G2FA4_ORIG_PACK (default: results/8a-g/pc-job-cards/g2fa4 next to the drafts) only to compare."""
 import contextlib, importlib.util, io, json, os, random, subprocess, sys, tempfile
 from pathlib import Path
@@ -1632,6 +1634,92 @@ def t_b2_running_gate():
 
 
 
+# ================================================================ J: ruling B3 (a window that is not contiguous is "not computable": deferred; a missing first redone update fails closed)
+def drop(ev, seg, *steps):
+    """remove the train lines of the given steps from one segment of a FakeEv"""
+    ev.train = [e for e in ev.train if not (e['seg'] == seg and e['step'] in steps)]
+    return ev
+
+
+EXACT_ONLY = dict(RULES, resume_exact_fields=['lr'])
+
+
+def t_b3_contiguity_unit():
+    # missing rstep+1 (update 101): fail closed when an opt-in key is set, in every soft variant; the message names the steps
+    for where, seg, who in (('resumed', 2, 'the resumed segment'), ('earlier', 1, 'the earlier segment')):
+        for rules in (EARLY_ONLY, EARLY_RULES, EXACT_ONLY, dict(EARLY_RULES, soft=SOFT3 + ['resume_early_abs', 'resume_exact_fields'])):
+            ev = with_fields(drop(AJ.FakeEv(0.0, 0.0), seg, 101))
+            r = S.trace_a(ev, rules, 9000)
+            assert r['verdict'] == 'FAIL' and len(r['why_fail']) == 1, (where, r['why_fail'])
+            w = r['why_fail'][0]
+            assert f'the first redone update 101 (the first update after the restore at 100) is missing from {who}; the first redone update present is 102: the first-update check cannot be computed as defined' == w, w
+            assert r['resume']['first_diff'] is None and 'early_max' not in r['resume'] and 'exact_checked' not in r['resume'], r['resume']
+            if 'resume_early_abs' in rules:
+                ew = r['resume']['early_window']
+                assert ew['computed'] is False and ew['deferred_to'] == 'probe P1b' and '102' in ew['reason'] and '103' in ew['reason'], ew
+    ev = drop(drop(AJ.FakeEv(0.0, 0.0), 1, 101), 2, 101)                                  # missing from both: not in the intersection, so the first present is 102 again
+    r = S.trace_a(ev, EARLY_ONLY, 9000)
+    assert r['verdict'] == 'FAIL' and any('missing from the earlier segment and the resumed segment' in w for w in r['why_fail']), r['why_fail']          # (the merged trace has a hole as well)
+    ev = drop(AJ.FakeEv(0.0, 0.0), 2, 101, 102, 103)                                      # first present is 104: named
+    assert 'the first redone update present is 104' in S.trace_a(ev, EARLY_ONLY, 9000)['why_fail'][0]
+    # without the opt-in keys the function is the original's, byte for byte (no failure, no early_max: the window steps are not contiguous from 101)
+    for rules in (RULES, dict(RULES, soft=['peak', 'resume_max_abs']), dict(RULES, soft=SOFT3)):
+        for seg in (1, 2):
+            ev = drop(AJ.FakeEv(0.0, 0.0), seg, 101)
+            a, b = O.trace_a(ev, rules, 9000), S.trace_a(ev, rules, 9000)
+            assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True) and b['verdict'] == 'PASS' and 'early_window' not in b['resume'], (a, b)
+    # a gap at rstep+2 or rstep+3: the window is not computable -> the B2 deferral (PASS if otherwise healthy), no early_max, the steps named
+    for gap in (102, 103):
+        for seg in (1, 2):
+            ev = with_fields(drop(AJ.FakeEv(0.0, 0.0), seg, gap))
+            for rules in (EARLY_ONLY, EARLY_RULES):
+                r = S.trace_a(ev, rules, 9000)
+                ew = r['resume']['early_window']
+                assert r['verdict'] == 'PASS' and r['why_fail'] == [] and 'early_max' not in r['resume'], (gap, r)
+                assert ew['computed'] is False and ew['deferred_to'] == 'probe P1b' and ew['redone'] == r['resume']['n_redone'] >= 3 and str(gap) in ew['reason'] and 'must be updates 102 and 103' in ew['reason'], ew
+                assert S.EARLY_DEFERRED in S.Sup.md_trace_a(dict(id='g2fa4'), r) and 'early_max' not in S.Sup.md_trace_a(dict(id='g2fa4'), r)
+            assert S.trace_a(ev, EARLY_RULES, 9000)['resume']['exact_checked'] == ['lr', 'plan_gapped', 'plan_rows', 'rounds']          # the first-update item is still computed (update 101 is there)
+            # no opt-in: the original's result (no early_max: not recorded for a non-contiguous window)
+            assert json.dumps(O.trace_a(ev, RULES, 9000), sort_keys=True) == json.dumps(S.trace_a(ev, RULES, 9000), sort_keys=True)
+            # other items still judge: a first-update gap or a window-independent miss FAILs, no value printed
+            r = S.trace_a(bump(ev, 2, 101, loss=0.02), EARLY_ONLY, 9000)
+            assert r['verdict'] == 'FAIL' and r['why_fail'][0].startswith('first redone update differs by') and 'early_max' not in r['resume'], r
+    # a gap outside the window (update 104 or later): unchanged, the window is computed
+    for gap in (104, 110):
+        r = S.trace_a(drop(AJ.FakeEv(0.0, 0.004), 2, gap), EARLY_ONLY, 9000)
+        assert r['verdict'] == 'PASS' and abs(r['resume']['early_max'] - 0.004) < 1e-9 and r['resume']['early_window'] == dict(computed=True, steps=[102, 103]), (gap, r)
+    # a gap at 102 with only two updates before it (101, then 103): counted by the B2 rule alone (redone < 3 is the plain deferral, no reason)
+    ev = AJ.FakeEv(0.0, 0.0)
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 103)]
+    r = S.trace_a(drop(ev, 2, 102), EARLY_ONLY, 9000)
+    assert r['resume']['n_redone'] == 2 and r['resume']['early_window'] == dict(computed=False, redone=2, deferred_to='probe P1b') and r['verdict'] == 'PASS', r
+    # contiguous: unchanged (computed, over the bar fails, under passes), the exact-field item is run
+    r = S.trace_a(with_fields(AJ.FakeEv(0.0, 0.004)), EARLY_RULES, 9000)
+    assert r['verdict'] == 'PASS' and r['resume']['early_window']['computed'] is True and 'exact_checked' in r['resume'] and r['resume']['first_diff'] is not None
+    assert S.trace_a(with_fields(AJ.FakeEv(0.0, 0.006)), EARLY_RULES, 9000)['verdict'] == 'FAIL'
+    print('ok B3 unit: missing update 101 (either segment or both) fails closed under the opt-in rules (names the steps, no early value, hard in soft variants) and changes nothing without them; a gap at 102 or 103 is deferred (no early_max); a gap outside the window or none: computed as before')
+
+
+def t_b3_running_gate():
+    """end to end with the fake runner: a hole in the resumed segment's train lines."""
+    # missing update 101 (rstep+1) after an unplanned crash and after the planned kill: FAIL and stop
+    for crash_at in (103, 0):
+        sup, j, texts = b2_run(crash_at, '--skip-log-seg2-at', '101')
+        assert j['status'] == 'stopped' and j['traceA']['verdict'] == 'FAIL' and len(j['traceA']['why_fail']) == 1, (crash_at, j)
+        assert 'first redone update 101 (the first update after the restore at 100) is missing from the resumed segment' in j['traceA']['why_fail'][0] and 'STOPPED.txt' in texts, j['traceA']
+        assert not [k for k, v in texts.items() if 'early_max' in v]
+    # a hole at 102 or 103 in a planned resume (>= 3 redone updates): deferred, PASS, printed three times, no early_max anywhere
+    for gap in (102, 103):
+        sup, j, texts = b2_run(0, '--skip-log-seg2-at', str(gap))
+        r = json.loads(texts['TRACE-A-g2fa4.json'])
+        assert j['status'] == 'done' and j['traceA']['verdict'] == 'PASS' and r['resume']['n_redone'] >= 3 and r['resume']['early_window']['computed'] is False and str(gap) in r['resume']['early_window']['reason'], (gap, j, r['resume'])
+        for name in ('TRACE-A-g2fa4.md', 'status.md', 'DONE-g2fa4.txt', 'supervisor.log'):
+            assert S.EARLY_DEFERRED in texts[name], (gap, name)
+        assert not [k for k, v in texts.items() if 'early_max' in v], gap
+    print('ok B3 running gate: missing update 101 -> FAIL + stop (after a crash and after the planned kill); a hole at 102 or 103 -> deferral printed in the TRACE-A md, status.md, DONE file and log, PASS, no early_max anywhere')
+
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
@@ -1639,7 +1727,7 @@ if __name__ == '__main__':
             t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
             t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
             t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged, t_early_not_computable_probe, t_early_not_computable_verdict, t_early_not_computable_trace_a, t_early_agreement,
-            t_b2_deferral_unit, t_b2_running_gate]
+            t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate]
     only = sys.argv[1:]
     try:
         for t in todo:
