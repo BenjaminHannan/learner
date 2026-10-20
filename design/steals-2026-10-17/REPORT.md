@@ -489,6 +489,38 @@ teacher-forced cards into the "own-fetch" record. The new findings are below.
   `sha256sum -c`; one stale card line; a duplicated insert hook; test gaps.
 - Reported to the coordinator with a proposed fix round. **No R2 run.**
 
+## R2 stage 0 RESULT (run 10-20, sealed at 983f00d5e, $0 CPU): NOT SHOWN
+The fourth seal's one focused review was clean: 0 blocking findings, and B1 and B2 were confirmed fixed. The run then
+went exactly as the card says. Its settings were 1,500 steps and 16 visits, in the sealed directory
+`artifacts/claude-steals-20261017/r2-stage0/`. The three seeds ran as three processes, which the card allows.
+`--score` wrote `result.json`.
+
+| seed | steps | acc A0 | acc A1 | d (points) | gold-card acc A0 / A1 | recall@4 A0 / A1 |
+|---|---|---|---|---|---|---|
+| 0 | 1,672 | 5.47% | 5.47% | 0.0 | 5.47% / 5.47% | 0.945 / 0.375 |
+| 1 | 1,672 | 4.30% | 8.20% | +3.9 | 4.30% / 8.20% | 0.633 / 0.883 |
+| 2 | 1,671 | 5.08% | 3.91% | −1.2 | 5.08% / 3.91% | 0.324 / 0.359 |
+
+- **Bar fails.** mean(d) = +0.91 points, SD 2.66 points, 2SE band −2.16 to +3.98 points. 1 of 3 seeds is positive,
+  against the ≥ 3 points and 2 of 3 the bar needs.
+- **The guards hold:**
+  - G1: the gold-card gain equals the own-retrieval gain;
+  - G2: pooled recall@4 is 0.539 for A1 against 0.634 for A0, above the floor of 0.507;
+  - G3: the own-fetch gold gate is 0.722 over 580 rows.
+- **Not "both at chance".** Seed 1's |d| is 3.9 points, more than the 1-point band. Verdict: **NOT SHOWN**.
+- **My prediction** was NOT SHOWN with both arms near chance. The verdict matches that. The "most likely single
+  outcome", a both-at-chance PROVED WRONG, did not happen.
+- **Reported, not claimed. Neither is part of the verdict:**
+  1. **The fetch gate is not selective.** In every A1 run its mean on gold rows equals its mean on wrong rows: 0.741 /
+     0.741, 0.872 / 0.872, 0.502 / 0.502. So G3's ≥ 0.2 floor measures the gate's level, not whether it prefers gold
+     cards. The decoder cross-attention gate averages 0.53–0.57.
+  2. **Gold-card accuracy equals own-retrieval accuracy in all six runs.** Handing the model its gold cards changes
+     nothing. On this toy at 1,500 steps, D's decoder does not use the cards at all, so a gate on them has nothing to
+     gate. This matches R1 stage 0's AdamW toy runs (4–6%, chance 6.25%).
+  3. **Recall@4 swings widely between seeds** (A0: 0.945, 0.633, 0.324). Retrieval is learned in some seeds and not
+     in others.
+  4. Every run asked on every question (asked_rate 1.0), ran all 8 loops, and never halted.
+
 ## R1 stage 1: prerequisites P1–P3 ($0, GO'd 10-20). DRAFT, the P2 re-review is NOT CLEAN, nothing booked
 - **P1** (`train_d(optimizer=)`, 677eb1d13, hardened in 505c4308d):
   - the default run matches the base commit's `train_d`: report (timing aside), weights, optimizer and trainer state,
