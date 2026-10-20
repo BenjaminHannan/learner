@@ -114,3 +114,51 @@ call sites.
 
 Review clean: **no**. Card sealed: no. 120 s dry run at the sealed commit: not run (it waits for a clean review).
 **C0 + S0 does not book, and no bid is sent.** Next, on a ruling: fix 1-2 (and 4-5) with tests, and settle 3 (Ben).
+
+---
+
+# Round 3, third pass: items 1-5 per the ruling of Oct 20, then the full-branch review (2026-10-20)
+
+## Fixes (commit aefad2808). Every new test fails on c70b3d86e and passes now.
+
+| item | fix | test |
+|---|---|---|
+| 1 | `MiniTrainer` syncs CUDA before the diagnostics timer | CUDA-path mock: sync once per timed logged step, before the clock; `_sync` calls `torch.cuda.synchronize` on cuda |
+| 2 | the box refuses a dirty `git status` in every mode; the dry run checks the committed manifest; the manifest pins all 46 imported repo modules + the box script, from a fresh-interpreter import closure; `manifest --check` on the box also fails on any unpinned import; full-run checkpoints sit under the git-ignored `artifacts/` | `BoxGuardTest` (dirty tree → exit 2 before any step; closure ⊆ manifest; committed manifest matches) |
+| 3 (ruled) | pooled tests use item means over seeds, paired over items; the ≥ 2-of-3 rule is unchanged; written into RUNCARD-S0 §2 and S1 M1 before sealing, with the reason and the ruling cited | 6 items flipping in every seed → HOLD (the old 3× pooling gave PROMOTE) |
+| 4 | money_stop projection adds each train's measured overhead outside T (C0 probes one short S0 train_d); a required argument; the MAXH × DPH ≤ $4.20 hard cap is unchanged | overhead pushes a $3.28 projection to $3.61, over the $3.50 S0 cap; omitting it is a TypeError |
+| 5 | subclasses refuse at build when thinkers > 1 unless they declare `SWARM_COMPATIBLE` themselves; docstring corrected | bare subclass, inherited opt-in, CardBypassMini and QReadMini refuse; flag-off builds |
+
+Tests: swarm + kit + model + train: 120 OK (1 pre-existing skip). Discover: 280, with the same 4 import-time errors as main.
+
+## Full-branch review at aefad2808: 10 findings. **VERDICT: NOT CLEAN. Stopped: no dry run at a sealed commit, no seal, no bid.**
+
+Blocking (confirmed):
+1. **The documented dry run always refuses** (`premonition_swarm_box.sh:42/96`). The default DRYRUN `OUT`
+   (`artifacts/.../dryrun`) holds 76 files force-added to git by the first dry run. The first log line appends to that
+   tracked `box.log`, which dirties the tree before the new clean-tree check. My own dry runs passed only because they
+   overrode `OUT`. Fix: default each dry run's `OUT` to a fresh `dryrun-<short sha>` folder, and refuse if `OUT` holds
+   any tracked file.
+
+Unequal clock charges that remain (the class item c targeted). Each is small but real:
+
+2. `_recall` scores ASK for all Q × M desks, then keeps desk 0, so S0 pays M× for a training diagnostic. Fix: score
+   desk 0's rows only.
+3. The final-stretch reading (and the eval pause, which the screen never uses: `eval_every=0`) takes timestamps
+   without a CUDA sync, so the last step's queued work is uncounted. That is less than one step in thousands.
+4. The GELU/HALT forward hooks on logged steps run inside forward. Their cost differs by arm and counts as training time.
+
+Recommendation for 2-4: **a structural fix, not a fourth patch.** Under `seconds_budget`, run NO tracked diagnostics
+in training (no forward hooks, no InsertLog, no `_recall`), for every arm. Losses still log from the step outputs, and
+the run cards read none of these diagnostics. Add one `_sync` when the loop ends. That removes the whole class at
+once, and the "equal diagnostics charge" machinery (timer, `diagnostic_seconds`) can go.
+
+Lower severity (open): 5 gold mode computes the ASK loss though its weight is 0 (S0's clock pays for it); 6
+`desk_asks` counts final-round asks, which cannot fetch (M3's fetch-count half still catches a silent desk); 7
+`merge_mask` builds a [Q·M, L, n_ent] tensor per round from an M-times duplicated table; 8 the round rule is written in
+three places; 9 there are two `_sync` helpers; 10 `Board.posted` is used only by tests, and IMPLEMENTATION-SPEC §7
+still describes the removed per-step metrics and the union recall.
+
+## Status against Q28
+
+Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
