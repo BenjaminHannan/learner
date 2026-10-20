@@ -1660,6 +1660,46 @@ class RunThreePrepTest(unittest.TestCase):
         self.assertIn("calibration 13.00/14.50", str(caught.exception))
         self.assertIn("open-at-abort 9.00/9.50", str(caught.exception))
 
+    def test_the_probe_trains_like_a_real_train_and_cleans_up(self) -> None:
+        # Review (item 4): train_probe calls train_d with the real `train` subcommand's arguments plus
+        # memory_phases=True, and removes its checkpoint.
+        import argparse
+        import premonition.train as ptrain
+        calls = []
+
+        def fake_train_d(budget, **kwargs):
+            calls.append(kwargs)
+            if kwargs.get("checkpoint"):
+                (Path(budget.root) / kwargs["checkpoint"]).mkdir(parents=True)
+            return {"status": "completed", "train_seconds": 3.0, "memory_phases": [{"phase": "start"}]}
+        saved = ptrain.train_d, ptrain._sync
+        ptrain.train_d, ptrain._sync = fake_train_d, (lambda device: None)
+        try:
+            with tempfile.TemporaryDirectory() as root:
+                budget = type("B", (), {"root": root})()
+                out = screen.train_probe(budget, "data/x", "tok.json", size="full", device="cpu", workers=3,
+                                         ckpt_dir="ck", seconds=20.0, max_tokens=55000, arm="S0")
+                self.assertEqual(list((Path(root) / "ck").iterdir()), [])          # the probe checkpoint is gone
+                args = argparse.Namespace(root=root, device="cpu", ckpt_dir="ck2", arm="S0", seed=0, data_rel="data/x",
+                                          tokenizer="tok.json", seconds=20.0, size="full", max_tokens=55000, workers=3,
+                                          out=str(Path(root) / "t.json"))
+                saved_make = screen.make_budget
+                screen.make_budget = lambda root: budget
+                try:
+                    screen.cmd_train(args)
+                finally:
+                    screen.make_budget = saved_make
+        finally:
+            ptrain.train_d, ptrain._sync = saved
+        probe, real = calls
+        self.assertIs(probe.pop("memory_phases"), True)
+        self.assertNotIn("memory_phases", real)
+        for kwargs in (probe, real):
+            kwargs.pop("checkpoint"), kwargs.pop("log")
+        self.assertEqual(probe, real)                                         # every other argument identical
+        self.assertEqual(out["status"], "completed")
+        self.assertEqual(out["memory_phases"], [{"phase": "start"}])
+
     def test_a_failed_probe_process_is_a_c0_stop(self) -> None:
         with fake_probe_process({}, rc=1):
             with tempfile.TemporaryDirectory() as root, self.assertRaises(screen.Stop) as caught:

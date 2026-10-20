@@ -1323,5 +1323,51 @@ class MemoryPhaseTest(unittest.TestCase):
             trainer._check_memory()
         self.assertEqual(caught.exception.peak, int(14.5 * GIB))
 
+    def test_phase_resets_keep_the_unreset_peak_on_a_fake_cuda_allocator(self) -> None:
+        # Review (run 3 prep, item 4): drive memory_phase / _check_memory with a fake CUDA peak counter. Calibration
+        # peaks at 14.5 GiB, step 1 at 9 GiB: the un-reset peak (14.5) trips the guard, so the instrumented run must
+        # trip too, which needs memory_phase to fold each closed phase into the floor before resetting.
+        import learnlab.train as ltrain
+        from learnlab.train import GIB, MemoryGuardError
+        from premonition.train import MiniTrainer, mini_train_config
+
+        class FakeCuda:
+            def __init__(self):
+                self.peak = self.current = 0
+            def max_memory_reserved(self, *_):
+                return self.peak
+            def reset_peak_memory_stats(self, *_):
+                self.peak = self.current
+        fake = FakeCuda()
+        names = ("max_memory_reserved", "max_memory_allocated", "memory_allocated", "memory_reserved",
+                 "reset_peak_memory_stats")
+        saved = {n: getattr(torch.cuda, n) for n in names}
+        torch.cuda.max_memory_reserved = torch.cuda.max_memory_allocated = fake.max_memory_reserved
+        torch.cuda.memory_allocated = torch.cuda.memory_reserved = lambda *_: fake.current
+        torch.cuda.reset_peak_memory_stats = fake.reset_peak_memory_stats
+        try:
+            for calibration_gib, trips in ((14.5, True), (13.0, False)):
+                model, _ = self._toy()
+                trainer = MiniTrainer(model, mini_train_config(), "cpu", flop_budget=1.0, seed=0)
+                trainer.device = torch.device("cuda")                  # only the counters are faked
+                trainer.memory_phases = []
+                fake.peak, fake.current = 1 * GIB, 1 * GIB
+                trainer.memory_phase("start")
+                fake.peak = int(calibration_gib * GIB)
+                trainer.memory_phase("calibration")                    # resets the live peak to 1 GiB
+                fake.peak = 9 * GIB                                    # step 1
+                self.assertEqual(ltrain.reserved_bytes(trainer.device), 9 * GIB)     # the live peak alone: no trip
+                if trips:
+                    with self.assertRaises(MemoryGuardError) as caught:
+                        trainer._check_memory()
+                    self.assertEqual(caught.exception.peak, int(14.5 * GIB))       # = the un-reset peak
+                else:
+                    trainer._check_memory()
+                self.assertEqual([p["phase"] for p in trainer.memory_phases], ["start", "calibration"])
+                self.assertEqual(trainer.memory_phases[1]["peak_reserved_bytes"], int(calibration_gib * GIB))
+        finally:
+            for n, f in saved.items():
+                setattr(torch.cuda, n, f)
+
 if __name__ == "__main__":
     unittest.main()
