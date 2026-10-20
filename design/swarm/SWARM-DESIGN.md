@@ -161,7 +161,10 @@ things force diversity:
 
 1. **Balanced assignment of the needed evidence (training only).** Each round, the cards the swarm still
    needs (gold minus the union of everything fetched) are split among the desks. The split is a
-   capacity-capped greedy matching on each desk's own ASK scores, at most ⌈|need| / M⌉ per desk. Each
+   greedy matching on each desk's own ASK scores in which **every desk gets ⌊|need| / M⌋ or ⌈|need| / M⌉
+   cards**: desks below the floor are served first, then desks below the ceiling (fixed 2026-10-20, review
+   round 3; the earlier cap-only rule could leave a desk with none, e.g. [2, 2, 2, 0] for 6 cards on 4 desks).
+   Each
    desk's set cross-entropy is computed only over its assigned cards, and its ASK target is "I have
    something assigned". In teacher mode, the teacher fetches each desk's assigned cards for that desk.
    This is *multiple-choice learning* (Guzman-Rivera et al. 2012; stochastic MCL, Lee et al. 2016):

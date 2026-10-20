@@ -315,7 +315,12 @@ class MiniTrainer(Trainer):
                 for module in model.modules() if isinstance(module, nn.GELU)]
             hooks.append(model.heads.halt.register_forward_hook(
                 lambda _m, _a, out: halts.append(out.detach().float().flatten())))
-        recorder = InsertLog(model) if track and config.store and config.thinkers == 1 else None
+        # Matched wall-clock arms (seconds_budget) are charged the same for diagnostics: no arm records card
+        # insertions (InsertLog copies to the host on every insert, and only one thinker supports it), and the
+        # post-step diagnostics below are timed and left off `train_seconds` (review round 3, item c).
+        timed = self.seconds_budget is not None
+        recorder = (InsertLog(model) if track and config.store and config.thinkers == 1 and not timed
+                    else None)
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
@@ -333,11 +338,14 @@ class MiniTrainer(Trainer):
         result["grad_norm"] = grad_norm
         result["metrics"] = out["metrics"]
         if track:
+            began = time.perf_counter()
             result["dead"] = 1.0 - torch.cat(alive).float().mean().item() if alive else None
             result["halt_rate"] = torch.cat(halts).gt(0).float().mean().item() if halts else None
             if recorder is not None:
                 result["cards"] = card_stats(recorder.calls, batch, loops, config.card_rows,
                                              offset=0 if plan.mode == "gold" else 1)
+            if timed:
+                result["diagnostic_seconds"] = time.perf_counter() - began
         return result
 
     # ------------------------------------------------------------------ the loop
@@ -428,6 +436,7 @@ class MiniTrainer(Trainer):
                 break
             track = (self.step + 1) % cfg.log_every == 0
             last = self._train_step(batch, plan, loops, track)
+            paused_total += last.get("diagnostic_seconds", 0.0)
             ran = int(last["metrics"]["question_loops"])
             mismatched += ran != int(loops.sum())
             self.flops += cost
@@ -461,6 +470,8 @@ class MiniTrainer(Trainer):
                       "eval": self.evaluate(evaluate)})
                 window_start += time.perf_counter() - paused
                 paused_total += time.perf_counter() - paused
+        if self.seconds_budget is not None:      # however the loop ended, count its last stretch (round 3, e)
+            self.train_seconds = start_seconds + time.perf_counter() - started - paused_total
         if window_steps:
             last.pop("cards", None)
             last.setdefault("dead", None)
@@ -503,6 +514,8 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
     """`PremonitionMini.answer` with the question's gold cards (NULL when never told) placed in its card rows
     before loop 1: the teacher-forced counterpart of own retrieval. Halting and further ASKs are the model's."""
     config = model.config
+    if config.thinkers > 1:              # its single-thinker path would silently skip desks, board and combiner
+        raise ValueError("answer_with_gold is single-thinker only (thinkers > 1 has no gold-card pass)")
     hidden = model.read(batch)
     store = model.build_store(hidden, batch)
     count = batch.q_visit.shape[0]
@@ -750,7 +763,8 @@ def checkpoint_config(trainer: MiniTrainer, *, contender: str, tokenizer: Option
         "train": asdict(trainer.config), "curriculum": asdict(trainer.curriculum), "seed": trainer.seed,
         "flops": {"budget": trainer.flop_budget, "spent": trainer.flops, "tolerance": trainer.tolerance,
                   "fit": None if trainer.fit is None else {"a": trainer.fit.a, "b": trainer.fit.b,
-                                                           "worst_residual": trainer.fit.worst}},
+                                                           "worst_residual": trainer.fit.worst},
+                  **({"seconds_budget": trainer.seconds_budget} if trainer.seconds_budget is not None else {})},
         "tokenizer": dict(tokenizer or {}), "detector": {"sha256": detector}, "data": dict(data or {}),
         **dict(extra or {}),
     }
@@ -783,7 +797,8 @@ def resume_trainer(path: Union[str, Path], device: Union[str, torch.device] = "c
     trainer = MiniTrainer(model, trainer_config, device, flop_budget=config["flops"]["budget"],
                           curriculum=Curriculum(**config["curriculum"]), tolerance=config["flops"]["tolerance"],
                           seed=config["seed"], fit=None if fit is None else FlopFit(fit["a"], fit["b"],
-                                                                                    fit["worst_residual"]))
+                                                                                    fit["worst_residual"]),
+                          seconds_budget=config["flops"].get("seconds_budget"))
     loaded = load_checkpoint(path, trainer.model, optimizer=trainer.optimizer, map_location=device,
                              restore_rng=True)
     trainer.load_state_dict(loaded["trainer"])

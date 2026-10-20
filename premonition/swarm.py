@@ -94,16 +94,19 @@ class Board:
         rows = (values.float() + think.age(bucket).float() + think.board_type.weight[1].float()
                 + think.desk.weight[author].float())                                   # [Q, M*K, d]
         row_index = torch.arange(self.size, device=flat.device)
-        slot_card, board, ok, pointer = self.slot_card, self.cards, self.cards_ok, self.count
-        for column in range(flat.shape[1]):
+        slot_card, pointer = self.slot_card, self.count
+        source = torch.full_like(slot_card, -1)                     # [Q, C]: the column that last wrote each row
+        for column in range(flat.shape[1]):                         # the FIFO runs on ids only (small tensors)
             card = flat[:, column]
             new = (card >= 0) & (card != store.null) & ~(slot_card == card.unsqueeze(1)).any(1)
             write = (row_index == (pointer % self.size).unsqueeze(1)) & new.unsqueeze(1)   # [Q, C]
             slot_card = torch.where(write, card.unsqueeze(1), slot_card)
-            board = torch.where(write.unsqueeze(-1), rows[:, column].unsqueeze(1), board)
-            ok = ok | write
+            source = torch.where(write, torch.full_like(source, column), source)
             pointer = pointer + new.long()
-        self.slot_card, self.cards, self.cards_ok, self.count = slot_card, board, ok, pointer
+        written = source >= 0                                       # then the board is written once
+        picked = rows.gather(1, source.clamp_min(0).unsqueeze(-1).expand(-1, -1, rows.shape[-1]))
+        self.cards = torch.where(written.unsqueeze(-1), picked, self.cards)
+        self.slot_card, self.cards_ok, self.count = slot_card, self.cards_ok | written, pointer
 
 
 # ----------------------------------------------------------------------------- combiner
@@ -153,28 +156,35 @@ def combiner_memory(model: Any, episode: Any, store: Optional[CardStore], desk_r
 
 
 # ----------------------------------------------------------------------------- ASK assignment
-def balanced_assignment(prefs: torch.Tensor, need: torch.Tensor) -> torch.Tensor:
+def balanced_assignment(prefs: torch.Tensor, need: torch.Tensor, picks: Optional[int] = None) -> torch.Tensor:
     """T [Q, M, N] bool: split each question's `need` [Q, N] across its M desks by `prefs` [Q, M, N].
 
-    Greedy balanced matching: capacity ceil(|need| / M) per desk; repeatedly take, per question, the best
-    (desk below capacity, unassigned card) pair. Disjoint, covers `need`, every desk gets floor or ceil.
+    The split rule (RUNCARD-S0 §1, part of the mechanism): with n = |need|, every desk gets floor(n / M) or
+    ceil(n / M) cards. Greedy: while some desk is below floor(n / M), only those desks may take a card;
+    after that, desks below ceil(n / M). Each pick takes, per question, the best (eligible desk, unassigned
+    card) pair by preference. The result is disjoint and covers `need`.
+    `picks` bounds the loop. Pass a static bound (training passes the batch's gold width + 1) to keep it
+    free of host syncs. None reads max |need| once, a sync, which is fine for tests.
     """
     count, desks, width = prefs.shape
     prefs = prefs.clamp_min(-1e9)
     total = need.sum(1)
-    cap = -(-total // desks)
+    floor, cap = total // desks, -(-total // desks)
     load = torch.zeros(count, desks, dtype=torch.long, device=need.device)
     free = need.clone()
     out = torch.zeros(count, desks, width, dtype=torch.bool, device=need.device)
-    row = torch.arange(count, device=need.device)
-    for _ in range(int(total.max()) if count else 0):
-        ok = (load < cap.unsqueeze(1)).unsqueeze(2) & free.unsqueeze(1)
+    desk_ids = torch.arange(desks, device=need.device)
+    pair_ids = torch.arange(desks * width, device=need.device)
+    for _ in range(int(total.max()) if picks is None and count else (picks or 0)):
+        short = load < floor.unsqueeze(1)                                       # desks still below the floor
+        open_ = torch.where(short.any(1, keepdim=True), short, load < cap.unsqueeze(1))
+        ok = open_.unsqueeze(2) & free.unsqueeze(1)                             # [Q, M, N]
         best = prefs.masked_fill(~ok, -math.inf).reshape(count, -1).argmax(1)
-        live = ok.reshape(count, -1).any(1)
-        who, desk, card = row[live], (best // width)[live], (best % width)[live]
-        out[who, desk, card] = True
-        load[who, desk] += 1
-        free[who, card] = False
+        live = ok.reshape(count, -1).any(1)                                     # a pick remains (device-side)
+        chosen = (pair_ids == best.unsqueeze(1)) & live.unsqueeze(1)            # unmasked writes: no sync
+        out |= chosen.view(count, desks, width)
+        load += ((desk_ids == (best // width).unsqueeze(1)) & live.unsqueeze(1)).long()
+        free &= ~chosen.view(count, desks, width).any(1)
     return out
 
 
@@ -342,7 +352,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
     inputs = inputs.masked_fill(inputs == IGNORE_INDEX, config.pad_id)
     keep = targets != IGNORE_INDEX
 
-    ans_terms, halt_terms, set_terms, bce_terms, ask_rates = [], [], [], [], []
+    ans_terms, halt_terms, set_terms, bce_terms = [], [], [], []
     for step in range(rounds):
         rows, halt, ask, scores = swarm.round(step)
         if swarm.board is not None:
@@ -371,11 +381,10 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
             metrics["answer_acc"] = correct.mean().detach()
         if store is None:
             continue
-        ask_rates.append((ask > 0).float().view(count, M).mean(0).detach())
         # L_ask: balanced assignment of the cards no desk has fetched yet.
         need_union = gold & ~union
         prefs = scores.detach().view(count, M, -1)
-        target = balanced_assignment(prefs, need_union).view(count * M, -1)
+        target = balanced_assignment(prefs, need_union, picks=batch.gold_lines.shape[1] + 1).view(count * M, -1)
         asks = target.any(1)
         bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
         if asks.any():
@@ -401,18 +410,16 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
         if set_terms:
             l_ask = l_ask + torch.cat(set_terms).mean()
     metrics["question_loops"] = torch.tensor(count * rounds * M)
-    with torch.no_grad():
-        metrics["swarm_register_cos"] = torch.tensor(register_cos(swarm.registers()))
-        if store is not None:
-            metrics["swarm_ask_rate"] = torch.stack(ask_rates).mean(0)
-            metrics["swarm_fetch_overlap"] = torch.tensor(fetch_overlap(swarm.desk_fetched()))
+    # No per-step swarm diagnostics (review round 3, item c): MiniTrainer never read them and they synced the
+    # host every step, charging S0's training clock. The diversity report runs at eval (`swarm_answer`).
     losses = {"lm": l_lm, "ask": l_ask, "ans": l_ans, "halt": l_halt}
     total = sum(weights.get(name, 0.0) * value for name, value in losses.items())
     return {**losses, "loss": total, "metrics": metrics}
 
 
 def _recall(model: Any, swarm: _Swarm, rows: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
-    """Gold recall@top_k of the first ASK, union over the desks' top-k, over eligible cards (told questions)."""
+    """Gold recall@top_k of desk 0's first ASK over eligible cards (told questions). Desk 0 only, so that it is
+    comparable with D1's training recall and with validation's `first_top` (also desk 0)."""
     from premonition.model import _norm
     store, episode, config = swarm.store, swarm.episode, model.config
     told = gold[:, :store.null].any(1)
@@ -422,7 +429,7 @@ def _recall(model: Any, swarm: _Swarm, rows: torch.Tensor, gold: torch.Tensor) -
         register = _norm(rows[:, model._register_base])
         scores = store.ask(model.heads.query(register), episode.q_visit, episode.q_line,
                            model.heads.log_kappa.exp(), model.think.age_bias, questions=swarm.all)
-        top = store.top(scores, config.top_k).view(swarm.count, -1)
+        top = store.top(scores, config.top_k).view(swarm.count, swarm.desks, -1)[:, 0]
         found = torch.zeros(gold.shape, dtype=torch.long, device=gold.device).scatter_add(
             1, top.clamp_min(0), (top >= 0).long()) > 0
         hit = (gold & found).sum(1).float()

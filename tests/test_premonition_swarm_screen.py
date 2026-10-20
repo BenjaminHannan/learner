@@ -552,5 +552,29 @@ class ConstantsMatchTheLibraryTest(unittest.TestCase):
         self.assertEqual(identity.V2_TOKENIZER["vocab_size"], 7068)
 
 
+class CheckpointRefusalTest(unittest.TestCase):
+    """Review round 3, item b: a rerun whose checkpoint already exists is refused BEFORE any training."""
+
+    def test_train_refuses_before_training_when_the_checkpoint_exists(self) -> None:
+        import argparse
+        import premonition.train as ptrain
+        called = []
+        original = ptrain.train_d
+        ptrain.train_d = lambda *a, **k: called.append(1) or {"status": "completed"}
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                (Path(folder) / "ck" / "D1-s0").mkdir(parents=True)
+                args = argparse.Namespace(root=folder, device="cpu", ckpt_dir="ck", arm="D1", seed=0, data_rel="d",
+                                          tokenizer="t", seconds=30.0, size="tiny", max_tokens=3000, workers=1,
+                                          out=str(Path(folder) / "train.json"))
+                with self.assertRaises(SystemExit) as caught:
+                    screen.cmd_train(args)
+                self.assertIn("REFUSED before training", str(caught.exception))
+                self.assertEqual(called, [])                                  # train_d never ran
+                self.assertFalse((Path(folder) / "train.json").exists())
+        finally:
+            ptrain.train_d = original
+
+
 if __name__ == "__main__":
     unittest.main()

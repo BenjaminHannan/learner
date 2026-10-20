@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import math
+import time
 import unittest
 
 import torch
@@ -167,7 +168,7 @@ class ForwardTest(unittest.TestCase):
                 self.assertEqual(int(out["metrics"]["gold_missing"]), 0)
                 rounds = 2 if mode == "gold" else model.config.swarm_rounds
                 self.assertEqual(int(out["metrics"]["question_loops"]), Q * rounds * M)
-                self.assertEqual(len(out["metrics"]["swarm_ask_rate"]), M)
+                self.assertFalse({"swarm_ask_rate", "swarm_register_cos", "swarm_fetch_overlap"} & set(out["metrics"]))
                 if mode == "teacher":
                     self.assertGreater(out["ask"].item(), 0.0)
                     self.assertGreater(model.think.desk.weight.grad.abs().sum().item(), 0.0)
@@ -503,6 +504,46 @@ class AssignmentTest(unittest.TestCase):
         self.assertEqual(target[1].tolist(), [True, True, False, False])
         self.assertEqual(target[0].tolist(), [False, False, True, True])
 
+    def test_every_desk_gets_its_share_with_four_desks_and_six_cards(self) -> None:
+        """Round 3, item a (coordinator: 4 desks, 6 cards). Desks 0-2 prefer every card, yet each desk gets 1 or 2:
+        the old cap-only greedy gave [2, 2, 2, 0], training desk 3 to stay silent."""
+        need = torch.zeros(1, 8, dtype=torch.bool)
+        need[0, :6] = True
+        prefs = torch.zeros(1, 4, 8)
+        prefs[0, :3] = 5.0
+        target = sw.balanced_assignment(prefs, need)[0]
+        self.assertEqual(sorted(target.sum(1).tolist()), [1, 1, 2, 2])
+        self.assertGreaterEqual(int(target[3].sum()), 1)
+        self.assertTrue(torch.equal(target.any(0), need[0]))
+        self.assertTrue((target.sum(0) <= 1).all())
+
+    def test_floor_or_ceil_for_three_four_and_eight_desks(self) -> None:
+        """The split rule: every desk gets floor(n / M) or ceil(n / M), disjoint, covering need, for any prefs."""
+        generator = torch.Generator().manual_seed(0)
+        for desks in (3, 4, 8):
+            for _ in range(20):
+                need = torch.rand(5, 18, generator=generator) < torch.rand(5, 1, generator=generator)
+                prefs = torch.randn(5, desks, 18, generator=generator) * 3
+                prefs[:, 0] += 10.0                                          # one greedy desk
+                target = sw.balanced_assignment(prefs, need)
+                n = need.sum(1, keepdim=True)
+                load = target.sum(2)
+                self.assertTrue(((load >= n // desks) & (load <= -(-n // desks))).all(), desks)
+                self.assertTrue(torch.equal(target.any(1), need), desks)
+                self.assertTrue((target.sum(1) <= 1).all(), desks)
+                self.assertTrue(torch.equal(sw.balanced_assignment(prefs, need, picks=18), target), desks)
+
+    def test_training_call_runs_no_syncing_op(self) -> None:
+        """Round 3, item c: with a static `picks` (as swarm_forward passes) the split forces no host sync."""
+        need = torch.zeros(2, 9, dtype=torch.bool)
+        need[0, [0, 2, 3, 6, 8]] = True
+        need[1, 4] = True
+        prefs = torch.randn(2, 4, 9, generator=torch.Generator().manual_seed(1))
+        with torch.no_grad(), _Record() as record:
+            sw.balanced_assignment(prefs, need, picks=9)
+        bad = sorted({op for op in record.ops if any(op.startswith(name) for name in NoSyncTest.SYNCING)})
+        self.assertEqual(bad, [], bad)
+
     def test_nothing_missing_assigns_nothing(self) -> None:
         target = sw.balanced_assignment(torch.randn(2, 3, 5), torch.zeros(2, 5, dtype=torch.bool))
         self.assertFalse(target.any())
@@ -790,6 +831,94 @@ class TrainingTest(unittest.TestCase):
             optimizer.step()
             losses.append(out["loss"].item())
         self.assertLess(losses[-1], 0.8 * losses[0])
+
+
+class RoundThreeTest(unittest.TestCase):
+    """Review round 3: c (no per-step swarm diagnostics; equal diagnostics charge under a seconds budget),
+    d (seconds budget survives checkpoint + resume), e (final stretch counted), g (answer_with_gold guard)."""
+
+    def test_swarm_forward_computes_no_per_step_diagnostics(self) -> None:
+        batch = synthetic_batch(seed=2)
+        saved = sw.register_cos, sw.fetch_overlap
+
+        def refuse(*_a, **_k):
+            raise AssertionError("per-step swarm diagnostic computed in training")
+
+        sw.register_cos = sw.fetch_overlap = refuse
+        try:
+            for make in (s0, s1):
+                for mode in ("gold", "teacher", "own"):
+                    make()(batch, mode=mode, p_own=0.5, generator=torch.Generator().manual_seed(0))
+        finally:
+            sw.register_cos, sw.fetch_overlap = saved
+        self.assertIsNotNone(sw.diversity(s1().answer(batch).swarm))          # the eval report still works
+
+    def _toy(self, **swarm):
+        from premonition.toy import ToySpec, toy_stream
+        from premonition.train import label_free
+        spec = ToySpec()
+        torch.manual_seed(0)
+        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64, **swarm))
+        return model, (label_free(b) for b in toy_stream(spec, 4, 0))
+
+    def test_equal_diagnostics_charge_under_a_seconds_budget(self) -> None:
+        from premonition.flops import FlopFit
+        from premonition.train import MiniTrainer, mini_train_config, planned_loops
+        for swarm in ({}, dict(thinkers=2)):
+            model, stream = self._toy(**swarm)
+            batch = next(stream)
+            timed = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
+                                seconds_budget=1e6)
+            plan = timed.plan()
+            out = timed._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
+            self.assertNotIn("cards", out)                                    # no arm records card insertions
+            self.assertGreaterEqual(out["diagnostic_seconds"], 0.0)
+            plain = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1.0, seed=0)
+            out = plain._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
+            self.assertNotIn("diagnostic_seconds", out)                       # flag-off training is unchanged
+            self.assertEqual("cards" in out, not swarm)
+        model, stream = self._toy()
+        trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30, seed=0,
+                              seconds_budget=1e6)
+        trainer.fit = FlopFit(0.0, 0.0, 0.0)
+        step = trainer._train_step
+
+        def slow_diagnostics(*args):                                          # 0.3 s of real, reported diagnostics
+            out = step(*args)
+            time.sleep(0.3)
+            return {**out, "diagnostic_seconds": 0.3}
+
+        trainer._train_step = slow_diagnostics
+        report = trainer.train(stream, max_steps=2)
+        self.assertEqual(report["steps"], 2)
+        self.assertLess(report["train_seconds"], report["seconds"] - 0.55)    # the 2 x 0.3 s is left off the clock
+        self.assertGreater(report["train_seconds"], 0.0)                      # item e: the last stretch is counted
+
+    def test_seconds_budget_survives_checkpoint_and_resume(self) -> None:
+        import tempfile
+        from pathlib import Path
+        from memorylab.storage import Budget
+        from premonition.train import MiniTrainer, checkpoint_config, mini_train_config, resume_trainer, \
+            save_mini_checkpoint
+        model, _ = self._toy(thinkers=2)
+        trainer = MiniTrainer(model, mini_train_config(), "cpu", flop_budget=1e30, seed=0, seconds_budget=600.0)
+        trainer.train_seconds = 123.0
+        with tempfile.TemporaryDirectory() as folder:
+            budget = Budget(Path(folder), hard=10_000_000_000, steady=8_000_000_000)
+            config = checkpoint_config(trainer, contender="D", tokenizer={"path": "toy", "sha256": "t" * 64},
+                                       detector="d" * 64, data={"dir": "toy", "tag": "toy"})
+            self.assertEqual(config["flops"]["seconds_budget"], 600.0)
+            save_mini_checkpoint(budget, "ck/S0", trainer, config)
+            again = resume_trainer(Path(folder) / "ck" / "S0")
+        self.assertEqual((again.seconds_budget, again.train_seconds), (600.0, 123.0))
+        plain = MiniTrainer(model, mini_train_config(), "cpu", flop_budget=1.0, seed=0)
+        self.assertNotIn("seconds_budget", checkpoint_config(plain, contender="D")["flops"])   # flag-off unchanged
+
+    def test_answer_with_gold_refuses_a_swarm(self) -> None:
+        from premonition.train import answer_with_gold
+        with self.assertRaises(ValueError):
+            answer_with_gold(s0(), synthetic_batch())
+        answer_with_gold(build(), synthetic_batch())                          # single thinker: unchanged
 
 
 if __name__ == "__main__":

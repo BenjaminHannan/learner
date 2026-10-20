@@ -463,15 +463,26 @@ def cmd_c0(args: argparse.Namespace) -> int:
 
 
 # ------------------------------------------------------------------ train, eval
+def checkpoint_free(root: Path, relative: str) -> None:
+    """Refuse BEFORE training if the checkpoint already exists (review round 3, item b): `save_checkpoint` never
+    overwrites, so a rerun would spend its whole T and then fail at the save, leaving no train JSON."""
+    target = Path(root) / relative
+    if target.exists():
+        raise SystemExit(f"REFUSED before training: checkpoint {target} already exists (a rerun after a VOID or a "
+                         f"partial PART=s0 run). Move it aside or pass a fresh --ckpt-dir; nothing was trained.")
+
+
 def cmd_train(args: argparse.Namespace) -> int:
     from premonition.train import train_d
     require_device(args.device)
+    checkpoint = f"{args.ckpt_dir}/{args.arm}-s{args.seed}"
+    checkpoint_free(Path(args.root), checkpoint)
     budget = make_budget(Path(args.root))
     began = time.perf_counter()
     report = train_d(budget, data_rel=args.data_rel, tokenizer_path=args.tokenizer, flop_budget=1e30,
                      seconds_budget=args.seconds, swarm=ARMS[args.arm] or None, seed=args.seed, device=args.device,
                      size=args.size, eval_every=0, max_tokens=args.max_tokens, workers=max(1, args.workers),
-                     checkpoint=f"{args.ckpt_dir}/{args.arm}-s{args.seed}", log=log)
+                     checkpoint=checkpoint, log=log)
     report = trim_history(report)
     report.update(arm=args.arm, seed=args.seed, seconds_requested=args.seconds,
                   wall_seconds=time.perf_counter() - began, size=args.size, environment=environment(args.device))

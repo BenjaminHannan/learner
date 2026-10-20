@@ -126,9 +126,12 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
   inference channel, identical in S0 and S1):
   - `need_union [Q, L+1] = gold & ~fetched_union`.
   - `prefs = scores.detach().view(Q, M, L+1)` with `-inf -> -1e9`.
-  - Greedy balanced matching: capacity `cap[q] = ceil(|need_union[q]| / M)`; repeat
-    `max_q |need_union[q]|` times: among (desk with load < cap, card in need not yet assigned) take the
-    per-question argmax pref, assign it. Output `T [Q, M, L+1]` bool. Vectorise over Q; loop over picks.
+  - Greedy balanced matching with a floor and a ceiling (review round 3, 2026-10-20): `floor = n // M`,
+    `cap = ceil(n / M)` per question, n = |need_union[q]|. Each pick: while any desk is below floor, only those
+    desks are eligible; otherwise desks below cap. Take the per-question argmax pref over (eligible desk,
+    unassigned needed card) and assign it. So every desk gets floor or ceil, disjoint, covering need. Output
+    `T [Q, M, L+1]` bool. Vectorised over Q, with a static number of picks (`gold_lines.shape[1] + 1`) and
+    unmasked writes, so it forces no host sync.
   - Desk target: `asks_m = T[q, m].any()`. `bce` over all Q*M desks; `set_cross_entropy(scores[qm], T[qm])`
     over desks with a non-empty target.
 * Fetch for the next round (not after the last; not in "gold"): teacher = `model._teacher_cards(desk_store,

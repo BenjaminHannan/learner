@@ -29,6 +29,16 @@ the tag goes in the readout).
   training seconds, with eval pauses excluded (`TrainerPlumbingTest`). `max_seconds` alone would stop the run but
   leave the curriculum frozen at its FLOP share, so it is not used. **T = the seconds D1 needs for F = 2.6e16 FLOPs on this box, measured in §C0, rounded up to the next 300 s, and capped at 3,600 s.** S0 gets the
   same T, whatever number of steps that buys.
+* **(10-20, pre-seal) The card split rule is part of the mechanism under test.** In training, each round's
+  still-needed gold cards are split across the desks by their own ASK scores, and **every desk gets ⌊n/M⌋ or
+  ⌈n/M⌉ of the n cards** (desks below the floor are served first). It is the same in S0 and S1, and it is used
+  only in training, never at inference. This replaces a cap-only rule that could leave a desk with none (review
+  round 3, item a). It is settled here, before any run.
+* **(10-20, pre-seal) What "equal T" charges.** With `seconds_budget` set, no arm records card insertions
+  (`InsertLog` / `card_stats`), and the post-step diagnostics every arm runs on its logged steps are timed and
+  left off `train_seconds`. The swarm's training step computes no unused diagnostics. So equal T means equal
+  training time for D1 and S0 alike (review round 3, item c). The diversity report and card statistics come
+  from the evaluation, not from training.
 * **Matched parameters (reported, separately).** D1 2,102,228 (v2) vs S0 2,102,740 (+512 desk embeddings, +0.02%).
 * **Reported, not matched:** steps, tokens, think FLOPs per question, s/step, peak GPU memory.
 * Eval: `evaluate_d_checkpoint(split="validation")` (label-free), max_loops default. S0 is fixed at 4
