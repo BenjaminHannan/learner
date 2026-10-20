@@ -69,7 +69,8 @@ SAFETY = 0.9                               # the deadline: SAFETY x the hard sto
 EXPORT_SECONDS = 900                       # ... minus this, left for packing the export ...
 PREJOB_S = 900                             # image pull and container start: the floor reserves it, waitlog enforces it
 WALL_SAFETY = 0.95                         # the on-box wall: 0.95 x the cap's hours at the box's $/h, from BOX_START
-BUILD_EST_S, TIMING_MAX_S, RUN_1B_MIN_S = 1800, 2400, 3600     # feasibility floor: build + 1a (its cap) + 1 h of 1b
+BUILD_EST_S, TIMING_MAX_S, RUN_1B_MIN_S = 2400, 2400, 3600     # feasibility floor: build (1,982 s measured on box
+                                                                # 56946584, plus margin) + 1a (its cap) + 1 h of 1b
 RUNNER = "scripts/premonition_steals_r1_stage1.py"
 CARD = "design/steals-2026-10-17/R1-STAGE1-CARD.md"
 SEAL_DEFAULT = "artifacts/claude-steals-20261017/r1-stage1/SEAL.sha256.txt"
@@ -138,7 +139,7 @@ fail() { say "R1S1-FAIL $*"; finish FAIL; }
 TICK=$!
 say "R1S1 START stage $STAGE"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1 | tee checks/gpu.txt
-echo "cpus $(nproc)"; free -g | head -2; df -h / | tail -1
+echo "cpus $(nproc)"; head -3 /proc/meminfo; df -h / | tail -1
 printf '%s' "$@" | base64 -d > pack.tar.xz
 echo "$PACK_SHA  pack.tar.xz" | sha256sum -c || fail "pack sha256"
 $PY -c "import tarfile; tarfile.open('pack.tar.xz', 'r:xz').extractall('tree')" || fail "pack untar"
@@ -234,20 +235,20 @@ CAP=__CAP__
 WALL_FROM_BOX_S=__WALL_FROM_BOX_S__
 LEDGER=$(dirname "$J")/r1s1-box-ledger.json
 SELF_STOP_PY='import json, os, sys, urllib.request
-req = urllib.request.Request(os.environ.get("VAST_API", "https://console.vast.ai/api/v0") + "/instances/" + os.environ["CONTAINER_ID"] + "/",
+req = urllib.request.Request(os.environ.get("R1S1_TEST_VAST_API", "https://console.vast.ai/api/v0") + "/instances/" + os.environ["CONTAINER_ID"] + "/",
     data=b"{\"state\": \"stopped\"}", method="PUT",
     headers={"Authorization": "Bearer " + os.environ["CONTAINER_API_KEY"], "Content-Type": "application/json"})
 try:
     body = urllib.request.urlopen(req, timeout=30).read().decode()
 except Exception as error:
-    print(type(error).__name__, error); sys.exit(1)
+    print(type(error).__name__, error, getattr(error, "read", lambda: b"")()[:200]); sys.exit(1)
 print(body[:200]); sys.exit(0 if json.loads(body or "{}").get("success") is True else 1)'
 self_stop() {   # ask Vast to stop this instance with the container's own key (python: the image need not have curl)
   if [ -z "${CONTAINER_ID:-}" ] || [ -z "${CONTAINER_API_KEY:-}" ]; then
     echo "=== R1S1 SELF-STOP no container key: exiting ends the container $(date -u +%FT%TZ)"; return
   fi
   for try in 1 2 3 4 5; do
-    reply=$(${PY:-python3} -c "$SELF_STOP_PY" 2>&1)
+    reply=$(timeout -k 5 45 ${PY:-python3} -c "$SELF_STOP_PY" 2>&1)   # a hard limit: DNS stalls too
     if [ $? = 0 ]; then
       echo "=== R1S1 SELF-STOP accepted (try $try) $(date -u +%FT%TZ)"; return
     fi
@@ -488,6 +489,14 @@ def job_stage(args):
     return m.group(1)
 
 
+def packed_cap(args):
+    """The CAP the pack baked into the job (args.json's job text)."""
+    m = re.search(r"^CAP=([0-9.]+)$", args[2], re.M) if len(args) > 2 else None
+    if not m:
+        raise SystemExit("args.json carries no CAP= line (made by another controller)")
+    return float(m.group(1))
+
+
 def with_box_start(job, epoch):
     """The job text with BOX_START set (once, by `create`, just before the request)."""
     if job.count("BOX_START=__BOX_START__") != 1:
@@ -503,6 +512,7 @@ def create(a):
         raise SystemExit(f"label must be {LABEL_PREFIX}{stage} for this pack, got {label}")
     if not str(a.offer).isdigit():
         raise SystemExit("--offer must be a numeric vast offer id")
+    set_cap(packed_cap(args))                  # the cap the job enforces, not a flag that could disagree with it
     if a.dryrun:
         args[2] = "export DRYRUN=1\n" + args[2]
     body = {"client_id": "me", "image": IMAGE, "disk": a.disk, "label": label, "runtype": "args", "args": args,
@@ -611,12 +621,13 @@ def over_stop(usd, stage):
 
 
 def cost(a):
+    set_cap(packed_cap(json.loads(Path(a.args).read_text())))
     x = inst(a.id) or {}
     stage = stage_of(x.get("label"), a.stage)
     c = running_cost(x, time.time())
     over = over_stop(c["usd"], stage)
     print(json.dumps({"id": a.id, "label": x.get("label"), "stage": stage, "status": x.get("actual_status"),
-                      "dph": c["dph"], "uptime_h": round(c["hours"], 3),
+                      "dph": c["dph"], "uptime_h": None if c["hours"] is None else round(c["hours"], 3),
                       "usd": None if c["usd"] is None else round(c["usd"], 4), "hard_stop_usd": HARD_STOP[stage],
                       "over": over}))
     if c["usd"] is None or over:
@@ -677,6 +688,8 @@ def waitlog(a):
     """The cap guard. Each poll: the status read, then the cost check at that moment, before anything else; then the
     closing marks, the time limit, the watchdog and the start check. Three failed polls in a row (a failed read, an
     unreadable cost, any exception) stop the box. Every exit stops the box first and waits until Vast confirms it."""
+    if getattr(a, "args", None):               # the CLI requires it: the cap guard uses the cap the job was packed with
+        set_cap(packed_cap(json.loads(Path(a.args).read_text())))
     t0 = time.time()
     stage = a.stage or STAGE
     key, changed, ever_running, failures = None, t0, False, 0
@@ -896,7 +909,8 @@ def main(argv=None):
         return p
     p = add("pack", pack)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
-    p.add_argument("--cap", type=float, default=None, help="this box's dollars (default and maximum: the stage cap)")
+    p.add_argument("--cap", type=float, required=True,
+                   help="this box's dollars: the stage's $2.80 less what earlier boxes spent (at most 2.80)")
     p.add_argument("--seal", default=SEAL_DEFAULT)
     p.add_argument("--torch", default=TORCH_PIN, help="torch version to pip install on the box, or `none`")
     p.add_argument("--out", required=True)
@@ -916,7 +930,7 @@ def main(argv=None):
         p.add_argument("--id", required=True)
         if name in ("cost", "waitlog"):
             p.add_argument("--stage", choices=STAGES, default=None)
-            p.add_argument("--cap", type=float, default=None, help="this box's dollars, as packed")
+            p.add_argument("--args", required=True, help="the pack's args.json: the cap is read from it")
         if name == "logs":
             p.add_argument("--out", required=True)
             p.add_argument("--tail", type=int, default=2000)

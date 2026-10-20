@@ -237,12 +237,12 @@ class PackTest(Fixture):
         self.assertEqual((rent.SAFETY, rent.EXPORT_SECONDS, rent.PREJOB_S), (0.9, 900, 900))
 
     def test_pack_refuses_when_the_deadline_is_under_the_floor(self) -> None:   # N3
-        self.assertEqual(rent.FLOOR_S, 900 + 1800 + 2400 + 3600)
-        self.pack(dph=0.90)                                       # 9180 s: fits
+        self.assertEqual(rent.FLOOR_S, 900 + 2400 + 2400 + 3600)       # the build estimate is the measured 1,982 s + margin
+        self.pack(dph=0.85)                                       # 9773 s: fits
         shutil.rmtree(self.out)
         self.assertEqual(rent.deadline_seconds(1.0), 8172)
         with self.assertRaises(SystemExit) as cm:
-            self.pack(dph=1.0)                                    # 8172 s < 8700
+            self.pack(dph=1.0)                                    # 8172 s < 9300
         self.assertIn("feasibility floor", str(cm.exception))
         self.assertFalse(self.out.exists())
         for dph in (0, -1):
@@ -1018,7 +1018,7 @@ class JobE2ETest(Fixture):
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         self.addCleanup(server.shutdown)
-        return {"VAST_API": f"http://127.0.0.1:{server.server_port}/api/v0", "NO_PROXY": "127.0.0.1,localhost",
+        return {"R1S1_TEST_VAST_API": f"http://127.0.0.1:{server.server_port}/api/v0", "NO_PROXY": "127.0.0.1,localhost",
                 "no_proxy": "127.0.0.1,localhost", "CONTAINER_ID": 7, "CONTAINER_API_KEY": "k"}
 
     def test_the_box_ends_by_its_wall_with_no_watcher(self) -> None:
@@ -1218,6 +1218,23 @@ class RealRunnerStartTest(unittest.TestCase):
 class CapTest(unittest.TestCase):
     def tearDown(self) -> None:
         rent.set_cap(None)
+
+    def test_every_command_takes_the_packed_cap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = ["bash", "-c", "x\nCAP=2.33\nDPH=0.68\nSTAGE=1ab\n", "r1s1"]
+            path = Path(tmp) / "args.json"
+            path.write_text(json.dumps(args))
+            self.assertEqual(rent.packed_cap(args), 2.33)
+            with self.assertRaises(SystemExit):
+                rent.packed_cap(["bash", "-c", "no cap here", "x"])
+            with mock.patch.object(rent, "inst", return_value={"label": LABEL, "dph_total": 0.68,
+                                                                "start_date": time.time() - 3.5 * 3600}), \
+                    mock.patch("builtins.print") as pr, self.assertRaises(SystemExit) as cm:
+                rent.cost(Ns(id="7", stage=None, args=str(path)))        # $2.38: over 2.33, under 2.80
+            out = json.loads(pr.call_args[0][0])
+            self.assertEqual((cm.exception.code, out["hard_stop_usd"], out["over"]), (3, 2.33, True))
+        with self.assertRaises(SystemExit):                                  # pack refuses without --cap
+            rent.main(["pack", "--dph", "0.6", "--out", "/nonexistent-dir"])
 
     def test_a_later_box_gets_what_is_left(self) -> None:
         rent.set_cap(2.33)                                                   # 2.80 - 0.47 spent on earlier boxes
