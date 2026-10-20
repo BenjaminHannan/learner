@@ -191,3 +191,16 @@ The script's header is the reference; this is the contract it implements.
   and it is then moved in. Writing it inside the folder being archived made GNU tar fail with "file changed as we
   read it" (found by the sixth-pass box tests, which run the real script in a throwaway clean repo with stand-in runner and
   readout).
+
+## C0's train-overhead probe in a fresh process (amended 2026-10-20, coordinator ruling on RUN2-C0-STOP, option ii)
+
+The probe is a short real `train_d` (S0 and D1, 20 s each). It now runs as `premonition_swarm_screen.py train-probe`
+in a fresh subprocess, as every real train does. Before it starts, the parent C0 process runs `gc.collect()` and
+`torch.cuda.empty_cache()`. Run 2's in-process probe ran after S0m8's guard trip and other probes, so it measured
+the C0 process, not a train.
+
+Instrumentation only: with `train_d(memory_phases=True)` (the probe; real trains leave it off) the trainer logs
+peak allocated / reserved memory for each phase: start, calibration, step1, train, (open-at-abort), validation (logged,
+never guarded) and save. It resets the CUDA peak at each boundary, and keeps the closed phases' peak in
+`reserved_floor`, so the 14 GiB guard decides on exactly the un-reset peak. The guard is unchanged. A probe abort is a C0
+stop whose message lists the phases. c0.json records them under `train_probe` / `train_probe_d1`.

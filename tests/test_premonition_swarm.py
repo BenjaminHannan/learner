@@ -1277,5 +1277,51 @@ class NinthPassTest(unittest.TestCase):
         self.assertFalse(InsertLog.applies(s0()))
         self.assertTrue(InsertLog.applies(build()))
 
+
+class MemoryPhaseTest(unittest.TestCase):
+    """Coordinator ruling on RUN2-C0-STOP (option ii), instrumentation only: per-phase memory logging that leaves
+    the 14 GiB guard's decision unchanged, and is off (no measuring, no resets) unless asked for."""
+
+    def _toy(self):
+        from premonition.toy import ToySpec, toy_stream
+        from premonition.train import label_free
+        spec = ToySpec()
+        torch.manual_seed(0)
+        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64))
+        return model, (label_free(b) for b in toy_stream(spec, 4, 0))
+
+    def test_off_by_default_and_phases_when_on(self) -> None:
+        from premonition.flops import FlopFit
+        from premonition.train import MiniTrainer, mini_train_config
+        model, stream = self._toy()
+        trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30, seed=0,
+                              seconds_budget=1e6)
+        self.assertIsNone(trainer.memory_phases)
+        self.assertEqual(trainer.reserved_floor, 0)
+        trainer.memory_phase("anything")                                      # a no-op when off
+        trainer.fit = FlopFit(0.0, 0.0, 0.0)
+        trainer.train(stream, max_steps=2)
+        self.assertIsNone(trainer.memory_phases)
+        model, stream = self._toy()
+        trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30, seed=0,
+                              seconds_budget=1e6)
+        trainer.fit = FlopFit(0.0, 0.0, 0.0)
+        trainer.memory_phases = []
+        trainer.train(stream, max_steps=3)
+        self.assertEqual([(p["phase"], p["step"]) for p in trainer.memory_phases], [("step1", 1), ("train", 3)])
+
+    def test_the_guard_decides_on_the_unreset_peak(self) -> None:
+        # With peaks reset between phases, the closed phases' peak (reserved_floor) still counts: the guard's
+        # decision equals the un-reset peak's. On CPU the live peak is 0, so only the floor can trip it.
+        from learnlab.train import GIB, MemoryGuardError
+        from premonition.train import MiniTrainer, mini_train_config
+        model, _ = self._toy()
+        trainer = MiniTrainer(model, mini_train_config(), "cpu", flop_budget=1.0, seed=0)
+        trainer._check_memory()                                               # floor 0: no trip
+        trainer.reserved_floor = int(14.5 * GIB)
+        with self.assertRaises(MemoryGuardError) as caught:
+            trainer._check_memory()
+        self.assertEqual(caught.exception.peak, int(14.5 * GIB))
+
 if __name__ == "__main__":
     unittest.main()

@@ -147,6 +147,31 @@ class Scenario:
         return folder
 
 
+class fake_probe_process:
+    """Replace subprocess.run for `measure_train_overhead`: record the command and write `probe` to its --out."""
+
+    def __init__(self, probe: dict, *, rc: int = 0, calls: list | None = None) -> None:
+        self.probe, self.rc, self.calls, self.commands = probe, rc, calls, []
+
+    def __enter__(self) -> "fake_probe_process":
+        import subprocess
+        self._saved = subprocess.run
+
+        def run(command, **kwargs):
+            self.commands.append(command)
+            if self.calls is not None:
+                self.calls.append("process")
+            if self.rc == 0:
+                Path(command[command.index("--out") + 1]).write_text(json.dumps(self.probe), encoding="utf-8")
+            return subprocess.CompletedProcess(command, self.rc, stdout="", stderr="probe crashed" if self.rc else "")
+        subprocess.run = run
+        return self
+
+    def __exit__(self, *exc) -> None:
+        import subprocess
+        subprocess.run = self._saved
+
+
 class MarksTestCase(unittest.TestCase):
     def run_card(self, scenario: Scenario, card: str = "S0", **options) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
@@ -984,17 +1009,13 @@ class SixthPassRunnerTest(unittest.TestCase):
 
     def test_an_aborted_overhead_probe_stops_c0(self) -> None:
         # Item 1: a probe that did not complete (e.g. the memory guard) stops C0 instead of reporting an overhead.
-        import premonition.train as ptrain
-        original = ptrain.train_d
-        ptrain.train_d = lambda *a, **k: {"status": "memory_guard", "error": "over the limit", "train_seconds": 1.0}
-        try:
+        # (Run 3 prep: the probe is a fresh subprocess; its JSON is faked here.)
+        with fake_probe_process({"status": "aborted", "error": "over the limit", "train_seconds": 1.0}):
             with tempfile.TemporaryDirectory() as root:
                 budget = type("B", (), {"root": root})()
                 with self.assertRaises(SystemExit) as caught:
                     screen.measure_train_overhead(budget, "d", "t", size="tiny", device="cpu", workers=1,
                                                   ckpt_dir="ck", seconds=1.0, max_tokens=10)
-        finally:
-            ptrain.train_d = original
         self.assertIn("did not complete", str(caught.exception))
         self.assertEqual(caught.exception.code, screen.C0_STOP)                    # a C0 stop, exit 3 (item 9)
 
@@ -1519,9 +1540,8 @@ class NinthPassRunnerTest(MarksTestCase):
         saved = (screen.torch.cuda.reset_peak_memory_stats, screen.torch.cuda.empty_cache, ptrain._sync,
                  ptrain.train_d)
         screen.torch.cuda.reset_peak_memory_stats = lambda *a: resets.append("reset")
-        screen.torch.cuda.empty_cache = lambda: None
+        screen.torch.cuda.empty_cache = lambda: resets.append("empty")
         ptrain._sync = lambda device: None
-        ptrain.train_d = lambda *a, **k: resets.append("train") or {"status": "completed", "train_seconds": 1.0}
         try:
             def run_one(config, mode):
                 if config is screen.C0_ARMS["S1m4"]:
@@ -1529,12 +1549,15 @@ class NinthPassRunnerTest(MarksTestCase):
                 return {"round_value": 1.0, "chunks": [1.0], "seconds": 1.0, "updates": 1,
                         "peak_allocated_bytes": None}
             screen.bench(run_one, rounds=1, device="cuda", log=lambda m: None)
-            self.assertEqual(resets, ["reset"])                                # after S1m4's failure
+            self.assertEqual(resets, ["empty", "reset"])                       # after S1m4's failure
             resets.clear()
-            with tempfile.TemporaryDirectory() as root:
-                screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="tiny", device="cuda",
-                                              workers=1, ckpt_dir="ck", seconds=1.0, max_tokens=10, arm="D1")
-            self.assertEqual(resets, ["reset", "train"])                       # reset before the probe trains
+            with fake_probe_process({"status": "completed", "train_seconds": 1.0}, calls=resets):
+                with tempfile.TemporaryDirectory() as root:
+                    screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="tiny",
+                                                  device="cuda", workers=1, ckpt_dir="ck", seconds=1.0,
+                                                  max_tokens=10, arm="D1")
+            # Run 3 prep (ruling ii): the parent frees its cache, then the probe runs in a FRESH process
+            self.assertEqual(resets, ["empty", "process"])
         finally:
             (screen.torch.cuda.reset_peak_memory_stats, screen.torch.cuda.empty_cache, ptrain._sync,
              ptrain.train_d) = saved
@@ -1592,6 +1615,58 @@ class NinthPassRunnerTest(MarksTestCase):
             self.assertNotIn(stale, box)
         for stale in ("static number of picks (`gold_lines.shape[1] + 1`)", "mean desk HALT\nprobability"):
             self.assertNotIn(stale, spec)
+
+
+class RunThreePrepTest(unittest.TestCase):
+    """Coordinator ruling on RUN2-C0-STOP (option ii): C0's train-overhead probe runs in a FRESH subprocess, after the
+    parent frees its cache, and logs memory per phase so an abort names its phase. The guard is unchanged."""
+
+    GIB = 2 ** 30
+
+    def test_the_probe_is_a_fresh_train_probe_process(self) -> None:
+        order = []
+        saved = screen.gc.collect
+        screen.gc.collect = lambda *a: order.append("gc") or saved(*a)
+        try:
+            with fake_probe_process({"status": "completed", "train_seconds": 20.0, "memory_phases": []},
+                                    calls=order) as fake:
+                with tempfile.TemporaryDirectory() as root:
+                    out = screen.measure_train_overhead(type("B", (), {"root": root})(), "data/x", "tok.json",
+                                                        size="full", device="cpu", workers=3, ckpt_dir="ck",
+                                                        seconds=20.0, max_tokens=55000, arm="S0")
+        finally:
+            screen.gc.collect = saved
+        command = fake.commands[0]
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[3], "train-probe")
+        self.assertEqual(command[command.index("--arm") + 1], "S0")
+        self.assertEqual(command[command.index("--max-tokens") + 1], "55000")
+        self.assertEqual(order[:2], ["gc", "process"])                       # freed before the fresh process
+        self.assertTrue(out["fresh_process"])
+        self.assertGreaterEqual(out["wall_seconds"], 0.0)
+        self.assertEqual(out["train_seconds"], 20.0)
+        args = screen.build_parser().parse_args(command[3:])                  # the runner accepts it
+        self.assertEqual((args.command, args.arm, args.seconds), ("train-probe", "S0", 20.0))
+
+    def test_an_abort_names_its_phase(self) -> None:
+        phases = [{"phase": "start", "peak_allocated_bytes": 1 * self.GIB, "peak_reserved_bytes": 1 * self.GIB},
+                  {"phase": "calibration", "peak_allocated_bytes": 13 * self.GIB, "peak_reserved_bytes": 14.5 * self.GIB},
+                  {"phase": "open-at-abort", "peak_allocated_bytes": 9 * self.GIB, "peak_reserved_bytes": 9.5 * self.GIB}]
+        with fake_probe_process({"status": "aborted", "error": "peak reserved 14.50 GiB", "memory_phases": phases}):
+            with tempfile.TemporaryDirectory() as root, self.assertRaises(screen.Stop) as caught:
+                screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="full", device="cpu",
+                                              workers=1, ckpt_dir="ck", seconds=20.0, max_tokens=10)
+        self.assertEqual(caught.exception.code, screen.C0_STOP)
+        self.assertIn("calibration 13.00/14.50", str(caught.exception))
+        self.assertIn("open-at-abort 9.00/9.50", str(caught.exception))
+
+    def test_a_failed_probe_process_is_a_c0_stop(self) -> None:
+        with fake_probe_process({}, rc=1):
+            with tempfile.TemporaryDirectory() as root, self.assertRaises(screen.Stop) as caught:
+                screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="full", device="cpu",
+                                              workers=1, ckpt_dir="ck", seconds=20.0, max_tokens=10)
+        self.assertEqual(caught.exception.code, screen.C0_STOP)
+        self.assertIn("probe process failed (rc 1)", str(caught.exception))
 
 if __name__ == "__main__":
     unittest.main()

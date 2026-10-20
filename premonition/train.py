@@ -260,6 +260,11 @@ class MiniTrainer(Trainer):
         self.seconds_budget = None if seconds_budget is None else float(seconds_budget)
         self.train_seconds = 0.0
         model.train_diagnostics = self.seconds_budget is None          # recall@k in forward: off when matched by time
+        # Memory instrumentation (swarm C0 train probe; off = None, nothing is measured or reset): `memory_phase`
+        # closes a phase, records its peak allocated / reserved, and resets the peak; `reserved_floor` keeps the
+        # closed phases' peak, so the 14 GiB guard decides on the same un-reset peak as without instrumentation.
+        self.memory_phases: Optional[list[dict[str, Any]]] = None
+        self.reserved_floor = 0
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
         self.seed = seed
@@ -272,6 +277,21 @@ class MiniTrainer(Trainer):
         self.generator = torch.Generator(device=self.device).manual_seed(seed)
 
     # ------------------------------------------------------------------ FLOPs
+    def memory_phase(self, name: str) -> None:
+        """Close memory phase `name` (instrumentation only; a no-op unless `memory_phases` is a list)."""
+        if self.memory_phases is None:
+            return
+        row: dict[str, Any] = {"phase": name, "step": self.step}
+        if self.device.type == "cuda":
+            peak_reserved = torch.cuda.max_memory_reserved(self.device)
+            row.update(peak_allocated_bytes=torch.cuda.max_memory_allocated(self.device),
+                       peak_reserved_bytes=peak_reserved,
+                       allocated_bytes=torch.cuda.memory_allocated(self.device),
+                       reserved_bytes=torch.cuda.memory_reserved(self.device))
+            self.reserved_floor = max(self.reserved_floor, peak_reserved)
+            torch.cuda.reset_peak_memory_stats(self.device)
+        self.memory_phases.append(row)
+
     def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
                   ) -> FlopFit:
         """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward)."""
@@ -473,6 +493,8 @@ class MiniTrainer(Trainer):
             entry["flops"] += cost
             if self.step == start_step + 1 or self.step % cfg.memory_check_every == 0:
                 self._check_memory()
+            if self.step == start_step + 1:
+                self.memory_phase("step1")                # instrumentation: the first step apart from the rest
             if track:
                 log(plan)
             if evaluate is not None and cfg.eval_every and self.step % cfg.eval_every == 0:
@@ -483,6 +505,7 @@ class MiniTrainer(Trainer):
                       "eval": self.evaluate(evaluate)})
                 window_start += time.perf_counter() - paused
                 paused_total += time.perf_counter() - paused
+        self.memory_phase("train")
         if self.seconds_budget is not None:      # however the loop ended, count its last stretch, queued work included
             _sync(self.device)
             self.train_seconds = start_seconds + time.perf_counter() - started - paused_total
@@ -1142,7 +1165,7 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
             eval_every: int = 1000, eval_visits: int = 256, calibration_batches: int = 4,
             max_seconds: Optional[float] = None, checkpoint: Optional[str] = None, workers: int = 1,
             swarm: Optional[Mapping[str, Any]] = None, seconds_budget: Optional[float] = None,
-            log: Log = print) -> dict[str, Any]:
+            memory_phases: bool = False, log: Log = print) -> dict[str, Any]:
     """Train D (or D-noask / D-noptr) on a step-1 village build for `flop_budget` FLOPs (design/06 §3-4).
 
     `data_rel` is the data build (e.g. data/village/large-seed0-...), `tokenizer_path` the v2 tokenizer
@@ -1150,7 +1173,9 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     validation hook scores `eval_visits` validation visits every `eval_every` steps; with `checkpoint`
     (a relative path) the final model is saved through `learnlab.ckpt`. `swarm` (thinkers / swarm_board /
     swarm_rounds / board_cards) makes it a swarm of desks; `seconds_budget` drives the curriculum and the stop
-    by training seconds (matched wall-clock arms; pass a FLOP budget out of reach). Returns a JSON-able report.
+    by training seconds (matched wall-clock arms; pass a FLOP budget out of reach). `memory_phases` (the swarm C0
+    train probe) logs peak allocated / reserved per phase: start, calibration, step1, train, the final
+    validation (logged, never guarded) and the save; the guard's decision is unchanged. Returns a JSON-able report.
     """
     from learnlab.tokenizer import Tokenizer
     from premonition import exp1
@@ -1166,9 +1191,13 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     model = PremonitionMini(config)
     trainer = d_trainer(model, device, flop_budget=flop_budget, seed=seed, seconds_budget=seconds_budget, lr=lr,
                         warmup_steps=warmup_steps, log_every=log_every, eval_every=eval_every)
+    if memory_phases:
+        trainer.memory_phases = []
+        trainer.memory_phase("start")                       # process start to here: caches, model on the device
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
     fit = trainer.calibrate(head)
+    trainer.memory_phase("calibration")
     log(f"premonition train {variant}: {model.num_parameters():,} params, F = {flop_budget:.3e}; FLOP fit "
         f"a = {fit.a:.4g}/token, b = {fit.b:.4g}/(question x loop), worst residual {fit.worst:.1%}")
     chosen = list(range(min(eval_visits, len(valid_cache))))
@@ -1196,7 +1225,9 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))
     except MemoryGuardError as error:
         report.update(status="aborted", error=str(error), peak_gpu_reserved_bytes=error.peak)
+        trainer.memory_phase("open-at-abort")              # the phase the guard stopped (step1 or train)
     report["validation"] = trainer.evaluate(hook)
+    trainer.memory_phase("validation")                     # logged, never guarded
     log(format_record({"step": trainer.step, "flops_share": trainer.flops / flop_budget, "eval": report["validation"]}))
     report["history"] = trainer.history
     if checkpoint:
@@ -1206,6 +1237,9 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                                         data={"dir": data_rel, "tag": Path(data_rel).name},
                                         preprocess_identity=preprocess.identity(preprocess.LABEL_FREE))
         report["checkpoint"] = str(save_mini_checkpoint(budget, checkpoint, trainer, ckpt_config))
+        trainer.memory_phase("save")
+    if trainer.memory_phases is not None:
+        report["memory_phases"] = trainer.memory_phases
     return report
 
 

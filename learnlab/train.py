@@ -174,7 +174,10 @@ class Trainer:
         return loss.detach(), grad_norm, dead
 
     def _check_memory(self) -> None:
-        peak, limit = reserved_bytes(self.device), self.config.memory_limit_bytes
+        # `reserved_floor` (0 unless a caller resets the CUDA peak between phases and keeps the earlier phases' peak
+        # there) keeps the guard's decision equal to the un-reset peak.
+        peak = max(reserved_bytes(self.device), getattr(self, "reserved_floor", 0))
+        limit = self.config.memory_limit_bytes
         if peak > limit:
             raise MemoryGuardError(
                 f"peak reserved GPU memory {peak / GIB:.2f} GiB exceeds the {limit / GIB:.2f} GiB "

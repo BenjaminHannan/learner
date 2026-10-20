@@ -67,6 +67,7 @@ import itertools  # noqa: E402
 import platform  # noqa: E402
 import shutil  # noqa: E402
 import statistics  # noqa: E402
+import tempfile  # noqa: E402
 import time  # noqa: E402
 from typing import Any, Callable, Mapping, Optional, Sequence  # noqa: E402
 
@@ -526,30 +527,76 @@ def measure_eval_seconds(budget: Any, data_rel: str, tokenizer_path: str, *, siz
     return {"first_pass_seconds": seconds[0], "second_pass_seconds": seconds[1], "estimate_seconds": seconds[1]}
 
 
-def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
-                           ckpt_dir: str, seconds: float, max_tokens: int, arm: str = "S0") -> dict[str, Any]:
-    """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short S0 `train_d` with a
-    `seconds` budget, wall time minus `train_seconds`. That covers caches (warm after the data step), FLOP
-    calibration, the final validation and the save. The probe checkpoint is deleted afterwards."""
+def train_probe(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
+                ckpt_dir: str, seconds: float, max_tokens: int, arm: str) -> dict[str, Any]:
+    """The probe itself (run in its own process by `measure_train_overhead`): one short `train_d` with a `seconds`
+    budget and per-phase memory logging; the probe checkpoint is deleted afterwards."""
     from premonition.train import _sync, train_d
-    reset_peak(device)
     relative = f"{ckpt_dir}/c0-trainprobe-{arm}-{time.time_ns()}"
     began = time.perf_counter()
     try:
         report = train_d(budget, data_rel=data_rel, tokenizer_path=tokenizer_path, seconds_budget=seconds,
                          swarm=ARMS[arm] or None, seed=0, device=device, size=size, max_tokens=max_tokens,
-                         workers=workers,
-                         checkpoint=relative, log=lambda message: None, **RUN_SETTINGS)
+                         workers=workers, checkpoint=relative, memory_phases=True, log=lambda message: None,
+                         **RUN_SETTINGS)
         _sync(device)
-        wall = time.perf_counter() - began
     finally:
         shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
-    if report.get("status") != "completed":                 # sixth pass, item 1: an aborted probe stops C0
-        raise c0_stop(f"c0: the {arm} train-overhead probe did not complete (status {report.get('status')!r}: "
-                      f"{str(report.get('error'))[:200]}); {arm} would abort the same way")
-    trained = float(report["train_seconds"])
+    return {"status": report.get("status"), "error": report.get("error"), "train_seconds": report.get("train_seconds"),
+            "inner_wall_seconds": time.perf_counter() - began, "memory_phases": report.get("memory_phases")}
+
+
+def phase_summary(phases: Optional[Sequence[Mapping[str, Any]]]) -> str:
+    """"name alloc/reserved GiB" per closed memory phase (CUDA only)."""
+    parts = []
+    for p in phases or []:
+        if p.get("peak_reserved_bytes") is not None:
+            parts.append(f"{p['phase']} {p['peak_allocated_bytes'] / 2**30:.2f}/{p['peak_reserved_bytes'] / 2**30:.2f}")
+    return ", ".join(parts) or "no CUDA phases"
+
+
+def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
+                           ckpt_dir: str, seconds: float, max_tokens: int, arm: str = "S0") -> dict[str, Any]:
+    """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short `train_d` of `arm` with a
+    `seconds` budget, wall time minus `train_seconds`. That covers start-up, caches, FLOP calibration, the final
+    validation and the save. It runs in a FRESH subprocess, as each real train does, after the parent frees what it
+    can (coordinator ruling on RUN2-C0-STOP, option ii), and logs peak allocated / reserved memory per phase (start,
+    calibration, step1, train, validation, save), so an abort names its phase. An abort stops C0."""
+    import subprocess
+    gc.collect()
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    with tempfile.TemporaryDirectory() as folder:
+        out = Path(folder) / "probe.json"
+        command = [sys.executable, "-B", str(Path(__file__).resolve()), "train-probe", "--arm", arm,
+                   "--seconds", str(seconds), "--data-rel", data_rel, "--tokenizer", tokenizer_path,
+                   "--root", str(budget.root), "--device", device, "--size", size, "--workers", str(workers),
+                   "--ckpt-dir", ckpt_dir, "--max-tokens", str(max_tokens), "--out", str(out)]
+        began = time.perf_counter()
+        done = subprocess.run(command, capture_output=True, text=True)
+        wall = time.perf_counter() - began
+        if done.returncode != 0 or not out.is_file():
+            raise c0_stop(f"c0: the {arm} train-overhead probe process failed (rc {done.returncode}): "
+                          f"{(done.stderr or done.stdout)[-300:]}")
+        probe = json.loads(out.read_text(encoding="utf-8"))
+    phases = phase_summary(probe.get("memory_phases"))
+    if probe.get("status") != "completed":                  # sixth pass, item 1: an aborted probe stops C0
+        raise c0_stop(f"c0: the {arm} train-overhead probe did not complete (status {probe.get('status')!r}: "
+                      f"{str(probe.get('error'))[:160]}); memory per phase, allocated/reserved GiB: {phases}; "
+                      f"{arm} would abort the same way")
+    trained = float(probe["train_seconds"])
     return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
-            "overhead_seconds": max(0.0, wall - trained)}
+            "overhead_seconds": max(0.0, wall - trained), "fresh_process": True,
+            "memory_phases": probe.get("memory_phases"), "memory_summary_gib": phases}
+
+
+def cmd_train_probe(args: argparse.Namespace) -> int:
+    require_device(args.device)
+    result = train_probe(make_budget(Path(args.root)), args.data_rel, args.tokenizer, size=args.size,
+                         device=args.device, workers=max(1, args.workers), ckpt_dir=args.ckpt_dir,
+                         seconds=args.seconds, max_tokens=args.max_tokens, arm=args.arm)
+    Path(args.out).write_text(json.dumps(result, default=str), encoding="utf-8")
+    return 0
 
 
 REQUIRED_ARMS = ("D1", "S0m4")                       # without these two the bench cannot set T
@@ -777,6 +824,14 @@ def build_parser() -> argparse.ArgumentParser:
     one.add_argument("--tokenizer", required=True)
     one.add_argument("--max-tokens", type=int, default=55_000)
     one.add_argument("--ckpt-dir", default=CKPT_DIR, help="checkpoint folder, relative to --root")
+    one = sub.add_parser("train-probe", help="C0's train-overhead probe, run in its own process by c0")
+    common(one)
+    one.add_argument("--arm", choices=sorted(ARMS), required=True)
+    one.add_argument("--seconds", type=float, required=True)
+    one.add_argument("--data-rel", required=True)
+    one.add_argument("--tokenizer", required=True)
+    one.add_argument("--max-tokens", type=int, default=REGISTERED_C0["max_tokens"])
+    one.add_argument("--ckpt-dir", default=CKPT_DIR)
     one = sub.add_parser("eval")
     common(one)
     one.add_argument("--checkpoint", required=True, help="checkpoint folder, relative to --root")
@@ -794,7 +849,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.workers = max(1, min(12, (os.cpu_count() or 2) - 1))
     try:
         return {"data": cmd_data, "c0": cmd_c0, "train": cmd_train, "eval": cmd_eval,
-                "manifest": cmd_manifest}[args.command](args)
+                "manifest": cmd_manifest, "train-probe": cmd_train_probe}[args.command](args)
     except Stop as stop:
         print(("REFUSED: " if stop.code == REFUSED else "C0 STOP: ") + stop.message, file=sys.stderr, flush=True)
         return stop.code
