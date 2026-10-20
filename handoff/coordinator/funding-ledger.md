@@ -78,3 +78,5 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 00:31 | Swarm | GO on round-3b items 1, 2, 4, 5. Item 3 (delegated by Ben): pooled M1 test averages items over seeds, then pairs over items; the ≥2-of-3-seeds rule is kept. Allowed pre-seal (no data yet) and stricter. | 0 |
 | 2026-10-20 00:28 | Steals | GO on round-5 blocking items #1 (row_halt HALT read) and #8 (R1 arm-order rotation). | 0 |
 | open | Ledger check | The decoder session claims "$29.86 of $50 committed" this week on Vast. Not yet reconciled with this ledger. | — |
+| 2026-10-20 00:50 | Steals | Round-6 review accepted as clean for the R1 path (9ce46e2..2004775 is docs only). R1 Stage 0 GO at 2004775: $0, CPU, marks as filed. Design questions (a)–(d) settled or held as listed. | 0 |
+| 2026-10-20 00:41 | Info constraints | S2 Stage 0 PASSED its pre-set marks (control about 11%, treated 1024/1024 on 3 seeds). Coordinator review of the final head running. Distractor reading GO ($0). | 0 |
