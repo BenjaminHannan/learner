@@ -34,3 +34,11 @@ passing its gate. 2b (≤ $1.00) only on a new ask. The worst case for the whole
 1. A code review of the change (`premonition/model.py`, `config.py`, `flops.py`, the new test and the guard script). That includes the `premonition/` no-edit override (RUN-CARD F4) and the masking under `wipe="store"`.
 2. The four [COORDINATOR] blanks in RUN-CARD.md: the join score definition, the parent (P1 or P2), the DEV-slip family rule, and pooled vs per-seed guard. Then I seal the card.
 3. A yes or no on stage 0.
+
+## Rulings received (coordinator Muse, Q12, 2026-10-17): recorded as received, bid text above unchanged
+
+- **Stage 0:** YES. $0 CPU toy A/B, one change only (the flag), no booking, gated as written (control fetches > 0 cards/question **and** at least one arm above chance). It runs only after the Q11 code review passes and the card is sealed.
+- **This week's Vast ledger** (fills the blank above): spent $5.58; approved-not-yet-spent $24.28; committed $29.86 of the $50/week cap; about $20.14 unallocated.
+- **Stages 1+2:** contingent approval within the cap, hard stops at stage 1 $0.30 and stage 2 $2.50 (combined at most $2.80), on-demand RTX 5090 only. They book ONLY after all three: stage 0 passes its gate, the Q11 code review passes, and the card is sealed with the Q13 fills.
+- **Stage 2b ($1.00):** NOT approved; needs a new ask if the result lands within 1 SE of the bar.
+- Items 2 of "What I need from you" (the four blanks) are now filled in RUN-CARD.md per Q13. Item 1 (code review) is pending with the coordinator.
