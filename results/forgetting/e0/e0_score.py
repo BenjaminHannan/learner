@@ -6,8 +6,9 @@
 
 --repo defaults to the learner checkout this script sits in (it must hold custom_io/ and domain/: claude/forgetting-round-g);
 e0.json records that checkout's path, git commit (and whether it had local changes) and CUSTOM_IO_DATA.
-Each run's parent comes from its own summary: '~' is expanded and a relative path that does not exist from the current folder is tried
-relative to the run folder (noted); there is no global parent override, because the E0 runs span seeds whose parents differ.
+Each run's parent comes from its own summary ('~' expanded). A relative path is resolved against --base (Main brain's launch folder,
+where its run recorded the path) when given, else the current folder, else the run folder, and the choice is noted; there is no global
+parent override, because the E0 runs span seeds whose parents differ. Smoke runs are refused.
 Python 3.10+: nothing imported here needs 3.12 (domain/far/learn_probe.py does, so its DEV pin is read from its source text).
 A DEV file with CRLF line endings is accepted when its LF-normalised sha256 matches (noted in e0.json).
 An existing --out is refused unless --overwrite. Runs with summary addon 'per_tool' are refused (analyze.py's A18 makes DM3 pass by
@@ -53,15 +54,18 @@ def check_devs(small, big, small_sha=SMALL_SHA, big_sha=BIG_SHA, notes=None):
     return small_sha, big_sha
 
 
-def resolve_parent(run, p):
-    """-> (parent path, note or None): the summary's parent with '~' expanded; a relative path that does not exist from the current
-    folder is tried relative to the run folder."""
+def resolve_parent(run, p, base=None):
+    """-> (parent path, note or None): the summary's parent with '~' expanded. An absolute path is used as is. A relative one is tried
+    against base (when given), then the current folder, then the run folder; the first that exists is used, with a note naming it."""
     q = os.path.expanduser(p)
-    if os.path.exists(q) or os.path.isabs(q):
+    if os.path.isabs(q):
         return q, None
-    r = os.path.join(run, q)
-    if os.path.exists(r):
-        return r, f'summary parent {p} resolved relative to the run folder: {r}'
+    for label, root in (('--base', base), ('the current folder', os.getcwd()), ('the run folder', run)):
+        if root is None:
+            continue
+        r = os.path.join(root, q)
+        if os.path.exists(r):
+            return r, f'summary parent {p} is relative; resolved against {label}: {r}'
     return q, None
 
 
@@ -99,7 +103,7 @@ def final_checkpoint_of(run, summary, night_checkpoints=None):
     return fin, notes
 
 
-def resolve_runs(runs, night_checkpoints=None):
+def resolve_runs(runs, night_checkpoints=None, base=None):
     """Every run checked before anything is scored: summary.json readable, not an A18 per_tool add-on run, final checkpoint by
     final_checkpoint_of, its own parent on disk (resolve_parent). -> [(run, summary, final, notes)]; SystemExit naming the first bad run."""
     out = []
@@ -108,12 +112,14 @@ def resolve_runs(runs, night_checkpoints=None):
         if not os.path.exists(sp):
             raise SystemExit(f'E0: {run}: no summary.json')
         s = json.load(open(sp))
+        if s.get('smoke'):
+            raise SystemExit(f'E0: {run}: a smoke run (summary smoke true); not an E0 run')
         if s.get('addon') == 'per_tool':
             raise SystemExit(f"E0: {run}: summary addon 'per_tool' (analyze.py A18: DM3 passes by construction); not an E0 run")
         fin, notes = final_checkpoint_of(run, s, night_checkpoints)
         if not s.get('parent'):
             raise SystemExit(f'E0: {run}: summary.json has no parent')
-        par, note = resolve_parent(run, s['parent'])
+        par, note = resolve_parent(run, s['parent'], base)
         if not os.path.exists(par):
             raise SystemExit(f'E0: {run}: parent checkpoint {s["parent"]} not on disk')
         if note:
@@ -139,7 +145,7 @@ def main(argv=None):
     a = argparse.ArgumentParser()
     here = os.path.dirname(os.path.abspath(__file__))
     a.add_argument('runs', nargs='+'); a.add_argument('--repo', default=os.path.normpath(os.path.join(here, '..', '..', '..')))
-    a.add_argument('--big', required=True)
+    a.add_argument('--big', required=True); a.add_argument('--base', default=None, help="Main brain's launch folder, for relative parent paths in the summaries")
     a.add_argument('--small', default=None); a.add_argument('--out', required=True); a.add_argument('--threads', type=int, default=4)
     a.add_argument('--overwrite', action='store_true')
     a = a.parse_args(argv)
@@ -155,13 +161,22 @@ def main(argv=None):
     if pinned_small_sha(a.repo) != SMALL_SHA:
         raise SystemExit('E0: the pinned 1,360-row DEV sha in domain/far/learn_probe.py is not SMALL_SHA: update SMALL_SHA')
     torch.set_num_threads(a.threads)
-    small = a.small or os.path.join(DEFAULT_DATA, 'dev', 'in_dist.jsonl')
+    small = os.path.expanduser(a.small or os.path.join(DEFAULT_DATA, 'dev', 'in_dist.jsonl'))
+    a.big = os.path.expanduser(a.big)
+    a.base = os.path.expanduser(a.base) if a.base else None
     dev_notes = []
     s_sha, b_sha = check_devs(small, a.big, notes=dev_notes)   # before any model is loaded
-    plan = resolve_runs(a.runs)   # every run checked before any scoring
+    plan = resolve_runs(a.runs, base=a.base)   # every run checked before any scoring
     import subprocess
-    git = lambda *c: subprocess.run(['git', '-C', a.repo, *c], capture_output=True, text=True).stdout.strip()
-    head, dirty = git('rev-parse', 'HEAD') or None, bool(git('status', '--porcelain', '--untracked-files=no'))
+    def git(*c):   # None when git is missing or refuses (e.g. 'dubious ownership'): recorded as unknown, never as clean
+        try:
+            r = subprocess.run(['git', '-C', a.repo, *c], capture_output=True, text=True)
+        except FileNotFoundError:
+            return None
+        return r.stdout.strip() if r.returncode == 0 else None
+    head = git('rev-parse', 'HEAD')
+    st = git('status', '--porcelain', '--untracked-files=no')
+    dirty = None if st is None else bool(st)
     devs = {'small': load_rows(small), 'big': load_rows(a.big)}
     cache, out = {}, {'dev_small_sha256': s_sha, 'dev_big_sha256': b_sha, 'dev_notes': dev_notes, 'repo': os.path.abspath(a.repo), 'repo_commit': head,
                       'repo_dirty': dirty, 'custom_io_data': os.environ.get('CUSTOM_IO_DATA'), 'runs': {}, 'planned': [r for r, _, _, _ in plan]}

@@ -17,8 +17,9 @@ Ship instrument is already fixed: the 6,800-row DEV under the house rule (coordi
 3. Score them from a learner checkout of branch `claude/forgetting-round-g` (the E0-ready commit; it holds custom_io/, domain/ and this
    script; the y0sxwe checkout of step 1 is only for building the DEV and has neither). From that checkout's root:
    `CUSTOM_IO_DATA=<seed-1 200k build> python results/forgetting/e0/e0_score.py --big ~/sk200k_big/dev/in_dist.jsonl --out e0.json RUN1 RUN2 RUN3 RUN4`
-   Python 3.10 or newer. --repo defaults to that checkout. Each run uses its own summary's parent ('~' expanded, relative paths also tried
-   from the run folder); there is no global parent override, because s200 and s201 have different parents. e0.json records the repo
+   Python 3.10 or newer. --repo defaults to that checkout. Each run uses its own summary's parent; there is no global parent override,
+   because s200 and s201 have different parents. First run `grep parent RUN/summary.json`: if the paths are relative, add
+   `--base <the folder Main brain was launched from>`. Pass only the four finals (the grep can also list '-n1' or smoke folders; smoke runs are refused). e0.json records the repo
    commit, whether it had local changes, and CUSTOM_IO_DATA, and each run's seed / tool / stop_reason; an existing e0.json is refused unless --overwrite.
 4. Bar (fixed in the solve doc before any result): if an NK-soft10 final fires a family on the 6,800 DEV, the ship decision is reopened
    between NK-soft10 and NK30. Report e0.json to Main brain. (Note, not a change to the bar: a final can also fail the house rule on
