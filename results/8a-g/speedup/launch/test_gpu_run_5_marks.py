@@ -50,6 +50,12 @@ def test_wrong_order_is_incomplete():
     assert g5.readout(res(order='BBBDDD'))['verdict'] == 'FAIL'
 
 
+def test_dd_is_reported_and_never_changes_the_verdict():
+    r = g5.readout(res())
+    assert len(r['DD_information_only']) == 3
+    r2 = dict(r); assert r['verdict'] == g5.readout(res())['verdict']
+
+
 def test_window_is_updates_101_to_300():
     a = [0.0] * 300; b = [0.0] * 100 + [1.0] * 200
     assert g5.mad(g5.window(a), g5.window(b)) == 1.0 and len(g5.window(a)) == 200

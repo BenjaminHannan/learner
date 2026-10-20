@@ -45,7 +45,8 @@ def readout(res):
     c1 = st.median(ab) <= max(aa)
     c2 = not (all_above or all_below)
     drift_wrong = all(x < LIMIT for x in aa) and min(ab) > max(aa)
-    out.update(AA=AA, AB=AB, max_AA=max(aa), median_AB=st.median(ab), min_AB=min(ab), B_window_means=mB, D_window_means=mD, D_all_above_B=all_above, D_all_below_B=all_below,
+    DD = [dict(pair=f'{D[i]["label"]}-{D[j]["label"]}', mad=mad(wD[i], wD[j])) for i, j in itertools.combinations(range(3), 2)]      # INFORMATION ONLY: not a bar, never read by the verdict
+    out.update(DD_information_only=DD, AA=AA, AB=AB, max_AA=max(aa), median_AB=st.median(ab), min_AB=min(ab), B_window_means=mB, D_window_means=mD, D_all_above_B=all_above, D_all_below_B=all_below,
                pass_i_median_AB_le_max_AA=c1, pass_ii_D_not_all_outside_B_same_side=c2, drift_proved_wrong=drift_wrong,
                limit_too_tight_for_future_B3G2=any(x >= LIMIT for x in aa))
     out['verdict'] = 'PASS' if (c1 and c2) else 'FAIL'
@@ -70,7 +71,8 @@ def render(r):
         L += ['', '| pair | mean abs dloss |', '|---|---|'] + [f'| {x["pair"]} (B-B) | {x["mad"]:.5f} |' for x in r['AA']] + [f'| {x["pair"]} (B-D) | {x["mad"]:.5f} |' for x in r['AB']]
         L += ['', f'- (i) median AB {r["median_AB"]:.5f} <= max AA {r["max_AA"]:.5f}: {r["pass_i_median_AB_le_max_AA"]}',
               f'- (ii) D window means {[round(m, 5) for m in r["D_window_means"]]} not all outside the B range {[round(min(r["B_window_means"]), 5), round(max(r["B_window_means"]), 5)]} on one side: {r["pass_ii_D_not_all_outside_B_same_side"]}',
-              f'- drift proved wrong (every AA < 0.02 and min AB {r["min_AB"]:.5f} > max AA): {r["drift_proved_wrong"]}', f'- {r["note_0_02"]}']
+              f'- drift proved wrong (every AA < 0.02 and min AB {r["min_AB"]:.5f} > max AA): {r["drift_proved_wrong"]}', f'- {r["note_0_02"]}',
+              '- information only, not a bar (D-D drift): ' + ', '.join(f'{x["pair"]} {x["mad"]:.5f}' for x in r['DD_information_only'])]
     return '\n'.join(L) + '\n'
 
 

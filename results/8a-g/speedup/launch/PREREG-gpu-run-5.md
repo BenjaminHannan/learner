@@ -1,6 +1,6 @@
 # PREREG: GPU-RUN-5, the E4 noise floor for `defer` (per the coordinator's ruling of 2026-10-20, APPROVE WITH CHANGES)
 
-**Status: DRAFT, NOT SEALED.** It is sealed only after the CPU dry run of the exact box script (§7) shows the readout computable from its outputs, and a dated SEALED line is added at the end. The seal hash then goes to the coordinator **before** booking. Booking also needs Ben's own approval of this version ("Coordinator approves GPU-RUN-5" means this rewritten version only).
+**Status: SEALED 2026-10-20 (end of §7).** It is sealed only after the CPU dry run of the exact box script (§7) shows the readout computable from its outputs, and a dated SEALED line is added at the end. The seal hash then goes to the coordinator **before** booking. Booking also needs Ben's own approval of this version ("Coordinator approves GPU-RUN-5" means this rewritten version only).
 
 ## 0. What stands, and what is not re-judged
 
@@ -51,6 +51,20 @@ Speed, the profiler counts, `kvcat`, accum 8, the PC, and any other model or arm
 - A PASS allows only fresh runs started at update 0 with it, under new run names, with `--speed-arms` in the resume config hash.
 - All code is a draft until the coordinator code-reviews it.
 
-## 7. CPU dry run (filled in before sealing)
+## 7. CPU dry run (2026-10-20, before sealing; logs and outputs in `launch/dryrun-gr5/`)
 
-(pending)
+The exact box script `gpu_run_5_box.sh` (sha256 `3448698ab3fa48ffb42c151223a4fe1eb93ce57fd2534d2f2d267bf9126abe1e`, pinned to commit `9f9e41077899310bace33a25c93ea9720cfecf9c`) ran on a 4-core CPU box through `dry_gr5.sh`. It went through the real setup, code fetch with pins, Gemma, data, skills and the pool-building smoke on the real pool, then `g1_e4floor` with tiny shapes but the full **300 updates × 6 traces**. Result: rc 0, `PROF DONE failed=none`, `CIO DONE`, 21 min. The money guard passed: 1.75 h × $0.46 = $0.805 ≤ $0.82.
+
+The readout `gpu_run_5_marks.py` (sha256 `9e281cba11253152f15759abeea3dfa329135b1d5ec88d2a6dcb5a8ee0fcf346`, 8/8 tests pass) computes every bar from the dry run's json: complete in the order BDBDBD, 3 AA, 9 AB, both PASS conditions, the drift-proved-wrong rule, and the 0.02 note.
+
+**Two things the dry run shows that bear on reading the GPU result. These are CPU facts, not a GPU result, and the CPU verdict means nothing for `defer`:**
+1. **On CPU the baseline is bit-deterministic run to run.** AA is exactly 0, so the rule returns "FAIL, closed for good" for the dry run. With AA = 0, any numerics-changing arm fails that way. The bars measure `defer` against the baseline's own drift, so they read correctly only where the baseline does drift. On the 4090 it should: GPU-RUN-4's one-update bf16 rerun of the same code differed at a gradient relative L2 of 3.0e-4. Its 300-update size is exactly what this run measures (untested).
+2. **`defer` has its own run-to-run variation on CPU; the baseline does not.**
+   - Shown: two lockstep `defer` trainers on the real pool and caps differ first at update 20, in one parameter, `reader.tok.weight` (the writer's byte table).
+   - Shown: the difference disappears with `torch.use_deterministic_algorithms(True)` or with one thread.
+   - Suggested: the parallel, unordered float accumulation in that table's gradient, which `defer`'s one large batched pass pushes into the multi-threaded path.
+   - Shown: one ulp at the first difference (1.9e-6) grows to 0.14–0.28 by update 300, an example of the chaotic amplification under discussion.
+
+   On the GPU every arm is already nondeterministic. The bars include `defer`'s own variation in AB, as ruled. D–D drift is reported **as information only**: it is not a bar and never read by the verdict (added before sealing).
+
+SEALED 2026-10-20 by the launch-bound solve session, per the coordinator's ruling of 10-20 (APPROVE WITH CHANGES). Box script sha256 `3448698ab3fa48ffb42c151223a4fe1eb93ce57fd2534d2f2d267bf9126abe1e`, readout sha256 `9e281cba11253152f15759abeea3dfa329135b1d5ec88d2a6dcb5a8ee0fcf346`. The seal hash (the sha256 of this file as committed) goes to the coordinator before booking. Booking needs Ben's own approval of this version. Nothing above changes after this line except by a dated amendment written before any result file it concerns is read.
