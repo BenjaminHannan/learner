@@ -93,3 +93,4 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 02:07 | GPU-RUN-5 bid ($1 cap) | Sent to the Opus xhigh gate as a possible bar-move after seeing a score. The session waits on an AskUserQuestion that Ben has to answer. | pending |
 | 2026-10-20 02:20 | GPU-RUN-5 (speed) | Opus gate: APPROVE WITH CHANGES. GPU-RUN-4 stays FAIL. New B/D×3 noise-floor test with bars sealed before rental: about $0.55, hard cap $1.00. Booking needs Ben's click in the session, then the seal hash sent to the coordinator. | ≤1.00 approved |
 | 2026-10-20 02:43 | Decoder reader-KV | Stage 0 FAIL (G2): control 0/3 and treated 1/3 above chance+0.05 (0.074, 0.160, 0.066). Line CLOSED as specced. The $2.80 Stages 1+2 approval is RELEASED. | 0 |
+| 2026-10-20 02:52 | GPU-RUN-5 | Seal accepted (PREREG 0ab5dbfd…, commit 6eef85bfe), with "incomplete = FAIL" added. No AA-floor guard. Waiting on Ben's click; hard cap $1.00. | 0 so far |
