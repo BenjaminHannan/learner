@@ -14,6 +14,8 @@ Companion files, all in `launch/`:
 | `prof_launch.py` | runner: registers the new arms into prof_train's `abequiv` / `abbench` / `profiler` / `syncs` sections for a box | shown (CPU smoke) |
 | `PREREG-launch-defer.md` | the protocol of §3 as a sheet to seal | DRAFT, not sealed |
 
+> **Correction 2026-10-20.** The 61% op cut quoted below is the first prototype's. After the Opus review's memory fix (answer rounds ≥ 8 checkpointed again, an EOS-only bucket), `defer` cuts device ops per micro-batch by **56%** at the real shape (8,502 → 3,705; DEFER-CPU-2026-10-16.md). On the CPU its gradients differed from the baseline's at about 1e-7 relative from the start (numerics-changing). GPU-RUN-4 (GPU-RUN-4-READOUT-2026-10-20.md) then measured 1.36× / 1.51× and found mark 2 failing on E4; `defer` is not used.
+
 ## Plain version (for Ben)
 
 - **Why training is slow:** each training step loops about 17 times ("rounds") per slice of data. In every round, besides the thinker, the code runs two tiny "writer" passes on a few rows each. Around each pass it stops 17 times to ask the GPU a question ("which rows have a call here?", "did this row get it right?"). Each stop makes the CPU wait for the GPU and then the GPU wait for the CPU. The writer passes are about half of everything the CPU has to launch.

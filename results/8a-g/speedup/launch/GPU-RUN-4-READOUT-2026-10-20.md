@@ -71,26 +71,34 @@ Shown:
 - They first differ by more than 0.01 at update 47.
 - From update 51 on, `defer`'s loss is lower in every 50-update window by 0.03–0.04, with single-update gaps up to 0.28.
 - One update of the same batch (abequiv) agrees to 3.5e-6 in loss and 0.9999996 in gradient cosine. That is a gradient difference about 3× the baseline's own rerun noise (relative L2 9.2e-4 against 3.0e-4).
+- **CPU facts, corrected 10-20 (ruling point b).** After the review's memory fix (answer rounds ≥ 8 checkpointed again, an EOS-only bucket), `defer` cut device ops per micro-batch by **56%** at the real shape (8,502 → 3,705; DEFER-CPU-2026-10-16.md), not the 61% of the first prototype. On the CPU in fp32 its gradients already differed from the baseline's at about **1e-7** relative (loss bit-equal): `defer` was numerics-changing from the start, and was labelled so.
 
 Suggested:
 - This shape — an exact start, then a gap that grows from last-bit rounding into a persistent offset after about 50 updates — is what chaotic amplification of rounding differences looks like. The record shows the same model doing exactly this to itself: on the PC, the same code resumed from its own update-100 checkpoint differed by **0.0167 mean |Δ| within just 50 redone updates, max 0.119** (TRACE-A-READING-2026-10-14.md). That is already near E4's 0.02 limit with no code change at all.
-- The E4 limits (0.02 / 0.01) were registered for `eg_once` on the plain PTC arm (PREREG-eg-once.md). They were carried into this sheet without a baseline-vs-baseline E4 on B3G2. They are absolute limits, set for a model whose loss is about 0.24 late in training, and that sheet calls E4 "a smoke check … it does not replace the seed spread" (PREREG-eg-once.md:22). B3G2's loss over updates 101–300 is about 2.9, 12 times larger. So 0.02 is about 0.7% of the loss here, against about 8% where it was set. `defer`'s 0.048 is 1.7% of the loss (shown arithmetic). This is the same class of defect as the chunk-spread rule the gate struck in condition 1: a fixed bar with no measured noise floor under it.
+- The E4 limits (0.02 / 0.01) were registered for `eg_once` on the plain PTC arm (PREREG-eg-once.md). They were carried into this sheet without a baseline-vs-baseline E4 on B3G2.
+- **Corrected 10-20 (coordinator ruling, point b).** An earlier version of this line said B3G2's loss scale was 12× the one the limits were set at. That was wrong: I compared against the 0.24 the eg_once sheet quotes as the trained PTS run's final loss, not the E4 window. eg_once's own E4 window mean was **1.53** (old 1.5322, variant 1.5234; PREREG-eg-once.md:63), against B3G2's 2.89 here: a ratio of about **1.9×**, not 12×. As a fraction of the window loss, eg_once passed at 0.0162 / 1.53 = **1.1%**, and `defer` failed at 0.048 / 2.89 = **1.7%** (shown arithmetic). The loss-scale argument therefore does little to excuse the failure.
 - A persistent sign within one pair is not evidence of a systematic effect. Once two chaotic trajectories separate they stay separated, so a single pair cannot distinguish "defer trains differently" from "any two runs drift this far".
 
 Untested: whether baseline against baseline (two runs of the same code on the same GPU) also exceeds 0.02 / 0.01 over updates 101–300. **That one number decides between the two readings, and this run did not measure it.**
 
 I am not re-reading the sealed sheet. Mark 2 failed as written, and `defer` stays unused.
 
-## 7. What would move this forward (a bid for the coordinator; nothing booked)
+## 7. What would move this forward: GPU-RUN-5 (rewritten 10-20 per the coordinator's ruling: APPROVE WITH CHANGES)
 
-A new pre-registration, GPU-RUN-5 "E4 noise floor", one 4090 box:
-1. Two baseline 300-update traces, same seed and rows: the A–A E4 statistic.
-2. One more baseline vs `defer` trace.
-3. Rule fixed in advance: `defer`'s E4 is read against the A–A floor. Mean |Δ| and difference of means must each be ≤ max(the registered limit, 1.5 × A–A).
-   - If A–A itself exceeds the registered limits, the E4 limits are recorded as unreadable for B3G2. Mark 2 for `defer` then rests on the bar plus the floor-relative E4.
-   - If A–A is well inside the limits while `defer` is not, `defer` changes training: closed.
+**GPU-RUN-4 stands as a FAIL for `defer` as tested.** Nothing in GPU-RUN-5 re-judges it, and GPU-RUN-4's E4 trace does not enter GPU-RUN-5's readout.
 
-Money: about 30 + 3 × 14 = 72 minutes up; about $0.6 at $0.47/h billed, with a $1 cap. It would displace nothing on the PC. It buys the decision whether the 1.36–1.51× speed-up (5–6 h saved per 24,000-update run) can be used at all.
+The first version of this bid had two clauses: E4's limits "recorded as unreadable", and a max(0.02, 1.5 × A–A) rule. The ruling **struck** both as a back door, and they are withdrawn.
+
+GPU-RUN-5, as ruled (sheet: `PREREG-gpu-run-5.md`):
+- **Box:** one 4090.
+- **Traces:** six fresh 300-update traces in the order B, D, B, D, B, D (B = baseline, D = `defer`), with the same seed, the same rows and the same pinned stochastic parts.
+- **Bars,** over updates 101–300:
+  - AA = mean |Δloss| of each of the 3 B–B pairs; AB = the same for each of the 9 B–D pairs.
+  - **PASS** needs both: (i) the median of the 9 AB ≤ the largest AA, and (ii) the 3 D window means do not all lie outside the B range on the same side.
+  - **"It's just drift" proved wrong:** every AA < 0.02 and every AB > every AA. Then `defer` is closed for good.
+  - If any AA ≥ 0.02, record that 0.02 is too tight, for FUTURE B3G2 sheets only.
+- **Consequences:** PASS → the `defer` port goes to code review, and `defer` is allowed only in fresh runs from update 0 under new names, with no change to 8aB3G2A4/A8. FAIL → final. Either way it is one rental with no re-run bids, and E4 is the only thing tested.
+- **Money:** about 70 min with setup, about $0.55, a hard cap of $1.00. Booking only after the sheet is sealed (after a CPU dry run), the seal hash is sent to the coordinator, and Ben approves this version himself.
 
 ## Money (shown)
 
