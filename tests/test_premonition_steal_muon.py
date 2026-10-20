@@ -273,5 +273,26 @@ class TrainerTest(unittest.TestCase):
         self.assertNotIn("optimizer", ptrain.checkpoint_config(trainer(tiny_model(), "adamw"), contender="D"))
 
 
+class R1RunnerTest(unittest.TestCase):
+    """Review round 5, item 8: the R1 stage-0 runner's arm order depends on the seed, not on its place in --seeds."""
+
+    def runner(self):
+        import importlib.util
+        from pathlib import Path
+        path = Path(__file__).resolve().parents[1] / "scripts" / "premonition_steals_r1_stage0.py"
+        spec = importlib.util.spec_from_file_location("premonition_steals_r1_stage0", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_the_arm_order_is_keyed_by_the_seed_and_is_a_latin_square(self) -> None:
+        r1 = self.runner()
+        orders = {seed: r1.arm_order(seed) for seed in (0, 1, 2)}
+        for slot in range(3):
+            self.assertEqual(sorted(order[slot] for order in orders.values()), ["A0", "A1", "A2"])
+        self.assertEqual(r1.arm_order(1), orders[1])                               # alone or in a list: the same
+        self.assertNotEqual(r1.arm_order(1), r1.arm_order(0))
+
+
 if __name__ == "__main__":
     unittest.main()

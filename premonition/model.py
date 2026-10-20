@@ -701,11 +701,14 @@ class PremonitionMini(nn.Module):
     def _step(self, episode: _Episode, index: torch.Tensor, step: int, store: Optional[CardStore]
               ) -> tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
         """One loop for questions `index`: (rows, halt logit, ask logit, ASK scores)."""
-        rows = self.think(self._loop_input(episode, index, step), episode.valid[index], step)
-        rows = self._loop_output(episode, index, step, rows)
+        proposed = self.think(self._loop_input(episode, index, step), episode.valid[index], step)
+        rows = self._loop_output(episode, index, step, proposed)
         episode.x = episode.x.index_copy(0, index, rows.to(episode.x.dtype))
         register = _norm(rows[:, self._register_base])
-        halt = self.heads.halt(register).squeeze(-1).float()
+        # row_halt freezes a halted register's stored row, but the read that decides the question's HALT must stay
+        # live, so HALT reads the block's proposal for register 0 (a frozen read could never change its mind).
+        live = _norm(proposed[:, self._register_base]) if self.config.row_halt else register
+        halt = self.heads.halt(live).squeeze(-1).float()
         if store is None:
             return rows, halt, None, None
         ask = self.heads.ask(register).squeeze(-1).float()

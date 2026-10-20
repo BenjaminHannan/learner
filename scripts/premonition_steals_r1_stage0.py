@@ -104,7 +104,14 @@ def run_seed(seed: int, order: list[str], settings: dict, log) -> list[dict]:
                 a.chunk()
         log(f"  s{seed} " + "  ".join(f"{a.arm} step {a.trainer.step:5d} {a.clock:7.1f}s loss {a.curve[-1][2]:.4f}"
                                       for a in arms))
-    return [a.result(settings) for a in arms]
+    return [dict(a.result(settings), order=order) for a in arms]
+
+
+def arm_order(seed: int) -> list[str]:
+    """The arm order of a seed: a rotation keyed by the seed itself (not its place in --seeds), so seeds 0, 1, 2 put
+    every arm in every slot once however the seeds are run or resumed."""
+    names = list(ARMS)
+    return names[seed % 3:] + names[:seed % 3]
 
 
 def loss_at(curve: list, seconds: float) -> float:
@@ -177,13 +184,13 @@ def main() -> None:
 
     log(f"R1 stage 0 start {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {platform.machine()} "
         f"threads {torch.get_num_threads()} settings {settings}")
-    runs, names = [], list(ARMS)
-    for k, seed in enumerate(args.seeds):
-        order = names[k % 3:] + names[:k % 3]                   # rotate the arm order across seeds
+    runs = []
+    for seed in args.seeds:
+        order = arm_order(seed)
         paths = [args.out / f"{arm}-s{seed}.json" for arm in order]
         if all(p.exists() for p in paths):
             saved = [json.loads(p.read_text()) for p in paths]
-            if any(s.get("settings") != settings for s in saved):
+            if any(s.get("settings") != settings or s.get("order") != order for s in saved):
                 raise SystemExit(f"{args.out} holds seed {seed} runs with other settings; use a new --out")
             runs += saved
             log(f"s{seed}: reusing {', '.join(p.name for p in paths)}")

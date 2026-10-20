@@ -85,6 +85,22 @@ class RowHaltTest(unittest.TestCase):
         self.assertEqual(len(episode.ponder), 1)
         self.assertEqual(tuple(episode.ponder[0].shape), (self.count * model.config.registers,))
 
+    def test_a_halted_register_zero_does_not_freeze_the_halt_read(self) -> None:
+        """Review round 5, item 1: once register 0 halts, its stored row is frozen, but the question-level HALT
+        must keep reading a live state, or a question that halted register 0 early could never finish."""
+        model = tiny_model(row_halt=True)
+        with torch.no_grad():
+            model.heads.row_halt.bias.fill_(20.0)                                  # every register halts at loop 1
+        episode, store = start(model, self.batch)
+        index = torch.arange(self.count)
+        halts = []
+        with torch.no_grad():
+            for step in range(4):
+                rows, halt, ask, scores = model._step(episode, index, step, store)
+                halts.append(halt.clone())
+        self.assertTrue(torch.equal(episode.halted[:, 0], torch.ones_like(episode.halted[:, 0])))
+        self.assertFalse(torch.equal(halts[2], halts[3]))         # the HALT read still moves (frozen before the fix)
+
     def test_training_and_no_grad_paths_give_the_same_keep_and_rows(self) -> None:
         model = tiny_model(row_halt=True)
         with torch.no_grad():

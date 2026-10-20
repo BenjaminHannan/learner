@@ -134,6 +134,8 @@ Notation: d = d_model, dk = key_dim, H = n_heads, dh = d / H, R = registers.
     forward keep damped training updates that answering never damps).
   - A halted register stops updating: out = in + keep * (think_out - in) on register rows only. It stays a valid
     row, so the other rows still read it.
+  - The question-level HALT reads the block's live proposal for register 0, not its frozen stored row (review
+    round 5), so a question whose register 0 halted early can still decide to stop.
   - When register 0 is halted (p > 0.5 at some loop, sticky; `episode.halted`), the question stops asking: `_choose` returns -1, and own-mode cards
     are masked.
   - The ponder cost is `row_halt_cost * mean(keep)` over (question, loop, register). It is appended through
