@@ -119,3 +119,46 @@ the guard decides the verdict. P(guard trips | score rises) ≈ 0.5.
 4. A row a plain same-size net cannot pass, and a memorisation check: *[filled: Q13]* **not applicable** to this card. A single-change paired A/B does not add a second change at seal time.
 5. F_few beside F_eq: not applicable (no few-shot split here).
 6. Sleep gates: not applicable.
+
+## 12. Stage 0: the $0 CPU toy gate (marks fixed 2026-10-20, before any stage 0 run)
+
+Coordinator re-review of PR #79 at `84bda16a8`: **CLEAN** (0 blocking). Under Muse's rulings the card is now
+sealed and stage 0 may run. Runner: `scripts/premonition_reader_kv_stage0.py`, sealed with this card.
+
+**What runs.** The far-fact toy at the toy gate's own settings (`tests/test_premonition_train.py`
+`ToyGateTest`): `train_toy("D", steps=1500, lr=1e-3, warmup_steps=100, seed=s)`, tiny preset, default
+`ToySpec` (chance = 1/16 = 0.0625). Control (`decoder_reader_kv=False`) and treated (`True`), seeds 0, 1 and 2,
+paired (identical init of shared weights and identical data stream, both shown by test). CPU in this container,
+$0, no rental. Held-out: `train_toy`'s own set, `toy_set(spec, 4, 16, seed + 1000)`, 256 questions.
+
+**Step matching (the re-review's condition).** Stage 0 does **not** go through `train_d`. `train_toy` sizes each
+arm's FLOP budget as `steps ×` that arm's own per-step cost (`budget_for_steps`), so paired arms train the same
+number of steps by construction, not by FLOP parity. **V1** checks this per seed (within 2%). If V1 fails, stage 0
+is INVALID and is reported as such. For stages 1+2, `train_d` still stops on FLOPs; step matching there is
+open finding 1 and must be fixed with a test before any GPU bid.
+
+**Gate (Muse Q12, "gated as written"), read per the family rule:**
+- **G1:** control's pooled mean cards fetched per question > 0.
+- **G2:** at least one arm is **above chance**, meaning held-out own-retrieval accuracy > chance + 0.05 = 0.1125 (the toy gate's own band), in at least 2 of 3 seeds.
+- **PASS** = V1 and G1 and G2. Then stages 1+2 may book within their caps. **FAIL** = V1 holds but G1 or G2 fails. Then there is no GPU spend, and I report back.
+
+**Result that would prove the premise wrong.** The premise is that the village A/B can produce a gain that
+counts. It is shown wrong if control fetches nothing (the guard cannot be read) or if neither arm leaves chance
+in 2 of 3 seeds.
+
+**Known weakness of G1 (kept as ruled; not mine to change).** A smoke run with 8 steps showed that an
+**untrained** model already fetches about 4 cards per question (one ASK of top-4). So G1 is nearly
+automatic. Reported alongside, as information and not a mark: cards/q and asks/q per arm and seed, against
+that untrained baseline.
+
+**Also reported, not marks:**
+- per-seed accuracy, both arms, with paired differences;
+- gold-card accuracy;
+- steps, FLOPs and wall time;
+- `validate`'s asked_rate, loops_mean and halt_rate;
+- the guard reading on the toy (pooled cards/q drop), as **evidence only**, because the verdict guard belongs to stage 2.
+
+On the toy each fact sits ≥ 128 tokens before its question, and the treated decoder can attend to those
+reader states directly. So a treated-only rise with a fetch drop would be the bypass in its plainest form.
+
+**Outputs:** `artifacts/claude-rkv-20261017/stage0/` (META.json, one JSON per run, STAGE0.json), committed after the run.
