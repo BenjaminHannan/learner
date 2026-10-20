@@ -875,11 +875,186 @@ def test_a1f_is_one_change_vs_l11():
     return 'A1F vs kfsoft with a pass-through KFOptimizer (real kfac_stats / factors, one re-measure): state_dict hashes equal at steps 0 / 2 / 4; guard_frozen, commit, diary sha, replay rows / weight / seed / pool equal on the records (record-only differences: A1F carries replay_kl_mean per step, kfsoft measure_secs / measures)'
 
 
+def test_replay_priority_probs():
+    """--replay-priority: replay_priority_probs sums to 1, is uniform when every KL is 0 (or frac 0), puts 0.5 + 0.5 * n_f / N on a family that
+    has all the KL at frac 0.5, orders families by their KL, and replay_priority_shares adds the rows up per family."""
+    fam = ['a'] * 6 + ['b'] * 3 + ['c'] * 1
+    N = len(fam)
+    p0 = LP.replay_priority_probs(fam, {'a': 0.0, 'b': 0.0, 'c': 0.0}, 0.5)
+    assert p0.dtype == np.float64 and np.allclose(p0, 1.0 / N) and abs(p0.sum() - 1) < 1e-15, p0
+    assert np.allclose(LP.replay_priority_probs(fam, {}, 0.9), 1.0 / N), 'no KL given: uniform'
+    assert np.allclose(LP.replay_priority_probs(fam, {'a': 1.0, 'b': 2.0, 'c': 3.0}, 0.0), 1.0 / N), 'frac 0: uniform'
+    p = LP.replay_priority_probs(fam, {'a': 0.0, 'b': 1.5, 'c': 0.0}, 0.5)
+    assert abs(p.sum() - 1) < 1e-12 and (p > 0).all()
+    sh = LP.replay_priority_shares(fam, p)
+    assert abs(sh['b'] - (0.5 + 0.5 * 3 / N)) < 1e-4 and abs(sh['a'] - 0.5 * 6 / N) < 1e-4 and abs(sh['c'] - 0.5 * 1 / N) < 1e-4, sh
+    assert list(sh)[0] == 'b' and abs(sum(sh.values()) - 1) < 1e-3
+    q = LP.replay_priority_probs(fam, {'a': 1.0, 'b': 2.0, 'c': 4.0}, 0.8)   # per-row mass follows (kl_f / S) / n_f
+    S = 7.0
+    for f, kl in (('a', 1.0), ('b', 2.0), ('c', 4.0)):
+        row = [i for i, x in enumerate(fam) if x == f][0]
+        assert abs(q[row] - (0.2 / N + 0.8 * (kl / S) / fam.count(f))) < 1e-12, f
+    sq = LP.replay_priority_shares(fam, q)
+    assert abs(sq['a'] - (0.2 * 6 / N + 0.8 * 1 / 7)) < 1e-4 and abs(sq['c'] - (0.2 / N + 0.8 * 4 / 7)) < 1e-4
+    assert sq['c'] > sq['b'] > sq['a'], sq   # shares follow the KL here (the 6-row family has the least KL)
+    r = LP.replay_priority_probs(['x', 'y'], {'x': 1.0, 'y': 2.0}, 0.6)   # equal row counts: the order of the probabilities is the order of the KLs
+    assert r[1] > r[0] and abs(r.sum() - 1) < 1e-15
+    return 'sums to 1; uniform for KL 0 / empty / frac 0; one family with all the KL at frac 0.5 gets 0.5 + 0.5 n_f/N; per-row mass = (1-f)/N + f (kl_f/S)/n_f; order follows the KL'
+
+
+def test_replay_priority_check_guard_args():
+    with tempfile.TemporaryDirectory() as src:
+        kw = dict(arm='LB', guard_src=src, kl_rows=32, kl_weight=10.0)
+        for g, extra in (('kfsoft', {}), ('replay', {}), ('replay', dict(replay_loss='kl'))):
+            LP.check_guard_args(guard=g, replay_priority=0.5, replay_priority_every=100, **kw, **extra)
+            LP.check_guard_args(guard=g, replay_priority=0.0, **kw, **extra)
+        LP.check_guard_args(guard='replay', replay_priority=0.999, **kw)
+        for bad_frac in (-0.1, 1.0, 1.5):
+            raises(lambda: LP.check_guard_args(guard='kfsoft', replay_priority=bad_frac, **kw), '--replay-priority must be in [0, 1)')
+            raises(lambda: LP.check_guard_args(arm='LB', guard=None, guard_src=None, replay_priority=bad_frac), '--replay-priority must be in [0, 1)')
+        raises(lambda: LP.check_guard_args(arm='LB', guard=None, guard_src=None, replay_priority=0.5), '--replay-priority needs --guard kfsoft or --guard replay')
+        raises(lambda: LP.check_guard_args(arm='LB', guard='kf', guard_src=src, replay_priority=0.5), '--replay-priority needs --guard kfsoft or --guard replay')
+        raises(lambda: LP.check_guard_args(guard='replay', replay_loss='ce', replay_priority=0.5, **kw), '--replay-loss kl')
+        raises(lambda: LP.check_guard_args(guard='kfsoft', replay_priority=0.5, replay_priority_every=0, **kw), '--replay-priority-every must be >= 1')
+        # through main(): refused before train(); parsed otherwise; the default is off
+        base = ['train', '--arm', 'LB', '--out', src, '--guard-src', src, '--kl-replay-rows', '32', '--kl-weight', '10']
+        raises(lambda: run_main(base + ['--guard', 'kfsoft', '--replay-priority', '1.0']), '--replay-priority must be in [0, 1)')
+        raises(lambda: run_main(base[:-4] + ['--replay-priority', '0.5']), '--replay-priority needs --guard kfsoft or --guard replay')
+        raises(lambda: run_main(base + ['--guard', 'replay', '--replay-loss', 'ce', '--replay-priority', '0.5']), '--replay-loss kl')
+        on = run_main(base + ['--guard', 'kfsoft', '--replay-priority', '0.5', '--replay-priority-every', '250'])
+        off = run_main(base + ['--guard', 'kfsoft'])
+    assert on['replay_priority'] == 0.5 and on['replay_priority_every'] == 250 and off['replay_priority'] == 0.0 and off['replay_priority_every'] == 500, (on, off)
+    return 'frac outside [0,1), frac > 0 without kfsoft / replay, with replay-loss ce, every < 1 refused (also through main()); the default is 0.0 / 500'
+
+
+def test_replay_priority_measure_isolated():
+    """measure_family_kl with a mocked replay_kl that draws from torch, python random, numpy and the model's ans_drill stream: afterwards all four
+    are where they were (the model stream too, which rng_isolated alone does not cover), the result is the batch-size-weighted mean per family over
+    the first 128 rows in batches of 64, and it runs under no_grad."""
+    from custom_io.data import CharVocab, Dataset
+    _, rows, _, _ = build_batch(n_rows=5, n_calls=3)
+    rows = [dict(r, source='diary') for r in rows]
+    vocab = CharVocab.build(rows)
+    ds = Dataset(rows, vocab)
+    big = [ds[i % 5] for i in range(300)]   # 300 diary rows (items repeat): family 'a' 250 rows (cap 128 -> batches 64, 64), 'b' 50 rows (one batch of 50)
+    fam = ['a'] * 250 + ['b'] * 50
+    m = tool(vocab)
+    m._drill_rng = random.Random('drill')
+    calls = []
+
+    class KR:
+        @staticmethod
+        def replay_kl(mm, parent, b):
+            assert not torch.is_grad_enabled(), 'measure runs under no_grad'
+            n = len(b['rows'])
+            calls.append(n)
+            torch.randn(3), random.random(), np.random.rand(), mm._drill_rng.random(); mm.drill_stats['rows'] += n
+            return torch.tensor(0.5 if len(calls) <= 2 else 2.0), {}
+    before, drill, stats = rng_state(), m._drill_rng.getstate(), dict(m.drill_stats)
+    out = LP.measure_family_kl(m, None, KR, big, fam)
+    assert same_state(before, rng_state()), 'global torch / python / numpy RNG moved'
+    assert m._drill_rng.getstate() == drill and m.drill_stats == stats, "the model's ans_drill stream moved"
+    assert calls == [64, 64, 50], calls
+    assert abs(out['a'] - 0.5) < 1e-6 and abs(out['b'] - 2.0) < 1e-6 and list(out) == ['a', 'b'], out
+    calls.clear()
+    KR.replay_kl = staticmethod(lambda mm, parent, b: (calls.append(len(b['rows'])), (torch.tensor(1.0), {}))[1])
+    out = LP.measure_family_kl(m, None, KR, big, fam, cap=70, bs=64)
+    assert calls == [64, 6, 50] and out == {'a': 1.0, 'b': 1.0}, (calls, out)
+    return 'mocked replay_kl drew from torch / random / numpy / the model drill stream: all restored; batches 64+64 (cap 128) and 50, size-weighted mean'
+
+
+def test_replay_priority_train_end_to_end():
+    """train() end to end (replay kl and kfsoft, real parent, 3 updates, scoring stubbed to a state_dict hash + the step's extra):
+    (1) OFF: the draw is kl_rng.randint (the recorded calls equal a fresh RandomState(KL_REPLAY_SEED) randint sequence, choice never called),
+        the records carry no replay_priority key, and the flag at 0.0 equals the flag absent;
+    (2) ON (families faked by diary index): choice is used, the records carry replay_priority / _every / _shares (sum 1) / _secs, the 'replay priority @' line;
+    (3) the measurement moves no training stream: with replay_priority_probs forced uniform, a run with the real measurement and a run with the
+        measurement stubbed to zeros end on equal state_dict hashes (the draws are the same choice calls; only the measurement differs);
+    (4) the replay arm with --replay-loss ce is refused."""
+    if not all(os.path.exists(x) for x in (PARENT, PROBE, os.path.join(FAR, 'train-rows-l5.jsonl'), os.path.join(FAR, 'eval-rows-l5.jsonl'))) \
+            or not os.path.isdir(os.path.join(GUARD_SRC, 'mainbrain')):
+        skip('parent / far-transfer rows / guard source absent')
+    import contextlib
+    import io
+    real_score, real_fam, real_probs, real_meas, RS = LP.score_step, LP.diary_families, LP.replay_priority_probs, LP.measure_family_kl, np.random.RandomState
+    draws = []
+
+    class RecRS(RS):
+        def randint(self, *a, **k):
+            r = super().randint(*a, **k)
+            draws.append(('randint', a, dict(k), [int(x) for x in r]))
+            return r
+
+        def choice(self, *a, **k):
+            r = super().choice(*a, **k)
+            draws.append(('choice', a[:1], {x: y for x, y in k.items() if x != 'p'}, [int(x) for x in r]))
+            return r
+
+    def run(td, tag, **kw):
+        seen = {'hash': {}, 'extra': {}}
+        draws.clear()
+
+        def stub(ck, m, addon, sets, out, arm, step, t_train, threads, extra=None, harm_fn=None, keep=False, stop_limits=None, keep_final=False):
+            h = hashlib.sha256()
+            for k, v in m.state_dict().items():
+                h.update(k.encode())
+                h.update(v.detach().numpy().tobytes())
+            seen['hash'][step], seen['extra'][step] = h.hexdigest(), dict(extra)
+        LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: [f'f{i % 3}' for i in range(len(diary))]), RecRS
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                LP.train('LB', 3, 1, os.path.join(td, tag), [0, 3], parent=PARENT, train_path=os.path.join(FAR, 'train-rows-l5.jsonl'), cells='l5',
+                         eval_rows=os.path.join(FAR, 'eval-rows-l5.jsonl'), probe=PROBE, log_every=1, harm_steps=[], diary_compare='none',
+                         guard_src=GUARD_SRC, diary_cache=diary, kl_replay_rows=4, kl_weight=10.0, **kw)
+        finally:
+            LP.score_step, LP.diary_families, np.random.RandomState = real_score, real_fam, RS
+        seen['out'], seen['draws'] = buf.getvalue(), list(draws)
+        return seen
+
+    with tempfile.TemporaryDirectory() as td:
+        diary = os.path.join(td, 'diary.jsonl')
+        with open(os.path.join(FAR, 'train-rows-l5.jsonl')) as f, open(diary, 'w') as g:
+            for i, line in zip(range(24), f):
+                r = json.loads(line)
+                g.write(json.dumps(dict(r, source='diary', accepted=[r['answer']], steps=[], family='diary')) + '\n')
+        absent = run(td, 'absent', guard='replay', replay_loss='kl')
+        zero = run(td, 'zero', guard='replay', replay_loss='kl', replay_priority=0.0, replay_priority_every=1)
+        ref = RS(LP.KL_REPLAY_SEED)
+        want = [[int(x) for x in ref.randint(0, 24, size=4)] for _ in range(3)]
+        for r in (absent, zero):
+            assert [d[0] for d in r['draws']] == ['randint'] * 3 and [d[3] for d in r['draws']] == want, r['draws']
+            assert 'replay_priority' not in r['extra'][3] and 'replay_priority_shares' not in r['extra'][3] and 'replay priority' not in r['out']
+        assert absent['hash'] == zero['hash'] and absent['hash'][0] != absent['hash'][3], 'FRAC 0 == flag absent'
+        assert absent['extra'][3].keys() == zero['extra'][3].keys()
+        for guard_kw in (dict(guard='replay', replay_loss='kl'), dict(guard='kfsoft')):
+            on = run(td, 'on', replay_priority=0.5, replay_priority_every=1, **guard_kw)
+            e = on['extra'][3]
+            assert e['replay_priority'] == 0.5 and e['replay_priority_every'] == 1 and set(e['replay_priority_shares']) == {'f0', 'f1', 'f2'}, e
+            assert abs(sum(e['replay_priority_shares'].values()) - 1) < 2e-4 and e['replay_priority_secs'] >= 0, e
+            assert on['extra'][0]['replay_priority_shares'] == {'f0': 0.3333, 'f1': 0.3333, 'f2': 0.3333}, on['extra'][0]['replay_priority_shares']   # uniform before update 1
+            assert [d[0] for d in on['draws']] == ['choice'] * 3 and 'replay priority @1:' in on['out'] and 'replay priority @2:' in on['out'] and 'replay priority @3' not in on['out'], on['out']
+            assert 'diary families 3' in on['out']
+            # (3) isolation, end to end
+            LP.replay_priority_probs = lambda fam, kl, frac: np.full(len(fam), 1.0 / len(fam))
+            try:
+                a = run(td, 'iso-real', replay_priority=0.5, replay_priority_every=1, **guard_kw)
+                LP.measure_family_kl = lambda m, parent, klreplay, kl_ds, fam, **k: {f: 0.0 for f in dict.fromkeys(fam)}
+                b = run(td, 'iso-zero', replay_priority=0.5, replay_priority_every=1, **guard_kw)
+            finally:
+                LP.replay_priority_probs, LP.measure_family_kl = real_probs, real_meas
+            assert a['hash'] == b['hash'], f'{guard_kw}: the measurement moved a training stream'
+        raises(lambda: LP.train('LB', 1, 1, os.path.join(td, 'ce'), [0], parent=PARENT, guard='replay', replay_loss='ce', guard_src=GUARD_SRC,
+                                kl_replay_rows=4, kl_weight=1.0, replay_priority=0.5), '--replay-loss kl')
+    return 'OFF: randint draws equal a fresh RandomState sequence, FRAC 0 == flag absent (hashes, record keys); ON: choice draws, shares / secs on the records, "replay priority @1/@2" lines; the measurement leaves the weights identical to a zero-KL (no-measure) run for replay-kl and kfsoft; replay-ce refused'
+
+
 TESTS = [test_check_guard_args_matrix, test_ce_replay_loss, test_kl_replay_loss_untouched, test_seed_moves_replay_stream,
          test_rng_isolation, test_harm_steps_default, test_dev_sha_check, test_big_dev_provenance, test_diary_train_pin, test_replay_arm_setup,
          test_train_harm_leaves_training_untouched, test_replay_freeze_setup, test_replay_freeze_real_parent_count,
          test_stop_if_drop_parse_and_decision, test_score_step_futility_record, test_train_a1f_stop_and_commit_check,
-         test_a1f_is_one_change_vs_l11]
+         test_a1f_is_one_change_vs_l11, test_replay_priority_probs, test_replay_priority_check_guard_args, test_replay_priority_measure_isolated,
+         test_replay_priority_train_end_to_end]
 
 if __name__ == '__main__':
     passed = skipped = 0

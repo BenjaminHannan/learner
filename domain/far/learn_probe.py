@@ -21,6 +21,9 @@
         kfsoft and each update appends --kl-replay-rows diary rows from RandomState(KL_REPLAY_SEED) (the stream follows --seed). --replay-loss kl
         (default) = weight x KL to the frozen parent (klreplay from --guard-src, commit-checked); ce = weight x the plain loss on the diary rows, whose
         targets are the parent's own greedy answers. --guard-soft is refused with it.)
+        [--replay-priority FRAC [--replay-priority-every 500]]        (kfsoft, or replay with --replay-loss kl: KL-prioritized replay draw. FRAC of the sampling mass goes to the
+        diary rows' original skill families in proportion to each family's measured KL to the frozen parent (re-measured every N updates on the current weights, RNG-isolated), the
+        rest stays uniform; 0 = off = the uniform draw, bit-identical to without the flag. Family labels are looked up by prompt in $CUSTOM_IO_DATA/train.jsonl, in memory only.)
         [--replay-freeze]        (A1F, only with --guard replay: before the optimizer is built, freeze exactly the tensors the K-FAC guard freezes -
         gp.freeze_unprojected from --guard-src (commit-checked) - so the trainable set and the clip set are L11's (Guarded's), with NO projection and
         NO mask and no Guarded wrapper; the optimizer is make_opt over the model as for the unguarded path, which leaves requires_grad False
@@ -1245,13 +1248,15 @@ def batch_order(n, batch, updates, seed):
         yield ni
 
 
-def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None, replay_loss=None, replay_freeze=False):
+def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None, kl_weight=None, soft=None, replay_loss=None, replay_freeze=False, replay_priority=0.0, replay_priority_every=500):
     """The guard is for arm LB only and needs its source folder; refuse otherwise, before any work.
     kl_rows / kl_weight (None = not given) are for --guard kfsoft and --guard replay only; both need both, rows >= 1 and weight > 0.
     soft (None = not given, 1 is used) is the graded-mask softness of --guard kfsoft (L13: 10), > 0, or 'hard' (L14: the hard
     mask, kf.factors soft=None, with the KL replay); --guard replay has no mask, so --guard-soft is refused with it.
     replay_loss (None = not given; 'kl' is used) is --replay-loss of --guard replay: 'kl' or 'ce'; refused with any other guard.
-    replay_freeze (False = not given) is --replay-freeze (A1F): valid only with --guard replay, refused with any other guard or none."""
+    replay_freeze (False = not given) is --replay-freeze (A1F): valid only with --guard replay, refused with any other guard or none.
+    replay_priority (0.0 = off, the uniform draw) is --replay-priority FRAC: in [0, 1), and > 0 only with --guard kfsoft or --guard replay
+    --replay-loss kl (the KL to the frozen parent is what is measured) and --kl-replay-rows >= 1; replay_priority_every >= 1."""
     if guard not in ('kfsoft', 'replay') and (kl_rows is not None or kl_weight is not None or soft is not None):
         raise SystemExit('--kl-replay-rows / --kl-weight / --guard-soft apply to --guard kfsoft only')
     if guard == 'replay' and soft is not None:
@@ -1264,6 +1269,17 @@ def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None
         raise SystemExit(f'--replay-loss must be one of {REPLAY_LOSSES}')
     if soft is not None and soft != 'hard' and soft <= 0:
         raise SystemExit("--guard-soft must be > 0 or 'hard'")
+    if not 0 <= replay_priority < 1:
+        raise SystemExit('--replay-priority must be in [0, 1)')
+    if replay_priority > 0:
+        if guard not in ('kfsoft', 'replay'):
+            raise SystemExit('--replay-priority needs --guard kfsoft or --guard replay')
+        if guard == 'replay' and replay_loss == 'ce':
+            raise SystemExit('--replay-priority measures the KL to the frozen parent: --guard replay needs --replay-loss kl (not ce)')
+        if kl_rows is None or kl_rows < 1:
+            raise SystemExit('--replay-priority needs --kl-replay-rows >= 1')
+        if replay_priority_every < 1:
+            raise SystemExit('--replay-priority-every must be >= 1')
     if not guard:
         return
     if arm != 'LB':
@@ -1629,6 +1645,75 @@ def install_first_call_weight(m, weight):
     return call_loss
 
 
+def diary_families(diary, data=None):
+    """--replay-priority: the original skill family of each diary row (list, diary order), looked up by prompt in the data folder's
+    train.jsonl (build_parent_diary's pool file; the first row with that prompt); '?' if the prompt is not there. In memory only: the
+    diary rows (and so diary.jsonl and its sha256) are not touched."""
+    from domain import mode
+    tpath = mode.guard(os.path.join(DIARY_DATA if data is None else data, 'train.jsonl'))
+    if not os.path.exists(tpath):
+        raise SystemExit(f'--replay-priority: family labels come from {tpath}, which does not exist (set CUSTOM_IO_DATA)')
+    want = {r['prompt'] for r in diary}
+    fam_of = {}
+    with open(tpath) as f:
+        for line in f:
+            r = json.loads(line)
+            if r['prompt'] in want and r['prompt'] not in fam_of:
+                fam_of[r['prompt']] = r['family']
+    return [fam_of.get(r['prompt'], '?') for r in diary]
+
+
+def replay_priority_probs(diary_fam, kl_by_fam, frac):
+    """--replay-priority: per-diary-row sampling probability (np.float64, sums to 1). p_i = (1 - frac) / N + frac * (kl_f / S) / n_f for
+    row i of family f (n_f rows, S = sum of the kl values over the families, a missing family counts 0); uniform 1/N when S <= 0."""
+    n = len(diary_fam)
+    cnt = {}
+    for f in diary_fam:
+        cnt[f] = cnt.get(f, 0) + 1
+    S = float(sum(max(float(kl_by_fam.get(f, 0.0)), 0.0) for f in cnt))
+    if S <= 0:
+        return np.full(n, 1.0 / n, dtype=np.float64)
+    p = np.array([(1.0 - frac) / n + frac * (max(float(kl_by_fam.get(f, 0.0)), 0.0) / S) / cnt[f] for f in diary_fam], dtype=np.float64)
+    return p / p.sum()
+
+
+def replay_priority_shares(diary_fam, p):
+    """family -> its share of the total sampling mass (sum of p over its rows), 4 dp, largest first."""
+    sh = {}
+    for f, x in zip(diary_fam, p):
+        sh[f] = sh.get(f, 0.0) + float(x)
+    return {f: round(v, 4) for f, v in sorted(sh.items(), key=lambda kv: -kv[1])}
+
+
+def measure_family_kl(m, parent, klreplay, kl_ds, diary_fam, cap=128, bs=64):
+    """--replay-priority: per-family KL of m to the frozen parent. For each family its first min(cap, n_f) diary rows (diary order), in
+    batches of at most bs, the mean of klreplay.replay_kl(m, parent, b)[0] weighted by batch size; m in whatever mode it is in (the loop's
+    train mode). Moves no training stream: torch / python / numpy global RNG via rng_isolated, and the model's own ans_drill stream
+    (m._drill_rng, m.drill_stats: train_golds draws from it in train mode) saved and restored; no grad. -> {family: kl >= 0}, first-seen order."""
+    import torch
+    from custom_io.data import collate, to_device
+    idx = {}
+    for i, f in enumerate(diary_fam):
+        idx.setdefault(f, []).append(i)
+    drill = (m._drill_rng.getstate(), dict(m.drill_stats)) if hasattr(m, '_drill_rng') else None
+    out = {}
+    try:
+        with rng_isolated(), torch.no_grad():
+            for f, ix in idx.items():
+                ix, tot, n = ix[:cap], 0.0, 0
+                for k in range(0, len(ix), bs):
+                    c = ix[k:k + bs]
+                    kl, _ = klreplay.replay_kl(m, parent, to_device(collate([kl_ds[i] for i in c]), 'cpu'))
+                    tot, n = tot + float(kl) * len(c), n + len(c)
+                out[f] = max(tot / n, 0.0)
+    finally:
+        if drill:
+            m._drill_rng.setstate(drill[0])
+            m.drill_stats.clear()
+            m.drill_stats.update(drill[1])
+    return out
+
+
 def kl_replay_loss(m, parent, weight, kls, klreplay):
     """Instance-level loss for --guard kfsoft. Same logic as klreplay.wrap (split the batch by row source 'diary'; the plain loss
     when not training / no grad / no diary or no new rows; tuple shape and aux 'replay_kl' kept; every KL appended to kls), but
@@ -1707,17 +1792,18 @@ def load_klreplay(src):
     return klreplay
 
 
-def setup_replay_arm(m, cons, make_opt, replay_loss, weight, log, klreplay=None, freeze=None):
+def setup_replay_arm(m, cons, make_opt, replay_loss, weight, log, klreplay=None, freeze=None, parent=None):
     """--guard replay (arm LB): no K-FAC mask, no Guarded wrapper, nothing frozen (unless freeze=..., A1F / --replay-freeze). m.loss becomes the replay loss ('kl':
     kl_replay_loss against klreplay.frozen_copy(m), taken now, before any update; 'ce': ce_replay_loss); every replay value is
     appended to `log`. The optimizer is make_opt(m, cons['lr']) exactly as the unguarded LB path builds it. -> (opt, params).
     freeze (A1F, --replay-freeze; None = nothing frozen, as shipped): a callable m -> frozen names, i.e. the guard source's
     gp.freeze_unprojected. It runs after the KL parent copy is taken and BEFORE the optimizer is built, so make_opt (which keeps only
     requires_grad parameters, as under Guarded, whose make_base is called after its freeze) builds its groups from the trainable set alone and the
-    frozen tensors are in no group - no gradient, no weight decay. params (the clip set) is then the trainable set, as under Guarded."""
+    frozen tensors are in no group - no gradient, no weight decay. params (the clip set) is then the trainable set, as under Guarded.
+    parent (kl only; None = klreplay.frozen_copy(m) taken here): the frozen parent, when the caller took it (--replay-priority measures against it)."""
     assert replay_loss in REPLAY_LOSSES, replay_loss
     if replay_loss == 'kl':
-        m.loss = kl_replay_loss(m, klreplay.frozen_copy(m), float(weight), log, klreplay)
+        m.loss = kl_replay_loss(m, klreplay.frozen_copy(m) if parent is None else parent, float(weight), log, klreplay)
     else:
         m.loss = ce_replay_loss(m, float(weight), log)
     params = list(m.parameters())
@@ -1765,7 +1851,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
           kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, replay_loss=None, dev_any=False,
-          harm_dev_big=None, diary_any=False, replay_freeze=False, stop_if_drop=None):
+          harm_dev_big=None, diary_any=False, replay_freeze=False, stop_if_drop=None, replay_priority=0.0, replay_priority_every=500):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1780,7 +1866,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     extra = {'addon_rank': rank, 'addon_alpha': alpha}
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
-    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft, replay_loss, replay_freeze)
+    check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft, replay_loss, replay_freeze, replay_priority, replay_priority_every)
+    prio_on = replay_priority > 0   # KL-prioritized, per-family replay draw (off = the uniform randint draw, bit-identical)
     stop_limits = None if stop_if_drop is None else dict(stop_if_drop)   # {step: limit} from parse_stop_if_drop; None = no futility stop
     if stop_limits is not None:
         bad = sorted(set(stop_limits) - harm_steps)
@@ -1838,8 +1925,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             klreplay = load_klreplay(guard_src) if replay_kind == 'kl' else None
             kl_ds = Dataset(diary, m.vocab)
             kl_rng = np.random.RandomState(KL_REPLAY_SEED)
+            kl_parent = klreplay.frozen_copy(m) if replay_kind == 'kl' else None   # taken where setup_replay_arm took it (first thing, before any update); shared with the priority measure
             freeze = load_guard(guard_src)[1].freeze_unprojected if replay_freeze else None   # A1F: the guard source's own freeze, before the optimizer
-            opt, params = setup_replay_arm(m, cons, make_opt, replay_kind, kl_weight, ces if replay_kind == 'ce' else kls, klreplay, freeze)
+            opt, params = setup_replay_arm(m, cons, make_opt, replay_kind, kl_weight, ces if replay_kind == 'ce' else kls, klreplay, freeze, kl_parent)
             extra.update(guard='replay', replay_loss=replay_kind, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
                          kl_replay_seed=KL_REPLAY_SEED, kl_replay_pool=len(diary), guard_diary_n=len(diary),
                          guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache)
@@ -1879,6 +1967,15 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         else:
             opt = make_opt(m, cons['lr'])
             print(f'LB full fine-tune params {sum(p.numel() for p in params)}, lr {cons["lr"]}', flush=True)
+    prio = dict(p=None, shares={}, secs=0.0, n=0)   # --replay-priority: the live sampling probabilities (None = uniform), the latest per-family shares, measuring time
+    if prio_on:
+        diary_fam = diary_families(diary)   # in memory only: the diary object and diary.jsonl stay as built / loaded
+        fam_n = Counter(diary_fam)
+        prio['p'] = np.full(len(diary), 1.0 / len(diary), dtype=np.float64)
+        prio['shares'] = replay_priority_shares(diary_fam, prio['p'])
+        extra.update(replay_priority=replay_priority, replay_priority_every=replay_priority_every)
+        print(f'replay priority {replay_priority} every {replay_priority_every} updates: diary families {len(fam_n)}, top 5 by rows: '
+              + ', '.join(f'{f}={n}' for f, n in fam_n.most_common(5)), flush=True)
     torch.manual_seed(SEED)   # ans_drill draws from the model's own RNG in train mode
     t_train, t_seg, losses = 0.0, time.time(), []
     steps = set(steps)
@@ -1887,6 +1984,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     rkey = 'replay_ce_mean' if replay_kind == 'ce' else 'replay_kl_mean'
     ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else (
         dict(extra, **{rkey: round(float(np.mean(rlog)), 6)}) if replay_arm and rlog else extra)   # replay arm: the running mean so far rides on each step's record
+    if prio_on:
+        ex0 = ex
+        ex = lambda: dict(ex0(), replay_priority_shares=dict(prio['shares']), replay_priority_secs=round(prio['secs'], 1))
     hf = lambda u: harm_fn if u in harm_steps else None
     sk = {'stop_limits': stop_limits, 'keep_final': keep_final} if stop_limits else {}   # passed only when a futility stop is set: score_step's other callers see the shipped call; keep_final lets a stopped run keep the checkpoint it stopped at
     stopped = None
@@ -1899,7 +1999,8 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         m.train()
         items = [ds[i] for i in ni]
         if use_replay:   # + diary rows (source 'diary'), told apart by kl_replay_loss / ce_replay_loss
-            items += [kl_ds[int(j)] for j in kl_rng.randint(0, len(diary), size=kl_replay_rows)]
+            draw = kl_rng.choice(len(diary), size=kl_replay_rows, replace=True, p=prio['p']) if prio_on else kl_rng.randint(0, len(diary), size=kl_replay_rows)
+            items += [kl_ds[int(j)] for j in draw]
         b = to_device(collate(items), 'cpu')
         o = m.loss(b)
         loss = o[0] if isinstance(o, tuple) else o
@@ -1918,6 +2019,17 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             t_seg = time.time()
         if guarded and u % guard_every == 0 and u < updates:   # re-measure F on the current weights; same base AdamW and state
             opt = guarded.refresh()
+        if prio_on and u % replay_priority_every == 0 and u < updates:   # re-measure the per-family KL to the parent on the current weights; moves no training stream
+            t1 = time.time()
+            kl_f = measure_family_kl(m, kl_parent, klreplay, kl_ds, diary_fam)
+            prio['p'] = replay_priority_probs(diary_fam, kl_f, replay_priority)
+            prio['shares'] = replay_priority_shares(diary_fam, prio['p'])
+            prio['secs'] += time.time() - t1
+            prio['n'] += 1
+            S = sum(kl_f.values())
+            top = sorted(kl_f.items(), key=lambda kv: -kv[1])[:5]
+            print(f'replay priority @{u}: top families by KL: ' + (' '.join(f'{f}={v:.3g}({100 * v / S:.1f}%)' for f, v in top) if S > 0 else 'none (KL 0: uniform)')
+                  + f' [{time.time() - t1:.1f}s]', flush=True)
         if u in steps:
             stopped = score_step(ck, m, addon, sets, out, arm, u, t_train, threads, ex(), hf(u), keep_final and u == last, **sk)
             t_seg = time.time()
@@ -1925,6 +2037,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 done = u
                 break
     m.eval()
+    if prio_on:
+        extra.update(replay_priority_shares=dict(prio['shares']), replay_priority_secs=round(prio['secs'], 1), replay_priority_measures=prio['n'])
+        print(f'replay priority: {prio["n"]} measures, {prio["secs"]:.1f}s', flush=True)
     if use_replay and rlog:
         extra[rkey] = round(float(np.mean(rlog)), 6)
         print(f'{rkey[:-5]} {json.dumps(dict(mean=extra[rkey], n=len(rlog), weight=kl_weight, rows=kl_replay_rows))}', flush=True)
@@ -1976,6 +2091,8 @@ def main(argv=None):
     a.add_argument('--stop-if-drop', default=None, help="futility stop, 'STEP:DROP[,STEP:DROP...]' (e.g. 1000:3.0,2000:3.0): each STEP must be a harm step; if the harm measure at STEP has in_dist_drop >= DROP the step's record gets futility_stop and training stops there (with --keep-final the stopped step's checkpoint is kept)")
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft / replay only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft / replay only: weight on the KL to the frozen parent (replay: or the CE) over those rows')
+    a.add_argument('--replay-priority', type=float, default=0.0, help='--guard kfsoft / replay (kl) only: fraction of the replay sampling mass given to diary families in proportion to their measured KL to the frozen parent (the rest uniform); 0 (default) = off = the uniform draw as shipped; in [0, 1)')
+    a.add_argument('--replay-priority-every', type=int, default=500, help='--replay-priority: re-measure the per-family KL every this many updates')
     a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
@@ -2022,7 +2139,7 @@ def main(argv=None):
         if a.first_call_weight <= 0:
             raise SystemExit('--first-call-weight must be > 0')
         a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
-        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft, a.replay_loss, a.replay_freeze)   # refuse before any work
+        check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft, a.replay_loss, a.replay_freeze, a.replay_priority, a.replay_priority_every)   # refuse before any work
         steps = [int(x) for x in a.steps.split(',')]
         harm_steps = resolve_harm_steps(steps, a.harm_steps, a.no_harm)
         stop_if_drop = parse_stop_if_drop(a.stop_if_drop, harm_steps)
@@ -2037,7 +2154,7 @@ def main(argv=None):
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache, diary_any=a.diary_any,
               kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
               seed=a.seed, first_call_weight=a.first_call_weight, replay_loss=a.replay_loss, dev_any=a.dev_any, harm_dev_big=a.harm_dev_big,
-              replay_freeze=a.replay_freeze, stop_if_drop=stop_if_drop)
+              replay_freeze=a.replay_freeze, stop_if_drop=stop_if_drop, replay_priority=a.replay_priority, replay_priority_every=a.replay_priority_every)
 
 
 if __name__ == '__main__':
