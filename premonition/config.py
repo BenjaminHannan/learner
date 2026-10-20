@@ -15,7 +15,7 @@ PARAM_BAND = (1_900_000, 2_150_000)   # design/06 §6, asserted at d = 128; the 
 VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; entity ids follow
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
-DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key", "dec_ent_match")   # design/info-constraints S2, S3: default off, left out of
+DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key", "dec_ent_match", "ask_ent_match")   # design/info-constraints S2, S3: default off, left out of
                                                       # config dicts when off, so plain-D digests are unchanged
 VARIANTS = ("D", "D-noask", "D-noptr")
 
@@ -59,6 +59,9 @@ class MiniConfig:
     dec_ent_match: bool = False         # S5 (design/info-constraints/S5-STAGE0-CARD.md): the decoder's attention
                                         # score of both rows of a card whose entities include a question entity
                                         # gets + kappa_d (one scalar, starts at 0). Needs S2. DRAFT
+    ask_ent_match: bool = False         # S6 (design/info-constraints/S6-STAGE0-CARD.md): ASK adds kappa_a * m_l,
+                                        # m_l = 1 where card l names a question entity (S5's feature); kappa_a
+                                        # starts at 0. Needs S5, refused with ent_key. DRAFT
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
     w_ask: float = 0.5
@@ -87,12 +90,14 @@ class MiniConfig:
             raise ValueError("ent_key scores cards: it needs the card store")
         if self.dec_ent_match and (not self.decoder_raw_cards or self.card_address):
             raise ValueError("dec_ent_match is built on decoder_raw_cards, without card_address (S5 card §2)")
+        if self.ask_ent_match and (not self.dec_ent_match or self.ent_key):
+            raise ValueError("ask_ent_match is built on dec_ent_match, without ent_key (S6 card §2)")
         if self.card_address and not self.decoder_raw_cards:
             raise ValueError("card_address is built on decoder_raw_cards (S3 card: base D + S2)")
         if self.check_band and self.d_model == 128:
             parts = self.parameter_breakdown()
             count = sum(parts.values()) - sum(parts.get(name, 0) for name in ("card_address", "ent_key",
-                                                                             "dec_ent_match"))  # drafts apart
+                                                                             "dec_ent_match", "ask_ent_match"))
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -181,6 +186,8 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
         parts["ent_key"] = _linear(d, config.n_ent) + 1
     if config.dec_ent_match:                                         # S5: kappa_d
         parts["dec_ent_match"] = 1
+    if config.ask_ent_match:                                         # S6: kappa_a
+        parts["ask_ent_match"] = 1
     return parts
 
 

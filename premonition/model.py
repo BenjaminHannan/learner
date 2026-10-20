@@ -367,6 +367,7 @@ class _Episode:
     mentions: Optional[torch.Tensor] = None   # [Q, n_ent] bool, S4 `ent_key` only: entities a question may mean
     q_ents: Optional[torch.Tensor] = None     # [Q, n_ent] bool, S5 `dec_ent_match` only: entities in the question
     match: Optional[torch.Tensor] = None      # [Q, cards] float, S5: 1 where the slot's card names a q_ents entity
+    ask_match: Optional[torch.Tensor] = None  # [Q, L + 1] float, S6: 1 where store card l names a q_ents entity
 
 
 class PremonitionMini(nn.Module):
@@ -410,6 +411,10 @@ class PremonitionMini(nn.Module):
             if type(self) is not PremonitionMini:
                 raise ValueError(f"dec_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
             self.dec_kappa = nn.Parameter(torch.zeros(()))          # S5 kappa_d: no RNG draw, starts at 0
+        if config.ask_ent_match:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"ask_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
+            self.ask_kappa = nn.Parameter(torch.zeros(()))          # S6 kappa_a: no RNG draw, starts at 0
         if config.ent_key:
             if type(self) is not PremonitionMini:
                 raise ValueError(f"ent_key is defined for PremonitionMini only, not {type(self).__name__}")
@@ -482,6 +487,9 @@ class PremonitionMini(nn.Module):
         if getattr(self, "dec_kappa", None) is not None:        # S5: kappa_d back to 0
             with torch.no_grad():
                 self.dec_kappa.zero_()
+        if getattr(self, "ask_kappa", None) is not None:        # S6: kappa_a back to 0
+            with torch.no_grad():
+                self.ask_kappa.zero_()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -496,6 +504,8 @@ class PremonitionMini(nn.Module):
                   for name, module in parts.items()}
         if self.config.dec_ent_match:
             counts["dec_ent_match"] = self.dec_kappa.numel()
+        if self.config.ask_ent_match:
+            counts["ask_ent_match"] = self.ask_kappa.numel()
         if self.config.ent_key:
             counts["ent_key"] = sum(p.numel() for p in self.ent_query.parameters()) + self.kappa_e.numel()
         return counts
@@ -573,6 +583,11 @@ class PremonitionMini(nn.Module):
         if config.dec_ent_match:
             episode.q_ents = self._mentions(batch, start)          # entities in the question span itself
             episode.match = torch.zeros(count, config.cards, device=device)
+        if config.ask_ent_match:                                    # S6: which store cards name a question entity
+            ents = store.ents[batch.q_visit]                                         # [Q, L, E]
+            hit = (episode.q_ents.unsqueeze(1).expand(-1, ents.shape[1], -1)
+                   .gather(2, ents.clamp_min(0)) & (ents >= 0)).any(2)               # [Q, L]
+            episode.ask_match = F.pad(hit.float(), (0, 1))                           # NULL last: 0
         return episode
 
     @property
@@ -663,9 +678,9 @@ class PremonitionMini(nn.Module):
     def _entity_scores(self, register: torch.Tensor, store: CardStore, episode: _Episode,
                        index: torch.Tensor) -> Optional[torch.Tensor]:
         """S4: [n, L + 1] kappa_e * (pi . e_l); pi = softmax of W_e r0 over the mentioned entities, e_l the card's
-        entity multi-hot / its count (0 for NULL and entity-free cards). None without `ent_key`."""
+        entity multi-hot / its count (0 for NULL and entity-free cards). Without `ent_key`: S6's term (or None)."""
         if not self.config.ent_key:
-            return None
+            return self._ask_match(episode, index)
         logits = self.ent_query(register).float().masked_fill(~episode.mentions[index], -math.inf)
         pi = torch.softmax(logits, -1).nan_to_num(0.0)            # a question with no mention: pi = 0
         ents = store.ents[episode.q_visit[index]]                  # [n, L, E]
@@ -674,6 +689,15 @@ class PremonitionMini(nn.Module):
         multi = multi / present.sum(2, keepdim=True).clamp_min(1.0)
         match = torch.einsum("ne,nle->nl", pi, multi)
         return self.kappa_e * F.pad(match, (0, 1))                 # NULL last: 0
+
+    def _ask_match(self, episode: _Episode, index: torch.Tensor) -> Optional[torch.Tensor]:
+        """S6: [n, L + 1] kappa_a * m_l, m_l = 1 where card l names a question entity (NULL 0). None without
+        `ask_ent_match`, and while kappa_a is frozen at exactly 0 (S6 stage 1), so the base ASK text runs."""
+        if not self.config.ask_ent_match:
+            return None
+        if not self.ask_kappa.requires_grad and float(self.ask_kappa) == 0.0:
+            return None
+        return self.ask_kappa * episode.ask_match[index]
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor,
                        bias: Optional[torch.Tensor] = None) -> torch.Tensor:
