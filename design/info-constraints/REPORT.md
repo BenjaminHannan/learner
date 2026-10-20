@@ -507,6 +507,25 @@ questions.
 - **Consequence for the plan:** this supports the ranking. S3 (`card_address`, choosing by a learned address)
   is next on the cumulative base D + S2. Its Stage 0 is gated on the coordinator's review verdict.
 
+#### S2 distractor reading, corrected (card §10b/§10c, 2026-10-20; reported, no verdict)
+
+**Disclosure.** The §10 reading above drew from every eligible card (35.4% fact lines; m02's own pool), not from
+fact cards as its text said. Its numbers stand as a reading of "gold + 2 random cards". The fact-only reading:
+
+| seed | control acc (/1024) | treated acc (/1024) | treated Wilson 95% | treated picks a distractor's value | distinct 256 / 1024 (control; treated) |
+|---|---|---|---|---|---|
+| 0 | 6.93% (71) | **29.20% (299)** | [26.5, 32.1] | 510 | 2 / 2; 13 / 14 |
+| 1 | 6.15% (63) | **36.04% (369)** | [33.2, 39.0] | 598 | 2 / 2; 15 / 16 |
+| 2 | 6.93% (71) | **30.76% (315)** | [28.0, 33.7] | 514 | 3 / 3; 15 / 16 |
+
+- **Reproduction:** all six arms reproduced their filed §9 scores; every arm was read. **VOID:** none.
+- **Reading (no verdict):** with the gold card plus 2 **fact** cards, S2 scores 29.2-36.0%. That is the 33.3%
+  random-card rate within its intervals.
+  - It names a distractor's value on 50-58% of questions, so it copies one of the three cards on 79-94% of
+    questions and picks among them at random.
+  - This is a cleaner statement of the §10a finding: **S2 reads a card; it does not choose.**
+- **Best §10b S2 reading:** 36.04% (seed 1). Plus 15 points gives 51.04%, against the sealed S3 mark 2 of 55%.
+
 #### S2 code review (E6; Claude Code built-in `/code-review`, high, on `main...branch`)
 
 **Round 3 (final design).** The review's root finding was that raw rows held outside `episode.x` had to be

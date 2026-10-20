@@ -180,3 +180,21 @@ non-gold, non-NULL card, filler lines included.
 seeds, and the same generator seed 7002. The only change: distractors are drawn from **fact lines only** (cards
 that name an entity), `preload_distractors(facts_only=True)`. Same readouts. Reported, no verdict, VOID rule as
 §10. Raw: `artifacts/claude-infoconstraints-20261018/s2-distract-facts/`. Random-card reference here: 33.3%.
+
+### 10c. §10b result (appended after the run; §10b spec unchanged since e9b6593ed)
+
+Run 2026-10-20, CPU, 1 thread per arm, $0.
+
+| seed | control acc (/1024) | treated acc (/1024) | treated Wilson 95% | treated picks a distractor's value | distinct 256 / 1024 (control; treated) |
+|---|---|---|---|---|---|
+| 0 | 6.93% (71) | **29.20% (299)** | [26.5, 32.1] | 510 | 2 / 2; 13 / 14 |
+| 1 | 6.15% (63) | **36.04% (369)** | [33.2, 39.0] | 598 | 2 / 2; 15 / 16 |
+| 2 | 6.93% (71) | **30.76% (315)** | [28.0, 33.7] | 514 | 3 / 3; 15 / 16 |
+
+- **Reproduction:** all six arms reproduced their filed §9 scores; every arm was read. **VOID:** none.
+- **Reading (no verdict):** with the gold card plus 2 **fact** cards, S2 scores 29.2-36.0%. That is the 33.3%
+  random-card rate within its intervals.
+  - It names a distractor's value on 50-58% of questions, so it copies one of the three cards on 79-94% of
+    questions and picks among them at random.
+  - This is a cleaner statement of the §10a finding: **S2 reads a card; it does not choose.**
+- **Best §10b S2 reading:** 36.04% (seed 1). Plus 15 points gives 51.04%, against the sealed S3 mark 2 of 55%.

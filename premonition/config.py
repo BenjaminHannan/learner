@@ -80,7 +80,8 @@ class MiniConfig:
         if self.card_address and not self.decoder_raw_cards:
             raise ValueError("card_address is built on decoder_raw_cards (S3 card: base D + S2)")
         if self.check_band and self.d_model == 128:
-            count = self.num_parameters() - self.parameter_breakdown().get("card_address", 0)   # S3 apart (card §2)
+            parts = self.parameter_breakdown()
+            count = sum(parts.values()) - parts.get("card_address", 0)          # S3 apart (S3 card §2)
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")

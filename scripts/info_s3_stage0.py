@@ -162,6 +162,10 @@ def cmd_summarize(args) -> None:
                     pools.add(runs[(cell, arm, seed)].get("pool"))
                 else:
                     missing.append(path.name)
+    references = [str(p.relative_to(ROOT)) for seed in SEEDS
+                  for p in (S2_STAGE0 / f"treated-seed{seed}.json", S2_DISTRACT[args.pool] / f"treated-seed{seed}.json")
+                  if not p.exists()]
+    missing += references                          # a missing filed S2 reference is an input gap, not a result
     if missing or pools != {args.pool}:
         summary = {"verdict": "INCOMPLETE", "missing": missing,
                    "pools": sorted(map(str, pools)), "wanted_pool": args.pool}   # one pool per verdict, as ruled

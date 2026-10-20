@@ -162,8 +162,9 @@ def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
 
 @torch.no_grad()
 def distract(model: PremonitionMini, batches: list, n: int, facts_only: bool = False) -> dict:
-    """Card §10: gold card + n shuffled other fact cards of the visit (m02 `distractor_preload`, generator seed
-    7000 + n), LOOPS think passes, greedy, exact match; plus m02's distractor-value count."""
+    """Card §10 / §10b: gold card + n shuffled other cards of the visit (generator seed 7000 + n), LOOPS think
+    passes, greedy, exact match; plus m02's distractor-value count. `facts_only=False` (§10, m02 exactly) draws from
+    every eligible card, filler lines included (~65%); `facts_only=True` (§10b) from fact lines only."""
     was = model.training
     model.eval()
     generator = torch.Generator().manual_seed(7000 + n)
