@@ -567,6 +567,16 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
     - a single network error can crash `waitlog`, the only thing enforcing the cap, and stops are not retried.
   - Stopped and reported, with a proposed fix round. **Nothing is booked.**
 
+- **Fix round (124e8af2e, GO 10-20):**
+  - Confirmed fixed: B-a (the deadline caps F), the 1b run's re-check of `price`, and every listed non-blocking item.
+  - **B-b is only partly closed**, so the re-review is **NOT CLEAN**. Four `waitlog` paths can still bill past $2.80
+    or end the watch without a confirmed stop:
+    - the cost check is stale;
+    - repeated exceptions loop forever;
+    - a failure on the first status read exits;
+    - a stop is counted as confirmed without Vast's intended status.
+  - Stopped and reported, with a proposal to simplify `waitlog` into a minimal cap guard.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
