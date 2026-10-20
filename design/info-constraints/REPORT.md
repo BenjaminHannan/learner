@@ -650,6 +650,31 @@ reader-kv primary readout once the coordinator defines it (reader-kv RUN-CARD F3
 compose, and the address pool would pool over a span instead of a line, but run them separately.
 `key_split` and S4 change the ASK key, not the decoder key, so they are independent.
 
+#### S3 build and review (2026-10-20; card `S3-STAGE0-CARD.md`, sealed 9af754828, amendments 1-4)
+
+**Built (DRAFT), not run.**
+- **Code:** `MiniConfig.card_address`, `CardAddress`, `CardStore.addresses`, an address block of 16 episode rows
+  after the S2 raw rows, and decoder key splicing (K from the address, V from rows).
+- **Pre-run tests (card §2):** all pass, in `tests/test_premonition_card_address.py` (14 tests):
+  - flag-off identity to the reviewed D + S2 at 90077ef2b;
+  - paired start (tiny and full; the RNG is not reseeded; `reset_parameters` keeps the pairing);
+  - ring alignment;
+  - K from the address and V from rows, against an independent reference;
+  - finite modes with wipes;
+  - refusals;
+  - the FLOP increment;
+  - plain config dicts and digests equal to 73b8e0224's.
+
+**Review.** The built-in `/code-review` (high) ran 11 rounds on main...head.
+- **Real issues found and fixed:** a CUDA reseed; a `reset_parameters` regression that broke the paired start
+  (introduced in round 5, caught in round 6); a FLOP miscount; a plain-D config-digest change from the new
+  fields; Cell A crash/VOID cases; a half-written episode on error; a missing-input verdict; the
+  preload's unchecked gold lines.
+- **The distractor-pool mismatch (round 9):** disclosed in S2 card §10b. It needs a ruling (S3 amendment 4).
+- **Rounds 10-11:** no model correctness bug.
+- **Kept by design (logged):** the pinned S2 commit (re-pin at merge, Q41), the episode-row layout and the
+  subclass guards, the duplicated pooling and decoder helpers, decode-path copies.
+
 ### S4. `ent_key`: entity identity in the ASK key (direction-only fetch / key collapse)
 
 **Targets:** audit item 3 as corrected (R4, N9): fact keys collapse to one direction, so ASK finds "a fact"
