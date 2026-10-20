@@ -137,3 +137,4 @@ Week of Mon Oct 19: at most $14.72 spent so far (credit drop since Oct 17; inclu
 | 2026-10-20 19:33 | Swarm C0+S0 | BOOKED after Ben's click. Vast 56941045 (RTX 4090, $0.4622/h), BOX_START 19:33:15Z, hard stop ~04:35Z, cap $4.20. A first box 56940815 ran 28 s (~$0.005) and was destroyed. Verified running on Vast 19:35Z; 56940815 absent. | ≤4.20 |
 | 2026-10-20 19:35 | Steals R1 S1 | Not booked (offers vanished). Old coordinator raised the price limit to $0.68/h; cap $2.80 and seal unchanged. Relayed; to verify when booked. | ≤2.80 |
 | 2026-10-20 19:35 | Vast check | Credit $17.96. Running: 56940993, 56941045. Six stopped span boxes still present. | — |
+| 2026-10-20 19:48 | Steals R1 S1 | Re-packed at --dph 0.68 (pack 77715d263370…, deadline 12,441 s from BOX_START). Nothing at or below $0.68/h at 19:47Z (cheapest $0.710). Ben clicked YES in session: watch to ~22:47Z, ONE booking at first qualifying offer. $0 so far. | ≤2.80 |
