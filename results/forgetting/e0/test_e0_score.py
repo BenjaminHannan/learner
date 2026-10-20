@@ -70,6 +70,38 @@ def test_final_checkpoint_notes_a_differing_path(tmp_path):
     assert notes == ['summary final_checkpoint is not the run folder night_2 file (path differs)']
 
 
+def test_final_checkpoint_notes_ignored_extra_nights(tmp_path):
+    run, s = _run(tmp_path, [1, 2, 3, 4], n=3)
+    fin, notes = E.final_checkpoint_of(run, s)
+    assert fin == os.path.join(run, 'night_3', 'checkpoint.pt')
+    assert notes[0] == 'night checkpoints after nights_run=3 were ignored: [4]', notes
+
+
+def test_note_wording_matches_analyze():
+    """Each note e0 writes is worded as domain/analyze.py words it (the templates appear verbatim in analyze's source)."""
+    src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'domain', 'analyze.py')).read()
+    for t in ("missing night checkpoints {missing}", "night checkpoints after nights_run={N} were ignored: {extra}",
+              "summary final_checkpoint not on disk ({fin}); used the night_{N} file in the run folder",
+              "'summary final_checkpoint is not the run folder night_%d file (path differs)' % N"):
+        assert t in src, t
+
+
+def test_resolve_runs_checks_every_run_before_scoring(tmp_path):
+    good, s = _run(tmp_path, [1, 2])
+    par = tmp_path / 'parent.pt'
+    par.write_bytes(b'p')
+    s['parent'] = str(par)
+    (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s))
+    plan = E.resolve_runs([good])
+    assert plan[0][0] == good and plan[0][2] == os.path.join(good, 'night_2', 'checkpoint.pt')
+    with pytest.raises(SystemExit, match='no summary.json'):
+        E.resolve_runs([good, str(tmp_path / 'absent')])
+    s2 = dict(s, parent=str(tmp_path / 'gone.pt'))
+    (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s2))
+    with pytest.raises(SystemExit, match='not on disk'):
+        E.resolve_runs([good])
+
+
 def test_final_checkpoint_clean_case_has_no_notes(tmp_path):
     run, s = _run(tmp_path, [1, 2])
     s['final_checkpoint'] = os.path.join(run, 'night_2', 'checkpoint.pt')

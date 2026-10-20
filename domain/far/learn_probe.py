@@ -1648,7 +1648,8 @@ def install_first_call_weight(m, weight):
 
 def diary_families(diary, data=None):
     """--replay-priority: the original skill family of each diary row, looked up by prompt in the data folder's train.jsonl
-    (build_parent_diary's pool file; the first row with that prompt). -> (families in diary order, sha256 of that train.jsonl).
+    (build_parent_diary's pool file; the first row with that prompt; prompts listed under more than one family are counted and printed).
+    -> (families in diary order, sha256 of that train.jsonl).
     Every diary row must be found: a prompt missing from train.jsonl means the labels come from another build than the diary
     (e.g. a --diary-cache from one build with CUSTOM_IO_DATA at another), so it stops (SystemExit with the count) rather than
     sampling on wrong labels. In memory only: the diary rows (and so diary.jsonl and its sha256) are not touched."""
@@ -1657,22 +1658,38 @@ def diary_families(diary, data=None):
     if not os.path.exists(tpath):
         raise SystemExit(f'--replay-priority: family labels come from {tpath}, which does not exist (set CUSTOM_IO_DATA)')
     want = {r['prompt'] for r in diary}
-    fam_of = {}
+    fam_of, conflicts = {}, set()
     h = hashlib.sha256()
     with open(tpath, 'rb') as f:
         for line in f:
             h.update(line)
             r = json.loads(line)
-            if r['prompt'] in want and r['prompt'] not in fam_of:
-                fam_of[r['prompt']] = r['family']
+            if r['prompt'] in want:
+                if r['prompt'] not in fam_of:
+                    fam_of[r['prompt']] = r['family']
+                elif fam_of[r['prompt']] != r['family']:
+                    conflicts.add(r['prompt'])
     miss = sum(r['prompt'] not in fam_of for r in diary)
     if miss:
         raise SystemExit(f'--replay-priority: {miss} of {len(diary)} diary rows have no family in {tpath} (sha256 {h.hexdigest()[:12]}): '
                          'the labels must come from the build the diary was made from')
+    if conflicts:
+        print(f'replay priority: {len(conflicts)} diary prompts appear in {tpath} under more than one family; each takes its first row\'s family', flush=True)
     return [fam_of[r['prompt']] for r in diary], h.hexdigest()
 
 
 REPLAY_PRIORITY_MIN_ROWS = 8   # --replay-priority: a family needs this many diary rows to get priority mass (fewer: its KL is too noisy)
+
+
+def replay_priority_weights(diary_fam, kl_by_fam, min_rows=REPLAY_PRIORITY_MIN_ROWS):
+    """--replay-priority: {family: the KL weight the draw uses}, first-seen order. A family counts 0 when it is missing from kl_by_fam,
+    its kl is not finite (NaN / inf) or not > 0, or it has fewer than min_rows diary rows. All 0 = no priority (the uniform draw)."""
+    cnt = Counter(diary_fam)
+
+    def kl(f):
+        v = float(kl_by_fam.get(f, 0.0))
+        return v if math.isfinite(v) and v > 0 and cnt[f] >= min_rows else 0.0
+    return {f: kl(f) for f in cnt}
 
 
 def replay_priority_probs(diary_fam, kl_by_fam, frac, min_rows=REPLAY_PRIORITY_MIN_ROWS):
@@ -1681,14 +1698,8 @@ def replay_priority_probs(diary_fam, kl_by_fam, frac, min_rows=REPLAY_PRIORITY_M
     its kl is not finite (NaN / inf: never let a bad measurement into the draw) or negative, or it has fewer than min_rows rows (a 1-2 row
     family's KL is measured on those same rows and would put its whole share on them); uniform 1/N when S <= 0."""
     n = len(diary_fam)
-    cnt = {}
-    for f in diary_fam:
-        cnt[f] = cnt.get(f, 0) + 1
-
-    def kl(f):
-        v = float(kl_by_fam.get(f, 0.0))
-        return v if math.isfinite(v) and v > 0 and cnt[f] >= min_rows else 0.0
-    w = {f: kl(f) for f in cnt}
+    cnt = Counter(diary_fam)
+    w = replay_priority_weights(diary_fam, kl_by_fam, min_rows)
     S = float(sum(w.values()))
     if not S > 0:
         return np.full(n, 1.0 / n, dtype=np.float64)
@@ -1993,6 +2004,9 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     prio = dict(p=None, shares={}, secs=0.0, n=0)   # --replay-priority: the live sampling probabilities (None = uniform), the latest per-family shares, measuring time
     if prio_on:
         diary_fam, labels_sha = diary_families(diary)   # in memory only: the diary object and diary.jsonl stay as built / loaded
+        if labels_sha != DIARY_TRAIN_SHA256 and not diary_any:   # the same rule as the diary pool (build_parent_diary): labels from the seed-1 build
+            raise SystemExit(f'--replay-priority: family labels come from a train.jsonl with sha256 {labels_sha[:12]}, not the skills seed-1 build '
+                             f'{DIARY_TRAIN_SHA256[:12]} the diary pool is pinned to (set CUSTOM_IO_DATA, or pass --diary-any)')
         fam_n = Counter(diary_fam)
         prio['shares'] = replay_priority_shares(diary_fam, np.full(len(diary), 1.0 / len(diary)))   # p stays None: the control's randint draw until the first measurement
         extra.update(replay_priority=replay_priority, replay_priority_every=replay_priority_every, replay_priority_labels_sha256=labels_sha)
@@ -2047,13 +2061,13 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             bad = [f for f, v in kl_f.items() if not math.isfinite(v)]
             if bad:
                 print(f'replay priority @{u}: non-finite KL for {bad}: counted 0 (the draw falls back toward uniform)', flush=True)
-            prio['p'] = replay_priority_probs(diary_fam, kl_f, replay_priority)
-            prio['shares'] = replay_priority_shares(diary_fam, prio['p'])
+            w = replay_priority_weights(diary_fam, kl_f)
+            S = sum(w.values())
+            prio['p'] = replay_priority_probs(diary_fam, kl_f, replay_priority) if S > 0 else None   # no priority mass: the control's randint draw
+            prio['shares'] = replay_priority_shares(diary_fam, prio['p'] if prio['p'] is not None else np.full(len(diary), 1.0 / len(diary)))
             prio['secs'] += time.time() - t1
             prio['n'] += 1
-            kl_ok = {f: v for f, v in kl_f.items() if math.isfinite(v)}
-            S = sum(kl_ok.values())
-            top = sorted(kl_ok.items(), key=lambda kv: -kv[1])[:5]
+            top = sorted(((f, v) for f, v in w.items() if v > 0), key=lambda kv: -kv[1])[:5]   # the weights the draw uses
             print(f'replay priority @{u}: top families by KL: ' + (' '.join(f'{f}={v:.3g}({100 * v / S:.1f}%)' for f, v in top) if S > 0 else 'none (KL 0: uniform)')
                   + f' [{time.time() - t1:.1f}s]', flush=True)
         if u in steps:

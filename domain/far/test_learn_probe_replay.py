@@ -910,6 +910,8 @@ def test_replay_priority_probs():
     # the default floor: a family under REPLAY_PRIORITY_MIN_ROWS rows gets no priority mass, however large its KL
     big = ['a'] * 20 + ['tiny'] * 2
     d = LP.replay_priority_probs(big, {'a': 1.0, 'tiny': 100.0}, 0.5)
+    assert LP.replay_priority_weights(big, {'a': 1.0, 'tiny': 100.0}) == {'a': 1.0, 'tiny': 0.0}
+    assert LP.replay_priority_weights(big, {'a': float('nan'), 'tiny': 1.0}) == {'a': 0.0, 'tiny': 0.0}
     assert LP.REPLAY_PRIORITY_MIN_ROWS == 8 and abs(d[-1] - 0.5 / 22) < 1e-12 and abs(d[0] - (0.5 / 22 + 0.5 / 20)) < 1e-12, d
     return 'sums to 1; uniform for KL 0 / empty / frac 0; one family with all the KL at frac 0.5 gets 0.5 + 0.5 n_f/N; per-row mass = (1-f)/N + f (kl_f/S)/n_f; order follows the KL; NaN/inf/negative KL counts 0 (no NaN p, choice works); families under 8 rows get no priority mass'
 
@@ -987,8 +989,13 @@ def test_diary_families_real_lookup():
         with open(os.path.join(td, 'train.jsonl'), 'w') as f:
             f.write(''.join(json.dumps(r) + '\n' for r in tr))
         want_sha = hashlib.sha256(open(os.path.join(td, 'train.jsonl'), 'rb').read()).hexdigest()
-        fam, sha = LP.diary_families([dict(prompt='p2'), dict(prompt='p1'), dict(prompt='p1')], data=td)
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            fam, sha = LP.diary_families([dict(prompt='p2'), dict(prompt='p1'), dict(prompt='p1')], data=td)
         assert fam == ['fb', 'fa', 'fa'] and sha == want_sha, (fam, sha)
+        assert '1 diary prompts appear' in buf.getvalue() and 'more than one family' in buf.getvalue(), buf.getvalue()
         raises(lambda: LP.diary_families([dict(prompt='p1'), dict(prompt='zz'), dict(prompt='yy')], data=td), '2 of 3 diary rows have no family')
         empty = os.path.join(td, 'nothing')
         os.mkdir(empty)
@@ -1011,6 +1018,7 @@ def test_replay_priority_train_end_to_end():
     import io
     real_score, real_fam, real_probs, real_meas, RS = LP.score_step, LP.diary_families, LP.replay_priority_probs, LP.measure_family_kl, np.random.RandomState
     draws = []
+    labels = {'sha': LP.DIARY_TRAIN_SHA256}
 
     class RecRS(RS):
         def randint(self, *a, **k):
@@ -1033,7 +1041,7 @@ def test_replay_priority_train_end_to_end():
                 h.update(k.encode())
                 h.update(v.detach().numpy().tobytes())
             seen['hash'][step], seen['extra'][step] = h.hexdigest(), dict(extra)
-        LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: ([f'f{i % 3}' for i in range(len(diary))], 'stub-sha')), RecRS
+        LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: ([f'f{i % 3}' for i in range(len(diary))], labels['sha'])), RecRS
         buf = io.StringIO()
         try:
             with contextlib.redirect_stdout(buf):
@@ -1068,17 +1076,35 @@ def test_replay_priority_train_end_to_end():
             assert on['extra'][0]['replay_priority_shares'] == {'f0': 0.3333, 'f1': 0.3333, 'f2': 0.3333}, on['extra'][0]['replay_priority_shares']   # uniform before update 1
             assert [d[0] for d in on['draws']] == ['randint', 'choice', 'choice'] and 'replay priority @1:' in on['out'] and 'replay priority @2:' in on['out'] and 'replay priority @3' not in on['out'], on['out']
             assert on['draws'][0][3] == want[0], 'before the first measurement ON draws exactly what the control draws'
-            assert on['extra'][0]['replay_priority_measures'] == 0 and e['replay_priority_measures'] == 2 and e['replay_priority_labels_sha256'] == 'stub-sha', e
+            assert on['extra'][0]['replay_priority_measures'] == 0 and e['replay_priority_measures'] == 2 and e['replay_priority_labels_sha256'] == LP.DIARY_TRAIN_SHA256, e
             assert 'diary families 3' in on['out']
-            # (3) isolation, end to end
+            # (3) isolation, end to end: weights forced on and probs forced uniform, so both runs draw with choice at the same p
+            real_w = LP.replay_priority_weights
             LP.replay_priority_probs = lambda fam, kl, frac, **k: np.full(len(fam), 1.0 / len(fam))
+            LP.replay_priority_weights = lambda fam, kl, **k: {f: 1.0 for f in dict.fromkeys(fam)}
             try:
                 a = run(td, 'iso-real', replay_priority=0.5, replay_priority_every=1, **guard_kw)
                 LP.measure_family_kl = lambda m, parent, klreplay, kl_ds, fam, **k: {f: 0.0 for f in dict.fromkeys(fam)}
                 b = run(td, 'iso-zero', replay_priority=0.5, replay_priority_every=1, **guard_kw)
             finally:
-                LP.replay_priority_probs, LP.measure_family_kl = real_probs, real_meas
+                LP.replay_priority_probs, LP.measure_family_kl, LP.replay_priority_weights = real_probs, real_meas, real_w
             assert a['hash'] == b['hash'], f'{guard_kw}: the measurement moved a training stream'
+            assert [d[0] for d in a['draws']] == ['randint', 'choice', 'choice'], a['draws']
+            # (5) a measurement with no priority mass (every KL 0 or NaN) keeps the control's randint draw, so the run equals the control
+            for zero in (0.0, float('nan')):
+                LP.measure_family_kl = lambda m, parent, klreplay, kl_ds, fam, **k: {f: zero for f in dict.fromkeys(fam)}
+                try:
+                    z = run(td, 'zero-kl', replay_priority=0.5, replay_priority_every=1, **guard_kw)
+                finally:
+                    LP.measure_family_kl = real_meas
+                assert [d[0] for d in z['draws']] == ['randint'] * 3 and [d[3] for d in z['draws']] == want, (zero, z['draws'])
+                assert 'none (KL 0: uniform)' in z['out'], z['out']
+        # (6) labels from another build than the pinned diary pool are refused, unless --diary-any
+        labels['sha'] = 'f' * 64
+        raises(lambda: run(td, 'other-build', guard='kfsoft', replay_priority=0.5, replay_priority_every=1), 'not the skills seed-1 build')
+        ok = run(td, 'other-build-any', guard='kfsoft', replay_priority=0.5, replay_priority_every=1, diary_any=True)
+        assert ok['extra'][3]['replay_priority_labels_sha256'] == 'f' * 64
+        labels['sha'] = LP.DIARY_TRAIN_SHA256
         raises(lambda: LP.train('LB', 1, 1, os.path.join(td, 'ce'), [0], parent=PARENT, guard='replay', replay_loss='ce', guard_src=GUARD_SRC,
                                 kl_replay_rows=4, kl_weight=1.0, replay_priority=0.5), '--replay-loss kl')
     return 'OFF: randint draws equal a fresh RandomState sequence, FRAC 0 == flag absent (hashes, record keys); ON: choice draws, shares / secs on the records, "replay priority @1/@2" lines; the measurement leaves the weights identical to a zero-KL (no-measure) run for replay-kl and kfsoft; replay-ce refused'
