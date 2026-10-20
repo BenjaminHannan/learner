@@ -577,6 +577,18 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
     - a stop is counted as confirmed without Vast's intended status.
   - Stopped and reported, with a proposal to simplify `waitlog` into a minimal cap guard.
 
+- **Simplification round (6a4bf54ee, GO 10-20):**
+  - **Built:**
+    - a minimal cap guard;
+    - an on-box wall with a self-stop through the container key;
+    - a no-watcher test showing the box ends at the wall.
+  - **The one review is NOT CLEAN.** Four blocking findings:
+    - the self-stop's curl does not check that Vast accepted the stop;
+    - a container restart reruns the job under a fresh wall;
+    - a late `waitlog` can call a finished box NOT-RUNNING and suggest destroying it;
+    - the wall assumes exactly 900 s of billing before the job starts.
+  - Stopped per the ruling. The coordinator decides whether to park R1 stage 1.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
