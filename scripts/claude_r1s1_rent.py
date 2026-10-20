@@ -446,11 +446,15 @@ def pack(a):
 
 
 # ----------------------------------------------------------------------------- search / create
+OFFER_QUERY = {"verified": {"eq": True}, "rentable": {"eq": True}, "rented": {"eq": False}, "type": "on-demand",
+               "num_gpus": {"eq": 1}, "gpu_name": {"eq": "RTX 5090"}, "gpu_ram": {"gte": 30000},
+               "reliability": {"gte": 0.98}, "cuda_max_good": {"gte": 12.8}, "disk_space": {"gte": 60},
+               "inet_down": {"gte": 200}, "cpu_cores_effective": {"gte": 8}, "order": [["dph_total", "asc"]],
+               "limit": 100}
+
+
 def search(a):
-    q = {"verified": {"eq": True}, "rentable": {"eq": True}, "rented": {"eq": False}, "type": "on-demand",
-         "num_gpus": {"eq": 1}, "gpu_name": {"eq": "RTX 5090"}, "gpu_ram": {"gte": 30000},
-         "reliability": {"gte": 0.98}, "cuda_max_good": {"gte": 12.8}, "disk_space": {"gte": 60},
-         "inet_down": {"gte": 200}, "cpu_cores_effective": {"gte": 8}, "order": [["dph_total", "asc"]], "limit": 100}
+    q = dict(OFFER_QUERY)
     offers = call("POST", "/bundles/", q).get("offers") or []
     keep = [o for o in offers if o.get("gpu_name") == "RTX 5090" and (o.get("dph_total") or 0) <= a.max_dph]
     for o in keep[: a.n]:
@@ -501,7 +505,8 @@ def create(a):
                          "the duplicate check needs it, so nothing was sent")
     m = re.search(r"^DPH=([0-9.e+-]+)$", args[2], re.M)
     packed = float(m.group(1)) if m else None
-    offers = call("POST", "/bundles/", {"id": {"eq": int(a.offer)}}).get("offers") or []
+    # the offer must still be listed by the same machine filters `search` uses (an id-only query returns nothing)
+    offers = [o for o in call("POST", "/bundles/", dict(OFFER_QUERY)).get("offers") or [] if o.get("id") == int(a.offer)]
     offered = offers[0].get("dph_total") if offers else None
     if packed is None or offered is None or offered > packed:
         raise SystemExit(f"offer {a.offer} costs {offered} $/h; the pack was made for at most {packed}; nothing sent")

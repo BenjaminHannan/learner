@@ -503,8 +503,10 @@ class Net(Fixture):
         self.calls.append((method, path))
         if method == "GET" and path == "/instances/":
             return {"success": False, "http": 503} if self.listing_fails else {"instances": list(self.instances)}
-        if method == "POST" and path == "/bundles/":
-            return {"offers": [{"id": 123, "dph_total": self.offer_dph}]}
+        if method == "POST" and path == "/bundles/":       # Vast answers a full filter query, never an id-only one
+            if "id" in (body or {}) or "gpu_name" not in (body or {}):
+                return {"offers": []}
+            return {"offers": [{"id": 999, "dph_total": 0.1}, {"id": 123, "dph_total": self.offer_dph}]}
         if method == "GET" and path.startswith("/instances/"):
             i = int(path.strip("/").split("/")[-1])
             found = [dict(x) for x in self.instances if x["id"] == i]
