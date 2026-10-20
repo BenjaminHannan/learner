@@ -62,3 +62,7 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 ~00:00 | Decoder (session_0183EgSA…) | premonition/ override confirmed for flag-gated edits only. Stage 0 GO after Ben confirmed the restart; marks committed before the run. Stages 1+2 ($2.80) gated. | 0 |
 | 2026-10-20 ~00:10 | Restart gate (session_01GR2gp7…) | B2 = option (a), via the Opus xhigh gate. Pass marks and the proves-wrong result fixed in the ruling. B3 as a separate commit. B1 still with Ben. | 0 |
 | 2026-10-19 | GPU-RUN-4 | Ben said yes ($2.07 hard stop). Booking needs Ben's click in the speed session: the auto-mode check blocks standing rental permission. | 0 so far |
+| 2026-10-20 00:16 | ShinkaEvolve trial (session_01YVHzs7…) | Ben approved. Goal: genuinely new mechanisms for PremonitionMini, with a novelty filter and judge. CPU only. NEW COST TYPE: Claude API spend, $5.00 hard stop, outside the Vast/Modal caps. Stage 0 ends with a sealed card before any evolve run. | API ≤5.00 |
+| 2026-10-20 00:13 | Brain (session_01R6PEw…) | Ben: "Opus review first" on G1 vs G3. Opus xhigh review running. | 0 |
+| 2026-10-20 00:12 | Swarm | GO on round-3 blocking items a–c, then the full-diff review, the dry run, the seal and the bid. | 0 |
+| 2026-10-20 00:11 | Brain | GO on a fix round for the 9 code-review findings (E0 identity check first). | 0 |
