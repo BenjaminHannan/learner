@@ -84,3 +84,6 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 ~01:00 | Restart gate | Deferral-line wording ruled. B1 add stands (delegated); the session may stage it as PENDING BEN. | 0 |
 | 2026-10-20 ~00:57 | Brain | Fix round 2 GO; G1-config bit-identity on the --guard replay path checked first. | 0 |
 | 2026-10-20 ~00:55 | Swarm | GO on the dry-run blocker, no tracked diagnostics under seconds_budget, items 5/6/10. | 0 |
+| 2026-10-20 01:20 | Decoder | Coordinator re-review of PR #79 @84bda16a8: CLEAN (0 blocking, 8 non-blocking). Stage 0 GO ($0) under Muse's rulings; fix step matching first if Stage 0 uses train_d. | 0 |
+| 2026-10-20 01:17 | Restart gate | Fix round GO (F1-F7, N2, N3); B1 staged PENDING BEN. | 0 |
+| 2026-10-20 01:12 | Swarm | Fourth-pass fixes 1-3 plus the _recall desk-0 slice GO. | 0 |
