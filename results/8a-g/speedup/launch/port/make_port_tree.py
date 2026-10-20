@@ -38,17 +38,18 @@ def main(argv):
     for p in (G2FA4_TRAIN, OVERLAY):
         if not os.path.exists(p):
             die(f'missing {p}')
+    base = {}
+    for rel, pin in PINS.items():       # checked on the committed blobs, before anything is written
+        h = hashlib.sha256(subprocess.run(['git', '-C', top, 'show', f'{COMMIT_FULL}:{rel}'], check=True, capture_output=True).stdout).hexdigest()
+        if h != pin:
+            die(f'base {rel} sha256 {h} != pin {pin}')
+        base[rel] = h
     os.makedirs(out, exist_ok=True)
     arc = subprocess.run(['git', '-C', top, 'archive', COMMIT_FULL, 'custom_io'], check=True, capture_output=True).stdout
     subprocess.run(['tar', '-x', '-C', out], input=arc, check=True)
-    base = {}
-    for rel, pin in PINS.items():
-        h = sha(os.path.join(out, rel))
-        if h != pin:
-            import shutil
-            shutil.rmtree(out)
-            die(f'base {rel} sha256 {h} != pin {pin}')
-        base[rel] = h
+    for rel, pin in PINS.items():       # and again on the extracted files
+        if sha(os.path.join(out, rel)) != pin:
+            die(f'extracted {rel} differs from the pin; {out} is left for inspection')
     print(f'base: git archive {COMMIT_FULL} custom_io -> {out}/custom_io')
     for rel, h in base.items():
         print(f'  base  {h}  {rel}  (matches the g2fa4 pin)')
