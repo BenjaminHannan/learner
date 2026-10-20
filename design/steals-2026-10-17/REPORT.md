@@ -100,7 +100,7 @@ for every flag, variant and seed.
 
 **Suite, shown.** All 103 test files were run one by one on this branch and on an untouched `main` checkout.
 - Every pre-existing file has the same outcome on both.
-- The 9 new files (152 tests) all pass.
+- The 9 new files (154 tests) all pass.
 - Pre-existing non-passes are environmental and identical on both:
   - 10 fable files assert a hard-coded Mac path;
   - `test_remote_runner` has 1 error;
@@ -520,8 +520,17 @@ reported; nothing patched, per the standing rule.**
 | 2 | `qk_norm` gains applied after `key_split`'s rotation break the relative-position property when both flags are on (measured −0.31 vs −1.55 for the same distance). | Note: a two-flag interaction, already documented in §2. |
 | 4, 5, 9, 10 | Engram's host-side hashing loop; QK-Clip runs only inside `MiniTrainer`; the discarded AdamW under Muon; duplicated interpolation and cap-sampling helpers. | Efficiency and cleanup notes. |
 
-**Status:** Q39 is not passed, and R1 and R2 stage 0 stay on hold. The next step is the coordinator's ruling on a
-round-5 fix of nos. 1 and 8 (and, if wanted, the should-fix nos. 3, 6 and 7).
+**Round 5 fixes (coordinator GO, 10-20, $0; commit f3618d73e).**
+- **No. 1:** under `row_halt`, the question-level HALT reads the block's live proposal for register 0, not the
+  frozen stored row. A test shows the HALT read keeps moving after register 0 halts; it fails on the pre-fix model.
+  With `row_halt` off, the read is the same row as before.
+- **No. 8:** the R1 runner's arm order is `arm_order(seed)`, a rotation keyed by the seed, which makes seeds 0–2 a
+  Latin square however they are run. Each result stores its order, and reuse with another order is refused. A test
+  fails on the pre-fix runner.
+- The should-fix nos. 3, 6 and 7 and the notes wait, as ruled.
+
+**Re-verification:** the probe again shows 6 of 1,853 entries differing, all timing fields. The full suite matches
+`main` on every pre-existing file, and the 9 steal files (154 tests) all pass.
 
 **Scope (both reviewers).**
 - Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
