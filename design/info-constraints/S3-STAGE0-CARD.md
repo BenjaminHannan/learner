@@ -145,3 +145,21 @@ Recorded under the card's own rule ("any deviation is recorded ... before the fi
    - refusals;
    - the FLOP increment.
    Flag-off identity to 73b8e0224 is `tests/test_premonition_decoder_raw_cards.py`.
+
+## Amendment 2 (2026-10-20, before any S3 run; §1-§7 marks unchanged)
+
+This supersedes Amendment 1, item 2, bullet 2. The code changed under review (S3 review rounds 1-4), so the
+record now matches the code that will run:
+- **S3 module construction and init seed.** The S3 modules are built inside `torch.random.fork_rng()` (CPU and
+  every CUDA stream restored), and the init seed is drawn there as `torch.randint(2**62)`.
+  - The global streams after construction therefore equal D + S2's (tested: RNG state and `initial_seed`
+    unchanged).
+  - The `address.proj` init follows the seed **and** the stream position at construction. In the runner each
+    arm is built right after `torch.manual_seed(seed)`, so it depends on the seed only.
+  - `address.proj` is N(0, 0.02) from its own generator, bias zero. `address.pool` is a copy of `writer.pool`.
+- **Keys.** `cross_kv` runs once over memory. The K half applied once to the 16 address rows replaces the keys of
+  the 16 card rows and the 16 raw rows. This is the §2 rule unchanged, tested against an independent reference
+  (K from address, V from rows).
+- **Refusals.** It is refused on subclasses that override `build_store` or `_decode_addressed`, in addition to the
+  S2 list.
+- **Cell A VOID.** A seed is also VOID if the filed S2 distractor reading for that seed is absent.

@@ -383,7 +383,7 @@ class PremonitionMini(nn.Module):
             # equal D + S2's at the same seed (S3 card §1). Pool starts as the writer's pool; proj N(0, 0.02).
             # Construction and the init seed draw only from the CPU stream, which fork_rng restores, so the global
             # stream is untouched and the init still follows it (seed and call order); the init has its own generator.
-            with torch.random.fork_rng(devices=[]):
+            with torch.random.fork_rng():                       # CPU and every CUDA stream are restored
                 self.address = CardAddress(config)
                 seed = int(torch.randint(2 ** 62, (1,)).item())
             generator = torch.Generator().manual_seed(seed)
@@ -392,8 +392,10 @@ class PremonitionMini(nn.Module):
                 self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator)
                                                * 0.02)
                 self.address.proj.bias.zero_()
-            if type(self).build_store is not PremonitionMini.build_store:
-                raise ValueError(f"card_address: {type(self).__name__} overrides build_store")
+            own = [name for name in ("build_store", "_decode_addressed")
+                   if getattr(type(self), name) is not getattr(PremonitionMini, name)]
+            if own:
+                raise ValueError(f"card_address: {type(self).__name__} overrides {', '.join(own)}")
             base, cards = config.question_rows + config.slots, config.cards
             self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
                                                                torch.arange(config.rows, config.rows + cards)]),

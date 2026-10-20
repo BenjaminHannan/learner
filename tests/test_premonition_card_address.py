@@ -22,7 +22,7 @@ from premonition.store import age_bucket
 from tests.test_premonition_decoder_raw_cards import differences, everything, modules_at
 from tests.test_premonition_model import VOCAB, synthetic_batch
 
-S2_COMMIT = "90077ef2b"
+S2_COMMIT = "90077ef2b09a66382c6d53fc46c8d881791a4455"
 
 
 def s2_modules() -> tuple:

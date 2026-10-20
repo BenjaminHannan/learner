@@ -178,8 +178,9 @@ def cmd_summarize(args) -> None:
             if cell == "A":                                   # §3 / §5: the control must be the filed S2 arm
                 filed = json.loads((S2_STAGE0 / f"treated-seed{seed}.json").read_text())["with_card"]
                 filed_d2 = json.loads((S2_DISTRACT / f"treated-seed{seed}.json").read_text())["d2"]
-                row["reproduces_s2"] = (all(c["gold"][f] == filed[f] for f in ("correct", "distinct_256",
-                                                                             "distinct_1024"))
+                row["reproduces_s2"] = (filed_d2 is not None                 # an unread S2 arm cannot be matched
+                                        and all(c["gold"][f] == filed[f] for f in ("correct", "distinct_256",
+                                                                                 "distinct_1024"))
                                         and c["d2"]["correct"] == filed_d2["correct"])
                 row["void"] = row["void"] or not row["reproduces_s2"]
             row["treated_address_mass_ent_rel"] = (t["pool_mass"]["address"]["ENT"]
