@@ -28,7 +28,7 @@ def make_run(arm: str, seed: int, loss: float, *, seconds: float = 100.0, acc: f
     return {"arm": arm, "seed": seed, "settings": dict(r1s1.CARD_SETTINGS, flop_budget=1e16),
             "bound": {"code": {"x": 1}, "data": {"price": "p" * 64}},
             "status": "completed", "budget_ok": True, "finite": True, "train_seconds": seconds, "steps": 1000,
-            "flops": 1e15, "provenance": {"torch": "2.11.0"},
+            "flops": 1e15, "tokens": 48_000_000, "provenance": {"torch": "2.11.0"},
             "s_per_step": seconds / 1000, "curve": [(0.0, 0, loss + 1.0), (seconds, 1000, loss)],
             "validation": {"accuracy": acc, "gold_recall_at_4": recall}}
 
@@ -154,6 +154,17 @@ class ScoreTest(unittest.TestCase):
         runs = card()
         runs[5]["flops"] = 1e15 * (1 + 1e-15)                                    # float rounding, as under torch 2.8
         self.assertEqual(self.verdict(runs), "PASS")
+        runs = card()
+        runs[5]["flops"] = 1e15 * (1 + 2e-9)                                     # just past the tolerance
+        self.assertIn("unpaired steps or FLOPs at seeds [2]", self.verdict(runs))
+        runs = card()
+        runs[3]["tokens"] = 48_000_001                                           # tokens must match exactly
+        self.assertIn("unpaired", self.verdict(runs))
+        runs = card()
+        for r in runs[:2]:                                                       # both arms of seed 0 aborted
+            r.update(steps=None, flops=None, tokens=None, status="aborted")
+        out = self.verdict(runs)                                                 # a verdict, not a TypeError
+        self.assertIn("unpaired steps or FLOPs at seeds [0]", out)
 
     def test_runs_must_match_the_sealed_code_and_one_torch(self) -> None:
         out = r1s1.score(card(), sealed=True, ident={"x": 2})

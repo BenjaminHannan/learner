@@ -147,15 +147,21 @@ sha256sum -c SEAL-pack.sha256.txt > "$J/checks/pack_files.txt" 2>&1 || { tail -5
 echo "pack files ok: $(wc -l < "$J/checks/pack_files.txt")"
 TORCH_CHECK='import torch,sys;ok=torch.cuda.is_available();print("torch",torch.__version__,"cuda",torch.version.cuda,ok,torch.cuda.get_device_name(0) if ok else "-");sys.exit(0 if ok else 1)'
 $PY -c "$TORCH_CHECK" 2>&1 | tee "$J/checks/torch_image.txt"
+PIP=${PIP:-$PY -m pip}            # the same interpreter the check and the runner use
 if [ "$TORCH_PIN" != none ]; then
-  # the CUDA 12.8 build: PyPI's default 2.11 wheel is cu130, which a 12.8 driver cannot run (box 56942633, 10-20)
-  PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "torch==$TORCH_PIN" \
+  # the CUDA 12.8 build, by its local version: PyPI's default 2.11 wheel is cu130, which a 12.8 driver cannot run
+  # (box 56942633, 10-20), and a plain ==2.11.0 would also accept a cu130 build already installed
+  PIP_BREAK_SYSTEM_PACKAGES=1 $PIP install -q --break-system-packages "torch==$TORCH_PIN+cu128" \
     --index-url https://download.pytorch.org/whl/cu128 > "$J/checks/pip.log" 2>&1 \
     || { tail -5 "$J/checks/pip.log"; fail "pip torch"; }
-  pip uninstall -y torchvision torchaudio >> "$J/checks/pip.log" 2>&1
+  $PIP uninstall -y torchvision torchaudio >> "$J/checks/pip.log" 2>&1
 fi
 $PY -c "$TORCH_CHECK" 2>&1 | tee "$J/checks/torch.txt"
 [ "${PIPESTATUS[0]}" = 0 ] || fail "torch/cuda check"
+if [ "$TORCH_PIN" != none ]; then   # and it is the pinned CUDA 12.8 build, not whatever else satisfied pip
+  $PY -c "import sys, torch as t; ok = t.__version__.split('+')[0] == '$TORCH_PIN' and str(t.version.cuda).startswith('12.8'); print('pinned build' if ok else 'NOT the pinned cu128 build', t.__version__, t.version.cuda); sys.exit(0 if ok else 1)" 2>&1 | tee -a "$J/checks/torch.txt"
+  [ "${PIPESTATUS[0]}" = 0 ] || fail "torch/cuda check"
+fi
 used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1)
 [ "${used:-0}" -gt 2000 ] && fail "GPU busy: $used MiB in use before any run"
 export PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
@@ -456,8 +462,7 @@ OFFER_QUERY = {"verified": {"eq": True}, "rentable": {"eq": True}, "rented": {"e
 
 
 def search(a):
-    q = dict(OFFER_QUERY)
-    offers = call("POST", "/bundles/", q).get("offers") or []
+    offers = call("POST", "/bundles/", OFFER_QUERY).get("offers") or []
     keep = [o for o in offers if o.get("gpu_name") == "RTX 5090" and (o.get("dph_total") or 0) <= a.max_dph]
     for o in keep[: a.n]:
         row = {k: o.get(k) for k in ("id", "gpu_name", "gpu_ram", "dph_total", "reliability", "inet_down",
@@ -508,9 +513,12 @@ def create(a):
     m = re.search(r"^DPH=([0-9.e+-]+)$", args[2], re.M)
     packed = float(m.group(1)) if m else None
     # the offer must still be listed by the same machine filters `search` uses (an id-only query returns nothing)
-    offers = [o for o in call("POST", "/bundles/", dict(OFFER_QUERY)).get("offers") or [] if o.get("id") == int(a.offer)]
+    offers = [o for o in call("POST", "/bundles/", OFFER_QUERY).get("offers") or [] if o.get("id") == int(a.offer)]
     offered = offers[0].get("dph_total") if offers else None
-    if packed is None or offered is None or offered > packed:
+    if offered is None:
+        raise SystemExit(f"offer {a.offer} is not in the filtered listing (taken, or outside the card's filters); "
+                         "nothing sent")
+    if packed is None or offered > packed:
         raise SystemExit(f"offer {a.offer} costs {offered} $/h; the pack was made for at most {packed}; nothing sent")
     live = [i for i in listing["instances"] if i.get("label") == label]
     if live:

@@ -295,7 +295,7 @@ class JobTextTest(Fixture):
         self.assertNotIn("sleep 3600", job)
         self.assertIn("torch.cuda.get_device_name", job)
         self.assertIn("torch==$TORCH_PIN", job)
-        self.assertIn("pip uninstall -y torchvision torchaudio", job)
+        self.assertIn("$PIP uninstall -y torchvision torchaudio", job)
         self.assertIn("export/MANIFEST.sha256", job)
 
     def test_export_holds_both_stages_and_all_checkpoints(self) -> None:
@@ -886,7 +886,8 @@ class JobE2ETest(Fixture):
         torch = base / "fake_torch" / "torch"
         torch.mkdir(parents=True)
         (torch / "__init__.py").write_text(
-            "import types\n__version__ = '2.11.0'\nversion = types.SimpleNamespace(cuda='12.8')\n"
+            "import os, types\n__version__ = os.environ.get('FAKE_TORCH_VERSION', '2.11.0+cu128')\n"
+            "version = types.SimpleNamespace(cuda=os.environ.get('FAKE_TORCH_CUDA', '12.8'))\n"
             "cuda = types.SimpleNamespace(is_available=lambda: True, get_device_name=lambda i: 'FakeGPU')\n")
         self.runner = base / "fake_runner.py"
         self.runner.write_text(FAKE_RUNNER)
@@ -903,7 +904,7 @@ class JobE2ETest(Fixture):
         if not keep_ledger:
             (self.jobdir.parent / "r1s1-box-ledger.json").unlink(missing_ok=True)
         env = {k: v for k, v in os.environ.items() if k not in ("DRYRUN", "RUNNER", "PY", "JOBDIR")}
-        env.update(PATH=f"{self.stubs}:{os.environ['PATH']}", JOBDIR=str(self.jobdir), PY=sys.executable,
+        env.update(PATH=f"{self.stubs}:{os.environ['PATH']}", JOBDIR=str(self.jobdir), PY=sys.executable, PIP="pip",
                    RUNNER=str(self.runner), TICK_S="1", FAKE_LOG=str(self.log), PYTHONDONTWRITEBYTECODE="1",
                    PYTHONPATH=str(Path(self.tmp.name) / "fake_torch"))
         env.update({k: str(v) for k, v in env_extra.items()})
@@ -1065,6 +1066,29 @@ class JobE2ETest(Fixture):
         for dph in (0.3, 0.45, 0.8):
             self.assertGreaterEqual(rent.wall_seconds(dph), rent.deadline_seconds(dph) + rent.EXPORT_SECONDS)
             self.assertLessEqual(rent.wall_seconds(dph) / 3600 * dph, 0.95 * 2.80 + 1e-9)
+
+    def test_a_wrong_torch_build_fails_at_setup(self) -> None:
+        shutil.rmtree(self.out)
+        self.pack(dph=0.45, torch=rent.TORCH_PIN)                        # this test installs the pinned build
+        for env in (dict(FAKE_TORCH_VERSION="2.11.0+cu130", FAKE_TORCH_CUDA="13.0"),
+                    dict(FAKE_TORCH_VERSION="2.8.0+cu128")):
+            with self.subTest(env=env):
+                shutil.rmtree(self.jobdir, ignore_errors=True)
+                self.log.unlink(missing_ok=True)
+                rc, text = self.run_job(**env)
+                self.assertIn("NOT the pinned cu128 build", text)
+                self.assertIn("=== R1S1-FAIL torch/cuda check", text)
+                self.assertEqual([c for c in self.calls() if not c.startswith("curl")], [])     # nothing ran
+                pip = self.log.read_text()
+                self.assertIn("torch==2.11.0+cu128", pip)
+                self.assertIn("--index-url https://download.pytorch.org/whl/cu128", pip)
+
+    def test_the_pinned_cu128_build_passes_setup(self) -> None:
+        shutil.rmtree(self.out)
+        self.pack(dph=0.45, torch=rent.TORCH_PIN)
+        rc, text = self.run_job()                                        # the fake torch is 2.11.0+cu128 by default
+        self.assertIn("pinned build 2.11.0+cu128 12.8", text)
+        self.assertIn("=== R1S1 DONE", text)
 
     def test_dryrun_stops_after_setup(self) -> None:
         rc, text = self.run_job(DRYRUN=1)

@@ -228,7 +228,8 @@ def run(arm: str, seed: int, *, budget, data_rel: str, tokenizer_path: str, sett
         "arm": arm, "seed": seed, "optimizer": ARMS[arm], "settings": settings, "bound": bound,
         "provenance": provenance(), "status": report["status"], "error": report.get("error"),
         "stop": report.get("stop"), "budget_ok": report.get("budget_ok"), "steps": report.get("steps"),
-        "parameters": report["parameters"], "flops": report.get("flops"), "train_seconds": seconds,
+        "parameters": report["parameters"], "flops": report.get("flops"), "tokens": report.get("tokens"),
+        "train_seconds": seconds,
         "wall_seconds": wall,
         "final_eval_seconds": validation.get("seconds", 0.0) + validation.get("held_out_seconds", 0.0),
         "s_per_step": seconds / max(clock) if clock and max(clock) else None,
@@ -392,9 +393,16 @@ def score(runs: list[dict], *, sealed: bool, ident: dict | None = None) -> dict:
     incomplete = [f"{r['arm']}-s{r['seed']}" for r in runs if r["status"] != "completed" or not r["budget_ok"]]
     if incomplete:
         problems.append(f"incomplete runs {incomplete}")
-    unpaired = [s for s in seeds if by[("A0", s)]["steps"] != by[("A1", s)]["steps"]
-                or not math.isclose(by[("A0", s)]["flops"], by[("A1", s)]["flops"], rel_tol=1e-9)]
-    if unpaired:            # the same steps, and FLOPs equal up to float rounding (torch 2.8 differs in the last digit)
+    def paired(a0: dict, a1: dict) -> bool:
+        """The same steps and tokens (integers, exactly), and FLOP totals equal up to float rounding: paired arms'
+        fitted totals differ in the last digit under torch 2.8. A missing count is never paired."""
+        counts = (a0.get("steps"), a1.get("steps"), a0.get("tokens"), a1.get("tokens"))
+        if any(c is None for c in counts) or not (finite(a0.get("flops")) and finite(a1.get("flops"))):
+            return False
+        return counts[0] == counts[1] and counts[2] == counts[3] and \
+            math.isclose(a0["flops"], a1["flops"], rel_tol=1e-9)
+    unpaired = [s for s in seeds if not paired(by[("A0", s)], by[("A1", s)])]
+    if unpaired:
         problems.append(f"unpaired steps or FLOPs at seeds {unpaired}")
     rows, ds, base, acc_hits, rec_hits, rec0, rec1, unreadable = [], [], [], 0, 0, [], [], False
     for seed in seeds:
