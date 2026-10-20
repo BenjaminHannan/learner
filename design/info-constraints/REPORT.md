@@ -271,6 +271,21 @@ One clarification first: my S-numbers are ordered by the order I would run them,
 The audit's big three map as follows: **squeeze → S3**, **writer's blind spot → S2**, **direction-only
 fetch → S4**. **S1** is the biggest new constraint (N1-N4).
 
+#### S4 build and review (2026-10-20; card `S4-STAGE0-CARD.md`, sealed 0b3269766)
+
+- **Built:** 7a2f5a32a. Pre-run tests 7/7 in `tests/test_premonition_ent_key.py`. Smoke check: the stage-1
+  shared-weight digests are equal across arms.
+- **Review:** one focused round on main...7a2f5a32a, per the coordinator's cost note (fix blocking, log the
+  rest). **No blocking finding for S4.** Logged:
+  - The S3 summarizer turns a missing filed S2 reference into INCOMPLETE for the whole study, where amendment 2
+    says VOID for that seed. The S3 run is final with every file present, so this is not exercised.
+  - The S4 FLOP comment says the match einsum is not counted. It is not counted on the model's measured path
+    (1,077 vs 1,024 per question-loop, tested), but a standalone einsum is. The S4 runner uses fixed steps, not a
+    FLOP budget.
+  - Older diagnostic scripts call `store.ask` directly and would omit the entity term; no S4 readout uses them.
+  - Kept: the design and efficiency items as before.
+- **No code changed after this review.** The S4 run uses 7a2f5a32a's code.
+
 ### S1. `ring_resident`: "fetched" means "in the tray"
 
 **Targets:** N1-N4 (new). Prerequisite reading for every answer-path number, including the coordinator's
