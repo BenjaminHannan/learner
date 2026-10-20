@@ -199,3 +199,12 @@ These also count as failure, whatever the evolution-seed scores look like:
 | `novelty_judge.py`, `confirm.py` | Stage 1 judge and fresh-seed confirmation |
 | `shinka_local.patch` | local patch to ShinkaEvolve: pricing rows and no temperature for Haiku/Sonnet/Opus 5.5. Upstream commit 8adc053 |
 | `KNOWN.md`, `KNOWN_SHORT.md` | known ideas |
+
+## Amendments
+
+### 2026-10-20: two clarifications to section 6 (after the evolve run, before finalist selection)
+The sealed section 6 leaves two choices open. Both are fixed here before any finalist was selected or confirmed. No pass mark, threshold, descriptor, novelty test or fresh-seed rule changes.
+1. **Finalists are evolved programs (generation 1 or later).** The seed is the baseline that every finalist is compared with, so it is not a candidate itself. "Distinct" means different code after comments, strings and spacing are removed (the same tokenisation as the code-novelty embedding).
+2. **The z-score reference set for 6(b) is the strange slot's** (`run_evo._strange_parent`): correct programs scoring at least 0.437 that have a valid descriptor. "Farthest" in 6(b) therefore means the same thing it meant during the run.
+
+Why: a code review of `select_finalists.py` found that the card did not pin either choice.
