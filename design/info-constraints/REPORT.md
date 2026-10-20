@@ -421,7 +421,8 @@ This differs from D-card-bypass (`premonition/answer_path.py`), which *replaced*
 and so removed Think's card work from the decoder. Here they are **added**.
 
 **Flag:** `decoder_raw_cards: bool = False`. 0 parameters (raw rows reuse `row_type[ROW_CARD]`). Cost: +16
-memory rows in one cross-attention, about +0.3% training FLOPs (estimate, untested).
+memory rows in one cross-attention; the FLOP hand count includes them and is tested against the measured count
+(`test_flop_hand_count_covers_the_raw_rows`).
 
 **Bit-identical when off:** with the flag off, `_start` appends no rows and the `_insert`/`_step` branches are
 skipped, so the episode is the base layout and `forward`/`_greedy`/`_decode_logits` are the base text. This is
@@ -520,7 +521,17 @@ re-added at every decode call site. They now live **inside the episode**: 16 row
   change the flag-off code path for every line); copies; duplicated preload / Wilson helpers in additive
   scripts.
 
-Earlier rounds (1-2), superseded where they conflict with rounds 3-5:
+**Round 6: no crash or wrong-number finding.**
+- **Fixed:** it caught that my round-4 test edit had deleted the flag-on / flag-off paired-start test. Restored
+  (tiny and full size: same RNG stream after build, same parameters, same weights).
+- **Fixed:** the comment and doc mismatches.
+- **Kept:** the remaining findings, all already kept above: the name-list guard vs a stored think width, the
+  `variant` label, CardBypass-style reuse, the duplicated preload / Wilson helpers, copies, and the
+  zero-weight `lm_loss` in the m02-style runner, which m02 itself also computed.
+- **Status (E6):** I read round 6 as the review passing on correctness. That reading is the coordinator's
+  call; the code stays DRAFT until confirmed.
+
+Earlier rounds (1-2), superseded where they conflict with rounds 3-6:
 - **Fixed** in e35f43df3 and the next commit:
   - the flag is refused on any subclass that overrides `_greedy` or `_decode_logits`, and without a store;
   - `_memory` tolerates bare `x`/`valid` episodes (a flag-off regression for

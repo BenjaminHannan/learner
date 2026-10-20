@@ -182,6 +182,19 @@ class FlagOffIsBitIdenticalTest(unittest.TestCase):
 
 
 class FlagOnTest(unittest.TestCase):
+    def test_paired_start_same_parameters_and_stream(self) -> None:
+        for size in ("tiny", "full"):
+            with self.subTest(size=size):
+                plain = tiny("D") if size == "tiny" else MiniConfig.preset("D", "full")
+                flagged = plain.with_(decoder_raw_cards=True)
+                off, rng_off = build(PremonitionMini, plain, 0)
+                on, rng_on = build(PremonitionMini, flagged, 0)
+                self.assertTrue(torch.equal(rng_off, rng_on))                   # same init stream after build
+                self.assertEqual(on.num_parameters(), off.num_parameters())
+                self.assertEqual(flagged.num_parameters(), plain.num_parameters())
+                for (n, a), (_, b) in zip(off.named_parameters(), on.named_parameters()):
+                    self.assertTrue(torch.equal(a, b), n)
+
     def test_refused_without_a_store(self) -> None:
         with self.assertRaises(ValueError):
             tiny("D-noask", decoder_raw_cards=True)

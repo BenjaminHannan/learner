@@ -46,7 +46,7 @@ class MiniConfig:
     store: bool = True                  # False = D-noask: no cards, no ASK
     pointers: bool = True               # False = D-noptr: no entity slots, no binder, no copy constraint
     decoder_raw_cards: bool = False     # S2 (design/info-constraints): every card row as inserted also goes into
-                                        # 16 rows after the think rows, which Think skips and the decoder reads;
+                                        # `cards` rows after the think rows, which Think skips, decoder reads;
                                         # 0 parameters. DRAFT
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
