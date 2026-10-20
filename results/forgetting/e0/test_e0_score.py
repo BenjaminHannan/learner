@@ -134,18 +134,33 @@ def test_check_devs_names_a_missing_file(tmp_path):
         E.check_devs(str(tmp_path / 'nope.jsonl'), small, s_sha, s_sha)
 
 
-def test_resolve_runs_parent_override_and_per_tool_refusal(tmp_path):
+def test_resolve_runs_parent_per_run_and_per_tool_refusal(tmp_path):
     good, s = _run(tmp_path, [1, 2])
-    par = tmp_path / 'parent.pt'
-    par.write_bytes(b'p')
-    s['parent'] = 'relative/elsewhere.pt'   # not on disk from here
+    (tmp_path / 'run' / 'p.pt').write_bytes(b'p')   # parent recorded relative to the run folder
+    s['parent'] = 'p.pt'
     (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s))
+    run, ss, fin, notes = E.resolve_runs([good], NC)[0]
+    assert ss['parent'] == os.path.join(good, 'p.pt') and ss['parent_as_recorded'] == 'p.pt' and 'relative to the run folder' in notes[-1]
+    (tmp_path / 'run' / 'summary.json').write_text(json.dumps(dict(s, parent='nowhere/x.pt')))
     with pytest.raises(SystemExit, match='not on disk'):
         E.resolve_runs([good], NC)
-    assert E.resolve_runs([good], NC, parent=str(par))[0][1]['parent'] == str(par)
     (tmp_path / 'run' / 'summary.json').write_text(json.dumps(dict(s, addon='per_tool')))
     with pytest.raises(SystemExit, match='per_tool'):
-        E.resolve_runs([good], NC, parent=str(par))
+        E.resolve_runs([good], NC)
+
+
+def test_check_devs_accepts_a_crlf_copy_with_a_note(tmp_path):
+    small, s_sha = _file(tmp_path, 'small.jsonl', [{'id': i} for i in range(3)])
+    crlf = tmp_path / 'crlf.jsonl'
+    crlf.write_bytes(open(small, 'rb').read().replace(b'\n', b'\r\n'))
+    notes = []
+    assert E.check_devs(str(crlf), small, s_sha, s_sha, notes=notes) == (s_sha, s_sha)
+    assert len(notes) == 1 and 'CRLF' in notes[0]
+
+
+def test_pinned_small_sha_read_from_source_matches():
+    repo = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+    assert E.pinned_small_sha(repo) == E.SMALL_SHA
 
 
 def test_main_refuses_a_bad_repo_and_an_existing_out(tmp_path):

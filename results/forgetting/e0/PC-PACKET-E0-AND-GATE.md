@@ -9,15 +9,20 @@ Ship instrument is already fixed: the 6,800-row DEV under the house rule (coordi
 1. Build the 6,800-row DEV once (about 2 min), from a learner checkout of branch `claude/project-thread-y0sxwe`:
    `python -m skills_curriculum.build --out ~/sk200k_big --train 200000 --dev-per-cell 200 --seed 1`
    Check: `sha256sum ~/sk200k_big/dev/in_dist.jsonl` starts `3e3a5edb`.
+   The 1,360-row DEV comes from the seed-1 200k build (`--dev-per-cell 40`, the default); if the PC has none:
+   `python -m skills_curriculum.build --out ~/sk200k --train 200000 --dev-per-cell 40 --seed 1`, check `~/sk200k/dev/in_dist.jsonl` starts `f975d9fb`.
+   (A copy written with Windows CRLF line endings is accepted by e0_score.py when its LF-normalised sha matches; it says so in e0.json.)
 2. List the four Main brain final runs E0 needs: `ls /mnt/project-files/main-brain/runs/ | grep -iE 'soft10|kl30|nk30'`
    (NK-soft10 at s200 and s201; NK30 at s200 and s201; e.g. `sheet-s200-kf99n-kl10-soft10`).
 3. Score them from a learner checkout of branch `claude/forgetting-round-g` (the E0-ready commit; it holds custom_io/, domain/ and this
    script; the y0sxwe checkout of step 1 is only for building the DEV and has neither). From that checkout's root:
    `CUSTOM_IO_DATA=<seed-1 200k build> python results/forgetting/e0/e0_score.py --big ~/sk200k_big/dev/in_dist.jsonl --out e0.json RUN1 RUN2 RUN3 RUN4`
-   (--repo defaults to that checkout; add `--parent <path>` if the summaries' parent paths do not resolve on the PC; e0.json records the
-   repo commit and CUSTOM_IO_DATA; an existing e0.json is refused unless --overwrite.)
+   Python 3.10 or newer. --repo defaults to that checkout. Each run uses its own summary's parent ('~' expanded, relative paths also tried
+   from the run folder); there is no global parent override, because s200 and s201 have different parents. e0.json records the repo
+   commit, whether it had local changes, and CUSTOM_IO_DATA, and each run's seed / tool / stop_reason; an existing e0.json is refused unless --overwrite.
 4. Bar (fixed in the solve doc before any result): if an NK-soft10 final fires a family on the 6,800 DEV, the ship decision is reopened
-   between NK-soft10 and NK30. Report e0.json to Main brain.
+   between NK-soft10 and NK30. Report e0.json to Main brain. (Note, not a change to the bar: a final can also fail the house rule on
+   in_dist drop > 1.5 with no family fired; e0.json shows that as passes=false, and it is reported as such for Ben to read.)
    Expected from the far data (suggested, not shown): NK-soft10 = L13-like, likely fires fewshot_number_rule on 6,800.
 
 ## Part 2. Ship-gate runs (Main brain domain mode, DM1/DM3 marks, s200 and s201, lr 1e-4, scored on BOTH DEVs)

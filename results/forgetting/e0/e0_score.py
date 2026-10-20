@@ -5,7 +5,11 @@
       --out e0.json RUN_DIR [RUN_DIR ...]
 
 --repo defaults to the learner checkout this script sits in (it must hold custom_io/ and domain/: claude/forgetting-round-g);
-e0.json records that checkout's path, git commit and CUSTOM_IO_DATA. --parent overrides every summary's parent (as analyze.py's --parent).
+e0.json records that checkout's path, git commit (and whether it had local changes) and CUSTOM_IO_DATA.
+Each run's parent comes from its own summary: '~' is expanded and a relative path that does not exist from the current folder is tried
+relative to the run folder (noted); there is no global parent override, because the E0 runs span seeds whose parents differ.
+Python 3.10+: nothing imported here needs 3.12 (domain/far/learn_probe.py does, so its DEV pin is read from its source text).
+A DEV file with CRLF line endings is accepted when its LF-normalised sha256 matches (noted in e0.json).
 An existing --out is refused unless --overwrite. Runs with summary addon 'per_tool' are refused (analyze.py's A18 makes DM3 pass by
 construction there, which E0 does not reproduce).
 
@@ -16,7 +20,7 @@ resolved (resolve_runs: summary, nights_run >= 1, nights, final checkpoint, pare
 e0.json is written atomically (temp file + rename) once before scoring (with the planned runs, replacing any older file) and again after
 each run, so a later failure keeps the runs already scored.
 """
-import argparse, base64, hashlib, json, os, sys, time
+import argparse, base64, hashlib, json, os, re, sys, time
 
 SMALL_SHA = 'f975d9fb312c02d759df991fa3bbb9ac73912d5f77cdc0e6991abd7980158b86'   # 1,360-row DEV = learn_probe.DEV_IN_DIST_SHA256 (asserted in main)
 BIG_SHA = '3e3a5edb05c7eee8c412edc224a3daa144ee6f9ee048a28db945e577db42aeaa'     # 6,800-row DEV, seed-1 build, --dev-per-cell 200 (ship instrument)
@@ -26,16 +30,45 @@ def sha(p):
     return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 
 
-def check_devs(small, big, small_sha=SMALL_SHA, big_sha=BIG_SHA):
-    """Refuse unless both DEV files are the expected ones: SystemExit naming a missing file or the file whose sha256 differs. -> (small_sha, big_sha)."""
+def lf_sha(p):
+    """sha256 of the file with CRLF line endings turned into LF (a Windows-written copy of the same DEV gives the LF sha)."""
+    return hashlib.sha256(open(p, 'rb').read().replace(b'\r\n', b'\n')).hexdigest()
+
+
+def check_devs(small, big, small_sha=SMALL_SHA, big_sha=BIG_SHA, notes=None):
+    """Refuse unless both DEV files are the expected ones: SystemExit naming a missing file or the file whose sha256 differs.
+    A CRLF copy is accepted when its LF-normalised sha256 matches (a note goes into notes, when given). -> (small_sha, big_sha) as expected."""
     for tag, p in (('small', small), ('big', big)):
         if not os.path.exists(p):
             raise SystemExit(f'E0: the {tag} DEV {p} does not exist (small: set CUSTOM_IO_DATA to the seed-1 build or pass --small; big: --big)')
-    got = {'small': (small, sha(small), small_sha), 'big': (big, sha(big), big_sha)}
-    for tag, (p, s, want) in got.items():
-        if s != want:
-            raise SystemExit(f'E0: the {tag} DEV {p} has sha256 {s[:12]}, expected {want[:12]}: wrong DEV file, nothing scored')
-    return got['small'][1], got['big'][1]
+    for tag, p, want in (('small', small, small_sha), ('big', big, big_sha)):
+        s = sha(p)
+        if s == want:
+            continue
+        if lf_sha(p) == want:
+            if notes is not None:
+                notes.append(f'{tag} DEV {p} has CRLF line endings (sha256 {s[:12]}); its LF-normalised sha256 is the expected {want[:12]}')
+            continue
+        raise SystemExit(f'E0: the {tag} DEV {p} has sha256 {s[:12]}, expected {want[:12]}: wrong DEV file, nothing scored')
+    return small_sha, big_sha
+
+
+def resolve_parent(run, p):
+    """-> (parent path, note or None): the summary's parent with '~' expanded; a relative path that does not exist from the current
+    folder is tried relative to the run folder."""
+    q = os.path.expanduser(p)
+    if os.path.exists(q) or os.path.isabs(q):
+        return q, None
+    r = os.path.join(run, q)
+    if os.path.exists(r):
+        return r, f'summary parent {p} resolved relative to the run folder: {r}'
+    return q, None
+
+
+def pinned_small_sha(repo):
+    """DEV_IN_DIST_SHA256 as pinned in <repo>/domain/far/learn_probe.py, read from the source text (that module needs Python 3.12)."""
+    m = re.search(r"^DEV_IN_DIST_SHA256 = '([0-9a-f]{64})'", open(os.path.join(repo, 'domain', 'far', 'learn_probe.py')).read(), re.M)
+    return m.group(1) if m else None
 
 
 def final_checkpoint_of(run, summary, night_checkpoints=None):
@@ -66,10 +99,9 @@ def final_checkpoint_of(run, summary, night_checkpoints=None):
     return fin, notes
 
 
-def resolve_runs(runs, night_checkpoints=None, parent=None):
+def resolve_runs(runs, night_checkpoints=None):
     """Every run checked before anything is scored: summary.json readable, not an A18 per_tool add-on run, final checkpoint by
-    final_checkpoint_of, parent on disk (parent, when given, replaces every summary's parent, as analyze.py's --parent).
-    -> [(run, summary, final, notes)]; SystemExit naming the first bad run."""
+    final_checkpoint_of, its own parent on disk (resolve_parent). -> [(run, summary, final, notes)]; SystemExit naming the first bad run."""
     out = []
     for run in runs:
         sp = os.path.join(run, 'summary.json')
@@ -78,11 +110,15 @@ def resolve_runs(runs, night_checkpoints=None, parent=None):
         s = json.load(open(sp))
         if s.get('addon') == 'per_tool':
             raise SystemExit(f"E0: {run}: summary addon 'per_tool' (analyze.py A18: DM3 passes by construction); not an E0 run")
-        if parent:
-            s = dict(s, parent=parent)
         fin, notes = final_checkpoint_of(run, s, night_checkpoints)
-        if not s.get('parent') or not os.path.exists(s['parent']):
-            raise SystemExit(f'E0: {run}: parent checkpoint {s.get("parent")} not on disk')
+        if not s.get('parent'):
+            raise SystemExit(f'E0: {run}: summary.json has no parent')
+        par, note = resolve_parent(run, s['parent'])
+        if not os.path.exists(par):
+            raise SystemExit(f'E0: {run}: parent checkpoint {s["parent"]} not on disk')
+        if note:
+            notes.append(note)
+        s = dict(s, parent=par, parent_as_recorded=s['parent'])
         out.append((run, s, fin, notes))
     return out
 
@@ -103,7 +139,7 @@ def main(argv=None):
     a = argparse.ArgumentParser()
     here = os.path.dirname(os.path.abspath(__file__))
     a.add_argument('runs', nargs='+'); a.add_argument('--repo', default=os.path.normpath(os.path.join(here, '..', '..', '..')))
-    a.add_argument('--big', required=True); a.add_argument('--parent', default=None)
+    a.add_argument('--big', required=True)
     a.add_argument('--small', default=None); a.add_argument('--out', required=True); a.add_argument('--threads', type=int, default=4)
     a.add_argument('--overwrite', action='store_true')
     a = a.parse_args(argv)
@@ -116,18 +152,19 @@ def main(argv=None):
     from custom_io.data import load_rows, DEFAULT_DATA
     from domain import harm
     from domain.analyze import sha256_file
-    from domain.far.learn_probe import DEV_IN_DIST_SHA256
-    if SMALL_SHA != DEV_IN_DIST_SHA256:
-        raise SystemExit('E0: the pinned 1,360-row DEV sha changed in the repo: update SMALL_SHA')
+    if pinned_small_sha(a.repo) != SMALL_SHA:
+        raise SystemExit('E0: the pinned 1,360-row DEV sha in domain/far/learn_probe.py is not SMALL_SHA: update SMALL_SHA')
     torch.set_num_threads(a.threads)
     small = a.small or os.path.join(DEFAULT_DATA, 'dev', 'in_dist.jsonl')
-    s_sha, b_sha = check_devs(small, a.big)   # before any model is loaded
-    plan = resolve_runs(a.runs, parent=a.parent)   # every run checked before any scoring
+    dev_notes = []
+    s_sha, b_sha = check_devs(small, a.big, notes=dev_notes)   # before any model is loaded
+    plan = resolve_runs(a.runs)   # every run checked before any scoring
     import subprocess
-    head = subprocess.run(['git', '-C', a.repo, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip() or None
+    git = lambda *c: subprocess.run(['git', '-C', a.repo, *c], capture_output=True, text=True).stdout.strip()
+    head, dirty = git('rev-parse', 'HEAD') or None, bool(git('status', '--porcelain', '--untracked-files=no'))
     devs = {'small': load_rows(small), 'big': load_rows(a.big)}
-    cache, out = {}, {'dev_small_sha256': s_sha, 'dev_big_sha256': b_sha, 'repo': os.path.abspath(a.repo), 'repo_commit': head,
-                      'custom_io_data': os.environ.get('CUSTOM_IO_DATA'), 'parent_override': a.parent, 'runs': {}, 'planned': [r for r, _, _, _ in plan]}
+    cache, out = {}, {'dev_small_sha256': s_sha, 'dev_big_sha256': b_sha, 'dev_notes': dev_notes, 'repo': os.path.abspath(a.repo), 'repo_commit': head,
+                      'repo_dirty': dirty, 'custom_io_data': os.environ.get('CUSTOM_IO_DATA'), 'runs': {}, 'planned': [r for r, _, _, _ in plan]}
     write_json_atomic(out, a.out)   # replaces any e0.json from an earlier invocation before the first run is scored
 
     def hits(ck, tag):
@@ -141,7 +178,8 @@ def main(argv=None):
         par = s['parent']
         print(f'{run}: nights_run {s["nights_run"]}, final {fin}, parent {par}' + ''.join(f'\n  NOTE {x}' for x in notes), flush=True)
         res = {'final_checkpoint': fin, 'final_sha256': sha256_file(fin), 'parent': par, 'parent_sha256': sha256_file(par),
-               'nights_run': int(s['nights_run']), 'notes': notes}
+               'parent_as_recorded': s['parent_as_recorded'], 'nights_run': int(s['nights_run']), 'notes': notes,
+               **{k: s.get(k) for k in ('seed', 'tool', 'addon', 'stop_reason', 'smoke')}}
         for tag in ('small', 'big'):
             rows = devs[tag]; ph, ch = hits(par, tag), hits(fin, tag)
             h = harm.harm_measure(ph, ch, rows, 5.0, 1.5)
