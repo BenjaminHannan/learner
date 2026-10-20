@@ -302,7 +302,8 @@ class Decoder(nn.Module):
         self.norm = nn.LayerNorm(d)
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
-                keys: Optional[tuple[torch.Tensor, torch.Tensor]] = None) -> torch.Tensor:
+                keys: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+                bias: Optional[torch.Tensor] = None) -> torch.Tensor:
         """`keys` (S3): (slots [G, P] long, rows [n, P, d]); the cross-attention keys at memory positions
         `slots[g]` (every group g) come from `rows` through the K half of `cross_kv`, computed once. Every value
         and every other key is the base one."""
@@ -321,7 +322,11 @@ class Decoder(nn.Module):
             spliced = F.linear(_norm(rows), self.cross_kv.weight[:kdim], self.cross_kv.bias[:kdim])
             spliced = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
             k = k.index_copy(2, slots.flatten(), spliced.repeat(1, 1, slots.shape[0], 1))
-        attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if bias is None:
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        else:                                          # S5: a float mask, the additive score bias on valid rows
+            mask = bias.to(q.dtype)[:, None, None, :].masked_fill(~valid[:, None, None, :], -math.inf)
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
         return self.norm(x)
@@ -360,6 +365,8 @@ class _Episode:
     q_visit: torch.Tensor
     q_line: torch.Tensor
     mentions: Optional[torch.Tensor] = None   # [Q, n_ent] bool, S4 `ent_key` only: entities a question may mean
+    q_ents: Optional[torch.Tensor] = None     # [Q, n_ent] bool, S5 `dec_ent_match` only: entities in the question
+    match: Optional[torch.Tensor] = None      # [Q, cards] float, S5: 1 where the slot's card names a q_ents entity
 
 
 class PremonitionMini(nn.Module):
@@ -399,6 +406,10 @@ class PremonitionMini(nn.Module):
             self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
                                                                torch.arange(config.rows, config.rows + cards)]),
                                  persistent=False)            # card rows, raw rows: keys from the address block
+        if config.dec_ent_match:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"dec_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
+            self.dec_kappa = nn.Parameter(torch.zeros(()))          # S5 kappa_d: no RNG draw, starts at 0
         if config.ent_key:
             if type(self) is not PremonitionMini:
                 raise ValueError(f"ent_key is defined for PremonitionMini only, not {type(self).__name__}")
@@ -468,6 +479,9 @@ class PremonitionMini(nn.Module):
             self._init_address()
         if getattr(self, "ent_query", None) is not None:        # S4: likewise
             self._init_ent_key()
+        if getattr(self, "dec_kappa", None) is not None:        # S5: kappa_d back to 0
+            with torch.no_grad():
+                self.dec_kappa.zero_()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -480,6 +494,8 @@ class PremonitionMini(nn.Module):
             parts["card_address"] = self.address
         counts = {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
                   for name, module in parts.items()}
+        if self.config.dec_ent_match:
+            counts["dec_ent_match"] = self.dec_kappa.numel()
         if self.config.ent_key:
             counts["ent_key"] = sum(p.numel() for p in self.ent_query.parameters()) + self.kappa_e.numel()
         return counts
@@ -551,9 +567,19 @@ class PremonitionMini(nn.Module):
             valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line, mentions if config.ent_key else None)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line, mentions if config.ent_key else None)
+        if config.dec_ent_match:
+            tokens = batch.tokens[batch.q_visit]                                     # [Q, T]
+            at = torch.arange(tokens.shape[1], device=device).unsqueeze(0)
+            inside = (at >= start.unsqueeze(1)) & (at < end.unsqueeze(1))
+            entity = tokens - config.vocab_size
+            named = inside & (entity >= 0) & (entity < config.n_ent)
+            episode.q_ents = (F.one_hot(entity.clamp(0, config.n_ent - 1), config.n_ent)
+                              * named.unsqueeze(-1)).sum(1) > 0
+            episode.match = torch.zeros(count, config.cards, device=device)
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -589,6 +615,12 @@ class PremonitionMini(nn.Module):
             raw = position[real] + (config.rows - self._card_base)    # the same ring slot among the raw rows
             episode.x = episode.x.index_put((who[real], raw), rows[real])
             episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
+        if config.dec_ent_match:                       # S5: does the slot's card name a question entity?
+            q_ents = episode.q_ents[index]                                           # [n, n_ent]
+            hit = (q_ents.unsqueeze(1).expand(-1, ents.shape[1], -1)
+                   .gather(2, ents.clamp_min(0)) & (ents >= 0)).any(2)               # [n, K]
+            episode.match = episode.match.index_put((who[real], position[real] - self._card_base),
+                                                    hit[real].float())
         if config.card_address:
             visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
             found = (lines >= 0).unsqueeze(-1)                         # `gather` gives line -1 for NULL / none
@@ -649,11 +681,26 @@ class PremonitionMini(nn.Module):
         match = torch.einsum("ne,nle->nl", pi, multi)
         return self.kappa_e * F.pad(match, (0, 1))                 # NULL last: 0
 
-    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
-                       ) -> torch.Tensor:
+    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor,
+                       bias: Optional[torch.Tensor] = None) -> torch.Tensor:
         if self.config.card_address:
             return self._decode_addressed(rows, valid, inputs)
+        if bias is not None:                                     # S5
+            return self.decoder(self.embed(inputs), rows, valid, bias=bias)
         return self.decoder(self.embed(inputs), rows, valid)
+
+    def _match_bias(self, episode: _Episode, index: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
+        """S5: [n, rows + cards] decoder score bias, kappa_d on both rows (think card row, S2 raw row) of every
+        slot whose card names a question entity, 0 elsewhere. None without `dec_ent_match`."""
+        if not self.config.dec_ent_match:
+            return None
+        if not self.dec_kappa.requires_grad and float(self.dec_kappa) == 0.0:
+            return None                  # frozen at 0 (S5 stage 1): exactly no bias, so the base attention path runs
+        match = episode.match if index is None else episode.match[index]
+        n, cards, base, think = match.shape[0], self.config.cards, self._card_base, self.config.rows
+        hit = self.dec_kappa * match
+        zeros = match.new_zeros
+        return torch.cat([zeros(n, base), hit, zeros(n, think - base - cards), hit], dim=1)
 
     def _decode_addressed(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor) -> torch.Tensor:
         """S3: memory = think rows + raw rows; the keys of the 16 card rows and the 16 raw rows come from their
@@ -733,7 +780,8 @@ class PremonitionMini(nn.Module):
             pairs += index.numel()
             rows, halt, ask, scores = self._step(episode, index, step, store)
             # L_ans (deep supervision) and the HALT target.
-            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index])
+            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index],
+                                             bias=self._match_bias(episode, index))
             target = targets[index]
             keep = target != IGNORE_INDEX
             logits = F.linear(hidden_ans[keep], self.embed.weight).float()
@@ -908,8 +956,9 @@ class PremonitionMini(nn.Module):
         out = torch.full((count, config.max_answer), config.pad_id, dtype=torch.long, device=device)
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
+        bias = self._match_bias(episode)                          # S5 (None without it); fixed while decoding
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence)[:, -1]
+            hidden = self._decode_logits(episode.x, episode.valid, sequence, bias=bias)[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)

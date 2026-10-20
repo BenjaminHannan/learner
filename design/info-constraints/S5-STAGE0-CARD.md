@@ -96,3 +96,27 @@ d_s = treated `acc_d2` − control `acc_d2`. "Every" means every valid seed.
 ## 8. Raw outputs
 `artifacts/claude-infoconstraints-20261018/s5-stage0/{control,treated}-seed{0,1,2}.json` and `.log`, plus
 `summary.json`. Runner: `scripts/info_s5_stage0.py`.
+
+## Amendment 1 (2026-10-20, before any S5 run; §3-§7 unchanged)
+
+Implementation details within §2-§4, recorded under the card's rule:
+1. **Stage-1 identity.** While κ_d is frozen at exactly 0 (stage 1), the bias is skipped. It is exactly zero, so
+   this is the same function, and the base attention path runs. This is needed for bit-identical stage-1 arms:
+   SDPA with a float mask that requires grad takes a different backward path, which differs from the boolean-mask
+   path in the last bit of the shared gradients (found by the pre-run test). From the first stage-2 step, κ_d
+   requires grad and the bias is always applied.
+2. **k per visit.** `torch.randint(3)` per visit from generator `1000 + seed`. Then the S2 §10b fact-only pool
+   noise and the shuffle, drawn from the same generator in that order. Identical across arms, because the draws do
+   not depend on the model.
+3. **Attention share (§4).** Position 0, the mean over heads of the softmax over all valid memory rows, including
+   the S5 bias. The share is the gold card's two rows (think card row + raw row of its slot) over the supplied
+   cards' rows.
+4. **Per-question d2.** The runner tallies `acc_d2` per question for the same-person split and **asserts** that
+   its total equals `S2.distract(..., facts_only=True)`'s.
+5. **Pre-run tests:** `tests/test_premonition_dec_ent_match.py` 5/5, covering:
+   - flag-off identity to 7a2f5a32a (only S2 on);
+   - paired start, and bit-identical forward and gradients while frozen at 0;
+   - the bias on exactly the matching card's two rows (attention logits by hand);
+   - ∂L/∂κ_d ≠ 0 at κ_d = 0;
+   - finite modes with wipes;
+   - refusals, the config round trip, and the reset.
