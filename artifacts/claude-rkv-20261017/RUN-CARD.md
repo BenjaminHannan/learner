@@ -162,3 +162,29 @@ On the toy each fact sits ≥ 128 tokens before its question, and the treated de
 reader states directly. So a treated-only rise with a fetch drop would be the bypass in its plainest form.
 
 **Outputs:** `artifacts/claude-rkv-20261017/stage0/` (META.json, one JSON per run, STAGE0.json), committed after the run.
+
+## Addendum A (2026-10-20, ~01:45 UTC): exact step matching, before any counted stage 0 result
+
+**What was wrong.** §12 said the paired arms "train the same number of steps by construction". That was
+inaccurate. `train_toy` stops each arm on its **own** FLOP budget (`steps ×` its own fitted per-step cost), so
+step counts were nearly equal, not identical. The first two runs show it: control s0 took 1,672 steps and
+treated s0 took 1,671. The coordinator flagged it at 01:40 UTC. Unequal-step results do not count for this card.
+
+**Fix (runner only; no change under `premonition/`).** `scripts/premonition_reader_kv_stage0.py` now builds each
+arm exactly as `train_toy` does, with one difference: the treated arm counts FLOPs with the **control's** fit
+and stops at the **control's** budget. Each step's counted FLOPs are `fit(tokens, planned loops)`, which
+depend only on the data and on the curriculum plan, and the plan depends only on counted FLOPs / budget. So
+the treated arm takes the identical steps through the identical phases. It still runs its own calibration
+first, so the trainer's generator (teacher distractors, own-pick draws) is consumed identically. Treated's
+true extra cost is reported (`own_cost_vs_counted`), not matched.
+
+**Shown by test** (`tests/test_premonition_reader_kv_stage0.py`, 2 passed):
+- The control arm is bit-identical to `train_toy` (steps, FLOPs, final losses, accuracy, every weight).
+- The matched treated arm has the same step count, the same counted FLOPs and the same per-step phase schedule (gold, teacher and own all visited). Both trainers' generators end in the same state.
+
+**Changes to §12:**
+- **V1** is now "identical step count **and** identical per-step phase schedule", not "within 2%".
+- G1, G2 and every other mark are **unchanged**.
+- The two superseded runs are kept, uncounted, in `stage0/superseded-before-addendum-A/`. **Disclosed before re-running:** control s0 had accuracy 0.055 and treated s0 had 0.074, both at chance, and both fetched about 4 cards/q.
+
+Stage 0 restarts from control s0. Re-sealed as `SEAL-v2.sha256.txt`; the first seal, `SEAL.sha256.txt`, is kept.
