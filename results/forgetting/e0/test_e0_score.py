@@ -126,6 +126,38 @@ def test_resolve_runs_checks_every_run_before_scoring(tmp_path):
         E.resolve_runs([good], NC)
 
 
+def test_check_devs_names_a_missing_file(tmp_path):
+    small, s_sha = _file(tmp_path, 'small.jsonl', [{'id': 1}])
+    with pytest.raises(SystemExit, match='big DEV .* does not exist'):
+        E.check_devs(small, str(tmp_path / 'nope.jsonl'), s_sha, s_sha)
+    with pytest.raises(SystemExit, match='CUSTOM_IO_DATA'):
+        E.check_devs(str(tmp_path / 'nope.jsonl'), small, s_sha, s_sha)
+
+
+def test_resolve_runs_parent_override_and_per_tool_refusal(tmp_path):
+    good, s = _run(tmp_path, [1, 2])
+    par = tmp_path / 'parent.pt'
+    par.write_bytes(b'p')
+    s['parent'] = 'relative/elsewhere.pt'   # not on disk from here
+    (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s))
+    with pytest.raises(SystemExit, match='not on disk'):
+        E.resolve_runs([good], NC)
+    assert E.resolve_runs([good], NC, parent=str(par))[0][1]['parent'] == str(par)
+    (tmp_path / 'run' / 'summary.json').write_text(json.dumps(dict(s, addon='per_tool')))
+    with pytest.raises(SystemExit, match='per_tool'):
+        E.resolve_runs([good], NC, parent=str(par))
+
+
+def test_main_refuses_a_bad_repo_and_an_existing_out(tmp_path):
+    out = tmp_path / 'e0.json'
+    out.write_text('{}')
+    with pytest.raises(SystemExit, match='no custom_io/ and domain/'):
+        E.main(['RUN', '--repo', str(tmp_path), '--big', 'b', '--out', str(out)])
+    repo = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+    with pytest.raises(SystemExit, match='exists; pass --overwrite'):
+        E.main(['RUN', '--repo', repo, '--big', 'b', '--out', str(out)])
+
+
 def test_final_checkpoint_clean_case_has_no_notes(tmp_path):
     run, s = _run(tmp_path, [1, 2])
     s['final_checkpoint'] = os.path.join(run, 'night_2', 'checkpoint.pt')

@@ -11,8 +11,11 @@ Ship instrument is already fixed: the 6,800-row DEV under the house rule (coordi
    Check: `sha256sum ~/sk200k_big/dev/in_dist.jsonl` starts `3e3a5edb`.
 2. List the four Main brain final runs E0 needs: `ls /mnt/project-files/main-brain/runs/ | grep -iE 'soft10|kl30|nk30'`
    (NK-soft10 at s200 and s201; NK30 at s200 and s201; e.g. `sheet-s200-kf99n-kl10-soft10`).
-3. Score them (script: `results/forgetting/e0/e0_score.py`, draft, read-only):
-   `CUSTOM_IO_DATA=<seed-1 200k build> python e0_score.py --repo <learner checkout> --big ~/sk200k_big/dev/in_dist.jsonl --out e0.json RUN1 RUN2 RUN3 RUN4`
+3. Score them from a learner checkout of branch `claude/forgetting-round-g` (the E0-ready commit; it holds custom_io/, domain/ and this
+   script; the y0sxwe checkout of step 1 is only for building the DEV and has neither). From that checkout's root:
+   `CUSTOM_IO_DATA=<seed-1 200k build> python results/forgetting/e0/e0_score.py --big ~/sk200k_big/dev/in_dist.jsonl --out e0.json RUN1 RUN2 RUN3 RUN4`
+   (--repo defaults to that checkout; add `--parent <path>` if the summaries' parent paths do not resolve on the PC; e0.json records the
+   repo commit and CUSTOM_IO_DATA; an existing e0.json is refused unless --overwrite.)
 4. Bar (fixed in the solve doc before any result): if an NK-soft10 final fires a family on the 6,800 DEV, the ship decision is reopened
    between NK-soft10 and NK30. Report e0.json to Main brain.
    Expected from the far data (suggested, not shown): NK-soft10 = L13-like, likely fires fewshot_number_rule on 6,800.
