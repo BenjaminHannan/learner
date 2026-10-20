@@ -74,13 +74,14 @@ def greedy(model: PremonitionMini, batch, *, card: bool) -> tuple[list[bool], li
 
 
 def score(model: PremonitionMini, batches: list, *, card: bool) -> dict:
+    was = model.training
     model.eval()
     ok, said = [], []
     for batch in batches:
         a, b = greedy(model, batch, card=card)
         ok += a
         said += b
-    model.train()
+    model.train(was)
     k, n = sum(ok), len(ok)
     first = sum(b.q_visit.shape[0] for b in batches[:4])
     return {"correct": k, "n": n, "acc": k / n, "wilson95": wilson(k, n),

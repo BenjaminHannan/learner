@@ -54,7 +54,7 @@ one against the code and looked for more.
 
 | # | The audit assumes | What the repo shows | Consequence |
 |---|---|---|---|
-| R1 | Measured numbers describe the main model | **No PremonitionMini checkpoint exists** (steals REPORT F1, `claude/steals-8:design/steals-2026-10-17/REPORT.md:16`). 7.4% / 24.2% / recall 0.90 come from tiny D (d = 32) trained 425 steps (130 s CPU) on the far-fact toy (`artifacts/claude-steals-20261017/qk-diagnostic.json` on that branch). The pool-mass, direct-reader, address-key and bypass numbers are from the ladder toy, 2,000 steps. | Every "measured" row below is early tiny-D toy behaviour (shown). None is village behaviour. |
+| R1 | Measured numbers describe the main model | **No PremonitionMini checkpoint exists** (steals REPORT F1, `claude/steals-8:design/steals-2026-10-17/REPORT.md:16`). 7.4% / 24.2% / recall 0.90 come from tiny D (d = 32) trained 425 steps (130 s CPU) on the far-fact toy (`artifacts/claude-steals-20261017/qk-diagnostic.json` on that branch). The pool-mass, direct-reader and address-key numbers are from the ladder toy, 2,000 steps. The bypass / think-gated numbers (m02) are from the far-fact toy, gold mode, answer loss only, 600-800 steps (corrected 10-19). | Every "measured" row below is early tiny-D toy behaviour (shown). None is village behaviour. |
 | R2 | "7.4% even with gold cards" isolates the answer path | **Revised after S1-P0 (shown, 3 seeds).** The tiny D of that diagnostic outputs **one constant answer** for all 256 held-out questions, in every condition: own retrieval, gold preloaded, gold preloaded with ASK off for 1-8 loops, and **no cards at all**. Accuracy (7.42 / 8.20 / 7.81%) is just the share of questions whose answer is that one value. It asks on 1-2 loops only (4-8 inserts per question), so the ring never overflows (0/256 on every seed). My first reading here was eviction (`asked_rate 1.0` read as "asks every loop"). That was **wrong**: `asked_rate` (`train.py:659`) counts questions that fetched at least once. | "Chance even with gold cards" is not evidence about the squeeze, Think, the decoder or the ring. It is an untrained (collapsed) answer path at 425 steps. S2 goes first (ruling E3). |
 | R3 | The squeeze causes chance answers with gold cards | With the **same** one-vector cards, D-card-bypass and D-think-gated copy from a supplied card 1024/1024 vs D's 112/1024 on two seeds (`reviews/opus-milestone-02-m02-20260918-232457.md:149-156`, shown). The direct reader (one decoder row per token instead of one pooled row) did not improve choosing (170 vs 164, 162 vs 161; `reviews/opus-milestone-03-continuation-direct-reader.md:26-30`, shown). | For the shown failures, Think's row-shared update (norm 8.7, row spread 0.3; m02 review `:120-121`) and decoder selection-by-value matter more than pooling. The squeeze is real but is not the shown cause. |
 | R4 | Direction-only matching loses gold rank | The raw key norm does not separate gold from the wrong cards that outrank it (+0.006 median gap); those wrong cards tie gold in direction (cos 0.992 vs 0.992). κ ≈ 13 (steals REPORT §3, shown). | The binding problem is **key collapse** (every fact card points the same way), not lost magnitude. The fix has to put new information into the key (S4; also steals `key_split`). |
@@ -350,7 +350,7 @@ here: no card mechanism can be read through a decoder that ignores its memory.
    425 toy steps". This touches the steals REPORT F2 ranking argument too.
 2. Any Stage 0 on the far-fact toy needs a budget where the control is *not* constant. I added a guard to
    every Stage 0 below: **the control must give > 1 distinct answer, else the cell is void, not a fail.**
-3. S2's Stage 0 moves to the m02 ladder-toy protocol, where D reached 112/1024 (not constant) and bypass
+3. S2's Stage 0 moves to the m02 protocol (far-fact toy, gold mode, answer loss only; corrected 10-19, it is not the ladder toy), where D reached 112/1024 (not constant) and bypass
    reached 1024/1024. See S2.
 4. S1 stays designed but is **not built** until S1-P1 shows eviction on a trained model.
 
@@ -424,7 +424,7 @@ memory rows in one cross-attention, about +0.3% training FLOPs (estimate, untest
 **Bit-identical when off:** the episode gets an optional `raw` tensor that is `None` when off. `_decode_logits`
 concatenates only when it is present.
 
-**Evidence it can work (shown, ladder toy):** bypass and gated copy 1024/1024 vs 112/1024 on 2 seeds (m02).
+**Evidence it can work (shown, far-fact toy, m02 protocol; corrected 10-19 from "ladder toy"):** bypass and gated copy 1024/1024 vs 112/1024 on 2 seeds (m02).
 
 **$0 probes.**
 - **S2-P0 (wash probe, eval-only).** On the S1-P0 models: cosine and value-probe decodability of each card
@@ -476,6 +476,31 @@ unwashed copy turns plain D's 11-13% into 100% on supplied cards, and the gain c
 memory. **Not yet bought:** choosing among cards, own retrieval, village. Next, per card §7: the distractor
 reading (gold + 2 fact cards), then a Stage-1 bid priced by measured seconds per update (E5). With S2 passed,
 the E4 cumulative base for S3 is D + S2.
+
+#### S2 code review (E6; Claude Code built-in `/code-review`, high, on `main...branch`)
+
+Two rounds.
+- **Fixed** in e35f43df3 and the next commit:
+  - the flag is refused on any subclass that overrides `_greedy` or `_decode_logits`, and without a store;
+  - `_memory` tolerates bare `x`/`valid` episodes (a flag-off regression for
+    `scripts/premonition_binding_probe.py`, now tested);
+  - the ring test uses distinct real cards;
+  - `_greedy` builds memory once;
+  - device-safe probe scripts;
+  - `wilson(0, 0)` guard;
+  - `score()` restores train/eval mode;
+  - the stale "ladder toy" wording here.
+- **Kept, with reasons:**
+  - (i) the identity test pins 73b8e0224, the house pattern from steals-8 (Q41: a later branch rebases and
+    re-runs its harness against the new base);
+  - (ii) a flag in base D rather than a `CardBypassMini`-style subclass, as ruled in E6 (flags, default off);
+  - (iii) external diagnostic scripts that call `_decode_logits(episode.x, ...)` directly would skip the raw
+    rows. They run frozen snapshots or older variants. `_memory`'s docstring states the rule, and no S2
+    readout uses them;
+  - (iv) `MiniConfig.variant` stays "D" (the flag is recorded explicitly in every S2 artifact; changing the
+    variant string would touch identity checks shared with other lines);
+  - (v) the duplicated gold-preload block in probe scripts. These are additive scripts, and the runner card
+    names the protocol it copies.
 
 ### S3. `card_address`: a learned "who and what" address for choosing (the squeeze)
 
@@ -612,8 +637,8 @@ which `π` reads in learned mode, so do not run S4 on top of `delta_bind` until 
 | 3 | **S4 ent_key** | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
 | 4 | **S1 ring_resident** | Unknown; not active in the toy model (0 overflow) | 0 params, about 20 lines | Low | Latent; build only if S1-P1 shows eviction on a trained village model |
 
-~~The single one I would run first: S1-P0~~ (done; negative). **Next: S2 Stage 0 on the m02 ladder-toy
-protocol**, with the new validity guard (the control must not be a constant answer). Before it, there is
+~~The single one I would run first: S1-P0~~ (done; negative). **Next: S2 Stage 0 on the m02 protocol
+(far-fact toy, gold mode; corrected 10-19 from "ladder-toy")** (done 10-19: PASS), with the new validity guard (the control must not be a constant answer). Before it, there is
 one $0 step that every answer-path line needs: a step sweep of plain D on the far-fact toy (425 / 1,000 /
 2,000 steps, distinct-answer count and gold-card accuracy). It tells us the smallest budget at which this
 toy's answer path is alive. Without it, no far-fact Stage 0, mine or the steals', can be read.

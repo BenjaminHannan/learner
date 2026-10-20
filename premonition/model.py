@@ -332,10 +332,10 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
-        if config.decoder_raw_cards and type(self) is not PremonitionMini:
-            # Subclasses (answer_path, ovn_qread, direct_reader, address_reader) decode through their own
-            # `_greedy` / `_decode_logits` and would skip `_memory`: the flag would be half-applied.
-            raise ValueError(f"decoder_raw_cards is defined for PremonitionMini only, not {type(self).__name__}")
+        if config.decoder_raw_cards and (type(self)._greedy is not PremonitionMini._greedy
+                                         or type(self)._decode_logits is not PremonitionMini._decode_logits):
+            # A subclass with its own decode path would skip `_memory`, so the flag would be half-applied.
+            raise ValueError(f"decoder_raw_cards: {type(self).__name__} overrides the decode path")
         self.reset_parameters()
 
     # ------------------------------------------------------------------ setup
@@ -439,7 +439,7 @@ class PremonitionMini(nn.Module):
         episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
                            torch.zeros(count, dtype=torch.long, device=device), fetched,
                            batch.q_visit, batch.q_line)
-        if config.decoder_raw_cards and config.cards:
+        if config.decoder_raw_cards:
             episode.raw = torch.zeros(count, config.cards, d, device=device)
         return episode
 
@@ -512,10 +512,11 @@ class PremonitionMini(nn.Module):
     def _memory(self, episode: _Episode, rows: torch.Tensor, valid: torch.Tensor,
                 index: Optional[torch.Tensor] = None) -> tuple[torch.Tensor, torch.Tensor]:
         """Decoder memory: the think rows, plus (`decoder_raw_cards`) the card rows as inserted, which share
-        the card rows' mask."""
-        if episode.raw is None:
+        the card rows' mask. Callers that run `_decode_logits` on episode rows directly must go through here."""
+        raw = getattr(episode, "raw", None)
+        if raw is None:
             return rows, valid
-        raw = episode.raw if index is None else episode.raw[index]
+        raw = raw if index is None else raw[index]
         cards = valid[:, self._card_base:self._card_base + self.config.cards]
         return torch.cat([rows, raw.to(rows.dtype)], dim=1), torch.cat([valid, cards], dim=1)
 

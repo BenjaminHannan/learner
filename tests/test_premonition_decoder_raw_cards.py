@@ -178,12 +178,26 @@ class FlagOffIsBitIdenticalTest(unittest.TestCase):
 
 
 class FlagOnTest(unittest.TestCase):
-    def test_refused_without_a_store_or_on_a_subclass(self) -> None:
-        from premonition.answer_path import CardBypassMini
+    def test_refused_without_a_store_or_on_a_decode_override(self) -> None:
+        from premonition.answer_path import CardBypassMini, ThinkGatedMini
         with self.assertRaises(ValueError):
             tiny("D-noask", decoder_raw_cards=True)
         with self.assertRaises(ValueError):
-            CardBypassMini(tiny("D", decoder_raw_cards=True))
+            CardBypassMini(tiny("D", decoder_raw_cards=True))       # overrides _decode_logits
+        ThinkGatedMini(tiny("D", decoder_raw_cards=True))           # keeps the base decode path: allowed
+
+    def test_flag_off_greedy_accepts_a_bare_episode(self) -> None:
+        from types import SimpleNamespace
+        model, _ = build(PremonitionMini, tiny("D"), 0)
+        model.eval()
+        batch = synthetic_batch(seed=2)
+        with torch.no_grad():
+            hidden = model.read(batch)
+            episode = model._start(batch, hidden, model.build_store(hidden, batch), model._mentions(batch))
+            bare = SimpleNamespace(x=episode.x, valid=episode.valid)
+            a = model._greedy(batch, episode, model._mentions(batch), None)
+            b = model._greedy(batch, bare, model._mentions(batch), None)
+        self.assertTrue(torch.equal(a[0], b[0]) and torch.equal(a[1], b[1]))
 
     def test_paired_start_same_parameters_and_stream(self) -> None:
         off, rng_off = build(PremonitionMini, tiny("D"), 0)
