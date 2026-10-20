@@ -53,3 +53,5 @@ Ruling Q81 points the Q75 review at 99cba1a47 and names three checks. This note 
 | 10 | The fixture removed modules without restoring them | Non-blocking (tests only) | Fixed |
 
 **Blocking findings open at a2a83f9f0: 0 known.** One blocking finding (#2) was fixed. **a2a83f9f0 itself has not been re-reviewed** (round cap reached), so its fixes are unreviewed.
+
+**Disposition (10-20, coordinator relaying Ben's answer):** the a2a83f9f0 fix is folded into the review of the three Bid C calibration drafts, with the same 2-round cap. Until then it stays DRAFT/PARKED.
