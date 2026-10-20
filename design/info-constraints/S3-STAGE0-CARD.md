@@ -196,3 +196,10 @@ That choice sets both the cell B training distractors and the primary `acc_d2`. 
 **Decision needed before any S3 run:**
 - (a) which pool, facts (the card's words) or mixed (the card's S2 reference);
 - (b) under facts, whether mark 2 stays 55% or follows the §10b S2 numbers.
+
+**Ruling on amendment 4 (coordinator, 2026-10-20), recorded before any S3 run:**
+- (a) **Pool: facts.** Run with `--pool facts`. The mixed-pool reading is reported as secondary (`d2_other_pool`).
+- (b) **Mark 2 stays at the sealed 55%.** Lowering it to 51.04% after seeing the §10b numbers is not allowed, and
+  55% is the stricter bar against the 36.04% fact-only reference.
+- **Cell A's** reproduction check therefore compares against the filed §10b fact-only reading
+  (`s2-distract-facts`: 299 / 369 / 315).
