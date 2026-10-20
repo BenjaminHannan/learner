@@ -377,3 +377,70 @@ cannot reset the total.
 
 Suites: `tests.test_premonition_swarm`, `…_swarm_screen`, `…_model`, `…_train`, `…_label_free`, `…_contenders`,
 `…_slices`, `…_data`: 243 tests OK (4 skipped).
+
+## Seventh pass: the highest-effort full sweep (built-in /code-review, max, all findings, 73b8e0224..b0088f166)
+
+**Verdict: not clean. Stopped, per the standing rule. Nothing was patched after the sweep.** The reviewer ran in one
+context (no fan-out, no separate verify pass). It re-checked each finding itself and reproduced 1, 2, 4 and 5 with
+scripts. I re-checked 1, 2, 3, 5 and 6 against the code: all hold. Also confirmed by the sweep: flag-off is
+bit-identical, the board FIFO, merge mask and floor/ceil split are right, the verdict precedence matches both cards,
+and the manifest matches the tree. The 135 tests in the two swarm test files pass.
+
+**A. Blocking (gate, money, fairness, registered statistics)**
+
+1. **The C0 stop can be bypassed by rerunning.** The one-run-per-OUT list leaves out `c0.json` and
+   `STOP-AND-ASK.txt`. So a second run on the same OUT (or on a fresh OUT, since nothing records an earlier stop)
+   re-measures C0, overwrites the stopping `c0.json`, and trains without STOP_OVERRIDE (reproduced). Fix: refuse an
+   OUT holding `c0.json` or `STOP-AND-ASK.txt` unless PART=s0, and record each C0 stop in the box ledger, so that a
+   later invocation needs STOP_OVERRIDE whatever OUT it uses.
+2. **The split's fixed 17 passes slow S0 every round.** `balanced_assignment` always runs `gold_lines.shape[1] + 1`
+   = 17 picks (gold_lines is padded to MAX_GOLD = 16), although most questions need 0-3 cards. That is about 1,400
+   of the 3,800-4,900 ops in an S0 step. S0 then gets fewer steps in T and a worse C0 ratio, a cost of the
+   implementation, not of the mechanism. Fix: bound the picks by `need_union.sum(1).max()` (one sync per round,
+   beside the existing `asks.any()` sync), with a test that the split is unchanged.
+3. **Pre-ledger billing is not counted.** With no ledger, BOX_START defaults to this invocation's start, so setup
+   time and CHECK_ONLY passes (which write no ledger) are outside the $4.20. Example: 45 min of setup, then 9.13 h →
+   $4.54. Fix: require BOX_START off DRYRUN (the rental agent gives the billing start), or default it to the
+   container's start.
+4. **What T means (needs a ruling).** The item-17 fix computes T_raw = F · Σ w_m s_m / f_m, which treats the
+   curriculum shares as FLOP shares. But a seconds-budget run splits its phases by TIME
+   (`plan(train_seconds / seconds_budget)`), so D1 trained for T does not spend F (the reviewer's example: +35%).
+   The formula that matches what the runs do is T_raw = F / Σ w_m (f_m / s_m), the time-share-weighted FLOP/s.
+   Both arms get the same T either way, so fairness is not affected. What changes is the card's sentence "the
+   seconds D1 needs for F FLOPs", and T can move by one 300 s step. **Recommendation: the time-share formula**,
+   because it is the one the runs implement. It is a one-line change plus the card text, and it needs your ruling
+   because item 17's wording was "FLOP-share-weighted".
+5. **fetch_overlap pooling is not the spec's statistic.** `_mean_diversity` weights each batch's fetch_overlap by its
+   question count. IMPLEMENTATION-SPEC §9 defines the mean over (question, desk-pair) entries with a non-empty union.
+   This statistic feeds the 0.8 collapse line (S0 M4, S1 M5). Reproduced: 0.10 reported against 0.015 defined.
+   Fix: carry the Jaccard sums and pair counts per batch and divide at the end.
+
+**B. Robustness (should fix, small)**
+
+6. After a CUDA OOM in one C0 arm, the cache is emptied inside the `except` block, while the traceback still holds
+   the arm's tensors. The next arm then starts from an inflated reserved figure and can trip the 14 GiB guard
+   falsely. Fix: empty the cache after the handler.
+7. When D1 or S0m4 fails, C0 keeps benchmarking every other arm and round (about 5-25 billed minutes) before exiting.
+   Fix: stop at once.
+8. FROM is validated only for PART=s0, but its files are copied for every PART (then overwritten by data and C0,
+   while the log claims a reuse). A missing file exits 1, which is not a documented code. Fix: refuse FROM unless
+   PART=s0.
+9. Exit codes: the runner's refusals exit 1, not 2. C0's "cannot set T" stop exits 1, which the box reports as
+   step failure 5 instead of stop 3. Fix: map them to the documented codes.
+
+**C. Cleanups**
+
+10. `merge_mask` builds a [Q·M, L, n_ent] temporary each round from an entity table copied once per desk. A
+    batched matmul gives the same mask with less work in S0's timed step. This is also S0 cost, like item 2.
+11. `swarm_answer` and `swarm_forward` copy the single-thinker preamble (wipe checks, the empty-batch return,
+    targets). Fix: shared helpers, so a later fix reaches both arms.
+12. `s1_card` re-assigns `m5["status"]` to the value it already has (dead code).
+13. The design docs contradict the code. SWARM-DESIGN §6 and IMPLEMENTATION-SPEC say the address/direct readers
+    compose with the swarm, but `__init__` now refuses them. §Q4 names `max_seconds`, while the runs use
+    `seconds_budget`.
+
+## Status against Q28 (seventh pass)
+
+Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is
+sent.** Spend: $0 (CPU only). Recommendation: one more round closing 1-3 and 5-13, plus 4 as ruled, each with a
+test that fails on b0088f166. Then the sweep again.
