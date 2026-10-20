@@ -116,3 +116,19 @@ single reductions would change the numerics again and would need its own run and
 - The `writer.copy` fallback is tested for its counter only (B3G2 never has a copy writer; the original body is not run on one).
 - T4 helper data and a "g2fa4 tree" are built by the test itself from the base tree plus the g2fa4 train.py (`G2FA4_TRAIN`, or found by walking up from the test file in the repo).
 - Not tested: any CUDA run, bf16, GPU memory, a real-shape run, `--accum` other than 2 in T4, the free-run paths beyond T1's flag-off identity.
+
+## Existing custom_io tests on the port tree (parent session, 10-20)
+
+Run directly (`python tests/<file>.py`) on the base tree (`git archive 74d6e92c75 custom_io`) and on the port tree built by `make_port_tree.py`, CPU:
+
+| suite | base | port |
+|---|---|---|
+| test_b3g2 | ALL OK | ALL OK |
+| test_b3g2_run | ALL OK | ALL OK |
+| test_talk_rounds | ALL OK | ALL OK |
+| test_reader_rule | ALL OK | ALL OK |
+| test_no_plug | ALL OK | ALL OK |
+| test_st1 | ALL OK | ALL OK |
+| test_writer | stopped at the 30-min limit during its base-tree training run (step 4000, dev exact 0.970) | not run |
+
+Not run: the rest of the custom_io suite (`writer.py` and the files the port does not touch are byte-identical to the base).
