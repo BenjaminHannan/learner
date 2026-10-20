@@ -87,3 +87,5 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 01:20 | Decoder | Coordinator re-review of PR #79 @84bda16a8: CLEAN (0 blocking, 8 non-blocking). Stage 0 GO ($0) under Muse's rulings; fix step matching first if Stage 0 uses train_d. | 0 |
 | 2026-10-20 01:17 | Restart gate | Fix round GO (F1-F7, N2, N3); B1 staged PENDING BEN. | 0 |
 | 2026-10-20 01:12 | Swarm | Fourth-pass fixes 1-3 plus the _recall desk-0 slice GO. | 0 |
+| 2026-10-20 ~01:55 | Decoder | Step-matching fix (Addendum A, runner only) reviewed CLEAN at 7de83cf5f. Stage 0 runs from there count; the two superseded runs (both at chance) are disclosed and uncounted. G1 passes trivially and counts as no evidence. | 0 |
+| 2026-10-20 ~01:35 | Swarm | Fifth-pass items 1-7 GO; next review is one highest-effort full sweep of kit and readout. | 0 |
