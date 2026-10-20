@@ -53,3 +53,64 @@ Review clean: **no**. Card sealed: no. Dry run at a sealed commit: no (the last 
 and the sealed commit must follow the next round). C0 stop-and-ask: in force. **C0 + S0 does not book, and no bid is sent.**
 Next: a fix round for a, b and c (on a ruling), with regression tests, then the full-diff review again; if clean, the
 120 s dry run at the sealed commit, then the seal, then the bid with the sealed commit's hash.
+
+---
+
+# Round 3, second pass: fixes for a-c, then the full-branch review again (2026-10-20)
+
+Ruling (coordinator session_014a7yFK9adwx14ocaqRQ6eZ, Oct 20): GO on a-c, each with a regression test that fails on the old
+code; carry non-blocking items only if they are a few lines in files already touched; then the full-diff review. If clean:
+the 120 s dry run at the sealed commit, seal, bid. If not: stop and report. Spend $0.
+
+## Fixes (commit e5ec841a6). All 8 new tests fail on baf1e071e and pass now.
+
+| item | fix | test |
+|---|---|---|
+| a | `balanced_assignment`: every desk gets ⌊n/M⌋ or ⌈n/M⌉ (below-floor desks served first). **The rule is written into RUNCARD-S0 §1 as part of the mechanism (10-20, pre-seal).** | 4 desks × 6 cards (was [2,2,2,0]); floor/ceil property for M = 3, 4, 8 |
+| b | runner refuses BEFORE training if the checkpoint path exists | `CheckpointRefusalTest` (train_d never runs) |
+| c | no per-step swarm diagnostics in training; the split uses a static number of picks and unmasked writes (no sync); with a seconds budget no arm records card insertions, and post-step diagnostics are timed off `train_seconds` (card §1, 10-20) | no-diagnostics test, split no-sync test, equal-charge test |
+| d (carried) | `seconds_budget` survives checkpoint and resume | resume test |
+| e (carried) | `train_seconds` counts the final stretch however the loop ends | in the equal-charge test |
+| f (part) | training recall is desk 0's, comparable with D1 and validation | n/a |
+| g (carried) | `answer_with_gold` refuses a swarm | guard test |
+| h (carried) | `Board.post` runs the FIFO on ids, then writes the board once | the exact row-contents and no-sync tests still pass |
+
+Still open from round 3: f's loop metric (desk-rounds in training against rounds in validation; documented). Tests: 113 OK
+(1 pre-existing skip); discover 273 run, with the same 4 import-time errors as unmodified main.
+
+## Full-branch review at e5ec841a6: 10 findings. **VERDICT: NOT CLEAN. Stopped: no dry run at a sealed commit, no seal, no bid.**
+
+New and blocking (1-3 confirmed in code):
+1. **My item-c timing is wrong on CUDA** (`train.py:341`). `began` is read before the queued backward and optimizer step
+   finish. The first `.item()` then waits for them, so GPU training time is counted as `diagnostic_seconds` and cut from
+   `train_seconds`. The bias differs by arm (S0's backward is heavier), and M5 cannot see it. Fix: `torch.cuda.synchronize()`
+   before `began` when timed, plus a test that the timed block starts after a sync (CPU: a recorded call).
+2. **The box does not refuse a dirty working tree** (`premonition_swarm_box.sh:98`). The run imports modules outside the
+   18-file manifest (`learnlab/train.py`, `learnlab/ckpt.py`, `learnlab/tokenizer.py`, `learnlab/village/*`,
+   `premonition/pointer.py`), so an uncommitted edit to one of them passes "HEAD == PIN" and "manifest OK". Fix: refuse
+   unless `git status --porcelain` is empty (the dry run must then commit its manifest first), and widen the manifest.
+3. **The pooled p-value in M1 (and in S1's M1/M2) treats the 3 seeds' identical validation items as independent pairs**
+   (`premonition_swarm_marks.py:272`). Every seed is scored on the same items, so item difficulty is shared and
+   significance is overstated. The card's §2 says "paired by item (and seed, when pooled)". **This is a method choice in a
+   pre-registered card, and under the standing rule a bar or method change goes to Ben.** Options: (i) a per-item average
+   over seeds (each item's mean correctness for S0 vs D1), paired over items; (ii) a seed-blocked test (a paired test per
+   seed, then combined), or a permutation test over item-level seed means; (iii) keep the card as written. I recommend (i):
+   it is the simplest honest unit, and the per-seed ≥ 2-of-3 condition stays as written.
+
+Validity, not blocking for correctness:
+
+4. `projected_box_hours` counts a train as exactly T, but each train also spends time on caches, calibration, the final
+   validation and the save (the dry run: about 60% over T at T = 30 s, and much less at T ≥ 300 s), so `money_stop` can
+   under-predict. Spend is still hard-capped by MAXH × DPH ≤ $4.20. Fix: project with measured overhead (C0 can time one
+   short `train_d`).
+5. Subclasses (`address_reader`, `direct_reader`, QRead variants) do not compose with thinkers > 1, despite the docstring.
+   Fix: refuse at build and correct the docstring. No subclass is in the screen.
+
+Cleanups (open): 6 `planned_loops` duplicates the swarm round rule; 7 `Board.post`'s column loop costs launches (S1 only);
+8 `swarm._recall` duplicates `_recall`; 9 `swarm_forward` duplicates about 40 lines of `forward`; 10 InsertLog guards sit at
+call sites.
+
+## Status against Q28
+
+Review clean: **no**. Card sealed: no. 120 s dry run at the sealed commit: not run (it waits for a clean review).
+**C0 + S0 does not book, and no bid is sent.** Next, on a ruling: fix 1-2 (and 4-5) with tests, and settle 3 (Ben).
