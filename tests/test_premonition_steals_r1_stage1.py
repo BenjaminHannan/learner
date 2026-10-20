@@ -171,16 +171,16 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual([r1s1.arm_order(s) for s in r1s1.CARD_SEEDS], [["A0", "A1"], ["A1", "A0"], ["A0", "A1"]])
 
 
-def stage_1a(arm: str, s_per_step: float) -> dict:
-    """A 1a run: 300 steps at 1e12 FLOPs each, one evaluation of 20 s at the end, 60 s start-up."""
+def stage_1a(arm: str, s_per_step: float, startup: float = 60.0) -> dict:
+    """A 1a run: 300 steps at 1e12 FLOPs each, one evaluation of 20 s at the end, `startup` s before training."""
     return {"arm": arm, "status": "completed", "finite": True, "flops": 3e14, "steps": 300, "s_per_step": s_per_step,
-            "train_seconds": 300 * s_per_step, "wall_seconds": 300 * s_per_step + 20.0 + 60.0, "evals": [],
+            "train_seconds": 300 * s_per_step, "wall_seconds": 300 * s_per_step + 20.0 + startup, "evals": [],
             "final_eval_seconds": 20.0}
 
 
 class PriceTest(unittest.TestCase):
     def test_largest_f_within_the_stop(self) -> None:
-        arms = [stage_1a("A0", 0.10), stage_1a("A1", 0.11)]
+        arms = [stage_1a("A0", 0.10, startup=660.0), stage_1a("A1", 0.11)]       # A0 ran first: +600 s of caches
         out = r1s1.price(arms, dph=0.45, build_seconds=1200.0)
         allowed = 0.8 * 2.50 / 0.45 * 3600
         self.assertLess(out["flop_budget"], r1s1.PRICE["f_max"])
@@ -192,7 +192,7 @@ class PriceTest(unittest.TestCase):
         self.assertTrue(out["gate_1a"]["muon_step_ratio_ok"])
         # by hand: 3 seeds x (steps x 0.21 s + evals x 20 s + 60 s x 2) + 1200 + 900 at F / 1e12 steps
         steps = out["flop_budget"] / 1e12
-        hand = 3 * (steps * 0.21 + 2 * (math.floor(steps / 500) + 1) * 20.0 + 120.0) + 2100.0
+        hand = 3 * (steps * 0.21 + 2 * (math.floor(steps / 500) + 1) * 20.0 + 120.0) + 2100.0 + 600.0
         self.assertAlmostEqual(r1s1.projected_seconds(out["flop_budget"], arms, 1200.0, 500), hand)
 
     def test_capped_at_f_max_and_gate(self) -> None:

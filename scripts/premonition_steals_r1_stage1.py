@@ -71,9 +71,11 @@ def sha256(path: Path) -> str:
 
 
 def package_hash() -> str:
-    """One hash over the code a run executes: premonition/*.py and learnlab/**/*.py, by relative path and content."""
+    """One hash over the code a run executes: premonition/*.py, learnlab/**/*.py and memorylab/**/*.py (the budget),
+    by relative path and content."""
     digest = hashlib.sha256()
-    for path in sorted([*(ROOT / "premonition").glob("*.py"), *(ROOT / "learnlab").rglob("*.py")]):
+    for path in sorted([*(ROOT / "premonition").glob("*.py"), *(ROOT / "learnlab").rglob("*.py"),
+                        *(ROOT / "memorylab").rglob("*.py")]):
         digest.update(path.relative_to(ROOT).as_posix().encode() + b"\0" + path.read_bytes())
     return digest.hexdigest()
 
@@ -245,15 +247,16 @@ def card_settings(settings: dict) -> bool:
 # ----------------------------------------------------------------------------- stage 1b's F
 def projected_seconds(f: float, arms: list[dict], build_seconds: float, eval_every: int) -> float:
     """Stage 1b's box seconds at F from stage 1a's runs: per run, steps x s/step + evaluations x their seconds +
-    the run's start-up (cache load, calibration); times the card's seeds, plus the build and the copy-off."""
-    total = build_seconds + PRICE["copy_off_seconds"]
+    the start-up with the caches built (the faster arm's); times the card's seeds; plus, once, the caches and the
+    detector (the first run's extra start-up), the village build and the copy-off."""
+    startups = [max(arm["wall_seconds"] - arm["train_seconds"] - sum(e["seconds"] for e in arm["evals"])
+                    - arm["final_eval_seconds"], 0.0) for arm in arms]
+    total = build_seconds + PRICE["copy_off_seconds"] + max(startups) - min(startups)
     for arm in arms:
         steps = f / (arm["flops"] / arm["steps"])
         evals = math.floor(steps / eval_every) + 1
         eval_seconds = statistics.fmean([e["seconds"] for e in arm["evals"]] + [arm["final_eval_seconds"]])
-        startup = arm["wall_seconds"] - arm["train_seconds"] - sum(e["seconds"] for e in arm["evals"]) \
-            - arm["final_eval_seconds"]
-        total += PRICE["seeds"] * (steps * arm["s_per_step"] + evals * eval_seconds + max(startup, 0.0))
+        total += PRICE["seeds"] * (steps * arm["s_per_step"] + evals * eval_seconds + min(startups))
     return total
 
 
