@@ -67,3 +67,9 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 00:12 | Swarm | GO on round-3 blocking items a–c, then the full-diff review, the dry run, the seal and the bid. | 0 |
 | 2026-10-20 00:11 | Brain | GO on a fix round for the 9 code-review findings (E0 identity check first). | 0 |
 | 2026-10-20 ~00:30 | Brain | BEN: keep G1 (pre-set rule), after the Opus xhigh review. G3 not adopted; its "proved wrong" condition was triggered. Verdict file to be corrected. G1 still needs the Main brain gate (DM1/DM3) and E0 before shipping. | 0 |
+| 2026-10-20 ~00:35 | Restart gate | Ben delegated. B1 = ADD the "framing falsified: escalate" outcome as its own amendment before any run (an exit only, no bar moved). B1/B2/B3 as separate commits. | 0 |
+| 2026-10-20 ~00:35 | Size (session_01BWoBq8…) | Ben delegated. Bid C chosen (B2 creative body; critical path; about 1/3 of Bid A's cost). Option 2(b) not taken, so the pre-set depth-first redirect stands. Booking waits on review and a sealed card. | 0 now; Bid C $14.0–24.4 committed, or $0 on BensPC |
+| 2026-10-20 ~00:35 | Game world | Ben delegated. Track 10: write OPTIONS.md defining label-side vs collection-side ($0) before the coordinator rules. | 0 |
+| 2026-10-20 ~00:35 | Steal 9 | Ben delegated. NOT NOW: the 8 steals still lack a clean review, and no Steal 9 spec exists in the repo. | 0 |
+| 2026-10-20 ~00:35 | Span boxes | HOLD; not destroyed (that can't be undone, and these are the only copies). Disk rent about $3.74/day. If Ben hasn't connected storage by Thu Oct 22, the coordinator asks him once more, then recommends destroying. | ~3.74/day |
+| 2026-10-20 ~00:35 | ShinkaEvolve | Stays on the API key, $5 hard stop, unless Ben says "subscription only". | — |
