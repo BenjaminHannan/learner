@@ -272,11 +272,13 @@ def timing_settings() -> dict:
     return dict(CARD_SETTINGS, flop_budget=F_1A)
 
 
-def price(arms: list[dict], *, dph: float, spent_seconds: float, ident: dict | None = None) -> dict:
-    """The card's F rule on stage 1a's two runs (one per arm), at the box's $/h, after `spent_seconds` of box time.
-    F is the largest value in [F_min, F_max] (two significant figures, rounded down, never below F_min) whose
-    projected stage-1b cost stays within both SAFETY x the 1b stop and the total cap less what is spent. "go" is
-    False, with the reason, when 1a's gate fails or even F_min does not fit."""
+def price(arms: list[dict], *, dph: float, spent_seconds: float, seconds_left: float,
+          ident: dict | None = None) -> dict:
+    """The card's F rule on stage 1a's two runs (one per arm), at the box's $/h, after `spent_seconds` of box time,
+    with `seconds_left` before the job's own run deadline. F is the largest value in [F_min, F_max] (two significant
+    figures, rounded down, never below F_min) whose projected stage-1b time fits all three: SAFETY x the 1b stop, the
+    total cap less what is spent (both in dollars at `dph`), and the seconds left. "go" is False, with the reason,
+    when 1a's gate fails or even F_min does not fit."""
     if sorted(a["arm"] for a in arms) != sorted(ARMS) or any(a["status"] != "completed" or not a["finite"]
                                                                for a in arms):
         raise SystemExit("price needs one completed, finite stage-1a run of each arm")
@@ -286,7 +288,7 @@ def price(arms: list[dict], *, dph: float, spent_seconds: float, ident: dict | N
         raise SystemExit("the stage-1a runs were made by other code than this runner, card and package")
     spent = spent_seconds / 3600.0 * dph
     budget = min(PRICE["safety"] * PRICE["hard_stop_1b"], PRICE["cap_total"] - spent)
-    allowed = budget / dph * 3600.0
+    allowed = min(budget / dph * 3600.0, seconds_left)
     cost = lambda f: projected_seconds(f, arms, CARD_SETTINGS["eval_every"])         # noqa: E731
     by = {a["arm"]: a for a in arms}
     ratio = by["A1"]["s_per_step"] / by["A0"]["s_per_step"]
@@ -303,10 +305,12 @@ def price(arms: list[dict], *, dph: float, spent_seconds: float, ident: dict | N
         unit = 10.0 ** (math.floor(math.log10(low)) - 1)
         f = max(PRICE["f_min"], math.floor(low / unit) * unit)      # two significant figures, down, not below F_min
     reason = None if gate and fits else ("1a gate: Muon's s/step over 1.25 x AdamW's" if not gate else
-                                         f"even F_min does not fit ${budget:.2f} at ${dph}/h")
+                                         f"even F_min does not fit ${budget:.2f} at ${dph}/h within "
+                                         f"{seconds_left:.0f} s")
     projected = None if f is None else cost(f) / 3600.0 * dph
     return {"go": gate and fits, "reason": reason, "flop_budget": f, "dph": dph, "rule": PRICE,
-            "spent_seconds": spent_seconds, "spent_dollars": spent, "budget_dollars": budget,
+            "spent_seconds": spent_seconds, "seconds_left": seconds_left, "spent_dollars": spent,
+            "budget_dollars": budget, "allowed_seconds": allowed,
             "projected_hours": None if f is None else cost(f) / 3600.0, "projected_dollars": projected,
             "projected_total_dollars": None if f is None else spent + projected,
             "steps_at_f": None if f is None else {a["arm"]: f / (a["flops"] / a["steps"]) for a in arms},
@@ -338,6 +342,23 @@ def check_price(price: dict) -> None:
         raise SystemExit("PRICE.json projects past the 1b stop")
     if not (finite(price.get("spent_dollars")) and price["spent_dollars"] + projected <= PRICE["cap_total"]):
         raise SystemExit("PRICE.json's spent + projected is over the total cap")
+    if not (finite(price.get("projected_hours")) and finite(price.get("seconds_left"))
+            and price["projected_hours"] * 3600.0 <= price["seconds_left"]):
+        raise SystemExit("PRICE.json projects past the job's run deadline")
+
+
+def check_price_source(price_file: dict, timing: Path) -> None:
+    """The sealed 1b run's own check that F came from the rule: the 1a runs in `timing` are the ones PRICE.json
+    hashed, and `price` on them, with the recorded inputs, gives the same F and go."""
+    names = [f"{arm}-s0.json" for arm in ARMS]
+    if price_file.get("from") != {n: sha256(timing / n) for n in names}:
+        raise SystemExit(f"PRICE.json was not made from the stage-1a runs in {timing}")
+    again = price([json.loads((timing / n).read_text()) for n in names], dph=price_file["dph"],
+                  spent_seconds=price_file["spent_seconds"], seconds_left=price_file["seconds_left"],
+                  ident=identity())
+    if (again["go"], again["flop_budget"]) != (price_file.get("go"), price_file.get("flop_budget")):
+        raise SystemExit(f"price on {timing} gives go {again['go']}, F {again['flop_budget']}; PRICE.json says "
+                         f"go {price_file.get('go')}, F {price_file.get('flop_budget')}")
 
 
 def score(runs: list[dict], *, sealed: bool, ident: dict | None = None) -> dict:
@@ -533,6 +554,9 @@ def cmd_run(args) -> None:
     elif args.price is not None:
         price_file = json.loads(args.price.read_text())
         check_price(price_file)
+        if args.timing_from is None:
+            raise SystemExit("--price needs --timing-from (stage 1a's directory) to re-check F")
+        check_price_source(price_file, args.timing_from)
         settings["flop_budget"] = price_file["flop_budget"]
         extra["price"] = sha256(args.price)
     else:
@@ -549,7 +573,8 @@ def cmd_price(args) -> None:
     """Stage 1b's F from stage 1a's run JSONs (--from), the box's $/h and the box seconds spent so far; writes
     PRICE.json. Exit 0: go; 3: 1a's gate failed; 4: even F_min does not fit (PRICE.json is written either way)."""
     arms = [json.loads((args.source / f"{arm}-s0.json").read_text()) for arm in ARMS]
-    result = price(arms, dph=args.dph, spent_seconds=args.spent_seconds, ident=identity())
+    result = price(arms, dph=args.dph, spent_seconds=args.spent_seconds, seconds_left=args.seconds_left,
+                   ident=identity())
     result["from"] = {f"{arm}-s0.json": sha256(args.source / f"{arm}-s0.json") for arm in ARMS}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     write_json(args.out, result)
@@ -607,6 +632,7 @@ def main() -> None:
     go.add_argument("--price", type=Path, default=None, help="PRICE.json from `price`: the card's F")
     go.add_argument("--flop-budget", type=float, default=None, help="plumbing runs only (--unsealed)")
     go.add_argument("--timing", action="store_true", help="stage 1a: the card's settings at F_1a, seed 0, unsealed")
+    go.add_argument("--timing-from", type=Path, default=None, help="with --price: stage 1a's directory")
     go.add_argument("--hard-gb", type=float, default=50)
     go.add_argument("--unsealed", action="store_true")
     go.set_defaults(fn=cmd_run)
@@ -615,6 +641,7 @@ def main() -> None:
     cost.add_argument("--dph", type=float, required=True, help="the booked box's $/h")
     cost.add_argument("--spent-seconds", type=float, required=True,
                       help="box seconds billed so far (the job's elapsed time plus its pre-job allowance)")
+    cost.add_argument("--seconds-left", type=float, required=True, help="seconds left before the job's run deadline")
     cost.add_argument("--out", type=Path, required=True)
     cost.set_defaults(fn=cmd_price)
     dry = sub.add_parser("dry")

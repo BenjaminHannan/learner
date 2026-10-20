@@ -261,11 +261,12 @@ class JobTextTest(Fixture):
         marks = ['$PY -B $RUNNER build --root "$ROOT" --workers "$(nproc)"',
                  '$PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1a" --timing',
                  '$PY -B $RUNNER price --from "$ROOT/out/1a" --dph "$DPH" --spent-seconds "$SPENT" '
+                 '--seconds-left "$SECONDS_LEFT"',
                  '--out "$ROOT/out/1b/PRICE.json"',
                  'echo "=== PRICE ',
                  'cp "$ROOT/$SEAL_REL" "$ROOT/out/1b/SEAL.sha256.txt"',
                  '$PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1b" '
-                 '--price "$ROOT/out/1b/PRICE.json"',
+                 '--price "$ROOT/out/1b/PRICE.json" --timing-from "$ROOT/out/1a"',
                  '$PY -B $RUNNER verify --out "$ROOT/out/1a"', '$PY -B $RUNNER verify --out "$ROOT/out/1b"',
                  "finish DONE"]
         at = [job.index(m) for m in marks[:-1]] + [job.rindex(marks[-1])]       # the DRYRUN stop also says finish DONE
@@ -338,13 +339,18 @@ class WaitlogTest(unittest.TestCase):
     STOPPED = [("PUT", "/instances/7/", {"state": "stopped"})]
 
     def run_wait(self, instance, text="", **kw):
+        """waitlog against a box that reports `instance` until a stop request arrives, then reports it stopped."""
         calls = []
 
         def fake_call(method, path, body=None, timeout=60):
             calls.append((method, path, body))
             return {"success": True}
+
+        def fake_inst(_i):
+            stopped = any(b == {"state": "stopped"} for _, _, b in calls)
+            return dict(instance, actual_status="stopped") if stopped else instance
         ns = Ns(id="7", stage=None, max_min=kw.get("max_min"), poll=0)
-        with mock.patch.object(rent, "call", fake_call), mock.patch.object(rent, "inst", return_value=instance), \
+        with mock.patch.object(rent, "call", fake_call), mock.patch.object(rent, "inst", fake_inst), \
                 mock.patch.object(rent, "log_text", return_value=text), mock.patch.object(rent.time, "sleep"), \
                 mock.patch("builtins.print") as pr, self.assertRaises(SystemExit) as cm:
             rent.waitlog(ns)
@@ -364,11 +370,13 @@ class WaitlogTest(unittest.TestCase):
         code, _, out = self.run_wait(self.inst(2.7), "=== R1S1 DONE x")
         self.assertEqual((code, out["event"]), (0, "DONE"))
 
-    def test_not_running_after_six_minutes(self) -> None:
+    def test_not_running_within_the_prejob_allowance_stops(self) -> None:
         inst = self.inst(0.01, status="loading")
-        with mock.patch.object(rent.time, "time", side_effect=[0, 7 * 60]):
+        self.assertEqual(rent.START_MIN, rent.PREJOB_S // 60)                      # the allowance is enforced
+        with mock.patch.object(rent.time, "time", side_effect=[0, 14 * 60, 16 * 60]):
             code, calls, out = self.run_wait(inst)
-        self.assertEqual((code, out["event"], calls), (4, "NOT-RUNNING", []))
+        self.assertEqual((code, out["event"], calls), (4, "NOT-RUNNING", self.STOPPED))
+        self.assertTrue(out["stopped"]["confirmed"])
 
     def test_closing_marks_stop_the_instance(self) -> None:
         code, calls, out = self.run_wait(self.inst(0.01), "a\n=== R1S1 DONE 2026-10-20T10:00:00Z\n")
@@ -382,7 +390,7 @@ class WaitlogTest(unittest.TestCase):
         inst = {"label": LABEL, "actual_status": "running", "dph_total": 1.0, "start_date": 0}
         with mock.patch.object(rent.time, "time", side_effect=[0, 60, 720]):
             code, calls, out = self.run_wait(inst, text)       # the early line is ignored; only the watchdog ends it
-        self.assertEqual((code, out["event"], calls), (5, "WATCHDOG", []))
+        self.assertEqual((code, out["event"], calls), (5, "WATCHDOG", self.STOPPED))     # and it stops the box
         code, calls, out = self.run_wait(self.inst(0.01), text + "=== R1S1 FAIL rc=na 2026-10-20T10:01:00Z\n")
         self.assertEqual((code, out["event"], calls), (2, "JOB-FAIL", self.STOPPED))
 
@@ -578,9 +586,9 @@ class Net(Fixture):
         box.update({f"/job/b64/{p}": b for p, b in parts.items()})
         return box
 
-    def pull(self, box, force_stop=False):
+    def pull(self, box):
         run = Path(self.tmp.name) / "run"
-        ns = Ns(id="7", out=str(run), force_stop=force_stop)
+        ns = Ns(id="7", out=str(run))
         self.read_paths = []
 
         def cat(i, path, tries=3):
@@ -601,6 +609,7 @@ class Net(Fixture):
         return pr
 
     def test_pull_ok_writes_marker_and_extracts_both_stages(self) -> None:
+        self.instances = [{"id": 7, "label": LABEL, "actual_status": "stopped"}]   # waitlog already stopped it
         run, ok = self.pull(self.fake_box())
         self.assertTrue(ok)
         self.assertEqual(json.loads((run / rent.PULL_OK).read_text())["id"], 7)
@@ -620,13 +629,6 @@ class Net(Fixture):
         self.assertFalse(ok)
         self.assertFalse(any(m == "PUT" for m, _ in self.calls))
 
-    def test_pull_force_stop_stops_an_unfinished_job_but_never_passes_it(self) -> None:
-        self.instances = [{"id": 7, "label": LABEL, "actual_status": "running"}]
-        run, ok = self.pull(self.fake_box(status=""), force_stop=True)
-        self.assertIn(("PUT", "/instances/7/"), self.calls)
-        self.assertFalse(ok)                                                  # no STATUS: no PULL_OK
-        self.assertFalse((run / rent.PULL_OK).exists())
-
     def test_pull_stops_a_running_instance_and_waits_for_the_stop(self) -> None:
         self.instances = [{"id": 7, "label": LABEL, "actual_status": "running"}]
         self.stop_after = 3                                                   # three more polls still say running
@@ -638,7 +640,7 @@ class Net(Fixture):
             return box.get(path)
         run = Path(self.tmp.name) / "run"
         with mock.patch.object(rent, "exec_cat", cat), mock.patch("builtins.print"):
-            rent.pull(Ns(id="7", out=str(run), force_stop=False))
+            rent.pull(Ns(id="7", out=str(run)))
         self.assertTrue((run / rent.PULL_OK).exists())
         seq = [c for c in self.calls if c[1] == "/instances/7/"]
         self.assertEqual(seq[:2], [("GET", "/instances/7/"), ("PUT", "/instances/7/")])
@@ -648,16 +650,26 @@ class Net(Fixture):
         self.assertTrue(all(stopped and left == 0 for _, stopped, left in parts_read))   # parts read after the stop
         self.assertEqual(seen[0][0], "/job/export/STATUS.txt")
 
-    def test_pull_gives_up_when_the_instance_never_stops(self) -> None:
-        self.instances = [{"id": 7, "label": LABEL, "actual_status": "running"}]
-        self.stop_after = 10 ** 6
-        run, ok = self.pull(self.fake_box())
+    def test_status_is_written_after_the_parts(self) -> None:
+        job = self.args()[2]
+        self.assertLess(job.index("> export/PARTS.txt"), job.index("> export/STATUS.txt"))
+
+    def test_a_dry_run_box_passes_its_pull(self) -> None:
+        self.instances = [{"id": 7, "label": LABEL, "actual_status": "stopped"}]
+        run, ok = self.pull(self.fake_box(status="DONE rc=na dryrun=1", stages=()))
+        self.assertTrue(ok)
+        run, ok = self.pull(self.fake_box(status="DONE rc=0", stages=()))      # a real DONE without out/ dirs fails
         self.assertFalse(ok)
-        self.assertEqual(self.read_paths, ["/job/export/STATUS.txt"])         # no part was read from a running box
-        self.assertFalse((run / rent.PULL_OK).exists())
-        gets = [c for c in self.calls if c == ("GET", "/instances/7/")]
-        self.assertEqual(len(gets), 1 + rent.STOP_POLLS)
-        self.assertEqual(rent.STOP_POLLS * rent.STOP_POLL_S, 300)             # about five minutes
+
+    def test_pull_keeps_asking_until_the_stop_is_confirmed(self) -> None:
+        self.instances = [{"id": 7, "label": LABEL, "actual_status": "running"}]
+        self.stop_after = 20                                                  # 20 polls still say running
+        run, ok = self.pull(self.fake_box())
+        self.assertTrue(ok)
+        puts = [c for c in self.calls if c == ("PUT", "/instances/7/")]
+        self.assertGreaterEqual(len(puts), 4)                                 # the stop request is repeated
+        self.assertEqual(self.read_paths[0], "/job/export/STATUS.txt")
+        self.assertTrue((run / rent.PULL_OK).exists())
 
     def test_pull_needs_the_checkpoints_when_exported(self) -> None:
         box = self.fake_box(ckpt=True)
@@ -947,6 +959,69 @@ class RunnerAgreementTest(unittest.TestCase):
         self.assertIn('(ROOT / "premonition").glob("*.py")', text)
         self.assertIn('(ROOT / "learnlab").rglob("*.py")', text)
         self.assertIn('(ROOT / "memorylab").rglob("*.py")', text)
+
+
+class NetworkFailureTest(unittest.TestCase):
+    """The coordinator's B-b test: socket and proxy failures on every kind of request, including the stop itself;
+    waitlog still ends with the box stopped, confirmed by Vast."""
+
+    def test_the_box_is_stopped_through_network_failures(self) -> None:
+        import socket
+        import urllib.error
+        state = {"stopped": False, "stop_puts": 0, "n": 0}
+        failures = [socket.timeout("timed out"), urllib.error.URLError("proxy: 502 Bad Gateway"),
+                    ConnectionResetError(104, "Connection reset by peer"), OSError("Tunnel connection failed: 407")]
+
+        class Reply(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        def urlopen(req, timeout=60):
+            state["n"] += 1
+            url = req if isinstance(req, str) else req.full_url
+            method = "GET" if isinstance(req, str) else req.get_method()
+            if state["n"] % 3 == 0:                                         # every third request fails somehow
+                raise failures[state["n"] % len(failures)]
+            if url.endswith("/instances/request_logs/7/"):
+                return Reply(json.dumps({"result_url": "https://logs.example/7"}).encode())
+            if url == "https://logs.example/7":
+                return Reply(b"=== R1S1 START\n=== MANIFEST\n=== R1S1 DONE 2026-10-20T12:00:00Z\n")
+            if method == "PUT" and url.endswith("/instances/7/"):
+                state["stop_puts"] += 1
+                if state["stop_puts"] <= 2:                                   # the first two stops are lost
+                    raise urllib.error.URLError("proxy: connection refused")
+                state["stopped"] = True
+                return Reply(b'{"success": true}')
+            if method == "GET" and url.endswith("/instances/7/"):
+                status = "stopped" if state["stopped"] else "running"
+                return Reply(json.dumps({"instances": [{"id": 7, "label": LABEL, "actual_status": status,
+                                                        "dph_total": 0.45, "start_date": time.time() - 3600}]}).encode())
+            raise AssertionError(f"unexpected request {method} {url}")
+
+        ns = Ns(id="7", stage=None, max_min=None, poll=0)
+        with mock.patch("urllib.request.urlopen", urlopen), mock.patch.object(rent.time, "sleep"), \
+                mock.patch("builtins.print") as pr, mock.patch("sys.stderr", io.StringIO()), \
+                self.assertRaises(SystemExit) as cm:
+            rent.waitlog(ns)
+        out = json.loads(pr.call_args[0][0])
+        self.assertEqual((cm.exception.code, out["event"]), (0, "DONE"))
+        self.assertTrue(state["stopped"])
+        self.assertGreaterEqual(state["stop_puts"], 3)                        # retried past the lost requests
+        self.assertTrue(out["stopped"]["confirmed"])
+
+    def test_call_never_raises_on_network_errors(self) -> None:
+        import socket
+        import urllib.error
+        for error in (socket.timeout("t"), urllib.error.URLError("proxy"), ConnectionResetError(), OSError("x"),
+                      ValueError("bad json")):
+            with mock.patch("urllib.request.urlopen", side_effect=error):
+                r = rent.call("GET", "/instances/7/")
+            self.assertEqual((r["success"], r["error"]), (False, type(error).__name__))
+        with mock.patch("urllib.request.urlopen", side_effect=socket.timeout("t")):
+            self.assertIsNone(rent.inst(7))                                   # unknown, not "gone"
 
 
 if __name__ == "__main__":
