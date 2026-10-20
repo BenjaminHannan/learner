@@ -1646,6 +1646,20 @@ def install_first_call_weight(m, weight):
     return call_loss
 
 
+def check_priority_labels(diary_any=False, data=None):
+    """--replay-priority, before any work: the family labels' train.jsonl must exist and be the skills seed-1 build the diary pool is
+    pinned to (DIARY_TRAIN_SHA256), unless diary_any (--diary-any). -> its sha256. diary_families checks per-row coverage later."""
+    from domain import mode
+    tpath = mode.guard(os.path.join(DIARY_DATA if data is None else data, 'train.jsonl'))
+    if not os.path.exists(tpath):
+        raise SystemExit(f'--replay-priority: family labels come from {tpath}, which does not exist (set CUSTOM_IO_DATA)')
+    sha = file_sha256(tpath)
+    if sha != DIARY_TRAIN_SHA256 and not diary_any:
+        raise SystemExit(f'--replay-priority: family labels come from a train.jsonl with sha256 {sha[:12]}, not the skills seed-1 build '
+                         f'{DIARY_TRAIN_SHA256[:12]} the diary pool is pinned to (set CUSTOM_IO_DATA, or pass --diary-any)')
+    return sha
+
+
 def diary_families(diary, data=None):
     """--replay-priority: the original skill family of each diary row, looked up by prompt in the data folder's train.jsonl
     (build_parent_diary's pool file; the first row with that prompt; prompts listed under more than one family are counted and printed).
@@ -1902,6 +1916,11 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
     check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft, replay_loss, replay_freeze, replay_priority, replay_priority_every)
     prio_on = replay_priority > 0   # KL-prioritized, per-family replay draw (off = the uniform randint draw, bit-identical)
+    if prio_on:   # refused before any work: a wrong label file, or a run too short for any measurement to apply
+        if replay_priority_every >= updates:
+            raise SystemExit(f'--replay-priority-every {replay_priority_every} must be < --updates {updates}: no measurement would ever apply, '
+                             'and the run would equal its control while its records say priority is on')
+        check_priority_labels(diary_any)
     stop_limits = None if stop_if_drop is None else dict(stop_if_drop)   # {step: limit} from parse_stop_if_drop; None = no futility stop
     if stop_limits is not None:
         bad = sorted(set(stop_limits) - harm_steps)
@@ -2130,7 +2149,7 @@ def main(argv=None):
     a.add_argument('--stop-if-drop', default=None, help="futility stop, 'STEP:DROP[,STEP:DROP...]' (e.g. 1000:3.0,2000:3.0): each STEP must be a harm step; if the harm measure at STEP has in_dist_drop >= DROP the step's record gets futility_stop and training stops there (with --keep-final the stopped step's checkpoint is kept)")
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft / replay only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft / replay only: weight on the KL to the frozen parent (replay: or the CE) over those rows')
-    a.add_argument('--replay-priority', type=float, default=0.0, help='--guard kfsoft / replay (kl) only: fraction of the replay sampling mass given to diary families in proportion to their measured KL to the frozen parent (the rest uniform); 0 (default) = off = the uniform draw as shipped; in [0, 1)')
+    a.add_argument('--replay-priority', type=float, default=0.0, help='NOT FOR USE (arm H1 failed; review findings open, see results/forgetting/g-2026-10-17/CODE-REVIEW-950a7d2e2.md). --guard kfsoft / replay (kl) only: fraction of the replay sampling mass given to diary families in proportion to their measured KL to the frozen parent (the rest uniform); 0 (default) = off = the uniform draw as shipped; in [0, 1)')
     a.add_argument('--replay-priority-every', type=int, default=500, help='--replay-priority: re-measure the per-family KL every this many updates')
     a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
     a.add_argument('--guard-energy', type=float, default=0.99)

@@ -7,8 +7,9 @@
 RUN_DIR = a Main brain run folder (summary.json + night_K/checkpoint.pt), e.g. /mnt/project-files/main-brain/runs/sheet-s200-kf99n-kl10-soft10.
 Final checkpoint by domain/analyze.py's rule, notes worded as analyze.py words them (final_checkpoint_of, night discovery =
 domain/score.py night_checkpoints). Before any model loads: both DEV files are identified by sha256 (check_devs) and every run is
-resolved (resolve_runs: summary, nights, final checkpoint, parent on disk); any problem stops the run with nothing scored.
-e0.json is rewritten after each run, so a later failure keeps the runs already scored.
+resolved (resolve_runs: summary, nights_run >= 1, nights, final checkpoint, parent on disk); any problem stops the run with nothing scored.
+e0.json is written atomically (temp file + rename) once before scoring (with the planned runs, replacing any older file) and again after
+each run, so a later failure keeps the runs already scored.
 """
 import argparse, base64, hashlib, json, os, sys, time
 
@@ -35,7 +36,11 @@ def final_checkpoint_of(run, summary, night_checkpoints=None):
     and a note when the final is not the run folder's night_N file. night_checkpoints defaults to domain/score.py's."""
     if night_checkpoints is None:
         from domain.score import night_checkpoints
+    if 'nights_run' not in summary:
+        raise SystemExit(f'E0: {run}: summary.json has no nights_run')
     n = int(summary['nights_run'])
+    if n < 1:
+        raise SystemExit(f'E0: {run}: nights_run is {n}: the run has no night checkpoint to score')
     nights = dict(night_checkpoints(run))
     missing = [k for k in range(1, n + 1) if k not in nights]
     if missing:
@@ -69,6 +74,14 @@ def resolve_runs(runs, night_checkpoints=None):
     return out
 
 
+def write_json_atomic(obj, path):
+    """Write obj as JSON to a temp file next to path, then rename it over path (os.replace): a kill mid-write leaves the old file whole."""
+    tmp = path + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(obj, f)
+    os.replace(tmp, path)
+
+
 def pack(bits):
     return base64.b64encode(bytes(int(''.join(map(str, bits[i:i + 8])).ljust(8, '0'), 2) for i in range(0, len(bits), 8))).decode()
 
@@ -90,7 +103,8 @@ def main(argv=None):
     s_sha, b_sha = check_devs(small, a.big)   # before any model is loaded
     plan = resolve_runs(a.runs)                # every run checked before any scoring
     devs = {'small': load_rows(small), 'big': load_rows(a.big)}
-    cache, out = {}, {'dev_small_sha256': s_sha, 'dev_big_sha256': b_sha, 'runs': {}}
+    cache, out = {}, {'dev_small_sha256': s_sha, 'dev_big_sha256': b_sha, 'runs': {}, 'planned': [r for r, _, _, _ in plan]}
+    write_json_atomic(out, a.out)   # replaces any e0.json from an earlier invocation before the first run is scored
 
     def hits(ck, tag):
         k = (os.path.realpath(ck), tag)
@@ -116,7 +130,7 @@ def main(argv=None):
             print(f'  {tag}: {res[tag]["parent"]} -> {res[tag]["final"]} drop {res[tag]["drop"]} (lost {b}, gained {c}) fired {h["fired"]} '
                   f'{"PASS" if h["passes"] else "FAIL"}', flush=True)
         out['runs'][run] = res
-        json.dump(out, open(a.out, 'w'))   # after each run: a later failure keeps what is scored
+        write_json_atomic(out, a.out)   # after each run: a later failure keeps what is scored
     print('wrote', a.out)
 
 

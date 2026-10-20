@@ -1,10 +1,16 @@
-"""Tests for e0_score.py's refusals (no model, no DEV build needed): python -m pytest -q results/forgetting/e0"""
-import hashlib, json, os, sys
+"""Tests for e0_score.py's refusals (no model, no DEV build, no torch: night discovery is passed in as a plain glob):
+python -m pytest -q results/forgetting/e0"""
+import glob, hashlib, json, os, re, sys
 
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import e0_score as E
+
+
+def NC(run):
+    """night discovery for the tests, as domain/score.py night_checkpoints does it, without importing it (it pulls in torch)."""
+    return sorted((int(re.search(r'night_(\d+)', p).group(1)), p) for p in glob.glob(os.path.join(run, 'night_*', 'checkpoint.pt')))
 
 
 def _file(tmp_path, name, rows):
@@ -50,12 +56,12 @@ def _run(tmp_path, nights, summary_final=None, n=None):
 def test_final_checkpoint_refuses_missing_nights(tmp_path):
     run, s = _run(tmp_path, [1, 3], n=3)
     with pytest.raises(SystemExit, match=r'missing night checkpoints \[2\]'):
-        E.final_checkpoint_of(run, s)
+        E.final_checkpoint_of(run, s, NC)
 
 
 def test_final_checkpoint_falls_back_to_night_n_with_a_note(tmp_path):
     run, s = _run(tmp_path, [1, 2], summary_final='/nowhere/checkpoint.pt')
-    fin, notes = E.final_checkpoint_of(run, s)
+    fin, notes = E.final_checkpoint_of(run, s, NC)
     assert fin == os.path.join(run, 'night_2', 'checkpoint.pt')
     assert len(notes) == 1 and 'not on disk' in notes[0]
 
@@ -65,25 +71,43 @@ def test_final_checkpoint_notes_a_differing_path(tmp_path):
     other = tmp_path / 'elsewhere.pt'
     other.write_bytes(b'y')
     s['final_checkpoint'] = str(other)
-    fin, notes = E.final_checkpoint_of(run, s)
+    fin, notes = E.final_checkpoint_of(run, s, NC)
     assert fin == str(other)
     assert notes == ['summary final_checkpoint is not the run folder night_2 file (path differs)']
 
 
 def test_final_checkpoint_notes_ignored_extra_nights(tmp_path):
     run, s = _run(tmp_path, [1, 2, 3, 4], n=3)
-    fin, notes = E.final_checkpoint_of(run, s)
+    fin, notes = E.final_checkpoint_of(run, s, NC)
     assert fin == os.path.join(run, 'night_3', 'checkpoint.pt')
     assert notes[0] == 'night checkpoints after nights_run=3 were ignored: [4]', notes
 
 
 def test_note_wording_matches_analyze():
-    """Each note e0 writes is worded as domain/analyze.py words it (the templates appear verbatim in analyze's source)."""
-    src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'domain', 'analyze.py')).read()
+    """Each note e0 writes is worded as domain/analyze.py words it: the same template appears in BOTH sources (analyze names N, e0 names n)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    src_a = open(os.path.join(here, '..', '..', '..', 'domain', 'analyze.py')).read()
+    src_e = open(os.path.join(here, 'e0_score.py')).read()
     for t in ("missing night checkpoints {missing}", "night checkpoints after nights_run={N} were ignored: {extra}",
               "summary final_checkpoint not on disk ({fin}); used the night_{N} file in the run folder",
               "'summary final_checkpoint is not the run folder night_%d file (path differs)' % N"):
-        assert t in src, t
+        assert t in src_a, ('analyze', t)
+        assert t.replace('{N}', '{n}').replace('% N', '% n') in src_e, ('e0', t)
+
+
+def test_nights_run_zero_or_missing_is_a_named_refusal(tmp_path):
+    run, s = _run(tmp_path, [1])
+    with pytest.raises(SystemExit, match='nights_run is 0'):
+        E.final_checkpoint_of(run, dict(s, nights_run=0), NC)
+    with pytest.raises(SystemExit, match='has no nights_run'):
+        E.final_checkpoint_of(run, {k: v for k, v in s.items() if k != 'nights_run'}, NC)
+
+
+def test_write_json_atomic_replaces_whole_file(tmp_path):
+    p = str(tmp_path / 'e0.json')
+    E.write_json_atomic({'runs': {'a': 1}}, p)
+    E.write_json_atomic({'runs': {'b': 2}}, p)
+    assert json.load(open(p)) == {'runs': {'b': 2}} and not os.path.exists(p + '.tmp')
 
 
 def test_resolve_runs_checks_every_run_before_scoring(tmp_path):
@@ -92,17 +116,17 @@ def test_resolve_runs_checks_every_run_before_scoring(tmp_path):
     par.write_bytes(b'p')
     s['parent'] = str(par)
     (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s))
-    plan = E.resolve_runs([good])
+    plan = E.resolve_runs([good], NC)
     assert plan[0][0] == good and plan[0][2] == os.path.join(good, 'night_2', 'checkpoint.pt')
     with pytest.raises(SystemExit, match='no summary.json'):
-        E.resolve_runs([good, str(tmp_path / 'absent')])
+        E.resolve_runs([good, str(tmp_path / 'absent')], NC)
     s2 = dict(s, parent=str(tmp_path / 'gone.pt'))
     (tmp_path / 'run' / 'summary.json').write_text(json.dumps(s2))
     with pytest.raises(SystemExit, match='not on disk'):
-        E.resolve_runs([good])
+        E.resolve_runs([good], NC)
 
 
 def test_final_checkpoint_clean_case_has_no_notes(tmp_path):
     run, s = _run(tmp_path, [1, 2])
     s['final_checkpoint'] = os.path.join(run, 'night_2', 'checkpoint.pt')
-    assert E.final_checkpoint_of(run, s) == (s['final_checkpoint'], [])
+    assert E.final_checkpoint_of(run, s, NC) == (s['final_checkpoint'], [])

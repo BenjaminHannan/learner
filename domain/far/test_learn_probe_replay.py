@@ -1003,6 +1003,23 @@ def test_diary_families_real_lookup():
     return 'labels by prompt (first row wins), sha256 of train.jsonl returned; unlabelled diary rows and a missing train.jsonl stop'
 
 
+def test_priority_refusals_before_any_work():
+    """check_priority_labels: a missing train.jsonl and one that is not the pinned seed-1 build are refused (unless diary_any); and train()
+    refuses --replay-priority-every >= --updates before loading anything (the parent path below does not exist)."""
+    with tempfile.TemporaryDirectory() as td:
+        raises(lambda: LP.check_priority_labels(data=td), 'does not exist')
+        with open(os.path.join(td, 'train.jsonl'), 'w') as f:
+            f.write(json.dumps(dict(prompt='p', family='f')) + '\n')
+        raises(lambda: LP.check_priority_labels(data=td), 'not the skills seed-1 build')
+        sha = hashlib.sha256(open(os.path.join(td, 'train.jsonl'), 'rb').read()).hexdigest()
+        assert LP.check_priority_labels(diary_any=True, data=td) == sha
+        for every in (3, 5):
+            raises(lambda: LP.train('LB', 3, 1, os.path.join(td, 'o'), [0, 3], parent=os.path.join(td, 'no-parent.pt'), guard='kfsoft',
+                                    guard_src=GUARD_SRC, kl_replay_rows=4, kl_weight=10.0, replay_priority=0.5, replay_priority_every=every),
+                   'must be < --updates')
+    return 'missing / unpinned label file refused (accepted with diary_any); every >= updates refused before any work'
+
+
 def test_replay_priority_train_end_to_end():
     """train() end to end (replay kl and kfsoft, real parent, 3 updates, scoring stubbed to a state_dict hash + the step's extra):
     (1) OFF: the draw is kl_rng.randint (the recorded calls equal a fresh RandomState(KL_REPLAY_SEED) randint sequence, choice never called),
@@ -1017,6 +1034,7 @@ def test_replay_priority_train_end_to_end():
     import contextlib
     import io
     real_score, real_fam, real_probs, real_meas, RS = LP.score_step, LP.diary_families, LP.replay_priority_probs, LP.measure_family_kl, np.random.RandomState
+    real_check = LP.check_priority_labels
     draws = []
     labels = {'sha': LP.DIARY_TRAIN_SHA256}
 
@@ -1042,6 +1060,7 @@ def test_replay_priority_train_end_to_end():
                 h.update(v.detach().numpy().tobytes())
             seen['hash'][step], seen['extra'][step] = h.hexdigest(), dict(extra)
         LP.score_step, LP.diary_families, np.random.RandomState = stub, (lambda diary, data=None: ([f'f{i % 3}' for i in range(len(diary))], labels['sha'])), RecRS
+        LP.check_priority_labels = lambda diary_any=False, data=None: labels['sha']   # the label file is faked here; check_priority_labels has its own test
         buf = io.StringIO()
         try:
             with contextlib.redirect_stdout(buf):
@@ -1050,6 +1069,7 @@ def test_replay_priority_train_end_to_end():
                          guard_src=GUARD_SRC, diary_cache=diary, kl_replay_rows=4, kl_weight=10.0, **kw)
         finally:
             LP.score_step, LP.diary_families, np.random.RandomState = real_score, real_fam, RS
+            LP.check_priority_labels = real_check
         seen['out'], seen['draws'] = buf.getvalue(), list(draws)
         return seen
 
@@ -1115,7 +1135,7 @@ TESTS = [test_check_guard_args_matrix, test_ce_replay_loss, test_kl_replay_loss_
          test_train_harm_leaves_training_untouched, test_replay_freeze_setup, test_replay_freeze_real_parent_count,
          test_stop_if_drop_parse_and_decision, test_score_step_futility_record, test_train_a1f_stop_and_commit_check,
          test_a1f_is_one_change_vs_l11, test_replay_priority_probs, test_replay_priority_check_guard_args, test_replay_priority_measure_isolated,
-         test_diary_families_real_lookup, test_replay_priority_train_end_to_end]
+         test_diary_families_real_lookup, test_priority_refusals_before_any_work, test_replay_priority_train_end_to_end]
 
 if __name__ == '__main__':
     passed = skipped = 0
