@@ -55,7 +55,8 @@ P1 test. Scoring checks it again: if the arms of a seed differ in steps or FLOPs
   - **The budget for 1b** is the smaller of two amounts: 0.8 × the 1b stop of $2.50 ($2.00), and the $2.80 cap less
     the dollars already spent.
     - Spent = the box seconds so far × the box's $/h.
-    - The box seconds are the job's elapsed time plus a 900 s pre-job allowance for the image pull and the start.
+    - The box seconds are counted from BOX_START, the moment just before `create` sends its request (the swarm box's
+      pattern).
   - **F** is the largest value in [F_min = 3.15e15, F_MAX = 7.5e15] whose projected 1b time fits both that budget
     and 0.9 × the seconds left before the job's own run deadline.
     - It is rounded down to two significant figures, and never below F_min.
@@ -112,9 +113,9 @@ P1 test. Scoring checks it again: if the arms of a seed differ in steps or FLOPs
 4. **1b, the card:** six runs at F in the sealed directory `out/1b` (`run --price`), then the manifests and the
    export.
 5. **The controller:**
-   - **The run's deadline** counts from the instance's billing start: 0.9 × the hours the $2.80 cap buys at the
-     box's $/h, minus 15 minutes for the export and a 900 s pre-job allowance. Outputs are therefore exported before
-     the stop. `pack` refuses a box where that deadline cannot cover the build, 1a and an hour of 1b.
+   - **The run's deadline** counts from BOX_START: 0.9 × the hours the $2.80 cap buys at the box's $/h, minus 15
+     minutes for the export. Outputs are therefore exported before the stop. `pack` refuses a box where that deadline
+     cannot cover a 15-minute pre-job allowance, the build, 1a and an hour of 1b.
    - **The watcher, `waitlog` (the cap guard):** every poll reads the status and checks the cost at that moment,
      before anything else. Three failed polls in a row stop the box. A stop counts as confirmed only when Vast no
      longer lists the box, or shows it intended stopped and not running. Every exit first stops the box and waits
@@ -130,11 +131,18 @@ P1 test. Scoring checks it again: if the arms of a seed differ in steps or FLOPs
      Stop requests and status reads are retried through any network error. A failure-injection test covers socket,
      proxy and reset errors, including lost stop requests.
    - **The box's own wall (independent of the watcher and of this session):**
-     - The job runs under `timeout` with a wall of 0.95 × the hours the $2.80 cap buys at the box's $/h, less the
-       900 s pre-job allowance. That ends at or before 0.95 × $2.80.
+     - The job runs under `timeout` with a wall at BOX_START + 0.95 × the hours the $2.80 cap buys at the box's
+       $/h. That ends at or before 0.95 × $2.80.
      - Whenever the job ends, at the wall or normally, the wrapper asks Vast to stop the instance using the
-       container's own `CONTAINER_ID` and `CONTAINER_API_KEY`, then exits, which ends the container.
-     - A test with no watcher and a hung 1b shows the box ending at the wall, with the stop request sent.
+       container's own `CONTAINER_ID` and `CONTAINER_API_KEY`. It checks that Vast accepted the stop and retries
+       up to five times. Then it exits, which ends the container.
+     - **A box ledger** (BOX_START, $/h, cap, wall end) sits one level above the job directory. If it is already
+       there, the container was restarted, and the job is never run again: the wrapper only self-stops. The
+       wrapper also refuses to start when BOX_START is missing or in the future, or when the money is already gone.
+     - Tests:
+       - with no watcher and a hung 1b, the box ends at the wall and the stop is sent;
+       - a restarted container does not rerun;
+       - a refused stop is retried and reported.
      - Untested on Vast itself: that those variables are set in the container, and that the container's exit stops
        GPU billing. The first real box will show both in its log.
    - **Pull:** it reads the export, checkpoints included, from the stopped box (vread2's route).

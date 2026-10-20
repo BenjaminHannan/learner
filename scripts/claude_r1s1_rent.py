@@ -15,8 +15,10 @@ for the whole box). The job: setup, village build, 1a timing run (`run --timing`
               pack.tar.xz (code, card, seal, data at HEAD) + SEAL-pack.sha256.txt + args.json. Always needs the sealed
               card, the SEAL file and the runner, committed; the seal's three entries (card, runner, package hash over
               the packed files) must match, and the *.py files on disk must be the packed ones. --dph is the offer's
-              $/h. The job's deadline counts from the job's start: SAFETY x the stop's hours, minus the export
-              allowance, minus PREJOB_S for the image pull before the job starts. Refused below the feasibility floor
+              $/h. Deadlines count from BOX_START, which `create` sets to the moment just before its request (the
+              swarm box's pattern): the run deadline is SAFETY x the stop's hours minus the export allowance, the
+              on-box wall WALL_SAFETY x the stop's hours. Refused below the feasibility floor (pre-job allowance +
+              build + 1a + an hour of 1b)
   search  [--n 12] [--max-dph 0.8]    1 RTX 5090, on-demand, verified, reliability >= 0.98 (read-only)
   create  --offer ID --args DIR/args.json [--label L] [--dryrun] [--yes]
               without --yes: prints the request, sends nothing; with --yes: refuses an offer dearer than the pack's
@@ -65,8 +67,8 @@ STAGES = ("1ab",)
 HARD_STOP = {"1ab": 2.80}                  # dollars for the whole box (coordinator's ruling: one job, one cap)
 SAFETY = 0.9                               # the deadline: SAFETY x the hard stop's hours ...
 EXPORT_SECONDS = 900                       # ... minus this, left for packing the export ...
-PREJOB_S = 900                             # ... minus this: image pull and container start, billed before the job runs
-WALL_SAFETY = 0.95                         # the on-box wall: 0.95 x the cap's hours at the box's $/h, less PREJOB_S
+PREJOB_S = 900                             # image pull and container start: the floor reserves it, waitlog enforces it
+WALL_SAFETY = 0.95                         # the on-box wall: 0.95 x the cap's hours at the box's $/h, from BOX_START
 BUILD_EST_S, TIMING_MAX_S, RUN_1B_MIN_S = 1800, 2400, 3600     # feasibility floor: build + 1a (its cap) + 1 h of 1b
 RUNNER = "scripts/premonition_steals_r1_stage1.py"
 CARD = "design/steals-2026-10-17/R1-STAGE1-CARD.md"
@@ -93,8 +95,8 @@ STAGE=__STAGE__
 TORCH_PIN=__TORCH_PIN__
 SEAL_REL=__SEAL_REL__
 DPH=__DPH__
-DEADLINE_S=__DEADLINE_S__
-PREJOB_S=__PREJOB_S__
+DEADLINE_S=__DEADLINE_S__     # seconds from BOX_START (the box's billing start, exported by the outer wrapper)
+RUN_END=$((BOX_START + DEADLINE_S))
 TIMING_MAX_S=__TIMING_MAX_S__
 START=$(date +%s)
 J=${JOBDIR:-/job}
@@ -167,17 +169,17 @@ DATA_REL=$(grep '^{' "$J/checks/build.out" | tail -1 | $PY -c "import json,sys;p
 [ -n "$DATA_REL" ] || fail "no data_rel in build output"
 echo "data_rel $DATA_REL, build $BUILD_S s"
 # --- 2. stage 1a: the timing run (unsealed; F_1a and seed 0 are fixed by the runner)
-LEFT=$((START + DEADLINE_S - $(date +%s)))
-[ "$LEFT" -gt 60 ] || fail "no time left before the deadline ($DEADLINE_S s at \$$DPH/h)"
+LEFT=$((RUN_END - $(date +%s)))
+[ "$LEFT" -gt 60 ] || fail "no time left before the deadline ($DEADLINE_S s from the box's start at \$$DPH/h)"
 [ "$LEFT" -gt "$TIMING_MAX_S" ] && LEFT=$TIMING_MAX_S
 mkdir -p "$ROOT/out/1a" "$ROOT/out/1b"
 say "RUN 1a timing, at most $LEFT s"
-timeout --foreground "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1a" --timing 2>&1 | tee -a "$J/checks/run.out"
+timeout --foreground -k 60 "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1a" --timing 2>&1 | tee -a "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "1a run rc=$RC"
-# --- 3. price: F for 1b from 1a's measurements, the box's $/h, and the seconds already spent (incl. the pre-job allowance)
-SPENT=$(( $(date +%s) - START + PREJOB_S ))
-SECONDS_LEFT=$((START + DEADLINE_S - $(date +%s) - 120))   # 1b's own deadline, less a margin for the seal copy
+# --- 3. price: F for 1b from 1a's measurements, the box's $/h, and the seconds billed since BOX_START
+SPENT=$(( $(date +%s) - BOX_START ))                       # billed since the create request
+SECONDS_LEFT=$((RUN_END - $(date +%s) - 120))              # 1b's own deadline, less a margin for the seal copy
 $PY -B $RUNNER price --from "$ROOT/out/1a" --dph "$DPH" --spent-seconds "$SPENT" --seconds-left "$SECONDS_LEFT" \
   --out "$ROOT/out/1b/PRICE.json" \
   > "$J/checks/price.out" 2> "$J/checks/price.err"
@@ -194,10 +196,10 @@ echo "=== PRICE $(sha256sum "$ROOT/out/1b/PRICE.json" | cut -d' ' -f1)"
 cat "$ROOT/out/1b/PRICE.json"
 # --- 4. stage 1b: the sealed card
 cp "$ROOT/$SEAL_REL" "$ROOT/out/1b/SEAL.sha256.txt" || fail "seal copy"
-LEFT=$((START + DEADLINE_S - $(date +%s)))
+LEFT=$((RUN_END - $(date +%s)))
 [ "$LEFT" -gt 60 ] || fail "no time left before the deadline after price ($DEADLINE_S s at \$$DPH/h)"
 say "RUN 1b, deadline in $LEFT s"
-timeout --foreground "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1b" --price "$ROOT/out/1b/PRICE.json" --timing-from "$ROOT/out/1a" 2>&1 | tee -a "$J/checks/run.out"
+timeout --foreground -k 60 "${LEFT}s" $PY -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$ROOT/out/1b" --price "$ROOT/out/1b/PRICE.json" --timing-from "$ROOT/out/1a" 2>&1 | tee -a "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "1b run rc=$RC"
 # --- 5. verify both run directories
@@ -214,29 +216,51 @@ finish DONE
 # untested on Vast here) and exits, which ends the container. So the box ends by the wall even if waitlog and the
 # controlling session are gone. WALL_S_TEST (tests only) may shorten the wall, never lengthen it.
 JOB = r'''# R1 stage 1ab rental job, outer wrapper (steals-8 thread), from scripts/claude_r1s1_rent.py.
+# The swarm box's money pattern: BOX_START is the epoch just before the create request (set by `create`); the box
+# ledger sits one level above the job directory, so a container restart cannot reset it, and a restart never reruns.
 set -u
 J=${JOBDIR:-/job}
-mkdir -p "$J"
-WALL_S=__WALL_S__
-if [ -n "${WALL_S_TEST:-}" ] && [ "$WALL_S_TEST" -lt "$WALL_S" ]; then WALL_S=$WALL_S_TEST; fi
+BOX_START=__BOX_START__
+DPH=__DPH__
+CAP=__CAP__
+WALL_FROM_BOX_S=__WALL_FROM_BOX_S__
+LEDGER=$(dirname "$J")/r1s1-box-ledger.json
+self_stop() {   # ask Vast to stop this instance with the container's own key; success is checked, not assumed
+  if [ -z "${CONTAINER_ID:-}" ] || [ -z "${CONTAINER_API_KEY:-}" ]; then
+    echo "=== R1S1 SELF-STOP no container key: exiting ends the container $(date -u +%FT%TZ)"; return
+  fi
+  for try in 1 2 3 4 5; do
+    reply=$(curl -fsS -m 30 -X PUT -H "Authorization: Bearer $CONTAINER_API_KEY" -H "Content-Type: application/json" \
+      -d '{"state": "stopped"}' "https://console.vast.ai/api/v0/instances/$CONTAINER_ID/" 2>&1)
+    if [ $? = 0 ] && printf '%s' "$reply" | grep -Eq '"success": *true'; then
+      echo "=== R1S1 SELF-STOP accepted (try $try) $(date -u +%FT%TZ)"; return
+    fi
+    echo "=== R1S1 SELF-STOP refused or failed (try $try): $(printf '%s' "$reply" | head -c 200)"
+    sleep 10
+  done
+}
+if [ -f "$LEDGER" ]; then          # this container already ran the job once: a restart never reruns it
+  echo "=== R1S1 RESTART-REFUSED: $(cat "$LEDGER") $(date -u +%FT%TZ)"; self_stop; exit 0
+fi
+NOW=$(date +%s)
+if ! [[ "$BOX_START" =~ ^[0-9]+$ ]] || [ "$BOX_START" -gt $((NOW + 60)) ]; then
+  echo "=== R1S1 REFUSED: BOX_START '$BOX_START' is not the create time"; self_stop; exit 0
+fi
+END=$((BOX_START + WALL_FROM_BOX_S))
+mkdir -p "$J" && printf '{"box_start": %s, "dph": %s, "cap": %s, "job_start": %s, "wall_end": %s}\n' \
+  "$BOX_START" "$DPH" "$CAP" "$NOW" "$END" > "$LEDGER" || { echo "=== R1S1 REFUSED: cannot write $LEDGER"; self_stop; exit 0; }
+WALL_S=$((END - NOW))
+if [ "$WALL_S" -le 60 ]; then echo "=== R1S1 REFUSED: no money left (wall ends $END)"; self_stop; exit 0; fi
+if [ -n "${WALL_S_TEST:-}" ] && [ "$WALL_S_TEST" -lt "$WALL_S" ]; then WALL_S=$WALL_S_TEST; fi   # tests: only shorter
+export BOX_START
 cat > "$J/job.sh" <<'R1S1_JOB_EOF'
 __BODY__
 R1S1_JOB_EOF
-echo "=== R1S1 WALL $WALL_S s from job start $(date -u +%FT%TZ)"
+echo "=== R1S1 WALL $WALL_S s, ends $(date -u -d "@$END" +%FT%TZ 2>/dev/null || echo "$END") (box start $BOX_START)"
 timeout -k 30 "${WALL_S}s" bash "$J/job.sh" "$@"
 RC=$?
 if [ "$RC" = 124 ] || [ "$RC" = 137 ]; then echo "=== R1S1 SELF-STOP wall deadline rc=$RC $(date -u +%FT%TZ)"; fi
-if [ -n "${CONTAINER_ID:-}" ] && [ -n "${CONTAINER_API_KEY:-}" ]; then
-  for try in 1 2 3 4 5; do
-    if curl -sS -m 30 -X PUT -H "Authorization: Bearer $CONTAINER_API_KEY" -H "Content-Type: application/json" \
-        -d '{"state": "stopped"}' "https://console.vast.ai/api/v0/instances/$CONTAINER_ID/"; then
-      echo "=== R1S1 SELF-STOP requested (try $try) $(date -u +%FT%TZ)"; break
-    fi
-    sleep 10
-  done
-else
-  echo "=== R1S1 SELF-STOP no container key: exiting ends the container $(date -u +%FT%TZ)"
-fi
+self_stop
 exit 0
 '''
 
@@ -270,7 +294,7 @@ def get(url, timeout=60):
 
 # ----------------------------------------------------------------------------- pack
 STAGE = "1ab"
-FLOOR_S = BUILD_EST_S + TIMING_MAX_S + RUN_1B_MIN_S      # what the deadline must at least cover
+FLOOR_S = PREJOB_S + BUILD_EST_S + TIMING_MAX_S + RUN_1B_MIN_S      # what the deadline must at least cover
 
 
 def git(*args):
@@ -348,9 +372,9 @@ def check_card_seal(seal_rel, files):
 
 
 def deadline_seconds(dph):
-    """The job's deadline, in seconds from the job's start: SAFETY x the hours the hard stop buys at `dph`, minus the
-    export, minus PREJOB_S (billing starts before the job: image pull, container start)."""
-    return int(SAFETY * HARD_STOP[STAGE] / dph * 3600) - EXPORT_SECONDS - PREJOB_S
+    """The job's run deadline, in seconds from BOX_START (the create request): SAFETY x the hours the hard stop buys
+    at `dph`, minus the export."""
+    return int(SAFETY * HARD_STOP[STAGE] / dph * 3600) - EXPORT_SECONDS
 
 
 def run_deadline(dph):
@@ -358,24 +382,25 @@ def run_deadline(dph):
         raise SystemExit("--dph (the offer's $/h) is required")
     d = deadline_seconds(dph)
     if d < FLOOR_S:
-        raise SystemExit(f"at ${dph}/h the deadline is {d} s, under the feasibility floor {FLOOR_S} s (build "
-                         f"{BUILD_EST_S} + 1a {TIMING_MAX_S} + 1b {RUN_1B_MIN_S}); find a cheaper box")
+        raise SystemExit(f"at ${dph}/h the deadline is {d} s, under the feasibility floor {FLOOR_S} s (pre-job "
+                         f"{PREJOB_S} + build {BUILD_EST_S} + 1a {TIMING_MAX_S} + 1b {RUN_1B_MIN_S}); find a cheaper box")
     return d
 
 
 def wall_seconds(dph):
-    """The on-box wall: WALL_SAFETY x the hours the cap buys at `dph`, less the pre-job allowance (from job start)."""
-    return int(WALL_SAFETY * HARD_STOP[STAGE] / dph * 3600) - PREJOB_S
+    """The on-box wall, in seconds from BOX_START: WALL_SAFETY x the hours the cap buys at `dph`."""
+    return int(WALL_SAFETY * HARD_STOP[STAGE] / dph * 3600)
 
 
 def make_job(pack_sha, seal_rel, torch_pin, dph):
     wall = wall_seconds(dph)
     if wall < run_deadline(dph) + EXPORT_SECONDS:      # the closing sleep may be cut short: the export is done by then
         raise SystemExit(f"the wall ({wall} s) leaves no room for the export after the run deadline")
-    text = JOB.replace("__BODY__", JOB_BODY).replace("__WALL_S__", str(wall))
+    text = JOB.replace("__BODY__", JOB_BODY).replace("__WALL_FROM_BOX_S__", str(wall)).replace(
+        "__CAP__", repr(HARD_STOP[STAGE]))
     for key, val in (("__PACK_SHA__", pack_sha), ("__STAGE__", STAGE), ("__TORCH_PIN__", torch_pin),
                      ("__SEAL_REL__", seal_rel), ("__DPH__", repr(float(dph))),
-                     ("__DEADLINE_S__", str(run_deadline(dph))), ("__PREJOB_S__", str(PREJOB_S)),
+                     ("__DEADLINE_S__", str(run_deadline(dph))),
                      ("__TIMING_MAX_S__", str(TIMING_MAX_S))):
         text = text.replace(key, val)
     return text
@@ -444,6 +469,13 @@ def job_stage(args):
     return m.group(1)
 
 
+def with_box_start(job, epoch):
+    """The job text with BOX_START set (once, by `create`, just before the request)."""
+    if job.count("BOX_START=__BOX_START__") != 1:
+        raise SystemExit("args.json has no unset BOX_START line (made by another controller, or already sent)")
+    return job.replace("BOX_START=__BOX_START__", f"BOX_START={int(epoch)}")
+
+
 def create(a):
     args = json.loads(Path(a.args).read_text())
     stage = job_stage(args)
@@ -477,8 +509,11 @@ def create(a):
     if live:
         print(json.dumps({"sent": False, "DUPLICATE": [i.get("id") for i in live]}))
         raise SystemExit(1)
+    box_start = int(time.time())               # the swarm pattern: the box's billing start is taken as this moment
+    args[2] = with_box_start(args[2], box_start)
     r = call("PUT", f"/asks/{a.offer}/", body, timeout=120)
     print(json.dumps({"sent": True, "success": r.get("success"), "new_contract": r.get("new_contract"),
+                      "box_start": box_start,
                       "error": r.get("error"), "msg": r.get("msg"),
                       "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}))
 
@@ -541,7 +576,9 @@ def running_cost(x, now, floor_hours=0.0):
     never less than `floor_hours`. After a stop this keeps counting wall time, so it is an upper bound."""
     dph = x.get("dph_total")
     start = x.get("start_date")
-    hours = (now - float(start)) / 3600 if start is not None else (x.get("duration") or 0) / 3600
+    if start is None and not x.get("duration"):          # no clock: the cost is unknown, never $0
+        return {"dph": dph, "hours": None, "usd": None}
+    hours = (now - float(start)) / 3600 if start is not None else x["duration"] / 3600
     hours = max(hours, floor_hours, 0.0)
     return {"dph": dph, "hours": hours, "usd": None if dph is None else float(dph) * hours}
 
@@ -638,8 +675,8 @@ def waitlog(a):
                 out(3, "HARD-STOP")
             failures = 0
             ever_running = ever_running or state == "running"
-            if state in STOPPED and ever_running:
-                out(6, "INSTANCE-ENDED")
+            if state in STOPPED:                # ended (or stopped before this watch): pull it, never destroy first
+                out(6, "INSTANCE-ENDED", note="pull it; destroy only after a passed pull")
             start = x.get("start_date")
             age = now - float(start) if start is not None else now - t0
             if state != "running" and not ever_running and age > START_MIN * 60:

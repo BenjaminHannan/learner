@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -224,22 +225,24 @@ class PackTest(Fixture):
 
     def test_deadline_counts_from_the_billing_start(self) -> None:           # N3
         info = self.pack(dph=0.45)
-        want = int(0.9 * 2.80 / 0.45 * 3600) - 900 - 900
-        self.assertEqual(want, 18360)
+        want = int(0.9 * 2.80 / 0.45 * 3600) - 900                  # from BOX_START, the create request
+        self.assertEqual(want, 19260)
         self.assertEqual((info["run_deadline_s"], rent.deadline_seconds(0.45)), (want, want))
         job = self.args()[2]
-        self.assertIn("DEADLINE_S=18360", job)
-        self.assertIn("PREJOB_S=900", job)
+        self.assertIn("DEADLINE_S=19260", job)
+        self.assertIn("RUN_END=$((BOX_START + DEADLINE_S))", job)
+        self.assertIn("SPENT=$(( $(date +%s) - BOX_START ))", job)
+        self.assertEqual(job.count("BOX_START=__BOX_START__"), 1)        # set by create, not by pack
         self.assertIn("DPH=0.45", job)
         self.assertEqual((rent.SAFETY, rent.EXPORT_SECONDS, rent.PREJOB_S), (0.9, 900, 900))
 
     def test_pack_refuses_when_the_deadline_is_under_the_floor(self) -> None:   # N3
-        self.assertEqual(rent.FLOOR_S, 1800 + 2400 + 3600)
-        self.pack(dph=0.90)                                       # 8280 s: fits
+        self.assertEqual(rent.FLOOR_S, 900 + 1800 + 2400 + 3600)
+        self.pack(dph=0.90)                                       # 9180 s: fits
         shutil.rmtree(self.out)
-        self.assertEqual(rent.deadline_seconds(1.0), 7272)
+        self.assertEqual(rent.deadline_seconds(1.0), 8172)
         with self.assertRaises(SystemExit) as cm:
-            self.pack(dph=1.0)                                    # 7272 s < 7800
+            self.pack(dph=1.0)                                    # 8172 s < 8700
         self.assertIn("feasibility floor", str(cm.exception))
         self.assertFalse(self.out.exists())
         for dph in (0, -1):
@@ -273,8 +276,8 @@ class JobTextTest(Fixture):
         self.assertEqual(at, sorted(at), marks)
         self.assertIn("RUNNER=${RUNNER:-scripts/premonition_steals_r1_stage1.py}", job)
         self.assertIn("PY=${PY:-python3}", job)
-        self.assertIn('SPENT=$(( $(date +%s) - START + PREJOB_S ))', job)
-        self.assertIn('timeout --foreground "${LEFT}s" $PY -B $RUNNER run', job)
+        self.assertIn('SPENT=$(( $(date +%s) - BOX_START ))', job)
+        self.assertIn('timeout --foreground -k 60 "${LEFT}s" $PY -B $RUNNER run', job)
         self.assertIn("[ \"$LEFT\" -gt \"$TIMING_MAX_S\" ] && LEFT=$TIMING_MAX_S", job)     # 1a: min(left, 2400)
         self.assertIn("TIMING_MAX_S=2400", job)
         self.assertNotIn("--flop-budget", job)
@@ -422,6 +425,20 @@ class WaitlogTest(unittest.TestCase):
         with mock.patch.object(rent.time, "time", side_effect=[0, 197 * 60, 199 * 60]):
             code, calls, out = self.run_wait(inst)
         self.assertEqual((out["event"], calls, out["waited_min"]), ("TIMEOUT", self.STOPPED, 199.0))
+
+    def test_a_box_stopped_before_the_watch_is_never_not_running(self) -> None:          # fix (3)
+        for status in ("exited", "stopped", "offline"):
+            box = {"label": LABEL, "actual_status": status, "intended_status": "stopped", "dph_total": 0.45,
+                   "start_date": time.time() - 5 * 3600}                                   # long past 15 min
+            code, _, out = self.run_wait(box)
+            self.assertEqual((code, out["event"]), (6, "INSTANCE-ENDED"), status)
+            self.assertIn("never destroy", out["note"].replace("destroy only after", "never destroy before"))
+            self.assertNotIn("try another host", json.dumps(out))
+
+    def test_a_missing_clock_is_an_unknown_cost_not_zero(self) -> None:
+        self.assertIsNone(rent.running_cost({"dph_total": 0.45}, time.time())["usd"])
+        self.assertIsNone(rent.running_cost({"dph_total": 0.45, "duration": 0}, time.time())["usd"])
+        self.assertAlmostEqual(rent.running_cost({"dph_total": 0.45, "duration": 3600}, 0)["usd"], 0.45)
 
     def test_three_failed_polls_in_a_row_stop(self) -> None:
         code, calls, out = self.run_wait({"label": LABEL, "actual_status": "running"})      # no price: unreadable cost
@@ -878,13 +895,18 @@ class JobE2ETest(Fixture):
         path.write_text("#!/bin/bash\n" + body + "\n")
         path.chmod(path.stat().st_mode | stat.S_IEXEC)
 
-    def run_job(self, **env_extra):
+    def run_job(self, box_start=None, keep_ledger=False, **env_extra):
+        """Run the job as `create` would send it: BOX_START set to `box_start` (default: now). The box ledger sits one
+        level above JOBDIR; it is removed first unless `keep_ledger` (a restart of the same box)."""
+        if not keep_ledger:
+            (self.jobdir.parent / "r1s1-box-ledger.json").unlink(missing_ok=True)
         env = {k: v for k, v in os.environ.items() if k not in ("DRYRUN", "RUNNER", "PY", "JOBDIR")}
         env.update(PATH=f"{self.stubs}:{os.environ['PATH']}", JOBDIR=str(self.jobdir), PY=sys.executable,
                    RUNNER=str(self.runner), TICK_S="1", FAKE_LOG=str(self.log), PYTHONDONTWRITEBYTECODE="1",
                    PYTHONPATH=str(Path(self.tmp.name) / "fake_torch"))
         env.update({k: str(v) for k, v in env_extra.items()})
         args = self.args()
+        args[2] = rent.with_box_start(args[2], int(time.time()) if box_start is None else box_start)
         outfile = Path(self.tmp.name) / "job.out"
         with outfile.open("wb") as fh:                    # a file, not a pipe: an orphaned stub sleep cannot hold it
             r = subprocess.run(["bash", "-c", args[2], args[3], *args[4:]], env=env, stdout=fh,
@@ -924,7 +946,7 @@ class JobE2ETest(Fixture):
         self.assertIn(f"=== PRICE {sh(price)}", text)
         self.assertLess(text.index(f"=== PRICE {sh(price)}"), text.index('"flop_budget"'))
         spent = int(next(c for c in self.calls() if c.startswith("price")).split("spent=")[1].split()[0])
-        self.assertTrue(rent.PREJOB_S <= spent < rent.PREJOB_S + 120, spent)
+        self.assertTrue(0 <= spent < 120, spent)                       # billed since BOX_START (create = now here)
         marks = rent.closing_marks(text.splitlines())
         self.assertEqual([len(marks[k]) for k in ("DONE", "FAIL", "GATE")], [1, 0, 0])
         self.assertLess(text.index("=== MANIFEST"), text.index("=== R1S1 DONE"))
@@ -983,7 +1005,7 @@ class JobE2ETest(Fixture):
         self.assertLess(elapsed, 45, text[-2000:])                       # the wall (6 s), not the 60 s hang
         self.assertIn("=== R1S1 WALL 6 s", text)
         self.assertIn("=== R1S1 SELF-STOP wall deadline rc=124", text)
-        self.assertIn("=== R1S1 SELF-STOP requested (try 1)", text)
+        self.assertIn("=== R1S1 SELF-STOP accepted (try 1)", text)
         curl = [ln for ln in self.log.read_text().splitlines() if ln.startswith("curl ")]
         self.assertEqual(len(curl), 1)
         self.assertIn("-X PUT", curl[0])
@@ -999,19 +1021,48 @@ class JobE2ETest(Fixture):
         rc, text = self.run_job(WALL_S_TEST=10 ** 9, CONTAINER_ID=7, CONTAINER_API_KEY="k")
         self.assertEqual(rc, 0, text[-3000:])
         wall = rent.wall_seconds(0.45)
-        self.assertIn(f"=== R1S1 WALL {wall} s", text)                   # the test override can only shorten it
+        shown = int(re.search(r"=== R1S1 WALL (\d+) s", text).group(1))
+        self.assertTrue(wall - 5 <= shown <= wall, shown)                # the test override can only shorten it
         self.assertNotIn("SELF-STOP wall deadline", text)
-        self.assertIn("=== R1S1 SELF-STOP requested (try 1)", text)      # a finished job asks for the stop as well
-        self.assertLess(text.index("=== R1S1 DONE"), text.index("=== R1S1 SELF-STOP requested"))
+        self.assertIn("=== R1S1 SELF-STOP accepted (try 1)", text)       # a finished job asks for the stop as well
+        self.assertLess(text.index("=== R1S1 DONE"), text.index("=== R1S1 SELF-STOP accepted"))
         shutil.rmtree(self.jobdir)
         rc, text = self.run_job()                                       # outside Vast: no key, exiting ends the box
         self.assertIn("=== R1S1 SELF-STOP no container key", text)
 
+    def test_a_restart_never_reruns_the_job(self) -> None:
+        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": true}\'')
+        rc, text = self.run_job(CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        self.assertIn("=== R1S1 DONE", text)
+        ledger = json.loads((self.jobdir.parent / "r1s1-box-ledger.json").read_text())
+        self.assertEqual(set(ledger), {"box_start", "dph", "cap", "job_start", "wall_end"})
+        before = self.log.read_text()
+        rc, text = self.run_job(keep_ledger=True, CONTAINER_ID=7, CONTAINER_API_KEY="k")   # the container restarts
+        self.assertIn("=== R1S1 RESTART-REFUSED", text)
+        self.assertIn("=== R1S1 SELF-STOP accepted", text)
+        new = self.log.read_text()[len(before):]
+        self.assertNotIn("build", new)                                   # nothing reran
+        self.assertEqual([ln for ln in new.splitlines() if ln.startswith("curl ")][0].count("-X PUT"), 1)
+
+    def test_the_wall_counts_from_box_start(self) -> None:
+        wall = rent.wall_seconds(0.45)
+        rc, text = self.run_job(box_start=int(time.time()) - wall + 30)    # 30 s of money left: refused
+        self.assertIn("=== R1S1 REFUSED: no money left", text)
+        self.assertNotIn("build", self.log.read_text() if self.log.exists() else "")
+        rc, text = self.run_job(box_start=int(time.time()) + 3600)          # a BOX_START in the future
+        self.assertIn("=== R1S1 REFUSED: BOX_START", text)
+
+    def test_a_refused_self_stop_is_retried_and_reported(self) -> None:
+        self.stub("curl", 'echo "curl $*" >> "$FAKE_LOG"; echo \'{"success": false, "error": "auth"}\'')
+        rc, text = self.run_job(CONTAINER_ID=7, CONTAINER_API_KEY="k")
+        self.assertEqual(text.count("=== R1S1 SELF-STOP refused or failed"), 5)
+        self.assertNotIn("SELF-STOP accepted", text)
+
     def test_wall_arithmetic(self) -> None:
-        self.assertEqual(rent.wall_seconds(0.45), int(0.95 * 2.80 / 0.45 * 3600) - 900)
+        self.assertEqual(rent.wall_seconds(0.45), int(0.95 * 2.80 / 0.45 * 3600))             # from BOX_START
         for dph in (0.3, 0.45, 0.8):
             self.assertGreaterEqual(rent.wall_seconds(dph), rent.deadline_seconds(dph) + rent.EXPORT_SECONDS)
-            self.assertLessEqual((rent.wall_seconds(dph) + rent.PREJOB_S) / 3600 * dph, 0.95 * 2.80 + 1e-9)
+            self.assertLessEqual(rent.wall_seconds(dph) / 3600 * dph, 0.95 * 2.80 + 1e-9)
 
     def test_dryrun_stops_after_setup(self) -> None:
         rc, text = self.run_job(DRYRUN=1)
