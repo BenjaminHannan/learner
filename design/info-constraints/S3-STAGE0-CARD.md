@@ -203,3 +203,44 @@ That choice sets both the cell B training distractors and the primary `acc_d2`. 
   55% is the stricter bar against the 36.04% fact-only reference.
 - **Cell A's** reproduction check therefore compares against the filed §10b fact-only reading
   (`s2-distract-facts`: 299 / 369 / 315).
+
+---
+
+## 9a. Result (appended after the run; §1-§7 and amendments 1-4 unchanged)
+
+Run 2026-10-20 in this container, CPU, 1 thread per run, 800 steps per run, `--pool facts` (ruling), code = review round
+12 (e548d89d2). Raw: `artifacts/claude-infoconstraints-20261018/s3-stage0/`; `summary.json` is the runner's verbatim
+§5-§7. Readings /1024 on the test split. d2 = gold + 2 fact cards (primary).
+
+| cell | seed | control gold / d2 / no card | treated gold / d2 / no card | d (d2) | treated address mass ENT+REL |
+|---|---|---|---|---|---|
+| A | 0 | 1024 / 299 / 72 | 1024 / 240 / 72 | −5.76 | 0.11 |
+| A | 1 | 1024 / 369 / 68 | 1024 / 332 / 68 | −3.61 | 0.10 |
+| A | 2 | 1024 / 315 / 0 | 1024 / 288 / 0 | −2.64 | 0.14 |
+| B | 0 | 703 / 289 / 72 | 628 / 242 / 63 | −4.59 | 0.23 |
+| B | 1 | 61 / 77 / 61 | 122 / 101 / 68 | +2.34 | 0.34 |
+| B | 2 | 235 / 189 / 54 | 332 / 202 / 61 | +1.27 | 0.28 |
+
+- **Validity:** no cell is VOID.
+  - Cell A's control reproduced the filed S2 arms exactly (gold 1024 ×3; §10b d2 299 / 369 / 315).
+  - Cell B's control has 12 / 3 / 10 distinct answers over 256 questions on d2.
+  - Every run finished 800 steps with finite gradients.
+- **Marks (§6):**
+  1. Cell B d ≥ +15 every seed, and mean − 2SE > 0: **no** (mean d −0.33 points; mean − 2SE −4.63).
+  2. Cell B treated d2 ≥ 55%: **no** (23.6 / 9.9 / 19.7%).
+  3. Treated gold-alone ≥ 95% in both cells: **no** (cell B 61.3 / 11.9 / 32.4%).
+  4. No-card guard ≤ 9.25%: yes (0-7.0%).
+  5. No harm in cell A: **no** (treated more than 3 points below control on 2 seeds: −5.76 and −3.61).
+  6. Treated distinct > 1, and all runs complete: yes.
+- **FAIL rule:** fired (cell B mean d ≤ +3 points; treated d2 < 40% on 3 seeds).
+- **Proves-wrong rule (§7):** fired (|d| ≤ 3 points on 2 cell B seeds: +2.34, +1.27).
+- **Verdict: FAIL; S3 is proved wrong on this protocol.** The "address exists but the decoder doesn't use it" note
+  did **not** apply: the address pool's ENT+REL mass is 0.23-0.34 in cell B and 0.10-0.14 in cell A, below 0.5.
+  The learned address never became a person/relation address. It kept mostly the value token, as the writer pool
+  it was copied from does (cell A VAL mass 0.67-0.75).
+- **Reported, not marked (suggested readings, not results):**
+  - Cell B is weak training. In 800 steps with distractors, even the control reads a lone gold card at only
+    6-69%. So cell B tested choosing in models that had not yet learned to read.
+  - The secondary mixed-pool reading is noisy: cell A treated seed 2 reads 672/1024 on the mixed pool against its
+    control's 408, while the other seeds do not move. No mark reads it.
+  - These suggest what a next card could test. They do not reopen this one.
