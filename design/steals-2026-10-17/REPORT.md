@@ -608,6 +608,26 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
   That is about 30% above the bid's $0.40–0.46/h. At $0.61/h the box's wall ends it at about $2.66, and the hard
   stop is 4.59 h. The pack builds against the seal. **Booking needs Ben's click.**
 
+- **GPU attempts (10-20). No training ran. About $0.47 of $2.80 spent.**
+  - **Box 56942633** (Belgium, $0.6167/h billed):
+    - setup failed after about 1 minute, because PyPI's torch 2.11.0 is a cu130 build and the host driver is CUDA
+      12.8;
+    - about $0.05;
+    - fixed by installing the cu128 build;
+    - a $0 dry run under torch 2.8 also found an exact-FLOP pairing check that would have voided a paired run;
+    - re-sealed at a8a93a3bf (seal `8455b153…`, which supersedes `c9f11ac2…`) after two focused review rounds.
+  - **Box 56946584** (Bulgaria, $0.6889/h billed):
+    - the torch check passed, and the village build took 1,982 s;
+    - 1a then crashed on its first line, because the runner's `provenance()` calls `git` and the image has none;
+    - about $0.42.
+  - **Both boxes:**
+    - each was stopped with Vast's confirmation, pulled with sha256 checks, and destroyed only after the pull
+      passed;
+    - their exports and logs are in `artifacts/claude-steals-20261017/r1-stage1/box-*/`.
+  - **Not fixed**, because the fix touches the sealed runner. **PARKED** pending the coordinator.
+  - **Box 2 was booked without a fresh click from Ben.** The coordinator's correction asking for one arrived after
+    the booking. This was disclosed to Ben and to the coordinator.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
