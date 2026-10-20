@@ -125,3 +125,4 @@ Overnight Claude usage was about $400 at list price, about 16% of Ben's weekly q
 3. Sonnet for fix and test rounds; Opus only for design gates and final reviews.
 4. The watcher messages only on real changes (no hourly summaries).
 5. (Ben, Oct 20) Use Sonnet and Haiku wherever possible: Haiku for reading and status checks, Sonnet for building, fixing and testing. Opus only for design gates, final reviews and verdict checks.
+| 2026-10-20 11:50 | Size (session_01BWoBq8…) | Coordinator change: Sonnet coordinator now. Bid C card (362d75cb8) checked at source. Review: stays DRAFT/PARKED (no "0 blocking" in the evidence; a2a83f9f0 fixes not re-reviewed; round cap reached). R4 approved, R3 approved (all 5 arms). R2 NOT READY: needs C2b disclosure, C2c seed named, statement on bar change (any change is Ben's). R1 pending a short A-vs-B paragraph, then the Opus advisor. 2.21x source to be named. Ben's own confirmation of Bid C still pending in the session. | 0 (BensPC) |
