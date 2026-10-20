@@ -176,9 +176,11 @@ def cmd_summarize(args) -> None:
                    "treated_distinct_primary": t[primary]["distinct_256"],
                    "complete": all(x["finite"] and x["steps_run"] == STEPS for x in (c, t))}
             if cell == "A":                                   # §3 / §5: the control must be the filed S2 arm
-                filed = json.loads((S2_STAGE0 / f"treated-seed{seed}.json").read_text())["with_card"]
-                filed_d2 = json.loads((S2_DISTRACT / f"treated-seed{seed}.json").read_text())["d2"]
-                row["reproduces_s2"] = (filed_d2 is not None                 # an unread S2 arm cannot be matched
+                stage0, distract = S2_STAGE0 / f"treated-seed{seed}.json", S2_DISTRACT / f"treated-seed{seed}.json"
+                present = stage0.exists() and distract.exists()           # amendment 2: absent filed S2 -> VOID
+                filed = json.loads(stage0.read_text())["with_card"] if present else None
+                filed_d2 = json.loads(distract.read_text())["d2"] if present else None
+                row["reproduces_s2"] = (present and filed_d2 is not None     # an unread S2 arm cannot be matched
                                         and all(c["gold"][f] == filed[f] for f in ("correct", "distinct_256",
                                                                                  "distinct_1024"))
                                         and c["d2"]["correct"] == filed_d2["correct"])

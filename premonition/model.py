@@ -540,6 +540,8 @@ class PremonitionMini(nn.Module):
         config = self.config
         if cards.shape[1] > config.card_rows:
             raise ValueError(f"cannot insert {cards.shape[1]} cards into {config.card_rows} rows at once")
+        if config.card_address and store.addresses is None:      # before anything is written
+            raise ValueError("card_address needs a store from PremonitionMini.build_store (it holds the addresses)")
         real = cards >= 0
         if not real.any():
             return
@@ -559,8 +561,6 @@ class PremonitionMini(nn.Module):
             episode.x = episode.x.index_put((who[real], raw), rows[real])
             episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
         if config.card_address:
-            if store.addresses is None:
-                raise ValueError("card_address needs a store from PremonitionMini.build_store (it holds the addresses)")
             visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
             found = (lines >= 0).unsqueeze(-1)                         # `gather` gives line -1 for NULL / none
             address = store.addresses[visit, lines.clamp_min(0)].float() * found          # NULL: zero address
