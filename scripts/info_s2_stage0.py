@@ -144,9 +144,11 @@ def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
     (-1 = none). `facts_only=False` is m02's `distractor_preload` exactly: the pool is EVERY eligible card, filler
     lines included (about 65% of the draws on the far-fact toy, measured 10-20), which is what the filed S2 §10
     reading used. `facts_only=True` keeps only fact lines (cards that name an entity), as both cards' text says."""
-    if bool((batch.gold_lines[:, 0] < 0).any()):
-        raise ValueError("preload_distractors needs a told question (gold line) for every question, as the far-fact toy")
-    gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+    if bool((batch.gold_lines[:, 0] < 0).any()) or bool((batch.gold_lines[:, 1:] >= 0).any()):
+        raise ValueError("preload_distractors needs exactly one gold line per question, as on the far-fact toy")
+    gold, _, missing = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
+    if int(missing.sum()):
+        raise ValueError("preload_distractors: a gold line has no card")
     pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
     pool[:, store.null] = False
     if facts_only:
