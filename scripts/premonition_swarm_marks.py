@@ -89,6 +89,7 @@ class Eval:
     items: dict[str, tuple[int, tuple[str, ...]]]
     cells: dict[str, tuple[int, int]]                 # name -> (hits, n), recomputed from the items
     swarm: Optional[dict[str, Any]]
+    identity: dict[str, Any] = field(default_factory=dict)
 
     def cell(self, name: str) -> tuple[int, int]:
         return self.cells.get(name, (0, 0))
@@ -101,6 +102,7 @@ class Context:
     min_items: int
     seconds_tol: float
     card: str = ""
+    dry_run: bool = False                                  # the CPU dry run: tiny preset, overridden T, legacy identity
     void: list[str] = field(default_factory=list)          # VOID reasons (schema, validity, missing files)
     insufficient: list[str] = field(default_factory=list)
     checked_pairs: set = field(default_factory=set)
@@ -194,10 +196,20 @@ def load_eval(ctx: Context, arm: str, seed: int, lesion: Optional[str]) -> Optio
         if not isinstance(swarm, dict) or any(key not in swarm for key in need):
             problems.append("directories.validation.retrieval.swarm is missing or incomplete")
             swarm = None
+        else:                                     # sixth pass, item 14: exactly one finite number per desk
+            desks = EXPECTED_SWARM[arm]["thinkers"]
+            for key in ("ask_rate", "fetch_count"):
+                values = swarm[key]
+                if (not isinstance(values, list) or len(values) != desks
+                        or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+                                   for v in values)):
+                    problems.append(f"swarm.{key} must list {desks} finite numbers (one per desk), got {values!r}")
+                    swarm = None
+                    break
     if problems:
         ctx.void.append(f"schema: {name}: " + "; ".join(problems[:6]) + (" ..." if len(problems) > 6 else ""))
     found = Eval(path=name, arm=arm, seed=seed, lesion=lesion, split=split, tag=tag, tokenizer_sha=sha,
-                 items=items, cells=cells, swarm=swarm)
+                 items=items, cells=cells, swarm=swarm, identity=dict(report.get("identity") or {}))
     ctx.evals[(arm, seed, lesion)] = found
     return found
 
@@ -274,6 +286,9 @@ def compare(ctx: Context, x_key: tuple[str, Optional[str]], y_key: tuple[str, Op
             per_item.setdefault(i, []).append((x, y))
     seeds_scored = len(out.seeds)
     common = sorted(i for i, pairs in per_item.items() if len(pairs) == seeds_scored)
+    if len(common) != len(per_item):                       # sixth pass, item 13: never pool a silent intersection
+        ctx.void.append(f"schema: {cell}: the item sets differ across seeds ({len(per_item) - len(common)} items are "
+                        f"not scored in every seed); every seed must score the same validation items")
     out.n = len(common)                                                 # independent units: items
     if out.n:
         x_mean = [Fraction(sum(x for x, _ in per_item[i]), seeds_scored) for i in common]
@@ -418,6 +433,18 @@ def validity_mark(ctx: Context, name: str, title: str, arms: Sequence[str]) -> d
     T = num((ctx.c0 or {}).get("T"))
     if not (T > 0):
         problems.append("validity: c0.json has no usable T")
+    if not ctx.dry_run:                                    # sixth pass, item 4: only the registered T is ever read
+        c0 = ctx.c0 or {}
+        if c0.get("t_override") is not None or c0.get("T") != c0.get("T_formula"):
+            problems.append(f"validity: c0.json T {c0.get('T')!r} is not the registered formula's "
+                            f"{c0.get('T_formula')!r} (t_override {c0.get('t_override')!r})")
+        for (arm, seed), report in sorted(ctx.trains.items()):
+            if report.get("size") != "full":
+                problems.append(f"validity: train-{arm}-s{seed} size {report.get('size')!r}, not 'full'")
+        for e in ctx.evals.values():
+            if e.identity.get("primary") is not True or e.identity.get("regime") != "label-free":
+                problems.append(f"validity: {e.path} is not a primary label-free report "
+                                f"(primary {e.identity.get('primary')!r}, regime {e.identity.get('regime')!r})")
     tags: dict[Any, list[str]] = {}
     shas: dict[Any, list[str]] = {}
     if ctx.c0:
@@ -579,8 +606,8 @@ def s1_card(ctx: Context) -> tuple[list[dict[str, Any]], dict[str, Any], dict[st
     m3 = slip_mark(ctx, "M3", "DEV slip vs D1 (guard): near / overall, S1 vs D1", ("S1", None), ("D1", None), "S1 vs D1")
     m4 = usage_mark(ctx, "M4", "desk usage (guard), S1", "S1")
     m5, s1_collapsed = diversity_mark(ctx, "M5", "diversity (guard), S1", "S1")
-    _, s0_collapsed = diversity_mark(ctx, "M5b", "diversity, S0 (reference)", "S0")
-    s0_rows, s1_rows = diversity_rows(ctx, "S0"), diversity_rows(ctx, "S1")
+    m5b, s0_collapsed = diversity_mark(ctx, "M5b", "diversity, S0 (reference)", "S0")
+    s0_rows, s1_rows = m5b["detail"]["seeds"], m5["detail"]["seeds"]          # one pass each (sixth pass, item 21)
     shift = {}
     if not any(r.get("missing") for r in s0_rows + s1_rows):
         shift = {"register_cos_S1_minus_S0": [b["register_cos"] - a["register_cos"] for a, b in zip(s0_rows, s1_rows)],
@@ -643,9 +670,9 @@ def s1_card(ctx: Context) -> tuple[list[dict[str, Any]], dict[str, Any], dict[st
 
 # ------------------------------------------------------------------ run and report
 def run(card: str, directory: str, *, seeds: Sequence[int] = SEEDS, min_items: int = MIN_ITEMS,
-        seconds_tol: float = SECONDS_TOL, note: str = "") -> dict[str, Any]:
+        seconds_tol: float = SECONDS_TOL, note: str = "", dry_run: bool = False) -> dict[str, Any]:
     ctx = Context(directory=Path(directory), seeds=tuple(seeds), min_items=min_items, seconds_tol=seconds_tol,
-                  card=card)
+                  card=card, dry_run=dry_run)
     ctx.c0 = read_json(ctx, "c0.json")
     for arm in CARD_ARMS[card]:
         for seed in ctx.seeds:
@@ -716,9 +743,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--seeds", default=",".join(map(str, SEEDS)))
     parser.add_argument("--seconds-tol", type=float, default=SECONDS_TOL)
     parser.add_argument("--note", default="", help="a line printed at the top of the .md (e.g. DRY RUN)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="the CPU dry run: accept its overridden T, tiny preset and legacy identity (never the real card)")
     args = parser.parse_args(argv)
     result = run(args.card, args.dir, seeds=[int(s) for s in args.seeds.split(",")], min_items=args.min_items,
-                 seconds_tol=args.seconds_tol, note=args.note)
+                 seconds_tol=args.seconds_tol, note=args.note, dry_run=args.dry_run)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=1, default=str) + "\n", encoding="utf-8")

@@ -998,17 +998,21 @@ class ThirdPassTest(unittest.TestCase):
         finally:
             ptrain._sync = original
 
-    def test_gold_mode_skips_the_unused_ask_terms(self) -> None:
+    def test_gold_mode_keeps_the_ask_terms_like_d1(self) -> None:
+        # Round 3, sixth pass, item 15 (ADOPTED Oct 20): D1's gold forward keeps a zero-weight ASK term, so its ASK
+        # and query heads are in the graph (zero gradient, decayed by AdamW). The swarm must match: the same shared
+        # parameters get a gradient in gold mode, in both arms.
         batch = synthetic_batch(seed=2)
-        model = s1()
-        original = sw.balanced_assignment
-        sw.balanced_assignment = lambda *a, **k: (_ for _ in ()).throw(AssertionError("split computed in gold"))
-        try:
+        untouched = {}
+        for name, model in (("D1", build()), ("S0", s0())):
+            model.zero_grad(set_to_none=True)
             out = model(batch, mode="gold")
-            self.assertEqual(out["ask"].item(), 0.0)
-        finally:
-            sw.balanced_assignment = original
-        out = model(batch, mode="gold", weights={"lm": 1.0, "ask": 0.5, "ans": 1.0, "halt": 0.0})
+            out["loss"].backward()
+            untouched[name] = {n for n, p in model.named_parameters()
+                               if p.grad is None and not n.startswith(("think.desk", "think.board_type"))}
+            self.assertNotIn("heads.ask.weight", untouched[name], name)
+        self.assertEqual(untouched["D1"], untouched["S0"])
+        out = s1()(batch, mode="gold", weights={"lm": 1.0, "ask": 0.5, "ans": 1.0, "halt": 0.0})
         self.assertGreater(out["ask"].item(), 0.0)                            # an explicit ask weight still trains it
 
     def test_final_round_asks_are_not_usage(self) -> None:
@@ -1074,6 +1078,73 @@ class AnswerCapTest(unittest.TestCase):
         self.assertEqual(int(model.answer(batch, max_loops=2).loops.max()), 2)
         self.assertEqual(int(model.answer(batch).loops.max()), rounds)
 
+
+
+class SixthPassTest(unittest.TestCase):
+    """Review round 3, sixth pass (the complete sweep, ruled Oct 20): items 16, 18 and 20. Item 15 (gold mode keeps
+    the ASK terms, as D1 does) is `ThirdPassTest.test_gold_mode_keeps_the_ask_terms_like_d1`."""
+
+    SYNCING_INDEX = ("nonzero",)                       # nonzero.default and boolean-mask indexing (both sync)
+
+    def _index_syncs(self, model: PremonitionMini, batch: VisitBatch, loops: int) -> int:
+        with torch.no_grad(), _Record() as record:
+            model(batch, mode="teacher", loops=loops, generator=torch.Generator().manual_seed(0))
+        return sum(1 for op in record.ops if op.startswith(self.SYNCING_INDEX))
+
+    def test_round_invariant_masks_add_no_sync_per_round(self) -> None:
+        # Item 18: the answer path's kept-token indices, owners and targets are computed once, so more rounds add no
+        # nonzero / boolean-index sync (the old loop recomputed them every round, a cost only the swarm paid).
+        batch = synthetic_batch(seed=2)
+        counts = [self._index_syncs(s0(), batch, loops) for loops in (2, 4)]
+        self.assertEqual(counts[0], counts[1], counts)
+
+    def test_weight_norm_is_not_computed_under_a_seconds_budget(self) -> None:
+        # Item 16: with a seconds budget the log adds no weight-norm pass (equal T charges only the losses).
+        from premonition.flops import FlopFit
+        from premonition.toy import ToySpec, toy_stream
+        from premonition.train import MiniTrainer, label_free, mini_train_config
+        spec = ToySpec()
+        for budget, expect_norm in ((1e6, False), (None, True)):
+            torch.manual_seed(0)
+            model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64))
+            trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30,
+                                  seed=0, seconds_budget=budget)
+            trainer.fit = FlopFit(0.0, 0.0, 0.0)
+            calls = []
+            original = trainer.weight_norm
+            trainer.weight_norm = lambda: calls.append(1) or original()
+            trainer.train((label_free(b) for b in toy_stream(spec, 4, 0)), max_steps=2)
+            self.assertEqual(bool(calls), expect_norm, budget)
+            norms = [record.get("weight_norm") for record in trainer.history if "loss" in record]
+            self.assertTrue(norms, budget)
+            self.assertEqual(all(n is None for n in norms), not expect_norm, (budget, norms))
+
+    def test_one_round_rule_and_one_modes(self) -> None:
+        # Item 20: one definition each. planned_loops, swarm_forward and swarm_answer all read `rounds_for`.
+        from premonition import model as pmodel
+        self.assertIs(sw.MODES, pmodel.MODES)
+        config = s0().config
+        for mode, loops, want in (("gold", None, 2), ("teacher", None, config.swarm_rounds),
+                                  ("own", 3, 3), ("own", 0, 1), ("eval", None, config.swarm_rounds),
+                                  ("eval", 2, 2), ("eval", 99, config.swarm_rounds)):
+            self.assertEqual(sw.rounds_for(config, mode, loops), want, (mode, loops))
+        with self.assertRaises(ValueError):
+            sw.rounds_for(config, "nope")
+        batch = synthetic_batch(seed=1)
+        for mode in ("gold", "teacher", "own"):
+            self.assertTrue(torch.equal(planned_loops(batch, mode, config),
+                                        torch.full((batch.size[2],), sw.rounds_for(config, mode) * M)))
+        calls = []
+        original = sw.rounds_for
+        sw.rounds_for = lambda *a, **k: calls.append(a[1]) or original(*a, **k)
+        try:
+            model = s0()
+            model(batch, mode="teacher")
+            model.answer(batch, max_loops=2)
+            planned_loops(batch, "own", model.config)
+        finally:
+            sw.rounds_for = original
+        self.assertEqual(calls, ["teacher", "eval", "own"])
 
 if __name__ == "__main__":
     unittest.main()

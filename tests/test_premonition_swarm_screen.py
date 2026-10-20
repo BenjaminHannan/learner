@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -19,8 +20,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
+# The runner sets its cache and temp variables (TMPDIR and others) at import time, for its own process. Restore
+# the environment afterwards so the rest of the test process is unaffected (round 3, sixth pass, item 19).
+_ENV_BEFORE = dict(os.environ)
+_TEMPDIR_BEFORE = tempfile.tempdir
 import premonition_swarm_screen as screen                        # noqa: E402  (bootstraps before torch)
 import premonition_swarm_marks as marks                          # noqa: E402
+os.environ.clear()
+os.environ.update(_ENV_BEFORE)
+tempfile.tempdir = _TEMPDIR_BEFORE
 
 from learnlab import policy                                      # noqa: E402
 from premonition import exp1, slices, swarm                      # noqa: E402
@@ -72,6 +80,7 @@ def eval_report(arm: str, seed: int, items: list[dict], *, lesion=None, swarm_di
     mini = {"thinkers": 1, "swarm_board": False} if arm == "D1" else {"thinkers": 4, "swarm_board": arm == "S1"}
     retrieval = {} if swarm_diag is None else {"swarm": swarm_diag}
     return {"split": "validation", "lesion": lesion, "checkpoint": f"checkpoints/swarm-screen/{arm}-s{seed}",
+            "identity": {"primary": True, "regime": "label-free"},
             "config": {"mini": mini}, "data": {"tag": tag}, "tokenizer": {"sha256": sha},
             "items": {"validation": items},
             "directories": {"validation": {"summary": summary, "retrieval": retrieval}}}
@@ -93,7 +102,7 @@ def train_report(arm: str, seed: int, *, seconds: float = T * 1.004, tag="tag-1"
     return {"status": "completed", "arm": arm, "seed": seed, "train_seconds": seconds, "seconds_budget": T,
             "steps": steps, "stop": "seconds budget", "loop_mismatches": 0, "final": {"loss": 2.3},
             "history": [{"step": 50, "loss": 2.4}, {"step": 100, "loss": 2.3}], "nonfinite_logged_steps": [],
-            "parameters": 1,
+            "parameters": 1, "size": "full",
             "swarm": marks.EXPECTED_SWARM[arm], "data": {"tag": tag}, "tokenizer": {"sha256": sha}}
 
 
@@ -114,7 +123,7 @@ class Scenario:
         def write(name: str, payload: dict) -> None:
             (folder / name).write_text(json.dumps(payload), encoding="utf-8")
 
-        write("c0.json", {"T": T, "tag": "tag-1", "tokenizer_sha256": "sha-1"})
+        write("c0.json", {"T": T, "T_formula": T, "t_override": None, "tag": "tag-1", "tokenizer_sha256": "sha-1"})
         arms = ("D1", "S0", "S1") if with_s1 else ("D1", "S0")
         for arm in arms:
             for seed in SEEDS:
@@ -665,7 +674,7 @@ class BoxGuardTest(unittest.TestCase):
         import subprocess
         probe = self.ROOT / f"dirty-probe-{os.getpid()}.tmp"                 # untracked, so `git status` is dirty
         pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
-        with tempfile.TemporaryDirectory() as out:
+        with tempfile.TemporaryDirectory(dir=self.ROOT / "artifacts") as out:   # inside the repo, git-ignored
             probe.write_text("dirty", encoding="utf-8")
             try:
                 run = subprocess.run(["bash", str(self.ROOT / "scripts/premonition_swarm_box.sh")], cwd=self.ROOT,
@@ -845,8 +854,407 @@ class FifthPassTest(MarksTestCase):
         self.assertIn('--ckpt-dir "${OUT#"$ROOT"/}/c0-probe"', c0_line)
         self.assertNotIn('--ckpt-dir "$CKPT"', c0_line)
         self.assertLess(text.index('rm -rf "$OUT/c0-probe"'), text.index(c0_line))   # cleared before C0 starts
-        self.assertIn("-e '^c0-probe'", text)                                  # and never packed
+        self.assertIn("--exclude=./c0-probe", text)                            # and never packed
 
+
+
+class SixthPassReadoutTest(MarksTestCase):
+    """Review round 3, sixth pass (the complete sweep, ruled Oct 20), readout items 4, 13, 14 and 21."""
+
+    def test_an_unregistered_T_voids_the_readout(self) -> None:
+        # Item 4: a T that is not the registered formula's (an override, or a T that differs from T_formula) is VOID.
+        for patch in ({"t_override": 300.0}, {"T_formula": 600}):
+            scenario = Scenario()
+            scenario.edits.append(("c0.json", lambda c, patch=patch: c.update(patch)))
+            result = self.run_card(scenario)
+            self.assertVerdict(result, "VOID")
+            self.assertTrue(any("registered formula" in r for r in result["void_reasons"]), result["void_reasons"])
+        self.assertVerdict(self.run_card(Scenario()), "PROMOTE")                     # the registered T reads clean
+
+    def test_tiny_runs_and_non_primary_evals_void_the_real_card(self) -> None:
+        # Item 4: the real card reads only full-size trains and primary label-free evals; the dry run says so.
+        scenario = Scenario()
+        scenario.edits.append(("train-S0-s1.json", lambda r: r.update(size="tiny")))
+        scenario.edits.append(("eval-D1-s2.json", lambda r: r.update(identity={"primary": False, "regime": "label-free"})))
+        result = self.run_card(scenario)
+        self.assertVerdict(result, "VOID")
+        reasons = " ".join(result["void_reasons"])
+        self.assertIn("train-S0-s1 size 'tiny'", reasons)
+        self.assertIn("eval-D1-s2.json is not a primary label-free report", reasons)
+        self.assertVerdict(self.run_card(scenario, dry_run=True), "PROMOTE")         # the dry run accepts them
+
+    def test_item_sets_that_differ_across_seeds_are_void(self) -> None:
+        # Item 13: each seed is internally consistent, but seed 1 scored one far item fewer. Pooling must not
+        # silently intersect: VOID.
+        scenario = Scenario()
+
+        def drop(report: dict) -> None:
+            report["items"]["validation"] = [i for i in report["items"]["validation"] if i["id"] != "far0"]
+            refresh(report)
+        for arm in ("D1", "S0"):
+            scenario.edits.append((f"eval-{arm}-s1.json", drop))
+        result = self.run_card(scenario)
+        self.assertVerdict(result, "VOID")
+        self.assertTrue(any("item sets differ across seeds" in r for r in result["void_reasons"]),
+                        result["void_reasons"])
+
+    def test_per_desk_lists_must_have_one_finite_number_per_desk(self) -> None:
+        # Item 14: an empty list, a short list (3 entries for 4 desks), a NaN and a string are schema problems.
+        for key, bad in (("fetch_count", []), ("ask_rate", [0.5, 0.5, 0.5]), ("fetch_count", [1.0, 2.0, float("nan"), 1.0]),
+                         ("ask_rate", "0.5")):
+            scenario = Scenario()
+            scenario.swarm["S0"][0] = {**HEALTHY, key: bad}
+            result = self.run_card(scenario)
+            self.assertVerdict(result, "VOID")
+            self.assertTrue(any(f"swarm.{key} must list 4 finite numbers" in r for r in result["void_reasons"]),
+                            (key, bad, result["void_reasons"]))
+
+    def test_s1_computes_each_arms_diversity_rows_once(self) -> None:
+        # Item 21: s1_card reuses the rows M5 / M5b already computed, instead of a second pass that re-appended the
+        # same VOID reasons (hidden only by the final de-duplication).
+        calls = []
+        original = marks.diversity_rows
+        marks.diversity_rows = lambda ctx, arm: calls.append(arm) or original(ctx, arm)
+        try:
+            scenario = Scenario()
+            scenario.edits.append(("eval-S0-s1.json", lambda r: r["directories"]["validation"].update(retrieval={})))
+            result = self.run_card(scenario, card="S1")
+        finally:
+            marks.diversity_rows = original
+        self.assertEqual(sorted(calls), ["S0", "S1"])
+        self.assertVerdict(result, "VOID")
+        self.assertEqual(len(result["void_reasons"]), len(set(result["void_reasons"])))
+
+
+class SixthPassRunnerTest(unittest.TestCase):
+    """Review round 3, sixth pass, runner items 1, 4, 12, 17 and 19."""
+
+    def test_t_raw_weights_flop_shares_by_each_modes_own_speed(self) -> None:
+        # Item 17: T_raw = F x sum_m w_m s_m / f_m (FLOP shares, each mode at its own FLOP/s), not F / (update-share
+        # weighted FLOPs per update / update-share weighted seconds).
+        seconds = {"gold": 1.0, "teacher": 2.0, "own": 4.0}
+        flops = {"gold": 1e12, "teacher": 1e12, "own": 4e12}
+        want = screen.F_TARGET * (0.05 * 1.0 / 1e12 + 0.25 * 2.0 / 1e12 + 0.70 * 4.0 / 4e12)
+        self.assertAlmostEqual(screen.t_raw_from_modes(seconds, flops), want, delta=want * 1e-12)
+        old = screen.F_TARGET / (screen.weighted(flops) / screen.weighted(seconds))     # the old update-share rule
+        self.assertGreater(abs(old - want) / want, 0.05)                              # they really differ here
+        with self.assertRaises(ValueError):
+            screen.t_raw_from_modes({**seconds, "own": 0.0}, flops)
+
+    def test_c0_refuses_a_t_override_off_the_tiny_preset(self) -> None:
+        # Item 4: an unregistered T is refused before any work, not only detected later.
+        with self.assertRaises(SystemExit) as caught:
+            screen.main(["c0", "--data-rel", "nowhere", "--tokenizer", "nowhere", "--out", "unused.json",
+                         "--size", "full", "--device", "cpu", "--t-override", "300"])
+        self.assertIn("--t-override is for the tiny CPU dry run only", str(caught.exception))
+
+    def test_the_c0_bench_trips_the_run_trainers_memory_guard(self) -> None:
+        # Item 1: time_run checks the run trainer's memory guard after each timed chunk, so an arm that S0 would
+        # abort on cannot set a T.
+        import premonition.train as ptrain
+        from learnlab.train import MemoryGuardError
+        from tests.test_premonition_model import VOCAB, synthetic_batch
+        batches = [synthetic_batch(seed=k) for k in range(3)]
+        checks = []
+
+        def guard(trainer) -> None:
+            checks.append(1)
+            raise MemoryGuardError("over the limit", 15, 14)
+        original = ptrain.MiniTrainer._check_memory
+        ptrain.MiniTrainer._check_memory = guard
+        try:
+            with self.assertRaises(MemoryGuardError):
+                screen.time_run({}, "teacher", batches, size="tiny", vocab=VOCAB, device="cpu", warmup=1, timed=2,
+                                chunk=1)
+        finally:
+            ptrain.MiniTrainer._check_memory = original
+        self.assertEqual(checks, [1])
+
+    def test_an_aborted_overhead_probe_stops_c0(self) -> None:
+        # Item 1: a probe that did not complete (e.g. the memory guard) stops C0 instead of reporting an overhead.
+        import premonition.train as ptrain
+        original = ptrain.train_d
+        ptrain.train_d = lambda *a, **k: {"status": "memory_guard", "error": "over the limit", "train_seconds": 1.0}
+        try:
+            with tempfile.TemporaryDirectory() as root:
+                budget = type("B", (), {"root": root})()
+                with self.assertRaises(SystemExit) as caught:
+                    screen.measure_train_overhead(budget, "d", "t", size="tiny", device="cpu", workers=1,
+                                                  ckpt_dir="ck", seconds=1.0, max_tokens=10)
+        finally:
+            ptrain.train_d = original
+        self.assertIn("did not complete", str(caught.exception))
+
+    def test_the_runners_default_checkpoint_folder_is_git_ignored(self) -> None:
+        # Item 12: a manual `train` run with the default --ckpt-dir must not dirty the tree.
+        import subprocess
+        args = screen.build_parser().parse_args(["train", "--arm", "D1", "--seed", "0", "--seconds", "1",
+                                                 "--data-rel", "d", "--tokenizer", "t", "--out", "o.json"])
+        self.assertEqual(args.ckpt_dir, screen.CKPT_DIR)
+        ignored = subprocess.run(["git", "check-ignore", "-q", "--no-index", f"{screen.CKPT_DIR}/D1-s0/model.pt"],
+                                 cwd=ROOT)
+        self.assertEqual(ignored.returncode, 0, screen.CKPT_DIR)
+
+    def test_importing_the_runner_leaves_the_test_environment_alone(self) -> None:
+        # Item 19: the runner's import-time cache and temp variables are restored for the rest of the test process.
+        # (Not a whole-environment comparison: torch's inductor sets TORCHINDUCTOR_CACHE_DIR itself when used.)
+        for name in ("TMPDIR", "TMP", "TEMP", "TORCH_HOME", "XDG_CACHE_HOME", "HF_HOME", "TORCHDYNAMO_DISABLE",
+                     "TORCH_COMPILE_DISABLE", "CUDA_CACHE_DISABLE"):
+            self.assertEqual(os.environ.get(name), _ENV_BEFORE.get(name), name)
+        self.assertNotEqual(os.environ.get("TMPDIR"), str(ROOT / ".runtime" / "tmp"))
+
+
+# A stand-in runner and readout for the box script: the REAL premonition_swarm_box.sh runs in a throwaway git repo
+# (clean tree, its own manifest), so every refusal and exit path is reachable on a CPU host in seconds.
+FAKE_SCREEN = r"""
+import json, os, sys
+from pathlib import Path
+argv = sys.argv[1:]
+cmd = argv[0]
+opts = {argv[i][2:]: argv[i + 1] for i in range(1, len(argv) - 1) if argv[i].startswith("--")}
+if cmd == os.environ.get("FAKE_FAIL"):
+    print(f"fake {cmd} failed"); sys.exit(1)
+if cmd == "manifest":
+    print("manifest OK"); sys.exit(0)
+out = Path(opts["out"])
+if cmd == "data":
+    out.write_text(json.dumps({"data_rel": "data/fake", "tokenizer_path": "tok/fake.json"}))
+elif cmd == "c0":
+    Path(opts["ckpt-dir"]).mkdir(parents=True, exist_ok=True)
+    (Path(opts["ckpt-dir"]) / "probe.pt").write_text("probe")
+    T = int(float(opts.get("t-override") or 600))
+    c0 = {"T": T, "T_formula": 600, "t_override": opts.get("t-override"), "stop_and_ask": False, "money_stop": False,
+          "ratio_s0m4_over_d1": 1.2,
+          "flags": {"ratio": 1.2, "stop_ratio": 2.5, "T": T, "eval_seconds_estimate": 60,
+                    "train_overhead_seconds": 30, "projected_s0_box_hours": 1.5, "dph": 0.46,
+                    "projected_s0_cost_usd": 0.69, "money_cap_usd": 3.5}}
+    patch = json.loads(os.environ.get("FAKE_C0") or "{}")
+    c0.update({k: v for k, v in patch.items() if k != "flags"}); c0["flags"].update(patch.get("flags", {}))
+    out.write_text(json.dumps(c0))
+elif cmd == "train":
+    folder = Path(opts["ckpt-dir"]) / f"{opts['arm']}-s{opts['seed']}"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "model.pt").write_text("weights")
+    out.write_text(json.dumps({"status": "completed"}))
+elif cmd == "eval":
+    out.write_text(json.dumps({"lesion": opts.get("lesion")}))
+"""
+FAKE_MARKS = r"""
+import sys
+from pathlib import Path
+argv = sys.argv[1:]
+out = Path(argv[argv.index("--out") + 1])
+out.write_text("{}")
+out.with_suffix(".md").write_text("VERDICT: HOLD (fake readout)\n")
+"""
+FAKE_PY = """#!/usr/bin/env bash
+# the box's CUDA probe answers FAKE_CUDA (default yes); everything else is the real python
+case "$*" in *torch.cuda.is_available*) exit "${FAKE_CUDA:-0}";; esac
+exec "%s" "$@"
+"""
+
+
+class SixthPassBoxTest(unittest.TestCase):
+    """Review round 3, sixth pass, box items 2-11, on the real box script in a throwaway clean repo."""
+
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def setUp(self) -> None:
+        import shutil
+        import subprocess
+        self._tmp = tempfile.TemporaryDirectory(dir="/tmp")
+        self.repo = Path(self._tmp.name).resolve() / "repo"
+        (self.repo / "scripts").mkdir(parents=True)
+        shutil.copy(self.ROOT / "scripts/premonition_swarm_box.sh", self.repo / "scripts/premonition_swarm_box.sh")
+        (self.repo / "scripts/premonition_swarm_screen.py").write_text(FAKE_SCREEN, encoding="utf-8")
+        (self.repo / "scripts/premonition_swarm_marks.py").write_text(FAKE_MARKS, encoding="utf-8")
+        (self.repo / ".gitignore").write_text("artifacts/\n", encoding="utf-8")
+        self.py = Path(self._tmp.name) / "fakepy"
+        self.py.write_text(FAKE_PY % sys.executable, encoding="utf-8")
+        self.py.chmod(0o755)
+        git = lambda *a: subprocess.run(["git", *a], cwd=self.repo, check=True, capture_output=True, text=True)
+        self.git = git
+        git("init", "-q")
+        git("config", "user.email", "t@t"), git("config", "user.name", "t")
+        names = ["scripts/premonition_swarm_box.sh", "scripts/premonition_swarm_screen.py",
+                 "scripts/premonition_swarm_marks.py"]
+        lines = subprocess.run(["sha256sum", *names], cwd=self.repo, capture_output=True, text=True, check=True).stdout
+        (self.repo / "scripts/premonition_swarm_manifest.txt").write_text(lines, encoding="utf-8")
+        git("add", "-A")
+        git("commit", "-qm", "fake")
+        self.pin = git("rev-parse", "HEAD").stdout.strip()
+        self.run_dir = self.repo / "artifacts" / "claude-swarm-screen-20261018"
+        self.ledger = self.run_dir / "money-ledger.json"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def box(self, **env) -> "subprocess.CompletedProcess":
+        import subprocess
+        base = {k: v for k, v in os.environ.items()
+                if k not in ("OUT", "CKPT", "DRYRUN", "DPH", "CAP", "MAXH", "PART", "FROM", "CHECK_ONLY",
+                             "STOP_OVERRIDE", "BOX_START", "C0_EXTRA")}
+        env = {**base, "PIN": self.pin, "PY": str(self.py), **{k: str(v) for k, v in env.items()}}
+        return subprocess.run(["bash", str(self.repo / "scripts/premonition_swarm_box.sh")], cwd=self.repo, env=env,
+                              capture_output=True, text=True, timeout=300)
+
+    def out(self, name: str) -> Path:
+        return self.run_dir / name
+
+    def write_ledger(self, box_start: int, dph: str = "0.46", cap: str = "4.20") -> None:
+        self.run_dir.mkdir(parents=True, exist_ok=True)
+        self.ledger.write_text(json.dumps({"box_start": box_start, "dph": dph, "cap": cap, "first_out": "x"}))
+
+    def c0_folder(self, name: str, *, gpu: str = "none", **c0) -> Path:
+        folder = self.out(name)
+        folder.mkdir(parents=True)
+        (folder / "data.json").write_text(json.dumps({"data_rel": "data/fake", "tokenizer_path": "tok/fake.json"}))
+        base = {"T": 600, "T_formula": 600, "t_override": None, "stop_and_ask": False, "money_stop": False,
+                "ratio_s0m4_over_d1": 1.2,
+                "flags": {"ratio": 1.2, "stop_ratio": 2.5, "T": 600, "eval_seconds_estimate": 60,
+                          "train_overhead_seconds": 30, "projected_s0_box_hours": 1.5, "dph": 0.46,
+                          "projected_s0_cost_usd": 0.69, "money_cap_usd": 3.5}}
+        base.update(c0)
+        (folder / "c0.json").write_text(json.dumps(base))
+        (folder / "host-c0.txt").write_text(f"gpu: {gpu}\n")
+        return folder
+
+    # ------------------------------------------------------------------ the whole flow, and the archive (10, 11)
+    def test_a_full_run_packs_without_the_actual_ckpt_and_keeps_both_host_records(self) -> None:
+        import tarfile
+        out = self.out("full")
+        run = self.box(DPH="0.46", OUT=out, CKPT="artifacts/claude-swarm-screen-20261018/full/my-ckpt")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertTrue((out / "my-ckpt" / "D1-s0" / "model.pt").exists())
+        with tarfile.open(out / "swarm-screen-out.tgz") as archive:
+            names = archive.getnames()
+        self.assertIn("./MARKS-S0.md", names)
+        self.assertFalse([n for n in names if "my-ckpt" in n or "c0-probe" in n or n.endswith(".tgz")], names)
+        self.assertIn("./host-c0.txt", names)
+        self.assertIn("./host-s0.txt", names)
+        self.assertTrue(self.ledger.exists())
+
+    # ------------------------------------------------------------------ money (2, 3, 5)
+    def test_the_bid_hours_at_this_dph_must_fit_the_total_cap(self) -> None:
+        run = self.box(DPH="0.50", OUT=self.out("o"))                       # 8.5 h x 0.50 = 4.25 > 4.20
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("A revised bid with the new total is needed", run.stdout)
+        self.assertFalse(self.ledger.exists())
+
+    def test_money_inputs_must_be_positive_decimals(self) -> None:
+        for env, word in (({"DPH": "abc"}, "DPH"), ({"DPH": "0.46", "MAXH": "2h"}, "MAXH"),
+                          ({"DPH": "0.46", "CAP": "-1"}, "CAP"), ({"DPH": "0"}, "DPH")):
+            run = self.box(OUT=self.out("o"), **env)
+            self.assertEqual(run.returncode, 2, (env, run.stdout))
+            self.assertIn(word, run.stdout.split("REFUSED")[-1], env)
+
+    def test_the_total_persists_across_invocations_and_fresh_outs(self) -> None:
+        import time
+        self.write_ledger(int(time.time()) - int(9.2 * 3600))                 # 9.2 h x 0.46 = 4.23: nothing left
+        run = self.box(DPH="0.46", OUT=self.out("fresh-out"))
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("no money is left", run.stdout)
+        self.assertFalse(self.out("fresh-out").joinpath("data.json").exists())
+        self.write_ledger(int(time.time()) - 3600, dph="0.40")               # a different rate than the ledger's
+        run = self.box(DPH="0.46", OUT=self.out("fresh-out-2"))
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("differ from the box ledger", run.stdout)
+
+    def test_the_first_invocation_starts_the_ledger_and_later_ones_reuse_it(self) -> None:
+        import time
+        start = int(time.time()) - 600
+        run = self.box(DPH="0.46", OUT=self.out("a"), PART="c0", BOX_START=start)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertEqual(json.loads(self.ledger.read_text())["box_start"], start)
+        run = self.box(DPH="0.46", OUT=self.out("b"), PART="c0", BOX_START=start + 500)   # ignored: the ledger rules
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn(f"box billing since {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(start))}", run.stdout)
+
+    def test_a_projected_s0_beyond_the_money_left_stops_and_cannot_be_overridden(self) -> None:
+        import time
+        self.write_ledger(int(time.time()) - 8 * 3600)                        # 9.13 h of money, 1.13 h left
+        run = self.box(DPH="0.46", OUT=self.out("o"), STOP_OVERRIDE="coordinator says go",
+                       FAKE_C0=json.dumps({"flags": {"projected_s0_box_hours": 7.5}}))
+        self.assertEqual(run.returncode, 3, run.stdout)
+        self.assertIn("a revised bid is needed", run.stdout)
+        self.assertFalse(list(self.out("o").glob("train-*.json")))
+
+    # ------------------------------------------------------------------ an unregistered T is refused (4)
+    def test_an_unregistered_t_is_refused(self) -> None:
+        run = self.box(DPH="0.46", OUT=self.out("o"), C0_EXTRA="--t-override 300")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("may not set --t-override", run.stdout)
+        run = self.box(DPH="0.46", OUT=self.out("p"), FAKE_C0=json.dumps({"T": 900}))   # T != T_formula
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("is not the registered formula", run.stdout)
+        self.assertFalse(list(self.out("p").glob("train-*.json")))
+
+    # ------------------------------------------------------------------ robustness (6-11)
+    def test_a_failed_step_exits_5_and_packs_nothing(self) -> None:
+        run = self.box(DRYRUN="1", OUT=self.out("o"), FAKE_FAIL="c0")
+        self.assertEqual(run.returncode, 5, run.stdout + run.stderr)
+        self.assertIn("STEP c0 FAILED", run.stdout)
+        self.assertFalse(self.out("o").joinpath("swarm-screen-out.tgz").exists())
+        self.assertFalse(list(self.out("o").glob("train-*.json")))
+
+    def test_an_out_with_many_tracked_files_is_refused_not_141(self) -> None:
+        big = self.out("big")
+        big.mkdir(parents=True)
+        for k in range(3000):
+            (big / f"tracked-file-with-a-long-name-so-the-list-overflows-a-pipe-{k:05d}.txt").write_text("x")
+        self.git("add", "-f", str(big))
+        self.git("commit", "-qm", "tracked under artifacts")
+        self.pin = self.git("rev-parse", "HEAD").stdout.strip()
+        run = self.box(DRYRUN="1", OUT=big, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+        self.assertIn("holds git-tracked files", run.stdout)
+
+    def test_one_run_per_out(self) -> None:
+        used = self.out("used")
+        used.mkdir(parents=True)
+        (used / "box.log").write_text("an earlier refusal's log only")
+        run = self.box(DRYRUN="1", OUT=used, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)           # a log alone is not a result
+        for name in ("train-D1-s0.json", "eval-S0-s2.json", "MARKS-S0.md", "swarm-screen-out.tgz"):
+            folder = self.out(f"with-{name}")
+            folder.mkdir(parents=True)
+            (folder / name).write_text("{}")
+            run = self.box(DRYRUN="1", OUT=folder, CHECK_ONLY="1")
+            self.assertEqual(run.returncode, 2, (name, run.stdout))
+            self.assertIn("already holds results", run.stdout)
+
+    def test_check_only_covers_part_s0s_inputs_host_and_gate(self) -> None:
+        run = self.box(DRYRUN="1", OUT=self.out("empty"), PART="s0", CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("PART=s0 needs data.json", run.stdout)
+        other = self.c0_folder("other-gpu", gpu="Tesla T4, GPU-1234")
+        run = self.box(DRYRUN="1", OUT=self.out("o1"), PART="s0", FROM=other, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("is not the one C0 measured T on", run.stdout)
+        stop = self.c0_folder("stop", stop_and_ask=True)
+        run = self.box(DRYRUN="1", OUT=self.out("o2"), PART="s0", FROM=stop, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 3, run.stdout)
+        unregistered = self.c0_folder("unregistered", T=900)
+        run = self.box(DPH="0.46", OUT=self.out("o3"), PART="s0", FROM=unregistered, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("is not the registered formula", run.stdout)
+        good = self.c0_folder("good")
+        run = self.box(DRYRUN="1", OUT=self.out("o4"), PART="s0", FROM=good, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertFalse(self.out("o4").joinpath("c0.json").exists())          # CHECK_ONLY copies nothing
+
+    def test_part_s0_from_an_earlier_out_copies_its_c0_and_trains(self) -> None:
+        good = self.c0_folder("first")
+        run = self.box(DPH="0.46", OUT=self.out("rerun"), PART="s0", FROM=good)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertEqual(self.out("rerun").joinpath("c0.json").read_text(), good.joinpath("c0.json").read_text())
+        self.assertIn("FROM: copied c0.json", run.stdout)
+        self.assertTrue(self.out("rerun").joinpath("train-S0-s2.json").exists())
+        missing = self.out("no-c0")
+        missing.mkdir(parents=True)
+        run = self.box(DPH="0.46", OUT=self.out("rerun-2"), PART="s0", FROM=missing)
+        self.assertEqual(run.returncode, 2, run.stdout)
+        self.assertIn("has no data.json", run.stdout)
 
 if __name__ == "__main__":
     unittest.main()

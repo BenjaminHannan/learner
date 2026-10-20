@@ -36,12 +36,26 @@ the tag goes in the readout).
   round 3, item a). It is settled here, before any run.
 * **(10-20, pre-seal) What "equal T" charges.** With `seconds_budget` set, **no arm runs any training
   diagnostic**: no forward hooks (dead-unit fraction, halt rate), no `InsertLog` / `card_stats`, no recall@k.
-  Only the losses are logged, and the GPU is synced before the clock is read when the loop ends. So equal T means
+  The log records the window's losses, the last step's grad norm (already computed for clipping) and throughput
+  counters; the weight norm is skipped (10-20, item 16). The GPU is synced before the clock is read when the loop
+  ends. So equal T means
   equal training work for D1, S0 and S1 (coordinator ruling, Oct 20, third pass). **Confirmed before adopting it:
   no mark of this card or of RUNCARD-S1 reads any of the removed diagnostics.** From the train reports the readout
   reads only `status`, `train_seconds`, `steps`, `final.loss`, the logged losses in `history`, `loop_mismatches`,
   `seconds_budget` and `stop` (`premonition_swarm_marks.py`, validity block). M1-M4 and M6 read the eval files, and
   the diversity report comes from evaluation.
+* **(10-20, pre-seal, sixth pass) The T formula, exactly.** C0 times D1 over its timed batches and counts the
+  FLOPs of those same batches per curriculum mode. T_raw = F / (D1's FLOP/s), where D1's FLOP/s is weighted by the
+  curriculum's FLOP shares: T_raw = F · Σ_m w_m · s_m / f_m (w_m the mode's FLOP share, s_m its measured seconds per
+  update, f_m its FLOPs per update, over the same timed batches). T = min(3600, 300 · ceil(T_raw / 300)). This is
+  what "the seconds D1 needs for F FLOPs" means; the earlier text weighted update shares and averaged FLOPs over
+  more batches than were timed (sweep item 17). **An unregistered T is refused, not only detected:** the box
+  refuses `--t-override` off the dry run and refuses to train when c0.json's T differs from its formula T, and the
+  readout VOIDs such a folder (item 4).
+* **(10-20, pre-seal, sixth pass) Gold mode keeps the ASK terms in both arms.** D1's gold forward keeps a
+  zero-weight ASK term (its ASK head gets a zero gradient and AdamW decays it). The swarm now does the same; the
+  earlier skip left S0's ASK head out of the graph and undecayed (sweep item 15, ADOPTED by the coordinator,
+  Oct 20).
 * **Matched parameters (reported, separately).** D1 2,102,228 (v2) vs S0 2,102,740 (+512 desk embeddings, +0.02%).
 * **Reported, not matched:** steps, tokens, think FLOPs per question, s/step, peak GPU memory.
 * Eval: `evaluate_d_checkpoint(split="validation")` (label-free), max_loops default. S0 is fixed at 4

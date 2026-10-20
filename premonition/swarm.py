@@ -27,11 +27,25 @@ import torch.nn.functional as F
 
 from learnlab.core import IGNORE_INDEX
 from premonition.batch import VisitBatch
+from premonition.model import MODES                    # model imports this module lazily, so no cycle
 from premonition.store import CardStore, age_bucket, set_cross_entropy
 
-MODES = ("gold", "teacher", "own")
+
 LESIONS = (None, "board", "notes", "cards")
 COLLAPSE_COS, COLLAPSE_OVERLAP = 0.95, 0.8     # the pre-registered collapse line
+
+
+def rounds_for(config: Any, mode: str, loops: Optional[int] = None) -> int:
+    """The one round rule (round 3, sixth pass, item 20). Training (`mode` in MODES): `loops` if given, else 2 for
+    "gold", else `swarm_rounds`. Eval (`mode == "eval"`, `loops` = max_loops): a cap on `swarm_rounds`, as D1's
+    max_loops is. Always at least 1 and at most `max_loops`."""
+    if mode == "eval":
+        rounds = min(loops or config.swarm_rounds, config.swarm_rounds)
+    elif mode in MODES:
+        rounds = loops if loops is not None else 2 if mode == "gold" else config.swarm_rounds
+    else:
+        raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+    return max(1, min(rounds, config.max_loops))
 
 
 # ----------------------------------------------------------------------------- board
@@ -324,8 +338,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
         return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
     device = hidden.device
-    rounds = loops if loops is not None else 2 if mode == "gold" else config.swarm_rounds
-    rounds = max(1, min(rounds, config.max_loops))
+    rounds = rounds_for(config, mode, loops)
     swarm = _Swarm(model, batch, hidden, store, model._mentions(batch))
     desk_store, episode = swarm.store, swarm.episode
     gold = None
@@ -343,6 +356,11 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
     inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
     inputs = inputs.masked_fill(inputs == IGNORE_INDEX, config.pad_id)
     keep = targets != IGNORE_INDEX
+    # Round-invariant (round 3, sixth pass, item 18): computed once, so the round loop adds no host syncs.
+    flat = torch.nonzero(keep.reshape(-1)).squeeze(1)
+    owner = torch.div(flat, keep.shape[1], rounding_mode="floor")
+    kept_targets = targets.reshape(-1).index_select(0, flat)
+    kept_count = keep.sum(1).clamp_min(1)
 
     ans_terms, halt_terms, set_terms, bce_terms = [], [], [], []
     for step in range(rounds):
@@ -351,13 +369,12 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
             swarm.board.write_notes(rows[:, model._register_base + 1])
         memory, valid = swarm.memory()
         hidden_ans = model._decode_logits(memory, valid, inputs)
-        logits = F.linear(hidden_ans[keep], model.embed.weight).float()
-        owner = torch.nonzero(keep)[:, 0]
-        token_ce = F.cross_entropy(logits, targets[keep], reduction="none")
+        logits = F.linear(hidden_ans.flatten(0, 1).index_select(0, flat), model.embed.weight).float()
+        token_ce = F.cross_entropy(logits, kept_targets, reduction="none")
         per_question = torch.zeros(count, device=device).index_add(0, owner, token_ce)
-        per_question = per_question / keep.sum(1).clamp_min(1)
+        per_question = per_question / kept_count
         wrong = torch.zeros(count, device=device).index_add(
-            0, owner, (logits.argmax(-1) != targets[keep]).float())
+            0, owner, (logits.argmax(-1) != kept_targets).float())
         correct = (wrong == 0).float()
         union = swarm.desk_fetched().any(1) if store is not None else None
         if gold is not None:
@@ -373,8 +390,6 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
             metrics["answer_acc"] = correct.mean().detach()
         if store is None:
             continue
-        if mode == "gold" and not weights.get("ask", 0.0):
-            continue                     # gold never fetches and L_ask has weight 0: skip the split and the ASK terms
         # L_ask: balanced assignment of the cards no desk has fetched yet.
         need_union = gold & ~union
         prefs = scores.detach().view(count, M, -1)
@@ -473,7 +488,7 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
     mentions = model._mentions(batch, low)
     swarm = _Swarm(model, batch, hidden, store, mentions, board=lesion != "board")
     board = swarm.board
-    rounds = max(1, min(max_loops or config.swarm_rounds, config.swarm_rounds))   # a cap, as D1's max_loops is
+    rounds = rounds_for(config, "eval", max_loops)                                 # a cap, as D1's max_loops is
     first_top = torch.full((count, config.top_k), -1, dtype=torch.long, device=device)
     asks = torch.zeros(count, M, dtype=torch.long, device=device)
     halt_prob = torch.zeros(count, device=device)

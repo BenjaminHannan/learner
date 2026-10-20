@@ -108,10 +108,8 @@ def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Ten
     """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU."""
     count = batch.q_visit.shape[0]
     if config.thinkers > 1:         # swarm: fixed rounds, counted in desk-rounds like metrics["question_loops"]
-        if mode not in ("gold", "teacher", "own"):
-            raise ValueError(f"unknown mode {mode!r}")
-        rounds = 2 if mode == "gold" else config.swarm_rounds
-        return torch.full((count,), min(max(rounds, 1), config.max_loops) * config.thinkers, dtype=torch.long)
+        rounds = swarm_module.rounds_for(config, mode)
+        return torch.full((count,), rounds * config.thinkers, dtype=torch.long)
     if mode == "gold":
         loops = torch.full((count,), 2, dtype=torch.long)
     elif mode == "teacher":
@@ -229,9 +227,10 @@ def _add(total: dict[str, Any], part: Mapping[str, Any]) -> None:
 
 
 # ----------------------------------------------------------------------------- the trainer
-def _sync(device: torch.device) -> None:
+def _sync(device: Union[torch.device, str]) -> None:
     """Wait for queued CUDA work, so a training-clock reading includes every queued step (matched wall-clock runs).
-    It does nothing on CPU, where the work is already done."""
+    It does nothing on CPU, where the work is already done. The one definition (the swarm screen's bench uses it)."""
+    device = torch.device(device)
     if device.type == "cuda":
         torch.cuda.synchronize(device)
 
@@ -403,7 +402,8 @@ class MiniTrainer(Trainer):
                 **{name: means.get(name) for name in ("loss", "lm", "ask", "ans", "halt")},
                 "gold_recall_at_4": means.get("recall_at_k"), "answer_acc": means.get("answer_acc"),
                 "answer_acc_first": means.get("answer_acc_first"),
-                "grad_norm": float(last["grad_norm"]), "weight_norm": self.weight_norm(),
+                "grad_norm": float(last["grad_norm"]),
+                "weight_norm": self.weight_norm() if self.seconds_budget is None else None,   # no extra work in T
                 "dead_mlp_fraction": last.get("dead"), "halt_rate": last.get("halt_rate"),
             }
             if "cards" in last:

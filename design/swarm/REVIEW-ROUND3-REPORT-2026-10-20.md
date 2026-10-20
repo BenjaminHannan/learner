@@ -336,3 +336,44 @@ gradient difference. The full list, grouped for one closing round:
 Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
 Recommendation: close all 21 in one round, each with a test that fails on the old code. Item 15 changes the training
 objective in gold mode back to D1's (equal arms), so it should be stated in the card. Then a full sweep again.
+
+## Seventh pass: all 21 closed (coordinator ruling Oct 20: "close all 21 findings in one round")
+
+Each fix has a regression test. **Every new test was run against the old code (3bc376ceb, with the new test
+files copied in) and fails there** (27 tests, classes `SixthPass*` in both swarm test files, plus
+`ThirdPassTest.test_gold_mode_keeps_the_ask_terms_like_d1`). Item 19's fix lives in the test file itself, so its
+test was shown to fail with the restore lines removed. The box tests run the REAL box script in a throwaway clean git
+repo, with a stand-in runner and readout, so every refusal, money and exit path is reached on a CPU host.
+
+| # | fix | test |
+|---|---|---|
+| 1 | `time_run` checks the run trainer's memory guard after each chunk; an arm that trips it fails (D1/S0m4 → C0 stops); an incomplete overhead probe stops C0 | `test_the_c0_bench_trips_the_run_trainers_memory_guard`, `test_an_aborted_overhead_probe_stops_c0` |
+| 2, 3, 5 | CAP is the total across invocations: a box ledger (box_start, dph, cap), refused on mismatch or when no money is left; hard stop = box_start + CAP/DPH (MAXH may only cut it); DPH/CAP/MAXH must be positive decimals; the bid's 8.5 h × DPH > CAP refuses ("a revised bid is needed"); projected S0 beyond the money left → exit 3, not overridable | `test_the_bid_hours_…`, `test_money_inputs_…`, `test_the_total_persists_…`, `test_the_first_invocation_starts_the_ledger_…`, `test_a_projected_s0_beyond_the_money_left_…` |
+| 4 | an unregistered T is refused: C0_EXTRA `--t-override` off DRYRUN, runner `--t-override` off tiny, box gate T ≠ T_formula; readout VOIDs a non-formula T, a non-full train or a non-primary eval (`--dry-run` relaxes this for the CPU dry run only) | `test_an_unregistered_t_is_refused`, `test_c0_refuses_a_t_override_…`, `test_an_unregistered_T_voids_the_readout`, `test_tiny_runs_and_non_primary_evals_…` |
+| 6 | a failed step exits 5 (no archive) | `test_a_failed_step_exits_5_and_packs_nothing` |
+| 7 | the tracked-files check has no pipe (no exit 141) | `test_an_out_with_many_tracked_files_is_refused_not_141` |
+| 8 | one run per OUT; rerun = fresh OUT with `PART=s0 FROM=<old OUT>` (copied read-only, sha256 logged) | `test_one_run_per_out`, `test_part_s0_from_an_earlier_out_…` |
+| 9, 11 | CHECK_ONLY runs PART=s0's input check, the GPU tie and the C0 gate; per-part host records; PART=s0 refuses a different GPU | `test_check_only_covers_part_s0s_inputs_host_and_gate` |
+| 10 | the archive excludes the actual CKPT and c0-probe | `test_a_full_run_packs_without_the_actual_ckpt_…` |
+| 12 | the runner's default `--ckpt-dir` is under artifacts/ (git-ignored) | `test_the_runners_default_checkpoint_folder_is_git_ignored` |
+| 13 | VOID when item sets differ across seeds | `test_item_sets_that_differ_across_seeds_are_void` |
+| 14 | per-desk lists: exactly the arm's desk count of finite numbers, else VOID (schema) | `test_per_desk_lists_must_have_one_finite_number_per_desk` |
+| 15 | **ADOPTED**: gold mode keeps the ASK terms, as D1 does (the skip is reverted; recorded pre-seal in RUNCARD-S0 §1) | `test_gold_mode_keeps_the_ask_terms_like_d1` |
+| 16 | no weight norm under a seconds budget; card text corrected | `test_weight_norm_is_not_computed_under_a_seconds_budget` |
+| 17 | `T_raw = F · Σ w_m s_m / f_m` over the same timed batches (`t_raw_from_modes`); card text records it | `test_t_raw_weights_flop_shares_by_each_modes_own_speed` |
+| 18 | round-invariant masks hoisted (losses and gradients bit-identical to the old code in teacher and own mode, checked) | `test_round_invariant_masks_add_no_sync_per_round` |
+| 19 | the tests restore the environment after importing the runner | `test_importing_the_runner_leaves_the_test_environment_alone` |
+| 20 | one `_sync` (train), one MODES (model), one round rule (`swarm.rounds_for`, used by planned_loops, swarm_forward, swarm_answer) | `test_one_round_rule_and_one_modes` |
+| 21 | s1_card reuses M5 / M5b's rows (one pass per arm) | `test_s1_computes_each_arms_diversity_rows_once` |
+
+**Found while testing (new, fixed):** `pack` tarred OUT into a file inside OUT. GNU tar then fails with "file
+changed as we read it" (exit 1), so a full run would have failed at its very last step. It now tars beside OUT and
+moves the archive in. A pack failure exits 5. The fresh-OUT check also had a bug: a plain path in a nullglob list is
+not a glob, so every OUT counted as "holding results". Fixed with `swarm-screen-out.tg[z]`.
+
+**Decision to flag:** the money ledger sits one folder above OUT
+(`artifacts/claude-swarm-screen-20261018/money-ledger.json`), not "under OUT" as the ruling said, so that a fresh OUT
+cannot reset the total.
+
+Suites: `tests.test_premonition_swarm`, `…_swarm_screen`, `…_model`, `…_train`, `…_label_free`, `…_contenders`,
+`…_slices`, `…_data`: 243 tests OK (4 skipped).

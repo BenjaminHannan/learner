@@ -146,3 +146,31 @@ takes about 0.3-0.6 s. That is about 2% of a 30 s budget, the whole width of RUN
 step of overshoot voids a 30 s dry run (it did at 9a3579a: +2.01%). At 120 s the same step is about 0.5%, and the
 dry run at d58a18a stayed within +0.25%. This setting is procedural only. It changes no success, kill or validity
 bar, and the box's own T still comes from C0 (≥ 300 s).
+
+## Money, reruns and exit codes (amended 2026-10-20, round 3 sixth pass; coordinator ruling Oct 20)
+
+The script's header is the reference; this is the contract it implements.
+* **CAP is the TOTAL for the box** ($4.20 for C0 + S0, every invocation and every OUT included). The running
+  total is `(now − BOX_START) × DPH`, idle time between invocations included. It is kept in a **box ledger**,
+  `artifacts/claude-swarm-screen-20261018/money-ledger.json` (`box_start`, `dph`, `cap`), written by the first
+  invocation that passes every check. The ruling said "persisted under OUT". The ledger sits one folder above OUT, on
+  purpose: one ledger per box, so a fresh OUT (the rerun route below) cannot reset the total. A later invocation
+  with a different DPH or CAP than the ledger is refused. The hard stop is `box_start + CAP / DPH` hours, cut
+  further by `MAXH` if given. Every step runs under `timeout` to that deadline.
+* **No quiet raise.** The script refuses before anything runs if the bid's 8.5 h × DPH exceeds CAP (above
+  $0.494/h at $4.20). Then a revised bid with a new total is needed. After C0, if the projected S0 box-hours exceed the
+  hours left before the hard stop, it writes STOP-AND-ASK.txt and exits 3. `STOP_OVERRIDE` cannot pass this one.
+* **Only the registered T trains.** Off DRYRUN, `C0_EXTRA` may not carry `--t-override`, the runner refuses
+  `--t-override` off the tiny preset, the box refuses a c0.json whose `T` is not its `T_formula`, and the readout
+  VOIDs such a folder.
+* **One run per OUT.** An OUT holding any `train-*.json`, `eval-*.json`, `MARKS-*` or the archive is refused. The
+  rerun route after a VOID or a cut: a fresh OUT with `PART=s0 FROM=<old OUT>`, which copies `data.json`,
+  `c0.json` and `host-c0.txt` read-only (their sha256 is logged), so the same T is used. PART=s0 refuses a GPU
+  (name, uuid) that differs from the one in `host-c0.txt`. Host records are per part: `host-c0.txt`, `host-s0.txt`.
+* `CHECK_ONLY=1` runs every refusal check, including PART=s0's inputs, the host tie and the C0 gate, then exits 0.
+* **Exit codes:** 2 refused (nothing paid ran in this invocation), 3 stop-and-ask, 4 the money deadline or MAXH
+  cut a step, 5 a step failed (or the archive could not be packed). On 3/4/5, copy OUT's JSON and logs back directly.
+* The archive excludes the actual CKPT folder (wherever it is inside OUT) and `c0-probe`. tar writes it beside OUT
+  and it is then moved in. Writing it inside the folder being archived made GNU tar fail with "file changed as we
+  read it" (found by the sixth-pass box tests, which run the real script in a throwaway clean repo with stand-in runner and
+  readout).

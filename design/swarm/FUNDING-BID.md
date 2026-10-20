@@ -60,3 +60,9 @@ finding out: ≤ $0.70.
 
 Each box refuses MAXH × DPH above its item cap. Copy back and check before destroying the box. One ledger
 line per launch. Every dollar figure in a readout is wall time × the billed rate.
+
+**(2026-10-20, coordinator ruling: $4.20 is the TOTAL across all PARTs.)** The box script enforces it as a
+running total over every invocation (a box ledger, `BOX-SPEC.md` "Money, reruns and exit codes"). The honest
+projection is this bid's 8.5 box-hours × DPH. At DPH ≤ $0.494/h it fits $4.20 (at the bid's $0.46/h: $3.91). Above
+that the box refuses to start, and a revised bid with the new total and its hard stop comes back here first.
+Neither MAXH nor the cap is ever raised quietly.

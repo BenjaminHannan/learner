@@ -72,6 +72,8 @@ from typing import Any, Callable, Mapping, Optional, Sequence  # noqa: E402
 
 import torch  # noqa: E402
 
+from premonition.model import MODES  # noqa: E402  (the one definition; after the bootstrap above)
+
 # ------------------------------------------------------------------ the registered arms and numbers
 ARMS: dict[str, dict[str, Any]] = {
     "D1": {},
@@ -81,7 +83,6 @@ ARMS: dict[str, dict[str, Any]] = {
 C0_ARMS: dict[str, dict[str, Any]] = {
     "D1": {}, "S0m2": dict(thinkers=2), "S0m4": ARMS["S0"], "S0m8": dict(thinkers=8), "S1m4": ARMS["S1"],
 }
-MODES = ("gold", "teacher", "own")
 P_OWN = 0.75                                         # the curriculum's flat p_own in the own phase
 CURRICULUM_WEIGHTS = {"gold": 0.05, "teacher": 0.25, "own": 0.70}
 F_TARGET = 2.6e16                                    # RUNCARD-S0 section 1: D1's FLOPs that define T
@@ -91,7 +92,7 @@ MONEY_CAP_USD = 3.50                                 # the S0 hard cap
 BOX_OVERHEAD = 1.15
 S0_RUNS = 6                                          # D1 and S0 x seeds 0-2: trains and validation evals
 VOCAB_V2 = 7068
-CKPT_DIR = "checkpoints/swarm-screen"
+CKPT_DIR = "artifacts/claude-swarm-screen-20261018/ckpt-manual"   # git-ignored (round 3, sixth pass, item 12)
 # Every repo module the run imports (review round 3, item 2): the closure of CLOSURE_SEEDS below, kept as an
 # explicit list so the manifest reads plainly. `ManifestCoverageTest` recomputes the closure and fails if an
 # imported repo module is missing, so a new import cannot go unpinned. Plus the box script.
@@ -162,6 +163,20 @@ def compute_T(d1_flops_per_s: float, *, target: float = F_TARGET, step: int = T_
         raise ValueError("D1 FLOP/s must be positive and finite")
     raw = target / d1_flops_per_s
     return raw, int(min(cap, step * max(1, math.ceil(raw / step))))
+
+
+def t_raw_from_modes(seconds: Mapping[str, float], flops: Mapping[str, float], *, target: float = F_TARGET,
+                     weights: Mapping[str, float] = None) -> float:
+    """The seconds D1 needs for `target` FLOPs under the curriculum (RUNCARD-S0 section 1; sixth pass, item 17).
+
+    The curriculum spends FLOP SHARES by phase (`weights`: 0.05 gold, 0.25 teacher, 0.70 own), so each phase's share
+    is spent at that phase's own FLOP/s: T_raw = target x sum_m w_m x s_m / f_m, with s_m D1's seconds per update and
+    f_m D1's FLOPs per update in mode m, both over the same timed batches."""
+    weights = CURRICULUM_WEIGHTS if weights is None else weights
+    for mode in MODES:
+        if not (seconds[mode] > 0 and flops[mode] > 0 and math.isfinite(seconds[mode]) and math.isfinite(flops[mode])):
+            raise ValueError(f"mode {mode}: seconds and FLOPs per update must be positive and finite")
+    return target * sum(weights[mode] * seconds[mode] / flops[mode] for mode in MODES)
 
 
 def projected_box_hours(T: float, eval_seconds: float, *, train_overhead: float, runs: int = S0_RUNS,
@@ -339,15 +354,10 @@ def fresh_trainer(arm_config: Mapping[str, Any], size: str, vocab: int, device: 
     return run_trainer(model, device, BENCH_SECONDS)
 
 
-def _sync(device: str) -> None:
-    if device == "cuda":
-        torch.cuda.synchronize()
-
-
 def time_run(arm_config: Mapping[str, Any], mode: str, batches: Sequence[Any], *, size: str, vocab: int,
              device: str, warmup: int, timed: int, chunk: int) -> dict[str, Any]:
     """One fresh model, `warmup` untimed updates, then `timed` timed ones in chunks: s/update per chunk."""
-    from premonition.train import Plan, planned_loops
+    from premonition.train import Plan, _sync, planned_loops
     trainer = fresh_trainer(arm_config, size, vocab, device)
     config = trainer.model.config
     plan = Plan(mode, mode, P_OWN if mode == "own" else 0.0)
@@ -365,6 +375,7 @@ def time_run(arm_config: Mapping[str, Any], mode: str, batches: Sequence[Any], *
             trainer._train_step(batch, plan, planned_loops(batch, mode, config), False)
         _sync(device)
         chunks.append((time.perf_counter() - began) / len(part))
+        trainer._check_memory()          # the run trainer's 14 GiB reserved guard (sixth pass, item 1): raises if over
     peak = torch.cuda.max_memory_allocated() if device == "cuda" else None
     del trainer
     gc.collect()
@@ -379,7 +390,7 @@ def gpu_busy_fraction(arm_config: Mapping[str, Any], batches: Sequence[Any], *, 
     if device != "cuda":
         return None
     from torch.profiler import ProfilerActivity, profile
-    from premonition.train import Plan, planned_loops
+    from premonition.train import Plan, _sync, planned_loops
     trainer = fresh_trainer(arm_config, size, vocab, device)
     config = trainer.model.config
     plan = Plan("own", "own", P_OWN)
@@ -426,7 +437,7 @@ def measure_eval_seconds(budget: Any, data_rel: str, tokenizer_path: str, *, siz
     S0 does not halt, so an untrained S0 does the same work as a trained one; D1's six-run share is charged at
     S0's rate, which is the larger. The first pass is reported too (it builds the validation cache)."""
     from premonition import preprocess
-    from premonition.train import checkpoint_config, evaluate_d_checkpoint, save_mini_checkpoint
+    from premonition.train import _sync, checkpoint_config, evaluate_d_checkpoint, save_mini_checkpoint
     from learnlab.tokenizer import Tokenizer
     from premonition import data as pdata
     trainer = fresh_trainer(ARMS["S0"], size, vocab, device)
@@ -455,7 +466,7 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
     """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short S0 `train_d` with a
     `seconds` budget, wall time minus `train_seconds`. That covers caches (warm after the data step), FLOP
     calibration, the final validation and the save. The probe checkpoint is deleted afterwards."""
-    from premonition.train import train_d
+    from premonition.train import _sync, train_d
     relative = f"{ckpt_dir}/c0-trainprobe-{time.time_ns()}"
     began = time.perf_counter()
     try:
@@ -466,13 +477,19 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
         wall = time.perf_counter() - began
     finally:
         shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
-    trained = float(report.get("train_seconds") or 0.0)
+    if report.get("status") != "completed":                 # sixth pass, item 1: an aborted probe stops C0
+        raise SystemExit(f"c0: the train-overhead probe did not complete (status {report.get('status')!r}: "
+                         f"{str(report.get('error'))[:200]}); S0 would abort the same way")
+    trained = float(report["train_seconds"])
     return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
             "overhead_seconds": max(0.0, wall - trained)}
 
 
 def cmd_c0(args: argparse.Namespace) -> int:
     from premonition.train import mini_train_config  # noqa: F401  (import check before the long bench)
+    from learnlab.train import MemoryGuardError
+    if args.t_override is not None and args.size != "tiny":
+        raise SystemExit("c0: --t-override is for the tiny CPU dry run only; the real T is the registered formula")
     from premonition import data as pdata
     require_device(args.device)
     root = Path(args.root)
@@ -500,6 +517,13 @@ def cmd_c0(args: argparse.Namespace) -> int:
                 try:
                     result = time_run(config, mode, fixed, size=args.size, vocab=vocab, device=args.device,
                                       warmup=args.warmup, timed=args.timed, chunk=args.chunk)
+                except MemoryGuardError as error:                    # the run trainer's guard: the arm cannot train
+                    failed[arm] = f"memory guard in {mode}: {str(error)[:200]}"
+                    log(f"c0: {arm} {failed[arm]}")
+                    gc.collect()
+                    if args.device == "cuda":
+                        torch.cuda.empty_cache()
+                    break
                 except torch.cuda.OutOfMemoryError as error:         # the arm is reported as not runnable
                     failed[arm] = f"CUDA out of memory in {mode}: {str(error)[:200]}"
                     log(f"c0: {arm} {failed[arm]}")
@@ -526,8 +550,10 @@ def cmd_c0(args: argparse.Namespace) -> int:
     # D1's FLOP fit and FLOP/s
     d1 = fresh_trainer(ARMS["D1"], args.size, vocab, args.device)
     fit = d1.calibrate(fixed[:4])
-    flops = curriculum_flops(fit, fixed, d1.model.config)
-    d1_flops_per_s = flops["weighted"] / per_arm["D1"]["weighted_s_per_update"]
+    timed_rows = fixed[args.warmup:args.warmup + args.timed]                  # the batches the seconds were timed on
+    flops = curriculum_flops(fit, timed_rows, d1.model.config)
+    t_raw_modes = t_raw_from_modes(per_arm["D1"]["s_per_update"], flops)
+    d1_flops_per_s = F_TARGET / t_raw_modes                                  # the effective curriculum FLOP/s
     t_raw, t_formula = compute_T(d1_flops_per_s)
     T = int(args.t_override) if args.t_override is not None else t_formula
     log(f"c0: D1 {per_arm['D1']['weighted_s_per_update']:.4f} s/update weighted, {flops['weighted']:.4e} FLOPs/update "
@@ -555,7 +581,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
                                           "p_own": P_OWN, "weights": CURRICULUM_WEIGHTS},
         "arms": per_arm, "weighted_flops_per_update": flops, "flop_fit": {"a": fit.a, "b": fit.b, "worst": fit.worst},
         "d1_flops_per_s": d1_flops_per_s, "f_target": F_TARGET, "T_raw": t_raw, "T_formula": t_formula,
-        "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
+        "t_raw_curriculum": t_raw_modes, "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
         "ratio_s0m4_over_d1": flags["ratio"], "stop_and_ask": flags["stop_and_ask"],
         "money_stop": flags["money_stop"], "flags": flags,
         "ratios_over_d1": {arm: v["weighted_s_per_update"] / per_arm["D1"]["weighted_s_per_update"]
@@ -575,7 +601,7 @@ def checkpoint_free(root: Path, relative: str) -> None:
 
 
 def cmd_train(args: argparse.Namespace) -> int:
-    from premonition.train import train_d
+    from premonition.train import _sync, train_d
     require_device(args.device)
     checkpoint = f"{args.ckpt_dir}/{args.arm}-s{args.seed}"
     checkpoint_free(Path(args.root), checkpoint)
@@ -590,7 +616,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     report.update(arm=args.arm, seed=args.seed, seconds_requested=args.seconds,
                   wall_seconds=time.perf_counter() - began, size=args.size, environment=environment(args.device))
     write_json(args.out, report)
-    return 0 if report.get("status") == "completed" else 2
+    return 0 if report.get("status") == "completed" else 5          # 2 means "refused"; 5 = a step failed
 
 
 def cmd_eval(args: argparse.Namespace) -> int:

@@ -142,8 +142,11 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
   Q * rounds * M` (desk-rounds: keeps `fit_flops` linear), and `recall_at_k` (first round, **desk 0's**
   top-k over told questions, comparable with D1; only when `model.train_diagnostics`, which MiniTrainer turns off
   for matched wall-clock runs). There are **no per-step swarm diagnostics** in training (review round 3); the
-  diversity report (§9) comes from `swarm_answer`. In "gold" mode with ASK weight 0 the split and the ASK terms are
-  skipped (gold never fetches).
+  diversity report (§9) comes from `swarm_answer`. In "gold" mode the split and the ASK terms are computed as in
+  every mode (weight 0 by default), so the ASK head is in the graph exactly as D1's is (zero gradient, decayed by
+  AdamW in both arms). The skip added in round 3, fifth pass, was reverted (sixth pass, item 15, ADOPTED Oct 20).
+  The answer path's round-invariant masks (kept-token indices, owners, targets, counts) are computed once before
+  the round loop (sixth pass, item 18), so the loop adds no host syncs.
 
 ## 8. Eval (`swarm_answer(model, batch, *, wipe, window_line, stop, max_loops, lesion=None)`)
 
