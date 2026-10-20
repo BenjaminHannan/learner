@@ -367,6 +367,52 @@ per run, each against an all-off control with paired seeds (§1 paired init).
     - The prices and estimates are PR 79's: D's s/FLOP has never been measured on a GPU.
     - The parent (or fresh start) and the primary village score go in the stage-1 bid. Q42 leaves them unfilled.
 
+## R1 stage 0 RESULT (run 10-20, commit 200477519, $0 CPU)
+
+The run follows `R1-STAGE0-BID.md` exactly, with no mark changed. Raw outputs are in
+`artifacts/claude-steals-20261017/r1-stage0/`: `log.txt`, one JSON per arm and seed, and `result.json`.
+
+- **Interruptions (logged in `log.txt`):** the container restarted twice during seed 1. Both times seed 1 was
+  thrown away and rerun from scratch at the same commit. Seed 0, completed in the first pass, was reused after the
+  runner's settings and arm-order check.
+- **Determinism:** the rerun of seed 1 reproduced the killed run's logged losses exactly at the same steps.
+- **Shape of the run:** each seed's three arms ran interleaved in one uninterrupted process. The arm orders formed a
+  Latin square: s0 A0 A1 A2, s1 A1 A2 A0, s2 A2 A0 A1. Each arm ran about 1,672 steps (the budget is set in FLOPs,
+  so the count lands near the 1,500 target, not on it), at about 0.47–0.49 s per step.
+
+**Verdicts on the pre-set marks.** d_s = held-out loss(A0) − loss(Ak) at T*.
+
+| Arm | d_s (s0, s1, s2) | mean d (2SE band) | seeds positive | relative | guard (seeds > 3 pts below A0) | **Verdict** |
+|---|---|---|---|---|---|---|
+| A1 Muon 3e-3 (recipe) | +0.383, +0.585, +0.917 | **+0.628** (+0.317 … +0.939) | 3/3 | +14.3% | 0 | **PASS** |
+| A2 Muon 2e-2 | −0.550, −0.346, −0.007 | −0.301 (−0.618 … +0.016) | 0/3 | −6.9% | 0 | **NOT SHOWN** (the upper bound misses PROVED WRONG by 0.016) |
+
+**The registered prediction was wrong.** It was "A2 PASS; A1 NOT SHOWN or PROVED WRONG"; the outcome is the
+reverse. The 60-step smoke run (§4) pointed the other way, and 1,672 steps reverse it. A short horizon favoured the
+higher lr.
+
+**Reported, not claimed (the card's secondary rows):**
+
+| Measure | A0 AdamW (s0 / s1 / s2) | A1 Muon 3e-3 | A2 Muon 2e-2 |
+|---|---|---|---|
+| Held-out accuracy, own retrieval (chance 6.25%) | 5.5 / 4.3 / 5.1% | **16.0 / 24.6 / 21.5%** | 5.5 / 4.3 / 6.6% |
+| Accuracy with the gold cards handed in | 5.5 / 4.3 / 5.1% | 27.7 / 35.2 / 15.6% | 5.5 / 4.3 / 6.6% |
+| Gold recall@4 | 0.945 / 0.633 / 0.324 | 0.359 / 0.328 / 0.324 | 0.355 / 0.320 / 0.344 |
+| Final L_ans (training) | 1.22 / 1.16 / 1.09 | 0.46 / 0.49 / 0.50 | 1.11 / 1.10 / 1.09 |
+| Final L_ask (training) | 1.29 / 1.83 / 2.35 | 2.41 / 2.33 / 2.36 | 2.38 / 2.35 / 2.35 |
+| Optimizer ms/step; train s/step | 3.5–3.7; 0.471–0.488 | 7.5–7.7; 0.477–0.492 | 7.6–7.7; 0.483–0.491 |
+
+**Reading (suggested, not claimed):**
+- Muon at the recipe lr is the **first arm on record whose toy answers leave chance**, in all 3 seeds. Through
+  09-18 and in §3, D sat at chance even when handed the gold cards; here the answer loss falls to about 0.5.
+- Its retrieval is no better than chance-adjacent (recall@4 about 0.33). AdamW's recall varies a lot by seed
+  (0.95 / 0.63 / 0.32), so recall is not ordered by optimizer.
+- The gain therefore sits on the answer path, not on fetching. That fits F2.
+- The wall-clock cost of Muon here is about +1% per step (4 ms on about 480 ms), so this result is effectively
+  equal-step as well as equal-clock.
+- It is a 3-seed toy result at d = 32. It says nothing yet about d = 128 or the village. Stage 1 needs its own
+  bid (Q42).
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
