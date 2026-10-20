@@ -6,22 +6,27 @@ design/v3/30-modes/330-rent-kit.md and design/steals-2026-10-17/R1-STAGE1-BID.md
 console.vast.ai requests; this script never reads or prints a key and prints only chosen fields of each API reply.
 Nothing here books anything by itself: `create` prints the request and sends it only with --yes.
 
-  pack    --stage {1a,1b} [--flop-budget F] [--seal REL] [--price REL] [--allow-dirty] --out DIR
+  pack    --stage {1a,1b} --dph D [--flop-budget F] [--seal REL] [--price REL] [--allow-dirty] --out DIR
               pack.tar.xz (code, card, seal, data at HEAD) + SEAL-pack.sha256.txt + args.json
               1a: timing smoke, needs --flop-budget; 1b: the sealed card, refuses --flop-budget and needs the card,
               a SEAL file that matches the card and the runner, and the PRICE.json (from the runner's `price` on 1a's
-              runs) that fixes F, all committed
+              runs) that fixes F, all committed. --dph is the offer's $/h (1b: at most PRICE.json's): the job's run
+              step gets a deadline of SAFETY x the hard stop's hours minus the export allowance, so the outputs are
+              always exported before the stop
   search  [--n 12] [--max-dph 0.8]    1 RTX 5090, on-demand, verified, reliability >= 0.98 (read-only)
   create  --offer ID --args DIR/args.json [--label L] [--dryrun] [--yes]
-              without --yes: prints the request, sends nothing
+              without --yes: prints the request, sends nothing; with --yes: refuses an offer dearer than the pack's
+              --dph, or when the instance list cannot be read (duplicate check)
   status  --id ID
   cost    --id ID [--stage S]         dph x uptime = running dollars against the stage's hard stop (exit 3 when reached)
   logs    --id ID --out FILE
   waitlog --id ID [--stage S] [--max-min 360]
-              exit 0 DONE, 2 job FAIL, 3 HARD STOP (instance stopped), 4 not running after 6 min, 5 no new log line
-              for 10 min, 6 timeout or instance gone, 7 price unreadable (instance stopped)
-  pull    --id ID --out RUNDIR [--with-ckpt]   export files read back with vast execute + cat, sha256 checked; writes
-              RUNDIR/PULL_OK.json only when every check passed
+              exit 0 DONE, 2 job FAIL (both stop the instance at once, so only storage bills during the pull), 3 HARD
+              STOP (instance stopped), 4 not running after 6 min, 5 no new log line for 10 min, 6 timeout or instance
+              gone, 7 price unreadable (instance stopped)
+  pull    --id ID --out RUNDIR   stops the instance if it still runs, then reads every export file (results and the
+              checkpoints) back with vast execute + cat on the stopped instance (vread2's route), sha256 checked;
+              writes RUNDIR/PULL_OK.json only when every check passed
   stop    --id ID
   destroy --id ID (--pulled RUNDIR | --abandon)   refuses without a passed pull (or --abandon for nothing-to-pull,
               e.g. never started); only for labels this thread created; confirms the instance is gone
@@ -49,7 +54,8 @@ TORCH_PIN = "2.11.0"                       # rent kit TORCH VERSION rule: traini
 LABEL_PREFIX = "claude-steals8-r1s1-"
 STAGES = ("1a", "1b")
 HARD_STOP = {"1a": 0.30, "1b": 2.50}       # dollars, bid section 4
-JOB_TIMEOUT = {"1a": "45m", "1b": "330m"}
+SAFETY = 0.8                               # the run's deadline: SAFETY x the hard stop's hours ...
+EXPORT_SECONDS = 900                       # ... minus this, left for packing the export (the job's own clock)
 RUNNER = "scripts/premonition_steals_r1_stage1.py"
 CARD = "design/steals-2026-10-17/R1-STAGE1-CARD.md"
 SEAL_DEFAULT = "artifacts/claude-steals-20261017/r1-stage1/SEAL.sha256.txt"
@@ -69,6 +75,9 @@ PACK_SHA=__PACK_SHA__
 STAGE=__STAGE__
 TORCH_PIN=__TORCH_PIN__
 SEAL_REL=__SEAL_REL__
+DPH=__DPH__
+DEADLINE_S=__DEADLINE_S__
+START=$(date +%s)
 J=${JOBDIR:-/job}
 ROOT=$J/tree
 OUT=$ROOT/out/$STAGE
@@ -96,7 +105,7 @@ finish() {   # $1 = DONE or FAIL
   say "MANIFEST"; cat export/MANIFEST.sha256
   say "PARTS $(ls b64/big | wc -l) big, $(ls b64/small | wc -l) small"
   say "R1S1 $1"
-  sleep 14400
+  sleep 3600          # waitlog stops the instance at DONE / FAIL; this only keeps the container up until then
   exit 0
 }
 fail() { say "R1S1-FAIL $*"; finish FAIL; }
@@ -132,8 +141,10 @@ DATA_REL=$(grep '^{' "$J/checks/build.out" | tail -1 | python3 -c "import json,s
 echo "data_rel $DATA_REL"
 mkdir -p "$OUT"
 __SEAL_COPY__
-say "RUN stage $STAGE"
-timeout __TIMEOUT__ python3 -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$OUT" __RUN_FLAGS__ 2>&1 | tee "$J/checks/run.out"
+LEFT=$((START + DEADLINE_S - $(date +%s)))
+[ "$LEFT" -gt 60 ] || fail "no time left before the deadline ($DEADLINE_S s at \$$DPH/h)"
+say "RUN stage $STAGE, deadline in $LEFT s"
+timeout "${LEFT}s" python3 -B $RUNNER run --root "$ROOT" --data-rel "$DATA_REL" --out "$OUT" __RUN_FLAGS__ 2>&1 | tee "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "run rc=$RC"
 python3 -B $RUNNER verify --out "$OUT" || fail "manifest verify on the box"
@@ -208,7 +219,14 @@ def check_card_seal(seal_rel, price_rel):
             raise SystemExit(f"{seal_rel} does not match {f} (sealed {sealed.get(f)}); refusing to pack stage 1b")
 
 
-def make_job(stage, pack_sha, flop, seal_rel, torch_pin, price_rel=PRICE_DEFAULT):
+def deadline_seconds(stage, dph):
+    """The job's run deadline from its start: SAFETY x the hours the hard stop buys at `dph`, minus the export."""
+    return int(SAFETY * HARD_STOP[stage] / dph * 3600) - EXPORT_SECONDS
+
+
+def make_job(stage, pack_sha, flop, seal_rel, torch_pin, price_rel=PRICE_DEFAULT, dph=None):
+    if not (dph and dph > 0):
+        raise SystemExit("--dph (the offer's $/h) is required")
     if stage == "1a":
         flags, seal_copy = f"--flop-budget {float(flop)!r} --unsealed --seeds 0", ""
     else:
@@ -217,7 +235,8 @@ def make_job(stage, pack_sha, flop, seal_rel, torch_pin, price_rel=PRICE_DEFAULT
     text = JOB
     for key, val in (("__PACK_SHA__", pack_sha), ("__STAGE__", stage), ("__TORCH_PIN__", torch_pin),
                      ("__SEAL_REL__", seal_rel if stage == "1b" else "-"), ("__SEAL_COPY__", seal_copy),
-                     ("__TIMEOUT__", JOB_TIMEOUT[stage]), ("__RUN_FLAGS__", flags)):
+                     ("__DPH__", repr(float(dph))), ("__DEADLINE_S__", str(deadline_seconds(stage, dph))),
+                     ("__RUN_FLAGS__", flags)):
         text = text.replace(key, val)
     return text
 
@@ -235,6 +254,9 @@ def pack(a):
         if a.allow_dirty:
             raise SystemExit("--allow-dirty is for the 1a smoke only")
         check_card_seal(a.seal, a.price)
+        priced = json.loads((REPO / a.price).read_text()).get("dph")
+        if not (priced and a.dph <= priced):
+            raise SystemExit(f"--dph {a.dph} is over the $/h F was priced at ({priced}); re-price or find a cheaper box")
     files = listed(a.allow_dirty)
     extra = [CARD] if (REPO / CARD).is_file() else []
     if stage == "1b":
@@ -263,7 +285,7 @@ def pack(a):
     out.mkdir(parents=True, exist_ok=True)
     (out / "pack.tar.xz").write_bytes(data)
     (out / "SEAL-pack.sha256.txt").write_text(seal)
-    job = make_job(stage, sha(data), a.flop_budget, a.seal, a.torch, a.price)
+    job = make_job(stage, sha(data), a.flop_budget, a.seal, a.torch, a.price, a.dph)
     b64 = base64.b64encode(data).decode()
     args = ["bash", "-c", job, f"r1s1-{stage}"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
     size = len(json.dumps(args))
@@ -272,7 +294,8 @@ def pack(a):
     (out / "args.json").write_text(json.dumps(args))
     print(json.dumps({"stage": stage, "head": head, "dirty": dirty, "pack_sha256": sha(data), "pack_bytes": len(data),
                       "files": len(files), "chunks": len(args) - 4, "args_bytes": size,
-                      "flop_budget": a.flop_budget}))
+                      "flop_budget": a.flop_budget, "dph": a.dph,
+                      "run_deadline_s": deadline_seconds(stage, a.dph)}))
 
 
 # ----------------------------------------------------------------------------- search / create
@@ -318,7 +341,17 @@ def create(a):
                           "hard_stop_usd": HARD_STOP[stage], "dryrun": a.dryrun,
                           "note": "nothing was sent; repeat with --yes to rent"}, indent=1))
         return
-    live = [i for i in (call("GET", "/instances/").get("instances") or []) if i.get("label") == label]
+    listing = call("GET", "/instances/")
+    if not isinstance(listing.get("instances"), list):
+        raise SystemExit(f"cannot read the instance list ({listing.get('http')} {listing.get('error')}); "
+                         "the duplicate check needs it, so nothing was sent")
+    m = re.search(r"^DPH=([0-9.e+-]+)$", args[2], re.M)
+    packed = float(m.group(1)) if m else None
+    offers = call("POST", "/bundles/", {"id": {"eq": int(a.offer)}}).get("offers") or []
+    offered = offers[0].get("dph_total") if offers else None
+    if packed is None or offered is None or offered > packed:
+        raise SystemExit(f"offer {a.offer} costs {offered} $/h; the pack was made for at most {packed}; nothing sent")
+    live = [i for i in listing["instances"] if i.get("label") == label]
     if live:
         print(json.dumps({"sent": False, "DUPLICATE": [i.get("id") for i in live]}))
         raise SystemExit(1)
@@ -440,10 +473,12 @@ def waitlog(a):
         if blind >= 3:
             r = stop_instance(a.id)
             out(7, "COST-UNKNOWN", stopped=r.get("success"))
-        if done:
-            out(0, "DONE", found=[ln for ln in lines if DONE_MARK in ln][-1:])
+        if done:                   # the export is written: stop now, so only storage bills during the pull
+            r = stop_instance(a.id)
+            out(0, "DONE", found=[ln for ln in lines if DONE_MARK in ln][-1:], stopped=r.get("success"))
         if failed:
-            out(2, "JOB-FAIL", found=failed[-3:])
+            r = stop_instance(a.id)
+            out(2, "JOB-FAIL", found=failed[-3:], stopped=r.get("success"))
         if state in ("exited", "stopped", "offline") and ever_running:
             out(6, "INSTANCE-ENDED")
         if state != "running" and not ever_running and now - t0 > START_MIN * 60:
@@ -487,9 +522,9 @@ def safe_extract(path, dest, mode):
             t.extractall(dest)
 
 
-def inner_check(out, with_ckpt):
-    """The runner's own MANIFEST.sha256 (inside the exported stage dir) against the extracted files. Returns
-    (found, bad); ckpt/ lines are skipped unless the ckpt tarball was pulled."""
+def inner_check(out):
+    """The runner's own MANIFEST.sha256 (inside the exported stage dir) against the extracted files, checkpoints
+    included. Returns (found, bad)."""
     found, bad = False, []
     for man in sorted(out.glob("*/MANIFEST.sha256")):
         found = True
@@ -497,8 +532,6 @@ def inner_check(out, with_ckpt):
             if not line.strip():
                 continue
             digest, name = line.split(maxsplit=1)
-            if name.startswith("ckpt/") and not with_ckpt:
-                continue
             p = man.parent / name
             if not p.is_file() or sha(p.read_bytes()) != digest:
                 bad.append(f"{man.parent.name}/{name}")
@@ -511,6 +544,9 @@ def pull(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / PULL_OK).unlink(missing_ok=True)
+    if inst(a.id).get("actual_status") == "running":     # no GPU billing while the parts are read
+        r = stop_instance(a.id)
+        print(json.dumps({"stopped_before_pull": r.get("success")}), flush=True)
     man = (exec_cat(a.id, "/job/export/MANIFEST.sha256") or b"").decode()
     parts = (exec_cat(a.id, "/job/export/PARTS.txt") or b"").decode()
     job_status = (exec_cat(a.id, "/job/export/STATUS.txt") or b"").decode().strip()
@@ -519,11 +555,8 @@ def pull(a):
     (out / "STATUS.txt").write_text(job_status + "\n")
     want = dict(reversed(ln.split(None, 1)) for ln in man.splitlines() if ln.strip())
     sizes = {p: int(n) for n, p in (ln.split() for ln in parts.splitlines() if ln.strip()) if p != "total"}
-    skipped = [] if a.with_ckpt else [n for n in want if n == "ckpt.tar.gz"]
     res = {}
     for name, h in sorted(want.items()):
-        if name in skipped:
-            continue
         res[name] = {"sha_ok": False}
         for size in ("big", "small"):
             ps = sorted(p for p in sizes if p.startswith(f"{size}/{name}.b64.p"))
@@ -546,14 +579,14 @@ def pull(a):
     inner_found, inner_bad = False, []
     if tar_ok:
         safe_extract(out / "out.tar.gz", out, "r:gz")
-        if a.with_ckpt and "ckpt.tar.gz" in res:
+        if "ckpt.tar.gz" in res:
             safe_extract(out / "ckpt.tar.gz", out, "r:gz")
-        inner_found, inner_bad = inner_check(out, a.with_ckpt)
+        inner_found, inner_bad = inner_check(out)
     job_done = job_status.startswith("DONE")
     inner_ok = not inner_bad and (inner_found or not job_done)
     ok = tar_ok and inner_ok and bool(job_status)
     print(json.dumps({"all_sha_ok": tar_ok, "inner_manifest_found": inner_found, "inner_bad": inner_bad,
-                      "job_status": job_status, "ckpt_skipped": bool(skipped), "pull_ok": ok}))
+                      "job_status": job_status, "pull_ok": ok}))
     if ok:
         (out / PULL_OK).write_text(json.dumps({"id": int(a.id), "ok": True, "job_status": job_status,
                                                "files": sorted(res), "inner_manifest_found": inner_found,
@@ -606,6 +639,7 @@ def main(argv=None):
     p = add("pack", pack)
     p.add_argument("--stage", choices=STAGES, required=True)
     p.add_argument("--flop-budget", type=float, default=None)
+    p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
     p.add_argument("--seal", default=SEAL_DEFAULT)
     p.add_argument("--price", default=PRICE_DEFAULT)
     p.add_argument("--torch", default=TORCH_PIN, help="torch version to pip install on the box, or `none`")
@@ -636,7 +670,6 @@ def main(argv=None):
             p.add_argument("--poll", type=float, default=120)
         if name == "pull":
             p.add_argument("--out", required=True)
-            p.add_argument("--with-ckpt", action="store_true", help="also pull ckpt.tar.gz (the six checkpoints)")
         if name == "destroy":
             p.add_argument("--pulled", default=None, help="RUNDIR of a passed `pull`")
             p.add_argument("--abandon", action="store_true", help="nothing to pull (never started / failed to start)")

@@ -50,7 +50,7 @@ class Fixture(unittest.TestCase):
         for name, text in self.files.items():
             self.write(name, text)
         self.write(SEAL_REL, self.seal_text())
-        self.write(PRICE_REL, '{"flop_budget": 1.2e16}\n')
+        self.write(PRICE_REL, '{"flop_budget": 1.2e16, "dph": 0.45}\n')
         self.git("init", "-q")
         self.commit("first")
         patch = mock.patch.object(rent, "REPO", self.repo)
@@ -76,7 +76,7 @@ class Fixture(unittest.TestCase):
 
     def pack(self, stage: str, **kw) -> dict:
         ns = Ns(stage=stage, flop_budget=kw.get("flop_budget"), seal=kw.get("seal", SEAL_REL),
-                price=kw.get("price", PRICE_REL), torch=rent.TORCH_PIN,
+                price=kw.get("price", PRICE_REL), torch=rent.TORCH_PIN, dph=kw.get("dph", 0.45),
                 allow_dirty=kw.get("allow_dirty", False), out=str(self.out))
         with mock.patch("builtins.print") as pr:
             rent.pack(ns)
@@ -143,9 +143,24 @@ class PackTest(Fixture):
         self.commit("empty price")
         with self.assertRaises(SystemExit):
             self.pack("1b")
-        self.write(PRICE_REL, '{"flop_budget": 1e16}\n')    # not committed
+        self.write(PRICE_REL, '{"flop_budget": 1e16, "dph": 0.45}\n')    # not committed
         with self.assertRaises(SystemExit):
             self.pack("1b")
+
+    def test_run_deadline_leaves_the_export_inside_the_stop(self) -> None:
+        info = self.pack("1a", flop_budget=1e16, dph=0.45)
+        self.assertEqual(info["run_deadline_s"], int(0.8 * 0.30 / 0.45 * 3600) - 900)       # 1020 s
+        self.assertIn("DEADLINE_S=1020", self.args()[2])
+        self.assertIn("DPH=0.45", self.args()[2])
+        info = self.pack("1b", dph=0.40)
+        self.assertEqual(info["run_deadline_s"], int(0.8 * 2.50 / 0.40 * 3600) - 900)
+        with self.assertRaises(SystemExit):
+            self.pack("1a", flop_budget=1e16, dph=0)
+
+    def test_1b_refuses_a_box_dearer_than_the_price(self) -> None:
+        with self.assertRaises(SystemExit) as cm:
+            self.pack("1b", dph=0.46)                                # PRICE.json was made at 0.45
+        self.assertIn("priced at", str(cm.exception))
 
     def test_1b_refuses_a_mismatched_seal(self) -> None:
         self.write(rent.CARD, "# card changed after the seal\n")
@@ -217,7 +232,8 @@ class JobTextTest(Fixture):
         self.assertIn("pip uninstall -y torchvision torchaudio", job)
         self.assertIn("export/MANIFEST.sha256", job)
         self.assertIn("out.tar.gz", job)
-        self.assertIn("sleep 14400", job)
+        self.assertIn("sleep 3600", job)
+        self.assertIn('timeout "${LEFT}s" python3 -B $RUNNER run', job)
 
     def test_seal_copied_before_run_in_1b(self) -> None:
         job = self.job("1b")
@@ -290,7 +306,7 @@ class WaitlogTest(unittest.TestCase):
     def test_1b_limit_is_its_own(self) -> None:
         inst = self.inst(1.0, label="claude-steals8-r1s1-1b")      # $1.00: over 1a's stop, under 1b's
         code, calls, out = self.run_wait(inst, stage="1b", text="=== R1S1 DONE x")
-        self.assertEqual((code, calls), (0, []))
+        self.assertEqual((code, out["event"]), (0, "DONE"))
         code, calls, out = self.run_wait(self.inst(2.6, label="claude-steals8-r1s1-1b"), stage="1b")
         self.assertEqual((code, out["event"]), (3, "HARD-STOP"))
 
@@ -300,11 +316,12 @@ class WaitlogTest(unittest.TestCase):
             code, calls, out = self.run_wait(inst)
         self.assertEqual((code, out["event"], calls), (4, "NOT-RUNNING", []))
 
-    def test_done_and_fail(self) -> None:
+    def test_done_and_fail_stop_the_instance(self) -> None:
+        stopped = [("PUT", "/instances/7/", {"state": "stopped"})]
         code, calls, out = self.run_wait(self.inst(0.01), "a\n=== R1S1 DONE 2026-10-20T10:00:00Z\n")
-        self.assertEqual((code, out["event"], calls), (0, "DONE", []))
-        code, _, out = self.run_wait(self.inst(0.01), "=== R1S1-FAIL build 2026\n=== R1S1 FAIL 2026\n")
-        self.assertEqual((code, out["event"]), (2, "JOB-FAIL"))
+        self.assertEqual((code, out["event"], calls), (0, "DONE", stopped))
+        code, calls, out = self.run_wait(self.inst(0.01), "=== R1S1-FAIL build 2026\n=== R1S1 FAIL 2026\n")
+        self.assertEqual((code, out["event"], calls), (2, "JOB-FAIL", stopped))
 
     def test_unreadable_price_stops(self) -> None:
         code, calls, out = self.run_wait({"label": "claude-steals8-r1s1-1a", "actual_status": "running"})
@@ -320,6 +337,8 @@ class Net(Fixture):
         self.pack("1a", flop_budget=1e16)
         self.calls = []
         self.instances = []                                       # what GET /instances/ lists
+        self.offer_dph = 0.40                                     # what the offer costs (the pack allows 0.45)
+        self.listing_fails = False
         self.sleep = mock.patch.object(rent.time, "sleep")
         self.sleep.start()
         self.addCleanup(self.sleep.stop)
@@ -330,7 +349,9 @@ class Net(Fixture):
     def fake_call(self, method, path, body=None, timeout=60):
         self.calls.append((method, path))
         if method == "GET" and path == "/instances/":
-            return {"instances": list(self.instances)}
+            return {"success": False, "http": 503} if self.listing_fails else {"instances": list(self.instances)}
+        if method == "POST" and path == "/bundles/":
+            return {"offers": [{"id": 123, "dph_total": self.offer_dph}]}
         if method == "GET" and path.startswith("/instances/"):
             i = int(path.strip("/").split("/")[-1])
             return {"instances": [x for x in self.instances if x["id"] == i]}
@@ -362,6 +383,19 @@ class Net(Fixture):
         puts = [c for c in self.calls if c[0] == "PUT"]
         self.assertEqual(puts, [("PUT", "/asks/123/")])
 
+    def test_create_refuses_a_dearer_offer(self) -> None:
+        self.offer_dph = 0.50
+        with self.assertRaises(SystemExit) as cm:
+            self.create(yes=True)
+        self.assertIn("nothing sent", str(cm.exception))
+        self.assertFalse(any(m == "PUT" for m, _ in self.calls))
+
+    def test_create_refuses_when_the_listing_fails(self) -> None:
+        self.listing_fails = True
+        with self.assertRaises(SystemExit):
+            self.create(yes=True)
+        self.assertFalse(any(m == "PUT" for m, _ in self.calls))
+
     def test_create_with_yes_stops_on_duplicate_label(self) -> None:
         self.instances = [{"id": 5, "label": "claude-steals8-r1s1-1a"}]
         with self.assertRaises(SystemExit):
@@ -387,19 +421,25 @@ class Net(Fixture):
         self.assertEqual(q["verified"], {"eq": True})
 
     # -- pull and destroy
-    def fake_box(self, tamper=False, status="DONE rc=0", inner=True):
-        """What /job/export and /job/b64 hold after a run: out.tar.gz holding stage dir '1a' with a runner manifest."""
-        files = {"1a/RESULT.json": b'{"x": 1}', "1a/log.txt": b"hello\n"}
-        files["1a/MANIFEST.sha256"] = "".join(f"{sh(b)}  {n[3:]}\n" for n, b in files.items()).encode()
-        if not inner:
-            del files["1a/MANIFEST.sha256"]
+    @staticmethod
+    def tgz(files: dict) -> bytes:
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w:gz") as t:
             for n, b in files.items():
                 i = tarfile.TarInfo(n)
                 i.size = len(b)
                 t.addfile(i, io.BytesIO(b))
-        tar = buf.getvalue()
+        return buf.getvalue()
+
+    def fake_box(self, tamper=False, status="DONE rc=0", inner=True, ckpt=False):
+        """What /job/export and /job/b64 hold after a run: out.tar.gz holding stage dir '1a' with a runner manifest
+        (and, with `ckpt`, ckpt.tar.gz holding 1a/ckpt/, which the manifest lists)."""
+        files = {"1a/RESULT.json": b'{"x": 1}', "1a/log.txt": b"hello\n"}
+        weights = {"1a/ckpt/A0-s0/state.pt": b"weights"} if ckpt else {}
+        files["1a/MANIFEST.sha256"] = "".join(f"{sh(b)}  {n[3:]}\n" for n, b in {**files, **weights}.items()).encode()
+        if not inner:
+            del files["1a/MANIFEST.sha256"]
+        tar = self.tgz(files)
         b64 = base64.encodebytes(tar)
         half = len(b64) // 2
         parts = {"big/out.tar.gz.b64.p000": b64, "small/out.tar.gz.b64.p000": b64[:half],
@@ -408,15 +448,20 @@ class Net(Fixture):
             parts["big/out.tar.gz.b64.p000"] = base64.encodebytes(tar[:-5] + b"xxxxx")
             parts["small/out.tar.gz.b64.p000"] = base64.encodebytes(tar[:-5] + b"xxxxx")
             parts.pop("small/out.tar.gz.b64.p001")
+        manifest = f"{sh(tar)}  out.tar.gz\n"
+        if ckpt:
+            ctar = self.tgz(weights)
+            parts["big/ckpt.tar.gz.b64.p000"] = base64.encodebytes(ctar)
+            manifest += f"{sh(ctar)}  ckpt.tar.gz\n"
         sizes = "".join(f"{len(b)} {p}\n" for p, b in parts.items()) + "999 total\n"
-        box = {"/job/export/MANIFEST.sha256": f"{sh(tar)}  out.tar.gz\n".encode(),
+        box = {"/job/export/MANIFEST.sha256": manifest.encode(),
                "/job/export/PARTS.txt": sizes.encode(), "/job/export/STATUS.txt": (status + "\n").encode()}
         box.update({f"/job/b64/{p}": b for p, b in parts.items()})
         return box
 
-    def pull(self, box, with_ckpt=False):
+    def pull(self, box):
         run = Path(self.tmp.name) / "run"
-        ns = Ns(id="7", out=str(run), with_ckpt=with_ckpt)
+        ns = Ns(id="7", out=str(run))
         with mock.patch.object(rent, "exec_cat", lambda i, path, tries=3: box.get(path)), \
                 mock.patch("builtins.print"):
             try:
@@ -437,7 +482,26 @@ class Net(Fixture):
         self.assertTrue(ok)
         self.assertEqual(json.loads((run / rent.PULL_OK).read_text())["id"], 7)
         self.assertEqual((run / "1a" / "log.txt").read_bytes(), b"hello\n")
-        self.assertEqual(self.calls, [])                          # pull itself talks to the box only through exec_cat
+        self.assertEqual(self.calls, [("GET", "/instances/7/")])   # a status read; the box is read through exec_cat
+
+    def test_pull_stops_a_running_instance_first(self) -> None:
+        self.instances = [{"id": 7, "label": "claude-steals8-r1s1-1a", "actual_status": "running"}]
+        _, ok = self.pull(self.fake_box())
+        self.assertTrue(ok)
+        self.assertEqual(self.calls[:2], [("GET", "/instances/7/"), ("PUT", "/instances/7/")])
+
+    def test_pull_needs_the_checkpoints_when_exported(self) -> None:
+        box = self.fake_box(ckpt=True)
+        run, ok = self.pull(box)
+        self.assertTrue(ok)
+        self.assertEqual((run / "1a" / "ckpt" / "A0-s0" / "state.pt").read_bytes(), b"weights")
+        self.assertIn("ckpt.tar.gz", json.loads((run / rent.PULL_OK).read_text())["files"])
+        broken = self.fake_box(ckpt=True)
+        for p in [p for p in broken if "ckpt.tar.gz.b64" in p]:
+            broken[p] = b"garbage"
+        run, ok = self.pull(broken)
+        self.assertFalse(ok)
+        self.assertFalse((run / rent.PULL_OK).exists())
 
     def test_pull_with_a_bad_hash_leaves_no_marker(self) -> None:
         run, ok = self.pull(self.fake_box(tamper=True))
@@ -455,7 +519,7 @@ class Net(Fixture):
         box = self.fake_box()
         run, _ = self.pull(box)
         (run / "1a" / "log.txt").write_bytes(b"changed")
-        found, bad = rent.inner_check(run, False)
+        found, bad = rent.inner_check(run)
         self.assertTrue(found)
         self.assertEqual(bad, ["1a/log.txt"])
 
@@ -464,9 +528,10 @@ class Net(Fixture):
         with self.assertRaises(SystemExit):
             self.destroy()                                        # no --pulled
         run, _ = self.pull(self.fake_box(tamper=True))            # a failed pull
+        before = list(self.calls)
         with self.assertRaises(SystemExit):
             self.destroy(pulled=str(run))
-        self.assertEqual(self.calls, [])                          # refused before any request
+        self.assertEqual(self.calls, before)                      # refused before any request
         run, _ = self.pull(self.fake_box())
         (run / rent.PULL_OK).write_text(json.dumps({"id": 8, "ok": True}))   # a pull of another instance
         with self.assertRaises(SystemExit):

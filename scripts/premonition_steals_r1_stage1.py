@@ -63,7 +63,9 @@ CARD_SETTINGS = {"variant": "D", "size": "full", "device": "cuda", "lr": 1e-3, "
 BUILD = {"visits": "large", "seed": 0}
 # Stage 1b's F (card section 2): the largest F whose projected cost, at stage 1a's measured step and evaluation times
 # and the booked box's $/h, stays within SAFETY x the hard stop; never above F_MAX. Fixed before any GPU run.
-PRICE = {"hard_stop": 2.50, "safety": 0.8, "f_max": 3.15e16, "copy_off_seconds": 900.0, "seeds": 3}
+PRICE = {"hard_stop": 2.50, "safety": 0.8, "f_max": 3.15e16, "f_min": 3.15e15, "copy_off_seconds": 900.0,
+         "seeds": 3, "max_muon_step_ratio": 1.25}
+PACKAGE = "premonition/*.py + learnlab/**/*.py + memorylab/**/*.py"   # the seal's name for the package hash
 
 
 def sha256(path: Path) -> str:
@@ -94,7 +96,7 @@ def provenance() -> dict:
 
 
 def check_seal(out: Path, ident: dict, unsealed: bool) -> bool:
-    """True when `out` holds a seal matching this runner and card. Without one, only --unsealed runs."""
+    """True when `out` holds a seal matching this runner, card and package. Without one, only --unsealed runs."""
     seal = out / SEAL
     if not seal.exists():
         if not unsealed:
@@ -102,9 +104,10 @@ def check_seal(out: Path, ident: dict, unsealed: bool) -> bool:
         return False
     if unsealed:
         raise SystemExit(f"{seal} exists: a sealed directory runs only the card, never --unsealed")
-    sealed = {line.split()[1]: line.split()[0] for line in seal.read_text().splitlines() if line.strip()}
+    sealed = {line.split(maxsplit=1)[1]: line.split()[0] for line in seal.read_text().splitlines()
+              if len(line.split()) >= 2}
     want = {"design/steals-2026-10-17/R1-STAGE1-CARD.md": ident["card"],
-            "scripts/premonition_steals_r1_stage1.py": ident["runner"]}
+            "scripts/premonition_steals_r1_stage1.py": ident["runner"], PACKAGE: ident["package"]}
     for name, digest in want.items():
         if sealed.get(name) != digest:
             raise SystemExit(f"{name} does not match the seal in {seal}; refusing to run")
@@ -131,9 +134,10 @@ def held_out_loss(model, batches) -> dict:
     for i, batch in enumerate(batches):
         generator = torch.Generator(device=device).manual_seed(EVAL_SEED + i)
         out = model(batch.to(device), mode="teacher", loops=EVAL_LOOPS, generator=generator)
-        rows.append({k: float(out[k]) for k in ("loss", "lm", "ask", "ans", "halt")})
+        rows.append((batch.tokens.shape[0], {k: float(out[k]) for k in ("loss", "lm", "ask", "ans", "halt")}))
     model.train(was)
-    return {"held_out": {k: statistics.fmean(r[k] for r in rows) for k in rows[0]} if rows else None,
+    visits = sum(n for n, _ in rows)                 # batches differ in size: weight each by its visits
+    return {"held_out": {k: sum(n * r[k] for n, r in rows) / visits for k in rows[0][1]} if rows else None,
             "held_out_seconds": time.perf_counter() - started}
 
 
@@ -268,6 +272,9 @@ def price(arms: list[dict], *, dph: float, build_seconds: float) -> dict:
     eval_every = CARD_SETTINGS["eval_every"]
     allowed = PRICE["safety"] * PRICE["hard_stop"] / dph * 3600.0
     cost = lambda f: projected_seconds(f, arms, build_seconds, eval_every)          # noqa: E731
+    if cost(PRICE["f_min"]) > allowed:
+        raise SystemExit(f"even F_min = {PRICE['f_min']:.3g} projects past ${PRICE['safety'] * PRICE['hard_stop']:.2f} "
+                         f"at ${dph}/h; stage 1b does not fit the stop")
     if cost(PRICE["f_max"]) <= allowed:
         f = PRICE["f_max"]
     else:
@@ -283,7 +290,7 @@ def price(arms: list[dict], *, dph: float, build_seconds: float) -> dict:
             "projected_hours": cost(f) / 3600.0, "projected_dollars": cost(f) / 3600.0 * dph,
             "steps_at_f": {a["arm"]: f / (a["flops"] / a["steps"]) for a in arms},
             "s_per_step": {a["arm"]: a["s_per_step"] for a in arms}, "muon_step_ratio": ratio,
-            "gate_1a": {"muon_step_ratio_ok": ratio <= 1.25},
+            "gate_1a": {"muon_step_ratio_ok": ratio <= PRICE["max_muon_step_ratio"]},
             "s_per_flop": {a["arm"]: a["s_per_step"] / (a["flops"] / a["steps"]) for a in arms}}
 
 
@@ -293,18 +300,40 @@ def arm_order(seed: int) -> list[str]:
     return names[seed % 2:] + names[:seed % 2]
 
 
-def score(runs: list[dict], *, sealed: bool) -> dict:
-    """The card's verdict, or NOT SCORED with the reason (the numbers are still computed for plumbing checks)."""
+def check_price(price: dict) -> None:
+    """A PRICE.json the sealed rule could have written: this runner's rule, F within [F_min, F_max], 1a's gate met,
+    and the projection within the stop."""
+    if price.get("rule") != PRICE:
+        raise SystemExit("PRICE.json was made under another rule")
+    f = price.get("flop_budget")
+    if not (finite(f) and PRICE["f_min"] <= f <= PRICE["f_max"]):
+        raise SystemExit(f"PRICE.json's F {f} is outside [{PRICE['f_min']:.3g}, {PRICE['f_max']:.3g}]")
+    if not price.get("gate_1a", {}).get("muon_step_ratio_ok"):
+        raise SystemExit("PRICE.json records a failed stage-1a gate (Muon's s/step over 1.25 x AdamW's)")
+    if not price.get("projected_dollars", math.inf) <= PRICE["safety"] * PRICE["hard_stop"]:
+        raise SystemExit("PRICE.json projects past the stop")
+
+
+def score(runs: list[dict], *, sealed: bool, ident: dict | None = None) -> dict:
+    """The card's verdict, or NOT SCORED with the reason (the numbers are still computed for plumbing checks).
+    DID NOT TRAIN comes first, and says so when the runs are not the card's either."""
     by = {(r["arm"], r["seed"]): r for r in runs}
     seeds = sorted({r["seed"] for r in runs})
-    if any((arm, seed) not in by for arm in ARMS for seed in seeds) or len(by) != len(runs):
-        return {"verdict": "NOT SCORED: every seed needs exactly one run of each arm"}
-    if any(not r["finite"] for r in runs):            # first, whatever else is wrong
-        return {"verdict": "DID NOT TRAIN", "non_finite": sorted(f"{r['arm']}-s{r['seed']}" for r in runs
-                                                                 if not r["finite"])}
     problems = []
     if not sealed:
         problems.append("unsealed run directory")
+    if ident is not None and any(r["bound"].get("code") != ident for r in runs):
+        problems.append("runs made with other code than this sealed runner, card and package")
+    if len({(r.get("provenance") or {}).get("torch") for r in runs}) != 1:
+        problems.append("runs made under different torch versions")
+    non_finite = sorted(f"{r['arm']}-s{r['seed']}" for r in runs if not r["finite"])
+    if non_finite:                                    # first, whatever else is wrong
+        verdict = "DID NOT TRAIN"
+        if problems or any((arm, seed) not in by for arm in ARMS for seed in seeds) or len(by) != len(runs):
+            verdict += " (and not the card's runs: " + "; ".join(problems or ["arms missing or repeated"]) + ")"
+        return {"verdict": verdict, "non_finite": non_finite}
+    if any((arm, seed) not in by for arm in ARMS for seed in seeds) or len(by) != len(runs):
+        return {"verdict": "NOT SCORED: every seed needs exactly one run of each arm (no numbers can be paired)"}
     if tuple(seeds) != CARD_SEEDS:
         problems.append(f"seeds {tuple(seeds)}, the card registers {CARD_SEEDS}")
     if any(not card_settings(r["settings"]) for r in runs) or len({r["settings"]["flop_budget"] for r in runs}) != 1:
@@ -316,6 +345,10 @@ def score(runs: list[dict], *, sealed: bool) -> dict:
     incomplete = [f"{r['arm']}-s{r['seed']}" for r in runs if r["status"] != "completed" or not r["budget_ok"]]
     if incomplete:
         problems.append(f"incomplete runs {incomplete}")
+    unpaired = [s for s in seeds if (by[("A0", s)]["steps"], by[("A0", s)]["flops"]) !=
+                (by[("A1", s)]["steps"], by[("A1", s)]["flops"])]
+    if unpaired:                                       # the arms of a seed must train the same steps and FLOPs
+        problems.append(f"unpaired steps or FLOPs at seeds {unpaired}")
     rows, ds, base, acc_hits, rec_hits, rec0, rec1, unreadable = [], [], [], 0, 0, [], [], False
     for seed in seeds:
         a0, a1 = by[("A0", seed)], by[("A1", seed)]
@@ -425,7 +458,7 @@ def run_all(*, budget, data_rel: str, tokenizer_path: str, settings: dict, seeds
             write_json(path, run(arm, seed, budget=budget, data_rel=data_rel, tokenizer_path=tokenizer_path,
                                  settings=settings, out=out, bound={"code": ident, "data": data}, log=log))
     runs = [json.loads((out / f"{arm}-s{seed}.json").read_text()) for seed in seeds for arm in ARMS]
-    result = {"sealed": sealed, "identity": ident, "settings": settings, "score": score(runs, sealed=sealed),
+    result = {"sealed": sealed, "identity": ident, "settings": settings, "score": score(runs, sealed=sealed, ident=ident),
               "runs": [{k: v for k, v in r.items() if k not in ("curve", "evals", "windows")} for r in runs]}
     write_json(out / "RESULT.json", result)                    # the only writer of RESULT.json
     (out / "RUN-NOTE.md").write_text(note(result))
@@ -469,7 +502,9 @@ def cmd_run(args) -> None:
     settings = dict(CARD_SETTINGS)
     extra = {}
     if args.price is not None:
-        settings["flop_budget"] = json.loads(args.price.read_text())["flop_budget"]
+        price_file = json.loads(args.price.read_text())
+        check_price(price_file)
+        settings["flop_budget"] = price_file["flop_budget"]
         extra["price"] = sha256(args.price)
     else:
         settings["flop_budget"] = args.flop_budget

@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import itertools
+import json
 import math
 from pathlib import Path
 import tempfile
@@ -27,6 +28,7 @@ def make_run(arm: str, seed: int, loss: float, *, seconds: float = 100.0, acc: f
     return {"arm": arm, "seed": seed, "settings": dict(r1s1.CARD_SETTINGS, flop_budget=1e16),
             "bound": {"code": {"x": 1}, "data": {"price": "p" * 64}},
             "status": "completed", "budget_ok": True, "finite": True, "train_seconds": seconds, "steps": 1000,
+            "flops": 1e15, "provenance": {"torch": "2.11.0"},
             "s_per_step": seconds / 1000, "curve": [(0.0, 0, loss + 1.0), (seconds, 1000, loss)],
             "validation": {"accuracy": acc, "gold_recall_at_4": recall}}
 
@@ -133,8 +135,30 @@ class ScoreTest(unittest.TestCase):
     def test_did_not_train_wins(self) -> None:
         runs = card()
         runs[3]["finite"] = False
-        runs[0]["status"] = "aborted"
-        self.assertEqual(self.verdict(runs, sealed=False), "DID NOT TRAIN")
+        self.assertEqual(self.verdict(runs), "DID NOT TRAIN")
+        runs[0]["status"] = "aborted"                                             # still first, and labelled
+        out = self.verdict(runs, sealed=False)
+        self.assertTrue(out.startswith("DID NOT TRAIN (and not the card's runs: unsealed"), out)
+        partial = card()[:-1]                                                     # an arm missing
+        partial[0]["finite"] = False
+        self.assertTrue(self.verdict(partial).startswith("DID NOT TRAIN (and not the card's runs: arms"))
+
+    def test_unpaired_steps_are_not_scored(self) -> None:
+        runs = card()
+        runs[3]["steps"] = 999
+        out = r1s1.score(runs, sealed=True)
+        self.assertIn("unpaired steps or FLOPs at seeds [1]", out["verdict"])
+        runs = card()
+        runs[5]["flops"] = 1.01e15
+        self.assertIn("unpaired", self.verdict(runs))
+
+    def test_runs_must_match_the_sealed_code_and_one_torch(self) -> None:
+        out = r1s1.score(card(), sealed=True, ident={"x": 2})
+        self.assertIn("other code than this sealed runner", out["verdict"])
+        self.assertEqual(r1s1.score(card(), sealed=True, ident={"x": 1})["verdict"], "PASS")
+        runs = card()
+        runs[2]["provenance"] = {"torch": "2.8.0"}
+        self.assertIn("different torch versions", self.verdict(runs))
 
     def test_not_scored_reasons_keep_the_numbers(self) -> None:
         cases = {"unsealed": (card(), False)}
@@ -201,6 +225,19 @@ class PriceTest(unittest.TestCase):
         self.assertEqual(out["flop_budget"], r1s1.PRICE["f_max"])
         self.assertFalse(out["gate_1a"]["muon_step_ratio_ok"])
 
+    def test_refuses_when_even_f_min_does_not_fit(self) -> None:
+        arms = [stage_1a("A0", 2.0), stage_1a("A1", 2.0)]                       # 2 s/step: F_min alone is ~3.6 h
+        with self.assertRaises(SystemExit):
+            r1s1.price(arms, dph=0.45, build_seconds=1200.0)
+
+    def test_check_price(self) -> None:
+        good = r1s1.price([stage_1a("A0", 0.10), stage_1a("A1", 0.11)], dph=0.45, build_seconds=1200.0)
+        r1s1.check_price(json.loads(json.dumps(good)))                           # survives the JSON round trip
+        for change in ({"flop_budget": 5e16}, {"flop_budget": 1e14}, {"gate_1a": {"muon_step_ratio_ok": False}},
+                       {"projected_dollars": 2.2}, {"rule": dict(r1s1.PRICE, safety=0.95)}):
+            with self.assertRaises(SystemExit, msg=str(change)):
+                r1s1.check_price({**good, **change})
+
     def test_refuses_an_unfinished_1a(self) -> None:
         arms = [stage_1a("A0", 0.1), dict(stage_1a("A1", 0.1), status="aborted")]
         with self.assertRaises(SystemExit):
@@ -209,19 +246,22 @@ class PriceTest(unittest.TestCase):
 
 class SealAndManifestTest(unittest.TestCase):
     def test_seal(self) -> None:
-        ident = {"card": "c" * 64, "runner": "r" * 64}
+        ident = {"card": "c" * 64, "runner": "r" * 64, "package": "p" * 64}
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             with self.assertRaises(SystemExit):
                 r1s1.check_seal(out, ident, unsealed=False)
             self.assertFalse(r1s1.check_seal(out, ident, unsealed=True))
             (out / r1s1.SEAL).write_text(f"{'c' * 64}  design/steals-2026-10-17/R1-STAGE1-CARD.md\n"
-                                         f"{'r' * 64}  scripts/premonition_steals_r1_stage1.py\n")
+                                         f"{'r' * 64}  scripts/premonition_steals_r1_stage1.py\n"
+                                         f"{'p' * 64}  {r1s1.PACKAGE}\n")
             self.assertTrue(r1s1.check_seal(out, ident, unsealed=False))
             with self.assertRaises(SystemExit):
                 r1s1.check_seal(out, {**ident, "runner": "x" * 64}, unsealed=False)
             with self.assertRaises(SystemExit):                                   # no plumbing in a sealed dir
                 r1s1.check_seal(out, ident, unsealed=True)
+            with self.assertRaises(SystemExit):                                   # the package is sealed too
+                r1s1.check_seal(out, {**ident, "package": "q" * 64}, unsealed=False)
 
     def test_manifest_catches_changes_and_losses(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -246,6 +286,25 @@ class HeldOutLossTest(unittest.TestCase):
         self.assertTrue(torch.equal(rng, torch.get_rng_state()))                 # explicit generators only
         self.assertEqual(first["held_out"], r1s1.held_out_loss(model, held_out)["held_out"])
         self.assertEqual(set(first["held_out"]), {"loss", "lm", "ask", "ans", "halt"})
+
+    def test_weighted_by_visits(self) -> None:
+        class Batch:
+            def __init__(self, visits: int, loss: float) -> None:
+                self.tokens, self.loss = torch.zeros(visits, 3), loss
+
+            def to(self, _device):
+                return self
+
+        class Fake(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.w = torch.nn.Parameter(torch.zeros(1))
+
+            def forward(self, batch, **_):
+                return {k: torch.tensor(batch.loss) for k in ("loss", "lm", "ask", "ans", "halt")}
+
+        out = r1s1.held_out_loss(Fake(), [Batch(5, 2.0), Batch(45, 1.0)])["held_out"]
+        self.assertAlmostEqual(out["loss"], (5 * 2.0 + 45 * 1.0) / 50)          # not the plain mean 1.5
 
 
 if __name__ == "__main__":
