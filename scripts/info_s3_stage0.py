@@ -36,7 +36,8 @@ _spec.loader.exec_module(S2)
 
 OUT = ROOT / "artifacts/claude-infoconstraints-20261018/s3-stage0"
 S2_STAGE0 = ROOT / "artifacts/claude-infoconstraints-20261018/s2-stage0"
-S2_DISTRACT = ROOT / "artifacts/claude-infoconstraints-20261018/s2-distract"
+S2_DISTRACT = {"mixed": ROOT / "artifacts/claude-infoconstraints-20261018/s2-distract",
+               "facts": ROOT / "artifacts/claude-infoconstraints-20261018/s2-distract-facts"}
 STEPS, LOOPS, LR, WARMUP = S2.STEPS, S2.LOOPS, S2.LR, S2.WARMUP
 SEEDS, CHANCE = (0, 1, 2), 1 / 16
 
@@ -46,12 +47,12 @@ def config_for(arm: str, vocab: int) -> MiniConfig:
                              card_address=arm == "treated")
 
 
-def distractor_loss(model: PremonitionMini, batch, generator: torch.Generator) -> torch.Tensor:
+def distractor_loss(model: PremonitionMini, batch, generator: torch.Generator, facts_only: bool) -> torch.Tensor:
     """Cell B (m02 `arm_loss` "+distractors"): answer CE after each of LOOPS loops, averaged over loops."""
     hidden = model.read(batch)
     store = model.build_store(hidden, batch)
     episode = model._start(batch, hidden, store, model._mentions(batch))
-    S2.preload_distractors(model, store, batch, episode, 2, generator)        # the S2 reading's own preload
+    S2.preload_distractors(model, store, batch, episode, 2, generator, facts_only)   # the S2 reading's preload
     answer = batch.answer
     length = int((answer != IGNORE_INDEX).sum(1).max().item())
     targets = answer[:, :max(length, 1)]
@@ -68,7 +69,7 @@ def distractor_loss(model: PremonitionMini, batch, generator: torch.Generator) -
     return sum(terms) / len(terms)
 
 
-def train(cell: str, arm: str, seed: int, threads: int):
+def train(cell: str, arm: str, seed: int, threads: int, pool: str):
     torch.set_num_threads(threads)
     spec = ToySpec()
     torch.manual_seed(seed)
@@ -89,7 +90,7 @@ def train(cell: str, arm: str, seed: int, threads: int):
         if cell == "A":
             loss = model.forward(batch, mode="gold", loops=LOOPS, weights={"ans": 1.0})["ans"]
         else:
-            loss = distractor_loss(model, batch, generator)
+            loss = distractor_loss(model, batch, generator, pool == "facts")
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         finite &= all(p.grad is None or bool(torch.isfinite(p.grad).all()) for p in params)
@@ -132,14 +133,16 @@ def pool_mass(model: PremonitionMini, batches: list) -> dict:
 
 
 def cmd_run(args) -> None:
-    model, history, finite, seconds, steps_done = train(args.cell, args.arm, args.seed, args.threads)
+    model, history, finite, seconds, steps_done = train(args.cell, args.arm, args.seed, args.threads, args.pool)
     test = [label_free(b) for b in toy_set(ToySpec(), S2.TEST_BATCHES, S2.VISITS, S2.TEST_SEED)]
-    result = {"cell": args.cell, "arm": args.arm, "seed": args.seed, "threads": args.threads,
+    result = {"cell": args.cell, "arm": args.arm, "seed": args.seed, "threads": args.threads, "pool": args.pool,
               "steps_run": steps_done, "finite": finite, "seconds": seconds, "torch": torch.__version__,
               "parameters": model.num_parameters(), "card_address": model.config.card_address,
               "decoder_raw_cards": model.config.decoder_raw_cards, "history": history,
               "gold": S2.score(model, test, card=True), "nocard": S2.score(model, test, card=False),
-              "d2": S2.distract(model, test, 2), "pool_mass": pool_mass(model, test[:4])}
+              "d2": S2.distract(model, test, 2, args.pool == "facts"),               # the primary pool
+              "d2_other_pool": S2.distract(model, test, 2, args.pool != "facts"),    # reported only
+              "pool_mass": pool_mass(model, test[:4])}
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"cell{args.cell}-{args.arm}-seed{args.seed}.json").write_text(json.dumps(result, indent=1))
     g, d2, nc = result["gold"], result["d2"], result["nocard"]
@@ -149,17 +152,19 @@ def cmd_run(args) -> None:
 
 def cmd_summarize(args) -> None:
     """Card §5-§7, verbatim."""
-    runs, missing = {}, []
+    runs, missing, pools = {}, [], set()
     for cell in ("A", "B"):
         for arm in ("control", "treated"):
             for seed in SEEDS:
                 path = OUT / f"cell{cell}-{arm}-seed{seed}.json"
                 if path.exists():
                     runs[(cell, arm, seed)] = json.loads(path.read_text())
+                    pools.add(runs[(cell, arm, seed)].get("pool"))
                 else:
                     missing.append(path.name)
-    if missing:
-        summary = {"verdict": "INCOMPLETE", "missing": missing}
+    if missing or pools != {args.pool}:
+        summary = {"verdict": "INCOMPLETE", "missing": missing,
+                   "pools": sorted(map(str, pools)), "wanted_pool": args.pool}   # one pool per verdict, as ruled
         OUT.mkdir(parents=True, exist_ok=True)
         (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
         print(json.dumps(summary, indent=1))
@@ -176,7 +181,8 @@ def cmd_summarize(args) -> None:
                    "treated_distinct_primary": t[primary]["distinct_256"],
                    "complete": all(x["finite"] and x["steps_run"] == STEPS for x in (c, t))}
             if cell == "A":                                   # §3 / §5: the control must be the filed S2 arm
-                stage0, distract = S2_STAGE0 / f"treated-seed{seed}.json", S2_DISTRACT / f"treated-seed{seed}.json"
+                stage0 = S2_STAGE0 / f"treated-seed{seed}.json"
+                distract = S2_DISTRACT[args.pool] / f"treated-seed{seed}.json"
                 present = stage0.exists() and distract.exists()           # amendment 2: absent filed S2 -> VOID
                 filed = json.loads(stage0.read_text())["with_card"] if present else None
                 filed_d2 = json.loads(distract.read_text())["d2"] if present else None
@@ -216,7 +222,7 @@ def cmd_summarize(args) -> None:
     note = None
     if wrong and statistics.fmean(r["treated_address_mass_ent_rel"] for r in b) >= 0.5:
         note = "address exists, decoder does not use it (card §7; points at the decoder query, N16)"
-    summary = {"verdict": verdict, "cellB_mean_d": mean, "cellB_mean_minus_2se": bound, "marks": marks,
+    summary = {"verdict": verdict, "pool": args.pool, "cellB_mean_d": mean, "cellB_mean_minus_2se": bound, "marks": marks,
                "fail_rule": fail, "proves_S3_wrong_rule": wrong, "note": note, **detail}
     (OUT / "summary.json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))
@@ -230,7 +236,10 @@ def main() -> None:
     run.add_argument("--arm", choices=("control", "treated"), required=True)
     run.add_argument("--seed", type=int, required=True)
     run.add_argument("--threads", type=int, default=1)
-    sub.add_parser("summarize")
+    run.add_argument("--pool", choices=("facts", "mixed"), required=True,
+                     help="distractor pool (coordinator ruling): fact lines only, or every eligible card (m02)")
+    summ = sub.add_parser("summarize")
+    summ.add_argument("--pool", choices=("facts", "mixed"), required=True)
     args = parser.parse_args()
     {"run": cmd_run, "summarize": cmd_summarize}[args.cmd](args)
 

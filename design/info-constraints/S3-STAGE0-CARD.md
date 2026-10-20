@@ -175,3 +175,24 @@ S3 review round 5 changed three implementation details. This supersedes the matc
   same seed). Tested.
 - **Scope.** `card_address` is defined for `PremonitionMini` itself only. Every subclass is refused, including
   ones that swap the writer after init (card_pools). The runner uses the base class.
+
+## Amendment 4 (2026-10-20, before any S3 run): the distractor pool needs a ruling. Marks unchanged.
+
+The S3 code review (round 9) found that this card's §3/§4 wording is inconsistent with the S2 reading it points to.
+- §3 says cell B trains with "2 random eligible non-gold, non-NULL **fact** cards (m02 `distractor_preload`)".
+- §4 says `acc_d2` is "gold + 2 shuffled fact cards ... (S2 card §10 reading)".
+- But m02's `distractor_preload`, and so the filed S2 §10 reading, draws from every eligible card, of which
+  about 35% are fact lines (S2 card §10b).
+- So "fact cards" and "the S2 §10 reading" are two different things.
+
+The runner therefore takes a required `--pool {facts, mixed}` on both `run` and `summarize`, with no default.
+That choice sets both the cell B training distractors and the primary `acc_d2`. Every run JSON records it,
+`summarize` refuses runs from mixed pools, and every run also reports the other pool's reading.
+- Cell A's reproduction check compares against the filed S2 reading of the same pool: `s2-distract` for mixed,
+  `s2-distract-facts` for facts.
+- **Mark 2 (55% = 39.84% + 15) is sealed as a number and is not changed here.** Whether it should instead be
+  "best §10b S2 reading + 15" under the facts pool is the coordinator's call.
+
+**Decision needed before any S3 run:**
+- (a) which pool, facts (the card's words) or mixed (the card's S2 reference);
+- (b) under facts, whether mark 2 stays 55% or follows the §10b S2 numbers.

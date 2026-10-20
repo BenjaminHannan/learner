@@ -139,14 +139,18 @@ def cmd_run(args) -> None:
 
 
 def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
-                        generator: torch.Generator) -> torch.Tensor:
-    """m02 `distractor_preload`: the gold card + n other eligible non-gold, non-NULL fact cards, shuffled;
-    inserts them and returns [Q, 1 + n] (-1 = none)."""
+                        generator: torch.Generator, facts_only: bool = False) -> torch.Tensor:
+    """The gold card + n other eligible non-gold, non-NULL cards, shuffled; inserts them and returns [Q, 1 + n]
+    (-1 = none). `facts_only=False` is m02's `distractor_preload` exactly: the pool is EVERY eligible card, filler
+    lines included (about 65% of the draws on the far-fact toy, measured 10-20), which is what the filed S2 §10
+    reading used. `facts_only=True` keeps only fact lines (cards that name an entity), as both cards' text says."""
     if bool((batch.gold_lines[:, 0] < 0).any()):
         raise ValueError("preload_distractors needs a told question (gold line) for every question, as the far-fact toy")
     gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
     pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
     pool[:, store.null] = False
+    if facts_only:
+        pool[:, :store.null] &= store.ents[batch.q_visit, :, 0] >= 0
     noise = torch.rand(pool.shape, generator=generator).to(pool.device).masked_fill(~pool, -1.0)
     best, extra = noise.topk(n, 1)
     extra = extra.masked_fill(best < 0, -1)
@@ -157,7 +161,7 @@ def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
 
 
 @torch.no_grad()
-def distract(model: PremonitionMini, batches: list, n: int) -> dict:
+def distract(model: PremonitionMini, batches: list, n: int, facts_only: bool = False) -> dict:
     """Card §10: gold card + n shuffled other fact cards of the visit (m02 `distractor_preload`, generator seed
     7000 + n), LOOPS think passes, greedy, exact match; plus m02's distractor-value count."""
     was = model.training
@@ -169,7 +173,7 @@ def distract(model: PremonitionMini, batches: list, n: int) -> dict:
         store = model.build_store(hidden, batch)
         mentions = model._mentions(batch)
         episode = model._start(batch, hidden, store, mentions)
-        cards = preload_distractors(model, store, batch, episode, n, generator)
+        cards = preload_distractors(model, store, batch, episode, n, generator, facts_only)
         count = batch.q_visit.shape[0]
         everyone = torch.arange(count, device=hidden.device)
         for step in range(LOOPS):
@@ -182,13 +186,14 @@ def distract(model: PremonitionMini, batches: list, n: int) -> dict:
             said.append(tuple(mine))
             v = int(batch.q_visit[q])
             values = {int(batch.tokens[v, int(batch.line_start[v, int(c)]) + 3]) for c in cards[q]
-                      if int(c) >= 0 and int(c) != int(batch.gold_lines[q, 0])}
+                      if int(c) >= 0 and int(c) != int(batch.gold_lines[q, 0])}   # m02's rule; a filler card's
+            # token 3 is a filler word, so on the mixed pool this counts only fact distractors' values in practice
             first = int(tokens[q, 0])
             other += first in values and first != int(batch.answer[q, 0])
     model.train(was)
     k, total = sum(ok), len(ok)
     head = sum(b.q_visit.shape[0] for b in batches[:4])
-    return {"n_distractors": n, "correct": k, "n": total, "acc": k / total, "wilson95": wilson(k, total),
+    return {"n_distractors": n, "facts_only": facts_only, "correct": k, "n": total, "acc": k / total, "wilson95": wilson(k, total),
             "predicts_distractor_value": other, "distinct_256": len(set(said[:head])),
             "distinct_1024": len(set(said)), "copy_a_random_card_rate": 1 / (1 + n)}
 
@@ -204,8 +209,8 @@ def cmd_distract(args) -> None:
               "finite": finite, "seconds": seconds, "reproduced_stage0": reproduced,
               "stage0_filed": {f: filed[f] for f in ("correct", "distinct_256", "distinct_1024")},
               "stage0_again": {f: again[f] for f in ("correct", "distinct_256", "distinct_1024")},
-              "d2": distract(model, test, 2) if reproduced else None}
-    out = OUT.parent / "s2-distract"
+              "d2": distract(model, test, 2, args.facts_only) if reproduced else None}
+    out = OUT.parent / ("s2-distract-facts" if args.facts_only else "s2-distract")
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{args.arm}-seed{args.seed}.json").write_text(json.dumps(result, indent=1))
     d2 = result["d2"]
@@ -281,6 +286,7 @@ def main() -> None:
     dis.add_argument("--arm", choices=("control", "treated"), required=True)
     dis.add_argument("--seed", type=int, required=True)
     dis.add_argument("--threads", type=int, default=1)
+    dis.add_argument("--facts-only", action="store_true", help="card §10b: distractors from fact lines only")
     args = parser.parse_args()
     {"run": cmd_run, "summarize": cmd_summarize, "distract": cmd_distract}[args.cmd](args)
 

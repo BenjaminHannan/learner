@@ -159,3 +159,24 @@ Run 2026-10-20, CPU, 1 thread per arm, $0. Raw: `artifacts/claude-infoconstraint
   - This is the choosing failure m02 found for bypass (545/1024 there, on validation with first-token match;
     not directly comparable) and the failure S3 (`card_address`) targets.
 - **Control:** stays near chance (5.7-9.8%).
+
+---
+
+## 10b. Disclosure, and the corrected fact-only reading (spec sealed before running, 2026-10-20)
+
+**Disclosure (found by the S3 code review, round 9; checked by hand).** §10 says the reading uses "2 other eligible
+fact cards". The code ran m02's `distractor_preload` exactly as written, and that draws from **every** eligible
+non-gold, non-NULL card, filler lines included.
+- Measured on the §2 test split with generator 7002: 725 of 2,048 distractors (**35.4%**) are fact lines; the
+  rest are filler lines ("[world] f f f f").
+- So the filed §10a numbers (treated 387 / 284 / 408; control 93 / 58 / 100) are a reading of "gold + 2
+  random eligible cards (about 1/3 fact)". They are not "gold + 2 fact cards".
+- The 33.3% random-card reference does not apply to them.
+- m02's 545/1024 reference used the same pool, so the comparison with m02 stands; only the label was wrong.
+- The filed numbers stay as filed (they reproduce), relabelled here. This mismatch between the text and the
+  implementation was mine.
+
+**§10b reading (the reading §10's text describes).** Same six arms, same retrain and reproduction assert, same
+seeds, and the same generator seed 7002. The only change: distractors are drawn from **fact lines only** (cards
+that name an entity), `preload_distractors(facts_only=True)`. Same readouts. Reported, no verdict, VOID rule as
+§10. Raw: `artifacts/claude-infoconstraints-20261018/s2-distract-facts/`. Random-card reference here: 33.3%.

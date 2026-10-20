@@ -883,6 +883,10 @@ def d_checks(config: Mapping[str, Any], tokenizer: Any, model: PremonitionMini, 
         full = MiniConfig.preset(config.get("contender", "D"), "full", vocab_size=int(mini["vocab_size"]),
                                  check_band=False)
         expected = {key: getattr(full, key) for key in ("d_model", "n_ent", "key_dim", "store", "pointers")}
+        drafts = [name for name in DRAFT_FLAGS if mini.get(name)]          # S2/S3 are never a contender's shape
+        if drafts:
+            problems.append(f"shape: draft flag(s) {', '.join(drafts)} on; contender "
+                            f"{config.get('contender', 'D')} is the plain architecture")
     if model.config.pointers:
         recorded = (config.get("detector") or {}).get("sha256")
         if not recorded:
