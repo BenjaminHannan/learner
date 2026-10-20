@@ -192,6 +192,21 @@ class CardAddressTest(unittest.TestCase):
         build(tiny("D", decoder_raw_cards=True, card_address=True), 11)
         self.assertEqual(torch.initial_seed(), 11)                              # no manual_seed inside
 
+    def test_reset_parameters_keeps_the_s3_init_rules(self) -> None:
+        model, _ = build(tiny("D", decoder_raw_cards=True, card_address=True), 2)
+        before = model.address.proj.weight.clone()
+        torch.manual_seed(9)
+        model.reset_parameters()
+        self.assertTrue(torch.equal(model.address.pool.weight, model.writer.pool.weight))
+        self.assertTrue(torch.equal(model.address.proj.weight, before))       # its own generator, same seed
+
+    def test_refused_on_any_subclass(self) -> None:
+        from premonition.answer_path import ThinkGatedMini
+        from premonition.card_pools import MeanPoolMini
+        for cls in (ThinkGatedMini, MeanPoolMini):
+            with self.subTest(cls=cls.__name__), self.assertRaises(ValueError):
+                cls(tiny("D", decoder_raw_cards=True, card_address=True))
+
     def test_band_excludes_s3(self) -> None:
         plain = MiniConfig.preset("D", "full", decoder_raw_cards=True)
         flagged = plain.with_(card_address=True)

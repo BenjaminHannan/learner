@@ -330,6 +330,11 @@ class Decoder(nn.Module):
 
 
 # ----------------------------------------------------------------------------- the model
+def _live_cuda_devices() -> list[int]:
+    """CUDA devices whose RNG streams exist already (fork them; never start a CUDA context just to fork)."""
+    return list(range(torch.cuda.device_count())) if torch.cuda.is_initialized() else []
+
+
 @dataclass
 class Answers:
     """Greedy answers of `PremonitionMini.answer`; ENT ids stay `vocab_size + e`."""
@@ -379,29 +384,31 @@ class PremonitionMini(nn.Module):
                 raise ValueError(f"decoder_raw_cards: {type(self).__name__} overrides {', '.join(own)}")
         self.reset_parameters()
         if config.card_address:
-            # Built after `reset_parameters` and inside fork_rng, so every shared weight and the global stream
-            # equal D + S2's at the same seed (S3 card §1). Pool starts as the writer's pool; proj N(0, 0.02).
-            # Construction and the init seed draw only from the CPU stream, which fork_rng restores, so the global
-            # stream is untouched and the init still follows it (seed and call order); the init has its own generator.
-            with torch.random.fork_rng():                       # CPU and every CUDA stream are restored
+            if type(self) is not PremonitionMini:
+                # Subclasses may swap the writer or own the episode or decode path after this point, which would
+                # break the address/writer pairing or the layout. S3 is defined on the base model only.
+                raise ValueError(f"card_address is defined for PremonitionMini only, not {type(self).__name__}")
+            # Built after `reset_parameters` inside fork_rng: every shared weight and the global streams equal
+            # D + S2's at the same seed (S3 card §1, amendment 2).
+            with torch.random.fork_rng(devices=_live_cuda_devices()):
                 self.address = CardAddress(config)
-                seed = int(torch.randint(2 ** 62, (1,)).item())
-            generator = torch.Generator().manual_seed(seed)
-            with torch.no_grad():
-                self.address.pool.load_state_dict(self.writer.pool.state_dict())
-                self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator)
-                                               * 0.02)
-                self.address.proj.bias.zero_()
-            own = [name for name in ("build_store", "_decode_addressed")
-                   if getattr(type(self), name) is not getattr(PremonitionMini, name)]
-            if own:
-                raise ValueError(f"card_address: {type(self).__name__} overrides {', '.join(own)}")
+                draw = int(torch.randint(2 ** 62, (1,)).item())
+            self._address_seed = (draw * 6364136223846793005 + 1442695040888963407) % 2 ** 63   # not the next draw
+            self._init_address()
             base, cards = config.question_rows + config.slots, config.cards
             self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
                                                                torch.arange(config.rows, config.rows + cards)]),
                                  persistent=False)            # card rows, raw rows: keys from the address block
 
     # ------------------------------------------------------------------ setup
+    def _init_address(self) -> None:
+        """S3 init: pool = a copy of the writer's pool, proj N(0, 0.02) from its own generator, bias 0."""
+        generator = torch.Generator().manual_seed(self._address_seed)
+        with torch.no_grad():
+            self.address.pool.load_state_dict(self.writer.pool.state_dict())
+            self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator) * 0.02)
+            self.address.proj.bias.zero_()
+
     def reset_parameters(self) -> None:
         config, d = self.config, self.config.d_model
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
@@ -433,6 +440,8 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        if getattr(self, "address", None) is not None:          # S3: a re-init restores the S3 init rules
+            self._init_address()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())

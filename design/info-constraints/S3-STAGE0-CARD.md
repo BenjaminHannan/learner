@@ -163,3 +163,15 @@ record now matches the code that will run:
 - **Refusals.** It is refused on subclasses that override `build_store` or `_decode_addressed`, in addition to the
   S2 list.
 - **Cell A VOID.** A seed is also VOID if the filed S2 distractor reading for that seed is absent.
+
+## Amendment 3 (2026-10-20, before any S3 run; §1-§7 marks unchanged)
+
+S3 review round 5 changed three implementation details. This supersedes the matching lines of Amendments 1-2.
+- **Seed.** The draw inside `fork_rng` is mixed (64-bit LCG step) into `address.proj`'s generator seed, so it is
+  never equal to the next value of the global stream.
+- **Streams.** `fork_rng` covers CPU plus CUDA devices that are already initialised. It never starts a CUDA
+  context.
+- **Re-init.** `reset_parameters()` re-applies the S3 init rules (the pool copied from the writer; proj from the
+  same seed). Tested.
+- **Scope.** `card_address` is defined for `PremonitionMini` itself only. Every subclass is refused, including
+  ones that swap the writer after init (card_pools). The runner uses the base class.
