@@ -209,7 +209,6 @@ class _Swarm:
         self.desks = M = config.thinkers
         self.count = Q = batch.q_visit.shape[0]
         device = hidden.device
-        self.device = device
         rep = lambda t: t.repeat_interleave(M, 0)  # noqa: E731
         self.owner = torch.arange(Q, device=device).repeat_interleave(M)
         self.desk_of = torch.arange(M, device=device).repeat(Q)
@@ -276,12 +275,6 @@ def overlap_terms(desk_fetched: torch.Tensor) -> tuple[float, int]:
     union = (real[:, i] | real[:, j]).sum(-1).float()
     keep = union > 0
     return float((inter[keep] / union[keep]).sum()), int(keep.sum())
-
-
-def fetch_overlap(desk_fetched: torch.Tensor) -> float:
-    """Mean Jaccard of two desks' fetched real cards over questions and desk pairs; NaN with no non-empty pair."""
-    total, pairs = overlap_terms(desk_fetched)
-    return total / pairs if pairs else float("nan")
 
 
 def register_cos(registers: torch.Tensor) -> float:
@@ -426,22 +419,11 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
 def _recall(model: Any, swarm: _Swarm, rows: torch.Tensor, gold: torch.Tensor) -> torch.Tensor:
     """Gold recall@top_k of desk 0's first ASK over eligible cards (told questions). It scores ONLY desk 0's rows
     (review round 3, fourth pass, item 4), so it is comparable with D1's training recall and with validation's
-    `first_top` (also desk 0), and costs what D1's does, not M times that."""
-    from premonition.model import _norm
-    store, episode, config = swarm.store, swarm.episode, model.config
-    told = gold[:, :store.null].any(1)
-    if not told.any():
-        return torch.zeros(())
+    `first_top` (also desk 0), and costs what D1's does, not M times that. It is D1's own `model._recall` on the
+    desk-0 rows (ninth pass, item 11: one definition)."""
+    lead = swarm.all[::swarm.desks]                                       # desk 0 of every question (qm = q * M)
     with torch.no_grad():
-        lead = swarm.all[::swarm.desks]                                   # desk 0 of every question (qm = q * M)
-        register = _norm(rows[lead, model._register_base])
-        scores = store.ask(model.heads.query(register), episode.q_visit[lead], episode.q_line[lead],
-                           model.heads.log_kappa.exp(), model.think.age_bias, questions=lead)
-        top = store.top(scores, config.top_k)                              # [Q, top_k]
-        found = torch.zeros(gold.shape, dtype=torch.long, device=gold.device).scatter_add(
-            1, top.clamp_min(0), (top >= 0).long()) > 0
-        hit = (gold & found).sum(1).float()
-        return (hit / gold.sum(1).clamp_min(1))[told].mean()
+        return model._recall(swarm.store, swarm.episode, lead, rows[lead], gold.repeat_interleave(swarm.desks, 0))
 
 
 # ----------------------------------------------------------------------------- evaluation
@@ -505,6 +487,6 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
                    first_top, union, halt_prob, detail)
 
 
-__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "entity_table", "fetch_overlap", "is_collapsed", "overlap_terms",
+__all__ = ["Board", "balanced_assignment", "combiner_memory", "diversity", "entity_table", "is_collapsed", "overlap_terms",
            "rounds_for",
            "merge_mask", "register_cos", "swarm_answer", "swarm_forward"]

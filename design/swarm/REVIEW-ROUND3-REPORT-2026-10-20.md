@@ -524,3 +524,32 @@ BOX_START item against the code: they hold.
 Review clean: **no** (2 blocking). Card sealed: no. Dry run: not run. **No booking and no bid.** Spend: $0.
 Recommendation: one more round. Item 1 is a straightforward fix. Item 2 and item 8 need rulings. Items 3-7 and
 9-12 are small. Then the sweep again.
+
+## Ninth pass: the eighth-pass sweep closed (coordinator ruling Oct 20)
+
+Rulings, recorded pre-seal in RUNCARD-S0 §1 (ninth-pass bullet) and FUNDING-BID:
+- (2) the C0 stop ratio is the steps-in-T ratio;
+- (8) near and overall are gated at ≥ 100 items like far_deep;
+- the $0.70 C0 cap is a sub-cap inside the $4.20 total.
+
+**Which case of item 8 applies, with the counts:** the case where near and overall CAN reach 100, so they are now
+gated. Even the tiny dry-run validation split has overall 188, near 105 and far_deep 62 per eval file. The large split
+is built from many more visits, and far_deep (gated already) is the smallest of the three cells.
+
+| # | fix | test (fails on 4e4ff4ff2) |
+|---|---|---|
+| B1 | off DRYRUN `C0_EXTRA` must be empty, and the c0 parser takes no abbreviations. c0.json records `dph` and `registered_settings`. The box gate and M5 require size full, device cuda, the registered settings and dph == DPH | `test_no_c0_extra_off_the_dry_run`, `test_the_c0_gate_requires_the_registered_c0_…`, `test_the_readout_requires_the_registered_c0`, `test_the_runner_takes_no_abbreviated_c0_options` |
+| B2 | `steps_ratio` = Σw/s(D1) ÷ Σw/s(S0m4) is the stop ratio (and `ratios_over_d1`) | `test_the_c0_stop_ratio_is_steps_in_t` (2.561 vs the old 2.286) |
+| 3 | the C0 gate refuses a C0 whose host record's commit is not PIN | `test_the_c0_gate_requires_…` (commit case) |
+| 4 | `reset_peak` before each probe and after a failed bench arm | `test_peak_memory_is_reset_before_probes_and_after_a_failed_arm` |
+| 5 | the projection charges D1 separately (its own train-overhead probe, and an eval probe in its worst case: no HALT, always ASK) plus 60 s per fresh process | `test_the_projection_charges_d1_separately_…` |
+| 6 | `BOX_START=${BOX_START:-}`, so an unset value is the documented refusal (exit 2) | `test_an_unset_billing_start_is_a_clean_refusal` |
+| 7 | s_m for T and for the ratio = total timed seconds / timed updates (a mean, like f_m) | `test_the_bench_reports_total_seconds_and_updates` |
+| 8 | `GATED_CELLS` = far_deep, near, overall | `test_near_and_overall_are_gated_at_100_items` |
+| 9 | data + C0 run to `BOX_START + 0.70 / DPH`, and the trains to the total's deadline | `test_the_c0_item_has_its_own_070_sub_cap` |
+| 10 | stale BOX-SPEC / IMPLEMENTATION-SPEC lines corrected | `test_the_specs_no_longer_describe_the_old_gate` |
+| 11 | `swarm._recall` calls `PremonitionMini._recall` on the desk-0 rows; dead `fetch_overlap` and `_Swarm.device` removed | `test_the_swarm_recall_is_d1s_recall_on_desk_zero` |
+| 12 | `InsertLog` refuses a swarm itself; the call sites ask `InsertLog.applies` | `test_insert_log_refuses_a_swarm_in_one_place` |
+
+The swarm's teacher- and own-mode losses and gradients are bit-identical to the previous pass, and flag-off is
+unchanged. Suites: the eight premonition suites, 271 tests OK (4 skipped).

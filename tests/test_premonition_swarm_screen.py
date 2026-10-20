@@ -123,7 +123,9 @@ class Scenario:
         def write(name: str, payload: dict) -> None:
             (folder / name).write_text(json.dumps(payload), encoding="utf-8")
 
-        write("c0.json", {"T": T, "T_formula": T, "t_override": None, "tag": "tag-1", "tokenizer_sha256": "sha-1"})
+        write("c0.json", {"T": T, "T_formula": T, "t_override": None, "tag": "tag-1", "tokenizer_sha256": "sha-1",
+                          "size": "full", "device": "cuda", "registered_settings": True, "dph": 0.46,
+                          "flags": {"dph": 0.46}})
         arms = ("D1", "S0", "S1") if with_s1 else ("D1", "S0")
         for arm in arms:
             for seed in SEEDS:
@@ -512,34 +514,35 @@ class RunnerMathTest(unittest.TestCase):
         self.assertEqual(screen.median_of([1.0, 2.0, 3.0, 4.0]), 2.5)
 
     def test_stop_and_ask_flag(self) -> None:
-        self.assertFalse(screen.stop_flags(2.5, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])          # exactly 2.5: no
-        self.assertTrue(screen.stop_flags(2.5001, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
-        self.assertFalse(screen.stop_flags(1.2, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
+        self.assertFalse(screen.stop_flags(2.5, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])          # exactly 2.5: no
+        self.assertTrue(screen.stop_flags(2.5001, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
+        self.assertFalse(screen.stop_flags(1.2, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
 
     def test_money_stop_flag(self) -> None:
         hours = screen.projected_box_hours(3600, 60, train_overhead=0.0)
-        self.assertAlmostEqual(hours, (6 * 3600 + 6 * 60) / 3600 * 1.15)                      # 7.015
-        low = screen.stop_flags(1.0, 1.0, 3600, 60, 0.49, train_overhead=0.0)
-        high = screen.stop_flags(1.0, 1.0, 3600, 60, 0.50, train_overhead=0.0)
+        self.assertAlmostEqual(hours, (6 * 3600 + 6 * 60 + 12 * 60) / 3600 * 1.15)            # 7.245 (12 processes)
+        edge = screen.MONEY_CAP_USD / hours                                                   # ~ $0.483/h
+        low = screen.stop_flags(1.0, 3600, 60, edge - 0.005, train_overhead=0.0)
+        high = screen.stop_flags(1.0, 3600, 60, edge + 0.005, train_overhead=0.0)
         self.assertFalse(low["money_stop"])
         self.assertTrue(high["money_stop"])
-        self.assertAlmostEqual(high["projected_s0_cost_usd"], hours * 0.50)
-        self.assertFalse(screen.stop_flags(1.0, 1.0, 3600, 60, 0.0, train_overhead=0.0)["money_stop"])             # no rate given: cannot fire
-        small = screen.stop_flags(1.0, 1.0, 300, 30, 0.46, train_overhead=0.0)
+        self.assertAlmostEqual(high["projected_s0_cost_usd"], hours * (edge + 0.005))
+        self.assertFalse(screen.stop_flags(1.0, 3600, 60, 0.0, train_overhead=0.0)["money_stop"])             # no rate given: cannot fire
+        small = screen.stop_flags(1.0, 300, 30, 0.46, train_overhead=0.0)
         self.assertFalse(small["money_stop"])
 
     def test_money_stop_counts_train_overhead(self) -> None:
         """Review round 3, item 4: each train also spends time outside T (caches, calibration, final validation,
         save). The projection adds it, and leaving it out is impossible (the keyword is required)."""
         hours = screen.projected_box_hours(3000, 60, train_overhead=300)
-        self.assertAlmostEqual(hours, (6 * (3000 + 300) + 6 * 60) / 3600 * 1.15)
-        without = screen.stop_flags(1.0, 1.0, 3000, 60, 0.56, train_overhead=0.0)
-        with_overhead = screen.stop_flags(1.0, 1.0, 3000, 60, 0.56, train_overhead=300.0)
-        self.assertFalse(without["money_stop"])                                # ~$3.28: under the $3.50 S0 cap
-        self.assertTrue(with_overhead["money_stop"])                           # ~$3.61: over it
+        self.assertAlmostEqual(hours, (6 * (3000 + 300) + 6 * 60 + 12 * 60) / 3600 * 1.15)
+        without = screen.stop_flags(1.0, 3000, 60, 0.53, train_overhead=0.0)
+        with_overhead = screen.stop_flags(1.0, 3000, 60, 0.53, train_overhead=300.0)
+        self.assertFalse(without["money_stop"])                                # ~$3.29: under the $3.50 S0 cap
+        self.assertTrue(with_overhead["money_stop"])                           # ~$3.58: over it
         self.assertEqual(with_overhead["train_overhead_seconds"], 300.0)
         with self.assertRaises(TypeError):
-            screen.stop_flags(1.0, 1.0, 3000, 60, 0.56)                        # the overhead cannot be omitted
+            screen.stop_flags(1.0, 3000, 60, 0.53)                        # the overhead cannot be omitted
 
     def test_trim_history_keeps_the_last_five(self) -> None:
         trimmed = screen.trim_history({"history": list(range(20)), "x": 1})
@@ -1033,10 +1036,14 @@ elif cmd == "c0":
     Path(opts["ckpt-dir"]).mkdir(parents=True, exist_ok=True)
     (Path(opts["ckpt-dir"]) / "probe.pt").write_text("probe")
     T = int(float(opts.get("t-override") or 600))
+    registered = ([opts.get(k) for k in ("rounds", "warmup", "timed", "chunk")] == ["3", "10", "40", "5"]
+                  and "max-tokens" not in opts)
     c0 = {"T": T, "T_formula": 600, "t_override": opts.get("t-override"), "stop_and_ask": False, "money_stop": False,
+          "size": opts.get("size"), "device": opts.get("device"), "registered_settings": registered,
+          "dph": float(opts.get("dph") or 0),
           "ratio_s0m4_over_d1": 1.2,
           "flags": {"ratio": 1.2, "stop_ratio": 2.5, "T": T, "eval_seconds_estimate": 60,
-                    "train_overhead_seconds": 30, "projected_s0_box_hours": 1.5, "dph": 0.46,
+                    "train_overhead_seconds": 30, "projected_s0_box_hours": 1.5, "dph": float(opts.get("dph") or 0),
                     "projected_s0_cost_usd": 0.69, "money_cap_usd": 3.5}}
     patch = json.loads(os.environ.get("FAKE_C0") or "{}")
     c0.update({k: v for k, v in patch.items() if k != "flags"}); c0["flags"].update(patch.get("flags", {}))
@@ -1107,6 +1114,7 @@ class BoxRepoCase(unittest.TestCase):
         if env.get("DRYRUN") != "1" and "BOX_START" not in env:
             import time
             env["BOX_START"] = int(time.time()) - 60                 # the billing start is required (eighth pass, 3)
+        env = {k: v for k, v in env.items() if v is not None}          # BOX_START=None: truly unset
         env = {**base, "PIN": self.pin, "PY": str(self.py), **{k: str(v) for k, v in env.items()}}
         return subprocess.run(["bash", str(self.repo / "scripts/premonition_swarm_box.sh")], cwd=self.repo, env=env,
                               capture_output=True, text=True, timeout=300)
@@ -1118,18 +1126,19 @@ class BoxRepoCase(unittest.TestCase):
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.ledger.write_text(json.dumps({"box_start": box_start, "dph": dph, "cap": cap, "first_out": "x"}))
 
-    def c0_folder(self, name: str, *, gpu: str = "none", **c0) -> Path:
+    def c0_folder(self, name: str, *, gpu: str = "none", commit: str = "", **c0) -> Path:
         folder = self.out(name)
         folder.mkdir(parents=True)
         (folder / "data.json").write_text(json.dumps({"data_rel": "data/fake", "tokenizer_path": "tok/fake.json"}))
         base = {"T": 600, "T_formula": 600, "t_override": None, "stop_and_ask": False, "money_stop": False,
-                "ratio_s0m4_over_d1": 1.2,
+                "ratio_s0m4_over_d1": 1.2, "size": "full", "device": "cuda", "registered_settings": True,
+                "dph": 0.46,
                 "flags": {"ratio": 1.2, "stop_ratio": 2.5, "T": 600, "eval_seconds_estimate": 60,
                           "train_overhead_seconds": 30, "projected_s0_box_hours": 1.5, "dph": 0.46,
                           "projected_s0_cost_usd": 0.69, "money_cap_usd": 3.5}}
         base.update(c0)
         (folder / "c0.json").write_text(json.dumps(base))
-        (folder / "host-c0.txt").write_text(f"gpu: {gpu}\n")
+        (folder / "host-c0.txt").write_text(f"gpu: {gpu}\ncommit: {commit or self.pin}\n")
         return folder
 
 
@@ -1190,9 +1199,9 @@ class SixthPassBoxTest(BoxRepoCase):
 
     def test_a_projected_s0_beyond_the_money_left_stops_and_cannot_be_overridden(self) -> None:
         import time
-        self.write_ledger(int(time.time()) - 8 * 3600)                        # 9.13 h of money, 1.13 h left
+        self.write_ledger(int(time.time()) - 3600)                            # 9.13 h of money, 8.13 h left
         run = self.box(DPH="0.46", OUT=self.out("o"), STOP_OVERRIDE="coordinator says go",
-                       FAKE_C0=json.dumps({"flags": {"projected_s0_box_hours": 7.5}}))
+                       FAKE_C0=json.dumps({"flags": {"projected_s0_box_hours": 8.5}}))
         self.assertEqual(run.returncode, 3, run.stdout)
         self.assertIn("a revised bid is needed", run.stdout)
         self.assertFalse(list(self.out("o").glob("train-*.json")))
@@ -1201,7 +1210,7 @@ class SixthPassBoxTest(BoxRepoCase):
     def test_an_unregistered_t_is_refused(self) -> None:
         run = self.box(DPH="0.46", OUT=self.out("o"), C0_EXTRA="--t-override 300")
         self.assertEqual(run.returncode, 2, run.stdout)
-        self.assertIn("may not set --t-override", run.stdout)
+        self.assertIn("C0_EXTRA must be empty off DRYRUN", run.stdout)
         run = self.box(DPH="0.46", OUT=self.out("p"), FAKE_C0=json.dumps({"T": 900}))   # T != T_formula
         self.assertEqual(run.returncode, 2, run.stdout)
         self.assertIn("is not the registered formula", run.stdout)
@@ -1338,6 +1347,55 @@ class EighthPassBoxTest(BoxRepoCase):
             self.assertIn("FROM is only for PART=s0", run.stdout)
 
 
+
+class NinthPassBoxTest(BoxRepoCase):
+    """Review round 3, ninth pass, box items: blocking 1, 3, 6 and 9."""
+
+    def test_no_c0_extra_off_the_dry_run(self) -> None:
+        # Blocking 1: extra args come last and would win (argparse), e.g. "--dph 0" silences money_stop.
+        for extra in ("--dph 0", "--size tiny", "--rounds 1 --timed 5", "--t-o 300"):
+            run = self.box(DPH="0.46", OUT=self.out("o"), C0_EXTRA=extra)
+            self.assertEqual(run.returncode, 2, (extra, run.stdout))
+            self.assertIn("C0_EXTRA must be empty off DRYRUN", run.stdout)
+            self.assertFalse(self.out("o").joinpath("data.json").exists())
+
+    def test_the_c0_gate_requires_the_registered_c0_at_this_rate_and_commit(self) -> None:
+        # Blocking 1 and item 3: size full, device cuda, the registered settings, dph == DPH, and C0 at PIN.
+        cases = {"tiny": (dict(size="tiny"), "is not the registered C0"),
+                 "cpu": (dict(device="cpu"), "is not the registered C0"),
+                 "settings": (dict(registered_settings=False), "is not the registered C0"),
+                 "rate": (dict(dph=0.0), "money check used dph"),
+                 "commit": (dict(commit="0123abc"), "C0 ran at commit '0123abc'")}
+        for name, (change, message) in cases.items():
+            folder = self.c0_folder(f"c0-{name}", **change)
+            run = self.box(DPH="0.46", OUT=self.out(f"o-{name}"), PART="s0", FROM=folder, CHECK_ONLY="1")
+            self.assertEqual(run.returncode, 2, (name, run.stdout))
+            self.assertIn(message, run.stdout, name)
+            self.assertFalse(list(self.out(f"o-{name}").glob("train-*.json")))
+        good = self.c0_folder("c0-good")
+        run = self.box(DPH="0.46", OUT=self.out("o-good"), PART="s0", FROM=good, CHECK_ONLY="1")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+
+    def test_an_unset_billing_start_is_a_clean_refusal(self) -> None:
+        # Item 6: BOX_START truly unset (not exported) is the documented refusal, not set -u's exit 1.
+        run = self.box(DPH="0.46", OUT=self.out("o"), BOX_START=None)
+        self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+        self.assertIn("BOX_START", run.stdout.split("REFUSED")[-1])
+
+    def test_the_c0_item_has_its_own_070_sub_cap(self) -> None:
+        # Item 9: data + C0 stop at box_start + 0.70 / DPH h (1.52 h at $0.46), inside the $4.20 total; the
+        # trains (PART=s0) still run to the total's deadline.
+        import time
+        self.write_ledger(int(time.time()) - int(1.6 * 3600))
+        run = self.box(DPH="0.46", OUT=self.out("late"))
+        self.assertEqual(run.returncode, 4, run.stdout)
+        self.assertIn("STEP data not started", run.stdout)
+        self.assertIn("sub-cap", run.stdout)
+        good = self.c0_folder("c0-done")
+        run = self.box(DPH="0.46", OUT=self.out("trains"), PART="s0", FROM=good)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+
+
 class EighthPassRunnerTest(unittest.TestCase):
     """Review round 3, eighth pass, runner / readout / docs items 6, 7, 9, 12 and 13."""
 
@@ -1427,6 +1485,113 @@ class EighthPassRunnerTest(unittest.TestCase):
         self.assertNotIn("`direct_reader.py`) compose.", spec)
         self.assertIn("one level\n  above OUT", box)
         self.assertNotIn('The ruling said "persisted under OUT"', box)
+
+
+class NinthPassRunnerTest(MarksTestCase):
+    """Review round 3, ninth pass: blocking 1 and 2, items 4, 5, 7, 8 and 10 (runner, readout, docs)."""
+
+    def test_the_c0_stop_ratio_is_steps_in_t(self) -> None:
+        # Blocking 2 (ruled Oct 20): sum w/s(D1) / sum w/s(S0) over the time shares. The sweep's example: S0
+        # costs 4.0 / 3.56 / 2.0 x D1 per update in gold / teacher / own. Update shares said 2.29 (go); S0 really
+        # gets 2.56 x fewer updates in T (stop).
+        d1 = {"gold": 2.0, "teacher": 4.5, "own": 8.0}
+        s0 = {"gold": 8.0, "teacher": 16.0, "own": 16.0}
+        ratio = screen.steps_ratio(d1, s0)
+        self.assertAlmostEqual(ratio, (0.05 / 2 + 0.25 / 4.5 + 0.70 / 8) / (0.05 / 8 + 0.25 / 16 + 0.70 / 16))
+        self.assertAlmostEqual(ratio, 2.561, places=3)
+        self.assertAlmostEqual(screen.weighted(s0) / screen.weighted(d1), 2.286, places=3)   # the old rule
+        self.assertTrue(screen.stop_flags(ratio, 600, 60, 0.46, train_overhead=0.0)["stop_and_ask"])
+
+    def test_the_bench_reports_total_seconds_and_updates(self) -> None:
+        # Item 7: T's s_m is total timed seconds / timed updates (a mean, like f_m), so time_run reports both.
+        from tests.test_premonition_model import VOCAB, synthetic_batch
+        batches = [synthetic_batch(seed=k) for k in range(4)]
+        out = screen.time_run({}, "teacher", batches, size="tiny", vocab=VOCAB, device="cpu", warmup=1, timed=3,
+                              chunk=2)
+        self.assertEqual(out["updates"], 3)
+        self.assertAlmostEqual(out["seconds"], out["chunks"][0] * 2 + out["chunks"][1] * 1, places=9)
+
+    def test_peak_memory_is_reset_before_probes_and_after_a_failed_arm(self) -> None:
+        # Item 4: an earlier arm's peak can never trip a later guard.
+        import premonition.train as ptrain
+        from learnlab.train import MemoryGuardError
+        resets = []
+        saved = (screen.torch.cuda.reset_peak_memory_stats, screen.torch.cuda.empty_cache, ptrain._sync,
+                 ptrain.train_d)
+        screen.torch.cuda.reset_peak_memory_stats = lambda *a: resets.append("reset")
+        screen.torch.cuda.empty_cache = lambda: None
+        ptrain._sync = lambda device: None
+        ptrain.train_d = lambda *a, **k: resets.append("train") or {"status": "completed", "train_seconds": 1.0}
+        try:
+            def run_one(config, mode):
+                if config is screen.C0_ARMS["S1m4"]:
+                    raise MemoryGuardError("over", 15, 14)
+                return {"round_value": 1.0, "chunks": [1.0], "seconds": 1.0, "updates": 1,
+                        "peak_allocated_bytes": None}
+            screen.bench(run_one, rounds=1, device="cuda", log=lambda m: None)
+            self.assertEqual(resets, ["reset"])                                # after S1m4's failure
+            resets.clear()
+            with tempfile.TemporaryDirectory() as root:
+                screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="tiny", device="cuda",
+                                              workers=1, ckpt_dir="ck", seconds=1.0, max_tokens=10, arm="D1")
+            self.assertEqual(resets, ["reset", "train"])                       # reset before the probe trains
+        finally:
+            (screen.torch.cuda.reset_peak_memory_stats, screen.torch.cuda.empty_cache, ptrain._sync,
+             ptrain.train_d) = saved
+
+    def test_the_projection_charges_d1_separately_and_each_fresh_process(self) -> None:
+        # Item 5: 3 x (T + S0 overhead + S0 eval) + 3 x (T + D1 overhead + D1 eval) + 12 x 60 s, x 1.15.
+        hours = screen.projected_box_hours(1800, 50, train_overhead=100, eval_seconds_d1=120, train_overhead_d1=200)
+        self.assertAlmostEqual(hours, (3 * (1800 + 100 + 50) + 3 * (1800 + 200 + 120) + 12 * 60) / 3600 * 1.15)
+        flags = screen.stop_flags(1.0, 1800, 50, 0.46, train_overhead=100, eval_seconds_d1=120, train_overhead_d1=200)
+        self.assertAlmostEqual(flags["projected_s0_box_hours"], hours)
+        self.assertEqual(flags["process_margin_seconds"], 60.0)
+
+    def test_the_readout_requires_the_registered_c0(self) -> None:
+        # Blocking 1: the readout VOIDs a C0 at another size, device, protocol or without a real rate.
+        for change in ({"size": "tiny"}, {"device": "cpu"}, {"registered_settings": False}, {"dph": 0.0},
+                       {"flags": {"dph": 0.3}}):
+            scenario = Scenario()
+            scenario.edits.append(("c0.json", lambda c, change=change: c.update(change)))
+            result = self.run_card(scenario)
+            self.assertVerdict(result, "VOID")
+            self.assertTrue(any("registered C0" in r or "real rate" in r for r in result["void_reasons"]),
+                            (change, result["void_reasons"]))
+
+    def test_the_runner_takes_no_abbreviated_c0_options(self) -> None:
+        # Blocking 1: "--t-o 300" must not mean "--t-override 300".
+        import contextlib
+        import io
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            screen.build_parser().parse_args(["c0", "--data-rel", "d", "--tokenizer", "t", "--out", "o", "--t-o", "300"])
+
+    def test_near_and_overall_are_gated_at_100_items(self) -> None:
+        # Item 8 (ruled Oct 20): near and overall, the DEV-slip guard's cells, need >= 100 items like far_deep.
+        scenario = Scenario()
+
+        def thin_near(report: dict) -> None:
+            report["items"]["validation"] = [i for i in report["items"]["validation"]
+                                             if not (i["id"].startswith("near") and int(i["id"][4:]) >= 90)]
+            refresh(report)
+            report["directories"]["validation"]["summary"]["items"] = len(report["items"]["validation"])
+        for arm in ("D1", "S0"):
+            for seed in SEEDS:
+                scenario.edits.append((f"eval-{arm}-s{seed}.json", thin_near))
+        result = self.run_card(scenario)
+        self.assertVerdict(result, "INSUFFICIENT")
+        self.assertTrue(any(r.startswith("near below 100 items") for r in result["insufficient_reasons"]),
+                        result["insufficient_reasons"])
+        self.assertVerdict(self.run_card(Scenario()), "PROMOTE")
+
+    def test_the_specs_no_longer_describe_the_old_gate(self) -> None:
+        # Item 10: the stale lines are gone.
+        box = (ROOT / "design/swarm/BOX-SPEC.md").read_text(encoding="utf-8")
+        spec = (ROOT / "design/swarm/IMPLEMENTATION-SPEC.md").read_text(encoding="utf-8")
+        for stale in ("`MAXH` (default 8.0)", "Refuse if `MAXH * DPH > CAP`", "hostname -> `host.txt`",
+                      'checkpoint=f"checkpoints/swarm-screen/'):
+            self.assertNotIn(stale, box)
+        for stale in ("static number of picks (`gold_lines.shape[1] + 1`)", "mean desk HALT\nprobability"):
+            self.assertNotIn(stale, spec)
 
 if __name__ == "__main__":
     unittest.main()

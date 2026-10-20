@@ -91,6 +91,10 @@ STOP_RATIO = 2.5                                     # FUNDING-BID C0 rule
 MONEY_CAP_USD = 3.50                                 # the S0 hard cap
 BOX_OVERHEAD = 1.15
 S0_RUNS = 6                                          # D1 and S0 x seeds 0-2: trains and validation evals
+PROCESS_MARGIN_SECONDS = 60.0                        # start-up of each fresh train / eval process (eighth sweep, 5)
+# The registered C0 protocol (BOX-SPEC C0). c0.json records the settings it ran with; the box's C0 gate and the
+# readout accept only these (round 3, ninth pass, blocking 1).
+REGISTERED_C0 = {"rounds": 3, "warmup": 10, "timed": 40, "chunk": 5, "max_tokens": 55_000}
 VOCAB_V2 = 7068
 CKPT_DIR = "artifacts/claude-swarm-screen-20261018/ckpt-manual"   # git-ignored (round 3, sixth pass, item 12)
 REFUSED, C0_STOP = 2, 3                              # the box's exit codes (premonition_swarm_box.sh header)
@@ -203,23 +207,43 @@ def t_raw_from_modes(seconds: Mapping[str, float], flops: Mapping[str, float], *
     return target / sum(weights[mode] * flops[mode] / seconds[mode] for mode in MODES)
 
 
-def projected_box_hours(T: float, eval_seconds: float, *, train_overhead: float, runs: int = S0_RUNS,
-                        overhead: float = BOX_OVERHEAD) -> float:
-    """(runs x (T + train overhead) + runs x eval estimate) / 3600 x overhead: the S0 box-hours (BOX-SPEC C0).
+def projected_box_hours(T: float, eval_seconds: float, *, train_overhead: float,
+                        eval_seconds_d1: Optional[float] = None, train_overhead_d1: Optional[float] = None,
+                        runs: int = S0_RUNS, overhead: float = BOX_OVERHEAD,
+                        process_margin: float = PROCESS_MARGIN_SECONDS) -> float:
+    """The S0 box-hours (BOX-SPEC C0): half the runs are S0, half D1, each a train (T + its overhead outside T) and
+    an eval, every one a fresh process (+ `process_margin` each); x `overhead`.
 
     `train_overhead` is the measured time a train step spends outside its T: caches, FLOP calibration, the final
-    validation and the checkpoint save (review round 3, item 4). It is required, so no caller can leave it out."""
-    return (runs * (T + train_overhead) + runs * eval_seconds) / 3600.0 * overhead
+    validation and the checkpoint save (review round 3, item 4). It is required, so no caller can leave it out.
+    D1's eval and overhead are measured separately (ninth pass, item 5); without them D1 is charged at S0's."""
+    eval_d1 = eval_seconds if eval_seconds_d1 is None else eval_seconds_d1
+    over_d1 = train_overhead if train_overhead_d1 is None else train_overhead_d1
+    half = runs / 2
+    seconds = (half * (T + train_overhead + eval_seconds) + half * (T + over_d1 + eval_d1)
+               + 2 * runs * process_margin)
+    return seconds / 3600.0 * overhead
 
 
-def stop_flags(s0m4_weighted: float, d1_weighted: float, T: float, eval_seconds: float, dph: float, *,
-               train_overhead: float) -> dict[str, Any]:
-    """The two C0 stop flags and their inputs."""
-    ratio = s0m4_weighted / d1_weighted
-    hours = projected_box_hours(T, eval_seconds, train_overhead=train_overhead)
+def steps_ratio(d1: Mapping[str, float], s0: Mapping[str, float], weights: Mapping[str, float] = None) -> float:
+    """How many times fewer updates S0 gets in T than D1: sum_m w_m / s_m(D1) / sum_m w_m / s_m(S0), with s_m the
+    seconds per update in mode m and w_m the curriculum's TIME shares (a seconds-budget run splits phases by time).
+    The C0 stop-and-ask ratio (coordinator ruling Oct 20, ninth pass, blocking 2; RUNCARD-S0 §1)."""
+    weights = CURRICULUM_WEIGHTS if weights is None else weights
+    return (sum(weights[m] / d1[m] for m in MODES)) / (sum(weights[m] / s0[m] for m in MODES))
+
+
+def stop_flags(ratio: float, T: float, eval_seconds: float, dph: float, *, train_overhead: float,
+               eval_seconds_d1: Optional[float] = None, train_overhead_d1: Optional[float] = None
+               ) -> dict[str, Any]:
+    """The two C0 stop flags and their inputs. `ratio` is `steps_ratio(D1, S0m4)`."""
+    hours = projected_box_hours(T, eval_seconds, train_overhead=train_overhead, eval_seconds_d1=eval_seconds_d1,
+                                train_overhead_d1=train_overhead_d1)
     cost = hours * dph
     return {"ratio": ratio, "stop_ratio": STOP_RATIO, "stop_and_ask": bool(ratio > STOP_RATIO),
             "T": T, "eval_seconds_estimate": eval_seconds, "train_overhead_seconds": train_overhead,
+            "eval_seconds_estimate_d1": eval_seconds_d1, "train_overhead_seconds_d1": train_overhead_d1,
+            "process_margin_seconds": PROCESS_MARGIN_SECONDS,
             "projected_s0_box_hours": hours, "dph": dph,
             "projected_s0_cost_usd": cost, "money_cap_usd": MONEY_CAP_USD, "money_stop": bool(cost > MONEY_CAP_USD)}
 
@@ -378,6 +402,13 @@ def fresh_trainer(arm_config: Mapping[str, Any], size: str, vocab: int, device: 
     return run_trainer(model, device, BENCH_SECONDS)
 
 
+def reset_peak(device: str) -> None:
+    """Restart CUDA's peak-memory counter, which the run trainer's 14 GiB guard reads. Called before each probe and
+    after a failed bench arm, so no earlier arm's peak can trip a later guard (round 3, ninth pass, item 4)."""
+    if device == "cuda":
+        torch.cuda.reset_peak_memory_stats()
+
+
 def time_run(arm_config: Mapping[str, Any], mode: str, batches: Sequence[Any], *, size: str, vocab: int,
              device: str, warmup: int, timed: int, chunk: int) -> dict[str, Any]:
     """One fresh model, `warmup` untimed updates, then `timed` timed ones in chunks: s/update per chunk."""
@@ -385,12 +416,11 @@ def time_run(arm_config: Mapping[str, Any], mode: str, batches: Sequence[Any], *
     trainer = fresh_trainer(arm_config, size, vocab, device)
     config = trainer.model.config
     plan = Plan(mode, mode, P_OWN if mode == "own" else 0.0)
-    if device == "cuda":
-        torch.cuda.reset_peak_memory_stats()
+    reset_peak(device)
     for batch in batches[:warmup]:
         trainer._train_step(batch, plan, planned_loops(batch, mode, config), False)
     rows = list(batches[warmup:warmup + timed])
-    chunks = []
+    chunks, total = [], 0.0
     for start in range(0, len(rows), chunk):
         part = rows[start:start + chunk]
         _sync(device)
@@ -398,14 +428,17 @@ def time_run(arm_config: Mapping[str, Any], mode: str, batches: Sequence[Any], *
         for batch in part:
             trainer._train_step(batch, plan, planned_loops(batch, mode, config), False)
         _sync(device)
-        chunks.append((time.perf_counter() - began) / len(part))
+        took = time.perf_counter() - began
+        total += took
+        chunks.append(took / len(part))
         trainer._check_memory()          # the run trainer's 14 GiB reserved guard (sixth pass, item 1): raises if over
     peak = torch.cuda.max_memory_allocated() if device == "cuda" else None
     del trainer
     gc.collect()
     if device == "cuda":
         torch.cuda.empty_cache()
-    return {"chunks": chunks, "round_value": median_of(chunks), "peak_allocated_bytes": peak}
+    return {"chunks": chunks, "round_value": median_of(chunks), "seconds": total, "updates": len(rows),
+            "peak_allocated_bytes": peak}
 
 
 def gpu_busy_fraction(arm_config: Mapping[str, Any], batches: Sequence[Any], *, size: str, vocab: int,
@@ -455,22 +488,30 @@ def eval_purpose(size: str, purpose: Optional[str] = None) -> Optional[str]:
 
 
 def measure_eval_seconds(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, vocab: int, device: str,
-                         workers: int, ckpt_dir: str = CKPT_DIR) -> dict[str, Any]:
-    """Seconds of one validation eval of a fresh (untrained) S0 checkpoint, the second pass (caches warm).
+                         workers: int, ckpt_dir: str = CKPT_DIR, arm: str = "S0") -> dict[str, Any]:
+    """Seconds of one validation eval of a fresh (untrained) `arm` checkpoint, the second pass (caches warm).
 
-    S0 does not halt, so an untrained S0 does the same work as a trained one; D1's six-run share is charged at
-    S0's rate, which is the larger. The first pass is reported too (it builds the validation cache)."""
+    S0 does not halt, so an untrained S0 does the same work as a trained one. D1 halts, so its probe is the worst
+    case: HALT never fires and ASK always does, so it runs all max_loops loops (ninth pass, item 5: D1's evals are
+    measured, not charged at S0's rate). The first pass is reported too (it builds the validation cache)."""
     from premonition import preprocess
     from premonition.train import _sync, checkpoint_config, evaluate_d_checkpoint, save_mini_checkpoint
     from learnlab.tokenizer import Tokenizer
     from premonition import data as pdata
-    trainer = fresh_trainer(ARMS["S0"], size, vocab, device)
+    reset_peak(device)
+    trainer = fresh_trainer(ARMS[arm], size, vocab, device)
+    if arm == "D1":
+        heads = trainer.model.heads
+        with torch.no_grad():
+            heads.halt.weight.zero_(), heads.halt.bias.fill_(-20.0)
+            if heads.ask is not None:
+                heads.ask.weight.zero_(), heads.ask.bias.fill_(20.0)
     tokenizer = Tokenizer.load(Path(budget.root) / tokenizer_path)
     detector = pdata.name_detector(budget, data_rel, workers=workers, log=log)
     config = checkpoint_config(trainer, contender="D", tokenizer={"path": tokenizer_path, "sha256": tokenizer.digest},
                                detector=detector.digest, data={"dir": data_rel, "tag": Path(data_rel).name},
                                preprocess_identity=preprocess.identity(preprocess.LABEL_FREE))
-    relative = f"{ckpt_dir}/c0-evalprobe-{time.time_ns()}"
+    relative = f"{ckpt_dir}/c0-evalprobe-{arm}-{time.time_ns()}"
     save_mini_checkpoint(budget, relative, trainer, config)
     seconds = []
     try:
@@ -486,24 +527,26 @@ def measure_eval_seconds(budget: Any, data_rel: str, tokenizer_path: str, *, siz
 
 
 def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
-                           ckpt_dir: str, seconds: float, max_tokens: int) -> dict[str, Any]:
+                           ckpt_dir: str, seconds: float, max_tokens: int, arm: str = "S0") -> dict[str, Any]:
     """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short S0 `train_d` with a
     `seconds` budget, wall time minus `train_seconds`. That covers caches (warm after the data step), FLOP
     calibration, the final validation and the save. The probe checkpoint is deleted afterwards."""
     from premonition.train import _sync, train_d
-    relative = f"{ckpt_dir}/c0-trainprobe-{time.time_ns()}"
+    reset_peak(device)
+    relative = f"{ckpt_dir}/c0-trainprobe-{arm}-{time.time_ns()}"
     began = time.perf_counter()
     try:
         report = train_d(budget, data_rel=data_rel, tokenizer_path=tokenizer_path, seconds_budget=seconds,
-                         swarm=ARMS["S0"], seed=0, device=device, size=size, max_tokens=max_tokens, workers=workers,
+                         swarm=ARMS[arm] or None, seed=0, device=device, size=size, max_tokens=max_tokens,
+                         workers=workers,
                          checkpoint=relative, log=lambda message: None, **RUN_SETTINGS)
         _sync(device)
         wall = time.perf_counter() - began
     finally:
         shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
     if report.get("status") != "completed":                 # sixth pass, item 1: an aborted probe stops C0
-        raise c0_stop(f"c0: the train-overhead probe did not complete (status {report.get('status')!r}: "
-                         f"{str(report.get('error'))[:200]}); S0 would abort the same way")
+        raise c0_stop(f"c0: the {arm} train-overhead probe did not complete (status {report.get('status')!r}: "
+                      f"{str(report.get('error'))[:200]}); {arm} would abort the same way")
     trained = float(report["train_seconds"])
     return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
             "overhead_seconds": max(0.0, wall - trained)}
@@ -539,6 +582,7 @@ def bench(run_one: Callable[[Mapping[str, Any], str], dict[str, Any]], *, rounds
                     gc.collect()
                     if device == "cuda":
                         torch.cuda.empty_cache()
+                    reset_peak(device)
                     if arm in REQUIRED_ARMS:
                         raise c0_stop(f"c0: {arm} could not run ({problem}); the bench cannot set T")
                     break
@@ -581,7 +625,10 @@ def cmd_c0(args: argparse.Namespace) -> int:
         by_mode = {mode: median_of([r["round_value"] for r in runs[arm][mode]]) for mode in MODES}
         peaks = [r["peak_allocated_bytes"] for mode in MODES for r in runs[arm][mode]
                  if r["peak_allocated_bytes"] is not None]
+        means = {mode: sum(r["seconds"] for r in runs[arm][mode]) / sum(r["updates"] for r in runs[arm][mode])
+                 for mode in MODES}                    # total timed seconds / timed updates (ninth pass, item 7)
         per_arm[arm] = {"s_per_update": by_mode, "weighted_s_per_update": weighted(by_mode),
+                        "mean_s_per_update": means,
                         "peak_allocated_bytes": max(peaks) if peaks else None,
                         "round_values": {mode: [r["round_value"] for r in runs[arm][mode]] for mode in MODES}}
     # D1's FLOP fit and FLOP/s
@@ -589,7 +636,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
     fit = d1.calibrate(fixed[:4])
     timed_rows = fixed[args.warmup:args.warmup + args.timed]                  # the batches the seconds were timed on
     flops = curriculum_flops(fit, timed_rows, d1.model.config)
-    t_raw_modes = t_raw_from_modes(per_arm["D1"]["s_per_update"], flops)
+    t_raw_modes = t_raw_from_modes(per_arm["D1"]["mean_s_per_update"], flops)   # means, like the FLOPs (item 7)
     d1_flops_per_s = F_TARGET / t_raw_modes                    # time-share-weighted curriculum FLOP/s
     t_raw, t_formula = compute_T(d1_flops_per_s)
     T = int(args.t_override) if args.t_override is not None else t_formula
@@ -600,29 +647,36 @@ def cmd_c0(args: argparse.Namespace) -> int:
     gc.collect()
     busy = {"D1": gpu_busy_fraction(C0_ARMS["D1"], fixed, size=args.size, vocab=vocab, device=args.device),
             "S0m4": gpu_busy_fraction(C0_ARMS["S0m4"], fixed, size=args.size, vocab=vocab, device=args.device)}
-    probe = measure_eval_seconds(budget, args.data_rel, args.tokenizer, size=args.size, vocab=vocab,
-                                 device=args.device, workers=max(1, args.workers), ckpt_dir=args.ckpt_dir)
-    train_probe = measure_train_overhead(budget, args.data_rel, args.tokenizer, size=args.size, device=args.device,
-                                         workers=max(1, args.workers), ckpt_dir=args.ckpt_dir,
-                                         seconds=args.overhead_probe_seconds, max_tokens=args.max_tokens)
-    flags = stop_flags(per_arm["S0m4"]["weighted_s_per_update"], per_arm["D1"]["weighted_s_per_update"], T,
-                       probe["estimate_seconds"], args.dph, train_overhead=train_probe["overhead_seconds"])
-    log(f"c0: S0m4/D1 weighted ratio {flags['ratio']:.3f} (stop above {STOP_RATIO}): stop_and_ask "
+    probes = {arm: measure_eval_seconds(budget, args.data_rel, args.tokenizer, size=args.size, vocab=vocab,
+                                        device=args.device, workers=max(1, args.workers), ckpt_dir=args.ckpt_dir,
+                                        arm=arm) for arm in ("S0", "D1")}
+    train_probes = {arm: measure_train_overhead(budget, args.data_rel, args.tokenizer, size=args.size,
+                                                device=args.device, workers=max(1, args.workers),
+                                                ckpt_dir=args.ckpt_dir, seconds=args.overhead_probe_seconds,
+                                                max_tokens=args.max_tokens, arm=arm) for arm in ("S0", "D1")}
+    probe, train_probe = probes["S0"], train_probes["S0"]
+    ratio = steps_ratio(per_arm["D1"]["mean_s_per_update"], per_arm["S0m4"]["mean_s_per_update"])
+    flags = stop_flags(ratio, T, probe["estimate_seconds"], args.dph, train_overhead=train_probe["overhead_seconds"],
+                       eval_seconds_d1=probes["D1"]["estimate_seconds"],
+                       train_overhead_d1=train_probes["D1"]["overhead_seconds"])
+    settings = {"rounds": args.rounds, "warmup": args.warmup, "timed": args.timed, "chunk": args.chunk,
+                "max_tokens": args.max_tokens}
+    log(f"c0: S0m4/D1 steps-in-T ratio {flags['ratio']:.3f} (stop above {STOP_RATIO}): stop_and_ask "
         f"{flags['stop_and_ask']}; projected S0 {flags['projected_s0_box_hours']:.3f} box-hours x ${args.dph}/h = "
         f"${flags['projected_s0_cost_usd']:.3f} (cap ${MONEY_CAP_USD}): money_stop {flags['money_stop']}")
     write_json(args.out, {
         "command": "c0", "size": args.size, "device": args.device, "data_rel": args.data_rel,
         "tag": Path(args.data_rel).name, "tokenizer_path": args.tokenizer, "tokenizer_sha256": tokenizer.digest,
-        "vocab_size": vocab, "settings": {"rounds": args.rounds, "warmup": args.warmup, "timed": args.timed,
-                                          "chunk": args.chunk, "max_tokens": args.max_tokens,
-                                          "p_own": P_OWN, "weights": CURRICULUM_WEIGHTS},
+        "vocab_size": vocab, "settings": {**settings, "p_own": P_OWN, "weights": CURRICULUM_WEIGHTS},
+        "registered_settings": settings == REGISTERED_C0, "dph": args.dph,
         "arms": per_arm, "weighted_flops_per_update": flops, "flop_fit": {"a": fit.a, "b": fit.b, "worst": fit.worst},
         "d1_flops_per_s": d1_flops_per_s, "f_target": F_TARGET, "T_raw": t_raw, "T_formula": t_formula,
         "t_raw_curriculum": t_raw_modes, "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
+        "eval_probe_d1": probes["D1"], "train_probe_d1": train_probes["D1"],
         "ratio_s0m4_over_d1": flags["ratio"], "stop_and_ask": flags["stop_and_ask"],
         "money_stop": flags["money_stop"], "flags": flags,
-        "ratios_over_d1": {arm: v["weighted_s_per_update"] / per_arm["D1"]["weighted_s_per_update"]
-                           for arm, v in per_arm.items() if "weighted_s_per_update" in v},
+        "ratios_over_d1": {arm: steps_ratio(per_arm["D1"]["mean_s_per_update"], v["mean_s_per_update"])
+                           for arm, v in per_arm.items() if "mean_s_per_update" in v},   # steps-in-T ratios
         "seconds": time.perf_counter() - started, "environment": environment(args.device)})
     return 0
 
@@ -702,15 +756,13 @@ def build_parser() -> argparse.ArgumentParser:
     one = sub.add_parser("data")
     common(one)
     one.add_argument("--visits", default="large", help="large, or tiny for the dry run")
-    one = sub.add_parser("c0")
+    one = sub.add_parser("c0", allow_abbrev=False)   # no "--t-o" for "--t-override" (ninth pass, blocking 1)
     common(one)
     one.add_argument("--data-rel", required=True)
     one.add_argument("--tokenizer", required=True)
-    one.add_argument("--rounds", type=int, default=3)
-    one.add_argument("--warmup", type=int, default=10)
-    one.add_argument("--timed", type=int, default=40)
-    one.add_argument("--chunk", type=int, default=5)
-    one.add_argument("--max-tokens", type=int, default=55_000)
+    for name in ("rounds", "warmup", "timed", "chunk"):                  # defaults: the registered protocol
+        one.add_argument(f"--{name}", type=int, default=REGISTERED_C0[name])
+    one.add_argument("--max-tokens", type=int, default=REGISTERED_C0["max_tokens"])
     one.add_argument("--dph", type=float, default=0.0, help="billed $/h (0 = the money check cannot fire)")
     one.add_argument("--t-override", type=float, default=None, help="dry run only: T instead of the formula")
     one.add_argument("--overhead-probe-seconds", type=float, default=20.0,

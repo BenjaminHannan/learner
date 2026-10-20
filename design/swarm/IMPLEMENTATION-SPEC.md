@@ -132,8 +132,9 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
     `cap = ceil(n / M)` per question, n = |need_union[q]|. Each pick: while any desk is below floor, only those
     desks are eligible; otherwise desks below cap. Take the per-question argmax pref over (eligible desk,
     unassigned needed card) and assign it. So every desk gets floor or ceil, disjoint, covering need. Output
-    `T [Q, M, L+1]` bool. Vectorised over Q, with a static number of picks (`gold_lines.shape[1] + 1`) and
-    unmasked writes, so it forces no host sync.
+    `T [Q, M, L+1]` bool. Vectorised over Q with unmasked writes. Training passes no static bound, so the loop
+    runs max |need| picks: one host sync per round, beside the existing `asks.any()`. Round 3, eighth pass: the
+    static bound of `gold_lines.shape[1] + 1` = 17 charged S0 for the padding.
   - Desk target: `asks_m = T[q, m].any()`. `bce` over all Q*M desks; `set_cross_entropy(scores[qm], T[qm])`
     over desks with a non-empty target.
 * Fetch for the next round (not after the last; not in "gold"): teacher = `model._teacher_cards(desk_store,
@@ -153,8 +154,8 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
 ## 8. Eval (`swarm_answer(model, batch, *, wipe, window_line, stop, max_loops, lesion=None)`)
 
 Mirror `PremonitionMini.answer` (same wipe handling, mentions, empty-batch return). Rounds =
-`min(max_loops or config.swarm_rounds, config.swarm_rounds)` (a cap on the trained rounds, as D1's `max_loops` is), fixed (no HALT exit; record the mean desk HALT
-probability of the last round as `halt_prob`). Each desk fetches its own `top_k` when its `ask > 0`
+`min(max_loops or config.swarm_rounds, config.swarm_rounds)` (a cap on the trained rounds, as D1's `max_loops` is), fixed (no HALT exit; record sigmoid(mean desk HALT
+logit) of the last round as `halt_prob`, as §12). Each desk fetches its own `top_k` when its `ask > 0`
 (not after the last round). Add keyword `lesion` to `PremonitionMini.answer`'s dispatch only through
 `**kwargs` passthrough — simplest: give `PremonitionMini.answer` a trailing keyword `lesion: Optional[str] = None`
 that raises `ValueError` if set while `thinkers == 1`, and is otherwise passed to `swarm_answer`.

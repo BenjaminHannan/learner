@@ -438,6 +438,14 @@ def validity_mark(ctx: Context, name: str, title: str, arms: Sequence[str]) -> d
         if c0.get("t_override") is not None or c0.get("T") != c0.get("T_formula"):
             problems.append(f"validity: c0.json T {c0.get('T')!r} is not the registered formula's "
                             f"{c0.get('T_formula')!r} (t_override {c0.get('t_override')!r})")
+        # ninth pass, blocking 1: the registered C0 at full size on the GPU, its money check at a real rate
+        if (c0.get("size") != "full" or c0.get("device") != "cuda" or c0.get("registered_settings") is not True):
+            problems.append(f"validity: c0.json is not the registered C0 (size {c0.get('size')!r}, device "
+                            f"{c0.get('device')!r}, registered settings {c0.get('registered_settings')!r})")
+        dph, flag_dph = num(c0.get("dph")), num((c0.get("flags") or {}).get("dph"))
+        if not (dph > 0 and flag_dph == dph):
+            problems.append(f"validity: c0.json's money check has no real rate (dph {c0.get('dph')!r}, "
+                            f"flags.dph {(c0.get('flags') or {}).get('dph')!r})")
         for (arm, seed), report in sorted(ctx.trains.items()):
             if report.get("size") != "full":
                 problems.append(f"validity: train-{arm}-s{seed} size {report.get('size')!r}, not 'full'")
@@ -499,15 +507,25 @@ def validity_mark(ctx: Context, name: str, title: str, arms: Sequence[str]) -> d
     return mark(name, title, "pass" if not problems else "fail", bar, value, detail)
 
 
+GATED_CELLS = ("far_deep", "near", "overall")       # RUNCARD-S0 §2: "cells need >= MIN_ITEMS" (ruling Oct 20)
+
+
 def cells_mark(ctx: Context, name: str, title: str) -> dict[str, Any]:
-    bar = f"far_deep has >= {ctx.min_items} items in every eval file (else INSUFFICIENT)"
-    counts = {e.path: e.cell("far_deep")[1] for e in ctx.evals.values()}
-    short = {path: n for path, n in counts.items() if n < ctx.min_items}
-    if short:
-        ctx.insufficient.append(f"far_deep below {ctx.min_items} items in {len(short)} of {len(counts)} eval files "
-                                f"(smallest {min(counts.values())}, largest {max(counts.values())})")
-    value = f"far_deep n: min {min(counts.values(), default=0)}, max {max(counts.values(), default=0)} over {len(counts)} files"
-    return mark(name, title, "pass" if not short else "fail", bar, value, {"far_deep_items": counts})
+    """far_deep (the primary ruler) and near / overall (the DEV-slip guard's cells) each need >= min_items items
+    in every eval file; otherwise INSUFFICIENT (round 3, ninth pass, item 8: the guard's cells were ungated)."""
+    bar = f"{' / '.join(GATED_CELLS)} each have >= {ctx.min_items} items in every eval file (else INSUFFICIENT)"
+    detail, parts, failed = {}, [], False
+    for cell in GATED_CELLS:
+        counts = {e.path: e.cell(cell)[1] for e in ctx.evals.values()}
+        short = {path: n for path, n in counts.items() if n < ctx.min_items}
+        if short:
+            failed = True
+            ctx.insufficient.append(f"{cell} below {ctx.min_items} items in {len(short)} of {len(counts)} eval files "
+                                    f"(smallest {min(counts.values())}, largest {max(counts.values())})")
+        detail[f"{cell}_items"] = counts
+        parts.append(f"{cell} n: min {min(counts.values(), default=0)}, max {max(counts.values(), default=0)}")
+    value = "; ".join(parts) + f" over {len(ctx.evals)} files"
+    return mark(name, title, "fail" if failed else "pass", bar, value, detail)
 
 
 # ------------------------------------------------------------------ information rows
@@ -696,8 +714,8 @@ def render(result: dict[str, Any]) -> str:
     rows = [f"# Swarm screen readout, card {result['card']}", ""]
     if result["note"]:
         rows += [f"**{result['note']}**", ""]
-    rows += [f"directory `{result['directory']}`; seeds {result['seeds']}; T = {result['T']}; far_deep minimum "
-             f"{result['min_items']} items; seconds tolerance {100 * result['seconds_tol']:g}%", "",
+    rows += [f"directory `{result['directory']}`; seeds {result['seeds']}; T = {result['T']}; cells (far_deep / near / "
+             f"overall) minimum {result['min_items']} items; seconds tolerance {100 * result['seconds_tol']:g}%", "",
              "| mark | what | status | bar | value |", "|---|---|---|---|---|"]
     for m in result["marks"]:
         rows.append(f"| {m['mark']} | {m['title']} | {m['status']} | {m['bar']} | {m['value'].replace('|', '/')} |")
@@ -738,7 +756,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--card", choices=("S0", "S1"), required=True)
     parser.add_argument("--dir", required=True, help="folder holding the runner's JSON files")
     parser.add_argument("--out", required=True, help="MARKS-<card>.json; the .md is written beside it")
-    parser.add_argument("--min-items", type=int, default=MIN_ITEMS, help="far_deep items needed per eval file (M6)")
+    parser.add_argument("--min-items", type=int, default=MIN_ITEMS,
+                        help="far_deep / near / overall items needed per eval file (M6)")
     parser.add_argument("--seeds", default=",".join(map(str, SEEDS)))
     parser.add_argument("--seconds-tol", type=float, default=SECONDS_TOL)
     parser.add_argument("--note", default="", help="a line printed at the top of the .md (e.g. DRY RUN)")

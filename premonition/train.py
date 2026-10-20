@@ -135,10 +135,18 @@ class InsertLog:
     """Records every card insertion of `model` (in `forward`, `answer` or `answer_with_gold`) while active.
 
     It shadows the bound `_insert` with a recording wrapper on the instance and removes it on exit, so the
-    model is unchanged afterwards (and a surrounding `read_only` sees no difference).
+    model is unchanged afterwards (and a surrounding `read_only` sees no difference). Its calls are indexed by
+    question (one row per question), so a swarm (Q * M desk rows) is refused here, in one place (round 3, ninth pass,
+    item 12); callers ask `InsertLog.applies(model)`.
     """
 
+    @staticmethod
+    def applies(model: PremonitionMini) -> bool:
+        return bool(model.config.store) and model.config.thinkers == 1
+
     def __init__(self, model: PremonitionMini) -> None:
+        if model.config.thinkers > 1:
+            raise ValueError("InsertLog / card_stats assume one row per question; a swarm has Q * M desk rows")
         self.model = model
         self.calls: list[tuple[torch.Tensor, torch.Tensor]] = []
 
@@ -326,7 +334,7 @@ class MiniTrainer(Trainer):
                 for module in model.modules() if isinstance(module, nn.GELU)]
             hooks.append(model.heads.halt.register_forward_hook(
                 lambda _m, _a, out: halts.append(out.detach().float().flatten())))
-        recorder = InsertLog(model) if diagnose and config.store and config.thinkers == 1 else None
+        recorder = InsertLog(model) if diagnose and InsertLog.applies(model) else None
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
@@ -678,7 +686,7 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
         count = batch.q_visit.shape[0]
         if count == 0:
             continue
-        recorder = InsertLog(model) if config.store and config.thinkers == 1 else None
+        recorder = InsertLog(model) if InsertLog.applies(model) else None
         with recorder or nullcontext():
             answers = model.answer(batch, stop=stop)
         correct, _ = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id)
@@ -876,7 +884,7 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
             if wipe:
                 window = torch.tensor([windows.get(qid, 0) for qid in batch.question_ids], dtype=torch.long,
                                       device=device)
-            recorder = InsertLog(model) if model.config.store and not wipe and model.config.thinkers == 1 else None
+            recorder = InsertLog(model) if InsertLog.applies(model) and not wipe else None
             extra = {} if not wipe else {"wipe": wipe, "window_line": window}
             if lesion is not None:
                 extra["lesion"] = lesion

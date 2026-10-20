@@ -28,10 +28,13 @@ line for about $4.
 
 **Asking now: C0 + S0 = $4.20 cap.** S1 ($2.40) is a separate yes, after the S0 readout.
 
-**C0 stop-and-ask rule (free insurance).** If S0 at M = 4 runs more than 2.5 × D1's s/step, concurrency is
+**C0 stop-and-ask rule (free insurance).** If S0 at M = 4 gets more than 2.5 × fewer updates in T than D1 (the
+steps-in-T ratio Σ w/s(D1) ÷ Σ w/s(S0) over the time shares; ruling of 2026-10-20, replacing a plain s/step
+ratio), concurrency is
 *not* near-free for D. The premise that D is launch-bound would then be wrong for this model. C0
 reports this, and S0 is **not** started until the coordinator rules (on M = 2, or go as is). Cost of
-finding out: ≤ $0.70.
+finding out: ≤ $0.70, enforced by the box as a sub-cap inside the $4.20 total (data + C0, from the box's billing
+start; ruling of 2026-10-20).
 
 ## What it displaces
 

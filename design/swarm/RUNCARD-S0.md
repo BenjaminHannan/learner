@@ -61,6 +61,19 @@ the tag goes in the readout).
   pass, item 4). Adopted by the coordinator session (session_014a7yFK9adwx14ocaqRQ6eZ, ruling of 2026-10-20) as a
   correction, not a moved bar: the card is unsealed and no C0 or S0 data exists. Both arms get the same T either
   way.
+* **(10-20, pre-seal, ninth pass) Three rulings of the coordinator session (session_014a7yFK9adwx14ocaqRQ6eZ,
+  2026-10-20), adopted before any C0 or S0 data exists. Each takes the stricter, consistent option.**
+  (a) **The C0 stop ratio is the steps-in-T ratio:** Σ_m w_m / s_m(D1) ÷ Σ_m w_m / s_m(S0m4), with w_m the time
+  shares and s_m the mean seconds per update (total timed seconds / timed updates). That is how many times fewer
+  updates S0 gets in T than D1. Stop and ask above 2.5. The earlier update-share average of s/update understated
+  it (sweep example: 2.29 vs 2.56). T_raw also uses the mean s_m, matching the mean FLOPs per update f_m.
+  (b) **Cells:** `far_deep`, `near` and `overall` each need ≥ 100 items in every eval file, else INSUFFICIENT.
+  By construction they can reach that: even the tiny dry-run validation split has `overall` 188, `near` 105 and
+  `far_deep` 62 per file. The large split is many times bigger, and `far_deep` is its smallest gated cell.
+  (c) **The C0 item's $0.70 hard cap is enforced as a sub-cap inside the $4.20 total.** Data + C0 stop at
+  BOX_START + 0.70 / DPH hours.
+  The registered C0 is also enforced. No extra C0 arguments are allowed off the dry run, and the box gate and M5
+  require size full, device cuda, the registered bench settings, a real dph, and a C0 run at the pinned commit.
 * **(10-20, pre-seal, sixth pass) Gold mode keeps the ASK terms in both arms.** D1's gold forward keeps a
   zero-weight ASK term (its ASK head gets a zero gradient and AdamW decays it). The swarm now does the same; the
   earlier skip left S0's ASK head out of the graph and undecayed (sweep item 15, ADOPTED by the coordinator,
@@ -99,7 +112,7 @@ the tag goes in the readout).
 | **M3 desk usage (guard)** | on every one of ≥ 2 of 3 seeds: every desk's eval `ask_rate` ≥ 0.05, the busiest desk fetched at least one real card (`fetch_count` > 0), and every desk's `fetch_count` ≥ 0.10 × the busiest desk's. Otherwise the breadth was not used → **FAIL (USAGE-COLLAPSE)**. (10-20, pre-seal: the "> 0" makes explicit that no fetch at all is unused breadth; the ratio alone passed 0 ≥ 0.1 × 0) |
 | **M4 diversity (guard)** | the readout prints `fetch_overlap`, `register_cos`, `ask_rate[4]`, `fetch_count[4]`, `silent_desks` per seed. If `collapsed` (register_cos > 0.95 **and** fetch_overlap > 0.8) on ≥ 2 of 3 seeds, the verdict line reads **"COLLAPSED: the desks are copies"** and the verdict cannot be PROMOTE |
 | **M5 matching (validity)** | every run's train seconds within T ± 2%; same data tag, tokenizer digest, eval items for every arm; `loop_mismatches` = 0 in every train report; no NaN loss. (10-18: `gold_missing` dropped. `train_d` does not log it. The gold-to-card mapping is covered by `test_premonition_model` / `test_premonition_swarm`.) Otherwise the run is **VOID** and reruns once under this same card |
-| **M6 cells** | `far_deep` has ≥ 100 items per seed; otherwise **INSUFFICIENT** (no verdict) |
+| **M6 cells** | `far_deep` has ≥ 100 items per seed; otherwise **INSUFFICIENT** (no verdict). (10-20, pre-seal, ninth pass: `near` and `overall`, the M2 guard's cells, must each have ≥ 100 too, as §2 says. See §1.) |
 
 **Verdict:**
 * **PROMOTE to S1** only if M1 passes and M2, M3, M4, M5, M6 hold.

@@ -51,13 +51,17 @@ Common options: `--root` (project root; default the repo), `--device cpu|cuda`, 
      `T = min(3600, 300 * ceil(T_raw / 300))` (RUNCARD-S0 §1). With `--size tiny` use `--t-override` (dry run: 120, as the box script passes).
    * GPU-busy fraction (CUDA only, else null): `torch.profiler` over 10 own-mode updates for D1 and S0m4:
      sum of CUDA kernel self time / wall time.
-   * **Stop-and-ask (FUNDING-BID C0 rule):** `ratio = S0m4 weighted s/update / D1 weighted s/update`;
-     `stop_and_ask = ratio > 2.5`. Also `money_stop = projected S0 box-hours x dph > 3.50` where projected
-     S0 box-hours = (6 x T + 6 x measured-eval-estimate) / 3600 x 1.15 and dph comes from `--dph` (box: the billed
-     rate). Write both flags and their inputs into c0.json.
+   * **Stop-and-ask (FUNDING-BID C0 rule; amended 2026-10-20, ninth pass):** `ratio = steps_ratio(D1, S0m4) =
+     Σ w/s(D1) ÷ Σ w/s(S0m4)` over the time shares, with s the mean s/update (total timed seconds / timed
+     updates); `stop_and_ask = ratio > 2.5`. Also `money_stop = projected S0 box-hours x dph > 3.50`. The
+     projected S0 box-hours are 3 × (T + S0 overhead + S0 eval) + 3 × (T + D1 overhead + D1 eval) + 12 × 60 s per
+     fresh process, / 3600 × 1.15. The overheads come from one short train probe per arm, and the evals from one probe
+     per arm (D1's in its worst case: no HALT, always ASK). dph comes from `--dph` (box: the billed rate). Write
+     both flags, their inputs, `dph` and `registered_settings` into c0.json.
 3. `train --arm D1|S0|S1 --seed N --seconds T --data-rel --tokenizer` -> `premonition.train.train_d(budget,
    data_rel=..., tokenizer_path=..., flop_budget=1e30, seconds_budget=T, swarm=ARMS[arm] or None, seed=N,
-   device=..., size=..., eval_every=0, checkpoint=f"checkpoints/swarm-screen/{arm}-s{N}")`; write the report JSON
+   device=..., size=..., eval_every=0, checkpoint=f"<--ckpt-dir>/{arm}-s{N}")` (default under artifacts/, git-ignored;
+   the box passes its CKPT); write the report JSON
    (drop "history" bulk except the last 5 records; keep everything else).
 4. `eval --checkpoint <rel> [--lesion board|notes|cards]` -> `evaluate_d_checkpoint(budget, ckpt, split="validation",
    device=..., lesion=...)`; write the JSON (it already has per-item `id/correct/decision/slices`).
@@ -100,12 +104,16 @@ Seeds 0, 1, 2. Writes `MARKS-<card>.json` and a human `MARKS-<card>.md` (one tab
 
 ## Box script (`scripts/premonition_swarm_box.sh`)
 
-Env: `PIN` (the sealed commit), `DPH` (billed $/h), `MAXH` (default 8.0), `CAP` (default 4.20), `PART` (`c0` | `s0` | `all`,
-default `all`), `DRYRUN` (1 = CPU tiny dry run). Steps, each logged with UTC timestamps to `box.log`:
-1. Refuse unless `git rev-parse HEAD == PIN` and every file in `scripts/premonition_swarm_manifest.txt`
-   (sha256 list, written by `premonition_swarm_screen.py manifest` over: premonition/{config,model,swarm,train,store,
-   batch,data,exp1,slices}.py, the three scripts) matches. Refuse if `MAXH * DPH > CAP` (skip in DRYRUN).
-2. Host record: `nvidia-smi -q`, torch/CUDA versions, hostname -> `host.txt` (DRYRUN: whatever exists).
+Env (the script's header is the reference; amended 2026-10-20): `PIN` (the sealed commit), `DPH` (billed $/h),
+`BOX_START` (billing start, required until the ledger exists), `MAXH` (optional, no default; it can only cut the
+money deadline), `CAP` (default 4.20, the total), `PART` (`c0` | `s0` | `all`, default `all`), `DRYRUN` (1 = CPU tiny
+dry run). Steps, each logged with UTC timestamps to `box.log`:
+1. Refuse unless `git rev-parse HEAD == PIN`, the tree is clean and every file in
+   `scripts/premonition_swarm_manifest.txt` (sha256 list over the run's import closure, written by
+   `premonition_swarm_screen.py manifest`) matches. Off DRYRUN, refuse if the bid's 8.5 h × DPH > CAP (see "Money,
+   reruns and exit codes" below).
+2. Host record: `nvidia-smi -q`, torch/CUDA versions, hostname, commit -> `host-c0.txt` before C0 and `host-s0.txt`
+   before the trains.
 3. `data` (large; DRYRUN: tiny).
 4. `c0` -> `c0.json`. If `stop_and_ask` or `money_stop`: write `STOP-AND-ASK.txt` with the numbers and EXIT 3 before
    any training. (PART=c0 stops here regardless.)

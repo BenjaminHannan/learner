@@ -32,10 +32,13 @@
 #            money_stop. Logged. It never overrides the box's money deadline or the total cap. Once any C0 on this box
 #            has stopped (recorded in the ledger), every later invocation needs it: re-measuring C0 in the same or a
 #            fresh OUT until it passes is refused (round 3, eighth pass, item 1).
-#   OUT, PY, WORKERS, C0_EXTRA, DRY_MAXTOK  output folder, python, data workers, extra c0 args (never --t-override off
-#            DRYRUN: an unregistered T is refused), the dry run's per-batch token cap.
+#   OUT, PY, WORKERS, C0_EXTRA, DRY_MAXTOK  output folder, python, data workers, extra c0 args (DRYRUN only: off
+#            DRYRUN it must be empty, since the C0 protocol, size, device, dph and T are registered), the dry run's
+#            per-batch token cap.
+#   The C0 item (data + C0, from BOX_START, so box setup included) has its own sub-cap of $0.70 inside CAP
+#   (FUNDING-BID, ruling Oct 20). PART=s0 refuses a C0 that ran at another commit than PIN.
 # Exit codes: 2 refused (nothing paid ran in this invocation), 3 stop-and-ask (C0's flags, or the runner's C0 stop:
-#             D1 or S0m4 cannot run), 4 the money deadline or MAXH was reached, 5 a step failed after it started (a
+#             D1 or S0m4 cannot run), 4 the money deadline, the C0 sub-cap or MAXH was reached, 5 a step failed after it started (a
 #             runner refusal mid-run included) or the archive could not be packed. On 3/4/5, copy OUT's JSON and logs
 #             back directly (no archive is packed).
 set -euo pipefail
@@ -47,6 +50,8 @@ PIN=${PIN:-}
 DPH=${DPH:-}
 MAXH=${MAXH:-}
 CAP=${CAP:-4.20}
+C0_CAP=0.70                        # FUNDING-BID: the C0 item's own hard cap, a sub-cap inside CAP (ruling Oct 20)
+BOX_START=${BOX_START:-}           # required off DRYRUN until the ledger exists (checked below)
 PART=${PART:-all}
 DRYRUN=${DRYRUN:-0}
 FROM=${FROM:-}
@@ -66,8 +71,10 @@ if [ "$DRYRUN" = 1 ]; then
 else
   SIZE=full; DEVICE=cuda; VISITS=large
   OUT=${OUT:-$ROOT/artifacts/$RUN/out}                            # git-ignored: outputs never dirty the tree
-  case " $C0_EXTRA " in *t-override*) refuse "C0_EXTRA may not set --t-override off DRYRUN: T is the registered formula (RUNCARD-S0 §1)";; esac
-  C0_ARGS="--rounds 3 --warmup 10 --timed 40 --chunk 5 $C0_EXTRA"
+  # Off DRYRUN nothing may change the registered C0 (round 3, ninth pass, blocking 1): extra args come last, so they
+  # would override --dph, --size, --device or the bench settings (argparse keeps the last value).
+  [ -z "$C0_EXTRA" ] || refuse "C0_EXTRA must be empty off DRYRUN: the C0 protocol, size, device, dph and T are registered (RUNCARD-S0 §1, BOX-SPEC C0)"
+  C0_ARGS="--rounds 3 --warmup 10 --timed 40 --chunk 5"
   TRAIN_ARGS=""
 fi
 case "$PART" in c0|s0|all) ;; *) refuse "PART must be c0, s0 or all (got $PART)";; esac
@@ -150,6 +157,7 @@ NOW=$(date +%s)
 if [ "$DRYRUN" = 1 ]; then
   DEADLINE=$(( START + 8 * 3600 ))
   if [ -n "$MAXH" ]; then DEADLINE=$(( START + $(awk -v m="$MAXH" 'BEGIN{printf "%d", m*3600}') )); fi
+  C0_DEADLINE=$DEADLINE
   say "DRYRUN: no money ledger; this invocation stops at $(date -u -d "@$DEADLINE" +%FT%TZ)"
 else
   is_decimal "$DPH" || { say "REFUSED: DPH (the billed dollars per hour) must be a positive decimal (got '$DPH')"; exit 2; }
@@ -172,6 +180,10 @@ else
   fi
   if [ "$DEADLINE" -le "$NOW" ]; then say "REFUSED: the box has spent $SPENT USD of the $CAP USD total; no money is left"; exit 2; fi
   say "money: box billing since $(date -u -d "@$BOX_START" +%FT%TZ), spent $SPENT USD of $CAP USD; hard stop at $(date -u -d "@$DEADLINE" +%FT%TZ)"
+  # The C0 item (data + C0, box setup included) has its own $0.70 sub-cap inside the total (ninth pass, item 9).
+  C0_DEADLINE=$(awk -v s="$BOX_START" -v c="$C0_CAP" -v d="$DPH" 'BEGIN{printf "%d", s + c/d*3600}')
+  if [ "$C0_DEADLINE" -gt "$DEADLINE" ]; then C0_DEADLINE=$DEADLINE; fi
+  say "money: the C0 item (data + C0) stops at $(date -u -d "@$C0_DEADLINE" +%FT%TZ) (sub-cap $C0_CAP USD)"
   if [ ! -f "$LEDGER" ]; then                # from here on the box's billing start is fixed, for every OUT
     mkdir -p "$(dirname "$LEDGER")"
     printf '{"box_start": %s, "dph": "%s", "cap": "%s", "first_out": "%s", "c0_stops": []}\n' "$BOX_START" "$DPH" "$CAP" "$OUT" > "$LEDGER"
@@ -222,9 +234,18 @@ c0_gate() {
   LEFT_SHORT=0
   T=$(jget "$c0" T)
   STOP=$(jget "$c0" stop_and_ask); MONEY=$(jget "$c0" money_stop)
+  # T is "on this box, for this code": C0 must have run at the pinned commit (ninth pass, item 3).
+  local c0_commit
+  c0_commit=$(sed -n 's/^commit: //p' "$(dirname "$c0")/host-c0.txt")
+  [ "$c0_commit" = "$HEAD" ] || { say "REFUSED: C0 ran at commit '${c0_commit}', not the pinned $HEAD; its T and stop flags are for other code"; exit 2; }
   if [ "$DRYRUN" != 1 ]; then
     [ "$(jget "$c0" t_override)" = None ] && [ "$(jget "$c0" T)" = "$(jget "$c0" T_formula)" ] \
       || { say "REFUSED: c0.json's T $(jget "$c0" T) is not the registered formula's ($(jget "$c0" T_formula)); an unregistered T is never trained"; exit 2; }
+    # ... and the registered protocol at full size on the GPU, at this box's rate (ninth pass, blocking 1)
+    [ "$(jget "$c0" size)" = full ] && [ "$(jget "$c0" device)" = cuda ] && [ "$(jget "$c0" registered_settings)" = True ] \
+      || { say "REFUSED: c0.json is not the registered C0 (size $(jget "$c0" size), device $(jget "$c0" device), registered settings $(jget "$c0" registered_settings))"; exit 2; }
+    awk -v a="$(jget "$c0" dph)" -v b="$(jget "$c0" flags.dph)" -v d="$DPH" 'BEGIN{exit !(a==d && b==d)}' \
+      || { say "REFUSED: c0.json's money check used dph $(jget "$c0" dph), not this box's DPH $DPH"; exit 2; }
     NEED=$(jget "$c0" flags.projected_s0_box_hours)
     LEFT=$(awk -v d="$DEADLINE" -v n="$(date +%s)" 'BEGIN{printf "%.3f", (d-n)/3600}')
     if awk -v need="$NEED" -v left="$LEFT" 'BEGIN{exit !(need>left)}'; then
@@ -260,9 +281,10 @@ fi
 # step NAME CMD...: log start/end with UTC timestamps and seconds, tee the output to NAME.log, cut at the deadline.
 step() {
   local name=$1; shift
-  local left
-  left=$(( DEADLINE - $(date +%s) ))
-  if [ "$left" -le 0 ]; then say "STEP $name not started: the money deadline or MAXH was reached"; exit 4; fi
+  local left until=$DEADLINE
+  case "$name" in data|c0) until=$C0_DEADLINE;; esac              # the C0 item's sub-cap
+  left=$(( until - $(date +%s) ))
+  if [ "$left" -le 0 ]; then say "STEP $name not started: the money deadline, the C0 sub-cap or MAXH was reached"; exit 4; fi
   say "STEP $name start: $*"
   local began rc=0
   began=$(date +%s)
@@ -273,7 +295,7 @@ step() {
   local took=$(( $(date +%s) - began ))
   printf '%s\t%s\t%s\n' "$name" "$took" "$rc" >> "$OUT/steps.tsv"
   say "STEP $name end rc=$rc seconds=$took"
-  if [ "$rc" = 124 ]; then say "STEP $name cut by the money deadline or MAXH"; exit 4; fi
+  if [ "$rc" = 124 ]; then say "STEP $name cut by the money deadline, the C0 sub-cap or MAXH"; exit 4; fi
   if [ "$name" = c0 ] && [ "$rc" = 3 ]; then         # the runner's C0 stop: D1 or S0m4 cannot run, so no T (item 9)
     { echo "STOP-AND-ASK: C0 could not set T (the runner's C0 stop; see c0.log)."; tail -5 "$OUT/c0.log"; } > "$OUT/STOP-AND-ASK.txt"
     cat "$OUT/STOP-AND-ASK.txt" | tee -a "$BOXLOG"

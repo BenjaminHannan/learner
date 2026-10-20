@@ -839,18 +839,18 @@ class RoundThreeTest(unittest.TestCase):
 
     def test_swarm_forward_computes_no_per_step_diagnostics(self) -> None:
         batch = synthetic_batch(seed=2)
-        saved = sw.register_cos, sw.fetch_overlap
+        saved = sw.register_cos, sw.overlap_terms
 
         def refuse(*_a, **_k):
             raise AssertionError("per-step swarm diagnostic computed in training")
 
-        sw.register_cos = sw.fetch_overlap = refuse
+        sw.register_cos = sw.overlap_terms = refuse
         try:
             for make in (s0, s1):
                 for mode in ("gold", "teacher", "own"):
                     make()(batch, mode=mode, p_own=0.5, generator=torch.Generator().manual_seed(0))
         finally:
-            sw.register_cos, sw.fetch_overlap = saved
+            sw.register_cos, sw.overlap_terms = saved
         self.assertIsNotNone(sw.diversity(s1().answer(batch).swarm))          # the eval report still works
 
     def _toy(self, **swarm):
@@ -1245,6 +1245,37 @@ class EighthPassTest(unittest.TestCase):
             trained[name] = {n for n, p in model.named_parameters() if p.grad is not None and p.grad.abs().sum() > 0}
         self.assertTrue({n for n in trained["D1"] if n.startswith("reader.")})
         self.assertEqual(trained["D1"] - trained["S0"], set())
+
+
+class NinthPassTest(unittest.TestCase):
+    """Review round 3, ninth pass (the eighth pass's sweep, ruled Oct 20): items 11 and 12 (model side)."""
+
+    def test_the_swarm_recall_is_d1s_recall_on_desk_zero(self) -> None:
+        # Item 11: one recall definition. swarm._recall calls PremonitionMini._recall on the desk-0 rows.
+        batch = synthetic_batch(seed=3)
+        calls = []
+        original = PremonitionMini._recall
+        PremonitionMini._recall = lambda self, store, episode, index, rows, gold: (
+            calls.append(int(index.shape[0])) or original(self, store, episode, index, rows, gold))
+        try:
+            out = s0()(batch, mode="teacher", generator=torch.Generator().manual_seed(0))
+        finally:
+            PremonitionMini._recall = original
+        self.assertEqual(calls, [batch.size[2]])                              # once, desk 0 of every question
+        self.assertIn("recall_at_k", out["metrics"])
+        self.assertFalse(hasattr(sw, "fetch_overlap"))                       # dead helper removed (overlap_terms)
+        model = s0()
+        hidden = model.read(batch)
+        swarm = sw._Swarm(model, batch, hidden, model.build_store(hidden, batch), model._mentions(batch))
+        self.assertFalse(hasattr(swarm, "device"))                           # never read: removed
+
+    def test_insert_log_refuses_a_swarm_in_one_place(self) -> None:
+        # Item 12: card_stats / InsertLog assume one row per question; the guard lives in InsertLog itself.
+        from premonition.train import InsertLog
+        with self.assertRaises(ValueError):
+            InsertLog(s0())
+        self.assertFalse(InsertLog.applies(s0()))
+        self.assertTrue(InsertLog.applies(build()))
 
 if __name__ == "__main__":
     unittest.main()
