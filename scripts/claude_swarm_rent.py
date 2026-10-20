@@ -202,24 +202,31 @@ def create(a):
     if offer is None:
         print(json.dumps({"refused": f"offer {a.offer} is not an RTX 4090 offer at <= ${a.max_dph}/h right now"}))
         return
+    rent(offer, label=a.label, cap=a.cap, max_dph=a.max_dph, dryrun=a.dryrun)
+
+
+def rent(offer: dict, *, label: str, cap: str, max_dph: float, dryrun: bool = False):
+    """PUT one offer (straight from a search: vast offer ids rotate within seconds, so no second lookup); then the
+    billed rate must not exceed the DPH the box counts with, or the instance is destroyed at once."""
     dph = f"{math.ceil((offer['dph_total'] + ROUND_MARGIN) * 10000) / 10000:.4f}"     # rounded up: never undercounts
-    if float(dph) > a.max_dph:
-        print(json.dumps({"refused": f"DPH {dph} with the storage margin is above ${a.max_dph}/h"}))
-        return
+    if float(dph) > max_dph + ROUND_MARGIN + 1e-4:
+        print(json.dumps({"refused": f"DPH {dph} is above ${max_dph}/h"}))
+        return None
     box_start = int(time.time())                                         # before the request: billing is covered
-    body = {"client_id": "me", "image": IMAGE, "disk": DISK_GB, "label": a.label, "runtype": "args",
-            "args": ["bash", "-c", job_for(dph, box_start, a.cap), "swarm"], "target_state": "running"}
-    if a.dryrun:
+    body = {"client_id": "me", "image": IMAGE, "disk": DISK_GB, "label": label, "runtype": "args",
+            "args": ["bash", "-c", job_for(dph, box_start, cap), "swarm"], "target_state": "running"}
+    if dryrun:
         print(json.dumps({"dryrun": True, "offer": offer.get("id"), "dph": dph, "box_start": box_start,
                           "job_bytes": len(body["args"][2])}))
-        return
-    r = call("PUT", f"/asks/{a.offer}/", body, timeout=120)
+        return None
+    r = call("PUT", f"/asks/{offer['id']}/", body, timeout=120)
     print(json.dumps({"success": r.get("success"), "new_contract": r.get("new_contract"), "error": r.get("error"),
-                      "msg": r.get("msg"), "dph": dph, "cap": a.cap, "box_start": box_start,
+                      "msg": r.get("msg"), "dph": dph, "cap": cap, "box_start": box_start,
                       "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(box_start))}), flush=True)
     new = r.get("new_contract")
     if not new:
-        return
+        return None
+    billed = None
     for _ in range(6):                       # the billed rate must not exceed the DPH the box counts with
         time.sleep(5)
         billed = inst(new).get("dph_total")
@@ -228,8 +235,9 @@ def create(a):
     if billed is None or billed > float(dph):
         call("DELETE", f"/instances/{new}/")
         print(json.dumps({"destroyed": new, "reason": f"billed {billed} $/h > the box's DPH {dph} (or unknown)"}))
-    else:
-        print(json.dumps({"billed_dph": billed, "box_dph": dph, "ok": True}))
+        return None
+    print(json.dumps({"billed_dph": billed, "box_dph": dph, "ok": True}))
+    return new
 
 
 def inst(i):
