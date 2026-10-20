@@ -11,7 +11,7 @@ for the whole box). The job: setup, village build, 1a timing run (`run --timing`
 (exit 3 = 1a gate failed, 4 = F_min does not fit: GATE, exported and stopped), then 1b, the sealed card at the F that
 `price` wrote, then verify and export.
 
-  pack    --dph D [--seal REL] [--torch V] --out DIR
+  pack    --dph D --cap C [--seal REL] [--torch V] --out DIR    (C = $2.80 less what earlier boxes of the stage spent)
               pack.tar.xz (code, card, seal, data at HEAD) + SEAL-pack.sha256.txt + args.json. Always needs the sealed
               card, the SEAL file and the runner, committed; the seal's three entries (card, runner, package hash over
               the packed files) must match, and the *.py files on disk must be the packed ones. --dph is the offer's
@@ -24,9 +24,9 @@ for the whole box). The job: setup, village build, 1a timing run (`run --timing`
               without --yes: prints the request, sends nothing; with --yes: refuses an offer dearer than the pack's
               --dph, or when the instance list cannot be read (duplicate check)
   status  --id ID
-  cost    --id ID [--stage S]         dph x uptime = running dollars against the hard stop (exit 3 when reached)
+  cost    --id ID --args DIR/args.json [--stage S]   dph x uptime = running dollars against the hard stop (exit 3 when reached)
   logs    --id ID --out FILE
-  waitlog --id ID [--stage S] [--max-min M]
+  waitlog --id ID --args DIR/args.json [--stage S] [--max-min M]    (the cap is read from the pack)
               stops the instance only on the closing marks the job prints after its export (`=== R1S1 DONE|FAIL|GATE`).
               exit 0 DONE, 2 job FAIL, 8 GATE (1a gate or F_min: no 1b), 3 HARD STOP, 4 not running after 6 min,
               5 no new log line for 10 min, 6 timeout or instance gone, 7 three failed polls in a row (BLIND). EVERY exit first stops
