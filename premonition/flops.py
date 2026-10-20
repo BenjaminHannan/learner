@@ -157,8 +157,8 @@ def mini_hand_count(config, batch: VisitBatch, question_loops: int, training: bo
     attention = padded * 8 * config.window * d * config.reader.count("attn")
     if config.store:
         dense += visits * lines * (2 * d * dk + 2 * d * d)
-    if getattr(config, "card_address", False):                    # S3: address projection per line
-        dense += visits * lines * 2 * d * d
+    if getattr(config, "card_address", False):                    # S3: address pool score per token,
+        dense += visits * length * 2 * d + visits * lines * 2 * d * d  #     address projection per line
     per_loop = config.think_layers * 2 * rows * (4 * d * d + 2 * config.think_mlp * d * d) + 2 * d
     per_loop_attention = config.think_layers * 4 * rows * rows * d
     if config.store:

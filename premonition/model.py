@@ -381,10 +381,12 @@ class PremonitionMini(nn.Module):
         if config.card_address:
             # Built after `reset_parameters` and inside fork_rng, so every shared weight and the global stream
             # equal D + S2's at the same seed (S3 card §1). Pool starts as the writer's pool; proj N(0, 0.02).
-            # Construction draws only from the CPU stream, which fork_rng restores; the init uses its own generator.
+            # Construction and the init seed draw only from the CPU stream, which fork_rng restores, so the global
+            # stream is untouched and the init still follows it (seed and call order); the init has its own generator.
             with torch.random.fork_rng(devices=[]):
                 self.address = CardAddress(config)
-            generator = torch.Generator().manual_seed((torch.initial_seed() + 0x53) % 2 ** 63)   # seed-dependent
+                seed = int(torch.randint(2 ** 62, (1,)).item())
+            generator = torch.Generator().manual_seed(seed)
             with torch.no_grad():
                 self.address.pool.load_state_dict(self.writer.pool.state_dict())
                 self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator)
@@ -598,7 +600,7 @@ class PremonitionMini(nn.Module):
     def _decode_addressed(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor) -> torch.Tensor:
         """S3: memory = think rows + raw rows; the keys of the 16 card rows and the 16 raw rows come from their
         ring slot's address row, every other key and every value from the row itself."""
-        think, cards, base = self.config.rows, self.config.cards, self._card_base
+        think, cards = self.config.rows, self.config.cards
         if rows.shape[1] != think + 2 * cards:
             raise ValueError(f"card_address expects {think + 2 * cards} episode rows, got {rows.shape[1]}")
         memory, address = rows[:, :think + cards], rows[:, think + cards:]

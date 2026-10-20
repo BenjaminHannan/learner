@@ -32,15 +32,15 @@ VARIANTS = ("D", "D-noask", "D-noptr")
 SEEDS = (0, 1)
 
 
-def _git_source(path: str) -> str:
+def _git_source(path: str, commit: str = BASE_COMMIT) -> str:
     try:
-        return subprocess.run(["git", "show", f"{BASE_COMMIT}:{path}"], cwd=ROOT, check=True,
+        return subprocess.run(["git", "show", f"{commit}:{path}"], cwd=ROOT, check=True,
                               capture_output=True, text=True).stdout
-    except (OSError, subprocess.CalledProcessError) as error:            # e.g. a shallow clone without the base
+    except (OSError, subprocess.CalledProcessError) as error:
         if os.environ.get("PREMONITION_ALLOW_MISSING_BASE") == "1":         # explicit opt-in only
-            raise unittest.SkipTest(f"base commit {BASE_COMMIT[:9]} not available: {error}") from None
-        raise AssertionError(f"base commit {BASE_COMMIT[:9]} is needed for the identity check (a rebase re-pins it, Q41; set "
-                             "PREMONITION_ALLOW_MISSING_BASE=1 to skip knowingly): {error}") from None
+            raise unittest.SkipTest(f"commit {commit[:9]} not available: {error}") from None
+        raise AssertionError(f"commit {commit[:9]} is needed for the identity check (a rebase re-pins it, Q41; "
+                             f"set PREMONITION_ALLOW_MISSING_BASE=1 to skip knowingly): {error}") from None
 
 
 def _load(name: str, source: str) -> types.ModuleType:
@@ -51,19 +51,24 @@ def _load(name: str, source: str) -> types.ModuleType:
     return module
 
 
-def base_modules() -> tuple[types.ModuleType, ...]:
-    """(config, store, model, train) exactly as at the base commit, wired to each other."""
-    if "premonition_rawbase_train" in sys.modules:
-        return tuple(sys.modules[f"premonition_rawbase_{name}"] for name in ("config", "store", "model", "train"))
-    config = _load("premonition_rawbase_config", _git_source("premonition/config.py"))
-    store = _load("premonition_rawbase_store", _git_source("premonition/store.py"))
-    model = _load("premonition_rawbase_model", _git_source("premonition/model.py").replace(
-        "from premonition.store import", "from premonition_rawbase_store import").replace(
-        "from premonition.config import", "from premonition_rawbase_config import"))
-    train = _load("premonition_rawbase_train", _git_source("premonition/train.py").replace(
-        "from premonition.model import", "from premonition_rawbase_model import").replace(
-        "from premonition.config import", "from premonition_rawbase_config import"))
+def modules_at(commit: str, prefix: str) -> tuple[types.ModuleType, ...]:
+    """(config, store, model, train) exactly as at `commit`, wired to each other under module names `prefix_*`."""
+    if f"{prefix}_train" in sys.modules:
+        return tuple(sys.modules[f"{prefix}_{name}"] for name in ("config", "store", "model", "train"))
+    config = _load(f"{prefix}_config", _git_source("premonition/config.py", commit))
+    store = _load(f"{prefix}_store", _git_source("premonition/store.py", commit))
+    model = _load(f"{prefix}_model", _git_source("premonition/model.py", commit).replace(
+        "from premonition.store import", f"from {prefix}_store import").replace(
+        "from premonition.config import", f"from {prefix}_config import"))
+    train = _load(f"{prefix}_train", _git_source("premonition/train.py", commit).replace(
+        "from premonition.model import", f"from {prefix}_model import").replace(
+        "from premonition.config import", f"from {prefix}_config import"))
     return config, store, model, train
+
+
+def base_modules() -> tuple[types.ModuleType, ...]:
+    """(config, store, model, train) exactly as at the base commit."""
+    return modules_at(BASE_COMMIT, "premonition_rawbase")
 
 
 def tiny(variant: str = "D", **flags) -> MiniConfig:

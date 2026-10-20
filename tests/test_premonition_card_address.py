@@ -11,11 +11,6 @@
 """
 from __future__ import annotations
 
-import os
-from pathlib import Path
-import subprocess
-import sys
-import types
 import unittest
 
 import torch
@@ -24,45 +19,16 @@ from premonition import train as ptrain
 from premonition.config import MiniConfig
 from premonition.model import ROW_CARD, _norm, PremonitionMini
 from premonition.store import age_bucket
-from tests.test_premonition_decoder_raw_cards import differences, everything
+from tests.test_premonition_decoder_raw_cards import differences, everything, modules_at
 from tests.test_premonition_model import VOCAB, synthetic_batch
 
 S2_COMMIT = "90077ef2b"
-ROOT = Path(__file__).resolve().parents[1]
 
 
-def _git_source(path: str) -> str:
-    try:
-        return subprocess.run(["git", "show", f"{S2_COMMIT}:{path}"], cwd=ROOT, check=True,
-                              capture_output=True, text=True).stdout
-    except (OSError, subprocess.CalledProcessError) as error:
-        if os.environ.get("PREMONITION_ALLOW_MISSING_BASE") == "1":         # explicit opt-in only
-            raise unittest.SkipTest(f"S2 commit {S2_COMMIT} not available: {error}") from None
-        raise AssertionError(f"S2 commit {S2_COMMIT} is needed for the identity check (a rebase re-pins it, Q41; set "
-                             "PREMONITION_ALLOW_MISSING_BASE=1 to skip knowingly): {error}") from None
-
-
-def _load(name: str, source: str) -> types.ModuleType:
-    module = types.ModuleType(name)
-    module.__file__ = f"<{name}>"
-    sys.modules[name] = module
-    exec(compile(source, module.__file__, "exec"), module.__dict__)
-    return module
-
-
-def s2_modules() -> tuple[types.ModuleType, ...]:
-    """(config, store, model, train) exactly as at the reviewed S2 commit."""
-    if "premonition_s2_train" in sys.modules:
-        return tuple(sys.modules[f"premonition_s2_{name}"] for name in ("config", "store", "model", "train"))
-    config = _load("premonition_s2_config", _git_source("premonition/config.py"))
-    store = _load("premonition_s2_store", _git_source("premonition/store.py"))
-    model = _load("premonition_s2_model", _git_source("premonition/model.py").replace(
-        "from premonition.store import", "from premonition_s2_store import").replace(
-        "from premonition.config import", "from premonition_s2_config import"))
-    train = _load("premonition_s2_train", _git_source("premonition/train.py").replace(
-        "from premonition.model import", "from premonition_s2_model import").replace(
-        "from premonition.config import", "from premonition_s2_config import"))
-    return config, store, model, train
+def s2_modules() -> tuple:
+    """(config, store, model, train) exactly as at the reviewed S2 commit. The commit exists on this branch only:
+    a rebase or squash merge re-pins it to the merged S2 head (Q41)."""
+    return modules_at(S2_COMMIT, "premonition_s2")
 
 
 def tiny(variant: str = "D", **flags) -> MiniConfig:

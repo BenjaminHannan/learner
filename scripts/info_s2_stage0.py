@@ -145,11 +145,11 @@ def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
     gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
     pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
     pool[:, store.null] = False
-    noise = torch.rand(pool.shape, generator=generator).masked_fill(~pool, -1.0)
+    noise = torch.rand(pool.shape, generator=generator).to(pool.device).masked_fill(~pool, -1.0)
     best, extra = noise.topk(n, 1)
     extra = extra.masked_fill(best < 0, -1)
     cards = torch.cat([batch.gold_lines[:, :1], extra], dim=1)
-    cards = cards.gather(1, torch.rand(cards.shape, generator=generator).argsort(1))
+    cards = cards.gather(1, torch.rand(cards.shape, generator=generator).to(cards.device).argsort(1))
     model._insert(episode, store, torch.arange(batch.q_visit.shape[0], device=cards.device), cards)
     return cards
 
