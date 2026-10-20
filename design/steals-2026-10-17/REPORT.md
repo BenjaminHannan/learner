@@ -93,13 +93,14 @@ gradients, answers, and takes trainer steps. The hand parameter count equals the
 
 **Paired init, shown.** Steal modules are built off the global RNG stream (`model._aside`), and they are initialised
 by an explicit generator, so no global stream, CPU or CUDA, is touched. So at a given seed, every shared weight and
-the RNG state equal the flag-off model's, and a paired A/B differs only in the steal. This includes `delta_bind`:
+the RNG state equal the flag-off model's, and a paired A/B differs only in the steal (per single steal: with several steals on, each steal's side-stream weights depend on which others are on,
+because they share one side stream in module order; every planned A/B changes one flag). This includes `delta_bind`:
 the binder it removes still has its init draws taken (`model._Draws`), so every later weight matches. That is tested
 for every flag, variant and seed.
 
 **Suite, shown.** All 103 test files were run one by one on this branch and on an untouched `main` checkout.
 - Every pre-existing file has the same outcome on both.
-- The 9 new files (150 tests) all pass.
+- The 9 new files (152 tests) all pass.
 - Pre-existing non-passes are environmental and identical on both:
   - 10 fable files assert a hard-coded Mac path;
   - `test_remote_runner` has 1 error;
@@ -479,6 +480,27 @@ Nos. 1–3 were confirmed by running code before any fix. Items 6 and 10 were al
 | 8 | The sink set-CE copied `set_cross_entropy` | **Fixed.** It now calls it. |
 | 9 | `gather_keys` copied `gather`'s indexing | **Fixed.** Both share `CardStore._slots` (`gather` is on the off path, and the probe re-verified it). |
 | 10 | Muon's AdamW half was a Python loop | Already fixed (round 1, no. 8). |
+
+**Round 4: re-review of the pushed `claude/steals-8` at 7865a0550. Fixes under the coordinator's GO, round 2, 10-18,
+resumed 10-19.**
+
+| # | Finding | Disposition |
+|---|---|---|
+| 1 | Under `key_split` the query's position part is rotated, but the NULL key went to the store unrotated. NULL's score therefore depended on the question's line: the same query scored +0.157 against NULL at line 3 and +0.246 at line 40 (confirmed). | **Fixed.** NULL has no line, so its position sub-key is zero (`CardWriter._null_key`), and its content part still learns. A test shows NULL's score is the same at lines 3, 17 and 40, and it fails on the pre-fix model. |
+| 2 | `row_halt` damped every training update by the soft keep Π(1 − p) (×0.66 by loop 8 at init), while answering applied full updates. Round 3 had aligned only the "stop asking" rule. | **Fixed at the root.** keep is now a straight-through product: its value is the hard sticky 0/1 keep (p > 0.5 once means halted) in training and answering alike, and its gradient is the soft keep's, so the router and the ponder cost still learn. `episode.hard` was only needed for the old split, so it is removed, which also removes the "callers must set hard" hazard of round 3 no. 5. Tests check: the forward value is exactly 0/1 with the soft gradient; the grad and no-grad paths give identical keeps and rows; the p = 0.4 / p = 0.6 test from round 3 still passes. The test fails on the pre-fix model. |
+| 4 | Engram: a visit with no `NameTable` used hashed row 0, and a missing spelling fell back to `"<ent e>"`, which gave the same row to id e in every visit. | **Fixed.** An entity without a spelling counts as no name, and a line with no spelled names is unchanged. A test covers empty tables, a missing table and one missing spelling, and it fails on the pre-fix model. |
+| 10 | QK-Clip's `amax` raises on a store with zero card lines. | **Not reachable.** Such a store already fails earlier, in the base commit's own `CardStore.ask` (an empty age-bias row, code unchanged since 73b8e0224), so the base model cannot score it either. The `numel` guard is kept as defence. A test shows the flag-on and flag-off models fail identically on that input, so QK-Clip adds no new failure. |
+
+Items 3 and 5–9 of that review are the documentation and efficiency notes that the coordinator ruled should wait.
+Item 3's documentation line is in §1: paired init holds per single steal; with two steals on, one steal's side-stream
+weights depend on which others are on.
+
+**Re-verification after the round 4 fixes (commit 3537dd429).**
+- Every new test fails on the pre-fix model and passes on the fix.
+- **Independent probe** (`git archive` trees, separate processes): of 1,853 recorded entries (1,816 tensors), the
+  same **6 differ from base, all of them timing fields**.
+- **Full suite**, all 103 files one by one: **every pre-existing file has the same outcome as on untouched
+  `main`**, and the 9 steal files (152 tests) all pass.
 
 **Scope (both reviewers).**
 - Code changes are limited to `premonition/{config,model,store,train}.py` and the new `premonition/muon.py`.
