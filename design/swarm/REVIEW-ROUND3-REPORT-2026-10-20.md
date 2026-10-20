@@ -251,3 +251,88 @@ Lower severity (open):
 
 Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
 Recommendation: one round for 1-6 (each small and testable), with 7 alongside since it is one line.
+
+---
+
+# Round 3, sixth pass: items 1-7 fixed, then ONE complete highest-effort sweep (2026-10-20)
+
+## Fixes (commit bf0f8d894). Each new test fails on 033f7c62b; on the committed tree all 14 box tests run and pass.
+
+| item | fix |
+|---|---|
+| 1 | the S1 readout enforces "as S0 M4" exactly: a collapsed S1 never PASSes, whatever S0 does |
+| 2 | the box takes ROOT as a physical path (`pwd -P`), so a symlinked repo path is not "outside the repository" |
+| 3 | the copy-back archive is packed only at a successful end, never on a refusal or failure, and an existing archive is never changed |
+| 4 | a non-finite logged loss anywhere in the full history voids M5 (`nonfinite_logged_steps`, counted before trimming) |
+| 5 | M3 fails when the busiest desk fetched nothing (the card's wording says so) |
+| 6 | C0's probe checkpoints go to `<OUT>/c0-probe`, cleared when C0 starts and never packed |
+| 7 | `swarm_answer`'s `max_loops` caps the trained rounds |
+
+Tests: 136 OK (3 skips: one pre-existing, two needing a committed tree and passing on it). Discover 296, with the same 4 errors.
+
+## The sweep (max effort, all findings, full branch diff at bf0f8d894): 21 findings. **NOT CLEAN. Stopped: no seal, no bid.**
+
+The reviewer confirmed that flag-off holds and that the S0/S1 marks and verdict precedence match the cards. It ran
+read-only checks on: the exit-141 case, the awk money bypass, the parameter counts, the manifest, and the gold-mode
+gradient difference. The full list, grouped for one closing round:
+
+**A. Money and paid time (blocking)**
+1. C0 never checks the trainer's 14 GiB reserved-memory guard. The bench calls `_train_step` directly, and the probe
+   `train_d`'s "aborted" status is ignored. A swarm arm can pass C0 and then abort at the first S0 train, after D1-s0
+   (paid) has run. Fix: C0 runs `_check_memory` on every timed arm, and fails C0 (stop-and-ask) on a guard trip or on
+   any probe status other than completed.
+2. After C0, nothing checks that the remaining MAXH covers `projected_s0_box_hours`, and the default MAXH (8 h) is below
+   the bid's own C0 + S0 estimate (8.5 h). The marks step can be cut at MAXH after the money is spent. Fix: refuse to
+   start the trains unless the remaining MAXH ≥ the projection × a margin, and set the default MAXH from the bid.
+3. The money guard is per invocation, so PART=c0 then PART=s0 on one box can total more than CAP. Fix: record the money
+   spent (wall time × DPH) in OUT and charge it against CAP across parts.
+4. The readout accepts any T in c0.json: `C0_EXTRA='--t-override …'` works on the real box, and M5 never checks
+   `t_override`, the train `size`, or the eval regime/identity. Fix: refuse `--t-override` unless DRYRUN; M5 requires
+   `t_override is None`, `T == T_formula`, size "full", and a primary identity on the real card.
+5. DPH, CAP and MAXH are never checked to be numbers, so awk string comparisons can bypass the cap. Fix: validate them
+   as positive decimals.
+
+**B. Box kit robustness and honesty**
+
+6. `cmd_train` returns 2 for an aborted train, which looks like "refused". Fix: a distinct exit code for a failed step.
+7. `git ls-files … | head` under pipefail dies with exit 141 (SIGPIPE) on a large tracked OUT. Fix: no pipe (`--error-unmatch`-free count, or `ls-files -z` into a variable).
+8. A VOID rerun has no clean route, and a dry-run rerun is not blocked: same-OUT PART=s0 overwrites files and then
+   cannot pack, and the dry run deletes its CKPT, so a rerun passes. Fix: one rule: a run needs a fresh OUT; refuse an
+   OUT holding any train/eval/MARKS file; document "rerun = fresh OUT, PART=s0 copying data.json/c0.json read-only".
+9. CHECK_ONLY exits before the PART=s0 prerequisite check and the c0 stop-flag check. Fix: run them under CHECK_ONLY too.
+10. `pack` leaves out `^ckpt` by name, not the actual (overridable) CKPT. Fix: exclude `$CKPT` itself.
+11. host.txt is overwritten on each run, and c0.json's T is not tied to the training host. Fix: per-part host files, and
+    PART=s0 refuses when the GPU name or uuid differs from C0's.
+12. The runner's default `--ckpt-dir checkpoints/swarm-screen` is not git-ignored. Fix: default under artifacts/.
+
+**C. Readout robustness**
+
+13. Item-set equality is enforced only within a seed; the pooled test silently intersects across seeds. Fix: VOID if a seed's item set differs.
+14. Malformed or short per-desk lists (`fetch_count: []`, 3 entries for 4 desks) crash or score as valid. Fix: VOID (schema)
+    unless every list has exactly the arm's desk count of finite numbers.
+
+**D. Equality of the arms (fairness, small)**
+
+15. The gold-mode skip (item 5 of the previous pass) changes optimizer behaviour. D1's forward keeps a zero-weight ASK
+    term, so the ASK head gets a zero gradient and AdamW decays it, while S0's head is out of the graph and not decayed.
+    The reviewer checked this on the tiny model. Fix: make D1 and S0 equal: the swarm keeps its ASK terms in gold, as
+    D1 does (so the head decays in both).
+16. `log()` still computes `weight_norm()` and a few `.item()` syncs every 50 steps, so the card's "only losses are
+    logged" is literally false (cost well under 0.1% of T). Fix: skip `weight_norm` under a seconds budget, and correct the card text.
+17. The T formula weights curriculum shares as update shares, and averages FLOPs over 50 batches against time over 40.
+    That can move T by one 300 s step near a boundary. Fix: T = F / (FLOP-share-weighted FLOP/s) over the same timed
+    batches, which is what the card's "the seconds D1 needs for F FLOPs" means.
+18. Round-invariant masks are recomputed every round (host syncs), a cost only S0 pays. Fix: compute them once before the loop.
+
+**E. Tests and cleanups**
+
+19. Importing the runner in tests mutates os.environ (TMPDIR and others) for the whole process. Fix: a fixture that
+    restores the environment.
+20. Duplicated `_sync`, MODES and round rule. Fix: one shared definition each.
+21. `s1_card` recomputes the diversity rows and appends VOID reasons twice. Fix: reuse the first pass.
+
+## Status against Q28
+
+Review clean: **no**. Card sealed: no. Dry run at a sealed commit: not run. **C0 + S0 does not book, and no bid is sent.**
+Recommendation: close all 21 in one round, each with a test that fails on the old code. Item 15 changes the training
+objective in gold mode back to D1's (equal arms), so it should be stated in the card. Then a full sweep again.
