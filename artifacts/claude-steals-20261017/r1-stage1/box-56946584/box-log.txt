@@ -1,0 +1,91 @@
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 12.8.1
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+=== R1S1 WALL 14037 s, ends 2026-10-21T00:18:26Z (box start 1792527824)
+=== R1S1 START stage 1ab 2026-10-20T20:24:29Z
+NVIDIA GeForce RTX 5090, 32607 MiB, 610.57.04
+cpus 96
+               total        used        free      shared  buff/cache   available
+Mem:             251          54          86           2         110         182
+overlay          60G   68K   60G   1% /
+pack.tar.xz: OK
+pack files ok: 83
+torch 2.8.0+cu128 cuda 12.8 True NVIDIA GeForce RTX 5090
+torch 2.11.0+cu128 cuda 12.8 True NVIDIA GeForce RTX 5090
+pinned build 2.11.0+cu128 12.8
+=== BUILD 2026-10-20T20:25:25Z
+=== TICK 20:26:29 |  | kb=52348 cache=992660
+=== TICK 20:28:29 |  | kb=134660 cache=992660
+=== TICK 20:30:29 |  | kb=216800 cache=992660
+=== TICK 20:32:29 |  | kb=298272 cache=992660
+=== TICK 20:34:29 |  | kb=383124 cache=992660
+=== TICK 20:36:29 |  | kb=462256 cache=992660
+=== TICK 20:38:29 |  | kb=544396 cache=992660
+=== TICK 20:40:29 |  | kb=629228 cache=992660
+=== TICK 20:42:29 |  | kb=711004 cache=992660
+=== TICK 20:44:29 |  | kb=793296 cache=992660
+=== TICK 20:46:29 |  | kb=875644 cache=992660
+=== TICK 20:48:29 |  | kb=957572 cache=992660
+=== TICK 20:50:29 |  | kb=1039752 cache=992660
+=== TICK 20:52:30 |  | kb=1121812 cache=992660
+=== TICK 20:54:30 |  | kb=1179192 cache=992660
+=== TICK 20:56:30 |  | kb=1207164 cache=992660
+data_rel data/village/stream/cache/large-seed0-53292765806d, build 1982 s
+=== RUN 1a timing, at most 2400 s 2026-10-20T20:58:27Z
+Traceback (most recent call last):
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 667, in <module>
+    main()
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 663, in main
+    args.fn(args)
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 574, in cmd_run
+    log(f"R1 stage 1 start {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {provenance()} settings {settings}")
+                                                                                 ^^^^^^^^^^^^
+  File "/job/tree/scripts/premonition_steals_r1_stage1.py", line 95, in provenance
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/opt/conda/lib/python3.11/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'git'
+=== R1S1-FAIL 1a run rc=1 2026-10-20T20:58:28Z
+=== EXPORT start 2026-10-20T20:58:28Z
+=== EXPORT tarred 2026-10-20T20:58:28Z
+=== MANIFEST 2026-10-20T20:58:28Z
+617f143679ae916794100a4545af5a1dc5f43853aa40d4a28480202771001243  out.tar.gz
+=== PARTS 1 big, 1 small 2026-10-20T20:58:28Z
+=== R1S1 FAIL 2026-10-20T20:58:28Z
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 12.8.1
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+=== R1S1 RESTART-REFUSED: {"box_start": 1792527824, "dph": 0.68, "cap": 2.8, "job_start": 1792527869, "wall_end": 1792541906} 2026-10-20T21:01:06Z
+=== R1S1 SELF-STOP refused or failed (try 1): environment: line 17: curl: command not found
+=== R1S1 SELF-STOP refused or failed (try 2): environment: line 17: curl: command not found
+=== R1S1 SELF-STOP refused or failed (try 3): environment: line 17: curl: command not found
