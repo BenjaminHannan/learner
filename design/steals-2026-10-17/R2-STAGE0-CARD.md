@@ -1,4 +1,10 @@
-# RUN CARD R2, stage 0: `fetch_gate` on the far-fact toy (SEALED before the run; amended and re-sealed 10-20)
+# RUN CARD R2, stage 0: `fetch_gate` on the far-fact toy (SEALED before the run; amended and re-sealed 10-20, twice)
+
+**Second amendment, 10-20, under the coordinator's ruling "SIMPLIFY", before any run on real settings.** The extension
+is removed: exactly seeds 0–2, verdict on 3 seeds. Runs are bound by content hash (runner, card, package), not the
+commit; the package hash is in the seal; unsealed runs are labelled UNSEALED. A log line can no longer fail before its
+run is saved, every run's settings are checked, the decoder gate is read once on real answer positions, and only
+`--score` writes `result.json`. This is stricter than before, and no card run has happened.
 
 **Amendment, 10-20, under the coordinator's ruling, before any run on real settings.** A focused review found three
 blocking problems in the first seal (3b31d19a5): "at chance" ignored chance, G3 read the preloaded path, and the
@@ -28,16 +34,21 @@ At each seed, every shared weight and the RNG stream are identical between the a
 - **Each run:** `premonition.train.train_toy("D", steps=1500, seed=s)`. That is the toy's registered setup: AdamW,
   lr 3e-3, warmup 20, 16 visits per batch, and a FLOP budget of about 1,500 batches. The step count lands near
   1,500, not exactly on it.
-- **Seeds:** 0, 1, 2.
-- **Extension rule:** seeds 3 and 4 are added **once** if the bar fails by less than 1 SE, meaning either
-  −SE < mean(d) − 2·SE ≤ 0, or 3 points − SE ≤ mean(d) < 3 points.
-  - In that case the 3-seed verdict is **EXTENSION DUE**, not a final verdict.
-  - Seeds 0–4 are scored only when the 3-seed score called for them. No further seeds, whatever happens.
+- **Seeds:** exactly 0, 1, 2. There is no extension: the verdict is on 3 seeds, and any other set of runs is NOT
+  SCORED.
 - **Runner:** `scripts/premonition_steals_r2_stage0.py`, run unchanged from the sealed version.
-  - It refuses to run if its own hash, or the card's, differs from the seal.
-  - Every run records the commit and one hash over `premonition/*.py`.
-  - Scoring needs every run to share the same identity and the card's settings (1,500 steps, 16 visits).
-    Otherwise it labels the result a smoke.
+  - The seal holds three hashes: this card's, the runner's, and one package hash over `premonition/*.py` and
+    `learnlab/**/*.py`. The runner refuses to run if any of the three differs.
+  - Without a seal it runs only with `--unsealed`, and the verdict is labelled UNSEALED. A sealed directory never
+    takes `--unsealed`.
+  - **Binding:** every run is bound to those three content hashes. The commit is recorded, not binding.
+  - **Scoring** (`--score`, which trains nothing, is the only writer of `result.json`) needs:
+    - every run to share the same hashes;
+    - each run to be made in the sealed directory;
+    - every run to have the card's settings (1,500 steps, 16 visits).
+
+    If the settings are off, the verdict is labelled a smoke; if a run was made outside the sealed directory, it is
+    labelled UNSEALED.
 - **Machine:** CPU. The readout is accuracy, not time, so the arms may run in separate processes.
 
 ## Primary readout
@@ -49,7 +60,7 @@ d_s = acc(A1, s) − acc(A0, s).
 ## Bar (all three)
 1. mean(d) − 2·SD(d)/√n > 0.
 2. mean(d) ≥ 0.03 (3 points).
-3. d_s > 0 in at least ⌈2n/3⌉ seeds: 2 of 3, or 4 of 5 after the extension.
+3. d_s > 0 in at least 2 of the 3 seeds.
 
 ## Guards (pooled over the scored seeds)
 - **G1, gold-card gain:** mean over seeds of [gold-card accuracy(A1) − gold-card accuracy(A0)] ≥ mean(d). The gain
@@ -59,12 +70,14 @@ d_s = acc(A1, s) − acc(A0, s).
   fetched itself** in `answer()`, pooled over seeds.
   - This is the path that produces the own-retrieval accuracy.
   - **Fewer than 30 such rows counts as a trip.**
-  - Reported, not judged: the gate on preloaded gold cards (`answer_with_gold`), and the decoder cross-attention
-    gate from one teacher-mode pass (4 fixed loops).
+  - Reported, not judged:
+    - the gate on preloaded gold cards (`answer_with_gold`);
+    - the decoder cross-attention gate, from one teacher-mode pass with 4 fixed loops. It is read once per run, on
+      real answer positions only.
   - G2 is unreadable if recall@4 is missing in every run of an arm, and unreadable counts as a trip.
 
 ## Verdicts (checked in this order)
-1. **DID NOT TRAIN:** any non-finite final training loss.
+1. **DID NOT TRAIN:** any non-finite final training loss. This wins over every label below.
 2. **GAIN NOT COUNTED (bypassed the cards):** the bar holds and G1 or G3 trips.
 3. **NOT COUNTED (retrieval guard G2):** the bar holds, G1 and G3 hold, and G2 trips.
 4. **PASS:** the bar, G1, G2 and G3 all hold.
@@ -72,7 +85,8 @@ d_s = acc(A1, s) − acc(A0, s).
    accuracy ≤ chance + 2 points (≤ 8.25%) **and** |d_s| < 1 point.
 6. **NOT SHOWN:** anything else.
 
-At 3 seeds, an **EXTENSION DUE** replaces any verdict from 5 or 6 (the extension is due only when the bar fails).
+A smoke (any run off the card's settings) or an unsealed directory or run labels the verdict ("SMOKE, …",
+"UNSEALED: …"). A labelled verdict is never the card's.
 
 ## Required rows (per seed and arm, in the JSON)
 - steps, seconds, parameters
