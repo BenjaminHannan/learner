@@ -1,0 +1,13 @@
+prof_launch: registered ['same', 'defer', 'kvcat', 'fastteach']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'fastteach', 'kvcat', 'defer', 'same', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'fastteach', 'kvcat', 'defer', 'same', 'accum 8
+prof_launch: host {"host": "c9f54a0290a6", "cpu_model": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz", "logical_cpus": 144, "python": "3.12.3", "torch": "2.11.0+cu128", "cuda": "12.8", "cudnn": 91900, "gpu": "NVIDIA GeForce RTX 4090", "deterministic": false, "cublas_workspace_config": null, "deterministic_algorithms": false, "argv": ["--arm", "B3G2", "--rung", "3M", "--accum", "4", "--data", "/j
+[   14.8s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   14.8s] === section profiler
+[   32.8s] profiler: schedule wait 1 warmup 1 active 2
+/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+[  197.1s] profiler: 1,412,347 events collected, analysing ...
+[  210.9s] profiler: GPU busy 35.6 % of wall, idle gap 64.4 % (accum 4, 2 profiled updates, profiler overhead inflates wall): GPU mostly idle: CPU / launch / sync bound
+[  214.4s] === section syncs
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:1270: UserWarning: Synchronization debug mode is a prototype feature and does not yet detect all synchronizing operations (Triggered internally at /pytorch/torch/csrc/cuda/Module.cpp:1003.)
+  torch._C._cuda_set_sync_debug_mode(debug_mode)
+[  241.6s] done /job/profraw/gr4_prof_base.json /job/profraw/gr4_prof_base.md

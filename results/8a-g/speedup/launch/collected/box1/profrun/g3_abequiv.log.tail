@@ -1,0 +1,17 @@
+prof_launch: registered ['same', 'defer', 'kvcat', 'fastteach']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'fastteach', 'kvcat', 'defer', 'same', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'fastteach', 'kvcat', 'defer', 'same', 'accum 8
+prof_launch: host {"host": "c9f54a0290a6", "cpu_model": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz", "logical_cpus": 144, "python": "3.12.3", "torch": "2.11.0+cu128", "cuda": "12.8", "cudnn": 91900, "gpu": "NVIDIA GeForce RTX 4090", "deterministic": false, "cublas_workspace_config": null, "deterministic_algorithms": false, "argv": ["--arm", "B3G2", "--rung", "3M", "--accum", "4", "--data", "/j
+[   14.7s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   14.7s] === section abequiv
+[   14.8s] abequiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them); reference accum 4, variants ['defer', 'kvcat', 'same']
+[   26.4s] abequiv fp32: reference loss 22.686007; rerun noise floor: grad cos 1.0000000000, bit exact False
+[   30.9s] abequiv bf16: reference loss 22.686195; rerun noise floor: grad cos 0.9999999560, bit exact False
+[   33.1s] abequiv defer fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 7.724e-07 step cos 0.9999999838 bit exact False
+[   34.9s] abequiv defer bf16: rel loss 3.531e-06 grad cos 0.9999995764 rel L2 9.226e-04 step cos 0.9999004862 bit exact False
+[   34.9s] abequiv defer: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 3.53e-06 / grad cos 0.9999995764, rerun floor 0.00e+00 / 0.9999999560; CPU fp32 clause equal_to_rounding: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   37.3s] abequiv kvcat fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 6.635e-07 step cos 0.9999999940 bit exact False
+[   39.3s] abequiv kvcat bf16: rel loss 0.000e+00 grad cos 0.9999999469 rel L2 3.260e-04 step cos 0.9999822316 bit exact False
+[   39.3s] abequiv kvcat: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 0.00e+00 / grad cos 0.9999999469, rerun floor 0.00e+00 / 0.9999999560; CPU fp32 clause bit_exact: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   41.9s] abequiv same fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 6.730e-07 step cos 0.9999999930 bit exact False
+[   43.9s] abequiv same bf16: rel loss 0.000e+00 grad cos 0.9999999455 rel L2 3.301e-04 step cos 0.9999757427 bit exact False
+[   43.9s] abequiv same: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 0.00e+00 / grad cos 0.9999999455, rerun floor 0.00e+00 / 0.9999999560; CPU fp32 clause bit_exact: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   44.0s] done /job/profraw/gr4_abequiv.json /job/profraw/gr4_abequiv.md
