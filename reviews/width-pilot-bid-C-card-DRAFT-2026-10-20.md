@@ -33,7 +33,7 @@ All the creative-stage lrs were set at 3M and stay fixed (one change). The C8 an
 
 | # | Ruling | Default this card proposes |
 |---|---|---|
-| R1 (undecided; A-vs-B note sent to the coordinator 10-20) | **Which fixed B2.** Both arms need the 9-register / 8-letter GEN bug fixed. | **(A) custom_io B2 plus a ported `caps.py`** (the 8a-G import-fixed overlay, sha 3da2dfbb) with a minimal caps JSON: `max_ans 35`, `n_reg 36`, everything else at today's values. Smallest change, and the ledger code needs no edit. (B), the 8a-G `src-b3` B2, changes loops and workspace too, so it is not one change. |
+| R1 (**RULED A**, coordinator 10-20, round 2; conditions in §2b) | **Which fixed B2.** Both arms need the 9-register / 8-letter GEN bug fixed. | **(A) custom_io B2 plus a ported `caps.py`** (the 8a-G import-fixed overlay, sha 3da2dfbb) with a minimal caps JSON: `max_ans 35`, `n_reg 36`, everything else at today's values. Smallest change, and the ledger code needs no edit. (B), the 8a-G `src-b3` B2, changes loops and workspace too, so it is not one change. |
 | R2 (**not ready**, coordinator 10-20: needs (a)–(c), now in §2a) | **The test.** The sealed C2b test (sha 2bdadb18…) **was opened and scored on 10-16**, and the roadmap says "opened once". | **A fresh sealed test, "C2c"**, drawn by the same generator on the same five held-out kinds (about 512 rows, about 102 per kind), with the seed named in a commit before generation (the HO2 / VAL pattern). The old test is not re-read. Re-reading it needs Ben's explicit ruling. |
 | R3 (**APPROVED**, coordinator 10-20) | **Arms.** c2b.py always builds and scores all five arms (N′, W, R, H, M); dropping H and M needs code edits. | **Run all five, read only N′, W and R.** No creative-code change beyond §5. H and M are printed as report-only. |
 | R4 (**APPROVED**, coordinator 10-20) | **Bars.** Any bar change goes to Ben. | The house form in §3, sized from Bid C's own sigma_d. |
@@ -57,6 +57,33 @@ All the creative-stage lrs were set at 3M and stay fixed (one change). The C8 an
   2. the headroom kinds (affine, double_add, sq_plus), chosen because C2b's base W first-try was under 50% there.
 - The guards (harm ≤ 2 every parent; practised within 2) carry over unchanged from C2b.
 - These are new bars for a new contrast, not edits to C2b's. Under R4 they are in house form, and any change to them goes to Ben.
+
+**(d) Headroom kinds: how they were chosen (coordinator's R2 conditions).**
+- **(a) Stated:** the 50% cutoff and the kind list were **not** chosen using any per-kind wide-minus-base result from C2b. None exists: C2b ran one width only. They were chosen from C2b's single-width base W first-try (affine 1.5%, double_add 16.7%, sq_plus 14.4% against square 94.7%, last_digit 69.1%). That is disclosed in (c).
+- **(b) Stated:** the list is **frozen from C2b** (affine, double_add, sq_plus). It is **not** recomputed from C2c's base arm. Selecting kinds on the same base arm the contrast subtracts would favour the wide arm through regression to the mean.
+
+## 2b. R1 = A: conditions before seal (coordinator 10-20, round 2)
+
+**Load gate (before any arm; on a fail: stop and report, no patch-and-retry).**
+
+The coordinator's wording ("load a C2b parent with caps applied first and reproduce its score") cannot pass as written. Option A's caps set `reader.N_PLACE = 37`, while a C2b parent's place table has 16 rows (`nn.Embedding(N_PLACE, d)`, `custom_io/models/reader.py:72`), so the state dict cannot load. The gate is therefore split into three checks, all **bit-identical on CPU** (same exact-match count and the same per-row answers on a fixed batch; float outputs compared with `torch.equal`), with no tolerance:
+1. **Caps plumbing check.** Apply a caps file equal to the old defaults (`max_ans 8`, `n_reg 9`, so `N_PLACE 16`) **before** `load_parent`, load C2b parent s200, and reproduce its recorded per-row C2b-test score bit-identically on a fixed 64-row batch. This shows the caps-first load path is correct and inert at the defaults.
+2. **Negative check.** Applying the Bid C caps (`n_reg 36`) and then loading a C2b parent must **fail with a shape error**. If it loads, caps were not applied before load: stop.
+3. **Fixed-caps round trip.** The calibration base parent P_0, trained under the Bid C caps, is reloaded in a fresh process with caps applied first. It must reproduce its own end-of-training eval on a fixed batch bit-identically on CPU.
+- **Runtime assert:** every c2b train and score entry point asserts, before `load_parent`, that `caps.apply` has run with the sealed caps file (its sha256 is recorded in each run's output).
+
+**Inert count (measured 10-20, CPU, from `creative/data/c2/*.jsonl` on `claude/project-thread-2zeaoc`):**
+
+| C2 split | Rows | Max answer chars | Answers > 8 chars | Max prompt chars | Prompts > 208 |
+|---|---|---|---|---|---|
+| dev | 256 | 3 | 0 | 54 | 0 |
+| labelled | 512 | 3 | 0 | 54 | 0 |
+| pool | 1,024 | 3 | 0 | 54 | 0 |
+| test | 512 | 3 | 0 | 54 | 0 |
+| warm | 2,048 | 3 | 0 | 54 | 0 |
+
+- **Zero C2 rows exceed the old caps.** On the puzzle rows themselves, the overlay is needed only for loading and has no direct effect on their targets or scores. C2c is drawn by the same generator, so the same is expected; C2c's own count is checked at generation.
+- **Not inert elsewhere (stated):** the parents train on the seed-1 200k skills build, and every night batch carries 16 skills replay rows. Any of those with answers over 8 chars train differently under the fix, and the skills-harm readout also scores them. So the fix changes the parents and the harm guard, not the C2 targets. The count of skills rows over 8 chars is **unmeasured here** (the build is not in this container); calibration counts it from the build.
 
 ## 3. Readout and pre-registered marks (house form)
 
