@@ -60,11 +60,13 @@ All the creative-stage lrs were set at 3M and stay fixed (one change). The C8 an
 
 **(d) Headroom kinds: how they were chosen (coordinator's R2 conditions).**
 - **(a) Stated:** the 50% cutoff and the kind list were **not** chosen using any per-kind wide-minus-base result from C2b. None exists: C2b ran one width only. They were chosen from C2b's single-width base W first-try (affine 1.5%, double_add 16.7%, sq_plus 14.4% against square 94.7%, last_digit 69.1%). That is disclosed in (c).
-- **(b) Stated:** the list is **frozen from C2b** (affine, double_add, sq_plus). It is **not** recomputed from C2c's base arm. Selecting kinds on the same base arm the contrast subtracts would favour the wide arm through regression to the mean.
+- **(b) Stated (accepted, coordinator 10-20):** the list is **frozen from C2b** (affine, double_add, sq_plus). It is **not** recomputed from C2c's base arm. Selecting kinds on the same base arm the contrast subtracts would favour the wide arm through regression to the mean.
 
 ## 2b. R1 = A: conditions before seal (coordinator 10-20, round 2)
 
-**Load gate (before any arm; on a fail: stop and report, no patch-and-retry).**
+**New parents (stated, coordinator 10-20):** a C2b parent cannot load under the Bid C caps, so **Bid C trains NEW parents under the caps** at both widths. "Same family as the C2b parents" means the **architecture only** (ledger, copy=True, 2 blocks, 8 loops, reader 2), not the C2b checkpoints.
+
+**Load gate (ACCEPTED in this three-check form, coordinator 10-20; before any arm; on a fail: stop and report, no patch-and-retry).**
 
 The coordinator's wording ("load a C2b parent with caps applied first and reproduce its score") cannot pass as written. Option A's caps set `reader.N_PLACE = 37`, while a C2b parent's place table has 16 rows (`nn.Embedding(N_PLACE, d)`, `custom_io/models/reader.py:72`), so the state dict cannot load. The gate is therefore split into three checks, all **bit-identical on CPU** (same exact-match count and the same per-row answers on a fixed batch; float outputs compared with `torch.equal`), with no tolerance:
 1. **Caps plumbing check.** Apply a caps file equal to the old defaults (`max_ans 8`, `n_reg 9`, so `N_PLACE 16`) **before** `load_parent`, load C2b parent s200, and reproduce its recorded per-row C2b-test score bit-identically on a fixed 64-row batch. This shows the caps-first load path is correct and inert at the defaults.
@@ -83,7 +85,8 @@ The coordinator's wording ("load a C2b parent with caps applied first and reprod
 | warm | 2,048 | 3 | 0 | 54 | 0 |
 
 - **Zero C2 rows exceed the old caps.** On the puzzle rows themselves, the overlay is needed only for loading and has no direct effect on their targets or scores. C2c is drawn by the same generator, so the same is expected; C2c's own count is checked at generation.
-- **Not inert elsewhere (stated):** the parents train on the seed-1 200k skills build, and every night batch carries 16 skills replay rows. Any of those with answers over 8 chars train differently under the fix, and the skills-harm readout also scores them. So the fix changes the parents and the harm guard, not the C2 targets. The count of skills rows over 8 chars is **unmeasured here** (the build is not in this container); calibration counts it from the build.
+- **Not inert elsewhere (stated):** the parents train on the seed-1 200k skills build, and every night batch carries 16 skills replay rows. Any of those with answers over 8 chars train differently under the fix, and the skills-harm readout also scores them. So **the overlay changes the parents' skills build and the harm guard, not the C2 targets** (accepted, coordinator 10-20).
+- The count of skills rows with answers over 8 chars is **unmeasured here** (the build is not in this container). **Calibration counts it** from the build. **If it is non-zero, it is reported before any arm runs.**
 
 ## 3. Readout and pre-registered marks (house form)
 
