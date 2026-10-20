@@ -329,6 +329,40 @@ questions (all told).
   3. Secondary readings move together in both arms: gold + 2 fact cards 382-424 of 1024, and own-retrieval
      answers 14.0-14.8%.
 
+#### S4-P0 village candidate count (2026-10-20; $0, data only, no model)
+
+Ruled by the coordinator on 10-20 alongside S6. Script: `scripts/info_s4_p0_village.py` (written by a Haiku
+reader, read and spot-checked by me). Raw: `artifacts/claude-infoconstraints-20261018/s4-p0-village/`.
+
+- **Data (shown).**
+  - No built village cache exists in this checkout; `data/village` holds patterns only.
+  - So the `validation` split was generated with `learnlab.village.shards.write_shards`, seed 0, 1,024 visits.
+  - Then the label-free v2 cache (`premonition.data.build_cache`, tokenizer v2-fallback, 7,068 ids), giving
+    8,882 questions, 8,333 of them told.
+  - This is a regenerated build, not the large build named in older reviews, so counts may differ there.
+- **Rule (shown).**
+  - The store's own `CardStore.write` / `eligible`: first ASK, cards on earlier non-question lines.
+  - A card "names the person" when its `line_ents` meet the entity ids in the question span (S5/S6's feature).
+  - Sanity check: the same code on the far-fact toy gives 2.292 candidates and a 0.485 ceiling (the S4 card's
+    2.29 / 0.485).
+- **Village, told questions (shown):**
+  - **70.6% name no person at all.** These are object questions, e.g. "where did the green kite use to be?";
+    I decoded ten spans to check. Object names are not pointerized, so the feature is 0 on every card.
+  - **Only 12.1% of gold cards name a question entity.** Even when the question names a person
+    (2,450 questions), the gold card names them 41% of the time. For example, in "how could E3 get the blue
+    spoon?" the gold lines are about the spoon.
+  - When the question names a person, candidates per question are: mean 6.06, median 5, p90 13, max 41;
+    27.6% have 8 or more.
+  - Ceilings (rank 1 of "filter by entity, then uniform"): 0.26 on questions whose gold matches. Over all told
+    questions it is 0.056, with a uniform fallback when nothing matches, against 0.032 for uniform over the
+    ~81 eligible cards.
+- **Reading (suggested).**
+  - By the S4-P0 rule, a person-match cue (S4, S5, S6) does not carry over to the village as built.
+  - The binding reason is not the candidate count but coverage: most questions and most gold cards carry no
+    person id.
+  - Any S5/S6 claim stays a far-fact-toy claim. A village version would need object identity in the
+    pointerizer (untested) or a learned cue.
+
 #### S5 build and review (2026-10-20; card `S5-STAGE0-CARD.md`, sealed bfe98381a, amendments 1-2)
 
 - **Built:** 6a2651752 + 7c0456589. Pre-run tests 5/5 in `tests/test_premonition_dec_ent_match.py`. Smoke check:
