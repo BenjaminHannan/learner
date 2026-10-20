@@ -172,7 +172,7 @@ def cmd_summarize(args) -> None:
             "mean_minus_2se_positive": bound > 0,
             "card_use_guard_removed_le_9.25pct": all(x["treated_removed"] <= CHANCE + 0.03 for x in valid),
             "treated_distinct_256_gt_1": all(x["treated_distinct_256"] > 1 for x in valid),
-            "finite_and_complete": all(x["finite_and_complete"] for x in valid)}
+            "finite_and_complete": all(x["finite_and_complete"] for x in cells)}   # every run, VOID or not
         fail = sum(x["treated_acc"] < 0.25 for x in valid) >= 2 or mean <= 0.03
         verdict = "PASS" if all(passes.values()) else ("FAIL" if fail else "INCONCLUSIVE")
         wrong = sum(abs(x["d"]) <= 0.03 for x in valid) >= 2 or not passes["card_use_guard_removed_le_9.25pct"]

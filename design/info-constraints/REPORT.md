@@ -496,7 +496,17 @@ re-added at every decode call site. They now live **inside the episode**: 16 row
   The same run at 4 threads drifts in the 4th decimal from step 200 (summation order) and gives the same
   scores. So the filed Stage 0 result stands for the final code.
 
-Earlier rounds (1-2), superseded where they conflict with round 3:
+**Round 4.**
+- **Fixed:** the flag is refused on any subclass that overrides `_start`, `_insert`, `_step`, `_greedy` or
+  `_decode_logits`. Those subclasses own the episode layout or the decode path: CardBypass, the qread family
+  incl. direct/address readers, softread. Subclasses that only change Think or the writer (ThinkGated,
+  ThinkCentered, TwoPool, MeanPool) stay allowed. This is tested both ways.
+- **Fixed:** the summarizer checks mark 5 over every run, VOID or not. The dead bare-episode test is replaced.
+- **Kept:** two extra out-of-place copies in `_insert`/`_step` with the flag on (16 of 92 rows; cost not
+  material at this size), and the `variant` label (see round 2).
+- The final summarizer re-applied to the filed Stage 0 files gives the same PASS (`summary.json` unchanged).
+
+Earlier rounds (1-2), superseded where they conflict with rounds 3-4:
 - **Fixed** in e35f43df3 and the next commit:
   - the flag is refused on any subclass that overrides `_greedy` or `_decode_logits`, and without a store;
   - `_memory` tolerates bare `x`/`valid` episodes (a flag-off regression for

@@ -186,27 +186,15 @@ class FlagOnTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             tiny("D-noask", decoder_raw_cards=True)
 
-    def test_flag_off_greedy_accepts_a_bare_episode(self) -> None:
-        from types import SimpleNamespace
-        model, _ = build(PremonitionMini, tiny("D"), 0)
-        model.eval()
-        batch = synthetic_batch(seed=2)
-        with torch.no_grad():
-            hidden = model.read(batch)
-            episode = model._start(batch, hidden, model.build_store(hidden, batch), model._mentions(batch))
-            bare = SimpleNamespace(x=episode.x, valid=episode.valid)
-            a = model._greedy(batch, episode, model._mentions(batch), None)
-            b = model._greedy(batch, bare, model._mentions(batch), None)
-        self.assertTrue(torch.equal(a[0], b[0]) and torch.equal(a[1], b[1]))
-
-    def test_paired_start_same_parameters_and_stream(self) -> None:
-        off, rng_off = build(PremonitionMini, tiny("D"), 0)
-        on, rng_on = build(PremonitionMini, tiny("D", decoder_raw_cards=True), 0)
-        self.assertTrue(torch.equal(rng_off, rng_on))
-        self.assertEqual(on.num_parameters(), off.num_parameters())
-        self.assertEqual(on.config.num_parameters(), off.config.num_parameters())
-        for (n, a), (_, b) in zip(off.named_parameters(), on.named_parameters()):
-            self.assertTrue(torch.equal(a, b), n)
+    def test_refused_on_subclasses_that_own_the_episode_layout(self) -> None:
+        from premonition.answer_path import CardBypassMini, ThinkGatedMini
+        from premonition.ovn_qread import QReadMini
+        for cls in (CardBypassMini, QReadMini):                      # override _start/_insert/_greedy/...
+            with self.subTest(cls=cls.__name__), self.assertRaises(ValueError):
+                cls(tiny("D", decoder_raw_cards=True))
+        model = ThinkGatedMini(tiny("D", decoder_raw_cards=True))    # only Think changes: allowed
+        out = model(synthetic_batch(seed=4), mode="gold")
+        self.assertTrue(torch.isfinite(out["loss"]))
 
     def test_every_mode_trains_and_answers(self) -> None:
         for variant in ("D", "D-noptr"):                               # D-noask is refused (no store)
