@@ -553,3 +553,48 @@ is built from many more visits, and far_deep (gated already) is the smallest of 
 
 The swarm's teacher- and own-mode losses and gradients are bit-identical to the previous pass, and flag-off is
 unchanged. Suites: the eight premonition suites, 271 tests OK (4 skipped).
+
+## Ninth pass: the highest-effort full sweep (73b8e0224..0d7a2e633)
+
+**Verdict: no BLOCKING finding. 13 NON-BLOCKING. Under the coordinator's rule of Oct 20 ("if the next sweep finds only
+non-blocking items, that counts as clean") the review is clean.** The reviewer ran in a single context (no fan-out). It
+reproduced the first four items with scripts and also ran the full `c0` subcommand at HEAD on CPU (tiny preset)
+end to end, including the new D1 probes. It reports:
+- flag-off unchanged;
+- finite losses and gradients for full-width M = 4 S0/S1 in all modes, in fp32 and bf16;
+- the split's floor/ceil rule held in 240 calls;
+- no desk-0 tie bias;
+- D1 and S0 matched on the stream, seed, T, optimizer and eval;
+- T and the stop ratio as ruled;
+- M1-M6 / KILL / precedence matching both cards, with item-mean pooling;
+- no way around the money or C0 gates.
+
+It also estimates the large validation split at about 41 times tiny's, so the 100-item cell gate is reachable.
+
+**Non-blocking (for the coordinator; none changes a mark or a gate):**
+
+1. *Operational, matters on a billed box:* `c0_gate` treats a short MAXH as a money stop and records it in the
+   ledger as a permanent C0 stop, even under CHECK_ONLY. So `CHECK_ONLY=1 PART=s0 MAXH=0.5` on a clean C0 exits 3
+   and blocks later runs until STOP_OVERRIDE (reproduced). Operating rule until fixed: **do not pass MAXH to a
+   PART=s0 / CHECK_ONLY invocation**.
+2. s1_card computes the notes/cards lesion rows after the verdict, so their VOID reasons do not change it (S1
+   only; S1 is not booked).
+3. `load_eval` crashes (instead of VOID) on some malformed eval files (`items.validation = null`, `summary = []`).
+   The box's marks step would exit 5 after paid runs. The runner never writes those shapes.
+4. *Operational:* empty-array expansions under `set -u` fail on bash < 4.4, at the marks step. Operating rule:
+   **the box image needs bash ≥ 4.4** (Ubuntu 18.04+ has it; this host has 5.2). Check `bash --version` first.
+5. BOX-SPEC's build-contract section still describes superseded rules: the D1 FLOP/s formula, medians, concatenated
+   pooling, M3 without "> 0", and M6 gating far_deep only. The cards and the code are right; the contract text is
+   stale.
+6. STOP-AND-ASK.txt still labels the ratio "weighted s/update".
+7. C0's log line and `weighted_s_per_update` are the old median update-weighted numbers (information only). T and
+   the ratio use the ruled time-share means.
+8. `CURRICULUM_WEIGHTS` / `P_OWN` copy `Curriculum`'s defaults, and no test ties them together.
+9. `model.train_diagnostics` is hidden state set by MiniTrainer (open since the fourth pass).
+10. With one round, `swarm_answer` reports every desk silent (the screen uses 4 rounds).
+11. `gold.repeat_interleave(M, 0)` is rebuilt every fetching round (a small S0 cost).
+12. IMPLEMENTATION-SPEC §10 still gives the old InsertLog condition.
+13. Altitude: the money and C0 gates live in bash, with inline python and awk. Most kit defects in passes 4-9 were
+    bash-specific.
+
+Next, per the rule: the CPU dry run at the reviewed commit, sealing, and the bid.
