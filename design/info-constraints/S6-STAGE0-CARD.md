@@ -135,3 +135,57 @@ d_s = treated rank1 − control rank1; a_s = treated own_acc − control own_acc
 ## 9. Raw outputs
 `artifacts/claude-infoconstraints-20261018/s6-stage0/{control,treated}-seed{0,1,2}.json` and `.log`, plus
 `summary.json` applying §5-§7. Runner: `scripts/info_s6_stage0.py`.
+
+---
+
+## 9a. Result (appended after the run; §1-§8 unchanged since 88fe1ac97)
+
+Run 2026-10-20, CPU, 1 thread per run (6 runs sharing 4 cores, 1,135-1,188 s each), **tiny preset (d = 32)**;
+800 stage-1 + 1,600 teacher steps; code = 23cf36d64 (one focused review, clean). Raw:
+`artifacts/claude-infoconstraints-20261018/s6-stage0/`; `summary.json` is the verbatim §5-§7. Test split,
+1,024 questions, all told.
+
+| seed | control rank1 / recall4 / own | treated rank1 / recall4 / own | d (rank1, points) | a (own, points) | κ_a | κ_d (control / treated) | d2 (control / treated) |
+|---|---|---|---|---|---|---|---|
+| 0 | 9.08% / 0.328 / 29.39% | 48.73% / 1.000 / 49.22% | +39.65 | +19.82 | 8.57 | 3.34 / 2.97 | 89.94 / 89.16% |
+| 1 | 8.40% / 0.326 / 28.71% | 51.56% / 1.000 / 50.98% | +43.16 | +22.27 | 8.57 | 2.45 / 2.30 | 87.60 / 88.09% |
+| 2 | 8.11% / 0.339 / 31.25% | 49.12% / 1.000 / 49.80% | +41.02 | +18.55 | 8.56 | 3.10 / 3.86 | 88.57 / 89.45% |
+
+Own-retrieval answers by n_q (eligible cards naming the question's person; 104 / 517 / 403 questions):
+
+| seed | control n_q = 1 / 2 / ≥ 3 | treated n_q = 1 / 2 / ≥ 3 |
+|---|---|---|
+| 0 | 32.7 / 30.4 / 27.3% | 97.1 / 53.0 / 32.0% |
+| 1 | 30.8 / 28.6 / 28.3% | 94.2 / 54.0 / 36.0% |
+| 2 | 31.7 / 34.4 / 27.0% | 100 / 52.6 / 33.3% |
+
+- **Validity:** no seed is VOID.
+  - Stage-1 acc_gold is 100% in every run, and control acc_gold is 100% after stage 2.
+  - The stage-1 digests are equal across arms (aa2fe67d / afcd13ff / 3075a389).
+  - The S5 base works: control κ_d 2.45-3.34, control d2 87.6-89.9%.
+  - First stage-2 ∂L/∂κ_a: −0.422 / −0.415 / −0.454.
+  - Gold card with m = 0: 0% of questions. Both arms fetch on every question (4.0 real cards on average).
+  - All runs complete and finite.
+- **Marks (§6):**
+  1. d ≥ +15 every seed: yes. Mean − 2SE > 0: yes (mean d +41.28 points; mean − 2SE +39.23).
+  2. Treated recall4 ≥ 0.85: yes (1.000).
+  3. a ≥ +10 every seed: yes (mean a +20.21 points).
+  4. Gold 100%, no card 6.1-7.0%, 16 distinct, d2 within 3 points of the control (−0.8 / +0.5 / +0.9), finite:
+     yes.
+- **FAIL:** not fired (κ_a 8.56-8.57 ≥ 1.0 on every seed). **Proves-wrong:** neither rule fired.
+- **Verdict: PASS (toy evidence only; the coordinator's 10-20 ruling).**
+- **Progress (no marks):** treated rank1 is 48-48.4% at stage-2 step 400 and flat after that. The control stays
+  at 7.5-9.4% throughout.
+- **Readings:**
+  1. **Shown.** Treated rank1 (48.7-51.6%) sits on the data-only ceiling of "filter by person, then uniform"
+     (0.485, §0). recall4 is 1.000. So ASK now fetches every card that names the person. Among those cards, the
+     q·k term ranks gold first no better than chance: it adds no relation choice.
+  2. **Shown.** Own-retrieval answers fall with n_q: about 97% when one card names the person, about 53% with
+     two, and about 34% with three or more. That is close to 1/n_q. It is the same relation-choice limit S5 left
+     in the decoder: same-person cards pick at about a coin flip.
+  3. **Suggested.** Fetch was a binding link: own answers went from about 29.8% to about 50.0% once retrieval
+     found the person. **Relation choice**, in ASK and in the decoder, is now the binding link on this toy.
+  4. **Scope.** This is a hand-built, label-free person bit with one learned scale, on the tiny far-fact toy.
+     By the S4-P0 village count (REPORT), this cue covers few village questions: 70.6% name no person, and
+     12.1% of gold cards name a question entity. By the coordinator's 10-20 ruling, it gets no Stage-1 or
+     village money as built.

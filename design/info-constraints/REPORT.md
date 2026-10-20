@@ -400,6 +400,34 @@ Tiny preset (d = 32); 800 stage-1 + 1,600 stage-2 steps; code = 7c0456589 (revie
     supplied identity signal" on the tiny far-fact toy with supplied cards. It does not buy learned choosing,
     own retrieval, or the village.
 
+#### S6 Stage 0 result (2026-10-20): PASS, toy evidence only
+
+Card `S6-STAGE0-CARD.md` (sealed 88fe1ac97; full tables in §9a). Code 23cf36d64: pre-run tests 5/5, one focused
+review clean, no change after it. Tiny preset, 800 gold + 1,600 teacher steps. Raw:
+`artifacts/claude-infoconstraints-20261018/s6-stage0/`.
+
+| seed | rank1 control → treated | own answers control → treated | κ_a |
+|---|---|---|---|
+| 0 | 9.08 → 48.73% | 29.39 → 49.22% | 8.57 |
+| 1 | 8.40 → 51.56% | 28.71 → 50.98% | 8.57 |
+| 2 | 8.11 → 49.12% | 31.25 → 49.80% | 8.56 |
+
+- **Validity:** no VOID. The stage-1 digests are equal, and the S5 base works (control κ_d ≥ 2.45, d2 ≥ 87.6%).
+- **Marks:** every mark is met. Mean rank1 d is +41.28 points (mean − 2SE +39.23), mean own d +20.21 points, and
+  recall4 1.000. FAIL and both proves-wrong rules did not fire.
+- **Verdict: PASS.**
+- **Shown:**
+  - Treated rank1 sits on the 0.485 "filter by person, then uniform" ceiling.
+  - Own answers by n_q (cards naming the person) are about 97 / 53 / 34% for 1 / 2 / ≥ 3.
+- **Suggested:** fetch was a binding link. **Relation choice** (in ASK and the decoder) is now the binding
+  link on the toy.
+- **Coordinator ruling, 10-20 (recorded):**
+  - No Stage-1 or village money for person-match cues (S4/S5/S6) as built; the S4-P0 count shows coverage is
+    the limit.
+  - S6 is reported as toy evidence only.
+  - Object identity in the pointerizer, or a learned cue, is a new design question for Ben and Opus. Not
+    started.
+
 ### S1. `ring_resident`: "fetched" means "in the tray"
 
 **Targets:** N1-N4 (new). Prerequisite reading for every answer-path number, including the coordinator's
@@ -935,6 +963,7 @@ which `π` reads in learned mode, so do not run S4 on top of `delta_bind` until 
 | 2 | **S3 card_address** — **Stage 0 FAILED 10-20** (proves-wrong fired; address did not learn ENT/REL) | Large on choosing if learned (oracle +0.66) | +16.6k params (0.8%) | Medium: the address may learn the value (guarded by pool mass) | Needs a decoder that reads cards (S2) first |
 | 3 | **S4 ent_key** — **Stage 0 FAILED 10-20** (κ_e never engaged; π stayed uniform) | Medium: rank-1 ceiling about 0.5 vs 0.24 on the toy; village unknown until P0 | +2k params | Medium: no help if names repeat across many lines | Retrieval is already at recall@4 0.90; answer path first (agrees with steals §5) |
 | 3b | **S5 dec_ent_match** — **Stage 0 PASSED 10-20** (d2 38-40.5% → 89.6-91.2%, 3/3 seeds) | Large on choosing among supplied cards by person; none on relation (same-person ~50%) | 1 scalar | Low on the toy; the feature uses pointerizer entity ids, untested on the village | Decoder-side identity works where S3/S4 did not engage |
+| 3c | **S6 ask_ent_match** — **Stage 0 PASSED 10-20, toy only** (rank1 8-9% → 49-52%, own answers 29-31% → 49-51%) | Fetch fixed up to the person ceiling; relation choice is the limit | 1 scalar | No village money (ruling 10-20): the person cue covers few village questions (S4-P0) | Mechanistic evidence that fetch was a binding link |
 | 4 | **S1 ring_resident** | Unknown; not active in the toy model (0 overflow) | 0 params, about 20 lines | Low | Latent; build only if S1-P1 shows eviction on a trained village model |
 
 ~~The single one I would run first: S1-P0~~ (done; negative). **Next: S2 Stage 0 on the m02 protocol
