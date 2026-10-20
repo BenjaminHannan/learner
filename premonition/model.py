@@ -302,9 +302,10 @@ class Decoder(nn.Module):
         self.norm = nn.LayerNorm(d)
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
-                keys: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """`keys` (S3): (slots [P] long, rows [n, P, d]); the cross-attention keys at memory positions `slots`
-        come from `rows` through the K half of `cross_kv`. Every value and every other key is the base one."""
+                keys: Optional[tuple[torch.Tensor, torch.Tensor]] = None) -> torch.Tensor:
+        """`keys` (S3): (slots [G, P] long, rows [n, P, d]); the cross-attention keys at memory positions
+        `slots[g]` (every group g) come from `rows` through the K half of `cross_kv`, computed once. Every value
+        and every other key is the base one."""
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
@@ -316,10 +317,12 @@ class Decoder(nn.Module):
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
         if keys is not None:
             slots, rows = keys
-            width = self.cross_q.out_features
-            spliced = F.linear(_norm(rows), self.cross_kv.weight[:width], self.cross_kv.bias[:width])
+            kdim = self.cross_q.out_features
+            spliced = F.linear(_norm(rows), self.cross_kv.weight[:kdim], self.cross_kv.bias[:kdim])
+            spliced = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
             k = k.clone()
-            k[:, :, slots] = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
+            for group in slots:
+                k[:, :, group] = spliced
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
@@ -381,7 +384,7 @@ class PremonitionMini(nn.Module):
             # Construction draws only from the CPU stream, which fork_rng restores; the init uses its own generator.
             with torch.random.fork_rng(devices=[]):
                 self.address = CardAddress(config)
-            generator = torch.Generator().manual_seed(torch.initial_seed() + 0x53)   # seed-dependent
+            generator = torch.Generator().manual_seed((torch.initial_seed() + 0x53) % 2 ** 63)   # seed-dependent
             with torch.no_grad():
                 self.address.pool.load_state_dict(self.writer.pool.state_dict())
                 self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator)
@@ -389,6 +392,10 @@ class PremonitionMini(nn.Module):
                 self.address.proj.bias.zero_()
             if type(self).build_store is not PremonitionMini.build_store:
                 raise ValueError(f"card_address: {type(self).__name__} overrides build_store")
+            base, cards = config.question_rows + config.slots, config.cards
+            self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
+                                                               torch.arange(config.rows, config.rows + cards)]),
+                                 persistent=False)            # card rows, raw rows: keys from the address block
 
     # ------------------------------------------------------------------ setup
     def reset_parameters(self) -> None:
@@ -595,9 +602,7 @@ class PremonitionMini(nn.Module):
         if rows.shape[1] != think + 2 * cards:
             raise ValueError(f"card_address expects {think + 2 * cards} episode rows, got {rows.shape[1]}")
         memory, address = rows[:, :think + cards], rows[:, think + cards:]
-        slots = torch.cat([torch.arange(base, base + cards), torch.arange(think, think + cards)]).to(rows.device)
-        keys = (slots, torch.cat([address, address], dim=1))
-        return self.decoder(self.embed(inputs), memory, valid[:, :think + cards], keys=keys)
+        return self.decoder(self.embed(inputs), memory, valid[:, :think + cards], keys=(self._address_slots, address))
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,

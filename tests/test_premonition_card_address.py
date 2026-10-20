@@ -11,6 +11,7 @@
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -35,7 +36,10 @@ def _git_source(path: str) -> str:
         return subprocess.run(["git", "show", f"{S2_COMMIT}:{path}"], cwd=ROOT, check=True,
                               capture_output=True, text=True).stdout
     except (OSError, subprocess.CalledProcessError) as error:
-        raise unittest.SkipTest(f"S2 commit {S2_COMMIT} not available: {error}") from None
+        if os.environ.get("PREMONITION_ALLOW_MISSING_BASE") == "1":         # explicit opt-in only
+            raise unittest.SkipTest(f"S2 commit {S2_COMMIT} not available: {error}") from None
+        raise AssertionError(f"S2 commit {S2_COMMIT} is needed for the identity check (a rebase re-pins it, Q41; set "
+                             "PREMONITION_ALLOW_MISSING_BASE=1 to skip knowingly): {error}") from None
 
 
 def _load(name: str, source: str) -> types.ModuleType:
