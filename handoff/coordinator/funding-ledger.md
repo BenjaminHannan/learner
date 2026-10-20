@@ -116,3 +116,11 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 06:34 | Steals R1 S1 | Fix round GO for money-safety blockers (stop must be CONFIRMED and retried on network errors; price capped by seconds left). Then re-review, seal, re-quote, Ben's click. | 0 |
 | 2026-10-20 07:13 | Steals R1 S1 | Last review round: adopt the swarm box's money pattern (BOX_START plus a ledger persisted outside the job directory) and fix the self-stop check. If not clean → PARK as DRAFT. AI review cost now exceeds the $2.80 run. | 0 |
 | 2026-10-20 07:26 | Steals R1 S1 | Final review CLEAN; SEALED (c9f11ac2…, f86f9450b). BOOKING APPROVED: RTX 5090 ≤$0.61/h (offer 50615776, $0.602/h), $2.80 cap, on-box wall ≈$2.66. Needs Ben's click. | ≤2.80 approved |
+
+## Usage rules (Ben, Oct 20 morning)
+
+Overnight Claude usage was about $400 at list price, about 16% of Ben's weekly quota. The causes: long-lived sessions with 400k-700k-token contexts re-read on every step, review loops, all-Opus work, and 8 sessions running in parallel all night.
+1. At most 2 code-review rounds per change. If it is still not clean, PARK; don't review again.
+2. Fresh sessions from a short summary for steals, swarm, info and Brain when they next need real work. The sessions holding Ben's rental clicks stay until their runs end.
+3. Sonnet for fix and test rounds; Opus only for design gates and final reviews.
+4. The watcher messages only on real changes (no hourly summaries).
