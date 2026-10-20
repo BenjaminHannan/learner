@@ -624,6 +624,41 @@ class BoxGuardTest(unittest.TestCase):
         self.assertEqual(screen.check_manifest(self.ROOT, self.ROOT / screen.MANIFEST_PATH), [],
                          "regenerate scripts/premonition_swarm_manifest.txt")
 
+    def test_documented_dry_run_gets_past_every_check(self) -> None:
+        """Third pass, item 1: the dry run exactly as documented (DRYRUN=1 PIN=HEAD, default OUT) passes the
+        clean-tree check. The default OUT is a fresh dryrun-<sha> folder, and CHECK_ONLY stops before any step."""
+        import os
+        import subprocess
+        status = subprocess.run(["git", "status", "--porcelain"], cwd=self.ROOT, capture_output=True, text=True).stdout
+        if status.strip():
+            self.skipTest("the working tree is dirty (development); this test needs a committed tree")
+        pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
+        env = {key: value for key, value in os.environ.items() if key != "OUT"}
+        run = subprocess.run(["bash", str(self.ROOT / "scripts/premonition_swarm_box.sh")], cwd=self.ROOT,
+                             env={**env, "DRYRUN": "1", "PIN": pin, "CHECK_ONLY": "1"},
+                             capture_output=True, text=True, timeout=300)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn(f"dryrun-{pin[:9]}", run.stdout)
+        self.assertIn("CHECK_ONLY: every refusal check passed", run.stdout)
+        after = subprocess.run(["git", "status", "--porcelain"], cwd=self.ROOT, capture_output=True, text=True).stdout
+        self.assertEqual(after.strip(), "")                                   # the check itself left the tree clean
+
+    def test_out_holding_tracked_files_is_refused_before_writing(self) -> None:
+        import os
+        import subprocess
+        tracked = self.ROOT / "artifacts/claude-swarm-screen-20261018/dryrun"
+        listed = subprocess.run(["git", "ls-files", "--", str(tracked)], cwd=self.ROOT, capture_output=True,
+                                text=True).stdout
+        self.assertTrue(listed.strip())                                       # the old, committed dry-run folder
+        before = (tracked / "box.log").read_bytes()
+        pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
+        run = subprocess.run(["bash", str(self.ROOT / "scripts/premonition_swarm_box.sh")], cwd=self.ROOT,
+                             env={**os.environ, "DRYRUN": "1", "PIN": pin, "OUT": str(tracked), "CHECK_ONLY": "1"},
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+        self.assertIn("holds git-tracked files", run.stdout)
+        self.assertEqual((tracked / "box.log").read_bytes(), before)          # nothing was written into it
+
     def test_box_refuses_a_dirty_tree_before_anything_runs(self) -> None:
         import os
         import subprocess

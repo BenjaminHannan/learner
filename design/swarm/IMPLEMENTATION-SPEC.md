@@ -100,7 +100,7 @@ Decode with `model._decode_logits(memory, valid, inputs)` in training; at eval, 
 For the round's chosen `cards [Q*M, K]` (−1 = none), view as `[Q, M*K]` and walk the M*K columns in
 desk order, **exactly as a one-by-one FIFO would** (review round 2, 2026-10-18). Column c is new iff
 `c >= 0`, `c != store.null`, and c is **not on the board at that moment**: `slot_card`, the card each row
-holds, is the only state, and `posted` is derived from it. So a card evicted earlier in the same round is
+holds, is the only state. So a card evicted earlier in the same round is
 posted again, even if it was on the board when the round began, and a card still on the board is never
 posted twice. A new card's row = `values + model.think.age(bucket) + board_type.weight[1] +
 desk.weight[m_author]` (values/lines via `store.gather`, `bucket` as in `_insert`). It is written at
@@ -139,9 +139,11 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
   "own" with `p_own > 0`: per desk, with prob p_own, use its own `store.top(scores, top_k)` masked where
   `ask <= 0` (pad to the teacher width as in forward).
 * metrics: `gold_missing`, `answer_acc_first`, `answer_acc` (final round), `question_loops =
-  Q * rounds * M` (desk-rounds: keeps `fit_flops` linear), `recall_at_k` (first round, union of every
-  desk's top-k over told questions), plus `swarm_ask_rate [M]` (mean over rounds and questions of
-  `ask > 0`), `swarm_fetch_overlap` and `swarm_register_cos` from §9 at the final round.
+  Q * rounds * M` (desk-rounds: keeps `fit_flops` linear), and `recall_at_k` (first round, **desk 0's**
+  top-k over told questions, comparable with D1; only when `model.train_diagnostics`, which MiniTrainer turns off
+  for matched wall-clock runs). There are **no per-step swarm diagnostics** in training (review round 3); the
+  diversity report (§9) comes from `swarm_answer`. In "gold" mode with ASK weight 0 the split and the ASK terms are
+  skipped (gold never fetches).
 
 ## 8. Eval (`swarm_answer(model, batch, *, wipe, window_line, stop, max_loops, lesion=None)`)
 
@@ -155,15 +157,17 @@ Lesions (eval-only): `None`; `"board"` (board never written: notes and cards sta
 run as S0); `"notes"` (cards posted, notes never written); `"cards"` (notes, no cards).
 Return `Answers(tokens, lengths, loops=[Q] rounds, first_top=desk 0's first top-k (NULL -> -1),
 fetched=union over desks [Q, L+1], halt_prob, swarm={...})` with
-`swarm = {"desk_fetched": [Q, M, L+1] bool, "desk_asks": [Q, M] long (rounds with ask > 0),
-"registers": [Q, M, registers, d] float (final rows), "notes": [Q, M, d] or None}`.
+`swarm = {"desk_fetched": [Q, M, L+1] bool, "desk_asks": [Q, M] long (rounds with ask > 0, counting only rounds
+that can fetch, i.e. all but the last), "registers": [Q, M, registers, d] float (final rows), "notes": [Q, M, d] or
+None, "rounds": rounds that can fetch (max(1, rounds - 1))}`.
 
 ## 9. Diversity report (`swarm.diversity(swarm_dict) -> dict[str, float]`)
 
 * `fetch_overlap`: mean over questions and desk pairs (i < j) of Jaccard(desk_fetched_i, desk_fetched_j),
   NULL excluded, pairs with empty union skipped (NaN if none).
 * `register_cos`: mean over questions and pairs of cosine(flattened registers_i, registers_j).
-* `ask_rate`: list [M] mean `desk_asks / rounds`; `fetch_count`: list [M] mean cards per question.
+* `ask_rate`: list [M] mean `desk_asks / rounds` over the rounds that can fetch (a final-round ask never fetches,
+  so it is not usage); `fetch_count`: list [M] mean cards per question.
 * `collapsed`: `register_cos > 0.95 and fetch_overlap > 0.8` (the pre-registered collapse line).
 * `silent_desks`: number of desks with `ask_rate < 0.05`.
 

@@ -563,7 +563,7 @@ class BoardTest(unittest.TestCase):
         cards = torch.tensor([[2, -1], [2, 4], [-1, store.null]])               # desks 0..2 of question 0
         board.post(cards)
         self.assertEqual(int(board.cards_ok.sum()), 2)                          # cards 2 and 4; NULL never posted
-        self.assertEqual(board.posted[0].nonzero().flatten().tolist(), [2, 4])
+        self.assertEqual(sorted(c for c in board.slot_card[0].tolist() if c >= 0), [2, 4])
         self.assertEqual(int(board.count[0]), 2)
         board.post(torch.tensor([[2, -1], [-1, -1], [4, -1]]))
         self.assertEqual(int(board.count[0]), 2)                                # nothing new
@@ -612,7 +612,7 @@ class BoardTest(unittest.TestCase):
                 self.assertEqual(int(board.count[0]), pointer, size)
                 self.assertEqual(board.slot_card[0].tolist(), card_at, size)
                 on_board = {c for c in card_at if c >= 0}
-                self.assertEqual(set(board.posted[0].nonzero().flatten().tolist()), on_board, size)
+                self.assertEqual({c for c in board.slot_card[0].tolist() if c >= 0}, on_board, size)
                 self.assertEqual(board.cards_ok[0].tolist(), [c >= 0 for c in card_at], size)
                 for slot, (card, desk) in enumerate(zip(card_at, author_at)):
                     if card >= 0:
@@ -861,39 +861,6 @@ class RoundThreeTest(unittest.TestCase):
         model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64, **swarm))
         return model, (label_free(b) for b in toy_stream(spec, 4, 0))
 
-    def test_equal_diagnostics_charge_under_a_seconds_budget(self) -> None:
-        from premonition.flops import FlopFit
-        from premonition.train import MiniTrainer, mini_train_config, planned_loops
-        for swarm in ({}, dict(thinkers=2)):
-            model, stream = self._toy(**swarm)
-            batch = next(stream)
-            timed = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
-                                seconds_budget=1e6)
-            plan = timed.plan()
-            out = timed._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
-            self.assertNotIn("cards", out)                                    # no arm records card insertions
-            self.assertGreaterEqual(out["diagnostic_seconds"], 0.0)
-            plain = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1.0, seed=0)
-            out = plain._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
-            self.assertNotIn("diagnostic_seconds", out)                       # flag-off training is unchanged
-            self.assertEqual("cards" in out, not swarm)
-        model, stream = self._toy()
-        trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30, seed=0,
-                              seconds_budget=1e6)
-        trainer.fit = FlopFit(0.0, 0.0, 0.0)
-        step = trainer._train_step
-
-        def slow_diagnostics(*args):                                          # 0.3 s of real, reported diagnostics
-            out = step(*args)
-            time.sleep(0.3)
-            return {**out, "diagnostic_seconds": 0.3}
-
-        trainer._train_step = slow_diagnostics
-        report = trainer.train(stream, max_steps=2)
-        self.assertEqual(report["steps"], 2)
-        self.assertLess(report["train_seconds"], report["seconds"] - 0.55)    # the 2 x 0.3 s is left off the clock
-        self.assertGreater(report["train_seconds"], 0.0)                      # item e: the last stretch is counted
-
     def test_seconds_budget_survives_checkpoint_and_resume(self) -> None:
         import tempfile
         from pathlib import Path
@@ -924,35 +891,6 @@ class RoundThreeTest(unittest.TestCase):
 class RoundThreeSecondPassTest(unittest.TestCase):
     """Review round 3, second pass: item 1 (sync before the diagnostics timer) and item 5 (non-composing
     subclasses refuse at build)."""
-
-    def test_sync_runs_before_the_diagnostics_timer_only_when_timed(self) -> None:
-        import premonition.train as ptrain
-        from premonition.toy import ToySpec, toy_stream
-        from premonition.train import MiniTrainer, label_free, mini_train_config, planned_loops
-        spec = ToySpec()
-        torch.manual_seed(0)
-        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64, thinkers=2))
-        batch = label_free(next(toy_stream(spec, 4, 0)))
-        events: list[str] = []
-        original_sync, original_clock = ptrain._sync, ptrain.time.perf_counter
-        ptrain._sync = lambda device: events.append(f"sync:{device.type}")
-        try:
-            for budget, track, expected in ((1e6, True, 1), (1e6, False, 0), (None, True, 0)):
-                events.clear()
-                trainer = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
-                                      seconds_budget=budget)
-                plan = trainer.plan()
-                trainer._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), track)
-                self.assertEqual(events.count("sync:cpu"), expected, (budget, track))
-            events.clear()                                              # order: the sync, THEN the timer starts
-            ptrain.time.perf_counter = lambda: events.append("clock") or original_clock()
-            trainer = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
-                                  seconds_budget=1e6)
-            plan = trainer.plan()
-            trainer._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
-            self.assertEqual(events[events.index("sync:cpu") + 1], "clock")
-        finally:
-            ptrain._sync, ptrain.time.perf_counter = original_sync, original_clock
 
     def test_sync_calls_cuda_synchronize_on_a_cuda_device(self) -> None:
         """The CUDA path, mocked (no GPU here): _sync waits on the device for cuda and does nothing on cpu."""
@@ -991,6 +929,96 @@ class RoundThreeSecondPassTest(unittest.TestCase):
             with self.assertRaises(ValueError, msg=real.__name__):
                 real(tiny_config(thinkers=2))
             real(tiny_config())
+
+
+class ThirdPassTest(unittest.TestCase):
+    """Review round 3, third pass (ruled Oct 20): no training diagnostics under a seconds budget, for any arm, plus
+    one sync when the loop ends (2); gold mode skips the unused ASK terms (5); final-round asks are not usage (6)."""
+
+    def _toy(self, **swarm):
+        from premonition.toy import ToySpec, toy_stream
+        from premonition.train import label_free
+        spec = ToySpec()
+        torch.manual_seed(0)
+        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64, **swarm))
+        return model, (label_free(b) for b in toy_stream(spec, 4, 0))
+
+    def test_no_training_diagnostics_under_a_seconds_budget(self) -> None:
+        from premonition.train import MiniTrainer, mini_train_config, planned_loops
+        for swarm in ({}, dict(thinkers=2)):
+            model, stream = self._toy(**swarm)
+            batch = next(stream)
+            registered = []
+            original = torch.nn.Module.register_forward_hook
+
+            def counting(module, *args, **kwargs):
+                registered.append(type(module).__name__)
+                return original(module, *args, **kwargs)
+
+            torch.nn.Module.register_forward_hook = counting
+            try:
+                timed = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
+                                    seconds_budget=1e6)
+                plan = timed.curriculum.plan(0.2)                             # teacher: recall WOULD be computed
+                out = timed._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
+                self.assertEqual(registered, [], swarm)                       # no forward hooks at all
+                self.assertFalse({"dead", "halt_rate", "cards", "diagnostic_seconds"} & set(out), swarm)
+                self.assertNotIn("recall_at_k", out["metrics"])               # no recall, for any arm
+                self.assertTrue(torch.isfinite(out["loss"]))                  # losses are still there
+                plain = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1.0, seed=0)
+                out = plain._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
+                self.assertTrue(registered)                                   # flag-off training is unchanged
+                self.assertIn("dead", out)
+                self.assertEqual("cards" in out, not swarm)
+            finally:
+                torch.nn.Module.register_forward_hook = original
+            teacher = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1.0, seed=0)
+            plan = teacher.curriculum.plan(0.2)                               # teacher phase: recall is computed
+            out = teacher._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), False)
+            self.assertIn("recall_at_k", out["metrics"])
+
+    def test_sync_once_when_the_loop_ends(self) -> None:
+        import premonition.train as ptrain
+        from premonition.flops import FlopFit
+        from premonition.train import MiniTrainer, mini_train_config
+        events: list[str] = []
+        original = ptrain._sync
+        ptrain._sync = lambda device: events.append(device.type)
+        try:
+            for budget, expected in ((1e6, ["cpu"]), (None, [])):
+                events.clear()
+                model, stream = self._toy()
+                trainer = MiniTrainer(model, mini_train_config(warmup_steps=2, log_every=1), "cpu", flop_budget=1e30,
+                                      seed=0, seconds_budget=budget)
+                trainer.fit = FlopFit(0.0, 0.0, 0.0)
+                report = trainer.train(stream, max_steps=2)
+                self.assertEqual(events, expected, budget)
+                if budget is not None:
+                    self.assertGreater(report["train_seconds"], 0.0)
+        finally:
+            ptrain._sync = original
+
+    def test_gold_mode_skips_the_unused_ask_terms(self) -> None:
+        batch = synthetic_batch(seed=2)
+        model = s1()
+        original = sw.balanced_assignment
+        sw.balanced_assignment = lambda *a, **k: (_ for _ in ()).throw(AssertionError("split computed in gold"))
+        try:
+            out = model(batch, mode="gold")
+            self.assertEqual(out["ask"].item(), 0.0)
+        finally:
+            sw.balanced_assignment = original
+        out = model(batch, mode="gold", weights={"lm": 1.0, "ask": 0.5, "ans": 1.0, "halt": 0.0})
+        self.assertGreater(out["ask"].item(), 0.0)                            # an explicit ask weight still trains it
+
+    def test_final_round_asks_are_not_usage(self) -> None:
+        batch = synthetic_batch(seed=4)
+        model = eager(s1())                                                   # every desk asks in every round
+        out = model.answer(batch)
+        rounds = model.config.swarm_rounds
+        self.assertEqual(int(out.swarm["desk_asks"].max()), rounds - 1)       # the last round never fetches
+        self.assertEqual(out.swarm["rounds"], rounds - 1)
+        self.assertEqual(sw.diversity(out.swarm)["ask_rate"], [1.0] * M)
 
 
 if __name__ == "__main__":

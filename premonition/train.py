@@ -230,8 +230,8 @@ def _add(total: dict[str, Any], part: Mapping[str, Any]) -> None:
 
 # ----------------------------------------------------------------------------- the trainer
 def _sync(device: torch.device) -> None:
-    """Wait for queued CUDA work. The diagnostics timer starts after it, so `diagnostic_seconds` never holds the
-    step's own backward or optimizer time (review round 3, item 1). It does nothing on CPU, where work is already done."""
+    """Wait for queued CUDA work, so a training-clock reading includes every queued step (matched wall-clock runs).
+    It does nothing on CPU, where the work is already done."""
     if device.type == "cuda":
         torch.cuda.synchronize(device)
 
@@ -252,6 +252,7 @@ class MiniTrainer(Trainer):
             raise ValueError("seconds_budget must be positive")
         self.seconds_budget = None if seconds_budget is None else float(seconds_budget)
         self.train_seconds = 0.0
+        model.train_diagnostics = self.seconds_budget is None          # recall@k in forward: off when matched by time
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
         self.seed = seed
@@ -316,18 +317,17 @@ class MiniTrainer(Trainer):
         alive: list[torch.Tensor] = []
         halts: list[torch.Tensor] = []
         hooks = []
-        if track:
+        # Matched wall-clock arms (seconds_budget): NO training diagnostics for ANY arm. No forward hooks, no
+        # InsertLog, no recall (`model.train_diagnostics`). Only the losses are logged, so equal T is equal training
+        # work for D1, S0 and S1 (review round 3, third pass, ruled Oct 20). The run cards read none of these.
+        diagnose = track and self.seconds_budget is None
+        if diagnose:
             hooks = [module.register_forward_hook(
                 lambda _m, args, _o: alive.append((args[0] > 0).flatten(0, -2).any(0)))
                 for module in model.modules() if isinstance(module, nn.GELU)]
             hooks.append(model.heads.halt.register_forward_hook(
                 lambda _m, _a, out: halts.append(out.detach().float().flatten())))
-        # Matched wall-clock arms (seconds_budget) are charged the same for diagnostics: no arm records card
-        # insertions (InsertLog copies to the host on every insert, and only one thinker supports it), and the
-        # post-step diagnostics below are timed and left off `train_seconds` (review round 3, item c).
-        timed = self.seconds_budget is not None
-        recorder = (InsertLog(model) if track and config.store and config.thinkers == 1 and not timed
-                    else None)
+        recorder = InsertLog(model) if diagnose and config.store and config.thinkers == 1 else None
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
@@ -344,17 +344,12 @@ class MiniTrainer(Trainer):
         result: dict[str, Any] = {name: out[name].detach().float() for name in ("loss", "lm", "ask", "ans", "halt")}
         result["grad_norm"] = grad_norm
         result["metrics"] = out["metrics"]
-        if track:
-            if timed:
-                _sync(self.device)                   # the step's queued GPU work belongs to training, not diagnostics
-            began = time.perf_counter()
+        if diagnose:
             result["dead"] = 1.0 - torch.cat(alive).float().mean().item() if alive else None
             result["halt_rate"] = torch.cat(halts).gt(0).float().mean().item() if halts else None
             if recorder is not None:
                 result["cards"] = card_stats(recorder.calls, batch, loops, config.card_rows,
                                              offset=0 if plan.mode == "gold" else 1)
-            if timed:
-                result["diagnostic_seconds"] = time.perf_counter() - began
         return result
 
     # ------------------------------------------------------------------ the loop
@@ -445,7 +440,6 @@ class MiniTrainer(Trainer):
                 break
             track = (self.step + 1) % cfg.log_every == 0
             last = self._train_step(batch, plan, loops, track)
-            paused_total += last.get("diagnostic_seconds", 0.0)
             ran = int(last["metrics"]["question_loops"])
             mismatched += ran != int(loops.sum())
             self.flops += cost
@@ -474,12 +468,15 @@ class MiniTrainer(Trainer):
             if track:
                 log(plan)
             if evaluate is not None and cfg.eval_every and self.step % cfg.eval_every == 0:
+                if self.seconds_budget is not None:
+                    _sync(self.device)                   # the last step's queued work is training time
                 paused = time.perf_counter()
                 emit({"step": self.step, "flops": self.flops, "flops_share": self.flops / budget,
                       "eval": self.evaluate(evaluate)})
                 window_start += time.perf_counter() - paused
                 paused_total += time.perf_counter() - paused
-        if self.seconds_budget is not None:      # however the loop ended, count its last stretch (round 3, e)
+        if self.seconds_budget is not None:      # however the loop ended, count its last stretch, queued work included
+            _sync(self.device)
             self.train_seconds = start_seconds + time.perf_counter() - started - paused_total
         if window_steps:
             last.pop("cards", None)

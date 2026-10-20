@@ -34,11 +34,14 @@ the tag goes in the readout).
   ⌈n/M⌉ of the n cards** (desks below the floor are served first). It is the same in S0 and S1, and it is used
   only in training, never at inference. This replaces a cap-only rule that could leave a desk with none (review
   round 3, item a). It is settled here, before any run.
-* **(10-20, pre-seal) What "equal T" charges.** With `seconds_budget` set, no arm records card insertions
-  (`InsertLog` / `card_stats`), and the post-step diagnostics every arm runs on its logged steps are timed and
-  left off `train_seconds`. The swarm's training step computes no unused diagnostics. So equal T means equal
-  training time for D1 and S0 alike (review round 3, item c). The diversity report and card statistics come
-  from the evaluation, not from training.
+* **(10-20, pre-seal) What "equal T" charges.** With `seconds_budget` set, **no arm runs any training
+  diagnostic**: no forward hooks (dead-unit fraction, halt rate), no `InsertLog` / `card_stats`, no recall@k.
+  Only the losses are logged, and the GPU is synced before the clock is read when the loop ends. So equal T means
+  equal training work for D1, S0 and S1 (coordinator ruling, Oct 20, third pass). **Confirmed before adopting it:
+  no mark of this card or of RUNCARD-S1 reads any of the removed diagnostics.** From the train reports the readout
+  reads only `status`, `train_seconds`, `steps`, `final.loss`, the logged losses in `history`, `loop_mismatches`,
+  `seconds_budget` and `stop` (`premonition_swarm_marks.py`, validity block). M1-M4 and M6 read the eval files, and
+  the diversity report comes from evaluation.
 * **Matched parameters (reported, separately).** D1 2,102,228 (v2) vs S0 2,102,740 (+512 desk embeddings, +0.02%).
 * **Reported, not matched:** steps, tokens, think FLOPs per question, s/step, peak GPU memory.
 * Eval: `evaluate_d_checkpoint(split="validation")` (label-free), max_loops default. S0 is fixed at 4

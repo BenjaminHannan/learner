@@ -52,16 +52,6 @@ class Board:
         self.count = torch.zeros(count, dtype=torch.long, device=device)
         self.slot_card = torch.full((count, self.size), -1, dtype=torch.long, device=device)   # card held per row
 
-    @property
-    def posted(self) -> Optional[torch.Tensor]:
-        """[Q, L + 1] bool: the cards on the board now (derived from `slot_card`, never stored apart)."""
-        if self.store is None:
-            return None
-        width = self.store.lines + 2                                                   # last column: empty rows
-        index = torch.where(self.slot_card >= 0, self.slot_card, torch.full_like(self.slot_card, width - 1))
-        return torch.zeros(self.count.shape[0], width, dtype=torch.bool, device=index.device).scatter_(
-            1, index, True)[:, :-1]
-
     def rows(self) -> tuple[torch.Tensor, torch.Tensor]:
         """(x [Q, M + C, d], ok [Q, M + C])."""
         return torch.cat([self.notes, self.cards], 1), torch.cat([self.notes_ok, self.cards_ok], 1)
@@ -383,6 +373,8 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
             metrics["answer_acc"] = correct.mean().detach()
         if store is None:
             continue
+        if mode == "gold" and not weights.get("ask", 0.0):
+            continue                     # gold never fetches and L_ask has weight 0: skip the split and the ASK terms
         # L_ask: balanced assignment of the cards no desk has fetched yet.
         need_union = gold & ~union
         prefs = scores.detach().view(count, M, -1)
@@ -391,7 +383,7 @@ def swarm_forward(model: Any, batch: VisitBatch, mode: str = "teacher", p_own: f
         bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
         if asks.any():
             set_terms.append(set_cross_entropy(scores[asks], target[asks]))
-        if step == 0:
+        if step == 0 and model.train_diagnostics:
             metrics["recall_at_k"] = _recall(model, swarm, rows, gold).detach()
         if mode == "gold" or step == rounds - 1:
             continue
@@ -490,7 +482,8 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
             board.write_notes(rows[:, model._register_base + 1])
         if store is None:
             continue
-        asks += (ask > 0).long().view(count, M)
+        if step + 1 < rounds:            # the last round never fetches, so its asks do not count as usage (M3)
+            asks += (ask > 0).long().view(count, M)
         top = store.top(scores, config.top_k)
         if step == 0:
             lead = top.view(count, M, -1)[:, 0]
@@ -510,7 +503,7 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
         fetched = torch.zeros(count, M, 1, dtype=torch.bool, device=device)
     detail = {"desk_fetched": fetched, "desk_asks": asks, "registers": swarm.registers().float(),
               "notes": board.notes.clone() if board is not None and lesion != "notes" else None,
-              "rounds": rounds}
+              "rounds": max(1, rounds - 1)}                # rounds that can fetch: desk_asks counts only those
     return Answers(tokens, lengths, torch.full((count,), rounds, dtype=torch.long, device=device),
                    first_top, union, halt_prob, detail)
 

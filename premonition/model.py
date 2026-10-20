@@ -326,6 +326,8 @@ class _Episode:
 class PremonitionMini(nn.Module):
     """forward(batch, mode) -> losses; answer(batch) -> greedy entity-aware answers."""
 
+    train_diagnostics = True       # forward's recall@k metric; MiniTrainer turns it off for matched wall-clock runs
+
     def __init__(self, config: MiniConfig) -> None:
         if config.thinkers > 1 and type(self) is not PremonitionMini and \
                 not type(self).__dict__.get("SWARM_COMPATIBLE", False):
@@ -611,7 +613,7 @@ class PremonitionMini(nn.Module):
             bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
             if asks.any():
                 set_terms.append(set_cross_entropy(scores[asks], need[asks]))
-            if step == 0:
+            if step == 0 and self.train_diagnostics:
                 metrics["recall_at_k"] = self._recall(store, episode, index, rows, gold).detach()
             # Fetch for the next loop.
             going = n_loops[index] > step + 1

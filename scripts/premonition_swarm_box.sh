@@ -17,6 +17,8 @@
 #            +-2% seconds band of M5, so 30 s voids on one step; see BOX-SPEC), no money check, and the S1 tiny arm +
 #            lesions are run so that MARKS-S1 is proven computable too. Like the real run it needs a clean tree and
 #            the COMMITTED manifest. Its numbers mean nothing.
+#   CHECK_ONLY  1 = run every refusal check (PIN, clean tree, OUT holds no tracked file, manifest, money, CUDA), then exit
+#            0 before any step: a pre-flight on the box, and what the tests run.
 #   STOP_OVERRIDE  non-empty text (the coordinator's ruling) lets the trains start although c0.json says
 #            stop_and_ask / money_stop. Logged.
 #   OUT, PY, WORKERS, C0_EXTRA, DRY_MAXTOK  output folder, python, data workers, extra c0 args, the dry run's
@@ -39,7 +41,8 @@ C0_EXTRA=${C0_EXTRA:-}
 RUN=claude-swarm-screen-20261018
 if [ "$DRYRUN" = 1 ]; then
   SIZE=tiny; DEVICE=cpu; VISITS=tiny; DPH=${DPH:-0.40}; DRY_MAXTOK=${DRY_MAXTOK:-3000}
-  OUT=${OUT:-$ROOT/artifacts/$RUN/dryrun}; CKPT=artifacts/$RUN/ckpt-dryrun
+  OUT=${OUT:-$ROOT/artifacts/$RUN/dryrun-$(git -C "$ROOT" rev-parse --short=9 HEAD)}   # fresh per commit
+  CKPT=artifacts/$RUN/ckpt-dryrun
   C0_ARGS="--rounds 3 --warmup 2 --timed 4 --chunk 2 --t-override 120 --max-tokens $DRY_MAXTOK $C0_EXTRA"
   TRAIN_ARGS="--max-tokens $DRY_MAXTOK"
 else
@@ -52,6 +55,14 @@ WORKERS=${WORKERS:-0}
 SCREEN="$PY -B scripts/premonition_swarm_screen.py"
 MARKS="$PY -B scripts/premonition_swarm_marks.py"
 COMMON="--device $DEVICE --size $SIZE --workers $WORKERS"
+# OUT must hold no git-tracked file (review round 3, third pass, item 1). Writing box.log into a tracked folder dirties
+# the tree and trips the clean-tree check below. This runs before anything is written.
+TRACKED=$(git -C "$ROOT" ls-files -- "$OUT" | head -5)
+if [ -n "$TRACKED" ]; then
+  printf 'REFUSED: OUT %s holds git-tracked files (for example %s). Use a fresh OUT; nothing was written.\n' \
+    "$OUT" "$(printf '%s' "$TRACKED" | head -1)"
+  exit 2
+fi
 mkdir -p "$OUT"
 BOXLOG="$OUT/box.log"
 START=$(date +%s)
@@ -118,6 +129,7 @@ if [ "$DRYRUN" != 1 ]; then
     say "REFUSED: no CUDA device on this host (the full run is for the GPU box; use DRYRUN=1 on a CPU host)"; exit 2
   fi
 fi
+if [ "${CHECK_ONLY:-0}" = 1 ]; then say "CHECK_ONLY: every refusal check passed; stopping before any step"; exit 0; fi
 
 # ---------------------------------------------------------------- 2. host record
 {
