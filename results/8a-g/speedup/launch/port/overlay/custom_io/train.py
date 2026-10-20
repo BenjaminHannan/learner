@@ -434,6 +434,8 @@ def main(argv=None):
     if args.speed_arms:
         if not hasattr(model, 'speed_defer'):
             sys.exit(f"--speed-arms {args.speed_arms} needs a model with the deferred writer (b3g2); model {args.model} has none")
+        if model.talk_rounds != 'last' or model.writer.copy:       # B3G2.loss would count a fallback on every call: refuse at startup instead of silently running the original
+            sys.exit(f"--speed-arms {args.speed_arms} can never take the deferred path with this model: " + (f"talk_rounds is {model.talk_rounds!r} (the deferred writer needs 'last')" if model.talk_rounds != 'last' else "the writer has a copy path (the deferred writer needs copy False)"))
         model.speed_defer = True
     if args.caps and hasattr(model, '_targets'):    # plain_tf_steps family: its answer slots are the steps+answer target (caps plain_target), not max_ans
         model.max_ans = args.max_ans
@@ -549,7 +551,7 @@ def main(argv=None):
     if hasattr(model, '_tk_spots'):         # tok_think: valid letters vs token spots the thinker saw in training (ratio = letters per spot)
         result['tok_think'] = dict(letters=model._tk_letters, spots=model._tk_spots, ratio=round(model._tk_letters / max(model._tk_spots, 1), 4))
     if args.speed_arms:
-        result['defer_stats'] = model.defer_stats
+        result['defer_stats'] = model.defer_counts       # counts since the last (re)start of the process: not stored in the checkpoint
     if ck_on:
         result['resumed_from'] = resumed_from
         result['ckpt'] = dict(every=args.ckpt_every, config_hash=cfg_hash, code_id=code, **ck_stats)

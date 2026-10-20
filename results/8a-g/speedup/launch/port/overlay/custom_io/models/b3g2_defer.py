@@ -8,8 +8,10 @@ micro-batch is done as ONE thinker-only loop, then ONE batched call pass (two bu
 answer pass over all (round, row) pairs (rounds < CKPT_FROM plain, rounds >= CKPT_FROM gradient-checkpointed as the original does). Every host-side list (who calls when, who has a target, who may
 answer) comes from the numpy schedule of B3G2.plan_np, never read back from the device; the host arrays go over in one copy.
 
-WHEN IT RUNS (B3G2._loss decides): speed_defer True and the model is training, autograd is on, talk_rounds == 'last' and the writer has no copy path. Anything else (eval, no_grad, talk_rounds
-'all', a copy writer) counts defer_stats['fallback'] and runs the original body; a run of the deferred path counts defer_stats['deferred'].
+WHEN IT RUNS (B3G2.loss decides; _loss is the base text and trace_loss / ST1 never come here): speed_defer True and the model is training, autograd is on, talk_rounds == 'last' and the writer has
+no copy path. Anything else (eval, no_grad, talk_rounds 'all', a copy writer) counts defer_counts['fallback'] and runs _loss; a run of the deferred path counts defer_counts['deferred'] (plain
+attribute, not a *_stats dict, so train.py's checkpoint does not store it and a flag-off checkpoint keeps the g2fa4 format; the counts restart at 0 after a resume).
+SOURCE GUARD: the first deferred call on a model checks SRC_HASH (sha1[:12] of the source of every method this file re-implements or relies on) and raises RuntimeError on a mismatch.
 
 NUMERICS-CHANGING ('near'): the per-row maths is identical but floating-point rounding is not: batched GEMMs, a longer padded call width, parameter gradients reduced in ONE backward over all pairs
 (another summation order). fp32 on a CPU: about 1e-7 relative; bf16 on a GPU: see the GPU-RUN-4/5 readouts. The thinker is bit-identical. Not 'same maths bit for bit'. A run with it is a different
@@ -17,13 +19,40 @@ run from one without: fresh runs from update 0 under new names only (train.py pu
 WHAT IS NOT CHANGED: the thinker, the tape, the stop head and its loss, w_stop, the aux keys and values, plan's draws (gap rng), train_golds' draws (drill rng), the K draw (torch.randint once per
 micro-batch, after plan), the order of the call-loss sum and of the answer-loss accumulation.
 """
+import hashlib, inspect
 import numpy as np
 import torch
 from torch.utils.checkpoint import checkpoint
 from custom_io.models import b3g2 as B3G2M
 
-NUMERICS = ("NUMERICS-CHANGING ('near'): per-row maths identical, floating-point rounding is not (batched GEMMs, a longer padded call width, one-shot parameter-gradient reductions); "
-            "the thinker is bit-identical, the writer's loss and gradient are equal up to rounding")
+# sha1 (first 12 hex) of the source of each method this file re-implements or relies on, trailing blanks stripped (defer.py's src_hash). B3G2 methods are those of the PORT tree (plan_np and loss
+# are the port's own; _loss is the base text, the one deferred_loss re-implements). A different source means this file was written against other code.
+SRC_HASH = dict(loop='173236f31248', call_pass='3aa7d3d707b2', ans_pass='5f2387af6a2b', answer_teacher='a33b2f2ef2b7', line_context='ee62580e169e', plan_np='c093c8d2edb3', _loss='349e3f1eaaff', loss='5b321b587b5b')
+SRC_HASH_WRITER = dict(teacher='c6d7f0df92ca', nll='ebaa4f2fc55f', right='1c885a0c60b2')
+SRC_HASH_TOOL = dict(think='6ccf66237406', tape_of='22b5b8101693')
+
+
+def src_hash(fn):
+    return hashlib.sha1('\n'.join(ln.rstrip() for ln in inspect.getsource(inspect.unwrap(fn)).splitlines()).encode()).hexdigest()[:12]
+
+
+def source_hashes(m):
+    """-> {name: (sha1[:12], expected)} of every guarded method, for model m (B3G2 methods of type(m), the writer's of type(m.writer), ToolH1.think, Tool.tape_of)."""
+    import custom_io.models.tool as T
+    import custom_io.models.tool_h1 as H
+    cls, wcls = type(m), type(m.writer)
+    out = {f'B3G2.{n}': (src_hash(getattr(cls, n)), h) for n, h in SRC_HASH.items()}
+    out.update({f'ByteWriter.{n}': (src_hash(getattr(wcls, n)), h) for n, h in SRC_HASH_WRITER.items()})
+    out['ToolH1.think'] = (src_hash(H.ToolH1.think), SRC_HASH_TOOL['think'])
+    out['Tool.tape_of'] = (src_hash(T.Tool.tape_of), SRC_HASH_TOOL['tape_of'])
+    return out
+
+
+def check_source(m):
+    """Raises RuntimeError naming the first method whose source is not the one this port was written against."""
+    for name, (got, want) in source_hashes(m).items():
+        if got != want:
+            raise RuntimeError(f'b3g2_defer: the source of {name} is not the custom_io this port was written against: sha1 {got} != {want}')
 
 
 def to_device_async(v, device):
@@ -55,14 +84,6 @@ def teacher_np(targets, cap, bos, eos, pad=-100):
             if n:
                 inp[b, 1:n + 1] = t
     return inp, tgt, over
-
-
-def shown_cround(sched, t, far):
-    """What the original loop's `shown` and `cround` hold AFTER round t (t >= 0; the call handling of round t done), from the schedule alone [B, tape] (numpy or torch):
-    shown[i, j] = 1 <= sched[i, j] <= t; cround[i, j] = sched[i, j] there, else `far` (FAR). (Rounds t < 1 write no call; a schedule entry -1 is no call.)"""
-    xp = np if isinstance(sched, np.ndarray) else torch
-    shown = (sched >= 1) & (sched <= t)
-    return shown, xp.where(shown, sched, far)
 
 
 def last_of(sched):
@@ -120,7 +141,7 @@ class Pack:
 # the loss
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 def thinker(m, batch, Ls, tapes, sched_dev, n):
-    """B3G2.loop's teacher-forced thinker half: the same reads, kv, tape, think calls in the same order; the writer is not called. shown comes from the schedule (shown_cround), as a
+    """B3G2.loop's teacher-forced thinker half: the same reads, kv, tape, think calls in the same order; the writer is not called. shown comes from the schedule, as a
     [n, B, K] tensor made at once on the device (no read). -> list of Z_t (t = 0..n-1)."""
     N_REG = B3G2M.N_REG
     X, xm = m.read(batch, talker=True)
@@ -137,7 +158,7 @@ def thinker(m, batch, Ls, tapes, sched_dev, n):
     kvt = [b.kv_of(Xt + m.src.weight[1]) for b in m.core]
     Z = torch.cat([m.ctrl.weight, m.reader.place.weight[:N_REG]]).expand(B, -1, -1)
     kvs = m.join_kv(kvs0, kvt)
-    before = torch.arange(-1, n - 1, device=dev)[:, None, None]                  # round t reads the tape as it stood after round t - 1: shown_cround(sched, t - 1)
+    before = torch.arange(-1, n - 1, device=dev)[:, None, None]                  # round t reads the tape as it stood after round t - 1: shown = 1 <= sched <= t - 1
     shown = ((sched_dev[None] >= 1) & (sched_dev[None] <= before))[:, :, :K]       # [n, B, K]
     vis_all = shown.index_select(2, ent) & mt[None]                              # [n, B, K*le]: shown[:, :K].gather(1, ent) & mt, every round at once
     zs = []
@@ -150,8 +171,11 @@ def thinker(m, batch, Ls, tapes, sched_dev, n):
 
 
 def deferred_loss(m, batch, golds):
-    """B3G2._loss's teacher-forced training loss, deferred and batched (see the header). -> (total, aux) exactly as _loss. Called by B3G2._loss only when it applies."""
-    m.defer_stats['deferred'] += 1
+    """B3G2._loss's teacher-forced training loss, deferred and batched (see the header). -> (total, aux) exactly as _loss. Called by B3G2.loss only when it applies."""
+    if not getattr(m, '_defer_src_ok', False):                                   # once per model, before anything is drawn
+        check_source(m)
+        m._defer_src_ok = True
+    m.defer_counts['deferred'] += 1
     dev, B = batch['prompt_ids'].device, len(batch['rows'])
     KS, CKPT_FROM, settled, BOS, EOS, F_ = B3G2M.KS, B3G2M.CKPT_FROM, B3G2M.settled, B3G2M.BOS, B3G2M.EOS, B3G2M.F      # module globals read at call time, as _loss reads them
     Ls = [len(x['texts']) for x in golds]
@@ -176,12 +200,12 @@ def deferred_loss(m, batch, golds):
     i_call, i_eos = np.nonzero(ic_np)[0], np.nonzero(~ic_np)[0]
     n_call = len(i_call)
     c_inv = np.argsort(np.concatenate([i_call, i_eos]), kind='stable')            # bucket order -> pair order
-    inp_c, tgt_c, over_c = teacher_np([targets[j] for j in i_call], m.WCAP, BOS, EOS)
-    inp_e, tgt_e, over_e = teacher_np([targets[j] for j in i_eos], m.WCAP, BOS, EOS)
+    inp_c, tgt_c, _ = teacher_np([targets[j] for j in i_call], m.WCAP, BOS, EOS)
+    inp_e, tgt_e, _ = teacher_np([targets[j] for j in i_eos], m.WCAP, BOS, EOS)
     a_t, a_i, ok = answer_pairs(last, has, n)
     Q = len(a_t)
     n_a0 = int((a_t < CKPT_FROM).sum())                                          # answer pairs of rounds < CKPT_FROM come first (rounds ascending)
-    inp_r, tgt_r, over_a = teacher_np([x['ans_ids'] for x in golds], m.WCAP, BOS, EOS)       # the answer teacher, built once as the original, rows indexed per pair below
+    inp_r, tgt_r, _ = teacher_np([x['ans_ids'] for x in golds], m.WCAP, BOS, EOS)       # the answer teacher, built once as the original, rows indexed per pair below
     pk = Pack()
     for name, a in (('sched', sched), ('cf_call', cf_np[i_call]), ('cf_eos', cf_np[i_eos]), ('c_inv', c_inv), ('c_rows', np.array(c_rows, np.int64)), ('inp_c', inp_c), ('tgt_c', tgt_c),
                     ('inp_e', inp_e), ('tgt_e', tgt_e), ('a_flat', a_t * B + a_i), ('a_rows', a_i), ('inp_a', inp_r[a_i]), ('tgt_a', tgt_r[a_i]), ('has', has.astype(np.int64)),

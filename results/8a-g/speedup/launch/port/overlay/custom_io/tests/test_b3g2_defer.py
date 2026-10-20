@@ -3,7 +3,7 @@
   PYTHONPATH=<port tree> python <port tree>/custom_io/tests/test_b3g2_defer.py      (plain-python runner: prints PASS / FAIL / SKIP per test and a summary; exit 1 on any FAIL; a SKIP is not a pass)
   env: BASE_TREE=<folder holding the UNMODIFIED custom_io of 74d6e92c75> (T1; else the test builds one with `git archive 74d6e92c75 custom_io`, needs a git checkout with that commit: BASE_REPO),
        G2FA4_TRAIN=<g2fa4 overlay/train.py> (T4 b / e; else looked for above this file), DEFER_T4=0 skips the train.py subprocess tests.
-  Build the port tree with port/make_port_tree.py OUT_DIR first (this file is part of it).
+  Build the port tree with port/make_port_tree.py OUT_DIR first (this file is part of it). ALLOW_SKIP=1: a SKIP does not fail the run (default: it does). PORT_OVERLAY=<port/overlay> for the sha check of the tree.
 
   T1 flag-off bitwise: the port's b3g2.py with speed_defer False == the UNMODIFIED b3g2.py (loss, aux, every gradient, RNG states, final weights, state_dict keys / shapes) over 3 AdamW updates,
      two subprocesses on two trees, gap_p and ans_drill on (the draws matter).
@@ -68,7 +68,7 @@ def dump(out):
     m = build_model(0)
     has_flag = hasattr(m, 'speed_defer')
     if has_flag:
-        assert m.speed_defer is False and m.defer_stats == dict(deferred=0, fallback=0)
+        assert m.speed_defer is False and m.defer_counts == dict(deferred=0, fallback=0)
     decay = [p for p in m.parameters() if p.ndim >= 2]
     rest = [p for p in m.parameters() if p.ndim < 2]
     opt = torch.optim.AdamW([{'params': decay, 'weight_decay': 0.1}, {'params': rest, 'weight_decay': 0.0}], lr=3e-3, betas=(0.9, 0.95))
@@ -140,6 +140,52 @@ def say(*a):
     print('   ', *a, flush=True)
 
 
+BASE_PINS = {'custom_io/models/b3g2.py': 'a4c61f0b567ec7e62b3233549be63eca7bca2a3f35a934dfc217fa49390868ce', 'custom_io/train.py': 'e05762ecca1af18f6260f09e5974e03b884e2f5ff5c21a4b801eed913d16793d'}
+
+
+def sha_file(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+def find_overlay():
+    """The reference overlay (port/overlay in the repo): $PORT_OVERLAY, else found by walking up from this file."""
+    p = os.environ.get('PORT_OVERLAY')
+    if p:
+        return p
+    d = HERE
+    while True:
+        cand = os.path.join(d, 'results', '8a-g', 'speedup', 'launch', 'port', 'overlay')
+        if os.path.isdir(cand):
+            return cand
+        up = os.path.dirname(d)
+        if up == d:
+            return None
+        d = up
+
+
+def test_000_the_trees_under_test_are_the_pinned_ones():
+    """Before anything runs: the base tree's b3g2.py / train.py are the 74d6e92c75 pins, and every file of the port tree under test that the overlay owns has the overlay's sha256 (FAIL on a mismatch)."""
+    base = base_tree()
+    bad = [f'base {rel}: sha256 {sha_file(os.path.join(base, rel))[:16]} != pin {pin[:16]}' for rel, pin in BASE_PINS.items() if sha_file(os.path.join(base, rel)) != pin]
+    tree = need_tree()
+    ov = find_overlay()
+    if ov is None:
+        raise unittest.SkipTest('the reference overlay (port/overlay) was not found: set PORT_OVERLAY; the port tree could not be checked')
+    n = 0
+    for dp, dn, fn in os.walk(os.path.join(ov, 'custom_io')):
+        dn[:] = [d for d in dn if d != '__pycache__']
+        for f in fn:
+            if f.endswith('.pyc'):
+                continue
+            rel = os.path.relpath(os.path.join(dp, f), ov)
+            mine = os.path.join(tree, rel)
+            n += 1
+            if not os.path.exists(mine) or sha_file(mine) != sha_file(os.path.join(dp, f)):
+                bad.append(f'port tree {rel}: differs from {os.path.join(ov, rel)}')
+    assert not bad, '; '.join(bad)
+    say(f'trees: base b3g2.py / train.py match the 74d6e92c75 pins; {n} overlay files match the port tree {tree}')
+
+
 def test_t1_flag_off_is_bitwise_the_unmodified_b3g2():
     tree, base = need_tree(), base_tree()
     r0 = child(base, os.path.join(SCRATCH, 'dump_base.pt'))
@@ -191,12 +237,16 @@ def nontrivial_right():
         if bool(v.any(1).any()):
             RIGHT_MARGIN.append(float((q - q.round()).abs()[v.any(1)].min().detach()))
         return v.any(1) & (((tgt.clamp(min=0).sum(1) + q.floor().long()) % 3) != 2)
+    import custom_io.models.b3g2_defer as DF
+    old_hash = DF.SRC_HASH_WRITER['right']
     BW.right = staticmethod(right)
+    DF.SRC_HASH_WRITER['right'] = DF.src_hash(right)                         # the port's source guard knows the stand-in
     del RIGHT_MARGIN[:]
     try:
         yield
     finally:
         BW.right = orig
+        DF.SRC_HASH_WRITER['right'] = old_hash
 
 
 def assert_margin():
@@ -290,7 +340,7 @@ def scenario(name, rows, K, tweak=None, seen=None):
     r0, r1 = one(m0, mb, K), one(m1, mb, K)
     c = compare(r0, r1)
     check_close(c, name)
-    assert m1.defer_stats == dict(deferred=1, fallback=0) and m0.defer_stats == dict(deferred=0, fallback=0), (m0.defer_stats, m1.defer_stats)
+    assert m1.defer_counts == dict(deferred=1, fallback=0) and m0.defer_counts == dict(deferred=0, fallback=0), (m0.defer_counts, m1.defer_counts)
     if seen is not None:
         B = len(rows)
         seen['aux'].append(r0['aux'])
@@ -452,13 +502,13 @@ def test_t3_fallbacks_are_bitwise_the_original_and_counted():
         a, b = fn(m0), fn(m1)
         same({k: v for k, v in a.items()}, {k: v for k, v in b.items()}, name)
         n_fb += 1
-        assert m1.defer_stats == dict(deferred=0, fallback=n_fb) and m0.defer_stats == dict(deferred=0, fallback=0), (name, m1.defer_stats, m0.defer_stats)
-        say(f'T3 {name}: bitwise the original; defer_stats {m1.defer_stats}')
+        assert m1.defer_counts == dict(deferred=0, fallback=n_fb) and m0.defer_counts == dict(deferred=0, fallback=0), (name, m1.defer_counts, m0.defer_counts)
+        say(f'T3 {name}: bitwise the original; defer_counts {m1.defer_counts}')
     # the model that took the fallbacks has had the same draws as its twin: the training path now runs the deferred loss, close to the original
     m0.zero_grad(set_to_none=True); m1.zero_grad(set_to_none=True)
     r0, r1 = train_loss(m0), train_loss(m1)
     check_close(compare(r0, r1), 'training path after the fallbacks')
-    assert m1.defer_stats == dict(deferred=1, fallback=3), m1.defer_stats
+    assert m1.defer_counts == dict(deferred=1, fallback=3), m1.defer_counts
     # a copy writer is a fallback too (the rule only; its original body is not run: B3G2 never has a copy writer)
     m2 = build_model(0)
     m2.speed_defer = True
@@ -467,16 +517,78 @@ def test_t3_fallbacks_are_bitwise_the_original_and_counted():
         m2.loss(mb)
     except Exception:                                                           # noqa: BLE001 - the original body may not support a copy writer; the counter is what is asserted
         pass
-    assert m2.defer_stats == dict(deferred=0, fallback=1), m2.defer_stats
-    say(f'T3 training path: defer_stats {m1.defer_stats}; writer.copy True: counted as a fallback ({m2.defer_stats})')
+    assert m2.defer_counts == dict(deferred=0, fallback=1), m2.defer_counts
+    say(f'T3 training path: defer_counts {m1.defer_counts}; writer.copy True: counted as a fallback ({m2.defer_counts})')
+
+
+def test_source_guard_shipped_hashes_match_the_port_tree():
+    import custom_io.models.b3g2_defer as DF
+    m = build_model(0)
+    hs = DF.source_hashes(m)
+    bad = {k: v for k, v in hs.items() if v[0] != v[1]}
+    assert not bad and len(hs) == len(DF.SRC_HASH) + len(DF.SRC_HASH_WRITER) + len(DF.SRC_HASH_TOOL), bad
+    DF.check_source(m)
+    say('source guard: ' + ', '.join(f'{k} {v[0]}' for k, v in hs.items()))
+
+
+def test_source_guard_raises_naming_the_method_that_changed():
+    import custom_io.models.b3g2 as g
+    import custom_io.models.tool as T
+    import custom_io.models.tool_h1 as H
+    from custom_io.models.writer import ByteWriter
+    rows = mk_rows(8)
+    mb = batch_of(rows)
+    targets = [(g.B3G2, 'call_pass', 'B3G2.call_pass'), (g.B3G2, '_loss', 'B3G2._loss'), (g.B3G2, 'plan_np', 'B3G2.plan_np'), (ByteWriter, 'nll', 'ByteWriter.nll'), (T.Tool, 'tape_of', 'Tool.tape_of'),
+               (H.ToolH1, 'think', 'ToolH1.think')]
+    for cls, name, label in targets:
+        orig_attr = cls.__dict__[name]
+        fn = orig_attr.__func__ if isinstance(orig_attr, staticmethod) else orig_attr
+
+        def patched(*a, __fn=fn, **k):                                          # a different source text, the same behaviour
+            return __fn(*a, **k)
+        setattr(cls, name, staticmethod(patched) if isinstance(orig_attr, staticmethod) else patched)
+        try:
+            m = build_model(0)
+            m.speed_defer = True
+            try:
+                m.loss(mb)
+            except RuntimeError as e:
+                assert label in str(e) and 'sha1' in str(e), str(e)
+            else:
+                raise AssertionError(f'no RuntimeError with {label} patched')
+            assert m.defer_counts == dict(deferred=0, fallback=0) and not getattr(m, '_defer_src_ok', False)
+        finally:
+            setattr(cls, name, orig_attr)
+        say(f'source guard: a changed {label} -> RuntimeError naming it')
+    m = build_model(0)                                                           # and everything restored: the guard passes again
+    m.speed_defer = True
+    m.loss(mb)
+    assert m.defer_counts == dict(deferred=1, fallback=0) and m._defer_src_ok
+
+
+def test_trace_loss_with_speed_defer_runs_the_original_and_counts_nothing():
+    """trace_loss (ST1) calls _loss directly: it never takes the deferred path, speed_defer or not, and counts nothing."""
+    rows = mk_rows(12)
+    mb = batch_of(rows)
+    m0, m1 = pair(rows)
+    traces = [dict(calls=[(t, '7') for t in m0.trace_of(r)['gold']['texts']], answer='42') for r in rows]
+    outs = []
+    for m in (m0, m1):
+        torch.manual_seed(5)
+        loss, aux = m.trace_loss(mb, traces)
+        loss.backward()
+        outs.append(dict(loss=loss.detach(), aux=aux, grads=[None if p.grad is None else p.grad.clone() for p in m.parameters()], rng=(torch.get_rng_state(), m._gap_rng.getstate(), m._drill_rng.getstate())))
+    same(outs[0], outs[1], 'trace_loss')
+    assert m1.defer_counts == dict(deferred=0, fallback=0) and m0.defer_counts == dict(deferred=0, fallback=0), m1.defer_counts
+    say('trace_loss with speed_defer True: bitwise the original, defer_counts untouched')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- pieces
 def test_attributes_are_plain_and_the_state_dict_is_unchanged():
     m = build_model(0)
-    assert m.speed_defer is False and m.defer_stats == dict(deferred=0, fallback=0)
+    assert m.speed_defer is False and m.defer_counts == dict(deferred=0, fallback=0)
     assert not any('defer' in k for k in m.state_dict()) and not any('defer' in n for n, _ in m.named_parameters()) and not any('defer' in n for n, _ in m.named_buffers())
-    assert 'speed_defer' not in m._parameters and 'speed_defer' not in m._buffers and 'defer_stats' not in m._modules
+    assert 'speed_defer' not in m._parameters and 'speed_defer' not in m._buffers and 'defer_counts' not in m._modules
 
 
 def test_plan_np_is_plan_without_the_device_copy():
@@ -636,6 +748,15 @@ def load_module(path, name):
     return mod
 
 
+def g2fa4_tree():
+    """The base package with ONLY the g2fa4 train.py replaced = what src-b3g2ck is."""
+    g2 = os.path.join(SCRATCH, 'g2fa4_tree')
+    if not os.path.exists(g2):
+        shutil.copytree(base_tree(), g2, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        shutil.copyfile(g2fa4_train(), os.path.join(g2, 'custom_io', 'train.py'))
+    return g2
+
+
 def test_t4a_speed_arms_on_a_model_without_the_writer_exits_with_a_message():
     tree = t4_on()
     data = make_data()
@@ -701,32 +822,28 @@ def test_t4d_a_speed_run_resumes_after_a_kill_and_reports_its_arm():
     res = json.load(open(os.path.join(out, 'RESULT.json')))
     assert res['config']['speed_arms'] == 'defer' and res['steps'] == N and res['resumed_from'] == [4], res['config']
     ds = res['defer_stats']
-    assert ds['deferred'] > 0 and ds['fallback'] == 0, ds
-    # an uninterrupted speed run: the same trace (the checkpoint restores weights, optimizer, every RNG incl. the model's own streams, defer_stats)
+    assert ds == dict(deferred=4, fallback=0), ds          # the counts are NOT in the checkpoint (that keeps its format the g2fa4 one): they count the resumed segment only, updates 5..6 x accum 2
+    # an uninterrupted speed run: the same trace (the checkpoint restores weights, optimizer, every RNG incl. the model's own streams)
     out_u = fresh('t4d_on_straight')
     rc, so_u, se_u = trun(tree, targs(data, out_u, N, ['--ckpt-every', '2', '--speed-arms', 'defer']))
     assert rc == 0, (so_u[-800:], se_u[-2500:])
     res_u = json.load(open(os.path.join(out_u, 'RESULT.json')))
     t_all = [e for e in trace(so1) if e['step'] <= 4] + trace(so2)
     assert t_all == trace(so_u), 'speed run: kill + resume trace differs from the uninterrupted run'
-    assert res['defer_stats'] == res_u['defer_stats'], (res['defer_stats'], res_u['defer_stats'])
+    assert res_u['defer_stats'] == dict(deferred=12, fallback=0), res_u['defer_stats']
     # flag off: no speed_arms key anywhere, no defer_stats
     out_off = fresh('t4d_off')
     rc, so_f, se_f = trun(tree, targs(data, out_off, 4, ['--ckpt-every', '2']))
     assert rc == 0, (so_f[-800:], se_f[-2500:])
     res_f = json.load(open(os.path.join(out_off, 'RESULT.json')))
     assert 'speed_arms' not in res_f['config'] and 'defer_stats' not in res_f and not any('speed_arms' in e for e in events(so_f)), res_f['config']
-    say(f'T4d: speed run killed after the step-4 checkpoint, resumed from 4: steps 5..6, trace == uninterrupted speed run, RESULT.json config.speed_arms {res["config"]["speed_arms"]!r}, defer_stats {ds} '
+    say(f'T4d: speed run killed after the step-4 checkpoint, resumed from 4: steps 5..6, trace == uninterrupted speed run, RESULT.json config.speed_arms {res["config"]["speed_arms"]!r}, defer_stats {ds} (counts since the restart) '
         f'(uninterrupted: {res_u["defer_stats"]}); flag-off RESULT.json has no speed_arms / defer_stats')
 
 
 def test_t4e_flag_off_run_equals_the_g2fa4_train_py_run():
     tree, data = t4_on(), make_data()
-    base = base_tree()
-    g2 = os.path.join(SCRATCH, 'g2fa4_tree')                                    # the base package with ONLY the g2fa4 train.py replaced = what src-b3g2ck is
-    if not os.path.exists(g2):
-        shutil.copytree(base, g2, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        shutil.copyfile(g2fa4_train(), os.path.join(g2, 'custom_io', 'train.py'))
+    g2 = g2fa4_tree()
     N = 4
     r = []
     for name, tr in (('g2fa4', g2), ('port', tree)):
@@ -748,10 +865,7 @@ def test_t4e_flag_off_run_equals_the_g2fa4_train_py_run():
 def test_t4f_an_old_g2fa4_checkpoint_resumes_in_the_port_tree_with_the_flag_off():
     """The flag-off hash is the g2fa4 one, so a checkpoint written by the g2fa4 train.py (killed after the step-4 checkpoint) resumes in the port tree and finishes as the uninterrupted g2fa4 run does."""
     tree, data = t4_on(), make_data()
-    g2 = os.path.join(SCRATCH, 'g2fa4_tree')
-    if not os.path.exists(g2):
-        shutil.copytree(base_tree(), g2, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        shutil.copyfile(g2fa4_train(), os.path.join(g2, 'custom_io', 'train.py'))
+    g2 = g2fa4_tree()
     N = 6
     out = fresh('t4f_mixed')
     a = targs(data, out, N, ['--ckpt-every', '2', '--resume'])
@@ -767,29 +881,53 @@ def test_t4f_an_old_g2fa4_checkpoint_resumes_in_the_port_tree_with_the_flag_off(
     same(torch.load(os.path.join(out, 'checkpoint.pt'), map_location='cpu', weights_only=False)['model'], torch.load(os.path.join(out_s, 'checkpoint.pt'), map_location='cpu', weights_only=False)['model'], 'final weights')
     say('T4f: g2fa4 train.py killed after its step-4 checkpoint, resumed by the port train.py (flag off): steps 5..6 and the final weights equal the uninterrupted g2fa4 run')
 
-def test_t4g_a_port_checkpoint_resumed_in_the_g2fa4_tree_fails_loudly():
-    """A checkpoint written by the port tree (flag off) carries the model's defer_stats among its *_stats counters. The g2fa4 tree's b3g2.py has no such attribute: --resume must die with a
-    traceback (rc != 0, AttributeError naming defer_stats) BEFORE any training line, never continue silently. Never move such checkpoints to src-b3g2ck."""
+def test_t4g_a_flag_off_port_checkpoint_resumes_in_the_g2fa4_tree_bitwise():
+    """The counters are not *_stats dicts, so a flag-off port-tree checkpoint has the g2fa4 format: killed after the step-4 checkpoint in the port tree, it resumes in the g2fa4 tree (src-b3g2ck's
+    code) and finishes bitwise as the uninterrupted g2fa4 run does."""
     tree, data = t4_on(), make_data()
-    g2 = os.path.join(SCRATCH, 'g2fa4_tree')
-    if not os.path.exists(g2):
-        shutil.copytree(base_tree(), g2, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-        shutil.copyfile(g2fa4_train(), os.path.join(g2, 'custom_io', 'train.py'))
+    g2 = g2fa4_tree()
     out = fresh('t4g')
     a = targs(data, out, 6, ['--ckpt-every', '2', '--resume'])
     rc, so1, se1 = trun(tree, a, kill_after=4)
     assert rc == 137 and os.path.exists(os.path.join(out, 'ckpt', 'step-4.pt')), (rc, se1[-1500:])
+    ck = torch.load(os.path.join(out, 'ckpt', 'step-4.pt'), map_location='cpu', weights_only=False)
+    assert not any('defer' in k for k in ck['model_streams'][1]) and not any('defer' in k for k in ck['model_streams'][0]), 'the port checkpoint must not store the defer counters'
     rc, so2, se2 = trun(g2, a)
-    assert rc != 0 and 'AttributeError' in se2 and 'defer_stats' in se2, (rc, se2[-1500:])
-    assert not trace(so2) and not any(e.get('event') == 'resumed' for e in events(so2)), 'no training line and no `resumed` event may precede the failure'
-    assert not os.path.exists(os.path.join(out, 'RESULT.json')) or json.load(open(os.path.join(out, 'RESULT.json'))).get('steps') != 6
-    say(f'T4g: port-tree checkpoint resumed in the g2fa4 tree: rc {rc}, {se2.strip().splitlines()[-1][:120]}')
+    assert rc == 0 and any(e.get('event') == 'resumed' and e['step'] == 4 for e in events(so2)), (rc, so2[-800:], se2[-2000:])
+    out_s = fresh('t4g_straight')
+    rc, so_s, se_s = trun(g2, targs(data, out_s, 6, ['--ckpt-every', '2', '--resume']))
+    assert rc == 0, (so_s[-800:], se_s[-1500:])
+    assert [e for e in trace(so1) if e['step'] <= 4] + trace(so2) == trace(so_s), 'trace differs from the uninterrupted g2fa4 run'
+    same(torch.load(os.path.join(out, 'checkpoint.pt'), map_location='cpu', weights_only=False)['model'], torch.load(os.path.join(out_s, 'checkpoint.pt'), map_location='cpu', weights_only=False)['model'], 'final weights')
+    say('T4g: flag-off port-tree checkpoint (no defer counters inside) resumed in the g2fa4 tree: steps 5..6 and final weights equal the uninterrupted g2fa4 run')
+
+
+def test_t4h_a_flag_on_port_checkpoint_resumed_in_the_g2fa4_tree_is_refused_by_the_hash():
+    tree, data = t4_on(), make_data()
+    g2 = g2fa4_tree()
+    out = fresh('t4h')
+    rc, so1, se1 = trun(tree, targs(data, out, 6, ['--ckpt-every', '2', '--resume', '--speed-arms', 'defer']), kill_after=4)
+    assert rc == 137 and os.path.exists(os.path.join(out, 'ckpt', 'step-4.pt')), (rc, se1[-1500:])
+    rc, so2, se2 = trun(g2, targs(data, out, 6, ['--ckpt-every', '2', '--resume']))        # the g2fa4 train.py has no --speed-arms: same line without it
+    assert rc == 1 and '--resume refused' in se2 and 'config hash' in se2 and 'AttributeError' not in se2 and not trace(so2), (rc, se2[-1000:])
+    say(f'T4h: flag-on port checkpoint resumed in the g2fa4 tree: refused by the config hash (rc {rc}), no AttributeError, no training line')
+
+
+def test_t4i_speed_arms_with_talk_rounds_all_exits_at_startup_and_says_why():
+    tree, data = t4_on(), make_data()
+    rc, so, se = trun(tree, targs(data, fresh('t4i'), 2, ['--speed-arms', 'defer'], cfg=dict(CFG, talk_rounds='all')))
+    assert rc == 1 and "can never take the deferred path" in se and "talk_rounds is 'all'" in se and not trace(so), (rc, se[-800:])
+    rc, so, se = trun(tree, targs(data, fresh('t4i2'), 2, [], cfg=dict(CFG, talk_rounds='all')))        # without the flag the same model trains
+    assert rc == 0, (so[-500:], se[-1500:])
+    say('T4i: --speed-arms defer with cfg talk_rounds "all": rc 1 at startup ("... can never take the deferred path with this model: talk_rounds is \'all\' (the deferred writer needs \'last\')"); the same model without the flag trains')
+
 
 ALL = [(n, fn) for n, fn in sorted(globals().items(), key=lambda kv: kv[1].__code__.co_firstlineno if callable(kv[1]) and hasattr(kv[1], '__code__') else 0) if n.startswith('test_') and callable(fn)]
 
 
 def main():
-    bad, skipped, passed, t_all = 0, 0, 0, time.time()
+    """Runs every test_*; test_000 (the trees are the pinned ones) first and a FAIL there stops everything. Exit 1 on any FAIL, and on any SKIP unless ALLOW_SKIP=1 (a skip is not a pass)."""
+    bad, skipped, passed, t_all, why = 0, 0, 0, time.time(), []
     for n, fn in ALL:
         t0 = time.time()
         try:
@@ -798,15 +936,23 @@ def main():
             print(f'PASS {n} ({time.time() - t0:.1f}s)', flush=True)
         except unittest.SkipTest as e:
             skipped += 1
+            why.append(f'{n}: {e}')
             print(f'SKIP {n}: {e}', flush=True)
         except Exception:                                                        # noqa: BLE001
             import traceback
             bad += 1
             print(f'FAIL {n} ({time.time() - t0:.1f}s)', flush=True)
             traceback.print_exc()
+            if n.startswith('test_000'):
+                print('the trees under test are not the pinned ones: nothing else was run', flush=True)
+                break
     print(f'{passed} passed, {skipped} skipped, {bad} failed (of {len(ALL)}) in {time.time() - t_all:.1f}s', flush=True)
+    rc = 1 if bad else 0
+    if skipped and os.environ.get('ALLOW_SKIP') != '1':
+        print(f'EXIT 1: {skipped} test(s) skipped, and a skip is not a pass (ALLOW_SKIP=1 to accept): ' + ' | '.join(why), flush=True)
+        rc = 1
     shutil.rmtree(SCRATCH, ignore_errors=True)
-    return 1 if bad else 0
+    return rc
 
 
 if __name__ == '__main__':

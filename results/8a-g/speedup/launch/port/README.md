@@ -4,24 +4,23 @@
 
 ## What it is
 An overlay pack that ports the speed change "defer" (`launch/defer.py`, the GPU-RUN-4 / GPU-RUN-5 variant) into the production trainer of the B3G2 arm as an opt-in flag. With
-`--speed-arms defer`, `B3G2._loss` (teacher forcing, training, autograd on, `talk_rounds == 'last'`, no copy writer) runs `models/b3g2_defer.py`: one thinker-only loop, then one batched call pass
-and one batched answer pass over all (round, row) pairs, with every host-side list taken from the numpy schedule (`B3G2.plan_np`). Anything else (eval, `no_grad`, `talk_rounds 'all'`) runs the
-original body and is counted in `model.defer_stats['fallback']`. The ops, their order and the dtypes are those of `defer.py` (checked by `test_port_vs_harness.py`, bit for bit).
+`--speed-arms defer`, `B3G2.loss` (the training entry point train.py and the harness Trainer call; teacher forcing, training, autograd on, `talk_rounds == 'last'`, no copy writer) runs `models/b3g2_defer.py`: one thinker-only loop, then one batched call pass
+and one batched answer pass over all (round, row) pairs, with every host-side list taken from the numpy schedule (`B3G2.plan_np`). Anything else (eval, `no_grad`) runs `_loss` and is counted in `model.defer_counts['fallback']`. `_loss` itself is the BASE text (zero diff), so `trace_loss` / ST1 and every other `_loss` caller run the original and count nothing. train.py refuses `--speed-arms defer` at startup for a model that can never take the path (`talk_rounds != 'last'` or a copy writer). The first deferred call on a model checks a source guard (`SRC_HASH`: sha1[:12] of the sources of `loop`, `call_pass`, `ans_pass`, `answer_teacher`, `line_context`, `plan_np`, `_loss`, `loss`, `ByteWriter.teacher/nll/right`, `ToolH1.think`, `Tool.tape_of`) and raises RuntimeError naming the method on a mismatch. The ops, their order and the dtypes are those of `defer.py` (checked by `test_port_vs_harness.py`, bit for bit).
 
 ## Base it applies to (pins, the g2fa4 list)
 - `git archive 74d6e92c75 custom_io` (commit 74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6)
 - `custom_io/models/b3g2.py` sha256 `a4c61f0b567ec7e62b3233549be63eca7bca2a3f35a934dfc217fa49390868ce`
 - `custom_io/train.py` sha256 `e05762ecca1af18f6260f09e5974e03b884e2f5ff5c21a4b801eed913d16793d`, replaced by `results/8a-g/pc-job-cards/g2fa4/overlay/train.py`
   (sha256 `e75e45fa43c6a6422c0a0e4222e05d8afc27580ec6551100680ed8f9ecdc5015`, checkpoint / resume) = the tree "src-b3g2ck"
-- This pack then replaces `train.py` (adds `--speed-arms`) and `models/b3g2.py` (adds `plan_np`, `speed_defer`, `defer_stats`, the `_loss` switch), and adds `models/b3g2_defer.py` and
+- This pack then replaces `train.py` (adds `--speed-arms`) and `models/b3g2.py` (adds `plan_np`, `speed_defer`, `defer_counts`, the switch in `loss`; `_loss` untouched), and adds `models/b3g2_defer.py` and
   `tests/test_b3g2_defer.py`. Overlay file sha256 (as printed by `make_port_tree.py`):
-  `train.py` 7d382b15...a65585, `b3g2.py` 155d6dbb...a24444, `b3g2_defer.py` 363e5e16...480e92, `tests/test_b3g2_defer.py` 69947c88...b2b07 (the full values are printed on every build).
+  `train.py` a6a6ae42...d8593, `b3g2.py` 94fb4646...a4953, `b3g2_defer.py` 494b847c...b9fcb1, `tests/test_b3g2_defer.py` 760e5c49...826e9 (full values: printed on every build). `make_port_tree.py` also pins the g2fa4 train.py sha256 above and dies on a mismatch.
 
 ## Rules
 - **Numerics-changing ('near').** Per-row maths is the same but floating-point rounding is not (batched GEMMs, longer padded call width, one-shot gradient reductions). The thinker is bit-identical.
 - **Only fresh runs from update 0, under NEW run names.** Never resume a run into or out of a run with the arm. This is enforced: `--speed-arms` is in the config hash only when non-empty, so
   `--resume` refuses a change in either direction (T4c), and a flag-off hash is byte-identical to the g2fa4 train.py's, so old checkpoints still resume (T4b, T4f).
-- **No change to 8aB3G2A4 / A8 or their tree.** `make_port_tree.py` never writes into an existing folder (it refuses a non-empty OUT_DIR and the names `src-b3g2` / `src-b3g2ck`).
+- **No change to 8aB3G2A4 / A8 or their tree.** `make_port_tree.py` never writes into an existing folder (it refuses a non-empty OUT_DIR, and any OUT_DIR whose resolved path has an ancestor, or itself, named `src-b3g2` / `src-b3g2ck`).
 - Flag off (`--speed-arms ''`, the default) is bitwise the original model code (T1) and the original train.py behaviour (T4e).
 
 ## Build and run
@@ -33,14 +32,15 @@ python -m custom_io.train --model b3g2 ... --speed-arms defer --out RUN_NEW_NAME
 Tests (CPU, one thread; the first needs the base tree from `git archive 74d6e92c75 custom_io`, built by the test itself if BASE_TREE is unset; run from a git checkout that has the commit):
 ```
 export OMP_NUM_THREADS=1
-BASE_TREE=<base> G2FA4_TRAIN=<g2fa4 overlay/train.py> PYTHONPATH=OUT_DIR python OUT_DIR/custom_io/tests/test_b3g2_defer.py     # T1-T4, about 80 s  (DEFER_T4=0 skips the train.py subprocess tests)
+BASE_TREE=<base> G2FA4_TRAIN=<g2fa4 overlay/train.py> PYTHONPATH=OUT_DIR python OUT_DIR/custom_io/tests/test_b3g2_defer.py     # about 100 s; first checks the trees (base pins, overlay sha256; PORT_OVERLAY=<port/overlay> when run from a built tree outside the repo) and stops on a mismatch.  A SKIP makes the run exit 1 unless ALLOW_SKIP=1 (DEFER_T4=0 skips the train.py subprocess tests)
 BASE_TREE=<base> PORT_TREE=OUT_DIR python test_port_vs_harness.py                                                                  # port == harness, bitwise, about 30 s
 PROF_PKG_ROOT=<base> python ../test_defer.py                                                                                       # the harness's own tests, unchanged, on the base tree
 ```
-Rollback: drop `--speed-arms` **within the port tree** (flag off is bitwise the original). **Checkpoint caveat:** a checkpoint written by the port tree (flag on or off) carries `defer_stats`,
-because train.py's `model_streams` stores every `*_stats` dict of the model. Restoring it into a tree whose `b3g2.py` lacks the port's changes (src-b3g2ck, the g2fa4 tree) dies loudly:
-`AttributeError: 'B3G2' object has no attribute 'defer_stats'`, rc 1, before any training line and before the `resumed` event (test T4g). **Never move port-tree checkpoints to src-b3g2ck.**
-Old g2fa4 checkpoints resume in the port tree fine (T4f).
+Rollback: drop `--speed-arms` within the port tree (flag off is bitwise the original).
+**Checkpoint format:** the counters are `model.defer_counts`, not a `*_stats` dict, so train.py's `model_streams` (which stores every `*_stats` dict) does not capture them: a flag-off port-tree checkpoint has the g2fa4
+format and resumes in the g2fa4 tree (src-b3g2ck code) bitwise as the uninterrupted g2fa4 run (T4g); a flag-on port checkpoint resumed there is refused by the config hash, no AttributeError (T4h). Old g2fa4
+checkpoints resume in the port tree (T4f). Consequence: the counts are NOT in the checkpoint, so after a `--resume` of a speed run `RESULT.json["defer_stats"]` counts only the resumed segment (T4d: 4 deferred
+losses for updates 5..6 at accum 2, against 12 for an uninterrupted run). A flag-on checkpoint still must only be resumed in the port tree with `--speed-arms defer`.
 
 ## Spec correction (10-20, parent session)
 The per-tensor fp32 bar "every gradient tensor rel L2 <= 1e-6" was the parent's over-tight spec and is replaced by `test_t2_float64_same_maths`. The registered fp32 bar (solve report 4.1) is the flat one:
@@ -50,34 +50,45 @@ truth on them, the deferred path within 1.5e-6 / 2.2e-6). In float64 the origina
 in the committed test, on EVERY tensor, with loss rel 0.0: the same maths, so the fp32 difference is summation order only. The fp32 tests keep ln_z at 1e-5 and every other tensor at 1e-6
 (comment in the test points to the float64 test). The deferred path is unchanged: the port stays bit-equal to the GPU-tested harness `defer.py` (`test_port_vs_harness.py`, below).
 
-## Test results actually obtained (CPU, torch 2.11, one thread, 2026-10-20, final run)
-`test_b3g2_defer.py`: **17 passed, 0 skipped, 0 failed (of 17)**, 86 s.
+## Test results actually obtained (CPU, torch 2.11, one thread, 2026-10-20, review round 1)
+`test_b3g2_defer.py`: **23 passed, 0 skipped, 0 failed (of 23)**, 100 s.
 ```
+PASS test_000 the trees under test are the pinned ones (base b3g2.py / train.py == 74d6e92c75 pins; the port tree's overlay files == port/overlay sha256)
 PASS T1 flag-off bitwise: loss, aux, 68 gradient tensors, RNG states (torch, gap, drill) and final state_dict BITWISE equal to the unmodified b3g2.py over 3 AdamW updates (gap_p .5, ans_drill .5)
 PASS T2 deferred vs original (fp32), real ByteWriter.right   (12 scenarios: K 4 / 8..32 / drawn, 4 rows, gap_p 1, ans_drill 1, only call rows, only no-call rows, writer cap 7, label right)
 PASS T2 deferred vs original (fp32), NON-TRIVIAL right       (the same 12; call_acc, eos_acc, right_last, stop_y, stop_acc all strictly between 0 and 1 somewhere; nll*10 edge margin 1.75e-04 >= 5e-5)
-PASS T2 float64 same maths (loss rel <= 1e-12, EVERY tensor rel L2 <= 1e-12): K 4 worst 1.4e-15, K 32 2.6e-15, gap+drill K 32 2.6e-15, 4 rows K 16 7.0e-16, cap 7 1.3e-15, label right 1.5e-15; loss rel 0.0
+PASS T2 float64 same maths (loss rel <= 1e-12, EVERY tensor rel L2 <= 1e-12): worst 1.4e-15 (K 4), 2.6e-15 (K 32), 2.6e-15 (gap+drill K 32); loss rel 0.0
 PASS T2 mutation check (4 wrong deferred losses are caught by the marks)
-PASS T3 fallbacks (eval, no_grad, talk_rounds 'all') bitwise the original, counted: defer_stats {'deferred': 0, 'fallback': 3}; training path {'deferred': 1, 'fallback': 3}
+PASS T3 fallbacks (eval, no_grad, talk_rounds 'all') bitwise the original, counted: defer_counts {'deferred': 0, 'fallback': 3}; training path {'deferred': 1, 'fallback': 3}
+PASS source guard: the shipped hashes match the port tree (13 methods); a changed B3G2.call_pass / _loss / plan_np, ByteWriter.nll, Tool.tape_of or ToolH1.think -> RuntimeError naming it
+PASS trace_loss with speed_defer True: bitwise the original, defer_counts untouched
 PASS attributes plain / state_dict unchanged; plan_np == plan; teacher_np == ByteWriter.teacher; schedule lists / answer pairs == the loop's host reads
 PASS T4a speed arm on plain_tf exits with the message; T4b flag-off config hash == g2fa4's (1a1058f4d313cccf; with defer 88b98660c3c734af)
 PASS T4c a change of speed arms refused at --resume both ways (rc 1); same flags resume
-PASS T4d speed run killed after the step-4 checkpoint resumes from 4, trace == uninterrupted speed run, RESULT.json config.speed_arms 'defer', defer_stats {'deferred': 12, 'fallback': 0}; flag-off RESULT.json has no speed_arms / defer_stats
+PASS T4d speed run killed after the step-4 checkpoint resumes from 4, trace == uninterrupted speed run, RESULT.json config.speed_arms 'defer', defer_stats {'deferred': 4, 'fallback': 0} (resumed segment only); flag-off RESULT.json has no speed_arms / defer_stats
 PASS T4e flag-off port train.py == g2fa4 train.py (train lines, start event, RESULT.json keys/config, config hash, final weights)
 PASS T4f a g2fa4 checkpoint resumes in the port tree and finishes as the uninterrupted g2fa4 run
-PASS T4g a port-tree checkpoint resumed in the g2fa4 tree fails loudly: rc 1, AttributeError: 'B3G2' object has no attribute 'defer_stats', no train line, no `resumed` event
+PASS T4g a flag-off port-tree checkpoint resumes in the g2fa4 tree and finishes bitwise as the uninterrupted g2fa4 run (no defer counters in the checkpoint)
+PASS T4h a flag-on port-tree checkpoint resumed in the g2fa4 tree is refused by the config hash (rc 1), no AttributeError, no training line
+PASS T4i --speed-arms defer with cfg talk_rounds 'all' exits at startup (rc 1) saying why; the same model without the flag trains
 ```
+Negative checks of the runners (done by hand): an edited port file or base train.py makes test_000 FAIL and nothing else runs; `DEFER_T4=0` or a missing reference overlay makes the run exit 1 and print the skip reasons.
 fp32 T2 numbers (all scenarios, both rights): loss relative diff 0.0 (bitwise on this CPU); flat gradient rel L2 6.6e-08 .. 9.3e-08; gradient cosine (per tensor and overall) 1.0000000000; aux keys equal,
-counts and `plan_*` exact; RNG states equal; per-tensor rel L2 <= 1e-6 for every tensor except `writer.ln_z.weight` / `.bias` (K 4: 7.8e-07; K 32: 2.1e-06, held to 1e-5).
+counts and `plan_*` exact; RNG states equal; per-tensor rel L2 <= 1e-6 for every tensor except `writer.ln_z.weight` / `.bias` (K 4: 7.8e-07; K 32: 2.1e-06, held to 1e-5; see the spec correction).
 
-`test_port_vs_harness.py`: **1 passed, 0 skipped, 0 failed (of 1)**, 27 s. 24 scenarios (12 real right, 12 non-trivial right): loss, every aux value, every gradient tensor and the RNG states BIT-EQUAL between the
-harness `Defer` variant on the base tree and `speed_defer=True` on the port tree; 3 AdamW updates through `Trainer.update()` (losses 36.7156906, 99.8713531, 55.9968453) and the final 72 state_dict
-tensors BIT-EQUAL; 12 / 12 deferred losses. (Mutation check: a 1e-7 scale in the port's answer accumulation makes it FAIL at `aux.ans`.)
+`test_port_vs_harness.py`: **2 passed, 0 skipped, 0 failed (of 2)**, 30 s (test_000 trees + the comparison). 24 scenarios (12 real right, 12 non-trivial right): loss, every aux value, every gradient tensor and the RNG
+states BIT-EQUAL between the harness `Defer` variant on the base tree and `speed_defer=True` on the port tree (the loss path is now `B3G2.loss`, with the source guard active); 3 AdamW updates through
+`Trainer.update()` (losses 36.7156906, 99.8713531, 55.9968453) and the final 72 state_dict tensors BIT-EQUAL; 12 / 12 deferred losses. (Mutation check: a 1e-7 scale in the port's answer accumulation makes it FAIL at `aux.ans`.)
 
-`../test_defer.py` unchanged on the base tree (`PROF_PKG_ROOT=<base>`): **24 passed, 2 skipped (the DEFER_REAL_SHAPE ones), 0 failed (of 26)**, 74 s.
+`../test_defer.py` unchanged on the base tree (`PROF_PKG_ROOT=<base>`): **24 passed, 2 skipped (the DEFER_REAL_SHAPE ones, which are not run here by design), 0 failed (of 26)**, 75 s.
+
+## Possible later change (numerics-changing; would need its own run)
+The per-round `lcall = lcall + ...` and `acc.index_add` loops in `deferred_loss` stay as they are: they keep the original's summation order and the bit-equality with the GPU-tested code. Replacing them by
+single reductions would change the numerics again and would need its own run and its own tests.
 
 ## Deviations from the spec, and open points
 - fp32 per-tensor bar: the two `writer.ln_z` tensors are held to 1e-5, every other tensor to 1e-6 (see the spec correction); the float64 test carries the same-maths claim. Aux counts and ratios of counts are held exact, stricter than asked.
+- The dispatch is in `B3G2.loss` (not `_loss`), reviewed 10-20: the golds are drawn first (same drill draws), `_loss` is the base text.
 - `deferred_loss` reads the module constants (`KS`, `CKPT_FROM`, `settled`, `BOS`, `EOS`, `F`, `N_REG`) from the `custom_io.models.b3g2` module at call time, which are the same objects `defer.py` read from
   `__globals__` (and lets `caps.apply` / the tests' `KS` pinning take effect).
 - The `writer.copy` fallback is tested for its counter only (B3G2 never has a copy writer; the original body is not run on one).

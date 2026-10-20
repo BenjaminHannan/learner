@@ -1,6 +1,7 @@
 """test_port_vs_harness.py: the port IS the GPU-tested code (DRAFT until the coordinator has code-reviewed the pack). CPU, fp32, one thread.
 
-  python test_port_vs_harness.py          (env: BASE_TREE=<folder with the UNMODIFIED custom_io of 74d6e92c75>, else built with git archive; PORT_TREE=<a tree made by make_port_tree.py>, else built into a temp dir)
+  python test_port_vs_harness.py          (env: BASE_TREE=<folder with the UNMODIFIED custom_io of 74d6e92c75>, else built with git archive; PORT_TREE=<a tree made by make_port_tree.py>, else built into a temp dir;
+   both are checked first: the base pins and the overlay sha256 values; ALLOW_SKIP=1 lets a SKIP pass)
 
 What it compares: model A = the harness's variant (launch/defer.py, `Defer`, set up exactly as launch/test_defer.py does through prof_train.Trainer(..., ['defer'])) on the BASE tree; model B = the
 same model on the PORT tree with `speed_defer = True` and NO harness variant. defer.py's source-hash guard checks B3G2.plan / _loss, which the port edits, so it would refuse on the port tree:
@@ -10,12 +11,15 @@ then 3 optimizer updates through Trainer.update() (loss of each update, final st
 4-row micro-batch, gap_p 1, ans_drill 1, only call rows, only no-call rows, writer cap 7, label 'right'), each with the real ByteWriter.right and with the non-trivial stand-in.
 A SKIP is not a pass; exit code 1 on any FAIL.
 """
-import contextlib, os, subprocess, sys, tempfile, time, unittest
+import contextlib, hashlib, os, shutil, subprocess, sys, tempfile, time, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAUNCH = os.path.normpath(os.path.join(HERE, '..'))
 PROFDIR = os.path.normpath(os.path.join(LAUNCH, '..', 'prof'))
 COMMIT = '74d6e92c75'
+OVERLAY = os.path.join(HERE, 'overlay')
+BASE_PINS = {'custom_io/models/b3g2.py': 'a4c61f0b567ec7e62b3233549be63eca7bca2a3f35a934dfc217fa49390868ce', 'custom_io/train.py': 'e05762ecca1af18f6260f09e5974e03b884e2f5ff5c21a4b801eed913d16793d'}
+TREES = {}                                                                     # scratch / base / port, made (and checked) once by test_000 and reused by the test
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- child
@@ -42,10 +46,25 @@ def child(role, out):
     def run(mb, K, tw=None):
         r = TD.run_one(w, a, names, mb, K, tweak=flag(tw))
         if role == 'port':
-            assert r['variants'] == [] and r['model'].defer_stats == dict(deferred=1, fallback=0), (r['variants'], r['model'].defer_stats)
+            assert r['variants'] == [] and r['model'].defer_counts == dict(deferred=1, fallback=0), (r['variants'], r['model'].defer_counts)
         else:
             assert r['stats']['defer']['deferred_losses'] == 1 and r['stats']['defer']['fallback_losses'] == 0, r['stats']
         return dict(loss=r['loss'], aux={k: (v.detach().clone() if torch.is_tensor(v) else v) for k, v in r['aux'].items()}, grads=r['grads'], rng=r['rng'])
+
+    @contextlib.contextmanager
+    def port_guard_knows_right(role):
+        """TD.nontrivial_right moves the harness's source-hash guard for ByteWriter.right to its stand-in; the port's own guard (b3g2_defer.SRC_HASH_WRITER) is moved the same way."""
+        if role != 'port':
+            yield
+            return
+        import custom_io.models.b3g2_defer as DF
+        from custom_io.models.writer import ByteWriter
+        old = DF.SRC_HASH_WRITER['right']
+        DF.SRC_HASH_WRITER['right'] = DF.src_hash(ByteWriter.__dict__['right'])
+        try:
+            yield
+        finally:
+            DF.SRC_HASH_WRITER['right'] = old
 
     mb16, mb4 = TD.full_batch(w), TD.micro_batch(w, 1)
     calling = [i for i, r in enumerate(mb16['rows']) if r.get('steps')]
@@ -59,7 +78,7 @@ def child(role, out):
     res = dict(real={}, nontrivial={}, updates=None)
     for name, mb, K, tw in scen:
         res['real'][name] = run(mb, K, tw)
-    with TD.nontrivial_right():
+    with TD.nontrivial_right(), port_guard_knows_right(role):
         for name, mb, K, tw in scen:
             res['nontrivial'][name] = run(mb, K, tw)
     # 3 optimizer updates through the harness's Trainer.update() (fetch, prep, split into accum micro-batches, loss + backward each, clip, AdamW)
@@ -69,7 +88,7 @@ def child(role, out):
             tr.model.speed_defer = True
         losses = [tr.update()[0].detach().clone() for _ in range(3)]
         sd = {k: v.detach().clone() for k, v in tr.model.state_dict().items()}
-        stats = tr.model.defer_stats if role == 'port' else tr.variant_stats()['defer']
+        stats = tr.model.defer_counts if role == 'port' else tr.variant_stats()['defer']
     finally:
         tr.close()
     res['updates'] = dict(losses=losses, final_sd=sd, deferred=(stats['deferred'] if role == 'port' else stats['deferred_losses']))
@@ -129,38 +148,61 @@ def same(x, y, what):
         assert x == y and type(x) == type(y), (what, x, y)
 
 
-def test_port_equals_the_gpu_tested_harness_variant_bitwise():
+def sha_file(path):
+    return hashlib.sha256(open(path, 'rb').read()).hexdigest()
+
+
+def test_000_the_trees_under_test_are_the_pinned_ones():
+    """Before anything runs (BASE_TREE / PORT_TREE if given, else the trees this test builds): the base b3g2.py / train.py are the 74d6e92c75 pins and every overlay file has the sha256 of port/overlay (FAIL on a mismatch)."""
     scratch = tempfile.mkdtemp(prefix='port-vs-harness-')
-    try:
-        base, port = tree_base(scratch), tree_port(scratch)
-        a = spawn('harness', base, os.path.join(scratch, 'harness.pt'))
-        b = spawn('port', port, os.path.join(scratch, 'port.pt'))
-        n = 0
-        for kind in ('real', 'nontrivial'):
-            assert list(a[kind]) == list(b[kind])
-            for name in a[kind]:
-                ra, rb = a[kind][name], b[kind][name]
-                same(ra['loss'], rb['loss'], f'{kind}/{name}: loss')
-                same(ra['aux'], rb['aux'], f'{kind}/{name}: aux')
-                same(ra['grads'], rb['grads'], f'{kind}/{name}: gradients')
-                same(ra['rng'], rb['rng'], f'{kind}/{name}: RNG states')
-                n += 1
-        ua, ub = a['updates'], b['updates']
-        same(ua['losses'], ub['losses'], 'update losses')
-        same(ua['final_sd'], ub['final_sd'], 'final state_dict')
-        assert ua['deferred'] == ub['deferred'] == 12, (ua['deferred'], ub['deferred'])          # 3 updates x accum 4 micro-batches, every loss deferred
-        say(f'{n} scenarios ({len(a["real"])} with the real ByteWriter.right, {len(a["nontrivial"])} with the non-trivial one): loss, every aux value, every gradient tensor and the RNG states BIT-EQUAL; '
-            f'3 AdamW updates through Trainer.update(): per-update losses {[float(x) for x in ua["losses"]]} and the final {len(ua["final_sd"])} state_dict tensors BIT-EQUAL; deferred losses {ua["deferred"]} / {ub["deferred"]}')
-    finally:
-        import shutil
-        shutil.rmtree(scratch, ignore_errors=True)
+    TREES['scratch'] = scratch
+    base, port = tree_base(scratch), tree_port(scratch)
+    TREES['base'], TREES['port'] = base, port
+    bad = [f'base {rel}: sha256 {sha_file(os.path.join(base, rel))[:16]} != pin {pin[:16]}' for rel, pin in BASE_PINS.items() if sha_file(os.path.join(base, rel)) != pin]
+    n = 0
+    for dp, dn, fn in os.walk(os.path.join(OVERLAY, 'custom_io')):
+        dn[:] = [d for d in dn if d != '__pycache__']
+        for f in fn:
+            if f.endswith('.pyc'):
+                continue
+            rel = os.path.relpath(os.path.join(dp, f), OVERLAY)
+            n += 1
+            if not os.path.exists(os.path.join(port, rel)) or sha_file(os.path.join(port, rel)) != sha_file(os.path.join(dp, f)):
+                bad.append(f'port tree {rel}: differs from {os.path.join(OVERLAY, rel)}')
+    assert not bad, '; '.join(bad)
+    say(f'trees: base b3g2.py / train.py match the 74d6e92c75 pins; {n} overlay files match the port tree {port}')
+
+
+def test_port_equals_the_gpu_tested_harness_variant_bitwise():
+    if 'port' not in TREES:
+        raise unittest.SkipTest('the trees were not made (see test_000)')
+    scratch, base, port = TREES['scratch'], TREES['base'], TREES['port']
+    a = spawn('harness', base, os.path.join(scratch, 'harness.pt'))
+    b = spawn('port', port, os.path.join(scratch, 'port.pt'))
+    n = 0
+    for kind in ('real', 'nontrivial'):
+        assert list(a[kind]) == list(b[kind])
+        for name in a[kind]:
+            ra, rb = a[kind][name], b[kind][name]
+            same(ra['loss'], rb['loss'], f'{kind}/{name}: loss')
+            same(ra['aux'], rb['aux'], f'{kind}/{name}: aux')
+            same(ra['grads'], rb['grads'], f'{kind}/{name}: gradients')
+            same(ra['rng'], rb['rng'], f'{kind}/{name}: RNG states')
+            n += 1
+    ua, ub = a['updates'], b['updates']
+    same(ua['losses'], ub['losses'], 'update losses')
+    same(ua['final_sd'], ub['final_sd'], 'final state_dict')
+    assert ua['deferred'] == ub['deferred'] == 12, (ua['deferred'], ub['deferred'])          # 3 updates x accum 4 micro-batches, every loss deferred
+    say(f'{n} scenarios ({len(a["real"])} with the real ByteWriter.right, {len(a["nontrivial"])} with the non-trivial one): loss, every aux value, every gradient tensor and the RNG states BIT-EQUAL; '
+        f'3 AdamW updates through Trainer.update(): per-update losses {[float(x) for x in ua["losses"]]} and the final {len(ua["final_sd"])} state_dict tensors BIT-EQUAL; deferred losses {ua["deferred"]} / {ub["deferred"]}')
 
 
 ALL = [(n, fn) for n, fn in sorted(globals().items(), key=lambda kv: kv[1].__code__.co_firstlineno if callable(kv[1]) and hasattr(kv[1], '__code__') else 0) if n.startswith('test_') and callable(fn)]
 
 
 def main():
-    bad, skipped, passed, t_all = 0, 0, 0, time.time()
+    """test_000 (the trees are the pinned ones) first; a FAIL there stops everything. Exit 1 on any FAIL, and on any SKIP unless ALLOW_SKIP=1 (a skip is not a pass)."""
+    bad, skipped, passed, t_all, why = 0, 0, 0, time.time(), []
     for n, fn in ALL:
         t0 = time.time()
         try:
@@ -169,14 +211,24 @@ def main():
             print(f'PASS {n} ({time.time() - t0:.1f}s)', flush=True)
         except unittest.SkipTest as e:
             skipped += 1
+            why.append(f'{n}: {e}')
             print(f'SKIP {n}: {e}', flush=True)
         except Exception:                                                        # noqa: BLE001
             import traceback
             bad += 1
             print(f'FAIL {n} ({time.time() - t0:.1f}s)', flush=True)
             traceback.print_exc()
+            if n.startswith('test_000'):
+                print('the trees under test are not the pinned ones: nothing else was run', flush=True)
+                break
     print(f'{passed} passed, {skipped} skipped, {bad} failed (of {len(ALL)}) in {time.time() - t_all:.1f}s', flush=True)
-    return 1 if bad else 0
+    rc = 1 if bad else 0
+    if skipped and os.environ.get('ALLOW_SKIP') != '1':
+        print(f'EXIT 1: {skipped} test(s) skipped, and a skip is not a pass (ALLOW_SKIP=1 to accept): ' + ' | '.join(why), flush=True)
+        rc = 1
+    if TREES.get('scratch'):
+        shutil.rmtree(TREES['scratch'], ignore_errors=True)
+    return rc
 
 
 if __name__ == '__main__':

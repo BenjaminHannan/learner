@@ -83,7 +83,7 @@ class B3G2(B3):
         self._tr = {}
         self.trace_stats = dict(rows=0, with_steps=0, calls=0, notes=0, unreadable=0, no_trace=0, over_tape=0, reply_mismatch=0, writer_over=0)
         self.free_stats = dict(unended=0, answer_unended=0)
-        self.speed_defer, self.defer_stats = False, dict(deferred=0, fallback=0)      # b3g2_defer (train.py --speed-arms defer; NUMERICS-CHANGING, off by default): plain attributes, no parameter or buffer
+        self.speed_defer, self.defer_counts = False, dict(deferred=0, fallback=0)      # b3g2_defer (train.py --speed-arms defer; NUMERICS-CHANGING, off by default): plain attributes; not *_stats, so train.py's checkpoint does not store them
 
     # ---- the tools ----
     @staticmethod
@@ -531,14 +531,15 @@ class B3G2(B3):
 
     # ---- loss ----
     def loss(self, batch):
-        return self._loss(batch, self.train_golds(batch['rows']))
-
-    def _loss(self, batch, golds):
-        if self.speed_defer:        # the deferred batched writer when it applies (training, autograd on, talk_rounds 'last', no copy path); else the original below
+        golds = self.train_golds(batch['rows'])
+        if self.speed_defer:        # the deferred batched writer when it applies (training, autograd on, talk_rounds 'last', no copy path); else _loss as always (trace_loss / ST1 never come here)
             if self.training and torch.is_grad_enabled() and self.talk_rounds == 'last' and not self.writer.copy:
                 from custom_io.models import b3g2_defer
                 return b3g2_defer.deferred_loss(self, batch, golds)
-            self.defer_stats['fallback'] += 1
+            self.defer_counts['fallback'] += 1
+        return self._loss(batch, golds)
+
+    def _loss(self, batch, golds):
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         Ls = [len(x['texts']) for x in golds]
         sched, last = self.plan(Ls, B, dev)                                     # B3's schedule: the calls' rounds
