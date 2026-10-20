@@ -129,3 +129,45 @@ From the focused review:
   shared-weight steps, a second difference between the arms besides the bias.
 - **Question entities.** `q_ents` is computed with the existing `_mentions(batch, start)`: the entities in the
   question span [start, "[answer"] + 1). Same set as before, one implementation.
+
+---
+
+## 9a. Result (appended after the run; §1-§8 unchanged since bfe98381a and amendments 1-2)
+
+Run 2026-10-20, CPU, 1 thread per run, **tiny preset (d = 32, about 80k parameters)**; 800 stage-1 + 1,600
+stage-2 steps (550-580 s per run); code = 7c0456589 (confirmation review clean). Raw:
+`artifacts/claude-infoconstraints-20261018/s5-stage0/`; `summary.json` is the verbatim §5-§7. Test split,
+1,024 questions; 216 have a distractor naming the question's person ("same"), 808 do not ("other").
+
+| seed | control d2 (same / other) | treated d2 (same / other) | d (points) | treated gold / no card / distinct | κ_d | gold share, other (control / treated) | d2 at κ_d = 8 |
+|---|---|---|---|---|---|---|---|
+| 0 | 37.99% (35.6 / 38.6) | 89.65% (50.9 / 100) | +51.66 | 100% / 7.03% / 16 | 4.41 | 0.332 / 0.948 | 90.04% |
+| 1 | 40.53% (36.1 / 41.7) | 89.55% (50.5 / 100) | +49.02 | 100% / 5.86% / 16 | 4.17 | 0.333 / 0.940 | 89.55% |
+| 2 | 38.96% (43.5 / 37.7) | 91.21% (58.3 / 100) | +52.25 | 100% / 5.57% / 16 | 4.02 | 0.337 / 0.938 | 91.50% |
+
+- **Validity:** no seed is VOID. The controls answer 16 distinct values on d2. Stage-1 gold is 100% in every
+  run, and control gold is 100% after stage 2. The stage-1 shared-weight digests are equal across arms on every
+  seed. The first stage-2 ∂L/∂κ_d is −0.090 / −0.068 / −0.185. All runs complete and finite.
+- **Marks (§6):**
+  1. d ≥ +15 every seed: yes. Mean − 2SE > 0: yes (mean d +50.98 points; mean − 2SE +48.99).
+  2. Treated d2 ≥ 60% every seed: yes.
+  3. Other − same ≥ 20 points every seed: yes (49.1 / 49.5 / 41.7).
+  4. Gold ≥ 95%, no card ≤ 9.25%, distinct > 1, finite: yes.
+- **FAIL rule:** not fired. **Proves-wrong (§7):** not fired.
+- **Verdict: PASS.**
+- **Reported notes (§7):**
+  - **ENGAGED:** yes. κ_d ≥ 1 and gold share ≥ 0.6 on every seed.
+  - **κ_d = 8 check:** 89.6-91.5%, above 45%, so the "fault after selection" note does not apply.
+  - **Control reaching 60%:** no (38-40.5%), so the "protocol alone teaches choosing" note does not apply.
+- **Progress readouts (no marks):** treated d2 is already 88-90% at stage-2 step 400 and flat after that. The
+  control stays at 36-42% throughout.
+- **Readings (suggested, not results):**
+  1. The control spreads its attention evenly over the three supplied cards (gold share 0.33 = 1/3) and lands
+     near the S2 §10b fact-only figure. Stage 2's distractor training alone did not teach it to choose.
+  2. With the match bias, every "other" question is answered correctly (808/808 on every seed). The errors
+     left are on "same" questions, at 50-58%. That is about a coin flip between two cards that both name the
+     person. The bias tells people apart but not relations: **relation choice is the next limit.**
+  3. **Scope.** What learned here is one scalar (κ_d about 4) on a hand-built, label-free feature: whether the
+     card's pointerizer entity ids include one in the question span. It shows that the decoder can use an
+     identity signal it is given, on the tiny far-fact toy, with supplied cards. It does not show learned
+     choosing, own retrieval (S4 failed), two-hop, larger models, or the village.
