@@ -229,6 +229,13 @@ def _add(total: dict[str, Any], part: Mapping[str, Any]) -> None:
 
 
 # ----------------------------------------------------------------------------- the trainer
+def _sync(device: torch.device) -> None:
+    """Wait for queued CUDA work. The diagnostics timer starts after it, so `diagnostic_seconds` never holds the
+    step's own backward or optimizer time (review round 3, item 1). It does nothing on CPU, where work is already done."""
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+
+
 class MiniTrainer(Trainer):
     """`Trainer` for `PremonitionMini` on `VisitBatch` streams, stopped by a FLOP budget (module docstring)."""
 
@@ -338,6 +345,8 @@ class MiniTrainer(Trainer):
         result["grad_norm"] = grad_norm
         result["metrics"] = out["metrics"]
         if track:
+            if timed:
+                _sync(self.device)                   # the step's queued GPU work belongs to training, not diagnostics
             began = time.perf_counter()
             result["dead"] = 1.0 - torch.cat(alive).float().mean().item() if alive else None
             result["halt_rate"] = torch.cat(halts).gt(0).float().mean().item() if halts else None

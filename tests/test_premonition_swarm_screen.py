@@ -147,6 +147,23 @@ class MarksTestCase(unittest.TestCase):
 
 
 class S0VerdictTest(MarksTestCase):
+    def test_seed_repeated_items_are_not_counted_as_independent(self) -> None:
+        """Round 3, item 3 (coordinator ruling): every seed scores the same items, so the pooled test pairs the
+        per-item SEED MEANS. Here the same 6 far_deep items flip in every seed (+5 pts on each seed): as 18
+        "independent" pairs McNemar gives p ~ 4e-6 (the old PROMOTE). As 6 items the sign-flip test gives
+        p ~ 1/64 > 0.01, so M1 fails and the verdict is HOLD."""
+        scenario = Scenario()
+        scenario.far = {"D1": [60, 60, 60], "S0": [66, 66, 66], "S1": [66, 66, 66]}
+        out = self.run_card(scenario)
+        m1 = next(m for m in out["marks"] if m["mark"] == "M1")
+        self.assertEqual(m1["detail"]["n_pooled"], FAR_N)
+        self.assertGreaterEqual(m1["detail"]["p"], 0.01)
+        self.assertEqual(m1["status"], "fail")
+        self.assertVerdict(out, "HOLD")
+        from learnlab.metrics import paired_greater_pvalue
+        old_p = paired_greater_pvalue([1] * 18, [0] * 18)                      # what 3x pooling had computed
+        self.assertLess(old_p, 0.01)
+
     def test_promote_and_every_mark_is_computed(self) -> None:
         result = self.run_card(Scenario())
         self.assertVerdict(result, "PROMOTE")
@@ -155,7 +172,7 @@ class S0VerdictTest(MarksTestCase):
         m1 = next(m for m in result["marks"] if m["mark"] == "M1")
         self.assertEqual(m1["status"], "pass")
         self.assertAlmostEqual(m1["detail"]["delta_points"], 100 * 15 / FAR_N)       # 12.5 points
-        self.assertEqual(m1["detail"]["n_pooled"], 3 * FAR_N)
+        self.assertEqual(m1["detail"]["n_pooled"], FAR_N)                # pooled unit = the item (round 3, item 3)
         self.assertLess(m1["detail"]["p"], 0.01)
 
     def test_void_on_a_schema_mismatch(self) -> None:
@@ -485,20 +502,34 @@ class RunnerMathTest(unittest.TestCase):
         self.assertEqual(screen.median_of([1.0, 2.0, 3.0, 4.0]), 2.5)
 
     def test_stop_and_ask_flag(self) -> None:
-        self.assertFalse(screen.stop_flags(2.5, 1.0, 300, 60, 0.4)["stop_and_ask"])          # exactly 2.5: no
-        self.assertTrue(screen.stop_flags(2.5001, 1.0, 300, 60, 0.4)["stop_and_ask"])
-        self.assertFalse(screen.stop_flags(1.2, 1.0, 300, 60, 0.4)["stop_and_ask"])
+        self.assertFalse(screen.stop_flags(2.5, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])          # exactly 2.5: no
+        self.assertTrue(screen.stop_flags(2.5001, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
+        self.assertFalse(screen.stop_flags(1.2, 1.0, 300, 60, 0.4, train_overhead=0.0)["stop_and_ask"])
 
     def test_money_stop_flag(self) -> None:
-        hours = screen.projected_box_hours(3600, 60)
+        hours = screen.projected_box_hours(3600, 60, train_overhead=0.0)
         self.assertAlmostEqual(hours, (6 * 3600 + 6 * 60) / 3600 * 1.15)                      # 7.015
-        low, high = screen.stop_flags(1.0, 1.0, 3600, 60, 0.49), screen.stop_flags(1.0, 1.0, 3600, 60, 0.50)
+        low = screen.stop_flags(1.0, 1.0, 3600, 60, 0.49, train_overhead=0.0)
+        high = screen.stop_flags(1.0, 1.0, 3600, 60, 0.50, train_overhead=0.0)
         self.assertFalse(low["money_stop"])
         self.assertTrue(high["money_stop"])
         self.assertAlmostEqual(high["projected_s0_cost_usd"], hours * 0.50)
-        self.assertFalse(screen.stop_flags(1.0, 1.0, 3600, 60, 0.0)["money_stop"])             # no rate given: cannot fire
-        small = screen.stop_flags(1.0, 1.0, 300, 30, 0.46)
+        self.assertFalse(screen.stop_flags(1.0, 1.0, 3600, 60, 0.0, train_overhead=0.0)["money_stop"])             # no rate given: cannot fire
+        small = screen.stop_flags(1.0, 1.0, 300, 30, 0.46, train_overhead=0.0)
         self.assertFalse(small["money_stop"])
+
+    def test_money_stop_counts_train_overhead(self) -> None:
+        """Review round 3, item 4: each train also spends time outside T (caches, calibration, final validation,
+        save). The projection adds it, and leaving it out is impossible (the keyword is required)."""
+        hours = screen.projected_box_hours(3000, 60, train_overhead=300)
+        self.assertAlmostEqual(hours, (6 * (3000 + 300) + 6 * 60) / 3600 * 1.15)
+        without = screen.stop_flags(1.0, 1.0, 3000, 60, 0.56, train_overhead=0.0)
+        with_overhead = screen.stop_flags(1.0, 1.0, 3000, 60, 0.56, train_overhead=300.0)
+        self.assertFalse(without["money_stop"])                                # ~$3.28: under the $3.50 S0 cap
+        self.assertTrue(with_overhead["money_stop"])                           # ~$3.61: over it
+        self.assertEqual(with_overhead["train_overhead_seconds"], 300.0)
+        with self.assertRaises(TypeError):
+            screen.stop_flags(1.0, 1.0, 3000, 60, 0.56)                        # the overhead cannot be omitted
 
     def test_trim_history_keeps_the_last_five(self) -> None:
         trimmed = screen.trim_history({"history": list(range(20)), "x": 1})
@@ -574,6 +605,42 @@ class CheckpointRefusalTest(unittest.TestCase):
                 self.assertFalse((Path(folder) / "train.json").exists())
         finally:
             ptrain.train_d = original
+
+
+class BoxGuardTest(unittest.TestCase):
+    """Review round 3, item 2: the box refuses a dirty working tree (every mode), and the committed manifest pins
+    every repo module the run imports."""
+
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def test_manifest_covers_every_imported_repo_module(self) -> None:
+        closure = screen.import_closure(self.ROOT)
+        self.assertIn("learnlab/train.py", closure)
+        missing = [name for name in closure if name not in screen.MANIFEST_FILES]
+        self.assertEqual(missing, [], "imported by the run but not pinned")
+        for name in ("learnlab/train.py", "learnlab/ckpt.py", "learnlab/tokenizer.py", "learnlab/village/world.py",
+                     "premonition/pointer.py", "scripts/premonition_swarm_box.sh"):
+            self.assertIn(name, screen.MANIFEST_FILES)
+        self.assertEqual(screen.check_manifest(self.ROOT, self.ROOT / screen.MANIFEST_PATH), [],
+                         "regenerate scripts/premonition_swarm_manifest.txt")
+
+    def test_box_refuses_a_dirty_tree_before_anything_runs(self) -> None:
+        import os
+        import subprocess
+        probe = self.ROOT / f"dirty-probe-{os.getpid()}.tmp"                 # untracked, so `git status` is dirty
+        pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
+        with tempfile.TemporaryDirectory() as out:
+            probe.write_text("dirty", encoding="utf-8")
+            try:
+                run = subprocess.run(["bash", str(self.ROOT / "scripts/premonition_swarm_box.sh")], cwd=self.ROOT,
+                                     env={**os.environ, "DRYRUN": "1", "PIN": pin, "OUT": out},
+                                     capture_output=True, text=True, timeout=120)
+            finally:
+                probe.unlink()
+            self.assertEqual(run.returncode, 2, run.stdout + run.stderr)
+            self.assertIn("working tree is not clean", run.stdout)
+            self.assertIn(probe.name, run.stdout)
+            self.assertFalse((Path(out) / "data.json").exists())             # refused before any step ran
 
 
 if __name__ == "__main__":

@@ -246,10 +246,16 @@ class Comparison:
 
 def compare(ctx: Context, x_key: tuple[str, Optional[str]], y_key: tuple[str, Optional[str]], cell: str
             ) -> Comparison:
-    """Pooled and per-seed paired comparison of x against y on `cell`, items matched by id within a seed."""
+    """Pooled and per-seed paired comparison of x against y on `cell`, items matched by id within a seed.
+
+    Pooled (RUNCARD-S0 §2 as amended 10-20, coordinator ruling on review round 3, item 3): every seed scores the
+    SAME validation items, so the independent unit is the item, not (item, seed). Each item's correctness is
+    averaged over the seeds for each arm, and the paired test runs over items: `paired_greater_pvalue` on the
+    item means, a sign-flip permutation test because the means are not binary. Pooled delta = the mean of the
+    item-mean differences. Only items scored in every seed's pair are pooled.
+    """
     out = Comparison(cell=cell, complete=True, seeds=[])
-    pooled_x: list[int] = []
-    pooled_y: list[int] = []
+    per_item: dict[str, list[tuple[int, int]]] = {}
     for seed in ctx.seeds:
         a = ctx.evals.get((x_key[0], seed, x_key[1]))
         b = ctx.evals.get((y_key[0], seed, y_key[1]))
@@ -264,12 +270,16 @@ def compare(ctx: Context, x_key: tuple[str, Optional[str]], y_key: tuple[str, Op
         out.seeds.append({"seed": seed, "n": n, "x_hits": sum(xs), "y_hits": sum(ys),
                           "x_acc": sum(xs) / n if n else None, "y_acc": sum(ys) / n if n else None,
                           "delta": delta})
-        pooled_x += xs
-        pooled_y += ys
-    out.n = len(pooled_x)
+        for i, x, y in zip(ids, xs, ys):
+            per_item.setdefault(i, []).append((x, y))
+    seeds_scored = len(out.seeds)
+    common = sorted(i for i, pairs in per_item.items() if len(pairs) == seeds_scored)
+    out.n = len(common)                                                 # independent units: items
     if out.n:
-        out.delta = Fraction(sum(pooled_x) - sum(pooled_y), out.n)
-        out.p = float(paired_greater_pvalue(pooled_x, pooled_y, margin=0.0))
+        x_mean = [Fraction(sum(x for x, _ in per_item[i]), seeds_scored) for i in common]
+        y_mean = [Fraction(sum(y for _, y in per_item[i]), seeds_scored) for i in common]
+        out.delta = sum((x - y for x, y in zip(x_mean, y_mean)), Fraction(0)) / out.n
+        out.p = float(paired_greater_pvalue([float(v) for v in x_mean], [float(v) for v in y_mean], margin=0.0))
     out.positive = sum(1 for s in out.seeds if s["delta"] is not None and s["delta"] > 0)
     out.negative = sum(1 for s in out.seeds if s["delta"] is not None and s["delta"] < 0)
     if len(out.seeds) < len(ctx.seeds) or any(s["n"] == 0 for s in out.seeds):

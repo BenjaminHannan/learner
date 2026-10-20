@@ -921,5 +921,77 @@ class RoundThreeTest(unittest.TestCase):
         answer_with_gold(build(), synthetic_batch())                          # single thinker: unchanged
 
 
+class RoundThreeSecondPassTest(unittest.TestCase):
+    """Review round 3, second pass: item 1 (sync before the diagnostics timer) and item 5 (non-composing
+    subclasses refuse at build)."""
+
+    def test_sync_runs_before_the_diagnostics_timer_only_when_timed(self) -> None:
+        import premonition.train as ptrain
+        from premonition.toy import ToySpec, toy_stream
+        from premonition.train import MiniTrainer, label_free, mini_train_config, planned_loops
+        spec = ToySpec()
+        torch.manual_seed(0)
+        model = PremonitionMini(MiniConfig.preset("D", "tiny", vocab_size=spec.vocab_size, window=64, thinkers=2))
+        batch = label_free(next(toy_stream(spec, 4, 0)))
+        events: list[str] = []
+        original_sync, original_clock = ptrain._sync, ptrain.time.perf_counter
+        ptrain._sync = lambda device: events.append(f"sync:{device.type}")
+        try:
+            for budget, track, expected in ((1e6, True, 1), (1e6, False, 0), (None, True, 0)):
+                events.clear()
+                trainer = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
+                                      seconds_budget=budget)
+                plan = trainer.plan()
+                trainer._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), track)
+                self.assertEqual(events.count("sync:cpu"), expected, (budget, track))
+            events.clear()                                              # order: the sync, THEN the timer starts
+            ptrain.time.perf_counter = lambda: events.append("clock") or original_clock()
+            trainer = MiniTrainer(model, mini_train_config(warmup_steps=2), "cpu", flop_budget=1e30, seed=0,
+                                  seconds_budget=1e6)
+            plan = trainer.plan()
+            trainer._train_step(batch, plan, planned_loops(batch, plan.mode, model.config), True)
+            self.assertEqual(events[events.index("sync:cpu") + 1], "clock")
+        finally:
+            ptrain._sync, ptrain.time.perf_counter = original_sync, original_clock
+
+    def test_sync_calls_cuda_synchronize_on_a_cuda_device(self) -> None:
+        """The CUDA path, mocked (no GPU here): _sync waits on the device for cuda and does nothing on cpu."""
+        import premonition.train as ptrain
+        calls = []
+        original = torch.cuda.synchronize
+        torch.cuda.synchronize = lambda device=None: calls.append(device)
+        try:
+            ptrain._sync(torch.device("cpu"))
+            self.assertEqual(calls, [])
+            ptrain._sync(torch.device("cuda", 0))
+            self.assertEqual(calls, [torch.device("cuda", 0)])
+        finally:
+            torch.cuda.synchronize = original
+
+    def test_non_composing_subclasses_refuse_at_build(self) -> None:
+        class Override(PremonitionMini):
+            pass
+
+        class OptedIn(PremonitionMini):
+            SWARM_COMPATIBLE = True
+
+        class Inherits(OptedIn):                                         # opting in is not inherited
+            pass
+
+        with self.assertRaises(ValueError):
+            Override(tiny_config(thinkers=2))
+        with self.assertRaises(ValueError):
+            Inherits(tiny_config(thinkers=2))
+        OptedIn(tiny_config(thinkers=2))
+        Override(tiny_config())                                          # flag off: every subclass builds as before
+        PremonitionMini(tiny_config(thinkers=2))
+        from premonition.answer_path import CardBypassMini                # the review's crashing example
+        from premonition.ovn_qread import QReadMini
+        for real in (CardBypassMini, QReadMini):
+            with self.assertRaises(ValueError, msg=real.__name__):
+                real(tiny_config(thinkers=2))
+            real(tiny_config())
+
+
 if __name__ == "__main__":
     unittest.main()

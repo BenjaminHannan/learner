@@ -92,11 +92,58 @@ BOX_OVERHEAD = 1.15
 S0_RUNS = 6                                          # D1 and S0 x seeds 0-2: trains and validation evals
 VOCAB_V2 = 7068
 CKPT_DIR = "checkpoints/swarm-screen"
-MANIFEST_FILES = [f"premonition/{name}.py" for name in
-                  ("config", "model", "swarm", "train", "store", "batch", "data", "exp1", "slices",
-                   "identity", "preprocess", "flops")] + [
-    "learnlab/step1.py", "learnlab/metrics.py", "learnlab/policy.py",     # data build, p-values, alpha / margin
-    "scripts/premonition_swarm_screen.py", "scripts/premonition_swarm_marks.py", "scripts/premonition_swarm_box.sh"]
+# Every repo module the run imports (review round 3, item 2): the closure of CLOSURE_SEEDS below, kept as an
+# explicit list so the manifest reads plainly. `ManifestCoverageTest` recomputes the closure and fails if an
+# imported repo module is missing, so a new import cannot go unpinned. Plus the box script.
+MANIFEST_FILES = sorted(
+    [f"premonition/{name}.py" for name in ("__init__", "batch", "config", "data", "exp1", "flops", "identity",
+                                           "model", "pointer", "preprocess", "slices", "store", "swarm", "train")]
+    + [f"learnlab/{name}.py" for name in ("__init__", "ckpt", "core", "leaks", "metrics", "patterns", "policy",
+                                          "readonly", "splits", "step1", "tokenizer", "toy", "train")]
+    + [f"learnlab/village/{name}.py" for name in ("__init__", "names", "oracle", "render", "scheduler", "shards",
+                                                  "stream", "vocab", "world")]
+    + [f"memorylab/{name}.py" for name in ("__init__", "checkpoint", "experiment", "model", "positive_controls",
+                                           "storage", "tasks", "transformer_model")]
+    + ["scripts/premonition_swarm_screen.py", "scripts/premonition_swarm_marks.py", "scripts/premonition_swarm_box.sh"])
+CLOSURE_SEEDS = ("premonition_swarm_screen", "premonition_swarm_marks", "premonition.train", "premonition.exp1",
+                 "premonition.slices", "premonition.data", "premonition.preprocess", "premonition.identity",
+                 "premonition.swarm", "premonition.flops", "premonition.pointer", "learnlab.step1", "learnlab.metrics",
+                 "learnlab.policy", "learnlab.ckpt", "learnlab.tokenizer", "learnlab.readonly", "learnlab.train",
+                 "memorylab.storage", "memorylab.experiment", "learnlab.village")
+
+
+_CLOSURE_PROGRAM = """
+import importlib, json, pkgutil, sys
+from pathlib import Path
+root = Path(sys.argv[1]).resolve()
+sys.path[:0] = [str(root), str(root / "scripts")]
+for name in json.loads(sys.argv[2]):
+    importlib.import_module(name)
+village = importlib.import_module("learnlab.village")
+for info in pkgutil.walk_packages(village.__path__, "learnlab.village."):
+    importlib.import_module(info.name)
+found = set()
+for module in list(sys.modules.values()):
+    path = getattr(module, "__file__", None)
+    if not path or not Path(path).is_absolute():
+        continue
+    path = Path(path).resolve()
+    if path.is_relative_to(root) and path.is_file() and path.relative_to(root).parts[0] != "tests":
+        found.add(path.relative_to(root).as_posix())
+print(json.dumps(sorted(found)))
+"""
+
+
+def import_closure(root: Path) -> list[str]:
+    """Repo files of every module the run imports: CLOSURE_SEEDS (they cover the lazy, in-function imports of
+    train_d / evaluate_d_checkpoint / the data build) plus every learnlab.village submodule. It runs in a FRESH
+    interpreter, so modules imported by a caller (a test runner, say) never leak into the answer."""
+    import subprocess
+    out = subprocess.run([sys.executable, "-B", "-c", _CLOSURE_PROGRAM, str(Path(root).resolve()),
+                          json.dumps(list(CLOSURE_SEEDS))], capture_output=True, text=True, check=True)
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
 MANIFEST_PATH = "scripts/premonition_swarm_manifest.txt"
 
 Log = Callable[[str], None]
@@ -113,20 +160,24 @@ def compute_T(d1_flops_per_s: float, *, target: float = F_TARGET, step: int = T_
     return raw, int(min(cap, step * max(1, math.ceil(raw / step))))
 
 
-def projected_box_hours(T: float, eval_seconds: float, *, runs: int = S0_RUNS, overhead: float = BOX_OVERHEAD
-                        ) -> float:
-    """(runs x T + runs x measured eval estimate) / 3600 x overhead: the S0 box-hours (BOX-SPEC C0)."""
-    return (runs * T + runs * eval_seconds) / 3600.0 * overhead
+def projected_box_hours(T: float, eval_seconds: float, *, train_overhead: float, runs: int = S0_RUNS,
+                        overhead: float = BOX_OVERHEAD) -> float:
+    """(runs x (T + train overhead) + runs x eval estimate) / 3600 x overhead: the S0 box-hours (BOX-SPEC C0).
+
+    `train_overhead` is the measured time a train step spends outside its T: caches, FLOP calibration, the final
+    validation and the checkpoint save (review round 3, item 4). It is required, so no caller can leave it out."""
+    return (runs * (T + train_overhead) + runs * eval_seconds) / 3600.0 * overhead
 
 
-def stop_flags(s0m4_weighted: float, d1_weighted: float, T: float, eval_seconds: float, dph: float
-               ) -> dict[str, Any]:
+def stop_flags(s0m4_weighted: float, d1_weighted: float, T: float, eval_seconds: float, dph: float, *,
+               train_overhead: float) -> dict[str, Any]:
     """The two C0 stop flags and their inputs."""
     ratio = s0m4_weighted / d1_weighted
-    hours = projected_box_hours(T, eval_seconds)
+    hours = projected_box_hours(T, eval_seconds, train_overhead=train_overhead)
     cost = hours * dph
     return {"ratio": ratio, "stop_ratio": STOP_RATIO, "stop_and_ask": bool(ratio > STOP_RATIO),
-            "T": T, "eval_seconds_estimate": eval_seconds, "projected_s0_box_hours": hours, "dph": dph,
+            "T": T, "eval_seconds_estimate": eval_seconds, "train_overhead_seconds": train_overhead,
+            "projected_s0_box_hours": hours, "dph": dph,
             "projected_s0_cost_usd": cost, "money_cap_usd": MONEY_CAP_USD, "money_stop": bool(cost > MONEY_CAP_USD)}
 
 
@@ -372,6 +423,27 @@ def measure_eval_seconds(budget: Any, data_rel: str, tokenizer_path: str, *, siz
     return {"first_pass_seconds": seconds[0], "second_pass_seconds": seconds[1], "estimate_seconds": seconds[1]}
 
 
+def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
+                           ckpt_dir: str, seconds: float, max_tokens: int) -> dict[str, Any]:
+    """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short S0 `train_d` with a
+    `seconds` budget, wall time minus `train_seconds`. That covers caches (warm after the data step), FLOP
+    calibration, the final validation and the save. The probe checkpoint is deleted afterwards."""
+    from premonition.train import train_d
+    relative = f"{ckpt_dir}/c0-trainprobe-{time.time_ns()}"
+    began = time.perf_counter()
+    try:
+        report = train_d(budget, data_rel=data_rel, tokenizer_path=tokenizer_path, flop_budget=1e30,
+                         seconds_budget=seconds, swarm=ARMS["S0"], seed=0, device=device, size=size, eval_every=0,
+                         max_tokens=max_tokens, workers=workers, checkpoint=relative, log=lambda message: None)
+        _sync(device)
+        wall = time.perf_counter() - began
+    finally:
+        shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
+    trained = float(report.get("train_seconds") or 0.0)
+    return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
+            "overhead_seconds": max(0.0, wall - trained)}
+
+
 def cmd_c0(args: argparse.Namespace) -> int:
     from premonition.train import mini_train_config  # noqa: F401  (import check before the long bench)
     from premonition import data as pdata
@@ -440,8 +512,11 @@ def cmd_c0(args: argparse.Namespace) -> int:
             "S0m4": gpu_busy_fraction(C0_ARMS["S0m4"], fixed, size=args.size, vocab=vocab, device=args.device)}
     probe = measure_eval_seconds(budget, args.data_rel, args.tokenizer, size=args.size, vocab=vocab,
                                  device=args.device, workers=max(1, args.workers), ckpt_dir=args.ckpt_dir)
+    train_probe = measure_train_overhead(budget, args.data_rel, args.tokenizer, size=args.size, device=args.device,
+                                         workers=max(1, args.workers), ckpt_dir=args.ckpt_dir,
+                                         seconds=args.overhead_probe_seconds, max_tokens=args.max_tokens)
     flags = stop_flags(per_arm["S0m4"]["weighted_s_per_update"], per_arm["D1"]["weighted_s_per_update"], T,
-                       probe["estimate_seconds"], args.dph)
+                       probe["estimate_seconds"], args.dph, train_overhead=train_probe["overhead_seconds"])
     log(f"c0: S0m4/D1 weighted ratio {flags['ratio']:.3f} (stop above {STOP_RATIO}): stop_and_ask "
         f"{flags['stop_and_ask']}; projected S0 {flags['projected_s0_box_hours']:.3f} box-hours x ${args.dph}/h = "
         f"${flags['projected_s0_cost_usd']:.3f} (cap ${MONEY_CAP_USD}): money_stop {flags['money_stop']}")
@@ -453,7 +528,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
                                           "p_own": P_OWN, "weights": CURRICULUM_WEIGHTS},
         "arms": per_arm, "weighted_flops_per_update": flops, "flop_fit": {"a": fit.a, "b": fit.b, "worst": fit.worst},
         "d1_flops_per_s": d1_flops_per_s, "f_target": F_TARGET, "T_raw": t_raw, "T_formula": t_formula,
-        "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe,
+        "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
         "ratio_s0m4_over_d1": flags["ratio"], "stop_and_ask": flags["stop_and_ask"],
         "money_stop": flags["money_stop"], "flags": flags,
         "ratios_over_d1": {arm: v["weighted_s_per_update"] / per_arm["D1"]["weighted_s_per_update"]
@@ -508,6 +583,8 @@ def cmd_manifest(args: argparse.Namespace) -> int:
     target = root / MANIFEST_PATH
     if args.check:
         problems = check_manifest(root, target)
+        problems += [f"{name}: imported by the run but not pinned in MANIFEST_FILES"
+                     for name in import_closure(root) if name not in MANIFEST_FILES]
         for problem in problems:
             print(problem, file=sys.stderr)
         print("manifest OK" if not problems else f"manifest FAILED ({len(problems)} problems)")
@@ -545,6 +622,8 @@ def build_parser() -> argparse.ArgumentParser:
     one.add_argument("--max-tokens", type=int, default=55_000)
     one.add_argument("--dph", type=float, default=0.0, help="billed $/h (0 = the money check cannot fire)")
     one.add_argument("--t-override", type=float, default=None, help="dry run only: T instead of the formula")
+    one.add_argument("--overhead-probe-seconds", type=float, default=20.0,
+                     help="seconds budget of the train-overhead probe (one short S0 train_d)")
     one.add_argument("--ckpt-dir", default=CKPT_DIR, help="folder for the eval-time probe checkpoint (removed)")
     one = sub.add_parser("train")
     common(one)

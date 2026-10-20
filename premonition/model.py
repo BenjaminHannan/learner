@@ -327,6 +327,11 @@ class PremonitionMini(nn.Module):
     """forward(batch, mode) -> losses; answer(batch) -> greedy entity-aware answers."""
 
     def __init__(self, config: MiniConfig) -> None:
+        if config.thinkers > 1 and type(self) is not PremonitionMini and \
+                not type(self).__dict__.get("SWARM_COMPATIBLE", False):
+            raise ValueError(f"{type(self).__name__} does not compose with the swarm (thinkers > 1): its "
+                             "_start/_step/_insert/_decode_logits overrides assume one episode row per question. "
+                             "Set SWARM_COMPATIBLE = True on the class only after testing it with design/swarm.")
         super().__init__()
         self.config = config
         self.embed = nn.Embedding(config.total_vocab, config.d_model)

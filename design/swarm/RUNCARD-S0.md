@@ -55,12 +55,20 @@ the tag goes in the readout).
 * Statistics: paired by item (and seed, when pooled), `learnlab.metrics.paired_greater_pvalue`,
   α = `policy.ALPHA` = 0.01, margin `policy.MIN_EFFECT` = 0.03, cells need ≥ `MIN_ITEMS` = 100 items
   per seed.
+* **(10-20, pre-seal) Pooling unit = the item.** Every seed scores the SAME validation items, so (item, seed)
+  pairs are not independent. Item difficulty is shared across seeds, and pooling them as separate pairs overstates
+  significance (pseudo-replication). So each item's correctness is **averaged over the 3 seeds for each arm**, and
+  the paired test (`paired_greater_pvalue`: a sign-flip permutation test on the non-binary item means) runs **over
+  items**. The pooled Δ is the mean item-mean difference. The ≥ 2-of-3-seeds condition is unchanged. It removes
+  the over-counting, so in general it is the stricter test. Source: review round 3, item 3, ruled by the coordinator session
+  (session_014a7yFK9adwx14ocaqRQ6eZ, 2026-10-20), which states that Ben delegated tonight's decisions to it. It is
+  adopted before sealing, with no S0/C0 data in existence. The same rule applies to every pooled test in RUNCARD-S1.
 
 ## 3. Marks (registered; each run once)
 
 | mark | bar |
 |---|---|
-| **M1 join (promote)** | pooled over 3 seeds, S0 `far_deep` ≥ D1 + 3.0 points, and p(S0 > D1) < 0.01 paired; **and** S0 > D1 on ≥ 2 of 3 seeds |
+| **M1 join (promote)** | pooled over 3 seeds (item means, §2, 10-20), S0 `far_deep` ≥ D1 + 3.0 points, and p(S0 > D1) < 0.01 paired over items; **and** S0 > D1 on ≥ 2 of 3 seeds |
 | **M2 DEV slip (guard)** | on ≥ 2 of 3 seeds, S0 `near` < D1 `near` − 3.0 points → **FAIL**; same rule for `overall`, judged separately. Per seed, never averaged (10-18) |
 | **M3 desk usage (guard)** | on every one of ≥ 2 of 3 seeds: every desk's eval `ask_rate` ≥ 0.05, and every desk's `fetch_count` ≥ 0.10 × the busiest desk's. Otherwise the breadth was not used → **FAIL (USAGE-COLLAPSE)** |
 | **M4 diversity (guard)** | the readout prints `fetch_overlap`, `register_cos`, `ask_rate[4]`, `fetch_count[4]`, `silent_desks` per seed. If `collapsed` (register_cos > 0.95 **and** fetch_overlap > 0.8) on ≥ 2 of 3 seeds, the verdict line reads **"COLLAPSED: the desks are copies"** and the verdict cannot be PROMOTE |

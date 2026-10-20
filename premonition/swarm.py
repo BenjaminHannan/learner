@@ -11,8 +11,10 @@ COMBINER the decoder reads every desk's rows plus one copy of the board. Entity 
 ASK      training-only balanced assignment (uses gold labels, never an inference channel): the cards
          still missing from the union of the desks' fetches are split across desks by their own scores.
 
-Built on `model._start / _step / _insert / _teacher_cards / _greedy`, so subclasses compose. Called
-from `PremonitionMini.forward` and `.answer` when `config.thinkers > 1`; the flag-off path is untouched.
+Built on `model._start / _step / _insert / _teacher_cards / _greedy`. Subclasses that override them
+(address_reader, direct_reader, the QRead variants) assume one episode row per question and do NOT compose:
+`PremonitionMini.__init__` refuses them when thinkers > 1, unless the class declares `SWARM_COMPATIBLE = True`.
+Called from `PremonitionMini.forward` and `.answer` when `config.thinkers > 1`; the flag-off path is untouched.
 """
 from __future__ import annotations
 

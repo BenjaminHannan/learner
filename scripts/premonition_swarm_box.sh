@@ -13,9 +13,10 @@
 #   CAP      dollars (default 4.20, ruling Q28).
 #   PART     c0 | s0 | all (default all). c0 stops after C0 whatever it says. s0 starts at the trains and needs the
 #            data.json and c0.json of an earlier c0 part in OUT.
-#   DRYRUN   1 = the CPU dry run: tiny preset and visits, cpu, T = 120 s (coordinator, round 2: a CPU step is ~2% of 30 s), the manifest is regenerated first
-#            (an uncommitted tree has none), no money check, and the S1 tiny arm + lesions are run so that
-#            MARKS-S1 is proven computable too. Its numbers mean nothing.
+#   DRYRUN   1 = the CPU dry run: tiny preset and visits, cpu, T = 120 s (one CPU step is ~2% of 30 s, the whole
+#            +-2% seconds band of M5, so 30 s voids on one step; see BOX-SPEC), no money check, and the S1 tiny arm +
+#            lesions are run so that MARKS-S1 is proven computable too. Like the real run it needs a clean tree and
+#            the COMMITTED manifest. Its numbers mean nothing.
 #   STOP_OVERRIDE  non-empty text (the coordinator's ruling) lets the trains start although c0.json says
 #            stop_and_ask / money_stop. Logged.
 #   OUT, PY, WORKERS, C0_EXTRA, DRY_MAXTOK  output folder, python, data workers, extra c0 args, the dry run's
@@ -43,7 +44,7 @@ if [ "$DRYRUN" = 1 ]; then
   TRAIN_ARGS="--max-tokens $DRY_MAXTOK"
 else
   SIZE=full; DEVICE=cuda; VISITS=large
-  OUT=${OUT:-$ROOT/artifacts/$RUN/out}; CKPT=checkpoints/swarm-screen
+  OUT=${OUT:-$ROOT/artifacts/$RUN/out}; CKPT=artifacts/$RUN/ckpt   # git-ignored: outputs never dirty the tree
   C0_ARGS="--rounds 3 --warmup 10 --timed 40 --chunk 5 $C0_EXTRA"
   TRAIN_ARGS=""
 fi
@@ -96,9 +97,11 @@ say "swarm screen box: PART=$PART DRYRUN=$DRYRUN SIZE=$SIZE DEVICE=$DEVICE MAXH=
 case "$PART" in c0|s0|all) ;; *) say "REFUSED: PART must be c0, s0 or all (got $PART)"; exit 2;; esac
 HEAD=$(git rev-parse HEAD)
 if [ -z "$PIN" ] || [ "$HEAD" != "$PIN" ]; then say "REFUSED: HEAD $HEAD is not PIN '${PIN}'"; exit 2; fi
-if [ "$DRYRUN" = 1 ]; then
-  say "DRYRUN: regenerating scripts/premonition_swarm_manifest.txt first (an uncommitted tree cannot have a committed manifest); the check below is then trivial"
-  $PY -B scripts/premonition_swarm_screen.py manifest
+# A clean tree, in every mode (review round 3, item 2): HEAD == PIN only proves the commit, so an uncommitted edit
+# to any file the run imports would otherwise run unseen. The dry run checks the COMMITTED manifest too.
+DIRTY=$(git status --porcelain)
+if [ -n "$DIRTY" ]; then
+  say "REFUSED: the working tree is not clean (git status --porcelain):"; printf '%s\n' "$DIRTY" | tee -a "$BOXLOG"; exit 2
 fi
 if ! sha256sum -c scripts/premonition_swarm_manifest.txt > "$OUT/manifest-check.log" 2>&1; then
   say "REFUSED: a pinned file differs from the manifest (see manifest-check.log)"; cat "$OUT/manifest-check.log" | tee -a "$BOXLOG"; exit 2
