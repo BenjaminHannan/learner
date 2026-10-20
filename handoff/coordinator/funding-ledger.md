@@ -124,3 +124,4 @@ Overnight Claude usage was about $400 at list price, about 16% of Ben's weekly q
 2. Fresh sessions from a short summary for steals, swarm, info and Brain when they next need real work. The sessions holding Ben's rental clicks stay until their runs end.
 3. Sonnet for fix and test rounds; Opus only for design gates and final reviews.
 4. The watcher messages only on real changes (no hourly summaries).
+5. (Ben, Oct 20) Use Sonnet and Haiku wherever possible: Haiku for reading and status checks, Sonnet for building, fixing and testing. Opus only for design gates, final reviews and verdict checks.
