@@ -571,13 +571,7 @@ class PremonitionMini(nn.Module):
                            torch.zeros(count, dtype=torch.long, device=device), fetched,
                            batch.q_visit, batch.q_line, mentions if config.ent_key else None)
         if config.dec_ent_match:
-            tokens = batch.tokens[batch.q_visit]                                     # [Q, T]
-            at = torch.arange(tokens.shape[1], device=device).unsqueeze(0)
-            inside = (at >= start.unsqueeze(1)) & (at < end.unsqueeze(1))
-            entity = tokens - config.vocab_size
-            named = inside & (entity >= 0) & (entity < config.n_ent)
-            episode.q_ents = (F.one_hot(entity.clamp(0, config.n_ent - 1), config.n_ent)
-                              * named.unsqueeze(-1)).sum(1) > 0
+            episode.q_ents = self._mentions(batch, start)          # entities in the question span itself
             episode.match = torch.zeros(count, config.cards, device=device)
         return episode
 
@@ -780,8 +774,9 @@ class PremonitionMini(nn.Module):
             pairs += index.numel()
             rows, halt, ask, scores = self._step(episode, index, step, store)
             # L_ans (deep supervision) and the HALT target.
-            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index],
-                                             bias=self._match_bias(episode, index))
+            bias = self._match_bias(episode, index)                       # S5; None keeps the base call
+            hidden_ans = (self._decode_logits(rows, episode.valid[index], inputs[index]) if bias is None else
+                          self._decode_logits(rows, episode.valid[index], inputs[index], bias=bias))
             target = targets[index]
             keep = target != IGNORE_INDEX
             logits = F.linear(hidden_ans[keep], self.embed.weight).float()
@@ -958,7 +953,8 @@ class PremonitionMini(nn.Module):
         done = torch.zeros(count, dtype=torch.bool, device=device)
         bias = self._match_bias(episode)                          # S5 (None without it); fixed while decoding
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence, bias=bias)[:, -1]
+            hidden = (self._decode_logits(episode.x, episode.valid, sequence) if bias is None else
+                      self._decode_logits(episode.x, episode.valid, sequence, bias=bias))[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)

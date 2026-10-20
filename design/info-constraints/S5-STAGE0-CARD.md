@@ -120,3 +120,12 @@ Implementation details within §2-§4, recorded under the card's rule:
    - ∂L/∂κ_d ≠ 0 at κ_d = 0;
    - finite modes with wipes;
    - refusals, the config round trip, and the reset.
+
+## Amendment 2 (2026-10-20, before any S5 run; §3-§7 marks unchanged)
+
+From the focused review:
+- **Clipping.** §3's "clip 1.0" is applied to the **shared weights only**, in both arms. κ_d's gradient is
+  clipped separately at 1.0. Otherwise κ_d's gradient would enter the treated arm's global norm and shrink its
+  shared-weight steps, a second difference between the arms besides the bias.
+- **Question entities.** `q_ents` is computed with the existing `_mentions(batch, start)`: the entities in the
+  question span [start, "[answer"] + 1). Same set as before, one implementation.

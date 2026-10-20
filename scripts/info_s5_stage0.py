@@ -213,7 +213,9 @@ def train(arm: str, seed: int, threads: int, test: list):
         if step == STAGE1 and kappa is not None:
             record["first_stage2_kappa_grad"] = float(kappa.grad)
         record["finite"] &= all(p.grad is None or bool(torch.isfinite(p.grad).all()) for p in model.parameters())
-        torch.nn.utils.clip_grad_norm_(list(model.parameters()), 1.0)
+        torch.nn.utils.clip_grad_norm_(shared, 1.0)                 # amendment 2: shared weights only, so kappa_d's
+        if kappa is not None and kappa.grad is not None:            # gradient cannot shrink the treated arm's steps
+            torch.nn.utils.clip_grad_norm_([kappa], 1.0)
         optimizer.step()
         done = step + 1
         if done % 100 == 0 or step == 0:
