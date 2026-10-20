@@ -1,4 +1,4 @@
-# RUN CARD R1, stage 1: Muon against AdamW on village data (DRAFT, NOT SEALED)
+# RUN CARD R1, stage 1: Muon against AdamW on village data (SEALED 2026-10-20, before any GPU run)
 
 Drafted 2026-10-20 from `R1-STAGE1-BID.md` and the coordinator's 10-20 rulings:
 - lr option (i), both arms at 1e-3;
