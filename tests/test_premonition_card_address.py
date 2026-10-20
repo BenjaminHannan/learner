@@ -192,11 +192,20 @@ class CardAddressTest(unittest.TestCase):
         build(tiny("D", decoder_raw_cards=True, card_address=True), 11)
         self.assertEqual(torch.initial_seed(), 11)                              # no manual_seed inside
 
-    def test_reset_parameters_keeps_the_s3_init_rules(self) -> None:
+    def test_reset_parameters_keeps_the_s3_init_rules_and_the_paired_stream(self) -> None:
+        control, _ = build(tiny("D", decoder_raw_cards=True), 2)
         model, _ = build(tiny("D", decoder_raw_cards=True, card_address=True), 2)
         before = model.address.proj.weight.clone()
         torch.manual_seed(9)
+        control.reset_parameters()
+        rng_c = torch.get_rng_state()
+        torch.manual_seed(9)
         model.reset_parameters()
+        self.assertTrue(torch.equal(torch.get_rng_state(), rng_c))            # same global stream after a re-init
+        shared = dict(control.named_parameters())
+        for name, value in model.named_parameters():
+            if name in shared:
+                self.assertTrue(torch.equal(value, shared[name]), name)        # same shared weights
         self.assertTrue(torch.equal(model.address.pool.weight, model.writer.pool.weight))
         self.assertTrue(torch.equal(model.address.proj.weight, before))       # its own generator, same seed
 

@@ -142,6 +142,8 @@ def preload_distractors(model: PremonitionMini, store, batch, episode, n: int,
                         generator: torch.Generator) -> torch.Tensor:
     """m02 `distractor_preload`: the gold card + n other eligible non-gold, non-NULL fact cards, shuffled;
     inserts them and returns [Q, 1 + n] (-1 = none)."""
+    if bool((batch.gold_lines[:, 0] < 0).any()):
+        raise ValueError("preload_distractors needs a told question (gold line) for every question, as the far-fact toy")
     gold, _, _ = store.gold(batch.gold_lines, batch.q_visit, batch.q_line)
     pool = store.eligible(batch.q_visit, batch.q_line) & ~gold
     pool[:, store.null] = False

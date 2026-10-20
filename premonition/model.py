@@ -320,9 +320,7 @@ class Decoder(nn.Module):
             kdim = self.cross_q.out_features
             spliced = F.linear(_norm(rows), self.cross_kv.weight[:kdim], self.cross_kv.bias[:kdim])
             spliced = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
-            k = k.clone()
-            for group in slots:
-                k[:, :, group] = spliced
+            k = k.index_copy(2, slots.flatten(), spliced.repeat(1, 1, slots.shape[0], 1))
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
@@ -414,13 +412,15 @@ class PremonitionMini(nn.Module):
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        for module in self.modules():
+        own = {id(m) for m in getattr(self, "address", nn.Identity()).modules()} - {id(self)}   # S3 inits apart
+        shared = [m for m in self.modules() if id(m) not in own]
+        for module in shared:
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, std=0.02)
                 nn.init.zeros_(module.bias)
             elif isinstance(module, nn.Embedding) and module is not self.embed:
                 nn.init.normal_(module.weight, std=0.02)
-        for module in self.modules():
+        for module in shared:
             outs = []
             if id(module) in residual:
                 outs.append(module.out)
@@ -559,6 +559,8 @@ class PremonitionMini(nn.Module):
             episode.x = episode.x.index_put((who[real], raw), rows[real])
             episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
         if config.card_address:
+            if store.addresses is None:
+                raise ValueError("card_address needs a store from PremonitionMini.build_store (it holds the addresses)")
             visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
             found = (lines >= 0).unsqueeze(-1)                         # `gather` gives line -1 for NULL / none
             address = store.addresses[visit, lines.clamp_min(0)].float() * found          # NULL: zero address
