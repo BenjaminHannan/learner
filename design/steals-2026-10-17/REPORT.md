@@ -556,6 +556,17 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
 - Reported to the coordinator. **Proposed:** merge 1a and 1b into one job under one $2.80 cap, with the sealed F rule
   applied on the box, or raise 1a's stop. Then one more $0 fix round and a re-review. **Nothing is booked.**
 
+- **After the 10-20 rulings:**
+  - **Rulings:** one job, one box, one $2.80 cap; the F rule accepted with F_MAX = 7.5e15 (about 3 epochs); 1b
+    starts automatically only if 1a's gate passes and F ≥ F_min.
+  - **Built:**
+    - the runner (7ea893bc8): `run --timing`, the sealed `price` with go/no-go exits, and `check_price`;
+    - the controller (ea7398b6c): stage `1ab`, with N1, N3 and N4 fixed, and a bash end-to-end test of the job.
+  - **Re-review, NOT CLEAN.** Two blocking findings:
+    - `price` budgets 1b in dollars only, not against the job's own run deadline;
+    - a single network error can crash `waitlog`, the only thing enforcing the cap, and stops are not retried.
+  - Stopped and reported, with a proposed fix round. **Nothing is booked.**
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
