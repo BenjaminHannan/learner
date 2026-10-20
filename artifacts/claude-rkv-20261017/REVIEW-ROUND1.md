@@ -26,4 +26,4 @@ code, and the new regression tests fail on `5ad2f788e` and pass on the fix.
 
 - `tests/test_premonition_decoder_reader_kv.py`: 15 passed (12 before, plus 3 new; the bit-identity test gained 3 paths).
 - On `5ad2f788e`'s `model.py` the new tests fail: the flag-off bit-identity test (bare-episode path) and the flag-on `validate` test.
-- Every premonition test file run on its own, compared with the pristine 73b8e0224 tree: appended below once the run finishes.
+- Every premonition test file (plus `tests/test_model.py`) run on its own, at `239f22881` and on the pristine 73b8e0224 tree: **identical except the new file** (pristine: 1 error, since its config lacks the flag; fixed: 15 passed). The pre-existing errors and empty collections are the same on both trees; they come from artifacts missing from this checkout: `handoff_diag` 1 passed + 5 errors, `pair_suite` 2 + 8, `teacher_delay_report` 6 + 12, and 10 files with no tests collected. The rest pass: `model` 17, `train` 9 (+1 skipped), `contenders` 22, `label_free` 23 (+1 skipped), `slices` 21, `data` 14, `binding_probe` 3, `address_keys` 6, `answer_path` 6, `direct_reader` 9, and 12 more files.
