@@ -80,3 +80,7 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | open | Ledger check | The decoder session claims "$29.86 of $50 committed" this week on Vast. Not yet reconciled with this ledger. | — |
 | 2026-10-20 00:50 | Steals | Round-6 review accepted as clean for the R1 path (9ce46e2..2004775 is docs only). R1 Stage 0 GO at 2004775: $0, CPU, marks as filed. Design questions (a)–(d) settled or held as listed. | 0 |
 | 2026-10-20 00:41 | Info constraints | S2 Stage 0 PASSED its pre-set marks (control about 11%, treated 1024/1024 on 3 seeds). Coordinator review of the final head running. Distractor reading GO ($0). | 0 |
+| 2026-10-20 01:10 | Info constraints | Coordinator review of PR #87 @90077ef2b: CLEAN (0 blocking, 7 non-blocking), so S2 code is no longer DRAFT. The `distract` runner addition is not yet reviewed. S3 build GO ($0); the run waits on the S3 review. | 0 |
+| 2026-10-20 ~01:00 | Restart gate | Deferral-line wording ruled. B1 add stands (delegated); the session may stage it as PENDING BEN. | 0 |
+| 2026-10-20 ~00:57 | Brain | Fix round 2 GO; G1-config bit-identity on the --guard replay path checked first. | 0 |
+| 2026-10-20 ~00:55 | Swarm | GO on the dry-run blocker, no tracked diagnostics under seconds_budget, items 5/6/10. | 0 |
