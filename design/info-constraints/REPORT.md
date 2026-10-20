@@ -674,6 +674,16 @@ compose, and the address pool would pool over a span instead of a line, but run 
 - **Rounds 10-11:** no model correctness bug.
 - **Kept by design (logged):** the pinned S2 commit (re-pin at merge, Q41), the episode-row layout and the
   subclass guards, the duplicated pooling and decoder helpers, decode-path copies.
+- **Correction to my 10-20 message to the coordinator:** round 11 ran on cbae3d9eb, not on 5b354d525. Code changed
+  after it (798d77677, the `preload_distractors` guard).
+- **Round 12** therefore ran on main...e548d89d2, which holds every code change. It found no crash or wrong-output
+  finding. Kept:
+  - the same design, efficiency and duplication items as above;
+  - `config.DRAFT_FLAGS`'s comment ("left out of config dicts when off") is true for `train.mini_config_dict`,
+    the D checkpoint and digest path. Diagnostic scripts that save `asdict(model.config)` do record the two
+    False flags; they never feed a contender identity.
+- **No code changed after round 12.** S3 Stage 0 runs on exactly the reviewed code. Later commits touch only
+  docs and artifacts.
 
 ### S4. `ent_key`: entity identity in the ASK key (direction-only fetch / key collapse)
 
