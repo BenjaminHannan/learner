@@ -1063,5 +1063,17 @@ class RecallSliceTest(unittest.TestCase):
         torch.testing.assert_close(new, old)
 
 
+class AnswerCapTest(unittest.TestCase):
+    """Review round 3, fifth pass, item 7: swarm_answer's max_loops is a CAP on the trained rounds, as D1's is."""
+
+    def test_max_loops_caps_the_rounds(self) -> None:
+        batch = synthetic_batch(seed=1)
+        model = s0()
+        rounds = model.config.swarm_rounds
+        self.assertEqual(int(model.answer(batch, max_loops=8).loops.max()), rounds)   # never more than trained
+        self.assertEqual(int(model.answer(batch, max_loops=2).loops.max()), 2)
+        self.assertEqual(int(model.answer(batch).loops.max()), rounds)
+
+
 if __name__ == "__main__":
     unittest.main()

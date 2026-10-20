@@ -113,7 +113,9 @@ default `all`), `DRYRUN` (1 = CPU tiny dry run). Steps, each logged with UTC tim
    DRYRUN T = 120, size tiny, device cpu).
 6. Evals of all six checkpoints.
 7. `premonition_swarm_marks.py --card S0` -> MARKS-S0.{json,md}.
-8. Tar every JSON/log/MARKS file (not checkpoints) to `swarm-screen-out.tgz` for copy-back; print its sha256.
+8. Tar every JSON/log/MARKS file (not checkpoints or C0 probes) to `swarm-screen-out.tgz` for copy-back; print its sha256.
+   (2026-10-20) Only at a successful end. Never on a refusal or failure, and an existing archive is never changed.
+   After a failure, copy OUT's JSON/logs back directly. C0's probe checkpoints go to `<OUT>/c0-probe`, cleared when C0 starts.
 Never destroys the box (the rental agent does that after a checked copy-back).
 
 ## CPU dry run (run it here)

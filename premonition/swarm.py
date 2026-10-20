@@ -473,7 +473,7 @@ def swarm_answer(model: Any, batch: VisitBatch, *, wipe: Optional[str] = None,
     mentions = model._mentions(batch, low)
     swarm = _Swarm(model, batch, hidden, store, mentions, board=lesion != "board")
     board = swarm.board
-    rounds = max(1, min(max_loops or config.swarm_rounds, config.max_loops))
+    rounds = max(1, min(max_loops or config.swarm_rounds, config.swarm_rounds))   # a cap, as D1's max_loops is
     first_top = torch.full((count, config.top_k), -1, dtype=torch.long, device=device)
     asks = torch.zeros(count, M, dtype=torch.long, device=device)
     halt_prob = torch.zeros(count, device=device)

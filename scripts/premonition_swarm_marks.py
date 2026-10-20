@@ -353,13 +353,14 @@ def usage_per_seed(ctx: Context, arm: str) -> list[dict[str, Any]]:
             continue
         ask, fetch = [num(v) for v in swarm["ask_rate"]], [num(v) for v in swarm["fetch_count"]]
         ok = (all(v >= ASK_FLOOR for v in ask) and all(math.isfinite(v) for v in fetch)
-              and min(fetch) >= FETCH_FLOOR * max(fetch))
+              and max(fetch) > 0 and min(fetch) >= FETCH_FLOOR * max(fetch))   # no fetch at all = breadth unused
         rows.append({"seed": seed, "ask_rate": ask, "fetch_count": fetch, "ok": ok})
     return rows
 
 
 def usage_mark(ctx: Context, name: str, title: str, arm: str) -> dict[str, Any]:
-    bar = (f"every desk ask_rate >= {ASK_FLOOR} and min fetch_count >= {FETCH_FLOOR} x max, on >= 2 of "
+    bar = (f"every desk ask_rate >= {ASK_FLOOR}, the busiest desk fetched > 0, and min fetch_count >= "
+           f"{FETCH_FLOOR} x max, on >= 2 of "
            f"{len(ctx.seeds)} seeds")
     rows = usage_per_seed(ctx, arm)
     if any(r.get("missing") for r in rows):
@@ -433,6 +434,10 @@ def validity_mark(ctx: Context, name: str, title: str, arms: Sequence[str]) -> d
             loss = num((report.get("final") or {}).get("loss"))
             history_bad = [r.get("step") for r in report.get("history") or []
                            if "loss" in r and r["loss"] is not None and not finite(r["loss"])]
+            if "nonfinite_logged_steps" not in report:              # counted over the full history before trimming
+                problems.append(f"validity: {label} has no nonfinite_logged_steps (full-history loss check)")
+            else:
+                history_bad = sorted(set(history_bad) | set(report["nonfinite_logged_steps"]))
             run = {"run": label, "status": report.get("status"), "train_seconds": seconds, "steps": report.get("steps"),
                    "final_loss": loss, "loop_mismatches": report.get("loop_mismatches"), "seconds_budget": report.get("seconds_budget"),
                    "stop": report.get("stop")}
@@ -586,7 +591,7 @@ def s1_card(ctx: Context) -> tuple[list[dict[str, Any]], dict[str, Any], dict[st
     m5["detail"]["S1_minus_S0"] = shift
     board_collapsed = bool(s1_collapsed) and s0_collapsed is False
     if m5["computed"]:
-        m5["status"] = "fail" if board_collapsed else ("info" if s1_collapsed else "pass")
+        m5["status"] = "fail" if s1_collapsed else "pass"          # "as S0 M4": a collapsed S1 never passes
     if shift:
         m5["value"] += " || S1 - S0 register_cos per seed " + ", ".join(f"{v:+.3f}" for v in shift["register_cos_S1_minus_S0"])
     m6 = validity_mark(ctx, "M6", "validity", CARD_ARMS["S1"])
@@ -611,10 +616,11 @@ def s1_card(ctx: Context) -> tuple[list[dict[str, Any]], dict[str, Any], dict[st
         verdict, reason = "KILL-COMM", "KILL-COMM: S1 does not beat S0 on far_deep (" + kill_value + ")"
     elif guard_fail:
         verdict, reason = "FAIL", "FAIL (" + ", ".join(f"{g} {names[g]}" for g in guard_fail) + ")"
-    elif m1["status"] == "pass" and not board_collapsed:
+    elif m1["status"] == "pass" and not s1_collapsed:
         verdict, reason = "PASS", "PASS (communication adds and is used)"
-    elif m1["status"] == "pass":
-        verdict, reason = "HOLD", f"HOLD: M1 passes but {BOARD_COLLAPSED_TEXT}"
+    elif m1["status"] == "pass":                                   # RUNCARD-S1 M5 "as S0 M4", whatever S0 does
+        verdict, reason = "HOLD", (f"HOLD: M1 passes but {BOARD_COLLAPSED_TEXT}" if board_collapsed
+                                   else f"HOLD: M1 passes but {COLLAPSED_TEXT}")
     else:
         verdict, reason = "HOLD", "HOLD: gain between 0 and 3 points, or not significant"
     if board_collapsed and BOARD_COLLAPSED_TEXT not in reason:

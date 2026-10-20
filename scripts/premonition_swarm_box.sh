@@ -28,7 +28,7 @@
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-ROOT=$(cd "$HERE/.." && pwd)
+ROOT=$(cd "$HERE/.." && pwd -P)   # physical, like `realpath` on OUT below (a symlinked /workspace must still match)
 cd "$ROOT"
 PIN=${PIN:-}
 DPH=${DPH:-}
@@ -62,7 +62,7 @@ COMMON="--device $DEVICE --size $SIZE --workers $WORKERS"
 OUT=$(realpath -m "$OUT")
 case "$OUT/" in
   "$ROOT"/*) ;;
-  *) printf 'REFUSED: OUT %s is outside the repository %s; use a folder under artifacts/. Nothing was written.\n' \
+  *) printf 'REFUSED: OUT %s is outside the repository %s; use a folder under artifacts/ (artifacts/ must be a real folder in the repository, not a symlink). Nothing was written.\n' \
        "$OUT" "$ROOT"; exit 2;;
 esac
 if ! git -C "$ROOT" check-ignore -q --no-index "$OUT/box.log"; then
@@ -85,21 +85,23 @@ fi
 mkdir -p "$OUT"
 BOXLOG="$OUT/box.log"
 START=$(date +%s)
-TARBALL_DONE=0
 
 say() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" | tee -a "$BOXLOG"; }
 jget() { "$PY" -B -c 'import json,sys; v=json.load(open(sys.argv[1]))
 for k in sys.argv[2].split("."): v=v[k]
 print(v)' "$1" "$2"; }
 
+# The copy-back archive is written ONLY at a successful run end (step 8), never on a refusal or a failure, and an
+# archive that already exists is never changed: its sha256 may already be logged (round 3, fifth pass, item 3).
+# After a failure, copy OUT's JSON and logs back directly.
 pack() {
-  [ "$TARBALL_DONE" = 1 ] && return 0
-  TARBALL_DONE=1
-  ( cd "$OUT" && rm -f swarm-screen-out.tgz && \
-    tar czf swarm-screen-out.tgz $(ls | grep -v -e '^swarm-screen-out.tgz$' -e '^ckpt' || true) ) \
+  if [ -e "$OUT/swarm-screen-out.tgz" ]; then
+    say "NOT packing: $OUT/swarm-screen-out.tgz already exists and is never changed"; return 1
+  fi
+  ( cd "$OUT" && tar czf swarm-screen-out.tgz $(ls | grep -v -e '^swarm-screen-out.tgz$' -e '^ckpt' -e '^c0-probe' || true) ) \
     && say "packed $OUT/swarm-screen-out.tgz sha256 $(sha256sum "$OUT/swarm-screen-out.tgz" | cut -d' ' -f1) ($(stat -c %s "$OUT/swarm-screen-out.tgz") bytes)"
 }
-finish() { rc=$?; say "EXIT rc=$rc after $(( $(date +%s) - START )) s"; pack || true; exit $rc; }
+finish() { rc=$?; say "EXIT rc=$rc after $(( $(date +%s) - START )) s"; exit $rc; }
 trap finish EXIT
 
 # step NAME CMD...: log start/end with UTC timestamps and seconds, tee the output to NAME.log, cut at MAXH.
@@ -171,7 +173,8 @@ if [ "$PART" != s0 ]; then
   step data $SCREEN data --visits "$VISITS" --out "$OUT/data.json" $COMMON
   DATA_REL=$(jget "$OUT/data.json" data_rel); TOK=$(jget "$OUT/data.json" tokenizer_path)
   # -------------------------------------------------------------- 4. C0
-  step c0 $SCREEN c0 --data-rel "$DATA_REL" --tokenizer "$TOK" --dph "${DPH:-0}" --ckpt-dir "$CKPT" --out "$OUT/c0.json" $COMMON $C0_ARGS
+  rm -rf "$OUT/c0-probe"            # C0's probe checkpoints live apart from CKPT, so a cut C0 never blocks PART=s0
+  step c0 $SCREEN c0 --data-rel "$DATA_REL" --tokenizer "$TOK" --dph "${DPH:-0}" --ckpt-dir "${OUT#"$ROOT"/}/c0-probe" --out "$OUT/c0.json" $COMMON $C0_ARGS
 else
   for f in data.json c0.json; do [ -f "$OUT/$f" ] || { say "REFUSED: PART=s0 needs $OUT/$f from an earlier c0 part"; exit 2; }; done
   DATA_REL=$(jget "$OUT/data.json" data_rel); TOK=$(jget "$OUT/data.json" tokenizer_path)

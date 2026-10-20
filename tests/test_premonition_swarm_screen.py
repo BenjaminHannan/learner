@@ -92,7 +92,8 @@ def refresh(report: dict) -> None:
 def train_report(arm: str, seed: int, *, seconds: float = T * 1.004, tag="tag-1", sha="sha-1", steps=1000) -> dict:
     return {"status": "completed", "arm": arm, "seed": seed, "train_seconds": seconds, "seconds_budget": T,
             "steps": steps, "stop": "seconds budget", "loop_mismatches": 0, "final": {"loss": 2.3},
-            "history": [{"step": 50, "loss": 2.4}, {"step": 100, "loss": 2.3}], "parameters": 1,
+            "history": [{"step": 50, "loss": 2.4}, {"step": 100, "loss": 2.3}], "nonfinite_logged_steps": [],
+            "parameters": 1,
             "swarm": marks.EXPECTED_SWARM[arm], "data": {"tag": tag}, "tokenizer": {"sha256": sha}}
 
 
@@ -762,6 +763,89 @@ class FourthPassTest(unittest.TestCase):
         finally:
             import shutil
             shutil.rmtree(out, ignore_errors=True)
+
+
+class FifthPassTest(MarksTestCase):
+    """Review round 3, fifth pass (ruled Oct 20): 1 a collapsed S1 never PASSes; 5 M3 fails when no desk fetched
+    anything; 4 a non-finite loss anywhere in the full history voids; 2 symlinked repo paths; 3 the archive is
+    packed only at a successful end; 6 C0's probes live apart from CKPT."""
+
+    ROOT = Path(__file__).resolve().parents[1]
+    COLLAPSED = dict(HEALTHY, register_cos=0.99, fetch_overlap=0.9, collapsed=True)
+
+    def test_collapsed_s1_never_passes_even_when_s0_is_collapsed(self) -> None:
+        scenario = Scenario()
+        scenario.swarm = {"S0": [dict(self.COLLAPSED) for _ in SEEDS], "S1": [dict(self.COLLAPSED) for _ in SEEDS]}
+        out = self.run_card(scenario, "S1")
+        self.assertEqual(next(m for m in out["marks"] if m["mark"] == "M1")["status"], "pass")
+        self.assertVerdict(out, "HOLD")
+        self.assertIn("COLLAPSED", out["verdict_line"])
+        self.assertEqual(next(m for m in out["marks"] if m["mark"] == "M5")["status"], "fail")
+
+    def test_m3_fails_when_every_desk_fetched_nothing(self) -> None:
+        scenario = Scenario()
+        scenario.swarm["S0"] = [dict(HEALTHY, fetch_count=[0.0, 0.0, 0.0, 0.0]) for _ in SEEDS]
+        out = self.run_card(scenario)
+        self.assertEqual(next(m for m in out["marks"] if m["mark"] == "M3")["status"], "fail")
+        self.assertVerdict(out, "FAIL")
+
+    def test_a_nonfinite_loss_anywhere_in_the_full_history_voids(self) -> None:
+        scenario = Scenario()
+        scenario.edits.append(("train-S0-s1.json", lambda r: r.update(nonfinite_logged_steps=[50])))
+        out = self.run_card(scenario)
+        self.assertVerdict(out, "VOID")
+        self.assertTrue(any("non-finite" in v or "final loss" in v for v in out["void_reasons"]), out["void_reasons"])
+        scenario = Scenario()
+        scenario.edits.append(("train-D1-s0.json", lambda r: r.pop("nonfinite_logged_steps")))
+        self.assertVerdict(self.run_card(scenario), "VOID")                   # the full-history count must exist
+        history = [{"step": 50, "loss": float("nan")}] + [{"step": 100 + i, "loss": 2.0} for i in range(10)]
+        self.assertEqual(screen.nonfinite_logged_steps(history), [50])        # trimming would have hidden step 50
+        self.assertEqual(screen.trim_history({"history": history})["history"][0]["step"], 105)
+
+    def _box(self, script: Path, cwd: Path, **env) -> "subprocess.CompletedProcess":
+        import os
+        import subprocess
+        pin = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.ROOT, capture_output=True, text=True).stdout.strip()
+        base = {k: v for k, v in os.environ.items() if k not in ("OUT", "CKPT")}
+        return subprocess.run(["bash", str(script)], cwd=cwd, env={**base, "DRYRUN": "1", "PIN": pin, **env},
+                              capture_output=True, text=True, timeout=180)
+
+    def test_a_symlinked_repo_path_is_not_outside_the_repository(self) -> None:
+        with tempfile.TemporaryDirectory(dir="/tmp") as folder:
+            link = Path(folder) / "repo"
+            link.symlink_to(self.ROOT)
+            run = self._box(link / "scripts/premonition_swarm_box.sh", link, CHECK_ONLY="1")
+            self.assertNotIn("is outside the repository", run.stdout, run.stdout)
+            self.assertIn(run.returncode, (0, 2), run.stdout + run.stderr)     # 2 only for a dirty dev tree
+            if run.returncode == 2:
+                self.assertIn("working tree is not clean", run.stdout)
+
+    def test_the_archive_is_packed_only_at_a_successful_end(self) -> None:
+        import shutil
+        out = self.ROOT / "artifacts" / f"swarm-pack-test-{__import__('os').getpid()}"
+        try:
+            (out / "ckpt" / "D1-s0").mkdir(parents=True)
+            (out / "ckpt" / "D1-s0" / "model.pt").write_text("x", encoding="utf-8")
+            (out / "swarm-screen-out.tgz").write_bytes(b"an archive whose sha256 was logged")
+            run = self._box(self.ROOT / "scripts/premonition_swarm_box.sh", self.ROOT, OUT=str(out))
+            self.assertEqual(run.returncode, 2, run.stdout + run.stderr)       # a refusal (CKPT busy, or dirty tree)
+            self.assertEqual((out / "swarm-screen-out.tgz").read_bytes(), b"an archive whose sha256 was logged")
+            self.assertNotIn("packed ", run.stdout)
+            fresh = self.ROOT / "artifacts" / f"swarm-pack-test-{__import__('os').getpid()}-fresh"
+            run = self._box(self.ROOT / "scripts/premonition_swarm_box.sh", self.ROOT, OUT=str(fresh), CHECK_ONLY="1")
+            self.assertFalse((fresh / "swarm-screen-out.tgz").exists())        # CHECK_ONLY / refusals never pack
+        finally:
+            shutil.rmtree(out, ignore_errors=True)
+            shutil.rmtree(self.ROOT / "artifacts" / f"swarm-pack-test-{__import__('os').getpid()}-fresh",
+                          ignore_errors=True)
+
+    def test_c0_probes_live_apart_from_ckpt(self) -> None:
+        text = (self.ROOT / "scripts/premonition_swarm_box.sh").read_text(encoding="utf-8")
+        c0_line = next(line for line in text.splitlines() if line.strip().startswith("step c0 "))
+        self.assertIn('--ckpt-dir "${OUT#"$ROOT"/}/c0-probe"', c0_line)
+        self.assertNotIn('--ckpt-dir "$CKPT"', c0_line)
+        self.assertLess(text.index('rm -rf "$OUT/c0-probe"'), text.index(c0_line))   # cleared before C0 starts
+        self.assertIn("-e '^c0-probe'", text)                                  # and never packed
 
 
 if __name__ == "__main__":

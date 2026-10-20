@@ -36,7 +36,7 @@ forgetting guard. Same statistics.
 | **M2 board is used** | pooled, S1 intact − S1 `lesion="board"` on `far_deep` ≥ 3.0 points, p < 0.01, and the drop is positive on ≥ 2 of 3 seeds. Otherwise **FAIL (BOARD-UNUSED)**: any S1 gain came from training dynamics, not talk (the register-loop failure, design §1) |
 | **M3 DEV slip vs D1** | on ≥ 2 of 3 seeds, S1 `near` < D1 `near` − 3.0, or S1 `overall` < D1 `overall` − 3.0 → **FAIL** |
 | **M4 desk usage** | as S0 M3, for S1 |
-| **M5 diversity** | as S0 M4. **Also:** the board is a broadcast, so the readout prints S1 − S0 `register_cos`. If S1 is collapsed and S0 is not, the verdict line says **"the board collapsed the desks"** and cannot PASS |
+| **M5 diversity** | as S0 M4 (10-20: enforced exactly, so a collapsed S1 never PASSes, whatever S0 does). **Also:** the board is a broadcast, so the readout prints S1 − S0 `register_cos`. If S1 is collapsed and S0 is not, the verdict line says **"the board collapsed the desks"** and cannot PASS |
 | **M6 validity** | as S0 M5 and M6 |
 
 **Verdict:** **PASS** (communication adds and is used) only if M1 and M2 pass and M3-M6 hold.

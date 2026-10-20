@@ -148,7 +148,7 @@ Mirror `PremonitionMini.forward` (same return dict, same weights defaults, same 
 ## 8. Eval (`swarm_answer(model, batch, *, wipe, window_line, stop, max_loops, lesion=None)`)
 
 Mirror `PremonitionMini.answer` (same wipe handling, mentions, empty-batch return). Rounds =
-`min(max_loops or config.swarm_rounds, config.max_loops)`, fixed (no HALT exit; record the mean desk HALT
+`min(max_loops or config.swarm_rounds, config.swarm_rounds)` (a cap on the trained rounds, as D1's `max_loops` is), fixed (no HALT exit; record the mean desk HALT
 probability of the last round as `halt_prob`). Each desk fetches its own `top_k` when its `ask > 0`
 (not after the last round). Add keyword `lesion` to `PremonitionMini.answer`'s dispatch only through
 `**kwargs` passthrough — simplest: give `PremonitionMini.answer` a trailing keyword `lesion: Optional[str] = None`

@@ -307,6 +307,20 @@ def open_caches(budget: Any, data_rel: str, tokenizer_path: str, workers: int):
     return tokenizer, detector, train
 
 
+LOSS_NAMES = ("loss", "lm", "ask", "ans", "halt")
+
+
+def nonfinite_logged_steps(history: Sequence[Mapping[str, Any]]) -> list[Any]:
+    """Steps of the FULL training history with a non-finite logged loss (or loss term). It is computed before
+    `trim_history` keeps only the last 5 records, so M5's no-NaN check sees every window (round 3, fifth pass, 4)."""
+    bad = []
+    for record in history:
+        values = [record.get(name) for name in LOSS_NAMES if record.get(name) is not None]
+        if any(not math.isfinite(float(v)) for v in values):
+            bad.append(record.get("step"))
+    return bad
+
+
 def run_trainer(model: Any, device: str, seconds: float):
     """The trainer a screen `train` step uses (`train_d` builds it through `d_trainer` with RUN_SETTINGS)."""
     from premonition.train import d_trainer
@@ -571,6 +585,7 @@ def cmd_train(args: argparse.Namespace) -> int:
                      swarm=ARMS[args.arm] or None, seed=args.seed, device=args.device, size=args.size,
                      max_tokens=args.max_tokens, workers=max(1, args.workers), checkpoint=checkpoint, log=log,
                      **RUN_SETTINGS)
+    report["nonfinite_logged_steps"] = nonfinite_logged_steps(report.get("history") or [])   # before trimming
     report = trim_history(report)
     report.update(arm=args.arm, seed=args.seed, seconds_requested=args.seconds,
                   wall_seconds=time.perf_counter() - began, size=args.size, environment=environment(args.device))
