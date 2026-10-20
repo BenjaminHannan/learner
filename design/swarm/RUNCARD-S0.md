@@ -18,6 +18,16 @@ the seal except by a dated amendment written before the result files it concerns
 kind exists at sealing: every number so far comes from tiny CPU dry runs, which are meaningless by design.
 RUNCARD-S1 stays a draft, not sealed and not booked (Q28).
 
+**Amendment 2026-10-20 (post-seal, before any S0 result exists; coordinator ruling on RUN1-C0-STOP).** Run 1 stopped
+at C0 before any training: D1 reserved 14.98 GiB, above the run trainer's unchanged 14 GiB guard
+(`RUN1-C0-STOP-2026-10-20.md`). For the next run, **every arm (D1, S0 and every C0 bench arm) runs under the same
+CUDA allocator setting, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`**, set in the rental job's environment. No
+sealed file changes; the PIN stays 34d8d0635. The setting changes how the allocator reserves memory, not the
+arithmetic, and it is the same for both arms, so the paired comparison is unaffected. The guard, T's formula, every
+mark and every bar are unchanged. Registered before the retry: **pass** if D1 and S0m4 both finish C0 with peak
+reserved under 14 GiB; **proved wrong** if D1 trips again, in which case the box exits 3, it stops, and there is no
+retry without a new ruling. If C0 stops, the job also records D1's and S0m4's peak allocated and reserved memory.
+
 Original status text, kept:
 **Status: DRAFT, NOT SEALED. Written 2026-10-17, before any swarm run of any size, on any data, CPU or
 GPU.** Two things must happen before sealing: (1) the coordinator accepts or replaces the PROVISIONAL

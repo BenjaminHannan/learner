@@ -49,6 +49,9 @@ JOB = r'''# swarm screen C0 + S0 rental job, from scripts/claude_swarm_rent.py (
 set -u
 export PIN=__PIN__
 export DPH=__DPH__ BOX_START=__BOX_START__ CAP=__CAP__
+# Run 2 (coordinator ruling on RUN1-C0-STOP, option A): the allocator setting, for every arm alike, set here in the
+# rental job only (no sealed or packed file carries it). Numerics are unchanged; it only reduces fragmentation.
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 J=${JOBDIR:-/job}
 REPO=$J/repo
 OUT=$REPO/artifacts/claude-swarm-screen-20261018/out
@@ -90,6 +93,7 @@ used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/n
 [ "${used:-0}" -gt 2000 ] && fail "GPU busy: $used MiB in use before any run"
 echo "cpus $(nproc)"; free -g | head -2; df -h / | tail -1
 python -c "import torch,sys;print('python',sys.version.split()[0],'torch',torch.__version__,torch.version.cuda,torch.cuda.is_available())" 2>&1 | tee checks/torch.txt
+python -c "import os,torch;print('PYTORCH_CUDA_ALLOC_CONF', os.environ.get('PYTORCH_CUDA_ALLOC_CONF'));print('allocator backend', torch.cuda.get_allocator_backend() if torch.cuda.is_available() else 'no cuda')" 2>&1 | tee checks/allocator.txt
 command -v git > /dev/null || { (apt-get update -qq && apt-get install -y -qq git) > checks/apt.log 2>&1 || fail "git install"; }
 say "CHECKOUT"
 git init -q "$REPO" && git -C "$REPO" remote add origin "$REPO_URL" || fail "git init"
@@ -100,8 +104,53 @@ say "BOX"
 cd "$REPO"
 bash scripts/premonition_swarm_box.sh > "$J/checks/box.out" 2>&1
 rc=$?
+if [ "$rc" = 3 ] && [ -f "$OUT/data.json" ]; then
+  # The stop record gives only reserved memory. A short guard-free probe (sealed code, unmodified, imported) reads
+  # peak ALLOCATED and RESERVED for D1 and S0m4 in each mode on the same batches, for the coordinator's ruling.
+  say "MEMPROBE"
+  timeout 900 python -B - "$OUT/data.json" > "$J/checks/memprobe.json" 2> "$J/checks/memprobe.err" <<'PY'
+__MEMPROBE__
+PY
+  cat "$J/checks/memprobe.json"
+fi
 finish "$rc"
 '''.replace("__PIN__", PIN).replace("$REPO_URL", REPO_URL)
+
+MEMPROBE = r'''
+import itertools, json, os, sys
+from pathlib import Path
+sys.argv = [sys.argv[0]] + sys.argv[1:]
+data = json.load(open(sys.argv[1]))
+sys.path.insert(0, "scripts")
+import premonition_swarm_screen as s                    # sealed runner, imported as is
+import torch
+import premonition.train as pt
+from premonition import data as pdata
+device, size = os.environ.get("MEMPROBE_DEVICE", "cuda"), os.environ.get("MEMPROBE_SIZE", "full")
+pt.MiniTrainer._check_memory = lambda self: None        # this probe records the peaks instead of aborting
+budget = s.make_budget(s.ROOT)
+tokenizer, _, train_cache = s.open_caches(budget, data["data_rel"], data["tokenizer_path"], 4)
+batches = list(itertools.islice(pdata.batches(train_cache, s.REGISTERED_C0["max_tokens"], seed=0, epochs=None,
+                                              max_visits=48), 12))
+out = {"PYTORCH_CUDA_ALLOC_CONF": os.environ.get("PYTORCH_CUDA_ALLOC_CONF"), "limit_gib": 14.0, "arms": {}}
+for arm in ("D1", "S0m4"):
+    for mode in s.MODES:
+        row = {}
+        try:
+            r = s.time_run(s.C0_ARMS[arm], mode, batches, size=size, vocab=tokenizer.vocab_size, device=device,
+                           warmup=2, timed=10, chunk=5)
+            row = {"seconds_per_update": r["round_value"]}
+        except Exception as e:                           # e.g. a real CUDA OOM: record it
+            row = {"error": f"{type(e).__name__}: {str(e)[:200]}"}
+        if device == "cuda":
+            row.update(peak_allocated_gib=torch.cuda.max_memory_allocated() / 2**30,
+                       peak_reserved_gib=torch.cuda.max_memory_reserved() / 2**30)
+            torch.cuda.empty_cache()
+        out["arms"].setdefault(arm, {})[mode] = row
+        print(json.dumps({arm: {mode: row}}), file=sys.stderr, flush=True)
+print(json.dumps(out, indent=1))
+'''.strip("\n")
+JOB = JOB.replace("__MEMPROBE__", MEMPROBE)
 
 
 def call(method, path, body=None, timeout=60):
