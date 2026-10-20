@@ -115,3 +115,4 @@ These hold the only copies of the span Stage 1 arm checkpoints. Retrieval route 
 | 2026-10-20 06:33 | Steals R2 | Stage 0 NOT SHOWN: d = [0.0, +3.9, −1.2] pts, mean +0.91, 2SE band −2.16 to +3.98. The gate is not selective. Final for stage 0; R2 stops. | 0 |
 | 2026-10-20 06:34 | Steals R1 S1 | Fix round GO for money-safety blockers (stop must be CONFIRMED and retried on network errors; price capped by seconds left). Then re-review, seal, re-quote, Ben's click. | 0 |
 | 2026-10-20 07:13 | Steals R1 S1 | Last review round: adopt the swarm box's money pattern (BOX_START plus a ledger persisted outside the job directory) and fix the self-stop check. If not clean → PARK as DRAFT. AI review cost now exceeds the $2.80 run. | 0 |
+| 2026-10-20 07:26 | Steals R1 S1 | Final review CLEAN; SEALED (c9f11ac2…, f86f9450b). BOOKING APPROVED: RTX 5090 ≤$0.61/h (offer 50615776, $0.602/h), $2.80 cap, on-box wall ≈$2.66. Needs Ben's click. | ≤2.80 approved |
