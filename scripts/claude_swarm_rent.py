@@ -180,7 +180,7 @@ def offers(max_dph):
     q = {"verified": {"eq": True}, "rentable": {"eq": True}, "rented": {"eq": False}, "type": "on-demand",
          "num_gpus": {"eq": 1}, "gpu_ram": {"gte": 23000}, "reliability": {"gte": 0.98},
          "cuda_max_good": {"gte": 12.6}, "disk_space": {"gte": DISK_GB}, "inet_down": {"gte": 300},
-         "cpu_cores_effective": {"gte": 8}, "allocated_storage": DISK_GB, "order": [["dph_total", "asc"]],
+         "cpu_cores_effective": {"gte": 12}, "allocated_storage": DISK_GB, "order": [["dph_total", "asc"]],
          "limit": 200}
     found = call("POST", "/bundles/", q).get("offers") or []
     return [o for o in found if o.get("gpu_name") == "RTX 4090" and o.get("dph_total", 99) <= max_dph]
