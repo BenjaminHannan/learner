@@ -203,12 +203,17 @@ def test_value_on_the_bar_holds_despite_float_error():
     assert rep["verdict"] == "WIN" and rep["rules"][0]["conditions"][0]["held"]
 
 
-def test_cli_exits_2_when_a_missing_variable_could_change_the_verdict(tmp_path):
+def test_tiny_written_bar_is_not_moved():
+    rep = pb.evaluate({"pairs": units([4e-10, 4e-10])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 1e-10}]}]))
+    assert rep["verdict"] == "UNRESOLVED"   # mean 4e-10 reads as 0.0 at 9 digits, and 0.0 > 1e-10 is false: the bar stays 1e-10
+
+
+def test_cli_exits_3_when_a_missing_variable_could_change_the_verdict(tmp_path):
     data, sp = tmp_path / "in.json", tmp_path / "spec.json"
     data.write_text(json.dumps({"pairs": units([1.0, 2.0, 3.0])}))
     sp.write_text(json.dumps(spec([{"name": "RATE", "conditions": [{"var": "pass_count", "op": ">=", "value": 4}]}], extras=["pass_count"])))
     r = subprocess.run([sys.executable, SRC, str(data), str(sp), "--summary-only"], capture_output=True, text=True)
-    assert r.returncode == 2 and "WARNING: missing vars pass_count" in r.stdout
+    assert r.returncode == 3 and "WARNING: missing vars pass_count" in r.stdout
 
 
 # (f) --------------------------------------------------------------- no eval

@@ -1608,6 +1608,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
     check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft)
+    check_diary_data(guard, diary_data, diary_cache)
     soft_value = (1 if guard_soft is None else None if guard_soft == 'hard' else
                   int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11; None = the hard mask (L14)
     soft_guard = guard == 'kfsoft'
@@ -1706,9 +1707,10 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
             if log_now:   # CPU only, so time.time() brackets the work; it is kept out of t_train and the s/update print
                 ts = time.time()
                 snap = snapshot_params(rms_named())
-                rms_secs += time.time() - ts
-                t0 += time.time() - ts
-                t_seg += time.time() - ts
+                dt = time.time() - ts
+                rms_secs += dt
+                t0 += dt
+                t_seg += dt
         # Grad norm = gn, the raw total norm BEFORE the clip. With --guard (kf / kfsoft) nothing rewrites the gradients between here and
         # the optimizer: mainbrain KFOptimizer.step() (kf.py, c823e4b9a) runs base.step() on the clipped p.grad as it is and projects
         # the weight CHANGE [W|b] afterwards. So there is no guard-modified gradient to measure; the gradient the optimizer uses is this

@@ -21,14 +21,14 @@ from domain.far.test_learn_probe_c8 import world, guard_world, run   # noqa: F40
 def clean_guard_imports():
     """load_guard / train import `mainbrain.*` from the guard source folder and cache it; drop what this test added, or a later
     test with its own guard source (test_learn_probe_c8) trips the 'klreplay comes from guard_src' check."""
-    for k in [k for k in sys.modules if k == 'mainbrain' or k.startswith('mainbrain.')]:   # and what an earlier test left (c8's guard run)
-        del sys.modules[k]
+    earlier = {k: sys.modules.pop(k) for k in [k for k in sys.modules if k == 'mainbrain' or k.startswith('mainbrain.')]}   # what an earlier test left (c8's guard run)
     mods, path = set(sys.modules), list(sys.path)
     yield
     for k in set(sys.modules) - mods:
         if k == 'mainbrain' or k.startswith('mainbrain.'):   # only those: dropping lazily imported torch modules breaks a re-import
             del sys.modules[k]
     sys.path[:] = path
+    sys.modules.update(earlier)   # put back what was removed at setup
 
 
 def argv(world, out, *extra):

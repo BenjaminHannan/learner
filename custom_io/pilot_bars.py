@@ -22,11 +22,12 @@ SPEC.json     {"floor_sd": 3.0, "alpha_two_sided": 0.05, "anchors": {...},
   lo = mean - half, hi = mean + half, plus the input's "extra" scalars.  Ops: >=, >, <=, <, ==.  Conditions are data
   (var/op/value), evaluated with a fixed operator table; there is no string evaluation anywhere.
   Every condition variable must be a built-in or be declared in spec "extras"; an unknown name (a typo) is a spec error.
-  Comparisons are made at the report's 9-digit rounding, so a value sitting on a bar is not lost to float error.
+  Each statistic is compared at the report's 9-digit rounding (bars are used exactly as written), so a value sitting on a
+  bar is not lost to float error.
   Order: gate first; then rules in order, first rule whose conditions ALL hold wins; else the spec's "default".
   A condition on a variable that is not available (e.g. an extra that was not passed) does NOT hold; it is flagged
   "missing" in the report; the summary warns when a missing variable sits in the gate or in a rule at or ahead of the
-  deciding one (i.e. could have changed the verdict), and the CLI then exits 2.  "missing_vars_any_rule" lists all of them.
+  deciding one (i.e. could have changed the verdict), and the CLI then exits 3.  "missing_vars_any_rule" lists all of them.
 """
 import argparse
 import json
@@ -228,7 +229,7 @@ def eval_cond(c, env):
     if var not in env:
         return {"var": var, "op": op, "value": value, "actual": None, "held": False, "status": "missing"}
     actual = env[var]
-    held = bool(OPS[op](round(actual, 9), round(value, 9)))   # same rounding as the report, so a value on the bar holds
+    held = bool(OPS[op](round(actual, 9), value))   # the statistic at the report's rounding; the written bar is used as written
     return {"var": var, "op": op, "value": value, "actual": actual, "held": held, "status": "held" if held else "failed"}
 
 
@@ -371,7 +372,7 @@ def main(argv=None):
         print(text)
     if not args.json_only:
         print(rep["summary"])
-    return 2 if rep["missing_vars"] else 0
+    return 3 if rep["missing_vars"] else 0   # not 2: argparse uses 2 for a usage error
 
 
 if __name__ == "__main__":

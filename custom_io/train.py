@@ -175,7 +175,7 @@ def main(argv=None):
     ap.add_argument('--device', default='auto')
     ap.add_argument('--bf16', action='store_true', help='autocast bf16 (cuda only)')
     ap.add_argument('--log-every', type=int, default=100)
-    ap.add_argument('--log-update-rms', action='store_true', help="log pre-clip grad norm stats and per-module update rms (rms(delta)/rms(param) of one step) on the train event; history in RESULT['update_rms_log']")
+    ap.add_argument('--log-update-rms', action='store_true', help="log pre-clip grad norm stats and per-group update rms (rms(delta)/rms(param) of one step; groups = module path cut after the layer index) on the train event; history in RESULT['update_rms_log']; its time is kept out of elapsed/train_s and reported as RESULT['update_rms_s'] (the CUDA syncs it adds are not); a --minutes stop mid-interval files that interval's grad stats as RESULT['update_rms_partial']")
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
     ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
@@ -215,14 +215,14 @@ def main(argv=None):
     cap = args.minutes * 60 if args.minutes else None
     t0, eval_s, step, run_loss, run_n, last_loss, status = time.time(), 0.0, 0, 0.0, 0, None, 'ok'
     rms_s = 0.0   # --log-update-rms work, kept out of elapsed (lr schedule, time cap) and train_s
-    gstats, update_log = GradStats(args.grad_clip), []
+    gstats, update_log, update_partial = GradStats(args.grad_clip), [], None
     model.train()
     while step < args.steps:
         elapsed = time.time() - t0 - rms_s
         if cap and elapsed >= cap:
             status = 'time_cap'
-            if args.log_update_rms and gstats.n:   # the unfinished interval: grad stats only (no snapshot was taken)
-                update_log.append(dict(step=step, partial=True, **gstats.pop()))
+            if args.log_update_rms and gstats.n:   # the unfinished interval: grad stats only (no snapshot), kept out of the log
+                update_partial = dict(step=step, **gstats.pop())
             break
         lr = lr_at(step, args.steps, args.warmup, args.lr, elapsed, cap)
         for g in opt.param_groups:
@@ -253,7 +253,7 @@ def main(argv=None):
                 extra['upd_rms_all'], extra['upd_rms'] = update_rms(snap)
                 update_log.append(dict(step=step, **extra))
                 rms_s += timed_sync(device) - ts
-            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0, 1),
+            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0 - rms_s, 1),
                    **{k: round(float(v), 5) for k, v in aux.items()}, **extra)
             run_loss, run_n = 0.0, 0
             if not math.isfinite(last_loss):
@@ -273,6 +273,8 @@ def main(argv=None):
     if args.log_update_rms:
         result['update_rms_log'] = update_log
         result['update_rms_s'] = rms_s   # excluded from train_s / steps_per_s
+        if update_partial:
+            result['update_rms_partial'] = update_partial   # --minutes stop mid-interval: that interval's grad stats
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib
