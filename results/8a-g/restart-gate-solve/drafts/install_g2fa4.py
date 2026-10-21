@@ -175,26 +175,28 @@ def supervisor_early_limit(src=None):
 TRACE_A_EARLY_FIELDS = ['lr', 'rounds', 'plan_']          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): exact data/RNG/schedule fields at the first redone update (the early-window bar is read lazily, see trace_a_early)
 
 
-def trace_a_early(src=None):
-    """-> the opt-in trace A rules of --trace-a-early (a fresh dict each call): resume_early_abs = EARLY_LIMIT read NOW from the supervisor file (EarlyLimitError if it cannot be), resume_exact_fields = a copy of TRACE_A_EARLY_FIELDS."""
-    return dict(resume_early_abs=supervisor_early_limit(src), resume_exact_fields=list(TRACE_A_EARLY_FIELDS))
+def trace_a_early(bar):
+    """-> the opt-in trace A rules of --trace-a-early (a fresh dict each call): resume_early_abs = `bar`, the value add_job read ONCE from the supervisor file (supervisor_early_limit(); a second read here would be a second chance to disagree with the [ok] row, or to fail outside the error handler, so `bar` is required and nothing is read), resume_exact_fields = a copy of TRACE_A_EARLY_FIELDS."""
+    if bar is None:
+        raise ValueError('trace_a_early needs the early-window bar read by add_job (early_bar); it does not read the supervisor file itself')
+    return dict(resume_early_abs=bar, resume_exact_fields=list(TRACE_A_EARLY_FIELDS))
 
 
-def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False):
+def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False, early_bar=None):
     """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
     spec = ADD_JOBS[spec_id]
     return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
-                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(trace_a_early() if early else {})), compare=copy.deepcopy(g4['compare']))
+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(trace_a_early(early_bar) if early else {})), compare=copy.deepcopy(g4['compare']))
 
 
-def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False, early=False):
+def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False, early=False, early_bar=None):
     """-> (new plan, [what changes], [problems]). `old` is not modified. Idempotent: a plan that already has the job (and the skip, if asked) comes back equal."""
     new, changes, problems = copy.deepcopy(old), [], []
     jobs = new.get('jobs', [])
     g4 = next((j for j in jobs if j.get('id') == 'g2fa4'), None)
     if g4 is None:
         return new, changes, ['plan.json has no job g2fa4 (nothing to build the new entry from)']
-    want = new_job_entry(spec_id, g4, soft, soft_mean, early)
+    want = new_job_entry(spec_id, g4, soft, soft_mean, early, early_bar)
     have = next((j for j in jobs if j.get('id') == spec_id), None)
     if have is None:
         jobs.append(want)
@@ -241,7 +243,7 @@ def add_job(a):
         old = None
     row(old is not None, 'plan.json of the install', str(pp))
     early_bar = None
-    if a.trace_a_early:                                                                    # the bar is read from the supervisor file only now, only for this flag; a problem is a [FIX] line, not a traceback
+    if a.trace_a_early:                                                                    # the bar is read from the supervisor file ONCE, here, only for this flag (inside the handler: a problem is a [FIX] line, not a traceback); this value is shown in the [ok] row AND is the one passed to added_plan -> new_job_entry -> trace_a_early (no second read)
         try:
             early_bar = supervisor_early_limit()
         except EarlyLimitError as e:
@@ -256,7 +258,7 @@ def add_job(a):
         g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
         g4stop = stop_file_of('g2fa4')
         say(f'      state.json: g2fa4 is {g4s or "not recorded"}; stop file naming g2fa4: {g4stop.name if g4stop else "none"}; ARMED.txt: {armed_text()}')
-        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a, a.soft_trace_a_mean, a.trace_a_early)
+        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a, a.soft_trace_a_mean, a.trace_a_early, early_bar)
         row(not problems, 'plan.json can take the new job', '; '.join(problems))
         say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
     if a.check or not ok_all:

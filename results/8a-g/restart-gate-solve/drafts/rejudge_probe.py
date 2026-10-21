@@ -7,6 +7,7 @@ It changes nothing of the probe: it reads C, R1, R2 (the run's logged losses for
 paragraph and the numbers, and writes REJUDGE-<job>.json next to the input. The registered rule of the probe (PASS if d <= max(0.10, 3n)) is computed too, unchanged, and is part of the reading. The reading of the
 ORIGINAL text alone is recorded in the JSON as original_reading_verdict (for comparison only).
 --calibration PROBE2.json is a second probe JSON of the SAME job, step and window (its R1, R2 are R3, R4; its C must equal the first file's C, else it is refused; it is also refused, exit 3, if it is the same file or the same content as the probe or if its R1, R2 repeat the probe's R1, R2 in either order: a copy of the first probe would only echo it). It is APPLIED ONLY when the two-resume verdict is UNRESOLVED_CALIBRATE (see the Clarification below); otherwise the two-resume verdict stands, calibration is null and calibration_not_applied in the JSON (and a printed note) says why (this includes ESCALATE: more resumes of a checkpoint whose restarts are bit-identical would repeat them). The two-resume verdict is computed FIRST and the --calibration file is opened, read and validated ONLY when it will be applied (verdict UNRESOLVED_CALIBRATE): for any other verdict the file is not read at all, so a bad calibration file can never hide an INSIDE, UNRESOLVED (window), OUTSIDE or ESCALATE reading; the JSON then has calibration_offered = the path given, calibration_source null and calibration_not_applied (calibration_source is the path only when the calibration was applied). See A1.3 below.
+REJUDGE-<job>.json is STRICT JSON (written with allow_nan=False): a ratio of infinity (every ESCALATE has Nbar = 0, so ratio = Dbar/Nbar is infinite) is written as `"ratio": null` with `"ratio_infinite": true` (false otherwise), and any other non-finite float as null with a `<key>_nonfinite` companion ("inf", "-inf" or "nan"); the printed text still says inf.
 An earlier REJUDGE-<job>.json is renamed REJUDGE-<job>.json.aside-<stamp> before the new one is written (the first reading is never lost).
 Exit code: 0 INSIDE healthy noise, 1 UNRESOLVED (either kind; the output says which: "UNRESOLVED (window)" or "UNRESOLVED_CALIBRATE"), 2 OUTSIDE, 3 the input cannot be read (a probe that was refused to judge, no C / R1 / R2, ...), 4 ESCALATE (framing falsified, PREREG Amendment 2 below: neither a pass nor a fail, the run is not read, no calibration is asked for; the question goes to Ben).
 
@@ -30,13 +31,13 @@ AMENDMENT 1 (PREREG-trace-a2.md, 2026-10-17 ~22:05 UTC, A1.1 and A1.3; the readi
   - Clarification (2026-10-18, after the code review; coordinator ruling): the 4-resume calibration resolves only the borderline UNRESOLVED_CALIBRATE case. It is never applied to a two-resume verdict of INSIDE, OUTSIDE or UNRESOLVED (window). An UNRESOLVED (window) still needs the same-window measurement of §4, so adding resumes cannot turn it into INSIDE.
   - Added here, not in the amendment text: with --calibration, P1 and P1b are also required of R3 and R4 (a failure is OUTSIDE), and the second file must have the same job, step, upto and C.
 
-AMENDMENT 2 (PREREG-trace-a2.md, 2026-10-21 ~03:10 UTC, B1 "framing falsified: escalate"; coordinator ruling Oct 20; written before any probe number exists; DRAFT, like Amendment 1; the text below is copied from the PREREG, only the markdown bold removed and the minus sign and N-bar / D-bar written as - / Nbar / Dbar):
+AMENDMENT 2 (PREREG-trace-a2.md, 2026-10-21 ~03:10 UTC, B1 "framing falsified: escalate"; coordinator ruling Oct 20; written before any probe number exists; DRAFT, like Amendment 1; the text below is copied from the PREREG as corrected by errata E1/E2 of 2026-10-21 (the erratum bracket itself is not copied), only the markdown bold removed and the minus sign and N-bar / D-bar written as - / Nbar / Dbar):
 This outcome is an exit only. It moves no bar and changes no pass/fail threshold. Every other outcome of §4 and Amendment 1 stays as written.
 Trigger (exact): P1 holds (update 201 exact for both resumes), P1b holds (updates 202-203 within the early limit), and the two resumes are bit-identical over the whole window (|R1-R2| = 0 at every update, so Nbar = 0 and n = 0), and they differ from the logged run (Dbar > 0).
 - In that case further resumes of the same checkpoint repeat R1/R2 exactly, so the calibration of Amendment 1 cannot resolve anything. That is the loop found in the code review (REVIEW-VERDICT-2026-10-18, B1).
 - This is PREREG §3 falsifier (c): fresh GPU processes do not differ, so the drift is not per-call rounding noise.
 Outcome: ESCALATE (framing falsified). The run is neither passed nor failed and is not read. The registered P2 verdict is still recorded beside it, unchanged. The SYSTEMATIC diagnosis and this solve's noise framing are on record as contradicted. The question goes to Ben: what makes a resumed process differ from continuing, if not rounding noise? No calibration is asked for. Re-running the same probe is pointless, because it repeats.
-Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the Nbar = 0, Dbar = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays INSIDE by the existing rules.
+Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the Nbar = 0, Dbar = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays judged by the existing rules: INSIDE, or UNRESOLVED (window) when the trace-A value is above max(0.02, 2·Nbar) = 0.02 (it is for the default 0.0282).
 """
 import argparse, json, sys, time
 from pathlib import Path
@@ -61,8 +62,8 @@ AMEND2 = (
     '- In that case further resumes of the same checkpoint repeat R1/R2 exactly, so the calibration of Amendment 1 cannot resolve anything. That is the loop found in the code review (REVIEW-VERDICT-2026-10-18, B1).\n'
     '- This is PREREG §3 falsifier (c): fresh GPU processes do not differ, so the drift is not per-call rounding noise.\n'
     "Outcome: ESCALATE (framing falsified). The run is neither passed nor failed and is not read. The registered P2 verdict is still recorded beside it, unchanged. The SYSTEMATIC diagnosis and this solve's noise framing are on record as contradicted. The question goes to Ben: what makes a resumed process differ from continuing, if not rounding noise? No calibration is asked for. Re-running the same probe is pointless, because it repeats.\n"
-    'Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the Nbar = 0, Dbar = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays INSIDE by the existing rules.\n')
-AMEND2_HEAD = 'AMENDMENT 2 (PREREG-trace-a2.md, 2026-10-21 ~03:10 UTC, B1 "framing falsified: escalate"; coordinator ruling Oct 20; written before any probe number exists; DRAFT, like Amendment 1; the text below is copied from the PREREG, only the markdown bold removed and the minus sign and N-bar / D-bar written as - / Nbar / Dbar)'
+    'Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the Nbar = 0, Dbar = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays judged by the existing rules: INSIDE, or UNRESOLVED (window) when the trace-A value is above max(0.02, 2·Nbar) = 0.02 (it is for the default 0.0282).\n')
+AMEND2_HEAD = 'AMENDMENT 2 (PREREG-trace-a2.md, 2026-10-21 ~03:10 UTC, B1 "framing falsified: escalate"; coordinator ruling Oct 20; written before any probe number exists; DRAFT, like Amendment 1; the text below is copied from the PREREG as corrected by errata E1/E2 of 2026-10-21 (the erratum bracket itself is not copied), only the markdown bold removed and the minus sign and N-bar / D-bar written as - / Nbar / Dbar)'
 RESTORE_MSG = 'restore differs at the first update: wrong checkpoint or incomplete restore; investigate, do not read'
 EARLY_LIMIT = 0.005          # default for a probe JSON of the old format (no early_limit in it). A new probe records the supervisor's EARLY_LIMIT in the file and that value is used; tests keep this default equal to the supervisor's
 FLOOR = 0.02
@@ -101,6 +102,31 @@ def calibration(C, Rs, v, early_limit=EARLY_LIMIT):
         verdict = 'INSIDE healthy noise' if v <= L else 'UNRESOLVED'
     return dict(verdict=verdict, pair_means=pairs, max_pair=max(pairs.values()), L=L, Dbar4=dbar4, mean_abs_ri_c=[mean(d) for d in ds], first_ri_c=[d[0] for d in ds], p1_all=p1,
                 early_max4=em, p1b_all=p1b, trace_a_value=v)
+
+
+def strict(x):
+    """-> a copy of x that is STRICT JSON: no float is inf or nan (the JSON standard has no such tokens, and Python would write the non-standard `Infinity` / `NaN`). A non-finite float becomes null; in a dict the key gets a companion
+    `<key>_nonfinite` = "inf" / "-inf" / "nan". `ratio` is the one that really occurs (every ESCALATE has ratio = inf): it always gets `ratio_infinite` (true / false) beside it, as well as the `ratio_nonfinite` companion when it is non-finite.
+    The printed text is not affected (it may still say "inf")."""
+    if isinstance(x, float):
+        return None if x != x or x in (float('inf'), float('-inf')) else x
+    if isinstance(x, (list, tuple)):
+        return [strict(v) for v in x]
+    if isinstance(x, dict):
+        out = {}
+        for k, v in x.items():
+            out[k] = strict(v)
+            if isinstance(v, float) and out[k] is None:
+                out[f'{k}_nonfinite'] = 'nan' if v != v else 'inf' if v > 0 else '-inf'
+        if 'ratio' in x:
+            out['ratio_infinite'] = x['ratio'] == float('inf')
+        return out
+    return x
+
+
+def strict_json(r):
+    """-> the text of REJUDGE-<job>.json: strict JSON (see strict), allow_nan=False so that any non-finite float that slipped past strict() fails loudly instead of writing `Infinity` / `NaN`."""
+    return json.dumps(strict(r), indent=1, allow_nan=False)
 
 
 def not_applied_note(verdict):
@@ -330,8 +356,9 @@ def main(argv=None):
     if note:
         r['plain_words'] += f' (The calibration file {a.calibration} was not applied: {note}.)'
     out = p.with_name(f'REJUDGE-{job}.json')
+    text = strict_json(r)                                                              # strict JSON, built BEFORE anything is moved aside (a failure here must not leave the earlier reading renamed)
     kept = aside(out)                                                                  # an earlier reading is never overwritten
-    out.write_text(json.dumps(r, indent=1), encoding='utf-8')
+    out.write_text(text, encoding='utf-8')
     kind = {'UNRESOLVED': 'UNRESOLVED (window)', 'ESCALATE': 'ESCALATE (framing falsified)'}.get(r['verdict'], r['verdict'])
     print(f'REJUDGE {job}: {kind}\n')
     print('Pre-registered reading (original, verbatim):\n' + PREREG)

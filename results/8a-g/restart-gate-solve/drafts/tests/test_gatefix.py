@@ -803,15 +803,15 @@ def t_installer_trace_a_early():
         return w
     with tempfile.TemporaryDirectory() as tmp:
         I = AJ.installed_pc(tmp)
-        assert I.trace_a_early() == EARLY and I.TRACE_A_EARLY_FIELDS == EARLY['resume_exact_fields'] and not hasattr(I, 'TRACE_A_EARLY'), 'the bar is read when needed (lazily), not stored at import'
+        assert I.trace_a_early(0.005) == EARLY and I.TRACE_A_EARLY_FIELDS == EARLY['resume_exact_fields'] and not hasattr(I, 'TRACE_A_EARLY'), 'the bar is read when needed (lazily), not stored at import'
         g4 = json.loads((I.STATE / 'plan.json').read_text())['jobs'][0]
         assert 'resume_early_abs' not in g4['trace_a'] and 'resume_exact_fields' not in g4['trace_a']
         assert I.new_job_entry('g2fa8', g4) == AJ.expected_g2fa8(I)                                         # default unchanged
-        assert I.new_job_entry('g2fa8', g4, early=True) == want(I)
-        assert I.new_job_entry('g2fa8', g4, True, False, True) == want(I, ['peak', 'resume_max_abs'])
-        assert I.new_job_entry('g2fa8', g4, True, True, True) == want(I, SOFT3)
-        assert I.trace_a_early()['resume_exact_fields'] == EARLY['resume_exact_fields'] and I.trace_a_early()['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS and I.new_job_entry('g2fa8', g4, early=True)['trace_a']['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS, 'the module list is copied, not shared'
-        assert g4['trace_a']['resume_first_diff'] == 0.01 and I.new_job_entry('g2fa8', g4, early=True)['trace_a']['resume_first_diff'] == 0.01
+        assert I.new_job_entry('g2fa8', g4, early=True, early_bar=0.005) == want(I)
+        assert I.new_job_entry('g2fa8', g4, True, False, True, 0.005) == want(I, ['peak', 'resume_max_abs'])
+        assert I.new_job_entry('g2fa8', g4, True, True, True, 0.005) == want(I, SOFT3)
+        assert I.trace_a_early(0.005)['resume_exact_fields'] == EARLY['resume_exact_fields'] and I.trace_a_early(0.005)['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS and I.new_job_entry('g2fa8', g4, early=True, early_bar=0.005)['trace_a']['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS, 'the module list is copied, not shared'
+        assert g4['trace_a']['resume_first_diff'] == 0.01 and I.new_job_entry('g2fa8', g4, early=True, early_bar=0.005)['trace_a']['resume_first_diff'] == 0.01
     # usage errors: not with another job / without --add-job
     for args in (['--trace-a-early'], ['--skip-tests', '--trace-a-early']):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1214,8 +1214,8 @@ def t_early_limit_single_source():
     # installer
     with tempfile.TemporaryDirectory() as tmp:
         I = AJ.load_installer(tmp)
-        assert I.trace_a_early()['resume_early_abs'] == S.EARLY_LIMIT == I.supervisor_early_limit(), (I.trace_a_early(), S.EARLY_LIMIT)
-        assert I.new_job_entry('g2fa8', json.loads(json.dumps(dict(src='x', trace_a={}, compare={}))), early=True)['trace_a']['resume_early_abs'] == S.EARLY_LIMIT
+        assert I.trace_a_early(I.supervisor_early_limit())['resume_early_abs'] == S.EARLY_LIMIT == I.supervisor_early_limit(), (I.supervisor_early_limit(), S.EARLY_LIMIT)
+        assert I.new_job_entry('g2fa8', json.loads(json.dumps(dict(src='x', trace_a={}, compare={}))), early=True, early_bar=I.supervisor_early_limit())['trace_a']['resume_early_abs'] == S.EARLY_LIMIT
         d = Path(tmp) / 'sup'; d.mkdir()
         for text, want in (('EARLY_LIMIT = 0.007\n', 0.007), ('x = 1\nEARLY_LIMIT = 0.007          # a comment 0.1\ny = 2\n', 0.007), ('EARLY_LIMIT=1e-3\n', 0.001)):
             (d / 'g.py').write_text(text)
@@ -1245,7 +1245,7 @@ def t_early_limit_single_source():
             spec.loader.exec_module(I2)
         finally:
             os.environ.pop('G2FA4_CIO', None)
-        assert I2.trace_a_early()['resume_early_abs'] == 0.0123, I2.trace_a_early()
+        assert I2.supervisor_early_limit() == 0.0123 and I2.trace_a_early(I2.supervisor_early_limit())['resume_early_abs'] == 0.0123, I2.supervisor_early_limit()
     assert S.EARLY_LIMIT == 0.005 and S.resume_probe_verdict([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0])['early_limit'] == S.EARLY_LIMIT
     # rejudge: its default equals the supervisor's; the early computation agrees with the supervisor's on random inputs
     assert R.EARLY_LIMIT == S.EARLY_LIMIT
@@ -1832,8 +1832,15 @@ def t_b1_escalate():
     if prereg.exists():
         t = prereg.read_text(encoding='utf-8')
         a2 = t[t.index('## Amendment 2'):t.index('**Status:** DRAFT, like Amendment 1.')].split('\n')[1:]
-        want = [x.replace('**', '').replace('\u2212', '-').replace('N\u0304', 'Nbar').replace('D\u0304', 'Dbar') for x in a2 if x.strip()]
+        import re as _re
+        # E1 (2026-10-21): the PREREG Order sentence was corrected; its "[Erratum 2026-10-21 (E1): ...]" bracket is a note about the correction and is NOT copied into AMEND2
+        assert sum('[Erratum 2026-10-21 (E1)' in x for x in a2) == 1, 'the E1 erratum bracket is in the PREREG, on one line'
+        want = [_re.sub(r' \[Erratum [^\]]*\]', '', x.replace('**', '').replace('\u2212', '-').replace('N\u0304', 'Nbar').replace('D\u0304', 'Dbar')) for x in a2 if x.strip()]
         assert want and '\n'.join(want) + '\n' == R.AMEND2, (want, R.AMEND2)
+        order = want[-1]
+        assert 'stays judged by the existing rules: INSIDE, or UNRESOLVED (window) when the trace-A value is above max(0.02, 2\u00b7Nbar) = 0.02' in order and 'stays INSIDE by' not in R.AMEND2 and 'stays INSIDE by' not in R.__doc__, 'E1: the corrected Order sentence (not the original) is what rejudge_probe.py carries'
+        # E2: the PREREG clarification limits the deferral line to a passed trace A
+        assert 'on a trace A that passed' in t.lower() or 'applies to a trace a that **passed**' in t.lower(), 'E2 wording is in the PREREG'
         assert 'Trigger (exact): P1 holds' in R.AMEND2 and 'Outcome: ESCALATE (framing falsified).' in R.AMEND2 and 'Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio.' in R.AMEND2
     # --- every other verdict is unchanged: thousands of random traces of every class against the pre-B1 decision written out above, excluding only inputs that meet the trigger (which must become ESCALATE, and were UNRESOLVED_CALIBRATE)
     rnd = random.Random(20261021)
@@ -2120,13 +2127,172 @@ def t_n2_calibration_gated_by_verdict():
     print('ok N2: the two-resume verdict comes first; the --calibration file is not opened for INSIDE / UNRESOLVED (window) / OUTSIDE (P1, P1b) / ESCALATE (a garbage / wrong-job / missing / directory file cannot hide them: exit 0/1/2/4, calibration_offered set, calibration_source null, calibration_not_applied); for UNRESOLVED_CALIBRATE it is read and a bad file is exit 3')
 
 
+def _strict_loads(text):
+    """json.loads that refuses the non-standard tokens Infinity / -Infinity / NaN (a strict parser)."""
+    def bad(tok):
+        raise ValueError('non-standard JSON constant ' + tok)
+    return json.loads(text, parse_constant=bad)
+
+
+def t_l2_strict_json():
+    """L2: REJUDGE-<job>.json is strict JSON: no Infinity / NaN token ever; an infinite ratio is null plus ratio_infinite true (false otherwise); allow_nan=False makes a regression fail loudly."""
+    inf = float('inf')
+    with tempfile.TemporaryDirectory() as tmp:
+        out_f = Path(tmp) / 'REJUDGE-g2fa8.json'
+        # --- ESCALATE: Nbar = 0 and Dbar > 0, ratio = inf in memory
+        r1, r2 = ident()
+        assert R.rejudge(CL, r1, r2)['ratio'] == inf
+        f = write_probe(tmp, 'g2fa8', CL, r1, r2)
+        rc, out = AJ.quiet(R.main, [str(f)])
+        text = out_f.read_text(encoding='utf-8')
+        j = _strict_loads(text)
+        assert rc == 4 and j['verdict'] == 'ESCALATE' and j['ratio'] is None and j['ratio_infinite'] is True, (rc, j['ratio'])
+        assert 'Infinity' not in text and 'NaN' not in text, 'no non-standard token in the file'
+        assert 'ratio = inf' in out, 'the printed text may still say inf'
+        assert 'ratio_nonfinite' in j and j['ratio_nonfinite'] == 'inf' and j['Dbar'] > 0 and j['Nbar'] == 0 and j['verdict'] == 'ESCALATE'
+        # --- the same with a calibration file offered (not applied)
+        r3, r4 = ident(off=0.07)
+        sub = Path(tmp) / 'sub'; sub.mkdir()
+        f2 = write_probe(sub, 'g2fa8', CL, r3, r4)
+        rc, out = AJ.quiet(R.main, [str(f), '--calibration', str(f2)])
+        j = _strict_loads(out_f.read_text(encoding='utf-8'))
+        assert rc == 4 and j['ratio'] is None and j['ratio_infinite'] is True and j['calibration'] is None, rc
+        # --- OUTSIDE with an infinite ratio (P1 fails, identical resumes): also strict
+        bad1 = [c + (1e-3 if i == 0 else 0.05 if i > 2 else 0) for i, c in enumerate(CL)]
+        f3 = write_probe(tmp, 'g2fa8', CL, bad1, list(bad1))
+        rc, out = AJ.quiet(R.main, [str(f3)])
+        j = _strict_loads(out_f.read_text(encoding='utf-8'))
+        assert rc == 2 and j['verdict'] == 'OUTSIDE' and j['ratio'] is None and j['ratio_infinite'] is True, (rc, j['verdict'])
+        # --- finite ratios: UNRESOLVED_CALIBRATE (with and without the calibration applied), UNRESOLVED, INSIDE: the ratio is a number and ratio_infinite is false
+        a1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(CL)]
+        a2 = [c + (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(CL)]
+        a3 = [c - (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(CL)]
+        a4 = [c - (0 if i in (0, 1, 2) else 0.0255) for i, c in enumerate(CL)]
+        sub2 = Path(tmp) / 'sub2'; sub2.mkdir()
+        fa = write_probe(tmp, 'g2fa8', CL, a1, a2)
+        fb = write_probe(sub2, 'g2fa8', CL, a3, a4)
+        for args, verdict in (([str(fa)], 'UNRESOLVED_CALIBRATE'), ([str(fa), '--calibration', str(fb)], 'INSIDE healthy noise')):
+            rc, out = AJ.quiet(R.main, args)
+            j = _strict_loads(out_f.read_text(encoding='utf-8'))
+            assert j['verdict'] == verdict and isinstance(j['ratio'], float) and j['ratio_infinite'] is False and 'ratio_nonfinite' not in j, (args, j['verdict'])
+            if len(args) > 1:
+                assert j['calibration'] is not None and all(isinstance(x, float) for x in j['calibration']['pair_means'].values())
+        for off, v, verdict in ((0.015, '0.015', 'INSIDE healthy noise'), (0.003, None, 'UNRESOLVED')):
+            x1, x2 = alt(off)
+            fc = write_probe(tmp, 'g2fa8', CL, x1, x2)
+            rc, out = AJ.quiet(R.main, [str(fc)] + (['--trace-a-mean', v] if v else []))
+            j = _strict_loads(out_f.read_text(encoding='utf-8'))
+            assert j['verdict'] == verdict and j['ratio_infinite'] is False and isinstance(j['ratio'], float), j['verdict']
+        # --- the UNRESOLVED_CALIBRATE verdict with an infinite ratio cannot be produced from a probe any more (n == 0 and Dbar > 0 with P1, P1b is ESCALATE), so check the serialiser directly on such a dict
+        r = dict(R.rejudge(CL, a1, a2), ratio=inf)
+        assert r['verdict'] == 'UNRESOLVED_CALIBRATE'
+        j = _strict_loads(R.strict_json(r))
+        assert j['verdict'] == 'UNRESOLVED_CALIBRATE' and j['ratio'] is None and j['ratio_infinite'] is True
+        # --- any other float that can be inf / nan: the trace-A value from --trace-a-mean (argparse accepts inf and nan)
+        f = write_probe(tmp, 'g2fa8', CL, *ident())                                           # (the file written above was overwritten by the later cases: ESCALATE again)
+        for tok, label in (('nan', 'nan'), ('inf', 'inf'), ('-inf', '-inf')):
+            rc, out = AJ.quiet(R.main, [str(f), '--trace-a-mean=' + tok])
+            text = out_f.read_text(encoding='utf-8')
+            j = _strict_loads(text)
+            assert rc == 4 and j['trace_a_value'] is None and j['trace_a_value_nonfinite'] == label and 'NaN' not in text and 'Infinity' not in text, (tok, rc)
+        # nested floats (the calibration dict) are cleaned too, and lists
+        z = _strict_loads(R.strict_json(dict(a=float('nan'), c=dict(b=-inf, ok=1.5), l=[1.0, inf, float('nan')], ratio=3.0)))
+        assert z == dict(a=None, a_nonfinite='nan', c=dict(b=None, b_nonfinite='-inf', ok=1.5), l=[1.0, None, None], ratio=3.0, ratio_infinite=False), z
+        # --- allow_nan=False: if a non-finite float ever slipped past strict(), writing fails LOUDLY (ValueError) and nothing is written or moved aside
+        keep = out_f.read_text(encoding='utf-8')
+        saved = R.strict
+        R.strict = lambda x: x                                                                 # simulate the regression
+        try:
+            try:
+                AJ.quiet(R.main, [str(f)])
+            except ValueError as e:
+                assert 'Out of range float' in str(e) or 'not JSON compliant' in str(e), e
+            else:
+                raise AssertionError('a regression must fail loudly, not write Infinity')
+        finally:
+            R.strict = saved
+        assert out_f.read_text(encoding='utf-8') == keep, 'the failed write left the earlier REJUDGE file in place (the text is built before anything is moved aside)'
+    # the module docstring says so
+    assert 'STRICT JSON' in R.__doc__ and 'ratio_infinite' in R.__doc__
+    print('ok L2: REJUDGE-<job>.json is strict JSON (parse_constant raising parses it): ESCALATE, ESCALATE with --calibration, OUTSIDE with identical resumes, UNRESOLVED_CALIBRATE (serialiser, inf ratio), and the finite cases; ratio null + ratio_infinite true/false; other non-finite floats null + <key>_nonfinite; allow_nan=False fails loudly with the file untouched')
+
+
+def t_l1_early_bar_read_once():
+    """L1: the early-window bar is read ONCE in add_job (inside the EarlyLimitError handling); that value is the one in the [ok] row and the one written to the plan; no second read, so a supervisor file that becomes unreadable after the first read cannot raise outside the handler."""
+    import re as _re
+    with tempfile.TemporaryDirectory() as tmp:
+        pack = make_pack(tmp, 'pack-l1', lambda t: t.replace('EARLY_LIMIT = 0.005 ', 'EARLY_LIMIT = 0.0123 ', 1))
+        for label, later in (('later reads raise OSError', 'raise'), ('later reads return another number', 'other')):
+            sub = Path(tmp) / ('pc-' + _re.sub(r'\W+', '', label)); sub.mkdir()
+            I = installer_from(sub, pack)
+            I.STAMP = 'L1'
+            real, calls = I.supervisor_early_limit, []
+            def once(src=None, real=real, calls=calls, later=later):
+                calls.append(src)
+                if len(calls) == 1:
+                    return real(src)
+                if later == 'raise':
+                    raise OSError('the supervisor file became unreadable after the first read')
+                return 0.777
+            I.supervisor_early_limit = once
+            rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early'])
+            assert rc == 0 and 'ADD-JOB g2fa8 DONE' in out and 'Traceback' not in out, (label, rc, out)
+            assert len(calls) == 1, (label, 'the bar was read more than once', calls)
+            shown = _re.search(r'\[ok\] --trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py ([0-9.e-]+) ', out)
+            assert shown, out
+            written = json.loads((I.STATE / 'plan.json').read_text())['jobs'][1]['trace_a']['resume_early_abs']
+            assert float(shown.group(1)) == written == 0.0123, (label, shown.group(1), written)
+            # --check reads once too, and shows the same value
+            calls.clear()
+            I.STAMP = 'L1c'
+            rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early', '--check'])
+            assert rc == 0 and len(calls) == 1 and f'[ok] --trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py 0.0123 ' in out, (label, rc, calls, out)
+        # a failing FIRST read is still the [FIX] row (inside the handler), exit 1, nothing changed
+        sub = Path(tmp) / 'pc-first'; sub.mkdir()
+        I = installer_from(sub, pack)
+        I.STAMP = 'L1f'
+        before = AJ.pc_files(I)
+        def boom(src=None):
+            raise I.EarlyLimitError('cannot read the early-window bar EARLY_LIMIT (simulated)')
+        I.supervisor_early_limit = boom
+        rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early'])
+        assert rc == 1 and '[FIX] --trace-a-early: the early-window bar EARLY_LIMIT' in out and 'Traceback' not in out and AJ.pc_files(I) == before, (rc, out)
+        # the pure functions do not read the supervisor at all: the bar is required
+        for fn in (lambda: I.trace_a_early(None), lambda: I.new_job_entry('g2fa8', dict(src='x', trace_a={}, compare={}), early=True)):
+            try:
+                fn()
+            except ValueError as e:
+                assert 'early_bar' in str(e), e
+            else:
+                raise AssertionError('trace_a_early / new_job_entry(early=True) without the bar must not read it themselves')
+    print('ok L1: the early bar is read once in add_job; the [ok] row shows the value written to the plan (also when a later read would raise OSError or return another number); a failing first read is the [FIX] row; trace_a_early / new_job_entry require the bar and do not read')
+
+
+def t_l5_patch_skip_reported():
+    """L5: when `patch` (or the drafts folder) is missing, t_patch_reproduces_drafts prints SKIPPED, returns 'SKIPPED' and prints no 'ok' line; here (Linux, with patch) it must really run."""
+    real_which, buf = shutil.which, io.StringIO()
+    shutil.which = lambda name, *a, **k: None if name == 'patch' else real_which(name, *a, **k)
+    try:
+        with contextlib.redirect_stdout(buf):
+            res = t_patch_reproduces_drafts()
+    finally:
+        shutil.which = real_which
+    assert res == 'SKIPPED' and buf.getvalue().startswith('SKIPPED') and not any(x.startswith('ok') for x in buf.getvalue().splitlines()), (res, buf.getvalue())
+    if real_which('patch') and (ORIG_PACK.parent.parent / 'restart-gate-solve' / 'drafts' / 'gatefix.patch').exists():          # where patch exists the real check runs and passes (it is not skipped)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            res = t_patch_reproduces_drafts()
+        assert res is None and buf.getvalue().startswith('ok gatefix.patch'), (res, buf.getvalue())
+    print('ok L5: a missing `patch` program is reported as SKIPPED (not as passed); where patch exists the check runs')
+
+
 def t_patch_reproduces_drafts():
     """F2: gatefix.patch lists every drafted file that differs from the pack (incl. tests/fake_runner.py) and `patch -p1` on a fresh copy of the pack reproduces each of them byte for byte."""
     drafts = ORIG_PACK.parent.parent / 'restart-gate-solve' / 'drafts'
     pf = drafts / 'gatefix.patch'
     if not pf.exists() or not shutil.which('patch'):
-        print('ok (skipped) gatefix.patch check: the drafts folder or the `patch` program is not here')
-        return
+        print('SKIPPED gatefix.patch check: the drafts folder or the `patch` program is not here (NOT counted as passed; the summary line counts it as skipped)')
+        return 'SKIPPED'
     files = [x[len('+++ b/'):] for x in pf.read_text(encoding='utf-8').splitlines() if x.startswith('+++ b/')]
     assert files == ['g2fa4_supervisor.py', 'install_g2fa4.py', 'tests/fake_runner.py', 'tests/test_probe.py'], files
     # every drafted file that also exists in the pack and differs from it is in the patch (nothing is forgotten, F2)
@@ -2150,15 +2316,18 @@ if __name__ == '__main__':
             t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
             t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged, t_early_not_computable_probe, t_early_not_computable_verdict, t_early_not_computable_trace_a, t_early_agreement,
             t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate, t_b1_escalate,
-            t_f1_deferral_only_on_pass, t_f3_reason_names_cause, t_f5_installer_lazy_bar, t_n2_calibration_gated_by_verdict, t_patch_reproduces_drafts]
+            t_f1_deferral_only_on_pass, t_f3_reason_names_cause, t_f5_installer_lazy_bar, t_n2_calibration_gated_by_verdict, t_l2_strict_json, t_l1_early_bar_read_once, t_l5_patch_skip_reported, t_patch_reproduces_drafts]
     only = sys.argv[1:]
     try:
+        ran = skipped = 0
         for t in todo:
             if not only or t.__name__ in only:
                 try:
-                    t()
+                    res = t()
                 finally:
                     T.cleanup()
-        print('GATEFIX TESTS OK (%d tests)' % len([t for t in todo if not only or t.__name__ in only]))
+                ran += 1
+                skipped += res == 'SKIPPED'                                       # L5: a test that could not run says so; it is never counted as passed
+        print('GATEFIX TESTS OK (%d tests, %d skipped)' % (ran, skipped))
     finally:
         T.cleanup()
