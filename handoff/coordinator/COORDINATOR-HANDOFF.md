@@ -31,3 +31,11 @@ You are the Learner-New coordinator for Ben, a high-school senior who owns the p
 
 ## Vast
 Credit is about $19.3; no instances are running except the six stopped span boxes. Check read-only with: curl https://console.vast.ai/api/v0/instances/?owner=me and /api/v0/users/current/ (the proxy adds the key).
+
+## Update Oct 21 ~01:20Z (Sonnet coordinator session_018Ybowk1FLjHVsZsWFonjEk)
+- Ben confirmed the delegation directly (see ledger). New session briefs carry the "coordinator speaks for Ben" line.
+- Swarm: line parked after run 3 (calibration needs 14.28 GiB); Ben approved the fix and a total of about $5.60. Fresh Sonnet session session_015W2KnpcFeGg9cH4WUhzry3 owns it; old swarm session on stand-by.
+- Steals R1 S1: parked ($1.32 spent). NEXT.md in artifacts/claude-steals-20261017/r1-stage1/.
+- Defer port: one more fix+review round allowed by Ben (speed session).
+- Watcher is a Haiku session (session_01DaSfX2LCyxuQBJxBQYT8xY). No rentals running; six stopped span boxes remain (disk about $3.74/day; ask Ben Thu Oct 22).
+- Restart gate, size, game world, PC runner ping, Brain E0 PC card are still open.
