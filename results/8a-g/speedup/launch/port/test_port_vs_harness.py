@@ -46,10 +46,13 @@ def child(role, out):
     def run(mb, K, tw=None):
         r = TD.run_one(w, a, names, mb, K, tweak=flag(tw))
         if role == 'port':
-            assert r['variants'] == [] and r['model'].defer_counts == dict(deferred=1, fallback=0), (r['variants'], r['model'].defer_counts)
+            import custom_io.models.b3g2_defer as DF
+            st = DF.stats(r['model'])
+            assert r['variants'] == [] and r['model'].defer_counts['deferred'] == 1 and r['model'].defer_counts['fallback'] == 0, (r['variants'], r['model'].defer_counts)
         else:
-            assert r['stats']['defer']['deferred_losses'] == 1 and r['stats']['defer']['fallback_losses'] == 0, r['stats']
-        return dict(loss=r['loss'], aux={k: (v.detach().clone() if torch.is_tensor(v) else v) for k, v in r['aux'].items()}, grads=r['grads'], rng=r['rng'])
+            st = r['stats']['defer']
+            assert st['deferred_losses'] == 1 and st['fallback_losses'] == 0, r['stats']
+        return dict(loss=r['loss'], aux={k: (v.detach().clone() if torch.is_tensor(v) else v) for k, v in r['aux'].items()}, grads=r['grads'], rng=r['rng'], stats=st)
 
     @contextlib.contextmanager
     def port_guard_knows_right(role):
@@ -88,10 +91,14 @@ def child(role, out):
             tr.model.speed_defer = True
         losses = [tr.update()[0].detach().clone() for _ in range(3)]
         sd = {k: v.detach().clone() for k, v in tr.model.state_dict().items()}
-        stats = tr.model.defer_counts if role == 'port' else tr.variant_stats()['defer']
+        if role == 'port':
+            import custom_io.models.b3g2_defer as DF
+            stats = DF.stats(tr.model)
+        else:
+            stats = tr.variant_stats()['defer']
     finally:
         tr.close()
-    res['updates'] = dict(losses=losses, final_sd=sd, deferred=(stats['deferred'] if role == 'port' else stats['deferred_losses']))
+    res['updates'] = dict(losses=losses, final_sd=sd, deferred=stats['deferred_losses'], stats=stats)
     torch.save(res, out)
 
 
@@ -173,6 +180,20 @@ def test_000_the_trees_under_test_are_the_pinned_ones():
     say(f'trees: base b3g2.py / train.py match the 74d6e92c75 pins; {n} overlay files match the port tree {port}')
 
 
+def test_make_port_tree_refuses_src_b3g2_folders_in_any_case():
+    scratch = tempfile.mkdtemp(prefix='mpt-names-')
+    try:
+        for name in ('SRC-B3G2CK', 'src-b3g2ck', 'Src-B3g2', 'src-b3g2'):
+            for sub in ('x', ''):
+                out = os.path.join(scratch, name, sub) if sub else os.path.join(scratch, name)
+                p = subprocess.run([sys.executable, os.path.join(HERE, 'make_port_tree.py'), out], capture_output=True, text=True)
+                assert p.returncode != 0 and 'REFUSED' in (p.stderr + p.stdout) and not os.path.exists(out), (name, sub, p.returncode, p.stderr[-300:])
+        assert not os.path.exists(os.path.join(scratch, 'SRC-B3G2CK')), 'nothing may be created'
+        say('make_port_tree.py refuses SRC-B3G2CK/x, src-b3g2ck/x, Src-B3g2/x, src-b3g2 (and the folders themselves), nothing created')
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def test_port_equals_the_gpu_tested_harness_variant_bitwise():
     if 'port' not in TREES:
         raise unittest.SkipTest('the trees were not made (see test_000)')
@@ -188,12 +209,14 @@ def test_port_equals_the_gpu_tested_harness_variant_bitwise():
             same(ra['aux'], rb['aux'], f'{kind}/{name}: aux')
             same(ra['grads'], rb['grads'], f'{kind}/{name}: gradients')
             same(ra['rng'], rb['rng'], f'{kind}/{name}: RNG states')
+            same({k: v for k, v in ra['stats'].items() if k != 'numerics'}, {k: v for k, v in rb['stats'].items() if k != 'numerics'}, f'{kind}/{name}: per-micro-batch counters (Defer.stats vs b3g2_defer.stats)')
             n += 1
     ua, ub = a['updates'], b['updates']
     same(ua['losses'], ub['losses'], 'update losses')
     same(ua['final_sd'], ub['final_sd'], 'final state_dict')
+    same({k: v for k, v in ua['stats'].items() if k != 'numerics'}, {k: v for k, v in ub['stats'].items() if k != 'numerics'}, 'counters after 3 updates')
     assert ua['deferred'] == ub['deferred'] == 12, (ua['deferred'], ub['deferred'])          # 3 updates x accum 4 micro-batches, every loss deferred
-    say(f'{n} scenarios ({len(a["real"])} with the real ByteWriter.right, {len(a["nontrivial"])} with the non-trivial one): loss, every aux value, every gradient tensor and the RNG states BIT-EQUAL; '
+    say(f'{n} scenarios ({len(a["real"])} with the real ByteWriter.right, {len(a["nontrivial"])} with the non-trivial one): loss, every aux value, every gradient tensor and the RNG states BIT-EQUAL, and the per-micro-batch counters (call / EOS-only / answer pairs, call width, rounds, rows) equal the harness Defer.stats; '
         f'3 AdamW updates through Trainer.update(): per-update losses {[float(x) for x in ua["losses"]]} and the final {len(ua["final_sd"])} state_dict tensors BIT-EQUAL; deferred losses {ua["deferred"]} / {ub["deferred"]}')
 
 

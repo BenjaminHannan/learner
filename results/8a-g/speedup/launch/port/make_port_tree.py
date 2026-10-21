@@ -29,8 +29,8 @@ def main(argv):
         sys.exit(__doc__)
     out = os.path.abspath(argv[0])
     real = os.path.realpath(out)
-    if any(part in FORBIDDEN_NAMES for part in real.split(os.sep)):
-        die(f'{out} (resolved: {real}) is, or is inside, a folder named {FORBIDDEN_NAMES}: never builds into those trees')
+    if any(part.lower() in {n.lower() for n in FORBIDDEN_NAMES} for part in real.split(os.sep)):      # case-insensitive (the PC's NTFS is not case sensitive)
+        die(f'{out} (resolved: {real}) is, or is inside, a folder named {FORBIDDEN_NAMES} (any case): never builds into those trees')
     if os.path.exists(out) and (not os.path.isdir(out) or os.listdir(out)):
         die(f'{out} exists and is not an empty folder')
     top = subprocess.run(['git', '-C', HERE, 'rev-parse', '--show-toplevel'], check=True, capture_output=True, text=True).stdout.strip()

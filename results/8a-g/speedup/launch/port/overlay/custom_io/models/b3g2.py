@@ -83,7 +83,8 @@ class B3G2(B3):
         self._tr = {}
         self.trace_stats = dict(rows=0, with_steps=0, calls=0, notes=0, unreadable=0, no_trace=0, over_tape=0, reply_mismatch=0, writer_over=0)
         self.free_stats = dict(unended=0, answer_unended=0)
-        self.speed_defer, self.defer_counts = False, dict(deferred=0, fallback=0)      # b3g2_defer (train.py --speed-arms defer; NUMERICS-CHANGING, off by default): plain attributes; not *_stats, so train.py's checkpoint does not store them
+        self.speed_defer = False        # b3g2_defer (train.py --speed-arms defer; NUMERICS-CHANGING, off by default): plain attributes; defer_counts is not a *_stats dict, so train.py's model_streams does not store it
+        self.defer_counts = dict(deferred=0, fallback=0, call_pairs=0, eos_pairs=0, answer_pairs=0, call_width_sum=0, call_width_max=0, rounds_sum=0, rows_sum=0)
 
     # ---- the tools ----
     @staticmethod
@@ -532,9 +533,9 @@ class B3G2(B3):
     # ---- loss ----
     def loss(self, batch):
         golds = self.train_golds(batch['rows'])
-        if self.speed_defer:        # the deferred batched writer when it applies (training, autograd on, talk_rounds 'last', no copy path); else _loss as always (trace_loss / ST1 never come here)
-            if self.training and torch.is_grad_enabled() and self.talk_rounds == 'last' and not self.writer.copy:
-                from custom_io.models import b3g2_defer
+        if self.speed_defer:        # the deferred batched writer when it applies (training, autograd on, talk_rounds 'last', no copy path); else _loss. train_golds has ALREADY drawn (drill rng), as in the original.
+            from custom_io.models import b3g2_defer         # trace_loss calls _loss directly and never gets here; ST1's ordinary half-batches call this loss(), so with the flag on they take the deferred path too
+            if self.training and torch.is_grad_enabled() and b3g2_defer.applies_statically(self):
                 return b3g2_defer.deferred_loss(self, batch, golds)
             self.defer_counts['fallback'] += 1
         return self._loss(batch, golds)

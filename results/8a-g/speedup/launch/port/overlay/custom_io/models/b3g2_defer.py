@@ -8,10 +8,11 @@ micro-batch is done as ONE thinker-only loop, then ONE batched call pass (two bu
 answer pass over all (round, row) pairs (rounds < CKPT_FROM plain, rounds >= CKPT_FROM gradient-checkpointed as the original does). Every host-side list (who calls when, who has a target, who may
 answer) comes from the numpy schedule of B3G2.plan_np, never read back from the device; the host arrays go over in one copy.
 
-WHEN IT RUNS (B3G2.loss decides; _loss is the base text and trace_loss / ST1 never come here): speed_defer True and the model is training, autograd is on, talk_rounds == 'last' and the writer has
+WHEN IT RUNS (B3G2.loss decides; _loss is the base text; trace_loss calls _loss directly and never comes here, but ST1's ordinary half-batches call loss(), so with the flag on they take this path): speed_defer True and the model is training, autograd is on, talk_rounds == 'last' and the writer has
 no copy path. Anything else (eval, no_grad, talk_rounds 'all', a copy writer) counts defer_counts['fallback'] and runs _loss; a run of the deferred path counts defer_counts['deferred'] (plain
-attribute, not a *_stats dict, so train.py's checkpoint does not store it and a flag-off checkpoint keeps the g2fa4 format; the counts restart at 0 after a resume).
-SOURCE GUARD: the first deferred call on a model checks SRC_HASH (sha1[:12] of the source of every method this file re-implements or relies on) and raises RuntimeError on a mismatch.
+attribute, not a *_stats dict, so train.py's model_streams does not store it and a flag-off checkpoint keeps the g2fa4 format; a flag-ON run keeps the counts in its checkpoint sidecar and restores them
+on --resume). defer_counts also carries defer.py's per-micro-batch sizes (call / EOS-only / answer pairs, call width, rounds, rows); stats(m) turns them into defer.py's means for RESULT.json.
+SOURCE GUARD: the first deferred call on a model checks SRC_HASH (sha1[:12] of the source of every method this file re-implements or relies on, resolved on type(m) and type(m.writer)) and raises RuntimeError on a mismatch.
 
 NUMERICS-CHANGING ('near'): the per-row maths is identical but floating-point rounding is not: batched GEMMs, a longer padded call width, parameter gradients reduced in ONE backward over all pairs
 (another summation order). fp32 on a CPU: about 1e-7 relative; bf16 on a GPU: see the GPU-RUN-4/5 readouts. The thinker is bit-identical. Not 'same maths bit for bit'. A run with it is a different
@@ -25,9 +26,9 @@ import torch
 from torch.utils.checkpoint import checkpoint
 from custom_io.models import b3g2 as B3G2M
 
-# sha1 (first 12 hex) of the source of each method this file re-implements or relies on, trailing blanks stripped (defer.py's src_hash). B3G2 methods are those of the PORT tree (plan_np and loss
-# are the port's own; _loss is the base text, the one deferred_loss re-implements). A different source means this file was written against other code.
-SRC_HASH = dict(loop='173236f31248', call_pass='3aa7d3d707b2', ans_pass='5f2387af6a2b', answer_teacher='a33b2f2ef2b7', line_context='ee62580e169e', plan_np='c093c8d2edb3', _loss='349e3f1eaaff', loss='5b321b587b5b')
+# sha1 (first 12 hex) of the source of each method this file re-implements or relies on, trailing blanks stripped (defer.py's src_hash). B3G2 methods are those of the PORT tree, resolved on type(m)
+# (plan and plan_np and loss are the port's own; _loss is the base text, the one deferred_loss re-implements and which still calls plan). A different source means this file was written against other code.
+SRC_HASH = dict(loop='173236f31248', call_pass='3aa7d3d707b2', ans_pass='5f2387af6a2b', answer_teacher='a33b2f2ef2b7', line_context='ee62580e169e', plan='c5a2cb0e4052', plan_np='c093c8d2edb3', _loss='349e3f1eaaff', loss='0dedb8e3d9b0')
 SRC_HASH_WRITER = dict(teacher='c6d7f0df92ca', nll='ebaa4f2fc55f', right='1c885a0c60b2')
 SRC_HASH_TOOL = dict(think='6ccf66237406', tape_of='22b5b8101693')
 
@@ -37,15 +38,27 @@ def src_hash(fn):
 
 
 def source_hashes(m):
-    """-> {name: (sha1[:12], expected)} of every guarded method, for model m (B3G2 methods of type(m), the writer's of type(m.writer), ToolH1.think, Tool.tape_of)."""
-    import custom_io.models.tool as T
-    import custom_io.models.tool_h1 as H
+    """-> {name: (sha1[:12], expected)} of every guarded method, as resolved on type(m) (B3G2 methods, think, tape_of) and type(m.writer): a subclass that overrides one is seen."""
     cls, wcls = type(m), type(m.writer)
-    out = {f'B3G2.{n}': (src_hash(getattr(cls, n)), h) for n, h in SRC_HASH.items()}
-    out.update({f'ByteWriter.{n}': (src_hash(getattr(wcls, n)), h) for n, h in SRC_HASH_WRITER.items()})
-    out['ToolH1.think'] = (src_hash(H.ToolH1.think), SRC_HASH_TOOL['think'])
-    out['Tool.tape_of'] = (src_hash(T.Tool.tape_of), SRC_HASH_TOOL['tape_of'])
+    out = {f'{cls.__name__}.{n}': (src_hash(getattr(cls, n)), h) for n, h in {**SRC_HASH, **SRC_HASH_TOOL}.items()}
+    out.update({f'{wcls.__name__}.{n}': (src_hash(getattr(wcls, n)), h) for n, h in SRC_HASH_WRITER.items()})
     return out
+
+
+def applies_statically(m):
+    """True when the model can ever take the deferred path: talk_rounds 'last' and a writer without a copy path (the rest of the rule, training and autograd on, is checked per call by B3G2.loss)."""
+    return m.talk_rounds == 'last' and not m.writer.copy
+
+
+NUMERICS = "NUMERICS-CHANGING ('near'): per-row maths identical, floating-point rounding is not (batched GEMMs, a longer padded call width, one-shot parameter-gradient reductions); the thinker is bit-identical"
+
+
+def stats(m):
+    """defer.py's Defer.stats() from m.defer_counts (python ints only): the counts and the per-micro-batch means, for RESULT.json."""
+    c, d = m.defer_counts, m.defer_counts['deferred']
+    per = lambda k: c[k] / d if d else None
+    return dict(numerics=NUMERICS, deferred_losses=d, fallback_losses=c['fallback'], call_pairs_per_micro_batch=per('call_pairs'), eos_only_pairs_per_micro_batch=per('eos_pairs'),
+                answer_pairs_per_micro_batch=per('answer_pairs'), mean_call_width=per('call_width_sum'), max_call_width=c['call_width_max'], mean_rounds=per('rounds_sum'), mean_rows_per_micro_batch=per('rows_sum'))
 
 
 def check_source(m):
@@ -172,7 +185,7 @@ def thinker(m, batch, Ls, tapes, sched_dev, n):
 
 def deferred_loss(m, batch, golds):
     """B3G2._loss's teacher-forced training loss, deferred and batched (see the header). -> (total, aux) exactly as _loss. Called by B3G2.loss only when it applies."""
-    if not getattr(m, '_defer_src_ok', False):                                   # once per model, before anything is drawn
+    if not getattr(m, '_defer_src_ok', False):                                   # once per model, on its first deferred call (B3G2.loss has already drawn the drill rng in train_golds; the guard draws nothing)
         check_source(m)
         m._defer_src_ok = True
     m.defer_counts['deferred'] += 1
@@ -272,4 +285,7 @@ def deferred_loss(m, batch, golds):
     aux.update({f'plan_{k}': float(v) for k, v in m.plan_stats.items()})
     if m.ans_drill:
         aux['drill_share'] = sum(x['drill'] for x in golds) / B
+    c = m.defer_counts                                                           # defer.py's per-micro-batch counters: python ints from numpy sizes, no device read
+    c['call_pairs'] += P; c['eos_pairs'] += P - n_call; c['answer_pairs'] += Q; c['call_width_sum'] += inp_c.shape[1]; c['call_width_max'] = max(c['call_width_max'], inp_c.shape[1])
+    c['rounds_sum'] += n; c['rows_sum'] += B
     return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}

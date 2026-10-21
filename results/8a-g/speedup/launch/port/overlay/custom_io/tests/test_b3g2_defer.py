@@ -68,7 +68,7 @@ def dump(out):
     m = build_model(0)
     has_flag = hasattr(m, 'speed_defer')
     if has_flag:
-        assert m.speed_defer is False and m.defer_counts == dict(deferred=0, fallback=0)
+        assert m.speed_defer is False and not any(m.defer_counts.values())
     decay = [p for p in m.parameters() if p.ndim >= 2]
     rest = [p for p in m.parameters() if p.ndim < 2]
     opt = torch.optim.AdamW([{'params': decay, 'weight_decay': 0.1}, {'params': rest, 'weight_decay': 0.0}], lr=3e-3, betas=(0.9, 0.95))
@@ -164,15 +164,20 @@ def find_overlay():
 
 
 def test_000_the_trees_under_test_are_the_pinned_ones():
-    """Before anything runs: the base tree's b3g2.py / train.py are the 74d6e92c75 pins, and every file of the port tree under test that the overlay owns has the overlay's sha256 (FAIL on a mismatch)."""
+    """Before anything runs: the base tree's b3g2.py / train.py are the 74d6e92c75 pins, the g2fa4 reference train.py is its pin (e75e45fa...), and every file of the port tree under test that the overlay owns has the overlay's sha256 (FAIL on a mismatch)."""
     base = base_tree()
+    skip_why = []
     bad = [f'base {rel}: sha256 {sha_file(os.path.join(base, rel))[:16]} != pin {pin[:16]}' for rel, pin in BASE_PINS.items() if sha_file(os.path.join(base, rel)) != pin]
     tree = need_tree()
+    try:
+        g2fa4_train()                                                            # the pin of the g2fa4 reference train.py (FAIL on a mismatch or a G2FA4_TRAIN that does not exist)
+    except unittest.SkipTest as e:
+        skip_why.append(str(e))
     ov = find_overlay()
     if ov is None:
-        raise unittest.SkipTest('the reference overlay (port/overlay) was not found: set PORT_OVERLAY; the port tree could not be checked')
+        skip_why.append('the reference overlay (port/overlay) was not found: set PORT_OVERLAY; the port tree could not be checked')
     n = 0
-    for dp, dn, fn in os.walk(os.path.join(ov, 'custom_io')):
+    for dp, dn, fn in (os.walk(os.path.join(ov, 'custom_io')) if ov else []):
         dn[:] = [d for d in dn if d != '__pycache__']
         for f in fn:
             if f.endswith('.pyc'):
@@ -183,7 +188,9 @@ def test_000_the_trees_under_test_are_the_pinned_ones():
             if not os.path.exists(mine) or sha_file(mine) != sha_file(os.path.join(dp, f)):
                 bad.append(f'port tree {rel}: differs from {os.path.join(ov, rel)}')
     assert not bad, '; '.join(bad)
-    say(f'trees: base b3g2.py / train.py match the 74d6e92c75 pins; {n} overlay files match the port tree {tree}')
+    if skip_why:
+        raise unittest.SkipTest('; '.join(skip_why))
+    say(f'trees: base b3g2.py / train.py match the 74d6e92c75 pins; the g2fa4 reference train.py matches its pin; {n} overlay files match the port tree {tree}')
 
 
 def test_t1_flag_off_is_bitwise_the_unmodified_b3g2():
@@ -202,6 +209,11 @@ def test_t1_flag_off_is_bitwise_the_unmodified_b3g2():
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- T2 helpers
+def two(m):
+    """The two headline counters of a model (the others are per-micro-batch sizes)."""
+    return dict(deferred=m.defer_counts['deferred'], fallback=m.defer_counts['fallback'])
+
+
 def G():
     import custom_io.models.b3g2 as g
     return g
@@ -340,7 +352,7 @@ def scenario(name, rows, K, tweak=None, seen=None):
     r0, r1 = one(m0, mb, K), one(m1, mb, K)
     c = compare(r0, r1)
     check_close(c, name)
-    assert m1.defer_counts == dict(deferred=1, fallback=0) and m0.defer_counts == dict(deferred=0, fallback=0), (m0.defer_counts, m1.defer_counts)
+    assert two(m1) == dict(deferred=1, fallback=0) and two(m0) == dict(deferred=0, fallback=0), (two(m0), two(m1))
     if seen is not None:
         B = len(rows)
         seen['aux'].append(r0['aux'])
@@ -502,13 +514,13 @@ def test_t3_fallbacks_are_bitwise_the_original_and_counted():
         a, b = fn(m0), fn(m1)
         same({k: v for k, v in a.items()}, {k: v for k, v in b.items()}, name)
         n_fb += 1
-        assert m1.defer_counts == dict(deferred=0, fallback=n_fb) and m0.defer_counts == dict(deferred=0, fallback=0), (name, m1.defer_counts, m0.defer_counts)
-        say(f'T3 {name}: bitwise the original; defer_counts {m1.defer_counts}')
+        assert two(m1) == dict(deferred=0, fallback=n_fb) and two(m0) == dict(deferred=0, fallback=0), (name, two(m1), two(m0))
+        say(f'T3 {name}: bitwise the original; defer_counts {two(m1)}')
     # the model that took the fallbacks has had the same draws as its twin: the training path now runs the deferred loss, close to the original
     m0.zero_grad(set_to_none=True); m1.zero_grad(set_to_none=True)
     r0, r1 = train_loss(m0), train_loss(m1)
     check_close(compare(r0, r1), 'training path after the fallbacks')
-    assert m1.defer_counts == dict(deferred=1, fallback=3), m1.defer_counts
+    assert two(m1) == dict(deferred=1, fallback=3), two(m1)
     # a copy writer is a fallback too (the rule only; its original body is not run: B3G2 never has a copy writer)
     m2 = build_model(0)
     m2.speed_defer = True
@@ -517,8 +529,8 @@ def test_t3_fallbacks_are_bitwise_the_original_and_counted():
         m2.loss(mb)
     except Exception:                                                           # noqa: BLE001 - the original body may not support a copy writer; the counter is what is asserted
         pass
-    assert m2.defer_counts == dict(deferred=0, fallback=1), m2.defer_counts
-    say(f'T3 training path: defer_counts {m1.defer_counts}; writer.copy True: counted as a fallback ({m2.defer_counts})')
+    assert two(m2) == dict(deferred=0, fallback=1), two(m2)
+    say(f'T3 training path: defer_counts {two(m1)}; writer.copy True: counted as a fallback ({two(m2)})')
 
 
 def test_source_guard_shipped_hashes_match_the_port_tree():
@@ -538,8 +550,8 @@ def test_source_guard_raises_naming_the_method_that_changed():
     from custom_io.models.writer import ByteWriter
     rows = mk_rows(8)
     mb = batch_of(rows)
-    targets = [(g.B3G2, 'call_pass', 'B3G2.call_pass'), (g.B3G2, '_loss', 'B3G2._loss'), (g.B3G2, 'plan_np', 'B3G2.plan_np'), (ByteWriter, 'nll', 'ByteWriter.nll'), (T.Tool, 'tape_of', 'Tool.tape_of'),
-               (H.ToolH1, 'think', 'ToolH1.think')]
+    targets = [(g.B3G2, 'call_pass', 'B3G2.call_pass'), (g.B3G2, '_loss', 'B3G2._loss'), (g.B3G2, 'plan', 'B3G2.plan'), (g.B3G2, 'plan_np', 'B3G2.plan_np'), (ByteWriter, 'nll', 'ByteWriter.nll'),
+               (T.Tool, 'tape_of', 'B3G2.tape_of'), (H.ToolH1, 'think', 'B3G2.think')]          # think / tape_of are hashed as resolved on type(m)
     for cls, name, label in targets:
         orig_attr = cls.__dict__[name]
         fn = orig_attr.__func__ if isinstance(orig_attr, staticmethod) else orig_attr
@@ -556,14 +568,57 @@ def test_source_guard_raises_naming_the_method_that_changed():
                 assert label in str(e) and 'sha1' in str(e), str(e)
             else:
                 raise AssertionError(f'no RuntimeError with {label} patched')
-            assert m.defer_counts == dict(deferred=0, fallback=0) and not getattr(m, '_defer_src_ok', False)
+            assert not any(m.defer_counts.values()) and not getattr(m, '_defer_src_ok', False)
         finally:
             setattr(cls, name, orig_attr)
         say(f'source guard: a changed {label} -> RuntimeError naming it')
     m = build_model(0)                                                           # and everything restored: the guard passes again
     m.speed_defer = True
     m.loss(mb)
-    assert m.defer_counts == dict(deferred=1, fallback=0) and m._defer_src_ok
+    assert two(m) == dict(deferred=1, fallback=0) and m._defer_src_ok
+
+
+def test_source_guard_sees_a_subclass_override_of_think_and_tape_of():
+    """think and tape_of are hashed as resolved on type(m): a subclass that overrides one (the same behaviour, another source) is refused, naming the subclass."""
+    import custom_io.models.b3g2 as g
+    mb = batch_of(mk_rows(8))
+    for name in ('think', 'tape_of'):
+        Sub = type('SubB3G2', (g.B3G2,), {name: (lambda self, *a, _n=name, **k: getattr(super(Sub, self), _n)(*a, **k))})
+        m = build_model(0)
+        m.__class__ = Sub
+        m.speed_defer = True
+        try:
+            m.loss(mb)
+        except RuntimeError as e:
+            assert f'SubB3G2.{name}' in str(e) and 'sha1' in str(e), str(e)
+        else:
+            raise AssertionError(f'no RuntimeError with {name} overridden on a subclass')
+        assert not any(m.defer_counts.values())
+        say(f'source guard: SubB3G2.{name} override -> RuntimeError naming it')
+
+
+def test_defer_counters_are_python_ints_and_match_the_batch():
+    """The harness's per-micro-batch counters (defer.py Defer.stats) kept in defer_counts, from numpy sizes: ints, consistent with aux['rounds'], the rows and the answer-pair rule; stats() gives the means."""
+    import custom_io.models.b3g2_defer as DF
+    rows = mk_rows(16)
+    mb = batch_of(rows)
+    m = build_model(0)
+    m.speed_defer = True
+    tot = dict(rounds=0, B=0, Q=0)
+    for K in (8, 32):
+        with forced_ks(K):
+            torch.manual_seed(5)
+            loss, aux = m.loss(mb)
+        golds = m.train_golds(mb['rows'])                                         # (draws the drill rng: only the sizes below are used)
+        tot['rounds'] += int(aux['rounds']); tot['B'] += len(rows)
+    c = m.defer_counts
+    assert all(type(v) is int for v in c.values()), c
+    assert c['deferred'] == 2 and c['fallback'] == 0 and c['rounds_sum'] == tot['rounds'] and c['rows_sum'] == tot['B'] == 32
+    assert c['call_pairs'] >= c['eos_pairs'] > 0 and c['answer_pairs'] > 0 and 1 <= c['call_width_max'] and c['call_width_sum'] >= 2 and c['call_width_sum'] <= 2 * c['call_width_max']
+    st = DF.stats(m)
+    assert st['deferred_losses'] == 2 and st['mean_rows_per_micro_batch'] == 16 and st['mean_rounds'] == tot['rounds'] / 2 and st['answer_pairs_per_micro_batch'] == c['answer_pairs'] / 2 and st['max_call_width'] == c['call_width_max']
+    assert 'NUMERICS-CHANGING' in st['numerics']
+    say(f'defer counters: {c}')
 
 
 def test_trace_loss_with_speed_defer_runs_the_original_and_counts_nothing():
@@ -579,14 +634,14 @@ def test_trace_loss_with_speed_defer_runs_the_original_and_counts_nothing():
         loss.backward()
         outs.append(dict(loss=loss.detach(), aux=aux, grads=[None if p.grad is None else p.grad.clone() for p in m.parameters()], rng=(torch.get_rng_state(), m._gap_rng.getstate(), m._drill_rng.getstate())))
     same(outs[0], outs[1], 'trace_loss')
-    assert m1.defer_counts == dict(deferred=0, fallback=0) and m0.defer_counts == dict(deferred=0, fallback=0), m1.defer_counts
+    assert not any(m1.defer_counts.values()) and not any(m0.defer_counts.values()), m1.defer_counts
     say('trace_loss with speed_defer True: bitwise the original, defer_counts untouched')
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- pieces
 def test_attributes_are_plain_and_the_state_dict_is_unchanged():
     m = build_model(0)
-    assert m.speed_defer is False and m.defer_counts == dict(deferred=0, fallback=0)
+    assert m.speed_defer is False and set(m.defer_counts) == {'deferred', 'fallback', 'call_pairs', 'eos_pairs', 'answer_pairs', 'call_width_sum', 'call_width_max', 'rounds_sum', 'rows_sum'} and not any(m.defer_counts.values())
     assert not any('defer' in k for k in m.state_dict()) and not any('defer' in n for n, _ in m.named_parameters()) and not any('defer' in n for n, _ in m.named_buffers())
     assert 'speed_defer' not in m._parameters and 'speed_defer' not in m._buffers and 'defer_counts' not in m._modules
 
@@ -729,15 +784,26 @@ def t4_on():
     return need_tree()
 
 
+G2FA4_PIN = 'e75e45fa43c6a6422c0a0e4222e05d8afc27580ec6551100680ed8f9ecdc5015'
+
+
 def g2fa4_train():
+    """The g2fa4 overlay train.py, checked against its sha256 pin (AssertionError = FAIL on a mismatch). $G2FA4_TRAIN if set: a path that does not exist is a FAIL, never a walk up to another copy;
+    else found by walking up from this file in the repo (SKIP when not found)."""
     p = os.environ.get('G2FA4_TRAIN')
-    d = HERE
-    while not p or not os.path.exists(p):
-        up = os.path.dirname(d)
-        if up == d:
-            raise unittest.SkipTest('g2fa4 overlay/train.py not found: set G2FA4_TRAIN')
-        d = up
-        p = os.path.join(d, 'results', '8a-g', 'pc-job-cards', 'g2fa4', 'overlay', 'train.py')
+    if p:
+        assert os.path.isfile(p), f'G2FA4_TRAIN={p} does not exist'
+    else:
+        d = HERE
+        while True:
+            up = os.path.dirname(d)
+            if up == d:
+                raise unittest.SkipTest('g2fa4 overlay/train.py not found: set G2FA4_TRAIN')
+            d = up
+            p = os.path.join(d, 'results', '8a-g', 'pc-job-cards', 'g2fa4', 'overlay', 'train.py')
+            if os.path.isfile(p):
+                break
+    assert sha_file(p) == G2FA4_PIN, f'g2fa4 train.py {p}: sha256 {sha_file(p)[:16]} != pin {G2FA4_PIN[:16]}'
     return p
 
 
@@ -822,7 +888,9 @@ def test_t4d_a_speed_run_resumes_after_a_kill_and_reports_its_arm():
     res = json.load(open(os.path.join(out, 'RESULT.json')))
     assert res['config']['speed_arms'] == 'defer' and res['steps'] == N and res['resumed_from'] == [4], res['config']
     ds = res['defer_stats']
-    assert ds == dict(deferred=4, fallback=0), ds          # the counts are NOT in the checkpoint (that keeps its format the g2fa4 one): they count the resumed segment only, updates 5..6 x accum 2
+    side4 = json.load(open(os.path.join(out, 'ckpt', 'step-4.json')))
+    assert side4['defer_counts']['deferred'] == 8, side4.get('defer_counts')          # the flag-ON sidecar carries the counts (updates 1..4 x accum 2)
+    assert ds['deferred_losses'] == 12 and ds['fallback_losses'] == 0, ds           # restored on --resume and counted on: exact across the kill
     # an uninterrupted speed run: the same trace (the checkpoint restores weights, optimizer, every RNG incl. the model's own streams)
     out_u = fresh('t4d_on_straight')
     rc, so_u, se_u = trun(tree, targs(data, out_u, N, ['--ckpt-every', '2', '--speed-arms', 'defer']))
@@ -830,14 +898,15 @@ def test_t4d_a_speed_run_resumes_after_a_kill_and_reports_its_arm():
     res_u = json.load(open(os.path.join(out_u, 'RESULT.json')))
     t_all = [e for e in trace(so1) if e['step'] <= 4] + trace(so2)
     assert t_all == trace(so_u), 'speed run: kill + resume trace differs from the uninterrupted run'
-    assert res_u['defer_stats'] == dict(deferred=12, fallback=0), res_u['defer_stats']
+    assert res_u['defer_stats'] == res['defer_stats'], (res_u['defer_stats'], res['defer_stats'])      # every count and mean, uninterrupted vs killed + resumed
+    assert res_u['defer_stats']['deferred_losses'] == 12 and res_u['defer_stats']['mean_rows_per_micro_batch'] == 4 and res_u['defer_stats']['call_pairs_per_micro_batch'] > 0
     # flag off: no speed_arms key anywhere, no defer_stats
     out_off = fresh('t4d_off')
     rc, so_f, se_f = trun(tree, targs(data, out_off, 4, ['--ckpt-every', '2']))
     assert rc == 0, (so_f[-800:], se_f[-2500:])
     res_f = json.load(open(os.path.join(out_off, 'RESULT.json')))
     assert 'speed_arms' not in res_f['config'] and 'defer_stats' not in res_f and not any('speed_arms' in e for e in events(so_f)), res_f['config']
-    say(f'T4d: speed run killed after the step-4 checkpoint, resumed from 4: steps 5..6, trace == uninterrupted speed run, RESULT.json config.speed_arms {res["config"]["speed_arms"]!r}, defer_stats {ds} (counts since the restart) '
+    say(f'T4d: speed run killed after the step-4 checkpoint, resumed from 4: steps 5..6, trace == uninterrupted speed run, RESULT.json config.speed_arms {res["config"]["speed_arms"]!r}, defer_stats {ds} (exact across the resume) '
         f'(uninterrupted: {res_u["defer_stats"]}); flag-off RESULT.json has no speed_arms / defer_stats')
 
 
@@ -891,6 +960,7 @@ def test_t4g_a_flag_off_port_checkpoint_resumes_in_the_g2fa4_tree_bitwise():
     rc, so1, se1 = trun(tree, a, kill_after=4)
     assert rc == 137 and os.path.exists(os.path.join(out, 'ckpt', 'step-4.pt')), (rc, se1[-1500:])
     ck = torch.load(os.path.join(out, 'ckpt', 'step-4.pt'), map_location='cpu', weights_only=False)
+    assert 'defer_counts' not in json.load(open(os.path.join(out, 'ckpt', 'step-4.json'))), 'a flag-off sidecar must be the g2fa4 one'
     assert not any('defer' in k for k in ck['model_streams'][1]) and not any('defer' in k for k in ck['model_streams'][0]), 'the port checkpoint must not store the defer counters'
     rc, so2, se2 = trun(g2, a)
     assert rc == 0 and any(e.get('event') == 'resumed' and e['step'] == 4 for e in events(so2)), (rc, so2[-800:], se2[-2000:])

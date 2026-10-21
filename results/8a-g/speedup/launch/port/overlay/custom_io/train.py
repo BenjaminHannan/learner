@@ -434,7 +434,8 @@ def main(argv=None):
     if args.speed_arms:
         if not hasattr(model, 'speed_defer'):
             sys.exit(f"--speed-arms {args.speed_arms} needs a model with the deferred writer (b3g2); model {args.model} has none")
-        if model.talk_rounds != 'last' or model.writer.copy:       # B3G2.loss would count a fallback on every call: refuse at startup instead of silently running the original
+        from custom_io.models import b3g2_defer
+        if not b3g2_defer.applies_statically(model):       # B3G2.loss would count a fallback on every call: refuse at startup instead of silently running the original
             sys.exit(f"--speed-arms {args.speed_arms} can never take the deferred path with this model: " + (f"talk_rounds is {model.talk_rounds!r} (the deferred writer needs 'last')" if model.talk_rounds != 'last' else "the writer has a copy path (the deferred writer needs copy False)"))
         model.speed_defer = True
     if args.caps and hasattr(model, '_targets'):    # plain_tf_steps family: its answer slots are the steps+answer target (caps plain_target), not max_ans
@@ -469,6 +470,8 @@ def main(argv=None):
             opt.load_state_dict(ck['opt'])
             restore_global_streams(ck['rng'], device)
             restore_model_streams(model, *ck['model_streams'])
+            if args.speed_arms and side.get('defer_counts') is not None:
+                model.defer_counts.update(side['defer_counts'])      # flag-ON sidecar only: the defer counts stay exact across --resume (the redone updates are counted again from the saved value)
             capcount.HITS.clear(); capcount.HITS.update(ck['cap_hits'])
             lp = ck['loop']
             step, eval_s, run_n, last_loss = ck['step'], lp['eval_s'], lp['run_n'], lp['last_loss']
@@ -535,7 +538,8 @@ def main(argv=None):
                     loop=dict(elapsed=ck_t - t0, eval_s=eval_s, run_loss=run_loss.cpu() if torch.is_tensor(run_loss) else run_loss, run_n=run_n, last_loss=last_loss),
                     data=dict(batches=step, n_rows=len(rows), order=args.order, seed=args.seed, batch=args.batch, per_epoch=len(rows) // args.batch)),
                     dict(version=1, config_hash=cfg_hash, config=cfg_hashed, data_id=dat_id, code_id=code, train_py_sha256=sha256_file(os.path.abspath(__file__)),
-                         torch=torch.__version__, device=device.type, accum=args.accum, resumed_from=resumed_from, saved_unix=round(time.time())))
+                         torch=torch.__version__, device=device.type, accum=args.accum, resumed_from=resumed_from, saved_unix=round(time.time()),
+                         **({'defer_counts': dict(model.defer_counts)} if args.speed_arms else {})))      # flag-off sidecar: exactly the g2fa4 one
                 ck_stats['writes'] += 1; ck_stats['write_s'] += secs; ck_stats['last_bytes'] = nbytes
                 jprint(event='ckpt', step=step, file=f'step-{step}.pt', mib=round(nbytes / 2 ** 20, 1), write_s=round(secs, 2))
             except Exception as e:      # a full disk or a locked file must not kill a 100-hour run: say so loudly, keep training, try again at the next interval
@@ -551,7 +555,7 @@ def main(argv=None):
     if hasattr(model, '_tk_spots'):         # tok_think: valid letters vs token spots the thinker saw in training (ratio = letters per spot)
         result['tok_think'] = dict(letters=model._tk_letters, spots=model._tk_spots, ratio=round(model._tk_letters / max(model._tk_spots, 1), 4))
     if args.speed_arms:
-        result['defer_stats'] = model.defer_counts       # counts since the last (re)start of the process: not stored in the checkpoint
+        result['defer_stats'] = b3g2_defer.stats(model)       # defer.py's Defer.stats(): counts and per-micro-batch means; kept across --resume through the flag-on sidecar
     if ck_on:
         result['resumed_from'] = resumed_from
         result['ckpt'] = dict(every=args.ckpt_every, config_hash=cfg_hash, code_id=code, **ck_stats)
