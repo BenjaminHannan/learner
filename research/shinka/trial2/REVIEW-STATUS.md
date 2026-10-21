@@ -22,3 +22,5 @@ Round 2 (same reviewer settings, after the fixes above): **NOT CLEAN, 9 findings
 7. `charge` rereads the whole ledger twice under the lock (slow for large batches).
 8. `input_upper` (chars / 2) is a heuristic, not a guaranteed bound; the 15,000-token-per-search figure is an assumption. The hold is weaker than "guaranteed".
 9. `batch_collect` polls with no deadline and drops the hold even if some custom_ids never came back.
+
+After round 2 (UNREVIEWED edits, made so the plumbing test could run safely): `make_client` now uses `max_retries=0` (finding 1 of round 2); the prosecutor prompt now requires at least 3 web searches (the first plumbing call searched zero times). Findings 2-9 are still open.

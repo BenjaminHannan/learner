@@ -27,7 +27,7 @@ TOOL = {"type": "web_search_20260209", "name": "web_search", "max_uses": MAX_SEA
 
 SYSTEM = (
     "You are a prior-art prosecutor. Your job is to PROVE the idea card below already exists, in the "
-    "literature or in the project's known list. Search the web for the closest published or "
+    "literature or in the project's known list. You MUST use the web_search tool at least 3 times before answering (searching is the point; do not answer from memory). Search the web for the closest published or "
     "open-source method. Be adversarial: a direct combination of two known items counts as known. "
     "Do not defend the card. Finish with ONE JSON object and nothing after it: "
     '{"closest": "<method/paper>", "citations": ["<url>", ...], "case": "<one paragraph>", '
@@ -76,4 +76,4 @@ def make_client(guard: Guard) -> GuardedClient:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise SystemExit("ANTHROPIC_API_KEY is not set; refusing to build a client")
     import anthropic
-    return GuardedClient(anthropic.Anthropic(), guard)
+    return GuardedClient(anthropic.Anthropic(max_retries=0), guard)   # no hidden retries: every attempt goes through the Guard

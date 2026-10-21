@@ -66,7 +66,7 @@ Any failed gate ends the trial; nothing after it is spent.
 - Stage caps: 0 = $0.50, 1 = $8, 2 = $4, 3 = $16, 4 = $6, 5 = $8, 6 = $3. **Whole-trial hard stop $45, warning $40**, far under Ben's $100 ceiling. No stage borrows from another. (The caps sum to $45.50, so in the unlikely case every stage runs to its cap the hard stop bites first, by $0.50.)
 - Ledger: `results/TRIAL2_LEDGER.jsonl`, re-read under a file lock on every check, so separate processes agree.
 - Tests: `test_money.py` (33 tests, fake client, no network). `mutation_check.py` switches off each of the 5 guard lines in a copy and requires a real assertion failure (not an import error), after first checking the unmutated copy passes: all 5 are caught.
-- Plumbing test (one prosecutor call, Stage 0, cap $0.50): written, **NOT RUN** (no API key in the build session). Worst case for the call is $0.28.
+- Plumbing test (Stage 0, cap $0.50): **RUN 2026-10-21, two calls, $0.110 total (ledger `results/TRIAL2_LEDGER.jsonl`).** Call 1 did not search (the model answered from memory), $0.018. Call 2, with the prompt requiring searches: 6 server-tool blocks, **4 billed web searches**, 22,365 input and 704 output tokens, **$0.092 measured for one prosecutor call** (Sonnet 5.5). The plan's $0.25-0.35 estimate was about 3x too high (suggested: it assumed more search-result tokens). Worst-case hold for one call is $0.27. Not yet compared with the console bill.
 
 ## 7. Who does the hand check at run time
 A **fresh Opus 5.5 reviewer session**, started for this purpose, that reads `KNOWN.md` and the card or finalist code
