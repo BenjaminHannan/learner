@@ -35,6 +35,15 @@ def set_cross_entropy(scores: torch.Tensor, target: torch.Tensor) -> torch.Tenso
     return torch.logsumexp(scores, 1) - torch.logsumexp(scores.masked_fill(~target, NEG_INF), 1)
 
 
+def set_cross_entropy_with_sink(scores: torch.Tensor, target: torch.Tensor, sink: torch.Tensor) -> torch.Tensor:
+    """[n]: set cross-entropy with one extra sink logit in every denominator.
+
+    Rows with an empty `target` (nothing left to fetch) take the sink as their target.
+    """
+    return set_cross_entropy(torch.cat([scores, sink.float().expand(scores.shape[0], 1)], dim=1),
+                             torch.cat([target, ~target.any(1, keepdim=True)], dim=1))
+
+
 @dataclass
 class CardStore:
     keys: torch.Tensor          # [B, L, dk] unit length
@@ -105,16 +114,31 @@ class CardStore:
 
     def ask(self, query: torch.Tensor, q_visit: torch.Tensor, q_line: torch.Tensor,
             kappa: torch.Tensor, age_bias: torch.Tensor, fetched: Optional[torch.Tensor] = None,
-            questions: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1]."""
+            questions: Optional[torch.Tensor] = None, query_gain: Optional[torch.Tensor] = None,
+            key_gain: Optional[torch.Tensor] = None, parts: Optional[dict] = None) -> torch.Tensor:
+        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1].
+
+        Steal 6: `query_gain` / `key_gain` [dk] scale the unit query / keys per dimension before the dot
+        product (QK-norm gains). `parts`, when given, receives "match" (kappa q.k, before the bias) and
+        "eligible" (both detached) for QK-Clip.
+        """
         query = F.normalize(query.float(), dim=-1)
         keys = torch.cat([self.keys[q_visit],
                           self.null_key.expand(q_visit.shape[0], 1, -1)], dim=1)
+        if query_gain is not None:
+            query = query * query_gain.float()
+        if key_gain is not None:
+            keys = keys * key_gain.float()
         scores = kappa.float() * torch.einsum("nk,nlk->nl", query, keys)
+        if parts is not None:
+            parts["match"] = scores.detach()
         bias = age_bias.float()[self.ages(q_line, age_bias.shape[0])]
         bias[:, self.null] = 0.0
         scores = scores + bias
-        return scores.masked_fill(~self.eligible(q_visit, q_line, fetched, questions), NEG_INF)
+        eligible = self.eligible(q_visit, q_line, fetched, questions)
+        if parts is not None:
+            parts["eligible"] = eligible
+        return scores.masked_fill(~eligible, NEG_INF)
 
     def top(self, scores: torch.Tensor, k: int) -> torch.Tensor:
         """[n, k] best eligible card indices (NULL = `null`), -1 where fewer are eligible."""
@@ -125,15 +149,26 @@ class CardStore:
     def gather(self, index: torch.Tensor, q_visit: torch.Tensor
                ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """(values [n, K, d], ents [n, K, E], lines [n, K]) of card indices; -1 / NULL handled."""
+        real, line, visit = self._slots(index, q_visit)
         n, count = index.shape
-        real = (index >= 0) & (index < self.lines)
-        line = index.clamp(0, self.lines - 1)
-        visit = q_visit.unsqueeze(1).expand(n, count)
         values = torch.where(real.unsqueeze(-1), self.values[visit, line],
                              self.null_value.to(self.values.dtype).expand(n, count, -1))
         ents = torch.where(real.unsqueeze(-1), self.ents[visit, line],
                            torch.full_like(self.ents[visit, line], -1))
         return values, ents, torch.where(real, line, torch.full_like(line, -1))
+
+    def gather_keys(self, index: torch.Tensor, q_visit: torch.Tensor) -> torch.Tensor:
+        """[n, K, dk] unit keys of card indices; the NULL key for NULL, -1 and padding."""
+        real, line, visit = self._slots(index, q_visit)
+        n, count = index.shape
+        return torch.where(real.unsqueeze(-1), self.keys[visit, line], self.null_key.expand(n, count, -1))
+
+    def _slots(self, index: torch.Tensor, q_visit: torch.Tensor
+               ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """(real [n, K], line [n, K], visit [n, K]) for card indices: real lines (not -1 or NULL), clamped."""
+        n, count = index.shape
+        real = (index >= 0) & (index < self.lines)
+        return real, index.clamp(0, self.lines - 1), q_visit.unsqueeze(1).expand(n, count)
 
     def gold(self, gold_lines: torch.Tensor, q_visit: torch.Tensor,
              q_line: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -173,4 +208,4 @@ class CardStore:
         return digest.hexdigest()
 
 
-__all__ = ["CardStore", "age_bucket", "set_cross_entropy"]
+__all__ = ["CardStore", "age_bucket", "set_cross_entropy", "set_cross_entropy_with_sink"]

@@ -16,6 +16,8 @@ the model trains under bf16 autocast. The controls are config flags: `store=Fals
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
+import hashlib
 import math
 from typing import Any, Iterable, Optional
 
@@ -26,10 +28,32 @@ import torch.nn.functional as F
 from learnlab.core import IGNORE_INDEX
 from premonition.batch import PAD_ID, VisitBatch
 from premonition.config import MiniConfig
-from premonition.store import CardStore, age_bucket, set_cross_entropy
+from premonition.store import CardStore, age_bucket, set_cross_entropy, set_cross_entropy_with_sink
 
 MODES = ("gold", "teacher", "own")
 ROW_QUESTION, ROW_SLOT, ROW_CARD, ROW_REGISTER = range(4)
+STEAL_SEED = 7100                     # offset of the side stream that initialises steal modules
+
+
+class _Draws(nn.Module):
+    """Stands where a steal removed a Linear: `reset_parameters` still draws that Linear's init numbers (and its
+    construction drew them too), so the global RNG stream and every later weight match the flag-off model."""
+
+    def __init__(self, fan_in: int, fan_out: int) -> None:
+        super().__init__()
+        nn.Linear(fan_in, fan_out)                 # the construction-time draws, discarded
+        self.shape = (fan_out, fan_in)
+
+
+def _aside(build):
+    """Build a steal module off the global RNG stream and mark it, so `reset_parameters` initialises it on a side
+    stream: at a given seed every shared weight is then the same with the steal on or off (paired A/Bs)."""
+    cuda = torch.get_default_device().type == "cuda"   # built on a CUDA default device: fork that stream too
+    with torch.random.fork_rng(devices=[torch.cuda.current_device()] if cuda else []):
+        module = build()
+    for part in module.modules():
+        part._steal = True
+    return module
 
 
 # ----------------------------------------------------------------------------- primitives
@@ -100,11 +124,15 @@ class LocalAttention(nn.Module):
         self.heads, self.window, self.base = config.n_heads, config.window, config.rope_base
         self.qkv = nn.Linear(d, 3 * d)
         self.out = nn.Linear(d, d)
+        if config.qk_norm_all:                                   # steal 6: per-head-dim RMSNorm on q and k
+            self.q_norm, self.k_norm = nn.RMSNorm(d // config.n_heads), nn.RMSNorm(d // config.n_heads)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch, length, width = x.shape
         heads, w = self.heads, self.window
         q, k, v = self.qkv(x).view(batch, length, 3, heads, width // heads).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         positions = torch.arange(length, device=x.device)
         q, k = rope(q, positions, self.base), rope(k, positions, self.base)
         blocks = -(-length // w)
@@ -168,8 +196,16 @@ class Reader(nn.Module):
         return self.norm(x)
 
 
+@lru_cache(maxsize=None)
+def engram_indices(spelling: str, heads: int, rows: int) -> tuple[int, ...]:
+    """Table row of a name in each Engram head: blake2b of "head:spelling" mod rows (never Python's hash())."""
+    return tuple(int.from_bytes(hashlib.blake2b(f"{h}:{spelling}".encode(), digest_size=8).digest(), "big") % rows
+                 for h in range(heads))
+
+
 class CardWriter(nn.Module):
-    """p = attention pool of a line's reader states; k = normalize(W_k p), v = W_v p; NULL card."""
+    """p = attention pool of a line's reader states; k = normalize(W_k p), v = W_v p; NULL card.
+    With `engram` the value also gets a gated lookup of the line's name spellings (steal 4)."""
 
     def __init__(self, config: MiniConfig) -> None:
         super().__init__()
@@ -179,6 +215,15 @@ class CardWriter(nn.Module):
         self.value = nn.Linear(d, d)
         self.null_key = nn.Parameter(torch.empty(config.key_dim))
         self.null_value = nn.Parameter(torch.empty(d))
+        self.pos_dim = config.pos_key_dim if config.key_split else 0     # steal 6: position sub-key width
+        self.pos_base = config.key_pos_base
+        self.engram = config.engram
+        if config.engram:
+            self.engram_heads, self.engram_rows = config.engram_heads, config.engram_rows
+            self.engram_tables = _aside(lambda: nn.ModuleList(nn.Embedding(config.engram_rows, d // config.engram_heads)
+                                                              for _ in range(config.engram_heads)))
+            self.engram_key = _aside(lambda: nn.Linear(d, d))
+            self.engram_value = _aside(lambda: nn.Linear(d, d))
 
     def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> CardStore:
         visits, lines = batch.line_start.shape
@@ -193,8 +238,60 @@ class CardWriter(nn.Module):
         weight = weight / total[slot]
         pooled = torch.zeros(visits * lines, hidden.shape[-1], device=hidden.device).index_add(
             0, slot, weight.unsqueeze(-1) * hidden[real].float()).view(visits, lines, -1)
-        return CardStore.write(self.key(pooled), self.value(pooled), batch,
-                               self.null_key, self.null_value)
+        return CardStore.write(self._keys(pooled, batch), self._values(pooled, batch), batch,
+                               self._null_key(), self.null_value)
+
+    def _null_key(self) -> torch.Tensor:
+        """The NULL key. Under key_split its position sub-key is zero: NULL has no line, so its score must not
+        depend on the question's line (the query's position part is rotated by it)."""
+        if not self.pos_dim:
+            return self.null_key
+        return torch.cat([self.null_key[:-self.pos_dim], self.null_key.new_zeros(self.pos_dim)])
+
+    def _keys(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[B, L, dk] card keys before CardStore.write normalises them."""
+        key = self.key(pooled)
+        if self.pos_dim:                       # key_split: RoPE on the last dims, position = the card's line
+            line = torch.arange(key.shape[1], device=key.device)
+            key = torch.cat([key[..., :-self.pos_dim], rope(key[..., -self.pos_dim:], line, self.pos_base)], -1)
+        return key
+
+    def _values(self, pooled: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[B, L, d] card values."""
+        value = self.value(pooled)
+        return self._engram(pooled, value, batch) if self.engram else value
+
+    def _engram(self, pooled: torch.Tensor, value: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """value + alpha W_V e on lines with a name; e = mean over the line's names of the concatenated head rows,
+        alpha = sigmoid(<norm(p), norm(W_K e)> / sqrt(d)). Lines with no name are returned unchanged. An entity
+        without a spelling (no NameTable for its visit, or none for the id) counts as no name: an ENT id is a
+        per-visit variable, so it must never fall back to a shared row."""
+        ents = batch.line_ents.cpu()                                         # [B, L, M]; -1 padding
+        rows = max(int(ents.max()) + 1, 1)
+        table = torch.zeros(ents.shape[0], rows + 1, self.engram_heads, dtype=torch.long)   # last row: padding
+        spelled = torch.zeros(ents.shape[0], rows + 1, dtype=torch.bool)                  # (visit, ent) has a name
+        where, hashed = [], []
+        for visit, names in enumerate(batch.names[:ents.shape[0]]):
+            for ent in ents[visit].unique().tolist():
+                if ent >= 0 and ent in names.spellings:
+                    where.append((visit, ent))
+                    hashed.append(engram_indices(names.spelling(ent), self.engram_heads, self.engram_rows))
+        if where:
+            visits, found = torch.tensor(where).unbind(1)
+            table[visits, found] = torch.tensor(hashed)
+            spelled[visits, found] = True
+        mapped = torch.where(ents >= 0, ents, torch.full_like(ents, rows))
+        visit_of = torch.arange(ents.shape[0]).view(-1, 1, 1)
+        index = table[visit_of, mapped]                                       # [B, L, M, H]
+        named = (ents >= 0) & spelled[visit_of, mapped]                       # [B, L, M]
+        index, named = index.to(value.device), named.to(value.device)
+        looked = torch.cat([t(index[..., h]) for h, t in enumerate(self.engram_tables)], dim=-1)   # [B, L, M, d]
+        count = named.sum(-1, keepdim=True)
+        e = (looked * named.unsqueeze(-1)).sum(2) / count.clamp_min(1)       # [B, L, d]
+        alpha = torch.sigmoid((_norm(pooled) * _norm(self.engram_key(e))).sum(-1, keepdim=True)
+                              / math.sqrt(pooled.shape[-1]))
+        added = value + (alpha * self.engram_value(e).float()).to(value.dtype)
+        return torch.where(count > 0, added, value)
 
 
 class ThinkLayer(nn.Module):
@@ -209,10 +306,14 @@ class ThinkLayer(nn.Module):
         self.proj = nn.Linear(d, d)
         self.norm2 = nn.LayerNorm(d)
         self.mlp = Mlp(d, config.think_mlp)
+        if config.qk_norm_all:                                   # steal 6
+            self.q_norm, self.k_norm = nn.RMSNorm(d // config.n_heads), nn.RMSNorm(d // config.n_heads)
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         n, rows, width = x.shape
         q, k, v = self.qkv(self.norm1(x)).view(n, rows, 3, self.heads, -1).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
         x = x + self.proj(attended.transpose(1, 2).reshape(n, rows, width))
         return x + self.mlp(self.norm2(x))
@@ -231,7 +332,17 @@ class Think(nn.Module):
         self.step = nn.Embedding(config.max_loops, d)
         self.age = nn.Embedding(config.age_buckets, d) if config.store else None
         self.age_bias = nn.Parameter(torch.zeros(config.age_buckets)) if config.store else None
-        self.binder = nn.Linear(2 * d, 2 * d) if config.store and config.pointers else None
+        bind = config.store and config.pointers
+        self.binder = nn.Linear(2 * d, 2 * d) if bind and not config.delta_bind else None
+        if config.delta_bind:                  # steal 1: key-addressed delta rule replaces the binder
+            if bind:
+                self.binder_draws = _Draws(2 * d, 2 * d)
+            rows = config.delta_bind_rows
+            self.delta_address = _aside(lambda: nn.Linear(config.key_dim, rows)) if bind else None
+            self.delta_write = _aside(lambda: nn.Linear(2 * d, d // rows + 1)) if bind else None
+        if config.fetch_gate and config.store:  # steal 2: per-head gate on fetched card values
+            self.fetch_gate = _aside(lambda: nn.Linear(2 * d, config.n_heads))
+        self.loop_query = nn.Parameter(torch.zeros(config.max_loops, d)) if config.loop_attnres else None
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
         x = x + self.step.weight[step]
@@ -244,6 +355,23 @@ class Think(nn.Module):
         gate, content = self.binder(torch.cat([slot, value.to(slot.dtype)], dim=-1)).chunk(2, -1)
         return slot + torch.sigmoid(gate.float()) * (torch.tanh(content.float()) - slot)
 
+    def delta_bind(self, slot: torch.Tensor, value: torch.Tensor, key: torch.Tensor) -> torch.Tensor:
+        """S <- S + beta kappa (w - kappa^T S)^T on S = slot.view(a, d / a); kappa = normalize(W_a key)."""
+        rows = self.delta_address.out_features
+        kappa = F.normalize(self.delta_address(key).float(), dim=-1)                      # [m, a]
+        beta, write = self.delta_write(torch.cat([slot, value.to(slot.dtype)], dim=-1)).float() \
+            .split([1, slot.shape[-1] // rows], dim=-1)
+        matrix = slot.float().view(slot.shape[0], rows, -1)                               # [m, a, b]
+        error = torch.tanh(write) - torch.einsum("ma,mab->mb", kappa, matrix)             # w - kappa^T S
+        matrix = matrix + torch.sigmoid(beta).unsqueeze(-1) * kappa.unsqueeze(-1) * error.unsqueeze(1)
+        return matrix.reshape(slot.shape[0], -1)
+
+    def gate_values(self, register: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
+        """[n, K, d] card values times sigmoid(W_g [normed register 0; v]) per head (fp32); register [n, d]."""
+        pair = torch.cat([register.unsqueeze(1).expand(-1, value.shape[1], -1), value.float()], dim=-1)
+        gate = torch.sigmoid(self.fetch_gate(pair).float())                               # [n, K, H]
+        return value.float() * gate.repeat_interleave(value.shape[-1] // gate.shape[-1], dim=-1)
+
 
 class Heads(nn.Module):
     """On register 0: query 128 -> 64, ASK and HALT logits, ASK temperature kappa."""
@@ -254,7 +382,13 @@ class Heads(nn.Module):
         self.query = nn.Linear(d, config.key_dim) if config.store else None
         self.ask = nn.Linear(d, 1) if config.store else None
         self.halt = nn.Linear(d, 1)
+        self.row_halt = _aside(lambda: nn.Linear(d, 1)) if config.row_halt else None
         self.log_kappa = nn.Parameter(torch.tensor(math.log(config.kappa_init))) if config.store else None
+        if config.fetch_sink and config.store:     # steal 2: a no-fetch logit, below every score at init
+            self.ask_sink = nn.Parameter(torch.tensor(-2 * config.kappa_init))
+        if config.store and config.qk_norm:                      # steal 6: per-dimension gains on the unit q and k
+            self.query_gain = nn.Parameter(torch.ones(config.key_dim))
+            self.key_gain = nn.Parameter(torch.ones(config.key_dim))
 
 
 class Decoder(nn.Module):
@@ -274,21 +408,49 @@ class Decoder(nn.Module):
         self.norm3 = nn.LayerNorm(d)
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
+        if config.fetch_gate:                      # steal 2: headwise sigmoid gate on cross-attention
+            self.cross_gate = _aside(lambda: nn.Linear(d, config.n_heads))
+        if config.fetch_sink:                      # steal 2: one sink logit per head (extra zero key and value)
+            self.cross_sink = nn.Parameter(torch.full((config.n_heads,), config.sink_init))
+        if config.qk_norm_all:                                   # steal 6: self- and cross-attention q/k norms
+            dh = d // config.n_heads
+            self.q_norm, self.k_norm = nn.RMSNorm(dh), nn.RMSNorm(dh)
+            self.cross_q_norm, self.cross_k_norm = nn.RMSNorm(dh), nn.RMSNorm(dh)
 
     def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
+        if hasattr(self, "q_norm"):
+            q, k = self.q_norm(q).to(v.dtype), self.k_norm(k).to(v.dtype)
         positions = torch.arange(length, device=x.device)
         q, k = rope(q, positions, self.base), rope(k, positions, self.base)
         attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
         x = x + self.proj(attended.transpose(1, 2).reshape(n, length, width))
-        q = self.cross_q(self.norm2(x)).view(n, length, heads, -1).transpose(1, 2)
+        normed = self.norm2(x)
+        q = self.cross_q(normed).view(n, length, heads, -1).transpose(1, 2)
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
-        attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if hasattr(self, "cross_q_norm"):
+            q, k = self.cross_q_norm(q).to(v.dtype), self.cross_k_norm(k).to(v.dtype)
+        if hasattr(self, "cross_sink"):
+            attended = self._sink_attention(q, k, v, valid)
+        else:
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if hasattr(self, "cross_gate"):
+            attended = attended * torch.sigmoid(self.cross_gate(normed).float()).transpose(1, 2).unsqueeze(-1)
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
         return self.norm(x)
+
+    def _sink_attention(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
+                        valid: torch.Tensor) -> torch.Tensor:
+        """Cross-attention with a per-head sink: a zero key and value whose logit is b_h (q . 0 = 0)."""
+        n, heads, length, _ = q.shape
+        k, v = (torch.cat([t, torch.zeros_like(t[:, :, :1])], dim=2) for t in (k, v))
+        mask = torch.zeros(n, 1, 1, valid.shape[1], dtype=q.dtype, device=q.device) \
+            .masked_fill(~valid[:, None, None, :], -math.inf).expand(n, heads, length, -1)
+        sink = self.cross_sink.to(q.dtype).view(1, heads, 1, 1).expand(n, heads, length, 1)
+        return F.scaled_dot_product_attention(q, k, v, attn_mask=torch.cat([mask, sink], dim=-1))
 
 
 # ----------------------------------------------------------------------------- the model
@@ -317,6 +479,13 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    history: Optional[list] = None              # steal 3: register states [Q, registers, d] entering each loop
+    keep: Optional[torch.Tensor] = None         # steal 5: [Q, registers] share of each register still updating
+    ponder: Optional[list] = None               # steal 5: per-loop keep terms for the ponder cost
+    halted: Optional[torch.Tensor] = None       # steal 5: [Q, registers] bool, sticky p > 0.5 (train and answer)
+    ask_cache: Optional[torch.Tensor] = None    # steal 7: [Q, L + 1] ASK scores at the last refresh
+    ask_query: Optional[torch.Tensor] = None    # steal 7: [Q, dk] unit query at the last refresh
+    ask_age: Optional[torch.Tensor] = None      # steal 7: [Q] loops since the last refresh
 
 
 class PremonitionMini(nn.Module):
@@ -331,6 +500,8 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
+        if config.qk_clip > 0:                 # steal 6: QK-Clip, the largest ASK logit of the last training forward
+            self.register_buffer("ask_logit_peak", torch.tensor(float("-inf")), persistent=False)
         self.reset_parameters()
 
     # ------------------------------------------------------------------ setup
@@ -339,12 +510,23 @@ class PremonitionMini(nn.Module):
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.normal_(module.weight, std=0.02)
-                nn.init.zeros_(module.bias)
-            elif isinstance(module, nn.Embedding) and module is not self.embed:
-                nn.init.normal_(module.weight, std=0.02)
+        def generic(modules: Iterable[nn.Module], generator: Optional[torch.Generator] = None) -> None:
+            for module in modules:
+                if isinstance(module, nn.Linear):
+                    nn.init.normal_(module.weight, std=0.02, generator=generator)
+                    nn.init.zeros_(module.bias)
+                elif isinstance(module, nn.Embedding) and module is not self.embed:
+                    nn.init.normal_(module.weight, std=0.02, generator=generator)
+                elif isinstance(module, _Draws):
+                    nn.init.normal_(torch.empty(module.shape, device=self.embed.weight.device), std=0.02)
+
+        generic(m for m in self.modules() if not getattr(m, "_steal", False))
+        steal = [m for m in self.modules() if getattr(m, "_steal", False)]
+        if steal:                                  # steal modules: same inits, on their own stream (see _aside)
+            device = next(steal[0].parameters()).device
+            if device.type != "meta":              # an explicit generator: no global stream (CPU or CUDA) is touched
+                seed = (STEAL_SEED + torch.initial_seed()) % 2 ** 63
+                generic(steal, torch.Generator(device=device).manual_seed(seed))
         for module in self.modules():
             outs = []
             if id(module) in residual:
@@ -365,6 +547,25 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        with torch.no_grad():
+            if config.fetch_gate:                  # steal 2: gates start open
+                self.decoder.cross_gate.bias.fill_(config.fetch_gate_bias)
+                if hasattr(self.think, "fetch_gate"):
+                    self.think.fetch_gate.bias.fill_(config.fetch_gate_bias)
+            if config.fetch_sink:                  # steal 2: decoder sinks at sink_init, ASK sink a no-op
+                self.decoder.cross_sink.fill_(config.sink_init)
+                if hasattr(self.heads, "ask_sink"):
+                    self.heads.ask_sink.fill_(-2 * config.kappa_init)     # scores are >= -kappa at init
+        if config.loop_attnres:
+            nn.init.zeros_(self.think.loop_query)                      # uniform mix at init
+        if config.row_halt:
+            nn.init.constant_(self.heads.row_halt.bias, config.row_halt_bias)
+        for module in self.modules():                              # steal 6: gains start at one (identity)
+            if isinstance(module, nn.RMSNorm):
+                nn.init.ones_(module.weight)
+        if config.store and config.qk_norm:
+            nn.init.ones_(self.heads.query_gain)
+            nn.init.ones_(self.heads.key_gain)
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -431,9 +632,16 @@ class PremonitionMini(nn.Module):
         valid.append(torch.ones(count, config.registers, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line)
+        if config.loop_attnres:
+            episode.history = [episode.x[:, config.rows - config.registers:]]     # v_0: the initial registers
+        if config.row_halt:
+            episode.keep = torch.ones(count, config.registers, device=device)
+            episode.halted = torch.zeros(count, config.registers, dtype=torch.bool, device=device)
+            episode.ponder = []
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -453,6 +661,8 @@ class PremonitionMini(nn.Module):
         if not real.any():
             return
         values, ents, lines = store.gather(cards, episode.q_visit[index])
+        if hasattr(self.think, "fetch_gate"):
+            values = self.think.gate_values(_norm(episode.x[index, self._register_base]), values)
         bucket = age_bucket(episode.q_line[index].unsqueeze(1) - lines, config.age_buckets)
         bucket = torch.where(lines >= 0, bucket, torch.zeros_like(bucket))
         rows = values.float() + self.think.age(bucket).float() \
@@ -466,8 +676,11 @@ class PremonitionMini(nn.Module):
         episode.count = episode.count.index_add(0, index, real.long().sum(1))
         episode.fetched = episode.fetched.index_put(
             (who[real], cards[real]), torch.ones_like(cards[real], dtype=torch.bool))
-        if self.think.binder is None:
+        delta = hasattr(self.think, "delta_address") and self.think.delta_address is not None
+        if self.think.binder is None and not delta:
             return
+        if delta:
+            keys = store.gather_keys(cards, episode.q_visit[index])                # [n, K, dk]
         for k in range(cards.shape[1]):
             ent = ents[:, k]                                                   # [n, E]
             repeat = (ent.unsqueeze(2) == ent.unsqueeze(1)).tril(-1).any(2)
@@ -478,22 +691,152 @@ class PremonitionMini(nn.Module):
             owner = index.unsqueeze(1).expand_as(ent)
             state = episode.x[owner[bind], slot[bind]]
             value = values[:, k].unsqueeze(1).expand(-1, ent.shape[1], -1)[bind]
-            episode.x = episode.x.index_put((owner[bind], slot[bind]), self.think.bind(state, value))
+            if delta:
+                key = keys[:, k].unsqueeze(1).expand(-1, ent.shape[1], -1)[bind]
+                bound = self.think.delta_bind(state, value, key)
+            else:
+                bound = self.think.bind(state, value)
+            episode.x = episode.x.index_put((owner[bind], slot[bind]), bound)
 
     def _step(self, episode: _Episode, index: torch.Tensor, step: int, store: Optional[CardStore]
               ) -> tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
         """One loop for questions `index`: (rows, halt logit, ask logit, ASK scores)."""
-        rows = self.think(episode.x[index], episode.valid[index], step)
+        proposed = self.think(self._loop_input(episode, index, step), episode.valid[index], step)
+        rows = self._loop_output(episode, index, step, proposed)
         episode.x = episode.x.index_copy(0, index, rows.to(episode.x.dtype))
         register = _norm(rows[:, self._register_base])
-        halt = self.heads.halt(register).squeeze(-1).float()
+        # row_halt freezes a halted register's stored row, but the read that decides the question's HALT must stay
+        # live, so HALT reads the block's proposal for register 0 (a frozen read could never change its mind).
+        live = _norm(proposed[:, self._register_base]) if self.config.row_halt else register
+        halt = self.heads.halt(live).squeeze(-1).float()
         if store is None:
             return rows, halt, None, None
         ask = self.heads.ask(register).squeeze(-1).float()
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias,
-                           episode.fetched[index], questions=index)
+        scores = self._ask_scores(episode, index, step, store, register)
         return rows, halt, ask, scores
+
+    def _loop_input(self, episode: _Episode, index: torch.Tensor, step: int) -> torch.Tensor:
+        """[n, R, d] rows fed to loop `step` for questions `index`."""
+        x = episode.x[index]
+        if not self.config.loop_attnres or step == 0:
+            return x
+        # AttnRes: register row r of loop t is sum_i alpha_i v_i[r] over the t + 1 register states so far,
+        # alpha = softmax_i(loop_query[t] . norm(v_i[r])). Card and slot rows pass through unmixed.
+        past = torch.stack([v[index] for v in episode.history[:step + 1]])              # [t + 1, n, R, d]
+        alpha = torch.softmax((_norm(past) * self.think.loop_query[step].float()).sum(-1), dim=0)
+        mix = (alpha.unsqueeze(-1) * past.float()).sum(0)
+        return torch.cat([x[:, :self._register_base], mix.to(x.dtype)], dim=1)
+
+    def _loop_output(self, episode: _Episode, index: torch.Tensor, step: int, rows: torch.Tensor) -> torch.Tensor:
+        """[n, R, d] rows a loop leaves behind, from the think block's output `rows`."""
+        config, base = self.config, self._register_base
+        if config.row_halt and step >= 1:
+            # Each register row halts with p = sigmoid(router(register entering the loop)), sticky once p > 0.5.
+            # keep is a straight-through product: its value is the hard 0/1 keep, the same in training and on the
+            # answer paths; its gradient is that of the soft keep prod(1 - p), so the router and ponder cost learn.
+            before = episode.x[index][:, base:]
+            p = torch.sigmoid(self.heads.row_halt(_norm(before)).squeeze(-1).float())        # [n, R]
+            soft = 1.0 - p
+            keep = episode.keep[index] * ((p <= 0.5).float() + (soft - soft.detach()))   # value exactly 0 or 1
+            episode.keep = episode.keep.index_copy(0, index, keep)
+            episode.halted = episode.halted.index_copy(0, index, episode.halted[index] | (p > 0.5))
+            episode.ponder.append(keep.flatten())
+            moved = before + keep.unsqueeze(-1).to(before.dtype) * (rows[:, base:] - before)
+            rows = torch.cat([rows[:, :base], moved.to(rows.dtype)], dim=1)
+        if config.loop_attnres:
+            # v_{t+1}: this loop's registers for `index`; questions that already stopped carry their last state.
+            latest = episode.history[-1].index_copy(0, index, rows[:, base:].to(episode.history[-1].dtype))
+            episode.history.append(latest)
+        return rows
+
+    def _ask_scores(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
+                    register: torch.Tensor) -> torch.Tensor:
+        """[n, L + 1] ASK scores of questions `index` from their normed register 0.
+
+        Steal 7 (`ask_reuse`): loops that need no refresh reuse `episode.ask_cache`, re-masked with the
+        current eligibility; the rows that refresh are rescored in full and written back to the cache.
+        """
+        config = self.config
+        query = self._positioned(self.heads.query(register), episode.q_line[index])
+        if not config.ask_reuse:
+            return self._match(episode, index, step, store, query)
+        unit = F.normalize(query.float(), dim=-1).detach()
+        if episode.ask_cache is None:                              # no cache yet: age -1
+            count, device = episode.fetched.shape[0], query.device
+            episode.ask_cache = torch.zeros(count, store.lines + 1, device=device)
+            episode.ask_query = torch.zeros(count, unit.shape[1], device=device)
+            episode.ask_age = torch.full((count,), -1, dtype=torch.long, device=device)
+        age = episode.ask_age[index]
+        # Threshold 0 means "always refresh" (in fp32, 1 - u.u of an unchanged unit query can be slightly negative).
+        distance = 1.0 - (unit * episode.ask_query[index]).sum(-1)
+        moved = distance > config.ask_refresh_cos if config.ask_refresh_cos > 0 else torch.ones_like(distance, dtype=torch.bool)
+        refresh = (age < 0) | (step % config.ask_refresh_every == 0) | moved
+        rows = torch.nonzero(refresh).squeeze(1)
+        if rows.numel() == index.numel():
+            scores = fresh = self._match(episode, index, step, store, query)
+        else:
+            scores = episode.ask_cache[index].masked_fill(
+                ~store.eligible(episode.q_visit[index], episode.q_line[index], episode.fetched[index],
+                                questions=index), float("-inf"))
+            if rows.numel():
+                fresh = self._match(episode, index[rows], step, store, query[rows])
+                scores = scores.index_copy(0, rows, fresh)
+        if rows.numel():
+            episode.ask_cache = episode.ask_cache.index_copy(0, index[rows], fresh)
+            episode.ask_query = episode.ask_query.index_copy(0, index[rows], unit[rows])
+        episode.ask_age = episode.ask_age.index_copy(0, index, torch.where(refresh, 0, age + 1))
+        return scores
+
+    def _positioned(self, query: torch.Tensor, q_line: torch.Tensor) -> torch.Tensor:
+        """Steal 6 `key_split`: RoPE on the query's last `pos_key_dim` dims at the question's line."""
+        if not self.config.key_split:
+            return query
+        p = self.config.pos_key_dim
+        return torch.cat([query[:, :-p], rope(query[:, -p:], q_line, self.config.key_pos_base)], dim=-1)
+
+    def _ask_gains(self) -> dict[str, torch.Tensor]:
+        """Steal 6 `qk_norm`: the optional gain arguments of `CardStore.ask`."""
+        if not self.config.qk_norm:
+            return {}
+        return {"query_gain": self.heads.query_gain, "key_gain": self.heads.key_gain}
+
+    def _match(self, episode: _Episode, index: torch.Tensor, step: int, store: CardStore,
+               query: torch.Tensor) -> torch.Tensor:
+        """`CardStore.ask` for questions `index` from their (positioned) raw query. Under `qk_clip` a
+        training forward records the largest kappa * cos over eligible real cards (all loops, detached)."""
+        record = self.config.qk_clip > 0 and self.training and torch.is_grad_enabled()
+        parts: Optional[dict] = {} if record else None
+        scores = store.ask(query, episode.q_visit[index], episode.q_line[index], self.heads.log_kappa.exp(),
+                           self.think.age_bias, episode.fetched[index], questions=index, parts=parts,
+                           **self._ask_gains())
+        if record and index.numel():
+            match = parts["match"].masked_fill(~parts["eligible"], float("-inf"))[:, :store.null]
+            if match.numel():                      # a store with no real card lines has nothing to clip
+                self.ask_logit_peak.copy_(torch.maximum(self.ask_logit_peak, match.amax()))
+        return scores
+
+    @torch.no_grad()
+    def after_optimizer_step(self) -> None:
+        """QK-Clip (Kimi K2): if the last forward's largest ASK logit exceeded `qk_clip` = tau, scale kappa
+        by tau / max. ASK is already cosine-normalised, so kappa is its only logit scale."""
+        if self.config.qk_clip <= 0 or not self.config.store:
+            return
+        tau = self.config.qk_clip
+        self.heads.log_kappa.add_(torch.log(tau / self.ask_logit_peak.clamp_min(tau)))   # peak <= tau (or -inf): no-op
+        self.ask_logit_peak.fill_(float("-inf"))
+
+    def _choose(self, episode: _Episode, index: torch.Tensor, store: CardStore, scores: torch.Tensor,
+                ask: torch.Tensor, stop: torch.Tensor) -> torch.Tensor:
+        """[n, top_k] the model's own fetch: top-k eligible cards, -1 where ASK <= 0 or `stop`
+        (or register 0 has halted, under row_halt; or the card scores at or below the ASK sink, under fetch_sink)."""
+        cut = (ask <= 0) | stop
+        if episode is not None and episode.halted is not None:   # the same rule in training and answering
+            cut = cut | episode.halted[index, 0]
+        top = store.top(scores, self.config.top_k).masked_fill(cut.unsqueeze(1), -1)
+        if hasattr(self.heads, "ask_sink"):        # steal 2: cards scoring at or below the sink are not fetched
+            below = scores.gather(1, top.clamp_min(0)) <= self.heads.ask_sink.float()
+            top = top.masked_fill(below, -1)
+        return top
 
     def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
                        ) -> torch.Tensor:
@@ -502,7 +845,8 @@ class PremonitionMini(nn.Module):
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
                 loops: Optional[int] = None, weights: Optional[dict[str, float]] = None,
-                generator: Optional[torch.Generator] = None) -> dict[str, Any]:
+                generator: Optional[torch.Generator] = None,
+                depth_cap: Optional[int] = None) -> dict[str, Any]:
         """The four losses of design/06 §3 and their weighted sum under "loss".
 
         mode "gold": every gold card (NULL when never told) is loaded before loop 1; 2 loops.
@@ -510,12 +854,15 @@ class PremonitionMini(nn.Module):
             distractors while G minus F is non-empty; ceil(|G| / 4) + 3 loops.
         mode "own": like "teacher", but each (question, loop) uses the model's own top-k
             (when its ASK logit > 0) with probability p_own; max_loops loops.
-        `loops` overrides the loop count. Default weights come from the config, except
+        `loops` overrides the loop count; `depth_cap` clamps it (random_depth: sampled here from `generator`
+        when training without one). Default weights come from the config, except
         that "gold" leaves out L_ask and L_halt (the 0-5% phase trains L_lm + L_ans only).
         """
         if mode not in MODES:
             raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
         config = self.config
+        if config.qk_clip > 0 and self.training and torch.is_grad_enabled():
+            self.ask_logit_peak.fill_(float("-inf"))      # QK-Clip reads only this forward's logits
         hidden = self.read(batch)
         l_lm = self.lm_loss(hidden, batch)
         store = self.build_store(hidden, batch)
@@ -532,6 +879,11 @@ class PremonitionMini(nn.Module):
             return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
         device = hidden.device
+        if config.random_depth and depth_cap is None and self.training and torch.is_grad_enabled():
+            depth_cap = int(torch.randint(config.random_depth_min, config.max_loops + 1, (1,), generator=generator,
+                                          device=None if generator is None else generator.device).item())
+        if depth_cap is not None and depth_cap < 1:
+            raise ValueError("depth_cap must be at least 1")
         episode = self._start(batch, hidden, store, self._mentions(batch))
         told_lines = (batch.gold_lines >= 0).sum(1).clamp_min(1)
         if loops is not None:
@@ -543,6 +895,8 @@ class PremonitionMini(nn.Module):
         else:
             n_loops = torch.full((count,), config.max_loops, dtype=torch.long, device=device)
         n_loops = n_loops.clamp(1, config.max_loops)
+        if depth_cap is not None:
+            n_loops = n_loops.clamp_max(depth_cap)
 
         gold = None
         if store is not None:
@@ -597,7 +951,9 @@ class PremonitionMini(nn.Module):
             need = gold[index] & ~episode.fetched[index]
             asks = need.any(1)
             bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
-            if asks.any():
+            if hasattr(self.heads, "ask_sink"):    # steal 2: every row counts; nothing-to-fetch rows target the sink
+                set_terms.append(set_cross_entropy_with_sink(scores, need, self.heads.ask_sink))
+            elif asks.any():
                 set_terms.append(set_cross_entropy(scores[asks], need[asks]))
             if step == 0:
                 metrics["recall_at_k"] = self._recall(store, episode, index, rows, gold).detach()
@@ -607,7 +963,7 @@ class PremonitionMini(nn.Module):
                 continue
             cards = self._teacher_cards(store, episode, index, need, gold[index], generator)
             if mode == "own" and p_own > 0:
-                own = store.top(scores.detach(), config.top_k).masked_fill((ask <= 0).unsqueeze(1), -1)
+                own = self._choose(episode, index, store, scores.detach(), ask, torch.zeros_like(going))
                 own = F.pad(own, (0, cards.shape[1] - own.shape[1]), value=-1)
                 pick = torch.rand(index.numel(), device=device, generator=generator) < p_own
                 cards = torch.where(pick.unsqueeze(1), own, cards)
@@ -616,6 +972,8 @@ class PremonitionMini(nn.Module):
 
         l_ans = torch.cat(ans_terms).sum() / pairs
         l_halt = torch.cat(halt_terms).mean()
+        if episode.ponder:
+            l_halt = l_halt + config.row_halt_cost * torch.cat(episode.ponder).mean()
         l_ask = zero
         if bce_terms:
             l_ask = torch.cat(bce_terms).mean()
@@ -660,8 +1018,9 @@ class PremonitionMini(nn.Module):
         if not told.any():
             return torch.zeros(())
         register = _norm(rows[:, self._register_base])
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index)
+        scores = store.ask(self._positioned(self.heads.query(register), episode.q_line[index]),
+                           episode.q_visit[index], episode.q_line[index], self.heads.log_kappa.exp(),
+                           self.think.age_bias, questions=index, **self._ask_gains())
         top = store.top(scores, self.config.top_k)
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
@@ -722,8 +1081,7 @@ class PremonitionMini(nn.Module):
                 top = store.top(scores, config.top_k)
                 if step == 0:
                     first_top = torch.where(top == store.null, torch.full_like(top, -1), top)
-                cards = top.masked_fill(((ask <= 0) | done).unsqueeze(1), -1)
-                self._insert(episode, store, index, cards)
+                self._insert(episode, store, index, self._choose(episode, index, store, scores, ask, done))
             running[index[done]] = False
         tokens, lengths = self._greedy(batch, episode, mentions, stop)
         return Answers(tokens, lengths, used, first_top, episode.fetched, halt_prob)

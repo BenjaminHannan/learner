@@ -16,6 +16,12 @@ VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; ent
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
 VARIANTS = ("D", "D-noask", "D-noptr")
+STEAL_FIELDS = ("delta_bind", "delta_bind_rows", "fetch_gate", "fetch_gate_bias", "fetch_sink", "sink_init",
+                "loop_attnres", "engram", "engram_heads", "engram_rows", "row_halt", "row_halt_cost", "row_halt_bias",
+                "random_depth", "random_depth_min", "qk_norm", "qk_norm_all", "qk_clip", "key_split", "key_pos_dim",
+                "key_pos_base", "ask_reuse", "ask_refresh_every", "ask_refresh_cos")   # every field the steals added
+STEAL_FLAGS = ("delta_bind", "fetch_gate", "fetch_sink", "loop_attnres", "engram", "row_halt", "random_depth",
+               "qk_norm", "qk_norm_all", "key_split", "ask_reuse")   # bool flags; qk_clip is a float (0 = off)
 
 
 @dataclass(frozen=True)
@@ -53,6 +59,34 @@ class MiniConfig:
     early_ans: float = 0.2              # L_ans weight before the loop that holds every gold card
     distractors: tuple[int, int] = (1, 2)
     check_band: bool = True
+    # Frontier steals (design/steals-2026-10-17/SPEC.md). Every flag is off by default, and with all of
+    # them off the model is bit-identical to 73b8e0224 (tests/test_premonition_steals_identity.py).
+    delta_bind: bool = False            # 1: slot binds are a key-addressed delta rule (Gated DeltaNet, KDA)
+    delta_bind_rows: int = 8            #    address rows of a slot read as a matrix [rows, d / rows]
+    fetch_gate: bool = False            # 2: per-head sigmoid gates on fetched card values and decoder cross-attention
+    fetch_gate_bias: float = 3.0        #    gate bias at init: sigmoid(3) = 0.95, open
+    fetch_sink: bool = False            # 2: learned sink logits: one per head in decoder cross-attention, one in ASK
+    sink_init: float = 0.0              #    decoder sink logit at init (the ASK sink starts at -2 kappa_init)
+    loop_attnres: bool = False          # 3: each loop's registers are a softmax mix of every earlier loop's (AttnRes)
+    engram: bool = False                # 4: a hashed lookup on a line's names, gated and added to its card value
+    engram_heads: int = 4
+    engram_rows: int = 1024             #    rows per head; the tables cost engram_rows x d parameters
+    row_halt: bool = False              # 5: per-register halting: a halted register stops updating (and asking);
+                                        #    hard in the forward pass, trained straight-through
+    row_halt_cost: float = 0.01         #    ponder cost on the mean share of registers still updating
+    row_halt_bias: float = -3.0         #    router bias at init: sigmoid(-3) = 0.05, keep updating
+    random_depth: bool = False          # 5: training samples a max loop count per batch
+    random_depth_min: int = 1
+    qk_norm: bool = False               # 6: learned per-dimension gains on ASK's unit query and keys
+    qk_norm_all: bool = False           # 6: RMSNorm on q and k in every attention (reader, think, decoder)
+    qk_clip: float = 0.0                # 6: cap on ASK's largest match logit after each optimizer step; 0 = off
+    key_split: bool = False             # 6: card keys = content sub-key + line-position (RoPE) sub-key
+    key_pos_dim: int = 0                #    width of the position sub-key; 0 = key_dim // 4
+    key_pos_base: float = 1000.0
+    ask_reuse: bool = False             # 7: reuse the ASK ranking between refresh loops (cache with invalidation)
+    ask_refresh_every: int = 2          #    loops 0, n, 2n, ... always rescore
+    ask_refresh_cos: float = 0.1        #    rescore early once the query's cosine distance from the cached one passes this
+                                        #    (0 = rescore every loop)
 
     def __post_init__(self) -> None:
         for name in ("vocab_size", "n_ent", "d_model", "n_heads", "reader_mlp", "window", "scan_chunk",
@@ -67,8 +101,21 @@ class MiniConfig:
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
+        # Steal settings are checked only when their flag is on, so every config valid at 73b8e0224 stays valid.
+        if self.delta_bind and (self.delta_bind_rows <= 0 or self.d_model % self.delta_bind_rows):
+            raise ValueError("delta_bind_rows must be positive and divide d_model")
+        if self.engram and (self.engram_heads <= 0 or self.d_model % self.engram_heads or self.engram_rows <= 0):
+            raise ValueError("engram_heads must divide d_model and engram_rows must be positive")
+        if self.random_depth and not 1 <= self.random_depth_min <= self.max_loops:
+            raise ValueError("random_depth_min must be in 1..max_loops")
+        if self.qk_clip < 0 or self.row_halt_cost < 0:
+            raise ValueError("qk_clip and row_halt_cost must be nonnegative")
+        if self.key_split and not (2 <= self.pos_key_dim < self.key_dim and self.pos_key_dim % 2 == 0):
+            raise ValueError("key_split needs an even key_pos_dim in 2..key_dim - 1")
+        if self.ask_reuse and (self.ask_refresh_every <= 0 or not 0.0 <= self.ask_refresh_cos <= 2.0):
+            raise ValueError("ask_refresh_every must be positive and ask_refresh_cos in [0, 2]")
         if self.check_band and self.d_model == 128:
-            count = self.num_parameters()
+            count = self.base().num_parameters()     # the band holds D itself; steal parameters are reported apart
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -114,6 +161,21 @@ class MiniConfig:
     def with_(self, **changes) -> MiniConfig:
         return replace(self, **changes)
 
+    @property
+    def pos_key_dim(self) -> int:
+        """Width of the line-position sub-key under `key_split` (the last dims of every key and query)."""
+        return self.key_pos_dim or max(2, self.key_dim // 4 // 2 * 2)
+
+    @property
+    def steals(self) -> tuple[str, ...]:
+        """The steal flags that are on (qk_clip counts when positive)."""
+        on = tuple(name for name in STEAL_FLAGS if getattr(self, name))
+        return on + (("qk_clip",) if self.qk_clip > 0 else ())
+
+    def base(self) -> MiniConfig:
+        """This config with every steal off (and no band check): today's D, D-noask or D-noptr."""
+        return replace(self, check_band=False, qk_clip=0.0, **{name: False for name in STEAL_FLAGS})
+
     def parameter_breakdown(self) -> dict[str, int]:
         """Trained parameters per module, embeddings included (design/06 §1 table)."""
         return parameter_breakdown(self)
@@ -128,21 +190,42 @@ def _linear(fan_in: int, fan_out: int) -> int:
 
 def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     d, dk, norm = config.d_model, config.key_dim, 2 * config.d_model
+    heads_n, qk = config.n_heads, (2 * (config.d_model // config.n_heads) if config.qk_norm_all else 0)
     mixer = _linear(d, 3 * d) + _linear(d, d)       # minGRU (z, h~, gate) + out, or qkv + out
     reader = (len(config.reader) * (2 * norm + mixer + _linear(d, config.reader_mlp * d)
                                      + _linear(config.reader_mlp * d, d)) + norm)
+    reader += config.reader.count("attn") * qk                       # steal 6: q/k RMSNorm gains
     writer = _linear(d, 1) + _linear(d, dk) + _linear(d, d) + dk + d if config.store else 0
+    if config.store and config.engram:                               # steal 4: tables + W_K, W_V
+        writer += config.engram_rows * d + 2 * _linear(d, d)
     layer = 2 * norm + _linear(d, 3 * d) + _linear(d, d) + _linear(d, config.think_mlp * d) \
-        + _linear(config.think_mlp * d, d)
+        + _linear(config.think_mlp * d, d) + qk
     embeddings = (4 + config.registers + config.max_loops) * d
     if config.store:
         embeddings += config.age_buckets * d + config.age_buckets   # age rows + recency biases
-    binder = _linear(2 * d, 2 * d) if config.store and config.pointers else 0
+    binder = 0
+    if config.store and config.pointers:
+        if config.delta_bind:                                        # steal 1 replaces the binder
+            rows = config.delta_bind_rows
+            binder = _linear(dk, rows) + _linear(2 * d, d // rows + 1)
+        else:
+            binder = _linear(2 * d, 2 * d)
+    if config.store and config.fetch_gate:                           # steal 2: card value gate
+        binder += _linear(2 * d, heads_n)
+    if config.loop_attnres:                                          # steal 3: one pseudo-query per loop
+        embeddings += config.max_loops * d
     heads = _linear(d, 1)                                            # HALT
     if config.store:
         heads += _linear(d, dk) + _linear(d, 1) + 1                  # query, ASK, kappa
+        heads += 2 * dk if config.qk_norm else 0                     # steal 6: query and key gains
+        heads += 1 if config.fetch_sink else 0                       # steal 2: ASK sink
+    if config.row_halt:                                              # steal 5: register router
+        heads += _linear(d, 1)
     decoder = 4 * norm + _linear(d, 3 * d) + _linear(d, d) + _linear(d, d) + _linear(d, 2 * d) \
         + _linear(d, d) + _linear(d, config.decoder_mlp * d) + _linear(config.decoder_mlp * d, d)
+    decoder += 2 * qk                                                # self- and cross-attention
+    decoder += _linear(d, heads_n) if config.fetch_gate else 0       # steal 2: cross-attention gate
+    decoder += heads_n if config.fetch_sink else 0                   # steal 2: cross-attention sinks
     return {
         "embedding": config.total_vocab * d,
         "reader": reader,
@@ -153,4 +236,4 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     }
 
 
-__all__ = ["MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]
+__all__ = ["MiniConfig", "PARAM_BAND", "STEAL_FIELDS", "STEAL_FLAGS", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]

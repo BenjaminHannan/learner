@@ -1,0 +1,80 @@
+{
+ "arm": "A1",
+ "seed": 0,
+ "optimizer": "muon",
+ "settings": {
+  "variant": "D",
+  "size": "full",
+  "device": "cuda",
+  "lr": 0.001,
+  "flop_budget": 340000000000000.0,
+  "warmup_steps": 100,
+  "max_tokens": 55000,
+  "max_visits": 48,
+  "log_every": 50,
+  "eval_every": 500,
+  "eval_visits": 256,
+  "calibration_batches": 4
+ },
+ "bound": {
+  "code": {
+   "runner": "cf985bf0d729d079eace109b50b4ce2dfef00926564adfcab912d10c4b56cae0",
+   "card": "279c72ea4ca47119b122ea06bc27194efe0af9f5123a2063169dc749595dee5d",
+   "package": "f99cf982ebea24cbce7b27bac27b75806f74f69dd8207c3072c1b453383623d6"
+  },
+  "data": {
+   "data_rel": "data/village/stream/cache/large-seed0-53292765806d",
+   "tokenizer": "c4153a16692aa0f390b972602d9f068781f6d47d1e896f205f8c3899077d80ff",
+   "tag": "large-seed0-53292765806d",
+   "detector": "ef6b1d4dc52dd6f03b4f2c3ee036cc56ef7fa9668fb84d3aa15b698eaad17f22"
+  }
+ },
+ "provenance": {
+  "commit": null,
+  "torch": "2.11.0+cu128",
+  "python": "3.11.13",
+  "machine": "x86_64",
+  "gpu": "NVIDIA GeForce RTX 5090"
+ },
+ "status": "aborted",
+ "error": "peak reserved GPU memory 14.88 GiB exceeds the 14.00 GiB limit; stopping now because Windows silently spills GPU memory to system RAM at about 1/30 speed. Reduce the batch, sequence length or model size.",
+ "stop": null,
+ "budget_ok": null,
+ "steps": null,
+ "parameters": 2130516,
+ "flops": null,
+ "tokens": null,
+ "train_seconds": 0.0,
+ "wall_seconds": 13.599912266014144,
+ "final_eval_seconds": 0.6823050731327385,
+ "s_per_step": null,
+ "final_losses": null,
+ "curve": [
+  [
+   0.0,
+   0,
+   22.645346865057945
+  ]
+ ],
+ "evals": [],
+ "windows": [],
+ "validation": {
+  "held_out": {
+   "loss": 22.645346865057945,
+   "lm": 11.263758946210146,
+   "ask": 4.496700655668974,
+   "ans": 9.061943430453539,
+   "halt": 0.7129415168892592
+  },
+  "accuracy": 0.0,
+  "accuracy_gold_cards": 0.0,
+  "gold_recall_at_4": 0.052267957008405766,
+  "random_recall_at_4": 0.051444885053144755,
+  "asked_rate": 0.0,
+  "loops_mean": 1.0,
+  "halt_rate": 1.0,
+  "questions": 2215
+ },
+ "finite": true,
+ "checkpoint": "ckpt/A1-s0"
+}
