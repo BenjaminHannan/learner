@@ -651,6 +651,8 @@ def pull(a):
     (out / "PARTS.txt").write_text(parts)
     (out / "STATUS.txt").write_text(job_status + "\n")
     want = dict(reversed(ln.split(None, 1)) for ln in man.splitlines() if ln.strip())
+    if getattr(a, 'only', None):
+        want = {k: v for k, v in want.items() if k in a.only.split(',')}
     sizes = {p: int(n) for n, p in (ln.split() for ln in parts.splitlines() if ln.strip()) if p != "total"}
     res = {}
     for name, h in sorted(want.items()):
@@ -778,6 +780,7 @@ def main(argv=None):
             p.add_argument("--poll", type=float, default=120)
         if name == "pull":
             p.add_argument("--out", required=True)
+            p.add_argument("--only", default=None, help="comma list of export tarballs to read (e.g. out.tar.gz)")
         if name == "destroy":
             p.add_argument("--pulled", default=None)
             p.add_argument("--abandon", action="store_true")
