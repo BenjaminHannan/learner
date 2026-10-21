@@ -6,7 +6,7 @@
 It changes nothing of the probe: it reads C, R1, R2 (the run's logged losses for the probed updates and the two resumes), applies the AMENDED reading (the original text and the amendment are both below), prints a plain-words
 paragraph and the numbers, and writes REJUDGE-<job>.json next to the input. The registered rule of the probe (PASS if d <= max(0.10, 3n)) is computed too, unchanged, and is part of the reading. The reading of the
 ORIGINAL text alone is recorded in the JSON as original_reading_verdict (for comparison only).
---calibration PROBE2.json is a second probe JSON of the SAME job, step and window (its R1, R2 are R3, R4; its C must equal the first file's C, else it is refused; it is also refused, exit 3, if it is the same file or the same content as the probe or if its R1, R2 repeat the probe's R1, R2 in either order: a copy of the first probe would only echo it). It is APPLIED ONLY when the two-resume verdict is UNRESOLVED_CALIBRATE (see the Clarification below); otherwise the two-resume verdict stands, calibration is null and calibration_not_applied in the JSON (and a printed note) says why (this includes ESCALATE: more resumes of a checkpoint whose restarts are bit-identical would repeat them). See A1.3 below.
+--calibration PROBE2.json is a second probe JSON of the SAME job, step and window (its R1, R2 are R3, R4; its C must equal the first file's C, else it is refused; it is also refused, exit 3, if it is the same file or the same content as the probe or if its R1, R2 repeat the probe's R1, R2 in either order: a copy of the first probe would only echo it). It is APPLIED ONLY when the two-resume verdict is UNRESOLVED_CALIBRATE (see the Clarification below); otherwise the two-resume verdict stands, calibration is null and calibration_not_applied in the JSON (and a printed note) says why (this includes ESCALATE: more resumes of a checkpoint whose restarts are bit-identical would repeat them). The two-resume verdict is computed FIRST and the --calibration file is opened, read and validated ONLY when it will be applied (verdict UNRESOLVED_CALIBRATE): for any other verdict the file is not read at all, so a bad calibration file can never hide an INSIDE, UNRESOLVED (window), OUTSIDE or ESCALATE reading; the JSON then has calibration_offered = the path given, calibration_source null and calibration_not_applied (calibration_source is the path only when the calibration was applied). See A1.3 below.
 An earlier REJUDGE-<job>.json is renamed REJUDGE-<job>.json.aside-<stamp> before the new one is written (the first reading is never lost).
 Exit code: 0 INSIDE healthy noise, 1 UNRESOLVED (either kind; the output says which: "UNRESOLVED (window)" or "UNRESOLVED_CALIBRATE"), 2 OUTSIDE, 3 the input cannot be read (a probe that was refused to judge, no C / R1 / R2, ...), 4 ESCALATE (framing falsified, PREREG Amendment 2 below: neither a pass nor a fail, the run is not read, no calibration is asked for; the question goes to Ben).
 
@@ -313,17 +313,19 @@ def main(argv=None):
         job = pr['job']
         early_limit, el_from = probe_early_limit(pr, p)
         v, src = trace_a_value(a, job)
-        R34 = None
-        if a.calibration:
+        r = rejudge(pr['C'], pr['R1'], pr['R2'], v, None, early_limit)                  # the two-resume verdict FIRST
+        if a.calibration and r['verdict'] == 'UNRESOLVED_CALIBRATE':                    # only now is the --calibration file opened, read and validated: it is the one case in which it will be applied (a bad file cannot hide any other reading)
             R34 = load_calibration(a.calibration, p, pr, early_limit)
-        r = rejudge(pr['C'], pr['R1'], pr['R2'], v, R34, early_limit)
+            r = rejudge(pr['C'], pr['R1'], pr['R2'], v, R34, early_limit)
+        elif a.calibration:                                                            # INSIDE / UNRESOLVED (window) / OUTSIDE / ESCALATE: the file is not read at all
+            r['calibration_not_applied'] = not_applied_note(r['verdict'])
     except CalibrationError as e:
         print(f'cannot use --calibration {a.calibration}: {e}')
         return 3
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f'cannot re-read {p}: {e if isinstance(e, ValueError) else repr(e)}')
         return 3
-    r.update(job=job, source=str(p), calibration_source=a.calibration, early_limit_from=el_from, trace_a_value_from=src, step=pr.get('step'), upto=pr.get('upto'), preregistered_reading=PREREG, amendment_1_reading=AMEND1, amendment_2_reading=AMEND2, plain_words=words(r, job))
+    r.update(job=job, source=str(p), calibration_offered=a.calibration, calibration_source=a.calibration if r['calibration'] is not None else None, early_limit_from=el_from, trace_a_value_from=src, step=pr.get('step'), upto=pr.get('upto'), preregistered_reading=PREREG, amendment_1_reading=AMEND1, amendment_2_reading=AMEND2, plain_words=words(r, job))
     note = r['calibration_not_applied']
     if note:
         r['plain_words'] += f' (The calibration file {a.calibration} was not applied: {note}.)'

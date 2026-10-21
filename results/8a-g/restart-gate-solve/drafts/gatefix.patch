@@ -42,17 +42,20 @@
              elif ev == 'ckpt_failed':
                  self.ckpt_failed += 1
              elif ev == 'ckpt':
-@@ -265,12 +274,32 @@
+@@ -265,12 +274,37 @@
  
  
  # ---------------------------------------------------------------- the two registered checks (pure functions; thresholds come from plan.json)
 +EARLY_DEFERRED = "early window not checked by the running gate; do not read this result until the probe's P1b passes."          # printed verbatim (TRACE-A md, status.md, finish message) when trace A could not compute the early window (coordinator ruling B2)
 +
 +
-+def early_deferred(resume):
-+    """the r['resume']['early_window'] record of a window trace A did not compute (or None)"""
-+    ew = (resume or {}).get('early_window')
-+    return ew if isinstance(ew, dict) and ew.get('computed') is False else None
++def early_deferred(rec, verdict):
++    """the ONE place that decides whether the deferral (EARLY_DEFERRED) is in force: -> the early_window record {computed: False, ...}, or None.
++    rec = a dict that holds an 'early_window' key: trace_a's r['resume'], or the stored js['traceA']; verdict = trace A's verdict (r['verdict'] / js['traceA']['verdict']).
++    The deferral applies only to a trace A that PASSED (coordinator review F1): on a FAIL the run is stopped for its own reasons, the stop message says them, and a line telling the operator to wait for P1b would mislead.
++    Every report that prints the line (TRACE-A md, status.md, DONE file / log line) and the state that stores the record asks this function (F7)."""
++    ew = (rec or {}).get('early_window')
++    return ew if verdict == 'PASS' and isinstance(ew, dict) and ew.get('computed') is False else None
 +
 +
  def trace_a(ev, rules, max_used_mib):
@@ -62,8 +65,10 @@
 +      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it. The window is computed only when the redone updates start with the three contiguous updates rstep+1, rstep+2, rstep+3 (rstep = the
 +        resumed step); then r['resume']['early_max'] is recorded (rule or not) and, with the rule set, r['resume']['early_window'] = {computed: True, steps: [rstep+2, rstep+3]}. When it cannot be computed (under 3 redone
 +        updates, or the redone updates are not contiguous from rstep+1) nothing about its value is recorded (ruling Q95: a gate never reports a check it did not compute); with the rule set that is NOT a failure and NOT
-+        a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'} (plus 'reason' naming the steps when 3 or more updates were redone), and the reports print EARLY_DEFERRED
-+        (coordinator ruling B2 / B3: the window is left to the probe's P1b, which is the reading gate);
++        a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'}, and the reports print EARLY_DEFERRED when (and only when) trace A passed (early_deferred(); never on a FAIL)
++        (coordinator ruling B2 / B3: the window is left to the probe's P1b, which is the reading gate). early_window['reason'] is present in exactly two cases and names the real cause:
++        (a) the first redone update rstep+1 is missing from the earlier segment, the resumed one or both ("the first redone update <rstep+1> is missing from ..."; trace A also FAILs on it, see below), and
++        (b) rstep+1 is present and 3 or more updates were redone, but the 2nd and 3rd are not rstep+2 and rstep+3 (a hole at rstep+2 or rstep+3). With rstep+1 present and under 3 redone updates there is no 'reason' (plain deferral);
 +      resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
 +        which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
 +      With either opt-in key set, the first redone update must be update rstep+1: if it is missing from the earlier or the resumed segment the first-update item (resume_first_diff and the exact fields) cannot be computed as defined,
@@ -77,7 +82,7 @@
  
      def miss(key, msg):
          (r['soft_misses'] if key in soft else r['why_fail']).append(msg)
-@@ -293,21 +322,70 @@
+@@ -293,21 +327,72 @@
      # the resume: the earlier segment's updates after the checkpoint, redone by the resumed segment (the first resume that has any such updates)
      r['resume'] = None
      for seg2, rstep in ev.resumed:
@@ -99,9 +104,9 @@
 +            early_on = rules.get('resume_early_abs') is not None
 +            fields = rules.get('resume_exact_fields')
 +            first_ok = common[0] == rstep + 1                                                     # the first redone update is the update right after the restore
++            gone = '' if first_ok else ' and '.join(w for w, ss in (('the earlier segment', s1), ('the resumed segment', s2)) if rstep + 1 not in ss)          # where update rstep+1 is missing
 +            if not first_ok and (early_on or fields is not None):                                  # opt-in, hard, fail closed: the first-update item would otherwise be computed on another update
 +                r['resume']['first_diff'] = None
-+                gone = ' and '.join(w for w, ss in (('the earlier segment', s1), ('the resumed segment', s2)) if rstep + 1 not in ss)
 +                r['why_fail'].append(f'the first redone update {rstep + 1} (the first update after the restore at {rstep}) is missing from {gone}; the first redone update present is {common[0]}: the first-update check cannot be computed as defined')
 +            elif d[0] > rules['resume_first_diff']:
                  r['why_fail'].append(f'first redone update differs by {d[0]:.4f} (limit {rules["resume_first_diff"]})')
@@ -122,7 +127,9 @@
 +                    r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd and 3rd after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
 +            elif early_on:                                                                        # opt-in: not computable here -> NOT a failure, deferred to the probe's P1b (coordinator ruling B2 / B3); no value, no pass
 +                r['resume']['early_window'] = ew = dict(computed=False, redone=len(common), deferred_to='probe P1b')
-+                if len(common) >= 3 or not first_ok:
++                if not first_ok:                                                                  # (a) the real cause: the first redone update is missing (trace A fails on it); the window cannot be located without it
++                    ew['reason'] = f'the first redone update {rstep + 1} (the first update after the restore at {rstep}) is missing from {gone}, so the 2nd and 3rd redone updates ({rstep + 2} and {rstep + 3}) cannot be located; the redone updates start {common[:4]}'
++                elif len(common) >= 3:                                                            # (b) a hole at rstep+2 or rstep+3
 +                    ew['reason'] = f'the 2nd and 3rd redone updates after the restore at {rstep} must be updates {rstep + 2} and {rstep + 3}, contiguous after update {rstep + 1}; the redone updates start {common[:4]}'
 +            if fields is not None and first_ok:                                                   # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal (not when the first redone update is missing: failed above)
 +                l1, l2 = s1f[common[0]], s2f[common[0]]
@@ -153,7 +160,7 @@
              break
      if r['resume'] is None:
          r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
-@@ -341,15 +419,47 @@
+@@ -341,15 +426,47 @@
      return r
  
  
@@ -204,46 +211,46 @@
  
  
  # ---------------------------------------------------------------- the supervisor
-@@ -595,6 +705,8 @@
+@@ -595,6 +712,8 @@
          L.append(f'max GPU memory in use seen: {js["max_used_mib"]} MiB; planned kill-and-resume: {js["kill_done"]}')
          if js.get('traceA'):
              L.append(f'trace A: **{js["traceA"]["verdict"]}** {js["traceA"]["why_fail"] or ""} (TRACE-A-{job["id"]}.md)')
-+            if js['traceA'].get('early_window'):                                  # the early window was not computed here (coordinator ruling B2)
++            if early_deferred(js['traceA'], js['traceA'].get('verdict')):          # the early window was not computed here and trace A passed (coordinator ruling B2; F1, F7)
 +                L.append(EARLY_DEFERRED)
          if job.get('baseline'):
              L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
          else:
-@@ -698,6 +810,8 @@
+@@ -698,6 +817,8 @@
              r = trace_a(ev, job['trace_a'], js['max_used_mib'])
              r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
              js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'], soft_misses=r['soft_misses'])
-+            if early_deferred(r['resume']):
-+                js['traceA']['early_window'] = r['resume']['early_window']          # (only when deferred: status.md and the finish message read it)
++            if early_deferred(r['resume'], r['verdict']):
++                js['traceA']['early_window'] = r['resume']['early_window']          # (only when deferred and trace A passed: status.md and the finish message read it; never stored for a FAIL, F1)
              jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
              (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
              self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}' + (f' (recorded, not gated: {r["soft_misses"]})' if r['soft_misses'] else ''))
-@@ -713,8 +827,9 @@
+@@ -713,8 +834,9 @@
          js['result'] = {k: res.get(k) for k in ('steps', 'steps_per_s', 'train_s', 'peak_mem_mib', 'peak_reserved_mib', 'n_params', 'resumed_from')}
          tail = (f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n' if job.get('baseline')
                  else 'no baseline in this job (no compare was made here).\n')
 -        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + tail, encoding='utf-8')
 -        self.log(f'DONE {job["id"]}: {js["result"]}')
-+        deferred = EARLY_DEFERRED + '\n' if (js.get('traceA') or {}).get('early_window') else ''          # the early window was not computed by trace A (coordinator ruling B2)
++        deferred = EARLY_DEFERRED + '\n' if early_deferred(js.get('traceA'), (js.get('traceA') or {}).get('verdict')) else ''          # the early window was not computed by trace A, which passed (coordinator ruling B2; F7)
 +        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + deferred + tail, encoding='utf-8')
 +        self.log(f'DONE {job["id"]}: {js["result"]}' + (f' | {EARLY_DEFERRED}' if deferred else ''))
          if js['base']['status'] == 'waiting':          # trace A never passed (or no room): there is nothing to compare any more
              js['base']['status'] = 'abandoned'
  
-@@ -858,7 +973,7 @@
+@@ -858,7 +980,7 @@
          L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
               f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
               f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
 -             f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
-+             f'- resume: {json.dumps(r.get("resume"))}', *([f'- {EARLY_DEFERRED}'] if early_deferred(r.get('resume')) else []), f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
++             f'- resume: {json.dumps(r.get("resume"))}', *([f'- {EARLY_DEFERRED}'] if early_deferred(r.get('resume'), r['verdict']) else []), f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
               f'- notes: {r["notes"] or "none"}']
          return '\n'.join(L) + '\n'
  
-@@ -886,6 +1001,19 @@
+@@ -886,6 +1008,19 @@
                    '| update | C (run) | R1 | R2 | abs R1-R2 | abs R1-C | abs R2-C |', '|---|---|---|---|---|---|---|']
              for i, s in enumerate(r['steps']):
                  L.append(f'| {s} | {f(r["C"][i])} | {f(r["R1"][i])} | {f(r["R2"][i])} | {f(r["diff_r1_r2"][i])} | {f(r["diff_r1_c"][i])} | {f(r["diff_r2_c"][i])} |')
@@ -263,7 +270,7 @@
          return '\n'.join(L) + '\n'
  
  
-@@ -1035,8 +1163,83 @@
+@@ -1035,8 +1170,83 @@
      return d
  
  
@@ -348,7 +355,7 @@
      sup = Sup(a.plan)
      job = next((j for j in sup.plan['jobs'] if a.job == j['id'] or (a.job is None and not j.get('skip'))), None)          # without --job: the first job that is not skipped
      if job is None:
-@@ -1065,7 +1268,20 @@
+@@ -1065,7 +1275,20 @@
      if miss or any(s not in C for s in steps):
          print(f'refused: missing {miss or "logged updates %d..%d of the main run in %s" % (step + 1, upto, sup.arm_dir(job) / "events.jsonl")}')
          return 2
@@ -370,7 +377,7 @@
      for tag in ('n1', 'n2'):
          pj = sup.probe_job(job, tag)
          sup.log(f'PROBE {tag}: {pj["queue"]} / {pj["job"]} from {keep} step-{step}')
-@@ -1074,6 +1290,10 @@
+@@ -1074,6 +1297,10 @@
              why.append(f'{tag}: {bad}')
          if ev is None:
              continue
@@ -381,7 +388,7 @@
          rs = next((s for _, s in ev.resumed), None)
          if rs != step:
              why.append(f'{tag}: resumed at {rs}, not {step}')
-@@ -1081,10 +1301,14 @@
+@@ -1081,10 +1308,14 @@
          R[tag] = first_per_step([e for e in ev.train if e['seg'] >= ev.resumed[0][0]], step + 1, upto)
          if any(s not in R[tag] for s in steps):
              why.append(f'{tag}: updates missing (first {[s for s in steps if s not in R[tag]][:5]})')
@@ -413,39 +420,56 @@
  the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused unless g2fa4 is stopped: state.json says
  'stopped' AND a stop file names g2fa4; and a stopped g2fa4 is never left unskipped, its stop file would hold the loop). With --soft-trace-a the g2fa8 entry's trace A records, and does not gate, the
 -whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead). --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
-+whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs = 0.005 (largest difference over the 2nd and 3rd redone updates) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
++whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1 and its clarification for B2/B3) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs (largest difference over the 2nd and 3rd redone updates must be <= the bar) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The bar is EARLY_LIMIT, the ONE definition in the g2fa4_supervisor.py next to this installer (0.005 at the time of writing); it is read from that file ONLY when --trace-a-early is used, and a missing file, a missing `EARLY_LIMIT = <number>` line or a malformed number is a [FIX] line (exit 1, nothing changed, no traceback) that does not affect any other mode. Two behaviours of the running gate to know: (1) when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3) the early window is NOT computed and is NOT a failure: it is deferred to the probe's P1b, and the TRACE-A md, status.md and the finish message print the line "early window not checked by the running gate; do not read this result until the probe's P1b passes." (only for a trace A that passed); (2) with this flag a missing first redone update (rstep+1) is a hard failure (the first-update check cannot be computed as defined). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
  g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
  import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
  from pathlib import Path
-@@ -145,23 +145,39 @@
+@@ -145,23 +145,56 @@
  
  
  SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
 +SOFT_TRACE_A_MEAN = SOFT_TRACE_A + ['resume_mean_abs']          # --soft-trace-a --soft-trace-a-mean: the mean absolute resume difference too (opt-in; never a default)
+ 
++class EarlyLimitError(Exception):
++    """the early-window bar cannot be taken from the supervisor file (missing file, no EARLY_LIMIT line, malformed number); add_job reports it as a [FIX] line."""
+ 
+-def new_job_entry(spec_id, g4, soft=False):
++
 +def supervisor_early_limit(src=None):
 +    """The early-window bar (Amendment 1) has ONE definition: `EARLY_LIMIT = <number>` in the pack's g2fa4_supervisor.py, the file this installer installs. It is read from that file's text (not imported: importing would run
-+    the supervisor's module code, and on the PC the installer never imports it); a missing file or line stops the installer rather than guess a number."""
++    the supervisor's module code, and on the PC the installer never imports it), and ONLY when --trace-a-early is used (never at import: the other modes must not depend on that line). A missing/unreadable file, a missing line
++    or a malformed number (not a finite, non-negative float) raises EarlyLimitError rather than guess a number."""
 +    src = Path(src) if src else IN / 'g2fa4_supervisor.py'
 +    try:
 +        text = src.read_text(encoding='utf-8')
-+    except OSError as e:
-+        raise SystemExit(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
++    except (OSError, ValueError) as e:
++        raise EarlyLimitError(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
 +    m = re.search(r'^EARLY_LIMIT\s*=\s*([0-9][0-9.eE+-]*)\s*(?:#.*)?$', text, re.M)
 +    if not m:
-+        raise SystemExit(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
-+    return float(m.group(1))
++        raise EarlyLimitError(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
++    try:
++        x = float(m.group(1))
++    except ValueError:
++        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a number: cannot take the early-window bar from it')
++    if not 0 <= x < float('inf'):
++        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a finite non-negative number: cannot take the early-window bar from it')
++    return x
 +
 +
-+TRACE_A_EARLY = dict(resume_early_abs=supervisor_early_limit(), resume_exact_fields=['lr', 'rounds', 'plan_'])          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): early window 2nd-3rd redone update, exact data/RNG/schedule fields at the first
- 
- 
--def new_job_entry(spec_id, g4, soft=False):
++TRACE_A_EARLY_FIELDS = ['lr', 'rounds', 'plan_']          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): exact data/RNG/schedule fields at the first redone update (the early-window bar is read lazily, see trace_a_early)
++
++
++def trace_a_early(src=None):
++    """-> the opt-in trace A rules of --trace-a-early (a fresh dict each call): resume_early_abs = EARLY_LIMIT read NOW from the supervisor file (EarlyLimitError if it cannot be), resume_exact_fields = a copy of TRACE_A_EARLY_FIELDS."""
++    return dict(resume_early_abs=supervisor_early_limit(src), resume_exact_fields=list(TRACE_A_EARLY_FIELDS))
++
++
 +def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False):
      """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
      spec = ADD_JOBS[spec_id]
      return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
 -                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A)) if soft else {})), compare=copy.deepcopy(g4['compare']))
-+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(copy.deepcopy(TRACE_A_EARLY) if early else {})), compare=copy.deepcopy(g4['compare']))
++                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(trace_a_early() if early else {})), compare=copy.deepcopy(g4['compare']))
  
  
 -def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False):
@@ -461,7 +485,7 @@
      have = next((j for j in jobs if j.get('id') == spec_id), None)
      if have is None:
          jobs.append(want)
-@@ -188,7 +204,7 @@
+@@ -188,7 +221,7 @@
      spec = ADD_JOBS[spec_id]
      qfile = spec['queue'] + '.txt'
      LINES.clear()
@@ -470,7 +494,24 @@
      # 1. the checks of the install (pins of src-b3g2, caps, the pack's files, python, disk) + the installed copy and the plan
      step1_checks(('overlay/train.py', 'queue/' + qfile, 'g2fa4_supervisor.py') + tuple('queue/' + q for q in A4_QUEUES))
      mark = SRC / 'G2FA4-SETUP-OK.txt'
-@@ -215,7 +231,7 @@
+@@ -207,7 +240,15 @@
+     except (OSError, ValueError):
+         old = None
+     row(old is not None, 'plan.json of the install', str(pp))
+-    if old is not None:
++    early_bar = None
++    if a.trace_a_early:                                                                    # the bar is read from the supervisor file only now, only for this flag; a problem is a [FIX] line, not a traceback
++        try:
++            early_bar = supervisor_early_limit()
++        except EarlyLimitError as e:
++            row(False, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', str(e))
++        else:
++            row(True, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', f'{early_bar} (from {IN / "g2fa4_supervisor.py"})')
++    if old is not None and (early_bar is not None or not a.trace_a_early):
+         try:
+             stj = json.loads((STATE / 'state.json').read_text(encoding='utf-8'))
+         except (OSError, ValueError):
+@@ -215,7 +256,7 @@
          g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
          g4stop = stop_file_of('g2fa4')
          say(f'      state.json: g2fa4 is {g4s or "not recorded"}; stop file naming g2fa4: {g4stop.name if g4stop else "none"}; ARMED.txt: {armed_text()}')
@@ -479,12 +520,14 @@
          row(not problems, 'plan.json can take the new job', '; '.join(problems))
          say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
      if a.check or not ok_all:
-@@ -294,10 +310,14 @@
+@@ -294,10 +335,16 @@
      ap.add_argument('--register', action='store_true')
      ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
      ap.add_argument('--soft-trace-a', action='store_true', help='with --add-job g2fa8: trace A records (does not gate) the whole-card memory peak and the largest single resume difference')
 +    ap.add_argument('--soft-trace-a-mean', action='store_true', help='only with --soft-trace-a: the mean absolute resume difference is recorded, not gated, as well (opt-in)')
-+    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items, the early window (2nd-3rd redone update <= 0.005) and equal lr / rounds / plan_* fields at the first redone update')
++    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items: the early window (largest difference over the 2nd and 3rd redone update must be <= the bar, which is EARLY_LIMIT read from the g2fa4_supervisor.py next to this installer, only when this flag is used) and equal lr / rounds / plan_* fields at the first redone update. '
++                    'When the judged resume has fewer than 3 contiguous redone updates the early window is NOT computed and NOT a failure: it is deferred to the probe-resume P1b check and the reports print a line saying so (only for a trace A that passed). '
++                    'With this flag a missing first redone update (rstep+1) is a hard failure')
      ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
      a = ap.parse_args(argv)
 -    if (a.skip_g2fa4 or a.soft_trace_a) and a.add_job != 'g2fa8':
@@ -496,6 +539,27 @@
      if a.add_job and (a.register or a.skip_tests):
          ap.error('--register / --skip-tests do not go with --add-job')
      if a.add_job:
+--- a/tests/fake_runner.py
++++ b/tests/fake_runner.py
+@@ -23,6 +23,8 @@
+     ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0); ap.add_argument('--jitter', type=float, default=0.0); ap.add_argument('--force-resume-step', type=int, default=0)
+     ap.add_argument('--child', action='store_true'); ap.add_argument('--busy', default='')
+     ap.add_argument('--device', default='cuda'); ap.add_argument('--hang-at', type=int, default=0); ap.add_argument('--die-after-resume-once', action='store_true')
++    ap.add_argument('--skip-log-seg2-at', type=int, default=0)          # drafts only (tests/test_gatefix.py): a resumed segment does not log update K (the update still runs, the checkpoints are still written): a hole in its train lines
++    ap.add_argument('--seg2-lr', type=float, default=0.0)          # drafts only (tests/test_gatefix.py): the logged lr of a resumed segment, to make an exact-field mismatch
+     a = ap.parse_args()
+     q = Path(a.queue).stem
+     out = Path(a.work) / 'results' / q / a.job
+@@ -75,7 +77,8 @@
+             (arm / 'crashed.flag').write_text('x')
+             sys.exit(1)
+         loss = float('nan') if (a.nan_at and step == a.nan_at) else loss_at(step, a.offset, a.seg2_offset, seg, a.jitter, a.job)
+-        jp(event='train', step=step, loss=round(loss, 5), lr=1e-3, elapsed=round(el, 3))
++        if not (a.skip_log_seg2_at and seg >= 2 and step == a.skip_log_seg2_at):
++            jp(event='train', step=step, loss=round(loss, 5), lr=(a.seg2_lr if a.seg2_lr and seg >= 2 else 1e-3), elapsed=round(el, 3))
+         if not math.isfinite(loss):
+             json.dump(dict(status='nonfinite_loss', steps=step), open(arm / 'RESULT.json', 'w'))
+             return
 --- a/tests/test_probe.py
 +++ b/tests/test_probe.py
 @@ -30,7 +30,7 @@

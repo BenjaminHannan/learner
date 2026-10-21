@@ -15,8 +15,10 @@ Tests of the four gate-fix changes, plain asserts like the pack's own tests:
   J  ruling B3: a window whose 2nd / 3rd redone update is not rstep+2 / rstep+3 is not computable (same deferral, no early_max); with an opt-in key set, a missing first redone update rstep+1 fails closed
      (the first-update item would be computed on another update); without the opt-in keys trace_a is the original's
   K  B1 (PREREG Amendment 2): rejudge_probe.py ESCALATE ("framing falsified": P1 and P1b hold, R1 == R2 at every update, Dbar > 0; exit 4; no calibration applied); every other verdict equal to the pre-B1 decision over 6000 random traces
+  L  fix round (coordinator Oct 20 ruling): F1 / F7 the deferral line only for a trace A that passed (one decision function), F3 early_window.reason names the missing first redone update, F5 + N3 the installer reads the early bar from
+     the supervisor lazily (clean [FIX] line, no traceback), N2 the --calibration file is read only for UNRESOLVED_CALIBRATE
 The ORIGINAL pack's supervisor is loaded from G2FA4_ORIG_PACK (default: results/8a-g/pc-job-cards/g2fa4 next to the drafts) only to compare."""
-import contextlib, importlib.util, io, json, os, random, subprocess, sys, tempfile
+import contextlib, importlib.util, io, json, os, random, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -801,14 +803,14 @@ def t_installer_trace_a_early():
         return w
     with tempfile.TemporaryDirectory() as tmp:
         I = AJ.installed_pc(tmp)
-        assert I.TRACE_A_EARLY == EARLY
+        assert I.trace_a_early() == EARLY and I.TRACE_A_EARLY_FIELDS == EARLY['resume_exact_fields'] and not hasattr(I, 'TRACE_A_EARLY'), 'the bar is read when needed (lazily), not stored at import'
         g4 = json.loads((I.STATE / 'plan.json').read_text())['jobs'][0]
         assert 'resume_early_abs' not in g4['trace_a'] and 'resume_exact_fields' not in g4['trace_a']
         assert I.new_job_entry('g2fa8', g4) == AJ.expected_g2fa8(I)                                         # default unchanged
         assert I.new_job_entry('g2fa8', g4, early=True) == want(I)
         assert I.new_job_entry('g2fa8', g4, True, False, True) == want(I, ['peak', 'resume_max_abs'])
         assert I.new_job_entry('g2fa8', g4, True, True, True) == want(I, SOFT3)
-        assert I.TRACE_A_EARLY == EARLY and I.new_job_entry('g2fa8', g4, early=True)['trace_a']['resume_exact_fields'] is not I.TRACE_A_EARLY['resume_exact_fields'], 'the module constant is copied, not shared'
+        assert I.trace_a_early()['resume_exact_fields'] == EARLY['resume_exact_fields'] and I.trace_a_early()['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS and I.new_job_entry('g2fa8', g4, early=True)['trace_a']['resume_exact_fields'] is not I.TRACE_A_EARLY_FIELDS, 'the module list is copied, not shared'
         assert g4['trace_a']['resume_first_diff'] == 0.01 and I.new_job_entry('g2fa8', g4, early=True)['trace_a']['resume_first_diff'] == 0.01
     # usage errors: not with another job / without --add-job
     for args in (['--trace-a-early'], ['--skip-tests', '--trace-a-early']):
@@ -1212,7 +1214,7 @@ def t_early_limit_single_source():
     # installer
     with tempfile.TemporaryDirectory() as tmp:
         I = AJ.load_installer(tmp)
-        assert I.TRACE_A_EARLY['resume_early_abs'] == S.EARLY_LIMIT == I.supervisor_early_limit(), (I.TRACE_A_EARLY, S.EARLY_LIMIT)
+        assert I.trace_a_early()['resume_early_abs'] == S.EARLY_LIMIT == I.supervisor_early_limit(), (I.trace_a_early(), S.EARLY_LIMIT)
         assert I.new_job_entry('g2fa8', json.loads(json.dumps(dict(src='x', trace_a={}, compare={}))), early=True)['trace_a']['resume_early_abs'] == S.EARLY_LIMIT
         d = Path(tmp) / 'sup'; d.mkdir()
         for text, want in (('EARLY_LIMIT = 0.007\n', 0.007), ('x = 1\nEARLY_LIMIT = 0.007          # a comment 0.1\ny = 2\n', 0.007), ('EARLY_LIMIT=1e-3\n', 0.001)):
@@ -1222,14 +1224,14 @@ def t_early_limit_single_source():
             (d / 'g.py').write_text(text)
             try:
                 I.supervisor_early_limit(d / 'g.py')
-            except SystemExit as e:
-                assert 'EARLY_LIMIT' in str(e.code), e
+            except I.EarlyLimitError as e:
+                assert 'EARLY_LIMIT' in str(e), e
             else:
                 raise AssertionError(text)
         try:
             I.supervisor_early_limit(d / 'missing.py')
-        except SystemExit as e:
-            assert 'cannot read' in str(e.code)
+        except I.EarlyLimitError as e:
+            assert 'cannot read' in str(e)
         else:
             raise AssertionError
         # the installer reads the supervisor in ITS OWN folder: a scratch copy of the pair with another number gives another bar
@@ -1243,7 +1245,7 @@ def t_early_limit_single_source():
             spec.loader.exec_module(I2)
         finally:
             os.environ.pop('G2FA4_CIO', None)
-        assert I2.TRACE_A_EARLY['resume_early_abs'] == 0.0123, I2.TRACE_A_EARLY
+        assert I2.trace_a_early()['resume_early_abs'] == 0.0123, I2.trace_a_early()
     assert S.EARLY_LIMIT == 0.005 and S.resume_probe_verdict([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0])['early_limit'] == S.EARLY_LIMIT
     # rejudge: its default equals the supervisor's; the early computation agrees with the supervisor's on random inputs
     assert R.EARLY_LIMIT == S.EARLY_LIMIT
@@ -1607,7 +1609,7 @@ def t_b2_deferral_unit():
     # (3) a planned resume (>= 3 redone updates): the window is computed; over 0.005 FAILs, healthy PASSes; no deferral
     r = S.trace_a(with_fields(AJ.FakeEv(0.0, 0.004)), EARLY_RULES, 9000)
     assert r['verdict'] == 'PASS' and r['resume']['early_window'] == dict(computed=True, steps=[102, 103]) and abs(r['resume']['early_max'] - 0.004) < 1e-9, r
-    assert S.EARLY_DEFERRED not in S.Sup.md_trace_a(dict(id='g2fa4'), r) and S.early_deferred(r['resume']) is None
+    assert S.EARLY_DEFERRED not in S.Sup.md_trace_a(dict(id='g2fa4'), r) and S.early_deferred(r['resume'], r['verdict']) is None
     r = S.trace_a(with_fields(AJ.FakeEv(0.0, 0.006)), EARLY_RULES, 9000)
     assert r['verdict'] == 'FAIL' and 'early redone updates 102 and 103' in r['why_fail'][0] and r['resume']['early_max'] > 0.005, r
     # without the opt-in keys: no early_window key at all
@@ -1903,6 +1905,243 @@ def t_b1_escalate():
           f'every other verdict equal to the pre-B1 decision over {n_total} random traces ({trig_n} meet the trigger -> ESCALATE, were UNRESOLVED_CALIBRATE): ' + str(dict(sorted(seen.items()))))
 
 
+# ================================================================ L: fix round (coordinator Oct 20 ruling): F1 / F7 deferral only on a passed trace A, F3 reason, F5 + N3 installer lazy bar, N2 calibration gated by the verdict
+def t_f1_deferral_only_on_pass():
+    D = S.EARLY_DEFERRED
+    assert D == "early window not checked by the running gate; do not read this result until the probe's P1b passes.", 'the ruled wording is not edited'
+    ew = dict(computed=False, redone=1, deferred_to='probe P1b')
+    # F7: one function decides; it needs the verdict
+    assert S.early_deferred(dict(early_window=ew), 'PASS') == ew
+    for v in ('FAIL', None, '', 'pass'):
+        assert S.early_deferred(dict(early_window=ew), v) is None, v
+    for rec in (None, {}, dict(early_window=None), dict(early_window='x'), dict(early_window=dict(computed=True, steps=[102, 103]))):
+        assert S.early_deferred(rec, 'PASS') is None, rec
+    src = Path(S.__file__).read_text(encoding='utf-8')
+    assert src.count(".get('early_window')") == 1 and src.count('early_deferred(') >= 6, 'the deferral is decided in early_deferred() only (status, finish, md, state all call it)'
+    def rules_md(r):
+        return S.Sup.md_trace_a(dict(id='g2fa4'), r)
+    # unit: a deferred PASS prints the line once; the same deferral record on a FAIL prints nothing
+    ev = with_fields(AJ.FakeEv(0.0, 0.0))
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 101)]
+    r = S.trace_a(ev, EARLY_RULES, 9000)
+    assert r['verdict'] == 'PASS' and S.early_deferred(r['resume'], r['verdict']) == r['resume']['early_window'] and rules_md(r).count(D) == 1
+    fails = {}
+    ev1 = with_fields(AJ.FakeEv(0.0, 0.0)); ev1.train = [e for e in ev1.train if not (e['seg'] == 1 and e['step'] > 101)]
+    fails['first-update gap'] = S.trace_a(bump(ev1, 2, 101, loss=0.02), EARLY_RULES, 9000)
+    ev2 = with_fields(AJ.FakeEv(0.0, 0.0)); ev2.train = [e for e in ev2.train if not (e['seg'] == 1 and e['step'] > 101)]
+    fails['exact-field mismatch'] = S.trace_a(bump(ev2, 2, 101, lr=2e-3), EARLY_RULES, 9000)
+    ev3 = with_fields(drop(AJ.FakeEv(0.0, 0.0), 2, 101))
+    fails['missing rstep+1'] = S.trace_a(ev3, EARLY_RULES, 9000)
+    ev4 = with_fields(AJ.FakeEv(0.0, 0.0)); ev4.train = [e for e in ev4.train if not (e['seg'] == 1 and e['step'] > 101)]
+    fails['peak over the limit'] = S.trace_a(ev4, EARLY_RULES, 99999)
+    for name, rr in fails.items():
+        assert rr['verdict'] == 'FAIL' and rr['resume']['early_window']['computed'] is False, (name, rr['why_fail'])               # (the record of what was not computed stays in the data)
+        assert S.early_deferred(rr['resume'], rr['verdict']) is None and D not in rules_md(rr) and 'early_max' not in rules_md(rr), name
+    # end to end against the fake runner: FAIL runs print / store the line nowhere; the deferred PASS prints it in the TRACE-A md, status.md, the DONE file and the log and stores it in state.json
+    for label, crash_at, extra in (('first-update gap', 102, ['--seg2-offset', '0.02']), ('exact-field mismatch', 102, ['--seg2-lr', '0.002']), ('missing rstep+1', 103, ['--skip-log-seg2-at', '101']),
+                                   ('missing rstep+1, planned kill', 0, ['--skip-log-seg2-at', '101']), ('first-update gap, 2 redone updates', 103, ['--seg2-offset', '0.02'])):
+        sup, j, texts = b2_run(crash_at, *extra)
+        assert j['status'] == 'stopped' and j['traceA']['verdict'] == 'FAIL' and 'STOPPED.txt' in texts, (label, j)
+        assert 'early_window' not in j['traceA'], (label, j['traceA'])                                                                 # not stored in state.json
+        assert not [k for k, v in texts.items() if D in v], (label, [k for k, v in texts.items() if D in v])                           # TRACE-A md, status.md, STOPPED.txt, supervisor.log: nowhere
+        assert 'status.md' in texts and 'trace A: **FAIL**' in texts['status.md'], label
+        assert not [k for k in texts if k.startswith('DONE-')], label
+    sup, j, texts = b2_run(102)
+    assert j['status'] == 'done' and j['traceA']['verdict'] == 'PASS' and j['traceA']['early_window']['computed'] is False, j['traceA']
+    for name in ('TRACE-A-g2fa4.md', 'status.md', 'DONE-g2fa4.txt', 'supervisor.log'):
+        assert D in texts[name], name
+    print('ok F1 / F7: the deferral line is printed and stored only for a trace A that PASSED (absent on first-gap FAIL, exact-field FAIL, missing rstep+1 FAIL, peak FAIL: TRACE-A md, status.md, STOPPED.txt, log, state.json); present on a deferred PASS in all four places; one decision function (early_deferred)')
+
+
+def t_f3_reason_names_cause():
+    # (a) rstep+1 missing: the reason names the first redone update, not updates 2-3 as the culprit
+    base = 'the first redone update 101 (the first update after the restore at 100) is missing from {}, so the 2nd and 3rd redone updates (102 and 103) cannot be located; the redone updates start {}'
+    for drops, who, start in (((2,), 'the resumed segment', '[102, 103, 104, 105]'), ((1,), 'the earlier segment', '[102, 103, 104, 105]'), ((1, 2), 'the earlier segment and the resumed segment', '[102, 103, 104, 105]')):
+        ev = with_fields(AJ.FakeEv(0.0, 0.0))
+        for seg in drops:
+            drop(ev, seg, 101)
+        for rules in (EARLY_ONLY, EARLY_RULES):
+            r = S.trace_a(ev, rules, 9000)
+            ew = r['resume']['early_window']
+            assert r['verdict'] == 'FAIL' and ew['computed'] is False and ew['reason'] == base.format(who, start), (drops, ew)
+            assert 'must be updates' not in ew['reason'] and r['resume']['first_diff'] is None
+    ev = with_fields(AJ.FakeEv(0.0, 0.0))                                                  # (a) also with under 3 redone updates (the first update is missing and the window is short)
+    ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 102)]
+    drop(ev, 2, 101)
+    ew = S.trace_a(ev, EARLY_ONLY, 9000)['resume']['early_window']
+    assert ew['redone'] == 1 and ew['reason'] == base.format('the resumed segment', '[102]'), ew
+    # (b) 101 present, a hole at 102 or 103, 3 or more redone updates: the original wording; 101 is not blamed
+    for gap in (102, 103):
+        ew = S.trace_a(with_fields(drop(AJ.FakeEv(0.0, 0.0), 2, gap)), EARLY_RULES, 9000)['resume']['early_window']
+        assert ew['reason'].startswith('the 2nd and 3rd redone updates after the restore at 100 must be updates 102 and 103, contiguous after update 101;') and 'is missing' not in ew['reason'], ew
+    # no reason: 101 present with under 3 redone updates (plain deferral); and a computed window
+    ev = with_fields(AJ.FakeEv(0.0, 0.0)); ev.train = [e for e in ev.train if not (e['seg'] == 1 and e['step'] > 102)]
+    assert S.trace_a(ev, EARLY_ONLY, 9000)['resume']['early_window'] == dict(computed=False, redone=2, deferred_to='probe P1b')
+    assert 'reason' not in S.trace_a(with_fields(AJ.FakeEv(0.0, 0.0)), EARLY_ONLY, 9000)['resume']['early_window']
+    # the docstring says exactly when `reason` appears
+    doc = S.trace_a.__doc__
+    assert "early_window['reason'] is present in exactly two cases" in doc and '(a) the first redone update rstep+1 is missing' in doc and '(b) rstep+1 is present and 3 or more updates were redone' in doc and 'no \'reason\' (plain deferral)' in doc
+    # the reason is in the record the TRACE-A md prints
+    r = S.trace_a(with_fields(drop(AJ.FakeEv(0.0, 0.0), 2, 101)), EARLY_ONLY, 9000)
+    assert 'is missing from the resumed segment, so the 2nd and 3rd redone updates' in S.Sup.md_trace_a(dict(id='g2fa4'), r)
+    print('ok F3: early_window.reason names the missing first redone update (resumed / earlier / both, also with under 3 redone updates), keeps the hole-at-102/103 wording for 101 present, is absent for a plain deferral; docstring states when it appears')
+
+
+def make_pack(tmp, name, edit=None):
+    """a copy of the pack folder this test runs in (installer + supervisor + queue/overlay files), without tests/; edit(text) -> new text edits the copy's supervisor, edit=False removes it"""
+    d = Path(tmp) / name
+    shutil.copytree(HERE.parent, d, ignore=lambda dr, names: [n for n in names if n in ('__pycache__', 'logs') or (Path(dr) == HERE.parent and n == 'tests')])
+    if edit is False:
+        (d / 'g2fa4_supervisor.py').unlink()
+    elif edit:
+        (d / 'g2fa4_supervisor.py').write_text(edit((d / 'g2fa4_supervisor.py').read_text(encoding='utf-8')), encoding='utf-8')
+    return d
+
+
+def installer_from(tmp, pack):
+    old = AJ.HERE
+    AJ.HERE = Path(pack) / 'tests'                                   # AJ.load_installer loads HERE.parent / 'install_g2fa4.py'
+    try:
+        return AJ.installed_pc(tmp)
+    finally:
+        AJ.HERE = old
+
+
+def t_f5_installer_lazy_bar():
+    import re as _re
+    broken = {
+        'missing line': lambda t: _re.sub(r'(?m)^EARLY_LIMIT\s*=.*$', '# (line removed)', t),
+        'malformed number 1.2.3': lambda t: _re.sub(r'(?m)^EARLY_LIMIT\s*=.*$', 'EARLY_LIMIT = 1.2.3', t),
+        'malformed number 5e': lambda t: _re.sub(r'(?m)^EARLY_LIMIT\s*=.*$', 'EARLY_LIMIT = 5e', t),
+        'overflow 1e999': lambda t: _re.sub(r'(?m)^EARLY_LIMIT\s*=.*$', 'EARLY_LIMIT = 1e999', t),
+        'missing file': False}
+    with tempfile.TemporaryDirectory() as tmp:
+        for label, edit in broken.items():
+            pack = make_pack(tmp, 'pack-' + _re.sub(r'\W+', '', label), None if edit is False else edit)
+            sub = Path(tmp) / ('pc-' + _re.sub(r'\W+', '', label)); sub.mkdir()
+            I = installer_from(sub, pack)                                               # (the import and a plain install already work without the supervisor's EARLY_LIMIT line: installed_pc runs main(['--skip-tests']))
+            if edit is False:                                                           # (a plain install needs the supervisor file as a pack file: delete it after the install)
+                (pack / 'g2fa4_supervisor.py').unlink()
+            assert Path(I.IN).resolve() == pack.resolve(), (I.IN, pack)
+            I.STAMP = 'F5'
+            before = AJ.pc_files(I)
+            # the modes without --trace-a-early do not need the line
+            if edit is not False:                                                       # (with the supervisor file gone every add-job mode fails its pack-file check; that is not about the bar)
+                rc, out = AJ.quiet(I.main, ['--check'])
+                assert rc == 0 and 'CHECK ONLY' in out and 'EARLY_LIMIT' not in out, (label, rc, out)
+                for args in ([], ['--soft-trace-a'], ['--soft-trace-a', '--soft-trace-a-mean']):
+                    rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--check'] + args)
+                    assert rc == 0 and 'CHECK ONLY' in out and 'EARLY_LIMIT' not in out and AJ.pc_files(I) == before, (label, args, rc, out)
+            # --trace-a-early: a [FIX] line, exit 1, no traceback (AJ.quiet would let an exception through), nothing changed
+            for extra in (['--check'], []):
+                rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early'] + extra)
+                assert rc == 1 and '[FIX] --trace-a-early: the early-window bar EARLY_LIMIT' in out and AJ.pc_files(I) == before, (label, extra, rc, out)
+                assert ('CHECK ONLY' in out) == bool(extra) and ('NOT DONE' in out) == (not extra) and 'Traceback' not in out, (label, out)
+                assert {'missing line': 'no line "EARLY_LIMIT = <number>"', 'missing file': 'cannot read the early-window bar EARLY_LIMIT', 'overflow 1e999': 'not a finite non-negative number'}.get(label, 'is not a number') in out, (label, out)
+        # and the real thing still works: the bar from the supervisor is in the entry; a plain install, --check and the soft flags are untouched
+        pack = make_pack(tmp, 'pack-good')
+        sub = Path(tmp) / 'pc-good'; sub.mkdir()
+        I = installer_from(sub, pack)
+        I.STAMP = 'F5g'
+        rc, out = AJ.quiet(I.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early', '--check'])
+        assert rc == 0 and f'[ok] --trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py {S.EARLY_LIMIT}' in out, out
+        # a changed bar in the supervisor is what the entry gets
+        pack2 = make_pack(tmp, 'pack-bar', lambda t: t.replace('EARLY_LIMIT = 0.005 ', 'EARLY_LIMIT = 0.0123 ', 1))
+        sub2 = Path(tmp) / 'pc-bar'; sub2.mkdir()
+        I2 = installer_from(sub2, pack2)
+        I2.STAMP = 'F5b'
+        rc, out = AJ.quiet(I2.main, ['--add-job', 'g2fa8', '--skip-g2fa4', '--trace-a-early'])
+        assert rc == 0 and json.loads((I2.STATE / 'plan.json').read_text())['jobs'][1]['trace_a']['resume_early_abs'] == 0.0123, out
+        # --help works with no supervisor file at all (nothing is read at import), and describes the flag accurately
+        alone = Path(tmp) / 'alone'; alone.mkdir()
+        shutil.copy2(HERE.parent / 'install_g2fa4.py', alone / 'install_g2fa4.py')
+        env = dict(os.environ, G2FA4_CIO=str(Path(tmp) / 'cio-alone'))
+        cp = subprocess.run([sys.executable, str(alone / 'install_g2fa4.py'), '--help'], capture_output=True, text=True, cwd=str(alone), env=env)
+        assert cp.returncode == 0 and 'Traceback' not in cp.stderr, (cp.returncode, cp.stderr)
+        h = ' '.join(cp.stdout.split())
+        for phrase in ('EARLY_LIMIT', 'g2fa4_supervisor.py next to this installer', 'only when this flag is used', 'fewer than 3 contiguous redone updates', 'NOT computed and NOT a failure', 'deferred to the probe-resume P1b check',
+                       'missing first redone update (rstep+1) is a hard failure'):
+            assert phrase in h, (phrase, h)
+        assert '0.005' not in h, 'the bar is not hard-coded in the help text'
+        d = I.__doc__
+        for phrase in ('fewer than 3 contiguous redone updates', 'deferred to the probe\'s P1b', 'missing first redone update (rstep+1) is a hard failure', 'the ONE definition in the g2fa4_supervisor.py next to this installer', 'ONLY when --trace-a-early is used',
+                       'a [FIX] line (exit 1, nothing changed, no traceback)', "early window not checked by the running gate; do not read this result until the probe's P1b passes."):
+            assert phrase in d, phrase
+        assert 'resume_early_abs = 0.005' not in d
+    print('ok F5 + N3: the early bar is read from the supervisor lazily (only with --trace-a-early); a missing file / missing line / malformed number (1.2.3, 5e, 1e999) is a [FIX] line with exit 1, nothing changed, no traceback, and plain / --check / --add-job (with and without soft flags) / --help are unaffected; --help and the docstring describe the deferral, the rstep+1 hard failure and the supervisor-owned bar')
+
+
+def t_n2_calibration_gated_by_verdict():
+    """N2: the two-resume verdict is computed first; the --calibration file is opened ONLY when the verdict is UNRESOLVED_CALIBRATE. A bad file never hides INSIDE / UNRESOLVED (window) / OUTSIDE / ESCALATE."""
+    calls = []
+    real = R.load_calibration
+    R.load_calibration = lambda *a, **k: (calls.append(a), real(*a, **k))[1]
+    try:
+        r1, r2 = ident()
+        e1, e2 = alt(0.015); e1[2] += 0.02
+        cases = [('INSIDE healthy noise', 0, alt(0.015)), ('UNRESOLVED', 1, alt(0.003)), ('OUTSIDE', 2, alt(0.015, first_exact=False)), ('OUTSIDE', 2, (e1, e2)), ('ESCALATE', 4, (r1, r2))]
+        with tempfile.TemporaryDirectory() as tmp:
+            sub = Path(tmp) / 'p2'; sub.mkdir()
+            garbage = sub / 'garbage.json'; garbage.write_text('{ not json')
+            wrongjob = write_probe(sub, 'otherjob', CL, *alt(0.01))                          # a perfectly valid probe file, of another job
+            empty_dir = sub / 'adir'; empty_dir.mkdir()                                       # reading a directory raises: proof the file is never opened
+            for bad in (garbage, wrongjob, Path(tmp) / 'nope.json', empty_dir):
+                for name, code, (a1, a2) in cases:
+                    f = write_probe(tmp, 'g2fa8', CL, a1, a2)
+                    calls.clear()
+                    rc, out = AJ.quiet(R.main, [str(f), '--calibration', str(bad)])
+                    j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+                    assert rc == code and j['verdict'] == name and not calls, (bad.name, name, rc, out[-300:])
+                    assert j['calibration'] is None and j['calibration_offered'] == str(bad) and j['calibration_source'] is None and j['calibration_not_applied'] == R.not_applied_note(name if name != 'UNRESOLVED' else 'UNRESOLVED'), (name, j['calibration_offered'], j['calibration_source'])
+                    assert 'cannot use --calibration' not in out and f'NOTE: --calibration {bad} was NOT applied' in out, out
+            # UNRESOLVED_CALIBRATE: now the file IS read, and a bad one is exit 3 naming it (the verdict needs it)
+            f1 = write_probe(tmp, 'g2fa8', CL, [c + (0 if i < 3 else 0.03) for i, c in enumerate(CL)], [c + (0 if i < 3 else 0.0255) for i, c in enumerate(CL)])
+            for bad in (garbage, wrongjob, Path(tmp) / 'nope.json'):
+                calls.clear()
+                rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(bad)])
+                assert rc == 3 and out.startswith(f'cannot use --calibration {bad}: ') and len(calls) == 1, (bad.name, rc, out)
+            # a good file is applied: calibration_source = the path, calibration_offered the same, nothing "not applied"
+            good = write_probe(sub, 'g2fa8', CL, [c - (0 if i < 3 else 0.03) for i, c in enumerate(CL)], [c - (0 if i < 3 else 0.0255) for i, c in enumerate(CL)])
+            calls.clear()
+            rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(good)])
+            j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+            assert rc == 0 and len(calls) == 1 and j['calibration'] is not None and j['calibration_source'] == str(good) == j['calibration_offered'] and j['calibration_not_applied'] is None, (rc, out[-300:])
+            # no --calibration: both None
+            rc, out = AJ.quiet(R.main, [str(write_probe(tmp, 'g2fa8', CL, *alt(0.015)))])
+            j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+            assert rc == 0 and j['calibration_offered'] is None and j['calibration_source'] is None and j['calibration_not_applied'] is None
+            # an unreadable FIRST probe is still exit 3 about the first probe (the calibration file is not looked at)
+            calls.clear()
+            rc, out = AJ.quiet(R.main, [str(Path(tmp) / 'missing-probe.json'), '--calibration', str(good)])
+            assert rc == 3 and out.startswith('cannot re-read ') and not calls
+    finally:
+        R.load_calibration = real
+    assert 'opened, read and validated ONLY when it will be applied' in R.__doc__ and 'calibration_offered' in R.__doc__
+    print('ok N2: the two-resume verdict comes first; the --calibration file is not opened for INSIDE / UNRESOLVED (window) / OUTSIDE (P1, P1b) / ESCALATE (a garbage / wrong-job / missing / directory file cannot hide them: exit 0/1/2/4, calibration_offered set, calibration_source null, calibration_not_applied); for UNRESOLVED_CALIBRATE it is read and a bad file is exit 3')
+
+
+def t_patch_reproduces_drafts():
+    """F2: gatefix.patch lists every drafted file that differs from the pack (incl. tests/fake_runner.py) and `patch -p1` on a fresh copy of the pack reproduces each of them byte for byte."""
+    drafts = ORIG_PACK.parent.parent / 'restart-gate-solve' / 'drafts'
+    pf = drafts / 'gatefix.patch'
+    if not pf.exists() or not shutil.which('patch'):
+        print('ok (skipped) gatefix.patch check: the drafts folder or the `patch` program is not here')
+        return
+    files = [x[len('+++ b/'):] for x in pf.read_text(encoding='utf-8').splitlines() if x.startswith('+++ b/')]
+    assert files == ['g2fa4_supervisor.py', 'install_g2fa4.py', 'tests/fake_runner.py', 'tests/test_probe.py'], files
+    # every drafted file that also exists in the pack and differs from it is in the patch (nothing is forgotten, F2)
+    differing = sorted(str(f.relative_to(drafts)).replace(os.sep, '/') for f in [drafts / 'g2fa4_supervisor.py', drafts / 'install_g2fa4.py', *sorted((drafts / 'tests').glob('*.py'))]
+                       if (ORIG_PACK / f.relative_to(drafts)).exists() and (ORIG_PACK / f.relative_to(drafts)).read_bytes() != f.read_bytes())
+    assert differing == sorted(files), (differing, files)
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp) / 'pack'
+        shutil.copytree(ORIG_PACK, t, ignore=shutil.ignore_patterns('__pycache__', 'logs'))
+        subprocess.run(['patch', '-p1', '-i', str(pf)], cwd=str(t), check=True, capture_output=True)
+        for f in files:
+            assert (t / f).read_bytes() == (drafts / f).read_bytes(), f
+    print('ok gatefix.patch: covers ' + ', '.join(files) + '; patch -p1 on a fresh copy of the pack reproduces each byte for byte; no other drafted file differs from the pack')
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
@@ -1910,7 +2149,8 @@ if __name__ == '__main__':
             t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
             t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
             t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged, t_early_not_computable_probe, t_early_not_computable_verdict, t_early_not_computable_trace_a, t_early_agreement,
-            t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate, t_b1_escalate]
+            t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate, t_b1_escalate,
+            t_f1_deferral_only_on_pass, t_f3_reason_names_cause, t_f5_installer_lazy_bar, t_n2_calibration_gated_by_verdict, t_patch_reproduces_drafts]
     only = sys.argv[1:]
     try:
         for t in todo:

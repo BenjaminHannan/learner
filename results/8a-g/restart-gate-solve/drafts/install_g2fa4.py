@@ -21,7 +21,7 @@ plus the installed src-b3g2ck (the mark and pins of the g2fa4 install), then (a)
 pack's g2fa4_supervisor.py (the version that honors `skip` and a job without a baseline) into WORK\\g2fa4\\ BEFORE plan.json changes (the old one is kept as .aside-<stamp>), (c) rewrites plan.json:
 the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused unless g2fa4 is stopped: state.json says
 'stopped' AND a stop file names g2fa4; and a stopped g2fa4 is never left unskipped, its stop file would hold the loop). With --soft-trace-a the g2fa8 entry's trace A records, and does not gate, the
-whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs = 0.005 (largest difference over the 2nd and 3rd redone updates) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
+whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1 and its clarification for B2/B3) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs (largest difference over the 2nd and 3rd redone updates must be <= the bar) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The bar is EARLY_LIMIT, the ONE definition in the g2fa4_supervisor.py next to this installer (0.005 at the time of writing); it is read from that file ONLY when --trace-a-early is used, and a missing file, a missing `EARLY_LIMIT = <number>` line or a malformed number is a [FIX] line (exit 1, nothing changed, no traceback) that does not affect any other mode. Two behaviours of the running gate to know: (1) when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3) the early window is NOT computed and is NOT a failure: it is deferred to the probe's P1b, and the TRACE-A md, status.md and the finish message print the line "early window not checked by the running gate; do not read this result until the probe's P1b passes." (only for a trace A that passed); (2) with this flag a missing first redone update (rstep+1) is a hard failure (the first-update check cannot be computed as defined). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
 g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
 import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
 from pathlib import Path
@@ -146,28 +146,45 @@ def armed_text():
 
 SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
 SOFT_TRACE_A_MEAN = SOFT_TRACE_A + ['resume_mean_abs']          # --soft-trace-a --soft-trace-a-mean: the mean absolute resume difference too (opt-in; never a default)
+
+class EarlyLimitError(Exception):
+    """the early-window bar cannot be taken from the supervisor file (missing file, no EARLY_LIMIT line, malformed number); add_job reports it as a [FIX] line."""
+
+
 def supervisor_early_limit(src=None):
     """The early-window bar (Amendment 1) has ONE definition: `EARLY_LIMIT = <number>` in the pack's g2fa4_supervisor.py, the file this installer installs. It is read from that file's text (not imported: importing would run
-    the supervisor's module code, and on the PC the installer never imports it); a missing file or line stops the installer rather than guess a number."""
+    the supervisor's module code, and on the PC the installer never imports it), and ONLY when --trace-a-early is used (never at import: the other modes must not depend on that line). A missing/unreadable file, a missing line
+    or a malformed number (not a finite, non-negative float) raises EarlyLimitError rather than guess a number."""
     src = Path(src) if src else IN / 'g2fa4_supervisor.py'
     try:
         text = src.read_text(encoding='utf-8')
-    except OSError as e:
-        raise SystemExit(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
+    except (OSError, ValueError) as e:
+        raise EarlyLimitError(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
     m = re.search(r'^EARLY_LIMIT\s*=\s*([0-9][0-9.eE+-]*)\s*(?:#.*)?$', text, re.M)
     if not m:
-        raise SystemExit(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
-    return float(m.group(1))
+        raise EarlyLimitError(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
+    try:
+        x = float(m.group(1))
+    except ValueError:
+        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a number: cannot take the early-window bar from it')
+    if not 0 <= x < float('inf'):
+        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a finite non-negative number: cannot take the early-window bar from it')
+    return x
 
 
-TRACE_A_EARLY = dict(resume_early_abs=supervisor_early_limit(), resume_exact_fields=['lr', 'rounds', 'plan_'])          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): early window 2nd-3rd redone update, exact data/RNG/schedule fields at the first
+TRACE_A_EARLY_FIELDS = ['lr', 'rounds', 'plan_']          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): exact data/RNG/schedule fields at the first redone update (the early-window bar is read lazily, see trace_a_early)
+
+
+def trace_a_early(src=None):
+    """-> the opt-in trace A rules of --trace-a-early (a fresh dict each call): resume_early_abs = EARLY_LIMIT read NOW from the supervisor file (EarlyLimitError if it cannot be), resume_exact_fields = a copy of TRACE_A_EARLY_FIELDS."""
+    return dict(resume_early_abs=supervisor_early_limit(src), resume_exact_fields=list(TRACE_A_EARLY_FIELDS))
 
 
 def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False):
     """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
     spec = ADD_JOBS[spec_id]
     return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
-                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(copy.deepcopy(TRACE_A_EARLY) if early else {})), compare=copy.deepcopy(g4['compare']))
+                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(trace_a_early() if early else {})), compare=copy.deepcopy(g4['compare']))
 
 
 def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False, early=False):
@@ -223,7 +240,15 @@ def add_job(a):
     except (OSError, ValueError):
         old = None
     row(old is not None, 'plan.json of the install', str(pp))
-    if old is not None:
+    early_bar = None
+    if a.trace_a_early:                                                                    # the bar is read from the supervisor file only now, only for this flag; a problem is a [FIX] line, not a traceback
+        try:
+            early_bar = supervisor_early_limit()
+        except EarlyLimitError as e:
+            row(False, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', str(e))
+        else:
+            row(True, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', f'{early_bar} (from {IN / "g2fa4_supervisor.py"})')
+    if old is not None and (early_bar is not None or not a.trace_a_early):
         try:
             stj = json.loads((STATE / 'state.json').read_text(encoding='utf-8'))
         except (OSError, ValueError):
@@ -311,7 +336,9 @@ def main(argv=None):
     ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
     ap.add_argument('--soft-trace-a', action='store_true', help='with --add-job g2fa8: trace A records (does not gate) the whole-card memory peak and the largest single resume difference')
     ap.add_argument('--soft-trace-a-mean', action='store_true', help='only with --soft-trace-a: the mean absolute resume difference is recorded, not gated, as well (opt-in)')
-    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items, the early window (2nd-3rd redone update <= 0.005) and equal lr / rounds / plan_* fields at the first redone update')
+    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items: the early window (largest difference over the 2nd and 3rd redone update must be <= the bar, which is EARLY_LIMIT read from the g2fa4_supervisor.py next to this installer, only when this flag is used) and equal lr / rounds / plan_* fields at the first redone update. '
+                    'When the judged resume has fewer than 3 contiguous redone updates the early window is NOT computed and NOT a failure: it is deferred to the probe-resume P1b check and the reports print a line saying so (only for a trace A that passed). '
+                    'With this flag a missing first redone update (rstep+1) is a hard failure')
     ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
     a = ap.parse_args(argv)
     if (a.skip_g2fa4 or a.soft_trace_a or a.trace_a_early) and a.add_job != 'g2fa8':
