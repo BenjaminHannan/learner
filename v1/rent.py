@@ -72,7 +72,7 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
   rm -rf export/* b64
   (cd "$ROOT/out" 2>/dev/null && tar -czf "$J/export/out.tar.gz" --exclude=wake-ckpt --exclude='*.pt' . -C "$J" checks) 2>/dev/null
   [ -f export/out.tar.gz ] || tar -czf export/out.tar.gz -C "$J" checks 2>/dev/null
-  (cd "$ROOT/out" 2>/dev/null && find . -name '*.pt' -size -60M -not -path './*/wake-ckpt/*' | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
+  (cd "$ROOT/out" 2>/dev/null && { find . -name '*.pt' -size -60M -not -path './*/wake-ckpt/*'; for lt in $(ls -t ./*/wake-ckpt/step-*.pt 2>/dev/null | head -1); do echo "$lt"; echo "$lt.sha256"; done; } | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
   say "EXPORT tarred"
   (cd export && sha256sum out.tar.gz ckpt.tar.gz 2>/dev/null > MANIFEST.sha256)
   mkdir -p b64/big b64/small
@@ -258,6 +258,8 @@ def make_job(pack_sha, kind, dph):
 
 def pack(a):
     kind = a.kind
+    if kind == "arm" and not a.arm:
+        raise SystemExit("--arm floor|full is required for kind arm")
     HARD_STOP[kind] = float(a.cap)
     deadline = run_deadline(a.dph, kind)
     files = listed() + [f"v1/box/{kind}.sh"]
@@ -277,7 +279,8 @@ def pack(a):
             return i
         for f in files:
             t.add(REPO / f, arcname=f, filter=norm)
-        for name, content in (("SEAL-pack.sha256.txt", seal), ("COMMIT", head + "\n")):
+        extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n")] if kind == "arm" else []
+        for name, content in (("SEAL-pack.sha256.txt", seal), ("COMMIT", head + "\n")) + tuple(extra):
             info = tarfile.TarInfo(name)
             info.size, info.mtime = len(content.encode()), 0
             t.addfile(info, io.BytesIO(content.encode()))
@@ -742,6 +745,8 @@ def main(argv=None):
     p.add_argument("--kind", choices=STAGES, required=True)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
     p.add_argument("--cap", type=float, required=True, help="this box's dollars")
+    p.add_argument("--arm", choices=("floor", "full"), default=None)
+    p.add_argument("--steps", type=int, default=12000)
     p.add_argument("--out", required=True)
     p = add("search", search)
     p.add_argument("--n", type=int, default=12)
