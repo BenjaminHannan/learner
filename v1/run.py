@@ -76,24 +76,43 @@ class AbortRule(RuntimeError):
 
 
 class Monitor:
-    """A1 and A2 on the wake loss stream; A4 on spend. Pure functions of what is logged (applied mechanically)."""
+    """A1 and A2 on the wake loss stream; A4 on spend (persisted across restarts). Pure functions of what is logged.
+    A1's 'running median' is taken over the previous 200 steps of the SAME curriculum phase (the loss changes definition between the
+    gold, teacher and own phases); the 1% is counted over all steps so far (needs >= 300)."""
 
-    def __init__(self, total_steps: int, price_per_hour: float, spend_cap: float, started: float) -> None:
-        self.total, self.price, self.cap, self.started = total_steps, price_per_hour, spend_cap, started
-        self.losses: list[float] = []
+    def __init__(self, total_steps: int, price_per_hour: float, spend_cap: float, ledger: Path) -> None:
+        self.total, self.price, self.cap, self.ledger = total_steps, price_per_hour, spend_cap, Path(ledger)
+        self.by_phase: dict[str, list[float]] = collections.defaultdict(list)
+        self.n = 0
         self.bad = 0
         self.dev_loss0: Optional[float] = None
+        prior = json.loads(self.ledger.read_text()) if self.ledger.exists() else {}
+        self.elapsed_before = float(prior.get("elapsed_s", 0.0))      # wall seconds spent by earlier processes of this arm
+        self.t0 = time.time()
 
-    def on_step(self, step: int, loss: float) -> None:
-        window = self.losses[-200:]
+    def elapsed(self) -> float:
+        return self.elapsed_before + (time.time() - self.t0)
+
+    def save(self) -> None:
+        self.ledger.write_text(json.dumps({"elapsed_s": self.elapsed(), "price_per_hour": self.price, "usd": self.usd()}))
+
+    def usd(self) -> float:
+        return self.elapsed() / 3600.0 * self.price
+
+    def check_spend(self) -> None:                                                  # A4 (wake steps and sleep stage boundaries)
+        if self.price and self.usd() >= self.cap:
+            self.save()
+            raise AbortRule("A4", f"spend cap ${self.cap:.2f} reached (${self.usd():.2f})")
+
+    def on_step(self, step: int, loss: float, phase: str = "own") -> None:
+        window = self.by_phase[phase][-200:]
         if len(window) >= 50 and loss > 3.0 * statistics.median(window):          # A1: > 3x the running median
             self.bad += 1
-        self.losses.append(loss)
-        n = len(self.losses)
-        if n >= 300 and self.bad / n > 0.01:                                       # A1: for more than 1% of steps
-            raise AbortRule("A1", f"loss above 3x its running median on {self.bad}/{n} steps (> 1%)")
-        if self.price and (time.time() - self.started) / 3600.0 * self.price >= self.cap:
-            raise AbortRule("A4", f"spend cap ${self.cap:.2f} reached")
+        self.by_phase[phase].append(loss)
+        self.n += 1
+        if self.n >= 300 and self.bad / self.n > 0.01:                              # A1: for more than 1% of steps
+            raise AbortRule("A1", f"loss above 3x its running median on {self.bad}/{self.n} steps (> 1%)")
+        self.check_spend()
 
     def check_a2(self, step: int, dev_loss: float) -> None:
         if step >= int(0.10 * self.total) and self.dev_loss0 is not None and dev_loss > 0.75 * self.dev_loss0:
@@ -134,14 +153,16 @@ def component_ran(arm: Arm, trainer, bridge: Bridge, d_model, b2, guard_logs: di
     return rep
 
 
-def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, trainer) -> dict[str, Any]:
+def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int, aborted: Optional[dict] = None) -> dict[str, Any]:
     """Dev numbers for the decision rule (never the sealed splits): D on all 5,000 DEV visits and the 1,000 `validation` visits,
-    the creative first-try on creative DEV, the bridge-off lesion of each, W1/W2 pass on dev, and the KL-share summary."""
+    the creative first-try on creative DEV (latest finished creative stage), the bridge-off lesion of each, W1/W2 pass on dev, and
+    the KL-share summary. After an abort it judges the last checkpoint (`aborted` carries the rule)."""
     from v1 import creative_sleep
-    res: dict[str, Any] = {"arm": arm.name, "steps": trainer.step}
+    res: dict[str, Any] = {"arm": arm.name, "steps": steps, "aborted": aborted}
     bridge.frozen_ctx = True
     for name, cache in (("dev", data.dev), ("validation", data.validation)):
-        batches, stops = make_eval_batches(cache, len(cache), data.tokenizer)
+        batches, stops = make_eval_batches(cache, getattr(a, "final_visits", None) or len(cache), data.tokenizer)
+        bridge.enabled = True
         r = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
         res[f"d_{name}"] = {"accuracy": r["accuracy"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
                             "loops_mean": r["loops_mean"]}
@@ -153,17 +174,45 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, trainer) -
     res["baseline_dev"] = base
     res["W1_dev_threshold"] = base["best"] + 0.10
     res["W1_dev_pass"] = res["d_dev"]["accuracy"] >= res["W1_dev_threshold"]
-    w2 = out / "creative" / "W2.pt"
-    if w2.exists():
-        c = creative_sleep.dev_report(str(w2), a.device, attach=bridge.attach_creative)
-        bridge.enabled = False
-        c0 = creative_sleep.dev_report(str(w2), a.device, attach=bridge.attach_creative)
-        bridge.enabled = True
-        res["creative_dev"] = {**c, "bridge_off_first_try": c0["first_try"]}
-        res["W2_dev_pass"] = c["first_try"] >= 0.20
-        ti = json.loads((out / "creative" / "train.json").read_text())
+    for name in ("W2.pt", "W1.pt", "Nprime.pt", "warm.pt"):
+        mp = out / "creative" / name
+        if mp.exists():
+            c = creative_sleep.dev_report(str(mp), a.device, attach=bridge.attach_creative)
+            bridge.enabled = False
+            c0 = creative_sleep.dev_report(str(mp), a.device, attach=bridge.attach_creative)
+            bridge.enabled = True
+            res["creative_dev"] = {**c, "bridge_off_first_try": c0["first_try"], "model": name}
+            res["W2_dev_pass"] = c["first_try"] >= 0.20 and name == "W2.pt"
+            break
+    tj = out / "creative" / "train.json"
+    if tj.exists():
+        ti = json.loads(tj.read_text())
         res["kl_share"] = {k: v.get("kl_share_mean_after_25pct") for k, v in ti.get("phases", {}).items()}
     return res
+
+
+def restore_last(trainer, bridge, bopt, ck_dir: Path, load_opt: bool = True) -> Optional[int]:
+    got = vckpt.load(ck_dir)
+    if got is None:
+        return None
+    if load_opt:
+        trainer.restore(got)
+    else:                                  # A1 relaunch with AdamW: weights, counters and RNG only; a fresh optimizer
+        trainer.model.load_state_dict(got["model"])
+        trainer.load_state_dict(got["trainer"])
+        vckpt.set_rng_state(got["rng"])
+    bridge.load_state_dict(got["bridge"])
+    if load_opt:
+        bopt.load_state_dict(got["bridge_opt"])
+    return int(got["step"])
+
+
+def save_final(trainer, d_model, bridge, bopt, arm, out: Path, ck_dir: Path) -> None:
+    payload = trainer.checkpoint_payload()
+    payload.update(bridge=bridge.state_dict(), bridge_opt=bopt.state_dict())
+    vckpt.save(ck_dir, trainer.step, payload)
+    torch.save({"model": d_model.state_dict(), "config": mini_config_dict(d_model.config), "bridge": bridge.state_dict(),
+                "arm": arm.name, "steps": trainer.step}, out / "D-final.pt")
 
 
 def main(argv=None) -> int:
@@ -177,7 +226,7 @@ def main(argv=None) -> int:
     ap.add_argument("--steps", type=int, default=12_000)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--workers", type=int, default=4)
-    ap.add_argument("--price-per-hour", type=float, default=0.0)
+    ap.add_argument("--price-per-hour", type=float, default=0.0, help="box $/h; with --spend-cap it is rule A4 (the arm jobs always pass it)")
     ap.add_argument("--spend-cap", type=float, default=20.0)
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--no-sleep", action="store_true")
@@ -185,11 +234,25 @@ def main(argv=None) -> int:
     ap.add_argument("--ckpt-every", type=int, default=None, help="override the 5%%-of-steps checkpoint interval (tests only)")
     ap.add_argument("--eval-every", type=int, default=None, help="override the 5%%-of-steps dev-eval interval (tests only)")
     ap.add_argument("--stop-after", type=int, default=None, help="testing only: stop the wake loop after this many steps")
+    ap.add_argument("--sleep-cap", type=int, default=None, help="testing only: cap every sleep stage's updates")
+    ap.add_argument("--pool-limit", type=int, default=None, help="testing only")
+    ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
+    ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
+    ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
+    ap.add_argument("--relaunch-adamw", action="store_true", help="A1 relaunch for FULL: resume the last good checkpoint with plain AdamW")
     a = ap.parse_args(argv)
     arm = ARMS[a.arm]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    started = time.time()
+    abort_file = out / "ABORT.json"
+    if abort_file.exists():
+        if not a.ack_abort:
+            log("REFUSED: ABORT.json exists (an abort rule fired); rerun with --ack-abort only as a recorded deviation:", abort_file.read_text())
+            return 3
+        n = len(list(out.glob("ABORT-*.json"))) + 1
+        abort_file.rename(out / f"ABORT-{n}.json")
+        (out / "deviation.json").write_text(json.dumps({"ack_abort": n, "relaunch_adamw": a.relaunch_adamw, "at": time.strftime("%FT%TZ")}))
     device = torch.device(a.device)
     data = dtrain.open_data(Path(a.root), Path(a.tokenizer), workers=a.workers, log=lambda s: None)
     d_model = build_d(arm, data.tokenizer.vocab_size)
@@ -199,33 +262,32 @@ def main(argv=None) -> int:
     bridge = Bridge(d_model.config.d_model, b2.d).to(device).attach(d_model, b2)
     bopt = torch.optim.AdamW(bridge.parameters(), lr=BRIDGE_LR, weight_decay=0.0)
     tc = mini_train_config(lr=LR, warmup_steps=WARMUP, log_every=50, memory_check_every=50)
-    trainer = dtrain.StepTrainer(d_model, tc, device, total_steps=a.steps, seed=SEED, optimizer="muon" if arm.muon else "adamw")
+    use_muon = arm.muon and not a.relaunch_adamw
+    trainer = dtrain.StepTrainer(d_model, tc, device, total_steps=a.steps, seed=SEED, optimizer="muon" if use_muon else "adamw")
     grouping = trainer.optimizer_grouping()
     log("optimizer grouping:", json.dumps({k: (v if k != "groups" else [{kk: vv for kk, vv in g.items() if kk != "names"} for g in v])
                                          for k, v in grouping.items()}))
     (out / "grouping.json").write_text(json.dumps(grouping, indent=1))
     ck_dir = out / "wake-ckpt"
-    resumed = vckpt.load(ck_dir)
-    if resumed is not None:
-        trainer.restore(resumed)
-        bridge.load_state_dict(resumed["bridge"])
-        bopt.load_state_dict(resumed["bridge_opt"])
-        log(f"RESUMED from step {resumed['step']}")
+    got = restore_last(trainer, bridge, bopt, ck_dir, load_opt=not a.relaunch_adamw)
+    if got is not None:
+        log(f"RESUMED from step {got}" + (" with a fresh AdamW (A1 relaunch)" if a.relaunch_adamw else ""))
     eval_batches, stops = make_eval_batches(data.dev, a.eval_visits, data.tokenizer)
     hook = validation_hook(eval_batches, tokenizer=data.tokenizer, stop=stops)
 
     def evaluate(model):
-        bridge.frozen_ctx = True
+        bridge.frozen_ctx = True               # dev data never moves the bridge summaries (dev_loss included)
         try:
             res = hook(model)
+            dl = dev_loss(trainer, eval_batches)
         finally:
             bridge.frozen_ctx = False
         return {"accuracy": res["accuracy"], "questions": res["questions"], "loops_mean": res["loops_mean"],
-                "gold_recall_at_4": res.get("gold_recall_at_4"), "dev_loss": dev_loss(trainer, eval_batches)}
+                "gold_recall_at_4": res.get("gold_recall_at_4"), "dev_loss": dl}
 
-    mon = Monitor(a.steps, a.price_per_hour, a.spend_cap, started)
+    mon = Monitor(a.steps, a.price_per_hour, a.spend_cap, out / "spend.json")
     evals_path = out / "dev_evals.jsonl"
-    if trainer.step == 0:
+    if trainer.step == 0 and not (out / "dev_loss0.json").exists():
         e0 = evaluate(d_model)
         mon.dev_loss0 = e0["dev_loss"]
         evals_path.open("a").write(json.dumps({"step": 0, **e0}) + "\n")
@@ -233,11 +295,10 @@ def main(argv=None) -> int:
     else:
         mon.dev_loss0 = json.loads((out / "dev_loss0.json").read_text())["dev_loss0"]
     from custom_io.data import Dataset, collate, load_rows, to_device
-    skills_rows = load_rows(os.path.join(a.skills, "train.jsonl"), limit=20_000)
+    skills_rows = load_rows(os.path.join(a.skills, "train.jsonl"))          # all 200,000 rows (the file is ordered by stage)
     ckpt_every = a.ckpt_every or max(1, int(CKPT_FRACTION * a.steps))
     eval_every = a.eval_every or max(1, int(EVAL_FRACTION * a.steps))
     stream = dtrain.train_stream(data.train, a.max_tokens, SEED, trainer.step, MAX_VISITS)
-    stats_log = []
 
     def b2_step() -> float:
         rows = __import__("random").Random(f"{SEED}-b2-{trainer.step}").sample(skills_rows, B2_BATCH)   # a function of the step: exact resume
@@ -246,7 +307,23 @@ def main(argv=None) -> int:
         loss.backward()                 # gradient reaches P_dc only (creative weights are frozen)
         return float(loss.detach())
 
-    # wake loop: wrapped so the bridge optimizer sees D's gradient on P_cd and the creative gradient on P_dc in the same step
+    def finish_after_abort(ar: AbortRule, phase: str) -> int:
+        abort_file.write_text(json.dumps({"rule": ar.rule, "why": ar.why, "step": trainer.step, "phase": phase}))
+        log("ABORT", ar)
+        mon.save()
+        try:                                   # "stop, judge the last checkpoint" (A4: "evaluate the last checkpoint as v1")
+            if phase == "wake":
+                step_back = restore_last(trainer, bridge, bopt, ck_dir)
+                if step_back is None:
+                    log("no checkpoint to judge (aborted before the first one)")
+                    return 3
+                save_final(trainer, d_model, bridge, bopt, arm, out, ck_dir)
+            fin = final_eval(arm, d_model, bridge, data, out, a, trainer.step, aborted={"rule": ar.rule, "why": ar.why, "phase": phase})
+            (out / "final_dev.json").write_text(json.dumps(fin, indent=1, default=float))
+        except Exception as error:             # never let the judging hide the abort itself
+            log("judging the last checkpoint failed:", repr(error))
+        return 3
+
     d_model.train()
     first = trainer.step
     t_wake, tok_wake = time.time(), 0
@@ -267,7 +344,7 @@ def main(argv=None) -> int:
             loss = float(res["loss"])
             if loss != loss or loss in (float("inf"), float("-inf")):
                 raise AbortRule("A1", f"non-finite loss at step {trainer.step}")
-            mon.on_step(trainer.step, loss)
+            mon.on_step(trainer.step, loss, plan.phase)
             with (out / "losses.jsonl").open("a") as lf:
                 lf.write(json.dumps({"step": trainer.step, "loss": loss, "b2_loss": lb, "lm": float(res["lm"]), "ans": float(res["ans"]),
                                      "phase": plan.phase}) + "\n")
@@ -276,7 +353,7 @@ def main(argv=None) -> int:
             if trainer.step % tc.log_every == 0:
                 peak = torch.cuda.max_memory_reserved(device) / 2 ** 30 if device.type == "cuda" else 0.0
                 log(f"step {trainer.step}/{a.steps} {plan.phase} loss {loss:.4f} b2_loss {lb:.4f} tok/s {tok_wake / max(time.time() - t_wake, 1e-9):,.0f} "
-                    f"peak {peak:.2f} GiB bridge {json.dumps(bridge.stats())}")
+                    f"peak {peak:.2f} GiB usd {mon.usd():.2f} bridge {json.dumps(bridge.stats())}")
             if trainer.step % eval_every == 0:
                 e = evaluate(d_model)
                 evals_path.open("a").write(json.dumps({"step": trainer.step, **e}) + "\n")
@@ -286,19 +363,16 @@ def main(argv=None) -> int:
                 payload = trainer.checkpoint_payload()
                 payload.update(bridge=bridge.state_dict(), bridge_opt=bopt.state_dict())
                 vckpt.save(ck_dir, trainer.step, payload)
+                mon.save()
     except AbortRule as ar:
-        (out / "ABORT.json").write_text(json.dumps({"rule": ar.rule, "why": ar.why, "step": trainer.step}))
-        log("ABORT", ar)
-        return 3
-    if trainer.step >= a.steps:
-        payload = trainer.checkpoint_payload()
-        payload.update(bridge=bridge.state_dict(), bridge_opt=bopt.state_dict())
-        vckpt.save(ck_dir, trainer.step, payload)
-        torch.save({"model": d_model.state_dict(), "config": mini_config_dict(d_model.config),
-                    "bridge": bridge.state_dict(), "arm": arm.name, "steps": trainer.step}, out / "D-final.pt")
+        return finish_after_abort(ar, "wake")
     wall = max(time.time() - t_wake, 1e-9)
-    (out / "wake-done.json").write_text(json.dumps({"steps": trainer.step, "steps_this_process": trainer.step - first, "bridge": bridge.stats(),
-        "tokens_per_s": tok_wake / wall, "wall_s": wall, "peak_gpu_reserved_gib": (torch.cuda.max_memory_reserved(device) / 2 ** 30) if device.type == "cuda" else None,
+    if trainer.step >= a.steps:
+        save_final(trainer, d_model, bridge, bopt, arm, out, ck_dir)
+    mon.save()
+    (out / "wake-done.json").write_text(json.dumps({
+        "steps": trainer.step, "steps_this_process": trainer.step - first, "bridge": bridge.stats(), "tokens_per_s": tok_wake / wall, "wall_s": wall,
+        "peak_gpu_reserved_gib": (torch.cuda.max_memory_reserved(device) / 2 ** 30) if device.type == "cuda" else None,
         "guard_limit_gib": trainer.guard_limit / 2 ** 30, "device": str(device),
         "card": torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu"}))
     if a.no_sleep or (a.stop_after is not None):
@@ -314,21 +388,23 @@ def main(argv=None) -> int:
 
     def g1_factory(raw, replay):
         parent = g1mod.frozen_copy(raw)
-        diary = g1mod.build_diary(parent, replay, n=g1mod.DIARY_SIZE, seed=SEED, device=a.device)
+        diary = g1mod.build_diary(parent, replay, n=a.diary, seed=SEED, device=a.device)
         return g1mod.G1(parent, diary, raw.vocab, device=a.device, seed=SEED)
 
     bridge.frozen_ctx = True            # D is not training in sleep: the summaries stay as wake left them, P_dc/P_cd are frozen
-    raw_dev = creative_sleep.dev_report(raw_ckpt, a.device, attach=bridge.attach_creative)["first_try"]
-    stage_dev = {"raw": raw_dev}
+    stage_dev: dict[str, float] = {}
 
     def on_stage(name, info_):
-        # A3, applied at the end of the first two G1-active phases (warm-up, N'): KL term > 50% of total loss after the first 25% of the
-        # phase AND creative dev first-try up < 1 point over the phase -> stop and judge the last checkpoint.
+        mon.check_spend()                                                           # A4 at every sleep stage boundary
+        # A3, applied at the end of the first two G1-active phases (warm-up, N'): mean KL-term share of total loss after the first 25% of
+        # the phase > 50% AND creative dev first-try up < 1 point over the phase -> stop and judge the last checkpoint. Re-applied on a restart.
         f = {"warmup": "warm.pt", "Nprime": "Nprime.pt"}.get(name)
         if f is None:
             return
+        if "raw" not in stage_dev:
+            stage_dev["raw"] = creative_sleep.dev_report(raw_ckpt, a.device, attach=bridge.attach_creative)["first_try"]
         cur = creative_sleep.dev_report(str(out / "creative" / f), a.device, attach=bridge.attach_creative)["first_try"]
-        prev = stage_dev["raw"] if name == "warmup" else stage_dev["warmup"]
+        prev = stage_dev["raw"] if name == "warmup" else stage_dev.get("warmup", stage_dev["raw"])
         stage_dev[name] = cur
         share = info_["phases"][name].get("kl_share_mean_after_25pct")
         log(f"A3 check {name}: KL share {share}, creative dev first-try {prev:.4f} -> {cur:.4f}")
@@ -338,13 +414,13 @@ def main(argv=None) -> int:
 
     try:
         info = creative_sleep.run_creative(str(out / "creative"), raw_ckpt, skills_train, a.skills, device=a.device, seed=SEED,
-                                           g1_factory=g1_factory, on_stage=on_stage, attach=bridge.attach_creative)
+                                           g1_factory=g1_factory, on_stage=on_stage, attach=bridge.attach_creative,
+                                           updates_cap=a.sleep_cap, pool_limit=a.pool_limit, dev_limit=a.dev_limit,
+                                           n1=(4 if a.sleep_cap else 32), n2=(8 if a.sleep_cap else 480))
     except AbortRule as ar:
-        (out / "ABORT.json").write_text(json.dumps({"rule": ar.rule, "why": ar.why, "phase": "sleep"}))
-        log("ABORT", ar)
-        return 3
+        return finish_after_abort(ar, "sleep")
     (out / "sleep-done.json").write_text(json.dumps(info, default=float))
-    final = final_eval(arm, d_model, bridge, data, out, a, trainer)
+    final = final_eval(arm, d_model, bridge, data, out, a, trainer.step)
     (out / "final_dev.json").write_text(json.dumps(final, indent=1, default=float))
     log("FINAL DEV", json.dumps(final, default=float)[:600])
     return 0

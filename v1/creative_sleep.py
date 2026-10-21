@@ -9,7 +9,6 @@ The sealed test split (creative/data/c2/test.jsonl) is never opened here; `dev_r
 """
 from __future__ import annotations
 
-import copy
 import json
 import math
 import os
@@ -22,12 +21,13 @@ from creative import c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, sleep, st
 from creative import rules_real as R
 from creative.c2b import DATA, LR, N1, N2, VISITS, T_GRID, load_recs, night_info, save_recs
 from custom_io.data import load_rows
+from v1.joint import clone_model
 
 log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)
 
 
 def _sleep_stage(base, recs, replay, extra, vocab, cfg, device, guard):
-    m = copy.deepcopy(base)
+    m = clone_model(base)
     r = sleep.sleep(m, recs, replay, vocab, cfg, device, replay_extra=extra, guard=guard)
     return m, r
 
@@ -55,6 +55,9 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
         if on_stage:
             on_stage(name, info)
 
+    if on_stage:                                  # a restart re-applies the stage checks (A3) to stages that are already done
+        for done_stage in [x for x in info["stages"] if x in ("warmup", "Nprime")]:
+            on_stage(done_stage, info)
     replay = sleep.load_replay(skills_train, None, seed)
     warm_rows = R.warm_records(R.load_split(DATA, "warm"))
     pool = c2_stones._with_nums(R.load_split(DATA, "pool")[:pool_limit])

@@ -20,8 +20,8 @@ def main(argv=None):
     dec = Path(a.decision)
     if not (dec / "DEV_PASS.json").exists():
         sys.exit("REFUSED: DEV_PASS.json missing; the chosen arm did not meet W1 and W2 on dev, so the seal stays shut.")
-    if (dec / "SEALED_READ.json").exists():
-        sys.exit("REFUSED: the sealed split was already read once; never re-read.")
+    if (dec / "SEALED_READ.json").exists() or (dec / "SEALED_READ.started").exists():
+        sys.exit("REFUSED: the sealed split was already opened once (SEALED_READ.json or .started exists); never re-read, even after a crash.")
     (dec / "SEALED_READ.started").write_text(time.strftime("%Y-%m-%d %H:%M:%S"))      # a crash after this still counts as opened
     import os
     os.environ["V1_SEALED_READ"] = "1"

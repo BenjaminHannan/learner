@@ -64,8 +64,12 @@ def latest_step(directory: Path) -> Optional[int]:
 def load(directory: Path, step: Optional[int] = None, map_location: Any = "cpu") -> Optional[dict[str, Any]]:
     """Newest verified checkpoint (or `step`), None if there is none. A hash mismatch raises, never loads."""
     directory = Path(directory)
-    step = latest_step(directory) if step is None else step
-    if step is None:
+    if step is None:                       # newest checkpoint that verifies; a corrupt one is skipped, never loaded
+        for cand in reversed(_listing(directory) if directory.exists() else []):
+            try:
+                return load(directory, cand, map_location)
+            except RuntimeError:
+                continue
         return None
     path = directory / f"step-{step}.pt"
     want = (directory / f"step-{step}.pt.sha256").read_text().strip()

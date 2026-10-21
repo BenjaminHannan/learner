@@ -17,7 +17,9 @@ _SS_TABLE = {(k, p): tuple(R.fn(k, p)(x) for x in R.DOMAIN) for k, p in _SS_RULE
 def sealed_rule_keys(data='creative/data/c2'):
     """(kind, params) of every row in every sealed split (the SS params must be disjoint from these)."""
     out = set()
-    for name in ('warm', 'dev', 'pool', 'test', 'labelled'):
+    # V1: the sealed `test` file is NOT read here. Checked once (rule keys only, no answers): the 100 (kind, params) keys of test equal the
+    # union of the other four splits' keys (100 = 100, difference empty), so leaving it out changes nothing (KNOWN_ISSUES).
+    for name in ('warm', 'dev', 'pool', 'labelled'):
         for r in R.load_split(data, name):
             out.add((r['kind'], tuple(r['params'])))
     return out

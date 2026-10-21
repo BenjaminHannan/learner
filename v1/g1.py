@@ -20,6 +20,7 @@ import torch.nn.functional as F
 
 from custom_io.data import Dataset, collate, to_device
 from mainbrain import gp, kf
+from v1.joint import clone_model
 
 KL_WEIGHT = 30.0
 KL_ROWS = 32
@@ -28,7 +29,7 @@ DIARY_SIZE = 4096     # the s200 sheet run's diary size (domain/far/learn_probe.
 
 
 def frozen_copy(m: torch.nn.Module) -> torch.nn.Module:
-    p = copy.deepcopy(m)
+    p = clone_model(m)
     for k in ("loss", "load_state_dict"):
         p.__dict__.pop(k, None)
     p.eval()
@@ -127,7 +128,12 @@ class G1:
         self.kl_parts_last: dict[str, float] = {}
 
     def begin(self, model) -> dict[str, Any]:
-        cpu = copy.deepcopy(model).to("cpu")
+        cpu = clone_model(model).to("cpu")
+        if model.__dict__.get("bridge_in") is not None:      # the statistics code is CPU-only: freeze the bridge vector as a CPU constant
+            with torch.no_grad():
+                vec = model.bridge_in().detach().cpu()
+            cpu.bridge_in = lambda v=vec: v
+            cpu.bridge_out = None
         stats = kf.kfac_stats(cpu, self.diary[:1024], bs=64)       # hard mask measured on the model's own old answers
         F, info = kf.factors(stats, self.energy, soft=None)
         self.F = {n: tuple(t.to(self.device) for t in f) for n, f in F.items()}

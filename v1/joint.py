@@ -11,6 +11,7 @@ bridge; each side's own parameters are trained by its own loss.
 """
 from __future__ import annotations
 
+import copy
 from typing import Optional
 
 import torch
@@ -36,11 +37,16 @@ class Bridge(nn.Module):
         self.frozen_ctx = False          # True at evaluation: summaries are not updated
 
     # ---- vectors added to each side (called inside that side's forward) ----
+    @staticmethod
+    def _unit(v: torch.Tensor) -> torch.Tensor:
+        """Scale-free summary: divide by its RMS (the creative registers have norm ~340, D's states ~11; zeros stay zeros)."""
+        return v / (v.pow(2).mean().sqrt() + 1e-6)
+
     def to_creative(self) -> torch.Tensor:
-        return self.p_dc(self.ctx_d)
+        return self.p_dc(self._unit(self.ctx_d))
 
     def to_d(self) -> torch.Tensor:
-        return self.p_cd(self.ctx_c)
+        return self.p_cd(self._unit(self.ctx_c))
 
     # ---- summaries observed from each side (called with that side's hidden states) ----
     def _ema(self, buf: torch.Tensor, seen: torch.Tensor, x: torch.Tensor) -> None:
@@ -87,3 +93,15 @@ class Bridge(nn.Module):
                 "p_dc_grad_norm": None if self.p_dc.weight.grad is None else float(self.p_dc.weight.grad.norm()),
                 "p_cd_grad_norm": None if self.p_cd.weight.grad is None else float(self.p_cd.weight.grad.norm()),
                 "ctx_d_norm": float(self.ctx_d.detach().norm()), "ctx_c_norm": float(self.ctx_c.detach().norm())}
+
+
+def clone_model(m):
+    """deepcopy a model WITHOUT dragging the bridge (and through it both models) along: the bridge hooks are instance attributes
+    (a lambda and a bound method). The copy gets the SAME hooks, so it feeds and reads the same bridge."""
+    hooks = {k: m.__dict__.pop(k) for k in ("bridge_in", "bridge_out") if k in m.__dict__}
+    try:
+        c = copy.deepcopy(m)
+    finally:
+        m.__dict__.update(hooks)
+    c.__dict__.update(hooks)
+    return c

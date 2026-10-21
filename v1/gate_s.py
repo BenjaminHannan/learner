@@ -113,7 +113,8 @@ def components(a) -> dict:
         for i in range(4):
             bopt.zero_grad(set_to_none=False)
             batch = next(stream)
-            plan = tr.plan()
+            from premonition.train import Plan
+            plan = Plan("gold", "gold", 0.0) if i < 2 else Plan("teacher", "teacher", 0.0)     # gold phase never asks; teacher does
             tr._train_step(batch, plan, vrun.planned_loops(batch, plan.mode, d.config), False)
             ds = Dataset(rows[i * 16:(i + 1) * 16], b2v, strict=False)
             lb, _ = b2.loss(to_device(collate([ds[j] for j in range(16)]), a.device))
@@ -128,16 +129,20 @@ def components(a) -> dict:
             "S2": {"flag": d.config.decoder_raw_cards, "decoder_memory_shape_and_valid_rows": seen[-1] if seen else None,
                    "raw_card_rows_configured": d.config.cards if d.config.decoder_raw_cards else 0},
             "muon": {"tensors": len(muon_names), "params": sum(g["n_params"] for g in grouping["groups"] if g["muon"]),
-                     "moved_after_4_steps": len(moved), "example_names": muon_names[:5]},
+                     "moved_after_4_steps": len(moved), "unmoved": [n for n in muon_names if n not in moved], "example_names": muon_names[:5]},
             "bridge_after_4_steps": grads[-1], "bridge_first": grads[0],
+            "component_ran": vrun.component_ran(arm, tr, bridge, d, b2, {}),
         }
+        last_bridge = bridge
     # G1 + sleep: a real (capped) creative sleep with the guard on, from the parent
     from v1 import creative_sleep
     raw_dev = Path(a.out) / "sleep-smoke"
+    last_bridge.frozen_ctx = True
     res_info = creative_sleep.run_creative(str(raw_dev), a.b2, os.path.join(a.skills, "train.jsonl"), a.skills, device=a.device, seed=0,
                                            g1_factory=lambda raw, replay: g1mod.G1(g1mod.frozen_copy(raw), g1mod.build_diary(
                                                g1mod.frozen_copy(raw), replay, n=a.diary, seed=0, device=a.device), raw.vocab, device=a.device),
-                                           pool_limit=a.pool, dev_limit=a.devn, n1=4, n2=8, updates_cap=a.cap)
+                                           pool_limit=a.pool, dev_limit=a.devn, n1=4, n2=8, updates_cap=a.cap,
+                                           attach=last_bridge.attach_creative)       # the production path: bridge attached, P_dc trained by wake steps
     out["sleep_smoke"] = {"stages": res_info["stages"], "phases": res_info["phases"], "seconds": res_info["seconds"]}
     return out
 
