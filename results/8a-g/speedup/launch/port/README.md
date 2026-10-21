@@ -2,6 +2,20 @@
 
 **DRAFT. All code in this folder is a draft until the coordinator has code-reviewed it. Not for use before that.**
 
+> **PARKED FOR GOOD 2026-10-21 (Ben's ruling via the coordinator: one last round, then park if not clean).**
+> - Round 3's review (after 9dabf411f) found **no numeric bug**. `deferred_loss` matches `launch/defer.py` op for op, the 14 SRC_HASH values match, and the README's sha values match the files.
+> - It is **not clean**. Nine findings, in order:
+>   1. The source guard hashes methods on `type(m)` / `type(m.writer)`, so a method replaced on the model *instance* passes. prof_train's pad64 `m.tape_of`, exact_arms' `m.answer_teacher` and some tests do this.
+>   2. A flag-on resume from a sidecar without `defer_counts` silently keeps 0.
+>   3. The counter test's pair and width checks are true by construction.
+>   4. `defer_stats` is copied once, before the final evals.
+>   5. A dead `train_golds` call sits in that test.
+>   6. `deferred` is counted before the sums, so they are wrong if the call raises.
+>   7. The sidecar counts are not integrity-checked.
+>   8. One dict mixes the headline counters and the sums.
+>   9. A small inefficiency in the folder guard.
+> - None affects flag-off (bitwise the original) or the flag-on numerics (bit-equal to the GPU-tested harness). Nothing here is changed further without a new ruling.
+
 > **UNPARKED for round 3 (the last) by Ben's ruling via the coordinator, 2026-10-21.** The pack was parked 2026-10-20 under the 2-round review cap after round 2 (10 findings, no numeric finding);
 > round 3 fixes the real findings below and nothing else (see "Round 3 (10-21)"). The round-2 triage, kept for the record:
 > - Round 1 (10 findings) was fixed in 089b8c7bd.
