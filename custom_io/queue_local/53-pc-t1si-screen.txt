@@ -1,0 +1,9 @@
+# T1SI re-screen: T1S + the learned entry-index term on the span pointer keys, Amendment 5's single next change after the T1S re-screen read
+# "NOT SHOWN: answer selection" (MARKS-D0-T1-2026-10-07.md Amendment 5, PASS-MARKS.md addendum 22 amendment 3).
+# T1SI = model 'tool' cfg {"span_copy": true, "span_idx": true} (3,311,572 params). Queue 50's T1S lines with only the name and cfg changed.
+# Ran on the two rented RTX 5090s that ran T1 and T1S (custom_io/queue/t1a|t1b/53-t1si-*.sh, re-scored by 54-wc-t1si-*.sh). Judge:
+#   python -m custom_io.analyze_t1s --arm T1SI --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/53-vast-t1si
+#     --wc custom_io/results/51-vast-wc-t1 custom_io/results/54-vast-wc-t1si
+# MEM 6000
+T1SI_s200 --model tool --cfg '{"span_copy": true, "span_idx": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+T1SI_s201 --model tool --cfg '{"span_copy": true, "span_idx": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds
