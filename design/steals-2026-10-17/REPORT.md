@@ -628,6 +628,18 @@ went exactly as the card says. Its settings were 1,500 steps and 16 visits, in t
   - **Box 2 was booked without a fresh click from Ben.** The coordinator's correction asking for one arrived after
     the booking. This was disclosed to Ben and to the coordinator.
 
+- **Box 56958705** (Sweden, $0.678/h billed; seal `d1dbe148…`, box cap $2.30):
+  - the torch check passed;
+  - the village build took 3,869 s, because 128 workers ran on about 16 effective cores;
+  - **1a started, and both arms aborted at step 1.** Peak reserved GPU memory was 14.88 GiB, over `learnlab`'s
+    default 14 GiB guard, which was sized for the 16 GB Windows PC;
+  - no finished timing runs, so `price` refused and the job failed: export, then stop;
+  - pulled (sha256 ok) and destroyed; about $0.85.
+- **Stage total about $1.32 of $2.80. On hold** for the coordinator. The fix candidates need a re-seal:
+  - a GPU-sized memory limit passed into `train_d`;
+  - build workers capped at the effective core count;
+  - a re-read of STATUS during the pull.
+
 ## RUN CARD R2: `fetch_gate` (gated fetch on card values and decoder cross-attention)
 
 **Status: blanks filled by the coordinator (Q43).** The bar and guards G1–G3 are confirmed as written.
