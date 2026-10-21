@@ -24,7 +24,7 @@ from learnlab import step1
 from premonition import data as pdata
 from premonition.config import MiniConfig
 from premonition.model import PremonitionMini
-from premonition.train import Curriculum, mini_train_config, planned_loops, validation_hook
+from premonition.train import Curriculum, mini_config_dict, mini_train_config, planned_loops, validation_hook
 from v1 import baselines, ckpt as vckpt, dtrain, g1 as g1mod, guard as vguard
 from v1.joint import Bridge
 
@@ -134,6 +134,38 @@ def component_ran(arm: Arm, trainer, bridge: Bridge, d_model, b2, guard_logs: di
     return rep
 
 
+def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, trainer) -> dict[str, Any]:
+    """Dev numbers for the decision rule (never the sealed splits): D on all 5,000 DEV visits and the 1,000 `validation` visits,
+    the creative first-try on creative DEV, the bridge-off lesion of each, W1/W2 pass on dev, and the KL-share summary."""
+    from v1 import creative_sleep
+    res: dict[str, Any] = {"arm": arm.name, "steps": trainer.step}
+    bridge.frozen_ctx = True
+    for name, cache in (("dev", data.dev), ("validation", data.validation)):
+        batches, stops = make_eval_batches(cache, len(cache), data.tokenizer)
+        r = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
+        res[f"d_{name}"] = {"accuracy": r["accuracy"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
+                            "loops_mean": r["loops_mean"]}
+        bridge.enabled = False
+        r0 = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
+        bridge.enabled = True
+        res[f"d_{name}"]["bridge_off_accuracy"] = r0["accuracy"]
+    base = baselines.baselines(data.train, data.dev)
+    res["baseline_dev"] = base
+    res["W1_dev_threshold"] = base["best"] + 0.10
+    res["W1_dev_pass"] = res["d_dev"]["accuracy"] >= res["W1_dev_threshold"]
+    w2 = out / "creative" / "W2.pt"
+    if w2.exists():
+        c = creative_sleep.dev_report(str(w2), a.device, attach=bridge.attach_creative)
+        bridge.enabled = False
+        c0 = creative_sleep.dev_report(str(w2), a.device, attach=bridge.attach_creative)
+        bridge.enabled = True
+        res["creative_dev"] = {**c, "bridge_off_first_try": c0["first_try"]}
+        res["W2_dev_pass"] = c["first_try"] >= 0.20
+        ti = json.loads((out / "creative" / "train.json").read_text())
+        res["kl_share"] = {k: v.get("kl_share_mean_after_25pct") for k, v in ti.get("phases", {}).items()}
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=sorted(ARMS), required=True)
@@ -149,6 +181,9 @@ def main(argv=None) -> int:
     ap.add_argument("--spend-cap", type=float, default=20.0)
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--no-sleep", action="store_true")
+    ap.add_argument("--eval-visits", type=int, default=DEV_EVAL_VISITS, help="dev visits per periodic eval (tests use fewer)")
+    ap.add_argument("--ckpt-every", type=int, default=None, help="override the 5%%-of-steps checkpoint interval (tests only)")
+    ap.add_argument("--eval-every", type=int, default=None, help="override the 5%%-of-steps dev-eval interval (tests only)")
     ap.add_argument("--stop-after", type=int, default=None, help="testing only: stop the wake loop after this many steps")
     a = ap.parse_args(argv)
     arm = ARMS[a.arm]
@@ -176,7 +211,7 @@ def main(argv=None) -> int:
         bridge.load_state_dict(resumed["bridge"])
         bopt.load_state_dict(resumed["bridge_opt"])
         log(f"RESUMED from step {resumed['step']}")
-    eval_batches, stops = make_eval_batches(data.dev, DEV_EVAL_VISITS, data.tokenizer)
+    eval_batches, stops = make_eval_batches(data.dev, a.eval_visits, data.tokenizer)
     hook = validation_hook(eval_batches, tokenizer=data.tokenizer, stop=stops)
 
     def evaluate(model):
@@ -199,8 +234,8 @@ def main(argv=None) -> int:
         mon.dev_loss0 = json.loads((out / "dev_loss0.json").read_text())["dev_loss0"]
     from custom_io.data import Dataset, collate, load_rows, to_device
     skills_rows = load_rows(os.path.join(a.skills, "train.jsonl"), limit=20_000)
-    ckpt_every = max(1, int(CKPT_FRACTION * a.steps))
-    eval_every = max(1, int(EVAL_FRACTION * a.steps))
+    ckpt_every = a.ckpt_every or max(1, int(CKPT_FRACTION * a.steps))
+    eval_every = a.eval_every or max(1, int(EVAL_FRACTION * a.steps))
     stream = dtrain.train_stream(data.train, a.max_tokens, SEED, trainer.step, MAX_VISITS)
     stats_log = []
 
@@ -214,6 +249,7 @@ def main(argv=None) -> int:
     # wake loop: wrapped so the bridge optimizer sees D's gradient on P_cd and the creative gradient on P_dc in the same step
     d_model.train()
     first = trainer.step
+    t_wake, tok_wake = time.time(), 0
     try:
         while trainer.step < a.steps:
             if a.stop_after is not None and trainer.step - first >= a.stop_after:
@@ -227,14 +263,20 @@ def main(argv=None) -> int:
             torch.nn.utils.clip_grad_norm_(bridge.parameters(), 1.0)
             bopt.step()
             trainer.tokens += int(batch.lengths.sum())
+            tok_wake += int(batch.lengths.sum())
             loss = float(res["loss"])
             if loss != loss or loss in (float("inf"), float("-inf")):
                 raise AbortRule("A1", f"non-finite loss at step {trainer.step}")
             mon.on_step(trainer.step, loss)
+            with (out / "losses.jsonl").open("a") as lf:
+                lf.write(json.dumps({"step": trainer.step, "loss": loss, "b2_loss": lb, "lm": float(res["lm"]), "ans": float(res["ans"]),
+                                     "phase": plan.phase}) + "\n")
             if trainer.step == first + 1 or trainer.step % tc.memory_check_every == 0:
                 vguard.check(device, trainer.guard_limit)
             if trainer.step % tc.log_every == 0:
-                log(f"step {trainer.step}/{a.steps} {plan.phase} loss {loss:.4f} b2_loss {lb:.4f} bridge {json.dumps(bridge.stats())}")
+                peak = torch.cuda.max_memory_reserved(device) / 2 ** 30 if device.type == "cuda" else 0.0
+                log(f"step {trainer.step}/{a.steps} {plan.phase} loss {loss:.4f} b2_loss {lb:.4f} tok/s {tok_wake / max(time.time() - t_wake, 1e-9):,.0f} "
+                    f"peak {peak:.2f} GiB bridge {json.dumps(bridge.stats())}")
             if trainer.step % eval_every == 0:
                 e = evaluate(d_model)
                 evals_path.open("a").write(json.dumps({"step": trainer.step, **e}) + "\n")
@@ -248,7 +290,17 @@ def main(argv=None) -> int:
         (out / "ABORT.json").write_text(json.dumps({"rule": ar.rule, "why": ar.why, "step": trainer.step}))
         log("ABORT", ar)
         return 3
-    (out / "wake-done.json").write_text(json.dumps({"steps": trainer.step, "bridge": bridge.stats()}))
+    if trainer.step >= a.steps:
+        payload = trainer.checkpoint_payload()
+        payload.update(bridge=bridge.state_dict(), bridge_opt=bopt.state_dict())
+        vckpt.save(ck_dir, trainer.step, payload)
+        torch.save({"model": d_model.state_dict(), "config": mini_config_dict(d_model.config),
+                    "bridge": bridge.state_dict(), "arm": arm.name, "steps": trainer.step}, out / "D-final.pt")
+    wall = max(time.time() - t_wake, 1e-9)
+    (out / "wake-done.json").write_text(json.dumps({"steps": trainer.step, "steps_this_process": trainer.step - first, "bridge": bridge.stats(),
+        "tokens_per_s": tok_wake / wall, "wall_s": wall, "peak_gpu_reserved_gib": (torch.cuda.max_memory_reserved(device) / 2 ** 30) if device.type == "cuda" else None,
+        "guard_limit_gib": trainer.guard_limit / 2 ** 30, "device": str(device),
+        "card": torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu"}))
     if a.no_sleep or (a.stop_after is not None):
         return 0
     # ---- SLEEP: the creative module, C2b's W path with G1 ----
@@ -292,6 +344,9 @@ def main(argv=None) -> int:
         log("ABORT", ar)
         return 3
     (out / "sleep-done.json").write_text(json.dumps(info, default=float))
+    final = final_eval(arm, d_model, bridge, data, out, a, trainer)
+    (out / "final_dev.json").write_text(json.dumps(final, indent=1, default=float))
+    log("FINAL DEV", json.dumps(final, default=float)[:600])
     return 0
 
 

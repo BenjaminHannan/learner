@@ -83,7 +83,7 @@ class Bridge(nn.Module):
         self._hook.remove()
 
     def stats(self) -> dict:
-        return {"p_dc_weight_norm": float(self.p_dc.weight.norm()), "p_cd_weight_norm": float(self.p_cd.weight.norm()),
+        return {"p_dc_weight_norm": float(self.p_dc.weight.detach().norm()), "p_cd_weight_norm": float(self.p_cd.weight.detach().norm()),
                 "p_dc_grad_norm": None if self.p_dc.weight.grad is None else float(self.p_dc.weight.grad.norm()),
                 "p_cd_grad_norm": None if self.p_cd.weight.grad is None else float(self.p_cd.weight.grad.norm()),
-                "ctx_d_norm": float(self.ctx_d.norm()), "ctx_c_norm": float(self.ctx_c.norm())}
+                "ctx_d_norm": float(self.ctx_d.detach().norm()), "ctx_c_norm": float(self.ctx_c.detach().norm())}

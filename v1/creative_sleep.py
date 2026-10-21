@@ -36,8 +36,8 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  g1_factory: Optional[Callable[[Any, Any], Any]] = None, pool_limit: Optional[int] = None,
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
-                 attach: Optional[Callable[[Any], None]] = None) -> dict[str, Any]:
-    """-> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
+                 attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None) -> dict[str, Any]:
+    """updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
     os.makedirs(out, exist_ok=True)
     P = lambda f: os.path.join(out, f)
     done = lambda f: os.path.exists(P(f))
@@ -68,6 +68,8 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
     raw, vocab, meta = load_parent(ckpt, device)
     guard = g1_factory(raw, replay) if g1_factory else None          # parent = the raw pre-V1 creative model (frozen copy inside)
 
+    cap = (lambda u: min(u, updates_cap)) if updates_cap else (lambda u: u)
+
     def phase_info(r):
         kl = r.get("kl") or []
         if not kl:
@@ -81,13 +83,13 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
 
     ts = time.time()
     if not done("Nprime.pt"):
-        cfgw = sleep.SleepCfg(updates=sleep.max_updates(len(warm_rows), 64, True, 4), batch=64, lr=3e-4, warmup=20, seed=seed, max_visits=4)
+        cfgw = sleep.SleepCfg(updates=cap(sleep.max_updates(len(warm_rows), 64, True, 4)), batch=64, lr=3e-4, warmup=20, seed=seed, max_visits=4)
         m0, rw = _sleep_stage(raw, warm_rows, replay, None, vocab, cfgw, device, guard)
         sleep.save_parent(m0, meta["name"], meta["cfg"], vocab, P("warm.pt"), step=(meta["step"] or 0), warmup=True)
         stage("warmup", time.time() - ts, phase_info(rw))
         ts = time.time()
         ss_rows, _ = stones.make_stone_rows(2048, seed)
-        cfgn = sleep.SleepCfg(updates=sleep.max_updates(2048, 64, True, 4), batch=64, lr=3e-4, warmup=20, seed=seed, max_visits=4)
+        cfgn = sleep.SleepCfg(updates=cap(sleep.max_updates(2048, 64, True, 4)), batch=64, lr=3e-4, warmup=20, seed=seed, max_visits=4)
         N, rn = _sleep_stage(m0, stones.solver_records(ss_rows), replay, warm_rows, vocab, cfgn, device, guard)
         sleep.save_parent(N, meta["name"], meta["cfg"], vocab, P("Nprime.pt"), step=(meta["step"] or 0), warmup=True)
         stage("Nprime", time.time() - ts, phase_info(rn))
@@ -131,7 +133,7 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             return info
         if not done(f"W{night}.pt"):
             ts = time.time()
-            updates = VISITS * len(recs) // 32
+            updates = cap(VISITS * len(recs) // 32)
             per = 32
             mv = max(VISITS, math.ceil(updates * per / max(len(recs), 1)))
             cfgs = sleep.SleepCfg(updates=updates, batch=64, lr=LR, warmup=20, seed=seed, max_visits=mv)
@@ -143,13 +145,16 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
     return info
 
 
-def dev_report(model_path: str, device: str = "cpu", limit: Optional[int] = None, attach: Optional[Callable[[Any], None]] = None) -> dict[str, Any]:
-    """W2's measure on the creative DEV split (never the sealed test): greedy first try per kind and pooled."""
+def dev_report(model_path: str, device: str = "cpu", limit: Optional[int] = None, attach: Optional[Callable[[Any], None]] = None,
+               split: str = "dev") -> dict[str, Any]:
+    """W2's measure: greedy first try per kind and pooled on creative DEV. split="test" is the sealed 512 and is passed ONLY by v1/sealed_read.py."""
+    if split != "dev" and os.environ.get("V1_SEALED_READ") != "1":
+        raise PermissionError("only v1/sealed_read.py may score a split other than dev")
     m, vocab, _ = sleep.load_parent(model_path, device)
     if attach:
         attach(m)
     m.eval()
-    rows = c2_stones._with_nums(R.load_split(DATA, "dev")[:limit])
+    rows = c2_stones._with_nums(R.load_split(DATA, split)[:limit])
     g = c2_pilot.greedy_eval(m, rows, vocab, device)
     kinds = sorted({r["kind"] for r in rows})
     by_kind = {k: sum(g["per_q_right"][i] for i, r in enumerate(rows) if r["kind"] == k) / sum(1 for r in rows if r["kind"] == k) for k in kinds}
