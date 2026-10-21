@@ -31,7 +31,7 @@ def tiny(variant: str = "D", seed: int = 0) -> PremonitionMini:
     return PremonitionMini(MiniConfig.preset(variant, "tiny", vocab_size=SPEC.vocab_size, window=64))
 
 
-class CalibrationAutocastTest(unittest.TestCase):
+class AutocastKit:
     """Swarm run 4: the FLOP calibration runs under the training step's bf16 autocast (CUDA: 14.28 GiB fp32 vs 5.67
     GiB per step in run 3). FLOP counts must not move: the tolerance was fixed BEFORE the first run at 0.1%.
     On CPU `trainer.autocast` is switched on by hand, so CPU bf16 autocast stands in for CUDA's."""
@@ -49,7 +49,7 @@ class CalibrationAutocastTest(unittest.TestCase):
     @staticmethod
     def batches() -> list:
         rng = random.Random(0)
-        return [label_free(make_batch(SPEC, 3, rng)) for _ in range(4)]
+        return [label_free(make_batch(SPEC, 3, rng)) for _ in range(7)]
 
     def calibrate_spied(self, trainer: MiniTrainer, batches: list) -> tuple:
         import premonition.train as ptrain
@@ -66,6 +66,10 @@ class CalibrationAutocastTest(unittest.TestCase):
             ptrain.measure_mini = real
         return fit, seen
 
+    # (shared helpers; the tests are in CalibrationAutocastTest below and in the swarm screen tests)
+
+
+class CalibrationAutocastTest(AutocastKit, unittest.TestCase):
     def test_calibration_runs_under_the_training_autocast(self) -> None:
         batches = self.batches()
         _, on = self.calibrate_spied(self.build(1, True), batches)

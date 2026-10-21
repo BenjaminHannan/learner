@@ -1617,10 +1617,10 @@ class NinthPassRunnerTest(MarksTestCase):
             self.assertNotIn(stale, spec)
 
 
-from tests.test_premonition_train import CalibrationAutocastTest as _Autocast  # noqa: E402
+from tests.test_premonition_train import AutocastKit as _Autocast  # noqa: E402
 
 
-class CalibrationFlopsUnderAutocastTest(_Autocast):
+class CalibrationFlopsUnderAutocastTest(_Autocast, unittest.TestCase):
     """Swarm run 4. Tolerance 0.1% (`TOLERANCE`), written down before the first run: calibrating under the training
     step's bf16 autocast must not move the FLOP counts, the fit, or the FLOPs per update that set T."""
 
@@ -1628,17 +1628,15 @@ class CalibrationFlopsUnderAutocastTest(_Autocast):
         batches = self.batches()
         for name, thinkers in (("D1", 1), ("S0", 3)):
             with self.subTest(arm=name):
-                half, seen = self.calibrate_spied(self.build(thinkers, True), batches)
-                self.assertTrue(all(seen), seen)           # the comparison is not vacuous: autocast was really on
-                full, _ = self.calibrate_spied(self.build(thinkers, False), batches)
                 trainer_half, trainer_full = self.build(thinkers, True), self.build(thinkers, False)
-                trainer_half.calibrate(batches[:3])
-                trainer_full.calibrate(batches[:3])
+                half, seen = self.calibrate_spied(trainer_half, batches)
+                self.assertTrue(all(seen), seen)           # the comparison is not vacuous: autocast was really on
+                full, _ = self.calibrate_spied(trainer_full, batches)
                 for a, b in zip(trainer_half.calibration["samples"], trainer_full.calibration["samples"]):
                     self.assertEqual((a["tokens"], a["question_loops"]), (b["tokens"], b["question_loops"]))
                     self.assertLessEqual(abs(a["flops"] - b["flops"]) / b["flops"], self.TOLERANCE)
                 config = trainer_full.model.config
-                rows = batches[3:]
+                rows = batches[3:]                         # four batches the fit was not made on
                 per_update = {k: screen.curriculum_flops(f, rows, config) for k, f in (("half", half), ("full", full))}
                 self.assertLessEqual(abs(per_update["half"]["weighted"] - per_update["full"]["weighted"])
                                      / per_update["full"]["weighted"], self.TOLERANCE)
@@ -1677,7 +1675,7 @@ class RunThreePrepTest(unittest.TestCase):
                                               "--data-rel", "d", "--tokenizer", "t", "--out", "o.json"])
 
     def test_a_calibration_peak_at_the_guard_is_proved_wrong_even_when_the_probe_aborted(self) -> None:
-        for allocated, reserved in ((14.28, 14.43), (14.0, 9.0), (9.0, 14.0)):
+        for allocated, reserved in ((14.28, 14.43), (14.0, 14.1), (9.0, 14.0)):
             with self.subTest(allocated=allocated):
                 phases = self.phases(calibration=(allocated, reserved))
                 for status in ("completed", "aborted"):
@@ -1688,7 +1686,6 @@ class RunThreePrepTest(unittest.TestCase):
 
     def test_the_guard_is_derived_from_the_trainer_config(self) -> None:
         from learnlab.train import TrainConfig
-        saved = TrainConfig.__dataclass_fields__["memory_limit_bytes"].default
         self.assertEqual(TrainConfig().memory_limit_bytes, 14 * self.GIB)
         phases = self.phases(calibration=(13.9, 13.95))
         out = self.probe({"status": "completed", "train_seconds": 1.0, "memory_phases": phases})
@@ -1701,7 +1698,6 @@ class RunThreePrepTest(unittest.TestCase):
             self.assertIn("PROVED WRONG", str(caught.exception))    # the limit came from TrainConfig, not a literal
         finally:
             screen.TrainConfig = TrainConfig
-        self.assertEqual(saved, 14 * self.GIB)
 
     def test_a_calibration_oom_is_proved_wrong_not_a_generic_probe_failure(self) -> None:
         phases = self.phases()

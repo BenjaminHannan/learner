@@ -293,24 +293,31 @@ class MiniTrainer(Trainer):
             torch.cuda.reset_peak_memory_stats(self.device)
         self.memory_phases.append(row)
 
+    def _autocast(self):
+        """bf16 autocast, CUDA only: the ONE context the training step and the FLOP calibration both run under."""
+        return torch.autocast(self.device.type, dtype=torch.bfloat16, enabled=self.autocast)
+
     def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
                   ) -> FlopFit:
         """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward)."""
         samples = []
         started = time.perf_counter()
         try:
-            for batch in batches:
-                batch = batch.to(self.device)
-                for mode in modes:
-                    # Same bf16 autocast as `_train_step`: FLOP counts do not depend on dtype, but fp32 activations
-                    # needed 14.28 GiB here against 5.67 GiB for a training step (swarm run 3).
-                    with torch.autocast(self.device.type, dtype=torch.bfloat16, enabled=self.autocast):
+            # Same bf16 autocast as `_train_step`: FLOP counts do not depend on dtype, but fp32 activations needed
+            # 14.28 GiB here against 5.67 GiB for a training step (swarm run 3).
+            with self._autocast():
+                for batch in batches:
+                    batch = batch.to(self.device)
+                    for mode in modes:
                         samples.append(measure_mini(self.model, batch, mode=mode,
                                                     p_own=0.5 if mode == "own" else 0.0, generator=self.generator))
         except Exception as error:
             if self.memory_phases is not None:             # the swarm C0 probe: name the phase an OOM stopped
-                self.memory_phase("calibration-failed")
-                error.memory_phases = self.memory_phases   # type: ignore[attr-defined]
+                try:
+                    self.memory_phase("calibration-failed")
+                    error.memory_phases = self.memory_phases   # type: ignore[attr-defined]
+                except Exception:                          # never let the instrumentation mask the real error
+                    pass
             raise
         self.fit = fit_flops(samples)
         self.calibration = {"a": self.fit.a, "b": self.fit.b, "worst_residual": self.fit.worst,
@@ -366,8 +373,7 @@ class MiniTrainer(Trainer):
                 lambda _m, _a, out: halts.append(out.detach().float().flatten())))
         recorder = InsertLog(model) if diagnose and InsertLog.applies(model) else None
         try:
-            with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
-                                                           enabled=self.autocast):
+            with recorder or nullcontext(), self._autocast():
                 out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator)
         finally:
             for hook in hooks:
