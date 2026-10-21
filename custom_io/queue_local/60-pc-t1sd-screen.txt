@@ -1,0 +1,9 @@
+# T1SD re-screen: T1SI + the distance-from-end table on the span pointer keys, Amendment 7's one start-pointer change after T1SI's miss
+# breakdown (MARKS-D0-T1-2026-10-07.md Amendment 7 + Clarification 7a, PASS-MARKS.md addendum 22 amendment 4).
+# T1SD = model 'tool' cfg {"span_copy": true, "span_idx": true, "span_end": true} (3,314,132 params). Queue 53's T1SI lines with only the name
+# and cfg changed. Ran on two rented RTX 5090s (custom_io/queue/t1d1|t1d2/60-t1sd-*.sh, re-scored at n >= 1000 by 61-wc-t1sd-*.sh). Judge:
+#   python -m custom_io.analyze_t1s --arm T1SD --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/60-vast-t1sd
+#     --wc custom_io/results/51-vast-wc-t1 custom_io/results/61-vast-wc-t1sd
+# MEM 6000
+T1SD_s200 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+T1SD_s201 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds

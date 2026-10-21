@@ -1,0 +1,54 @@
+child          split    parent   child   drop   b(lost) c(gained) itemSE  z
+L12-LA64       in_dist   90.22   1.99  88.24   1204      4   2.56 34.53
+L12-LB         in_dist   90.22  33.16  57.06    786     10   2.07 27.50
+L13-LBsoft10   in_dist   90.22  89.78   0.44     12      6   0.31  1.41
+L14-LBnk30     in_dist   90.22  89.93   0.29     11      7   0.31  0.94
+L12-LA64       frame     88.90   0.96  87.94   1198      2   2.55 34.53
+L12-LB         frame     88.90  31.10  57.79    804     18   2.11 27.41
+L13-LBsoft10   frame     88.90  88.68   0.22     14     11   0.37  0.60
+L14-LBnk30     frame     88.90  88.68   0.22     12      9   0.34  0.65
+L12-LA64       variant   36.74   0.76  35.98    480      5   1.67 21.57
+L12-LB         variant   36.74  13.79  22.95    357     54   1.54 14.95
+L13-LBsoft10   variant   36.74  36.97  -0.23     29     32   0.59 -0.38
+L14-LBnk30     variant   36.74  37.05  -0.30     22     26   0.52 -0.58
+L12-LA64       answer    75.25   1.50  73.75    885      0   2.48 29.75
+L12-LB         answer    75.25  20.92  54.33    659      7   2.15 25.26
+L13-LBsoft10   answer    75.25  74.67   0.58     11      4   0.32  1.81
+L14-LBnk30     answer    75.25  74.83   0.42     10      5   0.32  1.29
+L12-LA64       vocab     87.62   1.75  85.88    688      1   3.28 26.17
+L12-LB         vocab     87.62  35.75  51.88    424      9   2.60 19.94
+L13-LBsoft10   vocab     87.62  87.62   0.00      6      6   0.43  0.00
+L14-LBnk30     vocab     87.62  87.50   0.12      8      7   0.48  0.26
+L12-LA64       family     1.25   0.62   0.62      2      1   1.08  0.58
+L12-LB         family     1.25   3.12  -1.88      2      5   1.65 -1.13
+L13-LBsoft10   family     1.25   0.62   0.62      2      1   1.08  0.58
+L14-LBnk30     family     1.25   0.62   0.62      2      1   1.08  0.58
+L13 lost [197, 412, 422, 426, 512, 676, 771, 888, 961, 987, 1198, 1294] gained [312, 405, 558, 610, 755, 1223]
+L14 lost [197, 401, 413, 422, 426, 512, 676, 771, 888, 961, 1294] gained [312, 405, 438, 558, 610, 755, 1223]
+lost overlap 9 of 12 11
+  197 cipher_map steps 1 gold bbd par bbd L13 bed L14 bed
+  312 digits_parity steps 1 gold 23 par 24 L13 23 L14 23
+  401 fewshot_number_rule steps 1 gold 104 par 104 L13 104 L14 102
+  405 fewshot_number_rule steps 1 gold 14 par 18 L13 14 L14 14
+  412 fewshot_number_rule steps 1 gold 145 par 145 L13 135 L14 145
+  413 fewshot_number_rule steps 1 gold 42 par 42 L13 42 L14 40
+  422 fewshot_number_rule steps 1 gold 96 par 96 L13 06 L14 06
+  426 fewshot_number_rule steps 1 gold 120 par 120 L13 100 L14 100
+  438 fewshot_number_rule steps 1 gold 17 par 14 L13 16 L14 17
+  512 kin_chain steps 1 gold no par No L13 yes L14 yes
+  558 letter_ops steps 1 gold 1 par 2 L13 1 L14 1
+  610 list_stats steps 1 gold 40 par 49 L13 40 L14 40
+  676 object_track steps 1 gold garden par garden L13 lemon L14 lemon
+  755 order_chain steps 1 gold yes par no L13 yes L14 yes
+  771 passage_qa steps 1 gold 19 par 19 L13 29 L14 29
+  888 rule_apply steps 1 gold 38 par 38 L13 48 L14 48
+  961 seq_next steps 2 gold -35 par -35 L13 -45 L14 -45
+  987 seq_next steps 2 gold 37 par 37 L13 35 L14 37
+  1198 table_calc steps 1 gold 28 par 28 L13 21 L14 28
+  1223 table_lookup steps 1 gold 43 par 44 L13 43 L14 43
+  1294 verify_claim steps 1 gold no par no L13 ns L14 ns
+L12-LB by family (n parent child):
+arith_bare:40->9 backward_solve:40->0 chain_ops:40->0 chain_story2:40->1 cipher_map:39->1 compare_numbers:39->20 copy_word:40->40 digits_parity:34->11 distance_units:40->1 div_exact:40->12 fewshot_number_rule:20->2 group_induct:36->5 kin_chain:38->27 letter_ops:36->30 list_index:27->26 list_stats:37->15 object_track:40->36 odd_one_out:38->13 order_chain:25->20 passage_qa:39->12 percent_rate:40->0 prop_eval:40->36 rule_apply:39->14 seq_cycle:37->21 seq_next:34->2 state_update:39->0 story_addsub:40->8 story_chain3:39->0 syllogism:40->27 table_calc:22->1 table_lookup:10->6 var_chain:40->14 verify_claim:39->11 word_filter:40->30
+steps field sample: ['22 - 20 = 2'] ['parents are older']
+L12-LB by #calc steps (n: parent->child): {1: '1071: 959->413', 2: '208: 188->38', 3: '57: 57->0', 4: '19: 19->0', 5: '5: 4->0'}
+L13-LBsoft10 by #calc steps (n: parent->child): {1: '1071: 959->955', 2: '208: 188->186', 3: '57: 57->57', 4: '19: 19->19', 5: '5: 4->4'}
