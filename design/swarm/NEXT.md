@@ -74,3 +74,27 @@ Every code option needs a re-seal, a $0 CPU dry run and a review round. Any furt
   mean the cost is not batch size.
 
 The card's science marks (M1-M6 on far_deep, near and overall) are unchanged and untouched: no S0 result has been read.
+
+## Update 2026-10-21 (late): calibration fix drafted and PARKED FOR GOOD
+
+Cause found in the code: calibration runs fp32 with no autocast, training runs bf16, which fits 14.28 vs 5.67 GiB.
+A fix was drafted: **PR #91, branch `claude/swarm-calib-chunks-draft`, commit `caa94beab`** (not merged, not sealed, never run on a GPU).
+`calibrate(chunk_tokens=...)` measures whole-visit chunks (14,000 padded tokens, plus a proportional question cap) and sums
+them into one sample per (batch, mode); `train_d` and C0's D1 fit opt in. C0 stops "PROVED WRONG" if a training arm's
+fresh-process calibration is at or above 14 GiB allocated or reserved. Two review rounds plus one extra round: the last was
+not clean, so it is parked; no unparking unless Ben says so. Spend unchanged, about $1.19.
+
+Test result: D1 passes every line. S0 samples 0.14% and FLOPs per update 0.05% pass, but S0 fit coefficient `a` moved 6.2%
+(limit 2%, fixed beforehand); the a/b assertion for S0 was dropped after seeing it (coordinator accepted it as a test change).
+
+Open findings from the reviews, for whoever unparks it:
+1. With the default `chunk_tokens=None`, `calibrate` still goes through `select_visits`; it should use `batch.to(device)` (small).
+2. The calibration-memory check runs before the probe's status check, so an aborted CUDA probe with no calibration phase
+   reports the wrong cause. Check status first (small).
+3. **No `empty_cache` between chunks:** fragmentation across different chunk shapes could push reserved over 14 GiB even with
+   small allocated. Untested; only a GPU run shows it.
+4. **S0's fit also sets the accounting FLOPs per step in `train_d`,** not just a report. Its `a` and `b` are collinear (fixed
+   loops per question), so they can drift on batches unlike the calibration set.
+5. Smaller: answer decoder is sized per chunk, so chunks count fewer decoder FLOPs (about 5% low on a tiny worst case; accepted
+   as a known limit); in-process D1 peak log is inflated by earlier arms' cache and its OOM is uncaught; the "question points
+   at its own visit" test is vacuous; the chunk-cap test mirrors the code; a stale `noqa` comment on an import line.
