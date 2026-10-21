@@ -1,0 +1,29 @@
+{
+  "_note": "Rates in USD per million tokens. Checked 2026-10-21 against the claude-api skill reference (models table cached 2026-10-06; prompt-caching.md: cache write 1.25x for 5-minute TTL, 2x for 1-hour TTL, cache read 0.1x base, 0.05x on Opus 5.5 = $0.20/M; Batch API -50%). Items marked UNVERIFIED are not in that reference and are set conservatively; a wrong UNVERIFIED value would make the tally off, so the plumbing test compares the tally with the console bill.",
+  "checked": "2026-10-21",
+  "models": {
+    "claude-opus-5-5":   {"input": 4.00, "output": 20.00, "cache_read": 0.20},
+    "claude-sonnet-5-5": {"input": 2.00, "output": 10.00, "cache_read": 0.20},
+    "claude-haiku-5-5":  {"input": 0.10, "output": 0.50,  "cache_read": 0.01,
+                          "long_prompt_tokens": 100000, "long_input": 0.50, "long_output": 2.50}
+  },
+  "cache_write_multiplier": {"5m": 1.25, "1h": 2.0},
+  "batch_discount": 0.5,
+  "web_search_usd_per_search": 0.010,
+  "web_search_UNVERIFIED": "$10 per 1,000 searches is an assumption (the plan marks it untested); not in the bundled API reference.",
+  "haiku_cache_read_UNVERIFIED": "Haiku 5.5 cache read set to 0.1x base from the generic rule; not listed per model.",
+  "worst_case": {
+    "chars_per_token_floor": 2.0,
+    "search_result_tokens_per_search": 15000
+  },
+  "stages": {
+    "0": {"name": "build and plumbing", "cap_usd": 0.50},
+    "1": {"name": "ideation", "cap_usd": 8.00},
+    "2": {"name": "dedup, screen, planted", "cap_usd": 4.00},
+    "3": {"name": "prior-art search", "cap_usd": 16.00},
+    "4": {"name": "implement and known control", "cap_usd": 6.00},
+    "5": {"name": "refine", "cap_usd": 8.00},
+    "6": {"name": "confirm and final judge", "cap_usd": 3.00}
+  },
+  "whole_trial": {"hard_stop_usd": 45.00, "warn_usd": 40.00, "ben_ceiling_usd": 100.00}
+}
