@@ -1,0 +1,36 @@
+=== STEP data subset (workers 2) 2026-10-21T17:41:31Z
+=== STEP skills set + B2 2026-10-21T17:46:02Z
+setup ok
+=== STEP memory/throughput: arm floor max-tokens 55000 (40-step compressed curriculum: gold, teacher AND own phases, so the 8-loop memory peak is measured) 2026-10-21T17:47:21Z
+mt floor 55000 rc=0
+{"steps": 40, "steps_this_process": 40, "bridge": {"p_dc_weight_norm": 1.0312048196792603, "p_cd_weight_norm": 1.3234232664108276, "p_dc_grad_norm": 0.9879816174507141, "p_cd_grad_norm": 0.014411034062504768, "ctx_d_norm": 9.972953796386719, "ctx_c_norm": 230.75497436523438}, "tokens_per_s": 158269.34640423255, "wall_s": 11.928791284561157, "peak_gpu_reserved_gib": 8.728515625, "guard_limit_gib": 21.23706664983183, "device": "cuda", "card": "NVIDIA GeForce RTX 4090"}
+=== STEP memory/throughput: arm full max-tokens 55000 (40-step compressed curriculum: gold, teacher AND own phases, so the 8-loop memory peak is measured) 2026-10-21T17:48:12Z
+mt full 55000 rc=0
+{"steps": 40, "steps_this_process": 40, "bridge": {"p_dc_weight_norm": 1.106153964996338, "p_cd_weight_norm": 1.2595782279968262, "p_dc_grad_norm": 0.995552659034729, "p_cd_grad_norm": 0.0019944366067647934, "ctx_d_norm": 9.972357749938965, "ctx_c_norm": 229.48760986328125}, "tokens_per_s": 144866.2752771242, "wall_s": 13.03244662284851, "peak_gpu_reserved_gib": 8.4140625, "guard_limit_gib": 21.23706664983183, "device": "cuda", "card": "NVIDIA GeForce RTX 4090"}
+CHOSEN_MAX_TOKENS=55000
+=== STEP compressed full curriculum (300 steps = the ~2% check, all phases), arm floor, max-tokens 55000 2026-10-21T17:48:33Z
+compressed floor rc=0
+17:49:08 DEV {"accuracy": 0.0917941585535466, "questions": 2157, "loops_mean": 8.0, "gold_recall_at_4": 0.1749398529854634, "dev_loss": 4.5972035725911455}
+17:49:41 DEV {"accuracy": 0.1770978210477515, "questions": 2157, "loops_mean": 8.0, "gold_recall_at_4": 0.3152856103370375, "dev_loss": 3.5622210105260215}
+17:50:16 DEV {"accuracy": 0.16550764951321278, "questions": 2157, "loops_mean": 8.0, "gold_recall_at_4": 0.3860971680595311, "dev_loss": 3.070584535598755}
+{"steps": 300, "steps_this_process": 300, "bridge": {"p_dc_weight_norm": 1.6304157972335815, "p_cd_weight_norm": 2.0179049968719482, "p_dc_grad_norm": 0.9924458265304565, "p_cd_grad_norm": 0.008268577046692371, "ctx_d_norm": 8.609938621520996, "ctx_c_norm": 228.4066925048828}, "tokens_per_s": 150109.98312752222, "wall_s": 95.35164618492126, "peak_gpu_reserved_gib": 9.15625, "guard_limit_gib": 21.23706664983183, "device": "cuda", "card": "NVIDIA GeForce RTX 4090"}
+=== STEP compressed full curriculum (300 steps = the ~2% check, all phases), arm full, max-tokens 55000 2026-10-21T17:50:18Z
+compressed full rc=0
+17:50:56 DEV {"accuracy": 0.08298562818729717, "questions": 2157, "loops_mean": 8.0, "gold_recall_at_4": 0.1579286956408855, "dev_loss": 4.557559887568156}
+17:51:34 DEV {"accuracy": 0.16782568382012053, "questions": 2157, "loops_mean": 6.934631432545202, "gold_recall_at_4": 0.37441849791300313, "dev_loss": 3.2110495964686074}
+17:52:13 DEV {"accuracy": 0.1349095966620306, "questions": 2157, "loops_mean": 7.39823829392675, "gold_recall_at_4": 0.35583598600736516, "dev_loss": 3.2160103718439736}
+{"steps": 300, "steps_this_process": 300, "bridge": {"p_dc_weight_norm": 2.066474676132202, "p_cd_weight_norm": 1.3124126195907593, "p_dc_grad_norm": 0.9940882325172424, "p_cd_grad_norm": 0.01666300743818283, "ctx_d_norm": 6.716068267822266, "ctx_c_norm": 223.98373413085938}, "tokens_per_s": 133174.7053516451, "wall_s": 107.477121591568, "peak_gpu_reserved_gib": 8.771484375, "guard_limit_gib": 21.23706664983183, "device": "cuda", "card": "NVIDIA GeForce RTX 4090"}
+=== STEP resume check (arm full) 2026-10-21T17:52:15Z
+ "steps_after_resume_point": 20,
+ "max_abs_loss_diff_after_resume": 0.0,
+ "max_abs_loss_diff_all": 0.0,
+ "ckpt_steps_in_B": [
+  20,
+  30,
+  40
+ ],
+ "device_is_cuda": true,
+ "pass_cpu_1e-5": true,
+ "pass_gpu_1e-3": true
+}
+=== STEPS DONE 2026-10-21T17:52:52Z

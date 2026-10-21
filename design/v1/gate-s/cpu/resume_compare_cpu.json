@@ -1,0 +1,26 @@
+{
+ "resumed_vs_first_pass": {
+  "steps": [
+   5,
+   6,
+   7
+  ],
+  "max_abs_loss_diff": 0.0,
+  "pass_cpu_1e-5": true,
+  "pass_gpu_1e-3": true
+ },
+ "note": "A-vs-B compares two separate runs; on GPU they differ before the kill already (atomics, bf16), so only resumed_vs_first_pass tests resume.",
+ "steps_compared": 12,
+ "resume_point": 4,
+ "steps_after_resume_point": 8,
+ "max_abs_loss_diff_after_resume": 0.0,
+ "max_abs_loss_diff_all": 0.0,
+ "ckpt_steps_in_B": [
+  4,
+  8,
+  12
+ ],
+ "device_is_cuda": false,
+ "pass_cpu_1e-5": true,
+ "pass_gpu_1e-3": true
+}

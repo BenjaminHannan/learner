@@ -1,0 +1,12 @@
+16:08:18 optimizer grouping: {"optimizer": "adamw", "groups": [{"muon": false, "weight_decay": 0.1, "n_tensors": 39, "n_params": 2119168}, {"muon": false, "weight_decay": 0.0, "n_tensors": 68, "n_params": 11348}]}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/job/tree/v1/run.py", line 430, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/job/tree/v1/run.py", line 352, in main
+    vguard.check(device, trainer.guard_limit)
+  File "/job/tree/v1/guard.py", line 40, in check
+    raise MemoryGuardError(f"peak reserved {peak / GIB:.2f} GiB exceeds the guard {limit / GIB:.2f} GiB "
+v1.guard.MemoryGuardError: peak reserved 22.19 GiB exceeds the guard 21.16 GiB (0.9 x detected card memory); stopping before the card spills or crashes
