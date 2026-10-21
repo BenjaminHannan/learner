@@ -34,8 +34,8 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "arm")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "arm": 20.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "arm")
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "arm": 20.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
@@ -325,7 +325,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs|arm)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs2|gs|arm)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -432,7 +432,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs|arm)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs2|gs|arm)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)

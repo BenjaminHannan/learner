@@ -158,13 +158,22 @@ def resume_compare(dir_a: str, dir_b: str, after: int = 20) -> dict:
             d[r["step"]] = r
         return d
     A, B = last(dir_a), last(dir_b)
+    all_B = {}
+    for line in open(Path(dir_b) / "losses.jsonl"):
+        r = json.loads(line)
+        all_B.setdefault(r["step"], []).append(r["loss"])
     after_point = after
     ck = sorted(int(p.name.split("-")[1].split(".")[0]) for p in (Path(dir_b) / "wake-ckpt").glob("step-*.pt"))
     common = sorted(set(A) & set(B))
     diffs = {s: abs(A[s]["loss"] - B[s]["loss"]) for s in common}
     after = [s for s in common if s > after]
     mx = max(diffs[s] for s in after) if after else None
-    return {"steps_compared": len(common), "resume_point": after_point, "steps_after_resume_point": len(after), "max_abs_loss_diff_after_resume": mx,
+    dup = {st: v for st, v in all_B.items() if len(v) > 1}                      # steps B ran twice: first pass vs the resumed recomputation
+    rf = max((abs(v[0] - v[-1]) for v in dup.values()), default=None)
+    return {"resumed_vs_first_pass": {"steps": sorted(dup), "max_abs_loss_diff": rf, "pass_cpu_1e-5": rf is not None and rf <= 1e-5,
+                                       "pass_gpu_1e-3": rf is not None and rf <= 1e-3},
+            "note": "A-vs-B compares two separate runs; on GPU they differ before the kill already (atomics, bf16), so only resumed_vs_first_pass tests resume.",
+            "steps_compared": len(common), "resume_point": after_point, "steps_after_resume_point": len(after), "max_abs_loss_diff_after_resume": mx,
             "max_abs_loss_diff_all": max(diffs.values()) if diffs else None, "ckpt_steps_in_B": ck,
             "device_is_cuda": torch.cuda.is_available(), "pass_cpu_1e-5": mx is not None and mx <= 1e-5,
             "pass_gpu_1e-3": mx is not None and mx <= 1e-3}

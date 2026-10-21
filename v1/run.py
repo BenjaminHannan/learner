@@ -8,6 +8,8 @@ Same data, seed and steps for both arms. The sealed splits (village `test`, crea
 """
 from __future__ import annotations
 
+import os as _os
+_os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")      # less allocator fragmentation: 'reserved' tracks 'allocated'
 import argparse
 import collections
 import json
