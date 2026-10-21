@@ -190,3 +190,5 @@ Week of Mon Oct 19: at most $14.72 spent so far (credit drop since Oct 17; inclu
 - 2026-10-21 ~02:15Z Ben (direct, chat, verbatim): "go on the coordinator's Oct 20 ruling for the restart gate, and yes for the game world". Relayed to the restart-gate session (session_01GR2gp7svxd8z7yZeufWtwG) and game-world session (session_013wVGpXa8PM2JFLUHp6Arm7) as Ben's own words, quoted. $0.
 
 - 2026-10-21 ~02:55Z: PC runner did not answer the ping-2026-10-21 card (no pc-outbox branch; pc-status last updated Oct 16). Watcher on BensPC presumably down; older pcqueue cards also unpicked. Brain E0 PC card NOT queued. Told Ben. $0.
+
+- 2026-10-21 ~04:05Z (Sonnet coordinator): Restart gate review 1 of 2 NOT CLEAN, no gate-logic defects; two must-fix text errors in its own PREREG (E1 Nbar=0/Dbar=0 wording, E2 deferral-line wording), no bar moves, 44/44 tests. Branch claude/restart-gate-solve (1705e24474). Ruled: fix E1/E2 as errata plus L1, L2, L5, L7, then the 2nd and FINAL review; if not clean, PARK. $0.
