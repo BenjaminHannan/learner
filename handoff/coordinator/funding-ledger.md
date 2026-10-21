@@ -188,3 +188,5 @@ Week of Mon Oct 19: at most $14.72 spent so far (credit drop since Oct 17; inclu
 - 2026-10-21 ~02:10Z: Correction to the G0 row: Shinka plumbing test DID spend Claude API $0.110 of the $0.50 cap (money-guard tally, 2 prosecutor calls; one real call ≈ $0.092, plan estimate was ~3x too high). Not yet checked against the console bill. Running API total this trial ≈ $0.11 of the $100 ceiling. Two post-review edits (max_retries=0, search-required prompt) are unreviewed; scripts stay DRAFT. Trial remains stopped at G0.
 
 - 2026-10-21 ~02:15Z Ben (direct, chat, verbatim): "go on the coordinator's Oct 20 ruling for the restart gate, and yes for the game world". Relayed to the restart-gate session (session_01GR2gp7svxd8z7yZeufWtwG) and game-world session (session_013wVGpXa8PM2JFLUHp6Arm7) as Ben's own words, quoted. $0.
+
+- 2026-10-21 ~02:55Z: PC runner did not answer the ping-2026-10-21 card (no pc-outbox branch; pc-status last updated Oct 16). Watcher on BensPC presumably down; older pcqueue cards also unpicked. Brain E0 PC card NOT queued. Told Ben. $0.
