@@ -98,3 +98,28 @@ Open findings from the reviews, for whoever unparks it:
 5. Smaller: answer decoder is sized per chunk, so chunks count fewer decoder FLOPs (about 5% low on a tiny worst case; accepted
    as a known limit); in-process D1 peak log is inflated by earlier arms' cache and its OOM is uncaught; the "question points
    at its own visit" test is vacuous; the chunk-cap test mirrors the code; a stale `noqa` comment on an import line.
+
+## Notes the fresh session needs (added 2026-10-21, swarm session on stand-by)
+
+- **Money:** Ben approved the calibration fix at a total of about $5.60, including the $1.19 already spent.
+- **T depends on the same calibration.** C0 computes T from `d1.calibrate(fixed[:4])`
+  (`scripts/premonition_swarm_screen.py:683`) through `curriculum_flops(fit, ...)` and `t_raw_from_modes`. Changing
+  `MiniTrainer.calibrate` itself therefore also changes T's FLOP fit.
+  - The past T_raw values were 4,408 s and 3,544 s, both giving T = 3,600, because T = min(3600, 300·⌈T_raw/300⌉).
+  - A fit that moves T_raw below 3,300 s would change T.
+  - Either leave C0's T fit untouched (change only `train_d`'s calibration), or declare the change on the card before
+    the run.
+- **D1 too:** D1's calibration peak has never been measured. A fix and its marks should cover D1's probe as well as
+  S0's. The probes run in the order S0 then D1, and an S0 abort stops C0 before D1's probe runs.
+- **Practical lessons from runs 1-3:**
+  - After a re-seal, bump `PIN` in `scripts/claude_swarm_rent.py`, and check that GitHub serves the new sha.
+  - Run `git status -sb` before every push: a review run once left the repo on a detached HEAD, and three commits
+    silently went unpushed.
+  - Vast offer ids rotate within seconds, so book with `rent()` straight from a search.
+  - The controller destroys a box whose billed rate is above the box's DPH.
+  - Price the 80 GB disk into the search (`allocated_storage`).
+  - Require ≥ 12 effective cores: the data step runs `min(12, cpu_count - 1)` workers.
+  - Vast `execute` works only on stopped instances. Box progress is invisible until the job prints `SWARM EXIT`, so
+    watch the container log and the GPU/CPU heartbeat.
+  - The data build takes 35-47 min and is not reusable (it is rebuilt on every box).
+  - On exit 3 the job also writes `checks/memprobe.json`, with bench memory per arm and mode.
