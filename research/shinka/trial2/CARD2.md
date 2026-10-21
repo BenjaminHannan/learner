@@ -84,4 +84,4 @@ two known items), so Ben can see what the strict rule cost.
 - G0 FAILED: the coordinator and Ben decide whether the trial stops here (this card's rule) or whether a redesigned G0 is allowed. A new G0 would need its own pass mark written first and must not be tuned on this result.
 - Plumbing test still to run once `ANTHROPIC_API_KEY` exists; its measured cost goes into section 6.
 - Scripts for Stages 1, 2, 4, 5 (`ideate.py`, `screen.py`, `implement.py`, `refine.py`) are NOT built; only the money guard, the guarded client and `prosecute.py` are. They wait for the go/no-go on G0.
-- Code review of the scripts: see `REVIEW-STATUS.md` (scripts stay DRAFT until it says clean).
+- Code review of the scripts: see `REVIEW-STATUS.md` (scripts stay DRAFT; round 2 was not clean, so they are PARKED).
