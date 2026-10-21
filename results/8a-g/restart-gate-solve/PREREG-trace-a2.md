@@ -60,3 +60,23 @@ Everything above stays as written. These changes are made because the positive c
 **Status:** Amendment 1 remains a DRAFT recommendation. Adopting it is Ben's decision. The registered probe rule (P2) is unchanged.
 
 **What the positive controls say about where bugs are caught:** every fault class tried was caught by the start-of-redo checks: the exact first update (data, RNG, weights), the exact fields (lr, RNG), and the early window (optimizer, lr). Each was caught with ≥ 3x margin at bf16-like noise. The window mean caught nothing those miss. This supports moving the mean from the running gate to the record (shown on CPU; untested on GPU).
+
+---
+
+## Amendment 2 (2026-10-21 ~03:10 UTC): B1, the "framing falsified: escalate" outcome (coordinator ruling Oct 20; Ben's go, verbatim in `handoff/coordinator/funding-ledger.md` at 8b6eb1097d). Written before any probe number exists.
+This outcome is an **exit only**. It moves no bar and changes no pass/fail threshold. Every other outcome of §4 and Amendment 1 stays as written.
+
+**Trigger (exact):** P1 holds (update 201 exact for both resumes), P1b holds (updates 202-203 within the early limit), **and** the two resumes are bit-identical over the whole window (|R1−R2| = 0 at every update, so N̄ = 0 and n = 0), **and** they differ from the logged run (D̄ > 0).
+- In that case further resumes of the same checkpoint repeat R1/R2 exactly, so the calibration of Amendment 1 cannot resolve anything. That is the loop found in the code review (REVIEW-VERDICT-2026-10-18, B1).
+- This is PREREG §3 falsifier (c): fresh GPU processes do not differ, so the drift is not per-call rounding noise.
+
+**Outcome: ESCALATE (framing falsified).** The run is **neither passed nor failed** and is **not read**. The registered P2 verdict is still recorded beside it, unchanged. The SYSTEMATIC diagnosis and this solve's noise framing are on record as contradicted. The question goes to Ben: what makes a resumed process differ from continuing, if not rounding noise? No calibration is asked for. Re-running the same probe is pointless, because it repeats.
+
+**Order:** ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the N̄ = 0, D̄ = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays INSIDE by the existing rules.
+
+**Status:** DRAFT, like Amendment 1.
+
+## Clarification of Amendment 1 for B2/B3 (2026-10-21; coordinator rulings Oct 19-20, recorded here because the code cites this file)
+- **Running gate (trace A, opt-in `--trace-a-early`):** when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3), the early-window item is **not computed and is not a failure**. It is recorded as deferred to the probe's P1b, with the line "early window not checked by the running gate; do not read this result until the probe's P1b passes."
+- **Missing rstep+1:** under the opt-in rules, a missing first redone update (rstep+1) **fails closed**, because the first-update check cannot be computed as defined.
+- **Unchanged:** default rules (no opt-in keys) stay identical to the pack. The bars (0.005, 0.01), the exact fields, P1b and the planned-kill rule are unchanged.
