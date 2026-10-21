@@ -9,6 +9,8 @@ Same data, seed and steps for both arms. The sealed splits (village `test`, crea
 from __future__ import annotations
 
 import os as _os
+if "--deterministic" in __import__("sys").argv:
+    _os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 _os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")      # less allocator fragmentation: 'reserved' tracks 'allocated'
 import argparse
 import collections
@@ -241,9 +243,12 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
     ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
     ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--deterministic", action="store_true", help="torch deterministic algorithms (warn only) + fixed cuBLAS workspace: the resume re-run")
     ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
     ap.add_argument("--relaunch-adamw", action="store_true", help="A1 relaunch for FULL: resume the last good checkpoint with plain AdamW")
     a = ap.parse_args(argv)
+    if a.deterministic:
+        torch.use_deterministic_algorithms(True, warn_only=True)
     arm = ARMS[a.arm]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
