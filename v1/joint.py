@@ -71,6 +71,11 @@ class Bridge(nn.Module):
         self._d, self._c = d_model, creative
         return self
 
+    def attach_creative(self, creative) -> None:
+        """Hook one more creative model (sleep stages load several) to this same bridge."""
+        creative.bridge_in = lambda: self.to_creative() if self.enabled else torch.zeros(self.p_dc.out_features, device=self.ctx_d.device)
+        creative.bridge_out = self.observe_c
+
     def detach(self) -> None:
         self._d.bridge_in = None
         self._c.bridge_in = None

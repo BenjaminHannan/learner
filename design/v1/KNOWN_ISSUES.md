@@ -1,0 +1,17 @@
+# V1 KNOWN_ISSUES (one line each; none of these stops the run unless marked BLOCKING)
+
+1. Spec line 10 premise is false: G1's evidence (4-seed, 6,800 rows) is on the `custom_io` skills model family at d256 (T1SDR parents, 3.31M params), not on PremonitionMini D (d128). Coordinator ruled: G1 is applied to the creative d256 module only; no D-side KL; D stays d128.
+2. G1 hard lock was measured to block most join transfer (L14 "NK30": HO 9.8, marked PROVED WRONG for transfer, best old-skill retention). In sleep it may block the creative gain: that is exactly abort rule A3's concern. Sleep + G1 has never been run together.
+3. The KL term is new code: mainbrain's KL (`klreplay.py`) only knows the `tool` heads; `v1/g1.py` implements it for the ledger heads (op, operand pointers, mode, answer pointer, word pointer, GEN copy distribution). Unit-checked: 0 for model == parent, > 0 and differentiable otherwise.
+4. K-FAC statistics are measured on the first 1,024 of the 4,096 diary rows and on CPU (mainbrain's statistics code is CPU-only), re-measured at the start of each weight-changing creative stage.
+5. The join is functionally inert for W1/W2 (no v1 task needs information to cross it); a bridge-off lesion is reported as a diagnostic, not a gate. Design refinement vs JOINT-DESIGN draft: the projected vectors are added as residuals (D register rows / creative controller tokens) fed by EMA summaries, not as extra attention rows.
+6. Muon is applied to D only. The creative module's wake is frozen and its sleep keeps C2b's tuned fresh-AdamW recipe; consult line "Muon in both D and creative" is not followed (untested optimizer swap on a tuned sleep recipe). Coordinator may veto.
+7. W2's held-out set shares its 5 kinds with the unlabelled sleep pool by C2b's design ("held-out" = never taught with answers).
+8. Parent choice B2_s200 = first seed index of C2b's six parents (per-parent W first_try 173-218 of 512); fixed before any v1 result; a single parent is a single-seed v1 (multi-seed was dropped by the spec).
+9. Vendored code: `creative/` from claude/project-thread-2zeaoc (the code C2b ran) on `custom_io/` from claude/project-thread-trabt2 (newer, a superset). B2 behaviour on the newer tree is checked by re-scoring B2_s200 on skills dev (see GATE S report), not assumed.
+10. S2 code comes from claude/info-constraint-solutions (reviewed CLEAN at 90077ef2b per the ledger); it also carries S3/S4/S5/S6 draft flags, all OFF in both arms. S2's evidence is a d=32 far-fact toy only.
+11. 8-step wiring trials were run on the TRAIN/DEV caches (and `premonition.train.smoke` on a tiny temp build) before V1_PARAMS was committed; the sealed `test` shards were only hashed (bytes), never decoded or scored.
+12. `premonition.train.smoke` (toy, 60 steps) reports `recall_beats_random` and `budget_ok` False on the V1 tree; the same smoke on the original code is run for comparison (result in the Gate S report). The V1 edits are bit-identical with flags off (test_joint), so this is expected to be pre-existing.
+13. Defer is off in both arms (coordinator ruling); its guard holes are queue item 1 post-v1.
+14. CPU has no GPU: tokens/s, peak GPU memory and the pinned-image preflight on the actual box wait for the coordinator's venue ruling.
+15. A3's "dev accuracy rose less than 1 point over the previous 10% of steps" is applied per G1-active stage (warm-up, N'), because sleep has no uniform step axis; thresholds are unchanged.

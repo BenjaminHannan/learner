@@ -19,12 +19,12 @@ def main():
         else:
             continue
         if not dest.exists():
-            os.symlink(p, dest)
+            os.link(p, dest)
     for split in ("validation", "test"):
         for p in sorted((build / split).iterdir()):
             dest = root / split / p.name
             if not dest.exists():
-                os.symlink(p, dest)
+                os.link(p, dest)
     for name in ("train", "dev"):                # manifests: keep the build's train manifest for provenance
         src = build / "train" / "manifest.json"
         (root / name / "manifest.json").write_text(src.read_text())

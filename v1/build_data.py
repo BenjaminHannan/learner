@@ -6,7 +6,7 @@ Splits (learnlab.village.shards.write_shards, seed 0, 250 visits/shard):
   test        1,000 visits  : SEALED. Read once, only under the open-seal rule.
 Writes OUT_DIR/SHA256SUMS.txt (every file) and OUT_DIR/SPLITS.json (per-split digest = sha256 of its sorted 'sha  relpath' lines).
 """
-import hashlib, json, sys
+import hashlib, json, re, sys
 from pathlib import Path
 
 PER_SHARD, SEED = 250, 0
@@ -35,12 +35,16 @@ def main():
             part.append(f"{sha(p)}  {split}/{p.name}")
         lines += part
         digest[split] = hashlib.sha256("\n".join(part).encode()).hexdigest()
-    shards = sorted((out / "train").glob("shard-*.txt"))
-    digest["train_part"] = hashlib.sha256("\n".join(l for l in lines if l.split("  ")[1].startswith("train/") and int(l.split("shard-")[1][:5]) < DEV_FIRST_SHARD if "shard-" in l).encode()).hexdigest()
-    digest["dev_part"] = hashlib.sha256("\n".join(l for l in lines if l.split("  ")[1].startswith("train/") and "shard-" in l and int(l.split("shard-")[1][:5]) >= DEV_FIRST_SHARD).encode()).hexdigest()
+    def shard_no(line):
+        m = re.search(r"train/shard-(\d+)\.", line)
+        return int(m.group(1)) if m else None
+    train_lines = [l for l in lines if "  train/" in l]
+    digest["train_part"] = hashlib.sha256("\n".join(l for l in train_lines if shard_no(l) is not None and shard_no(l) < DEV_FIRST_SHARD).encode()).hexdigest()
+    digest["dev_part"] = hashlib.sha256("\n".join(l for l in train_lines if shard_no(l) is not None and shard_no(l) >= DEV_FIRST_SHARD).encode()).hexdigest()
+    n_shards = len({shard_no(l) for l in train_lines if shard_no(l) is not None})
     (out / "SHA256SUMS.txt").write_text("\n".join(lines) + "\n")
     (out / "SPLITS.json").write_text(json.dumps({"seed": SEED, "visits_per_shard": PER_SHARD, "plan": PLAN, "train_shards": [0, DEV_FIRST_SHARD - 1],
-                                                   "dev_shards": [DEV_FIRST_SHARD, len(shards) - 1], "sealed": "test", "digests": digest}, indent=1) + "\n")
+                                                   "dev_shards": [DEV_FIRST_SHARD, n_shards - 1], "sealed": "test", "digests": digest}, indent=1) + "\n")
     print(json.dumps(digest, indent=1))
 
 
