@@ -33,148 +33,148 @@ ok resume_probe_verdict under 3 updates: no early keys, md_probe prints no early
 ok trace A: 1-2 redone updates record no early_max and mention no early window (the result equals the original's; resume_early_abs defers the window to the probe, no failure); 3 redone updates record it
 ok agreement: the same 1- and 2-update data is refused by probe-resume (exit 3, nothing touched) and by rejudge_probe.py (exit 3, nothing written); from 3 updates both give the same early_max (3, 4, 10, 50 updates, and a real --upto step+3 probe)
 ok B2 unit: 1 and 2 redone updates with the opt-in rules: PASS, early_window deferred (computed False), no early_max, the verbatim line in the TRACE-A md; first-update gap and exact-field mismatch still FAIL; 3+ redone: computed, over 0.005 FAILs
-2026-10-21 03:42:14 STARTED runner MAIN-pc pid 9076: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpoukhx6w_/work --queue /tmp/tmpoukhx6w_/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpoukhx6w_/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
-2026-10-21 03:42:16 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:42:16 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpoukhx6w_/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034216
-2026-10-21 03:42:16 STARTED runner MAIN-pc pid 9080: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpoukhx6w_/work --queue /tmp/tmpoukhx6w_/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpoukhx6w_/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
-2026-10-21 03:42:20 TRACE A: PASS []
-2026-10-21 03:42:21 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
-2026-10-21 03:42:21 ALL DONE
-2026-10-21 03:42:21 STARTED runner MAIN-pc pid 9089: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmb07qrnm/work --queue /tmp/tmpmb07qrnm/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmb07qrnm/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103
-2026-10-21 03:42:23 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:42:23 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpmb07qrnm/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034223
-2026-10-21 03:42:23 STARTED runner MAIN-pc pid 9098: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmb07qrnm/work --queue /tmp/tmpmb07qrnm/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmb07qrnm/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103
-2026-10-21 03:42:27 TRACE A: PASS []
-2026-10-21 03:42:28 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
-2026-10-21 03:42:28 ALL DONE
-2026-10-21 03:42:28 STARTED runner MAIN-pc pid 9106: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpvykuusrt/work --queue /tmp/tmpvykuusrt/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpvykuusrt/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
-2026-10-21 03:42:30 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:42:31 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpvykuusrt/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034231
-2026-10-21 03:42:31 STARTED runner MAIN-pc pid 9154: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpvykuusrt/work --queue /tmp/tmpvykuusrt/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpvykuusrt/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
-2026-10-21 03:42:35 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
-2026-10-21 03:42:38 KILLED MAIN-pc: trace A failed
-2026-10-21 03:42:38 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:42:38 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:42:38 STARTED runner MAIN-pc pid 9192: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4u_wbfjg/work --queue /tmp/tmp4u_wbfjg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4u_wbfjg/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
-2026-10-21 03:42:40 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:42:40 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp4u_wbfjg/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034240
-2026-10-21 03:42:40 STARTED runner MAIN-pc pid 9198: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4u_wbfjg/work --queue /tmp/tmp4u_wbfjg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4u_wbfjg/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
-2026-10-21 03:42:44 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
-2026-10-21 03:42:47 KILLED MAIN-pc: trace A failed
-2026-10-21 03:42:47 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:42:47 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:42:48 STARTED runner MAIN-pc pid 9208: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpu42jrh8b/work --queue /tmp/tmpu42jrh8b/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpu42jrh8b/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
-2026-10-21 03:42:50 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:42:50 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpu42jrh8b/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034250
-2026-10-21 03:42:50 STARTED runner MAIN-pc pid 9214: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpu42jrh8b/work --queue /tmp/tmpu42jrh8b/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpu42jrh8b/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
-2026-10-21 03:42:54 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
-2026-10-21 03:42:57 KILLED MAIN-pc: trace A failed
-2026-10-21 03:42:57 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:42:57 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:42:57 STARTED runner MAIN-pc pid 9227: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpjtxqlmgf/work --queue /tmp/tmpjtxqlmgf/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpjtxqlmgf/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-lr 0.002
-2026-10-21 03:43:00 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:43:00 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpjtxqlmgf/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034300
-2026-10-21 03:43:00 STARTED runner MAIN-pc pid 9233: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpjtxqlmgf/work --queue /tmp/tmpjtxqlmgf/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpjtxqlmgf/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-lr 0.002
-2026-10-21 03:43:04 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
-2026-10-21 03:43:07 KILLED MAIN-pc: trace A failed
-2026-10-21 03:43:07 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:07 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:43:07 STARTED runner MAIN-pc pid 9243: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpijlgbn7e/work --queue /tmp/tmpijlgbn7e/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpijlgbn7e/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.007
-2026-10-21 03:43:13 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
-2026-10-21 03:43:13 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:13 STARTED runner MAIN-pc pid 9254: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpijlgbn7e/work --queue /tmp/tmpijlgbn7e/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpijlgbn7e/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.007
-2026-10-21 03:43:18 TRACE A: FAIL ['early redone updates 102 and 103 (the 2nd and 3rd after the restore) differ by up to 0.0070, at update 103 (limit 0.005): lost optimizer state or an lr offset?']
-2026-10-21 03:43:21 KILLED MAIN-pc: trace A failed
-2026-10-21 03:43:21 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:21 STOPPED job g2fa4: trace A FAILED: early redone updates 102 and 103 (the 2nd and 3rd after the restore) differ by up to 0.0070, at update 103 (limit 0.005): lost optimizer state or an lr offset? (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:43:21 STARTED runner MAIN-pc pid 9264: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4jshmm91/work --queue /tmp/tmp4jshmm91/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4jshmm91/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
-2026-10-21 03:43:27 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
-2026-10-21 03:43:27 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:27 STARTED runner MAIN-pc pid 9274: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4jshmm91/work --queue /tmp/tmp4jshmm91/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4jshmm91/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
-2026-10-21 03:43:31 TRACE A: PASS []
-2026-10-21 03:43:32 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
-2026-10-21 03:43:32 ALL DONE
+2026-10-21 03:56:22 STARTED runner MAIN-pc pid 11250: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpdny5me36/work --queue /tmp/tmpdny5me36/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpdny5me36/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
+2026-10-21 03:56:24 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:56:25 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpdny5me36/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035625
+2026-10-21 03:56:25 STARTED runner MAIN-pc pid 11252: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpdny5me36/work --queue /tmp/tmpdny5me36/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpdny5me36/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
+2026-10-21 03:56:29 TRACE A: PASS []
+2026-10-21 03:56:29 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
+2026-10-21 03:56:29 ALL DONE
+2026-10-21 03:56:29 STARTED runner MAIN-pc pid 11255: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpeqi_op70/work --queue /tmp/tmpeqi_op70/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpeqi_op70/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103
+2026-10-21 03:56:31 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:56:32 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpeqi_op70/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035632
+2026-10-21 03:56:32 STARTED runner MAIN-pc pid 11257: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpeqi_op70/work --queue /tmp/tmpeqi_op70/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpeqi_op70/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103
+2026-10-21 03:56:36 TRACE A: PASS []
+2026-10-21 03:56:36 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
+2026-10-21 03:56:36 ALL DONE
+2026-10-21 03:56:36 STARTED runner MAIN-pc pid 11262: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp3j68_c19/work --queue /tmp/tmp3j68_c19/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp3j68_c19/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
+2026-10-21 03:56:39 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:56:39 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp3j68_c19/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035639
+2026-10-21 03:56:39 STARTED runner MAIN-pc pid 11264: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp3j68_c19/work --queue /tmp/tmp3j68_c19/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp3j68_c19/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
+2026-10-21 03:56:43 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
+2026-10-21 03:56:46 KILLED MAIN-pc: trace A failed
+2026-10-21 03:56:46 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:56:46 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:56:46 STARTED runner MAIN-pc pid 11266: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp0jxdc3th/work --queue /tmp/tmp0jxdc3th/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0jxdc3th/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
+2026-10-21 03:56:48 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:56:49 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp0jxdc3th/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035649
+2026-10-21 03:56:49 STARTED runner MAIN-pc pid 11268: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp0jxdc3th/work --queue /tmp/tmp0jxdc3th/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0jxdc3th/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
+2026-10-21 03:56:53 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
+2026-10-21 03:56:56 KILLED MAIN-pc: trace A failed
+2026-10-21 03:56:56 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:56:56 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:56:56 STARTED runner MAIN-pc pid 11274: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp3epwjp9l/work --queue /tmp/tmp3epwjp9l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp3epwjp9l/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
+2026-10-21 03:56:58 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:56:58 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp3epwjp9l/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035658
+2026-10-21 03:56:58 STARTED runner MAIN-pc pid 11276: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp3epwjp9l/work --queue /tmp/tmp3epwjp9l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp3epwjp9l/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
+2026-10-21 03:57:03 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
+2026-10-21 03:57:06 KILLED MAIN-pc: trace A failed
+2026-10-21 03:57:06 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:06 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:57:06 STARTED runner MAIN-pc pid 11278: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpphr0nk1i/work --queue /tmp/tmpphr0nk1i/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpphr0nk1i/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-lr 0.002
+2026-10-21 03:57:08 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:57:08 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpphr0nk1i/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035708
+2026-10-21 03:57:08 STARTED runner MAIN-pc pid 11280: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpphr0nk1i/work --queue /tmp/tmpphr0nk1i/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpphr0nk1i/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-lr 0.002
+2026-10-21 03:57:12 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
+2026-10-21 03:57:15 KILLED MAIN-pc: trace A failed
+2026-10-21 03:57:15 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:15 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:57:16 STARTED runner MAIN-pc pid 11282: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpufaxxdh_/work --queue /tmp/tmpufaxxdh_/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpufaxxdh_/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.007
+2026-10-21 03:57:22 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-21 03:57:22 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:22 STARTED runner MAIN-pc pid 11284: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpufaxxdh_/work --queue /tmp/tmpufaxxdh_/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpufaxxdh_/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.007
+2026-10-21 03:57:26 TRACE A: FAIL ['early redone updates 102 and 103 (the 2nd and 3rd after the restore) differ by up to 0.0070, at update 103 (limit 0.005): lost optimizer state or an lr offset?']
+2026-10-21 03:57:29 KILLED MAIN-pc: trace A failed
+2026-10-21 03:57:29 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:29 STOPPED job g2fa4: trace A FAILED: early redone updates 102 and 103 (the 2nd and 3rd after the restore) differ by up to 0.0070, at update 103 (limit 0.005): lost optimizer state or an lr offset? (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:57:29 STARTED runner MAIN-pc pid 11289: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4ptvjote/work --queue /tmp/tmp4ptvjote/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4ptvjote/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-21 03:57:35 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
+2026-10-21 03:57:35 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:35 STARTED runner MAIN-pc pid 11291: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4ptvjote/work --queue /tmp/tmp4ptvjote/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4ptvjote/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-21 03:57:40 TRACE A: PASS []
+2026-10-21 03:57:40 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-21 03:57:40 ALL DONE
 ok B2 running gate: crash 1 and 2 updates after a save -> not stopped, PASS, deferral in TRACE-A md / status.md / DONE file / log, no early_max anywhere; gap > 0.01 or exact-field mismatch -> FAIL + stop; planned resume: early_max 0.007 FAILs + stops, healthy PASSes
 ok B3 unit: missing update 101 (either segment or both) fails closed under the opt-in rules (names the steps, no early value, hard in soft variants) and changes nothing without them; a gap at 102 or 103 is deferred (no early_max); a gap outside the window or none: computed as before
-2026-10-21 03:43:32 STARTED runner MAIN-pc pid 9281: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpydzzt0_u/work --queue /tmp/tmpydzzt0_u/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpydzzt0_u/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
-2026-10-21 03:43:34 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:43:34 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpydzzt0_u/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034334
-2026-10-21 03:43:34 STARTED runner MAIN-pc pid 9292: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpydzzt0_u/work --queue /tmp/tmpydzzt0_u/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpydzzt0_u/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
-2026-10-21 03:43:38 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
-2026-10-21 03:43:41 KILLED MAIN-pc: trace A failed
-2026-10-21 03:43:41 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:41 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:43:41 STARTED runner MAIN-pc pid 9300: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpuwiv5ez1/work --queue /tmp/tmpuwiv5ez1/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpuwiv5ez1/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
-2026-10-21 03:43:48 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
-2026-10-21 03:43:48 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:48 STARTED runner MAIN-pc pid 9310: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpuwiv5ez1/work --queue /tmp/tmpuwiv5ez1/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpuwiv5ez1/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
-2026-10-21 03:43:52 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
-2026-10-21 03:43:55 KILLED MAIN-pc: trace A failed
-2026-10-21 03:43:55 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:43:55 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:43:55 STARTED runner MAIN-pc pid 9323: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpacsejd83/work --queue /tmp/tmpacsejd83/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpacsejd83/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 102
-2026-10-21 03:44:01 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
-2026-10-21 03:44:01 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:01 STARTED runner MAIN-pc pid 9331: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpacsejd83/work --queue /tmp/tmpacsejd83/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpacsejd83/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 102
-2026-10-21 03:44:06 TRACE A: PASS []
-2026-10-21 03:44:06 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
-2026-10-21 03:44:06 ALL DONE
-2026-10-21 03:44:06 STARTED runner MAIN-pc pid 9342: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpuwxdg1b5/work --queue /tmp/tmpuwxdg1b5/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpuwxdg1b5/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 103
-2026-10-21 03:44:12 KILLED MAIN-pc: planned kill-and-resume test at update 155 (Ben's go line; big-run R4)
-2026-10-21 03:44:12 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:12 STARTED runner MAIN-pc pid 9352: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpuwxdg1b5/work --queue /tmp/tmpuwxdg1b5/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpuwxdg1b5/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 103
-2026-10-21 03:44:17 TRACE A: PASS []
-2026-10-21 03:44:17 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
-2026-10-21 03:44:17 ALL DONE
+2026-10-21 03:57:40 STARTED runner MAIN-pc pid 11294: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp953m88h0/work --queue /tmp/tmp953m88h0/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp953m88h0/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
+2026-10-21 03:57:42 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:57:43 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp953m88h0/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035743
+2026-10-21 03:57:43 STARTED runner MAIN-pc pid 11296: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp953m88h0/work --queue /tmp/tmp953m88h0/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp953m88h0/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
+2026-10-21 03:57:47 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
+2026-10-21 03:57:50 KILLED MAIN-pc: trace A failed
+2026-10-21 03:57:50 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:50 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:57:50 STARTED runner MAIN-pc pid 11298: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpepruptns/work --queue /tmp/tmpepruptns/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpepruptns/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
+2026-10-21 03:57:56 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
+2026-10-21 03:57:56 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:57:56 STARTED runner MAIN-pc pid 11300: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpepruptns/work --queue /tmp/tmpepruptns/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpepruptns/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
+2026-10-21 03:58:00 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
+2026-10-21 03:58:03 KILLED MAIN-pc: trace A failed
+2026-10-21 03:58:03 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:03 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:58:03 STARTED runner MAIN-pc pid 11306: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpbr5rygta/work --queue /tmp/tmpbr5rygta/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpbr5rygta/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 102
+2026-10-21 03:58:10 KILLED MAIN-pc: planned kill-and-resume test at update 155 (Ben's go line; big-run R4)
+2026-10-21 03:58:10 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:10 STARTED runner MAIN-pc pid 11308: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpbr5rygta/work --queue /tmp/tmpbr5rygta/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpbr5rygta/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 102
+2026-10-21 03:58:14 TRACE A: PASS []
+2026-10-21 03:58:14 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
+2026-10-21 03:58:14 ALL DONE
+2026-10-21 03:58:14 STARTED runner MAIN-pc pid 11310: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpxuo96hbg/work --queue /tmp/tmpxuo96hbg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpxuo96hbg/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 103
+2026-10-21 03:58:21 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
+2026-10-21 03:58:21 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:21 STARTED runner MAIN-pc pid 11312: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpxuo96hbg/work --queue /tmp/tmpxuo96hbg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpxuo96hbg/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 103
+2026-10-21 03:58:25 TRACE A: PASS []
+2026-10-21 03:58:25 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
+2026-10-21 03:58:25 ALL DONE
 ok B3 running gate: missing update 101 -> FAIL + stop (after a crash and after the planned kill); a hole at 102 or 103 -> deferral printed in the TRACE-A md, status.md, DONE file and log, PASS, no early_max anywhere
 ok B1 ESCALATE: trigger -> ESCALATE exit 4 (texts, Amendment 2 verbatim after Amendment 1, JSON); Nbar = Dbar = 0 -> INSIDE; P1 / P1b failing with identical resumes -> OUTSIDE; --calibration not applied to ESCALATE; every other verdict equal to the pre-B1 decision over 6000 random traces (929 meet the trigger -> ESCALATE, were UNRESOLVED_CALIBRATE): {'ESCALATE': 929, 'INSIDE healthy noise': 327, 'OUTSIDE': 2742, 'UNRESOLVED': 594, 'UNRESOLVED_CALIBRATE': 1408}
-2026-10-21 03:44:18 STARTED runner MAIN-pc pid 9360: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpgi56od16/work --queue /tmp/tmpgi56od16/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpgi56od16/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
-2026-10-21 03:44:20 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:44:20 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpgi56od16/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034420
-2026-10-21 03:44:20 STARTED runner MAIN-pc pid 9369: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpgi56od16/work --queue /tmp/tmpgi56od16/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpgi56od16/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
-2026-10-21 03:44:24 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
-2026-10-21 03:44:27 KILLED MAIN-pc: trace A failed
-2026-10-21 03:44:27 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:27 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:44:27 STARTED runner MAIN-pc pid 9380: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpj_bcum65/work --queue /tmp/tmpj_bcum65/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpj_bcum65/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
-2026-10-21 03:44:30 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:44:30 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpj_bcum65/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034430
-2026-10-21 03:44:30 STARTED runner MAIN-pc pid 9386: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpj_bcum65/work --queue /tmp/tmpj_bcum65/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpj_bcum65/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
-2026-10-21 03:44:34 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
-2026-10-21 03:44:37 KILLED MAIN-pc: trace A failed
-2026-10-21 03:44:37 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:37 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:44:37 STARTED runner MAIN-pc pid 9471: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpk_uf_lvr/work --queue /tmp/tmpk_uf_lvr/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpk_uf_lvr/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
-2026-10-21 03:44:39 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:44:40 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpk_uf_lvr/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034440
-2026-10-21 03:44:40 STARTED runner MAIN-pc pid 9475: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpk_uf_lvr/work --queue /tmp/tmpk_uf_lvr/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpk_uf_lvr/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
-2026-10-21 03:44:44 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
-2026-10-21 03:44:47 KILLED MAIN-pc: trace A failed
-2026-10-21 03:44:47 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:47 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:44:47 STARTED runner MAIN-pc pid 9485: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmywxahon/work --queue /tmp/tmpmywxahon/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmywxahon/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
-2026-10-21 03:44:53 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
-2026-10-21 03:44:53 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:44:53 STARTED runner MAIN-pc pid 9500: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmywxahon/work --queue /tmp/tmpmywxahon/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmywxahon/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
-2026-10-21 03:44:57 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
-2026-10-21 03:45:00 KILLED MAIN-pc: trace A failed
-2026-10-21 03:45:00 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:45:00 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:45:00 STARTED runner MAIN-pc pid 9508: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmy0ujdqb/work --queue /tmp/tmpmy0ujdqb/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmy0ujdqb/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
-2026-10-21 03:45:03 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:45:03 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpmy0ujdqb/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034503
-2026-10-21 03:45:03 STARTED runner MAIN-pc pid 9515: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpmy0ujdqb/work --queue /tmp/tmpmy0ujdqb/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpmy0ujdqb/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
-2026-10-21 03:45:07 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
-2026-10-21 03:45:10 KILLED MAIN-pc: trace A failed
-2026-10-21 03:45:10 GPU-BUSY: removed 1 line(s) of MAIN-pc
-2026-10-21 03:45:10 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
-2026-10-21 03:45:10 STARTED runner MAIN-pc pid 9528: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp6zudmm7o/work --queue /tmp/tmp6zudmm7o/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp6zudmm7o/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
-2026-10-21 03:45:12 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
-2026-10-21 03:45:13 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp6zudmm7o/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-034513
-2026-10-21 03:45:13 STARTED runner MAIN-pc pid 9534: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp6zudmm7o/work --queue /tmp/tmp6zudmm7o/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp6zudmm7o/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
-2026-10-21 03:45:17 TRACE A: PASS []
-2026-10-21 03:45:17 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
-2026-10-21 03:45:17 ALL DONE
+2026-10-21 03:58:26 STARTED runner MAIN-pc pid 11314: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmprak4faqo/work --queue /tmp/tmprak4faqo/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmprak4faqo/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
+2026-10-21 03:58:28 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:58:28 job-level RESULT.json (arm_failed) moved aside: /tmp/tmprak4faqo/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035828
+2026-10-21 03:58:28 STARTED runner MAIN-pc pid 11317: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmprak4faqo/work --queue /tmp/tmprak4faqo/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmprak4faqo/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-offset 0.02
+2026-10-21 03:58:33 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
+2026-10-21 03:58:36 KILLED MAIN-pc: trace A failed
+2026-10-21 03:58:36 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:36 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:58:36 STARTED runner MAIN-pc pid 11322: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp78hwbgqm/work --queue /tmp/tmp78hwbgqm/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp78hwbgqm/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
+2026-10-21 03:58:38 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:58:38 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp78hwbgqm/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035838
+2026-10-21 03:58:38 STARTED runner MAIN-pc pid 11324: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp78hwbgqm/work --queue /tmp/tmp78hwbgqm/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp78hwbgqm/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102 --seg2-lr 0.002
+2026-10-21 03:58:42 TRACE A: FAIL ['first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002']
+2026-10-21 03:58:45 KILLED MAIN-pc: trace A failed
+2026-10-21 03:58:45 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:45 STOPPED job g2fa4: trace A FAILED: first redone update 101: field(s) that must be exactly equal differ between the earlier segment and the resumed one: lr 0.001 vs 0.002 (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:58:45 STARTED runner MAIN-pc pid 11327: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4f9crxj7/work --queue /tmp/tmp4f9crxj7/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4f9crxj7/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
+2026-10-21 03:58:48 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:58:48 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp4f9crxj7/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035848
+2026-10-21 03:58:48 STARTED runner MAIN-pc pid 11329: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4f9crxj7/work --queue /tmp/tmp4f9crxj7/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4f9crxj7/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --skip-log-seg2-at 101
+2026-10-21 03:58:52 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
+2026-10-21 03:58:55 KILLED MAIN-pc: trace A failed
+2026-10-21 03:58:55 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:58:55 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:58:55 STARTED runner MAIN-pc pid 11331: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpae97ug5d/work --queue /tmp/tmpae97ug5d/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpae97ug5d/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
+2026-10-21 03:59:01 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
+2026-10-21 03:59:01 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:59:02 STARTED runner MAIN-pc pid 11336: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpae97ug5d/work --queue /tmp/tmpae97ug5d/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpae97ug5d/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --skip-log-seg2-at 101
+2026-10-21 03:59:06 TRACE A: FAIL ['the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined']
+2026-10-21 03:59:09 KILLED MAIN-pc: trace A failed
+2026-10-21 03:59:09 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:59:09 STOPPED job g2fa4: trace A FAILED: the first redone update 101 (the first update after the restore at 100) is missing from the resumed segment; the first redone update present is 102: the first-update check cannot be computed as defined (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:59:09 STARTED runner MAIN-pc pid 11338: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpqwwm59g4/work --queue /tmp/tmpqwwm59g4/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpqwwm59g4/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
+2026-10-21 03:59:11 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:59:11 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpqwwm59g4/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035911
+2026-10-21 03:59:11 STARTED runner MAIN-pc pid 11340: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmpqwwm59g4/work --queue /tmp/tmpqwwm59g4/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpqwwm59g4/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 103 --seg2-offset 0.02
+2026-10-21 03:59:16 TRACE A: FAIL ['first redone update differs by 0.0200 (limit 0.01)', 'redone updates differ by 0.0200 on average (limit 0.02)']
+2026-10-21 03:59:19 KILLED MAIN-pc: trace A failed
+2026-10-21 03:59:19 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-21 03:59:19 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.0200 (limit 0.01); redone updates differ by 0.0200 on average (limit 0.02) (registered fallback: accum 8, then 32; a new run name each)
+2026-10-21 03:59:19 STARTED runner MAIN-pc pid 11343: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4humjy_4/work --queue /tmp/tmp4humjy_4/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4humjy_4/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
+2026-10-21 03:59:21 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-21 03:59:21 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp4humjy_4/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261021-035921
+2026-10-21 03:59:21 STARTED runner MAIN-pc pid 11345: /usr/bin/python3 <scratch-pack>/tests/fake_runner.py --work /tmp/tmp4humjy_4/work --queue /tmp/tmp4humjy_4/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp4humjy_4/GPU-BUSY.txt --steps 320 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 102
+2026-10-21 03:59:25 TRACE A: PASS []
+2026-10-21 03:59:26 DONE g2fa4: {'steps': 320, 'steps_per_s': 50.0, 'train_s': 4.399999999999994, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None} | early window not checked by the running gate; do not read this result until the probe's P1b passes.
+2026-10-21 03:59:26 ALL DONE
 ok F1 / F7: the deferral line is printed and stored only for a trace A that PASSED (absent on first-gap FAIL, exact-field FAIL, missing rstep+1 FAIL, peak FAIL: TRACE-A md, status.md, STOPPED.txt, log, state.json); present on a deferred PASS in all four places; one decision function (early_deferred)
 ok F3: early_window.reason names the missing first redone update (resumed / earlier / both, also with under 3 redone updates), keeps the hole-at-102/103 wording for 101 present, is absent for a plain deferral; docstring states when it appears
 ok F5 + N3: the early bar is read from the supervisor lazily (only with --trace-a-early); a missing file / missing line / malformed number (1.2.3, 5e, 1e999) is a [FIX] line with exit 1, nothing changed, no traceback, and plain / --check / --add-job (with and without soft flags) / --help are unaffected; --help and the docstring describe the deferral, the rstep+1 hard failure and the supervisor-owned bar
