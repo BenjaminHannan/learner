@@ -72,11 +72,17 @@ This outcome is an **exit only**. It moves no bar and changes no pass/fail thres
 
 **Outcome: ESCALATE (framing falsified).** The run is **neither passed nor failed** and is **not read**. The registered P2 verdict is still recorded beside it, unchanged. The SYSTEMATIC diagnosis and this solve's noise framing are on record as contradicted. The question goes to Ben: what makes a resumed process differ from continuing, if not rounding noise? No calibration is asked for. Re-running the same probe is pointless, because it repeats.
 
-**Order:** ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the N̄ = 0, D̄ = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays INSIDE by the existing rules.
+**Order:** ESCALATE is decided after P1/P1b and before P2/P3/ratio. So a failing P1 or P1b is still OUTSIDE, and the N̄ = 0, D̄ = 0 case (restarts identical *and* equal to the run, a bit-exact card) stays judged by the existing rules: INSIDE, or UNRESOLVED (window) when the trace-A value is above max(0.02, 2·N̄) = 0.02 (it is for the default 0.0282). [Erratum 2026-10-21 (E1): the original text read "stays INSIDE by the existing rules", which was wrong; the code was already correct.]
 
 **Status:** DRAFT, like Amendment 1.
 
 ## Clarification of Amendment 1 for B2/B3 (2026-10-21; coordinator rulings Oct 19-20, recorded here because the code cites this file)
-- **Running gate (trace A, opt-in `--trace-a-early`):** when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3), the early-window item is **not computed and is not a failure**. It is recorded as deferred to the probe's P1b, with the line "early window not checked by the running gate; do not read this result until the probe's P1b passes."
+- **Running gate (trace A, opt-in `--trace-a-early`):** when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3), the early-window item is **not computed and is not a failure**. It is recorded as deferred to the probe's P1b, with the line "early window not checked by the running gate; do not read this result until the probe's P1b passes." This applies to a trace A that **passed**. A failed trace A carries no deferral line, because the run is stopped anyway. [Erratum 2026-10-21 (E2): the original text did not limit the line to a passed trace A; the F1 fix does.]
 - **Missing rstep+1:** under the opt-in rules, a missing first redone update (rstep+1) **fails closed**, because the first-update check cannot be computed as defined.
 - **Unchanged:** default rules (no opt-in keys) stay identical to the pack. The bars (0.005, 0.01), the exact fields, P1b and the planned-kill rule are unchanged.
+
+## Errata (2026-10-21, coordinator ruling: text only, no bar moves)
+- **E1** (Amendment 2, Order): the N̄ = 0, D̄ = 0 case reads by the existing rules (INSIDE, or UNRESOLVED (window) above the 0.02 floor), not "INSIDE".
+- **E2** (B2/B3 clarification): the deferral line appears only on a passed trace A.
+
+Both were corrected in place above, with the original wording kept in the erratum notes. Both were found by the 2026-10-21 code review (`drafts/REVIEW-VERDICT-2026-10-21.md`).
