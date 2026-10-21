@@ -265,6 +265,7 @@ class MiniTrainer(Trainer):
         # closed phases' peak, so the 14 GiB guard decides on the same un-reset peak as without instrumentation.
         self.memory_phases: Optional[list[dict[str, Any]]] = None
         self.reserved_floor = 0
+        self.autocast = self.device.type == "cuda"        # bf16 autocast: the training step AND the FLOP calibration
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
         self.seed = seed
@@ -297,11 +298,20 @@ class MiniTrainer(Trainer):
         """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward)."""
         samples = []
         started = time.perf_counter()
-        for batch in batches:
-            batch = batch.to(self.device)
-            for mode in modes:
-                samples.append(measure_mini(self.model, batch, mode=mode, p_own=0.5 if mode == "own" else 0.0,
-                                            generator=self.generator))
+        try:
+            for batch in batches:
+                batch = batch.to(self.device)
+                for mode in modes:
+                    # Same bf16 autocast as `_train_step`: FLOP counts do not depend on dtype, but fp32 activations
+                    # needed 14.28 GiB here against 5.67 GiB for a training step (swarm run 3).
+                    with torch.autocast(self.device.type, dtype=torch.bfloat16, enabled=self.autocast):
+                        samples.append(measure_mini(self.model, batch, mode=mode,
+                                                    p_own=0.5 if mode == "own" else 0.0, generator=self.generator))
+        except Exception as error:
+            if self.memory_phases is not None:             # the swarm C0 probe: name the phase an OOM stopped
+                self.memory_phase("calibration-failed")
+                error.memory_phases = self.memory_phases   # type: ignore[attr-defined]
+            raise
         self.fit = fit_flops(samples)
         self.calibration = {"a": self.fit.a, "b": self.fit.b, "worst_residual": self.fit.worst,
                             "samples": [asdict(s) for s in samples], "seconds": time.perf_counter() - started}
@@ -357,7 +367,7 @@ class MiniTrainer(Trainer):
         recorder = InsertLog(model) if diagnose and InsertLog.applies(model) else None
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
-                                                           enabled=self.device.type == "cuda"):
+                                                           enabled=self.autocast):
                 out = model(batch, mode=plan.mode, p_own=plan.p_own, generator=self.generator)
         finally:
             for hook in hooks:
