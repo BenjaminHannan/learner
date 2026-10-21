@@ -26,9 +26,9 @@ CHOSEN=""
 for MT in 55000 40000 32000 24000; do
   OK=1
   for ARM in floor full; do
-    say "STEP memory/throughput: arm $ARM max-tokens $MT (40 steps)"
+    say "STEP memory/throughput: arm $ARM max-tokens $MT (40-step compressed curriculum: gold, teacher AND own phases, so the 8-loop memory peak is measured)"
     rm -rf "$O/mt_${ARM}_$MT"
-    $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/mt_${ARM}_$MT" --b2 "$B2" --skills "$SK" --steps 12000 --stop-after 40 --no-sleep --max-tokens $MT --eval-visits 64 --ckpt-every 1000 --eval-every 1000 --workers "$W" > "$C/mt_${ARM}_$MT.out" 2>&1
+    $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/mt_${ARM}_$MT" --b2 "$B2" --skills "$SK" --steps 40 --no-sleep --max-tokens $MT --eval-visits 64 --ckpt-every 1000 --eval-every 1000 --workers "$W" > "$C/mt_${ARM}_$MT.out" 2>&1
     RC=$?; echo "mt $ARM $MT rc=$RC"; [ -f "$O/mt_${ARM}_$MT/wake-done.json" ] && cat "$O/mt_${ARM}_$MT/wake-done.json" | head -c 600; echo
     [ "$RC" = 0 ] || OK=0
   done
@@ -37,10 +37,8 @@ done
 echo "CHOSEN_MAX_TOKENS=${CHOSEN:-none}" | tee "$C/chosen.txt"
 [ -n "$CHOSEN" ] || exit 1
 for ARM in floor full; do
-  say "STEP 2% of steps, real plan, arm $ARM, max-tokens $CHOSEN"
-  $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/two_pct_$ARM" --b2 "$B2" --skills "$SK" --steps 12000 --stop-after 240 --no-sleep --max-tokens $CHOSEN --eval-visits 256 --ckpt-every 120 --eval-every 120 --workers "$W" > "$C/two_pct_$ARM.out" 2>&1; echo "2pct $ARM rc=$?"; grep -E "step (120|240)/|DEV" "$C/two_pct_$ARM.out" | tail -4 | cut -c1-240
-  say "STEP compressed full curriculum, arm $ARM"
-  $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/compressed_$ARM" --b2 "$B2" --skills "$SK" --steps 400 --no-sleep --max-tokens $CHOSEN --eval-visits 256 --ckpt-every 100 --eval-every 100 --workers "$W" > "$C/compressed_$ARM.out" 2>&1; echo "compressed $ARM rc=$?"; grep -E "DEV|ABORT" "$C/compressed_$ARM.out" | tail -5 | cut -c1-240
+  say "STEP compressed full curriculum (300 steps = the ~2% check, all phases), arm $ARM, max-tokens $CHOSEN"
+  $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/compressed_$ARM" --b2 "$B2" --skills "$SK" --steps 300 --no-sleep --max-tokens $CHOSEN --eval-visits 256 --ckpt-every 100 --eval-every 100 --workers "$W" > "$C/compressed_$ARM.out" 2>&1; echo "compressed $ARM rc=$?"; grep -E "DEV|ABORT" "$C/compressed_$ARM.out" | tail -5 | cut -c1-240; cat "$O/compressed_$ARM/wake-done.json" | head -c 700; echo
 done
 say "STEP resume check (arm full)"
 $PY -m v1.run --arm full --root "$ROOTD" --out "$O/res_B" --b2 "$B2" --skills "$SK" --steps 40 --max-tokens 20000 --no-sleep --eval-visits 32 --ckpt-every 10 --eval-every 1000 --stop-after 25 --workers "$W" > "$C/res_B1.out" 2>&1
