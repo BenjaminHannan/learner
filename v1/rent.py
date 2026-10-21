@@ -206,6 +206,7 @@ def get(url, timeout=60):
 
 # ----------------------------------------------------------------------------- pack
 FLOOR_S = PREJOB_S + 1800            # pre-job + setup/builds: the deadline must at least cover this plus some run
+FLOOR_BY_KIND = {"gs3": 900}         # the small resume re-run needs only a short run
 
 
 def git(*args):
@@ -236,8 +237,8 @@ def run_deadline(dph, kind):
     if not (dph and dph > 0):
         raise SystemExit("--dph (the offer's $/h) is required")
     d = deadline_seconds(dph, kind)
-    if d < FLOOR_S:
-        raise SystemExit(f"at ${dph}/h the deadline is {d} s, under the floor {FLOOR_S} s; find a cheaper box or raise the cap")
+    if d < FLOOR_BY_KIND.get(kind, FLOOR_S):
+        raise SystemExit(f"at ${dph}/h the deadline is {d} s, under the floor {FLOOR_BY_KIND.get(kind, FLOOR_S)} s; find a cheaper box or raise the cap")
     return d
 
 
