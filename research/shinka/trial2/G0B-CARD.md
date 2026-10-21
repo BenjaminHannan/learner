@@ -22,6 +22,16 @@ per-batch name vectors, no change to `make_visits` or `FrozenReader`. Consequenc
 reader's random draws differ from G0's for the same seed number, so the 8 test names are different random
 vectors than in G0. That is unavoidable with more names and is the only deviation from "same toy".
 
+**Code check (shown, grep of `task/*.py`).** `n_ent_train` is used only in `toy.py`: `Vocab` (it sets where the
+relation/value/filler token ids start, so only the number of embedding rows), `make_visits` (the name pool),
+and `sensitivity` (not used here). It does not feed the reader's mixing, decay, normalisation, line templates or
+the answerer. So `ToyConfig(n_ent_train=512)` is accepted and logged as a **same-family reader** (one side
+effect: the embedding table has more rows, which shifts the random draws; seeds 110-112 differ from G0 anyway).
+
+**G0's training regime (shown, `g0_probe.py`).** A fixed set of 4000 training visits (32,000 lines) generated once;
+each of the 600 steps samples 512 lines with replacement from that set (about 9.6 passes). G0b matches this
+exactly; only the number of names in the pool changes.
+
 **Why 512 (chosen now, before any G0b result).** The reader state is 32-wide. A name can be "memorised" only if
 the probe has room to store it. 512 names is 16x the state width and 32x G0's 16 names, and about 120x the
 probe's per-name capacity budget (4,225 numbers over 512 names is about 8 numbers each), so storing each name
@@ -57,6 +67,13 @@ INVALID (a control missed) allows only the one fix already declared in `G0-PASSM
   necessary, not sufficient, for Stage 1; the next step is the coordinator's/Ben's call, not automatic.
 - FAIL: the person's position is not readable enough from these reader states for a per-line writer, even when
   memorising is impossible. The line closes.
+
+## What G0b does and does not test (written before any result)
+G0 already showed that a probe trained on novel-name lines reaches 1.0, so "is the person in the reader
+states" is answered **yes** (shown). G0b only tests whether a **name-independent rule** exists when the probe has
+512 training names. It does **not** test the real risk: a writer trained on the toy's **16** names failing to
+find the person on novel names. A PASS only lets the coordinator ask Ben about Stage 1 and the money-guard
+review round; the 16-name transfer stays **untested**.
 
 ## Review
 At most 2 review rounds, blocking-only (wrong numbers, or a probe that sees test names). The parked money-guard
