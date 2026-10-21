@@ -73,6 +73,7 @@ from typing import Any, Callable, Mapping, Optional, Sequence  # noqa: E402
 
 import torch  # noqa: E402
 
+from learnlab.train import TrainConfig  # noqa: E402  (the 14 GiB guard's one definition)
 from premonition.model import MODES  # noqa: E402  (the one definition; after the bootstrap above)
 
 # ------------------------------------------------------------------ the registered arms and numbers
@@ -84,6 +85,7 @@ ARMS: dict[str, dict[str, Any]] = {
 C0_ARMS: dict[str, dict[str, Any]] = {
     "D1": {}, "S0m2": dict(thinkers=2), "S0m4": ARMS["S0"], "S0m8": dict(thinkers=8), "S1m4": ARMS["S1"],
 }
+TRAIN_PROBE_ARMS = tuple(ARMS)                       # every arm `train` runs through train_d: D1, S0, S1
 P_OWN = 0.75                                         # the curriculum's flat p_own in the own phase
 CURRICULUM_WEIGHTS = {"gold": 0.05, "teacher": 0.25, "own": 0.70}
 F_TARGET = 2.6e16                                    # RUNCARD-S0 section 1: D1's FLOPs that define T
@@ -540,6 +542,10 @@ def train_probe(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, d
                          workers=workers, checkpoint=relative, memory_phases=True, log=lambda message: None,
                          **RUN_SETTINGS)
         _sync(device)
+    except Exception as error:                  # an OOM or crash inside train_d / calibrate is reported, not lost
+        return {"status": "exception", "error": f"{type(error).__name__}: {error}", "train_seconds": None,
+                "inner_wall_seconds": time.perf_counter() - began,
+                "memory_phases": getattr(error, "memory_phases", None)}
     finally:
         shutil.rmtree(Path(budget.root) / relative, ignore_errors=True)
     return {"status": report.get("status"), "error": report.get("error"), "train_seconds": report.get("train_seconds"),
@@ -580,6 +586,18 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
                           f"{(done.stderr or done.stdout)[-300:]}")
         probe = json.loads(out.read_text(encoding="utf-8"))
     phases = phase_summary(probe.get("memory_phases"))
+    names = [p.get("phase") for p in probe.get("memory_phases") or []]
+    if probe.get("status") == "exception" and "calibration-failed" in names:
+        raise c0_stop(f"c0: PROVED WRONG: the {arm} FLOP calibration failed inside train_d "
+                      f"({str(probe.get('error'))[:160]}); memory per phase, allocated/reserved GiB: {phases}")
+    calibration = next((p for p in probe.get("memory_phases") or [] if p.get("phase") == "calibration"), None)
+    limit = TrainConfig().memory_limit_bytes
+    if calibration and calibration.get("peak_allocated_bytes") is not None and \
+            max(calibration["peak_allocated_bytes"], calibration["peak_reserved_bytes"]) >= limit:
+        raise c0_stop(f"c0: PROVED WRONG: the {arm} FLOP calibration peaked at "
+                      f"{calibration['peak_allocated_bytes'] / 2**30:.2f}/{calibration['peak_reserved_bytes'] / 2**30:.2f} "
+                      f"GiB allocated/reserved, at or above the {limit / 2**30:.0f} GiB guard; "
+                      f"memory per phase, allocated/reserved GiB: {phases}")
     if probe.get("status") != "completed":                  # sixth pass, item 1: an aborted probe stops C0
         raise c0_stop(f"c0: the {arm} train-overhead probe did not complete (status {probe.get('status')!r}: "
                       f"{str(probe.get('error'))[:160]}); memory per phase, allocated/reserved GiB: {phases}; "
@@ -700,7 +718,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
     train_probes = {arm: measure_train_overhead(budget, args.data_rel, args.tokenizer, size=args.size,
                                                 device=args.device, workers=max(1, args.workers),
                                                 ckpt_dir=args.ckpt_dir, seconds=args.overhead_probe_seconds,
-                                                max_tokens=args.max_tokens, arm=arm) for arm in ("S0", "D1")}
+                                                max_tokens=args.max_tokens, arm=arm) for arm in TRAIN_PROBE_ARMS}
     probe, train_probe = probes["S0"], train_probes["S0"]
     ratio = steps_ratio(per_arm["D1"]["mean_s_per_update"], per_arm["S0m4"]["mean_s_per_update"])
     flags = stop_flags(ratio, T, probe["estimate_seconds"], args.dph, train_overhead=train_probe["overhead_seconds"],
@@ -720,6 +738,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
         "d1_flops_per_s": d1_flops_per_s, "f_target": F_TARGET, "T_raw": t_raw, "T_formula": t_formula,
         "t_raw_curriculum": t_raw_modes, "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
         "eval_probe_d1": probes["D1"], "train_probe_d1": train_probes["D1"],
+        "train_probe_s1": train_probes["S1"],
         "ratio_s0m4_over_d1": flags["ratio"], "stop_and_ask": flags["stop_and_ask"],
         "money_stop": flags["money_stop"], "flags": flags,
         "ratios_over_d1": {arm: steps_ratio(per_arm["D1"]["mean_s_per_update"], v["mean_s_per_update"])

@@ -1617,11 +1617,142 @@ class NinthPassRunnerTest(MarksTestCase):
             self.assertNotIn(stale, spec)
 
 
+from tests.test_premonition_train import AutocastKit as _Autocast  # noqa: E402
+
+
+class CalibrationFlopsUnderAutocastTest(_Autocast, unittest.TestCase):
+    """Swarm run 4. Tolerance 0.1% (`TOLERANCE`), written down before the first run: calibrating under the training
+    step's bf16 autocast must not move the FLOP counts, the fit, or the FLOPs per update that set T."""
+
+    def test_autocast_leaves_the_flop_counts_and_the_fit_alone_for_d1_and_s0(self) -> None:
+        batches = self.batches()
+        for name, thinkers in (("D1", 1), ("S0", 3)):
+            with self.subTest(arm=name):
+                trainer_half, trainer_full = self.build(thinkers, True), self.build(thinkers, False)
+                half, seen = self.calibrate_spied(trainer_half, batches)
+                self.assertTrue(all(seen), seen)           # the comparison is not vacuous: autocast was really on
+                full, _ = self.calibrate_spied(trainer_full, batches)
+                for a, b in zip(trainer_half.calibration["samples"], trainer_full.calibration["samples"]):
+                    self.assertEqual((a["tokens"], a["question_loops"]), (b["tokens"], b["question_loops"]))
+                    self.assertLessEqual(abs(a["flops"] - b["flops"]) / b["flops"], self.TOLERANCE)
+                config = trainer_full.model.config
+                rows = batches[3:]                         # four batches the fit was not made on
+                per_update = {k: screen.curriculum_flops(f, rows, config) for k, f in (("half", half), ("full", full))}
+                self.assertLessEqual(abs(per_update["half"]["weighted"] - per_update["full"]["weighted"])
+                                     / per_update["full"]["weighted"], self.TOLERANCE)
+                for mode in ("gold", "teacher", "own"):
+                    self.assertLessEqual(abs(per_update["half"][mode] - per_update["full"][mode])
+                                         / per_update["full"][mode], self.TOLERANCE, mode)
+
+
 class RunThreePrepTest(unittest.TestCase):
     """Coordinator ruling on RUN2-C0-STOP (option ii): C0's train-overhead probe runs in a FRESH subprocess, after the
     parent frees its cache, and logs memory per phase so an abort names its phase. The guard is unchanged."""
 
     GIB = 2 ** 30
+
+    PHASE = {"start": (0.01, 0.03), "calibration": (5.0, 6.0), "step1": (5.7, 6.0)}
+
+    def phases(self, **override) -> list:
+        table = {**self.PHASE, **override}
+        return [{"phase": name, "peak_allocated_bytes": a * self.GIB, "peak_reserved_bytes": r * self.GIB}
+                for name, (a, r) in table.items()]
+
+    def probe(self, probe: dict):
+        with fake_probe_process(probe):
+            with tempfile.TemporaryDirectory() as root:
+                return screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="full",
+                                                     device="cuda", workers=1, ckpt_dir="ck", seconds=20.0,
+                                                     max_tokens=10, arm="S1")
+
+    def test_the_calibration_mark_covers_every_arm_that_trains_through_train_d(self) -> None:
+        import inspect
+        self.assertEqual(set(screen.TRAIN_PROBE_ARMS), set(screen.ARMS))
+        self.assertEqual(set(screen.TRAIN_PROBE_ARMS), {"D1", "S0", "S1"})
+        self.assertIn("for arm in TRAIN_PROBE_ARMS", inspect.getsource(screen.cmd_c0))
+        for arm in screen.TRAIN_PROBE_ARMS:                      # and `train` accepts each of them
+            screen.build_parser().parse_args(["train", "--arm", arm, "--seed", "0", "--seconds", "1",
+                                              "--data-rel", "d", "--tokenizer", "t", "--out", "o.json"])
+
+    def test_a_calibration_peak_at_the_guard_is_proved_wrong_even_when_the_probe_aborted(self) -> None:
+        for allocated, reserved in ((14.28, 14.43), (14.0, 14.1), (9.0, 14.0)):
+            with self.subTest(allocated=allocated):
+                phases = self.phases(calibration=(allocated, reserved))
+                for status in ("completed", "aborted"):
+                    with self.assertRaises(screen.Stop) as caught:
+                        self.probe({"status": status, "error": "over", "train_seconds": 1.0, "memory_phases": phases})
+                    self.assertEqual(caught.exception.code, screen.C0_STOP)
+                    self.assertIn("PROVED WRONG", str(caught.exception))
+
+    def test_the_guard_is_derived_from_the_trainer_config(self) -> None:
+        from learnlab.train import TrainConfig
+        self.assertEqual(TrainConfig().memory_limit_bytes, 14 * self.GIB)
+        phases = self.phases(calibration=(13.9, 13.95))
+        out = self.probe({"status": "completed", "train_seconds": 1.0, "memory_phases": phases})
+        self.assertTrue(out["fresh_process"])                    # 13.9 GiB passes under 14 GiB
+        import dataclasses
+        screen.TrainConfig = dataclasses.make_dataclass("C", [("memory_limit_bytes", int, 13 * self.GIB)])
+        try:
+            with self.assertRaises(screen.Stop) as caught:
+                self.probe({"status": "completed", "train_seconds": 1.0, "memory_phases": phases})
+            self.assertIn("PROVED WRONG", str(caught.exception))    # the limit came from TrainConfig, not a literal
+        finally:
+            screen.TrainConfig = TrainConfig
+
+    def test_a_calibration_oom_is_proved_wrong_not_a_generic_probe_failure(self) -> None:
+        phases = self.phases()
+        phases[1:] = [{"phase": "calibration-failed", "peak_allocated_bytes": 23.5 * self.GIB,
+                       "peak_reserved_bytes": 23.9 * self.GIB}]
+        with self.assertRaises(screen.Stop) as caught:
+            self.probe({"status": "exception", "error": "OutOfMemoryError: CUDA out of memory",
+                        "train_seconds": None, "memory_phases": phases})
+        self.assertIn("PROVED WRONG", str(caught.exception))
+        self.assertIn("calibration failed", str(caught.exception))
+
+    def test_an_exception_outside_calibration_is_the_generic_stop(self) -> None:
+        with self.assertRaises(screen.Stop) as caught:
+            self.probe({"status": "exception", "error": "KeyError: x", "train_seconds": None,
+                        "memory_phases": self.phases()[:1]})
+        self.assertNotIn("PROVED WRONG", str(caught.exception))
+        self.assertIn("did not complete", str(caught.exception))
+
+    def test_train_probe_reports_an_exception_with_the_phases_train_d_attached(self) -> None:
+        import premonition.train as ptrain
+        saved = ptrain.train_d
+
+        def boom(*args, **kwargs):
+            error = RuntimeError("CUDA out of memory")
+            error.memory_phases = [{"phase": "calibration-failed"}]
+            raise error
+        ptrain.train_d = boom
+        try:
+            with tempfile.TemporaryDirectory() as root:
+                out = screen.train_probe(type("B", (), {"root": root})(), "d", "t", size="full", device="cpu",
+                                         workers=1, ckpt_dir="ck", seconds=1.0, max_tokens=10, arm="S1")
+        finally:
+            ptrain.train_d = saved
+        self.assertEqual(out["status"], "exception")
+        self.assertEqual(out["memory_phases"], [{"phase": "calibration-failed"}])
+
+    def test_a_failing_calibration_attaches_its_phases_only_when_instrumented(self) -> None:
+        import premonition.train as ptrain
+        saved = ptrain.measure_mini
+
+        def boom(*args, **kwargs):
+            raise RuntimeError("CUDA out of memory")
+        ptrain.measure_mini = boom
+        try:
+            plain = _Autocast().build(1, False)
+            with self.assertRaises(RuntimeError) as caught:
+                plain.calibrate(_Autocast.batches()[:1])
+            self.assertFalse(hasattr(caught.exception, "memory_phases"))      # a real train just raises
+            instrumented = _Autocast().build(1, False)
+            instrumented.memory_phases = [{"phase": "start"}]
+            with self.assertRaises(RuntimeError) as caught:
+                instrumented.calibrate(_Autocast.batches()[:1])
+        finally:
+            ptrain.measure_mini = saved
+        self.assertEqual([p["phase"] for p in caught.exception.memory_phases], ["start", "calibration-failed"])
 
     def test_the_probe_is_a_fresh_train_probe_process(self) -> None:
         order = []
