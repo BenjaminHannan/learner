@@ -62,13 +62,34 @@ from premonition import swarm as swarm_module
 from premonition import identity, preprocess
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
 from premonition.config import MiniConfig
-from premonition.flops import FlopFit, fit_flops, measure_mini
+from premonition.flops import FlopFit, FlopSample, fit_flops, measure_mini
 from premonition.model import Answers, PremonitionMini
 from premonition.pointer import answer_text
 
 Log = Callable[[str], None]
 FORMAT = "premonition-mini-checkpoint"
 FORMAT_VERSION = 1
+CALIBRATION_CHUNK_TOKENS = 14_000      # padded positions per FLOP-calibration piece (about a quarter of a 55,000-token batch)
+
+
+def visit_chunks(batch: VisitBatch, chunk_tokens: Optional[int]) -> list[tuple[int, int]]:
+    """[start, stop) visit ranges covering `batch`: whole visits only, each range within `chunk_tokens` padded
+    positions and within the same share of the batch's questions (memory grows with both), except that a range
+    always holds at least one visit. `None` is one range."""
+    visits, length = batch.tokens.shape
+    if chunk_tokens is None or visits == 0:
+        return [(0, visits)]
+    rows = max(1, chunk_tokens // max(length, 1))
+    per_visit = torch.bincount(batch.q_visit, minlength=visits).tolist()
+    question_cap = max(1, -(-sum(per_visit) * rows // visits))
+    ranges, start, asked = [], 0, 0
+    for visit in range(visits):
+        if visit > start and (visit - start >= rows or asked + per_visit[visit] > question_cap):
+            ranges.append((start, visit))
+            start, asked = visit, 0
+        asked += per_visit[visit]
+    ranges.append((start, visits))
+    return ranges
 
 
 # ----------------------------------------------------------------------------- curriculum
@@ -292,16 +313,29 @@ class MiniTrainer(Trainer):
             torch.cuda.reset_peak_memory_stats(self.device)
         self.memory_phases.append(row)
 
-    def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
-                  ) -> FlopFit:
-        """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward)."""
+    def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own"),
+                  chunk_tokens: Optional[int] = None) -> FlopFit:
+        """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward).
+
+        The counter runs in fp32 with no autocast, so a whole 55,000-token batch needs about 14 GiB (swarm run 3)
+        against 5.7 GiB for a bf16 training step. Each batch is therefore measured in chunks of WHOLE visits of at
+        most `chunk_tokens` padded positions (a visit longer than that is a chunk of its own, never cut: attention
+        FLOPs are not linear in length), and the chunks' FLOPs, tokens and question loops are summed back into one
+        sample per (batch, mode). `None` (the default, so every other caller is unchanged) measures whole batches; the
+        swarm screen's `train_d` and C0 pass `CALIBRATION_CHUNK_TOKENS`. Known limit: the model sizes the answer
+        decoder from the longest answer in the batch it is given, so a chunk whose longest answer is shorter than the
+        batch's counts slightly fewer decoder FLOPs (only ever low)."""
         samples = []
         started = time.perf_counter()
         for batch in batches:
-            batch = batch.to(self.device)
+            chunks = [batch.select_visits(start, stop).to(self.device)
+                      for start, stop in visit_chunks(batch, chunk_tokens)]
             for mode in modes:
-                samples.append(measure_mini(self.model, batch, mode=mode, p_own=0.5 if mode == "own" else 0.0,
-                                            generator=self.generator))
+                parts = [measure_mini(self.model, chunk, mode=mode, p_own=0.5 if mode == "own" else 0.0,
+                                      generator=self.generator) for chunk in chunks]
+                samples.append(FlopSample(sum(p.flops for p in parts), sum(p.tokens for p in parts),
+                                          sum(p.question_loops for p in parts)))
+            del chunks
         self.fit = fit_flops(samples)
         self.calibration = {"a": self.fit.a, "b": self.fit.b, "worst_residual": self.fit.worst,
                             "samples": [asdict(s) for s in samples], "seconds": time.perf_counter() - started}
@@ -1196,7 +1230,7 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
         trainer.memory_phase("start")                       # process start to here: caches, model on the device
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
-    fit = trainer.calibrate(head)
+    fit = trainer.calibrate(head, chunk_tokens=CALIBRATION_CHUNK_TOKENS)
     trainer.memory_phase("calibration")
     log(f"premonition train {variant}: {model.num_parameters():,} params, F = {flop_budget:.3e}; FLOP fit "
         f"a = {fit.a:.4g}/token, b = {fit.b:.4g}/(question x loop), worst residual {fit.worst:.1%}")

@@ -61,6 +61,21 @@ class VisitBatch:
         """(visits, tokens per visit, questions)."""
         return self.tokens.shape[0], self.tokens.shape[1], self.q_visit.shape[0]
 
+    def select_visits(self, start: int, stop: int) -> "VisitBatch":
+        """Visits [start, stop) as a batch of their own. Whole visits only: no visit is cut, and the padded widths
+        (tokens, lines, answers, gold) are kept, so the chunks of a batch add up to its padded tokens exactly."""
+        keep = (self.q_visit >= start) & (self.q_visit < stop)
+        return VisitBatch(
+            tokens=self.tokens[start:stop], line_of=self.line_of[start:stop], card_end=self.card_end[start:stop],
+            lengths=self.lengths[start:stop], lm_mask=self.lm_mask[start:stop],
+            line_is_question=self.line_is_question[start:stop], line_start=self.line_start[start:stop],
+            line_ents=self.line_ents[start:stop],
+            q_visit=self.q_visit[keep] - start, q_line=self.q_line[keep], q_span=self.q_span[keep],
+            answer=self.answer[keep], gold_lines=self.gold_lines[keep], depth=self.depth[keep],
+            question_ids=[q for q, k in zip(self.question_ids, keep.tolist()) if k],
+            names=self.names[start:stop],
+            slices=None if self.slices is None else {name: tag[keep] for name, tag in self.slices.items()})
+
     def to(self, device: torch.device) -> "VisitBatch":
         moved = {name: value.to(device) if isinstance(value, torch.Tensor) else value
                  for name, value in self.__dict__.items()}
