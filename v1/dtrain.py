@@ -59,14 +59,34 @@ class StepTrainer(MiniTrainer):
     """MiniTrainer driven by a step budget: the curriculum share is step / total_steps."""
 
     def __init__(self, model: PremonitionMini, config, device, *, total_steps: int, seed: int = 0,
-                 curriculum: Curriculum = Curriculum(), guard_fraction: float = vguard.FRACTION) -> None:
+                 curriculum: Curriculum = Curriculum(), guard_fraction: float = vguard.FRACTION,
+                 optimizer: str = "adamw") -> None:
+        if optimizer not in ("adamw", "muon"):
+            raise ValueError("optimizer must be adamw or muon")
         super().__init__(model, config, device, flop_budget=1.0, curriculum=curriculum, seed=seed)
+        self.optimizer_name = optimizer
+        if optimizer == "muon":      # Muon on 2-D hidden matrices only; embeddings/head/norms/biases stay on AdamW
+            from premonition.muon import MuonAdamW, muon_param_groups
+            self.optimizer = MuonAdamW(muon_param_groups(self.model, config.weight_decay), lr=config.lr,
+                                       betas=(config.beta1, config.beta2), eps=config.eps,
+                                       fused=True if self.device.type == "cuda" else None)
         self.total_steps = int(total_steps)
         self.guard_limit = vguard.limit_bytes(self.device, guard_fraction)
         self.config = config
 
     def plan(self) -> Plan:
         return self.curriculum.plan(self.step / self.total_steps)
+
+    def optimizer_grouping(self) -> dict[str, Any]:
+        """Which parameters each optimizer group holds (printed and checked once in Gate S)."""
+        names = {id(p): n for n, p in self.model.named_parameters()}
+        out = {"optimizer": self.optimizer_name, "groups": []}
+        for g in self.optimizer.param_groups:
+            ps = g["params"]
+            out["groups"].append({"muon": bool(g.get("muon", False)), "weight_decay": g.get("weight_decay"),
+                                  "n_tensors": len(ps), "n_params": sum(p.numel() for p in ps),
+                                  "names": [names[id(p)] for p in ps]})
+        return out
 
     def checkpoint_payload(self, extra: Optional[dict] = None) -> dict[str, Any]:
         return {"model": self.model.state_dict(), "optimizer": self.optimizer.state_dict(),
