@@ -36,6 +36,7 @@ sufficient; a fail on a labelled probe is the stronger signal.
 ## 3. Bar sizing (shown, `results/trial2/bar_sizing.json`)
 Rule: `G0-PASSMARK.md`. Data: novel-name accuracy, seeds 100-104 only, paired by seed.
 - Largest paired-difference sd involving multi-head: 0.045 (two_pool - multihead). SE over 6 seeds = 0.0186, **2 x SE = 0.037 < 0.05. The +0.05 bar stands.** It is not lowered.
+- **How the tightening is read (written 2026-10-21 BEFORE the 105-109 runs):** only baseline and multi-head are run on 105-109, so only the pair multihead - baseline has 10 seeds; the other multi-head pairs keep their 5 seeds (100-104). s = the largest paired sd over all pairs that include multi-head, each on the seeds it has; bar = max(0.05, 2 x s / sqrt(6) rounded up to the next 0.005). The result goes in `results/trial2/bar_sizing_10.json`.
 - Caveat: with only 5 pairs the 95% interval on that sd is 0.027 to 0.131; at the upper end 2 x SE would be 0.107. The estimate is rough.
 - **Pre-declared tightening (sealed with this card, only ever raises the bar):** before Stage 1, run the baseline and multi-head on noise seeds 105-109 (CPU only, about 5 minutes, plan section 4). Recompute the paired sd over all 10 seeds with the same rule. The sealed bar is `max(0.05, 2 x SE rounded up to the next 0.005)`. It is never below +0.05.
 - Pairing did not shrink the spread (paired sd 0.045 vs single-writer sd 0.045), so the "well under 0.02" hope in the plan (suggested) is not supported: the SE of the mean difference is about 0.019.
