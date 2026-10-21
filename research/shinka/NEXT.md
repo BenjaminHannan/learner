@@ -67,3 +67,12 @@ Migration is off for the first 40% of generations. The strange slot starts only 
 - the four-way report: both / better-but-known / novel-but-not-better / neither.
 
 Trial 1's harness worked as intended. What went wrong was the search: it covered too few generations and never moved beyond the first idea family it found.
+
+## Trial 2 status (2026-10-21): stopped at G0
+
+Trial 2 (idea-first, `TRIAL2-PLAN-OPUS.md`) stopped at its sealed $0 gate G0. Details: `trial2/CARD2.md`, `trial2/G0-PASSMARK.md`, `results/trial2/g0.json`. Spend: $0.110 (plumbing test only). Stage 1 was never started.
+
+- **Result (shown):** a probe that sees one line's reader states found the person's position on 43% of novel-name lines (mark 60%; seeds 33%, 34%, 62%; chance 10%). Controls valid. The coordinator ruled the FAIL final.
+- **Caveat (suggested, not tested):** the probe was trained on only 16 names and scored 100% on them, so it probably memorised those names' vectors. Multi-head already finds the person on about 57% of novel lines, more than the probe did. The FAIL may therefore say more about the probe than about the toy.
+- **Redesign option (needs Ben's decision; new gate, new pass mark written first, never tuned on this result):** a probe that must find the person by role structure, for example "the token that is not a filler, relation or value", with training that gives it no way to memorise names (many more names, or random name vectors per batch).
+- **Side results:** one Sonnet prosecutor call with web search cost $0.092 (plan estimated $0.25-0.35). The +0.05 bar held against the existing noise (2 x SE = 0.037, wide interval). The money guard is built and tested but its scripts are PARKED, with 8 review findings open (`trial2/REVIEW-STATUS.md`).
