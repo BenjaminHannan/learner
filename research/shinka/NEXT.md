@@ -68,7 +68,9 @@ Migration is off for the first 40% of generations. The strange slot starts only 
 
 Trial 1's harness worked as intended. What went wrong was the search: it covered too few generations and never moved beyond the first idea family it found.
 
-## Trial 2 status (2026-10-21): stopped at G0
+## Trial 2 status (2026-10-21): G0 failed; G0b (512-name probe) PASSED, Stage 1 ready, not launched
+
+Update: G0b passed (novel-name person-position 0.968, `trial2/G0B-REPORT.md`). It does not test the 16-name transfer. Stage 1 (`trial2/ideate.py`, cap $5.00, stop $4.50) waits for the coordinator's GO. Older text below is the state at the G0 failure.
 
 Trial 2 (idea-first, `TRIAL2-PLAN-OPUS.md`) stopped at its sealed $0 gate G0. Details: `trial2/CARD2.md`, `trial2/G0-PASSMARK.md`, `results/trial2/g0.json`. Spend: $0.110 (plumbing test only). Stage 1 was never started.
 

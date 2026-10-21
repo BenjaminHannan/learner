@@ -108,7 +108,7 @@ def test_call_refused_when_worst_case_passes_stage_cap(g):
     fill(g, "0", 0.49)
     c = FakeClient()
     gc = GuardedClient(c, g)
-    with pytest.raises(MoneyStop, match="stage cap"):
+    with pytest.raises(MoneyStop, match="stage (cap|stop)"):
         gc.create("0", "t", **params(max_tokens=4000))
     assert c.calls == 0                                   # refused BEFORE sending
 
@@ -126,13 +126,25 @@ def test_ledger_shared_across_instances(g):
 
 
 def test_no_borrowing_between_stages(g):
-    fill(g, "1", 7.999)
+    fill(g, "1", 4.499)
     c = FakeClient()
-    with pytest.raises(MoneyStop, match="stage cap"):
+    with pytest.raises(MoneyStop, match="stage (cap|stop)"):
         GuardedClient(c, g).create("1", "t", **params(OPUS, max_tokens=8000))
     assert c.calls == 0
     GuardedClient(c, g).create("2", "t", **params())     # stage 2 has its own money
     assert c.calls == 1
+
+
+def test_stage1_stop_is_4_50_under_a_5_00_cap():
+    assert P["stages"]["1"]["cap_usd"] == 5.0 and P["stages"]["1"]["stop_usd"] == 4.5
+
+
+def test_stage1_call_refused_past_the_4_50_stop_even_though_cap_is_5(g):
+    fill(g, "1", 4.40)
+    c = FakeClient()
+    with pytest.raises(MoneyStop, match="stage stop"):
+        GuardedClient(c, g).create("1", "t", **params(OPUS, max_tokens=8000))   # worst case > $0.10
+    assert c.calls == 0
 
 
 def test_unknown_stage_refused(g):

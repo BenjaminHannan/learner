@@ -24,3 +24,11 @@ Round 2 (same reviewer settings, after the fixes above): **NOT CLEAN, 9 findings
 9. `batch_collect` polls with no deadline and drops the hold even if some custom_ids never came back.
 
 After round 2 (UNREVIEWED edits, made so the plumbing test could run safely): `make_client` now uses `max_retries=0` (finding 1 of round 2); the prosecutor prompt now requires at least 3 web searches (the first plumbing call searched zero times). Findings 2-9 are still open.
+
+## Extra review round (Ben's allowance, 2026-10-21; blocking findings only: wrong spend numbers, a way to exceed the cap, guard silently off)
+Reviewed: the open round-2 findings 2-9 and the Stage 1 path (batch submit / collect, no tools, no caching).
+- Finding 1 (hidden SDK retries): fixed earlier (`max_retries=0`), re-confirmed in `prosecute.make_client`. Stage 1 uses that client.
+- **New (required by the ruling): Stage 1 cap $5.00 with a $4.50 stop.** `pricing.json` stage 1 = cap 5.00, stop_usd 4.50; `Guard.stage_stop` is used in the pre-send check (tagged GUARD-stage, so the mutation check covers it); a charge past the hard cap still raises MoneyStop. Two new tests. 39 tests pass; mutation check: all 5 guards caught.
+- Not blocking for Stage 1, left as is: 2 (superseded by G0b), 3 (done differently: `bar_sizing_10.py`), 4 (a 5xx charges the full hold: over-counts, so safe; a transient error stops the run and needs a human look), 5 (`paused_out` only matters for prosecute, Stage 3), 6 (mutation coverage), 7 (speed), 9 (poll has no deadline: costs no money; a never-ending batch keeps its hold).
+- Finding 8 (worst case is a heuristic): the margin between the $4.50 stop and the $5.00 cap is the backstop. Stage 1 uses no web search, so the 15,000-token-per-search figure does not apply. Estimated Stage 1 worst case: pass 1 about $3.07 held (released as results are charged), expected actual about $1-2.
+- Result: **no blocking finding open for Stage 1.** Scripts for Stages 3+ stay PARKED/DRAFT. No further round.

@@ -116,6 +116,10 @@ class Guard:
             raise MoneyStop(f"unknown stage {stage!r}")
         return s["cap_usd"]
 
+    def stage_stop(self, stage: str) -> float:
+        """Spending line for new calls: the stage's optional stop_usd (below its cap), else its cap."""
+        return min(self.stage_cap(stage), self.p["stages"][str(stage)].get("stop_usd", float("inf")))
+
     def stage_left(self, stage: str) -> float:
         return self.stage_cap(stage) - self.spent(str(stage))
 
@@ -123,11 +127,11 @@ class Guard:
         return self.p["whole_trial"]["hard_stop_usd"] - self.spent()
 
     def _check(self, rows: list[dict], stage: str, worst_usd: float, what: str) -> None:
-        cap, hard = self.stage_cap(stage), self.p["whole_trial"]["hard_stop_usd"]
+        cap, hard = self.stage_stop(stage), self.p["whole_trial"]["hard_stop_usd"]
         in_stage, in_trial = self._sum(rows, stage), self._sum(rows, None)
         if in_stage + worst_usd > cap:  # GUARD-stage
             raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + stage {stage} spent/held "
-                            f"${in_stage:.4f} exceeds the stage cap ${cap:.2f}")
+                            f"${in_stage:.4f} exceeds the stage stop ${cap:.2f}")
         if in_trial + worst_usd > hard:  # GUARD-trial
             raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + trial spent/held "
                             f"${in_trial:.4f} exceeds the whole-trial hard stop ${hard:.2f}")
