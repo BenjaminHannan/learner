@@ -1551,7 +1551,8 @@ class NinthPassRunnerTest(MarksTestCase):
             screen.bench(run_one, rounds=1, device="cuda", log=lambda m: None)
             self.assertEqual(resets, ["empty", "reset"])                       # after S1m4's failure
             resets.clear()
-            with fake_probe_process({"status": "completed", "train_seconds": 1.0}, calls=resets):
+            with fake_probe_process({"status": "completed", "train_seconds": 1.0, "memory_phases": [
+                    {"phase": "calibration", "peak_allocated_bytes": 2 ** 30, "peak_reserved_bytes": 2 ** 30}]}, calls=resets):
                 with tempfile.TemporaryDirectory() as root:
                     screen.measure_train_overhead(type("B", (), {"root": root})(), "d", "t", size="tiny",
                                                   device="cuda", workers=1, ckpt_dir="ck", seconds=1.0,
