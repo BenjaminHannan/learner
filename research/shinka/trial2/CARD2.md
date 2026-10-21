@@ -36,7 +36,8 @@ sufficient; a fail on a labelled probe is the stronger signal.
 ## 3. Bar sizing (shown, `results/trial2/bar_sizing.json`)
 Rule: `G0-PASSMARK.md`. Data: novel-name accuracy, seeds 100-104 only, paired by seed.
 - Largest paired-difference sd involving multi-head: 0.045 (two_pool - multihead). SE over 6 seeds = 0.0186, **2 x SE = 0.037 < 0.05. The +0.05 bar stands.** It is not lowered.
-- Caveat: with only 5 pairs the 95% interval on that sd is 0.027 to 0.131; at the upper end 2 x SE would be 0.107. The estimate is rough. The tighter fix in the plan (noise runs on seeds 105-109) is a CPU-only job still to do if the trial goes on.
+- Caveat: with only 5 pairs the 95% interval on that sd is 0.027 to 0.131; at the upper end 2 x SE would be 0.107. The estimate is rough.
+- **Pre-declared tightening (sealed with this card, only ever raises the bar):** before Stage 1, run the baseline and multi-head on noise seeds 105-109 (CPU only, about 5 minutes, plan section 4). Recompute the paired sd over all 10 seeds with the same rule. The sealed bar is `max(0.05, 2 x SE rounded up to the next 0.005)`. It is never below +0.05.
 - Pairing did not shrink the spread (paired sd 0.045 vs single-writer sd 0.045), so the "well under 0.02" hope in the plan (suggested) is not supported: the SE of the mean difference is about 0.019.
 
 ## 4. Pass card
@@ -58,13 +59,13 @@ Any failed gate ends the trial; nothing after it is spent.
 
 ## 6. Money stop (in code: `trial2/money.py`, `guarded.py`, `pricing.json`)
 - **Every paid call goes through `GuardedClient`.** Cost is computed from each response's own usage (input, output, cache write by TTL, cache read, web-search count) at rates in `pricing.json`, checked 2026-10-21 against the claude-api reference. Unverified rates are flagged in that file (web search $10 per 1,000 searches; Haiku cache read).
-- **Before sending**, a call's worst case (all input uncached, x write multiplier if caching is asked for, all of `max_tokens` as output, every allowed search used and each adding 15,000 result tokens) must fit in what is left of its OWN stage and, separately, under the whole-trial hard stop. Else `MoneyStop`, nothing sent.
-- **Batches**: the summed worst case (no batch discount) is checked first; if accepted it is held in the ledger until collected, so nothing else can spend it.
-- **A request that fails in an unknown way is charged at its worst case.** A clean 4xx rejection is not charged.
+- **Before sending**, check-and-reserve is one locked step: a call's worst case (all input uncached, x write multiplier if caching is asked for, all of `max_tokens` as output, every allowed search used and each adding 15,000 result tokens) must fit in what is left of its OWN stage and, separately, under the whole-trial hard stop. Else `MoneyStop`, nothing sent. The worst case is written to the ledger as a hold before the call, so parallel workers cannot both spend the last dollars; it is replaced by the real charge from the response's usage. A web-search tool without `max_uses` is refused; a request that asks for caching is priced at its dearest TTL.
+- **Batches**: the summed worst case (no batch discount) is held before submit and shrinks only as each result is charged (once per custom_id); it is dropped after the last one. A failed collect leaves the hold in place.
+- **A request that fails in an unknown way is charged at its worst case.** A clean rejection (400, 401, 402, 403, 404, 413, 422, 429) is not charged; 408, 409, 5xx and timeouts are.
 - **A charge that ends over a cap raises `MoneyStop`**, and later calls are then refused.
 - Stage caps: 0 = $0.50, 1 = $8, 2 = $4, 3 = $16, 4 = $6, 5 = $8, 6 = $3. **Whole-trial hard stop $45, warning $40**, far under Ben's $100 ceiling. No stage borrows from another. (The caps sum to $45.50, so in the unlikely case every stage runs to its cap the hard stop bites first, by $0.50.)
 - Ledger: `results/TRIAL2_LEDGER.jsonl`, re-read under a file lock on every check, so separate processes agree.
-- Tests: `test_money.py` (21 tests, fake client, no network). `mutation_check.py` switches off each of the 5 guard lines in a copy and requires the tests to fail: all 5 are caught.
+- Tests: `test_money.py` (33 tests, fake client, no network). `mutation_check.py` switches off each of the 5 guard lines in a copy and requires a real assertion failure (not an import error), after first checking the unmutated copy passes: all 5 are caught.
 - Plumbing test (one prosecutor call, Stage 0, cap $0.50): written, **NOT RUN** (no API key in the build session). Worst case for the call is $0.28.
 
 ## 7. Who does the hand check at run time
@@ -83,4 +84,4 @@ two known items), so Ben can see what the strict rule cost.
 - G0 FAILED: the coordinator and Ben decide whether the trial stops here (this card's rule) or whether a redesigned G0 is allowed. A new G0 would need its own pass mark written first and must not be tuned on this result.
 - Plumbing test still to run once `ANTHROPIC_API_KEY` exists; its measured cost goes into section 6.
 - Scripts for Stages 1, 2, 4, 5 (`ideate.py`, `screen.py`, `implement.py`, `refine.py`) are NOT built; only the money guard, the guarded client and `prosecute.py` are. They wait for the go/no-go on G0.
-- Code review of the scripts: see `REVIEW-STATUS.md`.
+- Code review of the scripts: see `REVIEW-STATUS.md` (scripts stay DRAFT until it says clean).

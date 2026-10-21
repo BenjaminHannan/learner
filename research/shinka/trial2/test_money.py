@@ -57,7 +57,8 @@ def g(tmp_path):
 
 
 def fill(g, stage, usd):
-    g._append({"t": 0, "stage": stage, "model": "x", "tag": "pre", "usd": usd})
+    with g._locked():
+        g._write([{"t": 0, "stage": stage, "model": "x", "tag": "pre", "usd": usd}])
 
 
 def params(model=SONNET, max_tokens=1000, text="hi", tools=None):
@@ -197,12 +198,34 @@ def test_batch_accepted_holds_money_then_charges_at_batch_rate(g):
     reqs = [{"custom_id": "a", "params": params(max_tokens=500)}, {"custom_id": "b", "params": params(max_tokens=500)}]
     c = FakeClient({"input_tokens": 1000, "output_tokens": 500})
     gc = GuardedClient(c, g)
-    gc.batch_submit("2", "t", reqs)
+    batch, hold = gc.batch_submit("2", "t", reqs)
     assert c.batch_calls == 1 and g.spent("2") > 0          # held
     held = g.spent("2")
-    gc.batch_collect("2", "t", "b1", {"a": SONNET, "b": SONNET}, poll_s=0)
-    assert g.spent("2") == pytest.approx(0.5 * (1000 * 2 + 500 * 10) / 1e6)   # only 'a' succeeded
+    gc.batch_collect("2", "t", batch, hold, {"a": SONNET, "b": SONNET}, poll_s=0)
+    assert g.spent("2") == pytest.approx(0.5 * (1000 * 2 + 500 * 10) / 1e6)   # only 'a' succeeded; hold gone
     assert g.spent("2") < held
+
+
+def test_batch_collect_twice_does_not_double_charge(g):
+    reqs = [{"custom_id": "a", "params": params(max_tokens=500)}]
+    gc = GuardedClient(FakeClient({"input_tokens": 1000, "output_tokens": 500}), g)
+    batch, hold = gc.batch_submit("2", "t", reqs)
+    gc.batch_collect("2", "t", batch, hold, {"a": SONNET}, poll_s=0)
+    once = g.spent("2")
+    gc.batch_collect("2", "t", batch, hold, {"a": SONNET}, poll_s=0)
+    assert g.spent("2") == pytest.approx(once)
+
+
+def test_batch_hold_survives_a_failed_collect(g):
+    reqs = [{"custom_id": "a", "params": params(max_tokens=500)}]
+    c = FakeClient({"input_tokens": 1000, "output_tokens": 500})
+    gc = GuardedClient(c, g)
+    batch, hold = gc.batch_submit("2", "t", reqs)
+    held = g.spent("2")
+    c.messages.batches.results = lambda i: (_ for _ in ()).throw(ConnectionError("boom"))
+    with pytest.raises(ConnectionError):
+        gc.batch_collect("2", "t", batch, hold, {"a": SONNET}, poll_s=0)
+    assert g.spent("2") == pytest.approx(held)              # still held in full: not invisible
 
 
 def test_batch_hold_blocks_other_spend(g):
@@ -214,16 +237,56 @@ def test_batch_hold_blocks_other_spend(g):
         gc.create("2", "t", **params(OPUS, max_tokens=100000))
 
 
+def test_batch_create_timeout_keeps_the_money_counted(g):
+    c = FakeClient()
+    c.messages.batches.create = lambda requests: (_ for _ in ()).throw(TimeoutError("t"))
+    reqs = [{"custom_id": "a", "params": params(max_tokens=500)}]
+    with pytest.raises(TimeoutError):
+        GuardedClient(c, g).batch_submit("2", "t", reqs)
+    assert g.spent("2") > 0
+
+
 # --- failures --------------------------------------------------------------------------------
-def test_rejected_request_is_not_charged_but_unknown_failure_is(g):
-    gc = GuardedClient(FakeClient(error=ApiError(400)), g)
-    with pytest.raises(ApiError):
+@pytest.mark.parametrize("status,billed", [(400, False), (429, False), (408, True), (409, True), (529, True), (None, True)])
+def test_failed_request_billing(g, status, billed):
+    err = ApiError(status) if status else TimeoutError("t")
+    gc = GuardedClient(FakeClient(error=err), g)
+    with pytest.raises(type(err)):
         gc.create("0", "t", **params())
-    assert g.spent() == 0
-    gc = GuardedClient(FakeClient(error=ApiError(529)), g)
-    with pytest.raises(ApiError):
-        gc.create("0", "t", **params())
-    assert g.spent() > 0
+    assert (g.spent() > 0) == billed
+
+
+def test_search_tool_without_max_uses_is_refused(g):
+    c = FakeClient()
+    with pytest.raises(MoneyStop, match="max_uses"):
+        GuardedClient(c, g).create("0", "t", **params(tools=[{"type": "web_search_20260209", "name": "web_search"}]))
+    assert c.calls == 0
+
+
+def test_cache_control_in_request_raises_the_worst_case(g):
+    gc = GuardedClient(FakeClient(), g)
+    plain = params(text="x" * 4000)
+    cached = {**plain, "system": [{"type": "text", "text": "s", "cache_control": {"type": "ephemeral", "ttl": "1h"}}]}
+    five = {**plain, "system": [{"type": "text", "text": "s", "cache_control": {"type": "ephemeral"}}]}
+    assert gc.worst(cached) > gc.worst(five) > gc.worst(plain)
+
+
+def test_parallel_workers_cannot_both_spend_the_last_dollars(tmp_path):
+    import threading
+    path = tmp_path / "l.jsonl"
+    results = []
+
+    def worker():
+        try:
+            Guard(ledger=path, pricing=P).hold("0", 0.3, "t")
+            results.append("ok")
+        except MoneyStop:
+            results.append("refused")
+
+    ts = [threading.Thread(target=worker) for _ in range(8)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert results.count("ok") == 1 and results.count("refused") == 7        # $0.50 cap, $0.30 each
 
 
 def test_search_calls_count_searches_in_worst_case(g):
@@ -242,11 +305,24 @@ def test_prosecute_goes_through_the_guard_and_parses(g):
     c = FakeClient()
     c.messages.create = lambda **kw: resp
     out = prosecute.prosecute(GuardedClient(c, g), "0", {"core_operation": "x"}, "known", "t")
-    assert out["case"]["closest"] == "PMA" and out["searches"] == 1
+    assert out["case"]["closest"] == "PMA" and out["searches"] == 1 and out["parsed"] and not out["truncated"]
     assert g.spent("0") == pytest.approx((3000 * 2 + 400 * 10) / 1e6 + 0.01)
 
 
-def test_parse_case_garbage_is_none():
+def test_parse_case_handles_garbage_and_braces_in_strings():
     import prosecute
     assert prosecute.parse_case("no json here") is None
-    assert prosecute.parse_case('{"a": 1} trailing {') == {"a": 1}
+    assert prosecute.parse_case('{"a": 1} trailing {') is None                 # no "closest" key
+    t = 'pre {"closest": "X", "case": "uses f(x) = {a,b} sets }", "confidence": 3} done'
+    assert prosecute.parse_case(t)["case"].startswith("uses f(x) = {a,b}")
+    assert prosecute.parse_case('{"closest": "old"} then {"closest": "new"}')["closest"] == "new"
+
+
+def test_truncated_answer_is_flagged(g):
+    import prosecute
+    resp = NS(content=[NS(type="text", text='{"closest": "PM')], stop_reason="max_tokens",
+              usage=NS(model_dump=lambda: {"input_tokens": 100, "output_tokens": 3000}))
+    c = FakeClient()
+    c.messages.create = lambda **kw: resp
+    out = prosecute.prosecute(GuardedClient(c, g), "0", {"core_operation": "x"}, "known", "t")
+    assert out["truncated"] and not out["parsed"]

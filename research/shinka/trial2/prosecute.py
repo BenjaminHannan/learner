@@ -36,35 +36,40 @@ SYSTEM = (
 
 
 def parse_case(text: str) -> dict | None:
-    """The last top-level JSON object in the text, or None (a non-parse counts as KNOWN downstream)."""
-    end = text.rfind("}")
-    while end != -1:
-        depth = 0
-        for i in range(end, -1, -1):
-            depth += (text[i] == "}") - (text[i] == "{")
-            if depth == 0:
-                try:
-                    return json.loads(text[i:end + 1])
-                except json.JSONDecodeError:
-                    break
-        end = text.rfind("}", 0, end)
-    return None
+    """The last JSON object in the text that has a "closest" key, or None. Braces inside strings are
+    handled by the JSON decoder. A non-parse counts as KNOWN downstream (and is counted)."""
+    dec, found, i = json.JSONDecoder(), None, text.find("{")
+    while i != -1:
+        try:
+            obj, end = dec.raw_decode(text, i)
+        except json.JSONDecodeError:
+            i = text.find("{", i + 1)
+            continue
+        if isinstance(obj, dict) and "closest" in obj:
+            found = obj
+        i = text.find("{", end)
+    return found
+
+
+def build_params(card: dict, known_short: str, messages: list | None = None) -> dict:
+    first = {"role": "user", "content": f"KNOWN list (project):\n{known_short}\n\nIDEA CARD:\n{json.dumps(card, indent=2)}"}
+    return {"model": MODEL, "max_tokens": MAX_TOKENS, "system": SYSTEM, "tools": [TOOL],
+            "messages": messages or [first], "output_config": {"effort": "medium"}}
 
 
 def prosecute(gc: GuardedClient, stage: str, card: dict, known_short: str, tag: str) -> dict:
-    messages = [{"role": "user", "content":
-                 f"KNOWN list (project):\n{known_short}\n\nIDEA CARD:\n{json.dumps(card, indent=2)}"}]
+    params = build_params(card, known_short)
     text, n_search = "", 0
     for k in range(MAX_CONTINUES + 1):
-        resp = gc.create(stage, f"{tag}#{k}", model=MODEL, max_tokens=MAX_TOKENS, system=SYSTEM,
-                         messages=messages, tools=[TOOL], output_config={"effort": "medium"})
+        resp = gc.create(stage, f"{tag}#{k}", **params)
         n_search += sum(1 for b in resp.content if getattr(b, "type", "") == "server_tool_use")
         text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
         if resp.stop_reason != "pause_turn":
             break
-        messages = messages + [{"role": "assistant", "content": resp.content}]
-    return {"case": parse_case(text), "raw_tail": text[-400:], "searches": n_search,
-            "stop_reason": resp.stop_reason}
+        params = {**params, "messages": params["messages"] + [{"role": "assistant", "content": resp.content}]}
+    case = parse_case(text)
+    return {"case": case, "parsed": case is not None, "truncated": resp.stop_reason == "max_tokens",
+            "raw_tail": text[-400:], "searches": n_search, "stop_reason": resp.stop_reason}
 
 
 def make_client(guard: Guard) -> GuardedClient:

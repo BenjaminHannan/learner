@@ -4,17 +4,20 @@
   cache read, web-search request count) at the rates in pricing.json.
 - A call or batch is authorised BEFORE it is sent: its worst case must fit in what is left of its
   own stage (no borrowing between stages) and, separately, under the whole-trial hard stop.
-- The ledger (results/TRIAL2_LEDGER.jsonl) is re-read on every check, under a file lock, so
-  separate processes see each other's spend.
+- Check-and-reserve is ONE step under a file lock (`hold`): a call's worst case is written to the
+  ledger as a hold before it is sent, so parallel workers cannot both spend the same last dollars.
+  The ledger (results/TRIAL2_LEDGER.jsonl) is re-read, under that lock, on every check.
 Nothing here talks to the network.
 """
 
 from __future__ import annotations
 
+import contextlib
 import fcntl
 import json
 import math
 import time
+import uuid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -73,25 +76,40 @@ class Guard:
         self.ledger = Path(ledger)
         self.p = pricing or load_pricing()
 
-    # --- ledger -----------------------------------------------------------------------------
-    def _rows(self) -> list[dict]:
+    # --- ledger (every read and write goes through the lock) -----------------------------------
+    @contextlib.contextmanager
+    def _locked(self):
+        self.ledger.parent.mkdir(parents=True, exist_ok=True)
+        with self.ledger.with_suffix(".lock").open("w") as lk:
+            fcntl.flock(lk, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(lk, fcntl.LOCK_UN)
+
+    def _read(self) -> list[dict]:
         if not self.ledger.exists():
             return []
         return [json.loads(x) for x in self.ledger.read_text().splitlines() if x.strip()]
 
-    def spent(self, stage: str | None = None) -> float:
-        """Dollars already charged, PLUS dollars held for batches submitted but not yet collected."""
-        return sum(r["usd"] + r.get("reserved", 0.0) for r in self._rows() if stage is None or r["stage"] == stage)
+    def _rows(self) -> list[dict]:
+        with self._locked():
+            return self._read()
 
-    def _append(self, row: dict) -> None:
-        self.ledger.parent.mkdir(parents=True, exist_ok=True)
+    def _write(self, rows: list[dict]) -> None:              # caller holds the lock
         with self.ledger.open("a") as f:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            f.write(json.dumps(row) + "\n")
+            f.write("".join(json.dumps(r) + "\n" for r in rows))
             f.flush()
-            fcntl.flock(f, fcntl.LOCK_UN)
 
-    # --- limits -----------------------------------------------------------------------------
+    @staticmethod
+    def _sum(rows: list[dict], stage: str | None) -> float:
+        """Dollars charged PLUS dollars still held for calls/batches not yet settled."""
+        return sum(r["usd"] + r.get("reserved", 0.0) for r in rows if stage is None or r["stage"] == stage)
+
+    def spent(self, stage: str | None = None) -> float:
+        return self._sum(self._rows(), None if stage is None else str(stage))
+
+    # --- limits ---------------------------------------------------------------------------------
     def stage_cap(self, stage: str) -> float:
         s = self.p["stages"].get(str(stage))
         if s is None:
@@ -104,52 +122,86 @@ class Guard:
     def trial_left(self) -> float:
         return self.p["whole_trial"]["hard_stop_usd"] - self.spent()
 
-    def authorize(self, stage: str, worst_usd: float, what: str = "call") -> None:
-        """Refuse (raise MoneyStop) unless the worst case fits in the stage AND under the hard stop."""
-        stage = str(stage)
+    def _check(self, rows: list[dict], stage: str, worst_usd: float, what: str) -> None:
         cap, hard = self.stage_cap(stage), self.p["whole_trial"]["hard_stop_usd"]
-        in_stage, in_trial = self.spent(stage), self.spent()
+        in_stage, in_trial = self._sum(rows, stage), self._sum(rows, None)
         if in_stage + worst_usd > cap:  # GUARD-stage
-            raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + stage {stage} spent "
+            raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + stage {stage} spent/held "
                             f"${in_stage:.4f} exceeds the stage cap ${cap:.2f}")
         if in_trial + worst_usd > hard:  # GUARD-trial
-            raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + trial spent "
+            raise MoneyStop(f"refused {what}: worst case ${worst_usd:.4f} + trial spent/held "
                             f"${in_trial:.4f} exceeds the whole-trial hard stop ${hard:.2f}")
 
-    def authorize_batch(self, stage: str, worst_each: list[float]) -> float:
-        total = math.fsum(worst_each)
-        self.authorize(stage, total, what=f"batch of {len(worst_each)}")  # GUARD-batch (the batch's summed worst case)
-        return total
+    def authorize(self, stage: str, worst_usd: float, what: str = "call") -> None:
+        """Check only (nothing reserved). Real calls use `hold`, which checks and reserves atomically."""
+        with self._locked():
+            self._check(self._read(), str(stage), worst_usd, what)
 
-    def reserve(self, stage: str, tag: str, usd: float, batch_id: str) -> None:
-        self._append({"t": time.time(), "stage": str(stage), "model": "-", "tag": tag, "usd": 0.0,
-                      "reserved": usd, "batch_id": batch_id})
+    def hold(self, stage: str, worst_usd: float, tag: str, what: str = "call") -> str:
+        """Check the worst case and write it to the ledger as a hold, in one locked step. Returns the hold id."""
+        stage, hold_id = str(stage), uuid.uuid4().hex
+        with self._locked():
+            self._check(self._read(), stage, worst_usd, what)
+            self._write([{"t": time.time(), "stage": stage, "model": "-", "tag": tag, "usd": 0.0,
+                          "reserved": worst_usd, "hold_id": hold_id}])
+        return hold_id
 
-    def release(self, stage: str, tag: str, batch_id: str) -> None:
-        held = sum(r.get("reserved", 0.0) for r in self._rows() if r.get("batch_id") == batch_id)
-        self._append({"t": time.time(), "stage": str(stage), "model": "-", "tag": tag, "usd": 0.0,
-                      "reserved": -held, "batch_id": batch_id})
+    def hold_batch(self, stage: str, worst_each: list[float], tag: str) -> str:
+        return self.hold(stage, math.fsum(worst_each), tag, what=f"batch of {len(worst_each)}")  # GUARD-batch
 
-    # --- charging ---------------------------------------------------------------------------
-    def charge(self, stage: str, model: str, usage: dict, tag: str, batch: bool = False, **extra) -> float:
+    def _held(self, rows: list[dict], hold_id: str) -> float:
+        return sum(r.get("reserved", 0.0) for r in rows if r.get("hold_id") == hold_id)
+
+    def release(self, stage: str, hold_id: str, tag: str = "release") -> None:
+        """Drop whatever is still held under hold_id (clean rejection, or after the last charge)."""
+        with self._locked():
+            rows = self._read()
+            left = self._held(rows, hold_id)
+            if left:
+                self._write([{"t": time.time(), "stage": str(stage), "model": "-", "tag": tag, "usd": 0.0,
+                              "reserved": -left, "hold_id": hold_id}])
+
+    # --- charging -------------------------------------------------------------------------------
+    def charge(self, stage: str, model: str, usage: dict, tag: str, batch: bool = False,
+               hold_id: str | None = None, release: str = "all", key: str | None = None, **extra) -> float:
+        """Record one response's actual cost. With a hold: release 'all' of it, or only this charge's
+        amount ('cost', used for batches so the hold shrinks as results land). `key` makes the charge
+        idempotent: a second charge with the same key is skipped."""
+        stage = str(stage)
         usd = usage_cost(self.p, model, usage, batch=batch)
-        self._append({"t": time.time(), "stage": str(stage), "model": model, "tag": tag,
-                      "usd": usd, "batch": batch, "usage": usage, **extra})
-        self._after_charge(str(stage))
+        with self._locked():
+            rows = self._read()
+            if key is not None and any(r.get("key") == key for r in rows):
+                return 0.0
+            out = [{"t": time.time(), "stage": stage, "model": model, "tag": tag, "usd": usd, "batch": batch,
+                    "usage": usage, "key": key, **extra}]
+            if hold_id:
+                left = self._held(rows, hold_id)
+                drop = left if release == "all" else min(left, usd)
+                if drop:
+                    out.append({"t": time.time(), "stage": stage, "model": "-", "tag": tag, "usd": 0.0,
+                                "reserved": -drop, "hold_id": hold_id})
+            self._write(out)
+            self._check_after(self._read(), stage)
         return usd
 
-    def charge_unknown(self, stage: str, model: str, worst_usd: float, tag: str, why: str) -> float:
-        """A request that may have been billed but gave no usage: record its worst case."""
-        self._append({"t": time.time(), "stage": str(stage), "model": model, "tag": tag,
-                      "usd": worst_usd, "unknown_outcome": why})
-        self._after_charge(str(stage))
-        return worst_usd
+    def charge_unknown(self, stage: str, hold_id: str, model: str, tag: str, why: str) -> None:
+        """A request that may have been billed but gave no usage: its hold becomes a real charge."""
+        stage = str(stage)
+        with self._locked():
+            rows = self._read()
+            left = self._held(rows, hold_id)
+            self._write([{"t": time.time(), "stage": stage, "model": model, "tag": tag, "usd": left,
+                          "unknown_outcome": why},
+                         {"t": time.time(), "stage": stage, "model": "-", "tag": tag, "usd": 0.0,
+                          "reserved": -left, "hold_id": hold_id}])
+            self._check_after(self._read(), stage)
 
-    def _after_charge(self, stage: str) -> None:
-        if self.spent(stage) > self.stage_cap(stage):  # GUARD-overshoot-stage
-            raise MoneyStop(f"stage {stage} is over its cap after this charge (${self.spent(stage):.4f})")
-        if self.spent() > self.p["whole_trial"]["hard_stop_usd"]:  # GUARD-overshoot-trial
-            raise MoneyStop(f"whole trial is over the hard stop after this charge (${self.spent():.4f})")
+    def _check_after(self, rows: list[dict], stage: str) -> None:
+        if self._sum(rows, stage) > self.stage_cap(stage):  # GUARD-overshoot-stage
+            raise MoneyStop(f"stage {stage} is over its cap after this charge (${self._sum(rows, stage):.4f})")
+        if self._sum(rows, None) > self.p["whole_trial"]["hard_stop_usd"]:  # GUARD-overshoot-trial
+            raise MoneyStop(f"whole trial is over the hard stop after this charge (${self._sum(rows, None):.4f})")
 
     def warn(self) -> bool:
         return self.spent() >= self.p["whole_trial"]["warn_usd"]

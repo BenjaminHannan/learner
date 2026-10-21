@@ -28,8 +28,11 @@ CARD = {
 if __name__ == "__main__":
     g = Guard()
     gc = prosecute.make_client(g)
-    print(f"worst case for one call: ${gc.worst({'model': prosecute.MODEL, 'max_tokens': prosecute.MAX_TOKENS, 'system': prosecute.SYSTEM, 'messages': [{'role': 'user', 'content': json.dumps(CARD)}], 'tools': [prosecute.TOOL]}):.4f}")
-    out = prosecute.prosecute(gc, "0", CARD, (HERE.parent / "KNOWN_SHORT.md").read_text(), "plumbing")
-    rows = [r for r in g._rows() if r["tag"].startswith("plumbing")]
-    print(json.dumps({"result": out, "calls": len(rows), "usd_measured": sum(r["usd"] for r in rows),
-                      "usage": [r["usage"] for r in rows], "stage0_spent": g.spent("0")}, indent=2))
+    known = (HERE.parent / "KNOWN_SHORT.md").read_text()
+    print(f"worst case for one call (same payload as the real call): ${gc.worst(prosecute.build_params(CARD, known)):.4f}")
+    out = prosecute.prosecute(gc, "0", CARD, known, "plumbing")
+    rows = [r for r in g._rows() if r["tag"].startswith("plumbing") and r["usd"] > 0]
+    print(json.dumps({"result": out, "charged_rows": len(rows), "usd_measured": sum(r["usd"] for r in rows),
+                      "usage": [r.get("usage") for r in rows],
+                      "unknown_outcome": [r.get("unknown_outcome") for r in rows if r.get("unknown_outcome")],
+                      "stage0_spent": g.spent("0")}, indent=2))
