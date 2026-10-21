@@ -439,6 +439,7 @@ def resume_probe_verdict(C, R1, R2):
     n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise.
     `verdict`, n, d, limit and the mean_abs_* / diff_* keys are exactly the registered rule's. Added beside it (recorded, NOT the gate; the mean form is pre-registered in the re-reading
     of the probe, rejudge_probe.py): first_r1_c / first_r2_c / first_r1_r2 = the differences at the first probe update (exactly 0 when the restore is complete: the forward pass of the first update is deterministic),
+    identical_resumes = (n == 0), i.e. R1 == R2 at every update (recorded only: rejudge_probe.py reads a probe whose restarts are identical, differ from the run and pass P1 / P1b as ESCALATE, PREREG Amendment 2 / B1; this function's verdict is not affected),
     Dbar = mean(mean_abs_r1_c, mean_abs_r2_c), Nbar = mean_abs_r1_r2, ratio = Dbar / Nbar (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0),
     mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance).
     Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|),
@@ -453,7 +454,7 @@ def resume_probe_verdict(C, R1, R2):
     dbar, nbar = mean([out['mean_abs_r1_c'], out['mean_abs_r2_c']]), out['mean_abs_r1_r2']
     ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
     mlim = max(0.02, 2 * nbar)
-    out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
+    out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], identical_resumes=(n == 0), Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
                mean_form_verdict='PASS' if dbar <= mlim else 'FAIL', lag1_autocorr=lag1_autocorr([x - y for x, y in zip(R1, R2)]))
     if len(C) >= 3:
         em = max(d1[1], d2[1], d1[2], d2[2])
@@ -1009,7 +1010,8 @@ class Sup:
                   f'- Dbar = mean(mean|R1-C|, mean|R2-C|) = {r["Dbar"]:.4f}; Nbar = mean|R1-R2| = {r["Nbar"]:.4f}; ratio Dbar/Nbar = {r["ratio"]:.3f}',
                   f'- mean form: Dbar <= max(0.02, 2 Nbar) = {r["mean_form_limit"]:.4f}: {r["mean_form_verdict"]}',
                   *([f'- early window (the 2nd and 3rd probe updates{ew}, P1b): max |R - C| = {r["early_max"]:.6f}; limit {r["early_limit"]}: {r["early_verdict"]}'] if r.get('early_max') is not None else []),
-                  f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}']
+                  f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}',
+                  *(['- the two restarts are bit-identical to each other (|R1-R2| = 0 at every update) but differ from the run: if the first-update and early-window checks also hold, rejudge_probe.py reads this probe as ESCALATE (framing falsified, PREREG Amendment 2), not as a pass or a fail, and asks for no calibration; re-running the probe repeats.'] if r.get('identical_resumes') and r['Dbar'] > 0 else [])]
         if r.get('resume_warnings'):
             L += ['', 'resume_warning lines of the probe runs: ' + json.dumps(r['resume_warnings'])]
         return '\n'.join(L) + '\n'

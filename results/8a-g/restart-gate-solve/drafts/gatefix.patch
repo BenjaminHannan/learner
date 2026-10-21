@@ -153,7 +153,7 @@
              break
      if r['resume'] is None:
          r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
-@@ -341,15 +419,46 @@
+@@ -341,15 +419,47 @@
      return r
  
  
@@ -178,6 +178,7 @@
 +    n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise.
 +    `verdict`, n, d, limit and the mean_abs_* / diff_* keys are exactly the registered rule's. Added beside it (recorded, NOT the gate; the mean form is pre-registered in the re-reading
 +    of the probe, rejudge_probe.py): first_r1_c / first_r2_c / first_r1_r2 = the differences at the first probe update (exactly 0 when the restore is complete: the forward pass of the first update is deterministic),
++    identical_resumes = (n == 0), i.e. R1 == R2 at every update (recorded only: rejudge_probe.py reads a probe whose restarts are identical, differ from the run and pass P1 / P1b as ESCALATE, PREREG Amendment 2 / B1; this function's verdict is not affected),
 +    Dbar = mean(mean_abs_r1_c, mean_abs_r2_c), Nbar = mean_abs_r1_r2, ratio = Dbar / Nbar (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0),
 +    mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance).
 +    Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|),
@@ -194,7 +195,7 @@
 +    dbar, nbar = mean([out['mean_abs_r1_c'], out['mean_abs_r2_c']]), out['mean_abs_r1_r2']
 +    ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
 +    mlim = max(0.02, 2 * nbar)
-+    out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
++    out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], identical_resumes=(n == 0), Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
 +               mean_form_verdict='PASS' if dbar <= mlim else 'FAIL', lag1_autocorr=lag1_autocorr([x - y for x, y in zip(R1, R2)]))
 +    if len(C) >= 3:
 +        em = max(d1[1], d2[1], d1[2], d2[2])
@@ -203,7 +204,7 @@
  
  
  # ---------------------------------------------------------------- the supervisor
-@@ -595,6 +704,8 @@
+@@ -595,6 +705,8 @@
          L.append(f'max GPU memory in use seen: {js["max_used_mib"]} MiB; planned kill-and-resume: {js["kill_done"]}')
          if js.get('traceA'):
              L.append(f'trace A: **{js["traceA"]["verdict"]}** {js["traceA"]["why_fail"] or ""} (TRACE-A-{job["id"]}.md)')
@@ -212,7 +213,7 @@
          if job.get('baseline'):
              L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
          else:
-@@ -698,6 +809,8 @@
+@@ -698,6 +810,8 @@
              r = trace_a(ev, job['trace_a'], js['max_used_mib'])
              r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
              js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'], soft_misses=r['soft_misses'])
@@ -221,7 +222,7 @@
              jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
              (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
              self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}' + (f' (recorded, not gated: {r["soft_misses"]})' if r['soft_misses'] else ''))
-@@ -713,8 +826,9 @@
+@@ -713,8 +827,9 @@
          js['result'] = {k: res.get(k) for k in ('steps', 'steps_per_s', 'train_s', 'peak_mem_mib', 'peak_reserved_mib', 'n_params', 'resumed_from')}
          tail = (f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n' if job.get('baseline')
                  else 'no baseline in this job (no compare was made here).\n')
@@ -233,7 +234,7 @@
          if js['base']['status'] == 'waiting':          # trace A never passed (or no room): there is nothing to compare any more
              js['base']['status'] = 'abandoned'
  
-@@ -858,7 +972,7 @@
+@@ -858,7 +973,7 @@
          L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
               f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
               f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
@@ -242,7 +243,7 @@
               f'- notes: {r["notes"] or "none"}']
          return '\n'.join(L) + '\n'
  
-@@ -886,6 +1000,18 @@
+@@ -886,6 +1001,19 @@
                    '| update | C (run) | R1 | R2 | abs R1-R2 | abs R1-C | abs R2-C |', '|---|---|---|---|---|---|---|']
              for i, s in enumerate(r['steps']):
                  L.append(f'| {s} | {f(r["C"][i])} | {f(r["R1"][i])} | {f(r["R2"][i])} | {f(r["diff_r1_r2"][i])} | {f(r["diff_r1_c"][i])} | {f(r["diff_r2_c"][i])} |')
@@ -255,13 +256,14 @@
 +                  f'- Dbar = mean(mean|R1-C|, mean|R2-C|) = {r["Dbar"]:.4f}; Nbar = mean|R1-R2| = {r["Nbar"]:.4f}; ratio Dbar/Nbar = {r["ratio"]:.3f}',
 +                  f'- mean form: Dbar <= max(0.02, 2 Nbar) = {r["mean_form_limit"]:.4f}: {r["mean_form_verdict"]}',
 +                  *([f'- early window (the 2nd and 3rd probe updates{ew}, P1b): max |R - C| = {r["early_max"]:.6f}; limit {r["early_limit"]}: {r["early_verdict"]}'] if r.get('early_max') is not None else []),
-+                  f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}']
++                  f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}',
++                  *(['- the two restarts are bit-identical to each other (|R1-R2| = 0 at every update) but differ from the run: if the first-update and early-window checks also hold, rejudge_probe.py reads this probe as ESCALATE (framing falsified, PREREG Amendment 2), not as a pass or a fail, and asks for no calibration; re-running the probe repeats.'] if r.get('identical_resumes') and r['Dbar'] > 0 else [])]
 +        if r.get('resume_warnings'):
 +            L += ['', 'resume_warning lines of the probe runs: ' + json.dumps(r['resume_warnings'])]
          return '\n'.join(L) + '\n'
  
  
-@@ -1035,8 +1161,83 @@
+@@ -1035,8 +1163,83 @@
      return d
  
  
@@ -346,7 +348,7 @@
      sup = Sup(a.plan)
      job = next((j for j in sup.plan['jobs'] if a.job == j['id'] or (a.job is None and not j.get('skip'))), None)          # without --job: the first job that is not skipped
      if job is None:
-@@ -1065,7 +1266,20 @@
+@@ -1065,7 +1268,20 @@
      if miss or any(s not in C for s in steps):
          print(f'refused: missing {miss or "logged updates %d..%d of the main run in %s" % (step + 1, upto, sup.arm_dir(job) / "events.jsonl")}')
          return 2
@@ -368,7 +370,7 @@
      for tag in ('n1', 'n2'):
          pj = sup.probe_job(job, tag)
          sup.log(f'PROBE {tag}: {pj["queue"]} / {pj["job"]} from {keep} step-{step}')
-@@ -1074,6 +1288,10 @@
+@@ -1074,6 +1290,10 @@
              why.append(f'{tag}: {bad}')
          if ev is None:
              continue
@@ -379,7 +381,7 @@
          rs = next((s for _, s in ev.resumed), None)
          if rs != step:
              why.append(f'{tag}: resumed at {rs}, not {step}')
-@@ -1081,10 +1299,14 @@
+@@ -1081,10 +1301,14 @@
          R[tag] = first_per_step([e for e in ev.train if e['seg'] >= ev.resumed[0][0]], step + 1, upto)
          if any(s not in R[tag] for s in steps):
              why.append(f'{tag}: updates missing (first {[s for s in steps if s not in R[tag]][:5]})')

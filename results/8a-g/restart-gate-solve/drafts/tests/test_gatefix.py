@@ -14,6 +14,7 @@ Tests of the four gate-fix changes, plain asserts like the pack's own tests:
      status.md and the finish message), not a stop; first-update gaps / exact-field mismatches / early_max > 0.005 (>= 3 redone updates) still FAIL; end to end against the fake runner
   J  ruling B3: a window whose 2nd / 3rd redone update is not rstep+2 / rstep+3 is not computable (same deferral, no early_max); with an opt-in key set, a missing first redone update rstep+1 fails closed
      (the first-update item would be computed on another update); without the opt-in keys trace_a is the original's
+  K  B1 (PREREG Amendment 2): rejudge_probe.py ESCALATE ("framing falsified": P1 and P1b hold, R1 == R2 at every update, Dbar > 0; exit 4; no calibration applied); every other verdict equal to the pre-B1 decision over 6000 random traces
 The ORIGINAL pack's supervisor is loaded from G2FA4_ORIG_PACK (default: results/8a-g/pc-job-cards/g2fa4 next to the drafts) only to compare."""
 import contextlib, importlib.util, io, json, os, random, subprocess, sys, tempfile
 from pathlib import Path
@@ -302,7 +303,7 @@ def t_verdict_identical_to_original():
         old, new = O.resume_probe_verdict(C, R1, R2), S.resume_probe_verdict(C, R1, R2)
         assert json.dumps(old, sort_keys=True) == json.dumps({k: new[k] for k in old}, sort_keys=True), (i, old, new)
         assert old['verdict'] == new['verdict'] and repr(old['limit']) == repr(new['limit']) and repr(old['n']) == repr(new['n']) and repr(old['d']) == repr(new['d'])
-        added = {'first_r1_c', 'first_r2_c', 'first_r1_r2', 'Dbar', 'Nbar', 'ratio', 'mean_form_limit', 'mean_form_verdict', 'lag1_autocorr'}
+        added = {'first_r1_c', 'first_r2_c', 'first_r1_r2', 'identical_resumes', 'Dbar', 'Nbar', 'ratio', 'mean_form_limit', 'mean_form_verdict', 'lag1_autocorr'}
         assert set(new) - set(old) == added | ({'early_max', 'early_limit', 'early_verdict'} if L >= 3 else set()), (L, set(new) - set(old))          # (Q95: the early keys only with >= 3 updates)
         n_pass += old['verdict'] == 'PASS'
         n_fail += old['verdict'] == 'FAIL'
@@ -319,7 +320,7 @@ def t_verdict_identical_to_original():
                 pass
             else:
                 raise AssertionError('unequal / empty lists must still be refused')
-    print(f'ok `verdict` and every old key identical to the original pack function over 1000 random traces ({n_pass} PASS, {n_fail} FAIL); only the new keys are added (9 mean-form, + 3 early-window when there are >= 3 updates)')
+    print(f'ok `verdict` and every old key identical to the original pack function over 1000 random traces ({n_pass} PASS, {n_fail} FAIL); only the new keys are added (10 mean-form incl. identical_resumes, + 3 early-window when there are >= 3 updates)')
 
 
 def t_md_probe():
@@ -340,6 +341,9 @@ def t_md_probe():
     inf = dict(old_style, Dbar=0.1, Nbar=0.0, ratio=float('inf'), first_r1_c=0, first_r2_c=0, first_r1_r2=0, mean_form_limit=0.02, mean_form_verdict='FAIL', lag1_autocorr=None)
     assert 'ratio Dbar/Nbar = inf' in S.Sup.md_probe(inf) and 'not defined' in S.Sup.md_probe(inf) and 'early window' not in S.Sup.md_probe(inf)      # (a report from before Amendment 1 has no early_max)
     assert 'early window (the 2nd and 3rd probe updates, P1b): max |R - C| = 0.012000; limit 0.005: FAIL' in S.Sup.md_probe(dict(inf, early_max=0.012, early_limit=0.005, early_verdict='FAIL')), 'no steps key: no update numbers'
+    ident = dict(inf, identical_resumes=True)
+    assert 'rejudge_probe.py reads this probe as ESCALATE' in S.Sup.md_probe(ident) and 'bit-identical' in S.Sup.md_probe(ident)          # B1: identical restarts that differ from the run
+    assert 'ESCALATE' not in S.Sup.md_probe(dict(ident, Dbar=0.0, ratio=1.0)) and 'ESCALATE' not in S.Sup.md_probe(dict(inf, identical_resumes=False)) and 'ESCALATE' not in S.Sup.md_probe(inf)
     print('ok md_probe: the "recorded beside (pre-registered mean form, not the registered gate)" section after the table; old-format reports still render; inf ratio renders')
 
 
@@ -489,10 +493,10 @@ def t_rejudge_cases():
     r1, r2 = alt(0.015)
     r2[0] -= 1e-9
     assert R.rejudge(CL, r1, r2)['verdict'] == 'OUTSIDE'
-    # (b) exchangeability fails by the ratio: both restarts agree with each other but differ from the run (Nbar 0 -> ratio inf). Amended reading: with P1 and P1b holding this is UNRESOLVED_CALIBRATE, not OUTSIDE
+    # (b) exchangeability fails by the ratio: both restarts agree with each other but differ from the run (Nbar 0 -> ratio inf). Amendment 1 said UNRESOLVED_CALIBRATE (a loop: more resumes repeat R1 / R2); Amendment 2 (B1): ESCALATE
     r1 = [c + (0 if i in (0, 1, 2) else 0.05) for i, c in enumerate(CL)]
     r = R.rejudge(CL, r1, list(r1))
-    assert r['verdict'] == 'UNRESOLVED_CALIBRATE' and r['restore_ok'] and r['early_ok'] and r['ratio'] == float('inf') and not r['exchangeability_ok'] and r['Nbar'] == 0, r
+    assert r['verdict'] == 'ESCALATE' and r['restore_ok'] and r['early_ok'] and r['ratio'] == float('inf') and not r['exchangeability_ok'] and r['Nbar'] == 0 and r['identical_resumes'], r
     assert r['original_reading_verdict'] == 'OUTSIDE', r
     # ratio above 2 while the registered rule passes: both restarts are off the run by nearly the same amount
     r1 = [c + (0 if i in (0, 1, 2) else 0.03) for i, c in enumerate(CL)]
@@ -910,7 +914,10 @@ def t_rejudge_amended():
     s1 = list(CL); s1[1] += 0.01
     assert R.rejudge(CL, s1, list(s1))['verdict'] == 'OUTSIDE'
     s1 = [c + (0 if i in (0, 1, 2) else 0.05) for i, c in enumerate(CL)]; s1[3] += 0.3
-    assert R.rejudge(CL, s1, list(s1))['verdict'] == 'UNRESOLVED_CALIBRATE'
+    assert R.rejudge(CL, s1, list(s1))['verdict'] == 'ESCALATE'                              # (Amendment 2: identical restarts that differ from the run; before B1 this was UNRESOLVED_CALIBRATE)
+    s1[3] -= 0.3; s1[5] += 0.3
+    r2_ = list(s1); r2_[7] += 1e-12                                                          # one bit of difference somewhere: not identical, so not ESCALATE
+    assert R.rejudge(CL, s1, r2_)['verdict'] == 'UNRESOLVED_CALIBRATE'
     # the original reading is recorded beside, unchanged
     r1, r2 = alt(0.015); r1[1] += 0.02
     r = R.rejudge(CL, r1, r2)
@@ -948,7 +955,9 @@ def t_rejudge_calibration():
     assert r['verdict'] == 'UNRESOLVED' and r['calibration']['verdict'] == 'UNRESOLVED', r                                          # v above L: window
     # b) OUTSIDE: all four restarts agree with each other but sit away from the run (max pair ~ 0): Dbar4 > L = 0.02
     off = [c + (0 if i in (0, 1, 2) else 0.05) for i, c in enumerate(C)]
-    r = R.rejudge(C, off, list(off), 0.0282, (list(off), list(off)))
+    assert R.rejudge(C, off, list(off), 0.0282, (list(off), list(off)))['verdict'] == 'ESCALATE'                                    # (Amendment 2: BIT-identical restarts are an ESCALATE, the calibration is not applied)
+    off2 = list(off); off2[10] += 1e-9                                                                                              # (one bit of difference: not identical, the calibration path as before)
+    r = R.rejudge(C, off, off2, 0.0282, (list(off), list(off)))
     assert r['verdict'] == 'OUTSIDE' and r['calibration']['L'] == 0.02 and r['calibration']['Dbar4'] > 0.02 and r['restore_ok'] and r['early_ok'], r
     # boundary: Dbar4 == L is not outside (<=): all four at distance exactly 0.02 (mean over 47 updates of 0.02... use a constant 0.02 for all updates after the third)
     just = [c + (0 if i in (0, 1, 2) else 0.02) for i, c in enumerate(C)]
@@ -990,7 +999,8 @@ def t_rejudge_calibration():
         assert j['verdict'] == 'INSIDE healthy noise' and len(j['calibration']['pair_means']) == 6 and j['calibration_source'] == str(f2), j
         rc, out = AJ.quiet(R.main, [str(f1), '--calibration', str(f2), '--trace-a-mean', '0.5'])
         assert rc == 1 and 'UNRESOLVED (window)' in out and json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())['verdict'] == 'UNRESOLVED'
-        f3 = write_probe(sub, 'g2fa8', C, off, list(off))
+        offb = list(off); offb[10] += 1e-9                                                                                       # (not bit-identical to off: bit-identical restarts are an ESCALATE since Amendment 2)
+        f3 = write_probe(sub, 'g2fa8', C, off, offb)
         rc, out = AJ.quiet(R.main, [str(f3), '--calibration', str(write_probe(Path(tmp), 'g2fa8x', C, off, list(off)))])        # job differs between the files -> unreadable
         assert rc == 3 and "job is 'g2fa8x'" in out, out
         off2 = [x + 1e-6 for x in off]                                                                                           # (a file of its own resumes: not a copy of f3)
@@ -1405,6 +1415,9 @@ def t_rejudge_p23_unchanged():
         else:
             old_v = 'UNRESOLVED_CALIBRATE'
         r = R.rejudge(C, R1_, R2_, v)
+        if d1[0] == 0 and d2[0] == 0 and em <= 0.005 and nn == 0 and dbar > 0:                    # the Amendment 2 trigger (B1): old UNRESOLVED_CALIBRATE becomes ESCALATE; t_b1_escalate covers it
+            assert old_v == 'UNRESOLVED_CALIBRATE' and r['verdict'] == 'ESCALATE'
+            continue
         assert r['p23_ok'] is old_p23 and r['verdict'] == old_v, (r['p23_ok'], old_p23, r['verdict'], old_v)
         assert r['p23_ok'] == (r['exchangeability_ok'] and r['p3_ok'])
         seen[old_v] = seen.get(old_v, 0) + 1
@@ -1720,6 +1733,176 @@ def t_b3_running_gate():
 
 
 
+# ================================================================ K: B1 (PREREG Amendment 2): ESCALATE, "framing falsified"
+def old_decision(C, R1, R2, v, early_limit=0.005):
+    """the two-resume decision of rejudge_probe.py BEFORE Amendment 2, written out from the definitions (P1, P1b, P2, P3, ratio; the pre-B1 logic)."""
+    m = lambda xs: sum(xs) / len(xs)
+    d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
+    nn, dd = max(d12), max(d1 + d2)
+    reg = 'PASS' if dd <= max(0.10, 3 * nn) else 'FAIL'
+    dbar, nbar = m([m(d1), m(d2)]), m(d12)
+    ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
+    limit = max(0.02, 2 * nbar)
+    p1 = d1[0] == 0 and d2[0] == 0
+    p1b = max(d1[1], d1[2], d2[1], d2[2]) <= early_limit
+    if not (p1 and p1b):
+        return 'OUTSIDE'
+    if reg == 'PASS' and dbar <= limit and ratio <= 2.0:
+        return 'INSIDE healthy noise' if v <= limit else 'UNRESOLVED'
+    return 'UNRESOLVED_CALIBRATE'
+
+
+def ident(off=0.05, early=0.0):
+    """R1 == R2 (bit-identical), equal to C at update 1, `early` away at updates 2 and 3, `off` away after that"""
+    R_ = [c + (0 if i == 0 else early if i in (1, 2) else off) for i, c in enumerate(CL)]
+    return R_, list(R_)
+
+
+def t_b1_escalate():
+    # --- the trigger, exactly: P1 and P1b hold, R1 == R2 at every update, Dbar > 0
+    r1, r2 = ident()
+    r = R.rejudge(CL, r1, r2)
+    assert r['verdict'] == 'ESCALATE' and r['identical_resumes'] and r['n'] == 0 and r['Nbar'] == 0 and r['Dbar'] > 0 and r['restore_ok'] and r['early_ok'], r
+    assert r['registered_verdict'] in ('PASS', 'FAIL') and r['calibration'] is None and r['calibration_not_applied'] is None          # the registered P2 verdict is still computed beside it
+    assert R.rejudge(CL, r1, r2, 0.0001)['verdict'] == 'ESCALATE' and R.rejudge(CL, r1, r2, 9.0)['verdict'] == 'ESCALATE'              # not a function of the trace-A value
+    assert R.rejudge(CL, *ident(off=1e-9))['verdict'] == 'ESCALATE'                                                                      # any Dbar > 0, however small
+    assert R.rejudge(CL, *ident(off=0.5))['verdict'] == 'ESCALATE' and R.rejudge(CL, *ident(off=0.5))['registered_verdict'] == 'FAIL'   # P2 can fail beside it
+    assert R.rejudge(CL, *ident(off=0.0, early=0.005))['verdict'] == 'ESCALATE'                                                         # early gap exactly at the bar: P1b holds
+    # --- Nbar == 0 and Dbar == 0 (restarts identical AND equal to the run): not ESCALATE, the existing rules
+    r = R.rejudge(CL, list(CL), list(CL), 0.01)
+    assert r['verdict'] == 'INSIDE healthy noise' and r['Dbar'] == 0 and r['identical_resumes'], r
+    assert R.rejudge(CL, list(CL), list(CL))['verdict'] == 'UNRESOLVED'                                                                  # v = 0.0282 > 0.02, as before
+    # --- P1 or P1b failing stays OUTSIDE, with identical resumes
+    for first in (1e-9, 1e-3, 0.3):
+        r1 = [c + (first if i == 0 else 0.05 if i > 2 else 0) for i, c in enumerate(CL)]
+        r = R.rejudge(CL, r1, list(r1))
+        assert r['verdict'] == 'OUTSIDE' and not r['restore_ok'] and r['identical_resumes'], (first, r)
+    for early in (0.0050001, 0.02):
+        for idx in (1, 2):
+            r1 = [c + (early if i == idx else 0.05 if i > 2 else 0) for i, c in enumerate(CL)]
+            r = R.rejudge(CL, r1, list(r1))
+            assert r['verdict'] == 'OUTSIDE' and r['restore_ok'] and not r['early_ok'] and r['identical_resumes'], (early, idx, r)
+    # --- the CLI: exit 4, the texts, the JSON
+    with tempfile.TemporaryDirectory() as tmp:
+        r1, r2 = ident()
+        f = write_probe(tmp, 'g2fa8', CL, r1, r2)
+        rc, out = AJ.quiet(R.main, [str(f)])
+        j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+        assert rc == 4 and R.EXIT['ESCALATE'] == 4 and out.startswith('REJUDGE g2fa8: ESCALATE (framing falsified)'), (rc, out[:200])
+        assert j['verdict'] == 'ESCALATE' and j['amendment_2_reading'] == R.AMEND2 and j['preregistered_reading'] == R.PREREG and j['amendment_1_reading'] == R.AMEND1 and j['identical_resumes'] is True, j['verdict']
+        assert R.AMEND2_HEAD in out and R.AMEND2 in out and out.index(R.AMEND1) < out.index(R.AMEND2) < out.index(j['plain_words']), 'Amendment 2 is printed after the original and Amendment 1'
+        w = j['plain_words']
+        for phrase in ('ESCALATE (framing falsified)', 'identical but differ from the logged run', 'not rounding noise', 'SYSTEMATIC diagnosis is contradicted', 'PREREG falsifier (c)', 'neither passed nor failed', 'not read',
+                       'No calibration is asked for', 're-running the probe repeats', 'Escalate to Ben'):
+            assert phrase in w, (phrase, w)
+        # exit codes of the other verdicts are unchanged
+        for args, (code, name) in ((alt(0.015), (0, 'INSIDE healthy noise')), (alt(0.003), (1, 'UNRESOLVED')), (alt(0.015, first_exact=False), (2, 'OUTSIDE'))):
+            g = write_probe(tmp, 'other', CL, *args)
+            rc, out = AJ.quiet(R.main, [str(g)])
+            assert rc == code and json.loads((Path(tmp) / 'REJUDGE-other.json').read_text())['verdict'] == name, (name, rc)
+        g = write_probe(tmp, 'other', CL, [c + (0 if i < 3 else 0.03) for i, c in enumerate(CL)], [c + (0 if i < 3 else 0.0255) for i, c in enumerate(CL)])          # ratio fails, restarts differ: UNRESOLVED_CALIBRATE, exit 1
+        rc, out = AJ.quiet(R.main, [str(g)])
+        assert rc == 1 and json.loads((Path(tmp) / 'REJUDGE-other.json').read_text())['verdict'] == 'UNRESOLVED_CALIBRATE'
+        # Nbar = 0 and Dbar = 0 through the CLI: INSIDE, exit 0
+        g = write_probe(tmp, 'exact', CL, list(CL), list(CL))
+        rc, out = AJ.quiet(R.main, [str(g), '--trace-a-mean', '0.01'])
+        assert rc == 0 and json.loads((Path(tmp) / 'REJUDGE-exact.json').read_text())['verdict'] == 'INSIDE healthy noise'
+        # P1 / P1b failing with identical resumes: OUTSIDE, exit 2
+        for name, (a1, a2) in (('p1', ([c + (1e-3 if i == 0 else 0.05 if i > 2 else 0) for i, c in enumerate(CL)],) * 2),
+                                ('p1b', ([c + (0.02 if i == 2 else 0.05 if i > 2 else 0) for i, c in enumerate(CL)],) * 2)):
+            g = write_probe(tmp, name, CL, a1, list(a2))
+            rc, out = AJ.quiet(R.main, [str(g)])
+            assert rc == 2 and json.loads((Path(tmp) / f'REJUDGE-{name}.json').read_text())['verdict'] == 'OUTSIDE', (name, rc)
+        # --calibration is NOT applied to an ESCALATE: recorded and printed, the verdict stays ESCALATE (exit 4), a calibration of 2 NEW resumes that would otherwise be accepted
+        sub = Path(tmp) / 'p2'; sub.mkdir()
+        R3 = [c - (0 if i < 3 else 0.03) for i, c in enumerate(CL)]
+        R4 = [c - (0 if i < 3 else 0.0255) for i, c in enumerate(CL)]
+        f2 = write_probe(sub, 'g2fa8', CL, R3, R4)
+        rc, out = AJ.quiet(R.main, [str(f), '--calibration', str(f2)])
+        j = json.loads((Path(tmp) / 'REJUDGE-g2fa8.json').read_text())
+        assert rc == 4 and j['verdict'] == 'ESCALATE' and j['calibration'] is None, (rc, out)
+        assert 'ESCALATE' in j['calibration_not_applied'] and 'no calibration is asked for' in j['calibration_not_applied'] and 'Amendment 1 clarification' in j['calibration_not_applied'], j['calibration_not_applied']
+        assert 'NOTE: --calibration' in out and 'was NOT applied' in out and 'calibration (' not in out and 'not applied' in j['plain_words'], out
+    # --- the text of Amendment 2 is in the docstring and equals the PREREG paragraph (markdown bold removed; minus sign and N-bar / D-bar in ASCII)
+    assert R.AMEND2_HEAD + ':' in R.__doc__ and R.AMEND2 in R.__doc__ and 'Exit code: 0 INSIDE' in R.__doc__ and '4 ESCALATE' in R.__doc__
+    assert 'ESCALATE' not in R.PREREG and 'ESCALATE' not in R.AMEND1, 'the original and Amendment 1 texts are not edited'
+    prereg = ORIG_PACK.parent.parent / 'restart-gate-solve' / 'PREREG-trace-a2.md'
+    if prereg.exists():
+        t = prereg.read_text(encoding='utf-8')
+        a2 = t[t.index('## Amendment 2'):t.index('**Status:** DRAFT, like Amendment 1.')].split('\n')[1:]
+        want = [x.replace('**', '').replace('\u2212', '-').replace('N\u0304', 'Nbar').replace('D\u0304', 'Dbar') for x in a2 if x.strip()]
+        assert want and '\n'.join(want) + '\n' == R.AMEND2, (want, R.AMEND2)
+        assert 'Trigger (exact): P1 holds' in R.AMEND2 and 'Outcome: ESCALATE (framing falsified).' in R.AMEND2 and 'Order: ESCALATE is decided after P1/P1b and before P2/P3/ratio.' in R.AMEND2
+    # --- every other verdict is unchanged: thousands of random traces of every class against the pre-B1 decision written out above, excluding only inputs that meet the trigger (which must become ESCALATE, and were UNRESOLVED_CALIBRATE)
+    rnd = random.Random(20261021)
+    seen, trig_n, n_total = {}, 0, 6000
+    for k in range(n_total):
+        n = rnd.randint(3, 30)
+        C = [3 - 0.01 * i + rnd.gauss(0, 0.02) for i in range(n)]
+        cls = rnd.randrange(8)
+        v = rnd.choice([0.01, 0.0282, 0.05, 0.2])
+        def noisy(scale, shift=0.0, p1=True, p1b=True):
+            R_ = [c + rnd.gauss(0, scale) + shift for c in C]
+            if p1:
+                R_[0] = C[0]
+            if p1b:
+                for i in (1, 2):
+                    R_[i] = C[i] + rnd.gauss(0, 1e-3)
+            return R_
+        if cls == 0:                                                                  # identical restarts, healthy P1 / P1b, off by a shift (the trigger) or exactly equal to the run
+            R1_ = noisy(0, rnd.choice([0, 0, 0.001, 0.02, 0.1, 0.5]))
+            R2_ = list(R1_)
+        elif cls == 1:                                                                # identical restarts, P1 fails
+            R1_ = noisy(rnd.choice([0, 0.02]), rnd.choice([0, 0.05]), p1=False)
+            R2_ = list(R1_)
+        elif cls == 2:                                                                # identical restarts, P1b fails
+            R1_ = noisy(rnd.choice([0, 0.02]), rnd.choice([0, 0.05]), p1b=False)
+            R2_ = list(R1_)
+            R1_[rnd.choice([1, 2])] += rnd.choice([0.006, 0.02, -0.03]); R2_ = list(R1_)
+        elif cls == 3:                                                                # identical except ONE update (not the trigger)
+            R1_ = noisy(0, rnd.choice([0.02, 0.1]))
+            R2_ = list(R1_)
+            R2_[rnd.randrange(n)] += rnd.choice([1e-12, 1e-6, 0.01])
+        elif cls == 4:                                                                # ordinary noisy pairs, healthy
+            R1_, R2_ = noisy(rnd.choice([1e-4, 0.003, 0.015, 0.03])), noisy(rnd.choice([1e-4, 0.003, 0.015]))
+        elif cls == 5:                                                                # pairs off the run by a similar shift (ratio fails)
+            sh = rnd.choice([0.03, 0.06, 0.12])
+            R1_, R2_ = noisy(0.001, sh), noisy(0.001, sh)
+        elif cls == 6:                                                                # spikes and P1 / P1b failures in noisy pairs
+            R1_, R2_ = noisy(0.01, 0, p1=rnd.random() < 0.7, p1b=rnd.random() < 0.7), noisy(0.01, 0, p1=rnd.random() < 0.7, p1b=rnd.random() < 0.7)
+            R1_[rnd.randrange(n)] += rnd.choice([0, 0.5, -0.3])
+        else:                                                                         # a tiny difference between the restarts (Nbar > 0 but tiny)
+            R1_ = noisy(0, rnd.choice([0.01, 0.05]))
+            R2_ = [x + 1e-9 * rnd.random() for x in R1_]
+        old_v = old_decision(C, R1_, R2_, v)
+        r = R.rejudge(C, R1_, R2_, v)
+        d1, d2 = R.absdiff(R1_, C), R.absdiff(R2_, C)
+        meets = d1[0] == 0 and d2[0] == 0 and max(d1[1], d1[2], d2[1], d2[2]) <= 0.005 and R1_ == R2_ and sum(d1 + d2) > 0               # the trigger, spelled out independently
+        if meets:
+            trig_n += 1
+            assert old_v == 'UNRESOLVED_CALIBRATE' and r['verdict'] == 'ESCALATE', (k, cls, old_v, r['verdict'])
+            seen['ESCALATE'] = seen.get('ESCALATE', 0) + 1
+            R3_, R4_ = noisy(0.01, 0.03), noisy(0.01, 0.02)
+            rc_ = R.rejudge(C, R1_, R2_, v, (R3_, R4_))                            # a calibration is not applied to an ESCALATE
+            assert rc_['verdict'] == 'ESCALATE' and rc_['calibration'] is None and 'ESCALATE' in rc_['calibration_not_applied']
+            continue
+        assert r['verdict'] == old_v, (k, cls, old_v, r['verdict'])
+        seen[old_v] = seen.get(old_v, 0) + 1
+        R3_, R4_ = noisy(0.01, 0.03), noisy(0.01, 0.02)
+        rc_ = R.rejudge(C, R1_, R2_, v, (R3_, R4_))                                # with a calibration: as before (applied only to UNRESOLVED_CALIBRATE)
+        if old_v == 'UNRESOLVED_CALIBRATE':
+            assert rc_['calibration'] is not None and rc_['verdict'] == R.calibration(C, [R1_, R2_, R3_, R4_], v)['verdict']
+        else:
+            assert rc_['verdict'] == old_v and rc_['calibration'] is None and rc_['calibration_not_applied'] == R.not_applied_note(old_v)
+    assert set(seen) == {'INSIDE healthy noise', 'UNRESOLVED', 'UNRESOLVED_CALIBRATE', 'OUTSIDE', 'ESCALATE'} and min(seen.values()) >= 40, seen
+    # --- the supervisor's recorded field (does not touch the verdict or any old key; the 1000-trace test t_verdict_identical_to_original covers the old keys)
+    sv = S.resume_probe_verdict(CL, *ident())
+    assert sv['identical_resumes'] is True and sv['n'] == 0 and sv['verdict'] in ('PASS', 'FAIL') and sv['Dbar'] > 0
+    assert S.resume_probe_verdict(CL, *alt(0.015))['identical_resumes'] is False and S.resume_probe_verdict(CL, list(CL), list(CL))['identical_resumes'] is True
+    print('ok B1 ESCALATE: trigger -> ESCALATE exit 4 (texts, Amendment 2 verbatim after Amendment 1, JSON); Nbar = Dbar = 0 -> INSIDE; P1 / P1b failing with identical resumes -> OUTSIDE; --calibration not applied to ESCALATE; '
+          f'every other verdict equal to the pre-B1 decision over {n_total} random traces ({trig_n} meet the trigger -> ESCALATE, were UNRESOLVED_CALIBRATE): ' + str(dict(sorted(seen.items()))))
+
+
 if __name__ == '__main__':
     todo = [t_queue_accum, t_keep_guard_unit, t_main_run_hashes, t_events_resume_warning, t_probe_refuses, t_probe_accum_warning,
             t_verdict_fields, t_verdict_nbar_zero, t_lag1, t_verdict_identical_to_original, t_md_probe,
@@ -1727,7 +1910,7 @@ if __name__ == '__main__':
             t_trace_a_early_optin, t_trace_a_exact_fields, t_trace_a_exact_missing, t_verdict_early, t_installer_trace_a_early, t_rejudge_amended, t_rejudge_calibration,
             t_probe_report_aside, t_rejudge_calibration_gated, t_rejudge_calibration_refused, t_rejudge_aside, t_trace_a_early_needs_three, t_early_limit_single_source,
             t_rejudge_calibration_errors_named, t_rejudge_p23_unchanged, t_early_not_computable_probe, t_early_not_computable_verdict, t_early_not_computable_trace_a, t_early_agreement,
-            t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate]
+            t_b2_deferral_unit, t_b2_running_gate, t_b3_contiguity_unit, t_b3_running_gate, t_b1_escalate]
     only = sys.argv[1:]
     try:
         for t in todo:
