@@ -74,7 +74,9 @@ class Bridge(nn.Module):
         creative.bridge_in = lambda: self.to_creative() if self.enabled else torch.zeros(self.p_dc.out_features, device=self.ctx_d.device)
         creative.bridge_out = self.observe_c
         self._hook = d_model.heads.halt.register_forward_hook(lambda _m, args, _o: self.observe_d(args[0]))
-        self._d, self._c = d_model, creative
+        # plain references, NOT attributes of this nn.Module: assigning a Module here would register it, and bridge.parameters() (the bridge
+        # optimizer, the clip) would then cover every weight of D and of the creative model (the double-optimizer bug of the first arms)
+        self.__dict__['_d'], self.__dict__['_c'] = d_model, creative
         return self
 
     def attach_creative(self, creative) -> None:

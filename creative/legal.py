@@ -72,6 +72,8 @@ def sample_run_masked(model, batch, k, level=4, temperature=1.0, greedy=False, g
     Rs = torch.zeros(B, pp.N_RES, model.d, device=dev, dtype=S0.dtype)
     kvx = [b.kv_of(X + model.src.weight[1]) for b in model.core]
     Z = torch.cat([model.ctrl.weight, model.reader.place.weight[:N_REG]]).expand(B, -1, -1)
+    if getattr(model, 'bridge_in', None) is not None:      # V1 bridge: the same controller shift Ledger.run applies (sampling must match training)
+        Z = Z + model.bridge_in().to(Z.dtype)[None, None, :]
     ops, As, Bs = [], [], []
     for t in range(model.n_loops):
         ts = min(t, model.n_loops - 1)
