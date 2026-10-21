@@ -103,8 +103,7 @@ def build_diary(parent, rows: list[dict], n: int = DIARY_SIZE, seed: int = 0, bs
             ds = Dataset([{"id": f"d{s + i}", "prompt": r["prompt"], "answer": "", "accepted": [], "family": r.get("family", ""),
                            "level": r.get("level", 0)} for i, r in enumerate(chunk)], parent.vocab, strict=False)
             b = to_device(collate([ds[i] for i in range(len(chunk))]), device)
-            o = parent.run(b)
-            ans = parent.talk(parent.state_of(o), b)
+            ans = parent.generate(b)
             for i, r in enumerate(chunk):
                 out.append({"id": f"diary:{s + i}", "prompt": r["prompt"], "answer": ans[i], "accepted": [ans[i]],
                             "family": r.get("family", ""), "level": r.get("level", 0), "source": "diary", "steps": []})

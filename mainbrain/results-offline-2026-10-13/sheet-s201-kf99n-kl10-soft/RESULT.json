@@ -1,0 +1,645 @@
+{
+ "run": "/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/runs/sheet-s201-kf99n-kl10-soft",
+ "tool": "sheet",
+ "seed": 201,
+ "smoke": false,
+ "parent": "/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/parents/s201/checkpoint.pt",
+ "final_checkpoint": "/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/local/runs/sheet-s201-kf99n-kl10-soft/night_9/checkpoint.pt",
+ "nights_run": 9,
+ "stop_reason": "quiz_rise_below_1_over_2_nights",
+ "panel": {
+  "path": "/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/offline/panel/sheet.v2.jsonl",
+  "sha256": "dda9dc62d5b568ad3cc3c57bddbc821754a3dc8693c01d0629c61347af6d572c",
+  "n": 1000,
+  "n_near_scored": 420,
+  "n_far_scored": 280,
+  "suffix": ".v2",
+  "decontam_dropped": 0,
+  "decontam_by_kind": {},
+  "decontam_by_split": {}
+ },
+ "dev": {
+  "path": "/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/sk200k/dev/in_dist.jsonl",
+  "sha256": "f975d9fb312c02d759df991fa3bbb9ac73912d5f77cdc0e6991abd7980158b86",
+  "n": 1360
+ },
+ "kinds": {
+  "all": [
+   "SUM",
+   "MAX",
+   "MIN",
+   "PRODUCT",
+   "cell arithmetic",
+   "division",
+   "MOD",
+   "ABS",
+   "COUNTIF",
+   "IF"
+  ],
+  "scored": [
+   "SUM",
+   "MAX",
+   "MIN",
+   "PRODUCT",
+   "cell arithmetic",
+   "division",
+   "ABS"
+  ],
+  "unscored": {
+   "MOD": {
+    "ops": [
+     "mod"
+    ],
+    "no_row_form": [
+     "mod"
+    ]
+   },
+   "COUNTIF": {
+    "ops": [
+     "add",
+     "cmp",
+     "max"
+    ],
+    "no_row_form": [
+     "cmp"
+    ]
+   },
+   "IF": {
+    "ops": [
+     "add",
+     "cmp",
+     "max",
+     "mul",
+     "sub"
+    ],
+    "no_row_form": [
+     "cmp"
+    ]
+   }
+  },
+  "no_row_form_ops": [
+   "cmp",
+   "mod"
+  ],
+  "source": "run log deviation event (A2)"
+ },
+ "marks": {
+  "DM1": {
+   "value": 65.714286,
+   "bar": "pass >= +30; proved wrong < +10",
+   "verdict": "PASS",
+   "hair_miss_met": true,
+   "seed": 201,
+   "before": 0.952381,
+   "after": 66.666667
+  },
+  "DM2": {
+   "value": 2.142857,
+   "bar": "pass >= +10; \"<= +2 on both seeds\" is proved wrong",
+   "verdict": "FAIL",
+   "note": "",
+   "hair_miss_met": false,
+   "before": 0.357143,
+   "after": 2.5,
+   "seed": 201
+  },
+  "DM3": {
+   "value": 0.955882,
+   "bar": "pass: in_dist drop <= 1.5 and no family fired; proved wrong: drop > 5",
+   "verdict": "PASS",
+   "fired": []
+  },
+  "DM4": {
+   "verdict": "PROVED WRONG",
+   "audit_exit": null,
+   "audit": null,
+   "log_constants_sha256": "3528d5ea7b539c8328c6eb1edcb94540e7442e8f43e0aaf4704db045ec7c890f",
+   "constants_file_sha256": "4781b0be4e900b2912cf10a809950f6fd99dcaef78e64380bf211fb6ed358c14",
+   "constants_match": false,
+   "summary_constants_match": false,
+   "unknown_events": [],
+   "bar": "pass: audit exits clean and log constants hash = domain/constants.json; FAIL: more than 2% of the run tool's panel rows also in training (dropped), or any zero-step or bad-source row; proved wrong: any row from a v1 panel, or a constants hash that differs from the file (per-domain setting)",
+   "decontam": {
+    "n": 1000,
+    "dropped": 0,
+    "frac": 0.0,
+    "by_kind": {},
+    "by_split": {},
+    "ids": []
+   }
+  },
+  "DM5": {
+   "stop_night": 9,
+   "score_stop": 66.666667,
+   "score_prev": 61.428571,
+   "best": 66.666667,
+   "best_night": 9,
+   "nights_past_best": 0,
+   "rise_last_night": 5.238096,
+   "score_at_least_best_minus_3": true,
+   "rise_at_most_3": false,
+   "dm3_not_pass": false,
+   "verdict": "PROVED WRONG",
+   "rule": "pass: score(N) >= best - 3 and rise <= 3; proved wrong: rise > 5, or >= 4 nights past the best with DM3 not passing",
+   "curve": [
+    0.952381,
+    15.238095,
+    25.714286,
+    42.142857,
+    48.571429,
+    57.142857,
+    57.857143,
+    63.095238,
+    61.428571,
+    66.666667
+   ],
+   "note": "nights after the stop (N=9) do not exist, so \"would it have kept rising\" is not measured"
+  }
+ },
+ "dm3_detail": {
+  "in_dist_parent": 90.8824,
+  "in_dist_final": 89.9265,
+  "in_dist_drop": 0.9559,
+  "fired": [],
+  "families": {
+   "arith_bare": {
+    "a": 100.0,
+    "b": 97.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "backward_solve": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "chain_ops": {
+    "a": 100.0,
+    "b": 97.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "chain_story2": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "cipher_map": {
+    "a": 100.0,
+    "b": 97.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "compare_numbers": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "copy_word": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "digits_parity": {
+    "a": 95.0,
+    "b": 97.5,
+    "drop": -2.5,
+    "lo": 0.0,
+    "hi": 7.5,
+    "fires": false
+   },
+   "distance_units": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "div_exact": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "fewshot_number_rule": {
+    "a": 47.5,
+    "b": 40.0,
+    "drop": 7.5,
+    "lo": -22.5,
+    "hi": 7.5,
+    "fires": false
+   },
+   "group_induct": {
+    "a": 92.5,
+    "b": 92.5,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "kin_chain": {
+    "a": 87.5,
+    "b": 85.0,
+    "drop": 2.5,
+    "lo": -10.0,
+    "hi": 5.0,
+    "fires": false
+   },
+   "letter_ops": {
+    "a": 97.5,
+    "b": 97.5,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "list_index": {
+    "a": 75.0,
+    "b": 72.5,
+    "drop": 2.5,
+    "lo": -12.5,
+    "hi": 5.0,
+    "fires": false
+   },
+   "list_stats": {
+    "a": 92.5,
+    "b": 90.0,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "object_track": {
+    "a": 95.0,
+    "b": 95.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "odd_one_out": {
+    "a": 95.0,
+    "b": 95.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "order_chain": {
+    "a": 67.5,
+    "b": 70.0,
+    "drop": -2.5,
+    "lo": 0.0,
+    "hi": 7.5,
+    "fires": false
+   },
+   "passage_qa": {
+    "a": 97.5,
+    "b": 100.0,
+    "drop": -2.5,
+    "lo": 0.0,
+    "hi": 7.5,
+    "fires": false
+   },
+   "percent_rate": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "prop_eval": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "rule_apply": {
+    "a": 95.0,
+    "b": 95.0,
+    "drop": -0.0,
+    "lo": -7.5,
+    "hi": 7.5,
+    "fires": false
+   },
+   "seq_cycle": {
+    "a": 95.0,
+    "b": 92.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "seq_next": {
+    "a": 85.0,
+    "b": 77.5,
+    "drop": 7.5,
+    "lo": -20.0,
+    "hi": 5.0,
+    "fires": false
+   },
+   "state_update": {
+    "a": 95.0,
+    "b": 95.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "story_addsub": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "story_chain3": {
+    "a": 100.0,
+    "b": 97.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "syllogism": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "table_calc": {
+    "a": 55.0,
+    "b": 52.5,
+    "drop": 2.5,
+    "lo": -12.5,
+    "hi": 7.5,
+    "fires": false
+   },
+   "table_lookup": {
+    "a": 27.5,
+    "b": 27.5,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "var_chain": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   },
+   "verify_claim": {
+    "a": 95.0,
+    "b": 92.5,
+    "drop": 2.5,
+    "lo": -7.5,
+    "hi": 0.0,
+    "fires": false
+   },
+   "word_filter": {
+    "a": 100.0,
+    "b": 100.0,
+    "drop": -0.0,
+    "lo": 0.0,
+    "hi": 0.0,
+    "fires": false
+   }
+  }
+ },
+ "dm5_curve": [
+  0.952381,
+  15.238095,
+  25.714286,
+  42.142857,
+  48.571429,
+  57.142857,
+  57.857143,
+  63.095238,
+  61.428571,
+  66.666667
+ ],
+ "a8": {
+  "R2_spearman": 0.8841,
+  "R2_n": 10,
+  "R3_wasted_share_pct": 0.0,
+  "R3_kinds": [],
+  "R1": "not computed here (needs the even-mix control run)"
+ },
+ "per_kind": [
+  {
+   "kind": "SUM",
+   "scored": true,
+   "near0": 1.67,
+   "nearN": 61.67,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 0.0,
+   "quizN": 80.77,
+   "share_last_pct": 12.14,
+   "kept_last": 80,
+   "undo_rows": 0,
+   "own_rows": 266,
+   "tool_rows": 530,
+   "own_not_tool": 159
+  },
+  {
+   "kind": "MAX",
+   "scored": true,
+   "near0": 0.0,
+   "nearN": 85.0,
+   "far0": 0.0,
+   "farN": 7.5,
+   "quiz0": 3.85,
+   "quizN": 88.46,
+   "share_last_pct": 1.0,
+   "kept_last": 7,
+   "undo_rows": 0,
+   "own_rows": 134,
+   "tool_rows": 477,
+   "own_not_tool": 252
+  },
+  {
+   "kind": "MIN",
+   "scored": true,
+   "near0": 1.67,
+   "nearN": 85.0,
+   "far0": 2.5,
+   "farN": 5.0,
+   "quiz0": 0.0,
+   "quizN": 92.31,
+   "share_last_pct": 1.0,
+   "kept_last": 6,
+   "undo_rows": 0,
+   "own_rows": 117,
+   "tool_rows": 441,
+   "own_not_tool": 223
+  },
+  {
+   "kind": "PRODUCT",
+   "scored": true,
+   "near0": 0.0,
+   "nearN": 60.0,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 0.0,
+   "quizN": 61.54,
+   "share_last_pct": 12.14,
+   "kept_last": 80,
+   "undo_rows": 0,
+   "own_rows": 181,
+   "tool_rows": 492,
+   "own_not_tool": 167
+  },
+  {
+   "kind": "cell arithmetic",
+   "scored": true,
+   "near0": 0.0,
+   "nearN": 50.0,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 0.0,
+   "quizN": 65.38,
+   "share_last_pct": 23.28,
+   "kept_last": 400,
+   "undo_rows": 0,
+   "own_rows": 26,
+   "tool_rows": 1912,
+   "own_not_tool": 782
+  },
+  {
+   "kind": "division",
+   "scored": true,
+   "near0": 1.67,
+   "nearN": 73.33,
+   "far0": 0.0,
+   "farN": 5.0,
+   "quiz0": 0.0,
+   "quizN": 69.23,
+   "share_last_pct": 23.28,
+   "kept_last": 140,
+   "undo_rows": 0,
+   "own_rows": 313,
+   "tool_rows": 442,
+   "own_not_tool": 49
+  },
+  {
+   "kind": "MOD",
+   "scored": false,
+   "near0": 1.67,
+   "nearN": 0.0,
+   "far0": 0.0,
+   "farN": 2.5,
+   "quiz0": 0.0,
+   "quizN": 4.0,
+   "share_last_pct": 6.79,
+   "kept_last": 123,
+   "undo_rows": 0,
+   "own_rows": 0,
+   "tool_rows": 0,
+   "own_not_tool": 18
+  },
+  {
+   "kind": "ABS",
+   "scored": true,
+   "near0": 1.67,
+   "nearN": 51.67,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 0.0,
+   "quizN": 84.0,
+   "share_last_pct": 12.58,
+   "kept_last": 181,
+   "undo_rows": 0,
+   "own_rows": 794,
+   "tool_rows": 1846,
+   "own_not_tool": 560
+  },
+  {
+   "kind": "COUNTIF",
+   "scored": false,
+   "near0": 0.0,
+   "nearN": 3.33,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 0.0,
+   "quizN": 8.0,
+   "share_last_pct": 1.0,
+   "kept_last": 5,
+   "undo_rows": 0,
+   "own_rows": 0,
+   "tool_rows": 0,
+   "own_not_tool": 17
+  },
+  {
+   "kind": "IF",
+   "scored": false,
+   "near0": 0.0,
+   "nearN": 20.0,
+   "far0": 0.0,
+   "farN": 0.0,
+   "quiz0": 4.0,
+   "quizN": 8.0,
+   "share_last_pct": 6.79,
+   "kept_last": 2,
+   "undo_rows": 0,
+   "own_rows": 0,
+   "tool_rows": 0,
+   "own_not_tool": 2
+  }
+ ],
+ "learned": [
+  "SUM",
+  "MAX",
+  "MIN",
+  "ABS"
+ ],
+ "not_learned": [
+  "PRODUCT",
+  "cell arithmetic",
+  "division",
+  "MOD",
+  "COUNTIF",
+  "IF"
+ ],
+ "notes": [
+  "DM4 audit could not run: FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-learner/f940b6ca-364b-5210-9e75-665a78bcdc5c/scratchpad/offline/panel/rpn.v2.jsonl'",
+  "undone nights: none (the check events in the log hold each night's drop)"
+ ],
+ "one_seed_only": true,
+ "timings": {
+  "score_panel": 397.0,
+  "harm": 156.6,
+  "audit": 0.1,
+  "total": 553.9
+ }
+}

@@ -47,6 +47,7 @@ class CardStore:
     null_key: torch.Tensor      # [dk] unit length
     null_value: torch.Tensor    # [d]
     floor: Optional[torch.Tensor] = None   # [Q] long: after a wipe, cards on lines < floor are gone
+    addresses: Optional[torch.Tensor] = None   # [B, L, d] S3 `card_address` only: each card's address
 
     # ---------------------------------------------------------------- writing
     @classmethod
@@ -105,8 +106,9 @@ class CardStore:
 
     def ask(self, query: torch.Tensor, q_visit: torch.Tensor, q_line: torch.Tensor,
             kappa: torch.Tensor, age_bias: torch.Tensor, fetched: Optional[torch.Tensor] = None,
-            questions: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1]."""
+            questions: Optional[torch.Tensor] = None, extra: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """s_i = kappa q.k_i + b_age (fp32), -inf where the card is not eligible. [n, L + 1]. `extra` (S4): a
+        further [n, L + 1] score term, added before the eligibility mask."""
         query = F.normalize(query.float(), dim=-1)
         keys = torch.cat([self.keys[q_visit],
                           self.null_key.expand(q_visit.shape[0], 1, -1)], dim=1)
@@ -114,6 +116,8 @@ class CardStore:
         bias = age_bias.float()[self.ages(q_line, age_bias.shape[0])]
         bias[:, self.null] = 0.0
         scores = scores + bias
+        if extra is not None:
+            scores = scores + extra.float()
         return scores.masked_fill(~self.eligible(q_visit, q_line, fetched, questions), NEG_INF)
 
     def top(self, scores: torch.Tensor, k: int) -> torch.Tensor:
@@ -168,6 +172,8 @@ class CardStore:
         digest = hashlib.sha256()
         for item in fields(self):
             value = getattr(self, item.name)
+            if item.name == "addresses" and value is None:
+                continue                                  # keeps the digest of every store without S3
             digest.update(item.name.encode())
             digest.update(tensor_digest(value.detach()).encode() if value is not None else b"none")
         return digest.hexdigest()
