@@ -147,7 +147,7 @@ def components(a) -> dict:
     return out
 
 
-def resume_compare(dir_a: str, dir_b: str) -> dict:
+def resume_compare(dir_a: str, dir_b: str, after: int = 20) -> dict:
     """Run A is uninterrupted; run B was killed after its first stop-after steps and resumed from its last checkpoint. For every step
     present in both, compare the logged losses (the LAST record of a step in B, i.e. the resumed one). Pass: max abs diff <= 1e-5 on CPU
     (on GPU the bar is 1e-3, reported; bf16 autocast and atomics make bit-equality a CPU-only claim)."""
@@ -158,20 +158,42 @@ def resume_compare(dir_a: str, dir_b: str) -> dict:
             d[r["step"]] = r
         return d
     A, B = last(dir_a), last(dir_b)
+    after_point = after
     ck = sorted(int(p.name.split("-")[1].split(".")[0]) for p in (Path(dir_b) / "wake-ckpt").glob("step-*.pt"))
     common = sorted(set(A) & set(B))
     diffs = {s: abs(A[s]["loss"] - B[s]["loss"]) for s in common}
-    after = [s for s in common if s > 20]
+    after = [s for s in common if s > after]
     mx = max(diffs[s] for s in after) if after else None
-    return {"steps_compared": len(common), "steps_after_resume_point_20": len(after), "max_abs_loss_diff_after_20": mx,
+    return {"steps_compared": len(common), "resume_point": after_point, "steps_after_resume_point": len(after), "max_abs_loss_diff_after_resume": mx,
             "max_abs_loss_diff_all": max(diffs.values()) if diffs else None, "ckpt_steps_in_B": ck,
             "device_is_cuda": torch.cuda.is_available(), "pass_cpu_1e-5": mx is not None and mx <= 1e-5,
             "pass_gpu_1e-3": mx is not None and mx <= 1e-3}
 
 
+def sleeptime(a) -> dict:
+    """The real creative pipeline (C2b W path + G1, production settings: 32/480 tries, full warm-up and N') on a 1/8-size pool, to time every
+    stage and get the first sleep+G1 creative dev number. Costs are scaled linearly in the pool for the projection. DEV only."""
+    from v1 import creative_sleep
+    base = Path(a.out) / "sleeptime"
+    b = Bridge(128, 256).to(a.device)
+    from custom_io.models import build
+    t0 = time.time()
+    info = creative_sleep.run_creative(
+        str(base), a.b2, os.path.join(a.skills, "train.jsonl"), a.skills, device=a.device, seed=0,
+        g1_factory=lambda raw, replay: g1mod.G1(g1mod.frozen_copy(raw), g1mod.build_diary(g1mod.frozen_copy(raw), replay, n=4096, seed=0, device=a.device),
+                                                raw.vocab, device=a.device),
+        pool_limit=a.pool, dev_limit=None, attach=b.attach_creative)
+    rep = creative_sleep.dev_report(str(base / "W2.pt"), a.device, attach=b.attach_creative)
+    raw = creative_sleep.dev_report(a.b2, a.device, attach=b.attach_creative)
+    return {"pool_limit": a.pool, "total_seconds": time.time() - t0, "seconds_by_stage": info["seconds"], "stages": info["stages"],
+            "night1_records": info.get("night1_records"), "night2_records": info.get("night2_records"), "dev_W2": rep, "dev_raw_parent": raw,
+            "phases": info["phases"]}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["overfit", "components", "five", "resume_compare"])
+    ap.add_argument("what", choices=["overfit", "components", "five", "resume_compare", "sleeptime"])
+    ap.add_argument("--after", type=int, default=20)
     ap.add_argument("--a", default=None)
     ap.add_argument("--b", default=None)
     ap.add_argument("--root", default=None)
@@ -190,9 +212,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
     Path(a.out).mkdir(parents=True, exist_ok=True)
     if a.what == "resume_compare":
-        res = resume_compare(a.a, a.b)
+        res = resume_compare(a.a, a.b, a.after)
     elif a.what == "overfit":
         res = {"floor": overfit_d(a, "floor"), "full": overfit_d(a, "full"), "creative_sleep_path": overfit_creative(a)}
+    elif a.what == "sleeptime":
+        res = sleeptime(a)
     elif a.what == "components":
         res = components(a)
     else:

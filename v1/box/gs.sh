@@ -40,6 +40,8 @@ say "STEP overfit"
 $PY -m v1.gate_s overfit --root "$ROOTD" --b2 "$B2" --skills "$SK" --out "$O/gs" --device cuda --steps 300 > "$C/overfit.out" 2>&1; echo "overfit rc=$?"; tail -3 "$C/overfit.out"
 say "STEP components"
 $PY -m v1.gate_s components --root "$ROOTD" --b2 "$B2" --skills "$SK" --out "$O/gs" --device cuda --cap 40 --diary 512 --pool 64 --devn 64 > "$C/components.out" 2>&1; echo "components rc=$?"; tail -3 "$C/components.out"
+say "STEP creative sleep + G1, production settings on a 1/8 pool (timing + first creative dev number)"
+$PY -m v1.gate_s sleeptime --root "$ROOTD" --b2 "$B2" --skills "$SK" --out "$O/gs" --device cuda --pool 128 > "$C/sleeptime.out" 2>&1; echo "sleeptime rc=$?"; tail -3 "$C/sleeptime.out"
 for ARM in floor full; do
   say "STEP 2% of steps, real plan, arm $ARM"
   $PY -m v1.run --arm $ARM --root "$ROOTD" --out "$O/two_pct_$ARM" --b2 "$B2" --skills "$SK" --steps 12000 --stop-after 240 --no-sleep --eval-visits 256 --ckpt-every 120 --eval-every 120 --workers "$W" > "$C/two_pct_$ARM.out" 2>&1; echo "2pct $ARM rc=$?"; grep -E "step 2(00|40)|DEV|ABORT|Error" "$C/two_pct_$ARM.out" | tail -4
@@ -50,7 +52,7 @@ say "STEP resume check"
 $PY -m v1.run --arm full --root "$ROOTD" --out "$O/res_A" --b2 "$B2" --skills "$SK" --steps 40 --max-tokens 20000 --no-sleep --eval-visits 32 --ckpt-every 10 --eval-every 1000 --workers "$W" > "$C/res_A.out" 2>&1
 $PY -m v1.run --arm full --root "$ROOTD" --out "$O/res_B" --b2 "$B2" --skills "$SK" --steps 40 --max-tokens 20000 --no-sleep --eval-visits 32 --ckpt-every 10 --eval-every 1000 --stop-after 25 --workers "$W" > "$C/res_B1.out" 2>&1
 $PY -m v1.run --arm full --root "$ROOTD" --out "$O/res_B" --b2 "$B2" --skills "$SK" --steps 40 --max-tokens 20000 --no-sleep --eval-visits 32 --ckpt-every 10 --eval-every 1000 --workers "$W" > "$C/res_B2.out" 2>&1
-$PY -m v1.gate_s resume_compare --a "$O/res_A" --b "$O/res_B" --out "$O/gs" > "$C/resume.out" 2>&1; tail -3 "$C/resume.out"
+$PY -m v1.gate_s resume_compare --after 20 --a "$O/res_A" --b "$O/res_B" --out "$O/gs" > "$C/resume.out" 2>&1; tail -3 "$C/resume.out"
 nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv,noheader > "$C/gpu_end.txt" 2>&1
 say "STEPS DONE"
 exit 0

@@ -25,6 +25,7 @@ from v1.joint import clone_model
 KL_WEIGHT = 30.0
 KL_ROWS = 32
 ENERGY = 0.99
+MAX_ANS = 8             # custom_io.data.MAX_ANS: answer slots are 8 characters + EOS
 DIARY_SIZE = 4096     # the s200 sheet run's diary size (domain/far/learn_probe.py GUARD_CONSTANTS note)
 
 
@@ -106,6 +107,8 @@ def build_diary(parent, rows: list[dict], n: int = DIARY_SIZE, seed: int = 0, bs
             b = to_device(collate([ds[i] for i in range(len(chunk))]), device)
             ans = parent.generate(b)
             for i, r in enumerate(chunk):
+                if len(ans[i]) > MAX_ANS or not ans[i]:       # the dataset's strict length check (MAX_ANS chars + EOS) would reject it
+                    continue
                 out.append({"id": f"diary:{s + i}", "prompt": r["prompt"], "answer": ans[i], "accepted": [ans[i]],
                             "family": r.get("family", ""), "level": r.get("level", 0), "source": "diary", "steps": []})
     return out
