@@ -1708,5 +1708,24 @@ class RunThreePrepTest(unittest.TestCase):
         self.assertEqual(caught.exception.code, screen.C0_STOP)
         self.assertIn("probe process failed (rc 1)", str(caught.exception))
 
+    def test_calibration_memory_mark(self) -> None:
+        """Run-4 mark: a calibration phase at or above 14 GiB, allocated OR reserved, stops C0; below passes."""
+        gib = 2 ** 30
+        def phases(allocated: float, reserved: float) -> list[dict]:
+            return [{"phase": "calibration", "peak_allocated_bytes": int(allocated * gib),
+                     "peak_reserved_bytes": int(reserved * gib)}]
+        peak = screen.check_calibration_memory("D1", phases(4.0, 5.0))
+        self.assertEqual(peak, {"allocated": 4.0, "reserved": 5.0})
+        for allocated, reserved in ((14.28, 14.43), (13.0, 14.0), (14.0, 13.0)):
+            with self.assertRaises(screen.Stop) as caught:
+                screen.check_calibration_memory("S0", phases(allocated, reserved))
+            self.assertEqual(caught.exception.code, screen.C0_STOP)
+            self.assertIn("PROVED WRONG", str(caught.exception))
+        self.assertIsNone(screen.check_calibration_memory("D1", [{"phase": "start"}]))   # CPU: no CUDA phases
+        with self.assertRaises(screen.Stop):                                            # CUDA: a missing phase is a stop
+            screen.check_calibration_memory("D1", [{"phase": "start"}], require=True)
+        from learnlab.train import TrainConfig
+        self.assertEqual(screen.CALIBRATION_LIMIT_GIB * gib, TrainConfig.__dataclass_fields__["memory_limit_bytes"].default)
+
 if __name__ == "__main__":
     unittest.main()

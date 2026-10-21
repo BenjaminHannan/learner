@@ -555,6 +555,31 @@ def phase_summary(phases: Optional[Sequence[Mapping[str, Any]]]) -> str:
     return ", ".join(parts) or "no CUDA phases"
 
 
+CALIBRATION_LIMIT_GIB = 14.0                       # the guard's size (learnlab/train.py memory_limit_bytes); the mark is 'at or above', allocated or reserved
+
+
+def calibration_gib(phases: Optional[Sequence[Mapping[str, Any]]]) -> Optional[dict[str, float]]:
+    """Peak allocated / reserved GiB of the "calibration" memory phase, or None (no CUDA phases)."""
+    for p in phases or []:
+        if p.get("phase") == "calibration" and p.get("peak_reserved_bytes") is not None:
+            return {"allocated": p["peak_allocated_bytes"] / 2**30, "reserved": p["peak_reserved_bytes"] / 2**30}
+    return None
+
+
+def check_calibration_memory(arm: str, phases: Optional[Sequence[Mapping[str, Any]]], *, require: bool = False
+                             ) -> Optional[dict[str, float]]:
+    """Run-4 mark: a training arm's FLOP calibration must stay under 14 GiB allocated AND reserved in its fresh
+    process. At or above is the registered "proved wrong" outcome: C0 stops (exit 3), no patch-and-retry."""
+    peak = calibration_gib(phases)
+    if peak is None and require:
+        raise c0_stop(f"c0: the {arm} probe logged no calibration memory phase on CUDA; the run-4 mark cannot be read")
+    if peak is not None and max(peak.values()) >= CALIBRATION_LIMIT_GIB:
+        raise c0_stop(f"c0: PROVED WRONG (run-4 mark): the {arm} FLOP calibration peaked at "
+                      f"{peak['allocated']:.2f} GiB allocated / {peak['reserved']:.2f} reserved in its fresh process, "
+                      f"at or above {CALIBRATION_LIMIT_GIB:.0f} GiB; {phase_summary(phases)}")
+    return peak
+
+
 def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, size: str, device: str, workers: int,
                            ckpt_dir: str, seconds: float, max_tokens: int, arm: str = "S0") -> dict[str, Any]:
     """Seconds a train step spends OUTSIDE its T (review round 3, item 4): one short `train_d` of `arm` with a
@@ -580,6 +605,7 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
                           f"{(done.stderr or done.stdout)[-300:]}")
         probe = json.loads(out.read_text(encoding="utf-8"))
     phases = phase_summary(probe.get("memory_phases"))
+    calibration = check_calibration_memory(arm, probe.get("memory_phases"), require=device == "cuda")
     if probe.get("status") != "completed":                  # sixth pass, item 1: an aborted probe stops C0
         raise c0_stop(f"c0: the {arm} train-overhead probe did not complete (status {probe.get('status')!r}: "
                       f"{str(probe.get('error'))[:160]}); memory per phase, allocated/reserved GiB: {phases}; "
@@ -587,7 +613,8 @@ def measure_train_overhead(budget: Any, data_rel: str, tokenizer_path: str, *, s
     trained = float(probe["train_seconds"])
     return {"probe_seconds": seconds, "wall_seconds": wall, "train_seconds": trained,
             "overhead_seconds": max(0.0, wall - trained), "fresh_process": True,
-            "memory_phases": probe.get("memory_phases"), "memory_summary_gib": phases}
+            "memory_phases": probe.get("memory_phases"), "memory_summary_gib": phases,
+            "calibration_gib": calibration}
 
 
 def cmd_train_probe(args: argparse.Namespace) -> int:
@@ -640,7 +667,7 @@ def bench(run_one: Callable[[Mapping[str, Any], str], dict[str, Any]], *, rounds
 
 
 def cmd_c0(args: argparse.Namespace) -> int:
-    from premonition.train import mini_train_config  # noqa: F401  (import check before the long bench)
+    from premonition.train import CALIBRATION_CHUNK_TOKENS, mini_train_config  # noqa: F401  (import check before the long bench)
     if args.t_override is not None and args.size != "tiny":
         raise refused("c0: --t-override is for the tiny CPU dry run only; the real T is the registered formula")
     from premonition import data as pdata
@@ -680,7 +707,11 @@ def cmd_c0(args: argparse.Namespace) -> int:
                         "round_values": {mode: [r["round_value"] for r in runs[arm][mode]] for mode in MODES}}
     # D1's FLOP fit and FLOP/s
     d1 = fresh_trainer(ARMS["D1"], args.size, vocab, args.device)
-    fit = d1.calibrate(fixed[:4])
+    reset_peak(args.device)
+    fit = d1.calibrate(fixed[:4], chunk_tokens=CALIBRATION_CHUNK_TOKENS)
+    d1_calibration_peak = ({"allocated": torch.cuda.max_memory_allocated() / 2**30,       # logged only: this process is
+                            "reserved": torch.cuda.max_memory_reserved() / 2**30}         # not fresh; the probe is the mark
+                           if args.device == "cuda" else None)
     timed_rows = fixed[args.warmup:args.warmup + args.timed]                  # the batches the seconds were timed on
     flops = curriculum_flops(fit, timed_rows, d1.model.config)
     t_raw_modes = t_raw_from_modes(per_arm["D1"]["mean_s_per_update"], flops)   # means, like the FLOPs (item 7)
@@ -717,6 +748,7 @@ def cmd_c0(args: argparse.Namespace) -> int:
         "vocab_size": vocab, "settings": {**settings, "p_own": P_OWN, "weights": CURRICULUM_WEIGHTS},
         "registered_settings": settings == REGISTERED_C0, "dph": args.dph,
         "arms": per_arm, "weighted_flops_per_update": flops, "flop_fit": {"a": fit.a, "b": fit.b, "worst": fit.worst},
+        "d1_calibration_gib_in_c0_process": d1_calibration_peak,
         "d1_flops_per_s": d1_flops_per_s, "f_target": F_TARGET, "T_raw": t_raw, "T_formula": t_formula,
         "t_raw_curriculum": t_raw_modes, "t_override": args.t_override, "T": T, "gpu_busy": busy, "eval_probe": probe, "train_probe": train_probe,
         "eval_probe_d1": probes["D1"], "train_probe_d1": train_probes["D1"],
