@@ -19,3 +19,12 @@ The sealed card (`reviews/width-pilot-bid-C-card-2026-10-20.md`, commit e7841bb1
   - creative: 81 pass, 0 fail (52 existing plus 29 new). There is no baseline count from the unmodified branch, because that run did not finish.
   - custom_io: 36 pass, 13 fail. The same 13 fail on the unmodified branch, all for want of the skills data in this container.
 - The custom_io port and `claude/project-thread-f1to6a`'s own `--caps` / `--max-ans` flags would need reconciling if the lineages merge.
+
+## Coordinator rulings on addendum 1 (relayed 10-22; the coordinator speaks for Ben on routine rulings)
+
+- **A1, A3:** accepted as corrections of fact.
+- **A2:** **accepted into scope.** It fixes a silent wrong forward pass under 36 registers, changes no bar or mark, and has no effect at today's caps.
+- **A4:** **accepted.** Gate check (i) uses 64 rows of **C2 dev**, never the opened C2 test. The record is made once on BensPC from the actual parent s200 with unmodified code, then reproduced through the caps-first path, bit-identical on CPU.
+- **A5:** no ruling needed.
+- **Review:** one extra, final round is allowed on the two round-2 fix commits only (c07afac1c, ce5cbef2e). If it finds blocking issues: fix once, then park. No further round.
+- **The card stays sealed** (e7841bb12, file sha256 ff242c50…). $0, nothing booked. No GPU rental until the extra review is clean and the gate record is made on BensPC; then a gate packet with its cost goes to the coordinator.
