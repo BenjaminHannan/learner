@@ -5,7 +5,7 @@ import json, os, shutil, subprocess, sys, tempfile
 import pytest
 import torch
 from custom_io import caps
-from custom_io.data import CharVocab
+from custom_io.data import CharVocab, DEV_SPLITS
 from custom_io.models.ledger import Ledger
 from creative import bidc_load_gate as G, rules_real as R, sleep
 
@@ -46,7 +46,8 @@ def kit():
     # what custom_io/train.py --record-eval does, on the in-memory model (the real thing is run in test_train_process_record_end_to_end)
     threads = torch.get_num_threads()
     torch.set_num_threads(1)
-    torch.save(G.record_eval(new, v, G.load_rows(rows, N), caps.APPLIED, source='train_process', checkpoint_sha256=G.sha256_file(os.path.join(d, 'p0.pt'))), os.path.join(d, 'rec_p0.pt'))
+    torch.save(G.record_eval(new, v, G.load_rows(rows, N), caps.APPLIED, source='train_process', checkpoint_sha256=G.sha256_file(os.path.join(d, 'p0.pt')),
+                         rows_sha256=G.sha256_file(rows)), os.path.join(d, 'rec_p0.pt'))
     torch.set_num_threads(threads)
     caps.apply(caps.TODAY)
     caps.APPLIED = None
@@ -143,26 +144,49 @@ def test_report_is_not_overwritten_and_records_are_exclusive(kit):
     assert p.returncode != 0 and 'FileExistsError' in p.stderr
 
 
-def test_c2b_results_json_record_compares_the_right_vector(kit):
+def test_a_json_record_is_refused_for_check_1(kit):
+    """Review 2, B1: a C2b results .json (no row ids of its own, no floats) is no record any more, whatever rows the gate has."""
     rec = torch.load(os.path.join(kit, 'rec_c2b.pt'), weights_only=True)
     j = os.path.join(tempfile.mkdtemp(), 's200.json')
-    json.dump({'N': {'per_q': {'right': rec['right'] + [0.0] * 4}}}, open(j, 'w'))                 # more rows than the gate uses, as in a 512-row results file
+    json.dump({'N': {'per_q': {'right': rec['right'] + [0.0] * 4}}}, open(j, 'w'))
     p, rep = go(kit, extra=['--checks', '1'], recorded=j)
-    assert p.returncode == 3 and rep['results']['1']['ok'] and rep['results']['1']['compared'].startswith('per-row right only')
-    j2 = j.replace('s200', 'flipped')
-    json.dump({'N': {'per_q': {'right': [not x for x in rec['right']]}}}, open(j2, 'w'))
-    p, rep = go(kit, extra=['--checks', '1'], recorded=j2)
-    assert p.returncode == 1 and 'right differs' in rep['results']['1']['differences'][0]
+    assert p.returncode == 1 and not rep['results']['1']['ok'] and 'not a gate record' in rep['results']['1']['why_fail'] and 'ValueError' in rep['results']['1']['why_fail']
+    with pytest.raises(ValueError):
+        G.load_record(j)
+    assert 'record-arm' not in sh('--help').stdout and 'recorded_arm' not in rep['results']['1']
+
+
+def test_a_record_made_on_other_rows_is_refused(kit):
+    """Review 2, B1: compare() checks the record's own ids and rows-file sha256 against the gate's rows."""
+    # same ids, one row's text changed: only the rows-file sha256 can tell
+    rows = [json.loads(l) for l in open(os.path.join(kit, 'rows.jsonl'))]
+    rows[0]['prompt'] = rows[0]['prompt'] + ' '
+    other = os.path.join(tempfile.mkdtemp(), 'other.jsonl')
+    open(other, 'w').write(''.join(json.dumps(r, sort_keys=True) + '\n' for r in rows))
+    p, rep = go(kit, extra=['--checks', '1', '--rows', other])
+    assert p.returncode == 1 and any('rows file sha256' in x for x in rep['results']['1']['differences'])
+    # different rows (other ids): the TEST-rows-record-vs-DEV-rows case
+    rows2 = [json.loads(l) for l in open(os.path.join(kit, 'rows.jsonl'))][4:]
+    other2 = os.path.join(tempfile.mkdtemp(), 'other2.jsonl')
+    open(other2, 'w').write(''.join(json.dumps(r, sort_keys=True) + '\n' for r in rows2))
+    p, rep = go(kit, extra=['--checks', '1', '--rows', other2])
+    assert p.returncode == 1 and 'ids differ' in rep['results']['1']['differences'][0]
+    # a record without a rows sha256 is refused too, and the same for check 3's P_0 record
+    p, rep = go(kit, extra=['--checks', '1'], recorded=tampered(kit, 'rec_c2b.pt', lambda r: r.pop('rows_sha256')))
+    assert p.returncode == 1 and 'rows file sha256' in rep['results']['1']['differences'][0]
+    p, rep = go(kit, extra=['--checks', '3', '--bidc-rows', other], bidc_recorded='rec_p0.pt')
+    assert p.returncode == 1 and any('rows file sha256' in x for x in rep['results']['3']['differences'])
 
 
 def test_compare_unit():
     t = dict(x=torch.zeros(2, 3), y=torch.arange(4))
-    rec = dict(ids=['a'], right=[True], answers=['1'], tensors=t)
-    same = dict(ids=['a'], right=[True], answers=['1'], tensors={k: v.clone() for k, v in t.items()})
+    rec = dict(ids=['a'], rows_sha256='h', right=[True], answers=['1'], tensors=t)
+    same = dict(ids=['a'], rows_sha256='h', right=[True], answers=['1'], tensors={k: v.clone() for k, v in t.items()})
     assert G.compare(rec, same) == []
     assert 'x: shape' in G.compare(rec, dict(same, tensors=dict(same['tensors'], x=torch.zeros(3, 3))))[0]
     assert G.compare(rec, dict(same, answers=['2'])) == ['decoded answers differ']
     assert G.compare(rec, dict(same, ids=['b'])) == ['the recorded rows are not these rows (ids differ)']
+    assert 'rows file sha256' in G.compare(rec, dict(same, rows_sha256='other'))[0] and 'rows file sha256' in G.compare(dict(rec, rows_sha256=None), dict(same, rows_sha256=None))[0]
 
 
 # ------------------------------------------------------------------ code-review round 1
@@ -183,7 +207,7 @@ def test_check3_refuses_a_c2b_results_json_as_p0_record(kit):
     j = os.path.join(tempfile.mkdtemp(), 's.json')
     json.dump({'N': {'per_q': {'right': [True] * N}}}, open(j, 'w'))
     p, rep = go(kit, bidc_recorded=j)
-    assert p.returncode == 1 and any('needs a .pt record' in x for x in rep['results']['3']['differences'])
+    assert p.returncode == 1 and 'not a gate record' in rep['results']['3']['why_fail']
 
 
 def test_record_command_stamps_reload_and_the_checkpoint_sha(kit):
@@ -258,3 +282,93 @@ def test_train_record_eval_argument_errors():
     assert p.returncode == 2 and '--record-eval needs --out' in p.stderr
     p = subprocess.run(base + ['--model', 'plain_tf', '--out', tempfile.mkdtemp()], capture_output=True, text=True, cwd=ROOT)
     assert p.returncode == 2 and 'must be ledger' in p.stderr
+
+
+# ------------------------------------------------------------------ code-review round 2
+def with_machine(**kw):
+    def edit(rec):
+        rec['machine'] = dict(rec['machine'], **kw)
+    return edit
+
+
+@pytest.mark.parametrize('field,value', [('torch', '0.0.1'), ('platform', 'Windows-11-other'), ('processor', 'another cpu'), ('threads', 8), ('mkldnn', False), ('cpu', 'other cpu model')])
+def test_a_record_from_another_machine_is_refused_not_failed(kit, field, value):
+    """Review 2, B2: check 1 and check 3 compare the machine block BEFORE the bit-exact comparison; a mismatch is REFUSED (exit 4, verdict REFUSED), not FAIL (exit 1)."""
+    p, rep = go(kit, recorded=tampered(kit, 'rec_c2b.pt', with_machine(**{field: value})))
+    r = rep['results']['1']
+    assert p.returncode == 4 == G.REFUSED_CODE and rep['verdict'].startswith('REFUSED') and rep['stopped_at'] == 1 and rep['not_run'] == [2, 3]
+    assert r['refused'] and not r['ok'] and any(x.startswith(field) for x in r['differences']) and 'same machine' in r['why_fail'] and 'compared' not in r
+    p, rep = go(kit, extra=['--checks', '3'], bidc_recorded=tampered(kit, 'rec_p0.pt', with_machine(**{field: value})))
+    r = rep['results']['3']
+    assert p.returncode == 4 and rep['verdict'].startswith('REFUSED') and r['refused'] and any(x.startswith(field) for x in r['differences']) and 'same machine' in r['why_fail']
+
+
+def test_machine_refusal_comes_before_the_bit_exact_comparison(kit):
+    """a record that is BOTH from another machine and numerically different is REFUSED (nothing compared), not FAIL with float differences."""
+    def edit(rec):
+        rec['machine']['torch'] = '0.0.1'
+        rec['tensors']['R'].view(-1)[0] += 1
+    p, rep = go(kit, recorded=tampered(kit, 'rec_c2b.pt', edit))
+    assert p.returncode == 4 and rep['results']['1']['refused'] and not any('not bit-identical' in x for x in rep['results']['1']['differences'])
+    p, rep = go(kit, recorded=tampered(kit, 'rec_c2b.pt', lambda r: r.pop('machine')))        # an old-format record has no machine block: also refused
+    assert p.returncode == 4 and 'no machine block' in rep['results']['1']['differences'][0]
+
+
+def test_records_carry_the_machine_and_the_rows_sha(kit):
+    here = G.machine_info()
+    assert {'torch', 'platform', 'processor', 'machine', 'threads', 'mkldnn', 'mkl'} <= set(here)
+    for name in ('rec_c2b.pt', 'rec_p0.pt', 'rec_p0_reload.pt'):
+        rec = torch.load(os.path.join(kit, name), weights_only=True)
+        assert rec['machine']['threads'] == 1 and rec['machine']['torch'] == str(torch.__version__) and rec['machine']['platform'] == here['platform']
+        assert rec['rows_sha256'] == G.sha256_file(os.path.join(kit, 'rows.jsonl'))
+    assert G.machine_mismatch(here) == [] and G.machine_mismatch(dict(here, threads=2))[0].startswith('threads')
+
+
+def run_train(d, kit, extra, rows=None, n=N, record=None, final=False):
+    out = os.path.join(d, 'out')
+    argv = [sys.executable, '-m', 'custom_io.train', '--model', 'ledger', '--cfg', json.dumps(SMALL), '--data', os.path.join(d, 'data'), '--steps', '2', '--batch', '8', '--warmup', '1',
+            '--device', 'cpu', '--out', out, '--record-eval', record or os.path.join(d, 'rec.pt'), '--record-rows', rows or os.path.join(kit, 'rows.jsonl'), '--record-n', str(n)] + extra
+    return subprocess.run(argv, capture_output=True, text=True, cwd=ROOT), out
+
+
+def tiny_data(d):
+    os.makedirs(os.path.join(d, 'data', 'dev'))
+    for name, n, seed in [('train.jsonl', 32, 1)] + [(os.path.join('dev', f'{sp}.jsonl'), 4, 2 + i) for i, sp in enumerate(DEV_SPLITS)]:      # all six dev splits: final_eval reads each
+        with open(os.path.join(d, 'data', name), 'w') as f:
+            f.write(''.join(json.dumps(r) + '\n' for r in synthetic_rows(n, seed)))
+
+
+def test_train_record_eval_guard_needs_caps_and_valid_rows(kit):
+    """Review 2, B3: --record-eval without --caps, or with --record-rows that is missing / too short / fails its MANIFEST sha256, stops before any training or checkpoint."""
+    d = tempfile.mkdtemp()
+    tiny_data(d)
+    p, out = run_train(d, kit, [])
+    assert p.returncode == 2 and '--record-eval needs --caps' in p.stderr and not os.path.exists(out)
+    p, out = run_train(d, kit, ['--caps', BIDC], rows=os.path.join(d, 'nope.jsonl'))
+    assert p.returncode != 0 and 'does not exist' in p.stderr and not os.path.exists(out)
+    p, out = run_train(d, kit, ['--caps', BIDC], n=N + 100)                               # the kit rows file has N + 4 rows
+    assert p.returncode != 0 and 'REFUSED' in p.stderr and 'needs' in p.stderr and not os.path.exists(out) and '"event": "train"' not in p.stdout
+    # a rows file named in a MANIFEST whose bytes do not match its sha256
+    md = tempfile.mkdtemp()
+    shutil.copy(os.path.join(kit, 'rows.jsonl'), os.path.join(md, 'rows.jsonl'))
+    json.dump({'rows': {'sha256': '0' * 64}}, open(os.path.join(md, 'MANIFEST.json'), 'w'))
+    p, out = run_train(d, kit, ['--caps', BIDC], rows=os.path.join(md, 'rows.jsonl'))
+    assert p.returncode != 0 and 'REFUSED' in p.stderr and 'sealed hash' in p.stderr and not os.path.exists(out) and '"event": "train"' not in p.stdout
+
+
+def test_a_failed_record_write_still_leaves_result_json_and_the_final_eval(kit, monkeypatch):
+    """Review 2, B3: the post-training record write failing is recorded in RESULT.json, the checkpoint and the final eval are still written, and the exit is non-zero at the end."""
+    from custom_io import train
+    d = tempfile.mkdtemp()
+    tiny_data(d)
+    out, rec = os.path.join(d, 'out'), os.path.join(d, 'rec.pt')
+    def boom(*a, **k):
+        raise RuntimeError('disk full (test)')
+    monkeypatch.setattr(G, 'record_eval', boom)
+    with pytest.raises(SystemExit) as e:
+        train.main(['--model', 'ledger', '--cfg', json.dumps(SMALL), '--data', os.path.join(d, 'data'), '--steps', '2', '--batch', '8', '--warmup', '1', '--device', 'cpu', '--caps', BIDC,
+                    '--out', out, '--record-eval', rec, '--record-rows', os.path.join(kit, 'rows.jsonl'), '--record-n', str(N), '--final-eval', '--eval-max', '4'])
+    assert e.value.code not in (0, None) and 'NOT written' in str(e.value.code)
+    r = json.load(open(os.path.join(out, 'RESULT.json')))
+    assert 'disk full (test)' in r['record_eval_error'] and 'record_eval' not in r and r['final_eval'] is not None and r['lesions']
+    assert os.path.exists(os.path.join(out, 'checkpoint.pt')) and not os.path.exists(rec)
