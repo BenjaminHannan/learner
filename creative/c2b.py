@@ -5,6 +5,9 @@
   score  python3 -m creative.c2b score --root ROOT --skills-train train.jsonl --skills-data data_big
          opens the sealed test split ONCE, only if all 6 parents x 4 arms (+ N') exist under ROOT/s200..s205; refuses otherwise, and refuses a second time once REPORT.json exists.
   check  python3 -m creative.c2b check --root ROOT          (what is missing, nothing opened)
+  Bid C options (all default to the C2b behaviour): --caps FILE applies custom_io/caps.py with that file BEFORE any checkpoint is loaded (train and score refuse to run unless it has
+  been applied; its path and sha256 go into every output); --parents s700,s701,... for score / check (default s200..s205); --test PATH for score (a <name>.jsonl whose sibling
+  MANIFEST.json holds its sha256; default creative/data/c2/test.jsonl). The test path and sha256 go into every score output.
 
 PER PARENT (B2 s200..s205): raw B2 -> warm-up (2,048 warm add/mult rows, 4 visits, lr 3e-4, skills replay, seed 0; = fast-sleep's warm.pt) -> N' (stepping-stone sleep with add/mult
 replay, exactly job 7) -> pool temperature T = job 6's rule on DEV for N' (best reach@32 among temperatures passing sameness).
@@ -19,12 +22,13 @@ No answer key and no rule-kind label touches an arm's records, the search or the
 MEASURED on the sealed test split (512) for N', W, R, H, M after night 2: greedy first try (fits and right) per kind and pooled; reach@4, reach@32 (32 plain samples with repeats at T);
 practised check (256 fresh add/mult, reach@32 at T 1.0); skills harm (pooled-5 vs N'). Intervals: paired bootstrap over questions within parents, pooled over the 6 parents.
 The json carries numbers and per-parent readings only; the roadmap thread gives the verdict."""
-import argparse, copy, json, math, os, random, time
+import argparse, copy, hashlib, json, math, os, random, time
 import numpy as np
 import torch
 from creative import blind_baseline, c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, fewshot, legal, rules_real as R, sleep, stones
 from creative.c2_keep import MULTI
 from creative.pilot import skills_eval
+from custom_io import caps as capsmod
 from custom_io.models import progparse as pp
 
 DATA = 'creative/data/c2'
@@ -35,6 +39,33 @@ LR, VISITS = 1e-3, 32
 N1, N2 = 32, 480
 FILES = ('setup.json', 'Nprime.pt', 'W2.pt', 'R2.pt', 'H2.pt', 'M_final.pt', 'complete.json')
 log = lambda *a: print(time.strftime('%H:%M:%S'), *a, flush=True)
+
+
+# ------------------------------------------------------------------ Bid C: caps and test file (both default to the C2b behaviour)
+def caps_info(caps):
+    """caps = a caps file path or None. Raises unless custom_io.caps.apply ran with exactly that file (sha256 of its bytes), so call it BEFORE load_parent: the caps are module globals and a
+    checkpoint made under other caps does not load. -> dict(path, sha256, values) for the outputs; None when no caps file was asked for."""
+    if not caps:
+        return None
+    rec = capsmod.check_applied(caps)
+    return dict(path=rec['path'], sha256=rec['sha256'], values=rec['values'])
+
+
+def same_caps(recorded, now):
+    return (recorded or {}).get('sha256') == (now or {}).get('sha256')
+
+
+def test_path(test=None):
+    return os.path.abspath(test or os.path.join(DATA, 'test.jsonl'))
+
+
+def load_test(test=None, limit=None):
+    """-> (rows, info). The default is the C2 test split; any other path is a <name>.jsonl checked against the sha256 in its sibling MANIFEST.json (as rules_real.load_split does)."""
+    path = test_path(test)
+    d, name = os.path.split(path)
+    assert name.endswith('.jsonl'), f'--test must be a .jsonl file: {path}'
+    rows = R.load_split(d, name[:-len('.jsonl')])
+    return c2_stones._with_nums(rows[:limit]), dict(path=path, sha256=hashlib.sha256(open(path, 'rb').read()).hexdigest(), n=len(rows))
 
 
 # ------------------------------------------------------------------ records (saved with their target cache, so a re-run can reload them)
@@ -95,7 +126,8 @@ def sleep_on(base, recs, updates, vocab, replay, warm_rows, seed, device, lr=LR,
 
 # ------------------------------------------------------------------ one parent
 def train_parent(out, ckpt, skills_train=None, skills_data=None, warmed=None, device='cpu', seed=0, pool_limit=None, dev_limit=None, n1=N1, n2=N2, temps=T_GRID, T=None, lr=LR,
-                 visits=VISITS, min_records=1):
+                 visits=VISITS, min_records=1, caps=None):
+    caps_rec = caps_info(caps)                           # before anything is loaded
     os.makedirs(out, exist_ok=True)
     P = lambda f: os.path.join(out, f)
     t00 = time.time()
@@ -104,6 +136,11 @@ def train_parent(out, ckpt, skills_train=None, skills_data=None, warmed=None, de
                                                                     note='test/labelled never opened; DEV only picks the pool temperature; no kind label or key touches an arm')
     save = lambda: json.dump(info, open(path, 'w'), indent=1)
     done = lambda f: os.path.exists(P(f))
+    if os.path.exists(path) and not same_caps(info.get('caps'), caps_rec):      # a resumed run keeps its caps
+        raise SystemExit(f"REFUSED: {path} was made with caps {info.get('caps')}, this run has {caps_rec}")
+    info['caps'] = caps_rec
+    if caps_rec:
+        save()
 
     def stage(name, secs):
         info['seconds'][name] = round(secs, 1)
@@ -293,11 +330,19 @@ def measure(m, rows, vocab, device, T, fresh, skills_data, seed):
                                                                      reach32=[d['reach32'] for d in sc['per_question']]))
 
 
-def score_parent(root, parent, skills_train, skills_data, test, fresh, device, seed):
+def score_parent(root, parent, skills_train, skills_data, test, fresh, device, seed, caps=None, test_rec=None):
+    caps_rec = caps_info(caps)                           # before load_parent
     out = os.path.join(root, 'test', f'{parent}.json')
     if os.path.exists(out):
-        return json.load(open(out))
+        done = json.load(open(out))
+        if not same_caps(done.get('caps'), caps_rec) or (done.get('test') and test_rec and done['test']['sha256'] != test_rec['sha256']):
+            raise SystemExit(f'REFUSED: {out} was scored with caps {done.get("caps")} on test {done.get("test")}, this run has {caps_rec} on {test_rec}')
+        return done
     d = os.path.join(root, parent)
+    if os.path.exists(os.path.join(d, 'train.json')):
+        trained = json.load(open(os.path.join(d, 'train.json'))).get('caps')
+        if not same_caps(trained, caps_rec):
+            raise SystemExit(f'REFUSED: {parent} was trained with caps {trained}, this run has {caps_rec}')
     replay = sleep.load_replay(skills_train, None, seed) if skills_train else []
     setup = json.load(open(os.path.join(d, 'setup.json')))
     T = setup['T']
@@ -312,7 +357,7 @@ def score_parent(root, parent, skills_train, skills_data, test, fresh, device, s
     else:
         name, kw = fastsleep.MEMORY_C2B
         models['M'], _ = fastsleep.METHODS[name](N, dm['records'], replay, vocab, device, len(dm['records']), seed=seed, **kw)
-    res = dict(parent=parent, T=T, recall=rep)
+    res = dict(parent=parent, T=T, recall=rep, caps=caps_rec, test=test_rec)
     for arm, m in models.items():
         m.eval()
         t0 = time.time()
@@ -323,8 +368,10 @@ def score_parent(root, parent, skills_train, skills_data, test, fresh, device, s
     return res
 
 
-def score_test(root, skills_train=None, skills_data=None, device='cpu', seed=0, parents=PARENTS, test_limit=None, force=False):
-    """Refuses unless every parent has every arm; refuses a second pass once REPORT.json exists. Opens the sealed test split only after both checks."""
+def score_test(root, skills_train=None, skills_data=None, device='cpu', seed=0, parents=PARENTS, test_limit=None, force=False, caps=None, test_file=None):
+    """Refuses unless every parent has every arm; refuses a second pass once REPORT.json exists. Opens the sealed test split only after both checks.
+    caps: the caps file apply() ran with (asserted first); test_file: a <name>.jsonl other than the C2 test (its path and sha256 are recorded)."""
+    caps_rec = caps_info(caps)
     miss = missing(root, parents)
     if miss:
         raise SystemExit(f'REFUSED: the sealed test split stays closed. {len(miss)} file(s) missing (6 parents x W, R, H, M and N\' must all exist):\n  ' + '\n  '.join(miss[:30]))
@@ -333,18 +380,21 @@ def score_test(root, skills_train=None, skills_data=None, device='cpu', seed=0, 
         raise SystemExit('REFUSED: the test split was already opened and scored once (REPORT.json exists).')
     sentinel = os.path.join(root, 'TEST-OPENED.json')
     if not os.path.exists(sentinel):
-        json.dump(dict(opened=time.strftime('%Y-%m-%d %H:%M:%S'), parents=list(parents)), open(sentinel, 'w'))
-    test = c2_stones._with_nums(R.load_split(DATA, 'test')[:test_limit])
+        json.dump(dict(opened=time.strftime('%Y-%m-%d %H:%M:%S'), parents=list(parents), caps=caps_rec, test_path=test_path(test_file)), open(sentinel, 'w'))
+    test, test_rec = load_test(test_file, test_limit)
     fresh = c2_stones._with_nums(stones.fresh_practised(256, 1, 'fresh-check')[0])
     blind_path = os.path.join(root, 'test', 'blind.json')
     if os.path.exists(blind_path):
         blind = json.load(open(blind_path))
+        if blind.get('test_sha256') not in (None, test_rec['sha256']):
+            raise SystemExit(f'REFUSED: {blind_path} was made on another test file')
     else:                                                # report-only: blind BFS, no model (roadmap 4e50f8cf85); runs once with the test scoring
-        blind = blind_baseline.score_rows(test, workers=min(4, os.cpu_count() or 1))
+        blind = dict(blind_baseline.score_rows(test, workers=min(4, os.cpu_count() or 1)), test_sha256=test_rec['sha256'])
         os.makedirs(os.path.dirname(blind_path), exist_ok=True)
         json.dump(blind, open(blind_path, 'w'), indent=1)
-    per = [score_parent(root, p, skills_train, skills_data, test, fresh, device, seed) for p in parents]
+    per = [score_parent(root, p, skills_train, skills_data, test, fresh, device, seed, caps, test_rec) for p in parents]
     rep = report(per, test)
+    rep['caps'], rep['test'] = caps_rec, test_rec
     rep['blind_baseline'] = blind
     json.dump(rep, open(rep_path, 'w'), indent=1)
     return rep
@@ -396,18 +446,39 @@ def report(per, test):
     return out
 
 
-if __name__ == '__main__':
+def parse_args(argv=None):
     a = argparse.ArgumentParser()
     a.add_argument('cmd', choices=['train', 'score', 'check'])
     a.add_argument('--ckpt'); a.add_argument('--out'); a.add_argument('--root'); a.add_argument('--warmed'); a.add_argument('--skills-train'); a.add_argument('--skills-data')
     a.add_argument('--device', default='cpu'); a.add_argument('--seed', type=int, default=0)
     a.add_argument('--pool-limit', type=int); a.add_argument('--dev-limit', type=int); a.add_argument('--test-limit', type=int); a.add_argument('--T', type=float)
-    a = a.parse_args()
+    a.add_argument('--caps', help='caps json (custom_io/caps/caps-bidc.json): applied before any checkpoint is loaded; every train / score entry point asserts it ran')
+    a.add_argument('--parents', help='comma list of parent names for score / check (default s200,s201,s202,s203,s204,s205)')
+    a.add_argument('--test', help='score: the test file, <name>.jsonl with its sha256 in the sibling MANIFEST.json (default creative/data/c2/test.jsonl)')
+    args = a.parse_args(argv)
+    if args.cmd == 'train' and (args.parents or args.test):
+        a.error('--parents and --test apply to score / check, not train')
+    if args.cmd == 'check' and args.test:
+        a.error('--test applies to score')
+    args.parents = tuple(p for p in args.parents.split(',') if p) if args.parents is not None else PARENTS
+    if not args.parents:
+        a.error('--parents is empty')
+    return args
+
+
+def main(argv=None):
+    a = parse_args(argv)
+    if a.caps:
+        capsmod.apply_file(a.caps)                       # before any load_parent: the caps are module globals
     if a.cmd == 'train':
-        train_parent(a.out, a.ckpt, a.skills_train, a.skills_data, a.warmed, a.device, a.seed, a.pool_limit, a.dev_limit, T=a.T)
+        train_parent(a.out, a.ckpt, a.skills_train, a.skills_data, a.warmed, a.device, a.seed, a.pool_limit, a.dev_limit, T=a.T, caps=a.caps)
     elif a.cmd == 'check':
-        miss = missing(a.root)
-        print('complete: all 6 parents x 4 arms present' if not miss else f'{len(miss)} missing:\n  ' + '\n  '.join(miss))
+        miss = missing(a.root, a.parents)
+        print(f'complete: all {len(a.parents)} parents x 4 arms present' if not miss else f'{len(miss)} missing:\n  ' + '\n  '.join(miss))
     else:
-        r = score_test(a.root, a.skills_train, a.skills_data, a.device, a.seed, test_limit=a.test_limit)
+        r = score_test(a.root, a.skills_train, a.skills_data, a.device, a.seed, parents=a.parents, test_limit=a.test_limit, caps=a.caps, test_file=a.test)
         print(json.dumps(r['readings'], indent=1))
+
+
+if __name__ == '__main__':
+    main()
