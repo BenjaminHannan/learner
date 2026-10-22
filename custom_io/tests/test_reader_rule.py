@@ -5,7 +5,8 @@ RULE 1 (4:06 PM ET): "also for the calculator, it should be read by the reader. 
   Gemma term (Ledger.eg_term), through FrozenEG.encode_texts, which leaves the question's memo alone.
 RULE 2 (4:08 PM ET): "the talker shouldn't get a pointer from the thinker, it just transcribes the thoughts of the thinker. So it should read the thoughts of the thinker, maybe at every
   step, but at least the last, and answer in english from that. It literally is a math to language translator."
-  The answer (writer mode 1) is written from Z alone: no prompt, no tape, no copy keys, no selective-read feedback."""
+  The answer (writer mode 1) is written from Z alone: no prompt, no tape, no copy keys, no selective-read feedback. Since G2f (fix 2b) the CALL (mode 0) is too: nothing in B3G2 copies."""
+import ast, inspect
 import torch
 from custom_io.data import BOS, EOS
 from custom_io.models.b3 import B3
@@ -224,7 +225,7 @@ def test_r2_zero_length_context_and_empty_context_shapes():
     inp = torch.tensor([[1, 20, 21]] * B)
     with torch.no_grad():
         # (1) the shape used everywhere: one fully masked position
-        Xc, cm, ci = m.answer_context(Z)
+        Xc, cm, ci = m.line_context(Z)
         assert Xc.shape == (B, 1, d) and not cm.any()
         te = ByteWriter.teacher([[20, 21], [], [22]], ci, cm, 69, 1, 2)
         assert not te['fb'].any()
@@ -240,24 +241,109 @@ def test_r2_zero_length_context_and_empty_context_shapes():
     print('ok R2 T1: ByteWriter.head / run / greedy work with a zero-length context and with one fully masked position (same result: gate 1, copy 0)')
 
 
-def test_r2_call_mode_still_copies():
-    m = noisy_writer(make()).eval()
+class Spy:
+    """Records what the call writer is given: every call_pass log-prob, every call_greedy result, and every context the writer's head receives."""
+
+    def __init__(self, m):
+        self.logp, self.greedy, self.heads = [], [], []
+        cp, cg, hd = type(m).call_pass.__get__(m), type(m).call_greedy.__get__(m), ByteWriter.head.__get__(m.writer)       # the originals: a new Spy replaces the last one
+
+        def call_pass(Z, inp, tgt):
+            out = cp(Z, inp, tgt)
+            self.logp.append(out[0].detach().clone())
+            return out
+
+        def call_greedy(Z, temperature=0.0, generator=None):
+            out = cg(Z, temperature, generator)
+            self.greedy.append((out[0], out[1].tolist()))
+            return out
+
+        def head(R, Xc, cmask, cids, nocopy, ckeys):
+            self.heads.append((bool(cmask.any()), bool(nocopy), ckeys is None, bool(Xc.abs().sum() > 0), bool(cids.any())))
+            return hd(R, Xc, cmask, cids, nocopy, ckeys)
+        m.call_pass, m.call_greedy, m.writer.head = call_pass, call_greedy, head
+
+
+def fixed_z(m):
+    """The thinker replaced by a function of Z alone (the prompt, the tape and the replies are not read): with it, Z is the same whatever the batch."""
+    m.think = lambda Z, kvs, kvx, mask, t: Z * 0.9 + 0.01 * (t + 1)
+    return m
+
+
+def test_r2_calls_read_z_only():
+    """Rule 2 now covers calls: with Z fixed, changing the prompt, the tape and the replies leaves the call's teacher-forced log-probs bit-identical and the greedy call text identical."""
+    m = fixed_z(noisy_writer(loud(make()))).eval()
+    b1 = batch_of(rows(8), V)
+    b2 = batch_of([dict(r, prompt=r['prompt'][::-1] + ' zzz qqq', id=r['id'] + 'x') for r in rows(8)], V)
+
+    def tf(b, tape):
+        golds = m.plain_golds(b1['rows'])                                            # the same gold calls (they are read off the rows' own prompts); only the batch the model sees changes
+        Ls = [len(x['texts']) for x in golds]
+        sched, last = m.plan(Ls, len(Ls), b['prompt_ids'].device)
+        g = dict(L=Ls, ids=[x['ids'] for x in golds], tape=[tape(x) for x in golds], has=torch.tensor([bool(L) for L in Ls]))
+        spy = Spy(m)
+        with torch.no_grad():
+            o = m.loop(b, max(Ls) + 2, g=g, sched=sched)
+        return spy, o
+
+    s0, o0 = tf(b1, lambda x: x['tape'])
+    s1, o1 = tf(b2, lambda x: ['mul 9 9 = 81'] * len(x['tape']))               # another prompt, another tape, other replies
+    s2, o2 = tf(b1, lambda x: [t + ' = ?' for t in x['texts']])
+    assert s0.logp and len(s0.logp) == len(s1.logp) == len(s2.logp)
+    assert all(torch.equal(a, c) and torch.equal(a, d) for a, c, d in zip(s0.logp, s1.logp, s2.logp)), 'teacher-forced call log-probs follow Z only'
+    assert torch.equal(o0['Z'], o1['Z']) and float(o0['lcall']) == float(o1['lcall']) == float(o2['lcall'])
+    spy, ref = Spy(m), None
+    for b, les in ((b1, None), (b2, None), (b1, 'noexec'), (b2, 'opswap'), (b1, 'nocopy')):       # free run: another prompt, replies changed by the lesion, the tape follows
+        n0 = len(spy.greedy)
+        with torch.no_grad():
+            m.run(b, loops=5, lesion=les)
+        got = spy.greedy[n0:]
+        ref = ref or got
+        assert got and got == ref, (les, 'the greedy call text follows Z only')
+    assert spy.heads and all(not has and not nc and ck and not xc and not ci for has, nc, ck, xc, ci in spy.heads), 'the call writer\'s head never receives a visible context, keys or the lesion'
+    print('ok R2 T2: with Z fixed, changing the prompt, the tape and the replies leaves the call log-probs bit-identical and the greedy call text identical; the head never sees a context')
+
+
+def test_r2_no_prompt_or_tape_reaches_any_writer_call():
+    """Source check: in b3g2.py no writer call is given a prompt / tape tensor; the context it gets is line_context(Z)'s, and the copy-key machinery is gone."""
+    import custom_io.models.b3g2 as M
+    tree = ast.parse(inspect.getsource(M))
+    forbid = {'X', 'xm', 'Xt', 'idt', 'mt', 'vis', 'pids', 'batch', 'ckeys', 'ck', 'shown'}
+    n_calls = 0
+    for fn in [x for x in ast.walk(tree) if isinstance(x, ast.FunctionDef)]:
+        ctx_from_z = {t.id for a in ast.walk(fn) if isinstance(a, ast.Assign) and isinstance(a.value, ast.Call) and getattr(a.value.func, 'attr', '') == 'line_context'
+                      for tg in a.targets for t in ast.walk(tg) if isinstance(t, ast.Name)}
+        for c in [x for x in ast.walk(fn) if isinstance(x, ast.Call)]:
+            f = ast.unparse(c.func)
+            if not (f == 'self.writer' or f.startswith('self.writer.') and f.split('.')[-1] in ('greedy', 'run', 'forward', 'head')):
+                continue
+            n_calls += 1
+            names = {x.id for a in c.args + [k.value for k in c.keywords] for x in ast.walk(a) if isinstance(x, ast.Name)}
+            attrs = {x.attr for a in c.args + [k.value for k in c.keywords] for x in ast.walk(a) if isinstance(x, ast.Attribute)}
+            assert not names & forbid and not attrs & {'prompt_ids', 'ckeys'}, (fn.name, f, names, attrs)
+            assert not {'Xc', 'cmask', 'cids'} & names or {'Xc', 'cmask', 'cids'} <= ctx_from_z, (fn.name, 'the writer context is not line_context(Z)')
+    assert n_calls >= 3, n_calls
+    names = {x.attr for x in ast.walk(tree) if isinstance(x, ast.Attribute)} | {x.name for x in ast.walk(tree) if isinstance(x, ast.FunctionDef)}
+    assert not names & {'ckeys', 'layout_terms', 'span_keys', 'e_s', 'e_e'}, names & {'ckeys', 'layout_terms', 'span_keys', 'e_s', 'e_e'}
+    assert M.B3G2.answer_context is M.B3G2.line_context
+    print('ok R2 T2: b3g2.py passes no prompt / tape tensor into any writer call (%d call sites), the context is line_context(Z), no copy-key code' % n_calls)
+
+
+GOLD = dict(call='0x1.03e5640000000p+7', call_acc='0x0.0p+0', eos_acc='0x0.0p+0', stop_in='0x1.f334380000000p-15', stop_abs='0x1.2905bcd29db68p+13')       # re-taken at G2f (calls from Z only): the copy-free writer draws fewer init numbers, so loud()'s eg_proj draw (global RNG, after make) moves; before G2f: call 0x1.2ee1860000000p+7, stop_in 0x1.8874b80000000p-15, stop_abs 0x1.28eccd1bf5ea8p+13
+
+
+def test_r2_call_and_stop_inputs_unchanged_by_the_answer_rule():
+    m = loud((torch.manual_seed(0), make())[1]).train()
+    cap = {}
+    m.stop.register_forward_hook(lambda mod, inp, out: cap.update(z=inp[0].detach()))
     b = batch_of(rows(8), V)
-    texts = [['add 7 5'], [], [], [], [], [], [], []]
-    st = a_state(m, b, texts)
-    # call mode (mode 0) keeps its copy context [prompt; visible tape] and ckeys: its gate is not forced to 1 and the context reaches its output
-    X, xm = m.read(b, talker=True)
-    Xc, cm, ci = torch.cat([X, st[1].to(X.dtype)], 1), torch.cat([xm, st[3]], 1), torch.cat([b['prompt_ids'], st[2]], 1)
-    ck = m.ckeys(Xc.shape[1], X.shape[1], st[1].shape[1] // m.tape, cm)
-    zm = torch.ones(8, st[0].shape[1], dtype=torch.bool)
-    inp = torch.full((8, 3), 5)
-    with torch.no_grad():
-        p, g, a = m.writer.run(st[0], zm, Xc, cm, ci, torch.zeros(8, dtype=torch.long), inp, torch.zeros(8, 3, Xc.shape[1]), False, ck)
-        assert (g < 1).all() and a.sum() > 0
-        Xc2 = Xc + torch.randn(Xc.shape) * 3
-        p2, _, _ = m.writer.run(st[0], zm, Xc2, cm, ci, torch.zeros(8, dtype=torch.long), inp, torch.zeros(8, 3, Xc.shape[1]), False, ck)
-        assert not torch.equal(p, p2)
-    print('ok R2 T2: call mode keeps its copy context (gate < 1, attention over [prompt; tape], context-sensitive)')
+    torch.manual_seed(7)
+    loss, aux = m.loss(b)
+    z = cap['z'].double()
+    got = dict(call=float(aux['call']).hex(), call_acc=float(aux['call_acc']).hex(), eos_acc=float(aux['eos_acc']).hex(), stop_in=float(z.sum()).hex(), stop_abs=float(z.abs().sum()).hex())
+    assert got == GOLD, (got, GOLD)
+    assert torch.isfinite(loss) and float(aux['copy_share']) == 0.0
+    print('ok R2 T2 (d): the call loss, the call/EOS hits and the stop head\'s inputs are bit-identical to the G2f pin (taken at G2f; the answer term and the stop LABELS, which are built from the answers, change)')
 
 
 def test_r2_call_and_stop_inputs_do_not_depend_on_the_answer_path():

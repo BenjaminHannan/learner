@@ -51,8 +51,9 @@ def test_train_py():
         assert k in res['lesions'], (k, list(res['lesions']))
     assert 'nowordc' not in res['lesions']
     ex = res['extra']
-    for k in ('g2', 'op_acc', 'noexec', 'write_copy', 'h1', 'b3', 'chain5_lesions', 'opswap'):
+    for k in ('g2', 'op_acc', 'noexec', 'write_copy', 'h1', 'b3', 'chain5_lesions', 'opswap', 'talker'):
         assert k in ex, k
+    assert set(ex['talker']) == {'call_lines', 'copyable'}, ex['talker'].keys()
     assert set(res['chain5']) >= {'intact', 'loops:0', 'loops:32'}
     cap = res['cap_hits']
     for k in ('writer_over', 'no_trace', 'steps_unparsed', 'tape_entry_over', 'steps_over'):

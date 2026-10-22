@@ -5,7 +5,11 @@
 copy attention of step i-1 applied to Xc. One block: attention over [Z projected; its own steps, causal] (never the context), then an MLP, pre-LN.
 Output, fp32 as Ledger.gen_copy: p = gate * softmax(h tok^T + bias) + (1 - gate) * copy, copy = softmax of q_c(h).(k_c(Xc) + ckeys) / sqrt(dk) over
 the unmasked context scattered onto cids; nocopy forces gate = 1. `tok` is the reader's table, shared (input rows and tied readout), held in a list: not
-registered here, not counted by size(), moved and optimised by its owner."""
+registered here, not counted by size(), moved and optimised by its owner.
+`copy=False` (G2f, Ben's rule 2: "It literally is a math to language translator"): a writer with NO copy path. The copy-only parameters (w_fb, g_cp, q_cp, k_cp) are never created, `hidden`
+has no feedback term, `head` is the vocabulary softmax with gate 1 and attn zeros [B, L, N] (N = the context length the caller passed, so callers' shapes hold), and forward / run /
+greedy keep their signatures but ignore Xc, cmask (except its shape), cids, ckeys, fb, nocopy and refine (nothing is fed back, so no refine passes). The output is bit-identical for any
+context, feedback and ckeys passed. `copy=True` (default) is the CopyNet writer above, unchanged."""
 import math
 import torch
 import torch.nn as nn
@@ -13,16 +17,17 @@ import torch.nn.functional as F
 
 
 class ByteWriter(nn.Module):
-    def __init__(self, d, tok, cap, dk=64, heads=4, inner=None, mlp=2.0, n_modes=2):
+    def __init__(self, d, tok, cap, dk=64, heads=4, inner=None, mlp=2.0, n_modes=2, copy=True):
         super().__init__()
         inner = inner or d // 2
         assert inner % heads == 0
-        self.d, self.cap, self.dk, self.heads, self.inner, self.n_modes = d, cap, dk, heads, inner, n_modes
+        self.d, self.cap, self.dk, self.heads, self.inner, self.n_modes, self.copy = d, cap, dk, heads, inner, n_modes, bool(copy)
         self._tok = [tok]
         self.V = tok.num_embeddings
         self.pos = nn.Embedding(cap, d)
         self.start = nn.Embedding(n_modes, d)
-        self.w_fb = nn.Linear(d, d, bias=False)
+        if self.copy:
+            self.w_fb = nn.Linear(d, d, bias=False)
         self.w_in = nn.Linear(d, inner)
         self.w_z = nn.Linear(d, inner)
         self.ln_z = nn.LayerNorm(inner)
@@ -33,7 +38,8 @@ class ByteWriter(nn.Module):
         self.w_out = nn.Linear(inner, d)
         self.ln_t = nn.LayerNorm(d)
         self.bias = nn.Parameter(torch.zeros(self.V))
-        self.g_cp, self.q_cp, self.k_cp = nn.Linear(d, 1), nn.Linear(d, dk), nn.Linear(d, dk)
+        if self.copy:
+            self.g_cp, self.q_cp, self.k_cp = nn.Linear(d, 1), nn.Linear(d, dk), nn.Linear(d, dk)
         for m in self.modules():
             if isinstance(m, (nn.Linear, nn.Embedding)):
                 nn.init.normal_(m.weight, std=0.02)
@@ -51,7 +57,9 @@ class ByteWriter(nn.Module):
         """[B,L,d] decoder output (pre-LN) for inp [B,L] and the feedback states fbs [B,L,d]."""
         B, L = inp.shape
         assert L <= self.cap
-        x = self.tok.weight[inp] + self.pos.weight[:L] + self.start(mode)[:, None] + self.w_fb(fbs)
+        x = self.tok.weight[inp] + self.pos.weight[:L] + self.start(mode)[:, None]
+        if self.copy:
+            x = x + self.w_fb(fbs)
         x = self.w_in(x)
         z = self.ln_z(self.w_z(Z))
         h = self.ln1(x)
@@ -71,6 +79,8 @@ class ByteWriter(nn.Module):
             R, Xc = R.float(), Xc.float()
             h = self.ln_t(R)
             p_vocab = (F.linear(h, self.tok.weight.float()) + self.bias.float()).softmax(-1)
+            if not self.copy:
+                return p_vocab, torch.ones(p_vocab.shape[:2], device=R.device), torch.zeros(R.shape[0], R.shape[1], cmask.shape[1], device=R.device)
             kc = self.k_cp(Xc) if ckeys is None else self.k_cp(Xc) + ckeys.float()
             a = (torch.einsum('bld,bnd->bln', self.q_cp(h), kc) / math.sqrt(self.dk)).masked_fill(~cmask[:, None, :], -1e9).softmax(-1)
             a = a * cmask.any(-1)[:, None, None]
@@ -82,14 +92,14 @@ class ByteWriter(nn.Module):
             return gate[..., None] * p_vocab + (1 - gate[..., None]) * copy, gate, a
 
     def run(self, Z, zmask, Xc, cmask, cids, mode, inp, fb, nocopy, ckeys):
-        fbs = torch.bmm(fb.to(Xc.dtype), Xc)
+        fbs = torch.bmm(fb.to(Xc.dtype), Xc) if self.copy else None
         R = self.hidden(Z, zmask, inp, mode, fbs)
         return self.head(R, Xc, cmask, cids, nocopy, ckeys)
 
     def forward(self, Z, zmask, Xc, cmask, cids, mode, inp, fb, nocopy=False, ckeys=None, refine=0):
         """Teacher forced. -> (logp [B,L,V] fp32 = log(p + 1e-9), gate [B,L], attn [B,L,N]). refine=k > 0: k no-grad passes first replace fb[:, i] by the
         model's own (1 - gate_{i-1}) * attn_{i-1} (the free-run feedback, on the gold inputs), so the training pass sees what greedy() feeds back; 0 = fb as given."""
-        for _ in range(refine):
+        for _ in range(refine if self.copy else 0):
             with torch.no_grad():
                 _, g, a = self.run(Z, zmask, Xc, cmask, cids, mode, inp, fb, nocopy, ckeys)
             fb = torch.cat([torch.zeros_like(fb[:, :1]), ((1 - g[..., None]) * a)[:, :-1]], 1)
@@ -141,18 +151,24 @@ class ByteWriter(nn.Module):
         return v.any(1) & ((logp.argmax(-1) == tgt) | ~v).all(1)
 
     @torch.no_grad()
-    def greedy(self, Z, zmask, Xc, cmask, cids, mode, max_len=None, nocopy=False, ckeys=None, temperature=0.0, generator=None, bos=1, eos=2):
+    def greedy(self, Z, zmask, Xc, cmask, cids, mode, max_len=None, nocopy=False, ckeys=None, temperature=0.0, generator=None, bos=1, eos=2, record=False):
         """Free run, batched (temperature 0 = argmax, else samples the mixture). -> (list of B id lists without EOS, ended [B] bool: wrote EOS
-        within max_len steps, default cap). Feedback for step i is (1 - gate) * attn of step i-1."""
+        within max_len steps, default cap). Feedback for step i is (1 - gate) * attn of step i-1.
+        record=True: a third result, per row a list with one dict(copied, src, share) per WRITTEN byte (EOS excluded). Definition: for the chosen byte c at a step, p(c) = gate *
+        p_vocab(c) + (1 - gate) * copy(c) (see head: 1 - gate is the COPY weight, gate the generate weight). copy part = (1 - gate) * (attention mass on visible context positions
+        holding c); generate part = p(c) - copy part (= gate * p_vocab(c)); share = copy part / p(c) (the model's untempered p, also when sampling); copied = copy part >= generate
+        part; src = argmax of the attention over the visible positions holding c (None if there is none). record=False runs exactly the code it always did."""
         B, N = cids.shape
         T = min(max_len or self.cap, self.cap)
         inp = torch.full((B, 1), bos, dtype=torch.long, device=cids.device)
         fb = torch.zeros(B, 1, N, device=cids.device)
         done = torch.zeros(B, dtype=torch.bool, device=cids.device)
         out = [[] for _ in range(B)]
+        recs = [[] for _ in range(B)]
         for i in range(T):
             p, gate, a = self.run(Z, zmask, Xc, cmask, cids, mode, inp, fb, nocopy, ckeys)
             p = p[:, -1]
+            pr = p
             if temperature > 0:
                 nxt = torch.multinomial(p.pow(1 / temperature) + 1e-12, 1, generator=generator)[:, 0]
             else:
@@ -160,9 +176,15 @@ class ByteWriter(nn.Module):
             nxt = torch.where(done, torch.full_like(nxt, eos), nxt)
             for b in (~done & (nxt != eos)).nonzero()[:, 0].tolist():
                 out[b].append(int(nxt[b]))
+                if record:
+                    hold = (cids[b] == nxt[b]) & cmask[b]
+                    ab = a[b, -1]
+                    cp = float((1 - gate[b, -1]) * ab[hold].sum()) if hold.any() else 0.0
+                    pc = float(pr[b, nxt[b]])
+                    recs[b].append(dict(copied=cp >= pc - cp, src=int(ab.masked_fill(~hold, -1.0).argmax()) if hold.any() else None, share=cp / pc if pc > 0 else 0.0))
             done = done | (nxt == eos)
             if done.all():
                 break
             inp = torch.cat([inp, nxt[:, None]], 1)
             fb = torch.cat([fb, ((1 - gate[:, -1:]) * a[:, -1])[:, None]], 1)
-        return out, done
+        return (out, done, recs) if record else (out, done)
