@@ -1,0 +1,18 @@
+{
+  "_EXAMPLE": "EXAMPLE SPEC ONLY - NOT THE SEALED PRE-REGISTERED SPEC. The numbers below are illustrative placeholders for exercising pilot_bars.py. Do not use this file to issue a real verdict.",
+  "floor_sd": 3.0,
+  "alpha_two_sided": 0.05,
+  "anchors": {"_note": "EXAMPLE anchors; free-form context carried into the report, never evaluated"},
+  "gate": {"var": "sd_obs", "op": ">", "value": 8.0, "verdict": "GATE_FAIL_EXTEND"},
+  "rules": [
+    {"name": "SIZE_WINS",
+     "conditions": [{"var": "mean", "op": ">=", "value": 8}, {"var": "lo", "op": ">", "value": 2}]},
+    {"name": "SIZE_KILLED",
+     "conditions": [{"var": "mean", "op": "<=", "value": 2}, {"var": "hi", "op": "<", "value": 6}]},
+    {"name": "RATE_ONLY",
+     "_comment": "PLACEHOLDER: needs the extra scalar 'pass_count' in the results file's \"extra\" block",
+     "conditions": [{"var": "pass_count", "op": ">=", "value": 4}, {"var": "mean", "op": "<", "value": 8}]}
+  ],
+  "extras": ["pass_count"],
+  "default": "UNRESOLVED"
+}

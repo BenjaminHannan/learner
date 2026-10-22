@@ -15,6 +15,7 @@
         KL_REPLAY_SEED together; the eval fit seed, chosen before it applies, and the build-time streams stay as shipped);
         --first-call-weight (default 1.0 = shipped) weights the first call's losses (the call writer's token losses
         and round 0's span_call term), renormalised per trace to the uniform-weight trace mean - see install_first_call_weight)
+        [--log-update-rms]        (C8, opt-in, read-only: grad-norm and per-group update-rms history -> OUT/update-rms.json; off = unchanged)
 
 build: 6,000 F4-two and 6,000 F0-near rows from the probe generator (domain/far/sheet_probe.py), seed 93301, scored kinds
        only, no prompt in the probe file or any sheet panel (read for exclusion only). Refuses to overwrite.
@@ -27,6 +28,7 @@ import argparse
 import hashlib
 import itertools
 import json
+import math
 import os
 import random
 import re
@@ -1200,6 +1202,18 @@ def check_guard_args(arm, guard, guard_src, energy=0.99, every=500, kl_rows=None
         raise SystemExit('--guard-energy must be in (0,1) and --guard-every >= 1')
 
 
+def check_diary_data(guard, data, cache):
+    """--diary-data is read only by the guard's diary build: refuse it without --guard, and refuse a given folder with no train.jsonl
+    before any work (unless an existing --diary-cache means the folder is never read). The default path is not checked, so the
+    default behaviour is unchanged."""
+    if not guard:
+        if data != DIARY_DATA:
+            raise SystemExit('--diary-data applies to --guard only')
+        return
+    if data != DIARY_DATA and not (cache and os.path.exists(cache)) and not os.path.isfile(os.path.join(data, 'train.jsonl')):
+        raise SystemExit(f'--diary-data {data}: no train.jsonl there (and no existing --diary-cache)')
+
+
 def addon_size(arm, cons, rank=None, alpha=None):
     """(rank, alpha) for arm LA: the mode's constants unless overridden. LB has no add-on: overrides are refused."""
     if arm != 'LA':
@@ -1478,6 +1492,70 @@ def kl_replay_loss(m, parent, weight, kls, klreplay):
     return loss
 
 
+# C8 (opt-in, --log-update-rms): grad-norm and per-group update-size logging. Mirrors custom_io/train.py's update_group / GradStats /
+# snapshot_params / update_rms. Copied, not imported, on purpose: the far trainer is locked at claude/project-thread-94a956, whose
+# custom_io/train.py does not carry the C8 draft, so an import would tie the locked trainer to an unreviewed file. Keep the two in step.
+# Read-only: every function runs under no_grad, draws no random numbers and never writes a param, a grad or optimizer state.
+GRAD_CLIP = 1.0   # train()'s clip_grad_norm_ max norm; GradStats counts against the same value
+
+
+def update_group(name):
+    """Parameter name -> its module path cut after the first numeric (layer index) component, else to two components:
+    'blocks.0.qkv.weight' -> 'blocks.0', 'reader.blocks.1.conv.weight' -> 'reader.blocks.1', 'tok.weight' -> 'tok'."""
+    path = name.split('.')[:-1]
+    i = next((k for k, c in enumerate(path) if c.isdigit()), None)
+    return '.'.join(path[:i + 1] if i is not None else path[:2]) or name
+
+
+def sig6(x):
+    return float(f'{x:.6g}')
+
+
+class GradStats:
+    """Grad norms over one log interval -> mean, max and the fraction of steps above `clip`. Same as custom_io.train.GradStats."""
+    def __init__(self, clip):
+        self.clip, self.n = clip, 0
+
+    def add(self, gn):
+        import torch
+        with torch.no_grad():
+            gn = gn.detach().float()
+            z = torch.zeros_like(gn)
+            if not self.n:
+                self.sum, self.max, self.fired = z, z, z.clone()
+            self.sum, self.max, self.fired = self.sum + gn, torch.maximum(self.max, gn), self.fired + (gn > self.clip).float()
+            self.n += 1
+
+    def pop(self):
+        import torch
+        s, m, f = torch.stack([self.sum, self.max, self.fired]).tolist()
+        n, self.n = self.n, 0
+        return dict(grad_norm_mean=sig6(s / n), grad_norm_max=sig6(m), clip_frac=sig6(f / n))
+
+
+def snapshot_params(named):
+    """Copies of the trainable tensors in `named` (an iterable of (name, tensor)) as they are now: [(name, tensor, copy)]."""
+    import torch
+    with torch.no_grad():
+        return [(n, p, p.detach().clone()) for n, p in named if p.requires_grad]
+
+
+def update_rms(snap):
+    """After opt.step(): rms(delta) / rms(param before) over everything snapshotted and per update_group; a group whose before-norm is 0
+    is skipped. -> (all, {group: ratio}). Same as custom_io.train.update_rms."""
+    import torch
+    with torch.no_grad():
+        ss = {}
+        for n, p, b in snap:
+            ss.setdefault(update_group(n), []).append(torch.stack([torch.linalg.vector_norm(p.detach() - b, dtype=torch.float64).square(),
+                                                                   torch.linalg.vector_norm(b, dtype=torch.float64).square()]))
+        ss = {g: torch.stack(v).sum(0) for g, v in ss.items()}
+        vals = dict(zip(ss, torch.stack(list(ss.values())).tolist()))
+    ratio = lambda d, b: sig6(math.sqrt(d / b)) if b > 0 else None
+    tot = [sum(v[i] for v in vals.values()) for i in (0, 1)]
+    return ratio(*tot), {g: ratio(d, b) for g, (d, b) in vals.items() if b > 0}
+
+
 class Guarded:
     """The kf guard around one base AdamW: measure F (kf.factors of kfac_stats, norm 'example'), freeze what cannot be projected,
     wrap as kf.KFOptimizer. refresh() re-measures on the current weights and rebuilds only the wrapper (same base, same state)."""
@@ -1513,7 +1591,8 @@ class Guarded:
 def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROWS, log_every=100, cells='l1',
           addon_rank=None, addon_alpha=None, harm_steps=(), dev=DEV_IN_DIST, keep_final=False, guard=None, guard_energy=0.99,
           guard_every=500, guard_src=None, probe=None, eval_rows=None, diary_compare=DIARY_LOG, diary_cache=None,
-          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0):
+          kl_replay_rows=None, kl_weight=None, guard_soft=None, seed=None, first_call_weight=1.0, log_update_rms=False,
+          diary_data=DIARY_DATA):
     import torch
     from custom_io.data import Dataset, collate, to_device
     from custom_io.models import load_model
@@ -1529,6 +1608,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     harm_steps = set(harm_steps)
     assert harm_steps <= set(steps), ('--harm-steps must be among --steps', sorted(harm_steps), sorted(steps))
     check_guard_args(arm, guard, guard_src, guard_energy, guard_every, kl_replay_rows, kl_weight, guard_soft)
+    check_diary_data(guard, diary_data, diary_cache)
     soft_value = (1 if guard_soft is None else None if guard_soft == 'hard' else
                   int(guard_soft) if float(guard_soft).is_integer() else float(guard_soft))   # 1 = L11; None = the hard mask (L14)
     soft_guard = guard == 'kfsoft'
@@ -1567,7 +1647,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         assert all(p.requires_grad for p in params)
         if guard:
             kf, gp = load_guard(guard_src)
-            diary, dcmp = build_parent_diary(m, ck, guard_src, out, log_path=diary_compare, cache=diary_cache)
+            diary, dcmp = build_parent_diary(m, ck, guard_src, out, data=diary_data, log_path=diary_compare, cache=diary_cache)
             m.eval()
             if soft_guard:   # frozen parent for the KL replay, taken before any update; Main brain's own klreplay (c823e4b9a)
                 import importlib
@@ -1583,7 +1663,7 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
                 m.loss = kl_replay_loss(m, kl_parent, float(kl_weight), kls, klreplay)   # not klreplay.wrap: weights 1 + kl_weight, see its docstring
             params = [p for p in m.parameters() if p.requires_grad]   # clip over the trainable params
             extra.update(guard=guard, guard_energy=guard_energy, guard_every=guard_every, guard_src_commit=guard_commit,
-                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache,
+                         guard_norm='example', guard_replay=None, guard_parent_factors=False, guard_diary_n=len(diary), guard_diary_sha256=dcmp['sha256'], guard_diary_cache=diary_cache, guard_diary_data=None if 'cache' in dcmp else diary_data,   # None: the diary came from the cache, not a folder read
                          guard_frozen=len(guarded.frozen))
             if soft_guard:
                 extra.update(guard_soft=soft_value, guard_commit_check=commit_check, kl_replay_rows=kl_replay_rows, kl_weight=kl_weight,
@@ -1598,6 +1678,14 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
     last = max(steps)
     ex = lambda: dict(extra, measure_secs=round(guarded.measure_secs, 1), measures=guarded.measures) if guarded else extra
     hf = lambda u: harm_fn if u in harm_steps else None
+    gstats, update_log, rms_path, rms_secs = None, [], os.path.join(out, 'update-rms.json'), 0.0
+    if log_update_rms:   # C8, opt-in and read-only. Cadence: the progress-print points (every log_every updates, 100 from the CLI, and the last)
+        gstats = GradStats(GRAD_CLIP)
+        if arm == 'LA':   # the add-on's A / B are bare tensors, not module parameters: name them by the Linear they sit on
+            rms_named = lambda: [(f'{name}.{t}', x) for name, _, A, B in addon.layers for t, x in (('A', A), ('B', B))]
+        else:
+            rms_named = m.named_parameters   # evaluated at the snapshot, so tensors --guard froze are skipped
+        extra['update_rms_log'] = update_log   # the history so far rides on every scores.jsonl record; OUT/update-rms.json holds it whole
     if 0 in steps:
         score_step(ck, m, addon, sets, out, arm, 0, t_train, threads, ex(), hf(0), keep_final and last == 0)
     t_seg = time.time()
@@ -1611,17 +1699,43 @@ def train(arm, updates, threads, out, steps, parent=PARENT, train_path=TRAIN_ROW
         o = m.loss(b)
         loss = o[0] if isinstance(o, tuple) else o
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(params, 1.0)
+        gn = torch.nn.utils.clip_grad_norm_(params, GRAD_CLIP)   # the return value is the total grad norm BEFORE clipping
+        log_now = u % log_every == 0 or u == updates
+        if log_update_rms:
+            gstats.add(gn)
+            snap = None
+            if log_now:   # CPU only, so time.time() brackets the work; it is kept out of t_train and the s/update print
+                ts = time.time()
+                snap = snapshot_params(rms_named())
+                dt = time.time() - ts
+                rms_secs += dt
+                t0 += dt
+                t_seg += dt
+        # Grad norm = gn, the raw total norm BEFORE the clip. With --guard (kf / kfsoft) nothing rewrites the gradients between here and
+        # the optimizer: mainbrain KFOptimizer.step() (kf.py, c823e4b9a) runs base.step() on the clipped p.grad as it is and projects
+        # the weight CHANGE [W|b] afterwards. So there is no guard-modified gradient to measure; the gradient the optimizer uses is this
+        # one, clipped (norm min(gn, 1.0)). The projection does land inside the snapshot/update_rms window, so upd_rms is the update
+        # as applied, after the guard. If a guard that masks p.grad is ever used, measure the norm here, after it, right before opt.step().
         opt.step()
         opt.zero_grad(set_to_none=True)
         losses.append(float(loss.detach()))
         t_train += time.time() - t0
         if soft_guard and kls and u % log_every == 0:
             print(f'{arm} replay KL mean over last {min(len(kls), log_every)} updates: {np.mean(kls[-log_every:]):.5f}', flush=True)
-        if u % log_every == 0 or u == updates:
+        if log_now:
             k = u % log_every or log_every
             print(f'{arm} update {u}: {time.time() - t_seg:.1f}s for last {k} ({(time.time() - t_seg) / k:.3f} s/update), '
                   f'loss {np.mean(losses[-k:]):.4f}', flush=True)
+            if log_update_rms:
+                ts = time.time()
+                rec = dict(update=u, **gstats.pop())
+                rec['upd_rms_all'], rec['upd_rms'] = update_rms(snap)   # rms(delta) / rms(param before) of this one update
+                update_log.append(rec)
+                with open(rms_path, 'w') as f:
+                    json.dump(update_log, f, indent=1)
+                print(f'{arm} update_rms {json.dumps(rec)}', flush=True)
+                rms_secs += time.time() - ts
+                extra['update_rms_secs'] = round(rms_secs, 2)   # C8 work, outside train_secs and the s/update print
             t_seg = time.time()
         if guarded and u % guard_every == 0 and u < updates:   # re-measure F on the current weights; same base AdamW and state
             opt = guarded.refresh()
@@ -1662,6 +1776,7 @@ def main(argv=None):
     a.add_argument('--kl-replay-rows', type=int, default=None, help='--guard kfsoft only: diary rows added to every update (seeded draw)')
     a.add_argument('--kl-weight', type=float, default=None, help='--guard kfsoft only: weight on the KL to the frozen parent over those rows')
     a.add_argument('--guard-soft', default=None, help="--guard kfsoft only: softness of the graded mask (kf.factors soft=); default 1 (L11); L13 uses 10; 'hard' = the hard mask with the KL replay (L14)")
+    a.add_argument('--log-update-rms', action='store_true', help="train only (C8): log pre-clip grad-norm stats and per-group update rms (rms(delta)/rms(param before) of one update, groups = module path cut after the layer index) every 100 updates (train()'s log_every; the CLI has no --log-every) and at the last update; arm LA's figures are the add-on A/B factors' own change, not the effective weight's, so they are not comparable with LB's; with --guard the update rms is the update as applied, after the guard's projection; history in OUT/update-rms.json and on each scores.jsonl record; default off = training unchanged")
     a.add_argument('--guard-energy', type=float, default=0.99)
     a.add_argument('--guard-every', type=int, default=500, help='re-measure the guard factors every this many updates')
     a.add_argument('--parent', default=PARENT, help='parent checkpoint (default: the s200 parent)')
@@ -1669,6 +1784,7 @@ def main(argv=None):
     a.add_argument('--eval-rows', default=None, help='eval file for --cells l3/l4 (default eval-rows-l3) or l5 (default eval-rows-l5)')
     a.add_argument('--diary-compare', default=DIARY_LOG, help="main-brain log to compare the diary with; 'none' skips (recorded as skipped)")
     a.add_argument('--diary-cache', default=None, help='arm LB guard: load the diary rows from this file if it exists instead of rebuilding')
+    a.add_argument('--diary-data', default=DIARY_DATA, help='--guard only: folder whose train.jsonl is the diary prompt pool (the seed-1 200k skills build); default the original path; checked before any work unless --diary-cache exists')
     a.add_argument('--guard-src', default=None, help='folder holding mainbrain/ (kf.py, gp.py) at commit ' + GUARD_COMMIT)
     a.add_argument('--seed', type=int, default=None, help='train only (R1): the run seed, driving the torch seedings, the data order and the KL replay stream; default None = the shipped module SEED (93301), every stream as shipped')
     a.add_argument('--first-call-weight', type=float, default=1.0, help="train only (R1): weight on the first call's token losses in the call writer's loss, renormalised per trace to the uniform-weight trace mean; default 1.0 = uniform (shipped)")
@@ -1707,6 +1823,7 @@ def main(argv=None):
             raise SystemExit('--first-call-weight must be > 0')
         a.guard_soft = None if a.guard_soft is None else 'hard' if a.guard_soft in ('hard', 'none') else float(a.guard_soft)
         check_guard_args(a.arm, a.guard, a.guard_src, a.guard_energy, a.guard_every, a.kl_replay_rows, a.kl_weight, a.guard_soft)   # refuse before any work
+        check_diary_data(a.guard, a.diary_data, a.diary_cache)
         from domain.mode import CONST_PATH
         addon_size(a.arm, json.load(open(CONST_PATH)), a.addon_rank, a.addon_alpha)   # refuse LB overrides before any work
         train(a.arm, a.updates, a.threads, a.out, [int(x) for x in a.steps.split(',')],
@@ -1715,7 +1832,7 @@ def main(argv=None):
               guard_energy=a.guard_energy, guard_every=a.guard_every, guard_src=a.guard_src,
               parent=a.parent, probe=a.probe, eval_rows=a.eval_rows, diary_compare=a.diary_compare, diary_cache=a.diary_cache,
               kl_replay_rows=a.kl_replay_rows, kl_weight=a.kl_weight, guard_soft=a.guard_soft,
-              seed=a.seed, first_call_weight=a.first_call_weight)
+              seed=a.seed, first_call_weight=a.first_call_weight, log_update_rms=a.log_update_rms, diary_data=a.diary_data)
 
 
 if __name__ == '__main__':

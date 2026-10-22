@@ -25,6 +25,64 @@ def jprint(**kw):
     print(json.dumps(kw), flush=True)
 
 
+def update_group(name):
+    """Parameter name -> its module path cut after the first numeric (layer index) component, else to two components:
+    'blocks.0.qkv.weight' -> 'blocks.0', 'reader.blocks.1.conv.weight' -> 'reader.blocks.1', 'tok.weight' -> 'tok'."""
+    path = name.split('.')[:-1]
+    i = next((k for k, c in enumerate(path) if c.isdigit()), None)
+    return '.'.join(path[:i + 1] if i is not None else path[:2]) or name
+
+
+def sig6(x):
+    return float(f'{x:.6g}')
+
+
+def timed_sync(device):
+    """time.time() after the device's queued work has finished, so --log-update-rms work can be timed and kept out of the clocks."""
+    if getattr(device, 'type', device) == 'cuda':
+        torch.cuda.synchronize()
+    return time.time()
+
+
+class GradStats:
+    """Pre-clip grad norms over one log interval -> mean, max and the fraction of steps that clipped. Stays on the device until pop()."""
+    def __init__(self, clip):
+        self.clip, self.n = clip, 0
+
+    @torch.no_grad()
+    def add(self, gn):
+        gn = gn.detach().float()
+        z = torch.zeros_like(gn)
+        if not self.n:
+            self.sum, self.max, self.fired = z, z, z.clone()
+        self.sum, self.max, self.fired = self.sum + gn, torch.maximum(self.max, gn), self.fired + (gn > self.clip).float()
+        self.n += 1
+
+    def pop(self):
+        s, m, f = torch.stack([self.sum, self.max, self.fired]).tolist()
+        n, self.n = self.n, 0
+        return dict(grad_norm_mean=sig6(s / n), grad_norm_max=sig6(m), clip_frac=sig6(f / n))
+
+
+@torch.no_grad()
+def snapshot_params(model):
+    return [(n, p, p.detach().clone()) for n, p in model.named_parameters() if p.requires_grad]
+
+
+@torch.no_grad()
+def update_rms(snap):
+    """After opt.step(): rms(delta) / rms(param before) over the whole model and per update_group; a group whose before-norm is 0 is skipped."""
+    ss = {}
+    for n, p, b in snap:
+        ss.setdefault(update_group(n), []).append(torch.stack([torch.linalg.vector_norm(p.detach() - b, dtype=torch.float64).square(),
+                                                               torch.linalg.vector_norm(b, dtype=torch.float64).square()]))
+    ss = {g: torch.stack(v).sum(0) for g, v in ss.items()}
+    vals = dict(zip(ss, torch.stack(list(ss.values())).tolist()))
+    ratio = lambda d, b: sig6(math.sqrt(d / b)) if b > 0 else None
+    tot = [sum(v[i] for v in vals.values()) for i in (0, 1)]
+    return ratio(*tot), {g: ratio(d, b) for g, (d, b) in vals.items() if b > 0}
+
+
 def lesion_names(model):
     """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n} (or the model's LOOP_SWEEP)."""
     names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
@@ -117,6 +175,7 @@ def main(argv=None):
     ap.add_argument('--device', default='auto')
     ap.add_argument('--bf16', action='store_true', help='autocast bf16 (cuda only)')
     ap.add_argument('--log-every', type=int, default=100)
+    ap.add_argument('--log-update-rms', action='store_true', help="log pre-clip grad norm stats and per-group update rms (rms(delta)/rms(param) of one step; groups = module path cut after the layer index) on the train event; history in RESULT['update_rms_log']; its time is kept out of elapsed/train_s and reported as RESULT['update_rms_s'] (the CUDA syncs it adds are not); a --minutes stop mid-interval files that interval's grad stats as RESULT['update_rms_partial']")
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
     ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
@@ -155,11 +214,15 @@ def main(argv=None):
 
     cap = args.minutes * 60 if args.minutes else None
     t0, eval_s, step, run_loss, run_n, last_loss, status = time.time(), 0.0, 0, 0.0, 0, None, 'ok'
+    rms_s = 0.0   # --log-update-rms work, kept out of elapsed (lr schedule, time cap) and train_s
+    gstats, update_log, update_partial = GradStats(args.grad_clip), [], None
     model.train()
     while step < args.steps:
-        elapsed = time.time() - t0
+        elapsed = time.time() - t0 - rms_s
         if cap and elapsed >= cap:
             status = 'time_cap'
+            if args.log_update_rms and gstats.n:   # the unfinished interval: grad stats only (no snapshot), kept out of the log
+                update_partial = dict(step=step, **gstats.pop())
             break
         lr = lr_at(step, args.steps, args.warmup, args.lr, elapsed, cap)
         for g in opt.param_groups:
@@ -169,14 +232,29 @@ def main(argv=None):
             out = model.loss(batch)
         loss, aux = out if isinstance(out, tuple) else (out, {})
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+        gn = torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+        log_now = step + 1 == args.steps or (step + 1) % args.log_every == 0
+        if args.log_update_rms:
+            gstats.add(gn)
+            snap = None
+            if log_now:
+                ts = timed_sync(device)
+                snap = snapshot_params(model)
+                rms_s += timed_sync(device) - ts
         opt.step(); opt.zero_grad(set_to_none=True)
         step += 1
         run_loss += loss.detach(); run_n += 1
-        if step % args.log_every == 0 or step == args.steps:
+        if log_now:
             last_loss = float(run_loss) / run_n
-            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0, 1),
-                   **{k: round(float(v), 5) for k, v in aux.items()})
+            extra = {}
+            if args.log_update_rms:
+                ts = timed_sync(device)
+                extra = gstats.pop()
+                extra['upd_rms_all'], extra['upd_rms'] = update_rms(snap)
+                update_log.append(dict(step=step, **extra))
+                rms_s += timed_sync(device) - ts
+            jprint(event='train', step=step, loss=round(last_loss, 5), lr=round(lr, 7), elapsed=round(time.time() - t0 - rms_s, 1),
+                   **{k: round(float(v), 5) for k, v in aux.items()}, **extra)
             run_loss, run_n = 0.0, 0
             if not math.isfinite(last_loss):
                 status = 'nonfinite_loss'
@@ -189,9 +267,14 @@ def main(argv=None):
             jprint(event='quick_eval', step=step, dev_in_dist_200=round(r['exact'], 2), loss=last_loss)
     if device.type == 'cuda':
         torch.cuda.synchronize()
-    train_s = time.time() - t0 - eval_s
+    train_s = time.time() - t0 - eval_s - rms_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if args.log_update_rms:
+        result['update_rms_log'] = update_log
+        result['update_rms_s'] = rms_s   # excluded from train_s / steps_per_s
+        if update_partial:
+            result['update_rms_partial'] = update_partial   # --minutes stop mid-interval: that interval's grad stats
     mf = os.path.join(args.data, 'MANIFEST.json')       # the English adapter's manifest: its sha256 travels with the result (analyze_b1 checks it)
     if os.path.exists(mf):
         import hashlib
