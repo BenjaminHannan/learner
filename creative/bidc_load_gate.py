@@ -17,13 +17,14 @@ THE EVAL ("recorded"): on a fixed batch (the first --n rows, default 64, of --ro
   in-memory model right after training, with the sha256 of the checkpoint it saved; the only record check 3 accepts, because it is P_0's own END-OF-TRAINING eval) or "source": "reload" (the
   `record` command: a checkpoint loaded from disk; fine for check 1's C2b parent, refused by check 3 because a reload compared with a reload proves nothing about training). A .json in the C2b results format (creative/results/c2b/test/s200.json) is also accepted for check 1: then only the
   per-row `right` of arm --recorded-arm (default N) over the same rows is compared, which is weaker (no floats).
-NOTE --rows defaults to the first 64 rows of creative/data/c2/test.jsonl, the already-opened C2 test: reproducing a recorded C2b-test score needs those rows (card sec. 2b check 1). Point
---rows at another jsonl to avoid reading it."""
+NOTE --rows defaults to the first 64 rows of creative/data/c2/dev.jsonl (card addendum 1, A4): the opened C2 test is not re-read. Check 1's
+recorded side is then made once on BensPC from the actual C2b parent with the unmodified code (`record`), so the committed C2b-test .json
+records cannot serve check 1 on these rows."""
 import argparse, hashlib, json, os, subprocess, sys, time
 import torch
 
 TOK = 'GATE-RESULT '
-ROWS = 'creative/data/c2/test.jsonl'
+ROWS = 'creative/data/c2/dev.jsonl'   # not the opened C2 test (card addendum 1, A4)
 CAPS_OLD, CAPS_BIDC = 'custom_io/caps/caps-old-defaults.json', 'custom_io/caps/caps-bidc.json'
 FLOATS = ('R', 'lmode', 'lans', 'lword', 'lop1', 'la1', 'lb1')
 LONGS = ('ops', 'a', 'b', 'ans', 'mode', 'vals', 'valid')

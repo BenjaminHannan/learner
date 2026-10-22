@@ -113,7 +113,7 @@ def main(argv=None):
     ap.add_argument('--caps', help='caps json (custom_io/caps/*.json, see custom_io/caps.py): resizes the answer / register tables; applied before any data or model is built. Ledger (B2) only')
     ap.add_argument('--record-eval', metavar='PATH', help='write the Bid C load-gate record of the END-OF-TRAINING model, made here from the in-memory model right after the checkpoint is saved '
                     '(source "train_process", with the checkpoint sha256; creative/bidc_load_gate.py check 3 needs this). Needs --out and a ledger model; refuses to overwrite')
-    ap.add_argument('--record-rows', default='creative/data/c2/test.jsonl', help='--record-eval: the rows file of the fixed batch (its first --record-n rows)')
+    ap.add_argument('--record-rows', default='creative/data/c2/dev.jsonl', help='--record-eval: the rows file of the fixed batch (its first --record-n rows)')
     ap.add_argument('--record-n', type=int, default=64)
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
     ap.add_argument('--eval-batch', type=int, default=128)
