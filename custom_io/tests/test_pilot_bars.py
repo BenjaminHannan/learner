@@ -204,8 +204,18 @@ def test_value_on_the_bar_holds_despite_float_error():
 
 
 def test_tiny_written_bar_is_not_moved():
-    rep = pb.evaluate({"pairs": units([4e-10, 4e-10])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 1e-10}]}]))
-    assert rep["verdict"] == "UNRESOLVED"   # mean 4e-10 reads as 0.0 at 9 digits, and 0.0 > 1e-10 is false: the bar stays 1e-10
+    ok = pb.evaluate({"pairs": units([4e-9, 4e-9])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 1e-9}]}]))
+    assert ok["verdict"] == "R"   # 4e-9 > 1e-9 compared raw: the bar is not rounded to 0
+    on = pb.evaluate({"pairs": units([1e-9, 1e-9])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">=", "value": 1e-9}]}]))
+    assert on["verdict"] == "R"
+
+
+def test_long_decimal_bar_holds_for_an_equal_statistic():
+    third = 1.0 / 3.0
+    rep = pb.evaluate({"pairs": units([third, third])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">=", "value": 0.3333333333333333}]}]))
+    assert rep["verdict"] == "R"
+    rep = pb.evaluate({"pairs": units([third, third])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 0.3333333333333333}]}]))
+    assert rep["verdict"] == "UNRESOLVED"   # on the bar: strict > fails
 
 
 def test_cli_exits_3_when_a_missing_variable_could_change_the_verdict(tmp_path):

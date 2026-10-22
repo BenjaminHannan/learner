@@ -22,8 +22,8 @@ SPEC.json     {"floor_sd": 3.0, "alpha_two_sided": 0.05, "anchors": {...},
   lo = mean - half, hi = mean + half, plus the input's "extra" scalars.  Ops: >=, >, <=, <, ==.  Conditions are data
   (var/op/value), evaluated with a fixed operator table; there is no string evaluation anywhere.
   Every condition variable must be a built-in or be declared in spec "extras"; an unknown name (a typo) is a spec error.
-  Each statistic is compared at the report's 9-digit rounding (bars are used exactly as written), so a value sitting on a
-  bar is not lost to float error.
+  Bars are used exactly as written. A statistic within EQ_TOL (5e-10, relative above 1) of a bar counts as sitting on it
+  (>=, <=, == hold; >, < fail), so float error cannot flip a verdict either way; otherwise the comparison is raw.
   Order: gate first; then rules in order, first rule whose conditions ALL hold wins; else the spec's "default".
   A condition on a variable that is not available (e.g. an extra that was not passed) does NOT hold; it is flagged
   "missing" in the report; the summary warns when a missing variable sits in the gate or in a rule at or ahead of the
@@ -116,6 +116,7 @@ def t_quantile(p, df):
 
 # ---------------------------------------------------------------- statistics
 OPS = {">=": operator.ge, ">": operator.gt, "<=": operator.le, "<": operator.lt, "==": operator.eq}
+EQ_TOL = 5e-10
 BUILTIN_VARS = ("mean", "sd_obs", "s", "n", "half", "lo", "hi")
 
 
@@ -229,7 +230,11 @@ def eval_cond(c, env):
     if var not in env:
         return {"var": var, "op": op, "value": value, "actual": None, "held": False, "status": "missing"}
     actual = env[var]
-    held = bool(OPS[op](round(actual, 9), value))   # the statistic at the report's rounding; the written bar is used as written
+    if abs(actual - value) <= EQ_TOL * max(1.0, abs(value)):   # within float noise of the bar: it sits ON the bar
+        actual_cmp = value
+    else:
+        actual_cmp = actual
+    held = bool(OPS[op](actual_cmp, value))   # the written bar is used exactly as written
     return {"var": var, "op": op, "value": value, "actual": actual, "held": held, "status": "held" if held else "failed"}
 
 
