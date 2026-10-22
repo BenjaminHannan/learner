@@ -1,0 +1,205 @@
+{
+ "train": {
+  "logic_train": {
+   "n_rows": 130000,
+   "ctx_pairs": {
+    "distinct": 141833,
+    "total": 406614,
+    "mean_repeat": 2.87,
+    "median": 2,
+    "p90": 8,
+    "max": 30,
+    "share_seen_once": 0.4982
+   },
+   "query_pairs": {
+    "distinct": 70742,
+    "total": 130000,
+    "mean_repeat": 1.84,
+    "median": 1,
+    "p90": 4,
+    "max": 13,
+    "share_seen_once": 0.6664
+   },
+   "distinct_entities": 149,
+   "distinct_predicates": 1407,
+   "ent_usage": {
+    "min": 1482,
+    "max": 1875
+   }
+  },
+  "placebo_train": {
+   "n_rows": 130000,
+   "ctx_pairs": {
+    "distinct": 149240,
+    "total": 454174,
+    "mean_repeat": 3.04,
+    "median": 2,
+    "p90": 9,
+    "max": 33,
+    "share_seen_once": 0.4677
+   },
+   "query_pairs": {
+    "distinct": 70320,
+    "total": 130000,
+    "mean_repeat": 1.85,
+    "median": 1,
+    "p90": 4,
+    "max": 13,
+    "share_seen_once": 0.6659
+   },
+   "distinct_entities": 149,
+   "distinct_predicates": 1407,
+   "ent_usage": {
+    "min": 1786,
+    "max": 2248
+   }
+  }
+ },
+ "eval_vs_train": {
+  "logic_gate": {
+   "n_rows": 1608,
+   "matching_train": "logic_train",
+   "ctx_pairs_distinct": 4663,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 18.14,
+   "ctx_pairs_unseen_in_union_ctx_pct": 5.43,
+   "query_pairs_distinct": 1588,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 17.38,
+   "query_pairs_unseen_as_train_query_pct": 37.72,
+   "query_pairs_unseen_anywhere_in_union_pct": 3.84,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 5.6,
+   "entities_distinct": 149,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1340,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 14.5,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 825,
+    "agree_with_train_majority": 294,
+    "agree_pct": 35.64
+   }
+  },
+  "logic_dev": {
+   "n_rows": 1200,
+   "matching_train": "logic_train",
+   "ctx_pairs_distinct": 3668,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 17.86,
+   "ctx_pairs_unseen_in_union_ctx_pct": 5.64,
+   "query_pairs_distinct": 1192,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 16.61,
+   "query_pairs_unseen_as_train_query_pct": 34.98,
+   "query_pairs_unseen_anywhere_in_union_pct": 2.77,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 4.58,
+   "entities_distinct": 149,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1269,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 14.75,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 643,
+    "agree_with_train_majority": 209,
+    "agree_pct": 32.5
+   }
+  },
+  "logic_test_sampler": {
+   "n_rows": 1600,
+   "matching_train": "logic_train",
+   "ctx_pairs_distinct": 4495,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 18.49,
+   "ctx_pairs_unseen_in_union_ctx_pct": 5.87,
+   "query_pairs_distinct": 1576,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 17.2,
+   "query_pairs_unseen_as_train_query_pct": 36.17,
+   "query_pairs_unseen_anywhere_in_union_pct": 3.11,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 4.56,
+   "entities_distinct": 149,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1304,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 14.93,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 840,
+    "agree_with_train_majority": 289,
+    "agree_pct": 34.4
+   }
+  },
+  "logic_test_deeper": {
+   "n_rows": 800,
+   "matching_train": "logic_train",
+   "ctx_pairs_distinct": 2040,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 17.79,
+   "ctx_pairs_unseen_in_union_ctx_pct": 6.27,
+   "query_pairs_distinct": 799,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 17.77,
+   "query_pairs_unseen_as_train_query_pct": 34.67,
+   "query_pairs_unseen_anywhere_in_union_pct": 3.88,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 6.12,
+   "entities_distinct": 147,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1200,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 15.39,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 405,
+    "agree_with_train_majority": 112,
+    "agree_pct": 27.65
+   }
+  },
+  "placebo_dev": {
+   "n_rows": 1200,
+   "matching_train": "placebo_train",
+   "ctx_pairs_distinct": 4026,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 15.62,
+   "ctx_pairs_unseen_in_union_ctx_pct": 5.76,
+   "query_pairs_distinct": 1189,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 15.56,
+   "query_pairs_unseen_as_train_query_pct": 34.57,
+   "query_pairs_unseen_anywhere_in_union_pct": 4.29,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 5.92,
+   "entities_distinct": 149,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1245,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 14.87,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 620,
+    "agree_with_train_majority": 203,
+    "agree_pct": 32.74
+   }
+  },
+  "placebo_test_wording": {
+   "n_rows": 1200,
+   "matching_train": "placebo_train",
+   "ctx_pairs_distinct": 4121,
+   "ctx_pairs_unseen_in_matching_train_ctx_pct": 16.31,
+   "ctx_pairs_unseen_in_union_ctx_pct": 5.73,
+   "query_pairs_distinct": 1197,
+   "query_pairs_unseen_as_train_ctx_pair_pct": 14.37,
+   "query_pairs_unseen_as_train_query_pct": 34.34,
+   "query_pairs_unseen_anywhere_in_union_pct": 2.92,
+   "query_pair_rowweighted_unseen_in_union_ctx_pct": 3.92,
+   "entities_distinct": 149,
+   "entities_unseen_in_union_train": 0,
+   "predicates_distinct": 1273,
+   "predicates_unseen_in_union_train": 0,
+   "predicate_occurrence_unseen_pct": 0.0,
+   "mean_train_repeat_of_seen_ctx_pairs": 14.92,
+   "query_literal_memory_check": {
+    "eval_rows_with_seen_literal": 639,
+    "agree_with_train_majority": 234,
+    "agree_pct": 36.62
+   }
+  }
+ },
+ "lexicon": {
+  "n_entities": 149,
+  "n_common": 111,
+  "n_syllables": 40,
+  "n_possible_nonsense_6letter": 1296,
+  "possible_entity_pred_pairs": 209643
+ }
+}

@@ -1,0 +1,108 @@
+====================================================================================================
+lt-logic-gate-21-000001 -- plain agreement, depth 1
+PROMPT: A grifen brown thing is not garden. Alex is truly grifen. Alex is truly drolek. Alex is truly brown. So, is Alex not garden?
+PARSED facts: grifen(alex), drolek(alex), brown(alex)
+PARSED rules: x: grifen & brown -> ~garden
+QUERY: ~garden(alex) | gold: true
+FORWARD CHAINING (documented): 
+  round 1: ~garden(alex)  from  grifen(alex), brown(alex)
+  -> my label: true | min proof size/height: (1, 1)
+  modus-tollens-closed: true | textbook entailment: true | DIST: true | PNEG: true
+====================================================================================================
+lt-logic-gate-21-000121 -- convention: classical false, documented unknown (case split on 'naxpus')
+PROMPT: Lynn is truly not fancy. Those not naxpus are junlub. We know Ted is naxpus. A non-fancy thing is junlub. What is naxpus is not fancy. True or false or unknown: Tina is not junlub.
+PARSED facts: ~fancy(lynn), naxpus(ted)
+PARSED rules: x: ~naxpus -> junlub; x: ~fancy -> junlub; x: naxpus -> ~fancy
+QUERY: ~junlub(tina) | gold: unknown
+FORWARD CHAINING (documented): 
+  round 1: junlub(lynn)  from  ~fancy(lynn)
+  round 1: ~fancy(ted)  from  naxpus(ted)
+  round 2: junlub(ted)  from  ~fancy(ted)
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: unknown | textbook entailment: false | DIST: unknown | PNEG: unknown
+====================================================================================================
+lt-logic-gate-21-000375 -- convention: case split via entity rule
+PROMPT: Any vemrax is big. If Judy is not vemrax, Judy is then big. If Ian is funny, Ian is then not vemrax. Judy is truly kraflo. A kraflo thing is funny. True or false or unknown: Judy is big.
+PARSED facts: kraflo(judy)
+PARSED rules: x: vemrax -> big; judy: ~vemrax -> big; ian: funny -> ~vemrax; x: kraflo -> funny
+QUERY: big(judy) | gold: unknown
+FORWARD CHAINING (documented): 
+  round 1: funny(judy)  from  kraflo(judy)
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: unknown | textbook entailment: true | DIST: unknown | PNEG: unknown
+====================================================================================================
+lt-logic-gate-21-001569 -- convention: case split (p->X and not-p->X)
+PROMPT: All brave ones are heavy. Larry was blowug. Any heavy is naxfop. Every non-heavy is naxfop. So, is Larry naxfop?
+PARSED facts: blowug(larry)
+PARSED rules: x: brave -> heavy; x: heavy -> naxfop; x: ~heavy -> naxfop
+QUERY: naxfop(larry) | gold: unknown
+FORWARD CHAINING (documented): nothing derived
+
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: unknown | textbook entailment: true | DIST: unknown | PNEG: unknown
+====================================================================================================
+lt-logic-dev-23-000657 -- plain agreement, depth 3 (false/true via negations)
+PROMPT: If Lily is not rude, Lily must be mubtar. Those mubtar are rocket. All rocket are not vlemub. What is lubflo is wise. Lily is surely not rude. Claim: Lily is not vlemub.
+PARSED facts: ~rude(lily)
+PARSED rules: lily: ~rude -> mubtar; x: mubtar -> rocket; x: rocket -> ~vlemub; x: lubflo -> wise
+QUERY: ~vlemub(lily) | gold: true
+FORWARD CHAINING (documented): 
+  round 1: mubtar(lily)  from  ~rude(lily)
+  round 2: rocket(lily)  from  mubtar(lily)
+  round 3: ~vlemub(lily)  from  rocket(lily)
+  -> my label: true | min proof size/height: (3, 3)
+  modus-tollens-closed: true | textbook entailment: true | DIST: true | PNEG: unknown
+====================================================================================================
+lt-logic-dev-23-001078 -- wording: 'Every p and q' read distributively
+PROMPT: Note: Don is not happy. Gary is not vlejun. Every vlejun and lazy is not happy. Fact: Jenny is vlejun. Jenny is pexbax. Is it true that Jenny is not happy?
+PARSED facts: ~happy(don), ~vlejun(gary), vlejun(jenny), pexbax(jenny)
+PARSED rules: x: vlejun & lazy -> ~happy
+QUERY: ~happy(jenny) | gold: unknown
+FORWARD CHAINING (documented): nothing derived
+
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: unknown | textbook entailment: unknown | DIST: true | PNEG: unknown
+====================================================================================================
+lt-logic-dev-23-001121 -- wording: 'All p are not q' read as 'not all'
+PROMPT: Jeff is new. Troy being new makes Troy fendro. Being calm means fendro. Not vemjun means calm. All new are not vemjun. Fred is surely fendro. Is Jeff fendro?
+PARSED facts: new(jeff), fendro(fred)
+PARSED rules: troy: new -> fendro; x: calm -> fendro; x: ~vemjun -> calm; x: new -> ~vemjun
+QUERY: fendro(jeff) | gold: true
+FORWARD CHAINING (documented): 
+  round 1: ~vemjun(jeff)  from  new(jeff)
+  round 2: calm(jeff)  from  ~vemjun(jeff)
+  round 3: fendro(jeff)  from  calm(jeff)
+  -> my label: true | min proof size/height: (3, 3)
+  modus-tollens-closed: true | textbook entailment: true | DIST: true | PNEG: unknown
+====================================================================================================
+lt-logic-test_sampler-22-000138 -- convention: reductio / modus tollens
+PROMPT: If it is drotep and cozy, it is not zorkel. Being zorkel means drotep. Fact: Walt is zorkel. What is drotep and cozy is loud. Joy is cozy. Check: Walt is cozy.
+PARSED facts: zorkel(walt), cozy(joy)
+PARSED rules: x: drotep & cozy -> ~zorkel; x: zorkel -> drotep; x: drotep & cozy -> loud
+QUERY: cozy(walt) | gold: unknown
+FORWARD CHAINING (documented): 
+  round 1: drotep(walt)  from  zorkel(walt)
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: false | textbook entailment: false | DIST: unknown | PNEG: unknown
+====================================================================================================
+lt-logic-test_sampler-22-000997 -- convention: text is classically inconsistent
+PROMPT: Not lubbax means apple. It is true Jane is not lubbax. Walt is vlenax. Every doctor is not vlenax. If it is not doctor, it is apple. Every apple is doctor. Is it true that Jane is vlenax?
+PARSED facts: ~lubbax(jane), vlenax(walt)
+PARSED rules: x: ~lubbax -> apple; x: doctor -> ~vlenax; x: ~doctor -> apple; x: apple -> doctor
+QUERY: vlenax(jane) | gold: false
+FORWARD CHAINING (documented): 
+  round 1: apple(jane)  from  ~lubbax(jane)
+  round 2: doctor(jane)  from  apple(jane)
+  round 3: ~vlenax(jane)  from  doctor(jane)
+  -> my label: false | min proof size/height: (3, 3)
+  modus-tollens-closed: false | textbook entailment: inconsistent | DIST: false | PNEG: unknown
+====================================================================================================
+lt-placebo-dev-25-000662 -- convention: modus tollens
+PROMPT: Fact: Julia is heavy. Owen is quite lubpex. Any lubpex is not heavy. Claim: Julia is not lubpex.
+PARSED facts: heavy(julia), lubpex(owen)
+PARSED rules: x: lubpex -> ~heavy
+QUERY: ~lubpex(julia) | gold: unknown
+FORWARD CHAINING (documented): 
+  round 1: ~heavy(owen)  from  lubpex(owen)
+  -> my label: unknown | min proof size/height: (None, None)
+  modus-tollens-closed: true | textbook entailment: true | DIST: unknown | PNEG: unknown

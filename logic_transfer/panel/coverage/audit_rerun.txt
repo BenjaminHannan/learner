@@ -1,0 +1,24 @@
+== logic 
+/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/samples/raw_logic_5k.jsonl: n=5000 majority_rate=0.339
+  naive_bayes: 5-fold acc=0.380 (+4.1 pts)
+  nearest_centroid: 5-fold acc=0.403 (+6.4 pts)
+  tree_depth3: 5-fold acc=0.415 (+7.6 pts)
+OK: no shortcut warning.
+== logic --basic
+/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/samples/raw_logic_5k.jsonl: n=5000 majority_rate=0.339 (basic features)
+  naive_bayes: 5-fold acc=0.381 (+4.2 pts)
+  nearest_centroid: 5-fold acc=0.386 (+4.6 pts)
+  tree_depth3: 5-fold acc=0.371 (+3.2 pts)
+OK: no shortcut warning.
+== placebo 
+/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/samples/raw_placebo_5k.jsonl: n=5000 majority_rate=0.338
+  naive_bayes: 5-fold acc=0.902 (+56.4 pts)
+  nearest_centroid: 5-fold acc=0.902 (+56.4 pts)
+  tree_depth3: 5-fold acc=0.902 (+56.4 pts)
+WARNING: surface features beat the majority rate by more than 8 points: possible shortcut.
+== placebo --basic
+/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/samples/raw_placebo_5k.jsonl: n=5000 majority_rate=0.338 (basic features)
+  naive_bayes: 5-fold acc=0.450 (+11.2 pts)
+  nearest_centroid: 5-fold acc=0.446 (+10.7 pts)
+  tree_depth3: 5-fold acc=0.486 (+14.8 pts)
+WARNING: surface features beat the majority rate by more than 8 points: possible shortcut.

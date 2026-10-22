@@ -1,0 +1,133 @@
+model Tool params 3314132 ans_drill 0.25 span_copy True w_noop 0.1
+rows 32 keys ['accepted', 'answer', 'family', 'id', 'level', 'prompt', 'stage', 'steps', 'variant']
+prompt_ids (32, 204) ans_ids (32, 9) UNK count 0 PAD inside mask 0
+ROW0 prompt : Every tartom thing is puppy. Pam isn't daxzor. Ryan is never common. It is true Aaron is famous. Rob is lubpif, yes. Can we tell Aaron is puppy? (false/unknown/true)
+ROW0 answer : unknown | steps ['none'] | family logic_fc | stage 9
+ROW0 words  : [(0, 'Every'), (1, 'tartom'), (2, 'thing'), (3, 'is'), (4, 'puppy'), (5, '.'), (6, 'Pam'), (7, "isn't"), (8, 'daxzor'), (9, '.'), (10, 'Ryan'), (11, 'is'), (12, 'never'), (13, 'common'), (14, '.'), (15, 'It'), (16, 'is'), (17, 'true'), (18, 'Aaron'), (19, 'is'), (20, 'famous'), (21, '.'), (22, 'Rob'), (23, 'is'), (24, 'lubpif'), (25, ','), (26, 'yes'), (27, '.'), (28, 'Can'), (29, 'we'), (30, 'tell'), (31, 'Aaron'), (32, 'is'), (33, 'puppy'), (34, '?'), (35, '('), (36, 'false'), (37, '/'), (38, 'unknown'), (39, '/'), (40, 'true'), (41, ')')]
+ROW0 targets: mode 1 word positions (38,) -> ['unknown'] prog () ans ()
+ROW0 ids head: [50, 99, 82, 95, 102, 13, 97, 78, 95, 97, 92, 90] ... decode -> Every tartom thing is puppy. Pam isn't daxzor. Ryan is never
+ROW0 ans_ids : [98, 91, 88, 91, 92, 100, 91, 2, 0] ans_mask [True, True, True, True, True, True, True, True, False] (answer chars are NOT used by the logic loss: mode=WORD -> gen target empty)
+/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/target/s2_parent_trace.py:35: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  print('\nREAL model.loss total = %.5f' % float(total))
+
+REAL model.loss total = 19.13422
+aux: {'prog': 0.0, 'op_acc': 0.0, 'call': 0.0, 'mode': 1.3148, 'word': 17.81941, 'gen': 0.0, 'copy_share': 0.0, 'drill_share': 0.0, 'span_call': 0.0, 'span_ans': 0.0, 'stop': 0.0, 'span_share': 0.0}
+re-derived terms: lop=0.00000 lcall=0.00000 lmode=1.31480 lword=17.81941 span={'span_call': 0.0, 'span_ans': 0.0, 'stop': 0.0} total=19.13422  (matches real total: True)
+targets in batch: mode counts [0, 32, 0] | rows with op>0 (has program): 0 | gen target slots >=0: 0 | gold word positions per row (mean): 1.28 | w_noop weight on these rows: 0.1
+
+GRAD NORMS of the real total loss (gold labels):
+   mode head                                                      1.63596
+   op head                                                        0.00000
+   other(W_a)                                                     0.00000
+   other(W_b)                                                     0.00000
+   other(bias)                                                    0.00000
+   other(e_e)                                                     0.00000
+   other(e_s)                                                     0.00000
+   other(g_cp)                                                    0.00000
+   other(g_s)                                                     0.00000
+   other(k_cp)                                                    0.00000
+   other(k_s)                                                     0.00000
+   other(ln_t)                                                    0.00000
+   other(q_cp)                                                    0.00000
+   other(q_s)                                                     0.00000
+   other(stop_s)                                                  0.00000
+   other(tape_emb)                                                0.00000
+   reader(char table,pos,place,2 conv blocks,LN)                  80.49221
+   thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)          47.78637
+   word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)            18.41799
+   global grad norm = 95.37843  (course.py clips at 1.0)
+
+GRAD NORMS of term lword alone (value 17.81941):
+   mode head                                                      0.00000
+   op head                                                        0.00000
+   other(W_a)                                                     0.00000
+   other(W_b)                                                     0.00000
+   other(bias)                                                    0.00000
+   other(e_e)                                                     0.00000
+   other(e_s)                                                     0.00000
+   other(g_cp)                                                    0.00000
+   other(g_s)                                                     0.00000
+   other(k_cp)                                                    0.00000
+   other(k_s)                                                     0.00000
+   other(ln_t)                                                    0.00000
+   other(q_cp)                                                    0.00000
+   other(q_s)                                                     0.00000
+   other(stop_s)                                                  0.00000
+   other(tape_emb)                                                0.00000
+   reader(char table,pos,place,2 conv blocks,LN)                  81.51265
+   thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)          47.87041
+   word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)            18.41799
+
+GRAD NORMS of term lmode alone (value 1.31480):
+   mode head                                                      1.63596
+   op head                                                        0.00000
+   other(W_a)                                                     0.00000
+   other(W_b)                                                     0.00000
+   other(bias)                                                    0.00000
+   other(e_e)                                                     0.00000
+   other(e_s)                                                     0.00000
+   other(g_cp)                                                    0.00000
+   other(g_s)                                                     0.00000
+   other(k_cp)                                                    0.00000
+   other(k_s)                                                     0.00000
+   other(ln_t)                                                    0.00000
+   other(q_cp)                                                    0.00000
+   other(q_s)                                                     0.00000
+   other(stop_s)                                                  0.00000
+   other(tape_emb)                                                0.00000
+   reader(char table,pos,place,2 conv blocks,LN)                  12.75777
+   thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)          10.40120
+   word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)            0.00000
+
+GRAD NORMS of term lop alone (value 0.00000):
+   mode head                                                      0.00000
+   op head                                                        0.00000
+   other(W_a)                                                     0.00000
+   other(W_b)                                                     0.00000
+   other(bias)                                                    0.00000
+   other(e_e)                                                     0.00000
+   other(e_s)                                                     0.00000
+   other(g_cp)                                                    0.00000
+   other(g_s)                                                     0.00000
+   other(k_cp)                                                    0.00000
+   other(k_s)                                                     0.00000
+   other(ln_t)                                                    0.00000
+   other(q_cp)                                                    0.00000
+   other(q_s)                                                     0.00000
+   other(stop_s)                                                  0.00000
+   other(tape_emb)                                                0.00000
+   reader(char table,pos,place,2 conv blocks,LN)                  0.00000
+   thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)          0.00000
+   word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)            0.00000
+
+SHUFFLED labels (random label per row, 18/32 coincide with gold): lword=16.79887 lmode=1.31480 lop=0.00000 total=18.11367   | gold: lword=17.81941 lmode=1.31480 lop=0.00000 total=19.13422
+lword gradient: |g_gold|=96.2668 |g_shuf|=94.4726 cos(g_gold,g_shuf)=0.9491 |g_gold-g_shuf|=30.7267
+lword grad norms with SHUFFLED labels: {'mode head': 0.0, 'op head': 0.0, 'other(W_a)': 0.0, 'other(W_b)': 0.0, 'other(bias)': 0.0, 'other(e_e)': 0.0, 'other(e_s)': 0.0, 'other(g_cp)': 0.0, 'other(g_s)': 0.0, 'other(k_cp)': 0.0, 'other(k_s)': 0.0, 'other(ln_t)': 0.0, 'other(q_cp)': 0.0, 'other(q_s)': 0.0, 'other(stop_s)': 0.0, 'other(tape_emb)': 0.0, 'reader(char table,pos,place,2 conv blocks,LN)': 80.364571, 'thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)': 46.557802, 'word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)': 17.498318}
+label-dependent part of the lword gradient (|g_gold - g_shuf|) by group:
+   mode head                                                      0.00000
+   op head                                                        0.00000
+   other(W_a)                                                     0.00000
+   other(W_b)                                                     0.00000
+   other(bias)                                                    0.00000
+   other(e_e)                                                     0.00000
+   other(e_s)                                                     0.00000
+   other(g_cp)                                                    0.00000
+   other(g_s)                                                     0.00000
+   other(k_cp)                                                    0.00000
+   other(k_s)                                                     0.00000
+   other(ln_t)                                                    0.00000
+   other(q_cp)                                                    0.00000
+   other(q_s)                                                     0.00000
+   other(stop_s)                                                  0.00000
+   other(tape_emb)                                                0.00000
+   reader(char table,pos,place,2 conv blocks,LN)                  27.47145
+   thinker(8+9 tokens, core blocks, step/ctrl emb, ln_z)          13.28966
+   word-pointer head(q_word,k_word,len_emb,k_wc,ln_wc)            3.67244
+
+PARENT on these 32 logic rows: pointer mass on the 3 suffix option words: mean 0.045 (uniform over all words would be 0.070); mean ln(n_words/n_gold) = 3.592; lword = 17.819
+  mode head argmax counts (0 NUM/span,1 WORD,2 GEN): [0, 28, 4]  op argmax at round1 NOOP frac: 1.00
+
+FRESH random-init model on the same 32 rows: lword=3.6368 lmode=1.5160 lop=1.6502 total=6.8031  (ln 3 = 1.0986; mean ln(n_words/n_gold)=3.5921; ln 3 NOOP-free)
+
+PARENT lword over 256 train rows: gold 19.6252 (per-64 [20.145, 18.949, 19.515, 19.892]) | shuffled 18.9588 (per-64 [17.562, 19.574, 20.651, 18.049])

@@ -34,8 +34,9 @@ def _tally(d, key, hit):
 
 
 @torch.no_grad()
-def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds=False, norm=norm):
-    """-> {'exact' (%), 'correct', 'n', 'by_family', 'by_level' (str keys), 'multistep'} (+ 'preds' {id: pred}).
+def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds=False, norm=norm, by_label=False):
+    """-> {'exact' (%), 'correct', 'n', 'by_family', 'by_level' (str keys), 'multistep'} (+ 'preds' {id: pred}; + 'by_label' {gold answer: {correct, n}} with by_label=True,
+    for small answer sets such as true/false/unknown only).
     norm: the string normaliser a hit is judged under (english.en_norm for the English sets)."""
     device = device or next(model.parameters()).device
     was_training = model.training
@@ -51,9 +52,13 @@ def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds
             preds[i] = p
     model.train(was_training)
     res = {'by_family': {}, 'by_level': {}, 'multistep': {'correct': 0, 'n': 0}}
+    if by_label:
+        res['by_label'] = {}
     for r, p in zip(rows, preds):
         hit = int(is_hit(p, r, norm))
         _tally(res['by_family'], r['family'], hit)
+        if by_label:
+            _tally(res['by_label'], str(r['answer']), hit)
         _tally(res['by_level'], str(r['level']), hit)
         if r['family'] in MULTISTEP:
             res['multistep']['correct'] += hit

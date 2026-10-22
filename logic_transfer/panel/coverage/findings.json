@@ -1,0 +1,25 @@
+{
+  "dimension": "coverage",
+  "status": "defect-found",
+  "headline": "Coverage and held-out splits are as designed and do not explain the chance result; two non-blocking flaws found (sampler pooled depth 2-3 mark is chance-level for a never-unknown model; logic rows carry a +10 point dangling-word cue).",
+  "tables_file": "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/tables.txt",
+  "note": "findings.md was not written: the environment blocked writing a findings .md file from this subagent. The same content is in the structured output; numeric tables are in tables.txt and the *.json files beside this one.",
+  "repro_all": "bash /tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/run_all.sh",
+  "defects": [
+    {"id": "S1", "severity": "biases-score", "description": "logic_test_sampler: all 533 unknown rows have meta.depth = None (level 0), and score.py skips them in by_depth. The 'rule-first depths 2-3 pooled' rows are true/false only (356 true, 355 false). Constant 'true' scores 50.1%, constant 'unknown' 0%, uniform 3-way guessing 33%. The mark '>= 50%' is chance for a model that never answers unknown; this explains the 23-56% swings in addendum 5.", "effect_on_chance_result": "none for the gate depth-3 result (gate is balanced thirds); the pooled sampler number is not interpretable as written"},
+    {"id": "S2", "severity": "biases-score", "description": "Logic rows (not placebo) carry a wording-independent dangling-word cue: unknown rows contain a fresh predicate word that occurs once (break_chain). A lookup on (distinct words, singleton words, sentence count) gets 44.6% out-of-fold, 42.5% on gate, 47.8% at gate depth 3 (above the 45% 'proved wrong' line); recomputed from prompt text alone 42.7% OOF.", "effect_on_chance_result": "none: the models score 31-40%, below the cue, so they did not pick it up; but 45-48% on logic rows would not prove chaining"},
+    {"id": "S3", "severity": "cosmetic", "description": "L and P train contexts are not item-paired (0 of 130000 shared); placebo has up to 4 distractors (spec 1-3) and always >=2 facts; gate has 1608 rows not 1600; test_deeper has almost no conjunction rules (2.4% of sentences); capital 'O' never appears in the parent curriculum; 2 of 1600 sampler rows could not be mapped by my sentence parser; sampler unused-item count is tied to the label (V 0.66) but is not visible in the text.", "effect_on_chance_result": "none"}
+  ],
+  "claims": "see structured output (same list)",
+  "files": [
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/tables.txt",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/coverage.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/pairs.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/roles.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/family_compare.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/ladder.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/shortcuts_chi.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/leak_probe.json",
+    "/tmp/claude-0/-home-user-learner/37e869c5-9fee-53ef-875e-19be57429294/scratchpad/panel/coverage/run_all.sh"
+  ]
+}

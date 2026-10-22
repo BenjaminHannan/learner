@@ -26,7 +26,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 API = 'https://console.vast.ai/api/v0'
 IMAGE = 'pytorch/pytorch:2.11.0-cuda12.8-cudnn9-runtime'
-BOX = REPO / 'custom_io/box/box.sh'
+import os
+BOX = Path(os.environ['VAST_BOX']) if os.environ.get('VAST_BOX') else REPO / 'custom_io/box/box.sh'   # VAST_BOX=<script>: launch another box script (e.g. logic_transfer/box/lt2_box.sh)
 OUT = REPO / 'custom_io/results'
 
 
@@ -55,7 +56,7 @@ def search(a):
          'cuda_max_good': {'gte': 12.8}, 'disk_space': {'gte': 60}, 'inet_down': {'gte': 300},
          'cpu_cores_effective': {'gte': 8}, 'order': [['dph_total', 'asc']], 'limit': 300}
     offers = call('POST', '/bundles/', q).get('offers') or []
-    keep = [o for o in offers if o.get('gpu_name') == a.gpu]
+    keep = [o for o in offers if o.get('gpu_name') == a.gpu and (o.get('cpu_ram') or 0) >= a.min_ram * 1000]
     for o in keep[: a.n]:
         print(json.dumps({k: o.get(k) for k in ('id', 'gpu_name', 'gpu_ram', 'dph_total', 'reliability', 'inet_down',
                                                  'cpu_cores_effective', 'cpu_ram', 'disk_space', 'cuda_max_good',
@@ -257,6 +258,7 @@ def main():
     ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'collectck', 'destroy', 'credit', 'waitfor'])
     ap.add_argument('--gpu', default='RTX 5090')
     ap.add_argument('--n', type=int, default=60)
+    ap.add_argument('--min-ram', type=float, default=0, help='search: minimum host RAM in GB')
     ap.add_argument('--offer')
     ap.add_argument('--label', default='claude-custom-io')
     ap.add_argument('--maxpar', type=int, default=5)
