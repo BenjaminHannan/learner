@@ -45,6 +45,7 @@ class MiniConfig:
     eos_id: int = 2                     # learnlab.tokenizer.DEFAULT_SPECIALS: <pad> <bos> <eos> ...
     store: bool = True                  # False = D-noask: no cards, no ASK
     pointers: bool = True               # False = D-noptr: no entity slots, no binder, no copy constraint
+    decoder_reader_kv: bool = False     # True: the decoder also cross-attends to the reader's finished states
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
     w_ask: float = 0.5
@@ -68,7 +69,7 @@ class MiniConfig:
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
         if self.check_band and self.d_model == 128:
-            count = self.num_parameters()
+            count = self.num_parameters() - reader_kv_parameters(self)   # the band is D's, without the flag
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -126,6 +127,12 @@ def _linear(fan_in: int, fan_out: int) -> int:
     return fan_in * fan_out + fan_out
 
 
+def reader_kv_parameters(config: MiniConfig) -> int:
+    """The decoder's second cross-attention (to the reader states): norm, query, KV, out."""
+    d = config.d_model
+    return 2 * d + _linear(d, d) + _linear(d, 2 * d) + _linear(d, d) if config.decoder_reader_kv else 0
+
+
 def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     d, dk, norm = config.d_model, config.key_dim, 2 * config.d_model
     mixer = _linear(d, 3 * d) + _linear(d, d)       # minGRU (z, h~, gate) + out, or qkv + out
@@ -142,7 +149,8 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     if config.store:
         heads += _linear(d, dk) + _linear(d, 1) + 1                  # query, ASK, kappa
     decoder = 4 * norm + _linear(d, 3 * d) + _linear(d, d) + _linear(d, d) + _linear(d, 2 * d) \
-        + _linear(d, d) + _linear(d, config.decoder_mlp * d) + _linear(config.decoder_mlp * d, d)
+        + _linear(d, d) + _linear(d, config.decoder_mlp * d) + _linear(config.decoder_mlp * d, d) \
+        + reader_kv_parameters(config)
     return {
         "embedding": config.total_vocab * d,
         "reader": reader,
@@ -153,4 +161,5 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     }
 
 
-__all__ = ["MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown"]
+__all__ = ["MiniConfig", "PARAM_BAND", "VARIANTS", "VOCAB_V1", "VOCAB_V2", "parameter_breakdown",
+           "reader_kv_parameters"]
