@@ -110,3 +110,9 @@ two known items), so Ben can see what the strict rule cost.
 
 ## 12. Stage 1 relaunch (Ben's ruling 2026-10-22; written before the run)
 Ben approved the $0 fix and relaunch: **raise the output/reasoning token limit (`max_tokens` 8000 -> 24000); effort stays high; G1 stays >= 60 parseable cards with fits_interface yes; no bar change.** Ben also said money is not the constraint (Anthropic credit pool for this work: $157), so the old $5.00 / $4.50 Stage 1 line is lifted. Set instead (my choice, inside that pool): **Stage 1 cap $20.00, stop $16.00** (the ledger already holds the $1.70 from run 1; pass 1 worst case $8.83 is held at launch). The whole-trial $45 hard stop is unchanged and Stages 2+ stay unfunded. Run 1's outputs are kept as `stage1_*_run1.*`; run 2 is a fresh pass.
+
+## 13. Stage 1 run 2 result (2026-10-22, shown: `results/trial2/stage1_summary_real.json`, `stage1_cards_real.jsonl`)
+**G1 PASSED: 115 parseable cards, all 115 self-reported `fits_interface: yes` (need 60).** Spend by the usage tally: **run 2 = $3.826; Stage 1 total with run 1 = $5.527** (no money stop, no API error; console bill not compared; the stage's cap was $20 / stop $16).
+- Pass 1 (24 calls): 21 returned cards (105), 2 refusals and 1 truncated at 24,000 tokens. The lens "inversion" produced 0 cards (its calls refused or truncated); "linguistics" produced 5.
+- Far pass (12 calls): only 2 returned cards (10); 9 hit `max_tokens` again and 1 was a refusal. The far pass is therefore mostly lost; cards are 105 from pass 1 plus 10 from the far pass.
+- Not checked: card quality, duplicates, or whether any is KNOWN. `fits_interface` is the writer's own claim and was "yes" for every card, so it does not discriminate (suggested). Stage 2 (cluster, screen, planted cards) is NOT funded by this ruling.
