@@ -1,0 +1,15 @@
+prof_launch: registered ['same', 'defer', 'kvcat', 'fastteach']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'fastteach', 'kvcat', 'defer', 'same', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'fastteach', 'kvcat', 'defer', 'same', 'accum 8
+prof_launch: host {"host": "c4e54a088b90", "cpu_model": "AMD EPYC 9684X 96-Core Processor", "logical_cpus": 32, "python": "3.12.3", "torch": "2.11.0+cu128", "cuda": "12.8", "cudnn": 91900, "gpu": "NVIDIA GeForce RTX 4090", "deterministic": false, "cublas_workspace_config": null, "deterministic_algorithms": false, "argv": ["--arm", "B3G2", "--rung", "3M", "--accum", "4", "--data", "/job/work/g8a/po
+[    8.3s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[    8.3s] === section abbench
+[    8.3s] abbench arm same round 1/3: A (accum 4, baseline)
+[  102.2s] abbench arm same round 1/3: B (accum 4, same)
+[  191.9s]   A 1.8371 s/update; B 1.8005 s/update, peak alloc 8.327202796936035 GB
+[  191.9s] abbench arm same round 2/3: A (accum 4, baseline)
+[  281.7s] abbench arm same round 2/3: B (accum 4, same)
+[  371.1s]   A 1.8038 s/update; B 1.8053 s/update, peak alloc 8.327202796936035 GB
+[  371.1s] abbench arm same round 3/3: A (accum 4, baseline)
+[  460.6s] abbench arm same round 3/3: B (accum 4, same)
+[  550.2s]   A 1.7984 s/update; B 1.7968 s/update, peak alloc 8.327202796936035 GB
+[  550.2s] abbench arm same: A 1.8038 B 1.8005 s/update (speed 1.002x, A spread 1.022, does nothing, inside noise); wall 9.0 min, arm cost $0.069, $0.230 per 1,000 updates, $5.51 per 24,000-update run; mark 5: does not count
+[  550.2s] done /job/profraw/gr4_bench_aa.json /job/profraw/gr4_bench_aa.md

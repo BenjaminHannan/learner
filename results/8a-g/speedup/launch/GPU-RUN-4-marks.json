@@ -1,0 +1,642 @@
+{
+ "sheet": "PREREG-launch-defer.md (amended 10-17)",
+ "mark2": {
+  "defer": {
+   "bar": true,
+   "bar_precision": "bf16",
+   "rel_loss_diff": 3.531162509143189e-06,
+   "grad_cos": 0.9999995764426567,
+   "E4": {
+    "passed": false,
+    "registered_window": true,
+    "mean_abs_diff": 0.04811040282249451,
+    "diff_of_means": 0.03501561045646673,
+    "updates": 300
+   },
+   "holds": false,
+   "label": "numerics-changing"
+  },
+  "kvcat": {
+   "holds": true,
+   "how": "fell to the bf16 bar: relabelled near",
+   "relabelled": "near",
+   "label": "exact-candidate (treated as numbers-changing in this run)",
+   "deterministic": true
+  }
+ },
+ "mark7": {
+  "holds": true,
+  "parts": {
+   "syncs": true,
+   "dtoh": true,
+   "kernels": true
+  },
+  "defer_syncs": 62.5,
+  "defer_dtoh": 20.0,
+  "base_syncs": 1305.0,
+  "base_dtoh": 745.0,
+  "base_kernels": 75966.0,
+  "defer_kernels": 44830.0,
+  "kernel_ratio": 0.5901324276650081,
+  "base_kernel_ms": 1391.1047424999774,
+  "defer_kernel_ms": 1335.985634499929,
+  "kernel_ms_ratio": 0.9603774566241554
+ },
+ "boxes": [
+  {
+   "box": "collected/box1/profrun",
+   "host": {
+    "hostname": "c9f54a0290a6",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "host_txt": ""
+   },
+   "references": {
+    "base4": 2.3509231577860192,
+    "defer4": 1.5511888180160893,
+    "kvdefer4": 1.4427845628000795,
+    "base8": 3.412746580620296,
+    "defer8": 1.9819256194168702
+   },
+   "hostmon": {
+    "samples": 395,
+    "trainer_mhz_median": 2500.0,
+    "rule_e_struck": false,
+    "gpu_util_median": 45.0
+   },
+   "arms": {
+    "d4": {
+     "arm": "d4",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 2.383959887409583,
+       "b": 1.5511888180160893,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:01:11.607691Z",
+        "2026-10-20T01:02:46.494408Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:03:01.392999Z",
+        "2026-10-20T01:04:01.913092Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 2.3509231577860192,
+       "b": 1.5556825040839612,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:04:25.395304Z",
+        "2026-10-20T01:06:00.754105Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:06:15.667368Z",
+        "2026-10-20T01:07:16.532384Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 2.3513872049748894,
+       "b": 1.5744103010976687,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(b) chunk 5 1.6715 / median 1.5809 = 1.057"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-20T01:07:40.013912Z",
+        "2026-10-20T01:09:15.682642Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:09:30.656561Z",
+        "2026-10-20T01:10:31.673201Z"
+       ]
+      }
+     ],
+     "read_rounds": 2,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 8.152946949005127,
+     "peak_a_gb": 8.327202796936035,
+     "status": "regime-confounded",
+     "decided": false
+    },
+    "aa": {
+     "arm": "aa",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 2.460332670598291,
+       "b": 2.4631955042015763,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:11:19.728133Z",
+        "2026-10-20T01:12:57.578516Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:13:21.577939Z",
+        "2026-10-20T01:14:58.805811Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 2.380725502036512,
+       "b": 2.3808066338766367,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:15:22.675921Z",
+        "2026-10-20T01:16:59.174013Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:17:23.017740Z",
+        "2026-10-20T01:18:59.670865Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 2.4019028927898036,
+       "b": 2.404054802120663,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:19:23.643444Z",
+        "2026-10-20T01:21:00.715412Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:21:24.708646Z",
+        "2026-10-20T01:23:02.096629Z"
+       ]
+      }
+     ],
+     "read_rounds": 3,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 8.327202796936035,
+     "peak_a_gb": 8.327202796936035,
+     "a_median": 2.4019028927898036,
+     "b_median": 2.404054802120663,
+     "speed": 0.9991048834124076,
+     "b_over_a": 1.000895918539138,
+     "all_b_below": false,
+     "decided": true,
+     "mark1": false,
+     "status": "decided"
+    },
+    "k4": {
+     "arm": "k4",
+     "secondary": true,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 1.5553184038959444,
+       "b": 1.4427845628000795,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:38:32.095103Z",
+        "2026-10-20T01:39:32.903639Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:39:46.940848Z",
+        "2026-10-20T01:40:43.542336Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 1.5528408281039447,
+       "b": 1.4538083164254203,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:40:58.326154Z",
+        "2026-10-20T01:41:58.920895Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:42:12.790663Z",
+        "2026-10-20T01:43:09.524929Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 1.5549769926117731,
+       "b": 1.4474654860794545,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:43:24.456674Z",
+        "2026-10-20T01:44:25.224813Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:44:39.178810Z",
+        "2026-10-20T01:45:35.901526Z"
+       ]
+      }
+     ],
+     "read_rounds": 3,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 4.990385055541992,
+     "peak_a_gb": 8.152946949005127,
+     "a_median": 1.5549769926117731,
+     "b_median": 1.4474654860794545,
+     "speed": 1.074275696081376,
+     "b_over_a": 0.9308597445215314,
+     "all_b_below": true,
+     "decided": true,
+     "mark1": true,
+     "status": "decided"
+    },
+    "d8": {
+     "arm": "d8",
+     "secondary": true,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 3.4944333392893894,
+       "b": 2.009930500993505,
+       "a_normal": true,
+       "b_normal": false,
+       "a_why": [],
+       "b_why": [
+        "(b) chunk 5 2.1052 / median 1.9999 = 1.053"
+       ],
+       "mark4": true,
+       "read": false,
+       "a_window": [
+        "2026-10-20T01:46:36.246206Z",
+        "2026-10-20T01:48:55.841738Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:49:17.128415Z",
+        "2026-10-20T01:50:39.191131Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 3.434042727295309,
+       "b": 1.9819256194168702,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:51:15.427062Z",
+        "2026-10-20T01:53:33.620738Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:53:54.502362Z",
+        "2026-10-20T01:55:15.113627Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 3.412746580620296,
+       "b": 1.9998047944856807,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T01:55:51.247585Z",
+        "2026-10-20T01:58:08.747057Z"
+       ],
+       "b_window": [
+        "2026-10-20T01:58:29.721479Z",
+        "2026-10-20T01:59:51.082131Z"
+       ]
+      }
+     ],
+     "read_rounds": 2,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 4.361903190612793,
+     "peak_a_gb": 4.4749956130981445,
+     "status": "regime-confounded",
+     "decided": false
+    }
+   },
+   "mark5": true,
+   "mark5_value": 0.000895918539137952,
+   "box_counts": true,
+   "machine": "151645",
+   "image": "pytorch/pytorch:2.11.0-cuda12.8-cudnn9-runtime",
+   "dph": "0.4696",
+   "P6": {
+    "R": 0.5916102373768055,
+    "dead": false,
+    "kernel_ms": 1391.1047424999774,
+    "a_median_s": 2.3513872049748894
+   }
+  },
+  {
+   "box": "collected/box2/profrun",
+   "host": {
+    "hostname": "c4e54a088b90",
+    "cpu_model": "AMD EPYC 9684X 96-Core Processor",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "host_txt": ""
+   },
+   "references": {
+    "base4": 1.7983592829201371,
+    "defer4": 1.3315087743103504,
+    "kvdefer4": null,
+    "base8": null,
+    "defer8": null
+   },
+   "hostmon": {
+    "samples": 102,
+    "trainer_mhz_median": 2546.0,
+    "rule_e_struck": false,
+    "gpu_util_median": 79.5
+   },
+   "arms": {
+    "d4": {
+     "arm": "d4",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 1.8266722948290408,
+       "b": 1.3315087743103504,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:37:02.510292Z",
+        "2026-10-20T00:38:14.872918Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:38:27.687750Z",
+        "2026-10-20T00:39:19.886981Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 1.809323759144172,
+       "b": 1.3349265503697096,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:39:37.601027Z",
+        "2026-10-20T00:40:49.840480Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:41:02.634209Z",
+        "2026-10-20T00:41:54.895611Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 1.8061775251757353,
+       "b": 1.3321366635151208,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:42:12.568453Z",
+        "2026-10-20T00:43:24.832851Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:43:37.692869Z",
+        "2026-10-20T00:44:29.873184Z"
+       ]
+      }
+     ],
+     "read_rounds": 3,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 8.152946949005127,
+     "peak_a_gb": 8.327202796936035,
+     "a_median": 1.809323759144172,
+     "b_median": 1.3321366635151208,
+     "speed": 1.3582118176748423,
+     "b_over_a": 0.7362621845773112,
+     "all_b_below": true,
+     "decided": true,
+     "mark1": false,
+     "status": "decided"
+    },
+    "aa": {
+     "arm": "aa",
+     "secondary": false,
+     "rounds": [
+      {
+       "round": 1,
+       "a": 1.8370706191752104,
+       "b": 1.8004948099143805,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:45:02.099482Z",
+        "2026-10-20T00:46:14.106786Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:46:31.816032Z",
+        "2026-10-20T00:47:43.799057Z"
+       ]
+      },
+      {
+       "round": 2,
+       "a": 1.8038345344830304,
+       "b": 1.8053351051174102,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:48:01.512644Z",
+        "2026-10-20T00:49:13.613371Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:49:31.125984Z",
+        "2026-10-20T00:50:42.975804Z"
+       ]
+      },
+      {
+       "round": 3,
+       "a": 1.7983592829201371,
+       "b": 1.7968254601117222,
+       "a_normal": true,
+       "b_normal": true,
+       "a_why": [],
+       "b_why": [],
+       "mark4": true,
+       "read": true,
+       "a_window": [
+        "2026-10-20T00:51:00.576730Z",
+        "2026-10-20T00:52:12.574874Z"
+       ],
+       "b_window": [
+        "2026-10-20T00:52:30.172723Z",
+        "2026-10-20T00:53:42.164959Z"
+       ]
+      }
+     ],
+     "read_rounds": 3,
+     "error": null,
+     "skipped": null,
+     "peak_b_gb": 8.327202796936035,
+     "peak_a_gb": 8.327202796936035,
+     "a_median": 1.8038345344830304,
+     "b_median": 1.8004948099143805,
+     "speed": 1.0018548926385458,
+     "b_over_a": 0.9981485416179777,
+     "all_b_below": false,
+     "decided": true,
+     "mark1": false,
+     "status": "decided"
+    },
+    "k4": {
+     "arm": "k4",
+     "status": "missing",
+     "file": "gr4_bench_k4.json"
+    },
+    "d8": {
+     "arm": "d8",
+     "status": "missing",
+     "file": "gr4_bench_d8.json"
+    }
+   },
+   "mark5": true,
+   "mark5_value": -0.0018514583820222752,
+   "box_counts": true,
+   "machine": "150319",
+   "image": "pytorch/pytorch:2.11.0-cuda12.8-cudnn9-runtime",
+   "dph": "0.5126"
+  }
+ ],
+ "P6": {
+  "R": 0.5916102373768055,
+  "dead": false,
+  "kernel_ms": 1391.1047424999774,
+  "a_median_s": 2.3513872049748894
+ },
+ "predictions": {
+  "P1": [
+   {
+    "box": 1,
+    "speed": null,
+    "right": null
+   },
+   {
+    "box": 2,
+    "speed": 1.3582118176748423,
+    "right": true
+   }
+  ],
+  "P2": {
+   "d8": null,
+   "d4": null,
+   "right": null,
+   "secondary": true
+  },
+  "P3": {
+   "k4": 1.074275696081376,
+   "right": true
+  },
+  "P4": "not tested in this run (PC)",
+  "P5": {
+   "base_gb": 8.327202796936035,
+   "defer_gb": 8.152946949005127,
+   "right": true
+  },
+  "K4_peak_gb": 4.990385055541992
+ },
+ "outcome": {
+  "d4_wins": [
+   false,
+   false
+  ],
+  "d4_speeds": [
+   null,
+   1.3582118176748423
+  ],
+  "boxes_count": [
+   true,
+   true
+  ],
+  "replication_hosts_distinct": true,
+  "replication_same_env": true,
+  "mark7": true,
+  "mark2_defer": false,
+  "p1_kill_by_box": [
+   false,
+   false
+  ],
+  "defer_inefficient_by_box": [
+   false,
+   false
+  ],
+  "p6_R": 0.5916102373768055,
+  "p6_dead": false,
+  "voided_boxes": [],
+  "allows": "mark 2 fails for defer: defer is not used however fast"
+ }
+}

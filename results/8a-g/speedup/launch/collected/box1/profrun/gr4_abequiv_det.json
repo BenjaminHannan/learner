@@ -1,0 +1,305 @@
+{
+ "meta": {
+  "arm": "B3G2",
+  "rung": "3M",
+  "accum": 4,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "b3g2",
+  "cfg": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "label": "settled",
+   "span_copy": true,
+   "span_idx": true,
+   "span_end": true,
+   "ans_drill": 0.25,
+   "eg_embed": true,
+   "any_round": true,
+   "gap_p": 0.25,
+   "no_slots": true,
+   "no_place": true,
+   "bytes": true,
+   "as_written": true,
+   "blocks": 2,
+   "writer_mlp": 1.75
+  },
+  "n_params": 4023302,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "le": 95
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "B3G2",
+   "--rung",
+   "3M",
+   "--accum",
+   "4",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--caps",
+   "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+   "--sections",
+   "abequiv",
+   "--ab-variants",
+   "kvcat,same",
+   "--out",
+   "/job/profraw/gr4_abequiv_det.json"
+  ],
+  "started": "2026-10-20T01:37:27",
+  "finished": "2026-10-20T01:37:54"
+ },
+ "sections": {
+  "abequiv": {
+   "tag": {
+    "arm": "B3G2",
+    "rung": "3M",
+    "accum": 4,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128",
+    "variant": ""
+   },
+   "reference_accum": 4,
+   "variants_tested": [
+    "kvcat",
+    "same"
+   ],
+   "pinned": true,
+   "K0": 8,
+   "rows": 256,
+   "precisions": [
+    "fp32",
+    "bf16"
+   ],
+   "on_cpu": false,
+   "reference": {
+    "fp32": {
+     "loss": 22.686006546020508,
+     "rerun": {
+      "loss_base": 22.686006546020508,
+      "loss_var": 22.686006546020508,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999999996951,
+      "grad_rel_l2": 6.525944466180955e-07,
+      "grad_max_abs": 8.940696716308594e-06,
+      "grad_norm_base": 580.1388929340928,
+      "grad_norm_var": 580.1388943238795,
+      "step_cos": 0.9999999911358737,
+      "step_rel_l2": 0.00013314922865703511,
+      "step_max_abs": 5.477067475112563e-07,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     }
+    },
+    "bf16": {
+     "loss": 22.686195373535156,
+     "rerun": {
+      "loss_base": 22.686195373535156,
+      "loss_var": 22.686195373535156,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999583147122,
+      "grad_rel_l2": 0.0002887402892734391,
+      "grad_max_abs": 0.015625,
+      "grad_norm_base": 581.3055441609417,
+      "grad_norm_var": 581.3054234935447,
+      "step_cos": 0.999977657860985,
+      "step_rel_l2": 0.006684628514996402,
+      "step_max_abs": 6.511807441711426e-06,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     }
+    }
+   },
+   "variants": {
+    "kvcat": {
+     "variant": "kvcat",
+     "fp32": {
+      "loss_base": 22.686006546020508,
+      "loss_var": 22.686006546020508,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999999996936,
+      "grad_rel_l2": 6.471246832049523e-07,
+      "grad_max_abs": 9.5367431640625e-06,
+      "grad_norm_base": 580.1388929340928,
+      "grad_norm_var": 580.1388948573837,
+      "step_cos": 0.9999999889233373,
+      "step_rel_l2": 0.000148841489541909,
+      "step_max_abs": 6.598816071345937e-07,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     },
+     "bf16": {
+      "loss_base": 22.686195373535156,
+      "loss_var": 22.686195373535156,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999525042292,
+      "grad_rel_l2": 0.0003082096088003372,
+      "grad_max_abs": 0.015625,
+      "grad_norm_base": 581.3055441609417,
+      "grad_norm_var": 581.3061713826016,
+      "step_cos": 0.999979650639552,
+      "step_rel_l2": 0.006379552854221532,
+      "step_max_abs": 6.437625415856019e-06,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     },
+     "bar_precision": "bf16",
+     "mark6": {
+      "bar_holds": true,
+      "bar_precision": "bf16",
+      "label": "bf16_bar_only",
+      "cpu_fp32_checked": false,
+      "cpu_fp32_rule": "bit_exact",
+      "bit_exact_required": true,
+      "bit_exact_cpu_fp32": null,
+      "equal_to_rounding_cpu_fp32": null,
+      "cpu_fp32_clause_holds": null,
+      "holds": true,
+      "verdict": "holds",
+      "note": "CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run",
+      "rerun_noise_floor": {
+       "rel_loss_diff": 0.0,
+       "grad_cos": 0.9999999583147122,
+       "grad_rel_l2": 0.0002887402892734391,
+       "bit_exact": false
+      }
+     },
+     "cpu_bit_exact_note": "CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run"
+    },
+    "same": {
+     "variant": "same",
+     "fp32": {
+      "loss_base": 22.686006546020508,
+      "loss_var": 22.686006546020508,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999999996791,
+      "grad_rel_l2": 6.713859485670156e-07,
+      "grad_max_abs": 1.0013580322265625e-05,
+      "grad_norm_base": 580.1388929340928,
+      "grad_norm_var": 580.1389037791043,
+      "step_cos": 0.9999999929540428,
+      "step_rel_l2": 0.00011871139981529426,
+      "step_max_abs": 3.7061806779092876e-07,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     },
+     "bf16": {
+      "loss_base": 22.686195373535156,
+      "loss_var": 22.686195373535156,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999572416439,
+      "grad_rel_l2": 0.0002924427787873346,
+      "grad_max_abs": 0.015625,
+      "grad_norm_base": 581.3055441609417,
+      "grad_norm_var": 581.3069082893343,
+      "step_cos": 0.999979310229713,
+      "step_rel_l2": 0.006432693207048006,
+      "step_max_abs": 6.526837751152925e-06,
+      "bit_exact_loss": true,
+      "bit_exact_grad": false,
+      "bit_exact_step": false,
+      "bit_exact": false,
+      "meets_bar": true
+     },
+     "bar_precision": "bf16",
+     "mark6": {
+      "bar_holds": true,
+      "bar_precision": "bf16",
+      "label": "bf16_bar_only",
+      "cpu_fp32_checked": false,
+      "cpu_fp32_rule": "bit_exact",
+      "bit_exact_required": true,
+      "bit_exact_cpu_fp32": null,
+      "equal_to_rounding_cpu_fp32": null,
+      "cpu_fp32_clause_holds": null,
+      "holds": true,
+      "verdict": "holds",
+      "note": "CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run",
+      "rerun_noise_floor": {
+       "rel_loss_diff": 0.0,
+       "grad_cos": 0.9999999583147122,
+       "grad_rel_l2": 0.0002887402892734391,
+       "bit_exact": false
+      }
+     },
+     "cpu_bit_exact_note": "CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run"
+    }
+   },
+   "limits": {
+    "loss_rel": 0.0001,
+    "grad_cos": 0.9999,
+    "equal_to_rounding_rel": 1e-06,
+    "cpu_fp32_rule": {
+     "nosync": "bit_exact",
+     "pad64": "equal_to_rounding",
+     "pad64p": "equal_to_rounding",
+     "unfused": "bar_only",
+     "tf32": "bar_only",
+     "same": "bit_exact",
+     "defer": "equal_to_rounding",
+     "kvcat": "bit_exact",
+     "fastteach": "bit_exact"
+    }
+   },
+   "note": "mark 6 of PREREG-b3g2-speed-ab.md with Amendment 1. bit_exact = loss equal and gradient bit for bit. On a CPU fp32 run: nosync must be bit-exact; pad64 and pad64p must be equal to rounding (relative gradient difference and relative loss difference at most 1e-06); tf32 and unfused are bar-only (unfused only changes the optimizer kernel and the CPU has no fused one). On a run with no CPU fp32 comparison (every GPU run) mark 6 is the bf16 bar alone, labelled bf16_bar_only: CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run. step_* = the parameters' change after one optimizer step (descriptive; for unfused it is where fused and unfused AdamW differ, the loss and gradient cannot).",
+   "errors": [],
+   "mark6_by_variant": {
+    "kvcat": true,
+    "same": true
+   },
+   "mark6_label_by_variant": {
+    "kvcat": "bf16_bar_only",
+    "same": "bf16_bar_only"
+   },
+   "wall_s": 27.2
+  }
+ }
+}

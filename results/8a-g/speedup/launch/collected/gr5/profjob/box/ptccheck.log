@@ -1,0 +1,12 @@
+(i) six replaced files: originals = 74d6e92c75 (sha256), new = the PTC overlay; caps.py unchanged in both
+    ok calc_full: 31 fixed cases, calc_fill agreement, 8000 random strings, deep brackets and huge numbers: never raises
+    ok mask = generate: 16 rows, 42 result characters, forced positions == masked positions, text == gold, nocalc forces nothing, a mismatching step stays in the loss and is counted
+    ok masked loss: 42 result characters get target -100 and no gradient, the rest equal calc_train off; W unchanged (86); a 177-char target keeps its tail (140 trained)
+    ok PTC: count 4,023,976 (3M), 9,815,978 (10M), 30,003,659 (30M no plug) = PTS = PT; cfg = PTS cfg + calc_train; LESIONS [nocalc] (PTS keeps [calc]); train_args builds, refused without --caps / eg_embed
+    ok job caps: PTC shares PTS's caps dir and pin (caps_b3s.json), refuses a row over plain_target 115, refuses B3G2 beside it and another caps file
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK

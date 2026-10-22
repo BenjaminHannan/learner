@@ -1,0 +1,302 @@
+=== CIO START 2026-10-17T15:42:19Z
+=== STAGE setup 2026-10-17T15:42:19Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=1.5 dph=0.40 guard=OFF-profile-mode cap_usd=4.0 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-17T15:42:19Z
+=== PROF GR4 part=rep MAXH=1.5 DPH=0.40: ceiling 0.6 USD <= cap 0.69 USD 2026-10-17T15:42:19Z
+=== PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=70 PROF_JOB_STEPS=2 PROF_COMPILE=0 end_sleep=5 PROF_PLAN=gr4) 2026-10-17T15:42:19Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           0           5           0           9          15
+4
+/dev/vda        252G   23G   17G  59% /
+TICK at=2026-10-17T15:42:19Z stage=setup up_min=0 log=g9_bench_d8.log bytes= last= | mb data8a=5915 skills=111 pools=467 free=16455 ram_avail=15397 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.5.4', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.11.0+cpu cuda None'}
+# date 2026-10-17T15:42:21Z
+# uname
+Linux vm 6.18.44-fc-v139 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux
+# python
+Python 3.13.16
+# nvidia-smi
+cio: line 971: nvidia-smi: command not found
+# nvidia-smi gpu csv
+cio: line 972: nvidia-smi: command not found
+# pip list | grep -i -E "torch|transformers|numpy" (and the other pinned packages)
+accelerate        1.15.0
+huggingface_hub   1.33.0
+numpy             2.5.4
+pyarrow           26.0.0
+safetensors       0.8.0
+tokenizers        0.23.2
+torch             2.11.0+cpu
+transformers      5.19.0
+# torch
+torch 2.11.0+cpu cuda None cudnn None cuda_available False
+tf32 matmul False tf32 cudnn True float32_matmul_precision highest
+# cpu
+CPU(s):                                  4
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+               total        used        free      shared  buff/cache   available
+Mem:           16093         790        5803          14        9843       15302
+/dev/vda        252G   23G   17G  59% /
+=== STAGE code 2026-10-17T15:42:23Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-17T15:42:29Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-17T15:42:29Z
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK
+=== CODE-ID 8aPTC3S-pc-047f8ed212 (PC: WORK\code\8aPTC3S-pc-<same 10 hex>); code_identity.py (CRLF as LF): CODE-HASH-LF 47d676dde1 FILES-LIST-SHA256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2 (118 files) ; raw-bytes file list sha256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2; caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e 2026-10-17T15:42:59Z
+CMD 8a-data mem 3000 MiB: /home/user/venv/bin/python -m custom_io.g8a.get_data --work /home/user/gr4dry/J/work --out /home/user/gr4dry/J/work/results/8aPTC3S-pc/8a-data --data-pool /home/user/gr4dry/J/work/8a-inputs/data-pool --own-xz /home/user/gr4dry/J/work/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+CMD 8aPTC3S-3M-s400 mem 9000 MiB: /home/user/venv/bin/python -m custom_io.g8a.job --work /home/user/gr4dry/J/work/g8a --local --out /home/user/gr4dry/J/work/results/8aPTC3S-pc/8aPTC3S-3M-s400 --skills /home/user/gr4dry/J/work/data --big-data /home/user/gr4dry/J/work/data_big --data8a /home/user/gr4dry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /home/user/gr4dry/J/work/b3-inputs/cloze_long.py --caps-file /home/user/gr4dry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu --steps 2 --big-data '' --train-extra '--batch 16 --eval-max 16'
+CHILD-ENV (added to the environment): {'PYTORCH_CUDA_ALLOC_CONF': 'expandable_segments:True'}
+QUEUE-ENV (the PC's # ENV lines, Windows paths, not used here): {"PYTHONPATH": "C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages", "CUSTOM_IO_EG2": "C:\\Users\\benja\\eg2"}
+=== STAGE gemma 2026-10-17T15:42:59Z
+{"device": "cpu", "transformers": "5.19.0", "path": "/home/user/gr4dry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/home/user/gr4dry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+=== STAGE data 2026-10-17T15:43:12Z
+=== data branches fetched at 3d0afbeadd5f1775c7c92195348bab6f66da767d and 8d012f1f97bd8203b15e88e369dc856721e13e6a; building the 8a data (FineWeb-Edu shard 0 is 2.15 GB; the slices must hash to the manifest) 2026-10-17T15:43:18Z
+[get_data 15:43:19] teach.jsonl ok (already there)
+[get_data 15:43:19] web slices ok (already there) ['slice_rung10.jsonl', 'slice_rung3.jsonl', 'slice_rung30.jsonl']
+[get_data 15:43:19] READY /home/user/gr4dry/J/work/data8a
+=== STAGE skills 2026-10-17T15:43:19Z
+TICK at=2026-10-17T15:44:19Z stage=skills up_min=2 log=build.log bytes=240 last={"counts": {"train": 200000, "dev_answer": 1200, "dev_frame": 1360, "dev_vocab": 800, "dev_variant": 1320, "de | mb data8a=5915 skills=111 pools=467 free=16457 ram_avail=15034 | gpu 
+curriculum hashes match
+TICK at=2026-10-17T15:46:19Z stage=skills up_min=4 log=build_big.log bytes=241 last={"counts": {"train": 200000, "dev_answer": 6000, "dev_frame": 6800, "dev_vocab": 4000, "dev_variant": 6600, "d | mb data8a=5915 skills=111 pools=467 free=16457 ram_avail=15021 | gpu 
+big build train.jsonl hash matches
+=== STAGE prof 2026-10-17T15:46:37Z
+=== PROF START job smoke of 2 updates, then the harness (commit ad33f572b126bb31371854bce8e90c6c553c07d1); budget 70 min, maxh 1.5 h, speed guard OFF, up 4 min so far 2026-10-17T15:46:37Z
+=== PROF-HARNESS commit ad33f572b126bb31371854bce8e90c6c553c07d1; prof_train.py sha256 27741d82faeb6f7b149f47022e1a0cde780a02cf34283d9102841726ba25bd6c = the pinned value; test_prof.py 746ef3707644be16c8cefbda5ea6c787d2509489c274d8183925d46848969a2e; README.md be8853b494d56acbf1f32b17ee70e01d582898b0fd5e0910113f4f1c8bd5afcb; PREREG-eg-once.md 261ef009c6c8434f70adffc6da073f4f7d3a5da16c26c696f6a845558fc18b67 2026-10-17T15:46:39Z
+PROF-JOB cmd: /home/user/venv/bin/python -m custom_io.g8a.job --work /home/user/gr4dry/J/work/g8a --local --out /home/user/gr4dry/J/work/results/8aPTC3S-pc/profjob --skills /home/user/gr4dry/J/work/data --big-data /home/user/gr4dry/J/work/data_big --data8a /home/user/gr4dry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /home/user/gr4dry/J/work/b3-inputs/cloze_long.py --caps-file /home/user/gr4dry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu --steps 2 --big-data '' --train-extra '--batch 16 --eval-max 16' --steps 2 --train-extra '--log-every 1 --batch 16 --eval-max 16'
+=== STAGE prof-job 2026-10-17T15:46:40Z
+=== PROF-JOB START: the queue-built job command, --steps 2, --train-extra '--log-every 1 --batch 16 --eval-max 16', out /home/user/gr4dry/J/work/results/8aPTC3S-pc/profjob; timeout 1200 s (budget left 4197 s) 2026-10-17T15:46:40Z
+TICK at=2026-10-17T15:48:19Z stage=prof-job up_min=6 log=stdout.txt bytes=34 last=pool reused p10-rung30-s400-a64-L  | mb data8a=5915 skills=111 pools=467 free=16441 ram_avail=12194 | gpu 
+TICK at=2026-10-17T15:50:19Z stage=prof-job up_min=8 log=stdout.txt bytes=34 last=pool reused p10-rung30-s400-a64-L  | mb data8a=5915 skills=111 pools=467 free=16441 ram_avail=12214 | gpu 
+TICK at=2026-10-17T15:52:20Z stage=prof-job up_min=10 log=stdout.txt bytes=34 last=pool reused p10-rung30-s400-a64-L  | mb data8a=5915 skills=111 pools=467 free=16441 ram_avail=12241 | gpu 
+=== PROF-JOB END rc=0 secs=390 maxh_hit=no 2026-10-17T15:53:10Z
+pool reused p10-rung30-s400-a64-L
+{"rung": "3M", "seed": 400, "steps": 2, "wall_s": 388.4, "cost_usd": 0.0}
+RESULT-SUMMARY {"job_status": "ok", "arm_status": "ok", "steps": 2, "n_params": 4023976, "steps_per_s": 0.114, "train_s": 18, "wall_s": 384, "peak_mem_mib": null, "cap_total": 0, "calc_mismatch": 0, "calc_rows": 32, "calc_forced": 16, "final_eval": true, "chain5": false, "lesions": ["nocalc"]}
+PROF-JOB train step=1 loss=4.71416 lr=3.3e-06 elapsed_s=13.1 cap_hits=0
+PROF-JOB train step=2 loss=4.7024 lr=6.7e-06 elapsed_s=17.5 cap_hits=0
+PROF-JOB timing {"steps": 2, "train_s": 17.5, "steps_per_s_result": 0.11427386659724638, "sec_per_update_overall": 8.7509, "sec_per_update_first_to_last_log": 4.4, "first_log_step": 1, "last_log_step": 2, "job_wall_s": 390.0, "pool_build_s": 1.0, "arm_wall_s": 387.4, "final_eval_phase_s": 344.1, "startup_before_train_s": 23.7, "peak_mem_mib": null, "peak_reserved_mib": null}
+PROF-JOB projection for the 24,000-update job (this speed, suggested): train_h=29.33 final_eval_h=0.096 (the guard's EXTRA_H default is 0.5)
+PROF-JOB pool {"train_sha256": "27234f3e9861ce5f8c6db18371f27c5f52826712398b90a4e946e952ff8791fe", "train_bytes": 485544869, "rows": 1343273, "pieces": 60008258, "schedule_steps": 24000, "passes": 4.574}
+=== PROF harness pool /home/user/gr4dry/J/work/g8a/pools/p10-rung30-s400-a64-L (485544869 bytes), --pkg-root /home/user/gr4dry/J/src-ptc, CUSTOM_IO_EG2=/home/user/gr4dry/J/eg2 2026-10-17T15:53:10Z
+=== PROF-GR4 launch files pinned: prof_launch.py=11ba6dcd18ca defer.py=3fc6bd6eac30 exact_arms.py=437a80dd17a7 hostmon.sh=d3619b7da7c9 part=rep 2026-10-17T15:53:10Z
+# GPU-RUN-4 host: vm
+model name	: Intel(R) Xeon(R) Processor @ 2.10GHz
+2
+torch 2.11.0+cpu cuda None cudnn None
+=== PROF PLAN gr4 part rep: B3G2 3M; D4 = baseline vs defer (accum 4), AA = baseline vs same, K4 = defer vs defer,kvcat, D8 = baseline vs defer (accum 8); DPH=0.40; budget 70 min 2026-10-17T15:53:11Z
+=== STAGE prof-g4_bench_d4 2026-10-17T15:53:11Z
+=== PROF STEP g4_bench_d4 start: timeout 1500 s, budget left 3806 s 2026-10-17T15:53:11Z
+=== PROF STEP g4_bench_d4 end rc=0 secs=27 2026-10-17T15:53:38Z
+prof_launch: host {"host": "vm", "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz", "logical_cpus": 4, "python": "3.13.16", "torch": "2.11.0+cpu", "cuda": null, "cudnn": null, "gpu": null, "deterministic": false, "cublas_workspace_config": null, "determinist
+[    1.2s] === section abbench
+=== STAGE prof-g5_bench_aa 2026-10-17T15:53:38Z
+=== PROF STEP g5_bench_aa start: timeout 1500 s, budget left 3779 s 2026-10-17T15:53:38Z
+=== PROF STEP g5_bench_aa end rc=0 secs=32 2026-10-17T15:54:10Z
+prof_launch: host {"host": "vm", "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz", "logical_cpus": 4, "python": "3.13.16", "torch": "2.11.0+cpu", "cuda": null, "cudnn": null, "gpu": null, "deterministic": false, "cublas_workspace_config": null, "determinist
+[    1.2s] === section abbench
+--- gr4_bench_aa.md
+# Profile: B3G2 3M accum 4 batch 16 on x86_64 (cpu), torch 2.11.0+cpu
+
+model b3g2, 205,014 trained params, data /home/user/gr4dry/J/work/g8a/pools/p10-rung30-s400-a64-L (400 rows), EG front stub, bf16 autocast False, seed 400, caps caps_b3g2.json
+
+## abbench
+
+arm B3G2 | rung 3M | accum 4 | batch 16 | device cpu | torch 2.11.0+cpu
+
+reference A = accum 4; 3 interleaved rounds A,B,A,B,A,B x 4 timed updates after 1 warm-up (chunks of 2); marks (PREREG-b3g2-speed-ab.md, fixed before any number): speed counts at >= 1.3x, memory fits at <= 10.0 GB, rounds rise reported above +25 %, a cheap win needs B 5 % lower in the median and bel
+
+arm order (variants first, then the accum rows): same
+
+mark 5 as coded: B below A in EVERY round (all 3 rounds completed; an arm with fewer is "incomplete, cannot count"), the median of B at least 5 % lower than the median of A, i.e. B <= 0.95 x A (slightly stricter than "speed at least 1.05x", which would allow B <= 0.9524 x A), peak allocated <= 10 GB
+
+| arm | kind | A median s/update | B median s/update | speed (A/B) | B lower than A by | A round medians | B round medians | A spread (max/min) | peak alloc GB | mark 7 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| same | variant | 0.9097 | 0.9232 | 0.985 | -1.5 % | 0.901, 0.989, 0.910 | 0.951, 0.866, 0.923 | 1.097 | - | does nothing; inside noise |
+
+cheap wins (mark 5; mark 6 comes from abequiv, with the label of the check it rests on):
+
+| arm | B below A every round | B >= 5 % lower (B <= 0.95 A) | peak <= 10 GB | mark 6 holds | counts (without mark 6) | mark 5: counts |
+|---|---|---|---|---|---|---|
+| same | no | no | - | - | no | **no** |
+
+predictions (suggested, untested; marks 3 and 8):
+
+| prediction | measured | proved wrong |
+|---|---|---|
+| neither accum 8 nor accum 16 passes mark 1 against accum 4 | {} | - |
+
+--- gr4_bench_d4.md
+# Profile: B3G2 3M accum 4 batch 16 on x86_64 (cpu), torch 2.11.0+cpu
+
+model b3g2, 205,014 trained params, data /home/user/gr4dry/J/work/g8a/pools/p10-rung30-s400-a64-L (400 rows), EG front stub, bf16 autocast False, seed 400, caps caps_b3g2.json
+
+## abbench
+
+arm B3G2 | rung 3M | accum 4 | batch 16 | device cpu | torch 2.11.0+cpu
+
+reference A = accum 4; 3 interleaved rounds A,B,A,B,A,B x 4 timed updates after 1 warm-up (chunks of 2); marks (PREREG-b3g2-speed-ab.md, fixed before any number): speed counts at >= 1.3x, memory fits at <= 10.0 GB, rounds rise reported above +25 %, a cheap win needs B 5 % lower in the median and bel
+
+arm order (variants first, then the accum rows): defer
+
+mark 5 as coded: B below A in EVERY round (all 3 rounds completed; an arm with fewer is "incomplete, cannot count"), the median of B at least 5 % lower than the median of A, i.e. B <= 0.95 x A (slightly stricter than "speed at least 1.05x", which would allow B <= 0.9524 x A), peak allocated <= 10 GB
+
+| arm | kind | A median s/update | B median s/update | speed (A/B) | B lower than A by | A round medians | B round medians | A spread (max/min) | peak alloc GB | mark 7 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| defer | variant | 0.9129 | 0.5151 | 1.773 | +43.6 % | 0.913, 0.827, 0.914 | 0.515, 0.507, 0.532 | 1.104 | - | large |
+
+cheap wins (mark 5; mark 6 comes from abequiv, with the label of the check it rests on):
+
+| arm | B below A every round | B >= 5 % lower (B <= 0.95 A) | peak <= 10 GB | mark 6 holds | counts (without mark 6) | mark 5: counts |
+|---|---|---|---|---|---|---|
+| defer | yes | yes | - | - | - | **-** |
+
+predictions (suggested, untested; marks 3 and 8):
+
+| prediction | measured | proved wrong |
+|---|---|---|
+| neither accum 8 nor accum 16 passes mark 1 against accum 4 | {} | - |
+
+PROF COST DPH=0.40 USD/h: up 11.8 min = 0.08 USD so far; MAXH 1.5 h ceiling = 0.60 USD (the rental, from DPH x time, not a bill)
+=== STAGE result 2026-10-17T15:54:10Z
+=== PROF printing: block profjob (job smoke folder), block profrun (15 files, archive 11706 bytes) 2026-10-17T15:54:10Z
+RBEGIN|profjob|59a5a08431bb82ddff7aff8b2ca5dccd695ae6bd085e8e8b7859b1e3e147254e|15498
+R|profjob|H4sIAAAAAAAAA+w9a3PbOJL57F+B031IUmvJBMGn5+bD3dbM7d3tPOpmtraukhSLD0jimCI1JOXEk81/v26Ab1IWKdtKvBE/JCaIBhpAo1+Aurdpsvwt8a5ePOGjwGPquvgfnu7/4m+qq4ZmUl3R1BcKparKXhD9KZEqn12WuykhL9Ikye+rd+j7M322xfr/73e//O2vvy5+y5L40fvABTY0bd/664ya5fprpgZ0QhnVYf2VR8dk4PnK1//jBZnBDOS7bHZNZsnN7BIKgCDgDT6RWbqLV/iF/YBfoC7nAbxr
+R|profjob|iiJfc75FSFW8+ctVVgCS2X+o5Z9khiCqblzKt9hZczfAmlpRksI7T53IveNp1RyUe1Hi3zQLYidKEtEjLYs20RZbWljFu59s76AgT3e8KOErh288gTeWYuEn8Wn2868NHJ1NEvDoAKadtmq0StTLiuswCHiMiCqG0eryz6fpsyhzo8gpV6kB7buR7+SpG8bNWbko0JyJLzxwtm7qbjprqikqY6bZmEEssU2jOcCiqGowSqFQWSgKLV6dDFDgiOtCkpLvbuuONu4HB1jTZpvj3CiS2mSxG2M1psuS2Il3G6yj
+R|profjob|FVXeO1AJCkzVLGukXBAMrd+RpFmB7zaCoTrABFY8F9WKltPkvZhbqhvUKmCT9wAty2HBqMokEc6yZJf6OJhZhO1kOdkmSXRNoL6pkle4ici/fUuY8pr8ieAbU8h77pEsCn1OXkVJvJr76118Q/wo+YMT7OOSBG7uOtjQlSh1sNpie3dJcBPiFsTWAn77DfFhpnY5FFJlrtgkibGdXUD+/PPfyCuJxMaNwyVixq0lUwN3eUl+8vO5WaIjUHn9DdTL/TXPSL7mAgH4A3fny4zAAhH45N+QV7gi5AonHf6FmQa4
+R|profjob|n3/9hbwCYpsLYiNiVomc1dck5fMNd7Nd2kRR4pXE0R00eAnTeQnzWQz9B9d/fU2aS4MLQ24zALfJMkkFfqs02W3ntOgG28TSzN3IGfxGzHE9ozCCNL0jcUIkjq92sb924xUPAH+YR1kpTvIWvmuecpjyRLQNnBHnIYMa2yTNyQbEB/y93GWcuPEdtkCSW54itrOK+IEi10j+4iXY1n+7vi+o92Nj59B607hpY++1GEfql22QPv8W20DseyRzy1xoVcUGty7fnS1w3kzsTko11WSWYei2qWoGsypWU/GB5laH
+R|profjob|PbtBpjS7WicbfgVzkF7d8vj2ygvjq+1dvoYFmW+ID3OUbJwwWQiuQuZzwfTK1V1K9uSs4AMIEPLxbc2z3pZMi7xtcKxmacFB3xYsFEpKbtmsJRnj25IzQknBZd8K7ineJTcVBZ8AFUH7jYGtUi1I767+++p9kt5crSz3CndmdrUFepZbaJ7Blpy7hjb/K8BLElPhLw93FGIHf0epZIJYodjEWJqs5hyo5o7o4n0Zxm4EJW6Ek+V+mAPPIxbOD5LesUgtEHoO+/QK/xCqHmK3pIhYssv3NwwMdBfl2ZXlAhGy
+R|profjob|X+Zb/6rUG6EAoAUdE9EQ7CPkaf521xoYrSZC1MKx4cjgraTYci/Qkri23L1xNnzjbEJUR+JdFLWFFGpuwPScXRwix6emrao6sCa6YMxSqC0amuGMON4ujAJB5aW4EcWCnJxs7cLqICGrpsq0JeO2ZVCf60vLNwKPWsykS9X09aWuWqphAt+3Lc9WXI3bmsFtXV0uLdOmSz6rm86AVQY7IeHk/oX1hn0Ucp9ntbQxDKkDLwrpJbeCd+dgbfium2YhYnZboEjuLEH/SaW8U5ow7SJRy0mh+5bYR5nmBKkrBJhB
+R|profjob|tRpg62aZqKstdFOrhW0ToJCLyQ0IUCCSVsPNwbl+vnOFTmNqoNLbTK1WzFMd/gEmvZqUIdWmpeRVoA2GZkmGBppelju7LJCaxQVQxqfPrU4/u6exj5/MB3CE/W/o9Gz/n+Jprv9T+QDut/814FtGw/5naP8D3zvb/6d40P73k3gZrkqLv7RIZ139bFba+BX3HrQt+6alLO7busPcv2/E9kzilu1bSQjU2Dra6CT9SI7PC1dO0RJqHKLsNvFdr1nQdnsIvabSXDqKTNfyfQ9K/Q49FqxwoaxSN3D8KNw2lJOO
+R|profjob|lyVJA46tzLL1brmM4JscsFC1sBy0rQJ70OYaszkDBcwRChg2LkpQ86qKZPNC3XTwQxOUx6sozNZleTX2rg1eGu5Hz/uAXjqrUZXWfDGXmXvLnS1YZdjh0o0yXlesVkG1JJ5hDCZx1kQdlNx7Eb1fzwV7Dglt2BpqkUTfoyanWKqbUZJJTctUgPVRMLMURoFDYr1CIRXa7EJXqEU1ZuhgktkGq3o5YLG111PsaWgzCLO82rigYC7dTRjd1Ralm4b5GiYxrTRWoWGlKffz2taE0SNu4u9PpRG4RpyT2nszGjDc
+R|profjob|gnENK7ydDJls7xxYsmAqYBDeggbq+vlUQOFqcMI42E2HjXiewziPmCHYgLmDxDQZUrAMRyzNVFCgLp/HuZOCvTEVFk0Ox91uG5Q1EjLjvzsxGAeT4fIkvZMDZVNhc9cDdFFeTYW8dY+cXCRaZxlGuWDo40AvKnjcuBEw76iCnamHm2EtDIypAOZhALUFQKcCaFMB9KnTPpk0rNEoNVZnA9IjRBZdL08PVoCWLo6SFQnztWqmCyPRK3WmFkjhJ4yz9zU9PS5391z/BnSWwMmS6PZI2SD26AhC7TL5DQhajg5+
+R|profjob|T+p6E1n9KswzlNVhPpkbHS0nbmC4RzEGwepBvvAPk1m99xvUQeXCv3kmYgKZvX/nR9MBc3SCSV/Y6SVFlCQ3u8nKyudg+drDWP4I7tcGGMHy25MyguW3xzB+yY5hyOVJxyMx5CXYB7Xn96xtTwU8a9tnbbsBeda2z9r2l6Ntl97Avcz9eBb9IG35aCYNLC/2OR6jTud8x+u7D2PTx2nKD2DTbpa5K+787k6GfIie/GB11w2CbOcdB3tqNv9FKdkjGLc+lQ9PVrLbKvAIxt3uYTwTOYat2o/MVkEnduMvzkf9
+R|profjob|HJ0QD1KfvyY/xAMU6M/qiPinV6If6L8YoUS3x/j0/ovJSvTT6sSP7fBocepBpRiv8jvjtkt75pKtE/BlGE8GzPI0jFfIkOJsmaSbqfCoEDt+Et/ydAQb1UZQ/ghCtqYSsnU8ESiPRgTF0XjEszCJSyk5i5Mmo+qeQg+RybCMHxp7c8uU0zUo5ycAD3jIJkD3DbDxwAOifjzwsLgfDz9kik2AHvCajYceFPzjwYeF/3j4IQVgPHTfizYBdlAJGA8/pAiMhx5QBsYDDyoEh8FbjK3HG1tqwf7GWAcX4xggcwyQ
+R|profjob|2gGixwBpxwDpxyzKUURkTUGvtX59GbNXQBnlS0fMNGysIeFE73fbtc+8n0KW7Dv5niqNuv68KSJlj/E5RbAMGqAnkkwD3sGJgqVjiU4QLIPW6LMRTAMn5FNky5BxemrZ1HXkPQ8Boz2GgBnFV7tAowRMd6pGCZjumCYt6rFs33oStt86WX8Krn+2IM4WxBT4swXxzBj82YLYsyhfmwXROscfFiUPEwYP1v4fJA6GT/VPpbs/XCAcr/k/UCAMnPSfUO9/FNW9e+r/XITKF2o4jBIR+jHc/ijDoavOjxIR3Z4m
+R|profjob|saRjGbf9NIy7fVNgmHV/TivgubttHmwOfM2emwcaBF+E6+arMwoexeszyijojvp0Xp+jjIKT6PdP5Crq3EAYVPAHbiWMn9GBmwnjgfffThjfxvANhcPwh/bMKPK3jiF/awiDCaSiPDKpXJDq8oLvbp11bSzNZPxBB8O5FVEIRIvFyVO/vBD34kOnUMR32IqYDrIYeV2npvxp/0DRLgY1IGsAr3jsNJCoypvh8tpfEhBqbhw4Po+iTh+5u+UOyDuQGq3y96B5dDuIEyGVeQ2c5CLIgHwTgT82YbYpIjE0SoHA
+R|profjob|fTGCIpCDKCwiKWJ8KLEAIt5hGaewEZWLL3UzMLhv64G35KoaBIrnKYFGTc22KbNUz7aWKvNUtvRUTTV1zhTVNxRXMxnA6SICQyN+lLZQqGVrimGZ1LR182sOG9WM/5PlQbLLF7kbRov8w+NFuzkQ/1djTO/Ef9IMk57j/5zi+TgD1i9sKRnH5XIo9mon6AtpRV1th1wlzXirpBlsdTDSKnqK4E/D+nTRwEQE9hOo7I9FRMpIRP0oRGQgBFE3/lA/+FA38hBphR0irZhDn8R7LwxMLyRP7WSkinVZxZSlTGOq
+R|profjob|yVpjrqTPpeT7gn8OC6FhETQggAbFT0/49ETPoOAZFjv7hM5ekTMscPripiNsGqKmTSnhH3y2bzE86B8K3jCqmSrOP2MatSzl3SXeRczCANuWUYRg8WGpYY9vnBz6TXD654alKjY2dAuWeEmAW6E+qCBD1BYmktrqxUPqryP9UI1iQyIWFFswPlcECUaw5aRYZAt62VJBlHtbV1utK6pWNm4szH7j5kK/r/EB0lPPpDdAepdDOs6AhtPVb1qzLeIyXZZ3ZWdFeKrm7ViMBtq44CRfy4Nv+VayleKtcogVdUsz
+R|profjob|R75W6rXT6uN+rMrLu58dsz3UKYJc1bz7TKxPQqxBEvNy4rNi5tvBzQZjkl129e3PQ0WfW7l6Bs+A/i8WP3tEC2C6/q+rUP2s/5/gOev/Z/3/ecm1s/5/1v+fs0p11v/P+v+zIdaz/v9P/pT6/1P5/vE5oP+Duq91/f8qM876/ykejMtORD6XgAxGZwdu0MwB2IpN3+YLnQwteBTbzM9y3o5f4lPufy/58DTJP18czv9JmdLJ/6ma9Lz/T/J8vOjm+Gwnn2jnNWgk+Gzk92yl9+wn6xhO7tnN7dlP7dnJ7Dnr
+R|profjob|JvYcyOspLoE0snoOJR3p4bcvB1U7u2YvoWfZ15+fvDNZNDLZSuNCy2ASz14Oz14Kz24GT9FWK4tJP31nM3vncPLOft6QTurObubOTuLOTt7OPWk7B7J27knaec7Zec7ZOZizU5B7I2NnI2FnK19nI12nAGkk62xxhUaqzoFMnUOJOjt5Okem6dyXpfOcpPOcpPORknR2c3TuSdFZyp8x+TmH03M+XXbOweScY3Jz7k3NuTczZz8x5568nPvScg5k5RxOyjmUk/NgSk6xRJ2EnEPqSScd56fOZUqZjLNj633N
+R|profjob|Nyqf11OyiIrbPEEfB+w/qurV+a9KsR4YhNo5/+NJno8nPu7t6OeD2vlZNz/r5kO6+VmoPP7T5P+OXIRHFwOH+L+hGR3+r2na2f93kkf4/6pbKbZmijSjyBl5Fan1czl0SjdWErh3e1CxOphYLUSKHxuVeBhaCw2zhYU9hISh1b8N+9zurQITXCx5oL1/XnSqWUWzNVrUUk1mtlFTGWvhplum1Z4kEA9KC79GM10cddjBPSz3zlx32pQWau05U1o4tRHq//YNCwfxcEAoOe8xLgBgsWo6RU+P2YA7t8j+693J
+R|profjob|tMWapeuaZhn2U1pTJf8XZvEP//7jf33/3S+PnQL+AP83NFrnf6fy/JcZ5/ufJ3kOn/+0/fztM4WarBlTVE043KWHpXA8ZFuO7s/CkyJdKSO8LcIqyNYYRKNoQVnI3NaggXY/GOJo6obzrbMRjqZyO7VvWwrURKcFQpaqmwtTtWxDN1S96LVkCAUssFHDkDyyglVVS7EY0xYU1BVFUwqOKbAqMIXGDd2m2IlhWRIe8XVajTSdS8LgqUKFzLKbMIrqyCHiDA35M2wNvfwpc+7eSEdUs7DqAESAwjRqL3SdqqZt
+R|profjob|S6mDp1RpgnecnDiJHTfzw7ByT9ff2qyw8YFD8d1AeX2Zp/MhEIF8mj/LL/LK98amArez9c7YWoX16sFwYNQL09YsU2U6/UKGlnPX7w9M10zV7q4Z6rq9JVOoqlF1YQLt6Caz9PuWjHY/Ps3AqoNOYV023YLCcJecg5ZCDXZnuYGCxJcOQkOXJI4FUviWV80sXSl+DY6muvBmArGaSvMgT2fUoMUeuQl7swCLr5mdr2XMNDnB4tgYg5oIDYUZRlEKu1XMOQgmS7UNs73HmUltIDK2MKhhGVTXWk059V4H9qHo
+R|profjob|wPqYbtsGo6zJK8SRDYxDUOzCNnXbgO6ZaViarFa7IaqNvwwjeX286aEovO+1J3y5NFyVU9Vf2lzzDJdZluLrCrA5zbKtpaF5zPeo5nuua+nM59zlnk4tavPAs3zfLhqU7PKNWH35LwG2JKkBxiZjNby7bH43lfq7Yg5UoOxQjVJlljUMWeOiqjbzdv4Nb8SsmwFOszowREkYwFtLztBcOAUwtCgwZ42CGqGqZY1qwZlu2KBssPJDW5232tEkoLF+10CiptnrWdUpkK+xYMBuFdXSVL3XNaUMDFxlsGfoqdUz
+R|profjob|zmO/a8sa6lkFvd3QFxaAaGBMs17HYGTDRrQGO8aOWj3j+vR71kyD9nqmpqqZlrlgDLaQRVXb6nZtonZnG8OTrZQ9t1lNvbsMigEeQMTa+L+0aLxdgFdoG1tVbUnSlpjtfoyKX2eIPxzpqhPablSe/GbrJM2XbiF9y8PgwhIQFuTsfHrUvGDy2Ad0e4wg/ITHlm5eZJh5U3FQIikqI7styRNBVkTQHwljP1oIR6MXufFNyzMMzI+8eYP8Dlndu0vyBnmbYFr4IvhY9Sb94siu3r3b60h+fSm74QFBEUTYYkFV
+R|profjob|IkNhZt8QeaAuvJ34s5WALAHt2i/8qjqCeT0rBewc/Z+iLbkUhGd5uHHRM+1mxRivSIpzQkDYEKlGklfopxXOV/SjYg8i7A35z59/naswRaCDOH6yi/Oip0Ilg6aEBkNS7uPVd+LB/xtOfvrxO+GIFd9ebd0YhuFimK4YOo5XRa9Ozj/k0ARaBtt16mYc5gOdv/n7BDbXu0r/djY8XyfiTgLged3HiiRLOS2Jv9vwOP8GXdvX1XBhoPNioHLkrz6+LRRmvBjAYNLFFQM5KFlkY4kYnHw3xf0CnKIChH16Pfsa
+R|profjob|Ty07978f/bef+Byw/8XfnfvfwB7P9v8pnsr/vwkW+PciW5/6/j/oSw3/DzNx/Sk9r/9Jnn/9F3ERzHOz9YUf7L9d5IPwalwtmiuaubR4oIKA+8c/QLyEOaEX/AP3ydh7ZivLXeDx33yOHdx7YUpcUvLFRasjr0DhVS4hIfYDCyE8n3vh6sC1MiH9oVpx/8w6UFWgL06s2Q/tG2V4Y5DIu1meOhf3cMjLj907OJ9e4p0y1DPmqGfs78xj8zDe7mD8La2kuJE2R8tyFDA6yj1W3T2T18YAzW/7V8ca9+fKaXuJ
+R|profjob|6AodrhzRvjtlL1sNdEDGXEp7ef5FyYOfxu8/rp6qD2Typq5PkP8q2KsviP5UCDWfr5z/N9cfebyzBkngRMvHVAIO6n+w2J34H/Qc/+M0j2YGhmkEAadnZvo1Ps39L25hL0DyPnIfh/a/qXX5PzPOv/87zfNxJlwuwtk5K39HJn2mMpxNfUwEUrksK3+sDwtVFpW/2LeqSvWv9ilTy8L6F/oN2Or3/NRQMLQO6H3hUlxtkRc4xC1JoRCriiGxEOVLN4zCWF61EKGdN1vpG33zDptJuRs5wq+EZfjjBIxt8HWN
+R|profjob|99D6N/c/utVRh39sFnBg/6s6M3q//zfP8v8kz5ty0QnVrxX1mpnvSIBu3y0Y01l4n71puaXJiJ5qbONK2tjyQGXx4Y+Lbuua9o406xBB+SFYxJ5NLdPguhF45iDY8UgVjuB7sLLfkValGi3XMJjmecy3TG0Q7ni0hDd6P1K68o40qtQoASaa5ruqqZvKIFQAXUSJGyBC34cx/zv35t8FOwJbzZFHUls3/X3H84u/u2kMta7J/yU74qacZDwWYLvY3eVrHuehLw4bUg71szzD4xX0zP/le/KXnbcgP0fczRAs
+R|profjob|Jy4UOr/+9D/f/YiVeIzn5GQdrtY8RTc9J1G4CaEFNw7I0gW7P60QzRadcbBrCisu1BHEprrZn13L2/Xf0oWq8T8p5iW+UuVbtjDV6p0p+J0xHUosYPiSIzrl1QuKn4DNiHBtaZHiByolYPqIewMqfsbfKvy+cyOZfkenwJ+w/m4biSkRh6r2p09txFV2rcEC1PjWq/bxZePIUS7py2vyUrd9Uwn8/2fvansbOZLzd/0K4r7YixzX3V1d/XJBPgyHw9g5xzZ2fQiC+CD0q1bwWtJJ2qzX9+fz1FDSUiL31j74
+R|profjob|dLlEA8PSUmR1T3XV8zw1U+zhZgp98tvFzpu02nlX4m6oedVDv/8u2nmXtSZFAoqm0j85PLMX07D+z49drrr/SYvFCA+y9vx7+WqCtLe8k3C4bM/2P7OXUz/zQ7sx/zM/suPv/U8s/uuQU+878eCLt2/948Exf54n/97o/vFjl/8vTi/+Bur/r7n/Q0/8/0jHvfXH73If6NeOgY/d/9HePNR/mp+e//Aoxzcvvt4s/+3r1QIL/7unezdP926e7t38vzp28R/BO195eOT6Xyve6/8w+PGE/49w/Hl/y+q7J9Jt
+R|profjob|d6T6DT/X8bmSv1yka2lv/80hJGonZrsR8/X2cfbGa6WMm3cmRpDldlzOr47/++pmrw/Em1y3km+VLG7/98f5re347Wmdx7nZGFdeggV5KOjp+dnx3I2Zr47rae/H/YLMz3vn3WnuvPf8+/f/nn+fMfvoySf7Pvl7x+nT8bc5dvEfOmH5cvr2D98sv/79I97/Ndrs7f9q1dP9n0c55qZjCE0ywZlhMms7uckqvRmHNa9WbuSJ7UqtQrCsdDTKrKfB02TGlR39tJl4mgZF0+LTq8uyzHRiPrn67eL9RhBHOV21
+R|profjob|3y1u/7j4l/dVxCJdL7ytrkVTPB9hJvOtGZnNRKOlYdS0Hr2zRq1WE63XFrKAnQ1xXMUYrDIb5SdrNU0UMRM3BJnLGP1m8enbdLWIZrLjZJ3SNI6j8+MK5xRgN07rFZvJu41HwI0rpexmbcgZ5sFMqxA3xoy0eXY0t2xffXd/EzSZ4EhxXG/0eox6Wq8HP6iN1uPGcdgM+LC2YWIiz9EYvxm90UzrYdjAd8NojeHtBCd5HsHK8mZFsEdhE5V3PI4+mjjalVNT9Jbh7DDBllZm2mhebTbObrwzxj2Y4OsfZGob
+R|profjob|NfFmssY5Mw3rEcs6kVLrYT1F69W0ssNmMCEGmWcYeBOU0+shuBG+wgRWN1OLahjHDT5LZq3CoCdtx7VZ8YrJD3GFma3GiGWya5zrWtv1ZjJuMwR2flhr9ewItd935fysn57MHrNhGHQcx1VYkYmbSevJMqY5aB+8WRuevz4yrlejotGs8GeaFFk5g+Cn8WZJSZvgB8ODG9YIgw2CwRMb8b5HPIYwEJZ2nJzeOOWN42HgacSixLha83rYTguAN0fZSo2buF7pqAcsVTQbnImx1tl1jG7lsVgr+I8JwU9w+MrQ
+R|profjob|pIcw8oZGF0LYTmngqCbaaO80xw2TZq9XeuJhiryCc9ZGO2UoSNDGYb3maeVWk/dkJWQ1pnQtl9a/k/8fX1yXeWZBvik0rCQUya4QsnatbLDOw9V6GskihNdYxwkZoDZRj/AuW8+If7brcfHpWXv77OhPb9qbdrW4KannS+/z71q9XJyevc/E7+Y3Hs91+j8vMIfttjRyMXX85g/P5pfoSvTJ86tXi0+/PD178+MC/9r295+eAUJfv97O/Uo/e9IK/0DHLv+jZJeHP/za7f8fvf6LUN/jf6Oe+P8xjts1X/z5
+R|profjob|k90aZ77rNNc4812R1Nt1O7s63/5BPQ/b1+c7a6c/tduXDT038vqrNycnp2cnPZV2/OpNlj/Kno/bD529+eHinbxknvNzK69cvEuXl+dv59fcc7V9WyqlvW5y53D7cc23Y16WV9uPa9RH/yQXs8qbmhZfnZ+1T54KlV943Ov//KE+n/s/Hjn/eV//G3rK/0c5fskV/7vboB+57P9XXOoPaXljWX4s56dS/IxmivdvxpBvz5Y//vRLWjDkivSPF61cL28381tevUp3G/pZW9mZqFXNziuVq6fsbPFG5ZZd46IL
+R|profjob|p5i05hYK5KDqUO+U1T8UBO31f8rdkV/5AvDH8t/bvft/qOqe8v8xjl/QD+nUXj+k2+l+vOmHtOpAQ6R8GX6vIXLnw3cNkXjpIw2RpNVjNYD+3zjhv7z+e9//OK3S9nX97vGe/6q08w+//2EVPeX/Yxzj1+tp+fnw8vPll5vFzpdBNl98Ob1cfvnFy2+XLz8fZF98Z7SPzZmcTevOFCYP4OYYrM6q6YCfBgTYbOlWpaI4h+QT8kD74Ewyi0+1Dgu5k331dIngf82xl//zAj3f7unxK43xl/Nf7oc91P+snvp/
+R|profjob|HuewhWx22ekUtYOgdTbrRp1lw52iXHGtFwjcHGoqtuYUtMfLIYOUKBH5xfsa4bNjcN3p9fHx84t3R8AE6xUnKqpTLtG0bFKm5mtQldiFZFpTOUQXrenGV92Ymza5EqnYadduOkuv3/3UxCxqxV7IdAqIkVxjtpig9d3FkGwvjTFKb9V2Uj7aSNH6TDUa30OqzdoDZo9R2cAyI+C7bplTDgauMF3HAoOmJ4NygKqVvbtM0DnZHGymUIBnFecWuPX7jri1nLVYTrlycRFmOWCqPZNuynndQ/HZwwdIgpZiZG/g
+R|profjob|LpdVaT3G3gI8HUxuhyw36Q46igDchIlxarHULPuYFVQnqbOKymri3JptrncTTSSOXqXm2PbgE2UdD875ep5zdsE60z15q73zgZImlEW21QZPwq8ugSYiB+B8wRo4wh+7AvY757nUXcvzpcV0JTd2jhoVS6loqmW+sZNzo1rvbuyUvL2xg0qqyY2dRrH15lJoLakSfd+1u3PD6Eh2QIxaq0DWN90swXvVBCoRrvC2SfzFqn3mTA4VXQfsVJdLajXVZNKu3fkSCGyS7DqVmi+66VwTewWHwoDHgkesKblkMpwE
+R|profjob|l2IhSbYqpFIUikUdbSO+Z/M0nRxXJWa7Rjwq9s352n2GxyIyyjGnpAvCOuaWmo3IsJALci/OmVdDKKYF1J97ZrexQB0p2VowFQkVm3hX9+KQed12TDe0UE1tVavskW40R4m1Dfa9z6bvmX3d6km7nGccvPVB0h6rgPxrCAdrfDGlp2hzUk02cCIASeWEnKhYA0+pJZsC8mPf9GU7kee1bo1rSgB8oqpMKlx9R+DZ6mozcIIVdgiRC8N49UhHxIvniAwqOAlV1K7x24ZzSQ28ITFWSyHzHGP9HZJLO4rIECOY
+R|profjob|43qoAXgRZS1Ie0u+G4d4V+RzPGD2WNrXPtu8mCCWpq+WL7Zt40eGM+KLdZ13ErXM3gH3eie4p3cAm2wCapNXNiDcVAjaYTKhu2pNQbB/cKR/xSCfT1+uv/7Dt8sXdjtYSx0Ix+yAxDXDDwkwCGBqJsEtiB9fPPeEMEEeYU06MkIhLLmlAEeUDw721fQfy99/8dX65fIFb4cCRISGwEai5yKn5DuWFDnhKjNXC5emoHTVOedUIPEsgq5wrwBgybOPD2WWL9yND7XVDRHqk+zaB3gN0VDqsVenI3A4e6QiVx1w
+R|profjob|tsmFUNmRCklBaYKwzD2IlDF+lBCwlAHpjjRSwvSsDWvVmwLeVM3cAyjDG8O1g06yrkgWQJMpzvgWSjf3TkCe2rRLbx6A4Hwh8bcHogIHDLIEy1pnhGXgd9cO0IgEZI8lCtWCTZRHECptHtq+Q9/vZzTzgDpdsaw4RRCnNbVjqS1pdsJEHeELxgjd2gxnR4YEbwWUBZ3dsg0PrWeSRqMZKHNR8FoE/JauAZSYNdgGvFTY6JCyAnw0j6Vm/Fbm4kx37tEnNhbI9NC0PJ07vamns/G5iSA1U0E6zSrgT6qATERF
+R|profjob|Q/6C6e6aCGpLnpop2RaM31jwndoB41fzpGvQxfmOUO9ELgBhAwuJ9VxLhSEQUtG9I1ACuLoA2oWsKtive2Z1yO5xvsnfBuGhK6VUco+tYG7AId+5AaEhSODjpiEKEBkU4QnwPqC2kfgbgFTtB4yfmK35UOA1C6GgVELEVgo1IosqiMl4CyJC2BAZV5KYjUjwYrwjZB3OppP+gPlti++R01A1wHzdkwadVgWUL16hVNMEZs4QMyjogKlWB4meEhu0SwzA18o1H/bMydY28h5GwXsN2OlBUQ4ivivZjlED6sBG
+R|profjob|mmtJAXmGbNIAb+g8pyoSCpQb455t6WyeEzOA6iCucgBrIlEkDhmhmOZWgHrTCgBBUxQVk7V4G8OmWgKi9T6fzIbvugyOgK2JHczLHiLeAnKp9AAthHhv1YskShFrYItKEpEWOJZAB8Em2ed1b853X4kVpgKfQWTAj4kJEgCqGaMICXZG8ACssKCMEIIgayFmCI95P0TIuOKj2cvKk1fHvV2Xma4aVF+PFaJMp7kVYd5cSVoRKgA3+5YShOb7VoRsqOkUALdQjNKK8MD2tsMBiQPqbPAh8NRGBWUGr3uCPVYB
+R|profjob|IFKstSoTI+FJJci4AL4EoWssfM37ECiX2mcZDmRoEs+2ynXxBvZmKEFouEQV6QyuwBknGQCeBw5DLUDvAi4R8vD8Q7tXF63VmbY1JgdpQhDxgtqEoO2WHEMYogbpNhXKUOZJAaq4Z1lHkZzGZNQjzT80fH3+/R30gavYYa7B45eQuxeUBXVDIqsAnS+DALMDxHqCpoHGK3C+BiHV6vz9XHnVj6Wx6fXp2U1ZgrizGc5jUUiugOwriAs4BPiDvsU6OUhCUHSQKIb4jBVagQxVqId7ET13YchX0M62Agkk3jyK
+R|profjob|hgx5YhoTHI5I0RWaX5BWgkT2yAYjhWid90FlU8E/AMiC4u6er7ftQveYrFMTqMSZQ8E6VDxNl+RnDSeVVpHY64wUTCoWawx+yw1uBwAjr0o4YB7IKmWPLaAOlcXnAHnELMk3LyHqUC00jAH1jYKnE6OeABAWgBZSDFAum6aXdtAwUHV2iZ2VouuIbtsb6oggIldrqF4wDYYzpjOsQyphroAn1BMONRC85u9L6FvTWM0Zmzo4DEzT4OpuS4E81NJ5U5CeFMlhbtA2SPrclRNk8ckje6p3DfUEH5r1Vp8jNqCO
+R|profjob|QU0Q+BX6RqBHtsxFIeVji4HhqlQRNfNXOB3CmgsIJvdeUQ8rPmj4eNtFfNn6FrKx9Ihb8LsNkEco55FMSJoAbdak0w54hT+hqMMSOtca9FF1yB9kVNdW9QOD7JQBCi5pc2NZEyzGD5Aa6qcmjWXQHQmlsqgqxGlI8LkCO0F2FisFrcoHjO/0rR0BtD2I3KEe6SKAtAgeFG6qQ11mQtzDS4hGC0lHoPXEQGMj5aLXoORDDrrt2xPzYO9SIaoKaodak4ey0hrFF4cuE9Y2tLuOvV7mjr2aEuQchMHcsfdh83dt
+R|profjob|gUdIEs8SaRbFI6iNuCBE5kBBTQqNDt5ENY5o9CKgAcM4WSQDA3C7KubQIJfnJxfpchudFX5uPYM5pRjF58BxThlUW6CNrrtclpCrsp4YGKNAJwUBCh9BRILw3QfsS3v6DGOBoOkhIkR/oNbS0ZWOmARRqg68heBkQF0GkjeCnwJENHg1OikgtfEHzG8f/r29DJJLE9CCjELoYQV8VOBiJCrWnHTuwJ+WtCitVgIUfmnQeRXFgIMzD839to6cH1ApY0ATQupgyg3lg5Jr0VbLI0fBIinC2x4Yp1vKAIKiWiKg
+R|profjob|jcvQL5oN6K7HA2Nc31BercpHFFasobVBPxL4MTWodFAS6r0CDEZFpkiKviiyyGK1gWWgLbD6oegX08ev9BaFk1UQyxCDEX4yNkWHLBYty6IeUEFiIPnmPwpiyCcUv56xzApLTyoegp23l6c3JbbwDP5zySlnEO0OyOIDW0AWYB2FN7QdFhFiQBAhA+FqC1xjgy4udF/zbwFnfiDojMShQwuB+Y1s2QrxqbF6WqrPjEU2iCQMlwHpKAZ0lDJbRbxSczYQI+5exMxNiJ/JF6v/fZK7T0cMwDFYwgy9GXwICGok
+R|profjob|L4KFIydShFUutXUJdwglQDUEUgHZosovpt1Hs50Ox89IyQ6Wt/w9t7sdacEyknhRwuTGNZQXqAKBnsANVG+1QDCglpd9/k3rBjwP4QTlh5pUU/rgWHr5QyrL2W3L3t5evTq/ngfEGKqRb6oVF0skL5kAJvEsIa90KSgZEJXATwdF3F3C/HLDuyDqnKEPDmjmkzPLq3LZ2tnWkR6UZgnK2lXhGFCXRaUBGUQV7MUFbwCtozaFNHeRmvNykii5oauCrx8ci2SsWX5f/oAx58GKYSA+dDFiIyGMvcQZQC9XVUAU
+R|profjob|NuFFUUOoREB54NGGsEkamhn5qJT94GA8n5heXl2/qbe7FB/9T3vn3xy3jaTh/+dToOy6slwryQBIgqBSW7VZxWunEtm+2L693dWWCiRBedbSzJw4cuxc9rvf0+SMPZIy1iaVc3I5oFyWNEOiiR/d/b4NNChBTY+lljPwUf1MApVyDH9BV4USB8EEjQIo8ghSblvod114yB1GUYJBW6U5kRZPxzZFgFEJjMa7CpEqSuAbDw3uyB0QBqeNwjDlgbwoWIBpVA7DkkP8JNZTbJVSihTRpj0xlHICs4hzDp/vM2eZ
+R|profjob|gzCBSqLoHrxQADQgW1igrDAZFqKF4wF2JE4Pn3Zl6+HAVz3tFXF+bNTecMgCxkGEhQoml7XIzEJtAkOCdSyqHCgO5DaxhpvgAozso8dIFQ0K1xTBRutpbKu3CqtGYXE9QcaeBPN1oChwlbgOEQ2+lncEMGwNeCiHl2Jra8Fxgiia6HUTaky3wfa6bdLyQaeXZnPag4cr2V1SY8ZqE/GXzOjgAv7ZdYI85awMB6Nta4CGwadGPALIqZXwRdzasnyYiT7sjbRFRGmXSWAPNs4wmLJ0sL+mgqV1YjZQP7yMtKZs
+R|profjob|QmO0xPpbIRjg3Q7+lG/V5tytRGVj90EOoWZ4tsYGicFWrmKCQ8gbYBe0AEjcNTBwnee1q8oKP+4L6L5weQux2iqnXMkxejVO1A8sxxYywTp5gQiYzBjZAgWzLTTeCG4NAAAVROwJ0EoAgyz0caPe3iC/btBKEOClg3KVEsiQdWUwH8A1d1We6RbcAinTrZbocybLERDaQpYK0SofZCVhmyAf/pg9ssOL1RfN2HceIF26HLqT1R4UVRQ1jgh2J6F4xqv1dpj4bYe1D0CSVmcSi89Abk2I2yU9suM2tkFMC49h
+R|profjob|1uI0dIPaGMAkIMAWAPysk5C+HwEC/tBr5MNkUQjgCdaq5ubtYsad+2s50DIeK2uZAKWJts6tEQoF92S4hCHLy3QgdnQa4DKr8KYlnZmDvmzZFvajcj40J+rK1igObK2QADwq28C1u9LDkqMziG6EWaO3qCywAuIhSyH0dAcNrraLefHV4BrNqtfAaJk1GXY6MJEdEBzuU+U49KIG/tsyR2dw8pCDXAKYMN8Oy+fguNC8W8WMhjxrSoeHAFflAc7oXIVfDVVVysuyWmwtT497gPYGCWxL2AEMb1yDJwx1ttUk
+R|profjob|vBeTjWgCalvDjy0UHN/uLcoSMeqCf4Kr3RCWZLR5kk7C6Whb1WIOrJb3+VRbHe4gZrHuM8HJEq/GAXooewOp05Bd7Cq4NpPVGtxFbkIts7c1eGK4uG5lBcu1ef3xoVmsu6wwTazhYwyFE7vT1FDKAndhvBlIray/GoF0gHUwdFNgKvIANspaxufWtow9lovp7SI2np5uxRNoQLmMCyzHYWzKGlgBInVwb60DMLOUtSEQraDu29oyjoqNxtD7dZfDNsYAVfQSlWqY3BbLCQ2rG2FO0Aj6zGrn8VVaFsnR5U0Z
+R|profjob|/bhOCumPEGjmCJzXSDzRga3xIDAZZ2wtq1R1JbHFooB6SrIbCBgcHGTpp7tS5TKcvYbLDFBxiIV1sS0MKlA1uEXmJa7KxCgxRqFo0DvBwdheUGTTahgI9hI20LUYVF/8UN2rF/wKUwIeVdTPk3UQImwjVr1kzuRQYEwJ7mKI68LRMGd51zhGNUaaI5jGXxnVIXPpVbgAS/fjIi/thqlgmRoDGwDx0+WNLB11dWVxWxhVA02G6+BjmgB1qqBIGA+0piiu1301YCWcAHIYQobtDpg9ITfAdCudz0Oi2cFjugss
+R|profjob|uKxiZEXuGy8nimot6803az+Lp6F5N6ZY9yNhCh4BTkLHTMccN5NbT3fp3NViLCTmWgOATIP7zqm7MRjClskCyYr2poihi64u8sAeqSkKqahqKCm2qMiHt+E4B6GRFWCUzuPjIQiZAU865KCIYE8LJtoiZAy+YZebXMcuw3tCRE1RBCg87rOssX9NqDBmAiFkZ4ZAkRhhhraWdVGEFt3WyiUwOYRT5A1kGARukfVPmlAiE+vVdXlbl1A+b4EJsMxWW1d6xsPI+hVQTzt9lWlfETBG+ICXzOwuY7LYurCemeew
+R|profjob|yZ7+0VSqQ4N1MRgiK6LhzbaDJnbWN1bTdP2R6tct4GnrcrRheGrbGgEZkNVCW+F3eGwsTUmfFwwQxMFm2nVZkUGLLWhl2yBvrkFDqfBaOfqFLxD4CoAWrmWhKVknLQT0urKp6BL4UB1xTHUIxoA9muoH9GCQQBOGjewiwmL5Qf5ACAxXa5ksMKnOYHY65nyQ8JxhOPGkRdCdRdFoRQ0olfc31GXYJmLcE0MtkJiGljOOGPXOFA3KxVQt4Pk5aKZswXuQHyiKxzxDT3H7tW2jB5NsG4UPIUXBfQCvDF7aiFJh
+R|profjob|Z6zIs/inKCEJMC74EyYZxV7JCmuHaDBUVrT6qkW+IeBEXtc3RoWiA8bC5isTHLYCx6ljUdEh0RvwcdvmEnKBJMs6V1Nksu5gAfACqa9u7bkpZRXelWVp2EoBKsaKyu5Hjyl1viy6phb8jXsog81kp46RKSyBxug0rLTMvPm4jH4Rhjlby+sKHbAR45xBQ6nS4t3htNhp5n/rY0Zr0GhUAfON7TZd7oV/ywLpDau9kjKbnyzOLod2CHPXoW2ceEoe29MHeamRxITEehhYGYrHrNOyQMPz0IsGkfjWov0h6zrm
+R|profjob|ta5DpefhbZgNRrYpQJVM1gwRDGZW2GFBWOJDJbQpRhymvFK6wuphBBg4LJosiua1MIBt9u+9JH5pBj8aZVk0GjBYFeXVrZXHsMMd0IqK8c1bL0vqjfhTV5R5ZTMX6jYwllXwkMTbBL2P/srqWlljTTsnFKUR5YYEVr6GnkloOXi0UY676WLd4WqdhD60FvSEd9/adxsR2jgkBoe6ptOyvM5ka9CYGAzAMxGcgpdqO8ynLiNmVnhhkMTgCB/I262dNqQdT4DxoQ0S3JIIrywmwb7xFAaAmnVGgjhNVjbAHGY2
+R|profjob|6lLiP8ragpSCKbYb9cWyH2OcuvOoWct4YhchFLksi2ZdEObceQmpoEKxEyeIraU1vghcW8gUK7cp+xhhHl6LN4Tg60h3hE6WfipZCe6gkYA0qmZ6eTATyAS36HJfazgXZiQHJnd5LBk3v60NN0LNkLZA94oLKsUege7AZADfwhQV1M6XsCDHJMaiAw+p2/gAG4OAiE5ta80KV2ZAvQYYjH31uKjYyVKnqTOP+mERrYvynr8qMAWwnwWcpc2Dr3NoU1uAeLbULjDw5GJ+OWvHCWtl3YZHtFbIAzinxkjUjQYJ
+R|profjob|1L5lVIOJBpXBOIPz6yJksqjQQGJlAW/bhL0BNmvRK4k5g8sAjwgAVTEdGlmJqYWaWB9wUxYj1pUt0y+j5wrIrSx+ttscoSzuLl9NZwOccrgc+sJZUwTZwo61b3TpYYqyNRHwACetZXsBbr8CI1rZ/SV22YkmFduM/Dr8L+t1XZXZCIP0guhl4YiW0IAgQw1YdggukSabQlD72FoZ+wDXstU2R7uxBADmwyHjbpg9nfbMYnQCQmSL1sYS85R7uGvbAN90XjO/vezLAvvwMCZrtqn2IGHtP1A4sKzzGW5HNqs5
+R|profjob|2Q7JrDGAiFLgB4wC58io+1bcS+UlMgwpwiFmZqtyfFhqiEIibIRPmdAZ3zm4VAfhKWQTps7EKUbbFZ0sbhrZSCuMpq1MJvS0yq46KEnOkUp/6T3Sv+Vy7fy39uwXeP+DNdfz/wCEKf/nk5RfzxHgv3RP/P8s1/P/ZePYp37/o3bX3/+U6zLl/3+S8us68Xf9a3a014/n7KaTf39tJ/8mQ/1bKj+c/ykvAPz5UkB/Qv5nkaXzfz9JSfmfKf8z5X+m/M+U/5nyP1P+Z8r/TPmfKf8z5X+m/M+U/5nyP1P+Z8r/
+R|profjob|TPmfKf8z5X+m/M+U/5nyP1P+Z8r/TPmfKf8z5X+m/M+U/5nyP1P+Z8r/TPmfKf8z5X+m/M+U/5nyP1P+Z8r/TPmfKf8z5X+m/M+U//l/o1x5/+P87c+e+yXl9ve/uev5n1lepv3/n6JY2Nme0XumfGGKgyI/MPqvk/EF72/Olds3fj/P97pm743JKnXXqOdHz9Szbx4+PHr24uSLvzz5/OjLQ/UHrd56d+Lyaz8ePXn5YKhr8mxMKcv2Df9c0uhfTdnUf1Dg8N7JnzsF/Bb9h2Ff1/8c+pX0/1OUnel91U/f
+R|profjob|KsCa8KV2fEHjgZpfTE+ns3DWq9+rUgJrlW3KQu2MWWH3d9UsfstXkgkuuZDzN/HiLLz7TK227KrLWfMqzE6pcDpT9Xz5aqIo89dccNacdJdnZwcqM0h7yyVN6GO/u/pqenamwulFjOdxttyVF6RqdRFm7fxc9cuL6eyUK+FYC1VfhOZ1XOWTv7o8jWp2eV7HC55+Ft8MOedT6l0LPg/9a574NM6Gt8ofSGajvFN1V+VWjbmoimemUrAMn3bzC+mPxbyfLqfzGR3x+6GOzc92lRAz+eZ0ftbSKRJzbsZbe/4S
+R|profjob|dHq6q4I6n/bnkk4pmfXCF/kvvOulb6QHz+b92Ippr4aUlthuPjUS5YqDH3xQGrRUTGH5gSHXQz2zuTq9CO106EGRwG1LFf/rMpyNvTxgKzXvus/UnzfGase7+5/xuKYs90TEuuLXUTJGJXd/GaZnasfkWg1VxPb++kmZBgfj06t8V9tstyqd2smOmCvVrjcFf3vu1PJBpne1znZdUXGFPpLnlQDEfcbn2Yvnw/9Mpe509bf89ruNB/9Mff3w+ZdPnzxXfxt7/O9qR64bH/Nvwye0Y7j2hBb0ani1NcN1EbvL
+R|profjob|noZ+O8UfXS5XWbbqgVqn765bI7nO8tXBML2Z9fSgPMu9fvhYtdOLoacXdOPOlT3Z99dSGFKZYINuqFW0YOxOQ2+8v0iWKVUd+2kb6eGh0iAzh5sGSaKQV5Tn/djRO7KJZUM/D5RM/Hfq2zg9fUVdy2HwJXl5d5xkMMn5RRyFdHIAAwN5uWjRB5nL49NNpaOmsyXzi44ZJvQDNez4OdBonmSJ9tLfu/THyan8/5w2vx+Re3LHvb+LOi9Ws1nUCf1Qkjp9D3PzXRyn+8YAydETw/wcmhqwAevAhBp8Uq8WoWfk
+R|profjob|JjtTLNb6u4PhyhsXcMXVVcwDZRW6cDGVZt5MMt9I6d7Mm95V4zZqNey/k/m/+9FJOerXcq5WK8LMlWGDkYpvm7hYSvNH7QznmKWN5/ywqnvzQeU7lOajj5rZH/uowxN+ECumSoxRf9HsSYxc7cgHzfyc6kTFReDhs5fq8PHDw6/U068myW0kt5HcRnIbyW0kt/Ej3MYvzXZSuV6u8H9+P4mzNz93EPAW/m+NK6/zf2Zt4v+fotxVYsXV1TBgbg+s+evkrhwCdx7/F8KBd9V4xtT1uOBdNXszbadhrz+fTprp
+R|profjob|/GCwhKoqzcHGN4IXzs9HwLIENV3O2it3qtPFpWr6N1dqsLfXsJguuBrE8z0wCLC1N1V7D9WdJbDs1fdYwFmPFzzHLX0PYly8u6N2Bm+Eqxz9Lk59JjAPfBlOY39/gqmNZwNsVKti9k2xryfATmDyqexuPnl1WQ9fZBlfDBWrzWL3i/18sngXLgQUbHzu9jU39KGLyzjr50C6seh9z+fL+es4w2O+/5jPbbZvJ0NrrkkwZl//rllcTjYbOX5Z7JuK6u6q4b7V3R/uUM1lG9STOV3Mb7PZ+1/DSXgD5huOAPwT
+R|profjob|fCBOll1mwaXL88uz8RM1fDLe9uLiMqrubB6WmT0ZLzpZXMRm2oOXxzME+yVPIQ+JR9np7x+oW0s+OZJUmMFx3nL5l8CNs51v7qv/jPOZ/Hx2MQeL063qD9Jc/ejxd5MXr2StGdlqISgLRLSlVjM55Mv1hf1c+MaWS/PJ8+Hrf6FFZnLtg+V8CXBYlQGfrkoHDRp/GxAon9eXXfegkU3/fPh+ZCZH8XxTqnG6yt7/VVZ6/WvhdbZxWb7+rfL5+nNTZNpOHrTxzYM3TIlVsYV9JD8y+d+U/F9U/6YeJCDwaymb
+R|profjob|/v/8tZwA+cnPf7VZceP8V2fS+a+fpBwefQGqHw8BPI/nUGz4wtH0jwfqx5wMuT4m4bbjIX/SkZB7q5rlx56cQLD9fi5enYf44WJEfjvbe/vdv3KXXLmSFt8uYrPcAyRMO3zPHpZURY/HaiXFtC2crYxua1dqOQEhq13elFbXsXaxaExThCrA16NvvPe606XLaj0Ze/sqj5Rer35Sr6fzONN5nO7e5PDxl19/sffwyX+AR9uWflmd0Mz0mV7MZxIPBVv8971nf3nx9JvDxyeHL7/4/OTzr79+enhy+PTJn+4d
+R|profjob|qHtMdqCsQIKTPp7KHf2BQLJ7/5z8+8uHLx+OtQ9R28N7vbqr5O8hSLGr/jydtfNvJY6yfNXvDoB6wCIg4ihy7yD38dMnzz5/8ZixuHN4cHz8kp7rj4/rOPtHOD5mpPrpMn528xvAOPbo+Fg04fj462l9fCxX7q0R9p1d6nv5/MXTo5Mvn548fGS3CbB3/pkgRyqppJJKKqmkkkoqqaSSSiqppJJKKqmkkkoqqaSSSiqppJJKKqmkkkoqv8HyPw7K0IgAkAEA
+REND|profjob
+RBEGIN|profrun|0a1fbcfbd8a51478f6cc605551c264843abf7fd3d6932c9a31c500142615ed4f|11706
+R|profrun|H4sIAAAAAAAAA+xde5PbNpLP3/oUKGW3PJNQHIAg+JhZX5295/Pm6pJLZXev7jZJsSiJI/FGIhmSmkcy+e7XDRAkKIkj2Z7Yu7ViYot4NRpAP34AAbgo8+tyk1189hs+FB5fCPkLz/avfGfC8VyfCeo6n1HGHMhOxG/JlH42VR2XhHxW5nn9VL5D6f+gT9GM/6J0o2mSzZZRHNvr+bPWgQPsue7Q+Ash3K3xdxl1PyP0WbkYeP7Jx/9z8i1IQLpKLslr/tYh/GsSz2abNXHJNK5nS8I8kmfkPvAizyVns2Jz
+R|profrun|bpE6LyHFsRmz6ZcQNRqt83myIlO+cCziUGHBEJK6jNMsmZMiLuN1ZZF5XMfkYpmvk4tNlZQocvPy4eI/Lu7y8uZiEcQXRZ6vqouC0QmI5ILTSeVSOok9d/Kf5AxeSZnfVVD/m7fkusyzmlT1ZmqR6TUwGW/qfBZXNfn3eFUlFqkSqBrKWGQWF5X8K0L+7P+r8mw0+vxzEk+lwI9GcblWjX8kWC/2wWPbC49dPzySeXKbzhICTYbAbi+UyXVSAs2EvCIvNYUrwkma1Um5SuJb4KnMN9m8Iq+s11bzh9xDPXW6
+R|profrun|hsRNAb2UVCS+hgKEkTvgbbIpoOOXm+ymIvk1cc6vyDouIXD27XdvvnvzdoLNmlQFNHgST0F5LXKd3gOxaXKdlwmJsweSbdbTpDy/JDIbmQEPNdRSk395SZjN7y2yTtZ5+QAlVfwfIJ7alLx9bWmOy7RKSJkUeVkDiXia3ybkS0eQ31skJrNlEhfkLs1IBhVU5DWBBLLK76AZEFkvE6hhnsYZsIOcQQp0EqQktwlUK6uwZLuIfwnxVTpPSJZjlZACRBzopVcvKmhAmcSQVcf+nsxz6LAsr5dptgDpg3GRdVfr
+R|profrun|eLW6gqaui1VSg3z/pdwkarDzEsue3cYlMATtvU7LqraQScWpGjkpbNBj8RqKSc4EiUGSQNTnoC1mI97895vv/lc1gpxBtTDkTafp6udXBNsOld+l9ZJcJ7JjKjJOM50FJTWDdqjRGZ9bZq/BwL/GcQEhAhnv+rZextlWvlcWSe3EhvwwiNQOBfYcOatW6WJZrx5Aacp0VuuyYyURLWkQZnE/tsjdMgXpvss3K0hcYUtbeo6LFIG/IolvZOIsRpGQMiMlBsdY9phHlvlqXtmj0aNs/CO5SSHtERhqGK4ulMxD
+R|profrun|3Os9cYq7s1cXr89lDqPVr8j0QVJS/a7KVjLXdsyrRmzI2Tq+v1inGRLruAeeIayEjzyOHieTydF/oGEoIVC+ESd4g06ioa9eHO6ol0DA74TZOHYqC7NkfCh/oOdkrJCxgedZqjTEwpBIahO0QIawX/X15HE0arWwwpaixF7pcQApg5JgNteguslPm/TWUqKIwrOCqBXKDgaAyOyGpDXoegXKkWfnl93wdWJvKK6MB0vSieVZJ3yv2r7W8qH7uhEOCDb26AwZyjd1k3yuM4pLnePA4HSDkeX6r0nzRwa++CLL
+R|profrun|v/gCuwrkYQ5qkObYV9VmsYDGJtKu1PJNG1kuhTlQfdAVQtZAXzYQgc0rczTtd+CUFts8QrEsgXZBryi7EgAr+h28ShFXFYyMbCgj8QKcJqhh535++VU1AJ1sljyQs3mxhJ51ye8ullfEcS2AUJNGX8B9geOBLiwrUFHIeCWHbZYDxZfKtJVrMKKvyJcwYndoqUAZNuhxLohHdRkKQqoT0bzBq0V+B+6AmqJgaGnjti6wZggqBgq0z5I9iPrrn/9NRjAZ1m6ui99tx2PHwpnkF8WhbQ2WO0JTR6j7Z61fPjeV
+R|profrun|k4cCfzybejKaUQa/ju3yTmo6gWpVmQdhKIsx0RTjqpiioiIpRgIgkNpxG682CfR/Z6KVmqFHf9F1o/LxkG8yUW+6l6ZJfZega7rLSfWQzapz7UxgKBuiJnV04UbN1RU6KYhKEFZ1PhfKW5CC4g2uZQUeIZNsGMgEbHyVG24XyYDtrZu687vMVhY6uq2iGJhozfpFa82vyDSSRiFCqx3FEVhtMATQu68vYGyKvErr9BbxJ7kGBwQoxW7sWiTt2iV53CHwSP4gAcFZa9gnhEE5NDORNOnRYooSLyEa2PxIwZuo
+R|profrun|c1bQDW9TBDdJldQaKiUxZFdIDLrKlqIWQVujTTUHcme7enNuKI5N/itLJPC0wGomZJrfq5clkAEX+Kmx/r5Hz/+QRbAv9qy6ffY6Dsz/GKPe1vyPu8I/zf8+xrOpZxZA+tnSWhSbqFpH6+XP8hUUpn0vpPbdyfc6WRfRTL5u6nQVFbO6zQ/Tunm0TqdWvSzzul4lUTxD3bZmSLtOYpV9lcdzZqnpYRkV6bx9h3zmu2TADEPpkUMdbwJTROb/hYlLwS8d+jeL+aHjADCF+d43r/b8D/7SsZgdCIvR0KMWtxwm
+R|profrun|8+6S4wY5NkhOUCTn98mxILD5LkXXoOgMUvQlRWaBOjj+UwwKgxwfIAdzOg5/hZocaxj0Q9vbpuheUoOiO9yDftODJoMspEDxU0vx6XnfZ3f9b+7aRVzWabySSyXPUMfT9t/xqe9s2X+PcnGy/x/j+WVExnW8GF8SeCNjwDrwOsbVsLGFEbgghjH8axWW8xKIcGVILo1BiHkyqJbHMDsYa5VfIjCM6dbJVEIzW8ak8Yj8CnFjvRACcddyEQ/iWugemTWP1eoKhDiGcJVsUyAfGJL4LWrAsy4gETUEHAwAVoNX
+R|profrun|sGgYQHgnF4Qg6nvVCqgSePqxSa1056gEFSDjDOYFyL2KtWQcLm5gnG6ciu31WZtYNfUZNRJZJ5aIoN+7DLJC0rQ6UrBaNiBkTuh6rkfdMAwcN7C2Mh7IJjslUpOEtjICBTwhfOZxzkIoEHCvKUCYzXzKfE8EMAkKfc9T8T9qghJ/AxLQnSTboiE3QHKIzzYwmdRpCL7LWzNJpfyqCeb52pAGGYXoO0J2hS2ckLnCBc9FHTAjQmdBlcYKAdxI0dv2oMy13cB1g+BvY10kyeZPFHBgRsc42LCuQB3JWlDolOfk
+R|profrun|YUPVD7o8iZSHDp0oMrzlFGG3FJh1SxjwEBaRuKKJQhFFcZOD1HZ2X6z0qFdRlfxkDGZgazLE7V6Z977R3Dn8buYX3WtwuCQU3BIppc2yr4fHEybjEOdyY3hkMej+4UKh7QvXFYE5pkZt5shq+mI7Z298eahJOiNDige1N3B81/NZGIBa+kHYH8dOe4eyDWuvKzin+A0NtJeGfqe9FKWKh4GHpLzQ+ZTq69o8BGsSMC7AMAWi1ZpD2us4thcEniOO1l7fpgHlPfHYHmOXaqp8UHs1mZPyPqfyOtzmQnih+y7K
+R|profrun|63i2B04q9A8qr0sb+jzYzrk1vA1Jzz9KeUPGA0oDL/AFpSLwra2MB7I9obyu54We58ulEU+0w2KzwAm5Q8HPQQJln1Z3PR9cL4B28L88EG2zDupuaAee7/jOsbrLXVsAdHHYk7qrqQ6pLmuo0FYGTrr7HLrLQV4dBlbzXXQXhtTxfXCoh3WXNfSZv51zZ3wVSaW6o7Yd4+mRSFrA1FMAnvTRZwausLYyHsg2qM6u4wSOB41AvAyltMygpsO8N+Ch74T4uJ9CoZupCPZ7XZkV9aY6MibbrJMynWGu8Td//frN
+R|profrun|d1/98c+TP/7p1Tdvv/rmLTl7kSVx+eL8Ej/mTMr8jqzjelmRdJ5kdTqLVxa5XuVxnWaLSZGnWa0+UEAQPyngR+8zOZdM5uTtm6+/rnBLwSrPFklJing+xy0LuOh+l87rpVxTn1RLKCS3lsCMsZwsynieJkg3mW/UZ73zK/mdBT+V3qiP7dO0nhgcYepdmULxFxXUVlXyW0hLKcYPAj9t4hXZFLipQHOspVZ3E9QYYWk58g7tUqGrV9N4dtOlGonYnqiI07KKoMuidTor80jPp0Voiy5rkldRnq0ehrP7ttNl
+R|profrun|j7MKl2ufoB10mVGyI8mL7FvUKdFLj+/7yR7bKtxOxRGF76Td7WPB1cZGqaoho62HATTmc1AYB/7D/YAt6DroYXCOBf6CHo0OEfj5Yfg0OlRUOzC9iw41mQ+Bh3312zIIJ7djjDEH2+kH7wQZ8csuZ30kMQAZG/q+t51zZ8wVSfcoyCioBzOvIAgdN4R5YjjkYwayDfoYmJ+GHLwkuhFwNYaHYQDT/JDizDFw/eDkYU4e5uRhWg/jB4KClgmXgz77ztHLh3I9ASY+xy9A4PwE5pZPLR+q5QVczhxePmzIfNDy
+R|profrun|4cnFHOdifFsI33m3JUUYZwF21uFHuBhNn2/n3BlzRfI4D8NZGLDAZ7i+xwPH2sp4INsTHsZ3GUNHh7MY08OgPDqeSqCue/IwJw9z8jCdh4EJDKWe74OugXoc62DkopdPj5/DcN/mDqhn8JSDYQ3VIffCNJGTe/nN3QuMcOg5riveaeEMEEJIeXjEDIY19N2nv1jhmEuStFn0HrUN0WPTHmAYq4/tXUpyXySzXsK2dVaqsE6zKJZ+B90d51Cv4zPKvOZLSpdrKnMxmHsx3+fIvwPZ/G1aco8COKWACkHDIBC4
+R|profrun|Dh3QJp+5Z1Pmo9QR3Ac1FCGumwPCUhl7m0VNT6QbuKv0ypWM486rjI0MardBC9+k9dilAaIGgLMDm8l6XybbEy5g0lB4MH2jIXd3qIJd2qUG/aNsUxsR3+P4OI2UNkZqPP3HbcGobcZY7tA3huXw1ojx9PCiL+6+MICVYdYGd1IMfqTd/QA0MmwFrk4P1TSw0jy4PLCL6no1dbu05dgAiAOdcQRzvcCh+ivTeGejtewml4tArS9QIB94bTepvdeSIKOg226ACgm65jbLZMNGZNiKmEei+lgP2JOHT4CzlmDn
+R|profrun|uutys5tP7nRXefpZ8Jyb3hSOYtRDomNz//kWD1X6cxLNVnElUeQqLhfJeKv3pg+RKGZ1v0KsxIvkgZd+XZggInW+JWoOwEiWvOF8+1IQ/24kU3mRZORMHrlpTvXlpT5xgzD1JsvvsvNxjzF5AsjA3FrD8MhJp2HNpiqpvXjIA7FUGADQg/kMSKUPEtJI/hisr8zGKKXGZiwwxzDtcQLueTwIAt+jnpYneWokwtU3ih9tUCBweQ0QSxhIt+Hpia8kbmZkNvdB+qgfooMBey9Gjan4tdlbBhA3L9vPeN22srHe
+R|profrun|+Nbb12Zu0ZIa1JtqVeg1omZnmFTYAcMwYBb2GgVVjepa1V2HrNn4gPr1B2/f2PHQ5bbje+ATwSH7TrPeOTx26D45tEV4DCAgeHCVf3fkABUFHqdgh3CG6IZBR9jMhuunrnA49AzkY2HIjSEzTmjpUUJZ5W2Lugwo9e9/yGrceRMW6VNdWEujBOp0VyRPd3UqotlU+oNb33URU6X6CS2GqfM6Xg2iGIVhZJ6nUUzPAzY2vrEkcR3dK81QsqBMnTR7kCQBDx7w7YS7ivCAb6QP+EbygK+koFbGDPPW6LGMlTZS
+R|profrun|VtWA4jEeUYyaI4qRPKar8jtKaPFYrhmtyCgbhvKcqg2nv9WB2x8GT9z+8LGO3P6w98ztD8996Fbts61AN9We3Hc9La635UIHyfKnw2ynw2z6MNt49Oun3rl+ep7jac9/GMc/VvnCruN09Vx1HDj/x8XO+Q/XP53/+zgPjj8glQ0M/SWYj0WKRgssxvcv8NzzC4u8kCt5+HJzC8YGX9Cy1WhdXvx4BRai3hT6Ro0X03SxnmKe+po7+FvNixh/N9k1IiF8zXK0+31CJvm2Qs3BNK6SVZrJ9yKee277UshsgFcg
+R|profrun|ZLwCdLq5wzC4QfmLDj9dJcYrzAkxlCyiSsKdJpDDlEBSxwlCDYyhd5oS49IQg/2OhZYr3WyjuUc2soGto96AoK0lv/TWYeXZmkjet4NRX2V1sjr77pz8T5Jn+Pttmc+SChpF/hXvpqFv//QzFgKdxg8GeIpSnYkBWPsAc00JnbnN4H8P8+09rwN1buaxnnTKUJZ1wQXkaQNz/JQB/gQEKZ21c2csM4VJc4R3/VRFPIM5dJ5dp4uBguDbFnkJwE3OsTQNmGzf4pRrPJngIqClDyoRiJAHlSx1UAnDakIHr64K
+R|profrun|4+1D+PauFxCNvscZJ4Dg6kcAZuUKkGh7X1B36xE523/r0bm8RQbvIfrA64/2XGJk3kaULORdSCazL1++BOVUl1Xoq46M5CZKNkYKY4Oy2AW/ROzazI0sorXvXJX2bP9Q6ddGaZnYFA1tF4oSoK4mtC1avIIicsWLtVEmziXfIO54+9qkMsSA8zT7IOfBodID7DPP9lr2YV4vttmnXniY/YbKEAP8afYdmM4dKj3AvuPa1Oh9Hmyzzx16mP2Gyg4Dl92g7gwlzIPkdAdXHfGmqRbmymULi8g1NLCzEonixSZg
+R|profrun|BKzupg957whX948If/cSEUjB5Z/9t4hctRfIHLcoZjZyju3ep7ASM8V3/TOzUiOPzr2e/52cmW7xn+iu//vo+E+ILfwnKOcn/PcxnhP+O+G/E/77J8d/8oqr94V/24VN/IFpDXpiBnoKKWNb8CMUjB+BntgOejKqP4T9PFscKLyfdwfY63gPAm+L98DzjoFOispA9YeAn3iK9x3c1/HOqRxt3e+hv93veKnZQd4bKtvVX3ZUd2hp1CdvPuyjPjxFsXVrp3mRYQcFxTAUxFvX9kFBeQ/bASioq1bL/mYD3wHy
+R|profrun|AU56B8gnL1X+O4F8vWfv/S/K/TzX9S+H8J/juNv3fwl4P+G/j/Hg/S/9bX7vgy9GewDGaC/CGA1eCdPDGKMtkDHqoYzREMwYHcQZ20X3AY1RhzTwC1oDNvC1uxdHAw5813fjtKADA66OU8AD39/X+WtKxc1igmI4TK0qZ5OinukCiBcOZr6YgQrk6yjNJR99jKEpNUCiodb4gbbVU9Xw6qUR0+zLUR1kxDd39cgIRo0Evc9A9V6boi7ukQHRdmnR1E1t1yTRbttQ36Hbi3lUanOr1XCH7J2pm3dhaWL55okx
+R|profrun|GFwdaLlXtyTJUHsd0mRSp9lDK1sAGnVHtA1UO+tUx3k6stdrTMf2Onmo8wf7fk/Xt1I/25S3ST+/p+9KOnjtDredMAgdta35mC3Nrod7oE/fGn+7Z6//fy7H3zxP+3/u+s62/3dd6p38/8d40P+vk1rvaH7+C+BUVKRvS1P/kMSBu+H6SGAAR/SvkFPcXDMv0v8QhLlvc9ziGfRsTSXX+tY7YLLb9jzOoiVMU+T5DRWBs5akjFbxQyJ3EKoDFOMpTJJujPB6VXSboJDMKs8Lmd7Q0Vssx1WCd6POm21ngFIy
+R|profrun|ACnFg7lfVMWm8/vdyKS/lRWPykTzMl2p7WTNKcZxsoiS9TTZzrpnL+x4ERdR0Suc5VG1yuverlqMLFaxHN0ucvqgtgYadQD2AjxVJ1kTPWo2k0KPqDUR7CUqQMnVMCDewH+ABHvmw2CKhDt6SHGfDBi3dVHL+ii12mi105rrxkaZFGjHbbLcRWrLue/4OkcpG8lYF0bZae7FG0O34JY+/Iwhz2DQsBlwbFMo2g6QSHCglcfjQHkeCa/QlYPrqoaNJUNjXANqdAvRRDcuY9zIY2QHKBlJKPl0pytaq2annjo6
+R|profrun|ZGJjExwbRqMHj1vT0QfIGmf0IPIH9s0OSD7cuB5M/kAB3AHKfaS8ByrvYmUNlncBWwuX92C2FjD3YZuGzCZmNkDzPtTcv89yBzd/CHA2kfP7QOct7Nz5mP9v79x/G8mRO56f+68oaHKAZ8+W+/3QYILb29tMDsgsBtldIJkgEGRblhXLks6yfTt3vv89VWSzm89uyvbY3mw3MGOpm2I/SFYV2fx8qUTPSvjcxs9qAN1E0HoILcJiLYiWdxul0lEo1jJp24gZTPNoWkwG5/G0PZaufeg59WMvHImSQszhbKql
+R|profrun|cPN1vRTWspWAtcQAZhSgxwFGJGCNBTpcPuiCsA2BIKEgrZOxq8KCpgsLmjIs2LVhQVWHBVUfFkyFWLAptrY6sWCgxzatWHCoxZqP1qIYCy7AUlW7Aol99tWOBYMWdyd08OJdCrJODdn2LsDKjUMnOQ5udrwlc8HGj4OPoix4dG4NTVnYX1UWvHRlwUNZFmz0Ltj4XXDI3FkqIjiIXQWUVThclax96CGZt+3+pv4uk7+Uvnk0RK9SJR+mQws+XK+pRAt7aNGCg+3V1WildtBhFRwco2kV3Am7rIJDmdatTfsa
+R|profrun|zIJLqdbDKphatf1WwVCrtVkFU6/WZhU0xdrBKMDzGwVT39bLKJgKt26jYGrcuoyCrnLrZxQcIra2UMGVsNMo2BVvnZq3r8Mm2BVwfWyCoYHbaxNMFVy7TdB0cC0mwVDCHWwCPL9NMHVzvWyCqZzbYRMM7VynTVDVcxtBm6ZXcbJHr8IhW2CaCnfCDlPhVNN16+m+oLFwKVOZHUS2b1CnMtWpoEefCroVqmAfjSrYV6UK9tOpgl6lKujWqhIZ2NWq2qM9elVNA1dqcK/yro9nM7R3+6NdQ33X7tl0/V1btKsr
+R|profrun|8D7ctekN1WJKBpe3ZxhsaPb6hcGGam9XGKzr9rrDYFW51y8MdijvWHybM2GHb3Oo+Lp1fAfPNni2wbPt5dkcir8+rs3Q/O13bYbqr9216bq/NtemK/8Oru01uTZDK9jPtRlqwV2uTdcLdrs2RTHY07PZBYEtns2ZsNOzWdWD3frBg2cbPNvg2fbzbFalYQ/HZmoN949GGmrDVsem6Q3bBiN1xeHBrb0it2ZqFPsNUhoqxV2DlLpOsXuQUlUqNkcp3VKjHVqj7mXu+lSLwVO3GLyVi8Ffu1i4RZt6cXu7Lv1i
+R|profrun|UBSMoUMBWNinPg1g2FsFWM7ZpgMMphIwGFrAkjGUFY1/3XcUKDemaRyDl8oxPQ6fQXm30nGH1nGH2rFT71iyPW7N4w7V4w7dY6fysXxOL/Vjdm3++sfgpYDcbZi6LJNbB5ldqJcSspLSpYUMPWrI0KWHDF2KyNITtWkig1sVGbx1kbWU9mMP1EZuLlBXR5bbp6KQDPtoJMMDVJJhH51k8FVKFmZHFldXFZPB1Ew2QypTN1nrbJrKyV9BVH0fDWXoVVE2i3gPJeWuErZrKVvL166mbCldq56yWqymqjJouspK
+R|profrun|otETKCuDW1sZXOrKptC/qrGsNk39kKfOsoi4PJSWDU/cpbYM3XrLrdnvVlxWzOeoFUsGi+oy9Ogug0t5ubGRg/byU2svwyPVl5vqPygwDwrMhgKzZOnYEFA8pveCpEq/Dy8t+F8mO8XDpPHNL09Luvbof4SRof+G3aZw4H+fYzufLVfzs/f//T+wu1xut/wj1vCL6cXy5v16Aye3Z4v5DTnT90UIROC9fyij9xr1b37rm5X/vzp70nP0tP8sS1K9/YfJ0P6fZXtDgj6EX0+4pF3yUcTuwEa8KMTfrIFj+xhT
+R|profrun|bG8pUGN+sEX4gqBVwjsEuxLe4SMF8A5IQ4/ek+D5v/8A59hduGGad4dA2D8I7B/+lYsFkt9kuLNNOi8I3rxpRPGCRs/vntz0gp7BffMU7tvncC8r7t1bnkLTQ8bA5b3I4R3Gx8s1BiIYb95RJMBjZSksQnef1mGCiNFm5xSxRkD84tHttg7mdhSOxW+5ktkODvaNKd9OeHjFY+4dBcH/8p46LRhY1KMh1GGh/Sy0HfPgtr5i6qyA6KwA66zA72OMzem15OnFfLbFcH8NazzBDsOaNmhfKiE7BYhSb4IHj+wU
+R|profrun|hzyELiaKHBywHguLz9rI8bDZ+ztNSS6ml5J0btbdedf0SSbwE4kRBJKUpxitwJu+3t2w/ge/Ul5yrLJNuL4x1vCv1Cdydomeq0dk7RA9dX9oHAT37ObvgahX/NOE9k2H5b6J8eV9/OoOvj3+41uWQrrrbwFjf8qJP/d6iIml0vc0gf0BxjbHGMxQZpLY4Yc/4nde++A+uD86OvL+F9zXGtz3UFco/FRrYd8LLex7rn6Nf3+fJuMcS4+nSQ75MNch+5aKHxyy8W62N0ti9usopKNH+I+NsOJVBk2b29FtUfV8
+R|profrun|Jx46VilsFGgkr7Chzv9yu7w75PWOagobMmn7jfPTS+zjUc8Fm8Jm/XbSllVbx6Vmyvaj3Wjr4EFb075tHqyoDOLB1jUBv9bW56Ae1K0PvxUJs4lI0VMS0pP/Mt81/x9J/7755uibb+hZScNe2BJuFwu82zkzIzfsk7CpCau6JX8I7Y/o2urBK7o/NmQFbMhKv0j82cPHyzDvv/+DXzr51PX8CxxgT5Cpov/z8cU7U9US/QwbL+RdxnetVuZ7bslYx9rsZ0rdzHcsd3GQjNmM9HiZ1qZcF6Q2WXupYzozfuUX
+R|profrun|0Ipu4q6ff/yTKc8p7Tfv4769BN4vpvrQ3A39zqNdBtTSDxo3/FZuiTREi3/yccjbZRRSs6QR07a+SDWqabj02od+zhNyEfp7No7OvvI2G4YJFdkwQDMM0IgBmuBX0d01+3+zmSLd8gTn6O7/xUmUFVr/L4/CQf/1WTbSf2vFX55e/s2p8abKvTCRGsvbbofSi6rzoqq8WDVeFIUXRd/FUHcZkbK1kLSUZF34fiGYIxRd2E4+FGuVc9FekZpSLuJ0rZKMSluKV3ImlB1GEb09LAgYSQoxzc5Ash3JHPN1aUou
+R|profrun|vVUtk4RekxZRM30PQ9AkydKSXhoz3Ua+v5l/ZZmn2zVL1zlHt3kx6JqZVSu1hFWc4P2g9UAb0rw87ZvumIZjIl2zqpmd1jPZMc3HcVRlYTtL2zLVMRa5xm0adfpaLLJp3/Lq8xzFLEfMqJkQZgWuTYEg6zxGaYqgNOVInlO43255XqHrs5xemq9Y9v+ymafY3KXPHMU0HidZGSql0ztDMc1o0mGeKEVqn58Yi/wjPaVWvHWWMZ+KUNdhd9sty4wUkmhiAzbQ4lBL2JPM2XaLmFahquKUWmhLwdEL5TjMoziJ
+R|profrun|aSZFXLxo203HZRUWKam8R0VShM1Uib62m6EDKfFZxL5tN8NSIdAn72q7icjV1XQTkUuTYmi7T9F2sTiLrArLap+2i0WKNj8pPNpuIvLP9JRG+fIsU7+2GxKpkuQ5zT2Kw/hQS9iTzO13kygv4rRIyFE3swdJAoXNKc4q1qbD9GWbbpahkytTjBEwUvd1u+mEyNwqDsvIr+niD9JxlZahxBhYmm4qcpVKWC3btM6m0U4b2i48vu1i8aDRTMMyi/3bLitTDENziQxwtt20zj/K9ZRG+bIsQ85EszljdRx94htH
+R|profrun|Z1FcZdhSGZ2Wl4dawp5k7vZcpUURZlHIeO5WShCdcViUcZjkTBuxemlfnBdlSfNL8dak2+qNozGejUPsW3j7YnKzRRVmnXG0yNXtjEU2j3HG4tE1XS9ZQnNo420RVxURXHv553CM4XJeerTxmOefVz1tPKmzDHMv/1zmWYUWv2KtK24QAkO/0JHM3Z7R/5YlOXX8QdJirFQhGXsQsR5zFJUv26DTKMpornCUxW1vvze0ZjFutYd/JtcbZVHVGVrXubaAk+Gf62zKx/jnoTl7hds5hrlpme7RVWbFjLFTUWYe
+R|profrun|4Xadf9znsuss09KrOdOicmlSULCJ1iJyNWdXso5wO8/iKkxJhLhs6x9zz5gDPqeMAm78+7LNOS/zOCljokCqpGrtVG/EzSLfvPBv0RU+k7SKis6IW+SatGm04hXZDA3auJQnjsGzMfYu43iP/jMr5SQPYx//nIr8Uz2lUeI8S87dyTG4E31zcm9GazBp3CpGV5yUFdXCOMu1VJzFRWtQ5CFeXxSlIUXtel41iZtiII5d6zwKyXHn9cIdFgw3iaMkC/M0LDB6r+rq74Zw+xBcGcB1w6p+qOq+oGo3pmpAqjqi
+R|profrun|WtstGbj9td1BAApZJEE9s/6RHhWttfsdN1jrfCHjHO01ryOQTIUbp3V2WZ2xr3k3ypkUiJYt68reESUpdsBLEcRbEdojpt5XlkmcV3gdWVg1PKPK0NKNUnydx9gvjisBU7kJWjc/66Rnu9lZe0IVnZXTdJKzOjfboq8aNCtPYRxpD7IlZ+XzusDZbmxWz0GiZs1DLTSrLpg7Ui5BR2NFu1KYSSsyiZHXGOtnEmG8gEZd8JgdwGSclXGelBg2FIUYe7TiklGGLQyDpijP80b+3EZL5oyZjWLiKpOCdTDJOvyj
+R|profrun|fiOtMrAGAau9DTfo1x721WELHJbAagfqhWJcxKvFgI16mptacnbWNSPdFnzAIcYIUSGcaxfpSiNeeVxhNIHxQo1eWjnXPM0x+4JA5rS2WLZyw5qAaaKIIOayyKQiM/lWlW59YrbVSbY6uFZxmSbR6uRZbTSrJW6xo6yWuEXxeV0YayfE6oew2gFWE1/thlcd6OoArn4lcPVx2CqrswOyOsyINJDVYSHfV7cp/O98fffk8O8/9fJ/cZTr8z+xyxIP8z+fY3sDzPKq40RpPImjz8EbuKUhueDfsaH/AndXFFiX
+R|profrun|4zQ9Oj89uouSCt5E8OPHT4A+4vuPn36a/um/fvj245+/gz+EghdU/3z44edjlhfmzJf0DT6xP1Av64v713dLNJlHu6tlcLrcTGC1ROtRFdFEOkJ8yNUVWW1yw+dk55VfwmJ7C6e7OyWHuD+H7XKLqXfE7ywwooGjJRx9X09hvb+5xhAeTeTV/Hp3j75u+2WEQQTmQJ5sw2LI7XLNecfTy9kCDWOAkeJ8Nb+mB1xvEXZNxmFwcbtYYMhyPjudTy9uT9iBJMEDLGOQt3icjdNg+2V2Tfqh0n4MlvEHu9k5xiTr
+R|profrun|HXZT6gPYvcf9N5vL+Rr7mM1uNig2jgPuENQzNASjfJP8YDaOKszuDXckgc48Ai3VDD+QicdP63XzcTad3c2WGMyu5pzIDG7Ok5j0T69uV3wPsD38Z8TmcS3UJJ7yRFN0a6fLHcE3FxgRzXc3eBV0kd99+vmAwLzeLQ0+MiyVKnFP8j+vb+arg/94C/8536zp76frzel8h48V/kC3G374t78FP12Qo8VzM4TlFN2lI9co+A4PioS7zenl/MaRNA1+ZIc97qhZ0ERsLNYXX6jHID6fX8/rGre7mBGyBCe35+fH
+R|profrun|p+jbaX9TMsHH+ZV81igPq6T5VlSh+IhdvURKlopPVZmK/fTSMQ6Oz+Z3x3dYJeotzuIP9Ceh/6MC/8+q38HxrwKN+E1sVv7jibgPsXX7/yTM81zn/9Ns4D+eZSP+42p+Mxt9LQCE75oKXoKHAj1sCPkPaVRzxIMFdhU8UDAREn4151E+FUIA8pjmiOkTUELqyNYnOW+WPB6dte8sRuvpBVp5JqlTv8rBr9j1Ws2+zNlYYL2U8An2oy6l71erbTueQdmsNhu2Hn09mWkkRkpH2N26Wc3P6gGk3Zb0pTdbebn2
+R|profrun|eu/y7Bdz51yVbyQ56+nZ9XLFB4Zq5bDRfDGdY39cT2rRfxwtZtvpVvnxejPdrTY3ipYk7dyuZqfqQswnX/ggn3SO3ZTUwzEmqXcH9ZgwPhGuBEFPKcywkfNiIGEGEqAYdS9F37/8OsuqKVLq8qJxu9resPOF4WGzm78mScTNTtesQsdpneSvU/6+qKjfTmOKa3aTNQvDvlPdEQOf+FhocI6wbPb+NKxfI7J7qrLmAbBl7h136b3G/YhphWOkdMYKN+U3NmIXNCI9jLpt0XrobbmMqE8uJd9eLqZk0XoeOs9r
+R|profrun|VQ+6cSlvNBGLOzGETaueX9cv9qUFw2kN9lvxKqNZNJwSM+vBv7Wro7MHw7886tlQXnhnR+zO3PnJN8eWYad605u8vwJSXs1C63VrqNdZb+7/hD+C3Xt5V/32qX5a7pXmQ/mQttR8e0xeaz5rn/FWXEU4TpWMmtcWtZFpiTZ2uIZBOx4QiyFmf3UzpE12m9uucrHmo/y+9i/8a7N2PB5g1b2pethCmsfS3ir3VfWjzJvd6nOMmv3qo3cXSkeZWIukbSKnt9d3c+03+ah9q8Nn+IzsGBtvmufL9XJ3YU1Ecz3E
+R|profrun|aGxTK4WXr6ulMJYtAWoJAcwgQA8DjEDAGgp0eHzQedDmPaL0Drf1MXYotHkn0bwEVsFQsKOhoMKhoOKhYAKiACaz2WKi4mg7OcJERcEBi5rP1QKMgmNe1B6LdDqmIIA5q86ZsGs9XwdA6kRIX8N6vi6gFPpm2tmQUtgfKgUvrBT6wVLoXkJDmnMHw3q+T7VUhomhQv9kPBuICnugqOCakKfBqJ5rfNtnH1lsgjNhh01wgKluNPU12AQXqOphE0xUtdcmmLCq1SbouKrFJBjA6mAT4Pltgom3etkEE3DtsAkG
+R|profrun|4uq0CRrk6mkT7AyrLU5wJeyKE6zAqxt5fR0mwQ7A9poEGwLbYxJsEKzVJBgYrMUmGCDsYBPguW2CDZv1sAk2cLbDJhjorNMmaPCsuaTWyT59CvtkY4utcCbsshUOmNaJ074OY2GHa336FAZe2x8/GICtvU+hI7a2AEKHbB9uLNoHKnVah2X5HtPXMLBcv7jCAHO7+ho6muuOK1Q41y+ucPAHpq1wJ+yyFQ5Q143qvg5jYQN3fboaBrrbH1cY8K69q6Hju7a4Qgd4B1PxekyFifz6hRsG9NvVBdGxX3e4oYK/
+R|profrun|nl0QO9drCSucCTu7IHYI2I0Bvw5T4YCCfXohBhbcby0MMNjeC9HRYJu10ODgwVi8FmNhw4n9jIUBFHf1TXSk2G0sVKj4WZf7tQHG4IkYgy9kDP6YsbA0w2q/4thvdbVfxzCbD5IMfav9ul71dYz4O9Bk79V+nUMBHZG/A1J2rvbrApXZte2FKoMXrNxtmr7Ogr+upE5sGfZe8ldZtbcXXpYerhVfhoev/GvmYoeYwRNjBhfIvOcavw6cGfYGmmEPpBl8oeYXXuD3aSUP9sGdoRd4Nst3D+i5u3ht2LOjeG3g
+R|profrun|s710TfR5WOC3R8rFA4o2fO+wvu+ASQ/r+w6w9KtZ37ccV8H+6/v2bVb+ZzW7xU9PhgH18b8Y3mv8T4aGeeB/nmMj/kcdgqP5utOGl/EBI9mvVpvF8hS9LP66WXTFyu24JgFr1M+IgaHS9wUma7+doYu5vqLZzzfLUynyx5+drIhB2aAz3xJfe7pZny8Xrp9iE19srtGLXcn9B5lxkBAHCYuSAIcGjZLxhnrytww3PJL70NCGfmxDAhseCdZoWINCNZhQg8E01EiDMXleAA3m3HmBMyhT52uYQWIZWpTBQjK0
+R|profrun|861NjuERGINEMTwAYlAZhpaSkwgGGWBo+AUFXxD0ggYv1CiCii60O/Vn73z0liffVHoTWWDEAlPH6ntRmVQYo1fYEWQjxR4vHVIM6aPPg2rI19wU/Q8Mp7a7p1cA6fH/YVgkOv+L9WHw/8+x/e/mBEJIqhCiOAyDRbsKPO6OCyAYIlhkjSmjxDHf+9KXPmxPsIn2j61gMf8KbZ+2nvYf5VGq6/8kYT60/+fYsDd7u9Xkf8JwkkafAxob0o9EkyT5HCzmV1cz/VA8CYvPAUW75pEk/BzsLper1U47FifsVFQL
+R|profrun|9SPFJMz4kSMyUubRsj66iKbMe53Mdvr1JvkkTEWymCfjC/xq6eTskmm9ZLaZiO6DJ5LspJlKXLdsN41UWXPCfDo3cikncXO8EBeE135jJkxykbCsT3dpyU485qNFJS691FNVWMCfg+v57nZlnKdiOdiqCx6iezmfLVfzM/sx28/SeBJV1lpG8lOOWoaHsspay9JkEsWOWkbHKmstS3MsCmctw6Npf4ljaBtFvSVOAXDpeLgY70Z4npe2BcM2bMM2bMM2bMM2bMM2bMM2bMM2bMM2bMM2bMM2bMP2/2f7Pyib
+R|profrun|dS8AQAEA
+REND|profrun
+=== PROF RESULT PRINTED blocks=profjob,profrun r_lines=122 (the Vast log read window is 20000 lines) failed=[] skipped=[] 2026-10-17T15:54:10Z
+=== PROF-STEPS (name rc seconds timeout_s): 2026-10-17T15:54:10Z
+job 0 390 1200
+g4_bench_d4 0 27 1500
+g5_bench_aa 0 32 1500
+=== PROF DONE failed=none skipped=[] up_min=11 2026-10-17T15:54:10Z
+=== CIO DONE 2026-10-17T15:54:10Z
+dry_gr4 exit 0

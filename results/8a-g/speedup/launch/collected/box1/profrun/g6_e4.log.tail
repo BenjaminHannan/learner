@@ -1,0 +1,24 @@
+prof_launch: registered ['same', 'defer', 'kvcat', 'fastteach']; setup order ('bigmb', 'tf32', 'sdpa', 'unfused', 'nosync', 'fastteach', 'kvcat', 'defer', 'same', 'baseline', 'pad64', 'pad64p', 'sortpad', 'sortpad_tokw', 'oldw', 'compile', 'compile_ro', 'eg_sorted', 'eg_once', 'prefetch'); ab arm order ('nosync', 'pad64p', 'pad64', 'tf32', 'unfused', 'fastteach', 'kvcat', 'defer', 'same', 'accum 8
+prof_launch: host {"host": "c9f54a0290a6", "cpu_model": "Intel(R) Xeon(R) Platinum 8352V CPU @ 2.10GHz", "logical_cpus": 144, "python": "3.12.3", "torch": "2.11.0+cu128", "cuda": "12.8", "cudnn": 91900, "gpu": "NVIDIA GeForce RTX 4090", "deterministic": false, "cublas_workspace_config": null, "deterministic_algorithms": false, "argv": ["--arm", "B3G2", "--rung", "3M", "--accum", "4", "--data", "/j
+[   14.6s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   14.6s] === section equiv
+[   14.7s] equiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them)
+[   28.3s] equiv fp32: baseline loss 22.686007; rerun cos 1.00000000; accum=1 cos OOM
+[   35.5s] equiv bf16: baseline loss 22.686195; rerun cos 0.99999995; accum=1 cos 0.99999502
+[   37.7s] equiv defer fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 7.511e-07
+[   39.5s] equiv defer bf16: |dloss| 8.011e-05 rel 3.531e-06 grad cos 0.99999958 relL2 9.201e-04
+[   39.6s] E3 defer: loss rel 0.00e+00 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: not analysed: this model's loss is not one token-mean cross_ -> PASS
+[  119.4s]   curve baseline defer: update 50/300 loss 7.25127
+[  193.7s]   curve baseline defer: update 100/300 loss 4.06497
+[  269.2s]   curve baseline defer: update 150/300 loss 3.25230
+[  346.3s]   curve baseline defer: update 200/300 loss 2.75960
+[  426.4s]   curve baseline defer: update 250/300 loss 2.47435
+[  506.6s]   curve baseline defer: update 300/300 loss 2.31147
+[  565.8s]   curve variant defer: update 50/300 loss 7.26009
+[  618.6s]   curve variant defer: update 100/300 loss 4.00270
+[  671.6s]   curve variant defer: update 150/300 loss 3.19491
+[  727.2s]   curve variant defer: update 200/300 loss 2.66046
+[  782.9s]   curve variant defer: update 250/300 loss 2.44172
+[  841.1s]   curve variant defer: update 300/300 loss 2.32268
+[  841.8s] E4 defer: updates 101..300: mean |dloss| 0.0481 (limit 0.02), diff of means 0.0350 (limit 0.01) -> FAIL
+[  841.8s] done /job/profraw/gr4_e4.json /job/profraw/gr4_e4.md
