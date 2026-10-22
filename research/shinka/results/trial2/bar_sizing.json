@@ -1,0 +1,74 @@
+{
+  "per_seed_acc_novel": {
+    "baseline_singlepool": {
+      "100": 0.354,
+      "101": 0.37,
+      "102": 0.427,
+      "103": 0.398,
+      "104": 0.391
+    },
+    "mean_pool": {
+      "100": 0.248,
+      "101": 0.267,
+      "102": 0.3,
+      "103": 0.27,
+      "104": 0.277
+    },
+    "two_pool": {
+      "100": 0.486,
+      "101": 0.367,
+      "102": 0.485,
+      "103": 0.479,
+      "104": 0.475
+    },
+    "multihead_pool": {
+      "100": 0.59,
+      "101": 0.523,
+      "102": 0.625,
+      "103": 0.518,
+      "104": 0.57
+    }
+  },
+  "pairs": {
+    "baseline_singlepool - mean_pool": {
+      "mean_diff": 0.1156,
+      "sd_diff": 0.011588787684654519
+    },
+    "baseline_singlepool - two_pool": {
+      "mean_diff": -0.07039999999999999,
+      "sd_diff": 0.049074433262137625
+    },
+    "baseline_singlepool - multihead_pool": {
+      "mean_diff": -0.1772,
+      "sd_diff": 0.04401931394285921
+    },
+    "mean_pool - two_pool": {
+      "mean_diff": -0.18599999999999997,
+      "sd_diff": 0.051898940258930146
+    },
+    "mean_pool - multihead_pool": {
+      "mean_diff": -0.2928,
+      "sd_diff": 0.04128801278821735
+    },
+    "two_pool - multihead_pool": {
+      "mean_diff": -0.1068,
+      "sd_diff": 0.045460972272928786
+    }
+  },
+  "multihead_pairs_worst": {
+    "pair": "two_pool - multihead_pool",
+    "sd_diff": 0.045460972272928786,
+    "se_over_6_seeds": 0.018559364213248254,
+    "two_se": 0.03711872842649651,
+    "sd_95ci": [
+      0.027237525518563642,
+      0.130637135250753
+    ],
+    "two_se_at_ci_upper": 0.10666477427443274
+  },
+  "median_sd_all_pairs": 0.044740143107893995,
+  "bar_in_plan": 0.05,
+  "two_se_exceeds_bar": false,
+  "required_bar": 0.05,
+  "multihead_sd_alone": 0.04533982796614913
+}
