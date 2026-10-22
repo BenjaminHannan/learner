@@ -43,6 +43,8 @@ def test_representative_is_longest_mechanism():
     ({"implementable": True, "known_item": "none", "combination": True}, False),
     ({"implementable": False, "known_item": "none", "combination": False}, False),
     ({"implementable": "true", "known_item": "none", "combination": False}, False),
+    ({"implementable": True, "known_item": None, "combination": False}, False),
+    ({"implementable": True, "combination": False}, False),
     (None, False)])
 def test_passes(v, ok):
     assert screen.passes(v) is ok

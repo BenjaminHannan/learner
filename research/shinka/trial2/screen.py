@@ -122,8 +122,9 @@ def representative(fam: dict, by_id: dict) -> dict:
 
 
 def passes(v) -> bool:
+    k = v.get("known_item") if isinstance(v, dict) else None
     return (isinstance(v, dict) and v.get("implementable") is True and v.get("combination") is False
-            and str(v.get("known_item", "")).strip().lower() in ("none", "", "n/a", "no"))
+            and isinstance(k, str) and k.strip().lower() in ("none", "n/a", "no"))
 
 
 def load_cards() -> list[dict]:
@@ -157,11 +158,13 @@ def main():
         gc = prosecute.make_client(guard)
 
     by_id = {c["id"]: c for c in kept}
-    stopped, fams, results = None, [], {}
+    stopped, fams, results, cluster_info = None, [], {}, {}
     try:
         resp = gc.create(STAGE, "s2-cluster", **cluster_params(kept))
         obj = last_json(text_of(resp), "families")
+        cluster_info = {"stop_reason": resp.stop_reason, "parsed": obj is not None}
         fams = build_families(obj, kept)
+        cluster_info["unassigned"] = sum(1 for f in fams if f["name"].startswith("(unassigned)"))
         for n, fam in enumerate(fams):
             rep = representative(fam, by_id)
             r = gc.create(STAGE, f"s2-screen-{n:03d}", **screen_params(rep))
@@ -175,7 +178,11 @@ def main():
     summary = {"mode": tag, "money_stop": stopped, "stage2_spent_usd": guard.spent(STAGE), "cards": len(cards),
                "deduped_away": len(dropped), "kept": len(kept), "families": len(fams),
                "screened": len(results), "unparsed_verdicts": sum(1 for r in results.values() if r["verdict"] is None),
-               "families_passing": n_pass, "G2_min": G2_MIN_FAMILIES, "G2_pass": n_pass >= G2_MIN_FAMILIES and stopped is None}
+               "cluster": cluster_info,
+               "families_passing": n_pass, "G2_min": G2_MIN_FAMILIES,
+               # a failed or partial clustering makes "distinct families" meaningless: G2 cannot pass then
+               "G2_pass": (n_pass >= G2_MIN_FAMILIES and stopped is None and cluster_info.get("parsed") is True
+                           and cluster_info.get("stop_reason") != "max_tokens" and cluster_info.get("unassigned") == 0)}
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"stage2_{tag}.json").write_text(json.dumps({
         "summary": summary, "dropped_duplicates": dropped,
