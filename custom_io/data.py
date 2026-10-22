@@ -18,6 +18,13 @@ ASCII = set(chr(i) for i in range(32, 127))
 KEEP = ('id', 'prompt', 'answer', 'accepted', 'family', 'level', 'stage', 'variant', 'steps')
 
 
+def set_max_ans(n):
+    """Set MAX_ANS (answer chars before EOS; default 8). Dataset and collate read it at call time; call it before any data or model is built (custom_io/caps.py does)."""
+    global MAX_ANS
+    assert int(n) >= 1, n
+    MAX_ANS = int(n)
+
+
 def load_rows(path, limit=None, keep=KEEP):
     """Read a jsonl file. keep=None keeps every key (meta, slots, ...); default drops them to save RAM."""
     rows = []

@@ -14,11 +14,22 @@ A cap is never set below today's value, so on data that fits today's caps nothin
     plain_target plain_tf_steps.CAP (longest steps+answer target), MAX_NEW, MAX_POS                   today 64
 The only behaviour change a bigger N_PLACE brings: place ids of letters 15+ from a word's right end clamp at N_PLACE-2 instead of 14.
 
-  python3 -m custom_io.g8a.caps compute POOL_DIR [DEV_DIR ...] --out caps.json     # reads POOL/train.jsonl and every dev/*.jsonl
-  python3 -m custom_io.g8a.caps report caps.json POOL_DIR [DEV_DIR ...]            # rows touched per cap, today's caps and these
-"""
-import argparse, glob, json, os, sys
+  python3 -m custom_io.caps compute POOL_DIR [DEV_DIR ...] --out caps.json     # reads POOL/train.jsonl and every dev/*.jsonl
+  python3 -m custom_io.caps report caps.json POOL_DIR [DEV_DIR ...]            # rows touched per cap, today's caps and these
 
+PORT (Bid C draft). Copied from custom_io/g8a/caps.py at ce03628be (origin/claude/project-thread-x2cm2v, sha256 3da2dfbb...); UPSTREAM_SHA256 below is the full hash.
+Changes for this branch, which has no g8a / tool / english / plain_lm:
+  - compute_global() is dropped (it needs g8a.cloze / g8a.pool); apply() skips a module that does not exist here.
+  - apply(caps, path=None) records what it applied in APPLIED (path, sha256 of the caps FILE, resolved values); apply_file(path) reads a file and applies it;
+    check_applied(path) is what a caller asserts before it loads a checkpoint.
+  - Only the ledger (B2) is fully ported on this branch: it reads GEN_MAX at call time. plain_tf / register_loop still read data.MAX_ANS by value, so
+    PORTED_MODELS lists what may run under caps that differ from today's.
+"""
+import argparse, glob, hashlib, json, os, sys
+
+UPSTREAM_SHA256 = '3da2dfbb0ddde64f0b4a263ccc025a01e70ca35c7c69fd9e9fdbb9c2d2325f78'
+PORTED_MODELS = ('ledger',)       # models whose answer / register sizes follow the caps on this branch
+APPLIED = None                    # set by apply(): dict(path, sha256, values). None = nothing applied (today's globals)
 TODAY = dict(max_prompt=208, max_ans=8, n_num=16, w_max=64, n_res=7, n_reg=9, plain_target=64)
 
 
@@ -76,33 +87,6 @@ def compute_rows(rows, progs=True):
     return mx
 
 
-def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print):
-    """Caps for the whole ladder (addendum F d): the longest case in the LARGEST pool = all of own72 (the 30M rung's own rows contain the smaller rungs')
-    plus every cloze row of the 30M web slice plus the dev splits. Every rung then uses these same caps, so N_RES, n_loops and the tables are identical."""
-    from custom_io.g8a import cloze as Z, pool as P
-    mx, n = dict(TODAY), 0
-    def take(r, progs):
-        for k, v in measure(r, progs).items():
-            if v > mx[k]:
-                mx[k] = v
-    st = {s_: P._newstat() for s_ in ('skills', 'english', 'teach')}
-    for line, _, _ in P.own72_iter(own72, 30, max_ans, set(), st):
-        take(json.loads(line), True)
-        n += 1
-        if n % 200000 == 0:
-            say('own rows measured', n, {k: mx[k] for k in TODAY})
-    own_n = n
-    for r in Z.cloze_rows(Z.read_slice(web_slice), seed):
-        take(r, False)
-        n += 1
-    for r in _rows(dev_paths):
-        take(r, True)
-        n += 1
-    mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
-    mx.update(rows=n, own_rows=own_n, source='largest pool: own72 (rung <= 30) + rung30 web slice (cloze seed %d) + dev' % seed)
-    return mx
-
-
 def report(caps, paths, progs=True):
     """Rows over each cap (today's and the given one) and the longest value seen. Target 0 under the given caps."""
     over_today, over, seen, n = {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, 0
@@ -115,9 +99,16 @@ def report(caps, paths, progs=True):
     return dict(rows=n, longest=seen, today=TODAY, caps={k: caps[k] for k in TODAY}, rows_over_today=over_today, rows_over_caps=over)
 
 
-def apply(caps):
-    """Patch the module globals. Call before building any Dataset / model, and before anything imports these names by value."""
-    import sys as _s
+def file_sha256(path):
+    with open(path, 'rb') as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def apply(caps, path=None):
+    """Patch the module globals. Call before building any Dataset / model, and before anything imports these names by value.
+    path = the caps file these values came from (its sha256 goes into APPLIED). -> the resolved caps (every cap at least today's value)."""
+    global APPLIED
+    import importlib, importlib.util
     from custom_io import data
     from custom_io.models import progparse as pp, reader, plain_tf, plain_tf_steps
     caps = {k: max(int(caps.get(k, v)), v) for k, v in TODAY.items()}
@@ -136,17 +127,40 @@ def apply(caps):
     pp.N_NUM, pp.N_RES, pp.W_MAX = caps['n_num'], caps['n_res'], caps['w_max']
     pp.R0 = pp.N_NUM + len(pp.CONSTS)
     pp.M = pp.R0 + pp.N_RES
-    import importlib
     for name in ('custom_io.models.ledger', 'custom_io.models.tool', 'custom_io.english', 'custom_io.models.plain_lm'):
-        # 8b fix (g8b/README.md): import before patching. These modules are imported lazily (models.build), after train.py's apply(), so
-        # `_s.modules.get(name)` used to skip them and the Ledger kept N_REG 9 / GEN_MAX 8: 9 register tokens, GEN targets cut to 8 letters.
+        if importlib.util.find_spec(name) is None:      # tool / english / plain_lm are not on this branch
+            continue
+        # import before patching: ledger / tool / plain_lm are imported lazily (models.build), AFTER train.py's apply(), so `sys.modules.get` used to skip
+        # them and the Ledger kept N_REG 9 / GEN_MAX 8 (9 register tokens, GEN targets cut to 8 letters; found 10-08, g8b/README.md)
         m = importlib.import_module(name)
         for k, v in dict(N_NUM=pp.N_NUM, N_RES=pp.N_RES, W_MAX=pp.W_MAX, R0=pp.R0, M=pp.M, MAX_PROMPT=caps['max_prompt'], CAP=caps['plain_target']).items():
             if hasattr(m, k):
                 setattr(m, k, v)
         if hasattr(m, 'N_REG'):
             m.N_REG, m.GEN_MAX = caps['n_reg'], caps['n_reg'] - 1
+    APPLIED = dict(path=os.path.abspath(path) if path else None, sha256=file_sha256(path) if path else None, values=dict(caps))
     return caps
+
+
+def apply_file(path):
+    """Read a caps json and apply() it, recording the path and the file's sha256. -> the resolved caps."""
+    with open(path, encoding='utf-8') as f:
+        return apply(json.load(f), path)
+
+
+def check_applied(path):
+    """Raise unless apply() has run with exactly this caps file (compared by sha256 of the file's bytes). -> APPLIED. Call before load_parent."""
+    if APPLIED is None:
+        raise AssertionError(f'caps.apply has not run; expected caps file {path}')
+    want = file_sha256(path)
+    if APPLIED['sha256'] != want:
+        raise AssertionError(f"caps.apply ran with {APPLIED['path']} (sha256 {APPLIED['sha256']}), not {path} (sha256 {want})")
+    return APPLIED
+
+
+def is_today(caps):
+    """True when the resolved caps equal today's values (nothing changes for any model)."""
+    return all(caps[k] == v for k, v in TODAY.items())
 
 
 def n_loops_needed(caps):

@@ -93,6 +93,7 @@ def main(argv=None):
     ap.add_argument('--log-every', type=int, default=100)
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
+    ap.add_argument('--caps', help='caps json (custom_io/caps/*.json, see custom_io/caps.py): resizes the answer / register tables; applied before any data or model is built. Ledger (B2) only')
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
     ap.add_argument('--eval-batch', type=int, default=128)
     ap.add_argument('--minutes', type=float, help='wall-clock cap on training; still evals afterwards')
@@ -103,6 +104,14 @@ def main(argv=None):
     amp = (lambda: torch.autocast(device.type, dtype=torch.bfloat16)) if args.bf16 and device.type == 'cuda' else contextlib.nullcontext
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed); torch.cuda.manual_seed_all(args.seed)
     t_start = time.time()
+    caps_rec = None
+    if args.caps:                       # before any data or model is built: caps are module globals (custom_io/caps.py)
+        from custom_io import caps as _caps
+        _c = _caps.apply_file(args.caps)
+        if not _caps.is_today(_c) and args.model not in _caps.PORTED_MODELS:
+            sys.exit(f'--caps {args.caps} changes the sizes, but {args.model} reads them by value on this branch (ported: {", ".join(_caps.PORTED_MODELS)})')
+        caps_rec = _caps.APPLIED
+        jprint(event='caps', **caps_rec)
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
     vocab = CharVocab.get(args.data, args.vocab, rows)
@@ -156,9 +165,12 @@ def main(argv=None):
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if caps_rec:                        # only with --caps, so a run without it writes the same keys as before
+        result['caps'] = caps_rec
     if args.out:
         os.makedirs(args.out, exist_ok=True)
-        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step), os.path.join(args.out, 'checkpoint.pt'))
+        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step, **(dict(caps=caps_rec) if caps_rec else {})),
+                   os.path.join(args.out, 'checkpoint.pt'))
     def write():
         result['wall_s'] = time.time() - t_start
         if args.out:
