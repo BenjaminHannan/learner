@@ -15,7 +15,7 @@ the model trains under bf16 autocast. The controls are config flags: `store=Fals
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 from typing import Any, Iterable, Optional
 
@@ -197,6 +197,32 @@ class CardWriter(nn.Module):
                                self.null_key, self.null_value)
 
 
+class CardAddress(nn.Module):
+    """S3: a = W_a (softmax-pool of a line's reader states with its own score), the selection address of a card."""
+
+    def __init__(self, config: MiniConfig) -> None:
+        super().__init__()
+        d = config.d_model
+        self.pool = nn.Linear(d, 1)
+        self.proj = nn.Linear(d, d)
+
+    def forward(self, hidden: torch.Tensor, batch: VisitBatch) -> torch.Tensor:
+        """[visits, lines, d]; the same masked per-line softmax pool as `CardWriter`."""
+        visits, lines = batch.line_start.shape
+        real = batch.line_of >= 0
+        slot = (batch.line_of.clamp_min(0)
+                + lines * torch.arange(visits, device=hidden.device).unsqueeze(1))[real]
+        score = self.pool(hidden).squeeze(-1).float()[real]
+        peak = torch.full((visits * lines,), -math.inf, device=hidden.device)
+        peak = peak.scatter_reduce(0, slot, score.detach(), "amax").clamp_min(-1e30)
+        weight = torch.exp(score - peak[slot])
+        total = torch.zeros(visits * lines, device=hidden.device).index_add(0, slot, weight)
+        weight = weight / total[slot]
+        pooled = torch.zeros(visits * lines, hidden.shape[-1], device=hidden.device).index_add(
+            0, slot, weight.unsqueeze(-1) * hidden[real].float()).view(visits, lines, -1)
+        return self.proj(pooled)
+
+
 class ThinkLayer(nn.Module):
     """Pre-norm bidirectional self-attention over the think rows (padding rows masked) + MLP."""
 
@@ -275,7 +301,12 @@ class Decoder(nn.Module):
         self.mlp = Mlp(d, config.decoder_mlp)
         self.norm = nn.LayerNorm(d)
 
-    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, memory: torch.Tensor, valid: torch.Tensor,
+                keys: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+                bias: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """`keys` (S3): (slots [G, P] long, rows [n, P, d]); the cross-attention keys at memory positions
+        `slots[g]` (every group g) come from `rows` through the K half of `cross_kv`, computed once. Every value
+        and every other key is the base one."""
         n, length, width = x.shape
         heads = self.heads
         q, k, v = self.qkv(self.norm1(x)).view(n, length, 3, heads, -1).permute(2, 0, 3, 1, 4)
@@ -285,13 +316,29 @@ class Decoder(nn.Module):
         x = x + self.proj(attended.transpose(1, 2).reshape(n, length, width))
         q = self.cross_q(self.norm2(x)).view(n, length, heads, -1).transpose(1, 2)
         k, v = self.cross_kv(_norm(memory)).view(n, memory.shape[1], 2, heads, -1).permute(2, 0, 3, 1, 4)
-        attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        if keys is not None:
+            slots, rows = keys
+            kdim = self.cross_q.out_features
+            spliced = F.linear(_norm(rows), self.cross_kv.weight[:kdim], self.cross_kv.bias[:kdim])
+            spliced = spliced.view(n, rows.shape[1], heads, -1).transpose(1, 2).to(k.dtype)
+            k = k.index_copy(2, slots.flatten(), spliced.repeat(1, 1, slots.shape[0], 1))
+        if bias is None:
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=valid[:, None, None, :])
+        else:                                          # S5: a float mask, the additive score bias on valid rows
+            mask = bias.to(q.dtype)[:, None, None, :].masked_fill(~valid[:, None, None, :], -math.inf)
+            attended = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)
         x = x + self.cross_proj(attended.transpose(1, 2).reshape(n, length, width))
         x = x + self.mlp(self.norm3(x))
         return self.norm(x)
 
 
 # ----------------------------------------------------------------------------- the model
+def _live_cuda_devices() -> list[int]:
+    """CUDA devices whose RNG streams exist already (fork them; never start a CUDA context just to fork)."""
+    live = torch.cuda.is_initialized() or torch.get_default_device().type == "cuda"   # CUDA default: it will start
+    return list(range(torch.cuda.device_count())) if live else []
+
+
 @dataclass
 class Answers:
     """Greedy answers of `PremonitionMini.answer`; ENT ids stay `vocab_size + e`."""
@@ -317,6 +364,10 @@ class _Episode:
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool
     q_visit: torch.Tensor
     q_line: torch.Tensor
+    mentions: Optional[torch.Tensor] = None   # [Q, n_ent] bool, S4 `ent_key` only: entities a question may mean
+    q_ents: Optional[torch.Tensor] = None     # [Q, n_ent] bool, S5 `dec_ent_match` only: entities in the question
+    match: Optional[torch.Tensor] = None      # [Q, cards] float, S5: 1 where the slot's card names a q_ents entity
+    ask_match: Optional[torch.Tensor] = None  # [Q, L + 1] float, S6: 1 where store card l names a q_ents entity
 
 
 class PremonitionMini(nn.Module):
@@ -331,21 +382,85 @@ class PremonitionMini(nn.Module):
         self.think = Think(config)
         self.heads = Heads(config)
         self.decoder = Decoder(config)
+        if config.decoder_raw_cards:
+            # The raw rows live in the base episode layout (`_start`, `_insert`, `_step`); a subclass that
+            # replaces any of these or its own decode path would leave them empty, stale or colliding.
+            own = [name for name in ("_start", "_insert", "_step", "_greedy", "_decode_logits", "forward",
+                                     "answer", "_card_base", "_register_base")
+                   if getattr(type(self), name) is not getattr(PremonitionMini, name)]
+            if own:
+                raise ValueError(f"decoder_raw_cards: {type(self).__name__} overrides {', '.join(own)}")
         self.reset_parameters()
+        if config.card_address:
+            if type(self) is not PremonitionMini:
+                # Subclasses may swap the writer or own the episode or decode path after this point, which would
+                # break the address/writer pairing or the layout. S3 is defined on the base model only.
+                raise ValueError(f"card_address is defined for PremonitionMini only, not {type(self).__name__}")
+            # Built after `reset_parameters` inside fork_rng: every shared weight and the global streams equal
+            # D + S2's at the same seed (S3 card §1, amendment 2).
+            with torch.random.fork_rng(devices=_live_cuda_devices()):
+                self.address = CardAddress(config)
+                draw = int(torch.randint(2 ** 62, (1,), device="cpu").item())
+            self._address_seed = (draw * 6364136223846793005 + 1442695040888963407) % 2 ** 63   # not the next draw
+            self._init_address()
+            base, cards = config.question_rows + config.slots, config.cards
+            self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
+                                                               torch.arange(config.rows, config.rows + cards)]),
+                                 persistent=False)            # card rows, raw rows: keys from the address block
+        if config.dec_ent_match:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"dec_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
+            self.dec_kappa = nn.Parameter(torch.zeros(()))          # S5 kappa_d: no RNG draw, starts at 0
+        if config.ask_ent_match:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"ask_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
+            self.ask_kappa = nn.Parameter(torch.zeros(()))          # S6 kappa_a: no RNG draw, starts at 0
+        if config.ent_key:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"ent_key is defined for PremonitionMini only, not {type(self).__name__}")
+            # S4 card §1-§2: built after `reset_parameters` inside fork_rng (shared weights and global streams as
+            # D + S2's); W_e N(0, 0.02) from its own generator; kappa_e = 0, so the ASK scores start unchanged.
+            with torch.random.fork_rng(devices=_live_cuda_devices()):
+                self.ent_query = nn.Linear(config.d_model, config.n_ent)
+                draw = int(torch.randint(2 ** 62, (1,), device="cpu").item())
+            self._ent_seed = (draw * 2862933555777941757 + 3037000493) % 2 ** 63     # distinct from S3's seed
+            self.kappa_e = nn.Parameter(torch.zeros(()))
+            self._init_ent_key()
 
     # ------------------------------------------------------------------ setup
+    def _init_address(self) -> None:
+        """S3 init: pool = a copy of the writer's pool, proj N(0, 0.02) from its own generator, bias 0."""
+        generator = torch.Generator().manual_seed(self._address_seed)
+        with torch.no_grad():
+            self.address.pool.load_state_dict(self.writer.pool.state_dict())
+            self.address.proj.weight.copy_(torch.randn(self.address.proj.weight.shape, generator=generator,
+                                                       device="cpu") * 0.02)
+            self.address.proj.bias.zero_()
+
+    def _init_ent_key(self) -> None:
+        """S4 init: W_e N(0, 0.02) from its own generator, bias 0, kappa_e 0."""
+        generator = torch.Generator().manual_seed(self._ent_seed)
+        with torch.no_grad():
+            self.ent_query.weight.copy_(torch.randn(self.ent_query.weight.shape, generator=generator,
+                                                    device="cpu") * 0.02)
+            self.ent_query.bias.zero_()
+            self.kappa_e.zero_()
+
     def reset_parameters(self) -> None:
         config, d = self.config, self.config.d_model
         nn.init.normal_(self.embed.weight, std=d ** -0.5)
         residual = {id(m) for m in self.modules() if isinstance(m, (MinGRU, LocalAttention))}
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
-        for module in self.modules():
+        own = {id(m) for m in self.address.modules()} if hasattr(self, "address") else set()   # S3 inits apart
+        own |= {id(self.ent_query)} if hasattr(self, "ent_query") else set()                  # S4 inits apart
+        shared = [m for m in self.modules() if id(m) not in own]
+        for module in shared:
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, std=0.02)
                 nn.init.zeros_(module.bias)
             elif isinstance(module, nn.Embedding) and module is not self.embed:
                 nn.init.normal_(module.weight, std=0.02)
-        for module in self.modules():
+        for module in shared:
             outs = []
             if id(module) in residual:
                 outs.append(module.out)
@@ -365,6 +480,16 @@ class PremonitionMini(nn.Module):
         if self.writer is not None:
             nn.init.normal_(self.writer.null_key)
             nn.init.normal_(self.writer.null_value, std=0.02)
+        if getattr(self, "address", None) is not None:          # S3: a re-init restores the S3 init rules
+            self._init_address()
+        if getattr(self, "ent_query", None) is not None:        # S4: likewise
+            self._init_ent_key()
+        if getattr(self, "dec_kappa", None) is not None:        # S5: kappa_d back to 0
+            with torch.no_grad():
+                self.dec_kappa.zero_()
+        if getattr(self, "ask_kappa", None) is not None:        # S6: kappa_a back to 0
+            with torch.no_grad():
+                self.ask_kappa.zero_()
 
     def num_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters())
@@ -373,8 +498,17 @@ class PremonitionMini(nn.Module):
         """Trained parameters per module, named as in `MiniConfig.parameter_breakdown`."""
         parts = {"embedding": self.embed, "reader": self.reader, "card_writer": self.writer,
                  "think": self.think, "heads": self.heads, "decoder": self.decoder}
-        return {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
-                for name, module in parts.items()}
+        if self.config.card_address:
+            parts["card_address"] = self.address
+        counts = {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
+                  for name, module in parts.items()}
+        if self.config.dec_ent_match:
+            counts["dec_ent_match"] = self.dec_kappa.numel()
+        if self.config.ask_ent_match:
+            counts["ask_ent_match"] = self.ask_kappa.numel()
+        if self.config.ent_key:
+            counts["ent_key"] = sum(p.numel() for p in self.ent_query.parameters()) + self.kappa_e.numel()
+        return counts
 
     # ------------------------------------------------------------------ reading
     def read(self, batch: VisitBatch) -> torch.Tensor:
@@ -390,6 +524,8 @@ class PremonitionMini(nn.Module):
         return F.cross_entropy(logits.float(), batch.tokens[:, 1:][keep])
 
     def build_store(self, hidden: torch.Tensor, batch: VisitBatch) -> Optional[CardStore]:
+        if self.config.card_address:
+            return replace(self.writer(hidden, batch), addresses=self.address(hidden, batch))
         return self.writer(hidden, batch) if self.writer is not None else None
 
     def _mentions(self, batch: VisitBatch, low: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -429,11 +565,30 @@ class PremonitionMini(nn.Module):
             valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
         parts.append((self.think.register.weight.float() + type_row[ROW_REGISTER]).expand(count, -1, -1))
         valid.append(torch.ones(count, config.registers, dtype=torch.bool, device=device))
+        if config.decoder_raw_cards:
+            # S2: card rows as inserted, after the think rows. Think never reads or updates them (`_step`);
+            # the decoder reads them with every other row of the episode.
+            parts.append(torch.zeros(count, config.cards, d, device=device))
+            valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
+        if config.card_address:
+            # S3: each ring slot's address row, after the raw rows. Never valid memory itself: the decoder takes
+            # the keys of the card and raw rows from it (`_decode_logits`); Think skips it like the raw rows.
+            parts.append(torch.zeros(count, config.cards, d, device=device))
+            valid.append(torch.zeros(count, config.cards, dtype=torch.bool, device=device))
         fetched = (torch.zeros(count, store.lines + 1, dtype=torch.bool, device=device)
                    if store is not None else None)
-        return _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
-                        torch.zeros(count, dtype=torch.long, device=device), fetched,
-                        batch.q_visit, batch.q_line)
+        episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
+                           torch.zeros(count, dtype=torch.long, device=device), fetched,
+                           batch.q_visit, batch.q_line, mentions if config.ent_key else None)
+        if config.dec_ent_match:
+            episode.q_ents = self._mentions(batch, start)          # entities in the question span itself
+            episode.match = torch.zeros(count, config.cards, device=device)
+        if config.ask_ent_match:                                    # S6: which store cards name a question entity
+            ents = store.ents[batch.q_visit]                                         # [Q, L, E]
+            hit = (episode.q_ents.unsqueeze(1).expand(-1, ents.shape[1], -1)
+                   .gather(2, ents.clamp_min(0)) & (ents >= 0)).any(2)               # [Q, L]
+            episode.ask_match = F.pad(hit.float(), (0, 1))                           # NULL last: 0
+        return episode
 
     @property
     def _card_base(self) -> int:
@@ -449,6 +604,8 @@ class PremonitionMini(nn.Module):
         config = self.config
         if cards.shape[1] > config.card_rows:
             raise ValueError(f"cannot insert {cards.shape[1]} cards into {config.card_rows} rows at once")
+        if config.card_address and store.addresses is None:      # before anything is written
+            raise ValueError("card_address needs a store from PremonitionMini.build_store (it holds the addresses)")
         real = cards >= 0
         if not real.any():
             return
@@ -463,6 +620,23 @@ class PremonitionMini(nn.Module):
         episode.x = episode.x.index_put((who[real], position[real]), rows[real])
         episode.valid = episode.valid.index_put(
             (who[real], position[real]), torch.ones_like(position[real], dtype=torch.bool))
+        if config.decoder_raw_cards:
+            raw = position[real] + (config.rows - self._card_base)    # the same ring slot among the raw rows
+            episode.x = episode.x.index_put((who[real], raw), rows[real])
+            episode.valid = episode.valid.index_put((who[real], raw), torch.ones_like(raw, dtype=torch.bool))
+        if config.dec_ent_match:                       # S5: does the slot's card name a question entity?
+            q_ents = episode.q_ents[index]                                           # [n, n_ent]
+            hit = (q_ents.unsqueeze(1).expand(-1, ents.shape[1], -1)
+                   .gather(2, ents.clamp_min(0)) & (ents >= 0)).any(2)               # [n, K]
+            episode.match = episode.match.index_put((who[real], position[real] - self._card_base),
+                                                    hit[real].float())
+        if config.card_address:
+            visit = episode.q_visit[index].unsqueeze(1).expand_as(cards)
+            found = (lines >= 0).unsqueeze(-1)                         # `gather` gives line -1 for NULL / none
+            address = store.addresses[visit, lines.clamp_min(0)].float() * found          # NULL: zero address
+            address = address + self.think.age(bucket).float() + self.think.row_type.weight[ROW_CARD].float()
+            slot = position[real] + (config.rows + config.cards - self._card_base)
+            episode.x = episode.x.index_put((who[real], slot), address[real])
         episode.count = episode.count.index_add(0, index, real.long().sum(1))
         episode.fetched = episode.fetched.index_put(
             (who[real], cards[real]), torch.ones_like(cards[real], dtype=torch.bool))
@@ -483,7 +657,12 @@ class PremonitionMini(nn.Module):
     def _step(self, episode: _Episode, index: torch.Tensor, step: int, store: Optional[CardStore]
               ) -> tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
         """One loop for questions `index`: (rows, halt logit, ask logit, ASK scores)."""
-        rows = self.think(episode.x[index], episode.valid[index], step)
+        if self.config.decoder_raw_cards:
+            x, think_rows = episode.x[index], self.config.rows
+            rows = torch.cat([self.think(x[:, :think_rows], episode.valid[index][:, :think_rows], step).to(x.dtype),
+                              x[:, think_rows:]], dim=1)
+        else:
+            rows = self.think(episode.x[index], episode.valid[index], step)
         episode.x = episode.x.index_copy(0, index, rows.to(episode.x.dtype))
         register = _norm(rows[:, self._register_base])
         halt = self.heads.halt(register).squeeze(-1).float()
@@ -492,12 +671,63 @@ class PremonitionMini(nn.Module):
         ask = self.heads.ask(register).squeeze(-1).float()
         scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
                            self.heads.log_kappa.exp(), self.think.age_bias,
-                           episode.fetched[index], questions=index)
+                           episode.fetched[index], questions=index,
+                           extra=self._entity_scores(register, store, episode, index))
         return rows, halt, ask, scores
 
-    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor
-                       ) -> torch.Tensor:
+    def _entity_scores(self, register: torch.Tensor, store: CardStore, episode: _Episode,
+                       index: torch.Tensor) -> Optional[torch.Tensor]:
+        """S4: [n, L + 1] kappa_e * (pi . e_l); pi = softmax of W_e r0 over the mentioned entities, e_l the card's
+        entity multi-hot / its count (0 for NULL and entity-free cards). Without `ent_key`: S6's term (or None)."""
+        if not self.config.ent_key:
+            return self._ask_match(episode, index)
+        logits = self.ent_query(register).float().masked_fill(~episode.mentions[index], -math.inf)
+        pi = torch.softmax(logits, -1).nan_to_num(0.0)            # a question with no mention: pi = 0
+        ents = store.ents[episode.q_visit[index]]                  # [n, L, E]
+        present = (ents >= 0).float()
+        multi = (F.one_hot(ents.clamp_min(0), self.config.n_ent).float() * present.unsqueeze(-1)).sum(2)
+        multi = multi / present.sum(2, keepdim=True).clamp_min(1.0)
+        match = torch.einsum("ne,nle->nl", pi, multi)
+        return self.kappa_e * F.pad(match, (0, 1))                 # NULL last: 0
+
+    def _ask_match(self, episode: _Episode, index: torch.Tensor) -> Optional[torch.Tensor]:
+        """S6: [n, L + 1] kappa_a * m_l, m_l = 1 where card l names a question entity (NULL 0). None without
+        `ask_ent_match`, and while kappa_a is frozen at exactly 0 (S6 stage 1), so the base ASK text runs."""
+        if not self.config.ask_ent_match:
+            return None
+        if not self.ask_kappa.requires_grad and float(self.ask_kappa) == 0.0:
+            return None
+        return self.ask_kappa * episode.ask_match[index]
+
+    def _decode_logits(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor,
+                       bias: Optional[torch.Tensor] = None) -> torch.Tensor:
+        if self.config.card_address:
+            return self._decode_addressed(rows, valid, inputs)
+        if bias is not None:                                     # S5
+            return self.decoder(self.embed(inputs), rows, valid, bias=bias)
         return self.decoder(self.embed(inputs), rows, valid)
+
+    def _match_bias(self, episode: _Episode, index: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
+        """S5: [n, rows + cards] decoder score bias, kappa_d on both rows (think card row, S2 raw row) of every
+        slot whose card names a question entity, 0 elsewhere. None without `dec_ent_match`."""
+        if not self.config.dec_ent_match:
+            return None
+        if not self.dec_kappa.requires_grad and float(self.dec_kappa) == 0.0:
+            return None                  # frozen at 0 (S5 stage 1): exactly no bias, so the base attention path runs
+        match = episode.match if index is None else episode.match[index]
+        n, cards, base, think = match.shape[0], self.config.cards, self._card_base, self.config.rows
+        hit = self.dec_kappa * match
+        zeros = match.new_zeros
+        return torch.cat([zeros(n, base), hit, zeros(n, think - base - cards), hit], dim=1)
+
+    def _decode_addressed(self, rows: torch.Tensor, valid: torch.Tensor, inputs: torch.Tensor) -> torch.Tensor:
+        """S3: memory = think rows + raw rows; the keys of the 16 card rows and the 16 raw rows come from their
+        ring slot's address row, every other key and every value from the row itself."""
+        think, cards = self.config.rows, self.config.cards
+        if rows.shape[1] != think + 2 * cards:
+            raise ValueError(f"card_address expects {think + 2 * cards} episode rows, got {rows.shape[1]}")
+        memory, address = rows[:, :think + cards], rows[:, think + cards:]
+        return self.decoder(self.embed(inputs), memory, valid[:, :think + cards], keys=(self._address_slots, address))
 
     # ------------------------------------------------------------------ training
     def forward(self, batch: VisitBatch, mode: str = "teacher", p_own: float = 0.0,
@@ -568,7 +798,9 @@ class PremonitionMini(nn.Module):
             pairs += index.numel()
             rows, halt, ask, scores = self._step(episode, index, step, store)
             # L_ans (deep supervision) and the HALT target.
-            hidden_ans = self._decode_logits(rows, episode.valid[index], inputs[index])
+            bias = self._match_bias(episode, index)                       # S5; None keeps the base call
+            hidden_ans = (self._decode_logits(rows, episode.valid[index], inputs[index]) if bias is None else
+                          self._decode_logits(rows, episode.valid[index], inputs[index], bias=bias))
             target = targets[index]
             keep = target != IGNORE_INDEX
             logits = F.linear(hidden_ans[keep], self.embed.weight).float()
@@ -661,7 +893,8 @@ class PremonitionMini(nn.Module):
             return torch.zeros(())
         register = _norm(rows[:, self._register_base])
         scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index)
+                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index,
+                           extra=self._entity_scores(register, store, episode, index))
         top = store.top(scores, self.config.top_k)
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
@@ -742,8 +975,10 @@ class PremonitionMini(nn.Module):
         out = torch.full((count, config.max_answer), config.pad_id, dtype=torch.long, device=device)
         lengths = torch.full((count,), config.max_answer, dtype=torch.long, device=device)
         done = torch.zeros(count, dtype=torch.bool, device=device)
+        bias = self._match_bias(episode)                          # S5 (None without it); fixed while decoding
         for position in range(config.max_answer):
-            hidden = self._decode_logits(episode.x, episode.valid, sequence)[:, -1]
+            hidden = (self._decode_logits(episode.x, episode.valid, sequence) if bias is None else
+                      self._decode_logits(episode.x, episode.valid, sequence, bias=bias))[:, -1]
             logits = F.linear(hidden, self.embed.weight).float().masked_fill(banned, -math.inf)
             token = logits.argmax(-1)
             token = torch.where(done, torch.full_like(token, config.pad_id), token)
