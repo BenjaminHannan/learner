@@ -1,8 +1,10 @@
-# Bid C card: width on the B2 creative model (DRAFT, UNSEALED, 2026-10-20)
+# Bid C card: width on the B2 creative model (SEALED, 2026-10-22)
 
-**Status: draft for sealing. NOT sealed. Nothing books against it.**
-- The bid choice (Bid C) and the axis call (depth-first, 2(b) not taken) reached this session as a coordinator relay of Ben's general "unblock them" instruction, not as Ben's words in this session. They are recorded here as **relayed, pending Ben's in-session confirmation**.
-- Sealing = committing this file with the open rulings below filled in, then quoting its commit hash before any run.
+**Status: SEALED.** This commit is the seal. Its hash is quoted before any run, and the coordinator checks it before accepting.
+- **Bid C and depth-first (2(b) not taken): CONFIRMED.** Ben told the coordinator "can you type it. I don't want to do that", and the coordinator answered for him (relayed to this session 10-22). Earlier, Ben's general instruction to unblock the sessions had also been relayed (10-20). The confirmation was not typed in this session; that provenance is recorded here as it happened.
+- **Rulings:** R1 = A, R2 accepted (§2a), R3 and R4 approved (coordinator 10-20). The load gate, inert count and headroom statements were accepted (coordinator 10-20).
+- **Sealed does not mean booked.** Calibration still waits on the review of the three calibration code drafts (§5), with the a2a83f9f0 fix folded in (2-round cap). Any change to a bar goes to Ben. Any Vast portion goes to the coordinator as a bid.
+- Earlier file name: `width-pilot-bid-C-card-DRAFT-2026-10-20.md` (renamed at sealing).
 
 Labels: **shown** = read from code or results (fact sheet of 10-20, citations in the session record); **suggested** = this card's choice, open to ruling.
 
@@ -34,7 +36,7 @@ All the creative-stage lrs were set at 3M and stay fixed (one change). The C8 an
 | # | Ruling | Default this card proposes |
 |---|---|---|
 | R1 (**RULED A**, coordinator 10-20, round 2; conditions in §2b) | **Which fixed B2.** Both arms need the 9-register / 8-letter GEN bug fixed. | **(A) custom_io B2 plus a ported `caps.py`** (the 8a-G import-fixed overlay, sha 3da2dfbb) with a minimal caps JSON: `max_ans 35`, `n_reg 36`, everything else at today's values. Smallest change, and the ledger code needs no edit. (B), the 8a-G `src-b3` B2, changes loops and workspace too, so it is not one change. |
-| R2 (**not ready**, coordinator 10-20: needs (a)–(c), now in §2a) | **The test.** The sealed C2b test (sha 2bdadb18…) **was opened and scored on 10-16**, and the roadmap says "opened once". | **A fresh sealed test, "C2c"**, drawn by the same generator on the same five held-out kinds (about 512 rows, about 102 per kind), with the seed named in a commit before generation (the HO2 / VAL pattern). The old test is not re-read. Re-reading it needs Ben's explicit ruling. |
+| R2 (**ACCEPTED**, coordinator 10-20, with (a)–(d) in §2a) | **The test.** The sealed C2b test (sha 2bdadb18…) **was opened and scored on 10-16**, and the roadmap says "opened once". | **A fresh sealed test, "C2c"**, drawn by the same generator on the same five held-out kinds (about 512 rows, about 102 per kind), with the seed named in a commit before generation (the HO2 / VAL pattern). The old test is not re-read. Re-reading it needs Ben's explicit ruling. |
 | R3 (**APPROVED**, coordinator 10-20) | **Arms.** c2b.py always builds and scores all five arms (N′, W, R, H, M); dropping H and M needs code edits. | **Run all five, read only N′, W and R.** No creative-code change beyond §5. H and M are printed as report-only. |
 | R4 (**APPROVED**, coordinator 10-20) | **Bars.** Any bar change goes to Ben. | The house form in §3, sized from Bid C's own sigma_d. |
 
