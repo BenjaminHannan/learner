@@ -1,0 +1,64 @@
+{
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "small_350M": {
+  "all": 66.1,
+  "all_contains": 71.5,
+  "fresh_source": 68.1,
+  "fresh_paraphrase": 64.2,
+  "new_word_answers": 69.8,
+  "yes_no": 40.9,
+  "train_fit_bank": 67.4,
+  "gen_heldout": 93.4,
+  "lesion_zero_pool": 0.0,
+  "families": {
+   "comparative_direction": 69.3,
+   "event_ordering": 54.2,
+   "explicit_negation_with_positive_alternative": 65.6,
+   "giver_recipient_roles": 89.6,
+   "two_simple_relations_combined": 69.8,
+   "unambiguous_descriptive_reference": 48.4
+  }
+ },
+ "big_1p2B": {
+  "all": 92.6,
+  "all_contains": 94.4,
+  "fresh_source": 92.9,
+  "fresh_paraphrase": 92.4,
+  "new_word_answers": 93.0,
+  "yes_no": 90.9,
+  "train_fit_bank": 94.6,
+  "gen_heldout": 99.7
+ },
+ "bare_350M_lm_alone": 33.9,
+ "bare_350M_lm_fewshot": 50.0,
+ "M1_drop_vs_1p2B": {
+  "n": 6,
+  "mean": 26.5,
+  "ci95": [
+   20.4,
+   32.6
+  ],
+  "per_seed": [
+   23.4,
+   21.9,
+   33.3,
+   21.4,
+   24.5,
+   34.4
+  ],
+  "verdict": "FAIL"
+ },
+ "M2_vs_bare_1p2B_8shot_75": {
+  "mean": 66.1,
+  "min": 60.9,
+  "verdict": "FAIL"
+ },
+ "complete": true
+}
