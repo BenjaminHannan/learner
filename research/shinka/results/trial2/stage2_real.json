@@ -1,0 +1,3174 @@
+{
+  "summary": {
+    "mode": "real",
+    "money_stop": null,
+    "stage2_spent_usd": 0.2132992,
+    "cards": 175,
+    "deduped_away": 0,
+    "kept": 175,
+    "families": 175,
+    "screened": 175,
+    "unparsed_verdicts": 0,
+    "cluster": {
+      "stop_reason": "refusal",
+      "parsed": false,
+      "unassigned": 175
+    },
+    "families_passing": 62,
+    "G2_min": 15,
+    "G2_pass": false
+  },
+  "dropped_duplicates": [],
+  "families": [
+    {
+      "name": "(unassigned) c000",
+      "members": [
+        "c000"
+      ],
+      "rep": "c000",
+      "screen": {
+        "rep": "c000",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is sequential stick-breaking over three role niches with capacity carried between them, which is closest to the published stick-breaking attention (Tan et al. 2024) and not to any listed item; it is not a direct combination of two listed items, though it resembles multi-head pooling with a different normalisation."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c001",
+      "members": [
+        "c001"
+      ],
+      "rep": "c001",
+      "screen": {
+        "rep": "c001",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is iterative Lotka-Volterra competition with carrying capacity and cross-niche exclusion, which is not a listed item; the closest is slot attention, but its softmax-over-slots competition is a different mechanism, not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c002",
+      "members": [
+        "c002"
+      ],
+      "rep": "c002",
+      "screen": {
+        "rep": "c002",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (seed), with the pool-weight scorer fed by pairwise relation-network-style features (relation networks, pairwise then sum)",
+          "combination": true,
+          "reason": "The core operation is a softmax attention pool whose token weights come from an MLP on pairwise invariant interaction features (Gram entries, neighbour leakage), which directly combines the known single-softmax pool with relation networks; the EGNN-style invariance framing does not add a new core operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c003",
+      "members": [
+        "c003"
+      ],
+      "rep": "c003",
+      "screen": {
+        "rep": "c003",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation (a coevolving population of adversarial parasites that perturb only the selector's view of the token states, with gradient reversal against the writer) is not on the KNOWN list; its closest published relatives, PGD adversarial training and DANN, are outside the list and are not direct combinations of listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c004",
+      "members": [
+        "c004"
+      ],
+      "rep": "c004",
+      "screen": {
+        "rep": "c004",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, an MLDG-style inner step on one split of training names with an outer loss on a disjoint split, is a published meta-learning domain-generalization method (Li et al., 2018) but is not an item on the KNOWN list, and it is not a combination of two listed items; the writer itself is a per-line function trained by answer-only cross-entropy."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c005",
+      "members": [
+        "c005"
+      ],
+      "rep": "c005",
+      "screen": {
+        "rep": "c005",
+        "verdict": {
+          "implementable": true,
+          "known_item": "VQ codebook keys",
+          "combination": true,
+          "reason": "The learned detector bank is a prototype/codebook match whose max-over-prototypes score is used as a multiplicative gate on the pooling weights, which is a direct combination of the VQ codebook item with the gating item, though the chunkwise r-of-8 soft-count matching is a variant of classic negative selection rather than a listed item."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c006",
+      "members": [
+        "c006"
+      ],
+      "rep": "c006",
+      "screen": {
+        "rep": "c006",
+        "verdict": {
+          "implementable": true,
+          "known_item": "GLU / sigmoid gating applied to attention-pool weights (nearest known item; the product-of-gates form is not listed verbatim)",
+          "combination": true,
+          "reason": "The core operation is a per-token multiplicative product of sigmoid gates used to reweight a normalized pool, which is a direct combination of the known GLU/gating items with the seed single-softmax attention pool, and the kinetic-proofreading framing adds no new mechanism beyond that."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c007",
+      "members": [
+        "c007"
+      ],
+      "rep": "c007",
+      "screen": {
+        "rep": "c007",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core is a softmax attention pool whose logits come from leave-one-out deletion effects on a shared Deep Sets-style mean-pooled MLP summary, which combines two KNOWN items (single softmax attention pool and Deep Sets), though occlusion saliency is a related post-hoc idea."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c008",
+      "members": [
+        "c008"
+      ],
+      "rep": "c008",
+      "screen": {
+        "rep": "c008",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Slot attention (iterative competitive pooling), with Hopfield-style iterated pairwise similarity dynamics",
+          "combination": true,
+          "reason": "The core operation is iterated pairwise-interaction weight updates (relation-network-style pairwise terms, as in Hopfield/attention iterations) followed by competitive weighted pooling as in slot attention, which is a direct combination of two listed items even though the signed Lotka-Volterra extinction dynamics are a distinct framing."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c009",
+      "members": [
+        "c009"
+      ],
+      "rep": "c009",
+      "screen": {
+        "rep": "c009",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys, applied across tokens (set-wise) rather than across features, feeding a single softmax attention pool",
+          "combination": true,
+          "reason": "The idea is a per-line robust standardization of the token states (median/MAD across the 10 tokens), which is a set-wise variant of the known whitening/LayerNorm item, followed by the known softmax attention pool, so it is a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c010",
+      "members": [
+        "c010"
+      ],
+      "rep": "c010",
+      "screen": {
+        "rep": "c010",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is training-time input augmentation (a random orthogonal rotation of name embeddings before the frozen reader), which is not on the KNOWN list and is not a combination of two listed writer mechanisms; the closest published analogue is Hermann et al. 2015 entity anonymization, which is not on the list either."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c011",
+      "members": [
+        "c011"
+      ],
+      "rep": "c011",
+      "screen": {
+        "rep": "c011",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, recovering each token's ordinal rank among content tokens from exclusive prefix sums of a learned gate and pooling by Gaussian rank slots, is not on the known list. Its closest relatives are soft sorting and ranking (NeuralSort, soft rank), which use score comparisons rather than cumulative counts, so it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c012",
+      "members": [
+        "c012"
+      ],
+      "rep": "c012",
+      "screen": {
+        "rep": "c012",
+        "verdict": {
+          "implementable": true,
+          "known_item": "relation networks (pairwise then sum), with the pairwise features used to score a softmax attention pool",
+          "combination": true,
+          "reason": "The core operation is a per-token score built from sorted pairwise Gram similarities, which is a relation-network-style pairwise feature, fed into a single softmax attention pool. That is a direct combination of two KNOWN items, and the card is computable per line from the 10x32 states within the 20,000-number limit."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c013",
+      "members": [
+        "c013"
+      ],
+      "rep": "c013",
+      "screen": {
+        "rep": "c013",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Per-line blind deconvolution (estimating neighbour-mixing coefficients from filler tokens and inverting the banded system before the seed pool) is not on the known list; its nearest listed item is conv line encoders, but the kernel is estimated per line and inverted exactly rather than learned as weights."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c014",
+      "members": [
+        "c014"
+      ],
+      "rep": "c014",
+      "screen": {
+        "rep": "c014",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The writer's training objective includes an adversary cross-entropy on name labels read from training questions, which violates the required answer-only cross-entropy training, and the core mechanism (gradient-reversal invariance of attention-pool features to identity, DANN-style) is not on the KNOWN list and is not a direct combination of two listed items; the closest published method is domain-adversarial training (Ganin et al., 2016)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c015",
+      "members": [
+        "c015"
+      ],
+      "rep": "c015",
+      "screen": {
+        "rep": "c015",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a variational information bottleneck on the per-token attention-selector input, which is not an explicit list item and is not a direct combination of two listed items, though it is close in spirit to Deep VIB (Alemi et al. 2017) and variational attention, and the list's Gumbel/stochastic selection family."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c016",
+      "members": [
+        "c016"
+      ],
+      "rep": "c016",
+      "screen": {
+        "rep": "c016",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The per-line soft rank transform across the 10 tokens is a set-level, distribution-free feature normalisation that is not on the known list. Its closest known relative is LayerNorm/whitening, but that normalises across features rather than across set elements, and the rest (an MLP selector with softmax pooling of raw states) is the seed attention pool with a new input preprocessing step, so it is not a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c017",
+      "members": [
+        "c017"
+      ],
+      "rep": "c017",
+      "screen": {
+        "rep": "c017",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys",
+          "combination": false,
+          "reason": "The core operation, an orthonormal (Stiefel/Cayley-parametrised) key projection that preserves energy in undersampled directions, is a published orthogonal-weight technique (Arjovsky et al. 2016 and related Cayley/Stiefel work) that is close to the listed key whitening item, but it is not itself on the KNOWN list, so this is not a clean two-item combination."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c018",
+      "members": [
+        "c018"
+      ],
+      "rep": "c018",
+      "screen": {
+        "rep": "c018",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: top-k / hard token selection, with stick-breaking attention as the nearest published relative)",
+          "combination": true,
+          "reason": "The writer picks the k-th content token by a soft cumulative count gated by a learned filler-prototype (VQ-like) contentness score, which combines a codebook gate with top-k-style token selection, and it fits the per-line, under-20k-parameter, answer-only training constraints."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c019",
+      "members": [
+        "c019"
+      ],
+      "rep": "c019",
+      "screen": {
+        "rep": "c019",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Relation networks (pairwise inner-product features fed to an MLP) combined with a single softmax attention pool for selection weights",
+          "combination": true,
+          "reason": "The selector is an MLP over pairwise token inner products, which is a relation-network pairwise term, and its softmax weights drive a standard attention pool, so it is a direct combination of two known items and fits the per-line, answer-only interface."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c020",
+      "members": [
+        "c020"
+      ],
+      "rep": "c020",
+      "screen": {
+        "rep": "c020",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, exact forward-backward marginals over a role-subset trellis that enforces exactly one person, relation and value, is not on the KNOWN list; the closest published method is linear-chain structured attention (Kim et al. 2017), which lacks the exactly-once role-subset constraint, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c021",
+      "members": [
+        "c021"
+      ],
+      "rep": "c021",
+      "screen": {
+        "rep": "c021",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys",
+          "combination": false,
+          "reason": "The core operation is a learned key projection whose row space is whitened via the polar factor (AA^T)^(-1/2)A, which is a whitening transform of the key path and so matches the listed whitening-of-keys item; the orthogonality constraint is close to LSH/random-projection keys but is not a separate listed mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c022",
+      "members": [
+        "c022"
+      ],
+      "rep": "c022",
+      "screen": {
+        "rep": "c022",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a fixed Hadamard dispersal followed by structured block erasure as a training-time regularizer, which is closest to DropBlock plus random rotations; neither is on the KNOWN list and the pairing is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c023",
+      "members": [
+        "c023"
+      ],
+      "rep": "c023",
+      "screen": {
+        "rep": "c023",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys (per-component normalisation), with phasor-style VSA binding as the closest related item",
+          "combination": true,
+          "reason": "The card builds each key from separate person and relation projections (the known address-key pattern) and then normalises each complex pair to unit modulus (a per-component key normalisation, the same family as LayerNorm/whitening of keys), so it is a direct combination of two known items rather than a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c024",
+      "members": [
+        "c024"
+      ],
+      "rep": "c024",
+      "screen": {
+        "rep": "c024",
+        "verdict": {
+          "implementable": true,
+          "known_item": "conv line encoders (fixed-offset neighbour read), with the anchor implemented as a softmax attention pool",
+          "combination": true,
+          "reason": "The core is a softmax attention pool that locates the value token, followed by per-offset projections of neighbouring states (a conv-style fixed-offset read), which directly combines two known items: attention pooling and conv/role-specific projections."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c025",
+      "members": [
+        "c025"
+      ],
+      "rep": "c025",
+      "screen": {
+        "rep": "c025",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Stick-breaking attention (Tan et al., a published method, not verbatim on the list; closest to the top-k/entmax pooling family), with multi-head pooling as the other part",
+          "combination": true,
+          "reason": "The operator is a stick-breaking cumulative-product weighting (a published method) run as three ordered pooling heads with sigmoid content gates, which combines multi-head pooling with gating, and its gain depends on an unsupported assumption that content tokens have a fixed agent-first order."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c026",
+      "members": [
+        "c026"
+      ],
+      "rep": "c026",
+      "screen": {
+        "rep": "c026",
+        "verdict": {
+          "implementable": true,
+          "known_item": "capsule routing (routing-by-agreement with coupling coefficients normalized across parent capsules), closely matched by slot attention with fixed learned queries",
+          "combination": true,
+          "reason": "The core is multi-query attention pooling with four fixed learned role vectors, where the competitive normalization across roles is a Sinkhorn-balanced version of capsule-style coupling coefficients, so it is a direct combination of two listed items rather than a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c027",
+      "members": [
+        "c027"
+      ],
+      "rep": "c027",
+      "screen": {
+        "rep": "c027",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Hopfield nets (cosine-similarity retrieval over the line's own tokens with a sharp softmax), with the query built from a soft attention-pool pointer",
+          "combination": true,
+          "reason": "The card is a soft-attention pointer to a head token, followed by a learned linear query matched by cosine and sharp-softmax copy over the same line's tokens, which combines the known attention-pool and Hopfield-style retrieval items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c028",
+      "members": [
+        "c028"
+      ],
+      "rep": "c028",
+      "screen": {
+        "rep": "c028",
+        "verdict": {
+          "implementable": true,
+          "known_item": "GRU/LSTM/conv line encoders (a linear depthwise 1D conv along positions), with the seed softmax attention pool",
+          "combination": true,
+          "reason": "The core operation is a fixed, parameter-tied linear filter along the 10 positions (a restricted depthwise conv, here a Neumann-series inverse) followed by the unchanged seed attention pool, which is a direct combination of two listed items (conv line encoder plus single softmax attention pool)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c029",
+      "members": [
+        "c029"
+      ],
+      "rep": "c029",
+      "screen": {
+        "rep": "c029",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a differentiable forward-backward (CTC/HMM-style) monotone alignment that produces slot posteriors used as pooling weights. That is a published method family outside the KNOWN list, and it is not a direct combination of two listed items, since the ordered-slot DP constraint is not itself on the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c030",
+      "members": [
+        "c030"
+      ],
+      "rep": "c030",
+      "screen": {
+        "rep": "c030",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, assigning roles by a soft cumulative count of content-token presence and gating pooled tokens by their rank (an ordinal, sequence-position code), does not match any listed item; its nearest relatives, role-specific projections and softmax attention pooling, use learned per-role content queries or projections rather than a cumsum-rank gate."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c031",
+      "members": [
+        "c031"
+      ],
+      "rep": "c031",
+      "screen": {
+        "rep": "c031",
+        "verdict": {
+          "implementable": true,
+          "known_item": "NTM/DNC write heads (location-based shift addressing)",
+          "combination": true,
+          "reason": "The card combines a softmax attention pool that selects the relation landmark with NTM-style shift addressing that moves the weight one content-step back to the person, both of which are on the known list, and it fits the per-line interface with about 2k parameters trained by answer-only cross-entropy."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c032",
+      "members": [
+        "c032"
+      ],
+      "rep": "c032",
+      "screen": {
+        "rep": "c032",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "A learned orthogonal (Cayley-parametrised Stiefel) linear key map with a fixed coordinate slice is not the same operation as LayerNorm/whitening or random LSH projections, which are the closest listed items, so it does not match a known item or a direct combination of two."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c033",
+      "members": [
+        "c033"
+      ],
+      "rep": "c033",
+      "screen": {
+        "rep": "c033",
+        "verdict": {
+          "implementable": true,
+          "known_item": "VQ codebook keys (competitive prototype assignment), closest to slot attention's competitive slot assignment",
+          "combination": true,
+          "reason": "The mechanism is a learned competitive prototype bank whose soft assignments are used to subtract claimed tokens and then pool the residual, which combines the VQ codebook item with the known weighted-pooling and gating items; it is implementable per line within the 20,000-number limit and trained by answer-only cross-entropy."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c034",
+      "members": [
+        "c034"
+      ],
+      "rep": "c034",
+      "screen": {
+        "rep": "c034",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The idea is a training-distribution augmentation (synthetic Dirichlet-mixed pseudo-name vectors) rather than a writer architecture, and it is not an item on the KNOWN list; its closest outside analogues are mixup and domain randomisation, which are generic augmentation methods, not a combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c035",
+      "members": [
+        "c035"
+      ],
+      "rep": "c035",
+      "screen": {
+        "rep": "c035",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys (per-line mean-centering, with the median as a robust variant)",
+          "combination": true,
+          "reason": "The core operation is per-line centering followed by a learned soft gate on residual norm before pooling, which combines the listed LayerNorm/whitening item with a gate or top-k style selection, and only the median-for-mean swap is new."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c036",
+      "members": [
+        "c036"
+      ],
+      "rep": "c036",
+      "screen": {
+        "rep": "c036",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core operation is a joint softmax over ordered position triples with bilinear pairwise potentials and marginal pooling, which is structured attention/CRF-style inference not on the list; it is closest to a direct combination of role-specific (type-aware) pooling with bilinear/pairwise relation terms."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c037",
+      "members": [
+        "c037"
+      ],
+      "rep": "c037",
+      "screen": {
+        "rep": "c037",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a DPP marginal-kernel soft weighting of tokens computed from the line's own Gram matrix, which is close to the published DPP literature (Kulesza and Taskar) but is not itself an item on the KNOWN list, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c038",
+      "members": [
+        "c038"
+      ],
+      "rep": "c038",
+      "screen": {
+        "rep": "c038",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, pooling weights given by the squared ground-state eigenvector of a learned per-line tight-binding Hamiltonian, is not on the known list, and its closest published relatives (spectral/eigenvector-centrality graph pooling) are not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c039",
+      "members": [
+        "c039"
+      ],
+      "rep": "c039",
+      "screen": {
+        "rep": "c039",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Leave-one-out occlusion saliency (Zeiler and Fergus) is the closest published method, but it has not been used as a differentiable, learned pooling weight for a key/value memory writer, and the card's core operation is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c040",
+      "members": [
+        "c040"
+      ],
+      "rep": "c040",
+      "screen": {
+        "rep": "c040",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Top-k / Gumbel hard token selection (closest: soft top-k via cumulative mass, e.g. differentiable top-k / soft sorting)",
+          "combination": false,
+          "reason": "Selecting the k-th item by a cumulative soft count over a content mask is a soft top-k/rank selection, which is on the known list, and the k=1..3 mixture is multi-query pooling, but the design is not a direct combination of two listed items. It also assumes a fixed role order among the three content tokens, which the task does not state, so the ordinal slot may not identify the person."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c041",
+      "members": [
+        "c041"
+      ],
+      "rep": "c041",
+      "screen": {
+        "rep": "c041",
+        "verdict": {
+          "implementable": true,
+          "known_item": "role-specific projections (type-aware pooling)",
+          "combination": true,
+          "reason": "The selector is a per-line role classifier with separate role-wise pools, which is type-aware pooling, and its inputs are sorted pairwise cosines of the kind used in relation networks, so it is a direct combination of two known items, with the role-typing rule itself as the only new element."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c042",
+      "members": [
+        "c042"
+      ],
+      "rep": "c042",
+      "screen": {
+        "rep": "c042",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Slot attention (competitive normalization over slots), with multi-query role pooling as in PMA; Sinkhorn normalization is the known doubly-stochastic variant of this",
+          "combination": true,
+          "reason": "The core is per-role pooling of tokens (PMA/multi-query style) with a competitive, Sinkhorn-normalized assignment over roles, which is a direct combination of slot-attention competition and multi-query attention pooling, both on the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c043",
+      "members": [
+        "c043"
+      ],
+      "rep": "c043",
+      "screen": {
+        "rep": "c043",
+        "verdict": {
+          "implementable": true,
+          "known_item": "input noise augmentation / token dropout (masked modelling), applied as training-only corruption",
+          "combination": false,
+          "reason": "The selector is a per-token MLP over a local window with softmax role pools, and the training trick is random orthogonal rotation of each token's own vector, which is a form of input-noise or token-corruption augmentation with no architectural novelty over the listed items, though the norm-preserving, selector-only targeting is a specific variant."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c044",
+      "members": [
+        "c044"
+      ],
+      "rep": "c044",
+      "screen": {
+        "rep": "c044",
+        "verdict": {
+          "implementable": true,
+          "known_item": "capsule routing / slot attention (iterative soft assignment of tokens to roles, with CRF-as-RNN mean-field as the closest published precedent)",
+          "combination": true,
+          "reason": "The core is unrolled mean-field assignment of tokens to roles, which is capsule-routing-style iteration, with learned pairwise potentials over role pairs and offsets, a relation-network-style pairwise term, so it is a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c045",
+      "members": [
+        "c045"
+      ],
+      "rep": "c045",
+      "screen": {
+        "rep": "c045",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Ordinal addressing via a cumulative count of non-filler mass with a Gaussian kernel over rank is not among the listed pooling, attention, memory, or binding items; the closest known items are top-k hard token selection and multi-query pooling, but neither uses a cumulative-rank window, so it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c046",
+      "members": [
+        "c046"
+      ],
+      "rep": "c046",
+      "screen": {
+        "rep": "c046",
+        "verdict": {
+          "implementable": true,
+          "known_item": "type-aware pooling (role-specific softmax attention pooling over tokens, with the seed's attention pool as the base)",
+          "combination": false,
+          "reason": "The mechanism is role-specific attention pooling; the only change is that the per-token logits come from an MLP over direction-free scalar statistics, which restricts the scorer's input rather than adding a distinct readout operation, so it reduces to a known pooling scheme."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c047",
+      "members": [
+        "c047"
+      ],
+      "rep": "c047",
+      "screen": {
+        "rep": "c047",
+        "verdict": {
+          "implementable": true,
+          "known_item": "self-attention layers then pool (two-hop, induction-head-style attention)",
+          "combination": true,
+          "reason": "The card is a per-line two-stage attention pool: a first softmax pool picks an anchor, a learned linear map turns its pooled trace into a query for a second softmax pool over the tokens, and the anchor is masked out. This directly combines the known single softmax attention pool with the known iterated/two-hop attention pattern, and it fits the 20,000-number limit and answer-only training."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c048",
+      "members": [
+        "c048"
+      ],
+      "rep": "c048",
+      "screen": {
+        "rep": "c048",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention",
+          "combination": false,
+          "reason": "The core operation is competitive token-to-slot assignment with Sinkhorn-normalised marginals, which is slot attention with doubly-stochastic normalisation as in SuperGlue and Sinkhorn Transformers. Sinkhorn balancing is not itself on the KNOWN list, so this is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c049",
+      "members": [
+        "c049"
+      ],
+      "rep": "c049",
+      "screen": {
+        "rep": "c049",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys (per-line centering and scaling) combined with a confidence write gate on the softmax attention pool",
+          "combination": true,
+          "reason": "The method is a per-line robust centering and scaling step (a whitening-like normalization) followed by a norm-based confidence gate on a softmax attention pool, which is a direct combination of two listed items, and it fits the per-line, no-token-id, answer-only interface with about 2k parameters."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c050",
+      "members": [
+        "c050"
+      ],
+      "rep": "c050",
+      "screen": {
+        "rep": "c050",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a learned 5x5 checkerboard-kernel convolution along the diagonal of the token self-similarity matrix (Foote-style novelty), plus sorted similarity rows as position-free features; this is not on the KNOWN list, and the closest published method is Foote (2000) audio novelty detection rather than any listed item or a direct combination of two of them."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c051",
+      "members": [
+        "c051"
+      ],
+      "rep": "c051",
+      "screen": {
+        "rep": "c051",
+        "verdict": {
+          "implementable": true,
+          "known_item": "bilinear / covariance pooling (a quadratic-form scorer h^T U U^T h used in a softmax pool)",
+          "combination": true,
+          "reason": "The core operation is a quadratic-form attention scorer, which matches the bilinear/covariance pooling item, and the per-role learned subspaces U_r amount to role-specific projections, so the design is a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c052",
+      "members": [
+        "c052"
+      ],
+      "rep": "c052",
+      "screen": {
+        "rep": "c052",
+        "verdict": {
+          "implementable": true,
+          "known_item": "temperature or entropy tricks on pool weights (softmax pooling over logits that are z-scored, a LayerNorm-style normalization of scores)",
+          "combination": true,
+          "reason": "The core operation is a softmax attention pool whose logits are standardized per line by a local background mean and spread (a LayerNorm-style score normalization), which combines two listed items: softmax attention pooling and LayerNorm/whitening of scores, with the guard-cell exclusion as a minor variant."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c053",
+      "members": [
+        "c053"
+      ],
+      "rep": "c053",
+      "screen": {
+        "rep": "c053",
+        "verdict": {
+          "implementable": true,
+          "known_item": "conv line encoders",
+          "combination": true,
+          "reason": "The core operation is a shared, dimension-tied 5-tap 1D convolution over the line's token states followed by softmax attention pooling, which is a conv line encoder combined with the seed attention pool; the inverse-filter initialization is a parameterization choice, not a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c054",
+      "members": [
+        "c054"
+      ],
+      "rep": "c054",
+      "screen": {
+        "rep": "c054",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys (per-line set-centering, with a median in place of the mean)",
+          "combination": true,
+          "reason": "The core step, subtracting a per-line statistic across the 10 tokens before pooling, is a robust-median variant of the known centering/whitening of keys, and the separate key and value pools are a direct combination with the known two-pool design."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c055",
+      "members": [
+        "c055"
+      ],
+      "rep": "c055",
+      "screen": {
+        "rep": "c055",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, pairwise signed Lotka-Volterra dynamics among the tokens that sets pooling weights by surviving abundance, is not on the list; its closest relatives are iterative slot-attention or capsule-routing competition, but the pairwise interaction matrix and extinction dynamics make it a distinct mechanism rather than a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c056",
+      "members": [
+        "c056"
+      ],
+      "rep": "c056",
+      "screen": {
+        "rep": "c056",
+        "verdict": {
+          "implementable": true,
+          "known_item": "self-attention layers then pool (token-to-token mixing) with sparsemax/entmax-style simplex-constrained weights; closest is the self-expressive subspace-clustering family, which is not on the list",
+          "combination": true,
+          "reason": "The core operation is a simplex-constrained token-to-token mixing (a sparse, entmax-like self-attention map) followed by a softmax pool over a derived per-token score, with the antisymmetrisation as a minor twist, so it is a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c057",
+      "members": [
+        "c057"
+      ],
+      "rep": "c057",
+      "screen": {
+        "rep": "c057",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is training-time mixup and noise on the person's token vectors (Zhang et al. 2018 style, plus NEFTune-style embedding perturbation), which is not on the KNOWN list, and the writer itself stays a per-line function with no identity storage, so it is neither a listed item nor a combination of two."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c058",
+      "members": [
+        "c058"
+      ],
+      "rep": "c058",
+      "screen": {
+        "rep": "c058",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core operation, modularity eigenvectors of a degree-null-corrected affinity graph, is spectral clustering and is not on the known list (closest: spectral clustering and covariance pooling), but it is a direct combination of the listed relation-network pairwise term with a single softmax attention pool over the resulting token coordinates."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c059",
+      "members": [
+        "c059"
+      ],
+      "rep": "c059",
+      "screen": {
+        "rep": "c059",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a training-time gradient sign-agreement mask with MLDG-style inner/outer environment splits, which matches published AND-mask (Parascandolo et al. 2021) and MLDG (Li et al. 2018) rather than any item on the KNOWN architectural list, and it is not a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c060",
+      "members": [
+        "c060"
+      ],
+      "rep": "c060",
+      "screen": {
+        "rep": "c060",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest published method: structured attention networks, Kim et al. 2017, which use linear-chain CRF marginals as pooling weights; the typestate exactly-once constraint is the added element)",
+          "combination": false,
+          "reason": "The core operation, forward-backward marginals of a constrained linear-chain tag automaton used as soft pooling weights, matches published structured attention (Kim et al. 2017) and is not a direct combination of two items on the KNOWN list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c061",
+      "members": [
+        "c061"
+      ],
+      "rep": "c061",
+      "screen": {
+        "rep": "c061",
+        "verdict": {
+          "implementable": true,
+          "known_item": "conv/GRU line encoders (a tied-weight shift-convolution with residual updates, unrolled over iterations)",
+          "combination": true,
+          "reason": "The core operation is a weight-tied shift-convolution over the token axis, repeated with a residual input term, which is a conv line encoder, and it feeds a single softmax attention pool, which is the seed pooling, so it is a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c062",
+      "members": [
+        "c062"
+      ],
+      "rep": "c062",
+      "screen": {
+        "rep": "c062",
+        "verdict": {
+          "implementable": true,
+          "known_item": "top-k hard token selection (learned scalar score, then top-k token choice), with NeuralSort as the soft-sort variant",
+          "combination": true,
+          "reason": "The core operation is a learned per-token scalar score, a soft sort, and fixed top-k slot readouts, which reduces to the listed top-k/hard token selection and sort-then-select pooling. SortPooling and NeuralSort are close relatives, but the rank-slot readout is covered by the known top-k family."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c063",
+      "members": [
+        "c063"
+      ],
+      "rep": "c063",
+      "screen": {
+        "rep": "c063",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (the seed), with selection scores computed from pairwise-cosine statistics (bilinear/covariance-style features)",
+          "combination": true,
+          "reason": "The writer is a learned softmax attention pool whose scores come from a per-token Gram-matrix descriptor, which combines the seed attention pool with bilinear/covariance pairwise statistics; the proposal is implementable as a per-line function with about 1k parameters trained by answer-only cross-entropy."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c064",
+      "members": [
+        "c064"
+      ],
+      "rep": "c064",
+      "screen": {
+        "rep": "c064",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: LSH keys, via the frozen random 16x32 slice; LayerNorm/whitening of keys)",
+          "combination": false,
+          "reason": "The core operation is a learned orthogonal (Cayley) rotation followed by a frozen random projection, and a learned isometric key map is not on the known list, so it is not a direct combination of two listed items, though the random slice is close to LSH keys."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c065",
+      "members": [
+        "c065"
+      ],
+      "rep": "c065",
+      "screen": {
+        "rep": "c065",
+        "verdict": {
+          "implementable": true,
+          "known_item": "sparsemax / entmax (adaptive threshold over the set of token scores, here a leave-one-out order statistic instead of a sum-to-one threshold)",
+          "combination": false,
+          "reason": "The card reduces to a per-line sparse token selection with an adaptive threshold set by the other tokens' scores, which is the sparsemax/entmax family with a different threshold statistic and no sum-to-one constraint, and it does not clearly compose two KNOWN items beyond that."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c066",
+      "members": [
+        "c066"
+      ],
+      "rep": "c066",
+      "screen": {
+        "rep": "c066",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a learned order-statistic (L-filter) baseline, computed per channel across the 10 tokens and subtracted before attention pooling. That is not on the known list; the nearest items (mean/LayerNorm centering, whitening of keys) use fixed or dataset-level statistics rather than a learned rank-weighted per-line baseline, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c067",
+      "members": [
+        "c067"
+      ],
+      "rep": "c067",
+      "screen": {
+        "rep": "c067",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Top-k / sparsemax hard token selection combined with a conv line encoder (a local neighbourhood max that dilates the selection gate)",
+          "combination": true,
+          "reason": "The mechanism is a learned per-token threshold gate whose output is dilated to adjacent positions by a local max, then used for weighted pooling, which is a direct combination of hard token selection and a local convolutional gate; the Canny hysteresis framing is a relabelling of that pair, and the parameter count and answer-only training fit the interface."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c068",
+      "members": [
+        "c068"
+      ],
+      "rep": "c068",
+      "screen": {
+        "rep": "c068",
+        "verdict": {
+          "implementable": true,
+          "known_item": "GRU/LSTM/conv line encoders (a 1D convolution over the token axis, here a 2-parameter constrained kernel)",
+          "combination": false,
+          "reason": "The core operation is a shared linear filter along the token axis, which is a constrained conv line encoder; the subsequent seed softmax pool is just the baseline, so this is one known item with a restricted kernel rather than a combination of two."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c069",
+      "members": [
+        "c069"
+      ],
+      "rep": "c069",
+      "screen": {
+        "rep": "c069",
+        "verdict": {
+          "implementable": true,
+          "known_item": "bilinear/covariance pooling (quadratic squared-projection features), used as the logit source for a single softmax attention pool",
+          "combination": true,
+          "reason": "The mechanism is a single softmax attention pool whose logits come from log-compressed squared projections (x\u00b7w)\u00b2, which is the seed attention pool combined with bilinear/quadratic pooling, and it is implementable per line with under 3k parameters."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c070",
+      "members": [
+        "c070"
+      ],
+      "rep": "c070",
+      "screen": {
+        "rep": "c070",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is adversarial noise on the router's input view trained via gradient reversal, which is not on the KNOWN list; its nearest relatives are DANN-style adversarial training and adversarial attention perturbation, and the separate key/value pools are the only listed element."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c071",
+      "members": [
+        "c071"
+      ],
+      "rep": "c071",
+      "screen": {
+        "rep": "c071",
+        "verdict": {
+          "implementable": true,
+          "known_item": "type-aware pooling (role-specific projections) over multi-head / multi-query attention pooling (PMA); the person head is a residual of the relation and value pools, not a separate learned pool",
+          "combination": true,
+          "reason": "The mechanism is three softmax attention pools (content, relation, value) with a parameter-free residual for the person weight, which combines multi-head attention pooling with role-specific projections, both on the KNOWN list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c072",
+      "members": [
+        "c072"
+      ],
+      "rep": "c072",
+      "screen": {
+        "rep": "c072",
+        "verdict": {
+          "implementable": true,
+          "known_item": "capsule routing (vector-norm activations as orientation-invariant features)",
+          "combination": true,
+          "reason": "The core idea of routing on block energies ||Q_b x||\u00b2 is the capsule-network norm-as-activation scheme, and the pairwise block-norm products are a bilinear/covariance-style pooling feeding a softmax attention pool, so it is a direct combination of two known items; SignNet is the nearest published sign-invariance method but does not use a learned block partition for routing."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c073",
+      "members": [
+        "c073"
+      ],
+      "rep": "c073",
+      "screen": {
+        "rep": "c073",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, a linear map with a bounded singular spectrum via Cayley/QR orthonormal factors, is not on the KNOWN list and is closest to spectral normalization (Miyato et al. 2018) and Cayley orthogonal parameterizations (Helfrich et al. 2018), not to LayerNorm/whitening. The proposed novel-name rationale is flawed, since V (64x16) projects p onto a fixed 16-dimensional subspace, so input components outside it are discarded entirely and the 'at least half its energy' guarantee does not hold."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c074",
+      "members": [
+        "c074"
+      ],
+      "rep": "c074",
+      "screen": {
+        "rep": "c074",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The anchor pools are softmax attention pools and the person router is a softmax pool, so the design combines two known pooling items; the frame canonicalization itself (Puny et al. 2022, Kaba et al. 2023) is not on the list, and the closest match is canonicalization by frame averaging."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c075",
+      "members": [
+        "c075"
+      ],
+      "rep": "c075",
+      "screen": {
+        "rep": "c075",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: single softmax attention pool (seed); the difference is that the scorer takes handcrafted per-token statistics instead of a learned projection of the state)",
+          "combination": false,
+          "reason": "The core operation is softmax attention pooling whose scores come from a small MLP over fixed, permutation-invariant per-token statistics (norm, kurtosis, entropy, centroid distance), which is not a listed item and is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c076",
+      "members": [
+        "c076"
+      ],
+      "rep": "c076",
+      "screen": {
+        "rep": "c076",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: relation networks, pairwise then sum, combined with the single softmax attention pool)",
+          "combination": true,
+          "reason": "The core operation scores each token from its sorted pairwise cosine profile (a relation-network-style pairwise statistic) and feeds that score into a softmax attention pool, which is a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c077",
+      "members": [
+        "c077"
+      ],
+      "rep": "c077",
+      "screen": {
+        "rep": "c077",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: role-specific projections / type-aware pooling; the rank-indexed pointer is a soft token selection, not a role classifier)",
+          "combination": true,
+          "reason": "The card's core is a learned mixture over three ordinal token selectors, which is MoE-style routing over tokens, feeding separate key and value projections, which is role-specific projection; the pointer itself is a cumulative-sum rank over a content mask, a direct combination of those two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c078",
+      "members": [
+        "c078"
+      ],
+      "rep": "c078",
+      "screen": {
+        "rep": "c078",
+        "verdict": {
+          "implementable": true,
+          "known_item": "type-aware pooling (role-specific projections), with the person weight realised as a softmax-normalised pool over per-token type-detector scores",
+          "combination": true,
+          "reason": "The card is a per-line function of the 10x32 states with about 4k parameters trained by answer cross-entropy, but its person selection is a token-type gate (type-aware pooling) whose weights are a normalised softmax pool, so it is a direct combination of two known items rather than a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c079",
+      "members": [
+        "c079"
+      ],
+      "rep": "c079",
+      "screen": {
+        "rep": "c079",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a hard orthonormality constraint on the key projection (Stiefel/matrix-exponential parameterisation), which is not on the KNOWN list; the nearest listed items, LayerNorm/whitening of keys and LSH keys, normalise key statistics or use random hashing rather than constraining the learned map, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c080",
+      "members": [
+        "c080"
+      ],
+      "rep": "c080",
+      "screen": {
+        "rep": "c080",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (competitive normalisation over slots), with the temperature/entropy trick on pool weights; closest published analogue is Sinkhorn-normalised attention with equipartition (SwAV-style)",
+          "combination": true,
+          "reason": "The core operation is a Sinkhorn-balanced transport plan over tokens and roles, which is slot attention's competition across slots combined with the known entropy/temperature normalisation of pool weights, so it reduces to a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c081",
+      "members": [
+        "c081"
+      ],
+      "rep": "c081",
+      "screen": {
+        "rep": "c081",
+        "verdict": {
+          "implementable": true,
+          "known_item": "VQ codebook keys",
+          "combination": false,
+          "reason": "The idea is a soft codebook assignment (learned atoms with a distance-based softmax) whose escape mass weights the pooled key, which is the VQ codebook key item with one weighting scheme, not a combination of two listed items, though it sits close to codebook keys plus attention pooling."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c082",
+      "members": [
+        "c082"
+      ],
+      "rep": "c082",
+      "screen": {
+        "rep": "c082",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LSH keys (random projection / Johnson-Lindenstrauss-style keys)",
+          "combination": false,
+          "reason": "The core operation is a near-orthogonal linear map from the pooled person content to the key, which is a distance-preserving random-projection key in substance and so falls under the listed LSH keys item, though the orthogonality penalty and span-deficit motivation are a somewhat different framing."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c083",
+      "members": [
+        "c083"
+      ],
+      "rep": "c083",
+      "screen": {
+        "rep": "c083",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Per-line robust centering and scaling of the 10 token states by their channelwise median and MAD is a set-level order-statistic normalisation, which is not on the known list; its closest relatives are LayerNorm/whitening of keys and the seed attention pool, but neither implements median-baseline subtraction across the line's tokens."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c084",
+      "members": [
+        "c084"
+      ],
+      "rep": "c084",
+      "screen": {
+        "rep": "c084",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is averaging a pooled key over several randomly token-masked views of the same line, which is a dropout-style augmentation ensemble and is not on the known list; its nearest listed relative is multi-head/multi-query pooling with mean aggregation, but the masked-input averaging is a different mechanism, so it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c085",
+      "members": [
+        "c085"
+      ],
+      "rep": "c085",
+      "screen": {
+        "rep": "c085",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The writer's forward pass is per-line and within the 20,000-number budget, but training adds a KL consistency loss on selection weights, which breaks the stated requirement that training use only answer-only cross-entropy. The core operation (selection-invariance under random-vector substitution at the argmax slot) matches no listed item, and is not a direct combination of two of them."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c086",
+      "members": [
+        "c086"
+      ],
+      "rep": "c086",
+      "screen": {
+        "rep": "c086",
+        "verdict": {
+          "implementable": true,
+          "known_item": "VQ codebook keys",
+          "combination": true,
+          "reason": "The selector is a softmax attention pool whose logits are a negated max-cosine affinity to a learned prototype codebook, which combines the VQ codebook-affinity item with the softmax attention-pool item; the diversity penalty is an extra loss beyond answer-only cross-entropy, but it can be dropped and the forward function still fits the per-line interface."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c087",
+      "members": [
+        "c087"
+      ],
+      "rep": "c087",
+      "screen": {
+        "rep": "c087",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, gradient-reversal adversarial removal of a nuisance variable (DANN, Ganin 2016), is not on the KNOWN list and is not a direct combination of two listed items, though it is applied here to the attention selector of a soft-attention pool."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c088",
+      "members": [
+        "c088"
+      ],
+      "rep": "c088",
+      "screen": {
+        "rep": "c088",
+        "verdict": {
+          "implementable": true,
+          "known_item": "multi-head / multi-query attention pooling (PMA), with each head restricted to a fixed random feature subspace",
+          "combination": true,
+          "reason": "The core operation is several softmax token-selection pools, each on a fixed random subset of dimensions, combined by a renormalised geometric product; this is multi-head pooling (with random subspace heads) plus Product of Experts, both on the KNOWN list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c089",
+      "members": [
+        "c089"
+      ],
+      "rep": "c089",
+      "screen": {
+        "rep": "c089",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (the seed), with a fixed EMA-centroid query; closest external relative is Prototypical Networks (not on the KNOWN list)",
+          "combination": true,
+          "reason": "The writer is a softmax attention pool whose query is a running mean-centred state (a whitening-style centring on the seed pool, with mean pooling for the centroid), so it reduces to two KNOWN items and is only a buffered-query variant of the seed."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c090",
+      "members": [
+        "c090"
+      ],
+      "rep": "c090",
+      "screen": {
+        "rep": "c090",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (softmax competition over slots per input), combined with type-aware role prototypes",
+          "combination": true,
+          "reason": "The core operation is a per-token softmax over role slots (slot attention's competition across slots) whose logits come from role-specific prototype projections (type-aware pooling), with the person role as a learned constant default slot; this is a direct combination of two KNOWN items, not a new mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c091",
+      "members": [
+        "c091"
+      ],
+      "rep": "c091",
+      "screen": {
+        "rep": "c091",
+        "verdict": {
+          "implementable": true,
+          "known_item": "CoPE-style cumulative gate counting (closest: contextual position encoding), combined with role-specific projections ('type-aware pooling') over a small set of learned pool queries (multi-query attention pooling)",
+          "combination": true,
+          "reason": "The method is a per-line function that computes soft ranks from a cumulative sum of content gates, then uses three learned Gaussian pool weights with role-specific key and value projections; this matches the known combination of a content gate with multi-query, role-specific pooling, and the cumulative-gate position idea is CoPE's mechanism applied to pooling."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c092",
+      "members": [
+        "c092"
+      ],
+      "rep": "c092",
+      "screen": {
+        "rep": "c092",
+        "verdict": {
+          "implementable": true,
+          "known_item": "key from person+relation and value from value token (address keys)",
+          "combination": true,
+          "reason": "The card uses role-specific softmax pooling, which is type-aware pooling, and builds the key from pooled person and relation vectors and the value from the value token, which is the listed address-key design; its pairwise cosine-Gram selector is a relation-network-style pairwise term, so it is a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c093",
+      "members": [
+        "c093"
+      ],
+      "rep": "c093",
+      "screen": {
+        "rep": "c093",
+        "verdict": {
+          "implementable": true,
+          "known_item": "role-specific projections (type-aware pooling), with softmax attention pooling over tokens",
+          "combination": true,
+          "reason": "The card is a per-line, answer-only model that pools tokens with softmax weights scored from role-specific projections R and U, and it splits key and value into separate pools, all of which are listed items. The only new piece is the norm-based identity-blind scoring, which is a variant of capsule-style vector length rather than a distinct mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c094",
+      "members": [
+        "c094"
+      ],
+      "rep": "c094",
+      "screen": {
+        "rep": "c094",
+        "verdict": {
+          "implementable": true,
+          "known_item": "self-attention layers then pool (a local, window-2 bilinear self-attention score feeding a softmax pool), with the seed attention pool",
+          "combination": true,
+          "reason": "The score cos(M s_i, neighbour-average minus baseline) is a bilinear token-to-neighbour attention, which is a local self-attention layer followed by the seed softmax pool, plus a linear role head; the CA1-comparator framing is a relabelling of these known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c095",
+      "members": [
+        "c095"
+      ],
+      "rep": "c095",
+      "screen": {
+        "rep": "c095",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest published method: structured attention with linear-chain CRF marginals, Kim et al. 2017)",
+          "combination": true,
+          "reason": "The core is a CRF/BCJR trellis with an exactly-one-per-role constraint whose marginals weight role-specific pools, which is not a KNOWN list item, but it is a direct combination of role-specific pooling (separate pools per role) with soft token selection by marginals (the sparsemax/entmax family)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c096",
+      "members": [
+        "c096"
+      ],
+      "rep": "c096",
+      "screen": {
+        "rep": "c096",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, iterative exchange of prior-subtracted extrinsic logits between two decoders that see disjoint evidence (token versus neighbours), matches turbo decoding (Berrou 1993), a published method outside the KNOWN list, and is not a direct combination of two listed items (slot-attention iteration alone does not supply the disjoint-evidence extrinsic exchange)."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c097",
+      "members": [
+        "c097"
+      ],
+      "rep": "c097",
+      "screen": {
+        "rep": "c097",
+        "verdict": {
+          "implementable": true,
+          "known_item": "multi-query attention pooling (PMA / multi-seed pooling), with the per-role score being a softmax over positions",
+          "combination": true,
+          "reason": "The core is three role-specific softmax pools over tokens (multi-query pooling) with role-specific key and value projections (type-aware pooling), so the error-correcting-code framing is a relabelling of known pooling mechanisms rather than a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c098",
+      "members": [
+        "c098"
+      ],
+      "rep": "c098",
+      "screen": {
+        "rep": "c098",
+        "verdict": {
+          "implementable": true,
+          "known_item": "top-k/Gumbel hard token selection",
+          "combination": true,
+          "reason": "The method enumerates joint role assignments from the top-k reliability alternatives, which is top-k hard token selection, and re-ranks them with a pairwise neighbour-consistency term, which is relation-network-style pairwise scoring, so it is a direct combination of two known items rather than a novel operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c099",
+      "members": [
+        "c099"
+      ],
+      "rep": "c099",
+      "screen": {
+        "rep": "c099",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is training-only noise injected into a self-estimated name subspace (top PCA directions of the pooled person vector) on the selection pathway only, which is a targeted variant of feature-noise augmentation and is not on the known list; the closest named relatives are feature-noise augmentation and adversarial invariance training, neither of which is listed."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c100",
+      "members": [
+        "c100"
+      ],
+      "rep": "c100",
+      "screen": {
+        "rep": "c100",
+        "verdict": {
+          "implementable": true,
+          "known_item": "relation networks (pairwise then sum), used to gate the attention pool logits",
+          "combination": true,
+          "reason": "The core is a pairwise kernel summed per token into a scalar multiplicity that biases the softmax pool logits, which combines the known pairwise-then-sum relation-network item with the known gating/temperature tricks on pool weights, even though the Kasiski/index-of-coincidence framing is not on the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c101",
+      "members": [
+        "c101"
+      ],
+      "rep": "c101",
+      "screen": {
+        "rep": "c101",
+        "verdict": {
+          "implementable": true,
+          "known_item": "top-k / Gumbel-style hard token selection, combined with role-specific projections (type-aware pooling)",
+          "combination": true,
+          "reason": "The idea picks the top-3 tokens by a learned score and then assigns slots by score-based sorting, with a separate projection per slot. That is a direct combination of top-k hard token selection and role-specific projection, though the explicit sort-then-residual-elimination scheme is not itself listed."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c102",
+      "members": [
+        "c102"
+      ],
+      "rep": "c102",
+      "screen": {
+        "rep": "c102",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys",
+          "combination": true,
+          "reason": "The core operation is a fixed bias-centering plus orthogonal rotation of the key inputs, which is a constrained form of the listed whitening of keys, and it is paired with the standard attention pool and learned per-channel gains, so it reduces to a direct combination of known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c103",
+      "members": [
+        "c103"
+      ],
+      "rep": "c103",
+      "screen": {
+        "rep": "c103",
+        "verdict": {
+          "implementable": true,
+          "known_item": "conv line encoders (a learned linear neighbour-mixing layer followed by attention pooling; the unrolled Jacobi inverse is a deep-unfolding variant of this)",
+          "combination": true,
+          "reason": "The core operation is a weight-tied, linear, banded neighbour operator applied before the seed attention pool, which is a conv line encoder feeding a single softmax attention pool, both on the KNOWN list; the iterative inversion adds only unrolled deconvolution (deep unfolding), which is not a new pooling or memory mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c104",
+      "members": [
+        "c104"
+      ],
+      "rep": "c104",
+      "screen": {
+        "rep": "c104",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (the seed), applied after LayerNorm/whitening-style centering of the inputs, with separate key and value pools",
+          "combination": true,
+          "reason": "The core operation is per-line median centering followed by softmax attention pooling with separate key and value queries, which is a direct combination of the known seed attention pool and the known LayerNorm/whitening item; the median in place of the mean is a minor variant that does not change the mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c105",
+      "members": [
+        "c105"
+      ],
+      "rep": "c105",
+      "screen": {
+        "rep": "c105",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (one slot, iteratively refined by attention-weighted updates to the query)",
+          "combination": true,
+          "reason": "The core loop, where a query is repeatedly updated by its attention-weighted token average, is single-slot slot attention, and the population of clones with softmax weights is multi-query attention pooling, so the design is a direct combination of two listed items with the matured query emitted as the key."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c106",
+      "members": [
+        "c106"
+      ],
+      "rep": "c106",
+      "screen": {
+        "rep": "c106",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core is a per-token multiplicative gate (softplus projection times softplus projection, divided by a shared occupancy normaliser) feeding a temperature-scaled softmax pool, which is a direct combination of GLU/FiLM-style gating with temperature tricks on pool weights, not the kinetic-proofreading or adaptive-sorting circuit the card names."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c107",
+      "members": [
+        "c107"
+      ],
+      "rep": "c107",
+      "screen": {
+        "rep": "c107",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (seed), since the weights are a softmax over a quadratic score -(f-mu)^2/(2s^2) of a learned scalar, which is a negative-squared-distance (RBF-style) attention score close to temperature tricks on pool weights",
+          "combination": false,
+          "reason": "The core operation is a softmax attention pool with a non-monotone RBF-style score, which is a variant of the seed's single softmax pool rather than a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c108",
+      "members": [
+        "c108"
+      ],
+      "rep": "c108",
+      "screen": {
+        "rep": "c108",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a label-free batch-variance penalty on per-unit max-pooled selector peaks with homeostatic gains, which is not on the known list; the nearest items are max pooling and LayerNorm/whitening, but the cross-line ubiquity constraint is not either of them or a direct combination of two."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c109",
+      "members": [
+        "c109"
+      ],
+      "rep": "c109",
+      "screen": {
+        "rep": "c109",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is training-only entity-swap augmentation (copying real person-token states into filler positions as decoys), which resembles counterfactual entity-replacement augmentation in NLP but is not an item on the KNOWN list and is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c110",
+      "members": [
+        "c110"
+      ],
+      "rep": "c110",
+      "screen": {
+        "rep": "c110",
+        "verdict": {
+          "implementable": true,
+          "known_item": "multi-head / multi-query attention pooling (PMA) over a conv line encoder; the energy-ratio feature is a normalized bilinear/covariance-style pooling",
+          "combination": true,
+          "reason": "The method is a learned 3-tap convolution over token positions (conv line encoder) followed by K=4 subspace-projected, softmax-weighted pooling with an MLP gate, which is a direct combination of known items, and the GLRT energy ratio is a normalized quadratic feature of the same kind as bilinear pooling."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c111",
+      "members": [
+        "c111"
+      ],
+      "rep": "c111",
+      "screen": {
+        "rep": "c111",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operator, a multi-scale positional phase-congruency ratio (Morrone & Owens 1987; Kovesi 1999, adapted to 1D token sequences), is a published signal-processing method not on the KNOWN list, and it is not a direct combination of two listed items; its conv-filter component alone would match 'conv line encoders', but the phase-ratio selection is the core operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c112",
+      "members": [
+        "c112"
+      ],
+      "rep": "c112",
+      "screen": {
+        "rep": "c112",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core operation, a multiplicative pairwise local-max gate over neighbouring token scores that then weights an attention-style pool, is not itself a listed item, but it is a direct combination of relation-network pairwise terms with attention pooling, similar to the listed 'Deep Sets with a pairwise term' example."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c113",
+      "members": [
+        "c113"
+      ],
+      "rep": "c113",
+      "screen": {
+        "rep": "c113",
+        "verdict": {
+          "implementable": true,
+          "known_item": "write gates (surprise / predict-before-store), with the key built from whitened vectors (LayerNorm/whitening of keys)",
+          "combination": true,
+          "reason": "The card is a per-line linear state-space filter whose surprise score (NIS) gates the role decision, and whose key is a whitened innovation; surprise write gates and whitening of keys are both on the known list, so their combination covers it."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c114",
+      "members": [
+        "c114"
+      ],
+      "rep": "c114",
+      "screen": {
+        "rep": "c114",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, unrolled group-ISTA sparse coding with a learned convolution kernel and low-rank residual, is not on the known list. Its closest published relative is LISTA (learned ISTA, Gregor and LeCun 2010), which the list does not cover, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c115",
+      "members": [
+        "c115"
+      ],
+      "rep": "c115",
+      "screen": {
+        "rep": "c115",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (learned competition among slots, with Sinkhorn/MoE-style normalization over tokens)",
+          "combination": true,
+          "reason": "The core operation is a per-token soft assignment to roles, normalized by Sinkhorn with fixed marginals, followed by role-wise pooling. That is slot attention with Sinkhorn/MoE-style balancing, plus a parameter-free residual slot for the person; the residual slot is the only new element and is a null-slot variant of the known mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c116",
+      "members": [
+        "c116"
+      ],
+      "rep": "c116",
+      "screen": {
+        "rep": "c116",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none strictly; closest are the seed single softmax attention pool with a confidence/write gate added to its logits, plus LayerNorm/whitening-style centering",
+          "combination": true,
+          "reason": "The core is a per-line median-centering and norm-scaling step followed by the seed attention pool with a learned sigmoid gate added as log-weights, which directly combines two KNOWN items (seed attention pool with a write gate, and LayerNorm/whitening-style centering), though the coordinate-wise median reference is a robust statistic not on the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c117",
+      "members": [
+        "c117"
+      ],
+      "rep": "c117",
+      "screen": {
+        "rep": "c117",
+        "verdict": {
+          "implementable": true,
+          "known_item": "LayerNorm/whitening of keys (the closest match; orthogonal weight constraints from orthogonal/Cayley RNNs are a related prior form)",
+          "combination": true,
+          "reason": "The mechanism is the seed softmax attention pool followed by a normalized linear key projection, and the only added element is an orthonormal-row constraint on that projection, which is a weight-space form of the known key whitening/normalization item."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c118",
+      "members": [
+        "c118"
+      ],
+      "rep": "c118",
+      "screen": {
+        "rep": "c118",
+        "verdict": {
+          "implementable": true,
+          "known_item": "top-k / soft token selection (closest match: soft rank selection via cumulative gate mass, as in differentiable soft top-k)",
+          "combination": true,
+          "reason": "The card combines a learned content gate (a write-gate item) with rank-k soft top-k selection over cumulative gate mass, both on the KNOWN list, and the per-line, answer-only-trained implementation fits the interface."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c119",
+      "members": [
+        "c119"
+      ],
+      "rep": "c119",
+      "screen": {
+        "rep": "c119",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a training-harness augmentation that resamples person-token vectors from a fitted Gaussian or sphere, which is not a writer mechanism on the KNOWN list; its closest published relative is entity anonymization (Hermann et al. 2015), which is not on the list, and it is not a combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c120",
+      "members": [
+        "c120"
+      ],
+      "rep": "c120",
+      "screen": {
+        "rep": "c120",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a Prony/Berlekamp-Massey error-locator solve followed by a Vandermonde (Forney-style) inverse for sparse position recovery, which is not on the known list, and it is not a direct combination of two listed items (the DFT positional basis and softmax selection are only incidental to it)."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c121",
+      "members": [
+        "c121"
+      ],
+      "rep": "c121",
+      "screen": {
+        "rep": "c121",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Soft within-key ranking of the 16 pre-key coordinates (a Kendall-tau rank-modulation key, with the value path unchanged) is not on the known list. Its closest relatives are LayerNorm/whitening of keys and top-k/sparsemax selection, but it ranks across output coordinates rather than standardising moments or selecting a subset, so it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c122",
+      "members": [
+        "c122"
+      ],
+      "rep": "c122",
+      "screen": {
+        "rep": "c122",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, nested prefix losses that force every zero-padded prefix of the key to be a usable codeword, matches Matryoshka Representation Learning (Kusupati et al., 2022), which is not on the KNOWN list and is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c123",
+      "members": [
+        "c123"
+      ],
+      "rep": "c123",
+      "screen": {
+        "rep": "c123",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a fixed random sparse mask with trained edge weights and an irregular degree profile, which is closest to sparse random projections and fixed random sparse masks (e.g., SET-style sparse training), neither of which is listed as a KNOWN item, and it does not directly combine two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c124",
+      "members": [
+        "c124"
+      ],
+      "rep": "c124",
+      "screen": {
+        "rep": "c124",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, subtracting a learned linear estimate of relation and value content from the key with a sigmoid-scaled coefficient, is not on the KNOWN list and is not a direct combination of two listed items; its closest relatives are key whitening and the banned deflation, and since the subtraction is linear in pooled features it is effectively a learned linear residual that the writer could already express."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c125",
+      "members": [
+        "c125"
+      ],
+      "rep": "c125",
+      "screen": {
+        "rep": "c125",
+        "verdict": {
+          "implementable": true,
+          "known_item": "relation networks (pairwise term, then sum) feeding a single softmax attention pool",
+          "combination": true,
+          "reason": "The card scores each token by a pairwise neighbour-to-neighbour cosine-times-norm term (a relation-network-style pairwise function) and then uses that score in a softmax pool over tokens to form the key, which is a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c126",
+      "members": [
+        "c126"
+      ],
+      "rep": "c126",
+      "screen": {
+        "rep": "c126",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is Prony/annihilating-filter (MUSIC/ESPRIT-style) line-spectral estimation of token positions from a shared null vector across the 32 channels, which is not on the KNOWN list and is not a direct combination of two listed items; the closest published relative is FRI/Prony spike recovery, which is outside the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c127",
+      "members": [
+        "c127"
+      ],
+      "rep": "c127",
+      "screen": {
+        "rep": "c127",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Topographic prominence (scipy find_peaks-style peak selection, persistence/CFAR-like local contrast) scores each token against its nearest higher neighbours and is not on the KNOWN list, though it is close in spirit to top-k/sparsemax token selection and CFAR/ordered-statistic detection; the p_fam prototype bank partly stores familiar-name identity, which the brief disfavours."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c128",
+      "members": [
+        "c128"
+      ],
+      "rep": "c128",
+      "screen": {
+        "rep": "c128",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: surprise-gated write weighting on a softmax attention pool, i.e. the write-gate item)",
+          "combination": true,
+          "reason": "The core is a per-line Levinson-Durbin residual used as a surprise gate on softmax token pooling, which is a direct combination of the surprise write gate and the single softmax attention pool; the Levinson-Durbin/LPC detector itself is not on the list, but the prototype bank used for unfamiliarity stores familiar-name structure, which sits uneasily with the name-independence requirement."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c129",
+      "members": [
+        "c129"
+      ],
+      "rep": "c129",
+      "screen": {
+        "rep": "c129",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, channel-wise 4th-order kurtosis selection followed by per-token channel-ownership scoring, does not match any listed item; its nearest relatives (per-channel standardisation, softmax pooling with a confidence gate) do not capture the kurtosis-weighted ownership share, though the familiar-prototype bank term does lean on stored name identity."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c130",
+      "members": [
+        "c130"
+      ],
+      "rep": "c130",
+      "screen": {
+        "rep": "c130",
+        "verdict": {
+          "implementable": true,
+          "known_item": "top-k / Gumbel hard token selection (sparse keys from entity pointers)",
+          "combination": true,
+          "reason": "The card learns a per-token scorer that hard-selects the person token to form the key, which is the known hard token selection and pointer-key pattern, and it feeds that scorer with sorted pairwise cosines in the style of relation networks. The claimed invariance is also doubtful, since cosines to learned prototypes are not invariant to a novel name's direction."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c131",
+      "members": [
+        "c131"
+      ],
+      "rep": "c131",
+      "screen": {
+        "rep": "c131",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, a Cayley-parametrized semi-orthogonal key map, is not on the KNOWN list and is not a combination of two listed items; the closest published method is Cayley orthogonal parametrization (Helfrich et al. 2018, orthogonal RNNs), and the nearest listed item, LayerNorm/whitening of keys, normalizes outputs rather than constraining the linear map. The 16x32 semi-orthogonal map also discards a 16-dimensional complement, so the 'no direction can be zeroed' claim does not hold as stated."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c132",
+      "members": [
+        "c132"
+      ],
+      "rep": "c132",
+      "screen": {
+        "rep": "c132",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is an explicit ridge least-squares inverse of a learned banded neighbour-mixing operator (deconvolution) applied before pooling, which is not on the known list; the nearest item, conv line encoders, applies a learned forward filter rather than solving for an inverse, and the rest of the pipeline is ordinary pooling and projections."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c133",
+      "members": [
+        "c133"
+      ],
+      "rep": "c133",
+      "screen": {
+        "rep": "c133",
+        "verdict": {
+          "implementable": true,
+          "known_item": "type-aware pooling (role-specific projections) with a learned constant null/sink key (CLS-style learned slot), i.e. multi-query attention pooling with one query per role",
+          "combination": true,
+          "reason": "The card is a per-token softmax pool with one learned query per role, which is type-aware pooling, and its constant reject logit acts as a learned null/sink key, so it reduces to a direct combination of two known items (role-specific pooling and a CLS-style learned slot)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c134",
+      "members": [
+        "c134"
+      ],
+      "rep": "c134",
+      "screen": {
+        "rep": "c134",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention",
+          "combination": true,
+          "reason": "The core operation is one query per role pooling over tokens (multi-query/PMA-style pooling) with competition normalized across roles, which is slot attention's softmax competition extended to Sinkhorn doubly-stochastic normalization (close to published Sinkhorn attention and latent-permutation work, e.g. Mena et al. 2018)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c135",
+      "members": [
+        "c135"
+      ],
+      "rep": "c135",
+      "screen": {
+        "rep": "c135",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core is a learned sigmoid gate (GLU-style) that sets per-token weights, combined with adjacent-pair hierarchical merging (funnel or ToMe-style pooling) with an asymmetric, gate-weighted merge, so it is a direct combination of two known items rather than a novel operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c136",
+      "members": [
+        "c136"
+      ],
+      "rep": "c136",
+      "screen": {
+        "rep": "c136",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, a Born-rule |a|^2 weight from a complex amplitude whose self and context channels interfere through a cos(phi-psi) cross term, is not on the KNOWN list and is not a composition of two listed items; the closest published method is complex-valued/quantum-inspired attention (Li et al. 2019), which lacks the two-channel coherent superposition, and the design fits the per-line, answer-CE, 20k-number constraints."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c137",
+      "members": [
+        "c137"
+      ],
+      "rep": "c137",
+      "screen": {
+        "rep": "c137",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core is a softmax attention pool whose logits come from restricted structural features plus an annealed content field, distilled into the structural scorer by a KL term. That KL term is an extra non-CE loss, which violates the answer-only cross-entropy constraint, and the closest published precedent is product-of-experts debiasing (RUBi), which is not on the KNOWN list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c138",
+      "members": [
+        "c138"
+      ],
+      "rep": "c138",
+      "screen": {
+        "rep": "c138",
+        "verdict": {
+          "implementable": true,
+          "known_item": "relation networks (pairwise then sum)",
+          "combination": true,
+          "reason": "The core operation is a pairwise term over all token pairs, aggregated over rivals, which is a relation network, and the pairwise term is a skew-symmetric bilinear form, which is a bilinear pooling variant, so it is a direct combination of two listed items even though the product-of-duel-wins aggregation differs from the usual sum."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c139",
+      "members": [
+        "c139"
+      ],
+      "rep": "c139",
+      "screen": {
+        "rep": "c139",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is an augmentation-consistency loss (closest known item: UDA/R-drop, which is not on the KNOWN list), and its symmetric-KL term is not answer-only cross-entropy, which breaks the stated training constraint."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c140",
+      "members": [
+        "c140"
+      ],
+      "rep": "c140",
+      "screen": {
+        "rep": "c140",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, locating sparse support by fitting an annihilating filter to Fourier syndromes along the token axis (Prony/FRI-style), is not on the KNOWN list; the nearest listed item is top-k/sparsemax hard token selection, which uses learned scores rather than spectral root structure, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c141",
+      "members": [
+        "c141"
+      ],
+      "rep": "c141",
+      "screen": {
+        "rep": "c141",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, codebook-residual offset voting aggregated by a soft-median majority-logic decision over positions, does not match any listed item, and it is not a direct combination of two of them, since the nearest listed items (attention pooling, top-k selection, Deep Sets) do not supply the offset-vote-and-median mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c142",
+      "members": [
+        "c142"
+      ],
+      "rep": "c142",
+      "screen": {
+        "rep": "c142",
+        "verdict": {
+          "implementable": true,
+          "known_item": "capsule routing (iterative dynamic routing with coupling coefficients) and slot attention (iterative soft assignment across competing slots)",
+          "combination": true,
+          "reason": "The core operation is an iterated token-to-role soft assignment with per-dimension reliability weights, which is essentially capsule routing or slot-attention-style iterative refinement, and it adds robust per-dimension z-scoring, which is a direct combination of two known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c143",
+      "members": [
+        "c143"
+      ],
+      "rep": "c143",
+      "screen": {
+        "rep": "c143",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Decision-feedback cancellation (soft-decoding neighbour tokens to a learned symbol codebook and subtracting their leak templates before pooling) is not on the known list, and it is not a direct combination of two listed items, though it is closest in spirit to the listed linear equalisers and interference-cancelling ideas."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c144",
+      "members": [
+        "c144"
+      ],
+      "rep": "c144",
+      "screen": {
+        "rep": "c144",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "Tying one linear identity demapper between the value path and the person half of the key, trained by value-channel cross-entropy, is weight tying across roles, which is not a listed item; its closest relatives (separate key/value pools, role-specific projections, KV-memory embeddings) are the opposite design or only partly similar, so it does not clearly reduce to two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c145",
+      "members": [
+        "c145"
+      ],
+      "rep": "c145",
+      "screen": {
+        "rep": "c145",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (Sinkhorn/OT-normalized slot assignment, close to OTK optimal-transport pooling, which is not on the list)",
+          "combination": true,
+          "reason": "The core operation is a per-slot weighted pool over tokens with a doubly-stochastic (Sinkhorn) normalization and a null sink, which is slot attention's normalize-over-slots pooling combined with multi-query (PMA-style) role pooling and a gate on the null slot."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c146",
+      "members": [
+        "c146"
+      ],
+      "rep": "c146",
+      "screen": {
+        "rep": "c146",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core operation, ordinal slot addressing by a soft cumulative count over content tokens, is not on the KNOWN list, but its structure is multi-query slot pooling (PMA-style) combined with a learned role-specific mapping of slots to AGENT/PRED/THEME."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c147",
+      "members": [
+        "c147"
+      ],
+      "rep": "c147",
+      "screen": {
+        "rep": "c147",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: relation networks, pairwise scoring then sum)",
+          "combination": true,
+          "reason": "The core is a softmax over pairwise affinities (relation-network-style pair scoring) whose marginals then weight a single attention pool over the complement tokens, which combines two KNOWN items: relation networks and the softmax attention pool."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c148",
+      "members": [
+        "c148"
+      ],
+      "rep": "c148",
+      "screen": {
+        "rep": "c148",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": true,
+          "reason": "The core is a biaffine pairwise scorer over tokens (a relation-network-style pairwise term) feeding role-specific, label-gated attention pooling (type-aware pooling over a single softmax pool), which is a direct combination of two listed items; the closest published method is Kim et al. 2017 structured attention, which is not on the list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c149",
+      "members": [
+        "c149"
+      ],
+      "rep": "c149",
+      "screen": {
+        "rep": "c149",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Relation networks (pairwise, then sum)",
+          "combination": true,
+          "reason": "The core is a pairwise scoring function over token pairs, summed per token and turned into softmax pool weights, which is a relation network followed by a softmax attention pool; the antisymmetric Copeland aggregation is a variant of the pairwise sum, not a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c150",
+      "members": [
+        "c150"
+      ],
+      "rep": "c150",
+      "screen": {
+        "rep": "c150",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The writer stays a per-line function with a small selector and answer-only cross-entropy, and the periodic eta^2-based re-initialisation of high-selectivity units is a training-time procedure not on the known list; its nearest relatives (dormant-neuron resets, anergy-style indistinguishability) are not listed, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c151",
+      "members": [
+        "c151"
+      ],
+      "rep": "c151",
+      "screen": {
+        "rep": "c151",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a data-estimated Jacobian penalty on the selector logits restricted to the top-r PCA directions of attended states, which is not on the KNOWN list; its closest published relatives are contractive autoencoders (Rifai et al., 2011) and Jacobian regularisation (Hoffman et al., 2019), and it is not a direct combination of two KNOWN items. The writer stays a per-line function at inference, and the batch-level subspace estimate is used only as a training-time loss term."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c152",
+      "members": [
+        "c152"
+      ],
+      "rep": "c152",
+      "screen": {
+        "rep": "c152",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is per-line random sampling of module pathways (a DropPath/stochastic-depth-style regularizer over module libraries) with test-time ensemble averaging, which is not an item on the KNOWN list and is not a direct combination of two listed items; the closest published method is DropPath/stochastic depth, and the 'MoE routing over tokens' item differs because it is learned and token-level."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c153",
+      "members": [
+        "c153"
+      ],
+      "rep": "c153",
+      "screen": {
+        "rep": "c153",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, a training-only bias branch added in logit space and discarded at test (product-of-experts / learned-mixin debiasing, as in RUBi), is not on the KNOWN list and is not a direct combination of two listed items, though it is close in spirit to published bias-only debiasing."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c154",
+      "members": [
+        "c154"
+      ],
+      "rep": "c154",
+      "screen": {
+        "rep": "c154",
+        "verdict": {
+          "implementable": true,
+          "known_item": "hypernetwork gating (a per-line code conditions the selector's pool logits), with the KL-regularised latent akin to a rate-limited noisy channel",
+          "combination": true,
+          "reason": "The core is a per-line stochastic code that conditions attention pool logits, which combines the listed hypernetwork/FiLM-style conditioning with an information-bottleneck latent, so it is a direct combination of two known ideas rather than a new operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c155",
+      "members": [
+        "c155"
+      ],
+      "rep": "c155",
+      "screen": {
+        "rep": "c155",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, matrix-tree arc marginals over dependency trees used as a pointer, is not on the KNOWN list and is not a direct combination of two listed items; its closest published precedent is Structured Attention Networks (Kim et al. 2017), which the proposal itself cites, so it is literature-known but not a KNOWN-list item."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c156",
+      "members": [
+        "c156"
+      ],
+      "rep": "c156",
+      "screen": {
+        "rep": "c156",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The generational chain of pointer distillation on nonce names is not on the KNOWN list and is not a direct combination of two listed items, but it is not implementable under the stated rules because the selector is trained on teacher token-pointer targets rather than answer-only cross-entropy, and the nearest known relative is born-again self-distillation or synthetic-name dreaming."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c157",
+      "members": [
+        "c157"
+      ],
+      "rep": "c157",
+      "screen": {
+        "rep": "c157",
+        "verdict": {
+          "implementable": false,
+          "known_item": "contrastive key losses",
+          "combination": true,
+          "reason": "The writer is a per-line function, but training adds a cross-writer key-agreement and symmetric-KL loss on unlabeled nonce lines, which violates the stated answer-only cross-entropy constraint; the core agreement term is a contrastive-style key loss, and the random per-line writer sampling is close to MoE routing, so the idea is a combination of two known items (co-regularisation/deep mutual learning is also a close literature match)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c158",
+      "members": [
+        "c158"
+      ],
+      "rep": "c158",
+      "screen": {
+        "rep": "c158",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The card's core operation is a cosine regression of the key head onto the answerer's query vectors for synthetic probe names, with an L2 pull, which violates the answer-only cross-entropy training constraint and uses data outside the visit distribution; it is not a direct match to any listed item (its nearest relatives are address keys and contrastive key losses, but its target is a teacher distillation target, not a contrastive or geometric objective)."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c159",
+      "members": [
+        "c159"
+      ],
+      "rep": "c159",
+      "screen": {
+        "rep": "c159",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (the seed) with a fixed temperature on pool weights; the ternary quantisation is a variant of the scorer, not a separate listed item",
+          "combination": false,
+          "reason": "The core operation is a per-line softmax pool over token scores, with the scorer restricted to a ternary-weight sum of sign tests. That is the seed's softmax pool with a temperature trick and a quantised scorer, and the listed items cover this family, so it is not a new mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c160",
+      "members": [
+        "c160"
+      ],
+      "rep": "c160",
+      "screen": {
+        "rep": "c160",
+        "verdict": {
+          "implementable": true,
+          "known_item": "multi-head / multi-query attention pooling",
+          "combination": true,
+          "reason": "The four selectors are multi-head pooling heads whose pointer logits are combined by a geometric-mean consensus, which is close to MoE routing over tokens, while the cross-fitted out-of-fold training is standard stacking that the list does not name directly."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c161",
+      "members": [
+        "c161"
+      ],
+      "rep": "c161",
+      "screen": {
+        "rep": "c161",
+        "verdict": {
+          "implementable": false,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The ICC statistic groups activations by person-name identity, which requires name labels that the answer-only cross-entropy setup does not provide, so the training signal breaks the stated constraint even though the deployed per-line selector is a valid function of the reader states; the closest known family is pruning or dropout-style unit reinitialization, which is not on the KNOWN list."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c162",
+      "members": [
+        "c162"
+      ],
+      "rep": "c162",
+      "screen": {
+        "rep": "c162",
+        "verdict": {
+          "implementable": true,
+          "known_item": "single softmax attention pool (the seed)",
+          "combination": true,
+          "reason": "The writer's pointer weights come from a softmax over tokens with logits built from scalar features (prototype cosines, neighbour similarities), which is the seed softmax pool with identity-tag-style scoring; the genetic-programming search that finds the scorer is only the training procedure, not a new writer operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c163",
+      "members": [
+        "c163"
+      ],
+      "rep": "c163",
+      "screen": {
+        "rep": "c163",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation is a MAP-Elites quality-diversity archive of whole selectors indexed by behaviour on fixed probe lines, which is not on the KNOWN list and is not a direct combination of two listed items; the closest published method is MAP-Elites (Mouret & Clune, 2015), and the 36-elite weighted vote fits within 20,000 numbers and per-line use."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c164",
+      "members": [
+        "c164"
+      ],
+      "rep": "c164",
+      "screen": {
+        "rep": "c164",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The writer stays a per-line function with a seed-style pool and no extra parameters, and the reweighting only changes training; its core operation is worst-group replicator/Group-DRO-style loss weighting, which is a published method (Sagawa et al.) but is not an item on the KNOWN list and is not a direct combination of two KNOWN items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c165",
+      "members": [
+        "c165"
+      ],
+      "rep": "c165",
+      "screen": {
+        "rep": "c165",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, pooling each token by its exact arc marginal from matrix-tree (Kirchhoff) inference over dependency trees, is not on the KNOWN list and is not a direct combination of two listed items; the closest published method is Kim et al. 2017 structured attention, which uses the same matrix-tree marginals, so the judge should record that as the nearest prior art."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c166",
+      "members": [
+        "c166"
+      ],
+      "rep": "c166",
+      "screen": {
+        "rep": "c166",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, marginals from inside-outside over a latent categorial/CCG chart used as pooling weights, is not on the KNOWN list; the closest published method is structured attention networks (Kim et al. 2017) and latent CCG parsing, which the list does not cover, and it is not a direct combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c167",
+      "members": [
+        "c167"
+      ],
+      "rep": "c167",
+      "screen": {
+        "rep": "c167",
+        "verdict": {
+          "implementable": true,
+          "known_item": "Relation networks (pairwise g then sum)",
+          "combination": true,
+          "reason": "The core operation is a relation-network pairwise function, made antisymmetric and summed into a Copeland score, which is then used as a softmax attention pool weight over tokens. That is a direct combination of two KNOWN items: relation networks and single softmax attention pooling."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c168",
+      "members": [
+        "c168"
+      ],
+      "rep": "c168",
+      "screen": {
+        "rep": "c168",
+        "verdict": {
+          "implementable": true,
+          "known_item": "self-attention layers then pool (diagonal-masked, i.e. masked language modelling / cloze-style context)",
+          "combination": true,
+          "reason": "The core is a leave-self-out (diagonal-masked) self-attention over the 10 tokens, followed by a role classifier and a softmax pool over tokens, which combines the known items 'self-attention layers then pool' and 'role-specific projections (type-aware pooling)'; it is implementable per line with about 4k parameters."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c169",
+      "members": [
+        "c169"
+      ],
+      "rep": "c169",
+      "screen": {
+        "rep": "c169",
+        "verdict": {
+          "implementable": true,
+          "known_item": "multi-head / multi-query attention pooling (PMA), with the single softmax attention pool as the base",
+          "combination": true,
+          "reason": "Each token gets a softmax-pooled weight from several scorers that see nested feature subspaces (2, 8, and 32 dimensions), combined by a fixed exponentially weighted sum, which is multi-head attention pooling with a fixed gate across heads; the OT framing does not change the operation."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c170",
+      "members": [
+        "c170"
+      ],
+      "rep": "c170",
+      "screen": {
+        "rep": "c170",
+        "verdict": {
+          "implementable": true,
+          "known_item": "temperature or entropy tricks on pool weights (an adaptive, input-dependent temperature or bias on softmax pool logits)",
+          "combination": false,
+          "reason": "The core operation is a softmax attention pool whose per-line logit scale and bias (the multipliers lambda) are adapted to hit learned targets, which is an adaptive temperature/bias trick on pool weights, not a new pooling primitive, and it is a single mechanism rather than a combination of two listed items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c171",
+      "members": [
+        "c171"
+      ],
+      "rep": "c171",
+      "screen": {
+        "rep": "c171",
+        "verdict": {
+          "implementable": true,
+          "known_item": "address keys / role-specific projections (type-aware pooling)",
+          "combination": true,
+          "reason": "The key is a role-specific projection of the person pool (address-key style, built from the two separate pools) with the projection tied to the value decoder under stop-gradient, and weight tying of this kind is a published technique (Press & Wolf), so the core operation is a combination of known items rather than a new mechanism."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c172",
+      "members": [
+        "c172"
+      ],
+      "rep": "c172",
+      "screen": {
+        "rep": "c172",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none",
+          "combination": false,
+          "reason": "The core operation, a training-only name-indexed random-effect expert added to the pool logits and set to zero at test, matches no item on the KNOWN list, but it closely resembles the published learned-mixin/product-of-experts debiasing (Clark et al. 2019), so it is a literature-known method rather than a novel one."
+        },
+        "stop_reason": "end_turn",
+        "passes": true
+      }
+    },
+    {
+      "name": "(unassigned) c173",
+      "members": [
+        "c173"
+      ],
+      "rep": "c173",
+      "screen": {
+        "rep": "c173",
+        "verdict": {
+          "implementable": true,
+          "known_item": "none (closest: relation networks, pairwise term then sum, with FiLM-style multiplicative x*c conditioning; the card's cited 'alanine-scanning ablation' is not on the KNOWN list)",
+          "combination": true,
+          "reason": "The per-token logit is a relation-network-style pairwise scorer on [x; c; x*c] with marginal subtraction, which combines the pairwise relation-network idea with FiLM/bilinear multiplicative gating, and the neighbour context is a fixed-offset conv-style encoder, so it reduces to known items."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    },
+    {
+      "name": "(unassigned) c174",
+      "members": [
+        "c174"
+      ],
+      "rep": "c174",
+      "screen": {
+        "rep": "c174",
+        "verdict": {
+          "implementable": true,
+          "known_item": "slot attention (iterated competitive assignment of tokens across roles; closest is capsule-style iterative routing)",
+          "combination": false,
+          "reason": "The writer is a per-line, unrolled, answer-trained competitive assignment of tokens to roles with about 4k parameters, which fits the interface, but the core operation of iterated competitive token-to-role allocation matches slot attention and iterative capsule routing, with the Hill-threshold integral demand as a variant rather than a new primitive."
+        },
+        "stop_reason": "end_turn",
+        "passes": false
+      }
+    }
+  ]
+}
