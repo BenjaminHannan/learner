@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from custom_io.models.ledger import execute, value_code
 from custom_io.models import progparse as pp
 from creative.programs import ARITH, COMM, M, N_RES, R0, raw_key
-from creative.sampler import N_NUM, N_REG, TryRec, _tries_from, make_batch
+from creative.sampler import N_NUM, TryRec, _tries_from, lg, make_batch
 
 ARITH_T = torch.tensor(ARITH)
 
@@ -71,7 +71,7 @@ def sample_run_masked(model, batch, k, level=4, temperature=1.0, greedy=False, g
     S0 = S0 * valid[:, :R_, None]
     Rs = torch.zeros(B, pp.N_RES, model.d, device=dev, dtype=S0.dtype)
     kvx = [b.kv_of(X + model.src.weight[1]) for b in model.core]
-    Z = torch.cat([model.ctrl.weight, model.reader.place.weight[:N_REG]]).expand(B, -1, -1)
+    Z = torch.cat([model.ctrl.weight, model.reader.place.weight[:lg.N_REG]]).expand(B, -1, -1)
     ops, As, Bs = [], [], []
     for t in range(model.n_loops):
         ts = min(t, model.n_loops - 1)

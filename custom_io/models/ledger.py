@@ -26,13 +26,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from custom_io.data import EOS, MAX_ANS, word_spans
+from custom_io.data import EOS, word_spans
 from custom_io.models.base import Model
 from custom_io.models.reader import CharReader
 from custom_io.models import progparse as pp
 
 N_NUM, N_RES, M, R0, W_MAX, OPS, COMM = pp.N_NUM, pp.N_RES, pp.M, pp.R0, pp.W_MAX, pp.OPS, pp.COMM
 N_CTRL, N_REG, BIG = 8, 9, 10 ** 9
+GEN_MAX = N_REG - 1        # GEN register targets: 8 chars + EOS by default; custom_io/caps.py sets N_REG and GEN_MAX together
 ADD, SUB = 1, 2
 OMEGA = 0.03 * 1.6 ** torch.arange(10.)
 
@@ -298,7 +299,7 @@ class Ledger(Model):
                 op[i, s], A[i, s, list(ca)], Bm[i, s, list(cb)] = o, True, True
             mode[i], ans[i, list(t['ans'])], word[i, list(t['word'])] = t['mode'], True, True
             if t['mode'] == 2:
-                ids = self.vocab.encode(r['answer'][:MAX_ANS][::-1]) + [EOS]
+                ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
         A[:, :, 0] |= ~A.any(-1)
         Bm[:, :, 0] |= ~Bm.any(-1)

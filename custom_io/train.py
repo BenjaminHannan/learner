@@ -74,6 +74,29 @@ def final_eval(model, args, device, amp):
     return runs.pop(None), runs
 
 
+def write_gate_record(model, vocab, args, ckpt_path, caps_rec):
+    """The end-of-training eval record for creative/bidc_load_gate.py check 3, made from the in-memory model (a CPU copy: the gate evaluates on CPU with one thread). -> a summary dict."""
+    import copy
+    from creative import bidc_load_gate as gate
+    rows = gate.load_rows(args.record_rows, args.record_n)
+    rows_sha = gate.sha256_file(args.record_rows)
+    threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    try:
+        rec = gate.record_eval(copy.deepcopy(model).cpu(), vocab, rows, caps_rec, source='train_process', checkpoint_sha256=gate.sha256_file(ckpt_path), rows_sha256=rows_sha)
+    finally:
+        torch.set_num_threads(threads)
+    with open(args.record_eval, 'xb') as f:                     # exclusive
+        try:
+            torch.save(rec, f)
+        except BaseException:
+            f.close()
+            os.remove(args.record_eval)                         # no half-written record left behind to block a retry
+            raise
+    jprint(event='record_eval', path=args.record_eval, n=len(rec['ids']), right=sum(rec['right']), checkpoint_sha256=rec['checkpoint_sha256'])
+    return dict(path=args.record_eval, checkpoint_sha256=rec['checkpoint_sha256'], rows=args.record_rows, n=len(rec['ids']))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', required=True, choices=NAMES)
@@ -93,16 +116,46 @@ def main(argv=None):
     ap.add_argument('--log-every', type=int, default=100)
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
+    ap.add_argument('--caps', help='caps json (custom_io/caps/*.json, see custom_io/caps.py): resizes the answer / register tables; applied before any data or model is built. Ledger (B2) only')
+    ap.add_argument('--record-eval', metavar='PATH', help='write the Bid C load-gate record of the END-OF-TRAINING model, made here from the in-memory model right after the checkpoint is saved '
+                    '(source "train_process", with the checkpoint sha256; creative/bidc_load_gate.py check 3 needs this). Needs --out and a ledger model; refuses to overwrite')
+    ap.add_argument('--record-rows', default='creative/data/c2/dev.jsonl', help='--record-eval: the rows file of the fixed batch (its first --record-n rows)')
+    ap.add_argument('--record-n', type=int, default=64)
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
     ap.add_argument('--eval-batch', type=int, default=128)
     ap.add_argument('--minutes', type=float, help='wall-clock cap on training; still evals afterwards')
     ap.add_argument('--out', help='dir for RESULT.json and checkpoint.pt')
     args = ap.parse_args(argv)
+    if args.record_eval:                # refuse BEFORE any training time is spent
+        if not args.out:
+            ap.error('--record-eval needs --out (the record names the sha256 of the checkpoint it belongs to)')
+        if args.model != 'ledger':
+            ap.error('--record-eval is the Ledger gate record; the model must be ledger')
+        if not args.caps:
+            ap.error('--record-eval needs --caps (the gate record is the Bid C P_0 record: check 3 refuses a record made without the caps)')
+        if os.path.exists(args.record_eval):
+            sys.exit(f'REFUSED: {args.record_eval} exists; a record is not overwritten')
+        if not os.path.isfile(args.record_rows):
+            sys.exit(f'REFUSED: --record-rows {args.record_rows} does not exist')
     cfg = json.loads(args.cfg)
     device = torch.device('cuda' if args.device == 'auto' and torch.cuda.is_available() else 'cpu' if args.device == 'auto' else args.device)
     amp = (lambda: torch.autocast(device.type, dtype=torch.bfloat16)) if args.bf16 and device.type == 'cuda' else contextlib.nullcontext
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed); torch.cuda.manual_seed_all(args.seed)
     t_start = time.time()
+    caps_rec = None
+    if args.caps:                       # before any data or model is built: caps are module globals (custom_io/caps.py)
+        from custom_io import caps as _caps
+        _c = _caps.apply_file(args.caps)
+        if not _caps.is_today(_c) and args.model not in _caps.PORTED_MODELS:
+            sys.exit(f'--caps {args.caps} changes the sizes, but {args.model} reads them by value on this branch (ported: {", ".join(_caps.PORTED_MODELS)})')
+        caps_rec = _caps.APPLIED
+        jprint(event='caps', **caps_rec)
+    if args.record_eval:                # still before any data or model is built or a step is trained: the rows the record will use must load (MANIFEST sha256 checked) and have --record-n rows
+        from creative import bidc_load_gate as _gate
+        try:
+            _gate.load_rows(args.record_rows, args.record_n)
+        except (Exception, SystemExit) as e:
+            sys.exit(f'REFUSED: --record-rows {args.record_rows} cannot serve a --record-n {args.record_n} gate record: {type(e).__name__}: {e}')
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
     vocab = CharVocab.get(args.data, args.vocab, rows)
@@ -156,9 +209,19 @@ def main(argv=None):
     train_s = time.time() - t0 - eval_s
     result = dict(config=dict(vars(args), cfg=cfg), n_params=model.n_params(), steps=step, status=status, final_train_loss=last_loss,
                   train_s=train_s, steps_per_s=step / max(train_s, 1e-9), final_eval=None, lesions={})
+    if caps_rec:                        # only with --caps, so a run without it writes the same keys as before
+        result['caps'] = caps_rec
     if args.out:
         os.makedirs(args.out, exist_ok=True)
-        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step), os.path.join(args.out, 'checkpoint.pt'))
+        torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step, **(dict(caps=caps_rec) if caps_rec else {})),
+                   os.path.join(args.out, 'checkpoint.pt'))
+    if args.record_eval:                # from THIS process, on the in-memory model, right after training: the gate's reload in a fresh process must reproduce it bit for bit
+        try:
+            result['record_eval'] = write_gate_record(model, vocab, args, os.path.join(args.out, 'checkpoint.pt'), caps_rec)
+        except (Exception, SystemExit):   # the trained model and the final eval must not be lost to a failed record (load_rows raises SystemExit): note it, go on, exit non-zero at the end
+            import traceback
+            result['record_eval_error'] = traceback.format_exc()
+            jprint(event='record_eval_error', path=args.record_eval, error=result['record_eval_error'].strip().splitlines()[-1])
     def write():
         result['wall_s'] = time.time() - t_start
         if args.out:
@@ -175,6 +238,8 @@ def main(argv=None):
     write()
     jprint(event='done', steps=step, status=status, steps_per_s=round(result['steps_per_s'], 3), wall_s=round(result['wall_s'], 1),
            **(short(result['final_eval']) if result['final_eval'] else {}))
+    if 'record_eval_error' in result:
+        sys.exit(f"the --record-eval record was NOT written ({result['record_eval_error'].strip().splitlines()[-1]}); the checkpoint and RESULT.json are, but check 3 has no record for them")
     return result
 
 
