@@ -18,7 +18,7 @@ $Src  = 'C:\Users\benja\custom-io\src-bidc'          # a clean copy of claude/bi
 $Work = 'C:\Users\benja\creative\bidc'               # gate records and reports
 $C2B  = 'C:\Users\benja\creative\ckpt\B2_s200.pt'    # the raw C2b parent s200 (CONFIRM this path; c2b ran with --ckpt ~/creative/ckpt/B2_s$S.pt)
 Set-Location $Src
-if ((git rev-parse HEAD) -ne 'e0d65adb6...') { }     # replace with the full hash; the script must refuse any other commit
+if ((git rev-parse HEAD) -ne 'e0d65adb6eb30277eb92d9a10de3894540bd2290') { throw 'wrong commit: check out e0d65adb6 in $Src' }
 New-Item -ItemType Directory -Force -Path $Work | Out-Null
 switch ($Step) {
   'record-c2b' { python -m creative.bidc_load_gate record --ckpt $C2B --out "$Work\C2B_s200_RECORD.pt" --rows creative/data/c2/dev.jsonl }
@@ -27,7 +27,7 @@ switch ($Step) {
 }
 ```
 
-**Now run only:** `.\bidc-benspc.ps1 record-c2b`. Before running, fill in the full commit hash check, so the script refuses any other commit.
+**Now run only:** `.\bidc-benspc.ps1 record-c2b`. The script refuses any commit other than e0d65adb6.
 
 **Send back:** the file `C2B_s200_RECORD.pt` (or its sha256), the console output, and `git rev-parse HEAD`. Check 1 itself runs later, in the gate run, from the same script.
 
