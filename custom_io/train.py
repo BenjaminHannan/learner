@@ -218,7 +218,7 @@ def main(argv=None):
     if args.record_eval:                # from THIS process, on the in-memory model, right after training: the gate's reload in a fresh process must reproduce it bit for bit
         try:
             result['record_eval'] = write_gate_record(model, vocab, args, os.path.join(args.out, 'checkpoint.pt'), caps_rec)
-        except Exception:               # the trained model and the final eval must not be lost to a failed record: note it, go on, exit non-zero at the end
+        except (Exception, SystemExit):   # the trained model and the final eval must not be lost to a failed record (load_rows raises SystemExit): note it, go on, exit non-zero at the end
             import traceback
             result['record_eval_error'] = traceback.format_exc()
             jprint(event='record_eval_error', path=args.record_eval, error=result['record_eval_error'].strip().splitlines()[-1])
