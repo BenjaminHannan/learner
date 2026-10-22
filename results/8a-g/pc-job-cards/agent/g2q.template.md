@@ -1,0 +1,43 @@
+job: g2q (G2Q: B3 group 2 with talk_question on, the talker also reads the question; arm B3G2 at 3M, seed 400; 4,023,558 trained; the same pool p10-rung30-s400-a64-L, caps_b3g2.json and readout as G2f)
+queue: 8aB3G2Q
+next_queue: 8aB3G2Qb
+owner: Whole-model roadmap thread (PC queue; spec design/8a-g-gemma-growth-2026-10-08.md addendum AD) for the Build the talker thread (code, PR #69) and the big-run thread (marks Q-1 to Q-3, big-run PLAN.md tenth Addendum 10-11)
+gpu: yes
+started: @STARTED@
+log: C:\Users\benja\custom-io\work\q8aB3G2Q.log
+stall_minutes: 900
+paths: SRC = C:\Users\benja\custom-io\src-g2q (custom_io of the G2Q commit 4bdc31118a, branch claude/project-thread-emwjvn; never edit it)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
+starts_when: started by the post-G1 chain waiter v3e as the inserted job WORK\insert\30-g2q.txt (a side run), at its first insert check point
+  after G2f, AT-1 (11-at.txt, if the gate let it run) and test WIDE (20-wide.txt). Accum B3G2=32 (G2f's cautious guess).
+stall_check: Windows does not refresh LastWriteTime of a file that is still open, so never use it. The live log is the
+  running job's B3G2\stdout.txt under WORK\results\Q-pc\ (before it exists the job is building the pool: look for a
+  python process with custom_io.g8a.job in its command line). Stalled = its last "step" is the same as in the
+  previous status while a custom_io.train process runs -> report only.
+alive: a python process whose command line contains Q-pc.txt (the queue runner)
+done_when: the log prints "queue Q-pc done"; then WORK\results\Q-pc\8aB3G2Q-3M-s400\RESULT.json says "status": "ok" (else report)
+on_spill: a custom_io.train process with shared GPU memory over 1024 MiB, or "CUDA out of memory" in B3G2\stdout.txt:
+  0. Guard: if SRC\custom_io\queue_local\<next_queue>-pc.txt (or a later letter) exists, someone already relaunched: report only.
+  1. New-Item WORK\STOP (the runner then starts nothing new).
+  2. Stop by exact PID, after checking each command line: the custom_io.train process, its custom_io.g8a.job
+     parent, and the custom_io.local_runner process whose command line has Q-pc.txt.
+  3. Edit C:\Users\benja\GPU-BUSY.txt: remove only the lines that contain " Q-pc/".
+  4. A leftover WORK\g8a\pools\*.lock: rename it to <name>.stale-<yyyyMMdd-HHmm>.
+  5. Write SRC\custom_io\queue_local\<next_queue>-pc.txt: Q-pc.txt with Q-... renamed to <next_queue>-... and --accum B3G2
+     doubled (32->64->128). Already 128: stop, NEEDS ATTENTION.
+  6. Get-FileHash SRC\custom_io\g8a\caps.py must be 433475405AE7263579EBF4B9633916842567A5B1B1F3A8930311945E504F62D3. Else stop.
+  7. Move-Item WORK\STOP to WORK\STOP.used-<yyyyMMdd-HHmm>.
+  8. Write C:\Users\benja\custom-io\q<next_queue>_run.cmd (ASCII), these 5 lines with N = <next_queue>:
+     @echo off
+     set PYTHONUTF8=1
+     set PYTHONUNBUFFERED=1
+     cd /d C:\Users\benja\custom-io\src-g2q
+     C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\N-pc.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt >> C:\Users\benja\custom-io\work\qN.log 2>&1
+     Start it detached: Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd.exe /c C:\Users\benja\custom-io\qN_run.cmd'}
+  9. Save a copy of this card as g2qb.md (queue <next_queue>, next_queue 8aB3G2Qc, log WORK\q<next_queue>.log, started now);
+     move this card to done\. Log it in actions.md. (The chain waiter waits while WORK\STOP exists or a runner runs, so it waits for the relaunch.)
+on_refuse: a job that stops at start because a row is over its pinned caps prints the rows: report only, never edit caps
+on_crash: report only (any Traceback, "rows touch the global caps", an arm rc not 0, or the runner gone before done)
+max_restarts: 2
+next: the chain waiter goes on to g2c3 and B3 group 1; the roadmap thread reads RESULT.json against Q-1 to Q-3 and sends its paths to the talker thread
+never: change seed, data, caps, marks, steps, learning rate, the custom_io code or any setting not named above;
+  never touch G1's results, pools or checkpoints; never run two queues at once

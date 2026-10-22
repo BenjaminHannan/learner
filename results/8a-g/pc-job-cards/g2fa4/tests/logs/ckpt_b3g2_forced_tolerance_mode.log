@@ -1,0 +1,7 @@
+machine noise: the unmodified train.py differs from itself (largest loss-term difference 0, weights 0): checks below allow 20x that (floors 0.0002 relative, 0.05 on the accuracy fields, 1e-05 on weights)
+ok (1) flags off: 40-update trace and final weights equal to the unmodified train.py (within the machine noise; worst trace difference 0.00 of the allowed, weights 0)
+ok (2) --ckpt-every 10 changes nothing (trace and weights; worst 0.00 of the allowed, weights 0)
+ok (3) killed at update 22 (checkpoint 15): redone updates 16..22 equal the first segment (within the machine noise; worst 0.00 of the allowed); whole trace (worst 0.00) and final weights (0) equal the uninterrupted run
+ok (4) a restart with another --log-every, --ckpt-every and --accum resumes (with the accum warning)
+ok (5) control: another seed differs by 5.72 (median loss) and 0.219 (weights), at least 5x the allowed 0.0121 and 1e-05: a broken resume would be seen
+ALL OK

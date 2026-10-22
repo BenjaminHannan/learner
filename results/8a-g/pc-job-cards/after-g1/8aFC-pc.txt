@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: fc100 part 1 of 2 (v3c, 11 Oct 2026, spec addendum S): build the B3 3M long-chunk pool with src-b3 (custom_io at 71299b1a47), as before, so g2c3, B3 group 1 and group 2 reuse the same pool. The 100M fit runs moved to queue 8aFC2 (src-b3g2), which measures four group 2 shapes instead of the old ledger 21 x 512 only (FINISHED-MODEL item 10).
+# Line 2 only builds the pool and its caps report: --maxh 1e-9 then skips its PT arm, so its RESULT.json says arm_failed with PT skipped_maxh. That is expected; nothing trains.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+g8a: 8aFC-pool-3M-s400-L --rung 3M --seed 400 --arms PT --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3.json --maxh 1e-9

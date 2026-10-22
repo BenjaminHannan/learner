@@ -1,0 +1,10 @@
+# BensPC RTX 5070 Ti: G1s401r = 10M s401 of gate G1, rerun after Ben's PC restart (11 Oct 2026, about 9:45 PM ET; spec addendum AC). Only the
+# arms without an ok RESULT.json under WORK\results\8aG1s401*-pc\8aG1s401*-10M-s401 run (g1recover.ps1 fills @ARMS@ and @ACCUM@); the B2 arm
+# was in training at the restart and was lost (train.py saves only at the end). Same settings as 8aG1s401 otherwise. The post-G1 waiter
+# reads this job's RESULT.json (glob 8aG1s401*-pc\8aG1s401*-10M-s401) as the end of G1.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG1s401r-10M-s401 --rung 10M --seed 401 --arms @ARMS@ --b2-extra '{"eg_embed": true}' --accum @ACCUM@

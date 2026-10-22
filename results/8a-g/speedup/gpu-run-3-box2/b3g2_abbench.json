@@ -1,0 +1,562 @@
+{
+ "meta": {
+  "arm": "B3G2",
+  "rung": "3M",
+  "accum": 4,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "b3g2",
+  "cfg": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "label": "settled",
+   "span_copy": true,
+   "span_idx": true,
+   "span_end": true,
+   "ans_drill": 0.25,
+   "eg_embed": true,
+   "any_round": true,
+   "gap_p": 0.25,
+   "no_slots": true,
+   "no_place": true,
+   "bytes": true,
+   "as_written": true,
+   "blocks": 2,
+   "writer_mlp": 1.75
+  },
+  "n_params": 4023302,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "le": 95
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "B3G2",
+   "--rung",
+   "3M",
+   "--accum",
+   "4",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--caps",
+   "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+   "--sections",
+   "abbench",
+   "--ab-accums",
+   "8,16",
+   "--ab-variants",
+   "",
+   "--ab-rounds",
+   "3",
+   "--ab-warmup",
+   "10",
+   "--ab-updates",
+   "40",
+   "--ab-max-min",
+   "105",
+   "--ab-partial",
+   "/job/profraw/b3g2_abbench.partial.json",
+   "--ab-equiv-json",
+   "/job/profraw/b3g2_abequiv.json",
+   "--dph",
+   "0.5304",
+   "--out",
+   "/job/profraw/b3g2_abbench.json"
+  ],
+  "started": "2026-10-15T01:24:00",
+  "finished": "2026-10-15T01:59:10"
+ },
+ "sections": {
+  "abbench": {
+   "tag": {
+    "arm": "B3G2",
+    "rung": "3M",
+    "accum": 4,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128",
+    "variant": ""
+   },
+   "complete": true,
+   "reference_accum": 4,
+   "rounds": 3,
+   "warmup": 10,
+   "timed_updates": 40,
+   "chunk": 5,
+   "dph": 0.5304,
+   "arm_order": [
+    "accum 8",
+    "accum 16"
+   ],
+   "arms": {
+    "accum 8": {
+     "name": "accum 8",
+     "kind": "accum",
+     "accum": 8,
+     "variants": [],
+     "a_runs": [
+      {
+       "round_median": 2.2970148625783624,
+       "round_mean": 2.2752663029823452,
+       "chunk_values": [
+        2.365998821891844,
+        2.5296646405011414,
+        2.22803090326488,
+        2.5226709812879564,
+        2.419444003328681,
+        1.9953745596110821,
+        2.1495010456070305,
+        1.991445468366146
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 120.8821656703949
+      },
+      {
+       "round_median": 2.2370045674964785,
+       "round_mean": 2.281286912271753,
+       "chunk_values": [
+        2.3462642753496765,
+        2.646136449277401,
+        2.1277448596432804,
+        2.6554891360923647,
+        2.3875605151057244,
+        1.9600751996040344,
+        2.125455733016133,
+        2.0015691300854086
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 115.39877080917358
+      },
+      {
+       "round_median": 2.2396756035275756,
+       "round_mean": 2.2690124875400217,
+       "chunk_values": [
+        2.3345329888164996,
+        2.6369340727105737,
+        2.124123231880367,
+        2.578258577734232,
+        2.3867123438045383,
+        1.974578351713717,
+        2.144818218238652,
+        1.9721421154215932
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 113.23781657218933
+      }
+     ],
+     "b_runs": [
+      {
+       "round_median": 3.2984912186861037,
+       "round_mean": 3.3256829012418168,
+       "chunk_values": [
+        3.8425494818016888,
+        3.30429768897593,
+        3.1727339861914516,
+        2.9129952726885677,
+        3.317801593616605,
+        3.4733983838930724,
+        3.2890020543709397,
+        3.2926847483962773
+       ],
+       "peak_mem": {
+        "allocated_gb": 4.4749956130981445,
+        "reserved_gb": 4.609375
+       },
+       "oom": false,
+       "wall_s": 168.82521963119507
+      },
+      {
+       "round_median": 3.2459233056753876,
+       "round_mean": 3.2684286935487763,
+       "chunk_values": [
+        3.833284378051758,
+        3.241000803373754,
+        3.04372588545084,
+        2.8961297338828444,
+        3.250845807977021,
+        3.403394927084446,
+        3.2018214132636786,
+        3.2772265993058682
+       ],
+       "peak_mem": {
+        "allocated_gb": 4.4749956130981445,
+        "reserved_gb": 4.609375
+       },
+       "oom": false,
+       "wall_s": 166.34804821014404
+      },
+      {
+       "round_median": 3.2571078266948463,
+       "round_mean": 3.293810433452018,
+       "chunk_values": [
+        3.7982663076370953,
+        3.282302275300026,
+        3.146979839541018,
+        2.935955751501024,
+        3.241786338575184,
+        3.445152344554663,
+        3.227611295692623,
+        3.272429314814508
+       ],
+       "peak_mem": {
+        "allocated_gb": 4.4749956130981445,
+        "reserved_gb": 4.609375
+       },
+       "oom": false,
+       "wall_s": 166.82388186454773
+      }
+     ],
+     "rounds_completed": 3,
+     "rounds_expected": 3,
+     "oom": false,
+     "wall_min_a": 5.8253125508626304,
+     "wall_min_b": 8.366619161764781,
+     "wall_min_arm": 14.191931712627412,
+     "cost_arm_usd": 0.12545667633962632,
+     "peak_alloc_gb": 4.4749956130981445,
+     "rounds_per_micro_batch": {
+      "a": {
+       "micro_batches": 480,
+       "mean_per_micro_batch": 17.28125,
+       "sem_per_micro_batch": 0.4507061229494136,
+       "mean_per_row": 17.28125,
+       "min": 5.0,
+       "max": 32.0
+      },
+      "b": {
+       "micro_batches": 960,
+       "mean_per_micro_batch": 15.959375,
+       "sem_per_micro_batch": 0.3219996253363694,
+       "mean_per_row": 15.959375,
+       "min": 4.0,
+       "max": 32.0
+      }
+     },
+     "marks": {
+      "a_median": 2.2396756035275756,
+      "b_median": 3.2571078266948463,
+      "a_round_medians": [
+       2.2970148625783624,
+       2.2370045674964785,
+       2.2396756035275756
+      ],
+      "b_round_medians": [
+       3.2984912186861037,
+       3.2459233056753876,
+       3.2571078266948463
+      ],
+      "speed_vs_a": 0.6876270982407999,
+      "b_lower_than_a_by": -0.4542766021850557,
+      "a_spread": 1.0268261835285584,
+      "rounds_completed": 3,
+      "rounds_expected": 3,
+      "incomplete": false,
+      "b_below_a_completed_rounds": false,
+      "b_below_a_every_round": false,
+      "fits_memory_mark": true,
+      "inside_noise": false,
+      "size_class": "large",
+      "mark1_speed_counts": false,
+      "mark2_memory_fits": true,
+      "rounds_vs_a": 0.9235081374321881,
+      "mark4_rounds_rise_over_25pct": false
+     },
+     "money": {
+      "updates_per_hour": 1105.2750450859662,
+      "usd_per_1000_updates": 0.4798805531330406,
+      "hours_24000_run": 21.71405217796564,
+      "usd_24000_run": 11.517133275192975
+     }
+    },
+    "accum 16": {
+     "name": "accum 16",
+     "kind": "accum",
+     "accum": 16,
+     "variants": [],
+     "a_runs": [
+      {
+       "round_median": 2.237924687936902,
+       "round_mean": 2.262278374750167,
+       "chunk_values": [
+        2.338054635003209,
+        2.6432985132560134,
+        2.137794740870595,
+        2.5877919767051933,
+        2.385835132561624,
+        1.9410507649183273,
+        2.1123118087649346,
+        1.95208942592144
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 113.58812689781189
+      },
+      {
+       "round_median": 2.2366584606468676,
+       "round_mean": 2.2576163904741406,
+       "chunk_values": [
+        2.332940780930221,
+        2.5903566578403114,
+        2.1379767755046486,
+        2.567245824448764,
+        2.386346420645714,
+        1.9457775609567762,
+        2.1403761403635144,
+        1.9599109631031753
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 112.93600296974182
+      },
+      {
+       "round_median": 2.2215555481612683,
+       "round_mean": 2.248600900894962,
+       "chunk_values": [
+        2.3233450124040247,
+        2.5919214425608517,
+        2.118969030492008,
+        2.562625838443637,
+        2.3755637733265758,
+        1.9284884233027697,
+        2.119766083918512,
+        1.96812760271132
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.327202796936035,
+        "reserved_gb": 8.525390625
+       },
+       "oom": false,
+       "wall_s": 112.56491184234619
+      }
+     ],
+     "b_runs": [
+      {
+       "round_median": 5.988117543421685,
+       "round_mean": 6.04455841453746,
+       "chunk_values": [
+        5.496703404188156,
+        6.013564537465572,
+        5.962670549377799,
+        5.942914413288236,
+        6.409007047861815,
+        6.933149404451251,
+        6.027315963990986,
+        5.571141995675862
+       ],
+       "peak_mem": {
+        "allocated_gb": 2.518369674682617,
+        "reserved_gb": 2.609375
+       },
+       "oom": false,
+       "wall_s": 306.75785994529724
+      },
+      {
+       "round_median": 6.032825344987214,
+       "round_mean": 6.072326651564799,
+       "chunk_values": [
+        5.470551188848913,
+        6.093044290877879,
+        5.843512812815606,
+        5.978239031322301,
+        6.465686610899866,
+        7.01819667853415,
+        6.087411658652127,
+        5.621970940567553
+       ],
+       "peak_mem": {
+        "allocated_gb": 2.518369674682617,
+        "reserved_gb": 2.609375
+       },
+       "oom": false,
+       "wall_s": 307.53003311157227
+      },
+      {
+       "round_median": 6.010188919492066,
+       "round_mean": 6.0544019536813725,
+       "chunk_values": [
+        5.447014425508678,
+        6.075172295607627,
+        5.845217245258391,
+        5.945205543376505,
+        6.397638424485922,
+        6.942377804778516,
+        6.194778507575393,
+        5.587811382859945
+       ],
+       "peak_mem": {
+        "allocated_gb": 2.518369674682617,
+        "reserved_gb": 2.609375
+       },
+       "oom": false,
+       "wall_s": 305.86916065216064
+      }
+     ],
+     "rounds_completed": 3,
+     "rounds_expected": 3,
+     "oom": false,
+     "wall_min_a": 5.651484028498332,
+     "wall_min_b": 15.335950895150502,
+     "wall_min_arm": 20.987434923648834,
+     "cost_arm_usd": 0.1855289247250557,
+     "peak_alloc_gb": 2.518369674682617,
+     "rounds_per_micro_batch": {
+      "a": {
+       "micro_batches": 480,
+       "mean_per_micro_batch": 17.28125,
+       "sem_per_micro_batch": 0.4507061229494136,
+       "mean_per_row": 17.28125,
+       "min": 5.0,
+       "max": 32.0
+      },
+      "b": {
+       "micro_batches": 1920,
+       "mean_per_micro_batch": 16.04375,
+       "sem_per_micro_batch": 0.23605377358056756,
+       "mean_per_row": 16.04375,
+       "min": 4.0,
+       "max": 32.0
+      }
+     },
+     "marks": {
+      "a_median": 2.2366584606468676,
+      "b_median": 6.010188919492066,
+      "a_round_medians": [
+       2.237924687936902,
+       2.2366584606468676,
+       2.2215555481612683
+      ],
+      "b_round_medians": [
+       5.988117543421685,
+       6.032825344987214,
+       6.010188919492066
+      ],
+      "speed_vs_a": 0.3721444517980131,
+      "b_lower_than_a_by": -1.6871286006509236,
+      "a_spread": 1.007368323420579,
+      "rounds_completed": 3,
+      "rounds_expected": 3,
+      "incomplete": false,
+      "b_below_a_completed_rounds": false,
+      "b_below_a_every_round": false,
+      "fits_memory_mark": true,
+      "inside_noise": false,
+      "size_class": "large",
+      "mark1_speed_counts": false,
+      "mark2_memory_fits": true,
+      "rounds_vs_a": 0.9283905967450271,
+      "mark4_rounds_rise_over_25pct": false
+     },
+     "money": {
+      "updates_per_hour": 598.9828353522445,
+      "usd_per_1000_updates": 0.8855011674718309,
+      "hours_24000_run": 40.067926129947104,
+      "usd_24000_run": 21.252028019323944
+     }
+    }
+   },
+   "errors": [],
+   "reference": {
+    "accum": 4,
+    "variants": [],
+    "round_medians_all_arms": [
+     2.2970148625783624,
+     2.2370045674964785,
+     2.2396756035275756,
+     2.237924687936902,
+     2.2366584606468676,
+     2.2215555481612683
+    ],
+    "s_per_update_median": 2.2374646277166903,
+    "spread": 1.0339668816652143,
+    "money": {
+     "updates_per_hour": 1608.9639833429515,
+     "usd_per_1000_updates": 0.3296531218169257,
+     "hours_24000_run": 14.916430851444602,
+     "usd_24000_run": 7.911674923606217
+    }
+   },
+   "predictions": {
+    "mark3": {
+     "prediction": "neither accum 8 nor accum 16 passes mark 1 against accum 4",
+     "mark1_measured": {
+      "accum 8": false,
+      "accum 16": false
+     },
+     "proved_wrong": false
+    }
+   },
+   "mark6_used": {
+    "nosync": true,
+    "pad64p": true,
+    "pad64": true,
+    "tf32": true,
+    "unfused": true
+   },
+   "mark6_label_used": {
+    "nosync": "bf16_bar_only",
+    "pad64p": "bf16_bar_only",
+    "pad64": "bf16_bar_only",
+    "tf32": "bf16_bar_only",
+    "unfused": "bf16_bar_only"
+   },
+   "wall_min_total": 35.17936663627624,
+   "cost_total_usd": 0.310985601064682,
+   "marks": {
+    "speed_counts_at_x": 1.3,
+    "memory_fits_at_gb": 10.0,
+    "rounds_rise_reported_above": 1.25,
+    "b_lower_by": 0.05,
+    "noise_x": 2.0,
+    "does_nothing_under": 0.02,
+    "small_under": 0.05,
+    "mark5_reading": "mark 5 as coded: B below A in EVERY round (all 3 rounds completed; an arm with fewer is \"incomplete, cannot count\"), the median of B at least 5 % lower than the median of A, i.e. B <= 0.95 x A (slightly stricter than \"speed at least 1.05x\", which would allow B <= 0.9524 x A), peak allocated <= 10 GB, and mark 6 holds",
+    "source": "PREREG-b3g2-speed-ab.md, fixed before any number"
+   },
+   "note": "round value = median of the chunks' s/update (chunk = --chunk updates between two syncs); an arm's median = median of its round values; A is re-run in every arm, A and B alternate (A,B,A,B,A,B), so A's spread is that arm's own. speed_vs_a = A median / B median; b_lower_than_a_by = 1 - B/A (positive: B faster). inside_noise: |b_lower_than_a_by| < 2 x (A spread - 1). peak_alloc_gb = torch max_memory_allocated in GiB, reset before each timed run. cost_arm_usd = (A + B wall minutes) / 60 x dph. One seed, one box, one host.",
+   "wall_s": 2110.8
+  }
+ }
+}

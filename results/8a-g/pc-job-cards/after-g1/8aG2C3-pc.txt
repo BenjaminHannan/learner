@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: g2c3 = G2's plain control at 3M (G-PT 3M at caps_b3 on the B3 3M long-chunk pool p10-rung30-s400-a64-L, which fc100 builds), seed 400. PLAN.md substitution 4: a rung is a matched pair, so B3 3M's partner runs at the same caps and pool. Code src-b3 = custom_io at 71299b1a47 (3M band follows the caps). Accum PT=16 is cautious: long rows pad micro-batches to up to 2,000 letters (spec addendum N).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG2C3-3M-s400 --rung 3M --seed 400 --arms PT --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3.json --accum PT=16

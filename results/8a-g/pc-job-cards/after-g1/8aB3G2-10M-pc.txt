@@ -1,0 +1,16 @@
+# BensPC RTX 5070 Ti: B3 at 10M with groups 1 and 2 (model b3g2), seeds 400 then 401 = the G2 screen's B3 arms (big-run PLAN.md: "Then B3 10M with groups 1 and 2,
+# seed 400 then 401 (about 2 days each) = G2 screen, against the matched G-PT at caps_b3"; the matched plain control is g2c10s, the PTS arm at 10M, already in the chain).
+# Insert ONLY after group 2's 3M readout (8aB3G2s400-3M-s400) is scored by the architecture thread and is not proved wrong on B3G2-1 to B3G2-6. Seed 400 is also S, the
+# shallow side of the 10M depth pair (FINISHED item 10; PLAN "Addendum 10-11", marks DP-0 to DP-2); the deep twin 8aB3G2D10M-pc.txt runs after both seeds here.
+# S = b3g2_cfg('10M') with eg_embed: 7 blocks at width 256, 4 heads, mlp 4.8, 9,930,403 trained parameters plus the frozen Gemma (checked on cloud CPU 10-11 at
+# claude/learner-new-g2 1acfde9a73 under caps_b3g2.json, n_loops 12). Same 60M pool as 3M (same rows, same order), the 10M rung's lr 1e-3, caps_b3g2.json.
+# Accum B3G2=64 (4 rows a pass) is a memory guess, the same as D's so the pair differs only in shape; set both from fc100 / the 3M run's measured memory if needed
+# (the update is 256 rows either way).
+# Code: the src-b3g2 checkout (branch claude/learner-new-g2 at the commit named in pc-jobs\b3g2.md), unchanged.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 11000
+g8a: 8aB3G2-10M-s400 --rung 10M --seed 400 --arms B3G2 --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=64
+g8a: 8aB3G2-10M-s401 --rung 10M --seed 401 --arms B3G2 --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3g2.json --accum B3G2=64

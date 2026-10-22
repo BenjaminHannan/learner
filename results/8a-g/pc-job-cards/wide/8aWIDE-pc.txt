@@ -1,0 +1,8 @@
+# BensPC RTX 5070 Ti: test WIDE (roadmap spec addendum AB, 11 Oct 2026). B2 (EGE) seed 400 at about 10M by WIDTH: d 448, 7 heads, 2 blocks, mlp 4.8, 12 rounds (the 3M shape with only the width grown), 10,173,509 trained under G1's caps; lr 1e-3 x 256/448 (rung 10MW). G1's 10M pool p10-rung30-s400-a64 (reused: same rows and order), 24,000 updates of 256 rows, B2 only. Accum 8 (cautious: the 3M ran at 4 and spilled once at 4 on s401).
+# Code: src-wide = G1's src-8ag (custom_io at 612f5c5b01 + the caps fix) with configs.py adding rung 10MW only (install_wide.ps1). Run by waiter v3e as an inserted job (WORK\insert\20-wide.txt). Marks: pass >= 76.31 pooled-5, fail <= 75.01, between -> seed 401.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aWIDE-10MW-s400 --rung 10MW --seed 400 --arms B2 --b2-extra '{"eg_embed": true}' --accum B2=8

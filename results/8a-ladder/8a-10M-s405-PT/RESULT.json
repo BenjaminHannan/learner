@@ -1,0 +1,2834 @@
+{
+ "config": {
+  "model": "plain_tf_steps_g",
+  "cfg": {
+   "d_model": 256,
+   "n_heads": 4,
+   "n_layers": 13
+  },
+  "data": "/job/g8a/pools/p10-rung10-s405-a64",
+  "big_data": "/job/data_big",
+  "vocab": null,
+  "steps": 24000,
+  "batch": 256,
+  "accum": 1,
+  "lr": 0.001,
+  "warmup": 300,
+  "grad_clip": 1.0,
+  "seed": 405,
+  "order": "shuffled",
+  "device": "auto",
+  "bf16": true,
+  "log_every": 500,
+  "eval_every": 0,
+  "final_eval": true,
+  "english_eval": null,
+  "max_ans": 35,
+  "caps": "/job/g8a/pools/p10-rung10-s405-a64/caps.json",
+  "eval_max": null,
+  "save_preds": false,
+  "eval_batch": 128,
+  "minutes": null,
+  "out": "/job/g8a/w/8a-10M-s405-PT"
+ },
+ "n_params": 10405376,
+ "steps": 24000,
+ "status": "ok",
+ "final_train_loss": 0.3299090881347656,
+ "train_s": 1804.7588884830475,
+ "steps_per_s": 13.29817525939584,
+ "final_eval": {
+  "in_dist": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 35,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 40,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 39,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 22,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 38,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 40,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 36,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 40,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 29,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 37,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 30,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 38,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 18,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 32,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 29,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 35,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 31,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 40,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 40,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 40,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 39,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 28,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 37,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 40,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 38,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 39,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 40,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 22,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 11,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 40,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 33,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 38,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 219,
+     "n": 240
+    },
+    "6": {
+     "correct": 220,
+     "n": 240
+    },
+    "7": {
+     "correct": 88,
+     "n": 120
+    },
+    "1": {
+     "correct": 96,
+     "n": 120
+    },
+    "8": {
+     "correct": 147,
+     "n": 160
+    },
+    "4": {
+     "correct": 151,
+     "n": 200
+    },
+    "3": {
+     "correct": 100,
+     "n": 120
+    },
+    "5": {
+     "correct": 152,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 429,
+    "n": 480,
+    "exact": 89.375
+   },
+   "correct": 1173,
+   "n": 1360,
+   "exact": 86.25
+  },
+  "answer": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 32,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 19,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 40,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 40,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 20,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 38,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 40,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 13,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 36,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 17,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 40,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 40,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 13,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 12,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 8,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 34,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 25,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 40,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 35,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 39,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 22,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 8,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 40,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 34,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 35,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 1,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 6,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 40,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 0,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 169,
+     "n": 240
+    },
+    "6": {
+     "correct": 171,
+     "n": 240
+    },
+    "7": {
+     "correct": 37,
+     "n": 80
+    },
+    "1": {
+     "correct": 93,
+     "n": 120
+    },
+    "8": {
+     "correct": 115,
+     "n": 160
+    },
+    "4": {
+     "correct": 119,
+     "n": 200
+    },
+    "3": {
+     "correct": 64,
+     "n": 120
+    },
+    "5": {
+     "correct": 39,
+     "n": 40
+    }
+   },
+   "multistep": {
+    "correct": 359,
+    "n": 480,
+    "exact": 74.79166666666667
+   },
+   "correct": 807,
+   "n": 1200,
+   "exact": 67.25
+  },
+  "frame": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 36,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 37,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 40,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 40,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 21,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 34,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 39,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 37,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 40,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 27,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 38,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 29,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 38,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 18,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 29,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 30,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 34,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 24,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 40,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 40,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 39,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 36,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 26,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 36,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 40,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 39,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 39,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 39,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 34,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 14,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 40,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 28,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 36,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 215,
+     "n": 240
+    },
+    "6": {
+     "correct": 231,
+     "n": 240
+    },
+    "7": {
+     "correct": 86,
+     "n": 120
+    },
+    "1": {
+     "correct": 95,
+     "n": 120
+    },
+    "8": {
+     "correct": 144,
+     "n": 160
+    },
+    "4": {
+     "correct": 148,
+     "n": 200
+    },
+    "3": {
+     "correct": 96,
+     "n": 120
+    },
+    "5": {
+     "correct": 142,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 433,
+    "n": 480,
+    "exact": 90.20833333333333
+   },
+   "correct": 1157,
+   "n": 1360,
+   "exact": 85.07352941176471
+  },
+  "vocab": {
+   "by_family": {
+    "chain_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 40,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 40,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 40,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 30,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 18,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 23,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 21,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 36,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 40,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 33,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 40,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 38,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 37,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 40,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 21,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 12,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 36,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "6": {
+     "correct": 180,
+     "n": 200
+    },
+    "1": {
+     "correct": 97,
+     "n": 120
+    },
+    "2": {
+     "correct": 78,
+     "n": 80
+    },
+    "8": {
+     "correct": 139,
+     "n": 160
+    },
+    "4": {
+     "correct": 96,
+     "n": 160
+    },
+    "5": {
+     "correct": 73,
+     "n": 80
+    }
+   },
+   "multistep": {
+    "correct": 331,
+    "n": 400,
+    "exact": 82.75
+   },
+   "correct": 663,
+   "n": 800,
+   "exact": 82.875
+  },
+  "variant": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 10,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 7,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 20,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 8,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 9,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 0,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 10,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 0,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 0,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 18,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 30,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 0,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 11,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 0,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 0,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 3,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 8,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 16,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 14,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 26,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 1,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 3,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 0,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 40,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 22,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 40,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 19,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 0,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 7,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 16,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 27,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 15,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 40,
+     "n": 240
+    },
+    "6": {
+     "correct": 90,
+     "n": 240
+    },
+    "1": {
+     "correct": 20,
+     "n": 120
+    },
+    "7": {
+     "correct": 18,
+     "n": 80
+    },
+    "8": {
+     "correct": 101,
+     "n": 160
+    },
+    "4": {
+     "correct": 71,
+     "n": 200
+    },
+    "3": {
+     "correct": 6,
+     "n": 120
+    },
+    "5": {
+     "correct": 73,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 224,
+    "n": 480,
+    "exact": 46.666666666666664
+   },
+   "correct": 419,
+   "n": 1320,
+   "exact": 31.742424242424242
+  },
+  "family": {
+   "by_family": {
+    "clock_date": {
+     "correct": 0,
+     "n": 40
+    },
+    "op_define": {
+     "correct": 1,
+     "n": 40
+    },
+    "string_transform": {
+     "correct": 0,
+     "n": 40
+    },
+    "unit_convert": {
+     "correct": 1,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "6": {
+     "correct": 1,
+     "n": 80
+    },
+    "7": {
+     "correct": 1,
+     "n": 80
+    }
+   },
+   "multistep": {
+    "correct": 0,
+    "n": 0,
+    "exact": 0.0
+   },
+   "correct": 2,
+   "n": 160,
+   "exact": 1.25
+  }
+ },
+ "lesions": {
+  "calc": {
+   "in_dist": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 39,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 40,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 22,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 38,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 40,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 36,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 29,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 37,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 30,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 38,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 18,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 32,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 29,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 35,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 31,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 40,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 40,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 40,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 39,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 28,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 37,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 39,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 40,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 22,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 11,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 40,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 33,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 38,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 225,
+      "n": 240
+     },
+     "6": {
+      "correct": 222,
+      "n": 240
+     },
+     "7": {
+      "correct": 88,
+      "n": 120
+     },
+     "1": {
+      "correct": 96,
+      "n": 120
+     },
+     "8": {
+      "correct": 147,
+      "n": 160
+     },
+     "4": {
+      "correct": 151,
+      "n": 200
+     },
+     "3": {
+      "correct": 100,
+      "n": 120
+     },
+     "5": {
+      "correct": 152,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 431,
+     "n": 480,
+     "exact": 89.79166666666667
+    },
+    "correct": 1181,
+    "n": 1360,
+    "exact": 86.83823529411765
+   },
+   "answer": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 35,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 19,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 40,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 20,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 38,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 40,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 13,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 17,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 40,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 13,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 12,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 8,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 34,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 25,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 40,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 35,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 39,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 22,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 8,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 39,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 39,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 1,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 6,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 40,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 177,
+      "n": 240
+     },
+     "6": {
+      "correct": 175,
+      "n": 240
+     },
+     "7": {
+      "correct": 37,
+      "n": 80
+     },
+     "1": {
+      "correct": 93,
+      "n": 120
+     },
+     "8": {
+      "correct": 119,
+      "n": 160
+     },
+     "4": {
+      "correct": 119,
+      "n": 200
+     },
+     "3": {
+      "correct": 64,
+      "n": 120
+     },
+     "5": {
+      "correct": 39,
+      "n": 40
+     }
+    },
+    "multistep": {
+     "correct": 367,
+     "n": 480,
+     "exact": 76.45833333333333
+    },
+    "correct": 823,
+    "n": 1200,
+    "exact": 68.58333333333333
+   },
+   "frame": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 37,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 37,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 40,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 21,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 34,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 39,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 37,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 27,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 38,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 29,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 38,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 18,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 29,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 30,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 34,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 24,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 40,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 40,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 39,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 36,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 26,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 36,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 39,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 39,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 34,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 14,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 40,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 28,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 36,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 217,
+      "n": 240
+     },
+     "6": {
+      "correct": 231,
+      "n": 240
+     },
+     "7": {
+      "correct": 86,
+      "n": 120
+     },
+     "1": {
+      "correct": 95,
+      "n": 120
+     },
+     "8": {
+      "correct": 144,
+      "n": 160
+     },
+     "4": {
+      "correct": 148,
+      "n": 200
+     },
+     "3": {
+      "correct": 96,
+      "n": 120
+     },
+     "5": {
+      "correct": 142,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 433,
+     "n": 480,
+     "exact": 90.20833333333333
+    },
+    "correct": 1159,
+    "n": 1360,
+    "exact": 85.22058823529412
+   },
+   "vocab": {
+    "by_family": {
+     "chain_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 40,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 40,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 30,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 39,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 18,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 23,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 21,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 36,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 40,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 33,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 40,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 40,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 21,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 12,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 36,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 181,
+      "n": 200
+     },
+     "1": {
+      "correct": 97,
+      "n": 120
+     },
+     "2": {
+      "correct": 80,
+      "n": 80
+     },
+     "8": {
+      "correct": 142,
+      "n": 160
+     },
+     "4": {
+      "correct": 96,
+      "n": 160
+     },
+     "5": {
+      "correct": 73,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 335,
+     "n": 400,
+     "exact": 83.75
+    },
+    "correct": 669,
+    "n": 800,
+    "exact": 83.625
+   },
+   "variant": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 13,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 7,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 39,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 20,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 8,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 9,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 10,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 18,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 30,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 11,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 3,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 8,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 16,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 14,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 26,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 1,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 3,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 40,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 23,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 40,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 19,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 7,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 16,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 27,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 15,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 44,
+      "n": 240
+     },
+     "6": {
+      "correct": 90,
+      "n": 240
+     },
+     "1": {
+      "correct": 20,
+      "n": 120
+     },
+     "7": {
+      "correct": 18,
+      "n": 80
+     },
+     "8": {
+      "correct": 101,
+      "n": 160
+     },
+     "4": {
+      "correct": 71,
+      "n": 200
+     },
+     "3": {
+      "correct": 6,
+      "n": 120
+     },
+     "5": {
+      "correct": 73,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 224,
+     "n": 480,
+     "exact": 46.666666666666664
+    },
+    "correct": 423,
+    "n": 1320,
+    "exact": 32.04545454545455
+   },
+   "family": {
+    "by_family": {
+     "clock_date": {
+      "correct": 0,
+      "n": 40
+     },
+     "op_define": {
+      "correct": 1,
+      "n": 40
+     },
+     "string_transform": {
+      "correct": 0,
+      "n": 40
+     },
+     "unit_convert": {
+      "correct": 1,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 1,
+      "n": 80
+     },
+     "7": {
+      "correct": 1,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 0,
+     "exact": 0.0
+    },
+    "correct": 2,
+    "n": 160,
+    "exact": 1.25
+   }
+  }
+ },
+ "data_manifest_sha256": "fb540faab598814ff6d19ae4203c9a04ebc1affcbfa5216b88e576b1f1a1703a",
+ "wall_s": 1864.0362470149994,
+ "peak_mem_mib": 9579.2,
+ "peak_reserved_mib": 17516.0,
+ "chain5": {
+  "intact": {
+   "exact": 98.7,
+   "n": 1000,
+   "by_family": {
+    "chain_ops": {
+     "correct": 195,
+     "n": 200
+    },
+    "chain_story2": {
+     "correct": 198,
+     "n": 200
+    },
+    "state_update": {
+     "correct": 200,
+     "n": 200
+    },
+    "story_chain3": {
+     "correct": 197,
+     "n": 200
+    },
+    "var_chain": {
+     "correct": 197,
+     "n": 200
+    }
+   },
+   "hits": {
+    "chain_ops-DI1-1": 1,
+    "chain_ops-DI1-7": 1,
+    "chain_ops-DI1-24": 1,
+    "chain_ops-DI1-33": 1,
+    "chain_ops-DI1-38": 1,
+    "chain_ops-DI1-39": 1,
+    "chain_ops-DI1-41": 1,
+    "chain_ops-DI1-49": 1,
+    "chain_ops-DI1-54": 1,
+    "chain_ops-DI1-59": 1,
+    "chain_ops-DI1-70": 1,
+    "chain_ops-DI1-76": 1,
+    "chain_ops-DI1-87": 1,
+    "chain_ops-DI1-89": 1,
+    "chain_ops-DI1-92": 1,
+    "chain_ops-DI1-94": 1,
+    "chain_ops-DI1-100": 1,
+    "chain_ops-DI1-103": 1,
+    "chain_ops-DI1-105": 1,
+    "chain_ops-DI1-108": 1,
+    "chain_ops-DI1-118": 0,
+    "chain_ops-DI1-123": 1,
+    "chain_ops-DI1-131": 1,
+    "chain_ops-DI1-135": 1,
+    "chain_ops-DI1-137": 1,
+    "chain_ops-DI1-139": 1,
+    "chain_ops-DI1-142": 1,
+    "chain_ops-DI1-148": 1,
+    "chain_ops-DI1-165": 1,
+    "chain_ops-DI1-168": 1,
+    "chain_ops-DI1-169": 1,
+    "chain_ops-DI1-175": 1,
+    "chain_ops-DI1-176": 1,
+    "chain_ops-DI1-179": 1,
+    "chain_ops-DI1-181": 1,
+    "chain_ops-DI1-186": 1,
+    "chain_ops-DI1-190": 1,
+    "chain_ops-DI1-191": 1,
+    "chain_ops-DI1-200": 1,
+    "chain_ops-DI1-201": 1,
+    "chain_ops-DI1-215": 1,
+    "chain_ops-DI1-216": 1,
+    "chain_ops-DI1-217": 1,
+    "chain_ops-DI1-221": 1,
+    "chain_ops-DI1-223": 1,
+    "chain_ops-DI1-225": 1,
+    "chain_ops-DI1-251": 1,
+    "chain_ops-DI1-267": 1,
+    "chain_ops-DI1-270": 1,
+    "chain_ops-DI1-278": 1,
+    "chain_ops-DI1-284": 1,
+    "chain_ops-DI1-285": 1,
+    "chain_ops-DI1-293": 1,
+    "chain_ops-DI1-296": 1,
+    "chain_ops-DI1-297": 1,
+    "chain_ops-DI1-303": 1,
+    "chain_ops-DI1-305": 1,
+    "chain_ops-DI1-308": 1,
+    "chain_ops-DI1-312": 1,
+    "chain_ops-DI1-315": 1,
+    "chain_ops-DI1-322": 1,
+    "chain_ops-DI1-325": 1,
+    "chain_ops-DI1-326": 1,
+    "chain_ops-DI1-328": 1,
+    "chain_ops-DI1-329": 1,
+    "chain_ops-DI1-333": 1,
+    "chain_ops-DI1-335": 1,
+    "chain_ops-DI1-338": 1,
+    "chain_ops-DI1-340": 1,
+    "chain_ops-DI1-343": 1,
+    "chain_ops-DI1-346": 1,
+    "chain_ops-DI1-355": 1,
+    "chain_ops-DI1-356": 1,
+    "chain_ops-DI1-362": 1,
+    "chain_ops-DI1-364": 1,
+    "chain_ops-DI1-366": 1,
+    "chain_ops-DI1-367": 1,
+    "chain_ops-DI1-368": 1,
+    "chain_ops-DI1-369": 1,
+    "chain_ops-DI1-371": 1,
+    "chain_ops-DI1-372": 1,
+    "chain_ops-DI1-373": 1,
+    "chain_ops-DI1-383": 1,
+    "chain_ops-DI1-386": 1,
+    "chain_ops-DI1-387": 1,
+    "chain_ops-DI1-388": 1,
+    "chain_ops-DI1-389": 1,
+    "chain_ops-DI1-391": 1,
+    "chain_ops-DI1-407": 1,
+    "chain_ops-DI1-413": 0,
+    "chain_ops-DI1-415": 0,
+    "chain_ops-DI1-417": 1,
+    "chain_ops-DI1-424": 1,
+    "chain_ops-DI1-425": 1,
+    "chain_ops-DI1-427": 1,
+    "chain_ops-DI1-439": 1,
+    "chain_ops-DI1-443": 1,
+    "chain_ops-DI1-447": 1,
+    "chain_ops-DI1-450": 1,
+    "chain_ops-DI1-451": 1,
+    "chain_ops-DI1-454": 1,
+    "chain_ops-DI1-457": 1,
+    "chain_ops-DI1-464": 1,
+    "chain_ops-DI1-475": 1,
+    "chain_ops-DI1-480": 1,
+    "chain_ops-DI1-484": 1,
+    "chain_ops-DI1-486": 1,
+    "chain_ops-DI1-496": 1,
+    "chain_ops-DI1-501": 1,
+    "chain_ops-DI1-502": 1,
+    "chain_ops-DI1-508": 1,
+    "chain_ops-DI1-512": 1,
+    "chain_ops-DI1-518": 1,
+    "chain_ops-DI1-520": 1,
+    "chain_ops-DI1-521": 1,
+    "chain_ops-DI1-522": 1,
+    "chain_ops-DI1-525": 1,
+    "chain_ops-DI1-533": 1,
+    "chain_ops-DI1-536": 1,
+    "chain_ops-DI1-542": 1,
+    "chain_ops-DI1-550": 1,
+    "chain_ops-DI1-552": 1,
+    "chain_ops-DI1-556": 1,
+    "chain_ops-DI1-564": 1,
+    "chain_ops-DI1-565": 1,
+    "chain_ops-DI1-566": 1,
+    "chain_ops-DI1-567": 1,
+    "chain_ops-DI1-572": 1,
+    "chain_ops-DI1-574": 1,
+    "chain_ops-DI1-575": 1,
+    "chain_ops-DI1-589": 1,
+    "chain_ops-DI1-592": 1,
+    "chain_ops-DI1-597": 1,
+    "chain_ops-DI1-602": 1,
+    "chain_ops-DI1-606": 1,
+    "chain_ops-DI1-607": 1,
+    "chain_ops-DI1-609": 1,
+    "chain_ops-DI1-610": 1,
+    "chain_ops-DI1-613": 1,
+    "chain_ops-DI1-615": 1,
+    "chain_ops-DI1-616": 1,
+    "chain_ops-DI1-619": 1,
+    "chain_ops-DI1-632": 1,
+    "chain_ops-DI1-649": 1,
+    "chain_ops-DI1-651": 1,
+    "chain_ops-DI1-654": 0,
+    "chain_ops-DI1-656": 1,
+    "chain_ops-DI1-660": 1,
+    "chain_ops-DI1-670": 1,
+    "chain_ops-DI1-673": 1,
+    "chain_ops-DI1-676": 1,
+    "chain_ops-DI1-682": 1,
+    "chain_ops-DI1-687": 1,
+    "chain_ops-DI1-688": 1,
+    "chain_ops-DI1-693": 1,
+    "chain_ops-DI1-696": 1,
+    "chain_ops-DI1-715": 1,
+    "chain_ops-DI1-716": 1,
+    "chain_ops-DI1-718": 1,
+    "chain_ops-DI1-721": 1,
+    "chain_ops-DI1-725": 0,
+    "chain_ops-DI1-728": 1,
+    "chain_ops-DI1-731": 1,
+    "chain_ops-DI1-732": 1,
+    "chain_ops-DI1-735": 1,
+    "chain_ops-DI1-748": 1,
+    "chain_ops-DI1-754": 1,
+    "chain_ops-DI1-755": 1,
+    "chain_ops-DI1-758": 1,
+    "chain_ops-DI1-766": 1,
+    "chain_ops-DI1-771": 1,
+    "chain_ops-DI1-774": 1,
+    "chain_ops-DI1-776": 1,
+    "chain_ops-DI1-777": 1,
+    "chain_ops-DI1-779": 1,
+    "chain_ops-DI1-783": 1,
+    "chain_ops-DI1-787": 1,
+    "chain_ops-DI1-792": 1,
+    "chain_ops-DI1-793": 1,
+    "chain_ops-DI1-795": 1,
+    "chain_ops-DI1-796": 1,
+    "chain_ops-DI1-798": 1,
+    "chain_ops-DI1-799": 1,
+    "chain_ops-DI1-800": 1,
+    "chain_ops-DI1-804": 1,
+    "chain_ops-DI1-816": 1,
+    "chain_ops-DI1-818": 1,
+    "chain_ops-DI1-821": 1,
+    "chain_ops-DI1-824": 1,
+    "chain_ops-DI1-825": 1,
+    "chain_ops-DI1-827": 1,
+    "chain_ops-DI1-830": 1,
+    "chain_ops-DI1-833": 1,
+    "chain_ops-DI1-837": 1,
+    "chain_ops-DI1-841": 1,
+    "chain_ops-DI1-852": 1,
+    "chain_ops-DI1-854": 1,
+    "chain_ops-DI1-857": 1,
+    "chain_ops-DI1-860": 1,
+    "chain_ops-DI1-861": 1,
+    "chain_story2-DI1-8": 1,
+    "chain_story2-DI1-10": 1,
+    "chain_story2-DI1-15": 1,
+    "chain_story2-DI1-17": 1,
+    "chain_story2-DI1-18": 1,
+    "chain_story2-DI1-19": 1,
+    "chain_story2-DI1-25": 1,
+    "chain_story2-DI1-26": 1,
+    "chain_story2-DI1-35": 1,
+    "chain_story2-DI1-43": 1,
+    "chain_story2-DI1-49": 1,
+    "chain_story2-DI1-54": 1,
+    "chain_story2-DI1-57": 1,
+    "chain_story2-DI1-60": 1,
+    "chain_story2-DI1-61": 1,
+    "chain_story2-DI1-62": 1,
+    "chain_story2-DI1-72": 0,
+    "chain_story2-DI1-77": 1,
+    "chain_story2-DI1-80": 1,
+    "chain_story2-DI1-95": 1,
+    "chain_story2-DI1-102": 1,
+    "chain_story2-DI1-107": 1,
+    "chain_story2-DI1-109": 1,
+    "chain_story2-DI1-114": 1,
+    "chain_story2-DI1-116": 1,
+    "chain_story2-DI1-118": 1,
+    "chain_story2-DI1-120": 1,
+    "chain_story2-DI1-142": 1,
+    "chain_story2-DI1-147": 1,
+    "chain_story2-DI1-148": 1,
+    "chain_story2-DI1-157": 1,
+    "chain_story2-DI1-158": 1,
+    "chain_story2-DI1-159": 1,
+    "chain_story2-DI1-166": 1,
+    "chain_story2-DI1-171": 1,
+    "chain_story2-DI1-172": 1,
+    "chain_story2-DI1-173": 1,
+    "chain_story2-DI1-174": 1,
+    "chain_story2-DI1-176": 1,
+    "chain_story2-DI1-177": 1,
+    "chain_story2-DI1-178": 1,
+    "chain_story2-DI1-192": 1,
+    "chain_story2-DI1-194": 1,
+    "chain_story2-DI1-198": 1,
+    "chain_story2-DI1-199": 1,
+    "chain_story2-DI1-200": 1,
+    "chain_story2-DI1-202": 1,
+    "chain_story2-DI1-230": 1,
+    "chain_story2-DI1-235": 1,
+    "chain_story2-DI1-242": 1,
+    "chain_story2-DI1-244": 1,
+    "chain_story2-DI1-251": 1,
+    "chain_story2-DI1-262": 1,
+    "chain_story2-DI1-274": 1,
+    "chain_story2-DI1-278": 1,
+    "chain_story2-DI1-279": 1,
+    "chain_story2-DI1-281": 1,
+    "chain_story2-DI1-288": 1,
+    "chain_story2-DI1-299": 1,
+    "chain_story2-DI1-300": 1,
+    "chain_story2-DI1-303": 1,
+    "chain_story2-DI1-307": 1,
+    "chain_story2-DI1-314": 1,
+    "chain_story2-DI1-325": 1,
+    "chain_story2-DI1-326": 1,
+    "chain_story2-DI1-327": 1,
+    "chain_story2-DI1-330": 1,
+    "chain_story2-DI1-332": 1,
+    "chain_story2-DI1-336": 1,
+    "chain_story2-DI1-341": 1,
+    "chain_story2-DI1-349": 1,
+    "chain_story2-DI1-364": 1,
+    "chain_story2-DI1-374": 1,
+    "chain_story2-DI1-381": 1,
+    "chain_story2-DI1-383": 1,
+    "chain_story2-DI1-386": 1,
+    "chain_story2-DI1-388": 1,
+    "chain_story2-DI1-395": 1,
+    "chain_story2-DI1-396": 1,
+    "chain_story2-DI1-402": 1,
+    "chain_story2-DI1-408": 0,
+    "chain_story2-DI1-409": 1,
+    "chain_story2-DI1-423": 1,
+    "chain_story2-DI1-425": 1,
+    "chain_story2-DI1-426": 1,
+    "chain_story2-DI1-428": 1,
+    "chain_story2-DI1-429": 1,
+    "chain_story2-DI1-444": 1,
+    "chain_story2-DI1-449": 1,
+    "chain_story2-DI1-454": 1,
+    "chain_story2-DI1-455": 1,
+    "chain_story2-DI1-457": 1,
+    "chain_story2-DI1-462": 1,
+    "chain_story2-DI1-468": 1,
+    "chain_story2-DI1-470": 1,
+    "chain_story2-DI1-474": 1,
+    "chain_story2-DI1-481": 1,
+    "chain_story2-DI1-487": 1,
+    "chain_story2-DI1-497": 1,
+    "chain_story2-DI1-501": 1,
+    "chain_story2-DI1-506": 1,
+    "chain_story2-DI1-507": 1,
+    "chain_story2-DI1-509": 1,
+    "chain_story2-DI1-515": 1,
+    "chain_story2-DI1-517": 1,
+    "chain_story2-DI1-527": 1,
+    "chain_story2-DI1-534": 1,
+    "chain_story2-DI1-536": 1,
+    "chain_story2-DI1-537": 1,
+    "chain_story2-DI1-544": 1,
+    "chain_story2-DI1-555": 1,
+    "chain_story2-DI1-556": 1,
+    "chain_story2-DI1-563": 1,
+    "chain_story2-DI1-566": 1,
+    "chain_story2-DI1-568": 1,
+    "chain_story2-DI1-573": 1,
+    "chain_story2-DI1-576": 1,
+    "chain_story2-DI1-577": 1,
+    "chain_story2-DI1-582": 1,
+    "chain_story2-DI1-583": 1,
+    "chain_story2-DI1-587": 1,
+    "chain_story2-DI1-589": 1,
+    "chain_story2-DI1-591": 1,
+    "chain_story2-DI1-592": 1,
+    "chain_story2-DI1-600": 1,
+    "chain_story2-DI1-601": 1,
+    "chain_story2-DI1-610": 1,
+    "chain_story2-DI1-613": 1,
+    "chain_story2-DI1-615": 1,
+    "chain_story2-DI1-619": 1,
+    "chain_story2-DI1-632": 1,
+    "chain_story2-DI1-633": 1,
+    "chain_story2-DI1-640": 1,
+    "chain_story2-DI1-641": 1,
+    "chain_story2-DI1-646": 1,
+    "chain_story2-DI1-651": 1,
+    "chain_story2-DI1-653": 1,
+    "chain_story2-DI1-654": 1,
+    "chain_story2-DI1-657": 1,
+    "chain_story2-DI1-658": 1,
+    "chain_story2-DI1-669": 1,
+    "chain_story2-DI1-671": 1,
+    "chain_story2-DI1-689": 1,
+    "chain_story2-DI1-697": 1,
+    "chain_story2-DI1-698": 1,
+    "chain_story2-DI1-700": 1,
+    "chain_story2-DI1-702": 1,
+    "chain_story2-DI1-711": 1,
+    "chain_story2-DI1-712": 1,
+    "chain_story2-DI1-720": 1,
+    "chain_story2-DI1-722": 1,
+    "chain_story2-DI1-728": 1,
+    "chain_story2-DI1-740": 1,
+    "chain_story2-DI1-751": 1,
+    "chain_story2-DI1-752": 1,
+    "chain_story2-DI1-758": 1,
+    "chain_story2-DI1-761": 1,
+    "chain_story2-DI1-770": 1,
+    "chain_story2-DI1-778": 1,
+    "chain_story2-DI1-781": 1,
+    "chain_story2-DI1-782": 1,
+    "chain_story2-DI1-790": 1,
+    "chain_story2-DI1-793": 1,
+    "chain_story2-DI1-802": 1,
+    "chain_story2-DI1-817": 1,
+    "chain_story2-DI1-818": 1,
+    "chain_story2-DI1-820": 1,
+    "chain_story2-DI1-821": 1,
+    "chain_story2-DI1-823": 1,
+    "chain_story2-DI1-824": 1,
+    "chain_story2-DI1-840": 1,
+    "chain_story2-DI1-850": 1,
+    "chain_story2-DI1-851": 1,
+    "chain_story2-DI1-857": 1,
+    "chain_story2-DI1-865": 1,
+    "chain_story2-DI1-866": 1,
+    "chain_story2-DI1-868": 1,
+    "chain_story2-DI1-880": 1,
+    "chain_story2-DI1-889": 1,
+    "chain_story2-DI1-895": 1,
+    "chain_story2-DI1-898": 1,
+    "chain_story2-DI1-906": 1,
+    "chain_story2-DI1-907": 1,
+    "chain_story2-DI1-912": 1,
+    "chain_story2-DI1-915": 1,
+    "chain_story2-DI1-921": 1,
+    "chain_story2-DI1-926": 1,
+    "chain_story2-DI1-930": 1,
+    "chain_story2-DI1-933": 1,
+    "chain_story2-DI1-938": 1,
+    "chain_story2-DI1-939": 1,
+    "chain_story2-DI1-945": 1,
+    "chain_story2-DI1-949": 1,
+    "chain_story2-DI1-953": 1,
+    "chain_story2-DI1-956": 1,
+    "chain_story2-DI1-961": 1,
+    "chain_story2-DI1-967": 1,
+    "chain_story2-DI1-968": 1,
+    "chain_story2-DI1-989": 1,
+    "chain_story2-DI1-992": 1,
+    "state_update-DI1-2": 1,
+    "state_update-DI1-3": 1,
+    "state_update-DI1-11": 1,
+    "state_update-DI1-12": 1,
+    "state_update-DI1-13": 1,
+    "state_update-DI1-15": 1,
+    "state_update-DI1-16": 1,
+    "state_update-DI1-21": 1,
+    "state_update-DI1-25": 1,
+    "state_update-DI1-35": 1,
+    "state_update-DI1-42": 1,
+    "state_update-DI1-43": 1,
+    "state_update-DI1-45": 1,
+    "state_update-DI1-46": 1,
+    "state_update-DI1-49": 1,
+    "state_update-DI1-52": 1,
+    "state_update-DI1-53": 1,
+    "state_update-DI1-59": 1,
+    "state_update-DI1-60": 1,
+    "state_update-DI1-61": 1,
+    "state_update-DI1-62": 1,
+    "state_update-DI1-63": 1,
+    "state_update-DI1-64": 1,
+    "state_update-DI1-68": 1,
+    "state_update-DI1-71": 1,
+    "state_update-DI1-72": 1,
+    "state_update-DI1-73": 1,
+    "state_update-DI1-74": 1,
+    "state_update-DI1-78": 1,
+    "state_update-DI1-79": 1,
+    "state_update-DI1-80": 1,
+    "state_update-DI1-84": 1,
+    "state_update-DI1-86": 1,
+    "state_update-DI1-87": 1,
+    "state_update-DI1-92": 1,
+    "state_update-DI1-95": 1,
+    "state_update-DI1-97": 1,
+    "state_update-DI1-99": 1,
+    "state_update-DI1-100": 1,
+    "state_update-DI1-101": 1,
+    "state_update-DI1-102": 1,
+    "state_update-DI1-103": 1,
+    "state_update-DI1-104": 1,
+    "state_update-DI1-105": 1,
+    "state_update-DI1-109": 1,
+    "state_update-DI1-111": 1,
+    "state_update-DI1-112": 1,
+    "state_update-DI1-116": 1,
+    "state_update-DI1-118": 1,
+    "state_update-DI1-119": 1,
+    "state_update-DI1-121": 1,
+    "state_update-DI1-126": 1,
+    "state_update-DI1-129": 1,
+    "state_update-DI1-131": 1,
+    "state_update-DI1-133": 1,
+    "state_update-DI1-135": 1,
+    "state_update-DI1-137": 1,
+    "state_update-DI1-139": 1,
+    "state_update-DI1-140": 1,
+    "state_update-DI1-141": 1,
+    "state_update-DI1-145": 1,
+    "state_update-DI1-146": 1,
+    "state_update-DI1-147": 1,
+    "state_update-DI1-149": 1,
+    "state_update-DI1-150": 1,
+    "state_update-DI1-153": 1,
+    "state_update-DI1-154": 1,
+    "state_update-DI1-155": 1,
+    "state_update-DI1-161": 1,
+    "state_update-DI1-163": 1,
+    "state_update-DI1-167": 1,
+    "state_update-DI1-169": 1,
+    "state_update-DI1-175": 1,
+    "state_update-DI1-177": 1,
+    "state_update-DI1-178": 1,
+    "state_update-DI1-182": 1,
+    "state_update-DI1-185": 1,
+    "state_update-DI1-187": 1,
+    "state_update-DI1-188": 1,
+    "state_update-DI1-189": 1,
+    "state_update-DI1-193": 1,
+    "state_update-DI1-194": 1,
+    "state_update-DI1-195": 1,
+    "state_update-DI1-196": 1,
+    "state_update-DI1-198": 1,
+    "state_update-DI1-199": 1,
+    "state_update-DI1-201": 1,
+    "state_update-DI1-202": 1,
+    "state_update-DI1-206": 1,
+    "state_update-DI1-207": 1,
+    "state_update-DI1-213": 1,
+    "state_update-DI1-218": 1,
+    "state_update-DI1-221": 1,
+    "state_update-DI1-226": 1,
+    "state_update-DI1-228": 1,
+    "state_update-DI1-230": 1,
+    "state_update-DI1-231": 1,
+    "state_update-DI1-233": 1,
+    "state_update-DI1-235": 1,
+    "state_update-DI1-236": 1,
+    "state_update-DI1-239": 1,
+    "state_update-DI1-240": 1,
+    "state_update-DI1-241": 1,
+    "state_update-DI1-243": 1,
+    "state_update-DI1-245": 1,
+    "state_update-DI1-248": 1,
+    "state_update-DI1-251": 1,
+    "state_update-DI1-252": 1,
+    "state_update-DI1-254": 1,
+    "state_update-DI1-257": 1,
+    "state_update-DI1-258": 1,
+    "state_update-DI1-259": 1,
+    "state_update-DI1-262": 1,
+    "state_update-DI1-265": 1,
+    "state_update-DI1-267": 1,
+    "state_update-DI1-268": 1,
+    "state_update-DI1-270": 1,
+    "state_update-DI1-271": 1,
+    "state_update-DI1-272": 1,
+    "state_update-DI1-273": 1,
+    "state_update-DI1-274": 1,
+    "state_update-DI1-276": 1,
+    "state_update-DI1-285": 1,
+    "state_update-DI1-288": 1,
+    "state_update-DI1-293": 1,
+    "state_update-DI1-295": 1,
+    "state_update-DI1-299": 1,
+    "state_update-DI1-303": 1,
+    "state_update-DI1-304": 1,
+    "state_update-DI1-305": 1,
+    "state_update-DI1-307": 1,
+    "state_update-DI1-312": 1,
+    "state_update-DI1-313": 1,
+    "state_update-DI1-314": 1,
+    "state_update-DI1-315": 1,
+    "state_update-DI1-317": 1,
+    "state_update-DI1-323": 1,
+    "state_update-DI1-327": 1,
+    "state_update-DI1-328": 1,
+    "state_update-DI1-329": 1,
+    "state_update-DI1-331": 1,
+    "state_update-DI1-332": 1,
+    "state_update-DI1-333": 1,
+    "state_update-DI1-335": 1,
+    "state_update-DI1-336": 1,
+    "state_update-DI1-337": 1,
+    "state_update-DI1-341": 1,
+    "state_update-DI1-342": 1,
+    "state_update-DI1-347": 1,
+    "state_update-DI1-348": 1,
+    "state_update-DI1-349": 1,
+    "state_update-DI1-352": 1,
+    "state_update-DI1-353": 1,
+    "state_update-DI1-354": 1,
+    "state_update-DI1-355": 1,
+    "state_update-DI1-361": 1,
+    "state_update-DI1-364": 1,
+    "state_update-DI1-366": 1,
+    "state_update-DI1-367": 1,
+    "state_update-DI1-369": 1,
+    "state_update-DI1-370": 1,
+    "state_update-DI1-372": 1,
+    "state_update-DI1-374": 1,
+    "state_update-DI1-375": 1,
+    "state_update-DI1-378": 1,
+    "state_update-DI1-379": 1,
+    "state_update-DI1-381": 1,
+    "state_update-DI1-384": 1,
+    "state_update-DI1-385": 1,
+    "state_update-DI1-386": 1,
+    "state_update-DI1-388": 1,
+    "state_update-DI1-389": 1,
+    "state_update-DI1-391": 1,
+    "state_update-DI1-393": 1,
+    "state_update-DI1-397": 1,
+    "state_update-DI1-398": 1,
+    "state_update-DI1-399": 1,
+    "state_update-DI1-400": 1,
+    "state_update-DI1-401": 1,
+    "state_update-DI1-405": 1,
+    "state_update-DI1-407": 1,
+    "state_update-DI1-408": 1,
+    "state_update-DI1-411": 1,
+    "state_update-DI1-414": 1,
+    "state_update-DI1-418": 1,
+    "state_update-DI1-419": 1,
+    "state_update-DI1-420": 1,
+    "state_update-DI1-425": 1,
+    "state_update-DI1-426": 1,
+    "state_update-DI1-429": 1,
+    "state_update-DI1-431": 1,
+    "state_update-DI1-432": 1,
+    "state_update-DI1-434": 1,
+    "state_update-DI1-435": 1,
+    "state_update-DI1-436": 1,
+    "state_update-DI1-438": 1,
+    "state_update-DI1-440": 1,
+    "state_update-DI1-441": 1,
+    "state_update-DI1-449": 1,
+    "state_update-DI1-450": 1,
+    "story_chain3-DI1-4": 1,
+    "story_chain3-DI1-14": 1,
+    "story_chain3-DI1-15": 1,
+    "story_chain3-DI1-20": 1,
+    "story_chain3-DI1-23": 1,
+    "story_chain3-DI1-33": 1,
+    "story_chain3-DI1-34": 1,
+    "story_chain3-DI1-35": 1,
+    "story_chain3-DI1-36": 0,
+    "story_chain3-DI1-39": 1,
+    "story_chain3-DI1-43": 1,
+    "story_chain3-DI1-46": 1,
+    "story_chain3-DI1-48": 1,
+    "story_chain3-DI1-51": 1,
+    "story_chain3-DI1-55": 1,
+    "story_chain3-DI1-56": 1,
+    "story_chain3-DI1-62": 1,
+    "story_chain3-DI1-64": 1,
+    "story_chain3-DI1-65": 1,
+    "story_chain3-DI1-66": 1,
+    "story_chain3-DI1-68": 1,
+    "story_chain3-DI1-76": 1,
+    "story_chain3-DI1-78": 1,
+    "story_chain3-DI1-84": 1,
+    "story_chain3-DI1-87": 1,
+    "story_chain3-DI1-88": 1,
+    "story_chain3-DI1-93": 1,
+    "story_chain3-DI1-94": 1,
+    "story_chain3-DI1-95": 1,
+    "story_chain3-DI1-97": 1,
+    "story_chain3-DI1-99": 1,
+    "story_chain3-DI1-103": 1,
+    "story_chain3-DI1-104": 1,
+    "story_chain3-DI1-107": 1,
+    "story_chain3-DI1-108": 1,
+    "story_chain3-DI1-116": 1,
+    "story_chain3-DI1-124": 1,
+    "story_chain3-DI1-126": 1,
+    "story_chain3-DI1-129": 1,
+    "story_chain3-DI1-131": 1,
+    "story_chain3-DI1-133": 1,
+    "story_chain3-DI1-135": 1,
+    "story_chain3-DI1-137": 1,
+    "story_chain3-DI1-138": 1,
+    "story_chain3-DI1-144": 1,
+    "story_chain3-DI1-146": 1,
+    "story_chain3-DI1-148": 1,
+    "story_chain3-DI1-149": 1,
+    "story_chain3-DI1-153": 1,
+    "story_chain3-DI1-155": 1,
+    "story_chain3-DI1-165": 1,
+    "story_chain3-DI1-167": 1,
+    "story_chain3-DI1-170": 1,
+    "story_chain3-DI1-171": 1,
+    "story_chain3-DI1-174": 1,
+    "story_chain3-DI1-179": 1,
+    "story_chain3-DI1-183": 1,
+    "story_chain3-DI1-185": 1,
+    "story_chain3-DI1-186": 1,
+    "story_chain3-DI1-187": 1,
+    "story_chain3-DI1-189": 1,
+    "story_chain3-DI1-192": 1,
+    "story_chain3-DI1-194": 1,
+    "story_chain3-DI1-195": 1,
+    "story_chain3-DI1-197": 1,
+    "story_chain3-DI1-199": 1,
+    "story_chain3-DI1-202": 1,
+    "story_chain3-DI1-204": 1,
+    "story_chain3-DI1-210": 1,
+    "story_chain3-DI1-212": 1,
+    "story_chain3-DI1-214": 1,
+    "story_chain3-DI1-219": 1,
+    "story_chain3-DI1-224": 1,
+    "story_chain3-DI1-225": 1,
+    "story_chain3-DI1-228": 1,
+    "story_chain3-DI1-230": 1,
+    "story_chain3-DI1-231": 1,
+    "story_chain3-DI1-236": 1,
+    "story_chain3-DI1-241": 1,
+    "story_chain3-DI1-244": 1,
+    "story_chain3-DI1-246": 1,
+    "story_chain3-DI1-248": 0,
+    "story_chain3-DI1-249": 1,
+    "story_chain3-DI1-255": 1,
+    "story_chain3-DI1-256": 1,
+    "story_chain3-DI1-257": 1,
+    "story_chain3-DI1-258": 1,
+    "story_chain3-DI1-260": 1,
+    "story_chain3-DI1-261": 1,
+    "story_chain3-DI1-262": 1,
+    "story_chain3-DI1-269": 1,
+    "story_chain3-DI1-270": 1,
+    "story_chain3-DI1-273": 1,
+    "story_chain3-DI1-277": 1,
+    "story_chain3-DI1-278": 1,
+    "story_chain3-DI1-285": 1,
+    "story_chain3-DI1-286": 1,
+    "story_chain3-DI1-287": 1,
+    "story_chain3-DI1-291": 1,
+    "story_chain3-DI1-292": 1,
+    "story_chain3-DI1-294": 1,
+    "story_chain3-DI1-296": 1,
+    "story_chain3-DI1-297": 1,
+    "story_chain3-DI1-309": 1,
+    "story_chain3-DI1-312": 1,
+    "story_chain3-DI1-315": 1,
+    "story_chain3-DI1-316": 1,
+    "story_chain3-DI1-317": 1,
+    "story_chain3-DI1-318": 1,
+    "story_chain3-DI1-321": 1,
+    "story_chain3-DI1-323": 1,
+    "story_chain3-DI1-325": 1,
+    "story_chain3-DI1-330": 1,
+    "story_chain3-DI1-338": 1,
+    "story_chain3-DI1-340": 1,
+    "story_chain3-DI1-344": 1,
+    "story_chain3-DI1-346": 1,
+    "story_chain3-DI1-348": 1,
+    "story_chain3-DI1-350": 1,
+    "story_chain3-DI1-352": 1,
+    "story_chain3-DI1-354": 1,
+    "story_chain3-DI1-355": 1,
+    "story_chain3-DI1-356": 1,
+    "story_chain3-DI1-359": 1,
+    "story_chain3-DI1-362": 1,
+    "story_chain3-DI1-363": 1,
+    "story_chain3-DI1-369": 1,
+    "story_chain3-DI1-375": 1,
+    "story_chain3-DI1-384": 1,
+    "story_chain3-DI1-385": 1,
+    "story_chain3-DI1-387": 1,
+    "story_chain3-DI1-389": 1,
+    "story_chain3-DI1-393": 1,
+    "story_chain3-DI1-394": 1,
+    "story_chain3-DI1-395": 1,
+    "story_chain3-DI1-397": 1,
+    "story_chain3-DI1-398": 1,
+    "story_chain3-DI1-399": 1,
+    "story_chain3-DI1-401": 1,
+    "story_chain3-DI1-407": 1,
+    "story_chain3-DI1-410": 1,
+    "story_chain3-DI1-413": 1,
+    "story_chain3-DI1-414": 1,
+    "story_chain3-DI1-416": 1,
+    "story_chain3-DI1-429": 0,
+    "story_chain3-DI1-431": 1,
+    "story_chain3-DI1-437": 1,
+    "story_chain3-DI1-445": 1,
+    "story_chain3-DI1-446": 1,
+    "story_chain3-DI1-447": 1,
+    "story_chain3-DI1-451": 1,
+    "story_chain3-DI1-452": 1,
+    "story_chain3-DI1-454": 1,
+    "story_chain3-DI1-455": 1,
+    "story_chain3-DI1-459": 1,
+    "story_chain3-DI1-463": 1,
+    "story_chain3-DI1-467": 1,
+    "story_chain3-DI1-468": 1,
+    "story_chain3-DI1-471": 1,
+    "story_chain3-DI1-476": 1,
+    "story_chain3-DI1-479": 1,
+    "story_chain3-DI1-481": 1,
+    "story_chain3-DI1-483": 1,
+    "story_chain3-DI1-484": 1,
+    "story_chain3-DI1-486": 1,
+    "story_chain3-DI1-490": 1,
+    "story_chain3-DI1-494": 1,
+    "story_chain3-DI1-496": 1,
+    "story_chain3-DI1-498": 1,
+    "story_chain3-DI1-504": 1,
+    "story_chain3-DI1-507": 1,
+    "story_chain3-DI1-508": 1,
+    "story_chain3-DI1-516": 1,
+    "story_chain3-DI1-518": 1,
+    "story_chain3-DI1-523": 1,
+    "story_chain3-DI1-527": 1,
+    "story_chain3-DI1-528": 1,
+    "story_chain3-DI1-529": 1,
+    "story_chain3-DI1-531": 1,
+    "story_chain3-DI1-533": 1,
+    "story_chain3-DI1-534": 1,
+    "story_chain3-DI1-540": 1,
+    "story_chain3-DI1-541": 1,
+    "story_chain3-DI1-555": 1,
+    "story_chain3-DI1-556": 1,
+    "story_chain3-DI1-558": 1,
+    "story_chain3-DI1-560": 1,
+    "story_chain3-DI1-562": 1,
+    "story_chain3-DI1-563": 1,
+    "story_chain3-DI1-565": 1,
+    "story_chain3-DI1-569": 1,
+    "story_chain3-DI1-571": 1,
+    "story_chain3-DI1-574": 1,
+    "story_chain3-DI1-575": 1,
+    "story_chain3-DI1-576": 1,
+    "story_chain3-DI1-577": 1,
+    "story_chain3-DI1-579": 1,
+    "story_chain3-DI1-580": 1,
+    "story_chain3-DI1-583": 1,
+    "story_chain3-DI1-585": 1,
+    "var_chain-DI1-2": 1,
+    "var_chain-DI1-4": 1,
+    "var_chain-DI1-6": 1,
+    "var_chain-DI1-7": 1,
+    "var_chain-DI1-8": 1,
+    "var_chain-DI1-11": 1,
+    "var_chain-DI1-12": 1,
+    "var_chain-DI1-17": 1,
+    "var_chain-DI1-21": 1,
+    "var_chain-DI1-22": 1,
+    "var_chain-DI1-23": 1,
+    "var_chain-DI1-25": 1,
+    "var_chain-DI1-26": 1,
+    "var_chain-DI1-28": 1,
+    "var_chain-DI1-29": 1,
+    "var_chain-DI1-31": 1,
+    "var_chain-DI1-32": 1,
+    "var_chain-DI1-35": 1,
+    "var_chain-DI1-37": 1,
+    "var_chain-DI1-40": 1,
+    "var_chain-DI1-41": 1,
+    "var_chain-DI1-42": 1,
+    "var_chain-DI1-43": 1,
+    "var_chain-DI1-44": 1,
+    "var_chain-DI1-49": 1,
+    "var_chain-DI1-50": 1,
+    "var_chain-DI1-53": 1,
+    "var_chain-DI1-54": 1,
+    "var_chain-DI1-56": 1,
+    "var_chain-DI1-57": 1,
+    "var_chain-DI1-62": 1,
+    "var_chain-DI1-68": 1,
+    "var_chain-DI1-70": 1,
+    "var_chain-DI1-73": 1,
+    "var_chain-DI1-75": 1,
+    "var_chain-DI1-76": 1,
+    "var_chain-DI1-77": 1,
+    "var_chain-DI1-78": 1,
+    "var_chain-DI1-79": 1,
+    "var_chain-DI1-82": 1,
+    "var_chain-DI1-98": 1,
+    "var_chain-DI1-102": 1,
+    "var_chain-DI1-103": 1,
+    "var_chain-DI1-107": 1,
+    "var_chain-DI1-109": 1,
+    "var_chain-DI1-110": 1,
+    "var_chain-DI1-112": 1,
+    "var_chain-DI1-115": 1,
+    "var_chain-DI1-119": 1,
+    "var_chain-DI1-123": 1,
+    "var_chain-DI1-124": 1,
+    "var_chain-DI1-125": 1,
+    "var_chain-DI1-132": 1,
+    "var_chain-DI1-136": 1,
+    "var_chain-DI1-137": 1,
+    "var_chain-DI1-140": 1,
+    "var_chain-DI1-141": 1,
+    "var_chain-DI1-143": 1,
+    "var_chain-DI1-150": 1,
+    "var_chain-DI1-154": 1,
+    "var_chain-DI1-156": 1,
+    "var_chain-DI1-157": 1,
+    "var_chain-DI1-158": 1,
+    "var_chain-DI1-159": 1,
+    "var_chain-DI1-161": 1,
+    "var_chain-DI1-164": 1,
+    "var_chain-DI1-165": 1,
+    "var_chain-DI1-166": 1,
+    "var_chain-DI1-167": 1,
+    "var_chain-DI1-169": 1,
+    "var_chain-DI1-170": 1,
+    "var_chain-DI1-171": 1,
+    "var_chain-DI1-173": 1,
+    "var_chain-DI1-175": 1,
+    "var_chain-DI1-185": 1,
+    "var_chain-DI1-186": 1,
+    "var_chain-DI1-187": 1,
+    "var_chain-DI1-188": 1,
+    "var_chain-DI1-190": 1,
+    "var_chain-DI1-191": 1,
+    "var_chain-DI1-194": 1,
+    "var_chain-DI1-198": 1,
+    "var_chain-DI1-202": 1,
+    "var_chain-DI1-203": 1,
+    "var_chain-DI1-206": 1,
+    "var_chain-DI1-207": 1,
+    "var_chain-DI1-210": 1,
+    "var_chain-DI1-214": 1,
+    "var_chain-DI1-215": 1,
+    "var_chain-DI1-219": 1,
+    "var_chain-DI1-221": 1,
+    "var_chain-DI1-223": 1,
+    "var_chain-DI1-228": 1,
+    "var_chain-DI1-231": 1,
+    "var_chain-DI1-234": 1,
+    "var_chain-DI1-235": 1,
+    "var_chain-DI1-237": 1,
+    "var_chain-DI1-239": 1,
+    "var_chain-DI1-240": 1,
+    "var_chain-DI1-241": 0,
+    "var_chain-DI1-247": 1,
+    "var_chain-DI1-250": 1,
+    "var_chain-DI1-253": 1,
+    "var_chain-DI1-254": 1,
+    "var_chain-DI1-255": 1,
+    "var_chain-DI1-259": 1,
+    "var_chain-DI1-261": 1,
+    "var_chain-DI1-266": 1,
+    "var_chain-DI1-270": 1,
+    "var_chain-DI1-271": 1,
+    "var_chain-DI1-274": 1,
+    "var_chain-DI1-277": 1,
+    "var_chain-DI1-279": 1,
+    "var_chain-DI1-280": 1,
+    "var_chain-DI1-282": 0,
+    "var_chain-DI1-285": 1,
+    "var_chain-DI1-287": 1,
+    "var_chain-DI1-288": 1,
+    "var_chain-DI1-290": 1,
+    "var_chain-DI1-292": 1,
+    "var_chain-DI1-293": 1,
+    "var_chain-DI1-296": 1,
+    "var_chain-DI1-297": 1,
+    "var_chain-DI1-301": 1,
+    "var_chain-DI1-314": 1,
+    "var_chain-DI1-316": 1,
+    "var_chain-DI1-319": 1,
+    "var_chain-DI1-320": 1,
+    "var_chain-DI1-325": 0,
+    "var_chain-DI1-326": 1,
+    "var_chain-DI1-327": 1,
+    "var_chain-DI1-328": 1,
+    "var_chain-DI1-329": 1,
+    "var_chain-DI1-330": 1,
+    "var_chain-DI1-334": 1,
+    "var_chain-DI1-337": 1,
+    "var_chain-DI1-340": 1,
+    "var_chain-DI1-341": 1,
+    "var_chain-DI1-348": 1,
+    "var_chain-DI1-352": 1,
+    "var_chain-DI1-353": 1,
+    "var_chain-DI1-355": 1,
+    "var_chain-DI1-356": 1,
+    "var_chain-DI1-359": 1,
+    "var_chain-DI1-369": 1,
+    "var_chain-DI1-371": 1,
+    "var_chain-DI1-374": 1,
+    "var_chain-DI1-377": 1,
+    "var_chain-DI1-378": 1,
+    "var_chain-DI1-385": 1,
+    "var_chain-DI1-387": 1,
+    "var_chain-DI1-390": 1,
+    "var_chain-DI1-391": 1,
+    "var_chain-DI1-392": 1,
+    "var_chain-DI1-395": 1,
+    "var_chain-DI1-396": 1,
+    "var_chain-DI1-397": 1,
+    "var_chain-DI1-399": 1,
+    "var_chain-DI1-403": 1,
+    "var_chain-DI1-404": 1,
+    "var_chain-DI1-407": 1,
+    "var_chain-DI1-409": 1,
+    "var_chain-DI1-411": 1,
+    "var_chain-DI1-412": 1,
+    "var_chain-DI1-421": 1,
+    "var_chain-DI1-423": 1,
+    "var_chain-DI1-427": 1,
+    "var_chain-DI1-428": 1,
+    "var_chain-DI1-429": 1,
+    "var_chain-DI1-431": 1,
+    "var_chain-DI1-432": 1,
+    "var_chain-DI1-433": 1,
+    "var_chain-DI1-436": 1,
+    "var_chain-DI1-441": 1,
+    "var_chain-DI1-442": 1,
+    "var_chain-DI1-444": 1,
+    "var_chain-DI1-446": 1,
+    "var_chain-DI1-450": 1,
+    "var_chain-DI1-451": 1,
+    "var_chain-DI1-452": 1,
+    "var_chain-DI1-455": 1,
+    "var_chain-DI1-456": 1,
+    "var_chain-DI1-464": 1,
+    "var_chain-DI1-465": 1,
+    "var_chain-DI1-468": 1,
+    "var_chain-DI1-471": 1,
+    "var_chain-DI1-472": 1,
+    "var_chain-DI1-474": 1,
+    "var_chain-DI1-477": 1,
+    "var_chain-DI1-481": 1,
+    "var_chain-DI1-484": 1,
+    "var_chain-DI1-485": 1,
+    "var_chain-DI1-486": 1,
+    "var_chain-DI1-487": 1,
+    "var_chain-DI1-488": 1,
+    "var_chain-DI1-489": 1,
+    "var_chain-DI1-492": 1,
+    "var_chain-DI1-502": 1,
+    "var_chain-DI1-507": 1,
+    "var_chain-DI1-509": 1
+   }
+  },
+  "calc": {
+   "exact": 99.7,
+   "n": 1000,
+   "by_family": {
+    "chain_ops": {
+     "correct": 200,
+     "n": 200
+    },
+    "chain_story2": {
+     "correct": 200,
+     "n": 200
+    },
+    "state_update": {
+     "correct": 200,
+     "n": 200
+    },
+    "story_chain3": {
+     "correct": 197,
+     "n": 200
+    },
+    "var_chain": {
+     "correct": 200,
+     "n": 200
+    }
+   }
+  }
+ }
+}

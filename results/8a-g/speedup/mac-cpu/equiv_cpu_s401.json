@@ -1,0 +1,259 @@
+{
+ "meta": {
+  "arm": "PTS",
+  "rung": "3M",
+  "accum": 16,
+  "batch": 256,
+  "device": "cpu",
+  "device_name": "arm",
+  "torch": "2.14.1",
+  "cuda": null,
+  "python": "3.12.14",
+  "variant": "",
+  "bf16_autocast": false,
+  "model": "plain_tf_steps_g",
+  "cfg": {
+   "d_model": 256,
+   "n_heads": 4,
+   "eg_embed": true,
+   "n_layers": 4,
+   "hidden": 1066,
+   "all_steps": true
+  },
+  "n_params": 4023976,
+  "caps_file": "/Users/ben-hannan/speedup/pkg/custom_io/g8a/caps_b3s.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 115,
+   "le": 68
+  },
+  "data": "/Users/ben-hannan/speedup/pool-sample",
+  "rows_loaded": 20049,
+  "eg": "real",
+  "tiny": false,
+  "seed": 401,
+  "pkg_root": "/Users/ben-hannan/speedup/pkg",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "PTS",
+   "--rung",
+   "3M",
+   "--accum",
+   "16",
+   "--data",
+   "/Users/ben-hannan/speedup/pool-sample",
+   "--pkg-root",
+   "/Users/ben-hannan/speedup/pkg",
+   "--device",
+   "cpu",
+   "--eg",
+   "real",
+   "--sections",
+   "equiv",
+   "--equiv-check",
+   "--curve-updates",
+   "0",
+   "--equiv-list",
+   "eg_once",
+   "--seed",
+   "401",
+   "--out",
+   "/Users/ben-hannan/speedup/out/equiv_cpu_s401.json"
+  ],
+  "started": "2026-10-13T23:41:27",
+  "finished": "2026-10-13T23:42:54"
+ },
+ "sections": {
+  "equiv": {
+   "tag": {
+    "arm": "PTS",
+    "rung": "3M",
+    "accum": 16,
+    "batch": 256,
+    "device": "cpu",
+    "torch": "2.14.1"
+   },
+   "pinned": true,
+   "K0": 8,
+   "on_cpu": true,
+   "rows": 256,
+   "specs": {
+    "eg_once": {
+     "spec": "eg_once",
+     "fp32": {
+      "loss_base": 4.682764530181885,
+      "loss_var": 4.682764530181885,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.999999999999953,
+      "grad_rel_l2": 6.036497541736916e-08,
+      "grad_max_abs": 2.384185791015625e-07,
+      "grad_norm_base": 33.79230643537516,
+      "grad_norm_var": 33.79230645458588,
+      "E3_loss_ok": true,
+      "E3_grad_cos_ok": true
+     },
+     "weighting": {
+      "token_mean_per_micro_batch": true,
+      "weighting_changes": false,
+      "micro_batches_old": 16,
+      "micro_batches_variant": 16,
+      "tokens_per_micro_batch_old": [
+       183,
+       204,
+       198,
+       294,
+       151,
+       210,
+       222,
+       183,
+       163,
+       195,
+       175,
+       202,
+       243,
+       170,
+       261,
+       189
+      ],
+      "tokens_per_micro_batch_variant": [
+       183,
+       204,
+       198,
+       294,
+       151,
+       210,
+       222,
+       183,
+       163,
+       195,
+       175,
+       202,
+       243,
+       170,
+       261,
+       189
+      ],
+      "weight_ratio_min": 1.0,
+      "weight_ratio_max": 1.0,
+      "verdict": "weights unchanged"
+     },
+     "E3_verdict": "PASS"
+    }
+   },
+   "prereg": "PREREG-eg-once.md: E1 vectors (bf16 GPU), E2 vectors (fp32 CPU, 64 rows), E3 loss + gradient (fp32 CPU), E4 loss trace (bf16 GPU, 300 updates)",
+   "limits": {
+    "E1_position_cos": 0.998,
+    "E1_row_mean_cos": 0.9995,
+    "E1_x_old_spread": 1.5,
+    "E2_max_abs": 0.0001,
+    "E3_loss_rel": 1e-05,
+    "E3_grad_cos": 0.99999,
+    "E4_mean_abs": 0.02,
+    "E4_diff_of_means": 0.01,
+    "E4_window": [
+     101,
+     300
+    ]
+   },
+   "E3_setting": "fp32 on cpu (registered: cpu)",
+   "E3_registered_setting": true,
+   "E1": {
+    "once_vs_old": {
+     "n_positions": 46468,
+     "min_pos_cos": 0.9999999988213474,
+     "mean_pos_cos": 0.999999999999607,
+     "positions_below_limit": 0,
+     "min_row_mean_cos": 0.9999999999801125,
+     "rows_below_limit": 0,
+     "max_row_gap": 1.9887536062412892e-11,
+     "mean_row_gap": 1.9518414662300643e-13
+    },
+    "old_vs_old_half_accum": {
+     "n_positions": 46468,
+     "min_pos_cos": 0.9999999998677982,
+     "mean_pos_cos": 0.9999999999998851,
+     "positions_below_limit": 0,
+     "min_row_mean_cos": 0.999999999996988,
+     "rows_below_limit": 0,
+     "max_row_gap": 3.0120350658080497e-12,
+     "mean_row_gap": 6.139273117655719e-14
+    },
+    "rule1_every_position_cos_ge_0_998": true,
+    "rule2_every_row_mean_cos_ge_0_9995": true,
+    "rule3_gap_le_1_5x_old_spread": true,
+    "gap_over_spread": 6.602690748249171,
+    "passed": true,
+    "rows": 256,
+    "accum_old": 16,
+    "accum_half": 8,
+    "state_dtype": "torch.float32",
+    "device": "cpu",
+    "eg": "real",
+    "eg_once_stats": {
+     "hits": 16,
+     "misses": 0,
+     "gemma_chunks": 2,
+     "prompts": 256
+    },
+    "registered_setting": false,
+    "note": "registered: bf16 on the GPU with the real Gemma; anything else is a plumbing check"
+   },
+   "E2": {
+    "max_abs_diff": 0.0,
+    "limit": 0.0001,
+    "passed": true,
+    "n_values": 9947136,
+    "limit_relative": 1e-05,
+    "passed_relative": true,
+    "max_abs_value": 854.2741088867188,
+    "mean_abs_value": 33.89723220946062,
+    "p999_abs_value": 268.5379943847656,
+    "max_abs_diff_over_max_abs_value": 0.0,
+    "value_at_max_diff": 153.64276123046875,
+    "rel_diff_at_max_diff": 0.0,
+    "position_of_max_diff_flat": 0,
+    "rows_prompts_sha256": "ccb8ba1e22ae17366aec04d0ad6e33e1d456696f17bf0beca7c6ff3ab8ae7b88",
+    "seed": 401,
+    "rows": 64,
+    "micro_batch_rows": 16,
+    "dtype": "torch.float32",
+    "setting": "real Gemma, fp32, cpu",
+    "eg_once_stats": {
+     "hits": 4,
+     "misses": 0,
+     "gemma_chunks": 2,
+     "prompts": 64
+    },
+    "registered_setting": true
+   },
+   "precisions": [
+    "fp32"
+   ],
+   "reference": {
+    "fp32": {
+     "baseline_loss": 4.682764530181885,
+     "baseline_rerun": {
+      "abs_loss": 0.0,
+      "grad_cos": 0.9999999999999544,
+      "grad_rel_l2": 0.0,
+      "grad_max_abs": 0.0,
+      "grad_norm_base": 33.79230643537516,
+      "grad_norm_var": 33.79230643537516
+     },
+     "baseline_accum1_fullbatch": {
+      "accum": 1,
+      "skipped": true
+     }
+    }
+   },
+   "wall_s": 86.7
+  }
+ }
+}

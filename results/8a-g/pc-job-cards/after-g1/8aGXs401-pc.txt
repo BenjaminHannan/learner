@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: test GX stage 1, seed 401 only (design/8a-gx-experts-2026-10-09.md; spec design/8a-g-gemma-growth-2026-10-08.md addendum O). The experts thread's 8aGX-pc.txt (c1464d19b7) split in two so seed 401 runs only if seed 400 is alive; the g8a line is unchanged, so the job keeps the name 8aGX-3M-s401 that analyze_gx reads. Code src-8gx = c1464d19b7. Started only by the post-G1 chain waiter (q8aPost2_wait.ps1).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 12000
+g8a: 8aGX-3M-s401 --rung 3M --seed 401 --arms B2 --b2-extra '{"eg_embed": true, "experts": 52, "top_k": 8}' --accum B2=4

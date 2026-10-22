@@ -1,0 +1,112 @@
+=== CIO START 2026-10-14T04:33:40Z
+=== STAGE setup 2026-10-14T04:33:40Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=3 dph=0.38 guard=on cap_usd=4 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-14T04:33:40Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           5           7           4           8          10
+4
+tmpfs            16G  4.5G   12G  29% /dev/shm
+TICK at=2026-10-14T04:33:40Z stage=setup up_min=0 log=f2_b3g2_bench.log bytes= last= | mb data8a=1627 skills=111 pools=467 free=11570 ram_avail=10817 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.4.6', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.14.1+cpu cuda None'}
+=== STAGE code 2026-10-14T04:33:43Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-14T04:33:48Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-14T04:33:48Z
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK
+=== CODE-ID 8aPTC3S-pc-047f8ed212 (PC: WORK\code\8aPTC3S-pc-<same 10 hex>); code_identity.py (CRLF as LF): CODE-HASH-LF 47d676dde1 FILES-LIST-SHA256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2 (118 files) ; raw-bytes file list sha256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2; caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e 2026-10-14T04:34:15Z
+CMD 8a-data mem 3000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.get_data --work /dev/shm/ptcdry/J/work --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8a-data --data-pool /dev/shm/ptcdry/J/work/8a-inputs/data-pool --own-xz /dev/shm/ptcdry/J/work/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+CMD 8aPTC3S-3M-s400 mem 9000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8aPTC3S-3M-s400 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu -
+CHILD-ENV (added to the environment): {'PYTORCH_CUDA_ALLOC_CONF': 'expandable_segments:True'}
+QUEUE-ENV (the PC's # ENV lines, Windows paths, not used here): {"PYTHONPATH": "C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages", "CUSTOM_IO_EG2": "C:\\Users\\benja\\eg2"}
+=== STAGE gemma 2026-10-14T04:34:15Z
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+=== STAGE data 2026-10-14T04:34:27Z
+=== data branches fetched at 3d0afbeadd5f1775c7c92195348bab6f66da767d and 8d012f1f97bd8203b15e88e369dc856721e13e6a; building the 8a data (FineWeb-Edu shard 0 is 2.15 GB; the slices must hash to the manifest) 2026-10-14T04:34:32Z
+[get_data 04:34:33] teach.jsonl ok (already there)
+[get_data 04:34:33] web slices ok (already there) ['slice_rung10.jsonl', 'slice_rung3.jsonl', 'slice_rung30.jsonl']
+[get_data 04:34:33] READY /dev/shm/ptcdry/J/work/data8a
+=== STAGE skills 2026-10-14T04:34:33Z
+TICK at=2026-10-14T04:35:40Z stage=skills up_min=2 log=build.log bytes=1440 last={"counts": {"train": 200000, "dev_answer": 1200, "dev_frame": 1360, "dev_vocab": 800, "dev_variant": 1320, "de | mb data8a=1627 skills=111 pools=467 free=11572 ram_avail=10423 | gpu 
+curriculum hashes match
+big build train.jsonl hash matches
+=== STAGE train 2026-10-14T04:37:19Z
+=== PTC3S TRAIN START job=8aPTC3S-3M-s400 accum=PTC=16 seed=400 rung=3M expected_pool=p10-rung30-s400-a64-L code=8aPTC3S-pc-047f8ed212 2026-10-14T04:37:19Z
+TICK at=2026-10-14T04:37:40Z stage=train up_min=4 log=stdout.txt bytes=34 last=pool reused p10-rung30-s400-a64-L  | mb data8a=1627 skills=111 pools=467 free=11571 ram_avail=9027 | gpu 
+TICK at=2026-10-14T04:39:40Z stage=train up_min=6 step=2 loss=4.70828 train_elapsed_s=16.9 proj_train_h=56.33 proj_usd=21.63 | mb data8a=1627 skills=111 pools=467 free=11555 ram_avail=7472 | gpu 
+TICK at=2026-10-14T04:41:40Z stage=train up_min=8 step=2 loss=4.70828 train_elapsed_s=16.9 proj_train_h=56.33 proj_usd=21.65 | mb data8a=1627 skills=111 pools=467 free=11555 ram_avail=7481 | gpu 
+=== STAGE result 2026-10-14T04:43:29Z
+=== PTC3S JOB END rc=0 maxh_hit=no guard_stop=no 2026-10-14T04:43:29Z
+pool reused p10-rung30-s400-a64-L
+{"rung": "3M", "seed": 400, "steps": 2, "wall_s": 368.5, "cost_usd": 0.0}
+total 15764
+drwxr-xr-x 2 root root      100 Oct 14 04:37 .
+drwxr-xr-x 3 root root      220 Oct 14 04:43 ..
+-rw-r--r-- 1 root root    17673 Oct 14 04:43 RESULT.json
+-rw-r--r-- 1 root root 16114485 Oct 14 04:37 checkpoint.pt
+-rw-r--r-- 1 root root     2176 Oct 14 04:43 stdout.txt
+/dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L
+/dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L.caps-PTS
+RESULT-SUMMARY {"job_status": "ok", "arm_status": "ok", "steps": 2, "n_params": 4023976, "steps_per_s": 0.119, "train_s": 17, "wall_s": 364, "peak_mem_mib": null, "cap_total": 0, "calc_mismatch": 0, "calc_rows": 32, "calc_forced": 16, "final_eval": true, "chain5": false, "lesions": ["nocalc"]}
+RBEGIN|8aPTC3S-3M-s400|73b17e4a6581276946fd0dbf0c5a146b353ac82e45592b7b8bf706d5e07dacfc|16362
+REND|8aPTC3S-3M-s400
+=== PTC3S RESULT PRINTED rc=0 job_ok=yes (collect now; the checkpoint parts follow) 2026-10-14T04:43:29Z
+=== STAGE export 2026-10-14T04:43:29Z
+CKFULL|8aPTC3S-3M-s400/PTC|065369b389849c0899a1f9000e94bd952ac04f1086456f18385b283837f142cf|5
+RBEGIN|ck1|9c9b430b143974a20e65b41d2dcfb65a87ba1802cf5aefb8fefac0346435d0dd|3000000|8aPTC3S-3M-s400/PTC|0|5
+REND|ck1
+part ck1 8aPTC3S-3M-s400/PTC 0/5 round 1
+RBEGIN|ck2|b65c10225d894ba4eeec690c45bedbb8733830f66744fc8569d8bbf9f1a98ee4|3000000|8aPTC3S-3M-s400/PTC|1|5
+REND|ck2
+part ck2 8aPTC3S-3M-s400/PTC 1/5 round 1
+RBEGIN|ck3|16181c584b5371bf46eabf19dbd7e5037208c92a81db56c2f86dca3ca43a7a14|3000000|8aPTC3S-3M-s400/PTC|2|5
+REND|ck3
+part ck3 8aPTC3S-3M-s400/PTC 2/5 round 1
+RBEGIN|ck4|fe6d50c340e01fecd6a66bf6f99cd5a52c96d2f0892523f21eb107a5e321ec4b|3000000|8aPTC3S-3M-s400/PTC|3|5
+REND|ck4
+part ck4 8aPTC3S-3M-s400/PTC 3/5 round 1
+RBEGIN|ck5|bc553bdeaa21f703e4432a1d3c5f0919d0b844a6d6e656dc3db99aa62c6e4d8b|2910141|8aPTC3S-3M-s400/PTC|4|5
+REND|ck5
+part ck5 8aPTC3S-3M-s400/PTC 4/5 round 1
+CKFULL|8aPTC3S-3M-s400/PTC|065369b389849c0899a1f9000e94bd952ac04f1086456f18385b283837f142cf|5
+RBEGIN|ck6|9c9b430b143974a20e65b41d2dcfb65a87ba1802cf5aefb8fefac0346435d0dd|3000000|8aPTC3S-3M-s400/PTC|0|5
+REND|ck6
+part ck6 8aPTC3S-3M-s400/PTC 0/5 round 2
+RBEGIN|ck7|b65c10225d894ba4eeec690c45bedbb8733830f66744fc8569d8bbf9f1a98ee4|3000000|8aPTC3S-3M-s400/PTC|1|5
+REND|ck7
+part ck7 8aPTC3S-3M-s400/PTC 1/5 round 2
+RBEGIN|ck8|16181c584b5371bf46eabf19dbd7e5037208c92a81db56c2f86dca3ca43a7a14|3000000|8aPTC3S-3M-s400/PTC|2|5
+REND|ck8
+part ck8 8aPTC3S-3M-s400/PTC 2/5 round 2
+RBEGIN|ck9|fe6d50c340e01fecd6a66bf6f99cd5a52c96d2f0892523f21eb107a5e321ec4b|3000000|8aPTC3S-3M-s400/PTC|3|5
+REND|ck9
+part ck9 8aPTC3S-3M-s400/PTC 3/5 round 2
+RBEGIN|ck10|bc553bdeaa21f703e4432a1d3c5f0919d0b844a6d6e656dc3db99aa62c6e4d8b|2910141|8aPTC3S-3M-s400/PTC|4|5
+REND|ck10
+part ck10 8aPTC3S-3M-s400/PTC 4/5 round 2
+CKFULL|8aPTC3S-3M-s400/PTC|065369b389849c0899a1f9000e94bd952ac04f1086456f18385b283837f142cf|5
+RBEGIN|ck11|9c9b430b143974a20e65b41d2dcfb65a87ba1802cf5aefb8fefac0346435d0dd|3000000|8aPTC3S-3M-s400/PTC|0|5
+REND|ck11
+part ck11 8aPTC3S-3M-s400/PTC 0/5 round 3
+RBEGIN|ck12|b65c10225d894ba4eeec690c45bedbb8733830f66744fc8569d8bbf9f1a98ee4|3000000|8aPTC3S-3M-s400/PTC|1|5
+REND|ck12
+part ck12 8aPTC3S-3M-s400/PTC 1/5 round 3
+RBEGIN|ck13|16181c584b5371bf46eabf19dbd7e5037208c92a81db56c2f86dca3ca43a7a14|3000000|8aPTC3S-3M-s400/PTC|2|5
+REND|ck13
+part ck13 8aPTC3S-3M-s400/PTC 2/5 round 3
+RBEGIN|ck14|fe6d50c340e01fecd6a66bf6f99cd5a52c96d2f0892523f21eb107a5e321ec4b|3000000|8aPTC3S-3M-s400/PTC|3|5
+REND|ck14
+part ck14 8aPTC3S-3M-s400/PTC 3/5 round 3
+RBEGIN|ck15|bc553bdeaa21f703e4432a1d3c5f0919d0b844a6d6e656dc3db99aa62c6e4d8b|2910141|8aPTC3S-3M-s400/PTC|4|5
+REND|ck15
+part ck15 8aPTC3S-3M-s400/PTC 4/5 round 3
+CKDONE|15
+RBEGIN|8aPTC3S-3M-s400|06e069837c9539c6f611eea9abd1589a661b5622ea343e715f14cad3472f61c8|16376
+REND|8aPTC3S-3M-s400
+=== CIO DONE 2026-10-14T04:43:58Z
+run_dry exit 0

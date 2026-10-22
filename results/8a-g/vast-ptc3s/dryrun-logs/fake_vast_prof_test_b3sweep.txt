@@ -1,0 +1,97 @@
+kit vast.py sha256: b68462f7374176783a138f34edef8a9396adde958c05c46e63f34f04cf6675cd
+A create printed: {"success": true, "new_contract": 4242, "error": null, "msg": null, "at": "2026-10-14T10:06:45Z"}
+A exports line: export MAXPAR=5 QSUB= PROFILE=1 PROF_PLAN=b3sweep MAXH=3 DPH=0.46 END_SLEEP=300 FAIL_SLEEP=300
+A script after the exports line is the box script byte for byte: True | script bytes 72310 | whole args[2] bytes 72405 | body json bytes 74293
+A args[0:2] ['bash', '-c'] | args[3] cio
+B tail printed 14 lines, any R| line: False; last lines:
+B    RBEGIN|profjob|876614b07d18534ac100750f29f396cf97ff4304918942144a5f230ac337236b|18239
+B    REND|profjob
+B    RBEGIN|profrun|5830182ad8e4f9481614a5778690e2cd6b32c1945929b09a4719749be523e930|8285
+B    REND|profrun
+B    === PROF RESULT PRINTED blocks=profjob,profrun r_lines=119 (the Vast log read window is 20000 lines) failed=[] skipped=[] 2026-10-14T08:51:01Z
+B    === PROF-STEPS (name rc seconds timeout_s): 2026-10-14T08:51:01Z
+B    job 0 414 1200
+B    h1_b3g2_accumsweep 0 37 2700
+B    h2_b3g2_accumcmp 0 11 900
+B    at_g1 143 237 1200
+B    at_g2 143 237 1200
+B    === PROF DONE failed=none skipped=[] up_min=20 2026-10-14T08:51:01Z
+B    === CIO DONE 2026-10-14T08:51:01Z
+B    run_dry exit 0
+C collect printed: {"profjob": "ok", "profrun": "ok"}
+C 58 files extracted:
+C    profjob/PTC/RESULT.json 17663
+C    profjob/PTC/stdout.events.txt 2269
+C    profjob/PTC/stdout.tail.txt 2269
+C    profjob/RESULT.json 2841
+C    profjob/box/PTC-SETUP-OK.txt 1108
+C    profjob/box/at_g1.cmd.log 700
+C    profjob/box/at_g1.report.log 1078
+C    profjob/box/at_g2.cmd.log 699
+C    profjob/box/at_g2.report.log 1077
+C    profjob/box/at_pick.log 430
+C    profjob/box/at_pins.txt 889
+C    profjob/box/box.txt 118
+C    profjob/box/build.log 3360
+C    profjob/box/build_big.log 3374
+C    profjob/box/cmd.at.txt 626
+C    profjob/box/cmd.data.txt 413
+C    profjob/box/cmd.job.txt 630
+C    profjob/box/code_files.sha256 11428
+C    profjob/box/code_files_lf.sha256 11428
+C    profjob/box/code_hash_lf.txt 11
+C    profjob/box/code_identity.txt 119
+C    profjob/box/eg_check.log 3836
+C    profjob/box/eg_dl.log 138
+C    profjob/box/get_data.log 5162
+C    profjob/box/guard.out 0
+C    profjob/box/mkcmd.log 1398
+C    profjob/box/mkcmd_at.log 657
+C    profjob/box/pip.log 122
+C    profjob/box/prof_env.txt 1214
+C    profjob/box/profcmd.log 701
+C    profjob/box/ptccheck.log 22380
+C    profjob/box/versions.txt 209
+C    profjob/box.json 2722
+C    profjob/caps.json 685
+C    profjob/caps_report.json 934
+C    profjob/cmd.prof.sh.txt 767
+C    profjob/pool_MANIFEST.json 3342
+C    profjob/result.tgz.sha256 65
+C    profjob/stdout.events.txt 0
+C    profjob/stdout.tail.txt 108
+C    profrun/at_g1.json 1025
+C    profrun/at_g1.log.tail 110
+C    profrun/at_g1.train.log.tail 3884
+C    profrun/at_g2.json 1027
+C    profrun/at_g2.log.tail 110
+C    profrun/at_g2.train.log.tail 3884
+C    profrun/at_setup.md 1663
+C    profrun/b3g2_accumcmp.json 4022
+C    profrun/b3g2_accumcmp.md 972
+C    profrun/b3g2_accumsweep.json 6914
+C    profrun/b3g2_accumsweep.md 1783
+C    profrun/h1_b3g2_accumsweep.log.tail 965
+C    profrun/h2_b3g2_accumcmp.log.tail 886
+C    profrun/prof_env.txt 1214
+C    profrun/prof_status.txt 183
+C    profrun/prof_steps.txt 108
+C    profrun/result.tgz.sha256 65
+C    profrun/stages.txt 4657
+C expect b3g2_accumsweep.json PASS
+C expect b3g2_accumsweep.md PASS
+C expect b3g2_accumcmp.json PASS
+C expect b3g2_accumcmp.md PASS
+C expect at_g1.json PASS
+C expect at_g2.json PASS
+C expect at_setup.md PASS
+C expect prof_status.txt PASS
+C expect at_g1.log.tail PASS
+C expect at_g2.log.tail PASS
+C expect h1_b3g2_accumsweep.log.tail PASS
+C expect h2_b3g2_accumcmp.log.tail PASS
+C expect prof_steps.txt PASS
+C expect stages.txt PASS
+C grep prof_status.txt 'plan=b3sweep' PASS
+C grep prof_status.txt 'at_g2_accum=8' PASS
+C grep at_setup.md '6e72a5fae514a343c217c4d95cde37bc3b587c8e' PASS

@@ -1,0 +1,24 @@
+[    2.8s] world: arm PTC model plain_tf_steps_g (4,023,976 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3s.json device cuda eg real
+[    2.8s] === section equiv
+[    2.9s] equiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them)
+[    9.0s] E1 (torch.bfloat16, cuda, eg real): min position cos 0.528807, min row-mean cos 0.996825, max row gap once 3.175e-03 vs old spread 1.446e-03 -> FAIL
+[   51.3s] E2 (real Gemma, fp32, cpu (a second copy loaded for this)): max abs diff 5.722e-04 (registered limit 0.0001) -> FAIL; revised relative rule (1e-05 x max |H|) -> PASS (seed 400)
+[   55.7s] equiv fp32: baseline loss 4.729222; rerun cos 1.00000000; accum=1 cos OOM
+[   59.9s] equiv bf16: baseline loss 4.729199; rerun cos 1.00000000; accum=1 cos OOM
+[   61.1s] equiv eg_once fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999818 relL2 1.909e-03
+[   61.8s] equiv eg_once bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999781 relL2 2.097e-03
+[   62.0s] E3 eg_once: loss rel 0.00e+00 (limit 1e-05), grad cos 0.99999818 (limit 0.99999), weighting: weights unchanged -> PASS
+[   93.1s]   curve baseline eg_once: update 50/300 loss 2.82667
+[  123.6s]   curve baseline eg_once: update 100/300 loss 2.11409
+[  153.9s]   curve baseline eg_once: update 150/300 loss 1.71003
+[  186.1s]   curve baseline eg_once: update 200/300 loss 1.49294
+[  216.9s]   curve baseline eg_once: update 250/300 loss 1.25435
+[  247.9s]   curve baseline eg_once: update 300/300 loss 1.24756
+[  266.7s]   curve variant eg_once: update 50/300 loss 2.82613
+[  284.5s]   curve variant eg_once: update 100/300 loss 2.10554
+[  302.1s]   curve variant eg_once: update 150/300 loss 1.72593
+[  319.4s]   curve variant eg_once: update 200/300 loss 1.48142
+[  337.3s]   curve variant eg_once: update 250/300 loss 1.19681
+[  356.3s]   curve variant eg_once: update 300/300 loss 1.25263
+[  356.7s] E4 eg_once: updates 101..300: mean |dloss| 0.0162 (limit 0.02), diff of means 0.0088 (limit 0.01) -> PASS
+[  356.7s] done /job/profraw/equiv_e4.json /job/profraw/equiv_e4.md
