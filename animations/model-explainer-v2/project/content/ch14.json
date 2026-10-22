@@ -1,0 +1,571 @@
+{
+  "kicker": "Wrap-up",
+  "title": "What is proven, what is not, what comes next",
+  "blurb": "An honest ledger as of Oct 9: which parts have a result, which are only built or planned, the open risks, and what comes next.",
+  "accent": "tested",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 33,
+      "heading": "Where we stand on Oct 9",
+      "caption": [
+        {
+          "at": 0.0182,
+          "text": "The honest ledger, as of Oct 9: what has a result, and what does not."
+        },
+        {
+          "at": 0.3971,
+          "text": "The reader and thinker have results at 3M, about three million learned numbers. So does the outside calculator."
+        },
+        {
+          "at": 0.7231,
+          "text": "The stop switch has never run. The English talker is not built."
+        }
+      ],
+      "legend": [
+        {
+          "kind": "tested",
+          "label": "result exists"
+        },
+        {
+          "kind": "untested",
+          "label": "built, never run"
+        },
+        {
+          "kind": "placeholder",
+          "label": "not built"
+        }
+      ],
+      "parts": [
+        {
+          "chips": [
+            {
+              "kind": "tested",
+              "label": "tested at 3M"
+            }
+          ],
+          "text": "Adding Gemma: +2.67 points in 6 of 6 copies. One safety mark missed."
+        },
+        {
+          "chips": [
+            {
+              "kind": "tested",
+              "label": "tested at 3M"
+            },
+            {
+              "kind": "untested",
+              "label": "100M: untested"
+            }
+          ],
+          "text": ""
+        },
+        {
+          "chips": [
+            {
+              "kind": "tested",
+              "label": "tested, 6 copies"
+            },
+            {
+              "kind": "untested",
+              "label": "any round: never run"
+            }
+          ],
+          "text": "Outside tool, plain code. Two checks not clean."
+        },
+        {
+          "chips": [
+            {
+              "kind": "untested",
+              "label": "built, never run"
+            }
+          ],
+          "text": ""
+        },
+        {
+          "chips": [
+            {
+              "kind": "placeholder",
+              "label": "English: not built"
+            }
+          ],
+          "text": ""
+        }
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:29-38 (parts table: reader row 31, thinker 34, call writer 35, learned stop 36, calculator 37, talker 38)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:62-64 (calls at any round: built, untested)",
+        "big-run/PLAN.md:75 and :136 (the learned stop is built, never run), :133 (EGE 3M: +2.67 over B2, ahead on 6 of 6), :135 (calculator outside passed at 3M, leak mark cleared by the owner)",
+        "architecture/MARKS-D0-T1-2026-10-07.md:200-203 (Record 13: marks 1-3 and 6 pass; mark 5 holds on 5 of 6; mark 4 leak not a sealed pass, cleared by the owner)"
+      ],
+      "notes": "Reader +2.67, 6 of 6 seeds (RESULTS-EG2 line 108: per seed +1.14 +2.70 +3.44 +2.63 +3.54 +2.57), but the 6-seed confirm missed its zero-round leak mark (6.59 vs 4.62), FINISHED:31; the leak is explained in s08. Checker edits: the +2.67 is the gain from adding Gemma to B2 (the box now says 'Adding Gemma'); calculator text now says 'Two checks not clean' (swap check 5 of 6, leak check missed then cleared by the owner, shown in s05), because FINISHED:37 and MARKS Record 13 say the calculator confirm is 'PASS with mark 4 cleared by Ben and mark 5 unscored on seed 205', not a clean pass. Calculator column covers the call writer (tested in T1SDR, 6 seeds) and the any-round change (B3 group 1, built, never run, FINISHED:62-64). Talker: FINISHED:38 says 'today a small stand-in; the English talker is unbuilt'; the brief's 'stand-in works' is not a stated test result, so the chip only says 'stand-in only'. 3M = about three million learned numbers (T1SDR n_params 3,314,132; G-B2 3,544,913; GLOSSARY wording). Duration 43 -> 45 for the 7 added words. Fixer edits: Talker chip 'stand-in only' -> 'English: not built' so it says what the caption and s07 say (FINISHED:38: a small stand-in today, the English talker unbuilt; the map box already says 'stand-in today'). 100M chip left amber on purpose: the 100M rung exists as a config and a counted size (g8a/configs.py RUNGS['100M'], FINISHED:21-22) but its pool is 'not built' and it has never been run or fit-checked (PLAN:29, :93), so 'built, never run' is the right colour.",
+      "atMap": [
+        [
+          0.02,
+          0.0182
+        ],
+        [
+          0.33,
+          0.3971
+        ],
+        [
+          0.66,
+          0.7231
+        ]
+      ]
+    },
+    {
+      "id": "s03",
+      "duration": 29.5,
+      "heading": "Result one: the thinking does the work",
+      "caption": [
+        {
+          "at": 0.0203,
+          "text": "Result one. On 6,040 questions kept aside, the model scored 73.01 out of 100 with its thinking on."
+        },
+        {
+          "at": 0.3669,
+          "text": "With thinking switched off it scored 0.66. A plain model of the same size scored 67.12."
+        },
+        {
+          "at": 0.6693,
+          "text": "So the thinking does the work, on one copy at the smallest size. Bigger sizes are untested."
+        }
+      ],
+      "bars": [
+        {
+          "label": "Thinking on",
+          "value": 73.01,
+          "color": "thinker"
+        },
+        {
+          "label": "Thinking off",
+          "value": 0.66,
+          "color": "warn"
+        },
+        {
+          "label": "Plain model",
+          "value": 67.12,
+          "color": "placeholder"
+        }
+      ],
+      "labels": {
+        "chip": "tested: one copy, 3M",
+        "gap": "Gap over the plain model: +5.9 points",
+        "caveat": "Older design: calculator inside, 12 fixed rounds. Second copy and 10M were not in by Oct 9."
+      },
+      "src": [
+        "animations/source-g1-3m-s400.json and branch origin/claude/8a-g-pc-results results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/{B2,PT}/RESULT.json (G-B2 4,410 of 6,040 = 73.01; loops:0 40 of 6,040 = 0.66; G-PT 4,054 of 6,040 = 67.12; n_loops 12; recomputed by the checker)",
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md:187-189 (addendum G: same numbers; one rung of one seed)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:109-110 (shown on one seed), :125-126 (G1 tests the calculator-inside, 12-round model), :94 (12 rounds in G1)",
+        "big-run/PLAN.md:74 and :225 (G1's 3M lead for G-B2 over G-PT was +5.9 on one seed); :99 and :134 (3M seed 401 and the 10M arms still to run on Oct 9)"
+      ],
+      "notes": "Same numbers as ch04 s14, ch06 s03, ch09 s04. 73.01 belongs to the older design with the calculator inside and 12 fixed rounds (the Gemma-fronted G-B2 arm, 3M, seed 400); the finished design has not produced a number yet. The +5.9 gap is quoted from PLAN:74/:225, not computed here (73.01 - 67.12 = 5.89). The plain model G-PT has the same Gemma front and is within 1.4% of the size (3,495,936 vs 3,544,913). Checker edits: gap note now says 'points'; the caveat now says 'were not in by Oct 9' so it stays true after the date (the PLAN.md revision note of Oct 10 reports a second 3M copy, seed 401, 73.7 vs 68.0, not recomputed by the project; the video is dated Oct 9 and says one copy). Duration 40 -> 41. Fixer edit (JS timing only): the Thinking-off and Plain-model counts now start 0.15 s and 0.65 s after caption 2 appears and finish about 1.8 s later, so no frame shows a number still counting while the caption names the final value.",
+      "atMap": [
+        [
+          0.0146,
+          0.0203
+        ],
+        [
+          0.3374,
+          0.3669
+        ],
+        [
+          0.6602,
+          0.6693
+        ]
+      ]
+    },
+    {
+      "id": "s04",
+      "duration": 31,
+      "heading": "Result two: the calculator can sit outside",
+      "caption": [
+        {
+          "at": 0.0194,
+          "text": "Result two. The calculator is plain code outside the model. In the tested version the thinker writes a slip; the reader reads the reply."
+        },
+        {
+          "at": 0.3378,
+          "text": "Over 6 copies it scored 0.62 points above a similar calculator-inside design. The likely range includes zero."
+        },
+        {
+          "at": 0.7185,
+          "text": "With the calculator switched off, the questions that need it score 0.0, so the model really uses it."
+        }
+      ],
+      "labels": {
+        "slip": "sub 12 5",
+        "calc": "Outside calculator",
+        "replyNote": "read by the reader",
+        "reply": "7",
+        "tag": "made-up example",
+        "chip": "tested: 6 copies",
+        "ticks": [
+          "-1",
+          "0",
+          "+1",
+          "+2"
+        ],
+        "dot": "+0.62",
+        "range": "likely range: -0.23 to +1.46",
+        "off": "Calculator off: 0.0"
+      },
+      "values": {
+        "lo": -0.23,
+        "mid": 0.62,
+        "hi": 1.46
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:106-107 (T1SDR matched B2 over 6 seeds: pooled-5 +0.62, CI -0.23 to +1.46; calculator off scores 0.0)",
+        "architecture/MARKS-D0-T1-2026-10-07.md:200 and :204 (Record 13: +0.62, CI -0.23 to +1.46; tool off 0.0)",
+        "branch origin/claude/custom-reader-talker-4x309r custom_io/results/{70-vast-t1sdr,80-vast-t1sdr-confirm,80b-pc-t1sdr-confirm}/T1SDR_s200..s205 and 33-pc-confirm-b2/B2_s200..s205 RESULT.json (pooled-5 differences recomputed by the checker; extra.noexec.program_families 0.0 on 2,085 questions, 0.048 on s203)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:42-57 (the sub 12 5 = 7 example)"
+      ],
+      "notes": "The slip 'sub 12 5' and reply '7' are the project's made-up example (Tom's apples), a picture, not a result. The number-line is drawn to scale for the three numbers only (400 px per point). Recomputed from the raw files: per-seed T1SDR minus B2 on pooled-5 (6,040 questions) +1.937, -0.149, +0.182, +0.894, +0.960, -0.116; mean 0.618 = +0.62; sd 0.806, t(5) = 2.571, CI -0.228 to +1.464 = -0.23 to +1.46. Calculator off: extra.noexec.program_families = 0.0 on five copies and 0.048 on s203, over 2,085 questions that need the calculator. Chain-5 99.6-99.8 (FINISHED:106) is left out. Brief says 'matched'; the source says matched with +0.62 and a range that includes 0, so the caption says so. T1SDR is not a one-change twin of B2 (copy fixes and drills), so the caption says 'a similar calculator-inside design' (as ch05 s12). Checker edits: caption 3 says 'the questions that need it' instead of 'program questions'; the swap-check caption and note moved to the new s05 together with the leak check, which this scene did not mention at all. Duration 44 -> 38. Fixer edits (JS only): the green 'tested: 6 copies' chip moved from under the made-up '7' box to the left end of the number line it describes (the +0.62 measurement); the made-up reply box border is calculator slate, not tested-green.",
+      "atMap": [
+        [
+          0.02,
+          0.0194
+        ],
+        [
+          0.3,
+          0.3378
+        ],
+        [
+          0.62,
+          0.7185
+        ]
+      ]
+    },
+    {
+      "id": "s05",
+      "duration": 26.5,
+      "heading": "Two calculator checks were not clean",
+      "caption": [
+        {
+          "at": 0.0226,
+          "text": "The calculator had six pass marks. Four passed; two were not clean."
+        },
+        {
+          "at": 0.3408,
+          "text": "Swap check: with add and sub swapped, answers followed the reply on 5 of 6 copies; the sixth was lost."
+        },
+        {
+          "at": 0.6594,
+          "text": "Wrong-thinking leak check: five of six copies read above the limit of 5. The project owner cleared it on Oct 9."
+        }
+      ],
+      "cards": [
+        {
+          "title": "Swap check",
+          "big": "5 of 6",
+          "text": "First reading 97.1 to 97.6, pass line 99; passed after the scoring rule was corrected.",
+          "chip": {
+            "kind": "untested",
+            "label": "incomplete",
+            "color": "warn"
+          }
+        },
+        {
+          "title": "Wrong-thinking leak check",
+          "big": "5.00 to 5.59",
+          "text": "Right answers with another question's thinking swapped in, out of 100. Limit 5.",
+          "chip": {
+            "kind": "untested",
+            "label": "limit missed, owner-cleared",
+            "color": "warn"
+          }
+        }
+      ],
+      "src": [
+        "architecture/MARKS-D0-T1-2026-10-07.md:198-205 (Record 13: marks 1-3 and 6 pass; mark 5 holds on 5 of 6, seed 205 unscored, checkpoint lost; mark 4 leak did not pass as sealed, donor 5.59/5.15/5.59/5.07/5.00/5.59 against a flat line 5; Ben cleared it 8:21 AM ET 10-09; 'the report must carry both facts')",
+        "architecture/MARKS-D0-T1-2026-10-07.md:47-55 and :81 (Amendment 2: the 6-seed confirm runs marks 1-6)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:37 (leak mark cleared) and :106-108 (mark 5 holds on 5 of 6 seeds; seed 205 unscored)",
+        "branch origin/claude/custom-reader-talker-4x309r custom_io/results/*t1sdr*/T1SDR_s200..s205 RESULT.json: lesions.donor.in_dist.exact 5.588, 5.147, 5.588, 5.074, 5.000, 5.588 (n = 1,360); extra.opswap.swap_match 97.47, 97.23, 97.11, 97.34, 97.23, 97.59; custom_io/PASS-MARKS.md:462-464 (limit) and :777 (first reading); MARKS:189-196 (Amendment 12 scoring rule)"
+      ],
+      "notes": "NEW scene written by the checker. Reason: s04 and the ledger show the calculator as tested over 6 copies, but MARKS Record 13 says the confirm is a PASS only with mark 4 (leak) cleared by the owner and mark 5 (swap) unscored on seed 205, 'the report must carry both facts'; the old s04 carried only the swap fact (and called the missing copy 'one file'). Six marks: Amendment 2 (MARKS:78-81) runs 'marks 1-6'; Record 13: marks 1-3 and 6 pass = four. Swap: pass line 99 (MARKS:201); the run's own first reading was 97.1 to 97.6 (raw swap_match 97.11-97.59, recomputed); the Amendment 12 definition was written after those results were read (MARKS:189), so the card says it passed after the scoring rule was corrected, as ch05 s13 does. Leak: this is the calculator's own leak check (another question's thinking swapped in, count answers still right, in points out of 100 over 1,360 familiar questions), a different test from the reader's zero-round leak in s08. Five of six copies read above the limit 5 (5.07 to 5.59); the sixth read exactly 5.00. The big number shows the range over all six copies (5.00 to 5.59). Fixer edits: the leak card and caption 3 are named 'Wrong-thinking leak check' so this limit of 5 (1,360 familiar questions, another question's thinking swapped in) is not mixed up with the reader's zero-round leak limit of 4.62 (s08). Duration 43 -> 44 for the 2 added words.",
+      "atMap": [
+        [
+          0.02,
+          0.0226
+        ],
+        [
+          0.3,
+          0.3408
+        ],
+        [
+          0.64,
+          0.6594
+        ]
+      ]
+    },
+    {
+      "id": "s07",
+      "duration": 33,
+      "heading": "What has never been done",
+      "caption": [
+        {
+          "at": 0.0182,
+          "text": "Never run together: the Gemma reader, outside calculator, any-round calls and learned stop."
+        },
+        {
+          "at": 0.2187,
+          "text": "The first run is planned at 3M, after the size test (does bigger help?) finishes."
+        },
+        {
+          "at": 0.4204,
+          "text": "Bigger sizes are unproven: from 3M to 10M an earlier test gained +0.49 points for ours, +3.77 for plain, but had a setting bug."
+        },
+        {
+          "at": 0.8401,
+          "text": "The English talker and the race are planned. Games are paused."
+        }
+      ],
+      "pieces": [
+        "Gemma reader",
+        "Outside calculator",
+        "Calls in any round",
+        "Learned stop"
+      ],
+      "frame": "never run together",
+      "tag": "picture only",
+      "cards": [
+        {
+          "text": "Bigger sizes, fixed settings",
+          "chip": {
+            "kind": "untested",
+            "label": "not redone"
+          }
+        },
+        {
+          "text": "English talker",
+          "chip": {
+            "kind": "placeholder",
+            "label": "planned, not built"
+          }
+        },
+        {
+          "text": "Race vs a 360M-number model",
+          "chip": {
+            "kind": "placeholder",
+            "label": "planned"
+          }
+        },
+        {
+          "text": "Anything with a game",
+          "chip": {
+            "kind": "placeholder",
+            "label": "paused"
+          }
+        }
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:123-124 (outside calculator and Gemma never run together; first run B3 group 1 at 3M seed 400 after G1), :62-64 (calls at any round built, untested), :36 (learned stop built, never run)",
+        "big-run/PLAN.md:117-120 (B2 +0.49 from 3M to 10M, plain step model +3.77 (shown); B2 ran with 9 letter slots instead of 36 and answers cut to 8 letters), :132 (table row, 6 seeds / 5 seeds), :134 (G1 re-run in progress)",
+        "whole-model-roadmap/8A-10M-RESULT-2026-10-08.md:49 and :68 (3M to 10M: +0.49, CI -0.74 to +1.72; plain step model +3.77 over 5 seeds)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:38 (English talker unbuilt), :167 (games paused); big-run/PLAN.md:35 and :79 (SmolLM2-360M race, planned, needs the open-English talker)"
+      ],
+      "notes": "The pieces sliding together is a picture of the plan, not a measurement. The +0.49 (6 seeds) and +3.77 (plain step model, 5 seeds) are gains from 3M to 10M on pooled-5, from 8A-10M-RESULT:68; the caption now says 'from 3M to 10M ... gained'. FINISHED:128-129 quotes a different pair of earlier 10M-ladder gains (+0.03 and +0.28 vs plain +3.08 and +4.25); these are the seed 400 and 401 rows of the same table (8A-10M-RESULT:62-63), and FINISHED says the register bug means they do not count either way. The caption uses PLAN:117-120, the 'only result on size'. Checker edits: caption 1 'All parts together has never run' -> 'Never run together' (it lists four pieces, not all parts: no English talker exists); caption 2 explains 'size test' in three words (G1 is the removed 'does bigger help' part); caption 4 'games come later' -> 'Games are paused' (FINISHED:167; the card already says paused). Duration 43 -> 45 for the added words. Fixer edits: card chip 'not done' -> 'not redone' (the caption says an earlier test ran with a setting bug; only the fixed-settings run is not done); caption 4 'The talker and the race come later' -> 'The English talker and the race are planned' (cards: English talker not built, race planned; FINISHED:21 and :38 talker about 25M planned; PLAN:35 and :79 race planned) so nothing sounds like a later part of this video. Still open for the coordinator: the +0.49 / +3.77 sentence about the removed size chapter is longer than one clause.",
+      "atMap": [
+        [
+          0.02,
+          0.0182
+        ],
+        [
+          0.22,
+          0.2187
+        ],
+        [
+          0.4,
+          0.4204
+        ],
+        [
+          0.72,
+          0.8401
+        ]
+      ]
+    },
+    {
+      "id": "s08",
+      "duration": 28,
+      "heading": "Open risks, said plainly",
+      "caption": [
+        {
+          "at": 0.0214,
+          "text": "A leak is a right answer with zero thinking rounds. Six Gemma-reader copies averaged 6.59 against a limit of 4.62."
+        },
+        {
+          "at": 0.4688,
+          "text": "Deeper thinking can cost points; the stop may fire too early."
+        },
+        {
+          "at": 0.7105,
+          "text": "The big run's web text stays locked until the sealed test questions are fingerprint-checked."
+        }
+      ],
+      "bars": [
+        {
+          "label": "Average",
+          "value": 6.59,
+          "color": "warn"
+        },
+        {
+          "label": "Limit",
+          "value": 4.62,
+          "color": "placeholder"
+        }
+      ],
+      "labels": {
+        "axis": "Zero-round leak, points out of 100",
+        "one": "Separate run, familiar questions (seed 200): Gemma reader 18.09, same model without it 1.40.",
+        "chip": "limit missed"
+      },
+      "cards": [
+        {
+          "title": "Depth costs points",
+          "text": "On one test, 16 rounds cost 1.2 to 1.9 points."
+        },
+        {
+          "title": "Stop may fire early",
+          "text": "Our guess, never shown."
+        },
+        {
+          "title": "Big-run web text is locked",
+          "text": "Sealed-test fingerprints must be checked first."
+        }
+      ],
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:31 (mean 6.59 against limit 4.62, plain B2 3.62 + 1.0), :111-112 (separate seed-200 in-distribution run: EGE 18.09 against 1.40 for B2V, cause not settled)",
+        "branch origin/claude/custom-reader-talker-4x309r custom_io/results/39-pc-ege-confirm/RESULTS-EG2.md:111 (loops0_mean 6.59, plain_b2_loops0_mean 3.62, mark 4 False); custom_io/PASS-MARKS.md:344 and :375 (18.09; B2V 1.40)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:149-150 (16 rounds cost 1.2-1.9 points on one B2 probe); no-hardcoding/INPUT-UNITS-2026-10-07.md:39 (40-loops-probe, one seed); :66-69 (stop may fire early, suggested); :147-148 (web pool gate)",
+        "big-run/PLAN.md:77, :139 and :184 (B3 3M pool 62% web; protected-panel hash check: no pass on record, must pass before the ship build); data-pool/DATA-POOL-PLAN-2026-10-06.md:162-164 (small-rung web slices already used; hashes not merged yet)"
+      ],
+      "notes": "Leak mark A (reader, missed, not cleared) is a different test from leak mark B (calculator, s05). This scene is about A only. The bars are the six-copy confirm (EGE seeds 202-207; FINISHED:31, addendum 15); 'Six Gemma-reader copies' names whose leak it is. The 18.09 / 1.40 line is a separate seed-200 in-distribution run (2-seed screen, EGE_s200 246 of 1,360 = 18.09; B2V_s200 19 of 1,360 = 1.40), PASS-MARKS addendum 14, so it is labelled as its own run and not as one of the six. The comparison is the same model WITHOUT the Gemma reader (B2V = B2 letters only), not the 'plain model' of the other scenes; the old label 'plain model' was wrong against the GLOSSARY. Rounds: FINISHED:149 says 'On one B2 probe, 16 rounds cost 1.2-1.9 points'. Raw check: probe 40-loops-probe B2_s100 in_dist 89.35 at 8 rounds and 88.21 at 16 (-1.15; -1.87 on no-call questions); B2_s101 -0.85; q33 B2_s200 90.51 -> 88.60 (-1.91) and B2_s201 91.54 -> 89.93 (-1.62). So the cost is 0.85 to 1.91 points over four B2 copies; the card keeps the source's '1.2 to 1.9 on one test' (one probe copy, all questions to no-call questions) and now says 'points'. Web text: FINISHED:147-148 says the pool 'must not be used for training until the protected-panel hashes are merged and checked', but the 3M test pools already hold web rows (PLAN:77: the B3 3M pool is 62% web; DATA-POOL-PLAN:162-164: web slices are 62% of the 8a pools, 'Ben chose start now for 8a; the check must pass before 8c'; PLAN:139 and :184: must pass before the ship build). The caption and card therefore say 'the big run's web text'. Checker edits: caption 1 names the Gemma reader and the 6 copies; the 'one' label no longer calls the without-Gemma model 'plain'; card 1 adds 'points'; card 3 and caption 3 scoped to the big run; card 2 title shortened for the reading budget. 'Out of 100' follows the leak being a share of questions. Fixer edit (JS only): the two leak bars are drawn on the stated 0 to 100 scale (max 100, same scale as s03), so 6.59 and 4.62 show as slivers; values unchanged.",
+      "atMap": [
+        [
+          0.0133,
+          0.0214
+        ],
+        [
+          0.337,
+          0.4688
+        ],
+        [
+          0.6607,
+          0.7105
+        ]
+      ]
+    },
+    {
+      "id": "s10",
+      "duration": 33,
+      "heading": "The next gates, in order",
+      "caption": [
+        {
+          "at": 0.0182,
+          "text": "In order: the size test finishes, then a test of experts (many small specialist networks, not covered here)."
+        },
+        {
+          "at": 0.2827,
+          "text": "Then a 100M fit check (memory and speed) and the four pieces together at 3M."
+        },
+        {
+          "at": 0.5,
+          "text": "Then hand-written pieces are replaced, 10M and 30M follow, and a results readout is planned for Oct 31."
+        },
+        {
+          "at": 0.7697,
+          "text": "One big run waits for clear results and for the plan to be 90% sure it passes its marks."
+        }
+      ],
+      "chip": "plan only: dates are suggestions",
+      "steps": [
+        "Size test (G1)",
+        "Experts test",
+        "100M fit check",
+        "Four pieces, 3M",
+        "10M, then 30M",
+        "Readout, Oct 31 (planned)",
+        "One big run",
+        "Rented compute: owner's call"
+      ],
+      "src": [
+        "big-run/PLAN.md:40-41 (G1 finishes, then the post-G1 chain in order: GX stage 1, fc100 fit check, g2c3, B3 group 1 at 3M seed 400), :43 (group 2 replaces hand code, then B3 10M with groups 1 and 2), :44 (B3 30M), :45 (10-31 ladder readout), :29 (fit check = memory and speed)",
+        "big-run/PLAN.md:53 (the 90% bar: the plan author's reading of a relayed rule), :28 and :50 (no rentals; Vast credit is the owner's call)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:24-25 (no rentals; the owner: demonstrable results first), :136-139 (experts: GX stage 1 on the PC), :123-124 (first run B3 group 1 at 3M after G1), :100-102 (group 1 = the four pieces + 2,000-letter inputs; group 2 = the hand-code replacements)",
+        "big-run/PLAN.md:62-64 (the SCORECARD section; the brief's 'PLAN sec. 5' is really the G1 gate at line 197)"
+      ],
+      "notes": "G1: as of Oct 9 its 3M seed 401 is finishing and the 10M arms follow (PLAN:40). The seed-401 files in the snapshot belong to earlier 8a runs, not G1. The 90% bar is the plan author's reading of a relayed rule (PLAN:53). Every date is 'planned'; the Nov to Dec range for the 100M run (PLAN:46-49) is left out as an estimate. The PLAN.md revision note of 10-10 says the G1 gate moves out by 2-3 days; the video is dated Oct 9 and promises no dates. Checker edits: (1) 'the experts test' was a pointer to the removed ideas chapter; it now says what it is in six words and that it is not covered here (cut rule). (2) 'all parts together at 3M' -> 'the four pieces together at 3M': B3 group 1 is the Gemma reader + outside calculator + any-round calls + learned stop (+2,000-letter inputs), not all parts (no English talker, hand-written pieces still on the path). (3) The chain skipped B3 group 2 (replace hand-written pieces), which PLAN:43 puts before B3 10M; added to caption 3. (4) 'team readout' -> 'results readout' (PLAN:45: the ladder readout is the 'demonstrable results' the owner asked to see). (5) 90% clause now says what the 90% is about (PLAN:53: 'does what its written marks say'); 'rented compute' stays in the last box (PLAN:28). (6) 'G1 size test' -> 'Size test (G1)' (plain name first). The two-box fit check text 'memory and speed' is PLAN:29. g2c3 (the plain control at the B3 caps) is left out; it is a test arm, not a gate. Durations 39 -> 45. Fixer edit: chip 'plan only, no dates promised' -> 'plan only: dates are suggestions', so it no longer contradicts the Oct 31 box; PLAN:47 labels every date in the path 'suggested'. The Oct 31 box and caption are unchanged.",
+      "atMap": [
+        [
+          0.02,
+          0.0182
+        ],
+        [
+          0.22,
+          0.2827
+        ],
+        [
+          0.44,
+          0.5
+        ],
+        [
+          0.66,
+          0.7697
+        ]
+      ]
+    },
+    {
+      "id": "s12",
+      "duration": 31,
+      "heading": "What to remember",
+      "caption": [
+        {
+          "at": 0.0194,
+          "text": "The thinking does the work, shown on one copy at the smallest size."
+        },
+        {
+          "at": 0.2445,
+          "text": "The calculator can sit outside, shown on 6 copies at 3M, with two checks not clean. Most of the rest is built or planned."
+        },
+        {
+          "at": 0.5695,
+          "text": "The plan's judgment: nothing is ready to buy. It works at 3M, but nobody has shown it improves faster with size than a plain model."
+        }
+      ],
+      "parts": [
+        "Reads the question.",
+        "Thinks in rounds.",
+        "Outside tool: does exact sums.",
+        "Rings when done.",
+        "Stand-in today. Writes words."
+      ],
+      "chip": "the plan's own judgment",
+      "design": "New design, being built, not tested: works in turns; the talker's line calls the calculator; the whole reader reads the reply.",
+      "notes_on": [
+        "Nothing is ready to buy yet.",
+        "Plan's count on Oct 9: 0 of 9 goals fully green. Its guess for Oct 31: 5 or 6."
+      ],
+      "src": [
+        "kit/GLOSSARY.md (the four parts, the outside calculator and the one analogy)",
+        "big-run/PLAN.md:115-116 (bottom line 1: nothing is ready to buy; it works at 3M, nobody has shown it gets better with size faster than a plain model), :82 ('Today: 0 of 9 fully green'), :89 (realistic read at Oct 31: 5 or 6)",
+        "big-run/PLAN.md:74 and :133-134 (size claim untested for the model as specified); architecture/FINISHED-MODEL-2026-10-09.md:109-110 and :106-108"
+      ],
+      "notes": "Both numbers are the plan's own judgment, labelled as such on screen. No ch00 chapter file exists in the worktree; the five-part sentences follow the glossary. Checker edits: (1) caption 2 had 'Sleep is a promising research result': sleep is not in this video (no kept chapter mentions it) and the plan calls it 'Mixed; not on the run's path' (PLAN:140), not promising, so the sentence is dropped rather than left dangling. (2) 'The calculator can sit outside' now carries its strength (6 copies, 3M, two checks not clean: s05). (3) 'No recipe has shown both halves of demonstrably works' was unexplained; replaced by the two halves in PLAN:115-116 (it works at 3M; not shown to improve faster with size than a plain model). (4) 'Plan's own judgment' -> 'The plan's judgment' in the caption (the chip keeps 'the plan's own judgment'). Duration 42 -> 45. Fixer edit (JS only): added one status chip per part under the one-liners (kit default words: tested, tested, tested, built never tested, placeholder; same statuses as s01), so 'Most of the rest is built or planned' is visible; plan chip and notes moved down to make room.",
+      "atMap": [
+        [
+          0.0133,
+          0.0194
+        ],
+        [
+          0.337,
+          0.2445
+        ],
+        [
+          0.6607,
+          0.5695
+        ]
+      ]
+    }
+  ]
+}

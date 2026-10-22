@@ -1,0 +1,235 @@
+{
+ "reviews": {
+  "ch00": {
+   "chapter": "ch00",
+   "checked": 35,
+   "issues": [
+    {
+     "id": "ch00.s01.c2",
+     "kind": "meaning-changed",
+     "problem": "The caption says 'Two of its goals' (there may be more), but the spoken text says 'It has two goals', implying these are the only two.",
+     "fixed_text": "Two of its goals are skills and careful thinking first, then learning from only a few examples."
+    }
+   ]
+  },
+  "ch01": {
+   "chapter": "ch01",
+   "checked": 52,
+   "issues": []
+  },
+  "ch03": {
+   "chapter": "ch03",
+   "checked": 46,
+   "issues": [
+    {
+     "id": "ch03.s05.c2",
+     "kind": "meaning-changed",
+     "problem": "The spoken line 'for words... for reading, and 768' drops 'word table', 'reading layers (a transformer)' and the 'step widening rows to 768', so 768 sounds like a third part count, and the checker already errors (about 15 s against a 9.8 s slot). The caption is too long to say at all, so no wording that keeps all three numbers fits.",
+     "fixed_text": "134,217,728 are a word table. 136,784,896 are reading layers, plus a step to 768."
+    },
+    {
+     "id": "ch03.s06.c2",
+     "kind": "lost-caveat",
+     "problem": "The line says only '196,864 at 256. 393,728 at 512', losing that these are learned numbers and that 256 and 512 are the width, and it already errors on time (10.6 s against a 10.2 s slot).",
+     "fixed_text": "At width 256, 196,864 learned numbers. At 512, 393,728."
+    }
+   ]
+  },
+  "ch04": {
+   "chapter": "ch04",
+   "checked": 55,
+   "issues": [
+    {
+     "id": "ch04.s11.c3",
+     "kind": "lost-caveat",
+     "problem": "The word 'alone' was dropped, so '21 blocks give 97.1 million' sounds like the full model size rather than the blocks only.",
+     "fixed_text": "Our math: 21 blocks alone give 97.1 million. Older plan, 30 blocks: about 139 million."
+    },
+    {
+     "id": "ch04.s13.c2",
+     "kind": "meaning-changed",
+     "problem": "A bare list of '44 notes, 81 letters, 27 slots' no longer says that each note looks at 81 letters and 27 slots, so it is hard to follow how it gives 4,752.",
+     "fixed_text": "Notes look at letters. Roughly 44 notes, each seeing 81 letters and 27 slots: 4,752 checks."
+    },
+    {
+     "id": "ch04.s12.c3",
+     "kind": "meaning-changed",
+     "problem": "'The whole model at 100 million' drops the word 'step', so it sounds like the model has 100 million numbers while also saying 373.1 million, which contradicts itself.",
+     "fixed_text": "As built so far, without the planned talker, the whole model at the 100 million step is 373.1 million numbers, borrowed reader included."
+    }
+   ]
+  },
+  "ch06": {
+   "chapter": "ch06",
+   "checked": 42,
+   "issues": [
+    {
+     "id": "ch06.s03.c3",
+     "kind": "lost-caveat",
+     "problem": "The spoken line drops 'Trained at' and 'With ... rounds', so it is not clear that 73.01 is the trained setting and the others are turned-down settings, and the bare list of numbers is hard to follow.",
+     "fixed_text": "Trained at 12 rounds: 73.01. At 2: 29.30. At 1: 20.00. At 0: 0.66."
+    }
+   ]
+  },
+  "ch07": {
+   "chapter": "ch07",
+   "checked": 45,
+   "issues": []
+  },
+  "ch05": {
+   "chapter": "ch05",
+   "checked": 52,
+   "issues": [
+    {
+     "id": "ch05.s14.c1",
+     "kind": "meaning-changed",
+     "problem": "The caption says to swap in another question's thinking, but the spoken text says only 'other thinking', which is vague about whose thinking is swapped in.",
+     "fixed_text": "Swap in another question's thinking, count right answers out of 100. 1,360 questions."
+    }
+   ]
+  },
+  "ch09": {
+   "chapter": "ch09",
+   "checked": 33,
+   "issues": [
+    {
+     "id": "ch09.s09.c2",
+     "kind": "lost-caveat",
+     "problem": "The word 'borrowed' before 'Gemma reader' was dropped, and it is no longer clear that 4.49 and 4.34 are the with/without pair of the other copy 201.",
+     "fixed_text": "Copy 200: 18.09 with the borrowed Gemma reader, 1.40 without. Copy 201: 4.49, 4.34."
+    }
+   ]
+  },
+  "ch14": {
+   "chapter": "ch14",
+   "checked": 28,
+   "issues": []
+  },
+  "ch08": {
+   "chapter": "ch08",
+   "checked": 39,
+   "issues": [
+    {
+     "id": "ch08.s08.c3",
+     "kind": "lost-caveat",
+     "problem": "The spoken line drops that these are skills rows and that it is the earlier 3M models' data, so it sounds like a claim about the current run; 'Earlier 3M' is also clipped.",
+     "fixed_text": "Earlier 3M: 124,991 of 200,000 rows, 62.5%, no steps."
+    },
+    {
+     "id": "ch08.s10.c3",
+     "kind": "lost-caveat",
+     "problem": "The memory spill is spoken as a bare note ('memory spill suggested'), and it is unclear that it is the suggested cause for the other copy's 16.3 hours; also the division is clipped.",
+     "fixed_text": "6.51 over 2.38 is about 2.7 times longer. Other 3M: 16.3 hours. Memory spill suggested."
+    }
+   ]
+  }
+ },
+ "writes": {
+  "ch00": {
+   "chapter": "ch00",
+   "segments_written": 35,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch00.s09.c1 (dropped 'A result file exists')",
+    "ch00.s14.c1 (dropped 'the share of questions answered right')"
+   ]
+  },
+  "ch01": {
+   "chapter": "ch01",
+   "segments_written": 53,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch01.s15.c1 (dropped the word reader and the Green label to fit the time; all numbers kept)",
+    "ch01.s15.c2 (kept in full but rewritten shorter: outside calculator matched the old inside one)"
+   ]
+  },
+  "ch03": {
+   "chapter": "ch03",
+   "segments_written": 46,
+   "checker_errors": 2,
+   "heavily_shortened": [
+    "ch03.s05.c2 (UNRESOLVED ERROR: the caption's three numbers 134,217,728, 136,784,896 and 768 alone take about 13.8 s to say, and the slot allows 9.3 s. Dropping a number would also be an error. Current text is the shortest I kept: '134,217,728 for words. 136,784,896 for reading, and 768.' It needs a longer slot or a number cut from the caption.)",
+    "ch03.s06.c2 (UNRESOLVED ERROR: the numbers 256, 196,864, 512 and 393,728 take about 10.6 s, and the slot allows 9.7 s. Current text: '196,864 at 256. 393,728 at 512.' It needs a slightly longer slot or a shorter caption.)",
+    "ch03.s09.c1 (shortened: dropped 'letter-cipher' and 'a separate training run')",
+    "ch03.s07.c2 (shortened: dropped 'finished design' and the 'growth test' article)",
+    "ch03.s11.c3 (shortened: T1SDR and G1 name only, without 'growth test' for G1)",
+    "ch03.s05.c2 (also dropped the 'transformer' wording and the 'one row per word piece' explanation)",
+    "ch03.s09.c4 warning: 'one' and 'two' come from 'only two copies, one kind of question', which is on screen ('2 copies, one kind'); a false alarm"
+   ]
+  },
+  "ch04": {
+   "chapter": "ch04",
+   "segments_written": 55,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch04.s11.c2 (dropped 'its width' phrasing and 'learned'; says 'One block holds 4,624,281 numbers, at width 512.')",
+    "ch04.s11.c3 (dropped 'alone' and 'which would give')",
+    "ch04.s13.c2 (compressed to 'Roughly 44 notes, 81 letters, 27 slots: 4,752 checks a round'; dropped 'each looking at' and 'number')",
+    "ch04.s13.c3 (dropped 'the' and 'that is'; 'Older count: 4,752 times 8 rounds is 38,016')",
+    "ch04.s14.c1 (dropped 'at the smallest size' and 'completed' from this segment; 'one size' is still said in s14.c3)",
+    "ch04.s07.c5 (shortened to 'widens to 4.8 times'; dropped 'as many numbers')"
+   ]
+  },
+  "ch06": {
+   "chapter": "ch06",
+   "segments_written": 42,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch06.s03.c3 (caption too long to say; kept all numbers but dropped the words 'trained' and 'rounds' after the first)",
+    "ch06.s06.c4 (caption too long; dropped 'The stop switch has', now 'It has')"
+   ]
+  },
+  "ch05": {
+   "chapter": "ch05",
+   "segments_written": 52,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch05.s12.c3 (slot 8.0 s, number-heavy: dropped 'questions kept aside' and the word 'range', no punctuation, all numbers and 'likely' kept)",
+    "ch05.s05.c4 (dropped 'written' from 'written operands' and 'separate'; all numbers kept, T1SDR named)",
+    "ch05.s13.c4 (shortened to 'First reading: 97.1 to 97.6. Scoring was corrected after studying the misses.')",
+    "ch05.s14.c1 (shortened to 'swap in other thinking, count right answers out of 100. 1,360 questions.')",
+    "ch05.s12b.c1 (dropped the word 'calculator' before 'Outside' and 'Inside')",
+    "ch05.s13.c2 (shortened 'not counted' to 'don't count')"
+   ]
+  },
+  "ch07": {
+   "chapter": "ch07",
+   "segments_written": 45,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch07.s07.c2: caption has four large numbers and no room. Cut to '100M: 373.1, 271.0 borrowed, 102.1 trained.' Dropped 'design', 'in all', 'frozen reader (Gemma)', the M units on the last three numbers and the words 'not built' / 'as built'. 'The English talker is not built' was moved to the start of s07.c3, so the checker warns about the missing negation and built words in c2. This is a real reason, not a false alarm. A reviewer should check that the missing M units read acceptably.",
+    "ch07.s04.c1: dropped 'with an outside calculator'. Kept 6, 3-million-number, T1SDR and 91.5%.",
+    "ch07.s09.c2: shortened to 'Thinking on scored 73.01, off 0.66, on 6,040 kept-aside questions.' ('Off scored' became 'off'.)",
+    "ch07.s08.c2: dropped the word 'language' before 'model'. Kept 350-million-number, 66.1, 1.2 billion and 92.6.",
+    "ch07.s06.c2: shortened to 'were over 8' instead of 'were longer than 8'.",
+    "ch07.s09.c1: dropped 'calculator inside' to fit. Kept 3M and 12 rounds."
+   ]
+  },
+  "ch09": {
+   "chapter": "ch09",
+   "segments_written": 33,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch09.s05.c2 (dropped 'does not rise' wording to 'No gain', kept all numbers)",
+    "ch09.s09.c2 (dropped the word 'borrowed' and 'And' in Copy 201 numbers; kept all numbers)",
+    "ch09.s04.c1 and ch09.s04.c2 (trimmed 'at 12' and 'Turn the rounds dial down')"
+   ]
+  },
+  "ch08": {
+   "chapter": "ch08",
+   "segments_written": 39,
+   "checker_errors": 0,
+   "heavily_shortened": [
+    "ch08.s03.c3 (kept all four numbers, dropped 'row draws' wording and the 'rows come round again' sentence; now reads '24,000 by 256 is 6,144,000 of 1,418,702', which is terse)",
+    "ch08.s08.c3 (reduced to 'Earlier 3M models: 124,991 of 200,000 rows, 62.5%, no steps'; dropped 'skills')",
+    "ch08.s10.c3 (terse: '6.51 over 2.38: about 2.7 times longer. Other 3M: 16.3 hours, memory spill suggested')"
+   ]
+  },
+  "ch14": {
+   "chapter": "ch14",
+   "segments_written": 27,
+   "checker_errors": 0,
+   "heavily_shortened": []
+  }
+ }
+}
