@@ -126,7 +126,7 @@ def test_ledger_shared_across_instances(g):
 
 
 def test_no_borrowing_between_stages(g):
-    fill(g, "1", 19.999)
+    fill(g, "1", 39.999)
     c = FakeClient()
     with pytest.raises(MoneyStop, match="stage (cap|stop)"):
         GuardedClient(c, g).create("1", "t", **params(OPUS, max_tokens=8000))
@@ -136,11 +136,11 @@ def test_no_borrowing_between_stages(g):
 
 
 def test_stage1_stop_is_16_under_a_20_cap():
-    assert P["stages"]["1"]["cap_usd"] == 20.0 and P["stages"]["1"]["stop_usd"] == 16.0
+    assert P["stages"]["1"]["cap_usd"] == 40.0 and P["stages"]["1"]["stop_usd"] == 30.0
 
 
 def test_stage1_call_refused_past_the_stop_even_though_under_the_cap(g):
-    fill(g, "1", 15.9)
+    fill(g, "1", 29.9)
     c = FakeClient()
     with pytest.raises(MoneyStop, match="stage stop"):
         GuardedClient(c, g).create("1", "t", **params(OPUS, max_tokens=8000))   # worst case > $0.10

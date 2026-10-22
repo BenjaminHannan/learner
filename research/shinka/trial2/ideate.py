@@ -30,6 +30,7 @@ OUT = SHINKA / "results" / "trial2"
 STAGE = "1"
 MODELS = {"opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5-5"}
 MAX_TOKENS = 24000
+REDO_TOKENS = 64000   # --redo: re-send only the calls that ended at max_tokens or refused, with room to finish
 EFFORT = "high"
 G1_MIN_CARDS = 60
 FIELDS = ("core_operation", "mechanism", "why_novel_names", "nearest_known", "prediction", "fits_interface")
@@ -110,8 +111,8 @@ def user_prompt(lens: str, found: list[str] | None) -> str:
     return base
 
 
-def params(model_key: str, lens: str, found: list[str] | None = None) -> dict:
-    return {"model": MODELS[model_key], "max_tokens": MAX_TOKENS, "system": system_prompt(),
+def params(model_key: str, lens: str, found: list[str] | None = None, max_tokens: int | None = None) -> dict:
+    return {"model": MODELS[model_key], "max_tokens": max_tokens or MAX_TOKENS, "system": system_prompt(),
             "messages": [{"role": "user", "content": user_prompt(lens, found)}],
             "output_config": {"effort": EFFORT}}
 
@@ -152,11 +153,12 @@ def pick_far_lenses(cards: list[dict], k: int = 6) -> list[str]:
     return sorted(score, key=lambda l: (score[l], LENSES.index(l)))[:k]
 
 
-def run_batch(gc: GuardedClient, tag: str, jobs: list[tuple[str, str, list[str] | None]], poll_s: float):
+def run_batch(gc: GuardedClient, tag: str, jobs: list[tuple[str, str, list[str] | None]], poll_s: float,
+              max_tokens: int | None = None, origin: list[str] | None = None):
     requests, meta, models = [], {}, {}
     for n, (mk, lens, found) in enumerate(jobs):
         cid = f"{tag}-{n:02d}"
-        requests.append({"custom_id": cid, "params": params(mk, lens, found)})
+        requests.append({"custom_id": cid, "params": params(mk, lens, found, max_tokens)})
         meta[cid], models[cid] = (mk, lens), MODELS[mk]
     batch, hold = gc.batch_submit(STAGE, tag, requests)
     print(f"[{tag}] submitted {len(requests)} calls, batch {batch.id}", flush=True)
@@ -167,7 +169,8 @@ def run_batch(gc: GuardedClient, tag: str, jobs: list[tuple[str, str, list[str] 
         got = parse_cards(text)
         mk, lens = meta[cid]
         for c in got:
-            cards.append({**c, "lens": lens, "model": mk, "pass": tag, "custom_id": cid})
+            cards.append({**c, "lens": lens, "model": mk, "pass": tag, "custom_id": cid,
+                          **({"redo_of": origin[int(cid.rsplit("-", 1)[1])]} if origin else {})})
         if not got:
             lost.append({"custom_id": cid, "stop_reason": msg.stop_reason, "tail": text[-200:]})
     missing = sorted(set(meta) - set(results))
@@ -180,10 +183,39 @@ def g1(cards: list[dict]) -> dict:
             "G1_pass": len(yes) >= G1_MIN_CARDS}
 
 
+def redo(gc, guard, pass1, poll_s):
+    """Re-send the calls of the last real run that returned no card (truncated or refused), same prompts, bigger budget."""
+    prev = json.loads((OUT / "stage1_summary_real.json").read_text())
+    old = [json.loads(x) for x in (OUT / "stage1_cards_real.jsonl").read_text().splitlines() if x.strip()]
+    found = [c["core_operation"] for c in old if c["pass"] == "s1-pass1"]
+    far_jobs = [(mk, l, found) for l in prev["calls_info"]["far_lenses"] for mk in ("opus", "sonnet")]
+    jobs, origin = [], []
+    for kind, table in (("pass1", pass1), ("far", far_jobs)):
+        for x in prev["calls_info"][kind]["no_cards"]:
+            cid = x["custom_id"]
+            jobs.append(table[int(cid.rsplit("-", 1)[1])])
+            origin.append(cid)
+    stopped = None
+    try:
+        new, info = run_batch(gc, "s1-redo", jobs, poll_s, max_tokens=REDO_TOKENS, origin=origin)
+    except MoneyStop as e:
+        new, info, stopped = [], {}, str(e)
+        print("MONEY STOP:", e, flush=True)
+    allc = [{k: v for k, v in c.items()} for c in old] + new
+    tag = "fake" if isinstance(getattr(gc, "client", None), object) and gc.client.__class__.__name__ == "FakeClient" else "real"
+    (OUT / f"stage1_cards_final_{tag}.jsonl").write_text("".join(json.dumps(c) + "\n" for c in allc))
+    summary = {"mode": tag + "-redo", "money_stop": stopped, "stage1_spent_usd": guard.spent(STAGE), "redo_info": info,
+               "redo_tokens": REDO_TOKENS, "redone": origin, **g1(allc),
+               "cards_by_lens": {l: sum(c["lens"] == l for c in allc) for l in LENSES}}
+    (OUT / f"stage1_summary_final_{tag}.json").write_text(json.dumps(summary, indent=2))
+    print(json.dumps({k: v for k, v in summary.items() if k != "cards_by_lens"}, indent=2))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--go", action="store_true", help="the real run (spends money, within the guard)")
     ap.add_argument("--fake", action="store_true", help="fake client, temp ledger, no network")
+    ap.add_argument("--redo", action="store_true", help="re-send the failed calls of the last real run with REDO_TOKENS")
     ap.add_argument("--poll", type=float, default=30.0)
     a = ap.parse_args()
 
@@ -206,6 +238,8 @@ def main():
         gc = prosecute.make_client(guard)
 
     pass1 = [(mk, lens, None) for lens in LENSES for mk in ("opus", "sonnet")]
+    if a.redo:
+        return redo(gc, guard, pass1, a.poll)
     OUT.mkdir(parents=True, exist_ok=True)
     cards, info, stopped = [], {}, None
     try:
