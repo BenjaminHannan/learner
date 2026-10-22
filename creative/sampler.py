@@ -12,11 +12,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from custom_io.data import Dataset, collate, to_device
+from custom_io.models import ledger as lg
 from custom_io.models.ledger import ADD, SUB, execute, value_code
 from custom_io.models import progparse as pp
 from creative.programs import COMM, M, N_RES, R0, Try, raw_key
 
-N_NUM, N_REG = pp.N_NUM, 9
+N_NUM = pp.N_NUM        # the register count is read from lg.N_REG at call time: custom_io/caps.py changes it (Bid C: 36), and it was a hard-coded 9 here
 C1_LEVEL = 4        # C1's try sampler (decided 10-06): the used-number + exact-division mask of creative/legal.py. Plain = level 0. C2 does NOT use it.
 
 
@@ -64,7 +65,7 @@ def sample_run(model, batch, temperature=1.0, greedy=False, gen=None, first=None
     S0 = S0 * valid[:, :R_, None]
     Rs = torch.zeros(B, pp.N_RES, model.d, device=dev, dtype=S0.dtype)
     kvx = [b.kv_of(X + model.src.weight[1]) for b in model.core]
-    Z = torch.cat([model.ctrl.weight, model.reader.place.weight[:N_REG]]).expand(B, -1, -1)
+    Z = torch.cat([model.ctrl.weight, model.reader.place.weight[:lg.N_REG]]).expand(B, -1, -1)
     ops, As, Bs = [], [], []
     for t in range(model.n_loops if loops is None else loops):
         ts = min(t, model.n_loops - 1)
