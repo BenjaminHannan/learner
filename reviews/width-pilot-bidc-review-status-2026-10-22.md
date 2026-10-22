@@ -38,3 +38,7 @@ PR [BenjaminHannan/learner#95](https://github.com/BenjaminHannan/learner/pull/95
   - The MANIFEST check in `rules_real.load_split` is an `assert`, which `python -O` strips.
   - Report display: a strict comparison can hold where the report shows the statistic equal to the bar at 9 digits.
 - **Status:** the review rounds are exhausted. The fixes after this round (6b1cf5d6f; train.py SystemExit) are unreviewed. **The code is PARKED** for the coordinator.
+
+## Final blocking-only review (coordinator 10-22; fresh reviewer) on 6b1cf5d6f and e0d65adb6
+
+**Blocking findings: 0.** Under the coordinator's ruling the code now **counts as shipped**: `claude/bidc-calibration-drafts` at e0d65adb6, and `pilot_bars` at 6b1cf5d6f. Open non-blocking items stay as they are, with no code change (coordinator). Instead the run card requires that the P_0 record and the gate run on BensPC from the same script, with no OS update in between and the MKL environment set identically: `reviews/width-pilot-bidc/PC-JOB-bidc-gate-record.md`.
