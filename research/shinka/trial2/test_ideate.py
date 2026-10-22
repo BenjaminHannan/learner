@@ -38,7 +38,7 @@ def test_whole_pipeline_on_fake_client_stays_under_stop(tmp_path):
 def test_batch_refused_whole_when_worst_case_does_not_fit(tmp_path):
     g = Guard(ledger=tmp_path / "l.jsonl")
     with g._locked():
-        g._write([{"t": 0, "stage": "1", "model": "x", "tag": "fill", "usd": 4.0}])
+        g._write([{"t": 0, "stage": "1", "model": "x", "tag": "fill", "usd": 15.0}])
     fc = fake_client.FakeClient()
     with pytest.raises(MoneyStop):
         ideate.run_batch(GuardedClient(fc, g), "t", [("opus", "l", None)] * 24, 0.0)
