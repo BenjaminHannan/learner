@@ -21,3 +21,20 @@ PR [BenjaminHannan/learner#95](https://github.com/BenjaminHannan/learner/pull/95
   - a machine mismatch exits **4 (REFUSED)**, distinct from FAIL 1;
   - **P_0 must be trained, or at least its `--record-eval` made, on the gate machine (BensPC)**;
   - a kernel update on BensPC would refuse old records (`platform.platform()` includes the kernel version).
+
+## Extra final round (allowed by the coordinator 10-22), on c07afac1c and ce5cbef2e only
+
+- **Gate commit c07afac1c: 0 blocking.**
+  - A record from another machine can never pass; it is REFUSED with exit 4.
+  - The ids and rows-file sha256 checks run before any comparison.
+  - `.json` records are refused.
+  - The guard before training covers a missing `--caps`, a missing rows file, too few rows, and a MANIFEST mismatch.
+- **pilot_bars ce5cbef2e: 1 blocking.** With a bar at 0, such as the card's worst-seed rule "d_i > 0 on every seed-index", float noise from the inputs could flip the verdict (reproduced: a mean of 4.6e-17 fired `mean > 0`). **Fixed once in 6b1cf5d6f:** the tolerance is now 1e-12 × max(|statistic|, |bar|, largest |arm mean|). There is a regression test, and 25/25 pilot_bars tests pass.
+- **Also fixed, non-blocking:** the post-training `--record-eval` wrapper now also catches SystemExit, so RESULT.json survives a short rows file. bidc commit after c07afac1c; 19/19 targeted gate tests pass.
+- **Non-blocking items left open, for the coordinator:**
+  - `platform.platform()` includes the kernel or Windows build, so an OS update between P_0's training and the gate makes check 3 REFUSED for good. Relaxing this to CPU, torch and thread fields only is a one-line change if ruled.
+  - MKL/oneDNN environment variables (e.g. `MKL_CBWR`) and `torch.get_float32_matmul_precision()` are not in the machine block, so an environment mismatch would read as FAIL rather than REFUSED. Mitigation: run `record` and the gate from the same shell script.
+  - The guard does not check that the `--record-eval` directory exists or that `--record-n` equals the gate's `--n`.
+  - The MANIFEST check in `rules_real.load_split` is an `assert`, which `python -O` strips.
+  - Report display: a strict comparison can hold where the report shows the statistic equal to the bar at 9 digits.
+- **Status:** the review rounds are exhausted. The fixes after this round (6b1cf5d6f; train.py SystemExit) are unreviewed. **The code is PARKED** for the coordinator.
