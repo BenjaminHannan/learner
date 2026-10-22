@@ -1,6 +1,6 @@
 """python3 -m pytest creative/tests/test_make_c2c.py   (CPU, about 20 s; no model)
 Bid C draft, creative/make_c2c.py. Every generation here uses a test seed (never 93801) and a temp dir; creative/data/c2c is never written."""
-import json, os, tempfile
+import hashlib, json, os, tempfile
 import pytest
 from creative import make_c2c as M, rules_real as R
 from creative.c2b import load_test
@@ -107,3 +107,49 @@ def test_full_size_matches_the_c2_test_counts():
         assert man['_spec']['disjoint_from_c2']['prompt_overlap'] == 0 and man['_spec']['length_check']['answers_over_8_chars'] == 0
         assert M.check(os.path.join(d, 'c2c'))['n'] == 512
     assert not os.path.exists('creative/data/c2c')
+
+
+def test_check_exits_nonzero_on_overlap_or_long_rows(capsys):
+    """N9: --check is a gate, not a printout: any overlap with C2 or any row over the old caps -> exit 1."""
+    with tempfile.TemporaryDirectory() as d:
+        M.make(d, seed=4242, counts=SMALL)
+        assert M.main(['--check', d]) is None and M.check(d)['problems'] == []
+        rows = [json.loads(l) for l in open(os.path.join(d, 'test.jsonl'))]
+        c2 = R.load_split('creative/data/c2', 'dev')[0]
+        def rewrite(new_rows):
+            with open(os.path.join(d, 'test.jsonl'), 'w') as f:
+                f.write(''.join(json.dumps(r, sort_keys=True) + '\n' for r in new_rows))
+            man = json.load(open(os.path.join(d, 'MANIFEST.json')))
+            man['test']['sha256'] = hashlib.sha256(open(os.path.join(d, 'test.jsonl'), 'rb').read()).hexdigest()
+            json.dump(man, open(os.path.join(d, 'MANIFEST.json'), 'w'))
+        rewrite(rows[:-1] + [dict(c2, id='c2c:test:99999')])                           # a C2 question smuggled in
+        with pytest.raises(SystemExit) as e:
+            M.main(['--check', d])
+        assert e.value.code == 1 and any(x.startswith('prompt_overlap') for x in M.check(d)['problems']) and 'key_overlap' in capsys.readouterr().err
+        rewrite(rows[:-1] + [dict(rows[-1], answer='1' * 9)])
+        with pytest.raises(SystemExit) as e:
+            M.main(['--check', d])
+        assert e.value.code == 1 and M.check(d)['problems'] == ['answers_over_8_chars = 1']
+        rewrite(rows[:-1] + [dict(rows[-1], prompt='Examples: ' + '; '.join(['1 -> 1'] * 40) + '. Now 5 -> ?')])
+        assert M.check(d)['problems'] == ['prompts_over_208_chars = 1']
+
+
+def test_make_refuses_with_explicit_raises_not_asserts(monkeypatch):
+    """N9: the correctness guards in make() must survive python -O: SystemExit, nothing written."""
+    monkeypatch.setattr(M, 'overlap_report', lambda rows, c2: dict(c2_rows=0, prompt_overlap=1, key_overlap=0, duplicate_prompts_within=0))
+    with tempfile.TemporaryDirectory() as d:
+        with pytest.raises(SystemExit, match='REFUSED.*overlaps'):
+            M.make(os.path.join(d, 'c2c'), seed=4242, counts=SMALL)
+        assert not os.path.exists(os.path.join(d, 'c2c'))
+    man, c2 = M.load_c2()
+    use = M.usable_params(man)
+    with pytest.raises(SystemExit, match='cannot fill'):
+        M.draw(use, dict(square=10), 4242, c2, max_rounds=0)
+    bad = json.loads(json.dumps(man))
+    bad['_spec']['usable_counts']['affine'] += 1
+    with pytest.raises(SystemExit, match='usable parameter sets'):
+        M.usable_params(bad)
+    bad = json.loads(json.dumps(man))
+    bad['_spec']['kind_seal'] = 'x'
+    with pytest.raises(SystemExit, match='kind rules changed'):
+        M.usable_params(bad)

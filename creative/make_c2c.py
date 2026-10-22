@@ -1,7 +1,7 @@
 """C2c, the fresh sealed test for Bid C (reviews/width-pilot-bid-C-card, sec. 2a (b)). CPU, no model.
 
   python3 -m creative.make_c2c --out creative/data/c2c            writes OUT/test.jsonl and OUT/MANIFEST.json; refuses to overwrite either
-  python3 -m creative.make_c2c --check creative/data/c2c          re-reads a written test: sha256, length check, disjointness from every C2 split (no writing)
+  python3 -m creative.make_c2c --check creative/data/c2c          re-reads a written test: sha256, length check, disjointness from every C2 split (no writing; exits 1 if any overlap or length count is non-zero)
 
 The generator is creative.rules_real.make_questions, the one that built creative/data/c2 (rules_real.build_splits(seed=0), the default; C2's MANIFEST.json does not record its
 seed, so SEEDS_USED_BY_C2 names it), on the same five held-out kinds, the same kind rules (representable instances only, 3 examples + 1 query, the examples pin the query) and the
@@ -62,14 +62,17 @@ def load_c2(c2_dir=C2_DIR):
 def usable_params(man):
     """{kind: [params]} for the held-out kinds from C2's MANIFEST; asserts they match the manifest's counts and the code's kind seal."""
     spec = man['_spec']
-    assert spec['kind_seal'] == R.KIND_SEAL, 'the kind rules changed since C2 was sealed'
+    if spec['kind_seal'] != R.KIND_SEAL:
+        raise SystemExit('REFUSED: the kind rules changed since C2 was sealed')
     held = tuple(spec['held_out'])
-    assert set(held) == set(R.HELD_OUT) and not spec['dropped_kinds']
+    if set(held) != set(R.HELD_OUT) or spec['dropped_kinds']:
+        raise SystemExit(f'REFUSED: C2 held-out kinds {held} (dropped {spec["dropped_kinds"]}) are not rules_real.HELD_OUT {R.HELD_OUT}')
     use = {}
     for k in held:
         bad = {tuple(p) for p in spec['not_shown_representable'].get(k, [])}
         use[k] = [p for p in R.PARAMS[k] if tuple(p) not in bad]
-        assert len(use[k]) == spec['usable_counts'][k], (k, len(use[k]), spec['usable_counts'][k])
+        if len(use[k]) != spec['usable_counts'][k]:
+            raise SystemExit(f'REFUSED: {k} has {len(use[k])} usable parameter sets, C2\'s manifest says {spec["usable_counts"][k]}')
     return use
 
 
@@ -102,7 +105,8 @@ def draw(use, counts, seed, c2, max_rounds=60):
                 else:
                     kept.append(r)
                     seen.add(r['prompt'])
-        assert len(kept) == counts[kind], f'cannot fill {kind}: {len(kept)} of {counts[kind]}'
+        if len(kept) != counts[kind]:
+            raise SystemExit(f'REFUSED: cannot fill {kind}: {len(kept)} of {counts[kind]}')
         per[kind] = kept
     rows, i = [], 0
     while any(per.values()):
@@ -132,7 +136,8 @@ def make(out_dir, seed=SEED, c2_dir=C2_DIR, report_representable=False, counts=N
     counts = dict(counts or man['test']['kinds'])
     rows, dropped = draw(use, counts, real_seed, c2)
     lengths, overlap = length_report(rows), overlap_report(rows, c2)
-    assert overlap['prompt_overlap'] == overlap['key_overlap'] == overlap['duplicate_prompts_within'] == 0, overlap
+    if overlap['prompt_overlap'] or overlap['key_overlap'] or overlap['duplicate_prompts_within']:
+        raise SystemExit(f'REFUSED: the drawn test overlaps C2 or itself, nothing written: {overlap}')
     os.makedirs(out_dir, exist_ok=True)
     with open(paths[0], 'x') as f:
         for r in rows:
@@ -149,13 +154,22 @@ def make(out_dir, seed=SEED, c2_dir=C2_DIR, report_representable=False, counts=N
     return out
 
 
+def problems(rep):
+    """What a --check report must not contain: any overlap with C2 or inside the test, any answer over 8 / prompt over 208 chars. -> list of strings ([] = clean)."""
+    out = [f'{k} = {rep["disjoint_from_c2"][k]}' for k in ('prompt_overlap', 'key_overlap', 'duplicate_prompts_within') if rep['disjoint_from_c2'][k]]
+    out += [f'{k} = {rep["length_check"][k]}' for k in ('answers_over_8_chars', 'prompts_over_208_chars') if rep['length_check'][k]]
+    return out
+
+
 def check(out_dir, c2_dir=C2_DIR):
     """Re-read a written C2c: sha256 against its MANIFEST, kinds, lengths, disjointness. -> dict (nothing is written)."""
     man = json.load(open(os.path.join(out_dir, 'MANIFEST.json')))
     rows = R.load_split(out_dir, 'test')
     _, c2 = load_c2(c2_dir)
-    return dict(sha256=man['test']['sha256'], n=len(rows), kinds={k: sum(r['kind'] == k for r in rows) for k in sorted({r['kind'] for r in rows})}, seed=man['_spec']['seed'],
-                length_check=length_report(rows), disjoint_from_c2=overlap_report(rows, c2))
+    rep = dict(sha256=man['test']['sha256'], n=len(rows), kinds={k: sum(r['kind'] == k for r in rows) for k in sorted({r['kind'] for r in rows})}, seed=man['_spec']['seed'],
+               length_check=length_report(rows), disjoint_from_c2=overlap_report(rows, c2))
+    rep['problems'] = problems(rep)
+    return rep
 
 
 def main(argv=None):
@@ -167,7 +181,11 @@ def main(argv=None):
     a.add_argument('--report-representable', action='store_true', help='also run the breadth-first representability search (about 5 min) and record where it differs from the C2 manifest')
     a = a.parse_args(argv)
     if a.check:
-        print(json.dumps(check(a.check, a.c2), indent=1))
+        rep = check(a.check, a.c2)
+        print(json.dumps(rep, indent=1))
+        if rep['problems']:
+            print('CHECK FAILED: ' + '; '.join(rep['problems']), file=sys.stderr)
+            sys.exit(1)
         return
     man = make(a.out, a.seed, a.c2, a.report_representable)
     print(json.dumps(dict(test=man['test'], seed=man['_spec']['seed'], prompt_collisions_redrawn=man['_spec']['prompt_collisions_redrawn'],

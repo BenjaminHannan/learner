@@ -40,12 +40,17 @@ def kit():
     torch.manual_seed(4)
     new = Ledger(v, **SMALL)
     sleep.save_parent(new, 'ledger', SMALL, v, os.path.join(d, 'p0.pt'), step=0, caps=caps.APPLIED)
-    caps.apply(caps.TODAY)
-    caps.APPLIED = None
     rows = os.path.join(d, 'rows.jsonl')
     with open(rows, 'w') as f:
         f.write(''.join(json.dumps(r, sort_keys=True) + '\n' for r in R.load_split('creative/data/c2', 'dev')[:N + 4]))
-    for name, ck, extra in (('rec_c2b.pt', 'c2b_s200.pt', []), ('rec_p0.pt', 'p0.pt', ['--caps', BIDC])):
+    # what custom_io/train.py --record-eval does, on the in-memory model (the real thing is run in test_train_process_record_end_to_end)
+    threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    torch.save(G.record_eval(new, v, G.load_rows(rows, N), caps.APPLIED, source='train_process', checkpoint_sha256=G.sha256_file(os.path.join(d, 'p0.pt'))), os.path.join(d, 'rec_p0.pt'))
+    torch.set_num_threads(threads)
+    caps.apply(caps.TODAY)
+    caps.APPLIED = None
+    for name, ck, extra in (('rec_c2b.pt', 'c2b_s200.pt', []), ('rec_p0_reload.pt', 'p0.pt', ['--caps', BIDC])):
         p = sh('record', '--ckpt', os.path.join(d, ck), '--out', os.path.join(d, name), '--rows', rows, '--n', str(N), *extra)
         assert p.returncode == 0, p.stderr[-2000:]
     yield d
@@ -158,3 +163,98 @@ def test_compare_unit():
     assert 'x: shape' in G.compare(rec, dict(same, tensors=dict(same['tensors'], x=torch.zeros(3, 3))))[0]
     assert G.compare(rec, dict(same, answers=['2'])) == ['decoded answers differ']
     assert G.compare(rec, dict(same, ids=['b'])) == ['the recorded rows are not these rows (ids differ)']
+
+
+# ------------------------------------------------------------------ code-review round 1
+def test_check3_refuses_a_record_made_by_reload(kit):
+    """B1: P_0's record must come from the training process; a `record` (reload) of the same checkpoint reproduces itself trivially and proves nothing."""
+    assert torch.load(os.path.join(kit, 'rec_p0_reload.pt'), weights_only=True)['source'] == 'reload'
+    assert torch.load(os.path.join(kit, 'rec_c2b.pt'), weights_only=True)['source'] == 'reload'
+    assert torch.load(os.path.join(kit, 'rec_p0.pt'), weights_only=True)['source'] == 'train_process'
+    p, rep = go(kit, bidc_recorded='rec_p0_reload.pt')
+    assert p.returncode == 1 and rep['stopped_at'] == 3 and any("source is 'reload'" in x for x in rep['results']['3']['differences'])
+    p, rep = go(kit, bidc_recorded=tampered(kit, 'rec_p0.pt', lambda r: r.pop('source')))
+    assert p.returncode == 1 and any("source is None" in x for x in rep['results']['3']['differences'])
+    p, rep = go(kit, bidc_recorded=tampered(kit, 'rec_p0.pt', lambda r: r.update(checkpoint_sha256='0' * 64)))      # a train-process record of some other checkpoint
+    assert p.returncode == 1 and any('belongs to checkpoint' in x for x in rep['results']['3']['differences'])
+
+
+def test_check3_refuses_a_c2b_results_json_as_p0_record(kit):
+    j = os.path.join(tempfile.mkdtemp(), 's.json')
+    json.dump({'N': {'per_q': {'right': [True] * N}}}, open(j, 'w'))
+    p, rep = go(kit, bidc_recorded=j)
+    assert p.returncode == 1 and any('needs a .pt record' in x for x in rep['results']['3']['differences'])
+
+
+def test_record_command_stamps_reload_and_the_checkpoint_sha(kit):
+    rec = torch.load(os.path.join(kit, 'rec_p0_reload.pt'), weights_only=True)
+    assert rec['source'] == 'reload' and rec['checkpoint_sha256'] == G.sha256_file(os.path.join(kit, 'p0.pt'))
+
+
+def test_check3_refuses_a_checkpoint_without_a_caps_record(kit):
+    """N8: a derived checkpoint that dropped its caps record is refused under the Bid C caps, not waved through."""
+    ck = torch.load(os.path.join(kit, 'p0.pt'), weights_only=False)
+    ck.pop('caps')
+    d = tempfile.mkdtemp()
+    torch.save(ck, os.path.join(d, 'derived.pt'))
+    rec = torch.load(os.path.join(kit, 'rec_p0.pt'), weights_only=True)
+    rec['checkpoint_sha256'] = G.sha256_file(os.path.join(d, 'derived.pt'))           # everything else about the record is in order
+    torch.save(rec, os.path.join(d, 'rec.pt'))
+    p, rep = go(kit, bidc_parent=os.path.join(d, 'derived.pt'), bidc_recorded=os.path.join(d, 'rec.pt'))
+    assert p.returncode == 1 and rep['stopped_at'] == 3 and any('no caps record' in x for x in rep['results']['3']['differences'])
+
+
+def test_run_fails_on_a_nonzero_child_exit_even_if_it_printed_ok(monkeypatch):
+    """N9: the child's returncode counts, not only the line it printed."""
+    class P:
+        returncode, stderr = 7, 'boom'
+        stdout = G.TOK + json.dumps(dict(ok=True)) + '\n'
+    monkeypatch.setattr(G.subprocess, 'run', lambda *a, **k: P)
+    a = G.parser().parse_args(['run', '--checks', '2', '--c2b-parent', 'x.pt', '--report', 'unused'])
+    code, rep = G.run(a)
+    assert code == 1 and not rep['results'][2]['ok'] and 'exited with code 7' in rep['results'][2]['why_fail']
+
+
+def synthetic_rows(n, seed):
+    import random
+    rng, out = random.Random(seed), []
+    for i in range(n):
+        a, b = rng.randrange(2, 90), rng.randrange(2, 90)
+        out.append(dict(id=f'syn:{seed}:{i}', prompt=f'What is {a} plus {b}?', answer=str(a + b), accepted=[str(a + b)], family='arith_bare', level=1, stage=1, variant='', steps=[f'{a} + {b} = {a + b}']))
+    return out
+
+
+def test_train_process_record_end_to_end(kit):
+    """B1: custom_io/train.py --record-eval writes the record from the training process (source train_process, the checkpoint's sha256) and gate check 3 accepts exactly that,
+    in a fresh process, bit for bit; the `record` command's reload record of the same checkpoint is refused."""
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, 'data', 'dev'))
+    for name, n, seed in (('train.jsonl', 32, 1), (os.path.join('dev', 'in_dist.jsonl'), 8, 2)):
+        with open(os.path.join(d, 'data', name), 'w') as f:
+            f.write(''.join(json.dumps(r) + '\n' for r in synthetic_rows(n, seed)))
+    out, rec = os.path.join(d, 'out'), os.path.join(d, 'rec.pt')
+    argv = [sys.executable, '-m', 'custom_io.train', '--model', 'ledger', '--cfg', json.dumps(SMALL), '--data', os.path.join(d, 'data'), '--steps', '2', '--batch', '8', '--warmup', '1',
+            '--device', 'cpu', '--caps', BIDC, '--out', out, '--record-eval', rec, '--record-rows', os.path.join(kit, 'rows.jsonl'), '--record-n', str(N)]
+    p = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 0, p.stderr[-2000:]
+    r = torch.load(rec, weights_only=True)
+    ckpt = os.path.join(out, 'checkpoint.pt')
+    assert r['source'] == 'train_process' and r['checkpoint_sha256'] == G.sha256_file(ckpt) and r['caps']['sha256'] == G.sha256_file(BIDC) and len(r['ids']) == N
+    assert json.load(open(os.path.join(out, 'RESULT.json')))['record_eval']['checkpoint_sha256'] == r['checkpoint_sha256']
+    p, rep = go(kit, extra=['--checks', '3'], bidc_parent=ckpt, bidc_recorded=rec)
+    assert rep['results']['3']['ok'], rep['results']['3'] and rep['results']['3']['record_source'] == 'train_process'
+    reload_rec = os.path.join(d, 'reload.pt')
+    q = sh('record', '--ckpt', ckpt, '--out', reload_rec, '--rows', os.path.join(kit, 'rows.jsonl'), '--n', str(N), '--caps', BIDC)
+    assert q.returncode == 0, q.stderr[-1500:]
+    p, rep = go(kit, extra=['--checks', '3'], bidc_parent=ckpt, bidc_recorded=reload_rec)
+    assert p.returncode == 1 and any("source is 'reload'" in x for x in rep['results']['3']['differences'])
+    again = subprocess.run(argv[:-6] + ['--out', os.path.join(d, 'out2'), '--record-eval', rec] + argv[-4:], capture_output=True, text=True, cwd=ROOT)
+    assert again.returncode != 0 and 'REFUSED' in again.stderr and not os.path.exists(os.path.join(d, 'out2'))             # a record is not overwritten, and nothing trains first
+
+
+def test_train_record_eval_argument_errors():
+    base = [sys.executable, '-m', 'custom_io.train', '--steps', '1', '--device', 'cpu', '--record-eval', os.path.join(tempfile.mkdtemp(), 'r.pt')]
+    p = subprocess.run(base + ['--model', 'ledger'], capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 2 and '--record-eval needs --out' in p.stderr
+    p = subprocess.run(base + ['--model', 'plain_tf', '--out', tempfile.mkdtemp()], capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 2 and 'must be ledger' in p.stderr

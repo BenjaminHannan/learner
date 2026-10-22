@@ -2,7 +2,8 @@
 non-zero; there is no retry and no patch-and-retry (--report is opened exclusively, so a failed report cannot be overwritten by a second try).
 
   python3 -m creative.bidc_load_gate run --c2b-parent B2_s200.pt --recorded C2B_RECORD --bidc-parent P0.pt --bidc-recorded P0_RECORD --report GATE.json
-  python3 -m creative.bidc_load_gate record --ckpt P0.pt --out P0_RECORD [--caps custom_io/caps/caps-bidc.json]     # write a recorded eval of a checkpoint
+  python3 -m creative.bidc_load_gate record --ckpt P0.pt --out P0_RECORD [--caps custom_io/caps/caps-bidc.json]     # write a "reload" record of a checkpoint (check 1 only)
+  python3 -m custom_io.train ... --caps custom_io/caps/caps-bidc.json --out P0DIR --record-eval P0_RECORD --record-rows ROWS --record-n 64     # P_0's own end-of-training record (check 3)
 
   1  caps plumbing   caps-old-defaults.json (max_ans 8, n_reg 9, N_PLACE 16) applied BEFORE load_parent; load the C2b parent; its eval on the fixed batch equals the recorded one.
   2  negative        caps-bidc.json applied, then load_parent on the same C2b parent MUST raise a shape error (reader.place.weight 16 rows vs 37). It loading is a FAIL: the caps were not
@@ -12,8 +13,9 @@ Every check runs in its own fresh process (the caps are module globals).
 
 THE EVAL ("recorded"): on a fixed batch (the first --n rows, default 64, of --rows) one Ledger.run and one greedy sampler pass, in eval mode on CPU with one thread:
   right (greedy first try fits and equals the key, c2_pilot.greedy_eval), the decoded answers, the greedy program (ops / a / b / answer pointer / mode / values: long tensors) and the float
-  tensors R, lmode, lans, lword and the step-1 logits (compared with torch.equal). A record is a .pt written by `record` (or by record_eval() from the training process, which is the
-  way to get P_0's own END-OF-TRAINING eval from the in-memory model). A .json in the C2b results format (creative/results/c2b/test/s200.json) is also accepted for check 1: then only the
+  tensors R, lmode, lans, lword and the step-1 logits (compared with torch.equal). A record is a .pt with "source": "train_process" (custom_io/train.py --record-eval PATH: made by the training process from the
+  in-memory model right after training, with the sha256 of the checkpoint it saved; the only record check 3 accepts, because it is P_0's own END-OF-TRAINING eval) or "source": "reload" (the
+  `record` command: a checkpoint loaded from disk; fine for check 1's C2b parent, refused by check 3 because a reload compared with a reload proves nothing about training). A .json in the C2b results format (creative/results/c2b/test/s200.json) is also accepted for check 1: then only the
   per-row `right` of arm --recorded-arm (default N) over the same rows is compared, which is weaker (no floats).
 NOTE --rows defaults to the first 64 rows of creative/data/c2/test.jsonl, the already-opened C2 test: reproducing a recorded C2b-test score needs those rows (card sec. 2b check 1). Point
 --rows at another jsonl to avoid reading it."""
@@ -60,9 +62,16 @@ def evaluate_batch(model, vocab, rows, device='cpu'):
                 tensors={k: v.detach().cpu().contiguous() for k, v in t.items()})
 
 
-def record_eval(model, vocab, rows, caps_rec=None, device='cpu'):
-    """-> a record dict (torch.save it). Call it from the training process on the in-memory model for P_0's end-of-training record."""
-    return dict(kind='bidc-gate-eval-v1', caps=caps_rec, threads=torch.get_num_threads(), torch=str(torch.__version__), **evaluate_batch(model, vocab, rows, device))
+SOURCES = ('train_process', 'reload')
+
+
+def record_eval(model, vocab, rows, caps_rec=None, device='cpu', source='reload', checkpoint_sha256=None):
+    """-> a record dict (torch.save it). source says where the model came from: 'train_process' = the in-memory model of the training process, right after training (custom_io/train.py
+    --record-eval; this is the only record check 3 accepts) or 'reload' = a checkpoint loaded from disk (the `record` command). checkpoint_sha256 = the file the record corresponds to."""
+    if source not in SOURCES:
+        raise ValueError(f'source must be one of {SOURCES}')
+    return dict(kind='bidc-gate-eval-v1', source=source, checkpoint_sha256=checkpoint_sha256, caps=caps_rec, threads=torch.get_num_threads(), torch=str(torch.__version__),
+                **evaluate_batch(model, vocab, rows, device))
 
 
 def compare(rec, got):
@@ -95,7 +104,8 @@ def load_record(path, n, rows, arm='N'):
             raise SystemExit(f'{path}: arm {arm} has {len(right)} rows, the gate needs {n}')
         return dict(ids=[r['id'] for r in rows], right=[bool(x) for x in right], tensors=None, caps=None)
     rec = torch.load(path, weights_only=True)
-    assert rec.get('kind') == 'bidc-gate-eval-v1', f'{path} is not a gate record'
+    if rec.get('kind') != 'bidc-gate-eval-v1':
+        raise ValueError(f'{path} is not a gate record')
     return rec
 
 
@@ -146,8 +156,16 @@ def check3(a):
     rec = load_record(a.bidc_recorded, a.n, rows)
     ck = torch.load(a.bidc_parent, map_location='cpu', weights_only=False)
     bad = []
-    if (ck.get('caps') or {}).get('sha256') not in (None, caps_rec['sha256']):
-        bad.append(f"the checkpoint was trained under caps sha256 {ck['caps']['sha256']}, not {caps_rec['sha256']}")
+    ck_sha = (ck.get('caps') or {}).get('sha256')
+    if ck_sha is None:
+        bad.append('the checkpoint carries no caps record (trained without --caps, or a derived file that dropped it); under the Bid C caps that is a fail')
+    elif ck_sha != caps_rec['sha256']:
+        bad.append(f"the checkpoint was trained under caps sha256 {ck_sha}, not {caps_rec['sha256']}")
+    if rec.get('source') != 'train_process':
+        bad.append(f"the record's source is {rec.get('source')!r}, not 'train_process': check 3 compares against the eval the TRAINING process made on its in-memory model "
+                   "(custom_io/train.py --record-eval), not against another reload")
+    if rec.get('checkpoint_sha256') != sha256_file(a.bidc_parent):
+        bad.append(f"the record belongs to checkpoint sha256 {rec.get('checkpoint_sha256')}, not {sha256_file(a.bidc_parent)}")
     if rec.get('tensors') is None:
         bad.append('check 3 needs a .pt record (floats), not a results json')
     if (rec.get('caps') or {}).get('sha256') != caps_rec['sha256']:
@@ -155,7 +173,8 @@ def check3(a):
     model, vocab, meta = sleep.load_parent(a.bidc_parent, 'cpu')
     bad += compare(rec, evaluate_batch(model, vocab, rows))
     return dict(ok=not bad, differences=bad, caps_sha256=caps_rec['sha256'], n_params=model.n_params(), parent_sha256=sha256_file(a.bidc_parent),
-                recorded_sha256=sha256_file(a.bidc_recorded), checkpoint_caps_sha256=(ck.get('caps') or {}).get('sha256'))
+                recorded_sha256=sha256_file(a.bidc_recorded), checkpoint_caps_sha256=ck_sha, record_source=rec.get('source'),
+                record_checkpoint_sha256=rec.get('checkpoint_sha256'))
 
 
 CHECKS = {1: ('caps plumbing at the old defaults', check1, ('c2b_parent', 'recorded')), 2: ('negative: Bid C caps vs a C2b parent', check2, ('c2b_parent',)),
@@ -178,6 +197,8 @@ def run(a):
             p = subprocess.run(argv, capture_output=True, text=True)
             line = next((l for l in reversed(p.stdout.splitlines()) if l.startswith(TOK)), None)
             res = json.loads(line[len(TOK):]) if line else dict(ok=False, why_fail='the check process died', stderr_tail=p.stderr[-1500:])
+            if p.returncode != 0 and res.get('ok'):             # the printed verdict is not enough: a child that exits non-zero is a fail
+                res = dict(res, ok=False, why_fail=f'the check process exited with code {p.returncode} although it printed ok', stderr_tail=p.stderr[-1500:])
             report['results'][k] = dict(title=title, **res)
         if not report['results'][k]['ok']:
             code = 1
@@ -213,7 +234,7 @@ def record(a):
         caps_rec = caps.check_applied(a.caps)
     rows = load_rows(a.rows, a.n)
     model, vocab, meta = sleep.load_parent(a.ckpt, 'cpu')
-    rec = record_eval(model, vocab, rows, caps_rec)
+    rec = record_eval(model, vocab, rows, caps_rec, source='reload', checkpoint_sha256=sha256_file(a.ckpt))      # a reload record: check 3 refuses it (use train.py --record-eval)
     with open(a.out, 'xb') as f:                                    # exclusive: a record is not overwritten
         torch.save(rec, f)
     return rec

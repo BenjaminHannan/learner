@@ -36,6 +36,11 @@ def load_parent(path, device='cpu'):
 
 
 def save_parent(model, name, cfg, vocab, path, step=0, **meta):
+    """meta may carry `caps=` (the caps record the model was built under). When it does not, the record of the caps applied in this process (custom_io.caps.APPLIED) is stamped, so a
+    derived checkpoint (warm.pt, Nprime.pt, W2.pt, ...) keeps it; nothing is added when no caps were applied (the C2b files are unchanged)."""
+    from custom_io import caps as capsmod
+    if 'caps' not in meta and capsmod.APPLIED is not None:
+        meta['caps'] = dict(capsmod.APPLIED)
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     torch.save(dict(model=model.state_dict(), name=name, cfg=cfg, chars=vocab.chars, step=step, **meta), path)
 
