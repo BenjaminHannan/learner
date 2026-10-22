@@ -10,7 +10,8 @@ SEED 93801 is named in the card before generation. Collision rule: if it equals 
 DISJOINT BY PROMPT from every C2 split (warm, dev, pool, test, labelled): a drawn question whose (kind, parameters, examples, query) key is a C2 key is never drawn
 (make_questions' `avoid`), and one whose prompt text equals any C2 prompt is DROPPED and redrawn from the same kind with a fresh stream until the count is met; the number is in the manifest.
 The usable parameters of each kind come from C2's MANIFEST (rules_real.PARAMS minus `not_shown_representable`, checked against `usable_counts` and the kind seal), so no breadth-first
-search runs; --verify-representable runs rules_real.representable_params and demands the same lists.
+search runs and the kind rules are C2's. NOTE the current code's search reaches all 52 affine instances (C2's manifest lists (3, 15), (5, 13), (6, 15) as not shown), so a rebuild with
+rules_real.write_splits today does NOT reproduce C2; --report-representable runs the search (about 5 minutes) and writes the differences into the manifest instead of using them.
 The length check (answers over 8 chars, prompts over 208 chars: the old caps) is printed and written to the manifest; the card expects zeros, as for C2."""
 import argparse, hashlib, json, os, re, sys
 from creative import rules_real as R
@@ -113,7 +114,7 @@ def draw(use, counts, seed, c2, max_rounds=60):
     return rows, dropped
 
 
-def make(out_dir, seed=SEED, c2_dir=C2_DIR, verify_representable=False, counts=None):
+def make(out_dir, seed=SEED, c2_dir=C2_DIR, report_representable=False, counts=None):
     """counts: per-kind counts; default = C2's test counts (tests pass a small dict)."""
     man, c2 = load_c2(c2_dir)
     used = manifest_seeds(man) | set(SEEDS_USED_BY_C2)
@@ -123,9 +124,11 @@ def make(out_dir, seed=SEED, c2_dir=C2_DIR, verify_representable=False, counts=N
         if os.path.exists(p):
             raise SystemExit(f'REFUSED: {p} exists; C2c is generated once')
     use = usable_params(man)
-    if verify_representable:
+    differs = None
+    if report_representable:
         got, _, _ = R.representable_params(R.HELD_OUT)
-        assert {k: [tuple(p) for p in v] for k, v in got.items() if k in use} == {k: [tuple(p) for p in v] for k, v in use.items()}, 'representability differs from the C2 manifest'
+        differs = {k: dict(extra_in_code_now=sorted(set(map(tuple, got.get(k, []))) - set(map(tuple, v))), missing_in_code_now=sorted(set(map(tuple, v)) - set(map(tuple, got.get(k, [])))))
+                   for k, v in use.items() if set(map(tuple, got.get(k, []))) != set(map(tuple, v))}
     counts = dict(counts or man['test']['kinds'])
     rows, dropped = draw(use, counts, real_seed, c2)
     lengths, overlap = length_report(rows), overlap_report(rows, c2)
@@ -139,7 +142,7 @@ def make(out_dir, seed=SEED, c2_dir=C2_DIR, verify_representable=False, counts=N
                _spec=dict(seed=real_seed, requested_seed=seed, seed_rule=f'{SEED}; {FALLBACK_SEED} if {SEED} is a C2 seed', c2_seeds_checked=sorted(used),
                           generator='creative.rules_real.make_questions (tag c2c:KIND:ROUND, kinds interleaved in rules_real.HELD_OUT order)', salt=R.SALT, held_out=list(R.HELD_OUT),
                           kind_seal=R.KIND_SEAL, usable_counts=man['_spec']['usable_counts'], c2_manifest_sha256=hashlib.sha256(open(os.path.join(c2_dir, 'MANIFEST.json'), 'rb').read()).hexdigest(),
-                          c2_split_sha256={k: man[k]['sha256'] for k in R.SPLITS}, per_kind_counts_from='C2 test (MANIFEST.json)' if counts == man['test']['kinds'] else 'override', prompt_collisions_redrawn=dropped,
+                          c2_split_sha256={k: man[k]['sha256'] for k in R.SPLITS}, per_kind_counts_from='C2 test (MANIFEST.json)' if counts == man['test']['kinds'] else 'override', prompt_collisions_redrawn=dropped, representability_vs_current_code=differs,
                           disjoint_from_c2=overlap, length_check=lengths))
     with open(paths[1], 'x') as f:
         json.dump(out, f, indent=1, sort_keys=True)
@@ -161,12 +164,12 @@ def main(argv=None):
     a.add_argument('--seed', type=int, default=SEED)
     a.add_argument('--c2', default=C2_DIR)
     a.add_argument('--check', metavar='DIR', help='re-check a written C2c instead of generating')
-    a.add_argument('--verify-representable', action='store_true', help='also run the breadth-first representability search (slow) and demand the manifest lists')
+    a.add_argument('--report-representable', action='store_true', help='also run the breadth-first representability search (about 5 min) and record where it differs from the C2 manifest')
     a = a.parse_args(argv)
     if a.check:
         print(json.dumps(check(a.check, a.c2), indent=1))
         return
-    man = make(a.out, a.seed, a.c2, a.verify_representable)
+    man = make(a.out, a.seed, a.c2, a.report_representable)
     print(json.dumps(dict(test=man['test'], seed=man['_spec']['seed'], prompt_collisions_redrawn=man['_spec']['prompt_collisions_redrawn'],
                           disjoint_from_c2=man['_spec']['disjoint_from_c2'], length_check=man['_spec']['length_check']), indent=1))
     lc = man['_spec']['length_check']
