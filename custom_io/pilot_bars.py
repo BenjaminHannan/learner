@@ -22,8 +22,9 @@ SPEC.json     {"floor_sd": 3.0, "alpha_two_sided": 0.05, "anchors": {...},
   lo = mean - half, hi = mean + half, plus the input's "extra" scalars.  Ops: >=, >, <=, <, ==.  Conditions are data
   (var/op/value), evaluated with a fixed operator table; there is no string evaluation anywhere.
   Every condition variable must be a built-in or be declared in spec "extras"; an unknown name (a typo) is a spec error.
-  Bars are used exactly as written. A statistic within EQ_TOL (5e-10, relative above 1) of a bar counts as sitting on it
-  (>=, <=, == hold; >, < fail), so float error cannot flip a verdict either way; otherwise the comparison is raw.
+  Bars are used exactly as written. A statistic within a relative EQ_TOL (1e-12) of a bar counts as sitting on it
+  (>=, <=, == hold; >, < fail), so float error cannot flip a verdict either way; otherwise the comparison is raw (so a
+  bar of 0 or 1e-10 is never shifted, and a statistic the report shows above a bar at 9 digits compares above it).
   Order: gate first; then rules in order, first rule whose conditions ALL hold wins; else the spec's "default".
   A condition on a variable that is not available (e.g. an extra that was not passed) does NOT hold; it is flagged
   "missing" in the report; the summary warns when a missing variable sits in the gate or in a rule at or ahead of the
@@ -116,7 +117,7 @@ def t_quantile(p, df):
 
 # ---------------------------------------------------------------- statistics
 OPS = {">=": operator.ge, ">": operator.gt, "<=": operator.le, "<": operator.lt, "==": operator.eq}
-EQ_TOL = 5e-10
+EQ_TOL = 1e-12   # relative; float error in a mean of a few dozen values is ~1e-15 relative
 BUILTIN_VARS = ("mean", "sd_obs", "s", "n", "half", "lo", "hi")
 
 
@@ -230,7 +231,7 @@ def eval_cond(c, env):
     if var not in env:
         return {"var": var, "op": op, "value": value, "actual": None, "held": False, "status": "missing"}
     actual = env[var]
-    if abs(actual - value) <= EQ_TOL * max(1.0, abs(value)):   # within float noise of the bar: it sits ON the bar
+    if abs(actual - value) <= EQ_TOL * max(abs(actual), abs(value)):   # within float noise of the bar (relative): it sits ON the bar
         actual_cmp = value
     else:
         actual_cmp = actual

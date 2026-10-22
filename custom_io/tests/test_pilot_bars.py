@@ -208,6 +208,10 @@ def test_tiny_written_bar_is_not_moved():
     assert ok["verdict"] == "R"   # 4e-9 > 1e-9 compared raw: the bar is not rounded to 0
     on = pb.evaluate({"pairs": units([1e-9, 1e-9])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">=", "value": 1e-9}]}]))
     assert on["verdict"] == "R"
+    tiny = pb.evaluate({"pairs": units([4e-10, 4e-10])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 1e-10}]}]))
+    assert tiny["verdict"] == "R"   # no absolute floor: a bar of 1e-10 is not shifted
+    shown_above = pb.evaluate({"pairs": units([8.000000003, 8.000000003])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">", "value": 8}]}]))
+    assert shown_above["verdict"] == "R"   # a value the report shows above the bar compares above it
 
 
 def test_long_decimal_bar_holds_for_an_equal_statistic():
