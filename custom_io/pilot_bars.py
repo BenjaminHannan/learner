@@ -22,9 +22,9 @@ SPEC.json     {"floor_sd": 3.0, "alpha_two_sided": 0.05, "anchors": {...},
   lo = mean - half, hi = mean + half, plus the input's "extra" scalars.  Ops: >=, >, <=, <, ==.  Conditions are data
   (var/op/value), evaluated with a fixed operator table; there is no string evaluation anywhere.
   Every condition variable must be a built-in or be declared in spec "extras"; an unknown name (a typo) is a spec error.
-  Bars are used exactly as written. A statistic within a relative EQ_TOL (1e-12) of a bar counts as sitting on it
-  (>=, <=, == hold; >, < fail), so float error cannot flip a verdict either way; otherwise the comparison is raw (so a
-  bar of 0 or 1e-10 is never shifted, and a statistic the report shows above a bar at 9 digits compares above it).
+  Bars are used exactly as written. A statistic within EQ_TOL (1e-12) times max(|statistic|, |bar|, input scale) of a bar
+  counts as sitting on it (>=, <=, == hold; >, < fail), where the input scale is the largest |arm mean| over units. So float
+  error carried from the inputs cannot flip a verdict, even at a bar of 0; beyond that band the comparison is raw.
   Order: gate first; then rules in order, first rule whose conditions ALL hold wins; else the spec's "default".
   A condition on a variable that is not available (e.g. an extra that was not passed) does NOT hold; it is flagged
   "missing" in the report; the summary warns when a missing variable sits in the gate or in a rule at or ahead of the
@@ -225,13 +225,15 @@ def _check_cond(c, where):
     _num(c.get("value"), "%s: condition value" % where)
 
 
-def eval_cond(c, env):
-    """One condition -> dict with the numbers.  held is False (status 'missing') if the variable is unavailable."""
+def eval_cond(c, env, scale=0.0):
+    """One condition -> dict with the numbers.  held is False (status 'missing') if the variable is unavailable.
+    scale: the size of the input values (max |arm mean| over units), so the tolerance covers the float error a statistic
+    carries from its inputs even when the bar is 0."""
     var, op, value = c["var"], c["op"], float(c["value"])
     if var not in env:
         return {"var": var, "op": op, "value": value, "actual": None, "held": False, "status": "missing"}
     actual = env[var]
-    if abs(actual - value) <= EQ_TOL * max(abs(actual), abs(value)):   # within float noise of the bar (relative): it sits ON the bar
+    if abs(actual - value) <= EQ_TOL * max(abs(actual), abs(value), scale):   # within float noise of the bar: it sits ON the bar
         actual_cmp = value
     else:
         actual_cmp = actual
@@ -248,6 +250,7 @@ def evaluate(data, spec):
     extra = data.get("extra") or {}
     if not isinstance(extra, dict):
         raise ValueError("'extra' must be an object of named scalars")
+    scale = max([abs(r[k]) for r in rows for k in ("mean_a", "mean_b")] + [0.0])   # input size, for eval_cond's tolerance
     env = {k: st[k] for k in BUILTIN_VARS}
     for k, v in extra.items():
         if k in BUILTIN_VARS:
@@ -257,7 +260,7 @@ def evaluate(data, spec):
     gates = []
     gate_hit = None
     for g in _gates(spec):
-        res = eval_cond(g, env)
+        res = eval_cond(g, env, scale)
         res["verdict"] = g["verdict"]
         gates.append(res)
         if res["held"] and gate_hit is None:
@@ -265,7 +268,7 @@ def evaluate(data, spec):
 
     rule_reports, fired = [], None
     for r in spec["rules"]:
-        conds = [eval_cond(c, env) for c in r["conditions"]]
+        conds = [eval_cond(c, env, scale) for c in r["conditions"]]
         all_held = all(c["held"] for c in conds)
         rule_reports.append({"name": r["name"], "all_held": all_held, "conditions": conds})
         if all_held and fired is None:

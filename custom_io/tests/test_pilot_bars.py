@@ -214,6 +214,14 @@ def test_tiny_written_bar_is_not_moved():
     assert shown_above["verdict"] == "R"   # a value the report shows above the bar compares above it
 
 
+def test_zero_bar_is_not_flipped_by_float_noise_from_the_inputs():
+    pairs = [{"unit": "s1", "a": [0.7], "b": [0.8]}, {"unit": "s2", "a": [0.2], "b": [0.1]}]   # mean d = 4.6e-17, exactly 0 in theory
+    rep = pb.evaluate({"pairs": pairs}, spec([{"name": "UP", "conditions": [{"var": "mean", "op": ">", "value": 0}]}]))
+    assert rep["verdict"] == "UNRESOLVED"   # on the bar: strict > fails
+    rep = pb.evaluate({"pairs": pairs}, spec([{"name": "Z", "conditions": [{"var": "mean", "op": ">=", "value": 0}]}]))
+    assert rep["verdict"] == "Z"
+
+
 def test_long_decimal_bar_holds_for_an_equal_statistic():
     third = 1.0 / 3.0
     rep = pb.evaluate({"pairs": units([third, third])}, spec([{"name": "R", "conditions": [{"var": "mean", "op": ">=", "value": 0.3333333333333333}]}]))
