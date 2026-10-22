@@ -52,6 +52,10 @@ class MiniConfig:
     w_halt: float = 0.1
     early_ans: float = 0.2              # L_ans weight before the loop that holds every gold card
     distractors: tuple[int, int] = (1, 2)
+    thinkers: int = 1                   # desks per question; 1 = today's single thinker (swarm OFF)
+    swarm_board: bool = False           # the one communication channel; False = S0 (independent desks + combiner)
+    swarm_rounds: int = 4               # fixed rounds per question in teacher/own/eval (gold: 2); <= max_loops
+    board_cards: int = 16               # posted-card rows on the board (FIFO); only used with swarm_board
     check_band: bool = True
 
     def __post_init__(self) -> None:
@@ -67,6 +71,15 @@ class MiniConfig:
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
+        if self.thinkers < 1:
+            raise ValueError("thinkers must be >= 1")
+        if self.thinkers > 1:          # swarm-only fields: never checked with the flag off (any max_loops builds)
+            if not 1 <= self.swarm_rounds <= self.max_loops:
+                raise ValueError("swarm_rounds must be in 1..max_loops")
+            if self.board_cards < 1:
+                raise ValueError("board_cards must be positive")
+        if self.swarm_board and (self.thinkers < 2 or self.registers < 2):
+            raise ValueError("swarm_board needs thinkers > 1 and registers >= 2 (register 1 is the post register)")
         if self.check_band and self.d_model == 128:
             count = self.num_parameters()
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
@@ -138,6 +151,10 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
     if config.store:
         embeddings += config.age_buckets * d + config.age_buckets   # age rows + recency biases
     binder = _linear(2 * d, 2 * d) if config.store and config.pointers else 0
+    if config.thinkers > 1:
+        embeddings += config.thinkers * d                            # desk embeddings
+        if config.swarm_board:
+            embeddings += 2 * d                                      # board row types: note, card
     heads = _linear(d, 1)                                            # HALT
     if config.store:
         heads += _linear(d, dk) + _linear(d, 1) + 1                  # query, ASK, kappa

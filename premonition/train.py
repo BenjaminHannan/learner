@@ -58,6 +58,7 @@ from learnlab.core import IGNORE_INDEX
 from learnlab.policy import BUDGET_TOLERANCE
 from learnlab.train import MemoryGuardError, TrainConfig, Trainer
 from premonition import data as pdata
+from premonition import swarm as swarm_module
 from premonition import identity, preprocess
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
 from premonition.config import MiniConfig
@@ -106,6 +107,9 @@ class Curriculum:
 def planned_loops(batch: VisitBatch, mode: str, config: MiniConfig) -> torch.Tensor:
     """[Q] think loops `PremonitionMini.forward(batch, mode)` runs (no `loops` override), on the CPU."""
     count = batch.q_visit.shape[0]
+    if config.thinkers > 1:         # swarm: fixed rounds, counted in desk-rounds like metrics["question_loops"]
+        rounds = swarm_module.rounds_for(config, mode)
+        return torch.full((count,), rounds * config.thinkers, dtype=torch.long)
     if mode == "gold":
         loops = torch.full((count,), 2, dtype=torch.long)
     elif mode == "teacher":
@@ -131,10 +135,18 @@ class InsertLog:
     """Records every card insertion of `model` (in `forward`, `answer` or `answer_with_gold`) while active.
 
     It shadows the bound `_insert` with a recording wrapper on the instance and removes it on exit, so the
-    model is unchanged afterwards (and a surrounding `read_only` sees no difference).
+    model is unchanged afterwards (and a surrounding `read_only` sees no difference). Its calls are indexed by
+    question (one row per question), so a swarm (Q * M desk rows) is refused here, in one place (round 3, ninth pass,
+    item 12); callers ask `InsertLog.applies(model)`.
     """
 
+    @staticmethod
+    def applies(model: PremonitionMini) -> bool:
+        return bool(model.config.store) and model.config.thinkers == 1
+
     def __init__(self, model: PremonitionMini) -> None:
+        if model.config.thinkers > 1:
+            raise ValueError("InsertLog / card_stats assume one row per question; a swarm has Q * M desk rows")
         self.model = model
         self.calls: list[tuple[torch.Tensor, torch.Tensor]] = []
 
@@ -223,16 +235,36 @@ def _add(total: dict[str, Any], part: Mapping[str, Any]) -> None:
 
 
 # ----------------------------------------------------------------------------- the trainer
+def _sync(device: Union[torch.device, str]) -> None:
+    """Wait for queued CUDA work, so a training-clock reading includes every queued step (matched wall-clock runs).
+    It does nothing on CPU, where the work is already done. The one definition (the swarm screen's bench uses it)."""
+    device = torch.device(device)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+
+
 class MiniTrainer(Trainer):
     """`Trainer` for `PremonitionMini` on `VisitBatch` streams, stopped by a FLOP budget (module docstring)."""
 
     def __init__(self, model: PremonitionMini, config: TrainConfig, device: Union[str, torch.device] = "cpu", *,
                  flop_budget: float, curriculum: Curriculum = Curriculum(), tolerance: float = BUDGET_TOLERANCE,
-                 seed: int = 0, fit: Optional[FlopFit] = None) -> None:
+                 seed: int = 0, fit: Optional[FlopFit] = None, seconds_budget: Optional[float] = None) -> None:
         if not flop_budget > 0:
             raise ValueError("flop_budget must be positive")
         super().__init__(model, config, device)
         self.flop_budget = float(flop_budget)
+        # Matched wall-clock runs (design/swarm): the curriculum share and the stop come from training
+        # seconds (evaluation pauses excluded) instead of FLOPs. None = today's FLOP-budget behaviour.
+        if seconds_budget is not None and not seconds_budget > 0:
+            raise ValueError("seconds_budget must be positive")
+        self.seconds_budget = None if seconds_budget is None else float(seconds_budget)
+        self.train_seconds = 0.0
+        model.train_diagnostics = self.seconds_budget is None          # recall@k in forward: off when matched by time
+        # Memory instrumentation (swarm C0 train probe; off = None, nothing is measured or reset): `memory_phase`
+        # closes a phase, records its peak allocated / reserved, and resets the peak; `reserved_floor` keeps the
+        # closed phases' peak, so the 14 GiB guard decides on the same un-reset peak as without instrumentation.
+        self.memory_phases: Optional[list[dict[str, Any]]] = None
+        self.reserved_floor = 0
         self.curriculum = curriculum
         self.tolerance = float(tolerance)
         self.seed = seed
@@ -245,6 +277,21 @@ class MiniTrainer(Trainer):
         self.generator = torch.Generator(device=self.device).manual_seed(seed)
 
     # ------------------------------------------------------------------ FLOPs
+    def memory_phase(self, name: str) -> None:
+        """Close memory phase `name` (instrumentation only; a no-op unless `memory_phases` is a list)."""
+        if self.memory_phases is None:
+            return
+        row: dict[str, Any] = {"phase": name, "step": self.step}
+        if self.device.type == "cuda":
+            peak_reserved = torch.cuda.max_memory_reserved(self.device)
+            row.update(peak_allocated_bytes=torch.cuda.max_memory_allocated(self.device),
+                       peak_reserved_bytes=peak_reserved,
+                       allocated_bytes=torch.cuda.memory_allocated(self.device),
+                       reserved_bytes=torch.cuda.memory_reserved(self.device))
+            self.reserved_floor = max(self.reserved_floor, peak_reserved)
+            torch.cuda.reset_peak_memory_stats(self.device)
+        self.memory_phases.append(row)
+
     def calibrate(self, batches: Sequence[VisitBatch], modes: Sequence[str] = ("gold", "teacher", "own")
                   ) -> FlopFit:
         """Fit the per-batch cost on `batches` measured in every mode (FlopCounterMode, forward + backward)."""
@@ -267,15 +314,19 @@ class MiniTrainer(Trainer):
         return self.fit(batch.tokens.numel(), int(loops.sum())), loops
 
     def plan(self) -> Plan:
+        if self.seconds_budget is not None:
+            return self.curriculum.plan(self.train_seconds / self.seconds_budget)
         return self.curriculum.plan(self.flops / self.flop_budget)
 
     # ------------------------------------------------------------------ state
     def state_dict(self) -> dict[str, Any]:
         return {"step": self.step, "tokens": self.tokens, "padded_tokens": self.padded_tokens,
                 "flops": self.flops, "question_loops": self.question_loops, "questions": self.questions,
-                "generator": self.generator.get_state()}
+                "generator": self.generator.get_state(),
+                **({"train_seconds": self.train_seconds} if self.seconds_budget is not None else {})}
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
+        self.train_seconds = float(state.get("train_seconds", 0.0))
         self.step, self.tokens = int(state["step"]), int(state["tokens"])
         self.padded_tokens, self.flops = int(state["padded_tokens"]), float(state["flops"])
         self.question_loops, self.questions = int(state["question_loops"]), int(state["questions"])
@@ -293,13 +344,17 @@ class MiniTrainer(Trainer):
         alive: list[torch.Tensor] = []
         halts: list[torch.Tensor] = []
         hooks = []
-        if track:
+        # Matched wall-clock arms (seconds_budget): NO training diagnostics for ANY arm. No forward hooks, no
+        # InsertLog, no recall (`model.train_diagnostics`). Only the losses are logged, so equal T is equal training
+        # work for D1, S0 and S1 (review round 3, third pass, ruled Oct 20). The run cards read none of these.
+        diagnose = track and self.seconds_budget is None
+        if diagnose:
             hooks = [module.register_forward_hook(
                 lambda _m, args, _o: alive.append((args[0] > 0).flatten(0, -2).any(0)))
                 for module in model.modules() if isinstance(module, nn.GELU)]
             hooks.append(model.heads.halt.register_forward_hook(
                 lambda _m, _a, out: halts.append(out.detach().float().flatten())))
-        recorder = InsertLog(model) if track and config.store else None
+        recorder = InsertLog(model) if diagnose and InsertLog.applies(model) else None
         try:
             with recorder or nullcontext(), torch.autocast(self.device.type, dtype=torch.bfloat16,
                                                            enabled=self.device.type == "cuda"):
@@ -316,7 +371,7 @@ class MiniTrainer(Trainer):
         result: dict[str, Any] = {name: out[name].detach().float() for name in ("loss", "lm", "ask", "ans", "halt")}
         result["grad_norm"] = grad_norm
         result["metrics"] = out["metrics"]
-        if track:
+        if diagnose:
             result["dead"] = 1.0 - torch.cat(alive).float().mean().item() if alive else None
             result["halt_rate"] = torch.cat(halts).gt(0).float().mean().item() if halts else None
             if recorder is not None:
@@ -339,6 +394,7 @@ class MiniTrainer(Trainer):
         budget, ceiling = self.flop_budget, self.flop_budget * (1.0 + self.tolerance)
         start_step, start_tokens, start_flops = self.step, self.tokens, self.flops
         started = window_start = time.perf_counter()
+        start_seconds, paused_total = self.train_seconds, 0.0
         window: dict[str, Any] = {}
         counts: dict[str, int] = {}
         window_steps = window_tokens = window_padded = window_questions = window_loops = 0
@@ -374,7 +430,8 @@ class MiniTrainer(Trainer):
                 **{name: means.get(name) for name in ("loss", "lm", "ask", "ans", "halt")},
                 "gold_recall_at_4": means.get("recall_at_k"), "answer_acc": means.get("answer_acc"),
                 "answer_acc_first": means.get("answer_acc_first"),
-                "grad_norm": float(last["grad_norm"]), "weight_norm": self.weight_norm(),
+                "grad_norm": float(last["grad_norm"]),
+                "weight_norm": self.weight_norm() if self.seconds_budget is None else None,   # no extra work in T
                 "dead_mlp_fraction": last.get("dead"), "halt_rate": last.get("halt_rate"),
             }
             if "cards" in last:
@@ -387,6 +444,11 @@ class MiniTrainer(Trainer):
         self.model.train()
         plan = self.plan()
         while True:
+            if self.seconds_budget is not None:
+                self.train_seconds = start_seconds + time.perf_counter() - started - paused_total
+                if self.train_seconds >= self.seconds_budget:
+                    stop = "seconds budget"
+                    break
             if self.flops >= budget:
                 stop = "flop budget"
                 break
@@ -431,13 +493,22 @@ class MiniTrainer(Trainer):
             entry["flops"] += cost
             if self.step == start_step + 1 or self.step % cfg.memory_check_every == 0:
                 self._check_memory()
+            if self.step == start_step + 1:
+                self.memory_phase("step1")                # instrumentation: the first step apart from the rest
             if track:
                 log(plan)
             if evaluate is not None and cfg.eval_every and self.step % cfg.eval_every == 0:
+                if self.seconds_budget is not None:
+                    _sync(self.device)                   # the last step's queued work is training time
                 paused = time.perf_counter()
                 emit({"step": self.step, "flops": self.flops, "flops_share": self.flops / budget,
                       "eval": self.evaluate(evaluate)})
                 window_start += time.perf_counter() - paused
+                paused_total += time.perf_counter() - paused
+        self.memory_phase("train")
+        if self.seconds_budget is not None:      # however the loop ended, count its last stretch, queued work included
+            _sync(self.device)
+            self.train_seconds = start_seconds + time.perf_counter() - started - paused_total
         if window_steps:
             last.pop("cards", None)
             last.setdefault("dead", None)
@@ -454,6 +525,7 @@ class MiniTrainer(Trainer):
                 None if self.fit is None else {"a": self.fit.a, "b": self.fit.b, "worst_residual": self.fit.worst}),
             "loop_mismatches": mismatched, "phases": phases, "final": final,
             "peak_gpu_reserved_bytes": torch.cuda.max_memory_reserved(self.device) if cuda else None,
+            **({"train_seconds": self.train_seconds} if self.seconds_budget is not None else {}),
         }
 
 
@@ -479,6 +551,8 @@ def answer_with_gold(model: PremonitionMini, batch: VisitBatch, *, stop: Optiona
     """`PremonitionMini.answer` with the question's gold cards (NULL when never told) placed in its card rows
     before loop 1: the teacher-forced counterpart of own retrieval. Halting and further ASKs are the model's."""
     config = model.config
+    if config.thinkers > 1:              # its single-thinker path would silently skip desks, board and combiner
+        raise ValueError("answer_with_gold is single-thinker only (thinkers > 1 has no gold-card pass)")
     hidden = model.read(batch)
     store = model.build_store(hidden, batch)
     count = batch.q_visit.shape[0]
@@ -622,6 +696,7 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
              device: Optional[torch.device] = None) -> dict[str, Any]:
     """Own-retrieval and gold-card accuracy with retrieval, halting, loop and card diagnostics."""
     config = model.config
+    gold_cards = gold_cards and config.thinkers == 1       # answer_with_gold is a single-thinker pass
     device = device or next(model.parameters()).device
     stop = None if stop is None else sorted(set(stop))
     total: dict[str, Any] = {}
@@ -634,7 +709,7 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
         count = batch.q_visit.shape[0]
         if count == 0:
             continue
-        recorder = InsertLog(model) if config.store else None
+        recorder = InsertLog(model) if InsertLog.applies(model) else None
         with recorder or nullcontext():
             answers = model.answer(batch, stop=stop)
         correct, _ = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id)
@@ -647,7 +722,8 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
             _add(total, {"correct_gold_cards": sum(forced), "loops_gold_cards": int(teacher.loops.sum())})
         told = (batch.gold_lines >= 0).any(1).cpu()
         if config.store:
-            _add(cards, card_stats(recorder.calls, batch, answers.loops, config.card_rows, offset=1))
+            if recorder is not None:
+                _add(cards, card_stats(recorder.calls, batch, answers.loops, config.card_rows, offset=1))
             top = answers.first_top.cpu()
             gold = batch.gold_lines.cpu()
             size = (gold >= 0).sum(1).clamp_min(1)
@@ -724,7 +800,8 @@ def checkpoint_config(trainer: MiniTrainer, *, contender: str, tokenizer: Option
         "train": asdict(trainer.config), "curriculum": asdict(trainer.curriculum), "seed": trainer.seed,
         "flops": {"budget": trainer.flop_budget, "spent": trainer.flops, "tolerance": trainer.tolerance,
                   "fit": None if trainer.fit is None else {"a": trainer.fit.a, "b": trainer.fit.b,
-                                                           "worst_residual": trainer.fit.worst}},
+                                                           "worst_residual": trainer.fit.worst},
+                  **({"seconds_budget": trainer.seconds_budget} if trainer.seconds_budget is not None else {})},
         "tokenizer": dict(tokenizer or {}), "detector": {"sha256": detector}, "data": dict(data or {}),
         **dict(extra or {}),
     }
@@ -757,7 +834,8 @@ def resume_trainer(path: Union[str, Path], device: Union[str, torch.device] = "c
     trainer = MiniTrainer(model, trainer_config, device, flop_budget=config["flops"]["budget"],
                           curriculum=Curriculum(**config["curriculum"]), tolerance=config["flops"]["tolerance"],
                           seed=config["seed"], fit=None if fit is None else FlopFit(fit["a"], fit["b"],
-                                                                                    fit["worst_residual"]))
+                                                                                    fit["worst_residual"]),
+                          seconds_budget=config["flops"].get("seconds_budget"))
     loaded = load_checkpoint(path, trainer.model, optimizer=trainer.optimizer, map_location=device,
                              restore_rng=True)
     trainer.load_state_dict(loaded["trainer"])
@@ -779,7 +857,8 @@ def window_lines(items: Sequence[Any], cache: pdata.VisitCache) -> dict[str, int
 
 def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens: int = 16_384,
              device: Union[str, torch.device] = "cpu", diagnostics: Optional[dict[str, Any]] = None,
-             labels: Optional[bool] = None, regime: Optional[str] = None) -> Callable[..., list[dict[str, Any]]]:
+             labels: Optional[bool] = None, regime: Optional[str] = None,
+             lesion: Optional[str] = None) -> Callable[..., list[dict[str, Any]]]:
     """A `scorer` for `exp1.evaluate_directory`: D's answers for the items, as `step1.score_items` rows.
 
     D reads each question's whole visit from `cache` (the directory's pointerized cache) up to its
@@ -789,6 +868,8 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
     window defines the wipe line. Exact match is step 1's; answerable plan questions whose world is known
     also count any plan the oracle accepts. `diagnostics` (a dict) receives recall, loop, halting and card
     statistics, the targets flagged unbound, and predictions naming an entity the table does not hold.
+    A swarm (thinkers > 1) adds `diagnostics["swarm"]`: `swarm.diversity` averaged over batches; `lesion`
+    ("board" / "notes" / "cards") is passed to `model.answer` for swarms.
     """
     device = torch.device(device)
     regime = preprocess.regime_of(labels, regime)
@@ -814,6 +895,7 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
         predictions: dict[str, str] = {}
         stats: dict[str, Any] = {}
         cards: dict[str, Any] = {}
+        spread: list[tuple[int, dict[str, Any]]] = []
         groups = pdata.length_batches([lengths[v] for v in visits], max_tokens)
         for group in groups:
             batch = pdata.collate(cache, [visits[i] for i in group])
@@ -825,10 +907,14 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
             if wipe:
                 window = torch.tensor([windows.get(qid, 0) for qid in batch.question_ids], dtype=torch.long,
                                       device=device)
-            recorder = InsertLog(model) if model.config.store and not wipe else None
-            lesion = {} if not wipe else {"wipe": wipe, "window_line": window}
+            recorder = InsertLog(model) if InsertLog.applies(model) and not wipe else None
+            extra = {} if not wipe else {"wipe": wipe, "window_line": window}
+            if lesion is not None:
+                extra["lesion"] = lesion
             with recorder or nullcontext():
-                answers = model.answer(batch, stop=stops, **lesion)
+                answers = model.answer(batch, stop=stops, **extra)
+            if answers.swarm is not None:
+                spread.append((batch.q_visit.shape[0], swarm_module.diversity(answers.swarm)))
             _, texts = judge(answers, batch, tokenizer=tokenizer, stop=stops)
             predictions.update(zip(batch.question_ids, texts))
             unbound = sum(preprocess.prediction_text(ids, batch.names[int(batch.q_visit[q])], tokenizer)[1]
@@ -864,9 +950,30 @@ def d_scorer(cache: pdata.VisitCache, *, wipe: Optional[str] = None, max_tokens:
                                preprocess=cache.preprocess_identity, targets_unbound=flagged,
                                predictions_with_unbound_entity=stats.get("unbound_predictions", 0),
                                cards=summarize_cards(cards) if cards else None)
+            if spread:
+                diagnostics["swarm"] = _mean_diversity(spread)
         return results
 
     return score
+
+
+def _mean_diversity(parts: Sequence[tuple[int, dict[str, Any]]]) -> dict[str, Any]:
+    """Question-weighted mean of per-batch `swarm.diversity` dicts (register_cos; per-desk lists elementwise),
+    except fetch_overlap, which pools its Jaccard sums over the kept (question, desk pair) entries, as
+    IMPLEMENTATION-SPEC §9 defines it (eighth pass, item 5). `collapsed` is recomputed from the pooled values."""
+    def mean(name: str) -> Any:
+        rows = [(n, d[name]) for n, d in parts]
+        if isinstance(rows[0][1], list):
+            return [sum(n * v[i] for n, v in rows) / sum(n for n, _ in rows) for i in range(len(rows[0][1]))]
+        rows = [(n, v) for n, v in rows if not math.isnan(v)]
+        return sum(n * v for n, v in rows) / sum(n for n, _ in rows) if rows else float("nan")
+
+    out = {name: mean(name) for name in ("register_cos", "ask_rate", "fetch_count")}
+    pairs = sum(d["fetch_overlap_pairs"] for _, d in parts)
+    out["fetch_overlap"] = sum(d["fetch_overlap_sum"] for _, d in parts) / pairs if pairs else float("nan")
+    out["silent_desks"] = sum(rate < 0.05 for rate in out["ask_rate"])
+    out["collapsed"] = swarm_module.is_collapsed(out["register_cos"], out["fetch_overlap"])
+    return out
 
 
 def d_checks(config: Mapping[str, Any], tokenizer: Any, model: PremonitionMini, detector_digest: Optional[str]
@@ -896,7 +1003,8 @@ def evaluate_d_checkpoint(budget: Any, checkpoint: Union[str, Path], *, split: s
                           data_rel: Optional[str] = None, tokenizer_path: Optional[str] = None,
                           device: str = "cpu", max_tokens: int = 16_384, replay: bool = True, workers: int = 1,
                           names: Optional[Iterable[str]] = None, regime: str = preprocess.LABEL_FREE,
-                          purpose: Optional[str] = None, log: Log = print) -> dict[str, Any]:
+                          purpose: Optional[str] = None, lesion: Optional[str] = None,
+                          log: Log = print) -> dict[str, Any]:
     """Score a D / D-noask / D-noptr checkpoint like `exp1.evaluate_checkpoint` scores a Core one.
 
     Same report shape (so `exp1.verdict` pairs it with the others), plus "retrieval" diagnostics per
@@ -942,7 +1050,7 @@ def evaluate_d_checkpoint(budget: Any, checkpoint: Union[str, Path], *, split: s
                                     regime=cache_regime, log=log)
         diagnostics: dict[str, Any] = {}
         scorer = d_scorer(cache, wipe=wipe, max_tokens=max_tokens, device=device, diagnostics=diagnostics,
-                          regime=regime)
+                          regime=regime, lesion=lesion)
         rows, info = exp1.evaluate_directory(model, data, directory, replay=replay, workers=workers,
                                              names=None if names is None else list(names), scorer=scorer,
                                              regime=regime, log=log)
@@ -954,7 +1062,7 @@ def evaluate_d_checkpoint(budget: Any, checkpoint: Union[str, Path], *, split: s
         cell = info["summary"]["decision_cells"]
         log(f"premonition exp1 {config['contender']}{' W-' + wipe if wipe else ''} [{regime}] {directory}: "
             + ", ".join(f"{name} {exp1._pct(cell[name])}" for name in slices.DECISION_SLICES))
-    return {
+    report = {
         "command": "premonition eval", "experiment": 1, "contender": config["contender"], "wipe": wipe,
         "regime": regime,
         "identity": identity.report_identity(
@@ -968,6 +1076,9 @@ def evaluate_d_checkpoint(budget: Any, checkpoint: Union[str, Path], *, split: s
         "cut": {"seq_len": slices.SEQ_LEN, "max_new": slices.MAX_NEW, "max_len": slices.CUT_MAX_LEN},
         "split": split, "directories": reports, "name_gap": {"fresh_names": exp1._cell(fresh)}, "items": items,
     }
+    if lesion is not None:
+        report["lesion"] = lesion
+    return report
 
 
 # ----------------------------------------------------------------------------- runs
@@ -1038,18 +1149,33 @@ def _slice_tags_for(data: Any, directory: str, cache: pdata.VisitCache, visits: 
     return cache.tags(sets)
 
 
+def d_trainer(model: PremonitionMini, device: Union[str, torch.device], *, flop_budget: float, seed: int,
+              seconds_budget: Optional[float] = None, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
+              eval_every: int = 1000) -> MiniTrainer:
+    """The MiniTrainer `train_d` trains with: one constructor, so a benchmark (the swarm screen's C0) can build
+    exactly the trainer a run uses."""
+    return MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
+                                                eval_every=eval_every), device, flop_budget=flop_budget, seed=seed,
+                       seconds_budget=seconds_budget)
+
+
 def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: float, variant: str = "D",
             size: str = "full", device: str = "cpu", seed: int = 0, max_tokens: int = 55_000,
             max_visits: Optional[int] = 48, lr: float = 1e-3, warmup_steps: int = 100, log_every: int = 50,
             eval_every: int = 1000, eval_visits: int = 256, calibration_batches: int = 4,
             max_seconds: Optional[float] = None, checkpoint: Optional[str] = None, workers: int = 1,
-            log: Log = print) -> dict[str, Any]:
+            swarm: Optional[Mapping[str, Any]] = None, seconds_budget: Optional[float] = None,
+            memory_phases: bool = False, log: Log = print) -> dict[str, Any]:
     """Train D (or D-noask / D-noptr) on a step-1 village build for `flop_budget` FLOPs (design/06 §3-4).
 
     `data_rel` is the data build (e.g. data/village/large-seed0-...), `tokenizer_path` the v2 tokenizer
     (relative to the budget root). Caches and the name detector are built once through the budget. The
     validation hook scores `eval_visits` validation visits every `eval_every` steps; with `checkpoint`
-    (a relative path) the final model is saved through `learnlab.ckpt`. Returns a JSON-able report.
+    (a relative path) the final model is saved through `learnlab.ckpt`. `swarm` (thinkers / swarm_board /
+    swarm_rounds / board_cards) makes it a swarm of desks; `seconds_budget` drives the curriculum and the stop
+    by training seconds (matched wall-clock arms; pass a FLOP budget out of reach). `memory_phases` (the swarm C0
+    train probe) logs peak allocated / reserved per phase: start, calibration, step1, train, the final
+    validation (logged, never guarded) and the save; the guard's decision is unchanged. Returns a JSON-able report.
     """
     from learnlab.tokenizer import Tokenizer
     from premonition import exp1
@@ -1061,14 +1187,17 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
     valid_cache = pdata.load_or_build(budget, data_rel, "validation", tokenizer, detector, workers=workers,
                                       regime=preprocess.LABEL_FREE, log=log)
     torch.manual_seed(seed)
-    config = MiniConfig.preset(variant, size, vocab_size=tokenizer.vocab_size)
+    config = MiniConfig.preset(variant, size, vocab_size=tokenizer.vocab_size, **(swarm or {}))
     model = PremonitionMini(config)
-    trainer = MiniTrainer(model, mini_train_config(lr=lr, warmup_steps=warmup_steps, log_every=log_every,
-                                                   eval_every=eval_every), device, flop_budget=flop_budget,
-                          seed=seed)
+    trainer = d_trainer(model, device, flop_budget=flop_budget, seed=seed, seconds_budget=seconds_budget, lr=lr,
+                        warmup_steps=warmup_steps, log_every=log_every, eval_every=eval_every)
+    if memory_phases:
+        trainer.memory_phases = []
+        trainer.memory_phase("start")                       # process start to here: caches, model on the device
     stream = pdata.batches(train_cache, max_tokens, seed=seed, epochs=None, max_visits=max_visits)   # label-free
     head = [next(stream) for _ in range(calibration_batches)]
     fit = trainer.calibrate(head)
+    trainer.memory_phase("calibration")
     log(f"premonition train {variant}: {model.num_parameters():,} params, F = {flop_budget:.3e}; FLOP fit "
         f"a = {fit.a:.4g}/token, b = {fit.b:.4g}/(question x loop), worst residual {fit.worst:.1%}")
     chosen = list(range(min(eval_visits, len(valid_cache))))
@@ -1087,12 +1216,18 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                               "tokenizer": {"path": tokenizer_path, "sha256": tokenizer.digest},
                               "detector": None if detector is None else detector.digest,
                               "preprocess": preprocess.identity(preprocess.LABEL_FREE)}
+    if swarm:
+        report["swarm"] = dict(swarm)
+    if seconds_budget is not None:
+        report["seconds_budget"] = seconds_budget
     try:
         report.update(status="completed", **trainer.train(itertools.chain(head, stream), max_seconds=max_seconds,
                                                            evaluate=hook, on_log=lambda r: log(format_record(r))))
     except MemoryGuardError as error:
         report.update(status="aborted", error=str(error), peak_gpu_reserved_bytes=error.peak)
+        trainer.memory_phase("open-at-abort")              # the phase the guard stopped (step1 or train)
     report["validation"] = trainer.evaluate(hook)
+    trainer.memory_phase("validation")                     # logged, never guarded
     log(format_record({"step": trainer.step, "flops_share": trainer.flops / flop_budget, "eval": report["validation"]}))
     report["history"] = trainer.history
     if checkpoint:
@@ -1102,6 +1237,9 @@ def train_d(budget: Any, *, data_rel: str, tokenizer_path: str, flop_budget: flo
                                         data={"dir": data_rel, "tag": Path(data_rel).name},
                                         preprocess_identity=preprocess.identity(preprocess.LABEL_FREE))
         report["checkpoint"] = str(save_mini_checkpoint(budget, checkpoint, trainer, ckpt_config))
+        trainer.memory_phase("save")
+    if trainer.memory_phases is not None:
+        report["memory_phases"] = trainer.memory_phases
     return report
 
 

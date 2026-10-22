@@ -1,0 +1,276 @@
+{
+ "command": "premonition train",
+ "contender": "D",
+ "parameters": 304516,
+ "device": "cpu",
+ "seed": 2,
+ "data": {
+  "dir": "data/village/stream/cache/tiny-seed0-53292765806d",
+  "tag": "tiny-seed0-53292765806d"
+ },
+ "tokenizer": {
+  "path": "data/tokenizer/premonition-tok-v2-fallback.json",
+  "sha256": "2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a"
+ },
+ "detector": "dbb37b46aa94785d73435a527ad5a9685c21df0791112c248309276a8ef2e556",
+ "preprocess": {
+  "format": "premonition.preprocess",
+  "version": 1,
+  "regime": "label-free",
+  "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7"
+ },
+ "swarm": {
+  "thinkers": 4,
+  "swarm_board": false,
+  "swarm_rounds": 4,
+  "board_cards": 16
+ },
+ "seconds_budget": 30.0,
+ "status": "completed",
+ "steps": 95,
+ "tokens": 231407,
+ "seconds": 30.082004396000002,
+ "tokens_per_s": 7692.539265460986,
+ "stop": "seconds budget",
+ "flops": 907412685694.3599,
+ "flops_total": 907412685694.3599,
+ "flop_budget": 1e+30,
+ "flops_share": 9.0741268569436e-19,
+ "tolerance": 0.05,
+ "budget_ok": false,
+ "flops_per_token": 3921284.514705086,
+ "fit": {
+  "a": 1511186.477081182,
+  "b": 19883077.415221,
+  "worst_residual": 0.028447357137393638,
+  "samples": [
+   {
+    "flops": 7213251712,
+    "tokens": 2610,
+    "question_loops": 160
+   },
+   {
+    "flops": 10298450560,
+    "tokens": 2610,
+    "question_loops": 320
+   },
+   {
+    "flops": 10301666944,
+    "tokens": 2610,
+    "question_loops": 320
+   },
+   {
+    "flops": 6272070656,
+    "tokens": 2436,
+    "question_loops": 136
+   },
+   {
+    "flops": 8846861312,
+    "tokens": 2436,
+    "question_loops": 272
+   },
+   {
+    "flops": 8849228288,
+    "tokens": 2436,
+    "question_loops": 272
+   },
+   {
+    "flops": 6767967552,
+    "tokens": 2559,
+    "question_loops": 144
+   },
+   {
+    "flops": 9523245120,
+    "tokens": 2559,
+    "question_loops": 288
+   },
+   {
+    "flops": 9525914688,
+    "tokens": 2559,
+    "question_loops": 288
+   },
+   {
+    "flops": 8091672576,
+    "tokens": 2676,
+    "question_loops": 192
+   },
+   {
+    "flops": 11953142784,
+    "tokens": 2676,
+    "question_loops": 384
+   },
+   {
+    "flops": 11957124096,
+    "tokens": 2676,
+    "question_loops": 384
+   }
+  ],
+  "seconds": 6.823213446999944
+ },
+ "loop_mismatches": 0,
+ "phases": {
+  "gold": {
+   "steps": 6,
+   "flops": 42472584972.98696,
+   "first_step": 1
+  },
+  "teacher": {
+   "steps": 24,
+   "flops": 231984187325.94598,
+   "first_step": 7
+  },
+  "own": {
+   "steps": 65,
+   "flops": 632955913395.4272,
+   "first_step": 31
+  }
+ },
+ "final": {
+  "loss": 11.325294494628906,
+  "lm": 6.3896613121032715,
+  "ask": 4.474920749664307,
+  "ans": 2.6576147079467773,
+  "halt": 0.4055832028388977,
+  "answer_acc": 0.0,
+  "answer_acc_first": 0.0,
+  "recall_at_k": 0.2556527256965637
+ },
+ "peak_gpu_reserved_bytes": null,
+ "train_seconds": 30.08044073300016,
+ "validation": {
+  "questions": 213,
+  "accuracy": 0.0,
+  "loops_mean": 4.0,
+  "halt_rate": 0.0,
+  "by_depth": {
+   "0": {
+    "n": 12,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   },
+   "1": {
+    "n": 72,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   },
+   "2": {
+    "n": 57,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   },
+   "3": {
+    "n": 44,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   },
+   "4": {
+    "n": 24,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   },
+   "5": {
+    "n": 4,
+    "accuracy": 0.0,
+    "loops_mean": 4.0
+   }
+  },
+  "slices": {
+   "far": {
+    "n": 73,
+    "accuracy": 0.0
+   },
+   "far_deep": {
+    "n": 62,
+    "accuracy": 0.0
+   },
+   "multi_hop": {
+    "n": 122,
+    "accuracy": 0.0
+   },
+   "near": {
+    "n": 105,
+    "accuracy": 0.0
+   },
+   "not_told": {
+    "n": 10,
+    "accuracy": 0.0
+   },
+   "overall": {
+    "n": 188,
+    "accuracy": 0.0
+   }
+  },
+  "seconds": 0.8355772919999254,
+  "gold_recall_at_4": 0.07953289299461971,
+  "gold_any_at_4": 0.1890547263681592,
+  "random_recall_at_4": 0.04949051942398299,
+  "asked_rate": 0.6572769953051644,
+  "cards": null
+ },
+ "history": [
+  {
+   "step": 50,
+   "flops": 470156340482.48816,
+   "flops_share": 4.701563404824881e-19,
+   "phase": "own",
+   "p_own": 0.52763594208335,
+   "lr": 0.0005,
+   "tokens": 123486,
+   "padded_tokens": 124600,
+   "tokens_per_s": 7889.849187177288,
+   "padded_tokens_per_s": 7961.025611990752,
+   "loops_per_question": 15.001058201058202,
+   "loss": 17.676366806030273,
+   "lm": 8.679760932922363,
+   "ask": 4.07756233215332,
+   "ans": 6.943228721618652,
+   "halt": 0.6284555792808533,
+   "gold_recall_at_4": 0.21586765348911285,
+   "answer_acc": 0.0,
+   "answer_acc_first": 0.0,
+   "grad_norm": 5.039381980895996,
+   "weight_norm": 91.3863754272461,
+   "dead_mlp_fraction": 0.010841846466064453,
+   "halt_rate": 0.0
+  },
+  {
+   "step": 95,
+   "flops": 907412685694.3599,
+   "flops_share": 9.0741268569436e-19,
+   "phase": "own",
+   "p_own": 0.75,
+   "lr": 0.00095,
+   "tokens": 231407,
+   "padded_tokens": 233534,
+   "tokens_per_s": 7480.363424097925,
+   "padded_tokens_per_s": 7550.577823043554,
+   "loops_per_question": 16.0,
+   "loss": 11.325294494628906,
+   "lm": 6.3896613121032715,
+   "ask": 4.474920749664307,
+   "ans": 2.6576147079467773,
+   "halt": 0.4055832028388977,
+   "gold_recall_at_4": 0.2556527256965637,
+   "answer_acc": 0.0,
+   "answer_acc_first": 0.0,
+   "grad_norm": 3.537782669067383,
+   "weight_norm": 93.42849731445312,
+   "dead_mlp_fraction": null,
+   "halt_rate": null
+  }
+ ],
+ "checkpoint": "/home/user/learner/artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S0-s2",
+ "history_total": 2,
+ "arm": "S0",
+ "seconds_requested": 30.0,
+ "wall_seconds": 47.23862310300001,
+ "size": "tiny",
+ "environment": {
+  "python": "3.13.16",
+  "torch": "2.14.1+cpu",
+  "cuda": null,
+  "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+  "cpu_count": 4,
+  "device": "cpu"
+ }
+}

@@ -232,6 +232,9 @@ class Think(nn.Module):
         self.age = nn.Embedding(config.age_buckets, d) if config.store else None
         self.age_bias = nn.Parameter(torch.zeros(config.age_buckets)) if config.store else None
         self.binder = nn.Linear(2 * d, 2 * d) if config.store and config.pointers else None
+        # Swarm (premonition/swarm.py): created only with thinkers > 1, so the flag-off RNG stream is untouched.
+        self.desk = nn.Embedding(config.thinkers, d) if config.thinkers > 1 else None
+        self.board_type = nn.Embedding(2, d) if config.thinkers > 1 and config.swarm_board else None
 
     def forward(self, x: torch.Tensor, valid: torch.Tensor, step: int) -> torch.Tensor:
         x = x + self.step.weight[step]
@@ -302,6 +305,7 @@ class Answers:
     first_top: torch.Tensor   # [Q, top_k] long: lines of the first ASK's top-k (-1 = NULL or none)
     fetched: Optional[torch.Tensor]   # [Q, L + 1] bool: cards fetched (NULL last); None without a store
     halt_prob: torch.Tensor   # [Q] float: HALT probability at the answering loop
+    swarm: Optional[dict[str, Any]] = None   # swarm per-desk readouts (see premonition/swarm.py); None for one thinker
 
     def ids(self) -> list[list[int]]:
         return [row[:length].tolist() for row, length in zip(self.tokens.cpu(), self.lengths.cpu())]
@@ -322,7 +326,14 @@ class _Episode:
 class PremonitionMini(nn.Module):
     """forward(batch, mode) -> losses; answer(batch) -> greedy entity-aware answers."""
 
+    train_diagnostics = True       # forward's recall@k metric; MiniTrainer turns it off for matched wall-clock runs
+
     def __init__(self, config: MiniConfig) -> None:
+        if config.thinkers > 1 and type(self) is not PremonitionMini and \
+                not type(self).__dict__.get("SWARM_COMPATIBLE", False):
+            raise ValueError(f"{type(self).__name__} does not compose with the swarm (thinkers > 1): its "
+                             "_start/_step/_insert/_decode_logits overrides assume one episode row per question. "
+                             "Set SWARM_COMPATIBLE = True on the class only after testing it with design/swarm.")
         super().__init__()
         self.config = config
         self.embed = nn.Embedding(config.total_vocab, config.d_model)
@@ -513,23 +524,15 @@ class PremonitionMini(nn.Module):
         `loops` overrides the loop count. Default weights come from the config, except
         that "gold" leaves out L_ask and L_halt (the 0-5% phase trains L_lm + L_ans only).
         """
-        if mode not in MODES:
-            raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+        if self.config.thinkers > 1:                       # design/swarm: M desks per question
+            from premonition.swarm import swarm_forward
+            return swarm_forward(self, batch, mode, p_own, loops, weights, generator)
+        hidden, l_lm, store, zero, weights, empty = self._train_prelude(batch, mode, weights)
+        if empty is not None:
+            return empty
         config = self.config
-        hidden = self.read(batch)
-        l_lm = self.lm_loss(hidden, batch)
-        store = self.build_store(hidden, batch)
         count = batch.q_visit.shape[0]
-        zero = hidden.sum() * 0.0
         metrics: dict[str, torch.Tensor] = {}
-        if weights is None:
-            weights = {"lm": config.w_lm, "ask": config.w_ask, "ans": config.w_ans, "halt": config.w_halt}
-            if mode == "gold":
-                weights.update(ask=0.0, halt=0.0)
-        if count == 0:
-            losses = {"lm": l_lm, "ask": zero, "ans": zero, "halt": zero}
-            metrics["question_loops"] = torch.zeros((), dtype=torch.long)
-            return {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
 
         device = hidden.device
         episode = self._start(batch, hidden, store, self._mentions(batch))
@@ -554,12 +557,7 @@ class PremonitionMini(nn.Module):
                                       torch.full_like(gold, -1, dtype=torch.long)).topk(width, 1).values
                 self._insert(episode, store, torch.arange(count, device=device), preload)
 
-        answer = batch.answer
-        length = int((answer != IGNORE_INDEX).sum(1).max().item())
-        targets = answer[:, :max(length, 1)]
-        start_token = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1]
-        inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
-        inputs = inputs.masked_fill(inputs == IGNORE_INDEX, config.pad_id)
+        targets, inputs = self._answer_targets(batch)
 
         ans_terms, halt_terms, set_terms, bce_terms = [], [], [], []
         pairs = 0
@@ -599,7 +597,7 @@ class PremonitionMini(nn.Module):
             bce_terms.append(F.binary_cross_entropy_with_logits(ask, asks.float(), reduction="none"))
             if asks.any():
                 set_terms.append(set_cross_entropy(scores[asks], need[asks]))
-            if step == 0:
+            if step == 0 and self.train_diagnostics:
                 metrics["recall_at_k"] = self._recall(store, episode, index, rows, gold).detach()
             # Fetch for the next loop.
             going = n_loops[index] > step + 1
@@ -666,19 +664,46 @@ class PremonitionMini(nn.Module):
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
 
-    # ------------------------------------------------------------------ evaluation
-    @torch.no_grad()
-    def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
-               window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
-               max_loops: Optional[int] = None) -> Answers:
-        """Greedy answers with the model's own retrieval and halting (design/06 §2).
+    # Shared by the single thinker and the swarm (premonition/swarm.py), so a fix reaches both arms (round 3,
+    # eighth pass, item 11).
+    def _train_prelude(self, batch: VisitBatch, mode: str, weights: Optional[dict[str, float]]
+                       ) -> tuple[torch.Tensor, torch.Tensor, Optional[CardStore], torch.Tensor, dict[str, float],
+                                  Optional[dict]]:
+        """forward's start: (hidden, L_lm, store, zero, weights, the count == 0 result or None). The ops run in
+        the original order, so the flag-off graph (and its gradient sums) is bit-identical."""
+        if mode not in MODES:
+            raise ValueError(f"unknown mode {mode!r}; choose from {MODES}")
+        config = self.config
+        hidden = self.read(batch)
+        l_lm = self.lm_loss(hidden, batch)
+        store = self.build_store(hidden, batch)
+        zero = hidden.sum() * 0.0
+        if weights is None:
+            weights = {"lm": config.w_lm, "ask": config.w_ask, "ans": config.w_ans, "halt": config.w_halt}
+            if mode == "gold":
+                weights.update(ask=0.0, halt=0.0)
+        empty = None
+        if batch.q_visit.shape[0] == 0:
+            losses = {"lm": l_lm, "ask": zero, "ans": zero, "halt": zero}
+            metrics = {"question_loops": torch.zeros((), dtype=torch.long)}
+            empty = {**losses, "loss": sum(weights[k] * v for k, v in losses.items()), "metrics": metrics}
+        return hidden, l_lm, store, zero, weights, empty
 
-        Loops until HALT (p > 0.5) or `max_loops`; ASK (logit > 0) fetches the top-k
-        eligible cards. ENT ids are restricted to entities already mentioned (in the
-        window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
-        "store" keeps the reader state but drops cards and names before it; "full" also
-        re-reads from the window start with a fresh reader.
-        """
+    def _answer_targets(self, batch: VisitBatch) -> tuple[torch.Tensor, torch.Tensor]:
+        """(targets [Q, A], teacher-forced decoder inputs [Q, A]) for L_ans."""
+        answer = batch.answer
+        length = int((answer != IGNORE_INDEX).sum(1).max().item())
+        targets = answer[:, :max(length, 1)]
+        start_token = batch.tokens[batch.q_visit, batch.q_span[:, 1] - 1]
+        inputs = torch.cat([start_token.unsqueeze(1), targets[:, :-1]], dim=1)
+        return targets, inputs.masked_fill(inputs == IGNORE_INDEX, self.config.pad_id)
+
+    # ------------------------------------------------------------------ evaluation
+    def _answer_prelude(self, batch: VisitBatch, wipe: Optional[str], window_line: Optional[torch.Tensor]
+                        ) -> tuple[VisitBatch, torch.Tensor, Optional[CardStore], Optional[torch.Tensor],
+                                   Optional[Answers]]:
+        """answer's start: wipe checks and crop, read, store (wiped). (batch, hidden, store, low, the empty-batch
+        Answers or None)."""
         config = self.config
         low = None
         if wipe is not None:
@@ -693,15 +718,41 @@ class PremonitionMini(nn.Module):
         store = self.build_store(hidden, batch)
         if store is not None and wipe is not None:
             store = store.wipe(window_line)
+        empty = None
+        if batch.q_visit.shape[0] == 0:
+            device = hidden.device
+            none = torch.zeros(0, dtype=torch.long, device=device)
+            empty = Answers(torch.zeros(0, config.max_answer, dtype=torch.long, device=device), none,
+                            none, torch.zeros(0, config.top_k, dtype=torch.long, device=device),
+                            None if store is None else torch.zeros(0, store.lines + 1, dtype=torch.bool,
+                                                                   device=device),
+                            torch.zeros(0, device=device))
+        return batch, hidden, store, low, empty
+
+    @torch.no_grad()
+    def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
+               window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
+               max_loops: Optional[int] = None, lesion: Optional[str] = None) -> Answers:
+        """Greedy answers with the model's own retrieval and halting (design/06 §2).
+
+        Loops until HALT (p > 0.5) or `max_loops`; ASK (logit > 0) fetches the top-k
+        eligible cards. ENT ids are restricted to entities already mentioned (in the
+        window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
+        "store" keeps the reader state but drops cards and names before it; "full" also
+        re-reads from the window start with a fresh reader. `lesion` is for swarms only.
+        """
+        if self.config.thinkers > 1:                       # design/swarm: M desks per question
+            from premonition.swarm import swarm_answer
+            return swarm_answer(self, batch, wipe=wipe, window_line=window_line, stop=stop,
+                                max_loops=max_loops, lesion=lesion)
+        if lesion is not None:
+            raise ValueError("lesion needs a swarm (thinkers > 1)")
+        config = self.config
+        batch, hidden, store, low, empty = self._answer_prelude(batch, wipe, window_line)
+        if empty is not None:
+            return empty
         count = batch.q_visit.shape[0]
         device = hidden.device
-        if count == 0:
-            empty = torch.zeros(0, dtype=torch.long, device=device)
-            return Answers(torch.zeros(0, config.max_answer, dtype=torch.long, device=device), empty,
-                           empty, torch.zeros(0, config.top_k, dtype=torch.long, device=device),
-                           None if store is None else torch.zeros(0, store.lines + 1, dtype=torch.bool,
-                                                                  device=device),
-                           torch.zeros(0, device=device))
         mentions = self._mentions(batch, low)
         episode = self._start(batch, hidden, store, mentions)
         limit = min(max_loops or config.max_loops, config.max_loops)
