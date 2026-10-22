@@ -1,0 +1,575 @@
+--- a/g2fa4_supervisor.py
++++ b/g2fa4_supervisor.py
+@@ -12,6 +12,8 @@
+   python g2fa4_supervisor.py disarm      renames ARMED.txt: the loop leaves; a running job goes on
+   python g2fa4_supervisor.py halt        disarm + stop the plan's runners (their checkpoints stay): only on Ben's word
+   python g2fa4_supervisor.py probe-resume --keep DIR --step 200 --upto 250   after the run: resume the kept checkpoint twice on the idle card, compare with the run's own updates
++                                         (exit 0 PASS, 1 FAIL, 2 refused: e.g. a checkpoint whose sidecar accum / step is not the job's, 3 refused: --upto < step+3, the early window
++                                         (updates step+2 and step+3) cannot be computed; nothing is run or written)
+   python g2fa4_supervisor.py selftest    CUDA check in this very context (the boot task runs as SYSTEM): writes selftest.txt
+ 
+ It starts nothing by itself: `run` does nothing until ARMED.txt exists, which the Mac helper writes (`arm`) on Ben's go line; after that the boot task
+@@ -178,10 +180,14 @@
+ 
+ 
+ def aside(p):
+-    """rename a file out of the way (never delete)."""
++    """rename a file out of the way (never delete). Two asides of the same name within one second get a -2, -3, ... suffix: an earlier aside is never replaced."""
+     p = Path(p)
+     if p.exists():
+         q = p.with_name(p.name + '.aside-' + stamp())
++        n = 1
++        while q.exists():
++            n += 1
++            q = p.with_name(f'{p.name}.aside-{stamp()}-{n}')
+         os.replace(p, q)
+         return q
+ 
+@@ -212,6 +218,7 @@
+         self.off, self.seg, self.train, self.resumed, self.segments = 0, 0, [], [], []
+         self.last_step, self.nonfinite, self.last_elapsed = 0, False, 0.0
+         self.device, self.ckpt_failed, self.ckpts = None, 0, 0
++        self.warnings = []                        # every `resume_warning` event line (train.py: accum differs from the checkpoint's, other code id, CUDA streams not restored)
+ 
+     def update(self):
+         try:
+@@ -237,6 +244,8 @@
+                 self.resumed.append((self.seg, e.get('step')))
+             elif ev == 'start':
+                 self.device = e.get('device')
++            elif ev == 'resume_warning':
++                self.warnings.append(e)
+             elif ev == 'ckpt_failed':
+                 self.ckpt_failed += 1
+             elif ev == 'ckpt':
+@@ -265,12 +274,37 @@
+ 
+ 
+ # ---------------------------------------------------------------- the two registered checks (pure functions; thresholds come from plan.json)
++EARLY_DEFERRED = "early window not checked by the running gate; do not read this result until the probe's P1b passes."          # printed verbatim (TRACE-A md, status.md, finish message) when trace A could not compute the early window (coordinator ruling B2)
++
++
++def early_deferred(rec, verdict):
++    """the ONE place that decides whether the deferral (EARLY_DEFERRED) is in force: -> the early_window record {computed: False, ...}, or None.
++    rec = a dict that holds an 'early_window' key: trace_a's r['resume'], or the stored js['traceA']; verdict = trace A's verdict (r['verdict'] / js['traceA']['verdict']).
++    The deferral applies only to a trace A that PASSED (coordinator review F1): on a FAIL the run is stopped for its own reasons, the stop message says them, and a line telling the operator to wait for P1b would mislead.
++    Every report that prints the line (TRACE-A md, status.md, DONE file / log line) and the state that stores the record asks this function (F7)."""
++    ew = (rec or {}).get('early_window')
++    return ew if verdict == 'PASS' and isinstance(ew, dict) and ew.get('computed') is False else None
++
++
+ def trace_a(ev, rules, max_used_mib):
+-    """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches."""
++    """Trace A (big-run, fixed before any PC run): no NaN/Inf; GPU peak under the limit; the loss falls; the resume matches.
++    Opt-in rule keys (absent = today's behaviour; PREREG-trace-a2.md Amendment 1), both HARD (never released by rules.soft):
++      resume_early_abs (float): max |dL| over the 2nd and 3rd redone updates must be <= it. The window is computed only when the redone updates start with the three contiguous updates rstep+1, rstep+2, rstep+3 (rstep = the
++        resumed step); then r['resume']['early_max'] is recorded (rule or not) and, with the rule set, r['resume']['early_window'] = {computed: True, steps: [rstep+2, rstep+3]}. When it cannot be computed (under 3 redone
++        updates, or the redone updates are not contiguous from rstep+1) nothing about its value is recorded (ruling Q95: a gate never reports a check it did not compute); with the rule set that is NOT a failure and NOT
++        a pass of the window: r['resume']['early_window'] = {computed: False, redone: k, deferred_to: 'probe P1b'}, and the reports print EARLY_DEFERRED when (and only when) trace A passed (early_deferred(); never on a FAIL)
++        (coordinator ruling B2 / B3: the window is left to the probe's P1b, which is the reading gate). early_window['reason'] is present in exactly two cases and names the real cause:
++        (a) the first redone update rstep+1 is missing from the earlier segment, the resumed one or both ("the first redone update <rstep+1> is missing from ..."; trace A also FAILs on it, see below), and
++        (b) rstep+1 is present and 3 or more updates were redone, but the 2nd and 3rd are not rstep+2 and rstep+3 (a hole at rstep+2 or rstep+3). With rstep+1 present and under 3 redone updates there is no 'reason' (plain deferral);
++      resume_exact_fields (list): at the FIRST redone update every listed field must be present in both the earlier segment's train line and the resumed one and be equal (an entry ending in '_' is a prefix, e.g. 'plan_',
++        which must match some key and the same keys in both lines; any other entry is a field name). A listed field that is missing is a hard failure, not a skip. r['resume'] gets exact_checked, exact_mismatch and exact_missing.
++      With either opt-in key set, the first redone update must be update rstep+1: if it is missing from the earlier or the resumed segment the first-update item (resume_first_diff and the exact fields) cannot be computed as defined,
++      which is a hard failure that names the steps (fail closed; r['resume']['first_diff'] is then None). Without the opt-in keys none of this applies and the result is the original pack function's (plus early_max where recorded).
++      resume_first_diff keeps its value (a bar, not changed here)."""
+     up, n = rules['upto'], rules['first_n']
+     m = ev.merged()
+     r = dict(upto=up, rules=rules, why_fail=[], notes=[], max_used_mib=max_used_mib, soft_misses=[])
+-    soft = set(rules.get('soft', ()))          # items listed here ('peak', 'resume_max_abs') are RECORDED, not gated: a miss goes to soft_misses and does not stop the run (the reading of the result is gated after the run instead)
++    soft = set(rules.get('soft', ()))          # items listed here ('peak', 'resume_max_abs', and with --soft-trace-a-mean also 'resume_mean_abs') are RECORDED, not gated: a miss goes to soft_misses and does not stop the run (the reading of the result is gated after the run instead)
+ 
+     def miss(key, msg):
+         (r['soft_misses'] if key in soft else r['why_fail']).append(msg)
+@@ -293,21 +327,72 @@
+     # the resume: the earlier segment's updates after the checkpoint, redone by the resumed segment (the first resume that has any such updates)
+     r['resume'] = None
+     for seg2, rstep in ev.resumed:
+-        s1 = {}
++        s1f = {}
+         for e in ev.train:
+             if e['seg'] < seg2 and e['step'] > rstep:          # the latest earlier line for each step (a segment that died before its first update has none)
+-                s1[e['step']] = e['loss']
+-        s2 = {e['step']: e['loss'] for e in ev.train if e['seg'] == seg2}
++                s1f[e['step']] = e
++        s1 = {s: e['loss'] for s, e in s1f.items()}
++        s2f = {e['step']: e for e in ev.train if e['seg'] == seg2}          # (the whole train lines are kept for the exact-field item; the losses are compared exactly as before)
++        s2 = {s: e['loss'] for s, e in s2f.items()}
+         common = sorted(set(s1) & set(s2))
+         if common:
+             d = [abs(s1[s] - s2[s]) for s in common]
+             r['resume'] = dict(resumed_step=rstep, n_redone=len(common), first_diff=d[0], mean_abs=mean(d), max_abs=max(d))
+-            if d[0] > rules['resume_first_diff']:
++            early_on = rules.get('resume_early_abs') is not None
++            fields = rules.get('resume_exact_fields')
++            first_ok = common[0] == rstep + 1                                                     # the first redone update is the update right after the restore
++            gone = '' if first_ok else ' and '.join(w for w, ss in (('the earlier segment', s1), ('the resumed segment', s2)) if rstep + 1 not in ss)          # where update rstep+1 is missing
++            if not first_ok and (early_on or fields is not None):                                  # opt-in, hard, fail closed: the first-update item would otherwise be computed on another update
++                r['resume']['first_diff'] = None
++                r['why_fail'].append(f'the first redone update {rstep + 1} (the first update after the restore at {rstep}) is missing from {gone}; the first redone update present is {common[0]}: the first-update check cannot be computed as defined')
++            elif d[0] > rules['resume_first_diff']:
+                 r['why_fail'].append(f'first redone update differs by {d[0]:.4f} (limit {rules["resume_first_diff"]})')
+             if mean(d) > rules['resume_mean_abs']:
+-                r['why_fail'].append(f'redone updates differ by {mean(d):.4f} on average (limit {rules["resume_mean_abs"]})')
++                miss('resume_mean_abs', f'redone updates differ by {mean(d):.4f} on average (limit {rules["resume_mean_abs"]})')       # hard unless rules.soft lists 'resume_mean_abs' (installer: --soft-trace-a-mean; never a default)
+             if max(d) > rules['resume_max_abs']:
+                 miss('resume_max_abs', f'redone updates differ by up to {max(d):.4f} (limit {rules["resume_max_abs"]})')
++            # Amendment 1 (PREREG-trace-a2.md): the loss of the first redone update is a forward pass before the optimizer step, so lost optimizer state / an lr offset first show at the 2nd and 3rd redone updates
++            if common[:3] == [rstep + 1, rstep + 2, rstep + 3]:                                   # the early window = the 2nd AND 3rd redone update, computed only from three contiguous redone updates (else nothing is recorded: Q95)
++                early = list(zip(common[1:3], d[1:3]))
++                r['resume']['early_max'] = em = max(x for _, x in early)                       # recorded always (when the window is computed)
++                lim = rules.get('resume_early_abs')
++                if early_on:
++                    r['resume']['early_window'] = dict(computed=True, steps=[s for s, _ in early])
++                if lim is not None and em > lim:                                                  # opt-in, hard (never in `soft`)
++                    worst = max(early, key=lambda t: t[1])[0]
++                    r['why_fail'].append(f'early redone updates {" and ".join(str(s) for s, _ in early)} (the 2nd and 3rd after the restore) differ by up to {em:.4f}, at update {worst} (limit {lim}): lost optimizer state or an lr offset?')
++            elif early_on:                                                                        # opt-in: not computable here -> NOT a failure, deferred to the probe's P1b (coordinator ruling B2 / B3); no value, no pass
++                r['resume']['early_window'] = ew = dict(computed=False, redone=len(common), deferred_to='probe P1b')
++                if not first_ok:                                                                  # (a) the real cause: the first redone update is missing (trace A fails on it); the window cannot be located without it
++                    ew['reason'] = f'the first redone update {rstep + 1} (the first update after the restore at {rstep}) is missing from {gone}, so the 2nd and 3rd redone updates ({rstep + 2} and {rstep + 3}) cannot be located; the redone updates start {common[:4]}'
++                elif len(common) >= 3:                                                            # (b) a hole at rstep+2 or rstep+3
++                    ew['reason'] = f'the 2nd and 3rd redone updates after the restore at {rstep} must be updates {rstep + 2} and {rstep + 3}, contiguous after update {rstep + 1}; the redone updates start {common[:4]}'
++            if fields is not None and first_ok:                                                   # opt-in, hard: data / RNG / schedule fields of the first redone update must be equal (not when the first redone update is missing: failed above)
++                l1, l2 = s1f[common[0]], s2f[common[0]]
++                skip = ('seg', 'loss', 'step', 'elapsed')                                         # never compared this way
++                names, missing = set(), []
++                for f in fields:
++                    if f in skip:
++                        continue
++                    if f.endswith('_'):                                                           # a prefix: it must match some key, and the same keys in both lines
++                        k1, k2 = ({k for k in l if k not in skip and k.startswith(f)} for l in (l1, l2))
++                        if not k1 and not k2:
++                            missing.append(dict(field=f, reason='prefix matches no key in either line'))
++                        elif k1 != k2:
++                            missing.append(dict(field=f, reason=f'prefix matches different keys: earlier {sorted(k1)}, resumed {sorted(k2)}'))
++                        names |= k1 & k2
++                    elif f in l1 and f in l2:
++                        names.add(f)
++                    else:
++                        missing.append(dict(field=f, reason='absent from ' + ('both lines' if f not in l1 and f not in l2 else 'the earlier line' if f not in l1 else 'the resumed line')))
++                names = sorted(names)
++                same = lambda x, y: x == y or (isinstance(x, float) and isinstance(y, float) and x != x and y != y)
++                bad = [dict(field=k, earlier=l1[k], resumed=l2[k]) for k in names if not same(l1[k], l2[k])]
++                r['resume'].update(exact_checked=names, exact_mismatch=bad, exact_missing=missing)
++                if missing:                                                                       # hard: an exact-field item that cannot compare a listed field is not a pass
++                    r['why_fail'].append(f'first redone update {common[0]}: listed exact field(s) cannot be compared: ' + '; '.join(f'{m["field"]} ({m["reason"]})' for m in missing))
++                if bad:
++                    r['why_fail'].append(f'first redone update {common[0]}: field(s) that must be exactly equal differ between the earlier segment and the resumed one: ' + ', '.join(f'{b["field"]} {b["earlier"]!r} vs {b["resumed"]!r}' for b in bad))
+             break
+     if r['resume'] is None:
+         r['why_fail'].append('no resume with redone updates to compare (the planned kill-and-resume did not run, or the killed segment had no update after its checkpoint)')
+@@ -341,15 +426,47 @@
+     return r
+ 
+ 
++def lag1_autocorr(xs):
++    """lag-1 autocorrelation of a series (sum of (x_t - m)(x_t+1 - m) over sum of (x_t - m)^2); None if the series has under 3 points or no variance."""
++    xs = list(xs)
++    if len(xs) < 3:
++        return None
++    m = sum(xs) / len(xs)
++    den = sum((x - m) ** 2 for x in xs)
++    if den == 0:
++        return None
++    return sum((a - m) * (b - m) for a, b in zip(xs, xs[1:])) / den
++
++
++EARLY_LIMIT = 0.005          # Amendment 1 A1.1: the early window (2nd and 3rd redone update) bar, the ONE definition: the probe's P1b uses it (and records it as early_limit in the probe JSON, which rejudge_probe.py reads); install_g2fa4.py reads this line's text for --trace-a-early (keep it `EARLY_LIMIT = <number>`)
++
++
+ def resume_probe_verdict(C, R1, R2):
+     """The registered resume-noise rule (TRACE-A-READING item 2): C = the run's continuous updates, R1 / R2 = two resumes of the same checkpoint (equal-length lists).
+-    n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise."""
++    n = largest |R1 - R2|, d = largest |R_i - C|; PASS if d <= max(0.10, 3n), FAIL otherwise.
++    `verdict`, n, d, limit and the mean_abs_* / diff_* keys are exactly the registered rule's. Added beside it (recorded, NOT the gate; the mean form is pre-registered in the re-reading
++    of the probe, rejudge_probe.py): first_r1_c / first_r2_c / first_r1_r2 = the differences at the first probe update (exactly 0 when the restore is complete: the forward pass of the first update is deterministic),
++    identical_resumes = (n == 0), i.e. R1 == R2 at every update (recorded only: rejudge_probe.py reads a probe whose restarts are identical, differ from the run and pass P1 / P1b as ESCALATE, PREREG Amendment 2 / B1; this function's verdict is not affected),
++    Dbar = mean(mean_abs_r1_c, mean_abs_r2_c), Nbar = mean_abs_r1_r2, ratio = Dbar / Nbar (inf if Nbar == 0 and Dbar > 0; 1.0 if both are 0),
++    mean_form_limit = max(0.02, 2 Nbar), mean_form_verdict = PASS if Dbar <= mean_form_limit, lag1_autocorr of the signed series R1 - R2 (None if it has no variance).
++    Amendment 1 (P1b, early window; recorded, not the gate): early_max = max over probe updates 2 and 3 (e.g. 202-203) of max(|R1 - C|, |R2 - C|),
++    early_limit = 0.005, early_verdict = PASS if early_max <= early_limit. The window needs at least 3 updates (ruling Q95, as in rejudge_probe.py): with fewer the three keys are ABSENT from the result
++    (not None, not computed), and md_probe prints no early-window line for it."""
+     assert len(C) == len(R1) == len(R2) and C, 'the three loss lists must have the same non-zero length'
+     d12, d1, d2 = ([abs(x - y) for x, y in zip(a, b)] for a, b in ((R1, R2), (R1, C), (R2, C)))
+     n, d = max(d12), max(d1 + d2)
+     lim = max(0.10, 3 * n)
+-    return dict(n=n, d=d, limit=lim, verdict='PASS' if d <= lim else 'FAIL', mean_abs_r1_r2=mean(d12), mean_abs_r1_c=mean(d1), mean_abs_r2_c=mean(d2),
+-                diff_r1_r2=d12, diff_r1_c=d1, diff_r2_c=d2)
++    out = dict(n=n, d=d, limit=lim, verdict='PASS' if d <= lim else 'FAIL', mean_abs_r1_r2=mean(d12), mean_abs_r1_c=mean(d1), mean_abs_r2_c=mean(d2),
++               diff_r1_r2=d12, diff_r1_c=d1, diff_r2_c=d2)
++    dbar, nbar = mean([out['mean_abs_r1_c'], out['mean_abs_r2_c']]), out['mean_abs_r1_r2']
++    ratio = (float('inf') if dbar > 0 else 1.0) if nbar == 0 else dbar / nbar
++    mlim = max(0.02, 2 * nbar)
++    out.update(first_r1_c=d1[0], first_r2_c=d2[0], first_r1_r2=d12[0], identical_resumes=(n == 0), Dbar=dbar, Nbar=nbar, ratio=ratio, mean_form_limit=mlim,
++               mean_form_verdict='PASS' if dbar <= mlim else 'FAIL', lag1_autocorr=lag1_autocorr([x - y for x, y in zip(R1, R2)]))
++    if len(C) >= 3:
++        em = max(d1[1], d2[1], d1[2], d2[2])
++        out.update(early_max=em, early_limit=EARLY_LIMIT, early_verdict='PASS' if em <= EARLY_LIMIT else 'FAIL')
++    return out
+ 
+ 
+ # ---------------------------------------------------------------- the supervisor
+@@ -595,6 +712,8 @@
+         L.append(f'max GPU memory in use seen: {js["max_used_mib"]} MiB; planned kill-and-resume: {js["kill_done"]}')
+         if js.get('traceA'):
+             L.append(f'trace A: **{js["traceA"]["verdict"]}** {js["traceA"]["why_fail"] or ""} (TRACE-A-{job["id"]}.md)')
++            if early_deferred(js['traceA'], js['traceA'].get('verdict')):          # the early window was not computed here and trace A passed (coordinator ruling B2; F1, F7)
++                L.append(EARLY_DEFERRED)
+         if job.get('baseline'):
+             L.append(f'baseline: {js["base"]["status"]}' + (f'; compare: **{js["compare"]["verdict"]}** ({js["compare"].get("read_as")})' if js.get('compare') else ''))
+         else:
+@@ -698,6 +817,8 @@
+             r = trace_a(ev, job['trace_a'], js['max_used_mib'])
+             r['gpu_used_mib_at_launch'] = js.get('gpu_at_launch')
+             js['traceA'] = dict(verdict=r['verdict'], why_fail=r['why_fail'], soft_misses=r['soft_misses'])
++            if early_deferred(r['resume'], r['verdict']):
++                js['traceA']['early_window'] = r['resume']['early_window']          # (only when deferred and trace A passed: status.md and the finish message read it; never stored for a FAIL, F1)
+             jdump(self.sd / f'TRACE-A-{job["id"]}.json', r)
+             (self.sd / f'TRACE-A-{job["id"]}.md').write_text(self.md_trace_a(job, r), encoding='utf-8')
+             self.log(f'TRACE A: {r["verdict"]} {r["why_fail"]}' + (f' (recorded, not gated: {r["soft_misses"]})' if r['soft_misses'] else ''))
+@@ -713,8 +834,9 @@
+         js['result'] = {k: res.get(k) for k in ('steps', 'steps_per_s', 'train_s', 'peak_mem_mib', 'peak_reserved_mib', 'n_params', 'resumed_from')}
+         tail = (f'baseline compare: {json.dumps(js.get("compare"))}\nread it only if the compare verdict is PASS or UNCLEAR (big-run).\n' if job.get('baseline')
+                 else 'no baseline in this job (no compare was made here).\n')
+-        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + tail, encoding='utf-8')
+-        self.log(f'DONE {job["id"]}: {js["result"]}')
++        deferred = EARLY_DEFERRED + '\n' if early_deferred(js.get('traceA'), (js.get('traceA') or {}).get('verdict')) else ''          # the early window was not computed by trace A, which passed (coordinator ruling B2; F7)
++        (self.sd / f'DONE-{job["id"]}.txt').write_text(f'{ts()} {job["id"]} finished: {json.dumps(js["result"])}\nRESULT.json: {self.arm_dir(job) / "RESULT.json"}\n' + deferred + tail, encoding='utf-8')
++        self.log(f'DONE {job["id"]}: {js["result"]}' + (f' | {EARLY_DEFERRED}' if deferred else ''))
+         if js['base']['status'] == 'waiting':          # trace A never passed (or no room): there is nothing to compare any more
+             js['base']['status'] = 'abandoned'
+ 
+@@ -858,7 +980,7 @@
+         L = [f'# Trace A for {job["id"]}: {r["verdict"]}', '', f'rules (big-run, fixed before the run): {json.dumps(r["rules"])}', '',
+              f'- finite: {r["finite"]}; GPU memory in use (whole card, sampled every poll), peak: {r["max_used_mib"]} MiB (limit {r["rules"]["peak_limit_mib"]}); in use before the run started: {r.get("gpu_used_mib_at_launch")} MiB',
+              f'- loss: mean of updates 1..{r["rules"]["first_n"]} = {r.get("mean_first")}, mean of the last {r["rules"]["last_n"]} of {r["upto"]} = {r.get("mean_last")}, falls: {r.get("falls")}',
+-             f'- resume: {json.dumps(r.get("resume"))}', f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
++             f'- resume: {json.dumps(r.get("resume"))}', *([f'- {EARLY_DEFERRED}'] if early_deferred(r.get('resume'), r['verdict']) else []), f'- failures: {r["why_fail"] or "none"}', f'- recorded, not gated (rules.soft = {r["rules"].get("soft", [])}; the result is read only if RESULT.json peak_mem_mib <= {r["rules"]["peak_limit_mib"]} and the resume-noise probe passes): {r.get("soft_misses") or "none"}',
+              f'- notes: {r["notes"] or "none"}']
+         return '\n'.join(L) + '\n'
+ 
+@@ -886,6 +1008,19 @@
+                   '| update | C (run) | R1 | R2 | abs R1-R2 | abs R1-C | abs R2-C |', '|---|---|---|---|---|---|---|']
+             for i, s in enumerate(r['steps']):
+                 L.append(f'| {s} | {f(r["C"][i])} | {f(r["R1"][i])} | {f(r["R2"][i])} | {f(r["diff_r1_r2"][i])} | {f(r["diff_r1_c"][i])} | {f(r["diff_r2_c"][i])} |')
++        if 'Dbar' in r:
++            ac = r.get('lag1_autocorr')
++            ew = (' = ' + ' and '.join(str(x) for x in r['steps'][1:3])) if len(r.get('steps') or []) >= 2 else ''
++            L += ['', '## recorded beside (pre-registered mean form, not the registered gate)', '',
++                  f'The verdict above is the registered rule and is unchanged. These numbers are recorded next to it (re-read with rejudge_probe.py):',
++                  f'- first probe update (expected exactly 0 when the restore is complete): |R1-C| = {r["first_r1_c"]:.6f}, |R2-C| = {r["first_r2_c"]:.6f}, |R1-R2| = {r["first_r1_r2"]:.6f}',
++                  f'- Dbar = mean(mean|R1-C|, mean|R2-C|) = {r["Dbar"]:.4f}; Nbar = mean|R1-R2| = {r["Nbar"]:.4f}; ratio Dbar/Nbar = {r["ratio"]:.3f}',
++                  f'- mean form: Dbar <= max(0.02, 2 Nbar) = {r["mean_form_limit"]:.4f}: {r["mean_form_verdict"]}',
++                  *([f'- early window (the 2nd and 3rd probe updates{ew}, P1b): max |R - C| = {r["early_max"]:.6f}; limit {r["early_limit"]}: {r["early_verdict"]}'] if r.get('early_max') is not None else []),
++                  f'- lag-1 autocorrelation of the signed series R1 - R2: {"not defined (no variance)" if ac is None else f"{ac:.3f}"}',
++                  *(['- the two restarts are bit-identical to each other (|R1-R2| = 0 at every update) but differ from the run: if the first-update and early-window checks also hold, rejudge_probe.py reads this probe as ESCALATE (framing falsified, PREREG Amendment 2), not as a pass or a fail, and asks for no calibration; re-running the probe repeats.'] if r.get('identical_resumes') and r['Dbar'] > 0 else [])]
++        if r.get('resume_warnings'):
++            L += ['', 'resume_warning lines of the probe runs: ' + json.dumps(r['resume_warnings'])]
+         return '\n'.join(L) + '\n'
+ 
+ 
+@@ -1035,8 +1170,83 @@
+     return d
+ 
+ 
++def queue_accum(text, arm):
++    """the accum of `arm` on the g8a: line(s) of a queue file (`--accum B3G2=8`, or a bare `--accum 8` for every arm). -> (int or None, problem or None); None + problem if the file names two different values."""
++    vals = set()
++    for ln in text.splitlines():
++        if ln.startswith('g8a:'):
++            for m in re.finditer(r'--accum\s+(?:(\w+)=)?(\d+)', ln):
++                if m.group(1) in (None, arm):
++                    vals.add(int(m.group(2)))
++    if len(vals) > 1:
++        return None, f'the queue file names several --accum values for {arm}: {sorted(vals)}'
++    return (vals.pop() if vals else None), None
++
++
++def main_run_hashes(sup, job):
++    """config hashes of the main run, cheaply: ({full hash from each sidecar in the run's own ckpt\\ (the newest two)}, {12-character prefixes from the `resumed` event lines of its events.jsonl})."""
++    full, short = set(), set()
++    arm = sup.arm_dir(job)
++    for f in sorted((arm / 'ckpt').glob('step-*.json')):
++        d = jload(f)
++        if isinstance(d, dict) and d.get('config_hash'):
++            full.add(d['config_hash'])
++    try:
++        for ln in open(arm / 'events.jsonl', encoding='utf-8', errors='replace'):
++            if '"resumed"' in ln:
++                try:
++                    e = json.loads(ln)
++                except ValueError:
++                    continue
++                if e.get('event') == 'resumed' and e.get('config_hash'):
++                    short.add(str(e['config_hash'])[:12])
++    except OSError:
++        pass
++    return full, short
++
++
++def keep_guard(job, step, side, queue_text, main_hashes):
++    """Does the kept checkpoint (its sidecar `side`) belong to `job` and to `step`? -> (problems, notes). Any problem = refuse (exit 2), nothing is run.
++    train.py only WARNS when --accum differs from the checkpoint's (resume_warning), so without this the probe of a job could resume another job's checkpoint (the README's ckpt-keep holds g2fa4's accum-4 step 200; g2fa8 is accum 8)
++    and report a false FAIL. The config hash does NOT include --accum (queue header), so it cannot tell g2fa4 from g2fa8: only the accum check can. The hash is compared with the main run's own (sidecars in its ckpt\\,
++    or the `resumed` events) when one is there; when the main run has none of either (no checkpoint kept, never resumed) the comparison is skipped and said so in `notes`."""
++    problems, notes = [], []
++    if not isinstance(side, dict):
++        return [f'step-{step}.json is not a JSON object'], notes
++    if side.get('step') != step:
++        problems.append(f'the sidecar step-{step}.json says step {side.get("step")!r}, not {step} (--step): the file is not that checkpoint')
++    qa, qprob = queue_accum(queue_text, job.get('arm', 'B3G2'))
++    if qprob:
++        problems.append(qprob)
++    pa = job.get('accum')
++    if qa is not None and pa is not None and qa != pa:
++        problems.append(f'job {job["id"]}: its queue file says --accum {qa} but plan.json says accum {pa}: cannot tell which one is the job\'s')
++    want = qa if qa is not None else pa
++    if want is None:
++        problems.append(f'job {job["id"]}: no accum found (neither --accum {job.get("arm", "B3G2")}=<n> in {job["queue"]}.txt nor "accum" in plan.json): cannot check the checkpoint')
++    elif side.get('accum') != want:
++        problems.append(f'the checkpoint in --keep was saved at accum {side.get("accum")!r}, job {job["id"]} runs at accum {want}: it is another job\'s checkpoint (train.py would only warn and resume it); '
++                        f'use the step-{step} of {job["id"]} itself, or --job of the job it belongs to')
++    full, short = main_hashes
++    h = side.get('config_hash')
++    if full:
++        if h not in full:
++            problems.append(f'the checkpoint\'s config_hash {str(h)[:12]} differs from the main run\'s own checkpoints ({sorted(x[:12] for x in full)}): it is not this run\'s checkpoint')
++    elif short:
++        if str(h)[:12] not in short:
++            problems.append(f'the checkpoint\'s config_hash {str(h)[:12]} differs from the main run\'s (resumed events: {sorted(short)})')
++    else:
++        notes.append('config_hash not compared: the main run has no checkpoint sidecar and no resumed event to take its hash from')
++    return problems, notes
++
++
+ def probe_resume(a):
+-    """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused."""
++    """After the run: resume the kept checkpoint twice on the idle card (queues <queue>n1 / n2), compare with the run's own logged updates. Exit 0 PASS, 1 FAIL, 2 refused (the existing reasons),
++    3 refused because the early window (updates step+2 and step+3) cannot be computed: --upto < step+3 (ruling Q95; rejudge_probe.py refuses a probe with under 3 updates the same way).
++    The exit-3 check is the first thing done: nothing is started, written, renamed aside or logged."""
++    if a.upto - a.step < 3:
++        print(f'refused (exit 3): the early window (updates {a.step + 2} and {a.step + 3}) cannot be computed with --upto {a.upto} < step+3 = {a.step + 3}; use --upto {a.step + 3} or more. Nothing was run or written.')
++        return 3
+     sup = Sup(a.plan)
+     job = next((j for j in sup.plan['jobs'] if a.job == j['id'] or (a.job is None and not j.get('skip'))), None)          # without --job: the first job that is not skipped
+     if job is None:
+@@ -1065,7 +1275,20 @@
+     if miss or any(s not in C for s in steps):
+         print(f'refused: missing {miss or "logged updates %d..%d of the main run in %s" % (step + 1, upto, sup.arm_dir(job) / "events.jsonl")}')
+         return 2
+-    R, why = {}, []
++    side = jload(keep / f'step-{step}.json')
++    qf = Path(job['src']) / 'custom_io' / 'queue_local' / (job['queue'] + '.txt')
++    try:
++        qtext = qf.read_text(encoding='utf-8')
++    except OSError as e:
++        print(f'refused: the queue file of job {job["id"]} cannot be read ({e})')
++        return 2
++    bad, notes = keep_guard(job, step, side, qtext, main_run_hashes(sup, job))
++    for n in notes:
++        sup.log(f'PROBE guard: {n}')
++    if bad:
++        print(f'refused: the checkpoint in {keep} is not job {job["id"]}\'s step {step}:\n  ' + '\n  '.join(bad))
++        return 2
++    R, why, warns = {}, [], {}
+     for tag in ('n1', 'n2'):
+         pj = sup.probe_job(job, tag)
+         sup.log(f'PROBE {tag}: {pj["queue"]} / {pj["job"]} from {keep} step-{step}')
+@@ -1074,6 +1297,10 @@
+             why.append(f'{tag}: {bad}')
+         if ev is None:
+             continue
++        warns[tag] = [w.get('warning') for w in ev.warnings]
++        if any('accum' in (w or '') for w in warns[tag]):
++            why.append(f'{tag}: train.py warned about --accum on resume ({[w for w in warns[tag] if "accum" in (w or "")][0]}): the probe resumed another job\'s checkpoint; not judged')
++            continue
+         rs = next((s for _, s in ev.resumed), None)
+         if rs != step:
+             why.append(f'{tag}: resumed at {rs}, not {step}')
+@@ -1081,10 +1308,14 @@
+         R[tag] = first_per_step([e for e in ev.train if e['seg'] >= ev.resumed[0][0]], step + 1, upto)
+         if any(s not in R[tag] for s in steps):
+             why.append(f'{tag}: updates missing (first {[s for s in steps if s not in R[tag]][:5]})')
+-    r = dict(job=job['id'], step=step, upto=upto, keep=str(keep), why_fail=why, verdict='FAIL')
++    r = dict(job=job['id'], step=step, upto=upto, keep=str(keep), why_fail=why, verdict='FAIL', resume_warnings={t: w for t, w in warns.items() if w})
+     if not why:
+         r.update(resume_probe_verdict([C[s] for s in steps], [R['n1'][s] for s in steps], [R['n2'][s] for s in steps]))
+         r.update(steps=steps, C=[C[s] for s in steps], R1=[R['n1'][s] for s in steps], R2=[R['n2'][s] for s in steps])
++    for ext in ('json', 'md'):                                                                  # an earlier report is never overwritten: it is renamed .aside-<stamp> first
++        kept = aside(sup.sd / f'PROBE-RESUME-{job["id"]}.{ext}')
++        if kept:
++            sup.log(f'PROBE: the earlier report moved aside: {kept}')
+     jdump(sup.sd / f'PROBE-RESUME-{job["id"]}.json', r)
+     (sup.sd / f'PROBE-RESUME-{job["id"]}.md').write_text(Sup.md_probe(r), encoding='utf-8')
+     sup.log(f'PROBE RESUME: {r["verdict"]} n={r.get("n")} d={r.get("d")} limit={r.get("limit")} {why or ""}')
+--- a/install_g2fa4.py
++++ b/install_g2fa4.py
+@@ -2,7 +2,7 @@
+ """install_g2fa4.py: puts the G2f-a4 pack on BensPC. Run it with the PC's own python from the folder the Mac copied (C:\\Users\\benja\\custom-io\\in-g2fa4):
+ 
+     C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py [--check] [--skip-tests] [--register]
+-    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--soft-trace-a] [--check]
++    C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe install_g2fa4.py --add-job g2fa8 [--skip-g2fa4] [--soft-trace-a [--soft-trace-a-mean]] [--trace-a-early] [--check]
+ 
+ It starts no training job and changes nothing that already exists (a folder or file it replaces is renamed .aside-<stamp>). Steps:
+  1. refuses if a custom_io job is running (it would compete for the CPU and the GPU) and checks the pinned hashes of src-b3g2 (the code G2f ran: custom_io at 74d6e92c75);
+@@ -21,7 +21,7 @@
+ pack's g2fa4_supervisor.py (the version that honors `skip` and a job without a baseline) into WORK\\g2fa4\\ BEFORE plan.json changes (the old one is kept as .aside-<stamp>), (c) rewrites plan.json:
+ the old one is kept as plan.json.aside-<stamp>, the job list becomes [g2fa4 unchanged, g2fa8], and only with --skip-g2fa4 the g2fa4 entry gets skip=true and a skip_reason (refused unless g2fa4 is stopped: state.json says
+ 'stopped' AND a stop file names g2fa4; and a stopped g2fa4 is never left unskipped, its stop file would hold the loop). With --soft-trace-a the g2fa8 entry's trace A records, and does not gate, the
+-whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead). --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
++whole-card memory peak and the largest single resume difference (the reading of the result is gated after the run instead); with --soft-trace-a-mean as well (only together with --soft-trace-a) it also records, and does not gate, the mean absolute resume difference (the first redone update, NaN/Inf and the loss falling stay hard in every variant). With --trace-a-early (opt-in, valid with --add-job g2fa8, alone or with the soft flags; PREREG-trace-a2.md Amendment 1 and its clarification for B2/B3) the g2fa8 entry's trace A gets two more HARD items: resume_early_abs (largest difference over the 2nd and 3rd redone updates must be <= the bar) and resume_exact_fields = ['lr', 'rounds', 'plan_'] (those logged fields must be equal at the first redone update). The bar is EARLY_LIMIT, the ONE definition in the g2fa4_supervisor.py next to this installer (0.005 at the time of writing); it is read from that file ONLY when --trace-a-early is used, and a missing file, a missing `EARLY_LIMIT = <number>` line or a malformed number is a [FIX] line (exit 1, nothing changed, no traceback) that does not affect any other mode. Two behaviours of the running gate to know: (1) when the judged resume has fewer than 3 contiguous redone updates (rstep+1, rstep+2, rstep+3) the early window is NOT computed and is NOT a failure: it is deferred to the probe's P1b, and the TRACE-A md, status.md and the finish message print the line "early window not checked by the running gate; do not read this result until the probe's P1b passes." (only for a trace A that passed); (2) with this flag a missing first redone update (rstep+1) is a hard failure (the first-update check cannot be computed as defined). The variants (strict, soft, soft + mean, each with or without --trace-a-early) are never mixed: the entry differs, so the second run is refused. --check shows what the real ARMED.txt arms. Idempotent: a second run changes nothing; a g2fa8 entry that differs from the expected one is refused, never overwritten. ARMED.txt, STOPPED.txt, state.json and everything of
+ g2fa4 are not touched: the old go line does not arm g2fa8 (README). The log of the run goes to WORK\\g2fa4\\add-job-g2fa8-<stamp>.txt. A plain install run later keeps the longer plan."""
+ import argparse, copy, hashlib, json, os, re, shutil, subprocess, sys, time
+ from pathlib import Path
+@@ -145,23 +145,58 @@
+ 
+ 
+ SOFT_TRACE_A = ['peak', 'resume_max_abs']          # --soft-trace-a: these two trace A items are recorded, not gated (TRACE-A-READING-2026-10-14.md: gate the reading of the result, not the running)
++SOFT_TRACE_A_MEAN = SOFT_TRACE_A + ['resume_mean_abs']          # --soft-trace-a --soft-trace-a-mean: the mean absolute resume difference too (opt-in; never a default)
+ 
++class EarlyLimitError(Exception):
++    """the early-window bar cannot be taken from the supervisor file (missing file, no EARLY_LIMIT line, malformed number); add_job reports it as a [FIX] line."""
+ 
+-def new_job_entry(spec_id, g4, soft=False):
++
++def supervisor_early_limit(src=None):
++    """The early-window bar (Amendment 1) has ONE definition: `EARLY_LIMIT = <number>` in the pack's g2fa4_supervisor.py, the file this installer installs. It is read from that file's text (not imported: importing would run
++    the supervisor's module code, and on the PC the installer never imports it), and ONLY when --trace-a-early is used (never at import: the other modes must not depend on that line). A missing/unreadable file, a missing line
++    or a malformed number (not a finite, non-negative float) raises EarlyLimitError rather than guess a number."""
++    src = Path(src) if src else IN / 'g2fa4_supervisor.py'
++    try:
++        text = src.read_text(encoding='utf-8')
++    except (OSError, ValueError) as e:
++        raise EarlyLimitError(f'cannot read the early-window bar EARLY_LIMIT from {src}: {e}')
++    m = re.search(r'^EARLY_LIMIT\s*=\s*([0-9][0-9.eE+-]*)\s*(?:#.*)?$', text, re.M)
++    if not m:
++        raise EarlyLimitError(f'no line "EARLY_LIMIT = <number>" in {src}: cannot take the early-window bar from it')
++    try:
++        x = float(m.group(1))
++    except ValueError:
++        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a number: cannot take the early-window bar from it')
++    if not 0 <= x < float('inf'):
++        raise EarlyLimitError(f'the line "EARLY_LIMIT = {m.group(1)}" in {src} is not a finite non-negative number: cannot take the early-window bar from it')
++    return x
++
++
++TRACE_A_EARLY_FIELDS = ['lr', 'rounds', 'plan_']          # --trace-a-early (opt-in, hard items; PREREG-trace-a2.md Amendment 1): exact data/RNG/schedule fields at the first redone update (the early-window bar is read lazily, see trace_a_early)
++
++
++def trace_a_early(bar):
++    """-> the opt-in trace A rules of --trace-a-early (a fresh dict each call): resume_early_abs = `bar`, the value add_job read ONCE from the supervisor file (supervisor_early_limit(); a second read here would be a second chance to disagree with the [ok] row, or to fail outside the error handler, so `bar` is required and nothing is read), resume_exact_fields = a copy of TRACE_A_EARLY_FIELDS."""
++    if bar is None:
++        raise ValueError('trace_a_early needs the early-window bar read by add_job (early_bar); it does not read the supervisor file itself')
++    return dict(resume_early_abs=bar, resume_exact_fields=list(TRACE_A_EARLY_FIELDS))
++
++
++def new_job_entry(spec_id, g4, soft=False, soft_mean=False, early=False, early_bar=None):
+     """the plan entry of an added job: the registered recipe of `spec_id` on the same src; trace A rules and the compare dict are the g2fa4 ones (the whole-card peak limit stays 12288), NO baseline."""
+     spec = ADD_JOBS[spec_id]
+     return dict(id=spec_id, title=spec['title'], src=g4['src'], queue=spec['queue'], job=spec['job'], arm='B3G2', steps=24000, accum=spec['accum'], kill_resume_at=150,
+-                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A)) if soft else {})), compare=copy.deepcopy(g4['compare']))
++                trace_a=dict(copy.deepcopy(g4['trace_a']), peak_limit_mib=12288, **(dict(soft=list(SOFT_TRACE_A_MEAN if soft_mean else SOFT_TRACE_A)) if soft else {}), **(trace_a_early(early_bar) if early else {})), compare=copy.deepcopy(g4['compare']))
+ 
+ 
+-def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False):
++def added_plan(old, spec_id, skip_g4, g4_state_status, g4_stop=None, soft=False, soft_mean=False, early=False, early_bar=None):
+     """-> (new plan, [what changes], [problems]). `old` is not modified. Idempotent: a plan that already has the job (and the skip, if asked) comes back equal."""
+     new, changes, problems = copy.deepcopy(old), [], []
+     jobs = new.get('jobs', [])
+     g4 = next((j for j in jobs if j.get('id') == 'g2fa4'), None)
+     if g4 is None:
+         return new, changes, ['plan.json has no job g2fa4 (nothing to build the new entry from)']
+-    want = new_job_entry(spec_id, g4, soft)
++    want = new_job_entry(spec_id, g4, soft, soft_mean, early, early_bar)
+     have = next((j for j in jobs if j.get('id') == spec_id), None)
+     if have is None:
+         jobs.append(want)
+@@ -188,7 +223,7 @@
+     spec = ADD_JOBS[spec_id]
+     qfile = spec['queue'] + '.txt'
+     LINES.clear()
+-    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --soft-trace-a" if a.soft_trace_a else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
++    say(f'install_g2fa4 --add-job {spec_id}{" --skip-g2fa4" if a.skip_g2fa4 else ""}{" --soft-trace-a" if a.soft_trace_a else ""}{" --soft-trace-a-mean" if a.soft_trace_a_mean else ""}{" --trace-a-early" if a.trace_a_early else ""}{" --check" if a.check else ""} {STAMP} from {IN}')
+     # 1. the checks of the install (pins of src-b3g2, caps, the pack's files, python, disk) + the installed copy and the plan
+     step1_checks(('overlay/train.py', 'queue/' + qfile, 'g2fa4_supervisor.py') + tuple('queue/' + q for q in A4_QUEUES))
+     mark = SRC / 'G2FA4-SETUP-OK.txt'
+@@ -207,7 +242,15 @@
+     except (OSError, ValueError):
+         old = None
+     row(old is not None, 'plan.json of the install', str(pp))
+-    if old is not None:
++    early_bar = None
++    if a.trace_a_early:                                                                    # the bar is read from the supervisor file ONCE, here, only for this flag (inside the handler: a problem is a [FIX] line, not a traceback); this value is shown in the [ok] row AND is the one passed to added_plan -> new_job_entry -> trace_a_early (no second read)
++        try:
++            early_bar = supervisor_early_limit()
++        except EarlyLimitError as e:
++            row(False, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', str(e))
++        else:
++            row(True, '--trace-a-early: the early-window bar EARLY_LIMIT of g2fa4_supervisor.py', f'{early_bar} (from {IN / "g2fa4_supervisor.py"})')
++    if old is not None and (early_bar is not None or not a.trace_a_early):
+         try:
+             stj = json.loads((STATE / 'state.json').read_text(encoding='utf-8'))
+         except (OSError, ValueError):
+@@ -215,7 +258,7 @@
+         g4s = stj.get('jobs', {}).get('g2fa4', {}).get('status')
+         g4stop = stop_file_of('g2fa4')
+         say(f'      state.json: g2fa4 is {g4s or "not recorded"}; stop file naming g2fa4: {g4stop.name if g4stop else "none"}; ARMED.txt: {armed_text()}')
+-        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a)
++        new, changes, problems = added_plan(old, spec_id, a.skip_g2fa4, g4s, g4stop, a.soft_trace_a, a.soft_trace_a_mean, a.trace_a_early, early_bar)
+         row(not problems, 'plan.json can take the new job', '; '.join(problems))
+         say('      plan.json: ' + ('; '.join(changes) if changes else 'already as wanted, nothing to change') + f'; jobs after: {[j.get("id") for j in new.get("jobs", [])]}')
+     if a.check or not ok_all:
+@@ -294,10 +337,16 @@
+     ap.add_argument('--register', action='store_true')
+     ap.add_argument('--add-job', choices=sorted(ADD_JOBS), help='add this job to the plan of an installed pack (no tests, no tasks, starts nothing)')
+     ap.add_argument('--soft-trace-a', action='store_true', help='with --add-job g2fa8: trace A records (does not gate) the whole-card memory peak and the largest single resume difference')
++    ap.add_argument('--soft-trace-a-mean', action='store_true', help='only with --soft-trace-a: the mean absolute resume difference is recorded, not gated, as well (opt-in)')
++    ap.add_argument('--trace-a-early', action='store_true', help='with --add-job g2fa8 (opt-in): trace A gets two more hard items: the early window (largest difference over the 2nd and 3rd redone update must be <= the bar, which is EARLY_LIMIT read from the g2fa4_supervisor.py next to this installer, only when this flag is used) and equal lr / rounds / plan_* fields at the first redone update. '
++                    'When the judged resume has fewer than 3 contiguous redone updates the early window is NOT computed and NOT a failure: it is deferred to the probe-resume P1b check and the reports print a line saying so (only for a trace A that passed). '
++                    'With this flag a missing first redone update (rstep+1) is a hard failure')
+     ap.add_argument('--skip-g2fa4', action='store_true', help='with --add-job g2fa8: mark the g2fa4 job skip=true in plan.json')
+     a = ap.parse_args(argv)
+-    if (a.skip_g2fa4 or a.soft_trace_a) and a.add_job != 'g2fa8':
+-        ap.error('--skip-g2fa4 / --soft-trace-a only go with --add-job g2fa8')
++    if (a.skip_g2fa4 or a.soft_trace_a or a.trace_a_early) and a.add_job != 'g2fa8':
++        ap.error('--skip-g2fa4 / --soft-trace-a / --trace-a-early only go with --add-job g2fa8')
++    if a.soft_trace_a_mean and not a.soft_trace_a:
++        ap.error('--soft-trace-a-mean only goes together with --soft-trace-a (it adds an item to the soft list)')
+     if a.add_job and (a.register or a.skip_tests):
+         ap.error('--register / --skip-tests do not go with --add-job')
+     if a.add_job:
+--- a/tests/fake_runner.py
++++ b/tests/fake_runner.py
+@@ -23,6 +23,8 @@
+     ap.add_argument('--nan-at', type=int, default=0); ap.add_argument('--offset', type=float, default=0.0); ap.add_argument('--seg2-offset', type=float, default=0.0); ap.add_argument('--jitter', type=float, default=0.0); ap.add_argument('--force-resume-step', type=int, default=0)
+     ap.add_argument('--child', action='store_true'); ap.add_argument('--busy', default='')
+     ap.add_argument('--device', default='cuda'); ap.add_argument('--hang-at', type=int, default=0); ap.add_argument('--die-after-resume-once', action='store_true')
++    ap.add_argument('--skip-log-seg2-at', type=int, default=0)          # drafts only (tests/test_gatefix.py): a resumed segment does not log update K (the update still runs, the checkpoints are still written): a hole in its train lines
++    ap.add_argument('--seg2-lr', type=float, default=0.0)          # drafts only (tests/test_gatefix.py): the logged lr of a resumed segment, to make an exact-field mismatch
+     a = ap.parse_args()
+     q = Path(a.queue).stem
+     out = Path(a.work) / 'results' / q / a.job
+@@ -75,7 +77,8 @@
+             (arm / 'crashed.flag').write_text('x')
+             sys.exit(1)
+         loss = float('nan') if (a.nan_at and step == a.nan_at) else loss_at(step, a.offset, a.seg2_offset, seg, a.jitter, a.job)
+-        jp(event='train', step=step, loss=round(loss, 5), lr=1e-3, elapsed=round(el, 3))
++        if not (a.skip_log_seg2_at and seg >= 2 and step == a.skip_log_seg2_at):
++            jp(event='train', step=step, loss=round(loss, 5), lr=(a.seg2_lr if a.seg2_lr and seg >= 2 else 1e-3), elapsed=round(el, 3))
+         if not math.isfinite(loss):
+             json.dump(dict(status='nonfinite_loss', steps=step), open(arm / 'RESULT.json', 'w'))
+             return
+--- a/tests/test_probe.py
++++ b/tests/test_probe.py
+@@ -30,7 +30,7 @@
+     keep = Path(tmp) / 'ckpt-keep'
+     keep.mkdir()
+     (keep / 'step-200.pt').write_bytes(b'x')
+-    (keep / 'step-200.json').write_text('{}')
++    (keep / 'step-200.json').write_text(json.dumps(dict(step=200, accum=4, config_hash='c0ffee' * 10)))      # (gatefix: the probe now reads the sidecar: accum and step must be the job's)
+     if not armed:
+         (sd / 'ARMED.txt').rename(sd / 'ARMED.txt.aside-old')
+         (sd / 'ALL-DONE.txt').write_text('done\n')

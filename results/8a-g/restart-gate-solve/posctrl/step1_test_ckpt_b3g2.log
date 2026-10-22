@@ -1,0 +1,10 @@
+machine noise: none (the unmodified train.py gives identical traces and weights twice): every check below is bit for bit
+ok (1) flags off: 40-update trace and final weights equal to the unmodified train.py (bit for bit; worst trace difference 0.00 of the allowed, weights 0)
+ok (2) --ckpt-every 10 changes nothing (trace and weights; worst 0.00 of the allowed, weights 0)
+ok (3) killed at update 22 (checkpoint 15): redone updates 16..22 equal the first segment (bit for bit; worst 0.00 of the allowed); whole trace (worst 0.00) and final weights (0) equal the uninterrupted run
+ok (4) a restart with another --log-every, --ckpt-every and --accum resumes (with the accum warning)
+ALL OK
+
+real	2m15.727s
+user	2m11.608s
+sys	0m2.385s
