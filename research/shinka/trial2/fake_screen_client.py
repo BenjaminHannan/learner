@@ -12,7 +12,10 @@ class FakeClient:
     def _create(self, **kw):
         self.calls += 1
         user = kw["messages"][0]["content"]
-        if "families" in kw["system"]:
+        if "MERGE" in kw["system"] or "merge FAMILIES" in kw["system"]:
+            ids = re.findall(r"^(f\d{3}):", user, flags=re.M)
+            text = json.dumps({"groups": [ids[i:i + 2] for i in range(0, len(ids), 2)]})
+        elif "families" in kw["system"]:
             ids = re.findall(r"^(c\d{3}):", user, flags=re.M)
             fams = [{"name": f"f{i}", "members": ids[i:i + 2]} for i in range(0, len(ids), 2)]
             text = "ok " + json.dumps({"families": fams})
