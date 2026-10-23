@@ -40,6 +40,7 @@ from premonition.model import PremonitionMini
 from premonition.train import mini_config_dict, mini_train_config, validation_hook
 from v1 import ckpt as vckpt
 from v1 import dtrain
+from v1.extra import mixed_stream, open_extra, shard_dir  # noqa: F401  (shared with v1.run; re-exported)
 from v1.run import CKPT_FRACTION, DEV_EVAL_VISITS, LR, MAX_TOKENS, MAX_VISITS, WARMUP, make_eval_batches
 
 EVAL_FRACTION = 0.10
@@ -55,56 +56,6 @@ class Stop(RuntimeError):
 def build_d(vocab_size: int, seed: int) -> PremonitionMini:
     torch.manual_seed(seed)
     return PremonitionMini(MiniConfig.preset("D", "full", vocab_size=vocab_size, decoder_raw_cards=True))
-
-
-def shard_dir(path: Path) -> Path:
-    from learnlab import step1
-    path = Path(path)
-    for cand in (path, path / "train"):
-        if cand.is_dir() and step1.shard_files(cand):
-            return cand
-    raise SystemExit(f"--extra-train {path}: no shard files found (looked in it and in its train/ subdirectory)")
-
-
-def open_extra(dirs: list[Path], data: dtrain.DData, out: Path, workers: int) -> list[Any]:
-    caches = []
-    for k, d in enumerate(dirs):
-        sd = shard_dir(d)
-        cp = out / "extra-cache" / f"{k}-{sd.parent.name}-{sd.name}.pt"
-        cache = None
-        if cp.is_file():
-            cache = pdata.VisitCache.load(cp)
-            if cache.info.get("source") != str(sd) or cache.info.get("detector_sha256") != data.detector.digest:
-                cache = None
-        if cache is None:
-            cache = pdata.build_cache(sd, data.tokenizer, data.detector, split="train", workers=workers, regime=preprocess.LABEL_FREE)
-            cp.parent.mkdir(parents=True, exist_ok=True)
-            tmp = cp.with_suffix(".tmp")
-            tmp.write_bytes(cache.to_bytes())
-            tmp.replace(cp)
-        log(f"extra-train {sd}: {len(cache):,} visits, {int(cache.lengths.sum()):,} tokens")
-        caches.append(cache)
-    return caches
-
-
-def mixed_stream(caches: list[Any], max_tokens: int, seed: int, skip: int, max_visits: Optional[int]):
-    """Batch-level mixture, proportional to token counts; `skip` batches already trained (resume)."""
-    w = [float(c.lengths.sum()) for c in caches]
-    cum = list(itertools.accumulate(w))
-
-    def pick(step: int) -> int:
-        r = random.Random(f"{seed}-mix-{step}").random() * cum[-1]
-        return next(i for i, c in enumerate(cum) if r < c) if len(cum) > 1 else 0
-
-    counts = [0] * len(caches)
-    for s in range(skip):
-        counts[pick(s)] += 1
-    streams = [itertools.islice(pdata.batches(c, max_tokens, seed=seed + 1000 * i, epochs=None, max_visits=max_visits), counts[i], None)
-               for i, c in enumerate(caches)]
-    step = skip
-    while True:
-        yield next(streams[pick(step)])
-        step += 1
 
 
 def main(argv=None) -> int:
