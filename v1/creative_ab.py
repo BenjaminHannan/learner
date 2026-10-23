@@ -54,7 +54,7 @@ def main(argv=None):
     kw = dict(ARMS[a.arm])
     diary = g1mod.DIARY_SIZE
     if a.smoke:
-        kw.update(updates_cap=6, pool_limit=24, dev_limit=24, n1=4, n2=8)
+        kw.update(updates_cap=2, pool_limit=16, dev_limit=16, n1=2, n2=4, T=1.0)
         kw["dream2"] = 16 if kw["dream2"] else 0
         diary = 32
     else:
