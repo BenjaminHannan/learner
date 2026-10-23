@@ -136,7 +136,7 @@ _STATE: dict[str, Any] = {}
 
 
 def _setup(config: Mapping[str, Any]) -> None:
-    source = PatternSource.load()
+    source = PatternSource.load(Path(config["patterns"])) if config.get("patterns") else PatternSource.load()
     registry = village_registry(source, world_families())
     teacher = frozenset(p for p, b in source.bank.items() if b in TEACHER_BANKS)
     _STATE.update(config=dict(config), profile=Profile.of(config["switched"]), source=source, registry=registry,
@@ -219,7 +219,8 @@ def _make_shard(task: tuple[int, int, int, str]) -> dict[str, Any]:
 
 def write_probe(name: str, concerns: Iterable[str], n_visits: int, out_dir: os.PathLike, workers: int = 1, *,
                 seed: int = PROBE_SEED, index_offset: int = 0, visits_per_shard: int = VISITS_PER_SHARD,
-                window_chars: int = WINDOW_CHARS, audit_every: int = 1, verbose: bool = True) -> dict[str, Any]:
+                window_chars: int = WINDOW_CHARS, audit_every: int = 1, verbose: bool = True,
+                patterns: Optional[str] = None) -> dict[str, Any]:
     """Write (or finish writing) `n_visits` visits of the probe `name` under `out_dir/<name>/` (same files as write_shards)."""
     profile = Profile.of(concerns)
     if n_visits < 0 or visits_per_shard < 1 or workers < 1:
@@ -228,6 +229,8 @@ def write_probe(name: str, concerns: Iterable[str], n_visits: int, out_dir: os.P
     directory.mkdir(parents=True, exist_ok=True)
     config = {"name": name, "switched": sorted(profile.switched), "seed": seed, "index_offset": index_offset,
               "window_chars": window_chars, "audit_every": audit_every}
+    if patterns:  # another pattern bank (e.g. the train-only paraphrase bank); recorded so a rerun with another bank is refused
+        config["patterns"] = str(patterns)
     _setup(config)
     manifest = {
         "split": profile.label, "probe": name, "n_visits": n_visits, "seed": seed, "index_offset": index_offset,
@@ -271,6 +274,8 @@ def write_training_data(concerns: Iterable[str], n_visits: int, out_dir: os.Path
     a normal train visit (indices 0..99,999). Output: `out_dir/<name>/` with name "train+difficulty" by default;
     the visits are labelled split "train" (load the cache with split="train")."""
     concerns = tuple(concerns)
+    if options.get("patterns") and concerns:
+        raise ValueError("switch one thing at a time: an extra pattern bank or difficulty, not both")
     if set(concerns) - {"difficulty"}:
         raise ValueError("training data may only switch 'difficulty'; other concerns would leak validation items into training")
     if index_offset < 100_000:

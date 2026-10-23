@@ -20,6 +20,8 @@ if [ -n "${EXTRA_CMD:-}" ]; then
   ( cd "$ROOT" && bash -c "$EXTRA_CMD" ) > "$C/extra_cmd.out" 2>&1 || { tail -20 "$C/extra_cmd.out"; exit 1; }
   tail -3 "$C/extra_cmd.out"
 fi
+# an EXTRA_CMD that renders with another pattern bank leaves it here, so the name detector also blocks its template words
+[ -f "$J/detector-patterns.json" ] && export GEN_DETECTOR_PATTERNS="$J/detector-patterns.json" && echo "detector patterns: $GEN_DETECTOR_PATTERNS"
 EXTRA_ARGS=()
 for d in $(ls -d "$J"/extra/*/ 2>/dev/null | sort); do EXTRA_ARGS+=(--extra-train "${d%/}"); done
 echo "extra dirs: ${EXTRA_ARGS[*]:-none}"

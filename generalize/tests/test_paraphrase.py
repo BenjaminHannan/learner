@@ -72,17 +72,22 @@ class PlanTest(unittest.TestCase):
 
 
 class AuditTest(unittest.TestCase):
-    def test_clean_bank_has_no_leaks_and_a_leaky_train_pattern_is_named(self):
+    def test_simulated_audit_is_clean_for_a_train_only_addition(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "aug.json"
             PP.write_bank(PP.assemble(BASE, fake_entries()), path)
             self.assertEqual(PP.leaking_ids(path) - {e["id"] for e in fake_entries()}, set())
-            # A train pattern that is a bare substring-form of a held-out one cannot be told apart in text.
-            held = next(e for e in BASE["banks"]["ev.go"]["validation"])
-            clash = {"id": "feedfacefeed", "bank": "ev.go", "text": held["text"], "writer": "test"}
-            PP.write_bank(PP.assemble(BASE, [clash]), path)
-            # Identical skeleton is left to provenance by split_vocab, so it is not a text leak.
-            self.assertNotIn("feedfacefeed", PP.leaking_ids(path) - {"feedfacefeed"})
+
+
+class ShippedBankTest(unittest.TestCase):
+    @unittest.skipUnless(PP.OUT.exists(), "bank-v1-aug.json not built")
+    def test_shipped_aug_bank(self):
+        aug = json.loads(PP.OUT.read_text())
+        PP.verify_untouched(BASE, aug)
+        PatternSource.load(PP.OUT)
+        for bank, by_split in aug["banks"].items():
+            if bank in PP.fallback_banks(PP.SRC):
+                self.assertEqual(by_split, BASE["banks"][bank])
 
 
 if __name__ == "__main__":
