@@ -37,7 +37,16 @@ PY
 DATA=$OUT/data
 [ -f "$DATA/DATA_REPORT.json" ] || python3 backbone/build_data.py "$DATA" --workers "$(nproc)"
 
-COMMON="--data $DATA --steps $STEPS --bsz $BSZ --micro-bsz $MICRO --max-len $MAXLEN"
+EXTRA=""
+if [ -n "${PROBES:-}" ]; then   # generalization probes (one axis switched; generator from the generalization thread, seed 101)
+  if [ ! -f "$DATA/probes.done" ]; then
+    (cd backbone/genlab && mkdir -p data/village && cp -r ../../data/village/patterns data/village/ && \
+     python3 -m generalize.probes ../../$OUT/probes_raw --visits ${PROBE_VISITS:-500} --probes "$PROBES" --workers "$(nproc)") && \
+    python3 backbone/probe_rows.py $OUT/probes_raw $DATA && touch "$DATA/probes.done"
+  fi
+  for p in ${PROBES//,/ }; do EXTRA="$EXTRA --extra-eval $p=$DATA/probe_$p.jsonl"; done
+fi
+COMMON="$EXTRA --data $DATA --steps $STEPS --bsz $BSZ --micro-bsz $MICRO --max-len $MAXLEN"
 step() {  # step NAME RESULT_FILE args...
   local name=$1 res=$2; shift 2
   if [ -f "$res" ]; then echo "-- skip $name (have $res)"; return; fi

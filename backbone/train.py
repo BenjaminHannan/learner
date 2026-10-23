@@ -359,6 +359,7 @@ def main():
     ap.add_argument("--limit-eval", type=int, default=None)
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--tag", default=None)
+    ap.add_argument("--extra-eval", action="append", default=[], help="NAME=rows.jsonl, scored after dev/validation")
     args = ap.parse_args()
 
     out = Path(args.out)
@@ -461,7 +462,8 @@ def main():
 
     if device.type == "cuda":
         result["peak_gpu_mem_gb_after_train"] = torch.cuda.max_memory_allocated() / 2**30
-    for name, rows in (("dev", dev_rows), ("validation", val_rows)):
+    extra = [(spec.split("=", 1)[0], read_jsonl(spec.split("=", 1)[1])) for spec in args.extra_eval]
+    for name, rows in (("dev", dev_rows), ("validation", val_rows), *extra):
         result[name] = evaluate(runner, enc, rows, device, args, name, train_templates)
         print(f"[result] {args.arm} {name} acc {result[name]['accuracy']:.4f} (n={result[name]['n']})", flush=True)
     result["gap_dev_minus_validation"] = result["dev"]["accuracy"] - result["validation"]["accuracy"]
