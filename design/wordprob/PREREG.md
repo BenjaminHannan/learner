@@ -32,3 +32,13 @@ existing placeholder talker) instead of a from-scratch 10.8M char model; same da
 seeded eval samples. FU1 suggested the misses are reading errors (wrong operation), which pretrained language knowledge targets.
 - Pass: heldout_template >= 70% (STEPS 6k: 53.8%). Proves wrong: heldout_template < 60%.
 - Reported: heldout_structure, by step count.
+
+## Follow-up FU3 (pre-registered 2026-10-23 ~22:30Z, after FU2 = 78.8%, before this run)
+One change vs FU2: the same SmolLM2-360M architecture and tokenizer, randomly initialised (`--random-init`, arm `smolrand`);
+everything else identical (lr 1e-4, 3,000 steps x 64 rows, seed 0, same eval rows). Question: was FU2's gain from the
+pretraining or from being 34x bigger?
+- Pass (pretraining is the cause): heldout_template <= 60%.
+- Proves wrong (size alone explains most of it): heldout_template >= 72%.
+- Between 60% and 72%: both matter; report as mixed.
+- Known confound (stated in advance): lr and step count were chosen for fine-tuning; a scratch 360M model may need a
+  different schedule, so a low score is "this recipe cannot train it from scratch", not "no amount of training could".

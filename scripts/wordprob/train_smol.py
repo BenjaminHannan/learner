@@ -116,7 +116,12 @@ def train(args, model=None, tok=None):
     if model is None:
         from transformers import AutoModelForCausalLM, AutoTokenizer
         tok = AutoTokenizer.from_pretrained(args.model)
-        model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.bfloat16 if cuda else torch.float32)
+        dtype = torch.bfloat16 if cuda else torch.float32
+        if args.random_init:  # size control: same architecture and tokenizer, no pretrained weights
+            from transformers import AutoConfig
+            model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(args.model), torch_dtype=dtype)
+        else:
+            model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype)
     eos_id = tok.eos_token_id
     pad_id = tok.pad_token_id if tok.pad_token_id is not None else eos_id
     if args.grad_ckpt:
@@ -164,7 +169,7 @@ def train(args, model=None, tok=None):
     manifest = data / "MANIFEST.json"
     msha = hashlib.sha256(manifest.read_bytes()).hexdigest() if manifest.is_file() else None
     tail = loss_log[-50:]
-    result = {"arm": "smol_steps", "model": args.model, "steps": n_steps, "params": params, "seed": args.seed,
+    result = {"arm": "smolrand_steps" if args.random_init else "smol_steps", "random_init": args.random_init, "model": args.model, "steps": n_steps, "params": params, "seed": args.seed,
               "train_rows": len(ex), "final_train_loss": sum(tail) / len(tail) if tail else None,
               "mean_step_seconds": sum(step_times) / len(step_times) if step_times else None, "manifest_sha256": msha,
               "accuracy": {}, "by_n_steps": {}, "eval_n": {}, "samples": {}}
@@ -204,6 +209,7 @@ def parse_args(argv=None):
     ap.add_argument("--train-n", type=int, default=0)
     ap.add_argument("--log-every", type=int, default=50)
     ap.add_argument("--grad-ckpt", action="store_true")
+    ap.add_argument("--random-init", action="store_true", help="same architecture, randomly initialised (size control)")
     return ap.parse_args(argv)
 
 
