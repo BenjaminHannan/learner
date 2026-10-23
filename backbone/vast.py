@@ -16,7 +16,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 API = "https://console.vast.ai/api/v0"
-IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime"
+IMAGE = "pytorch/pytorch:2.9.1-cuda12.8-cudnn9-devel"
 FILES = ["backbone", "learnlab", "data/village/patterns"]
 CHUNK = 100_000
 
