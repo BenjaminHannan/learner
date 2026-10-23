@@ -58,7 +58,7 @@ from learnlab.core import IGNORE_INDEX
 from learnlab.policy import BUDGET_TOLERANCE
 from learnlab.train import MemoryGuardError, TrainConfig, Trainer
 from premonition import data as pdata
-from premonition import identity, preprocess
+from premonition import identity, preprocess, scoring
 from premonition.batch import N_ENT, PAD_ID, NameTable, VisitBatch
 from premonition.config import DRAFT_FLAGS, MiniConfig
 from premonition.flops import FlopFit, fit_flops, measure_mini
@@ -586,11 +586,15 @@ def _strip(ids: Sequence[int], stop: set[int]) -> list[int]:
 
 
 def judge(answers: Answers, batch: VisitBatch, *, tokenizer: Any = None, stop: Optional[Iterable[int]] = None,
-          eos: int = 2) -> tuple[list[bool], list[str]]:
+          eos: int = 2, plans: Optional[Mapping[str, Any]] = None,
+          exact_out: Optional[list[bool]] = None) -> tuple[list[bool], list[str]]:
     """(exact match per question, prediction text). With a tokenizer: the prediction through
     `preprocess.prediction_text` (an unbound entity is a wrong answer) and the target through the strict
     `preprocess.target_text` (a malformed target raises MalformedTarget, never scores as wrong), compared by
-    `step1.exact_match` (step 1's scoring); without: the ids up to the first stop id."""
+    `step1.exact_match` (step 1's scoring); without: the ids up to the first stop id.
+    With `plans` (question id -> plan world, from `step1.load_oracle`) a Q12 answer also counts when
+    `step1.plan_works` accepts it, as `evaluate` does; `exact_out`, if given, is filled with the exact flags.
+    `plans=None` is the exact-only behaviour."""
     stops = set(stop) if stop is not None else {eos}
     predicted = answers.ids()
     gold = batch.answer.cpu().tolist()
@@ -604,7 +608,13 @@ def judge(answers: Answers, batch: VisitBatch, *, tokenizer: Any = None, stop: O
         table = batch.names[int(batch.q_visit[q])]
         said = entity_text(ids, table, tokenizer)
         expected = preprocess.target_text([t for t in gold[q] if t != IGNORE_INDEX], table, tokenizer)
-        correct.append(step1.exact_match(said, expected))
+        if plans is None:
+            correct.append(step1.exact_match(said, expected))
+        else:
+            hit_exact, hit = scoring.score_answer(expected, said, plans.get(batch.question_ids[q]))
+            correct.append(hit)
+            if exact_out is not None:
+                exact_out.append(hit_exact)
         texts.append(said)
     return correct, texts
 
@@ -619,8 +629,10 @@ def _eligible_cards(batch: VisitBatch) -> torch.Tensor:
 @torch.no_grad()
 def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer: Any = None,
              stop: Optional[Iterable[int]] = None, gold_cards: bool = True,
-             device: Optional[torch.device] = None) -> dict[str, Any]:
-    """Own-retrieval and gold-card accuracy with retrieval, halting, loop and card diagnostics."""
+             device: Optional[torch.device] = None, plans: Optional[Mapping[str, Any]] = None) -> dict[str, Any]:
+    """Own-retrieval and gold-card accuracy with retrieval, halting, loop and card diagnostics.
+    With `plans` (see `judge`), "accuracy" and everything derived from it count a working Q12 plan as right;
+    "accuracy_exact" is always the exact-match rate, and the q12_* fields count the plan questions."""
     config = model.config
     device = device or next(model.parameters()).device
     stop = None if stop is None else sorted(set(stop))
@@ -637,13 +649,18 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
         recorder = InsertLog(model) if config.store else None
         with recorder or nullcontext():
             answers = model.answer(batch, stop=stop)
-        correct, _ = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id)
+        exact: list[bool] = []
+        correct, _ = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id, plans=plans, exact_out=exact)
+        if plans is None:
+            exact = correct
         hit = torch.tensor(correct)
-        _add(total, {"questions": count, "correct": int(hit.sum()), "loops": int(answers.loops.sum()),
+        _add(total, {"questions": count, "correct": int(hit.sum()), "correct_exact": sum(exact), "loops": int(answers.loops.sum()),
                      "halted": int((answers.halt_prob > 0.5).sum())})
+        if plans is not None:
+            _add(total, scoring.plan_counts(batch.question_ids, exact, correct, plans))
         if gold_cards and config.store:
             teacher = answer_with_gold(model, batch, stop=stop)
-            forced, _ = judge(teacher, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id)
+            forced, _ = judge(teacher, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id, plans=plans)
             _add(total, {"correct_gold_cards": sum(forced), "loops_gold_cards": int(teacher.loops.sum())})
         told = (batch.gold_lines >= 0).any(1).cpu()
         if config.store:
@@ -671,12 +688,19 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
     out: dict[str, Any] = {
         "questions": total.get("questions", 0),
         "accuracy": total.get("correct", 0) / n,
+        "accuracy_exact": total.get("correct_exact", 0) / n,
         "loops_mean": total.get("loops", 0) / n,
         "halt_rate": total.get("halted", 0) / n,
         "by_depth": {d: {"n": v[1], "accuracy": v[0] / v[1], "loops_mean": v[2] / v[1]} for d, v in sorted(depths.items())},
         "slices": {name: {"n": v[1], "accuracy": v[0] / v[1] if v[1] else None} for name, v in sorted(slices.items())},
         "seconds": time.perf_counter() - started,
     }
+    if plans is not None:
+        q12 = total.get("q12_questions", 0)
+        out.update(plan_checked=True, q12_questions=q12, q12_exact=total.get("q12_exact", 0),
+                   q12_plan_checked=total.get("q12_plan_checked", 0),
+                   q12_accuracy_exact=total.get("q12_exact", 0) / q12 if q12 else None,
+                   q12_accuracy_plan_checked=total.get("q12_plan_checked", 0) / q12 if q12 else None)
     if gold_cards and config.store:
         out["accuracy_gold_cards"] = total.get("correct_gold_cards", 0) / n
         out["own_minus_gold_cards"] = out["accuracy"] - out["accuracy_gold_cards"]

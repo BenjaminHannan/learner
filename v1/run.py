@@ -157,6 +157,14 @@ def component_ran(arm: Arm, trainer, bridge: Bridge, d_model, b2, guard_logs: di
     return rep
 
 
+def load_plans(root, name: str) -> dict:
+    """question id -> plan world for the dev / validation split dir (`step1.load_oracle`; {} without an oracle index).
+    Only non-sealed dirs: `name` must be dev or validation."""
+    if name not in ("dev", "validation"):
+        raise ValueError(f"plans are loaded for dev/validation only, not {name!r}")
+    return step1.load_oracle(Path(root) / name)[1]
+
+
 def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int, aborted: Optional[dict] = None) -> dict[str, Any]:
     """Dev numbers for the decision rule (never the sealed splits): D on all 5,000 DEV visits and the 1,000 `validation` visits,
     the creative first-try on creative DEV (latest finished creative stage), the bridge-off lesion of each, W1/W2 pass on dev, and
@@ -168,14 +176,21 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int
     bridge.frozen_ctx = True
     for name, cache in (("dev", data.dev), ("validation", data.validation)):
         batches, stops = make_eval_batches(cache, getattr(a, "final_visits", None) or len(cache), data.tokenizer)
+        plans = load_plans(a.root, name) if getattr(a, "plan_scoring", False) else None
         bridge.enabled = True
-        r = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
-        res[f"d_{name}"] = {"accuracy": r["accuracy"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
-                            "loops_mean": r["loops_mean"]}
+        r = validation_hook(batches, tokenizer=data.tokenizer, stop=stops, plans=plans)(d_model)
+        res[f"d_{name}"] = {"accuracy": r["accuracy_exact"], "questions": r["questions"], "gold_recall_at_4": r.get("gold_recall_at_4"),
+                            "loops_mean": r["loops_mean"]}      # "accuracy" stays exact match: the frozen decision rule reads it
+        if plans is not None:
+            res[f"d_{name}"].update({k: r[k] for k in ("q12_questions", "q12_exact", "q12_plan_checked", "q12_accuracy_exact",
+                                                       "q12_accuracy_plan_checked")}, accuracy_plan_checked=r["accuracy"],
+                                    plan_worlds=len(plans))
         bridge.enabled = False
-        r0 = validation_hook(batches, tokenizer=data.tokenizer, stop=stops)(d_model)
+        r0 = validation_hook(batches, tokenizer=data.tokenizer, stop=stops, plans=plans)(d_model)
         bridge.enabled = True
-        res[f"d_{name}"]["bridge_off_accuracy"] = r0["accuracy"]
+        res[f"d_{name}"]["bridge_off_accuracy"] = r0["accuracy_exact"]
+        if plans is not None:
+            res[f"d_{name}"]["bridge_off_accuracy_plan_checked"] = r0["accuracy"]
     base = baselines.baselines(data.train, data.dev)
     res["baseline_dev"] = base
     res["W1_dev_threshold"] = base["best"] + 0.10
@@ -247,6 +262,7 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
     ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
     ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--plan-scoring", action="store_true", help="final eval also reports plan-checked accuracy (Q12 plans the oracle accepts count); off = v1 as frozen")
     ap.add_argument("--deterministic", action="store_true", help="torch deterministic algorithms (warn only) + fixed cuBLAS workspace: the resume re-run")
     ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
     ap.add_argument("--relaunch-adamw", action="store_true", help="A1 relaunch for FULL: resume the last good checkpoint with plain AdamW")
