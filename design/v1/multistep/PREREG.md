@@ -68,3 +68,16 @@ school loss flat), 4 visits, 40,000 dreams, 1,000 Occam dreams per night.
 Marks: **PASS** if occam5_strict Hard >= base + 10 points AND >= 20%, Easy within 5 of base, skills harm <= 2 points.
 **Not leakage**: occam5_strict keeps >= half of occam5's gain. **Proved wrong**: occam5_strict Hard <= base + 3.
 Mechanism check (reported): school loss after the school must fall below 2.0, otherwise the arm "did not learn its dreams".
+
+# Round 3: depth-balanced Occam dreams (pre-registered 2026-10-23, before round 2's result was seen)
+Found while building round 2: after Occam relabelling the school is mostly short (2,000-dream sample: found length 1: 53%, 2: 32%, 3: 12%,
+4: 3%, 5: 0.1%), because most random 4-5 step programs equal a shorter one. The hard kinds need 3-5 steps. One change from occam5: the 40,000
+school dreams are dealt by FOUND (shortest) length, 1-4 steps, 10,000 each (5 is too rare to fill; dropped). Nightly dreams as occam5.
+
+| Arm | |
+|---|---|
+| occam_deep | depth-balanced Occam school, strict filter ON (held-out forms removed) |
+
+Run with the same seeds against round 2's base (same code path, same seeds; base is re-run on the box for a same-box comparison).
+Marks: PASS if occam_deep Hard >= base + 10 AND >= 20%, Easy within 5, harm <= 2. Depth helps: occam_deep Hard >= occam5_strict Hard + 5.
+Proved wrong: occam_deep Hard <= base + 3. Mechanism: school loss < 2.0.
