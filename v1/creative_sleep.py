@@ -36,8 +36,11 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  g1_factory: Optional[Callable[[Any, Any], Any]] = None, pool_limit: Optional[int] = None,
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
-                 attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None) -> dict[str, Any]:
-    """updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
+                 attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None,
+                 retention: Optional[Callable[[str, str], dict]] = None) -> dict[str, Any]:
+    """updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard).
+    retention(name, ckpt_path) -> dict (default None = off, v1 unchanged): called after each sleep night's W{n}.pt exists (W1, W2), the result is kept in
+    info["retention"][name] and train.json (skills retention check, see `retention_fn`)."""
     os.makedirs(out, exist_ok=True)
     P = lambda f: os.path.join(out, f)
     done = lambda f: os.path.exists(P(f))
@@ -143,6 +146,10 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             m, rs = _sleep_stage(base, recs, replay, warm_rows, vocab, cfgs, device, guard)
             sleep.save_parent(m, meta["name"], meta["cfg"], vocab, P(f"W{night}.pt"), step=(meta["step"] or 0), warmup=True)
             stage(f"W{night}_sleep", time.time() - ts, phase_info(rs))
+        if retention is not None and f"W{night}" not in info.get("retention", {}):
+            info.setdefault("retention", {})[f"W{night}"] = retention(f"W{night}", P(f"W{night}.pt"))
+            save()
+            log("retention", f"W{night}", info["retention"][f"W{night}"])
     json.dump(dict(T=Tt, base5=setup["base5"]), open(P("complete.json"), "w"))
     log("CREATIVE DONE", out)
     return info
@@ -162,3 +169,17 @@ def dev_report(model_path: str, device: str = "cpu", limit: Optional[int] = None
     kinds = sorted({r["kind"] for r in rows})
     by_kind = {k: sum(g["per_q_right"][i] for i, r in enumerate(rows) if r["kind"] == k) / sum(1 for r in rows if r["kind"] == k) for k in kinds}
     return dict(first_try=g["right"], fits=g["fits"], n=len(rows), by_kind=by_kind)
+
+
+def retention_fn(skills_data: str, device: str = "cpu", base5: Optional[float] = None, attach: Optional[Callable[[Any], None]] = None,
+                 dev_limit: Optional[int] = None) -> Callable[[str, str], dict]:
+    """Skills retention after a sleep night (C2b's harm measure): pooled-5 skills exact (`fastsleep.skills5`) of the checkpoint, harm in points =
+    100 x (base5 - skills5) vs `base5` (the RAW parent's score, common to every arm), plus creative dev first-try. DEV only; never the sealed split."""
+    def fn(name: str, path: str) -> dict:
+        m, _, _ = sleep.load_parent(path, device)
+        if attach:
+            attach(m)
+        s5 = fastsleep.skills5(m, skills_data, device)
+        d = dev_report(path, device, limit=dev_limit, attach=attach)
+        return dict(skills5=s5, harm_points=None if base5 is None else 100 * (base5 - s5), dev_first_try=d["first_try"], dev_by_kind=d["by_kind"])
+    return fn

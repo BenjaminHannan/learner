@@ -325,6 +325,10 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-limit", type=int, default=None, help="testing only")
     ap.add_argument("--diary", type=int, default=g1mod.DIARY_SIZE, help="testing only: G1 diary size (the arms use 4096)")
     ap.add_argument("--final-visits", type=int, default=None, help="testing only: score only this many dev/validation visits at the end")
+    ap.add_argument("--g1-norm", choices=list(g1mod.NORMS), default="none",
+                    help="G1 K-FAC G normalisation: none = v1 as frozen (empirical G); example = the L14 NK30 recipe (design/v1/g1-ablate/PREREG.md)")
+    ap.add_argument("--no-g1", action="store_true", help="creative sleep without G1 (the g1_off control); off = v1 as frozen")
+    ap.add_argument("--sleep-retention", action="store_true", help="after each sleep night score skills5 + creative dev and record them in sleep-done.json; off = v1 as frozen")
     ap.add_argument("--plan-scoring", action="store_true", help="final eval also reports plan-checked accuracy (Q12 plans the oracle accepts count); off = v1 as frozen")
     ap.add_argument("--deterministic", action="store_true", help="torch deterministic algorithms (warn only) + fixed cuBLAS workspace: the resume re-run")
     ap.add_argument("--ack-abort", action="store_true", help="continue after an abort file exists (A1 relaunch / a recorded deviation)")
@@ -476,7 +480,7 @@ def main(argv=None) -> int:
     def g1_factory(raw, replay):
         parent = g1mod.frozen_copy(raw)
         diary = g1mod.build_diary(parent, replay, n=a.diary, seed=SEED, device=a.device)
-        return g1mod.G1(parent, diary, raw.vocab, device=a.device, seed=SEED)
+        return g1mod.G1(parent, diary, raw.vocab, device=a.device, seed=SEED, norm=a.g1_norm)
 
     bridge.frozen_ctx = True            # D is not training in sleep: the summaries stay as wake left them, P_dc/P_cd are frozen
     stage_dev: dict[str, float] = {}
@@ -499,9 +503,17 @@ def main(argv=None) -> int:
         if share is not None and share > 0.5 and (cur - prev) * 100 < 1.0:
             raise AbortRule("A3", f"{name}: KL share {share:.2f} > 0.50 and creative dev rose {(cur - prev) * 100:.2f} < 1 point")
 
+    retention = None
+    if a.sleep_retention:
+        from creative import fastsleep as _fs
+        _raw, _, _ = creative_sleep.sleep.load_parent(raw_ckpt, a.device)
+        bridge.attach_creative(_raw)
+        retention = creative_sleep.retention_fn(a.skills, a.device, base5=_fs.skills5(_raw, a.skills, a.device), attach=bridge.attach_creative,
+                                                dev_limit=a.dev_limit)
+        del _raw
     try:
         info = creative_sleep.run_creative(str(out / "creative"), raw_ckpt, skills_train, a.skills, device=a.device, seed=SEED,
-                                           g1_factory=g1_factory, on_stage=on_stage, attach=bridge.attach_creative,
+                                           g1_factory=(None if a.no_g1 else g1_factory), retention=retention, on_stage=on_stage, attach=bridge.attach_creative,
                                            updates_cap=a.sleep_cap, pool_limit=a.pool_limit, dev_limit=a.dev_limit,
                                            n1=(4 if a.sleep_cap else 32), n2=(8 if a.sleep_cap else 480))
     except AbortRule as ar:

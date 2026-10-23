@@ -26,6 +26,7 @@ KL_WEIGHT = 30.0
 KL_ROWS = 32
 ENERGY = 0.99
 MAX_ANS = 8             # custom_io.data.MAX_ANS: answer slots are 8 characters + EOS
+NORMS = ("none", "example")
 DIARY_SIZE = 4096     # the s200 sheet run's diary size (domain/far/learn_probe.py GUARD_CONSTANTS note)
 
 
@@ -120,7 +121,10 @@ class G1:
     `extra_loss(model, step)` is the KL term. Log fields in `self.log` (kl_mean, kl_parts, frozen count, protected share)."""
 
     def __init__(self, parent, diary: list[dict], vocab, kl_weight: float = KL_WEIGHT, kl_rows: int = KL_ROWS,
-                 energy: float = ENERGY, seed: int = 0, device: str = "cpu") -> None:
+                 energy: float = ENERGY, seed: int = 0, device: str = "cpu", norm: str = "none") -> None:
+        if norm not in NORMS:
+            raise ValueError(f"g1 norm must be one of {NORMS}, got {norm!r}")
+        self.norm = norm                  # 'none' = v1 as frozen (empirical G); 'example' = the L14 NK30 recipe's per-example-normalised G
         self.parent, self.diary, self.vocab = parent, diary, vocab
         self.kl_weight, self.kl_rows, self.energy, self.seed, self.device = kl_weight, kl_rows, energy, seed, device
         self.rng = random.Random(f"{seed}-klrows")
@@ -137,7 +141,7 @@ class G1:
                 vec = model.bridge_in().detach().cpu()
             cpu.bridge_in = lambda v=vec: v
             cpu.bridge_out = None
-        stats = kf.kfac_stats(cpu, self.diary[:1024], bs=64)       # hard mask measured on the model's own old answers
+        stats = kf.kfac_stats(cpu, self.diary[:1024], bs=64, norm=(None if self.norm == "none" else self.norm))       # hard mask measured on the model's own old answers
         F, info = kf.factors(stats, self.energy, soft=None)
         self.F = {n: tuple(t.to(self.device) for t in f) for n, f in F.items()}
         for p in model.parameters():
@@ -145,7 +149,7 @@ class G1:
         self.frozen = gp.freeze_unprojected(model)
         free = [v["free_share"] for v in info.values()]
         self.info = {"layers": len(info), "frozen_tensors": len(self.frozen), "mean_free_share": sum(free) / max(len(free), 1),
-                     "energy": self.energy}
+                     "energy": self.energy, "norm": self.norm}
         return self.info
 
     def wrap_optimizer(self, model, base):
