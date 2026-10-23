@@ -90,5 +90,92 @@ class ShippedBankTest(unittest.TestCase):
                 self.assertEqual(by_split, BASE["banks"][bank])
 
 
+AUG = PP.PATTERNS / "bank-v1-aug.json"
+AUG2 = PP.PATTERNS / "bank-v1-aug2.json"
+FILLED = ("ev.breaks", "ev.is_closed", "ev.kind_group", "q.next_to", "q.plan_get", "q.rule_category", "q.rule_container",
+          "q.rule_material", "q.where_at_time", "q.where_before", "q.who_has", "q.yn_has", "rule.R1_material", "rule.R2",
+          "t.quiz_later", "t.right")
+
+
+@unittest.skipUnless(AUG2.exists(), "bank-v1-aug2.json not built")
+class Aug2Test(unittest.TestCase):
+    def test_loads_without_fallback_and_registry_accepts(self):
+        from learnlab.village.render import village_registry
+        source = PatternSource.load(AUG2)
+        self.assertNotIn("+fill", source.version)
+        self.assertFalse([p for p in source.text if p.startswith("fb-") and source.bank[p] not in FILLED])
+        village_registry(source)
+
+    def test_held_out_pools_identical_to_bank_v1(self):
+        old, new = PatternSource.load(PP.SRC), PatternSource.load(AUG2)
+        for key, ids in old.pools.items():
+            if key[1] in ("validation", "test") or (key[0].startswith("t.") and key[1] not in PP.TRAIN_STYLES):
+                self.assertEqual(new.pools[key], ids, key)
+                self.assertEqual([old.text[i] for i in ids], [new.text[i] for i in ids])
+        for bank in FILLED:  # held-out fallback ids keep their texts
+            self.assertTrue(all(new.text[i] == old.text[i] for i in new.text if i.startswith("fb-") and i in old.text))
+
+    def test_counts_and_more_templates_than_aug(self):
+        old, new = PatternSource.load(AUG), PatternSource.load(AUG2)
+        for bank in FILLED + ("q.why_at", "q.yn_at", "q.yn_in"):
+            if bank.startswith("t."):
+                for style in PP.TRAIN_STYLES:
+                    self.assertGreaterEqual(len(new.pools[(bank, style)]), 2 * len(old.pools[(bank, style)]))
+            else:
+                self.assertGreaterEqual(len(new.pools[(bank, "train")]), 22 if bank in FILLED + ("q.why_at", "q.yn_at") else 24)
+                self.assertGreater(len(new.pools[(bank, "train")]), len(old.pools[(bank, "train")]))
+
+    def test_train_renders_use_more_distinct_templates(self):
+        import tempfile
+        from collections import Counter
+        from learnlab.village import shards
+        used = {}
+        for name, path in (("aug", AUG), ("aug2", AUG2)):
+            with tempfile.TemporaryDirectory() as tmp:
+                shards.write_shards("train", 40, tmp, 1, patterns=str(path), verbose=False)
+                ids = Counter()
+                for f in Path(tmp, "train").glob("*.jsonl"):
+                    for line in f.read_text().splitlines():
+                        ids.update(json.dumps(json.loads(line).get("provenance", {})).split('"'))
+            source = PatternSource.load(path)
+            used[name] = {b: {i for i in ids if i in source.bank and source.bank[i] == b} for b in FILLED}
+        better = [b for b in FILLED if len(used["aug2"][b]) > len(used["aug"][b])]
+        self.assertGreaterEqual(len(better), 12, {b: (len(used["aug"][b]), len(used["aug2"][b])) for b in FILLED})
+        for b in FILLED:
+            self.assertGreaterEqual(len(used["aug2"][b]), len(used["aug"][b]))
+
+    def test_validation_shards_and_probe_byte_identical(self):
+        import tempfile
+        from generalize import probes
+        from learnlab.village import shards
+
+        def read(directory):
+            return {p.name: p.read_bytes() for p in sorted(Path(directory).rglob("*")) if p.suffix in (".txt", ".jsonl")}
+
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            shards.write_shards("validation", 40, a, 1, patterns=str(PP.SRC), verbose=False)
+            shards.write_shards("validation", 40, b, 1, patterns=str(AUG2), verbose=False)
+            ra, rb = read(a), read(b)
+            self.assertTrue(ra)
+            self.assertEqual(ra, rb)
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            probes.write_probe("Pword", ("template",), 40, a, 1, verbose=False)
+            probes.write_probe("Pword", ("template",), 40, b, 1, verbose=False, patterns=str(AUG2))
+            # A probe is a TRAIN visit with only the non-teacher templates switched to validation, so its teacher
+            # (train-style) wordings legitimately change with any train augmentation (bank-v1-aug does too). What must
+            # not change is every non-teacher template choice, visit by visit.
+            old, new = PatternSource.load(), PatternSource.load(AUG2)
+
+            def choices(directory, source):
+                rows = [json.loads(line) for f in sorted(Path(directory).rglob("*.jsonl")) for line in f.read_text().splitlines()]
+                return [[t for t in r["provenance"]["template"] if not source.bank[t].startswith("t.")]
+                        for r in rows if r.get("kind") == "visit"]
+
+            ca, cb = choices(a, old), choices(b, new)
+            self.assertEqual(len(ca), 40)
+            self.assertEqual(ca, cb)
+            self.assertTrue(all(old.split[t] in ("validation", "test") for v in ca for t in v if old.bank[t] in FILLED))
+
+
 if __name__ == "__main__":
     unittest.main()
