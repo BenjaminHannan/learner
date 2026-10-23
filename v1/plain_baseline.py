@@ -38,7 +38,7 @@ from typing import Any, Callable, Iterator, Optional, Sequence
 import torch
 
 from learnlab import step1
-from learnlab.core import Core, CoreConfig
+from learnlab.core import IGNORE_INDEX, Core, CoreConfig, lm_loss
 from learnlab.step1 import ANSWER_TAG, FEEDBACK_TAG, Question
 from learnlab.tokenizer import Tokenizer
 from learnlab.train import TrainConfig, Trainer
@@ -239,6 +239,35 @@ class Prefetch:
 # ----------------------------------------------------------------- scoring
 
 
+def accum_step(trainer: Trainer, x: torch.Tensor, y: torch.Tensor, m: torch.Tensor, chunks: int):
+    """Trainer._step split into `chunks` row-groups (gradient accumulation): the same full-batch token-mean loss and one
+    optimizer step, with less activation memory. chunks=1 is Trainer._step itself."""
+    if chunks <= 1:
+        return trainer._step(x, y, m, track=False)
+    dev = trainer.device
+    x, y, m = (t.to(dev, non_blocking=True) for t in (x, y, m))
+    for group in trainer.optimizer.param_groups:
+        group["lr"] = trainer.lr_at(trainer.step)
+    kept = lambda yy, mm: yy.masked_fill(~mm.bool(), IGNORE_INDEX).ne(IGNORE_INDEX).sum()
+    total = kept(y, m).clamp_min(1)
+    trainer.optimizer.zero_grad(set_to_none=True)
+    loss_sum = torch.zeros((), device=dev)
+    for xs, ys, ms in zip(x.chunk(chunks), y.chunk(chunks), m.chunk(chunks)):
+        n = kept(ys, ms)
+        if int(n) == 0:
+            continue
+        with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=dev.type == "cuda"):
+            logits = trainer.model(xs)
+        part = lm_loss(logits, ys, ms) * (n / total)
+        part.backward()
+        loss_sum += part.detach()
+    gnorm = torch.nn.utils.clip_grad_norm_(trainer.model.parameters(), trainer.config.grad_clip or float("inf"))
+    trainer.optimizer.step()
+    trainer.step += 1
+    trainer.tokens += y.numel()
+    return loss_sum, gnorm, None
+
+
 @torch.no_grad()
 def score_questions(model: Core, tokenizer: Tokenizer, questions: Sequence[Question], *, batch_size: int = 128,
                     max_new: int = MAX_NEW) -> dict[str, Any]:
@@ -291,6 +320,7 @@ def payload(model: Core, trainer: Trainer, stream_state: dict[str, int], steps: 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--accum", type=int, default=4, help="row-groups per step (gradient accumulation; same loss and step, less memory)")
     ap.add_argument("--root", required=True, help="village data root (train/dev/validation; the sealed `test` dir is never read)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--steps", type=int, default=12_000)
@@ -345,7 +375,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if a.stop_after is not None and trainer.step - first >= a.stop_after:
             break
         (x, y, m), stream_state, real = next(stream)
-        loss, gnorm, _ = trainer._step(x, y, m, track=False)
+        loss, gnorm, _ = accum_step(trainer, x, y, m, a.accum)
         loss_v = float(loss)
         if loss_v != loss_v or loss_v in (float("inf"), float("-inf")):
             raise FloatingPointError(f"non-finite loss at step {trainer.step}")
