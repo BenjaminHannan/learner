@@ -23,3 +23,18 @@ Held-out templates by number of steps (STEPS / ANSWER): 1 step 85% / 15%, 2 step
 - suggested: capability256's successor should train on step targets with a large, template-diverse corpus. Errors grow with step
   count, so longer training / a bigger model or a calculator tool for the arithmetic are the next single changes to test.
 - untested: one seed only; this is a fresh small model, not the village model, not capability256's LFM adapter.
+
+## FU1: STEPS arm, 18,000 steps (3x) — RESULT
+RTX 5090, $0.35. Raw: results-fu1/steps/final.json. Final train loss 6e-5 (train is fitted).
+
+| Split | STEPS 6k | STEPS 18k |
+|---|---|---|
+| dev | 49.8% | 53.6% |
+| heldout_template | 53.8% | **55.4%** |
+| heldout_structure | 28.2% | 28.4% |
+
+- Mark (shown): pass needed >= 65%; proves-wrong was < 58%. 55.4% -> **proved wrong: 3x more training does not help.**
+- Error reading (suggested, from the 10 saved held-out samples): the 4 misses all do the arithmetic right but pick the wrong
+  operation or operands ("12 more than" -> minus; "19 batteries at 9 dollars each" -> 19 + 9). The limit is reading the
+  English, not computing. A from-scratch 10.8M char model has little language knowledge; the next single change to test is
+  a pretrained language backbone on the same data and marks.
