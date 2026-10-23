@@ -33,3 +33,9 @@ Inference-only checks on base (diag): forcing more loops (min_loops 3/5/8) HELPS
 setting chosen on dev first; per-loop state change and register lesions are descriptive (no mark).
 
 Spend cap: $3 per box, $10 total for this lab (Vast).
+
+## Addendum 1 (21:22 UTC, after base / reg16 / mq4 finished, before base-s1 and before any wave-2 run)
+Seen so far (validation): base 42.5, reg16 48.7, mq4 50.0. Wave 2 replicates the two apparent winners and tries them together:
+`reg16-s1`, `mq4-s1`, `reg16mq4` (16 registers, registers 0-3 query). Marks:
+- reg16 / mq4 REPLICATE if the seed-1 run also clears max(base, base-s1) + max(3, N) on validation.
+- reg16mq4 HELPS BEYOND if validation >= max(reg16 runs, mq4 runs) + max(3, N); else the two are not additive.
