@@ -11,6 +11,9 @@ exec > >(tee -a "$OUT/run_box.log") 2>&1
 echo "== run_box $(date -u +%FT%TZ) steps=$STEPS bsz=$BSZ micro=$MICRO maxlen=$MAXLEN"
 nvidia-smi --query-gpu=name,memory.total --format=csv || echo "no nvidia-smi"
 
+if [ -n "${BIG:-}" ] && [ ! -f "$OUT/.installed" ]; then   # big-model reference: vLLM brings its own torch
+  python3 -m pip install -q "vllm==${VLLM:-0.32.0}" && touch "$OUT/.installed"
+fi
 if [ ! -f "$OUT/.installed" ]; then
   python3 -c "import torch" 2>/dev/null || python3 -m pip install torch
   TV=$(python3 -c "import torch;print(torch.__version__.split('+')[0])"); echo "torch==$TV" > /tmp/torch-pin.txt
@@ -18,7 +21,7 @@ if [ ! -f "$OUT/.installed" ]; then
   if [ "${WITH_CONV1D:-0}" = 1 ]; then python3 -m pip install ninja packaging && python3 -m pip install causal-conv1d --no-build-isolation || echo "causal-conv1d build failed; using torch fallback"; fi
   touch "$OUT/.installed"
 fi
-python3 - <<'PY'
+[ -n "${BIG:-}" ] || python3 - <<'PY'
 import torch, transformers, peft
 print("torch", torch.__version__, "cuda", torch.cuda.is_available(), "transformers", transformers.__version__, "peft", peft.__version__)
 try:
@@ -30,6 +33,7 @@ except Exception as e: print("causal_conv1d missing (torch fallback):", type(e).
 assert torch.cuda.is_available(), "no CUDA"
 PY
 
+
 DATA=$OUT/data
 [ -f "$DATA/DATA_REPORT.json" ] || python3 backbone/build_data.py "$DATA" --workers "$(nproc)"
 
@@ -39,6 +43,10 @@ step() {  # step NAME RESULT_FILE args...
   if [ -f "$res" ]; then echo "-- skip $name (have $res)"; return; fi
   echo "-- $name $(date -u +%T)"; python3 backbone/train.py "$@" || echo "!! $name failed"
 }
+if [ -n "${BIG:-}" ]; then
+  [ -f $OUT/big/result_big.json ] || python3 backbone/eval_vllm.py --model "$BIG" --data $DATA --out $OUT/big --max-len ${BIGLEN:-4096} || echo "!! big failed"
+  ARMS=${ARMS:-none}
+fi
 ARMS=${ARMS:-a0,a,b}
 has() { case ",$ARMS," in *",$1,"*) return 0;; *) return 1;; esac; }
 has a0 && step a0   $OUT/a0/result_a0.json   --arm a0 --model "$MODEL" $COMMON --out $OUT/a0
