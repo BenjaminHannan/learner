@@ -6,7 +6,7 @@ guard in `waitlog`, stop-then-pull with sha256 checks, destroy only after a pass
 DRAFT until the V1 review passes. The agent proxy adds the vast key; this script never reads or prints a key.
 Nothing here rents by itself: `create` prints the request and sends it only with --yes, and every rental needs Ben's own click.
 
-  pack    --kind gs|arm|plain|wordprob --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
+  pack    --kind gs|arm|plain|wordprob|creative --dph D --cap C [--arm A] --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
                                                       mainbrain domain skills_curriculum + tokenizer + pattern bank + data hashes)
                                                       as pack.tar.xz + args.json; the box script is v1/box/<kind>.sh from the pack
   search  [--n 12] [--max-dph 0.8] [--gpu "RTX 4090"] [--min-ram 23000]
@@ -34,8 +34,8 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "gs2", "gs3", "arm", "plain", "wordprob")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0, "wordprob": 6.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "gs3", "arm", "plain", "wordprob", "creative")
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0, "wordprob": 6.0, "creative": 3.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
@@ -288,6 +288,8 @@ def pack(a):
         a.steps = 6000 if kind == "wordprob" else 12000
     if kind == "arm" and not a.arm:
         raise SystemExit("--arm floor|full is required for kind arm")
+    if kind == "creative" and a.arm not in ("control", "treat"):
+        raise SystemExit("--arm control|treat is required for kind creative")
     HARD_STOP[kind] = float(a.cap)
     deadline = run_deadline(a.dph, kind)
     files = (WORDPROB_FILES if kind == "wordprob" else listed() + [f"v1/box/{kind}.sh"])
@@ -318,6 +320,8 @@ def pack(a):
             info = tarfile.TarInfo(n)
             info.size, info.mtime = len(b), 0
             t.addfile(info, io.BytesIO(b))
+        if kind == "creative":   # creative-only dream2 A/B (design/v1/dream2/PREREG.md): ARM=control|treat
+            extra = [("ARM.env", f"ARM={a.arm}\nSTEPS=0\nCAP={a.cap}\n")]
         for name, content in (("SEAL-pack.sha256.txt", seal), ("COMMIT", head + "\n")) + tuple(extra):
             info = tarfile.TarInfo(name)
             info.size, info.mtime = len(content.encode()), 0
@@ -329,6 +333,8 @@ def pack(a):
     (out / "SEAL-pack.sha256.txt").write_text(seal)
     (out / "COMMIT").write_text(head + "\n")
     job = make_job(sha(data), kind, a.dph)
+    if kind == "creative":      # the arm in the job text, so `create` can give each arm its own box label
+        job = job.replace("STAGE=creative\n", f"STAGE=creative\nARMTAG={a.arm}\n", 1)
     b64 = base64.b64encode(data).decode()
     args = ["bash", "-c", job, f"v1g-{kind}"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
     size = len(json.dumps(args))
@@ -374,7 +380,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain|wordprob)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain|wordprob|creative)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -399,6 +405,8 @@ def create(a):
     args = json.loads(Path(a.args).read_text())
     stage = job_stage(args)
     label = a.label or f"{LABEL_PREFIX}{stage}"
+    if stage == "creative" and not a.label:       # one box per arm, so two can run at once
+        label += "-" + re.search(r"^ARMTAG=(control|treat)", args[2], re.M).group(1)
     if not label.startswith(LABEL_PREFIX):
         raise SystemExit(f"label must start with {LABEL_PREFIX}")
     if not str(a.offer).isdigit():
@@ -481,7 +489,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain|wordprob)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain|wordprob|creative)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)
@@ -796,7 +804,7 @@ def main(argv=None):
     p.add_argument("--kind", choices=STAGES, required=True)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
     p.add_argument("--cap", type=float, required=True, help="this box's dollars")
-    p.add_argument("--arm", choices=("floor", "full"), default=None)
+    p.add_argument("--arm", choices=("floor", "full", "control", "treat"), default=None)
     p.add_argument("--steps", type=int, default=None, help="default 12000 (plain/arm), 6000 (wordprob)")
     p.add_argument("--data", default=None, help="wordprob: the wordprob-v1 data folder, packed into the args (xz)")
     p.add_argument("--data-url", default=None, help="wordprob: the box fetches a tar.xz of the data dir here instead (if the data is too big for the args)")
