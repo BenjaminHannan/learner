@@ -58,3 +58,19 @@ By step count, heldout_template (scratch STEPS 6k -> SmolLM2): 1 step 85 -> 94%,
 - Caveats (untested): 34x more parameters as well as pretraining, so this does not separate "pretrained" from "bigger";
   one seed; 2,000-row samples (±~1.8 pts). Long chains (4 steps) are still the weak spot at 50%.
 - Suggested next single change: same SmolLM2 recipe with a randomly initialised SmolLM2-360M (separates pretraining from size).
+
+## FU3: same SmolLM2-360M architecture, random init (size control) — RESULT
+RTX 4090 (Vast), 19 min, $0.19. Raw: results-fu3/smolrand/. Pre-registered in commit 2667e501 before the box was rented.
+
+| Split | scratch 10.8M STEPS | SmolLM2 random init | SmolLM2 pretrained |
+|---|---|---|---|
+| dev | 49.8% | 42.0% | 80.7% |
+| heldout_template | 53.8% | **45.7%** | 78.8% |
+| heldout_structure | 28.2% | 20.8% | 48.2% |
+
+heldout_template by step count (random init): 1 step 70%, 2 steps 56%, 3 steps 35%, 4 steps 19%.
+
+- Mark (shown): pass needed <= 60%; proves-wrong was >= 72%. 45.7% -> **PASS: pretraining, not size, explains FU2's gain.**
+  The 34x-bigger random model with the same recipe scores below the small scratch model.
+- Caveat (stated in advance): the recipe was set for fine-tuning; a scratch 360M model might do better with a different
+  schedule. Final train loss 0.011 vs 0.0055 pretrained.
