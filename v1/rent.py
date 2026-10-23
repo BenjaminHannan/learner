@@ -49,6 +49,7 @@ MAX_ARGS_BYTES = 1_800_000
 START_MIN = PREJOB_S // 60
 STOP_MARGIN_S = 120
 WATCHDOG_MIN = 10
+WATCHDOG_MIN_STAGE = {"multistep": 60, "multistep2": 60, "multistep3": 60}   # long silent phases (dream generation, school sleep) write no new log line
 CLOSING = re.compile(r"(?:^|\s)=== V1G (DONE|FAIL|GATE)(?=\s|$)")
 PULL_OK = "PULL_OK.json"
 STAGE = "gs"
@@ -567,8 +568,8 @@ def waitlog(a):
                     k = progress_key(text)
                     if k != key:
                         key, changed = k, now
-                    elif now - changed > WATCHDOG_MIN * 60:
-                        out(5, "WATCHDOG", note="no new log line for 10 min")
+                    elif now - changed > WATCHDOG_MIN_STAGE.get(stage, WATCHDOG_MIN) * 60:
+                        out(5, "WATCHDOG", note=f"no new log line for {WATCHDOG_MIN_STAGE.get(stage, WATCHDOG_MIN)} min")
         except SystemExit:
             raise
         except Exception as error:              # a failed read, an unreadable cost, anything else: three in a row stop it
