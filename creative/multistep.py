@@ -19,7 +19,12 @@ import time
 HARD = ('affine', 'sq_plus', 'double_add')
 EASY = ('square', 'last_digit')
 SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + ('oracle',)
+OCCAM_ARMS = ('occam5', 'occam5_strict')
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + ('oracle',)
+ROUND2_ARMS = ('base', 'occam5', 'occam5_strict', 'oracle')
+OCCAM_SIZES = dict(lr=1e-3, visits=4)         # round 2 (PREREG): lr 1e-3, 4 visits
+OCCAM_SHARDS = 128                             # fixed (not the core count): the cache key / stream must not depend on the box
+OCCAM_LOSS_MARK = 2.0                          # mechanism line: school loss after the school must fall below this
 REPORT_ONLY = ('oracle',)
 SIZES = dict(school_n=40000, nightly=1000, visits=2, lr=3e-4)
 SMOKE = dict(school_n=60, nightly=20, updates_cap=2, pool_limit=64, dev_limit=16, n1=8, n2=16, T=1.0)
@@ -41,6 +46,9 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(school=dict(sch, strict=True), dream2=k, dream2_max_steps=5, dream2_strict=True)
     if arm == 'school5_curr':
         return dict(school=dict(sch, curriculum=True), dream2=k, dream2_max_steps=5)
+    if arm in OCCAM_ARMS:
+        oc = dict(sch, occam=True, strict=(arm == 'occam5_strict'), shards=OCCAM_SHARDS if sizes is SIZES else 8, **OCCAM_SIZES)
+        return dict(school=oc, dream2=k, dream2_max_steps=5, dream2_occam=True, **(dict(dream2_strict=True) if arm == 'occam5_strict' else {}))
     if arm == 'oracle':       # report only: pool reference programs, update count matched to school5's, no nightly dreams
         return dict(school=dict(oracle=True, updates=sleep.max_updates(n, 64, True, SIZES['visits']), lr=SIZES['lr'], visits=SIZES['visits']))
     raise KeyError(arm)
@@ -112,6 +120,40 @@ def verdict(arms: dict) -> dict:
     return out
 
 
+def verdict_round2(arms: dict, school_loss: dict | None = None) -> dict:
+    """PREREG Round 2 marks, mechanically. arms = {arm: dict(hard, easy, harm)} seed means (fractions); school_loss = {arm: final school loss (mean over seeds)} (the mechanism line).
+    PASS: occam5_strict Hard >= base + 10 points AND >= 20%, Easy within 5 of base, harm <= 2 points. Not leakage: occam5_strict keeps >= half of occam5's gain.
+    Proved wrong: occam5_strict Hard <= base + 3. Mechanism: school loss < 2.0, else the arm did not learn its dreams. oracle is report only."""
+    pts = lambda x: round(100.0 * x, 9)
+    b = arms['base']
+    gain = {a: pts(arms[a]['hard'] - b['hard']) for a in OCCAM_ARMS if a in arms}
+    out = dict(gains_hard_points=gain, lines=[])
+    if 'occam5_strict' in arms:
+        x = arms['occam5_strict']
+        c = dict(hard_ge_base_plus_10=gain['occam5_strict'] >= 10, hard_ge_20=pts(x['hard']) >= 20, easy_ok=pts(x['easy']) >= pts(b['easy']) - 5, harm_ok=pts(x['harm']) <= 2)
+        out['pass_detail'], out['pass'] = c, all(c.values())
+        out['lines'].append(('PASS: occam5_strict' if out['pass'] else 'NO PASS: occam5_strict') + f" (Hard {pts(x['hard']):.1f}% = base {pts(b['hard']):.1f} + {gain['occam5_strict']:.1f}; Easy {pts(x['easy']):.1f} vs base {pts(b['easy']):.1f}; harm {pts(x['harm']):.1f} pts; failed: {[k for k, v in c.items() if not v]})")
+        out['proved_wrong'] = gain['occam5_strict'] <= 3
+        if out['proved_wrong']:
+            out['lines'].append('PROVED WRONG: occam5_strict Hard <= base + 3 points')
+        if 'occam5' in gain:
+            if gain['occam5'] > 0:
+                nl = gain['occam5_strict'] >= 0.5 * gain['occam5']
+                out['not_leakage'] = nl
+                out['lines'].append(f"{'NOT LEAKAGE' if nl else 'LEAKAGE SUSPECTED'}: strict gain {gain['occam5_strict']:.1f} vs occam5 gain {gain['occam5']:.1f} points")
+            else:
+                out['not_leakage'] = None
+                out['lines'].append(f"LEAKAGE CHECK n/a: occam5 has no Hard gain over base ({gain['occam5']:.1f} points)")
+    if school_loss:
+        mech = {a: (l is not None and l < OCCAM_LOSS_MARK) for a, l in school_loss.items()}
+        out['school_loss'], out['mechanism_learned'] = school_loss, mech
+        for a, l in school_loss.items():
+            out['lines'].append(f"MECHANISM {a}: school loss {l if l is None else round(l, 3)} -> " + ('learned its dreams (< 2.0)' if mech[a] else 'DID NOT LEARN ITS DREAMS (>= 2.0)'))
+    if 'oracle' in arms:
+        out['lines'].append(f"oracle (REPORT ONLY): Hard {pts(arms['oracle']['hard']):.1f}%")
+    return out
+
+
 def aggregate(per_seed: dict) -> dict:
     """{seed: {arm: eval dict}} -> {arm: dict(per_seed, mean)}."""
     arms = sorted({a for s in per_seed.values() for a in s}, key=ARMS.index)
@@ -165,13 +207,15 @@ def pregen(root: str, seed: int, arms, sizes: dict, kw: dict, workers: int, cach
     pool = c2_stones._with_nums(R.load_split(D.DATA, 'pool')[:kw.get('pool_limit')])
     avoid = [r['prompt'] for r in pool]
     over = {}
-    for arm in [x for x in arms if x in SCHOOL_ARMS]:
+    for arm in [x for x in arms if x in SCHOOL_ARMS + OCCAM_ARMS]:
         sch = arm_kwargs(arm, sizes, cache=cache, workers=workers)['school']
         rows = []
         for night, mx, k in CS.school_plan(sch):
             t0 = time.time()
             st = {}
-            rows += D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=sch['strict'], shards=sch.get('shards', 8), workers=workers, stats=st, cache_dir=cache)
+            rows += D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=sch['strict'], shards=sch.get('shards', 8), workers=workers, stats=st, cache_dir=cache, occam=bool(sch.get('occam')))
+            if sch.get('occam'):
+                log(f'occam {arm}: dropped', sum(v['occam_dropped'] for v in st.values()), 'found-length counts', {k_: sum(v[k_] for v in st.values()) for k_ in st[1] if k_.startswith('found_')})
             log(f'dreams {arm} night {night} max_steps {mx} n {k}: {time.time() - t0:.0f}s; accept rate per length', {L: round(v['accepted'] / max(v['draws'], 1), 5) for L, v in st.items()})
         over[arm] = D.kind_overlap(rows)
         log('kind_overlap', arm, {k: v for k, v in over[arm].items() if k in ('n', 'any_held_out_same_function')})
@@ -183,7 +227,8 @@ def main():
     ap.add_argument('--b2'), ap.add_argument('--skills'), ap.add_argument('--out')
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--seeds', type=int, nargs='+', default=[0, 1])
-    ap.add_argument('--arms', nargs='+', default=list(ARMS), choices=ARMS)
+    ap.add_argument('--arms', nargs='+', default=None, choices=ARMS)
+    ap.add_argument('--round', type=int, default=1, choices=(1, 2), help='2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict')
     ap.add_argument('--parallel', type=int, default=1)
     ap.add_argument('--threads', type=int, default=2, help='OMP threads per arm subprocess')
     ap.add_argument('--cache-dir', default=None, help='dream cache (default OUT/s<seed>/dreams); keep it out of the exported out/ tree')
@@ -196,7 +241,8 @@ def main():
     kw = smoke_kwargs(sizes) if a.smoke else {}
     root = os.path.abspath(a.out)
     os.makedirs(root, exist_ok=True)
-    arms = [x for x in ARMS if x in a.arms]
+    r2 = a.round == 2
+    arms = [x for x in ARMS if x in (a.arms or (ROUND2_ARMS if r2 else ARMS))]
     ncpu = os.cpu_count() or 1
     per_seed, overlap, failed = {}, {}, []
     for seed in a.seeds:
@@ -237,9 +283,16 @@ def main():
                 else:
                     failed.append(dict(seed=seed, arm=arm, **r))
     agg = aggregate(per_seed)
-    res = dict(prereg='design/v1/multistep/PREREG.md', smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
+    res = dict(prereg='design/v1/multistep/PREREG.md', round=a.round, smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
                report_only_arms=list(REPORT_ONLY), failed_arms=failed)
-    if 'base' in agg and any(x in agg for x in SCHOOL_ARMS):
+    if r2 and 'base' in agg and any(x in agg for x in OCCAM_ARMS):
+        sl = {}
+        for ar in OCCAM_ARMS:
+            if ar in agg:
+                v = [r['school']['phases'][-1]['final_loss'] for r in agg[ar]['per_seed'].values() if r.get('school') and r['school'].get('phases') and r['school']['phases'][-1].get('final_loss') is not None]
+                sl[ar] = sum(v) / len(v) if v else None
+        res['verdict'] = verdict_round2({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()}, sl)
+    elif 'base' in agg and any(x in agg for x in SCHOOL_ARMS):
         res['verdict'] = verdict({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()})
     json.dump(res, open(os.path.join(root, 'results.json'), 'w'), indent=1, default=float)
     log('RESULTS', os.path.join(root, 'results.json'))

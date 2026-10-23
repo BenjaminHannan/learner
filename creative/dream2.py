@@ -35,6 +35,8 @@ MAX_OUT = 999
 CONST_SLOTS = tuple(range(N_NUM, N_NUM + len(CONSTS)))
 CONST_VALUES = tuple(CONSTS)
 ARM = 'D2'
+OCCAM_MAX_STEPS = 5
+OCCAM_MAX_STATES = 200000
 
 
 def _example_key(pairs) -> frozenset:
@@ -115,13 +117,14 @@ def is_held_out_form(t: Try, q_slot: int) -> bool:
 
 
 def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night: int = 0, max_steps: int = 2, data: Optional[str] = DATA, check_real: bool = True,
-                  strict: bool = False, stats: Optional[dict] = None, lengths: Optional[tuple] = None):
+                  strict: bool = False, stats: Optional[dict] = None, lengths: Optional[tuple] = None, occam: bool = False,
+                  occam_max_states: int = OCCAM_MAX_STATES):
     """n dream TRAINING RECORDS (the form c2b W records take, so v1/creative_sleep and sleep.sleep consume them unchanged).
     Each record is fewshot._record's output (id 'D2:D2:<seed>:<night>:<i>:0', prompt, the program's own query output as `answer`, forced slot ids registered in
     custom_io.models.progparse._CACHE) plus `nums` and `dream` = dict(steps, ans, length, xs, ys, q). Deterministic in (n, seed, night, avoid_prompts).
     max_steps: longest program (2 = the brief; 3 reaches the shortest forms of double_add / sq_plus). strict: also reject-and-redraw any dream whose program equals ANY
     held-out kind's form (any PARAMS) at every x in R.DOMAIN (the dreams then never show a held-out function; default False = bit-identical to before).
-    lengths: deal exactly these lengths round-robin instead of 1..max_steps (the top-up of dream_rows_par). stats (a dict, filled in): per length draws / accepted / strict_rejected. Distinct `night` values give distinct ids (school phases use their own). avoid_prompts: extra prompts to exclude; warm/pool/dev are always excluded (check_real=False only for unit tests of the sampler)."""
+    lengths: deal exactly these lengths round-robin instead of 1..max_steps (the top-up of dream_rows_par). stats (a dict, filled in): per length draws / accepted / strict_rejected. occam=True: after a dream passes every check it is RELABELLED with fewshot.find_reference on the dream row itself (prompt + own answer, <=5 steps, BFS = shortest program): the record's program is the found one, dreams with none are dropped (stats occam_dropped; found_<k> = found length k; dream['length'] stays the drawn length, dream['found_length'] the found one); strict also tests the found program. Default False = bit-identical. Distinct `night` values give distinct ids (school phases use their own). avoid_prompts: extra prompts to exclude; warm/pool/dev are always excluded (check_real=False only for unit tests of the sampler)."""
     avoid_p, avoid_k = real_keys(data=data) if check_real else (set(), set())
     avoid_p = set(avoid_p) | set(avoid_prompts)
     for pr in avoid_prompts:                                # an extra prompt also removes its example-pair set
@@ -132,7 +135,7 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
     out, seen_p, seen_k, draws = [], set(), set(), 0
     st = stats if stats is not None else {}
     for L in (lengths or range(1, max_steps + 1)):
-        st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0))
+        st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0, occam_dropped=0, **{f'found_{k}': 0 for k in range(1, OCCAM_MAX_STEPS + 1)}))
     while len(out) < n:
         draws += 1
         assert draws < 4000 * n + 5000, f'cannot draw {n} dreams ({len(out)} so far)'
@@ -145,6 +148,18 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
         if strict and is_held_out_form(t, 2 * K_EX):
             st[L]['strict_rejected'] += 1
             continue
+        if occam:
+            row0 = dict(id='occam', prompt=prompt, answer=str(ans))
+            tf_ = F.find_reference(row0, max_steps=OCCAM_MAX_STEPS, max_states=occam_max_states)
+            if tf_ is None:
+                st[L]['occam_dropped'] += 1
+                continue
+            vf = F.verdict(F.parse(prompt), tf_)
+            if vf[0] != 'accept' or vf[2] != ans or (strict and is_held_out_form(tf_, 2 * K_EX)):
+                st[L]['occam_dropped'] += 1
+                continue
+            st[L][f'found_{len(cone(tf_))}'] += 1
+            t = tf_
         st[L]['accepted'] += 1
         seen_p.add(prompt)
         seen_k.add(_example_key(zip(xs, ys)))
@@ -153,16 +168,16 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
         rec = F._record(row, t, ARM, 0)                    # registers the forced slot ids under rec['id']
         rec['nums'] = row['nums']
         steps, a_slot = train_form(t)
-        rec['dream'] = dict(steps=[tuple(s) for s in steps], ans=a_slot, length=length, xs=xs, ys=ys, q=q)
+        rec['dream'] = dict(steps=[tuple(s) for s in steps], ans=a_slot, length=length, found_length=len(cone(t)), xs=xs, ys=ys, q=q)
         assert rec['answer'] == str(ans)
         out.append(rec)
     return out
 
 
 def _shard(args):
-    n, seed, avoid, night, max_steps, strict = args
+    n, seed, avoid, night, max_steps, strict, occam, mst = args
     st = {}
-    return dream_rows_c2(n, seed, avoid, night=night, max_steps=max_steps, strict=strict, stats=st), st
+    return dream_rows_c2(n, seed, avoid, night=night, max_steps=max_steps, strict=strict, stats=st, occam=occam, occam_max_states=mst), st
 
 
 def _register(rows):
@@ -173,10 +188,10 @@ def _register(rows):
 
 
 def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night: int = 0, max_steps: int = 2, strict: bool = False, shards: int = 8, workers: int = 1,
-                   stats: Optional[dict] = None, cache_dir: Optional[str] = None):
+                   stats: Optional[dict] = None, cache_dir: Optional[str] = None, occam: bool = False, occam_max_states: int = OCCAM_MAX_STATES):
     """Same dreams as dream_rows_c2 but in `shards` fixed shards run by `workers` processes (the stream depends on `shards`, never on `workers`; each shard its own seed tag '<seed>s<i>'; duplicates across shards are dropped and topped up serially;
     lengths stay balanced: shards are multiples of max_steps). Not bit-equal to dream_rows_c2(n, seed): a different, equally valid stream. cache_dir: pickle of the result
-    keyed by all arguments (read back and re-registered). Row ids start 'D2:dream:<seed>s<i>:<night>:'; the top-up uses tag '<seed>t'."""
+    keyed by all arguments (read back and re-registered). occam: see dream_rows_c2 (the cache key includes it; use shards >= the core count, e.g. 128, to spread find_reference over all cores). Row ids start 'D2:dream:<seed>s<i>:<night>:'; the top-up uses tag '<seed>t'."""
     import hashlib
     import multiprocessing as mp
     import pickle
@@ -184,8 +199,8 @@ def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, nigh
     avoid = list(avoid_prompts)
     path = None
     if cache_dir:
-        key = hashlib.sha256(repr((n, seed, night, max_steps, strict, shards, sorted(avoid))).encode()).hexdigest()[:16]
-        path = os.path.join(cache_dir, f'dreams_{seed}_{night}_{max_steps}_{int(strict)}_{n}_{key}.pkl')
+        key = hashlib.sha256(repr((n, seed, night, max_steps, strict, shards, sorted(avoid)) + ((occam, occam_max_states) if occam else ())).encode()).hexdigest()[:16]
+        path = os.path.join(cache_dir, f'dreams_{seed}_{night}_{max_steps}_{int(strict)}{"_occam" if occam else ""}_{n}_{key}.pkl')
         if os.path.exists(path):
             d = pickle.load(open(path, 'rb'))
             if stats is not None:
@@ -194,7 +209,7 @@ def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, nigh
     units = n // max_steps
     sizes = [(units // shards + (i < units % shards)) * max_steps for i in range(shards)]
     sizes[0] += n - sum(sizes)
-    jobs = [(m, f'{seed}s{i}', avoid, night, max_steps, strict) for i, m in enumerate(sizes) if m]
+    jobs = [(m, f'{seed}s{i}', avoid, night, max_steps, strict, occam, occam_max_states) for i, m in enumerate(sizes) if m]
     if workers > 1:
         with mp.get_context('fork').Pool(min(workers, len(jobs))) as pool:
             res = pool.map(_shard, jobs)
@@ -210,14 +225,14 @@ def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, nigh
             seen_k.add(k)
             rows.append(r)
         for L, v in s_.items():
-            a = st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0))
+            a = st.setdefault(L, {k_: 0 for k_ in v})
             for kk in a:
                 a[kk] += v[kk]
     want = {L: sum(m_ // max_steps + (L <= m_ % max_steps) for m_ in sizes) for L in range(1, max_steps + 1)}      # per-length target (balanced like the serial stream)
     for L in range(1, max_steps + 1):                       # top up each short length with fresh dreams (cross-shard duplicates were dropped)
         short = want[L] - sum(r['dream']['length'] == L for r in rows)
         if short > 0:
-            extra = dream_rows_c2(2 * short + 10, f'{seed}t{L}', avoid + list(seen_p), night=night, max_steps=max_steps, strict=strict, lengths=(L,))
+            extra = dream_rows_c2(2 * short + 10, f'{seed}t{L}', avoid + list(seen_p), night=night, max_steps=max_steps, strict=strict, lengths=(L,), occam=occam, occam_max_states=occam_max_states)
             for r in extra:
                 k = _example_key(zip(r['dream']['xs'], r['dream']['ys']))
                 if short == 0:

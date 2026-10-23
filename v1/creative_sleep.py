@@ -32,13 +32,17 @@ def _sleep_stage(base, recs, replay, extra, vocab, cfg, device, guard):
     return m, r
 
 
-def add_dreams(recs: list, counts: dict, pool: list, dream2: int, seed: int, night: int, max_steps: int = 2, strict: bool = False):
+def add_dreams(recs: list, counts: dict, pool: list, dream2: int, seed: int, night: int, max_steps: int = 2, strict: bool = False, occam: bool = False):
     """Dream rows (creative/dream2.py): `dream2` extra records appended to a night's W records. dream2 == 0 returns `recs` itself and imports nothing
     (the flag-off path is today's code path exactly). Dreams avoid every warm/pool/dev prompt (and the pool prompts passed here). -> (records, info)."""
     if not dream2:
         return recs, None
     from creative import dream2 as D
-    dreams = D.dream_rows_c2(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps, **(dict(strict=True) if strict else {}))
+    if occam:       # Occam-relabelled (slow find_reference): spread over the cores; fixed shards so the stream does not depend on the core count
+        import os
+        dreams = D.dream_rows_par(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps, strict=strict, shards=32, workers=min(32, os.cpu_count() or 1), occam=True)
+    else:
+        dreams = D.dream_rows_c2(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps, **(dict(strict=True) if strict else {}))
     return list(recs) + dreams, dict(n=len(dreams), seed=seed, night=night, max_steps=max_steps, by_length={L: sum(d['dream']['length'] == L for d in dreams) for L in range(1, max_steps + 1)})
 
 
@@ -63,7 +67,7 @@ def school_plan(school) -> list:
     if school.get("curriculum"):
         thirds = [n // 3, n // 3, n - 2 * (n // 3)]
         return [(921 + i, m_, k) for i, (m_, k) in enumerate(zip((2, 3, 5), thirds))]
-    return [(900 + 10 * strict, ms, n)]
+    return [(900 + 10 * strict + 5 * bool(school.get("occam")), ms, n)]
 
 
 def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap, seed, phase_info):
@@ -90,13 +94,15 @@ def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap,
     for night, mx, k in plan:
         t0 = time.time()
         st = {}
-        dreams = D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=strict, shards=school.get("shards", 8), workers=school.get("workers", 1), stats=st, cache_dir=school.get("cache"))
+        dreams = D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=strict, shards=school.get("shards", 8), workers=school.get("workers", 1), stats=st, cache_dir=school.get("cache"),
+                                 occam=bool(school.get("occam")))
         cfg = sleep.SleepCfg(updates=cap(sleep.max_updates(len(dreams), 64, True, visits)), batch=64, lr=lr, warmup=20, seed=seed, max_visits=visits)
         gen_s = time.time() - t0
         if cfg.updates < 1:
             raise ValueError(f"school phase of {len(dreams)} dreams gives 0 updates at {visits} visits; use a larger n")
         m, r = _sleep_stage(m, dreams, replay, warm_rows, vocab, cfg, device, guard)
         info["phases"].append(dict(night=night, max_steps=mx, n=len(dreams), strict=strict, by_length={L: sum(d["dream"]["length"] == L for d in dreams) for L in range(1, mx + 1)},
+                                   by_found_length={L: sum(d["dream"].get("found_length", d["dream"]["length"]) == L for d in dreams) for L in range(1, mx + 1)},
                                    draw_stats=st, gen_seconds=round(gen_s, 1), seconds=round(time.time() - t0, 1), final_loss=fl(r), **phase_info(r)))
     info["_model"] = m
     return info
@@ -107,7 +113,7 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
-                 dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None) -> dict[str, Any]:
+                 dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None, dream2_occam: bool = False) -> dict[str, Any]:
     """dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
     dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
@@ -213,7 +219,7 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             tries, fit1, fit, drawn = c2_stuck.search(base, pool, vocab, device, seeds[night], Tt, n1, n2)
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
             ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
-            Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps, dream2_strict)
+            Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps, dream2_strict, dream2_occam)
             if dinfo:
                 info.setdefault("dream2", {})[str(night)] = dinfo
                 ninfo["dream2"] = dinfo

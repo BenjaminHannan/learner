@@ -113,3 +113,67 @@ def test_arms_follow_the_prereg_table():
     assert k['school5_strict']['school']['strict'] and k['school5_strict']['dream2_strict'] and k['school5_curr']['school']['curriculum']
     assert CS.school_plan(k['school5_curr']['school']) == [(921, 2, 13333), (922, 3, 13333), (923, 5, 13334)]
     assert k['oracle']['school']['updates'] == 2500 and 'dream2' not in k['oracle'] and 'oracle' in MS.REPORT_ONLY
+
+
+# ---------------- round 2: Occam dreams ----------------
+from creative import fewshot as F
+from creative.programs import cone, run, train_form
+
+
+def test_occam_relabel_fits_row_and_is_not_longer():
+    st = {}
+    rows = D.dream_rows_c2(30, 2, max_steps=5, check_real=False, night=7, occam=True, stats=st)
+    assert len(rows) == 30
+    for r in rows:
+        d = r['dream']
+        t = Try.make(d['steps'], d['ans'])
+        p = F.parse(r['prompt'])
+        assert F.verdict(p, t)[0] == 'accept' and r['answer'] == str(F.verdict(p, t)[2])      # the forced program reproduces every example and the query
+        assert d['found_length'] == len(cone(t)) <= d['length']
+        outs = [run([0] * Q + [x], t)[0][t.ans] for x in d['xs'] + [d['q']]]
+        assert outs == d['ys'] + [int(r['answer'])]
+    assert sum(v['occam_dropped'] for v in st.values()) >= 0 and sum(v[f'found_{k}'] for v in st.values() for k in range(1, 6)) == 30
+
+
+def test_occam_deterministic_and_default_off_unchanged():
+    a = D.dream_rows_c2(12, 5, max_steps=5, check_real=False, night=8, occam=True)
+    b = D.dream_rows_c2(12, 5, max_steps=5, check_real=False, night=8, occam=True)
+    assert [(r['id'], r['prompt'], r['dream']['steps']) for r in a] == [(r['id'], r['prompt'], r['dream']['steps']) for r in b]
+    assert inspect.signature(D.dream_rows_c2).parameters['occam'].default is False and inspect.signature(D.dream_rows_par).parameters['occam'].default is False
+    assert inspect.signature(CS.add_dreams).parameters['occam'].default is False and inspect.signature(CS.run_creative).parameters['dream2_occam'].default is False
+    x, y = D.dream_rows_c2(20, 3), D.dream_rows_c2(20, 3, occam=False)
+    assert [(r['id'], r['prompt'], r['dream']['steps']) for r in x] == [(r['id'], r['prompt'], r['dream']['steps']) for r in y]
+
+
+def test_occam_strict_still_applied_and_par_cache_key(tmp_path):
+    rows = D.dream_rows_c2(150, 0, max_steps=1, check_real=False, night=5, occam=True, strict=True)
+    assert D.kind_overlap(rows)['any_held_out_same_function'] == 0
+    assert not any(D.is_held_out_form(Try.make(r['dream']['steps'], r['dream']['ans']), Q) for r in rows)
+    a = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=2, cache_dir=str(tmp_path), occam=True)
+    b = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=1, cache_dir=str(tmp_path))           # same args but occam off: must not hit the occam cache
+    assert len(list(tmp_path.glob('*.pkl'))) == 2 and any('occam' in p.name for p in tmp_path.glob('*.pkl'))
+    assert all('found_length' in r['dream'] for r in a) and not any('found_length' in r['dream'] for r in b)
+    c = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=1, cache_dir=str(tmp_path), occam=True)
+    assert [(r['id'], r['prompt']) for r in a] == [(r['id'], r['prompt']) for r in c]
+    assert sorted(r['dream']['length'] for r in a) == sorted([1, 2, 3, 4, 5] * 4)
+
+
+def test_round2_arms_and_verdict():
+    k = {a: MS.arm_kwargs(a, MS.SIZES) for a in MS.ROUND2_ARMS}
+    o = k['occam5']['school']
+    assert (o['n'], o['max_steps'], o['visits'], o['lr'], o['strict'], o['occam'], o['shards']) == (40000, 5, 4, 1e-3, False, True, 128)
+    assert k['occam5']['dream2'] == 1000 and k['occam5']['dream2_occam'] and not k['occam5'].get('dream2_strict')
+    assert k['occam5_strict']['school']['strict'] and k['occam5_strict']['dream2_strict'] and k['occam5_strict']['dream2_occam']
+    assert k['base'] == {} and k['oracle'] == MS.arm_kwargs('oracle', MS.SIZES)
+    assert MS.arm_kwargs('school5', MS.SIZES)['school']['lr'] == 3e-4 and 'occam' not in MS.arm_kwargs('school5', MS.SIZES)['school']      # round 1 unchanged
+    assert CS.school_plan(o) != CS.school_plan(dict(o, occam=False)) and CS.school_plan(dict(o, occam=False)) == [(900, 5, 40000)]
+    A = lambda h, e=0.9, hm=0.0: dict(hard=h, easy=e, harm=hm)
+    v = MS.verdict_round2(dict(base=A(0.02), occam5=A(0.30), occam5_strict=A(0.25), oracle=A(0.9)), dict(occam5=1.2, occam5_strict=1.5))
+    assert v['pass'] and v['not_leakage'] and not v['proved_wrong'] and all(v['mechanism_learned'].values())
+    v = MS.verdict_round2(dict(base=A(0.02), occam5=A(0.30), occam5_strict=A(0.15)), dict(occam5=1.2, occam5_strict=2.5))
+    assert not v['pass'] and not v['mechanism_learned']['occam5_strict'] and any('DID NOT LEARN' in l for l in v['lines'])       # 15% < 20%
+    v = MS.verdict_round2(dict(base=A(0.02), occam5=A(0.30), occam5_strict=A(0.10)))
+    assert v['not_leakage'] is False
+    v = MS.verdict_round2(dict(base=A(0.10), occam5=A(0.12), occam5_strict=A(0.13)))
+    assert v['proved_wrong'] and not v['pass']
+    assert not MS.verdict_round2(dict(base=A(0.02, 0.9), occam5_strict=A(0.30, 0.80)))['pass'] and not MS.verdict_round2(dict(base=A(0.02), occam5_strict=A(0.30, 0.9, 0.03)))['pass']
