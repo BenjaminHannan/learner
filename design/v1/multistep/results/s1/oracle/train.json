@@ -1,0 +1,79 @@
+{
+ "ckpt": "/job/B2_s200.pt",
+ "seed": 1,
+ "stages": [
+  "warmup",
+  "Nprime",
+  "setup",
+  "school",
+  "night1_records",
+  "W1_sleep",
+  "night2_records",
+  "W2_sleep"
+ ],
+ "seconds": {
+  "warmup": 38.0,
+  "Nprime": 37.6,
+  "setup": 1336.7,
+  "school": 955.7,
+  "night1_records": 155.4,
+  "W1_sleep": 253.6,
+  "night2_records": 118.9,
+  "W2_sleep": 412.6
+ },
+ "g1": false,
+ "phases": {
+  "warmup": {
+   "updates": 256
+  },
+  "Nprime": {
+   "updates": 256
+  },
+  "school": {
+   "cfg": {
+    "oracle": true,
+    "updates": 2500,
+    "lr": 0.0003,
+    "visits": 2
+   },
+   "phases": [
+    {
+     "oracle": true,
+     "records": 1024,
+     "skipped": 0,
+     "max_visits": 79,
+     "seconds": 823.0,
+     "final_loss": -0.20446194007992743,
+     "updates": 2500
+    }
+   ]
+  },
+  "W1_sleep": {
+   "updates": 1059
+  },
+  "W2_sleep": {
+   "updates": 1613
+  }
+ },
+ "school": {
+  "cfg": {
+   "oracle": true,
+   "updates": 2500,
+   "lr": 0.0003,
+   "visits": 2
+  },
+  "phases": [
+   {
+    "oracle": true,
+    "records": 1024,
+    "skipped": 0,
+    "max_visits": 79,
+    "seconds": 823.0,
+    "final_loss": -0.20446194007992743,
+    "updates": 2500
+   }
+  ]
+ },
+ "night1_records": 1059,
+ "night2_records": 1613
+}

@@ -43,3 +43,28 @@ Arm score = mean over the 2 seeds. Skills harm: pooled-5 skills (fastsleep.skill
 - dream2 vs base is reported only (PR #96's expectation: no Hard gain, since 2-step dreams cannot write these forms).
 
 Noise: ~150 questions per kind per seed, two seeds; a 10-point gap is about 3 standard errors on a pooled Hard mean of ~450 x 2.
+
+## Result of round 1 (2026-10-23, Vast RTX 3090, $0.40) — `results/results.json`
+Hard (affine, sq_plus, double_add) / Easy, mean of 2 seeds, dev + labelled (768): base 11.1 / 79.4; dream2 12.3 / 84.8; school5 1.2 / 78.7;
+school5_strict 1.5 / 81.1; school5_curr 1.5 / 81.3; oracle (report only) 45.5 / 99.0. Verdict by the marks above: **PROVED WRONG** (every school arm
+<= base + 3; in fact about 10 points below base). The school's own loss stayed at ~7.0 after 2,500 updates (oracle school: below 0), i.e. the model
+did not learn the random dreams at all. Reading (suggested, not tested): a uniformly random program is a noisy label, because many programs fit
+the same 3 examples and the label is whichever one was drawn; the oracle's labels are the SHORTEST program (breadth-first search), which is
+consistent across questions, and it reaches 45.5%.
+
+# Round 2: Occam dreams (pre-registered 2026-10-23, before the run)
+One change: every school dream is RE-LABELLED with the shortest program that fits its own shown examples and query
+(`fewshot.find_reference` on the dream row, the same search that labels the oracle; dreams with no program within 5 steps are dropped).
+The label never comes from a held-out kind's key; strict filtering as before. Everything else as round 1, school lr 1e-3 (round 1's 3e-4 left the
+school loss flat), 4 visits, 40,000 dreams, 1,000 Occam dreams per night.
+
+| Arm | |
+|---|---|
+| base | as round 1 (re-run, same seeds) |
+| occam5 | Occam-labelled school, 1-5 step functions |
+| occam5_strict | as occam5, held-out forms removed (same filter as round 1) |
+| oracle | as round 1 (report only) |
+
+Marks: **PASS** if occam5_strict Hard >= base + 10 points AND >= 20%, Easy within 5 of base, skills harm <= 2 points.
+**Not leakage**: occam5_strict keeps >= half of occam5's gain. **Proved wrong**: occam5_strict Hard <= base + 3.
+Mechanism check (reported): school loss after the school must fall below 2.0, otherwise the arm "did not learn its dreams".

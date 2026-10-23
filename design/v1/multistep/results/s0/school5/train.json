@@ -1,0 +1,185 @@
+{
+ "ckpt": "/job/B2_s200.pt",
+ "seed": 0,
+ "stages": [
+  "warmup",
+  "Nprime",
+  "setup",
+  "school",
+  "night1_records",
+  "W1_sleep",
+  "night2_records",
+  "W2_sleep"
+ ],
+ "seconds": {
+  "warmup": 38.1,
+  "Nprime": 37.6,
+  "setup": 1314.0,
+  "school": 1313.2,
+  "night1_records": 331.7,
+  "W1_sleep": 368.4,
+  "night2_records": 175.8,
+  "W2_sleep": 275.5
+ },
+ "g1": false,
+ "phases": {
+  "warmup": {
+   "updates": 256
+  },
+  "Nprime": {
+   "updates": 256
+  },
+  "school": {
+   "cfg": {
+    "n": 40000,
+    "max_steps": 5,
+    "strict": false,
+    "curriculum": false,
+    "visits": 2,
+    "lr": 0.0003,
+    "cache": "/job/dreamcache",
+    "workers": 1
+   },
+   "phases": [
+    {
+     "night": 900,
+     "max_steps": 5,
+     "n": 40000,
+     "strict": false,
+     "by_length": {
+      "1": 8000,
+      "2": 8000,
+      "3": 8000,
+      "4": 8000,
+      "5": 8000
+     },
+     "draw_stats": {
+      "1": {
+       "draws": 87716,
+       "accepted": 8000,
+       "strict_rejected": 0
+      },
+      "2": {
+       "draws": 263886,
+       "accepted": 8000,
+       "strict_rejected": 0
+      },
+      "3": {
+       "draws": 776003,
+       "accepted": 8000,
+       "strict_rejected": 0
+      },
+      "4": {
+       "draws": 2139215,
+       "accepted": 8000,
+       "strict_rejected": 0
+      },
+      "5": {
+       "draws": 5803492,
+       "accepted": 8000,
+       "strict_rejected": 0
+      }
+     },
+     "gen_seconds": 1.2,
+     "seconds": 1313.0,
+     "final_loss": 7.044966659545898,
+     "updates": 2500
+    }
+   ]
+  },
+  "W1_sleep": {
+   "updates": 1699
+  },
+  "W2_sleep": {
+   "updates": 1934
+  }
+ },
+ "school": {
+  "cfg": {
+   "n": 40000,
+   "max_steps": 5,
+   "strict": false,
+   "curriculum": false,
+   "visits": 2,
+   "lr": 0.0003,
+   "cache": "/job/dreamcache",
+   "workers": 1
+  },
+  "phases": [
+   {
+    "night": 900,
+    "max_steps": 5,
+    "n": 40000,
+    "strict": false,
+    "by_length": {
+     "1": 8000,
+     "2": 8000,
+     "3": 8000,
+     "4": 8000,
+     "5": 8000
+    },
+    "draw_stats": {
+     "1": {
+      "draws": 87716,
+      "accepted": 8000,
+      "strict_rejected": 0
+     },
+     "2": {
+      "draws": 263886,
+      "accepted": 8000,
+      "strict_rejected": 0
+     },
+     "3": {
+      "draws": 776003,
+      "accepted": 8000,
+      "strict_rejected": 0
+     },
+     "4": {
+      "draws": 2139215,
+      "accepted": 8000,
+      "strict_rejected": 0
+     },
+     "5": {
+      "draws": 5803492,
+      "accepted": 8000,
+      "strict_rejected": 0
+     }
+    },
+    "gen_seconds": 1.2,
+    "seconds": 1313.0,
+    "final_loss": 7.044966659545898,
+    "updates": 2500
+   }
+  ]
+ },
+ "dream2": {
+  "1": {
+   "n": 1000,
+   "seed": 0,
+   "night": 1,
+   "max_steps": 5,
+   "by_length": {
+    "1": 200,
+    "2": 200,
+    "3": 200,
+    "4": 200,
+    "5": 200
+   }
+  },
+  "2": {
+   "n": 1000,
+   "seed": 0,
+   "night": 2,
+   "max_steps": 5,
+   "by_length": {
+    "1": 200,
+    "2": 200,
+    "3": 200,
+    "4": 200,
+    "5": 200
+   }
+  }
+ },
+ "night1_records": 1699,
+ "night2_records": 1934
+}
