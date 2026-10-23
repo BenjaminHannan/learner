@@ -73,12 +73,15 @@ def render_visit(
     registry: Optional[SplitRegistry] = None,
     *,
     window_chars: int = WINDOW_CHARS,
+    view: Optional[Any] = None,
 ) -> RenderedVisit:
-    """Render one world visit; the world's provenance is re-checked and recorded through the same view."""
+    """Render one world visit; the world's provenance is re-checked and recorded through the same view.
+
+    `view` (default: the registry's view of the visit's split) is for mixed-axis probes."""
     source = source or default_source()
     registry = registry if registry is not None else default_registry(source)
     split = visit["split"]
-    view = registry.view(split)
+    view = view if view is not None else registry.view(split)
     for axis, items in (visit.get("provenance") or {}).items():
         for item in ((items,) if isinstance(items, str) else items):
             view.use(axis, item)

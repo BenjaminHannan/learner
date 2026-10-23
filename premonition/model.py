@@ -907,12 +907,13 @@ class PremonitionMini(nn.Module):
     @torch.no_grad()
     def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
                window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
-               max_loops: Optional[int] = None) -> Answers:
+               max_loops: Optional[int] = None, extra_loops: int = 0) -> Answers:
         """Greedy answers with the model's own retrieval and halting (design/06 §2).
 
         Loops until HALT (p > 0.5) or `max_loops`; ASK (logit > 0) fetches the top-k
-        eligible cards. ENT ids are restricted to entities already mentioned (in the
-        window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
+        eligible cards. `extra_loops` (default 0, the behaviour above; inference-time probe) keeps a question
+        thinking that many loops after its first HALT, still bounded by `max_loops`. ENT ids are restricted to
+        entities already mentioned (in the window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
         "store" keeps the reader state but drops cards and names before it; "full" also
         re-reads from the window start with a fresh reader.
         """
@@ -946,6 +947,8 @@ class PremonitionMini(nn.Module):
         used = torch.zeros(count, dtype=torch.long, device=device)
         halt_prob = torch.zeros(count, device=device)
         first_top = torch.full((count, config.top_k), -1, dtype=torch.long, device=device)
+        armed = torch.zeros(count, dtype=torch.bool, device=device)      # extra_loops only: halted at some loop
+        left = torch.zeros(count, dtype=torch.long, device=device)       # extra_loops only: loops still to run
         for step in range(limit):
             index = torch.nonzero(running).squeeze(1)
             if index.numel() == 0:
@@ -954,7 +957,13 @@ class PremonitionMini(nn.Module):
             used[index] = step + 1
             prob = torch.sigmoid(halt)
             halt_prob[index] = prob
-            done = (prob > 0.5) | (step + 1 == limit)
+            if extra_loops > 0:
+                before = armed[index]
+                left[index] = torch.where(before, left[index] - 1, torch.full_like(left[index], extra_loops))
+                armed[index] = before | (prob > 0.5)
+                done = (armed[index] & (left[index] <= 0)) | (step + 1 == limit)
+            else:
+                done = (prob > 0.5) | (step + 1 == limit)
             if store is not None:
                 top = store.top(scores, config.top_k)
                 if step == 0:
