@@ -30,7 +30,7 @@ wc -l "$D"/*.jsonl
 RC=0
 for ARM in answer steps; do
   say "STEP arm $ARM steps $STEPS at \$$DPH/h, cap \$$CAP"
-  $PY "$ROOT/scripts/wordprob/train_wp.py" --data "$D" --arm "$ARM" --out "$O/$ARM" --steps "$STEPS" --device cuda 2>&1 | tee -a "$J/checks/arm_$ARM.out"
+  $PY "$ROOT/scripts/wordprob/train_wp.py" --data "$D" --arm "$ARM" --out "$O/$ARM" --steps "$STEPS" --device "${WP_DEVICE:-cuda}" ${WP_EXTRA:-} 2>&1 | tee -a "$J/checks/arm_$ARM.out"
   R=${PIPESTATUS[0]}
   echo "arm $ARM rc=$R"
   [ "$R" = 0 ] || RC=$R
