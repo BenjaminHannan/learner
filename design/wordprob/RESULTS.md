@@ -38,3 +38,23 @@ RTX 5090, $0.35. Raw: results-fu1/steps/final.json. Final train loss 6e-5 (train
   operation or operands ("12 more than" -> minus; "19 batteries at 9 dollars each" -> 19 + 9). The limit is reading the
   English, not computing. A from-scratch 10.8M char model has little language knowledge; the next single change to test is
   a pretrained language backbone on the same data and marks.
+
+## FU2: pretrained SmolLM2-360M, STEPS targets, 3,000 steps — RESULT
+RTX 4090 (Vast, Utah), 17 min wall, $0.15. Raw: results-fu2/smol/final.json, train.log. Pre-registered 21:58Z (commit
+ed2fd52d56), box rented 22:03Z.
+
+| Split | STEPS 6k (10.8M, scratch) | FU1 18k | **SmolLM2-360M** |
+|---|---|---|---|
+| dev | 49.8% | 53.6% | **80.7%** |
+| heldout_template | 53.8% | 55.4% | **78.8%** |
+| heldout_structure | 28.2% | 28.4% | **48.2%** |
+
+By step count, heldout_template (scratch STEPS 6k -> SmolLM2): 1 step 85 -> 94%, 2 steps 63 -> 92%, 3 steps 42 -> 73%,
+4 steps 23 -> 50%.
+
+- Mark (shown): pass needed >= 70%; proves-wrong was < 60%. 78.8% -> **PASS.**
+- Shown: a pretrained language backbone fine-tuned on the same data beats the from-scratch model by 25 points on unseen
+  templates, after only 3,000 steps (about 1 epoch's first 90%).
+- Caveats (untested): 34x more parameters as well as pretraining, so this does not separate "pretrained" from "bigger";
+  one seed; 2,000-row samples (±~1.8 pts). Long chains (4 steps) are still the weak spot at 50%.
+- Suggested next single change: same SmolLM2 recipe with a randomly initialised SmolLM2-360M (separates pretraining from size).
