@@ -46,7 +46,7 @@ if [ -n "${PROBES:-}" ]; then   # generalization probes (one axis switched; gene
   fi
   for p in ${PROBES//,/ }; do EXTRA="$EXTRA --extra-eval $p=$DATA/probe_$p.jsonl"; done
 fi
-COMMON="$EXTRA --data $DATA --steps $STEPS --bsz $BSZ --micro-bsz $MICRO --max-len $MAXLEN"
+COMMON="$EXTRA --seed ${SEED:-0} --data $DATA --steps $STEPS --bsz $BSZ --micro-bsz $MICRO --max-len $MAXLEN"
 step() {  # step NAME RESULT_FILE args...
   local name=$1 res=$2; shift 2
   if [ -f "$res" ]; then echo "-- skip $name (have $res)"; return; fi
