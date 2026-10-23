@@ -19,8 +19,13 @@ assert hashlib.sha256(data).hexdigest() == "94057436d98a485cb4ed0bc750244c2d86a2
 open(os.environ["J"] + "/B2_s200.pt", "wb").write(data)
 print("setup ok")
 PYEOF
-say "STEP multistep (2 seeds, 6 arms, parallel 10) at \$$DPH/h"
-$PY -m creative.multistep --b2 "$J/B2_s200.pt" --skills "$J/skills" --out "$O" --cache-dir "$J/dreamcache" --device cuda --seeds 0 1 --parallel 10 2>&1 | tee -a "$C/arm_multistep.out"
+say "STEP multistep (2 seeds, 6 arms, 2 seeds side by side, parallel 6 each) at \$$DPH/h"
+for S in 0 1; do   # the two seeds run side by side (each its own driver, 6 arms at a time); the last call only aggregates (every arm is skipped as finished)
+  $PY -m creative.multistep --b2 "$J/B2_s200.pt" --skills "$J/skills" --out "$O" --cache-dir "$J/dreamcache" --device cuda --seeds $S --parallel 6 > "$C/seed$S.out" 2>&1 &
+done
+wait
+tail -5 "$C/seed0.out" "$C/seed1.out"
+$PY -m creative.multistep --b2 "$J/B2_s200.pt" --skills "$J/skills" --out "$O" --cache-dir "$J/dreamcache" --device cuda --seeds 0 1 --parallel 6 2>&1 | tee -a "$C/arm_multistep.out"
 RC=${PIPESTATUS[0]}
 echo "multistep rc=$RC"
 [ -f "$O/results.json" ] && head -c 20000 "$O/results.json"
