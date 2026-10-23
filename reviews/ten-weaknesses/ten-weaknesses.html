@@ -1,0 +1,207 @@
+<title>Ten Cracks in Premonition v1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one column of marked-up "test papers", red pen = weakness, green pen = fix */
+:root{
+  --bg:#f4f6fa; --paper:#ffffff; --ink:#1b2a4a; --muted:#66718a; --line:#d9dfea;
+  --red:#cf3b2e; --green:#2b8a57; --blue:#3d6fd8; --amber:#b9770e;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141d; --paper:#171e2b; --ink:#e5eaf4; --muted:#98a3ba; --line:#2b3547;
+  --red:#ff6b5d; --green:#5cc98a; --blue:#7ea2ff; --amber:#f0b44c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141d; --paper:#171e2b; --ink:#e5eaf4; --muted:#98a3ba; --line:#2b3547;
+  --red:#ff6b5d; --green:#5cc98a; --blue:#7ea2ff; --amber:#f0b44c; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+main{max-width:720px;margin:0 auto;padding-block:28px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:22px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.hero{padding-top:28px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,46px);line-height:1.05;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(21px,4.6vw,27px);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0;max-width:62ch}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.num{font-family:var(--display);font-weight:800;color:var(--red);font-size:13px;letter-spacing:.04em}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;border:1.5px solid currentColor}
+.p-shown{color:var(--green)} .p-sugg{color:var(--amber)} .p-done{color:var(--blue)}
+.fix{border-top:2px dashed var(--line);padding-top:10px;color:var(--ink)}
+.fix b{color:var(--green)}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);fill:var(--ink)}
+svg .m{fill:var(--muted)} svg .r{fill:var(--red)} svg .g{fill:var(--green)} svg .b{fill:var(--blue)}
+svg .big{font-family:var(--display);font-weight:800}
+.fig{overflow-x:auto}
+footer{font-size:13px;color:var(--muted);max-width:720px;margin:0 auto;padding-block:0 32px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+footer a{color:var(--blue)}
+ul.done{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+</style>
+
+<main>
+
+<!-- HERO -->
+<section class="card hero">
+  <span class="tag">Premonition v1 · health check</span>
+  <h1>Ten cracks in the v1 model</h1>
+  <p>22 AI checkers hunted for weak spots; each suspect had to survive a skeptic trying to disprove it.</p>
+  <div class="fig"><svg viewBox="0 0 360 170" role="img" aria-label="Funnel: 32 suspects, 14 shortlisted, 11 survived, top 10 kept">
+    <polygon points="20,20 340,20 290,60 70,60" fill="var(--line)"/>
+    <polygon points="70,66 290,66 255,104 105,104" fill="var(--line)"/>
+    <polygon points="105,110 255,110 235,146 125,146" fill="var(--red)" opacity=".85"/>
+    <text x="180" y="46" text-anchor="middle" class="big" font-size="18">32 suspects</text>
+    <text x="180" y="91" text-anchor="middle" class="big" font-size="16">14 shortlisted</text>
+    <text x="180" y="134" text-anchor="middle" class="big" font-size="15" style="fill:var(--paper)">11 survived</text>
+    <text x="180" y="166" text-anchor="middle" class="m" font-size="13">3 thrown out · top 10 below</text>
+  </svg></div>
+  <p class="tag">Not repeated here: the five weak spots other threads already own (bridge, loops, multi-step puzzles, held-out gap, show-your-work).</p>
+</section>
+
+<!-- 1: Q13 shortcut + 2: plan scoring -->
+<section class="card">
+  <div class="row"><span class="num">#1 · #2</span><span class="pill p-shown">shown in code</span></div>
+  <h2>The quiz itself has two flaws</h2>
+  <div class="fig"><svg viewBox="0 0 360 200" role="img" aria-label="Which question: right answer is the first place named 97 percent of the time. Plan question: a working plan with an extra step is marked wrong.">
+    <text x="10" y="20" class="m" font-size="13">#1 “More apples at the Mill or the Barn?”</text>
+    <rect x="10" y="32" width="340" height="28" rx="6" fill="var(--line)"/>
+    <rect x="10" y="32" width="330" height="28" rx="6" fill="var(--red)"/>
+    <text x="20" y="51" font-size="14" style="fill:var(--paper)" class="big">answer = first place named: 97%</text>
+    <text x="10" y="80" class="m" font-size="12">So it can score here without reading the story.</text>
+    <text x="10" y="116" class="m" font-size="13">#2 “How does Ana get the key?”</text>
+    <rect x="10" y="126" width="165" height="54" rx="8" fill="none" stroke="var(--green)" stroke-width="2"/>
+    <text x="20" y="148" font-size="13">open box, take key</text>
+    <text x="20" y="168" class="g big" font-size="14">✓ marked right</text>
+    <rect x="185" y="126" width="165" height="54" rx="8" fill="none" stroke="var(--red)" stroke-width="2"/>
+    <text x="195" y="148" font-size="13">go to (here), open box…</text>
+    <text x="195" y="168" class="r big" font-size="14">✗ also works, marked wrong</text>
+  </svg></div>
+  <p>Flaw 1 hits 5% of practice-exam questions and 9% of new-question ones; flaw 2 hits plan questions (13% of new ones).</p>
+  <p class="fix"><b>Fix:</b> flip a coin for which place is named first; mark any plan that works as right.</p>
+</section>
+
+<!-- 3,4: weak pass marks -->
+<section class="card">
+  <div class="row"><span class="num">#3 · #4</span><span class="pill p-shown">shown, re-measured</span></div>
+  <h2>The pass lines are set too low</h2>
+  <div class="fig"><svg viewBox="0 0 360 250" role="img" aria-label="Story model: pass line 19%, a wording-only guess 20%, model 80%. Puzzle model: pass line 20%, always answer square 19.9%, model 34.8%, a two-rule guess 39.8%.">
+    <text x="10" y="18" class="big" font-size="14">Story questions</text>
+    <g font-size="12">
+      <text x="10" y="40" class="m">guess from wording only</text><rect x="150" y="30" width="40" height="14" rx="3" fill="var(--muted)"/><text x="195" y="41">20%</text>
+      <text x="10" y="62" class="m">model, bridge unplugged</text><rect x="150" y="52" width="52" height="14" rx="3" fill="var(--muted)"/><text x="207" y="63">26%</text>
+      <text x="10" y="84" class="m">the model</text><rect x="150" y="74" width="160" height="14" rx="3" fill="var(--blue)"/><text x="315" y="85">80%</text>
+      <line x1="188" y1="24" x2="188" y2="96" stroke="var(--red)" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <text x="150" y="110" class="r big">pass line 19%</text>
+    </g>
+    <text x="10" y="148" class="big" font-size="14">Puzzle cards</text>
+    <g font-size="12">
+      <text x="10" y="170" class="m">always say “x × x”</text><rect x="150" y="160" width="40" height="14" rx="3" fill="var(--muted)"/><text x="195" y="171">19.9%</text>
+      <text x="10" y="192" class="m">the model</text><rect x="150" y="182" width="70" height="14" rx="3" fill="var(--blue)"/><text x="225" y="193">34.8%</text>
+      <text x="10" y="214" class="m">simple two-rule guess</text><rect x="150" y="204" width="80" height="14" rx="3" fill="var(--muted)"/><text x="235" y="215">39.8%</text>
+      <line x1="190" y1="154" x2="190" y2="226" stroke="var(--red)" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <text x="150" y="242" class="r big">pass line 20%</text>
+    </g>
+  </svg></div>
+  <p>Brainless tricks already reach both pass lines, so “PASS” proves little. The model still wins on stories.</p>
+  <p class="fix"><b>Fix:</b> set each pass line 10 points above the best brainless trick (about 29% and 30%), before the next run.</p>
+</section>
+
+<!-- 5: lucky snapshot -->
+<section class="card">
+  <div class="row"><span class="num">#5</span><span class="pill p-shown">shown in the logs</span></div>
+  <h2>The final score is a lucky snapshot</h2>
+  <div class="fig"><svg viewBox="0 0 360 190" role="img" aria-label="Practice-exam score from step 6000 to 12000 jumps between 76 and 84 percent; the reported 80 is just the last point.">
+    <rect x="40" y="61.6" width="300" height="46.8" fill="var(--blue)" opacity=".12"/>
+    <line x1="40" y1="150" x2="340" y2="150" stroke="var(--line)"/>
+    <text x="34" y="154" text-anchor="end" class="m" font-size="11">70%</text>
+    <text x="34" y="89" text-anchor="end" class="m" font-size="11">80%</text>
+    <text x="34" y="24" text-anchor="end" class="m" font-size="11">90%</text>
+    <line x1="40" y1="85" x2="340" y2="85" stroke="var(--line)" stroke-dasharray="2 4"/>
+    <polyline fill="none" stroke="var(--blue)" stroke-width="2.5" points="40,108.4 70,97.4 100,68.8 130,79.8 160,105.8 190,86.3 220,64.2 250,61.6 280,88.9 310,78.5 340,85.7"/>
+    <circle cx="340" cy="85.7" r="6" fill="var(--red)"/>
+    <text x="334" y="112" text-anchor="end" class="r big" font-size="13">reported: 80%</text>
+    <text x="40" y="170" class="m" font-size="11">step 6,000</text>
+    <text x="340" y="170" text-anchor="end" class="m" font-size="11">12,000</text>
+    <text x="190" y="186" text-anchor="middle" class="m" font-size="11">score swings 76–84% while the learning speed never slows</text>
+  </svg></div>
+  <p>The model keeps taking full-size learning steps right to the end, so its score wobbles by about ±2 points.</p>
+  <p class="fix"><b>Fix:</b> shrink the learning steps over the last 20% of training, and report the average of the last 5 checks (81.4%).</p>
+</section>
+
+<!-- 6,7: flying blind -->
+<section class="card">
+  <div class="row"><span class="num">#6 · #7</span><span class="pill p-shown">shown in code</span></div>
+  <h2>Training runs with half the gauges off</h2>
+  <div class="fig"><svg viewBox="0 0 360 170" role="img" aria-label="Practice exam checked 21 times; new questions checked only once at the end. Detailed breakdowns are computed and thrown away.">
+    <text x="10" y="18" class="m" font-size="12">checks during one training run</text>
+    <text x="10" y="46" font-size="13">practice exam</text>
+    <g fill="var(--blue)">
+      <circle cx="130" cy="42" r="4"/><circle cx="141" cy="42" r="4"/><circle cx="152" cy="42" r="4"/><circle cx="163" cy="42" r="4"/><circle cx="174" cy="42" r="4"/><circle cx="185" cy="42" r="4"/><circle cx="196" cy="42" r="4"/><circle cx="207" cy="42" r="4"/><circle cx="218" cy="42" r="4"/><circle cx="229" cy="42" r="4"/><circle cx="240" cy="42" r="4"/><circle cx="251" cy="42" r="4"/><circle cx="262" cy="42" r="4"/><circle cx="273" cy="42" r="4"/><circle cx="284" cy="42" r="4"/><circle cx="295" cy="42" r="4"/><circle cx="306" cy="42" r="4"/><circle cx="317" cy="42" r="4"/><circle cx="328" cy="42" r="4"/><circle cx="339" cy="42" r="4"/><circle cx="350" cy="42" r="4"/>
+    </g>
+    <text x="10" y="80" font-size="13">new questions</text>
+    <line x1="130" y1="76" x2="345" y2="76" stroke="var(--line)" stroke-dasharray="3 4"/>
+    <circle cx="350" cy="76" r="5" fill="var(--red)"/>
+    <text x="345" y="98" text-anchor="end" class="r" font-size="12">only once: 45%</text>
+    <rect x="10" y="114" width="340" height="44" rx="8" fill="none" stroke="var(--line)" stroke-width="2"/>
+    <text x="22" y="134" font-size="12">score by difficulty · by question type · when it stops</text>
+    <text x="22" y="150" class="r big" font-size="13">worked out, then thrown away 🗑</text>
+  </svg></div>
+  <p>Nobody can see whether the 45% on new questions rose or fell while training went on.</p>
+  <p class="fix"><b>Fix:</b> score new questions at every check and save the full breakdown (no change to training).</p>
+</section>
+
+<!-- 8,9: safety lock -->
+<section class="card">
+  <div class="row"><span class="num">#8 · #9</span><span class="pill p-shown">shown in code</span></div>
+  <h2>The puzzle model's “don't forget” lock is never tested</h2>
+  <div class="fig"><svg viewBox="0 0 360 170" role="img" aria-label="Lock costs 17 to 27 percent of each sleep's effort; nothing checks if old skills survive. The proven recipe lost 4 of 160 skills; the variant v1 uses lost 12 of 160 in older tests.">
+    <rect x="18" y="52" width="50" height="40" rx="6" fill="var(--amber)"/>
+    <path d="M28 52 v-12 a15 15 0 0 1 30 0 v12" fill="none" stroke="var(--amber)" stroke-width="6"/>
+    <text x="80" y="64" font-size="13">costs 17–27% of each night's learning</text>
+    <text x="80" y="84" class="r big" font-size="13">but nobody checks if it works</text>
+    <text x="10" y="120" class="m" font-size="12">old skills lost, in an earlier test of the same lock</text>
+    <g font-size="12">
+      <text x="10" y="142">recipe it claims</text><rect x="120" y="132" width="20" height="14" rx="3" fill="var(--green)"/><text x="146" y="143">4 / 160</text>
+      <text x="10" y="164">what v1 coded</text><rect x="120" y="154" width="60" height="14" rx="3" fill="var(--red)"/><text x="186" y="165">12 / 160</text>
+    </g>
+  </svg></div>
+  <p>One setting differs from the proven recipe, and in older tests that setting was the difference between pass and fail. Its effect on v1 is untested.</p>
+  <p class="fix"><b>Fix:</b> switch the setting to the proven one, and score old skills after every night, with a lock-off comparison.</p>
+</section>
+
+<!-- 10: halts early -->
+<section class="card">
+  <div class="row"><span class="num">#10</span><span class="pill p-sugg">our best guess</span></div>
+  <h2>It stops thinking as soon as it feels sure</h2>
+  <div class="fig"><svg viewBox="0 0 360 150" role="img" aria-label="Thinking rounds used: 2.27 on practice questions, 2.08 on harder new questions, out of 8.">
+    <text x="10" y="18" class="m" font-size="12">thinking rounds used (out of 8)</text>
+    <g font-size="12">
+      <text x="10" y="48">practice questions</text>
+      <rect x="140" y="36" width="200" height="16" rx="4" fill="var(--line)"/><rect x="140" y="36" width="56.7" height="16" rx="4" fill="var(--blue)"/><text x="202" y="49">2.27</text>
+      <text x="10" y="80">harder new questions</text>
+      <rect x="140" y="68" width="200" height="16" rx="4" fill="var(--line)"/><rect x="140" y="68" width="52" height="16" rx="4" fill="var(--red)"/><text x="198" y="81">2.08</text>
+    </g>
+    <text x="10" y="116" font-size="13">Its “stop” button learns <tspan class="big">“am I right now?”</tspan></text>
+    <text x="10" y="136" font-size="13">never <tspan class="big">“is a clue still missing?”</tspan></text>
+  </svg></div>
+  <p>Harder questions get fewer rounds, not more. Part of the loops problem another thread owns.</p>
+  <p class="fix"><b>Fix:</b> teach “stop” only once all needed clues are fetched, as the original design planned.</p>
+</section>
+
+<!-- next -->
+<section class="card" id="next">
+  <span class="tag">What happens next</span>
+  <h2>Cheap fixes are built; the rest ride the next run</h2>
+  <ul class="done" id="donelist">
+    <li>Building and testing fixes #1–#7 now (all switched off by default, so v1 stays as it was).</li>
+  </ul>
+  <p class="fix"><b>Next run:</b> new pass lines, slower ending, full gauges, coin-flip quiz. Fixes #8–#10 need a GPU test.</p>
+</section>
+
+</main>
+<footer>
+Sources: branch claude/v1-assembly (REPORT-V1, results2/full and floor, learnlab/village/scheduler.py:599-605, premonition/train.py:605, v1/baselines.py, v1/run.py:191, v1/g1.py:140, premonition/model.py:812-824). Numbers re-measured on regenerated practice and new-question visits; the sealed test was never opened. Thrown out by the skeptics: “dev puzzles leak into sleep”, “dev tunes sleep temperature”, “empty card fills slots”. Dropped as weaker: the teacher phase may waste ~20% of training.
+</footer>
