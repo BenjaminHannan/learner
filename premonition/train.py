@@ -603,6 +603,8 @@ def judge(answers: Answers, batch: VisitBatch, *, tokenizer: Any = None, stop: O
         if tokenizer is None:
             mine, target = _strip(ids, stops), _strip(gold[q], stops | {eos})
             correct.append(bool(target) and mine == target)
+            if plans is not None and exact_out is not None:
+                exact_out.append(correct[-1])
             texts.append(" ".join(map(str, mine)))
             continue
         table = batch.names[int(batch.q_visit[q])]
@@ -629,10 +631,12 @@ def _eligible_cards(batch: VisitBatch) -> torch.Tensor:
 @torch.no_grad()
 def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer: Any = None,
              stop: Optional[Iterable[int]] = None, gold_cards: bool = True,
-             device: Optional[torch.device] = None, plans: Optional[Mapping[str, Any]] = None) -> dict[str, Any]:
+             device: Optional[torch.device] = None, plans: Optional[Mapping[str, Any]] = None,
+             per_question: Optional[list] = None) -> dict[str, Any]:
     """Own-retrieval and gold-card accuracy with retrieval, halting, loop and card diagnostics.
     With `plans` (see `judge`), "accuracy" and everything derived from it count a working Q12 plan as right;
-    "accuracy_exact" is always the exact-match rate, and the q12_* fields count the plan questions."""
+    "accuracy_exact" is always the exact-match rate, and the q12_* fields count the plan questions. With `per_question` (a list) one
+    row per question is appended to it (question_id, depth, correct, loops, halted, prediction[, correct_gold_cards]); reporting only."""
     config = model.config
     device = device or next(model.parameters()).device
     stop = None if stop is None else sorted(set(stop))
@@ -650,10 +654,11 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
         with recorder or nullcontext():
             answers = model.answer(batch, stop=stop)
         exact: list[bool] = []
-        correct, _ = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id, plans=plans, exact_out=exact)
+        correct, texts = judge(answers, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id, plans=plans, exact_out=exact)
         if plans is None:
             exact = correct
         hit = torch.tensor(correct)
+        forced = None
         _add(total, {"questions": count, "correct": int(hit.sum()), "correct_exact": sum(exact), "loops": int(answers.loops.sum()),
                      "halted": int((answers.halt_prob > 0.5).sum())})
         if plans is not None:
@@ -662,6 +667,14 @@ def validate(model: PremonitionMini, batches: Iterable[VisitBatch], *, tokenizer
             teacher = answer_with_gold(model, batch, stop=stop)
             forced, _ = judge(teacher, batch, tokenizer=tokenizer, stop=stop, eos=config.eos_id, plans=plans)
             _add(total, {"correct_gold_cards": sum(forced), "loops_gold_cards": int(teacher.loops.sum())})
+        if per_question is not None:
+            halted = (answers.halt_prob > 0.5).tolist()
+            for q, qid in enumerate(batch.question_ids):
+                row = {"question_id": qid, "depth": int(batch.depth[q]), "correct": bool(correct[q]), "loops": int(answers.loops[q]),
+                       "halted": bool(halted[q]), "prediction": texts[q]}
+                if forced is not None:
+                    row["correct_gold_cards"] = bool(forced[q])
+                per_question.append(row)
         told = (batch.gold_lines >= 0).any(1).cpu()
         if config.store:
             _add(cards, card_stats(recorder.calls, batch, answers.loops, config.card_rows, offset=1))

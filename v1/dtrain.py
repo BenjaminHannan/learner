@@ -55,14 +55,36 @@ def open_data(root: Path, tokenizer_path: Path, workers: int = 1, log: Callable[
     return DData(tok, caches["train"], caches["dev"], caches["validation"], det)
 
 
+LR_SCHEDULES = ("constant", "wsd")
+WSD_STABLE_FRAC = 0.8
+
+
+def wsd_lr(step: int, total_steps: int, base_lr: float, warmup_steps: int, stable_frac: float = WSD_STABLE_FRAC,
+           final_frac: float = 0.0) -> float:
+    """Warmup-stable-decay: the same linear warmup as the constant schedule, the base LR until `stable_frac` of the steps, then a
+    linear fall to `final_frac` * base_lr at the last step. A pure function of the step (exact resume)."""
+    warm = min(1.0, (step + 1) / warmup_steps) if warmup_steps else 1.0
+    start = stable_frac * total_steps
+    if step <= start:
+        return base_lr * warm
+    left = min(1.0, (step - start) / max(total_steps - 1 - start, 1e-9))
+    return base_lr * warm * (1.0 - (1.0 - final_frac) * left)
+
+
 class StepTrainer(MiniTrainer):
     """MiniTrainer driven by a step budget: the curriculum share is step / total_steps."""
 
     def __init__(self, model: PremonitionMini, config, device, *, total_steps: int, seed: int = 0,
                  curriculum: Curriculum = Curriculum(), guard_fraction: float = vguard.FRACTION,
-                 optimizer: str = "adamw") -> None:
+                 optimizer: str = "adamw", lr_schedule: str = "constant", wsd_stable_frac: float = WSD_STABLE_FRAC,
+                 wsd_final_frac: float = 0.0) -> None:
         if optimizer not in ("adamw", "muon"):
             raise ValueError("optimizer must be adamw or muon")
+        if lr_schedule not in LR_SCHEDULES:
+            raise ValueError(f"lr_schedule must be one of {LR_SCHEDULES}")
+        if not 0.0 <= wsd_stable_frac <= 1.0 or not 0.0 <= wsd_final_frac <= 1.0:
+            raise ValueError("wsd fractions must be in [0, 1]")
+        self.lr_schedule, self.wsd_stable_frac, self.wsd_final_frac = lr_schedule, wsd_stable_frac, wsd_final_frac
         super().__init__(model, config, device, flop_budget=1.0, curriculum=curriculum, seed=seed)
         self.optimizer_name = optimizer
         if optimizer == "muon":      # Muon on 2-D hidden matrices only; embeddings/head/norms/biases stay on AdamW
@@ -73,6 +95,12 @@ class StepTrainer(MiniTrainer):
         self.total_steps = int(total_steps)
         self.guard_limit = vguard.limit_bytes(self.device, guard_fraction)
         self.config = config
+
+    def lr_at(self, step: int) -> float:
+        """Constant after warmup (v1, the default) or warmup-stable-decay; _train_step writes it into every param group."""
+        if self.lr_schedule == "constant":
+            return super().lr_at(step)
+        return wsd_lr(step, self.total_steps, self.config.lr, self.config.warmup_steps, self.wsd_stable_frac, self.wsd_final_frac)
 
     def plan(self) -> Plan:
         return self.curriculum.plan(self.step / self.total_steps)
