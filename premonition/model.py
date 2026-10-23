@@ -370,6 +370,13 @@ class _Episode:
     ask_match: Optional[torch.Tensor] = None  # [Q, L + 1] float, S6: 1 where store card l names a q_ents entity
 
 
+def halt_target_for(kind: str, correct: torch.Tensor, have_all: torch.Tensor) -> torch.Tensor:
+    """HALT BCE target. "correct" (v1): the answer is right now. "correct_and_evidence": right AND every gold card already fetched."""
+    if kind == "correct_and_evidence":
+        return correct * have_all.float()
+    return correct
+
+
 class PremonitionMini(nn.Module):
     """forward(batch, mode) -> losses; answer(batch) -> greedy entity-aware answers."""
     bridge_in = None            # V1 join hook: callable returning a [d_model] vector added to the register rows (None = off)
@@ -815,13 +822,15 @@ class PremonitionMini(nn.Module):
             wrong = torch.zeros(index.numel(), device=device).index_add(
                 0, owner, (logits.argmax(-1) != target[keep]).float())
             correct = (wrong == 0).float()
+            halt_target = correct
             if gold is not None:
                 have_all = ~(gold[index] & ~episode.fetched[index]).any(1)
+                halt_target = halt_target_for(config.halt_target, correct, have_all)
                 scale = torch.where(have_all, 1.0, config.early_ans)
             else:
                 scale = torch.ones_like(per_question)
             ans_terms.append(scale * per_question)
-            halt_terms.append(F.binary_cross_entropy_with_logits(halt, correct, reduction="none"))
+            halt_terms.append(F.binary_cross_entropy_with_logits(halt, halt_target, reduction="none"))
             if step == 0:
                 metrics["answer_acc_first"] = correct.mean().detach()
             last = n_loops[index] == step + 1

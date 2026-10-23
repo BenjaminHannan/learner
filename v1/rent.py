@@ -4,7 +4,13 @@ which drove the steals R1 stage-1 boxes; same money pattern: BOX_START from `cre
 guard in `waitlog`, stop-then-pull with sha256 checks, destroy only after a passed pull).
 
 DRAFT until the V1 review passes. The agent proxy adds the vast key; this script never reads or prints a key.
-Nothing here rents by itself: `create` prints the request and sends it only with --yes, and every rental needs Ben's own click.
+Nothing here rents by itself: `create` prints the request and sends it only with --yes. (Originally every rental needed Ben's own click;
+Ben granted blanket permission on 2026-10-23 for the generalization work, so `create --yes` is fine there.)
+
+kind dgen (generalize/box/dgen.sh, D-only generalization arms): pack --kind dgen --arm NAME --steps N [--seed S] [--weight-decay W]
+[--extra-cmd 'shell command'] --dph D --cap 3.0 --out DIR; use a distinct `create --label claude-v1-dgen-NAME` per concurrent arm.
+`pull` refuses (no PULL_OK, so `destroy` refuses) for a finished dgen box unless ckpt.tar.gz (carrying D-final.pt) is sha256-verified and
+out/NAME/D-final.pt and out/NAME/final.json were extracted.
 
   pack    --kind gs|arm --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
                                                       mainbrain domain skills_curriculum + tokenizer + pattern bank + data hashes)
@@ -34,14 +40,19 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "gs2", "gs3", "arm")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "gs3", "arm", "dgen")
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "dgen": 3.00}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
 PREJOB_S = 900
 WALL_SAFETY = 0.95
-CODE_DIRS = ["premonition", "learnlab", "memorylab", "v1", "custom_io", "creative", "mainbrain", "domain", "skills_curriculum"]
+CODE_DIRS = ["premonition", "learnlab", "memorylab", "v1", "custom_io", "creative", "mainbrain", "domain", "skills_curriculum", "generalize"]
+BOX_SCRIPT = {"dgen": "generalize/box/dgen.sh"}      # every other kind: v1/box/<kind>.sh
+
+
+def box_script(kind):
+    return BOX_SCRIPT.get(kind, f"v1/box/{kind}.sh")
 DATA_FILES = ["data/tokenizer/premonition-tok-v2.json", "data/tokenizer/premonition-tok-v2.manifest.json",
               "data/village/patterns/bank-v1.json", "design/v1/data/village-SHA256SUMS.txt", "design/v1/V1_PARAMS.md"]
 CHUNK = 100_000
@@ -84,7 +95,7 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
     split -b 1000000 -d -a 3 "b64/$n.b64" "b64/small/$n.b64.p"
   done
   (cd b64 && wc -c big/* small/*) > export/PARTS.txt
-  echo "$1 rc=${RC:-na}${DRYRUN:+ dryrun=$DRYRUN}" > export/STATUS.txt
+  echo "$1 rc=${RC:-na}${DRYRUN:+ dryrun=$DRYRUN} stage=$STAGE" > export/STATUS.txt
   kill $TICK 2>/dev/null
   say "MANIFEST"; cat export/MANIFEST.sha256
   say "V1G $1"
@@ -111,7 +122,7 @@ used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/n
 export PYTHONUTF8=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2
 [ "${DRYRUN:-0}" = 1 ] && { say "DRYRUN stop"; finish DONE; }
 export J ROOT PY DPH BOX_START RUN_END
-bash "$ROOT/v1/box/$STAGE.sh" 2>&1 | tee -a "$J/checks/run.out"
+bash "$ROOT/__BOX_SCRIPT__" 2>&1 | tee -a "$J/checks/run.out"
 RC=${PIPESTATUS[0]}
 [ "$RC" = 0 ] || fail "box script rc=$RC"
 finish DONE
@@ -251,7 +262,7 @@ def make_job(pack_sha, kind, dph):
     if wall < run_deadline(dph, kind) + EXPORT_SECONDS:
         raise SystemExit(f"the wall ({wall} s) leaves no room for the export after the run deadline")
     text = JOB.replace("__BODY__", JOB_BODY).replace("__WALL_FROM_BOX_S__", str(wall)).replace("__CAP__", repr(HARD_STOP[kind]))
-    for key, val in (("__PACK_SHA__", pack_sha), ("__STAGE__", kind), ("__DPH__", repr(float(dph))),
+    for key, val in (("__BOX_SCRIPT__", box_script(kind)), ("__PACK_SHA__", pack_sha), ("__STAGE__", kind), ("__DPH__", repr(float(dph))),
                      ("__DEADLINE_S__", str(run_deadline(dph, kind)))):
         text = text.replace(key, val)
     return text
@@ -259,11 +270,17 @@ def make_job(pack_sha, kind, dph):
 
 def pack(a):
     kind = a.kind
-    if kind == "arm" and not a.arm:
+    if kind == "arm" and a.arm not in ("floor", "full"):
         raise SystemExit("--arm floor|full is required for kind arm")
+    if kind == "dgen" and not (a.arm and re.fullmatch(r"[A-Za-z0-9_.-]+", a.arm)):
+        raise SystemExit("--arm NAME (letters, digits, _ . -) is required for kind dgen")
+    if kind == "dgen" and a.halt_arms and not all(re.fullmatch(r"[A-Za-z0-9_.-]+=(correct|correct_and_evidence)", t) for t in a.halt_arms.split()):
+        raise SystemExit("--halt-arms: space-separated name=correct|correct_and_evidence")
+    if kind == "dgen" and a.extra_cmd and not re.fullmatch(r"[^\n]*", a.extra_cmd):
+        raise SystemExit("--extra-cmd must be one line")
     HARD_STOP[kind] = float(a.cap)
     deadline = run_deadline(a.dph, kind)
-    files = listed() + [f"v1/box/{kind}.sh"]
+    files = listed() + [box_script(kind)]
     files = sorted(set(files))
     for f in files:
         if not (REPO / f).is_file():
@@ -281,6 +298,11 @@ def pack(a):
         for f in files:
             t.add(REPO / f, arcname=f, filter=norm)
         extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n")] if kind == "arm" else []
+        if kind == "dgen":    # sourced by generalize/box/dgen.sh; values single-quoted (EXTRA_CMD is a shell command run on the box)
+            q = lambda v: "'" + str(v).replace("'", "'\\''") + "'"
+            extra = [("ARM.env", f"ARM={q(a.arm)}\nSTEPS={q(a.steps)}\nSEED={q(a.seed)}\nCAP={q(a.cap)}\n"
+                                 f"WEIGHT_DECAY={q(a.weight_decay if a.weight_decay is not None else '')}\nEXTRA_CMD={q(a.extra_cmd or '')}\n"
+                                 f"HALT_ARMS={q(a.halt_arms or '')}\n")]
         for name, content in (("SEAL-pack.sha256.txt", seal), ("COMMIT", head + "\n")) + tuple(extra):
             info = tarfile.TarInfo(name)
             info.size, info.mtime = len(content.encode()), 0
@@ -326,7 +348,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs3|gs2|gs|arm)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|dgen)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -433,7 +455,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|dgen)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)
@@ -684,8 +706,19 @@ def pull(a):
         inner_found, inner_bad = inner_check(out)
     job_done = job_status.startswith("DONE") and "dryrun=1" not in job_status     # a dry run has no out/ dirs
     missing = []
+    if tar_ok and "stage=dgen" in job_status and "dryrun=1" not in job_status:
+        # A dgen box exists to hand back D-final.pt and final.json: no passed pull (hence no destroy) without both,
+        # the checkpoint tarball (sha256-verified above, it carries D-final.pt) included.
+        if "ckpt.tar.gz" not in res or not res["ckpt.tar.gz"]["sha_ok"]:
+            missing.append("ckpt.tar.gz")
+        if job_status.startswith("DONE"):
+            for need in ("D-final.pt", "final.json"):
+                hits = [p for p in out.glob(f"out/*/{need}") if p.is_file() and p.stat().st_size > 0] or \
+                       [p for p in out.glob(f"*/{need}") if p.is_file() and p.stat().st_size > 0]
+                if not hits:
+                    missing.append(need)
     inner_ok = not inner_bad
-    ok = tar_ok and inner_ok and bool(job_status)
+    ok = tar_ok and inner_ok and bool(job_status) and not missing
     print(json.dumps({"all_sha_ok": tar_ok, "inner_manifest_found": inner_found, "inner_bad": inner_bad,
                       "manifest_missing": missing, "job_status": job_status, "pull_ok": ok}))
     if ok:
@@ -748,8 +781,12 @@ def main(argv=None):
     p.add_argument("--kind", choices=STAGES, required=True)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
     p.add_argument("--cap", type=float, required=True, help="this box's dollars")
-    p.add_argument("--arm", choices=("floor", "full"), default=None)
+    p.add_argument("--arm", default=None, help="kind arm: floor|full; kind dgen: a free arm NAME (output dir out/NAME)")
     p.add_argument("--steps", type=int, default=12000)
+    p.add_argument("--seed", type=int, default=0, help="kind dgen")
+    p.add_argument("--weight-decay", type=float, default=None, help="kind dgen")
+    p.add_argument("--halt-arms", default=None, help="kind dgen: 'name=target name=target' (target correct|correct_and_evidence): D-only arms run in order on one box")
+    p.add_argument("--extra-cmd", default=None, help="kind dgen: one-line shell command run on the box to write extra shards into $J/extra/<subdir>/")
     p.add_argument("--out", required=True)
     p = add("search", search)
     p.add_argument("--n", type=int, default=12)

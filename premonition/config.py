@@ -15,6 +15,7 @@ PARAM_BAND = (1_900_000, 2_150_000)   # design/06 §6, asserted at d = 128; the 
 VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; entity ids follow
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
+HALT_TARGETS = ("correct", "correct_and_evidence")
 DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key", "dec_ent_match", "ask_ent_match")   # design/info-constraints S2, S3: default off, left out of
                                                       # config dicts when off, so plain-D digests are unchanged
 VARIANTS = ("D", "D-noask", "D-noptr")
@@ -68,6 +69,8 @@ class MiniConfig:
     w_ans: float = 1.0
     w_halt: float = 0.1
     early_ans: float = 0.2              # L_ans weight before the loop that holds every gold card
+    halt_target: str = "correct"       # HALT BCE target. "correct" (default, v1): every answer token argmax-correct at this loop.
+                                        # "correct_and_evidence": that AND every gold card already fetched (needs the card store).
     distractors: tuple[int, int] = (1, 2)
     check_band: bool = True
 
@@ -81,6 +84,10 @@ class MiniConfig:
             raise ValueError("d_model / n_heads must be an even integer (RoPE)")
         if not self.reader or any(kind not in READER_KINDS for kind in self.reader):
             raise ValueError(f"reader layers must be drawn from {READER_KINDS}")
+        if self.halt_target not in HALT_TARGETS:
+            raise ValueError(f"halt_target must be one of {HALT_TARGETS}")
+        if self.halt_target != "correct" and not self.store:
+            raise ValueError("halt_target correct_and_evidence needs the card store (it has no gold cards otherwise)")
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")

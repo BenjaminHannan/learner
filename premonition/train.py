@@ -738,6 +738,8 @@ def mini_config_dict(config: MiniConfig) -> dict[str, Any]:
     for name in DRAFT_FLAGS:                       # an off draft flag is left out: plain-D dicts and digests as before
         if not values[name]:
             del values[name]
+    if values.get("halt_target") == "correct":      # the default target is left out too: v1 dicts and digests unchanged
+        del values["halt_target"]
     return values
 
 
