@@ -63,7 +63,7 @@ def sample_program(rng: random.Random, q_slot: int, length: int) -> Try:
     return Try.make(steps, R0 + len(steps) - 1)
 
 
-def _draw(rng, avoid_prompts, avoid_keys, length, k_ex=K_EX):
+def _draw(rng, avoid_prompts, avoid_keys, length, k_ex=K_EX, seen_p=(), seen_k=()):
     """-> (prompt, xs, ys, q, answer, Try, length) for one acceptable dream, or None for a rejected draw."""
     q_slot = 2 * k_ex
     t = sample_program(rng, q_slot, length)
@@ -83,7 +83,8 @@ def _draw(rng, avoid_prompts, avoid_keys, length, k_ex=K_EX):
         return None
     ys, ans = outs[:-1], outs[-1]
     prompt = R.prompt_of(xs, ys, q)
-    if prompt in avoid_prompts or _example_key(zip(xs, ys)) in avoid_keys:
+    key = _example_key(zip(xs, ys))
+    if prompt in avoid_prompts or prompt in seen_p or key in avoid_keys or key in seen_k:
         return None
     v = F.verdict(F.parse(prompt), t)                       # C2's checker: structure + python ints + B2's torch executor, every example
     if v[0] != 'accept' or v[2] != ans:
@@ -91,11 +92,36 @@ def _draw(rng, avoid_prompts, avoid_keys, length, k_ex=K_EX):
     return prompt, xs, ys, q, ans, t, length
 
 
-def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night: int = 0, max_steps: int = 2, data: Optional[str] = DATA, check_real: bool = True):
+_HELD_TABLES = None
+
+
+def _held_tables():
+    """Set of output tuples over R.DOMAIN of every held-out kind at every one of its PARAMS (strict mode's membership test)."""
+    global _HELD_TABLES
+    if _HELD_TABLES is None:
+        _HELD_TABLES = frozenset(tab for (k, _p), tab in R._TABLE.items() if k in R.HELD_OUT)
+    return _HELD_TABLES
+
+
+def is_held_out_form(t: Try, q_slot: int) -> bool:
+    """The program computes some held-out kind's form (any PARAMS) at every x in R.DOMAIN (invalid anywhere = not equal)."""
+    outs = []
+    for x in R.DOMAIN:
+        vals, valid = run([0] * q_slot + [x], t)
+        if not valid[t.ans]:
+            return False
+        outs.append(vals[t.ans])
+    return tuple(outs) in _held_tables()
+
+
+def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night: int = 0, max_steps: int = 2, data: Optional[str] = DATA, check_real: bool = True,
+                  strict: bool = False, stats: Optional[dict] = None, lengths: Optional[tuple] = None):
     """n dream TRAINING RECORDS (the form c2b W records take, so v1/creative_sleep and sleep.sleep consume them unchanged).
     Each record is fewshot._record's output (id 'D2:D2:<seed>:<night>:<i>:0', prompt, the program's own query output as `answer`, forced slot ids registered in
     custom_io.models.progparse._CACHE) plus `nums` and `dream` = dict(steps, ans, length, xs, ys, q). Deterministic in (n, seed, night, avoid_prompts).
-    max_steps: longest program (2 = the brief; 3 reaches the shortest forms of double_add / sq_plus). avoid_prompts: extra prompts to exclude; warm/pool/dev are always excluded (check_real=False only for unit tests of the sampler)."""
+    max_steps: longest program (2 = the brief; 3 reaches the shortest forms of double_add / sq_plus). strict: also reject-and-redraw any dream whose program equals ANY
+    held-out kind's form (any PARAMS) at every x in R.DOMAIN (the dreams then never show a held-out function; default False = bit-identical to before).
+    lengths: deal exactly these lengths round-robin instead of 1..max_steps (the top-up of dream_rows_par). stats (a dict, filled in): per length draws / accepted / strict_rejected. Distinct `night` values give distinct ids (school phases use their own). avoid_prompts: extra prompts to exclude; warm/pool/dev are always excluded (check_real=False only for unit tests of the sampler)."""
     avoid_p, avoid_k = real_keys(data=data) if check_real else (set(), set())
     avoid_p = set(avoid_p) | set(avoid_prompts)
     for pr in avoid_prompts:                                # an extra prompt also removes its example-pair set
@@ -104,13 +130,22 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
             avoid_k.add(_example_key(zip(pp_['xs'], pp_['ys'])))
     rng = random.Random(f'dream2|{seed}|{night}')
     out, seen_p, seen_k, draws = [], set(), set(), 0
+    st = stats if stats is not None else {}
+    for L in (lengths or range(1, max_steps + 1)):
+        st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0))
     while len(out) < n:
         draws += 1
-        assert draws < 400 * n + 5000, f'cannot draw {n} dreams ({len(out)} so far)'
-        d = _draw(rng, avoid_p | seen_p, avoid_k | seen_k, 1 + len(out) % max_steps)
+        assert draws < 4000 * n + 5000, f'cannot draw {n} dreams ({len(out)} so far)'
+        L = lengths[len(out) % len(lengths)] if lengths else 1 + len(out) % max_steps
+        st[L]['draws'] += 1
+        d = _draw(rng, avoid_p, avoid_k, L, seen_p=seen_p, seen_k=seen_k)       # (no per-draw set unions: they made 5k+ dream shards quadratic)
         if d is None:
             continue
         prompt, xs, ys, q, ans, t, length = d
+        if strict and is_held_out_form(t, 2 * K_EX):
+            st[L]['strict_rejected'] += 1
+            continue
+        st[L]['accepted'] += 1
         seen_p.add(prompt)
         seen_k.add(_example_key(zip(xs, ys)))
         row = dict(id=f'dream:{seed}:{night}:{len(out):05d}', prompt=prompt, answer=str(ans), accepted=[str(ans)], family='fewshot_number_rule', level=7,
@@ -122,6 +157,86 @@ def dream_rows_c2(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night
         assert rec['answer'] == str(ans)
         out.append(rec)
     return out
+
+
+def _shard(args):
+    n, seed, avoid, night, max_steps, strict = args
+    st = {}
+    return dream_rows_c2(n, seed, avoid, night=night, max_steps=max_steps, strict=strict, stats=st), st
+
+
+def _register(rows):
+    """Re-register forced slot ids in THIS process (the target cache is per process: rows built by a worker or loaded from disk need it)."""
+    for r in rows:
+        F.register_targets(r['id'], r['nums'], r['dream']['steps'], r['dream']['ans'])
+    return rows
+
+
+def dream_rows_par(n: int, seed: int, avoid_prompts: Iterable[str] = (), *, night: int = 0, max_steps: int = 2, strict: bool = False, shards: int = 8, workers: int = 1,
+                   stats: Optional[dict] = None, cache_dir: Optional[str] = None):
+    """Same dreams as dream_rows_c2 but in `shards` fixed shards run by `workers` processes (the stream depends on `shards`, never on `workers`; each shard its own seed tag '<seed>s<i>'; duplicates across shards are dropped and topped up serially;
+    lengths stay balanced: shards are multiples of max_steps). Not bit-equal to dream_rows_c2(n, seed): a different, equally valid stream. cache_dir: pickle of the result
+    keyed by all arguments (read back and re-registered). Row ids start 'D2:dream:<seed>s<i>:<night>:'; the top-up uses tag '<seed>t'."""
+    import hashlib
+    import multiprocessing as mp
+    import pickle
+    import os
+    avoid = list(avoid_prompts)
+    path = None
+    if cache_dir:
+        key = hashlib.sha256(repr((n, seed, night, max_steps, strict, shards, sorted(avoid))).encode()).hexdigest()[:16]
+        path = os.path.join(cache_dir, f'dreams_{seed}_{night}_{max_steps}_{int(strict)}_{n}_{key}.pkl')
+        if os.path.exists(path):
+            d = pickle.load(open(path, 'rb'))
+            if stats is not None:
+                stats.update(d['stats'])
+            return _register(d['rows'])
+    units = n // max_steps
+    sizes = [(units // shards + (i < units % shards)) * max_steps for i in range(shards)]
+    sizes[0] += n - sum(sizes)
+    jobs = [(m, f'{seed}s{i}', avoid, night, max_steps, strict) for i, m in enumerate(sizes) if m]
+    if workers > 1:
+        with mp.get_context('fork').Pool(min(workers, len(jobs))) as pool:
+            res = pool.map(_shard, jobs)
+    else:
+        res = [_shard(j) for j in jobs]
+    rows, seen_p, seen_k, st = [], set(), set(), {}
+    for rs, s_ in res:
+        for r in rs:
+            k = _example_key(zip(r['dream']['xs'], r['dream']['ys']))
+            if r['prompt'] in seen_p or k in seen_k:
+                continue
+            seen_p.add(r['prompt'])
+            seen_k.add(k)
+            rows.append(r)
+        for L, v in s_.items():
+            a = st.setdefault(L, dict(draws=0, accepted=0, strict_rejected=0))
+            for kk in a:
+                a[kk] += v[kk]
+    want = {L: sum(m_ // max_steps + (L <= m_ % max_steps) for m_ in sizes) for L in range(1, max_steps + 1)}      # per-length target (balanced like the serial stream)
+    for L in range(1, max_steps + 1):                       # top up each short length with fresh dreams (cross-shard duplicates were dropped)
+        short = want[L] - sum(r['dream']['length'] == L for r in rows)
+        if short > 0:
+            extra = dream_rows_c2(2 * short + 10, f'{seed}t{L}', avoid + list(seen_p), night=night, max_steps=max_steps, strict=strict, lengths=(L,))
+            for r in extra:
+                k = _example_key(zip(r['dream']['xs'], r['dream']['ys']))
+                if short == 0:
+                    break
+                if r['prompt'] in seen_p or k in seen_k:
+                    continue
+                seen_p.add(r['prompt'])
+                seen_k.add(k)
+                rows.append(r)
+                short -= 1
+    rows = _register(rows)
+    assert len({r['id'] for r in rows}) == len(rows) == n, (len(rows), n)
+    if stats is not None:
+        stats.update(st)
+    if path:
+        os.makedirs(cache_dir, exist_ok=True)
+        pickle.dump(dict(rows=rows, stats=st), open(path + '.tmp', 'wb'))
+        os.replace(path + '.tmp', path)
+    return rows
 
 
 # ---- disclosure: how many dreams are one of the held-out kinds? ----
@@ -149,7 +264,7 @@ def kind_overlap(rows, kinds=R.HELD_OUT, practised=R.PRACTISED) -> dict:
     Reads only the shown examples / the program; a disclosure, never a filter.
     -> {kind: dict(fits_examples, same_function, n_*)}, plus 'n', 'by_length', 'any_held_out_same_function'."""
     n = len(rows)
-    out = dict(n=n, by_length={L: sum(r['dream']['length'] == L for r in rows) for L in (1, 2, 3)})
+    out = dict(n=n, by_length={L: sum(r["dream"]["length"] == L for r in rows) for L in range(1, 1 + max([r["dream"]["length"] for r in rows] + [3]))})
     for kind in tuple(kinds) + tuple(practised):
         fe = sf = 0
         for r in rows:

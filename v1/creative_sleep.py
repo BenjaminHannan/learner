@@ -32,14 +32,74 @@ def _sleep_stage(base, recs, replay, extra, vocab, cfg, device, guard):
     return m, r
 
 
-def add_dreams(recs: list, counts: dict, pool: list, dream2: int, seed: int, night: int, max_steps: int = 2):
+def add_dreams(recs: list, counts: dict, pool: list, dream2: int, seed: int, night: int, max_steps: int = 2, strict: bool = False):
     """Dream rows (creative/dream2.py): `dream2` extra records appended to a night's W records. dream2 == 0 returns `recs` itself and imports nothing
     (the flag-off path is today's code path exactly). Dreams avoid every warm/pool/dev prompt (and the pool prompts passed here). -> (records, info)."""
     if not dream2:
         return recs, None
     from creative import dream2 as D
-    dreams = D.dream_rows_c2(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps)
+    dreams = D.dream_rows_c2(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps, **(dict(strict=True) if strict else {}))
     return list(recs) + dreams, dict(n=len(dreams), seed=seed, night=night, max_steps=max_steps, by_length={L: sum(d['dream']['length'] == L for d in dreams) for L in range(1, max_steps + 1)})
+
+
+def oracle_records(pool: list) -> tuple[list, int]:
+    """Reference-program records for the held-out-kind POOL questions (uses the answer key's kind / params; report-only upper bound). Rows with no reference are skipped. -> (records, skipped)."""
+    from creative import fewshot as F
+    out, skipped = [], 0
+    for r in pool:
+        assert r["kind"] in R.HELD_OUT, r["kind"]
+        ref = R.reference(r["kind"], tuple(r["params"]))
+        if ref is None:
+            skipped += 1
+            continue
+        t, _, qs = ref
+        out.append(F._record(r, R.remap(t, qs, F.parse(r["prompt"])["q_slot"]), "OR", 0))
+    return out, skipped
+
+
+def school_plan(school) -> list:
+    """[(night tag, max_steps, n)] per school phase (night tags 9xx keep dream ids distinct from the nightly dreams 1, 2 and from each other)."""
+    n, ms, strict = school["n"], school.get("max_steps", 5), bool(school.get("strict"))
+    if school.get("curriculum"):
+        thirds = [n // 3, n // 3, n - 2 * (n // 3)]
+        return [(921 + i, m_, k) for i, (m_, k) in enumerate(zip((2, 3, 5), thirds))]
+    return [(900 + 10 * strict, ms, n)]
+
+
+def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap, seed, phase_info):
+    """The dream school (see run_creative). -> info dict with '_model' (the trained model), counts by length, seconds and final losses per phase."""
+    from creative import dream2 as D
+    lr = school.get("lr", 3e-4)
+    visits = school.get("visits", 2)
+    fl = lambda r: (sum(r["loss"][-50:]) / max(len(r["loss"][-50:]), 1)) if r.get("loss") else None
+    info = dict(cfg={k: v for k, v in school.items()}, phases=[])
+    if school.get("oracle"):
+        recs, skipped = oracle_records(pool)
+        ups = cap(school["updates"])
+        mv = max(visits, math.ceil(ups * 32 / max(len(recs), 1)))
+        cfg = sleep.SleepCfg(updates=ups, batch=64, lr=lr, warmup=20, seed=seed, max_visits=mv)
+        t0 = time.time()
+        m, r = _sleep_stage(base, recs, replay, warm_rows, vocab, cfg, device, guard)
+        info["phases"].append(dict(oracle=True, records=len(recs), skipped=skipped, max_visits=mv, seconds=round(time.time() - t0, 1), final_loss=fl(r), **phase_info(r)))
+        info["_model"] = m
+        return info
+    strict = bool(school.get("strict"))
+    plan = school_plan(school)
+    avoid = [r["prompt"] for r in pool]
+    m = base
+    for night, mx, k in plan:
+        t0 = time.time()
+        st = {}
+        dreams = D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=strict, shards=school.get("shards", 8), workers=school.get("workers", 1), stats=st, cache_dir=school.get("cache"))
+        cfg = sleep.SleepCfg(updates=cap(sleep.max_updates(len(dreams), 64, True, visits)), batch=64, lr=lr, warmup=20, seed=seed, max_visits=visits)
+        gen_s = time.time() - t0
+        if cfg.updates < 1:
+            raise ValueError(f"school phase of {len(dreams)} dreams gives 0 updates at {visits} visits; use a larger n")
+        m, r = _sleep_stage(m, dreams, replay, warm_rows, vocab, cfg, device, guard)
+        info["phases"].append(dict(night=night, max_steps=mx, n=len(dreams), strict=strict, by_length={L: sum(d["dream"]["length"] == L for d in dreams) for L in range(1, mx + 1)},
+                                   draw_stats=st, gen_seconds=round(gen_s, 1), seconds=round(time.time() - t0, 1), final_loss=fl(r), **phase_info(r)))
+    info["_model"] = m
+    return info
 
 
 def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, device: str = "cpu", seed: int = 0,
@@ -47,9 +107,14 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
                  attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
-                 dream2_max_steps: int = 2) -> dict[str, Any]:
+                 dream2_max_steps: int = 2, stop_after: Optional[str] = None, dream2_strict: bool = False, school: Optional[dict] = None) -> dict[str, Any]:
     """dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
     They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
+    dream2_strict: nightly dreams also drop every dream equal to a held-out kind's form (dream2.py strict).
+    stop_after: "setup" returns right after the setup stage (None = whole pipeline).
+    school: None = off = today's behaviour exactly. Else a dream school between setup and night 1 (school.pt from Nprime.pt; night 1 then starts from school.pt): dict(n, max_steps=5, strict=False,
+    curriculum=False (3 sequential sleeps, max_steps 2/3/5, n split in thirds), visits=2, lr=3e-4, workers=1, cache=<dir or None>) with skills replay + warm rows as replay_extra, like the warm-up.
+    Or dict(oracle=True, updates=U, lr=...): REPORT-ONLY upper bound, school = supervised POOL questions' reference programs (answer key kind/params), U updates (visits raised to fit).
     updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
     os.makedirs(out, exist_ok=True)
     P = lambda f: os.path.join(out, f)
@@ -111,6 +176,13 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
         stage("Nprime", time.time() - ts, phase_info(rn))
     N, vocab, meta = load_parent(P("Nprime.pt"), device)
     N.eval()
+    if school and not done("school.pt"):
+        ts = time.time()
+        sinfo = run_school(school, load_parent(P("Nprime.pt"), device)[0], pool, replay, warm_rows, vocab, device, guard, cap, seed, phase_info)
+        m_s = sinfo.pop("_model")
+        sleep.save_parent(m_s, meta["name"], meta["cfg"], vocab, P("school.pt"), step=(meta["step"] or 0), warmup=True)
+        info["school"] = sinfo
+        stage("school", time.time() - ts, sinfo)
 
     ts = time.time()
     if not done("setup.json"):
@@ -128,10 +200,12 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
         json.dump(res, open(P("setup.json"), "w"), indent=1)
         stage("setup", time.time() - ts)
     setup = json.load(open(P("setup.json")))
+    if stop_after == "setup":                     # the shared part of a multi-arm experiment (creative/multistep.py)
+        return info
     Tt = setup["T"]
     seeds = {n: seed + 10 * n for n in (1, 2)}
 
-    for night, base_name in ((1, "Nprime.pt"), (2, "W1.pt")):
+    for night, base_name in ((1, "school.pt" if school else "Nprime.pt"), (2, "W1.pt")):
         base, _, _ = load_parent(P(base_name), device)
         base.eval()
         ts = time.time()
@@ -139,7 +213,7 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
             tries, fit1, fit, drawn = c2_stuck.search(base, pool, vocab, device, seeds[night], Tt, n1, n2)
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
             ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
-            Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps)
+            Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps, dream2_strict)
             if dinfo:
                 info.setdefault("dream2", {})[str(night)] = dinfo
                 ninfo["dream2"] = dinfo
@@ -169,9 +243,9 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
 
 def dev_report(model_path: str, device: str = "cpu", limit: Optional[int] = None, attach: Optional[Callable[[Any], None]] = None,
                split: str = "dev") -> dict[str, Any]:
-    """W2's measure: greedy first try per kind and pooled on creative DEV. split="test" is the sealed 512 and is passed ONLY by v1/sealed_read.py."""
-    if split != "dev" and os.environ.get("V1_SEALED_READ") != "1":
-        raise PermissionError("only v1/sealed_read.py may score a split other than dev")
+    """W2's measure: greedy first try per kind and pooled on creative DEV. split="test" is the sealed 512 (labelled is allowed too) and is passed ONLY by v1/sealed_read.py."""
+    if split not in ("dev", "labelled") and os.environ.get("V1_SEALED_READ") != "1":     # labelled = the plain nets' 512 held-out-kind questions (never sealed)
+        raise PermissionError("only v1/sealed_read.py may score a split other than dev / labelled")
     m, vocab, _ = sleep.load_parent(model_path, device)
     if attach:
         attach(m)
@@ -180,4 +254,4 @@ def dev_report(model_path: str, device: str = "cpu", limit: Optional[int] = None
     g = c2_pilot.greedy_eval(m, rows, vocab, device)
     kinds = sorted({r["kind"] for r in rows})
     by_kind = {k: sum(g["per_q_right"][i] for i, r in enumerate(rows) if r["kind"] == k) / sum(1 for r in rows if r["kind"] == k) for k in kinds}
-    return dict(first_try=g["right"], fits=g["fits"], n=len(rows), by_kind=by_kind)
+    return dict(first_try=g["right"], fits=g["fits"], n=len(rows), by_kind=by_kind, n_by_kind={k: sum(1 for r in rows if r["kind"] == k) for k in kinds})

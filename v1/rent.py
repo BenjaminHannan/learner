@@ -6,7 +6,7 @@ guard in `waitlog`, stop-then-pull with sha256 checks, destroy only after a pass
 DRAFT until the V1 review passes. The agent proxy adds the vast key; this script never reads or prints a key.
 Nothing here rents by itself: `create` prints the request and sends it only with --yes, and every rental needs Ben's own click.
 
-  pack    --kind gs|arm|plain --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
+  pack    --kind gs|arm|plain|multistep --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
                                                       mainbrain domain skills_curriculum + tokenizer + pattern bank + data hashes)
                                                       as pack.tar.xz + args.json; the box script is v1/box/<kind>.sh from the pack
   search  [--n 12] [--max-dph 0.8] [--gpu "RTX 4090"] [--min-ram 23000]
@@ -34,8 +34,8 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "gs2", "gs3", "arm", "plain")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "gs3", "arm", "plain", "multistep")
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "plain": 5.0, "multistep": 6.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
@@ -72,7 +72,7 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
   rm -rf export/* b64
   (cd "$ROOT/out" 2>/dev/null && tar -czf "$J/export/out.tar.gz" --exclude=wake-ckpt --exclude='*.pt' . -C "$J" checks) 2>/dev/null
   [ -f export/out.tar.gz ] || tar -czf export/out.tar.gz -C "$J" checks 2>/dev/null
-  (cd "$ROOT/out" 2>/dev/null && { find . \( -name D-final.pt -o -name plain-final.pt -o -name W2.pt -o -name W1.pt -o -name Nprime.pt \) -not -path './*/wake-ckpt/*'; for lt in $(ls -t ./*/wake-ckpt/step-*.pt 2>/dev/null | head -1); do echo "$lt"; echo "$lt.sha256"; done; } | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
+  (cd "$ROOT/out" 2>/dev/null && { find . \( -name D-final.pt -o -name plain-final.pt -o -name W2.pt -o -name W1.pt -o -name Nprime.pt \) -not -path './*/wake-ckpt/*' -not -path './multistep/*'; for lt in $(ls -t ./*/wake-ckpt/step-*.pt 2>/dev/null | head -1); do echo "$lt"; echo "$lt.sha256"; done; } | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
   say "EXPORT tarred"
   (cd export && sha256sum out.tar.gz ckpt.tar.gz 2>/dev/null > MANIFEST.sha256)
   mkdir -p b64/big b64/small
@@ -328,7 +328,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|plain|multistep)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -435,7 +435,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|plain|multistep)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)
