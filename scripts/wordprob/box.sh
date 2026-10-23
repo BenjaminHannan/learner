@@ -30,7 +30,12 @@ wc -l "$D"/*.jsonl
 RC=0
 for ARM in ${WP_ARMS:-answer steps}; do
   say "STEP arm $ARM steps $STEPS at \$$DPH/h, cap \$$CAP"
-  $PY "$ROOT/scripts/wordprob/train_wp.py" --data "$D" --arm "$ARM" --out "$O/$ARM" --steps "$STEPS" --device "${WP_DEVICE:-cuda}" ${WP_EXTRA:-} 2>&1 | tee -a "$J/checks/arm_$ARM.out"
+  if [ "$ARM" = smol ]; then
+    $PY -m pip install -q transformers==4.46.3 accelerate 2>&1 | tail -2
+    $PY "$ROOT/scripts/wordprob/train_smol.py" --data "$D" --out "$O/$ARM" --device "${WP_DEVICE:-cuda}" ${WP_EXTRA:-} 2>&1 | tee -a "$J/checks/arm_$ARM.out"
+  else
+    $PY "$ROOT/scripts/wordprob/train_wp.py" --data "$D" --arm "$ARM" --out "$O/$ARM" --steps "$STEPS" --device "${WP_DEVICE:-cuda}" ${WP_EXTRA:-} 2>&1 | tee -a "$J/checks/arm_$ARM.out"
+  fi
   R=${PIPESTATUS[0]}
   echo "arm $ARM rc=$R"
   [ "$R" = 0 ] || RC=$R

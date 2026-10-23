@@ -246,7 +246,7 @@ def wall_seconds(dph, kind):
     return int(WALL_SAFETY * HARD_STOP[kind] / dph * 3600)
 
 
-WORDPROB_FILES = ["v1/PINS.json", "scripts/wordprob/train_wp.py", "scripts/wordprob/box.sh"]     # the whole code pack of the word-problem stage
+WORDPROB_FILES = ["v1/PINS.json", "scripts/wordprob/train_wp.py", "scripts/wordprob/train_smol.py", "scripts/wordprob/box.sh"]     # the whole code pack of the word-problem stage
 WORDPROB_SPLITS = ("train", "dev", "heldout_template", "heldout_structure")
 
 
