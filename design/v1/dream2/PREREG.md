@@ -23,3 +23,4 @@ contain them.
 
 ## Budget
 Two Vast boxes in parallel, cap $3 each.
+deviation: both creative arms on RTX 3090 (no 4090 offers available at launch), 20:37Z
