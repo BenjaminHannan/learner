@@ -161,7 +161,9 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int
     """Dev numbers for the decision rule (never the sealed splits): D on all 5,000 DEV visits and the 1,000 `validation` visits,
     the creative first-try on creative DEV (latest finished creative stage), the bridge-off lesion of each, W1/W2 pass on dev, and
     the KL-share summary. After an abort it judges the last checkpoint (`aborted` carries the rule)."""
+    from creative import rules_real
     from v1 import creative_sleep
+    from v1.creative_baselines import creative_baselines
     res: dict[str, Any] = {"arm": arm.name, "steps": steps, "aborted": aborted}
     bridge.frozen_ctx = True
     for name, cache in (("dev", data.dev), ("validation", data.validation)):
@@ -188,6 +190,8 @@ def final_eval(arm: Arm, d_model, bridge: Bridge, data, out: Path, a, steps: int
             res["creative_dev"] = {**c, "bridge_off_first_try": c0["first_try"], "model": name}
             res["W2_dev_pass"] = c["first_try"] >= 0.20 and name == "W2.pt"
             break
+    if "creative_dev" in res:              # reporting only: no-learning baselines on creative dev; W2_dev_pass above is unchanged
+        res["creative_baselines"] = creative_baselines(rules_real.load_split(creative_sleep.DATA, "dev"))
     tj = out / "creative" / "train.json"
     if tj.exists():
         ti = json.loads(tj.read_text())
