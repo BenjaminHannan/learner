@@ -332,6 +332,17 @@ def pack(a):
     b64 = base64.b64encode(data).decode()
     args = ["bash", "-c", job, f"v1g-{kind}"] + [b64[i:i + CHUNK] for i in range(0, len(b64), CHUNK)]
     size = len(json.dumps(args))
+    if size > MAX_ARGS_BYTES and kind == "wordprob" and blobs:
+        dbuf = io.BytesIO()
+        with tarfile.open(fileobj=dbuf, mode="w:xz", preset=9) as dt:
+            for n, bb in sorted(blobs.items()):
+                info = tarfile.TarInfo(n.split("/", 2)[2])
+                info.size, info.mtime = len(bb), 0
+                dt.addfile(info, io.BytesIO(bb))
+        (out / "wordprob-data.tar.xz").write_bytes(dbuf.getvalue())
+        raise SystemExit(f"args are {size} bytes, over {MAX_ARGS_BYTES}: the data is too big to ship inside them. Wrote {out / 'wordprob-data.tar.xz'} "
+                         f"({len(dbuf.getvalue())} bytes, sha256 {sha(dbuf.getvalue())}). Host it at an https URL, then repeat the pack "
+                         f"with --data-url URL --data-sha {sha(dbuf.getvalue())} (and no --data).")
     if size > MAX_ARGS_BYTES:
         raise SystemExit(f"args are {size} bytes, over {MAX_ARGS_BYTES}; shrink the pack")
     (out / "args.json").write_text(json.dumps(args))
