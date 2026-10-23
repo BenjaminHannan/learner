@@ -368,6 +368,7 @@ class _Episode:
     q_ents: Optional[torch.Tensor] = None     # [Q, n_ent] bool, S5 `dec_ent_match` only: entities in the question
     match: Optional[torch.Tensor] = None      # [Q, cards] float, S5: 1 where the slot's card names a q_ents entity
     ask_match: Optional[torch.Tensor] = None  # [Q, L + 1] float, S6: 1 where store card l names a q_ents entity
+    x0: Optional[torch.Tensor] = None         # [Q, R, d] `think_inject` only: the rows as `_start` / `_insert` wrote them
 
 
 class PremonitionMini(nn.Module):
@@ -408,6 +409,14 @@ class PremonitionMini(nn.Module):
             self.register_buffer("_address_slots", torch.stack([torch.arange(base, base + cards),
                                                                torch.arange(config.rows, config.rows + cards)]),
                                  persistent=False)            # card rows, raw rows: keys from the address block
+        if config.think_inject:
+            if type(self) is not PremonitionMini:
+                raise ValueError(f"think_inject is defined for PremonitionMini only, not {type(self).__name__}")
+            # State lab: built after `reset_parameters` inside fork_rng (shared weights and global streams equal the
+            # baseline's at the same seed); zero weight and bias, so loop 1 equals the baseline.
+            with torch.random.fork_rng(devices=_live_cuda_devices()):
+                self.inject = nn.Linear(config.d_model, config.d_model)
+            self._init_inject()
         if config.dec_ent_match:
             if type(self) is not PremonitionMini:
                 raise ValueError(f"dec_ent_match is defined for PremonitionMini only, not {type(self).__name__}")
@@ -438,6 +447,12 @@ class PremonitionMini(nn.Module):
                                                        device="cpu") * 0.02)
             self.address.proj.bias.zero_()
 
+    def _init_inject(self) -> None:
+        """think_inject init: weight and bias 0."""
+        with torch.no_grad():
+            self.inject.weight.zero_()
+            self.inject.bias.zero_()
+
     def _init_ent_key(self) -> None:
         """S4 init: W_e N(0, 0.02) from its own generator, bias 0, kappa_e 0."""
         generator = torch.Generator().manual_seed(self._ent_seed)
@@ -454,6 +469,7 @@ class PremonitionMini(nn.Module):
         residual_std = 0.02 / math.sqrt(2 * (len(config.reader) + config.think_layers + 1))
         own = {id(m) for m in self.address.modules()} if hasattr(self, "address") else set()   # S3 inits apart
         own |= {id(self.ent_query)} if hasattr(self, "ent_query") else set()                  # S4 inits apart
+        own |= {id(self.inject)} if hasattr(self, "inject") else set()                        # think_inject inits apart
         shared = [m for m in self.modules() if id(m) not in own]
         for module in shared:
             if isinstance(module, nn.Linear):
@@ -485,6 +501,8 @@ class PremonitionMini(nn.Module):
             self._init_address()
         if getattr(self, "ent_query", None) is not None:        # S4: likewise
             self._init_ent_key()
+        if getattr(self, "inject", None) is not None:           # think_inject: back to zero
+            self._init_inject()
         if getattr(self, "dec_kappa", None) is not None:        # S5: kappa_d back to 0
             with torch.no_grad():
                 self.dec_kappa.zero_()
@@ -503,6 +521,8 @@ class PremonitionMini(nn.Module):
             parts["card_address"] = self.address
         counts = {name: sum(p.numel() for p in module.parameters()) if module is not None else 0
                   for name, module in parts.items()}
+        if self.config.think_inject:
+            counts["think_inject"] = sum(p.numel() for p in self.inject.parameters())
         if self.config.dec_ent_match:
             counts["dec_ent_match"] = self.dec_kappa.numel()
         if self.config.ask_ent_match:
@@ -584,6 +604,8 @@ class PremonitionMini(nn.Module):
         episode = _Episode(torch.cat(parts, dim=1), torch.cat(valid, dim=1),
                            torch.zeros(count, dtype=torch.long, device=device), fetched,
                            batch.q_visit, batch.q_line, mentions if config.ent_key else None)
+        if config.think_inject:
+            episode.x0 = episode.x.clone()                         # the rows as written; `_insert` adds the card rows
         if config.dec_ent_match:
             episode.q_ents = self._mentions(batch, start)          # entities in the question span itself
             episode.match = torch.zeros(count, config.cards, device=device)
@@ -622,6 +644,8 @@ class PremonitionMini(nn.Module):
         position = self._card_base + (episode.count[index].unsqueeze(1) + order) % config.card_rows
         who = index.unsqueeze(1).expand_as(cards)
         episode.x = episode.x.index_put((who[real], position[real]), rows[real])
+        if config.think_inject:
+            episode.x0 = episode.x0.index_put((who[real], position[real]), rows[real])
         episode.valid = episode.valid.index_put(
             (who[real], position[real]), torch.ones_like(position[real], dtype=torch.bool))
         if config.decoder_raw_cards:
@@ -663,21 +687,37 @@ class PremonitionMini(nn.Module):
         """One loop for questions `index`: (rows, halt logit, ask logit, ASK scores)."""
         if self.config.decoder_raw_cards:
             x, think_rows = episode.x[index], self.config.rows
-            rows = torch.cat([self.think(x[:, :think_rows], episode.valid[index][:, :think_rows], step).to(x.dtype),
+            think_in = x[:, :think_rows]
+            if self.config.think_inject:       # Think's input is x + W_i norm(x0) (the think rows only)
+                think_in = think_in + self.inject(_norm(episode.x0[index][:, :think_rows])).to(x.dtype)
+            rows = torch.cat([self.think(think_in, episode.valid[index][:, :think_rows], step).to(x.dtype),
                               x[:, think_rows:]], dim=1)
         else:
-            rows = self.think(episode.x[index], episode.valid[index], step)
+            x = episode.x[index]
+            if self.config.think_inject:
+                x = x + self.inject(_norm(episode.x0[index])).to(x.dtype)
+            rows = self.think(x, episode.valid[index], step)
         episode.x = episode.x.index_copy(0, index, rows.to(episode.x.dtype))
         register = _norm(rows[:, self._register_base])
         halt = self.heads.halt(register).squeeze(-1).float()
         if store is None:
             return rows, halt, None, None
         ask = self.heads.ask(register).squeeze(-1).float()
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias,
-                           episode.fetched[index], questions=index,
-                           extra=self._entity_scores(register, store, episode, index))
+        scores = self._ask_scores(rows, episode, index, store, episode.fetched[index])
         return rows, halt, ask, scores
+
+    def _ask_scores(self, rows: torch.Tensor, episode: _Episode, index: torch.Tensor, store: CardStore,
+                    fetched: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """[n, L + 1] ASK scores from register 0; with `multi_query` = m, the elementwise max over the queries of
+        registers 0..m-1 (same `heads.query`, same arguments otherwise)."""
+        best = None
+        for j in range(max(self.config.multi_query, 1)):
+            register = _norm(rows[:, self._register_base + j])
+            scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
+                               self.heads.log_kappa.exp(), self.think.age_bias, fetched, questions=index,
+                               extra=self._entity_scores(register, store, episode, index))
+            best = scores if best is None else torch.maximum(best, scores)
+        return best
 
     def _entity_scores(self, register: torch.Tensor, store: CardStore, episode: _Episode,
                        index: torch.Tensor) -> Optional[torch.Tensor]:
@@ -797,6 +837,7 @@ class PremonitionMini(nn.Module):
 
         ans_terms, halt_terms, set_terms, bce_terms = [], [], [], []
         pairs = 0
+        last_only = config.ans_last_only and mode == "own"        # state lab: L_ans at the final loop only
         for step in range(int(n_loops.max().item())):
             index = torch.nonzero(n_loops > step).squeeze(1)
             pairs += index.numel()
@@ -820,7 +861,10 @@ class PremonitionMini(nn.Module):
                 scale = torch.where(have_all, 1.0, config.early_ans)
             else:
                 scale = torch.ones_like(per_question)
-            ans_terms.append(scale * per_question)
+            if last_only:
+                ans_terms.append((scale * per_question)[n_loops[index] == step + 1])
+            else:
+                ans_terms.append(scale * per_question)
             halt_terms.append(F.binary_cross_entropy_with_logits(halt, correct, reduction="none"))
             if step == 0:
                 metrics["answer_acc_first"] = correct.mean().detach()
@@ -850,7 +894,7 @@ class PremonitionMini(nn.Module):
             cards = cards.masked_fill(~going.unsqueeze(1), -1)
             self._insert(episode, store, index, cards)
 
-        l_ans = torch.cat(ans_terms).sum() / pairs
+        l_ans = torch.cat(ans_terms).sum() / (count if last_only else pairs)
         l_halt = torch.cat(halt_terms).mean()
         l_ask = zero
         if bce_terms:
@@ -895,10 +939,7 @@ class PremonitionMini(nn.Module):
         told = gold[index][:, :store.null].any(1)
         if not told.any():
             return torch.zeros(())
-        register = _norm(rows[:, self._register_base])
-        scores = store.ask(self.heads.query(register), episode.q_visit[index], episode.q_line[index],
-                           self.heads.log_kappa.exp(), self.think.age_bias, questions=index,
-                           extra=self._entity_scores(register, store, episode, index))
+        scores = self._ask_scores(rows, episode, index, store)
         top = store.top(scores, self.config.top_k)
         hit = (gold[index].gather(1, top.clamp_min(0)) & (top >= 0)).sum(1).float()
         return (hit / gold[index].sum(1).clamp_min(1))[told].mean()
@@ -907,10 +948,11 @@ class PremonitionMini(nn.Module):
     @torch.no_grad()
     def answer(self, batch: VisitBatch, *, wipe: Optional[str] = None,
                window_line: Optional[torch.Tensor] = None, stop: Optional[Iterable[int]] = None,
-               max_loops: Optional[int] = None) -> Answers:
+               max_loops: Optional[int] = None, min_loops: Optional[int] = None) -> Answers:
         """Greedy answers with the model's own retrieval and halting (design/06 §2).
 
-        Loops until HALT (p > 0.5) or `max_loops`; ASK (logit > 0) fetches the top-k
+        Loops until HALT (p > 0.5) or `max_loops`; HALT is ignored before loop `min_loops` (inference only; the
+        model keeps looping, and fetching while ASK > 0); ASK (logit > 0) fetches the top-k
         eligible cards. ENT ids are restricted to entities already mentioned (in the
         window, after a wipe). Wipes need `window_line` [Q], the first line of A's window:
         "store" keeps the reader state but drops cards and names before it; "full" also
@@ -954,7 +996,7 @@ class PremonitionMini(nn.Module):
             used[index] = step + 1
             prob = torch.sigmoid(halt)
             halt_prob[index] = prob
-            done = (prob > 0.5) | (step + 1 == limit)
+            done = ((prob > 0.5) & (step + 1 >= (min_loops or 1))) | (step + 1 == limit)
             if store is not None:
                 top = store.top(scores, config.top_k)
                 if step == 0:

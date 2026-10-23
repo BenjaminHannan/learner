@@ -15,7 +15,8 @@ PARAM_BAND = (1_900_000, 2_150_000)   # design/06 §6, asserted at d = 128; the 
 VOCAB_V1 = 6372                       # tokenizer ids of premonition-tok-v1; entity ids follow
 VOCAB_V2 = 7068                       # premonition-tok-v2-fallback (syllable-split names): use this one
 READER_KINDS = ("gru", "attn")
-DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key", "dec_ent_match", "ask_ent_match")   # design/info-constraints S2, S3: default off, left out of
+DRAFT_FLAGS = ("decoder_raw_cards", "card_address", "ent_key", "dec_ent_match", "ask_ent_match", "think_inject",
+               "multi_query", "ans_last_only")   # design/info-constraints S2, S3: default off, left out of
                                                       # config dicts when off, so plain-D digests are unchanged
 VARIANTS = ("D", "D-noask", "D-noptr")
 
@@ -62,6 +63,13 @@ class MiniConfig:
     ask_ent_match: bool = False         # S6 (design/info-constraints/S6-STAGE0-CARD.md): ASK adds kappa_a * m_l,
                                         # m_l = 1 where card l names a question entity (S5's feature); kappa_a
                                         # starts at 0. Needs S5, refused with ent_key. DRAFT
+    think_inject: bool = False          # state lab: Think's input is x + W_i norm(x0), x0 = the rows as written by `_start` /
+                                        # `_insert`; W_i is zero-initialised, so loop 1 starts equal to the baseline. DRAFT
+    multi_query: int = 0                # state lab: > 0 = the first `multi_query` registers each make an ASK query (shared
+                                        # `heads.query`); the ASK scores are their elementwise max. ASK/HALT stay on
+                                        # register 0. 0 params. Needs multi_query <= registers. DRAFT
+    ans_last_only: bool = False         # state lab: in forward mode "own", L_ans only at each question's final loop (no
+                                        # deep supervision); HALT loss unchanged; gold/teacher phases unchanged. 0 params. DRAFT
     # Loss weights (design/06 §3, ASSUMPTION: tuned in build step 5).
     w_lm: float = 1.0
     w_ask: float = 0.5
@@ -84,6 +92,10 @@ class MiniConfig:
         low, high = self.distractors
         if not 0 <= low <= high:
             raise ValueError("distractors must be (low, high) with 0 <= low <= high")
+        if self.multi_query < 0 or self.multi_query > self.registers:
+            raise ValueError("multi_query must be in 0..registers")
+        if self.multi_query and not self.store:
+            raise ValueError("multi_query scores cards: it needs the card store")
         if self.decoder_raw_cards and not self.store:
             raise ValueError("decoder_raw_cards needs the card store (it is a no-op for D-noask)")
         if self.ent_key and not self.store:
@@ -97,7 +109,8 @@ class MiniConfig:
         if self.check_band and self.d_model == 128:
             parts = self.parameter_breakdown()
             count = sum(parts.values()) - sum(parts.get(name, 0) for name in ("card_address", "ent_key",
-                                                                             "dec_ent_match", "ask_ent_match"))
+                                                                             "dec_ent_match", "ask_ent_match",
+                                                                             "think_inject"))
             if not PARAM_BAND[0] <= count <= PARAM_BAND[1]:
                 raise ValueError(f"{self.variant} has {count:,} parameters at d = 128; "
                                  f"design/06 requires {PARAM_BAND[0]:,}-{PARAM_BAND[1]:,}")
@@ -180,6 +193,8 @@ def parameter_breakdown(config: MiniConfig) -> dict[str, int]:
         "heads": heads,
         "decoder": decoder,
     }
+    if config.think_inject:                                          # state lab: the input-injection linear
+        parts["think_inject"] = _linear(d, d)
     if config.card_address:                                          # S3: address pool + projection
         parts["card_address"] = _linear(d, 1) + _linear(d, d)
     if config.ent_key:                                               # S4: entity query + kappa_e
