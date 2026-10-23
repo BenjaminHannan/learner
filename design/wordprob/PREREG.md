@@ -20,3 +20,8 @@ Same small decoder-only transformer trained from scratch (~10M params, character
 
 ## Budget
 Two Vast boxes (one per arm) or one box sequentially, total cap $6.
+
+## Follow-up FU1 (pre-registered 2026-10-23 ~20:55Z, after the first result, before this run)
+One change: STEPS arm only, 18,000 steps instead of 6,000 (everything else identical).
+- Pass: heldout_template >= 65% (first run 53.8%). Proves wrong: heldout_template < 58% (more training doesn't help).
+- Reported: 4-step held-out accuracy (first run 23%) and heldout_structure (first run 28.2%).

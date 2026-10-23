@@ -315,7 +315,7 @@ def pack(a):
         if kind == "plain":      # the plain-transformer baseline (design/v1/plain-baseline): same ARM.env shape, ARM=plain
             extra = [("ARM.env", f"ARM=plain\nSTEPS={a.steps}\nCAP={a.cap}\n")]
         if kind == "wordprob":
-            extra = [("WP.env", f"STEPS={a.steps}\nCAP={a.cap}\n{wp_env}")]
+            extra = [("WP.env", f"STEPS={a.steps}\nCAP={a.cap}\n{wp_env}" + (f"WP_ARMS=\"{__import__('os').environ['WP_ARMS']}\"\n" if __import__('os').environ.get('WP_ARMS') else ""))]
         for n, b in sorted(blobs.items()):
             info = tarfile.TarInfo(n)
             info.size, info.mtime = len(b), 0

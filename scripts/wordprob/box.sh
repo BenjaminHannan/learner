@@ -28,7 +28,7 @@ for f in train dev heldout_template heldout_structure; do [ -f "$D/$f.jsonl" ] |
 wc -l "$D"/*.jsonl
 
 RC=0
-for ARM in answer steps; do
+for ARM in ${WP_ARMS:-answer steps}; do
   say "STEP arm $ARM steps $STEPS at \$$DPH/h, cap \$$CAP"
   $PY "$ROOT/scripts/wordprob/train_wp.py" --data "$D" --arm "$ARM" --out "$O/$ARM" --steps "$STEPS" --device "${WP_DEVICE:-cuda}" ${WP_EXTRA:-} 2>&1 | tee -a "$J/checks/arm_$ARM.out"
   R=${PIPESTATUS[0]}
@@ -36,7 +36,7 @@ for ARM in answer steps; do
   [ "$R" = 0 ] || RC=$R
 done
 
-for ARM in answer steps; do
+for ARM in ${WP_ARMS:-answer steps}; do
   echo "=====BEGIN final.json $ARM====="
   cat "$O/$ARM/final.json" 2>/dev/null || echo "(missing)"
   echo
