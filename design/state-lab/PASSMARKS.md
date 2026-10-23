@@ -45,3 +45,10 @@ Seen: base-s1 validation 42.4 (N = 0.15, so the 1.5 floor and the 3-point bar ap
 HALT, 51.4 at min_loops=8. Wave 3: `lastloss-s1` (replicate) and `all3` = reg16 + mq4 + lastloss together.
 - lastloss REPLICATES if seed 1 also clears 45.5 on validation at min_loops=8.
 - all3 HELPS BEYOND if validation (better of HALT / min_loops=8) >= best single arm + 3.
+
+## Addendum 3 (22:05 UTC): the noise is bigger than base vs base-s1 showed
+A duplicate of lastloss seed 0 on another box (GPU nondeterminism only) scored 46.0 at min_loops=8 vs 51.4: a 5.4-point
+spread from the same seed. inject scored 42.2 (neutral). The base pair (42.5 / 42.4) therefore under-states the noise.
+From here the judgement uses ALL runs of an arm: an arm HELPS only if its mean over runs clears the mean of all base runs by
+>= 3 points AND its worst run beats the best base run. Wave 4 adds base-s2, base-s3, lastloss-s2, mq4-s2 to get >= 3 runs each.
+The original per-run marks above are still reported as written.
