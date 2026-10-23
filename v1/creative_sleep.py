@@ -67,7 +67,7 @@ def school_plan(school) -> list:
     if school.get("curriculum"):
         thirds = [n // 3, n // 3, n - 2 * (n // 3)]
         return [(921 + i, m_, k) for i, (m_, k) in enumerate(zip((2, 3, 5), thirds))]
-    return [(900 + 10 * strict + 5 * bool(school.get("occam")), ms, n)]
+    return [(900 + 10 * strict + 5 * bool(school.get("occam")) + 2 * bool(school.get("found_lengths")), ms, n)]
 
 
 def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap, seed, phase_info):
@@ -95,7 +95,7 @@ def run_school(school, base, pool, replay, warm_rows, vocab, device, guard, cap,
         t0 = time.time()
         st = {}
         dreams = D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=strict, shards=school.get("shards", 8), workers=school.get("workers", 1), stats=st, cache_dir=school.get("cache"),
-                                 occam=bool(school.get("occam")))
+                                 occam=bool(school.get("occam")), found_lengths=tuple(school["found_lengths"]) if school.get("found_lengths") else None)
         cfg = sleep.SleepCfg(updates=cap(sleep.max_updates(len(dreams), 64, True, visits)), batch=64, lr=lr, warmup=20, seed=seed, max_visits=visits)
         gen_s = time.time() - t0
         if cfg.updates < 1:

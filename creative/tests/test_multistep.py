@@ -152,7 +152,7 @@ def test_occam_strict_still_applied_and_par_cache_key(tmp_path):
     a = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=2, cache_dir=str(tmp_path), occam=True)
     b = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=1, cache_dir=str(tmp_path))           # same args but occam off: must not hit the occam cache
     assert len(list(tmp_path.glob('*.pkl'))) == 2 and any('occam' in p.name for p in tmp_path.glob('*.pkl'))
-    assert all('found_length' in r['dream'] for r in a) and not any('found_length' in r['dream'] for r in b)
+    assert all('found_length' in r['dream'] for r in a) and all(r['dream']['found_length'] <= r['dream']['length'] for r in b)
     c = D.dream_rows_par(20, 4, (), night=905, max_steps=5, shards=4, workers=1, cache_dir=str(tmp_path), occam=True)
     assert [(r['id'], r['prompt']) for r in a] == [(r['id'], r['prompt']) for r in c]
     assert sorted(r['dream']['length'] for r in a) == sorted([1, 2, 3, 4, 5] * 4)
@@ -177,3 +177,37 @@ def test_round2_arms_and_verdict():
     v = MS.verdict_round2(dict(base=A(0.10), occam5=A(0.12), occam5_strict=A(0.13)))
     assert v['proved_wrong'] and not v['pass']
     assert not MS.verdict_round2(dict(base=A(0.02, 0.9), occam5_strict=A(0.30, 0.80)))['pass'] and not MS.verdict_round2(dict(base=A(0.02), occam5_strict=A(0.30, 0.9, 0.03)))['pass']
+
+
+# ---------------- round 3: depth-balanced Occam dreams ----------------
+def test_found_length_quotas_exact_and_programs_have_that_length(tmp_path):
+    rows = D.dream_rows_c2(16, 1, max_steps=5, check_real=False, night=11, occam=True, found_lengths=(1, 2, 3, 4))
+    assert [sum(r['dream']['found_length'] == L for r in rows) for L in (1, 2, 3, 4)] == [4] * 4
+    assert all(len(cone(Try.make(r['dream']['steps'], r['dream']['ans']))) == r['dream']['found_length'] <= r['dream']['length'] for r in rows)
+    again = D.dream_rows_c2(16, 1, max_steps=5, check_real=False, night=11, occam=True, found_lengths=(1, 2, 3, 4))
+    assert [(r['id'], r['prompt']) for r in rows] == [(r['id'], r['prompt']) for r in again]
+    with pytest.raises(AssertionError):
+        D.dream_rows_c2(4, 1, check_real=False, found_lengths=(1, 2))              # needs occam
+    a = D.dream_rows_par(24, 3, (), night=917, max_steps=5, strict=True, shards=3, workers=2, cache_dir=str(tmp_path), occam=True, found_lengths=(1, 2, 3, 4))
+    assert [sum(r['dream']['found_length'] == L for r in a) for L in (1, 2, 3, 4)] == [6] * 4
+    assert not any(D.is_held_out_form(Try.make(r['dream']['steps'], r['dream']['ans']), Q) for r in a)
+    D.dream_rows_par(24, 3, (), night=917, max_steps=5, strict=True, shards=3, workers=1, cache_dir=str(tmp_path), occam=True)       # drawn-length dealing: its own cache entry
+    assert len(list(tmp_path.glob('*.pkl'))) == 2 and any('_f1234_' in p.name for p in tmp_path.glob('*.pkl'))
+    c = D.dream_rows_par(24, 3, (), night=917, max_steps=5, strict=True, shards=3, workers=1, cache_dir=str(tmp_path), occam=True, found_lengths=(1, 2, 3, 4))
+    assert [(r['id'], r['prompt']) for r in a] == [(r['id'], r['prompt']) for r in c]
+
+
+def test_round3_arm_and_verdict():
+    k = MS.arm_kwargs('occam_deep', MS.SIZES)
+    o = k['school']
+    assert (o['n'], o['visits'], o['lr'], o['strict'], o['occam'], o['shards'], tuple(o['found_lengths'])) == (40000, 4, 1e-3, True, True, 128, (1, 2, 3, 4))
+    assert k['dream2'] == 1000 and k['dream2_occam'] and k['dream2_strict'] and MS.ROUND3_ARMS == ('base', 'occam_deep')
+    assert CS.school_plan(o) == [(917, 5, 40000)] and CS.school_plan(dict(o, found_lengths=None)) == [(915, 5, 40000)]
+    A = lambda h, e=0.9, hm=0.0: dict(hard=h, easy=e, harm=hm)
+    v = MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.30)), dict(occam_deep=1.0), dict(hard=0.20))
+    assert v['pass'] and v['depth_helps'] and not v['proved_wrong'] and v['mechanism_learned']['occam_deep']
+    v = MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.30)), None, dict(hard=0.27))
+    assert v['pass'] and v['depth_helps'] is False
+    v = MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.04)))
+    assert v['proved_wrong'] and not v['pass'] and v['depth_helps'] is None and any('n/a' in l for l in v['lines'])
+    assert not MS.verdict_round3(dict(base=A(0.02), occam_deep=A(0.15)))['pass']

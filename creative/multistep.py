@@ -20,7 +20,10 @@ HARD = ('affine', 'sq_plus', 'double_add')
 EASY = ('square', 'last_digit')
 SCHOOL_ARMS = ('school5', 'school5_strict', 'school5_curr')
 OCCAM_ARMS = ('occam5', 'occam5_strict')
-ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + ('oracle',)
+DEEP_ARMS = ('occam_deep',)
+ARMS = ('base', 'dream2') + SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS + ('oracle',)
+FOUND_LENGTHS = (1, 2, 3, 4)
+ROUND3_ARMS = ('base', 'occam_deep')
 ROUND2_ARMS = ('base', 'occam5', 'occam5_strict', 'oracle')
 OCCAM_SIZES = dict(lr=1e-3, visits=4)         # round 2 (PREREG): lr 1e-3, 4 visits
 OCCAM_SHARDS = 128                             # fixed (not the core count): the cache key / stream must not depend on the box
@@ -46,6 +49,9 @@ def arm_kwargs(arm: str, sizes: dict, cache: str | None = None, workers: int = 1
         return dict(school=dict(sch, strict=True), dream2=k, dream2_max_steps=5, dream2_strict=True)
     if arm == 'school5_curr':
         return dict(school=dict(sch, curriculum=True), dream2=k, dream2_max_steps=5)
+    if arm == 'occam_deep':      # round 3: school dealt by FOUND length 1-4 (10,000 each), strict; nightly dreams as occam5_strict (drawn-length dealt)
+        oc = dict(sch, occam=True, strict=True, found_lengths=FOUND_LENGTHS, shards=OCCAM_SHARDS if sizes is SIZES else 8, **OCCAM_SIZES)
+        return dict(school=oc, dream2=k, dream2_max_steps=5, dream2_occam=True, dream2_strict=True)
     if arm in OCCAM_ARMS:
         oc = dict(sch, occam=True, strict=(arm == 'occam5_strict'), shards=OCCAM_SHARDS if sizes is SIZES else 8, **OCCAM_SIZES)
         return dict(school=oc, dream2=k, dream2_max_steps=5, dream2_occam=True, **(dict(dream2_strict=True) if arm == 'occam5_strict' else {}))
@@ -154,6 +160,32 @@ def verdict_round2(arms: dict, school_loss: dict | None = None) -> dict:
     return out
 
 
+def verdict_round3(arms: dict, school_loss: dict | None = None, compare: dict | None = None) -> dict:
+    """PREREG Round 3, mechanically. arms = {arm: dict(hard, easy, harm)} seed means (fractions). PASS: occam_deep Hard >= base + 10 points AND >= 20%, Easy within 5, harm <= 2.
+    Depth helps: occam_deep Hard >= occam5_strict Hard + 5 (occam5_strict from round 2: compare = dict(hard=fraction) or None -> n/a). Proved wrong: occam_deep Hard <= base + 3.
+    Mechanism: school loss < 2.0."""
+    pts = lambda x: round(100.0 * x, 9)
+    b, x = arms['base'], arms['occam_deep']
+    gain = pts(x['hard'] - b['hard'])
+    c = dict(hard_ge_base_plus_10=gain >= 10, hard_ge_20=pts(x['hard']) >= 20, easy_ok=pts(x['easy']) >= pts(b['easy']) - 5, harm_ok=pts(x['harm']) <= 2)
+    out = dict(gain_hard_points=gain, pass_detail=c, **{'pass': all(c.values())}, proved_wrong=gain <= 3, lines=[])
+    out['lines'].append(('PASS: occam_deep' if out['pass'] else 'NO PASS: occam_deep') + f" (Hard {pts(x['hard']):.1f}% = base {pts(b['hard']):.1f} + {gain:.1f}; Easy {pts(x['easy']):.1f} vs base {pts(b['easy']):.1f}; harm {pts(x['harm']):.1f} pts; failed: {[k for k, v in c.items() if not v]})")
+    if out['proved_wrong']:
+        out['lines'].append('PROVED WRONG: occam_deep Hard <= base + 3 points')
+    if compare and compare.get('hard') is not None:
+        dh = pts(x['hard'] - compare['hard']) >= 5
+        out['depth_helps'] = dh
+        out['lines'].append(('DEPTH HELPS' if dh else 'DEPTH DOES NOT HELP (< +5)') + f": occam_deep Hard {pts(x['hard']):.1f}% vs round-2 occam5_strict {pts(compare['hard']):.1f}%")
+    else:
+        out['depth_helps'] = None
+        out['lines'].append('DEPTH HELPS: n/a (no round-2 occam5_strict result given; pass --compare round2/results.json)')
+    if school_loss:
+        out['school_loss'], out['mechanism_learned'] = school_loss, {a: (l is not None and l < OCCAM_LOSS_MARK) for a, l in school_loss.items()}
+        for a, l in school_loss.items():
+            out['lines'].append(f"MECHANISM {a}: school loss {l if l is None else round(l, 3)} -> " + ('learned its dreams (< 2.0)' if out['mechanism_learned'][a] else 'DID NOT LEARN ITS DREAMS (>= 2.0)'))
+    return out
+
+
 def aggregate(per_seed: dict) -> dict:
     """{seed: {arm: eval dict}} -> {arm: dict(per_seed, mean)}."""
     arms = sorted({a for s in per_seed.values() for a in s}, key=ARMS.index)
@@ -207,13 +239,13 @@ def pregen(root: str, seed: int, arms, sizes: dict, kw: dict, workers: int, cach
     pool = c2_stones._with_nums(R.load_split(D.DATA, 'pool')[:kw.get('pool_limit')])
     avoid = [r['prompt'] for r in pool]
     over = {}
-    for arm in [x for x in arms if x in SCHOOL_ARMS + OCCAM_ARMS]:
+    for arm in [x for x in arms if x in SCHOOL_ARMS + OCCAM_ARMS + DEEP_ARMS]:
         sch = arm_kwargs(arm, sizes, cache=cache, workers=workers)['school']
         rows = []
         for night, mx, k in CS.school_plan(sch):
             t0 = time.time()
             st = {}
-            rows += D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=sch['strict'], shards=sch.get('shards', 8), workers=workers, stats=st, cache_dir=cache, occam=bool(sch.get('occam')))
+            rows += D.dream_rows_par(k, seed, avoid, night=night, max_steps=mx, strict=sch['strict'], shards=sch.get('shards', 8), workers=workers, stats=st, cache_dir=cache, occam=bool(sch.get('occam')), found_lengths=sch.get('found_lengths'))
             if sch.get('occam'):
                 log(f'occam {arm}: dropped', sum(v['occam_dropped'] for v in st.values()), 'found-length counts', {k_: sum(v[k_] for v in st.values()) for k_ in st[1] if k_.startswith('found_')})
             log(f'dreams {arm} night {night} max_steps {mx} n {k}: {time.time() - t0:.0f}s; accept rate per length', {L: round(v['accepted'] / max(v['draws'], 1), 5) for L, v in st.items()})
@@ -228,7 +260,8 @@ def main():
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--seeds', type=int, nargs='+', default=[0, 1])
     ap.add_argument('--arms', nargs='+', default=None, choices=ARMS)
-    ap.add_argument('--round', type=int, default=1, choices=(1, 2), help='2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict')
+    ap.add_argument('--round', type=int, default=1, choices=(1, 2, 3), help='2 = the Occam round: arms base occam5 occam5_strict oracle, round-2 verdict; 3 = depth-balanced Occam: base + occam_deep')
+    ap.add_argument('--compare', default=None, help='round 3: round 2 results.json (for the depth-helps line: its occam5_strict Hard)')
     ap.add_argument('--parallel', type=int, default=1)
     ap.add_argument('--threads', type=int, default=2, help='OMP threads per arm subprocess')
     ap.add_argument('--cache-dir', default=None, help='dream cache (default OUT/s<seed>/dreams); keep it out of the exported out/ tree')
@@ -242,7 +275,8 @@ def main():
     root = os.path.abspath(a.out)
     os.makedirs(root, exist_ok=True)
     r2 = a.round == 2
-    arms = [x for x in ARMS if x in (a.arms or (ROUND2_ARMS if r2 else ARMS))]
+    r3 = a.round == 3
+    arms = [x for x in ARMS if x in (a.arms or (ROUND3_ARMS if a.round == 3 else ROUND2_ARMS if r2 else ARMS))]
     ncpu = os.cpu_count() or 1
     per_seed, overlap, failed = {}, {}, []
     for seed in a.seeds:
@@ -285,13 +319,20 @@ def main():
     agg = aggregate(per_seed)
     res = dict(prereg='design/v1/multistep/PREREG.md', round=a.round, smoke=a.smoke, seeds=a.seeds, sizes=sizes, hard_kinds=HARD, easy_kinds=EASY, arms=agg, kind_overlap=overlap,
                report_only_arms=list(REPORT_ONLY), failed_arms=failed)
-    if r2 and 'base' in agg and any(x in agg for x in OCCAM_ARMS):
+    if (r2 or r3) and 'base' in agg and any(x in agg for x in OCCAM_ARMS + DEEP_ARMS):
         sl = {}
-        for ar in OCCAM_ARMS:
+        for ar in OCCAM_ARMS + DEEP_ARMS:
             if ar in agg:
                 v = [r['school']['phases'][-1]['final_loss'] for r in agg[ar]['per_seed'].values() if r.get('school') and r['school'].get('phases') and r['school']['phases'][-1].get('final_loss') is not None]
                 sl[ar] = sum(v) / len(v) if v else None
-        res['verdict'] = verdict_round2({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()}, sl)
+        am = {k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()}
+        if r3 and 'occam_deep' in am:
+            cmp_ = None
+            if a.compare and os.path.exists(a.compare):
+                cmp_ = dict(hard=json.load(open(a.compare))['arms']['occam5_strict']['mean']['hard'])
+            res['verdict'] = verdict_round3(am, sl, cmp_)
+        else:
+            res['verdict'] = verdict_round2(am, sl)
     elif 'base' in agg and any(x in agg for x in SCHOOL_ARMS):
         res['verdict'] = verdict({k: dict(hard=v['mean']['hard'], easy=v['mean']['easy'], harm=v['mean']['harm']) for k, v in agg.items()})
     json.dump(res, open(os.path.join(root, 'results.json'), 'w'), indent=1, default=float)
