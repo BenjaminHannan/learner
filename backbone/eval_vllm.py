@@ -37,7 +37,7 @@ def main():
     enc = Encoder(tok, a.max_len, prefix)
 
     llm = LLM(model=a.model, max_model_len=a.max_len + 64, gpu_memory_utilization=0.92, tensor_parallel_size=a.tp,
-              limit_mm_per_prompt={"image": 0, "video": 0}, enable_prefix_caching=True)
+              limit_mm_per_prompt={"image": 0, "video": 0}, enable_prefix_caching=True, max_num_seqs=256)
     sp = SamplingParams(temperature=0.0, max_tokens=24, stop=["\n", " [feedback]"])
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     result = {"model": a.model, "max_len": a.max_len, "few_shot_ids": shots, "prompt": "instruction + 3-shot, text completion"}

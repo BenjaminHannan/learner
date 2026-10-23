@@ -11,3 +11,7 @@ Boxes (Vast, run in parallel, each self-stops at 3 h):
 First launch (~20:05Z) failed at unpack (no xz in the image; boxes destroyed after ~10 min, < $0.40 total); relaunched 20:17Z with gzip.
 Second launch (20:15Z) failed: the runtime image has no C compiler, which Triton needs for the linear-attention
 kernels (fla, and vLLM's). Relaunched 20:27Z on the -devel image: a 57421039, b 57421036, a2 57421035, 27b 57421042.
+20:58Z: the time budget cut arm b to 418 steps (about 4 s/step on the A100 with the loop). Arm a's own budget will
+give it more steps, so an extra box runs arm a at exactly 418 steps (claude-bb-a418) for the prereg's equal-steps
+comparison; the longer arm a run is reported too. 27B box relaunched with max_num_seqs=256 (vLLM refused 1024:
+too few linear-attention state slots).
