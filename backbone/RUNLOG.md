@@ -4,6 +4,8 @@
 (1024 would cut the evidence out of ~60% of contexts), LoRA r16, lr 2e-4 cosine, seed 0. A per-arm time
 budget can lower the step count once at step 20 (logged as steps vs steps_requested); any such cut is reported.
 Boxes (Vast, run in parallel, each self-stops at 3 h):
-- 57418506 claude-bb-a  A100 PCIE 40GB $0.443/h: arms a0, a
-- 57418505 claude-bb-b  A100 SXM4 40GB $0.539/h: arm b, then b with --eval-loops 1
-- 57418503 claude-bb-a2 A100 SXM4 40GB $0.416/h: arm a2 (Qwen3.5-2B), micro-batch 2
+- 57420072 claude-bb-a  A100 PCIE 40GB $0.443/h: arms a0, a
+- 57420069 claude-bb-b  A100 SXM4 40GB $0.539/h: arm b, then b with --eval-loops 1
+- 57420065 claude-bb-a2 A100 SXM4 40GB $0.416/h: arm a2 (Qwen3.5-2B), micro-batch 2
+- 57420074 claude-bb-27b RTX PRO 6000 96GB $1.20/h: Qwen3.8-27B untrained 3-shot reference (vLLM, max-len 4096; no mark)
+First launch (~20:05Z) failed at unpack (no xz in the image; boxes destroyed after ~10 min, < $0.40 total); relaunched 20:17Z with gzip.

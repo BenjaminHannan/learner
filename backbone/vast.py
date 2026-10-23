@@ -36,7 +36,7 @@ PY
 if [ ! -f $J/.started ]; then
   touch $J/.started
   shift 0
-  printf '%s' "$@" | tr -d ' ' | base64 -d > pack.tar.xz && mkdir -p tree && tar -xJf pack.tar.xz -C tree || { echo "=== BB FAIL unpack"; self_stop; exit 0; }
+  printf '%s' "$@" | tr -d ' ' | base64 -d > pack.tgz && mkdir -p tree && python3 -c "import tarfile;tarfile.open('pack.tgz').extractall('tree')" || { echo "=== BB FAIL unpack"; self_stop; exit 0; }
   cd tree
   echo "=== BB START $(date -u +%FT%TZ) $ENVLINE"
   ( while sleep 300; do echo "=== TICK $(date -u +%T) $(tail -c 300 out/run_box.log 2>/dev/null | tr '\n' ' ' | tail -c 200)"; done ) &
@@ -68,7 +68,7 @@ def get(url, timeout=60):
 
 def pack(a):
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:xz") as t:
+    with tarfile.open(fileobj=buf, mode="w:gz") as t:
         for f in FILES:
             t.add(REPO / f, arcname=f, filter=lambda i: None if "__pycache__" in i.name or i.name.endswith(".pyc") else i)
     b64 = base64.b64encode(buf.getvalue()).decode()
@@ -90,7 +90,7 @@ def search(a):
 
 def create(a):
     args = json.loads(Path(a.args).read_text())
-    body = {"client_id": "me", "image": IMAGE, "disk": 80, "label": a.label, "runtype": "args", "args": args, "target_state": "running"}
+    body = {"client_id": "me", "image": IMAGE, "disk": a.disk, "label": a.label, "runtype": "args", "args": args, "target_state": "running"}
     r = call("PUT", f"/asks/{a.offer}/", body, timeout=120)
     print(json.dumps({k: r.get(k) for k in ("success", "new_contract", "error", "msg", "http", "body")}))
 
@@ -134,7 +134,7 @@ def main():
     p = argparse.ArgumentParser(); s = p.add_subparsers(dest="cmd", required=True)
     x = s.add_parser("pack"); x.add_argument("--out", required=True); x.add_argument("--env", default=""); x.add_argument("--hours", type=int, default=3)
     x = s.add_parser("search"); x.add_argument("--gpu", default="A100 SXM4"); x.add_argument("--max-dph", type=float, default=0.8); x.add_argument("--n", type=int, default=8)
-    x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True)
+    x = s.add_parser("create"); x.add_argument("--offer", required=True); x.add_argument("--args", required=True); x.add_argument("--label", required=True); x.add_argument("--disk", type=int, default=80)
     s.add_parser("status")
     x = s.add_parser("logs"); x.add_argument("id"); x.add_argument("--tail", type=int, default=300); x.add_argument("--show", type=int, default=40)
     x = s.add_parser("cat"); x.add_argument("id"); x.add_argument("path"); x.add_argument("--out")
