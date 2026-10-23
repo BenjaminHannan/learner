@@ -6,6 +6,7 @@
 | v1 FULL (PC weights) | 45.6 | 82.7 | 82.3 | 50.6 | 82.6 | 74.8 | 79.5 | 87% |
 | D-only base seed 1 | 43.0 | 73.0 | 72.4 | 45.1 | 72.3 | 67.6 | 70.3 | 93% |
 | D-only base seed 0 | 47.4 | 77.2 | - | 53.1 | - | 71.8 | - | 80% |
+| D-only + Claude wordings (fword s0) | 51.8 | 78.1 | - | 61.3 | - | 69.5 | - | 59% |
 | D-only more stories (fmore) | 47.4 | 80.5 | 81.1 | 51.4 | 81.2 | 73.9 | 79.0 | 88% |
 Verdict by PASSMARKS: **Pword is the bottleneck** (drop >= G/2 in every model). Names, style, R8 each < G/4; depth ~ G/5.
 Q11 95 -> 0 and Q6/Q7/Q8 collapse under new wording alone. Rule-question weakness (n_families=1) is mostly wording (63.5 -> 9.3, base1).
@@ -25,3 +26,8 @@ Caveat (ten-weaknesses audit, PR #99): Q13 answer leaks via place order; Q13 sco
 Baseline mean validation 46.0 (sd ~3.0, N=|s0-s1|=4.5). Pass = +8 over B, dev >= B-2, gain > 2N.
 - fdepth: +1.4 (s0) / +2.7 (s1): **wrong-if met (< 3): depth is not the bottleneck.**
 - fword s0: +5.0 vs base s0, +4.4 vs fmore; dev -1.6. **Not a pass (< +8), not proved wrong (> 3).** Needs seeds; bank still has 16 banks on 3 fallback wordings (q.where_before, q.who_has, ...).
+
+### fword seed 0 on the probes (aug bank detector)
+Pword 61.3 vs base0 53.1 (+8.2); wording drop P0-Pword 16.8 vs 24.0 (30% of the wording drop closed). Q11 0 -> 85, Q1 52 -> 82 under new wording.
+Still bad under new wording: Q12 plan (10.6; q.plan_get was a fallback-only bank, not augmented in aug), Q6 33, Q7 6, Q8 54. aug2 fills the 16 fallback-only banks (arms faug2s0/s1 running).
+Box note: three seed-1/2 fword boxes went offline at ~27-29 min (different hosts); seed 0 completed. Unexplained so far.
