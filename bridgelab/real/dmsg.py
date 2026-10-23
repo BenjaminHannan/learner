@@ -42,6 +42,15 @@ def load_d(ckpt: str, device, vocab_size: int, seed: int = 0) -> PremonitionMini
             raise ValueError(f"{ckpt}: no D config in the checkpoint (expected D-final.pt with 'config')")
         model = PremonitionMini(cfg)
         model.load_state_dict(payload["model"])
+        if "bridge" in payload:
+            # v1 D was trained with the v1 bridge on; at eval it adds the frozen vector p_cd(unit(ctx_c)) to the register rows.
+            # Without it D collapses to its bridge-off lesion (~23% dev; counts answered only "zero"/"three"; bridgelab/dcount).
+            from v1.joint import Bridge
+            br = Bridge(cfg.d_model, payload["bridge"]["p_dc.weight"].shape[0])
+            br.load_state_dict(payload["bridge"])
+            with torch.no_grad():
+                vec = br.to_d().detach().to(device)
+            model.bridge_in = lambda: vec
     model = model.to(device).eval()
     for p in model.parameters():
         p.requires_grad_(False)

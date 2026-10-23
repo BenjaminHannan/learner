@@ -192,8 +192,7 @@ class Wire:
         if self.bridge.kind == "xattn":
             for i, blk in enumerate(L.core):
                 self.hooks.append(blk.register_forward_hook(lambda m, a, o, i=i: self._xhook(i, o)))
-        if self.bridge.kind in ("pooled", "ema_const"):
-            L.bridge_in = self._bridge_in
+        L.bridge_in = self._bridge_in                      # always: carries the v1 base vector (if any) plus this bridge's per-item v
         if self.bridge.kind == "ema_const":
             self.bridge.joint.__dict__['_c'] = None          # v1's attach() not used: the vector goes through bridge_in above
         return self
@@ -202,12 +201,16 @@ class Wire:
         for h in self.hooks:
             h.remove()
         self.hooks = []
-        self.ledger.bridge_in = None
+        self.ledger.bridge_in = base_in(self.ledger)
         self.ledger.vcode.vec = None
         self.ledger.slot_value = None
 
     def _bridge_in(self):
-        return self.out["v"] if (self.active and self.out is not None and self.out["v"] is not None) else torch.zeros(self.ledger.d, device=self.ledger.bridge_dev())
+        base = getattr(self.ledger, "_v1_base", None)
+        base = torch.zeros(self.ledger.d, device=self.ledger.bridge_dev()) if base is None else base
+        if self.active and self.out is not None and self.out.get("v") is not None:
+            return self.out["v"] + base
+        return base
 
     def _xhook(self, i: int, output):
         if not self.active or self.out is None or self.out.get("mem") is None:
@@ -219,6 +222,13 @@ class Wire:
         self.out = out
         self.ledger.slot_value = slot_value
         self.ledger.vcode.vec = out["v"] if self.active else None
+
+
+def base_in(ledger):
+    """The v1 creative was trained with the v1 bridge's frozen vector p_dc(unit(ctx_d)) added to Z; without it W2 collapses (creative bridge-off ~4%).
+    load_creative stores it as ledger._v1_base; this hook keeps it on when no per-item bridge is wired."""
+    base = getattr(ledger, "_v1_base", None)
+    return None if base is None else (lambda: base)
 
 
 def _bridge_dev(self):

@@ -28,7 +28,7 @@ from custom_io.evalx import is_hit
 
 from . import data as D
 from . import dmsg
-from .bridge import D2C, KINDS, Wire, ablate, to_slot_ledger
+from .bridge import D2C, KINDS, Wire, ablate, base_in, to_slot_ledger
 
 HERE = Path(__file__).resolve().parent
 log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)
@@ -46,9 +46,19 @@ def file_tag(path: str) -> str:
     return hashlib.sha256(f"{os.path.abspath(path)}|{st.st_size}|{int(st.st_mtime)}".encode()).hexdigest()[:10]
 
 
-def load_creative(path: str, device):
+def load_creative(path: str, device, d_ckpt: str = None):
     model, vocab, meta = sleep.load_parent(path, device)
     to_slot_ledger(model)
+    if d_ckpt and d_ckpt not in ("random", "synthetic") and "W2" in os.path.basename(path):    # only the v1 joint creative was trained with it
+        payload = torch.load(d_ckpt, map_location="cpu", weights_only=False)
+        if "bridge" in payload:                       # v1 W2 needs the v1 bridge's frozen vector (see bridge.base_in)
+            from v1.joint import Bridge
+            st = payload["bridge"]
+            br = Bridge(st["p_dc.weight"].shape[1], st["p_dc.weight"].shape[0])
+            br.load_state_dict(st)
+            with torch.no_grad():
+                model._v1_base = br.to_creative().detach().to(device)
+            model.bridge_in = base_in(model)
     return model, vocab, meta
 
 
@@ -229,7 +239,7 @@ def main(argv=None):
     log("D's own count accuracy:", {s: round(v["acc"], 3) for s, v in d_own.items()})
 
     # ---- creative + bridge
-    ledger, vocab, meta = load_creative(a.c_ckpt, device)
+    ledger, vocab, meta = load_creative(a.c_ckpt, device, a.d_ckpt)
     for p in ledger.parameters():
         p.requires_grad_(not a.freeze_creative)
     bridge = wire = None
