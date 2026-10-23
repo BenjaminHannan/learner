@@ -41,6 +41,7 @@ ARMS: dict[str, dict[str, Any]] = {
     "mq4": {"multi_query": 4},
     "lastloss": {"ans_last_only": True},
     "reg16mq4": {"registers": 16, "multi_query": 4},
+    "all3": {"registers": 16, "multi_query": 4, "ans_last_only": True},
 }
 
 log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)

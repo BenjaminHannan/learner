@@ -39,3 +39,9 @@ Seen so far (validation): base 42.5, reg16 48.7, mq4 50.0. Wave 2 replicates the
 `reg16-s1`, `mq4-s1`, `reg16mq4` (16 registers, registers 0-3 query). Marks:
 - reg16 / mq4 REPLICATE if the seed-1 run also clears max(base, base-s1) + max(3, N) on validation.
 - reg16mq4 HELPS BEYOND if validation >= max(reg16 runs, mq4 runs) + max(3, N); else the two are not additive.
+
+## Addendum 2 (21:41 UTC, after base-s1 and lastloss finished, before wave 3)
+Seen: base-s1 validation 42.4 (N = 0.15, so the 1.5 floor and the 3-point bar apply: bar = 45.5). lastloss validation 45.0 with
+HALT, 51.4 at min_loops=8. Wave 3: `lastloss-s1` (replicate) and `all3` = reg16 + mq4 + lastloss together.
+- lastloss REPLICATES if seed 1 also clears 45.5 on validation at min_loops=8.
+- all3 HELPS BEYOND if validation (better of HALT / min_loops=8) >= best single arm + 3.

@@ -35,7 +35,7 @@ PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
 STAGES = ("gs", "gs2", "gs3", "arm", "state")
-STATE_ARMS = ("base", "inject", "reg16", "mq4", "lastloss", "reg16mq4")      # v1/state_lab.py ARMS
+STATE_ARMS = ("base", "inject", "reg16", "mq4", "lastloss", "reg16mq4", "all3")      # v1/state_lab.py ARMS
 STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "state": 3.00}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec); a state-lab box <= $3 (hard)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
