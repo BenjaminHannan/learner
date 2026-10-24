@@ -33,7 +33,7 @@ ACCEL = "NvidiaTeslaT4"
 CODE_FILES = ["train.py", "rollout.py", "grader.py", "sandbox.py", "checks.py", "tools.json"]
 
 FULL = dict(deadline_s=11 * 3600, min_reserve_s=45 * 60, unknown_reserve_s=int(2.5 * 3600), progress_s=300,
-            common="--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 2 --max-usd 14 --dtype fp16",
+            common="--steps 20 --tasks-per-step 8 --group 4 --seed 0 --save-every 2 --max-usd 14 --dtype fp16 --gen-batch 8",
             eval_flags="--eval-only --eval-grade --dtype fp16")
 SMOKE = dict(deadline_s=40 * 60, min_reserve_s=8 * 60, unknown_reserve_s=15 * 60, progress_s=60,
              common="--steps 2 --tasks-per-step 2 --group 2 --seed 0 --save-every 1 --max-usd 2 --dtype fp16",
