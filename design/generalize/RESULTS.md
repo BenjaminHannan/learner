@@ -50,3 +50,6 @@ fwordR1 (aug, seed 1) on probes: Pword 61.4 vs base1 45.1 (+16.3); wording drop 
 | v1 FULL | 82.7 | 50.6 | 32.1 | 45.6 |
 | D-only + aug (seed 1) | 71.2 | 61.4 | 9.9 | 53.9 |
 Suggested: pretraining removes most of the wording gap; Claude wordings recover part of it for the from-scratch model.
+
+### faug2 seed 1 on the probes (aug2 detector)
+validation 58.7, P0 79.7, Pword 68.9 (base1 45.1: +23.8), Pdepth 72.4; wording drop 10.7 (base1 28.0). Q12 plan 10.6 -> 70.0 and Q6 32 -> 72 under new wording vs aug; **Q7 still 0.5 under new wording (68.9 with train wording)**: the one question type the paraphrases did not fix (next thing to look at).
